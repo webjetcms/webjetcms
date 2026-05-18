@@ -28,12 +28,12 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 /**
- * <p>Aplikácia pre presmerovanie hlavnej stránky na podadresár podľa jazyka prehliadača.</p>
- * <p>Detekuje jazyk z HTTP hlavičky {@code Accept-Language} a presmeruje používateľa na príslušný jazykový priečinok.</p>
- * <p>Príklad include:</p>
+ * <p>Application for redirecting the home page to a subdirectory based on browser language.</p>
+ * <p>It detects the language from the HTTP {@code Accept-Language} header and redirects the user to the corresponding language folder.</p>
+ * <p>Include example:</p>
  * <code>!INCLUDE(sk.iway.basecms.langredirect.LanguageRedirectApp)!</code>
  *
- * Anotácia @WebjetAppStore zabezpečí zobrazenie aplikácie v zozname aplikácií v editore (v AppStore)
+ * The @WebjetAppStore annotation ensures the application is displayed in the editor application list (AppStore)
  */
 @WebjetComponent("sk.iway.basecms.langredirect.LanguageRedirectApp")
 @WebjetAppStore(
@@ -54,14 +54,14 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
     private static final String PATH_SEPARATOR = "/";
 
     /**
-     * Zoznam podporovaných jazykov oddelených čiarkou.
-     * Predvolené: sk,cs,en
+     * Comma-separated list of supported languages.
+     * Default: sk,cs,en
      */
     @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "apps.langredirect.supportedLanguages")
     private String supportedLanguages = "sk,cs,en";
 
     /**
-     * Predvolený jazyk ak sa nepodarí detekovať jazyk prehliadača.
+        * Default language if browser language detection fails.
      */
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "apps.langredirect.defaultLanguage", editor = {
          @DataTableColumnEditor(
@@ -81,35 +81,35 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
     private String defaultLanguage = "sk";
 
     /**
-     * Ak je true, presmeruje sa len na koreňovej URL adrese (napr. / alebo /index.html).
-     * Ak je false, presmeruje sa vždy pri vstupe do stránky.
+     * If true, redirect only on the root URL (for example, / or /index.html).
+     * If false, always redirect when entering the page.
      */
     @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = "basic", title = "apps.langredirect.rootOnly")
     private boolean rootOnly = true;
 
     /**
-     * Priečinok na webe kde sa má hľadať jazykový podadresár.
-     * Napr. ak je nastavené na "/", hľadá sa /sk/, /cs/, /en/.
+     * Website folder where the language subdirectory should be searched.
+     * For example, if set to "/", it searches for /sk/, /cs/, /en/.
      */
     @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "advanced", title = "apps.langredirect.basePath")
     private String basePath = "/";
 
     /**
-     * Ak je true, presmerovanie sa vykoná len ak používateľ nemá nastavený cookie s jazykom.
-     * Umožňuje používateľovi zmeniť jazyk manuálne bez presmerovania.
+     * If true, redirection is performed only when the user does not have a language cookie set.
+     * This allows users to change language manually without being redirected.
      */
     @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = "advanced", title = "apps.langredirect.respectCookie")
     private boolean respectCookie = true;
 
-      /**
-       * Dynamicky získava možnosti pre výber jazyka z konfigurácie dizajnových šablón.
-       * Používa LayoutService.getLanguages() rovnako ako v editácii šablón.
-       *
-       * @param componentRequest Component request kontext
-       * @param request HTTP request
-       * @return Mapa s možnosťami pre pole defaultLanguage
-       */
-      @Override
+    /**
+     * Dynamically gets language selection options from design template configuration.
+     * Uses LayoutService.getLanguages() the same way as template editing.
+     *
+     * @param componentRequest Component request context
+     * @param request HTTP request
+     * @return Map with options for the defaultLanguage field
+    */
+    @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
         Map<String, List<OptionDto>> options = new HashMap<>();
 
@@ -126,8 +126,8 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
      }
 
     /**
-     * Metóda init sa volá po vytvorení objektu a nastavení parametrov.
-     * Presmerovanie sa vykonáva v @DefaultHandler metóde view().
+     * The init method is called after object creation and parameter setup.
+     * Redirection is performed in the @DefaultHandler view() method.
      *
      * @param request
      * @param response
@@ -138,10 +138,10 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
     }
 
     /**
-     * Detekuje jazyk z HTTP hlavičky Accept-Language.
+     * Detects language from the HTTP Accept-Language header.
      *
      * @param request HTTP request
-     * @return detekovaný jazyk (sk, cs, en, atď.)
+     * @return detected language (sk, cs, en, etc.)
      */
     private String detectLanguage(HttpServletRequest request) {
         String acceptLanguage = request.getHeader("Accept-Language");
@@ -177,10 +177,10 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
     }
 
     /**
-     * Skontroluje či je jazyk v zozname podporovaných jazykov.
+     * Checks whether the language is in the list of supported languages.
      *
-     * @param lang detekovaný jazyk
-     * @return true ak je jazyk podporovaný
+     * @param lang detected language
+     * @return true if the language is supported
      */
     private boolean isSupportedLanguage(String lang) {
         if (Tools.isEmpty(lang))
@@ -195,19 +195,19 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
     }
 
     /**
-     * Default handler - vykoná presmerovanie na jazykovú mutáciu stránky podľa detekovaného jazyka.
-     * Ak existuje cookie lng, použije sa jej hodnota. Inak sa detekuje jazyk z Accept-Language hlavičky.
+     * Default handler - redirects to the page language variant based on detected language.
+     * If the lng cookie exists, its value is used. Otherwise, language is detected from the Accept-Language header.
      *
      * @param request HTTP request
-     * @return redirect URL na jazykovú mutáciu (napr. /sk/, /en/)
+     * @return redirect URL to the language variant (for example, /sk/, /en/)
      */
     @DefaultHandler
     public String view(HttpServletRequest request) {
-        // Skontroluj, či používateľ nemá nastavený jazykový cookie
+        // Check whether the user has a language cookie set
         if (respectCookie) {
             String langCookie = Tools.getCookieValue(request.getCookies(), "lng", null);
             if (Tools.isNotEmpty(langCookie)) {
-                // Over, či je jazyk v zozname podporovaných jazykov
+                // Verify whether the language is in the list of supported languages
                 if (isSupportedLanguage(langCookie)) {
                     String redirectPath = basePath + langCookie + PATH_SEPARATOR;
                     Logger.debug(LanguageRedirectApp.class, "Redirecting to language from cookie: " + redirectPath);
@@ -216,10 +216,10 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
             }
         }
 
-        // Detekuj jazyk z Accept-Language hlavičky
+        // Detect language from the Accept-Language header
         String detectedLang = detectLanguage(request);
 
-        // Ak rootOnly=true, presmeruj len na koreňovej URL adrese
+        // If rootOnly=true, redirect only on the root URL
         String path = request.getRequestURI().toLowerCase();
         String contextPath = request.getContextPath().toLowerCase();
         path = path.replace(contextPath, "");

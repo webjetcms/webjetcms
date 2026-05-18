@@ -830,7 +830,7 @@ jUnit tests are in `src/test/java`. When testing JPA entities:
 4. [ ] Create frontend HTML in `apps/{name}/admin/index.html`
 5. [ ] Create `modinfo.properties` in `apps/{name}/`
 6. [ ] Add translation keys to `text-webjet9.properties`, `text_cz-webjet9.properties`, `text_en-webjet9.properties`
-7. [ ] Create automated test in `src/test/webapp/tests/apps/{name}.js` using skill [codeceptjs](../codeceptjs/SKILL.md).
+7. [ ] Create automated test in `src/test/webapp/tests/apps/{name}.js` using skill [codeceptjs](../wj-codeceptjs/SKILL.md).
 8. [ ] Add changelog entry in `docs/sk/CHANGELOG-2026.md`
 9. [ ] Check `docs/sk/ROADMAP.md` for planned item and mark as done
 10. [ ] Verify export/import functionality works correctly

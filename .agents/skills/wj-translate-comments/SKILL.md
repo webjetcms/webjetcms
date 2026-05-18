@@ -78,6 +78,8 @@ For each comment:
 - keep domain names, class names, config keys, and product terms unchanged
 - keep placeholders, URLs, tags, and code fragments unchanged
 - keep TODO/FIXME semantics and priority markers unchanged
+- keep original leading/trailing whitespace on every comment line
+- in JavaDoc/block comments, preserve the exact prefix structure (`/**`, `*`, `*/`) and alignment
 
 Preferred style:
 
@@ -85,9 +87,42 @@ Preferred style:
 - action-oriented phrasing for TODO comments
 - grammar and punctuation suitable for technical docs
 
+Whitespace guard example (JavaDoc):
+
+Before:
+```java
+	/**
+	 * Zoznam podporovanych jazykov oddelenych ciarkou.
+	 * Predvolene: sk,cs,en
+	 */
+```
+
+After (correct):
+```java
+	/**
+	 * Comma-separated list of supported languages.
+	 * Default: sk,cs,en
+	 */
+```
+
+After (incorrect - do not do this):
+```java
+	/**
+		* Comma-separated list of supported languages.
+		* Default: sk,cs,en
+	 */
+```
+
 ### 6. Apply Edits Carefully
 
 Update only comment text in place.
+
+Preserve comment formatting exactly:
+
+- do not change indentation depth of comment lines
+- do not add/remove spaces before `*` in JavaDoc lines
+- do not reflow wrapping unless explicitly requested
+- do not normalize tabs to spaces or spaces to tabs
 
 Do not change:
 
@@ -104,6 +139,7 @@ After editing:
 - verify no behavioral diff outside comments
 - run lint/compile/tests if requested or when risk is non-trivial
 - ensure no accidental encoding or formatting damage
+- for each edited block comment/JavaDoc, compare line prefixes and leading whitespace with the original; only comment text should differ
 
 ### 8. Report Results
 
