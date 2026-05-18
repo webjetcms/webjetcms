@@ -113,4 +113,10 @@
         "/`[^`\\n]+`/g",
         "/```[\\s\\S]*?```/g"
     ],
+    "chat.promptFilesLocations": {
+        ".agents/prompts": true
+    },
+    "chat.instructionsFilesLocations": {
+        ".agents/instructions": true
+    },
 }

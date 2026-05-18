@@ -4,6 +4,10 @@
 
 > Vývojová verzia aktualizovaná z main repozitára.
 
+### Aplikácie
+
+- Pridaná nová aplikácia [Presmerovanie podľa jazyka](redactor/apps/language-redirect/README.md) na automatické presmerovanie návštevníkov na jazykovú verziu stránky podľa detekcie jazyka z HTTP hlavičky `Accept-Language`. Podporuje až 8 priradení jazykov na URL adresy, rešpektovanie jazykového cookie a možnosť presmerovania len na koreňovej URL (#58497).
+
 ## 2026.18
 
 > WebJET CMS 2026.18 prináša **schvaľovanie zmien priečinkov** s podporou viacúrovňového schvaľovania a **testovanie prístupnosti** integrované priamo do automatizovaných testov.
@@ -21,7 +25,7 @@
 
 ### Webové stránky
 
-- Schvaľovanie - pridané [schvaľovanie zmien priečinkov](redactor/webpages/approve/README.md) vrátane schvaľovania vytvorenia, editácie a zmazania priečinka. Schvaľovateľ dostane email s prehľadom zmien a možnosťou schváliť alebo zamietnuť zmenu. Podporované je aj viacúrovňové schvaľovanie (#58405).
+- Schvaľovanie - pridané [schvaľovanie zmien priečinkov](redactor/webpages/approve/README.md) vrátane schvaľovanie vytvorenia, editácie a zmazania priečinka. Schvaľovateľ dostane email s prehľadom zmien a možnosťou schváliť alebo zamietnuť zmenu. Podporované je aj viacúrovňové schvaľovanie (#58405).
 
 ![](redactor/webpages/approve/approve-group-page.png)
 
