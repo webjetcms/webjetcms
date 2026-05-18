@@ -723,7 +723,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 
                             //pretoze z label sa generuje potom ID/name elementu a potrebujeme polia rozlisovat (juts in case of JSP and rest only if they are checkboxes or radios)
                             label = placeholder;
-                            if (required &&Tools.isNotEmpty(requiredLabelAdd)) {
+                            if (required && Tools.isNotEmpty(requiredLabelAdd)) {
                                 placeholder += requiredLabelAdd;
                             }
                         }
