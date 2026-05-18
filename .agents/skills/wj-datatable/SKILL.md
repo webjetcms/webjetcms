@@ -834,3 +834,4 @@ jUnit tests are in `src/test/java`. When testing JPA entities:
 8. [ ] Add changelog entry in `docs/sk/CHANGELOG-2026.md`
 9. [ ] Check `docs/sk/ROADMAP.md` for planned item and mark as done
 10. [ ] Verify export/import functionality works correctly
+11. [ ] Write all code comments in English.

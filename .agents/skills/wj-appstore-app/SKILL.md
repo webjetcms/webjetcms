@@ -527,6 +527,8 @@ custom=true
    @PreAuthorize("@WebjetSecurityService.isInUserGroup('editors')") // specific group
    ```
 
+9. **Comments in English**: Write all code comments in English.
+
 ## Reference Implementations
 
 - **Simple app with CRUD**: `src/main/java/sk/iway/basecms/contact/ContactApp.java`
