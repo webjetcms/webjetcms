@@ -26,6 +26,8 @@ import sk.iway.iwcm.tags.support.ResponseUtils;
  */
 public abstract class WebjetComponentAbstract implements WebjetComponentInterface {
 
+    protected static final String EMPTY_PAGE = "/apps/_common/empty";
+
     /** DEFAULT commonSettings TAB */
     @DataTableColumn(
         inputType = DataTableColumnType.CHECKBOX,

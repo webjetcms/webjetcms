@@ -6,11 +6,11 @@ import java.util.List;
 import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.layout.LayoutService;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
@@ -51,30 +51,13 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 @Setter
 public class LanguageRedirectApp extends WebjetComponentAbstract {
 
-    private static final String PATH_SEPARATOR = "/";
-
     /**
-     * Comma-separated list of supported languages.
-     * Default: sk,cs,en
-     */
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "apps.langredirect.supportedLanguages")
-    private String supportedLanguages = "sk,cs,en";
-
-    /**
-        * Default language if browser language detection fails.
+     * Default language if browser language detection fails or no mapping is found.
      */
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "apps.langredirect.defaultLanguage", editor = {
          @DataTableColumnEditor(
             attr = {
-                 @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "apps.langredirect.availableLanguages")
-             },
-            options = {
-                 @DataTableColumnEditorAttr(key = "Slovenčina (sk)", value = "sk"),
-                 @DataTableColumnEditorAttr(key = "Čeština (cs)", value = "cs"),
-                 @DataTableColumnEditorAttr(key = "English (en)", value = "en"),
-                 @DataTableColumnEditorAttr(key = "Polski (pl)", value = "pl"),
-                 @DataTableColumnEditorAttr(key = "Deutsch (de)", value = "de"),
-                 @DataTableColumnEditorAttr(key = "Magyar (hu)", value = "hu")
+                 @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
              }
          )
     })
@@ -84,15 +67,8 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
      * If true, redirect only on the root URL (for example, / or /index.html).
      * If false, always redirect when entering the page.
      */
-    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = "basic", title = "apps.langredirect.rootOnly")
-    private boolean rootOnly = true;
-
-    /**
-     * Website folder where the language subdirectory should be searched.
-     * For example, if set to "/", it searches for /sk/, /cs/, /en/.
-     */
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "advanced", title = "apps.langredirect.basePath")
-    private String basePath = "/";
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = "advanced", title = "apps.langredirect.rootOnly")
+    private boolean rootOnly = false;
 
     /**
      * If true, redirection is performed only when the user does not have a language cookie set.
@@ -102,12 +78,114 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
     private boolean respectCookie = true;
 
     /**
+     * Language-to-URL redirect mappings. Up to 8 configurable pairs.
+     * Each pair consists of a language selection and a redirect URL.
+     * Leave language empty to skip that mapping.
+     */
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "groupedit.language")
+    private String mapping1Lang = "";
+
+    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.langredirect.redirect", editor = {
+         @DataTableColumnEditor(
+            attr = {
+                 @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
+             }
+         )
+    })
+    private String mapping1Url = "";
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "groupedit.language")
+    private String mapping2Lang = "";
+
+    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.langredirect.redirect", editor = {
+         @DataTableColumnEditor(
+            attr = {
+                 @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
+             }
+         )
+    })
+    private String mapping2Url = "";
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "groupedit.language")
+    private String mapping3Lang = "";
+
+    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.langredirect.redirect", editor = {
+         @DataTableColumnEditor(
+            attr = {
+                 @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
+             }
+         )
+    })
+    private String mapping3Url = "";
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "groupedit.language")
+    private String mapping4Lang = "";
+
+    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.langredirect.redirect", editor = {
+         @DataTableColumnEditor(
+            attr = {
+                 @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
+             }
+         )
+    })
+    private String mapping4Url = "";
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "groupedit.language")
+    private String mapping5Lang = "";
+
+    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.langredirect.redirect", editor = {
+         @DataTableColumnEditor(
+            attr = {
+                 @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
+             }
+         )
+    })
+    private String mapping5Url = "";
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "groupedit.language")
+    private String mapping6Lang = "";
+
+    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.langredirect.redirect", editor = {
+         @DataTableColumnEditor(
+            attr = {
+                 @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
+             }
+         )
+    })
+    private String mapping6Url = "";
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "groupedit.language")
+    private String mapping7Lang = "";
+
+    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.langredirect.redirect", editor = {
+         @DataTableColumnEditor(
+            attr = {
+                 @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
+             }
+         )
+    })
+    private String mapping7Url = "";
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "groupedit.language")
+    private String mapping8Lang = "";
+
+    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.langredirect.redirect", editor = {
+         @DataTableColumnEditor(
+            attr = {
+                 @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
+             }
+         )
+    })
+    private String mapping8Url = "";
+
+    /**
      * Dynamically gets language selection options from design template configuration.
      * Uses LayoutService.getLanguages() the same way as template editing.
+     * Adds an empty option as the first item for all mapping fields.
      *
      * @param componentRequest Component request context
      * @param request HTTP request
-     * @return Map with options for the defaultLanguage field
+     * @return Map with options for defaultLanguage and all mapping fields
     */
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
@@ -116,26 +194,27 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
         LayoutService ls = new LayoutService(request);
         List<LabelValueDetails> languages = ls.getLanguages(false, true);
 
+        // Build options with empty option first, then all languages
         List<OptionDto> langOptions = new ArrayList<>();
+        langOptions.add(new OptionDto("", "", null));
         for (LabelValueDetails lvd : languages) {
             langOptions.add(new OptionDto(lvd.getLabel(), lvd.getValue(), null));
          }
-        options.put("defaultLanguage", langOptions);
+
+        // Add options for defaultLanguage and all 8 mapping fields
+        options.put("defaultLanguage", langOptions.subList(1, langOptions.size())); // defaultLanguage should not have empty option
+
+        options.put("mapping1Lang", langOptions);
+        options.put("mapping2Lang", langOptions);
+        options.put("mapping3Lang", langOptions);
+        options.put("mapping4Lang", langOptions);
+        options.put("mapping5Lang", langOptions);
+        options.put("mapping6Lang", langOptions);
+        options.put("mapping7Lang", langOptions);
+        options.put("mapping8Lang", langOptions);
 
         return options;
      }
-
-    /**
-     * The init method is called after object creation and parameter setup.
-     * Redirection is performed in the @DefaultHandler view() method.
-     *
-     * @param request
-     * @param response
-     */
-    @Override
-    public void init(HttpServletRequest request, HttpServletResponse response) {
-        // Redirect is handled in the @DefaultHandler view() method
-    }
 
     /**
      * Detects language from the HTTP Accept-Language header.
@@ -177,60 +256,84 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
     }
 
     /**
-     * Checks whether the language is in the list of supported languages.
+     * Looks up the redirect URL for a given language from the 8 configurable mappings.
+     * If no mapping is found for the given language, falls back to searching for defaultLanguage.
      *
-     * @param lang detected language
-     * @return true if the language is supported
+     * @param lang the language to search for
+     * @return the redirect URL, or null if no mapping is found
      */
-    private boolean isSupportedLanguage(String lang) {
-        if (Tools.isEmpty(lang))
-            return false;
+    private String getRedirectUrl(String lang) {
+        if (lang == null) return null;
 
-        String[] supported = supportedLanguages.toLowerCase().split(",");
-        for (String s : supported) {
-            if (s.trim().equals(lang))
-                return true;
+        // First, try to find a mapping for the requested language
+        String redirectUrl = null;
+        if (lang.equals(mapping1Lang) && Tools.isNotEmpty(mapping1Url)) {
+            redirectUrl = mapping1Url;
+        } else if (lang.equals(mapping2Lang) && Tools.isNotEmpty(mapping2Url)) {
+            redirectUrl = mapping2Url;
+        } else if (lang.equals(mapping3Lang) && Tools.isNotEmpty(mapping3Url)) {
+            redirectUrl = mapping3Url;
+        } else if (lang.equals(mapping4Lang) && Tools.isNotEmpty(mapping4Url)) {
+            redirectUrl = mapping4Url;
+        } else if (lang.equals(mapping5Lang) && Tools.isNotEmpty(mapping5Url)) {
+            redirectUrl = mapping5Url;
+        } else if (lang.equals(mapping6Lang) && Tools.isNotEmpty(mapping6Url)) {
+            redirectUrl = mapping6Url;
+        } else if (lang.equals(mapping7Lang) && Tools.isNotEmpty(mapping7Url)) {
+            redirectUrl = mapping7Url;
+        } else if (lang.equals(mapping8Lang) && Tools.isNotEmpty(mapping8Url)) {
+            redirectUrl = mapping8Url;
         }
-        return false;
+
+        return redirectUrl;
     }
 
     /**
      * Default handler - redirects to the page language variant based on detected language.
-     * If the lng cookie exists, its value is used. Otherwise, language is detected from the Accept-Language header.
+     * Checks all 8 configurable language-to-URL mappings first.
+     * If no mapping is found, falls back to defaultLanguage.
+     * If the lng cookie exists and respectCookie is true, its value is used.
      *
      * @param request HTTP request
-     * @return redirect URL to the language variant (for example, /sk/, /en/)
+     * @return redirect URL to the language variant
      */
     @DefaultHandler
     public String view(HttpServletRequest request) {
-        // Check whether the user has a language cookie set
-        if (respectCookie) {
-            String langCookie = Tools.getCookieValue(request.getCookies(), "lng", null);
-            if (Tools.isNotEmpty(langCookie)) {
-                // Verify whether the language is in the list of supported languages
-                if (isSupportedLanguage(langCookie)) {
-                    String redirectPath = basePath + langCookie + PATH_SEPARATOR;
-                    Logger.debug(LanguageRedirectApp.class, "Redirecting to language from cookie: " + redirectPath);
-                    return "redirect:" + redirectPath;
-                }
-            }
-        }
-
-        // Detect language from the Accept-Language header
-        String detectedLang = detectLanguage(request);
-
         // If rootOnly=true, redirect only on the root URL
-        String path = request.getRequestURI().toLowerCase();
-        String contextPath = request.getContextPath().toLowerCase();
-        path = path.replace(contextPath, "");
+        String path = PathFilter.getOrigPath(request);
 
         if (rootOnly && !"/".equals(path) && !"/index.html".equals(path) && !"".equals(path)) {
             Logger.debug(LanguageRedirectApp.class, "Not root path, skipping redirect: " + path);
-            return "";
+            return EMPTY_PAGE;
         }
 
-        String redirectPath = basePath + detectedLang + PATH_SEPARATOR;
-        Logger.debug(LanguageRedirectApp.class, "Redirecting to: " + redirectPath + " (detected lang: " + detectedLang + ")");
-        return "redirect:" + redirectPath;
+        String lang = null;
+
+        // If respectCookie is true, check for lng cookie
+        if (respectCookie) {
+            String langCookie = Tools.getCookieValue(request.getCookies(), "lng", null);
+            if (Tools.isNotEmpty(langCookie)) {
+                lang = langCookie;
+            }
+        }
+        if (Tools.isEmpty(lang)) {
+            // Detect language from Accept-Language header
+            lang = detectLanguage(request);
+        }
+
+        // Look up redirect URL from mappings (with defaultLanguage fallback)
+        String redirectUrl = getRedirectUrl(lang);
+
+        if (Tools.isEmpty(redirectUrl)) {
+            //if no redirect was found for detected language, try to find redirect for default language
+            redirectUrl = getRedirectUrl(defaultLanguage);
+        }
+
+        if (Tools.isNotEmpty(redirectUrl)) {
+            Logger.debug(LanguageRedirectApp.class, "Redirecting to mapped URL: " + redirectUrl + " (lang: " + lang + ")");
+            return "redirect:" + redirectUrl;
+        }
+
+        return EMPTY_PAGE;
     }
 }
