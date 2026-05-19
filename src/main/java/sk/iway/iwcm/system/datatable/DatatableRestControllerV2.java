@@ -1111,7 +1111,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 								}
 
 								if (enumValue == null) {
-									throw new ConstraintViolationException("Invalid enum value '"+value+"' for field '"+field+"'", null);
+									throw new ConstraintViolationException("Invalid enum value '"+value+"' for field '"+field+"'", new HashSet<>());
 								}
 
 								predicates.add(builder.equal(root.get(field), enumValue));

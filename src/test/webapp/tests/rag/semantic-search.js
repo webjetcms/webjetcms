@@ -8,7 +8,7 @@ Scenario('Set semantic search as wanted search', ({ I, DT, Document }) => {
     Document.setConfigValue("searchType", "semantic");
 });
 
-const searcData = [
+const searchData = [
     {
         pageName: "semantic_parent",
         pageUrl: "/apps/vyhladavanie/semantic_parent/mcgregorov-obchodny-uder.html",
@@ -72,7 +72,7 @@ Scenario('Try semantic search', ({ I, DT, Document }) => {
     I.amOnPage("/apps/vyhladavanie/semanticke-vyhladavanie.html?");
     I.waitForVisible("#searchWords", 5);
 
-    searcData.forEach(({ pageName, pageUrl, questions }) => {
+    searchData.forEach(({ pageName, pageUrl, questions }) => {
         questions.forEach(question => {
             I.fillField('#searchWords', question);
             I.click(".smallSearchSubmit");

@@ -20,7 +20,7 @@ Každý chunk obsahuje tieto stĺpce:
 - **Index časti** – poradie chunku v rámci stránky (0, 1, 2, ...)
 - **Text časti** – text, pre ktorý bol vygenerovaný embedding (samotný embedding sa nezobrazuje)
 - **Model embeddingu** – použitý OpenAI model, napr. `text-embedding-3-small`
-- **Dimenzie** – počet dimenzií embeddingu, napr. `1024`
+- **Dimenzie** – počet dimenzií embeddingu, napr. `1536`
 - **Jazyk** – jazyková verzia stránky
 - **Stav** – stav spracovania:
   - **COMPLETED** – úspešne spracovaný

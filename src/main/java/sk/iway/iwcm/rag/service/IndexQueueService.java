@@ -50,7 +50,7 @@ public class IndexQueueService {
 
         List<IndexQueueEntity> queueList = new ArrayList<>();
         for (Integer entityId : entityIds) {
-            queueList.add( preparEntity(entityId, entityType, action, domainId) );
+            queueList.add( prepareEntity(entityId, entityType, action, domainId) );
         }
 
         queueRepository.saveAll(queueList);
@@ -71,7 +71,7 @@ public class IndexQueueService {
 
         removeFromQueue(entityId, entityType, domainId);
 
-        queueRepository.save( preparEntity(entityId, entityType, action, domainId) );
+        queueRepository.save( prepareEntity(entityId, entityType, action, domainId) );
     }
 
     /**
@@ -84,7 +84,7 @@ public class IndexQueueService {
      */
     public List<Integer> getQueued(RagEntityType entityType, RagIndexAction action, Integer domainId) {
         if(entityType == null || action == null || domainId <= 0 ) {
-            throw new IllegalArgumentException("Invalid parameters for adding to index queue.");
+            throw new IllegalArgumentException("Invalid parameters for getting from index queue.");
         }
 
         return queueRepository.findExistingEntityIds(entityType, action, domainId);
@@ -118,7 +118,7 @@ public class IndexQueueService {
     /**
      * Create a new IndexQueueEntity with the given parameters and current timestamp.
      */
-    private IndexQueueEntity preparEntity(int entityId, RagEntityType entityType, RagIndexAction action, int domainId) {
+    private IndexQueueEntity prepareEntity(int entityId, RagEntityType entityType, RagIndexAction action, int domainId) {
         IndexQueueEntity entity = new IndexQueueEntity();
         entity.setEntityType(entityType);
         entity.setEntityId(entityId);

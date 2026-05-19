@@ -87,7 +87,7 @@ public class EmbeddingChunkEntity extends BaseEditorFields {
     @Column(name = "content_hash", nullable = false, length = 64)
     @DataTableColumn(
         inputType = DataTableColumnType.HIDDEN,
-        title = "components.rag.content_hash",
+        title = "",
         tab = "main"
     )
     private String contentHash;

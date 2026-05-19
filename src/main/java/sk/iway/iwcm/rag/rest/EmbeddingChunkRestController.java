@@ -36,6 +36,7 @@ import sk.iway.iwcm.rag.pgvector.EmbeddingChunkRepository;
 import sk.iway.iwcm.rag.pgvector.EmbeddingChunkStatus;
 import sk.iway.iwcm.rag.service.IndexQueueService;
 import sk.iway.iwcm.rag.service.RagEntityType;
+import sk.iway.iwcm.rag.vectorstore.PgVectorStore;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
@@ -56,15 +57,24 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
     private final EmbeddingChunkRepository chunkRepository;
     private final IndexQueueService indexQueueService;
 
+    private final PgVectorStore vectorStore;
+
     @Autowired
-    public EmbeddingChunkRestController(EmbeddingChunkRepository chunkRepository, IndexQueueService indexQueueService) {
+    public EmbeddingChunkRestController(EmbeddingChunkRepository chunkRepository, IndexQueueService indexQueueService, PgVectorStore vectorStore) {
         super(chunkRepository);
         this.chunkRepository = chunkRepository;
         this.indexQueueService = indexQueueService;
+        this.vectorStore = vectorStore;
     }
 
     @Override
     public Page<EmbeddingChunkEntity> getAllItems(Pageable pageable) {
+
+        if (vectorStore.isAvailable() == false && vectorStore.initializeSchema() == false) {
+            // Error will be throwed by PgVectorStore
+            return new DatatablePageImpl<>( new ArrayList<>() );
+        }
+
         // Check if entityType is set and valid
         RagEntityType ragEntityType = RagEntityType.fromString( getRequest().getParameter("entityType") );
         if(ragEntityType == null) return new DatatablePageImpl<>( new ArrayList<>() );
@@ -160,26 +170,37 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
     @GetMapping("/document-stat")
     public Map<String, Object> getDocumentStat(@RequestParam("rootDir") int rootDir, @RequestParam("includeSubfolders") boolean includeSubfolders, @RequestParam("action") String action) {
         Pair<Integer, List<Integer>> data = getDocIds(rootDir, includeSubfolders);
-        if(data == null) data = new Pair<Integer, List<Integer>>(0, new ArrayList<>());
+        if (data == null) data = new Pair<>(0, new ArrayList<>());
 
         Map<String, Object> response = new HashMap<>();
         response.put("totalGroups", data.getFirst());
         response.put("totalDocuments", data.getSecond() != null ? data.getSecond().size() : 0);
 
-        Set<Integer> indexedDocIds = chunkRepository.findDistinctEntityIdsByEntityTypeAndDomainId(RagEntityType.DOCUMENT, CloudToolsForCore.getDomainId()).stream().collect(Collectors.toSet());
+        Set<Integer> indexedDocIds = chunkRepository
+                .findDistinctEntityIdsByEntityTypeAndDomainId(RagEntityType.DOCUMENT, CloudToolsForCore.getDomainId())
+                .stream().collect(Collectors.toSet());
+
         int indexedCount = 0;
-        if(data.getSecond() != null) {
-            for(Integer docId : data.getSecond()) {
-                if(indexedDocIds.contains(docId)) indexedCount++;
+        if (data.getSecond() != null) {
+            for (Integer docId : data.getSecond()) {
+                if (indexedDocIds.contains(docId)) indexedCount++;
             }
         }
         response.put("indexedDocuments", indexedCount);
 
-        Set<Integer> queued = indexQueueService.getQueued(RagEntityType.DOCUMENT, RagIndexAction.fromString(action), CloudToolsForCore.getDomainId()).stream().collect(Collectors.toSet());
+        RagIndexAction ragAction = RagIndexAction.fromString(action);
+        if (ragAction == null) {
+            response.put("queuedDocuments", 0);
+            return response;
+        }
+
+        Set<Integer> queued = indexQueueService.getQueued(RagEntityType.DOCUMENT, ragAction, CloudToolsForCore.getDomainId())
+                .stream().collect(Collectors.toSet());
+
         int queuedCount = 0;
-        if(data.getSecond() != null) {
-            for(Integer docId : data.getSecond()) {
-                if(queued.contains(docId)) queuedCount++;
+        if (data.getSecond() != null) {
+            for (Integer docId : data.getSecond()) {
+                if (queued.contains(docId)) queuedCount++;
             }
         }
         response.put("queuedDocuments", queuedCount);

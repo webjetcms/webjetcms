@@ -162,21 +162,11 @@ class PugWatchPlugin {
             if (changedViewsJsFiles.length > 0) {
                 const pagesToRecompile = new Set();
 
-                // For each changed JS file, find PUG pages in the same directory that include it
                 changedViewsJsFiles.forEach(jsFile => {
-                    const jsBasename = path.basename(jsFile);
-                    const jsDir = path.dirname(jsFile);
-
-                    // Check sibling .pug files for `include <basename>`
-                    pugFileToPage.forEach((page, pugPath) => {
-                        if (path.dirname(pugPath) !== jsDir) return;
-                        try {
-                            const content = fs.readFileSync(pugPath, "utf8");
-                            if (content.includes("include " + jsBasename)) {
-                                pagesToRecompile.add(page);
-                            }
-                        } catch (e) { /* skip */ }
-                    });
+                    const pages = jsFileToPages.get(jsFile);
+                    if (Array.isArray(pages)) {
+                        pages.forEach(page => pagesToRecompile.add(page));
+                    }
                 });
 
                 if (pagesToRecompile.size === 0) return;

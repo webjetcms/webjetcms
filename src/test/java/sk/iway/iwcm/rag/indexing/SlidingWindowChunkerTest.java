@@ -56,8 +56,9 @@ class SlidingWindowChunkerTest {
         for (int i = 0; i < chunks.size() - 1; i++) {
             String currentEnd = chunks.get(i).substring(Math.max(0, chunks.get(i).length() - 10));
             String nextStart = chunks.get(i + 1).substring(0, Math.min(10, chunks.get(i + 1).length()));
-            // With overlap, there should be some common text between consecutive chunks
+
             assertFalse(chunks.get(i).isEmpty(), "Chunk should not be empty");
+            assertEquals(currentEnd, nextStart, "Chunk " + i + " must overlap with chunk " + (i + 1) + " by 10 characters");
         }
     }
 

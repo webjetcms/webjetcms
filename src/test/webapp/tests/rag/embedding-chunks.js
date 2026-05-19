@@ -130,7 +130,7 @@ Scenario('Chunks test + run deleting index action', ({ I, DT }) => {
     I.clickCss("#modalIframe .modal-footer button.btn-primary");
     I.switchTo("#modalIframeIframeElement");
     I.waitForVisible("#succ-msg-delete", 10);
-    I.seeTextEquals("Webové stránky boli úspešne zaradené do fronty na odstránenie indexovanie. (2)", "#succ-msg-delete");
+    I.seeTextEquals("Webové stránky boli úspešne zaradené do fronty na odstránenie indexovania. (2)", "#succ-msg-delete");
 
     I.say("Check changed stats");
     checkIndexingStatusValues(I, 1, 2, 2, 2);

@@ -21,7 +21,12 @@ function getActiveTabValue() {
 function filterFn() {
     const entityType = getActiveTabValue();
 
-    if (typeof embeddingChunksDataTable === "undefined" || typeof WJ === "undefined" || typeof $ !== "function") {
+    if (
+        entityType == null ||
+        typeof embeddingChunksDataTable === "undefined" ||
+        typeof WJ === "undefined" ||
+        typeof $ !== "function"
+    ) {
         return;
     }
 
