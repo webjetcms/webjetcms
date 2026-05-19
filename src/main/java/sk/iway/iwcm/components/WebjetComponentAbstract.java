@@ -26,6 +26,8 @@ import sk.iway.iwcm.tags.support.ResponseUtils;
  */
 public abstract class WebjetComponentAbstract implements WebjetComponentInterface {
 
+    protected static final String EMPTY_PAGE = "/apps/_common/empty";
+
     /** DEFAULT commonSettings TAB */
     @DataTableColumn(
         inputType = DataTableColumnType.CHECKBOX,
@@ -277,6 +279,16 @@ public abstract class WebjetComponentAbstract implements WebjetComponentInterfac
             fieldOptions.add(new OptionDto(label, value, original));
         }
         return fieldOptions;
+    }
+
+    /**
+     * Check if component is in editor preview mode (e.g. in page editor)
+     * @param request
+     * @return - true if in editor preview mode, false otherwise
+     */
+    public boolean isEditorPreview(HttpServletRequest request) {
+        if (request.getAttribute("inPreviewMode") != null || request.getAttribute("inlineEditorAdmin") != null) return true;
+        return false;
     }
 
     @Override

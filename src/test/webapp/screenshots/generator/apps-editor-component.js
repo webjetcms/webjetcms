@@ -271,3 +271,7 @@ Scenario('apps screenshot for editor-components.jsp apps to spring v4', ({ I, DT
 
     screenshotWebAndApp(I, Document, 77872, "/components/carousel_slider", "#amazingcarousel-container-1", tabLink1Spring, tabLink3Spring);
 });
+
+Scenario('language-redirect', ({ I, DT, DTE, Document }) => {
+    screenshotWebAndApp(I, Document, 163462, "/apps/language-redirect", ".ly-content .container", tabLinkNone, tabLink2Spring, 800, 600);
+});

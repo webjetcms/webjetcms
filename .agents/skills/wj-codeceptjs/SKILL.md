@@ -76,6 +76,8 @@ src/test/webapp/
 
 6. **Permissions testing is mandatory**: For datatable tests, always include `perms` parameter.
 
+7. **Always run tests with local URL**: Use `CODECEPT_URL='http://iwcm.interway.sk'` so tests run against local development version. Do not use `*:prod` scripts for branch verification. For the exact commands, see **Running Tests**.
+
 ## Authentication
 
 Use the pre-configured `login` injection in `Before` blocks:
@@ -96,6 +98,30 @@ Scenario('my test', ({ I }) => {
 The `login('admin')` function handles logging in as `tester` user, manages cookies, and sets default window size. It is defined in `codecept.conf.js` autoLogin plugin.
 
 ## Running Tests
+
+### IMPORTANT: Always run tests against local development URL
+
+To test your current branch changes, always run tests with:
+
+```shell
+CODECEPT_URL='http://iwcm.interway.sk'
+```
+
+If `CODECEPT_URL` is not set, tests can run against production/default target where your branch changes are not deployed yet. Avoid `*:prod` scripts when verifying branch changes.
+
+Recommended local execution patterns:
+
+```shell
+cd src/test/webapp/
+
+# Run only scenarios tagged with @current (recommended during development)
+npm run current
+
+# Run one test file against local URL
+npm run all tests/apps/test-name.js
+```
+
+Tip: add `@current` to the scenario you are actively developing, then use `npm run current` for fast iteration.
 
 ```shell
 cd src/test/webapp/
@@ -195,6 +221,7 @@ Implemented in `src/test/webapp/pages/DTE.js`:
 - `await DTE.selectOptionMulti(name, values)` - select multiple dropdown values (async)
 - `DTE.fillField(name, value)` - fill field by backend field name (uses `#DTE_Field_name` selector)
 - `DTE.appendField(name, value)` - append text to field (workaround for I.appendField issues)
+- `DTE.clickSwitch(name)` - toggle radio/switch option by input name, e.g. `DTE.clickSwitch('datum_0')`
 - `DTE.fillQuill(name, value)` - fill Quill editor field
 - `DTE.fillCkeditor(htmlCode)` - set HTML in CKEditor
 - `DTE.fillCleditor(parentSelector, value)` - fill cleditor WYSIWYG
@@ -270,6 +297,32 @@ within("div.modal-dialog", () => {
 // Or with context parameter
 I.click("Save", "div.modal-dialog");
 ```
+
+## Using Integrated Browser for Selector Discovery
+
+When creating or debugging E2E tests, use #tool:browser to inspect real page state before writing selectors.
+
+### What the AI can inspect
+
+- Open the target page in Integrated Browser.
+- Read the accessibility tree and visible UI structure.
+- Interact with elements (click, type, hover) to reveal dynamic states.
+- Inspect DOM details and verify selectors using Playwright page evaluation.
+
+### Recommended workflow
+
+1. Open the exact admin/frontend page where the test will run.
+2. Trigger the same UI state as in test (open modal, switch tab, expand accordion, etc.).
+3. Capture candidate selectors and validate uniqueness in the current state.
+4. Prefer stable selectors (id, data attributes, component wrapper context) over fragile text-only selectors.
+5. Use scoped selectors when repeated elements exist (table rows, modal forms, nested tabs).
+6. Convert validated selectors to CodeceptJS syntax (`I.click`, `I.fillField`, `locate(...)`, context parameter).
+
+### Practical notes for WebJET pages
+
+- For editor dialogs and nested iframes, verify frame context first, then resolve selectors inside that frame.
+- For DataTable pages, wait for loaders before validating selector visibility.
+- If selector is unstable across domains/languages, prefer structural CSS selector in a stable container.
 
 ## Writing a DataTable CRUD Test (baseTest)
 
@@ -584,6 +637,87 @@ Scenario("API unauthorized", ({ I }) => {
     I.seeResponseCodeIs(401);
 });
 ```
+
+## Appstore app Testing
+
+Use this pattern for inserted applications rendered in page editor (`wj_component` iframe) where parameters are stored in INCLUDE markup and verified through `Apps.assertParams()`.
+
+### How to get tested parameters from Java class
+
+Read the AppStore Java class and use backend field names as parameter keys in expected objects.
+
+Example source fields (Java):
+
+```java
+@DataTableColumn(...)
+private Boolean aktualizovane;
+
+@DataTableColumn(...)
+private Boolean datum;
+
+@DataTableColumn(...)
+private Boolean cas;
+```
+
+Expected params object in test:
+
+```javascript
+const defaultParams = {
+    aktualizovane: 'false',
+    datum: 'false',
+    cas: 'false'
+};
+```
+
+### Example scenario: inserted app parameter test
+
+```javascript
+Scenario('testovanie app - last modify', async ({ I, DTE, Apps }) => {
+    Apps.insertApp('Dátum a meniny', '#apps-app-date-title', null, false);
+    I.switchTo('.cke_dialog_ui_iframe');
+    I.waitForElement('#editorComponent', 10);
+    I.switchTo('#editorComponent');
+    DTE.selectOption('field', 'Dátum poslednej modifikácie');
+
+    //IMPORTANT: close dialog before Apps.assertParams()
+    I.switchTo();
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok');
+
+    const defaultParams = {
+        aktualizovane: 'false',
+        datum: 'false',
+        cas: 'false'
+    };
+    await Apps.assertParams(defaultParams);
+
+    Apps.openAppEditor();
+
+    const changedParams = {
+        aktualizovane: 'true',
+        datum: 'true',
+        cas: 'true'
+    };
+
+    DTE.clickSwitch('aktualizovane_0');
+    DTE.clickSwitch('datum_0');
+    DTE.clickSwitch('cas_0');
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok');
+
+    await Apps.assertParams(changedParams);
+});
+```
+
+### AppStore testing checklist
+
+1. Insert app with `Apps.insertApp(...)`.
+2. Configure at least one field in component modal (`DTE.selectOption`, `DTE.fillField`, `DTE.clickSwitch`).
+3. Confirm dialog and assert default INCLUDE parameters with `await Apps.assertParams(defaultParams)`.
+4. Re-open app editor via `Apps.openAppEditor()` and change parameters.
+5. Confirm dialog and assert changed parameters with `await Apps.assertParams(changedParams)`.
+6. Build expected parameter keys from Java app field names (`@DataTableColumn` properties), not from translated UI labels.
 
 ## Best Practices Summary
 

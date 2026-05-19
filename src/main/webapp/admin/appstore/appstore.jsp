@@ -7,6 +7,14 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.system.*,sk.iway.iwcm.users.*,sk.iway.iwcm.*,java.util.*,java.io.*,sk.iway.iwcm.i18n.Prop"
 %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"
 %><iwcm:checkLogon admin="true" perms='<%=Constants.getString("webpagesFunctionsPerms")%>'/><% request.setAttribute("closeTable", true);
+%><%!
+
+private String formatDesc(String desc) {
+	if (desc == null) return "";
+	desc = Tools.replace(desc, "\n", "<br/>");
+	return desc;
+}
+
 %><%
 	//Cache c = Cache.getInstance();
 	//c.removeObject("cloud.AppManager.appsList");
@@ -393,7 +401,7 @@ function componentClick(componentName, width, height)
 							<div class="description">
 								<%
 								if(Tools.isNotEmpty(app.getDescriptionKey()) && app.getDescriptionKey().indexOf(" ") > -1) out.print(app.getDescriptionKey());
-								else out.print(prop.getText(app.getDescriptionKey()));
+								else out.print(formatDesc(prop.getText(app.getDescriptionKey())));
 								%>
 							</div>
 						</div>
