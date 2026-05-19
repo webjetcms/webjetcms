@@ -63,6 +63,11 @@ public interface VectorStore {
     boolean initializeSchema();
 
     /**
+     * Drop vector schema table with all stored embeddings.
+     */
+    boolean dropSchema();
+
+    /**
      * Get existing embeddings for an entity, keyed by content hash.
      * Used to skip re-embedding unchanged chunks.
      */

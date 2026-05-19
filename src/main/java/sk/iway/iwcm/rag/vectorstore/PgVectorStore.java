@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.ComplexQuery;
@@ -21,6 +22,8 @@ import sk.iway.iwcm.rag.pgvector.RagJpaConfig;
 @Service
 public class PgVectorStore implements VectorStore {
 
+    private static final String DIMENSION_PLACEHOLDER = "{DIMENSION_PLACEHOLDER}";
+
     private static final String CREATE_EXTENSION_SQL = "CREATE EXTENSION IF NOT EXISTS vector";
 
     private static final String CREATE_TABLE_SQL = """
@@ -31,7 +34,7 @@ public class PgVectorStore implements VectorStore {
             chunk_index     INT NOT NULL,
             chunk_text      TEXT NOT NULL,
             content_hash    VARCHAR(64) NOT NULL,
-            embedding       vector(1536),
+            embedding       vector(%s),
             embedding_model VARCHAR(100) NOT NULL,
             dimensions      INT NOT NULL,
             language        VARCHAR(10),
@@ -41,7 +44,7 @@ public class PgVectorStore implements VectorStore {
             create_date     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             CONSTRAINT uq_rag_chunk UNIQUE (entity_type, entity_id, chunk_index, embedding_model)
         )
-        """;
+        """.formatted(DIMENSION_PLACEHOLDER);
 
     private static final String CREATE_HNSW_INDEX_SQL = """
         CREATE INDEX IF NOT EXISTS idx_rag_embedding_hnsw ON rag_embedding_chunks
@@ -82,6 +85,9 @@ public class PgVectorStore implements VectorStore {
     private static final String GET_EXISTING_HASH_EMBEDDING =
         "SELECT content_hash, embedding::text AS embedding_text FROM rag_embedding_chunks " +
         "WHERE entity_type = ? AND entity_id = ? AND embedding_model = ? AND status = '" + EmbeddingChunkStatus.COMPLETED.name() + "'";
+
+    private static final String DROP_TABLE_SQL =
+        "DROP TABLE IF EXISTS rag_embedding_chunks";
 
     @Override
     public void store(String entityType, long entityId, int chunkIndex, String chunkText,
@@ -185,7 +191,8 @@ public class PgVectorStore implements VectorStore {
         try {
             SimpleQuery sq = new SimpleQuery(dsName);
             sq.execute(CREATE_EXTENSION_SQL);
-            sq.execute(CREATE_TABLE_SQL);
+            // Importatnt note: the table creation must be done with the correct dimension count, otherwise the embedding insertions will fail with "vector has wrong number of dimensions" error
+            sq.execute( Tools.replace(CREATE_TABLE_SQL, DIMENSION_PLACEHOLDER, Constants.getInt("ragEmbeddingDimensions") + "") );
             sq.execute(CREATE_HNSW_INDEX_SQL);
             sq.execute(CREATE_ENTITY_INDEX_SQL);
             sq.execute(CREATE_DOMAIN_LANG_INDEX_SQL);
@@ -254,6 +261,25 @@ public class PgVectorStore implements VectorStore {
         } catch (Exception e) {
             Logger.error(PgVectorStore.class, "Error fetching existing embeddings for " + entityType + "/" + entityId + ": " + e.getMessage());
             return new java.util.HashMap<>();
+        }
+    }
+
+    @Override
+    public boolean dropSchema() {
+        String dsName = RagJpaConfig.getRagDataSourceName();
+        if (dsName == null) {
+            Logger.println(PgVectorStore.class, "RAG datasource not available, skipping schema drop");
+            return false;
+        }
+
+        try {
+            SimpleQuery sq = new SimpleQuery(dsName);
+            sq.execute(DROP_TABLE_SQL);
+            Logger.println(PgVectorStore.class, "RAG pgvector table dropped successfully");
+            return true;
+        } catch (Exception e) {
+            Logger.error(PgVectorStore.class, "Error dropping RAG pgvector table: " + e.getMessage());
+            return false;
         }
     }
 }
