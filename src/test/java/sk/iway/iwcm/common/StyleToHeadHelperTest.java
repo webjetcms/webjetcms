@@ -29,7 +29,7 @@ class StyleToHeadHelperTest extends BaseWebjetTest {
         Constants.clearValues();
         ConstantsV9.clearValuesWebJet9();
         // Enable the feature for testing
-        Constants.setBoolean("moveStyleToHead", true);
+        Constants.setBoolean("showDocMoveStyleToHead", true);
     }
 
     @Test
@@ -203,7 +203,7 @@ class StyleToHeadHelperTest extends BaseWebjetTest {
     @Test
     @DisplayName("Feature disabled - return unchanged content")
     void testFeatureDisabled() {
-        Constants.setBoolean("moveStyleToHead", false);
+        Constants.setBoolean("showDocMoveStyleToHead", false);
 
         StringBuilder input = new StringBuilder(
             "<style>.video { color: red; }</style><div>Content</div>"

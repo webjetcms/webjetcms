@@ -61,7 +61,7 @@ public class StyleToHeadHelper {
       * Extracts all &lt;style&gt; tags and &lt;link rel="stylesheet"&gt; tags from the given HTML code,
       * removes them from the content, and stores them in the request for later insertion into the head section.
       *
-      * If moveStyleToHead config is disabled, returns the original content unchanged.
+      * If showDocMoveStyleToHead config is disabled, returns the original content unchanged.
       *
       * @param htmlCode The HTML content to process
       * @param request The HTTP request to store collected styles
@@ -73,7 +73,7 @@ public class StyleToHeadHelper {
          }
 
          // Check if feature is enabled
-        if (Constants.getBoolean("moveStyleToHead") == false) {
+        if (Constants.getBoolean("showDocMoveStyleToHead") == false) {
             return htmlCode;
          }
 

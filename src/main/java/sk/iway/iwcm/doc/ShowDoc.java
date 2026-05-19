@@ -1700,7 +1700,7 @@ private static String combineCss(String cssStyle)
 
     /**
      * Forward request to JSP/Thymeleaf template with body processing.
-     * If moveStyleToHead is enabled, captures the response, extracts collected styles
+     * If showDocMoveStyleToHead is enabled, captures the response, extracts collected styles
      * from components, and inserts them into the head section.
      *
      * @param forward The forward path (JSP or Thymeleaf template)
@@ -1712,7 +1712,7 @@ private static String combineCss(String cssStyle)
     private void forwardWithBodyProcessing(String forward, HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        if (Constants.getBoolean("moveStyleToHead") == false) {
+        if (Constants.getBoolean("showDocMoveStyleToHead") == false) {
             // Feature disabled, use standard forward
             request.getRequestDispatcher(forward).forward(request, response);
             return;
