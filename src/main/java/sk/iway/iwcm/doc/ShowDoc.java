@@ -72,6 +72,8 @@ public class ShowDoc extends HttpServlet {
      */
     public static String ACTUAL_USER_HASH = null; //NOSONAR
 
+    private static final String MOVE_STYLE_TO_HEAD_KEY = "showDocMoveStyleToHead";
+
     /**
      * Skontroluje, ci parametre neobsahuju naznaky XSS, ak ano,
      * vrati redirect na URL bez skodlivych parametrov
@@ -303,6 +305,12 @@ private static String combineCss(String cssStyle)
     public static void setRequestData(TemplateDetails temp, HttpServletRequest request)
 	{
 		request.setAttribute("templateDetails", temp);
+
+        if (temp.getMoveStyleToHead() != null)
+        {
+            if (temp.getMoveStyleToHead().intValue() == 1) request.setAttribute(MOVE_STYLE_TO_HEAD_KEY, Boolean.TRUE);
+            else if (temp.getMoveStyleToHead().intValue() == 2) request.setAttribute(MOVE_STYLE_TO_HEAD_KEY, Boolean.FALSE);
+        }
 
 		long tempGroupId = temp.getTemplatesGroupId();
 		if (tempGroupId > 0)
@@ -1712,7 +1720,7 @@ private static String combineCss(String cssStyle)
     private void forwardWithBodyProcessing(String forward, HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        if (Constants.getBoolean("showDocMoveStyleToHead") == false) {
+        if (!isMoveStyleToHeadEnabled(request)) {
             // Feature disabled, use standard forward
             request.getRequestDispatcher(forward).forward(request, response);
             return;
@@ -1769,5 +1777,20 @@ private static String combineCss(String cssStyle)
 
         // Clear collected styles
         StyleToHeadHelper.clearCollectedStyles(request);
+    }
+
+    /**
+     * Returns true if move style to head feature is enabled for the current request, either via request attribute or global configuration.
+     * @param request The HTTP request
+     * @return true if the feature is enabled, false otherwise
+     */
+    public static boolean isMoveStyleToHeadEnabled(HttpServletRequest request) {
+        Boolean requestValue = (Boolean) request.getAttribute(MOVE_STYLE_TO_HEAD_KEY);
+
+        if (requestValue != null) {
+            return requestValue;
+        }
+
+        return Constants.getBoolean("showDocMoveStyleToHead"); //NOSONAR
     }
 }
