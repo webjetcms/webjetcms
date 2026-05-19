@@ -4,7 +4,7 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('templates @current', ({ I, DT, DTE, Document }) => {
+Scenario('templates', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/templates/temps-list/");
     DT.waitForLoader();
     Document.screenshot("/frontend/templates/templates.png");
