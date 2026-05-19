@@ -64,6 +64,7 @@ public class RagJpaConfig {
         emf.setPersistenceProvider(new WebJETPersistenceProvider());
         emf.setDataSource(DBPool.getInstance().getDataSource(dsName));
         emf.setJpaVendorAdapter(new EclipseLinkJpaVendorAdapter());
+        emf.setPersistenceUnitName(dsName);
         emf.setPackagesToScan("sk.iway.iwcm.rag.pgvector");
 
         Properties properties = new Properties();
