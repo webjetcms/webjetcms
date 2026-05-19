@@ -18,7 +18,8 @@ Create a complete AppStore application based on user input. Generate all require
 
 ## Questions to Ask
 
-Before generating code, confirm:
+Before generating code use #tool:vscode/askQuestions to confirm:
+
 - **App name** — Java class name and package (e.g., `sk.iway.basecms.weather.WeatherApp`)
 - **Purpose** — What does the app display on the page?
 - **Parameters** — What configurable fields should the editor expose? (e.g., city name, units, display style)

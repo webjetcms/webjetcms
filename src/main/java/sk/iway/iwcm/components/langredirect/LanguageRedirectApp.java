@@ -40,7 +40,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
     nameKey = "apps.langredirect.title",
     descKey = "apps.langredirect.desc",
     imagePath = "ti ti-language",
-    galleryImages = "/components/langredirect/screenshot-1.jpg",
+    galleryImages = "/apps/app-language-redirect/screenshot-1.jpg,/apps/app-language-redirect/screenshot-2.jpg,/apps/app-language-redirect/screenshot-3.jpg",
     commonSettings = false
 )
 @DataTableTabs(tabs = {
