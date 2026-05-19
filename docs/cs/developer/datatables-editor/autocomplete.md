@@ -6,7 +6,7 @@ V editoru lze snadno doplnit **"našeptávač" k textovým polím** pro uživate
 
 ## Konfigurace
 
-Autocomplete pole se aktivuje nastavením atributů editoru pomocí anotace `@DataTableColumnEditorAttr`:
+Autocomplete pole se aktivuje nastavením atributů editoru pomocí anotace ```@DataTableColumnEditorAttr```:
 
 ```java
 @DataTableColumn(
@@ -19,18 +19,19 @@ Autocomplete pole se aktivuje nastavením atributů editoru pomocí anotace `@Da
 )
 ```
 
-Podporovány jsou následující atributy, povinné je pouze `data-ac-url`:
-- `data-ac-url` - URL adresa REST služby, která vrátí pole/list `String` hodnot.
-- `data-ac-click` - jméno funkce, která se zavolá po kliknutí na možnost v autocompletu (pro nastavení dalších polí). Nastavením na hodnotu `fireEnter` je po zvolení hodnoty vyvolána událost stisknutí klávesy `Enter`.
-- `data-ac-name` - jméno URL parametru, ve kterém se do REST služby zašle napsaná hodnota (výchozí term).
-- `data-ac-min-length` - minimální počet znaků pro volání REST služby (výchozí 1).
-- `data-ac-max-rows` - maximální počet zobrazených řádků (výchozí 30).
-- `data-ac-params` - seznam selektorů polí, jejichž hodnoty se přidají do URL adresy volání REST služby, například. `#DTE_Field_templateInstallName,#DTE_Field_templatesGroupId`.
-- `data-ac-select` - při nastavení na `true` se autocomplete chová podobně jako výběrové pole - po kliknutí myší do vstupního pole jsou načteny a zobrazeny všechny možnosti.
-- `data-ac-collision` - umístění načtených možností vůči vstupnímu poli. Ve výchozím nastavení `flipfit` pro automatické umístění, pro možnost `select` je přednastaveno na `none` pro striktní umístění pod vstupní pole.
-- `data-ac-render-item-fn` - název funkce, která specificky vygeneruje prvek seznamu dat
+Podporovány jsou následující atributy, povinné je pouze ```data-ac-url```:
 
-Příklad REST služby vracející údaje je v [ConfigurationController.getAutocomplete](../../../../src/main/java/sk/iway/iwcm/components/configuration/ConfigurationController.java), implementace je jednoduchá - na základě zadaného `term` parametru vrátí seznam `List<String>` vyhovujících záznamů:
+- ```data-ac-url``` - ​​URL adresa REST služby, která vrátí pole/dopis ```String``` hodnot.
+- ```data-ac-click``` - ​​jméno funkce, která se zavolá po kliknutí na možnost v autocompletu (pro nastavení dalších polí). Nastavením na hodnotu ```fireEnter``` je po zvolení hodnoty vyvolána událost stisknutí klávesy ```Enter```.
+- ```data-ac-name``` - ​​jméno URL parametru, ve kterém se do REST služby zašle napsaná hodnota (výchozí term).
+- ```data-ac-min-length``` - ​​minimální počet znaků pro volání REST služby (výchozí 1).
+- ```data-ac-max-rows``` - ​​maximální počet zobrazených řádků (výchozí 30).
+- `data-ac-params` - ​​seznam selektorů polí, jejichž hodnoty se přidají do URL adresy volání REST služby, například. `#DTE_Field_templateInstallName,#DTE_Field_templatesGroupId`.
+- ```data-ac-select``` - ​​při nastavení na ```true``` se autocomplete chová podobně jako výběrové pole - po kliknutí myší do vstupního pole jsou načteny a zobrazeny všechny možnosti.
+- ```data-ac-collision``` - ​​umístění načtených možností vůči vstupnímu poli. Ve výchozím nastavení ```flipfit``` pro automatické umístění, pro možnost ```select``` je přednastaveno na ```none``` pro striktní umístění pod vstupní pole.
+- ```data-ac-render-item-fn``` - ​​název funkce, která specificky vygeneruje prvek seznamu dat
+
+Příklad REST služby vracející údaje je v [ConfigurationController.getAutocomplete](../../../../src/main/java/sk/iway/iwcm/components/configuration/ConfigurationController.java), implementace je jednoduchá - na základě zadaného ```term``` parametru vrátí seznam @@CODE_
 
 ```java
 @GetMapping("/autocomplete")
@@ -42,11 +43,11 @@ public List<String> getAutocomplete(@RequestParam String term) {
 }
 ```
 
-Jelikož na backendu se typicky používá LIKE vyhledávání je možné zadat do vyhledávání znak `%` pro zobrazení všech výsledků. To je ale pro uživatele netypické, proto při zadání mezery nebo znaku `*` se do vyhledávání hodnota nahradí za znak `%` pro zobrazení všech záznamů.
+Jelikož na backendu se typicky používá LIKE vyhledávání je možné zadat do vyhledávání znak ```%``` pro zobrazení všech výsledků. To je ale pro uživatele netypické, proto při zadání mezery nebo znaku ```*``` se do vyhledávání hodnota nahradí za znak ```%``` pro zobrazení všech záznamů.
 
 ## Použití mimo datatabulky
 
-`Autocompleter` lze využít i mimo datatabulky jednoduše jednoduchým nastavením `data-ac` atributů a CSS třídy `autocomplete`. Inicializace je automaticky aktivována v [app-init.js](../../../../src/main/webapp/admin/v9/src/js/app-init.js) na všechny `input` elementy s CSS třídou `autocomplete`. Příklad:
+```Autocompleter``` je možné využiť aj mimo datatabuľky jednoducho jednoduchým nastavením ```data-ac``` atribútov a CSS triedy ```autocomplete```. Inicializácia je automaticky aktivovaná v [app-init.js](../../../../src/main/webapp/admin/v9/src/js/app-init.js) na všetky ```input``` elementy s CSS triedou ```autocomplete```. Príklad:
 
 ```html
 <div id="docIdInputWrapper" class="col-auto col-pk-input">
@@ -59,7 +60,7 @@ Jelikož na backendu se typicky používá LIKE vyhledávání je možné zadat 
 
 Autocomplete používá [jQuery-ui-autocomplete](https://api.jqueryui.com/autocomplete/) funkce. Interně je zapouzdřen do JavaScript třídy [AutoCompleter](../../../../src/main/webapp/admin/v9/src/js/autocompleter.js). Ta je upravena z původní verze ve WebJET 8, zpětně by měla být kompatibilní (lze použít i URL adresy původních autocomplete služeb ve WebJET 8).
 
-Doplněna je funkce `autobind()`, která převezme nastavení z data atributů zadaného input elementu. Inicializace autocomplete je implementována v index.js v kódu:
+Doplněna je funkce ```autobind()```, která převezme nastavení z data atributů zadaného input elementu. Inicializace autocomplete je implementována v index.js v kódu:
 
 ```javascript
 //nastav autocomplete
@@ -69,16 +70,16 @@ $('#'+DATA.id+'_modal input.form-control[data-ac-url]').each(function() {
 });
 ```
 
-přičemž jak je vidět `div.DTE_Field` elementu se také nastaví CSS třída `dt-autocomplete` pro možnost budoucího stylování elementu.
+přičemž jak vidno ```div.DTE_Field``` elementu se také nastaví CSS třída ```dt-autocomplete``` pro možnost budoucího stylování elementu.
 
-Funkce nastavena přes `click` parametr se jmenuje se zpožděním 100ms, aby se nejprve nastavila hodnota v poli, kterou je následně možné získat a použít.
+Funkce nastavená přes ```click``` parametr se jmenuje se zpožděním 100ms, aby se nejprve nastavila hodnota v poli, kterou je následně možné získat a použít.
 
 ## Speciální generování prvků seznamu
 
-Pomocí parametru `data-ac-render-item-fn` lze nastavit název funkce, která specificky vygeneruje prvek do seznamu dat. Aby to fungovalo musí být splněno :
-- vygenerovaný prvek musí být `li` element (to co je v něm je už na vás)
-- tento vygenerovaný element musí být vložen do listu `ul`
-- zadaná funkce v `data-ac-render-item-fn` musí být definována pomocí `window` a musí mít vstupní parametry `ul` a `item`
+Pomocí parametru ```data-ac-render-item-fn``` lze nastavit název funkce, která specificky vygeneruje prvek do seznamu dat. Aby to fungovalo musí být splněno :
+- vygenerovaný prvek musí být ```li``` element (to co je v něm je už na vás)
+- tento vygenerovaný element musí být vložen do listu ```ul```
+- zadaná funkce v ```data-ac-render-item-fn``` musí být definována pomocí ```window``` a musí mít vstupní parametry ```ul``` a ```item```
 
 Příklad vlastní funkce
 
@@ -106,4 +107,4 @@ window.disableDeletedEnum = function(ul, item) {
 }
 ```
 
-V tomto příkladu jsme při splnění podmínky přidali elementu třídu `disabled`. Autocomplete jsme nastavili tak, že data (prvky) označená třídou `disabled` se barevně zvýrazní a nelze je zvolit.
+V tomto příkladu jsme při splnění podmínky přidali elementu třídu ```disabled```. Autocomplete jsme nastavili tak, že data (prvky) označená třídou ```disabled``` se barevně zvýrazní a nelze je zvolit.

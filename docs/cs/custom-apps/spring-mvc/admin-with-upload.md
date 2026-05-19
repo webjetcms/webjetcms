@@ -8,14 +8,14 @@ Ukázková Spring MVC aplikace v administraci s nahráním souboru na backend.
 
 V administraci se zobrazení stránky realizuje pomocí [AdminThymeleafController](../../developer/frameworks/README.md). Formulář/data pro MVC aplikaci jsou do modelu vloženy pomocí poslechu [události pro zobrazení stránky v administraci](../../developer/frameworks/thymeleaf.md#vložení-vlastních-objektů-do-modelu).
 
-Zpracování nahraného souboru je komplikovanější, pokud potřebujete využít i soubor doporučujeme rozšířit třídu [AbstractUploadListener](../../../javadoc/sk/iway/iwcm/admin/AbstractUploadListener.html), která zjednodušuje zpracování nahraného souboru.
+Zpracování nahraného souboru je komplikovanější, pokud potřebujete využít i soubor doporučujeme rozšířit třídu [AbstractUploadListener](../../../javadoc/cs/iway/iwcm/admin/AbstractUploadListener.html), která zjednodušuje zpracování nahraného souboru.
 
-Třída `AbstractUploadListener` zajistí zpracování `multipart requestu` v konstruktoru voláním `super.processForm(event);` a nastavení atributů zadaného beanu (formuláře). Volání `getForm()` získá objekt formuláře a volání `getBindingResult()` získá případné chybové zprávy - ověření povinných polí atp.
+Třída ```AbstractUploadListener``` zajistí zpracování ```multipart requestu``` v konstruktoru voláním ```super.processForm(event);``` a nastavení atributů zadaného beanu (formuláře). Volání ```getForm()``` získá objekt formuláře a volání ```getBindingResult()``` získá případné chybové zprávy - ověření povinných polí atp.
 
 ```java
 package sk.iway.basecms.contact.upload;
 
-import javax.validation.Validator;
+import jakarta.validation.Validator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,9 +68,9 @@ public class UploadExampleListener extends AbstractUploadListener<Form> {
 }
 ```
 
-Třída `Form` je jen jednoduchý bean, nahrávaný soubor je typu `MultipartFile`. Pro ukázku obsahuje pole `p1` a `p2` is ukázkou validace povinného pole a **ukázky validace délky 10 až 20 znaků**.
+Třída ```Form``` je jen jednoduchý bean, nahrávaný soubor je typu ```MultipartFile```. Pro ukázku obsahuje pole ```p1``` a ```p2``` is ukázkou validace povinného pole a **ukázky validace délky 10 až 20 znaků**.
 
-Pro validaci jsou podporovány standardní anotace pro validace polí pomocí [javax.validation.Validator](https://www.baeldung.com/javax-validation).
+Pro validaci jsou podporovány standardní anotace pro validace polí pomocí [jakarta.validation.Validator](https://www.baeldung.com/javax-validation).
 
 ```java
 package sk.iway.basecms.contact.upload;
@@ -80,9 +80,9 @@ import lombok.Setter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Component
 @Getter
@@ -111,9 +111,9 @@ form.document.not_null=Dokument nemôže byť prázdny
 
 HTML kód stránky obsahuje standardní `Spring MVC` formulář.
 
-Ukázka obsahuje zobrazení jména nahraného souboru, který se získá z atributu `importedFileName`, který se nastaví na backendu po úspěšném nahrání souboru.
+Ukázka obsahuje zobrazení jména nahraného souboru, který se získá z atributu ```importedFileName```, který se nastaví na backendu po úspěšném nahrání souboru.
 
-Chybové zprávy jsou získány z objektu `fields.errors` a pokud existují jsou zobrazeny ve formuláři.
+Chybové zprávy jsou získány z objektu ```fields.errors``` a pokud existují jsou zobrazeny ve formuláři.
 
 ```html
 <script type="text/javascript">
@@ -170,4 +170,4 @@ window.domReady.add(function () {
 
 ## Poznámky k implementaci
 
-Konfigurace pro nahrávání souboru je nastavena v `V9SpringConfig.multipartResolver()` a obsloužená přes `ThymeleafAdminController.appHandlerPost()`, který zpracovává `consumes = { MediaType.MULTIPART_FORM_DATA_VALUE }`.
+Konfigurace pro nahrávání souboru je nastavena v ```V9SpringConfig.multipartResolver()``` a obsloužená přes ```ThymeleafAdminController.appHandlerPost()```, který zpracovává ```consumes = { MediaType.MULTIPART_FORM_DATA_VALUE }```.

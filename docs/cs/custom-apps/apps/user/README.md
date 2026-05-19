@@ -2,16 +2,16 @@
 
 ## Registrační formulář
 
-Máte-li ve stránce [zaheslovanou zónu](../../../redactor/zaheslovana-zona/README.md) s registračním formulářem můžete při registraci vyvolat váš vlastní kód. upravit/doplnit údaje uživatele, nebo nastavit skupiny do kterých patří na základě dodatečných informací (např. email adresy).
+Pokud máte ve stránce [zaheslovanou zónu](../../../redactor/zaheslovaná-zona/README.md) s registračním formulářem můžete při registraci vyvolat váš vlastní kód a např. upravit/doplnit údaje uživatele, nebo nastavit skupiny do kterých patří na základě dodatečných informací (např. email adresy).
 
-Do `pageParams` registrace přidejte parametr `afterSaveInterceptor` - `!INCLUDE(/components/user/newuser.jsp, ..., afterSaveInterceptor=sk.iway...MojaTrieda`, přičemž tato třída implementuje `sk.iway.iwcm.stripes.AfterRegUserSaveInterceptor`. V metodě `public boolean intercept(UserDetails user, HttpServletRequest request)` můžete modifikovat `user` objekt. Když metoda vrátí `true`, tak se následně změny zapíší i do databáze. Jméno třídy lze zadat i přes konf. proměnnou `stripesUserAfterSaveClass` pokud vám nevyhovuje zadání do `pageParams` objektu.
+Do `pageParams` registrace přidejte parametr `afterSaveInterceptor` - `!INCLUDE(/components/user/newuser.jsp, ..., afterSaveInterceptor=sk.iway...MojaTrieda`, přičemž tato třída implementuje `sk.iway.iwcm.stripes.AfterRegUserSaveInterceptor`. V metodě `public boolean intercept(UserDetails user, HttpServletRequest request)` můžete modifikovat `user` objekt. Když metoda vrátí `true`, tak se následně změny zapíší i do databáze. Jméno třídy lze zadat i přes konf. proměnnou `stripesUserAfterSaveClass` nevyhovuje-li vám zadání do `pageParams` objektu.
 
 Příklad třídy:
 
 ```java
 package sk.iway.installname.user;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.stripes.AfterRegUserSaveInterceptor;
 import sk.iway.iwcm.users.UserDetails;

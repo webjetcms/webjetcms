@@ -5,8 +5,9 @@ Vloží do stránky aplikaci, která bude zobrazovat odkazy na příbuzné strá
 ## Nastavení aplikace
 
 V této části lze nastavit:
+
 - Adresář - kořenová složka, ve které se hledají příbuzné stránky
-- Prohledat také podadresáře
+- Prohledat i podadresáře
 - Nadpis
   - Název skupiny - název složky aktuální stránky
   - Název rodič. skupiny - název rodičovské složky aktuální stránky

@@ -11,6 +11,7 @@ Jaké informace se vloží na stránku se udává výběrem **Vložit pole** z k
 **Registrační formulář** je přednastavená hodnota pro aplikaci. Nabízí široké možnosti nastavení údajů pro registraci uživatele. Pro standardní nastavení můžete ponechat hodnoty tak jak jsou přednastaveny.
 
 Možnosti nastavení:
+
 - **Uživatelské skupiny**
 - **Skupiny uživatelů**, skupiny, do kterých se může uživatel přihlásit nebo z nich odhlásit během registrace
 - **E-mailová adresa musí být unikátní**
@@ -35,13 +36,14 @@ V kartě Pole si můžete zvolit pole, která se zobrazí v registračním formu
 
 V kartě Povinné si můžete zvolit pole, která se při odeslání formuláře budou vyžadovat.
 
-!>**Upozornění:** pokud nějaké pole nastavíte jako povinné, aplikace nekontroluje, zda bylo také nastaveno jako viditelné. Na tohle si musíte dát pozor.
+!>**Upozornění:** pokud nějaké pole nastavíte jako povinné, aplikace nekontroluje, zda bylo i nastaveno jako viditelné. Na tohle si musíte dát pozor.
 
 ![](editor-required.png)
 
 ### Přihlašovací formulář
 
 Pro přihlašovací formulář můžete nastavit pouze jediný parametr a to:
+
 - **Uživatelské skupiny**, v případě nezvolení žádné možnosti se skupiny vygenerují podle stránky, na kterou se uživatel, pomocí sociálních sítí, pokouší přihlásit
 
 ![](editor-login_form.png)

@@ -1,6 +1,6 @@
 # Rozšíření Spring DATA repozitářů WebJET CMS
 
-V některých případech budete ve vašem projektu potřebovat rozšířit možnosti `Spring DATA` repozitářů stávajících entit. Například při zobrazení speciálních novinek, kde potřebujete zobrazit seznam `DocDetails` entit.
+V některých případech budete ve vašem projektu potřebovat rozšířit možnosti `Spring DATA` repozitářů stávajících entit. Například při zobrazení speciálních novinek, kde potřebujete zobrazit seznam ```DocDetails``` entit.
 
 Máte několik možností realizace. Toto je ukázkový `REST controller`, který ukazuje použití všech níže uvedených příkladů:
 
@@ -73,15 +73,15 @@ public class NewsController {
 }
 ```
 
-V `SpringConfig` a `JpaDBConfig` nezapomeňte přidat package `sk.iway.web.news`, nebo příklady vytvořte ve vámi nakonfigurovaném/používaném package.
+V ```SpringConfig``` a ```JpaDBConfig``` nezapomeňte přidat package ```sk.iway.web.news```, nebo příklady vytvořte ve vámi nakonfigurovaném/používaném package.
 
 ## Nový repozitář v originálním package
 
-Nejjednodušší řešení bez dodatečné konfigurace je vytvořit nový `Spring DATA` repozitář v package stejném jako je standardní WebJET repozitář (např. `sk.iway.iwcm.doc`). To zajistí jeho automatickou inicializaci při startu WebJETu.
+Nejjednodušší řešení bez dodatečné konfigurace je vytvořit nový `Spring DATA` repozitář v package stejném jako je standardní WebJET repozitář (např. ```sk.iway.iwcm.doc```). To zajistí jeho automatickou inicializaci při startu WebJETu.
 
-!>**Upozornění:** tento package nesmíte přidat do vašeho `JpaDBConfig`, protože jedna entita (třída) nemůže být ve více JPA konfiguracích najednou.
+!>**Upozornění:** tento package nesmíte přidat do vašeho ```JpaDBConfig```, protože jedna entita (třída) nemůže být ve více JPA konfiguracích najednou.
 
-V příkladu je vytvořena metoda `findByTitleLike` pro vyhledání seznamu web stránek podle názvu. Používají se původní `DocDetails` entity.
+V příkladu je vytvořena metoda ```findByTitleLike``` pro vyhledání seznamu web stránek podle názvu. Používají se původní ```DocDetails``` entity.
 
 ```java
 package sk.iway.iwcm.doc;
@@ -100,9 +100,9 @@ public interface OriginalPackageRepository extends JpaRepository<DocDetails, Lon
 }
 ```
 
-## Použití `Specification`
+## Použití ```Specification```
 
-Většina repozitářů rozšiřuje `JpaSpecificationExecutor` a lze tedy dynamicky vytvořit podmínku pro získání dat. V výše uvedeném `NewsController` je použit standardní (bez vaší změny) repozitář `DocDetailsRepository`. S využitím `criteriaBuilder` lze sestavit specifické podmínky pro výběr dat z databáze, příklad je v metodě `getByTitleOrExternalLink`.
+Většina repozitářů rozšiřuje ```JpaSpecificationExecutor``` a lze tedy dynamicky vytvořit podmínku pro získání dat. V výše uvedeném ```NewsController``` je použit standardní (bez vaší změny) repozitář ```DocDetailsRepository```. S využitím ```criteriaBuilder``` lze sestavit specifické podmínky pro výběr dat z databáze, příklad je v metodě ```getByTitleOrExternalLink```.
 
 ```java
 public class NewsController {
@@ -128,7 +128,7 @@ public class NewsController {
 }
 ```
 
-V případě jednoduché podmínky můžete použít i přímý zápis `Specification` při volání `findAll`:
+V případě jednoduché podmínky můžete použít i přímý zápis ```Specification``` při volání ```findAll```:
 
 ```java
     @GetMapping("/unmodified-repository-direct")
@@ -139,19 +139,19 @@ V případě jednoduché podmínky můžete použít i přímý zápis `Specific
 
 ## Vytvoření vlastního repozitáře a entity
 
-Pro některé případy je vhodné vytvořit vlastní repozitář a vlastní entitu (nelze použít původní entitu z WebJET CMS z důvodu rozdílného `TransactionManager`). To je vhodné i pro případ, kdy nepotřebujete přenášet všechny údaje a tedy částečně toto řešení nahrazuje DTO objekty.
+Pro některé případy je vhodné vytvořit vlastní repozitář a vlastní entitu (nelze použít původní entitu z WebJET CMS z důvodu rozdílného ```TransactionManager```). To je vhodné i pro případ, kdy nepotřebujete přenášet všechny údaje a tedy částečně toto řešení nahrazuje DTO objekty.
 
-Jako první vytvořte entitu, můžete použít podobný kód jako v původní entitě, v našem příkladu přenášíme pouze sloupec `title`. Technicky není problém v tom, že pro tabulku `documents` již existuje jiná entita:
+Jako první vytvořte entitu, můžete použít podobný kód jako v původní entitě, v našem příkladu přenášíme pouze sloupec ```title```. Technicky není problém v tom, že pro tabulku ```documents``` již existuje jiná entita:
 
 ```java
 package sk.iway.web.news;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import lombok.Getter;
 import lombok.Setter;

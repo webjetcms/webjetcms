@@ -3,10 +3,12 @@
 Sekce **Skupiny uživatelů** zobrazuje seznam skupin, do kterých můžete kategorizovat návštěvníky/uživatele/příjemce hromadného emailu.
 
 Systémově rozlišujeme dva typy skupin:
+
 - **Přístupů k zaheslované sekci web sídla** - skupina pro přístupová práva k neveřejným sekcím web sídla
 - **Přihlášení k hromadnému e-mailu** - skupina pro distribuční seznam pro posílání hromadných emailů
 
 Tabulka nabízí rychlé akce nad skupinami pomocí tlačítek:
+
 - ![](user-groups-addGroupToAll.png ":no-zoom"), **Přidat zvolenou skupinu všem uživatelům** - zvolené skupiny budou přidány všem stávajícím uživatelům.
 - ![](user-groups-removeGroupFromAll.png ":no-zoom"), **Odebrat zvolenou skupinu všem uživatelům** - zvolené skupiny budou odebrány všem stávajícím uživatelům.
 - ![](user-groups-removeUsersFromGroup.png ":no-zoom"), **Smazat všechny uživatele zvolené skupiny** - uživatelé kteří mají alespoň jednu ze zvolené skupiny budou vymazáni.
@@ -16,6 +18,7 @@ Tabulka nabízí rychlé akce nad skupinami pomocí tlačítek:
 ## Editor
 
 V dialogovém okně editoru pro definování skupiny máte následující možnosti:
+
 - **Název** - jednoznačný název skupiny uživatelů.
 - **Typ skupiny** - typ skupiny, buď přístupová práva pro skupinu pro kontrolu práv, nebo skupinu pro hromadný email.
 - **Poznámka** - libovolná poznámka.

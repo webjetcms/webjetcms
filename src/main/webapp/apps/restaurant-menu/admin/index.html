@@ -214,11 +214,11 @@
 
         <div class="col-auto">
             <div class="btn-group status-info">
-                <button class="btn btn-sm btn-outline-secondary day-back" onclick="changeCurrentDay('remove')">
+                <button class="btn btn-sm btn-outline-secondary day-back" onclick="changeCurrentDay('remove')" data-toggle="tooltip" data-th-title="#{datatables.button.prev.js}">
                     <i class="ti ti-arrow-left"></i>
                 </button>
-                <input type="text" id="dateStatus" class="form-control form-control-sm filter-input disabled" disabled/>
-                <button class="btn btn-sm btn-outline-secondary day-forward" onclick="changeCurrentDay('add')">
+                <input type="text" id="dateStatus" class="form-control form-control-sm filter-input disabled" disabled data-th-aria-label="#{stat.time}"/>
+                <button class="btn btn-sm btn-outline-secondary day-forward" onclick="changeCurrentDay('add')" data-toggle="tooltip" data-th-title="#{datatables.button.next.js}">
                     <i class="ti ti-arrow-right"></i>
                 </button>
             </div>

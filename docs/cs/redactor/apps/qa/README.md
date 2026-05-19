@@ -11,7 +11,7 @@ Aplikace Otázky a odpovědi, umožňuje do stránky vložit časté dotazy a od
 - Počet otázek na stránce (zobrazí se pokud je zvoleno: Otázky s odpověďmi)
 - Email pro zasílání otázek (zobrazí se pokud je zvoleno: Formulář pro zadání otázky)
 
-Otázky jsou řazeny do skupin, kterou zadáváte při vkládání aplikace. Pokud potřebujete udělat ještě podskupiny, můžete modifikovat soubor `/components/qa/qa-ask.jsp`, kde nahradíte skryté pole `categoryName` za výběrové menu, pomocí kterého budou návštěvníci moci vybrat podskupinu.
+Otázky jsou řazeny do skupin, kterou zadáváte při vkládání aplikace. Pokud potřebujete provést ještě podskupiny, můžete modifikovat soubor ```/components/qa/qa-ask.jsp```, kde nahradíte skryté pole ```categoryName``` za výběrové menu, pomocí kterého budou návštěvníci moci vybrat podskupinu.
 
 ![](webform.png)
 
@@ -21,10 +21,10 @@ Přehled všech příspěvků do sekce Otázky a odpovědi si můžete prohlédn
 
 ![](admin.png)
 
-Klepnutím na dotaz, se vám zobrazí formulář s parametry otázky a odpovědi. Otázku s odpovědí lze kromě zobrazení na stránce i odeslat emailem na adresu zadavatele dotazy. Pokud zadavatel neoznačil možnost **Souhlasím se zveřejněním otázky na webové stránce**, odpověď lze pouze zaslat na jeho email (možnost Zobrazovat na web stránce nechte nezvolenou). Provedené změny potvrdíte kliknutím na Uložit.
+Klepnutím na dotaz, se vám zobrazí formulář s parametry otázky a odpovědi. Otázku s odpovědí lze kromě zobrazení na stránce i odeslat emailem na adresu zadavatele dotazy. Pokud zadavatel neoznačil možnost **Souhlasím se zveřejněním otázky na web stránce**, odpověď lze pouze zaslat na jeho email (možnost Zobrazovat na web stránce nechte nezvolenou). Provedené změny potvrdíte kliknutím na Uložit.
 
 ![](admin-edit.png)
 
-V případě, že zadáte "Odpověď do e-mailu" a zvolíte možnost **Zobrazovat na web stránce**, tak se text z "Odpověď do e-mailu" automaticky zkopíruje do "Odpověď na stránku".
+V případě, že zadáte "Odpověď do e-mailu" a zvolíte možnost **Zobrazovat na webové stránce**, tak se text z "Odpověď do e-mailu" automaticky zkopíruje do "Odpověď na stránku".
 
 Aplikace podporuje nastavení [volitelných polí](../../../frontend/webpages/customfields/README.md).

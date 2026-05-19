@@ -42,6 +42,7 @@ public class FormsEntityBasic {
         tab = "basic",
         renderFormatLinkTemplate = "javascript:openFormHtml('{{id}}');",
         renderFormatPrefix = "<i class=\"ti ti-eye\"></i>",
+        renderFormatAriaLabel = "button.show",
         orderable = false,
         hiddenEditor = true
     )

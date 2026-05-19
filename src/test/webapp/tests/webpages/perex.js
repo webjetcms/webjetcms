@@ -60,7 +60,7 @@ Scenario('verify only current domain selection for available groups', ({I, DT, D
     I.waitForElement("#jsTree");
     I.waitForText("Jet portal 4", 5, "#jsTree a.jstree-anchor");
     I.dontSee("mirroring.tau27.iway.sk", "#jsTree a.jstree-anchor");
-    I.click("a.close-custom-modal");
+    I.click("button.close-custom-modal");
     DTE.cancel();
 });
 
@@ -478,7 +478,7 @@ Scenario("BUG: duplicate available groups in perex group on save", async ({ I, D
     I.click("button.btn-vue-jstree-add");
     I.waitForElement("#jsTree");
     I.waitForText("Jet portal 4", 5, "#jsTree a.jstree-anchor");
-    I.click("a.close-custom-modal");
+    I.click("button.close-custom-modal");
     DTE.save();
 
     //verify no duplicates

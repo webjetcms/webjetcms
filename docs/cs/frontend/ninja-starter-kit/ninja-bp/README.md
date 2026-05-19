@@ -65,7 +65,7 @@ HTML kód je rozdělen do více souborů pro možnost vložení společného kó
 </html>
 ```
 
-#### **sidebar.jsp**
+#### ** sidebar.jsp**
 
 ```html
 <iwcm:write name="doc_right_menu"/>
@@ -112,10 +112,10 @@ lang="${ninja.temp.lngIso}" data-browser-name="${ninja.userAgent.browserName}" d
 <meta property="og:image" content="${ninja.page.urlDomain}${ninja.page.seoImage}" />
 <meta property="og:site_name" content="${ninja.temp.group.siteName}" />
 <meta property="og:type" content="website" />
-<meta property="og:locale" content="${ninja.temp.lngIso}" />
+<meta property="og:locale" content="${ninja.temp.lngIsoUnderscore}" />
 
 <%--<link rel="alternate" hreflang="" href="" />--%>
-<link rel="canonical" href="${ninja.page.url}" />
+<link rel="canonical" href="${ninja.page.canonical}" />
 
 <%-- <% if (ninja.amp.enabled) { %> --%>
 <c:if test="${requestScope.doc_temp_name == 'Blog template'}">

@@ -10,5 +10,6 @@ The behavior of website URLs can be set with the following configuration variabl
 
 - `virtualPathLastSlash` defaults to `true` - sets the last `/` option for **main page** URLs. When set to `true`, the Products page URL will be created as `/products/`, when set to `false`, it will be created as `/products`.
 - `editorPageExtension` defaults to `.html` - sets the extension for **other pages in the folder**. When set to `.html`, the URL of the page `iPhone` will be created as `/products/iphone.html`, when set to `/` it will be created as `/products/iphone/`.
+- `editorTargetBlankFunction` default `return openTargetBlank(this, event)` - name of JavaScript function to be used instead of target=\"_blank\" and target='_blank' as onclick.
 
 After changing the values, it is necessary to restart the application server.

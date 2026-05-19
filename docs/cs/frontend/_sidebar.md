@@ -1,10 +1,10 @@
- <div class="sidebar-section">Web designér</div>
+<div class="sidebar-section">Web designér</div>
 
-- [:point\_left: Zpět na Úvod](/?back)
+- [:point_left: Zpět na Úvod](/?back)
 
 - Nastavení
   - [Šablony](/frontend/setup/README.md)
-  - [Všeobecná nastavení](/frontend/setup/config.md)
+  - [Obecná nastavení](/frontend/setup/config.md)
   - [Volitelná pole](/frontend/webpages/customfields/README.md)
   - [FontAwesome](/frontend/webpages/fontawesome/README.md)
   - [CKEditor](/frontend/setup/ckeditor.md)
@@ -51,3 +51,5 @@
 - Generování obrázků
   - [Thumb servlet](/frontend/thumb-servlet/README.md)
   - [Bod zájmu](/frontend/thumb-servlet/interest-point.md)
+
+

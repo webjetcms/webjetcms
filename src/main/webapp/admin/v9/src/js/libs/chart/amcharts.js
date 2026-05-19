@@ -67,6 +67,8 @@ export class WebjetTheme extends am5.Theme {
       paddingBottom: 6,
       paddingLeft: 7,
       paddingRight: 7,
+      width: 20,
+      height: 20,
     });
     this.rule("RoundedRectangle", ["background", "resize", "button"]).setAll({
       cornerRadiusBL: 6,

@@ -187,6 +187,17 @@ module.exports = {
   },
 
   /**
+   * Force editorType mode
+   * @param {*} mode - pageBuilder, html, standard
+   */
+  setEditorMode(mode) {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
+    I.executeScript(function (mode) {
+        window.WJ.setAdminSetting("editorTypeForced", mode);
+    }, mode);
+  },
+
+  /**
    * Close toastr notification
    */
   notifyClose() {

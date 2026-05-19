@@ -35,13 +35,13 @@ Umožňuje filtrování podle odhlasované odpovědi ankety. Umíte si tak odfil
 
 ## Tabulka
 
-Tabulka obsahuje všechny odfiltrované záznamy o uživatelských hlasováních. Tato data lze v tabulce dále filtrovat (seřadit) podle potřeby, **ale** tyto akce nad tabulkou neovlivňují data použitá v grafech.
+Tabulka obsahuje všechny odfiltrované záznamy o uživatelských hlasováních. Tato data lze v tabulce dále filtrovat (seřadit) podle potřeby, ale tyto akce nad tabulkou neovlivňují data použitá v grafech.
 
 ![](inquiry-stat_table.png)
 
 ## Graf Zastoupení odpovědí
 
-Graf **Zastoupení odpovědí** poskytuje rychlý přehled o tom, pro které odpovědi uživatelé nejvíce hlasovali ve zvoleném časovém rozsahu.
+Graf **Zastoupení odpovědí** poskytuje rychlý přehled o tom, za které odpovědi uživatelé nejvíce hlasovali ve zvoleném časovém rozsahu.
 
 ![](inquiry-stat_pie_chart.png)
 

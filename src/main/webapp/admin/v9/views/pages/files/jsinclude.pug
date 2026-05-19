@@ -318,6 +318,9 @@ script.
 
         $(".elfinder-button").has(".elfinder-button-icon-wjeditswitch").addClass("div-warning");
 
+        //Make the drop zone focusable for accessibility
+        $(".elfinder-cwd-wrapper").attr("tabindex", "0").attr("role", "region").attr("aria-label", "[[\#{datatables.upload.uploadFile.js}]]");
+
         //Set height of elfinder
         setElfinderHeight();
 

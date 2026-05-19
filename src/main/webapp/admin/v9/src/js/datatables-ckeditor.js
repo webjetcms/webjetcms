@@ -550,7 +550,7 @@ export class DatatablesCkEditor {
 						{
 							type: 'html',
 							id: 'wjImageIframe',
-							html: '<div><iframe id="wjImageIframeElement" style="width: 800px; height: 463px;" src="/admin/v9/files/wj_image/" border="0"/></div>'
+							html: '<div><iframe id="wjImageIframeElement" title="' + that.translate('images') + '" style="width: 800px; height: 463px;" src="/admin/v9/files/wj_image/" border="0"/></div>'
 						}
 						]
 					}, 'info');
@@ -1812,6 +1812,15 @@ export class DatatablesCkEditor {
 				{
 					//console.log("instanceReady");
 					//FCKeditor_OnComplete();
+
+					// Set title on the wysiwyg iframe for accessibility (a11y)
+					try {
+						var frame = evt.editor.window.getFrame();
+						if (frame && !frame.getAttribute('title')) {
+							frame.setAttribute('title', evt.editor.lang.editor);
+						}
+					} catch(e) {}
+
 					if (options.hasOwnProperty("onReady")) {
 						//console.log("instanceReady callback");
 						options.onReady(that.ckEditorInstance);

@@ -7,10 +7,11 @@ Sekce obsahuje přehled provázaných stránek pod společným synchronizačním
 ## Struktura tabulky
 
 Abychom uměli v tabulce číst, musíme pochopit strukturu tabulky, kde:
-- **Řádky**, každý řádek obsahují všechny stránky (přesnější cesty ke stránkám), které jsou navzájem provázány stejnou hodnotou parametru `syncId` (minimálně jedna stránka)
+
+- **Řádky**, každý řádek obsahují všechny stránky (přesněji cesty ke stránkám), které jsou navzájem provázány stejnou hodnotou parametru `syncId` (minimálně jedna stránka)
 - **Sloupce** se dělí následovně:
   - **SyncID**, hodnota synchronizačního identifikátoru, kterým jsou stránky v řádku provázány
-  - **Stav**, ikony, které upozorňují na speciální stavy (více v sekci [stav provázání](./docs#stav-provázání))
+  - **Stav**, ikony, které upozorňují na speciální stavy (více v sekci [stav provázání](./docs#stav-převázání))
   - **cs, en, ...**, jsou automaticky generovány sloupce, kde každý sloupec obsahuje stránky pro danou jazykovou mutaci. Tento jazyk se získá z rodičovské složky stránky nebo její šablony. Počet sloupců v tabulce se dynamicky mění a závisí na tom, v kolika jazykových mutacích jsou stránky provázány. Pokud hodnota ve sloupci chybí, tak neexistuje pro daný `syncId` provázaná stránka v dané jazykové mutaci.
 
 !>**Upozornění:** v případě existence více provázaných stránek se stejnou hodnotou `syncId` a ve stejné jazykové mutaci, jejich hodnoty se ve sloupci pro danou jazykovou mutaci spojí, takže hodnota ve sloupci bude obsahovat cesty k více stránkám.
@@ -18,8 +19,9 @@ Abychom uměli v tabulce číst, musíme pochopit strukturu tabulky, kde:
 ## Stav provázání
 
 Sloupec **Stav** nabízí pomocí ikon rychlý přehled o stavu převázání. Podporuje následující stavy:
-- <i class="ti ti-exclamation-circle" style="color: #ff4b58;" ></i>, ikona zodpovědná stavu **Špatné mapování**. Provázání stránek nabude tento stav v případě objevení více provázaných stránek ve stejné jazykové mutaci.
-- <i class="ti ti-alert-triangle" style="color: #fabd00;" ></i>, ikona zodpovědná stavu **Nerovnoměrné vnoření**. Provázání stránek nabude tento stav v případě rozdílné hloubky provázaných stránek od kořenové složky.
+
+-<i class="ti ti-exclamation-circle" style="color: #E00028;"></i> , ikona zodpovědná stavu **Špatné mapování**. Provázání stránek nabude tento stav v případě objevení více provázaných stránek ve stejné jazykové mutaci.
+-<i class="ti ti-alert-triangle" style="color: #fabd00;"></i> , ikona zodpovědná stavu **Nerovnoměrné vnoření**. Provázání stránek nabude tento stav v případě rozdílné hloubky provázaných stránek od kořenové složky.
 - **nic**, žádná ikona se nezobrazuje v případě pokud provázání je korektní (nespadá do předchozích stavů)
 
 ### Špatné mapování
@@ -32,7 +34,7 @@ Protože provázané by měly být stejné struktury, rozdílné hloubky rodičo
 
 ## Vymazání/zrušení převázání
 
-Při vymazání/zrušení celého provázání zaniká stávající synchronizační parametr `syncId`, protože už nemá co provázat.
+Při vymazání/zrušení celého provázání zaniká existující synchronizační parametr `syncId`, protože už nemá co provázat.
 
 ## Editace provázání
 
@@ -44,9 +46,10 @@ Na následujícím obrázku můžeme vidět příklad **špatného mapování**,
 
 ### Změna stránek
 
-Při editaci lze provázané stránky změnit. V takovém případě bude nahrazené stránce odstraněn synchronizační parametr `syncId` a nově-zvolené stránce se přidá parametr `syncId`.
+Při editaci lze provázané stránky změnit. V takovém případě bude nahrazené stránce odstraněn synchronizační parametr `syncId` a nově zvolené stránce se přidá parametr `syncId`.
 
 Pro zvolené stránky není povoleno:
+
 - duplicitní zvolení téže stránky
 - zvolení stránky s nastaveným `syncId` (samozřejmě jiným než právě upravované). Pokud stále budete trvat na provázání dané stránky, nejprve musíte zrušit její aktuální provázání (odstranit `syncId`) a až následně ji můžete provázat s jinými stránkami (přidat nové `syncId`).
 - výběr více stránek ve stejné jazykové mutaci (chyba [špatné mapování](./docs#špatné-mapování))
@@ -58,12 +61,11 @@ Každá z těchto chyb se kontroluje. Pokud se taková chyba objeví při pokusu
 
 ### Přidání stránky
 
-Tabulka neumožňuje vytvoření zcela nového provázání (nového `syncId`) ale umožňuje přidání (provázání) nových stránek k již existujícím. V editoru při editaci záznamu se nachází tlačítko
+Tabulka neumožňuje vytvoření zcela nového provázání (nového `syncId`) ale umožňuje přidání (převázání) nových stránek k již existujícím. V editoru při editaci záznamu se nachází tlačítko
 
 <button id="add-sync-btn" class="btn btn-outline-secondary" onclick="showNewSelector(groupsMirroringTable)">
-  <i class="ti ti-plus" ></i>
-
-  <span> Připojit složku </span>
+    <i class="ti ti-plus"></i>
+    <span>Připojit složku</span>
 </button>
 
 pomocí kterého umíte přidat nová pole pro výběr stránek. Když zobrazíte maximální povolený počet polí (povolených provázání) tlačítko se skryje.

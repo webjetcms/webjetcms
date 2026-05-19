@@ -7,6 +7,7 @@ GDPR Cookies poskytují podrobnou kontrolu nad tím, jaké typy cookies mohou b�
 ## Nastavení aplikace
 
 - **Vložit odkaz na úpravu povolených cookies**: Umožňuje přidat odkaz, který uživatelům poskytne možnost upravit své preference pro povolené cookies.
+  
 
 ![](editor.png)
 

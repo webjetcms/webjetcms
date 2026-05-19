@@ -501,7 +501,7 @@ function initClosure() {
 
     //
     var select = `
-        <select id="tree-folder-search-type" class="filter-input-prepend">
+        <select id="tree-folder-search-type" class="filter-input-prepend" aria-label="${WJ.translate('datatables.select.type.js')}">
             <option value="contains" selected data-content="<i class=\'ti ti-arrows-horizontal\'></i><small>${WJ.translate('datatables.select.contains.js')}</small>">${WJ.translate('datatables.select.contains.js')}</option>
             <option value="startwith" data-content="<i class=\'ti ti-arrow-left-bar\'></i><small>${WJ.translate('datatables.select.startwith.js')}</small>">${WJ.translate('datatables.select.startwith.js')}</option>
             <option value="endwith" data-content="<i class=\'ti ti-arrow-right-bar\'></i><small>${WJ.translate('datatables.select.endwith.js')}</small>">${WJ.translate('datatables.select.endwith.js')}</option>
@@ -520,9 +520,9 @@ function initClosure() {
                     '<th class="dt-format-text" data-column-index="2" rowspan="1" colspan="1" style="padding: 0px 0px 4px 0px !important;">' +
                         '<div class="input-group">' +
                             select +
-                            '<input id="tree-folder-search-input" class="form-control form-control-sm filter-input">' +
-                            '<button id="tree-folder-search-button" class="btn btn-sm btn-outline-secondary btn-search"><i class="ti ti-search"></i></button>' +
-                            '<button id="tree-folder-search-clear-button" class="btn btn-sm btn-outline-secondary btn-clear" style="padding-top: 4px;"><i class="ti ti-circle-x"></i></button>' +
+                            '<input id="tree-folder-search-input" class="form-control form-control-sm filter-input" aria-label="'+WJ.translate("datatables.defaults.search.js")+'" />' +
+                            '<button id="tree-folder-search-button" class="btn btn-sm btn-outline-secondary btn-search" aria-label="'+WJ.translate("datatables.defaults.search.js")+'"><i class="ti ti-search"></i></button>' +
+                            '<button id="tree-folder-search-clear-button" class="btn btn-sm btn-outline-secondary btn-clear" style="padding-top: 4px;" aria-label="'+WJ.translate("button.reset")+'"><i class="ti ti-circle-x"></i></button>' +
                         '</div>' +
                     '</th>' +
                 '</tr>' +

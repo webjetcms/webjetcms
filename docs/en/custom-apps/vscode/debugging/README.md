@@ -80,10 +80,10 @@ This will appear in the Debug launch option. The important setting is:
 
 It is important to note that if JavaScript files are compiled, the ```.map``` file also needs to be generated. However, this typically does not have an exact path set in your development environment, so in the ```sourceMapPathOverrides``` configuration, it is possible to set the path replacement/completion to absolute.
 
-In order for ```webpack``` to also generate the ```.map``` file, it is necessary to modify the configuration by setting the ```devtoolModuleFilenameTemplate``` attribute:
+In order for ```rspack``` to also generate the ```.map``` file, it is necessary to modify the configuration by setting the ```devtoolModuleFilenameTemplate``` attribute:
 
-```
-module.exports = {
+```javascript
+const config = {
     entry: {
         ...
     },

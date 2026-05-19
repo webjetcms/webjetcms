@@ -311,6 +311,16 @@ After clicking on the desired character, that character will be written at the c
 
 !> Warning: the icon for inserting special characters may in some cases be changed to the ![](../../../frontend/webpages/fontawesome/editor-toolbar-icon.png ":no-zoom") icon for inserting [FontAwesome](../../../frontend/webpages/fontawesome/README.md) images.
 
+## Inserting text in hard-to-reach places
+
+Sometimes it is difficult to place the cursor, for example, after the last paragraph or image. In such a situation, the editor displays a so-called help line. This allows you to insert empty text, an image, an application or a block. In the case of Page Builder, after clicking, it allows you to insert a prepared block into the page.
+
+![](wjmagicline.png)
+
+Similarly, sometimes it is a problem to insert the cursor after the last SVG icon, bold text, etc. In such a case, the editor displays an icon behind the element to move the cursor to the given location. Sometimes the move may not succeed on the first click, we recommend that you first click anywhere in the text and then click the icon to move the cursor.
+
+![](wjmagicline-append.png)
+
 ## Page content change detection
 
 The page editor includes a mechanism that detects changes to page content. If you click the Cancel button to close the window while changes have been made to the page content, you will see a dialog box warning you that the changes have not been saved. Click OK to close the window without saving your changes, or click Cancel to return to the page editor.

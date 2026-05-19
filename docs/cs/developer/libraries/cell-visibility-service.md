@@ -2,27 +2,25 @@
 
 Třída `CellVisibilityService` rozšiřuje funkcionalitu `DataTables`
 
-***
-
+---
 **Dependencies (závislosti)**
 
 - [Tools](tools.md)
 - [StorageHandler](storage-handler.md)
-
-***
+---
 
 ### Popis fungování:
 
-Při potvrzení nastavení se odešle pomocí metody [buildConfigDataFromObject()](#buildconfigdatafromobject) objekt aktuální dataTabulky a ten z ní vybere její ID a atribut `bVisible`, který následně uloží do localStorage pod unikátním klíčem, který identifikuje konkrétní tabulku.
+Při potvrzení nastavení se odešle pomocí metody [buildConfigDataFromObject()](#buildconfigdatafromobject) objekt aktuální dataTabulky
+a ten z ní vybere její ID a atribut `bVisible`, který následně uloží do localStorage pod unikátním klíčem, který identifikuje konkrétní tabulku.
 
-Při každém dalším rederu tabulky se pomocí metody [updateColumnConfig()](#updatecolumnconfig) do které posíláme ID tabulky a konfigurační objekt samotné tabulky. Vybereme uložená nastavení z localStorage na základě ID a aktualizujeme konfigurační objekt, který se následně nastaví jako výchozí.
+Při každém dalším rederu tabulky se pomocí metody [updateColumnConfig()](#updatecolumnconfig) do které posíláme ID tabulky a konfigurační objekt samotné tabulky.
+Vybereme uložená nastavení z localStorage na základě ID a aktualizujeme konfigurační objekt, který se následně nastaví jako výchozí.
 
-***
-
+---
 ## Vytvoření instance:
 
 **WebJET** vytváří instanci v souboru [app.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app.js)
-
 ```javascript
 import {CellVisibilityService} from "./libs/data-tables-extends/";
 
@@ -34,7 +32,6 @@ window.dataTableCellVisibilityService = new CellVisibilityService();
 **WebJET** používá třídu v souboru [.../webjetdatatables/index.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js)
 
 Sesbírání a uložení dat probíhá, při stisku tlačítka save v konfiguraci sloupců.
-
 ```javascript
 {
     action: function action(e, dataTable) {
@@ -44,7 +41,6 @@ Sesbírání a uložení dat probíhá, při stisku tlačítka save v konfigurac
 ```
 
 Aktualizace column dat tabulky probíhá při jejím vytváření.
-
 ```javascript
 DataTable({
     columns: window.dataTableCellVisibilityService.updateColumnConfig(DATA.id, DATA.columns),
@@ -55,8 +51,8 @@ DataTable({
 
 **(Kliknutím zobrazíš detail pro funkci)**
 
-| Metody |
-| ------------------------------------------------------------- |
+| Metody                                                    |
+| -----------                                               |
 | [buildConfigDataFromObject()](#buildconfigdatafromobject) |
 | [updateColumnConfig()](#updatecolumnconfig)               |
 
@@ -65,7 +61,6 @@ DataTable({
 #### buildConfigDataFromObject()
 
 Z objektu dataTable vybere seznam dostupných fieldů a vybere z nich název fieldu (data) a atribut visible (bVisible).
-
 ```javascript
 /**
  * @description Z objektu dataTable, vyberie zoznam dostupných fieldov a vyberie z nich názov fieldu (data) a atribút visible (bVisible).
@@ -81,13 +76,11 @@ Z objektu dataTable vybere seznam dostupných fieldů a vybere z nich název fie
  */
 window.dataTableCellVisibilityService.buildConfigDataFromObject(dataTable);
 ```
-
-***
+---
 
 #### updateColumnConfig()
 
 Aktualizuje existující column objekt uloženými daty. Pokud data neexistují, metoda vrátí její vstup.
-
 ```javascript
 /**
  * @description Aktualizuje existujúci column objekt uloženými dátami. Ak dáta neexistujú, metóda vráti jej vstup.
@@ -98,5 +91,4 @@ Aktualizuje existující column objekt uloženými daty. Pokud data neexistují,
  */
 window.dataTableCellVisibilityService.updateColumnConfig(dataTableID, configArray);
 ```
-
-***
+---

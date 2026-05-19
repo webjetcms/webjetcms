@@ -1,8 +1,8 @@
 # Značky
 
-Pomocí značek (původní název **perex skupiny**) nebo anglicky `hashtag` můžete označit klíčová slova ve web stránce. V aplikaci novinky lze použít filtrování novinek podle značek.
+Pomocí značek (původní název **perex skupiny**) nebo anglicky ```hashtag``` můžete označit klíčová slova ve web stránce. V aplikaci novinky lze použít filtrování novinek podle značek.
 
-Pro přístup ke jménu položce Web stránky - značky potřebujete mít právo **Web stránky - Značky**, jinak se menu položka nezobrazí.
+Pro přístup k menu položce Web stránky - značky potřebujete mít právo **Web stránky - Značky**, jinak se menu položka nezobrazí.
 
 ![](perex-groups.png)
 
@@ -13,6 +13,7 @@ Editor pro vytvoření značek je jednoduchý a obsahuje pouze 2 karty.
 ### Karta Základní
 
 Karta obsahuje následující pole:
+
 - **Název skupiny**, unikátní název značky, je povinen.
 - **Zobrazit pro**, nastavení omezení zobrazení značek pouze pro určité adresáře web stránek.
 
@@ -20,7 +21,7 @@ Karta obsahuje následující pole:
 
 ### Karta Překlady
 
-Karta překlady slouží k **volitelné** zadefinování názvu značky pro jednotlivé jazykové mutace. Pokud jsou definovány použijí se ve web stránce namísto hodnoty **Název skupiny**.
+Karta překlady slouží k **volitelné** zadefinování názvu značky pro jednotlivé jazykové mutace. Pokud jsou definovány použijí se ve web stránce místo hodnoty **Název skupiny**.
 
 ![](perex-groups_tab-translates.png)
 
@@ -42,7 +43,7 @@ Značky se standardně zobrazují jako zaškrtávací pole, pokud je ale definov
 
 ### Duplicita názvů značek
 
-V případě, že vytvoříte více značek se stejnou jazykovou mutací názvu, v editoru web stránky se při výběru značky zobrazí je **ID** a **Název skupiny** pro rozlišení. Pokud značka má pouze **Název skupiny** nebo jazyková mutace je stejná jako **Název skupiny**, navíc se zobrazí pouze **ID**.
+V případě, že vytvoříte více značek se stejnou jazykovou mutací názvu, v editoru web stránky se při výběru značky zobrazí jejich **ID** a **Název skupiny** pro rozlišení. Pokud značka má pouze **Název skupiny** nebo jazyková mutace je stejná jako **Název skupiny**, navíc se zobrazí pouze **ID**.
 
 ![](perex-duplicity-values.png)
 

@@ -6,10 +6,12 @@ module.exports = {
     /**
      * a11y check method. Internally use axe and a11yhelper.js to check WCAG violations
      */
-    async check() {
+    async check(context = null) {
         //https://allurereport.org/docs/codeceptjs-reference/#tag
         await allure.tags("accessibility");
-        let violations = await I.runA11yCheck();
+        let violations = await I.runA11yCheck({
+            context: context,
+        });
 
         let errorMessage = "";
 

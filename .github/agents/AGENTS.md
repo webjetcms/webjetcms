@@ -98,6 +98,12 @@ If any of the above conflicts with existing repository patterns, align docs & co
 - System errors: log (`Logger.error`) + neutral/generic message to client.
 - Prefer a consistent response DTO (e.g., DataTableError / ApiResponse) with `success|error` fields.
 
+### Language
+
+- **Always use English** for all code comments, annotations, commit messages, and test assertions.
+- Never use Slovak (or any other non-English language) in code, comments, annotations, or test code examples.
+- This applies to jUnit tests, Java source files, configuration files, and any other project files.
+
 ### Validation
 
 - Bean Validation first; enrich errors via custom checks then merge into binding result / response.

@@ -7,6 +7,8 @@ Návod na zřízení nové instalace/čisté databáze pro nový projekt ve WebJ
 - lokálně funkční WebJET (nakonfigurován Tomcat, web aplikace)
 - přístup na DB server s právy pro zřízení nového DB schématu (nebo již zřízené DB schéma)
 
+!>**Upozornění:** pokud zřizujete novou instalaci použijte jako základ repozitář [basecms](https://github.com/webjetcms/basecms) ne repozitář [webjetcms](https://github.com/webjetcms/webjetcms). Rozdíl je v tom, že `basemcs` je základní projekt použití WebJET CMS s možností vlastního [designu webových stránek](../../frontend/README.md) a programování [zákaznických aplikací](../../custom-apps/README.md). Repozitář `webjetcms` je určen pro programátora jádra WebJET CMS a vyžaduje [složitější nastavení](../../developer/install/README.md).
+
 ## Základní požadavky na server
 
 - Server s minimálně 8 GB paměti (pro aplikace s větší zátěží minimálně 12GB), procesor alespoň `Dual Core 2 GHz` (pro servery s větší zátěží Quad core), místo na disku alespoň 40GB.
@@ -90,21 +92,23 @@ Pro instalace produktů jako je `NET, LMS, DSK` je na serveru třeba povolit `we
 ```
 
 Podporovány jsou následující XML elementy:
-- `dbname` - jméno databázového připojení, pro WebJET CMS tabulky musí mít hodnotu `iwcm`, v XML ale můžete nastavit více `datasource` elementů a vytvořit tak připojení i do dalších databází, nastavte sem unikátní jméno
-- `driver` - java třída databázového ovladače
-- `url` - URL adresa ve formátu pro `JDBC` připojení
-- `username` - přihlašovací jméno
-- `password` - přihlašovací heslo
+
+- `dbname` - ​​jméno databázového připojení, pro WebJET CMS tabulky musí mít hodnotu `iwcm`, v XML ale můžete nastavit více `datasource` elementů a vytvořit tak připojení i do dalších databází, nastavte sem unikátní jméno
+- `driver` - ​​java třída databázového ovladače
+- `url` - ​​URL adresa ve formátu pro `JDBC` připojení
+- `username` - ​​přihlašovací jméno
+- `password` - ​​přihlašovací heslo
 
 Volitelně lze nastavit:
-- `minimumSize` - minimální počet neustále otevřených databázových spojení (výchozí 0)
-- `maximumSize` - maximální počet otevřených databázových spojení (výchozí 50)
-- `autoCommit` - pokud je nastaveno na `true` nastaví se `connection.setAutoCommit(true);`, po nastavení na `false` je třeba transakci ukončit programově (výchozí `false`)
-- `readOnly` - nastavte na `true` pokud je databázové spojení určeno pouze pro čtení dat (výchozí `false`)
-- `transactionIsolation` - nastavení [izolace transakcí](https://github.com/brettwooldridge/HikariCP?tab=readme-ov-file#infrequently-used) (výchozí prázdné)
-- `connectionTimeout` - počet sekund, kdy je spojení považováno za neuzavřené (výchozí 300), nastavuje hodnotu `LeakDetectionThreshold`
-- `testQuery` - testovací SQL výraz pro ověření funkčnosti spojení. Pro `JDBC` ovladače v4 se používá volání `isValid()`, pro starší ovladače je třeba nastavit. Hodnota `true` nastaví výchozí výraz `SELECT 1` (použije se automaticky pro `jtds` ovladač). Je ale možné nastavit váš vlastní SQL výraz.
-- `hikariProperties` - umožní nastavit další vlastnosti [HikariCP](https://github.com/brettwooldridge/HikariCP?tab=readme-ov-file#gear-configuration-knobs-baby) ve formátu `properties`
+
+- `minimumSize` - ​​minimální počet neustále otevřených databázových spojení (výchozí 0)
+- `maximumSize` - ​​maximální počet otevřených databázových spojení (výchozí 50)
+- `autoCommit` - ​​pokud je nastaveno na `true` nastaví se `connection.setAutoCommit(true);`, po nastavení na `false` je třeba transakci ukončit programově (výchozí `false`)
+- `readOnly` - ​​nastavte na `true` pokud je databázové spojení určeno pouze pro čtení dat (výchozí `false`)
+- `transactionIsolation` - ​​nastavení [izolace transakcí](https://github.com/brettwooldridge/HikariCP?tab=readme-ov-file#infrequently-used) (výchozí prázdné)
+- `connectionTimeout` - ​​počet sekund, kdy je spojení považováno za neuzavřené (výchozí 300), nastavuje hodnotu `LeakDetectionThreshold`
+- `testQuery` - ​​testovací SQL výraz pro ověření funkčnosti spojení. Pro `JDBC` ovladače v4 se používá volání `isValid()`, pro starší ovladače je třeba nastavit. Hodnota `true` nastaví výchozí výraz `SELECT 1` (použije se automaticky pro `jtds` ovladač). Je ale možné nastavit váš vlastní SQL výraz.
+- `hikariProperties` - ​​umožní nastavit další vlastnosti [HikariCP](https://github.com/brettwooldridge/HikariCP?tab=readme-ov-file#gear-configuration-knobs-baby) ve formátu `properties`
 
 Příklad nastavení specifických vlastností:
 
@@ -160,15 +164,15 @@ Při pokusu o přihlášení nebo přístup k webové stránce WebJET zobrazí c
 
 - V prohlížeči otevřete URL adresu [instalace](http://localhost/wjerrorpages/setup/setup).
 
-> WebJET vše co začíná na `/wjerrorpages/` zpracuje i když není nastartován. Automaticky poskytuje statický soubor [/wjerrorpages/dberror.html](http://localhost/wjerrorpages/dberror.html) při jakémkoli GET požadavku. V adresáři `/wjerrorpages/` je možné mít i obrázky, doporučujeme je ale raději vložit přes `data:` zápis přímo do `dberror.html`.
+> WebJET vše co začíná na `/wjerrorpages/` zpracuje i když není nastartován. Automaticky poskytuje statický soubor [/wjerrorpages/dberror.html](http://localhost/wjerrorpages/dberror.html) při jakémkoli GET požadavku. V adresáři `/wjerrorpages/` lze mít i obrázky, doporučujeme je ale raději vložit přes `data:` zápis přímo do `dberror.html`.
 
-- Výše uvedená URL má výjimku a je povoleno její použití i při nekorektně nastartovaném WebJETu (ale jen na doméně `localhost` nebo `iwcm.interway.sk`).
+- Výše ​​uvedená URL má výjimku a je povoleno její použití i při nekorektně nastartovaném WebJETu (ale jen na doméně `localhost` nebo `iwcm.interway.sk`).
 - Zobrazí se vám dialog instalace WebJETu:
 
 ![](./setup.png)
 
-- Zkontrolujte/zadejte údaje pro nastavení databázového připojení (předvolí se hodnoty ze souboru poolman.xml). Instalace vytváří spojení přímo na uvedené hodnoty (ignoruje hodnoty v poolman.xml), proto je potřebuje. Pokud ale soubor `poolman.xml` již existuje, nepřepíše ho, čili pro další start se už použijí hodnoty v `poolman.xml`. Pokud soubor neexistuje, vytvoří se podle zadaných hodnot.
-- Zadejte unikátní název instalace (bez mezer a diakritiky, například. `interway2023`) a licenční číslo (pokud nepoužíváte Open Sorce verzi) a zkontrolujte ostatní hodnoty.
+- Zkontrolujte/zadejte údaje pro nastavení databázového připojení (předvolí se hodnoty ze souboru poolman.xml). Instalace vytváří spojení přímo na uvedené hodnoty (ignoruje hodnoty v poolman.xml), proto je potřebuje. Pokud ale soubor `poolman.xml` již existuje, nepřepíše jej, tedy pro další start se už použijí hodnoty v `poolman.xml`. Pokud soubor neexistuje, vytvoří se podle zadaných hodnot.
+- Zadejte unikátní název instalace (bez mezer a diakritiky, např. `interway2023`) a licenční číslo (pokud nepoužíváte Open Sorce verzi) a zkontrolujte ostatní hodnoty.
 - Klepněte na OK pro spuštění instalace. Pokud validace zadaných hodnot proběhne úspěšně, uvidíte následující hlášení:
 
 ![](./setup-saved.png)
@@ -270,7 +274,7 @@ V tomto momentě je WebJET inicializován a spuštěn do standardního stavu.
 
 ## Přihlášení do administrace
 
-Přihlaste se do [admin sekce](http://localhost/admin/) se jménem `admin` a heslem `heslo`:
+Přihlaste se do [admin sekce](http://localhost/admin/) se jménem ```admin``` a heslem ```heslo```:
 
 ![](./first-login.png)
 
@@ -308,12 +312,14 @@ Otevřete si editaci **admin** uživatele. Po zobrazení okna zkontrolujete v ka
 ![](./user-edit.png)
 
 V kartě **Práva** povolte potřebná práva. Minimálně přidejte práva:
+
 - Konfigurace
 - Konfigurace - zobrazení všech proměnných
 
 ![](./user-perms.png)
 
 Po nastavení práv se odhlaste pro aplikování nových práv a znovu se přihlaste. Po přihlášení přejděte do sekce [Nastavení/Konfigurace](http://localhost/admin/v9/settings/configuration/) a nastavte následující konf. proměnné:
+
 - Pokud je server v prostředí InterWay, nebo je umístěn za proxy serverem/load balancerem nastavte proměnnou `serverBeyoundProxy` na hodnotu `true`. WebJET v tomto režimu očekává IP adresu návštěvníka v HTTP hlavičce `x-forwarded-for` a použitý protokol v `x-forwarded-proto`.
 - Můžete nastavit proměnnou `logLevel` na hodnotu `debug` pro podrobnější logování.
 - Doporučujeme nastavit proměnnou `webEnableIPs` na seznam prefixů IP adres, ze kterých budete na web před spuštěním přistupovat (např. 127.0.0.1,10.,192.168.,195.168.35.4,195.168.35.5).

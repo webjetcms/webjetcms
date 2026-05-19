@@ -1,6 +1,6 @@
- <div class="sidebar-section">Programování zákaznických aplikací</div>
+<div class="sidebar-section">Programování zákaznických aplikací</div>
 
-- [:point\_left: Zpět na Úvod](/?back)
+- [:point_left: Zpět na Úvod](/?back)
 
 - Spring
   - [Konfigurace Spring](/custom-apps/spring-config/)
@@ -19,7 +19,7 @@
     - [Způsoby platby](/custom-apps/apps/eshop/payment-methods/README.md)
   - [Formuláře](/custom-apps/apps/multistep-forms/README.md)
 - Spring MVC
-  - [Aplikace ve web stránce](/custom-apps/spring-mvc/)
+  - [Aplikace ve webové stránce](/custom-apps/spring-mvc/)
   - [Admin s nahráním souboru](/custom-apps/spring-mvc/admin-with-upload.md)
   - [Admin import z Excelu](/custom-apps/spring-mvc/admin-excel-import.md)
 - Appstore

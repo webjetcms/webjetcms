@@ -13,7 +13,7 @@
 
 ## Template root directory path *String*
 
-The path to the template root directory is compiled from `/templates/ + ${ninja.webjet.installName} + ${ninja.temp.templateFolderName}`.
+The path to the template root directory consists of `/templates/ + ${ninja.webjet.installName} + ${ninja.temp.templateFolderName}`.
 
 ```java
 ${ninja.temp.basePath}
@@ -21,7 +21,7 @@ ${ninja.temp.basePath}
 
 ## Path to CSS styles *String*
 
-The path to CSS styles is compiled from `${ninja.temp.basePath} + /assets/css/`.
+The path to CSS styles consists of `${ninja.temp.basePath} + /assets/css/`.
 
 ```java
 ${ninja.temp.basePathCss}
@@ -29,7 +29,7 @@ ${ninja.temp.basePathCss}
 
 ## Path to JS scripts *String*
 
-The path to JS scripts is compiled from `${ninja.temp.basePath} + /assets/js/`.
+The path to JS scripts consists of `${ninja.temp.basePath} + /assets/js/`.
 
 ```java
 ${ninja.temp.basePathJs}
@@ -37,7 +37,7 @@ ${ninja.temp.basePathJs}
 
 ## Image path *String*
 
-Image path compiled from `${ninja.temp.basePath} + /assets/images/`.
+Image path composed of `${ninja.temp.basePath} + /assets/images/`.
 
 ```java
 ${ninja.temp.basePathImg}
@@ -52,11 +52,13 @@ ${ninja.temp.lngIso}
 ```
 
 Used in :ghost:<code>head.jsp</code>
+
 ```html
-<meta property="og:locale" content="${ninja.temp.lngIso}" />
+<meta property="og:locale" content="${ninja.temp.lngIsoUnderscore}" />
 ```
 
 Used in :ghost:<code>html-attributes.jsp</code>
+
 ```html
 <html lang="${ninja.temp.lngIso}" >
 ```
@@ -70,6 +72,7 @@ ${ninja.temp.charset}
 ```
 
 Used in :ghost:<code>head.jsp</code>
+
 ```html
 <meta charset="${ninja.temp.charset}">
 <meta http-equiv="Content-type" content="text/html;charset=${ninja.temp.charset}" />
@@ -84,6 +87,7 @@ ${ninja.temp.insertTouchIconsHtml}
 ```
 
 The HTML code that will be generated:
+
 ```html
 <link rel="apple-touch-icon-precomposed" href="/thumb/templates/interway/ninja-starter-kit/assets/images/touch-icon.png?w=0&h=0&ip=5" />
 <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/thumb/templates/interway/ninja-starter-kit/assets/images/touch-icon.png?w=72&h=72&ip=5" />
@@ -101,5 +105,5 @@ The HTML code that will be generated:
 Template folder name, default `/ninja-starter-kit/`
 
 ```java
-${ninja.temp.templateFolderName} 
+${ninja.temp.templateFolderName}
 ```

@@ -1,6 +1,7 @@
 # Automatické testování DataTables
 
-V administraci je většina testů datatabulky shodná ve formě `CRUD (Create, Read, Update, Delete)` operací. Aby se nemuseli dokola opakovat standardní postupy testu datatabulky připravili jsme **automatizované testování**. Implementace je v souboru [DataTables.js](../../../../src/test/webapp/pages/DataTables.js) a zahrnuje následující kroky:
+V administraci je většina testů datatabulky shodná ve formě ```CRUD (Create, Read, Update, Delete)``` operací. Aby se nemuseli dokola opakovat standardní postupy testu datatabulky připravili jsme **automatizované testování**. Provádění je v souboru [DataTables.js](../../../../src/test/webapp/pages/DataTables.js) a zahrnuje následující kroky:
+
 - přidání nového záznamu
   - ověření povinných polí
 - vyhledání přidaného záznamu
@@ -36,7 +37,7 @@ Scenario('zakladne testy', async ({I, DataTables}) => {
 });
 ```
 
-do `dataTable` nastavujete **jméno** proměnné ve stránce. Je možné použít i další parametry testu (příklad v souboru [templates.js](../../../../src/test/webapp/tests/components/templates.js)):
+do ```dataTable``` nastavujete **jméno** proměnné ve stránce. Lze použít i další parametry testu (příklad v souboru [templates.js](../../../../src/test/webapp/tests/components/templates.js)):
 
 ```javascript
 Scenario('zakladne testy', async ({I, DataTables}) => {
@@ -76,46 +77,49 @@ Scenario('zakladne testy', async ({I, DataTables}) => {
 });
 ```
 
-Při uložení nového záznamu se zároveň do objektu `options.testingData` uloží pole vyplněných údajů povinných polí. Ty můžete využít například. ve funkci `editSearchSteps` jako:
+Při uložení nového záznamu se zároveň do objektu ```options.testingData``` uloží pole vyplněných údajů povinných polí. Ty můžete využít například. ve funkci ```editSearchSteps``` jako:
 
 ```javascript
     I.see(`${options.testingData[0]}-change`, "div.dt-scroll-body");
 ```
 
-Objekt `options` je vrácen z `baseTest` funkce a lze jej použít v dalších scénářích, příklad je v [translation-keys.js](../../../../src/test/webapp/tests/settings/translation-keys.js)
+Objekt ```options``` je vrácen z ```baseTest``` funkce a lze jej použít v dalších scénářích, příklad je v [translation-keys.js](../../../../src/test/webapp/tests/settings/translation-keys.js)
 
-!>**Upozornění:** automatizovaný test základních operací nenahrazuje komplexní testování. Má sloužit jako základ testu, vaším úkolem je přidat testovací scénáře specifických vlastností. Ideální jako **samostatné scénáře**, nebo doplněním kroků do funkcí `createSteps, editSteps, editSearchSteps, beforeDeleteSteps`.
+!>**Upozornění:** automatizovaný test základních operací nenahrazuje komplexní testování. Má sloužit jako základ testu, vaším úkolem je přidat testovací scénáře specifických vlastností. Ideální jako **samostatné scénáře**, nebo doplněním kroků do funkcí ```createSteps, editSteps, editSearchSteps, beforeDeleteSteps```.
 
 ## Možnosti nastavení
 
-Přes `options` objekt povinné nastavit:
-- `dataTable` - jméno proměnné ve web stránce s datatabulkou.
+Přes ```options``` objekt povinné nastavit:
+
+- ```dataTable``` - ​​jméno proměnné ve web stránce s datatabulkou.
 
 Volitelné možnosti:
-- `requiredFields` - seznam povinných polí. Pokud nejsou zadané načtou se automaticky z `columns` definice (mají atribut `required: true`).
-- `testingData` - seznam hodnot pro vyplnění místo generované `autotest-xxxx`. Je to nutné, když pole mají specifický formát/délku (např. email).
-- `container` - možnost definovat CSS selektor kontejneru, ve které je datatabulka vložena (nutno definovat pro vnořenou datatabulku).
-- `containerModal` - možnost definovat CSS selektor kontejneru dialogového okna datatable editoru (nutno definovat pro vnořenou datatabulku).
-- `skipRefresh` - pokud je nastaveno na `true` neprovede se obnovení web stránky po přidání záznamu.
-- `skipSwitchDomain` - pokud je nastaveno na `true` neprovede se kontrola mezidoménového oddělení záznamů.
-- `switchDomainName` - možnost definovat jinou doménu než je výchozí `mirroring.tau27.iway.sk` pro kontrolu mezi-doménového oddělení záznamů.
-- `skipDuplication` - pokud je nastaveno na `true` neprovede se test duplikování záznamů.
-- `createSteps` - funkce přidávající kroky testování při vytvoří nového záznamu.
-- `afterCreateSteps` - funkce je provedena po uložení nového záznamu. Pokud tabulka nemá žádná povinná pole je možné nastavením `requiredFields.push("string1");options.testingData[0] = string1;` pole zadefinovat a nastavit mu hodnotu.
-- `editSteps` - funkce přidávající kroky testování při editaci záznamu.
-- `editSearchSteps` - funkce přidávající kroky testování při vyhledání záznamu.
-- `beforeDeleteSteps` - funkce přidávající kroky testování před smazáním záznamu.
-- `perms` - jméno práva (např. `editor_edit_media_all`) pro automatické ověření zabezpečení REST služby.
-- `extraWait` - pokud je nastaveno v některých případech se počká nastavený čas v sekundách, potřebné pokud stránka načítá nějaké extra údaje.
+
+- ```requiredFields``` - ​​seznam povinných polí. Pokud nejsou zadány, načtou se automaticky z ```columns``` definice (mají atribut ```required: true```).
+- ```testingData``` - ​​seznam hodnot pro vyplnění místo generované ```autotest-xxxx```. Je to nutné, když pole mají specifický formát/délku (např. email).
+- ```container``` - ​​možnost definovat CSS selektor kontejneru, ve které je datatabulka vložena (nutno definovat pro vnořenou datatabulku).
+- ```containerModal``` - ​​možnost definovat CSS selektor kontejneru dialogového okna datatable editoru (nutno definovat pro vnořenou datatabulku).
+- ```skipRefresh``` - ​​pokud je nastaveno na ```true``` neprovede se obnovení web stránky po přidání záznamu.
+- ```skipSwitchDomain``` - ​​pokud je nastaveno na ```true``` neprovede se kontrola mezidoménového oddělení záznamů.
+- ```switchDomainName``` - ​​možnost definovat jinou doménu než je výchozí ```mirroring.tau27.iway.sk``` pro kontrolu mezi-doménového oddělení záznamů.
+- ```skipDuplication``` - ​​pokud je nastaveno na ```true``` neprovede se test duplikování záznamů.
+- ```createSteps``` - ​​funkce přidávající kroky testování při vytvoří nového záznamu.
+- ```afterCreateSteps``` - ​​funkce je provedena po uložení nového záznamu. Pokud tabulka nemá žádná povinná pole, lze nastavením ```requiredFields.push("string1");options.testingData[0] = string1;``` pole definovat a nastavit mu hodnotu.
+- ```editSteps``` - ​​funkce přidávající kroky testování při editaci záznamu.
+- ```editSearchSteps``` - ​​funkce přidávající kroky testování při vyhledání záznamu.
+- ```beforeDeleteSteps``` - ​​funkce přidávající kroky testování před smazáním záznamu.
+- ```perms``` - ​​jméno práva (např. ```editor_edit_media_all```) pro automatické ověření zabezpečení REST služby.
+- ```extraWait``` - ​​pokud je nastaveno v některých případech se počká nastavený čas v sekundách, potřebné pokud stránka načítá nějaké extra údaje.
 
 Interně se po inicializaci ještě nastaví následující atributy:
-- `id` - ID objektu datatabulky v DOM stromu.
-- `url` - URL adresa aktuální web stránky.
-- `testingData` - obsahuje nastavené hodnoty povinných polí.
+
+- ```id``` - ​​ID objektu datatabulky v DOM stromu.
+- ```url``` - ​​URL adresa aktuální web stránky.
+- ```testingData``` - ​​obsahuje nastavené hodnoty povinných polí.
 
 ## Způsob generování povinných polí
 
-Automatizovaný test vyplňuje pouze povinná pole, zároveň testuje zobrazení chybového hlášení, když povinné pole není vyplněno. Na začátku testu se definují konstanty `startDate` a `date` az nich se generuje hodnota povinného pole, které se přidá i náhodné číslo. Hodnota vždy obsahuje i text **autotest**, podle které lze vyhledat nesmazané záznamy (je bezpečné je smazat).
+Automatizovaný test vyplňuje pouze povinná pole, zároveň testuje zobrazení chybového hlášení, když povinné pole není vyplněno. Na začátku testu se definují konstanty ```startDate``` a ```date``` az nich se generuje hodnota povinného pole, které se přidá i náhodné číslo. Hodnota vždy obsahuje i text **autotest**, podle které lze vyhledat nesmazané záznamy (je bezpečné je smazat).
 
 ```javascript
 const randomText = I.getRandomText();
@@ -132,19 +136,19 @@ if (field.toLocaleLowerCase().indexOf("email")!=-1) {
 I.fillField(`#DTE_Field_${field}`, `${testingData[index]}`);
 ```
 
-Pomocí konfigurace `testingData` můžete předem nastavit hodnotu pole pro jeho nastavení při vytvoření. V takovém případě se vygenerovaná hodnota `autotest-xxxx` nepoužije.
+Pomocí konfigurace ```testingData``` můžete předem nastavit hodnotu pole pro jeho nastavení při vytvoření. V takovém případě se vygenerovaná hodnota ```autotest-xxxx``` nepoužije.
 
 Pokud má pole v názvu hodnotu email vygeneruje se hodnota is doménovým jménem na konci, aby mělo pole platnou hodnotu.
 
 ## Testování auditních záznamů
 
-Po smazání záznamů se testuje audit. Kontroluje se počet záznamů od spuštění testu (dle konstanty `startDate`) obsahujících v popisu text prvního povinného pole (`testingData[0]`).
+Po smazání záznamů se testuje audit. Kontroluje se počet záznamů od spuštění testu (podle konstanty ```startDate```) obsahujících v popisu text prvního povinného pole (```testingData[0]```).
 
 Ověřuje se počet nalezených záznamů, kterých by mělo být minimálně 3 (create, edit, delete).
 
 ## Testování práv
 
-Po zadání parametru `perms` datatabulka automaticky ověří i zadané právo. Zobrazí obsah datatabulky, právo odstraní a následně ověří zobrazení chybového hlášení `Prístup k tejto stránke je zamietnutý`.
+Po zadání parametru ```perms``` datatabulka automaticky ověří i zadané právo. Zobrazí obsah datatabulky, právo odstraní a následně ověří zobrazení chybového hlášení ```Prístup k tejto stránke je zamietnutý```.
 
 Příklad použití:
 
@@ -155,7 +159,7 @@ await DataTables.baseTest({
 });
 ```
 
-!>**Upozornění:** zadání tohoto parametru je povinné, aby se vždy při zobrazení datatabulky otestovala i práva. Při vnořené datatabulce ale tento test může být problematický z důvodu odhlášení, můžete zadat prázdnou hodnotu nebo znak `-`.
+!>**Upozornění:** zadání tohoto parametru je povinné, aby se vždy při zobrazení datatabulky otestovala i práva. Při vnořené datatabulce ale tento test může být problematický z důvodu odhlášení, můžete zadat prázdnou hodnotu, nebo znak ```-```.
 
 ## Detaily implementace
 
@@ -165,9 +169,9 @@ Test je implementován v souboru [DataTables.js](../../../../src/test/webapp/pag
 const columns = await I.getDataTableColumns(dataTable);
 ```
 
-Ze které se čte seznam polí, jejich nastavení atp. Pokud nejsou definována povinná pole, získají se z columns definice podle atributu `required: true`.
+Ze které se čte seznam polí, jejich nastavení atp. Pokud nejsou definována povinná pole, získají se z columns definice podle atributu ```required: true```.
 
-Funkce `I.getDataTableColumns` je definována v [custom\_helper.js](../../../../src/test/webapp/custom_helper.js):
+Funkce ```I.getDataTableColumns``` je definována v [custom_helper.js](../../../../src/test/webapp/custom_helper.js):
 
 ```javascript
   /**
@@ -189,8 +193,8 @@ Funkce `I.getDataTableColumns` je definována v [custom\_helper.js](../../../../
   }
 ```
 
-Všechny funkce jsou asynchronní z důvodu volání `I.getDataTableColumns`.
+Všechny funkce jsou asynchronní z důvodu volání ```I.getDataTableColumns```.
 
-!>**Upozornění:** při implementaci se nám stalo, že druhé volání `this.helpers['Playwright'];` během běhu testu odhlásí přihlášeného uživatele (resetne cookies). Chtěli jsme použít toto volání při formátování dat, bohužel aktuálně to není možné. Předpokládáme, že se jedná o chybu v CodeceptJS.
+!>**Upozornění:** při implementaci se nám stalo, že druhé volání ```this.helpers['Playwright'];``` během běhu testu odhlásí přihlášeného uživatele (resetne cookies). Chtěli jsme použít toto volání při formátování dat, bohužel aktuálně to není možné. Předpokládáme, že se jedná o chybu v CodeceptJS.
 
 Následně jsou prováděny jednotlivé kroky testu jak je běžně známe.

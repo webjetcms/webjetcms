@@ -20,6 +20,7 @@ public @interface DataTableColumn {
     String renderFormatLinkTemplate() default "";
     String renderFormatPrefix() default "";
     String renderFunction() default "";
+    String renderFormatAriaLabel() default "";
 
     //column default visibility in table, if false, user can set column to visible
     boolean[] visible() default {};
