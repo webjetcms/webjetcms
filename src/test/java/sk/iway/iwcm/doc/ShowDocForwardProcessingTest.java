@@ -108,7 +108,9 @@ class ShowDocForwardProcessingTest extends BaseWebjetTest {
         public RequestDispatcher getRequestDispatcher(String path) {
             return new RequestDispatcher() {
                 @Override
-                public void forward(ServletRequest req, ServletResponse res) {}
+                public void forward(ServletRequest req, ServletResponse res) {
+                    //empty - we want to test that forward is NOT called and redirect is done via include instead
+                }
 
                 @Override
                 public void include(ServletRequest req, ServletResponse res)
@@ -133,7 +135,9 @@ class ShowDocForwardProcessingTest extends BaseWebjetTest {
         public RequestDispatcher getRequestDispatcher(String path) {
             return new RequestDispatcher() {
                 @Override
-                public void forward(ServletRequest req, ServletResponse res) {}
+                public void forward(ServletRequest req, ServletResponse res) {
+                    //empty - we want to test that forward is NOT called and error is done via include instead
+                }
 
                 @Override
                 public void include(ServletRequest req, ServletResponse res)
@@ -190,7 +194,9 @@ class ShowDocForwardProcessingTest extends BaseWebjetTest {
             public RequestDispatcher getRequestDispatcher(String path) {
                 return new RequestDispatcher() {
                     @Override
-                    public void forward(ServletRequest req, ServletResponse res) {}
+                    public void forward(ServletRequest req, ServletResponse res) {
+                        //empty - we want to test that forward is NOT called and content is sent via include instead
+                    }
 
                     @Override
                     public void include(ServletRequest req, ServletResponse res)
