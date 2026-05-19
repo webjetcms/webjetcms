@@ -34,24 +34,23 @@ Keď návštevník zadá vyhľadávací dotaz:
 
 Ak WebJET CMS beží priamo na PostgreSQL, pgvector databáza sa použije automaticky bez ďalšej konfigurácie.
 
+Musí byť iba nastavený datasource ako v prípade `poolman-docker-pgsql.xml`.
+
 ### Samostatná pgvector databáza (vedľajšia)
 
-Ak primárna databáza nie je PostgreSQL, vytvorte Docker kontajner s pgvector a nakonfigurujte datasource `rag_jpa` v súbore `poolman.xml`:
-
-```xml
-<datasource name="rag_jpa">
-  <driver-class>org.postgresql.Driver</driver-class>
-  <url>jdbc:postgresql://localhost:15433/webjetcms_rag</url>
-  <username>webjetcms_rag</username>
-  <password>...</password>
-</datasource>
-```
+Ak primárna databáza nie je PostgreSQL, vytvorte Docker kontajner s pgvector.
 
 Pre lokálny vývoj je pripravený súbor `.devcontainer/db/docker-compose-rag-pgsql.yml`:
 
 ```bash
 docker compose -f .devcontainer/db/docker-compose-rag-pgsql.yml up -d
 ```
+
+už s nakonfigurovanými datasource:
+
+- `poolman-docker-mariadb.xml`
+- `poolman-docker-mssql.xml`
+- `poolman-docker-oracle.xml`
 
 ## Konfigurácia
 
@@ -67,6 +66,8 @@ Aktivácia a nastavenie sémantického vyhľadávania v `Konfigurácia` (skupina
 | `searchType` | `db` | Typ vyhľadávania: `db` (databázové), `lucene` (Lucene fulltext), `semantic` (pgvector sémantické). |
 
 !> Pre aktiváciu sémantického vyhľadávania nastavte `ragSemanticSearchEnabled=true` **aj** `searchType=semantic`.
+
+!>**Upozornenie:** pri zmene konfiguračnej premennej `ragEmbeddingDimensions` sa vymaže celá tabuľka `rag_embedding_chunks`, pretože vektory nebudú kompatibilné. Zvážte zálohu dát pred zmenou tejto hodnoty. Tabuľka sa automaticky znová vytvorí s novou dimenziou.
 
 ## Používanie v šablónach
 
