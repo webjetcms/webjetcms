@@ -128,12 +128,24 @@ class LanguageRedirectAppTest extends BaseWebjetTest {
     }
 
     @Test
-    void testDetectLanguageWithMultipleLanguages() {
+    void testDetectLanguageWithMultipleLanguagesSelectsHighestQuality() {
         setRequestContext(request);
         try {
             request.addHeader("Accept-Language", "cs-CZ;q=0.9, sk;q=0.8, en;q=0.7");
             String lang = invokeDetectLanguage();
             assertEquals("cs", lang);
+        } finally {
+            clearRequestContext();
+        }
+    }
+
+    @Test
+    void testDetectLanguageWithQualityFactorSelectsHighestQuality() {
+        setRequestContext(request);
+        try {
+            request.addHeader("Accept-Language", "sk;q=0.5, en;q=0.9");
+            String lang = invokeDetectLanguage();
+            assertEquals("en", lang);
         } finally {
             clearRequestContext();
         }
@@ -152,7 +164,7 @@ class LanguageRedirectAppTest extends BaseWebjetTest {
     }
 
     @Test
-    void testDetectLanguageUnknownFallbackToDefault() {
+    void testDetectLanguageUnknownLanguageReturnsAsIs() {
         app.setDefaultLanguage("en");
         setRequestContext(request);
         try {

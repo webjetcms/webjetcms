@@ -68,14 +68,14 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
      * If false, always redirect when entering the page.
      */
     @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = "advanced", title = "apps.app-language-redirect.rootOnly")
-    private boolean rootOnly = false;
+    private Boolean rootOnly = false;
 
     /**
      * If true, redirection is performed only when the user does not have a language cookie set.
      * This allows users to change language manually without being redirected.
      */
     @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = "advanced", title = "apps.app-language-redirect.respectCookie")
-    private boolean respectCookie = true;
+    private Boolean respectCookie = true;
 
     /**
      * Language-to-URL redirect mappings. Up to 8 configurable pairs.
@@ -218,6 +218,7 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
 
     /**
      * Detects language from the HTTP Accept-Language header.
+     * Parses quality factors (q-values) to find the language with highest preference.
      *
      * @param request HTTP request
      * @return detected language (sk, cs, en, etc.)
@@ -231,22 +232,50 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
         }
 
         try {
-            // Parse the first (highest priority) language
-            String[] languages = acceptLanguage.split(",");
-            if (languages.length > 0) {
-                String lang = languages[0].trim();
+            String bestLang = null;
+            double bestQuality = -1.0;
 
-                // Remove quality factor (e.g., en-US;q=0.7 -> en-US)
-                if (lang.indexOf(';') != -1)
-                    lang = lang.split(";")[0].trim();
+            // Parse all language preferences with quality factors
+            String[] languages = acceptLanguage.split(",");
+            for (String langPref : languages) {
+                langPref = langPref.trim();
+                if (langPref.isEmpty()) continue;
+
+                // Extract quality factor (default 1.0 if not specified)
+                double quality = 1.0;
+                if (langPref.indexOf(';') != -1) {
+                    String[] parts = langPref.split(";");
+                    langPref = parts[0].trim();
+                    for (int i = 1; i < parts.length; i++) {
+                        String param = parts[i].trim();
+                        if (param.startsWith("q=")) {
+                            try {
+                                quality = Double.parseDouble(param.substring(2));
+                            } catch (NumberFormatException e) {
+                                Logger.debug(LanguageRedirectApp.class, "Failed to parse quality factor: " + param);
+                                quality = 1.0;
+                            }
+                        }
+                    }
+                }
 
                 // Extract language code from locale (e.g., en-US -> en, sk_SK -> sk)
+                String lang = langPref;
                 if (lang.indexOf('-') != -1)
                     lang = lang.split("-")[0];
                 if (lang.indexOf('_') != -1)
                     lang = lang.split("_")[0];
+                lang = lang.toLowerCase();
 
-                return lang.toLowerCase();
+                // Track language with highest quality
+                if (quality > bestQuality) {
+                    bestQuality = quality;
+                    bestLang = lang;
+                }
+            }
+
+            if (bestLang != null && bestQuality > 0) {
+                return bestLang;
             }
         } catch (Exception e) {
             Logger.error(LanguageRedirectApp.class, "Error detecting language: " + e.getMessage(), e);
