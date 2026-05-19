@@ -69,11 +69,12 @@ public class MultistepFormsRestController {
                 throw new IllegalStateException("Provided params to get stepHtml are invalid.");
 
             FormHtmlHandler formHtmlHandler = new FormHtmlHandler(formName, request);
+            FormConditionsHandler formConditionsHandler = new FormConditionsHandler(formName, request);
 
             JSONObject result = new JSONObject();
             result.put("html", formHtmlHandler.getFormStepHtml(stepId, request));
-            result.put("visibilityConditions", formHtmlHandler.getVisibilityConditions(stepId, request));
-            result.put("requirementConditions", formHtmlHandler.getRequirementConditions(stepId, request));
+            result.put("visibilityConditions", formConditionsHandler.getVisibilityConditions(stepId));
+            result.put("requirementConditions", formConditionsHandler.getRequirementConditions(stepId));
 
             return ResponseEntity.ok()
                 .header("Content-Type", contentTypeWithCharset)

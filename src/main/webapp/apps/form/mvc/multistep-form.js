@@ -269,6 +269,24 @@ export class MultistepForm {
     }
 
     /**
+     * Resolve a field wrapper (.form-group) by itemFormId.
+     * Supports standard inputs as well as label-only rows rendered without inputs.
+     * @param {string} itemFormId - Form item identifier.
+     * @returns {HTMLElement|null} Matched field wrapper or null.
+     */
+    _resolveFieldWrapper(itemFormId) {
+        if (!itemFormId) return null;
+
+        const input = this.wrapper.querySelector(`[name="${itemFormId}"], [id="${itemFormId}"]`);
+        if (input) return input.closest('.form-group') || input.parentElement;
+
+        const label = this.wrapper.querySelector(`label[for="${itemFormId}"]`);
+        if (label) return label.closest('.form-group') || label.parentElement;
+
+        return null;
+    }
+
+    /**
      * Initialize conditional visibility for fields in the current step.
      * Uses the server-provided visibilityConditions map (itemFormId -> {conditions, hidden})
      * instead of parsing from DOM attributes.
@@ -287,11 +305,7 @@ export class MultistepForm {
             const conditions = entry.conditions;
             if (!Array.isArray(conditions) || conditions.length === 0) continue;
 
-            // Find the input/select/textarea with this name, then get its wrapper .form-group
-            const input = this.wrapper.querySelector(`[name="${itemFormId}"], [id="${itemFormId}"]`);
-            if (!input) continue;
-
-            const field = input.closest('.form-group') || input.parentElement;
+            const field = this._resolveFieldWrapper(itemFormId);
             if (!field) continue;
 
             // Apply server-side hidden state for cross-step conditions
@@ -398,10 +412,7 @@ export class MultistepForm {
             const conditions = entry.conditions;
             if (!Array.isArray(conditions) || conditions.length === 0) continue;
 
-            const input = this.wrapper.querySelector(`[name="${itemFormId}"], [id="${itemFormId}"]`);
-            if (!input) continue;
-
-            const field = input.closest('.form-group') || input.parentElement;
+            const field = this._resolveFieldWrapper(itemFormId);
             if (!field) continue;
 
             // Apply server-side requirement state for cross-step conditions

@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 
@@ -24,6 +25,7 @@ public class FormItemsConditionEntity {
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_form_items_conditions")
     @DataTableColumn(inputType = DataTableColumnType.ID, hidden = true)
+    @Accessors(chain = false)
     private Long id;
 
     // Used as fast reference to get all form items conditions

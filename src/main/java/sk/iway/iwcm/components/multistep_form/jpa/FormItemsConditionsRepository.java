@@ -15,6 +15,8 @@ public interface FormItemsConditionsRepository extends DomainIdRepository<FormIt
 
     List<FormItemsConditionEntity> findAllByFormItemIdAndConditionTypeAndDomainIdOrderBySortPriorityAsc(Long formItemId, ConditionType conditionType, Integer domainId);
 
+    List<FormItemsConditionEntity> findAllByFormItemIdInAndDomainIdOrderByFormItemIdAscSortPriorityAsc(List<Long> formItemIds, Integer domainId);
+
     @Query("SELECT fice.formItemId FROM FormItemsConditionEntity fice WHERE fice.formName = :formName AND fice.itemFormId = :itemFormId AND fice.domainId = :domainId")
     List<Long> getDependedItems(@Param("formName") String formName, @Param("itemFormId") String itemFormId, @Param("domainId") Integer domainId);
 }

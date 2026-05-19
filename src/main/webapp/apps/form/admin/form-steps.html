@@ -183,28 +183,41 @@
         formItemsDataTable.on("draw", function() { loadStepPreview(); });
 
         formItemsDataTable.EDITOR.on( 'open', function( e, mode, action ) {
+
+            if("create" === action) {
+                ["visibilityConditions", "requirementConditions"].forEach(tabId => {
+                    $("#pills-dt-formItemsDataTable-" + tabId + "-tab").hide();
+                });
+            }
+
             if(itemsFirstLoad === true) {
                 itemsFirstLoad = false;
 
                 $("#DTE_Field_fieldType").on("change", function() {
                     const selectedFieldType = $(this).val();
                     const hiddenFieldsByType = formItemsDataTable.DATA.jsonOptions.hiddenFieldsByType;
-                    const hiddenTabsByType = formItemsDataTable.DATA.jsonOptions.hiddenTabsByType;
 
-                    hiddenTabsByType.forEach(tab => {
-                        if(tab.value === selectedFieldType) {
-                            let label = tab.label;
-                            if(label != null && label.trim().length > 0) {
-                                label.split(",").map(s => s.trim()).forEach(tabId => {
-                                    $("#pills-dt-formItemsDataTable-" + tabId + "-tab").hide();
-                                });
-                            } else {
-                                $("#pills-dt-formItemsDataTable-visibilityConditions-tab").show();
-                                $("#pills-dt-formItemsDataTable-requirmentConditions-tab").show();
+                    const editDialog = $("div.DTE.DTE_Action_Edit");
+                    if(editDialog != undefined && editDialog != null && editDialog.length) {
+                        // Its edit
+
+                        // Reset condition tabs before applying selected type specific hidden tabs.
+                        ["visibilityConditions", "requirementConditions"].forEach(tabId => {
+                            $("#pills-dt-formItemsDataTable-" + tabId + "-tab").show();
+                        });
+
+                        const hiddenTabsByType = formItemsDataTable.DATA.jsonOptions.hiddenTabsByType;
+                        hiddenTabsByType.forEach(tab => {
+                            if(tab.value === selectedFieldType) {
+                                let label = tab.label;
+                                if(label != null && label.trim().length > 0) {
+                                    label.split(",").map(s => s.trim()).forEach(tabId => {
+                                        $("#pills-dt-formItemsDataTable-" + tabId + "-tab").hide();
+                                    });
+                                }
                             }
-                        }
-                    });
-
+                        });
+                    }
 
                     let fieldsToHide = [];
                     for(let i = 0; i < hiddenFieldsByType.length; i++) {
@@ -288,14 +301,14 @@
 
     let conditionsWithoutValue = ["EMPTY", "NOT_EMPTY"];
     let visibilityConditionsDataTable = null;
-    let requirmentConditionsDataTable = null;
+    let requirementConditionsDataTable = null;
     window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
         if (event.detail.conf.id == "DTE_Field_visibilityConditions" && visibilityConditionsDataTable == null) {
             visibilityConditionsDataTable = event.detail.conf.datatable;
             bindTableEvent(visibilityConditionsDataTable);
-        } else if(event.detail.conf.id == "DTE_Field_requirmentConditions" && requirmentConditionsDataTable == null) {
-            requirmentConditionsDataTable = event.detail.conf.datatable;
-            bindTableEvent(requirmentConditionsDataTable);
+        } else if(event.detail.conf.id == "DTE_Field_requirementConditions" && requirementConditionsDataTable == null) {
+            requirementConditionsDataTable = event.detail.conf.datatable;
+            bindTableEvent(requirementConditionsDataTable);
         }
     });
 

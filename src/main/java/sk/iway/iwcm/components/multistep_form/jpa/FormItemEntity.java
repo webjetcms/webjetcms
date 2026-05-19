@@ -35,7 +35,7 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
     @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
     @DataTableTab(id = "advanced", title = "datatable.tab.advanced"),
     @DataTableTab(id = MultistepFormsService.VISIBILITY_TAB, title = "components.form_items_condition.visibility_tab"),
-    @DataTableTab(id = MultistepFormsService.REQUIREEMNT_TAB, title = "components.form_items_condition.requirement_tab"),
+    @DataTableTab(id = MultistepFormsService.REQUIREMENT_TAB, title = "components.form_items_condition.requirement_tab"),
     @DataTableTab(id = "stat", title = "components.form_items.stat_tab")
 })
 public class FormItemEntity extends BaseEditorFields {
@@ -139,7 +139,7 @@ public class FormItemEntity extends BaseEditorFields {
 
     @Transient
     @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title="&nbsp;",
-        tab = "visibilityConditions",
+        tab = "visibilityConditions", className = "hide-on-create",
         editor = { @DataTableColumnEditor(
             attr = {
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/form-items-conditions?formName={formName}&itemId={id}&stepId={stepId}&conditionType=VISIBILITY"),
@@ -155,10 +155,10 @@ public class FormItemEntity extends BaseEditorFields {
 
     @Transient
     @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title="&nbsp;",
-        tab = "requirmentConditions",
+        tab = "requirementConditions", className = "hide-on-create",
         editor = { @DataTableColumnEditor(
             attr = {
-                @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/form-items-conditions?formName={formName}&itemId={id}&stepId={stepId}&conditionType=REQUIRMENT"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/form-items-conditions?formName={formName}&itemId={id}&stepId={stepId}&conditionType=REQUIREMENT"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.multistep_form.jpa.FormItemsConditionEntity"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "true"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "import,export,celledit"),
@@ -167,7 +167,7 @@ public class FormItemEntity extends BaseEditorFields {
             }
         )}
     )
-    private List<FormItemsConditionEntity> requirmentConditions;
+    private List<FormItemsConditionEntity> requirementConditions;
 
     @Column(name = "item_form_id")
     @DataTableColumn(inputType = DataTableColumnType.HIDDEN)

@@ -4,18 +4,15 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.apache.commons.text.StringEscapeUtils;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.CryptoFactory;
 import sk.iway.iwcm.FileTools;
@@ -28,12 +25,8 @@ import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.forms.FormsEntity;
 import sk.iway.iwcm.components.forms.FormsService;
-import sk.iway.iwcm.components.multistep_form.jpa.ConditionType;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
-import sk.iway.iwcm.components.multistep_form.jpa.FormItemsConditionEntity;
-import sk.iway.iwcm.components.multistep_form.jpa.FormItemsConditionsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
-import sk.iway.iwcm.components.multistep_form.jpa.OperatorType;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.doc.DocDB;
@@ -66,7 +59,6 @@ public class FormHtmlHandler {
     private final FormStepsRepository formStepsRepository;
     private final FormItemsRepository formItemsRepository;
     private final FormSettingsRepository formSettingsRepository;
-    private final FormItemsConditionsRepository formItemsConditionsRepository;
 
     //
     private String formName;
@@ -93,16 +85,13 @@ public class FormHtmlHandler {
 
     public FormHtmlHandler(String formName, HttpServletRequest request) {
         this.formStepsRepository = Tools.getSpringBean("formStepsRepository", FormStepsRepository.class);
-        if(this.formStepsRepository == null) throw new IllegalStateException("FormHtmlHandler was no aible to obtain FormStepsRepository");
+        if(this.formStepsRepository == null) throw new IllegalStateException("FormHtmlHandler was not able to obtain FormStepsRepository");
 
         this.formItemsRepository = Tools.getSpringBean("formItemsRepository", FormItemsRepository.class);
-        if(this.formItemsRepository == null) throw new IllegalStateException("FormHtmlHandler was no aible to obtain FormItemsRepository");
+        if(this.formItemsRepository == null) throw new IllegalStateException("FormHtmlHandler was not able to obtain FormItemsRepository");
 
         this.formSettingsRepository = Tools.getSpringBean("formSettingsRepository", FormSettingsRepository.class);
-        if(this.formSettingsRepository == null) throw new IllegalStateException("FormHtmlHandler was no aible to obtain FormSettingsRepository");
-
-        this.formItemsConditionsRepository = Tools.getSpringBean("formItemsConditionsRepository", FormItemsConditionsRepository.class);
-        if(this.formItemsConditionsRepository == null) throw new IllegalStateException("FormHtmlHandler was no aible to obtain FormItemsConditionsRepository");
+        if(this.formSettingsRepository == null) throw new IllegalStateException("FormHtmlHandler was not able to obtain FormSettingsRepository");
 
         this.formName = formName;
 
@@ -174,113 +163,6 @@ public class FormHtmlHandler {
     }
 
     /**
-     * Builds a map of visibility conditions for all items in a step.
-     * Each entry maps the item's fieldFormId to its conditions array and server-side hide flag.
-     * This separates visibility metadata from HTML rendering.
-     *
-     * @param stepId ID of the step
-     * @param request HTTP request (for session access to evaluate cross-step conditions)
-     * @return JSONObject where keys are itemFormId and values are objects with "conditions" array and "hidden" boolean
-     */
-    public final JSONObject getVisibilityConditions(Long stepId, HttpServletRequest request) {
-        return getConditionalMap(stepId, request, ConditionType.VISIBILITY, "hidden", false, "visibility");
-    }
-
-    /**
-     * Build a JSON map of requirement conditions for the given step.
-     * Structure mirrors getVisibilityConditions: keys are itemFormId, values contain
-     * "conditions" array and "required" boolean (true when cross-step conditions are all met).
-     *
-     * @param stepId ID of the step
-     * @param request HTTP request (for session access to evaluate cross-step conditions)
-     * @return JSONObject where keys are itemFormId and values are objects with "conditions" array and "required" boolean
-     */
-    public final JSONObject getRequirementConditions(Long stepId, HttpServletRequest request) {
-        return getConditionalMap(stepId, request, ConditionType.REQUIRMENT, "required", true, "requirement");
-    }
-
-    private JSONObject getConditionalMap(Long stepId, HttpServletRequest request, ConditionType conditionType,
-                                         String resultKey, boolean resultWhenAllMet, String conditionLabel) {
-        JSONObject result = new JSONObject();
-
-        List<FormItemEntity> stepItems = formItemsRepository.getAllStepItems(stepId, CloudToolsForCore.getDomainId());
-        Set<String> currentStepFieldIds = new HashSet<>();
-        for (FormItemEntity stepItem : stepItems) {
-            if (Tools.isNotEmpty(stepItem.getItemFormId())) currentStepFieldIds.add(stepItem.getItemFormId());
-        }
-
-        for (FormItemEntity stepItem : stepItems) {
-            List<FormItemsConditionEntity> conditionsX = formItemsConditionsRepository.findAllByFormItemIdAndConditionTypeAndDomainIdOrderBySortPriorityAsc(stepItem.getId(), conditionType, CloudToolsForCore.getDomainId());
-            if (conditionsX == null || conditionsX.isEmpty()) continue;
-
-            JSONArray conditions = new JSONArray();
-            for (FormItemsConditionEntity condition : conditionsX) {
-                JSONObject cond = new JSONObject();
-                cond.put("fieldId", condition.getItemFormId());
-                cond.put("operator", condition.getOperator().getValue());
-                cond.put("value", condition.getValue());
-                cond.put("caseInsensitive", Boolean.TRUE.equals(condition.getCaseInsensitive()));
-                if (condition.getJoinOperatorType() != null) {
-                    cond.put("joinOperator", condition.getJoinOperatorType().name());
-                }
-                conditions.put(cond);
-            }
-
-            boolean conditionResult = false;
-            try {
-                String sessionPrefix = MultistepFormsService.getSessionKey(this.formName, request) + "_";
-                boolean allFromPreviousSteps = true;
-                Boolean combinedResult = null;
-
-                for (int i = 0; i < conditions.length(); i++) {
-                    JSONObject cond = conditions.getJSONObject(i);
-                    String fieldId = cond.optString("fieldId", "");
-                    OperatorType operatorType = OperatorType.fromString(cond.optString("operator", "equals"));
-                    String requiredValue = cond.optString("value", "");
-                    boolean caseInsensitive = cond.optBoolean("caseInsensitive", false);
-
-                    if (Tools.isEmpty(fieldId)) continue;
-
-                    if (currentStepFieldIds.contains(fieldId)) {
-                        allFromPreviousSteps = false;
-                        continue;
-                    }
-
-                    Object sessionValue = request.getSession().getAttribute(sessionPrefix + fieldId);
-                    String storedValue = sessionValue != null ? sessionValue.toString() : "";
-
-                    boolean met = MultistepFormsService.evaluateOperator(operatorType, storedValue, requiredValue, caseInsensitive);
-
-                    if (combinedResult == null) {
-                        combinedResult = met;
-                    } else {
-                        // Use joinOperator from the PREVIOUS condition (postfix operator)
-                        JSONObject prevCond = conditions.getJSONObject(i - 1);
-                        String joinOp = prevCond.optString("joinOperator", "AND");
-                        if ("OR".equalsIgnoreCase(joinOp)) {
-                            combinedResult = combinedResult || met;
-                        } else {
-                            combinedResult = combinedResult && met;
-                        }
-                    }
-                }
-
-                boolean allMet = combinedResult != null ? combinedResult : true;
-                conditionResult = allFromPreviousSteps && (resultWhenAllMet ? allMet : !allMet);
-            } catch (Exception e) {
-                Logger.debug(FormHtmlHandler.class, "Failed to evaluate " + conditionLabel + " condition for item " + stepItem.getItemFormId() + ": " + e.getMessage());
-            }
-
-            JSONObject entry = new JSONObject();
-            entry.put("conditions", conditions);
-            entry.put(resultKey, conditionResult);
-            result.put(stepItem.getItemFormId(), entry);
-        }
-
-        return result;
-    }
-
-    /**
      * Creates the opening HTML of the form, including optional CSS links and action URL.
      *
      * @param stepId current step ID (used for action URL), -1 for email render
@@ -345,7 +227,15 @@ public class FormHtmlHandler {
      */
     private StringBuilder getStepItems(Long stepId, HttpServletRequest request) {
         StringBuilder stepItemsHtml = new StringBuilder();
+
+        FormConditionsHandler formConditionsHandler = new FormConditionsHandler(this.formName, request);
+        // isFieldHiddenByCondition requires data as JSONObject
+        JSONObject jsonObject = new JSONObject(this.formData);
+
         for(FormItemEntity stepItem : formItemsRepository.getAllStepItems(stepId, CloudToolsForCore.getDomainId())) {
+
+            // DO NOT ADD item from form step if its hidden by condition - for email render
+            if(isEmailRender == true && Tools.isTrue(formConditionsHandler.isFieldHiddenByCondition(stepItem, jsonObject))) continue;
 
             JSONObject item = new JSONObject(stepItem);
             String fieldType = item.getString("fieldType");

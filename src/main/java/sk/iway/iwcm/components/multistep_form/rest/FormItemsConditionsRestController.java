@@ -39,7 +39,6 @@ import sk.iway.iwcm.system.datatable.ProcessItemAction;
 public class FormItemsConditionsRestController extends DatatableRestControllerV2<FormItemsConditionEntity, Long> {
 
     private final MultistepFormsService multistepFormsService;
-
     private final FormItemsRepository formItemsRepository;
 
     @Autowired
@@ -69,8 +68,12 @@ public class FormItemsConditionsRestController extends DatatableRestControllerV2
         predicates.add(builder.equal(root.get("formItemId"), itemId));
 
         ConditionType conditionType = ConditionType.fromString( getRequest().getParameter("conditionType") );
-        if(conditionType == null) predicates.add(builder.equal(root.get("conditionType"), "NONE"));
-        else predicates.add(builder.equal(root.get("conditionType"), conditionType));
+        if(conditionType == null) {
+            // Return no results for missing or invalid condition type.
+            predicates.add(builder.disjunction());
+        } else {
+            predicates.add(builder.equal(root.get("conditionType"), conditionType));
+        }
 
         predicates.add(builder.equal(root.get("domainId"), CloudToolsForCore.getDomainId()));
     }
@@ -119,7 +122,7 @@ public class FormItemsConditionsRestController extends DatatableRestControllerV2
 
         if(itemId > 0 && Tools.isNotEmpty(itemFormId)) {
             formItemsRepository.countItemsByIdAndItemFormId(formName, Long.valueOf(itemId), itemFormId).ifPresent(count -> {
-                if(count > 0) errors.rejectValue("errorField.itemFormId", "", "cant point to itself");
+                if(count > 0) errors.rejectValue("errorField.itemFormId", "", getProp().getText("components.form_items_condition.cant_point_to_self_err"));
             });
         }
 

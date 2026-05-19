@@ -146,7 +146,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         if(isRowView == false && MultistepFormsService.getRowViewItemTypes().contains(entity.getFieldType()))
             throw new IllegalStateException(getProp().getText("components.form_items.formIsNotRowView"));
 
-        if("edit".equals(target.getAction()) && Tools.isFalse(entity.getAllowSaveWhenCondition())) {
+        if("edit".equals(target.getAction()) && Boolean.TRUE.equals(entity.getAllowSaveWhenCondition()) == false) {
             validateFieldConditionDependencies(entity, false);
         }
     }

@@ -2,7 +2,7 @@ package sk.iway.iwcm.components.multistep_form.jpa;
 
 public enum ConditionType {
     VISIBILITY,
-    REQUIRMENT;
+    REQUIREMENT;
 
     public static ConditionType fromString(String value) {
         if (value == null) return null;
