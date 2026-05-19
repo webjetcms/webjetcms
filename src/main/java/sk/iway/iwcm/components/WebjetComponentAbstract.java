@@ -287,7 +287,7 @@ public abstract class WebjetComponentAbstract implements WebjetComponentInterfac
      * @return - true if in editor preview mode, false otherwise
      */
     public boolean isEditorPreview(HttpServletRequest request) {
-        if (request.getAttribute("inPreviewMode") != null) return true;
+        if (request.getAttribute("inPreviewMode") != null || request.getAttribute("inlineEditorAdmin") != null) return true;
         return false;
     }
 

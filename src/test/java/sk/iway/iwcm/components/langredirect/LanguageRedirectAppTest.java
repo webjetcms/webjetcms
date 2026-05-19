@@ -1,4 +1,4 @@
-package sk.iway.basecms.langredirect;
+package sk.iway.iwcm.components.langredirect;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -16,7 +16,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import jakarta.servlet.http.HttpServletRequest;
-
 import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.test.BaseWebjetTest;
 

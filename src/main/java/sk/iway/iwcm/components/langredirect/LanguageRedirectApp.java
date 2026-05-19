@@ -1,4 +1,4 @@
-package sk.iway.basecms.langredirect;
+package sk.iway.iwcm.components.langredirect;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,11 +31,11 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
  * <p>Application for redirecting the home page to a subdirectory based on browser language.</p>
  * <p>It detects the language from the HTTP {@code Accept-Language} header and redirects the user to the corresponding language folder.</p>
  * <p>Include example:</p>
- * <code>!INCLUDE(sk.iway.basecms.langredirect.LanguageRedirectApp)!</code>
+ * <code>!INCLUDE(sk.iway.iwcm.components.langredirect.LanguageRedirectApp)!</code>
  *
  * The @WebjetAppStore annotation ensures the application is displayed in the editor application list (AppStore)
  */
-@WebjetComponent("sk.iway.basecms.langredirect.LanguageRedirectApp")
+@WebjetComponent("sk.iway.iwcm.components.langredirect.LanguageRedirectApp")
 @WebjetAppStore(
     nameKey = "apps.langredirect.title",
     descKey = "apps.langredirect.desc",
