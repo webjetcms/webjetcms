@@ -62,8 +62,6 @@ class A11yHelper extends Helper {
 		const _opts = { ...defaultRunA11YOpts, ...A11yHelper.config, ...opts };
 		fileName = `${Date.now().toString()}_${_opts.reportFileName}`;
 
-		await injectAxe(page);
-
         const context = _opts.context;
         const axeOptions = {
             axeOptions: _opts.axeOptions,
@@ -76,7 +74,71 @@ class A11yHelper extends Helper {
             outputDir: _opts.outputDir,
             reportFileName: fileName,
         };
-        const violations = await getViolations(page, context, axeOptions?.axeOptions)
+
+        // Traverse nested iframes based on whitespace-separated selector segments.
+        // E.g. "iframe.cke_dialog_ui_iframe #editorComponent" will:
+        //   1. Find iframe.cke_dialog_ui_iframe in the page and switch into its frame
+        //   2. Find #editorComponent inside that frame; if it is also an iframe, switch into it
+        // Non-iframe segments are used as the axe context within the current frame.
+        let targetPage = page;
+        let targetContext = context;
+        if (context && typeof context === 'string') {
+            const parts = context.trim().split(/\s+/);
+            let currentPage = page;
+            let resolved = false;
+
+            for (let i = 0; i < parts.length; i++) {
+                const selector = parts[i];
+                const element = await currentPage.waitForSelector(selector, { timeout: 5000 }).catch(() => null);
+
+                if (!element) {
+                    console.log(`a11y: "${selector}" not found in current frame, using remaining selector as axe context`);
+                    targetPage = currentPage;
+                    targetContext = parts.slice(i).join(' ');
+                    resolved = true;
+                    break;
+                }
+
+                const tagName = await element.evaluate(el => el.tagName.toLowerCase());
+                console.log(`a11y: "${selector}" => tagName="${tagName}"`);
+
+                if (tagName === 'iframe') {
+                    const frame = await element.contentFrame();
+                    if (!frame) {
+                        console.log(`a11y: contentFrame() is null for "${selector}", falling back`);
+                        targetPage = currentPage;
+                        targetContext = parts.slice(i).join(' ');
+                        resolved = true;
+                        break;
+                    }
+                    await frame.waitForLoadState('domcontentloaded');
+                    currentPage = frame;
+                    console.log(`a11y: switched into iframe "${selector}"`);
+                    if (i === parts.length - 1) {
+                        // Last part was an iframe — run axe on the whole frame
+                        targetPage = currentPage;
+                        targetContext = null;
+                        resolved = true;
+                    }
+                } else {
+                    // Non-iframe element: use this and remaining parts as axe context
+                    targetPage = currentPage;
+                    targetContext = parts.slice(i).join(' ');
+                    resolved = true;
+                    break;
+                }
+            }
+
+            if (!resolved) {
+                targetPage = currentPage;
+                targetContext = null;
+            }
+        }
+
+		//console.log("a11y: targetPage=", targetPage.url(), "targetContext=", targetContext);
+		await injectAxe(targetPage);
+
+        const violations = await getViolations(targetPage, targetContext, axeOptions?.axeOptions)
 
         //console.log("violations=", violations);
 

@@ -13,7 +13,7 @@ Mapování URL adres `*.do` se konfiguruje v souboru `struts-config.xml`, v uká
 </action>
 ```
 
-Action třída, v tomto případě `InquiryAnswerAction`, zpracovává požadavek pomocí metody `execute` a může využívat data uložená ve `ActionForm` bean. Následně používá metodu `mapping.findForward()` pro přesměrování požadavku na výstupní zobrazení v JSP souboru. V příkladu je použito přesměrování k zobrazení `fail`, které je definováno v souboru `struts-config.xml` jak `/components/inquiry/fail.jsp`.
+Action třída, v tomto případě `InquiryAnswerAction`, zpracovává požadavek pomocí metody `execute` a může využívat údaje uložené ve `ActionForm` bean. Následně používá metodu `mapping.findForward()` k přesměrování požadavku na výstupní zobrazení v JSP souboru. V příkladu je použito přesměrování pro zobrazení `fail`, které je definováno v souboru `struts-config.xml` jako `/components/inquiry/fail.jsp`.
 
 ```java
     @Override
@@ -32,7 +32,7 @@ Action třída, v tomto případě `InquiryAnswerAction`, zpracovává požadave
 
 ## Přechod z mapování Struts na Spring
 
-Pro přechod na Spring vymažte mapování ze `struts-config.xml` a vytvořte nové ve Spring kontroloři. Problém je, pokud potřebujete zachovat původní URL adresy (jelikož se mohou používat v různých JSP souborech). Nelze vytvořit Spring mapování na `/cokolvek.do`, vzhledem k tomu `*.do` zpracuje Struts `servlet`. Řešením je třída `UnknownAction`, která mapuje neznámé Struts `*.do` volání na `*.struts`, které již můžete ve Spring mapovat:
+Pro přechod na Spring vymažte mapování ze `struts-config.xml` a vytvořte nové ve Spring kontroloři. Problém je, pokud potřebujete zachovat původní URL adresy (jelikož se mohou používat v různých JSP souborech). Nelze vytvořit Spring mapování na `/cokolvek.do`, protože `*.do` zpracuje Struts `servlet`. Řešením je třída `UnknownAction`, která mapuje neznámé Struts `*.do` volání na `*.struts`, které již můžete ve Spring mapovat:
 
 ```xml
     <action path="/unknown" type="sk.iway.iwcm.sync.UnknownAction" unknown="true" />
@@ -138,4 +138,4 @@ V případě přesunu požadavku na JSP soubor můžete využít metodu `request
 
 ### JSP značky
 
-Značky jako `<logic:present/iterate/...` nahrazeno za odpovídající `<iwcm:present/iterate/...`, pozor `<bean:write` za `<iwcm:beanWrite`.
+Značky jako `<logic:present/iterate/...` nahrazeny za odpovídající `<iwcm:present/iterate/...`, pozor `<bean:write` za `<iwcm:beanWrite`.

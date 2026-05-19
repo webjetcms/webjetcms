@@ -439,3 +439,7 @@ See the [screen reader commands reference](references/A11Y-PATTERNS.md#screen-re
 - [Web Quality Audit](../web-quality-audit/SKILL.md)
 - [WCAG criteria reference](references/WCAG.md)
 - [Accessibility code patterns](references/A11Y-PATTERNS.md)
+
+## IMPORTANT code change convention
+
+We use thymeleaf templates in HTML files and also in PUG files. There is difference how to insert text from translation files/keys. In HTML files always insert it like `data-th-aria-label="#{components.name.key}"` and in PUG files it must be correctly escaped by backslash `data-th-aria-label="\#{components.name.key}"`. Note we are using prefix `data-th-` before real attribute name, so the translation key will be processed by Thymeleaf template. Please follow this convention when adding new text from translation files/keys.

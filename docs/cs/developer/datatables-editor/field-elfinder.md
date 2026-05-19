@@ -4,14 +4,15 @@ Datové pole elfinder integruje výběr odkazu na soubor pomocí aplikace elfind
 
 Pro pole obsahující odkaz na obrázek se na začátku pole zobrazuje náhled obrázku.
 
-Hodnota pole je zobrazena s šedým pozadím, pole ale není typu `disabled`, v případě potřeby lze hodnotu upravit, nebo vložit ze schránky. Šedá barva je zvolena, aby uživatele naváděla kliknout na ikonu výběru odkazu.
+Hodnota pole je zobrazena s šedým pozadím, pole ale není typu ```disabled```, v případě potřeby lze hodnotu upravit, nebo vložit ze schránky. Šedá barva je zvolena, aby uživatele naváděla kliknout na ikonu výběru odkazu.
 
 ![](field-type-elfinder.png)
 
 ## Použití anotace
 
-Anotace se používá jako `DataTableColumnType.ELFINDER`, přičemž je možné nastavit následující atributy:
-- `className` - pokud obsahuje hodnotu `image` zobrazí se na začátku pole náhled zvoleného obrázku (nebo ikona prázdného obrázku, pokud obrázek ještě není zvolen)
+Anotace se používá jako ```DataTableColumnType.ELFINDER```, přičemž je možné nastavit následující atributy:
+
+- ```className``` - ​​pokud obsahuje hodnotu ```image``` zobrazí se na začátku pole náhled zvoleného obrázku (nebo ikona prázdného obrázku, pokud obrázek ještě není zvolen)
 
 Kompletní příklad anotace:
 
@@ -34,17 +35,18 @@ private String externalLink;
 
 ## Nastavení
 
-Pomocí atributu `className` je možné nastavit doplňkové filtrování zobrazených souborů:
-- `image` - zobrazí se pouze soubory, jejichž `mime-type` začíná na `image/`.
-- `video` - zobrazí se pouze soubory, jejichž `mime-type` začíná na `video/`.
-- `multimedia` - zobrazí se pouze soubory, jejichž `mime-type` začíná na `image/` nebo `video/`.
+Pomocí atributu `className` lze nastavit doplňkové filtrování zobrazených souborů:
+
+- `image` - ​​zobrazí se pouze soubory, jejichž `mime-type` začíná na `image/`.
+- `video` - ​​zobrazí se pouze soubory, jejichž `mime-type` začíná na `video/`.
+- `multimedia` - ​​zobrazí se pouze soubory, jejichž `mime-type` začíná na `image/` nebo `video/`.
 
 Nastavení `mime-type` je čteno ze souboru [mime.types](../../../../src/main/webapp/WEB-INF/mime.types).
 
 ## Poznámky k implementaci
 
-Implementace je v souboru [field-type-elfinder.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-elfinder.js). Podle `className` generuje vhodný HTML kód input pole. Do proměnné `conf._prepend` ukládá odkaz na prepend element (`div.input-group-prepend .input-group-text`) s náhledem obrázku. Funkce `setValue(conf, val)` se používá k nastavení hodnoty pole a zároveň k nastavení náhledového obrázku (je-li typu `.jpg` nebo `.png`).
+Implementace je v souboru [field-type-elfinder.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-elfinder.js). Podle ```className``` generuje vhodný HTML kód input pole. Do proměnné ```conf._prepend``` ukládá odkaz na prepend element (```div.input-group-prepend .input-group-text```) s náhledem obrázku. Funkce ```setValue(conf, val)``` se používá k nastavení hodnoty pole a zároveň k nastavení náhledového obrázku (je-li typu ```.jpg``` nebo ```.png```).
 
-Náhledový obrázek je nastaven jako `background-image`, zároveň je `prepend` elementu nastavená CSS třída `has-image`.
+Náhledový obrázek je nastaven jako ```background-image```, zároveň je ```prepend``` elementu nastavena CSS třída ```has-image```.
 
-Otevření okna elfinder-a je zajištěno voláním funkce [WJ.openElFinder](../frameworks/webjetjs.md#iframe-dialog) s nastaveným `callback` na funkci `setValue`.
+Otevření okna elfinderu je zajištěno voláním funkce [WJ.openElFinder](../frameworks/webjetjs.md#iframe-dialog) s nastaveným ```callback``` na funkci ```setValue```.

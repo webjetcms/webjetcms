@@ -6,59 +6,64 @@ WebJET obsahuje inteligentní editor web stránek, který vám co nejvěrněji z
 
 ## Práce s textem (psaní/vkládání/kopírování)
 
-Při práci s textem si musíte v první řadě uvědomit rozdíl mezi odstavcem a zalomeným textem, čili rozdělením věty do dalšího řádku. Jednotlivé odstavce vytvoříte běžným stisknutím `ENTER`, zatímco zalomení textu pomocí klávesové kombinace `SHIFT + ENTER`.
+Při práci s textem si musíte v první řadě uvědomit rozdíl mezi odstavcem a zalomeným textem, čili rozdělením věty do dalšího řádku. Jednotlivé odstavce vytvoříte běžným stisknutím ```ENTER```, zatímco zalomení textu pomocí klávesové kombinace ```SHIFT + ENTER```.
 
 Rozdíl mezi nimi je zřetelný hlavně kvůli většímu odsazení mezi odstavci (oproti zalomení textu). Další důležitý rozdíl je v tom, že několik úprav textu (jako například vytvoření nadpisu) se aplikuje na celý odstavec. Pokud takový odstavec obsahuje zalomení řádku, tak se tato změna aplikuje i na zalomený řádek.
 
-Pokud chcete, aby se text po napsání mezery nezalomil, můžete kromě normální mezery vložit **pevnou mezeru**. Takový případ se může vyskytnout například při psaní dat `10. 2. 2009` nebo různých jiných textů, které by neměly být rozděleny na dva řádky, jako například. velikost souborů `123 kB` nebo telefonní číslo `0905 123 456`. Pevná mezera se vkládá klávesovou kombinací CTRL+Mezera. Vzhledově se nijak neliší, rozdílné je jen její chování vůči okolnímu textu na konci řádku.
+Pokud chcete, aby se text po napsání mezery nezalomil, můžete kromě normální mezery vložit **pevnou mezeru**. Takový případ se může vyskytnout například při psaní dat ```10. 2. 2009``` nebo různých jiných textů, které by neměly být rozděleny na dva řádky, například. velikost souborů ```123 kB``` nebo telefonní číslo ```0905 123 456```. Pevná mezera se vkládá klávesovou kombinací CTRL+Mezera. Vzhledově se nijak neliší, rozdílné je jen její chování vůči okolnímu textu na konci řádku.
 
 **Text ve WebJET editoru můžete upravovat následujícími způsoby**:
+
 - psaním přímo do editoru
-- vložením z jiného dokumentu (`DOC`, `PDF`, `XLS`, jiná web stránka...)
+- vložením z jiného dokumentu (```DOC```, ```PDF```, ```XLS```, jiná web stránka...)
 
 ### Vložení z jiného dokumentu
 
-**Klasické vložení textu** z panelu nástrojů pomocí ikony nebo kombinací kláves `CTRL + v`. Při vložení textu tímto způsobem se text vloží is původním formátováním zdrojového textu. Tento způsob je však nechtěný hlavně z důvodu ponechání jednotného stylování textů na celém webu podle předdefinovaných stylů.
+**Klasické vložení textu** z panelu nástrojů pomocí ikony nebo kombinací kláves ```CTRL + v```. Při vložení textu tímto způsobem se text vloží is původním formátováním zdrojového textu. Tento způsob je však nechtěný hlavně z důvodu ponechání jednotného stylování textů na celém webu podle předdefinovaných stylů.
 
 ![](paste.png)
 
-**Vložení neformátovaného textu** z panelu nástrojů pomocí ikony![](paste_text.png ":no-zoom") nebo kombinací kláves `CTRL + t` zda `CTRL + SHIFT + v`. Tento způsob vkládání textu vám text vloží bez jakéhokoli formátování, pro vkládání běžného textu je proto nejvhodnější.
+**Vložení neformátovaného textu** z panelu nástrojů pomocí ikony![](paste_text.png ":no-zoom" ) nebo kombinací kláves ```CTRL + t``` či ```CTRL + SHIFT + v```.
+Tento způsob vkládání textu vám text vloží bez jakéhokoli formátování, pro vkládání běžného textu je proto nejvhodnější.
 
-**Vložení textu z `Word` / `Excel` souboru** z panelu nástrojů pomocí ikony ![](paste_from_word.png ":no-zoom") nebo kombinací kláves `CTRL + w`. Tato možnost vloží text se zachovanými odstavci a tabulkami, ale očištěný od všech stylů z původního dokumentu. Bohužel některé prohlížeče mají tuto klávesovou zkratku vyhrazenou pro zavření okna/záložky, takže v takovém případě je lepší vkládat text přes klepnutí na ikonku v panelu nástrojů a ne přes klávesovou zkratku.
+**Vložení textu z ```Word``` / ```Excel``` souboru** z panelu nástrojů pomocí ikony ![](paste_from_word.png ":no-zoom" ) nebo kombinací kláves ```CTRL + w```.
+Tato možnost vloží text se zachovanými odstavci a tabulkami, ale očištěný od všech stylů z původního dokumentu. Bohužel některé prohlížeče mají tuto klávesovou zkratku vyhrazenou pro zavření okna/záložky, takže v
+takovém případě je lepší vkládat text přes kliknutí na ikonku v panelu nástrojů a ne přes klávesovou zkratku.
 
 ### Kopírování textu
 
-Kopírování textu je možné označením textu a kliknutím na ikonku ![](copy.png ":no-zoom") (nebo kombinací kláves `CTRL + c`).
+Kopírování textu je možné označením textu a klepnutím na ikonku ![](copy.png ":no-zoom" ) (nebo kombinací kláves ```CTRL + c```).
 
 ### Vystřižení textu
 
-Vystřižení textu je možné označením textu a kliknutím na ikonku ![](cut.png ":no-zoom") (nebo kombinací kláves `CTRL + x`).
+Vystřižení textu je možné označením textu a kliknutím na ikonku ![](cut.png ":no-zoom" ) (nebo kombinací kláves ```CTRL + x```).
 
 ## Práce se styly a formátování textu
 
-Ve WebJETu máte k dispozici jistý počet předdefinovaných stylů pro nadpisy a pro písma, která se používají pro stylování stránky do přijatelné formy. Správné definování nadpisů má zároveň značný význam pro optimalizaci pro vyhledávače (`SEO`) a vnitřní strukturu dokumentu.
+Ve WebJETu máte k dispozici jistý počet předdefinovaných stylů pro nadpisy a pro písma, která se používají pro stylování stránky do přijatelné formy. Správné definování nadpisů má zároveň značný význam pro optimalizaci pro vyhledávače (```SEO```) a vnitřní strukturu dokumentu.
 
-Předdefinované nadpisy se aplikují vždy na celý odstavec. Nadpis vytvoříte kliknutím do požadovaného odstavce, ze kterého chcete udělat nadpis a z rozbalovací nabídky vyberete požadovanou úroveň nadpisu.
+Předdefinované nadpisy se aplikují vždy na celý odstavec. Nadpis vytvoříte kliknutím do požadovaného odstavce, ze kterého chcete udělat nadpis az rozbalovací nabídky vyberete požadovanou úroveň nadpisu.
 
 ![](roletka.png)
 
 Na každé webové stránce by měl být vždy pouze jeden hlavní Nadpis 1, kterým by se měl text začínat. Jelikož je tento nadpis na standardní stránce automaticky vygenerován z názvu stránky (pokud to tak šablona definuje), není třeba jej vkládat do těla stránky. Sekce v rámci stránky se oddělují Nadpisem 2, jejich pod-sekce Nadpisem 3, atp.
 
-V této nabídce jsou i další předdefinované styly, jejich použití však vychází z jejich pojmenování, například styly obsahující text "tabulka" se používají pouze pro tabulky a podobně. Klepnutím do libovolného textu stránky v editoru se vám do pole Styl automaticky nastaví styl použitý na dané pozici kurzoru. Aktuálně použitý styl je zvýrazněn podbarvením jeho názvu. Opakovaným zvolením již nastaveného stylu se tento styl odstraní. Více informací je v [manuálu pro Web Designéra](../../../frontend/examples/template-bare/README.md#seznam-stylů-pro-editor).
+V této nabídce jsou i další předdefinované styly, jejich použití však vychází z jejich pojmenování, například styly obsahující text "tabulka" se používají pouze pro tabulky a podobně. Klepnutím do libovolného textu stránky v editoru se vám do pole Styl automaticky nastaví styl použitý na dané pozici kurzoru. Aktuálně použitý styl je zvýrazněn podbarvením jeho názvu. Opakovaným zvolením již nastaveného stylu se tento styl odstraní. Více informací je v [manuálu pro Web Designéra](../../../frontend/examples/template-bare/README.md#seznam-stylů-pre-editor).
 
 Pokud chcete změnit styl takového textu v rámci odstavce, nesmíte text označovat. Stačí kliknout do daného textu ve stránce, styl barvy se automaticky přednastaví v rozbalovací nabídce **Styl** a následně jej můžete změnit na jiný styl.
 
 Pomocí předdefinovaných stylů můžete text na stránce také zvýrazňovat. Ve výběru naleznete např. různé typy nadpisů, barevná zvýraznění. Používání stylů zajistí jednotný vzhled stránek.
 
 Další způsob formátování textu je pomocí následujících standardních nástrojů (aplikují se označením textu, který chcete upravit):
+
 - ![](bold.png ":no-zoom"), **hrubé písmo**
-- ![](italic.png ":no-zoom"), *kurzíva*
-- ![](underline.png ":no-zoom"), <ins>podtržení</ins>
+- ![](italic.png ":no-zoom"), *kurziva*
+- ![](underline.png ":no-zoom"),<ins> podtržení</ins>
 - ![](strike.png ":no-zoom"), ~~přeškrtnutí~~
 - ![](subscript.png ":no-zoom"), <sub>horní index</sub>
 - ![](superscript.png ":no-zoom"), <sup>dolní index</sup>
 
-Formátování textu pomocí nástroje pro změnu barvy textu ![](bcg_color.png ":no-zoom") a podbarvení textu ![](text_color.png ":no-zoom") Doporučujeme nepoužívat, jelikož způsobuje grafickou nekonzistentnost web stránky a degraduje její hodnotu v rámci web sídla.
+Formátování textu pomocí nástroje pro změnu barvy textu ![](bcg_color.png ":no-zoom") a podbarvení textu ![](text_color.png ":no-zoom") doporučujeme nepoužívat, protože způsobuje grafickou nekonzistentnost web stránky a degraduje její hodnotu v rámci web sídla.
 
 ## Odstraňování formátování
 
@@ -70,7 +75,8 @@ Tento nástroj funguje tak, že formátovaný text označíte a po kliknutí na 
 
 ## Seznamy (odrážkové / číslované) a odsazení textu
 
-K vytvoření očíslovaného seznamu slouží ikonka ![](numbered_list.png ":no-zoom"). K vytvoření odrážkového (nečíslovaného) seznamu slouží ikonka ![](bulleted_list.png ":no-zoom").
+K vytvoření očíslovaného seznamu slouží ikonka ![](numbered_list.png ":no-zoom").
+K vytvoření odrážkového (nečíslovaného) seznamu slouží ikonka ![](bulleted_list.png ":no-zoom").
 
 Z obyčejného odstavce vytvoříte seznam tak, že kliknete do daného odstavce a kliknete na ikonku požadovaného seznamu (číslovaný nebo odrážkový).
 
@@ -82,26 +88,28 @@ Pokud chcete změnit typ odrážek při číslovaném seznamu, klikněte do polo
 
 Pokud chcete vytvořit vnořený seznam, kliknete do dané položky seznamu a klepnutím na ikonku odsazení doprava ![](indent.png ":no-zoom") vytvoříte vnořený seznam. Zrušit vnořený seznam můžete ikonkou pro odsazení textu doleva ![](outdent.png ":no-zoom").
 
-Vytváření seznamu ukončíte dvojnásobným stisknutím klávesy `ENTER` na konci seznamu.
+Vytvoření seznamu ukončíte dvojnásobným stisknutím klávesy ```ENTER``` na konci seznamu.
 
 ## Odkazy na soubory a nahrávání souborů
 
-Chcete-li vytvořit odkaz na dokument/soubor označte si text, který má být odkazem, klikněte na ikonku Odkaz ![](link.png ":no-zoom") nebo pomocí zkratky `CTRL + k`, zobrazí se vám dialogové okno pro vytvoření odkazu:
+Chcete-li vytvořit odkaz na dokument/soubor označte si text, který má být odkazem, klikněte na ikonku Odkaz ![](link.png ":no-zoom") nebo pomocí zkratky ```CTRL + k```, zobrazí se vám dialogové okno pro vytvoření odkazu:
 
 ![](link_dialog.png)
 
-- v případě je-li dokument **určen pouze pro aktuální web stránku**, je třeba zvolit položku “Média této stránky” a v ní položku “Soubory”.
+- v případě, že je dokument **určen pouze pro aktuální web stránku**, je třeba zvolit položku “Média této stránky” av ní položku “Soubory”.
   - Vyhledáte dokument, kliknete na něj a odkaz na dokument se automaticky zkopíruje do pole URL.
-  - V případě, že se v seznamu požadovaný dokument nenachází, funkcí `drag&drop` je možné nahrát dokument z vašeho počítače
+  - V případě, že se v seznamu požadovaný dokument nenachází, funkcí ```drag&drop``` je možné nahrát dokument z vašeho počítače
   - Potvrdíte OK, čímž se vám na vyznačeném místě vytvoří odkaz na soubor.
-- v případě pokud dokument **není určen pouze pro danou stránku** (dokument se může nacházet i na jiné stránce), je třeba zvolit položku **Média všech stránek** a v ní položku **Soubory**.
+
+- v případě, že dokument **není určen pouze pro danou stránku** (dokument se může nacházet i na jiné stránce), je třeba zvolit položku **Média všech stránek** av ní položku **Soubory**.
   - Zobrazí se vám adresářová struktura adresářů a souborů na serveru, na které máte povolen přístup.
   - Vyhledáte v adresářích požadovaný soubor, kliknete na něj a odkaz na dokument se automaticky zkopíruje do pole URL
   - Potvrdíte OK, čímž se vám na vyznačeném místě vytvoří odkaz na soubor.
 
-Podle směrnice na přístupnost web sídla by všechny textové soubory ke stažení nacházející se na web stránkách měly být uveřejňovány hlavně ve formátu `PDF`. Formáty používané aplikací `Word` a `Excel` (`DOC` a `XLS`) nejsou vyhovující.
+Podle směrnice na přístupnost web sídla by všechny textové soubory ke stažení nacházející se na web stránkách měly být uveřejňovány hlavně ve formátu ```PDF```. Formáty používané aplikací ```Word``` a ```Excel``` (```DOC``` a ```XLS```) nejsou vyhovující.
 
-Pokud máte k tomu oprávnění, tak můžete v daném adresáři pro soubory vytvářet i nové podadresáře kliknutím na ikonku ![](elfinder_addFolder.png ":no-zoom"). Názvy souborů na serveru by neměly obsahovat mezery, speciální znaky a písmena s diakritikou.
+Pokud máte k tomu oprávnění, tak můžete v daném adresáři pro soubory vytvářet i nové podadresáře kliknutím na ikonku ![](elfinder_addFolder.png ":no-zoom").
+Názvy souborů na serveru by neměly obsahovat mezery, speciální znaky a písmena s diakritikou.
 
 ## Vkládání a úprava odkazů na jiné web stránky
 
@@ -109,14 +117,23 @@ Linky / odkazy na další stránky vkládáte podobně jako odkaz na dokument/so
 
 ![](link_dialog-webpage.png)
 
-- Označte text (slovo), který má být klikatelný jako odkaz. Potom kliknete na ikonku Odkaz ![](link.png ":no-zoom") nebo pomocí zkratky `CTRL+ k`. Otevře se vám dialogové okno, ve kterém je třeba zvolit položku **Web stránky** a ve stromové struktuře vyhledat stránku na kterou chcete vytvořit odkaz. Po kliknutí na jméno stránky se vám do pole URL adresa zkopíruje adresa označené stránky. Potvrzením `OK` se vám na stránce vytvoří odkaz na zvolenou web stránku.
-- Chcete-li vložit odkaz na stránku nacházející se na jiném web sídle (linka na externí web stránku), zadejte její adresu přímo do pole URL adresa (is prefixem `https://`). Zároveň se automaticky změní pole **Cíl** (v kartě Cíl) na hodnotu **Nové okno (`_blank`)**, což zajistí, že po kliknutí na tento odkaz se stránka otevře v novém okně/kartě prohlížeče. Pole **Cíl** se na hodnotu **Nové okno (`_blank`)** nastavuje také v případě, že chcete vytvořit odkaz na dokument ke stažení. Pokud nechcete, aby se odkaz otevřel do nového okna, je třeba parametr **Cíl** nastavit na hodnotu **Totéž okno `_self`**. Při odkazech na externí webové stránky a na dokumenty je však otevření odkazu do nového okna doporučeno.
+- Označte text (slovo), který má být klikatelný jako odkaz. Potom klepnete na ikonku Odkaz ![](link.png ":no-zoom") nebo pomocí zkratky ```CTRL+ k```. Otevře se vám dialogové okno, ve kterém je třeba zvolit položku **Web stránky** a ve stromové struktuře vyhledat stránku na kterou chcete vytvořit odkaz. Po kliknutí na jméno stránky se vám do pole URL adresa zkopíruje adresa označené stránky. Potvrzením ```OK``` se vám na stránce vytvoří odkaz na zvolenou web stránku.
+
+- Chcete-li vložit odkaz na stránku nacházející se na jiném web sídle (linka na externí web stránku), zadejte její adresu přímo do pole URL adresa (is prefixem ```https://```). Zároveň se automaticky změní pole **Cíl** (v kartě Cíl) na hodnotu **Nové okno (```_blank```)**, což zajistí, že po kliknutí na tento odkaz se stránka otevře v novém okně/kartě prohlížeče. Pole **Cíl** se na hodnotu **Nové okno (```_blank```)** nastavuje i v případě, že chcete vytvořit odkaz na dokument ke stažení. Pokud nechcete, aby se odkaz otevřel do nového okna, je třeba parametr **Cíl** nastavit na hodnotu **Totéž okno ```_self```**. Při odkazech na externí webové stránky a na dokumenty je však otevření odkazu do nového okna doporučeno.
 
 ## Tlačítka
 
-Pokud je ve web stránce vložen odkaz, nebo tlačítko, které má nastavený CSS styl obsahující výraz `btn-` nebo CSS styl má nastavenou hodnotu `display` obsahující `block`, tedy i například `inline-block` zobrazí se po kliknutí na takový odkaz v editoru okno nastavení tlačítka. V něm lze jednoduše změnit text tlačítka a nastavit odkaz po kliknutí. Můžete případně i změnit barvu pozadí, písma a zaoblení rohů, standardně ale tyto hodnoty nedoporučujeme měnit – měly by být nastaveny podle CSS stylů web stránky.
+Pokud je ve webové stránce vložen odkaz, nebo tlačítko, které má nastavený CSS styl obsahující výraz `btn` (nastavitelné přes konfigurační proměnnou `ckeditor_button_baseClass`) zobrazí se po kliknutí na takový odkaz v editoru okno nastavení tlačítka. V něm lze jednoduše změnit text tlačítka a nastavit odkaz po kliknutí, styl tlačítka a podobně.
 
 ![](link_dialog_button.png)
+
+V kartě rozšířené lze nastavit další atributy jako ID elementu, titulek, popis pro čtečky (aria-label) a podobně.
+
+![](link_dialog_button_advanced.png)
+
+Podobně existuje dialogové okno pro tlačítka (element `button`) is podporou SVG ikon. Ten vložíte kliknutím na menu výběrové menu pro vložení formuláře a následně možnost Tlačítko. Více informací je v [sekci pro web designéra](../../../frontend/setup/ckeditor.md#tlačítko).
+
+![](wjformbutton.png)
 
 ## Vkládání obrázků
 
@@ -142,7 +159,7 @@ Po zvolení obrázku se automaticky vyplní pole šířka a výška, která defi
 
 ### Karta fotobanka
 
-Karta **fotobanka** umožňuje získání (stažení) obrázků z bezplatné online platformy [Pixabay](https://pixabay.com). Tato platforma poskytuje rozsáhlou sbírku obrázků, které je [lze použít zdarma](https://pixabay.com/service/license-summary/).
+Karta **Fotobanka** umožňuje získání (stažení) obrázků z bezplatné online platformy [Pixabay](https://pixabay.com). Tato platforma poskytuje rozsáhlou sbírku obrázků, které lze [možné použít zdarma](https://pixabay.com/service/license-summary/).
 
 Po zadání a vyhledání výrazu, Vám budou nabídnuty vyhovující obrázky. Nabídka obsahuje několik stran, mezi kterými umíte procházet.
 
@@ -174,13 +191,13 @@ WebJET automaticky pro video soubor vloží namísto obrázku video přehrávač
 
 ### Editace obrázků
 
-Pokud je obrázek příliš velký a nevejde se vám do stránky, nebo potřebujete provést v obrázku jinou změnu můžete použít editor obrázků. Klepněte na obrázek a následně na ikonu tužky pro otevření [editoru obrázků](../../image-editor/README.md).
+Pokud je obrázek příliš velký a nevejde se vám do stránky, nebo potřebujete provést v obrázku jinou změnu můžete použít editor obrázků. Klikněte na obrázek a následně na ikonu tužky pro otevření [editoru obrázků](../../image-editor/README.md).
 
 ![](../../image-editor/editor-preview.png)
 
 ## Vkládání a úprava tabulek
 
-Tabulku lze vytvořit dvěma způsoby. Použít předdefinovanou stylovanou tabulku, nebo vložit tabulku kopírováním z `Word` / `Excel` souboru.
+Tabulku lze vytvořit dvěma způsoby. Použít předdefinovanou stylovanu tabulku, nebo vložit tabulku kopírováním z ```Word``` / ```Excel``` souboru.
 
 ### Vytvoření barevné tabulky
 
@@ -192,13 +209,13 @@ V případě, že potřebujete vytvořit komplexnější tabulku, je třeba klik
 
 ![](table_dialog.png)
 
-Zde můžete nastavit počet sloupců a řádků. Pokud chcete, aby se tabulka šířkou přizpůsobovala obsahu, tak šířku zadávat nemusíte (vymažte předvyplněnou hodnotu). Ostatní parametry by měly zůstat s nulovou hodnotou, aby se nebily s přednastaveným stylem tabulky. Potvrzením `OK` vložíte tabulka na původní pozici kurzoru.
+Zde můžete nastavit počet sloupců a řádků. Pokud chcete, aby se tabulka šířkou přizpůsobovala obsahu, tak šířku zadávat nemusíte (vymažte předvyplněnou hodnotu). Ostatní parametry by měly zůstat s nulovou hodnotou, aby se nebily s přednastaveným stylem tabulky. Potvrzením ```OK``` vložíte tabulka na původní pozici kurzoru.
 
-### Vkládání tabulky z `Word` a `Excel` souboru
+### Vkládání tabulky z ```Word``` a ```Excel``` souboru
 
-Při vkládání tabulky z jiných aplikací, resp. dokumentů přes klávesovou zkratku `CTRL + v` se vás systém automaticky zeptá, zda chcete tabulku vyčistit. Pokud kliknete `OK`, tak editor očistí tabulku od nechtěných formátovacích znaků původního dokumentu, ale ponechá strukturu tabulky v původní formě.
+Při vkládání tabulky z jiných aplikací, resp. dokumentů přes klávesovou zkratku ```CTRL + v``` se vás systém automaticky zeptá, zda chcete tabulku vyčistit. Pokud kliknete ```OK```, tak editor očistí tabulku od nechtěných formátovacích znaků původního dokumentu, ale ponechá strukturu tabulky v původní formě.
 
-Tabulka zůstane v obsahu stránky zachována i tehdy, použijete-li pro vkládání textu nástroj pro vkládání textu z `Word` / `Excel` souboru (`CTRL + w`) ![](paste_from_word.png ":no-zoom").
+Tabulka zůstane v obsahu stránky zachována i tehdy, použijete-li ke vkládání textu nástroj pro vkládání textu z ```Word``` / ```Excel``` souboru (```CTRL + w```) ![](paste_from_word.png ":no-zoom").
 
 ### Úprava stávající tabulky
 
@@ -214,13 +231,13 @@ Pro vkládání nebo smazání sloupce slouží pod-menu položky **Sloupec**.
 
 ![](table_edit_column.png)
 
-Pokud chcete sloučit dvě sousední buňky (v rámci řádku), tak musíte označit jejich obsah (neobsahují-li žádný text nejprve do buňky zadejte libovolný text aby se dala buňka lépe označit), kliknout pravým tlačítkem na tento označený obsah a zvolit pod-menu položky **Buňka** a v tomto pod-menu položku **Sloučit buňky**.
+Pokud chcete sloučit dvě sousední buňky (v rámci řádku), tak musíte označit jejich obsah (pokud neobsahují žádný text nejprve do buňky zadejte libovolný text aby se dala buňka lépe označit), kliknout pravým tlačítkem na tento označený obsah a zvolit podmenu položky **Buňka** a v tomto pod-menu položku **.
 
 ![](table_edit_cell.png)
 
 Obsah buněk se pak sloučí do jedné a vy jej můžete dále upravovat.
 
-Pokud chcete odstranit původní orámování tabulky, změnit odsazení buněk, nebo provést tabulku barevnou klikněte na položku **Vlastnosti tabulky**. Zobrazí se vám dialogové okno, ve kterém můžete změnit různé parametry tabulky kromě počtu řádků a sloupců tabulky (ty se upravují již zmíněným způsobem na předchozí straně).
+Pokud chcete odstranit původní orámování tabulky, změnit odsazení buněk, nebo provést tabulku barevnou klikněte na položku ** Vlastnosti tabulky**. Zobrazí se vám dialogové okno, ve kterém můžete změnit různé parametry tabulky kromě počtu řádků a sloupců tabulky (ty se upravují již zmíněným způsobem na předchozí straně).
 
 ![](table_dialog.png)
 
@@ -259,13 +276,26 @@ Většina aplikací obsahuje kartu Zobrazení pro společná nastavení (pokud t
 ![](../../../custom-apps/appstore/common-settings-tab.png)
 
 Karta obsahuje parametry:
+
 - Zobrazení na zařízeních, sloužící k nastavení [podmíněného zobrazení aplikace](../../../custom-apps/appstore/README.md#podmíněné-zobrazení-aplikace) na zařízeních typu tablet, telefon nebo standardní počítač. Pokud není zvolena žádná možnost, zobrazí se aplikace na všech zařízeních (stejně jako když jsou zvoleny všechny možnosti).
 - Přihlášený uživatel - umožňuje nastavit zobrazení aplikace podle stavu přihlášení návštěvníka web sídla - zobrazení vždy, jen pokud je uživatel přihlášen, nebo není-li přihlášen. V editoru stránek se aplikace zobrazí vždy, ale v náhledu nebo zobrazení stránky se zobrazí podle nastavené hodnoty.
 - Čas vyrovnávací paměti (minuty) - slouží k nastavení doby v minutách, po jakou má být inicializovaná aplikace uložena ve vyrovnávací paměti pro její rychlejší zobrazení. Například seznam novinek se nemění často a jejich načtení je náročné na databázový server, je tedy vhodné nastavit například hodnotu 30. Pokud je přihlášen administrátor, vyrovnávací paměť se nepoužije a vždy se zobrazí aktuální údaje.
 
+**Styl** - sekce obsahuje nastavení pro obalení výstupu aplikace do `div` kontejneru. Můžete tak nastavit například odsazení aplikace ve stránce, šířku nebo různé styly zobrazení, ale také informace pro čtečku pro slabozraké návštěvníky:
+
+- CSS třída - výběr CSS tříd z předdefinovaného seznamu (např. `container`, `mt-2`, `w-100`). Seznam dostupných tříd je nastavitelný přes konfigurační proměnnou `appWrapperClasses` (čárkou oddělený seznam). Konfigurační proměnná podporuje dva formáty zápisu:
+  - jednoduchý formát - pouze název CSS třídy. `container,mt-2,w-100` - ​​název třídy se zobrazí přímo v editoru.
+  - formát s překladovým klíčem - `prekladový_kľúč:css_trieda`, Např. `apps.wrapper.container:container` - v editoru se zobrazí přeložený text podle jazyka administrace (např. "Kontejner (container)"), ale do HTML se vloží pouze hodnota CSS třídy. Překladový klíč se vyhledá v překladových textech.
+  - oba formáty lze kombinovat v jednom seznamu, například. `apps.wrapper.container:container,mt-2,apps.wrapper.w-75:w-75`.
+- ID - nastavení HTML `id` atributu pro obalovací `div` element.
+- Titulek - nastavení HTML `title` atributu pro obalovací `div` element.
+- `Aria Label` - ​​nastavení `aria-label` atributu pro obalovací `div` element, který slouží ke zlepšení přístupnosti pro čtečky obrazovky.
+
+Je-li nastavena některá z těchto hodnot, výstup aplikace se automaticky obalí do `div` elementu se zadanými atributy. V náhledu aplikace v editoru se zobrazí informace o nastavených atributech.
+
 ## Před připravené bloky
 
-Editor stránky nabízí možnost vkládání přednastavených bloků (`HTML` objektů) na stránku. Např. tabulka, text, kontaktní formulář atp. Umíte vložit i obsah jiné stránky do aktuální stránky (např. opakující se formulář).
+Editor stránky nabízí možnost vkládání přednastavených bloků (```HTML``` objektů) na stránku. Např. tabulka, text, kontaktní formulář atp. Umíte vložit i obsah jiné stránky do aktuální stránky (např. opakující se formulář).
 
 Zobrazení bloků provedete kliknutím na ikonu ![](../../apps/htmlbox/htmlbox_icon.png ":no-zoom") v editoru stránky, která zobrazí dialogové okno s kategoriemi bloků.
 
@@ -273,13 +303,23 @@ Více informací v popisu aplikace [před-připravené bloky](../../apps/htmlbox
 
 ## Vkládání speciálních znaků
 
-Mohou nastat případy, kdy budete potřebovat při psaní napsat i znaky, které česká klávesnice neobsahuje, například znak Dolaru (`$`), Euro (`€`) nebo zavináč (`@`). Pro usnadnění práce máte k dispozici vkládání speciálních znaků pomocí připraveného modulu. Klepnutím na ikonku ![](specialchar.png ":no-zoom") se vám zobrazí dialogové okno s nabídkou speciálních (ale i standardních) znaků.
+Mohou nastat případy, kdy budete potřebovat při psaní napsat i znaky, které česká klávesnice neobsahuje, například znak Dolaru (```Mohou nastat případy, kdy budete potřebovat při psaní napsat i znaky, které česká klávesnice neobsahuje, například znak Dolaru (``), Euro (```€```) nebo zavináč (```@```). Pro usnadnění práce máte k dispozici vkládání speciálních znaků pomocí připraveného modulu. Klepnutím na ikonku ![](specialchar.png ":no-zoom") se vám zobrazí dialogové okno s nabídkou speciálních (ale i standardních) znaků.
 
 ![](specialchar_dialog.png)
 
 Po kliknutí na požadovaný znak se vám daný znak napíše na pozici kurzoru. Speciální znaky se vkládají jako text, takže nemají žádná další nastavení.
 
 !> Upozornění: ikona pro vkládání speciálních znaků může být v některých případech změněna na ikonu ![](../../../frontend/webpages/fontawesome/editor-toolbar-icon.png ":no-zoom") pro vkládání [FontAwesome](../../../frontend/webpages/fontawesome/README.md) obrázků.
+
+## Vkládání textu na těžko dostupná místa
+
+Někdy je obtížné umístit kurzor například za poslední odstavec nebo obrázek. Editor v takové situaci zobrazuje tzn. pomocnou čáru. Ta umožňuje vložit prázdný text, obrázek, aplikaci nebo blok. V případě Page Builder po kliknutí umožní vložit připravený blok do stránky.
+
+![](wjmagicline.png)
+
+Podobně je někdy problém vložit kurzor za poslední SVG ikonu, tlustý text a podobně. V takovém případě za elementem editor zobrazuje ikonu pro přesun kurzoru na dané místo. Někdy se přesun nemusí podařit na první kliknutí, doporučujeme předem kliknout kdekoli do textu a poté na ikonu pro přesun kurzoru.
+
+![](wjmagicline-append.png)
 
 ## Detekce změny obsahu stránky
 

@@ -5,10 +5,12 @@ Aplikace Dotazníky slouží k přípravě a správě dotazníků. Kromě správ
 ![](quiz-datatable.png)
 
 Pro vytvoření jsou zapotřebí 2 parametry:
+
 - Název
 - Typ odpovědi
 
 Parametr Typ odpovědi má na výsledný vzhled i nastavování dotazníku velký vliv. Podporuje 2 typy:
+
 - Správná odpověď - vždy je správná pouze jedna odpověď z několika a tato správná odpověď má hodnotu 1 bod
 - Bodová odpověď - správných může být i více odpovědí, a každá správná odpověď může mít jinou bodovou hodnotu
 
@@ -60,35 +62,40 @@ Takové vytvořené otázky/ohodnocení, které byly vytvořeny před samotným 
 
 ## Možné chyby
 
-Možné chyby, na které je třeba si dávat pozor:
+Možné chyby na které je třeba si dávat pozor:
+
 - Pokud nevyplníte žádnou odpověď, uložení otázky se nezdaří a budete vyzváni k vyplnění alespoň jedné odpovědi.
 - To, jak je zvolena Správná odpověď (u dotazníku typu **Správná odpověď**) je výhradně na vás. Když, jako správnou odpověď zvolíte nezadefinovanou (prázdnou) odpověď, otázka se uloží, ale nikdy nebude možné na ni odpovědět správně, protože prázdná odpověď se nezobrazí.
 - Pokud při definování odpovědí u dotazníku typu **Bodová odpověď** zapomenete těmto odpovědím přiřadit body, automaticky se nastaví na 0. To znamená, že zvolením takové odpovědi se nezískají žádné body a odpověď je považována za nesprávnou.
 
 ## Statistika dotazníků
 
-Aplikace dotazníky nabízí také statistickou část. Po označení záznamu dotazníku v tabulce se přesměrujete na statistickou část stisknutí tlačítka ![](quizStat-button.png ":no-zoom"). Stejně jako v případě tabulky otázek se statistická sekce liší v závislosti na typu odpovědi daného dotazníku. Některé prvky však mají společné.
+Aplikace dotazníky nabízí také statistickou část. Po označení záznamu dotazníku v tabulce se přesměrujete na statistickou část stisku tlačítka ![](quizStat-button.png ":no-zoom"). Stejně jako v případě tabulky otázek se statistická sekce liší v závislosti na typu odpovědi daného dotazníku. Některé prvky však mají společné.
 
 Společná je hlavička stránky s rozšířeným filtrem, pro filtrování dat v určitém datovém rozsahu. Filtr funguje na principu:
+
 - pokud žádný rozsah není zadán, automatický vrátí data za poslední měsíc (+- 30 dní)
 - pokud je nastaven rozsah pouze OD, tak filtr vrátí data v rozsahu nastaveného OD do aktuálního data
-- pokud je nastaven rozsah pouze DO, tak filtr vrátí data v měsíčním rozsahu s koncem v zadaném DO
+- je-li nastaven rozsah pouze DO, tak filtr vrátí data v měsíčním rozsahu s koncem v zadaném DO
 
 ![](quizStat-header.png)
 
 Pro obě typy odpovědí jsou společné PRVNÍ 2 grafy a tabulka dat (složení sloupců tabulky se také mění v závislosti na typu odpovědi dotazníku, aby to více logicky vyhovovalo datům). Společné grafy jsou:
+
 - Procento správných odpovědí na jednotlivé otázky, za zvolené období (zaokrouhleno), pomocí sloupcového grafu reprezentuje procento správných odpovědí (ze všech) za daný časový rozsah. Hodnoty v % jsou zaokrouhleny na celá čísla. Z grafu můžete snadno odpozorovat, které dotazy byly zodpovězeny s největší nebo nejmenší úspěšností.
-- Počet správných a nesprávných odpovědí za zvolené období – pro všechny otázky, pomocí čárového grafu reprezentuje kolik bylo správných a nesprávných odpovědí (v celých číslech) za daný den. Počítají se odpovědi všech uživatelů za všechny dotazy dohromady. Z grafu tak snadno vyčtete, ve který den byl poměr dobrých a špatných odpovědí na otázky lepší či horší. Graf obsahuje také čáru, reprezentující počet všech odpovědí (pro lepší vizualizaci poměru správných/nesprávných ke všem).
+- Počet správných a nesprávných odpovědí za zvolené období - pro všechny otázky, pomocí čárového grafu reprezentuje kolik bylo správných a nesprávných odpovědí (v celých číslech) za daný den. Počítají se odpovědi všech uživatelů za všechny dotazy dohromady. Z grafu tak snadno vyčtete, ve který den byl poměr dobrých a špatných odpovědí na otázky lepší či horší. Graf obsahuje také čáru, reprezentující počet všech odpovědí (pro lepší vizualizaci poměru správných/nesprávných ke všem).
 
 ![](quizStat.png)
 
 **Správná odpověď**
 
 Statistika dotazníku s odpovědí typu **Správná odpověď** obsahuje 2 další grafy:
-- Počet správných odpovědí za zvolené období - pro jednotlivé otázky, čárový graf reprezentující počet správných odpovědí na jednotlivé dotazy v daný den. Poskytuje přehled o tom, které otázky konkrétně v který den měly nejvíce/nejméně SPRÁVNÍCH odpovědí. Od všech uživatelů spolu.
-- Počet nesprávných odpovědí za zvolené období - pro jednotlivé otázky, čárový graf reprezentující počet nesprávných odpovědí na jednotlivé dotazy v daný den. Poskytuje přehled o tom, které otázky konkrétně v který den měly nejvíce/nejméně NESPRÁVNÝCH odpovědí. Od všech uživatelů spolu.
+
+- Počet správných odpovědí za zvolené období - pro jednotlivé otázky, čárový graf reprezentující počet správných odpovědí na jednotlivé otázky v daný den. Poskytuje přehled o tom, které otázky konkrétně v který den měly nejvíce/nejméně SPRÁVNÍCH odpovědí. Od všech uživatelů spolu.
+- Počet nesprávných odpovědí za zvolené období - pro jednotlivé otázky, čárový graf reprezentující počet nesprávných odpovědí na jednotlivé otázky v daný den. Poskytuje přehled o tom, které otázky konkrétně v který den měly nejvíce/nejméně NESPRÁVNÝCH odpovědí. Od všech uživatelů spolu.
 
 **Bodová odpověď**
 
 Statistika dotazníku s odpovědí typu **Bodová odpověď** obsahuje 1 další graf:
-- Počet získaných bodů za zvolené období - pro jednotlivé otázky, čárový graf reprezentující počet získaných bodů za jednotlivé dotazy v daný den. Jelikož otázka může mít v tomto případě několik správných odpovědí, tak graf procentuální úspěšnosti nestačí. Tento graf jasně ukáže, které otázky byly v daný den bodově nejvíce/nejméně ziskové. Takže otázka menší úspěšností může být stále více bodově úspěšná (například když její odpovědi jsou výše hodnoceny nebo uživatelé volili výše hodnocené odpovědi na tuto otázku).
+
+- Počet získaných bodů za zvolené období - pro jednotlivé otázky, čárový graf reprezentující počet získaných bodů za jednotlivé otázky v daný den. Jelikož otázka může mít v tomto případě několik správných odpovědí, tak graf procentuální úspěšnosti nestačí. Tento graf jasně ukáže, které otázky byly v daný den bodově nejvíce/nejméně ziskové. Takže otázka menší úspěšností může být stále více bodově úspěšná (například když její odpovědi jsou výše hodnoceny nebo uživatelé volili výše hodnocené odpovědi na tuto otázku).

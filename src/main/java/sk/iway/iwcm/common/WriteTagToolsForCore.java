@@ -32,12 +32,23 @@ public class WriteTagToolsForCore {
         //utility class
     }
 
+    /**
+     * Replace target="_blank" with onclick function, fix multi domain links and apply spam protection to formmail links in given text
+     * @param text
+     * @param request
+     * @return
+     */
     public static StringBuilder fixXhtml(StringBuilder text, HttpServletRequest request)
     {
+        if (text == null) return null;
+
         StringBuilder replacedText = text;
         //nahrad target="_blank"
-        replacedText = Tools.replace(replacedText, "target='_blank'", "onclick=\"return openTargetBlank(this, event)\"");
-        replacedText = Tools.replace(replacedText, "target=\"_blank\"", "onclick=\"return openTargetBlank(this, event)\"");
+        String editorTargetBlankFunction = Constants.getString("editorTargetBlankFunction");
+        if (Tools.isNotEmpty(editorTargetBlankFunction)) {
+            replacedText = Tools.replace(replacedText, "target='_blank'", "onclick=\"" + editorTargetBlankFunction + "\"");
+            replacedText = Tools.replace(replacedText, "target=\"_blank\"", "onclick=\"" + editorTargetBlankFunction + "\"");
+        }
         replacedText = Tools.replace(replacedText, "target=\"__blank\"", "target=\"_blank\"");
         replacedText = Tools.replace(replacedText, "target='__blank'", "target='_blank'");
 

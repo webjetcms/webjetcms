@@ -1420,9 +1420,11 @@ Scenario('Inserting various links through the dialog', ({ I, DTE }) => {
 
     I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=112027');
     DTE.waitForEditor();
+    DTE.waitForCkeditor();
 
     for (const input of links) {
         I.clickCss('#cke_44');
+        I.waitForElement("#wjLinkIframe", 10);
         I.switchTo('#wjLinkIframe');
         I.wait(1); //necessary static waiting
         I.waitForElement('#txtUrl', 10);

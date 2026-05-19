@@ -11,18 +11,18 @@ export function typeJsTree() {
             conf._searchForm = $('<div class="input-group" />');
             conf._div.append(conf._searchForm);
 
-            conf._search = $('<input class="form-control"/>').appendTo(conf._searchForm);
+            conf._search = $('<input class="form-control" aria-label="'+WJ.translate("datatables.defaults.search.js")+'"/>').appendTo(conf._searchForm);
             conf._searchForm.append(
-                    '<button class="btn btn-sm btn-outline-secondary btn-search">' +
+                    '<button class="btn btn-sm btn-outline-secondary btn-search" aria-label="'+WJ.translate("datatables.defaults.search.js")+'" title="'+WJ.translate("datatables.defaults.search.js")+'" data-toggle="tooltip">' +
                         '<i class="ti ti-search"></i>' +
                     '</button>' +
-                    '<button class="btn btn-sm btn-outline-secondary btn-clear" style="display: none;">' +
+                    '<button class="btn btn-sm btn-outline-secondary btn-clear" style="display: none;" aria-label="'+WJ.translate("button.reset")+'" title="'+WJ.translate("button.reset")+'" data-toggle="tooltip">' +
                         '<i class="ti ti-circle-x"></i>' +
                     '</button>' +
-                    '<button class="btn btn-sm btn-outline-secondary btn-select-all">' +
+                    '<button class="btn btn-sm btn-outline-secondary btn-select-all" aria-label="'+WJ.translate("datatables.button.select_all.js")+'" title="'+WJ.translate("datatables.button.select_all.js")+'" data-toggle="tooltip">' +
                         '<i class="ti ti-checkbox"></i>' +
                     '</button>' +
-                    '<button class="btn btn-sm btn-outline-secondary btn-deselect-all">' +
+                    '<button class="btn btn-sm btn-outline-secondary btn-deselect-all" aria-label="'+WJ.translate("datatables.button.deselect_all.js")+'" title="'+WJ.translate("datatables.button.deselect_all.js")+'" data-toggle="tooltip">' +
                         '<i class="ti ti-square"></i>' +
                     '</button>'
             );

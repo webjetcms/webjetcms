@@ -32,19 +32,31 @@ public class EditorUtils {
 	 * @param editedDoc
 	 */
 	public static void nonBreakingSpaceReplacement(DocDetails editedDoc) {
+		if (editedDoc == null || Tools.isEmpty(editedDoc.getData())) return;
 
-		if (editedDoc == null) return;
+		editedDoc.setData(nonBreakingSpaceReplacement(editedDoc.getData()));
+	}
+
+	/**
+	 * V HTML kode stranky nahradi medzeru za nedelitelnu medzeru pred spojkami.
+	 * Tie sa definuju v konf. premennej editorSingleCharNbsp.
+	 * Nahrada sa aplikuje len na textove casti HTML, nie na atributy ani tagy.
+	 * @param text
+	 * @return
+	 */
+	public static String nonBreakingSpaceReplacement(String text) {
+
+		if (Tools.isEmpty(text)) return text;
 
 		String conjunctions = Constants.getString("editorSingleCharNbsp");
 		if (Tools.isNotEmpty(conjunctions)) {
-			String data = editedDoc.getData();
-			if (Tools.isNotEmpty(data)) {
+			if (Tools.isNotEmpty(text)) {
 				// Spracovavame HTML podľa tagov a textovych casti
 				// Regex rozdeluje HTML na HTML tagy/komentare (<...>) a textove casti
 				// Pattern: <[^>]*>  - HTML tagy a komentare (< ... >)
 				//         |[^<]+     - textove casti (vsetko ostatne)
 				Pattern tagPattern = Pattern.compile("<[^>]*>|[^<]+");
-				Matcher matcher = tagPattern.matcher(data);
+				Matcher matcher = tagPattern.matcher(text);
 				StringBuffer sb = new StringBuffer();
 				String conjunctionPattern = conjunctions.replace(',', '|');
 				String replacePattern = "(?i)(\\s|&nbsp;)(" + conjunctionPattern + ")\\s";
@@ -59,10 +71,10 @@ public class EditorUtils {
 					}
 					sb.append(part);
 				}
-				editedDoc.setData(sb.toString());
+				return sb.toString();
 			}
 		}
-
+		return text;
 	}
 
     /**

@@ -25,6 +25,7 @@ V kódu si můžete všimnout parametru `reservationObjectIds`. Jedná se o sezn
 ## Stavba aplikace
 
 Aplikace se skládá ze 2 hlavních částí:
+
 - kalendář dostupnosti a cen
 - formulář rezervace
 
@@ -60,16 +61,20 @@ Jak si můžete všimnout, kalendář má různé graficky odlišné prvky, kter
 
 Nejběžnější prvek kalendáře je den, který si umíte zvolit k rezervaci. Každý prvek obsahuje informace:
 - den v měsíci
-- informace o obsazenosti, tedy kolik rezervací již je na tento den vytvořen a z jakého maximálního počtu. Příklad `0/1, 2/5, ...`.
+- informace o obsazenosti, tedy kolik rezervací již je na tento den vytvořen az jakého maximálního počtu. Příklad `0/1, 2/5, ...`.
 - cena rezervace za daný den pro daný objekt is měnou. Příklad `120 eur, 15 czk, ..`.
 
-!>**Upozornění**: tato cena rezervace na daný den je vypočtena již se slevou uživatele. Tato procentuální sleva je nastavena pro specifické [skupiny uživatelů](../../../../admin/users/user-groups.md). Pokud uživatel patří do více **skupin uživatelů** které mají nastavenou procentuální slevu, použije se z nich ta největší. Pokud sleva má hodnotu `0%`, částka rezervace se nemění. Pokud sleva má hodnotu `100%`, rezervace je zdarma.
+!>**Upozornění**: tato cena rezervace na daný den je vypočtena již se slevou uživatele. Tato procentuální sleva je nastavena pro specifické [skupiny uživatelů](../../../../admin/users/user-groups.md). Pokud uživatel patří do více **skupin uživatelů** které mají nastavenou procentuální slevu, použije se z nich ta největší. Pokud sleva má hodnotu ```0%```, částka rezervace se nemění. Pokud sleva má hodnotu ```100%```, rezervace je zdarma.
 
 Víkendové dny jsou pro lepší přehled zvýrazněny červeně.
 
-|      Běžný den | Běžný den (již s jinou rezervací) |    Víkendový den |
-| :-----------------: | :-------------------------------: | :------------------: |
-| ![](normal_day.png) | ![](parcial_normal_day.png)    | ![](weekend_day.png) |
+Běžný den             |  Běžný den (již s jinou rezervací)   | Víkendový den
+:--------------------:|:------------------------------------:|:------------------------------------:
+
+![](normal_day.png)
+
+   |  ![](parcial_normal_day.png)         | ![](weekend_day.png)
+
 
 **Nezvolitelný den**
 
@@ -79,31 +84,39 @@ Další běžný prvek kalendáře je den, který nelze zvolit. Jedná se o dny,
 
 **Speciální `Check-out ONLY` den**
 
-Tento speciální prvek kalendáře zobrazuje den, který lze zvolit, ale ne rezervovat. Příklad: při rezervaci pokoje jde o den, který si rezervoval už někdo jiný (jeho rezervace v daný den začíná) ale vy jej můžete využít v rezervaci k odchodu z pokoje. Odtud také pochází název `Check-out ONLY`, který se také zobrazí jako popis prvku.
+Tento speciální prvek kalendáře zobrazuje den, který lze zvolit, ale ne rezervovat.
+Příklad: při rezervaci pokoje jde o den, který si rezervoval už někdo jiný (jeho rezervace v daný den začíná) ale vy jej můžete využít v rezervaci k odchodu z pokoje. Odtud také pochází název `Check-out ONLY`, který se také zobrazí jako popis prvku.
 
 ![](check_out_only_day.png)
 
 ### Logika volby rozsahu
 
-Volba rozsahu v kalendáři funguje na jednoduchém principu zvolení počátečního a konečného dne k rezervaci (nebo naopak, nemá to žádný vliv). Zvolit můžete pouze **zvolitelné dny** s výjimkou `Check-out ONLY` dní. Pokud vám zvolený den nevyhovuje, stačí na něj opět kliknout (tím se vypne jeho označení).
+Volba rozsahu v kalendáři funguje na jednoduchém principu zvolení počátečního a konečného dne k rezervaci (nebo naopak, nemá to žádný vliv). Zvolit můžete pouze **zvolitelné dny** s výjimkou `Check-out ONLY` dnů. Pokud vám zvolený den nevyhovuje, stačí na něj opět kliknout (tím se vypne jeho označení).
 
 !>**Upozornění**: můžete zvolit najednou pouze jeden rozsah, který musí být platný v celém trvání, takže nemůže být přerušen dnem v minulosti nebo plně obsazeným (rezervovaným) dnem.
 
-Kalendář má již v sobě zabudované kontroly, aby se tato podmínka dodržela. Proto nedovolí kliknout na **nezvolitelné dny**, ale navíc zablokuje ty dny, které s právě zvoleným počátečním dnem nedokázaly vytvořit souvislý interval. **Příklad:** na následujících obrázcích můžete vidět, jak se po výběru dne `19.07` zablokují všechny dny od `01.06` do `16.06`. Zablokují se, protože nelze zvolit v jednom rozsahu. Tento rozsah by byl přerušen několika plně obsazenými (rezervovanými) dny a takový rozsah není platný.
+Kalendář má již v sobě zabudované kontroly, aby se tato podmínka dodržela. Proto nedovolí kliknout na **nezvolitelné dny**, ale navíc zablokuje ty dny, které s právě zvoleným počátečním dnem nedokázaly vytvořit souvislý interval.
+**Příklad:** na následujících obrázcích můžete vidět, jak se po výběru dne `19.07` zablokují všechny dny od `01.06` do `16.06`. Zablokují se, protože nelze zvolit v jednom rozsahu. Tento rozsah by byl přerušen několika plně obsazenými (rezervovanými) dny a takový rozsah není platný.
 
-|     Před zvolením |     Po zvolení |
-| :--------------------: | :-----------------: |
-| ![](calendar_base.png) | ![](calendar_A.png) |
+Před zvolením | Po zvolení
+:---------------------:|:----------------------:
+
+![](calendar_base.png)
+
+ | ![](calendar_A.png)
 
 Po zvolení prvního dne (počátečního) stačí zvolit druhý povolený den (konečného). Při přechodu nad jednotlivými dny se vám bude rozsah předoznačovat abyste měli přehled a po výběru konečného dne se již plně označí.
 
-|    Před zvolením |     Po zvolení |
-| :-----------------: | :-----------------: |
-| ![](calendar_B.png) | ![](calendar_C.png) |
+Před zvolením | Po zvolení
+:---------------------:|:----------------------:
+
+![](calendar_B.png)
+
+ | ![](calendar_C.png)
 
 Všimněte si, že po zvolení se nám opět zpřístupnily dočasně zablokované dny od `01.06` do `16.06`. Samozřejmě tento výběr můžeme změnit. Stačí vybrat klepnutím nový počáteční den.
 
-Také si můžete všimnout, že kalendář nám dovolil zvolit dny od `21.07` do `23.07`, které jsou pouze částečně rezervovány.
+Také si můžete všimnout, že kalendář nám ​​dovolil zvolit dny od `21.07` do `23.07`, které jsou jen částečně rezervovány.
 
 !>**Upozornění**: rozsah musí mít alespoň 2 dny, jelikož poslední den rezervace je určen k opuštění rezervovaného objektu a za tento poslední den **se neplatí**.
 
@@ -118,7 +131,7 @@ Tato povinná pole se automaticky před-vyplní pokud jste přihlášen uživate
 - Příjmení
 - E-mail
 
-Pole **Datum a čas příjezdu** a **Datum a čas odjezdu** se nedají změnit a slouží pouze k informačním účelům. Automatický změní hodnotu podle zvoleného rozsahu v kalendáři.
+Pole **Datum a čas příjezdu** a **Datum a čas odjezdu** nelze změnit a slouží pouze k informačním účelům. Automatický změní hodnotu podle zvoleného rozsahu v kalendáři.
 
 !>**Upozornění**: hodnoty pro **čas příjezdu** a **čas odjezdu** se získávají z konfiguračních proměnných `reservationAllDayStartTime` a `reservationAllDayEndTime`.
 

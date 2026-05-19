@@ -12,13 +12,13 @@ Seznam můžete plnit manuálně, importem z Excel souboru a automaticky odkazem
 <a href="/odhlasenie-z-mailingu.html?email=!RECIPIENT_EMAIL!&save=true">Kliknite pre odhlásenie</a>
 ```
 
-přičemž stránka s adresou `/odhlasenie-z-mailingu.html` obsahuje aplikaci pro odhlášení:
+přičemž stránka s adresou ```/odhlasenie-z-mailingu.html``` obsahuje aplikaci pro odhlášení:
 
 ```html
 !INCLUDE(/components/dmail/unsubscribe.jsp, senderEmail=name@your-domain.com, senderName="Your Name", confirmUnsubscribe=true)!
 ```
 
-[Klepnutí na odkaz](../form/README.md#odhlášení) zajistí odhlášení email adresy příjemce z mailové kampaně.
+[Kliknutí na odkaz](../form/README.md#odhlášení) zajistí odhlášení email adresy příjemce z mailové kampaně.
 
 ![](unsubscribed-form.png)
 

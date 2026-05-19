@@ -11,20 +11,23 @@ Dostupné složky reprezentující kategorie jsou uspořádány do tzn. stromu, 
 ![](select-options.png)
 
 Hodnoty ve výběrovém poli sekce v hlavičce se generují:
-- automaticky - je-li konf. proměnná `basketAdminGroupIds` nastavena na prázdnou hodnotu získá se seznam ID složek s novinkami vyhledáváním výrazu `%!INCLUDE(/components/eshop/%", "%!INCLUDE(/components/basket/%", "%product-list.jsp%", "%products.jsp%"` v tělech stránek.
+
+- automaticky - je-li konf. proměnná `basketAdminGroupIds` nastavená na prázdnou hodnotu získá se seznam ID složek s novinkami vyhledáváním výrazu `%!INCLUDE(/components/eshop/%", "%!INCLUDE(/components/basket/%", "%product-list.jsp%", "%products.jsp%"` v tělech stránek.
 - podle konf. proměnné `basketAdminGroupIds`, kde je možné zadat čárkou oddělený seznam ID složek, například. `17,23*,72`, přičemž pokud ID složky končí na znak `*` načtou se při výběru i produkty (web stránky) z pod složek.
 
 ## Přidání nové kategorie produktů
 
 Přidáním nové kategorie se vytvoří podsložka, která bude umístěna pod právě zvolenou složku (kategorii).
 
-Příklad. Máme-li právě zvolená složka ![](select-phones.png ":no-zoom") a vytvoříme nový s názvem **Android**, tak nám vznikne nová složka na adrese ![](select-phones-android.png ":no-zoom")
+Příklad.
+Pokud máme právě zvolenou složku ![](select-phones.png ":no-zoom") a vytvoříme novou s názvem **Android**, tak nám vznikne nová složka na adrese ![](select-phones-android.png ":no-zoom")
 
-Novou složku přidáme tlačítkem <button class="btn btn-sm btn-outline-secondary" type="button"><span><i class="ti ti-folder-plus" ></i></span></button>. Po jeho stisknutí se zobrazí okno pro přidání složky
+Novou složku přidáme tlačítkem <button class="btn btn-sm btn-outline-secondary" type="button"><span><i class="ti ti-folder-plus"></i></span></button> . Po jeho stisknutí se zobrazí okno pro přidání složky
 
 ![](toaster-new-folder.png)
 
 Okno obsahuje také informaci o tom, pod jakou složku se tato nová vytvoří. Po (ne)vyplnění pole v okně a potvrzení tlačítkem <button class="btn btn-primary" type="button">Potvrdit</button> mohou nastat čtyři situace:
+
 - pokud název nové kategorie nebude zadán, vytvoření se nezdaří a zobrazena bude hláška
 
 ![](toaster-new-folder-A.png)
@@ -33,7 +36,7 @@ Okno obsahuje také informaci o tom, pod jakou složku se tato nová vytvoří. 
 
 ![](toaster-new-folder-B.png)
 
-- nastane-li jiná chyba, bude zobrazena hláška
+- nastane-li jiná chyba, zobrazena bude hláška
 
 ![](toaster-new-folder-A.png)
 
@@ -43,7 +46,7 @@ Okno obsahuje také informaci o tom, pod jakou složku se tato nová vytvoří. 
 
 ## Správa produktů
 
-Produkty jsou reprezentovány stránkami, které můžete přidávat pod konkrétní kategorie. Nadřazená složka se ve stránce automaticky přednastaví podle aktuálně zvolené kategorie (ale je možné ji změnit). Nad produkty (stránkami) je možné provádět všechny operace jak vytvořit/upravit/klonovat/importovat...
+Produkty jsou reprezentovány stránkami, které můžete přidávat pod konkrétní kategorie. Nadřazená složka se ve stránce automaticky přednastaví podle aktuálně zvolené kategorie (ale je možné ji změnit). Nad produkty (stránkami) lze provádět všechny operace jak vytvořit/upravit/klonovat/importovat ...
 
 ![](new-product.png)
 
@@ -52,6 +55,7 @@ Produkty jsou reprezentovány stránkami, které můžete přidávat pod konkré
 ### Karta **Perex**
 
 V kartě **Perex** je důležité nastavení:
+
 - hodnoty **Obrázek**. Tento obrázek se zobrazí v elektronickém obchodě jako náhled produktu.
 
 ![](new-product-image.png)

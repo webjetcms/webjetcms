@@ -4,17 +4,18 @@ Pole datatable umožňuje v editoru stránek zobrazit vnořenou datatabulku (nap
 
 ![](../../redactor/webpages/media.png)
 
-Jelikož aktuálně vložená datatabulka pracuje se samostatnými REST službami vrácená data jsou prázdné pole `[]`.
+Jelikož aktuálně vložená datatabulka pracuje se samostatnými REST službami vrácená data jsou prázdné pole ```[]```.
 
 ## Použití anotace
 
-Anotace se používá jako `DataTableColumnType.DATATABLE`, přičemž je třeba nastavit následující atributy editoru:
-- `data-dt-field-dt-url` - URL adresa REST služby, může obsahovat makra pro vložení hodnoty z rodičovského editoru, např.: `/admin/rest/audit/notify?docid={docId}&groupId={groupId}`
-- `data-dt-field-dt-columns` - jméno třídy (včetně packages) ze které se použije [definice sloupců datatabulky](datatable-columns.md) Např. `sk.iway.iwcm.system.audit.AuditNotifyEntity`
-- `data-dt-field-dt-columns-customize` - jméno JavaScript funkce, která může být použita k úpravě`columns` objektu, například `removeEditorFields`. Funkce musí být dostupná přímo ve `windows` objektu, jak parametr dostane`columns` objekt a očekává se, že jej vrátí upravený. Příklad `function removeEditorFields(columns) { return columsn; }`.
-- `data-dt-field-dt-tabs` - seznam karet pro editor v JSON formátu. Všechny názvy i hodnoty JSON objektu je třeba obalit do `'`, překlady jsou nahrazeny automaticky. Příklad: `@DataTableColumnEditorAttr(key = "data-dt-field-dt-tabs", value = "[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true },{ 'id': 'fields', 'title': '[[#{editor.tab.fields}]]' }]")`. Pokud není zadáno, automaticky se získá podle anotace `@DataTableTabs` zadané třídy.
-- `data-dt-field-dt-localJson` - aktivuje režim, který pracuje s lokálním JSON objektem. Používá se primárně pro aplikace ve web stránce pro evidenci položek aplikace (např. položky slide show), které se navíc automaticky kódují do řetězce vhodného do `PageParams` objektu a jsou kódovaném v `Base64`. Pokud existuje funkce `window.datatableLocalJsonUpdate = function(val, conf)` zavolá se na volitelnou úpravu dat.
-- `data-dt-field-dt-autoload` - pokud máte tabulku v první kartě nastavte na `true` pro její automatické načtení při otevření okna, jinak se tabulka inicializuje až při kliknutí na kartu ve které se nachází.
+Anotace se používá jako ```DataTableColumnType.DATATABLE```, přičemž je třeba nastavit následující atributy editoru:
+
+- ```data-dt-field-dt-url``` - ​​URL adresa REST služby, může obsahovat makra pro vložení hodnoty z rodičovského editoru, např.: ```/admin/rest/audit/notify?docid={docId}&groupId={groupId}```
+- ```data-dt-field-dt-columns``` - ​​jméno třídy (včetně packages) ze které se použije [definice sloupců datatabulky](datatable-columns.md). ```sk.iway.iwcm.system.audit.AuditNotifyEntity```
+- `data-dt-field-dt-columns-customize` - ​​jméno JavaScript funkce, která může být použita k úpravě `columns` objektu, například. `removeEditorFields`. Funkce musí být dostupná přímo ve `windows` objektu, jako parametr obdrží `columns` objekt a očekává se, že jej vrátí upravený. Příklad `function removeEditorFields(columns) { return columsn; }`.
+- `data-dt-field-dt-tabs` - ​​seznam karet pro editor v JSON formátu. Všechny názvy i hodnoty JSON objektu je třeba obalit do `'`, překlady jsou nahrazeny automaticky. Příklad: `@DataTableColumnEditorAttr(key = "data-dt-field-dt-tabs", value = "[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true },{ 'id': 'fields', 'title': '[[#{editor.tab.fields}]]' }]")`. Pokud není zadáno, automaticky se získá podle anotace `@DataTableTabs` zadané třídy.
+- `data-dt-field-dt-localJson` - ​​aktivuje režim, který pracuje s lokálním JSON objektem. Používá se primárně pro aplikace ve web stránce pro evidenci položek aplikace (např. položky slide show), které se navíc automaticky kódují do řetězce vhodného do `PageParams` objektu a jsou kódovány v `Base64`. Pokud existuje funkce `window.datatableLocalJsonUpdate = function(val, conf)` zavolá se na volitelnou úpravu dat.
+- `data-dt-field-dt-autoload` - ​​pokud máte tabulku v první kartě nastavte na `true` pro její automatické načtení při otevření okna, jinak se tabulka inicializuje až při kliknutí na kartu ve které se nachází.
 
 Kompletní příklad anotace:
 
@@ -31,9 +32,9 @@ Kompletní příklad anotace:
 private List<Media> media;
 ```
 
-Pomocí data atributů lze nastavovat i další konfigurační možnosti datatabulky. Data jsou zasílána jako řetězec. Hodnoty `true` a `false` se konvertují na `boolean` objekt. Nastavení atributu `order` umožňuje nastavit uspořádání pouze pro jeden sloupec. Ostatní možnosti se přenesou jako řetězec.
+Pomocí data atributů lze nastavovat i další konfigurační možnosti datatabulky. Data jsou zasílána jako řetězec. Hodnoty ```true``` a ```false``` se konvertují na ```boolean``` objekt. Nastavení atributu ```order``` umožňuje nastavit uspořádání pouze pro jeden sloupec. Ostatní možnosti se přenesou jako řetězec.
 
-K menu nastavované možnosti přidejte předponu `data-dt-field-dt-`, tedy pro nastavení možnosti `serverSide` použijte klíč `data-dt-field-dt-serverSide`. Příklad doplňkových anotací:
+K menu nastavované možnosti přidejte předponu ```data-dt-field-dt-```, čili pro nastavení možnosti ```serverSide``` použijte klíč ```data-dt-field-dt-serverSide```. Příklad doplňkových anotací:
 
 ```java
     @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "false"), //vypnutie serveroveho strankovania/vyhladavania
@@ -47,10 +48,11 @@ K menu nastavované možnosti přidejte předponu `data-dt-field-dt-`, tedy pro 
 **API a události**
 
 Vytvořená datatabulka se zpřístupní jako:
-- `conf.datatable` na původním `conf` objektu sloupce datatabulky
-- `window` objekt s názvem `datatableInnerTable_fieldName` - objekt lze použít pro automatizované testování nebo jiné JavaScript operace.
 
-Po vytvoření vnořené datatabulky je vyvolána událost `WJ.DTE.innerTableInitialized` kde v objektu `event.detail.conf` je přenesena konfigurace.
+- ```conf.datatable``` na původním ```conf``` objektu sloupce datatabulky
+- ```window``` objekt s názvem ```datatableInnerTable_fieldName``` - objekt lze použít pro automatizované testování nebo jiné JavaScript operace.
+
+Po vytvoření vnořené datatabulky je vyvolána událost ```WJ.DTE.innerTableInitialized``` kde v objektu ```event.detail.conf``` je přenesena konfigurace.
 
 ## Lokální JSON data
 
@@ -60,7 +62,7 @@ Pro parametry aplikace ve web stránce se výsledek kóduje do `Base64` aby nedo
 
 V aplikaci tak bude možné upravovat seznam položek, měnit jejich pořadí atp. bez použití a definování REST služby. Výsledek se uloží zpět do JSON objektu a zakóduje přes `Base64`. Při inicializaci se doplní sloupec `ID` a `rowOrder`. Využívá se atribut `DATA.src` objektu `datatables` pro přímé nastavení dat pro tabulku.
 
-Automaticky se aktivuje i funkce pro možnost změny pořadí řádků pomocí funkce `Drag&Drop`. Z důvodu konfliktů při přesunu řádků a jejich různého uspořádání je vypnuta možnost uspořádat seznam podle libovolného sloupce, seznam se pořádá automaticky podle pořadí uspořádání. Pro režim JSON editor se tento sloupec automaticky přidá - všimněte si, že třída `ImpressSlideshowItem` v příkladu níže neobsahuje ani `ID` ani `rowOrder` sloupec, jelikož technicky pro zobrazení dat nejsou nutné. Přidají se automaticky. Pokud potřebujete sloupec ručně zobrazit, použijte anotaci `DataTableColumnType.ROW_REORDER`.
+Automaticky se aktivuje také funkce pro možnost změny pořadí řádků pomocí funkce `Drag&Drop`. Z důvodu konfliktů při přesunu řádků a jejich různého uspořádání je vypnuta možnost uspořádat seznam podle libovolného sloupce, seznam se pořádá automaticky podle pořadí uspořádání. Pro režim JSON editor se tento sloupec automaticky přidá - všimněte si, že třída `ImpressSlideshowItem` v příkladu níže neobsahuje ani `ID` ani `rowOrder` sloupec, protože technicky pro zobrazení dat nejsou potřeba. Přidají se automaticky. Pokud potřebujete sloupec ručně zobrazit, použijte anotaci `DataTableColumnType.ROW_REORDER`.
 
 Příklad použití:
 
@@ -97,10 +99,10 @@ public class ImpressSlideshowItem {
 
 ## Poznámky k implementaci
 
-Implementace je v souboru [field-type-datatable.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-datatable.js) a v [index.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) nastaveno jako `$.fn.dataTable.Editor.fieldTypes.datatable = fieldTypeDatatable.typeDatatable();`.
+Implementace je v souboru [field-type-datatable.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-datatable.js) av [index.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) nastaveno jako ```$.fn.dataTable.Editor.fieldTypes.datatable = fieldTypeDatatable.typeDatatable();```.
 
-Funkce `resizeDatatable` se používá pro výpočet velikosti datatabulky (aby scrolovaly jen řádky), přepočet je volán při inicializaci pole, intervalem každých 20 sekund (pro jistotu), při změně velikosti okna a při kliknutí na tab v editoru. Přepočet se provede jen když je pole viditelné.
+Funkce ```resizeDatatable``` se používá pro výpočet velikosti datatabulky (aby scrolovaly pouze řádky), přepočet je volán při inicializaci pole, intervalem každých 20 sekund (pro jistotu), při změně velikosti okna a při kliknutí na tab v editoru. Přepočet se provede jen když je pole viditelné.
 
-Při kliknutí na tab v editoru se testuje jméno tabu vůči tabu kde je vložena datatabulka a pokud se shoduje provede se nastavení šířky sloupců voláním `conf.datatable.columns.adjust();`. Datatabulka se může znovu použít pro různá data a toto zajistí korektní nastavení šířky sloupců v hlavičce podle obsahu tabulky.
+Při kliknutí na tab v editoru se testuje jméno tabu vůči tabu kde je vložena datatabulka a pokud se shoduje provede se nastavení šířky sloupců voláním ```conf.datatable.columns.adjust();```. Datatabulka se může znovu použít pro různá data a toto zajistí korektní nastavení šířky sloupců v hlavičce podle obsahu tabulky.
 
-Funkce `getUrlWithParams` dokáže v URL adrese nahradit pole z json objektu. Pokud URL adresa datatabulky obsahuje `?docid={docId}&groupId={groupId}` tak hodnota `{docId}` a `{groupId}` je nahrazena hodnotami z JSON objektu `EDITOR.currentJson`.
+Funkce ```getUrlWithParams``` dokáže v URL adrese nahradit pole z json objektu. Pokud URL adresa datatabulky obsahuje ```?docid={docId}&groupId={groupId}``` tak hodnota ```{docId}``` a ```{groupId}``` je nahrazena hodnotami z JSON objektu ```EDITOR.currentJson```.

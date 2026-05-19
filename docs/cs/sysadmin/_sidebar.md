@@ -1,6 +1,6 @@
- <div class="sidebar-section">Manuál pro provoz</div>
+<div class="sidebar-section">Manuál pro provoz</div>
 
-- [:point\_left: Zpět na Úvod](/?back)
+- [:point_left: Zpět na Úvod](/?back)
 
 - Bezpečnost
   - [Bezpečnostní testy](/sysadmin/pentests/README.md)
@@ -9,7 +9,7 @@
   - [Zodpovědné oznamování zranitelností](/sysadmin/responsible-disclosure/README.md)
 - Audit
   - [Audit](/sysadmin/audit/README.md)
-  - [Seznam notifikací](/sysadmin/audit/audit-notifications.md)
+  - [Seznam oznámení](/sysadmin/audit/audit-notifications.md)
   - [Změněné stránky](/sysadmin/audit/audit-changed-webpages.md)
   - [Čeká na publikování](/sysadmin/audit/audit-awaiting-publish-webpages.md)
   - [Úrovně logování](/sysadmin/audit/audit-log-levels.md)

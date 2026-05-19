@@ -2,7 +2,7 @@
 
 V kartě Historie se zobrazují publikované historické verze web stránky a **aktuálně rozpracované (ještě nepublikované) verze**. Při publikování rozpracované verze se z historie smažou dočasné/pracovní verze stránky a v historii se ponechá publikovaná verze.
 
-Plánované verze (budoucí) mají ve sloupci **Bude publikováno** zobrazené datum, kdy daná verze bude/byla publikována. Pokud máte naplánovanou stránku pro publikování a chcete ji zrušit stačí ji smazat.
+Plánované verze (budoucí) mají ve sloupci **Bude publikováno** zobrazeno datum, kdy daná verze bude/byla publikována. Pokud máte naplánovanou stránku pro publikování a chcete ji zrušit stačí ji smazat.
 
 Stránky, které mají nastavenou možnost **Odveřejnit stránku po tomto datu** zobrazují datum ve sloupci **Bude vypnuto**. V daném čase se vypne veřejné zobrazování web stránky (stránka nebude pro veřejnost dostupná). Pokud potřebujete vypnutí stránky zrušit, je třeba upravit danou verzi a plánované vypnutí zrušit jejím znovu uložením.
 
@@ -15,6 +15,7 @@ V případě schvalování/zamítnutí stránky se zobrazuje i jméno uživatele
 ![](history.png)
 
 Zvolením řádku a kliknutím na ikonu lze provést akce:
+
 - ![](history-btn-edit.png ":no-zoom") - Editovat stránku - zvolená verze se načte z historie do editoru. Umožňuje vám nově publikovat starší verzi stránky.
 - ![](history-btn-remove.png ":no-zoom") - Smazat - smaže stránku z historie, lze použít pouze na stránky s naplánovaným publikováním (mají vyplněné datum v **Bude publikováno**).
 - ![](history-btn-preview.png ":no-zoom") - Zobrazit stránku - zobrazí zvolenou web stránku z historie. Upozorňujeme, že v historii se ukládá text stránky, pokud dojde ke změně šablony (např. v patičce stránky) toto nebude reflektováno při zobrazení.

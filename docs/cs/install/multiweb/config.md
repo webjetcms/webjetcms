@@ -1,6 +1,7 @@
 # Konfigurace
 
 Pro správné fungování je třeba dodržet následující požadavky:
+
 - [Nastavení šablon](../../frontend/setup/README.md) pro správu více domén
 - První doméně je tzn. řídící, neměla by obsahovat reálnou web stránku, slouží k nastavování globálních parametrů.
 - Pro každou doménu doporučujeme vytvořit doménový alias. Vytvoříte jej v konfiguraci jako klíč `multiDomainAlias:DOMAIN-NAME` s vhodnou hodnotou doménového jména bez mezer, www a přípony. `interway`. Doménový alias vám umožní připravit web na pracovní doméně a následně jej přesunout na produkční doménu. Zadaný doménový alias se použije pro hledání souborů šablon a upravených souborů aplikací.

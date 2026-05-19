@@ -2,7 +2,7 @@
 
 Aplikace doménové limity umožňuje nastavit limity počtu odesílaných emailů podle domény. Zlepší tak doručení emailů, protože mail servery při vysokém počtu odeslaných emailů z jedné IP adresy mohou emaily blokovat, nebo je rovnou dávat do složky spam.
 
-V tabulce jsou červenou barvou zvýrazněny limity, které jsou neaktivní a neaplikují se při odesílání emailů. Pro přesně nespecifikované domény se použijí hodnoty zadané pro doménu `*`, neboli nastavení limitů s doménou `*` se aplikuje na všechny neuvedené domény.
+V tabulce jsou červenou barvou zvýrazněny limity, které jsou neaktivní a neaplikují se při odesílání emailů. Pro přesně nespecifikované domény se použijí hodnoty zadané pro doménu ```*```, čili nastavení limitů s doménou ```*``` se aplikuje na všechny neuvedené domény.
 
 ![](datatable.png)
 

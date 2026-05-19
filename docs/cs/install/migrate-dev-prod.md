@@ -5,22 +5,24 @@ Základní informace, které je třeba provést při migraci mezi prostředími.
 ## Konfigurační proměnné
 
 Zkontrolujte následující konf. proměnné:
-- `cloudStaticFilesDir` - cesta k adresáři se statickými soubory, je třeba ji nastavit správně na dané prostředí (případně ji na prostředí smazat, pokud se externí statické soubory nepoužívají).
-- `enableStaticFilesExternalDir` - zapnutí/vypnutí používání externího adresáře pro statické soubory.
-- `smtpServer` - adresa SMTP serveru + proměnné `smtpUsername, smtpPassword, smtpPort, smtpUseTLS` a podobně.
-- `emailProtectionSenderEmail` - nastavte email adresu, která se použije jako email odesílatele, může být rozdílná pro jednotlivá prostředí, musí být povolena na SMTP serveru.
-- `proxyHost/proxyPort` - nastavení proxy
-- `webEnabledIPs` - seznam IP adres ze kterých je dostupný web, na DEV prostředí nastavit ve výchozím nastavení na `#localhost,127.0.0.1,10.,192.168.,#interway,85.248.107.8,195.168.35.4,62.168.118.90,62.168.118.67,#klient,`
-- `adminEnabledIPs` - seznam IP adres ze kterých lze přistupovat do administrace, ve výchozím nastavení na `#localhost,127.0.0.1,10.,192.168.,#interway,85.248.107.8,195.168.35.4,#klient,`
-- `multidomainAdminHost` - pokud je nastavena ověřte doménu, používá se k nastavení domény pro CMS na více doménové instalaci.
-- `serverBeyoundProxy` - nastavení umístění aplikačního serveru za proxy/load balancer.
-- `logLevel` - na produkci ponechat na `normal`, na vývojářském prostředí můžete změnit na `debug`.
+
+- `cloudStaticFilesDir` - ​​cesta k adresáři se statickými soubory, je třeba ji nastavit správně na dané prostředí (případně ji na prostředí smazat, pokud se externí statické soubory nepoužívají).
+- `enableStaticFilesExternalDir` - ​​zapnutí/vypnutí používání externího adresáře pro statické soubory.
+- `smtpServer` - ​​adresa SMTP serveru + proměnné `smtpUsername, smtpPassword, smtpPort, smtpUseTLS` a podobně.
+- `emailProtectionSenderEmail` - ​​nastavte email adresu, která se použije jako email odesílatele, může být rozdílná pro jednotlivá prostředí, musí být povolena na SMTP serveru.
+- `proxyHost/proxyPort` - ​​nastavení proxy
+- `webEnabledIPs` - ​​seznam IP adres ze kterých je dostupný web, na DEV prostředí nastavit ve výchozím nastavení na `#localhost,127.0.0.1,10.,192.168.,#interway,85.248.107.8,195.168.35.4,62.168.118.90,62.168.118.67,#klient,`
+- `adminEnabledIPs` - ​​seznam IP adres ze kterých lze přistupovat do administrace, ve výchozím nastavení na `#localhost,127.0.0.1,10.,192.168.,#interway,85.248.107.8,195.168.35.4,#klient,`
+- `multidomainAdminHost` - ​​je-li nastavena ověřte doménu, používá se k nastavení domény pro CMS na více doménové instalaci.
+- `serverBeyoundProxy` - ​​nastavení umístění aplikačního serveru za proxy/load balancer.
+- `logLevel` - ​​na produkci ponechat na `normal`, na vývojářském prostředí můžete změnit na `debug`.
 
 Zkontrolujte všechny ostatní konf. proměnné a zvažte jejich dopad na projekt a vhodnost nastavení.
 
 ## Doménové adresy
 
-Pokud web používá `multidomain` je třeba korektně nastavit domény. Při migraci mezi prostředími zkontrolujte všechny kořenové adresáře a nastavte správná doménová jména. Zaškrtněte také možnost Změnit přesměrování domény, pokud je ale doména nastavena ve více kořenových složkách (např. na sk i en) zaškrtněte to jen při první změně domény.
+Pokud web používá `multidomain` je třeba korektně nastavit domény. Při migraci mezi prostředími zkontrolujte všechny kořenové adresáře a nastavte správná doménová jména.
+Zaškrtněte také možnost Změnit přesměrování domény, pokud je ale doména nastavena ve více kořenových složkách (např. na sk i en) zaškrtněte to jen při první změně domény.
 
 ## Uživatelé (při migraci na DEV prostředí)
 
@@ -35,6 +37,7 @@ Zkontrolujte úlohy na pozadí, zejména nastavené URL adresy úloh. Na DEV pro
 ## Mazání dat (při migraci na DEV prostředí)
 
 Aby lokální databáze na DEV prostředí nebyla zbytečně velká doporučujeme provést mazání dat:
+
 - statistiku ponechat jen za poslední 3 měsíce
 - smazat kompletně emaily (ideálně přes `DELETE * FROM emails`)
 - smazat monitorování serveru

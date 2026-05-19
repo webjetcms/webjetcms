@@ -167,11 +167,16 @@ export function renderTd(row, td, rowData) {
             let linkText = WJ.escapeHtml(td);
             linkText = linkText.replaceAll("&quot;", "\"");
             linkText = linkText.replaceAll("&#x3D;", "=");
-            //console.log("linkText=", linkText);
+
+            let ariaLabel = row.settings.aoColumns[row.col].renderFormatAriaLabel;
+            let ariaLabelAttr = "";
+            if (typeof ariaLabel !== "undefined" && ariaLabel !== "") {
+                ariaLabelAttr = ' aria-label="' + ariaLabel + '"';
+            }
 
             if ("quill" === row.settings.aoColumns[row.col].editor?.type) linkText = WJ.htmlToText(td);
 
-            return  '<div class="datatable-column-width"><a href="' + template + '">'+ renderPrefix(row) + linkText + renderSuffix(row) + '</a></div>';
+            return  '<div class="datatable-column-width"><a href="' + template + '"' + ariaLabelAttr + '>'+ renderPrefix(row) + linkText + renderSuffix(row) + '</a></div>';
         } else {
             var text = WJ.htmlToText(td);
             try {

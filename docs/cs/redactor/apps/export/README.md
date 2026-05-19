@@ -11,9 +11,10 @@ Ostatní pole jsou podobná jako při vkládání seznamu novinek do web stránk
 ![](exportDat-editor.png)
 
 Data lze exportovat ve formátech:
+
 - JSON
-- XML (formát pro RSS čtečku)
-- `ud-ofngovcz` - export ve formátu pro `Úradní desku` v [OpenData ČR](https://ofn.gov.cz/úřední-desky/2021-07-20/) JSON formátu. Při použití je třeba definovat překladové klíče v CZ jazyce `components.ud-ofngovcz.url` s URL adresou stránky a `components.ud-ofngovcz.ico` s IČO města. Hodnota pro pole Agenda se bere ze značky (perex skupiny), přílohy z médií stránky.
+- XML ​​(formát pro RSS čtečku)
+- `ud-ofngovcz` - ​​export ve formátu pro `Úradní desku` v [OpenData ČR](https://ofn.gov.cz/úřední-desky/2021-07-20/) JSON formátu. Při použití je třeba definovat překladové klíče v CZ jazyce `components.ud-ofngovcz.url` s URL adresou stránky a `components.ud-ofngovcz.ico` s IČ města. Hodnota pro pole Agenda se bere ze značky (perex skupiny), přílohy z médií stránky.
 
 Ukázka exportu ve formátu json:
 

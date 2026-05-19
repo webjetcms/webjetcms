@@ -5,6 +5,7 @@
 ## Nastavení aplikace
 
 V této části lze nastavit:
+
 - Zemi
 
 ![](editor.png)

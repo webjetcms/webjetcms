@@ -1083,7 +1083,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	 */
 	public String getTitle()
 	{
-		if (title==null || title.length()==0)
+		if (title==null || title.isEmpty())
 		{
 			title = "no name";
 		}
@@ -1096,7 +1096,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	 */
 	public String getNavbar()
 	{
-		if (navbar == null || navbar.length() < 1)
+		if (navbar == null || navbar.isEmpty())
 		{
 			String navbarFromTitle = title;
 			if (navbarFromTitle.contains("<") && navbarFromTitle.contains(">")) navbarFromTitle = Tools.html2text(navbarFromTitle);
@@ -1428,8 +1428,6 @@ public class DocBasic implements DocGroupInterface, Serializable
 	{
 		if (eventDate == 0) return;
 		this.eventDateDate = new Date(eventDate);
-		setEventDateString(Tools.formatDate(eventDateDate));
-		setEventTimeString(Tools.formatTime(eventDateDate));
 	}
 
 	/**
@@ -1752,7 +1750,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	 * @deprecated Pouzivajte verziu ktora vrati Integer
 	 */
 	@JsonIgnore
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	public String[] getPerexGroup() {
 		return Tools.getTokens(getPerexGroupIdsString(), ",");
 	}
@@ -2197,7 +2195,8 @@ public class DocBasic implements DocGroupInterface, Serializable
 
 	public void setEventDateString(String eventDateString) {
 		if (Tools.isEmpty(eventDateString)) {
-			eventDateDate = null;
+			this.eventDateDate = null;
+			return;
 		}
 		this.eventDateDate = new Date(DB.getTimestamp(eventDateString));
 	}

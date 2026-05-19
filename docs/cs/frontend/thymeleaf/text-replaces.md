@@ -115,7 +115,8 @@ Text stránky vytvořené přímo v editoru WebJET může obsahovat speciální 
 
 ## Přihlášený uživatel
 
-Údaje o přihlášeném uživateli (pokud existuje sekce web sídla, která je dostupná pouze pod heslem). Hodnoty lze použít k před vyplnění hodnot formulářových polí. Pokud není přihlášen žádný uživatel, hodnoty všech značek budou prázdný znak.
+Údaje o přihlášeném uživateli (pokud existuje sekce web sídla, která je dostupná pouze pod heslem).
+Hodnoty lze použít k před vyplnění hodnot formulářových polí. Pokud není přihlášen žádný uživatel, hodnoty všech značek budou prázdný znak.
 
 ```html
 <table width="100%" class="ramikTable">

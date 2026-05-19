@@ -11,14 +11,14 @@ V kartě „Obsah“ lze upravovat obsahovou část samotné webové stránky. E
 Dostupné jsou více typů editorů podle nastavení skupiny šablon nebo šablony (pole Typ editoru stránek). Aktuálně jsou podporovány následující typy editorů:
 
 - Standardní - editor typu `WYSIWYG`, tedy vizuální editor ve kterém to co vidíte na obrazovce se také uloží. Práce je podobná práci v MS Word, kdy umíte jednoduše označit text, nastavit tučné písmo, vkládat obrázky atp.
-- HTML editor - při otevření se zobrazí HTML kód stránky. Je určen pro speciální stránky, jejichž kód by byl porouchaný u editoru typu `WYSIWYG` Např. stránky pro hromadný email, které obsahují celý HTML kód včetně hlavičky a patičky. Kód je v takovém případě typicky dodán z externí agentury a je pouze vložen do stránky bez potřeby jeho změn.
+- HTML editor - při otevření se zobrazí HTML kód stránky. Je určen pro speciální stránky, jejichž kód by byl porouchaný u editoru typu `WYSIWYG`. stránky pro hromadný email, které obsahují celý HTML kód včetně hlavičky a patičky. Kód je v takovém případě typicky dodán z externí agentury a je pouze vložen do stránky bez potřeby jeho změn.
 - Page Builder - režim skládání web stránky z [připravených bloků](../pagebuilder.md), umožňuje jednoduše bloky upravovat, přidávat, přesouvat pořadí atp. Je určen k vytváření komplexních web stránek.
 
 ## Karta základní
 
 Nejdůležitějším parametrem každé web stránky je její titulek (nadpis). Titulek se zadává do textového pole v kartě Základní. Pokud vytváříte novou web stránku v prázdné složce, tak si systém automaticky přebere titulek z názvu této složky. V opačném případě je tam při vytvoření nové web stránky text „Nová web stránka“, který samozřejmě musíte změnit na smysluplný název definující obsah web stránky. Titulek se zadává normálně s diakritikou i mezerami jako obyčejný text.
 
-Hlavní stránka složky má standardně synchronizovaný [název web stránky s názvem složky](../group.md#synchronizace-názvu-složky-a-web-stránky).
+Hlavní stránka složky má standardně synchronizovaný [název webové stránky s názvem složky](../group.md#synchronizace-názvu-složka-a-web-stránky).
 
 ![](tab-basic.png)
 
@@ -33,15 +33,15 @@ Web stránku můžete uložit do **více složek**, jejichž seznam je v sekci Z
 
 V případě, že **vymažete kopii web stránky** tak bude přesunuta do koše. Než bude tato kopie v koši, tak originální stránka z nadřazené složky bude mít při editaci změněnu adresu složky kopie na koš. Samozřejmě můžete dále přidávat další kopie a to i do složky, odkud jsme vymazali tu první kopii. Vymazané kopie web stránky se po permanentním vymazání z koše již nadále nebudou zobrazovat jako existující kopie při editaci originální stránky.
 
-V případě, že **vymažete originální web stránku** z nadřazené složky, ta se přesune do koše, aniž by to ovlivnilo již existující kopie této stránky. Upozorňujeme ale, že při editaci stránky bude mít vypnutý atribut Zobrazovat, který samozřejmě můžete znovu zapnout pro zobrazování stránek. Po permanentním **vymazání originální** web stránky z koše se **permanentně vymažou všechny její kopie**. To znamená, že tyto kopie již nebudou nadále dostupné (ani v koši) a nebudou se dát obnovit.
+V případě, že **vymažete originální web stránku** z nadřazené složky, ta se přesune do koše, aniž by to ovlivnilo již existující kopie této stránky. Upozorňujeme ale, že při editaci stránky bude mít vypnutý atribut Zobrazovat, který samozřejmě můžete znovu zapnout pro zobrazování stránek. Po permanentním **vymazání originální** webové stránky z koše se **permanentně vymažou všechny její kopie**. To znamená, že tyto kopie již nebudou nadále dostupné (ani v koši) a nebudou se dát obnovit.
 
 ### URL adresa
 
-V poli URL adresa nastavujete adresu web stránky na internetu (část za doménovým jménem). `/produkty/webjet-cms/funkcie.html`.
+V poli URL adresa nastavujete adresu web stránky na internetu (část za doménovým jménem). ```/produkty/webjet-cms/funkcie.html```.
 
 Pole se **při uložení nové web stránky automaticky vyplní** podle URL adresy složky a pole Název položky v menu, nemusíte jej manuálně vyplňovat.
 
-Z pohledu optimalizace pro vyhledávače by URL adresa stránky měla obsahovat klíčová slova. Ty ale musí být ideální i v titulku stránky, nadpisech a textu stránky.
+Z pohledu optimalizace pro vyhledávače by URL adresa stránky měla obsahovat klíčová slova. Ty ale musí být ideální i v titulku stránky, nadpisech a v textu stránky.
 
 Pokud URL adresu stránky změníte, automaticky se vytvoří přesměrování v aplikaci Přesměrování cest. Pokud jiná stránka odkazuje na původní URL adresu bude přesměrována na novou adresu stránky.
 
@@ -59,7 +59,7 @@ Při změně URL adresy stránky se automaticky vytvoří přesměrování v apl
 
 #### Zdědit začátek URL adresy z adresáře
 
-Při této volbě můžete zadat koncovou URL web stránky, přičemž její začátek se převezme z rodičovských adresářů. Je to vhodné, pokud potřebujete aby stránka měla vždy stejné koncové URL, například `404.html` nebo `cta.html`.
+Při této volbě můžete zadat koncovou URL web stránky, přičemž její začátek se převezme z rodičovských adresářů. Je to vhodné, pokud potřebujete, aby stránka měla vždy stejné koncové URL, například ```404.html``` nebo ```cta.html```.
 
 Hodnota URL adresy se bude měnit při:
 
@@ -80,15 +80,15 @@ Umožňuje zobrazovat informace jako: **Upozornění: na stránku vede odkaz z V
 
 ## Správa více domén
 
-Pokud je WebJET [nastaven na správu více domén](../../../frontend/setup/README.md#správa-více-domén) tak v kartě Základny se pro složky v kořenové složce zobrazuje pole Doména.
+Pokud je WebJET [nastaven pro správu více domén](../../../frontend/setup/README.md#zpráva-více-domén) tak v kartě Základny se pro složky v kořenové složce zobrazuje pole Doména.
 
 ### Vytvoření nové domény
 
 Pokud potřebujete vytvořit novou doménu postupujte následovně:
 
 - Klepněte na ikonu pro přidání nové složky
-- Zadejte potřebné údaje jako Název složky atd.
-- Změňte nadřazenou složku na kořenovou složku.
+- Zadejte potřebné údaje jako Název složky atp.
+- Změňte Nadřazenou složku na Kořenovou složku.
 - Po nastavení na kořenovou složku se zobrazí pole Doména, zadejte doménové jméno.
 - Uložte složku kliknutím na tlačítko Přidat.
 
@@ -148,13 +148,13 @@ Obrázek můžete definovat přes ikonku, která se nachází za políčkem **Ob
 
 ### Publikování web stránky
 
-Pokud jste si načasovali publikování web stránky a chcete být o tomto publikování jako **autor stránky** informován, stačí nastavit konfigurační proměnnou `webpagesNotifyAutorOnPublish`. Přednastavená hodnota je **true**, čili vždy po publikování nové verze web stránky se jejímu autorovi odešle následující informační email.
+Pokud jste si načasovali publikování webové stránky a chcete být o tomto publikování jako **autor stránky** informován, stačí nastavit konfigurační proměnnou ```webpagesNotifyAutorOnPublish```. Přednastavená hodnota je **true**, čili vždy po publikování nové verze web stránky se jejímu autorovi odešle následující informační email.
 
 ![](publish-email-notification.png)
 
-Konec emailu obsahuje odkaz na stránku, kde můžete zkontrolovat novou verzi stránky. Pokud si tyto informační emaily nepřejete, musíte nastavit hodnotu konfigurační proměnné `webpagesNotifyAutorOnPublish` na **false**.
+Konec emailu obsahuje odkaz na stránku, kde můžete zkontrolovat novou verzi stránky. Pokud si tyto informační emaily nepřejete, musíte nastavit hodnotu konfigurační proměnné ```webpagesNotifyAutorOnPublish``` na **false**.
 
-Tato akce se [Audituje](../../../sysadmin/audit/README.md) kde typ auditu je `SAVEDOC` a popis auditované akce obsahuje informaci `publishStatus: Webpage was published`, díky čemuž víte akce publikování jednoduše najít.
+Tato akce se [Audituje](../../../sysadmin/audit/README.md) kde typ auditu je ```SAVEDOC``` a popis auditované akce obsahuje informaci ```publishStatus: Webpage was published```, díky čemuž víte akce publikování jednoduše najít.
 
 ![](publish-audit-logs.png)
 
@@ -178,7 +178,7 @@ Uspořádání definuje pořadí odkazů. Média přiřazená do různých skupi
 
 ## Karta volitelná pole
 
-V kartě Volitelná pole lze web stránce a adresáři nastavovat volitelné atributy (hodnoty, texty) podle vaší potřeby. Hodnoty lze následně přenést a použít v šabloně stránky. Typy (text, číslo, výběrové pole, výběr souboru...) a názvy polí lze nastavit dle potřeby, více informací je v sekci [Volitelná pole](../../../frontend/webpages/customfields/README.md).
+V kartě Volitelná pole lze web stránce a adresáři nastavovat volitelné atributy (hodnoty, texty) podle vaší potřeby. Hodnoty lze následně přenést a použít v šabloně stránky. Typy (text, číslo, výběrové pole, výběr souboru...) a názvy polí lze nastavit podle potřeby, více informací je v sekci [Volitelná pole](../../../frontend/webpages/customfields/README.md).
 
 ![](../../../frontend/webpages/customfields/webpages.png)
 
@@ -206,17 +206,17 @@ Zároveň při uložení pracovní verze se nezavře okno editoru, můžete tak 
 
 ## Náhled stránky
 
-Klepnutím na tlačítko `Náhľad` v patičce okna editoru se otevře nová karta v prohlížeči s náhledem kompletní stránky bez potřeby jejího uložení. Můžete tak provést změny ve stránce a prohlédnout si jak reálně bude vypadat po jejím uložení.
+Klepnutím na tlačítko ```Náhľad``` v patičce okna editoru se otevře nová karta v prohlížeči s náhledem kompletní stránky bez potřeby jejího uložení. Můžete tak provést změny ve stránce a prohlédnout si jak reálně bude vypadat po jejím uložení.
 
-Zároveň pokud okno náhledu nezavřete se náhled automaticky aktualizuje při uložení stránky. To je výhodné využití s funkcí [Uložit pracovní verzi](#uložit-pracovní-verzi) kde můžete přesunout okno náhledu např. na druhý monitor a mít ho stále otevřeno během práce. Při každém uložení se vám náhled automaticky aktualizuje.
+Zároveň pokud okno náhledu nezavřete se náhled automaticky aktualizuje při uložení stránky. To je výhodné využití s ​​funkcí [Uložit pracovní verzi](#uložit-pracovní-verzi) kde můžete přesunout okno náhledu např. na druhý monitor a mít ho stále otevřeno během práce. Při každém uložení se vám náhled automaticky aktualizuje.
 
 <div class="video-container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/6OSTrMJj8z4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/6OSTrMJj8z4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 ## Kolaborace více redaktorů
 
-Aby nedošlo k případu, že jednu stránku editují současně dva různí uživatelé, systém WebJET vás v takovém případě upozorní hlášením, že na stránce v současnosti již někdo pracuje. Znamená to, že editovanou stránku má již někdo načtenou v editoru. V takové situaci musíte opustit editor a počkat, dokud dotyčný uživatel neskončí svou práci, abyste si navzájem nepřepsali své úpravy.
+Aby nedošlo k případu, že jednu stránku editují současně dva různí uživatelé, systém WebJET vás v takovém případě upozorní hlášením, že na stránce v současnosti již někdo pracuje. Znamená to, že editovanou stránku má již někdo načtenou v editoru. V takové situaci musíte opustit editor a počkat, až dotyčný uživatel neskončí svou práci, abyste si navzájem nepřepsali své úpravy.
 
 Doporučujeme, abyste po ukončení práce a uložení/publikování stránky opustili editor stránek, minimalizujete tím možnost zobrazení hlášení pro jiného redaktora.
 
@@ -242,4 +242,4 @@ Nástrojový panel se zobrazuje:
 - Pokud jste před zobrazením stránky tím navštívili sekci Web stránky v administraci.
 - Konfigurační proměnná `disableWebJETToolbar` je nastavena na hodnotu `false`.
 
-Kromě těchto podmínek lze zobrazit panel pomocí URL parametru `?NO_WJTOOLBAR=true` pro jeho vypnutí nebo `?NO_WJTOOLBAR=false` pro jeho zapnutí.`true` se nebude zobrazovat dokud se neodhlásíte z administrace.
+Kromě těchto podmínek je možné zobrazit panel pomocí URL parametru `?NO_WJTOOLBAR=true` pro jeho vypnutí nebo `?NO_WJTOOLBAR=false` pro jeho zapnutí. Po nastavení na hodnotu `true` se nebude zobrazovat dokud se neodhlásíte z administrace.

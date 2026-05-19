@@ -1280,6 +1280,8 @@ public class Constants {
 				"Nastavenie moznosti zobrazovania vymazania komponenty pri inline editacii, nastavenim na false sa vypne zobrazenie zmazania komponenty");
 
 		// default parametre metadataCleaner
+		setString("metadataCleanFiles", "pdf-gen", "editor;files;gallery",
+				"Zoznam typov suborov oddeleny ciarkou pre ktore sa budu cistit metadata, mozne hodnoty: pdf-gen=cistenie metadat generovanych PDF suborov");
 		setString("metadataRemoverCommand", "", "editor;files;gallery",
 				"Ak je nastavene aktivuje sa odstranovanie metadat z uploadovanych suborov, alebo sa pouzije imageMagick na zmensenie velkosti - nastavte na /usr/bin/convert");
 		setString("metadataRemoverParams", "{filePath}", "editor;files;gallery",

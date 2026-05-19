@@ -29,6 +29,7 @@ Při úpravě již existujícího záznamu se nám v editoru zobrazí i pole s p
 ## Vymazání klíče
 
 Smazání překladového klíče je složitější proces, který se může lišit v závislosti na typu překladového klíče. Mazat lze pouze klíče vytvořené/upravené v databázi, které se nenacházejí přímo v překladovém souboru:
+
 - Nový klíč - při pokusu o jeho vymazání se vymažou všechny jeho jazykové překlady z databáze. To znamená, že tento překladový klíč již nebudete schopni najít v tabulce.
 - Původní klíč s novými hodnotami - při pokusu o vymazání tohoto klíče se vymažou pouze nové databázové hodnoty az překladového klíče se stane původní klíč definovaný v souboru (takže se opět nastaví hodnoty tak, jak byly vyčteny ze souboru). Tento klíč budeme moci dále nalézt v tabulce.
 - Původní klíč - **nelze odstranit**. Tyto klíče byly získány ze souboru s překladovými klíči a soubor nelze modifikovat. Při pokusu o vymazání takového klíče budete upozorněni oznámením, že tento klíč nelze vymazat.

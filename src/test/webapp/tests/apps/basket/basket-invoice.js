@@ -24,6 +24,7 @@ Before(({ I, DT, login }) => {
 const basketUserEmail = "basket.notifyuser";
 
 Scenario('Eshop - Switch domain and empty email inbox', async ({I, Document, TempMail}) => {
+    I.closeOtherTabs();
     I.say("Change domain");
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
     Document.switchDomain("shop.tau27.iway.sk");
@@ -37,10 +38,10 @@ Scenario('Eshop - create new invoice', async ({I, TempMail}) => {
     I.say("First create new INVOICE");
 
     I.say("Add 2 phone's");
-    I.amOnPage("/produkty/mobily/iphone/iphone-x-128gb.html");
+    I.amOnPage("/sk/produkty/mobily/iphone/iphone-x-128gb.html");
     I.waitForVisible("button.addToBasket");
     I.clickCss("button.addToBasket");
-    I.amOnPage("/produkty/mobily/android/smasung-galaxy-s9-64gb.html");
+    I.amOnPage("/sk/produkty/mobily/android/smasung-galaxy-s9-64gb.html");
     I.waitForVisible("button.addToBasket");
     I.clickCss("button.add");
     I.clickCss("button.addToBasket");

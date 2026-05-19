@@ -13,6 +13,7 @@ Sekce nahrazuje původní způsob definování šablon novinek pomocí překlado
 ## Editor
 
 Dostupná jsou následující pole:
+
 - **Název šablony** - povinné pole s **jedinečným** název šablony novinek
 - **Obrázek šablony** - pole pro výběr ilustračního obrázku zobrazených novinek (pro lepší orientaci při výběru šablony v aplikaci novinky)
 - **Šablonovací nástroj** - výběr šablonovacího nástroje (dosud podporován pouze `Velocity`)
@@ -37,7 +38,7 @@ Po kliknutí na nabízený kód se zvolený kód vloží do pole nad kterým jst
 
 ## Příklady kódu
 
-Šablony novinek používají [Velocity Engine](https://velocity.apache.org/engine/2.3/vtl-reference.html) pro zobrazení, je tedy možné definovat cykly, podmínky a jiný programový kód. Připraveny jsou šablony s jedním, dvěma i třemi sloupci. Šablony doporučujeme editovat pouze uživateli, kteří vědí co dělají a znají syntax `Velocity Engine`. Doporučujeme vycházet z připravených šablon a případně je jen upravovat. Standardní redaktor by neměl mít právo na editaci šablon novinek, měl by je jen používat.
+Šablony novinek používají [Velocity Engine](https://velocity.apache.org/engine/2.3/vtl-reference.html) pro zobrazení, je tedy možné definovat cykly, podmínky a jiný programový kód. Připraveny jsou šablony s jedním, dvěma i třemi sloupci. Šablony doporučujeme editovat pouze uživateli, kteří vědí co dělají a znají syntaxi `Velocity Engine`. Doporučujeme vycházet z připravených šablon a případně je jen upravovat. Standardní redaktor by neměl mít právo na editaci šablon novinek, měl by je jen používat.
 
 Několik ukázek práce s pokročilými objekty:
 

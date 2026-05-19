@@ -30,16 +30,6 @@ block content
     <table class="datatableInit table"></table>
 ```
 
-After creating a new pug file, you need to add it to `webpack` in the [webpack.common.js](../../../../src/main/webapp/admin/v9/webpack.common.js) file in the plugins section:
-
-```javascript
-plugins: [
-    ...
-    new HtmlWebpackPlugin(generateHtmlPlugins("/settings/menosuborubezpripony"))
-    ...
-]
-```
-
 ## Spring DATA repository and JPA Entity/Bean
 
 Create the JPA bean in the appropriate package, typically `sk.iway.iwcm.components.MENOMODULU` with the same name as the table name and the Entity extension.

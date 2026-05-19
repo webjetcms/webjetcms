@@ -1804,8 +1804,13 @@ export const dataTableInit = options => {
                         if (separator) {
                             opts.multipleSeparator = separator;
                         }
+                        $select.on('rendered.bs.select', function () {
+                            dtWJ.applySelectAriaLabel(this);
+                        });
                         //console.log("Setting selectpicker, opts=", opts, " el=", $select);
                         $select.selectpicker(opts);
+                        // Apply immediately after init
+                        dtWJ.applySelectAriaLabel($select[0]);
                     });
                 }
 

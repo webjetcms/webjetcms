@@ -20,7 +20,7 @@ Seznam skupin šablon zobrazuje přehled vytvořených skupin, ve výchozím nas
   - Standardní - hlavní editor stránek s formátováním textu, vkládáním obrázků, odkazů atp.
   - HTML editor – používá se pro speciální stránky, které potřebují používat přesný HTML editor.
   - Page Builder - režim editace stránky skládající se z [připravených bloků](../page-builder/README.md).
-  - `Grid Editor` - předchůdce režimu Page Builder, bude v roce 2024 odstraněn.
+  - `Grid Editor` - ​​předchůdce režimu Page Builder, bude v roce 2024 odstraněn.
 - Počet použití - počet šablon v této skupině.
 
 ## Karta Metadata

@@ -2,11 +2,11 @@
 
 This is a special table that primarily uses optional fields to function. This allows us to achieve modularity in the editor, where each payment method has custom fields in the editor.
 
-The basic element is the [BasePaymentMethod](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/jpa/PaymentMethodEntity.java) class, which has optional AL fields (they can be easily added if necessary).
+The basic element is the [BasePaymentMethod](../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/jpa/PaymentMethodEntity.java) class, which has optional AL fields (they can be easily added if necessary).
 
 ## Adding a new payment method
 
-To add a new payment method, we need to create a Service, e.g. like [GoPayService](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/rest/GoPayService.java). Each payment method requires its own file.
+To add a new payment method, we need to create a Service, e.g. like [GoPayService](../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/rest/GoPayService.java). Each payment method requires its own file.
 
 ```java
 @Service
@@ -44,7 +44,7 @@ The annotation provides parameters for setting:
 
 ### ```FieldMapAttr```
 
-Interface [`FieldMapAttr`](../../../../../../src/main/java/sk/iway/iwcm/components/basket/support/FieldMapAttr.java) allows defining an optional field for the payment method.
+Interface [`FieldMapAttr`](../../../../../src/main/java/sk/iway/iwcm/components/basket/support/FieldMapAttr.java) allows defining an optional field for the payment method.
 
 The available parameters to set are:
 

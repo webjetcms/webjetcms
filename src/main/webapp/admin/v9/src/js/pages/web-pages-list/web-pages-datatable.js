@@ -455,25 +455,25 @@ export class WebPagesDatatable {
             //prepinac zobrazenia stranok z podadresarov
             this.webpagesDatatable.button().add(buttonCounter++, {
                 tag: "div",
-                text: ` <input type="checkbox" class="form-check-input" id="dtRecursiveSwitch" value="true"></input>
+                text: ` <input type="checkbox" class="form-check-input" id="dtRecursiveSwitch" value="true" aria-label="${window.WJ.translate('datatable.show_all_subfolders.js')}"></input>
                         <label class="form-check-label is-icon-arrows-v" for="dtRecursiveSwitch"></label>`,
                 className: 'custom-control form-switch buttons-recursive buttons-divider-left',
                 attr: {
                     'title': window.WJ.translate('datatable.show_all_subfolders.js'),
                     'data-toggle': 'tooltip',
-                    'data-dtbtn': 'showsubfolders'
+                    'data-dtbtn': 'showsubfolders',
+                    'role': 'group',
                 },
                 action: function (e, node, el) {
-
                     if ($(el).hasClass("enabled")) {
-                        recursive = false;
+                        window.recursive = false;
                         $(el).removeClass("enabled");
                     } else {
-                        recursive = true;
+                        window.recursive = true;
                         $(el).addClass("enabled");
                     }
 
-                    self.webpagesDatatable.setAjaxUrl(WJ.urlAddParam(returnActualPathWithoutRecursionParam(), "recursive", recursive));
+                    self.webpagesDatatable.setAjaxUrl(WJ.urlAddParam(returnActualPathWithoutRecursionParam(), "recursive", window.recursive));
                     self.webpagesDatatable.ajax.reload();
                 }
             });
@@ -570,7 +570,7 @@ export class WebPagesDatatable {
                         <input class="form-check-input" type="checkbox" value="" id="webpagesSaveCheckbox">
                         <label class="form-check-label" for="webpagesSaveCheckbox">
                             ${WJ.translate('editor.saveWorkCopy.js')}
-                            <span data-toggle="tooltip" title="${WJ.translate('editor.saveWorkCopy.tooltip.js')}"><i class="ti ti-info-circle"></i></span>
+                            <span role="img" data-toggle="tooltip" title="${WJ.translate('editor.saveWorkCopy.tooltip.js')}"><i class="ti ti-info-circle"></i></span>
                         </label>
                     </div>
                 `;

@@ -4,16 +4,16 @@
 
 ## Karty v editoru
 
-WebJET verze Editoru má implementovanou podporu karet. Každá karta musí mít unikátní `id`, na které se v columns definici v části editor nastavuje karta, do které se přesune dané pole. Pokud hodnota `tab` v columns definici není nastavena pole se přesune do první karty.
+WebJET verze Editoru má implementovanou podporu karet. Každá karta musí mít unikátní ``id``, na které se v columns definici v části editor nastavuje karta, do které se přesune dané pole. Pokud hodnota ```tab``` v columns definici není nastavena pole se přesune do první karty.
 
-Volitelně může `tabs` definice obsahovat atribut `content` s HTML kódem který se vloží do karty. V takovém případě již nesmí obsahovat pole z `columns` definice. Zároveň se takto definované kartě zruší odsazení a `before` element s šedým pasem, obsah karty je na celou šířku a případné odsazení je třeba si řešit v custom CSS.
+Volitelně může ```tabs``` definice obsahovat atribut ```content``` s HTML kódem který se vloží do karty. V takovém případě již nesmí obsahovat pole z ```columns``` definice. Zároveň se takto definované kartě zruší odsazení a ```before``` element s šedým pásem, obsah karty je na celou šířku a případné odsazení je třeba si řešit v custom CSS.
 
 Možné atributy:
-- `selected` definuje výchozí zobrazenou kartu, měl by být nastaven pouze na jedné kartě.
-- `className` umožňuje doplnit CSS styl k přepínači karet. Předdefinovány jsou CSS styly `hide-on-create` pro schování karty při pořizování nového záznamu a `hide-on-edit` pro schování karty při editaci již existujícího záznamu, `hide-on-duplicate` pro schování karty při duplikování.
-- `perms` umožňuje nezobrazit kartu pokud uživatel nemá zadané právo (pozor, znak `.` v právu se nadrazuje za znak `_`). Kontrolují se práva v JavaScript objektu `nopermsJavascript`.
-- `hideOnCreate` nastavením na hodnotu `true` schová kartu při vytváření nového záznamu.
-- `hideOnEdit` nastavením na hodnotu `true` schová kartu při editaci stávajícího záznamu.
+- ```selected``` definuje ve výchozím nastavení zobrazenou kartu, měl by být nastaven pouze na jedné kartě.
+- ```className``` umožňuje doplnit CSS styl k přepínači karet. Předdefinovány jsou CSS styly ```hide-on-create``` pro schování karty při vytváření nového záznamu a ```hide-on-edit``` pro schování karty při editaci již existujícího záznamu, `hide-on-duplicate` pro schování karty při duplikování.
+- ```perms``` umožňuje nezobrazit kartu pokud uživatel nemá zadané právo (pozor, znak ```.``` v právu se nadrazuje za znak ```_```). Kontrolují se práva v JavaScript objektu ```nopermsJavascript```.
+- ```hideOnCreate``` nastavením na hodnotu ```true``` schová kartu při vytváření nového záznamu.
+- ```hideOnEdit``` nastavením na hodnotu ```true``` schová kartu při editaci existujícího záznamu.
 
 ```javascript
 let tabs = [
@@ -53,7 +53,7 @@ galleryTable = WJ.DataTable( {
 });
 ```
 
-Pro přepnutí tabu lze aktivovat `listener`:
+Pro přepnutí tabu lze aktivovat ```listener```:
 
 ```javascript
 window.addEventListener('WJ.DTE.tabclick', function (e) {
@@ -62,7 +62,7 @@ window.addEventListener('WJ.DTE.tabclick', function (e) {
 }, false);
 ```
 
-Pokud potřebujete mít **kartu na plnou výšku okna** lze kartě nastavit CSS styl `.dte-tab-autoheight`. V případě potřeby je možné přes data atribut `data-dt-autoheight-offset` nastavit posun velikosti (pokud okno obsahuje již jiný element). Pokud potřebujete, aby okno bylo posuvné (může obsahovat velký objekt) nezapomeňte nastavit `style="overflow:scroll;"`.
+Pokud potřebujete mít **kartu na plnou výšku okna** je možné kartě nastavit CSS styl ```.dte-tab-autoheight```. V případě potřeby lze přes data atribut ```data-dt-autoheight-offset``` nastavit posun velikosti (pokud okno obsahuje již jiný element). Pokud potřebujete, aby okno bylo posuvné (může obsahovat velký objekt) nezapomeňte nastavit ```style="overflow:scroll;"```.
 
 ```javascript
 var tabs = [
@@ -139,25 +139,27 @@ let columns = [
 ## Události
 
 Kromě [standardních událostí](https://editor.datatables.net/reference/event/) z Datatabulky jsou ve WebJETu přidány následující události:
-- `WJ.DTE.open` - vyvolaný při otevření okna editoru, v `details` objektu přenese `dte` objekt editoru.
-- `WJ.DTE.opened` - vyvolaný po otevření okna (okno je již zobrazeno), v `details` objektu přenese `dte` objekt editoru, jeho `id` a typ akce (`edit,create,remove`) v `action`.
-- `WJ.DTE.close` - vyvolaný při zavření okna editoru, v `details` objektu přenese `dte` objekt editoru.
-- `WJ.DTE.forceReload` - je vyvolán když REST služba vrátí požadavek na obnovení datatabulky. Ta se obnoví sama, tento event se odešle pro možnost aktualizace nap. JS tree
-- `WJ.DTE.tabclick` - je vyvolán po kliknutí na tab v editoru
-- `WJ.DTE.submitclick` - je vyvolán po kliknutí na tlačítko uložení editoru
-- `WJ.DTE.closeclick` - je vyvolán po kliknutí na tlačítko zavření okna editoru
-- `WJ.DTE.xhrfetch` - je vyvolán po načtení dat do editoru při volání přes fetchOnEdit, okno editoru je stále v DOM stromu a nefungují standardní eventy `dt.opened`
-- `WJ.DTE.resize` - je vyvoláno při změně velikosti okna (kliknutí na tlačítko maximalizovat/minimalizovat)
+
+- ```WJ.DTE.open``` - ​​vyvolaný při otevření okna editoru, v ```details``` objektu přenese ```dte``` objekt editoru.
+- ```WJ.DTE.opened``` - ​​vyvolaný po otevření okna (okno je již zobrazeno), v ```details``` objektu přenese ```dte``` objekt editoru, jeho ```id``` a typ akce (```edit,create,remove```) v ```action```.
+- ```WJ.DTE.close``` - ​​vyvolaný při zavření okna editoru, v ```details``` objektu přenese ```dte``` objekt editoru.
+- ```WJ.DTE.forceReload``` - ​​je vyvolán když REST služba vrátí požadavek na obnovení datatabulky. Ta se obnoví sama, tento event se odešle pro možnost aktualizace nap. JS tree
+- ```WJ.DTE.tabclick``` - ​​je vyvolán po kliknutí na tab v editoru
+- ```WJ.DTE.submitclick``` - ​​je vyvolán po kliknutí na tlačítko uložení editoru
+- ```WJ.DTE.closeclick``` - ​​je vyvolán po kliknutí na tlačítko zavření okna editoru
+- ```WJ.DTE.xhrfetch``` - ​​je vyvolán po načtení dat do editoru při volání přes fetchOnEdit, okno editoru je stále v DOM stromu a nefungují standardní eventy ```dt.opened```
+- ```WJ.DTE.resize``` - ​​je vyvoláno při změně velikosti okna (kliknutí na tlačítko maximalizovat/minimalizovat)
 
 ## Stylování
 
 Pro specifické případy je třeba nastavit CSS styl pro pole (anotace className):
-- `todo` - pole se zobrazí oranžovou barvou naznačující, že je zatím nefunkční
-- `DTE_Field_Has_Checkbox` - zmenší odsazení mezi polem a následujícím zaškrtávacím polem (nastavuje se na pole, ne checkbox)
+
+- ```todo``` - ​​pole se zobrazí oranžovou barvou naznačující, že je zatím nefunkční
+- ```DTE_Field_Has_Checkbox``` - ​​zmenší odsazení mezi polem a následujícím zaškrtávacím polem (nastavuje se na pole, ne checkbox)
 
 ## Speciální tlačítka
 
-Pokud potřebujete mít speciální tlačítka v editoru namísto standardního tlačítka Uložit můžete při konfiguraci Datatabulky použít možnost `editorButtons`:
+Pokud potřebujete mít speciální tlačítka v editoru namísto standardního tlačítka Uložit můžete při konfiguraci Datatabulky použít možnost ```editorButtons```:
 
 ```javascript
 webpagesDatatable = WJ.DataTable({
@@ -238,10 +240,11 @@ filePropertiesTable = WJ.DataTable({
 ### Dynamická změna hodnot ve výběrovém poli
 
 Někdy je třeba dynamicky měnit hodnoty v select boxu na základě změn v předchozích polích. Příklad je v souboru [temps-list.pug](../../../../src/main/webapp/admin/v9/views/pages/templates/temps-list.pug) kde je řešení na:
+
 - změna hodnot select boxu při načítání editoru
 - změna hodnot při změně předchozího pole
 
-V ukázkovém případě se jedná o změnu hodnot pole `forward` na základě hodnoty vybrané v select boxu `templatesGroupId`. Navíc se zachovává i aktuálně nastavená hodnota v poli `forward`, aby se nestalo, že vrácené možné hodnoty neobsahují aktuálně nastavenou hodnotu.
+V ukázkovém případě se jedná o změnu hodnot pole ```forward``` na základě hodnoty vybrané v select boxu ```templatesGroupId```. Navíc se zachovává i aktuálně nastavená hodnota v poli ```forward```, aby se nestalo, že vrácené možné hodnoty neobsahují aktuálně nastavenou hodnotu.
 
 ```javascript
 let tabs = [
@@ -303,7 +306,7 @@ window.domReady.add(function () {
 });
 ```
 
-REST služba je přidána do stávající třídy [TemplatesController](../../../../src/main/java/sk/iway/iwcm/components/templates/TemplatesController.java):
+REST služba je přidána do existující třídy [TemplatesController](../../../../src/main/java/sk/iway/iwcm/components/templates/TemplatesController.java):
 
 ```java
 @RequestMapping("/forwards/")
@@ -327,9 +330,9 @@ webpagesDatatable.EDITOR.on( 'initEdit', function( e, node, data, items, type ){
 
 ### Programové otevření editoru
 
-Pro korektní programové otevření editoru je třeba využít WebJET API. To zajistí korektní zobrazení dopisů a tlačítek. Parametr `row` je **jQuery selektor** řádku, podobně jako v [originálním API](https://editor.datatables.net/reference/api/edit\(\)). Nejjednodušší pomocí selektoru podle ID záznamu `#ID`.
+Pro korektní programové otevření editoru je třeba využít WebJET API. To zajistí korektní zobrazení dopisů a tlačítek. Parametr ```row``` je **jQuery selektor** řádku, podobně jako v [originálním API](https://editor.datatables.net/reference/api/edit()). Nejjednodušší pomocí selektoru podle ID záznamu ```#ID```.
 
-Funkce `wjEditFetch` provede i případné obnovení dat řádku (je-li nastavena možnost `fetchOnEdit`) a provedení nastavené `onEdit` funkce. Volání `wjEdit` otevře editor s již načtenými daty a neprovádí žádné speciální operace. Máte-li upravenou funkci `onEdit` je vždy třeba použít volání `wjEdit`, jinak dojde k zacyklení.
+Funkce ```wjEditFetch``` provede i případné obnovení dat řádku (je-li nastavena možnost ```fetchOnEdit```) a provedení nastavené ```onEdit``` funkce. Volání ```wjEdit``` otevře editor s již načtenými daty a neprovádí žádné speciální operace. Máte-li upravenou funkci ```onEdit``` je vždy nutné použít volání ```wjEdit```, jinak dojde k zacyklení.
 
 ```javascript
 //API
@@ -342,7 +345,7 @@ webpagesDatatable.wjEditFetch($('.datatableInit tr[id=' + docId + ']'));
 
 ### Podmíněné zobrazení vstupního pole
 
-Pokud potřebujete podmíněně zobrazit vstupní pole na základě jiné hodnoty můžete využít API volání `field("meno").hide()`. Ukázka schová/zobrazí pole při otevření editoru na základě jiné hodnoty v JSON datech:
+Pokud potřebujete podmíněně zobrazit vstupní pole na základě jiné hodnoty můžete využít API volání ```field("meno").hide()```. Ukázka schová/zobrazí pole při otevření editoru na základě jiné hodnoty v JSON datech:
 
 ```javascript
 groupsDatatable.EDITOR.on('open', function (e, type) {
@@ -361,4 +364,5 @@ groupsDatatable.EDITOR.on('open', function (e, type) {
 ### API funkce
 
 Další API funkce, které můžete použít:
-- `TABLE.wjUpdateOptions(url=null, callback=null)` - znovu provede volání REST služby `/all` pro získání aktuálních `json.options` číselníků a tyto aktualizuje ve filtrech datatabulky iv editoru (a to i když je editor otevřen). Volitelně lze zadat URL adresu a případný `callback` zavolán po aktualizaci číselníků.
+
+- ```TABLE.wjUpdateOptions(url=null, callback=null)``` - ​​znovu provede volání REST služby ```/all``` pro získání aktuálních ```json.options``` číselníků a tyto aktualizuje ve filtrech datatabulky iv editoru (a to i když je editor otevřen). Volitelně je možné zadat URL adresu a případný ```callback``` zavolaný po aktualizaci číselníků.

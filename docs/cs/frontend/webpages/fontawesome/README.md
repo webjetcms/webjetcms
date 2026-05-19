@@ -1,6 +1,6 @@
 # FontAwesome
 
-WebJET v editoru podporuje vkládání ikon ze sady [FontAwesome](https://fontawesome.com) klepnutím na ikonu ![](editor-toolbar-icon.png ":no-zoom"), což vyvolá zobrazení okna pro vložení ikony ze sady FontAwesome do stránky.
+WebJET v editoru podporuje vkládání ikon ze sady [FontAwesome](https://fontawesome.com) kliknutím na ikonu ![](editor-toolbar-icon.png ":no-zoom"), což vyvolá zobrazení okna pro vložení ikony ze sady FontAwesome do stránky.
 
 ![](editor.png)
 
