@@ -206,7 +206,7 @@ Na konci každého kroku sa automatický vygeneruje tlačidlo, ktorého text sa 
 
 ![](real-form.png)
 
-!>**Upozornenie:** Náhľad formuláru sa vo výsledku môže graficky líšiť od skutočného zobrazenia vo webovej aplikácii, nakoľko záleží na použitej šablóne a štýloch stránky v ktorej bude formulár vložený. Náhľad slúži hlavne na predstavu o rozložení a obsahu formuláru.
+!>**Upozornenie:** Náhľad formuláru je orientačný a môže sa kompozične aj graficky líšiť od skutočného zobrazenia na stránke. V editore sa zobrazujú všetky položky bez ohľadu na nastavené podmienky, aby ste vedeli formulár lepšie navrhnúť a skontrolovať. Na reálnej stránke sa však formulár mení dynamicky podľa podmienok zobrazenia (niektoré polia sa môžu skryť alebo zobraziť podľa hodnôt iných polí) a zároveň podľa použitej šablóny a štýlov stránky, do ktorej je formulár vložený.
 
 ## Vloženie formuláru do stránky
 
