@@ -636,6 +636,9 @@ private static String combineCss(String cssStyle)
 
         DocDetails doc = null;
         boolean inlineEditorAdmin = user != null && user.isAdmin() && "true".equals(request.getParameter("inlineEditorAdmin"));
+        if (inlineEditorAdmin) {
+            request.setAttribute("inlineEditorAdmin", Boolean.TRUE);
+        }
 
         int group_id = -1;
         try
