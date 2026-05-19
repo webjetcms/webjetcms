@@ -80,8 +80,8 @@ public class StyleToHeadHelper {
             return htmlCode;
         }
 
-        // Check if feature is enabled
-        if (ShowDoc.isMoveStyleToHeadEnabled(request)) {
+        // If feature is disabled, keep content unchanged.
+        if (ShowDoc.isMoveStyleToHeadEnabled(request) == false) {
             return htmlCode;
         }
 

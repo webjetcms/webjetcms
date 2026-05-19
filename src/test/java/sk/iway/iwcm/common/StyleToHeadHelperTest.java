@@ -276,7 +276,7 @@ class StyleToHeadHelperTest extends BaseWebjetTest {
     @DisplayName("Extract link with single quotes around stylesheet")
     void testExtractLinkWithSingleQuotes() {
         StringBuilder input = new StringBuilder(
-            "<div><link href=\"/css/style.css' rel='stylesheet'><p>Content</p></div>"
+            "<div><link href='/css/style.css' rel='stylesheet'><p>Content</p></div>"
         );
 
         StringBuilder result = StyleToHeadHelper.extractAndCollectStyles(input, request);
@@ -285,6 +285,37 @@ class StyleToHeadHelperTest extends BaseWebjetTest {
 
         String collected = StyleToHeadHelper.getCollectedStyles(request);
         assertTrue(collected.contains("rel='stylesheet'"));
+    }
+
+    @Test
+    @DisplayName("Request attribute can disable feature even if global config is enabled")
+    void testRequestAttributeDisablesFeature() {
+        request.setAttribute("showDocMoveStyleToHead", Boolean.FALSE);
+
+        StringBuilder input = new StringBuilder(
+            "<style>.video { color: red; }</style><div>Content</div>"
+        );
+
+        StringBuilder result = StyleToHeadHelper.extractAndCollectStyles(input, request);
+
+        assertEquals("<style>.video { color: red; }</style><div>Content</div>", result.toString());
+        assertFalse(StyleToHeadHelper.hasCollectedStyles(request));
+    }
+
+    @Test
+    @DisplayName("Request attribute can enable feature even if global config is disabled")
+    void testRequestAttributeEnablesFeature() {
+        Constants.setBoolean("showDocMoveStyleToHead", false);
+        request.setAttribute("showDocMoveStyleToHead", Boolean.TRUE);
+
+        StringBuilder input = new StringBuilder(
+            "<style>.video { color: red; }</style><div>Content</div>"
+        );
+
+        StringBuilder result = StyleToHeadHelper.extractAndCollectStyles(input, request);
+
+        assertEquals("<div>Content</div>", result.toString());
+        assertTrue(StyleToHeadHelper.hasCollectedStyles(request));
     }
 
     @Test
