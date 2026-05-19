@@ -37,8 +37,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
  */
 @WebjetComponent("sk.iway.iwcm.components.langredirect.LanguageRedirectApp")
 @WebjetAppStore(
-    nameKey = "apps.langredirect.title",
-    descKey = "apps.langredirect.desc",
+    nameKey = "apps.app-language-redirect.title",
+    descKey = "apps.app-language-redirect.desc",
     imagePath = "ti ti-language",
     galleryImages = "/apps/app-language-redirect/screenshot-1.jpg,/apps/app-language-redirect/screenshot-2.jpg,/apps/app-language-redirect/screenshot-3.jpg",
     commonSettings = false
@@ -54,7 +54,7 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
     /**
      * Default language if browser language detection fails or no mapping is found.
      */
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "apps.langredirect.defaultLanguage", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "apps.app-language-redirect.defaultLanguage", editor = {
          @DataTableColumnEditor(
             attr = {
                  @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
@@ -67,14 +67,14 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
      * If true, redirect only on the root URL (for example, / or /index.html).
      * If false, always redirect when entering the page.
      */
-    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = "advanced", title = "apps.langredirect.rootOnly")
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = "advanced", title = "apps.app-language-redirect.rootOnly")
     private boolean rootOnly = false;
 
     /**
      * If true, redirection is performed only when the user does not have a language cookie set.
      * This allows users to change language manually without being redirected.
      */
-    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = "advanced", title = "apps.langredirect.respectCookie")
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = "advanced", title = "apps.app-language-redirect.respectCookie")
     private boolean respectCookie = true;
 
     /**
@@ -85,7 +85,7 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "groupedit.language")
     private String mapping1Lang = "";
 
-    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.langredirect.redirect", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.app-language-redirect.redirect", editor = {
          @DataTableColumnEditor(
             attr = {
                  @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
@@ -97,7 +97,7 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "groupedit.language")
     private String mapping2Lang = "";
 
-    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.langredirect.redirect", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.app-language-redirect.redirect", editor = {
          @DataTableColumnEditor(
             attr = {
                  @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
@@ -109,7 +109,7 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "groupedit.language")
     private String mapping3Lang = "";
 
-    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.langredirect.redirect", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.app-language-redirect.redirect", editor = {
          @DataTableColumnEditor(
             attr = {
                  @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
@@ -121,7 +121,7 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "groupedit.language")
     private String mapping4Lang = "";
 
-    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.langredirect.redirect", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.app-language-redirect.redirect", editor = {
          @DataTableColumnEditor(
             attr = {
                  @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
@@ -133,7 +133,7 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "groupedit.language")
     private String mapping5Lang = "";
 
-    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.langredirect.redirect", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.app-language-redirect.redirect", editor = {
          @DataTableColumnEditor(
             attr = {
                  @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
@@ -145,7 +145,7 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "groupedit.language")
     private String mapping6Lang = "";
 
-    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.langredirect.redirect", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.app-language-redirect.redirect", editor = {
          @DataTableColumnEditor(
             attr = {
                  @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
@@ -157,7 +157,7 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "groupedit.language")
     private String mapping7Lang = "";
 
-    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.langredirect.redirect", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.app-language-redirect.redirect", editor = {
          @DataTableColumnEditor(
             attr = {
                  @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
@@ -169,7 +169,7 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "groupedit.language")
     private String mapping8Lang = "";
 
-    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.langredirect.redirect", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, renderFormat = "dt-format-link", tab = "basic", title = "apps.app-language-redirect.redirect", editor = {
          @DataTableColumnEditor(
             attr = {
                  @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
