@@ -306,7 +306,7 @@ private static String combineCss(String cssStyle)
 	{
 		request.setAttribute("templateDetails", temp);
 
-        if (temp.getMoveStyleToHead() != null)
+        if (temp.getMoveStyleToHead() != null && request.getAttribute(MOVE_STYLE_TO_HEAD_KEY) == null)
         {
             if (temp.getMoveStyleToHead().intValue() == 1) request.setAttribute(MOVE_STYLE_TO_HEAD_KEY, Boolean.TRUE);
             else if (temp.getMoveStyleToHead().intValue() == 2) request.setAttribute(MOVE_STYLE_TO_HEAD_KEY, Boolean.FALSE);
@@ -1785,6 +1785,10 @@ private static String combineCss(String cssStyle)
      * @return true if the feature is enabled, false otherwise
      */
     public static boolean isMoveStyleToHeadEnabled(HttpServletRequest request) {
+
+        if ("true".equals(request.getParameter(SetCharacterEncodingFilter.PDF_PRINT_PARAM))) return false;
+        if (request.getParameter("isPdfVersion") != null) return false;
+
         Boolean requestValue = (Boolean) request.getAttribute(MOVE_STYLE_TO_HEAD_KEY);
 
         if (requestValue != null) {
