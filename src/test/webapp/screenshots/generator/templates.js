@@ -4,13 +4,31 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('templates', ({ I, DT, DTE, Document }) => {
+Scenario('templates @current', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/templates/temps-list/");
     DT.waitForLoader();
     Document.screenshot("/frontend/templates/templates.png");
     I.amOnPage("/admin/v9/templates/temps-list/?tempId=7");
     DTE.waitForEditor();
     Document.screenshot("/frontend/templates/templates-edit.png");
+
+    I.clickCss("#pills-dt-datatableInit-advanced-tab");
+    Document.screenshot("/frontend/templates/templates-edit-advanced.png");
+
+    I.clickCss("#pills-dt-datatableInit-style-tab");
+    Document.screenshot("/frontend/templates/templates-edit-style.png");
+
+    I.clickCss("#pills-dt-datatableInit-templatesTab-tab");
+    Document.screenshot("/frontend/templates/templates-edit-templates.png");
+
+    I.clickCss("#pills-dt-datatableInit-accessTab-tab");
+    Document.screenshot("/frontend/templates/templates-edit-access.png");
+
+    I.clickCss("#pills-dt-datatableInit-folders-tab");
+    Document.screenshot("/frontend/templates/templates-edit-folders.png");
+
+    I.clickCss("#pills-dt-datatableInit-sites-tab");
+    Document.screenshot("/frontend/templates/templates-edit-sites.png");
 });
 
 Scenario('temps-groups', ({ I, DT, DTE, Document }) => {
