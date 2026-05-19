@@ -92,7 +92,13 @@ Create file at `src/main/webapp/apps/myapp/mvc/view.html`:
 
 ### 3. Add Translation Keys
 
-Add to appropriate properties files (e.g., `src/main/webapp/WEB-INF/classes/sk/text.properties`):
+Add translation keys to the language-specific properties files:
+
+- Slovak: `src/main/webapp/WEB-INF/classes/text-webjet9.properties`
+- Czech: `src/main/webapp/WEB-INF/classes/text_cz-webjet9.properties`
+- English: `src/main/webapp/WEB-INF/classes/text_en-webjet9.properties`
+
+The `webjet9` suffix is project-specific and can differ by installation (for example `basecms`).
 
 ```properties
 components.myapp.title=My Application
