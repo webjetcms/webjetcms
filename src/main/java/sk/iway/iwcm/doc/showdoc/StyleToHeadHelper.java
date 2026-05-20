@@ -8,10 +8,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import jakarta.servlet.http.HttpServletRequest;
-
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.doc.ShowDoc;
+import sk.iway.iwcm.doc.TemplateDetails;
 
 /**
  * Helper class for extracting &lt;style&gt; tags and &lt;link
@@ -31,6 +32,8 @@ import sk.iway.iwcm.doc.ShowDoc;
  * @author WebJET CMS
  */
 public class StyleToHeadHelper {
+
+    public static final String MOVE_STYLE_TO_HEAD_KEY = "showDocMoveStyleToHead";
 
     private StyleToHeadHelper() {
         // Utility class
@@ -81,7 +84,7 @@ public class StyleToHeadHelper {
         }
 
         // If feature is disabled, keep content unchanged.
-        if (ShowDoc.isMoveStyleToHeadEnabled(request) == false) {
+        if (isMoveStyleToHeadEnabled(request) == false) {
             return htmlCode;
         }
 
@@ -235,5 +238,46 @@ public class StyleToHeadHelper {
         result.append(html, headEndIndex, html.length());
 
         return result.toString();
+    }
+
+    /**
+     * Returns true if move style to head feature is enabled for the current request, either via request attribute or global configuration.
+     * @param request The HTTP request
+     * @return true if the feature is enabled, false otherwise
+     */
+    public static boolean isMoveStyleToHeadEnabled(HttpServletRequest request) {
+
+        if ("true".equals(request.getParameter(SetCharacterEncodingFilter.PDF_PRINT_PARAM))) return false;
+        if (request.getParameter("isPdfVersion") != null) return false;
+
+        Boolean requestValue = (Boolean) request.getAttribute(MOVE_STYLE_TO_HEAD_KEY);
+
+        if (requestValue != null) {
+            return requestValue;
+        }
+
+        return Constants.getBoolean("showDocMoveStyleToHead"); //NOSONAR
+    }
+
+    /**
+     * Sets the request attribute to enable or disable moving styles to head based on the TemplateDetails configuration.
+     * @param temp
+     * @param request
+     */
+    public static void setRequestAttribute(TemplateDetails temp, HttpServletRequest request) {
+        if (temp.getMoveStyleToHead() != null && request.getAttribute(MOVE_STYLE_TO_HEAD_KEY) == null)
+        {
+            if (temp.getMoveStyleToHead().intValue() == 1) request.setAttribute(MOVE_STYLE_TO_HEAD_KEY, Boolean.TRUE);
+            else if (temp.getMoveStyleToHead().intValue() == 2) request.setAttribute(MOVE_STYLE_TO_HEAD_KEY, Boolean.FALSE);
+        }
+    }
+
+    /**
+     * Sets the request attribute to enable or disable moving styles to head for the current request.
+     * @param enabled
+     * @param request
+     */
+    public static void setMoveStyleToHeadEnabled(boolean enabled, HttpServletRequest request) {
+        request.setAttribute(MOVE_STYLE_TO_HEAD_KEY, enabled);
     }
 }

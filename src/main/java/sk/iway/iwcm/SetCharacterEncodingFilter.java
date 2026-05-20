@@ -15,6 +15,7 @@ import sk.iway.iwcm.components.proxy.Proxy;
 import sk.iway.iwcm.components.proxy.jpa.ProxyBean;
 import sk.iway.iwcm.components.proxy.ProxyDB;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.showdoc.StyleToHeadHelper;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.WJResponseWrapper;
 import sk.iway.iwcm.system.context.ContextFilter;
@@ -459,6 +460,8 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 			if ("true".equals(request.getParameter(PDF_PRINT_PARAM)) && "true".equals(request.getParameter(PDF_PRINT_PARAM+"No"))==false)
 	      {
 	         Logger.debug( SetCharacterEncodingFilter.class, "------------> ROBIM EXPORT PRE PDF");
+
+			 StyleToHeadHelper.setMoveStyleToHeadEnabled(false, request);
 
 	         WJResponseWrapper wrapper = new WJResponseWrapper(response,request);
 
