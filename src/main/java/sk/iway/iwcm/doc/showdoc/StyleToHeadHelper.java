@@ -66,10 +66,11 @@ public class StyleToHeadHelper {
 
     /**
      * Pattern to match blocks that must remain untouched.
-     * This includes IE conditional comments and noscript fallback content.
+         * This includes IE conditional comments, noscript fallback content, and
+         * script blocks where markup may appear as JavaScript string literals.
      */
     private static final Pattern PROTECTED_BLOCK_PATTERN = Pattern.compile(
-            "<!--\\s*\\[if[\\s\\S]*?<!\\s*\\[endif\\]\\s*-->|<noscript\\b[^>]*>[\\s\\S]*?</noscript>",
+            "<!--\\s*\\[if[\\s\\S]*?<!\\s*\\[endif\\]\\s*-->|<noscript\\b[^>]*>[\\s\\S]*?</noscript>|<script\\b[^>]*>[\\s\\S]*?</script>",
             Pattern.CASE_INSENSITIVE);
 
     /**

@@ -511,6 +511,21 @@ class StyleToHeadHelperTest extends BaseWebjetTest {
         assertFalse(collected.contains(".fallback { display: block; }"));
     }
 
+    @Test
+    @DisplayName("Do NOT extract stylesheet link inside script block")
+    void testDoNotExtractLinkInsideScript() {
+        StringBuilder input = new StringBuilder(
+            "<script type=\"text/javascript\">" +
+            "MapTools.addTo($('head'), '<link rel=\"stylesheet\" {attrs} />', links);" +
+            "</script><div>Content</div>"
+        );
+
+        StringBuilder result = StyleToHeadHelper.extractAndCollectStyles(input, request);
+
+        assertEquals(input.toString(), result.toString());
+        assertFalse(StyleToHeadHelper.hasCollectedStyles(request));
+    }
+
 
     /**
      * Helper method to count occurrences of a substring
