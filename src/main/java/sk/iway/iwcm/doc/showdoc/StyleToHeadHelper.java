@@ -13,6 +13,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.TemplateDetails;
+import sk.iway.iwcm.tags.BuffTag;
 
 /**
  * Helper class for extracting &lt;style&gt; tags and &lt;link
@@ -70,7 +71,7 @@ public class StyleToHeadHelper {
          * script blocks where markup may appear as JavaScript string literals.
      */
     private static final Pattern PROTECTED_BLOCK_PATTERN = Pattern.compile(
-            "<!--\\s*\\[if[\\s\\S]*?<!\\s*\\[endif\\]\\s*-->|<noscript\\b[^>]*>[\\s\\S]*?</noscript>|<script\\b[^>]*>[\\s\\S]*?</script>",
+            "<!--\\s*\\[if[\\s\\S]*?<!\\s*\\[endif\\]\\s*-->|<noscript\\b[^>]*>[\\s\\S]*?</noscript>|<script\\b[^>]*>[\\s\\S]*?</script>", //NOSONAR
             Pattern.CASE_INSENSITIVE);
 
     /**
@@ -275,6 +276,9 @@ public class StyleToHeadHelper {
 
         if ("true".equals(request.getParameter(SetCharacterEncodingFilter.PDF_PRINT_PARAM))) return false;
         if (request.getParameter("isPdfVersion") != null) return false;
+        if (request.getAttribute("renderingIncludes") != null) return false;
+        if (request.getAttribute("fulltext_preview") != null) return false;
+        if (request.getAttribute(BuffTag.IS_BUFF_TAG) != null) return false;
 
         Boolean requestValue = (Boolean) request.getAttribute(MOVE_STYLE_TO_HEAD_KEY);
 
