@@ -54,9 +54,6 @@ taglib
 	rel='stylesheet' type='text/css'>
 <link rel="stylesheet" type="text/css"
 	href="/components/app-impress_slideshow/css/style.css" />
-<!--[if lt IE 9]>
-		<link rel="stylesheet" type="text/css" href="css/style_ie.css" />
-<![endif]-->
 <style type="text/css">
 
 <% if(itemsList.length()>0){ %>
@@ -87,23 +84,6 @@ taglib
 	src="/components/app-impress_slideshow/js/jquery.jmslideshow.js"></script>
 <script type="text/javascript"
 	src="/components/app-impress_slideshow/js/modernizr.custom.94160.js"></script>
-<noscript>
-	<style type="text/css">
-	.step {
-		width: 100%;
-		position: relative;
-	}
-	.step:not(.active) {
-		opacity: 1;
-		filter: alpha(opacity=99);
-		-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(opacity=99)";
-	}
-	.step:not(.active) a.jms-link{
-		opacity: 1;
-		margin-top: 40px;
-	}
-	</style>
-</noscript>
 <%
 counter = 0;
 
@@ -135,7 +115,7 @@ effects[4] = "data-x=\"4500\" data-z=\"1000\" data-rotate-y=\"45\"";
 				<%
 					String perexImage = (String)item.get("image");
 				%>
-				<img src="/thumb/<%=perexImage%>?w=<%=pageParams.getValue("imageWidth", "400")%>&h=<%=pageParams.getValue("imageHeight", "300")%>&ip=5" />
+				<img src="/thumb<%=perexImage%>?w=<%=pageParams.getValue("imageWidth", "400")%>&h=<%=pageParams.getValue("imageHeight", "300")%>&ip=5" />
 			</div>
 
 	<% } %>

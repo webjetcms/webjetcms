@@ -35,6 +35,7 @@ Význam a dopad na výkon:
 
 - HTML výstup je validnejší, pretože štýly a stylesheet linky sa konsolidujú v hlavičke dokumentu namiesto tela stránky.
 - Pri zapnutom režime sa vykonáva dodatočné spracovanie HTML (vyhľadanie a extrakcia štýlov), čo môže zvýšiť CPU čas pri zobrazení stránky.
+- Bloky v IE podmienkach a `noscript` zostávajú na mieste.
 
 ### Karta Štýl
 

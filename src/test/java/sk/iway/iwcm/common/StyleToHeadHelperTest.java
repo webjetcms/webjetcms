@@ -465,6 +465,52 @@ class StyleToHeadHelperTest extends BaseWebjetTest {
         assertTrue(collected.contains("mixed.css"));
     }
 
+    @Test
+    @DisplayName("Do NOT extract stylesheet link inside IE conditional comment")
+    void testDoNotExtractLinkInsideConditionalComment() {
+        StringBuilder input = new StringBuilder(
+            "<link href=\"/css/base.css\" rel=\"stylesheet\">" +
+            "<!--[if lt IE 9]>" +
+            "<link rel=\"stylesheet\" type=\"text/css\" href=\"/css/style_ie.css\" />" +
+            "<![endif]-->" +
+            "<div>Content</div>"
+        );
+
+        StringBuilder result = StyleToHeadHelper.extractAndCollectStyles(input, request);
+
+        assertEquals(
+            "<!--[if lt IE 9]><link rel=\"stylesheet\" type=\"text/css\" href=\"/css/style_ie.css\" /><![endif]--><div>Content</div>",
+            result.toString()
+        );
+
+        String collected = StyleToHeadHelper.getCollectedStyles(request);
+        assertTrue(collected.contains("/css/base.css"));
+        assertFalse(collected.contains("/css/style_ie.css"));
+    }
+
+    @Test
+    @DisplayName("Do NOT extract style inside noscript fallback")
+    void testDoNotExtractStyleInsideNoscript() {
+        StringBuilder input = new StringBuilder(
+            "<style>.base { color: red; }</style>" +
+            "<noscript>" +
+            "<style>.fallback { display: block; }</style>" +
+            "</noscript>" +
+            "<div>Content</div>"
+        );
+
+        StringBuilder result = StyleToHeadHelper.extractAndCollectStyles(input, request);
+
+        assertEquals(
+            "<noscript><style>.fallback { display: block; }</style></noscript><div>Content</div>",
+            result.toString()
+        );
+
+        String collected = StyleToHeadHelper.getCollectedStyles(request);
+        assertTrue(collected.contains(".base { color: red; }"));
+        assertFalse(collected.contains(".fallback { display: block; }"));
+    }
+
 
     /**
      * Helper method to count occurrences of a substring

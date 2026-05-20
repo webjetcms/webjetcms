@@ -65,6 +65,14 @@ public class StyleToHeadHelper {
             Pattern.CASE_INSENSITIVE);
 
     /**
+     * Pattern to match blocks that must remain untouched.
+     * This includes IE conditional comments and noscript fallback content.
+     */
+    private static final Pattern PROTECTED_BLOCK_PATTERN = Pattern.compile(
+            "<!--\\s*\\[if[\\s\\S]*?<!\\s*\\[endif\\]\\s*-->|<noscript\\b[^>]*>[\\s\\S]*?</noscript>",
+            Pattern.CASE_INSENSITIVE);
+
+    /**
      * Extracts all &lt;style&gt; tags and &lt;link rel="stylesheet"&gt; tags from
      * the given HTML code,
      * removes them from the content, and stores them in the request for later
@@ -108,11 +116,17 @@ public class StyleToHeadHelper {
 
         Matcher styleMatcher = STYLE_PATTERN.matcher(htmlCode);
         while (styleMatcher.find()) {
+            if (isInsideProtectedBlock(styleMatcher.start(), htmlCode)) {
+                continue;
+            }
             allMatches.add(new MatchPosition(styleMatcher.start(), styleMatcher.end(), styleMatcher.group()));
         }
 
         Matcher linkMatcher = LINK_STYLESHEET_PATTERN.matcher(htmlCode);
         while (linkMatcher.find()) {
+            if (isInsideProtectedBlock(linkMatcher.start(), htmlCode)) {
+                continue;
+            }
             allMatches.add(new MatchPosition(linkMatcher.start(), linkMatcher.end(), linkMatcher.group()));
         }
 
@@ -140,6 +154,17 @@ public class StyleToHeadHelper {
         }
 
         return result;
+    }
+
+    private static boolean isInsideProtectedBlock(int position, CharSequence htmlCode) {
+        Matcher protectedBlockMatcher = PROTECTED_BLOCK_PATTERN.matcher(htmlCode);
+        while (protectedBlockMatcher.find()) {
+            if (position >= protectedBlockMatcher.start() && position < protectedBlockMatcher.end()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
