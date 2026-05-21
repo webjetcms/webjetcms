@@ -4195,15 +4195,16 @@ CREATE TABLE `templates` (
   `disable_spam_protection` tinyint(1) DEFAULT 0,
   `templates_group_id` int(11) NOT NULL DEFAULT 1,
   `inline_editing_mode` varchar(16) DEFAULT NULL,
+  `move_style_to_head` INT DEFAULT 0,
   PRIMARY KEY (`temp_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 LOCK TABLES `templates` WRITE;
 /*!40000 ALTER TABLE `templates` DISABLE KEYS */;
 
-INSERT INTO `templates` (`temp_id`, `temp_name`, `forward`, `lng`, `header_doc_id`, `footer_doc_id`, `after_body_data`, `css`, `menu_doc_id`, `right_menu_doc_id`, `base_css_path`, `object_a_doc_id`, `object_b_doc_id`, `object_c_doc_id`, `object_d_doc_id`, `available_groups`, `template_install_name`, `disable_spam_protection`, `templates_group_id`, `inline_editing_mode`)
+INSERT INTO `templates` (`temp_id`, `temp_name`, `forward`, `lng`, `header_doc_id`, `footer_doc_id`, `after_body_data`, `css`, `menu_doc_id`, `right_menu_doc_id`, `base_css_path`, `object_a_doc_id`, `object_b_doc_id`, `object_c_doc_id`, `object_d_doc_id`, `available_groups`, `template_install_name`, `disable_spam_protection`, `templates_group_id`, `inline_editing_mode`, `move_style_to_head`)
 VALUES
-	(1,'Generic','tmp_generic.jsp','sk',1,3,'','',2,-1,'/css/page.css',NULL,NULL,NULL,NULL,NULL,NULL,0,1,NULL);
+	(1,'Generic','tmp_generic.jsp','sk',1,3,'','',2,-1,'/css/page.css',NULL,NULL,NULL,NULL,NULL,NULL,0,1,NULL, 0);
 
 /*!40000 ALTER TABLE `templates` ENABLE KEYS */;
 UNLOCK TABLES;

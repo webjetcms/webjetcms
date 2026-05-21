@@ -497,7 +497,7 @@ public class PathFilter implements Filter
 					req.getSession().setAttribute("pathFilter.showPathFilterTime", "true");
 					timer = new DebugTimer("PathFilter");
 				}
-				Logger.debug(PathFilter.class, path);
+				//Logger.debug(PathFilter.class, path);
 			}
 
 			//trackovanie videni emailu

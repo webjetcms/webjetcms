@@ -24,7 +24,9 @@ import sk.iway.iwcm.users.UsersDB;
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_CONF_UPDATE)
 public class ConfPreparedEntity {
 
-    public ConfPreparedEntity(){}
+    public ConfPreparedEntity() {
+        //empty constructor for JPA
+    }
 
     @Id
     @Column(name = "id")
@@ -74,7 +76,7 @@ public class ConfPreparedEntity {
     Integer userId;
 
     @Transient
-	@DataTableColumn(inputType = DataTableColumnType.TEXT, tab="main", renderFormat = "dt-format-text", title="components.audit_log.user_full_name", orderable = false, editor = {
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, renderFormat = "dt-format-text", title="components.audit_log.user_full_name", orderable = false, editor = {
 			@DataTableColumnEditor(type = "text", attr = {
 					@DataTableColumnEditorAttr(key = "disabled", value = "disabled") }) })
 	private String userFullName;

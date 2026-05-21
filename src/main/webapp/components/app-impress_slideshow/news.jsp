@@ -55,7 +55,7 @@ taglib
 <link rel="stylesheet" type="text/css"
 	href="/components/app-impress_slideshow/css/style.css" />
 <!--[if lt IE 9]>
-		<link rel="stylesheet" type="text/css" href="css/style_ie.css" />
+		<link rel="stylesheet" type="text/css" href="/components/app-impress_slideshow/css/style_ie.css" />
 <![endif]-->
 <style type="text/css">
 
@@ -135,7 +135,7 @@ effects[4] = "data-x=\"4500\" data-z=\"1000\" data-rotate-y=\"45\"";
 				<%
 					String perexImage = (String)item.get("image");
 				%>
-				<img src="/thumb/<%=perexImage%>?w=<%=pageParams.getValue("imageWidth", "400")%>&h=<%=pageParams.getValue("imageHeight", "300")%>&ip=5" />
+				<img src="/thumb<%=perexImage%>?w=<%=pageParams.getValue("imageWidth", "400")%>&h=<%=pageParams.getValue("imageHeight", "300")%>&ip=5" />
 			</div>
 
 	<% } %>
