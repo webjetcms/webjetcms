@@ -28,7 +28,7 @@ import sk.iway.iwcm.tags.BuffTag;
  *
  * Usage:
  * 1. Call extractAndCollectStyles() during component processing in WriteTag
- * 2. Call getCollectedStyles() in StyleToHeadFilter to insert into head
+ * 2. Call getCollectedStyles() to insert into head
  *
  * @author WebJET CMS
  */
@@ -85,6 +85,9 @@ public class StyleToHeadHelper {
     private static final Pattern SCRIPT_PATTERN = Pattern.compile(
         "<script\\b[^>]*>[\\s\\S]*?</script>",
         Pattern.CASE_INSENSITIVE);
+
+    private static final Pattern HEAD_CLOSING_TAG_PATTERN = Pattern.compile("</head>", Pattern.CASE_INSENSITIVE);
+    private static final Pattern BODY_CLOSING_TAG_PATTERN = Pattern.compile("</body>", Pattern.CASE_INSENSITIVE);
 
     /**
      * Extracts all &lt;style&gt; tags and &lt;link rel="stylesheet"&gt; tags from
@@ -263,24 +266,40 @@ public class StyleToHeadHelper {
             return html;
         }
 
-        // Find </head> tag (case insensitive)
-        int headEndIndex = html.indexOf("</head>");
-        if (headEndIndex == -1) {
-            headEndIndex = html.indexOf("</HEAD>");
+        if (html == null) {
+            return styles;
         }
 
-        if (headEndIndex == -1) {
-            // No head section found, return unchanged
-            Logger.debug(StyleToHeadHelper.class, "No </head> tag found, styles will remain in original position");
-            return html;
+        int headEndIndex = findClosingTagIndex(html, HEAD_CLOSING_TAG_PATTERN);
+        if (headEndIndex != -1) {
+            return insertAtIndex(html, styles, headEndIndex);
         }
 
-        // Insert styles before </head>
+        int bodyEndIndex = findClosingTagIndex(html, BODY_CLOSING_TAG_PATTERN);
+        if (bodyEndIndex != -1) {
+            Logger.debug(StyleToHeadHelper.class, "No </head> tag found, inserting styles before </body>");
+            return insertAtIndex(html, styles, bodyEndIndex);
+        }
+
+        Logger.debug(StyleToHeadHelper.class, "No </head> or </body> tag found, prepending styles to document");
+        return styles + html;
+    }
+
+    private static int findClosingTagIndex(String html, Pattern closingTagPattern) {
+        Matcher matcher = closingTagPattern.matcher(html);
+        if (matcher.find()) {
+            return matcher.start();
+        }
+
+        return -1;
+    }
+
+    private static String insertAtIndex(String html, String styles, int insertionIndex) {
         StringBuilder result = new StringBuilder(html.length() + styles.length());
-        result.append(html, 0, headEndIndex);
+        result.append(html, 0, insertionIndex);
         // result.append("\n<!-- Styles moved from components -->\n");
         result.append(styles);
-        result.append(html, headEndIndex, html.length());
+        result.append(html, insertionIndex, html.length());
 
         return result.toString();
     }

@@ -170,7 +170,7 @@ public class TemplatesDB extends DB
 
 				tmpDetails.setTemplateInstallName(getDbString(rs, "template_install_name"));
 				tmpDetails.setDisableSpamProtection(rs.getBoolean("disable_spam_protection"));
-				tmpDetails.setMoveStyleToHead((Integer) rs.getObject("move_style_to_head"));
+				tmpDetails.setMoveStyleToHead(rs.getInt("move_style_to_head"));
 
 				// tmpDetails.setPocetPouziti(rs.getInt("doc_count"));
 

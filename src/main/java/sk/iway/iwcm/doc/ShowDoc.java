@@ -1730,7 +1730,7 @@ private static String combineCss(String cssStyle)
         responseWrapper.flushBuffer();
 
         //set content type from wrapper to original response
-        response.setContentType(responseWrapper.getContentType());
+        if (responseWrapper.getContentType() != null) response.setContentType(responseWrapper.getContentType());
 
         // Handle redirects captured by wrapper
         if (Tools.isNotEmpty(responseWrapper.getRedirectLocation())) {
@@ -1764,7 +1764,7 @@ private static String combineCss(String cssStyle)
         }
 
         if (capturedContent != null) {
-            byte[] bytes = capturedContent.getBytes(SetCharacterEncodingFilter.getEncoding());
+            byte[] bytes = capturedContent.getBytes(response.getCharacterEncoding() != null ? response.getCharacterEncoding() : SetCharacterEncodingFilter.getEncoding());
             response.setContentLength(bytes.length);
             response.getOutputStream().write(bytes);
         }

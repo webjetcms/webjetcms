@@ -526,6 +526,42 @@ class StyleToHeadHelperTest extends BaseWebjetTest {
         assertFalse(StyleToHeadHelper.hasCollectedStyles(request));
     }
 
+    @Test
+    @DisplayName("Insert styles before closing head tag (case-insensitive)")
+    void testInsertStylesBeforeHeadCaseInsensitive() {
+        String html = "<html><HeAd><title>T</title></hEaD><body>Content</body></html>";
+        String styles = "<style>.x{color:red;}</style>\n";
+
+        String result = StyleToHeadHelper.insertStylesIntoHead(html, styles);
+
+        assertEquals(
+            "<html><HeAd><title>T</title>" + styles + "</hEaD><body>Content</body></html>",
+            result
+        );
+    }
+
+    @Test
+    @DisplayName("Insert styles before closing body when head is missing")
+    void testInsertStylesBeforeBodyWhenHeadMissing() {
+        String html = "<html><div>Content</div></body></html>";
+        String styles = "<style>.x{color:red;}</style>\n";
+
+        String result = StyleToHeadHelper.insertStylesIntoHead(html, styles);
+
+        assertEquals("<html><div>Content</div>" + styles + "</body></html>", result);
+    }
+
+    @Test
+    @DisplayName("Prepend styles when neither head nor body is present")
+    void testInsertStylesAtBeginningWhenNoHeadAndNoBody() {
+        String html = "<div>Only fragment</div>";
+        String styles = "<style>.x{color:red;}</style>\n";
+
+        String result = StyleToHeadHelper.insertStylesIntoHead(html, styles);
+
+        assertEquals(styles + html, result);
+    }
+
 
     /**
      * Helper method to count occurrences of a substring

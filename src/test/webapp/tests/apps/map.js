@@ -17,8 +17,8 @@ async function testMap(I, Document, moveStyleToHead = false) {
 }
 
 Scenario("Map - test zobrazovania", async ({ I, Document }) => {
-    testMap(I, Document, false);
-    testMap(I, Document, true);
+    await testMap(I, Document, false);
+    await testMap(I, Document, true);
 });
 
 Scenario("reset conf", async ({ I, Document }) => {

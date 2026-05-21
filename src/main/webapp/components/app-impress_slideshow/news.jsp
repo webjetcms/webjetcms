@@ -55,7 +55,7 @@ taglib
 <link rel="stylesheet" type="text/css"
 	href="/components/app-impress_slideshow/css/style.css" />
 <!--[if lt IE 9]>
-		<link rel="stylesheet" type="text/css" href="css/style_ie.css" />
+		<link rel="stylesheet" type="text/css" href="/components/app-impress_slideshow/css/style_ie.css" />
 <![endif]-->
 <style type="text/css">
 
@@ -87,6 +87,23 @@ taglib
 	src="/components/app-impress_slideshow/js/jquery.jmslideshow.js"></script>
 <script type="text/javascript"
 	src="/components/app-impress_slideshow/js/modernizr.custom.94160.js"></script>
+<noscript>
+	<style type="text/css">
+	.step {
+		width: 100%;
+		position: relative;
+	}
+	.step:not(.active) {
+		opacity: 1;
+		filter: alpha(opacity=99);
+		-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(opacity=99)";
+	}
+	.step:not(.active) a.jms-link{
+		opacity: 1;
+		margin-top: 40px;
+	}
+	</style>
+</noscript>
 <%
 counter = 0;
 
