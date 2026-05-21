@@ -54,6 +54,9 @@ taglib
 	rel='stylesheet' type='text/css'>
 <link rel="stylesheet" type="text/css"
 	href="/components/app-impress_slideshow/css/style.css" />
+<!--[if lt IE 9]>
+		<link rel="stylesheet" type="text/css" href="css/style_ie.css" />
+<![endif]-->
 <style type="text/css">
 
 <% if(itemsList.length()>0){ %>

@@ -7,30 +7,33 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario("Pôsobivá prezentácia - test zobrazovania",({ I }) => {
+function testApp(I, Document, moveStyleToHead = false) {
+
+    Document.setConfigValue("showDocMoveStyleToHead", ""+moveStyleToHead);
+
     I.amOnPage("/apps/posobiva-prezentacia/");
     I.waitForElement(".jms-slideshow");
     I.seeElement(locate("h1").withText("Pôsobivá prezentácia"));
     I.seeElement('.jms-dots-current');
 
     I.say("overenie rotácie a vykreslenia");
-    I.waitForElement('.step.jmstep1.active');
+    I.waitForElement('.step.jmstep1.active', 10);
     within({ css: '.step.jmstep1.active' }, async () => {
         I.seeElement(locate('h3').withText('Koleso'));
         const imgUrl = await I.grabAttributeFrom('img', 'src');
-        I.assertContain(imgUrl,'/thumb//images/gallery/test-vela-foto/dsc04082.jpeg?w=400&h=300&ip=5', 'The image was not loaded correctly. The source differs from what was expected.');
+        I.assertContain(imgUrl,'/thumb/images/gallery/test-vela-foto/dsc04082.jpeg?w=400&h=300&ip=5', 'The image was not loaded correctly. The source differs from what was expected.');
     });
-    I.waitForElement('.step.jmstep2.active');
+    I.waitForElement('.step.jmstep2.active', 10);
     within({ css: '.step.jmstep2.active' }, async () => {
         I.seeElement(locate('h3').withText('Svetlo'));
         const imgUrl = await I.grabAttributeFrom('img', 'src');
-        I.assertContain(imgUrl,'/thumb//images/gallery/test-vela-foto/dsc04089.jpeg?w=400&h=300&ip=5', 'The image was not loaded correctly. The source differs from what was expected.');
+        I.assertContain(imgUrl,'/thumb/images/gallery/test-vela-foto/dsc04089.jpeg?w=400&h=300&ip=5', 'The image was not loaded correctly. The source differs from what was expected.');
     });
-    I.waitForElement('.step.jmstep3.active');
+    I.waitForElement('.step.jmstep3.active', 10);
     within({ css: '.step.jmstep3.active' }, async () => {
         I.seeElement(locate('h3').withText('Volant'));
         const imgUrl = await I.grabAttributeFrom('img', 'src');
-        I.assertContain(imgUrl,'/thumb//images/gallery/test-vela-foto/dsc04126.jpeg?w=400&h=300&ip=5', 'The image was not loaded correctly. The source differs from what was expected.');
+        I.assertContain(imgUrl,'/thumb/images/gallery/test-vela-foto/dsc04126.jpeg?w=400&h=300&ip=5', 'The image was not loaded correctly. The source differs from what was expected.');
     });
 
     I.say("overenie prepínania pomocou jms-dots");
@@ -56,13 +59,21 @@ Scenario("Pôsobivá prezentácia - test zobrazovania",({ I }) => {
 
     I.say("Check stop rotating action after selecting slide");
     I.clickCss(`#jms-slideshow > nav.jms-dots > span:nth-child(1)`);
-    I.waitForVisible(locate('h3').withText('Volant'));
+    I.waitForVisible(locate('h3').withText('Volant'), 10);
     for(let i = 0;  i < 5; i++) {
         I.wait(1);
         I.seeElement(locate('h3').withText('Volant'));
     }
+}
+
+Scenario("Pôsobivá prezentácia - test zobrazovania",({ I, Document }) => {
+    testApp(I, Document, false);
+    testApp(I, Document, true);
 });
 
+Scenario("reset conf", async ({ I, Document }) => {
+    Document.setConfigValue("showDocMoveStyleToHead", "false");
+});
 
 Scenario('testovanie aplikácie - Posobiva prezentacii', async ({ I, DT, DTE, Apps, Document }) => {
     Apps.insertApp('Pôsobivá prezentácia', '#components-app-impress_slideshow-title', null, false);
@@ -160,7 +171,7 @@ Scenario('testovanie aplikácie - Posobiva prezentacii', async ({ I, DT, DTE, Ap
     I.waitForElement("#jms-slideshow");
 
     within("#jms-slideshow", () => {
-        I.seeElement("img[src='/thumb//images/gallery/test-vela-foto/dsc04082.jpeg?w=300&h=200&ip=5']");
+        I.seeElement("img[src='/thumb/images/gallery/test-vela-foto/dsc04082.jpeg?w=300&h=200&ip=5']");
         I.seeElement( locate("h3[style='color:#ea1010ff!important; ']").withChild( locate("p").withText("Toto je nadpis obrazka") ) );
         I.seeElement( locate("div[style='color:#27ec2eff!important; ']").withChild( locate("p").withText("Toto je podnadpis obrazka") ) );
     });

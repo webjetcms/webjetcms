@@ -66,13 +66,25 @@ public class StyleToHeadHelper {
             Pattern.CASE_INSENSITIVE);
 
     /**
-     * Pattern to match blocks that must remain untouched.
-         * This includes IE conditional comments, noscript fallback content, and
-         * script blocks where markup may appear as JavaScript string literals.
+     * IE conditional comments must remain untouched.
      */
-    private static final Pattern PROTECTED_BLOCK_PATTERN = Pattern.compile(
-            "<!--\\s*\\[if[\\s\\S]*?<!\\s*\\[endif\\]\\s*-->|<noscript\\b[^>]*>[\\s\\S]*?</noscript>|<script\\b[^>]*>[\\s\\S]*?</script>", //NOSONAR
-            Pattern.CASE_INSENSITIVE);
+    private static final Pattern CONDITIONAL_COMMENT_PATTERN = Pattern.compile(
+        "<!--\\s*\\[if[\\s\\S]*?<!\\s*\\[endif\\]\\s*-->",
+        Pattern.CASE_INSENSITIVE);
+
+    /**
+     * Noscript fallback content must remain untouched.
+     */
+    private static final Pattern NOSCRIPT_PATTERN = Pattern.compile(
+        "<noscript\\b[^>]*>[\\s\\S]*?</noscript>",
+        Pattern.CASE_INSENSITIVE);
+
+    /**
+     * Script blocks may contain markup-like strings and must remain untouched.
+     */
+    private static final Pattern SCRIPT_PATTERN = Pattern.compile(
+        "<script\\b[^>]*>[\\s\\S]*?</script>",
+        Pattern.CASE_INSENSITIVE);
 
     /**
      * Extracts all &lt;style&gt; tags and &lt;link rel="stylesheet"&gt; tags from
@@ -159,9 +171,15 @@ public class StyleToHeadHelper {
     }
 
     private static boolean isInsideProtectedBlock(int position, CharSequence htmlCode) {
-        Matcher protectedBlockMatcher = PROTECTED_BLOCK_PATTERN.matcher(htmlCode);
-        while (protectedBlockMatcher.find()) {
-            if (position >= protectedBlockMatcher.start() && position < protectedBlockMatcher.end()) {
+        return isInsidePattern(position, htmlCode, CONDITIONAL_COMMENT_PATTERN)
+                || isInsidePattern(position, htmlCode, NOSCRIPT_PATTERN)
+                || isInsidePattern(position, htmlCode, SCRIPT_PATTERN);
+    }
+
+    private static boolean isInsidePattern(int position, CharSequence htmlCode, Pattern pattern) {
+        Matcher matcher = pattern.matcher(htmlCode);
+        while (matcher.find()) {
+            if (position >= matcher.start() && position < matcher.end()) {
                 return true;
             }
         }
