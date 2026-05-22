@@ -3,3 +3,25 @@
 .ly-page-wrapper {
     min-height: 100%;
 }
+
+.skip-link {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 2000;
+    padding: 0.5rem 1rem;
+    color: #0b2e55;
+    background-color: #ffffff;
+    border: 2px solid #0b2e55;
+    border-radius: 0 0 0.5rem 0;
+    font-weight: 600;
+    text-decoration: none;
+    transform: translateY(-120%);
+    transition: transform 0.15s ease-in-out;
+
+    &:focus,
+    &:focus-visible {
+        transform: translateY(0);
+        outline: none;
+    }
+}

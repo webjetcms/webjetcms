@@ -1007,7 +1007,7 @@ div.dt-header-row ul[role=menu] {
                 }
             }
             span.tab-title {
-                color: $nice-gray-300;
+                color: $gray-text;
                 width: 120px;
                 margin-right: 5px;
                 display: inline-flex;
@@ -1021,7 +1021,7 @@ div.dt-header-row ul[role=menu] {
                 text-overflow: ellipsis;
             }
             span.tab-headline {
-                color: $nice-gray-300;
+                color: $gray-text;
                 display: inline-block;
             }
             span.btn-tooltip {

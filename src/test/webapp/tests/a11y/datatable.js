@@ -118,3 +118,15 @@ Scenario("p40: is-not-public contrast", async ({ I, DTE, Apps, a11y }) => {
     I.amOnPage("/apps/forum/admin/");
     await a11y.check();
 });
+
+Scenario("p41: column visibility settings @current", async ({ I, DTE, Apps, a11y }) => {
+    I.amOnPage("/admin/v9/templates/temps-list/");
+
+    var tableId = "datatableInit";
+    var container = "#"+tableId+"_wrapper";
+    I.clickCss(container+" button.buttons-settings");
+    I.clickCss(container+" button.buttons-colvis");
+    I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
+
+    await a11y.check("ul.dropdown-menu.show div.dt-button-collection ul.dropdown-menu.show");
+});
