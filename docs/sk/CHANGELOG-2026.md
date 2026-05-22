@@ -16,6 +16,10 @@
 
 ![](redactor/apps/language-redirect/editor-basic.png)
 
+### Dokumentácia
+
+- Vytvorená nová sekcia [Obchodné informácie](sales/README.md) ktorá obsahuje opisy vlastností a funkcionalít WebJET CMS z pohľadu predaja (#58505).
+
 ## 2026.18
 
 > WebJET CMS 2026.18 prináša **schvaľovanie zmien priečinkov** s podporou viacúrovňového schvaľovania a **testovanie prístupnosti** integrované priamo do automatizovaných testov.
