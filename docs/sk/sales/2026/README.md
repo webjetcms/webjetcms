@@ -2,6 +2,25 @@
 
 Tento súbor obsahuje opisy vlastností WebJET CMS dodaných v roku 2026 z pohľadu predaja. Nové záznamy sa pridávajú na vrch (pod tento úvod), takže najnovšie vlastnosti sú vždy hore.
 
+## Automatizované testovanie prístupnosti webových stránok
+
+WebJET CMS zavádza **automatizované testovanie prístupnosti (accessibility)**, ktoré overuje, či sú webové stránky a administračné rozhranie prístupné pre **všetkých používateľov** — vrátane tých so zrakovým, sluchovým, motorickým alebo kognitívnym obmedzením. Systém automaticky kontroluje súlad s medzinárodným štandardom **WCAG 2.2** (Web Content Accessibility Guidelines) na úrovniach A a AA, čo je požiadavka legislatívy EÚ aj Slovenska pre weby verejného sektora a čoraz viac aj pre komerčné subjekty.
+
+Pre zákazníka to v praxi znamená, že **každá zmena na webe môže byť automaticky skontrolovaná** z hľadiska prístupnosti ešte pred nasadením do prevádzky. Vývojár tak nemusí manuálne kontrolovať desiatky pravidiel, pretože systém to môže robiť za neho automaticky a opakovane pri každej zmene.
+
+Testovanie prístupnosti môže byť **zabudované priamo do vývojového procesu**, nie je to externý audit vykonaný raz ročne. To znamená, že problémy sa zachytávajú priebežne a opravujú sa v momente vzniku, čo je **výrazne lacnejšie a rýchlejšie** než dodatočná oprava po externom audite. Systém generuje **prehľadné HTML reporty** s detailným popisom každého porušenia, čo uľahčuje komunikáciu medzi vývojovým tímom a zodpovednými osobami za prístupnosť.
+
+**Hlavné benefity:**
+
+- **Súlad s legislatívou**: Automatická kontrola zabezpečuje, že web spĺňa požiadavky európskej smernice o prístupnosti webových sídiel (EAA) a slovenskej legislatívy, čím zákazník predchádza právnym rizikám a pokutám.
+- **Inkluzívny web pre všetkých**: Web je prístupný aj pre ľudí so zdravotnými obmedzeniami, čo rozširuje potenciálnu cieľovú skupinu a zlepšuje reputáciu organizácie.
+- **Priebežná kontrola namiesto jednorazového auditu**: Každá zmena je automaticky overená, čím sa problémy zachytávajú okamžite — oprava v momente vzniku je rádovo lacnejšia než dodatočný audit.
+- **Nižšie náklady na opravu**: Včasná detekcia porušení znižuje náklady na opravu prístupnosti až o 80 % v porovnaní s opravami po nasadení do produkcie.
+- **Prehľadné reporty**: Automaticky generované HTML reporty s popisom porušení a ich závažnosťou zjednodušujú prioritu opráv a komunikáciu v tíme.
+- **Podpora štandardu WCAG 2.2**: Kontrola pokrýva najnovšiu verziu štandardu vrátane úrovní A a AA, čo zabezpečuje aktuálnosť aj voči budúcim legislatívnym požiadavkám.
+
+Podrobná dokumentácia: [Testovanie prístupnosti](../../developer/testing/a11y.md)
+
 ## AI Skills — inteligentné zručnosti pre rýchlejší vývoj a správu CMS
 
 WebJET CMS integruje sadu **AI Skills** — špecializovaných zručností pre umelú inteligenciu, ktoré výrazne **zrýchľujú vývoj, údržbu a rozširovanie** webových projektov. AI Skills fungujú priamo vo vývojovom prostredí (VS Code s GitHub Copilot) a dokážu na základe jednoduchej požiadavky **automaticky generovať hotový kód, testy, dokumentáciu aj celé nové moduly** v súlade s konvenciami a štruktúrou WebJET CMS. Vývojár tak nemusí ručne vytvárať desiatky súborov a pamätať si všetky technické detaily — stačí opísať, čo potrebuje, a AI Skills dodajú funkčný výsledok.
