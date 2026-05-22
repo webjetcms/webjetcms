@@ -51,4 +51,22 @@
    <vulnerabilityName>GHSA-hfvx-25r5-qc3w</vulnerabilityName>
  </suppress>
 
+ <!-- we use AllowSafeHtmlAttributeConverter on quill instances on backend -->
+ <suppress>
+   <notes><![CDATA[
+   file name: main.00d2424f1cc31435.js
+   ]]></notes>
+   <packageUrl regex="true">^pkg:javascript/quill@.*$</packageUrl>
+   <cve>CVE-2025-15056</cve>
+ </suppress>
+
+ <!-- used only for admin bundle, not relevant for user inputs -->
+ <suppress>
+   <notes><![CDATA[
+   file name: postcss:8.5.9
+   ]]></notes>
+   <packageUrl regex="true">^pkg:npm/postcss@.*$</packageUrl>
+   <vulnerabilityName>CVE-2026-41305</vulnerabilityName>
+ </suppress>
+
 </suppressions>

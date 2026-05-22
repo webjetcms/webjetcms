@@ -336,7 +336,7 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
         // If rootOnly=true, redirect only on the root URL
         String path = PathFilter.getOrigPath(request);
 
-        if (rootOnly && !"/".equals(path) && !"/index.html".equals(path) && !"".equals(path)) {
+        if (Tools.isTrue(rootOnly) && !"/".equals(path) && !"/index.html".equals(path) && !"".equals(path)) {
             Logger.debug(LanguageRedirectApp.class, "Not root path, skipping redirect: " + path);
             return EMPTY_PAGE;
         }
@@ -344,7 +344,7 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
         String lang = null;
 
         // If respectCookie is true, check for lng cookie
-        if (respectCookie) {
+        if (Tools.isTrue(respectCookie)) {
             String langCookie = Tools.getCookieValue(request.getCookies(), "lng", null);
             if (Tools.isNotEmpty(langCookie)) {
                 lang = langCookie;

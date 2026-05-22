@@ -38,6 +38,7 @@ import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.ninja.Amp;
+import sk.iway.iwcm.doc.showdoc.StyleToHeadHelper;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.editor.InlineEditor;
 import sk.iway.iwcm.i18n.Prop;
@@ -714,6 +715,9 @@ public class WriteTag extends BodyTagSupport
 									htmlCode = WriteTagToolsForCore.preventSpam(htmlCode, request);
 									htmlCode = WriteTagToolsForCore.secureFormmail(htmlCode, request);
 									htmlCode = WriteTagToolsForCore.replaceWriteText(htmlCode, request);
+									// Extract style tags and collect them for head section insertion
+        							htmlCode = StyleToHeadHelper.extractAndCollectStyles(htmlCode, request);
+
 									executionTimeStopWatch.stop();
 									ExecutionTimeMonitor.recordComponentExecution(cacheKey, executionTimeStopWatch.getTime(), memoryConsumed.diff());
 

@@ -463,12 +463,14 @@ public class Logger
 
 	public static void debug(Class<?> c, String message)
 	{
-		getLogger(c).debug(getMessageColorWrapped(message, "DEBUG"));
+		org.slf4j.Logger l = getLogger(c);
+		if (l.isDebugEnabled()) l.debug(getMessageColorWrapped(message, "DEBUG"));
 	}
 
 	public static void debug(Class<?> c, String message, Object... params)
 	{
-		getLogger(c).debug(getMessageColorWrapped(message, "DEBUG"), params);
+		org.slf4j.Logger l = getLogger(c);
+		if (l.isDebugEnabled()) l.debug(getMessageColorWrapped(message, "DEBUG"), params);
 	}
 
 	public static void debug(Object o, String message)
@@ -682,6 +684,16 @@ public class Logger
 			return message;
 		}
 
+		if (message != null) {
+			if (message.contains("SELECT") || message.contains("INSERT") || message.contains("UPDATE") || message.contains("DELETE")) {
+				//use different color for SQL queries, to make them more visible in logs
+				level = "GREEN";
+			} else if (message.startsWith("GET ") || message.startsWith("POST ") || message.startsWith("PUT ") || message.startsWith("DELETE ")) {
+				//use different color for HTTP requests, to make them more visible in logs
+				level = "MAGENTA";
+			}
+		}
+
 		String ansiColorCode = getAnsiColorCode(level);
 		if (ansiColorCode == null) {
 			return message;
@@ -694,17 +706,23 @@ public class Logger
 		switch (level) {
 			case "ERROR":
 				return "\u001B[31m"; // Red
+			case "GREEN":
+				return "\u001B[32m"; // Green
 			case "WARN":
 				return "\u001B[33m"; // Yellow
 			case "DEBUG":
 				return "\u001B[34m"; // Blue
+			case "MAGENTA":
+				return "\u001B[35m"; // Magenta
+			case "CYAN":
+				return "\u001B[36m"; // Cyan
 			default:
 				return null;
 		}
 	}
 
 	private static String getAnsiColorCodeReset() {
-		return "\u001B[0m";
+		return "\u001B[0m"; //NOSONAR
 	}
 
 	/**

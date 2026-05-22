@@ -274,7 +274,7 @@ public class TemplateDetails {
     /**
      * Moznost definovania InstallName per sablona (prepise aktualnu hodnotu z Constants)
      */
-    @DataTableColumn(inputType=DataTableColumnType.TEXT, title="temp_edit.install_name", tab = "basic")
+    @DataTableColumn(inputType=DataTableColumnType.TEXT, title="temp_edit.install_name", tab = "advanced")
     private String templateInstallName;
 
     @DataTableColumn(
@@ -302,12 +302,31 @@ public class TemplateDetails {
     private String afterBodyData = "";
 
     /**
+     * Option to move style element to head per template
+     */
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title = "templates.move_style_to_head",
+        tab = "advanced",
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = "templates.move_style_to_head_0", value = "0"),
+                    @DataTableColumnEditorAttr(key = "templates.move_style_to_head_1", value = "1"),
+                    @DataTableColumnEditorAttr(key = "templates.move_style_to_head_2", value = "2")
+                }
+            )
+        }
+    )
+    private Integer moveStyleToHead;
+
+    /**
      * Moznost vypnutia spam ochrany per sablona
      */
     @DataTableColumn(
         inputType = DataTableColumnType.BOOLEAN,
         title = "templates.temps-list.spam",
-        tab = "basic"
+        tab = "advanced"
     )
     private boolean disableSpamProtection = false;
 
@@ -650,6 +669,14 @@ public class TemplateDetails {
 
     public void setDisableSpamProtection(boolean disableSpamProtection) {
         this.disableSpamProtection = disableSpamProtection;
+    }
+
+    public Integer getMoveStyleToHead() {
+        return moveStyleToHead;
+    }
+
+    public void setMoveStyleToHead(Integer moveStyleToHead) {
+        this.moveStyleToHead = moveStyleToHead;
     }
 
     public Long getTemplatesGroupId() {
