@@ -2,6 +2,37 @@
 
 Tento súbor obsahuje opisy vlastností WebJET CMS dodaných v roku 2026 z pohľadu predaja. Nové záznamy sa pridávajú na vrch (pod tento úvod), takže najnovšie vlastnosti sú vždy hore.
 
+## AI Skills — inteligentné zručnosti pre rýchlejší vývoj a správu CMS
+
+WebJET CMS integruje sadu **AI Skills** — špecializovaných zručností pre umelú inteligenciu, ktoré výrazne **zrýchľujú vývoj, údržbu a rozširovanie** webových projektov. AI Skills fungujú priamo vo vývojovom prostredí (VS Code s GitHub Copilot) a dokážu na základe jednoduchej požiadavky **automaticky generovať hotový kód, testy, dokumentáciu aj celé nové moduly** v súlade s konvenciami a štruktúrou WebJET CMS. Vývojár tak nemusí ručne vytvárať desiatky súborov a pamätať si všetky technické detaily — stačí opísať, čo potrebuje, a AI Skills dodajú funkčný výsledok.
+
+Pre zákazníka to znamená predovšetkým **výrazne rýchlejšiu dodávku nových funkcií a úprav**. Zmeny, ktoré predtým trvali hodiny alebo dni, je možné dodať v priebehu minút. Rovnako dôležitá je možnosť **rýchleho prototypovania** — zákazník si môže nechať pripraviť prototyp nového modulu, formulára alebo administračnej stránky takmer okamžite a rozhodnúť sa, či je smer správny, ešte pred investíciou do plného vývoja. Ak zákazník disponuje vlastným vývojovým tímom a upravuje si projekt samostatne, môže AI Skills **využívať priamo** — systém ho prevedie celým procesom a zabezpečí, že výsledok je kompatibilný s architektúrou WebJET CMS.
+
+Nasadenie AI Skills zároveň zvyšuje **kvalitu a konzistenciu** dodávaného kódu. Každá zručnosť vynucuje osvedčené postupy, automaticky pridáva testy a dodržiava projektové konvencie, čím sa znižuje riziko chýb a zjednodušuje budúca údržba.
+
+**Hlavné benefity:**
+
+- **Rýchlejšia dodávka**: Nové funkcie a úpravy sú k dispozícii v zlomku pôvodného času, čo skracuje čas uvedenia na trh.
+- **Rýchle prototypovanie**: Zákazník získa funkčný prototyp nového modulu takmer okamžite a môže ho vyhodnotiť pred schválením plného vývoja.
+- **Nižšie náklady na vývoj**: Automatizácia rutinných úloh znižuje počet potrebných vývojárskych hodín.
+- **Vyššia kvalita kódu**: AI Skills dodržiavajú osvedčené postupy, generujú testy a kontrolujú konzistenciu, čím sa znižuje počet chýb.
+- **Nezávislosť zákazníka**: Zákazníci s vlastným vývojovým tímom môžu AI Skills využívať sami na rozšírenie a prispôsobenie svojho projektu.
+- **Jednoduchosť použitia**: Stačí opísať požiadavku bežným jazykom — AI Skills prevedú zámer na hotový, funkčný kód.
+
+### Dostupné AI Skills
+
+| Zručnosť | Popis |
+| ----------- | ------- |
+| **Vytvorenie aplikácie (AppStore)** | Vygeneruje kompletnú aplikáciu pre editor stránok — Java triedu, šablónu, konfiguráciu a registráciu do zoznamu aplikácií. |
+| **Vytvorenie administračnej stránky (DataTable)** | Pripraví celý CRUD modul pre administráciu — databázovú entitu, REST rozhranie, HTML stránku a automatizované testy. |
+| **Automatizované E2E testy (CodeceptJS)** | Napíše end-to-end testy pre prehliadač, ktoré overia funkčnosť stránok, formulárov a oprávnení. |
+| **Revízia kódu (Code Review)** | Skontroluje zmeny v kóde z hľadiska správnosti, bezpečnosti, spätnej kompatibility a dodržiavania konvencií projektu. |
+| **Audit prístupnosti (Accessibility)** | Vykoná audit webovej prístupnosti podľa štandardu WCAG 2.2 a navrhne opravy pre klávesovú navigáciu, kontrast a čítačky obrazovky. |
+| **Aktualizácia dokumentácie** | Automaticky doplní technickú dokumentáciu na základe zmien v kóde, čím udržiava dokumentáciu vždy aktuálnu. |
+| **Preklad komentárov** | Preloží komentáre v zdrojovom kóde zo slovenčiny do angličtiny bez zmeny funkčnosti, čím zlepšuje čitateľnosť pre medzinárodné tímy. |
+| **Marketingový obsah** | Na základe dodaných zmien vygeneruje podklady pre blog, sociálne siete alebo changelog — ušetrí čas marketingovému tímu. |
+| **Opis vlastností pre predaj** | Analyzuje technické zmeny a vytvorí zrozumiteľný opis z pohľadu zákazníka a obchodných výhod. |
+
 ## Viackrokové formuláre
 
 WebJET CMS prináša viackrokové formuláre, ktoré **rozdeľujú dlhé formuláre na menšie a pre používateľa zrozumiteľnejšie časti**. Namiesto jedného preplneného formulára dostane návštevník **jasne vedený proces po jednotlivých krokoch**, čo znižuje pocit zahltenia a pomáha zvýšiť počet úspešne dokončených odoslaní. Táto funkcionalita je vhodná napríklad pre registrácie, dopytové formuláre, náborové formuláre, prihlášky či interné zberové procesy.
