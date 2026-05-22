@@ -126,3 +126,26 @@ Systém ponúka **automatické schvaľovanie alebo workflow so schvaľovateľom*
 ![Rezervácia dní — kalendár s cenami](../../redactor/apps/reservation/day-book-app/app-table_B.png)
 
 Podrobná dokumentácia: [Rezervácia času](../../redactor/apps/reservation/time-book-app/README.md) | [Rezervácia dní](../../redactor/apps/reservation/day-book-app/README.md)
+
+## Elektronický obchod — vynovená administrácia, platobné brány a doručenie
+
+WebJET CMS prináša **kompletne vynovenú aplikáciu Elektronický obchod**, ktorá poskytuje všetko potrebné na prevádzku internetového obchodu priamo v redakčnom systéme. Administrátori získavajú **prehľadnú správu produktov, objednávok, spôsobov platby a doručenia** v modernom rozhraní bez potreby externých nástrojov. Produkty sa organizujú do **stromovej štruktúry kategórií**, kde je možné jednoducho vytvárať nové kategórie, priraďovať produktom obrázky, značky na filtrovanie a atribúty (výrobca, parametre, špecifikácie). Správa objednávok zahŕňa kompletný životný cyklus — od vytvorenia cez sledovanie stavu platby až po notifikáciu zákazníka o zmenách.
+
+Kľúčovou novinkou je **integrácia platobnej brány GoPay**, ktorá umožňuje zákazníkom platiť online kartou, bankovým prevodom alebo inými elektronickými spôsobmi platby. Platobná brána sa konfiguruje priamo v administrácii — stačí zadať prístupové údaje a aktivovať požadované platobné metódy. Systém **automaticky spracováva platby**, sleduje ich stavy (úspešná, neúspešná, čakajúca) a podporuje aj **refundácie** — vrátenie celej sumy alebo jej časti priamo cez administráciu. Pre každú objednávku je dostupná kompletná **história všetkých platobných transakcií**, čo zjednodušuje účtovníctvo a riešenie reklamácií.
+
+**Konfigurácia spôsobov doručenia** umožňuje nastaviť rôzne možnosti doručenia podľa krajiny, vrátane ceny bez DPH, sadzby DPH a poradia zobrazenia. Každý spôsob doručenia môže mať **špecifické parametre** podľa typu dopravcu. Systém podporuje viacero krajín súčasne, čo je dôležité pre zákazníkov pôsobiacich na viacerých trhoch. Celý modul je **rozšíriteľný** — programátor môže pridávať nové platobné metódy aj spôsoby doručenia podľa požiadaviek zákazníka.
+
+**Hlavné benefity:**
+
+- **Kompletná správa e-shopu v CMS**: Produkty, objednávky, platby a doručenie na jednom mieste — nie je potrebný samostatný e-shopový systém ani externé nástroje.
+- **Integrácia platobnej brány GoPay**: Online platby kartou a bankovým prevodom s automatickým spracovaním transakcií, sledovaním stavov a podporou refundácií.
+- **Flexibilné spôsoby platby**: Konfigurácia viacerých platobných metód (GoPay, prevod, dobierka) s individuálnym nastavením pre každú metódu priamo v administrácii.
+- **Spôsoby doručenia podľa krajiny**: Nastavenie rôznych spôsobov doručenia s cenami a DPH pre každú podporovanú krajinu — ideálne pre medzinárodný predaj.
+- **Automatické sledovanie platieb a stavov objednávok**: Systém automaticky prepočítava zaplatené sumy a mení stav objednávky (nová, čiastočne zaplatená, zaplatená), čo eliminuje manuálnu prácu.
+- **Refundácie jedným kliknutím**: Plná alebo čiastočná refundácia platby priamo z administrácie, vrátane spracovania cez platobnú bránu.
+- **Notifikácie zákazníkov**: Automatické emailové notifikácie o zmenách stavu objednávky s konfigurovateľným textom a prehľadom objednávky.
+- **Rozšíriteľnosť**: Možnosť programátorsky pridávať nové platobné metódy a spôsoby doručenia podľa individuálnych požiadaviek zákazníka.
+
+![Správa produktov](../../redactor/apps/eshop/product-list/datatable.png)
+
+Podrobná dokumentácia: [Elektronický obchod](../../redactor/apps/eshop/product-list/README.md)
