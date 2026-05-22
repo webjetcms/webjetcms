@@ -21,6 +21,8 @@ Rozlišujeme tri hlavné skupiny zákazníkov:
 Opisy vlastností sú organizované po rokoch — každý rok má vlastný súbor:
 
 - [Rok 2026](2026/README.md) — vlastnosti dodané v roku 2026
+- [Rok 2025](2025/README.md) — vlastnosti dodané v roku 2025
+- [Rok 2024](2024/README.md) — vlastnosti dodané v roku 2024
 
 Nové záznamy sa pridávajú na vrch príslušného ročného súboru (najnovšie hore). Každý záznam obsahuje:
 
