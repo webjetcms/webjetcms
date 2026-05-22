@@ -1,4 +1,4 @@
-# Obchodné informácie - rok 2024
+# Informácie pre obchodníka - rok 2024
 
 Tento súbor obsahuje opisy vlastností WebJET CMS dodaných v roku 2024 z pohľadu predaja. Nové záznamy sa pridávajú na vrch (pod tento úvod), takže najnovšie vlastnosti sú vždy hore.
 

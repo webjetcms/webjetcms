@@ -1,10 +1,10 @@
-# Obchodné informácie
+# Informácie pre obchodníka
 
-Táto sekcia obsahuje opisy vlastností a funkcionalít WebJET CMS z pohľadu predaja. Nie je to technická dokumentácia — cieľom je poskytnúť obchodnému oddeleniu, pre-sales konzultantom a account manažérom zrozumiteľné informácie o tom, čo jednotlivé vlastnosti prinášajú zákazníkom a prečo sú pre nich hodnotné.
+Táto sekcia obsahuje opisy vlastností a funkcionalít WebJET CMS z pohľadu predaja. Nie je to technická dokumentácia — cieľom je **poskytnúť obchodnému oddeleniu, pre-sales konzultantom a account manažérom zrozumiteľné informácie** o tom, čo jednotlivé vlastnosti **prinášajú zákazníkom a prečo sú pre nich hodnotné**.
 
 ## Pre koho je táto sekcia
 
-Primárne pre interné obchodné oddelenie. Informácie sú formulované tak, aby sa dali priamo použiť v komunikácii so zákazníkom — v ponukách, prezentáciách, na obchodných stretnutiach alebo v odpovediach na otázky typu "prečo WebJET?".
+Primárne pre interné obchodné oddelenie. Informácie sú formulované tak, aby sa dali **priamo použiť v komunikácii so zákazníkom** — v ponukách, prezentáciách, na obchodných stretnutiach alebo v odpovediach na otázky typu "prečo WebJET?".
 
 ## Skupiny zákazníkov
 

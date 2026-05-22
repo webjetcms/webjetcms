@@ -1,4 +1,4 @@
-# Obchodné informácie - rok 2025
+# Informácie pre obchodníka - rok 2025
 
 Tento súbor obsahuje opisy vlastností WebJET CMS dodaných v roku 2025 z pohľadu predaja. Nové záznamy sa pridávajú na vrch (pod tento úvod), takže najnovšie vlastnosti sú vždy hore.
 
