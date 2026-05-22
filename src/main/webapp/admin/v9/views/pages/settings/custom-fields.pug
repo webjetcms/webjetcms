@@ -1,0 +1,23 @@
+extends ../../partials/layout
+
+block content
+
+    script.
+        var customFieldsDataTable;
+
+        window.domReady.add(function () {
+
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity')})];
+            var url = "/admin/rest/custom-fields/";
+
+            customFieldsDataTable = WJ.DataTable({
+                url: url,
+                columns: columns,
+                serverSide: true,
+                id: "customFieldsDataTable",
+                fetchOnCreate: true,
+                fetchOnEdit: true
+            });
+        });
+
+    <table id="customFieldsDataTable" class="datatableInit table"></table>

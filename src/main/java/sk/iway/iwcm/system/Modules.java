@@ -780,6 +780,20 @@ public class Modules
 		sub.setMenuIcon("refresh");
 		loadModule(sub);
 
+		// Custom fields
+		sub = new ModuleInfo().setMenuOrder(7400);
+		sub.setLeftMenuNameKey("settings.custom-fields.title");
+		sub.setNameKey("settings.custom-fields.title");
+		sub.setPath("/admin/v9/settings/custom-fields/");
+		sub.setWjVersions("BPECDIM");
+		sub.setUserItem(true);
+		sub.setItemKey("customFields");
+		sub.setDefaultDisabled(false);
+		sub.setShowInLeftMenu(true);
+		sub.setGroup("config");
+		sub.setMenuIcon("table-options");
+		loadModule(sub);
+
 		// Editacia textov
 		sub = new ModuleInfo().setMenuOrder(7020);
 		sub.setLeftMenuNameKey("admin.conf_editor.edit_text");

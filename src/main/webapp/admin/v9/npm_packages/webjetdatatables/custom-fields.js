@@ -304,6 +304,11 @@ export function update(EDITOR, action) {
 
         inputBox.html(template);
 
+        if (v.required === true) {
+            inputBox.find('input, select, textarea').attr('required', 'required');
+            container.addClass('required');
+        }
+
         //For every field, remove params s.opts._input AND s.opts.renderFormat -> they can be still set from previous field initialization
         //If previous field was quill, it will make problem with saving
         EDITOR.field(customPrefix + identifier).s.opts._input = "";
