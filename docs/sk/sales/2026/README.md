@@ -52,6 +52,30 @@ Nasadenie AI Skills zároveň zvyšuje **kvalitu a konzistenciu** dodávaného k
 | **Marketingový obsah** | Na základe dodaných zmien vygeneruje podklady pre blog, sociálne siete alebo changelog — ušetrí čas marketingovému tímu. |
 | **Opis vlastností pre predaj** | Analyzuje technické zmeny a vytvorí zrozumiteľný opis z pohľadu zákazníka a obchodných výhod. |
 
+## Prihlasovanie cez OAuth2/Keycloak
+
+WebJET CMS teraz podporuje **prihlasovanie používateľov prostredníctvom externých poskytovateľov identity** ako sú Google, Facebook, GitHub, Okta alebo podnikový Keycloak server. Technicky ide o štandard **OAuth2/OpenID Connect** — v praxi to znamená, že používatelia sa môžu prihlásiť **jedným kliknutím cez účet, ktorý už majú** (napríklad firemný Google účet alebo **podnikový SSO** systém), bez nutnosti pamätať si ďalšie heslo. Administrátor webu si jednoducho nakonfiguruje, ktorých poskytovateľov chce povoliť, a systém automaticky zobrazí príslušné prihlasovacie tlačidlá.
+
+Kľúčovou výhodou je **automatická synchronizácia skupín a práv**. Ak organizácia používa podnikový identity server (napr. Keycloak), WebJET CMS dokáže pri každom prihlásení automaticky prevziať skupiny a role, v ktorých je používateľ zaradený, a **priradiť mu zodpovedajúce práva** v CMS. To eliminuje potrebu manuálnej správy oprávnení — keď sa zmení rola zamestnanca v podnikovom systéme, **zmena sa automaticky prenesie aj do WebJET CMS**. Administrátori sú nastavovaní automaticky na základe členstva v definovanej skupine, čo zjednodušuje správu prístupov aj vo veľkých organizáciách.
+
+Riešenie je **flexibilné a rozšíriteľné** — zákazník môže nakonfigurovať ľubovoľného OAuth2 poskytovateľa, nielen preddefinovaných (Google, Facebook, GitHub, Okta). Podporované je aj **súčasné použitie viacerých poskytovateľov** (napr. Keycloak pre administrátorov a Google pre zákaznícku zónu) a konfigurácia sa dá úplne prispôsobiť potrebám organizácie vrátane vlastných atribútov pre prihlasovacie meno. Pre zákaznícku zónu aj pre administráciu je možné nastaviť rôznych poskytovateľov s rôznymi úrovňami synchronizácie práv.
+
+**Hlavné benefity:**
+
+- **Jednotné prihlásenie (SSO)**: Používatelia sa prihlasujú účtom, ktorý už poznajú — žiadne ďalšie heslá na zapamätanie, čo zvyšuje bezpečnosť aj pohodlie.
+- **Automatická synchronizácia práv**: Skupiny a role sa preberajú z podnikového identity servera pri každom prihlásení — odpadá manuálna správa oprávnení v CMS.
+- **Podpora ľubovoľného OAuth2 poskytovateľa**: Okrem preddefinovaných (Google, Facebook, GitHub, Okta) je možné nakonfigurovať akýkoľvek vlastný OAuth2/OpenID Connect server.
+- **Bezpečnosť na podnikovej úrovni**: Autentifikácia prebieha na strane overeného poskytovateľa — WebJET CMS nikdy neukladá heslá externých služieb, čo znižuje bezpečnostné riziká.
+- **Oddelená konfigurácia pre admin a zákaznícku zónu**: Rôzni poskytovatelia pre rôzne časti systému umožňujú presné riadenie prístupov podľa typu používateľa.
+- **Nižšie prevádzkové náklady**: Centrálna správa používateľov v jednom systéme (napr. Keycloak) znižuje administratívnu záťaž a eliminuje duplicitnú správu účtov.
+- **Jednoduchá inštalácia**: Pre populárnych poskytovateľov (Google, Facebook) stačí nastaviť dva konfiguračné parametre; pre podnikový Keycloak je k dispozícii pripravená Docker konfigurácia.
+
+<div class="video-container">
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/q8xs3qDq-G4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+Podrobná dokumentácia: [OAuth2 Autentifikácia](../../install/oauth2/oauth2.md) | [Keycloak - Inštalácia a konfigurácia](../../install/oauth2/keycloak.md)
+
 ## Viackrokové formuláre
 
 WebJET CMS prináša viackrokové formuláre, ktoré **rozdeľujú dlhé formuláre na menšie a pre používateľa zrozumiteľnejšie časti**. Namiesto jedného preplneného formulára dostane návštevník **jasne vedený proces po jednotlivých krokoch**, čo znižuje pocit zahltenia a pomáha zvýšiť počet úspešne dokončených odoslaní. Táto funkcionalita je vhodná napríklad pre registrácie, dopytové formuláre, náborové formuláre, prihlášky či interné zberové procesy.
@@ -82,7 +106,9 @@ Veľkou výhodou je aj vysoká miera variability. Pri jednotlivých poliach je m
 - **Personalizácia pre vyšší komfort**: Predvyplnenie údajov o prihlásenom používateľovi zrýchľuje vyplnenie a znižuje počet opustených formulárov.
 - **Rozšíriteľnosť do budúcna**: Typy polí a dostupné nastavenia sa dajú prispôsobiť podľa potrieb konkrétneho projektu alebo segmentu.
 
-![Editor položiek formulára](../../redactor/apps/multistep-form/form-item-editor.png)
+<div class="video-container">
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/XRnwipQ-mH4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 Podrobná dokumentácia: [Editor viackrokových formulárov](../../redactor/apps/multistep-form/README.md)
 
@@ -101,3 +127,4 @@ Ešte väčšiu hodnotu prinášajú **grafy odpovedí pri jednotlivých otázka
 ![Štatistiky formulára](../../redactor/apps/multistep-form/stat-section.png)
 
 Podrobná dokumentácia: [Štatistiky viackrokových formulárov](../../redactor/apps/multistep-form/stat.md)
+
