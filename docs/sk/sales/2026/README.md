@@ -2,6 +2,8 @@
 
 Tento súbor obsahuje opisy vlastností WebJET CMS dodaných v roku 2026 z pohľadu predaja. Nové záznamy sa pridávajú na vrch (pod tento úvod), takže najnovšie vlastnosti sú vždy hore.
 
+---
+
 ## Automatizované testovanie prístupnosti webových stránok
 
 WebJET CMS zavádza **automatizované testovanie prístupnosti (accessibility)**, ktoré overuje, či sú webové stránky a administračné rozhranie prístupné pre **všetkých používateľov** — vrátane tých so zrakovým, sluchovým, motorickým alebo kognitívnym obmedzením. Systém automaticky kontroluje súlad s medzinárodným štandardom **WCAG 2.2** (Web Content Accessibility Guidelines) na úrovniach A a AA, čo je požiadavka legislatívy EÚ aj Slovenska pre weby verejného sektora a čoraz viac aj pre komerčné subjekty.
