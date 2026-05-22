@@ -15,3 +15,4 @@
     - [Verzia 2020](/CHANGELOG-2020.md)
 - [Zrušené/nepodporované vlastnosti](/deprecated/README.md)
 - [Roadmap](/ROADMAP.md)
+- [Obchodné informácie](/sales/README.md)

@@ -93,7 +93,8 @@ Write a section in **Slovak** with the following structure:
 - What problem it solves for the customer
 - What the customer gains by having this feature
 - Why this matters (competitive advantage, compliance, efficiency, security)
-- Mention relevance for specific customer segments only where particularly obvious}
+- Mention relevance for specific customer segments only where particularly obvious
+- Use **bold** to highlight key features, capabilities, and important points within the paragraphs so readers can quickly scan and find the most important information}
 
 **Hlavné benefity:**
 
@@ -114,6 +115,7 @@ Podrobná dokumentácia: [{link text}](../../{path-to-docs})
 - **Language**: Slovak
 - **Tone**: Professional but accessible — as if explaining to an intelligent non-technical person
 - **Focus**: Customer value, benefits, competitive advantages, security, compliance
+- **Bold highlights**: Use **bold** for key features, capabilities, and important points within paragraphs — readers should be able to scan the text and grasp the most important information at a glance
 - **Avoid**: Implementation details, class names, method names, technical jargon without explanation
 - **Explain**: Technical terms in parentheses or inline (e.g., "API (rozhranie pre prepojenie s inými systémami)")
 - **Competitive angle**: If the feature provides an advantage over typical CMS solutions, mention it
