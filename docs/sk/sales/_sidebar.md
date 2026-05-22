@@ -4,4 +4,5 @@
 
 - Obchodné informácie
   - [Úvod](/sales/README.md)
-  - [2026](/sales/2026/README.md)
+  - [Rok 2026](/sales/2026/README.md)
+  - [Rok 2025](/sales/2025/README.md)
