@@ -5,7 +5,7 @@
 - [Editor's Manual](/redactor/README.md)
 - [Administrator Manual](/admin/README.md)
 - [Operation Manual](/sysadmin/README.md)
-- [Information for the merchant](/sales/README.md)
+- [New Features Overview](/sales/README.md)
 - [Changelog](/CHANGELOG.md)
     - [Version 2026](/CHANGELOG-2026.md)
     - [Version 2025](/CHANGELOG-2025.md)

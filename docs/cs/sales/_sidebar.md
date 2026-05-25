@@ -1,8 +1,8 @@
-<div class="sidebar-section">Informace pro obchodníka</div>
+<div class="sidebar-section">Přehled nových vlastností</div>
 
 - [:point_left: Zpět na Úvod](/?back)
 
-- Informace pro obchodníka
+- Přehled nových vlastností
   - [Úvod](/sales/README.md)
   - [Rok 2026](/sales/2026/README.md)
   - [Rok 2025](/sales/2025/README.md)

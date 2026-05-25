@@ -1,6 +1,6 @@
-# Information for the trader - year 2026
+# New Features Overview - 2026
 
-This file contains descriptions of WebJET CMS features shipped in 2026 from a sales perspective. New entries are added to the top (below this introduction), so the newest features are always at the top.
+This section contains descriptions of the features and **functionalities of WebJET CMS in plain language**, without unnecessary technical formulations in 2026. New entries are added to the top (below this introduction), so the newest features are always at the top.
 
 ---
 
@@ -129,4 +129,3 @@ Even more valuable are **charts of responses for individual questions**. The org
 ![Form Statistics](../../redactor/apps/multistep-form/stat-section.png)
 
 Detailed documentation: [Multistep Form Statistics](../../redactor/apps/multistep-form/stat.md)
-

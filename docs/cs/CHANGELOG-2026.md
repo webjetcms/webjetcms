@@ -18,7 +18,7 @@
 
 ### Dokumentace
 
-- Vytvořena nová sekce [Obchodní informace](sales/README.md) která obsahuje popisy vlastností a funkcionalit WebJET CMS z pohledu prodeje (#58505).
+- Vytvořena nová sekce [Přehled nových vlastností](sales/README.md) která obsahuje popisy nových vlastností a **funkcionalit WebJET CMS srozumitelným jazykem**, bez zbytečně technických formulací (#58505).
 - Vytvořená sekce [Řešení problémů](sysadmin/troubleshooting/README.md) v manuálu pro provoz.
 
 ## 2026.18

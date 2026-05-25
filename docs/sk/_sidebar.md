@@ -5,7 +5,7 @@
 - [Manuál pre redaktora](/redactor/README.md)
 - [Manuál pre správcu](/admin/README.md)
 - [Manuál pre prevádzku](/sysadmin/README.md)
-- [Informácie pre obchodníka](/sales/README.md)
+- [Prehľad nových vlastností](/sales/README.md)
 - [Zoznam zmien](/CHANGELOG.md)
     - [Verzia 2026](/CHANGELOG-2026.md)
     - [Verzia 2025](/CHANGELOG-2025.md)

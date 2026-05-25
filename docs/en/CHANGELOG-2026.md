@@ -18,8 +18,8 @@
 
 ### Documentation
 
-- A new section [Sales Information](sales/README.md) has been created which contains descriptions of WebJET CMS features and functionalities from a sales perspective (#58505).
-- Created a [Troubleshooting section](sysadmin/troubleshooting/README.md) in the operation manual.
+- A new section [Overview of new features] (sales/README.md) has been created, which contains descriptions of new features and **functionalities of WebJET CMS in understandable language**, without unnecessarily technical formulations (#58505).
+- Created a [Troubleshooting] section (sysadmin/troubleshooting/README.md) in the operation manual.
 
 ## 2026.18
 

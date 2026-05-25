@@ -4,7 +4,8 @@
 export default {
     sourceLanguage: 'sk',
     //outputLanguages: ['en-US'],
-    outputLanguages: ['cs'],
+    //outputLanguages: ['cs'],
+    outputLanguages: ['en-US', 'cs'],
     directories: [
         ['sk', '$langcode$'],
         //['sk/sysadmin', '$langcode$/sysadmin'],

@@ -1,6 +1,6 @@
-# Informace pro obchodníka - rok 2026
+# Přehled nových vlastností - rok 2026
 
-Tento soubor obsahuje popisy vlastností WebJET CMS dodaných v roce 2026 z pohledu prodeje. Nové záznamy se přidávají na vrch (pod tento úvod), takže nejnovější vlastnosti jsou vždy nahoře.
+Tato sekce obsahuje popisy vlastností a **funkcionalit WebJET CMS srozumitelným jazykem**, bez zbytečně technických formulací v roce 2026. Nové záznamy se přidávají na vrch (pod tento úvod), takže nejnovější vlastnosti jsou vždy nahoře.
 
 ---
 
@@ -129,4 +129,3 @@ Ještě větší hodnotu přinášejí **grafy odpovědí u jednotlivých otáze
 ![Statistiky formuláře](../../redactor/apps/multistep-form/stat-section.png)
 
 Podrobná dokumentace: [Statistiky vícekrokových formulářů](../../redactor/apps/multistep-form/stat.md)
-

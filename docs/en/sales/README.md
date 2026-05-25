@@ -1,10 +1,18 @@
-# Information for the merchant
+# Overview of new features
 
-This section contains descriptions of WebJET CMS features and functionalities from a sales perspective. It is not technical documentation — the goal is to **provide sales, pre-sales consultants, and account managers with understandable information** about what each feature **brings to customers and why it is valuable to them**.
+This section contains descriptions of new features and **functionalities of WebJET CMS in plain language**, without unnecessary technical formulations. It is not technical documentation. The goal is **to clearly explain what individual features bring to customers and why they are valuable to them**.
 
 ## Who is this section for?
 
-Primarily for internal sales departments. The information is formulated so that it can be **directly used in customer communication** — in offers, presentations, business meetings, or in answers to questions like "why WebJET?".
+This section is intended for anyone who needs to quickly understand the benefits of the WebJET CMS solution:
+
+- **traders**
+- **pre-sales consultants**
+- **project managers**
+- **marketing teams**
+- **customers and client-side decision-makers**
+
+The information is formulated in a way that it can be **directly used in customer communication** — in offers, presentations, meetings, or in answers to questions like "why WebJET?".
 
 ## Customer groups
 
