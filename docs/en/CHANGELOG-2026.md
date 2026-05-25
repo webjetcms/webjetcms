@@ -4,6 +4,23 @@
 
 > Development version updated from the main repository.
 
+### Websites
+
+- Templates - added option to set the movement of `<style>` and `<link rel="stylesheet">` tags from the page body to `<head>` via [template option](frontend/templates/templates.md) with support for global configuration variable `showDocMoveStyleToHead`. Blocks in IE conditions, `noscript` and `script` remain in place (#231).
+
+![](frontend/templates/templates-edit-advanced.png)
+
+### Applications
+
+- Added new application [Language Redirect](redactor/apps/language-redirect/README.md) to automatically redirect visitors to the language version of the page based on language detection from the HTTP header `Accept-Language`. It supports up to 8 language assignments per URL, respecting the language cookie, and the option to redirect only to the root URL (#58497).
+
+![](redactor/apps/language-redirect/editor-basic.png)
+
+### Documentation
+
+- A new section [Sales Information](sales/README.md) has been created which contains descriptions of WebJET CMS features and functionalities from a sales perspective (#58505).
+- Created a [Troubleshooting section](sysadmin/troubleshooting/README.md) in the operation manual.
+
 ## 2026.18
 
 > WebJET CMS 2026.18 brings **folder change approval** with support for multi-level approval and **accessibility testing** integrated directly into automated tests.

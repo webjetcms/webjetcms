@@ -31,7 +31,7 @@ Pokud potřebujete pro určité stránky administrace vložit vlastní objekt do
 
 Příkladem použití je [WebPagesListener](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebPagesListener.java).
 
-Důležité je použít anotaci ```@Component``` (což vyžaduje i přidání package ve třídě [SpringConfig](../../../../src/main/java/cs/iway/webjet/v9/V9SpringConfig.java) v anotaci @@CODE@@1_) a samozřejmě V podmínkách je třeba nastavit hodnotu parametru ```page``` a ```subpage```, aby poslech události byl proveden pouze pro zadanou stránku administrace.
+Důležité je použít anotaci ```@Component``` (což vyžaduje i přidání package ve třídě [SpringConfig](../../../../src/main/java/sk/iway/webjet/v9/V9SpringConfig.java) v anotaci @@CODE@@1_) a samozřejmě V podmínkách je třeba nastavit hodnotu parametru ```page``` a ```subpage```, aby poslech události byl proveden pouze pro zadanou stránku administrace.
 
 ```java
 @Component

@@ -225,7 +225,9 @@ Scenario('Forwards by installName', ({I, DTE}) => {
 
     //
     I.say("Setting another install name");
+    I.clickCss("#pills-dt-datatableInit-advanced-tab");
     I.fillField("#DTE_Field_templateInstallName", "another-install-name");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
 
     I.fillField("#DTE_Field_forward", "*");
     I.waitForVisible("ul.dt-autocomplete-select");
