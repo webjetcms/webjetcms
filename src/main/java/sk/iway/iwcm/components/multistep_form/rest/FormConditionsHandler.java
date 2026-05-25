@@ -25,7 +25,11 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.JoinOperatorType;
 import sk.iway.iwcm.components.multistep_form.jpa.OperatorType;
 
-
+/**
+ * Helper class to evaluate form item conditions (visibility and requirement) based on both session data (previous steps) and received JSON data (current step).
+ * Provides methods to check if a field should be hidden or required, and to build JSON maps of conditions for frontend use.
+ * Caches conditions for performance, with cache invalidation when conditions are updated.
+ */
 public class FormConditionsHandler {
 
     private static final String CACHE_KEY_PREFIX = "multistep_form.conditions.";

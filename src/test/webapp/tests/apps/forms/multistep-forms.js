@@ -201,8 +201,8 @@ Scenario('Test form detail and filled data', async ({ I, DT, DTE }) => {
     DTE.cancel();
 
     const expectedHtml = `
-        <div class="form-step mt-3"><div class="step-header"><p>1 - Primarny nadpis | 1 - Sekundarny nadpis</p></div><div class="form-group mb-3"><label for="meno-1">Vase meno<span class="requirement-mark" style="color: red;">&nbsp;*</span>:</label> <span class="form-control emailInput-text">Tester</span></div>
-        <div class="form-group mb-3"><label for="priezvisko-1">Vase priezvisko:</label> <span class="form-control emailInput-text">Playwright</span></div><div class="form-group mb-3"><label for="email-1">Emailova adresa<span class="requirement-mark" style="color: red;">&nbsp;*</span>:</label> <span class="form-control emailInput-text">sivan@noopmail.com</span></div>
+        <div class="form-step mt-3"><div class="step-header"><p>1 - Primarny nadpis | 1 - Sekundarny nadpis</p></div><div class="form-group mb-3"><label for="meno-1">Vase meno<span class="text-danger requirement-mark">&nbsp;*</span>:</label> <span class="form-control emailInput-text">Tester</span></div>
+        <div class="form-group mb-3"><label for="priezvisko-1">Vase priezvisko:</label> <span class="form-control emailInput-text">Playwright</span></div><div class="form-group mb-3"><label for="email-1">Emailova adresa<span class="text-danger requirement-mark">&nbsp;*</span>:</label> <span class="form-control emailInput-text">sivan@noopmail.com</span></div>
         <div class="form-group mb-3"><label for="checkboxgroup-1">Skupina zaškrtávacích polí:</label><div class="form-check"><span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-0" class="form-check-label">A</label></div>
         <div class="form-check"><span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-1" class="form-check-label">B</label></div>
         <div class="form-check"><span class="inputcheckbox emailinput-cb input-unchecked">[&nbsp;]</span> <label for="checkboxgroup-1-2" class="form-check-label">C</label></div>
@@ -210,7 +210,7 @@ Scenario('Test form detail and filled data', async ({ I, DT, DTE }) => {
         <div class="form-check"><span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-1" class="form-check-label">E</label></div>
         <div class="form-check"><span class="inputradio emailinput-radio input-checked">[X]</span> <label for="radiogroup-1-2" class="form-check-label">F</label></div>
         </div></div><hr><div class="form-step mt-3"><div class="step-header"><p>2 - Druhy krok | 2 - Sekundarny nadpis druheho kroku</p></div><div class="form-group mb-3"><label for="multiupload_images-1">Pridajte obrazky:</label> <span class="form-control emailInput-text">penguin.jpg</span> </div>
-        <div class="form-group mb-3"><label for="select-1">Select pole:</label><span class="form-control emailInput-select">C</span></div><div class="form-group mb-3"><label for="wysiwyg-1">WYSIWYG<span class="requirement-mark" style="color: red;">&nbsp;*</span>:</label> <span class="form-control emailInput-textarea" style="height: auto;">happy wysiwyg placeholder</span></div></div>
+        <div class="form-group mb-3"><label for="select-1">Select pole:</label><span class="form-control emailInput-select">C</span></div><div class="form-group mb-3"><label for="wysiwyg-1">WYSIWYG<span class="text-danger requirement-mark">&nbsp;*</span>:</label> <span class="form-control emailInput-textarea" style="height: auto;">happy wysiwyg placeholder</span></div></div>
     `;
 
     const actualHtml = await getSubmitedFormPreview(I);

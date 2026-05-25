@@ -41,7 +41,7 @@ public interface FormItemsRepository extends DomainIdRepository<FormItemEntity, 
     List<FormItemEntity> findAllByFormNameAndDomainId(String formName, Integer domainId);
 
     // Basically, we need find first only because joined radio buttons that have same itemFormId but are separate items
-    FormItemEntity findFirstByFormNameAndItemFormIdOrderBySortPriorityAsc(String formName, String itemFormId);
+    FormItemEntity findFirstByFormNameAndItemFormIdAndDomainIdOrderBySortPriorityAsc(String formName, String itemFormId, Integer domainId);
 
     Integer countByFormNameAndStepIdAndSortPriorityAndIdNot(String formName, Long stepId, Integer sortPriority, Integer id);
 
@@ -50,5 +50,5 @@ public interface FormItemsRepository extends DomainIdRepository<FormItemEntity, 
     @Query("SELECT COUNT(fie.id) FROM FormItemEntity fie WHERE fie.formName = :formName AND fie.id = :id AND fie.itemFormId = :itemFormId AND fie.domainId = :domainId")
     Optional<Integer> countItemsByIdAndItemFormId(@Param("formName") String formName, @Param("id") Long id, @Param("itemFormId") String itemFormId, @Param("domainId") Integer domainId);
 
-    List<FormItemEntity> findAllByFormNameAndIdIn(String formName, List<Long> ids);
+    List<FormItemEntity> findAllByFormNameAndIdInAndDomainId(String formName, List<Long> ids, Integer domainId);
 }

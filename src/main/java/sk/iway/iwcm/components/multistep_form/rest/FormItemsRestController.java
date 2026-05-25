@@ -78,7 +78,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         boolean even = false;
         for(FormItemEntity item : page.getContent()) {
             if(lastStep == null) lastStep = item.getStepId();
-            else if(lastStep != item.getStepId()) {
+            else if(lastStep.intValue() != item.getStepId().intValue()) {
                 lastStep = item.getStepId();
                 even = !even;
             }
@@ -157,7 +157,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
 
         Pair<String, String> chartStatInfo = MultistepFormsService.getChartStatInfo(getRequest());
         if(chartStatInfo != null) {
-            entity = formItemsRepository.findFirstByFormNameAndItemFormIdOrderBySortPriorityAsc(chartStatInfo.getFirst(), chartStatInfo.getSecond());
+            entity = formItemsRepository.findFirstByFormNameAndItemFormIdAndDomainIdOrderBySortPriorityAsc(chartStatInfo.getFirst(), chartStatInfo.getSecond(), CloudToolsForCore.getDomainId());
             return processFromEntity(entity, ProcessItemAction.GETONE);
         }
 
@@ -180,7 +180,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
     public FormItemEntity insertItem(FormItemEntity entity) {
         Pair<String, String> chartStatInfo = MultistepFormsService.getChartStatInfo(getRequest());
         if(chartStatInfo != null) {
-            FormItemEntity originalEntity = formItemsRepository.findFirstByFormNameAndItemFormIdOrderBySortPriorityAsc(chartStatInfo.getFirst(), chartStatInfo.getSecond());
+            FormItemEntity originalEntity = formItemsRepository.findFirstByFormNameAndItemFormIdAndDomainIdOrderBySortPriorityAsc(chartStatInfo.getFirst(), chartStatInfo.getSecond(), CloudToolsForCore.getDomainId());
             if(entity != null) {
                 entity = processToEntity(entity, null);
 
@@ -211,7 +211,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
 
         StringBuilder sb = new StringBuilder("");
         for(Integer regexId : entity.getRegexValidationArr()) sb.append(regexId).append("+");
-        entity.setRegexValidation(sb.length() > 0 ? sb.substring(0, sb.length() - 1) : "");
+        entity.setRegexValidation(sb.isEmpty() == false ? sb.substring(0, sb.length() - 1) : "");
 
         //Prepare itemFormId - if insert OR always for radio (because you can change the field label)
         if(entity.getId() == null || entity.getId() < 1 || "radio".equals(entity.getFieldType())) {
@@ -337,14 +337,14 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
             }
         }
 
-        if(inputClasses == null || inputClasses.size() < 1) return regexIds;
+        if(inputClasses.size() < 1) return regexIds;
         else return regExpRepository.findRegexIdsByTypeIn(inputClasses);
     }
 
     private void validateFieldConditionDependencies(FormItemEntity entity, boolean isDelete) {
         List<Long> conditionsUsingField = formItemsConditionsRepository.getDependedItems(entity.getFormName(), entity.getItemFormId(), CloudToolsForCore.getDomainId());
         if(conditionsUsingField != null && conditionsUsingField.size() > 0) {
-            List<FormItemEntity> items = formItemsRepository.findAllByFormNameAndIdIn(entity.getFormName(), conditionsUsingField);
+            List<FormItemEntity> items = formItemsRepository.findAllByFormNameAndIdInAndDomainId(entity.getFormName(), conditionsUsingField, CloudToolsForCore.getDomainId());
 
             Prop prop = getProp();
             StringBuilder sb = new StringBuilder(prop.getText("components.form_items.bind_condition_notif.msg"));

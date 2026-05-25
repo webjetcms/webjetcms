@@ -214,7 +214,6 @@ public class MultistepFormsService {
         return options;
     }
 
-
     /**
      * Provide tab visibility configuration per field type.
      * <p>
