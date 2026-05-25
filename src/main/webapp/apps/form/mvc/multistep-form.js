@@ -168,7 +168,7 @@ export class MultistepForm {
         form.querySelectorAll('input, textarea, select').forEach(el => {
             if (!el.name) return;
             // Skip fields hidden by visibility conditions
-            if (el.hasAttribute('data-visibility-disabled')) return;
+            if (el.dataset.visibilityDisabled === 'true') return;
             if (el.type === 'checkbox' || el.type === 'radio') {
                 if (!el.checked) return;
             }
@@ -308,11 +308,12 @@ export class MultistepForm {
             const field = this._resolveFieldWrapper(itemFormId);
             if (!field) continue;
 
+            // Mark as animation-capable for CSS transitions
+            field.classList.add('mf-visibility-animated');
+
             // Apply server-side hidden state for cross-step conditions
             if (entry.hidden) {
-                field.style.display = 'none';
-                const inputs = field.querySelectorAll('input, select, textarea');
-                inputs.forEach(inp => inp.setAttribute('data-visibility-disabled', 'true'));
+                this._setFieldVisibility(field, false, false);
             }
 
             this.visibilityConditions.set(field, conditions);
@@ -379,17 +380,7 @@ export class MultistepForm {
 
         const allMet = combinedResult !== null ? combinedResult : true;
 
-        field.style.display = allMet ? '' : 'none';
-
-        // Also disable/enable inputs inside so they don't get submitted when hidden
-        const inputs = field.querySelectorAll('input, select, textarea');
-        inputs.forEach(input => {
-            if (allMet) {
-                input.removeAttribute('data-visibility-disabled');
-            } else {
-                input.setAttribute('data-visibility-disabled', 'true');
-            }
-        });
+        this._setFieldVisibility(field, allMet, true);
 
         // Re-evaluate requirement conditions since visibility may affect them
         this.requirementConditions.forEach((reqConds, reqField) => {
@@ -482,11 +473,117 @@ export class MultistepForm {
         let allMet = combinedResult !== null ? combinedResult : true;
 
         // If field is hidden by visibility conditions, don't make it required
-        if (field.style.display === 'none') {
+        if (this._isFieldHidden(field)) {
             allMet = false;
         }
 
         this._setFieldRequired(field, allMet);
+    }
+
+    /**
+     * Set field visibility with optional fade/scale animation.
+     * Hidden fields are marked so they are skipped during submit.
+     * @param {HTMLElement} field - The field wrapper element (.form-group).
+     * @param {boolean} visible - Whether the field should be visible.
+     * @param {boolean} [animate=true] - Whether to animate the transition.
+     */
+    _setFieldVisibility(field, visible, animate = true) {
+        if (!field) return;
+
+        const inputs = field.querySelectorAll('input, select, textarea');
+        const transitionDurationMs = 260;
+        const currentlyHidden = this._isFieldHidden(field);
+
+        if (field._visibilityTimeoutId) {
+            window.clearTimeout(field._visibilityTimeoutId);
+            field._visibilityTimeoutId = null;
+        }
+
+        // Avoid replaying animations when visibility state has not changed.
+        if (visible && !currentlyHidden) {
+            inputs.forEach(input => { delete input.dataset.visibilityDisabled; });
+            return;
+        }
+        if (!visible && currentlyHidden) {
+            inputs.forEach(input => { input.dataset.visibilityDisabled = 'true'; });
+            return;
+        }
+
+        if (visible) {
+            inputs.forEach(input => { delete input.dataset.visibilityDisabled; });
+
+            field.style.display = '';
+            field.classList.remove('mf-hide', 'mf-collapsed');
+
+            if (!animate) {
+                field.classList.remove('mf-enter', 'mf-collapsed');
+                field.style.maxHeight = '';
+                return;
+            }
+
+            // Start from collapsed state and smoothly expand to content height.
+            field.classList.add('mf-collapsed', 'mf-enter');
+            field.style.maxHeight = '0px';
+            field.getBoundingClientRect();
+
+            const targetHeight = field.scrollHeight;
+            field.style.maxHeight = `${targetHeight}px`;
+
+            window.requestAnimationFrame(() => {
+                field.classList.remove('mf-collapsed', 'mf-enter');
+            });
+
+            field._visibilityTimeoutId = window.setTimeout(() => {
+                field.style.maxHeight = '';
+                if (field._visibilityTimeoutId) {
+                    window.clearTimeout(field._visibilityTimeoutId);
+                    field._visibilityTimeoutId = null;
+                }
+            }, transitionDurationMs);
+
+            return;
+        }
+
+        inputs.forEach(input => { input.dataset.visibilityDisabled = 'true'; });
+
+        if (!animate || field.style.display === 'none') {
+            field.style.display = 'none';
+            field.classList.remove('mf-hide', 'mf-enter');
+            field.classList.add('mf-collapsed');
+            field.style.maxHeight = '0px';
+            return;
+        }
+
+        // Animate collapse so following fields move up smoothly.
+        const currentHeight = field.scrollHeight;
+        field.style.maxHeight = `${currentHeight}px`;
+        field.getBoundingClientRect();
+
+        field.classList.remove('mf-enter');
+        field.classList.add('mf-hide', 'mf-collapsed');
+        field.style.maxHeight = '0px';
+
+        const finishHide = () => {
+            field.style.display = 'none';
+            field.classList.remove('mf-hide');
+            field.style.maxHeight = '0px';
+            if (field._visibilityTimeoutId) {
+                window.clearTimeout(field._visibilityTimeoutId);
+                field._visibilityTimeoutId = null;
+            }
+        };
+
+        field._visibilityTimeoutId = window.setTimeout(finishHide, transitionDurationMs);
+    }
+
+    /**
+     * Determine whether a field should be treated as hidden.
+     * @param {HTMLElement} field - The field wrapper element.
+     * @returns {boolean} true if hidden or in hide transition.
+     */
+    _isFieldHidden(field) {
+        if (!field) return true;
+        return field.style.display === 'none' || field.classList.contains('mf-hide') || field.classList.contains('mf-collapsed');
     }
 
     /**

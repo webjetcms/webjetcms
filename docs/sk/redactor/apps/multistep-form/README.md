@@ -116,8 +116,8 @@ Pre každú položku formulára môžete nastaviť pravidlá, ktoré dynamicky m
 
 K dispozícii sú dve samostatné karty:
 
-- **Podmienky zobrazenia** - určujú, či sa položka zobrazí alebo skryje.
-- **Podmienky povinnosti** - určujú, či bude položka povinná alebo nepovinná.
+- **Zobrazenie** - určujú, či sa položka zobrazí alebo skryje (podmienky zobrazenia).
+- **Povinnosť** - určujú, či bude položka povinná alebo nepovinná (podmienky povinnosti).
 
 Obe karty používajú rovnaký typ pravidiel a rovnaký spôsob vyhodnocovania. Líšia sa iba výsledným efektom. Nastavenia z jednej karty neovplyvňujú nastavenia druhej karty.
 

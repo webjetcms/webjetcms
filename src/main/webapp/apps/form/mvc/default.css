@@ -1,0 +1,18 @@
+.multistep-form-app .form-group.mf-visibility-animated {
+    overflow: hidden;
+    transform-origin: top center;
+    transition: max-height 0.26s ease, margin-top 0.26s ease, margin-bottom 0.26s ease, opacity 0.2s ease, transform 0.2s ease;
+}
+
+.multistep-form-app .form-group.mf-visibility-animated.mf-enter,
+.multistep-form-app .form-group.mf-visibility-animated.mf-hide {
+    opacity: 0;
+    transform: scale(0.97);
+}
+
+.multistep-form-app .form-group.mf-visibility-animated.mf-collapsed {
+    max-height: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    pointer-events: none;
+}

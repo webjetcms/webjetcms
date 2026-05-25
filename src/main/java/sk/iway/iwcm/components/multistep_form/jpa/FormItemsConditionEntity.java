@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,6 +32,10 @@ public class FormItemsConditionEntity {
     // Used as fast reference to get all form items conditions
     @Column(name = "form_name")
     private String formName;
+
+    @DataTableColumn(inputType = DataTableColumnType.STATIC_TEXT, title = "components.form_items_condition.infolabel", filter = false, orderable = false)
+    @Transient
+    private String infolabel;
 
     @Column(name = "sort_priority")
     @DataTableColumn(inputType = DataTableColumnType.ROW_REORDER, title = "editor.sort_order", filter = false)
