@@ -137,4 +137,18 @@ public class FormItemsConditionsRestController extends DatatableRestControllerV2
 
         return entity;
     }
+
+    @Override
+    public void afterSave(FormItemsConditionEntity entity, FormItemsConditionEntity saved) {
+        if (saved != null) {
+            FormConditionsHandler.clearConditionsCache(saved.getFormItemId(), saved.getDomainId());
+        }
+    }
+
+    @Override
+    public void afterDelete(FormItemsConditionEntity entity, long id) {
+        if (entity != null) {
+            FormConditionsHandler.clearConditionsCache(entity.getFormItemId(), entity.getDomainId());
+        }
+    }
 }

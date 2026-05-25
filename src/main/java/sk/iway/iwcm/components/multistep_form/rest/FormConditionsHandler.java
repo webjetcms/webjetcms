@@ -12,6 +12,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import jakarta.servlet.http.HttpServletRequest;
+import javax.annotation.Nullable;
+import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -26,11 +28,26 @@ import sk.iway.iwcm.components.multistep_form.jpa.OperatorType;
 
 public class FormConditionsHandler {
 
+    private static final String CACHE_KEY_PREFIX = "multistep_form.conditions.";
+    private static final int CACHE_MINUTES = 10;
+
     private final FormItemsConditionsRepository formItemsConditionsRepository;
     private final FormItemsRepository formItemsRepository;
 
     private String formName;
     private HttpServletRequest request;
+
+    private static String getConditionsCacheKey(Long formItemId, ConditionType conditionType, Integer domainId) {
+        return CACHE_KEY_PREFIX + domainId + "." + formItemId + "." + conditionType.name();
+    }
+
+    public static void clearConditionsCache(Long formItemId, Integer domainId) {
+        if (formItemId == null || domainId == null) return;
+
+        Cache cache = Cache.getInstance();
+        cache.removeObject(getConditionsCacheKey(formItemId, ConditionType.VISIBILITY, domainId), true);
+        cache.removeObject(getConditionsCacheKey(formItemId, ConditionType.REQUIREMENT, domainId), true);
+    }
 
     public FormConditionsHandler(String formName, HttpServletRequest request) {
 
@@ -55,6 +72,7 @@ public class FormConditionsHandler {
      * @param received the current step's submitted JSON data
      * @return true if the field should be hidden (conditions NOT met), false if visible
      */
+    @Nullable
     protected Boolean isFieldHiddenByCondition(FormItemEntity stepItem, JSONObject received) {
         Boolean result = evaluateFieldConditions(stepItem, received, ConditionType.VISIBILITY);
         return result == null ? null : !result;
@@ -69,6 +87,7 @@ public class FormConditionsHandler {
      * @param received the current step's submitted JSON data
      * @return true if the field should be required (all conditions met), false otherwise
      */
+    @Nullable
     protected Boolean isFieldRequiredByCondition(FormItemEntity stepItem, JSONObject received) {
         return evaluateFieldConditions(stepItem, received, ConditionType.REQUIREMENT);
     }
@@ -82,12 +101,17 @@ public class FormConditionsHandler {
      * @param conditionType the type of conditions to evaluate (VISIBILITY or REQUIREMENT)
      * @return true if all conditions are met, false if not met, null if no conditions found
      */
+    @Nullable
     private Boolean evaluateFieldConditions(FormItemEntity stepItem, JSONObject received, ConditionType conditionType) {
+        Integer domainId = CloudToolsForCore.getDomainId();
+        String cacheKey = getConditionsCacheKey(stepItem.getId(), conditionType, domainId);
 
-        List<FormItemsConditionEntity> conditions = null;
+        @SuppressWarnings("unchecked")
+        List<FormItemsConditionEntity> conditions = (List<FormItemsConditionEntity>) Cache.getInstance().getObject(cacheKey);
 
-        if(conditions == null) {
-            conditions = formItemsConditionsRepository.findAllByFormItemIdAndConditionTypeAndDomainIdOrderBySortPriorityAsc(stepItem.getId(), conditionType, CloudToolsForCore.getDomainId());
+        if (conditions == null) {
+            conditions = formItemsConditionsRepository.findAllByFormItemIdAndConditionTypeAndDomainIdOrderBySortPriorityAsc(stepItem.getId(), conditionType, domainId);
+            Cache.getInstance().setObject(cacheKey, new ArrayList<>(conditions), CACHE_MINUTES);
         }
 
         if (conditions == null || conditions.isEmpty()) return null; // no conditions found
