@@ -140,7 +140,7 @@ export class MultistepForm {
 
             // init cleditor if needed
             window.setTimeout(() => {
-                if (window.$ && $.fn && $.fn.cleditor) {
+                if (window.$ && $.fn?.cleditor) {
                     $(this.wrapper).find("textarea.formsimple-wysiwyg").cleditor({
                         width: '100%',
                         controls: 'bold italic underline bullets numbering outdent indent image link icon size color highlight pastetext',
@@ -173,7 +173,7 @@ export class MultistepForm {
                 if (!el.checked) return;
             }
             const value = el.value;
-            if (Object.prototype.hasOwnProperty.call(result, el.name)) {
+            if (Object.hasOwn(result, el.name)) {
                 if (Array.isArray(result[el.name])) {
                     result[el.name].push(value);
                 } else {
@@ -685,7 +685,7 @@ export class MultistepForm {
         if (el) return el.value || '';
 
         // Fallback to stored values from previous steps
-        if (Object.prototype.hasOwnProperty.call(this.submittedValues, fieldId)) {
+        if (Object.hasOwn(this.submittedValues, fieldId)) {
             const val = this.submittedValues[fieldId];
             return Array.isArray(val) ? val.join(',') : (val || '');
         }

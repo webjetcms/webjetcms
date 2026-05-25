@@ -11,6 +11,6 @@ public enum ConditionType {
                 return type;
             }
         }
-        throw new IllegalArgumentException("Unknown ConditionType: " + value);
+        return null;
     }
 }

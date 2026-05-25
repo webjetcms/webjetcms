@@ -286,7 +286,7 @@ public class MultistepFormsService {
     public static final Map<String, String> getFormDataAsMap(FormsEntity form) {
         Map<String, String> formData = new LinkedHashMap<>();
         for(String fieldData : Tools.getTokens(form.getData(), "|")) {
-            String fieldDataArr[] = Tools.getTokens(fieldData, "~");
+            String[] fieldDataArr = Tools.getTokens(fieldData, "~");
             String fieldId = fieldDataArr[0];
             if(fieldId.endsWith("-fileNames")) fieldId = fieldId.replace("-fileNames", "");
             String fieldValue = fieldDataArr.length == 2 ? fieldDataArr[1] : "";
@@ -305,7 +305,7 @@ public class MultistepFormsService {
      */
     public static final String getFieldName (FormItemEntity stepItem, Prop prop) {
         String fieldName = "";
-        if(Tools.isEmpty(stepItem.getLabel())) fieldName = prop.getText("components.formsimple.label." + stepItem.getFieldType());
+        if(Tools.isEmpty(stepItem.getLabel())) fieldName = prop.getText(ITEM_KEY_LABEL_PREFIX + stepItem.getFieldType());
         else fieldName = new Html2Text( StringEscapeUtils.unescapeHtml4(stepItem.getLabel()) ).getText();
         return fieldName;
     }
@@ -320,7 +320,7 @@ public class MultistepFormsService {
         String formName = Tools.getStringValue(request.getParameter("formName"), "");
         String itemFormId = Tools.getStringValue(request.getParameter("itemFormId"), "");
 
-        if(Tools.isNotEmpty(formName) && Tools.isNotEmpty(itemFormId)) return new Pair<String,String>(formName, itemFormId);
+        if(Tools.isNotEmpty(formName) && Tools.isNotEmpty(itemFormId)) return new Pair<>(formName, itemFormId);
         else return null;
     }
 
@@ -347,7 +347,7 @@ public class MultistepFormsService {
      * @return sorted condition field options grouped by step labels
      */
     public final List<LabelValue> getAvailableConditionFields(String formName, Integer stepId, Prop prop) {
-        int currentPosition = new SimpleQuery().forInt("SELECT current_position FROM form_steps WHERE id = ?", stepId);
+        int currentPosition = new SimpleQuery().forInt("SELECT current_position FROM form_steps WHERE id = ? AND domain_id = ?", stepId, CloudToolsForCore.getDomainId());
 
         Map<Long, String> stepNames = new HashMap<>();
         Map<Long, Integer> stepPositions = new HashMap<>();
@@ -396,7 +396,7 @@ public class MultistepFormsService {
             .sorted(Comparator
                 .comparingInt((FormItemEntity fie) -> stepPositions.getOrDefault(fie.getStepId().longValue(), 0))
                 .thenComparingInt(fie -> fie.getSortPriority() != null ? fie.getSortPriority() : 0))
-            .collect(Collectors.toList());
+            .toList();
 
         List<LabelValue> options = new ArrayList<>();
         String previousItemFormId = null;
@@ -532,7 +532,7 @@ public class MultistepFormsService {
             if(stepItem.getFieldType().startsWith("captcha")) continue; // captcha is not saved in DB
 
             if(patternData.isEmpty()) patternData.append(stepItem.getItemFormId());
-            else patternData.append("|~" + stepItem.getItemFormId());
+            else patternData.append("|~").append(stepItem.getItemFormId());
 
             if(stepItem.getFieldType().startsWith(MULTIUPLOAD_PREFIX)) patternData.append("-fileNames");
         }
@@ -585,7 +585,7 @@ public class MultistepFormsService {
         // STEP VALIDATION
         customStepValidation(formProcessor, formName, validStepEntity, received, request, errors);
 
-        if(errors == null || errors.size() < 1) {
+        if(errors.isEmpty()) {
             // RUN STEP INTERCEPTOR
             customStepInterceptor(formProcessor, formName, validStepEntity, received, request, errors);
 
@@ -732,8 +732,11 @@ public class MultistepFormsService {
         for(FormItemEntity stepItem : getStepItemsForValidation(stepId)) {
             String[] values = asArray(stepItem.getItemFormId(), received);
             String stringValue = Tools.join(values, ",");
-            if("captcha".equals(stepItem.getFieldType())) continue;
-            else request.getSession().setAttribute(prefix + stepItem.getItemFormId(), stringValue);
+            if("captcha".equals(stepItem.getFieldType())) {
+                // Skip captcha fields
+            } else {
+                request.getSession().setAttribute(prefix + stepItem.getItemFormId(), stringValue);
+            }
         }
     }
 
@@ -821,7 +824,7 @@ public class MultistepFormsService {
 
                 if(value.matches(regex) == false) {
                     if (DocTools.testXss(value)) value = "";
-					if (DocTools.testXss(itemFormId)) itemFormId = "";
+                    if (DocTools.testXss(itemFormId)) itemFormId = "";
 
                     value = ResponseUtils.filter(value);
 
@@ -896,7 +899,7 @@ public class MultistepFormsService {
                     // Collect file name
                     String tempFileName = uploadService.getTempFileName(fileKey);
                     if (Tools.isNotEmpty(tempFileName)) {
-                        if (fileNames.length() > 0) fileNames.append(",");
+                        if (fileNames.isEmpty() == false) fileNames.append(",");
                         fileNames.append(tempFileName);
 
                         String originalFileName = uploadService.getOriginalFileName(fileKey);
