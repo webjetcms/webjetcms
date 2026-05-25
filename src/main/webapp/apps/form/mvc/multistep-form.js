@@ -168,7 +168,7 @@ export class MultistepForm {
         form.querySelectorAll('input, textarea, select').forEach(el => {
             if (!el.name) return;
             // Skip fields hidden by visibility conditions
-            if (el.dataset.visibilityDisabled === 'true') return;
+            if (this._isFieldHidden(el.closest('.form-group') || el.parentElement)) return;
             if (el.type === 'checkbox' || el.type === 'radio') {
                 if (!el.checked) return;
             }
@@ -490,7 +490,6 @@ export class MultistepForm {
     _setFieldVisibility(field, visible, animate = true) {
         if (!field) return;
 
-        const inputs = field.querySelectorAll('input, select, textarea');
         const transitionDurationMs = 260;
         const currentlyHidden = this._isFieldHidden(field);
 
@@ -500,18 +499,10 @@ export class MultistepForm {
         }
 
         // Avoid replaying animations when visibility state has not changed.
-        if (visible && !currentlyHidden) {
-            inputs.forEach(input => { delete input.dataset.visibilityDisabled; });
-            return;
-        }
-        if (!visible && currentlyHidden) {
-            inputs.forEach(input => { input.dataset.visibilityDisabled = 'true'; });
-            return;
-        }
+        if (visible && !currentlyHidden) return;
+        if (!visible && currentlyHidden) return;
 
         if (visible) {
-            inputs.forEach(input => { delete input.dataset.visibilityDisabled; });
-
             field.style.display = '';
             field.classList.remove('mf-hide', 'mf-collapsed');
 
@@ -543,8 +534,6 @@ export class MultistepForm {
 
             return;
         }
-
-        inputs.forEach(input => { input.dataset.visibilityDisabled = 'true'; });
 
         if (!animate || field.style.display === 'none') {
             field.style.display = 'none';
