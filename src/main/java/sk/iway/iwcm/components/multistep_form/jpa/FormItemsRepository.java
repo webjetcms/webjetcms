@@ -47,8 +47,8 @@ public interface FormItemsRepository extends DomainIdRepository<FormItemEntity, 
 
     List<FormItemEntity> findAllByFormNameAndStepIdInAndDomainId(String formName, List<Integer> stepIds, Integer domainId);
 
-    @Query("SELECT COUNT(fie.id) FROM FormItemEntity fie WHERE fie.formName = :formName AND fie.id = :id AND fie.itemFormId = :itemFormId")
-    Optional<Integer> countItemsByIdAndItemFormId(@Param("formName") String formName, @Param("id") Long id, @Param("itemFormId") String itemFormId);
+    @Query("SELECT COUNT(fie.id) FROM FormItemEntity fie WHERE fie.formName = :formName AND fie.id = :id AND fie.itemFormId = :itemFormId AND fie.domainId = :domainId")
+    Optional<Integer> countItemsByIdAndItemFormId(@Param("formName") String formName, @Param("id") Long id, @Param("itemFormId") String itemFormId, @Param("domainId") Integer domainId);
 
     List<FormItemEntity> findAllByFormNameAndIdIn(String formName, List<Long> ids);
 }

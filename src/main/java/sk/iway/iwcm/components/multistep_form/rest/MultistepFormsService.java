@@ -218,7 +218,7 @@ public class MultistepFormsService {
     /**
      * Provide tab visibility configuration per field type.
      * <p>
-     * Depending on the field type, returns tabs that should be shown in admin:
+     * Depending on the field type, returns list of tabs that should be shown in admin:
      * visibility conditions, requirement conditions, both, or none.
      *
      * @param request request used to resolve localized labels and field metadata

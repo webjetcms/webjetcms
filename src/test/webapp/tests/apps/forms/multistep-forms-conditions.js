@@ -26,14 +26,14 @@ Scenario('Base tests', ({ I, DT, DTE }) => {
     I.amOnPage("/apps/form/admin/form-steps/?formName=" + formName);
     DT.waitForLoader();
 
-    I.say("Test tabs visbility CREATE - do not see conditions tabs");
+    I.say("Test tabs visibility CREATE - do not see conditions tabs");
         I.click(DT.btn.formItems_add_button);
         DTE.waitForEditor("formItemsDataTable");
         I.dontSeeElement(visibilityConditions);
         I.dontSeeElement(requirementConditions);
         DTE.cancel();
 
-    I.say("Test tabs visbility EDIT - see conditions tabs");
+    I.say("Test tabs visibility EDIT - see conditions tabs");
         I.clickCss("#formItemsDataTable td.sorting_1");
         I.click(DT.btn.formItems_edit_button);
         DTE.waitForEditor("formItemsDataTable");

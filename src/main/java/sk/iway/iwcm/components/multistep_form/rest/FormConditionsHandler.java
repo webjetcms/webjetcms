@@ -29,9 +29,6 @@ public class FormConditionsHandler {
     private final FormItemsConditionsRepository formItemsConditionsRepository;
     private final FormItemsRepository formItemsRepository;
 
-    private final Map<Long, Map<ConditionType, List<FormItemsConditionEntity>>> conditionsCache = new HashMap<>();
-
-
     private String formName;
     private HttpServletRequest request;
 
@@ -42,10 +39,10 @@ public class FormConditionsHandler {
         this.request = request;
 
         this.formItemsConditionsRepository = Tools.getSpringBean("formItemsConditionsRepository", FormItemsConditionsRepository.class);
-        if(this.formItemsConditionsRepository == null) throw new IllegalStateException("FormHtmlHandler was not able to obtain FormItemsConditionsRepository");
+        if(this.formItemsConditionsRepository == null) throw new IllegalStateException("FormConditionsHandler was not able to obtain FormItemsConditionsRepository");
 
         this.formItemsRepository = Tools.getSpringBean("formItemsRepository", FormItemsRepository.class);
-        if(this.formItemsRepository == null) throw new IllegalStateException("FormHtmlHandler was not able to obtain FormItemsRepository");
+        if(this.formItemsRepository == null) throw new IllegalStateException("FormConditionsHandler was not able to obtain FormItemsRepository");
     }
 
 
@@ -83,16 +80,11 @@ public class FormConditionsHandler {
      * @param stepItem the form item with conditions
      * @param received the current step's submitted JSON data
      * @param conditionType the type of conditions to evaluate (VISIBILITY or REQUIREMENT)
-     * @param conditionsCache optional cache of conditions for performance
      * @return true if all conditions are met, false if not met, null if no conditions found
      */
     private Boolean evaluateFieldConditions(FormItemEntity stepItem, JSONObject received, ConditionType conditionType) {
 
         List<FormItemsConditionEntity> conditions = null;
-        if (conditionsCache != null) {
-            Map<ConditionType, List<FormItemsConditionEntity>> byType = conditionsCache.get(stepItem.getId());
-            if (byType != null) conditions = byType.get(conditionType);
-        }
 
         if(conditions == null) {
             conditions = formItemsConditionsRepository.findAllByFormItemIdAndConditionTypeAndDomainIdOrderBySortPriorityAsc(stepItem.getId(), conditionType, CloudToolsForCore.getDomainId());

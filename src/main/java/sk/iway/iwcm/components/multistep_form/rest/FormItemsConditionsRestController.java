@@ -121,7 +121,7 @@ public class FormItemsConditionsRestController extends DatatableRestControllerV2
         String formName = Tools.getStringValue(getRequest().getParameter("formName"), null);
 
         if(itemId > 0 && Tools.isNotEmpty(itemFormId)) {
-            formItemsRepository.countItemsByIdAndItemFormId(formName, Long.valueOf(itemId), itemFormId).ifPresent(count -> {
+            formItemsRepository.countItemsByIdAndItemFormId(formName, Long.valueOf(itemId), itemFormId, CloudToolsForCore.getDomainId()).ifPresent(count -> {
                 if(count > 0) errors.rejectValue("errorField.itemFormId", "", getProp().getText("components.form_items_condition.cant_point_to_self_err"));
             });
         }
