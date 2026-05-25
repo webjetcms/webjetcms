@@ -128,6 +128,7 @@
   - [Send page by email](/redactor/apps/send_link/README.md)
   - [Impressive Slideshow](/redactor/apps/app-impress_slideshow/README.md)
   - [Users](/redactor/apps/user/README.md)
+  - [Language Redirect](/redactor/apps/language-redirect/README.md)
   - [Proxy](/redactor/apps/proxy/README.md)
   - [Related pages](/redactor/apps/related-pages/README.md)
   - Reservations

@@ -4,6 +4,23 @@
 
 > Vývojová verze aktualizovaná z main repozitáře.
 
+### Webové stránky
+
+- Šablony - přidána možnost nastavit přesun `<style>` a `<link rel="stylesheet">` značek z těla stránky do `<head>` přes [volbu v šabloně](frontend/templates/templates.md) s podporou globální konfigurační proměnné `showDocMoveStyleToHead`. Bloky v IE podmínkách, `noscript` a `script` zůstávají na místě (#231).
+
+![](frontend/templates/templates-edit-advanced.png)
+
+### Aplikace
+
+- Přidána nová aplikace [Přesměrování podle jazyka](redactor/apps/language-redirect/README.md) pro automatické přesměrování návštěvníků na jazykovou verzi stránky podle detekce jazyka z HTTP hlavičky `Accept-Language`. Podporuje až 8 přiřazení jazyků na URL adresy, respektování jazykového cookie a možnost přesměrování pouze na kořenové URL (#58497).
+
+![](redactor/apps/language-redirect/editor-basic.png)
+
+### Dokumentace
+
+- Vytvořena nová sekce [Přehled nových vlastností](sales/README.md) která obsahuje popisy nových vlastností a **funkcionalit WebJET CMS srozumitelným jazykem**, bez zbytečně technických formulací (#58505).
+- Vytvořená sekce [Řešení problémů](sysadmin/troubleshooting/README.md) v manuálu pro provoz.
+
 ## 2026.18
 
 > WebJET CMS 2026.18 přináší **schvalování změn složek** s podporou víceúrovňového schvalování a **testování přístupnosti** integrované přímo do automatizovaných testů.

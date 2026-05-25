@@ -10,17 +10,36 @@ The number of uses column shows the number of pages that use the template. If it
 
 ## Template editor
 
-![](templates-edit.png)
-
 ### Basic tab
+
+![](templates-edit.png)
 
 - Template group - assigning a template to [template group](template-groups.md).
 - HTML template defines which JSP/HTML template will be used (the HTML template must be saved in the `/templates` folder and have the extension `jsp` or `html`).
 - Page editor type - defines what type of page editor will be used, for complex websites typically [Page Builder](../page-builder/README.md) is used. By default, the value set in the template group is inherited.
-- Installation name - when viewing the template, it is possible to change the installation name, which affects the application versions used - allows you to use a specifically modified application in the `/components/MENO_INSTALACIE/aplikacia/` folder for the template.
+
+### Advanced tab
+
+![](templates-edit-advanced.png)
+
+- Installation name - when viewing a template, it is possible to change the installation name, which affects the application versions used. It allows you to use a specifically modified application in the `/components/MENO_INSTALACIE/aplikacia/` folder for the template.
 - Disable spam protection - disable spam protection if the page in this template is loaded using a REST service, or if it is a page used for mass email.
+- Move styles to `head` - ​​determines the processing of `<style>` and `<link rel="stylesheet">` tags that can be generated in the page body (e.g. from components):
+  - By configuration variable - will use the global setting of the configuration variable `showDocMoveStyleToHead`.
+  - On - forces styles to be moved to `<head>` for this template regardless of the global setting.
+  - Disabled - disables style shifting for this template regardless of the global setting.
+
+The configuration variable `showDocMoveStyleToHead` serves as the default value for the entire solution. A setting in the template can override it for a specific layout.
+
+Importance and impact on performance:
+
+- HTML output is more valid because styles and stylesheet links are consolidated in the document head instead of the page body.
+- When enabled, additional HTML processing (stylesheet retrieval and extraction) is performed, which may increase CPU time when displaying the page.
+- Blocks in IE conditions, `script` and `noscript` remain in place.
 
 ### Style tab
+
+![](templates-edit-style.png)
 
 - Main CSS style - a list of references to the CSS file that the template uses. The specified CSS will also be used to get a list of CSS styles for selection in the page editor.
 - Secondary CSS style - additional CSS style, not used for the Styles drop-down menu in the page editor.
@@ -32,6 +51,8 @@ The page editor in the admin area automatically looks for the `/templates/templa
 
 ### Template tab
 
+![](templates-edit-templates.png)
+
 - Assigning web pages used as headers, footers, etc.
 
 ![](disp_process.png)
@@ -42,13 +63,19 @@ Web pages defining the header, footer, and menu are inserted into the HTML templ
 
 ### Access tab
 
+![](templates-edit-access.png)
+
 Allows you to define folders for which the template will be displayed for selection when editing a web page.
 
 ### Folders tab
 
+![](templates-edit-folders.png)
+
 For an existing template, it displays a list of folders that have the displayed template set as the default template for creating a new web page.
 
 ### Websites tab
+
+![](templates-edit-sites.png)
 
 For an existing template, it displays a list of websites that use the template.
 

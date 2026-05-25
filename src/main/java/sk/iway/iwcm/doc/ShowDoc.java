@@ -40,6 +40,8 @@ import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.components.response_header.rest.ResponseHeaderService;
 import sk.iway.iwcm.doc.ninja.Amp;
 import sk.iway.iwcm.doc.ninja.Ninja;
+import sk.iway.iwcm.doc.showdoc.ContentCapturingResponseWrapper;
+import sk.iway.iwcm.doc.showdoc.StyleToHeadHelper;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -54,9 +56,9 @@ import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
 
-@WebServlet(name = "ShowDoc2",
-            urlPatterns = {"/showdoc.do"}
-            )
+
+@SuppressWarnings({"java:S3776"})
+@WebServlet(name = "ShowDoc2", urlPatterns = {"/showdoc.do"})
 public class ShowDoc extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
@@ -301,6 +303,8 @@ private static String combineCss(String cssStyle)
     public static void setRequestData(TemplateDetails temp, HttpServletRequest request)
 	{
 		request.setAttribute("templateDetails", temp);
+
+        StyleToHeadHelper.setRequestAttribute(temp, request);
 
 		long tempGroupId = temp.getTemplatesGroupId();
 		if (tempGroupId > 0)
@@ -628,14 +632,15 @@ private static String combineCss(String cssStyle)
             return;
         }
 
-        //TODO: check rights?
-
         DocDB docDB = DocDB.getInstance();
         TemplatesDB tempDB = TemplatesDB.getInstance();
         TemplateDetails temp;
 
         DocDetails doc = null;
         boolean inlineEditorAdmin = user != null && user.isAdmin() && "true".equals(request.getParameter("inlineEditorAdmin"));
+        if (inlineEditorAdmin) {
+            request.setAttribute("inlineEditorAdmin", Boolean.TRUE);
+        }
 
         int group_id = -1;
         try
@@ -1424,7 +1429,7 @@ private static String combineCss(String cssStyle)
                 forward = "/thymeleaf/showdoc";
             }
 
-            request.getRequestDispatcher(forward).forward(request, response);
+            forwardWithBodyProcessing(forward, request, response);
         }
     }
 
@@ -1693,5 +1698,78 @@ private static String combineCss(String cssStyle)
          return true;
         }
         return false;
+    }
+
+    /**
+     * Forward request to JSP/Thymeleaf template with body processing.
+     * If showDocMoveStyleToHead is enabled, captures the response, extracts collected styles
+     * from components, and inserts them into the head section.
+     *
+     * @param forward The forward path (JSP or Thymeleaf template)
+     * @param request The HTTP request
+     * @param response The HTTP response
+     * @throws ServletException if forwarding fails
+     * @throws IOException if I/O error occurs
+     */
+    private void forwardWithBodyProcessing(String forward, HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        if (StyleToHeadHelper.isMoveStyleToHeadEnabled(request)==false) {
+            // Feature disabled, use standard forward
+            request.getRequestDispatcher(forward).forward(request, response);
+            return;
+        }
+
+        // Create response wrapper to capture output
+        ContentCapturingResponseWrapper responseWrapper = new ContentCapturingResponseWrapper(response);
+
+        // Forward to the template - this populates responseWrapper with content
+        request.getRequestDispatcher(forward).include(request, responseWrapper);
+
+        // Flush any buffered content
+        responseWrapper.flushBuffer();
+
+        //set content type from wrapper to original response
+        if (responseWrapper.getContentType() != null) response.setContentType(responseWrapper.getContentType());
+
+        // Handle redirects captured by wrapper
+        if (Tools.isNotEmpty(responseWrapper.getRedirectLocation())) {
+            response.sendRedirect(responseWrapper.getRedirectLocation());
+            StyleToHeadHelper.clearCollectedStyles(request);
+            return;
+        }
+
+        // Handle errors captured by wrapper
+        if (responseWrapper.hasError()) {
+            if (Tools.isNotEmpty(responseWrapper.getErrorMessage())) {
+                response.sendError(responseWrapper.getErrorCode(), responseWrapper.getErrorMessage());
+            } else {
+                response.sendError(responseWrapper.getErrorCode());
+            }
+            StyleToHeadHelper.clearCollectedStyles(request);
+            return;
+        }
+
+        // Get the captured content
+        String capturedContent = responseWrapper.getCapturedContent();
+
+        // Check if we have collected styles to insert
+        if (StyleToHeadHelper.hasCollectedStyles(request) && Tools.isNotEmpty(capturedContent)) {
+            // Insert styles into head section
+            String styles = StyleToHeadHelper.getCollectedStyles(request);
+            String processedHtml = StyleToHeadHelper.insertStylesIntoHead(capturedContent, styles);
+
+            // Write processed content to original response
+            capturedContent = processedHtml;
+        }
+
+        if (capturedContent != null) {
+            byte[] bytes = capturedContent.getBytes(response.getCharacterEncoding() != null ? response.getCharacterEncoding() : SetCharacterEncodingFilter.getEncoding());
+            response.setContentLength(bytes.length);
+            response.getOutputStream().write(bytes);
+        }
+
+        // Clear collected styles
+        StyleToHeadHelper.clearCollectedStyles(request);
     }
 }

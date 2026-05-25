@@ -2,6 +2,7 @@ AA
 accordion
 action
 admini
+administračné
 administračného
 administračnej
 administračnému
@@ -96,6 +97,7 @@ branche
 breadcrumb
 build
 Builder
+Builderi
 buildu
 BVSSLA
 cachuje
@@ -185,6 +187,7 @@ debug
 debugger
 Debugovanie
 debugovať
+deduplikácia
 DeepL
 deepmark
 Definition
@@ -200,6 +203,7 @@ detegovaného
 detegovanej
 detegovaní
 detegovaný
+detegovaným
 Devconatiners
 devcontainers
 developer
@@ -233,6 +237,7 @@ editácii
 editáciou
 editáciu
 editačné
+editačného
 editačný
 editujúcich
 elfinder
@@ -316,6 +321,7 @@ INCLUDE
 Info
 inicializovanie
 iniciálne
+Inkluzívny
 InnoDB
 Instagram
 integrujúce
@@ -326,6 +332,11 @@ invalidovaná
 issues
 javascript
 jazyka
+jazykmi
+jazykom
+jazykov
+jazyku
+jazyky
 JCrop
 JPA
 jquery
@@ -346,6 +357,7 @@ komitov
 komponenách
 komponentou
 konf
+konfigurovateľnosť
 konštruktor
 konštruktora
 konštruktore
@@ -429,6 +441,7 @@ neprerobené
 nespárujú
 nevyhladateľná
 newsletter
+newsletterov
 Ninja
 Nothing
 notifikáciám
@@ -476,8 +489,10 @@ penetračnými
 perex
 perexu
 Persistent
+Personalizácia
 personalizáciu
 personalizovaných
+personalizovať
 perzistentná
 PGP
 phishingovým
@@ -511,6 +526,8 @@ Predpripravené
 Predpripravený
 predvolene
 Predvyplnená
+predvyplnené
+Predvyplnenie
 predvyplní
 pregenerovania
 Pregenerovať
@@ -643,11 +660,13 @@ stránkovaného
 streamovaná
 streamovanie
 streamovanú
+stresujúco
 Struts
 Sur
 SVG
 SVN
 System
+škálovateľnosť
 štýlovania
 štýlovanie
 štýlovaniu

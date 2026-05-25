@@ -175,7 +175,7 @@ public class DataTableColumn {
                 title = "&nbsp;";
             } else {
                 String titleKey = "components." + toLowerUnderscore(controller.getSimpleName()) + "." + toLowerUnderscore(field.getName());
-                title = prop.getText(titleKey);
+                title = prop.getText(titleKey, false);
                 if (titleKey.equals(title)) {
                     if (inputType != null && inputType.length>0 && inputType[0] == DataTableColumnType.ID) {
                         title = prop.getText("datatables.id.js");

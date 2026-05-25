@@ -6,7 +6,8 @@
   "scripts": {
     "docs": "docsify serve .",
     "sitemap": "node sitemapGenerator.js",
-    "translate": "node node_modules/@webjetcms/deepmark/dist/bin.mjs translate --mode hybrid && copyfiles -u 1 -s 'sk/**/*.{png,jpg}' 'cs/' && copyfiles -u 1 -s 'sk/**/*.{png,jpg}' 'en/'",
+    "translate": "node node_modules/@webjetcms/deepmark/dist/bin.mjs translate --mode hybrid && copyfiles -u 1 -s 'sk/**/*.{png,jpg}' 'cs/' && copyfiles -u 1 -s 'sk/**/*.{png,jpg}' 'en/' && npm run fix",
+    "fix": "node posttranslate.js",
     "pdf": "node convert-to-pdf.js",
     "postinstall": "npx replace-in-file \"browser.newPage();\" \"browser.newPage();\n\t\tpage.setDefaultTimeout(0);\" node_modules/docsify-to-pdf/src/render.js"
   },

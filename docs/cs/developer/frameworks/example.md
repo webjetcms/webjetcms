@@ -127,13 +127,13 @@ public interface RedirectsRepository extends JpaRepository<UrlRedirectBean, Long
 }
 ```
 
-Repozitář a JPA bean doporučuji mít ve stejném package. Aby WebJET inicializoval JPA repozitář je následně třeba ještě přidat package do [cs.iway.webjet.v9.V9JpaDBConfig.java](../../../../src/main/java/cs/iway/webjet/v9/V9JpaDBConfig.java) do anotace ```emf.setPackagesToScan```. Samotná JPA beana se inicializuje při startu WebJETu, pokud ji máte v jiném package než ak.iway.iwcm.components nebo sk.iway.iwcm.system a JPA vám nefunguje přidejte v administraci WebJETu v Nastavení->Konfigurace novou proměnnou s názvem `jpaAddPackages`.
+Repozitář a JPA bean doporučuji mít ve stejném package. Aby WebJET inicializoval JPA repozitář je následně třeba ještě přidat package do [cs.iway.webjet.v9.V9JpaDBConfig.java](../../../../src/main/java/sk/iway/webjet/v9/V9JpaDBConfig.java) do anotace ```emf.setPackagesToScan```. Samotná JPA beana se inicializuje při startu WebJETu, pokud ji máte v jiném package než ak.iway.iwcm.components nebo sk.iway.iwcm.system a JPA vám nefunguje přidejte v administraci WebJETu v Nastavení->Konfigurace novou proměnnou s názvem `jpaAddPackages`.
 
 ## Rest služba
 
 Rest služba je poměrně jednoduchá, většina je implementována v super třídě [DatatableRestControllerV2.java](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java). Příkladem je [RedirectRestController.java](../../../../src/main/java/sk/iway/iwcm/components/redirects/RedirectRestController.java):
 
-Pokud se vám REST služba po startu neinicializuje je třeba přidat její package do seznamu inicializovaných Spring packages ve třídě [cs.iway.webjet.v9.V9SpringConfig.java](../../../../src/main/java/cs/iway/webjet/v9/V9Spring
+Pokud se vám REST služba po startu neinicializuje je třeba přidat její package do seznamu inicializovaných Spring packages ve třídě [cs.iway.webjet.v9.V9SpringConfig.java](../../../../src/main/java/sk/iway/webjet/v9/V9Spring
 
 ```java
 package sk.iway.iwcm.components.redirects;
