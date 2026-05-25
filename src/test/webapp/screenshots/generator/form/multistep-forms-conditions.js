@@ -21,12 +21,17 @@ Scenario('Before test preparation', async ({ I, DT, DTE, Document }) => {
     I.clickCss("#pills-dt-formItemsDataTable-visibilityConditions-tab");
     I.waitForVisible(editor);
 
-    Document.screenshotElement("div.modal.show div.DTE_Action_Edit.modal-content", "/redactor/apps/multistep-form/tab-visibilityConditions.png");
+    Document.screenshot("/redactor/apps/multistep-form/tab-visibilityConditions.png");
 
     I.clickCss(editor + " button.buttons-create");
     DTE.waitForEditor("datatableFieldDTE_Field_visibilityConditions");
 
-    Document.screenshotElement("#datatableFieldDTE_Field_visibilityConditions_modal div.DTE_Action_Create", "/redactor/apps/multistep-form/tab-visibilityConditions-create.png");
+    I.wait(3);
+    await I.executeScript(() => {
+        $("#datatableFieldDTE_Field_visibilityConditions_modal div.DTE.modal-content").css("top", "110px");
+    });
+
+    Document.screenshot("/redactor/apps/multistep-form/tab-visibilityConditions-create.png");
 
     I.clickCss("#datatableFieldDTE_Field_visibilityConditions_modal button.btn-close-editor");
 
