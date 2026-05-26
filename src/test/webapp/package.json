@@ -54,7 +54,7 @@
     "allure-codeceptjs": "^3.7.1",
     "allure-commandline": "^2.38.1",
     "axe-playwright": "^2.2.2",
-    "codeceptjs": "^4.0.0-rc.17",
+    "codeceptjs": "^4.0.2",
     "codeceptjs-chai": "^2.3.5",
     "mochawesome": "^7.1.4",
     "moment": "^2.30.1",
