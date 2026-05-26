@@ -200,7 +200,11 @@ export class MultistepForm {
             let parsed;
             try { parsed = JSON.parse(text); } catch (_) { parsed = { raw: text }; }
 
-            if (!resp.ok) {
+            if (resp.ok === true) {
+                // Store submitted values for cross-step visibility conditions
+                Object.assign(this.submittedValues, result);
+                await this.postSaveAction(parsed);
+            } else {
                 const errRedirect = parsed.err_redirect || null;
                 if (errRedirect) {
                     window.location.href = errRedirect;
@@ -212,10 +216,6 @@ export class MultistepForm {
                     if (holder) holder.innerHTML = '';
                 }
                 await this.showGlobalErr(parsed);
-            } else {
-                // Store submitted values for cross-step visibility conditions
-                Object.assign(this.submittedValues, result);
-                await this.postSaveAction(parsed);
             }
         } catch (err) {
             console.error('Network/JS error submitting form', err);
@@ -367,18 +367,16 @@ export class MultistepForm {
 
             if (combinedResult === null) {
                 combinedResult = met;
-            } else {
+            } else if (prevJoinOperator === 'OR') {
                 // Use joinOperator from the PREVIOUS condition (postfix operator)
-                if (prevJoinOperator === 'OR') {
-                    combinedResult = combinedResult || met;
-                } else {
-                    combinedResult = combinedResult && met;
-                }
+                combinedResult = combinedResult || met;
+            } else {
+                combinedResult = combinedResult && met;
             }
             prevJoinOperator = cond.joinOperator || 'AND';
         }
 
-        const allMet = combinedResult !== null ? combinedResult : true;
+        const allMet = combinedResult == null ? true : combinedResult;
 
         this._setFieldVisibility(field, allMet, true);
 
@@ -459,18 +457,16 @@ export class MultistepForm {
 
             if (combinedResult === null) {
                 combinedResult = met;
-            } else {
+            } else if (prevJoinOperator === 'OR') {
                 // Use joinOperator from the PREVIOUS condition (postfix operator)
-                if (prevJoinOperator === 'OR') {
-                    combinedResult = combinedResult || met;
-                } else {
-                    combinedResult = combinedResult && met;
-                }
+                combinedResult = combinedResult || met;
+            } else {
+                combinedResult = combinedResult && met;
             }
             prevJoinOperator = cond.joinOperator || 'AND';
         }
 
-        let allMet = combinedResult !== null ? combinedResult : true;
+        let allMet = combinedResult == null ? true : combinedResult;
 
         // If field is hidden by visibility conditions, don't make it required
         if (this._isFieldHidden(field)) {
@@ -587,9 +583,9 @@ export class MultistepForm {
 
         inputs.forEach(input => {
             if (required) {
-                input.setAttribute('data-requirement-required', 'true');
+                input.setAttribute('data-requirement-required', 'true'); //NOSONAR
             } else {
-                input.removeAttribute('data-requirement-required');
+                input.removeAttribute('data-requirement-required'); //NOSONAR
             }
         });
 
@@ -604,12 +600,12 @@ export class MultistepForm {
                 const popoverLink = label.querySelector('i.popover-link');
                 if (!existingMark) {
                     if (popoverLink) {
-                        label.insertBefore(mark, popoverLink);
+                        popoverLink.before(mark);
                     } else {
                         label.appendChild(mark);
                     }
                 } else if (popoverLink && mark.nextSibling !== popoverLink) {
-                    label.insertBefore(mark, popoverLink);
+                    popoverLink.before(mark);
                 } else if (!popoverLink && label.lastChild !== mark) {
                     label.appendChild(mark);
                 }
