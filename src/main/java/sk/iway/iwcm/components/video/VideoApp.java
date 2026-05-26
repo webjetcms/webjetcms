@@ -9,6 +9,8 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.editor.rest.ComponentRequest;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
@@ -46,7 +48,7 @@ public class VideoApp extends WebjetComponentAbstract {
             @DataTableColumnEditorAttr(key = "components.video_player.videoAlign-center", value = "center"),
             @DataTableColumnEditorAttr(key = "components.video_player.videoAlign-right", value = "right")
     }))
-    private String align = "left";
+    private String align = "center";
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.video_player.width", tab = "basic")
     private Integer width = 425;
@@ -56,6 +58,13 @@ public class VideoApp extends WebjetComponentAbstract {
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.video_player.widthPercentage", tab = "basic")
     private Integer percentageWidth = 100;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title = "components.video_player.ratioClass",
+        tab = "basic"
+    )
+    private String ratioClass = "embed-responsive embed-responsive-16by9 ratio ratio-16x9";
 
     @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.video_player.autoplay", tab = "basic",
         editor = {
@@ -162,6 +171,13 @@ public class VideoApp extends WebjetComponentAbstract {
             }
         }));
         options.put("field", optionsMap);
+
+        String videoClasses = Constants.getString("videoClasses", "");
+        if (Tools.isNotEmpty(videoClasses)) {
+            List<OptionDto> ratioOptions = parseOptionsFromConfig(request, videoClasses);
+            addCurrentValueToOptions(ratioOptions, ratioClass);
+            options.put("ratioClass", ratioOptions);
+        }
 
         return options;
     }

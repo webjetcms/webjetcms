@@ -11,17 +11,18 @@ Adresár:
 ```
 
 Názvy Pole A - Pole X lze změnit v konfiguraci v části editace textů. Stačí modifikovat klíče:
-- `editor.field_x` - pro web stránku
-- `temp-ID.editor.field_x` - pro web stránku se šablonou `ID` Např. `temp-3.editor.field_a` změní název volného pole A pouze pro web stránky, které používají šablonu s `ID` 3.
-- `groupedit.field_x` - pro adresář
-- `user.field_x` - pro uživatele
-- `components.qa.field_x` - pro aplikaci Otázky a odpovědi
-- `components.banner.field_x` - pro aplikaci Bannerový systém
-- `components.media.field_x` - pro aplikaci Média
-- `components.perex.field_x` - pro aplikaci Značky
-- `components.invoice.field_x` - pro aplikaci Elektronický obchod
 
-Technické informace se nacházejí v [dokumentaci pro programátora](../../../developer/datatables-editor/customfields.md).
+- `editor.field_x` - ​​pro web stránku
+- `temp-ID.editor.field_x` - ​​pro web stránku se šablonou `ID`, například. `temp-3.editor.field_a` změní název volného pole A pouze pro webové stránky, které používají šablonu s `ID` 3.
+- `groupedit.field_x` - ​​pro adresář
+- `user.field_x` - ​​pro uživatele
+- `components.qa.field_x` - ​​pro aplikaci Otázky a odpovědi
+- `components.banner.field_x` - ​​pro aplikaci Bannerový systém
+- `components.media.field_x` - ​​pro aplikaci Média
+- `components.perex.field_x` - ​​pro aplikaci Značky
+- `components.invoice.field_x` - ​​pro aplikaci Elektronický obchod
+
+Technické informace jsou uvedeny v [dokumentaci pro programátora](../../../developer/datatables-editor/customfields.md).
 
 ## Typy polí
 
@@ -36,9 +37,10 @@ Pole se standardně zobrazují jako textová, pomocí změny definice přes pře
 ![](webpages-text.png)
 
 Typ pole `text` je standardní textové pole. Je ale možné limitovat maximální velikost pole ai po zadaném počtu znaků zobrazit varování:
-- `editor.field_x.type=text` - standardní textové pole o velikosti maximálně 255 znaků
-- `editor.field_x.type=text-10` - standardní textové pole o velikosti maximálně 10 znaků
-- `editor.field_x.type=text-160, warningLength-50` - standardní textové pole o velikosti maximálně 160 znaků, po zadání 50 znaků se zobrazí varování o překročení doporučené délky textu (např. pole popis Google doporučuje mít dlouhé 50-160 znaků)
+
+- `editor.field_x.type=text` - ​​standardní textové pole o velikosti maximálně 255 znaků
+- `editor.field_x.type=text-10` - ​​standardní textové pole o velikosti maximálně 10 znaků
+- `editor.field_x.type=text-160, warningLength-50` - ​​standardní textové pole o velikosti maximálně 160 znaků, po zadání 50 znaků se zobrazí varování o překročení doporučené délky textu (např. pole popis Google doporučuje mít dlouhé 50-160 znaků)
 
 Při dosažení zadaného počtu znaků v nastavení `warninglength` se zobrazí varování. Příklad takového varování :
 
@@ -50,7 +52,7 @@ Text samotného varování se získává z překladového klíče, který si mus
 
 Typ pole `textarea` je standardní textová (více řádková) oblast.
 
-- `editor.field_x.type=textarea` - standardní textová oblast
+- `editor.field_x.type=textarea` - ​​standardní textová oblast
 
 ![](webpages-textarea.png)
 
@@ -58,7 +60,7 @@ Typ pole `textarea` je standardní textová (více řádková) oblast.
 
 Pro zobrazení jednoduchého textu můžete nastavit ty pole na hodnotu `label`. Hodnota se pouze zobrazí bez možnosti její editace.
 
-- `editor.field_x.type=label` - needitovatelný text
+- `editor.field_x.type=label` - ​​needitovatelný text
 
 ![](webpages-label.png)
 
@@ -66,7 +68,7 @@ Pro zobrazení jednoduchého textu můžete nastavit ty pole na hodnotu `label`.
 
 ![](webpages-select.png)
 
-Pro možnost výběru z předem definovaných hodnot je možné do `.type` zadat možné hodnoty oddělené znakem `|`:
+Pro možnost výběru z předem definovaných hodnot lze do `.type` zadat možné hodnoty oddělené znakem `|`:
 
 `editor.field_x.type=Hodnota 1|Hodnota 2|Hodnota 3`
 
@@ -100,7 +102,7 @@ Pro možnost zadání data zadejte do `.type` možnost `date`.
 
 ### Nezobrazit
 
-Pokud potřebujete nepoužívaná pole skrýt můžete použít pole typu `none`.
+Pokud potřebujete nepoužívaná pole skrýt, můžete použít pole typu `none`.
 
 `editor.field_x.type=none`
 
@@ -108,7 +110,7 @@ Pokud potřebujete nepoužívaná pole skrýt můžete použít pole typu `none`
 
 ![](webpages-autocomplete.png)
 
-Pole typu `autocomplete` funguje podobně jako výběrové pole, ale umožňuje zadat i jinou hodnotu, než jsou výchozí možnosti. Funkce se zapne prefixem `autocomplete:` v možných hodnotách oddělených znakem `|`. Zároveň výchozí možnosti se zobrazují postupně po zadání alespoň 3 znaků:
+Pole typu `autocomplete` funguje podobně jako výběrové pole, ale umožňuje zadat i jinou hodnotu než jsou výchozí možnosti. Funkce se zapne prefixem `autocomplete:` v možných hodnotách oddělených znakem `|`. Zároveň výchozí možnosti se zobrazují postupně po zadání alespoň 3 znaků:
 
 `temp-3.editor.field_d.type=autocomplete:Autocomplete Možnosť 1|Autocomplete Iná možnosť|Autocomplete Pokus 3`
 
@@ -131,22 +133,24 @@ Podobně jako pro obrázek je nastavením `.type` na hodnotu `link` možné otev
 ### Výběr složky webových stránek
 
 Pro výběr složky webových stránek lze použít typ `json_group`:
-- `editor.field_x.type=json_group` - zobrazí výběr složek webových stránek
+
+- `editor.field_x.type=json_group` - ​​zobrazí výběr složek webových stránek
 
 ![](webpages-group.png)
 
-- `editor.field_x.type=json_group_null` - přidáním `null` na konec typu lze nastavit i prázdnou hodnotu (zobrazí se tlačítko pro smazání vybrané složky)
+- `editor.field_x.type=json_group_null` - ​​přidáním `null` na konec typu lze nastavit i prázdnou hodnotu (zobrazí se tlačítko pro smazání vybrané složky)
 
 ![](webpages-group-null.png)
 
 ### Výběr webové stránky
 
 Pro výběr stránek lze použít typ `json_doc`:
-- `editor.field_x.type=json_doc` - zobrazí výběr stránek
+
+- `editor.field_x.type=json_doc` - ​​zobrazí výběr stránek
 
 ![](webpages-doc.png)
 
-- `editor.field_x.type=json_doc_null` - přidáním `null` na konec typu lze nastavit i prázdnou hodnotu (zobrazí se tlačítko pro smazání vybrané webové stránky)
+- `editor.field_x.type=json_doc_null` - ​​přidáním `null` na konec typu lze nastavit i prázdnou hodnotu (zobrazí se tlačítko pro smazání vybrané webové stránky)
 
 ![](webpages-doc-null.png)
 
@@ -163,30 +167,34 @@ Pro výběr adresáře v souborovém systému nastavením `.type` na hodnotu `di
 ![](webpages-docsin.png)
 
 Pro výběr existující stránky (její `docId`) lze použít typ `docsIn_GROUPID`:
-- `editor.field_x.type=docsIn_67` - zobrazí výběr stránky z adresáře 67
-- `editor.field_x.type=docsIn_67_null` - přidáním `null` na konec typu lze vybrat i prázdnou možnost (nenastavit žádnou stránku)
+
+- `editor.field_x.type=docsIn_67` - ​​zobrazí výběr stránky z adresáře 67
+- `editor.field_x.type=docsIn_67_null` - ​​přidáním `null` na konec typu lze vybrat i prázdnou možnost (nenastavit žádnou stránku)
 
 ### Číselník
 
 ![](webpages-enumeration.png)
 
 Propojení na číselník je přes typ `enumeration_X` kde X je ID typu číselníku. Jako hodnota a label se ve výchozím nastavení nastaví `string1` hodnota z číselníku:
-- `editor.field_x.type=enumeration_2` - zobrazí jako výběrové pole možnosti z typu číselníku 2, hodnota i label budou z `string1`
-- `editor.field_x.type=enumeration_2_null` - přidáním `_null` na konec typu lze vybrat i prázdnou možnost
+
+- `editor.field_x.type=enumeration_2` - ​​zobrazí jako výběrové pole možnosti z typu číselníku 2, hodnota i label budou z `string1`
+- `editor.field_x.type=enumeration_2_null` - ​​přidáním `_null` na konec typu lze vybrat i prázdnou možnost
 
 #### Vlastní sloupce pro label a hodnotu
 
 Je možné specifikovat, které vlastnosti z číselníku se použijí pro label a hodnotu výběrového pole:
-- `editor.field_x.type=enumeration_2_string1_id` - label bude z `string1`, hodnota z `id`
-- `editor.field_x.type=enumeration_2_string2_string3` - label bude z `string2`, hodnota z `string3`
-- `editor.field_x.type=enumeration_2_string1_id_null` - label bude z `string1`, hodnota z `id`, s možností prázdné hodnoty
+
+- `editor.field_x.type=enumeration_2_string1_id` - ​​label bude z `string1`, hodnota z `id`
+- `editor.field_x.type=enumeration_2_string2_string3` - ​​label bude z `string2`, hodnota z `string3`
+- `editor.field_x.type=enumeration_2_string1_id_null` - ​​label bude z `string1`, hodnota z `id`, s možností prázdné hodnoty
 
 Můžete použít kteroukoli vlastnost z číselníku:
+
 - `string1` až `string12` - textová pole
 - `decimal1` až `decimal4` - číselná pole
 - `boolean1` až `boolean4` - boolovská pole
 - `date1` až `date4` - datumová pole
-- `id` - identifikátor záznamu v číselníku
+- `id` - ​​identifikátor záznamu v číselníku
 
 ### Unikátní identifikátor
 
@@ -202,14 +210,15 @@ Typ pole `color` umožňuje vybrat barvu včetně nastavení průsvitnosti.
 
 ## Propojení na šablonu
 
-V některých případech je třeba mít definované různé názvy a možnosti volitelných polí podle šablony stránky/adresáře nebo podle skupiny šablon. WebJET umožňuje nastavit překladové klíče s prefixem `temp-ID.` pro šablonu, nebo s prefixem překladových textů nastavených ve skupině šablon:
-- `temp-ID.editor.field_x=Pole X` - nastavení názvu pole pro šablonu se zadaným `ID`
-- `temp_group_prefix.editor.field_x=Pole X` - nastavení názvu pole pro skupinu šablon, která má nastavený Prefix textových klíčů na hodnotu `temp_group_prefix`
+V některých případech je třeba mít definované různé názvy a možnosti volitelných polí podle šablony stránky/adresáře nebo podle skupiny šablon. WebJET umožňuje nastavit překladové klíče s prefixem `temp-ID.` pro šablonu nebo s prefixem překladových textů nastavených ve skupině šablon:
+
+- `temp-ID.editor.field_x=Pole X` - ​​nastavení názvu pole pro šablonu se zadaným `ID`
+- `temp_group_prefix.editor.field_x=Pole X` - ​​nastavení názvu pole pro skupinu šablon, která má nastavený Prefix textových klíčů na hodnotu `temp_group_prefix`
 
 ![](translations.png)
 
 ## Propojení na doménu
 
-Překladové klíče lze modifikovat i podle aktuální domény. Stačí nastavit konfigurační proměnnou `constantsAliasSearch` na `true`, což aktivuje vyhledávání konfiguračních proměnných a překladových klíčů s doménovým prefixem. Máte-li například. doménu `demo.webjetcms.sk` je možné vytvořit konfigurační proměnné typu `demo.webjetcms.sk-installName` ale také překladové klíče typu `demo.webjetcms.sk-editor.field_x.type=link`.
+Překladové klíče lze modifikovat i podle aktuální domény. Stačí nastavit konfigurační proměnnou `constantsAliasSearch` na `true`, což aktivuje vyhledávání konfiguračních proměnných a překladových klíčů s doménovým prefixem. Máte-li například. doménu `demo.webjetcms.sk` lze vytvořit konfigurační proměnné typu `demo.webjetcms.sk-installName` ale i překladové klíče typu `demo.webjetcms.sk-editor.field_x.type=link`.
 
-Doména se ale může měnit, proto doporučujeme vytvořit tvz. doménové aliasy. Ty lze nastavit více doménám na stejnou hodnotu (např. pro test a produkční domény) a při změně domény není třeba přejmenovat všechny klíče a konfigurační hodnoty. Alias definujete v konfiguraci jako novou proměnnou s názvem `multiDomainAlias:demo.webjetcms.sk` a hodnotou např. `demo`. Následně v prefixech klíče můžete použít prefix `demo` namísto celé domény.
+Doména se ale může měnit, proto doporučujeme vytvořit tvz. doménové aliasy. Ty lze nastavit více doménám na stejnou hodnotu (např. pro test a produkční domény) a při změně domény není třeba přejmenovat všechny klíče a konfigurační hodnoty. Alias ​​definujete v konfiguraci jako novou proměnnou s názvem `multiDomainAlias:demo.webjetcms.sk` a hodnotou např. `demo`. Následně v prefixech klíče můžete použít prefix `demo` místo celé domény.

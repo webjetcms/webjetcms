@@ -28,13 +28,14 @@ if (window != window.top) {
 
 window.initSubmenuTabsClick = function() {
     //handle tabs click - we need also to execute link so it cant be BS tabs
-    var $tabs = $(".ly-submenu .md-tabs li");
-    if ($tabs.hasClass("binded")) return;
+    var $tabs = $(".ly-submenu .md-tabs li").not(".binded");
+    if ($tabs.length === 0) return;
     $tabs.addClass("binded");
     $tabs.on("click", "a", function(e) {
+
         let $this = $(this);
         let isActive = $this.hasClass("active");
-        let href = $this.attr("href");
+
         $this.parents(".md-tabs").find("li a.active").removeClass("active");
 
         if (isActive) {
@@ -48,7 +49,7 @@ window.initSubmenuTabsClick = function() {
             $this.addClass("active");
             $this.closest('ul').removeClass("open");
             //hide menu
-            $("div.js-sidebar-toggler").trigger("click");
+            $(".js-sidebar-toggler").trigger("click");
         }
     });
 }
@@ -211,7 +212,7 @@ function initClosure() {
     });
 
     //sidebar toogler responsive
-    $("div.js-sidebar-toggler").on("click", function(e) {
+    $(".js-sidebar-toggler").on("click", function(e) {
         $("div.ly-sidebar").toggleClass("active");
         $("div.ly-page-wrapper").toggleClass("active");
         $(this).children("i").toggleClass("ti-x");
@@ -500,7 +501,7 @@ function initClosure() {
 
     //
     var select = `
-        <select id="tree-folder-search-type" class="filter-input-prepend">
+        <select id="tree-folder-search-type" class="filter-input-prepend" aria-label="${WJ.translate('datatables.select.type.js')}">
             <option value="contains" selected data-content="<i class=\'ti ti-arrows-horizontal\'></i><small>${WJ.translate('datatables.select.contains.js')}</small>">${WJ.translate('datatables.select.contains.js')}</option>
             <option value="startwith" data-content="<i class=\'ti ti-arrow-left-bar\'></i><small>${WJ.translate('datatables.select.startwith.js')}</small>">${WJ.translate('datatables.select.startwith.js')}</option>
             <option value="endwith" data-content="<i class=\'ti ti-arrow-right-bar\'></i><small>${WJ.translate('datatables.select.endwith.js')}</small>">${WJ.translate('datatables.select.endwith.js')}</option>
@@ -519,9 +520,9 @@ function initClosure() {
                     '<th class="dt-format-text" data-column-index="2" rowspan="1" colspan="1" style="padding: 0px 0px 4px 0px !important;">' +
                         '<div class="input-group">' +
                             select +
-                            '<input id="tree-folder-search-input" class="form-control form-control-sm filter-input">' +
-                            '<button id="tree-folder-search-button" class="btn btn-sm btn-outline-secondary btn-search"><i class="ti ti-search"></i></button>' +
-                            '<button id="tree-folder-search-clear-button" class="btn btn-sm btn-outline-secondary btn-clear" style="padding-top: 4px;"><i class="ti ti-circle-x"></i></button>' +
+                            '<input id="tree-folder-search-input" class="form-control form-control-sm filter-input" aria-label="'+WJ.translate("datatables.defaults.search.js")+'" />' +
+                            '<button id="tree-folder-search-button" class="btn btn-sm btn-outline-secondary btn-search" aria-label="'+WJ.translate("datatables.defaults.search.js")+'"><i class="ti ti-search"></i></button>' +
+                            '<button id="tree-folder-search-clear-button" class="btn btn-sm btn-outline-secondary btn-clear" style="padding-top: 4px;" aria-label="'+WJ.translate("button.reset")+'"><i class="ti ti-circle-x"></i></button>' +
                         '</div>' +
                     '</th>' +
                 '</tr>' +

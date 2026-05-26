@@ -296,8 +296,8 @@ block content
             .col-auto(style='width :450px;')
                 .input-group
                     input#searchText.form-control.form-control-sm.filter-input(type='text' data-th-placeholder='#{searchall.text}')
-                    button.filtrujem.btn.btn-sm.btn-outline-secondary(type='submit')
-                        i.ti.ti-search
+                    button.filtrujem.btn.btn-sm.btn-outline-secondary(type='submit' data-th-title='#{datatables.defaults.search.js}' data-bs-toggle='tooltip')
+                        i.ti.ti-search(aria-hidden='true')
 
             .rootDirDiv.col-auto(data-th-title='#{components.stat.filter.showOnlyFromGroup}' data-bs-toggle='tooltip')
                 input#rootDir.webjet-dte-jstree(type='text' value='-1' data-th-data-text='#{components.stat.stats.root_dirs.all}' data-th-data-text-empty='#{components.stat.stats.root_dirs.all}')

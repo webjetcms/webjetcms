@@ -26,8 +26,8 @@ include ../pug/mixins
                 <button class="btn btn-sm buttons-selected btn-outline-secondary buttons-recover buttons-divider hidden" data-toggle="tooltip" data-th-title="\#{editor.recover.folder_button}">
                     <span><i class="ti ti-trash-off text-danger"></i></span>
                 </button>
-                <div class="btn btn-sm custom-control form-switch noperms-editDir" data-toggle="tooltip" data-th-title="\#{groupedit.allowDragDrop}">
-                    <input type="checkbox" class="form-check-input" id="treeAllowDragDrop" value="true"/>
+                <div class="btn btn-sm custom-control form-switch noperms-editDir" role="group" data-toggle="tooltip" data-th-title="\#{groupedit.allowDragDrop}">
+                    <input type="checkbox" class="form-check-input" id="treeAllowDragDrop" value="true" aria-label="\#{groupedit.allowDragDrop}"/>
                     <label class="form-check-label is-icon-arrows-v" for="treeAllowDragDrop"></label>
                 </div>
 

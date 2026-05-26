@@ -5,9 +5,9 @@ rm -rf ../../../build/test-results/
 if [ "$1" = "current" ]; then
   npm run a11y:current
 elif [ "$1" = "pause" ]; then
-  npm run a11y:pause
+  npm run a11y:pause $2
 else
-  npm run a11y
+  npm run a11y $1
 fi
 
 echo "Setting categories"

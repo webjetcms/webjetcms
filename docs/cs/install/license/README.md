@@ -1,10 +1,10 @@
 # Nastavení licenčního čísla
 
-Licenční číslo pro WebJET se zadává v sekci Nastavení/Konfigurace do konf. proměnné `lisense`. K hlavní licenci je možné mít nastaveny doplňkové licence pro další domény (např. při použití Enterprise licence) v konf. proměnné `licenseDomains` kde se zadává každá doplňková licence domény na nový řádek.
+Licenční číslo pro WebJET se zadává v sekci Nastavení/Konfigurace do konf. proměnné `lisense`. K hlavní licenci lze mít nastaveny doplňkové licence pro další domény (např. při použití Enterprise licence) v konf. proměnné `licenseDomains` kde se zadává každá doplňková licence domény na nový řádek.
 
 ## Nesprávné licenční číslo
 
-Pokud WebJET obsahuje licenční číslo s exspirovaným datem platnosti, nesprávným doménovým jménem, nebo licenční číslo je nesprávně zadané, zobrazí se po přihlášení do administrace možnost aktualizovat licenční číslo, v logech serveru se při startu zobrazí:
+Pokud WebJET obsahuje licenční číslo s exspirovaným datem platnosti, nesprávným doménovým jménem, ​​nebo licenční číslo je nesprávně zadané, zobrazí se po přihlášení do administrace možnost aktualizovat licenční číslo, v logech serveru se při startu zobrazí:
 
 ```log
 [webjet][s.i.i.InitServlet][INFO][0] 2023-10-02 09:27:30 - -----------------------------------------------

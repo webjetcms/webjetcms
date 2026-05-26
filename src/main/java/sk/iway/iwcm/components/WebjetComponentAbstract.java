@@ -26,6 +26,8 @@ import sk.iway.iwcm.tags.support.ResponseUtils;
  */
 public abstract class WebjetComponentAbstract implements WebjetComponentInterface {
 
+    protected static final String EMPTY_PAGE = "/apps/_common/empty";
+
     /** DEFAULT commonSettings TAB */
     @DataTableColumn(
         inputType = DataTableColumnType.CHECKBOX,
@@ -128,27 +130,41 @@ public abstract class WebjetComponentAbstract implements WebjetComponentInterfac
         Map<String, List<OptionDto>> options = new HashMap<>();
         String wrapperClasses = Constants.getString("appWrapperClasses", "");
         if (Tools.isNotEmpty(wrapperClasses)) {
-            Prop prop = Prop.getInstance(request);
-            List<OptionDto> wrapperOptions = new ArrayList<>();
-            String[] tokens = Tools.getTokens(wrapperClasses, ",");
-            for (String token : tokens) {
-                String trimmed = token.trim();
-                if (Tools.isNotEmpty(trimmed)) {
-                    int colonIndex = trimmed.indexOf(':');
-                    if (colonIndex > 0) {
-                        String label = trimmed.substring(0, colonIndex).trim();
-                        String value = trimmed.substring(colonIndex + 1).trim();
-                        label = prop.getText(label);
-                        wrapperOptions.add(new OptionDto(label, value, null));
-                    } else {
-                        wrapperOptions.add(new OptionDto(trimmed, trimmed, null));
-                    }
-                }
-            }
+            List<OptionDto> wrapperOptions = parseOptionsFromConfig(request, wrapperClasses);
             if (wrapperClass != null) {
                 addCurrentValueToOptions(wrapperOptions, Tools.getTokens(wrapperClass, "+"));
             }
             options.put("wrapperClass", wrapperOptions);
+        }
+        return options;
+    }
+
+    /**
+     * Parses a comma-separated string of translation-key:value or just value into a list of OptionDto.
+     * @param request The request to retrieve translation properties.
+     * @param config The configuration string to parse.
+     * @return A list of parsed OptionDto.
+    */
+    protected List<OptionDto> parseOptionsFromConfig(HttpServletRequest request, String config) {
+        List<OptionDto> options = new ArrayList<>();
+        if (Tools.isEmpty(config)) {
+            return options;
+        }
+        Prop prop = Prop.getInstance(request);
+        String[] tokens = Tools.getTokens(config, ",");
+        for (String token : tokens) {
+            String trimmed = token.trim();
+            if (Tools.isNotEmpty(trimmed)) {
+                int colonIndex = trimmed.lastIndexOf(':');
+                if (colonIndex > 0) {
+                    String label = trimmed.substring(0, colonIndex).trim();
+                    String value = trimmed.substring(colonIndex + 1).trim();
+                    label = prop.getText(label);
+                    options.add(new OptionDto(label, value, null));
+                } else {
+                    options.add(new OptionDto(trimmed, trimmed, null));
+                }
+            }
         }
         return options;
     }
@@ -263,6 +279,16 @@ public abstract class WebjetComponentAbstract implements WebjetComponentInterfac
             fieldOptions.add(new OptionDto(label, value, original));
         }
         return fieldOptions;
+    }
+
+    /**
+     * Check if component is in editor preview mode (e.g. in page editor)
+     * @param request
+     * @return - true if in editor preview mode, false otherwise
+     */
+    public boolean isEditorPreview(HttpServletRequest request) {
+        if (request.getAttribute("inPreviewMode") != null || request.getAttribute("inlineEditorAdmin") != null) return true;
+        return false;
     }
 
     @Override

@@ -56,6 +56,7 @@ public class DataTableColumn {
     private String renderFormatLinkTemplate;
     private String renderFormatPrefix;
     private String renderFunction;
+    private String renderFormatAriaLabel;
 
     private DataTableColumnEditor editor;
     private Boolean visible;
@@ -174,7 +175,7 @@ public class DataTableColumn {
                 title = "&nbsp;";
             } else {
                 String titleKey = "components." + toLowerUnderscore(controller.getSimpleName()) + "." + toLowerUnderscore(field.getName());
-                title = prop.getText(titleKey);
+                title = prop.getText(titleKey, false);
                 if (titleKey.equals(title)) {
                     if (inputType != null && inputType.length>0 && inputType[0] == DataTableColumnType.ID) {
                         title = prop.getText("datatables.id.js");
@@ -217,6 +218,9 @@ public class DataTableColumn {
 
         if (Tools.isNotEmpty(annotation.renderFormatLinkTemplate())) {
             renderFormatLinkTemplate = annotation.renderFormatLinkTemplate();
+        }
+        if (Tools.isNotEmpty(annotation.renderFormatAriaLabel())) {
+            renderFormatAriaLabel = DataTableColumnsFactory.translate(annotation.renderFormatAriaLabel());
         }
 
         if (Tools.isNotEmpty(annotation.renderFormatPrefix())) {

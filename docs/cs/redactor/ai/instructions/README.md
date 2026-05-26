@@ -2,17 +2,23 @@
 
 Při psaní instrukcí pro OpenAI response API dodržujte tato doporučení:
 
-1. **Buďte konkrétní** Jasně a přesně popište, co očekáváte od odpovědi. Vyhněte se nejednoznačnosti.
+1. **Buďte konkrétní**
+    Jasně a přesně popište, co očekáváte od odpovědi. Vyhněte se nejednoznačnosti.
 
-2. **Používejte jednoduchý jazyk** Formulujte instrukce srozumitelně, aby byly snadno pochopitelné pro systém i uživatele.
+2. **Používejte jednoduchý jazyk**
+    Formulujte instrukce srozumitelně, aby byly snadno pochopitelné pro systém i uživatele.
 
-3. **Nedefinujte formát výstupu** O formát výstupu se stará implementace, která rozhodne na základě typu požadavku a jiných parametrů.
+3. **Nedefinujte formát výstupu**
+    O formát výstupu se stará implementace, která rozhodne na základě typu požadavku a jiných parametrů.
 
-4. **Uveďte příklady** Přiložte ukázky požadovaného vstupu a výstupu, pokud je to možné.
+4. **Uveďte příklady**
+    Přiložte ukázky požadovaného vstupu a výstupu, pokud je to možné.
 
-5. **Vyhněte se zbytečným detailům** Zaměřte se na podstatné informace, které jsou důležité pro výsledek.
+5. **Vyhněte se zbytečným detailům**
+    Zaměřte se na podstatné informace, které jsou důležité pro výsledek.
 
-6. **Specifikujte jazyk odpovědi** Pokud má být odpověď v konkrétním jazyce, uveďte to explicitně.
+6. **Upřesněte jazyk odpovědi**
+    Pokud má být odpověď v konkrétním jazyce, uveďte to explicitně.
 
 ## Příklad správné instrukce
 
@@ -52,9 +58,9 @@ Upravit obrázek:
 
 Při pokročilých úpravách HTML kódu je třeba získat upravený kód ale také vysvětlení co bylo upraveno. Pokud odpověď od AI obsahuje na začátku blok
 
-````text
+```text
   ```html
-````
+```
 
 tak je obsah tohoto bloku je považován za HTML kód a vše co je následně za tímto blokem se zobrazí návštěvníkovi v dialogu asistenta jako odpověď.
 
@@ -76,7 +82,7 @@ Všimněte si definování `output_format`, který definuje vytvoření 2 sekcí
 
 ## AI v prohlížeči
 
-Psaní instrukcí pro AI v prohlížeči je specifické podle [možností dostupného API](https://developer.chrome.com/docs/ai/built-in-apis). Instrukce je rozdělena na název API a následnou konfiguraci. V odkazu na `MDM` dokumentaci naleznete podrobné informace o možnostech konfigurace.
+Psaní instrukcí pro AI v prohlížeči je specifické podle [možností dostupného API](https://developer.chrome.com/docs/ai/built-in-apis). Instrukce je rozdělena na název API a následnou konfiguraci. V odkazu na `MDM` dokumentaci najdete podrobné informace o možnostech konfigurace.
 
 I když API podporuje nastavení jazyka, aktuálně obvykle podporuje pouze anglický jazyk. Do konfigurace můžete přidat možnost `"translateOutputLanguage": "autodetect"` pro následné provedení překladu. Hodnota `autodetect` detekuje jazyk původního textu a tento následně použije. Můžete případně zadat fixní hodnotu. `sk`, nebo hodnotu `userLng` kde se jazyk nastaví podle jazyka aktuálně přihlášeného uživatele.
 
@@ -133,7 +139,7 @@ Writer:
 
 ### Úprava textu
 
-Pro úpravu stávajícího textu se používá [Rewriter](https://developer.chrome.com/docs/ai/built-in-apis). Pomocí atributu `tone` je možné změnit formálnost textu.
+Pro úpravu existujícího textu se používá [Rewriter](https://developer.chrome.com/docs/ai/built-in-apis). Pomocí atributu `tone` lze změnit formálnost textu.
 
 ```JavaScript
 Rewriter:
@@ -166,7 +172,7 @@ LanguageModel:
 
 V instrukcích jsou před použitím nahrazeny speciální značky, ty můžete použít pro vložení údajů na přesné místo.
 
-- `{userPrompt}` - vloží zadaný text uživatelem ze vstupního dialogu (je-li zvolena možnost Požadovat vstup od uživatele).
+- `{userPrompt}` - ​​vloží zadaný text uživatelem ze vstupního dialogu (je-li zvolena možnost Požadovat vstup od uživatele).
 
 ```json
 {
@@ -175,9 +181,10 @@ V instrukcích jsou před použitím nahrazeny speciální značky, ty můžete 
    "returnFormat": "Return only generated image, without any other response. Image return as Base64."
 }
 ```
-- `{inputText}` - vstupní text, hodnota pole, jehož jméno je zadáno v Zdrojové pole v nastaveních asistenta.
-- `{language}` - jazyk naposledy zobrazené web stránky, může být odlišný od jazyka právě přihlášeného uživatele. Například jste přihlášeni v českém rozhraní, ale upravujete anglickou verzi web stránky.
-- `{userLanguage}` - jazyk, ve kterém je přihlášen uživatel.
+
+- `{inputText}` - ​​vstupní text, hodnota pole, jehož jméno je zadáno v Zdrojové pole v nastaveních asistenta.
+- `{language}` - ​​jazyk naposledy zobrazené web stránky, může být odlišný od jazyka právě přihlášeného uživatele. Například jste přihlášeni v českém rozhraní, ale upravujete anglickou verzi web stránky.
+- `{userLanguage}` - ​​jazyk, ve kterém je přihlášen uživatel.
 
 ```json
 {
@@ -334,4 +341,4 @@ Pro nastavení doporučujeme model `gemini-2.5-pro`, v akci nastavte entitu `sk.
 
 Výše uvedený prompt jsme získali následujícím požadavkem v ChatGPT modelu ChatGPT 5 PRO, přičemž jsme přiložili vytištěnou část z dokumentace o [PageBuilder blocích](../../../frontend/page-builder/blocks.md).
 
-Potřebuji abys mi pomohl s přípravou promptu pro Chat GPT nebo jiný AI model. Připravuji WebJET CMS kde uživatel může zadat požadavek/prompt na vytvoření web stránky. Příklad: Vytvoř web stránku pro kadeřnický salon v bratislavě, Je otevřen každý den od 8:00 do 15:00 a specializuje se na stříhání mužů. Dělá také úpravu brady/barber. Sídlí na ulici Hatallova 13. Telefon 0903 123 456. K zobrazení je použit framework Bootstrap 5. Negeneruj žádné nové CSS styly, používej výhradně CSS třídy dostupné v Bootstrap 5 jako btn-primary, barvy a podobně. Úloha je vytvořit HTML strukturu skládající se z následujících elementů/stavebních prvků: `<section>` - hlavní stavební prvek, odděluje jednotlivé sekce, typický na celou šířku obrazovky `<div class="container">` - kontejner pro textové části `<div class="row">` - řádek obsahuje col elementy `<div class="col">` - finální sloupec s textem, jedině zde může uživatel upravovat text, upravitelný text nemůže být v jiném elementu, protože uživatel by jej nemohl změnit. Může obsahovat vnořené elementy jako P, TABLE, IMG atp. Více informací o struktuře HTML kódu pro nástroj PageBuilder ve WebJET CMS je v přiloženém PDF dokumentu. SUMARIZACE: tvůj úkol je připravit strukturovaný JSON prompt pro AI splňující výše uvedená kritéria. Uživatel k promptu připojí požadavek na obsah web stránky a výsledkem bude HTML kód.
+Potřebuji abys mi pomohl s přípravou promptu pro Chat GPT nebo jiný AI model. Připravuji WebJET CMS kde uživatel může zadat požadavek/prompt na vytvoření web stránky. Příklad: Vytvoř web stránku pro kadeřnický salon v bratislavě, Je otevřen každý den od 8:00 do 15:00 a specializuje se na stříhání mužů. Dělá také úpravu brady/barber. Sídlí na ulici Hatallova 13. Telefon 0903 123 456. K zobrazení je použit framework Bootstrap 5. Negeneruj žádné nové CSS styly, používej výhradně CSS třídy dostupné v Bootstrap 5 jako btn-primary, barvy a podobně. Úloha je vytvořit HTML strukturu skládající se z následujících elementů/stavebních prvků: `<section>` - ​​hlavní stavební prvek, odděluje jednotlivé sekce, typický na celou šířku obrazovky `<div class="container">` - kontejner pro textové části `<div class="row">` - řádek obsahuje col elementy `<div class="col">` - finální sloupec s textem jiném elementu, protože uživatel by jej nemohl změnit. Může obsahovat vnořené elementy jako P, TABLE, IMG atp. Více informací o struktuře HTML kódu pro nástroj PageBuilder ve WebJET CMS je v přiloženém PDF dokumentu. SUMARIZACE: tvůj úkol je připravit strukturovaný JSON prompt pro AI splňující výše uvedená kritéria. Uživatel k promptu připojí požadavek na obsah web stránky a výsledkem bude HTML kód.

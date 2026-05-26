@@ -150,7 +150,7 @@ public class AdminPropRestController {
     private static long getLastModified(String url, long currentLastModified) {
         IwcmFile f = new IwcmFile(Tools.getRealPath(url));
         if (f.exists()) {
-            Logger.debug(AdminPropRestController.class, "Last modified "+f.getAbsolutePath()+"="+Tools.formatDateTimeSeconds(f.lastModified()));
+            //Logger.debug(AdminPropRestController.class, "Last modified "+f.getAbsolutePath()+"="+Tools.formatDateTimeSeconds(f.lastModified()));
             if (f.lastModified()>currentLastModified) return f.lastModified();
         }
         return currentLastModified;

@@ -1884,7 +1884,7 @@ export async function createServerMonitoringChart(rootName, type) {
 /* SUPPORT LOGIC, like methods that work with ext filters etc. */
 
 export async function initGroupIdSelect() {
-    await $("input.webjet-dte-jstree").each(async function(index) {
+    await $("input.webjet-dte-jstree, input.webjet-dte-jstree-alldomains").each(async function(index) {
         var $element = $(this);
         //console.log("html=", $element[0].outerHTML, "val=", $element.val(), "text=", $element.data("text"));
         var id = $element.attr("id");
@@ -1914,7 +1914,7 @@ export async function initGroupIdSelect() {
                 "groupId": groupId,
                 "fullPath": fullPath
             }],
-            className: "dt-tree-groupid-root",
+            className: $element.hasClass("webjet-dte-jstree-alldomains") ? "dt-tree-groupid-alldomains-all" : "dt-tree-groupid-root",
             _id: id
         };
         //console.log("conf=", conf);

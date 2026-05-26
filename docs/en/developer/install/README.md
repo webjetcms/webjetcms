@@ -4,9 +4,9 @@ If you don't have it yet, install [VS Code with recommended dependencies and ext
 
 We use [lombok](https://projectlombok.org) in the project, install the extension into your development environment - on the website, click on the menu item ```Install``` and in the IDEs section, follow the instructions.
 
-## Webpack builds JS, CSS and PUG files
+## rspack build JS, CSS and PUG files
 
-The administration files are compiled via webpack from the source ```js/scss/pug``` files. For the initial installation, run in a new terminal:
+The administration files are compiled via rspack from the source ```js/scss/pug``` files. For the initial installation, run in a new terminal:
 
 ```shell
 cd src/main/webapp/admin/v9
@@ -23,7 +23,7 @@ npm install
 
 it will install the necessary libraries, license for `Datatables Editor` and build the production version.
 
-You can then start **dev mode**, in which **webpack automatically tracks changes** in ```js/scss/pug``` files and builds the ```dist``` directory:
+You can then start **dev mode**, in which **rspack automatically tracks changes** in ```js/scss/pug``` files and builds the ```dist``` directory:
 
 ```shell
 cd src/main/webapp/admin/v9
@@ -54,7 +54,7 @@ Project compilation:
 gradlew compileJava - kompilacia projektu
 ```
 
-including refreshing dependencies (WebJET from artifactory):
+including restoring dependencies (WebJET from artifactory):
 
 ```shell
 gradlew compileJava --refresh-dependencies --info
@@ -62,7 +62,7 @@ gradlew compileJava --refresh-dependencies --info
 
 Starting/stopping Tomcat, creating a WAR archive:
 
-!>**Warning:** Before running gradle appRun, build the dist directory of HTML/CSS files once via the gradle npmbuild command, or run the npm run watch command from the src/main/webapp/admin/v9 directory in a separate terminal.
+!>**Warning:** before running gradle appRun, build the dist directory of HTML/CSS files once via the gradle command `npmbuild`, or run the npm run watch command from the src/main/webapp/admin/v9 directory in a separate terminal.
 
 ```shell
 gradlew appRun
@@ -90,7 +90,7 @@ Gradle wrapper update
 
 WebJET is licensed by domain. For local operation, you need to add the following line to the hosts file (on Windows it is c:\windows\system32\drivers\etc\hosts):
 
-```
+```txt
 127.0.0.1   iwcm.interway.sk
 ```
 

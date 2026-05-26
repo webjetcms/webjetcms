@@ -1,6 +1,6 @@
- <div class="sidebar-section">Manuál pro redaktora</div>
+<div class="sidebar-section">Manuál pro redaktora</div>
 
-- [:point\_left: Zpět na Úvod](/?back)
+- [:point_left: Zpět na Úvod](/?back)
 
 - Používání administrace
   - [Přihlášení a odhlášení](/redactor/admin/logon.md)
@@ -16,12 +16,13 @@
   - [Základní práce](/redactor/webpages/README.md)
   - [Editace web stránky](/redactor/webpages/editor/README.md)
   - [Práce v editoru](/redactor/webpages/working-in-editor/README.md)
-  - [Složka web stránky](/redactor/webpages/group.md)
+  - [Složka webové stránky](/redactor/webpages/group.md)
   - [Historie](/redactor/webpages/history.md)
   - [Obnovení z koše](/redactor/webpages/recover.md)
   - [Page Builder](/redactor/webpages/pagebuilder.md)
+  - [Předpřipravené bloky](/redactor/apps/htmlbox/README.md)
   - [Kontrola odkazů a prázdných stránek](/redactor/webpages/linkcheck.md)
-  - [Import a export web stránek](/redactor/webpages/import-export.md)
+  - [Import a export webových stránek](/redactor/webpages/import-export.md)
   - [Schvalování změn](/redactor/webpages/approve/README.md)
   - [Zaheslované stránky](/redactor/zaheslovana-zona/README.md)
   - [Editor obrázků](/redactor/image-editor/README.md)
@@ -43,11 +44,12 @@
   - [Statistika](/redactor/ai/stat/README.md)
 - Aplikace
   - AB testování
-    - [Úvod](/redactor/apps/abtesting/README.md)
-    - [AB Testování](/redactor/apps/abtesting/abtesting.md)
+    - [AB testování](/redactor/apps/abtesting/README.md)
+    - [Zpráva AB testů](/redactor/apps/abtesting/abtesting.md)
   - Anketa
     - [Anketa](/redactor/apps/inquiry/README.md)
     - [Statistika ankety](/redactor/apps/inquiry/inquiry-stat.md)
+    - [Anketa snadno](/redactor/apps/inquiry/inquiry-simple.md)
   - Bannerový systém
     - [Seznam bannerů](/redactor/apps/banner/README.md)
     - [Statistika bannerů](/redactor/apps/banner/banner-stat/README.md)
@@ -77,12 +79,14 @@
   - Formuláře
     - [Seznam formulářů](/redactor/apps/form/README.md)
     - [Položky formuláře](/redactor/apps/multistep-form/README.md)
+    - [Statistiky formuláře](/redactor/apps/multistep-form/stat.md)
     - [Regulární výrazy](/redactor/apps/form/regexps.md)
   - Fórum/Diskuse
     - [Nastavení aplikace](/redactor/apps/forum/README.md)
     - [Seznam diskusí](/redactor/apps/forum/forum-list.md)
   - Galerie
     - [Galerie](/redactor/apps/gallery/README.md)
+    - [Správa struktury](/redactor/apps/gallery/structure.md)
     - [Nastavení vodoznaku](/redactor/apps/gallery/watermark.md)
   - GDPR
     - [Cookies souhlas](/redactor/apps/gdpr/README.md)
@@ -91,7 +95,7 @@
     - [Vyhledávání](/redactor/apps/gdpr/search.md)
     - [Mazání dat](/redactor/apps/gdpr/data-deleting.md)
     - [Integrace Google Tag Manager](/redactor/apps/gdpr/gtm.md)
-  - [Google vyhledávání](/redactor/apps/app-vyhladavanie/README.md)
+  - [Google vyhledávání](/redactor/apps/app-vyhledávání/README.md)
   - Hromadný e-mail
     - [Kampaně](/redactor/apps/dmail/campaings/README.md)
     - [Formulář pro přihlášení a odhlášení](/redactor/apps/dmail/form/README.md)
@@ -111,6 +115,7 @@
   - [Mapa stránek](/redactor/apps/sitemap/README.md)
   - [Menu (navigační)](/redactor/apps/menu/README.md)
   - [Navigační lišta](/redactor/apps/navbar/README.md)
+  - [Nápovědy](/redactor/apps/tooltip/README.md)
   - [Novinky](/redactor/apps/news/README.md)
   - [Odkazy na sociální sítě](/redactor/apps/app-social_icon/README.md)
   - [Doporučení](/redactor/apps/app-testimonials/README.md)
@@ -123,7 +128,7 @@
   - [Poslat stránku emailem](/redactor/apps/send_link/README.md)
   - [Působivá prezentace](/redactor/apps/app-impress_slideshow/README.md)
   - [Uživatelé](/redactor/apps/user/README.md)
-  - [Předpřipravené bloky](/redactor/apps/htmlbox/README.md)
+  - [Přesměrování podle jazyka](/redactor/apps/language-redirect/README.md)
   - [Proxy](/redactor/apps/proxy/README.md)
   - [Příbuzné stránky](/redactor/apps/related-pages/README.md)
   - Rezervace
@@ -132,12 +137,11 @@
     - [Seznam rezervačních objektů](/redactor/apps/reservation/reservation-objects/README.md)
     - [Aplikace Rezervace](/redactor/apps/reservation/reservation-app/README.md)
     - [Aplikace Rezervace času](/redactor/apps/reservation/time-book-app/README.md)
-    - [Aplikace Rezervace dní](/redactor/apps/reservation/day-book-app/README.md)
+    - [Aplikace Rezervace dnů](/redactor/apps/reservation/day-book-app/README.md)
   - [Skripty](/redactor/apps/insert-script/README.md)
   - [Slider](/redactor/apps/slider/README.md)
   - [Slit slider](/redactor/apps/app-slit_slider/README.md)
   - [Statistika](/redactor/apps/stat/README.md)
-  - [Tooltip](/redactor/apps/tooltip/README.md)
   - [Video](/redactor/apps/video/README.md)
   - [Vložení dokumentu](/redactor/apps/app-docsembed/README.md)
   - [Vložení HTML kódu](/redactor/apps/app-htmlembed/README.md)

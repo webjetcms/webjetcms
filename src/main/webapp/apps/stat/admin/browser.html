@@ -149,12 +149,12 @@
         <div class="col-auto dt-extfilter-title-dayDate" style="display: none;"></div>
         <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
         <div class="col-auto" data-th-title="#{components.stat.filter.showOnlyFromGroup}" data-toggle="tooltip">
-            <input type="text" class="webjet-dte-jstree" id="rootDir" value="-1" data-th-data-text="#{components.stat.stats.root_dirs.all}" data-th-data-text-empty="#{components.stat.stats.root_dirs.all}"/>
+            <input type="text" class="webjet-dte-jstree-alldomains" id="rootDir" value="-1" data-th-data-text="#{components.stat.stats.root_dirs.all}" data-th-data-text-empty="#{components.stat.stats.root_dirs.all}"/>
         </div>
         <div class="col-auto">
-            <div class="btn btn-sm custom-control form-switch" data-toggle="tooltip" data-th-title="#{stat.withoutBots}">
-                <input id="botFilterOut" type="checkbox" class="form-check-input" value="true" />
-                <label for="botFilterOut" class="form-check-label is-icon-arrows-v"></label>
+            <div class="btn btn-sm custom-control form-switch" role="group" data-toggle="tooltip" data-th-title="#{stat.withoutBots}">
+                <input id="botFilterOut" type="checkbox" class="form-check-input" value="true" data-th-aria-label="#{stat.withoutBots}" />
+                    <label for="botFilterOut" class="form-check-label is-icon-arrows-v" aria-hidden="true"></label>
             </div>
         </div>
     </div>

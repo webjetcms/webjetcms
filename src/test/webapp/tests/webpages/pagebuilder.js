@@ -391,6 +391,9 @@ Scenario('BUG: when you open PB doc and then empty NON PB it has PB content', ({
 
 function checkStyleModal(docId, colSelector, isCustom, I, DTE, Apps) {
 
+    //to force codemirror render all items
+    I.resizeWindow(1280, 1800);
+
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid="+docId);
     I.closeOtherTabs();
     DTE.waitForEditor();

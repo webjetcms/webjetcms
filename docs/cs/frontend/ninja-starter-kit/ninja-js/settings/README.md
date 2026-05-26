@@ -1,16 +1,16 @@
 # Nastavení
 
 | Nastavení | Typ | Přednastaveno | Popis |
- | ---------- | --------- | ------------- | ---------------------------- |
- | fireTime | *Integer* | 200 | Zpoždění zavolání události |
- | debug | *Boolean* | false | Debug režim |
+| --- | ----- | --- | ----- |
+| fireTime | *Integer* | 200 | Zpoždění zavolání události |
+| debug | *Boolean* | false | Debug režim |
 
 ## Zpoždění zavolání události *Integer*
 
-Všechny metody, jejichž spouštěčem je změna velikosti monitoru se zavolají se zpožděním podle nastaveného `fireTime`. Defaultně je nastaven na 200ms.
+Všechny metody, jejichž spouštěčem je změna velikosti monitoru se zavolají se zpožděním podle nastaveného `fireTime`.
+Defaultně je nastaven na 200ms.
 
 Příklad nastavení:
-
 ```javascript
 Nina.init({
     fireTime: 300
@@ -19,10 +19,9 @@ Nina.init({
 
 ## Debug režim *Boolean*
 
-Debug režim, který při nastavení na `true` povolí vypisování logů přes `Nina.log("Hello world");`. Defaultně je nastaven na `false`, tehdy se logy v konzole nevypíší.
+Debug režim, který při nastavení na `true` povolí vypisování logů přes `Nina.log("Hello world");`. Defaultně je nastaven na `false`, tehdy se logy v konzoli nevypíší.
 
 Příklad zapnutí:
-
 ```javascript
 Nina.init({
     debug: true

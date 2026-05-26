@@ -1,6 +1,6 @@
- <div class="sidebar-section">Instalace</div>
+<div class="sidebar-section">Instalace</div>
 
-- [:point\_left: Zpět na Úvod](/?back)
+- [:point_left: Zpět na Úvod](/?back)
 
 - Instalace
   - [Předpoklady a verze](/install/versions.md)
@@ -10,6 +10,7 @@
   - [Základní konfigurace](/install/config/README.md)
   - [Externí konfigurace](/install/external-configuration.md)
   - [Spam ochrana](/install/config/spam-protection.md)
+  - [DB s právy na čtení](/install/config/ro-user.md)
   - Autorizace
     - [OAuth2](/install/oauth2/oauth2.md)
     - [Keycloak](/install/oauth2/keycloak.md)

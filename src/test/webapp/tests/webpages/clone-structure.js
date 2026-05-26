@@ -145,7 +145,7 @@ async function hardDeleteFolder(I, DT, DTE, groupName) {
     I.click("Zmazať", "div.DTE_Action_Remove");
     DT.waitForLoader();
 
-    I.say("Check taht group was deleted");
+    I.say("Check that group was deleted");
     I.waitForInvisible(  locate("a.jstree-anchor").withText(groupName), 10 );
 
     I.say("HARD DELETE");

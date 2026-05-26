@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context>
+    <!-- Persist sessions to disk on graceful shutdown so users stay logged in after restart.
+         Required since Tomcat 11 / Gretty 5.x where the default StandardManager no longer
+         reliably serialises sessions to the work directory. -->
+    <Manager className="org.apache.catalina.session.PersistentManager" saveOnRestart="true">
+        <Store className="org.apache.catalina.session.FileStore" directory="${user.home}/.webjetcms/sessions"/>
+    </Manager>
+</Context>

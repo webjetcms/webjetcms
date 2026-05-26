@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-mssql
+    platform: linux/amd64
     container_name: webjetcms-mssql
     environment:
       ACCEPT_EULA: "Y"

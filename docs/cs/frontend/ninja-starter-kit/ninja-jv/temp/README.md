@@ -1,19 +1,19 @@
 # Informace o šabloně
 
 | Metoda | Typ | Popis |
- | ---------------------------------- | -------- | ----------------------------- |
- | ${ninja.temp.basePath}             | *String* | Cesta k root adresáři šablony |
- | ${ninja.temp.basePathCss}          | *String* | Cesta k CSS stylům |
- | ${ninja.temp.basePathJs}           | *String* | Cesta k JS skriptům |
- | ${ninja.temp.basePathImg}          | *String* | Cesta k obrázkům |
- | ${ninja.temp.lngIso}               | *String* | HTML ISO Language Cod |
- | ${ninja.temp.charset}              | *String* | Kódování souboru |
- | ${ninja.temp.insertTouchIconsHtml} | *String* | Nastavení touch ikon |
- | ${ninja.temp.templateFolderName}   | *String* | Název složky šablony |
+| --- | --- | --- |
+| ${ninja.temp.basePath} | *String* | Cesta k root adresáři šablony |
+| ${ninja.temp.basePathCss} | *String* | Cesta k CSS stylům |
+| ${ninja.temp.basePathJs} | *String* | Cesta k JS skriptům |
+| ${ninja.temp.basePathImg} | *String* | Cesta k obrázkům |
+| ${ninja.temp.lngIso} | *String* | HTML ISO Language Cod |
+| ${ninja.temp.charset} | *String* | Kódování souboru |
+| ${ninja.temp.insertTouchIconsHtml} | *String* | Nastavení touch ikon |
+| ${ninja.temp.templateFolderName} | *String* | Název složky šablony |
 
 ## Cesta k root adresáři šablony *String*
 
-Cesta k root adresáři šablony vyskládaná z `/templates/ + ${ninja.webjet.installName} + ${ninja.temp.templateFolderName}`.
+Cesta k root adresáři šablony složená z `/templates/ + ${ninja.webjet.installName} + ${ninja.temp.templateFolderName}`.
 
 ```java
 ${ninja.temp.basePath}
@@ -21,7 +21,7 @@ ${ninja.temp.basePath}
 
 ## Cesta k CSS stylům *String*
 
-Cesta k CSS stylům vyskládaná z `${ninja.temp.basePath} + /assets/css/`.
+Cesta k CSS stylům složená z `${ninja.temp.basePath} + /assets/css/`.
 
 ```java
 ${ninja.temp.basePathCss}
@@ -29,7 +29,7 @@ ${ninja.temp.basePathCss}
 
 ## Cesta k JS skriptům *String*
 
-Cesta k JS skriptům vyskládaná z `${ninja.temp.basePath} + /assets/js/`.
+Cesta k JS skriptům složená z `${ninja.temp.basePath} + /assets/js/`.
 
 ```java
 ${ninja.temp.basePathJs}
@@ -37,7 +37,7 @@ ${ninja.temp.basePathJs}
 
 ## Cesta k obrázkům *String*
 
-Cesta k obrázkům vyskládaná z `${ninja.temp.basePath} + /assets/images/`.
+Cesta k obrázkům složená z `${ninja.temp.basePath} + /assets/images/`.
 
 ```java
 ${ninja.temp.basePathImg}
@@ -54,10 +54,10 @@ ${ninja.temp.lngIso}
 Použité v :ghost:<code>head.jsp</code>
 
 ```html
-<meta property="og:locale" content="${ninja.temp.lngIso}" />
+<meta property="og:locale" content="${ninja.temp.lngIsoUnderscore}" />
 ```
 
-Použité v :ghost:<code>html-attributes.jsp</code>
+Použito v :ghost:<code>html-attributes.jsp</code>
 
 ```html
 <html lang="${ninja.temp.lngIso}" >
@@ -102,7 +102,7 @@ HTML kód, který se vygeneruje:
 
 ## Název složky šablony *String*
 
-Název složky šablony, defaultně `/ninja-starter-kit/`
+Název složky šablony, ve výchozím nastavení `/ninja-starter-kit/`
 
 ```java
 ${ninja.temp.templateFolderName}

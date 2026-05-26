@@ -20,4 +20,4 @@ V této části lze nastavit:
 
 ## Nastavení
 
-Celkový počet dostupných bloků lze nastavit v konfigurační proměnné `contentBlockTypeCount`, ve výchozím nastavení nastaveno na `5`.
+Celkový počet dostupných bloků lze nastavit v konfigurační proměnné `contentBlockTypeCount`, ve výchozím nastavení na `5`.

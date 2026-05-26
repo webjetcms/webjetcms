@@ -334,7 +334,7 @@ block content
         table.urlFormTable
             tr
                 td(style='width: 80px;' data-th-title='\#{elfinder.image.urlTitle}').cke_dialog_ui_vbox_child
-                    label.cke_dialog_ui_labeled_label [[\#{components.groupEdit.url_info}]]:
+                    label.cke_dialog_ui_labeled_label(for='txtUrl') [[\#{components.groupEdit.url_info}]]:
                 td.cke_dialog_ui_vbox_child
                     div.cke_dialog_ui_input_text
                         input#txtUrl(style='width: 100%;' type='text' class="form-control cke_dialog_ui_input_text" onkeyup='txtUrlOnChange(this);')

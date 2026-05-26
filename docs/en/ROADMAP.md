@@ -50,7 +50,7 @@ Explanation of the pictograms used:
 - [x] Tags - filter by current domain to be the same as in other sections (#57837).
 - [x] User import - if no password is entered, generate one (for new users), if not sent, set status `authorized` to `true` (#58253).
 - [ ] In tests, somehow automatically check for the occurrence of `I\.waitForText\('.*?', '.*?'\);` and `I\.waitForText\(".*?", ".*?"\);`, which are incorrect waits without a defined time, will cause automated tests to crash.
-- [ ] Add an application to redirect the main page to `/sk/` or `/en/` depending on the browser language.
+- [x] Add an application to redirect the main page to `/sk/` or `/en/` depending on the browser language. (#58477)
 - [x] Modify configuration deletion so that when deleted, it is set to the original value defined in `Constants` (#57849).
 - [x] Gallery - when duplicating an image, allow changing the "Folder" so that we can duplicate images to a folder other than the current one (#57885).
 - [x] Mass email - audit changes in user groups (#58249).

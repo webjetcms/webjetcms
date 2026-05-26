@@ -7,6 +7,7 @@ Aplikace Úrovně logování umožňuje správu úrovni logování pro jednotliv
 První záznam v tabulce je vždy **Hlavní úroveň logování** (základní úroveň).
 
 Využívají se 2 konfigurační proměnné:
+
 - **logLevel**, obsahuje hodnotu úrovně logování pro **Hlavní úroveň logování**
 - **logLevels**, obsahuje seznam java balíků s úrovní logování (každý na novém řádku). Např.:
 

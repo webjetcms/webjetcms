@@ -43,8 +43,8 @@ export function typeWysiwyg() {
                     <iframe id="${id}-pageBuilderIframe" class="md-pageBuilder" src="about:blank"></iframe>
                 </div>
                 <div class="exit-inline-editor" id="${id}-editorTypeSelector">
-                    ${WJ.translate("editor.type_select.label.js")}<br/>
-                    <select onchange="window.switchEditorType(this)" data-hide-disabled="true">
+                    <label for="${id}-editorTypeSelect-select">${WJ.translate("editor.type_select.label.js")}</label><br/>
+                    <select id="${id}-editorTypeSelect-select" onchange="window.switchEditorType(this)" data-hide-disabled="true">
                         <option value="">${WJ.translate("editor.type_select.standard.js")}</option>
                         <option value="html">${WJ.translate("editor.type_select.html.js")}</option>
                         <option value="pageBuilder">${WJ.translate("editor.type_select.page_builder.js")}</option>
@@ -52,8 +52,8 @@ export function typeWysiwyg() {
                     <br/>
                     ${WJ.translate("pagebuilder.modal.tab.size")}:
                     <a href="javascript:pbSetWindowSize('phone')" title="${WJ.translate('pagebuilder.modal.visibility.sm')}" data-toggle="tooltip"><span class="ti ti-device-mobile"></span></a>
-                    <a href="javascript:pbSetWindowSize('tablet')" title="${WJ.translate('pagebuilder.modal.visibility.md')}" data-toggle="tooltip"><span class="ti ti-device-tablet"></a>
-                    <a href="javascript:pbSetWindowSize('desktop')" title="${WJ.translate('pagebuilder.modal.visibility.xl')}" data-toggle="tooltip"><span class="ti ti-device-desktop"></a>
+                    <a href="javascript:pbSetWindowSize('tablet')" title="${WJ.translate('pagebuilder.modal.visibility.md')}" data-toggle="tooltip"><span class="ti ti-device-tablet"></span></a>
+                    <a href="javascript:pbSetWindowSize('desktop')" title="${WJ.translate('pagebuilder.modal.visibility.xl')}" data-toggle="tooltip"><span class="ti ti-device-desktop"></span></a>
                 </div>
                 `;
             let htmlCodeElement = $(htmlCode);

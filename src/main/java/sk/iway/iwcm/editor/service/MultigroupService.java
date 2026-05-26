@@ -168,6 +168,16 @@ public class MultigroupService {
 	 * @param docId
 	 */
 	public void setDefaultDocId(int groupId, int docId) {
+		setDefaultDocId(groupId, docId, false);
+	}
+
+	/**
+	 * Skontroluje a nastavi default docid adresara (ak je neplatne alebo nenastavene)
+	 * @param groupId
+	 * @param docId
+	 * @param addGroupSchedulerRecord - true, ak chceme pri zmene default docu pridat zaznam do GroupSchedulerDto
+	 */
+	public void setDefaultDocId(int groupId, int docId, boolean addGroupSchedulerRecord) {
 		//ak je to prva stranka v adresari a adresar nema defaultDoc, nastav
 		GroupDetails group = groupsDB.getGroup(groupId);
 		if (group != null) {
@@ -175,7 +185,7 @@ public class MultigroupService {
 
 			if ((group.getDefaultDocId() < 1 && group.getNavbar().indexOf("<a") == -1) || doc == null) {
 				group.setDefaultDocId(docId);
-				groupsDB.setGroup(group);
+				groupsDB.setGroup(group, true, addGroupSchedulerRecord);
 			}
 		}
 	}

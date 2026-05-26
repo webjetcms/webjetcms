@@ -4,8 +4,7 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('approving', ({I, DT, Document}) => {
-
+Scenario('approving doc', ({I, DT, Document}) => {
     if("sk" === I.getConfLng()) {
         I.amOnPage("/admin/approve.jsp?historyid=6951&docid=6031");
     } else if("en" === I.getConfLng()) {
@@ -21,5 +20,4 @@ Scenario('approving', ({I, DT, Document}) => {
     I.clickCss("#pills-waiting-tab");
     DT.waitForLoader();
     Document.screenshot("/redactor/webpages/approve/approve-tab.png");
-
 });

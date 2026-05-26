@@ -1,6 +1,7 @@
 services:
   oracle:
     image: container-registry.oracle.com/database/express:21.3.0-xe
+    platform: linux/amd64
     container_name: webjetcms-oracle
     environment:
       ORACLE_PWD: "${WEBJET_DB_PASS}"

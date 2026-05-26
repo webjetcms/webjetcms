@@ -5,6 +5,7 @@ Vloží do stránky ikony s odkazy na sociální sítě Facebook, Twitter, Insta
 ## Nastavení aplikace
 
 Nastavení obsahuje karty:
+
 - **Základní**
 - **Styl**
 
@@ -17,6 +18,7 @@ V kartě můžete zadat adresu vaší stránky pro jednotlivé sociální sítě
 ### Karta - Styl
 
 V kartě můžete nastavit:
+
 - **Vizuální styl** - zobrazení ikon
 - **Zarovnání ikon** - vlevo, střed, vpravo
 

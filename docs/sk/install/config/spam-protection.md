@@ -29,6 +29,7 @@ Limity je možné upraviť špecificky pre niektoré moduly/aplikácie pridaním
 - `search` - [vyhľadávanie](../../redactor/apps/search/README.md), limituje počet vyhľadávaní.
 - `ThumbServlet` - [náhľadové obrázky](../../frontend/thumb-servlet/README.md), limituje počet vygenerovaní nového náhľadového obrázka, obrázku sú ukladané na disk a použité pre ďalšie požiadavky.
 - `userform` - [registrácia nového používateľa](../../redactor/zaheslovana-zona/README.md), limituje počet nových registrácií a úprav profilu používateľa v zaheslovanej zóne.
+- `404` - [počet volaní stránky 404](../../sysadmin/troubleshooting/README.md), limituje koľko krát je možné volať stránku 404, po prekročení limitu je zrušená `session` a používateľ je odhlásený.
 
 Predvolene sú už upravené nasledovné hodnoty:
 

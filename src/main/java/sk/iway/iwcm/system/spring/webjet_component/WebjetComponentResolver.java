@@ -20,6 +20,7 @@ import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.components.WebjetComponentInterface;
+import sk.iway.iwcm.doc.showdoc.StyleToHeadHelper;
 import sk.iway.iwcm.editor.rest.ComponentsService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.annotations.DefaultHandler;
@@ -69,17 +70,21 @@ public class WebjetComponentResolver {
             }
 
             // ziska content responsu
-            String content = mockResponse.getContentAsString();
+            StringBuilder content = new StringBuilder(mockResponse.getContentAsString());
+
+            // Extract style tags and collect them for head section insertion
+            content = StyleToHeadHelper.extractAndCollectStyles(content, request);
 
             // wrap component output with wrapper div if wrapper attributes are set
             if (component instanceof WebjetComponentAbstract wca) {
                 String[] wrapperDiv = WebjetComponentAbstract.buildWrapperDiv(wca.getWrapperClass(), wca.getWrapperId(), wca.getWrapperTitle(), wca.getWrapperAriaLabel());
                 if (wrapperDiv != null) {
-                    content = wrapperDiv[0] + content + wrapperDiv[1];
+                    content.insert(0, wrapperDiv[0]);
+                    content.append(wrapperDiv[1]);
                 }
             }
 
-            return content;
+            return content.toString();
         } catch (IOException e) {
             sk.iway.iwcm.Logger.error(e);
         }

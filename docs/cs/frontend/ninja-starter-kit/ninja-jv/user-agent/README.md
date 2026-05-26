@@ -1,24 +1,23 @@
 # Informace o Zařízení
 
 | Metoda | Typ | Popis |
-| ---------------------------------- | --------- | ------------------------ |
-| ${ninja.userAgent.browserName}     | *String*  | Název prohlížeče |
-| ${ninja.userAgent.browserVersion}  | *String*  | Verze prohlížeče |
+| --- | --- | --- |
+| ${ninja.userAgent.browserName} | *String* | Název prohlížeče |
+| ${ninja.userAgent.browserVersion} | *String* | Verze prohlížeče |
 | ${ninja.userAgent.browserOutdated} | *Boolean* | Zastaralí prohlížeč |
-| ${ninja.userAgent.blind}           | *Boolean* | Textová verze stránky |
-| ${ninja.userAgent.deviceType}      | *String*  | Typ zařízení |
-| ${ninja.userAgent.deviceOS}        | *String*  | Název operačního systému |
+| ${ninja.userAgent.blind} | *Boolean* | Textová verze stránky |
+| ${ninja.userAgent.deviceType} | *String* | Typ zařízení |
+| ${ninja.userAgent.deviceOS} | *String* | Název operačního systému |
 
 ## Název prohlížeče *String*
 
-Název prohlížeče (vždy malými písmeny) zjištěn z userAgenta: `msie / chrome / safari / firefox`.
+Název prohlížeče (vždy malými písmeny) zjištěný z userAgenta: `msie / chrome / safari / firefox`.
 
 ```java
 ${ninja.userAgent.browserName}
 ```
 
-Použité v :ghost:<code>html-attributes.jsp</code>
-
+Použito v :ghost:<code>html-attributes.jsp</code>
 ```html
 <html data-browser-name="${ninja.userAgent.browserName}" >
 ```
@@ -31,8 +30,7 @@ Verze prohlížeče zjištěna z userAgenta.
 ${ninja.userAgent.browserVersion}
 ```
 
-Použité v :ghost:<code>html-attributes.jsp</code>
-
+Použito v :ghost:<code>html-attributes.jsp</code>
 ```html
 <html data-browser-version="${ninja.userAgent.browserVersion}" >
 ```
@@ -46,7 +44,6 @@ ${ninja.userAgent.browserOutdated}
 ```
 
 Defaultně nastavené hodnoty v `config.properties`
-
 ```properties
 minBrowserVersion.MSIE=9
 minBrowserVersion.CHROME=38
@@ -56,15 +53,14 @@ minBrowserVersion.EDGE=12
 minBrowserVersion.ANDROID_BROWSER=4
 ```
 
-Použité v :ghost:<code>browser-support.jsp</code>
-
+Použito v :ghost:<code>browser-support.jsp</code>
 ```java
 <c:if test="${ninja.userAgent.browserOutdated}">
     //zobrazí sa hláška o používaní zastaralého prehliadača
 </c:if>
 ```
 
-Hodnoty v `minBrowserVersion` je možné doplnit o nové prohlížeče zadáním hodnoty detekovaného prohlížeče z hodnoty `${ninja.userAgent.browserName}`.
+Hodnoty v `minBrowserVersion` lze doplnit o nové prohlížeče zadáním hodnoty detekovaného prohlížeče z hodnoty `${ninja.userAgent.browserName}`.
 
 Například pro `User-Agent` hodnotu:
 
@@ -82,26 +78,23 @@ Všimněte si speciální znak `\u0020` který reprezentuje mezeru. Hodnota se z
 
 ## Textová verze stránky *Boolean*
 
-Je-li parametr `forceBrowserDetector` nastaven na `blind` vrátí `true`.
+Pokud je parametr `forceBrowserDetector` nastaven na `blind` vrátí `true`.
 
 ```java
 ${ninja.userAgent.blind}
 ```
 
 Příklad zapnutí v URL adrese:
-
 ```url
 www.nazovdomeny.sk?forceBrowserDetector=blind
 ```
 
 Příklad vypnutí v URL adrese:
-
 ```url
 www.nazovdomeny.sk?forceBrowserDetector=pc
 ```
 
 Použité v :ghost:<code>head.jsp</code>
-
 ```java
 <c:choose>
     <c:when test="${ninja.userAgent.blind}">
@@ -115,14 +108,14 @@ Použité v :ghost:<code>head.jsp</code>
 
 ## Typ zařízení *String*
 
-Typ zařízení (vždy malímy písmeny) zjištěn z userAgenta: `desktop / phone / tablet`.
+Typ zařízení (vždy malímy písmeny) zjištěn z userAgenta:
+`desktop / phone / tablet`.
 
 ```java
 ${ninja.userAgent.deviceType}
 ```
 
-Použité v :ghost:<code>html-attributes.jsp</code>
-
+Použito v :ghost:<code>html-attributes.jsp</code>
 ```html
 <html data-device-type="${ninja.userAgent.deviceType}" >
 ```
@@ -135,8 +128,7 @@ Název operačního systému (vždy malímy písmeny) na zařízení zjištěný
 ${ninja.userAgent.deviceOS}
 ```
 
-Použité v :ghost:<code>html-attributes.jsp</code>
-
+Použito v :ghost:<code>html-attributes.jsp</code>
 ```html
 <html data-device-os="${ninja.userAgent.deviceOS}" >
 ```

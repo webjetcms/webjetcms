@@ -8,7 +8,7 @@ java -version
 source "$HOME/.sdkman/bin/sdkman-init.sh"
 
 #NASTAV NA ZACIATKU:
-sdk use java 11.0.16.1-tem
+sdk use java 11.0.30-tem
 
 echo "Switched to JAVA version:"
 java -version

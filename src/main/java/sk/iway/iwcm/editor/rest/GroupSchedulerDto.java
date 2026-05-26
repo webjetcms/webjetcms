@@ -2,14 +2,21 @@ package sk.iway.iwcm.editor.rest;
 
 import java.util.Date;
 
-import jakarta.persistence.*;
-
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -21,12 +28,9 @@ public class GroupSchedulerDto {
 
     @Id
     @Column(name = "schedule_id")
+    @GeneratedValue(strategy=GenerationType.IDENTITY, generator="S_webjet_groups_scheduler")
     @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
-
-    @Column(name = "group_name")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "[[#{editor.directory_name}]]")
-    private String groupName;
 
     @Column(name = "save_date")
     //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
@@ -34,6 +38,10 @@ public class GroupSchedulerDto {
         inputType = DataTableColumnType.DATETIME,
         title = "editor.group_schedule.save_date")
     private Date saveDate;
+
+    @Column(name = "group_name")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "[[#{editor.directory_name}]]")
+    private String groupName;
 
     @Column(name = "when_to_publish")
     //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
@@ -140,6 +148,30 @@ public class GroupSchedulerDto {
     @Column(name = "logged_show_in_sitemap")
     private Integer loggedShowInSitemap;
 
+    @Transient
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, renderFormat = "dt-format-text", title = "history.changedBy", orderable = false, editor = {
+			@DataTableColumnEditor(type = "text", attr = {
+					@DataTableColumnEditorAttr(key = "disabled", value = "disabled") }) })
+	private String userFullName;
+
+    // Approval fields for folder/group change approval flow
+
+    @Column(name = "awaiting_approve")
+    private String awaitingApprove;
+
+    @Column(name = "approved_by")
+    private Integer approvedBy;
+
+    @Column(name = "disapproved_by")
+    private Integer disapprovedBy;
+
+    @Column(name = "approve_date")
+    @DataTableColumn(inputType = DataTableColumnType.DATETIME, title = "history.approveDate")
+    private Date approveDate;
+
+    @Column(name = "is_delete")
+    private Boolean isDelete;
+
     public boolean getInternal() {
         return internal;
     }
@@ -147,12 +179,6 @@ public class GroupSchedulerDto {
     public boolean getForceGroupTemplate() {
         return forceGroupTemplate;
     }
-
-    @Transient
-	@DataTableColumn(inputType = DataTableColumnType.TEXT, tab="main", renderFormat = "dt-format-text", title="components.audit_log.user_full_name", orderable = false, editor = {
-			@DataTableColumnEditor(type = "text", attr = {
-					@DataTableColumnEditorAttr(key = "disabled", value = "disabled") }) })
-	private String userFullName;
 
 	public String getUserFullName() {
 		if (userFullName == null && userId != null && userId.intValue()>0) {
@@ -173,4 +199,8 @@ public class GroupSchedulerDto {
         inputType = DataTableColumnType.DATETIME,
         title = "groupedit.publish.realPublishDate")
     private Date datePublished;
+
+    @Transient
+    @DataTableColumnNested
+	private GroupSchedulerEditorFields editorFields = null;
 }

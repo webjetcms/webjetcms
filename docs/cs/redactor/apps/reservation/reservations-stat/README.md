@@ -1,6 +1,6 @@
 # Statistika rezervací
 
-Sekce **Statistika rezervací** nabízí rychlé a přehledné vyobrazení těch nejdůležitějších statistik, týkajících se vytvořených [rezervací](../reservations/README.md). V úvahu se berou pouze takové rezervace, které jsou **schváleno**. Více o stavu rezervace se dočtete v části [](../reservations/README.md#schvaľovanie-rezervácií).
+Sekce **Statistika rezervací** nabízí rychlé a přehledné vyobrazení těch nejdůležitějších statistik, týkajících se vytvořených [rezervací](../reservations/README.md). V úvahu se berou pouze takové rezervace, které jsou **schváleny**. Více o stavu rezervace se dočtete v části [](../reservations/README.md#schvalování-rezervací).
 
 Statistika zpracovává data rezervací v **měsíčních intervalech**, tedy vždy od začátku po konec zvoleného měsíce. K volbě měsíce/roku za který chceme statistiku zobrazit slouží datový filtr vedle názvu sekce.
 
@@ -12,7 +12,7 @@ Z tohoto hlediska jsme museli i statistiku rozdělit podle typu rezervace, tedy 
 
 ## Minutové/hodinové
 
-Statistika pro rezervace typu **Minutové/hodinové** nabízí 3 grafy a také tabulku s údaji. Data kladou důraz na počet rezervovaných hodin. Jelikož tyto rezervace lze rezervovat i na minuty, tak jsou hodnoty přepočteny na hodiny s přesností na 2 desetinná místa.
+Statistika pro rezervace typu **Minutové/hodinové** nabízí 3 grafy, jakož i tabulku s údaji. Data kladou důraz na počet rezervovaných hodin. Jelikož tyto rezervace lze rezervovat i na minuty, tak jsou hodnoty přepočteny na hodiny s přesností na 2 desetinná místa.
 
 ![](datatable_hours.png)
 
@@ -50,7 +50,7 @@ Tento čárový graf zobrazuje kolik rezervovaných hodin bylo spolu nad všemi 
 
 ## Celodenní
 
-Statistika pro rezervace typu **Celodenní** nabízí 3 grafy a také tabulku s údaji. Data kladou důraz na počet rezervovaných dnů, jelikož tyto rezervace jsou celodenní.
+Statistika pro rezervace typu **Celodenní** nabízí 3 grafy, jakož i tabulku s údaji. Data kladou důraz na počet rezervovaných dnů, jelikož tyto rezervace jsou celodenní.
 
 ![](datatable_days.png)
 
@@ -69,7 +69,7 @@ Jak je vidět z obrázku výše, k dispozici jsou 3 grafy, které si následně 
 Tento dvojitý koláčový graf reprezentuje poměr rezervací a rezervovaných dnů pro jednotlivé uživatele. Takto snadno určíte, který uživatelé vytvořili nejvíce rezervací a rezervovali nejvíc dní.
 
 - Vnější vrstva ukazuje, kolik **rezervací celkově** vytvořili jednotliví uživatelé (nad všemi objekty dohromady).
-- Vnitřní vrstva ukazuje kolik **dnů celkově** bylo rezervováno jednotlivými uživateli (nad všemi objekty dohromady).
+- Vnitřní vrstva ukazuje kolik **dní celkově** bylo rezervováno jednotlivými uživateli (nad všemi objekty dohromady).
 - Střed grafu zobrazuje sumář **Počet rezervací**, takže počet všech vytvořených rezervací.
 
 **Graf - Poměr počtu rezervací a rezervovaných dnů jednotlivých rezervačních objektů**
@@ -77,7 +77,7 @@ Tento dvojitý koláčový graf reprezentuje poměr rezervací a rezervovaných 
 Tento dvojitý koláčový graf reprezentuje poměr rezervací a rezervovaných dní nad jednotlivými objekty. Takto snadno určíte, který objekt byl nejvíce rezervován a měl nejvíce rezervovaných dní.
 
 - Vnější v vrstva ukazuje, kolik **rezervací celkově** bylo vytvořeno nad daným objektem (všemi uživateli dohromady).
-- Vnitřní vrstva ukazuje kolik **dnů celkově** bylo rezervováno nad daným objektem (všemi uživateli dohromady).
+- Vnitřní vrstva ukazuje kolik **dní celkově** bylo rezervováno nad daným objektem (všemi uživateli dohromady).
 - Střed grafu zobrazuje sumář **Počet rezervovaných dnů**, takže počet všech rezervovaných dnů nad všemi objekty.
 
 **Graf - Celkový počet celodenních rezervací na daný den**

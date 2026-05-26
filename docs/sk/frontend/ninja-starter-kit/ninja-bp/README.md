@@ -5,6 +5,7 @@ HTML kód je rozdelený do viacerých súborov pre možnosť vloženia spoločn�
 <!-- tabs:start -->
 
 #### ** home-page.jsp **
+
 ```html
 <!doctype html>
 <html class="no-js pg-homepage" <%@ include file="includes/html-attributes.jsp" %>>
@@ -65,16 +66,19 @@ HTML kód je rozdelený do viacerých súborov pre možnosť vloženia spoločn�
 ```
 
 #### ** sidebar.jsp **
+
 ```html
 <iwcm:write name="doc_right_menu"/>
 ```
 
 #### ** html-attributes.jsp **
+
 ```html
 lang="${ninja.temp.lngIso}" data-browser-name="${ninja.userAgent.browserName}" data-browser-version="${ninja.userAgent.browserVersion}" data-device-type="${ninja.userAgent.deviceType}" data-device-os="${ninja.userAgent.deviceOS}" data-ab-variant="${ninja.abVariant}"
 ```
 
 #### ** header.jsp **
+
 ```html
 <c:if test="${ninja.userAgent.blind}">
     <a href="${ninja.page.urlPath}?forceBrowserDetector=blind">Textová verzia stránky</a>
@@ -86,6 +90,7 @@ lang="${ninja.temp.lngIso}" data-browser-name="${ninja.userAgent.browserName}" d
 ```
 
 #### ** head.jsp **
+
 ```html
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta charset="${ninja.temp.charset}">
@@ -107,7 +112,7 @@ lang="${ninja.temp.lngIso}" data-browser-name="${ninja.userAgent.browserName}" d
 <meta property="og:image" content="${ninja.page.urlDomain}${ninja.page.seoImage}" />
 <meta property="og:site_name" content="${ninja.temp.group.siteName}" />
 <meta property="og:type" content="website" />
-<meta property="og:locale" content="${ninja.temp.lngIso}" />
+<meta property="og:locale" content="${ninja.temp.lngIsoUnderscore}" />
 
 <%--<link rel="alternate" hreflang="" href="" />--%>
 <link rel="canonical" href="${ninja.page.canonical}" />
@@ -153,6 +158,7 @@ ${ninja.webjet.insertJqueryFake}
 ```
 
 #### ** debug-info.jsp **
+
 ```html
 <c:if test="${ninja.debug}">
 <div class="md-debug-info">
@@ -197,6 +203,7 @@ ${ninja.webjet.insertJqueryFake}
 ```
 
 #### ** browser-support.jsp **
+
 ```html
 <c:if test="${ninja.userAgent.browserOutdated}">
 <div class="alert alert-warning md-browser-support md-browser-support--outdated" role="alert">
@@ -214,6 +221,7 @@ ${ninja.webjet.insertJqueryFake}
 ```
 
 #### ** breadcrumb.jsp **
+
 ```html
 <div class="md-breadcrumb" id="blindBlock-breadcrumb">
     <iwcm:write name="navbar"/>
@@ -221,6 +229,7 @@ ${ninja.webjet.insertJqueryFake}
 ```
 
 #### ** blind-friendly-panel.jsp **
+
 ```html
 <c:if test="${ninja.userAgent.blind}">
     <div id="blindBlock-top">
@@ -244,7 +253,6 @@ ${ninja.webjet.insertJqueryFake}
     </div>
 </c:if>
 ```
-
 
 <!-- tabs:end -->
 

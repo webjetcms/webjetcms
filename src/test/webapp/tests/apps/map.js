@@ -1,6 +1,11 @@
 Feature('apps.map');
 
-Scenario("Map - test zobrazovania", async ({ I, Document }) => {
+async function testMap(I, Document, moveStyleToHead = false) {
+
+    I.relogin('admin');
+    Document.setConfigValue("showDocMoveStyleToHead", ""+moveStyleToHead);
+    I.logout();
+
     I.amOnPage("/apps/map/");
     I.waitForElement("#map1");
     I.seeElement(locate("h1").withText(("Map")));
@@ -9,6 +14,17 @@ Scenario("Map - test zobrazovania", async ({ I, Document }) => {
     I.wait(2);
 
    await Document.compareScreenshotElement("#map1", "autotest-map0.png", 1280, 760, 20);
+}
+
+Scenario("Map - test zobrazovania", async ({ I, Document }) => {
+    await testMap(I, Document, false);
+    await testMap(I, Document, true);
+});
+
+Scenario("reset conf", async ({ I, Document }) => {
+    I.relogin('admin');
+    Document.setConfigValue("showDocMoveStyleToHead", "false");
+    I.logout();
 });
 
 Scenario("Map - test editor", async ({ I, login, Apps }) => {

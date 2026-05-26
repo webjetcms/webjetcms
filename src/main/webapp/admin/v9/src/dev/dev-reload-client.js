@@ -70,7 +70,7 @@
     }
 
     function connect() {
-        if (navigator.appVersion.indexOf("Chrome/147.0.0.0") !== -1) { //NOSONAR
+        if (navigator.appVersion.indexOf("Chrome/147") !== -1) { //NOSONAR
             //codecept browser, skip live reload to avoid infinite wait until network idle
             return;
         }
@@ -78,7 +78,7 @@
         eventSource = new window.EventSource(reloadUrl);
 
         eventSource.addEventListener("connected", function () {
-            log("connected");
+            log("connected, navigatorVersion: " + navigator.appVersion);
         });
 
         eventSource.addEventListener("reload", function (event) {

@@ -1,13 +1,14 @@
 # Generování snímků obrazovky dokumentace
 
-Snímky obrazovky (`screenshot`) pro manuál/dokumentaci je třeba generovat automatizovaně, aby je bylo možné kdykoliv znovu vygenerovat (např. po změně designu). Pro jejich generování je využit CodeceptJS framework používaný pro automatizované testování. Skripty jsou tedy velmi podobné těm pro testování.
+Snímky obrazovky (```screenshot```) pro manuál/dokumentaci je třeba generovat automatizovaně, aby je bylo možné kdykoli znovu vygenerovat (např. po změně designu). Pro jejich generování je využit CodeceptJS framework používaný pro automatizované testování. Skripty jsou tedy velmi podobné těm pro testování.
 
 Pro potřeby dokumentace existují speciální funkce:
-- `Document.screenshot(screenshotFilePath, width, height)` - pořídí snímek celé obrazovky, parametry `width` a `height` jsou volitelné.
-- `Document.screenshotElement(selector, screenshotFilePath, width, height)` - pořídí snímek elementu podle zadaného `selector` parametru.
-- `Document.screenshotAppEditor(docId, path, callback, width, height)` - pořídí snímek nastavení aplikace v editoru (např. galerie).
 
-!>**Upozornění:** snímky obrazovky jsou automaticky ukládány do `/docs` adresáře. Pro zadanou cestu `/redactor/webpages/domain-select.png` vznikne soubor `/docs/redactor/webpages/domain-select.png`.
+- ```Document.screenshot(screenshotFilePath, width, height)``` - ​​pořídí snímek celé obrazovky, parametry ```width``` a ```height``` jsou volitelné.
+- ```Document.screenshotElement(selector, screenshotFilePath, width, height)``` - ​​pořídí snímek elementu podle zadaného ```selector``` parametru.
+- ```Document.screenshotAppEditor(docId, path, callback, width, height)``` - ​​pořídí snímek nastavení aplikace v editoru (např. galerie).
+
+!>**Upozornění:** snímky obrazovky jsou automaticky ukládány do ```/docs``` adresáře. Pro zadanou cestu ```/redactor/webpages/domain-select.png``` vznikne soubor ```/docs/redactor/webpages/domain-select.png```.
 
 [Příklad](../../../src/test/webapp/screenshots/generator/manual-redactor.js) scénáře pro pořízení snímků obrazovky:
 
@@ -41,7 +42,7 @@ Scenario('web-pages-list', ({ I, DT, Document }) => {
 
 Snímky obrazovky vygenerujete následujícím příkazem:
 
-````shell
+```shell
 cd src/test/webapp
 #spustenie generovania vsetkych screenshotov
 npm run scr
@@ -49,7 +50,7 @@ npm run scr
 npm run scr screenshots/generator/manual-sysadmin.js
 #spustenie generovania screenshotov konkrétneho scenára s hodnotou ```@current``` v názve
 npm run scr:current
-````
+```
 
 ## Úprava CSS stylů
 

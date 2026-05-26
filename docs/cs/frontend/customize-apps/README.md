@@ -5,9 +5,10 @@ Pokud potřebujete modifikovat existující aplikaci (např. banner), nikdy to n
 Chcete-li modifikovat soubor `/components/search/search.jsp`, vytvořte si nejprve kopii souboru s názvem `/components/INSTALL_NAME/search/search.jsp`.
 
 Hodnota `INSTALL_NAME` je jméno instalace, v konfiguraci v položce s názvem `installName`. V takto vytvořeném souboru můžete vytvářet modifikace bez obav z přepsání souboru při aktualizaci. Ve stránce může zůstat `!INCLUDE(...)!` původní aplikace, WebJET provede automatické nahrazení cesty:
+
 - `/components/INSTALL_NAME/search/search.jsp`
 - `/components/search/search.jsp`
 
 Vyhledání správného souboru proběhne automaticky. Použije se první nalezený podle uvedeného pořadí.
 
-Podobně funguje i pro Spring aplikace ve složce `/apps/INSTALL_NAME/` Např. `/apps/file-archive/mvc/file-archive.html` zkopírujte do `/apps/INSTALL_NAME/file-archive/mvc/file-archive.html` a upravte podle vašich potřeb.
+Podobně funguje i pro Spring aplikace ve složce `/apps/INSTALL_NAME/`. `/apps/file-archive/mvc/file-archive.html` zkopírujte do `/apps/INSTALL_NAME/file-archive/mvc/file-archive.html` a upravte podle vašich potřeb.

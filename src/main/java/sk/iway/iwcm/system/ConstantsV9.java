@@ -21,7 +21,7 @@ public class ConstantsV9 {
 		Constants.setString("mariaDbDefaultEngine", "InnoDB");
 		Constants.setString("chunksQuantity", "25");
 		Constants.setString("propertiesAdminKeys",
-			  "button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*,text.warning,text.info,editor.directory_name,editor.confirmExitMessage,menu.forms");
+			  "button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*,text.warning,text.info,editor.directory_name,editor.confirmExitMessage,menu.forms,datatables.quill.toolbar.*");
 		Constants.setInt("webpagesTreeAutoOpenLimit", 2);
 		Constants.setString("deepl_auth_key", "", "translations", "Preklady - authentifikacny kluc k sluzbe deepl.com pre preklad textov");
 		Constants.setString("deepl_api_url", "https://api-free.deepl.com/v2/translate", "translations", "URL adresa pre API volanie DeepL prekladu, ak mate PRO ucet pouzite https://api.deepl.com/v2/translate");
@@ -53,7 +53,7 @@ public class ConstantsV9 {
 				Constants.MOD_SECURITY,
 				"Zoznam stlpcov v databaze, ktore mozu obsahovat HTML kod (nebudu pri citani escapovane specialne znaky). Pre zakaznicke projekty nastavte premennu xssHtmlAllowedFields");
 
-		Constants.setString("xsrfParamNameExceptionSystem", Constants.getString("xsrfParamNameExceptionSystem")+",tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,c,noip,rnd,login,auth,reservationDate,iID,name,act,datum,basketAct,invoicePaymentId,email,save");
+		Constants.setString("xsrfParamNameExceptionSystem", Constants.getString("xsrfParamNameExceptionSystem")+",tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,c,noip,rnd,login,auth,reservationDate,iID,name,act,datum,basketAct,invoicePaymentId,email,save,scheduleId");
 
 		Constants.setString("jpaToLowerFields", "description,questionText,notifyIntrotext,question,data,dataAsc,htmlHead,htmlData,attachments,message,files,html,note,descriptionLong*,answer,afterBodyData,value,mediaInfo*,userNote,messageText,htmlCode,purpose,content,propValue,defaultValue,dataResult,descriptionText,scriptBody,relatedPages,name", Constants.MOD_CONFIG, "Zoznam nazvov CLOB stlpcov pre ktore sa v pripade Oracle pouzije LOWER funkcia pri vyhladavani");
 
@@ -97,6 +97,8 @@ public class ConstantsV9 {
 		Constants.setString("basketInvoiceBonusStatuses", "", Constants.MOD_CONFIG, "Bonusove statusy pre objednávku v sekcií Elektonický obchod. Formát: ID_STATUSU|PREKALDOVÝ_KĽÚČ\nID_STATUSU|PREKALDOVÝ_KĽÚČ. ID_STATUSU musí byť číslo väčšie rovné 10.");
 
 		Constants.setBoolean("ABTestingAllowVariantUrl", false, "abtest", "Nastavenim na true povoli priame zobrazenie variantnej URL adresy aj ne-administratorom, napr. volanie /investicie/abtestvariantb.html");
+
+		Constants.setBoolean("showDocMoveStyleToHead", false, Constants.mods(Constants.MOD_PERFORMANCE, Constants.MOD_EDITOR, "webpages"), "Pri nastaveni na true sa <style> tagy z komponent presunu do <head> sekcie pre validny HTML kod. Riesenie problemu s HTML validaciou kde style tagy nemozu byt v body.");
 
 		Constants.setBoolean("forumAlwaysNotifyPageAuthor", false, Constants.MOD_CONFIG, "Pri nastaveni na true sa budú odosielať notifikácie autorovi stránky s Diskusiou, vždy keď bude pridaná nová téma alebo odpoveď.");
 
@@ -243,6 +245,8 @@ public class ConstantsV9 {
 		Constants.setString("xForwardedForHeader", "x-forwarded-for", Constants.MOD_SECURITY, "Názov HTTP hlavičky, ktorá obsahuje pôvodnú IP adresu klienta pri použití reverzného proxy servera. Použije sa prvá IP adresa v zozname, ak končí na ::last použije sa posledná.");
 		Constants.setString("moduleDisableList", "", Constants.MOD_CONFIG, "Čiarkov oddelený zoznam modulov, ktoré sa majú zakázať. Napríklad cmp_blog,cmp_forum,make_zip_archive,modRestart,editor_unlimited_upload");
 
+		Constants.setString("editorTargetBlankFunction", "return openTargetBlank(this, event)", Constants.MOD_EDITOR, "Meno JavaScript funkcie, ktorá sa použije namiesto target=\"_blank\" a target='_blank' ako onclick, napríklad return openTargetBlank(this, event)");
+
 		Constants.setString("multistepform_nameFields", "firstname,lastname,meno,priezvisko,jmeno,prijmeni", Constants.MOD_FORMMAIL, "");
 		Constants.setString("multistepform_emailFields", "email,e-mail", Constants.MOD_FORMMAIL, "");
 		Constants.setString("multistepform_attachmentDefaultName", "prilohy.html", Constants.MOD_FORMMAIL, "");
@@ -265,6 +269,10 @@ public class ConstantsV9 {
 		Constants.setString("imageMagickCustomParams_webp", "\n-quality 80 -define webp:method=6 -define webp:auto-filter=true -define webp:sns-strength=50", "images", "Custom parameters for ImageMagick WebP format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
 
 		Constants.setString("appWrapperClasses", "apps.wrapper.container:container,apps.wrapper.container-fluid:container-fluid,apps.wrapper.mt-1:mt-1,apps.wrapper.mt-2:mt-2,apps.wrapper.mt-3:mt-3,apps.wrapper.mt-4:mt-4,apps.wrapper.mb-1:mb-1,apps.wrapper.mb-2:mb-2,apps.wrapper.mb-3:mb-3,apps.wrapper.mb-4:mb-4,apps.wrapper.w-100:w-100,apps.wrapper.w-75:w-75,apps.wrapper.w-50:w-50,apps.wrapper.mx-auto:mx-auto", Constants.MOD_EDITOR, "Čiarkou oddelený zoznam CSS tried pre obalenie výstupu aplikácie do wrapper kontajnera. Formát: prekladový_kľúč:css_trieda alebo len css_trieda. Ak je uvedený prekladový kľúč, zobrazí sa preložený názov.");
+
+		Constants.setString("videoClasses", "components.video_player.ratio-16x9:embed-responsive-16by9 ratio ratio-16x9,components.video_player.ratio-4x3:embed-responsive-4by3 ratio ratio-4x3,components.video_player.ratio-1x1:embed-responsive-1by1 ratio ratio-1x1,components.video_player.ratio-21x9:embed-responsive-21by9 ratio ratio-21x9,components.video_player.ratio-9x16:ratio ratio-9x16", Constants.MOD_EDITOR, "Čiarkou oddelený zoznam CSS tried pre obalenie videa (pomer strán). Formát: prekladový_kľúč:css_trieda alebo len css_trieda. Prvá položka je predvolená hodnota.");
+		Constants.setString("videoWrapperClass", "embed-responsive", Constants.MOD_EDITOR, "CSS trieda pre obaľovací element videa (embed-responsive pre Bootstrap).");
+		Constants.setString("videoItemClass", "embed-responsive-item", Constants.MOD_EDITOR, "CSS trieda pre vnútorný iframe element videa (embed-responsive-item pre Bootstrap).");
 	}
 
 	/**

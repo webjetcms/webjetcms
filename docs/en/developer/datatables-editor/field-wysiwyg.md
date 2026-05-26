@@ -24,7 +24,7 @@ var tabs = [
 
 ## Implementation notes
 
-The implementation is in the file [field-type-wysiwyg.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-wysiwyg) and in [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) set as ```$.fn.dataTable.Editor.fieldTypes.wysiwyg = fieldTypeWysiwyg.typeWysiwyg();```.
+The implementation is in the file [field-type-wysiwyg.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-wysiwyg.js) and in [index.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) set as ```$.fn.dataTable.Editor.fieldTypes.wysiwyg = fieldTypeWysiwyg.typeWysiwyg();```.
 
 When displayed in the editor, a separate form named ```editorForm``` is generated in the ```create``` function, which contains additional fields ```docId```, ```groupId```, ```virtualPath```, ```title``` with values ​​filled according to the current JSON object. These fields are used for historical reasons in various ckeditor components to obtain the ID of the currently edited page (e.g. to display the Media of this page when selecting an image/file).
 
@@ -32,7 +32,7 @@ To speed up the display of the list of web pages, ckeditor is initialized only w
 
 ### Initializing ckeditor
 
-The ckeditor functionality itself is modified in the file [datatables-ckeditor.js](../../../src/main/webapp/admin/v9/src/js/datatables-ckeditor.js) which modifies the standard ckeditor for WebJET requirements (elfinder integration, modified dialogs, added new plugins, etc.). The basis is based on the original code from version 8, but the functionality is wrapped in the ```DatatablesCkEditor``` class. Its initialization is encapsulated in ```app.js``` as:
+The ckeditor functionality itself is modified in the file [datatables-ckeditor.js](../../../../src/main/webapp/admin/v9/src/js/datatables-ckeditor.js) which modifies the standard ckeditor for WebJET requirements (elfinder integration, modified dialogs, added new plugins, etc.). The basis is based on the original code from version 8, but the functionality is wrapped in the ```DatatablesCkEditor``` class. Its initialization is encapsulated in ```app.js``` as:
 
 ```javascript
 const createDatatablesCkEditor = () => {

@@ -150,6 +150,34 @@ export function typeQuill() {
     }
 
     /**
+     * Add aria-label and title attributes to Quill toolbar picker elements (dropdowns)
+     * to fix accessibility issues - screen readers cannot identify these controls otherwise.
+     * @param {Object} quill - Quill editor instance
+     */
+    function addToolbarA11y(quill) {
+        const toolbar = quill.getModule('toolbar');
+        if (!toolbar || !toolbar.container) return;
+
+        const pickerLabels = {
+            'ql-header':     WJ.translate('datatables.quill.toolbar.header'),
+            'ql-align':      WJ.translate('datatables.quill.toolbar.align'),
+            'ql-color':      WJ.translate('datatables.quill.toolbar.color'),
+            'ql-background': WJ.translate('datatables.quill.toolbar.background'),
+            'ql-script':     WJ.translate('datatables.quill.toolbar.script'),
+            'ql-size':       WJ.translate('datatables.quill.toolbar.size'),
+            'ql-font':       WJ.translate('datatables.quill.toolbar.font'),
+        };
+
+        Object.entries(pickerLabels).forEach(([cls, label]) => {
+            const pickerLabel = toolbar.container.querySelector('.' + cls + ' .ql-picker-label');
+            if (pickerLabel) {
+                pickerLabel.setAttribute('aria-label', label);
+                pickerLabel.setAttribute('title', label);
+            }
+        });
+    }
+
+    /**
      * Test if the editor is one line (without P tags)
      * @param {*} conf - datatanle column config
      * @returns
@@ -242,6 +270,9 @@ export function typeQuill() {
 
             // Add the matcher to the clipboard module
             conf._quill.clipboard.addMatcher(Node.ELEMENT_NODE, removeStylesAndClasses);
+
+            // Add accessibility attributes to toolbar picker elements
+            addToolbarA11y(conf._quill);
 
             return input;
         },

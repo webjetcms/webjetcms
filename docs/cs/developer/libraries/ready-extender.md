@@ -2,28 +2,27 @@
 
 pro správu a spouštění callbacků.
 
-***
-
+---
 **Dependencies (závislosti)**
 
 - [Tools](tools.md)
-
-***
+---
 
 ### Popis fungování:
 
-`ReadyExtender` slouží jako virtuální úložiště resp. collector funkcí, sesbíraných při načítání webu a tato kolekce funkcí se na konci renderu manuálně provede v pořadí v jakém se nachází v úložišti (v pořadí v jakém byly funkce přidány).
+`ReadyExtender` slouží jako virtuální úložiště resp. collector funkcí, sklizených při načítání webu
+a tato kolekce funkcí se na konci renderu manuálně provede v pořadí v jakém se nachází v úložišti (v pořadí v jakém byly funkce přidány).
 
-**Pořadí přidané funkce lze také určit při jejím přidávání.**
+**Pořadí přidané funkce, lze i určit při jejím přidávání.**
 
-Na konci načítání webu, například. v `document.ready` zavoláme metodu [fire()](#fire) a tím se spustí vykonávání sesbíraných funkcí.
+Na konci načítání webu, například. v `document.ready` zavoláme metodu [fire()](#fire) a tím se spustí provádění shromážděných funkcí.
 
-Můžeme si tedy určit, kdy se má, která funkce spustit a odpadá nám potřeba sledovat pořadí provádění klasických `document.ready` funkcí a stačí nám pouze jedna funkce `document.ready` pro provedení [fire()](#fire)
+Můžeme si tedy určit, kdy se má, která funkce spustit a odpadá nám potřeba sledovat pořadí provádění klasických `document.ready` funkcí
+a stačí nám pouze jedna funkce `document.ready` pro provedení [fire()](#fire)
 
 ## Vytvoření instance:
 
 **WebJET** inicializuje knihovnu v souboru [app.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app.js)
-
 ```javascript
 import Ready from './libs/ready-extender/ready-extender';
 
@@ -64,13 +63,13 @@ window.domReady.fire();
 
 **(Kliknutím zobrazíš detail pro funkci)**
 
-| Metody | Gettery |
-| ------------------- | --------------------- |
-| [add()](#add)       | [listName](#listName) |
-| [remove()](#remove) | [dopis](#dopis)         |
-| [fire()](#fire)     |
+| Metody                | Gettery               |
+| -----------           | -----------           |
+| [add()](#add)         | [listName](#listName) |
+| [remové()](#remové)   | [list](#list)         |
+| [fire()](#fire)       |
 
-***
+---
 
 ### Detailní popis funkcí
 
@@ -80,8 +79,7 @@ Přidá do seznamu novou funkci.
 
 **Druhý vstupní argument** určuje pořadí přidávané funkce. Čísluje se od 1. Pokud není zadáno, funkce se přidá na konec seznamu. Hodnoty pořadí >= 900 se neberou v úvahu, předpokládá se, že ty musí být na vždy konci.
 
-**Třetí vstupní argument** nastaven na TRUE zajistí, že se při existenci funkce na dané pozici (`orderId`), na sílu přepíše funkce a předešlá se přidá na nejbližší volné místo.
-
+**Třetí vstupní argument** nastavený na TRUE zajistí, že se při existenci funkce na dané pozici (`orderId`), na sílu přepíše funkce a předešlá se přidá na nejbližší volné místo.
 ```javascript
 /**
  * @description Pridá do zoznamu nový callback.
@@ -94,12 +92,10 @@ Přidá do seznamu novou funkci.
 add(callback, orderId = 0, rewriteOrder = false);
 ```
 
-***
-
+---
 #### remove()
 
 Odstraní callback ze seznamu na základě čísla jeho pořadí.
-
 ```javascript
 /**
  * @description Odstráni callback zo zoznamu na základe čísla jeho poradia.
@@ -110,12 +106,10 @@ Odstraní callback ze seznamu na základě čísla jeho pořadí.
 remove(orderId);
 ```
 
-***
-
+---
 #### fire()
 
 Spustí provedení všech callbacků v seznamu, zařadím podle pořadí.
-
 ```javascript
 /**
  * @description Spustí vykonanie všetkých callbackov v zozname, zaradom podľa poradia.
@@ -125,12 +119,10 @@ Spustí provedení všech callbacků v seznamu, zařadím podle pořadí.
 fire();
 ```
 
-***
-
+---
 #### listName
 
 Získá vygenerovaný název úložiště
-
 ```javascript
 /**
  * @description Získa vygenerovaný názov úložiska
@@ -144,12 +136,10 @@ Získá vygenerovaný název úložiště
 const IdReadyCallbackListu = window.domReady.listName;
 ```
 
-***
-
+---
 #### dopis
 
 Vrátí kompletní seznam všech přidaných funkcí is jejich pořadovým číslem
-
 ```javascript
 /**
  * @description Vráti kompletný zoznam všetkých pridaných callbackov aj s ich poradovým číslom
@@ -163,4 +153,4 @@ Vrátí kompletní seznam všech přidaných funkcí is jejich pořadovým čís
 const zoznamCallbackov = window.domReady.list;
 ```
 
-***
+---

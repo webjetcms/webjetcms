@@ -3,6 +3,7 @@ package sk.iway.iwcm.components.gdpr;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import jakarta.persistence.Query;
@@ -94,29 +95,14 @@ public class GdprDataDeleting {
     public void deleteOldFormData()
     {
         Adminlog.add(Adminlog.TYPE_GDPR_FORMS_DELETE,getUserId(),"GDPR "+cronSignature+" Hromadne mazem "+getOldFormDataCount()+" zaznamov z formularov, starsich ako "+Constants.getInt("gdprDeleteFormDataAfterDays")+" dni",-1,-1);
-        String date = getFormatedDate(Constants.getInt("gdprDeleteFormDataAfterDays"));
-        if(Constants.DB_TYPE == Constants.DB_MSSQL)
-        {
-            sq.execute("DELETE FROM forms where create_date < convert (datetime,'"+date+"')");
-        }
-        else // na MYSQL a ORACLE to zbieha ako tent isty SQl dotaz
-        {
-            sq.execute("DELETE FROM forms where create_date < '"+date+"'");
-        }
+        Date before = getCalendarBeforeDate(Constants.getInt("gdprDeleteFormDataAfterDays")).getTime();
+        sq.execute("DELETE FROM forms where create_date < ?", before);
     }
 
     public int getOldFormDataCount()
     {
-        String date = getFormatedDate(Constants.getInt("gdprDeleteFormDataAfterDays"));
-        if(Constants.DB_TYPE == Constants.DB_MSSQL)
-        {
-            return sq.forInt("SELECT count(*) FROM forms where create_date < convert (datetime,'"+date+"')");
-        }
-        else // na MYSQL a ORACLE to zbieha ako tent isty SQl dotaz
-        {
-            return sq.forInt("SELECT count(*) FROM forms where create_date < '"+date+"'");
-        }
-        //return sq.forInt("SELECT count(*) FROM forms where create_date < ?", getCalendarBeforeDate(Constants.getInt("gdprDeleteFormDataAfterDays")).getTime());
+        Date before = getCalendarBeforeDate(Constants.getInt("gdprDeleteFormDataAfterDays")).getTime();
+        return sq.forInt("SELECT count(*) FROM forms where create_date < ?", before);
     }
 
     public long getOldBasketOrdersCount()
@@ -144,41 +130,17 @@ public class GdprDataDeleting {
 
     public int getSendedEmailsCount()
     {
-        String date = getFormatedDate(Constants.getInt("gdprDeleteEmailsAfterDays"));
+        Date before = getCalendarBeforeDate(Constants.getInt("gdprDeleteEmailsAfterDays")).getTime();
 
-        if(Constants.DB_TYPE == Constants.DB_MSSQL)
-        {
-            return sq.forInt("SELECT count(*) FROM emails WHERE sent_date < convert (datetime,'"+date+"')");
-        }
-        else if(Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL)
-        {
-            return sq.forInt("SELECT count(*) FROM emails WHERE sent_date < to_date('"+date+"','YYYY-MM-DD')");
-        }
-        else
-        {
-            return sq.forInt("SELECT count(*) FROM emails WHERE sent_date < '"+date+"'");
-        }
-
-
+        return sq.forInt("SELECT count(*) FROM emails WHERE sent_date < ?", before);
     }
 
     public void deleteSendedEmails()
     {
-        Adminlog.add(Adminlog.TYPE_GDPR_EMAILS_DELETE,getUserId(),"GDPR "+cronSignature+" Hromadne mazem "+getSendedEmailsCount()+" zaznamov z tabulky emails, starsich ako 0 dni",-1,-1);
-        String date = getFormatedDate(Constants.getInt("gdprDeleteEmailsAfterDays"));
+        Adminlog.add(Adminlog.TYPE_GDPR_EMAILS_DELETE,getUserId(),"GDPR "+cronSignature+" Hromadne mazem "+getSendedEmailsCount()+" zaznamov z tabulky emails, starsich ako "+Constants.getInt("gdprDeleteEmailsAfterDays")+" dni",-1,-1);
+        Date before = getCalendarBeforeDate(Constants.getInt("gdprDeleteEmailsAfterDays")).getTime();
 
-        if(Constants.DB_TYPE == Constants.DB_MSSQL)
-        {
-            sq.execute("DELETE FROM emails WHERE sent_date < convert (datetime,'"+date+"')");
-        }
-        else if(Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL)
-        {
-            sq.execute("DELETE FROM emails WHERE sent_date < to_date('"+date+"','YYYY-MM-DD')");
-        }
-        else // na MYSQL a ORACLE to zbieha ako tent isty SQl dotaz
-        {
-            sq.execute("DELETE FROM emails where sent_date < ?", date);
-        }
+        sq.execute("DELETE FROM emails where sent_date < ?", before);
     }
 
     private static String getFormatedDate(int daysBefore)

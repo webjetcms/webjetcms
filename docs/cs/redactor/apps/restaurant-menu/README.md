@@ -1,6 +1,7 @@
 # Restaurační menu
 
-Aplikace Restaurační menu umožňuje zadefinování jídel, vytvoření menu pomocí jídel a následně zobrazení menu v různých stylech. Do web stránky můžete aplikaci Restaurační menu přidat přes výběr aplikací nebo přímo kódem do těla web stránky. Příklad: `!INCLUDE(/components/restaurant_menu/menu.jsp, style=02, mena=&euro;)!`
+Aplikace Restaurační menu umožňuje zadefinování jídel, vytvoření menu pomocí jídel a následně zobrazení menu v různých stylech. Do web stránky můžete aplikaci Restaurační menu přidat přes výběr aplikací nebo přímo kódem do těla web stránky.
+Příklad: ```!INCLUDE(/components/restaurant_menu/menu.jsp, style=02, mena=&euro;)!```
 
 ![](menu-app-dialog.png)
 

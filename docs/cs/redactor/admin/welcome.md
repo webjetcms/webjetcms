@@ -6,7 +6,7 @@ Zobrazuje seznam vašich přihlášení (pokud je povoleno přihlášení na ví
 
 ### Moje aktivní přihlášení
 
-Mini aplikace **Moje aktivní přihlášení** zobrazuje seznam všech aktivních přihlášení do administrace WebJET CMS pod Vaším uživatelským účtem. Vaše aktuální přihlášení je označeno ikonou <i class="ti ti-current-location fs-6" ></i>.
+Mini aplikace **Moje aktivní přihlášení** zobrazuje seznam všech aktivních přihlášení do administrace WebJET CMS pod Vaším uživatelským účtem. Vaše aktuální přihlášení je označeno ikonou<i class="ti ti-current-location fs-6"></i> .
 
 ![](sessions.png)
 
@@ -14,15 +14,15 @@ Jednotlivá přihlášení mají tooltip, který zobrazí další informace.
 
 ![](sessions-tooltip.png)
 
-Klepnutím na ikonu <i class="ti ti-logout fs-6" ></i> můžete ukončit dané přihlášení. Pokud je to v rámci Vašeho aktuálního uzlu clusteru, přihlášení bude okamžitě ukončeno. Pokud je to přihlášení v jiném uzlu, přihlášení bude ukončeno po synchronizaci mezi uzly clusteru (typicky do minuty).
+Klepnutím na ikonu<i class="ti ti-logout fs-6"></i> můžete ukončit dané přihlášení. Pokud je to v rámci Vašeho aktuálního uzlu clusteru, přihlášení bude okamžitě ukončeno. Pokud je to přihlášení v jiném uzlu, přihlášení bude ukončeno po synchronizaci mezi uzly clusteru (typicky do minuty).
 
-Poznámka: data se aktualizují po přihlášení uživatele. Můžete nastavit nový záznam do [úkoly na pozadí](../../admin/settings/cronjob/README.md) pro častější aktualizaci dat, kde jako název úlohy zadáte hodnotu `sk.iway.iwcm.stat.SessionClusterService`. Zadejte interval podle potřeby, například. každých 10 minut. Při úloze na pozadí se z databáze smažou záznamy starší 60 minut. Pokud není úloha na pozadí nastavena, záznamy se mažou při přihlášení uživatele, pokud jsou starší 24 hodin.
+Poznámka: data se aktualizují po přihlášení uživatele. Můžete nastavit nový záznam do [úlohy na pozadí](../../admin/settings/cronjob/README.md) pro častější aktualizaci dat, kde jako název úlohy zadáte hodnotu `sk.iway.iwcm.stat.SessionClusterService`. Zadejte interval podle potřeby, například. každých 10 minut. Při úloze na pozadí se z databáze smažou záznamy starší 60 minut. Pokud není úloha na pozadí nastavena, záznamy se mažou při přihlášení uživatele, pokud jsou starší 24 hodin.
 
 ### Přihlášení administrátoři
 
 Pokud máte právo "Úvod - zobrazení přihlášených administrátorů", zobrazí se také seznam všech přihlášených administrátorů. Máte tak přehled, kolik uživatelů aktuálně pracuje v administraci.
 
-Klepnutím na ikonu <i class="ti ti-mail fs-6" ></i> můžete danému administrátorovi odeslat email.
+Klepnutím na ikonu<i class="ti ti-mail fs-6"></i> můžete danému administrátorovi odeslat email.
 
 ## Záložky
 
@@ -39,7 +39,7 @@ Ve výchozím nastavení jsou zobrazeny záložky na seznam webových stránek a
 Upozornění: seznam záložek se ukládá v prohlížeči, pokud používáte více prohlížečů nastavte si záložky ve všech.
 
 <div class="video-container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/G5Ts04jSMX8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/G5Ts04jSMX8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 ## Zpětná vazba

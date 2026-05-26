@@ -1,6 +1,6 @@
 # Kategorie
 
-Sekce kategorie slouží k řízení**již existujících** kategorií, které byly definovány v[Manažeři dokumentů](./README.md). Povoleny jsou jen 2 akce a to**úprava** a **mazání**. Pro práci s touto sekcí potřebujete právo Manažer dokumentů-Kategorie (`menuFileArchivManagerCategory`).
+Sekce kategorie slouží k řízení **již existujících** kategorií, které byly definovány v [Manažeru dokumentů](./README.md). Povoleny jsou jen 2 akce a to **úprava** a **mazání**. Pro práci s touto sekcí potřebujete právo Manažer dokumentů-Kategorie (`menuFileArchivManagerCategory`).
 
 ![](category-manager.png)
 

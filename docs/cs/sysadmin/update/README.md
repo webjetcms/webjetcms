@@ -6,9 +6,9 @@ Při kliknutí na jednotlivé verze se v pravé části obrazovky zobrazí sezna
 
 ![](main-page.png)
 
-!>**Upozornění:** aktualizaci WebJETu provádějte pouze v případě, že víte co děláte. Před aktualizací kontaktujte vašeho poskytovatele hostingu pro případnou podporu. Může se stát, že po aktualizaci WebJET nenastartuje správně a bude nutný restart serveru.
+!>**Upozornění:** aktualizaci WebJETu provádějte pouze v případě pokud víte co děláte. Před aktualizací kontaktujte vašeho poskytovatele hostingu pro případnou podporu. Může se stát, že po aktualizaci WebJET nenastartuje správně a bude nutný restart serveru.
 
-Pokud váš projekt obsahuje doplňkové JAR knihovny je třeba je umístit i do složky `/WEB-INF/lib-custom/`. Během aktualizace je plně nahrazená složka `/WEB-INF/lib/` a tedy vaše knihovny by byly smazány. To může mít za následek neschopnost spuštění po restartu. Pokud taková situace nastane zkopírujte chybějící knihovny do `/WEB-INF/lib/` ze zálohy.
+Pokud váš projekt obsahuje doplňkové JAR knihovny je třeba je umístit i do složky `/WEB-INF/lib-custom/`. Během aktualizace je plně nahrazena složka `/WEB-INF/lib/` a tedy vaše knihovny by byly smazány. To může mít za následek neschopnost spuštění po restartu. Pokud taková situace nastane zkopírujte chybějící knihovny do `/WEB-INF/lib/` ze zálohy.
 
 ## Aktualizace na konkrétní verzi
 

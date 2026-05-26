@@ -325,7 +325,7 @@ public class LogonTools {
 
         if (err.toString().trim().length()>1)
         {
-            errors.put("ERROR_KEY", prop.getText("approveAction.err.badPass"));
+            errors.put("ERROR_KEY", prop.getText("logon.err.wrongPass"));
             //aby sa vzdy zobrazil dialog poslat heslo
             request.setAttribute("logon.err.wrongPass", "true");
 
@@ -1007,7 +1007,8 @@ public class LogonTools {
         if (user != null) return;
 
         //ak uz mame nieco ulozene neprepiseme to
-        if (session.getAttribute("adminAfterLogonRedirect")!=null) return;
+        String adminAfterLogonRedirect = (String)session.getAttribute("adminAfterLogonRedirect");
+        if (adminAfterLogonRedirect != null && "/admin/".equals(adminAfterLogonRedirect)==false) return;
 
         //bereme orig_path, je potrebne toto volat zo vsetkych miest pred redirectom dalej
         //teoreticky by sa dal pouzit referer, ale skrz viacere presmerovania a bezpecnost to nemozeme pouzit
@@ -1015,7 +1016,7 @@ public class LogonTools {
 
         Logger.debug(LogonTools.class, "adminAfterLogonRedirect="+session.getAttribute("adminAfterLogonRedirect"));
 
-        if (origPath != null && origPath.indexOf("logon")==-1 && origPath.equals("/admin/")==false && origPath.equals("/admin")==false && origPath.indexOf("/admin/index.jsp")==-1 && origPath.indexOf("/admin/welcome.jsp")==-1 && session.getAttribute("adminAfterLogonRedirect")==null)
+        if (origPath != null && origPath.indexOf("logon")==-1 && origPath.equals("/admin/")==false && origPath.equals("/admin")==false && origPath.indexOf("/admin/index.jsp")==-1 && origPath.indexOf("/admin/welcome.jsp")==-1)
         {
             //ukladame iba taketo cesty, nech sa nam tam neulozi odkaz na css, js alebo nieco podobne
             if (origPath.endsWith(".do") || origPath.endsWith(".jsp") || origPath.endsWith("/") || origPath.endsWith(".action"))
@@ -1151,6 +1152,7 @@ public class LogonTools {
         {
             Calendar cal2=Calendar.getInstance();
             cal2.add(Calendar.SECOND, Constants.getInt("logonBlockedDelay"));
+            Logger.debug(LogonTools.class, "Blokujem ip "+ipAddress+" do " + Tools.formatDateTimeSeconds(cal2.getTime()));
             cache.setObjectSeconds(LOGON_BLOCKED_IP_CACHE_KEY, cal2, Constants.getInt("logonBlockedDelay")+10, false);
         }
 
@@ -1166,7 +1168,7 @@ public class LogonTools {
             {
                 Calendar cal3 = Calendar.getInstance();
                 cal3.add(Calendar.SECOND, Constants.getInt("logonLoginBlockedDelay"));
-                Logger.debug(LogonTools.class, "Blokujem ip "+ipAddress+" na " + Constants.getInt("logonLoginBlockedDelay")+" sekund");
+                Logger.debug(LogonTools.class, "Blokujem ip "+ipAddress+" na " + Constants.getInt("logonLoginBlockedDelay")+" sekund do " + Tools.formatDateTimeSeconds(cal3.getTime()));
                 cache.setObjectSeconds(LOGON_BLOCKED_USERNAME_TIME_CACHE_KEY, cal3, Constants.getInt("logonLoginBlockedDelay"), false);
             }
         }

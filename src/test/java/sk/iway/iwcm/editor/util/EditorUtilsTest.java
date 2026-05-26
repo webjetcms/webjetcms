@@ -94,29 +94,56 @@ class EditorUtilsTest extends BaseWebjetTest {
     @Test
     @DisplayName("Už existujúce &nbsp; entity")
     void testExistingNbspEntities() {
-        docDetails.setData("Text s&nbsp;existujúcou entitou a novou spojkou.");
-        EditorUtils.nonBreakingSpaceReplacement(docDetails);
-        assertEquals("Text s&nbsp;existujúcou entitou a&nbsp;novou spojkou.", docDetails.getData());
+        String data = "Text s&nbsp;existujúcou entitou a novou spojkou.";
+        String expected = "Text s&nbsp;existujúcou entitou a&nbsp;novou spojkou.";
 
-        docDetails.setData("Text&nbsp;a &nbsp;ďalší a text.");
+        docDetails.setData(data);
+        EditorUtils.nonBreakingSpaceReplacement(docDetails);
+        assertEquals(expected, docDetails.getData());
+
+        //String variant
+        String result = EditorUtils.nonBreakingSpaceReplacement(data);
+        assertEquals(expected, result);
+
+        data = "Text&nbsp;a &nbsp;ďalší a text.";
+        expected = "Text&nbsp;a&nbsp;&nbsp;ďalší a&nbsp;text.";
+        docDetails.setData(data);
         EditorUtils.nonBreakingSpaceReplacement(docDetails);
         assertEquals("Text&nbsp;a&nbsp;&nbsp;ďalší a&nbsp;text.", docDetails.getData());
+
+        //String variant
+        result = EditorUtils.nonBreakingSpaceReplacement(data);
+        assertEquals(expected, result);
     }
 
     @Test
     @DisplayName("Viacero spojok za sebou")
     void testMultipleConjunctionsInSequence() {
-        docDetails.setData("Test a v texte s obsahom.");
+        String data = "Text a v texte s obsahom.";
+        String expected = "Text a&nbsp;v&nbsp;texte s&nbsp;obsahom.";
+
+        docDetails.setData(data);
         EditorUtils.nonBreakingSpaceReplacement(docDetails);
-        assertEquals("Test a&nbsp;v&nbsp;texte s&nbsp;obsahom.", docDetails.getData());
+        assertEquals(expected, docDetails.getData());
+
+        //String variant
+        String result = EditorUtils.nonBreakingSpaceReplacement(data);
+        assertEquals(expected, result);
     }
 
     @Test
     @DisplayName("Číselné spojky s bodkou")
     void testNumericConjunctions() {
-        docDetails.setData("Bod 1. v zozname a bod 25. v tom istom.");
+        String data = "Bod 1. v zozname a bod 25. v tom istom.";
+        String expected = "Bod 1.&nbsp;v&nbsp;zozname a&nbsp;bod 25.&nbsp;v&nbsp;tom istom.";
+
+        docDetails.setData(data);
         EditorUtils.nonBreakingSpaceReplacement(docDetails);
-        assertEquals("Bod 1.&nbsp;v&nbsp;zozname a&nbsp;bod 25.&nbsp;v&nbsp;tom istom.", docDetails.getData());
+        assertEquals(expected, docDetails.getData());
+
+        //String variant
+        String result = EditorUtils.nonBreakingSpaceReplacement(data);
+        assertEquals(expected, result);
     }
 
     @Test
@@ -125,6 +152,10 @@ class EditorUtilsTest extends BaseWebjetTest {
         docDetails.setData("");
         EditorUtils.nonBreakingSpaceReplacement(docDetails);
         assertEquals("", docDetails.getData());
+
+        //String variant
+        String result = EditorUtils.nonBreakingSpaceReplacement("");
+        assertEquals("", result);
     }
 
     @Test
@@ -146,17 +177,30 @@ class EditorUtilsTest extends BaseWebjetTest {
     @Test
     @DisplayName("Špecifické znaky a diakritika")
     void testSpecialCharactersAndDiacritics() {
-        docDetails.setData("Slovo s diakritikou ľščťž a pokračovanie.");
+        String data = "Slovo s diakritikou ľščťž a pokračovanie.";
+        String expected = "Slovo s&nbsp;diakritikou ľščťž a&nbsp;pokračovanie.";
+
+        docDetails.setData(data);
         EditorUtils.nonBreakingSpaceReplacement(docDetails);
-        assertEquals("Slovo s&nbsp;diakritikou ľščťž a&nbsp;pokračovanie.", docDetails.getData());
+        assertEquals(expected, docDetails.getData());
+
+        //String variant
+        String result = EditorUtils.nonBreakingSpaceReplacement(data);
+        assertEquals(expected, result);
     }
 
     @Test
     @DisplayName("Veľké a malé písmená")
     void testCaseInsensitivity() {
-        docDetails.setData("Text A veľké písmeno alebo a malé písmeno.");
+        String data = "Text A veľké písmeno nebo a malé písmeno.";
+        String expected = "Text A&nbsp;veľké písmeno nebo a&nbsp;malé písmeno.";
+        docDetails.setData(data);
         EditorUtils.nonBreakingSpaceReplacement(docDetails);
-        assertEquals("Text A&nbsp;veľké písmeno alebo a&nbsp;malé písmeno.", docDetails.getData());
+        assertEquals(expected, docDetails.getData());
+
+        //String variant
+        String result = EditorUtils.nonBreakingSpaceReplacement(data);
+        assertEquals(expected, result);
     }
 
     @Test
@@ -169,6 +213,15 @@ class EditorUtilsTest extends BaseWebjetTest {
         docDetails.setData("koniec textu a ");
         EditorUtils.nonBreakingSpaceReplacement(docDetails);
         assertEquals("koniec textu a&nbsp;", docDetails.getData());
+
+        //String variant
+        String data = " a začiatok textu";
+        String result = EditorUtils.nonBreakingSpaceReplacement(data);
+        assertEquals(" a&nbsp;začiatok textu", result);
+
+        data = "koniec textu a ";
+        result = EditorUtils.nonBreakingSpaceReplacement(data);
+        assertEquals("koniec textu a&nbsp;", result);
     }
 
     @Test
@@ -178,6 +231,11 @@ class EditorUtilsTest extends BaseWebjetTest {
         docDetails.setData("Text a obsah s rôznymi spojkami.");
         EditorUtils.nonBreakingSpaceReplacement(docDetails);
         assertEquals("Text a obsah s rôznymi spojkami.", docDetails.getData());
+
+        //String variant
+        String data = "Text a obsah s rôznymi spojkami.";
+        String result = EditorUtils.nonBreakingSpaceReplacement(data);
+        assertEquals("Text a obsah s rôznymi spojkami.", result);
 
         Constants.clearValues();
 		ConstantsV9.clearValuesWebJet9();

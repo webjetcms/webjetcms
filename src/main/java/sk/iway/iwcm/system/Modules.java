@@ -103,6 +103,7 @@ public class Modules
 		modVersions.put("cmp_app-impress_slideshow", "BPECIDM;d13");
 		modVersions.put("cmp_app-testimonials", "BPECIDM;d14");
 		modVersions.put("cmp_app-cookiebar", "BPECIDMO;d15");
+		modVersions.put("cmp_app-language-redirect", "BPECIDMO;d16");
 
 		//standard moduly
 		modVersions.put("cmp_abtesting", "E;7c9"); //WebJET AB Testovanie

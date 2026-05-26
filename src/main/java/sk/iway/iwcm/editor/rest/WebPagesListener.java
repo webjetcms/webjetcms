@@ -32,6 +32,8 @@ import sk.iway.iwcm.doc.GroupsJsTreeItem;
 import sk.iway.iwcm.doc.GroupsTreeService;
 import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
 import sk.iway.iwcm.editor.EditorDB;
+import sk.iway.iwcm.editor.approve.GroupsApproveRestController;
+import sk.iway.iwcm.editor.approve.WebApproveRestController;
 import sk.iway.iwcm.editor.service.GroupsService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
@@ -45,6 +47,7 @@ import sk.iway.iwcm.users.UsersDB;
  * - optimalizacia rychlosti zobrazenia
  */
 @Component
+@SuppressWarnings("java:S6813")
 public class WebPagesListener {
 
     @Autowired
@@ -59,6 +62,9 @@ public class WebPagesListener {
     @Autowired
     private DocAtrDefRepository docAtrDefRepository;
 
+    @Autowired
+    private GroupSchedulerDtoRepository groupSchedulerDtoRepository;
+
     @EventListener(condition = "#event.clazz eq 'sk.iway.iwcm.admin.ThymeleafEvent' && event.source.page=='webpages' && event.source.subpage=='web-pages-list'")
     protected void setInitalData(final WebjetEvent<ThymeleafEvent> event) {
         try {
@@ -70,6 +76,7 @@ public class WebPagesListener {
             String groupsInitialJson = "null";
             String webpagesInitialJson = "null";
             Boolean hasPagesToApprove = Boolean.FALSE;
+            Boolean hasGroupsToApprove = Boolean.FALSE;
             boolean hasSystemTab = true;
             boolean hasTrashTab = true;
 
@@ -141,12 +148,11 @@ public class WebPagesListener {
 
                 if ("pills-system-tab".equals(showTab)) {
                     rootGroups = rootGroups.stream().filter(g->{
-                        if (g instanceof GroupsJsTreeItem) {
-                            GroupsJsTreeItem gjs = (GroupsJsTreeItem) g;
+                        if (g instanceof GroupsJsTreeItem gjs) {
                             if (gjs.getGroup().getFullPath().startsWith(trash.getFullPath())) return false;
                         }
                         return true;
-                    }).collect(Collectors.toList());
+                    }).collect(Collectors.toList()); //NOSONAR
                 }
 
                 List<JsTreeItem> expandedGroups = expandGroupsLastFolder(rootGroups, lastGroupId, user, showPages, click, request);
@@ -159,7 +165,7 @@ public class WebPagesListener {
                     //use first group as rootGroupDetails
                     List<GroupDetails> onlyRootGroupList = new ArrayList<>();
                     if (lastGroup != null) onlyRootGroupList.add(lastGroup); //user doesnt' have edit rights to group, so it's null
-                    else if (rootGroups.get(0) instanceof GroupsJsTreeItem) onlyRootGroupList.add(((GroupsJsTreeItem)rootGroups.get(0)).getGroup());
+                    else if (rootGroups.get(0) instanceof GroupsJsTreeItem gjs) onlyRootGroupList.add(gjs.getGroup());
 
                     rootGroupDetails = new DatatablePageImpl<>(onlyRootGroupList);
                     if (onlyRootGroupList.isEmpty()==false) {
@@ -190,6 +196,11 @@ public class WebPagesListener {
                 try {
                     List<DocHistory> pagesForApprove = docHistoryRepository.findAll(WebApproveRestController.getToApproveConditions(options.getUserId()));
                     if (pagesForApprove.isEmpty()==false) hasPagesToApprove = Boolean.TRUE;
+
+
+                    // Check if user has groups to approve
+                    if (GroupsApproveRestController.countGroupsToApprove(options.getUserId(), groupSchedulerDtoRepository) > 0) hasGroupsToApprove = Boolean.TRUE;
+
                 } catch (Exception ex) {
                     Logger.error(ex);
                 }
@@ -201,6 +212,7 @@ public class WebPagesListener {
             model.addAttribute("groupsInitialJson", fixJson(groupsInitialJson));
             model.addAttribute("webpagesInitialJson", fixJson(webpagesInitialJson));
             model.addAttribute("hasPagesToApprove", hasPagesToApprove);
+            model.addAttribute("hasGroupsToApprove", hasGroupsToApprove);
             model.addAttribute("showTab", showTab);
 
             //ak ma user specialne prava na priecinky automaticky system a kos vypni,
@@ -282,8 +294,7 @@ public class WebPagesListener {
         groupsOriginal.addAll(groups);
 
         for (JsTreeItem item : groupsOriginal) {
-            if (item instanceof GroupsJsTreeItem) {
-                GroupsJsTreeItem gitem = (GroupsJsTreeItem)item;
+            if (item instanceof GroupsJsTreeItem gitem) {
 
                 if (position == 0 && Tools.isEmpty(gitem.getParent())) {
                      gitem.setParent("#");
@@ -308,8 +319,7 @@ public class WebPagesListener {
                     expandGroups(groups, parentGroups, lastGroupId, position+1, user, showPages, click, request);
                 }
             }
-            if (item instanceof DocumentsJsTreeItem) {
-                DocumentsJsTreeItem ditem = (DocumentsJsTreeItem)item;
+            if (item instanceof DocumentsJsTreeItem ditem) {
                 if (position == 0 && Tools.isEmpty(ditem.getParent())) {
                      ditem.setParent("#");
                 }

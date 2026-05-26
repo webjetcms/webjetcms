@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1.65 (2026-03-18)
+ * Version 2.1.65 (2026-05-07)
  * http://elfinder.org
  * 
  * Copyright 2009-2026, Studio 42
@@ -14315,7 +14315,8 @@ if (typeof elFinder === 'function' && elFinder.prototype.i18) {
 			'cmdwjmetadata' : 'Permissions',
 			'cmdwjfileupdate'  : 'Update file',
 			'wjfileupdate-onlyOneFileErr': 'Only one file can be selected when updating a file',
-			'wjfileupdate-typeMismatch': 'The type of the selected file must be the same as the type of the file to be updated, namely: '
+			'wjfileupdate-typeMismatch': 'The type of the selected file must be the same as the type of the file to be updated, namely: ',
+			'wjsearch-title' : 'Search'
 		}
 	};
 }
@@ -22613,7 +22614,7 @@ $.fn.elfinderwjsearchbutton = function(cmd) {
 				}
 			},
 			incVal = '',
-			input  = $('<input type="text" size="42"/>')
+			input  = $('<input type="text" size="42" name="wjsearch"/>').attr('aria-label', fm.i18n('wjsearch-title'))
 				.on('focus', function() {
 					// close other menus
 					!button.hasClass('ui-state-active') && fm.getUI().click();

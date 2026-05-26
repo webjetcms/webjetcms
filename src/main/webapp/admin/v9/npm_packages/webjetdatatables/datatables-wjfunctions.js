@@ -270,7 +270,7 @@ export function getScrollbarWidth() {
 }
 
 /**
- * Pokusi sa ziskat hodnotu v editore podla stlpca dt-row-edit, ked nenajde vrati prazdnu hodnotu
+ * Pokusi sa ziskat hodnotu v editore podla stlpca dt-row-edit alebo dt-row-title, ked nenajde vrati prazdnu hodnotu
  * @param {*} EDITOR
  * @param {*} row - riadok z DT alebo NULL pre ziskanie zaznamu priamo z DTE
  * @returns
@@ -283,7 +283,7 @@ export function getTitle(EDITOR, row = null) {
         //skus najst property, ktora sa pouziva na kliknutie
         $.each(EDITOR.TABLE.DATA.columns, function (key, col) {
             //console.log("key=", key, "col=", col, "row=", row);
-            if (typeof col.className != "undefined" && col.className?.indexOf("dt-row-edit")!=-1) {
+            if (typeof col.className != "undefined" && (col.className?.indexOf("dt-row-edit")!=-1 || col.className?.indexOf("dt-row-title")!=-1)) {
                 if (col.data.indexOf(".")!=-1) {
                     //hlbsi objekt
                     title = WJ.getJsonProperty(row, col.data);
@@ -1303,5 +1303,20 @@ export function iframeHideParentFooterOnEditorOpen(TABLE) {
         window.addEventListener("WJ.DTE.close", function(e) {
             $(window.parent.parent.parent.document).find(selector).removeClass(className);
         });
+    }
+}
+
+/**
+ * a11y: when no value is selected (filter-option-inner-inner shows only &nbsp;),
+ * set aria-label to the "select" translation so screen readers announce the purpose.
+ * When a value is selected, remove aria-label so the button title (selected text) is used.
+ */
+export function applySelectAriaLabel(sel) {
+    const $btn = $(sel).closest('.bootstrap-select').find('> button');
+    const innerText = $btn.find('.filter-option-inner-inner').text();
+    if (innerText === '\xa0' || innerText === '') {
+        $btn.attr('aria-label', WJ.translate('button.select'));
+    } else {
+        $btn.removeAttr('aria-label');
     }
 }

@@ -7,6 +7,8 @@ Instructions for setting up a new installation/clean database for a new project 
 - locally functional WebJET (configured Tomcat, web application)
 - access to the DB server with rights to create a new DB schema (or an already created DB schema)
 
+!>**Warning:** if you are setting up a new installation, use the [basecms](https://github.com/webjetcms/basecms) repository as a base, not the [webjetcms](https://github.com/webjetcms/webjetcms) repository. The difference is that `basemcs` is a basic project for using WebJET CMS with the possibility of custom [web site design](../../frontend/README.md) and programming [custom applications](../../custom-apps/README.md). The `webjetcms` repository is intended for the WebJET CMS core programmer and requires [more complex setup](../../developer/install/README.md).
+
 ## Basic server requirements
 
 - Server with at least 8 GB of memory (at least 12 GB for applications with a higher load), processor at least `Dual Core 2 GHz` (for servers with a higher load Quad core), disk space at least 40 GB.

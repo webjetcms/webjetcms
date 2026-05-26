@@ -32,12 +32,23 @@ public class WriteTagToolsForCore {
         //utility class
     }
 
+    /**
+     * Replace target="_blank" with onclick function, fix multi domain links and apply spam protection to formmail links in given text
+     * @param text
+     * @param request
+     * @return
+     */
     public static StringBuilder fixXhtml(StringBuilder text, HttpServletRequest request)
     {
+        if (text == null) return null;
+
         StringBuilder replacedText = text;
         //nahrad target="_blank"
-        replacedText = Tools.replace(replacedText, "target='_blank'", "onclick=\"return openTargetBlank(this, event)\"");
-        replacedText = Tools.replace(replacedText, "target=\"_blank\"", "onclick=\"return openTargetBlank(this, event)\"");
+        String editorTargetBlankFunction = Constants.getString("editorTargetBlankFunction");
+        if (Tools.isNotEmpty(editorTargetBlankFunction)) {
+            replacedText = Tools.replace(replacedText, "target='_blank'", "onclick=\"" + editorTargetBlankFunction + "\"");
+            replacedText = Tools.replace(replacedText, "target=\"_blank\"", "onclick=\"" + editorTargetBlankFunction + "\"");
+        }
         replacedText = Tools.replace(replacedText, "target=\"__blank\"", "target=\"_blank\"");
         replacedText = Tools.replace(replacedText, "target='__blank'", "target='_blank'");
 
@@ -78,7 +89,7 @@ public class WriteTagToolsForCore {
         return replacedText;
     }
 
-    public static StringBuilder preventSpam(StringBuilder text, HttpServletRequest request)
+    public static StringBuilder preventSpam(StringBuilder text, HttpServletRequest request) //NOSONAR
     {
         if (Constants.getBoolean("spamProtection") == false)
             return (text);
@@ -220,7 +231,7 @@ public class WriteTagToolsForCore {
                                 StringBuffer labelText = new StringBuffer();
                                 replacedText = updateLabelClassInvalid(replacedText, id, labelText);
 
-                                if (labelText.length()>0)
+                                if (labelText.isEmpty()==false)
                                 {
                                     writeText = Tools.replace(writeText, "<li>"+id, "<li>"+labelText.toString());
                                 }
@@ -233,7 +244,7 @@ public class WriteTagToolsForCore {
                             int formStart = replacedText.lastIndexOf("<form", start);
                             if (formStart > 0)
                             {
-                                replacedText = new StringBuilder().append(replacedText.substring(0, formStart)).append("<link type='text/css' media='screen' rel='stylesheet' href='/components/form/check_form.css'></link>" + prop.getText("spamprotectiondisable.formmailErrorNotify", writeText)).append(replacedText.substring(formStart));
+                                replacedText = new StringBuilder().append(replacedText.substring(0, formStart)).append("<link type='text/css' media='screen' rel='stylesheet' href='/components/form/check_form.css' />" + prop.getText("spamprotectiondisable.formmailErrorNotify", writeText)).append(replacedText.substring(formStart));
                             }
                         }
 

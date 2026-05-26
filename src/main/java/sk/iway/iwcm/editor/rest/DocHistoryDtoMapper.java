@@ -19,12 +19,14 @@ public interface DocHistoryDtoMapper {
     DocHistoryDtoMapper INSTANCE = Mappers.getMapper(DocHistoryDtoMapper.class);
 
     @Mapping(source = "historySaveDate", target = "historySaveDate", qualifiedByName = "stringDateToLong")
+    @Mapping(source = "historyApproveDate", target = "historyApproveDate", qualifiedByName = "stringDateToDate")
     @Mapping(source = "publishStartStringExtra", target = "publishStartStringExtra", qualifiedByName = "stringDateToDate")
     @Mapping(source = "historyId", target = "id")
     DocHistoryDto docToHistoryDto(DocDetails doc);
     List<DocHistoryDto> toHistoryDtos(List<DocDetails> docs);
 
     @Mapping(source = "historySaveDate", target = "historySaveDate", qualifiedByName = "stringDateToLong")
+    @Mapping(source = "historyApproveDate", target = "historyApproveDate", qualifiedByName = "stringDateToDate")
     @Mapping(source = "publishStartStringExtra", target = "publishStartStringExtra", qualifiedByName = "stringDateToDate")
     DocHistoryDto docHistoryToHistoryDto(DocHistory doc);
 

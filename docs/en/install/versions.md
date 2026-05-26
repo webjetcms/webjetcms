@@ -14,6 +14,9 @@ ext {
 
 Currently, the following versions of WebJET exist:
 
+- `2026.18-jakarta` - ​​stabilized version 2026.18, no daily changes are added to it.
+- `2026.0.18-jakarta` - ​​stabilized version 2025.0.18 with bug fixes compared to version 2026.0 (without adding improvements from the SNAPSHOT version).
+- `2026.0.18` - ​​stabilized version 2025.0.18 with bug fixes compared to version 2026.0 (without adding improvements from the SNAPSHOT version).
 - `2026.0-jakarta-SNAPSHOT` - ​​regularly updated version from the main repository using `Jakarta namespace`. Requires Tomcat 11, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2026.0-jakarta-SNAPSHOT)
 - `2026.0-SNAPSHOT` - ​​updated version from `hotfix/2026.0` with fixes from version `2026.0` for Tomcat9/Java 17.
 - `2026.0-jakarta` - ​​stabilized version 2026.0 for the Tomcat 11 application server using `Jakarta namespace`, no daily changes are added to it.
