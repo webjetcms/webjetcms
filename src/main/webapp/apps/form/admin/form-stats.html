@@ -23,9 +23,39 @@
             title: WJ.translate("forms.formsList.js"),
         }
     });
+
+    const advancedCards = ["viewCount", "responseAttempts", "errorsCount", "conversionRate"];
 </script>
 
 <script type="module" th:inline="javascript">
+
+    function insertBotFilterToStatsPills() {
+        const pills = document.querySelector("ul#pills-form-stats");
+        const element = document.getElementById("filter");
+
+        const input = document.getElementById("botFilterOut");
+        input.addEventListener("change", function() {
+            const chartContainer = document.getElementById("chartContainer");
+            const bonusChartContainer = document.getElementById("bonusChartContainer");
+            if(this.checked === true) {
+                chartContainer.style.display = "none";
+                bonusChartContainer.style.display = "block";
+            } else {
+                chartContainer.style.display = "block";
+                bonusChartContainer.style.display = "none";
+            }
+
+            const displayStyle = this.checked === true ? "block" : "none";
+            advancedCards.forEach(id => {
+                const card = document.querySelector(`[data-stat-id="${id}"]`);
+                if(card) {
+                    card.style.display = displayStyle;
+                }
+            });
+        });
+
+        pills.appendChild(element);
+    }
 
     window.domReady.add(function () {
         WJ.headerTabs({
@@ -38,6 +68,8 @@
                 { url: '/apps/form/admin/regexps/', title: WJ.translate('components.form.reg_exp.js'), active: false }
             ]
         });
+
+        insertBotFilterToStatsPills();
     });
 
     import { StatsByCharts } from '/apps/_common/charts/stats-by-charts.js';
@@ -49,6 +81,11 @@
             document.getElementById("averageDuration").textContent = data.averageDuration;
             document.getElementById("durationDays").textContent = data.durationDays;
             document.getElementById("lastResponseDateTime").textContent = data.lastResponseDateTime;
+            document.getElementById("viewCount").textContent = data.viewCount;
+            document.getElementById("errorsCount").textContent = data.chartErrorData.allErrorsCount;
+
+            const conversionRate = data.viewCount > 0 ? (data.totalResponses / data.viewCount).toFixed(2) : "0.00";
+            document.getElementById("conversionRate").textContent = conversionRate + "%";
 
             let instance = new StatsByCharts(
                 {
@@ -67,6 +104,64 @@
 
             instance.createCharts(data.chartData);
 
+            window.initAmcharts().then(module => {
+                const pieLanguagesConfig = {
+                    yAxeName: "count",
+                    xAxeName: "name",
+                    chartTitle: '[[\#{components.multistep_form.languages_chart.label}]]',
+                    chartDivId: "form-stats-pieLanguages",
+                    chartData: data.chartBonusData.languageData
+                };
+                ChartTools.createAmchart( new ChartTools.PieChartForm(pieLanguagesConfig) );
+
+                const tableReferrersConfig = {
+                    paramsNames: ["name", "count"],
+                    chartTitle: '[[\#{components.multistep_form.referrer_chart.label}]]',
+                    chartDivId: "form-stats-tableReferrers",
+                    chartData: data.chartBonusData.referrerData
+                };
+                let tableReferrersChart = new ChartTools.TableChartForm(tableReferrersConfig);
+                tableReferrersChart.headerNames = [
+                    "Refferer",
+                    window.WJ.translate("components.stats_by_charts.table.count.js")
+                ];
+                ChartTools.createAmchart( tableReferrersChart );
+
+                const pieFieldsErrorsConfig = {
+                    yAxeName: "count",
+                    xAxeName: "name",
+                    chartTitle: '[[\#{components.multistep_form.field_errors_chart.label}]]',
+                    chartDivId: "form-stats-pieFieldsErrors",
+                    chartData: data.chartErrorData.pieErrorData
+                };
+                let pieFieldsErrorsChart = new ChartTools.PieChartForm(pieFieldsErrorsConfig);
+                pieFieldsErrorsChart.labelKey = "components.multistep_form.field_error_sum.label.js";
+                ChartTools.createAmchart( pieFieldsErrorsChart );
+
+                const pieSystemErrorsConfig = {
+                    yAxeName: "count",
+                    xAxeName: "name",
+                    chartTitle: '[[#{components.multistep_form.field_errors_chart.label}]]',
+                    chartDivId: "form-stats-pieSystemErrors",
+                    chartData: data.chartErrorData.pieSystemErrorData
+                };
+                let pieSystemErrorsChart = new ChartTools.PieChartForm(pieSystemErrorsConfig);
+                pieSystemErrorsChart.labelKey = "components.multistep_form.field_error_sum.label.js";
+                ChartTools.createAmchart( pieSystemErrorsChart );
+
+                const lineSystemErrorsConfig = {
+                    yAxeNames: ChartTools.getLineChartYAxeNameObjs(["count"], [undefined]),
+                    xAxeName: "dayDate",
+                    chartTitle: '[[#{stat.top.lineChart}]]',
+                    chartDivId: "form-stats-lineKokos",
+                    chartData: ChartTools.convertDataForLineChart(data.chartErrorData.kokos),
+                    dateType: ChartTools.DateType.Auto
+                };
+
+                let lineSystemErrorsChart = new ChartTools.LineChartForm(lineSystemErrorsConfig);
+                ChartTools.createAmchart(lineSystemErrorsChart);
+            });
+
             window.addEventListener("stat-chart-update", async (e) => {
                 const chartId = e?.detail?.id;
                 if(chartId) {
@@ -84,11 +179,11 @@
         .catch(error => {
             console.error("Error fetching stats:", error);
         });
-
 </script>
 
 <div class="row header-container g-3">
-    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher">
+
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher" data-stat-id="responsesCount">
         <div class="stat-card h-100 stat-card--green">
             <div class="stat-card__icon">
                 <i class="ti ti-users"></i>
@@ -100,7 +195,7 @@
         </div>
     </div>
 
-    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher">
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher" data-stat-id="averageDuration">
         <div class="stat-card h-100 stat-card--blue">
             <div class="stat-card__icon">
                 <i class="ti ti-alarm"></i>
@@ -112,7 +207,7 @@
         </div>
     </div>
 
-    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher">
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher" data-stat-id="durationDays">
         <div class="stat-card h-100 stat-card--orange">
             <div class="stat-card__icon">
                 <i class="ti ti-calendar"></i>
@@ -124,7 +219,7 @@
         </div>
     </div>
 
-    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher">
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher" data-stat-id="lastResponseDateTime">
         <div class="stat-card h-100 stat-card--red">
             <div class="stat-card__icon">
                 <i class="ti ti-calendar-pause"></i>
@@ -135,9 +230,91 @@
             </div>
         </div>
     </div>
+
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher" data-stat-id="viewCount" style="display:none;">
+        <div class="stat-card h-100 stat-card--blue">
+            <div class="stat-card__icon">
+                <i class="ti ti-eye"></i>
+            </div>
+            <div class="stat-card__content">
+                <span class="stat-card__title" data-th-text="#{components.multistep_form.view_count}">VIEW COUNT</span>
+                <span id="viewCount" class="stat-card__value">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher" data-stat-id="responseAttempts" style="display:none;">
+        <div class="stat-card h-100 stat-card--orange">
+            <div class="stat-card__icon">
+                <i class="ti ti-send"></i>
+            </div>
+            <div class="stat-card__content">
+                <span class="stat-card__title" data-th-text="#{components.multistep_form.response_attempts}">RESPONSE ATTEMPTS</span>
+                <span id="responseAttempts" class="stat-card__value">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher" data-stat-id="errorsCount" style="display:none;">
+        <div class="stat-card h-100 stat-card--red">
+            <div class="stat-card__icon">
+                <i class="ti ti-exclamation-circle"></i>
+            </div>
+            <div class="stat-card__content">
+                <span class="stat-card__title" data-th-text="#{components.multistep_form.errors_count}">ERRORS COUNT</span>
+                <span id="errorsCount" class="stat-card__value">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher" data-stat-id="conversionRate" style="display:none;">
+        <div class="stat-card h-100 stat-card--gray">
+            <div class="stat-card__icon">
+                <i class="ti ti-users"></i>
+            </div>
+            <div class="stat-card__content">
+                <span class="stat-card__title" data-th-text="#{components.multistep_form.convertion_rate}">CONVERTION RATE</span>
+                <span id="conversionRate" class="stat-card__value">0</span>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <div id="chartContainer" class="row"></div>
+
+<div id="bonusChartContainer" style="display:none;">
+    <div class="row">
+        <div class="col-6">
+            <div id="form-stats-pieLanguages" class="amcharts"></div>
+        </div>
+
+        <div class="col-6">
+            <div id="form-stats-tableReferrers" class="amcharts"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-6">
+            <div id="form-stats-pieFieldsErrors" class="amcharts"></div>
+        </div>
+
+        <div class="col-6">
+            <div id="form-stats-pieSystemErrors" class="amcharts"></div>
+        </div>
+    </div>
+
+    <div id="form-stats-lineKokos" class="amcharts"></div>
+</div>
+
+<li class="nav-item" id="filter">
+    <div class="col-auto">
+        <div class="btn btn-sm custom-control form-switch" role="group" data-toggle="tooltip" data-th-title="#{stat.withoutBots}">
+            <input id="botFilterOut" type="checkbox" class="form-check-input" value="true" data-th-aria-label="#{stat.withoutBots}" />
+            <label for="botFilterOut" class="form-check-label is-icon-arrows-v" aria-hidden="true"></label>
+        </div>
+    </div>
+</li>
 
 <style>
     .header-container {
@@ -165,11 +342,13 @@
     .stat-card--blue   { background: #D9DEFF; color: #003289; }
     .stat-card--orange { background: #FFDAA3; color: #4A3600; }
     .stat-card--red    { background: #FFD6D7; color: #790011; }
+    .stat-card--gray   { background: #DDDFE6; color: #353944; }
 
     .stat-card--green  .stat-card__icon { color: #51DCBD; }
     .stat-card--blue   .stat-card__icon { color: #B8C3FF; }
     .stat-card--orange .stat-card__icon { color: #F6BE3F; }
     .stat-card--red    .stat-card__icon { color: #FFB3B5; }
+    .stat-card--gray   .stat-card__icon { color: #C2C6D2; }
 
     .stat-card__icon {
         flex-shrink: 0;
@@ -202,6 +381,7 @@
         font-weight: 700;
         line-height: 1.1;
     }
+
     div.amcharts table.table tr td:nth-child(2), div.amcharts table.table tr th:nth-child(2) {
         text-align: right;
         padding-right: 15px;

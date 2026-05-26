@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
@@ -47,12 +48,17 @@ public class MultistepFormsRestController {
             if(Tools.isNotEmpty(sfe.getErrorRedirect()))
                 response.put("err_redirect", sfe.getErrorRedirect());
 
+            Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Error while saving form (or form step):" + formName + ". Error: " + sfe.getLocalizedMessage(), multistepFormsService.getFormId(formName), 2);
+
             return ResponseEntity.badRequest().body(response.toString());
         }
 
         catch (Exception e) {
             Logger.error(MultistepFormsRestController.class, "saveForm() failed. " + e.getLocalizedMessage(), e);
             response.put("err_msg", Prop.getInstance(request).getText("datatable.error.unknown"));
+
+            Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Error while saving form (or form step):" + formName + ". Error: " + e.getLocalizedMessage(), multistepFormsService.getFormId(formName), 2);
+
             return ResponseEntity.badRequest().body(response.toString());
         }
     }
@@ -77,6 +83,9 @@ public class MultistepFormsRestController {
             Logger.error(MultistepFormsRestController.class, "getFormStepHtml() failed. " + e.getLocalizedMessage(), e);
             JSONObject response = new JSONObject();
             response.put("err_msg", Prop.getInstance(request).getText("datatable.error.unknown"));
+
+            Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Error while getting next form step. formName:" + formName + ", stepId:" + stepId + ". Error: " + e.getLocalizedMessage() , multistepFormsService.getFormId(formName), 1);
+
             return ResponseEntity.badRequest()
                 .header("Content-Type", contentTypeWithCharset)
                 .body(response.toString());

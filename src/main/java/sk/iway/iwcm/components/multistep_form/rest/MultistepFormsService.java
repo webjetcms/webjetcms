@@ -262,6 +262,11 @@ public class MultistepFormsService {
 
     /* ********** PUBLIC - support methods ********** */
 
+    public final int getFormId(String formName) {
+        if(Tools.isEmpty(formName)) return -1;
+        return formsRepository.getFormId(formName, CloudToolsForCore.getDomainId()).orElse(-1);
+    }
+
     public final boolean validateFormInfo(String formName, Long currentStepId, HttpServletRequest request) {
         return getValidStepEntity(formName, currentStepId, request) != null;
     }
@@ -462,7 +467,13 @@ public class MultistepFormsService {
             response.put("form-name", formName);
             response.put("step-id", nextStep == null ? -1L : nextStep.getId()); // -1L means that form ends, there is no more steps
 
-        } else response.put("fieldErrors", errors);
+        } else {
+            // Add error to response to show to user
+            response.put("fieldErrors", errors);
+
+            // increment field error count
+            formItemsRepository.incrementErrorCountByItemFormIds(formName, CloudToolsForCore.getDomainId(), new ArrayList<>(errors.keySet()));
+        }
     }
 
     /* ********** PRIVATE - main logic methods ********** */

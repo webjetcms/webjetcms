@@ -2,6 +2,7 @@ package sk.iway.iwcm.components.forms;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
@@ -35,6 +36,6 @@ public interface FormsRepository extends FormsRepositoryInterface<FormsEntity>{
     @Query("SELECT MIN(fe.createDate) FROM FormsEntity fe WHERE fe.formName = :formName AND fe.domainId = :domainId AND fe.createDate IS NOT NULL")
     Date findMinCreateDate(@Param("formName") String formName, @Param("domainId") Integer domainId);
 
-    @Query("SELECT fe.duration FROM FormsEntity fe WHERE fe.formName = :formName AND fe.domainId = :domainId AND fe.createDate IS NOT NULL")
-    List<Long> findAllDurations(@Param("formName") String formName, @Param("domainId") Integer domainId);
+    @Query("SELECT fe.id FROM FormsEntity fe WHERE fe.formName = :formName AND fe.domainId = :domainId AND fe.createDate IS NULL")
+    Optional<Integer> getFormId(@Param("formName") String formName, @Param("domainId") Integer domainId);
 }

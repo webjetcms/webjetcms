@@ -198,7 +198,7 @@ public class FormMailService {
 				if (sendMessageAsAttach==false && forceTextPlain==false)
 					messageBody = FormHtmlHandler.appendStyle(htmlData.toString(), cssData, emailEncoding, forceTextPlain);
 
-				Adminlog.add(Adminlog.TYPE_FORMMAIL, "Formular " + form.getFormName() + " uspesne ulozeny do databazy, odoslany bude neskor", form.getDocId(), form.getId().intValue());
+				Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM, "Formular " + form.getFormName() + " uspesne ulozeny do databazy, odoslany bude neskor", form.getDocId(), form.getId().intValue());
 
 				//musime kvoli clustru a potencionalnemu zapisu suborov pozdrzat email
 				long sendLaterTime = Tools.getNow();
@@ -329,7 +329,7 @@ public class FormMailService {
 
 					sb.append(" succesfully send to email ").append(recipients);
 
-					Adminlog.add(Adminlog.TYPE_SENDMAIL, "email from:" + from + " to:" + recipients + " subject:" + subject, (long)form.getDocId(), form.getId());
+					Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM, "email from:" + from + " to:" + recipients + " subject:" + subject, (long)form.getDocId(), form.getId());
 				}
 				catch (Exception ex) {
 					Logger.error(FormMailService.class, ex);
@@ -354,6 +354,6 @@ public class FormMailService {
 		if (Tools.isNotEmpty(recipients)) sb.append("\n subject: ").append(subject);
 		sb.append("\n");
 
-		Adminlog.add(Adminlog.TYPE_FORMMAIL,  sb.toString(), (long)form.getDocId(), form.getId());
+		Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM,  sb.toString(), (long)form.getDocId(), form.getId());
     }
 }
