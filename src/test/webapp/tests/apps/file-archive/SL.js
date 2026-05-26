@@ -1,9 +1,8 @@
 const { I } = inject();
-const DT = require("../../../pages/DT.js");
-const DTE = require("../../../pages/DTE.js");
-const Document = require("../../../pages/Document.js")
-
-module.exports = {
+import DT from "../../../pages/DT.js";
+import DTE from "../../../pages/DTE.js";
+import Document from "../../../pages/Document.js";
+export default {
 
     // Constants
     fileArchive: '/apps/file-archive/admin/',

@@ -1,7 +1,6 @@
 Feature('apps.basket.deliver-methods');
 
-const SL = require("./SL");
-
+import SL from "./SL.js";
 var title;
 
 Before(({ I, login }) => {

@@ -1,14 +1,13 @@
-const DT = require("./DT");
-const DTE = require("./DTE");
-const Document = require("./Document");
-
+import DT from "./DT.js";
+import DTE from "./DTE.js";
+import Document from "./Document.js";
 const { I } = inject();
 
 //.ge aby preslo email validaciou
 const CHANGE_TEXT = "-chan.ge";
 const DUPLICATE_TEXT = "-dupli.cate";
 
-module.exports = {
+export default {
 
     async baseTest(options) {
 

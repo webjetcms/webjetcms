@@ -34,7 +34,7 @@ console.log("browser=", browser);
 console.log("restart=", restart);
 console.log("autoDelayEnabled=", autoDelayEnabled);
 
-exports.config = {
+export const config = {
   tests: './tests/**/*.js',
   output: '../../../build/test',
   helpers: {
@@ -91,7 +91,7 @@ exports.config = {
     FileSystem: {},
     A11yHelper: {
       require: './helpers/a11yhelper.js',
-      outputDir: '../../../build/test/allure-results',
+      outputDir: '../../../build/test/report',
       skipFailures: false,
       reporter: "html"
     }
@@ -120,16 +120,16 @@ exports.config = {
     retryFailedStep: {
       enabled: true
     },
-    screenshotOnFail: {
+    screenshot: {
       enabled: true,
       fullPageScreenshots: true
     },
-    allure: {
+    testomatio: {
       enabled: true,
-      require: "allure-codeceptjs",
-      resultsDir: "../../../build/test/allure-results",
+      require: '@testomatio/reporter/lib/adapter/codecept.js',
+      html: true,
     },
-    pauseOnFail: {},
+    pause: {},
     auth: {
       enabled: true,
       saveToFile: false,

@@ -1,9 +1,7 @@
 Feature('apps.gallery.gallery-regenerate-images');
 
-const DT = require("../../../pages/DT");
-const DTE = require("../../../pages/DTE");
-
-
+import DT from "../../../pages/DT.js";
+import DTE from "../../../pages/DTE.js";
 Before(({ login }) => {
      login('admin');
 });

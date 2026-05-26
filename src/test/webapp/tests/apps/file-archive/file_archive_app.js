@@ -1,7 +1,6 @@
 Feature('apps.file-archive.file_archive_app');
 
-const SL = require("./SL.js");
-
+import SL from "./SL.js";
 let randomNumber;
 let NO_ARCHIVE_DOCUMENTS = "Žiadne archívne verzie alebo vzory pre tento dokument.";
 let ARCHIVE_DOCUMENTS = "Archívne verzie";

@@ -1,4 +1,4 @@
-module.exports = {
+export default {
 
     verifyReservationPrice(I, reservationObjectName, dateFrom, dateTo, timeFrom, timeTo, expectedPrice) {
         // Nastav rezerváciu

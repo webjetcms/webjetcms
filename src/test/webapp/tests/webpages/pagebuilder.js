@@ -1,7 +1,6 @@
 Feature('webpages.pagebuilder');
 
-const assert = require('assert');
-
+import assert from "assert";
 Before(({ I, login }) => {
     login('admin');
 });

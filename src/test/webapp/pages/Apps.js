@@ -1,11 +1,11 @@
 const { I } = inject();
-const DTE = require("./DTE");
-const DT = require("./DT");
-const i18n = require("./i18n");
+import DTE from "./DTE.js";
+import DT from "./DT.js";
+import i18n from "./i18n.js";
 /**
  * Functions for interacting with the application
  */
-module.exports = {
+export default {
 
     /**
      * Switches to a specified editor type.

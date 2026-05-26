@@ -18,7 +18,7 @@ npx codeceptjs run tests/components/gallery_test.js --steps
 npx codeceptjs run --steps --grep "@current"
 
 #zapnutie Pause On Fail - zapauzovanie ked nastane chyba
-npx codeceptjs run --steps -p pauseOnFail --grep "@current"
+npx codeceptjs run --steps -p pause --grep "@current"
 
 #spustenie screenshotera pre manual
 npx codeceptjs run --override '{ "tests": "./screenshots/generator/**/*.js"}' --steps

@@ -1,9 +1,8 @@
 Feature('apps.reservation.day-book-app');
 
-const assert = require('assert');
-const SL = require("./shared-logic");
-const TempMail = require('../../../pages/TempMail');
-
+import assert from "assert";
+import SL from "./shared-logic.js";
+import TempMail from "../../../pages/TempMail.js";
 let randomNumber;
 
 Before(({ I, login, DT }) => {

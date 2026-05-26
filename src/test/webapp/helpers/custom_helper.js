@@ -103,4 +103,4 @@ class CustomWebjetHelper extends Helper {
   }
 }
 
-module.exports = CustomWebjetHelper;
+export default CustomWebjetHelper;

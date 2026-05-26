@@ -1,7 +1,7 @@
 /**
  * CS translations
  */
-module.exports = {
+export default {
     keys() {
         return {
             //filebrowser.js

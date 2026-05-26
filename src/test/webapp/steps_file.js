@@ -1,7 +1,6 @@
-const moment = require("moment");
-const buttons = require('./pages/buttons.js')
-
-module.exports = function () {
+import moment from "moment";
+import buttons from "./pages/buttons.js";
+export default function () {
   return actor({
 
     getConfLng() {

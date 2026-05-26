@@ -1,14 +1,13 @@
 const { I } = inject();
-const DT = require("./DT");
-const DTE = require("./DTE");
-const Apps = require("./Apps");
-const i18n = require("./i18n");
-
+import DT from "./DT.js";
+import DTE from "./DTE.js";
+import Apps from "./Apps.js";
+import i18n from "./i18n.js";
 /**
  * Funkcie pre pracu s Dokumentami
  */
 
-module.exports = {
+export default {
 
   isScreenshotsEnabled() {
       var enabled = process.env.CODECEPT_SCREENSHOTS;

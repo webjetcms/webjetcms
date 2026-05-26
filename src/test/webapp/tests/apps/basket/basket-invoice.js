@@ -1,7 +1,6 @@
 Feature('apps.basket.basket-invoice');
 
-const SL = require("./SL");
-
+import SL from "./SL.js";
 var randomNumber;
 let paymentDataTable = "#datatableFieldDTE_Field_editorFields-payments_wrapper";
 let itemsDataTable = "#datatableFieldDTE_Field_editorFields-items_wrapper";

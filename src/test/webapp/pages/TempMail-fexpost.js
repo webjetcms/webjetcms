@@ -4,7 +4,7 @@ const { I } = inject();
  * Funkcie pre pracu s https://tempmail.plus
  */
 
-module.exports = {
+export default {
 
     /**
      * Prihlási sa do TempMail a zobrazí e-maily.

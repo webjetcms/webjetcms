@@ -1,5 +1,5 @@
 Feature('components.webpages');
-const assert = require('assert');
+import assert from "assert";
 var randomNumber;
 var container = "div.tree-col";
 var containerPage = "#datatableInit_wrapper";

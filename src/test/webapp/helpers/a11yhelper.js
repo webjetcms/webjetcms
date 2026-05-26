@@ -2,9 +2,8 @@
 // based on: https://github.com/kobenguyent/codeceptjs-a11y-helper/blob/main/src/index.ts
 
 const { Helper } = codeceptjs;
-const { resolve } = require("path");
-const { readFileSync } = require("fs");
-
+import { resolve } from "path";
+import { readFileSync } from "fs";
 //see https://www.deque.com/axe/core-documentation/api-documentation/#parameters-axerun
 const defaultAxeOptions = {
 	runOnly: {
@@ -199,4 +198,4 @@ class A11yHelper extends Helper {
 	}
 }
 
-module.exports = A11yHelper;
+export default A11yHelper;

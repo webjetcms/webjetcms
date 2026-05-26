@@ -5,7 +5,7 @@ const { I } = inject();
  * https://tempmail.sk
  */
 
-module.exports = {
+export default {
 
     /**
      * Prihlási sa do TempMail a zobrazí e-maily.

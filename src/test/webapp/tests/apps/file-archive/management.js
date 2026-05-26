@@ -1,7 +1,6 @@
 Feature('apps.file-archive.management');
 
-const SL = require("./SL.js");
-
+import SL from "./SL.js";
 Before(({ login, DT }) => {
     login('admin');
     DT.addContext("category","#categoryManagerDataTable_wrapper");

@@ -1,13 +1,11 @@
 const { I } = inject();
 
-const sk = require("./i18n.sk");
-const cs = require("./i18n.cs");
-
-
+import sk from "./i18n.sk.js";
+import cs from "./i18n.cs.js";
 /**
  * Simple translator, default language is english
  */
-module.exports = {
+export default {
 
     /**
      * Translate text to current language.

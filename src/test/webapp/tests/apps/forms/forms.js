@@ -14,8 +14,7 @@ var numberOfDateToResults = "559";
 var formName = "Elektornicky-formular";
 var randomNumber;
 var randomNumber2;
-const assert = require('assert');
-
+import assert from "assert";
 Before(({ I, login }) => {
     login('admin');
     if (typeof randomNumber=="undefined") {

@@ -1,8 +1,7 @@
 Feature('apps.gallery.gallery-access');
 
-const DT = require("../../../pages/DT");
-const DTE = require("../../../pages/DTE");
-
+import DT from "../../../pages/DT.js";
+import DTE from "../../../pages/DTE.js";
 var randomNumber,
      mainFolder,
      subfolder1,
