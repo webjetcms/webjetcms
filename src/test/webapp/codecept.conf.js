@@ -120,7 +120,7 @@ export const config = {
     },
     testomatio: {
       enabled: true,
-      require: '@testomatio/reporter/lib/adapter/codecept.js',
+      require: '@testomatio/reporter/codecept',
       html: true,
     },
     pause: {},
