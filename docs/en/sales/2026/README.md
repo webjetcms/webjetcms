@@ -4,6 +4,25 @@ This section contains descriptions of the features and **functionalities of WebJ
 
 ---
 
+## Smart forms that adapt to user responses
+
+WebJET CMS brings **conditional display and conditional field requirement** to multi-step forms, allowing the form to **dynamically change while being filled out**. The user sees only the questions that are relevant to their situation, and the system automatically determines which fields must be filled in. In practice, this means a shorter, more understandable form without unnecessary steps.
+
+This brings a measurable business effect for the customer: **higher form completion rates**, fewer submission errors, and better quality data for further processing in the store, marketing, or customer support. When a form is personalized to the user, frustration is reduced, completion time is shortened, and the chance that the visitor will actually submit the form increases.
+
+The solution is also prepared for long-term project growth. The administrator can **set rules directly in the editor** without interfering with the code, and the functionality is **extensible** for customer-specific processes (for example, different logic for different types of queries, client segments, or internal workflows). It also includes protection against invalid configurations, which reduces operational risk when editing the form.
+
+**Main benefits:**
+
+- **More accurate data collection**: Conditional field requirements ensure that the system only requests data that is truly necessary in a specific situation.
+- **Better user experience**: Dynamic display shortens the form and makes it clearer even for more complex processes.
+- **Quick edits without development**: Sales or marketing teams can change form logic directly in the administration.
+- **Lower operational risk**: Field dependency checks help prevent invalid settings and regressions.
+
+![Conditional display of fields in a form](../../redactor/apps/multistep-form/tab-visibilityConditions.png)
+
+Detailed documentation: [Conditional display/item validation](../../redactor/apps/multistep-form/README.md#conditional-displayitem-validation)
+
 ## Automated website accessibility testing
 
 WebJET CMS introduces **automated accessibility testing**, which verifies whether websites and the administrative interface are accessible to **all users** — including those with visual, hearing, motor or cognitive disabilities. The system automatically checks compliance with the international standard **WCAG 2.2** (Web Content Accessibility Guidelines) at levels A and AA, which is a requirement of EU and Slovak legislation for public sector websites and increasingly for commercial entities.
