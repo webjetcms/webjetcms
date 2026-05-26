@@ -4,6 +4,25 @@ Táto sekcia obsahuje opisy vlastností a **funkcionalít WebJET CMS zrozumiteľ
 
 ---
 
+## Inteligentné formuláre, ktoré sa prispôsobujú odpovediam používateľa
+
+WebJET CMS prináša do viackrokových formulárov **podmienené zobrazenie a podmienenú povinnosť polí**, vďaka čomu sa formulár vie **dynamicky meniť počas vypĺňania**. Používateľ vidí iba tie otázky, ktoré sú pre jeho situáciu relevantné, a systém automaticky určí, ktoré polia musia byť vyplnené. V praxi to znamená kratší, zrozumiteľnejší formulár bez zbytočných krokov.
+
+Pre zákazníka to prináša merateľný obchodný efekt: **vyššiu mieru dokončenia formulárov**, menej chýb pri odoslaní a kvalitnejšie dáta na ďalšie spracovanie v obchode, marketingu či zákazníckej podpore. Keď sa formulár prispôsobí používateľovi, znižuje sa frustrácia, skracuje sa čas vypĺňania a rastie šanca, že návštevník formulár naozaj odošle.
+
+Riešenie je zároveň pripravené na dlhodobý rast projektu. Administrátor vie **pravidlá nastavovať priamo v editore** bez zásahu do kódu a funkcionalita je **rozšíriteľná** aj pre špecifické procesy zákazníka (napríklad rozdielne logiky pre rôzne typy dopytov, segmenty klientov alebo interné workflow). Súčasťou je aj ochrana pred neplatnými konfiguráciami, takže sa znižuje prevádzkové riziko pri úpravách formulára.
+
+**Hlavné benefity:**
+
+- **Presnejší zber dát**: Podmienená povinnosť polí zabezpečí, že systém vyžiada iba údaje, ktoré sú v konkrétnej situácii naozaj potrebné.
+- **Lepší používateľský zážitok**: Dynamické zobrazenie skracuje formulár a robí ho prehľadnejším aj pri zložitejších procesoch.
+- **Rýchle úpravy bez vývoja**: Obchodné alebo marketingové tímy môžu meniť logiku formulára priamo v administrácii.
+- **Nižšie prevádzkové riziko**: Kontroly závislostí medzi poľami pomáhajú predchádzať neplatným nastaveniam a regresiám.
+
+![Podmienené zobrazenie polí vo formulári](../../redactor/apps/multistep-form/tab-visibilityConditions.png)
+
+Podrobná dokumentácia: [Podmienené zobrazenie/validovanie položky](../../redactor/apps/multistep-form/README.md#podmienené-zobrazenievalidovanie-položky)
+
 ## Automatizované testovanie prístupnosti webových stránok
 
 WebJET CMS zavádza **automatizované testovanie prístupnosti (accessibility)**, ktoré overuje, či sú webové stránky a administračné rozhranie prístupné pre **všetkých používateľov** — vrátane tých so zrakovým, sluchovým, motorickým alebo kognitívnym obmedzením. Systém automaticky kontroluje súlad s medzinárodným štandardom **WCAG 2.2** (Web Content Accessibility Guidelines) na úrovniach A a AA, čo je požiadavka legislatívy EÚ aj Slovenska pre weby verejného sektora a čoraz viac aj pre komerčné subjekty.

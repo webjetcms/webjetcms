@@ -63,7 +63,7 @@ Editor pre pridávanie a úpravu položiek je špeciálny tým, že mení svoj o
 - **Povolená hodnota** - pre pokročilú validáciu vstupu používateľa viete zvoliť ľubovoľný počet regulárnych výrazov, ktoré musia byť splnené, aby bol vstup platný. Viac sa o nich dozviete v sekcii [Regulárne výrazy](../form/regexps.md).
 - **Názov poľa** - názov, ktorý sa zobrazí používateľovi. Ak nie je zadaný použije sa názov zhodný s typom poľa.
 
-V karte Pokročilé môžete nastaviť ďalšie voliteľné parametre ako:
+V karte **Pokročilé** môžete nastaviť ďalšie voliteľné parametre ako:
 
 - **Krok formuláru** - krok, ku ktorému položka patrí, môžete tak ľahko položku presunúť do iného kroku.
 - **Poradie** - určuje poradie položky v rámci kroku.
@@ -110,6 +110,76 @@ Dostupné značky sú:
 - ```!LOGGED_USER_FIELDE!``` - voľné pole E
 - `!LOGGED_USER_GROUPS!` - zoznam skupín používateľov
 
+### Podmienené zobrazenie/validovanie položky
+
+Pre každú položku formulára môžete nastaviť pravidlá, ktoré dynamicky menia jej správanie podľa hodnôt iných položiek.
+
+K dispozícii sú dve samostatné karty:
+
+- **Zobrazenie** - určujú, či sa položka zobrazí alebo skryje (podmienky zobrazenia).
+- **Povinnosť** - určujú, či bude položka povinná alebo nepovinná (podmienky povinnosti).
+
+Obe karty používajú rovnaký typ pravidiel a rovnaký spôsob vyhodnocovania. Líšia sa iba výsledným efektom. Nastavenia z jednej karty neovplyvňujú nastavenia druhej karty.
+
+![](tab-visibilityConditions.png)
+
+!>**Upozornenie:** Systém nekontroluje, či sú zadané podmienky reálne splniteľné, preto ich nastavujte tak, aby mohli nastať. Vyhnite sa aj situáciám, keď má položka podmienené zobrazenie a zároveň sa jej hodnota používa v ďalšej podmienke, pretože môže vzniknúť mŕtva situácia. Rovnako neodporúčame meniť poradie krokov ak už máte nastavené podmienky, pretože môže nastať situácia, keď pole z kroku 1 čaká na hodnotu poľa z kroku 3, čo nebude fungovať správne.
+
+#### Kedy sú podmienky dostupné
+
+- Karty s podmienkami sa zobrazia iba pri editácii existujúcej položky (nie pri vytváraní novej).
+- Dostupnosť kariet závisí od typu poľa:
+  - Ak položka nepodporuje nastavenie **Povinné pole**, nebude dostupná ani karta **Podmienky povinnosti**.
+  - Pri grafických položkách (napr. medzera, nový riadok, prázdna bunka) podmienky nie sú dostupné, pretože nejde o interaktívne vstupné pole.
+- Ak sú nastavené **Podmienky povinnosti**, hodnota prepínača **Povinné pole** sa ignoruje.
+- V podmienkach môžete použiť iba položky z rovnakého alebo z predchádzajúcich krokov formulára.
+
+#### Ako vytvoriť podmienku
+
+Výsledné pravidlo vytvoríte kombináciou jednotlivých riadkov v tabuľke podmienok. Každý riadok predstavuje jednu podmienku s viacerými parametrami. Na jednu položku môžete pridať viac podmienok.
+
+Ide o plochú štruktúru (bez zátvoriek), takže nie je podporené vnáranie podmienok.
+
+Každá podmienka obsahuje tieto parametre:
+
+- **Pole formulára** - položka, ktorej hodnota sa použije pri vyhodnotení podmienky. Možnosti sú zoradené rovnako ako vo formulári.
+- **Podmienka porovnania** - spôsob porovnania hodnoty poľa:
+  - **rovná sa**
+  - **nerovná sa**
+  - **obsahuje**
+  - **neobsahuje**
+  - **začína na**
+  - **končí na**
+  - **je prázdne**
+  - **nie je prázdne**
+- **Porovnávaná hodnota** - hodnota, voči ktorej sa porovná obsah vybraného poľa.
+- **Ignorovať veľkosť písmen** - porovnanie nebude citlivé na veľké/malé písmená.
+- **Logický operátor** - spojenie s nasledujúcou podmienkou:
+  - `AND` - musia platiť obe podmienky,
+  - `OR` - stačí, ak platí aspoň jedna podmienka.
+
+![](tab-visibilityConditions-create.png)
+
+!>**Upozornenie:** Pri operátoroch **je prázdne** a **nie je prázdne** sa polia **Porovnávaná hodnota** a **Ignorovať veľkosť písmen** automaticky skryjú, pretože sa testuje iba existencia obsahu poľa, nie jeho konkrétna hodnota.
+
+#### Vyhodnocovanie pravidiel
+
+- Podmienky sa vyhodnocujú priebežne počas vypĺňania kroku.
+- Ak sú splnené **Podmienky zobrazenia**, pole sa zobrazí, inak sa skryje.
+- Ak sú splnené **Podmienky povinnosti**, pole je povinné, inak je nepovinné.
+- Skryté pole sa neodosiela a nevaliduje.
+- Ak je pole skryté, nikdy nemôže byť zároveň povinné.
+
+#### Dôležité obmedzenia
+
+- Podmienka nemôže odkazovať sama na seba. Ide o nepovolený stav a podmienka sa nebude dať uložiť.
+- Položku, ktorá je použitá v podmienkach iných položiek, nie je možné odstrániť.
+- Pri úprave takejto položky editor zobrazí upozornenie na závislé položky. Uloženie môžete povoliť v karte **Pokročilé** voľbou **Uložiť aj pri existujúcich závislých položkách**.
+
+Pri pokuse o úpravu alebo odstránenie položky, ktorá je použitá v podmienke inej položky, sa zobrazí chyba aj notifikácia so zoznamom závislých položiek.
+
+![](save-condition-error.png)
+
 ### Štatistika
 
 Karta **Štatistika** umožňuje zapnúť štatistiku odpovedí pre danú položku formulára. Štatistiku aktivujete zvolením možnosti **Zobraziť štatistiku**. Po jej zapnutí sa zobrazia všetky dostupné nastavenia štatistiky pre danú položku.
@@ -136,7 +206,7 @@ Na konci každého kroku sa automatický vygeneruje tlačidlo, ktorého text sa 
 
 ![](real-form.png)
 
-!>**Upozornenie:** Náhľad formuláru sa vo výsledku môže graficky líšiť od skutočného zobrazenia vo webovej aplikácii, nakoľko záleží na použitej šablóne a štýloch stránky v ktorej bude formulár vložený. Náhľad slúži hlavne na predstavu o rozložení a obsahu formuláru.
+!>**Upozornenie:** Náhľad formuláru je orientačný a môže sa kompozične aj graficky líšiť od skutočného zobrazenia na stránke. V editore sa zobrazujú všetky položky bez ohľadu na nastavené podmienky, aby ste vedeli formulár lepšie navrhnúť a skontrolovať. Na reálnej stránke sa však formulár mení dynamicky podľa podmienok zobrazenia (niektoré polia sa môžu skryť alebo zobraziť podľa hodnôt iných polí) a zároveň podľa použitej šablóny a štýlov stránky, do ktorej je formulár vložený.
 
 ## Vloženie formuláru do stránky
 

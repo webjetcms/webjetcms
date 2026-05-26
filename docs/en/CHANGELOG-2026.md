@@ -91,6 +91,7 @@ Redesigned application properties settings in the editor from the old code in `J
 ![](redactor/apps/multistep-form/stat-section.png)
 
 - Added **Completion Duration** column for multi-step forms, which shows how long it took the user to complete the form (time from viewing to submission) (#58333).
+- Multi-step forms - added support for conditional display/validation of form items based on created conditions. More in the [Conditional display/validation of items] section (redactor/apps/multistep-form/README.md#conditional-displayvalidation-of-items) (#58477).
 
 ### Gallery
 

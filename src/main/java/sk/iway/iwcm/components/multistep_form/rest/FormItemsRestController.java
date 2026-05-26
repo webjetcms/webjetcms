@@ -7,11 +7,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -25,6 +20,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -33,14 +32,19 @@ import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.forms.FormsService;
 import sk.iway.iwcm.components.forms.RegExpRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
+import sk.iway.iwcm.components.multistep_form.jpa.FormItemsConditionsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.ChartType;
 import sk.iway.iwcm.stat.rest.StatService;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.NotifyBean;
+import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
 
 @RestController
@@ -53,14 +57,16 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
     private final RegExpRepository regExpRepository;
     private final MultistepFormsService multistepFormsService;
     private final FormSettingsRepository formSettingsRepository;
+    private final FormItemsConditionsRepository formItemsConditionsRepository;
 
     @Autowired
-    public FormItemsRestController(FormItemsRepository formItemsRepository, RegExpRepository regExpRepository, MultistepFormsService multistepFormsService, FormSettingsRepository formSettingsRepository) {
+    public FormItemsRestController(FormItemsRepository formItemsRepository, RegExpRepository regExpRepository, MultistepFormsService multistepFormsService, FormSettingsRepository formSettingsRepository, FormItemsConditionsRepository formItemsConditionsRepository) {
         super(formItemsRepository);
         this.formItemsRepository = formItemsRepository;
         this.regExpRepository = regExpRepository;
         this.multistepFormsService = multistepFormsService;
         this.formSettingsRepository = formSettingsRepository;
+        this.formItemsConditionsRepository = formItemsConditionsRepository;
     }
 
     @Override
@@ -72,7 +78,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         boolean even = false;
         for(FormItemEntity item : page.getContent()) {
             if(lastStep == null) lastStep = item.getStepId();
-            else if(lastStep != item.getStepId()) {
+            else if(lastStep.intValue() != item.getStepId().intValue()) {
                 lastStep = item.getStepId();
                 even = !even;
             }
@@ -87,6 +93,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         page.addOptions("regexValidationArr", MultistepFormsService.getRegExOptions(regExpRepository, getRequest()), "label", "value", false);
         page.addOptions("chartType", ChartType.getOptions(getProp()), "label", "value", false);
         page.addOptions("colorScheme", StatService.getColorSchemeOptions(), "label", "value", true);
+        page.addOptions("hiddenTabsByType", MultistepFormsService.getFieldTabVisibility(getRequest()), "label", "value", false);
 
         processFromEntity(page, ProcessItemAction.GETALL);
 
@@ -138,6 +145,10 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         boolean isRowView = Tools.isTrue(formSettingsRepository.isRowView(entity.getFormName(), CloudToolsForCore.getDomainId()) );
         if(isRowView == false && MultistepFormsService.getRowViewItemTypes().contains(entity.getFieldType()))
             throw new IllegalStateException(getProp().getText("components.form_items.formIsNotRowView"));
+
+        if("edit".equals(target.getAction()) && Boolean.TRUE.equals(entity.getAllowSaveWhenCondition()) == false) {
+            validateFieldConditionDependencies(entity, false);
+        }
     }
 
     @Override
@@ -146,7 +157,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
 
         Pair<String, String> chartStatInfo = MultistepFormsService.getChartStatInfo(getRequest());
         if(chartStatInfo != null) {
-            entity = formItemsRepository.findFirstByFormNameAndItemFormIdOrderBySortPriorityAsc(chartStatInfo.getFirst(), chartStatInfo.getSecond());
+            entity = formItemsRepository.findFirstByFormNameAndItemFormIdAndDomainIdOrderBySortPriorityAsc(chartStatInfo.getFirst(), chartStatInfo.getSecond(), CloudToolsForCore.getDomainId());
             return processFromEntity(entity, ProcessItemAction.GETONE);
         }
 
@@ -169,7 +180,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
     public FormItemEntity insertItem(FormItemEntity entity) {
         Pair<String, String> chartStatInfo = MultistepFormsService.getChartStatInfo(getRequest());
         if(chartStatInfo != null) {
-            FormItemEntity originalEntity = formItemsRepository.findFirstByFormNameAndItemFormIdOrderBySortPriorityAsc(chartStatInfo.getFirst(), chartStatInfo.getSecond());
+            FormItemEntity originalEntity = formItemsRepository.findFirstByFormNameAndItemFormIdAndDomainIdOrderBySortPriorityAsc(chartStatInfo.getFirst(), chartStatInfo.getSecond(), CloudToolsForCore.getDomainId());
             if(entity != null) {
                 entity = processToEntity(entity, null);
 
@@ -200,7 +211,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
 
         StringBuilder sb = new StringBuilder("");
         for(Integer regexId : entity.getRegexValidationArr()) sb.append(regexId).append("+");
-        entity.setRegexValidation(sb.length() > 0 ? sb.substring(0, sb.length() - 1) : "");
+        entity.setRegexValidation(sb.isEmpty() == false ? sb.substring(0, sb.length() - 1) : "");
 
         //Prepare itemFormId - if insert OR always for radio (because you can change the field label)
         if(entity.getId() == null || entity.getId() < 1 || "radio".equals(entity.getFieldType())) {
@@ -234,6 +245,14 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
 
         // After save ensure that form pattern is updated
         multistepFormsService.updateFormPattern(entity.getFormName());
+    }
+
+    @Override
+    public boolean beforeDelete(FormItemEntity entity) {
+        //
+        validateFieldConditionDependencies(entity, true);
+
+        return super.beforeDelete(entity);
     }
 
     @Override
@@ -318,8 +337,30 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
             }
         }
 
-        if(inputClasses == null || inputClasses.size() < 1) return regexIds;
+        if(inputClasses.size() < 1) return regexIds;
         else return regExpRepository.findRegexIdsByTypeIn(inputClasses);
     }
 
+    private void validateFieldConditionDependencies(FormItemEntity entity, boolean isDelete) {
+        List<Long> conditionsUsingField = formItemsConditionsRepository.getDependedItems(entity.getFormName(), entity.getItemFormId(), CloudToolsForCore.getDomainId());
+        if(conditionsUsingField != null && conditionsUsingField.size() > 0) {
+            List<FormItemEntity> items = formItemsRepository.findAllByFormNameAndIdInAndDomainId(entity.getFormName(), conditionsUsingField, CloudToolsForCore.getDomainId());
+
+            Prop prop = getProp();
+            StringBuilder sb = new StringBuilder(prop.getText("components.form_items.bind_condition_notif.msg"));
+            sb.append("<ul>");
+
+            for(LabelValue item : multistepFormsService.prepareConditionFieldOptions(items, entity.getFormName(), prop))
+                sb.append("<li>").append( item.getLabel() ).append("</li>");
+            sb.append("</ul>");
+
+            addNotify(new NotifyBean(prop.getText("components.form_items.bind_condition_notif.title"), sb.toString(), NotifyType.WARNING, 15000));
+
+            if(isDelete == true) {
+                throwError(prop.getText("components.form_items.bind_condition.delete_err"), true);
+            } else {
+                throwError(prop.getText("components.form_items.bind_condition.save_err"), true);
+            }
+        }
+    }
 }

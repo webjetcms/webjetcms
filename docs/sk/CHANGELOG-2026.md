@@ -91,6 +91,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 ![](redactor/apps/multistep-form/stat-section.png)
 
 - Pre viackrokové formuláre pridaný stĺpec **Trvanie vyplnenia**, ktorý zobrazuje ako dlho trvalo vyplnenie formuláru používateľom (čas od jeho zobrazenia po odoslanie) (#58333).
+- Viackrokové formuláre - pridaná podpora pre podmienené zobrazenie/validovanie položky formulára na základe vytvorených podmienok. Viac v časti [Podmienené zobrazenie/validovanie položky](redactor/apps/multistep-form/README.md#podmienené-zobrazenievalidovanie-položky) (#58477).
 
 ### Galéria
 
