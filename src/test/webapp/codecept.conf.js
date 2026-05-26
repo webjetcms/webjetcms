@@ -109,12 +109,6 @@ export const config = {
     a11y: './pages/a11y.js',
   },
   bootstrap: null,
-  mocha: {
-    //generovanie reportov do output adresara https://codecept.io/reports/#html
-    reporterOptions: {
-      reportDir: "../../../build/test/report"
-    }
-  },
   name: 'webapp',
   plugins: {
     retryFailedStep: {
