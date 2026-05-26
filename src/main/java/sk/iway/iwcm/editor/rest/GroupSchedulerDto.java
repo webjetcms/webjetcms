@@ -149,7 +149,7 @@ public class GroupSchedulerDto {
     private Integer loggedShowInSitemap;
 
     @Transient
-	@DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "main", renderFormat = "dt-format-text", title = "history.changedBy", orderable = false, editor = {
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, renderFormat = "dt-format-text", title = "history.changedBy", orderable = false, editor = {
 			@DataTableColumnEditor(type = "text", attr = {
 					@DataTableColumnEditorAttr(key = "disabled", value = "disabled") }) })
 	private String userFullName;

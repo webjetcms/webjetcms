@@ -95,6 +95,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.inquiry",
     "sk.iway.iwcm.components.inquirySimple",
     "sk.iway.iwcm.components.insertScript.rest",
+    "sk.iway.iwcm.components.langredirect",
     "sk.iway.iwcm.components.media",
     "sk.iway.iwcm.components.menu",
     "sk.iway.iwcm.components.memory_cleanup.cache_objects",

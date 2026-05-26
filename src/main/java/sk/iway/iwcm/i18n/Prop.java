@@ -346,6 +346,17 @@ public class Prop
 	 */
 	public String getText(String key)
 	{
+		return getText(key, true);
+	}
+
+	/**
+	 * Gets the text attribute of the Prop object, if checkMissing is true, it will check if the value is missing and log it, if false, it will return the value without checking if it's missing
+	 * @param key
+	 * @param checkMissing
+	 * @return
+	 */
+	public String getText(String key, boolean checkMissing)
+	{
 		if (properties == null)
 		{
 			return (key);
@@ -361,7 +372,7 @@ public class Prop
 		//vyhladaj kluc podla domenoveho prefixu (podobne ako konf. premennu)
 		value = checkDomainAlias(key, value);
 
-		if (value.equals(key) && key.endsWith(".tooltip")==false && key.startsWith("displaytag.")==false && key.startsWith("[[#{")==false &&
+		if (checkMissing && value.equals(key) && key.endsWith(".tooltip")==false && key.startsWith("displaytag.")==false && key.startsWith("[[#{")==false &&
 			key.startsWith("components.translation_key.")==false && "&nbsp;".equals(key)==false && "ID".equals(key)==false && key.endsWith(".id")==false)
 		{
 			//chybajuci string, pridaj ho do chybajucich
@@ -389,7 +400,9 @@ public class Prop
 				}
 
 				//only log actual i18n keys (those containing a dot) to avoid logging plain text values
-				if (key.contains(".")) Logger.warn(Prop.class, "Missing text for key: [" + key + "] in language: [" + language + "]");
+				if (key.contains(".")) {
+					Logger.warn(Prop.class, "Missing text for key: [" + key + "] in language: [" + language + "]");
+				}
 			} catch (Exception ex) {
 				//do nothing not important if we fail to add missing key, just log it, probably java.util.ConcurrentModificationException
 			}

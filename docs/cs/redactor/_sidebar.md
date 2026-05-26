@@ -128,6 +128,7 @@
   - [Poslat stránku emailem](/redactor/apps/send_link/README.md)
   - [Působivá prezentace](/redactor/apps/app-impress_slideshow/README.md)
   - [Uživatelé](/redactor/apps/user/README.md)
+  - [Přesměrování podle jazyka](/redactor/apps/language-redirect/README.md)
   - [Proxy](/redactor/apps/proxy/README.md)
   - [Příbuzné stránky](/redactor/apps/related-pages/README.md)
   - Rezervace

@@ -9,11 +9,10 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.apache.commons.text.StringEscapeUtils;
 import org.json.JSONObject;
 
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.CryptoFactory;
 import sk.iway.iwcm.FileTools;
@@ -86,13 +85,13 @@ public class FormHtmlHandler {
 
     public FormHtmlHandler(String formName, HttpServletRequest request) {
         this.formStepsRepository = Tools.getSpringBean("formStepsRepository", FormStepsRepository.class);
-        if(this.formStepsRepository == null) throw new IllegalStateException("FormHtmlHandler was no aible to obtain FormStepsRepository");
+        if(this.formStepsRepository == null) throw new IllegalStateException("FormHtmlHandler was not able to obtain FormStepsRepository");
 
         this.formItemsRepository = Tools.getSpringBean("formItemsRepository", FormItemsRepository.class);
-        if(this.formItemsRepository == null) throw new IllegalStateException("FormHtmlHandler was no aible to obtain FormItemsRepository");
+        if(this.formItemsRepository == null) throw new IllegalStateException("FormHtmlHandler was not able to obtain FormItemsRepository");
 
         this.formSettingsRepository = Tools.getSpringBean("formSettingsRepository", FormSettingsRepository.class);
-        if(this.formSettingsRepository == null) throw new IllegalStateException("FormHtmlHandler was no aible to obtain FormSettingsRepository");
+        if(this.formSettingsRepository == null) throw new IllegalStateException("FormHtmlHandler was not able to obtain FormSettingsRepository");
 
         this.formName = formName;
 
@@ -228,7 +227,15 @@ public class FormHtmlHandler {
      */
     private StringBuilder getStepItems(Long stepId, HttpServletRequest request) {
         StringBuilder stepItemsHtml = new StringBuilder();
+
+        FormConditionsHandler formConditionsHandler = new FormConditionsHandler(this.formName, request);
+        // isFieldHiddenByCondition requires data as JSONObject
+        JSONObject jsonObject = new JSONObject(this.formData);
+
         for(FormItemEntity stepItem : formItemsRepository.getAllStepItems(stepId, CloudToolsForCore.getDomainId())) {
+
+            // DO NOT ADD item from form step if its hidden by condition - for email render
+            if(isEmailRender == true && Tools.isTrue(formConditionsHandler.isFieldHiddenByCondition(stepItem, jsonObject))) continue;
 
             JSONObject item = new JSONObject(stepItem);
             String fieldType = item.getString("fieldType");
