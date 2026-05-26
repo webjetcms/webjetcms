@@ -493,18 +493,18 @@ export class MultistepForm {
         const transitionDurationMs = 260;
         const currentlyHidden = this._isFieldHidden(field);
 
+        // Avoid replaying animations when visibility state has not changed.
+        if (visible && !currentlyHidden) return;
+        if (!visible && currentlyHidden) return;
+
         if (field._visibilityTimeoutId) {
             window.clearTimeout(field._visibilityTimeoutId);
             field._visibilityTimeoutId = null;
         }
 
-        // Avoid replaying animations when visibility state has not changed.
-        if (visible && !currentlyHidden) return;
-        if (!visible && currentlyHidden) return;
-
         if (visible) {
             field.style.display = '';
-            field.classList.remove('mf-hide', 'mf-collapsed');
+            field.classList.remove('mf-hide', 'mf-collapsed', 'mf-hidden');
 
             if (!animate) {
                 field.classList.remove('mf-enter', 'mf-collapsed');
@@ -555,6 +555,7 @@ export class MultistepForm {
         const finishHide = () => {
             field.style.display = 'none';
             field.classList.remove('mf-hide');
+            field.classList.add('mf-hidden');
             field.style.maxHeight = '0px';
             if (field._visibilityTimeoutId) {
                 window.clearTimeout(field._visibilityTimeoutId);

@@ -80,7 +80,7 @@ function testFields(I, DT, DTE, tab, modal, id) {
         DTE.waitForEditor("formItemsDataTable");
         I.clickCss(tab);
 
-        I.waitForVisible(editor);
+        waitForVisible(I, editor);
         I.clickCss(editor + " button.buttons-create");
         DTE.waitForEditor(id);
 
@@ -103,11 +103,11 @@ function testFields(I, DT, DTE, tab, modal, id) {
     I.say("I cant save item when conditions are bound");
         DTE.save();
         I.see("Táto položka formulára sa používa v podmienkach. Naozaj chcete vykonať uloženie? Ak áno, môžete to povoliť v karte 'Pokročilé' zapnutím možnosti 'Uložiť aj pri existujúcich závislých položkách'.");
-        I.waitForVisible("#toast-container-webjet");
+        waitForVisible(I, "#toast-container-webjet");
         I.see("Zoznam závislých položiek:", "#toast-container-webjet .toast-message");
         I.see("(Krok 1) Toto je pre zenu.", "#toast-container-webjet .toast-message");
         I.clickCss("#toast-container-webjet button.toast-close-button");
-        I.waitForInvisible("#toast-container-webjet");
+        waitForInvisible(I, "#toast-container-webjet");
 
     I.say("But you can allow it");
         I.clickCss("#pills-dt-formItemsDataTable-advanced-tab");
@@ -123,7 +123,7 @@ function testFields(I, DT, DTE, tab, modal, id) {
         DTE.waitForEditor("formItemsDataTable");
         I.clickCss(tab);
 
-        I.waitForVisible(editor);
+        waitForVisible(I, editor);
         I.clickCss(editor + " button.buttons-create");
         DTE.waitForEditor(id);
 
@@ -132,7 +132,7 @@ function testFields(I, DT, DTE, tab, modal, id) {
 
 function testFieldOptionsVisibililty(I, modal, seeArr = [], dontSeeArr = [], selectStep = null) {
     I.clickCss(modal + " .DTE_Field_Name_itemFormId button.dropdown-toggle");
-    I.waitForVisible("div.dropdown-menu.show");
+    waitForVisible(I, "div.dropdown-menu.show");
 
     seeArr.forEach(field => {
         I.seeElement( locate("div.dropdown-menu.show").find(locate("span.text").withText(field)) );
@@ -144,8 +144,25 @@ function testFieldOptionsVisibililty(I, modal, seeArr = [], dontSeeArr = [], sel
 
     if(selectStep != null) {
         I.click( locate("div.dropdown-menu.show").find(locate("span.text").withText(selectStep)) );
-        I.waitForInvisible("div.dropdown-menu.show");
+        waitForInvisible(I, "div.dropdown-menu.show");
     }
+}
+
+function waitForInvisible(I, selector, timeout = 5) {
+    I.wait(0.5); // wait for possible animation to finish to avoid false positive in next check
+    I.waitForInvisible(selector, timeout);
+    I.wait(0.5); // wait for possible animation to finish to avoid false positive in next check
+}
+
+function waitForVisible(I, selector, timeout = 5) {
+    I.wait(0.5); // wait for possible animation to finish to avoid false positive in next check
+    I.waitForVisible(selector, timeout);
+    I.wait(0.5); // wait for possible animation to finish to avoid false positive in next check
+}
+
+function dontSeeElement(I, selector) {
+    I.wait(0.5); // wait for possible animation to finish to avoid false positive in next check
+    I.dontSeeElement(selector);
 }
 
 Scenario('TETS CONDITIONS in form', async ({ I, DT, DTE, TempMail }) => {
@@ -158,16 +175,16 @@ Scenario('TETS CONDITIONS in form', async ({ I, DT, DTE, TempMail }) => {
         I.dontSeeElement("#meno-1");
 
         I.clickCss("input#radiogroup-1-0[value='valA']");
-        I.dontSeeElement("#meno-1");
+        waitForInvisible(I, "#meno-1", 5);
 
         I.clickCss("input#radiogroup-1-1[value='valB']");
-        I.seeElement("#meno-1");
+        waitForVisible(I, "#meno-1", 5);
 
         I.clickCss("input#radiogroup-1-2[value='valC']");
-        I.seeElement("#meno-1");
+        waitForVisible(I, "#meno-1", 5);
 
         I.clickCss("input#radiogroup-1-0[value='valA']");
-        I.dontSeeElement("#meno-1");
+        waitForInvisible(I, "#meno-1");
 
     I.say("Dont see Step1 - Email until -> Step1 - Priezvisko is not_empty AND Step1 - Checkgroup is not_empty AND Step1 - Radiogroup not_contains 'auto'");
         I.dontSeeElement("#email-1");
@@ -188,23 +205,23 @@ Scenario('TETS CONDITIONS in form', async ({ I, DT, DTE, TempMail }) => {
         I.dontSeeElement("#email-1");
 
         I.clickCss("input#checkboxgroup-1-1[value='autobus']");
-        I.seeElement("#email-1");
+        waitForVisible(I, "#email-1", 5);
 
     I.say(" Dont see Step1 - popiska-1 until - > Step1 - Pohlavie MUZ ... in codition is error where text do not match case BUT we allowed case insensitivity");
         I.dontSeeElement("label[for='popiska-1']");
 
         I.clickCss("#pohlavie-false-muz");
-        I.seeElement("label[for='popiska-1']");
+        waitForVisible(I, "label[for='popiska-1']", 5);
 
     I.say("Step1 - popiska-1 requires - > Step1 - Pohlavie MUZ ... BUT we amde case error and DONT allowed case insensitivity - sooo field will not be visible");
-        I.dontSeeElement("label[for='popiska-2']");
+        waitForInvisible(I, "label[for='popiska-2']", 5);
 
         I.clickCss("#pohlavie-false-zena");
-        I.dontSeeElement("label[for='popiska-2']");
+        waitForInvisible(I, "label[for='popiska-2']", 5);
 
     I.say("Check that Meno is required and email is not required");
         I.clickCss("input#radiogroup-1-2[value='valC']"); // show field
-        I.seeElement("#meno-1");
+        waitForVisible(I, "#meno-1", 5);
 
     I.clickCss("button[type='submit']");
         I.see("Meno - povinné pole");
@@ -213,13 +230,13 @@ Scenario('TETS CONDITIONS in form', async ({ I, DT, DTE, TempMail }) => {
 
     I.say("Hide Meno");
         I.clickCss("input#radiogroup-1-0[value='valA']");
-        I.dontSeeElement("#meno-1");
+        waitForInvisible(I, "#meno-1", 5);
 
     I.say("Change Step1 - POhlavie to make field Step1 - Email required .... check that required span was added");
-        I.dontSeeElement("label[for='email-1'] span.requirement-mark");
+        waitForInvisible(I, "label[for='email-1'] span.requirement-mark", 5);
 
         I.clickCss("#pohlavie-false-ine");
-        I.seeElement("label[for='email-1'] span.requirement-mark");
+        waitForVisible(I, "label[for='email-1'] span.requirement-mark", 5);
 
     I.clickCss("button[type='submit']");
         I.dontSee("Meno - povinné pole"); // this is hidden so no more required
@@ -243,48 +260,48 @@ Scenario('TETS CONDITIONS in form', async ({ I, DT, DTE, TempMail }) => {
         I.dontSeeElement("input#adresa-1");
 
         I.fillField("input#menopriezvisko-1", "Tester_1");
-        I.seeElement("input#adresa-1");
+        waitForVisible(I, "input#adresa-1", 5);
 
         I.fillField("input#menopriezvisko-1", "Tester_2");
-        I.seeElement("input#adresa-1");
+        waitForVisible(I, "input#adresa-1", 5);
 
         I.fillField("input#menopriezvisko-1", "Tester_3");
-        I.dontSeeElement("input#adresa-1");
+        waitForInvisible(I, "input#adresa-1", 5);
 
         //case sensitive
         I.fillField("input#menopriezvisko-1", "tester_1");
-        I.dontSeeElement("input#adresa-1");
+        waitForInvisible(I, "input#adresa-1", 5);
 
     I.say("I see Step2 - telefon-1 when -> Step1 - email-1 starts with " + baseUserMail + " (ignore case) AND Step2 - radiogroup-2-1 is selected");
-        I.dontSeeElement("input#telefon-1");
+        waitForInvisible(I, "input#telefon-1", 5);
 
         I.clickCss("input#radiogroup-2-0[value='one']");
-        I.dontSeeElement("input#telefon-1");
+        waitForInvisible(I, "input#telefon-1", 5);
 
         I.clickCss("input#radiogroup-2-1[value='two']");
-        I.seeElement("input#telefon-1");
+        waitForVisible(I, "input#telefon-1", 5);
 
         I.clickCss("input#radiogroup-2-2[value='three']");
-        I.dontSeeElement("input#telefon-1");
+        waitForInvisible(I, "input#telefon-1", 5);
 
     I.say("Test validations");
         I.clickCss("input#radiogroup-2-1[value='two']");
-        I.seeElement("input#telefon-1");
+        waitForVisible(I, "input#telefon-1", 5);
         I.clickCss("button[type='submit']");
         I.waitForText("Hodnota () pre pole Telefónne číslo je neplatná", 5);
         I.dontSee("Adresa - povinné pole");
 
         I.fillField("input#menopriezvisko-1", "Tester_1");
-        I.seeElement("input#adresa-1");
+        waitForVisible(I, "input#adresa-1", 5);
         I.clickCss("button[type='submit']");
         I.waitForText("Hodnota () pre pole Telefónne číslo je neplatná", 5);
         I.dontSee("Adresa - povinné pole");
 
         I.fillField("input#menopriezvisko-1", "Tester_2");
-        I.seeElement("input#adresa-1");
+        waitForVisible(I, "input#adresa-1", 5);
         I.clickCss("button[type='submit']");
         I.waitForText("Hodnota () pre pole Telefónne číslo je neplatná", 5);
-        I.waitForText("Adresa - povinné pole");
+        I.waitForText("Adresa - povinné pole", 5);
 
         I.fillField("input#telefon-1", "0123456789");
         I.clickCss("button[type='submit']");
@@ -292,7 +309,7 @@ Scenario('TETS CONDITIONS in form', async ({ I, DT, DTE, TempMail }) => {
         I.dontSee("Hodnota () pre pole Telefónne číslo je neplatná");
 
         I.fillField("input#menopriezvisko-1", "Tester_X");
-        I.dontSeeElement("input#adresa-1");
+        waitForInvisible(I, "input#adresa-1", 5);
 
         I.clickCss("button[type='submit']");
         I.waitForText("Formulár bol úspešne odoslaný", 10);

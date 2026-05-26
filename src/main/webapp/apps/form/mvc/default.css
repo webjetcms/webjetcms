@@ -1,4 +1,5 @@
 .multistep-form-app .form-group.mf-visibility-animated {
+    display: block;
     overflow: hidden;
     transform-origin: top center;
     transition: max-height 0.26s ease, margin-top 0.26s ease, margin-bottom 0.26s ease, opacity 0.2s ease, transform 0.2s ease;
@@ -15,4 +16,9 @@
     margin-top: 0 !important;
     margin-bottom: 0 !important;
     pointer-events: none;
+}
+
+.multistep-form-app .form-group.mf-visibility-animated.mf-hidden,
+.multistep-form-app .form-group.mf-visibility-animated.mf-hidden input {
+    display: none;
 }
