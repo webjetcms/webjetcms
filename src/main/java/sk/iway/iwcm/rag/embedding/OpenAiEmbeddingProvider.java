@@ -49,6 +49,13 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
             ObjectNode requestBody = MAPPER.createObjectNode();
             requestBody.put("model", model);
 
+            if (supportsDimensionsParameter(model)) {
+                int dimensions = getDimensions(model);
+                if (dimensions > 0) {
+                    requestBody.put("dimensions", dimensions);
+                }
+            }
+
             ArrayNode inputArray = MAPPER.createArrayNode();
             for (String text : texts) {
                 inputArray.add(text);
@@ -86,6 +93,10 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
     @Override
     public String getDefaultModel() {
         return Constants.getString("ragEmbeddingModel");
+    }
+
+    private boolean supportsDimensionsParameter(String model) {
+        return Tools.isNotEmpty(model) && model.startsWith("text-embedding-3-");
     }
 
     /**

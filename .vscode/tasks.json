@@ -584,7 +584,7 @@
             }
         },
         {
-            "label": "Docker RAG PgSQL Start",
+            "label": "Docker RAG PgSQL-vector Start",
             "type": "shell",
             "options": {
                 "cwd": ".devcontainer/db/"
@@ -597,7 +597,7 @@
             }
         },
         {
-            "label": "Docker RAG PgSQL Stop",
+            "label": "Docker RAG PgSQL-vector Stop",
             "type": "shell",
             "options": {
                 "cwd": ".devcontainer/db/"

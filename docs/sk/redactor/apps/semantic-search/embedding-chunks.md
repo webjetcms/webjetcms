@@ -1,10 +1,10 @@
-# Sémantické indexovanie
+# Sémantický index
 
-Sémantické indexovanie prevádza obsah stránok na vektorové reprezentácie (embeddingy) pomocou OpenAI API a ukladá ich do databázy [pgvector](https://github.com/pgvector/pgvector). To umožňuje efektívne sémantické vyhľadávanie.
+Sémantický index prevádza obsah stránok na vektorové reprezentácie (`embedding`) pomocou OpenAI API a ukladá ich do vektorovej databázy. To umožňuje efektívne sémantické vyhľadávanie.
 
 Pre presnejšie výsledky sa obsah rozdeľuje na menšie časti – **chunky**. Každý chunk je indexovaný samostatne, čo systému umožňuje porovnávať dotazy s konkrétnymi časťami textu a nie s celou stránkou naraz.
 
-Správu embeddingov nájdete v sekcii **Nastavenia → Sémantické indexovanie**.
+Správu vektorov nájdete v sekcii **Nastavenia → Sémantický index**.
 
 Aktuálne je podporované indexovanie **webových stránok**. Ďalšie typy môžu pribudnúť v budúcnosti.
 
@@ -17,10 +17,10 @@ Indexuje sa čistý text stránky – názov, perex a telo bez HTML tagov. Obsah
 Každý chunk obsahuje tieto stĺpce:
 
 - **ID entity** – ID webovej stránky
-- **Index časti** – poradie chunku v rámci stránky (0, 1, 2, ...)
+- **Index časti** – poradie `chunk` v rámci stránky (0, 1, 2, ...)
 - **Text časti** – text, pre ktorý bol vygenerovaný embedding (samotný embedding sa nezobrazuje)
-- **Model embeddingu** – použitý OpenAI model, napr. `text-embedding-3-small`
-- **Dimenzie** – počet dimenzií embeddingu, napr. `1536`
+- **Model** – použitý OpenAI model, napr. `text-embedding-3-small`
+- **Dimenzie** – počet dimenzií vektora, napr. `1536`
 - **Jazyk** – jazyková verzia stránky
 - **Stav** – stav spracovania:
   - **COMPLETED** – úspešne spracovaný
@@ -42,21 +42,21 @@ V hlavičke tabuľky sú dostupné tieto filtre:
 
 ## Presmerovanie z Webových stránok
 
-V sekcii **Webové stránky** môžete pri zvolenom priečinku kliknúť na tlačidlo <button class="btn btn-sm buttons-selected btn-outline-secondary"><span><i class="ti ti-database-search"></i></span></button> v hlavičke priečinkov. Tým sa otvorí sekcia **Sémantické indexovanie** s automaticky nastaveným filtrom pre daný priečinok.
+V sekcii **Webové stránky** môžete pri zvolenom priečinku kliknúť na tlačidlo <button class="btn btn-sm buttons-selected btn-outline-secondary"><span><i class="ti ti-database-search"></i></span></button> v hlavičke priečinkov. Tým sa otvorí sekcia **Sémantický index** s automaticky nastaveným filtrom pre daný priečinok.
 
 ### Automatické indexovanie
 
 Systém automaticky zaradí stránku do fronty pri:
 
-- **vytvorení alebo úprave** – stránka sa zaindexuje (alebo preindexuje) bez manuálneho zásahu
-- **zmazaní alebo presunutí do koša** – všetky súvisiace chunky sa odstránia z databázy
-- **obnovení z koša** – stránka sa opätovne zaindexuje
+- **vytvorení alebo úprave** – stránka sa indexuje (alebo aktualizuje) bez manuálneho zásahu
+- **zmazaní alebo presunutí do koša** – všetky súvisiace bloky sa odstránia z databázy
+- **obnovení z koša** – stránka sa opätovne indexuje
 
 ### Manuálne indexovanie
 
 Kliknite na tlačidlo <button class="btn btn-sm btn-success" type="button"><span><i class="ti ti-database-plus"></i></span></button> pre otvorenie dialógu indexovania.
 
-Dialóg zobrazí prehľad stránok zvoleného priečinka – celkový počet, počet už indexovaných a počet vo fronte. Priečinok sa prednastaví podľa aktívneho filtra. Po potvrdení sa všetky stránky zaradia do fronty. Ak stránka už má aktuálny embedding, znovu sa neindexuje.
+Dialóg zobrazí prehľad stránok zvoleného priečinka – celkový počet, počet už indexovaných a počet vo fronte. Priečinok sa nastaví podľa aktívneho filtra. Po potvrdení sa všetky stránky zaradia do fronty. Ak stránka už má aktuálny embedding, znovu sa neindexuje.
 
 Akciu spustíte tlačidlom <button class="btn btn-primary"><i class="ti ti-check"></i> <span>Spustiť akciu</span></button>.
 
