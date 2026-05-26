@@ -36,7 +36,7 @@ Systém podporuje nasledujúce typy vyhľadávania:
 ### Porovnanie typov vyhľadávania
 
 | | Databázové (`db`) | Lucene | Sémantické (`semantic`) |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Technológia | SQL LIKE / FULLTEXT | `Apache Lucene` | `OpenAI embeddings` + `pgvector` |
 | Zhoda | Kľúčové slová | Kľúčové slová + skloňovanie | Sémantický význam |
 | Výsledky bez zhody slov | Nie | Čiastočne | Áno |

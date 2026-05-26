@@ -17,15 +17,30 @@ public interface EmbeddingProvider {
     List<float[]> embed(List<String> texts, String model);
 
     /**
+     * Generate embeddings with provider usage metadata.
+     * Implementations may override this method to return token usage.
+     */
+    default EmbeddingBatchResult embedWithUsage(List<String> texts, String model) {
+        return new EmbeddingBatchResult(embed(texts, model), 0);
+    }
+
+    /**
      * Generate embedding for a single text.
      * @param text text string to embed
      * @param model the embedding model name
      * @return float array representing the embedding vector
      */
     default float[] embed(String text, String model) {
-        List<float[]> results = embed(List.of(text), model);
+        List<float[]> results = embedWithUsage(List.of(text), model).getEmbeddings();
         if (results == null || results.isEmpty()) return new float[0];
         return results.get(0);
+    }
+
+    /**
+     * Generate embedding for a single text with provider usage metadata.
+     */
+    default EmbeddingBatchResult embedWithUsage(String text, String model) {
+        return embedWithUsage(List.of(text), model);
     }
 
     /**

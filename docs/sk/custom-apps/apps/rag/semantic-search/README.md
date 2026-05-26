@@ -115,9 +115,9 @@ Systém automaticky zaradí stránku do indexovacej fronty pri jej:
 
 Toto zabezpečuje listener [DocSaveEventListener](../../../../../../src/main/java/sk/iway/iwcm/rag/listener/DocSaveEventListener.java), ktorý reaguje na udalosti ukladania dokumentov.
 
-## Cron úloha
+## Úloha na pozadí
 
-Frontu spracúva cron úloha [RagIndexCronTask](../../../../../../src/main/java/sk/iway/iwcm/rag/service/RagIndexCronTask.java). Odporúčané nastavenie je spúšťanie každých 5 minút:
+Frontu spracúva úloha na pozadí [sk.iway.iwcm.rag.service.RagIndexCronTask](../../../../../../src/main/java/sk/iway/iwcm/rag/service/RagIndexCronTask.java). Odporúčané nastavenie je spúšťanie každých 5 minút:
 
 Cron úloha je bezpečná voči súbežnému spusteniu – pri behu sa nastaví príznak v cache s platnosťou 60 minút. Chybné záznamy sa nevymažú a opätovne sa spracujú pri ďalšom behu.
 

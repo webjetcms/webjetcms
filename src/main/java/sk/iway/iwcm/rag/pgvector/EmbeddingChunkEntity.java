@@ -73,11 +73,14 @@ public class EmbeddingChunkEntity extends BaseEditorFields {
 
     @Column(name = "chunk_text", nullable = false, columnDefinition = "TEXT")
     @DataTableColumn(
-        inputType = DataTableColumnType.TEXTAREA,
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        renderFormat = "dt-format-text-wrap",
+        className = "dt-style-text-wrap wrap",
         title = "settings.embedding-chunks.chunkText",
         tab = "main",
         editor = {
             @DataTableColumnEditor(
+                type = "textarea",
                 attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
             )
         }
@@ -153,6 +156,7 @@ public class EmbeddingChunkEntity extends BaseEditorFields {
     @Column(name = "error_message", length = 500)
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
+        className = "wrap",
         title = "settings.embedding-chunks.errorMessage",
         tab = "main",
         editor = {

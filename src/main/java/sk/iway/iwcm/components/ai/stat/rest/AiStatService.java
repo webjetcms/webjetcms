@@ -23,6 +23,8 @@ import org.springframework.stereotype.Service;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DateTools;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
@@ -59,8 +61,16 @@ public class AiStatService {
         newStatRecord.setUsedTokens(usedTokens);
         newStatRecord.setCreated(new Date());
 
-        Identity currentUser = UsersDB.getCurrentUser(request);
-        newStatRecord.setUserId(currentUser != null ? currentUser.getUserId() : -1L);
+        newStatRecord.setUserId(-1L);
+        if (request != null) {
+            Identity currentUser = UsersDB.getCurrentUser(request);
+            newStatRecord.setUserId(currentUser != null ? currentUser.getUserId() : -1L);
+        } else {
+            RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
+            if (requestBean != null) {
+                newStatRecord.setUserId((long)requestBean.getUserId());
+            }
+        }
         newStatRecord.setDomainId(CloudToolsForCore.getDomainId());
         statRepo.save(newStatRecord);
     }

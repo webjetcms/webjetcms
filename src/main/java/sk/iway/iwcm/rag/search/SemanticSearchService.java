@@ -3,14 +3,15 @@ package sk.iway.iwcm.rag.search;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.rag.embedding.EmbeddingBatchResult;
 import sk.iway.iwcm.rag.embedding.EmbeddingProvider;
+import sk.iway.iwcm.rag.service.RagEmbeddingStatService;
 import sk.iway.iwcm.rag.vectorstore.PgVectorStore;
 import sk.iway.iwcm.rag.vectorstore.VectorSearchResult;
 
@@ -23,11 +24,13 @@ public class SemanticSearchService {
 
     private final EmbeddingProvider embeddingProvider;
     private final PgVectorStore vectorStore;
+    private final RagEmbeddingStatService ragEmbeddingStatService;
 
     @Autowired
-    public SemanticSearchService(EmbeddingProvider embeddingProvider, PgVectorStore vectorStore) {
+    public SemanticSearchService(EmbeddingProvider embeddingProvider, PgVectorStore vectorStore, RagEmbeddingStatService ragEmbeddingStatService) {
         this.embeddingProvider = embeddingProvider;
         this.vectorStore = vectorStore;
+        this.ragEmbeddingStatService = ragEmbeddingStatService;
     }
 
     /**
@@ -47,7 +50,16 @@ public class SemanticSearchService {
         }
 
         String model = embeddingProvider.getDefaultModel();
-        float[] queryEmbedding = embeddingProvider.embed(query, model);
+        EmbeddingBatchResult embeddingResult = embeddingProvider.embedWithUsage(List.of(query), model);
+        List<float[]> queryEmbeddings = embeddingResult.getEmbeddings();
+        if (queryEmbeddings.isEmpty()) {
+            Logger.error(SemanticSearchService.class, "Failed to generate query embedding");
+            return List.of();
+        }
+
+        ragEmbeddingStatService.recordSearchTokens(embeddingResult.getUsedTokens());
+
+        float[] queryEmbedding = queryEmbeddings.get(0);
         if (queryEmbedding.length == 0) {
             Logger.error(SemanticSearchService.class, "Failed to generate query embedding");
             return List.of();
@@ -77,7 +89,7 @@ public class SemanticSearchService {
         return docMap.values().stream()
             .sorted((a, b) -> Double.compare(b.getSimilarity(), a.getSimilarity()))
             .limit(maxResults)
-            .collect(Collectors.toList());
+            .toList();
     }
 
     /**

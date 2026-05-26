@@ -35,12 +35,17 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
 
     @Override
     public List<float[]> embed(List<String> texts, String model) {
-        if (texts == null || texts.isEmpty()) return List.of();
+        return embedWithUsage(texts, model).getEmbeddings();
+    }
+
+    @Override
+    public EmbeddingBatchResult embedWithUsage(List<String> texts, String model) {
+        if (texts == null || texts.isEmpty()) return EmbeddingBatchResult.empty();
 
         String apiKey = OpenAiSupportService.getApiKey();
         if (Tools.isEmpty(apiKey)) {
             Logger.error(OpenAiEmbeddingProvider.class, "OpenAI API key is not configured (ai_openAiAuthKey)");
-            return List.of();
+            return EmbeddingBatchResult.empty();
         }
 
         if (Tools.isEmpty(model)) model = getDefaultModel();
@@ -74,14 +79,17 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
 
                 if (statusCode < 200 || statusCode >= 300) {
                     Logger.error(OpenAiEmbeddingProvider.class, "OpenAI embeddings API error " + statusCode + ": " + responseBody);
-                    return List.of();
+                    return EmbeddingBatchResult.empty();
                 }
 
-                return parseEmbeddings(responseBody);
+                JsonNode root = MAPPER.readTree(responseBody);
+                List<float[]> embeddings = parseEmbeddings(root);
+                int usedTokens = parseUsedTokens(root);
+                return new EmbeddingBatchResult(embeddings, usedTokens);
             }
         } catch (IOException e) {
             Logger.error(OpenAiEmbeddingProvider.class, "Error calling OpenAI embeddings API: " + e.getMessage());
-            return List.of();
+            return EmbeddingBatchResult.empty();
         }
     }
 
@@ -102,13 +110,11 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
     /**
      * Parse the OpenAI embeddings API JSON response into a list of float arrays.
      * Expects the standard response format with a "data" array containing "embedding" arrays.
-     * @param responseBody the raw JSON response body
+        * @param root parsed JSON response body
      * @return list of embedding vectors
-     * @throws IOException if JSON parsing fails
      */
-    private List<float[]> parseEmbeddings(String responseBody) throws IOException {
+    private List<float[]> parseEmbeddings(JsonNode root) {
         List<float[]> embeddings = new ArrayList<>();
-        JsonNode root = MAPPER.readTree(responseBody);
         JsonNode dataArray = root.path("data");
 
         if (dataArray.isArray()) {
@@ -125,5 +131,15 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
         }
 
         return embeddings;
+    }
+
+    private int parseUsedTokens(JsonNode root) {
+        JsonNode usage = root.path("usage");
+        if (usage.isMissingNode() || usage.isNull()) return 0;
+
+        int totalTokens = usage.path("total_tokens").asInt(0);
+        if (totalTokens > 0) return totalTokens;
+
+        return usage.path("prompt_tokens").asInt(0);
     }
 }

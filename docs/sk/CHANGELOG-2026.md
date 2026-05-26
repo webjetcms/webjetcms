@@ -7,6 +7,7 @@
 ### Webové stránky
 
 - Šablóny - pridaná možnosť nastaviť presun `<style>` a `<link rel="stylesheet">` značiek z tela stránky do `<head>` cez [voľbu v šablóne](frontend/templates/templates.md) s podporou globálnej konfiguračnej premennej `showDocMoveStyleToHead`. Bloky v IE podmienkach, `noscript` a `script` zostávajú na mieste (#231).
+- Sémantické vyhľadávanie (RAG) - do AI štatistík bola doplnená evidencia spotreby embedding tokenov rozdelená podľa skupín na indexovanie a vyhľadávanie, aby bolo možné náklady jednoducho filtrovať v existujúcom prehľade (#211).
 
 ![](frontend/templates/templates-edit-advanced.png)
 

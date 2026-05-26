@@ -17,6 +17,7 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.rag.RagIndexAction;
+import sk.iway.iwcm.rag.embedding.EmbeddingBatchResult;
 import sk.iway.iwcm.rag.embedding.EmbeddingProvider;
 import sk.iway.iwcm.rag.indexing.DocDetailsContentExtractor;
 import sk.iway.iwcm.rag.indexing.SlidingWindowChunker;
@@ -35,6 +36,7 @@ public class SemanticIndexService {
     private final SlidingWindowChunker chunker;
     private final EmbeddingProvider embeddingProvider;
     private final PgVectorStore vectorStore;
+    private final RagEmbeddingStatService ragEmbeddingStatService;
 
     private final IndexQueueRepository queueRepository;
 
@@ -45,13 +47,15 @@ public class SemanticIndexService {
                                 SlidingWindowChunker chunker,
                                 EmbeddingProvider embeddingProvider,
                                 PgVectorStore vectorStore,
-                                IndexQueueRepository queueRepository) {
+                                IndexQueueRepository queueRepository,
+                                RagEmbeddingStatService ragEmbeddingStatService) {
         this.contentExtractor = contentExtractor;
         this.chunker = chunker;
         this.embeddingProvider = embeddingProvider;
         this.vectorStore = vectorStore;
 
         this.queueRepository = queueRepository;
+        this.ragEmbeddingStatService = ragEmbeddingStatService;
     }
 
     /**
@@ -188,12 +192,16 @@ public class SemanticIndexService {
 
             // Step 3: Embed only changed chunks
             if (chunksToEmbedTexts.isEmpty() == false) {
-                List<float[]> newEmbeddings = embeddingProvider.embed(chunksToEmbedTexts, model);
+                EmbeddingBatchResult embeddingResult = embeddingProvider.embedWithUsage(chunksToEmbedTexts, model);
+                List<float[]> newEmbeddings = embeddingResult.getEmbeddings();
                 if (newEmbeddings.size() != chunksToEmbedTexts.size()) {
                     Logger.error(SemanticIndexService.class, "Embedding count mismatch for doc " + entityId +
                         ": expected " + chunksToEmbedTexts.size() + ", got " + newEmbeddings.size());
                     return;
                 }
+
+                ragEmbeddingStatService.recordIndexingTokens(embeddingResult.getUsedTokens());
+
                 for (int i = 0; i < chunksToEmbedIndices.size(); i++) {
                     resolvedEmbeddings[chunksToEmbedIndices.get(i)] = newEmbeddings.get(i);
                 }
