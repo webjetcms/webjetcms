@@ -97,7 +97,7 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
     public void addSpecSearch(Map<String, String> params, List<Predicate> predicates, Root<EmbeddingChunkEntity> root, CriteriaBuilder builder) {
         // By entity type - apply additional filtering
         RagEntityType ragEntityType = RagEntityType.fromString( params.get("entityType") );
-        if(ragEntityType.equals(RagEntityType.DOCUMENT)) {
+        if(RagEntityType.DOCUMENT.equals(ragEntityType)) {
             int rootDir = Tools.getIntValue(params.get("searchRootDir"), -1);
             boolean includeSubfolders = Tools.getBooleanValue(params.get("includeSubfolders"), false);
             Pair<Integer, List<Integer>> data = getDocIds(rootDir, includeSubfolders);
@@ -115,7 +115,7 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
 
     @Override
     public void getOptions(DatatablePageImpl<EmbeddingChunkEntity> page) {
-        page.addOptions("entityType", chunkRepository.findDistinctEntityTypes(CloudToolsForCore.getDomainId()).stream().map(Enum::name).collect(Collectors.toList()));
+        page.addOptions("entityType", chunkRepository.findDistinctEntityTypes(CloudToolsForCore.getDomainId()).stream().map(Enum::name).toList());
         page.addOptions("language", Arrays.asList( Constants.getArray("languages") ));
 
         super.getOptions(page);
@@ -224,7 +224,7 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
         if(rootDir == -1) {
             // All from domain
 
-            if(includeSubfolders == false) return new Pair<Integer,List<Integer>>(allGroupCount, docIds);
+            if(includeSubfolders == false) return new Pair<>(allGroupCount, docIds);
 
             List<Integer> rootGroupsIds = new SimpleQuery().forListInteger("SELECT group_id FROM groups WHERE parent_group_id = 0 AND domain_name = ? AND group_name != 'System'", CloudToolsForCore.getDomainName());
             if(rootGroupsIds.isEmpty()) return null;
@@ -253,6 +253,6 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
             allGroupCount = groups.size();
         }
 
-        return new Pair<Integer, List<Integer>>(allGroupCount, docIds);
+        return new Pair<>(allGroupCount, docIds);
     }
 }

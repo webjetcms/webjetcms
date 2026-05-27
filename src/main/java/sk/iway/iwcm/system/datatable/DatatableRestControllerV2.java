@@ -1110,11 +1110,12 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 									}
 								}
 
-								if (enumValue == null) {
-									throw new ConstraintViolationException("Invalid enum value '"+value+"' for field '"+field+"'", new HashSet<>());
+								if (enumValue != null) {
+									predicates.add(builder.equal(root.get(field), enumValue));
+								} else {
+									//just log error, we dont want to break search if enum value is not correct
+									Logger.error(DatatableRestControllerV2.class, "Enum constant not found for value: " + enumText + " in enum type: " + type.getName());
 								}
-
-								predicates.add(builder.equal(root.get(field), enumValue));
 							} else {
 								if (value.startsWith("^") && value.endsWith("$")) predicates.add(builder.equal(root.get(field), value.substring(1, value.length()-1)));
 								else {

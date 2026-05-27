@@ -1,5 +1,6 @@
 package sk.iway.iwcm.rag.search;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.rag.embedding.EmbeddingBatchResult;
 import sk.iway.iwcm.rag.embedding.EmbeddingProvider;
 import sk.iway.iwcm.rag.service.RagEmbeddingStatService;
@@ -21,6 +23,8 @@ import sk.iway.iwcm.rag.vectorstore.VectorSearchResult;
  */
 @Service
 public class SemanticSearchService {
+
+    private static final double ADAPTIVE_THRESHOLD_TOP_RATIO = 0.7d;
 
     private final EmbeddingProvider embeddingProvider;
     private final PgVectorStore vectorStore;
@@ -85,11 +89,48 @@ public class SemanticSearchService {
             });
         }
 
-        // Sort by similarity descending and limit
-        return docMap.values().stream()
+        List<SemanticSearchResult> sortedResults = docMap.values().stream()
             .sorted((a, b) -> Double.compare(b.getSimilarity(), a.getSimilarity()))
+            .toList();
+
+        double minimumSimilarity = Tools.getDoubleValue(Constants.getString("ragSemanticSearchMinSimilarity"), 0.2d);
+        int minimumResults = Constants.getInt("ragSemanticSearchMinResults");
+        int minimumResultsForCall = Math.min(Math.max(0, minimumResults), Math.max(0, maxResults));
+
+        return filterResultsBySimilarity(sortedResults, minimumSimilarity, minimumResultsForCall).stream()
             .limit(maxResults)
             .toList();
+    }
+
+    /**
+     * Filter and sort semantic search results based on similarity thresholds and minimum result count.
+     * Uses an adaptive similarity threshold based on the top result to allow for more results when the top similarity is low.
+     * @param sortedResults - list of results sorted by similarity descending
+     * @param minimumSimilarity - absolute minimum similarity threshold (0.0 to 1.0)
+     * @param minimumResultCount - minimum number of results to return regardless of similarity (0 for no minimum)
+     * @return list of filtered semantic search results
+     */
+    public static List<SemanticSearchResult> filterResultsBySimilarity(List<SemanticSearchResult> sortedResults, double minimumSimilarity, int minimumResultCount) {
+        if (sortedResults == null || sortedResults.isEmpty()) {
+            return List.of();
+        }
+
+        int minCount = Math.max(0, minimumResultCount);
+        double similarityFloor = Math.max(0d, Math.min(1d, minimumSimilarity));
+
+        Double topSimilarityValue = sortedResults.get(0).getSimilarity();
+        double topSimilarity = topSimilarityValue == null ? 0d : topSimilarityValue.doubleValue();
+        double adaptiveSimilarityThreshold = Math.max(similarityFloor, topSimilarity * ADAPTIVE_THRESHOLD_TOP_RATIO);
+
+        List<SemanticSearchResult> filteredResults = new ArrayList<>();
+        for (SemanticSearchResult result : sortedResults) {
+            if (result.getSimilarity() == null) continue;
+            if (result.getSimilarity().doubleValue() >= adaptiveSimilarityThreshold || filteredResults.size() < minCount) {
+                filteredResults.add(result);
+            }
+        }
+
+        return filteredResults;
     }
 
     /**

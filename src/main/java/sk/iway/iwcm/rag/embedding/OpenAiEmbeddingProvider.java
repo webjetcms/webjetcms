@@ -5,10 +5,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Service;
@@ -72,7 +74,19 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
             post.setHeader("Content-Type", "application/json; charset=utf-8");
             post.setEntity(new StringEntity(MAPPER.writeValueAsString(requestBody), StandardCharsets.UTF_8));
 
-            try (CloseableHttpClient httpClient = HttpClients.createDefault();
+            // Configure timeouts to prevent hanging on slow/unresponsive OpenAI API
+            RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(10000)  // 10 seconds to connect
+                .setSocketTimeout(30000)   // 30 seconds to read response
+                .setConnectionRequestTimeout(5000)  // 5 seconds to get connection from pool
+                .build();
+            post.setConfig(requestConfig);
+
+            // Create HTTP client with retry handler (3 retries for transient failures)
+            try (CloseableHttpClient httpClient = HttpClients.custom()
+                    .setDefaultRequestConfig(requestConfig)
+                    .setRetryHandler(new DefaultHttpRequestRetryHandler(3, true))
+                    .build();
                 CloseableHttpResponse response = httpClient.execute(post)) {
                 int statusCode = response.getStatusLine().getStatusCode();
                 String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
