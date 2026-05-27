@@ -36,12 +36,13 @@ public interface VectorStore {
     /**
      * Find the most similar chunks to the query embedding.
      * @param queryEmbedding the query vector
+     * @param embeddingModel model used to generate/query embeddings
      * @param domainId domain ID to filter by (null for all)
      * @param language language to filter by (null for all)
      * @param limit max number of results
      * @return list of search results ordered by similarity (descending)
      */
-    List<VectorSearchResult> search(float[] queryEmbedding, Integer domainId, String language, int limit);
+    List<VectorSearchResult> search(float[] queryEmbedding, String embeddingModel, Integer domainId, String language, int limit);
 
     /**
      * Check if the vector store is available and properly initialized.

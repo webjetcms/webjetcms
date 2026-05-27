@@ -71,7 +71,7 @@ public class SemanticSearchService {
 
         // Fetch more chunks than needed since multiple chunks can belong to the same document
         int chunkLimit = maxResults * 3;
-        List<VectorSearchResult> chunkResults = vectorStore.search(queryEmbedding, domainId, language, chunkLimit);
+        List<VectorSearchResult> chunkResults = vectorStore.search(queryEmbedding, model, domainId, language, chunkLimit);
 
         // Aggregate by entity_id, keeping best similarity per document
         Map<Long, SemanticSearchResult> docMap = new HashMap<>();

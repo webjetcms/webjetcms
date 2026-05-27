@@ -281,6 +281,8 @@ public class ConstantsV9 {
 		Constants.setInt("ragChunkOverlap", 200, Constants.MOD_RAG, "Počet znakov, ktoré sa majú prekrývať medzi susednými chunkmi pri rozdeľovaní textu pre RAG indexovanie.");
 		Constants.setString("ragSemanticSearchMinSimilarity", "0.2", Constants.MOD_RAG, "Minimálna hodnota similarity pre výsledky semantického vyhľadávania. Ak je hodnota mimo intervalu 0-1, použije sa najbližšia hranica.");
 		Constants.setInt("ragSemanticSearchMinResults", 3, Constants.MOD_RAG, "Minimálny počet výsledkov semantického vyhľadávania. Ak ich je po filtrovaní menej, doplnia sa podľa najvyššej similarity.");
+		Constants.setInt("ragSearchEfSearch", 40, Constants.MOD_RAG, "HNSW index parameter ef_search — čím vyššia hodnota, tým lepší recall ale pomalšie vyhľadávanie. Default je 40, pre väčšie datasety zvážte zvýšenie na 100 alebo viac.");
+		Constants.setString("ragSearchDistanceMetric", "cosine", Constants.MOD_RAG, "Metrika vzdialenosti pre pgvector vyhľadávanie. Možné hodnoty: 'cosine' (cosínusová vzdialenosť), 'inner_product' (vnútorný súčin, rýchlejší pre normalizované vektory), 'l2' (euklidovská vzdialenosť). Zmena vyžaduje reindex HNSW indexu.");
 
 		Constants.setString("searchType", "db", Constants.MOD_CONFIG, "Typ vyhladavania: db (databazove), lucene (Lucene fulltext), semantic (semanticke vyhladavanie cez pgvector)");
 	}

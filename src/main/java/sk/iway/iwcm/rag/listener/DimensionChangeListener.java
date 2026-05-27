@@ -37,6 +37,14 @@ public class DimensionChangeListener {
                 } else {
                     Logger.error(DimensionChangeListener.class, "Failed to drop vector schema.");
                 }
+            } else if ("ragSearchDistanceMetric".equals(conf.getName())) {
+                Logger.debug(DimensionChangeListener.class, "conf name=" + conf.getName() + " value=" + conf.getValue());
+
+                if (vectorStore.recreateHnswIndex()) {
+                    Logger.info(DimensionChangeListener.class, "HNSW index recreated successfully after distance metric change.");
+                } else {
+                    Logger.error(DimensionChangeListener.class, "Failed to recreate HNSW index after distance metric change.");
+                }
             }
         } catch (Exception ex) {
             Logger.error(SaveListener.class, ex);

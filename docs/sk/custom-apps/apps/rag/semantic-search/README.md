@@ -66,6 +66,8 @@ Aktivácia a nastavenie sémantického vyhľadávania v [Konfigurácia](../../..
 | `searchType` | `db` | Typ vyhľadávania: `db` (databázové), `lucene` (Lucene fulltext), `semantic` (sémantické). |
 | `ragSemanticSearchMinSimilarity` | `0.2` | minimálna hodnota similarity pre výsledky. Hodnota mimo intervalu 0-1 sa orezáva na najbližšiu hranicu |
 | `ragSemanticSearchMinResults` | `3` | minimálny počet výsledkov sémantického vyhľadávania; pri menšom počte sa doplnia podľa najvyššej similarity |
+| `ragSearchEfSearch` | `40` | `HNSW` index parameter `ef_search` — čím vyššia hodnota, tým lepší recall ale pomalšie vyhľadávanie. Default je 40, pre väčšie web sídla zvážte zvýšenie na 100 alebo viac. |
+| `ragSearchDistanceMetric` | `cosine` | Metrika vzdialenosti pre `pgvector` vyhľadávanie. Možné hodnoty: 'cosine' (kosínusová vzdialenosť), 'inner_product' (vnútorný súčin, rýchlejší pre normalizované vektory), 'l2' (euklidovská vzdialenosť). Zmena vyžaduje reindex `HNSW` indexu. |
 
 !> Pre aktiváciu sémantického vyhľadávania nastavte `ragSemanticSearchEnabled=true` **aj** `searchType=semantic`.
 

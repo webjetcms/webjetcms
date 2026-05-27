@@ -46,17 +46,14 @@ public class PgVectorStore implements VectorStore {
         )
         """.formatted(DIMENSION_PLACEHOLDER);
 
-    private static final String CREATE_HNSW_INDEX_SQL = """
-        CREATE INDEX IF NOT EXISTS idx_rag_embedding_hnsw ON rag_embedding_chunks
-            USING hnsw (embedding vector_cosine_ops)
-            WITH (m = 16, ef_construction = 64)
-        """;
-
     private static final String CREATE_ENTITY_INDEX_SQL =
         "CREATE INDEX IF NOT EXISTS idx_rag_chunk_entity ON rag_embedding_chunks (entity_type, entity_id)";
 
     private static final String CREATE_DOMAIN_LANG_INDEX_SQL =
         "CREATE INDEX IF NOT EXISTS idx_rag_chunk_domain_lang ON rag_embedding_chunks (domain_id, language, status)";
+
+    private static final String DROP_HNSW_INDEX_SQL =
+        "DROP INDEX IF EXISTS idx_rag_embedding_hnsw";
 
     private static final String UPSERT_SQL =
         "INSERT INTO rag_embedding_chunks" +
@@ -76,11 +73,23 @@ public class PgVectorStore implements VectorStore {
         " SET status = '" + EmbeddingChunkStatus.ERROR.name() + "', error_message = ?" +
         " WHERE entity_type = ? AND entity_id = ? AND embedding_model = ?";
 
-    private static final String SEARCH_SQL =
-        "SELECT id, entity_type, entity_id, chunk_index, chunk_text," +
-        "       1 - (embedding <=> ?::vector) AS similarity" +
-        " FROM rag_embedding_chunks" +
-        " WHERE status = '" + EmbeddingChunkStatus.COMPLETED.name() + "'";
+    /**
+     * Builds SEARCH_SQL dynamically based on configured distance metric.
+     * Supports: cosine (1 - <=>), inner_product (negated <#>), l2 (normalized <->)
+     */
+    private static String buildSearchSql() {
+        String metric = Constants.getString("ragSearchDistanceMetric");
+        String similarityCalc = switch (metric) {
+            case "inner_product" -> "(embedding <#> ?::vector) * -1 AS similarity";
+            case "l2" -> "1 / (1 + (embedding <-> ?::vector)) AS similarity";
+            default -> "1 - (embedding <=> ?::vector) AS similarity";
+        };
+        return "SELECT id, entity_type, entity_id, chunk_index, chunk_text," +
+               "       " + similarityCalc +
+               " FROM rag_embedding_chunks" +
+               " WHERE status = '" + EmbeddingChunkStatus.COMPLETED.name() + "'" +
+               " AND embedding_model = ?";
+    }
 
     private static final String GET_EXISTING_HASH_EMBEDDING =
         "SELECT content_hash, embedding::text AS embedding_text FROM rag_embedding_chunks " +
@@ -133,13 +142,31 @@ public class PgVectorStore implements VectorStore {
     }
 
     @Override
-    public List<VectorSearchResult> search(float[] queryEmbedding, Integer domainId, String language, int limit) {
+    public List<VectorSearchResult> search(float[] queryEmbedding, String embeddingModel, Integer domainId, String language, int limit) {
         String dsName = RagJpaConfig.getRagDataSourceName();
         if (dsName == null) return new ArrayList<>();
 
-        StringBuilder sql = new StringBuilder(SEARCH_SQL);
+        // Apply configured ef_search parameter if not default
+        int efSearch = Constants.getInt("ragSearchEfSearch");
+        if (efSearch != 40) {
+            try {
+                new SimpleQuery(dsName).execute("SET LOCAL hnsw.ef_search = ?", efSearch);
+            } catch (Exception e) {
+                Logger.error(PgVectorStore.class, "Failed to set hnsw.ef_search to " + efSearch + ": " + e.getMessage());
+            }
+        }
+
+        String metric = Constants.getString("ragSearchDistanceMetric");
+        String orderOperator = switch (metric) {
+            case "inner_product" -> "<#>";
+            case "l2" -> "<->";
+            default -> "<=>";
+        };
+
+        StringBuilder sql = new StringBuilder(buildSearchSql());
         List<Object> params = new ArrayList<>();
         params.add(vectorToString(queryEmbedding));
+        params.add(embeddingModel);
 
         if (domainId != null) {
             sql.append(" AND domain_id = ?");
@@ -149,7 +176,7 @@ public class PgVectorStore implements VectorStore {
             sql.append(" AND language = ?");
             params.add(language);
         }
-        sql.append(" ORDER BY embedding <=> ?::vector LIMIT ?");
+        sql.append(" ORDER BY embedding ").append(orderOperator).append(" ?::vector LIMIT ?");
         params.add(vectorToString(queryEmbedding));
         params.add(limit);
 
@@ -191,15 +218,52 @@ public class PgVectorStore implements VectorStore {
         try {
             SimpleQuery sq = new SimpleQuery(dsName);
             sq.execute(CREATE_EXTENSION_SQL);
-            // Importatnt note: the table creation must be done with the correct dimension count, otherwise the embedding insertions will fail with "vector has wrong number of dimensions" error
+            // Important note: the table creation must be done with the correct dimension count, otherwise the embedding insertions will fail with "vector has wrong number of dimensions" error
             sq.execute( Tools.replace(CREATE_TABLE_SQL, DIMENSION_PLACEHOLDER, Constants.getInt("ragEmbeddingDimensions") + "") );
-            sq.execute(CREATE_HNSW_INDEX_SQL);
+
+            if (recreateHnswIndex() == false) {
+                return false;
+            }
+
             sq.execute(CREATE_ENTITY_INDEX_SQL);
             sq.execute(CREATE_DOMAIN_LANG_INDEX_SQL);
             Logger.println(PgVectorStore.class, "RAG pgvector schema initialized successfully");
             return true;
         } catch (Exception e) {
             Logger.error(PgVectorStore.class, "Error initializing RAG pgvector schema: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Recreates HNSW index according to configured distance metric.
+     */
+    public boolean recreateHnswIndex() {
+        String dsName = RagJpaConfig.getRagDataSourceName();
+        if (dsName == null) {
+            Logger.println(PgVectorStore.class, "RAG datasource not available, skipping HNSW index recreation");
+            return false;
+        }
+
+        try {
+            String metric = Constants.getString("ragSearchDistanceMetric");
+            String indexOps = switch (metric) {
+                case "inner_product" -> "vector_ip_ops";
+                case "l2" -> "vector_l2_ops";
+                default -> "vector_cosine_ops";
+            };
+
+            String createIndexSql = "CREATE INDEX IF NOT EXISTS idx_rag_embedding_hnsw ON rag_embedding_chunks" +
+                    " USING hnsw (embedding " + indexOps + ")" +
+                    " WITH (m = 16, ef_construction = 64)";
+
+            SimpleQuery sq = new SimpleQuery(dsName);
+            sq.execute(DROP_HNSW_INDEX_SQL);
+            sq.execute(createIndexSql);
+            Logger.println(PgVectorStore.class, "RAG HNSW index recreated successfully with distance metric: " + metric);
+            return true;
+        } catch (Exception e) {
+            Logger.error(PgVectorStore.class, "Error recreating RAG HNSW index: " + e.getMessage());
             return false;
         }
     }
