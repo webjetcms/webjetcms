@@ -4,15 +4,8 @@ Before(({ I, login }) =>{
     login('admin');
 });
 
-const rootDirId = "64071";
-
 Scenario('Allow rag semantic search', ({ I, DT, DTE, Document }) => {
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=" + rootDirId);
-    DT.waitForLoader();
-
-    Document.screenshotElement(".tree-col button.buttons-index", "/redactor/apps/semantic-search/redirect-button.png");
-
-    I.clickCss(".tree-col button.buttons-index");
+    I.amOnPage("/admin/v9/settings/embedding-chunks/?rootDir=25");
     DT.waitForLoader();
 
     I.resizeWindow(1920, 800);

@@ -7,7 +7,6 @@
 ### Webové stránky
 
 - Šablóny - pridaná možnosť nastaviť presun `<style>` a `<link rel="stylesheet">` značiek z tela stránky do `<head>` cez [voľbu v šablóne](frontend/templates/templates.md) s podporou globálnej konfiguračnej premennej `showDocMoveStyleToHead`. Bloky v IE podmienkach, `noscript` a `script` zostávajú na mieste (#231).
-- Sémantické vyhľadávanie (RAG) - do AI štatistík bola doplnená evidencia spotreby embedding tokenov rozdelená podľa skupín na indexovanie a vyhľadávanie, aby bolo možné náklady jednoducho filtrovať v existujúcom prehľade (#211).
 
 ![](frontend/templates/templates-edit-advanced.png)
 
@@ -118,9 +117,9 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
   - Dátové tabuľky, editor (#58389-4).
 - Rozšírené a11y testy o nové scenáre pre správcu súborov, monitorovanie, štatistiky, nahrávanie súborov, správu používateľov a webové stránky. Metóda `a11y.check()` podporuje parameter `context` pre obmedzenie kontroly na konkrétnu časť stránky vrátane vnorených `iframe` elementov (#58389-5).
 
-### Sémantické vyhľadávanie (RAG)
+### Sémantické vyhľadávanie
 
-- Pridaná podpora [sémantického vyhľadávania](redactor/apps/semantic-search/README.md) postaveného na technológii `RAG` (Retrieval-Augmented Generation) s využitím vektorovej databázy `pgvector` a `OpenAI embeddings`. Umožňuje vyhľadávanie na základe sémantického významu dotazu, nie len zhody kľúčových slov (#58461).
+- Pridaná podpora [sémantického vyhľadávania](redactor/apps/semantic-search/README.md) postaveného na technológii vektorovej databázy `pgvector` a `OpenAI embeddings`. Umožňuje vyhľadávanie na základe sémantického významu dotazu, nie len zhody kľúčových slov (#211).
 
 ### Iné menšie zmeny
 

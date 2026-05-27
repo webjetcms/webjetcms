@@ -1,14 +1,14 @@
 # Sémantické vyhľadávanie (RAG)
 
-Sémantické vyhľadávanie umožňuje návštevníkom nájsť relevantné stránky na základe **významu otázky**, nielen zhody kľúčových slov. Využíva technológiu RAG (Retrieval-Augmented Generation) postavenú na vektorovej databáze [pgvector](https://github.com/pgvector/pgvector) a vektoroch generovaných cez OpenAI API.
+Sémantické vyhľadávanie umožňuje návštevníkom nájsť relevantné stránky na základe **významu otázky**, nielen zhody kľúčových slov. Využíva technológiu postavenú na vektorovej databáze [pgvector](https://github.com/pgvector/pgvector) a vektoroch generovaných cez OpenAI API.
 
 ## Ako to funguje
 
 Systém pracuje v dvoch fázach:
 
-### 1. Indexovanie (offline)
+### 1. Indexovanie
 
-Keď je webová stránka uložená alebo zmenená, systém ju zaradí do fronty na indexovanie. Cron úloha ([RagIndexCronTask](../../../../../../src/main/java/sk/iway/iwcm/rag/service/RagIndexCronTask.java)) pravidelne spracúva frontu:
+Keď je webová stránka uložená alebo zmenená, systém ju zaradí do fronty na indexovanie. Úloha na pozadí ([RagIndexCronTask](../../../../../../src/main/java/sk/iway/iwcm/rag/service/RagIndexCronTask.java)) pravidelne spracúva frontu:
 
 1. **Extrakcia obsahu** – z `DocDetails` sa extrahuje čistý text (názov + perex + telo stránky bez HTML tagov).
 2. **Rozdelenie na časti (chunking)** – text sa rozdelí na prekrývajúce sa časti pomocou algoritmu posuvného okna (`SlidingWindowChunker`). Predvolená veľkosť časti je 500 znakov s prekryvom 100 znakov.
@@ -28,19 +28,19 @@ Keď návštevník zadá vyhľadávací dotaz:
 
 - **PostgreSQL** s rozšírením **pgvector** (obraz: `pgvector/pgvector:pg18-trixie` alebo novší)
 - **OpenAI API kľúč** – ten istý, ktorý sa používa pre AI asistentov (`ai_openAiAuthKey`)
-- Sémantické vyhľadávanie funguje **len s PostgreSQL**. Pre ostatné databázy (MySQL/MariaDB, MSSQL, Oracle) je potrebné nastaviť samostatnú vektorovú databázu cez datasource `rag_jpa`.
+- Sémantické vyhľadávanie funguje **len v PostgreSQL**. Pre ostatné databázy (MySQL/MariaDB, MSSQL, Oracle) je potrebné nastaviť samostatnú vektorovú databázu cez datasource `rag_jpa`. Môžete teda používať napríklad MariaDB pre databázu WebJET CMS a samostatnú PostgreSQL pre vektorovú časť.
 
 ### PostgreSQL ako primárna databáza
 
 Ak WebJET CMS beží priamo na PostgreSQL, vektorová databáza sa použije automaticky bez ďalšej konfigurácie.
 
-Musí byť iba nastavený datasource ako v prípade `poolman-docker-pgsql.xml`.
+Musí byť iba nastavený datasource ako v prípade [poolman-docker-pgsql.xml](../../../../../../src/main/resources/poolman-docker-pgsql.xml).
 
 ### Samostatná vektorová databáza (vedľajšia)
 
 Ak primárna databáza nie je PostgreSQL, vytvorte Docker kontajner s `pgvector`.
 
-Pre lokálny vývoj je pripravený súbor `.devcontainer/db/docker-compose-rag-pgsql.yml`:
+Pre lokálny vývoj je pripravený súbor [.devcontainer/db/docker-compose-rag-pgsql.yml](../../../../../../.devcontainer/db/docker-compose-rag-pgsql.yml):
 
 ```bash
 docker compose -f .devcontainer/db/docker-compose-rag-pgsql.yml up -d
@@ -48,13 +48,13 @@ docker compose -f .devcontainer/db/docker-compose-rag-pgsql.yml up -d
 
 už s nakonfigurovanými datasource:
 
-- `poolman-docker-mariadb.xml`
-- `poolman-docker-mssql.xml`
-- `poolman-docker-oracle.xml`
+- [poolman-docker-mariadb.xml](../../../../../../src/main/resources/poolman-docker-mariadb.xml)
+- [poolman-docker-mssql.xml](../../../../../../src/main/resources/poolman-docker-mssql.xml)
+- [poolman-docker-oracle.xml](../../../../../../src/main/resources/poolman-docker-oracle.xml)
 
 ## Konfigurácia
 
-Aktivácia a nastavenie sémantického vyhľadávania v `Konfigurácia` (skupina `rag`):
+Aktivácia a nastavenie sémantického vyhľadávania v [Konfigurácia](../../../../admin/setup/configuration/README.md):
 
 | Premenná | Predvolená hodnota | Popis |
 | --- | --- | --- |
@@ -63,11 +63,15 @@ Aktivácia a nastavenie sémantického vyhľadávania v `Konfigurácia` (skupina
 | `ragEmbeddingDimensions` | `1536` | Počet dimenzií vektora. Musí zodpovedať použitému modelu a tabuľke v databáze. |
 | `ragChunkSize` | `1000` | Maximálna veľkosť jednej časti textu v znakoch. |
 | `ragChunkOverlap` | `200` | Počet znakov, o ktoré sa susedné časti prekrývajú. |
-| `searchType` | `db` | Typ vyhľadávania: `db` (databázové), `lucene` (Lucene fulltext), `semantic` (pgvector sémantické). |
+| `searchType` | `db` | Typ vyhľadávania: `db` (databázové), `lucene` (Lucene fulltext), `semantic` (sémantické). |
+| `ragSemanticSearchMinSimilarity` | `0.2` | minimálna hodnota similarity pre výsledky. Hodnota mimo intervalu 0-1 sa orezáva na najbližšiu hranicu |
+| `ragSemanticSearchMinResults` | `3` | minimálny počet výsledkov sémantického vyhľadávania; pri menšom počte sa doplnia podľa najvyššej similarity |
 
 !> Pre aktiváciu sémantického vyhľadávania nastavte `ragSemanticSearchEnabled=true` **aj** `searchType=semantic`.
 
 !>**Upozornenie:** pri zmene konfiguračnej premennej `ragEmbeddingDimensions` sa vymaže celá tabuľka `rag_embedding_chunks`, pretože vektory nebudú kompatibilné. Zvážte zálohu dát pred zmenou tejto hodnoty. Tabuľka sa automaticky znova vytvorí s novou dimenziou.
+
+Nastavte [automatizovanú úlohu](../../../../admin/settings/cronjob/README.md) s hodnotou `sk.iway.iwcm.rag.service.RagIndexCronTask` spúšťanú napríklad každých 5 minút - hodnota `*/5` v poli Minúta.
 
 ### Odporúčania pre slovenský a český obsah
 
@@ -82,7 +86,7 @@ Pri ladení sa riaďte týmito odporúčaniami:
 
 ### Alternatívne embedding modely
 
-Predvolený model `text-embedding-3-small` je multilingválny a slovenčinu/češtinu zvláda v dostatočnej kvalite pre väčšinu webových projektov. Ak požadujete vyššiu presnosť pre slovanské jazyky, k dispozícii sú tieto alternatívy:
+Predvolený model `text-embedding-3-small` je viacjazyčný a slovenčinu/češtinu zvláda v dostatočnej kvalite pre väčšinu webových projektov. Ak požadujete vyššiu presnosť pre slovanské jazyky, k dispozícii sú tieto alternatívy:
 
 | Model | `ragEmbeddingModel` | `ragEmbeddingDimensions` | Kvalita pre SK/CZ | Poznámka |
 | --- | --- | --- | --- | --- |
@@ -115,9 +119,9 @@ Systém automaticky zaradí stránku do indexovacej fronty pri jej:
 
 Toto zabezpečuje listener [DocSaveEventListener](../../../../../../src/main/java/sk/iway/iwcm/rag/listener/DocSaveEventListener.java), ktorý reaguje na udalosti ukladania dokumentov.
 
-## Úloha na pozadí
+## Automatizované úlohy
 
-Frontu spracúva úloha na pozadí [sk.iway.iwcm.rag.service.RagIndexCronTask](../../../../../../src/main/java/sk/iway/iwcm/rag/service/RagIndexCronTask.java). Odporúčané nastavenie je spúšťanie každých 5 minút:
+Frontu spracúva automatizovaná úloha [sk.iway.iwcm.rag.service.RagIndexCronTask](../../../../../../src/main/java/sk/iway/iwcm/rag/service/RagIndexCronTask.java). Odporúčané nastavenie je spúšťanie každých 5 minút.
 
 Cron úloha je bezpečná voči súbežnému spusteniu – pri behu sa nastaví príznak v cache s platnosťou 60 minút. Chybné záznamy sa nevymažú a opätovne sa spracujú pri ďalšom behu.
 
