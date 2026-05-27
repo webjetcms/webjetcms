@@ -95,8 +95,8 @@ public class PgVectorStore implements VectorStore {
         "SELECT content_hash, embedding::text AS embedding_text FROM rag_embedding_chunks " +
         "WHERE entity_type = ? AND entity_id = ? AND embedding_model = ? AND status = '" + EmbeddingChunkStatus.COMPLETED.name() + "'";
 
-    private static final String DROP_TABLE_SQL =
-        "DROP TABLE IF EXISTS rag_embedding_chunks";
+    private static final String DELETE_MODEL_DATA_SQL =
+        "DELETE FROM rag_embedding_chunks WHERE embedding_model = ?";
 
     @Override
     public void store(String entityType, long entityId, int chunkIndex, String chunkText,
@@ -329,7 +329,7 @@ public class PgVectorStore implements VectorStore {
     }
 
     @Override
-    public boolean dropSchema() {
+    public boolean deleteModelData(String embeddingModel) {
         String dsName = RagJpaConfig.getRagDataSourceName();
         if (dsName == null) {
             Logger.println(PgVectorStore.class, "RAG datasource not available, skipping schema drop");
@@ -338,7 +338,7 @@ public class PgVectorStore implements VectorStore {
 
         try {
             SimpleQuery sq = new SimpleQuery(dsName);
-            sq.execute(DROP_TABLE_SQL);
+            sq.execute(DELETE_MODEL_DATA_SQL, embeddingModel);
             Logger.println(PgVectorStore.class, "RAG pgvector table dropped successfully");
             return true;
         } catch (Exception e) {

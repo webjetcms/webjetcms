@@ -64,9 +64,10 @@ public interface VectorStore {
     boolean initializeSchema();
 
     /**
-     * Drop vector schema table with all stored embeddings.
+     * Delete all stored embeddings for a specific model.
+     * @param embeddingModel model used to generate the embeddings to delete
      */
-    boolean dropSchema();
+    boolean deleteModelData(String embeddingModel);
 
     /**
      * Get existing embeddings for an entity, keyed by content hash.

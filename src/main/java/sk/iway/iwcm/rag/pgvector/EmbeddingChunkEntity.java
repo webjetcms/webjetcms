@@ -102,8 +102,7 @@ public class EmbeddingChunkEntity extends BaseEditorFields {
     @DataTableColumn(
         inputType = DataTableColumnType.DISABLED,
         title = "settings.embedding-chunks.embeddingModel",
-        tab = "main",
-        visible = false
+        tab = "main"
     )
     private String embeddingModel;
 

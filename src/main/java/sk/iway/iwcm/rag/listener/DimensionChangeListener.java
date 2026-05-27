@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.components.structuremirroring.SaveListener;
 import sk.iway.iwcm.rag.vectorstore.PgVectorStore;
@@ -32,7 +33,7 @@ public class DimensionChangeListener {
                 Logger.debug(DimensionChangeListener.class, "conf name=" + conf.getName() + " value=" + conf.getValue());
 
                 // Drop the vector schema to apply new dimensions
-                if (vectorStore.dropSchema()) {
+                if (vectorStore.deleteModelData(Constants.getString("ragEmbeddingModel"))) {
                     Logger.info(DimensionChangeListener.class, "Vector schema dropped successfully.");
                 } else {
                     Logger.error(DimensionChangeListener.class, "Failed to drop vector schema.");
