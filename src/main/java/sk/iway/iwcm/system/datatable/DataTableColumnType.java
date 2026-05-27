@@ -157,4 +157,9 @@ public enum DataTableColumnType {
      * Tabler icons renderer
      */
     ICON,
+
+    /**
+     * Dynamic list of string options joined by | separator
+     */
+    OPTIONS,
 }
