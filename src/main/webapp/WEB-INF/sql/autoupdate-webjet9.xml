@@ -3505,6 +3505,95 @@
         <void method="add">
             <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="author"><string>sivan</string></void>
+                <void property="date"><string>06.05.2026</string></void>
+                <void property="desc"><string>Vytvorenie tabulky form_items_conditions</string></void>
+                <void property="mysql">
+                    <string>
+                        CREATE TABLE form_items_conditions (
+                            id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                            form_name VARCHAR(255) NOT NULL,
+                            form_item_id INT NOT NULL,
+                            item_form_id VARCHAR(255) NOT NULL,
+                            condition_type VARCHAR(255) NOT NULL,
+                            operator VARCHAR(255) NOT NULL,
+                            value VARCHAR(255) NOT NULL,
+                            join_operator_type VARCHAR(255) NOT NULL,
+                            case_insensitive TINYINT(1) NOT NULL DEFAULT 0,
+                            sort_priority INT NOT NULL DEFAULT 0,
+                            domain_id INT NOT NULL DEFAULT 1
+                        );
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        CREATE TABLE form_items_conditions (
+                            id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+                            form_name NVARCHAR(255) NOT NULL,
+                            form_item_id INT NOT NULL,
+                            item_form_id NVARCHAR(255) NOT NULL,
+                            condition_type NVARCHAR(255) NOT NULL,
+                            operator NVARCHAR(255) NOT NULL,
+                            value NVARCHAR(255) NOT NULL,
+                            join_operator_type NVARCHAR(255) NOT NULL,
+                            case_insensitive BIT NOT NULL DEFAULT 0,
+                            sort_priority INT NOT NULL DEFAULT 0,
+                            domain_id INT NOT NULL DEFAULT 1
+                        );
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        CREATE TABLE form_items_conditions (
+                            id INTEGER NOT NULL PRIMARY KEY,
+                            form_name NVARCHAR2(255) NOT NULL,
+                            form_item_id INTEGER NOT NULL,
+                            item_form_id NVARCHAR2(255) NOT NULL,
+                            condition_type NVARCHAR2(255) NOT NULL,
+                            operator NVARCHAR2(255) NOT NULL,
+                            value NVARCHAR2(255) NOT NULL,
+                            join_operator_type NVARCHAR2(255) NOT NULL,
+                            case_insensitive NUMBER(1) DEFAULT 0 NOT NULL,
+                            sort_priority INTEGER DEFAULT 0 NOT NULL,
+                            domain_id INTEGER DEFAULT 1 NOT NULL
+                        );
+                        CREATE SEQUENCE S_form_items_conditions START WITH 1;
+                        CREATE TRIGGER T_form_items_conditions BEFORE INSERT ON form_items_conditions
+                            FOR EACH ROW
+                                DECLARE
+                                    val INTEGER|
+                                BEGIN
+                                    IF :new.id IS NULL THEN
+                                        SELECT S_form_items_conditions.nextval into val FROM dual|
+                                        :new.id:= val|
+                                    END IF|
+                                END|
+                        ;
+                    </string>
+                </void>
+                <void property="pgsql">
+                    <string>
+                        CREATE SEQUENCE S_form_items_conditions START WITH 1;
+                        CREATE TABLE form_items_conditions (
+                            id INT DEFAULT NEXTVAL('S_form_items_conditions') PRIMARY KEY NOT NULL,
+                            form_name VARCHAR(255) NOT NULL,
+                            form_item_id INT NOT NULL,
+                            item_form_id VARCHAR(255) NOT NULL,
+                            condition_type VARCHAR(255) NOT NULL,
+                            operator VARCHAR(255) NOT NULL,
+                            value VARCHAR(255) NOT NULL,
+                            join_operator_type VARCHAR(255) NOT NULL,
+                            case_insensitive BOOLEAN NOT NULL DEFAULT FALSE,
+                            sort_priority INT NOT NULL DEFAULT 0,
+                            domain_id INT NOT NULL DEFAULT 1
+                        );
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
                 <void property="date"><string>20.05.2026</string></void>
                 <void property="desc"><string>Create new table custom_fields with id, alphabet, class_name (required), entity_id, label, type, tooltip, and required columns + enforce uniqueness and lookup indexes</string></void>
                 <void property="mysql">
@@ -3570,7 +3659,7 @@
                         ;
                     </string>
                 </void>
-                <void property="pgsql">
+                <void property="pgsql">Expand commentComment on lines R3499 to R3573Resolved
                     <string>
                         CREATE TABLE custom_fields (
                             id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY NOT NULL,

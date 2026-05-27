@@ -723,7 +723,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 
                             //pretoze z label sa generuje potom ID/name elementu a potrebujeme polia rozlisovat (juts in case of JSP and rest only if they are checkboxes or radios)
                             label = placeholder;
-                            if (required &&Tools.isNotEmpty(requiredLabelAdd)) {
+                            if (required && Tools.isNotEmpty(requiredLabelAdd)) {
                                 placeholder += requiredLabelAdd;
                             }
                         }
@@ -762,7 +762,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 
                 //skus zobrazit nadpis nad pole ak je definovany cez components.formsimple.firstTime.xxx
                 String firstTimeHeadingKey = "components.formsimple.firstTimeHeading."+fieldType;
-                String firstTimeHeading = prop.getText(firstTimeHeadingKey);
+                String firstTimeHeading = prop.getText(firstTimeHeadingKey, false);
                 //System.out.println("firstTimeHeadingKey="+firstTimeHeadingKey+" firstTimeHeading="+firstTimeHeading);
                 if (Tools.isNotEmpty(firstTimeHeading) && firstTimeHeading.equals(firstTimeHeadingKey)==false && firstTimeHeadingSet.contains(label)==false)
                 {

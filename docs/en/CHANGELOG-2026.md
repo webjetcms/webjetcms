@@ -4,6 +4,23 @@
 
 > Development version updated from the main repository.
 
+### Websites
+
+- Templates - added option to set the movement of `<style>` and `<link rel="stylesheet">` tags from the page body to `<head>` via [template option](frontend/templates/templates.md) with support for global configuration variable `showDocMoveStyleToHead`. Blocks in IE conditions, `noscript` and `script` remain in place (#231).
+
+![](frontend/templates/templates-edit-advanced.png)
+
+### Applications
+
+- Added new application [Language Redirect](redactor/apps/language-redirect/README.md) to automatically redirect visitors to the language version of the page based on language detection from the HTTP header `Accept-Language`. It supports up to 8 language assignments per URL, respecting the language cookie, and the option to redirect only to the root URL (#58497).
+
+![](redactor/apps/language-redirect/editor-basic.png)
+
+### Documentation
+
+- A new section [Overview of new features] (sales/README.md) has been created, which contains descriptions of new features and **functionalities of WebJET CMS in understandable language**, without unnecessarily technical formulations (#58505).
+- Created a [Troubleshooting] section (sysadmin/troubleshooting/README.md) in the operation manual.
+
 ## 2026.18
 
 > WebJET CMS 2026.18 brings **folder change approval** with support for multi-level approval and **accessibility testing** integrated directly into automated tests.
@@ -74,6 +91,7 @@ Redesigned application properties settings in the editor from the old code in `J
 ![](redactor/apps/multistep-form/stat-section.png)
 
 - Added **Completion Duration** column for multi-step forms, which shows how long it took the user to complete the form (time from viewing to submission) (#58333).
+- Multi-step forms - added support for conditional display/validation of form items based on created conditions. More in the [Conditional display/validation of items] section (redactor/apps/multistep-form/README.md#conditional-displayvalidation-of-items) (#58477).
 
 ### Gallery
 

@@ -16,6 +16,11 @@
 
 ![](redactor/apps/language-redirect/editor-basic.png)
 
+### Dokumentácia
+
+- Vytvorená nová sekcia [Prehľad nových vlastností](sales/README.md) ktorá obsahuje opisy nových vlastností a **funkcionalít WebJET CMS zrozumiteľným jazykom**, bez zbytočne technických formulácií (#58505).
+- Vytvorená sekcia [Riešenie problémov](sysadmin/troubleshooting/README.md) v manuáli pre prevádzku.
+
 ## 2026.18
 
 > WebJET CMS 2026.18 prináša **schvaľovanie zmien priečinkov** s podporou viacúrovňového schvaľovania a **testovanie prístupnosti** integrované priamo do automatizovaných testov.
@@ -88,6 +93,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 ![](redactor/apps/multistep-form/stat-section.png)
 
 - Pre viackrokové formuláre pridaný stĺpec **Trvanie vyplnenia**, ktorý zobrazuje ako dlho trvalo vyplnenie formuláru používateľom (čas od jeho zobrazenia po odoslanie) (#58333).
+- Viackrokové formuláre - pridaná podpora pre podmienené zobrazenie/validovanie položky formulára na základe vytvorených podmienok. Viac v časti [Podmienené zobrazenie/validovanie položky](redactor/apps/multistep-form/README.md#podmienené-zobrazenievalidovanie-položky) (#58477).
 
 ### Galéria
 
