@@ -110,7 +110,7 @@ public class SemanticSearchService {
      * @param minimumResultCount - minimum number of results to return regardless of similarity (0 for no minimum)
      * @return list of filtered semantic search results
      */
-    public static List<SemanticSearchResult> filterResultsBySimilarity(List<SemanticSearchResult> sortedResults, double minimumSimilarity, int minimumResultCount) {
+    public List<SemanticSearchResult> filterResultsBySimilarity(List<SemanticSearchResult> sortedResults, double minimumSimilarity, int minimumResultCount) {
         if (sortedResults == null || sortedResults.isEmpty()) {
             return List.of();
         }
