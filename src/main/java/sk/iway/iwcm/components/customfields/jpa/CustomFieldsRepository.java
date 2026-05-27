@@ -15,8 +15,8 @@ public interface CustomFieldsRepository extends JpaRepository<CustomFieldsEntity
     List<CustomFieldsEntity> findAllByClassNameAndEntityId(String className, Long entityid);
 
     @Query("SELECT cfe.id FROM CustomFieldsEntity cfe WHERE cfe.className = :className AND cfe.alphabet = :alphabet AND cfe.entityId = :entityId")
-    Optional<Long> countEntities(String className, String alphabet, Long entityId);
+    Optional<Long> getEntityId(String className, String alphabet, Long entityId);
 
     @Query("SELECT cfe.id FROM CustomFieldsEntity cfe WHERE cfe.className = :className AND cfe.alphabet = :alphabet AND cfe.entityId IS NULL")
-    Optional<Long> countNullEntities(String className, String alphabet);
+    Optional<Long> getNullEntityId(String className, String alphabet);
 }

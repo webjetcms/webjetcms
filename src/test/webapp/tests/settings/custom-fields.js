@@ -25,7 +25,7 @@ Scenario('Custom fields required logic test @screenshot', async ({ I, DT, DTE, D
     I.seeElement( locate("ul.dt-autocomplete-select li.ui-menu-item div").withText(docClass) );
     I.seeElement( locate("ul.dt-autocomplete-select li.ui-menu-item div").withText("sk.iway.iwcm.doc.DocHistory") );
 
-    I.say("Go test DOC entiy - not fields required");
+    I.say("Go test DOC entity - not fields required");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + docId_1);
     DTE.waitForEditor();
     I.clickCss("#pills-dt-datatableInit-history-tab");
@@ -56,7 +56,7 @@ Scenario('Custom fields required logic test @screenshot', async ({ I, DT, DTE, D
     DTE.save();
     I.dontSeeElement(".DTE_Form_Error");
 
-    I.say('Allso for another entityId');
+    I.say('Also for another entityId');
     addCustomFieldSetting(I, DTE, docClass, "I", docId_2, false);
 
     I.say("Now test how doc's fields changed");

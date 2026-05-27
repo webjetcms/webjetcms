@@ -75,7 +75,6 @@ import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.components.customfields.jpa.CustomFieldsRepository;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
 import sk.iway.iwcm.components.customfields.rest.CustomFieldsService;
 import sk.iway.iwcm.database.ActiveRecordBase;
@@ -790,12 +789,6 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 * @param entity entity instance to validate
 	 */
 	public void validateEditorForCustomFields(HttpServletRequest request, DatatableRequest<Long, T> target, Identity user, Errors errors, Long id, T entity) {
-		CustomFieldsRepository customFieldsRepository = Tools.getSpringBean("customFieldsRepository", CustomFieldsRepository.class);
-		if(customFieldsRepository == null) {
-			Logger.error(this.getClass(), "Could not get customFieldsRepository bean from spring context, skipping custom fields validation");
-			return;
-		}
-
 		for(Character alphabet : CustomFieldsService.getRequiredFieldsAlphabets(new CustomFieldsSearchDto(entity))) {
 			try {
 				BeanWrapperImpl bw = new BeanWrapperImpl(entity);
@@ -805,7 +798,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				}
 			} catch (NotReadablePropertyException ex) {
 				Logger.error(this.getClass(), "Error validating custom fields, property field" + alphabet + " not found in entity " + entity.getClass().getName(), ex);
-				//failsafe, ak nemame property fieldX tak ju proste nevalidujeme
+				// Failsafe: if property fieldX does not exist, simply skip validation for it
 				continue;
 			}
 		}

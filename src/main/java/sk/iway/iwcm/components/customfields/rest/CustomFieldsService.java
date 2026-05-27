@@ -77,10 +77,10 @@ public class CustomFieldsService {
             return List.of();
         }
 
-        // First get all fields that have no class name set - these are for all entities
+        // First get all fields that have no entityId set - these are for all entities of specified class name (global fields)
         List<CustomFieldsEntity> globalCustomFields = customFieldsRepository.findAllGlobalCustomFields(main.getClassName());
 
-        // Now get all fields for the specific class name
+        // Now get all fields for the specific entityId (specific fields) for the same class name - these will override global fields if there are any
         List<CustomFieldsEntity> classCustomFields = customFieldsRepository.findAllByClassNameAndEntityId(main.getClassName(), main.getEntityId());
 
         // Specific fields have higher priority than global ones, so we will override global fields with specific ones if there are any

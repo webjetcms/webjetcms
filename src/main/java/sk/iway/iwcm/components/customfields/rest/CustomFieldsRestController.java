@@ -43,14 +43,14 @@ public class CustomFieldsRestController extends DatatableRestControllerV2<Custom
         if("create".equals(target.getAction()) || "edit".equals(target.getAction())) {
             Long existingId = null;
             if(entity.getEntityId() == null || entity.getEntityId() < 1) {
-                existingId = customFieldsRepository.countNullEntities(entity.getClassName(), entity.getAlphabet()).orElse(-1l);
+                existingId = customFieldsRepository.getNullEntityId(entity.getClassName(), entity.getAlphabet()).orElse(-1l);
             } else {
-                existingId = customFieldsRepository.countEntities(entity.getClassName(), entity.getAlphabet(), entity.getEntityId()).orElse(-1L);
+                existingId = customFieldsRepository.getEntityId(entity.getClassName(), entity.getAlphabet(), entity.getEntityId()).orElse(-1L);
             }
 
             boolean isDuplicate = false;
             if("create".equals(target.getAction()) && existingId > 0) isDuplicate = true;
-            if("edit".equals(target.getAction()) && existingId > 1 && existingId.equals(id) == false) isDuplicate = true;
+            if("edit".equals(target.getAction()) && existingId > 0 && existingId.equals(id) == false) isDuplicate = true;
 
             if(isDuplicate) {
                 String errorMessage = getProp().getText("settings.custom-fields.duplicity-err");
