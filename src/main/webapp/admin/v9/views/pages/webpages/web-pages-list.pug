@@ -368,13 +368,6 @@ block content
                         $('.tree-col .dt-header-row .buttons-recover').removeClass("processing");
                     });
 
-                    $('.tree-col .dt-header-row .buttons-index').click(function () {
-                        var type = getTreeNodeType(selectedNode);
-                        if (type === 'group') {
-                            window.location.href = "/admin/v9/settings/embedding-chunks/?rootDir=" + selectedNode.id + "#pills-document";
-                        }
-                    });
-
                     window.jsTreeDocumentOpener.dataTable = webpagesDatatable;
                     window.jsTreeDocumentOpener.init();
                     var docIdParameter = window.jsTreeDocumentOpener._currentId;

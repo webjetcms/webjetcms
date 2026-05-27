@@ -136,6 +136,7 @@ function _getSubFolderCheck() {
     input.type = "checkbox";
     input.className = "form-check-input";
     input.value = "true";
+    input.checked = true;
 
     const label = document.createElement("label");
     label.setAttribute("for", "botFilterOut");

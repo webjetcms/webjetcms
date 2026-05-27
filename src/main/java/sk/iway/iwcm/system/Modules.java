@@ -781,14 +781,14 @@ public class Modules
 		loadModule(sub);
 
 		// Embedding-chunks
-		sub = new ModuleInfo().setMenuOrder(7400);
+		sub = new ModuleInfo().setMenuOrder(7024);
 		sub.setLeftMenuNameKey("settings.embedding-chunks.title");
 		sub.setNameKey("settings.embedding-chunks.title");
 		sub.setPath("/admin/v9/settings/embedding-chunks/");
 		sub.setWjVersions("BPECDIM");
 		sub.setUserItem(true);
 		sub.setItemKey("embeddingChunks");
-		sub.setDefaultDisabled(false);
+		sub.setDefaultDisabled(true);
 		sub.setShowInLeftMenu(true);
 		sub.setGroup("config");
 		sub.setMenuIcon("database-search");

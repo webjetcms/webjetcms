@@ -99,14 +99,16 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
         RagEntityType ragEntityType = RagEntityType.fromString( params.get("entityType") );
         if(RagEntityType.DOCUMENT.equals(ragEntityType)) {
             int rootDir = Tools.getIntValue(params.get("searchRootDir"), -1);
-            boolean includeSubfolders = Tools.getBooleanValue(params.get("includeSubfolders"), false);
-            Pair<Integer, List<Integer>> data = getDocIds(rootDir, includeSubfolders);
+            if (rootDir > 0) {
+                boolean includeSubfolders = Tools.getBooleanValue(params.get("includeSubfolders"), false);
+                Pair<Integer, List<Integer>> data = getDocIds(rootDir, includeSubfolders);
 
-            List<Integer> entityIds = data != null ? data.getSecond() : new ArrayList<>();
-            if(entityIds.isEmpty()) entityIds.add(-1); // to avoid error with empty list
-            predicates.add( builder.and(
-                root.get("entityId").in(entityIds)
-            ) );
+                List<Integer> entityIds = data != null ? data.getSecond() : new ArrayList<>();
+                if(entityIds.isEmpty()) entityIds.add(-1); // to avoid error with empty list
+                predicates.add( builder.and(
+                    root.get("entityId").in(entityIds)
+                ) );
+            }
         }
 
         super.addSpecSearch(params, predicates, root, builder);

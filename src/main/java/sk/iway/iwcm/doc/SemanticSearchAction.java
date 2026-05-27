@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.SpamProtection;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -32,15 +33,6 @@ public class SemanticSearchAction {
 
 		String forward = "success";
 		String error = "error";
-		boolean english = false;
-		if (request.getParameter("lng") != null) {
-			english = true;
-			forward = "english";
-		}
-		String pForward = request.getParameter("forward");
-		if (pForward != null && pForward.endsWith(".jsp")) {
-			forward = "/templates/" + pForward;
-		}
 
 		int perPage = 10;
 		try {
@@ -112,7 +104,7 @@ public class SemanticSearchAction {
 			}
 
 			Integer domainId = CloudToolsForCore.getDomainId();
-			String language = request.getParameter("lng");
+			String language = PageLng.getUserLng(request);
 
 			// Fetch max 3 pages of results from semantic search, we will do pagination in Java after filtering non-searchable documents
 			int maxFetch = perPage * 3;
@@ -204,19 +196,9 @@ public class SemanticSearchAction {
 			SearchAction.preparePages(request, perPage, index, totalResults, paramsLink, "search.do");
 
 			if (totalResults > toIndex) {
-				if (!english) {
-					request.setAttribute("next", "<a href=\"search.do?index=" + (index + perPage) + paramsLink + "\"> Ďalej &gt;&gt;&gt; </a>");
-				} else {
-					request.setAttribute("next", "<a href=\"search.do?index=" + (index + perPage) + paramsLink + "\"> Next &gt;&gt;&gt; </a>");
-				}
 				request.setAttribute("nextHref", "search.do?index=" + (index + perPage) + paramsLink);
 			}
 			if (index != 0) {
-				if (!english) {
-					request.setAttribute("prev", "<a href=\"search.do?index=" + (index - perPage) + paramsLink + "\"> &lt;&lt;&lt; Späť </a>");
-				} else {
-					request.setAttribute("prev", "<a href=\"search.do?index=" + (index - perPage) + paramsLink + "\"> &lt;&lt;&lt; Back </a>");
-				}
 				request.setAttribute("prevHref", "search.do?index=" + (index - perPage) + paramsLink);
 			}
 
