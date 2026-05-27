@@ -75,6 +75,55 @@ Aktivácia a nastavenie sémantického vyhľadávania v [Konfigurácia](../../..
 
 Nastavte [automatizovanú úlohu](../../../../admin/settings/cronjob/README.md) s hodnotou `sk.iway.iwcm.rag.service.RagIndexCronTask` spúšťanú napríklad každých 5 minút - hodnota `*/5` v poli Minúta.
 
+### Hybridné vyhľadávanie (vector + fulltext)
+
+Pri režime `short_query_only` sa fulltext zapína najmä pre krátke dotazy, kde môže byť samotná vektorová podobnosť menej stabilná.
+
+Pri režime `fallback_on_low_vector` sa fulltext vykoná iba vtedy, keď je top vektorová similarity nízka alebo je príliš málo výsledkov.
+
+Výsledky sa spájajú pomocou `RRF` (Reciprocal Rank Fusion). V praxi to znamená, že sa neporovnávajú samotné čísla similarity medzi vektorovou a fulltext vetvou, ale iba ich poradie v každej vetve.
+
+Zjednodušene:
+
+1. Vektorové vyhľadávanie vráti zoznam výsledkov zoradený od najlepšieho po horšie.
+2. Fulltext vyhľadávanie vráti svoj vlastný zoznam zoradený od najlepšieho po horšie.
+3. Každý výsledok dostane body podľa pozície v zozname, kde lepšie umiestnenie znamená viac bodov.
+4. Ak sa ten istý chunk objaví v oboch vetvách, body sa mu sčítajú.
+5. Potom sa výsledky zoradia podľa súčtu bodov a až z toho sa vyberú dokumenty.
+
+Týmto spôsobom môže byť výsledok, ktorý je mierne slabší vo vektore, ale veľmi dobrý vo fulltexte, posunutý vyššie. Naopak, výsledok, ktorý je silný len v jednej vetve, neprebije kombinovaný výsledok z oboch vetiev len náhodne veľkým číslom similarity.
+
+```mermaid
+flowchart TD
+	Q[Dotaz používateľa] --> V[Vektorové vyhľadávanie]
+	Q --> F[Fulltext nad chunk_text]
+
+	V --> VR[Vektorový rebríček]
+	F --> FR[Fulltext rebríček]
+
+	VR --> RRF[RRF merge podľa poradia]
+	FR --> RRF
+
+	RRF --> S[Zoradenie chunkov podľa výsledného skóre]
+	S --> D[Agregácia na dokumenty]
+	D --> O[Finálny zoznam výsledkov]
+```
+
+Možné je nastaviť nasledovné konfiguračné premenné:
+
+| Premenná | Predvolená hodnota | Popis |
+| --- | --- | --- |
+| `ragHybridSearchEnabled` | `true` | Zapne hybridné vyhľadávanie kombinujúce vektorové a fulltext výsledky nad `rag_embedding_chunks.chunk_text`. |
+| `ragHybridSearchMode` | `short_query_only` | Režim hybridného vyhľadávania: `off`, `always`, `short_query_only`, `fallback_on_low_vector`. |
+| `ragHybridShortQueryMaxChars` | `12` | Maximálna dĺžka dotazu v znakoch pre režim `short_query_only`. |
+| `ragHybridShortQueryMaxTerms` | `2` | Maximálny počet slov dotazu pre režim `short_query_only`. |
+| `ragHybridFallbackTopSimilarity` | `0.35` | Prah top similarity pre režim `fallback_on_low_vector`. |
+| `ragHybridVectorWeight` | `0.7` | Váha vektorového poradia pri RRF merge. |
+| `ragHybridFtsWeight` | `0.3` | Váha fulltext poradia pri RRF merge. |
+| `ragHybridRrfK` | `60` | Parameter `k` pre Reciprocal Rank Fusion. |
+| `ragHybridChunkFetchMultiplier` | `3` | Násobič počtu chunkov načítaných oproti požadovanému počtu výsledkov. |
+| `ragHybridFtsUseIlikeFallback` | `true` | Ak FTS vráti prázdny výsledok, použije sa fallback cez `ILIKE` nad `chunk_text`. |
+
 ### Odporúčania pre slovenský a český obsah
 
 Predvolené hodnoty (`text-embedding-3-small`, `chunkSize=1000`, `chunkOverlap=200`) sú vyvážený kompromis medzi cenou, rýchlosťou a presnosťou pre bežné web stránky v slovenčine a češtine.

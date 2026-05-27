@@ -45,6 +45,17 @@ public interface VectorStore {
     List<VectorSearchResult> search(float[] queryEmbedding, String embeddingModel, Integer domainId, String language, int limit);
 
     /**
+     * Find relevant chunks by fulltext search in chunk text.
+     * @param query textual query
+     * @param embeddingModel model used to filter rows
+     * @param domainId domain ID to filter by (null for all)
+     * @param language language to filter by (null for all)
+     * @param limit max number of results
+     * @return list of search results ordered by fulltext rank (descending)
+     */
+    List<VectorSearchResult> searchFulltext(String query, String embeddingModel, Integer domainId, String language, int limit);
+
+    /**
      * Check if the vector store is available and properly initialized.
      */
     boolean isAvailable();

@@ -9,7 +9,9 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class SlidingWindowChunkerTest {
+import sk.iway.iwcm.test.BaseWebjetTest;
+
+class SlidingWindowChunkerTest extends BaseWebjetTest {
 
     private SlidingWindowChunker chunker;
 

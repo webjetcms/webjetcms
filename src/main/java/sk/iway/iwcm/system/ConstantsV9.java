@@ -283,6 +283,16 @@ public class ConstantsV9 {
 		Constants.setInt("ragSemanticSearchMinResults", 3, Constants.MOD_RAG, "Minimálny počet výsledkov semantického vyhľadávania. Ak ich je po filtrovaní menej, doplnia sa podľa najvyššej similarity.");
 		Constants.setInt("ragSearchEfSearch", 40, Constants.MOD_RAG, "HNSW index parameter ef_search — čím vyššia hodnota, tým lepší recall ale pomalšie vyhľadávanie. Default je 40, pre väčšie datasety zvážte zvýšenie na 100 alebo viac.");
 		Constants.setString("ragSearchDistanceMetric", "cosine", Constants.MOD_RAG, "Metrika vzdialenosti pre pgvector vyhľadávanie. Možné hodnoty: 'cosine' (cosínusová vzdialenosť), 'inner_product' (vnútorný súčin, rýchlejší pre normalizované vektory), 'l2' (euklidovská vzdialenosť). Zmena vyžaduje reindex HNSW indexu.");
+		Constants.setBoolean("ragHybridSearchEnabled", true, Constants.MOD_RAG, "Zapne hybridné vyhľadávanie nad rag_embedding_chunks kombinujúce vektorové a fulltext výsledky.");
+		Constants.setString("ragHybridSearchMode", "short_query_only", Constants.MOD_RAG, "Režim hybridného vyhľadávania: off, always, short_query_only, fallback_on_low_vector.");
+		Constants.setInt("ragHybridShortQueryMaxChars", 12, Constants.MOD_RAG, "Maximálna dĺžka dotazu v znakoch pre režim short_query_only.");
+		Constants.setInt("ragHybridShortQueryMaxTerms", 2, Constants.MOD_RAG, "Maximálny počet slov dotazu pre režim short_query_only.");
+		Constants.setString("ragHybridFallbackTopSimilarity", "0.35", Constants.MOD_RAG, "Prahová hodnota top similarity pre režim fallback_on_low_vector.");
+		Constants.setString("ragHybridVectorWeight", "0.7", Constants.MOD_RAG, "Váha vektorového poradia pri RRF merge hybridného vyhľadávania.");
+		Constants.setString("ragHybridFtsWeight", "0.3", Constants.MOD_RAG, "Váha fulltext poradia pri RRF merge hybridného vyhľadávania.");
+		Constants.setInt("ragHybridRrfK", 60, Constants.MOD_RAG, "Hodnota k parametra pre RRF merge hybridného vyhľadávania.");
+		Constants.setInt("ragHybridChunkFetchMultiplier", 3, Constants.MOD_RAG, "Násobič počtu chunkov načítaných pre hybridné vyhľadávanie voči požadovanému počtu výsledkov.");
+		Constants.setBoolean("ragHybridFtsUseIlikeFallback", true, Constants.MOD_RAG, "Pri prázdnych FTS výsledkoch vykoná fallback cez ILIKE nad chunk_text.");
 
 		Constants.setString("searchType", "db", Constants.MOD_CONFIG, "Typ vyhladavania: db (databazove), lucene (Lucene fulltext), semantic (semanticke vyhladavanie cez pgvector)");
 	}

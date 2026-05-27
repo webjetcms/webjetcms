@@ -50,7 +50,7 @@ public class SlidingWindowChunker {
         int pos = 0;
         while (pos < text.length()) {
             int end = Math.min(pos + chunkSize, text.length());
-            String chunk = text.substring(pos, end).trim();
+            String chunk = text.substring(pos, end);
             if (chunk.isEmpty() == false) {
                 chunks.add(chunk);
             }

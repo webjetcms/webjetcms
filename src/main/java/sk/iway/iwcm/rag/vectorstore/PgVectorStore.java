@@ -52,6 +52,9 @@ public class PgVectorStore implements VectorStore {
     private static final String CREATE_DOMAIN_LANG_INDEX_SQL =
         "CREATE INDEX IF NOT EXISTS idx_rag_chunk_domain_lang ON rag_embedding_chunks (domain_id, language, status)";
 
+    private static final String CREATE_CHUNK_TEXT_FTS_INDEX_SQL =
+        "CREATE INDEX IF NOT EXISTS idx_rag_chunk_text_fts ON rag_embedding_chunks USING GIN (to_tsvector('simple', chunk_text))";
+
     private static final String DROP_HNSW_INDEX_SQL =
         "DROP INDEX IF EXISTS idx_rag_embedding_hnsw";
 
@@ -97,6 +100,22 @@ public class PgVectorStore implements VectorStore {
 
     private static final String DELETE_MODEL_DATA_SQL =
         "DELETE FROM rag_embedding_chunks WHERE embedding_model = ?";
+
+    private static final String FTS_SEARCH_SQL_PREFIX =
+        "SELECT id, entity_type, entity_id, chunk_index, chunk_text, " +
+        "ts_rank_cd(to_tsvector('simple', chunk_text), websearch_to_tsquery('simple', ?)) AS similarity " +
+        "FROM rag_embedding_chunks " +
+        "WHERE status = '" + EmbeddingChunkStatus.COMPLETED.name() + "' " +
+        "AND embedding_model = ? " +
+        "AND to_tsvector('simple', chunk_text) @@ websearch_to_tsquery('simple', ?)";
+
+    private static final String FTS_ILIKE_SQL_PREFIX =
+        "SELECT id, entity_type, entity_id, chunk_index, chunk_text, " +
+        "CASE WHEN position(lower(?) in lower(chunk_text)) > 0 THEN 1.0 ELSE 0.0 END AS similarity " +
+        "FROM rag_embedding_chunks " +
+        "WHERE status = '" + EmbeddingChunkStatus.COMPLETED.name() + "' " +
+        "AND embedding_model = ? " +
+        "AND chunk_text ILIKE ?";
 
     @Override
     public void store(String entityType, long entityId, int chunkIndex, String chunkText,
@@ -195,6 +214,73 @@ public class PgVectorStore implements VectorStore {
     }
 
     @Override
+    public List<VectorSearchResult> searchFulltext(String query, String embeddingModel, Integer domainId, String language, int limit) {
+        String dsName = RagJpaConfig.getRagDataSourceName();
+        if (dsName == null || Tools.isEmpty(query) || limit <= 0) return new ArrayList<>();
+
+        List<VectorSearchResult> ftsResults = executeFulltextSearch(dsName, query, embeddingModel, domainId, language, limit);
+        if (ftsResults.isEmpty() && Constants.getBoolean("ragHybridFtsUseIlikeFallback")) {
+            return executeIlikeSearch(dsName, query, embeddingModel, domainId, language, limit);
+        }
+
+        return ftsResults;
+    }
+
+    private List<VectorSearchResult> executeFulltextSearch(String dsName, String query, String embeddingModel, Integer domainId, String language, int limit) {
+        StringBuilder sql = new StringBuilder(FTS_SEARCH_SQL_PREFIX);
+        List<Object> params = new ArrayList<>();
+        params.add(query);
+        params.add(embeddingModel);
+        params.add(query);
+
+        addScopeFilters(sql, params, domainId, language);
+        sql.append(" ORDER BY similarity DESC LIMIT ?");
+        params.add(limit);
+
+        return executeSearchQuery(dsName, sql.toString(), params);
+    }
+
+    private List<VectorSearchResult> executeIlikeSearch(String dsName, String query, String embeddingModel, Integer domainId, String language, int limit) {
+        StringBuilder sql = new StringBuilder(FTS_ILIKE_SQL_PREFIX);
+        List<Object> params = new ArrayList<>();
+        params.add(query);
+        params.add(embeddingModel);
+        params.add("%" + query + "%");
+
+        addScopeFilters(sql, params, domainId, language);
+        sql.append(" ORDER BY similarity DESC, id ASC LIMIT ?");
+        params.add(limit);
+
+        return executeSearchQuery(dsName, sql.toString(), params);
+    }
+
+    private void addScopeFilters(StringBuilder sql, List<Object> params, Integer domainId, String language) {
+        if (domainId != null) {
+            sql.append(" AND domain_id = ?");
+            params.add(domainId);
+        }
+        if (Tools.isNotEmpty(language)) {
+            sql.append(" AND language = ?");
+            params.add(language);
+        }
+    }
+
+    private List<VectorSearchResult> executeSearchQuery(String dsName, String sql, List<Object> params) {
+        return new ComplexQuery()
+            .setSql(sql)
+            .setParams(params.toArray())
+            .setDatabase(dsName)
+            .list(rs -> new VectorSearchResult(
+                rs.getLong("id"),
+                rs.getString("entity_type"),
+                rs.getLong("entity_id"),
+                rs.getInt("chunk_index"),
+                rs.getString("chunk_text"),
+                rs.getDouble("similarity")
+            ));
+    }
+
+    @Override
     public boolean isAvailable() {
         String dsName = RagJpaConfig.getRagDataSourceName();
         if (dsName == null) return false;
@@ -227,6 +313,7 @@ public class PgVectorStore implements VectorStore {
 
             sq.execute(CREATE_ENTITY_INDEX_SQL);
             sq.execute(CREATE_DOMAIN_LANG_INDEX_SQL);
+            sq.execute(CREATE_CHUNK_TEXT_FTS_INDEX_SQL);
             Logger.println(PgVectorStore.class, "RAG pgvector schema initialized successfully");
             return true;
         } catch (Exception e) {
