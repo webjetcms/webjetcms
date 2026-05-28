@@ -749,3 +749,33 @@ Pole nepodporuje AI tlačidlo (`btn-ai`).
     )
     private String options = "";
 ```
+
+## ENUMERATION
+
+Typ poľa určený pre napojenie na aplikáciu číselníky. V editore sa zobrazí jeden riadok s tromi vstupmi:
+
+- číslo (ID alebo názov typu číselníka),
+- stĺpec pre text (`label`) položky,
+- stĺpec pre hodnotu (`value`) položky.
+
+Technicky sa hodnota uloží vo formáte:
+
+`enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY`
+
+Príklad výslednej hodnoty: `enumeration-options|4|string1|string2`
+
+Podporované názvy stĺpcov sú `string1` až `string12`, `decimal1` až `decimal4`, `boolean1` až `boolean4`, `date1` až `date4`.
+
+Príklad použitia v entite:
+
+```java
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.ENUMERATION,
+        title = "multistep_form.value_as_enumeration",
+        tab = "advanced"
+    )
+    private String valueAsEnumeration;
+```
+
+Tento typ sa používa najmä pri formulároch, kde je potrebné dynamicky generovať `<option>` hodnoty zo zvoleného číselníka.

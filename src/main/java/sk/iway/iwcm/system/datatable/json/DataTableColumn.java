@@ -741,6 +741,14 @@ public class DataTableColumn {
             }
             editor.setType("options");
         }
+
+        if (dataTableColumnType == DataTableColumnType.ENUMERATION) {
+            renderFormat = "dt-format-text";
+            if (editor == null) {
+                editor = new DataTableColumnEditor();
+            }
+            editor.setType("enumeration");
+        }
     }
 
     private void setFinalProperties(Field field) {
