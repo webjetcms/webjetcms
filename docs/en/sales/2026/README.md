@@ -4,6 +4,26 @@ This section contains descriptions of the features and **functionalities of WebJ
 
 ---
 
+## Smart search by question meaning
+
+WebJET CMS delivers **semantic search** that goes beyond keyword matching, but also understands **the meaning of the user query**. This means that visitors will find relevant content even when they don't use the exact wording from the web. The result is a more natural search that behaves more closely to how people actually ask questions.
+
+For the customer, this means **higher success rate of finding an answer on the first try**, fewer page bounces and a better user experience, especially on content-intensive websites. The feature is suitable for the public sector, corporate portals, product websites and customer service centers, where regular full-text search often returns too many irrelevant results.
+
+The solution is also **flexible and extensible**. It is possible to combine classic full-text and semantic search (hybrid mode), adjust the sensitivity of results and adapt it to the customer's infrastructure, including a separate vector database. In practice, this brings lower operational risk, better scalability and the possibility of gradual deployment without the need to change the entire website at once.
+
+**Main benefits:**
+
+- **More relevant results for visitors**: The system searches by meaning, not just by exact words, which increases the chance that the user will quickly find what they need.
+- **Higher conversion and user satisfaction**: Fewer blind results and a shorter path to information help reduce website bounces.
+- **Competitive advantage of modern AI search**: The organization gains a feature that conventional CMS solutions often lack in production quality.
+- **Secure and scalable deployment**: Support for a standalone vector database enables deployment even in environments where the main database is not PostgreSQL.
+- **Fine-tuning capability**: Configurable parameters allow you to balance accuracy, performance, and cost according to the type of project.
+
+![Semantic Search - Index Settings](../../redactor/apps/semantic-search/index-dialog.png)
+
+Detailed documentation: [Semantic Search](../../custom-apps/apps/rag/semantic-search/README.md) | [Managing Indexed Data](../../redactor/apps/semantic-search/README.md)
+
 ## Smart forms that adapt to user responses
 
 WebJET CMS brings **conditional display and conditional field requirement** to multi-step forms, allowing the form to **dynamically change while being filled out**. The user sees only the questions that are relevant to their situation, and the system automatically determines which fields must be filled in. In practice, this means a shorter, more understandable form without unnecessary steps.

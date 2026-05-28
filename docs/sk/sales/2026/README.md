@@ -4,6 +4,26 @@ Táto sekcia obsahuje opisy vlastností a **funkcionalít WebJET CMS zrozumiteľ
 
 ---
 
+## Inteligentné vyhľadávanie podľa významu otázky
+
+WebJET CMS prináša **sémantické vyhľadávanie**, ktoré nepracuje len so zhodou kľúčových slov, ale rozumie aj **významu používateľského dopytu**. Návštevník tak nájde relevantný obsah aj vtedy, keď nepoužije presnú formuláciu z webu. Výsledkom je prirodzenejšie vyhľadávanie, ktoré sa správa bližšie tomu, ako ľudia reálne kladú otázky.
+
+Pre zákazníka to znamená **vyššiu úspešnosť nájdenia odpovede na prvý pokus**, menej odchodov zo stránky a lepší používateľský zážitok najmä na obsahovo rozsiahlych weboch. Funkcia je vhodná pre verejný sektor, korporátne portály, produktové weby aj zákaznícke centrá, kde bežné fulltextové hľadanie často vracia priveľa nerelevantných výsledkov.
+
+Riešenie je zároveň **flexibilné a rozšíriteľné**. Dá sa kombinovať klasické fulltextové a sémantické vyhľadávanie (hybridný režim), nastavovať citlivosť výsledkov a prispôsobiť ho infraštruktúre zákazníka vrátane oddelenej vektorovej databázy. V praxi to prináša nižšie prevádzkové riziko, lepšiu škálovateľnosť a možnosť postupného nasadenia bez potreby meniť celý web naraz.
+
+**Hlavné benefity:**
+
+- **Relevantnejšie výsledky pre návštevníkov**: Systém vyhľadáva podľa významu, nie len podľa presných slov, čo zvyšuje šancu, že používateľ rýchlo nájde to, čo potrebuje.
+- **Vyššia konverzia a spokojnosť používateľov**: Menej slepých výsledkov a kratšia cesta k informácii pomáhajú znižovať odchody z webu.
+- **Konkurenčná výhoda moderného AI vyhľadávania**: Organizácia získava funkciu, ktorú bežné CMS riešenia často nemajú v produkčnej kvalite.
+- **Bezpečné a škálovateľné nasadenie**: Podpora samostatnej vektorovej databázy umožňuje nasadenie aj v prostrediach, kde hlavná databáza nie je PostgreSQL.
+- **Možnosť presného doladenia**: Konfigurovateľné parametre umožňujú vyvážiť presnosť, výkon a náklady podľa typu projektu.
+
+![Sémantické vyhľadávanie - nastavenie indexu](../../redactor/apps/semantic-search/index-dialog.png)
+
+Podrobná dokumentácia: [Sémantické vyhľadávanie](../../custom-apps/apps/rag/semantic-search/README.md) | [Správa indexovaných údajov](../../redactor/apps/semantic-search/README.md)
+
 ## Inteligentné formuláre, ktoré sa prispôsobujú odpovediam používateľa
 
 WebJET CMS prináša do viackrokových formulárov **podmienené zobrazenie a podmienenú povinnosť polí**, vďaka čomu sa formulár vie **dynamicky meniť počas vypĺňania**. Používateľ vidí iba tie otázky, ktoré sú pre jeho situáciu relevantné, a systém automaticky určí, ktoré polia musia byť vyplnené. V praxi to znamená kratší, zrozumiteľnejší formulár bez zbytočných krokov.
