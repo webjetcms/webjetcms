@@ -777,7 +777,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                     StringBuilder iterable = new StringBuilder();
                     String iterableKey = "components.formsimple.iterable."+fieldType;
                     String iterableCode = prop.getText(iterableKey);
-                    if (Tools.isNotEmpty(iterableCode) && iterableCode.equals(iterableKey)==false)
+                    if (Tools.isNotEmpty(iterableCode) && iterableCode.equals(iterableKey) == false)
                     {
                         String delimiter = " ";
                         if (value.contains("|")) delimiter = "|";
@@ -788,28 +788,28 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                         iterableSize = values.length;
                         for (String token : values)
                         {
-                        String valueLabel = token;
-                        String code = iterableCode;
+                            String valueLabel = token;
+                            String code = iterableCode;
 
-                        int separator = token.indexOf(":");
-                        if (code.contains("${value-label}") && separator>0) {
-                            valueLabel = token.substring(0, separator);
-                            token = token.substring(separator+1);
-                        }
+                            int separator = token.indexOf(":");
+                            if (code.contains("${value-label}") && separator > 0) {
+                                valueLabel = token.substring(0, separator);
+                                token = token.substring(separator + 1);
+                            }
 
-                        code = Tools.replace(code, "${value}", token);
-                        code = Tools.replace(code, "${value-label}", valueLabel);
-                        code = Tools.replace(code, "${counter}", String.valueOf(counter));
+                            code = Tools.replace(code, "${value}", token);
+                            code = Tools.replace(code, "${value-label}", valueLabel);
+                            code = Tools.replace(code, "${counter}", String.valueOf(counter));
 
-                        iterable.append(code).append("\n");
-                        counter++;
+                            iterable.append(code).append("\n");
+                            counter++;
                         }
                     }
                     html = Tools.replace(html, "${iterable}", iterable.toString());
                 }
 
                 html = Tools.replace(html, "${id}", id);
-                html = Tools.replace(html, "${label}", isEmailRender && label.trim().endsWith(":") == false ? label+":" : label);
+                html = Tools.replace(html, "${label}", isEmailRender && label.trim().endsWith(":") == false ? label + ":" : label);
                 html = Tools.replace(html, "${labelSanitized}", labelSanitized);
                 html = Tools.replace(html, "${value}", value);
                 html = Tools.replace(html, "${valueSanitized}", DocTools.removeChars(value, true));

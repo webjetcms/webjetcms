@@ -87,7 +87,10 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
             else item.setRowClass("odd-step");
         }
 
-        page.addOptions("fieldType", MultistepFormsService.getFieldTypes(getRequest()), "label", "value", false);
+        Pair<List<LabelValue>, List<LabelValue>> optionsPair = MultistepFormsService.getFieldTypes(getRequest());
+        page.addOptions("fieldType", optionsPair.getFirst(), "label", "value", false);
+        page.addOptions("inputType", optionsPair.getSecond(), "label", "value", false);
+
         page.addOptions("hiddenFieldsByType", MultistepFormsService.getFiledTypeVisibility(getRequest()), "label", "value", false);
         page.addOptions("stepId", multistepFormsService.getFormStepsOptions(MultistepFormsService.getFormName(getRequest()), getProp()), "label", "value", false);
         page.addOptions("regexValidationArr", MultistepFormsService.getRegExOptions(regExpRepository, getRequest()), "label", "value", false);
@@ -301,6 +304,12 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
             if(Tools.isEmpty(entity.getChartType())) entity.setChartType( ChartType.BAR_HORIZONTAL.getKey() );
             if(Tools.isEmpty(entity.getColorScheme())) entity.setColorScheme( StatService.DEFAULT_COLORSET_NAME );
             if(entity.getTopCount() == null) entity.setTopCount(5);
+
+            // if field type is iterable, value must be copied to valueAsOptions
+            if(MultistepFormsService.isFieldtypeIterable(entity.getFieldType(), getRequest())) {
+                entity.setValueAsOptions(entity.getValue());
+                entity.setValue("");
+            }
         }
 
         return entity;
@@ -308,6 +317,11 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
 
     @Override
     public FormItemEntity processToEntity(FormItemEntity entity, ProcessItemAction action) {
+        // if field type is iterable, value is stored in valueAsOptions
+        if(MultistepFormsService.isFieldtypeIterable(entity.getFieldType(), getRequest())) {
+            entity.setValue(entity.getValueAsOptions());
+        }
+
         // When usage of colorScheme is not allowed, remove value
         if(Tools.isTrue(entity.getShowStat()) && Tools.isTrue(entity.getUseColorScheme())) return entity;
         entity.setColorScheme("");

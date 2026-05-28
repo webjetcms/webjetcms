@@ -171,10 +171,11 @@ public class MultistepFormsService {
      * @param request request used to resolve localized labels
      * @return list of field type options
      */
-    public static final List<LabelValue> getFieldTypes(HttpServletRequest request) {
+    public static final Pair<List<LabelValue>, List<LabelValue>> getFieldTypes(HttpServletRequest request) {
         Prop prop = Prop.getInstance(request);
 
-        List<LabelValue> options = new ArrayList<>();
+        List<LabelValue> visibleOptions = new ArrayList<>();
+        List<LabelValue> technicalOptions = new ArrayList<>();
         Map<String, String> formsimpleFields = prop.getTextStartingWith(ITEM_KEY_LABEL_PREFIX);
 
         for(Entry<String, String> entry : formsimpleFields.entrySet()) {
@@ -184,13 +185,25 @@ public class MultistepFormsService {
             if(htmlCode != null && (htmlCode.toLowerCase().contains("type=\"submit\"") || htmlCode.toLowerCase().contains("type=\'submit\'")) )
                 continue;
 
-            options.add(new LabelValue(entry.getValue(), entry.getKey().substring(ITEM_KEY_LABEL_PREFIX.length())));
+            String value = entry.getKey().substring(ITEM_KEY_LABEL_PREFIX.length());
+            visibleOptions.add(new LabelValue(entry.getValue(), value));
+
+            String inputType = "text";
+            if(htmlCode != null && htmlCode.contains("${iterable}")) inputType = "iterable";
+
+            technicalOptions.add(new LabelValue(inputType, value));
         }
 
         //sort by label
-        options.sort((o1, o2) -> o1.getLabel().compareToIgnoreCase(o2.getLabel()));
+        visibleOptions.sort((o1, o2) -> o1.getLabel().compareToIgnoreCase(o2.getLabel()));
 
-        return options;
+        return new Pair<>(visibleOptions, technicalOptions);
+    }
+
+    public static final boolean isFieldtypeIterable(String fieldType, HttpServletRequest request) {
+        Prop prop = Prop.getInstance(request);
+        String htmlCode = prop.getText(ITEM_KEY_INPUT_PREFIX + fieldType);
+        return (htmlCode != null && htmlCode.contains("${iterable}"));
     }
 
     /**

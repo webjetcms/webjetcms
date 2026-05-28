@@ -89,6 +89,10 @@ public class FormItemEntity extends BaseEditorFields {
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.formsimple.value", hidden = true, tab = "advanced")
     private String value;
 
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.OPTIONS, title = "components.formsimple.value",  hidden = true, tab = "advanced")
+    private String valueAsOptions;
+
     @Column(name = "placeholder")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.formsimple.placeholder", hidden = true, tab = "advanced")
     private String placeholder;

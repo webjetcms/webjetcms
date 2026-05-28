@@ -196,6 +196,7 @@
                 $("#DTE_Field_fieldType").on("change", function() {
                     const selectedFieldType = $(this).val();
                     const hiddenFieldsByType = formItemsDataTable.DATA.jsonOptions.hiddenFieldsByType;
+                    const inputTypeByFieldType = formItemsDataTable.DATA.jsonOptions.inputType;
 
                     const editDialog = $("div.DTE.DTE_Action_Edit");
                     if(editDialog != undefined && editDialog != null && editDialog.length) {
@@ -246,6 +247,31 @@
                             formItemsDataTable.EDITOR.field(fieldName).hide();
                         }
                     });
+
+                    // Special logic for value field
+                    setTimeout(() => {
+                        let inputType = "text";
+                        inputTypeByFieldType.forEach(type => {
+                            if(type.value === selectedFieldType) {
+                                inputType = type.label;
+                            }
+                        });
+                        //console.log("Selected field type: " + selectedFieldType + ", input type: " + inputType);
+
+                        if(formItemsDataTable.EDITOR.field("value").displayed() === true) {
+                            // It has meaning only if value field is showed
+                            if("iterable" === inputType) {
+                                formItemsDataTable.EDITOR.field("value").hide();
+                                formItemsDataTable.EDITOR.field("valueAsOptions").show();
+                            } else {
+                                formItemsDataTable.EDITOR.field("value").show();
+                                formItemsDataTable.EDITOR.field("valueAsOptions").hide();
+                            }
+                        } else {
+                            // value field is hidden, hide valueAsOptions too
+                            formItemsDataTable.EDITOR.field("valueAsOptions").hide();
+                        }
+                    }, 500);
 
                     if(selectedFieldType !== formItemsDataTable.EDITOR.currentJson["fieldType"]) {
                         // Call only on real change
