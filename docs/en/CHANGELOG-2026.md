@@ -117,6 +117,10 @@ Redesigned application properties settings in the editor from the old code in `J
   - Data tables, editor (#58389-4).
 - Extended a11y tests with new scenarios for file manager, monitoring, statistics, file upload, user management and website. The `a11y.check()` method supports the `context` parameter to limit the inspection to a specific part of the page, including nested `iframe` elements (#58389-5).
 
+### Semantic search
+
+- Added support for [semantic search](redactor/apps/semantic-search/README.md) built on the `pgvector` and `OpenAI embeddings` vector database technology. It allows visitors to find relevant pages based on **the meaning of the query**, not just keyword matching (#211).
+
 ### Other minor changes
 
 - Gallery - added support for transparency in `png/webp/gif` images when resizing them, if [ImageMagick](redactor/apps/gallery/README.md#possible-configuration-variables) (#osk396).

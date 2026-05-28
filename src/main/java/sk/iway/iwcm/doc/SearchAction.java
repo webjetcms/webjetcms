@@ -21,7 +21,6 @@ import java.util.StringTokenizer;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
@@ -68,11 +67,18 @@ public class SearchAction
 	{
 		PageParams pageParams = new PageParams(request);
 
-		if (Constants.getBoolean("luceneAsDefaultSearch") || "true".equals(request.getParameter("useLucene")) || pageParams.getBooleanValue("useLucene", false))
+		String searchType = Constants.getString("searchType");
+		if ("lucene".equals(searchType) || Constants.getBoolean("luceneAsDefaultSearch") || "true".equals(request.getParameter("useLucene")) || pageParams.getBooleanValue("useLucene", false))
 		{
 			//parameter useLucene=true je mozne pouzit pri porovnani standardneho a lucene vyhladavania
 			return LuceneSearchAction.search(request);
 		}
+		if ("semantic".equals(searchType) || "true".equals(request.getParameter("useSemantic")) || pageParams.getBooleanValue("useSemantic", false))
+		{
+			return SemanticSearchAction.search(request, response);
+		}
+
+		// ELSE - standardne databazove vyhladavanie
 
 		Identity user = UsersDB.getCurrentUser(request);
 
@@ -989,7 +995,7 @@ public class SearchAction
 			sk.iway.iwcm.Logger.error(e);
 			request.setAttribute("wrong", "true");
 			request.setAttribute("notfound", "true");
-			request.setAttribute("err_msg", "Chyba pri práci s databázou..." + e.getMessage());
+			request.setAttribute("err_msg", "Chyba pri práci s databázou...");
 			return (error);
 		}
 		finally
@@ -1003,7 +1009,7 @@ public class SearchAction
 			catch (Exception e)
 			{
 				sk.iway.iwcm.Logger.error(e);
-				request.setAttribute("err_msg", "Chyba pri práci s databázou: " + e.getMessage());
+				request.setAttribute("err_msg", "Chyba pri práci s databázou...");
 			}
 		}
 

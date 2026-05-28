@@ -1093,18 +1093,43 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 							predicates.add(builder.equal(root.get(field), Double.valueOf(value)));
 						} else {
 
-							if (value.startsWith("^") && value.endsWith("$")) predicates.add(builder.equal(root.get(field), value.substring(1, value.length()-1)));
-							else {
-								if (value.startsWith("^")) value = value.substring(1)+"%";
-								else if (value.endsWith("$")) value = "%"+value.substring(0, value.length()-1);
-								else value = "%"+value+"%";
+							// In case of Enum we need to convert String value to Enum constant
+							Class<?> type = root.get(field).getJavaType();
+							if(type.isEnum()) {
+								String enumText = value != null ? value.trim() : "";
+								Object[] enumConstants = type.getEnumConstants();
+								Object enumValue = null;
 
-								if (Constants.DB_TYPE==Constants.DB_ORACLE && isJpaLowerField(field)) {
-									predicates.add(builder.like(builder.lower(root.get(field)), value.toLowerCase()));
-								} else if (Constants.DB_TYPE==Constants.DB_PGSQL) {
-									predicates.add(builder.like(builder.lower(builder.function("unaccent", String.class, root.get(field))), DB.internationalToEnglish(value).toLowerCase()));
+								if (enumConstants != null) {
+									for (Object enumConstant : enumConstants) {
+										Enum<?> constant = (Enum<?>) enumConstant;
+										if (constant.name().equals(enumText)) {
+											enumValue = constant;
+											break;
+										}
+									}
+								}
+
+								if (enumValue != null) {
+									predicates.add(builder.equal(root.get(field), enumValue));
 								} else {
-									predicates.add(builder.like(root.get(field), value));
+									//just log error, we dont want to break search if enum value is not correct
+									Logger.error(DatatableRestControllerV2.class, "Enum constant not found for value: " + enumText + " in enum type: " + type.getName());
+								}
+							} else {
+								if (value.startsWith("^") && value.endsWith("$")) predicates.add(builder.equal(root.get(field), value.substring(1, value.length()-1)));
+								else {
+									if (value.startsWith("^")) value = value.substring(1)+"%";
+									else if (value.endsWith("$")) value = "%"+value.substring(0, value.length()-1);
+									else value = "%"+value+"%";
+
+									if (Constants.DB_TYPE==Constants.DB_ORACLE && isJpaLowerField(field)) {
+										predicates.add(builder.like(builder.lower(root.get(field)), value.toLowerCase()));
+									} else if (Constants.DB_TYPE==Constants.DB_PGSQL) {
+										predicates.add(builder.like(builder.lower(builder.function("unaccent", String.class, root.get(field))), DB.internationalToEnglish(value).toLowerCase()));
+									} else {
+										predicates.add(builder.like(root.get(field), value));
+									}
 								}
 							}
 						}

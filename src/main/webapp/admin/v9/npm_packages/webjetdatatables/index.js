@@ -3142,11 +3142,14 @@ export const dataTableInit = options => {
                             if (selected) $(row).addClass("selected");
                             if (highlight) $(row).addClass("highlight");
 
+                            if(data.hasOwnProperty("rowClass")) {
+                                $(row).addClass(data.rowClass);
+                            }
+
                             if (data.hasOwnProperty("editorFields") && data.editorFields !== null && data.editorFields.hasOwnProperty("rowClass")) {
-
-
                                 if (data.editorFields.rowClass !== null) $(row).addClass(data.editorFields.rowClass);
                             }
+
                             if (DATA.onRowCallback!=null && typeof DATA.onRowCallback == "function") DATA.onRowCallback(TABLE, row, data);
                         },
                         stateSave: DATA.stateSave,
