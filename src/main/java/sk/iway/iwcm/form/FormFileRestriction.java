@@ -1,8 +1,12 @@
 package sk.iway.iwcm.form;
 
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.ImageTools;
+import sk.iway.iwcm.components.upload.XhrFileUploadService;
 import sk.iway.iwcm.gallery.ImageInfo;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.upload.UploadedFile;
 
@@ -25,32 +29,96 @@ public class FormFileRestriction
 
 	int maxSizeInKilobytes;
 
+	long maxCombinedSizeInKilobytes;
+
 	int pictureWidth;
 
 	int pictureHeight;
 
 	public boolean isSentFileValid(UploadedFile file)
 	{
-		boolean isValid = true;
-		isValid &= isBelowMaxSize(file.getFileSize());
-		isValid &= hasAllowedExtension(file.getFileName());
-		if (ImageTools.isImage(file.getFileName()))
-		{
-			isValid &= hasNeededWidthAndHeight(file);
-		}
-		return isValid;
+		return isSentFileValid(file, null) == null;
 	}
 
 	public boolean isSentFileValid(IwcmFile file)
 	{
-		boolean isValid = true;
-		isValid &= isBelowMaxSize(file.length());
-		isValid &= hasAllowedExtension(file.getName());
+		return isSentFileValid(file, null) == null;
+	}
+
+	public String isSentFileValid(UploadedFile file, Prop prop) {
+		if (prop == null) prop = Prop.getInstance(Constants.getString("defaultLanguage"));
+
+		if (isBelowMaxSize(file.getFileSize()) == false) {
+			return prop.getText(
+				"components.forms.file_to_big_err",
+				file.getFileName(),
+				FileTools.formatFileSize(file.getFileSize()),
+				FileTools.formatFileSizeFromKb(maxSizeInKilobytes)
+			);
+		}
+
+		if (hasAllowedExtension(file.getFileName()) == false) {
+			return prop.getText(
+				"components.forms.bad_file_extension_err",
+				file.getFileName(),
+				allowedExtensions
+			);
+		}
+
+		if (ImageTools.isImage(file.getFileName()))
+		{
+			if (hasNeededWidthAndHeight(file) == false) {
+				ImageInfo imageInformation = new ImageInfo(file);
+				return prop.getText(
+					"components.forms.image_dimensions_err",
+					file.getFileName(),
+					imageInformation.getWidth() + "",
+					imageInformation.getHeight() + "",
+					pictureWidth + "",
+					pictureHeight + ""
+				);
+			}
+		}
+
+		return null;
+	}
+
+	public String isSentFileValid(IwcmFile file, Prop prop) {
+		if (prop == null) prop = Prop.getInstance();
+
+		if (isBelowMaxSize(file.length()) == false) {
+			return prop.getText(
+				"components.forms.file_to_big_err",
+				XhrFileUploadService.getOriginalFileName(file),
+				FileTools.formatFileSize(file.length()),
+				FileTools.formatFileSizeFromKb(maxSizeInKilobytes)
+			);
+		}
+
+		if (hasAllowedExtension(file.getName()) == false) {
+			return prop.getText(
+				"components.forms.bad_file_extension_err",
+				XhrFileUploadService.getOriginalFileName(file),
+				allowedExtensions
+			);
+		}
+
 		if (ImageTools.isImage(file.getName()))
 		{
-			isValid &= hasNeededWidthAndHeight(file);
+			if (hasNeededWidthAndHeight(file) == false) {
+				ImageInfo imageInformation = new ImageInfo(file);
+				return prop.getText(
+					"components.forms.image_dimensions_err",
+					XhrFileUploadService.getOriginalFileName(file),
+					imageInformation.getWidth() + "",
+					imageInformation.getHeight() + "",
+					pictureWidth + "",
+					pictureHeight + ""
+				);
+			}
 		}
-		return isValid;
+
+		return null;
 	}
 
 	private boolean isBelowMaxSize(long fileSize)
@@ -156,5 +224,13 @@ public class FormFileRestriction
 	{
 		this.pictureHeight = pictureHeight;
 		return this;
+	}
+
+	public long getMaxCombinedSizeInKilobytes() {
+		return maxCombinedSizeInKilobytes;
+	}
+
+	public void setMaxCombinedSizeInKilobytes(long maxCombinedSizeInKilobytes) {
+		this.maxCombinedSizeInKilobytes = maxCombinedSizeInKilobytes;
 	}
 }

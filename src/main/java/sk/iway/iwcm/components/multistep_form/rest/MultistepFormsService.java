@@ -919,10 +919,11 @@ public class MultistepFormsService {
                         Logger.debug(FormMailAction.class, "Multiupload, fileKey=" + fileKey + " path=" + filePath);
                         if (filePath != null) {
                             IwcmFile file = new IwcmFile(filePath);
-                            if (file.exists() && restriction.isSentFileValid(file) == false) {
+                            String errMsg = restriction.isSentFileValid(file, prop);
+                            if (file.exists() && errMsg != null) {
                                 errors.merge(
                                     uploadedFilesParamName,
-                                    prop.getText("multistep_form.bad_file", XhrFileUploadService.getOriginalFileName(file)),
+                                    errMsg,
                                     (oldVal, newVal) -> oldVal + "\n" + newVal
                                 );
                             } else {
@@ -965,7 +966,7 @@ public class MultistepFormsService {
         if (restriction != null && restriction.getMaxCombinedSizeInKilobytes() > 0) {
             long totalSizeInKB = fileSizeMap.values().stream().mapToLong(Long::longValue).sum();
             if (totalSizeInKB > restriction.getMaxCombinedSizeInKilobytes()) {
-                throw new SaveFormException(prop.getText("combined_files_to_big_err", FileTools.formatFileSizeFromKb(restriction.getMaxCombinedSizeInKilobytes())), false, null);
+                throw new SaveFormException(prop.getText("components.forms.combined_files_to_big_err", FileTools.formatFileSizeFromKb(restriction.getMaxCombinedSizeInKilobytes())), false, null);
             }
         }
     }
