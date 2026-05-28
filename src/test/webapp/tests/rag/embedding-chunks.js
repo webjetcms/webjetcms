@@ -4,7 +4,7 @@ Before(({ I, login }) =>{
     login('admin');
 });
 
-const rootDirId = "64071";
+const rootDirId = "115851";
 const rootDirPath = "/Aplikácie/Vyhľadávanie/semantic_parent";
 const rootSubDirPath = "/Aplikácie/Vyhľadávanie/semantic_parent/semantic_child";
 const valueA = "Všade na svete však podľa Boston Consulting Group Wealth Reportu 2018 platí";
@@ -32,10 +32,11 @@ Scenario('Chunks - base test', ({ I, DT }) => {
 
     I.say("Check default dir");
     checkPathInRootDir(I, "Všetky priečinky");
+    I.uncheckOption("#includeSubfolders");
 
-    I.say("Can't see subfolder value");
+    I.say("See subfolder value");
     DT.filterContains("chunkText", valueA);
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    I.see(valueA, "#datatableInit tbody td");
 
     I.say("Select folder and try it again");
     selectTree(I, "#embeddingChunksDataTable_extfilter button.btn-vue-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent"]);
@@ -43,7 +44,7 @@ Scenario('Chunks - base test', ({ I, DT }) => {
     I.say("Check loaded values");
     DT.waitForLoader();
     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
-    DT.checkTableRow("datatableInit_wrapper", 1, [null, null, "0", null, "sk", "COMPLETED"]);
+    DT.checkTableRow("datatableInit_wrapper", 1, [null, null, "0", null, "text-embedding-3-small", "sk", "COMPLETED"]);
 });
 
 Scenario('Stop indexing CronJob before removing action', ({ I, DT, DTE }) => {
@@ -53,11 +54,8 @@ Scenario('Stop indexing CronJob before removing action', ({ I, DT, DTE }) => {
 });
 
 Scenario('Chunks test + run deleting index action', ({ I, DT }) => {
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=" + rootDirId);
+    I.amOnPage("/admin/v9/settings/embedding-chunks/?rootDir=" + rootDirId);
     DT.waitForLoader();
-
-    I.say("Use button to redirect from tree groups to embedding chunks");
-    I.clickCss(".tree-col button.buttons-index");
 
     DT.waitForLoader();
     I.say("Check active tab");
@@ -65,6 +63,7 @@ Scenario('Chunks test + run deleting index action', ({ I, DT }) => {
 
     I.say("Check pre-selected root dir");
     checkPathInRootDir(I, rootDirPath);
+    I.uncheckOption("#includeSubfolders");
 
     I.say("Check that index action buttons are there");
     I.seeElement("button.btnAddIndex");
@@ -77,11 +76,12 @@ Scenario('Chunks test + run deleting index action', ({ I, DT }) => {
     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
 
     I.say("Can't see sub-folder value");
+
     DT.filterContains("chunkText", valueC);
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
     I.say("Allow sub-folders and see value");
-    I.checkOption("#embeddingChunksDataTable_extfilter #botFilterOut")
+    I.checkOption("#embeddingChunksDataTable_extfilter #includeSubfolders")
     DT.waitForLoader();
     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
 
@@ -155,7 +155,6 @@ Scenario('After removing action - checks', ({ I, DT }) => {
     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
 
     I.say("Include subfolders and test that we can't find indexes");
-    I.checkOption("#embeddingChunksDataTable_extfilter #botFilterOut");
     DT.waitForLoader();
     DT.filterContains("chunkText", valueC);
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
@@ -216,7 +215,7 @@ Scenario('Run adding index action', ({ I, DT }) => {
     I.waitForInvisible("#modalIframeIframeElement");
 
     I.say("Test that pages are still not indexed");
-    I.checkOption("#embeddingChunksDataTable_extfilter #botFilterOut");
+    I.checkOption("#embeddingChunksDataTable_extfilter #includeSubfolders");
     DT.waitForLoader();
     DT.filterContains("chunkText", valueC);
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
@@ -235,7 +234,7 @@ Scenario('After adding action - checks', ({ I, DT }) => {
     I.say("Go and check that pages are again indexed");
     I.amOnPage("/admin/v9/settings/embedding-chunks/?rootDir=" + rootDirId + "#pills-document");
 
-    I.checkOption("#embeddingChunksDataTable_extfilter #botFilterOut");
+    I.checkOption("#embeddingChunksDataTable_extfilter #includeSubfolders");
     DT.waitForLoader();
     DT.filterContains("chunkText", valueC);
     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");

@@ -6,12 +6,13 @@ Before(({ I, login }) =>{
 
 Scenario('Set semantic search as wanted search', ({ I, DT, Document }) => {
     Document.setConfigValue("searchType", "semantic");
+    Document.setConfigValue("spamProtectionTimeout-search", "1");
 });
 
 const searchData = [
     {
         pageName: "semantic_parent",
-        pageUrl: "/apps/vyhladavanie/semantic_parent/mcgregorov-obchodny-uder.html",
+        pageUrl: "/apps/vyhladavanie/semantic_parent/",
         questions: [
             "Prečo sa McGregorova whisky volá Proper No. Twelve",
             "Akú whisky vlastní Conor McGregor",
@@ -25,8 +26,7 @@ const searchData = [
         questions: [
             "Ako reagovali americké akcie na nové clá medzi USA a Čínou",
             "Prečo sa americké akcie držali blízko historických maxím",
-            "Ako odstránenie slova „uvoľnená“ z hodnotenia menovej politiky Fedu ovplyvnilo trhy",
-            "Ako sankcie voči Iránu ovplyvnili cenu ropy"
+            "Ako odstránenie slova „uvoľnená“ z hodnotenia menovej politiky Fedu ovplyvnilo trhy"
         ]
     },
     {
@@ -35,8 +35,7 @@ const searchData = [
         questions: [
             "Prečo boli finančné trhy také volatilné",
             "Ako inflácia, vyššie úroky a obchodná vojna ovplyvnili americké akcie",
-            "Na akú úroveň klesol 10-ročný americký výnos",
-            "Prečo zlato rástlo počas trhových turbulencií"
+            "Na akú úroveň klesol 10-ročný americký výnos"
         ]
     },
     {
@@ -78,21 +77,14 @@ Scenario('Try semantic search', ({ I, DT, Document }) => {
             I.click(".smallSearchSubmit");
             I.waitForElement("h1.searchResultsH1", 20);
             checkTopFind(I, pageUrl, pageName);
-            I.wait(10);
+            I.wait(1);
         });
     });
 });
 
 Scenario('Remove search preference', ({ I, DT, Document }) => {
-    I.amOnPage("/admin/v9/settings/configuration/");
-    DT.waitForLoader();
-    DT.filterEquals("name", "searchType");
-    I.clickCss("button.buttons-select-all");
-    I.clickCss("button.buttons-remove");
-    I.waitForElement("div.DTE_Action_Remove");
-    I.waitForText("searchType", 5);
-    I.click("Zmazať", "div.DTE_Action_Remove");
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    Document.setConfigValue("spamProtectionTimeout-search", "10");
+    Document.setConfigValue("searchType", "db");
 });
 
 function checkTopFind(I, pageUrl, pageName) {

@@ -36,8 +36,8 @@ function filterFn() {
 
     if ("document" === entityType) {
         const rootDirValue = $("#rootDir").val();
-        // The switch keeps id "botFilterOut" for compatibility with existing chart logic.
-        const includeSubfolders = $("#botFilterOut").is(":checked");
+        // The switch keeps id "includeSubfolders" for compatibility with existing chart logic.
+        const includeSubfolders = $("#includeSubfolders").is(":checked");
 
         embeddingChunksDataTable.setAjaxUrl(
             WJ.urlUpdateParam(embeddingChunksDataTable.getAjaxUrl(), "searchRootDir", rootDirValue)
@@ -132,14 +132,14 @@ function _getSubFolderCheck() {
     innerDiv.setAttribute("title", "[[#{settings.embedding-chunks.sub-folder}]]");
 
     const input = document.createElement("input");
-    input.id = "botFilterOut";
+    input.id = "includeSubfolders";
     input.type = "checkbox";
     input.className = "form-check-input";
     input.value = "true";
     input.checked = true;
 
     const label = document.createElement("label");
-    label.setAttribute("for", "botFilterOut");
+    label.setAttribute("for", "includeSubfolders");
     label.className = "form-check-label is-icon-subfolders";
 
     innerDiv.appendChild(input);
@@ -181,6 +181,7 @@ async function addFilterBasedOnTab() {
         if ("document" === entityType) {
             ChartTools.initGroupIdSelect();
             ChartTools.bindFilter(filterFn);
+            $("#includeSubfolders").on("change", filterFn);
         }
 
         // Init tooltips
@@ -294,9 +295,7 @@ function _openIndexModal(conf) {
         title: conf.title,
         buttonTitleKey: conf.buttonTitleKey,
         okclick: function () {
-            if (typeof $ === "function") {
-                $("#modalIframeIframeElement").contents().find("button#submitBtn").click();
-            }
+            $("#modalIframeIframeElement").contents().find("button#submitBtn").click();
             return false;
         }
     });
