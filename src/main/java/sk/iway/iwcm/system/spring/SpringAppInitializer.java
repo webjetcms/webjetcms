@@ -39,7 +39,7 @@ public class SpringAppInitializer implements WebApplicationInitializer
 		springConfigClasses.add("sk.iway.webjet.v9.V9SpringConfig");
 
 		// RAG module
-		springConfigClasses.add("sk.iway.iwcm.rag.RagSpringConfig");
+		springConfigClasses.add("sk.iway.iwcm.rag.pgvector.PgvectorSpringConfig");
 
 		if (initialized) {
 			String contextDbName = servletContext.getInitParameter("webjetDbname");

@@ -12,7 +12,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.rag.pgvector.EmbeddingChunkStatus;
-import sk.iway.iwcm.rag.pgvector.RagJpaConfig;
+import sk.iway.iwcm.rag.pgvector.PgvectorJpaConfig;
 
 /**
  * PgVector implementation of VectorStore.
@@ -121,7 +121,7 @@ public class PgVectorStore implements VectorStore {
     public void store(String entityType, long entityId, int chunkIndex, String chunkText,
                       String contentHash, float[] embedding, String embeddingModel,
                       int dimensions, String language, Integer domainId) {
-        String dsName = RagJpaConfig.getRagDataSourceName();
+        String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null) return;
 
         try {
@@ -135,7 +135,7 @@ public class PgVectorStore implements VectorStore {
 
     @Override
     public void deleteByEntity(String entityType, long entityId) {
-        String dsName = RagJpaConfig.getRagDataSourceName();
+        String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null) return;
 
         try {
@@ -147,7 +147,7 @@ public class PgVectorStore implements VectorStore {
 
     @Override
     public void markError(String entityType, long entityId, String embeddingModel, String errorMessage) {
-        String dsName = RagJpaConfig.getRagDataSourceName();
+        String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (Tools.isEmpty(dsName)) return;
 
         try {
@@ -162,7 +162,7 @@ public class PgVectorStore implements VectorStore {
 
     @Override
     public List<VectorSearchResult> search(float[] queryEmbedding, String embeddingModel, Integer domainId, String language, int limit) {
-        String dsName = RagJpaConfig.getRagDataSourceName();
+        String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null) return new ArrayList<>();
 
         // Apply configured ef_search parameter if not default
@@ -215,7 +215,7 @@ public class PgVectorStore implements VectorStore {
 
     @Override
     public List<VectorSearchResult> searchFulltext(String query, String embeddingModel, Integer domainId, String language, int limit) {
-        String dsName = RagJpaConfig.getRagDataSourceName();
+        String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null || Tools.isEmpty(query) || limit <= 0) return new ArrayList<>();
 
         List<VectorSearchResult> ftsResults = executeFulltextSearch(dsName, query, embeddingModel, domainId, language, limit);
@@ -282,7 +282,7 @@ public class PgVectorStore implements VectorStore {
 
     @Override
     public boolean isAvailable() {
-        String dsName = RagJpaConfig.getRagDataSourceName();
+        String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null) return false;
 
         try {
@@ -295,7 +295,7 @@ public class PgVectorStore implements VectorStore {
 
     @Override
     public boolean initializeSchema() {
-        String dsName = RagJpaConfig.getRagDataSourceName();
+        String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null) {
             Logger.println(PgVectorStore.class, "RAG datasource not available, skipping schema initialization");
             return false;
@@ -326,7 +326,7 @@ public class PgVectorStore implements VectorStore {
      * Recreates HNSW index according to configured distance metric.
      */
     public boolean recreateHnswIndex() {
-        String dsName = RagJpaConfig.getRagDataSourceName();
+        String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null) {
             Logger.println(PgVectorStore.class, "RAG datasource not available, skipping HNSW index recreation");
             return false;
@@ -390,7 +390,7 @@ public class PgVectorStore implements VectorStore {
      * */
     @Override
     public Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingModel) {
-        String dsName = RagJpaConfig.getRagDataSourceName();
+        String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null) return new java.util.HashMap<>();
 
         try {
@@ -417,7 +417,7 @@ public class PgVectorStore implements VectorStore {
 
     @Override
     public boolean deleteModelData(String embeddingModel) {
-        String dsName = RagJpaConfig.getRagDataSourceName();
+        String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null) {
             Logger.println(PgVectorStore.class, "RAG datasource not available, skipping schema drop");
             return false;

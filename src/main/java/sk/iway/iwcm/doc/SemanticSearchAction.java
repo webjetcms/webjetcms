@@ -96,7 +96,7 @@ public class SemanticSearchAction {
 		try {
 			SemanticSearchService semanticSearchService = Tools.getSpringBean("semanticSearchService", SemanticSearchService.class);
 			if (semanticSearchService == null || semanticSearchService.isAvailable() == false) {
-				Logger.debug(SearchAction.class, "Semantic search service not available");
+				Logger.error(SearchAction.class, "Semantic search service not available");
 				request.setAttribute("aList", new ArrayList<SearchDetails>());
 				request.setAttribute("wrong", "true");
 				request.setAttribute("notfound", "true");

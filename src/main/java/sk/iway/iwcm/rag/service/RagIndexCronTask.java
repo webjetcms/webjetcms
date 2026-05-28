@@ -2,7 +2,7 @@ package sk.iway.iwcm.rag.service;
 
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.rag.pgvector.RagJpaConfig;
+import sk.iway.iwcm.rag.pgvector.PgvectorJpaConfig;
 
 /**
  * Cron task that processes the RAG indexing queue.
@@ -15,7 +15,7 @@ public class RagIndexCronTask {
 
     public static void main(String[] args) {
         // isRagAvailable() checks also if "ragSemanticSearchEnabled"
-        if (RagJpaConfig.isRagAvailable() == false) {
+        if (PgvectorJpaConfig.isRagAvailable() == false) {
             Logger.debug(RagIndexCronTask.class, "RAG not available, skipping queue processing");
             return;
         }

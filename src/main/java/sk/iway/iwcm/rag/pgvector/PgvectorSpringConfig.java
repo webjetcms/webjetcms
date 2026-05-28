@@ -1,4 +1,4 @@
-package sk.iway.iwcm.rag;
+package sk.iway.iwcm.rag.pgvector;
 
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -9,8 +9,8 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ComponentScan({
-    "sk.iway.iwcm.rag",
+    "sk.iway.iwcm.rag.pgvector",
 })
-public class RagSpringConfig {
+public class PgvectorSpringConfig {
 
 }

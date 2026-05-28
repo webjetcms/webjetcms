@@ -32,7 +32,7 @@ import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
     transactionManagerRef = "ragTransactionManager",
     basePackages = { "sk.iway.iwcm.rag.pgvector" }
 )
-public class RagJpaConfig {
+public class PgvectorJpaConfig {
 
     private static final String RAG_DATASOURCE_NAME = "rag_jpa";
 
@@ -52,11 +52,11 @@ public class RagJpaConfig {
      */
     @Bean("ragEntityManager")
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
-        Logger.println(RagJpaConfig.class, "loading RAG RagJpaConfig");
+        Logger.println(PgvectorJpaConfig.class, "loading RAG RagJpaConfig");
 
         String dsName = getRagDataSourceName();
         if (Tools.isEmpty(dsName)) {
-            Logger.println(RagJpaConfig.class, "RAG datasource not available, using iwcm as fallback");
+            Logger.println(PgvectorJpaConfig.class, "RAG datasource not available, using iwcm as fallback");
             dsName = "iwcm";
         }
 
