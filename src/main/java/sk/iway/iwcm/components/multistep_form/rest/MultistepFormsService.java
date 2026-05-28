@@ -22,12 +22,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.Html2Text;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
+import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
+import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
 import sk.iway.iwcm.components.forms.FormsEntity;
 import sk.iway.iwcm.components.forms.FormsRepository;
 import sk.iway.iwcm.components.forms.RegExpEntity;
@@ -75,6 +77,8 @@ public class MultistepFormsService {
 
     public static final String SESSION_PREFIX = "MultistepForm_";
     public static final String MULTIUPLOAD_PREFIX = "multiupload";
+
+    private static final String ALL_FILES_SIZE_SESSION_KEY_SUFFIX = "_allFilesSizeInKB";
 
     private static final String ITEM_KEY_LABEL_PREFIX = "components.formsimple.label.";
     private static final String ITEM_KEY_HIDE_FIELDS_PREFIX = "components.formsimple.hide.";
@@ -588,8 +592,8 @@ public class MultistepFormsService {
         /* validate required / captcha / XSS (for names and values) */
         validateFields(formName, stepId, received, spamProtectionEnabled, request, errors);
 
-        /* Separe validate file fields */
-        validateFileFields(formName, received, errors, request);
+        /* Separate validate file fields */
+        validateFileFields(formName, formSettings, received, errors, request);
 
         // GET form processor that can have custom validation / interceptor / form save
         FormProcessorInterface formProcessor = getFormProcessor(request, formName, stepId, formSettings);
@@ -739,7 +743,8 @@ public class MultistepFormsService {
      * @param request  HTTP request with session storage
      */
     private void saveStepData(String formName, Long stepId, JSONObject received, HttpServletRequest request) {
-        String prefix = getSessionKey(formName, request) + "_";
+        String sessionKey = getSessionKey(formName, request);
+        String prefix = sessionKey + "_";
 
         for(FormItemEntity stepItem : getStepItemsForValidation(stepId)) {
             String[] values = asArray(stepItem.getItemFormId(), received);
@@ -862,19 +867,35 @@ public class MultistepFormsService {
     /**
      * Validate multi-upload file fields including restrictions and duplicate file names.
      *
-     * @param formName logical form name
-     * @param received submitted step payload
-     * @param errors   mutable map collecting file validation errors
-     * @param request  HTTP request with localization context
+     * @param formName     logical form name
+     * @param formSettings already-loaded form settings (may be null)
+     * @param received     submitted step payload
+     * @param errors       mutable map collecting file validation errors
+     * @param request      HTTP request with localization context
      */
-    private void validateFileFields(String formName, JSONObject received, Map<String, String> errors, HttpServletRequest request) {
+    private void validateFileFields(String formName, FormSettingsEntity formSettings, JSONObject received, Map<String, String> errors, HttpServletRequest request) throws SaveFormException {
         Prop prop = Prop.getInstance(request);
 
-        String[] uploadedFilesParamNameList = asArray("Multiupload.formElementName", received);
-        if (uploadedFilesParamNameList == null || uploadedFilesParamNameList.length == 0) return;
+        String sessionKey = getSessionKey(formName, request);
+        String fileSizeMapKey = sessionKey + ALL_FILES_SIZE_SESSION_KEY_SUFFIX;
 
-        FormFileRestriction restriction = null;
-        if (FormDB.isThereFileRestrictionFor(formName)) restriction = FormDB.getFileRestrictionFor(formName);
+        // Load existing file size map from session (fileKey -> sizeInKB)
+        Map<String, Long> fileSizeMap = new HashMap<>();
+        Object mapObj = request.getSession().getAttribute(fileSizeMapKey);
+        if (mapObj instanceof Map<?, ?> existingMap) {
+            for (Map.Entry<?, ?> entry : existingMap.entrySet()) {
+                if (entry.getKey() instanceof String k && entry.getValue() instanceof Long v)
+                    fileSizeMap.put(k, v);
+            }
+        }
+
+        String[] uploadedFilesParamNameList = asArray("Multiupload.formElementName", received);
+        if (uploadedFilesParamNameList == null || uploadedFilesParamNameList.length == 0) {
+            return;
+        }
+
+        // Build restriction from already-loaded formSettings to avoid redundant DB queries
+        FormFileRestriction restriction = FormSettingsService.getFileRestriction(formName, formSettings);
 
         XhrFileUploadService uploadService = XhrFileUploadServlet.getService();
 
@@ -904,6 +925,10 @@ public class MultistepFormsService {
                                     prop.getText("multistep_form.bad_file", XhrFileUploadService.getOriginalFileName(file)),
                                     (oldVal, newVal) -> oldVal + "\n" + newVal
                                 );
+                            } else {
+                                // Always put/overwrite size for this fileKey (handles re-submits)
+                                long fileSizeInKB = file.length() / 1024;
+                                fileSizeMap.put(fileKey, fileSizeInKB);
                             }
                         }
                     }
@@ -931,6 +956,17 @@ public class MultistepFormsService {
                     );
                 }
             });
+        }
+
+        // Save file size map back to session
+        request.getSession().setAttribute(fileSizeMapKey, fileSizeMap);
+
+        // Check combined size of all files across all steps
+        if (restriction != null && restriction.getMaxCombinedSizeInKilobytes() > 0) {
+            long totalSizeInKB = fileSizeMap.values().stream().mapToLong(Long::longValue).sum();
+            if (totalSizeInKB > restriction.getMaxCombinedSizeInKilobytes()) {
+                throw new SaveFormException(prop.getText("combined_files_to_big_err", FileTools.formatFileSizeFromKb(restriction.getMaxCombinedSizeInKilobytes())), false, null);
+            }
         }
     }
 

@@ -4,7 +4,7 @@
     const formColumnsToKeep = ["id", "formName", "recipients", "count", "createDate", "formType", "savedb"];
     const basicSettingColumns = ["forward", "forwardFail", "isPdf", "allowOnlyOneSubmit", "overwriteOldForms", "doubleOptIn", "messageAsAttach", "messageAsAttachFileName", "encryptKey", "encrypKeyInfo", "useFormDoc", "formmailSendUserInfoDoc", "useFormMailDoc"];
     const emailSettingColumns = ["ccEmails", "bccEmails", "replyTo", "subject", "forceTextPlain", "formMailEncoding", "addTechInfo", "emailTextBefore", "emailTextAfter", "fieldsEmailHeader"];
-    const advancedSettingColumns = ["rowView", "formAddClasses", "formCss", "forwardType", "afterSendInterceptor", "formProcessor", "maxSizeInKilobytes", "allowedExtensions", "pictureHeight", "pictureWidth"];
+    const advancedSettingColumns = ["rowView", "formAddClasses", "formCss", "forwardType", "afterSendInterceptor", "formProcessor", "maxSizeInKilobytes", "maxCombinedSizeInKilobytes", "allowedExtensions", "pictureHeight", "pictureWidth"];
 
     var tabs = [
         { id: 'basic', title: /*[[#{datatable.tab.basic}]]*/ '', selected: true },

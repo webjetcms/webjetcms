@@ -1417,4 +1417,29 @@ public class FileTools
 
 		return ret;
 	}
+
+	public static String formatFileSizeFromKb(long kilobytes) {
+        if (kilobytes < 0) { return "unknown"; }
+        return formatFileSize(kilobytes * 1024);
+    }
+
+    public static String formatFileSize(long bytes) {
+        if (bytes < 0) { return "unknown"; }
+        if (bytes < 1024) { return bytes + " B"; }
+
+        final String[] units = {"kB", "MB", "GB", "TB", "PB"};
+        double size = bytes;
+        int unitIndex = -1;
+
+        do {
+            size /= 1024;
+            unitIndex++;
+        } while (size >= 1024 && unitIndex < units.length - 1);
+
+        if (size >= 100 || size == Math.floor(size)) {
+            return String.format("%.0f %s", size, units[unitIndex]);
+        } else {
+            return String.format("%.1f %s", size, units[unitIndex]);
+        }
+    }
 }
