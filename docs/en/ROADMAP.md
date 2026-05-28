@@ -14,7 +14,7 @@ Explanation of the pictograms used:
 
 ## 2026
 
-- [ ] Semantic search - use AI to improve search with `RAG`.
+- [x] Semantic search - use AI to improve search with `RAG` (#211).
 - [ ] `Headless` CMS - prepare REST interfaces for using WebJET CMS in `headless` mode.
 - [ ] Migration to `Spring Boot` project.
 - [x] Testing - add accessibility testing using the [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) extension (#58389).

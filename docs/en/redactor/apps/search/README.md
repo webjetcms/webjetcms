@@ -18,9 +18,30 @@ In the settings you can set:
 
 If you want to search in files as well, you need to [set up file indexing](../../files/fbrowser/folder-settings/README.md#indexing) in the Explorer section and on the given file folder and run initial indexing.
 
-### Setting up Lucene usage
+### Setting the search type
 
-By default, search is performed using a database server. It is possible to enable search using the [Lucene](https://lucene.apache.org/) library, which is also used in ```Elastic Search``` as a search system. Set the config variable `luceneAsDefaultSearch` to the value `true` and start the initial indexing via `/components/search/lucene_console.jsp`.
+The system supports the following search types:
+
+- **Database search** – a standard type of search using a database server.
+  - Used by default if no other type is set. It can be explicitly set to the value `searchType` by the configuration variable `db`.
+- **Lucene** – search using the [Lucene](https://lucene.apache.org/) library, which also forms the basis of the Elastic Search system.
+  - Set the configuration variable `luceneAsDefaultSearch` to the value `true`, or the variable `searchType` to the value `lucene`.
+  - Start initial indexing via `/components/search/lucene_console.jsp`.
+- **Semantic search** – search using pgvector.
+  - Set the variable `searchType` to the value `semantic`, enable semantic search by setting the variable `ragSemanticSearchEnabled` to `true`.
+  - Read more in the [Semantic Search](../semantic-search/README.md) section.
+
+!>**Warning:** The configuration variable `luceneAsDefaultSearch` has a higher priority than the variable `searchType`. So if `luceneAsDefaultSearch=true` is set, Lucene will be used regardless of the value set for the variable `searchType`.
+
+### Comparison of search types
+
+| | Database (`db`) | Lucene | Semantic (`semantic`) |
+| --- | --- | --- | --- |
+| Technology | SQL LIKE / FULLTEXT | `Apache Lucene` | `OpenAI embeddings` + `pgvector` |
+| Match | Keywords | Keywords + inflection | Semantic meaning |
+| Results without word matches | No | Partially | Yes |
+| Requirements | Primary DB | Lucene index | `PostgreSQL` + `pgvector` + `OpenAI` |
+| Price | Free | Free | OpenAI API (paid) |
 
 ## View the application
 
