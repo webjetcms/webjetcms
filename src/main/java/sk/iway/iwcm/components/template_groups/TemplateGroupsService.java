@@ -56,9 +56,13 @@ public class TemplateGroupsService {
             item.setProjectFieldC(prop.getProperty("temp-group-" + item.getId() + ".project.field.c"));
             item.setProjectFieldD(prop.getProperty("temp-group-" + item.getId() + ".project.field.d"));
 
-            if (InitServlet.isTypeCloud()) {
+            if (InitServlet.isTypeCloud() && CloudToolsForCore.isControllerDomain()==false) {
+                String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(request));
                 //Pre MULTIWEB mozeme zobrazit len nepriradene sablony (id=1) alebo tie, ktore zacinaju na nas domainalias
-                if (item.getId() == 1 || item.getProjectName().toLowerCase().startsWith(MultiDomainFilter.getDomainAlias(DocDB.getDomain(request)))) {
+                if ((item.getProjectName() != null && item.getProjectName().toLowerCase().startsWith(domainAlias))
+                    || (item.getDirectory() != null && item.getDirectory().toLowerCase().startsWith(domainAlias))
+                    || (item.getKeyPrefix() != null && item.getKeyPrefix().equals(domainAlias))
+                ) {
                     temp.add(item);
                 }
             } else {

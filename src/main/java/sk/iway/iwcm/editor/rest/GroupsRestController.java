@@ -3,7 +3,9 @@ package sk.iway.iwcm.editor.rest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -50,7 +52,10 @@ import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.multiweb.MultiWebService;
 import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
+import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
@@ -214,13 +219,22 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
     }
 
     @Override
+    public void beforeSave(GroupDetails entity) {
+        if (InitServlet.isTypeCloud() && CloudToolsForCore.isControllerDomain()==false) {
+            //force current domain
+            entity.setDomainName(CloudToolsForCore.getDomainName());
+        }
+        super.beforeSave(entity);
+    }
+
+    @Override
     public void beforeDuplicate(GroupDetails entity) {
         entity.setDefaultDocId(-1);
         entity.getEditorFields().getDefaultDocDetails().setDocId(0);
     }
 
     @Override
-    public GroupDetails editItem(GroupDetails entity, long id) {
+    public GroupDetails editItem(GroupDetails entity, long id) { //NOSONAR
         entity.getEditorFields().toGroupDetails(entity);
         GroupsDB groupsDB = GroupsDB.getInstance();
         Identity user = getUser();
@@ -262,10 +276,21 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 
         boolean forceReload = false;
         boolean forceReloadNewDomainName = false;
+
+        //data for multiweb
+        boolean isControllerDomain = CloudToolsForCore.isControllerDomain();
+        UserDetails controllerUser = null;
+        String oldDomain = null;
+        if (isControllerDomain) {
+            //we use this user later as new user for new domain
+            controllerUser = UsersDB.getUser(user.getUserId());
+        }
+
         RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
         if (Tools.isNotEmpty(entity.getDomainName()) && Constants.getBoolean("multiDomainEnabled")==true) {
             //nastav do RequestBeanu domenu nastavenu v entite
             if (rb.getDomain().equalsIgnoreCase(entity.getDomainName())==false) {
+                oldDomain = rb.getDomain();
                 rb.setDomain(entity.getDomainName());
                 forceReloadNewDomainName = true;
             }
@@ -563,15 +588,17 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
                 groupsDB.save(localSystem);
                 groupsDB = GroupsDB.getInstance(true);
 
-                DocDetails ef = null;
+                DocDetails localSystemDoc = null;
                 if (Constants.getBoolean("groupCreateBlankWebpageAfterCreate"))
                 {
-                    ef = editorFacade.createEmptyWebPage(localSystem, null);
+                    localSystemDoc = editorFacade.createEmptyWebPage(localSystem, null);
                 }
 
                 //vytvor podadresare Hlavicky, Paticky, Menu
                 Prop prop = getProp();
                 String[] keys = {"groupslist.system.header", "groupslist.system.footer", "groupslist.system.menu"};
+                Map<String, Integer> systemDocIds = new HashMap<>();
+                if (localSystemDoc != null) systemDocIds.put("localSystemDoc", localSystemDoc.getDocId());
                 int sortPriority = 0;
                 for (String key : keys) {
                     String name = prop.getText(key);
@@ -590,14 +617,29 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
                     subgroup.setMenuType(GroupDetails.MENU_TYPE_HIDDEN);
                     subgroup.setLoggedMenuType(-1);
                     //ako hlavnu nastav System priecinok, pretoze hlavicky/paticky stranky maju zvycajne ine meno
-                    if (ef != null) subgroup.setDefaultDocId(ef.getDocId());
+                    if (localSystemDoc != null) subgroup.setDefaultDocId(localSystemDoc.getDocId());
                     groupsDB.save(subgroup);
 
-                    if (ef != null) {
-                        editorFacade.createEmptyWebPage(subgroup, prop.getText(key+".pagetitle"));
+                    if (localSystemDoc != null) {
+                        DocDetails webpage = editorFacade.createEmptyWebPage(subgroup, prop.getText(key+".pagetitle"));
+                        systemDocIds.put(key, webpage.getDocId());
                     }
                 }
                 groupsDB = GroupsDB.getInstance(true);
+
+                //for multiweb create also new user
+                if (isControllerDomain && controllerUser != null) {
+                    MultiWebService multiWebService = new MultiWebService(entity, localSystem, controllerUser, systemDocIds, getProp());
+                    multiWebService.createNewDomain();
+
+                    if (multiWebService.getUserNotify() != null) addNotify(multiWebService.getUserNotify());
+
+                    //reset domain back to controller domain because otherwise page will be reloaded
+                    if (rb != null) rb.setDomain(oldDomain);
+                    getRequest().getSession().setAttribute("preview.editorDomainName", oldDomain);
+                    forceReload = false;
+                    forceReloadNewDomainName = false;
+                }
             }
         }
 

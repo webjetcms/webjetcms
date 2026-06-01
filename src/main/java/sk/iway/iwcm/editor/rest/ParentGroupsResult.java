@@ -71,7 +71,7 @@ public class ParentGroupsResult {
         Collections.reverse(parents);
 
         // domena z adresaru
-        setDomain(group.getDomainName());
+        if (group != null) setDomain(group.getDomainName());
     }
 
     public enum JsTreeTab {
