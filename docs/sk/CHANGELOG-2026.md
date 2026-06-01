@@ -20,6 +20,7 @@
 
 - Pridaná možnosť [vytvoriť novú doménu](install/multiweb/config.md) z riadiacej domény, vytvorí aj používateľa, skupinu šablón, šablónu a systémové stránky (#58525).
 - Pridané zobrazenie zoznamu skupín šablón (#58525).
+- V riadiacej doméne je možné upravovať všetky presmerovania domén.
 
 ### Dokumentácia
 
