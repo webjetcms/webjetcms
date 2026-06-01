@@ -109,9 +109,9 @@ public class MultiWebService {
             templateDetails.setTemplatesGroupId(templatesGroupBean.getId());
 
             //set docids
-            templateDetails.setHeaderDocId(systemDocIds.get("groupslist.system.header"));
-            templateDetails.setFooterDocId(systemDocIds.get("groupslist.system.footer"));
-            templateDetails.setMenuDocId(systemDocIds.get("groupslist.system.menu"));
+            if (systemDocIds.get("groupslist.system.header") != null) templateDetails.setHeaderDocId(systemDocIds.get("groupslist.system.header"));
+            if (systemDocIds.get("groupslist.system.footer") != null) templateDetails.setFooterDocId(systemDocIds.get("groupslist.system.footer"));
+            if (systemDocIds.get("groupslist.system.menu") != null) templateDetails.setMenuDocId(systemDocIds.get("groupslist.system.menu"));
             templateDetails.setRightMenuDocId(-1);
             templateDetails.setObjectADocId(-1);
             templateDetails.setObjectBDocId(-1);
