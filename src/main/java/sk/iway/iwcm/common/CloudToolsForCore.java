@@ -105,8 +105,7 @@ public class CloudToolsForCore {
         "users.perm_groups",
 
         "conf.show_all_variables",
-        "prop.show_all_texts",
-        "menuTemplatesGroup"
+        "prop.show_all_texts"
     ));
     private static final Set<String> DISABLED_ITEMS_MULTIWEB_ALL = new HashSet<>(Arrays.asList(
         "make_zip_archive",

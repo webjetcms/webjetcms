@@ -112,7 +112,7 @@ public class WebPagesListener {
                 }
                 if (groupId > 0) {
                     GroupDetails group = groupsDB.getGroup(groupId);
-                    if (group != null && Tools.isNotEmpty(group.getDomainName())) {
+                    if (group != null && Tools.isNotEmpty(group.getDomainName()) && GroupsDB.isGroupEditable(user, group.getGroupId())) {
                         event.getSource().getRequest().getSession().setAttribute("preview.editorDomainName", group.getDomainName());
                         RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
                         if (rb != null) {

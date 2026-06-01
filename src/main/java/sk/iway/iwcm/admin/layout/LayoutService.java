@@ -115,6 +115,9 @@ public class LayoutService
                 } else if ("P".equals(Constants.getString("wjVersion"))) {
                     css.append(".noperms-ver-pro { display: none !important; }\n");
                     javascript.append("nopermsJavascript[\"ver-pro\"]=true;\n");
+                } else if ("M".equals(Constants.getString("wjVersion")) && CloudToolsForCore.isControllerDomain()==false) {
+                    css.append(".noperms-ver-multiweb { display: none !important; }\n");
+                    javascript.append("nopermsJavascript[\"ver-multiweb\"]=true;\n");
                 }
 
                 //ve need to verify this modules because they are used in FE components
