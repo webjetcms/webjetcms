@@ -14,9 +14,9 @@ Novú doménu je možné zriadiť vytvorením nového koreňového priečinka v 
 - základná štruktúra `System` priečinka, hlavičky, pätičky
 - skupina šablón (páruje sa na základe zhody prefixu prekladových kľúčov a doménového aliasu)
 - šablóna
-- používateľ, jeho heslo sa zobrazí v notifikácii
+- používateľ `admin`, jeho heslo sa zobrazí v notifikácii
 
-Pre manuálne vytvorenie môžete použiť nižšie uvedený SQL príkaz. Výraz `DOMAIN-NAME` nahraďte za doménové meno. Prihlasovacie meno je `Heslo1`. Po pridaní je potrebné buď cez riadiacu doménu zmazať cache v Ovládací panel->Cache objekty kliknutím na zmazať všetko, alebo reštartovať aplikačný server.
+Pre manuálne vytvorenie môžete použiť nižšie uvedený SQL príkaz. Výraz `DOMAIN-NAME` nahraďte za doménové meno. Prihlasovacie meno je `admin`, heslo je `Heslo1`. Po pridaní je potrebné buď cez riadiacu doménu zmazať cache v Ovládací panel->Cache objekty kliknutím na zmazať všetko, alebo reštartovať aplikačný server.
 
 ```sql
 INSERT INTO `groups` (`group_name`, `internal`, `parent_group_id`, `navbar`, `default_doc_id`, `temp_id`, `sort_priority`, `password_protected`, `menu_type`, `url_dir_name`, `sync_id`, `sync_status`, `html_head`, `logon_page_doc_id`, `domain_name`, `new_page_docid_template`, `install_name`, `field_a`, `field_b`, `field_c`, `field_d`, `logged_menu_type`, `link_group_id`)
