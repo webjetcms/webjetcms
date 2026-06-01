@@ -87,6 +87,6 @@ public class ParentGroupsResult {
         final Prop propSystem = Prop.getInstance(Constants.getString("defaultLanguage"));
         final String trashDirPath = propSystem.getText("config.trash_dir");
 
-        return parentGroups.stream().filter(p -> !p.getFullPath().equals(trashDirPath) && !p.getFullPath().equals("/System")).collect(Collectors.toList());
+        return parentGroups.stream().filter(p -> !p.getFullPath().equals(trashDirPath) && !p.getFullPath().equals("/System")).toList();
     }
 }

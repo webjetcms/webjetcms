@@ -59,8 +59,7 @@ public class TemplateGroupsService {
             if (InitServlet.isTypeCloud() && CloudToolsForCore.isControllerDomain()==false) {
                 String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(request));
                 //Pre MULTIWEB mozeme zobrazit len tie, ktore zacinaju/obsahuju nas domainalias
-                if ((item.getProjectName() != null && item.getProjectName().toLowerCase().contains(domainAlias))
-                    || (item.getDirectory() != null && item.getDirectory().toLowerCase().contains(domainAlias))
+                if ((item.getDirectory() != null && item.getDirectory().toLowerCase().contains(domainAlias))
                     || (item.getKeyPrefix() != null && item.getKeyPrefix().toLowerCase().equals(domainAlias))
                 ) {
                     temp.add(item);

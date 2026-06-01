@@ -12,7 +12,7 @@ Novú doménu je možné zriadiť vytvorením nového koreňového priečinka v 
 
 - zadaná doména
 - základná štruktúra `System` priečinka, hlavičky, pätičky
-- skupina šablón (páruje sa na základe zhody prefixu prekladových kľúčov a doménového aliasu)
+- skupina šablón - páruje sa na základe zhody prefixu prekladových kľúčov a doménového aliasu, alebo ak priečinok obsahuje doménový alias
 - šablóna
 - používateľ `admin`, jeho heslo sa zobrazí v notifikácii
 

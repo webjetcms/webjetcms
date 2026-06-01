@@ -20,6 +20,10 @@ import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
+/**
+ * Service for creating new domain in multiweb system. It creates new user for new domain and clones template from template defined in group details.
+ * It also sets domain alias for new domain and updates existing pages and groups with new template.
+ */
 public class MultiWebService {
 
     private final GroupDetails entity;
