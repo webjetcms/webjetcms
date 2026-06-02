@@ -110,13 +110,25 @@ export function typeOptions() {
             return conf._wrapper[0];
         },
 
-        get: function (conf) {
+      get: function (conf) {
             const values = [];
             conf._wrapper.find(".options-input-row").each(function () {
-                const val1 = $(this).find(".options-value-1").val().trim();
-                const val2 = $(this).find(".options-value-2").val().trim();
+                const raw1 = $(this).find(".options-value-1").val();
+                const raw2 = $(this).find(".options-value-2").val();
+
+                const val1 = (raw1 == null ? "" : String(raw1)).trim();
+                let val2 = (raw2 == null ? "" : String(raw2)).trim();
+
                 if (val1.length > 0 || val2.length > 0) {
-                    values.push(val1 + ":" + val2);
+
+                    if (val1.length === 0) {
+                        // if only value is set, treat it as both label and value
+                        values.push(val2 + ":" + val2);
+                    } else {
+                        // if value is omitted, default it to label
+                        if (val2.length === 0) val2 = val1;
+                        values.push(val1 + ":" + val2);
+                    }
                 }
             });
             return values.join("|");

@@ -39,9 +39,28 @@ export function typeEnumeration() {
         },
 
         get: function (conf) {
-            const val1 = conf._wrapper.find(".options-value-1").val().trim();
-            const val2 = conf._wrapper.find(".options-value-2 .filter-option-inner-inner").text().trim();
-            const val3 = conf._wrapper.find(".options-value-3 .filter-option-inner-inner").text().trim();
+            const wrapper = conf && conf._wrapper;
+            if (!wrapper || wrapper.length === 0) {
+                return "";
+            }
+
+            const val1Raw = wrapper.find(".options-value-1").val();
+            let val2 = wrapper.find(".options-value-2 .filter-option-inner-inner").text();
+            let val3 = wrapper.find(".options-value-3 .filter-option-inner-inner").text();
+
+            const val1 = val1Raw == null ? "" : String(val1Raw).trim();
+            val2 = val2 == null ? "" : String(val2).trim();
+            val3 = val3 == null ? "" : String(val3).trim();
+
+            if (val2.length === 0) {
+                const fallbackVal2 = wrapper.find(".options-value-2").val();
+                val2 = fallbackVal2 == null ? "" : String(fallbackVal2).trim();
+            }
+
+            if (val3.length === 0) {
+                const fallbackVal3 = wrapper.find(".options-value-3").val();
+                val3 = fallbackVal3 == null ? "" : String(fallbackVal3).trim();
+            }
 
             //console.log("val1", val1, " val2", val2, " val3", val3);
 

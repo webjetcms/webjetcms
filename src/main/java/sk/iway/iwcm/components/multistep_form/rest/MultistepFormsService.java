@@ -959,6 +959,9 @@ public class MultistepFormsService {
             });
         }
 
+        // Drop deleted/expired temp files from the session map (e.g., user removed an upload)
+        fileSizeMap.entrySet().removeIf(e -> uploadService.getTempFilePath(e.getKey()) == null);
+
         // Save file size map back to session
         request.getSession().setAttribute(fileSizeMapKey, fileSizeMap);
 

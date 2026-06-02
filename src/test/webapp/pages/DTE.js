@@ -302,7 +302,8 @@ module.exports = {
           for (let i = 0; i < valuesArr.length; i++) {
                let parts = valuesArr[i].split(":");
                let label = (parts[0] || "").trim();
-               let optionValue = (parts.length > 1 ? parts.slice(1).join(":") : label).trim();
+               let optionValue = (parts.length > 1 ? parts.slice(1).join(":") : "").trim();
+               if (optionValue.length === 0) optionValue = label;
 
                I.fillField("div.options-input-row:nth-child(" + (i + 1) + ") input.options-value-1", label);
                I.fillField("div.options-input-row:nth-child(" + (i + 1) + ") input.options-value-2", optionValue);
