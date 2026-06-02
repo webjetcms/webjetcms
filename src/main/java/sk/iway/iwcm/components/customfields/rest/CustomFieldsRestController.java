@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsRepository;
 import sk.iway.iwcm.system.datatable.Datatable;
@@ -46,9 +47,9 @@ public class CustomFieldsRestController extends DatatableRestControllerV2<Custom
         if("create".equals(target.getAction()) || "edit".equals(target.getAction())) {
             Long existingId = null;
             if(entity.getEntityId() == null || entity.getEntityId() < 1) {
-                existingId = customFieldsRepository.getNullEntityId(entity.getClassName(), entity.getAlphabet()).orElse(-1l);
+                existingId = customFieldsRepository.getNullEntityId(entity.getClassName(), entity.getAlphabet(), CloudToolsForCore.getDomainId()).orElse(-1l);
             } else {
-                existingId = customFieldsRepository.getEntityId(entity.getClassName(), entity.getAlphabet(), entity.getEntityId()).orElse(-1L);
+                existingId = customFieldsRepository.getEntityId(entity.getClassName(), entity.getAlphabet(), entity.getEntityId(), CloudToolsForCore.getDomainId()).orElse(-1L);
             }
 
             boolean isDuplicate = false;

@@ -18,6 +18,7 @@ import jakarta.persistence.Entity;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsRepository;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
@@ -78,17 +79,17 @@ public class CustomFieldsService {
         }
 
         // First get all fields that have no entityId set - these are for all entities of specified class name (global fields)
-        List<CustomFieldsEntity> globalCustomFields = customFieldsRepository.findAllGlobalCustomFields(main.getClassName());
+        List<CustomFieldsEntity> globalCustomFields = customFieldsRepository.findAllGlobalCustomFields(main.getClassName(), CloudToolsForCore.getDomainId());
 
         // Now get all fields for the specific entityId (specific fields) for the same class name - these will override global fields if there are any
-        List<CustomFieldsEntity> classCustomFields = customFieldsRepository.findAllByClassNameAndEntityId(main.getClassName(), main.getEntityId());
+        List<CustomFieldsEntity> classCustomFields = customFieldsRepository.findAllByClassNameAndEntityId(main.getClassName(), main.getEntityId(), CloudToolsForCore.getDomainId());
 
         // Specific fields have higher priority than global ones, so we will override global fields with specific ones if there are any
         mergeLists(globalCustomFields, classCustomFields);
 
         // if bonusClassName is provided do merge BUT bonus class fields has HIGHEST priority
         if(bonus != null && bonus.isValid() == true) {
-            List<CustomFieldsEntity> bonusClassCustomFields = customFieldsRepository.findAllByClassNameAndBonusContext(main.getClassName(), bonus.getClassName(), bonus.getEntityId());
+            List<CustomFieldsEntity> bonusClassCustomFields = customFieldsRepository.findAllByClassNameAndBonusContext(main.getClassName(), bonus.getClassName(), bonus.getEntityId(), CloudToolsForCore.getDomainId());
             mergeLists(classCustomFields, bonusClassCustomFields);
             classCustomFields = bonusClassCustomFields;
         }

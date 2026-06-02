@@ -3674,6 +3674,7 @@
                             required TINYINT(1) DEFAULT 0,
                             bonus_class_name VARCHAR(255) DEFAULT '',
                             bonus_entity_id INT DEFAULT 0,
+                            domain_id INT NOT NULL DEFAULT 1,
                             CONSTRAINT uk_custom_fields_class_alpha_entity UNIQUE (class_name, alphabet, entity_id, bonus_class_name, bonus_entity_id)
                         );
                         CREATE INDEX idx_custom_fields_class_entity ON custom_fields (class_name, entity_id);
@@ -3692,6 +3693,7 @@
                             required BIT DEFAULT 0,
                             bonus_class_name NVARCHAR(255) DEFAULT '',
                             bonus_entity_id INT DEFAULT 0,
+                            domain_id INT NOT NULL DEFAULT 1,
                             CONSTRAINT uk_custom_fields_class_alpha_entity UNIQUE (class_name, alphabet, entity_id, bonus_class_name, bonus_entity_id)
                         );
                         CREATE INDEX idx_custom_fields_class_entity ON custom_fields (class_name, entity_id);
@@ -3710,6 +3712,7 @@
                             required SMALLINT DEFAULT 0,
                             bonus_class_name NVARCHAR2(255) DEFAULT '',
                             bonus_entity_id INTEGER DEFAULT 0,
+                            domain_id INTEGER NOT NULL DEFAULT 1
                             CONSTRAINT uk_custom_fields_class_alpha_entity UNIQUE (class_name, alphabet, entity_id, bonus_class_name, bonus_entity_id)
                         );
                         CREATE INDEX idx_custom_fields_class_entity ON custom_fields (class_name, entity_id);
@@ -3739,7 +3742,8 @@
                             tooltip TEXT,
                             required BOOLEAN DEFAULT false,
                             bonus_class_name VARCHAR(255) DEFAULT '',
-                            bonus_entity_id INT DEFAULT 0
+                            bonus_entity_id INT DEFAULT 0,
+                            domain_id INT NOT NULL DEFAULT 1
                         );
                         CREATE UNIQUE INDEX uk_custom_fields_class_alpha_entity ON custom_fields (class_name, alphabet, entity_id, bonus_class_name, bonus_entity_id);
                         CREATE INDEX idx_custom_fields_class_entity ON custom_fields (class_name, entity_id);

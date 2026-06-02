@@ -94,6 +94,9 @@ public class CustomFieldsEntity {
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "settings.custom-fields.bonus_entity_id", tab = "bonus", className = "ai-off")
     private Long bonusEntityId;
 
+    @Column(name="domain_id")
+	private Integer domainId;
+
     public void setAlphabet(String alphabet) {
         if(Tools.isNotEmpty(alphabet))
             this.alphabet = alphabet.toUpperCase();
