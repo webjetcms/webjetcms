@@ -27,6 +27,8 @@ public class Field implements Serializable {
     //
     private boolean disabled;
 
+    private boolean required;
+
     //potrebujeme ich kvoli WJ8
     public String getKey() {
         return key;
@@ -105,5 +107,12 @@ public class Field implements Serializable {
     }
     public void setOriginalValue(String originalValue) {
         this.originalValue = originalValue;
+    }
+
+    public boolean isRequired() {
+        return required;
+    }
+    public void setRequired(boolean required) {
+        this.required = required;
     }
 }

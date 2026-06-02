@@ -5,16 +5,18 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
+import sk.iway.iwcm.components.customfields.rest.CustomFieldsService;
 import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.doc.DocDB;
@@ -79,11 +81,18 @@ public class BaseEditorFields {
         List<Field> fields = new ArrayList<>();
         fieldsDefinitionKeyPrefix = keyPrefix;
         Method method;
+
+        // Required fields by Custom-fields table configuration
+        List<Character> requiredFields = new ArrayList<>();
+        requiredFields = CustomFieldsService.getRequiredFieldsAlphabets(new CustomFieldsSearchDto(bean));
+
         for (char alphabet = 'A'; alphabet <= lastAlphabet; alphabet++) {
 
             try {
                 Field field = new Field();
                 method = bean.getClass().getMethod("getField" + alphabet);
+
+                field.setRequired(requiredFields != null && requiredFields.contains(alphabet));
 
                 String labelKey = keyPrefix+".field_" + Character.toLowerCase(alphabet);
                 String label = prop.getText(labelKey);
@@ -149,7 +158,7 @@ public class BaseEditorFields {
                         int enumerationId = 0;
                         String labelProperty = "string1";
                         String valueProperty = "string1";
-                        
+
                         if (parts.length >= 2) {
                             enumerationId = Tools.getIntValue(parts[1], 0);
                         }
@@ -170,10 +179,10 @@ public class BaseEditorFields {
                                         BeanWrapper beanWrapper = new BeanWrapperImpl(enumData);
                                         Object labelValue = beanWrapper.getPropertyValue(labelProperty);
                                         Object valueValue = beanWrapper.getPropertyValue(valueProperty);
-                                        
+
                                         String enumLabel = labelValue != null ? labelValue.toString() : "";
                                         String enumValue = valueValue != null ? valueValue.toString() : "";
-                                        
+
                                         fieldValues.add(new FieldValue(enumLabel, enumValue));
                                     } catch (Exception e) {
                                         Logger.error(BaseEditorFields.class, "Error reading enumeration properties: " + labelProperty + ", " + valueProperty, e);

@@ -69,6 +69,10 @@
 
 ![](redactor/webpages/working-in-editor/wjmagicline-append.png)
 
+- Voliteľné polia - pridaná možnosť centrálne nastaviť vlastnosti [voliteľných polí](frontend/webpages/customfields/custom-fields-settings.md) v novej tabuľke v časti Nastavenia (#58413).
+
+![](frontend/webpages/customfields/custom-fields-settings-editor.png)
+
 ### Aplikácie
 
 Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP` na `Spring` aplikácie. Aplikácie automaticky získavajú aj možnosť nastaviť [zobrazenie na zariadeniach](custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie). Dizajn je v zhode so zvyškom WebJET CMS a dátových tabuliek (#57409).

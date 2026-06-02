@@ -838,6 +838,20 @@ public class Modules
 		sub.setMenuIcon("disc");
 		loadModule(sub);
 
+		// Custom fields
+		sub = new ModuleInfo().setMenuOrder(7120);
+		sub.setLeftMenuNameKey("settings.custom-fields.title");
+		sub.setNameKey("settings.custom-fields.title");
+		sub.setPath("/admin/v9/settings/custom-fields/");
+		sub.setWjVersions("BPECDIM");
+		sub.setUserItem(true);
+		sub.setItemKey("customFields");
+		sub.setDefaultDisabled(true);
+		sub.setShowInLeftMenu(true);
+		sub.setGroup("config");
+		sub.setMenuIcon("table-options");
+		loadModule(sub);
+
 		// Restartovat
 		sub = new ModuleInfo().setMenuOrder(7310);
 		sub.setLeftMenuNameKey("admin.conf_editor.restart");
