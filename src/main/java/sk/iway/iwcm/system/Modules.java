@@ -802,7 +802,7 @@ public class Modules
 		sub.setWjVersions("BPECDIM");
 		sub.setUserItem(true);
 		sub.setItemKey("customFields");
-		sub.setDefaultDisabled(false);
+		sub.setDefaultDisabled(true);
 		sub.setShowInLeftMenu(true);
 		sub.setGroup("config");
 		sub.setMenuIcon("table-options");

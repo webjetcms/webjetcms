@@ -799,7 +799,6 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			} catch (NotReadablePropertyException ex) {
 				Logger.error(this.getClass(), "Error validating custom fields, property field" + alphabet + " not found in entity " + entity.getClass().getName(), ex);
 				// Failsafe: if property fieldX does not exist, simply skip validation for it
-				continue;
 			}
 		}
 	}

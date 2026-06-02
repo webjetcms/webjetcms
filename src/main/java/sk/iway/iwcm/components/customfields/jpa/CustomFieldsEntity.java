@@ -75,6 +75,6 @@ public class CustomFieldsEntity {
     public void setAlphabet(String alphabet) {
         if(Tools.isNotEmpty(alphabet))
             this.alphabet = alphabet.toUpperCase();
-        else this.alphabet = null;
+        else this.alphabet = null; //NOSONAR
     }
 }
