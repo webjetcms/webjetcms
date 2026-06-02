@@ -18,9 +18,7 @@ public interface CustomFieldsRepository extends DomainIdRepository<CustomFieldsE
     @Query("SELECT cfe FROM CustomFieldsEntity cfe WHERE cfe.className = :className AND cfe.bonusClassName = :bonusClassName AND cfe.bonusEntityId = :bonusEntityId AND cfe.domainId = :domainId")
     List<CustomFieldsEntity> findAllByClassNameAndBonusContext(String className, String bonusClassName, Long bonusEntityId, Integer domainId);
 
-    @Query("SELECT cfe.id FROM CustomFieldsEntity cfe WHERE cfe.className = :className AND cfe.alphabet = :alphabet AND cfe.entityId = :entityId AND cfe.domainId = :domainId")
-    Optional<Long> getEntityId(String className, String alphabet, Long entityId, Integer domainId);
+    @Query("SELECT cfe.id FROM CustomFieldsEntity cfe WHERE cfe.className = :className AND cfe.alphabet = :alphabet AND cfe.entityId = :entityId AND cfe.bonusClassName = :bonusClassName AND cfe.bonusEntityId = :bonusEntityId AND cfe.domainId = :domainId")
+    Optional<Long> getEntityId(String className, String alphabet, Long entityId, String bonusClassName, Long bonusEntityId, Integer domainId);
 
-    @Query("SELECT cfe.id FROM CustomFieldsEntity cfe WHERE cfe.className = :className AND cfe.alphabet = :alphabet AND cfe.entityId IS NULL AND cfe.domainId = :domainId")
-    Optional<Long> getNullEntityId(String className, String alphabet, Integer domainId);
 }

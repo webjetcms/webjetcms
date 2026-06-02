@@ -46,11 +46,11 @@ public class CustomFieldsRestController extends DatatableRestControllerV2<Custom
 
         if("create".equals(target.getAction()) || "edit".equals(target.getAction())) {
             Long existingId = null;
-            if(entity.getEntityId() == null || entity.getEntityId() < 1) {
-                existingId = customFieldsRepository.getNullEntityId(entity.getClassName(), entity.getAlphabet(), CloudToolsForCore.getDomainId()).orElse(-1l);
-            } else {
-                existingId = customFieldsRepository.getEntityId(entity.getClassName(), entity.getAlphabet(), entity.getEntityId(), CloudToolsForCore.getDomainId()).orElse(-1L);
-            }
+
+            String bonusClassName = entity.getBonusClassName() != null ? entity.getBonusClassName() : "";
+            Long bonusEntityId = entity.getBonusEntityId() != null ? entity.getBonusEntityId() : 0L;
+            Long entityId = entity.getEntityId() != null ? entity.getEntityId() : 0L;
+            existingId = customFieldsRepository.getEntityId(entity.getClassName(), entity.getAlphabet(), entityId, bonusClassName, bonusEntityId, CloudToolsForCore.getDomainId()).orElse(-1L);
 
             boolean isDuplicate = false;
             if("create".equals(target.getAction()) && existingId > 0) isDuplicate = true;
@@ -85,6 +85,8 @@ public class CustomFieldsRestController extends DatatableRestControllerV2<Custom
 
     @Override
     public CustomFieldsEntity processFromEntity(CustomFieldsEntity entity, ProcessItemAction action) {
+        if (entity == null) return null;
+
         if (entity.getEntityId() != null && entity.getEntityId() < 1) {
             entity.setEntityId(null);
         }

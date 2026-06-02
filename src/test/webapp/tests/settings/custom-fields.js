@@ -10,6 +10,7 @@ const docClass = "sk.iway.iwcm.doc.DocDetails";
 
 const templateId = "4319";
 const templateClass = "sk.iway.iwcm.doc.TemplateDetails";
+const tooltipText = "autotest-custom-fields-required";
 
 Scenario('Custom fields required logic test @screenshot', async ({ I, DT, DTE, Document }) =>{
     I.say("Do some basic checks");
@@ -65,8 +66,8 @@ Scenario('Custom fields required logic test @screenshot', async ({ I, DT, DTE, D
 
     I.say("DocDetails are SPECIAL they custom fields logic can be ovewrite by TEMPLATES logic");
     I.amOnPage("/admin/v9/settings/custom-fields/");
-    addCustomFieldSetting(I, DTE, templateClass, "f", templateId, true);
-    addCustomFieldSetting(I, DTE, templateClass, "g", templateId, true);
+    addCustomFieldSetting(I, DTE, docClass, "f", null, true, null, templateClass, templateId, Document);
+    addCustomFieldSetting(I, DTE, docClass, "g", null, true, null, templateClass, templateId);
 
     Document.screenshot("/frontend/webpages/customfields/custom-fields-settings-datatable.png");
 
@@ -75,7 +76,7 @@ Scenario('Custom fields required logic test @screenshot', async ({ I, DT, DTE, D
 
     Document.screenshotElement("div.DTE_Action_Create", "/frontend/webpages/customfields/custom-fields-settings-editor.png");
 
-    I.say("GO check that only DOC with thi TEMP is affected - bonus TEMP has highest priority");
+    I.say("GO check that only DOC with this TEMP is affected - bonus TEMP has highest priority");
     checkDocCustomFields(I, DTE, docId_1, ["F", "G", "H", "I"], ["J"]);
     checkDocCustomFields(I, DTE, docId_2, ["G", "H"], ["F", "J", "I"]);
 });
@@ -84,27 +85,13 @@ Scenario('Custom fields required logic test - AFTER', async ({ I, DT, DTE }) =>{
     I.say('Return it back to basic state - REMOVE added settings');
 
     I.amOnPage("/admin/v9/settings/custom-fields/");
-    DT.filterEquals("className", docClass);
+    DT.filterEquals("tooltip", tooltipText);
 
     I.clickCss("button.buttons-select-all");
     I.clickCss("button.buttons-remove");
     I.waitForElement("div.DTE_Action_Remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
     DTE.waitForLoader();
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
-
-    DT.filterEquals("className", templateClass);
-    I.fillField("input.dt-filter-from-entityId", templateId);
-    I.fillField("input.dt-filter-to-entityId", templateId);
-    I.clickCss("button.dt-filtrujem-entityId");
-    DT.waitForLoader();
-
-    I.clickCss("button.buttons-select-all");
-    I.clickCss("button.buttons-remove");
-    I.waitForElement("div.DTE_Action_Remove");
-    I.click("Zmazať", "div.DTE_Action_Remove");
-    DTE.waitForLoader();
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });
 
 function checkDocCustomFields(I, DTE, docId, requiredFields, notRequiredFields) {
@@ -123,11 +110,11 @@ function checkDocCustomFields(I, DTE, docId, requiredFields, notRequiredFields) 
     });
 }
 
-function addCustomFieldSetting(I, DTE, className, alphabet, entityId, isRequired, seeError = null) {
+function addCustomFieldSetting(I, DTE, className, alphabet, entityId, isRequired, seeError = null, bonusClassName = null, bonusEntityId = null, Document = null) {
     I.clickCss("button.buttons-create");
     DTE.waitForEditor("customFieldsDataTable");
     I.fillField("#DTE_Field_className", className);
-    I.fillField("#DTE_Field_alphabet", alphabet);
+    DTE.selectOption("alphabet", alphabet.toUpperCase());
 
     if(entityId !== null) {
         I.fillField("#DTE_Field_entityId", entityId);
@@ -138,6 +125,18 @@ function addCustomFieldSetting(I, DTE, className, alphabet, entityId, isRequired
     } else {
         I.uncheckOption("#DTE_Field_required_0");
     }
+
+    if (bonusClassName !== null) {
+        I.clickCss("#pills-dt-customFieldsDataTable-bonus-tab");
+        I.fillField("#DTE_Field_bonusClassName", bonusClassName);
+        I.fillField("#DTE_Field_bonusEntityId", bonusEntityId);
+
+        if (Document != null) Document.screenshot("/frontend/webpages/customfields/custom-fields-settings-editor-bonus.png");
+
+        I.clickCss("#pills-dt-customFieldsDataTable-basic-tab");
+    }
+
+    I.fillField("#DTE_Field_tooltip", tooltipText);
 
     DTE.save();
 
