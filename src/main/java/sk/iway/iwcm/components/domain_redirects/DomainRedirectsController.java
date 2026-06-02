@@ -38,7 +38,7 @@ public class DomainRedirectsController extends DatatableRestControllerV2<DomainR
     @Override
     public Page<DomainRedirectBean> getAllItems(Pageable pageable) {
         List<DomainRedirectBean> listedBeans;
-        if (InitServlet.isTypeCloud()) listedBeans = DomainRedirectDB.getRedirectByDestDomain(CloudToolsForCore.getDomainName());
+        if (InitServlet.isTypeCloud() && CloudToolsForCore.isControllerDomain()==false) listedBeans = DomainRedirectDB.getRedirectByDestDomain(CloudToolsForCore.getDomainName());
         else listedBeans = DomainRedirectDB.getAllRedirects();
         return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(listedBeans);
     }
@@ -90,6 +90,8 @@ public class DomainRedirectsController extends DatatableRestControllerV2<DomainR
 
     private boolean isDomainValid(DomainRedirectBean entity, Errors errors) {
         if (InitServlet.isTypeCloud()==false) return true;
+        //allow all edits in controller domain
+        if (CloudToolsForCore.isControllerDomain()) return true;
 
         boolean isValid = true;
         if (entity.getRedirectTo().contains(CloudToolsForCore.getDomainName())==false)

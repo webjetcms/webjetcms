@@ -501,6 +501,8 @@ block content
                     });
 
                     function showHideDomainName(parentGroupId) {
+                        //always hide in multiweb
+                        if (WJ.hasPermission("ver-multiweb") == false) parentGroupId = 1;
                         window.setTimeout(function() {
                             try {
                                 if (parentGroupId > 0) {

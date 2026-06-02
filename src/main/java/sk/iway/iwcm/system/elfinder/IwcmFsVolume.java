@@ -19,6 +19,7 @@ import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.AdminTools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.FileIndexerTools;
@@ -378,6 +379,7 @@ public class IwcmFsVolume implements FsVolume
 		}
 
 		boolean fbrowserShowOnlyWritableFolders = Constants.getBoolean("fbrowserShowOnlyWritableFolders");
+		if (CloudToolsForCore.isControllerDomain()) fbrowserShowOnlyWritableFolders = false;
 
 		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();
 		Logger.debug(IwcmFsVolume.class, "listChildren, user="+user+" cs.length="+cs.length+" fbrowserShowOnlyWritableFolders="+fbrowserShowOnlyWritableFolders);

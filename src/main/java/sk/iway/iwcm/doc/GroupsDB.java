@@ -529,6 +529,11 @@ public class GroupsDB extends DB
 				}
 			}
 		}
+		if (InitServlet.isTypeCloud())
+		{
+			//do not use firstGroup without domain name match in multiweb
+			return null;
+		}
 		return (firstGroup);
 	}
 
@@ -2608,12 +2613,7 @@ public class GroupsDB extends DB
 		}
 
 		int actualParent = 0;
-		if(InitServlet.isTypeCloud())
-		{
-			//ak sa jedna napr. o /System/Kos tak sa nastavi parent na ID hlavneho adresara namiesto na 0 (globalny System folder)
-			if (path.startsWith("/"+CloudToolsForCore.getDomainName())==false)	actualParent = CloudToolsForCore.getDomainId();
-		}
-		else if (Constants.getBoolean("templatesUseDomainLocalSystemFolder")==true && path.startsWith("/System/"))
+		if (Constants.getBoolean("templatesUseDomainLocalSystemFolder")==true && path.startsWith("/System/"))
 		{
 			//overenie lokalneho /System/Kos adresara
 			Prop propSystem = Prop.getInstance(Constants.getString("defaultLanguage"));
@@ -3313,12 +3313,20 @@ public class GroupsDB extends DB
 
         if (user == null) return false;
 
+		GroupsDB groupsDB = GroupsDB.getInstance();
+		if(InitServlet.isTypeCloud()) {
+			//verify domain match
+			GroupDetails group = groupsDB.getGroup(groupId);
+			if (group == null || group.getDomainName() == null || group.getDomainName().equals(CloudToolsForCore.getDomainName())==false) {
+				return false;
+			}
+		}
+
         if (user.getEditableGroups() == null || user.getEditableGroups().isEmpty()) {
             return true;
         }
 
         List<GroupDetails> editableGroups = getGroupsList(user.getEditableGroups());
-        GroupsDB groupsDB = GroupsDB.getInstance();
         for (GroupDetails editableGroup : editableGroups) {
             List<GroupDetails> parents = groupsDB.getParentGroups(editableGroup.getGroupId(), true);
             if (parents.stream().anyMatch(groupDetails -> groupDetails.getGroupId() == groupId)) {

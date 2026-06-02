@@ -53,7 +53,7 @@ public class ConstantsV9 {
 				Constants.MOD_SECURITY,
 				"Zoznam stlpcov v databaze, ktore mozu obsahovat HTML kod (nebudu pri citani escapovane specialne znaky). Pre zakaznicke projekty nastavte premennu xssHtmlAllowedFields");
 
-		Constants.setString("xsrfParamNameExceptionSystem", Constants.getString("xsrfParamNameExceptionSystem")+",tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,c,noip,rnd,login,auth,reservationDate,iID,name,act,datum,basketAct,invoicePaymentId,email,save,scheduleId");
+		Constants.setString("xsrfParamNameExceptionSystem", Constants.getString("xsrfParamNameExceptionSystem")+",tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,c,noip,rnd,login,auth,reservationDate,iID,name,act,datum,basketAct,invoicePaymentId,email,save,scheduleId,rootDir");
 
 		Constants.setString("jpaToLowerFields", "description,questionText,notifyIntrotext,question,data,dataAsc,htmlHead,htmlData,attachments,message,files,html,note,descriptionLong*,answer,afterBodyData,value,mediaInfo*,userNote,messageText,htmlCode,purpose,content,propValue,defaultValue,dataResult,descriptionText,scriptBody,relatedPages,name", Constants.MOD_CONFIG, "Zoznam nazvov CLOB stlpcov pre ktore sa v pripade Oracle pouzije LOWER funkcia pri vyhladavani");
 
@@ -273,6 +273,28 @@ public class ConstantsV9 {
 		Constants.setString("videoClasses", "components.video_player.ratio-16x9:embed-responsive-16by9 ratio ratio-16x9,components.video_player.ratio-4x3:embed-responsive-4by3 ratio ratio-4x3,components.video_player.ratio-1x1:embed-responsive-1by1 ratio ratio-1x1,components.video_player.ratio-21x9:embed-responsive-21by9 ratio ratio-21x9,components.video_player.ratio-9x16:ratio ratio-9x16", Constants.MOD_EDITOR, "Čiarkou oddelený zoznam CSS tried pre obalenie videa (pomer strán). Formát: prekladový_kľúč:css_trieda alebo len css_trieda. Prvá položka je predvolená hodnota.");
 		Constants.setString("videoWrapperClass", "embed-responsive", Constants.MOD_EDITOR, "CSS trieda pre obaľovací element videa (embed-responsive pre Bootstrap).");
 		Constants.setString("videoItemClass", "embed-responsive-item", Constants.MOD_EDITOR, "CSS trieda pre vnútorný iframe element videa (embed-responsive-item pre Bootstrap).");
+
+		Constants.setBoolean("ragSemanticSearchEnabled", false, Constants.MOD_RAG, "Povolí semantické vyhľadávanie cez RAG nad vektorovou databázou pgvector.");
+		Constants.setInt("ragEmbeddingDimensions", 1536, Constants.MOD_RAG, "Počet dimenzií embedding vektora generovaného pre RAG. Hodnota musí zodpovedať použitému modelu a definícii stĺpca vo vektorovej databáze.");
+		Constants.setString("ragEmbeddingModel", "text-embedding-3-small", Constants.MOD_RAG, "Názov embedding modelu použitého na generovanie vektorov pre RAG indexovanie a semantické vyhľadávanie.");
+		Constants.setInt("ragChunkSize", 1000, Constants.MOD_RAG, "Maximálna veľkosť jedného textového chunku v znakoch pri rozdeľovaní dokumentov pre RAG indexovanie.");
+		Constants.setInt("ragChunkOverlap", 200, Constants.MOD_RAG, "Počet znakov, ktoré sa majú prekrývať medzi susednými chunkmi pri rozdeľovaní textu pre RAG indexovanie.");
+		Constants.setString("ragSemanticSearchMinSimilarity", "0.2", Constants.MOD_RAG, "Minimálna hodnota similarity pre výsledky semantického vyhľadávania. Ak je hodnota mimo intervalu 0-1, použije sa najbližšia hranica.");
+		Constants.setInt("ragSemanticSearchMinResults", 3, Constants.MOD_RAG, "Minimálny počet výsledkov semantického vyhľadávania. Ak ich je po filtrovaní menej, doplnia sa podľa najvyššej similarity.");
+		Constants.setInt("ragSearchEfSearch", 40, Constants.MOD_RAG, "HNSW index parameter ef_search — čím vyššia hodnota, tým lepší recall ale pomalšie vyhľadávanie. Default je 40, pre väčšie datasety zvážte zvýšenie na 100 alebo viac.");
+		Constants.setString("ragSearchDistanceMetric", "cosine", Constants.MOD_RAG, "Metrika vzdialenosti pre pgvector vyhľadávanie. Možné hodnoty: 'cosine' (cosínusová vzdialenosť), 'inner_product' (vnútorný súčin, rýchlejší pre normalizované vektory), 'l2' (euklidovská vzdialenosť). Zmena vyžaduje reindex HNSW indexu.");
+		Constants.setBoolean("ragHybridSearchEnabled", true, Constants.MOD_RAG, "Zapne hybridné vyhľadávanie nad rag_embedding_chunks kombinujúce vektorové a fulltext výsledky.");
+		Constants.setString("ragHybridSearchMode", "short_query_only", Constants.MOD_RAG, "Režim hybridného vyhľadávania: off, always, short_query_only, fallback_on_low_vector.");
+		Constants.setInt("ragHybridShortQueryMaxChars", 12, Constants.MOD_RAG, "Maximálna dĺžka dotazu v znakoch pre režim short_query_only.");
+		Constants.setInt("ragHybridShortQueryMaxTerms", 2, Constants.MOD_RAG, "Maximálny počet slov dotazu pre režim short_query_only.");
+		Constants.setString("ragHybridFallbackTopSimilarity", "0.35", Constants.MOD_RAG, "Prahová hodnota top similarity pre režim fallback_on_low_vector.");
+		Constants.setString("ragHybridVectorWeight", "0.7", Constants.MOD_RAG, "Váha vektorového poradia pri RRF merge hybridného vyhľadávania.");
+		Constants.setString("ragHybridFtsWeight", "0.3", Constants.MOD_RAG, "Váha fulltext poradia pri RRF merge hybridného vyhľadávania.");
+		Constants.setInt("ragHybridRrfK", 60, Constants.MOD_RAG, "Hodnota k parametra pre RRF merge hybridného vyhľadávania.");
+		Constants.setInt("ragHybridChunkFetchMultiplier", 3, Constants.MOD_RAG, "Násobič počtu chunkov načítaných pre hybridné vyhľadávanie voči požadovanému počtu výsledkov.");
+		Constants.setBoolean("ragHybridFtsUseIlikeFallback", true, Constants.MOD_RAG, "Pri prázdnych FTS výsledkoch vykoná fallback cez ILIKE nad chunk_text.");
+
+		Constants.setString("searchType", "db", Constants.MOD_CONFIG, "Typ vyhladavania: db (databazove), lucene (Lucene fulltext), semantic (semanticke vyhladavanie cez pgvector)");
 	}
 
 	/**
