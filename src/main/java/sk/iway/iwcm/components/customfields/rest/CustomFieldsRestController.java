@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.customfields.rest;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +16,10 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsRepository;
 import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
 
 @RestController
 @RequestMapping("/admin/rest/custom-fields/")
@@ -55,9 +58,9 @@ public class CustomFieldsRestController extends DatatableRestControllerV2<Custom
             if(isDuplicate) {
                 String errorMessage = getProp().getText("settings.custom-fields.duplicity-err");
                 // This combination of className, alphabet and entityId already exists, so we cannot allow it
-                errors.rejectValue("errorField.className", null, errorMessage);
-                errors.rejectValue("errorField.alphabet", null, errorMessage);
-                errors.rejectValue("errorField.entityId", null, errorMessage);
+                errors.rejectValue("errorField.className", null, errorMessage); //NOSONAR
+                errors.rejectValue("errorField.alphabet", null, errorMessage); //NOSONAR
+                errors.rejectValue("errorField.entityId", null, errorMessage); //NOSONAR
             }
         }
     }
@@ -66,4 +69,28 @@ public class CustomFieldsRestController extends DatatableRestControllerV2<Custom
     public List<String> getAutocompleteClass(@RequestParam String term) {
         return customFieldsService.getClassOptions(term);
     }
+
+    @Override
+    public void getOptions(DatatablePageImpl<CustomFieldsEntity> page) {
+        List<String> options = new ArrayList<>();
+        options.add(""); //empty option
+        //generate options from A-Z
+        for(char c = 'A'; c <= 'Z'; c++) {
+            options.add(String.valueOf(c));
+        }
+
+        page.addOptions("alphabet", options, null, null, false);
+    }
+
+    @Override
+    public CustomFieldsEntity processFromEntity(CustomFieldsEntity entity, ProcessItemAction action) {
+        if (entity.getEntityId() != null && entity.getEntityId() < 1) {
+            entity.setEntityId(null);
+        }
+        if (entity.getBonusEntityId() != null && entity.getBonusEntityId() < 1) {
+            entity.setBonusEntityId(null);
+        }
+        return entity;
+    }
+
 }

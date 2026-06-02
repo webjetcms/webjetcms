@@ -235,6 +235,11 @@ public class CustomFieldsService {
             }
         }
 
+        //add sk.iway.iwcm.doc.TemplateDetails if not present, because it is not entity
+        if(foundClasses.contains("sk.iway.iwcm.doc.TemplateDetails") == false) {
+            foundClasses.add("sk.iway.iwcm.doc.TemplateDetails");
+        }
+
         return foundClasses;
     }
 

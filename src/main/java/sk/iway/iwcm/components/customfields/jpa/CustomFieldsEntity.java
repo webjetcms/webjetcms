@@ -8,10 +8,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Tools;
@@ -19,11 +17,17 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 @Entity
 @Table(name = "custom_fields")
 @Getter
 @Setter
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "bonus", title = "settings.custom-fields.tabs.bonus")
+})
 public class CustomFieldsEntity {
 
     @Id
@@ -33,7 +37,7 @@ public class CustomFieldsEntity {
     private Long id;
 
     @Column(name = "class_name")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "settings.custom-fields.class_name", tab = "basic", className = "ai-off",
+    @DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, title = "settings.custom-fields.class_name", tab = "basic", className = "ai-off",
         editor = {
 			@DataTableColumnEditor(
 				attr = {
@@ -48,14 +52,12 @@ public class CustomFieldsEntity {
     private String className;
 
     @Column(name="alphabet")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "settings.custom-fields.alphabet", tab = "basic", className = "ai-off")
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "settings.custom-fields.alphabet", tab = "basic", className = "ai-off")
     @NotNull
-    @Size(min = 1, max = 1)
     private String alphabet;
 
     @Column(name = "entity_id")
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "settings.custom-fields.entity_id", tab = "basic", className = "ai-off")
-    @Min(1)
     private Long entityId;
 
     @Column(name="type")
@@ -81,7 +83,7 @@ public class CustomFieldsEntity {
 				attr = {
 					@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/custom-fields/autocomplete-class"),
 					@DataTableColumnEditorAttr(key = "data-ac-min-length", value = "1"),
-					@DataTableColumnEditorAttr(key = "data-ac-select", value = "true")
+					@DataTableColumnEditorAttr(key = "data-ac-select", value = "false")
 				}
 			)
 		}
@@ -90,7 +92,6 @@ public class CustomFieldsEntity {
 
     @Column(name = "bonus_entity_id")
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "settings.custom-fields.bonus_entity_id", tab = "bonus", className = "ai-off")
-    @Min(1)
     private Long bonusEntityId;
 
     public void setAlphabet(String alphabet) {
@@ -103,13 +104,13 @@ public class CustomFieldsEntity {
     @PreUpdate
     private void normalizeBonusFields() {
         if(Tools.isEmpty(bonusClassName)) {
-            bonusClassName = null;
+            bonusClassName = "";
         }
-        if(bonusEntityId != null && bonusEntityId < 1) {
-            bonusEntityId = null;
+        if(bonusEntityId == null || bonusEntityId < 1) {
+            bonusEntityId = 0L;
         }
-        if(entityId != null && entityId < 1) {
-            entityId = null;
+        if(entityId == null || entityId < 1) {
+            entityId = 0L;
         }
     }
 }

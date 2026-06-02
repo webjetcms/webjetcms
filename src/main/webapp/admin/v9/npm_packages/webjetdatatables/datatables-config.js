@@ -388,7 +388,7 @@ export function renderRadio(td, type, rowData, row) {
 
 export function renderNumber(td, type, rowData, row, numberFormat) {
 
-    if (td === "") { return "" }
+    if (td === "" || td === null) { return "" }
 
     if (type == "sort" || type == "filter" ) {
         return parseInt(td)
@@ -400,7 +400,7 @@ export function renderNumber(td, type, rowData, row, numberFormat) {
 
 export function renderNumberDecimal(td, type, rowData, row, numberFormat) {
 
-    if (td === "") { return "" }
+    if (td === "" || td === null) { return "" }
 
     if (type == "sort" || type == "filter" ) {
         return parseFloat(td, 10);

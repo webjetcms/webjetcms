@@ -9,10 +9,10 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface CustomFieldsRepository extends JpaRepository<CustomFieldsEntity, Long>, JpaSpecificationExecutor<CustomFieldsEntity> {
 
-    @Query("SELECT cfe FROM CustomFieldsEntity cfe WHERE cfe.className = :className AND cfe.entityId IS NULL AND cfe.bonusClassName IS NULL")
+    @Query("SELECT cfe FROM CustomFieldsEntity cfe WHERE cfe.className = :className AND cfe.entityId = 0 AND cfe.bonusClassName = ''")
     List<CustomFieldsEntity> findAllGlobalCustomFields(String className);
 
-    @Query("SELECT cfe FROM CustomFieldsEntity cfe WHERE cfe.className = :className AND cfe.entityId = :entityId AND cfe.bonusClassName IS NULL")
+    @Query("SELECT cfe FROM CustomFieldsEntity cfe WHERE cfe.className = :className AND cfe.entityId = :entityId AND cfe.bonusClassName = ''")
     List<CustomFieldsEntity> findAllByClassNameAndEntityId(String className, Long entityId);
 
     @Query("SELECT cfe FROM CustomFieldsEntity cfe WHERE cfe.className = :className AND cfe.bonusClassName = :bonusClassName AND cfe.bonusEntityId = :bonusEntityId")
