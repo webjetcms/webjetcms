@@ -81,7 +81,7 @@ Scenario('Custom fields required logic test @screenshot', async ({ I, DT, DTE, D
     checkDocCustomFields(I, DTE, docId_2, ["G", "H"], ["F", "J", "I"]);
 });
 
-Scenario('Custom fields required logic test - AFTER', async ({ I, DT, DTE }) =>{
+Scenario('Custom fields required logic test - AFTER @screenshot', async ({ I, DT, DTE }) =>{
     I.say('Return it back to basic state - REMOVE added settings');
 
     I.amOnPage("/admin/v9/settings/custom-fields/");

@@ -794,7 +794,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				BeanWrapperImpl bw = new BeanWrapperImpl(entity);
 				Object value = bw.getPropertyValue("field" + alphabet);
 				if (value == null || Tools.isEmpty(String.valueOf(value))) {
-					errors.rejectValue("errorField.field" + alphabet, null, getProp().getText("settings.custom-fields.required-err"));
+					errors.rejectValue("errorField.field" + alphabet, null, getProp().getText("settings.custom-fields.required-err")); //NOSONAR
 				}
 			} catch (NotReadablePropertyException ex) {
 				Logger.error(this.getClass(), "Error validating custom fields, property field" + alphabet + " not found in entity " + entity.getClass().getName(), ex);
