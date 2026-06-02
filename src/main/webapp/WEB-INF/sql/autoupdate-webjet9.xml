@@ -3660,7 +3660,7 @@
             <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="author"><string>sivan</string></void>
                 <void property="date"><string>20.05.2026</string></void>
-                <void property="desc"><string>Create new table custom_fields with id, alphabet, class_name (required), entity_id, label, type, tooltip, and required columns + enforce uniqueness and lookup indexes</string></void>
+                <void property="desc"><string>Create new table custom_fields for optional fields UI settings</string></void>
                 <void property="mysql">
                     <string>
                         CREATE TABLE custom_fields (
@@ -3672,8 +3672,12 @@
                             type VARCHAR(50),
                             tooltip TEXT,
                             required TINYINT(1) DEFAULT 0,
+                            bonus_class_name VARCHAR(255),
+                            bonus_entity_id INT,
                             entity_id_unique INT GENERATED ALWAYS AS (IFNULL(entity_id, -1)) STORED,
-                            CONSTRAINT uk_custom_fields_class_alpha_entity UNIQUE (class_name, alphabet, entity_id_unique)
+                            bonus_class_name_unique VARCHAR(255) GENERATED ALWAYS AS (IFNULL(bonus_class_name, '')) STORED,
+                            bonus_entity_id_unique INT GENERATED ALWAYS AS (IFNULL(bonus_entity_id, -1)) STORED,
+                            CONSTRAINT uk_custom_fields_class_alpha_entity UNIQUE (class_name, alphabet, entity_id_unique, bonus_class_name_unique, bonus_entity_id_unique)
                         );
                         CREATE INDEX idx_custom_fields_class_entity ON custom_fields (class_name, entity_id);
                     </string>
@@ -3689,8 +3693,12 @@
                             type NVARCHAR(50),
                             tooltip NTEXT,
                             required BIT DEFAULT 0,
+                            bonus_class_name NVARCHAR(255),
+                            bonus_entity_id INT,
                             entity_id_unique AS ISNULL(entity_id, -1) PERSISTED,
-                            CONSTRAINT uk_custom_fields_class_alpha_entity UNIQUE (class_name, alphabet, entity_id_unique)
+                            bonus_class_name_unique AS ISNULL(bonus_class_name, '') PERSISTED,
+                            bonus_entity_id_unique AS ISNULL(bonus_entity_id, -1) PERSISTED,
+                            CONSTRAINT uk_custom_fields_class_alpha_entity UNIQUE (class_name, alphabet, entity_id_unique, bonus_class_name_unique, bonus_entity_id_unique)
                         );
                         CREATE INDEX idx_custom_fields_class_entity ON custom_fields (class_name, entity_id);
                     </string>
@@ -3706,8 +3714,12 @@
                             type NVARCHAR2(50),
                             tooltip NCLOB,
                             required SMALLINT DEFAULT 0,
+                            bonus_class_name NVARCHAR2(255),
+                            bonus_entity_id INTEGER,
                             entity_id_unique NUMBER GENERATED ALWAYS AS (NVL(entity_id, -1)) VIRTUAL,
-                            CONSTRAINT uk_custom_fields_class_alpha_entity UNIQUE (class_name, alphabet, entity_id_unique)
+                            bonus_class_name_unique NVARCHAR2(255) GENERATED ALWAYS AS (NVL(bonus_class_name, '')) VIRTUAL,
+                            bonus_entity_id_unique NUMBER GENERATED ALWAYS AS (NVL(bonus_entity_id, -1)) VIRTUAL,
+                            CONSTRAINT uk_custom_fields_class_alpha_entity UNIQUE (class_name, alphabet, entity_id_unique, bonus_class_name_unique, bonus_entity_id_unique)
                         );
                         CREATE INDEX idx_custom_fields_class_entity ON custom_fields (class_name, entity_id);
                         CREATE SEQUENCE S_custom_fields START WITH 1;
@@ -3734,9 +3746,11 @@
                             label VARCHAR(255),
                             type VARCHAR(50),
                             tooltip TEXT,
-                            required BOOLEAN DEFAULT false
+                            required BOOLEAN DEFAULT false,
+                            bonus_class_name VARCHAR(255),
+                            bonus_entity_id INT
                         );
-                        CREATE UNIQUE INDEX uk_custom_fields_class_alpha_entity ON custom_fields (class_name, alphabet, COALESCE(entity_id, -1));
+                        CREATE UNIQUE INDEX uk_custom_fields_class_alpha_entity ON custom_fields (class_name, alphabet, COALESCE(entity_id, -1), COALESCE(bonus_class_name, ''), COALESCE(bonus_entity_id, -1));
                         CREATE INDEX idx_custom_fields_class_entity ON custom_fields (class_name, entity_id);
                     </string>
                 </void>

@@ -88,7 +88,7 @@ public class CustomFieldsService {
 
         // if bonusClassName is provided do merge BUT bonus class fields has HIGHEST priority
         if(bonus != null && bonus.isValid() == true) {
-            List<CustomFieldsEntity> bonusClassCustomFields = customFieldsRepository.findAllByClassNameAndEntityId(bonus.getClassName(), bonus.getEntityId());
+            List<CustomFieldsEntity> bonusClassCustomFields = customFieldsRepository.findAllByClassNameAndBonusContext(main.getClassName(), bonus.getClassName(), bonus.getEntityId());
             mergeLists(classCustomFields, bonusClassCustomFields);
             classCustomFields = bonusClassCustomFields;
         }
