@@ -30,3 +30,5 @@
 - Testing
   - [Testing Options](/custom-apps/testing/README.md)
   - [Code Coverage](/custom-apps/testing/codecoverage.md)
+- RAG
+  - [Semantic Search](/custom-apps/apps/rag/semantic-search/README.md)

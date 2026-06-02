@@ -16,6 +16,13 @@
 
 ![](redactor/apps/language-redirect/editor-basic.png)
 
+### Multiweb
+
+- Pridaná možnosť [vytvoriť novú doménu](install/multiweb/config.md) z riadiacej domény, vytvorí aj používateľa, skupinu šablón, šablónu a systémové stránky (#58525).
+- Pridané zobrazenie zoznamu skupín šablón (#58525).
+- V riadiacej doméne je možné upravovať všetky presmerovania domén.
+- V riadiacej doméne pridaná možnosť zobraziť všetky súbory.
+
 ### Dokumentácia
 
 - Vytvorená nová sekcia [Prehľad nových vlastností](sales/README.md) ktorá obsahuje opisy nových vlastností a **funkcionalít WebJET CMS zrozumiteľným jazykom**, bez zbytočne technických formulácií (#58505).
@@ -121,6 +128,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
   - Zlepšené kontrasty farieb v chybových správach a hláseniach (#58389-4).
   - Dátové tabuľky, editor (#58389-4).
 - Rozšírené a11y testy o nové scenáre pre správcu súborov, monitorovanie, štatistiky, nahrávanie súborov, správu používateľov a webové stránky. Metóda `a11y.check()` podporuje parameter `context` pre obmedzenie kontroly na konkrétnu časť stránky vrátane vnorených `iframe` elementov (#58389-5).
+
+### Sémantické vyhľadávanie
+
+- Pridaná podpora [sémantického vyhľadávania](redactor/apps/semantic-search/README.md) postaveného na technológii vektorovej databázy `pgvector` a `OpenAI embeddings`. Umožňuje návštevníkom nájsť relevantné stránky na základe **významu otázky**, nielen zhody kľúčových slov (#211).
 
 ### Iné menšie zmeny
 

@@ -18,6 +18,7 @@ public class SearchDetails extends DocDetails
 {
    private String link;
    private String dataOriginal;
+   private Double similarity;
 
    /**
     * Vrati ikonu suboru alebo prazdny retazes ak sa nejedna o subor
@@ -161,4 +162,12 @@ public class SearchDetails extends DocDetails
 	{
 		this.dataOriginal = dataOriginal;
 	}
+
+   public Double getSimilarity() {
+      return similarity;
+   }
+
+   public void setSimilarity(Double similarity) {
+      this.similarity = similarity;
+   }
 }
