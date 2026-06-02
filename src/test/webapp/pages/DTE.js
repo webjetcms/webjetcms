@@ -263,5 +263,85 @@ module.exports = {
     */
    seeInField(name, value) {
      I.seeInField("#DTE_Field_" + name, value);
-   }
+   },
+
+      /**
+          * Fills dynamic options rows in a DataTable Editor field.
+          *
+          * Expected input format for value: "label:value|label:value".
+          * - Each pipe-separated item creates/fills one option row.
+          * - If ":value" is missing, the label is used as value.
+          * - Empty items are ignored.
+          *
+          * Example:
+          * addFieldOptions("valueAsOptions", "A:a|B:b|C")
+          * creates rows: [A,a], [B,b], [C,C].
+          *
+          * @param {String} name - DataTable Editor field name (without #DTE_Field_ prefix)
+          * @param {String} value - Options encoded as "label:value|label:value"
+          */
+   addFieldOptions(name, value) {
+     if (typeof value !== "string" || value.trim().length === 0) { return; }
+
+     within("#DTE_Field_" + name, () => {
+          let valuesArr = value
+               .split("|")
+               .map(item => item.trim())
+               .filter(item => item.length > 0);
+
+          if (valuesArr.length === 0) { return; }
+
+          I.waitForElement("button.options-add-btn", 5);
+
+          // Click button to add enough option rows.
+          for (let i = 1; i < valuesArr.length; i++) {
+               I.clickCss("button.options-add-btn");
+          }
+
+          // Fill option label:value rows from input format "label:value|label:value".
+          for (let i = 0; i < valuesArr.length; i++) {
+               let parts = valuesArr[i].split(":");
+               let label = (parts[0] || "").trim();
+               let optionValue = (parts.length > 1 ? parts.slice(1).join(":") : label).trim();
+
+               I.fillField("div.options-input-row:nth-child(" + (i + 1) + ") input.options-value-1", label);
+               I.fillField("div.options-input-row:nth-child(" + (i + 1) + ") input.options-value-2", optionValue);
+          }
+     });
+   },
+
+      /**
+          * Fills one enumeration mapping row in DataTable Editor options.
+          *
+          * The method sets:
+          * - enumeration ID input (`options-value-1`)
+          * - label field from the first dropdown (`options-value-2`)
+          * - value field from the second dropdown (`options-value-3`)
+          *
+          * @param {String} name - DataTable Editor field name (without #DTE_Field_ prefix)
+          * @param {String} enumId - Enumeration identifier written to the first input
+          * @param {String} labelField - Visible text to select in the label dropdown
+          * @param {String} valueField - Visible text to select in the value dropdown
+          */
+      fillEnumerationField(name, enumId, labelField, valueField) {
+           const fieldSelector = "#DTE_Field_" + name;
+
+           I.waitForElement(fieldSelector, 5);
+           I.waitForElement(fieldSelector + " input.options-value-1", 5);
+           I.fillField(fieldSelector + " input.options-value-1", enumId);
+
+           const selectOptionByText = (dropdownClass, optionText) => {
+               const dropdownToggle = fieldSelector + " div." + dropdownClass + " button.dropdown-toggle";
+               const dropdownSelector = "div.dropdown." + dropdownClass;
+               const optionSelector = locate(dropdownSelector).find(locate("a.dropdown-item span").withText(optionText));
+
+               I.clickCss(dropdownToggle);
+               I.waitForVisible(dropdownSelector, 5);
+               I.waitForVisible(optionSelector, 5);
+               I.click(optionSelector);
+           };
+
+           selectOptionByText("options-value-2", labelField);
+           selectOptionByText("options-value-3", valueField);
+      }
 }
