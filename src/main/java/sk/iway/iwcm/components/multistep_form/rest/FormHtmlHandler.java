@@ -255,8 +255,13 @@ public class FormHtmlHandler {
 
                 stepItemsHtml.append(itemHtml);
             } else {
-                // !! its for show or for email... remaster item html
-                itemHtml = editFieldHtmlToEmailRender(itemHtml, stepItem);
+                if(MultistepFormsService.getRowViewItemTypes().contains(fieldType)) {
+                    // Do not change HTML, this html can be unbalanced like "</div><div class="row">" and its not valid ... so editFieldHtmlToEmailRender would return "<div class="row"></div>" because of Jsoup.parseBodyFragment
+                } else {
+                    // !! its for show or for email... remaster item html
+                    itemHtml = editFieldHtmlToEmailRender(itemHtml, stepItem);
+                }
+
                 stepItemsHtml.append(itemHtml);
             }
         }

@@ -307,8 +307,23 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
 
             // if field type is iterable, value must be copied to valueAsOptions
             if(MultistepFormsService.isFieldtypeIterable(entity.getFieldType(), getRequest())) {
-                entity.setValueAsOptions(entity.getValue());
-                entity.setValue("");
+                if(Tools.isNotEmpty(entity.getValue())) {
+                    if(entity.getValue().startsWith("enumeration-options")) {
+                        entity.setValueAsEnumeration( entity.getValue() );
+                        entity.setValueAsOptions("");
+                        entity.setValue("");
+                        entity.setUseValueAsEnumeration(Boolean.TRUE);
+                    } else {
+                        entity.setValueAsOptions( entity.getValue() );
+                        entity.setValueAsEnumeration("");
+                        entity.setValue("");
+                        entity.setUseValueAsEnumeration(Boolean.FALSE);
+                    }
+                } else {
+                    entity.setValueAsOptions("");
+                    entity.setValueAsEnumeration("");
+                    entity.setUseValueAsEnumeration(Boolean.FALSE);
+                }
             }
         }
 
@@ -319,7 +334,16 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
     public FormItemEntity processToEntity(FormItemEntity entity, ProcessItemAction action) {
         // if field type is iterable, value is stored in valueAsOptions
         if(MultistepFormsService.isFieldtypeIterable(entity.getFieldType(), getRequest())) {
-            entity.setValue(entity.getValueAsOptions());
+            if(Tools.isTrue(entity.getUseValueAsEnumeration())) {
+                entity.setValue( entity.getValueAsEnumeration() );
+                entity.setValueAsOptions("");
+            } else {
+                entity.setValue( entity.getValueAsOptions() );
+                entity.setValueAsEnumeration("");
+            }
+        } else {
+            entity.setValueAsOptions("");
+            entity.setValueAsEnumeration("");
         }
 
         // When usage of colorScheme is not allowed, remove value
