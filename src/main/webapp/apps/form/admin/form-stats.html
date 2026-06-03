@@ -29,11 +29,11 @@
 
 <script type="module" th:inline="javascript">
 
-    function insertBotFilterToStatsPills() {
+    function insertFilterToStatsPills() {
         const pills = document.querySelector("ul#pills-form-stats");
         const element = document.getElementById("filter");
 
-        const input = document.getElementById("botFilterOut");
+        const input = document.getElementById("showAdvancedStats");
         input.addEventListener("change", function() {
             const chartContainer = document.getElementById("chartContainer");
             const bonusChartContainer = document.getElementById("bonusChartContainer");
@@ -69,7 +69,7 @@
             ]
         });
 
-        insertBotFilterToStatsPills();
+        insertFilterToStatsPills();
     });
 
     import { StatsByCharts } from '/apps/_common/charts/stats-by-charts.js';
@@ -84,7 +84,7 @@
             document.getElementById("viewCount").textContent = data.viewCount;
             document.getElementById("errorsCount").textContent = data.chartErrorData.allErrorsCount;
 
-            const conversionRate = data.viewCount > 0 ? (data.totalResponses / data.viewCount).toFixed(2) : "0.00";
+            const conversionRate = data.viewCount > 0 ? ((data.totalResponses / data.viewCount) * 100).toFixed(2) : "0.00";
             document.getElementById("conversionRate").textContent = conversionRate + "%";
 
             let instance = new StatsByCharts(
@@ -108,7 +108,7 @@
                 const pieLanguagesConfig = {
                     yAxeName: "count",
                     xAxeName: "name",
-                    chartTitle: '[[\#{components.multistep_form.languages_chart.label}]]',
+                    chartTitle: '[[#{components.multistep_form.languages_chart.label}]]',
                     chartDivId: "form-stats-pieLanguages",
                     chartData: data.chartBonusData.languageData
                 };
@@ -116,13 +116,13 @@
 
                 const tableReferrersConfig = {
                     paramsNames: ["name", "count"],
-                    chartTitle: '[[\#{components.multistep_form.referrer_chart.label}]]',
+                    chartTitle: '[[#{components.multistep_form.referrer_chart.label}]]',
                     chartDivId: "form-stats-tableReferrers",
                     chartData: data.chartBonusData.referrerData
                 };
                 let tableReferrersChart = new ChartTools.TableChartForm(tableReferrersConfig);
                 tableReferrersChart.headerNames = [
-                    "Refferer",
+                    window.WJ.translate("admin.welcome.bookmarks.dialog.urlAddress.js"),
                     window.WJ.translate("components.stats_by_charts.table.count.js")
                 ];
                 ChartTools.createAmchart( tableReferrersChart );
@@ -130,7 +130,7 @@
                 const pieFieldsErrorsConfig = {
                     yAxeName: "count",
                     xAxeName: "name",
-                    chartTitle: '[[\#{components.multistep_form.field_errors_chart.label}]]',
+                    chartTitle: '[[#{components.multistep_form.field_errors_chart.label}]]',
                     chartDivId: "form-stats-pieFieldsErrors",
                     chartData: data.chartErrorData.pieErrorData
                 };
@@ -309,9 +309,9 @@
 
 <li class="nav-item" id="filter">
     <div class="col-auto">
-        <div class="btn btn-sm custom-control form-switch" role="group" data-toggle="tooltip" data-th-title="#{stat.withoutBots}">
-            <input id="botFilterOut" type="checkbox" class="form-check-input" value="true" data-th-aria-label="#{stat.withoutBots}" />
-            <label for="botFilterOut" class="form-check-label is-icon-arrows-v" aria-hidden="true"></label>
+        <div class="btn btn-sm custom-control form-switch" role="group" data-toggle="tooltip" data-th-title="#{components.multistep_form.show_advanced_stats}">
+            <input id="showAdvancedStats" type="checkbox" class="form-check-input" value="true" data-th-aria-label="#{components.multistep_form.show_advanced_stats}" />
+            <label for="showAdvancedStats" class="form-check-label is-icon-arrows-v" aria-hidden="true"></label>
         </div>
     </div>
 </li>

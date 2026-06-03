@@ -53,7 +53,10 @@ export class StatsByCharts {
             if(destroyReponse === true) {
 
                 let chartDefType = newChartDef.type;
-                if(chartDefType != null && chartDefType != undefined && chartDefType.length) chartDefType = chartDefType.toLowerCase();
+                if(chartDefType != null && chartDefType != undefined && chartDefType.length) {
+                    chartDefType = chartDefType.toLowerCase();
+                    newChartDef.type = chartDefType;
+                }
 
                 if(chartDefType === ChartTools.ChartType.Pie_Donut || chartDefType === ChartTools.ChartType.Pie_Classic) {
                     this._renderPieChart(newChartDef, chartUniqueId);
@@ -131,7 +134,10 @@ export class StatsByCharts {
                 chartContainer.prepend(button);
 
                 let chartDefType = chartDef.type;
-                if(chartDefType != null && chartDefType != undefined && chartDefType.length) chartDefType = chartDefType.toLowerCase();
+                if(chartDefType != null && chartDefType != undefined && chartDefType.length) {
+                    chartDefType = chartDefType.toLowerCase();
+                    chartDef.type = chartDefType;
+                }
 
                 if(chartDefType === ChartTools.ChartType.Pie_Donut || chartDefType === ChartTools.ChartType.Pie_Classic) {
                     this._renderPieChart(chartDef, chartUniqueId);
