@@ -1708,37 +1708,33 @@ private static String combineCss(String cssStyle)
      *
      * @param htmlContent The HTML content to process
      * @param nonce The CSP nonce value to inject
-     * @return HTML content with nonce injected into script tags
+    * @return HTML content with nonce injected into script tags
      */
     private String injectCspNonceIntoScripts(String htmlContent, String nonce) {
         if (Tools.isEmpty(htmlContent) || Tools.isEmpty(nonce)) {
             return htmlContent;
         }
-        // Match <script> tags (with optional attributes) and inject nonce attribute
+        // Match only opening <script> tags (not closing </script>), with optional attributes
         // Handles: <script>, <script defer>, <script type="...">, etc.
-        // Does NOT match <script nonce="..."> (already has nonce)
-        String pattern = "(<script(?:\\s+[^>]*?(?<!nonce\\s*=[\"']))?\\s*)>";
-        java.util.regex.Pattern patternObj = java.util.regex.Pattern.compile(pattern, java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.DOTALL);
-        java.util.regex.Matcher matcher = patternObj.matcher(htmlContent);
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(<script[^>]*?)>", java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.DOTALL);
+        java.util.regex.Matcher matcher = pattern.matcher(htmlContent);
         StringBuffer sb = new StringBuffer();
+        java.util.regex.Pattern scriptPattern = java.util.regex.Pattern.compile("(<script)(\\s+[^>]*)?");
         while (matcher.find()) {
-            String tagStart = matcher.group(1);
+            String tagContent = matcher.group(1);
             // Check if nonce is already present
-            if (tagStart.toLowerCase().contains("nonce=")) {
+            if (tagContent.toLowerCase().contains("nonce=")) {
                 matcher.appendReplacement(sb, matcher.group(0));
             } else {
                 // Inject nonce attribute after existing attributes (or after "script")
-                String injectPoint = tagStart;
-                // Find the position to inject nonce - after any existing attributes
-                java.util.regex.Pattern scriptPattern = java.util.regex.Pattern.compile("(</?script)(\\s+[^>]*)?");
-                java.util.regex.Matcher scriptMatcher = scriptPattern.matcher(tagStart);
+                java.util.regex.Matcher scriptMatcher = scriptPattern.matcher(tagContent);
+                String injectPoint = tagContent;
                 if (scriptMatcher.find()) {
-                    String tagName = scriptMatcher.group(1);
                     String attributes = scriptMatcher.group(2);
                     if (Tools.isNotEmpty(attributes)) {
-                        injectPoint = tagName + attributes + " nonce=\"" + nonce + "\"";
+                        injectPoint = "<script" + attributes + " nonce=\"" + nonce + "\"";
                     } else {
-                        injectPoint = tagName + " nonce=\"" + nonce + "\"";
+                        injectPoint = "<script nonce=\"" + nonce + "\"";
                     }
                 }
                 matcher.appendReplacement(sb, injectPoint + ">");
