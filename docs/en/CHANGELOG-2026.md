@@ -10,6 +10,18 @@
 
 ![](frontend/templates/templates-edit-advanced.png)
 
+### Forms
+
+- Added the ability to easily set up checkboxes and groups of checkboxes/select fields in multi-step forms (#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced.png)
+
+- Added the ability to link a selection field and a group of checkboxes/selection fields to a dial pad in multi-step forms (#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
+
+- Added the option to set the maximum combined file size in the form, previously only the size for a file could be set, if the form contains multiple files, it is possible to set the maximum size for all files together (#58517).
+
 ### Applications
 
 - Added new application [Language Redirect](redactor/apps/language-redirect/README.md) to automatically redirect visitors to the language version of the page based on language detection from the HTTP header `Accept-Language`. It supports up to 8 language assignments per URL, respecting the language cookie, and the option to redirect only to the root URL (#58497).
@@ -27,6 +39,16 @@
 
 - A new section [Overview of new features] (sales/README.md) has been created, which contains descriptions of new features and **functionalities of WebJET CMS in understandable language**, without unnecessarily technical formulations (#58505).
 - Created a [Troubleshooting] section (sysadmin/troubleshooting/README.md) in the operation manual.
+
+### For the programmer
+
+- Datatables - added a new field type `OPTIONS` for [dynamic list of values](developer/datatables-editor/standard-fields.md#options) in the editor. Each row contains two text fields (key and value), supports adding, removing and reordering using `drag & drop` (#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced.png)
+
+- Data tables - added a new field type `ENUMERATION` for [connection to enumeration tables](developer/datatables-editor/standard-fields.md#enumeration) in the editor. The field stores the configuration in `enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY` format and allows you to set the source of values ​​(#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
 
 ## 2026.18
 

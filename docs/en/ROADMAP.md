@@ -19,10 +19,10 @@ Explanation of the pictograms used:
 - [ ] Migration to `Spring Boot` project.
 - [x] Testing - add accessibility testing using the [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) extension (#58389).
 - [ ] Rights - add the option to set read-only rights and optionally set only allowed IDs for editing.
-- [ ] Forms - add the option to set the total size of attachments for a form, now it can only be set per file.
+- [x] Forms - add option to set total attachment size for form, now can only be set per file (#58517).
 - [ ] Statistics - adjust write to `seo_bots` through `StatWriteBuffer` for fewer conflicts under high load and cluster database.
 - [x] Scripts - add option to set whether the script should also be inserted in the page editor or not (#58349).
-- [ ] Forms - add a group of selection and checkbox fields `radio/checkbox` connected to the code list, similar to what we have for the `select` field.
+- [x] Forms - add a group of selection and checkbox fields `radio/checkbox` connected to the number list, similar to what we have for the `select` field (#58517).
 - [ ] Delete files associated with a web page when I delete it - but ask the user in advance if they want to delete the files. Check if they are not being used somewhere else.
 - [ ] Data deletion - add the option to delete pages and folders from the trash. Also resolve the option to run data deletion as an automated task.
 - [ ] Unused files - make it possible to get a list of unused files - they are not used anywhere on the page, not even in media, etc. There was an API for this `FileTools.getDirFileUsage(currentDir, request)`. Add as a tab to the folder properties in explorer.

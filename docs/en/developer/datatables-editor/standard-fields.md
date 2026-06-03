@@ -732,3 +732,54 @@ Field type allowing [file upload](field-file-upload.md).
     )
     private String file = "";
 ```
+
+## OPTIONS
+
+Field type for a dynamic list of values. In the editor, it appears as a list of input lines, where each line contains two text fields (e.g. key and value). Lines can be added, removed, and reordered using `drag & drop`.
+
+The resulting value is stored as a string, where individual lines are separated by the `|` character and values ​​within a line are separated by the `:` character. For example: `key1:value1|key2:value2|key3:value3`.
+
+The field does not support the AI ​​button (`btn-ai`).
+
+```java
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPTIONS,
+        title = "components.myapp.options",
+        tab = "basic"
+    )
+    private String options = "";
+```
+
+![](../../redactor/apps/multistep-form/form-item-editor-advanced.png)
+
+## ENUMERATION
+
+Field type intended for connection to the codebook application. The editor displays one line with three inputs:
+
+- number (ID or name of the codebook type),
+- column for the text (`label`) of the item,
+- column for the value (`value`) of the item.
+
+Technically, the value is stored in the format:
+
+`enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY`
+
+Example of the resulting value: `enumeration-options|4|string1|string2`
+
+Supported column names are `string1` to `string12`, `decimal1` to `decimal4`, `boolean1` to `boolean4`, `date1` to `date4`.
+
+Example of use in an entity:
+
+```java
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.ENUMERATION,
+        title = "multistep_form.value_as_enumeration",
+        tab = "advanced"
+    )
+    private String valueAsEnumeration;
+```
+
+This type is used mainly in forms where it is necessary to dynamically generate `<option>` values ​​from the selected code list.
+
+![](../../redactor/apps/multistep-form/form-item-editor-advanced-enum.png)

@@ -19,10 +19,10 @@ Vysvětlení použitých piktogramů:
 - [ ] Migrace na `Spring Boot` projekt.
 - [x] Testování - přidat testování přístupnosti pomocí rozšíření [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) (#58389).
 - [ ] Práva - přidat možnost nastavit práva jen na čtení a případně nastavit pouze povolené ID pro editaci.
-- [ ] Formuláře - přidat možnost nastavit celkovou velikost příloh pro formulář, nyní lze nastavit jedině per soubor.
+- [x] Formuláře - přidat možnost nastavit celkovou velikost příloh pro formulář, nyní lze nastavit jedině per soubor (#58517).
 - [ ] Statistika - upravit zápis do `seo_bots` přes `StatWriteBuffer` pro méně konfliktů při vysokém zatížení a cluster databázi.
 - [x] Skripty - přidat možnost nastavit, zda se má skript vkládat iv editoru stránek, nebo ne (#58349).
-- [ ] Formuláře - přidat skupinu výběrových a zaškrtávacích polí `radio/checkbox` napojenou na číselník, podobně jako máme pro `select` pole.
+- [x] Formuláře - přidat skupinu výběrových a zaškrtávacích polí `radio/checkbox` napojenou na číselník, podobně jako máme pro `select` pole (#58517).
 - [ ] Smazat přidružené soubory k web stránce když ji smažu - zeptat se ale předem uživatele, zda soubory chce smazat. Kontrolovat, zda se nepoužívají někde jinde.
 - [ ] Mazání dat - přidat možnost mazat stránky a složky z koše. Vyřešit také možnost mazání dat spouštět jako automatizovaný úkol.
 - [ ] Nepoužívané soubory - udělat možnost získat seznam nepoužívaných souborů - nikde ve stránce se nepoužívají, ani v médiích atp. Byla k tomu API `FileTools.getDirFileUsage(currentDir, request)`. Přidat jako kartu do vlastností složky v průzkumníku.
