@@ -90,6 +90,10 @@ export function typeOptions() {
 
             conf._wrapper = $(`
                 <div id="${id}" class="options-field-wrapper">
+                    <div class="input-group mb-2 options-input-row-header">
+                        <span class="options-label">${WJ.translate("editor.form.sl.name")}</span>
+                        <span class="options-value">${WJ.translate("editor.form.sl.value")}</span>
+                    </div>
                     <div class="options-inputs"></div>
                     <button class="btn btn-outline-secondary mt-2 options-add-btn" type="button">
                         <i class="ti ti-plus"></i> ${WJ.translate("button.add")}
@@ -137,9 +141,12 @@ export function typeOptions() {
         set: function (conf, val) {
             conf._wrapper.find(".options-inputs").empty();
             if (val && val.length > 0) {
-                const parts = val.split("|");
+                let parts;
+                if (val.indexOf("|") != -1) parts = val.split("|");
+                else parts = val.split(",");
                 for (let i = 0; i < parts.length; i++) {
                     const pair = parts[i].split(":");
+                    if (pair.length === 1) pair.push(pair[0]); // if only one part, treat it as both label and value
                     addInputRow(conf, pair[0] || "", pair[1] || "");
                 }
             } else {

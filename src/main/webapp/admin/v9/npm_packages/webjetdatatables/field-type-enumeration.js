@@ -28,10 +28,17 @@ export function typeEnumeration() {
 
             const options = buildOptions();
             conf._wrapper = $(`
-                <div id="${id}" class="input-group">
-                    <input type="number" class="form-control options-value-1" value="" style="max-width: 80px;" />
-                    <select class="form-select options-value-2">${options}</select>
-                    <select class="form-select options-value-3">${options}</select>
+                <div id="${id}" class="options-field-wrapper">
+                    <div class="input-group mb-2 options-input-row-header">
+                        <span class="options-id">${WJ.translate("datatables.id.js")}</span>
+                        <span class="options-label">${WJ.translate("editor.form.sl.name")}</span>
+                        <span class="options-value">${WJ.translate("editor.form.sl.value")}</span>
+                    </div>
+                    <div class="input-group options-inputs">
+                        <input type="number" class="form-control options-value-1" value="" style="max-width: 80px;" />
+                        <select class="form-select options-value-2">${options}</select>
+                        <select class="form-select options-value-3">${options}</select>
+                    </div>
                 </div>
             `);
 

@@ -761,7 +761,7 @@ Scenario("check special form options behavior", ({ I, DT, DTE }) => {
     I.seeElement("div.DTE_Field_Name_valueAsEnumeration");
 });
 
-Scenario("check special form options usage", async ({ I, DT, DTE, Apps }) => {
+Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Apps, Document }) => {
     I.say('Prepare test form');
     I.amOnPage("/apps/form/admin/");
 
@@ -786,6 +786,9 @@ Scenario("check special form options usage", async ({ I, DT, DTE, Apps }) => {
     I.clickCss("#pills-dt-formItemsDataTable-advanced-tab");
     I.checkOption("#DTE_Field_useValueAsEnumeration_0");
     DTE.fillEnumerationField("valueAsEnumeration", 5010, "string1", "string2");
+
+    Document.screenshot("/redactor/apps/multistep-form/form-item-editor-advanced-enum.png");
+
     DTE.save();
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appInsertTestPageId);
@@ -858,7 +861,7 @@ Scenario("check special form options usage", async ({ I, DT, DTE, Apps }) => {
     compareTwoHtml(I, actualHtml, expectedHtml);
 });
 
-Scenario('Remove form 2 and test it', ({ I, DT }) => {
+Scenario('Remove form 2 and test it @screenshot', ({ I, DT }) => {
     I.amOnPage("/apps/form/admin/");
 
     DT.filterEquals("formName", specialFormName);

@@ -87,7 +87,7 @@ public class MultistepFormApp extends WebjetComponentAbstract {
         Identity currentcUser = UsersDB.getCurrentUser(request);
         if(currentcUser != null && currentcUser.getUserId() > 0) {
             FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
-            if(Tools.isTrue(formSettings.getAllowOnlyOneSubmit())) {
+            if(formSettings != null && Tools.isTrue(formSettings.getAllowOnlyOneSubmit())) {
                 //Did user allready submitted ?
                 Integer count = formsRepository.getNumberOfSubmitted(formName, CloudToolsForCore.getDomainId());
                 if(count != null && count > 0) {
