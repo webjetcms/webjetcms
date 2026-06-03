@@ -196,6 +196,30 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 		}
 
 		requests.put(Thread.currentThread().getId(), requestBean);
+		// Generate CSP nonce for this request
+		requestBean.setCspNonce(generateCspNonce());
+   }
+
+	/**
+	 * Generate a cryptographically secure random nonce for Content-Security-Policy.
+	 * Only generates nonce if contentSecurityPolicy configuration contains {nonce} placeholder.
+	 * Returns base64-encoded random bytes (standard CSP nonce format).
+	 * @return base64-encoded nonce string, or null if no {nonce} placeholder found
+	 */
+	private static String generateCspNonce() {
+		String cspValue = Constants.getString("contentSecurityPolicy");
+		if (Tools.isEmpty(cspValue) || !cspValue.contains("{nonce}")) {
+			return null;
+		}
+		try {
+			java.security.SecureRandom random = new java.security.SecureRandom();
+			byte[] bytes = new byte[16];
+			random.nextBytes(bytes);
+			return java.util.Base64.getEncoder().withoutPadding().encodeToString(bytes);
+		} catch (Exception e) {
+			Logger.error(SetCharacterEncodingFilter.class, "Failed to generate CSP nonce", e);
+			return null;
+		}
    }
 
    /**

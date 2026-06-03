@@ -59,6 +59,17 @@ public class RequestBean
 
 	private ApplicationContext springContext;
 
+	// CSP nonce for Content-Security-Policy header (generated per-request)
+	private String cspNonce;
+
+	public String getCspNonce() {
+		return cspNonce;
+	}
+
+	public void setCspNonce(String cspNonce) {
+		this.cspNonce = cspNonce;
+	}
+
 	//umoznuje prenasat atributy podobne ako request.set/getAttribute
 	private Map<String, Object> attributes;
 

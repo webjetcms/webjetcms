@@ -45,7 +45,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] `quill` - pridať možnosť nastaviť položky menu vrátane farieb.
 - [ ] Aplikácie - možnosť nákupu aplikácie pre OpenSource verziu (#55825).
 - [ ] Možnosť vykonať Thymeleaf kód v hlavičke/pätičke a možno aj v tele web stránky.
-- [ ] Bezpečnosť - pridať podporu generovania `nonce` pre `Content-Security-Policy` hlavičku, viď napr. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.
+- [x] Bezpečnosť - pridať podporu generovania `nonce` pre `Content-Security-Policy` hlavičku, viď napr. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee. (#TBD)
 - [x] Formuláre - pridať možnosť volať Java triedu pre validáciu formuláru (#58161).
 - [x] Značky - filtrovať podľa aktuálnej domény aby to bolo rovnaké ako v iných častiach (#57837).
 - [x] Import používateľov - ak nie je zadané heslo, tak vygenerovať (pre nových používateľov), ak nie je posielaný stav `authorized` nastaviť na `true` (#58253).

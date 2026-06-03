@@ -42,7 +42,8 @@
 
 ### Pre programátora
 
-- Dátové tabuľky - pridaný nový typ poľa `OPTIONS` pre [dynamický zoznam hodnôt](developer/datatables-editor/standard-fields.md#options) v editore. Každý riadok obsahuje dva textové polia (kľúč a hodnota), podporuje pridávanie, odoberanie a zmenu poradia pomocou `drag & drop` (#58517).
+- Dátové tabuľky - pridaný nový typ poľa `OPTIONS`
+- Bezpečnosť - pridaná podpora generovania `nonce` pre `Content-Security-Policy` hlavičku. Ak konfigurácia `contentSecurityPolicy` obsahuje `{nonce}` placeholder, automaticky sa vygeneruje unikátny kryptograficky bezpečný nonce a vstrekne sa do všetkých `<script>` značiek v HTML výstupe aj do CSP hlavičky (#TBD). Pridané JUnit testy pre overenie funkcionity (21 testov). pre [dynamický zoznam hodnôt](developer/datatables-editor/standard-fields.md#options) v editore. Každý riadok obsahuje dva textové polia (kľúč a hodnota), podporuje pridávanie, odoberanie a zmenu poradia pomocou `drag & drop` (#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced.png)
 
