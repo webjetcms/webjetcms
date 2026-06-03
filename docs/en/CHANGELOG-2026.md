@@ -16,6 +16,13 @@
 
 ![](redactor/apps/language-redirect/editor-basic.png)
 
+### Multiweb
+
+- Added option [create new domain](install/multiweb/config.md) from the control domain, it will also create user, template group, template and system pages (#58525).
+- Added template group list view (#58525).
+- All domain redirects can be edited in the control domain.
+- Added option to view all files in the management domain.
+
 ### Documentation
 
 - A new section [Overview of new features] (sales/README.md) has been created, which contains descriptions of new features and **functionalities of WebJET CMS in understandable language**, without unnecessarily technical formulations (#58505).
@@ -61,6 +68,10 @@
 - Added an icon to move the [cursor to a hard-to-reach place](redactor/webpages/working-in-editor/README.md#inserting-text-in-hard-to-reach-places), such as behind the last SVG icon in a line and the like (#osk105).
 
 ![](redactor/webpages/working-in-editor/wjmagicline-append.png)
+
+- Optional fields - added the ability to centrally set the properties of [optional fields](frontend/webpages/customfields/custom-fields-settings.md) in a new table in the Settings section (#58413).
+
+![](frontend/webpages/customfields/custom-fields-settings-editor.png)
 
 ### Applications
 
