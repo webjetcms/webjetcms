@@ -157,4 +157,15 @@ public enum DataTableColumnType {
      * Tabler icons renderer
      */
     ICON,
+
+    /**
+     * Dynamic list of string options joined by | separator
+     */
+    OPTIONS,
+
+    /**
+     * Select field populated from {@link sk.iway.iwcm.components.enumerations.model.EnumerationDataBean} values.
+     * Renders as text ({@code dt-format-text}) and uses the enumeration editor type.
+     */
+    ENUMERATION
 }

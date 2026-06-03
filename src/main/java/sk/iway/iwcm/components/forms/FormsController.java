@@ -206,7 +206,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
 
     @Override
     public boolean deleteItem(FormsEntity entity, long id) {
-        return formsService.deleteItem(entity, id, formStepsRepository, formItemsRepository);
+        return formsService.deleteItem(entity, id, formStepsRepository, formItemsRepository, formSettingsRepository);
     }
 
     @Override

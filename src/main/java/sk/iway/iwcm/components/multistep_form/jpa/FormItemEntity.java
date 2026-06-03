@@ -89,6 +89,18 @@ public class FormItemEntity extends BaseEditorFields {
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.formsimple.value", hidden = true, tab = "advanced")
     private String value;
 
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "multistep_form.use_value_as_enumeration",  hidden = true, tab = "advanced")
+    private Boolean useValueAsEnumeration;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.OPTIONS, title = "multistep_form.value_as_options",  hidden = true, tab = "advanced")
+    private String valueAsOptions;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.ENUMERATION, title = "multistep_form.value_as_enumeration",  hidden = true, tab = "advanced")
+    private String valueAsEnumeration;
+
     @Column(name = "placeholder")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.formsimple.placeholder", hidden = true, tab = "advanced")
     private String placeholder;

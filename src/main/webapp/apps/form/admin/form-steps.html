@@ -196,6 +196,7 @@
                 $("#DTE_Field_fieldType").on("change", function() {
                     const selectedFieldType = $(this).val();
                     const hiddenFieldsByType = formItemsDataTable.DATA.jsonOptions.hiddenFieldsByType;
+                    const inputTypeByFieldType = formItemsDataTable.DATA.jsonOptions.inputType;
 
                     const editDialog = $("div.DTE.DTE_Action_Edit");
                     if(editDialog != undefined && editDialog != null && editDialog.length) {
@@ -247,6 +248,38 @@
                         }
                     });
 
+                    // Special logic for value field
+                    setTimeout(() => {
+                        let inputType = "text";
+                        inputTypeByFieldType.forEach(type => {
+                            if(type.value === selectedFieldType) {
+                                inputType = type.label;
+                            }
+                        });
+                        //console.log("Selected field type: " + selectedFieldType + ", input type: " + inputType);
+
+                        if(formItemsDataTable.EDITOR.field("value").displayed() === true) {
+                            // It has meaning only if value field is showed
+                            if("iterable" === inputType) {
+                                formItemsDataTable.EDITOR.field("value").hide();
+
+                                formItemsDataTable.EDITOR.field("useValueAsEnumeration").show();
+                                toggleValueAsFields();
+                            } else {
+                                formItemsDataTable.EDITOR.field("value").show();
+
+                                formItemsDataTable.EDITOR.field("valueAsOptions").hide();
+                                formItemsDataTable.EDITOR.field("valueAsEnumeration").hide();
+                                formItemsDataTable.EDITOR.field("useValueAsEnumeration").hide();
+                            }
+                        } else {
+                            // value field is hidden, hide valueAsOptions too
+                            formItemsDataTable.EDITOR.field("valueAsOptions").hide();
+                            formItemsDataTable.EDITOR.field("valueAsEnumeration").hide();
+                            formItemsDataTable.EDITOR.field("useValueAsEnumeration").hide();
+                        }
+                    }, 500);
+
                     if(selectedFieldType !== formItemsDataTable.EDITOR.currentJson["fieldType"]) {
                         // Call only on real change
                         fetch(`/admin/rest/form-items/default-regex?fieldType=${selectedFieldType}`, {
@@ -264,6 +297,23 @@
                         .catch(err => console.error(err));
                     }
                 });
+
+                function toggleValueAsFields() {
+                    const useEnum = formItemsDataTable.EDITOR.field("useValueAsEnumeration").val();
+                    const checked = (Array.isArray(useEnum) ? useEnum[0] : useEnum) === true;
+                    if(checked) {
+                        formItemsDataTable.EDITOR.field("valueAsOptions").hide();
+                        formItemsDataTable.EDITOR.field("valueAsEnumeration").show();
+                    } else {
+                        formItemsDataTable.EDITOR.field("valueAsOptions").show();
+                        formItemsDataTable.EDITOR.field("valueAsEnumeration").hide();
+                    }
+                }
+
+                // add listener
+                document.getElementById("DTE_Field_useValueAsEnumeration_0").addEventListener("change",
+                    function() { toggleValueAsFields(); }
+                );
 
                 $("#DTE_Field_showStat_0").on("change", function() {
                     const statAllowed = formItemsDataTable.EDITOR.field("showStat").val()[0];
