@@ -287,7 +287,7 @@ public class MultistepFormsService {
      * @return list of non-input layout item field types
      */
     public static final List<String> getRowViewItemTypes() {
-        return List.of("novy-riadok", "prazdny-stlpec");
+        return List.of("novy-riadok", "prazdny-stlpec", "new-row", "empty-column");
     }
 
     /**
