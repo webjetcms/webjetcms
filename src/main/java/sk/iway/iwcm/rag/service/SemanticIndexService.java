@@ -65,10 +65,18 @@ public class SemanticIndexService {
      * Failed items remain in the queue and are retried on the next run.
      */
     public void processQueue() {
-        // If vector store is not available, start initialization. If initialization fails, skip processing - next runs will retry initialization.
-        if (vectorStore.isAvailable() == false && vectorStore.initializeSchema() == false) {
-            Logger.error(SemanticIndexService.class, "Vector store not available and initialization failed, skipping queue processing");
-            return;
+
+        if (vectorStore.isAvailable() == false) {
+            // If vector store is not available (not allowed or available)
+            Logger.error(SemanticIndexService.class, "Vector store NOT available, skipping queue processing");
+            return; // cannot do this
+        } else if(vectorStore.isAvailableAndInitialized() == false) {
+            // Vector store is available but not initialized, we can try to initialize it
+            if(vectorStore.initializeSchema() == false) {
+                // Inicialization failed, error will be logged by vector store, we cannot do this
+                Logger.error(SemanticIndexService.class, "Vector store available BUT initialization failed, skipping queue processing");
+                return;
+            }
         }
 
         Cache cache = Cache.getInstance();

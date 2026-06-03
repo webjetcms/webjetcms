@@ -15,8 +15,8 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.rag.embedding.EmbeddingBatchResult;
 import sk.iway.iwcm.rag.embedding.EmbeddingProvider;
 import sk.iway.iwcm.rag.service.RagEmbeddingStatService;
-import sk.iway.iwcm.rag.vectorstore.VectorStore;
 import sk.iway.iwcm.rag.vectorstore.VectorSearchResult;
+import sk.iway.iwcm.rag.vectorstore.VectorStore;
 
 /**
  * Service for semantic search over document embeddings.
@@ -53,8 +53,9 @@ public class SemanticSearchService {
      * @return list of document IDs with their best similarity scores
      */
     public List<SemanticSearchResult> search(String query, Integer domainId, String language, int maxResults) {
-        if (vectorStore.isAvailable() == false) {
-            Logger.debug(SemanticSearchService.class, "Vector store not available, returning empty results");
+        if (vectorStore.isAvailableAndInitialized() == false) {
+            // If vector store is not available or not initialized, we cannot perform semantic search, return empty results
+            Logger.debug(SemanticSearchService.class, "Vector store not available or initialized, returning empty results");
             return List.of();
         }
 
@@ -257,10 +258,7 @@ public class SemanticSearchService {
         return filteredResults;
     }
 
-    /**
-     * Check if semantic search is enabled and available.
-     */
     public boolean isAvailable() {
-        return Constants.getBoolean("ragSemanticSearchEnabled") && vectorStore.isAvailable();
+        return vectorStore.isAvailableAndInitialized();
     }
 }

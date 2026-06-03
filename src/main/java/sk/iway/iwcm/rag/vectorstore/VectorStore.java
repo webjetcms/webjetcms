@@ -56,9 +56,16 @@ public interface VectorStore {
     List<VectorSearchResult> searchFulltext(String query, String embeddingModel, Integer domainId, String language, int limit);
 
     /**
-     * Check if the vector store is available and properly initialized.
+     * Check if the vector store can be used in the current runtime configuration.
+     * This does not guarantee that required schema objects already exist.
      */
     boolean isAvailable();
+
+    /**
+     * Check if the vector store is available and schema is initialized.
+     * Implementations should return true only when operations can be executed safely.
+     */
+    boolean isAvailableAndInitialized();
 
     /**
      * Mark all chunks for an entity as ERROR with a message.

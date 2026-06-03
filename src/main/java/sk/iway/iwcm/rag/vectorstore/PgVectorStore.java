@@ -39,12 +39,12 @@ public class PgVectorStore implements VectorStore {
             dimensions      INT NOT NULL,
             language        VARCHAR(10),
             domain_id       INT,
-            status          VARCHAR(20) NOT NULL DEFAULT '" + EmbeddingChunkStatus.COMPLETED.name() + "',
+            status          VARCHAR(20) NOT NULL DEFAULT '%s',
             error_message   VARCHAR(500),
             create_date     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             CONSTRAINT uq_rag_chunk UNIQUE (entity_type, entity_id, chunk_index, embedding_model)
         )
-        """.formatted(DIMENSION_PLACEHOLDER);
+        """.formatted(DIMENSION_PLACEHOLDER, EmbeddingChunkStatus.COMPLETED.name());
 
     private static final String CREATE_ENTITY_INDEX_SQL =
         "CREATE INDEX IF NOT EXISTS idx_rag_chunk_entity ON rag_embedding_chunks (entity_type, entity_id)";
@@ -282,11 +282,18 @@ public class PgVectorStore implements VectorStore {
 
     @Override
     public boolean isAvailable() {
-        String dsName = PgvectorJpaConfig.getRagDataSourceName();
-        if (dsName == null) return false;
+        // We are DEPEDND on RAG, so PgVector store is available if RAG is allowed and datasource is available
+        return PgvectorJpaConfig.isRagAvailable();
+    }
+
+    @Override
+    public boolean isAvailableAndInitialized() {
+        // Chck is isAvailable and the table exists (simple query to check)
+        if (isAvailable() == false) return false;
 
         try {
-            new SimpleQuery(dsName).forInt("SELECT 1 FROM rag_embedding_chunks LIMIT 1");
+            // Because we check if isAvailable first, we can be sure that datasource is available, so if this query fails, it means the table is not initialized
+            new SimpleQuery(PgvectorJpaConfig.getRagDataSourceName()).forInt("SELECT 1 FROM rag_embedding_chunks LIMIT 1");
             return true;
         } catch (Exception e) {
             return false;

@@ -70,9 +70,15 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
     @Override
     public Page<EmbeddingChunkEntity> getAllItems(Pageable pageable) {
 
-        if (vectorStore.isAvailable() == false && vectorStore.initializeSchema() == false) {
-            // Error will be throwed by PgVectorStore
+        if (vectorStore.isAvailable() == false) {
+            // If vector store is not available (not allowed or available)
             return new DatatablePageImpl<>( new ArrayList<>() );
+        } else if (vectorStore.isAvailableAndInitialized() == false) {
+            // Vector store is available but not initialized, we can try to initialize it
+            if(vectorStore.initializeSchema() == false) {
+                // Inicialization failed, return empty results, error will be logged by vector store
+                return new DatatablePageImpl<>( new ArrayList<>() );
+            }
         }
 
         // Check if entityType is set and valid
@@ -117,7 +123,13 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
 
     @Override
     public void getOptions(DatatablePageImpl<EmbeddingChunkEntity> page) {
-        page.addOptions("entityType", chunkRepository.findDistinctEntityTypes(CloudToolsForCore.getDomainId()).stream().map(Enum::name).toList());
+        if (vectorStore.isAvailableAndInitialized() == true) {
+            page.addOptions("entityType", chunkRepository.findDistinctEntityTypes(CloudToolsForCore.getDomainId()).stream().map(Enum::name).toList());
+        } else {
+            // Store is not available or not initialized (if needed), init is handled by getAlItems
+            page.addOptions("entityType", new ArrayList<>() );
+        }
+
         page.addOptions("language", Arrays.asList( Constants.getArray("languages") ));
 
         super.getOptions(page);
@@ -177,6 +189,13 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
         Map<String, Object> response = new HashMap<>();
         response.put("totalGroups", data.getFirst());
         response.put("totalDocuments", data.getSecond() != null ? data.getSecond().size() : 0);
+
+        if (vectorStore.isAvailableAndInitialized() == false) {
+            // Cannot check indexed status if vector store is not available or not initialized, return 0 for both indexed and queued
+            response.put("indexedDocuments", 0);
+            response.put("queuedDocuments", 0);
+            return response;
+        }
 
         Set<Integer> indexedDocIds = chunkRepository
                 .findDistinctEntityIdsByEntityTypeAndDomainId(RagEntityType.DOCUMENT, CloudToolsForCore.getDomainId())
