@@ -212,13 +212,13 @@ class CspNonceTest extends BaseWebjetTest {
 		verify(mockResponse, never()).setHeader(anyString(), anyString());
 	}
 
-	// ==================== ShowDoc.injectCspNonceIntoScripts() Tests ====================
+	// ==================== ShowDoc.injectCspNonceIntoTags() Tests ====================
 
 	@Test
 	void testInjectCspNonceIntoScriptsSimpleScript() {
 		ShowDoc showDoc = new ShowDoc();
 		String input = "<html><body><script>console.log('hello');</script></body></html>";
-		String result = injectCspNonceIntoScripts(showDoc, input, "testnonce123");
+		String result = injectCspNonceIntoTags(showDoc, input, "testnonce123");
 
 		assertTrue(result.contains("nonce=\"testnonce123\""), "Nonce should be injected into simple script tag");
 		assertTrue(result.contains("<script nonce=\"testnonce123\">"), "Script tag should have nonce attribute");
@@ -228,7 +228,7 @@ class CspNonceTest extends BaseWebjetTest {
 	void testInjectCspNonceIntoScriptsScriptWithAttributes() {
 		ShowDoc showDoc = new ShowDoc();
 		String input = "<html><body><script type=\"text/javascript\" defer>console.log('hello');</script></body></html>";
-		String result = injectCspNonceIntoScripts(showDoc, input, "myNonce");
+		String result = injectCspNonceIntoTags(showDoc, input, "myNonce");
 
 		assertTrue(result.contains("nonce=\"myNonce\""), "Nonce should be injected into script with attributes");
 		assertTrue(result.contains("type=\"text/javascript\""), "Original attributes should be preserved");
@@ -239,7 +239,7 @@ class CspNonceTest extends BaseWebjetTest {
 	void testInjectCspNonceIntoScriptsMultipleScripts() {
 		ShowDoc showDoc = new ShowDoc();
 		String input = "<html><body><script>var a = 1;</script><p>text</p><script>var b = 2;</script></body></html>";
-		String result = injectCspNonceIntoScripts(showDoc, input, "abc123");
+		String result = injectCspNonceIntoTags(showDoc, input, "abc123");
 
 		int count = result.split("nonce=\"abc123\"").length - 1;
 		assertEquals(2, count, "Nonce should be injected into all script tags");
@@ -249,7 +249,7 @@ class CspNonceTest extends BaseWebjetTest {
 	void testInjectCspNonceIntoScriptsAlreadyHasNonce() {
 		ShowDoc showDoc = new ShowDoc();
 		String input = "<html><body><script nonce=\"existing\">console.log('hello');</script></body></html>";
-		String result = injectCspNonceIntoScripts(showDoc, input, "newNonce");
+		String result = injectCspNonceIntoTags(showDoc, input, "newNonce");
 
 		// Should NOT add another nonce
 		assertEquals(1, result.split("nonce=").length - 1, "Should not duplicate nonce attribute");
@@ -260,7 +260,7 @@ class CspNonceTest extends BaseWebjetTest {
 	void testInjectCspNonceIntoScriptsNoScriptTags() {
 		ShowDoc showDoc = new ShowDoc();
 		String input = "<html><body><p>No scripts here</p></body></html>";
-		String result = injectCspNonceIntoScripts(showDoc, input, "testnonce");
+		String result = injectCspNonceIntoTags(showDoc, input, "testnonce");
 
 		assertEquals(input, result, "Content without script tags should remain unchanged");
 	}
@@ -268,7 +268,7 @@ class CspNonceTest extends BaseWebjetTest {
 	@Test
 	void testInjectCspNonceIntoScriptsEmptyContent() {
 		ShowDoc showDoc = new ShowDoc();
-		String result = injectCspNonceIntoScripts(showDoc, "", "testnonce");
+		String result = injectCspNonceIntoTags(showDoc, "", "testnonce");
 		assertEquals("", result, "Empty content should remain empty");
 	}
 
@@ -276,7 +276,7 @@ class CspNonceTest extends BaseWebjetTest {
 	void testInjectCspNonceIntoScriptsNullNonce() {
 		ShowDoc showDoc = new ShowDoc();
 		String input = "<html><body><script>console.log('hello');</script></body></html>";
-		String result = injectCspNonceIntoScripts(showDoc, input, null);
+		String result = injectCspNonceIntoTags(showDoc, input, null);
 
 		assertEquals(input, result, "Content should remain unchanged when nonce is null");
 	}
@@ -285,7 +285,7 @@ class CspNonceTest extends BaseWebjetTest {
 	void testInjectCspNonceIntoScriptsScriptSrcAttribute() {
 		ShowDoc showDoc = new ShowDoc();
 		String input = "<html><body><script src=\"/app.js\" type=\"module\"></script></body></html>";
-		String result = injectCspNonceIntoScripts(showDoc, input, "moduleNonce");
+		String result = injectCspNonceIntoTags(showDoc, input, "moduleNonce");
 
 		assertTrue(result.contains("nonce=\"moduleNonce\""), "Nonce should be injected into external script tag");
 		assertTrue(result.contains("src=\"/app.js\""), "Original src attribute should be preserved");
@@ -295,21 +295,118 @@ class CspNonceTest extends BaseWebjetTest {
 	void testInjectCspNonceIntoScriptsMixedScripts() {
 		ShowDoc showDoc = new ShowDoc();
 		String input = "<html><body><script src=\"/app.js\"></script><script>var a = 1;</script><script nonce=\"existing\">var b = 2;</script></body></html>";
-		String result = injectCspNonceIntoScripts(showDoc, input, "generatedNonce");
+		String result = injectCspNonceIntoTags(showDoc, input, "generatedNonce");
 
 		// First two scripts should get nonce, third should keep existing
 		int nonceCount = result.split("nonce=").length - 1;
 		assertEquals(3, nonceCount, "All script tags should have nonce attribute");
 	}
 
+	// ==================== ShowDoc injectCspNonceIntoTags() Tests for Style and Link Tags ====================
+
+	@Test
+	void testInjectCspNonceIntoTagsSimpleStyle() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><head><style>body { color: red; }</style></head></html>";
+		String result = injectCspNonceIntoTags(showDoc, input, "styleNonce");
+		assertTrue(result.contains("nonce=\"styleNonce\""), "Nonce should be injected into style tag");
+		assertTrue(result.contains("<style nonce=\"styleNonce\">"), "Style tag should have nonce attribute");
+	}
+
+	@Test
+	void testInjectCspNonceIntoTagsStyleWithAttributes() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><head><style type=\"text/css\" media=\"screen\">body { color: red; }</style></head></html>";
+		String result = injectCspNonceIntoTags(showDoc, input, "myStyleNonce");
+		assertTrue(result.contains("nonce=\"myStyleNonce\""), "Nonce should be injected into style with attributes");
+		assertTrue(result.contains("type=\"text/css\""), "Original attributes should be preserved");
+		assertTrue(result.contains("media=\"screen\""), "Original media attribute should be preserved");
+	}
+
+	@Test
+	void testInjectCspNonceIntoTagsMultipleStyles() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><head><style>.a { color: red; }</style><style>.b { color: blue; }</style></head></html>";
+		String result = injectCspNonceIntoTags(showDoc, input, "abc");
+		int count = result.split("nonce=\"abc\"").length - 1;
+		assertEquals(2, count, "Nonce should be injected into all style tags");
+	}
+
+	@Test
+	void testInjectCspNonceIntoTagsStyleAlreadyHasNonce() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><head><style nonce=\"existing\">body { color: red; }</style></head></html>";
+		String result = injectCspNonceIntoTags(showDoc, input, "newNonce");
+		assertEquals(1, result.split("nonce=").length - 1, "Should not duplicate nonce attribute");
+		assertTrue(result.contains("nonce=\"existing\""), "Original nonce should be preserved");
+	}
+
+	@Test
+	void testInjectCspNonceIntoTagsLinkStylesheetDoubleQuotes() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\"></head></html>";
+		String result = injectCspNonceIntoTags(showDoc, input, "linkNonce");
+		assertTrue(result.contains("nonce=\"linkNonce\""), "Nonce should be injected into link stylesheet tag");
+		assertTrue(result.contains("rel=\"stylesheet\""), "Original rel attribute should be preserved");
+		assertTrue(result.contains("href=\"/css/main.css\""), "Original href attribute should be preserved");
+	}
+
+	@Test
+	void testInjectCspNonceIntoTagsLinkStylesheetSingleQuotes() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><head><link rel='stylesheet' href='/css/main.css'></head></html>";
+		String result = injectCspNonceIntoTags(showDoc, input, "linkNonce");
+		assertTrue(result.contains("nonce=\"linkNonce\""), "Nonce should be injected into link stylesheet tag with single quotes");
+	}
+
+	@Test
+	void testInjectCspNonceIntoTagsLinkStylesheetNoQuotes() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><head><link rel=stylesheet href=/css/main.css></head></html>";
+		String result = injectCspNonceIntoTags(showDoc, input, "linkNonce");
+		assertTrue(result.contains("nonce=\"linkNonce\""), "Nonce should be injected into link stylesheet tag without quotes");
+	}
+
+	@Test
+	void testInjectCspNonceIntoTagsLinkNotStylesheet() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><head><link rel=\"icon\" href=\"/favicon.ico\"></head></html>";
+		String result = injectCspNonceIntoTags(showDoc, input, "linkNonce");
+		assertEquals(input, result, "Non-stylesheet link tags should not get nonce");
+		assertFalse(result.contains("nonce="), "Should not inject nonce into non-stylesheet link");
+	}
+
+	@Test
+	void testInjectCspNonceIntoTagsLinkAlreadyHasNonce() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\" nonce=\"existing\"></head></html>";
+		String result = injectCspNonceIntoTags(showDoc, input, "newNonce");
+		int nonceCount = result.split("nonce=").length - 1;
+		assertEquals(1, nonceCount, "Should not duplicate nonce attribute");
+		assertTrue(result.contains("nonce=\"existing\""), "Original nonce should be preserved");
+	}
+
+	@Test
+	void testInjectCspNonceIntoTagsMixedContent() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><head><style>.a { color: red; }</style><link rel=\"stylesheet\" href=\"/css/main.css\"></head><body><script>var a = 1;</script></body></html>";
+		String result = injectCspNonceIntoTags(showDoc, input, "mixedNonce");
+		// Should inject nonce into all 3 tag types (script, style, link)
+		int nonceCount = result.split("nonce=\"mixedNonce\"").length - 1;
+		assertEquals(3, nonceCount, "Should inject nonce into script, style, and link stylesheet tags");
+		assertTrue(result.contains("<script nonce=\"mixedNonce\">"), "Script tag should have nonce");
+		assertTrue(result.contains("<style nonce=\"mixedNonce\">"), "Style tag should have nonce");
+		assertTrue(result.contains("nonce=\"mixedNonce\""), "Link tag should have nonce");
+	}
+
 	// Helper method to access private method via reflection
-	private String injectCspNonceIntoScripts(ShowDoc showDoc, String htmlContent, String nonce) {
+	private String injectCspNonceIntoTags(ShowDoc showDoc, String htmlContent, String nonce) {
 		try {
-			java.lang.reflect.Method method = ShowDoc.class.getDeclaredMethod("injectCspNonceIntoScripts", String.class, String.class);
+			java.lang.reflect.Method method = ShowDoc.class.getDeclaredMethod("injectCspNonceIntoTags", String.class, String.class);
 			method.setAccessible(true);
 			return (String) method.invoke(showDoc, htmlContent, nonce);
 		} catch (Exception e) {
-			throw new RuntimeException("Failed to invoke injectCspNonceIntoScripts", e);
+			throw new RuntimeException("Failed to invoke injectCspNonceIntoTags", e);
 		}
 	}
 }
