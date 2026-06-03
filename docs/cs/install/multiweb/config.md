@@ -8,7 +8,15 @@ Pro správné fungování je třeba dodržet následující požadavky:
 
 ## Zřízení nové domény
 
-Aktuálně je třeba novou doménu vytvořit níže uvedeným SQL příkazem. Výraz `DOMAIN-NAME` nahraďte za doménové jméno. Přihlašovací jméno je `Heslo1`. Po přidání je třeba buď přes řídicí doménu smazat cache v Ovládací panely->Cache objekty kliknutím na smazat vše, nebo restartovat aplikační server.
+Novou doménu lze zřídit vytvořením nové kořenové složky v řídicí doméně. Nastavením nadřazené složky na kořenovou složku se zobrazí možnost zadat doménové jméno. Zadejte název složky, URL adresu nastavte na hodnotu `/` a zadejte hodnotu do pole Doména. Vytvoří se:
+
+- zadaná doména
+- základní struktura `System` složky, hlavičky, patičky
+- skupina šablon - páruje se na základě shody prefixu překladových klíčů a doménového aliasu, nebo pokud složka obsahuje doménový alias
+- šablona
+- uživatel `admin`, jeho heslo se zobrazí v notifikaci
+
+Pro manuální vytvoření můžete použít níže uvedený SQL příkaz. Výraz `DOMAIN-NAME` nahraďte za doménové jméno. Přihlašovací jméno je `admin`, heslo je `Heslo1`. Po přidání je třeba buď přes řídicí doménu smazat cache v Ovládací panely->Cache objekty kliknutím na smazat vše, nebo restartovat aplikační server.
 
 ```sql
 INSERT INTO `groups` (`group_name`, `internal`, `parent_group_id`, `navbar`, `default_doc_id`, `temp_id`, `sort_priority`, `password_protected`, `menu_type`, `url_dir_name`, `sync_id`, `sync_status`, `html_head`, `logon_page_doc_id`, `domain_name`, `new_page_docid_template`, `install_name`, `field_a`, `field_b`, `field_c`, `field_d`, `logged_menu_type`, `link_group_id`)

@@ -16,6 +16,13 @@
 
 ![](redactor/apps/language-redirect/editor-basic.png)
 
+### Multiweb
+
+- Přidána možnost [vytvořit novou doménu](install/multiweb/config.md) z řídicí domény, vytvoří také uživatele, skupinu šablon, šablonu a systémové stránky (#58525).
+- Přidáno zobrazení seznamu skupin šablon (#58525).
+- V řídící doméně je možné upravovat všechna přesměrování domén.
+- V řídicí doméně přidána možnost zobrazit všechny soubory.
+
 ### Dokumentace
 
 - Vytvořena nová sekce [Přehled nových vlastností](sales/README.md) která obsahuje popisy nových vlastností a **funkcionalit WebJET CMS srozumitelným jazykem**, bez zbytečně technických formulací (#58505).
@@ -61,6 +68,10 @@
 - Přidána ikona pro přesun [kurzoru na těžko dostupné místo](redactor/webpages/working-in-editor/README.md#vkládání-textu-na-těžko-dostupná-místa), jako například za poslední SVG ikonu v řádku a podobně (#osk105).
 
 ![](redactor/webpages/working-in-editor/wjmagicline-append.png)
+
+- Volitelná pole - přidána možnost centrálně nastavit vlastnosti [volitelných polí](frontend/webpages/customfields/custom-fields-settings.md) v nové tabulce v části Nastavení (#58413).
+
+![](frontend/webpages/customfields/custom-fields-settings-editor.png)
 
 ### Aplikace
 
