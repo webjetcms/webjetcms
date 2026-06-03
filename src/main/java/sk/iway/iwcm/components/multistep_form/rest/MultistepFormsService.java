@@ -884,8 +884,9 @@ public class MultistepFormsService {
         Object mapObj = request.getSession().getAttribute(fileSizeMapKey);
         if (mapObj instanceof Map<?, ?> existingMap) {
             for (Map.Entry<?, ?> entry : existingMap.entrySet()) {
-                if (entry.getKey() instanceof String k && entry.getValue() instanceof Long v)
+                if (entry.getKey() instanceof String k && entry.getValue() instanceof Long v) {
                     fileSizeMap.put(k, v);
+                }
             }
         }
 

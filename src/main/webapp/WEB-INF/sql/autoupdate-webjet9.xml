@@ -3757,10 +3757,10 @@
                 <void property="author"><string>sivan</string></void>
                 <void property="date"><string>28.05.2026</string></void>
                 <void property="desc"><string>form_settings - add max_combined_size_in_kilobytes column</string></void>
-                <void property="mysql"><string>ALTER TABLE form_settings ADD COLUMN max_combined_size_in_kilobytes INT NULL</string></void>
-                <void property="mssql"><string>ALTER TABLE form_settings ADD max_combined_size_in_kilobytes INT NULL</string></void>
-                <void property="oracle"><string>ALTER TABLE form_settings ADD (max_combined_size_in_kilobytes INTEGER NULL)</string></void>
-                <void property="pgsql"><string>ALTER TABLE form_settings ADD COLUMN max_combined_size_in_kilobytes INT NULL</string></void>
+                <void property="mysql"><string>ALTER TABLE form_settings ADD COLUMN max_combined_size_in_kilobytes BIGINT NULL</string></void>
+                <void property="mssql"><string>ALTER TABLE form_settings ADD max_combined_size_in_kilobytes BIGINT NULL</string></void>
+                <void property="oracle"><string>ALTER TABLE form_settings ADD (max_combined_size_in_kilobytes NUMBER(19,0) NULL)</string></void>
+                <void property="pgsql"><string>ALTER TABLE form_settings ADD COLUMN max_combined_size_in_kilobytes BIGINT NULL</string></void>
             </object>
         </void>
 
