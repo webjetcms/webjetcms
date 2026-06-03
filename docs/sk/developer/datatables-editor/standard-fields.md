@@ -735,7 +735,7 @@ Typ poľa umožňujúci [nahratie súboru](field-file-upload.md).
 
 ## OPTIONS
 
-Typ poľa pre dynamický zoznam hodnôt. V editore sa zobrazí ako zoznam vstupných riadkov, kde každý riadok obsahuje dva textové polia (napr. kľúč a hodnota). Riadky je možné pridávať, odoberať a meniť ich poradie pomocou `drag & drop`.
+Typ poľa pre dynamický zoznam hodnôt. V editore sa zobrazí ako zoznam vstupných riadkov, kde každý riadok obsahuje dve textové polia (napr. kľúč a hodnota). Riadky je možné pridávať, odoberať a meniť ich poradie pomocou `drag & drop`.
 
 Výsledná hodnota sa ukladá ako reťazec, kde jednotlivé riadky sú oddelené znakom `|` a hodnoty v rámci riadku sú oddelené znakom `:`. Napríklad: `key1:value1|key2:value2|key3:value3`.
 
