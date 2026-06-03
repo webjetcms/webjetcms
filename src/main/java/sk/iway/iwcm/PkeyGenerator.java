@@ -123,9 +123,9 @@ public class PkeyGenerator
     */
    private void pkeyReloadAll()
 	{
-   	List<PkeyBean> pkeys = new ComplexQuery().setSql("SELECT * FROM pkey_generator").list(new Mapper<PkeyBean>()
+   		List<PkeyBean> pkeys = new ComplexQuery().setSql("SELECT * FROM pkey_generator").list(new Mapper<PkeyBean>()
 		{
-   		@Override
+   			@Override
 			public PkeyBean map(ResultSet rs) throws SQLException
 			{
 				PkeyBean p = new PkeyBean();
@@ -218,6 +218,7 @@ public class PkeyGenerator
 				p.setValue(newValue);
 
 				Logger.debug(this,"PkeyGenerator ALLOCATE:" + p.toString());
+				return; //NOSONAR - this returns from for cycle
 			}
 			catch (SQLException ex)
 			{
