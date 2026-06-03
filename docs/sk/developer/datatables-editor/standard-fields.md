@@ -750,6 +750,8 @@ Pole nepodporuje AI tlačidlo (`btn-ai`).
     private String options = "";
 ```
 
+![](../../redactor/apps/multistep-form/form-item-editor-advanced.png)
+
 ## ENUMERATION
 
 Typ poľa určený pre napojenie na aplikáciu číselníky. V editore sa zobrazí jeden riadok s tromi vstupmi:
@@ -779,3 +781,5 @@ Príklad použitia v entite:
 ```
 
 Tento typ sa používa najmä pri formulároch, kde je potrebné dynamicky generovať `<option>` hodnoty zo zvoleného číselníka.
+
+![](../../redactor/apps/multistep-form/form-item-editor-advanced-enum.png)

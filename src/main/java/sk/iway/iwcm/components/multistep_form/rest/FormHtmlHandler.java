@@ -99,7 +99,7 @@ public class FormHtmlHandler {
 
         this.prop = Prop.getInstance(request);
         this.requiredLabelAdd = prop.getText("components.formsimple.requiredLabelAdd");
-        this.firstTimeHeadingSet = new HashSet<String>();
+        this.firstTimeHeadingSet = new HashSet<>();
 
         FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
         if (formSettings != null) {
@@ -125,7 +125,7 @@ public class FormHtmlHandler {
      */
     public final String getFormHtmlBeforeCss() {
         if(formHtmlBeforeCss == null) return "";
-        return new String(formHtmlBeforeCss);
+        return formHtmlBeforeCss;
     }
 
     /**
@@ -134,8 +134,8 @@ public class FormHtmlHandler {
      * @return pair of (inline <style> CSS, <link> tags); empty values if not available
      */
     public final Pair<String, String> getCssDataPair() {
-        if(cssDataPair == null) return new Pair<String,String>("", "");
-        return new Pair<String,String>(cssDataPair.first, cssDataPair.second);
+        if(cssDataPair == null) return new Pair<>("", "");
+        return new Pair<>(cssDataPair.first, cssDataPair.second);
     }
 
     /**
@@ -371,7 +371,7 @@ public class FormHtmlHandler {
         this.cssDataPair = cssPair;
 
         // Set final value without CSS and without crypto to separe variable .... we need tthis value other logic like PDF version etc
-        this.formHtmlBeforeCss = new String(formHtmlAsText);
+        this.formHtmlBeforeCss = formHtmlAsText;
 
         //
         CryptoFactory cryptoFactory = new CryptoFactory();
@@ -495,7 +495,7 @@ public class FormHtmlHandler {
 				StringBuilder cssStyle = new StringBuilder("");
 
                 // base
-				String baseCssPaths[] = Tools.getTokens(temp.getBaseCssPath(), "\n");
+				String[] baseCssPaths = Tools.getTokens(temp.getBaseCssPath(), "\n");
 				if (group != null && Constants.getBoolean("multiDomainEnabled") == true && Tools.isNotEmpty(group.getDomainName())) {
                     for(String baseCssPath : baseCssPaths) {
                         //ak je cssko v /templates adresari uz domain alias nepridavame
@@ -510,7 +510,7 @@ public class FormHtmlHandler {
                 }
 
                 // temp
-				String tempCssLinks[] =  Tools.getTokens(temp.getCss(), "\n");
+				String[] tempCssLinks =  Tools.getTokens(temp.getCss(), "\n");
 				if (group != null && Constants.getBoolean("multiDomainEnabled") == true && Tools.isNotEmpty(group.getDomainName())) {
                     for(String tempCssLink : tempCssLinks) {
                         //ak je cssko v /templates adresari uz domain alias nepridavame
@@ -525,7 +525,7 @@ public class FormHtmlHandler {
                 }
 
                 // editor
-				String editorEditorCsses[] = Tools.getTokens(Constants.getString("editorEditorCss"), "\n");
+				String[] editorEditorCsses = Tools.getTokens(Constants.getString("editorEditorCss"), "\n");
                 for(String editorEditorCss : editorEditorCsses) {
                     editorEditorCss = FormMailAction.checkEmailCssVersion(editorEditorCss);
                     cssStyle.append(FileTools.readFileContent(editorEditorCss)).append('\n');
@@ -533,7 +533,7 @@ public class FormHtmlHandler {
                 }
 
                 // Form specific csss (from form settings)
-                String formSpecificCsses[] = Tools.getTokens(formSpecificCssStr, "\n");
+                String[] formSpecificCsses = Tools.getTokens(formSpecificCssStr, "\n");
                 for(String formSpecificCss : formSpecificCsses) {
                     formSpecificCss = FormMailAction.checkEmailCssVersion(formSpecificCss);
                     cssStyle.append(FileTools.readFileContent(formSpecificCss)).append('\n');
@@ -669,7 +669,7 @@ public class FormHtmlHandler {
                 nextBtnLabel = prop.getText("components.mustistep.form.next_step");
         }
 
-        return new Pair<String,String>(backBtnLabel, nextBtnLabel);
+        return new Pair<>(backBtnLabel, nextBtnLabel);
     }
 
     private String getHtmlForRadioInput(boolean isSelected, boolean radioCheckboxAsText) {

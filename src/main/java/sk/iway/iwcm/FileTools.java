@@ -446,35 +446,36 @@ public class FileTools
 
 	/**
 	 * Vrati naformatovanu velkost suboru v B, kB, MB
-	 * @param lengthLong
+	 * @param bytes
 	 * @param exactFormat - ak je nastavene na false, tak iba MB vracia s desatinnymi miestami
 	 * @return
 	 */
-	public static String getFormatFileSize(long lengthLong, boolean exactFormat)
+	public static String getFormatFileSize(long bytes, boolean exactFormat)
 	{
 		String length = "";
-		if (lengthLong > (1024 * 1024))
-		{
-			if (exactFormat)
-			{
-				length = decimalFormat.format(lengthLong / (1024d * 1024d)) + " MB";
-				Logger.debug(FileTools.class, "DecimalFormat: "+decimalFormatJednoMiesto.format(lengthLong / (1024d * 1024d)));
-			}
-			else
-			{
-				length = decimalFormatJednoMiesto.format(lengthLong / (1024d * 1024d)) + " MB";
-			}
+
+		if (bytes < 0) { return "0 B"; }
+        if (bytes < 1024) { return bytes + " B"; }
+
+        final String[] units = {"kB", "MB", "GB", "TB", "PB"};
+        double size = bytes;
+        int unitIndex = -1;
+
+        do {
+            size /= 1024;
+            unitIndex++;
+        } while (size >= 1024 && unitIndex < units.length - 1);
+
+        if (exactFormat) {
+			length = decimalFormat.format(size) + " " + units[unitIndex];
+			Logger.debug(FileTools.class, "DecimalFormat: "+decimalFormatJednoMiesto.format(size / (1024d * 1024d)));
+		} else if (unitIndex >= 1) {
+			// pre MB a vetsi pouzivame jedno desatinne miesto
+			length = decimalFormatJednoMiesto.format(size) + " " + units[unitIndex];
+		} else {
+			length = decimalFormatBezMiest.format(size) + " " + units[unitIndex];
 		}
-		else if (lengthLong > 1024)
-		{
-			if (exactFormat) length = decimalFormat.format(lengthLong / 1024d) + " kB";
-			else length = decimalFormatBezMiest.format(lengthLong / 1024d) + " kB";
-		}
-		else
-		{
-			if (exactFormat) length = decimalFormat.format(lengthLong) + " B";
-			else length = decimalFormatBezMiest.format(lengthLong) + " B";
-		}
+
 		return(length);
 	}
 
@@ -1418,28 +1419,21 @@ public class FileTools
 		return ret;
 	}
 
+	/**
+	 * Format file size in human readable format from kilobytes, e.g. 1.5 MB, 200 kB, 500 B, etc.
+	 * @param kilobytes
+	 * @return
+	 */
 	public static String formatFileSizeFromKb(long kilobytes) {
-        if (kilobytes < 0) { return "unknown"; }
-        return formatFileSize(kilobytes * 1024);
+        return getFormatFileSize(kilobytes * 1024, true);
     }
 
-    public static String formatFileSize(long bytes) {
-        if (bytes < 0) { return "unknown"; }
-        if (bytes < 1024) { return bytes + " B"; }
-
-        final String[] units = {"kB", "MB", "GB", "TB", "PB"};
-        double size = bytes;
-        int unitIndex = -1;
-
-        do {
-            size /= 1024;
-            unitIndex++;
-        } while (size >= 1024 && unitIndex < units.length - 1);
-
-        if (size >= 100 || size == Math.floor(size)) {
-            return String.format("%.0f %s", size, units[unitIndex]);
-        } else {
-            return String.format("%.1f %s", size, units[unitIndex]);
-        }
-    }
+	/**
+	 * Format file size in human readable format from bytes, e.g. 1.5 MB, 200 kB, 500 B, etc.
+	 * @param fileSize
+	 * @return
+	 */
+	public static String formatFileSize(long fileSize) {
+		return getFormatFileSize(fileSize, true);
+	}
 }

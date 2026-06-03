@@ -69,8 +69,14 @@ V karte **Pokročilé** môžete nastaviť ďalšie voliteľné parametre ako:
 - **Poradie** - určuje poradie položky v rámci kroku.
 - **Predvyplnená hodnota** - hodnota, ktorá sa zobrazí vyplnená v poli, používateľ tak nemusí nastaviť hodnotu, ak je všeobecne známa. Toto pole sa zobrazuje iba ak nejde o položku typu výberové pole.
 - **Povolené možnosti** - pri položke typu výberové pole (select, checkbox skupina, radio skupina a pod.) môžete manuálne definovať zoznam možností. Každá možnosť sa skladá z dvoch hodnôt - textu, ktorý sa zobrazí používateľovi, a hodnoty, ktorá sa odošle pri odoslaní formulára. Možnosti je možné pridávať, odoberať a meniť ich poradie pomocou `drag & drop`. Toto pole sa zobrazuje iba ak nie je povolená možnosť **Použiť prepojenie na číselník**.
+
+![](form-item-editor-advanced.png)
+
 - **Použiť prepojenie na číselník** - prepínač, ktorý určuje, či sa možnosti výberového poľa zadávajú manuálne cez **Povolené možnosti**, alebo sa načítajú dynamicky z aplikácie [Číselníky](../../apps/enumeration/README.md).
 - **Prepojenie na číselník** - zobrazí sa pri položke typu výberové pole, ak je povolená možnosť **Použiť prepojenie na číselník**. Nastavíte číslo (ID) číselníka, stĺpec číselníka pre text zobrazený používateľovi a stĺpec pre odosielanú hodnotu. Možnosti sa tak generujú dynamicky z dát číselníka a pri zmene údajov v číselníku sa automaticky aktualizujú aj vo formulári.
+
+![](form-item-editor-advanced-enum.png)
+
 - **Zástupný text** - text, ktorý sa zobrazí v poli ako nápoveda pre používateľa ak nie je pole vyplnené (je prázdne).
 - **Tooltip** - ak zadáte hodnotu tooltipu, zobrazí sa pri názve poľa informačná bublina.
 

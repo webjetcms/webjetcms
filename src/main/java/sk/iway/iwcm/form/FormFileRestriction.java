@@ -1,6 +1,5 @@
 package sk.iway.iwcm.form;
 
-import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.ImageTools;

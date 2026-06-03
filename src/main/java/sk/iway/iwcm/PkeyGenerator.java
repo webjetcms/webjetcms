@@ -218,7 +218,6 @@ public class PkeyGenerator
 				p.setValue(newValue);
 
 				Logger.debug(this,"PkeyGenerator ALLOCATE:" + p.toString());
-				return;
 			}
 			catch (SQLException ex)
 			{
