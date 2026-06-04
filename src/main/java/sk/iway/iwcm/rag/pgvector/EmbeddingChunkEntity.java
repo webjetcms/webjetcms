@@ -175,4 +175,18 @@ public class EmbeddingChunkEntity extends BaseEditorFields {
         renderFormat = "dt-format-date-time"
     )
     private Date createDate;
+
+    /* PRIMARY FOR DOC'S, BECAUSE ITS HELPS WITH SEARCH (and DOC'S are main user of this functionality) */
+
+    @Column(name = "root_group_l1")
+	private Integer rootGroupL1;
+
+	@Column(name = "root_group_l2")
+	private Integer rootGroupL2;
+
+	@Column(name = "root_group_l3")
+	private Integer rootGroupL3;
+
+	@Column(name = "group_id")
+    private Integer groupId;
 }

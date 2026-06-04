@@ -39,6 +39,10 @@ public class PgVectorStore implements VectorStore {
             dimensions      INT NOT NULL,
             language        VARCHAR(10),
             domain_id       INT,
+            group_id        INT,
+            root_group_l1   INT,
+            root_group_l2   INT,
+            root_group_l3   INT,
             status          VARCHAR(20) NOT NULL DEFAULT '%s',
             error_message   VARCHAR(500),
             create_date     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -58,14 +62,16 @@ public class PgVectorStore implements VectorStore {
     private static final String DROP_HNSW_INDEX_SQL =
         "DROP INDEX IF EXISTS idx_rag_embedding_hnsw";
 
-    private static final String UPSERT_SQL =
+    private static final String UPSERT_WITH_GROUPS_SQL =
         "INSERT INTO rag_embedding_chunks" +
         "    (entity_type, entity_id, chunk_index, chunk_text, content_hash, embedding," +
-        "     embedding_model, dimensions, language, domain_id, status, create_date)" +
-        " VALUES (?, ?, ?, ?, ?, ?::vector, ?, ?, ?, ?, '" + EmbeddingChunkStatus.COMPLETED.name() + "', CURRENT_TIMESTAMP)" +
+        "     embedding_model, dimensions, language, domain_id, group_id, root_group_l1, root_group_l2, root_group_l3, status, create_date)" +
+        " VALUES (?, ?, ?, ?, ?, ?::vector, ?, ?, ?, ?, ?, ?, ?, ?, '" + EmbeddingChunkStatus.COMPLETED.name() + "', CURRENT_TIMESTAMP)" +
         " ON CONFLICT (entity_type, entity_id, chunk_index, embedding_model)" +
         " DO UPDATE SET chunk_text = EXCLUDED.chunk_text, content_hash = EXCLUDED.content_hash," +
-        "              embedding = EXCLUDED.embedding, status = '" + EmbeddingChunkStatus.COMPLETED.name() + "'," +
+        "              embedding = EXCLUDED.embedding, group_id = EXCLUDED.group_id," +
+        "              root_group_l1 = EXCLUDED.root_group_l1, root_group_l2 = EXCLUDED.root_group_l2," +
+        "              root_group_l3 = EXCLUDED.root_group_l3, status = '" + EmbeddingChunkStatus.COMPLETED.name() + "'," +
         "              error_message = NULL";
 
     private static final String DELETE_BY_ENTITY_SQL =
@@ -125,13 +131,22 @@ public class PgVectorStore implements VectorStore {
     public void store(String entityType, long entityId, int chunkIndex, String chunkText,
                       String contentHash, float[] embedding, String embeddingModel,
                       int dimensions, String language, Integer domainId) {
+        store(entityType, entityId, chunkIndex, chunkText, contentHash, embedding, embeddingModel, dimensions, language, domainId, null, null, null, null);
+    }
+
+    @Override
+    public void store(String entityType, long entityId, int chunkIndex, String chunkText,
+                      String contentHash, float[] embedding, String embeddingModel,
+                      int dimensions, String language, Integer domainId,
+                      Integer groupId, Integer rootGroupL1, Integer rootGroupL2, Integer rootGroupL3) {
         String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null) return;
 
         try {
-            new SimpleQuery(dsName).execute(UPSERT_SQL,
+            new SimpleQuery(dsName).execute(UPSERT_WITH_GROUPS_SQL,
                 entityType, entityId, chunkIndex, chunkText, contentHash,
-                vectorToString(embedding), embeddingModel, dimensions, language, domainId);
+                vectorToString(embedding), embeddingModel, dimensions, language, domainId,
+                groupId, rootGroupL1, rootGroupL2, rootGroupL3);
         } catch (Exception e) {
             Logger.error(PgVectorStore.class, "Error storing embedding for " + entityType + "/" + entityId + "/" + chunkIndex + ": " + e.getMessage());
         }
@@ -327,6 +342,13 @@ public class PgVectorStore implements VectorStore {
             sq.execute(CREATE_ENTITY_INDEX_SQL);
             sq.execute(CREATE_DOMAIN_LANG_INDEX_SQL);
             sq.execute(CREATE_CHUNK_TEXT_FTS_INDEX_SQL);
+
+            // Migrate existing tables: add group columns if they do not exist yet
+            sq.execute("ALTER TABLE rag_embedding_chunks ADD COLUMN IF NOT EXISTS group_id INT");
+            sq.execute("ALTER TABLE rag_embedding_chunks ADD COLUMN IF NOT EXISTS root_group_l1 INT");
+            sq.execute("ALTER TABLE rag_embedding_chunks ADD COLUMN IF NOT EXISTS root_group_l2 INT");
+            sq.execute("ALTER TABLE rag_embedding_chunks ADD COLUMN IF NOT EXISTS root_group_l3 INT");
+
             Logger.println(PgVectorStore.class, "RAG pgvector schema initialized successfully");
             return true;
         } catch (Exception e) {

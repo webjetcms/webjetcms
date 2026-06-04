@@ -27,6 +27,30 @@ public interface VectorStore {
                int dimensions, String language, Integer domainId);
 
     /**
+     * Store a chunk with its embedding vector, including group hierarchy metadata.
+     * @param entityType entity type (e.g., "document")
+     * @param entityId entity ID
+     * @param chunkIndex chunk position within the entity
+     * @param chunkText the text content of the chunk
+     * @param contentHash SHA-256 hash of the chunk text for deduplication
+     * @param embedding the embedding vector
+     * @param embeddingModel model used to generate the embedding
+     * @param dimensions number of dimensions
+     * @param language language code
+     * @param domainId domain ID
+     * @param groupId direct group/folder ID of the entity
+     * @param rootGroupL1 top-level ancestor group ID (level 1)
+     * @param rootGroupL2 second-level ancestor group ID (level 2)
+     * @param rootGroupL3 third-level ancestor group ID (level 3)
+     */
+    default void store(String entityType, long entityId, int chunkIndex, String chunkText,
+                       String contentHash, float[] embedding, String embeddingModel,
+                       int dimensions, String language, Integer domainId,
+                       Integer groupId, Integer rootGroupL1, Integer rootGroupL2, Integer rootGroupL3) {
+        store(entityType, entityId, chunkIndex, chunkText, contentHash, embedding, embeddingModel, dimensions, language, domainId);
+    }
+
+    /**
      * Delete all chunks for an entity.
      * @param entityType entity type
      * @param entityId entity ID

@@ -225,8 +225,8 @@ public class SemanticIndexService {
             int domainId = GroupsDB.getDomainId(domainName);
 
             for (int i = 0; i < chunks.size(); i++) {
-                vectorStore.store(entityType, entityId, i, chunks.get(i), chunkHashes.get(i),
-                    resolvedEmbeddings[i], model, dimensions, language, domainId);
+                vectorStore.store(entityType, entityId, i, chunks.get(i), chunkHashes.get(i), resolvedEmbeddings[i],
+                    model, dimensions, language, domainId, doc.getGroupId(), doc.getRootGroupL1(), doc.getRootGroupL2(), doc.getRootGroupL3());
             }
 
             Logger.debug(SemanticIndexService.class, "Indexed doc " + entityId + " with " + chunks.size() + " chunks");
