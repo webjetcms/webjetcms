@@ -1518,7 +1518,7 @@ public class Constants {
 				"Ak je true nebude elfinder ziskavat last modified, size a nebude sa kontrolovat, ci priecinky maju podpriecinky(bude sa predpokladat, ze ano)");
 
 		setString("contentSecurityPolicy", "", MOD_SECURITY,
-				"Obmedzenie ako stránka ma stranka nacitavat rôzne zdroje, ak mate httpS certifikat odporucame nastavit na hodnotu: default-src 'self'; script-src 'self' {nonce} https: 'strict-dynamic'; style-src 'self' https: {noAnce} 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https: data:; connect-src 'self' https:; frame-src 'self' www.youtube.com docs.google.com; media-src https:; object-src 'none'; frame-ancestors 'self'; base-uri 'self'; form-action 'self';");
+				"Obmedzenie ako stránka ma stranka nacitavat rôzne zdroje, ak mate httpS certifikat odporucame nastavit na hodnotu: default-src 'self'; script-src 'self' {nonce} https: 'strict-dynamic'; style-src 'self' https: 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https: data:; connect-src 'self' https:; frame-src 'self' www.youtube.com docs.google.com; media-src https:; object-src 'none'; frame-ancestors 'self'; base-uri 'self'; form-action 'self';");
 		setString("contentSecurityPolicySvg", "default-src 'self' 'unsafe-inline'", MOD_SECURITY,
 				"Obmedzenie pre SVG obrazky, ktore mozu obsahovat vlozeny javascript kod, odporucame nastavit na hodnotu: default-src 'self' 'unsafe-inline'");
 		setString("refererPolicy", "same-origin", MOD_SECURITY,
