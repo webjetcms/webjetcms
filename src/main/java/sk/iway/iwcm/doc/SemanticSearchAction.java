@@ -108,7 +108,7 @@ public class SemanticSearchAction {
 
 			// Fetch max 3 pages of results from semantic search, we will do pagination in Java after filtering non-searchable documents
 			int maxFetch = perPage * 3;
-			List<SemanticSearchResult> semanticResults = semanticSearchService.search(words, domainId, language, maxFetch);
+			List<SemanticSearchResult> semanticResults = semanticSearchService.search(words, domainId, language, maxFetch, request);
 
 			// Apply pagination - skip results before index
 			int totalResults = semanticResults.size();

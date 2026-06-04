@@ -9,6 +9,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -35,11 +36,15 @@ public class SemanticSearchService {
     private final VectorStore vectorStore;
     private final RagEmbeddingStatService ragEmbeddingStatService;
 
+    private final RagService ragService;
+
     @Autowired
-    public SemanticSearchService(EmbeddingProvider embeddingProvider, VectorStore vectorStore, RagEmbeddingStatService ragEmbeddingStatService) {
+    public SemanticSearchService(EmbeddingProvider embeddingProvider, VectorStore vectorStore, RagEmbeddingStatService ragEmbeddingStatService, RagService ragService) {
         this.embeddingProvider = embeddingProvider;
         this.vectorStore = vectorStore;
         this.ragEmbeddingStatService = ragEmbeddingStatService;
+
+        this.ragService = ragService;
     }
 
     /**
@@ -52,7 +57,7 @@ public class SemanticSearchService {
      * @param maxResults maximum number of unique documents to return
      * @return list of document IDs with their best similarity scores
      */
-    public List<SemanticSearchResult> search(String query, Integer domainId, String language, int maxResults) {
+    public List<SemanticSearchResult> search(String query, Integer domainId, String language, int maxResults, HttpServletRequest request) {
         if (vectorStore.isAvailableAndInitialized() == false) {
             // If vector store is not available or not initialized, we cannot perform semantic search, return empty results
             Logger.debug(SemanticSearchService.class, "Vector store not available or initialized, returning empty results");
@@ -83,6 +88,10 @@ public class SemanticSearchService {
         int chunkLimit = Math.max(1, maxResults * chunkFetchMultiplier);
 
         List<VectorSearchResult> vectorChunkResults = vectorStore.search(queryEmbedding, model, domainId, language, chunkLimit);
+
+
+        String answer = ragService.answerQuestion(query, domainId, vectorChunkResults, request);
+        request.setAttribute("ragAnswer", Tools.isEmpty(answer) ? "-" : answer);
 
         boolean useHybridSearch = shouldUseHybridSearch(query, vectorChunkResults, minimumResultsForCall);
         List<VectorSearchResult> chunkResults = vectorChunkResults;

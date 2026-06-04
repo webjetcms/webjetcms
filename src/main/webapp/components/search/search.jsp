@@ -163,6 +163,15 @@ if (searchType != null)
  <h1 class="searchResultsH1"><iwcm:text key="components.search.search_results"/></h1>
 
  <div class="search">
+
+	<iwcm:present name="ragAnswer">
+		<p class="ragAnswer">
+			<iwcm:text key="components.search.rag_answer"/>
+			<br/>
+			<iway:request name="ragAnswer"/>
+		</p>
+	</iwcm:present>
+
 	<iwcm:present name="totalResults">
 		<p class="totalResults">
 			<iwcm:text key="components.search.number_of_found_results"/>: <iway:request name="totalResults"/>
