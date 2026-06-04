@@ -77,6 +77,8 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 
    public static final String PDF_PRINT_PARAM = "_printAsPdf";
 
+   private static final java.security.SecureRandom SECURE_RANDOM = new java.security.SecureRandom();
+
    //customizovana error hlaska pri nedostupnosti DB spojenia pri starte servera
    private static Map<String, String> dbErrorMessageText = new Hashtable<>();
    static {
@@ -118,9 +120,8 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
    public static void registerDataContext(ServletRequest req)
    {
    	//iba HttpServletRequest ma session
-		if (req instanceof HttpServletRequest)
+		if (req instanceof HttpServletRequest request)
 		{
-			HttpServletRequest request = (HttpServletRequest)req;
 			registerDataContext(request);
 		}
    }
@@ -212,9 +213,8 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 			return null;
 		}
 		try {
-			java.security.SecureRandom random = new java.security.SecureRandom();
 			byte[] bytes = new byte[16];
-			random.nextBytes(bytes);
+			SECURE_RANDOM.nextBytes(bytes);
 			return java.util.Base64.getEncoder().withoutPadding().encodeToString(bytes);
 		} catch (Exception e) {
 			Logger.error(SetCharacterEncodingFilter.class, "Failed to generate CSP nonce", e);
@@ -668,8 +668,7 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 	 */
    private void checkSessionSerializable(ServletRequest servletRequest) throws ObjectNotSerializableException
 	{
-		if (servletRequest instanceof HttpServletRequest) {
-		   HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
+		if (servletRequest instanceof HttpServletRequest httpRequest) {
 		   HttpSession session = httpRequest.getSession(false);
 		   if (session != null) {
 		       boolean serializable = true;
@@ -682,7 +681,7 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 		                   attrName, Tools.sessionGetAttribute(session, attrName)
 		           );
 		           if (!attributeSerializable) {
-		               if (items.length() > 0) {
+		               if (items.isEmpty() == false) {
 		                   items.append(", ");
 		               }
 		               items.append(attrName);
@@ -926,7 +925,7 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 			String principalName = Tools.getUserPrincipal(req).getName();
 			//Logger.debug(getClass(), "Parsing login from user principal...["+principalName+"]");
 			String userNameFromPrincipal = principalName.substring( principalName.indexOf('\\') + 1 );
-			///userNameFromPrincipal = userNameFromPrincipal.substring(0, userNameFromPrincipal.length());
+			//userNameFromPrincipal = userNameFromPrincipal.substring(0, userNameFromPrincipal.length());
 			//Logger.debug(getClass(), "Parsed '"+userNameFromPrincipal+"'");
 			return userNameFromPrincipal;
 		}

@@ -21,14 +21,14 @@ import sk.iway.iwcm.test.BaseWebjetTest;
 class CspNonceTest extends BaseWebjetTest {
 
 	@BeforeAll
-	public static void initJpa() {
+	static void initJpa() {
 		Constants.setString("jpaAddPackages", "");
 		DBPool.getInstance();
 		DBPool.jpaInitialize();
 	}
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 		// Reset the request context for each test
 		SetCharacterEncodingFilter.unRegisterDataContext();
 		Constants.setString("contentSecurityPolicy", "");
@@ -82,7 +82,7 @@ class CspNonceTest extends BaseWebjetTest {
 		RequestBean bean = SetCharacterEncodingFilter.getCurrentRequestBean();
 		assertNotNull(bean, "RequestBean should not be null");
 		assertNotNull(bean.getCspNonce(), "CSP nonce should be generated when contentSecurityPolicy contains {nonce}");
-		assertTrue(bean.getCspNonce().length() > 0, "CSP nonce should not be empty");
+		assertFalse(bean.getCspNonce().isEmpty(), "CSP nonce should not be empty");
 	}
 
 	@Test
@@ -102,6 +102,7 @@ class CspNonceTest extends BaseWebjetTest {
 				case 0: nonce1 = bean.getCspNonce(); break;
 				case 1: nonce2 = bean.getCspNonce(); break;
 				case 2: nonce3 = bean.getCspNonce(); break;
+				default: break;
 			}
 		}
 
@@ -135,7 +136,7 @@ class CspNonceTest extends BaseWebjetTest {
 		HttpServletResponse mockResponse = mock(HttpServletResponse.class);
 		PathFilter.setHeader(mockResponse, "Content-Security-Policy", "contentSecurityPolicy");
 
-		verify(mockResponse).setHeader(eq("Content-Security-Policy"), eq("default-src 'self'"));
+		verify(mockResponse).setHeader("Content-Security-Policy", "default-src 'self'");
 	}
 
 	@Test
@@ -173,7 +174,7 @@ class CspNonceTest extends BaseWebjetTest {
 		HttpServletResponse mockResponse = mock(HttpServletResponse.class);
 		PathFilter.setHeader(mockResponse, "Content-Security-Policy", "contentSecurityPolicy");
 
-		verify(mockResponse).setHeader(eq("Content-Security-Policy"), eq("default-src 'self'; script-src 'self'"));
+		verify(mockResponse).setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'");
 	}
 
 	@Test

@@ -1721,7 +1721,7 @@ private static String combineCss(String cssStyle)
         // Single regex pattern to match all three tag types (script, style, link)
         // Uses alternation to match any of: <script..., <style..., <link...rel="stylesheet"...>
         java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
-            "(<script[^>]*?>)|(<style[^>]*?>)|(<link\\b[^>]*?rel\\s*=\\s*(?:\"stylesheet\"|'stylesheet'|stylesheet)[^>]*?>)",
+            "(<script[^>]*?>)|(<style[^>]*?>)|(<link\\b[^>]*?rel\\s*=\\s*(?:\"stylesheet\"|'stylesheet'|stylesheet)[^>]*?>)", //NOSONAR
             java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.DOTALL
         );
         java.util.regex.Matcher matcher = pattern.matcher(htmlContent);
