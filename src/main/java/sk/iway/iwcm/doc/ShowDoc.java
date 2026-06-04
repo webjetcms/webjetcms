@@ -1897,11 +1897,11 @@ private static String combineCss(String cssStyle)
             capturedContent = injectCspNonceIntoTags(capturedContent, cspNonce, !scriptSrcAllowsUnsafeInline, !styleSrcAllowsUnsafeInline);
             // Process inline styles and event handlers for CSP compliance
             // Only process if unsafe-inline is NOT allowed (since browser already allows them)
-            if (scriptSrcAllowsUnsafeInline == false) {
-                capturedContent = processInlineEventHandlers(capturedContent, cspNonce);
-            }
             if (styleSrcAllowsUnsafeInline == false) {
                 capturedContent = processInlineStyles(capturedContent, cspNonce);
+            }
+            if (scriptSrcAllowsUnsafeInline == false) {
+                capturedContent = processInlineEventHandlers(capturedContent, cspNonce);
             }
         }
 
@@ -2014,7 +2014,7 @@ private static String combineCss(String cssStyle)
         // Find all inline event handlers (onclick, onmouseover, onmouseout, onfocus, onblur, etc.)
         // Handles both double and single quotes
         java.util.regex.Pattern eventPattern = java.util.regex.Pattern.compile(
-            "(\\s+(onclick|onmouseover|onmouseout|onfocus|onblur|onkeydown|onkeyup|onsubmit|onchange|oninput|ondblclick|oncontextmenu|ondrag|ondrop)\\s*=\\s*)(\"([^\"]*)\")|(\\s+(onclick|onmouseover|onmouseout|onfocus|onblur|onkeydown|onkeyup|onsubmit|onchange|oninput|ondblclick|oncontextmenu|ondrop)\\s*=\\s*)('([^']*)')",
+            "(\\s+(onclick|onmouseover|onmouseout|onfocus|onblur|onkeydown|onkeyup|onsubmit|onchange|oninput|ondblclick|oncontextmenu|ondrag|ondrop)\\s*=\\s*)(\"([^\"]*)\")|(\\s+(onclick|onmouseover|onmouseout|onfocus|onblur|onkeydown|onkeyup|onsubmit|onchange|oninput|ondblclick|oncontextmenu|ondrop)\\s*=\\s*)('([^']*)')", //NOSONAR
             java.util.regex.Pattern.CASE_INSENSITIVE
         );
         java.util.regex.Matcher matcher = eventPattern.matcher(htmlContent);
@@ -2108,6 +2108,7 @@ private static String combineCss(String cssStyle)
         }
         // Check if 'unsafe-inline' appears within this directive's value
         String directiveValue = cspValue.substring(valueStart, directiveEnd);
-        return directiveValue.indexOf("unsafe-inline") >= 0;
+        if (directiveValue.contains("{nonce}")) return false;
+        return directiveValue.contains("unsafe-inline");
     }
 }
