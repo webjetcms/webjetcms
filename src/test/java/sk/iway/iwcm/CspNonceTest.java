@@ -149,14 +149,15 @@ class CspNonceTest extends BaseWebjetTest {
 		when(mockRequest.getSession()).thenReturn(mockSession);
 		SetCharacterEncodingFilter.registerDataContext(mockRequest);
 
+		String expectedNonce = SetCharacterEncodingFilter.getCurrentRequestBean().getCspNonce();
 		HttpServletResponse mockResponse = mock(HttpServletResponse.class);
 		PathFilter.setHeader(mockResponse, "Content-Security-Policy", "contentSecurityPolicy");
 
-		// Verify the header was set with the nonce replaced
+		// Verify the header was set with the nonce replaced by 'nonce-<value>' (CSP source expression format)
 		verify(mockResponse).setHeader(eq("Content-Security-Policy"), argThat(value ->
 			value.contains("default-src 'self'") &&
 			value.contains("script-src 'self'") &&
-			value.contains(SetCharacterEncodingFilter.getCurrentRequestBean().getCspNonce()) &&
+			value.contains("'nonce-" + expectedNonce + "'") &&
 			!value.contains("{nonce}")
 		));
 	}

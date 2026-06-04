@@ -2419,10 +2419,10 @@ public class PathFilter implements Filter
 		value = Tools.replace(value, "\r", " ");
 		value = Tools.replace(value, "\n", " ");
 
-		// Replace {nonce} placeholder with actual nonce from current request
+		// Replace {nonce} placeholder with CSP nonce source expression ('nonce-<value>')
 		RequestBean currentRequestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
 		if (currentRequestBean != null && Tools.isNotEmpty(currentRequestBean.getCspNonce())) {
-			value = Tools.replace(value, "{nonce}", currentRequestBean.getCspNonce());
+			value = Tools.replace(value, "{nonce}", "'nonce-" + currentRequestBean.getCspNonce() + "'");
 		}
 
 		response.setHeader(headerName, value);

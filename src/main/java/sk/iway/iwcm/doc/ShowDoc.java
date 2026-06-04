@@ -1813,8 +1813,14 @@ private static String combineCss(String cssStyle)
     private void forwardWithBodyProcessing(String forward, HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        if (StyleToHeadHelper.isMoveStyleToHeadEnabled(request)==false) {
-            // Feature disabled, use standard forward
+        // Check if body processing is needed (either style-to-head or CSP nonce injection)
+        boolean needsStyleProcessing = StyleToHeadHelper.isMoveStyleToHeadEnabled(request);
+        boolean needsCspNonce = SetCharacterEncodingFilter.getCurrentRequestBean() != null
+                && Tools.isNotEmpty(SetCharacterEncodingFilter.getCurrentRequestBean().getCspNonce());
+        boolean needsProcessing = needsStyleProcessing || needsCspNonce;
+
+        if (!needsProcessing) {
+            // No body processing needed, use standard forward
             request.getRequestDispatcher(forward).forward(request, response);
             return;
         }
@@ -1852,7 +1858,7 @@ private static String combineCss(String cssStyle)
         // Get the captured content
         String capturedContent = responseWrapper.getCapturedContent();
 
-        // Inject CSP nonce into <script> tags
+        // Inject CSP nonce into <script>, <style>, and <link> tags
         String cspNonce = SetCharacterEncodingFilter.getCurrentRequestBean() != null
                 ? SetCharacterEncodingFilter.getCurrentRequestBean().getCspNonce()
                 : null;
@@ -1861,7 +1867,7 @@ private static String combineCss(String cssStyle)
         }
 
         // Check if we have collected styles to insert
-        if (StyleToHeadHelper.hasCollectedStyles(request) && Tools.isNotEmpty(capturedContent)) {
+        if (needsStyleProcessing && StyleToHeadHelper.hasCollectedStyles(request) && Tools.isNotEmpty(capturedContent)) {
             // Insert styles into head section
             String styles = StyleToHeadHelper.getCollectedStyles(request);
             String processedHtml = StyleToHeadHelper.insertStylesIntoHead(capturedContent, styles);
