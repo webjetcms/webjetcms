@@ -38,9 +38,9 @@ public final class NonceHelper {
         // Use StringBuilder (no synchronization overhead) with initial capacity
         StringBuilder sb = new StringBuilder(htmlContent.length());
         // Pre-compile patterns for each tag type (includes closing '>' to handle plain tags like <style>)
-        java.util.regex.Pattern scriptPattern = java.util.regex.Pattern.compile("(<script)(\\s+[^>]*)?>");
-        java.util.regex.Pattern stylePattern = java.util.regex.Pattern.compile("(<style)(\\s+[^>]*)?>");
-        java.util.regex.Pattern linkPattern = java.util.regex.Pattern.compile("(<link)(\\s+[^>]*)?>");
+        java.util.regex.Pattern scriptPattern = java.util.regex.Pattern.compile("(<script)(\\s+[^>]*)?>", java.util.regex.Pattern.CASE_INSENSITIVE);
+        java.util.regex.Pattern stylePattern = java.util.regex.Pattern.compile("(<style)(\\s+[^>]*)?>", java.util.regex.Pattern.CASE_INSENSITIVE);
+        java.util.regex.Pattern linkPattern = java.util.regex.Pattern.compile("(<link)(\\s+[^>]*)?>", java.util.regex.Pattern.CASE_INSENSITIVE);
         int lastEnd = 0;
         while (matcher.find()) {
             // Append text before this match
@@ -118,6 +118,8 @@ public final class NonceHelper {
         String injectPoint = tagContent;
         if (tagMatcher.find()) {
             String attributes = tagMatcher.group(2);
+            //
+            attributes = attributes.replaceAll("\\s*/\\s*$", "");
             if (Tools.isNotEmpty(attributes)) {
                 injectPoint = tagName + attributes + " nonce=\"" + nonce + "\"";
             } else {
@@ -168,7 +170,7 @@ public final class NonceHelper {
                 styleValue = matcher.group(6); // single-quoted value
             }
 
-            String dataAttr = quotePrefix.replace("style", "data-inline-style") + "\"nonce" + styleCounter + "\"";
+            String dataAttr = quotePrefix.replaceAll("(?i)style", "data-inline-style") + "\"nonce" + styleCounter + "\"";
 
             // Append text before this match
             processedHtml.append(htmlContent, lastEnd, matcher.start());
@@ -263,7 +265,7 @@ public final class NonceHelper {
             int counter = eventCounters.getOrDefault(eventType, 0) + 1;
             eventCounters.put(eventType, counter);
 
-            String dataAttr = quotePrefix.replace(eventType, "data-inline-" + eventType) + "\"nonce" + counter + "\"";
+            String dataAttr = quotePrefix.replaceAll("(?i)" + eventType, "data-inline-" + eventType) + "\"nonce" + counter + "\"";
 
             // Append text before this match
             processedHtml.append(htmlContent, lastEnd, matcher.start());
