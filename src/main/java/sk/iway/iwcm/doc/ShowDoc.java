@@ -1710,114 +1710,93 @@ private static String combineCss(String cssStyle)
      * @param nonce The CSP nonce value to inject
     * @return HTML content with nonce injected into script tags
      */
+    /**
+     * Injects CSP nonce into <script>, <style>, and <link rel="stylesheet"> tags in a single pass.
+     * Optimized for memory efficiency: uses single StringBuilder, processes all tag types in one pass.
+     */
     private String injectCspNonceIntoTags(String htmlContent, String nonce) {
         if (Tools.isEmpty(htmlContent) || Tools.isEmpty(nonce)) {
             return htmlContent;
         }
-        String result = injectNonceIntoScriptTags(htmlContent, nonce);
-        result = injectNonceIntoStyleTags(result, nonce);
-        result = injectNonceIntoLinkTags(result, nonce);
-        return result;
-    }
-
-    /**
-     * Injects CSP nonce into <script> tags.
-     */
-    private String injectNonceIntoScriptTags(String htmlContent, String nonce) {
-        // Match only opening <script> tags (not closing </script>), with optional attributes
-        // Handles: <script>, <script defer>, <script type="...">, etc.
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(<script[^>]*?)>", java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.DOTALL);
+        // Single regex pattern to match all three tag types (script, style, link)
+        // Uses alternation to match any of: <script..., <style..., <link...rel="stylesheet"...>
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
+            "(<script[^>]*?>)|(<style[^>]*?>)|(<link\\b[^>]*?rel\\s*=\\s*(?:\"stylesheet\"|'stylesheet'|stylesheet)[^>]*?>)",
+            java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.DOTALL
+        );
         java.util.regex.Matcher matcher = pattern.matcher(htmlContent);
-        StringBuffer sb = new StringBuffer();
+        // Use StringBuilder (no synchronization overhead) with initial capacity
+        StringBuilder sb = new StringBuilder(htmlContent.length());
+        // Pre-compile patterns for each tag type
         java.util.regex.Pattern scriptPattern = java.util.regex.Pattern.compile("(<script)(\\s+[^>]*)?");
-        while (matcher.find()) {
-            String tagContent = matcher.group(1);
-            // Check if nonce is already present
-            if (tagContent.toLowerCase().contains("nonce=")) {
-                matcher.appendReplacement(sb, matcher.group(0));
-            } else {
-                // Inject nonce attribute after existing attributes (or after "script")
-                java.util.regex.Matcher scriptMatcher = scriptPattern.matcher(tagContent);
-                String injectPoint = tagContent;
-                if (scriptMatcher.find()) {
-                    String attributes = scriptMatcher.group(2);
-                    if (Tools.isNotEmpty(attributes)) {
-                        injectPoint = "<script" + attributes + " nonce=\"" + nonce + "\"";
-                    } else {
-                        injectPoint = "<script nonce=\"" + nonce + "\"";
-                    }
-                }
-                matcher.appendReplacement(sb, injectPoint + ">");
-            }
-        }
-        matcher.appendTail(sb);
-        return sb.toString();
-    }
-
-    /**
-     * Injects CSP nonce into <style> tags.
-     */
-    private String injectNonceIntoStyleTags(String htmlContent, String nonce) {
-        // Match only opening <style> tags (not closing </style>), with optional attributes
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(<style[^>]*?)>", java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.DOTALL);
-        java.util.regex.Matcher matcher = pattern.matcher(htmlContent);
-        StringBuffer sb = new StringBuffer();
         java.util.regex.Pattern stylePattern = java.util.regex.Pattern.compile("(<style)(\\s+[^>]*)?");
+        java.util.regex.Pattern linkPattern = java.util.regex.Pattern.compile("(<link)(\\s+[^>]*)?");
+        int lastEnd = 0;
         while (matcher.find()) {
-            String tagContent = matcher.group(1);
-            // Check if nonce is already present
-            if (tagContent.toLowerCase().contains("nonce=")) {
-                matcher.appendReplacement(sb, matcher.group(0));
-            } else {
-                // Inject nonce attribute after existing attributes (or after "style")
-                java.util.regex.Matcher styleMatcher = stylePattern.matcher(tagContent);
-                String injectPoint = tagContent;
-                if (styleMatcher.find()) {
-                    String attributes = styleMatcher.group(2);
-                    if (Tools.isNotEmpty(attributes)) {
-                        injectPoint = "<style" + attributes + " nonce=\"" + nonce + "\"";
-                    } else {
-                        injectPoint = "<style nonce=\"" + nonce + "\"";
-                    }
-                }
-                matcher.appendReplacement(sb, injectPoint + ">");
-            }
+            // Append text before this match
+            sb.append(htmlContent, lastEnd, matcher.start());
+            String tagContent = matcher.group(0);
+            // Determine which tag type and inject nonce
+            String processedTag = processTagForNonce(tagContent, nonce, scriptPattern, stylePattern, linkPattern);
+            sb.append(processedTag);
+            lastEnd = matcher.end();
         }
-        matcher.appendTail(sb);
+        // Append remaining text after last match
+        sb.append(htmlContent, lastEnd, htmlContent.length());
         return sb.toString();
     }
 
     /**
-     * Injects CSP nonce into <link rel="stylesheet"> tags.
+     * Processes a single tag (script, style, or link) to inject nonce if not already present.
      */
-    private String injectNonceIntoLinkTags(String htmlContent, String nonce) {
-        // Match <link> tags with rel="stylesheet" (case-insensitive), handling single/double/no quotes
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(<link\\b[^>]*?rel\\s*=\\s*(?:\"stylesheet\"|'stylesheet'|stylesheet)[^>]*?)>", java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.DOTALL);
-        java.util.regex.Matcher matcher = pattern.matcher(htmlContent);
-        StringBuffer sb = new StringBuffer();
-        java.util.regex.Pattern linkPattern = java.util.regex.Pattern.compile("(<link)(\\s+[^>]*)?");
-        while (matcher.find()) {
-            String tagContent = matcher.group(1);
-            // Check if nonce is already present
-            if (tagContent.toLowerCase().contains("nonce=")) {
-                matcher.appendReplacement(sb, matcher.group(0));
+    private String processTagForNonce(String tagContent, String nonce, java.util.regex.Pattern scriptPattern,
+                                      java.util.regex.Pattern stylePattern, java.util.regex.Pattern linkPattern) {
+        // Check if nonce is already present
+        if (tagContent.toLowerCase().contains("nonce=")) {
+            return tagContent;
+        }
+        // Extract tag name (handles both <script> and <script type="...">)
+        // Find the end of the tag name (space or '>')
+        int gtIndex = tagContent.indexOf('>');
+        int spaceIndex = tagContent.indexOf(' ');
+        int nameEnd;
+        if (spaceIndex < 0) {
+            nameEnd = gtIndex;
+        } else if (gtIndex < 0) {
+            nameEnd = spaceIndex;
+        } else {
+            nameEnd = Math.min(spaceIndex, gtIndex);
+        }
+        if (nameEnd < 0) {
+            return tagContent;
+        }
+        String tagName = tagContent.substring(0, nameEnd).toLowerCase();
+        java.util.regex.Pattern tagSpecificPattern;
+        switch (tagName) {
+            case "<script":
+                tagSpecificPattern = scriptPattern;
+                break;
+            case "<style":
+                tagSpecificPattern = stylePattern;
+                break;
+            case "<link":
+                tagSpecificPattern = linkPattern;
+                break;
+            default:
+                return tagContent;
+        }
+        // Inject nonce attribute after existing attributes (or after tag name)
+        java.util.regex.Matcher tagMatcher = tagSpecificPattern.matcher(tagContent);
+        String injectPoint = tagContent;
+        if (tagMatcher.find()) {
+            String attributes = tagMatcher.group(2);
+            if (Tools.isNotEmpty(attributes)) {
+                injectPoint = tagName + attributes + " nonce=\"" + nonce + "\"";
             } else {
-                // Inject nonce attribute after existing attributes (or after "link")
-                java.util.regex.Matcher linkMatcher = linkPattern.matcher(tagContent);
-                String injectPoint = tagContent;
-                if (linkMatcher.find()) {
-                    String attributes = linkMatcher.group(2);
-                    if (Tools.isNotEmpty(attributes)) {
-                        injectPoint = "<link" + attributes + " nonce=\"" + nonce + "\"";
-                    } else {
-                        injectPoint = "<link nonce=\"" + nonce + "\"";
-                    }
-                }
-                matcher.appendReplacement(sb, injectPoint + ">");
+                injectPoint = tagName + " nonce=\"" + nonce + "\"";
             }
         }
-        matcher.appendTail(sb);
-        return sb.toString();
+        return injectPoint + ">";
     }
 
     /**

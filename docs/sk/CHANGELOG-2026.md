@@ -35,6 +35,10 @@
 - V riadiacej doméne je možné upravovať všetky presmerovania domén.
 - V riadiacej doméne pridaná možnosť zobraziť všetky súbory.
 
+### Bezpečnosť
+
+- Pridaná podpora generovania `nonce` pre `Content-Security-Policy` hlavičku. Ak konfigurácia `contentSecurityPolicy` obsahuje `{nonce}` symbol, automaticky sa vygeneruje unikátny kryptograficky bezpečný `nonce` a pridá sa do všetkých `<script>`, `<style>` a `<link rel="stylesheet">` značiek v HTML výstupe aj do `Content-Security-Policy` hlavičky (#58533).
+
 ### Dokumentácia
 
 - Vytvorená nová sekcia [Prehľad nových vlastností](sales/README.md) ktorá obsahuje opisy nových vlastností a **funkcionalít WebJET CMS zrozumiteľným jazykom**, bez zbytočne technických formulácií (#58505).
@@ -43,7 +47,6 @@
 ### Pre programátora
 
 - Dátové tabuľky - pridaný nový typ poľa `OPTIONS` pre [dynamický zoznam hodnôt](developer/datatables-editor/standard-fields.md#options) v editore. Každý riadok obsahuje dva textové polia (kľúč a hodnota), podporuje pridávanie, odoberanie a zmenu poradia pomocou `drag & drop` (#58517).
-- Bezpečnosť - pridaná podpora generovania `nonce` pre `Content-Security-Policy` hlavičku. Ak konfigurácia `contentSecurityPolicy` obsahuje `{nonce}` placeholder, automaticky sa vygeneruje unikátny kryptograficky bezpečný nonce a vstrekne sa do všetkých `<script>`, `<style>` a `<link rel="stylesheet">` značiek v HTML výstupe aj do CSP hlavičky (#58533). Pridané JUnit testy pre overenie funkcionity (31 testov).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced.png)
 
