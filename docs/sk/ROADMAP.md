@@ -26,6 +26,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] Zmazať pridružené súbory k web stránke keď ju zmažem - spýtať sa ale vopred používateľa, či súbory chce zmazať. Kontrolovať, či sa nepoužívajú niekde inde.
 - [ ] Mazanie dát - pridať možnosť mazať stránky a priečinky z koša. Vyriešiť aj možnosť mazanie dát spúšťať ako automatizovanú úlohu.
 - [ ] Nepoužívané súbory - spraviť možnosť získať zoznam nepoužívaných súborov - nikde v stránke sa nepoužívajú, ani v médiach atď. Bola na to API `FileTools.getDirFileUsage(currentDir, request)`. Pridať ako kartu do vlastností priečinka v prieskumníku.
+- [ ] Prieskumník - zamedziť prácu s priečinku pre Manažér dokumentov, aby sa so súbormi nedalo manipulovať mimo Manažér dokumentov.
 
 ## 2025
 
