@@ -35,6 +35,10 @@
 - V riadiacej doméne je možné upravovať všetky presmerovania domén.
 - V riadiacej doméne pridaná možnosť zobraziť všetky súbory.
 
+### Bezpečnosť
+
+- Pridaná podpora generovania `nonce` pre [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
+
 ### Dokumentácia
 
 - Vytvorená nová sekcia [Prehľad nových vlastností](sales/README.md) ktorá obsahuje opisy nových vlastností a **funkcionalít WebJET CMS zrozumiteľným jazykom**, bez zbytočne technických formulácií (#58505).

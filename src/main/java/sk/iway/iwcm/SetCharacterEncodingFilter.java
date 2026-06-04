@@ -77,6 +77,8 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 
    public static final String PDF_PRINT_PARAM = "_printAsPdf";
 
+   private static final java.security.SecureRandom SECURE_RANDOM = new java.security.SecureRandom();
+
    //customizovana error hlaska pri nedostupnosti DB spojenia pri starte servera
    private static Map<String, String> dbErrorMessageText = new Hashtable<>();
    static {
@@ -118,9 +120,8 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
    public static void registerDataContext(ServletRequest req)
    {
    	//iba HttpServletRequest ma session
-		if (req instanceof HttpServletRequest)
+		if (req instanceof HttpServletRequest request)
 		{
-			HttpServletRequest request = (HttpServletRequest)req;
 			registerDataContext(request);
 		}
    }
@@ -196,6 +197,29 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 		}
 
 		requests.put(Thread.currentThread().getId(), requestBean);
+		// Generate CSP nonce for this request
+		requestBean.setCspNonce(generateCspNonce());
+   }
+
+	/**
+	 * Generate a cryptographically secure random nonce for Content-Security-Policy.
+	 * Only generates nonce if contentSecurityPolicy configuration contains {nonce} placeholder.
+	 * Returns base64-encoded random bytes (standard CSP nonce format).
+	 * @return base64-encoded nonce string, or null if no {nonce} placeholder found
+	 */
+	private static String generateCspNonce() {
+		String cspValue = Constants.getString("contentSecurityPolicy");
+		if (Tools.isEmpty(cspValue) || !cspValue.contains("{nonce}")) {
+			return null;
+		}
+		try {
+			byte[] bytes = new byte[16];
+			SECURE_RANDOM.nextBytes(bytes);
+			return java.util.Base64.getEncoder().withoutPadding().encodeToString(bytes);
+		} catch (Exception e) {
+			Logger.error(SetCharacterEncodingFilter.class, "Failed to generate CSP nonce", e);
+			return null;
+		}
    }
 
    /**
@@ -599,7 +623,7 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 			}
 		}
 
-   	PathFilter.setHeader(res, "X-Frame-Options", "xFrameOptions");
+   		PathFilter.setHeader(res, "X-Frame-Options", "xFrameOptions");
 		PathFilter.setAccessControlAllowOrigin(path, res);
 		PathFilter.setHeader(res, "X-XSS-Protection", "xXssProtection");
 		PathFilter.setHeader(res, "Server", "serverName");
@@ -612,7 +636,11 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 			//pre SVG mame separe CSP hlavicky
 			PathFilter.setHeader(res, "Content-Security-Policy", "contentSecurityPolicySvg");
 		} else {
-			PathFilter.setHeader(res, "Content-Security-Policy", "contentSecurityPolicy");
+			String cspValue = Constants.getString("contentSecurityPolicy");
+			if (Tools.isNotEmpty(cspValue) && cspValue.contains("{nonce}")==false) {
+				//if CSP contains {nonce} placeholder, it will be set in ShowDoc.java after replacing {nonce} with actual value
+				PathFilter.setHeader(res, "Content-Security-Policy", "contentSecurityPolicy");
+			}
 		}
 		PathFilter.setHeader(res, "Referrer-Policy", "refererPolicy");
 
@@ -644,8 +672,7 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 	 */
    private void checkSessionSerializable(ServletRequest servletRequest) throws ObjectNotSerializableException
 	{
-		if (servletRequest instanceof HttpServletRequest) {
-		   HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
+		if (servletRequest instanceof HttpServletRequest httpRequest) {
 		   HttpSession session = httpRequest.getSession(false);
 		   if (session != null) {
 		       boolean serializable = true;
@@ -658,7 +685,7 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 		                   attrName, Tools.sessionGetAttribute(session, attrName)
 		           );
 		           if (!attributeSerializable) {
-		               if (items.length() > 0) {
+		               if (items.isEmpty() == false) {
 		                   items.append(", ");
 		               }
 		               items.append(attrName);
@@ -902,7 +929,7 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 			String principalName = Tools.getUserPrincipal(req).getName();
 			//Logger.debug(getClass(), "Parsing login from user principal...["+principalName+"]");
 			String userNameFromPrincipal = principalName.substring( principalName.indexOf('\\') + 1 );
-			///userNameFromPrincipal = userNameFromPrincipal.substring(0, userNameFromPrincipal.length());
+			//userNameFromPrincipal = userNameFromPrincipal.substring(0, userNameFromPrincipal.length());
 			//Logger.debug(getClass(), "Parsed '"+userNameFromPrincipal+"'");
 			return userNameFromPrincipal;
 		}
