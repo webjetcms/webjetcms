@@ -623,7 +623,7 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 			}
 		}
 
-   	PathFilter.setHeader(res, "X-Frame-Options", "xFrameOptions");
+   		PathFilter.setHeader(res, "X-Frame-Options", "xFrameOptions");
 		PathFilter.setAccessControlAllowOrigin(path, res);
 		PathFilter.setHeader(res, "X-XSS-Protection", "xXssProtection");
 		PathFilter.setHeader(res, "Server", "serverName");
@@ -636,7 +636,11 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 			//pre SVG mame separe CSP hlavicky
 			PathFilter.setHeader(res, "Content-Security-Policy", "contentSecurityPolicySvg");
 		} else {
-			PathFilter.setHeader(res, "Content-Security-Policy", "contentSecurityPolicy");
+			String cspValue = Constants.getString("contentSecurityPolicy");
+			if (Tools.isNotEmpty(cspValue) && cspValue.contains("{nonce}")==false) {
+				//if CSP contains {nonce} placeholder, it will be set in ShowDoc.java after replacing {nonce} with actual value
+				PathFilter.setHeader(res, "Content-Security-Policy", "contentSecurityPolicy");
+			}
 		}
 		PathFilter.setHeader(res, "Referrer-Policy", "refererPolicy");
 

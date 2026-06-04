@@ -1727,10 +1727,10 @@ private static String combineCss(String cssStyle)
         java.util.regex.Matcher matcher = pattern.matcher(htmlContent);
         // Use StringBuilder (no synchronization overhead) with initial capacity
         StringBuilder sb = new StringBuilder(htmlContent.length());
-        // Pre-compile patterns for each tag type
-        java.util.regex.Pattern scriptPattern = java.util.regex.Pattern.compile("(<script)(\\s+[^>]*)?");
-        java.util.regex.Pattern stylePattern = java.util.regex.Pattern.compile("(<style)(\\s+[^>]*)?");
-        java.util.regex.Pattern linkPattern = java.util.regex.Pattern.compile("(<link)(\\s+[^>]*)?");
+        // Pre-compile patterns for each tag type (includes closing '>' to handle plain tags like <style>)
+        java.util.regex.Pattern scriptPattern = java.util.regex.Pattern.compile("(<script)(\\s+[^>]*)?>");
+        java.util.regex.Pattern stylePattern = java.util.regex.Pattern.compile("(<style)(\\s+[^>]*)?>");
+        java.util.regex.Pattern linkPattern = java.util.regex.Pattern.compile("(<link)(\\s+[^>]*)?>");
         int lastEnd = 0;
         while (matcher.find()) {
             // Append text before this match
@@ -1858,14 +1858,6 @@ private static String combineCss(String cssStyle)
         // Get the captured content
         String capturedContent = responseWrapper.getCapturedContent();
 
-        // Inject CSP nonce into <script>, <style>, and <link> tags
-        String cspNonce = SetCharacterEncodingFilter.getCurrentRequestBean() != null
-                ? SetCharacterEncodingFilter.getCurrentRequestBean().getCspNonce()
-                : null;
-        if (Tools.isNotEmpty(capturedContent) && Tools.isNotEmpty(cspNonce)) {
-            capturedContent = injectCspNonceIntoTags(capturedContent, cspNonce);
-        }
-
         // Check if we have collected styles to insert
         if (needsStyleProcessing && StyleToHeadHelper.hasCollectedStyles(request) && Tools.isNotEmpty(capturedContent)) {
             // Insert styles into head section
@@ -1874,6 +1866,15 @@ private static String combineCss(String cssStyle)
 
             // Write processed content to original response
             capturedContent = processedHtml;
+        }
+
+        // Inject CSP nonce into <script>, <style>, and <link> tags
+        String cspNonce = SetCharacterEncodingFilter.getCurrentRequestBean() != null
+                ? SetCharacterEncodingFilter.getCurrentRequestBean().getCspNonce()
+                : null;
+        if (Tools.isNotEmpty(capturedContent) && Tools.isNotEmpty(cspNonce)) {
+            PathFilter.setHeader(response, "Content-Security-Policy", "contentSecurityPolicy");
+            capturedContent = injectCspNonceIntoTags(capturedContent, cspNonce);
         }
 
         if (capturedContent != null) {
