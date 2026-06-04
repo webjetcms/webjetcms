@@ -1875,6 +1875,9 @@ private static String combineCss(String cssStyle)
         if (Tools.isNotEmpty(capturedContent) && Tools.isNotEmpty(cspNonce)) {
             PathFilter.setHeader(response, "Content-Security-Policy", "contentSecurityPolicy");
             capturedContent = injectCspNonceIntoTags(capturedContent, cspNonce);
+            // Process inline styles and event handlers for CSP compliance
+            capturedContent = processInlineStyles(capturedContent, cspNonce);
+            capturedContent = processInlineEventHandlers(capturedContent, cspNonce);
         }
 
         if (capturedContent != null) {
@@ -1885,5 +1888,170 @@ private static String combineCss(String cssStyle)
 
         // Clear collected styles
         StyleToHeadHelper.clearCollectedStyles(request);
+    }
+
+    /**
+     * Processes inline styles by replacing them with data attributes and injecting CSS rules with nonce.
+     * For elements with inline style="...", replaces with data-inline-style="counter" and generates
+     * CSS rules like [data-inline-style="1"] { property: value !important; }.
+     *
+     * @param htmlContent The HTML content
+     * @param nonce The CSP nonce
+     * @return Processed HTML with inline styles replaced and CSS injected
+     */
+    private String processInlineStyles(String htmlContent, String nonce) {
+        if (Tools.isEmpty(htmlContent) || Tools.isEmpty(nonce)) {
+            return htmlContent;
+        }
+
+        // Find all elements with inline style attributes (handles both double and single quotes)
+        java.util.regex.Pattern stylePattern = java.util.regex.Pattern.compile(
+            "(\\s+style\\s*=\\s*)(\"([^\"]*)\")|(\\s+style\\s*=\\s*)('([^']*)')",
+            java.util.regex.Pattern.CASE_INSENSITIVE
+        );
+        java.util.regex.Matcher matcher = stylePattern.matcher(htmlContent);
+
+        StringBuilder cssRules = new StringBuilder();
+        int styleCounter = 0;
+        StringBuilder processedHtml = new StringBuilder(htmlContent.length());
+        int lastEnd = 0;
+
+        while (matcher.find()) {
+            styleCounter++;
+            String quotePrefix;
+            String styleValue;
+
+            // Determine which quote style was used (group 1 = double-quoted prefix, group 4 = single-quoted prefix)
+            if (matcher.group(1) != null) {
+                quotePrefix = matcher.group(1);
+                styleValue = matcher.group(3); // double-quoted value
+            } else {
+                quotePrefix = matcher.group(4);
+                styleValue = matcher.group(6); // single-quoted value
+            }
+
+            String dataAttr = quotePrefix.replace("style", "data-inline-style") + "\"nonce" + styleCounter + "\"";
+
+            // Append text before this match
+            processedHtml.append(htmlContent, lastEnd, matcher.start());
+            processedHtml.append(dataAttr);
+
+            // Generate CSS rule with !important for each property
+            cssRules.append("       [data-inline-style=\"nonce").append(styleCounter).append("\"] {");
+
+            // Parse CSS properties and add !important to each
+            String[] properties = styleValue.split(";");
+            for (String prop : properties) {
+                String trimmed = prop.trim();
+                if (Tools.isNotEmpty(trimmed) && trimmed.contains(":")) {
+                    // Remove trailing semicolon if present, then append " !important;"
+                    String propPart = trimmed.endsWith(";") ? trimmed.substring(0, trimmed.length() - 1) : trimmed;
+                    cssRules.append(propPart).append(" !important;");
+                }
+            }
+            cssRules.append("}\n");
+
+            lastEnd = matcher.end();
+        }
+
+        // Append remaining text
+        processedHtml.append(htmlContent, lastEnd, htmlContent.length());
+
+        // If we found inline styles, inject CSS with nonce
+        if (styleCounter > 0) {
+            String styleInjection = "\n<style nonce=\"" + nonce + "\">\n" + cssRules.toString() + "</style>\n";
+            // Find the closing </body> tag and insert before it, or append at end
+            int bodyCloseIndex = processedHtml.lastIndexOf("</body>");
+            if (bodyCloseIndex > 0) {
+                processedHtml.insert(bodyCloseIndex, styleInjection);
+            } else {
+                processedHtml.append(styleInjection);
+            }
+        }
+
+        return processedHtml.toString();
+    }
+
+    /**
+     * Processes inline event handlers by replacing them with data attributes and injecting JavaScript with nonce.
+     * For elements with inline event handlers (onclick, onmouseover, etc.), replaces with
+     * data-inline-onclick="counter" and generates JavaScript code to restore the handlers.
+     *
+     * @param htmlContent The HTML content
+     * @param nonce The CSP nonce
+     * @return Processed HTML with inline event handlers replaced and JavaScript injected
+     */
+    private String processInlineEventHandlers(String htmlContent, String nonce) {
+        if (Tools.isEmpty(htmlContent) || Tools.isEmpty(nonce)) {
+            return htmlContent;
+        }
+
+        // Find all inline event handlers (onclick, onmouseover, onmouseout, onfocus, onblur, etc.)
+        // Handles both double and single quotes
+        java.util.regex.Pattern eventPattern = java.util.regex.Pattern.compile(
+            "(\\s+(onclick|onmouseover|onmouseout|onfocus|onblur|onkeydown|onkeyup|onsubmit|onchange|oninput|ondblclick|oncontextmenu|ondrag|ondrop)\\s*=\\s*)(\"([^\"]*)\")|(\\s+(onclick|onmouseover|onmouseout|onfocus|onblur|onkeydown|onkeyup|onsubmit|onchange|oninput|ondblclick|oncontextmenu|ondrop)\\s*=\\s*)('([^']*)')",
+            java.util.regex.Pattern.CASE_INSENSITIVE
+        );
+        java.util.regex.Matcher matcher = eventPattern.matcher(htmlContent);
+
+        StringBuilder jsCode = new StringBuilder();
+        java.util.Map<String, Integer> eventCounters = new java.util.HashMap<>();
+        StringBuilder processedHtml = new StringBuilder(htmlContent.length());
+        int lastEnd = 0;
+
+        while (matcher.find()) {
+            String quotePrefix;
+            String eventType;
+            String handlerValue;
+
+            // Determine which quote style was used
+            if (matcher.group(1) != null) {
+                quotePrefix = matcher.group(1);
+                eventType = matcher.group(2).toLowerCase();
+                handlerValue = matcher.group(4); // double-quoted
+            } else {
+                quotePrefix = matcher.group(5);
+                eventType = matcher.group(6).toLowerCase();
+                handlerValue = matcher.group(8); // single-quoted
+            }
+
+            //unfilter values
+            handlerValue = handlerValue.replace("&#39;", "'");
+            handlerValue = handlerValue.replace("&quot;", "\"");
+
+            // Get or create counter for this event type
+            int counter = eventCounters.getOrDefault(eventType, 0) + 1;
+            eventCounters.put(eventType, counter);
+
+            String dataAttr = quotePrefix.replace(eventType, "data-inline-" + eventType) + "\"nonce" + counter + "\"";
+
+            // Append text before this match
+            processedHtml.append(htmlContent, lastEnd, matcher.start());
+            processedHtml.append(dataAttr);
+
+            // Generate JavaScript to restore the event handler
+            jsCode.append("       document.querySelectorAll('[data-inline-").append(eventType).append("=\"nonce").append(counter).append("\"]').forEach(function(el) {");
+            jsCode.append("el.").append(eventType).append(" = function(event) {").append(handlerValue).append(";};");
+            jsCode.append("});\n");
+
+            lastEnd = matcher.end();
+        }
+
+        // Append remaining text
+        processedHtml.append(htmlContent, lastEnd, htmlContent.length());
+
+        // If we found inline event handlers, inject JavaScript with nonce
+        if (!eventCounters.isEmpty()) {
+            String scriptInjection = "\n<script nonce=\"" + nonce + "\">\n" + jsCode.toString() + "</script>\n";
+            // Find the closing </body> tag and insert before it, or append at end
+            int bodyCloseIndex = processedHtml.lastIndexOf("</body>");
+            if (bodyCloseIndex > 0) {
+                processedHtml.insert(bodyCloseIndex, scriptInjection);
+            } else {
+                processedHtml.append(scriptInjection);
+            }
+        }
+
+        return processedHtml.toString();
     }
 }
