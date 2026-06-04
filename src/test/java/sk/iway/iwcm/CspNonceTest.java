@@ -131,8 +131,13 @@ class CspNonceTest extends BaseWebjetTest {
 
 	@Test
 	void testSetHeaderNoNoncePlaceholderWhenDisabled() {
-		Constants.setBoolean("cspNonceEnabled", false);
 		Constants.setString("contentSecurityPolicy", "default-src 'self'");
+
+		HttpSession mockSession = mock(HttpSession.class);
+		when(mockSession.getId()).thenReturn("test-session-id");
+		HttpServletRequest mockRequest = mock(HttpServletRequest.class);
+		when(mockRequest.getSession()).thenReturn(mockSession);
+		SetCharacterEncodingFilter.registerDataContext(mockRequest);
 
 		HttpServletResponse mockResponse = mock(HttpServletResponse.class);
 		PathFilter.setHeader(mockResponse, "Content-Security-Policy", "contentSecurityPolicy");
@@ -588,5 +593,156 @@ class CspNonceTest extends BaseWebjetTest {
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to invoke processInlineEventHandlers", e);
 		}
+	}
+
+	// ==================== Helper methods for isUnsafeInlineAllowedInCsp ====================
+
+	private boolean isUnsafeInlineAllowedInCsp(String cspValue) {
+		try {
+			java.lang.reflect.Method method = ShowDoc.class.getDeclaredMethod("isUnsafeInlineAllowedInCsp", String.class);
+			method.setAccessible(true);
+			return (Boolean) method.invoke(null, cspValue);
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to invoke isUnsafeInlineAllowedInCsp", e);
+		}
+	}
+
+	private boolean isDirectiveAllowsUnsafeInline(String cspValue, String directiveName) {
+		try {
+			java.lang.reflect.Method method = ShowDoc.class.getDeclaredMethod("isDirectiveAllowsUnsafeInline", String.class, String.class);
+			method.setAccessible(true);
+			return (Boolean) method.invoke(null, cspValue, directiveName);
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to invoke isDirectiveAllowsUnsafeInline", e);
+		}
+	}
+
+	private String injectCspNonceIntoTags(ShowDoc showDoc, String htmlContent, String nonce) {
+		return injectCspNonceIntoTags(showDoc, htmlContent, nonce, true, true);
+	}
+
+	private String injectCspNonceIntoTags(ShowDoc showDoc, String htmlContent, String nonce, boolean injectIntoScripts, boolean injectIntoStyles) {
+		try {
+			java.lang.reflect.Method method = ShowDoc.class.getDeclaredMethod("injectCspNonceIntoTags", String.class, String.class, boolean.class, boolean.class);
+			method.setAccessible(true);
+			return (String) method.invoke(showDoc, htmlContent, nonce, injectIntoScripts, injectIntoStyles);
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to invoke injectCspNonceIntoTags", e);
+		}
+	}
+
+	@Test
+	void testIsUnsafeInlineAllowedInCspEmpty() {
+		ShowDoc showDoc = new ShowDoc();
+		assertFalse(isUnsafeInlineAllowedInCsp(null), "Null CSP should return false");
+		assertFalse(isUnsafeInlineAllowedInCsp(""), "Empty CSP should return false");
+	}
+
+	@Test
+	void testIsUnsafeInlineAllowedInCspNoUnsafeInline() {
+		String csp = "default-src 'self'; script-src 'self' {nonce} https:; style-src 'self' {nonce} https:";
+		assertFalse(isUnsafeInlineAllowedInCsp(csp), "CSP without unsafe-inline should return false");
+	}
+
+	@Test
+	void testIsUnsafeInlineAllowedInCspScriptSrcHasUnsafeInline() {
+		String csp = "default-src 'self'; script-src 'self' 'unsafe-inline' {nonce}; style-src 'self'";
+		assertTrue(isUnsafeInlineAllowedInCsp(csp), "CSP with unsafe-inline in script-src should return true");
+	}
+
+	@Test
+	void testIsUnsafeInlineAllowedInCspStyleSrcHasUnsafeInline() {
+		String csp = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'";
+		assertTrue(isUnsafeInlineAllowedInCsp(csp), "CSP with unsafe-inline in style-src should return true");
+	}
+
+	@Test
+	void testIsUnsafeInlineAllowedInCspBothHaveUnsafeInline() {
+		String csp = "script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'";
+		assertTrue(isUnsafeInlineAllowedInCsp(csp), "CSP with unsafe-inline in both should return true");
+	}
+
+	@Test
+	void testIsUnsafeInlineAllowedInCspOnlyDefaultSrc() {
+		String csp = "default-src 'self' 'unsafe-inline'; script-src 'self'";
+		assertFalse(isUnsafeInlineAllowedInCsp(csp), "unsafe-inline in default-src only should return false");
+	}
+
+	@Test
+	void testIsUnsafeInlineAllowedInCspLastDirective() {
+		String csp = "default-src 'self'; script-src 'self' {nonce} https:; style-src 'self' {nonce} https: 'unsafe-inline'";
+		assertTrue(isUnsafeInlineAllowedInCsp(csp), "unsafe-inline in last directive should be detected");
+	}
+
+	@Test
+	void testIsDirectiveAllowsUnsafeInlineScriptSrc() {
+		String csp = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self'";
+		assertTrue(isDirectiveAllowsUnsafeInline(csp, "script-src"), "script-src with unsafe-inline should return true");
+	}
+
+	@Test
+	void testIsDirectiveAllowsUnsafeInlineStyleSrc() {
+		String csp = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'";
+		assertTrue(isDirectiveAllowsUnsafeInline(csp, "style-src"), "style-src with unsafe-inline should return true");
+	}
+
+	@Test
+	void testIsDirectiveAllowsUnsafeInlineNotPresent() {
+		String csp = "default-src 'self'; script-src 'self' {nonce} https:; style-src 'self' {nonce} https:";
+		assertFalse(isDirectiveAllowsUnsafeInline(csp, "script-src"), "script-src without unsafe-inline should return false");
+		assertFalse(isDirectiveAllowsUnsafeInline(csp, "style-src"), "style-src without unsafe-inline should return false");
+	}
+
+	@Test
+	void testIsDirectiveAllowsUnsafeInlineWrongDirective() {
+		String csp = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self'";
+		assertTrue(isDirectiveAllowsUnsafeInline(csp, "script-src"), "script-src with unsafe-inline should return true");
+		assertFalse(isDirectiveAllowsUnsafeInline(csp, "style-src"), "style-src without unsafe-inline should return false");
+	}
+
+	@Test
+	void testInjectCspNonceIntoTagsScriptSrcAllowsUnsafeInline() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><body><script>console.log('test');</script><style>.a { color: red; }</style></body></html>";
+		// script-src allows unsafe-inline, style-src does not
+		String result = injectCspNonceIntoTags(showDoc, input, "testNonce", false, true);
+		// Script tag should NOT get nonce (script-src allows unsafe-inline)
+		assertFalse(result.contains("<script nonce=\"testNonce\">"), "Script tag should not get nonce when script-src allows unsafe-inline");
+		// Style tag SHOULD get nonce (style-src does not allow unsafe-inline)
+		assertTrue(result.contains("<style nonce=\"testNonce\">"), "Style tag should get nonce when style-src does not allow unsafe-inline");
+	}
+
+	@Test
+	void testInjectCspNonceIntoTagsStyleSrcAllowsUnsafeInline() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><body><script>console.log('test');</script><style>.a { color: red; }</style></body></html>";
+		// script-src does not allow unsafe-inline, style-src does
+		String result = injectCspNonceIntoTags(showDoc, input, "testNonce", true, false);
+		// Script tag SHOULD get nonce (script-src does not allow unsafe-inline)
+		assertTrue(result.contains("<script nonce=\"testNonce\">"), "Script tag should get nonce when script-src does not allow unsafe-inline");
+		// Style tag should NOT get nonce (style-src allows unsafe-inline)
+		assertFalse(result.contains("<style nonce=\"testNonce\">"), "Style tag should not get nonce when style-src allows unsafe-inline");
+	}
+
+	@Test
+	void testInjectCspNonceIntoTagsBothAllowUnsafeInline() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><body><script>console.log('test');</script><style>.a { color: red; }</style></body></html>";
+		// Both directives allow unsafe-inline
+		String result = injectCspNonceIntoTags(showDoc, input, "testNonce", false, false);
+		// Neither tag should get nonce
+		assertFalse(result.contains("nonce=\"testNonce\""), "No nonce should be injected when both directives allow unsafe-inline");
+	}
+
+	@Test
+	void testInjectCspNonceIntoTagsLinkStylesheetScriptSrcAllowsUnsafeInline() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\"></head><body><script>var a = 1;</script></body></html>";
+		// script-src allows unsafe-inline, style-src does not
+		String result = injectCspNonceIntoTags(showDoc, input, "linkNonce", false, true);
+		// Link tag SHOULD get nonce (style-src does not allow unsafe-inline)
+		assertTrue(result.contains("nonce=\"linkNonce\""), "Link stylesheet tag should get nonce when style-src does not allow unsafe-inline");
+		// Script tag should NOT get nonce (script-src allows unsafe-inline)
+		assertFalse(result.contains("<script nonce=\"linkNonce\">"), "Script tag should not get nonce when script-src allows unsafe-inline");
 	}
 }

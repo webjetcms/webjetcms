@@ -1701,20 +1701,16 @@ private static String combineCss(String cssStyle)
     }
 
     /**
-     * Forward request to JSP/Thymeleaf template with body processing.
-    /**
-     * Inject CSP nonce into all <script> tags in HTML content.
-     * Handles various script tag forms: &lt;script&gt;, &lt;script defer&gt;, &lt;script type="..."&gt;, etc.
-     *
-     * @param htmlContent The HTML content to process
-     * @param nonce The CSP nonce value to inject
-    * @return HTML content with nonce injected into script tags
-     */
-    /**
      * Injects CSP nonce into <script>, <style>, and <link rel="stylesheet"> tags in a single pass.
      * Optimized for memory efficiency: uses single StringBuilder, processes all tag types in one pass.
+     *
+     * @param htmlContent The HTML content to process
+     * @param nonce The CSP nonce value
+     * @param injectIntoScripts Whether to inject nonce into <script> tags (false if script-src allows unsafe-inline)
+     * @param injectIntoStyles Whether to inject nonce into <style> and <link> tags (false if style-src allows unsafe-inline)
+     * @return HTML content with nonce injected into eligible tags
      */
-    private String injectCspNonceIntoTags(String htmlContent, String nonce) {
+    private String injectCspNonceIntoTags(String htmlContent, String nonce, boolean injectIntoScripts, boolean injectIntoStyles) {
         if (Tools.isEmpty(htmlContent) || Tools.isEmpty(nonce)) {
             return htmlContent;
         }
@@ -1736,8 +1732,8 @@ private static String combineCss(String cssStyle)
             // Append text before this match
             sb.append(htmlContent, lastEnd, matcher.start());
             String tagContent = matcher.group(0);
-            // Determine which tag type and inject nonce
-            String processedTag = processTagForNonce(tagContent, nonce, scriptPattern, stylePattern, linkPattern);
+            // Determine which tag type and inject nonce (skip if corresponding CSP directive allows unsafe-inline)
+            String processedTag = processTagForNonce(tagContent, nonce, scriptPattern, stylePattern, linkPattern, injectIntoScripts, injectIntoStyles);
             sb.append(processedTag);
             lastEnd = matcher.end();
         }
@@ -1748,9 +1744,20 @@ private static String combineCss(String cssStyle)
 
     /**
      * Processes a single tag (script, style, or link) to inject nonce if not already present.
+     * Skips injection for tag types whose corresponding CSP directive allows unsafe-inline.
+     *
+     * @param tagContent The matched tag string
+     * @param nonce The CSP nonce value
+     * @param scriptPattern Pre-compiled pattern for script tags
+     * @param stylePattern Pre-compiled pattern for style tags
+     * @param linkPattern Pre-compiled pattern for link tags
+     * @param injectIntoScripts Whether to inject nonce into script tags
+     * @param injectIntoStyles Whether to inject nonce into style/link tags
+     * @return Processed tag string
      */
     private String processTagForNonce(String tagContent, String nonce, java.util.regex.Pattern scriptPattern,
-                                      java.util.regex.Pattern stylePattern, java.util.regex.Pattern linkPattern) {
+                                      java.util.regex.Pattern stylePattern, java.util.regex.Pattern linkPattern,
+                                      boolean injectIntoScripts, boolean injectIntoStyles) {
         // Check if nonce attribute is already present (lookbehind ensures nonce is preceded by whitespace or letter, not - or ?)
         if (java.util.regex.Pattern.compile("(?<=[\\sa-z])nonce\\s*=").matcher(tagContent).find()) {
             return tagContent;
@@ -1771,6 +1778,13 @@ private static String combineCss(String cssStyle)
             return tagContent;
         }
         String tagName = tagContent.substring(0, nameEnd).toLowerCase();
+        // Skip nonce injection for tag types whose CSP directive allows unsafe-inline
+        if (tagName.equals("<script") && !injectIntoScripts) {
+            return tagContent;
+        }
+        if ((tagName.equals("<style") || tagName.equals("<link")) && !injectIntoStyles) {
+            return tagContent;
+        }
         java.util.regex.Pattern tagSpecificPattern;
         switch (tagName) {
             case "<script":
@@ -1873,11 +1887,22 @@ private static String combineCss(String cssStyle)
                 ? SetCharacterEncodingFilter.getCurrentRequestBean().getCspNonce()
                 : null;
         if (Tools.isNotEmpty(capturedContent) && Tools.isNotEmpty(cspNonce)) {
+            String contentSecurityPolicy = Constants.getString("contentSecurityPolicy");
             PathFilter.setHeader(response, "Content-Security-Policy", "contentSecurityPolicy");
-            capturedContent = injectCspNonceIntoTags(capturedContent, cspNonce);
+            // Check each directive separately to skip nonce injection only for tag types
+            // whose corresponding CSP directive already allows unsafe-inline
+            boolean scriptSrcAllowsUnsafeInline = isDirectiveAllowsUnsafeInline(contentSecurityPolicy, "script-src");
+            boolean styleSrcAllowsUnsafeInline = isDirectiveAllowsUnsafeInline(contentSecurityPolicy, "style-src");
+            // Inject nonce into tags, skipping tag types whose directive allows unsafe-inline
+            capturedContent = injectCspNonceIntoTags(capturedContent, cspNonce, !scriptSrcAllowsUnsafeInline, !styleSrcAllowsUnsafeInline);
             // Process inline styles and event handlers for CSP compliance
-            capturedContent = processInlineStyles(capturedContent, cspNonce);
-            capturedContent = processInlineEventHandlers(capturedContent, cspNonce);
+            // Only process if unsafe-inline is NOT allowed (since browser already allows them)
+            if (scriptSrcAllowsUnsafeInline == false) {
+                capturedContent = processInlineEventHandlers(capturedContent, cspNonce);
+            }
+            if (styleSrcAllowsUnsafeInline == false) {
+                capturedContent = processInlineStyles(capturedContent, cspNonce);
+            }
         }
 
         if (capturedContent != null) {
@@ -2053,5 +2078,36 @@ private static String combineCss(String cssStyle)
         }
 
         return processedHtml.toString();
+    }
+
+    /**
+     * Checks if a specific CSP directive allows 'unsafe-inline'.
+     * Parses using indexOf to find the directive start and end (next ';' or end of string),
+     * then checks if 'unsafe-inline' exists within that range.
+     *
+     * @param cspValue The full CSP configuration string
+     * @param directiveName The directive name to check (e.g., "script-src", "style-src")
+     * @return true if the directive allows 'unsafe-inline'
+     */
+    private static boolean isDirectiveAllowsUnsafeInline(String cspValue, String directiveName) {
+        // Find the directive by looking for the name followed by whitespace
+        int directiveIndex = cspValue.indexOf(directiveName);
+        if (directiveIndex < 0) {
+            return false;
+        }
+        // Move past the directive name to the value part
+        int valueStart = directiveIndex + directiveName.length();
+        // Skip whitespace after directive name
+        while (valueStart < cspValue.length() && Character.isWhitespace(cspValue.charAt(valueStart))) {
+            valueStart++;
+        }
+        // Find the end of this directive (next ';' or end of string)
+        int directiveEnd = cspValue.indexOf(';', valueStart);
+        if (directiveEnd < 0) {
+            directiveEnd = cspValue.length();
+        }
+        // Check if 'unsafe-inline' appears within this directive's value
+        String directiveValue = cspValue.substring(valueStart, directiveEnd);
+        return directiveValue.indexOf("unsafe-inline") >= 0;
     }
 }
