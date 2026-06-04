@@ -71,10 +71,14 @@ public class PgVectorStore implements VectorStore {
     private static final String DELETE_BY_ENTITY_SQL =
         "DELETE FROM rag_embedding_chunks WHERE entity_type = ? AND entity_id = ?";
 
-    private static final String MARK_ERROR_SQL =
-        "UPDATE rag_embedding_chunks" +
-        " SET status = '" + EmbeddingChunkStatus.ERROR.name() + "', error_message = ?" +
-        " WHERE entity_type = ? AND entity_id = ? AND embedding_model = ?";
+    private static final String DELETE_FOR_ERROR_SQL =
+        "DELETE FROM rag_embedding_chunks WHERE entity_type = ? AND entity_id = ? AND embedding_model = ?";
+
+    private static final String INSERT_ERROR_CHUNK_SQL =
+        "INSERT INTO rag_embedding_chunks" +
+        "    (entity_type, entity_id, chunk_index, chunk_text, content_hash," +
+        "     embedding_model, dimensions, language, domain_id, status, error_message, create_date)" +
+        " VALUES (?, ?, 0, 'ERROR', 'ERROR', ?, ?, NULL, ?, '" + EmbeddingChunkStatus.ERROR.name() + "', ?, CURRENT_TIMESTAMP)";
 
     /**
      * Builds SEARCH_SQL dynamically based on configured distance metric.
@@ -146,15 +150,17 @@ public class PgVectorStore implements VectorStore {
     }
 
     @Override
-    public void markError(String entityType, long entityId, String embeddingModel, String errorMessage) {
+    public void markError(String entityType, long entityId, String embeddingModel, String errorMessage, Integer domainId) {
         String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (Tools.isEmpty(dsName)) return;
 
         try {
             String truncatedMessage = errorMessage != null && errorMessage.length() > 500
                 ? errorMessage.substring(0, 500) : errorMessage;
-            new SimpleQuery(dsName).execute(MARK_ERROR_SQL,
-                truncatedMessage, entityType, entityId, embeddingModel);
+
+            SimpleQuery sq = new SimpleQuery(dsName);
+            sq.execute(DELETE_FOR_ERROR_SQL, entityType, entityId, embeddingModel);
+            sq.execute(INSERT_ERROR_CHUNK_SQL, entityType, entityId, embeddingModel, Constants.getInt("ragEmbeddingDimensions"), domainId, truncatedMessage);
         } catch (Exception e) {
             Logger.error(PgVectorStore.class, "Error marking chunks as ERROR for " + entityType + "/" + entityId + ": " + e.getMessage());
         }

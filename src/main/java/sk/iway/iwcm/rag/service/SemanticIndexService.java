@@ -9,12 +9,15 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.structuremirroring.GroupMirroringServiceV9;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.rag.RagIndexAction;
 import sk.iway.iwcm.rag.embedding.EmbeddingBatchResult;
@@ -201,11 +204,10 @@ public class SemanticIndexService {
             // Step 3: Embed only changed chunks
             if (chunksToEmbedTexts.isEmpty() == false) {
                 EmbeddingBatchResult embeddingResult = embeddingProvider.embedWithUsage(chunksToEmbedTexts, model);
+
                 List<float[]> newEmbeddings = embeddingResult.getEmbeddings();
                 if (newEmbeddings.size() != chunksToEmbedTexts.size()) {
-                    Logger.error(SemanticIndexService.class, "Embedding count mismatch for doc " + entityId +
-                        ": expected " + chunksToEmbedTexts.size() + ", got " + newEmbeddings.size());
-                    return;
+                    throw new IllegalStateException("Embedding count mismatch for doc " + entityId + ": expected " + chunksToEmbedTexts.size() + ", got " + newEmbeddings.size());
                 }
 
                 ragEmbeddingStatService.recordIndexingTokens(embeddingResult.getUsedTokens());
@@ -229,8 +231,16 @@ public class SemanticIndexService {
 
             Logger.debug(SemanticIndexService.class, "Indexed doc " + entityId + " with " + chunks.size() + " chunks");
         } catch (Exception e) {
+            Adminlog.add(Adminlog.TYPE_SEARCH, "Error indexing doc " + e.getMessage(), entityId, null);
             Logger.error(SemanticIndexService.class, "Error indexing doc " + entityId + ": " + e.getMessage());
-            vectorStore.markError(entityType, entityId, embeddingProvider.getDefaultModel(), e.getMessage());
+
+            // Try get domain id
+            int domainId = -1;
+            GroupDetails group = doc.getGroup();
+            if(group != null && Tools.isNotEmpty(group.getDomainName()) ) domainId = GroupsDB.getDomainId(group.getDomainName());
+            if(domainId < 1) domainId = CloudToolsForCore.getDomainId();
+
+            vectorStore.markError(entityType, entityId, embeddingProvider.getDefaultModel(), e.getMessage(), domainId);
         }
     }
 

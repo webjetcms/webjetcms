@@ -10,9 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 import sk.iway.iwcm.rag.embedding.EmbeddingBatchResult;
 import sk.iway.iwcm.rag.embedding.EmbeddingProvider;
 import sk.iway.iwcm.rag.service.RagEmbeddingStatService;
@@ -65,7 +67,16 @@ public class SemanticSearchService {
         }
 
         String model = embeddingProvider.getDefaultModel();
-        EmbeddingBatchResult embeddingResult = embeddingProvider.embedWithUsage(List.of(query), model);
+        EmbeddingBatchResult embeddingResult;
+
+        try {
+            embeddingResult = embeddingProvider.embedWithUsage(List.of(query), model);
+        } catch (ProviderCallException e) {
+            Logger.error(SemanticSearchService.class, "Error generating query embedding: " + e.getMessage(), e);
+            Adminlog.add(Adminlog.TYPE_SEARCH, "Error generating query embedding: " + e.getMessage(), null, null);
+            return List.of();
+        }
+
         List<float[]> queryEmbeddings = embeddingResult.getEmbeddings();
         if (queryEmbeddings.isEmpty()) {
             Logger.error(SemanticSearchService.class, "Failed to generate query embedding");

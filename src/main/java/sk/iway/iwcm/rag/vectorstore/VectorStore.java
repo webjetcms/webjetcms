@@ -68,13 +68,13 @@ public interface VectorStore {
     boolean isAvailableAndInitialized();
 
     /**
-     * Mark all chunks for an entity as ERROR with a message.
+     * Replace chunks for an entity/model with a single ERROR marker row.
      * @param entityType entity type
      * @param entityId entity ID
      * @param embeddingModel model used
      * @param errorMessage error description
      */
-    void markError(String entityType, long entityId, String embeddingModel, String errorMessage);
+    void markError(String entityType, long entityId, String embeddingModel, String errorMessage, Integer domainId);
 
     /**
      * Initialize the pgvector extension and create the table if needed.
