@@ -460,10 +460,6 @@ class CspNonceTest extends BaseWebjetTest {
 			String.class, HttpServletRequest.class, HttpServletResponse.class);
 		method.setAccessible(true);
 
-		// Capture what gets written to the response
-		HttpServletResponse mockResponse = mock(HttpServletResponse.class);
-		ContentCapturingResponseWrapper actualResponseWrapper = new ContentCapturingResponseWrapper(mockResponse);
-
 		// We can't easily test the full forwarding path without a servlet container,
 		// but we can verify the nonce injection logic is triggered by checking
 		// that the nonce is generated and available
@@ -479,81 +475,81 @@ class CspNonceTest extends BaseWebjetTest {
 	}
 
 	@Test
-	void testProcessInlineStylesSimple() throws Exception {
+	void testProcessInlineStylesSimple() {
 		ShowDoc showDoc = new ShowDoc();
 		String input = "<html><body><div style=\"color: red; font-size: 14px;\">Test</div></body></html>";
 		String nonce = "testNonce";
 
 		String result = invokeProcessInlineStyles(showDoc, input, nonce);
 		// Should replace style attribute with data-inline-style and inject CSS
-		assertTrue(result.contains("data-inline-style=\"1\""), "Should replace style with data-inline-style");
+		assertTrue(result.contains("data-inline-style=\"nonce1\""), "Should replace style with data-inline-style");
 		assertFalse(result.contains(" style=\""), "Should not contain original style attribute");
-		assertTrue(result.contains("[data-inline-style=\"1\"]"), "Should generate CSS rule");
+		assertTrue(result.contains("[data-inline-style=\"nonce1\"]"), "Should generate CSS rule");
 		assertTrue(result.contains("color: red !important"), "Should include color property with !important");
 		assertTrue(result.contains("font-size: 14px !important"), "Should include font-size property with !important");
 		assertTrue(result.contains("nonce=\"" + nonce + "\""), "Should inject nonce into style tag");
 	}
 
 	@Test
-	void testProcessInlineStylesSVG() throws Exception {
+	void testProcessInlineStylesSVG() {
 		ShowDoc showDoc = new ShowDoc();
 		String input = "<html><body><svg style=\"width: 10px; height: 20px;\"></svg></body></html>";
 		String nonce = "svgNonce";
 
 		String result = invokeProcessInlineStyles(showDoc, input, nonce);
 		// Should handle SVG elements with inline styles
-		assertTrue(result.contains("data-inline-style=\"1\""), "Should replace SVG style with data-inline-style");
+		assertTrue(result.contains("data-inline-style=\"nonce1\""), "Should replace SVG style with data-inline-style");
 		assertFalse(result.contains(" style=\""), "Should not contain original style attribute");
 		assertTrue(result.contains("width: 10px !important"), "Should include width property with !important");
 		assertTrue(result.contains("height: 20px !important"), "Should include height property with !important");
 	}
 
 	@Test
-	void testProcessInlineStylesMultipleElements() throws Exception {
+	void testProcessInlineStylesMultipleElements() {
 		ShowDoc showDoc = new ShowDoc();
 		String input = "<html><body><div style=\"color: red;\">A</div><span style=\"color: blue;\">B</span></body></html>";
 		String nonce = "multiNonce";
 
 		String result = invokeProcessInlineStyles(showDoc, input, nonce);
 		// Should handle multiple elements with different counters
-		assertTrue(result.contains("data-inline-style=\"1\""), "First element should have counter 1");
-		assertTrue(result.contains("data-inline-style=\"2\""), "Second element should have counter 2");
+		assertTrue(result.contains("data-inline-style=\"nonce1\""), "First element should have counter 1");
+		assertTrue(result.contains("data-inline-style=\"nonce2\""), "Second element should have counter 2");
 		assertFalse(result.contains(" style=\""), "Should not contain original style attributes");
-		assertTrue(result.contains("[data-inline-style=\"1\"]"), "Should generate CSS rule for counter 1");
-		assertTrue(result.contains("[data-inline-style=\"2\"]"), "Should generate CSS rule for counter 2");
+		assertTrue(result.contains("[data-inline-style=\"nonce1\"]"), "Should generate CSS rule for counter 1");
+		assertTrue(result.contains("[data-inline-style=\"nonce2\"]"), "Should generate CSS rule for counter 2");
 	}
 
 	@Test
-	void testProcessInlineEventHandlersSimple() throws Exception {
+	void testProcessInlineEventHandlersSimple() {
 		ShowDoc showDoc = new ShowDoc();
 		String input = "<html><body><button onclick=\"clicked()\">Click</button></body></html>";
 		String nonce = "eventNonce";
 
 		String result = invokeProcessInlineEventHandlers(showDoc, input, nonce);
 		// Should replace onclick with data-inline-onclick and inject JavaScript
-		assertTrue(result.contains("data-inline-onclick=\"1\""), "Should replace onclick with data-inline-onclick");
+		assertTrue(result.contains("data-inline-onclick=\"nonce1\""), "Should replace onclick with data-inline-onclick");
 		assertFalse(result.contains(" onclick=\""), "Should not contain original onclick attribute");
-		assertTrue(result.contains("document.querySelectorAll('[data-inline-onclick=\"1\"]')"), "Should generate JavaScript selector");
+		assertTrue(result.contains("document.querySelectorAll('[data-inline-onclick=\"nonce1\"]')"), "Should generate JavaScript selector");
 		assertTrue(result.contains("el.onclick = function(event) {clicked();};"), "Should generate function wrapper");
 		assertTrue(result.contains("nonce=\"" + nonce + "\""), "Should inject nonce into script tag");
 	}
 
 	@Test
-	void testProcessInlineEventHandlersMultipleTypes() throws Exception {
+	void testProcessInlineEventHandlersMultipleTypes() {
 		ShowDoc showDoc = new ShowDoc();
 		String input = "<html><body><button onclick=\"clicked()\" onmouseover=\"hovered()\">Click</button></body></html>";
 		String nonce = "multiEventNonce";
 
 		String result = invokeProcessInlineEventHandlers(showDoc, input, nonce);
 		// Should handle multiple event handlers with separate counters
-		assertTrue(result.contains("data-inline-onclick=\"1\""), "onclick should have counter 1");
-		assertTrue(result.contains("data-inline-onmouseover=\"1\""), "onmouseover should have counter 1 (separate)");
+		assertTrue(result.contains("data-inline-onclick=\"nonce1\""), "onclick should have counter 1");
+		assertTrue(result.contains("data-inline-onmouseover=\"nonce1\""), "onmouseover should have counter 1 (separate)");
 		assertFalse(result.contains(" onclick=\""), "Should not contain original onclick");
 		assertFalse(result.contains(" onmouseover=\""), "Should not contain original onmouseover");
 	}
 
 	@Test
-	void testProcessInlineEventHandlersFunctionWrapperPreservesThis() throws Exception {
+	void testProcessInlineEventHandlersFunctionWrapperPreservesThis() {
 		ShowDoc showDoc = new ShowDoc();
 		String input = "<html><body><button onclick=\"this.style.display='none'\">Click</button></body></html>";
 		String nonce = "thisNonce";
@@ -564,114 +560,26 @@ class CspNonceTest extends BaseWebjetTest {
 			"Should preserve 'this' in function wrapper");
 	}
 
-	// Helper methods
-	private String injectCspNonceIntoTags(ShowDoc showDoc, String htmlContent, String nonce) {
-		try {
-			java.lang.reflect.Method method = ShowDoc.class.getDeclaredMethod("injectCspNonceIntoTags", String.class, String.class);
-			method.setAccessible(true);
-			return (String) method.invoke(showDoc, htmlContent, nonce);
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to invoke injectCspNonceIntoTags", e);
-		}
-	}
-
-	private String invokeProcessInlineStyles(ShowDoc showDoc, String htmlContent, String nonce) {
-		try {
-			java.lang.reflect.Method method = ShowDoc.class.getDeclaredMethod("processInlineStyles", String.class, String.class);
-			method.setAccessible(true);
-			return (String) method.invoke(showDoc, htmlContent, nonce);
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to invoke processInlineStyles", e);
-		}
-	}
-
-	private String invokeProcessInlineEventHandlers(ShowDoc showDoc, String htmlContent, String nonce) {
-		try {
-			java.lang.reflect.Method method = ShowDoc.class.getDeclaredMethod("processInlineEventHandlers", String.class, String.class);
-			method.setAccessible(true);
-			return (String) method.invoke(showDoc, htmlContent, nonce);
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to invoke processInlineEventHandlers", e);
-		}
-	}
-
-	// ==================== Helper methods for isUnsafeInlineAllowedInCsp ====================
-
-	private boolean isUnsafeInlineAllowedInCsp(String cspValue) {
-		try {
-			java.lang.reflect.Method method = ShowDoc.class.getDeclaredMethod("isUnsafeInlineAllowedInCsp", String.class);
-			method.setAccessible(true);
-			return (Boolean) method.invoke(null, cspValue);
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to invoke isUnsafeInlineAllowedInCsp", e);
-		}
-	}
-
-	private boolean isDirectiveAllowsUnsafeInline(String cspValue, String directiveName) {
-		try {
-			java.lang.reflect.Method method = ShowDoc.class.getDeclaredMethod("isDirectiveAllowsUnsafeInline", String.class, String.class);
-			method.setAccessible(true);
-			return (Boolean) method.invoke(null, cspValue, directiveName);
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to invoke isDirectiveAllowsUnsafeInline", e);
-		}
-	}
+	// ==================== Helper methods for NonceHelper ====================
 
 	private String injectCspNonceIntoTags(ShowDoc showDoc, String htmlContent, String nonce) {
 		return injectCspNonceIntoTags(showDoc, htmlContent, nonce, true, true);
 	}
 
 	private String injectCspNonceIntoTags(ShowDoc showDoc, String htmlContent, String nonce, boolean injectIntoScripts, boolean injectIntoStyles) {
-		try {
-			java.lang.reflect.Method method = ShowDoc.class.getDeclaredMethod("injectCspNonceIntoTags", String.class, String.class, boolean.class, boolean.class);
-			method.setAccessible(true);
-			return (String) method.invoke(showDoc, htmlContent, nonce, injectIntoScripts, injectIntoStyles);
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to invoke injectCspNonceIntoTags", e);
-		}
+		return sk.iway.iwcm.doc.showdoc.NonceHelper.injectCspNonceIntoTags(htmlContent, nonce, injectIntoScripts, injectIntoStyles);
 	}
 
-	@Test
-	void testIsUnsafeInlineAllowedInCspEmpty() {
-		ShowDoc showDoc = new ShowDoc();
-		assertFalse(isUnsafeInlineAllowedInCsp(null), "Null CSP should return false");
-		assertFalse(isUnsafeInlineAllowedInCsp(""), "Empty CSP should return false");
+	private String invokeProcessInlineStyles(ShowDoc showDoc, String htmlContent, String nonce) {
+		return sk.iway.iwcm.doc.showdoc.NonceHelper.processInlineStyles(htmlContent, nonce);
 	}
 
-	@Test
-	void testIsUnsafeInlineAllowedInCspNoUnsafeInline() {
-		String csp = "default-src 'self'; script-src 'self' {nonce} https:; style-src 'self' {nonce} https:";
-		assertFalse(isUnsafeInlineAllowedInCsp(csp), "CSP without unsafe-inline should return false");
+	private String invokeProcessInlineEventHandlers(ShowDoc showDoc, String htmlContent, String nonce) {
+		return sk.iway.iwcm.doc.showdoc.NonceHelper.processInlineEventHandlers(htmlContent, nonce);
 	}
 
-	@Test
-	void testIsUnsafeInlineAllowedInCspScriptSrcHasUnsafeInline() {
-		String csp = "default-src 'self'; script-src 'self' 'unsafe-inline' {nonce}; style-src 'self'";
-		assertTrue(isUnsafeInlineAllowedInCsp(csp), "CSP with unsafe-inline in script-src should return true");
-	}
-
-	@Test
-	void testIsUnsafeInlineAllowedInCspStyleSrcHasUnsafeInline() {
-		String csp = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'";
-		assertTrue(isUnsafeInlineAllowedInCsp(csp), "CSP with unsafe-inline in style-src should return true");
-	}
-
-	@Test
-	void testIsUnsafeInlineAllowedInCspBothHaveUnsafeInline() {
-		String csp = "script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'";
-		assertTrue(isUnsafeInlineAllowedInCsp(csp), "CSP with unsafe-inline in both should return true");
-	}
-
-	@Test
-	void testIsUnsafeInlineAllowedInCspOnlyDefaultSrc() {
-		String csp = "default-src 'self' 'unsafe-inline'; script-src 'self'";
-		assertFalse(isUnsafeInlineAllowedInCsp(csp), "unsafe-inline in default-src only should return false");
-	}
-
-	@Test
-	void testIsUnsafeInlineAllowedInCspLastDirective() {
-		String csp = "default-src 'self'; script-src 'self' {nonce} https:; style-src 'self' {nonce} https: 'unsafe-inline'";
-		assertTrue(isUnsafeInlineAllowedInCsp(csp), "unsafe-inline in last directive should be detected");
+	private boolean isDirectiveAllowsUnsafeInline(String cspValue, String directiveName) {
+		return sk.iway.iwcm.doc.showdoc.NonceHelper.isDirectiveAllowsUnsafeInline(cspValue, directiveName);
 	}
 
 	@Test
