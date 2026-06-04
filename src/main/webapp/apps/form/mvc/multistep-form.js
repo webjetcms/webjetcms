@@ -717,7 +717,7 @@ export class MultistepForm {
                     const errDiv = $(this.wrapper).find('div.cs-error-' + fieldName);
                     const errorMsgArr = String(errorMsg).split('\n');
                     errDiv.html('');
-                    let html = "<ul style='margin:0px; padding-left: 20px;'>";
+                    let html = "<ul class='mf-error-list'>";
                     for (const msg of errorMsgArr) html += `<li>${msg}</li>`;
                     html += '</ul>';
                     errDiv.html(html);

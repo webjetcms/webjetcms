@@ -182,8 +182,10 @@ public final class NonceHelper {
             for (String prop : properties) {
                 String trimmed = prop.trim();
                 if (Tools.isNotEmpty(trimmed) && trimmed.contains(":")) {
-                    // Remove trailing semicolon if present, then append " !important;"
+                    // Remove trailing semicolon if present
                     String propPart = trimmed.endsWith(";") ? trimmed.substring(0, trimmed.length() - 1) : trimmed;
+                    // Escape CSS special characters to prevent breaking out of the rule block
+                    propPart = propPart.replace("}", "\\}").replace("{", "\\{");
                     cssRules.append(propPart).append(" !important;");
                 }
             }
@@ -319,6 +321,7 @@ public final class NonceHelper {
         if (directiveEnd < 0) {
             directiveEnd = cspValue.length();
         }
+        // Use fast check instead tokenizing
         // Check if 'unsafe-inline' appears within this directive's value
         String directiveValue = cspValue.substring(valueStart, directiveEnd);
         if (directiveValue.contains("{nonce}")) return false;
