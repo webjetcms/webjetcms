@@ -62,14 +62,6 @@ public class RequestBean
 	// CSP nonce for Content-Security-Policy header (generated per-request)
 	private String cspNonce;
 
-	public String getCspNonce() {
-		return cspNonce;
-	}
-
-	public void setCspNonce(String cspNonce) {
-		this.cspNonce = cspNonce;
-	}
-
 	//umoznuje prenasat atributy podobne ako request.set/getAttribute
 	private Map<String, Object> attributes;
 
@@ -500,5 +492,11 @@ public class RequestBean
 	}
 	public void setLngCookie(String lngCookie) {
 		this.lngCookie = lngCookie;
+	}
+	public String getCspNonce() {
+		return cspNonce;
+	}
+	public void setCspNonce(String cspNonce) {
+		this.cspNonce = cspNonce;
 	}
 }

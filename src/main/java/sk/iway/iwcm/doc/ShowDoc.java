@@ -1717,11 +1717,12 @@ private static String combineCss(String cssStyle)
 
         // Check if body processing is needed (either style-to-head or CSP nonce injection)
         boolean needsStyleProcessing = StyleToHeadHelper.isMoveStyleToHeadEnabled(request);
-        boolean needsCspNonce = SetCharacterEncodingFilter.getCurrentRequestBean() != null
-                && Tools.isNotEmpty(SetCharacterEncodingFilter.getCurrentRequestBean().getCspNonce());
-        boolean needsProcessing = needsStyleProcessing || needsCspNonce;
+        String cspNonce = SetCharacterEncodingFilter.getCurrentRequestBean() != null
+                ? SetCharacterEncodingFilter.getCurrentRequestBean().getCspNonce()
+                : null;
+        boolean needsProcessing = needsStyleProcessing || Tools.isNotEmpty(cspNonce);
 
-        if (!needsProcessing) {
+        if (needsProcessing == false) {
             // No body processing needed, use standard forward
             request.getRequestDispatcher(forward).forward(request, response);
             return;
@@ -1771,9 +1772,6 @@ private static String combineCss(String cssStyle)
         }
 
         // Inject CSP nonce into <script>, <style>, and <link> tags
-        String cspNonce = SetCharacterEncodingFilter.getCurrentRequestBean() != null
-                ? SetCharacterEncodingFilter.getCurrentRequestBean().getCspNonce()
-                : null;
         if (Tools.isNotEmpty(capturedContent) && Tools.isNotEmpty(cspNonce)) {
             String contentSecurityPolicy = Constants.getString("contentSecurityPolicy");
             PathFilter.setHeader(response, "Content-Security-Policy", "contentSecurityPolicy");

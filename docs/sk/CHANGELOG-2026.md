@@ -37,7 +37,7 @@
 
 ### Bezpečnosť
 
-- Pridaná podpora generovania `nonce` pre `Content-Security-Policy` hlavičku. Ak konfigurácia `contentSecurityPolicy` obsahuje `{nonce}` symbol, automaticky sa vygeneruje unikátny kryptograficky bezpečný `nonce` a pridá sa do všetkých `<script>`, `<style>` a `<link rel="stylesheet">` značiek v HTML výstupe aj do `Content-Security-Policy` hlavičky. Inline štýly a skripty sú presunuté na koniec HTML kódu a nastavené pomocou data atribútov (#58533).
+- Pridaná podpora generovania `nonce` pre [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
 
 ### Dokumentácia
 
