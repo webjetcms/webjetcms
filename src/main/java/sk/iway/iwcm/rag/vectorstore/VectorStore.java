@@ -5,57 +5,27 @@ import java.util.Map;
 
 /**
  * Abstraction for vector storage and similarity search.
+ * Handles ONLY the embedding (vector) column via native SQL.
+ * Entity CRUD operations are handled by EmbeddingChunkRepository (JPA).
  * Primary implementation uses PgVector (PostgreSQL + pgvector extension).
  */
 public interface VectorStore {
 
     /**
-     * Store a chunk with its embedding vector.
-     * @param entityType entity type (e.g., "document")
-     * @param entityId entity ID
-     * @param chunkIndex chunk position within the entity
-     * @param chunkText the text content of the chunk
-     * @param contentHash SHA-256 hash of the chunk text for deduplication
+     * Update the embedding vector for an existing chunk entity.
+     * The entity must already be saved via EmbeddingChunkRepository.
+     * @param id the chunk entity ID
      * @param embedding the embedding vector
-     * @param embeddingModel model used to generate the embedding
-     * @param dimensions number of dimensions
-     * @param language language code
-     * @param domainId domain ID
      */
-    void store(String entityType, long entityId, int chunkIndex, String chunkText,
-               String contentHash, float[] embedding, String embeddingModel,
-               int dimensions, String language, Integer domainId);
+    void updateEmbedding(Long id, float[] embedding);
 
     /**
-     * Store a chunk with its embedding vector, including group hierarchy metadata.
-     * @param entityType entity type (e.g., "document")
-     * @param entityId entity ID
-     * @param chunkIndex chunk position within the entity
-     * @param chunkText the text content of the chunk
-     * @param contentHash SHA-256 hash of the chunk text for deduplication
-     * @param embedding the embedding vector
-     * @param embeddingModel model used to generate the embedding
-     * @param dimensions number of dimensions
-     * @param language language code
-     * @param domainId domain ID
-     * @param groupId direct group/folder ID of the entity
-     * @param rootGroupL1 top-level ancestor group ID (level 1)
-     * @param rootGroupL2 second-level ancestor group ID (level 2)
-     * @param rootGroupL3 third-level ancestor group ID (level 3)
+     * Update embedding vectors for multiple existing chunk entities in a batch.
+     * All entities must already be saved via EmbeddingChunkRepository.
+     * @param ids the chunk entity IDs
+     * @param embeddings the embedding vectors (must match ids in size and order)
      */
-    default void store(String entityType, long entityId, int chunkIndex, String chunkText,
-                       String contentHash, float[] embedding, String embeddingModel,
-                       int dimensions, String language, Integer domainId,
-                       Integer groupId, Integer rootGroupL1, Integer rootGroupL2, Integer rootGroupL3) {
-        store(entityType, entityId, chunkIndex, chunkText, contentHash, embedding, embeddingModel, dimensions, language, domainId);
-    }
-
-    /**
-     * Delete all chunks for an entity.
-     * @param entityType entity type
-     * @param entityId entity ID
-     */
-    void deleteByEntity(String entityType, long entityId);
+    void updateEmbeddingBatch(List<Long> ids, List<float[]> embeddings);
 
     /**
      * Find the most similar chunks to the query embedding.
@@ -90,15 +60,6 @@ public interface VectorStore {
      * Implementations should return true only when operations can be executed safely.
      */
     boolean isAvailableAndInitialized();
-
-    /**
-     * Replace chunks for an entity/model with a single ERROR marker row.
-     * @param entityType entity type
-     * @param entityId entity ID
-     * @param embeddingModel model used
-     * @param errorMessage error description
-     */
-    void markError(String entityType, long entityId, String embeddingModel, String errorMessage, Integer domainId);
 
     /**
      * Initialize the pgvector extension and create the table if needed.

@@ -3,6 +3,7 @@ package sk.iway.iwcm.rag.service;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -26,6 +28,9 @@ import sk.iway.iwcm.rag.indexing.DocDetailsContentExtractor;
 import sk.iway.iwcm.rag.indexing.SlidingWindowChunker;
 import sk.iway.iwcm.rag.jpa.IndexQueueEntity;
 import sk.iway.iwcm.rag.jpa.IndexQueueRepository;
+import sk.iway.iwcm.rag.pgvector.EmbeddingChunkEntity;
+import sk.iway.iwcm.rag.pgvector.EmbeddingChunkRepository;
+import sk.iway.iwcm.rag.pgvector.EmbeddingChunkStatus;
 import sk.iway.iwcm.rag.vectorstore.PgVectorStore;
 
 /**
@@ -40,6 +45,7 @@ public class SemanticIndexService {
     private final EmbeddingProvider embeddingProvider;
     private final PgVectorStore vectorStore;
     private final RagEmbeddingStatService ragEmbeddingStatService;
+    private final EmbeddingChunkRepository embeddingChunkRepository;
 
     private final IndexQueueRepository queueRepository;
 
@@ -51,7 +57,8 @@ public class SemanticIndexService {
                                 EmbeddingProvider embeddingProvider,
                                 PgVectorStore vectorStore,
                                 IndexQueueRepository queueRepository,
-                                RagEmbeddingStatService ragEmbeddingStatService) {
+                                RagEmbeddingStatService ragEmbeddingStatService,
+                                EmbeddingChunkRepository embeddingChunkRepository) {
         this.contentExtractor = contentExtractor;
         this.chunker = chunker;
         this.embeddingProvider = embeddingProvider;
@@ -59,6 +66,7 @@ public class SemanticIndexService {
 
         this.queueRepository = queueRepository;
         this.ragEmbeddingStatService = ragEmbeddingStatService;
+        this.embeddingChunkRepository = embeddingChunkRepository;
     }
 
     /**
@@ -99,6 +107,8 @@ public class SemanticIndexService {
                 items = queueRepository.findTop500ByOrderByCreateDateAsc();
                 if (items.isEmpty()) break;
 
+                List<Long> processedItemIds = new ArrayList<>(items.size());
+
                 // Refresh TTL so the flag doesn't expire during a slow batch (e.g. slow AI provider)
                 cache.setObject(PROCESSING_QUEUE_KEY, Boolean.TRUE, 60);
 
@@ -107,13 +117,26 @@ public class SemanticIndexService {
                 for (IndexQueueEntity item : items) {
                     try {
                         processEntity(item.getAction(), item.getEntityType(), item.getEntityId());
-
-                        // Remove processed item from queue
-                        queueRepository.deleteById(item.getId());
+                        processedItemIds.add(item.getId());
                     } catch (Exception e) {
                         Logger.error(SemanticIndexService.class, "Error processing queue item " + item.getId() +
                             " (" + item.getEntityType() + "/" + item.getEntityId() + "): " + e.getMessage());
                         // Don't delete failed items - they'll be retried on next run
+                    }
+                }
+
+                if (processedItemIds.isEmpty() == false) {
+                    try {
+                        queueRepository.deleteAllByIdInBatch(processedItemIds);
+                    } catch (Exception e) {
+                        Logger.error(SemanticIndexService.class, "Batch queue cleanup failed, falling back to row-by-row delete: " + e.getMessage());
+                        for (Long queueId : processedItemIds) {
+                            try {
+                                queueRepository.deleteById(queueId);
+                            } catch (Exception deleteEx) {
+                                Logger.error(SemanticIndexService.class, "Failed to delete processed queue item " + queueId + ": " + deleteEx.getMessage());
+                            }
+                        }
                     }
                 }
             } while (items.size() == 500);
@@ -131,7 +154,7 @@ public class SemanticIndexService {
     private void processEntity(RagIndexAction action, RagEntityType entityType, int entityId) {
         if (entityType == RagEntityType.DOCUMENT) {
             if (action == RagIndexAction.DELETE) {
-                vectorStore.deleteByEntity(DocDetailsContentExtractor.ENTITY_TYPE.name(), entityId);
+                embeddingChunkRepository.deleteByEntityTypeAndEntityId(DocDetailsContentExtractor.ENTITY_TYPE, (long) entityId);
             } else if(action == RagIndexAction.INDEX) {
                 indexDocument(entityId);
             } else {
@@ -160,14 +183,14 @@ public class SemanticIndexService {
             String text = contentExtractor.extractText(doc);
             if (Tools.isEmpty(text)) {
                 // Empty document, remove any existing embeddings
-                vectorStore.deleteByEntity(entityType, entityId);
+                embeddingChunkRepository.deleteByEntityTypeAndEntityId(DocDetailsContentExtractor.ENTITY_TYPE, entityId);
                 return;
             }
 
             // Step 2: Chunk
             List<String> chunks = chunker.chunk(text);
             if (chunks.isEmpty()) {
-                vectorStore.deleteByEntity(entityType, entityId);
+                embeddingChunkRepository.deleteByEntityTypeAndEntityId(DocDetailsContentExtractor.ENTITY_TYPE, entityId);
                 return;
             }
 
@@ -217,17 +240,50 @@ public class SemanticIndexService {
                 }
             }
 
-            // Step 4: Delete old chunks and store new ones
-            vectorStore.deleteByEntity(entityType, entityId);
+            // Step 4: Delete old chunks via repository and save new entities
+            embeddingChunkRepository.deleteByEntityTypeAndEntityId(DocDetailsContentExtractor.ENTITY_TYPE, entityId);
 
             String language = GroupMirroringServiceV9.getLanguage(doc.getGroup());
             String domainName = DocDB.getInstance().getDomain(docId);
             int domainId = GroupsDB.getDomainId(domainName);
 
+            Date now = new Date();
+            List<EmbeddingChunkEntity> chunksToStore = new ArrayList<>(chunks.size());
             for (int i = 0; i < chunks.size(); i++) {
-                vectorStore.store(entityType, entityId, i, chunks.get(i), chunkHashes.get(i), resolvedEmbeddings[i],
-                    model, dimensions, language, domainId, doc.getGroupId(), doc.getRootGroupL1(), doc.getRootGroupL2(), doc.getRootGroupL3());
+                EmbeddingChunkEntity chunk = new EmbeddingChunkEntity();
+                chunk.setEntityType(DocDetailsContentExtractor.ENTITY_TYPE);
+                chunk.setEntityId(entityId);
+                chunk.setChunkIndex(i);
+                chunk.setChunkText(chunks.get(i));
+                chunk.setContentHash(chunkHashes.get(i));
+                chunk.setEmbeddingModel(model);
+                chunk.setDimensions(dimensions);
+                chunk.setLanguage(language);
+                chunk.setDomainId(domainId);
+                chunk.setGroupId(doc.getGroupId());
+                chunk.setStatus(EmbeddingChunkStatus.COMPLETED);
+                chunk.setCreateDate(now);
+
+                //Set root groups
+                int[] rootGroups = DocDB.getRootGroupL(doc.getGroupId(), null, -1);
+                chunk.setRootGroupL1(rootGroups[0]);
+                chunk.setRootGroupL2(rootGroups[1]);
+                chunk.setRootGroupL3(rootGroups[2]);
+
+                chunksToStore.add(chunk);
             }
+
+            // Save entities via JPA (without embedding vector)
+            List<EmbeddingChunkEntity> savedChunks = embeddingChunkRepository.saveAllAndFlush(chunksToStore);
+
+            // Update embedding vectors via native SQL
+            List<Long> savedIds = new ArrayList<>(savedChunks.size());
+            List<float[]> embeddingsToStore = new ArrayList<>(savedChunks.size());
+            for (int i = 0; i < savedChunks.size(); i++) {
+                savedIds.add(savedChunks.get(i).getId());
+                embeddingsToStore.add(resolvedEmbeddings[i]);
+            }
+            vectorStore.updateEmbeddingBatch(savedIds, embeddingsToStore);
 
             Logger.debug(SemanticIndexService.class, "Indexed doc " + entityId + " with " + chunks.size() + " chunks");
         } catch (Exception e) {
@@ -240,7 +296,27 @@ public class SemanticIndexService {
             if(group != null && Tools.isNotEmpty(group.getDomainName()) ) domainId = GroupsDB.getDomainId(group.getDomainName());
             if(domainId < 1) domainId = CloudToolsForCore.getDomainId();
 
-            vectorStore.markError(entityType, entityId, embeddingProvider.getDefaultModel(), e.getMessage(), domainId);
+            String model = embeddingProvider.getDefaultModel();
+
+            // Delete existing chunks for this entity/model and save error marker via repository
+            embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndEmbeddingModel(DocDetailsContentExtractor.ENTITY_TYPE, entityId, model);
+
+            String truncatedMessage = e.getMessage() != null && e.getMessage().length() > 500
+                ? e.getMessage().substring(0, 500) : e.getMessage();
+
+            EmbeddingChunkEntity errorChunk = new EmbeddingChunkEntity();
+            errorChunk.setEntityType(DocDetailsContentExtractor.ENTITY_TYPE);
+            errorChunk.setEntityId(entityId);
+            errorChunk.setChunkIndex(0);
+            errorChunk.setChunkText("ERROR");
+            errorChunk.setContentHash("ERROR");
+            errorChunk.setEmbeddingModel(model);
+            errorChunk.setDimensions(Constants.getInt("ragEmbeddingDimensions"));
+            errorChunk.setDomainId(domainId);
+            errorChunk.setStatus(EmbeddingChunkStatus.ERROR);
+            errorChunk.setErrorMessage(truncatedMessage);
+            errorChunk.setCreateDate(new java.util.Date());
+            embeddingChunkRepository.save(errorChunk);
         }
     }
 

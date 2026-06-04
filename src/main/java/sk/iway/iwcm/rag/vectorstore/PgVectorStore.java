@@ -16,7 +16,8 @@ import sk.iway.iwcm.rag.pgvector.PgvectorJpaConfig;
 
 /**
  * PgVector implementation of VectorStore.
- * Uses native SQL via JDBC to leverage pgvector operators (cosine distance <=>).
+ * Handles ONLY the embedding (vector) column via native SQL using pgvector operators.
+ * Entity CRUD operations are handled by EmbeddingChunkRepository (JPA).
  * Connects to the RAG datasource (primary PgSQL or secondary rag_jpa).
  */
 @Service
@@ -62,29 +63,8 @@ public class PgVectorStore implements VectorStore {
     private static final String DROP_HNSW_INDEX_SQL =
         "DROP INDEX IF EXISTS idx_rag_embedding_hnsw";
 
-    private static final String UPSERT_WITH_GROUPS_SQL =
-        "INSERT INTO rag_embedding_chunks" +
-        "    (entity_type, entity_id, chunk_index, chunk_text, content_hash, embedding," +
-        "     embedding_model, dimensions, language, domain_id, group_id, root_group_l1, root_group_l2, root_group_l3, status, create_date)" +
-        " VALUES (?, ?, ?, ?, ?, ?::vector, ?, ?, ?, ?, ?, ?, ?, ?, '" + EmbeddingChunkStatus.COMPLETED.name() + "', CURRENT_TIMESTAMP)" +
-        " ON CONFLICT (entity_type, entity_id, chunk_index, embedding_model)" +
-        " DO UPDATE SET chunk_text = EXCLUDED.chunk_text, content_hash = EXCLUDED.content_hash," +
-        "              embedding = EXCLUDED.embedding, group_id = EXCLUDED.group_id," +
-        "              root_group_l1 = EXCLUDED.root_group_l1, root_group_l2 = EXCLUDED.root_group_l2," +
-        "              root_group_l3 = EXCLUDED.root_group_l3, status = '" + EmbeddingChunkStatus.COMPLETED.name() + "'," +
-        "              error_message = NULL";
-
-    private static final String DELETE_BY_ENTITY_SQL =
-        "DELETE FROM rag_embedding_chunks WHERE entity_type = ? AND entity_id = ?";
-
-    private static final String DELETE_FOR_ERROR_SQL =
-        "DELETE FROM rag_embedding_chunks WHERE entity_type = ? AND entity_id = ? AND embedding_model = ?";
-
-    private static final String INSERT_ERROR_CHUNK_SQL =
-        "INSERT INTO rag_embedding_chunks" +
-        "    (entity_type, entity_id, chunk_index, chunk_text, content_hash," +
-        "     embedding_model, dimensions, language, domain_id, status, error_message, create_date)" +
-        " VALUES (?, ?, 0, 'ERROR', 'ERROR', ?, ?, NULL, ?, '" + EmbeddingChunkStatus.ERROR.name() + "', ?, CURRENT_TIMESTAMP)";
+    private static final String UPDATE_EMBEDDING_SQL =
+        "UPDATE rag_embedding_chunks SET embedding = ?::vector WHERE id = ?";
 
     /**
      * Builds SEARCH_SQL dynamically based on configured distance metric.
@@ -128,57 +108,68 @@ public class PgVectorStore implements VectorStore {
         "AND chunk_text ILIKE ?";
 
     @Override
-    public void store(String entityType, long entityId, int chunkIndex, String chunkText,
-                      String contentHash, float[] embedding, String embeddingModel,
-                      int dimensions, String language, Integer domainId) {
-        store(entityType, entityId, chunkIndex, chunkText, contentHash, embedding, embeddingModel, dimensions, language, domainId, null, null, null, null);
-    }
+    public void updateEmbedding(Long id, float[] embedding) {
+        if (id == null || embedding == null || embedding.length == 0) return;
 
-    @Override
-    public void store(String entityType, long entityId, int chunkIndex, String chunkText,
-                      String contentHash, float[] embedding, String embeddingModel,
-                      int dimensions, String language, Integer domainId,
-                      Integer groupId, Integer rootGroupL1, Integer rootGroupL2, Integer rootGroupL3) {
         String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null) return;
 
         try {
-            new SimpleQuery(dsName).execute(UPSERT_WITH_GROUPS_SQL,
-                entityType, entityId, chunkIndex, chunkText, contentHash,
-                vectorToString(embedding), embeddingModel, dimensions, language, domainId,
-                groupId, rootGroupL1, rootGroupL2, rootGroupL3);
+            new SimpleQuery(dsName).execute(UPDATE_EMBEDDING_SQL, vectorToString(embedding), id);
         } catch (Exception e) {
-            Logger.error(PgVectorStore.class, "Error storing embedding for " + entityType + "/" + entityId + "/" + chunkIndex + ": " + e.getMessage());
+            Logger.error(PgVectorStore.class,
+                "Error updating embedding for chunk id " + id + ": " + e.getMessage());
         }
     }
 
     @Override
-    public void deleteByEntity(String entityType, long entityId) {
+    public void updateEmbeddingBatch(List<Long> ids, List<float[]> embeddings) {
+        if (ids == null || ids.isEmpty() || embeddings == null || embeddings.isEmpty()) return;
+        if (ids.size() != embeddings.size()) {
+            throw new IllegalArgumentException("IDs/embeddings count mismatch: ids=" + ids.size() + ", embeddings=" + embeddings.size());
+        }
+
         String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null) return;
 
         try {
-            new SimpleQuery(dsName).execute(DELETE_BY_ENTITY_SQL, entityType, entityId);
+            String sql = buildBatchUpdateEmbeddingSql(ids.size());
+            List<Object> params = new ArrayList<>(ids.size() * 2);
+
+            for (int i = 0; i < ids.size(); i++) {
+                params.add(ids.get(i));
+                params.add(vectorToString(embeddings.get(i)));
+            }
+
+            // Add all IDs again for the WHERE IN clause
+            for (Long id : ids) {
+                params.add(id);
+            }
+
+            new SimpleQuery(dsName).execute(sql, params.toArray());
         } catch (Exception e) {
-            Logger.error(PgVectorStore.class, "Error deleting embeddings for " + entityType + "/" + entityId + ": " + e.getMessage());
+            Logger.error(PgVectorStore.class, "Error batch updating embeddings, falling back to row-by-row updates: " + e.getMessage());
+            for (int i = 0; i < ids.size(); i++) {
+                updateEmbedding(ids.get(i), embeddings.get(i));
+            }
         }
     }
 
-    @Override
-    public void markError(String entityType, long entityId, String embeddingModel, String errorMessage, Integer domainId) {
-        String dsName = PgvectorJpaConfig.getRagDataSourceName();
-        if (Tools.isEmpty(dsName)) return;
+    private String buildBatchUpdateEmbeddingSql(int rowCount) {
+        StringBuilder sql = new StringBuilder("UPDATE rag_embedding_chunks SET embedding = CASE id ");
 
-        try {
-            String truncatedMessage = errorMessage != null && errorMessage.length() > 500
-                ? errorMessage.substring(0, 500) : errorMessage;
-
-            SimpleQuery sq = new SimpleQuery(dsName);
-            sq.execute(DELETE_FOR_ERROR_SQL, entityType, entityId, embeddingModel);
-            sq.execute(INSERT_ERROR_CHUNK_SQL, entityType, entityId, embeddingModel, Constants.getInt("ragEmbeddingDimensions"), domainId, truncatedMessage);
-        } catch (Exception e) {
-            Logger.error(PgVectorStore.class, "Error marking chunks as ERROR for " + entityType + "/" + entityId + ": " + e.getMessage());
+        for (int i = 0; i < rowCount; i++) {
+            sql.append("WHEN ? THEN ?::vector ");
         }
+
+        sql.append("END WHERE id IN (");
+        for (int i = 0; i < rowCount; i++) {
+            if (i > 0) sql.append(", ");
+            sql.append("?");
+        }
+        sql.append(")");
+
+        return sql.toString();
     }
 
     @Override

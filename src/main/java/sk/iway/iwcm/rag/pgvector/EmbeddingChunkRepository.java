@@ -21,19 +21,18 @@ import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 @Repository
 public interface EmbeddingChunkRepository extends DomainIdRepository<EmbeddingChunkEntity, Long> {
 
-    List<EmbeddingChunkEntity> findByEntityTypeAndEntityId(RagEntityType entityType, Long entityId);
-
-    List<EmbeddingChunkEntity> findByEntityTypeAndEntityIdAndEmbeddingModel(RagEntityType entityType, Long entityId, String embeddingModel);
-
     @Transactional
     @Modifying
     @Query("DELETE FROM EmbeddingChunkEntity c WHERE c.entityType = :entityType AND c.entityId = :entityId")
     void deleteByEntityTypeAndEntityId(@Param("entityType") RagEntityType entityType, @Param("entityId") Long entityId);
 
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM EmbeddingChunkEntity c WHERE c.entityType = :entityType AND c.entityId = :entityId AND c.embeddingModel = :embeddingModel")
+    void deleteByEntityTypeAndEntityIdAndEmbeddingModel(@Param("entityType") RagEntityType entityType, @Param("entityId") Long entityId, @Param("embeddingModel") String embeddingModel);
+
     @Query("SELECT DISTINCT c.entityType FROM EmbeddingChunkEntity c WHERE c.domainId = :domainId")
     List<RagEntityType> findDistinctEntityTypes(@Param("domainId") Integer domainId);
-
-    Page<EmbeddingChunkEntity> findAllByEntityType(RagEntityType entityType, Pageable pageable);
 
     @Query("SELECT DISTINCT c.entityId FROM EmbeddingChunkEntity c WHERE c.entityType = :entityType AND c.domainId = :domainId")
     List<Integer> findDistinctEntityIdsByEntityTypeAndDomainId(RagEntityType entityType, Integer domainId);
