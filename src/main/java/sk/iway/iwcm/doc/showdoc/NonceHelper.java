@@ -118,9 +118,9 @@ public final class NonceHelper {
         String injectPoint = tagContent;
         if (tagMatcher.find()) {
             String attributes = tagMatcher.group(2);
-            //
-            attributes = attributes.replaceAll("\\s*/\\s*$", "");
+            // Handle tags with no attributes (group 2 is null)
             if (Tools.isNotEmpty(attributes)) {
+                attributes = attributes.replaceAll("\\s*/\\s*$", "");
                 injectPoint = tagName + attributes + " nonce=\"" + nonce + "\"";
             } else {
                 injectPoint = tagName + " nonce=\"" + nonce + "\"";

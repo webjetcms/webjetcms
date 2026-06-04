@@ -653,4 +653,93 @@ class CspNonceTest extends BaseWebjetTest {
 		// Script tag should NOT get nonce (script-src allows unsafe-inline)
 		assertFalse(result.contains("<script nonce=\"linkNonce\">"), "Script tag should not get nonce when script-src allows unsafe-inline");
 	}
+
+	// ==================== Edge Cases: Self-closing and explicit closing tags ====================
+
+	@Test
+	void testInjectCspNonceIntoTagsLinkSelfClosingSlash() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><head><link rel=\"stylesheet\" type=\"text/css\" href=\"/css/main.css\" /></head></html>";
+		String result = injectCspNonceIntoTags(showDoc, input, "linkNonce");
+		assertTrue(result.contains("nonce=\"linkNonce\""), "Nonce should be injected into self-closing link tag (with />)");
+		assertTrue(result.contains("href=\"/css/main.css\""), "Original href attribute should be preserved");
+	}
+
+	@Test
+	void testInjectCspNonceIntoTagsLinkExplicitClosingTag() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><head><link rel=\"stylesheet\" type=\"text/css\" href=\"/css/main.css\"></link></head></html>";
+		String result = injectCspNonceIntoTags(showDoc, input, "linkNonce");
+		assertTrue(result.contains("nonce=\"linkNonce\""), "Nonce should be injected into link tag with explicit closing tag (</link>)");
+		assertTrue(result.contains("href=\"/css/main.css\""), "Original href attribute should be preserved");
+	}
+
+	@Test
+	void testInjectCspNonceIntoTagsLinkSelfClosingWithSpace() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><head><link rel=\"stylesheet\" type=\"text/css\" href=\"/css/main.css\" > </head></html>";
+		String result = injectCspNonceIntoTags(showDoc, input, "linkNonce");
+		assertTrue(result.contains("nonce=\"linkNonce\""), "Nonce should be injected into link tag with space before >");
+	}
+
+	@Test
+	void testInjectCspNonceIntoTagsScriptWithSrcExplicitClosing() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><head><script src=\"https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js\"></script></head></html>";
+		String result = injectCspNonceIntoTags(showDoc, input, "scriptNonce");
+		assertTrue(result.contains("nonce=\"scriptNonce\""), "Nonce should be injected into script tag with src and explicit closing tag");
+		assertTrue(result.contains("src=\"https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js\""), "Original src attribute should be preserved");
+	}
+
+	@Test
+	void testInjectCspNonceIntoTagsScriptWithSrcSelfClosing() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><head><script src=\"https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js\" /></head></html>";
+		String result = injectCspNonceIntoTags(showDoc, input, "scriptNonce");
+		assertTrue(result.contains("nonce=\"scriptNonce\""), "Nonce should be injected into script tag with src and self-closing />");
+		assertTrue(result.contains("src=\"https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js\""), "Original src attribute should be preserved");
+	}
+
+	@Test
+	void testInjectCspNonceIntoTagsScriptWithSrcNoClosing() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><head><script src=\"https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js\"></script></head></html>";
+		String result = injectCspNonceIntoTags(showDoc, input, "scriptNonce");
+		assertTrue(result.contains("nonce=\"scriptNonce\""), "Nonce should be injected into script tag with src attribute");
+		assertTrue(result.contains("src=\"https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js\""), "Original src attribute should be preserved");
+	}
+
+	@Test
+	void testInjectCspNonceIntoTagsMixedClosingStyles() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><head>"
+				+ "<link rel=\"stylesheet\" href=\"/css/a.css\">"
+				+ "<link rel=\"stylesheet\" href=\"/css/b.css\" />"
+				+ "<link rel=\"stylesheet\" href=\"/css/c.css\"></link>"
+				+ "<script src=\"/js/x.js\"></script>"
+				+ "<script src=\"/js/y.js\" />"
+				+ "</head></html>";
+		String result = injectCspNonceIntoTags(showDoc, input, "mixedNonce");
+		// Should inject nonce into all 5 tags
+		int nonceCount = result.split("nonce=\"mixedNonce\"").length - 1;
+		assertEquals(5, nonceCount, "Should inject nonce into all 5 tags with different closing styles");
+	}
+
+	@Test
+	void testInjectCspNonceIntoTagsLinkSelfClosingNoNonceWhenUnsafeInline() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\" /></head></html>";
+		// style-src allows unsafe-inline, so no nonce injection into style/link tags
+		String result = injectCspNonceIntoTags(showDoc, input, "linkNonce", true, false);
+		assertFalse(result.contains("nonce=\"linkNonce\""), "Self-closing link tag should not get nonce when style-src allows unsafe-inline");
+	}
+
+	@Test
+	void testInjectCspNonceIntoTagsScriptSelfClosingNoNonceWhenUnsafeInline() {
+		ShowDoc showDoc = new ShowDoc();
+		String input = "<html><head><script src=\"/app.js\" /></head></html>";
+		// script-src allows unsafe-inline, so no nonce injection into script tags
+		String result = injectCspNonceIntoTags(showDoc, input, "scriptNonce", false, true);
+		assertFalse(result.contains("nonce=\"scriptNonce\""), "Self-closing script tag should not get nonce when script-src allows unsafe-inline");
+	}
 }
