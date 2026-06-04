@@ -1751,8 +1751,8 @@ private static String combineCss(String cssStyle)
      */
     private String processTagForNonce(String tagContent, String nonce, java.util.regex.Pattern scriptPattern,
                                       java.util.regex.Pattern stylePattern, java.util.regex.Pattern linkPattern) {
-        // Check if nonce is already present
-        if (tagContent.toLowerCase().contains("nonce=")) {
+        // Check if nonce attribute is already present (lookbehind ensures nonce is preceded by whitespace or letter, not - or ?)
+        if (java.util.regex.Pattern.compile("(?<=[\\sa-z])nonce\\s*=").matcher(tagContent).find()) {
             return tagContent;
         }
         // Extract tag name (handles both <script> and <script type="...">)

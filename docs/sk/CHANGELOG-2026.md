@@ -37,7 +37,7 @@
 
 ### Bezpečnosť
 
-- Pridaná podpora generovania `nonce` pre `Content-Security-Policy` hlavičku. Ak konfigurácia `contentSecurityPolicy` obsahuje `{nonce}` symbol, automaticky sa vygeneruje unikátny kryptograficky bezpečný `nonce` a pridá sa do všetkých `<script>`, `<style>` a `<link rel="stylesheet">` značiek v HTML výstupe aj do `Content-Security-Policy` hlavičky (#58533). Optimalizovaná vstrekovacia logika: single-pass regex namiesto 3-pass spracovania, StringBuilder namiesto StringBuffer (o 10-15% rýchlejšie), redukcia pamäťových alokácií zo 4 na 2. Opravené dve kritické problémy: CSP hlavička teraz používa správny formát `'nonce-<value>'` (vrátane prefixu a úvodzoviek), nonce sa vstrekne do HTML aj keď je vypnutá funkcia presunu štýlov do hlavičky.
+- Pridaná podpora generovania `nonce` pre `Content-Security-Policy` hlavičku. Ak konfigurácia `contentSecurityPolicy` obsahuje `{nonce}` symbol, automaticky sa vygeneruje unikátny kryptograficky bezpečný `nonce` a pridá sa do všetkých `<script>`, `<style>` a `<link rel="stylesheet">` značiek v HTML výstupe aj do `Content-Security-Policy` hlavičky (#58533). Optimalizovaná vstrekovacia logika: single-pass regex namiesto 3-pass spracovania, StringBuilder namiesto StringBuffer (o 10-15% rýchlejšie), redukcia pamäťových alokácií zo 4 na 2. Opravené kritické problémy: CSP hlavička používa správny formát `'nonce-<value>'` (vrátane prefixu a úvodzoviek), nonce sa vstrekne do HTML aj keď je vypnutá funkcia presunu štýlov do hlavičky, detekcia existujúceho nonce používa presnú regulárny výraz na rozlíšenie skutočného atribútu nonce od falošných pozitív (data-nonce, ?nonce= v URL).
 
 ### Dokumentácia
 
