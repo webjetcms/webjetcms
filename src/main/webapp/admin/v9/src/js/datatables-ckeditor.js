@@ -592,6 +592,155 @@ export class DatatablesCkEditor {
 						}, 'info');
 					}
 
+					// Thumb tab - configure /thumb image parameters
+					dialogDefinition.addContents(
+					{
+						id: 'thumb',
+						label: that.translate("thumb"),
+						elements: [
+						{
+							type: 'hbox',
+							widths: ['50%', '50%'],
+							children: [
+							{
+								type: 'text',
+								id: 'thumbWidth',
+								label: that.translate("thumbWidth"),
+								'default': '',
+								validate: function() {
+									var ip = this.getDialog().getContentElement('thumb', 'thumbIpMode').getValue();
+									if ((ip == 3 || ip == 4) && !this.getValue()) {
+										return that.translate("thumbWidthRequired");
+									}
+									return true;
+								}
+							},
+							{
+								type: 'text',
+								id: 'thumbHeight',
+								label: that.translate("thumbHeight"),
+								'default': '',
+								validate: function() {
+									var ip = this.getDialog().getContentElement('thumb', 'thumbIpMode').getValue();
+									if ((ip == 3 || ip == 4) && !this.getValue()) {
+										return that.translate("thumbHeightRequired");
+									}
+									return true;
+								}
+							}
+							]
+						},
+						{
+							type: 'select',
+							id: 'thumbIpMode',
+							label: that.translate("thumbIpMode"),
+							'default': '1',
+							items: [
+								['', ''],
+								['1', that.translate("thumbIp1")],
+								['2', that.translate("thumbIp2")],
+								['3', that.translate("thumbIp3")],
+								['4', that.translate("thumbIp4")],
+								['5', that.translate("thumbIp5")]
+							],
+							setup: function( type, element ) {
+								var classNames = element.getClasses ? (element.getClasses().toArray().join(' ') || '') : '';
+								var fixedSizeMatch = /fixedSize-\d+-\d+-(\d+)/.exec(classNames);
+								if (fixedSizeMatch) {
+									this.setValue(fixedSizeMatch[1]);
+								}
+							},
+							commit: function( type, element ) {
+								// Class is updated live by generateThumbClass()
+							},
+							onChange: function() {
+								updateThumbTabVisibility(this);
+								generateThumbClass(this.getDialog());
+							}
+						},
+						{
+							type: 'hbox',
+							widths: ['50%', '50%'],
+							children: [
+							{
+								type: 'text',
+								id: 'thumbBackgroundColor',
+								label: that.translate("thumbBackgroundColor"),
+								'default': '#ffffff',
+								style: 'width: 100px;',
+								setup: function( type, element ) {
+									var classNames = element.getClasses ? (element.getClasses().toArray().join(' ') || '') : '';
+									// Background color is stored in URL, not in class - read from element attributes if available
+									this.setValue('#ffffff');
+								}
+							},
+							{
+								type: 'checkbox',
+								id: 'thumbNoIp',
+								label: that.translate("thumbNoIp"),
+								'default': false,
+								setup: function( type, element ) {
+									this.setValue(false);
+								},
+								commit: function( type, element ) {
+									// Handled in live class generation
+								}
+							}
+							]
+						}
+						]
+					}, 'info');
+
+					// Helper function to update thumb tab field visibility
+					function updateThumbTabVisibility(thumbElement) {
+						var dialog = thumbElement.getDialog();
+						var ipMode = dialog.getContentElement('thumb', 'thumbIpMode').getValue();
+						var heightField = dialog.getContentElement('thumb', 'thumbHeight');
+						var widthField = dialog.getContentElement('thumb', 'thumbWidth');
+						var colorField = dialog.getContentElement('thumb', 'thumbBackgroundColor');
+
+						// Show/hide height field based on IP mode
+						if (ipMode == '1') {
+							heightField.getElement().getParent().getParent().hide();
+						} else {
+							heightField.getElement().getParent().getParent().show();
+						}
+
+						// Show/hide width field based on IP mode
+						if (ipMode == '2') {
+							widthField.getElement().getParent().getParent().hide();
+						} else {
+							widthField.getElement().getParent().getParent().show();
+						}
+
+						// Show/hide background color field based on IP mode
+						if (ipMode == '3' || ipMode == '4') {
+							colorField.getElement().getParent().getParent().show();
+						} else {
+							colorField.getElement().getParent().getParent().hide();
+						}
+					}
+
+					// Helper function to generate CSS class from thumb tab values
+					function generateThumbClass(dialog) {
+						var width = dialog.getContentElement('thumb', 'thumbWidth').getValue();
+						var height = dialog.getContentElement('thumb', 'thumbHeight').getValue();
+						var ipMode = dialog.getContentElement('thumb', 'thumbIpMode').getValue();
+						var noIp = dialog.getContentElement('thumb', 'thumbNoIp').getValue();
+
+						// Remove existing fixedSize class
+						var currentClass = dialog.getContentElement('advanced', 'txtGenClass').getValue();
+						currentClass = currentClass.replace(/\s*fixedSize-\d+-\d+(-\d+)?/g, '').trim();
+
+						// Generate new class
+						if (ipMode && (width || height)) {
+							var newClass = 'fixedSize-' + (width || '') + '-' + (height || '') + '-' + ipMode;
+							currentClass = (currentClass ? currentClass + ' ' : '') + newClass;
+						}
+
+						dialog.getContentElement('advanced', 'txtGenClass').setValue(currentClass);
+					}
+
 					//console.log("dialogDefinition=", dialogDefinition);
 
 					dialogDefinition.dialog.on( 'show', function()
@@ -657,6 +806,33 @@ export class DatatablesCkEditor {
 							classes = classes.replace("w-100", "");
 							dialog.getContentElement("advanced", "txtGenClass").setValue(classes);
 						});
+
+						// Thumb tab: preload existing values and wire change events
+						if (dialog.getContentElement('thumb', 'thumbWidth')) {
+							var existingClass = dialog.getContentElement("advanced", "txtGenClass").getValue() || '';
+							var fixedSizeMatch = /fixedSize-(\d*)-(\d*)(?:-(\d+))?/.exec(existingClass);
+
+							if (fixedSizeMatch) {
+								// Preload width, height, ip mode from existing class
+								if (fixedSizeMatch[1]) dialog.getContentElement('thumb', 'thumbWidth').setValue(fixedSizeMatch[1]);
+								if (fixedSizeMatch[2]) dialog.getContentElement('thumb', 'thumbHeight').setValue(fixedSizeMatch[2]);
+								if (fixedSizeMatch[3]) dialog.getContentElement('thumb', 'thumbIpMode').setValue(fixedSizeMatch[3]);
+							}
+
+							// Wire change events for live class generation
+							dialog.getContentElement('thumb', 'thumbWidth').on('change', function() {
+								generateThumbClass(dialog);
+							});
+							dialog.getContentElement('thumb', 'thumbHeight').on('change', function() {
+								generateThumbClass(dialog);
+							});
+							dialog.getContentElement('thumb', 'thumbNoIp').on('change', function() {
+								generateThumbClass(dialog);
+							});
+
+							// Set initial visibility based on IP mode
+							updateThumbTabVisibility(dialog.getContentElement('thumb', 'thumbIpMode'));
+						}
 
 						setTimeout( function()
 						{
