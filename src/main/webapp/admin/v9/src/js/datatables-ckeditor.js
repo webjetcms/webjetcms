@@ -637,11 +637,11 @@ export class DatatablesCkEditor {
 							'default': '1',
 							items: [
 								['', ''],
-								['1', that.translate("thumbIp1")],
-								['2', that.translate("thumbIp2")],
-								['3', that.translate("thumbIp3")],
-								['4', that.translate("thumbIp4")],
-								['5', that.translate("thumbIp5")]
+								['1 - ' + that.translate("thumbIp1"), '1'],
+								['2 - ' + that.translate("thumbIp2"), '2'],
+								['3 - ' + that.translate("thumbIp3"), '3'],
+								['4 - ' + that.translate("thumbIp4"), '4'],
+								['5 - ' + that.translate("thumbIp5"), '5']
 							],
 							setup: function( type, element ) {
 								var classNames = element.getClasses ? (element.getClasses().toArray().join(' ') || '') : '';
@@ -807,33 +807,6 @@ export class DatatablesCkEditor {
 							dialog.getContentElement("advanced", "txtGenClass").setValue(classes);
 						});
 
-						// Thumb tab: preload existing values and wire change events
-						if (dialog.getContentElement('thumb', 'thumbWidth')) {
-							var existingClass = dialog.getContentElement("advanced", "txtGenClass").getValue() || '';
-							var fixedSizeMatch = /fixedSize-(\d*)-(\d*)(?:-(\d+))?/.exec(existingClass);
-
-							if (fixedSizeMatch) {
-								// Preload width, height, ip mode from existing class
-								if (fixedSizeMatch[1]) dialog.getContentElement('thumb', 'thumbWidth').setValue(fixedSizeMatch[1]);
-								if (fixedSizeMatch[2]) dialog.getContentElement('thumb', 'thumbHeight').setValue(fixedSizeMatch[2]);
-								if (fixedSizeMatch[3]) dialog.getContentElement('thumb', 'thumbIpMode').setValue(fixedSizeMatch[3]);
-							}
-
-							// Wire change events for live class generation
-							dialog.getContentElement('thumb', 'thumbWidth').on('change', function() {
-								generateThumbClass(dialog);
-							});
-							dialog.getContentElement('thumb', 'thumbHeight').on('change', function() {
-								generateThumbClass(dialog);
-							});
-							dialog.getContentElement('thumb', 'thumbNoIp').on('change', function() {
-								generateThumbClass(dialog);
-							});
-
-							// Set initial visibility based on IP mode
-							updateThumbTabVisibility(dialog.getContentElement('thumb', 'thumbIpMode'));
-						}
-
 						setTimeout( function()
 						{
 							//for next open update data
@@ -855,6 +828,36 @@ export class DatatablesCkEditor {
 							{
 								//toto moze nastat pri prvom nacitani, vtedy sa ale refresh zavola priamo v iframe kode
 								//console.log("Error image dialog show, e=", e);
+							}
+
+							// Thumb tab: preload existing values and wire change events
+							console.log("Initializing thumb tab, dialog=", dialog.getContentElement('thumb', 'thumbWidth'));
+							if (dialog.getContentElement('thumb', 'thumbWidth')) {
+								var existingClass = dialog.getContentElement("advanced", "txtGenClass").getValue() || '';
+								console.log("Existing class for thumb tab:", existingClass);
+								var fixedSizeMatch = /fixedSize-(\d*)-(\d*)(?:-(\d+))?/.exec(existingClass);
+
+								if (fixedSizeMatch) {
+									console.log("Preloading thumb tab values, width=", fixedSizeMatch[1], " height=", fixedSizeMatch[2], " ipMode=", fixedSizeMatch[3]);
+									// Preload width, height, ip mode from existing class
+									if (fixedSizeMatch[1]) dialog.getContentElement('thumb', 'thumbWidth').setValue(fixedSizeMatch[1]);
+									if (fixedSizeMatch[2]) dialog.getContentElement('thumb', 'thumbHeight').setValue(fixedSizeMatch[2]);
+									if (fixedSizeMatch[3]) dialog.getContentElement('thumb', 'thumbIpMode').setValue(fixedSizeMatch[3]);
+								}
+
+								// Wire change events for live class generation
+								dialog.getContentElement('thumb', 'thumbWidth').on('change', function() {
+									generateThumbClass(dialog);
+								});
+								dialog.getContentElement('thumb', 'thumbHeight').on('change', function() {
+									generateThumbClass(dialog);
+								});
+								dialog.getContentElement('thumb', 'thumbNoIp').on('change', function() {
+									generateThumbClass(dialog);
+								});
+
+								// Set initial visibility based on IP mode
+								updateThumbTabVisibility(dialog.getContentElement('thumb', 'thumbIpMode'));
 							}
 						}, 200);
 
