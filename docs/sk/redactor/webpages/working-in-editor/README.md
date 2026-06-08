@@ -185,7 +185,30 @@ Uložené obrázky z **Fotobanky** majú automaticky vyplnenú hodnotu **URL adr
 
 ### Karta Miniatúra
 
+Karta **Miniatúra** umožňuje nastaviť parametre automatického generovania zmenšených obrázkov `thumbnail` priamo z dialógového okna vkladania obrázkov.
 
+![](image_dialog-thumb.png)
+
+**Režim bodu záujmu (IP)**
+
+Výberom [režimu bodu záujmu](../../../frontend/thumb-servlet/interest-point.md) určíte, ktorá časť obrázka bude pri orezávaní zachovaná:
+
+| Režim | Popis |
+| ------- | ------- |
+| `1` | Zachováva iba šírku (výška sa prispôsobí automaticky) |
+| `2` | Zachováva iba výšku (šírka sa prispôsobí automaticky) |
+| `3` | Zachováva šírku aj výšku + doplnenie pozadia farbou |
+| `4` | Zachováva šírku aj výšku + doplnenie pozadia farbou |
+| `5` | Zachováva šírku aj výšku bez doplnenia pozadia |
+
+**Dynamické zobrazenie polí**
+
+Polia na karte Miniatúra sa dynamicky zobrazujú/skrývajú podľa vybraného režimu bodu záujmu:
+
+- Režimy `1` a `2`: Zobrazí sa iba jedno rozmerné pole (šírka alebo výška).
+- Režimy `3` a `4`: Zobrazia sa obe rozmerné polia + pole pre farbu pozadia. Tá sa zadá vo formáte `#rrggbb`
+- Režim `5`: Zobrazia sa obe rozmerné polia bez poľa pre farbu.
+- Pole **Vypnúť bod záujmu** sa zobrazí pre všetky režimy okrem prázdnej hodnoty. To nastavuje, či sa pri generovaní aplikuje aj nastavený bod záujmu, alebo sa použije celý obrázok.
 
 ### Video súbory
 

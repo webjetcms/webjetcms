@@ -10,6 +10,10 @@
 
 ![](frontend/templates/templates-edit-advanced.png)
 
+- V dialógu vkladania obrázkov pridaná karta **Miniatúra** pre nastavenie parametrov [generovania zmenšených obrázkov](redactor/webpages/working-in-editor/README.md#karta-miniatúra) `thumbnail` (#243).
+
+![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
+
 ### Formuláre
 
 - Do viackrokových formulárov pridaná možnosť jednoducho nastavovať výberové polia a skupiny zaškrtávacích / výberových polí (#58517).
