@@ -686,11 +686,6 @@ export class DatatablesCkEditor {
 						var widthField = dialog.getContentElement('thumb', 'thumbWidth');
 						var colorField = dialog.getContentElement('thumb', 'thumbBackgroundColor');
 
-						console.log("Updating thumb tab visibility, ipMode=", ipMode);
-						window.heightField = heightField;
-						window.widthField = widthField;
-						window.colorField = colorField;
-
 						// Show/hide height field based on IP mode
 						if (ipMode == '1' || ipMode == '') {
 							heightField.getElement().hide();
@@ -790,7 +785,6 @@ export class DatatablesCkEditor {
 								txtUrl = WJ.urlRemoveParam(txtUrl, 'noip');
 							}
 						}
-						console.log("Updated thumb URL: ", txtUrl);
 						dialog.getContentElement("info", "txtUrl").setValue(txtUrl);
 					}
 

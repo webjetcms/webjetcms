@@ -10,7 +10,7 @@
 
 ![](frontend/templates/templates-edit-advanced.png)
 
-- V dialógu vkladania obrázkov pridaná karta **Miniatúra** pre nastavenie parametrov [generovania zmenšených obrázkov](redactor/webpages/working-in-editor/README.md#karta-miniatúra) `thumbnail` (#243).
+- V dialógu vkladania obrázkov pridaná karta **Miniatúra** pre nastavenie parametrov [generovania zmenšených obrázkov](redactor/webpages/working-in-editor/README.md#karta-miniatúra) `thumbnail` (#58317).
 
 ![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
 
