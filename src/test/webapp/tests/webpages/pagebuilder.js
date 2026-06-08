@@ -295,9 +295,69 @@ Scenario('bug - /thumb prefix and parameters in image url', async ({ I, DTE, Doc
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
     DTE.waitForEditor();
 
-    await validateThumb(I, "Etiam orci");
-    await validateThumb(I, "intranetové riešenie");
+    await validateThumb(I, "Etiam orci", 160, 160, 300, 300);
+    await validateThumb(I, "Etiam orci", 300, 300);
+
+    await validateThumb(I, "intranetové riešenie", 160, 160, 200, 200);
+    await validateThumb(I, "intranetové riešenie", 200, 200);
 });
+
+async function validateThumb(I, elementText, width=160, height=160, setWidth=null, setHeight=null) {
+    I.say("---> validateThumb, element: "+elementText+", width: "+width+", height: "+height+", setWidth: "+setWidth+", setHeight: "+setHeight);
+
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    var imgLocator = locate("div").withChild(locate("h3").withText(elementText)).find(locate(".fixedSize-"+width+"-"+height+"-5"));
+    I.waitForElement(imgLocator, 10);
+    I.click(imgLocator);
+    I.switchTo(locate(".cke_dialog_container").withAttr({style: "display: flex; z-index: 10010;"}).find("table.cke_dialog #wjImageIframeElement"));
+
+    I.waitForElement('#txtUrl', 10);
+    I.wait(5);
+    const url = await I.grabValueFrom("#txtUrl");
+
+    //
+    I.say('Checking if the URL contains "/thumb/" only once.');
+    const regex = /^(?!.*\bthumb\b.*\bthumb\b).*thumb.*/;
+    assert.match(url, regex, 'URL does not contain "/thumb/" only once');
+
+    //
+    I.say('Checking if the URL contains the correct parameters: w='+width+', h='+height+', ip=5.');
+    assert.match(url, new RegExp('w=' + width));
+    assert.match(url, new RegExp('h=' + height));
+    assert.match(url, /ip=5/);
+
+    //
+    I.say('Checking if the parameters are not duplicated in the URL.');
+    assert.doesNotMatch(url, new RegExp('w=' + width + '.*w=' + width), "Parameter 'w' is duplicated in the URL");
+    assert.doesNotMatch(url, new RegExp('h=' + height + '.*h=' + height), "Parameter 'h' is duplicated in the URL");
+    assert.doesNotMatch(url, /ip=5.*ip=5/, "Parameter 'ip' is duplicated in the URL");
+
+    //
+    I.switchTo();
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+
+
+    //check values in thumbs dialog
+    I.click(locate("a.cke_dialog_tab").withText("Miniatúra"));
+    var widthLocator = locate(".cke_dialog_container").withAttr({style: "display: flex; z-index: 10010;"}).find(".cke_dialog_ui_vbox.cke_dialog_page_contents").withText("Režim").find(".cke_dialog_ui_text").withText("Šírka").find("input.cke_dialog_ui_input_text");
+    var heightLocator = locate(".cke_dialog_container").withAttr({style: "display: flex; z-index: 10010;"}).find(".cke_dialog_ui_vbox.cke_dialog_page_contents").withText("Režim").find(".cke_dialog_ui_text").withText("Výška").find("input.cke_dialog_ui_input_text");
+    I.seeInField(widthLocator, width);
+    I.seeInField(heightLocator, height);
+
+    if (setWidth !== null) I.fillField(widthLocator, setWidth);
+    if (setHeight !== null) I.fillField(heightLocator, setHeight);
+
+    I.clickCss(".cke_dialog_ui_button_ok");
+
+    await I.executeScript(() => {
+        const element = document.querySelector('#cke_692_uiElement #wjImageIframeElement');
+            if (element) {
+              element.remove();
+            }
+    });
+
+    I.switchTo();
+}
 
 function insertLink(I, link) {
     I.clickCss(".cke_button.cke_button__link.cke_button_off");
@@ -314,48 +374,6 @@ function insertLink(I, link) {
           element.remove();
         }
     });
-}
-
-async function validateThumb(I, elementText) {
-    I.switchTo("#DTE_Field_data-pageBuilderIframe");
-    I.waitForElement(locate("div").withChild(locate("h3").withText(elementText)).find(locate(".fixedSize-160-160-5")), 10);
-    I.click(locate("div").withChild(locate("h3").withText(elementText)).find(locate(".fixedSize-160-160-5")));
-    I.switchTo(locate(".cke_dialog_container").withAttr({style: "display: flex; z-index: 10010;"}).find("table.cke_dialog #wjImageIframeElement"));
-
-    I.waitForElement('#txtUrl', 10);
-    I.wait(5);
-    const url = await I.grabValueFrom("#txtUrl");
-
-    //
-    I.say('Checking if the URL contains "/thumb/" only once.');
-    const regex = /^(?!.*\bthumb\b.*\bthumb\b).*thumb.*/;
-    assert.match(url, regex, 'URL does not contain "/thumb/" only once');
-
-    //
-    I.say('Checking if the URL contains the correct parameters: w=160, h=160, ip=5.');
-    assert.match(url, /w=160/);
-    assert.match(url, /h=160/);
-    assert.match(url, /ip=5/);
-
-    //
-    I.say('Checking if the parameters are not duplicated in the URL.');
-    assert.doesNotMatch(url, /w=160.*w=160/, "Parameter 'w' is duplicated in the URL");
-    assert.doesNotMatch(url, /h=160.*h=160/, "Parameter 'h' is duplicated in the URL");
-    assert.doesNotMatch(url, /ip=5.*ip=5/, "Parameter 'ip' is duplicated in the URL");
-
-    //
-    I.switchTo();
-    I.switchTo("#DTE_Field_data-pageBuilderIframe");
-    I.clickCss(".cke_dialog_ui_button_cancel");
-
-    await I.executeScript(() => {
-        const element = document.querySelector('#cke_692_uiElement #wjImageIframeElement');
-            if (element) {
-              element.remove();
-            }
-    });
-
-    I.switchTo();
 }
 
 Scenario('BUG: when you open PB doc and then empty NON PB it has PB content', ({I, DTE, Document}) => {
