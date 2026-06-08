@@ -596,7 +596,7 @@ export class DatatablesCkEditor {
 					dialogDefinition.addContents(
 					{
 						id: 'thumb',
-						label: that.translate("thumb"),
+						label: that.translate("thumbTabTitle"),
 						elements: [
 							{
 								type: 'select',
