@@ -83,8 +83,8 @@ block content
                     var ip=6;
                     try
                     {
-                        //podpora pre zadanie css ako fixedSize-700-400 alebo fixedSize-700-400-1-cffff00-true
-                        var fixedSizeRegex = /fixedSize-(\d+)-(\d+)(?:-(\d+))?(?:-c([a-fA-F0-9]{6}))?(?:-true)?/gi;
+                        // Format: fixedSize-w-h-ip[-color][-true] where color is hex without # or c prefix
+                        var fixedSizeRegex = /fixedSize-(\d+)-(\d+)(?:-(\d+))?(?:-([a-fA-F0-9]{6}))?(?:-true)?/gi;
                         var matched = fixedSizeRegex.exec(classNames);
                         //console.log(matched);
                         if (matched != null && matched.length >= 3)
@@ -102,9 +102,9 @@ block content
                         urlPath = WJ.urlUpdateParam(urlPath, "w", actualWidth);
                         urlPath = WJ.urlUpdateParam(urlPath, "h", actualHeight);
                         urlPath = WJ.urlUpdateParam(urlPath, "ip", ip);
-                        // Extract color and noip from class name
-                        var colorMatch = /fixedSize-\d+-\d+(?:-\d+)?(?:-c([a-fA-F0-9]{6}))?/.exec(classNames);
-                        var noipMatch = /fixedSize-\d+-\d+(?:-\d+)?(?:-c[a-fA-F0-9]{6})?-true/.exec(classNames);
+                        // Extract color and noip from class name (color without c prefix)
+                        var colorMatch = /fixedSize-\d+-\d+(?:-\d+)?(?:-([a-fA-F0-9]{6}))?/.exec(classNames);
+                        var noipMatch = /fixedSize-\d+-\d+(?:-\d+)?(?:-[a-fA-F0-9]{6})?-true/.exec(classNames);
                         if (colorMatch && colorMatch[1]) {
                             urlPath = WJ.urlUpdateParam(urlPath, "c", colorMatch[1]);
                         }

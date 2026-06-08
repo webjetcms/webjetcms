@@ -599,42 +599,10 @@ export class DatatablesCkEditor {
 						label: that.translate("thumb"),
 						elements: [
 							{
-								type: 'hbox',
-								widths: ['50%', '50%'],
-								children: [
-								{
-									type: 'text',
-									id: 'thumbWidth',
-									label: that.translate("thumbWidth"),
-									'default': '',
-									validate: function() {
-										var ip = this.getDialog().getContentElement('thumb', 'thumbIpMode').getValue();
-										if ((ip == 3 || ip == 4) && !this.getValue()) {
-											return that.translate("thumbWidthRequired");
-										}
-										return true;
-									}
-								},
-								{
-									type: 'text',
-									id: 'thumbHeight',
-									label: that.translate("thumbHeight"),
-									'default': '',
-									validate: function() {
-										var ip = this.getDialog().getContentElement('thumb', 'thumbIpMode').getValue();
-										if ((ip == 3 || ip == 4) && !this.getValue()) {
-											return that.translate("thumbHeightRequired");
-										}
-										return true;
-									}
-								}
-								]
-							},
-							{
 								type: 'select',
 								id: 'thumbIpMode',
 								label: that.translate("thumbIpMode"),
-								'default': '1',
+								'default': '',
 								items: [
 									['', ''],
 									['1 - ' + that.translate("thumbIp1"), '1'],
@@ -655,6 +623,32 @@ export class DatatablesCkEditor {
 								},
 								onChange: function() {
 									updateThumbTabVisibility(this);
+								}
+							},
+							{
+								type: 'text',
+								id: 'thumbWidth',
+								label: that.translate("thumbWidth"),
+								'default': '',
+								validate: function() {
+									var ip = this.getDialog().getContentElement('thumb', 'thumbIpMode').getValue();
+									if ((ip == 3 || ip == 4) && !this.getValue()) {
+										return that.translate("thumbWidthRequired");
+									}
+									return true;
+								}
+							},
+							{
+								type: 'text',
+								id: 'thumbHeight',
+								label: that.translate("thumbHeight"),
+								'default': '',
+								validate: function() {
+									var ip = this.getDialog().getContentElement('thumb', 'thumbIpMode').getValue();
+									if ((ip == 3 || ip == 4) && !this.getValue()) {
+										return that.translate("thumbHeightRequired");
+									}
+									return true;
 								}
 							},
 							{
@@ -698,14 +692,14 @@ export class DatatablesCkEditor {
 						window.colorField = colorField;
 
 						// Show/hide height field based on IP mode
-						if (ipMode == '1') {
+						if (ipMode == '1' || ipMode == '') {
 							heightField.getElement().hide();
 						} else {
 							heightField.getElement().show();
 						}
 
 						// Show/hide width field based on IP mode
-						if (ipMode == '2') {
+						if (ipMode == '2' || ipMode == '') {
 							widthField.getElement().hide();
 						} else {
 							widthField.getElement().show();
@@ -717,9 +711,15 @@ export class DatatablesCkEditor {
 						} else {
 							colorField.getElement().hide();
 						}
+						if (ipMode == '') {
+							dialog.getContentElement('thumb', 'thumbNoIp').getElement().hide();
+						} else {
+							dialog.getContentElement('thumb', 'thumbNoIp').getElement().show();
+						}
 					}
 
 					// Helper function to generate CSS class from thumb tab values
+					// Format: fixedSize-w-h-ip[-color][-true] where color is hex without # or c prefix
 					function generateThumbClass(dialog) {
 						var width = dialog.getContentElement('thumb', 'thumbWidth').getValue();
 						var height = dialog.getContentElement('thumb', 'thumbHeight').getValue();
@@ -727,19 +727,19 @@ export class DatatablesCkEditor {
 						var bgColor = dialog.getContentElement('thumb', 'thumbBackgroundColor').getValue();
 						var noIp = dialog.getContentElement('thumb', 'thumbNoIp').getValue();
 
-						// Remove existing fixedSize class (old and new format)
+						// Remove existing fixedSize class (all formats)
 						var currentClass = dialog.getContentElement('advanced', 'txtGenClass').getValue();
-						currentClass = currentClass.replace(/\s*fixedSize-\d+-\d+(-\d+)?(-c[a-fA-F0-9]{6})?(-true)?/g, '').trim();
+						currentClass = currentClass.replace(/\s*fixedSize-\d+-\d+(?:-\d+)?(?:-[a-fA-F0-9]{6})?(?:-true)?/g, '').trim();
 
-						// Generate new class
+						// Generate new class: fixedSize-w-h-ip (required) + optional color and/or noip
 						if (ipMode && (width || height)) {
 							var newClass = 'fixedSize-' + (width || '') + '-' + (height || '') + '-' + ipMode;
-							// Add color if present (strip # prefix)
-							if (bgColor) {
+							// Add color if present (strip # prefix, no c prefix)
+							if (bgColor && (ipMode == "3" || ipMode == "4")) {
 								var colorValue = bgColor.replace(/^#/, '');
-								newClass += '-c' + colorValue;
+								newClass += '-' + colorValue;
 							}
-							// Add noip if checked
+							// Add noip if checked (only if no color, or after color)
 							if (noIp) {
 								newClass += '-true';
 							}
@@ -774,8 +774,8 @@ export class DatatablesCkEditor {
 							txtUrl = txtUrl.replace(/(\?|&)$/, '');
 						} else {
 							//add /thumb prefix if not present
-							if (!/\/thumb\//.test(txtUrl)) {
-								txtUrl = txtUrl.replace(/(\/?)([^\/]+)$/, '/thumb/$2');
+							if (txtUrl.indexOf("/thumb/") != 0) {
+								txtUrl = "/thumb" + txtUrl;
 							}
 							txtUrl = WJ.urlUpdateParam(txtUrl, 'w', width);
 							txtUrl = WJ.urlUpdateParam(txtUrl, 'h', height);
@@ -886,7 +886,8 @@ export class DatatablesCkEditor {
 							// Thumb tab: preload existing values and wire change events
 							if (dialog.getContentElement('thumb', 'thumbWidth')) {
 								var existingClass = dialog.getContentElement("advanced", "txtGenClass").getValue() || '';
-								var fixedSizeMatch = /fixedSize-(\d*)-(\d*)(?:-(\d+))?(?:-c([a-fA-F0-9]{6}))?(?:-true)?/.exec(existingClass);
+								// Format: fixedSize-w-h-ip[-color][-true] where color is hex without # or c prefix
+								var fixedSizeMatch = /fixedSize-(\d*)-(\d*)(?:-(\d+))?(?:-([a-fA-F0-9]{6}))?(?:-true)?/.exec(existingClass);
 
 								if (fixedSizeMatch) {
 									// Preload width, height, ip mode, color, noip from existing class
@@ -956,7 +957,8 @@ export class DatatablesCkEditor {
 								{
 									if (txtUrl.indexOf(".svg")>0 && classNames.indexOf("fixedSize")!=-1)
 									{
-										var fixedSizeRegex = /fixedSize-(\d+)-(\d+)(?:-(\d+))?(?:-c[a-fA-F0-9]{6})?(?:-true)?/gi;
+										// Format: fixedSize-w-h-ip[-color][-true] where color is hex without # or c prefix
+										var fixedSizeRegex = /fixedSize-(\d+)-(\d+)(?:-(\d+))?(?:-([a-fA-F0-9]{6}))?(?:-true)?/gi;
 										var matched = fixedSizeRegex.exec(classNames);
 										//console.log(matched);
 										if (matched != null && matched.length >= 3)
