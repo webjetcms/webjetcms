@@ -6,4 +6,5 @@
     <Manager className="org.apache.catalina.session.PersistentManager" saveOnRestart="true">
         <Store className="org.apache.catalina.session.FileStore" directory="${user.home}/.webjetcms/sessions"/>
     </Manager>
+    <Resources allowLinking="true" />
 </Context>
