@@ -955,7 +955,7 @@ export class DatatablesCkEditor {
 										var fixedSizeRegex = /fixedSize-(\d+)-(\d+)(?:-(\d+))?(?:-([a-fA-F0-9]{6}))?(?:-true)?/gi;
 										var matched = fixedSizeRegex.exec(classNames);
 										//console.log(matched);
-										if (matched != null && matched.length >= 3)
+										if (matched != null && matched.length >= 4)
 										{
 											var actualWidth = matched[1];
 											var actualHeight = matched[2];

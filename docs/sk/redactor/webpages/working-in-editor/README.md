@@ -206,7 +206,7 @@ Výberom [režimu bodu záujmu](../../../frontend/thumb-servlet/interest-point.m
 Polia na karte Miniatúra sa dynamicky zobrazujú/skrývajú podľa vybraného režimu bodu záujmu:
 
 - Režimy `1` a `2`: Zobrazí sa iba jedno rozmerné pole (šírka alebo výška).
-- Režimy `3` a `4`: Zobrazia sa obe rozmerné polia + pole pre farbu pozadia. Tá sa zadá vo formáte `#rrggbb`
+- Režimy `3` a `4`: Zobrazia sa obe rozmerné polia + pole pre farbu pozadia. Farbu zadajte vo formáte `#rrggbb`
 - Režim `5`: Zobrazia sa obe rozmerné polia bez poľa pre farbu.
 - Pole **Vypnúť bod záujmu** sa zobrazí pre všetky režimy okrem prázdnej hodnoty. To nastavuje, či sa pri generovaní aplikuje aj nastavený bod záujmu, alebo sa použije celý obrázok.
 
