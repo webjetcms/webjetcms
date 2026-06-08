@@ -728,7 +728,7 @@ export class DatatablesCkEditor {
 
 						// Generate new class: fixedSize-w-h-ip (required) + optional color and/or noip
 						if (ipMode && (width || height)) {
-							var newClass = 'fixedSize-' + (width || '') + '-' + (height || '') + '-' + ipMode;
+							var newClass = 'fixedSize-' + (width || '0') + '-' + (height || '0') + '-' + ipMode;
 							// Add color if present (strip # prefix, no c prefix)
 							if (bgColor && (ipMode == "3" || ipMode == "4")) {
 								var colorValue = bgColor.replace(/^#/, '');
@@ -769,7 +769,7 @@ export class DatatablesCkEditor {
 							txtUrl = txtUrl.replace(/(\?|&)$/, '');
 						} else {
 							//add /thumb prefix if not present
-							if (txtUrl.indexOf("/thumb/") != 0) {
+							if (txtUrl.indexOf("/thumb/") != 0 && txtUrl.indexOf("://") == -1) {
 								txtUrl = "/thumb" + txtUrl;
 							}
 							txtUrl = WJ.urlUpdateParam(txtUrl, 'w', width);
@@ -881,15 +881,15 @@ export class DatatablesCkEditor {
 							if (dialog.getContentElement('thumb', 'thumbWidth')) {
 								var existingClass = dialog.getContentElement("advanced", "txtGenClass").getValue() || '';
 								// Format: fixedSize-w-h-ip[-color][-true] where color is hex without # or c prefix
-								var fixedSizeMatch = /fixedSize-(\d*)-(\d*)(?:-(\d+))?(?:-([a-fA-F0-9]{6}))?(?:-true)?/.exec(existingClass);
+								var fixedSizeMatch = /fixedSize-(\d*)-(\d*)(?:-(\d+))?(?:-([a-fA-F0-9]{6}))?(?:-([a-z]{4}))?/.exec(existingClass);
 
 								if (fixedSizeMatch) {
 									// Preload width, height, ip mode, color, noip from existing class
 									if (fixedSizeMatch[1]) dialog.getContentElement('thumb', 'thumbWidth').setValue(fixedSizeMatch[1]);
 									if (fixedSizeMatch[2]) dialog.getContentElement('thumb', 'thumbHeight').setValue(fixedSizeMatch[2]);
 									if (fixedSizeMatch[3]) dialog.getContentElement('thumb', 'thumbIpMode').setValue(fixedSizeMatch[3]);
-									if (fixedSizeMatch[4]) dialog.getContentElement('thumb', 'thumbBackgroundColor').setValue("#" + fixedSizeMatch[4]);
-									if (fixedSizeMatch[5] === "true") dialog.getContentElement('thumb', 'thumbNoIp').setValue(true);
+									if (fixedSizeMatch[4] && fixedSizeMatch[4].length === 6) dialog.getContentElement('thumb', 'thumbBackgroundColor').setValue("#" + fixedSizeMatch[4]);
+									if (fixedSizeMatch[4] === "true" ||fixedSizeMatch[5] === "true") dialog.getContentElement('thumb', 'thumbNoIp').setValue(true);
 								}
 
 								//get color and noip from URL parameters if available (fallback)
