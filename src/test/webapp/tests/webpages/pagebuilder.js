@@ -289,7 +289,7 @@ Scenario('bug - open window for file selection', ({ I, DTE ,Document}) => {
     I.switchTo();
 });
 
-Scenario('bug - /thumb prefix and parameters in image url', async ({ I, DTE, Document }) => {
+Scenario('bug - /thumb prefix and parameters in image url @current', async ({ I, DTE, Document }) => {
     Document.resetPageBuilderMode();
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
