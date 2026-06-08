@@ -183,6 +183,10 @@ Uložené obrázky z **Fotobanky** majú automaticky vyplnenú hodnotu **URL adr
 
 ![](image_dialog-pixabay-edit.png)
 
+### Karta Miniatúra
+
+
+
 ### Video súbory
 
 Cez dialógové okno pre vloženie obrázku môžete vkladať aj video súbory. Buď priamo z vášho servera výberom video súboru, alebo do poľa URL adresa zadáte odkaz na web stránku `YouTube/Facebook/TikTok`.
