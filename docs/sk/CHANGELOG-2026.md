@@ -262,7 +262,15 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+- AI asistent - upravené získanie odpovede pri použití `reasoning` v OpenAI (#244).
 - Bezpečnosť - opravená možnosť nastaviť [meno HTTP hlavičky pre získanie IP adresy](sysadmin/pentests/README.md#konfigurácia) cez premennú `xForwardedForHeader`.
+- Formulár ľahko - upravené polia pre zadanie názvu poľa a tooltipu na jednoriadkový WYSIWYG editor, aby výsledok neobsahoval `P` element (#244).
+- Manažér dokumentov - doplnené filtrovanie súborov podľa dátumov platnosti (ak nie je platný rozsah dátumov, nezobrazia sa) a súborov ktoré nemajú nastavený atribút zobrazovať (#233).
+- Video - aktualizovaná knižnica `videojs` na prehrávanie lokálnych audio/video súborov z verzie 6.2.0 na verziu 8.23.6 (#233).
+- Video - opravené nastavenie odkazu na lokálny audio/video súbor pri editácii už vloženej aplikácie (#233).
+- Výkon - pridaný index v tabuľke `emails` podľa `click_hash` pre lepší výkon v Oracle databáze (#244).
+- Web stránky - doplnené zobrazenie `mp3` súborov vo výbere Média všetkých stránok/Videá (#233).
+- Web stránky - povolené vkladanie súborov typu `svg,webp,mp3` ak používateľ nemá povolené právo Kompletné menu v editore, hodnota nastavená v konfiguračnej premennej `FCKConfig.UploadFileTypes[Basic][image]` (#233).
 
 ## 2026.0.18
 
