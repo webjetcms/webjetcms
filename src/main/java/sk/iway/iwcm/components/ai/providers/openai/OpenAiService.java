@@ -121,6 +121,12 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         for(int i = 0; i < data.size(); i++) {
             JsonNode message = data.get(i);
             try {
+                String type = message.get("type").asText();
+                if(Tools.isNotEmpty(type) && "reasoning".equals(type)) {
+                    //SKIP REASONING MESSAGES - THEY ARE NOT FOR USER, BUT FOR INTERNAL USAGE
+                    continue;
+                }
+
                 contentArray = (ArrayNode) message.path("content");
                 break;
             } catch (Exception e) {
@@ -128,7 +134,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             }
         }
 
-        if(contentArray == null || contentArray.isEmpty()) throw new IllegalStateException("COntent not found.");
+        if(contentArray == null || contentArray.isEmpty()) throw new IllegalStateException("Content not found.");
 
         return contentArray.get(0).path("text").asText();
     }
