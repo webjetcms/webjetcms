@@ -751,7 +751,7 @@ public class FormMailAction extends HttpServlet
 				if ("useFormDocId".equals(field) || "g-recaptcha-response".equals(field) || "bSubmit".equals(field) || "__token".equals(field) ||
 						"addTechInfo".equals(field) || "forceTextPlain".equals(field) || "subject".equals(field) ||
 						"pictureHeight".equals(field) || "maxSizeInKilobytes".equals(field) || "messageAsAttachFileName".equals(field) || "useFormMailDocId".equals(field) || "pictureWidth".equals(field) ||
-						field.startsWith("formmail") || "useFormDocIdOriginal".equals(field)) continue;
+						field.startsWith("formmail") || field.startsWith("formMail") || "useFormDocIdOriginal".equals(field)  || "rowView".equals(field)) continue;
 
 				value = getValue(field, request, formFilesTable);
 				String fieldText = field;
