@@ -9,7 +9,7 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"
 if (Tools.isEmpty(Constants.getString("grideditorPhantomjsPath")) || (new sk.iway.iwcm.io.IwcmFile(Constants.getString("grideditorPhantomjsPath")).exists() == false)) return;
 
 String forward = request.getParameter("forward");
-if (Tools.isEmpty(forward) || forward.startsWith("/templates/")==false || forward.contains("/pagebuilder/")==false || sk.iway.iwcm.common.FileBrowserTools.hasForbiddenSymbol(forward)) return;
+if (Tools.isNotEmpty(forward) && (forward.startsWith("/templates/")==false || forward.contains("/pagebuilder/")==false || sk.iway.iwcm.common.FileBrowserTools.hasForbiddenSymbol(forward))) return;
 
 String hash = Constants.getString("grideditorPhantomjsHash");
 if (Tools.isEmpty(hash) || hash.equals(request.getParameter("hash")) == false) return;
