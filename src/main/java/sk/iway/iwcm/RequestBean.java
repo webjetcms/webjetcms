@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletRequest;
+import sk.iway.iwcm.users.UserDetails;
 
 import org.springframework.context.ApplicationContext;
 
@@ -29,6 +30,7 @@ import org.springframework.context.ApplicationContext;
 public class RequestBean
 {
 	private int userId;
+	private String userLogin;
 	private String remoteIP;
 	private String remoteHost;
 	private String baseHref;
@@ -75,6 +77,23 @@ public class RequestBean
 	public void setUserId(int userId)
 	{
 		this.userId = userId;
+	}
+	public String getUserLogin() {
+		return userLogin;
+	}
+	public void setUserLogin(String userLogin) {
+		this.userLogin = userLogin;
+	}
+	public void setUser(UserDetails user) {
+		if (user != null) {
+			this.userId = user.getUserId();
+			this.userLogin = user.getLogin();
+			this.isUserAdmin = user.isAdmin();
+		} else {
+			this.userId = -1;
+			this.userLogin = "";
+			this.isUserAdmin = false;
+		}
 	}
 	public String getRemoteIP()
 	{
