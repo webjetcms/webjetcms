@@ -26,6 +26,10 @@
 
 - Added the option to set the maximum combined file size in the form, previously only the size for a file could be set, if the form contains multiple files, it is possible to set the maximum size for all files together (#58517).
 
+### Semantic search
+
+- Added support for [semantic search](redactor/apps/semantic-search/README.md) built on the `pgvector` and `OpenAI embeddings` vector database technology. It allows visitors to find relevant pages based on **the meaning of the query**, not just keyword matching (#211).
+
 ### Applications
 
 - Added new application [Language Redirect](redactor/apps/language-redirect/README.md) to automatically redirect visitors to the language version of the page based on language detection from the HTTP header `Accept-Language`. It supports up to 8 language assignments per URL, respecting the language cookie, and the option to redirect only to the root URL (#58497).
@@ -160,10 +164,6 @@ Redesigned application properties settings in the editor from the old code in `J
   - Data tables, editor (#58389-4).
 - Extended a11y tests with new scenarios for file manager, monitoring, statistics, file upload, user management and website. The `a11y.check()` method supports the `context` parameter to limit the inspection to a specific part of the page, including nested `iframe` elements (#58389-5).
 
-### Semantic search
-
-- Added support for [semantic search](redactor/apps/semantic-search/README.md) built on the `pgvector` and `OpenAI embeddings` vector database technology. It allows visitors to find relevant pages based on **the meaning of the query**, not just keyword matching (#211).
-
 ### Other minor changes
 
 - Gallery - added support for transparency in `png/webp/gif` images when resizing them, if [ImageMagick](redactor/apps/gallery/README.md#possible-configuration-variables) (#osk396).
@@ -262,7 +262,15 @@ Redesigned application properties settings in the editor from the old code in `J
 
 > A patch version of the original version 2026.0.
 
+- AI assistant - modified getting an answer when using `reasoning` in OpenAI (#244).
 - Security - fixed the ability to set [HTTP header name for obtaining IP address](sysadmin/pentests/README.md#configuration) via the `xForwardedForHeader` variable.
+- Easy form - modified fields for entering field name and tooltip in a single-line WYSIWYG editor so that the result does not contain the `P` element (#244).
+- Document Manager - added filtering of files by validity dates (if the date range is not valid, they will not be displayed) and files that do not have the display attribute set (#233).
+- Video - updated library `videojs` for playing local audio/video files from version 6.2.0 to version 8.23.6 (#233).
+- Video - fixed setting of link to local audio/video file when editing an already inserted application (#233).
+- Performance - added index on table `emails` by `click_hash` for better performance in Oracle database (#244).
+- Web pages - added display of `mp3` files in the Media of all pages/Videos selection (#233).
+- Web pages - allowed to insert files of type `svg,webp,mp3` if the user does not have the Full menu right in the editor, the value set in the configuration variable `FCKConfig.UploadFileTypes[Basic][image]` (#233).
 
 ## 2026.0.18
 

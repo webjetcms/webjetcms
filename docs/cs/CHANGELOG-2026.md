@@ -26,6 +26,10 @@
 
 - Přidána možnost ve formuláři nastavit maximální kombinovaná velikost souboru, původně se dala nastavovat jen velikost pro soubor, pokud formulář obsahuje více souborů lze nastavit maximální velikost pro všechny soubory společně (#58517).
 
+### Sémantické vyhledávání
+
+- Přidána podpora [sémantického vyhledávání](redactor/apps/semantic-search/README.md) postaveného na technologii vektorové databáze `pgvector` a `OpenAI embeddings`. Umožňuje návštěvníkům najít relevantní stránky na základě **významu otázky**, nejen shody klíčových slov (#211).
+
 ### Aplikace
 
 - Přidána nová aplikace [Přesměrování podle jazyka](redactor/apps/language-redirect/README.md) pro automatické přesměrování návštěvníků na jazykovou verzi stránky podle detekce jazyka z HTTP hlavičky `Accept-Language`. Podporuje až 8 přiřazení jazyků na URL adresy, respektování jazykového cookie a možnost přesměrování pouze na kořenové URL (#58497).
@@ -160,10 +164,6 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
   - Datové tabulky, editor (#58389-4).
 - Rozšířené a11y testy o nové scénáře pro správce souborů, sledování, statistiky, nahrávání souborů, správu uživatelů a webové stránky. Metoda `a11y.check()` podporuje parametr `context` pro omezení kontroly na konkrétní část stránky včetně vnořených `iframe` elementů (#58389-5).
 
-### Sémantické vyhledávání
-
-- Přidána podpora [sémantického vyhledávání](redactor/apps/semantic-search/README.md) postaveného na technologii vektorové databáze `pgvector` a `OpenAI embeddings`. Umožňuje návštěvníkům najít relevantní stránky na základě **významu otázky**, nejen shody klíčových slov (#211).
-
 ### Jiné menší změny
 
 - Galerie - přidána podpora průsvitnosti v `png/webp/gif` obrázcích při změně jejich velikosti, pokud se nepoužívá [ImageMagick](redactor/apps/gallery/README.md#možné-konfigurační-proměnné) (#osk396).
@@ -262,7 +262,15 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 
 > Opravná verze původní verze 2026.0.
 
+- AI asistent - upravené získání odpovědi při použití `reasoning` v OpenAI (#244).
 - Bezpečnost - opravena možnost nastavit [jméno HTTP hlavičky pro získání IP adresy](sysadmin/pentests/README.md#konfigurace) přes proměnnou `xForwardedForHeader`.
+- Formulář snadno - upravená pole pro zadání názvu pole a tooltipu na jednořádkový WYSIWYG editor, aby výsledek neobsahoval `P` element (#244).
+- Manažer dokumentů - doplněné filtrování souborů podle dat platnosti (není-li platný rozsah dat, nezobrazí se) a souborů které nemají nastavený atribut zobrazovat (#233).
+- Video - aktualizovaná knihovna `videojs` pro přehrávání lokálních audio/video souborů z verze 6.2.0 na verzi 8.23.6 (#233).
+- Video - opraveno nastavení odkazu na lokální audio/video soubor při editaci již vložené aplikace (#233).
+- Výkon - přidán index v tabulce `emails` podle `click_hash` pro lepší výkon v Oracle databázi (#244).
+- Web stránky - doplněné zobrazení `mp3` souborů ve výběru Média všech stránek/Videa (#233).
+- Web stránky - povoleno vkládání souborů typu `svg,webp,mp3` pokud uživatel nemá povoleno právo Kompletní menu v editoru, hodnota nastavená v konfigurační proměnné `FCKConfig.UploadFileTypes[Basic][image]` (#233).
 
 ## 2026.0.18
 

@@ -146,7 +146,10 @@
   - [Vložení dokumentu](/redactor/apps/app-docsembed/README.md)
   - [Vložení HTML kódu](/redactor/apps/app-htmlembed/README.md)
   - [Vyhledávače (SEO)](/redactor/apps/seo/README.md)
-  - [Vyhledávání](/redactor/apps/search/README.md)
+  - Vyhledávání
+    - [Vyhledávání](/redactor/apps/search/README.md)
+    - [Sémantické vyhledávání (RAG)](/redactor/apps/semantic-search/README.md)
+    - [Sémantický index](/redactor/apps/semantic-search/embedding-chunks.md)
   - [Zobrazení souborů](/redactor/apps/site-browser/README.md)
   - [Zrcadlení struktury](/redactor/apps/docmirroring/README.md)
 - Soubory
