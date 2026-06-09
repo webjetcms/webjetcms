@@ -144,14 +144,7 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 
 
 			Identity user = UsersDB.getCurrentUser(session);
-			if (user != null)
-			{
-				requestBean.setUserId(user.getUserId());
-				requestBean.setUserAdmin(user.isAdmin());
-			} else {
-				requestBean.setUserId(-1);
-				requestBean.setUserAdmin(false);
-			}
+			requestBean.setUser(user);
 			requestBean.setRemoteIP(Tools.getRemoteIP(request));
 			requestBean.setRemoteHost(Tools.getRemoteHost(request));
 			requestBean.setBaseHref(Tools.getBaseHref(request));

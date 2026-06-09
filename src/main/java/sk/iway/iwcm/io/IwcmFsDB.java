@@ -1248,7 +1248,7 @@ public class IwcmFsDB
 				RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
 				if (rb == null) {
 					rb = new RequestBean();
-					rb.setUserId(-1);
+					rb.setUser(null);
 				}
 				fhb.setUserId(rb.getUserId());
 				fhb.setDeleted(deleted);

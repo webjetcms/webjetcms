@@ -26,6 +26,7 @@ Explanation of the pictograms used:
 - [ ] Delete files associated with a web page when I delete it - but ask the user in advance if they want to delete the files. Check if they are not being used somewhere else.
 - [ ] Data deletion - add the option to delete pages and folders from the trash. Also resolve the option to run data deletion as an automated task.
 - [ ] Unused files - make it possible to get a list of unused files - they are not used anywhere on the page, not even in media, etc. There was an API for this `FileTools.getDirFileUsage(currentDir, request)`. Add as a tab to the folder properties in explorer.
+- [ ] Explorer - prevent working with the Document Manager folder so that files cannot be manipulated outside of the Document Manager.
 
 ## 2025
 
@@ -45,7 +46,7 @@ Explanation of the pictograms used:
 - [ ] `quill` - ​​add the ability to set menu items including colors.
 - [ ] Applications - option to purchase the application for the OpenSource version (#55825).
 - [ ] Possibility to execute Thymeleaf code in the header/footer and possibly also in the body of the web page.
-- [ ] Security - add support for generating `nonce` for `Content-Security-Policy` header, see e.g. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.
+- [x] Security - add support for generating `nonce` for `Content-Security-Policy` header, see e.g. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee. (#58533)
 - [x] Forms - add the ability to call a Java class for form validation (#58161).
 - [x] Tags - filter by current domain to be the same as in other sections (#57837).
 - [x] User import - if no password is entered, generate one (for new users), if not sent, set status `authorized` to `true` (#58253).

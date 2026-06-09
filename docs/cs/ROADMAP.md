@@ -26,6 +26,7 @@ Vysvětlení použitých piktogramů:
 - [ ] Smazat přidružené soubory k web stránce když ji smažu - zeptat se ale předem uživatele, zda soubory chce smazat. Kontrolovat, zda se nepoužívají někde jinde.
 - [ ] Mazání dat - přidat možnost mazat stránky a složky z koše. Vyřešit také možnost mazání dat spouštět jako automatizovaný úkol.
 - [ ] Nepoužívané soubory - udělat možnost získat seznam nepoužívaných souborů - nikde ve stránce se nepoužívají, ani v médiích atp. Byla k tomu API `FileTools.getDirFileUsage(currentDir, request)`. Přidat jako kartu do vlastností složky v průzkumníku.
+- [ ] Průzkumník - zamezit práci se složkou pro Manažer dokumentů, aby se se soubory nedalo manipulovat mimo Manažer dokumentů.
 
 ## 2025
 
@@ -45,7 +46,7 @@ Vysvětlení použitých piktogramů:
 - [ ] `quill` - ​​přidat možnost nastavit položky menu včetně barev.
 - [ ] Aplikace - možnost nákupu aplikace pro OpenSource verzi (#55825).
 - [ ] Možnost provést Thymeleaf kód v hlavičce/patičce a možná i v těle web stránky.
-- [ ] Bezpečnost - přidat podporu generování `nonce` pro `Content-Security-Policy` hlavičku, viz. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.
+- [x] Bezpečnost - přidat podporu generování `nonce` pro `Content-Security-Policy` hlavičku, viz. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee. (#58533)
 - [x] Formuláře - přidat možnost volat Java třídu pro validaci formuláře (#58161).
 - [x] Značky - filtrovat podle aktuální domény aby to bylo stejné jako v jiných částech (#57837).
 - [x] Import uživatelů - pokud není zadané heslo, tak vygenerovat (pro nové uživatele), pokud není posílaný stav `authorized` nastavit na `true` (#58253).

@@ -628,6 +628,22 @@ const WJ = (() => {
     }
 
     /**
+     * Remove URL parameter from URL
+     * @param {*} url
+     * @param {*} paramName
+     * @returns
+     */
+    function urlRemoveParam(url, paramName) {
+        const urlParts = url.split('?');
+        if (urlParts.length >= 2) {
+            const prefix = encodeURIComponent(paramName) + '=';
+            const params = urlParts[1].split('&').filter(param => !param.startsWith(prefix));
+            return urlParts[0] + (params.length > 0 ? '?' + params.join('&') : '');
+        }
+        return url;
+    }
+
+    /**
      * returns URL parameter value
      * @param {*} name - parameter name
      * @param {*} queryString - URL query string OR null to ger from current window.location.search
@@ -635,6 +651,11 @@ const WJ = (() => {
      */
     function urlGetParam(name, queryString=null) {
         if (queryString == null) queryString = window.location.search;
+        //remove everything before ?, because in some cases (e.g. datatables ajax) it can be full URL instead of just query string
+        const questionMarkIndex = queryString.indexOf('?');
+        if (questionMarkIndex != -1) {
+            queryString = queryString.substring(questionMarkIndex);
+        }
         const urlParams = new URLSearchParams(queryString);
         return urlParams.get(name);
     }
@@ -1560,6 +1581,9 @@ const WJ = (() => {
         },
         urlUpdateParam: (url, paramName, paramValue) => {
             return urlUpdateParam(url, paramName, paramValue);
+        },
+        urlRemoveParam: (url, paramName) => {
+            return urlRemoveParam(url, paramName);
         },
         urlGetParam: (url, queryString) => {
             return urlGetParam(url, queryString);

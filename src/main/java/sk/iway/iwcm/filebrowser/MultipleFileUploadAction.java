@@ -171,7 +171,7 @@ public class MultipleFileUploadAction extends HttpServlet
 
 		//nastavim userId do RequestBean-u
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
-		if (user != null) rb.setUserId(user.getUserId());
+		rb.setUser(user);
 
 		//sprav upload
 		UploadedFile formFile;

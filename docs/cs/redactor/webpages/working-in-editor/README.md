@@ -183,6 +183,33 @@ Uložené obrázky z **Fotobanky** mají automaticky vyplněnou hodnotu **URL ad
 
 ![](image_dialog-pixabay-edit.png)
 
+### Karta Miniatura
+
+Karta **Miniatura** umožňuje nastavit parametry automatického generování zmenšených obrázků `thumbnail` přímo z dialogového okna vkládání obrázků.
+
+![](image_dialog-thumb.png)
+
+**Režim bodu zájmu (IP)**
+
+Výběrem [režimu bodu zájmu](../../../frontend/thumb-servlet/interest-point.md) určíte, která část obrázku bude při ořezávání zachována:
+
+| Režim | Popis |
+| ------- | ------- |
+| `1` | Zachovává pouze šířku (výška se přizpůsobí automaticky) |
+| `2` | Zachovává pouze výšku (šířka se přizpůsobí automaticky) |
+| `3` | Zachovává šířku i výšku + doplnění pozadí barvou |
+| `4` | Zachovává šířku i výšku + doplnění pozadí barvou |
+| `5` | Zachovává šířku i výšku bez doplnění pozadí |
+
+**Dynamické zobrazení polí**
+
+Pole na kartě Miniatura se dynamicky zobrazují/skrývají podle vybraného režimu bodu zájmu:
+
+- Režimy `1` a `2`: Zobrazí se pouze jedno rozměrné pole (šířka nebo výška).
+- Režimy `3` a `4`: Zobrazí se obě rozměrná pole + pole pro barvu pozadí. Barvu zadejte ve formátu `#rrggbb`
+- Režim `5`: Zobrazí se obě rozměrná pole bez pole pro barvu.
+- Pole **Vypnout bod zájmu** se zobrazí pro všechny režimy kromě prázdné hodnoty. To nastavuje, zda se při generování aplikuje i nastavený bod zájmu, nebo se použije celý obrázek.
+
 ### Video soubory
 
 Přes dialogové okno pro vložení obrázku můžete vkládat i video soubory. Buď přímo z vašeho serveru výběrem video souboru, nebo do pole URL adresa zadáte odkaz na web stránku `YouTube/Facebook/TikTok`.
