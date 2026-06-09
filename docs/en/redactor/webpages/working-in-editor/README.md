@@ -183,6 +183,33 @@ Saved images from **Photo Bank** have the value **Image source URL** automatical
 
 ![](image_dialog-pixabay-edit.png)
 
+### Thumbnail tab
+
+The **Thumbnail** tab allows you to set the parameters for automatically generating thumbnail images `thumbnail` directly from the image insertion dialog box.
+
+![](image_dialog-thumb.png)
+
+**Point of Interest (POI) Mode**
+
+By selecting [point of interest mode](../../../frontend/thumb-servlet/interest-point.md) you determine which part of the image will be preserved when cropping:
+
+| Mode | Description |
+| ------- | ------- |
+| `1` | Preserves only the width (height adjusts automatically) |
+| `2` | Preserves height only (width adjusts automatically) |
+| `3` | Preserves width and height + adds background color |
+| `4` | Preserves width and height + adds background color |
+| `5` | Preserves both width and height without adding background |
+
+**Dynamic display of fields**
+
+The fields on the Thumbnail tab are dynamically shown/hidden based on the selected POI mode:
+
+- `1` and `2` modes: Only one dimensional field (width or height) is displayed.
+- `3` and `4` modes: Both dimensional fields + a field for the background color are displayed. Enter the color in the format `#rrggbb`
+- `5` mode: Both dimensional fields are displayed without a color field.
+- The **Disable POI** field is displayed for all modes except the empty value. This sets whether the set POI is also applied during generation, or the entire image is used.
+
 ### Video files
 
 You can also insert video files through the image insertion dialog box. Either directly from your server by selecting a video file, or by entering a link to the website `YouTube/Facebook/TikTok` in the URL address field.

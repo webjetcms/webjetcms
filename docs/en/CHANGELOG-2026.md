@@ -10,6 +10,10 @@
 
 ![](frontend/templates/templates-edit-advanced.png)
 
+- Added **Thumbnail** tab in the image insertion dialog for setting parameters for [generating thumbnail images](redactor/webpages/working-in-editor/README.md#thumbnail-tab) `thumbnail` (#58317).
+
+![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
+
 ### Forms
 
 - Added the ability to easily set up checkboxes and groups of checkboxes/select fields in multi-step forms (#58517).
@@ -35,6 +39,10 @@
 - All domain redirects can be edited in the control domain.
 - Added option to view all files in the management domain.
 
+### Safety
+
+- Added support for generating `nonce` for the [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) header (#58533).
+
 ### Documentation
 
 - A new section [Overview of new features] (sales/README.md) has been created, which contains descriptions of new features and **functionalities of WebJET CMS in understandable language**, without unnecessarily technical formulations (#58505).
@@ -49,6 +57,8 @@
 - Data tables - added a new field type `ENUMERATION` for [connection to enumeration tables](developer/datatables-editor/standard-fields.md#enumeration) in the editor. The field stores the configuration in `enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY` format and allows you to set the source of values ​​(#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
+
+- Logging - added attribute `sessionId` and user login name `userLogin` (#OSK526) to [Logback MDC](https://logback.qos.ch/manual/mdc.html).
 
 ## 2026.18
 

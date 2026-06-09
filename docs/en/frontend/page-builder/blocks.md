@@ -155,6 +155,27 @@ We recommend generating blocks using [PugJS](https://pugjs.org).
 
 If the image has the CSS class ```fixedSize-w-h-ip``` set, the specified dimensions ```w``` and ```h``` are automatically set after changing the image address, if the last data ```ip``` is also specified, the [point of interest](../../frontend/thumb-servlet/README.md) is also set. For example, the CSS class ```fixedSize-160-160-5``` automatically generates an image of size 160 x 160 pixels with a set point of interest of 5. We recommend setting the class to all illustrative images where their size is important.
 
+### Extended fixedSize format
+
+The CSS class format is ```fixedSize-w-h-ip[-color][-true]``` where:
+
+| Parameters | Mandatory | Description |
+| ----------- | --------- | ------- |
+| `w` | Yes | Image width in pixels |
+| `h` | Yes | Image height in pixels |
+| `ip` | Yes | Point of Interest Mode (1-5) |
+| `color` | No | Hex value of the background color without `#` and without `c` prefix (e.g. `ff0000`) |
+| `true` | No | Parameter for disabling a point of interest |
+
+#### Format examples
+
+| Format | Meaning |
+| -------- | -------- |
+| ```fixedSize-700-400-1``` | Basic format with width 700, height 400 and IP mode 1 |
+| ```fixedSize-700-400-3-ff0000'' | With background color (red) |
+| ```fixedSize-700-400-1-true'' | With POI turned off |
+| ```fixedSize-700-400-3-ff0000-true'' | With background color and POI turned off |
+
 When clicking on an image with the CSS class ```fixedSize/w-100/autoimg```, the image properties window will immediately open for easy replacement. This way, the editor does not have to click on the image and then click the change image icon in the toolbar.
 
 If an image contains the expression `placeholder` or `stock` in the URL, the image selection dialog will not open to the folder containing that image, but to the Media folder of this page. This allows the user to easily upload a new image.
