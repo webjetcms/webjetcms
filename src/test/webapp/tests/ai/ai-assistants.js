@@ -500,7 +500,7 @@ function checkBaseWaitDialog(I, assistantName, provider, icon, hasContainer = fa
     I.seeElement( locate(".toast.toast-info > .toast-title > .header-back-button > .ai-title > span").withText(assistantName) );
     I.seeElement( locate(".toast.toast-info > .toast-title > .header-back-button > .ai-title > span.provider").withText("(" + provider + ")") );
 
-    if ("Vytvoriť zoznam kľúčových slov" === assistantName) {
+    if ("Vytvoriť zoznam kľúčových slov" === assistantName || "Generate ALT tag" === assistantName) {
         return; //response is too fast, do not check AI working status
     }
 

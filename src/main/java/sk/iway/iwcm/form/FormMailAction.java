@@ -144,7 +144,7 @@ public class FormMailAction extends HttpServlet
 						((IwcmRequest)request).setParameter(me.getKey(), "NOT_EMPTY");
 
 						formFiles.add(formFile);
-						if (restriction != null && restriction.isSentFileValid(formFile, Prop.getInstance(request))==null)
+						if (restriction != null && restriction.isSentFileValid(formFile, Prop.getInstance(request))!=null)
 						{
 							request.setAttribute("invalidFiles", true);
 						}
@@ -300,7 +300,7 @@ public class FormMailAction extends HttpServlet
 									IwcmFile file = new IwcmFile(filePath);
 									if (file.exists())
 									{
-										if (restriction.isSentFileValid(file, prop) == null)
+										if (restriction.isSentFileValid(file, prop) != null)
 										{
 											request.setAttribute("invalidFiles", "true");
 										}
