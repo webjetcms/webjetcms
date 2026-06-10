@@ -15,6 +15,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.rag.search.SemanticSearchResult;
 import sk.iway.iwcm.rag.search.SemanticSearchService;
+import sk.iway.iwcm.rag.service.RagEntityType;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -108,7 +109,7 @@ public class SemanticSearchAction {
 
 			// Fetch max 3 pages of results from semantic search, we will do pagination in Java after filtering non-searchable documents
 			int maxFetch = perPage * 3;
-			List<SemanticSearchResult> semanticResults = semanticSearchService.search(words, domainId, language, maxFetch, request);
+			List<SemanticSearchResult> semanticResults = semanticSearchService.search(words, domainId, language, maxFetch, RagEntityType.DOCUMENT, request);
 
 			// Apply pagination - skip results before index
 			int totalResults = semanticResults.size();

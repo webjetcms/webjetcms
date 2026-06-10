@@ -1,6 +1,7 @@
 package sk.iway.iwcm.rag.vectorstore;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -13,6 +14,7 @@ import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.rag.pgvector.EmbeddingChunkStatus;
 import sk.iway.iwcm.rag.pgvector.PgvectorJpaConfig;
+import sk.iway.iwcm.rag.service.RagEntityType;
 
 /**
  * PgVector implementation of VectorStore.
@@ -173,7 +175,7 @@ public class PgVectorStore implements VectorStore {
     }
 
     @Override
-    public List<VectorSearchResult> search(float[] queryEmbedding, String embeddingModel, Integer domainId, String language, int limit) {
+    public List<VectorSearchResult> search(float[] queryEmbedding, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams) {
         String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null) return new ArrayList<>();
 
@@ -199,14 +201,10 @@ public class PgVectorStore implements VectorStore {
         params.add(vectorToString(queryEmbedding));
         params.add(embeddingModel);
 
-        if (domainId != null) {
-            sql.append(" AND domain_id = ?");
-            params.add(domainId);
-        }
-        if (Tools.isNotEmpty(language)) {
-            sql.append(" AND language = ?");
-            params.add(language);
-        }
+        addScopeFilters(sql, params, entityType, domainId, language);
+
+        addEntityTypeSpecificConditions(sql, entityType, bonusParams);
+
         sql.append(" ORDER BY embedding ").append(orderOperator).append(" ?::vector LIMIT ?");
         params.add(vectorToString(queryEmbedding));
         params.add(limit);
@@ -226,47 +224,66 @@ public class PgVectorStore implements VectorStore {
     }
 
     @Override
-    public List<VectorSearchResult> searchFulltext(String query, String embeddingModel, Integer domainId, String language, int limit) {
+    public List<VectorSearchResult> searchFulltext(String query, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams) {
         String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null || Tools.isEmpty(query) || limit <= 0) return new ArrayList<>();
 
-        List<VectorSearchResult> ftsResults = executeFulltextSearch(dsName, query, embeddingModel, domainId, language, limit);
-        if (ftsResults.isEmpty() && Constants.getBoolean("ragHybridFtsUseIlikeFallback")) {
-            return executeIlikeSearch(dsName, query, embeddingModel, domainId, language, limit);
+        List<VectorSearchResult> ftsResults = executeFulltextSearch(dsName, query, embeddingModel, entityType, domainId, language, limit, bonusParams);
+
+        boolean hybridFtsUseIlikeFallback = Constants.getBoolean("ragHybridFtsUseIlikeFallback");
+        if(bonusParams != null) {
+            hybridFtsUseIlikeFallback = Tools.getBooleanValue(
+                                            String.valueOf(bonusParams.get("hybridFtsUseIlikeFallback")),
+                                            hybridFtsUseIlikeFallback
+                                        );
+        }
+
+        if (ftsResults.isEmpty() && hybridFtsUseIlikeFallback) {
+            return executeIlikeSearch(dsName, query, embeddingModel, entityType, domainId, language, limit, bonusParams);
         }
 
         return ftsResults;
     }
 
-    private List<VectorSearchResult> executeFulltextSearch(String dsName, String query, String embeddingModel, Integer domainId, String language, int limit) {
+    private List<VectorSearchResult> executeFulltextSearch(String dsName, String query, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams) {
         StringBuilder sql = new StringBuilder(FTS_SEARCH_SQL_PREFIX);
         List<Object> params = new ArrayList<>();
         params.add(query);
         params.add(embeddingModel);
         params.add(query);
 
-        addScopeFilters(sql, params, domainId, language);
+        addScopeFilters(sql, params, entityType, domainId, language);
+
+        addEntityTypeSpecificConditions(sql, entityType, bonusParams);
+
         sql.append(" ORDER BY similarity DESC LIMIT ?");
         params.add(limit);
 
         return executeSearchQuery(dsName, sql.toString(), params);
     }
 
-    private List<VectorSearchResult> executeIlikeSearch(String dsName, String query, String embeddingModel, Integer domainId, String language, int limit) {
+    private List<VectorSearchResult> executeIlikeSearch(String dsName, String query, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams) {
         StringBuilder sql = new StringBuilder(FTS_ILIKE_SQL_PREFIX);
         List<Object> params = new ArrayList<>();
         params.add(query);
         params.add(embeddingModel);
         params.add("%" + query + "%");
 
-        addScopeFilters(sql, params, domainId, language);
+        addScopeFilters(sql, params, entityType, domainId, language);
+
+        addEntityTypeSpecificConditions(sql, entityType, bonusParams);
+
         sql.append(" ORDER BY similarity DESC, id ASC LIMIT ?");
         params.add(limit);
 
         return executeSearchQuery(dsName, sql.toString(), params);
     }
 
-    private void addScopeFilters(StringBuilder sql, List<Object> params, Integer domainId, String language) {
+    private void addScopeFilters(StringBuilder sql, List<Object> params, RagEntityType entityType, Integer domainId, String language) {
+        if (entityType != null) {
+            sql.append(" AND entity_type = ?");
+            params.add(entityType.name());
+        }
         if (domainId != null) {
             sql.append(" AND domain_id = ?");
             params.add(domainId);
@@ -275,6 +292,62 @@ public class PgVectorStore implements VectorStore {
             sql.append(" AND language = ?");
             params.add(language);
         }
+    }
+
+    private void addEntityTypeSpecificConditions(StringBuilder sql, RagEntityType entityType, Map<String, Object> bonusParams) {
+
+        // Document searches can be narrowed to the search app's selected root groups.
+        if(bonusParams != null && RagEntityType.DOCUMENT == entityType) {
+            List<Integer> rootGroupsL1 = asIntegerList(bonusParams.get("rootGroupL1"));
+            List<Integer> rootGroupsL2 = asIntegerList(bonusParams.get("rootGroupL2"));
+            List<Integer> rootGroupsL3 = asIntegerList(bonusParams.get("rootGroupL3"));
+            List<Integer> rootGroups = asIntegerList(bonusParams.get("rootGroups"));
+
+            boolean hasL1 = rootGroupsL1 != null && !rootGroupsL1.isEmpty();
+            boolean hasL2 = rootGroupsL2 != null && !rootGroupsL2.isEmpty();
+            boolean hasL3 = rootGroupsL3 != null && !rootGroupsL3.isEmpty();
+            boolean hasRootGroups = rootGroups != null && !rootGroups.isEmpty();
+
+            if(hasL1 || hasL2 || hasL3 || hasRootGroups) {
+                sql.append(" AND (");
+                boolean first = true;
+                if(hasL1) {
+                    sql.append("root_group_l1 IN (").append(Tools.join(rootGroupsL1, ",")).append(")");
+                    first = false;
+                }
+                if(hasL2) {
+                    if(!first) sql.append(" OR ");
+                    sql.append("root_group_l2 IN (").append(Tools.join(rootGroupsL2, ",")).append(")");
+                    first = false;
+                }
+                if(hasL3) {
+                    if(!first) sql.append(" OR ");
+                    sql.append("root_group_l3 IN (").append(Tools.join(rootGroupsL3, ",")).append(")");
+                    first = false;
+                }
+                if(hasRootGroups) {
+                    if(!first) sql.append(" OR ");
+                    sql.append("group_id IN (").append(Tools.join(rootGroups, ",")).append(")");
+                }
+                sql.append(") ");
+            }
+        }
+    }
+
+    private List<Integer> asIntegerList(Object value) {
+        if (!(value instanceof Collection<?>)) return null;
+
+        Collection<?> collection = (Collection<?>) value;
+        if (collection.isEmpty()) return null;
+
+        List<Integer> result = new ArrayList<>(collection.size());
+        for (Object item : collection) {
+            if (item instanceof Integer integerValue) {
+                result.add(integerValue);
+            }
+        }
+
+        return result;
     }
 
     private List<VectorSearchResult> executeSearchQuery(String dsName, String sql, List<Object> params) {
@@ -294,17 +367,16 @@ public class PgVectorStore implements VectorStore {
 
     @Override
     public boolean isAvailable() {
-        // We are DEPEDND on RAG, so PgVector store is available if RAG is allowed and datasource is available
+        // PgVector is available only when the RAG datasource is enabled and reachable.
         return PgvectorJpaConfig.isRagAvailable();
     }
 
     @Override
     public boolean isAvailableAndInitialized() {
-        // Chck is isAvailable and the table exists (simple query to check)
+        // Availability checks the datasource; this query verifies that the schema has been initialized.
         if (isAvailable() == false) return false;
 
         try {
-            // Because we check if isAvailable first, we can be sure that datasource is available, so if this query fails, it means the table is not initialized
             new SimpleQuery(PgvectorJpaConfig.getRagDataSourceName()).forInt("SELECT 1 FROM rag_embedding_chunks LIMIT 1");
             return true;
         } catch (Exception e) {

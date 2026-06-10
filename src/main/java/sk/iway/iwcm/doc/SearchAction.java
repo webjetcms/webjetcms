@@ -67,18 +67,23 @@ public class SearchAction
 	{
 		PageParams pageParams = new PageParams(request);
 
-		String searchType = Constants.getString("searchType");
+		String searchType = pageParams.getValue("searchType", "");
+		if(Tools.isEmpty(searchType) || "auto".equals(searchType)) {
+			// Empty and auto keep the globally configured search type.
+			searchType = Constants.getString("searchType");
+		}
+
 		if ("lucene".equals(searchType) || Constants.getBoolean("luceneAsDefaultSearch") || "true".equals(request.getParameter("useLucene")) || pageParams.getBooleanValue("useLucene", false))
 		{
-			//parameter useLucene=true je mozne pouzit pri porovnani standardneho a lucene vyhladavania
+			// useLucene=true allows comparing standard database search with Lucene search.
 			return LuceneSearchAction.search(request);
 		}
-		if ("semantic".equals(searchType) || "true".equals(request.getParameter("useSemantic")) || pageParams.getBooleanValue("useSemantic", false))
+		if ("semantic".equals(searchType) || "hybrid".equals(searchType) || "true".equals(request.getParameter("useSemantic")) || pageParams.getBooleanValue("useSemantic", false))
 		{
 			return SemanticSearchAction.search(request, response);
 		}
 
-		// ELSE - standardne databazove vyhladavanie
+		// ELSE - standard database search
 
 		Identity user = UsersDB.getCurrentUser(request);
 

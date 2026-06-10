@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
@@ -18,23 +20,18 @@ import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.components.ai.rest.AiService;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.rag.service.RagSettingsService;
 import sk.iway.iwcm.rag.vectorstore.VectorSearchResult;
 
 @Service
 public class RagService {
 
     private static final String RAG_ASSIST_NAME = "RAG-SEARCH";
-    private static final String RAG_GROUP_NAME = "92-rag-search";
+    private static final String RAG_GROUP_NAME = "92-rag-answer";
 
     private static final String RAG_DEFAULT_ASSIST_PROVIDER = "openai";
     private static final String RAG_DEFAULT_ASSIST_MODEL = "gpt-5.4-mini";
-
-    private static final double DEFAULT_MIN_SIMILARITY = 0.3;
-    private static final int DEFAULT_TOP_K = 10;
-    private static final int DEFAULT_MAX_CHUNK_GAP = 1;
-    private static final int DEFAULT_MAX_BLOCKS = 3;
-    private static final int DEFAULT_MAX_CHARACTERS = 4500;
-    private static final int DEFAULT_MAX_MERGED_BLOCK_CHARACTERS = 1800;
 
     private final AssistantDefinitionRepository assistantRepository;
     private final AiStatRepository statRepo;
@@ -49,11 +46,38 @@ public class RagService {
     }
 
     public String answerQuestion(String question, Integer domainId, List<VectorSearchResult> vectorChunkResults, HttpServletRequest request) {
-        AssistantDefinitionEntity assistant = getOrCreateAssistant(domainId);
+        Prop prop = Prop.getInstance(request);
+        if(Tools.isEmpty(question) || vectorChunkResults == null || vectorChunkResults.isEmpty()) {
+            Logger.debug(RagService.class, "Cannot answer RAG question because question is empty or no retrieved chunks. question=" + question + ", vectorChunkResults=" + (vectorChunkResults == null ? "null" : vectorChunkResults.size()));
+            return prop.getText("components.search.rag_answer.cant_answer");
+        }
+
+        PageParams pageParams = new PageParams(request);
+
+        AssistantDefinitionEntity assistant = null;
+        Long assistantId = Tools.getLongValue(pageParams.getValue("ragAssistantId", ""), -1L);
+        if(assistantId != null && assistantId > 0) {
+            Optional<AssistantDefinitionEntity> opt = assistantRepository.findById(assistantId);
+            if(opt.isPresent()) {
+                assistant = opt.get();
+            }
+        }
+
+        if(assistant == null) {
+            assistant = getOrCreateAssistant(domainId);
+        }
+
+        if(assistant == null) return null;
 
         // Post-process chunks: filter, merge, deduplicate, limit
         RagChunkPostProcessor postProcessor = new RagChunkPostProcessor(
-                DEFAULT_TOP_K, DEFAULT_MIN_SIMILARITY, DEFAULT_MAX_CHUNK_GAP, DEFAULT_MAX_BLOCKS, DEFAULT_MAX_CHARACTERS, DEFAULT_MAX_MERGED_BLOCK_CHARACTERS);
+                RagSettingsService.getRagAnswerTopK(pageParams),
+                RagSettingsService.getRagAnswerMinSimilarity(pageParams),
+                RagSettingsService.getRagAnswerMaxChunkGap(pageParams),
+                RagSettingsService.getRagAnswerMaxBlocks(pageParams),
+                RagSettingsService.getRagAnswerMaxCharacters(pageParams),
+                RagSettingsService.getRagAnswerMaxMergedBlockCharacters(pageParams));
+
         List<MergedContextBlock> contextBlocks = postProcessor.process(vectorChunkResults);
 
         InputDataDTO inputData = new InputDataDTO();
@@ -71,9 +95,17 @@ public class RagService {
 
         try {
             AssistantResponseDTO responseDto = aiService.getAiResponse(inputData, statRepo, assistantRepository, request);
-            return responseDto.getResponse();
+            String ragAnswer = responseDto.getResponse();
+
+            if(Tools.isEmpty(ragAnswer)) return prop.getText("components.search.rag_answer.cant_answer");
+
+            ragAnswer = ragAnswer.trim();
+
+            if("CAN_ANSWER_QUESTION".equals(ragAnswer)) return prop.getText("components.search.rag_answer.cant_answer");
+
+            return ragAnswer;
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.error(RagService.class, "Error getting AI response for RAG question. assistantId=" + assistant.getId() + ", error=" + e.getMessage());
         }
 
         return null;
@@ -92,7 +124,7 @@ public class RagService {
     }
 
     private AssistantDefinitionEntity getOrCreateAssistant(Integer domainId) {
-        Optional<AssistantDefinitionEntity> existing = assistantRepository.findFirstByClassNameAndDomainId(RagService.class.getName(), domainId);
+        Optional<AssistantDefinitionEntity> existing = assistantRepository.findFirstByClassNameAndDomainIdOrderByIdAsc(RagService.class.getName(), domainId);
         if (existing.isPresent()) return existing.get();
 
         try {
@@ -101,9 +133,7 @@ public class RagService {
             AiAssistantsService.clearCache();
             return created;
         } catch (RuntimeException ex) {
-            // Logger.error(RagEmbeddingStatService.class, "Failed to create RAG embedding stats assistant for groupName=" + groupName + ", provider=" + PROVIDER_OPENAI + ", domainId=" + domainId + ", error=" + ex.getMessage());
-            // Optional<AssistantDefinitionEntity> fallback = assistantRepository.findFirstByGroupNameAndProviderAndDomainId(groupName, PROVIDER_OPENAI, domainId);
-            // return fallback.orElse(null);
+            Logger.error(RagService.class, "Error creating RAG answer assistant for domainId=" + domainId + ", error=" + ex.getMessage());
             return null;
         }
     }
@@ -139,7 +169,7 @@ public class RagService {
                 "instructions": [
                     "Use only retrievedContext as the source of truth.",
                     "Do not use outside knowledge, guess, or add unsupported facts.",
-                    "If the answer is missing, say: \\"I don't have enough information in the provided context to answer that.\\"",
+                    "If the answer is missing, say: \\"CAN_ANSWER_QUESTION\\"",
                     "If only partly answered, give the supported part and say what is missing.",
                     "Merge overlapping chunks, remove repeated wording, and keep exact facts such as names, numbers, dates, limits, conditions, and exceptions.",
                     "If chunks conflict, state the conflict and do not choose a side unless the context resolves it.",

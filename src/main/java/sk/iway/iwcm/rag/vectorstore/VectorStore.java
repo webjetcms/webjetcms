@@ -3,6 +3,8 @@ package sk.iway.iwcm.rag.vectorstore;
 import java.util.List;
 import java.util.Map;
 
+import sk.iway.iwcm.rag.service.RagEntityType;
+
 /**
  * Abstraction for vector storage and similarity search.
  * Handles ONLY the embedding (vector) column via native SQL.
@@ -31,23 +33,27 @@ public interface VectorStore {
      * Find the most similar chunks to the query embedding.
      * @param queryEmbedding the query vector
      * @param embeddingModel model used to generate/query embeddings
+     * @param entityType entity type to filter by (null for all)
      * @param domainId domain ID to filter by (null for all)
      * @param language language to filter by (null for all)
      * @param limit max number of results
+     * @param bonusParams optional store-specific filters, such as document root groups
      * @return list of search results ordered by similarity (descending)
      */
-    List<VectorSearchResult> search(float[] queryEmbedding, String embeddingModel, Integer domainId, String language, int limit);
+    List<VectorSearchResult> search(float[] queryEmbedding, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams);
 
     /**
      * Find relevant chunks by fulltext search in chunk text.
      * @param query textual query
      * @param embeddingModel model used to filter rows
+     * @param entityType entity type to filter by (null for all)
      * @param domainId domain ID to filter by (null for all)
      * @param language language to filter by (null for all)
      * @param limit max number of results
+     * @param bonusParams optional store-specific filters, such as document root groups and fallback flags
      * @return list of search results ordered by fulltext rank (descending)
      */
-    List<VectorSearchResult> searchFulltext(String query, String embeddingModel, Integer domainId, String language, int limit);
+    List<VectorSearchResult> searchFulltext(String query, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams);
 
     /**
      * Check if the vector store can be used in the current runtime configuration.

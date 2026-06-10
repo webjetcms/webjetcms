@@ -20,8 +20,8 @@ public class SlidingWindowChunker {
      * @return list of text chunks
      */
     public List<String> chunk(String text) {
-        int chunkSize = Constants.getInt("ragChunkSize");
-        int overlap = Constants.getInt("ragChunkOverlap");
+        int chunkSize = Constants.getInt("ragEmbeddingChunkSize");
+        int overlap = Constants.getInt("ragEmbeddingChunkOverlap");
         return chunk(text, chunkSize, overlap);
     }
 
