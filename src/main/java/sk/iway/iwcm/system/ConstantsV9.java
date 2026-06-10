@@ -306,12 +306,13 @@ public class ConstantsV9 {
 
 		/* RAG - ANSWER */
 		Constants.setBoolean("ragAnswerAllowed", false, Constants.MOD_RAG, "Povolí RAG odpoved.");
+		Constants.setString("ragAnswerModel", "gpt-5.4-mini", Constants.MOD_RAG, "Predvolený OpenAI model použitý na generovanie RAG odpovede.");
 		Constants.setString("ragAnswerMinSimilarity", "0.3", Constants.MOD_RAG, "Minimalna hodnota similarity chunku pouzita pri post-processingu kontextu pre RAG odpoved. Chunky pod touto hranicou sa pri tvorbe odpovede odfiltruju.");
-		Constants.setInt("ragAnswerTopK", 10, Constants.MOD_RAG, "Maximalny pocet najrelevantnejsich chunkov vstupujucich do post-processingu pred vytvorenim RAG odpovede.");
+		Constants.setInt("ragAnswerTopK", 12, Constants.MOD_RAG, "Maximalny pocet najrelevantnejsich chunkov vstupujucich do post-processingu pred vytvorenim RAG odpovede.");
 		Constants.setInt("ragAnswerMaxChunkGap", 1, Constants.MOD_RAG, "Maximalna povolena medzera medzi susednymi chunkmi pri ich zlucovani do jedneho kontextoveho bloku pre RAG odpoved.");
-		Constants.setInt("ragAnswerMaxBlocks", 3, Constants.MOD_RAG, "Maximalny pocet zlucenych kontextovych blokov, ktore sa odoslu modelu pri generovani RAG odpovede.");
-		Constants.setInt("ragAnswerMaxCharacters", 4500, Constants.MOD_RAG, "Maximalny celkovy pocet znakov post-processovaneho kontextu, ktory sa pouzije pri generovani RAG odpovede.");
-		Constants.setInt("ragAnswerMaxMergedBlockCharacters", 1800, Constants.MOD_RAG, "Maximalny pocet znakov jedneho zluceneho kontextoveho bloku po spojeni susednych chunkov pre RAG odpoved.");
+		Constants.setInt("ragAnswerMaxBlocks", 4, Constants.MOD_RAG, "Maximalny pocet zlucenych kontextovych blokov, ktore sa odoslu modelu pri generovani RAG odpovede.");
+		Constants.setInt("ragAnswerMaxCharacters", 6000, Constants.MOD_RAG, "Maximalny celkovy pocet znakov post-processovaneho kontextu, ktory sa pouzije pri generovani RAG odpovede.");
+		Constants.setInt("ragAnswerMaxMergedBlockCharacters", 2200, Constants.MOD_RAG, "Maximalny pocet znakov jedneho zluceneho kontextoveho bloku po spojeni susednych chunkov pre RAG odpoved.");
 
 		Constants.setString("searchType", "db", Constants.MOD_CONFIG, "Typ vyhladavania: db (databazove), lucene (Lucene fulltext), semantic (semanticke vyhladavanie cez pgvector), hybrid (kombinace vektoroveho a fulltext vyhledavania), semanticRAG ()");
 	}

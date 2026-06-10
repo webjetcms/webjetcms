@@ -5,10 +5,12 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
@@ -32,6 +34,7 @@ public class RagService {
 
     private static final String RAG_DEFAULT_ASSIST_PROVIDER = "openai";
     private static final String RAG_DEFAULT_ASSIST_MODEL = "gpt-5.4-mini";
+    private static final String CANNOT_ANSWER_SENTINEL = "CANNOT_ANSWER_QUESTION";
 
     private final AssistantDefinitionRepository assistantRepository;
     private final AiStatRepository statRepo;
@@ -79,14 +82,18 @@ public class RagService {
                 RagSettingsService.getRagAnswerMaxMergedBlockCharacters(pageParams));
 
         List<MergedContextBlock> contextBlocks = postProcessor.process(vectorChunkResults);
+        if(contextBlocks.isEmpty()) {
+            Logger.debug(RagService.class, "Cannot answer RAG question because no chunks survived post-processing. question=" + question);
+            return prop.getText("components.search.rag_answer.cant_answer");
+        }
 
         InputDataDTO inputData = new InputDataDTO();
         inputData.setAssistantId(assistant.getId());
         inputData.setUserPrompt(question);
         inputData.setBonusParams(
             Map.of(
-                // "userQuestion", question,
-                "chunks", buildChunksJson(contextBlocks).toString()
+                "userQuestion", JSONObject.quote(question),
+                "retrievedContext", buildChunksJson(contextBlocks).toString()
             )
         );
         inputData.setInputValueType(InputDataDTO.InputValueType.TEXT);
@@ -101,7 +108,7 @@ public class RagService {
 
             ragAnswer = ragAnswer.trim();
 
-            if("CAN_ANSWER_QUESTION".equals(ragAnswer)) return prop.getText("components.search.rag_answer.cant_answer");
+            if(isCannotAnswerResponse(ragAnswer)) return prop.getText("components.search.rag_answer.cant_answer");
 
             return ragAnswer;
         } catch (Exception e) {
@@ -111,6 +118,14 @@ public class RagService {
         return null;
     }
 
+    /**
+     * Builds the structured JSON payload passed to the RAG answer assistant.
+     * The payload keeps chunk text together with retrieval metadata so the prompt
+     * contract remains explicit and future source fields can be added safely.
+     *
+     * @param contextBlocks merged context blocks selected for the answer prompt
+     * @return JSON array with one object per context block
+     */
     private JSONArray buildChunksJson(List<MergedContextBlock> contextBlocks) {
         if (contextBlocks == null || contextBlocks.isEmpty()) {
             return new JSONArray();
@@ -118,9 +133,57 @@ public class RagService {
 
         JSONArray chunksArray = new JSONArray();
         for (MergedContextBlock block : contextBlocks) {
-            chunksArray.put(block.getText());
+            JSONObject chunk = new JSONObject();
+            chunk.put("entityType", block.getEntityType());
+            chunk.put("entityId", block.getEntityId());
+            chunk.put("startChunkIndex", block.getStartChunkIndex());
+            chunk.put("endChunkIndex", block.getEndChunkIndex());
+            chunk.put("maxSimilarity", block.getMaxSimilarity());
+            chunk.put("averageSimilarity", block.getAverageSimilarity());
+            chunk.put("sourceChunkCount", block.getSourceChunkCount());
+            chunk.put("text", block.getText());
+
+            if(Tools.isNotEmpty(block.getSourceTitle()) || Tools.isNotEmpty(block.getSourceUrl())) {
+                JSONObject source = new JSONObject();
+                if(Tools.isNotEmpty(block.getSourceTitle())) source.put("title", block.getSourceTitle());
+                if(Tools.isNotEmpty(block.getSourceUrl())) source.put("url", block.getSourceUrl());
+                chunk.put("source", source);
+            }
+
+            chunksArray.put(chunk);
         }
         return chunksArray;
+    }
+
+    /**
+     * Checks whether the assistant returned the cannot-answer sentinel. The
+     * comparison accepts the new sentinel and the legacy misspelled value, with
+     * light normalization for quotes, backticks, and a trailing period.
+     *
+     * @param ragAnswer raw assistant response
+     * @return true when the response means the answer is not present in context
+     */
+    private boolean isCannotAnswerResponse(String ragAnswer) {
+        if(Tools.isEmpty(ragAnswer)) return false;
+
+        String normalized = ragAnswer.trim();
+        boolean changed;
+        do {
+            changed = false;
+            if(normalized.endsWith(".")) {
+                normalized = normalized.substring(0, normalized.length() - 1).trim();
+                changed = true;
+            }
+            if(normalized.length() >= 2 && (
+                    (normalized.startsWith("\"") && normalized.endsWith("\"")) ||
+                    (normalized.startsWith("'") && normalized.endsWith("'")) ||
+                    (normalized.startsWith("`") && normalized.endsWith("`")))) {
+                normalized = normalized.substring(1, normalized.length() - 1).trim();
+                changed = true;
+            }
+        } while(changed);
+
+        return CANNOT_ANSWER_SENTINEL.equalsIgnoreCase(normalized);
     }
 
     private AssistantDefinitionEntity getOrCreateAssistant(Integer domainId) {
@@ -148,7 +211,7 @@ public class RagService {
         assistant.setFieldTo("semanticSearchEmbedding");
         assistant.setProvider(RAG_DEFAULT_ASSIST_PROVIDER);
         assistant.setInstructions( getInstructions() );
-        assistant.setModel(RAG_DEFAULT_ASSIST_MODEL);
+        assistant.setModel( getDefaultAnswerModel() );
         assistant.setGroupName(RAG_GROUP_NAME);
         assistant.setUserPromptEnabled(false);
         assistant.setUserPromptLabel("");
@@ -161,25 +224,37 @@ public class RagService {
         return assistant;
     }
 
+    /**
+     * Resolves the default model for newly created RAG answer assistants.
+     *
+     * @return configured ragAnswerModel value or the built-in fallback model
+     */
+    private String getDefaultAnswerModel() {
+        String model = Constants.getString("ragAnswerModel");
+        if(Tools.isEmpty(model)) return RAG_DEFAULT_ASSIST_MODEL;
+        return model;
+    }
+
     private String getInstructions() {
        return """
             {
                 "role": "You answer questions using only retrieved document context.",
-                "task": "Answer the userQuestion using retrievedContext.",
+                "task": "Answer userQuestion using retrievedContext.",
+                "userQuestion": {userQuestion},
                 "instructions": [
                     "Use only retrievedContext as the source of truth.",
                     "Do not use outside knowledge, guess, or add unsupported facts.",
-                    "If the answer is missing, say: \\"CAN_ANSWER_QUESTION\\"",
+                    "If the answer is missing, respond with exactly: \\"CANNOT_ANSWER_QUESTION\\"",
                     "If only partly answered, give the supported part and say what is missing.",
                     "Merge overlapping chunks, remove repeated wording, and keep exact facts such as names, numbers, dates, limits, conditions, and exceptions.",
                     "If chunks conflict, state the conflict and do not choose a side unless the context resolves it.",
                     "Do not mention embeddings, vectors, similarity scores, chunking, retrieval, RAG, or internal details.",
-                    "Use citations only when source metadata is provided.",
+                    "Do not cite sources unless source.title or source.url is present in retrievedContext.",
                     "Answer in the same language as the userQuestion.",
                     "Format bullets with each item on a new line.",
                     "Do not add follow-up offers, suggestions, or questions at the end. Just answer the userQuestion."
                 ],
-                "retrievedContext": {chunks}
+                "retrievedContext": {retrievedContext}
             }
         """;
     }

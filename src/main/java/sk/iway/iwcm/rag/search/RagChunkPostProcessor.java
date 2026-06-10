@@ -40,12 +40,12 @@ public class RagChunkPostProcessor {
      * @param maxMergedBlockCharacters  maximum characters in a single merged block; prevents unbounded merging
      */
     public RagChunkPostProcessor(int topK, double minSimilarity, int maxChunkGap, int maxBlocks, int maxCharacters, int maxMergedBlockCharacters) {
-        this.topK = topK;
-        this.minSimilarity = minSimilarity;
-        this.maxChunkGap = maxChunkGap;
-        this.maxBlocks = maxBlocks;
-        this.maxCharacters = maxCharacters;
-        this.maxMergedBlockCharacters = maxMergedBlockCharacters;
+        this.topK = Math.max(1, topK);
+        this.minSimilarity = Math.max(0d, Math.min(1d, minSimilarity));
+        this.maxChunkGap = Math.max(0, maxChunkGap);
+        this.maxBlocks = Math.max(1, maxBlocks);
+        this.maxCharacters = Math.max(1, maxCharacters);
+        this.maxMergedBlockCharacters = Math.max(1, maxMergedBlockCharacters);
     }
 
     /**
@@ -68,8 +68,8 @@ public class RagChunkPostProcessor {
         // 2. Sort by entityId, then chunkIndex
         List<VectorSearchResult> sorted = sortChunks(filtered);
 
-        // 3. Group by entityId
-        Map<Long, List<VectorSearchResult>> grouped = groupByEntityId(sorted);
+        // 3. Group by entity type and entity ID
+        Map<String, List<VectorSearchResult>> grouped = groupByEntity(sorted);
 
         // 4. Merge adjacent chunks within each entity group
         List<MergedContextBlock> merged = new ArrayList<>();
@@ -155,13 +155,17 @@ public class RagChunkPostProcessor {
     }
 
     /**
-     * Group chunks by entityId preserving insertion order (already sorted).
+     * Group chunks by entity type and entity ID preserving insertion order.
+     *
+     * @param sortedChunks chunks already sorted by entity and chunk index
+     * @return ordered map keyed by entity type and entity ID
      */
-    Map<Long, List<VectorSearchResult>> groupByEntityId(List<VectorSearchResult> sortedChunks) {
-        Map<Long, List<VectorSearchResult>> grouped = new LinkedHashMap<>();
+    Map<String, List<VectorSearchResult>> groupByEntity(List<VectorSearchResult> sortedChunks) {
+        Map<String, List<VectorSearchResult>> grouped = new LinkedHashMap<>();
         for (VectorSearchResult chunk : sortedChunks) {
             Long entityId = chunk.getEntityId() != null ? chunk.getEntityId() : 0L;
-            grouped.computeIfAbsent(entityId, k -> new ArrayList<>()).add(chunk);
+            String entityType = chunk.getEntityType() != null ? chunk.getEntityType() : "";
+            grouped.computeIfAbsent(entityType + ":" + entityId, k -> new ArrayList<>()).add(chunk);
         }
         return grouped;
     }
@@ -201,7 +205,7 @@ public class RagChunkPostProcessor {
 
                 if (textBuilder.length() + appended.length() > maxMergedBlockCharacters) {
                     // Block would exceed size limit: finalize current block and start a new one
-                    blocks.add(buildBlock(first.getEntityId(), startIndex, endIndex,
+                    blocks.add(buildBlock(first.getEntityType(), first.getEntityId(), startIndex, endIndex,
                             textBuilder.toString(), maxSim, sumSim, count));
 
                     textBuilder = new StringBuilder(currentText);
@@ -220,7 +224,7 @@ public class RagChunkPostProcessor {
                 }
             } else {
                 // Gap too large: finalize current block and start a new one
-                blocks.add(buildBlock(first.getEntityId(), startIndex, endIndex,
+                blocks.add(buildBlock(first.getEntityType(), first.getEntityId(), startIndex, endIndex,
                         textBuilder.toString(), maxSim, sumSim, count));
 
                 textBuilder = new StringBuilder(getChunkText(current));
@@ -233,7 +237,7 @@ public class RagChunkPostProcessor {
         }
 
         // Finalize last block
-        blocks.add(buildBlock(first.getEntityId(), startIndex, endIndex,
+        blocks.add(buildBlock(first.getEntityType(), first.getEntityId(), startIndex, endIndex,
                 textBuilder.toString(), maxSim, sumSim, count));
 
         return blocks;
@@ -329,8 +333,11 @@ public class RagChunkPostProcessor {
             String text = block.getText();
             int textLen = text != null ? text.length() : 0;
 
-            if (totalChars + textLen > maxCharacters && !result.isEmpty()) {
-                // Try to include a truncated version if this is the first block that exceeds the limit
+            if (totalChars + textLen > maxCharacters) {
+                int remaining = maxCharacters - totalChars;
+                if (remaining > 0 && result.isEmpty()) {
+                    result.add(copyWithText(block, truncateText(text, remaining)));
+                }
                 break;
             }
 
@@ -341,16 +348,77 @@ public class RagChunkPostProcessor {
         return result;
     }
 
-    private MergedContextBlock buildBlock(Long entityId, int startIndex, int endIndex,
+    /**
+     * Truncates text to the requested maximum length, preferring a nearby
+     * whitespace boundary so the returned prompt context does not end mid-word.
+     *
+     * @param text text to truncate
+     * @param maxLength maximum allowed length
+     * @return truncated text, or the original text when it already fits
+     */
+    private String truncateText(String text, int maxLength) {
+        if (text == null || text.length() <= maxLength) return text;
+
+        int end = Math.max(1, maxLength);
+        for (int i = end - 1; i > Math.max(0, end - 80); i--) {
+            if (Character.isWhitespace(text.charAt(i))) {
+                end = i;
+                break;
+            }
+        }
+
+        return text.substring(0, end).trim();
+    }
+
+    /**
+     * Creates a copy of a merged context block with replacement text while keeping
+     * all source metadata and similarity statistics unchanged.
+     *
+     * @param source original merged context block
+     * @param text replacement text
+     * @return copied block with the supplied text
+     */
+    private MergedContextBlock copyWithText(MergedContextBlock source, String text) {
+        return new MergedContextBlock(
+            source.getEntityType(),
+            source.getEntityId(),
+            source.getStartChunkIndex(),
+            source.getEndChunkIndex(),
+            text,
+            source.getMaxSimilarity(),
+            source.getAverageSimilarity(),
+            source.getSourceChunkCount(),
+            source.getSourceTitle(),
+            source.getSourceUrl()
+        );
+    }
+
+    /**
+     * Builds a merged context block and computes its average similarity.
+     *
+     * @param entityType type of the source entity
+     * @param entityId ID of the source entity
+     * @param startIndex first chunk index included in the block
+     * @param endIndex last chunk index included in the block
+     * @param text merged chunk text
+     * @param maxSim highest similarity among merged chunks
+     * @param sumSim sum of similarities among merged chunks
+     * @param count number of merged chunks
+     * @return populated merged context block
+     */
+    private MergedContextBlock buildBlock(String entityType, Long entityId, int startIndex, int endIndex,
                                           String text, double maxSim, double sumSim, int count) {
         return new MergedContextBlock(
+                entityType,
                 entityId,
                 startIndex,
                 endIndex,
                 text,
                 maxSim,
                 count > 0 ? sumSim / count : 0.0,
-                count
+                count,
+                null,
+                null
         );
     }
 
