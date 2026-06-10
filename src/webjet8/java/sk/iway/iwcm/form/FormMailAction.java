@@ -937,7 +937,7 @@ public class FormMailAction extends HttpServlet
 			isCsrfCorrect = checkCsrf(request);
 		}
 
-		if ("public".equals(Constants.getString("clusterMyNodeType")) && Constants.getBoolean("formAllowOnlyExistingFormsOnPublicNode")==true)
+		if (Constants.getBoolean("formAllowOnlyExistingFormsOnPublicNode")==true)
 		{
 			//na public node umoznime odoslat len definovane formulare
 			int recordsCount = new SimpleQuery().forInt("select count(form_name) from form_settings where form_name=?", formName);

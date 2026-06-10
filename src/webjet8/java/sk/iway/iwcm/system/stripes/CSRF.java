@@ -99,10 +99,6 @@ public class CSRF
 	 */
 	public static boolean verifyTokenAndDeleteIt(HttpServletRequest request)
 	{
-		if ("true".equals(request.getSession().getAttribute("WriteTag.disableSpamProtectionJavascript"))) {
-			return true;
-		}
-
 		String[] parameterValues = request.getParameterValues(PARAMETER_NAME);
 		if (parameterValues != null) {
 			for (String parameterValue : parameterValues) {
