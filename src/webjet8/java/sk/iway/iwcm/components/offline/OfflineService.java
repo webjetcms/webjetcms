@@ -40,6 +40,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import sk.iway.Password;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
@@ -79,8 +80,10 @@ public class OfflineService {
     {
 		Logger.println(OfflineAction.class,"offlineAction");
 
+		String servletContextUserKey = Password.generateStringHash(64);
+
 		//setni usera do servlet contextu, ten sa potom vybera v PathFilter (inak nie je mozne preniest login)
-		Constants.getServletContext().setAttribute(Constants.USER_KEY, user);
+		Constants.getServletContext().setAttribute(Constants.USER_KEY+"_"+servletContextUserKey, user);
 
 
 		Prop prop = Prop.getInstance(request);
@@ -256,11 +259,11 @@ public class OfflineService {
 			{
 				if (Tools.isEmpty(doc.getVirtualPath()))
 				{
-					data = downloadUrl(basePath + "/showdoc.do?docid="+doc.getDocId(), request);
+					data = downloadUrl(basePath + "/showdoc.do?docid="+doc.getDocId(), servletContextUserKey, request);
 				}
 				else
 				{
-					data = downloadUrl(basePath + doc.getVirtualPath(), request);
+					data = downloadUrl(basePath + doc.getVirtualPath(), servletContextUserKey, request);
 				}
 
 				if (Tools.isNotEmpty(data))
@@ -286,7 +289,7 @@ public class OfflineService {
 
 							if(pageFcieFile.exists() == false)
 							{
-								pageFcieData = downloadUrl(basePath + "/components/_common/javascript/page_functions.js.jsp?language="+td.getLng(), request);
+								pageFcieData = downloadUrl(basePath + "/components/_common/javascript/page_functions.js.jsp?language="+td.getLng(), servletContextUserKey, request);
 								osw = new OutputStreamWriter(new FileOutputStream(pageFcieFile), SetCharacterEncodingFilter.getEncoding());
 								osw.write(pageFcieData);
 								osw.close();
@@ -402,7 +405,7 @@ public class OfflineService {
 					}
 
 
-					data = downloadUrl(basePath + link, request);
+					data = downloadUrl(basePath + link, servletContextUserKey, request);
 					if (Tools.isNotEmpty(data))
 					{
 						//	uprav cesty
@@ -1109,7 +1112,7 @@ public class OfflineService {
 	 * @param req
 	 * @return
 	 */
-	public static String downloadUrl(String basePath, HttpServletRequest req)
+	public static String downloadUrl(String basePath, String servletContextUserKey, HttpServletRequest req)
 	{
 		//aby nas neodhlasilo
 		if (basePath.contains("/logoff.do")) return "";
@@ -1122,9 +1125,9 @@ public class OfflineService {
 		String name;
         String value;
 
-	   HttpGet method = new HttpGet(basePath);
+	   	HttpGet method = new HttpGet(basePath);
 
-      Enumeration<String> e = req.getHeaderNames();
+      	Enumeration<String> e = req.getHeaderNames();
 		while (e.hasMoreElements())
 		{
 			name = e.nextElement();
@@ -1155,7 +1158,7 @@ public class OfflineService {
 			method.setHeader(name, value);
 			Logger.println(OfflineAction.class,name+": "+value);
 		}
-		method.setHeader("userInServletContext", "true");
+		method.setHeader("userInServletContext", servletContextUserKey);
 		//nastav dmail header, aby sa negeneroval inline editor
 		method.setHeader("dmail", "1");
 

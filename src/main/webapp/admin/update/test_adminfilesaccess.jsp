@@ -46,12 +46,12 @@ public static int downloadUrl(String url, StringBuilder data, StringBuilder stat
 
 			if (logUser!=null)
 			{
-				Constants.getServletContext().setAttribute(Constants.USER_KEY, logUser);
+				Constants.getServletContext().setAttribute(Constants.USER_KEY+"_true", logUser);
 				conn.setRequestProperty("userInServletContext", "true");
 			}
 			else
 			{
-				Constants.getServletContext().removeAttribute(Constants.USER_KEY);
+				Constants.getServletContext().removeAttribute(Constants.USER_KEY+"_true");
 			}
 
 			conn.connect();

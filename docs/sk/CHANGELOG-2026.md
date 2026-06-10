@@ -9,6 +9,7 @@
 - Bezpečnosť - opravené chyby Local File Inclusion, kontrola nahrávaných súborov a RCE. Zraniteľnosť sa netýka web stránok s nastavenými externými súbormi - nastavená konfiguračná premenná `cloudStaticFilesDir` (#245).
 - Bezpečnosť - pridaný CSRF token pre formulár pri vypnutej SPAM ochrane (#245).
 - Bezpečnosť - každé odoslanie formuláru kontroluje nastavenie formuláru v databáze, ak sa nenájde formulár nie je možné odoslať. Pôvodná verzia toto kontrolovala len na verejných uzloch clustra, teraz sa to kontroluje bez ohľadu na cluster. V prípade potreby vypnete funkčnosť nastavením konfiguračnej premennej `formAllowOnlyExistingFormsOnPublicNode` na hodnotu `false` (#245).
+- Bezpečnosť - opravená možnosť získania administrátorského účtu pri generovaní offline verzie (#245).
 - Formulár ľahko - upravené polia pre zadanie názvu poľa a tooltipu na jednoriadkový WYSIWYG editor, aby výsledok neobsahoval `P` element (#244).
 - Manažér dokumentov - doplnené filtrovanie súborov podľa dátumov platnosti (ak nie je platný rozsah dátumov, nezobrazia sa) a súborov ktoré nemajú nastavený atribút zobrazovať (#233).
 - Video - aktualizovaná knižnica `videojs` na prehrávanie lokálnych audio/video súborov z verzie 6.2.0 na verziu 8.23.6 (#233).
