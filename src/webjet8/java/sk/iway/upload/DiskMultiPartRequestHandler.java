@@ -16,11 +16,11 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.IwcmRequest;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
-import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
 import javax.servlet.http.HttpServletRequest;
@@ -70,7 +70,7 @@ public class DiskMultiPartRequestHandler
 		files = upload.parseRequest(request);
 		if (files != null) Logger.debug(DiskMultiPartRequestHandler.class, "DiskMultiPartRequestHandler.handleRequest, files="+files.size());
 
-		UserDetails user = UsersDB.getCurrentUser(request);
+		Identity user = UsersDB.getCurrentUser(request);
 		List<FileItem> allowedFiles = new ArrayList<>();
 		if (files != null) {
 			for (FileItem item : files)

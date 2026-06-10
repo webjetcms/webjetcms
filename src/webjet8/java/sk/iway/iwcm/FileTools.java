@@ -70,7 +70,7 @@ public class FileTools
 	public static final List<String> videoExtensions = Collections.unmodifiableList(Arrays.asList(
 				".mp4", ".wmv", ".mpeg", ".3gp", "mkv"));
 
-	private static final String[] NOT_ALLOWED_FILE_TYPES = new String[] {"jsp", "class", "java", "php", "sh", "exe", "bat", "cmd", "com", "vbs", "js", "wsf", "wsh", "ps1", "ps2", "psm1"};
+	private static final String[] NOT_ALLOWED_FILE_TYPES = new String[] {"jsp", "class", "java", "php", "sh", "exe", "bat", "cmd", "com", "vbs", "wsf", "wsh", "ps1", "ps2", "psm1"};
 
 	/**
 	 * Skopiruje subor src do dest
@@ -934,7 +934,7 @@ public class FileTools
 	 * @param user
 	 * @param fileName
 	 * @return
-	 */public static boolean isFileAllowedForUpload(UserDetails user, String fileName)
+	 */public static boolean isFileAllowedForUpload(Identity user, String fileName)
 	{
 		//zmenene z false na true pretoze potom sa zle plnili polia so subormi a padalo to dalej na NPE
 		if (fileName == null || Tools.isEmpty(fileName)) return true;
