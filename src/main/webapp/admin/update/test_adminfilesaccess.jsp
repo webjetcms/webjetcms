@@ -9,15 +9,15 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %>
 <%@ page import="sk.iway.iwcm.users.UsersDB" %>
-<%@ page import="sk.iway.iwcm.common.FileBrowserTools" %><iwcm:checkLogon admin="true" perms="modUpdate"/>
+<%@ page import="sk.iway.iwcm.common.FileBrowserTools" %>
 <%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
 taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
-taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%!
+taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><iwcm:checkLogon admin="true" perms="modUpdate"/><%!
 
-public static int downloadUrl(String url, StringBuilder data, StringBuilder statusHeader, Identity logUser)
+public static int downloadUrl(String url, String servletContextUserKey, StringBuilder data, StringBuilder statusHeader, Identity logUser)
 {
 	int responseStatus = -1;
 
@@ -46,12 +46,12 @@ public static int downloadUrl(String url, StringBuilder data, StringBuilder stat
 
 			if (logUser!=null)
 			{
-				Constants.getServletContext().setAttribute(Constants.USER_KEY, logUser);
-				conn.setRequestProperty("userInServletContext", "true");
+				Constants.getServletContext().setAttribute(Constants.USER_KEY+"_"+servletContextUserKey, logUser);
+				conn.setRequestProperty("userInServletContext", servletContextUserKey);
 			}
 			else
 			{
-				Constants.getServletContext().removeAttribute(Constants.USER_KEY);
+				Constants.getServletContext().removeAttribute(Constants.USER_KEY+"_"+servletContextUserKey);
 			}
 
 			conn.connect();
@@ -109,7 +109,7 @@ private boolean isAdminFile(String url, String fileContent)
 	return false;
 }
 
-private void checkDir(String url, JspWriter out, String baseHref, Identity logUser) throws IOException
+private void checkDir(String url, String servletContextUserKey, JspWriter out, String baseHref, Identity logUser) throws IOException
 {
 	IwcmFile[] files = new IwcmFile(Tools.getRealPath(url)).listFiles();
 	for (IwcmFile f : files)
@@ -118,7 +118,7 @@ private void checkDir(String url, JspWriter out, String baseHref, Identity logUs
 
 		if (f.isDirectory())
 		{
-			checkDir(url+f.getName()+"/", out, baseHref, logUser);
+			checkDir(url+f.getName()+"/", servletContextUserKey, out, baseHref, logUser);
 		}
 		else if (f.getName().endsWith(".jsp"))
 		{
@@ -142,7 +142,7 @@ private void checkDir(String url, JspWriter out, String baseHref, Identity logUs
 
 			String httpAddr = baseHref+fullUrl;
 
-			int responseStatus = downloadUrl(httpAddr, data, statusHeader, logUser);
+			int responseStatus = downloadUrl(httpAddr, servletContextUserKey, data, statusHeader, logUser);
 
 			String dataStr = data.toString();
 
@@ -211,9 +211,11 @@ if ("fix".equals(request.getParameter("act"))) {
 
 	out.println("<h3>Testing: "+baseUrl+"</h3>");
 
-	checkDir(baseUrl, out, Tools.getBaseHref(request), logUser);
+	String servletContextUserKey = sk.iway.Password.generateStringHash(64);
 
-	Constants.getServletContext().removeAttribute(Constants.USER_KEY);
+	checkDir(baseUrl, servletContextUserKey, out, Tools.getBaseHref(request), logUser);
+
+	Constants.getServletContext().removeAttribute(Constants.USER_KEY+"_"+servletContextUserKey);
 }
 %>
 
