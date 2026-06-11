@@ -937,7 +937,7 @@ public class FormMailAction extends HttpServlet
 			isCsrfCorrect = checkCsrf(request);
 		}
 
-		if ("public".equals(Constants.getString("clusterMyNodeType")) && Constants.getBoolean("formAllowOnlyExistingFormsOnPublicNode")==true)
+		if (Constants.getBoolean("formAllowOnlyExistingFormsOnPublicNode")==true)
 		{
 			//na public node umoznime odoslat len definovane formulare
 			int recordsCount = new SimpleQuery().forInt("select count(form_name) from form_settings where form_name=?", formName);
@@ -1190,6 +1190,10 @@ public class FormMailAction extends HttpServlet
 												DocTools.removeChars(
 														DB.internationalToEnglish(fileName));
 
+										if (FileTools.isFileAllowedForUpload(user, fileName) == false) {
+											continue; //not allowed file types
+										}
+
 										if ("false".equals(Constants.getString("useSMTPServer")))
 										{
 											if (fileNamesSendLater == null)
@@ -1243,6 +1247,9 @@ public class FormMailAction extends HttpServlet
 										for (String param : Tools.getTokens(keys, ";"))
 										{
 											String fileName = XhrFileUploadServlet.getService().getOriginalFileName(param);
+											if (FileTools.isFileAllowedForUpload(user, fileName) == false) {
+												continue; //not allowed file types
+											}
 											fileName = XhrFileUploadServlet.getService().moveAndReplaceFile(param, baseDirName + File.separator, formId + "_" + fileName);
 											IwcmFile dest = new IwcmFile(dir, fileName);
 											if (dest.exists())

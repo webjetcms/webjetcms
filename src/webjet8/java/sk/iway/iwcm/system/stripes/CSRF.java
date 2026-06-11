@@ -85,7 +85,7 @@ public class CSRF
 	 */
 	public static String getCsrfToken(HttpSession session, boolean saveToSession)
 	{
-		String token = CryptoUtil.encrypt(session.getId()+"-"+String.valueOf(Tools.getNow()));
+		String token = CryptoUtil.encrypt(session.getId()+"-"+Tools.getNow());
 		if (saveToSession) setTokenToSession(session, token);
 
 		return token;
@@ -99,10 +99,6 @@ public class CSRF
 	 */
 	public static boolean verifyTokenAndDeleteIt(HttpServletRequest request)
 	{
-		if ("true".equals(request.getSession().getAttribute("WriteTag.disableSpamProtectionJavascript"))) {
-			return true;
-		}
-
 		String[] parameterValues = request.getParameterValues(PARAMETER_NAME);
 		if (parameterValues != null) {
 			for (String parameterValue : parameterValues) {

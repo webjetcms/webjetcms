@@ -1,6 +1,7 @@
 package sk.iway.iwcm.form;
 
 import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.gallery.ImageInfo;
 import sk.iway.iwcm.io.IwcmFile;
@@ -20,15 +21,15 @@ import sk.iway.upload.UploadedFile;
 public class FormFileRestriction
 {
 	String formName;
-	
+
 	String allowedExtensions;
-	
+
 	int maxSizeInKilobytes;
-	
+
 	int pictureWidth;
-	
+
 	int pictureHeight;
-	
+
 	public boolean isSentFileValid(UploadedFile file)
 	{
 		boolean isValid = true;
@@ -54,12 +55,17 @@ public class FormFileRestriction
 	}
 
 	private boolean isBelowMaxSize(long fileSize)
-	{		
+	{
 		return maxSizeInKilobytes <= 0 || (fileSize/1024) <= maxSizeInKilobytes;
 	}
 
 	private boolean hasAllowedExtension(String fileName)
 	{
+		//for FormMail we never want to allow unsafe file types
+		Identity fakeUser = new Identity();
+		fakeUser.setAdmin(false);
+		if (FileTools.isFileAllowedForUpload(fakeUser, fileName)==false) return false; //check global file type restrictions first
+
 		if (Tools.isEmpty(allowedExtensions))
 			return true;
 
@@ -70,7 +76,7 @@ public class FormFileRestriction
 			if (fileName.endsWith(extension.trim()))
 				return true;
 		}
-		
+
 		return false;
 	}
 
@@ -85,14 +91,14 @@ public class FormFileRestriction
 		}
 		return false;
 	}
-	
+
 
 	private boolean hasNeededWidthAndHeight(UploadedFile file)
 	{
 		try
 		{
 			ImageInfo imageInformation = new ImageInfo(file);
-			return (pictureHeight <= 0 || imageInformation.getHeight() <= pictureHeight) 
+			return (pictureHeight <= 0 || imageInformation.getHeight() <= pictureHeight)
 				&& (pictureWidth <= 0 || imageInformation.getWidth() <= pictureWidth);
 		}
 		catch (Exception e)
@@ -114,8 +120,8 @@ public class FormFileRestriction
 			return false;
 		}
 	}
-	
-	
+
+
 	public String getFormName()
 	{
 		return this.formName;

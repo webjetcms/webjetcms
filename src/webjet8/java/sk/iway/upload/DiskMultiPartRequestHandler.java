@@ -1,7 +1,6 @@
 package sk.iway.upload;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -15,11 +14,13 @@ import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.IwcmRequest;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
-
+import sk.iway.iwcm.users.UsersDB;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.Part;
@@ -50,7 +51,7 @@ import javax.servlet.ServletException;
 public class DiskMultiPartRequestHandler
 {
 
-   private List<FileItem> files;
+	private List<FileItem> files;
 
 	/**
     *  kopia triedy z originalneho balika, pouziva vsak nas MultipartIterator
@@ -58,15 +59,34 @@ public class DiskMultiPartRequestHandler
     *@param  request               Description of the Parameter
     *@exception  ServletException  Description of the Exception
     * @throws FileUploadException
-	 * @throws UnsupportedEncodingException
     */
-   public HttpServletRequest handleRequest(HttpServletRequest request) throws ServletException, FileUploadException, UnsupportedEncodingException, IOException
+   public HttpServletRequest handleRequest(HttpServletRequest request) throws ServletException, FileUploadException, IOException
    {
 		DiskFileItemFactory factory = new DiskFileItemFactory();
 
 		ServletFileUpload upload = new ServletFileUpload(factory);
 		files = upload.parseRequest(request);
 		if (files != null) Logger.debug(DiskMultiPartRequestHandler.class, "DiskMultiPartRequestHandler.handleRequest, files="+files.size());
+
+		Identity user = UsersDB.getCurrentUser(request);
+		List<FileItem> allowedFiles = new ArrayList<>();
+		if (files != null) {
+			for (FileItem item : files)
+			{
+				DiskFileItem diskFile = ((DiskFileItem)item);
+				if (diskFile.isFormField() || FileTools.isFileAllowedForUpload(user, diskFile.getName())) {
+					allowedFiles.add(item);
+				} else {
+					Logger.warn(DiskMultiPartRequestHandler.class, "Blocked uploaded file by type, field="+diskFile.getFieldName()+" fileName="+diskFile.getName());
+					try {
+						diskFile.delete();
+					} catch (Exception e) {
+						Logger.error(DiskMultiPartRequestHandler.class, "Error deleting blocked file item", e);
+					}
+				}
+			}
+			files = allowedFiles;
+		}
 
 		IwcmRequest wrapped = new IwcmRequest(request);
 
