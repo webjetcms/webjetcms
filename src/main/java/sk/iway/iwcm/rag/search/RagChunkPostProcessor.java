@@ -32,8 +32,8 @@ public class RagChunkPostProcessor {
     private final int maxMergedBlockCharacters;
 
     /**
-     * @param topK                      number of top chunks to always keep regardless of similarity
-     * @param minSimilarity             soft similarity threshold; chunks below this are dropped only if enough top-K chunks remain
+     * @param topK                      number of top chunks considered for context before adaptive thresholding is applied
+     * @param minSimilarity             soft similarity threshold; chunks below this are dropped only if enough top chunks remain
      * @param maxChunkGap               maximum gap between chunkIndex values to still merge (1 = adjacent only)
      * @param maxBlocks                 maximum number of merged context blocks to return
      * @param maxCharacters             maximum total characters across all returned blocks
@@ -124,23 +124,33 @@ public class RagChunkPostProcessor {
     }
 
     /**
-     * Compute an adaptive similarity threshold based on the number of available chunks.
+     * Computes a soft similarity cutoff that adapts to candidate volume.
      *
-     * Few chunks (1-2): threshold = minSimilarity * 0.6 (loose, keep more context)
-     * Many chunks (topK): threshold = minSimilarity * 1.2 (tight, be selective)
-     * In between: linear interpolation
+     * Rules:
+     * - {@code chunkCount <= 1}: use a loose threshold ({@code minSimilarity * 0.6})
+     * - {@code chunkCount >= topK}: use a stricter threshold ({@code minSimilarity * 1.2})
+     * - otherwise: linearly interpolate between {@code 0.6x} and {@code 1.2x}
+     *
+     * The final value is clamped to the range {@code [0.0, 1.0]}.
+     *
+     * @param chunkCount number of top-ranked chunks considered after top-K limiting
+     * @return adaptive similarity threshold in range {@code [0.0, 1.0]}
      */
     double computeAdaptiveThreshold(int chunkCount) {
+       double threshold;
+
         if (chunkCount <= 1) {
-            return minSimilarity * 0.6;
+             threshold = minSimilarity * 0.6;
+        } else if (chunkCount >= topK) {
+            threshold = minSimilarity * 1.2;
+        } else {
+            // Linear interpolation between loose (0.6x) and tight (1.2x)
+            double ratio = (double) (chunkCount - 1) / (topK - 1);
+            double multiplier = 0.6 + ratio * (1.2 - 0.6);
+            threshold = minSimilarity * multiplier;
         }
-        if (chunkCount >= topK) {
-            return minSimilarity * 1.2;
-        }
-        // Linear interpolation between loose (0.6x) and tight (1.2x)
-        double ratio = (double) (chunkCount - 1) / (topK - 1);
-        double multiplier = 0.6 + ratio * (1.2 - 0.6);
-        return minSimilarity * multiplier;
+
+        return Math.max(0d, Math.min(1d, threshold));
     }
 
     /**

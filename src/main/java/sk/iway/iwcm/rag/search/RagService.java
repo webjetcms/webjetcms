@@ -204,7 +204,7 @@ public class RagService {
     private AssistantDefinitionEntity buildAssistant(Integer domainId) {
         AssistantDefinitionEntity assistant = new AssistantDefinitionEntity();
         assistant.setName(RAG_ASSIST_NAME);
-        assistant.setDescription("RAG search assistants.");
+        assistant.setDescription("RAG search assistant.");
         assistant.setAction( SupportedActions.GENERATE_TEXT.getAction() );
         assistant.setClassName( RagService.class.getName() );
         assistant.setFieldFrom("");

@@ -115,12 +115,13 @@ public class SemanticSearchService {
 
             int[] rootGroupsIds = Tools.getTokensInt(rootGroupString, "+");
 
-            // Prefer indexed root-group columns for the first three levels, then fall back to group_id for deeper descendants.
+            // Prefer indexed root-group columns for the first three levels, but keep full subtree
+            // in group_id as well to preserve deep-folder scoping.
             Set<Integer> first3LayersGroups = new HashSet<>();
             for(int rootGroupId : rootGroupsIds) {
                 if(rootGroupId < 1) continue;
 
-                for(GroupDetails group : groupsDB.getGroupsTree(rootGroupId, true, true, false, 2)) {
+                for(GroupDetails group : groupsDB.getGroupsTree(rootGroupId, true, false, false, 2)) {
                     first3LayersGroups.add( group.getGroupId() );
                 }
             }
@@ -130,10 +131,7 @@ public class SemanticSearchService {
                 if(rootGroupId < 1) continue;
 
                 for(GroupDetails group : groupsDB.getGroupsTree(rootGroupId, false, true)) {
-                    // Avoid querying the same group through both indexed root columns and group_id.
-                    if(first3LayersGroups.contains(group.getGroupId()) == false) {
-                        restGroups.add(group.getGroupId());
-                    }
+                    restGroups.add(group.getGroupId());
                 }
             }
 

@@ -314,7 +314,7 @@ public class ConstantsV9 {
 		Constants.setInt("ragAnswerMaxCharacters", 6000, Constants.MOD_RAG, "Maximalny celkovy pocet znakov post-processovaneho kontextu, ktory sa pouzije pri generovani RAG odpovede.");
 		Constants.setInt("ragAnswerMaxMergedBlockCharacters", 2200, Constants.MOD_RAG, "Maximalny pocet znakov jedneho zluceneho kontextoveho bloku po spojeni susednych chunkov pre RAG odpoved.");
 
-		Constants.setString("searchType", "db", Constants.MOD_CONFIG, "Typ vyhladavania: db (databazove), lucene (Lucene fulltext), semantic (semanticke vyhladavanie cez pgvector), hybrid (kombinace vektoroveho a fulltext vyhledavania), semanticRAG ()");
+		Constants.setString("searchType", "db", Constants.MOD_CONFIG, "Typ vyhladavania: db (databazove), lucene (Lucene fulltext), semantic (semanticke vyhladavanie cez pgvector), hybrid (kombinace vektoroveho a fulltext vyhledavania)");
 	}
 
 	/**
