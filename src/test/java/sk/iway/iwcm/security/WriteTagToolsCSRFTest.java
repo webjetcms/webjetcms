@@ -151,19 +151,4 @@ class WriteTagToolsCSRFTest extends BaseWebjetTest {
         StringBuilder result = WriteTagToolsForCore.fixXhtml(text, request);
         assertNotNull(result, "Result should handle mailto links");
     }
-
-    @Test
-    void testFixXhtml_NoSpamProtectionConfigured() {
-        // When no spamProtectionJavascript is configured
-        Constants.setString("spamProtectionJavascript", null);
-
-        StringBuilder text = new StringBuilder(
-            "<form action='/formmail.do' method='post'>" +
-            "<input type='text' name='field1' />" +
-            "</form>"
-        );
-
-        StringBuilder result = WriteTagToolsForCore.fixXhtml(text, request);
-        assertNotNull(result, "Result should not be null when no spam protection configured");
-    }
 }

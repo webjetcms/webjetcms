@@ -11,7 +11,6 @@ import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 /**
  * JUnit tests for FileTools.isFileAllowedForUpload() security fix.
@@ -54,8 +53,8 @@ class FileToolsSecurityTest extends BaseWebjetTest {
 
     @Test
     void testIsFileAllowedForUpload_BlocksJSPFiles() {
-        Identity user = mock(Identity.class);
-        when(user.isAdmin()).thenReturn(false);
+        Identity user = new Identity();
+        user.setAdmin(false);
 
         assertFalse(FileTools.isFileAllowedForUpload(user, "shell.jsp"),
             "JSP files should be blocked for non-admin users");
@@ -63,8 +62,8 @@ class FileToolsSecurityTest extends BaseWebjetTest {
 
     @Test
     void testIsFileAllowedForUpload_BlocksClassFiles() {
-        Identity user = mock(Identity.class);
-        when(user.isAdmin()).thenReturn(false);
+        Identity user = new Identity();
+        user.setAdmin(false);
 
         assertFalse(FileTools.isFileAllowedForUpload(user, "exploit.class"),
             "Class files should be blocked for non-admin users");
@@ -72,8 +71,8 @@ class FileToolsSecurityTest extends BaseWebjetTest {
 
     @Test
     void testIsFileAllowedForUpload_BlocksExecutableFiles() {
-        Identity user = mock(Identity.class);
-        when(user.isAdmin()).thenReturn(false);
+        Identity user = new Identity();
+        user.setAdmin(false);
 
         assertFalse(FileTools.isFileAllowedForUpload(user, "malware.exe"),
             "EXE files should be blocked for non-admin users");
@@ -85,8 +84,8 @@ class FileToolsSecurityTest extends BaseWebjetTest {
 
     @Test
     void testIsFileAllowedForUpload_BlocksScriptFiles() {
-        Identity user = mock(Identity.class);
-        when(user.isAdmin()).thenReturn(false);
+        Identity user = new Identity();
+        user.setAdmin(false);
 
         assertFalse(FileTools.isFileAllowedForUpload(user, "powershell.ps1"),
             "PS1 script files should be blocked for non-admin users");
@@ -100,8 +99,8 @@ class FileToolsSecurityTest extends BaseWebjetTest {
 
     @Test
     void testIsFileAllowedForUpload_BlocksWindowsScriptFiles() {
-        Identity user = mock(Identity.class);
-        when(user.isAdmin()).thenReturn(false);
+        Identity user = new Identity();
+        user.setAdmin(false);
 
         assertFalse(FileTools.isFileAllowedForUpload(user, "script.vbs"),
             "VBS script files should be blocked for non-admin users");
@@ -113,8 +112,8 @@ class FileToolsSecurityTest extends BaseWebjetTest {
 
     @Test
     void testIsFileAllowedForUpload_BlocksAllDangerousExtensions() {
-        Identity user = mock(Identity.class);
-        when(user.isAdmin()).thenReturn(false);
+        Identity user = new Identity();
+        user.setAdmin(false);
 
         for (String ext : DANGEROUS_EXTENSIONS) {
             String fileName = "testfile." + ext;
@@ -125,8 +124,8 @@ class FileToolsSecurityTest extends BaseWebjetTest {
 
     @Test
     void testIsFileAllowedForUpload_AllowsSafeExtensions() {
-        Identity user = mock(Identity.class);
-        when(user.isAdmin()).thenReturn(false);
+        Identity user = new Identity();
+        user.setAdmin(false);
 
         for (String ext : SAFE_EXTENSIONS) {
             String fileName = "testfile." + ext;
@@ -137,8 +136,8 @@ class FileToolsSecurityTest extends BaseWebjetTest {
 
     @Test
     void testIsFileAllowedForUpload_AllowsAdminUsers() {
-        Identity adminUser = mock(Identity.class);
-        when(adminUser.isAdmin()).thenReturn(true);
+        Identity adminUser = new Identity();
+        adminUser.setAdmin(true);
 
         // Even dangerous extensions should be allowed for admin users
         for (String ext : DANGEROUS_EXTENSIONS) {
@@ -150,8 +149,8 @@ class FileToolsSecurityTest extends BaseWebjetTest {
 
     @Test
     void testIsFileAllowedForUpload_NullFileName() {
-        Identity user = mock(Identity.class);
-        when(user.isAdmin()).thenReturn(false);
+        Identity user = new Identity();
+        user.setAdmin(false);
 
         assertTrue(FileTools.isFileAllowedForUpload(user, null),
             "null file name should return true (allow by default)");
@@ -159,8 +158,8 @@ class FileToolsSecurityTest extends BaseWebjetTest {
 
     @Test
     void testIsFileAllowedForUpload_EmptyFileName() {
-        Identity user = mock(Identity.class);
-        when(user.isAdmin()).thenReturn(false);
+        Identity user = new Identity();
+        user.setAdmin(false);
 
         assertTrue(FileTools.isFileAllowedForUpload(user, ""),
             "empty file name should return true (allow by default)");
@@ -168,8 +167,8 @@ class FileToolsSecurityTest extends BaseWebjetTest {
 
     @Test
     void testIsFileAllowedForUpload_CaseInsensitiveExtensionCheck() {
-        Identity user = mock(Identity.class);
-        when(user.isAdmin()).thenReturn(false);
+        Identity user = new Identity();
+        user.setAdmin(false);
 
         // Test that extensions are checked case-insensitively
         assertFalse(FileTools.isFileAllowedForUpload(user, "shell.JSP"),
@@ -182,8 +181,8 @@ class FileToolsSecurityTest extends BaseWebjetTest {
 
     @Test
     void testIsFileAllowedForUpload_DenyForbiddenSymbols() {
-        Identity user = mock(Identity.class);
-        when(user.isAdmin()).thenReturn(false);
+        Identity user = new Identity();
+        user.setAdmin(false);
 
         // Files with forbidden symbols should be blocked
         String fileName = "test<file>.jpg";
@@ -194,8 +193,8 @@ class FileToolsSecurityTest extends BaseWebjetTest {
     @Test
     void testIsFileAllowedForUpload_AdminUserBypass() {
         // When user is admin, all file types should be allowed
-        Identity adminUser = mock(Identity.class);
-        when(adminUser.isAdmin()).thenReturn(true);
+        Identity adminUser = new Identity();
+        adminUser.setAdmin(true);
 
         // Even dangerous extensions should be allowed for admin users
         assertTrue(FileTools.isFileAllowedForUpload(adminUser, "shell.jsp"),
@@ -208,8 +207,8 @@ class FileToolsSecurityTest extends BaseWebjetTest {
     void testIsFileAllowedForUpload_NullUser() {
         // When user is null, the admin check is skipped and file extensions are checked
         // shell.jsp should be blocked by extension check
-        Identity user = mock(Identity.class);
-        when(user.isAdmin()).thenReturn(false);
+        Identity user = new Identity();
+        user.setAdmin(false);
         assertFalse(FileTools.isFileAllowedForUpload(user, "shell.jsp"),
             "JSP files should be blocked even with null user (extension check still applies)");
     }
@@ -218,8 +217,8 @@ class FileToolsSecurityTest extends BaseWebjetTest {
 
     @Test
     void testIsFileAllowedForUpload_PathTraversalBlocked() {
-        Identity user = mock(Identity.class);
-        when(user.isAdmin()).thenReturn(false);
+        Identity user = new Identity();
+        user.setAdmin(false);
 
         // Path traversal attempts should be blocked
         String fileName = "../../../etc/passwd.jpg";
@@ -229,8 +228,8 @@ class FileToolsSecurityTest extends BaseWebjetTest {
 
     @Test
     void testIsFileAllowedForUpload_NoExtension() {
-        Identity user = mock(Identity.class);
-        when(user.isAdmin()).thenReturn(false);
+        Identity user = new Identity();
+        user.setAdmin(false);
 
         // Files without extension should be allowed (no extension to check)
         assertTrue(FileTools.isFileAllowedForUpload(user, "readme"),

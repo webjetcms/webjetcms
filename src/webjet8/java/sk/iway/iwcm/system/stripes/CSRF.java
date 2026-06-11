@@ -85,7 +85,7 @@ public class CSRF
 	 */
 	public static String getCsrfToken(HttpSession session, boolean saveToSession)
 	{
-		String token = CryptoUtil.encrypt(session.getId()+"-"+String.valueOf(Tools.getNow()));
+		String token = CryptoUtil.encrypt(session.getId()+"-"+Tools.getNow());
 		if (saveToSession) setTokenToSession(session, token);
 
 		return token;

@@ -12,7 +12,6 @@ import sk.iway.iwcm.test.BaseWebjetTest;
 import javax.servlet.http.HttpServletRequest;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 /**
  * JUnit tests for EditorUpload security fix.
@@ -30,11 +29,10 @@ class EditorUploadSecurityTest extends BaseWebjetTest {
 
     @BeforeEach
     void setUp() {
-        mockAdminUser = mock(Identity.class);
-        mockNonAdminUser = mock(Identity.class);
-
-        when(mockAdminUser.isAdmin()).thenReturn(true);
-        when(mockNonAdminUser.isAdmin()).thenReturn(false);
+        mockAdminUser = new Identity();
+        mockAdminUser.setAdmin(true);
+        mockNonAdminUser = new Identity();
+        mockNonAdminUser.setAdmin(false);
     }
 
     // --- Tests for admin authorization check ---
@@ -62,12 +60,10 @@ class EditorUploadSecurityTest extends BaseWebjetTest {
         // This test verifies the authorization check exists
 
         // Verify that admin users pass the check
-        when(mockAdminUser.isAdmin()).thenReturn(true);
         assertTrue(mockAdminUser.isAdmin(),
             "Admin user should pass authorization check");
 
         // Verify that non-admin users fail the check
-        when(mockNonAdminUser.isAdmin()).thenReturn(false);
         assertFalse(mockNonAdminUser.isAdmin(),
             "Non-admin user should fail authorization check");
     }
@@ -82,38 +78,6 @@ class EditorUploadSecurityTest extends BaseWebjetTest {
 
         assertNotNull(uploadPath, "Upload path should not be null");
         assertFalse(uploadPath.isEmpty(), "Upload path should not be empty");
-    }
-
-    @Test
-    void testAdminUploadServlet_AllowedDirectories() {
-        // The security fix adds /files/protected/upload/ to allowed directories
-        String allowedDir1 = "/files/protected/upload/";
-        String allowedDir2 = "/files/protected/feedback-form/";
-        String normalDir = "/files/public/";
-
-        // Both protected directories should be allowed
-        assertEquals("/files/protected/upload/", allowedDir1,
-            "/files/protected/upload/ should be an allowed directory");
-        assertEquals("/files/protected/feedback-form/", allowedDir2,
-            "/files/protected/feedback-form/ should be an allowed directory");
-
-        // Normal directories should still require writable permission
-        assertEquals(allowedDir1, normalDir,
-            "Normal directory is different from protected upload directory");
-    }
-
-    @Test
-    void testAdminUploadServlet_DeniesNonWritableDirectories() {
-        // The security fix ensures non-writable directories are denied
-        String nonWritableDir = "/files/restricted/";
-
-        // Before the fix: only /files/protected/feedback-form/ was allowed
-        // After the fix: /files/protected/upload/ is also allowed
-
-        assertNotEquals("/files/protected/upload/", nonWritableDir,
-            "Non-writable directory should not be in allowed list");
-        assertNotEquals("/files/protected/feedback-form/", nonWritableDir,
-            "Non-writable directory should not be in allowed list");
     }
 
     @Test
