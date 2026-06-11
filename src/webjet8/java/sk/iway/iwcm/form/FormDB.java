@@ -778,8 +778,8 @@ public class FormDB
 
 	public static boolean isThereFileRestrictionFor(String formName)
 	{
-		return new SimpleQuery().forInt(
-			"SELECT COUNT(*) FROM form_settings WHERE form_name = ? AND max_size_in_kilobytes IS NOT NULL "+CloudToolsForCore.getDomainIdSqlWhere(true), formName) > 0;
+		//there is always a file restrictions for forms
+		return true; //NOSONAR
 	}
 
 	public static FormFileRestriction getFileRestrictionFor(String formName) {

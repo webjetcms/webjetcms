@@ -939,7 +939,7 @@ public class FileTools
 		//zmenene z false na true pretoze potom sa zle plnili polia so subormi a padalo to dalej na NPE
 		if (fileName == null || Tools.isEmpty(fileName)) return true;
 
-		if ((user!=null && user.isAdmin()) || RequestBean.isAdminLogged()) {
+		if ((user!=null && user.isAdmin()) || (user == null && RequestBean.isAdminLogged())) {
 			//allow all file types for admin users
 			return true;
 		}
