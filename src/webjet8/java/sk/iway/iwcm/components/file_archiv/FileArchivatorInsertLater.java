@@ -3,6 +3,7 @@ package sk.iway.iwcm.components.file_archiv;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
@@ -21,10 +22,28 @@ import sk.iway.iwcm.io.IwcmFile;
 
 public class FileArchivatorInsertLater
 {
+    private static final String AUDIT_FILE_ARCHIVATOR_INSERT_LATER = "FileArchivatorInsertLater";
+
+    private static boolean isPublicNode() {
+        String nodeType = Constants.getString("clusterMyNodeType", "");
+        if (Tools.isEmpty(nodeType)) {
+            return false;
+        }
+        return !"full".equalsIgnoreCase(nodeType);
+    }
+
     public static void main(String[] args)
     {
+        if (isPublicNode()) {
+            return;
+        }
+
         try
         {
+            //prevencia proti spusteniu naraz viacerymi nodmi
+            long rndSleep = ThreadLocalRandom.current().nextInt( 10000);
+            Thread.sleep(rndSleep);
+
             List<FileArchivatorBean> filesToUpload = FileArchivatorDB.getFilesToUpload();
 
             for(FileArchivatorBean fab : filesToUpload)
@@ -84,7 +103,7 @@ public class FileArchivatorInsertLater
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
 
-            Adminlog.add(Adminlog.TYPE_CRON, "FileArchivatorInsertLater error:"+e.getMessage()+"\n"+sw.toString(), -1, -1);
+            Adminlog.add(Adminlog.TYPE_CRON, AUDIT_FILE_ARCHIVATOR_INSERT_LATER + " error:" +e.getMessage()+"\n"+ sw, -1, -1);
             sk.iway.iwcm.Logger.error(e);
         }
         finally
@@ -113,6 +132,7 @@ public class FileArchivatorInsertLater
                 IwcmFile oldFile = new IwcmFile(Tools.getRealPath(oldFileBean.getFilePath() + oldFileBean.getFileName()));
                 if(oldFile.renameTo(realFile) == false) {
                     //ERR
+                    Adminlog.add(Adminlog.TYPE_CRON, AUDIT_FILE_ARCHIVATOR_INSERT_LATER + " renameTo failed for file: oldFile: " +oldFile.getAbsolutePath() + ", realFile: "+realFile.getAbsolutePath(), -1, -1);
                     return null;
                 }
 
@@ -143,6 +163,7 @@ public class FileArchivatorInsertLater
                 //ITS main file, there is no old file
                 if(FileTools.moveFile(scheduledBean.getFilePath() + scheduledBean.getFileName(), fileUrl + uniqueFileName) == false) {
                     //ERR
+                    Adminlog.add(Adminlog.TYPE_CRON, AUDIT_FILE_ARCHIVATOR_INSERT_LATER + " moveFile failed for file: origUrl: " +scheduledBean.getVirtualPath() + ", destUrl: "+fileUrl + uniqueFileName, -1, -1);
                     return null;
                 }
 
@@ -152,6 +173,7 @@ public class FileArchivatorInsertLater
                 scheduledBean.setReferenceId(null);
 
                 if(scheduledBean.save() == false) {
+                    Adminlog.add(Adminlog.TYPE_CRON, AUDIT_FILE_ARCHIVATOR_INSERT_LATER + " save failed for file: " +scheduledBean.getVirtualPath(), -1, -1);
                     Logger.error(FileArchivatorInsertLater.class, "save failed");
                     return null;
                 }
@@ -159,9 +181,11 @@ public class FileArchivatorInsertLater
                 return uniqueFileName;
             }
         } catch (Exception e) {
-            return null;
+            Adminlog.add(Adminlog.TYPE_CRON, AUDIT_FILE_ARCHIVATOR_INSERT_LATER + " renameFile error: \n" +e.getMessage(), -1, -1);
+            Logger.error(e);
         }
 
+        Adminlog.add(Adminlog.TYPE_CRON, AUDIT_FILE_ARCHIVATOR_INSERT_LATER + " renameFile failed for file: " +scheduledBean.getVirtualPath(), -1, -1);
         return null;
 	}
 
@@ -261,7 +285,7 @@ public class FileArchivatorInsertLater
         if( Tools.isTrue(fab.getShowFile()) )
             text.append(prop.getText("editor.show")).append(":").append(prop.getText("qa.publishOnWeb.yes")).append("<br/>");
 		else
-            text.append(prop.getText("editor.show")).append(":").append(prop.getText("qa.publishOnWeb.no")).append("<br />");
+            text.append(prop.getText("editor.show")).append(":").append(prop.getText("qa.publishOnWeb.no")).append("<br/>");
 
 
         text.append(prop.getText("components.banner.priority")).append(": ")
@@ -286,6 +310,10 @@ public class FileArchivatorInsertLater
 
         if(Tools.isEmpty(emails))
             emails = Constants.getString("fileArchivSupportEmails");
+
+        if(stav != 0) {
+            Adminlog.add(Adminlog.TYPE_CRON, AUDIT_FILE_ARCHIVATOR_INSERT_LATER + " saved error, stav=" +stav+" : \n"+text.toString().replace("<br/>","\n"), -1, -1);
+        }
 
         String[] emailsArray = Tools.getTokens(emails, ",", true);
         for (String recipient : emailsArray)
