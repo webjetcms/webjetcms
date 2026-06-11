@@ -47,12 +47,10 @@ public static int downloadUrl(String url, String servletContextUserKey, StringBu
 			if (logUser!=null)
 			{
 				Constants.getServletContext().setAttribute(Constants.USER_KEY+"_"+servletContextUserKey, logUser);
-				System.out.println("Set user in servlet context with key: " + Constants.USER_KEY+"_"+servletContextUserKey);
 				conn.setRequestProperty("userInServletContext", servletContextUserKey);
 			}
 			else
 			{
-				System.out.println("REMOVE user in servlet context with key: " + Constants.USER_KEY+"_"+servletContextUserKey);
 				Constants.getServletContext().removeAttribute(Constants.USER_KEY+"_"+servletContextUserKey);
 			}
 
@@ -113,8 +111,6 @@ private boolean isAdminFile(String url, String fileContent)
 
 private void checkDir(String url, String servletContextUserKey, JspWriter out, String baseHref, Identity logUser) throws IOException
 {
-
-
 	IwcmFile[] files = new IwcmFile(Tools.getRealPath(url)).listFiles();
 	for (IwcmFile f : files)
 	{
@@ -219,7 +215,7 @@ if ("fix".equals(request.getParameter("act"))) {
 
 	checkDir(baseUrl, servletContextUserKey, out, Tools.getBaseHref(request), logUser);
 
-	Constants.getServletContext().removeAttribute(Constants.USER_KEY);
+	Constants.getServletContext().removeAttribute(Constants.USER_KEY+"_"+servletContextUserKey);
 }
 %>
 

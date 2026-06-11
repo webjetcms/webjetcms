@@ -14,6 +14,7 @@ import net.sourceforge.stripes.controller.StripesFilterIway;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.system.ConstantsV9;
@@ -85,7 +86,7 @@ public class BaseWebjetTest
 
 
 			} catch (Exception e) {
-				e.printStackTrace();
+				Logger.error(BaseWebjetTest.class, "Failed to initialize StripesFilterIway for tests" + e.getMessage());
 			}
 		}
 	}

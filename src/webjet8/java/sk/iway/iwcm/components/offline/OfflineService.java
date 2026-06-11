@@ -450,7 +450,7 @@ public class OfflineService {
 		ConfDB.deleteName("disableSpamProtectionForOffline");
 		Constants.deleteConstant("disableSpamProtectionForOffline");
 
-		Constants.getServletContext().removeAttribute(Constants.USER_KEY);
+		Constants.getServletContext().removeAttribute(Constants.USER_KEY+"_"+servletContextUserKey);
 
 		//ak treba, vygeneruj not_available_on_cd.html
 		f = new File(Tools.getRealPath(destination +"/not_available_on_cd.html"));

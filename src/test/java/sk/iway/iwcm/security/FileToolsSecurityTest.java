@@ -207,9 +207,7 @@ class FileToolsSecurityTest extends BaseWebjetTest {
     void testIsFileAllowedForUpload_NullUser() {
         // When user is null, the admin check is skipped and file extensions are checked
         // shell.jsp should be blocked by extension check
-        Identity user = new Identity();
-        user.setAdmin(false);
-        assertFalse(FileTools.isFileAllowedForUpload(user, "shell.jsp"),
+        assertFalse(FileTools.isFileAllowedForUpload(null, "shell.jsp"),
             "JSP files should be blocked even with null user (extension check still applies)");
     }
 

@@ -192,8 +192,10 @@ public class WriteTagToolsForCore {
                                 replacedText = new StringBuilder(replacedText.substring(0, end + 1)).append(csrfToken).append(replacedText.substring(end + 1));
                                 end = end + csrfToken.length(); //posun end index za pridany token
                             }
+                            start = replacedText.indexOf("<form", end + 1);
+                        } else {
+                            break;
                         }
-                        start = replacedText.indexOf("<form", end + 1);
                     }
                 }
 

@@ -1,7 +1,6 @@
 package sk.iway.upload;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -60,7 +59,6 @@ public class DiskMultiPartRequestHandler
     *@param  request               Description of the Parameter
     *@exception  ServletException  Description of the Exception
     * @throws FileUploadException
-	 * @throws UnsupportedEncodingException
     */
    public HttpServletRequest handleRequest(HttpServletRequest request) throws ServletException, FileUploadException, IOException
    {
