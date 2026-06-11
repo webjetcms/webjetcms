@@ -183,6 +183,7 @@ public class FileArchivatorInsertLater
         } catch (Exception e) {
             Adminlog.add(Adminlog.TYPE_CRON, AUDIT_FILE_ARCHIVATOR_INSERT_LATER + " renameFile error: \n" +e.getMessage(), -1, -1);
             Logger.error(e);
+            return null;
         }
 
         Adminlog.add(Adminlog.TYPE_CRON, AUDIT_FILE_ARCHIVATOR_INSERT_LATER + " renameFile failed for file: " +scheduledBean.getVirtualPath(), -1, -1);
