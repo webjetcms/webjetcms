@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * The security fix ensures that CSRF tokens are always included in forms
  * regardless of the spamProtectionJavascript setting.
  */
+@SuppressWarnings("java:S5976")
 @Execution(ExecutionMode.SAME_THREAD)
 class WriteTagToolsCSRFTest extends BaseWebjetTest {
 

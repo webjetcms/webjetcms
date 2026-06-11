@@ -17,6 +17,7 @@ import static org.mockito.Mockito.*;
  * JUnit tests for FileTools.isFileAllowedForUpload() security fix.
  * Verifies that dangerous file extensions are blocked for non-admin users.
  */
+@SuppressWarnings("java:S5976")
 @Execution(ExecutionMode.SAME_THREAD)
 class FileToolsSecurityTest extends BaseWebjetTest {
 
