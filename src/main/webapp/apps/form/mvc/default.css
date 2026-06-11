@@ -22,3 +22,8 @@
 .multistep-form-app .form-group.mf-visibility-animated.mf-hidden input {
     display: none;
 }
+
+.multistep-form-app .mf-error-list {
+    margin: 0px;
+    padding-left: 20px;
+}

@@ -582,8 +582,8 @@ public class Constants {
 				"limity pre upload suborov cez editor v kB pre subory a skratene menu");
 		setString("FCKConfig.UploadFileTypes[Default][image]", "", mods(MOD_EDITOR, MOD_SECURITY),
 				"limity typov suborov pre upload cez editor pre obrazky a standardne menu"); // jpg,jpeg,png,gif,swf,mpg,mov,wmv,flv,avi,mp3,vma,wav
-		setString("FCKConfig.UploadFileTypes[Basic][image]", "jpg,jpeg,png,gif,mp4", mods(MOD_EDITOR, MOD_SECURITY),
-				"limity typov suborov pre upload cez editor pre obrazky a skratene menu, prednastavene na jpg,jpeg,png,gif,swf");
+		setString("FCKConfig.UploadFileTypes[Basic][image]", "jpg,jpeg,png,gif,svg,webp,mp3,mp4", mods(MOD_EDITOR, MOD_SECURITY),
+				"limity typov suborov pre upload cez editor pre obrazky a skratene menu, prednastavene na jpg,jpeg,png,gif,svg,webp,mp3,mp4");
 		setString("FCKConfig.UploadFileTypes[Default][file]", "", mods(MOD_EDITOR, MOD_SECURITY),
 				"limity typov suborov pre upload cez editor pre subory a standardne menu");
 		setString("FCKConfig.UploadFileTypes[Basic][file]", "doc,docx,xls,xlsx,pdf,zip,rtf",
@@ -1518,11 +1518,7 @@ public class Constants {
 				"Ak je true nebude elfinder ziskavat last modified, size a nebude sa kontrolovat, ci priecinky maju podpriecinky(bude sa predpokladat, ze ano)");
 
 		setString("contentSecurityPolicy", "", MOD_SECURITY,
-				"Obmedzenie ako stránka ma stranka nacitavat rôzne zdroje, ak mate httpS certifikat odporucame nastavit na hodnotu: default-src 'none'; script-src https: blob: data: 'unsafe-inline' 'unsafe-eval'; worker-src https: blob:; child-src https: blob:; style-src https: data: 'unsafe-inline' 'unsafe-eval'; img-src https: data: 'unsafe-inline'; font-src https: data:; object-src blob: 'self'; base-uri 'none'; frame-ancestors 'self'; connect-src blob: 'self'; frame-src 'self';"); // default-src
-																																																																																																																																																																		// https:
-																																																																																																																																																																		// data:
-																																																																																																																																																																		// 'unsafe-inline'
-																																																																																																																																																																		// 'unsafe-eval'
+				"Obmedzenie ako stránka ma stranka nacitavat rôzne zdroje, ak mate httpS certifikat odporucame nastavit na hodnotu: default-src 'self'; script-src 'self' {nonce} https: 'strict-dynamic'; style-src 'self' https: 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https: data:; connect-src 'self' https:; frame-src 'self' www.youtube.com docs.google.com; media-src https:; object-src 'none'; frame-ancestors 'self'; base-uri 'self'; form-action 'self';");
 		setString("contentSecurityPolicySvg", "default-src 'self' 'unsafe-inline'", MOD_SECURITY,
 				"Obmedzenie pre SVG obrazky, ktore mozu obsahovat vlozeny javascript kod, odporucame nastavit na hodnotu: default-src 'self' 'unsafe-inline'");
 		setString("refererPolicy", "same-origin", MOD_SECURITY,
@@ -1809,7 +1805,7 @@ public class Constants {
 		setString("userEditableTreeMenuType", "rows", mods("combine", MOD_EDITOR),
 				"Zobrazenie stomu vo web strankach pokial ma pouzivatel nastavene prava na adresar. Momentalne mozne hodnoty su tree alebo rows");
 
-		setString("prepositions", "bez,cez,do,k,medzi,na,o,od,okrem,po,pod,pre,pred,pri,proti,s,so,u,z,zo,v",
+		setString("prepositions", "bez,cez,do,k,medzi,na,o,od,okrem,po,pod,pre,pred,pri,proti,s,so,u,z,zo,v,a,i",
 				"config;editor", "zoznam predloziek");
 
 		setString("emailAttachmentsPublisher.pop3.host", "", "emailAttachmentsPublisher", "adresa na pop3");

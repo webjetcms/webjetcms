@@ -146,7 +146,10 @@
   - [Document Embed](/redactor/apps/app-docsembed/README.md)
   - [Embed HTML code](/redactor/apps/app-htmlembed/README.md)
   - [Search Engines (SEO)](/redactor/apps/seo/README.md)
-  - [Search](/redactor/apps/search/README.md)
+  - Search
+    - [Search](/redactor/apps/search/README.md)
+    - [Semantic Search (RAG)](/redactor/apps/semantic-search/README.md)
+    - [Semantic index](/redactor/apps/semantic-search/embedding-chunks.md)
   - [View files](/redactor/apps/site-browser/README.md)
   - [Structure Mirroring](/redactor/apps/docmirroring/README.md)
 - Files

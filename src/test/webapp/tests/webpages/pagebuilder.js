@@ -295,9 +295,100 @@ Scenario('bug - /thumb prefix and parameters in image url', async ({ I, DTE, Doc
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
     DTE.waitForEditor();
 
-    await validateThumb(I, "Etiam orci");
-    await validateThumb(I, "intranetové riešenie");
+    var setData = { width: 300, height: 300 };
+    await validateThumb(I, "Etiam orci", { width: 160, height: 160 }, setData);
+    var setData2 = { width: 400, height: 300, ipMode: 3, bgColor: "ff0000" };
+    await validateThumb(I, "Etiam orci", setData, setData2);
+    var setData3 = { width: 500, height: 500, ipMode: 4, bgColor: "00ff00", noIp: true };
+    await validateThumb(I, "Etiam orci", setData2, setData3);
+    var setData4 = { width: 150, height: 0, ipMode: 1 };
+    await validateThumb(I, "Etiam orci", setData3, setData4);
+    await validateThumb(I, "Etiam orci", setData4, null);
+
+    setData = { width: 200, height: 200 };
+    await validateThumb(I, "intranetové riešenie", { width: 160, height: 160 }, setData);
+    await validateThumb(I, "intranetové riešenie", setData, null);
 });
+
+async function validateThumb(I, elementText, checkData, setData = null) {
+    I.say("---> validateThumb, element: "+elementText+", checkData: "+JSON.stringify(checkData)+", setData: "+JSON.stringify(setData));
+
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+
+    var fixedSizeClass = "fixedSize-"+checkData.width+"-"+checkData.height;
+    if (checkData.ipMode) fixedSizeClass += "-"+checkData.ipMode;
+    else fixedSizeClass += "-5"; //default ip mode is 5
+    if (checkData.bgColor) fixedSizeClass += "-"+checkData.bgColor;
+    if (checkData.noIp) fixedSizeClass += "-true";
+
+    var imgLocator = locate("div").withChild(locate("h3").withText(elementText)).find(locate("img."+fixedSizeClass));
+    I.waitForElement(imgLocator, 10);
+    I.click(imgLocator);
+    I.switchTo(locate(".cke_dialog_container").withAttr({style: "display: flex; z-index: 10010;"}).find("table.cke_dialog #wjImageIframeElement"));
+
+    I.waitForElement('#txtUrl', 10);
+    I.wait(3); //wait to populate URL between ckeditor / elfinder
+    const url = await I.grabValueFrom("#txtUrl");
+
+    //
+    I.say('Checking if the URL contains "/thumb/" only once.');
+    const regex = /^(?!.*\bthumb\b.*\bthumb\b).*thumb.*/;
+    assert.match(url, regex, 'URL does not contain "/thumb/" only once');
+
+    if (checkData.height === 0) checkData.height = ""; //if height is 0, it should not be present in URL, so we check empty value
+    //
+    I.say('Checking if the URL contains the correct parameters: w='+checkData.width+', h='+checkData.height+', ip=5.');
+    assert.match(url, new RegExp('w=' + checkData.width + "&"));
+    assert.match(url, new RegExp('h=' + checkData.height + "&"));
+    assert.match(url, new RegExp('ip=' + (checkData.ipMode || 5)));
+
+    //
+    I.say('Checking if the parameters are not duplicated in the URL.');
+    assert.doesNotMatch(url, new RegExp('w=' + checkData.width + '.*w=' + checkData.width), "Parameter 'w' is duplicated in the URL");
+    assert.doesNotMatch(url, new RegExp('h=' + checkData.height + '.*h=' + checkData.height), "Parameter 'h' is duplicated in the URL");
+    assert.doesNotMatch(url, new RegExp('ip=' + (checkData.ipMode || 5) + '.*ip=' + (checkData.ipMode || 5)), "Parameter 'ip' is duplicated in the URL");
+
+    //
+    I.switchTo();
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+
+
+    if (checkData.height === "") checkData.height = 0; //switch back to 0 for checking in field, if it was empty in URL
+
+    //check values in thumbs dialog
+    I.click(locate("a.cke_dialog_tab").withText("Miniatúra"));
+    var widthLocator = locate(".cke_dialog_container").withAttr({style: "display: flex; z-index: 10010;"}).find(".cke_dialog_ui_vbox.cke_dialog_page_contents").withText("Režim").find(".cke_dialog_ui_text").withText("Šírka").find("input.cke_dialog_ui_input_text");
+    var heightLocator = locate(".cke_dialog_container").withAttr({style: "display: flex; z-index: 10010;"}).find(".cke_dialog_ui_vbox.cke_dialog_page_contents").withText("Režim").find(".cke_dialog_ui_text").withText("Výška").find("input.cke_dialog_ui_input_text");
+    var ipLocator = locate(".cke_dialog_container").withAttr({style: "display: flex; z-index: 10010;"}).find(".cke_dialog_ui_vbox.cke_dialog_page_contents").withText("Režim").find(".cke_dialog_ui_select").withText("Režim").find("select.cke_dialog_ui_input_select");
+    var colorLocator = locate(".cke_dialog_container").withAttr({style: "display: flex; z-index: 10010;"}).find(".cke_dialog_ui_vbox.cke_dialog_page_contents").withText("Režim").find(".cke_dialog_ui_text").withText("Farba pozadia").find("input.cke_dialog_ui_input_text");
+    var noIpLocator = locate(".cke_dialog_container").withAttr({style: "display: flex; z-index: 10010;"}).find(".cke_dialog_ui_vbox.cke_dialog_page_contents").withText("Režim").find(".cke_dialog_ui_checkbox").withText("Vypnúť bod záujmu").find("input.cke_dialog_ui_checkbox_input");
+    if (checkData.width) I.seeInField(widthLocator, checkData.width);
+    if (checkData.height) I.seeInField(heightLocator, checkData.height);
+    if (checkData.ipMode) I.seeInField(ipLocator, checkData.ipMode);
+    if (checkData.bgColor) I.seeInField(colorLocator, checkData.bgColor);
+    if (checkData.noIp === true) I.seeCheckboxIsChecked(noIpLocator);
+    else  I.dontSeeCheckboxIsChecked(noIpLocator);
+
+    if (setData !== null) {
+        if (setData.width !== null) I.fillField(widthLocator, setData.width);
+        if (setData.height !== null) I.fillField(heightLocator, setData.height);
+        if (setData.ipMode) I.selectOption(ipLocator, setData.ipMode);
+        if (setData.bgColor) I.fillField(colorLocator, setData.bgColor);
+        if (setData.noIp === true) I.checkOption(noIpLocator);
+        else I.uncheckOption(noIpLocator);
+    }
+
+    I.clickCss(".cke_dialog_ui_button_ok");
+
+    await I.executeScript(() => {
+        const element = document.querySelector('#cke_692_uiElement #wjImageIframeElement');
+            if (element) {
+              element.remove();
+            }
+    });
+
+    I.switchTo();
+}
 
 function insertLink(I, link) {
     I.clickCss(".cke_button.cke_button__link.cke_button_off");
@@ -314,48 +405,6 @@ function insertLink(I, link) {
           element.remove();
         }
     });
-}
-
-async function validateThumb(I, elementText) {
-    I.switchTo("#DTE_Field_data-pageBuilderIframe");
-    I.waitForElement(locate("div").withChild(locate("h3").withText(elementText)).find(locate(".fixedSize-160-160-5")), 10);
-    I.click(locate("div").withChild(locate("h3").withText(elementText)).find(locate(".fixedSize-160-160-5")));
-    I.switchTo(locate(".cke_dialog_container").withAttr({style: "display: flex; z-index: 10010;"}).find("table.cke_dialog #wjImageIframeElement"));
-
-    I.waitForElement('#txtUrl', 10);
-    I.wait(5);
-    const url = await I.grabValueFrom("#txtUrl");
-
-    //
-    I.say('Checking if the URL contains "/thumb/" only once.');
-    const regex = /^(?!.*\bthumb\b.*\bthumb\b).*thumb.*/;
-    assert.match(url, regex, 'URL does not contain "/thumb/" only once');
-
-    //
-    I.say('Checking if the URL contains the correct parameters: w=160, h=160, ip=5.');
-    assert.match(url, /w=160/);
-    assert.match(url, /h=160/);
-    assert.match(url, /ip=5/);
-
-    //
-    I.say('Checking if the parameters are not duplicated in the URL.');
-    assert.doesNotMatch(url, /w=160.*w=160/, "Parameter 'w' is duplicated in the URL");
-    assert.doesNotMatch(url, /h=160.*h=160/, "Parameter 'h' is duplicated in the URL");
-    assert.doesNotMatch(url, /ip=5.*ip=5/, "Parameter 'ip' is duplicated in the URL");
-
-    //
-    I.switchTo();
-    I.switchTo("#DTE_Field_data-pageBuilderIframe");
-    I.clickCss(".cke_dialog_ui_button_cancel");
-
-    await I.executeScript(() => {
-        const element = document.querySelector('#cke_692_uiElement #wjImageIframeElement');
-            if (element) {
-              element.remove();
-            }
-    });
-
-    I.switchTo();
 }
 
 Scenario('BUG: when you open PB doc and then empty NON PB it has PB content', ({I, DTE, Document}) => {

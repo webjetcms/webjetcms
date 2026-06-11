@@ -85,7 +85,8 @@ Formuláři lze nastavit další nepovinné parametry, které ovlivní jeho zpra
   - Hodnota ```addParams``` provede přesměrování na cílovou stránku s přidáním jednotlivých parametrů do URL. V takovém případě přesměrování provede prohlížeč a v adresním řádku zůstane adresa cílové stránky. Jelikož ale parametry jsou přidány do URL adresy je limitován jejich počet délkou URL což je standardně 2048 znaků.
 - **Interceptor před odesláním emailu** - hodnota je název třídy, která **musí implementovat interface `AfterSendInterceptor`**. Po odeslání emailu se provede kód z této třídy. Používá se u starší verze formulářů odesílaných na URL adresu `/formMailAction.do`.
 - **Zpracovatel formulářů** - hodnota je název třídy, která musí implementovat interface [FormProcessorInterface](../../../../../src/main/java/sk/iway/iwcm/components/multistep_form/support/FormProcessorInterface.java). Třída zajistí zpracování kroků formuláře dle vlastní logiky. Příkladem je třída [FormEmailVerificationProcessor](../../../../../src/main/java/sk/iway/iwcm/components/multistep_form/support/FormEmailVerificationProcessor.java), která zajistí odeslání ověřovacího kódu na email a jeho verifikaci. Používá se u vícekrokových formulářů.
-- **Maximální velikost souboru** - maximální velikost nahrávaného souboru v bajtech.
+- **Maximální velikost souboru** - maximální velikost jednoho nahrávaného souboru v bajtech.
+- **Maximální kombinovaná velikost souboru** - maximální velikost všech nahraných souborů v bajtech.
 - **Povolené přípony** - čárkou oddělený seznam povolených přípon nahrávaných souborů. `jpg,png,pdf,docx`.
 - **Maximální výška (pro obrázky)** - maximální výška nahrávaného obrázku v pixelech.
 - **Maximální šířka (pro obrázky)** - maximální šířka nahrávaného obrázku v pixelech.

@@ -67,7 +67,16 @@ V kartě **Pokročilé** můžete nastavit další volitelné parametry jako:
 
 - **Krok formuláře** - krok, ke kterému položka patří, můžete tak snadno položku přesunout do jiného kroku.
 - **Pořadí** - určuje pořadí položky v rámci kroku.
-- **Předvyplněná hodnota** - hodnota, která se zobrazí vyplněná v poli, uživatel tak nemusí nastavit hodnotu, pokud je všeobecně známá. Pro pole typu výběrové pole sem zadejte čárkovou oddělovaný seznam hodnot, například `začiatočník,pokročilý,expert`.
+- **Předvyplněná hodnota** - hodnota, která se zobrazí vyplněná v poli, uživatel tak nemusí nastavit hodnotu, pokud je všeobecně známá. Toto pole se zobrazuje pouze pokud se nejedná o položku typu výběrové pole.
+- **Povolené možnosti** - u položky typu výběrové pole (select, checkbox skupina, radio skupina apod.) můžete manuálně definovat seznam možností. Každá možnost se skládá ze dvou hodnot - textu, který se zobrazí uživateli, a hodnoty, která se odešle při odeslání formuláře. Možnosti lze přidávat, odebírat a měnit jejich pořadí pomocí `drag & drop`. Toto pole se zobrazuje pouze pokud není povolena možnost **Použít odkaz na číselník**.
+
+![](form-item-editor-advanced.png)
+
+- **Použít odkaz na číselník** - přepínač, který určuje, zda se možnosti výběrového pole zadávají manuálně přes **Povolené možnosti**, nebo se načítají dynamicky z aplikace [Číselníky](../../apps/enumeration/README.md).
+- **Propojení na číselník** - zobrazí se u položky typu výběrové pole, pokud je povolena možnost **Použít propojení na číselník**. Nastavíte číslo (ID) číselníku, sloupec číselníku pro text zobrazený uživateli a sloupec pro odesílanou hodnotu. Možnosti se tak generují dynamicky z dat číselníku a při změně údajů v číselníku se automaticky aktualizují i ​​ve formuláři.
+
+![](form-item-editor-advanced-enum.png)
+
 - **Zástupní text** - text, který se zobrazí v poli jako nápověda pro uživatele pokud není pole vyplněno (je prázdné).
 - **Tooltip** - pokud zadáte hodnotu tooltipu, zobrazí se při názvu pole informační bublina.
 
@@ -85,7 +94,7 @@ Formulář přepnete do režimu řádkového zobrazení v [nastaveních formulá
 
 ### Značky
 
-Pokud chcete v položce formuláře použít informace o aktuálním přihlášeném uživateli (např. jeho jméno, email, atd.), můžete použít speciální značky. Tyto značky se automaticky nahradí příslušnými hodnotami při zobrazení formuláře uživateli. Pro nepřihlášené uživatele budou tyto značky nahrazeny prázdnou hodnotou. Hodnotu zadejte do pole **Předvyplněná hodnota** položky formuláře.
+Pokud chcete v položce formuláře použít informace o aktuálním přihlášeném uživateli (např. jeho jméno, email, atd.), můžete použít speciální značky. Tyto značky se automaticky nahradí příslušnými hodnotami při zobrazení formuláře uživateli. Pro nepřihlášené uživatele budou tyto značky nahrazeny prázdnou hodnotou. Hodnotu zadejte do pole **Předvyplněná hodnota** (pokud je pro daný typ položky dostupné).
 
 Dostupné značky jsou:
 

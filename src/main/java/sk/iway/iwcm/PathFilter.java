@@ -2419,6 +2419,16 @@ public class PathFilter implements Filter
 		value = Tools.replace(value, "\r", " ");
 		value = Tools.replace(value, "\n", " ");
 
+		if (value.contains("{nonce}")) {
+			// Replace {nonce} placeholder with CSP nonce source expression ('nonce-<value>')
+			RequestBean currentRequestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
+			String nonceValue = "";
+			if (currentRequestBean != null && Tools.isNotEmpty(currentRequestBean.getCspNonce())) {
+				nonceValue = currentRequestBean.getCspNonce();
+			}
+			value = Tools.replace(value, "{nonce}", "'nonce-" + nonceValue + "'");
+		}
+
 		response.setHeader(headerName, value);
 	}
 
@@ -2696,7 +2706,7 @@ public class PathFilter implements Filter
 	}
 
 	private static boolean isPathSafe(String path) {
-		if (path == null || path.length() < 1) return true;
+		if (path == null || path.isEmpty()) return true;
 
 		if (path.indexOf('\'')!=-1 || path.indexOf('"')!=-1 || path.indexOf('\r')!=-1 || path.indexOf('\n')!=-1 ||
 			path.contains("%0D") || path.contains("%0A") || path.contains("%0d") || path.contains("%0a") || //crlf utok

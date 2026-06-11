@@ -10,16 +10,59 @@
 
 ![](frontend/templates/templates-edit-advanced.png)
 
+- V dialogu vkládání obrázků přidána karta **Miniatura** pro nastavení parametrů [generování zmenšených obrázků](redactor/webpages/working-in-editor/README.md#karta-miniatura) `thumbnail` (#58317).
+
+![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
+
+### Formuláře
+
+- Do vícekrokových formulářů přidána možnost jednoduše nastavovat výběrová pole a skupiny zaškrtávacích / výběrových polí (#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced.png)
+
+- Do vícekrokových formulářů přidána možnost propojení výběrového pole a skupiny zaškrtávacích / výběrových polí na číselník (#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
+
+- Přidána možnost ve formuláři nastavit maximální kombinovaná velikost souboru, původně se dala nastavovat jen velikost pro soubor, pokud formulář obsahuje více souborů lze nastavit maximální velikost pro všechny soubory společně (#58517).
+
+### Sémantické vyhledávání
+
+- Přidána podpora [sémantického vyhledávání](redactor/apps/semantic-search/README.md) postaveného na technologii vektorové databáze `pgvector` a `OpenAI embeddings`. Umožňuje návštěvníkům najít relevantní stránky na základě **významu otázky**, nejen shody klíčových slov (#211).
+
 ### Aplikace
 
 - Přidána nová aplikace [Přesměrování podle jazyka](redactor/apps/language-redirect/README.md) pro automatické přesměrování návštěvníků na jazykovou verzi stránky podle detekce jazyka z HTTP hlavičky `Accept-Language`. Podporuje až 8 přiřazení jazyků na URL adresy, respektování jazykového cookie a možnost přesměrování pouze na kořenové URL (#58497).
 
 ![](redactor/apps/language-redirect/editor-basic.png)
 
+### Multiweb
+
+- Přidána možnost [vytvořit novou doménu](install/multiweb/config.md) z řídicí domény, vytvoří také uživatele, skupinu šablon, šablonu a systémové stránky (#58525).
+- Přidáno zobrazení seznamu skupin šablon (#58525).
+- V řídící doméně je možné upravovat všechna přesměrování domén.
+- V řídicí doméně přidána možnost zobrazit všechny soubory.
+
+### Bezpečnost
+
+- Přidána podpora generování `nonce` pro [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
+
 ### Dokumentace
 
 - Vytvořena nová sekce [Přehled nových vlastností](sales/README.md) která obsahuje popisy nových vlastností a **funkcionalit WebJET CMS srozumitelným jazykem**, bez zbytečně technických formulací (#58505).
 - Vytvořená sekce [Řešení problémů](sysadmin/troubleshooting/README.md) v manuálu pro provoz.
+
+### Pro programátora
+
+- Datové tabulky - přidán nový typ pole `OPTIONS` pro [dynamický seznam hodnot](developer/datatables-editor/standard-fields.md#options) v editoru. Každý řádek obsahuje dvě textová pole (klíč a hodnota), podporuje přidávání, odebírání a změnu pořadí pomocí `drag & drop` (#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced.png)
+
+- Datové tabulky - přidán nový typ pole `ENUMERATION` pro [napojení na číselníky](developer/datatables-editor/standard-fields.md#enumeration) v editoru. Pole ukládá konfiguraci ve formátu `enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY` a umožňuje nastavit zdroj hodnot (#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
+
+- Logování - do [Logback MDC](https://logback.qos.ch/manual/mdc.html) doplněn atribut `sessionId` a přihlašovacího jména uživatele `userLogin` (#OSK526).
 
 ## 2026.18
 
@@ -61,6 +104,10 @@
 - Přidána ikona pro přesun [kurzoru na těžko dostupné místo](redactor/webpages/working-in-editor/README.md#vkládání-textu-na-těžko-dostupná-místa), jako například za poslední SVG ikonu v řádku a podobně (#osk105).
 
 ![](redactor/webpages/working-in-editor/wjmagicline-append.png)
+
+- Volitelná pole - přidána možnost centrálně nastavit vlastnosti [volitelných polí](frontend/webpages/customfields/custom-fields-settings.md) v nové tabulce v části Nastavení (#58413).
+
+![](frontend/webpages/customfields/custom-fields-settings-editor.png)
 
 ### Aplikace
 
@@ -116,10 +163,6 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
   - Zlepšené kontrasty barev v chybových zprávách a hlášeních (#58389-4).
   - Datové tabulky, editor (#58389-4).
 - Rozšířené a11y testy o nové scénáře pro správce souborů, sledování, statistiky, nahrávání souborů, správu uživatelů a webové stránky. Metoda `a11y.check()` podporuje parametr `context` pro omezení kontroly na konkrétní část stránky včetně vnořených `iframe` elementů (#58389-5).
-
-### Sémantické vyhledávání
-
-- Přidána podpora [sémantického vyhledávání](redactor/apps/semantic-search/README.md) postaveného na technologii vektorové databáze `pgvector` a `OpenAI embeddings`. Umožňuje návštěvníkům najít relevantní stránky na základě **významu otázky**, nejen shody klíčových slov (#211).
 
 ### Jiné menší změny
 
@@ -219,7 +262,15 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 
 > Opravná verze původní verze 2026.0.
 
+- AI asistent - upravené získání odpovědi při použití `reasoning` v OpenAI (#244).
 - Bezpečnost - opravena možnost nastavit [jméno HTTP hlavičky pro získání IP adresy](sysadmin/pentests/README.md#konfigurace) přes proměnnou `xForwardedForHeader`.
+- Formulář snadno - upravená pole pro zadání názvu pole a tooltipu na jednořádkový WYSIWYG editor, aby výsledek neobsahoval `P` element (#244).
+- Manažer dokumentů - doplněné filtrování souborů podle dat platnosti (není-li platný rozsah dat, nezobrazí se) a souborů které nemají nastavený atribut zobrazovat (#233).
+- Video - aktualizovaná knihovna `videojs` pro přehrávání lokálních audio/video souborů z verze 6.2.0 na verzi 8.23.6 (#233).
+- Video - opraveno nastavení odkazu na lokální audio/video soubor při editaci již vložené aplikace (#233).
+- Výkon - přidán index v tabulce `emails` podle `click_hash` pro lepší výkon v Oracle databázi (#244).
+- Web stránky - doplněné zobrazení `mp3` souborů ve výběru Média všech stránek/Videa (#233).
+- Web stránky - povoleno vkládání souborů typu `svg,webp,mp3` pokud uživatel nemá povoleno právo Kompletní menu v editoru, hodnota nastavená v konfigurační proměnné `FCKConfig.UploadFileTypes[Basic][image]` (#233).
 
 ## 2026.0.18
 

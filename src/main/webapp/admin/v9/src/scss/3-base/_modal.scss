@@ -380,6 +380,21 @@ body.modal-open {
                 }
             }
         }
+
+        .DTE_Field_Type_options, .DTE_Field_Type_enumeration {
+            .options-input-row-header {
+                font-size: 14px;
+                padding-top: 8px;
+                .options-id {
+                    margin-left: 12px;
+                    width: 80px;
+                }
+                .options-label {
+                    margin-left: 54px;
+                    width: 214px;
+                }
+            }
+        }
     }
 
     &-header {

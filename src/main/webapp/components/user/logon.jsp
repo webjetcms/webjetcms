@@ -294,7 +294,7 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 				</fieldset>
 			</div>
 
-			<logic:present name="logonUrls">
+			<iwcm:present name="logonUrls">
 				<p class="text-center">
 					<iwcm:text key="button.oauth2Login"/>
 				</p>
@@ -305,7 +305,7 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 						</a>
 					</c:forEach>
 				</div>
-			</logic:present>
+			</iwcm:present>
 
 		</iwcm:notPresent>
 

@@ -163,7 +163,8 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.rag.rest",
     "sk.iway.iwcm.rag.search",
     "sk.iway.iwcm.rag.service",
-    "sk.iway.iwcm.rag.vectorstore"
+    "sk.iway.iwcm.rag.vectorstore",
+    "sk.iway.iwcm.components.customfields.rest"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 

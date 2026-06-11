@@ -85,7 +85,8 @@ It is possible to set additional optional parameters for the form that will affe
   - The value ```addParams``` will redirect to the target page with the addition of individual parameters to the URL. In this case, the browser will perform the redirect and the address of the target page will remain in the address bar. However, since the parameters are added to the URL, their number is limited by the length of the URL, which is 2048 characters by default.
 - **Interceptor before sending email** - the value is the name of the class that **must implement the interface `AfterSendInterceptor`**. After sending the email, the code from this class will be executed. It is used for older versions of forms sent to the URL address `/formMailAction.do`.
 - **Form Processor** - the value is the name of the class that must implement the interface [FormProcessorInterface](../../../../../src/main/java/sk/iway/iwcm/components/multistep_form/support/FormProcessorInterface.java). The class will ensure the processing of the form steps according to its own logic. An example is the class [FormEmailVerificationProcessor](../../../../../src/main/java/sk/iway/iwcm/components/multistep_form/support/FormEmailVerificationProcessor.java), which ensures sending the verification code to the email and its verification in the second step of the form. It is used for multi-step forms.
-- **Maximum file size** - maximum size of the uploaded file in bytes.
+- **Maximum file size** - maximum size of a single uploaded file in bytes.
+- **Maximum combined file size** - the maximum size of all uploaded files in bytes.
 - **Allowed extensions** - comma-separated list of allowed extensions for uploaded files, e.g. `jpg,png,pdf,docx`.
 - **Maximum height (for images)** - maximum height of the uploaded image in pixels.
 - **Maximum width (for images)** - maximum width of the uploaded image in pixels.

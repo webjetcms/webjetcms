@@ -33,7 +33,8 @@ const fixes = [
   {
     from: 'manuals/WebJET_pro_redaktorů.docx',
     to: 'manuals/WebJET_pre_redaktorov.docx'
-  }
+  },
+  { from: 'Zpráva indexovaných dat', to: 'Správa indexovaných dat' },
 ];
 
 async function applyFix(fix) {

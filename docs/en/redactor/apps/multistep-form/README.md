@@ -67,7 +67,16 @@ In the **Advanced** tab, you can set additional optional parameters such as:
 
 - **Form Step** - the step the item belongs to, so you can easily move the item to another step.
 - **Order** - determines the order of the item within the step.
-- **Prefilled value** - the value that will be displayed filled in the field, so the user does not have to set the value if it is generally known. For select fields, enter a comma-separated list of values ​​here, for example `začiatočník,pokročilý,expert`.
+- **Prefilled value** - a value that will be displayed filled in the field, so the user does not have to set a value if it is generally known. This field is only displayed if it is not a select field type item.
+- **Allowed options** - for a selection field type item (select, checkbox group, radio group, etc.), you can manually define a list of options. Each option consists of two values ​​- the text that is displayed to the user and the value that is sent when the form is submitted. Options can be added, removed, and reordered using `drag & drop`. This field is only displayed if the **Use link to code list** option is not enabled.
+
+![](form-item-editor-advanced.png)
+
+- **Use Enumeration Link** - a toggle that determines whether the selection field options are entered manually via **Enabled Options**, or loaded dynamically from the [Enumerations] application (../../apps/enumeration/README.md).
+- **Link to codebook** - appears for a selection field type item if the **Use link to codebook** option is enabled. You set the codebook number (ID), the codebook column for the text displayed to the user, and the column for the value sent. The options are then dynamically generated from the codebook data and automatically updated in the form when the data in the codebook changes.
+
+![](form-item-editor-advanced-enum.png)
+
 - **Placeholder text** - text that will be displayed in the field as a hint for the user if the field is not filled in (empty).
 - **Tooltip** - if you enter a tooltip value, an information bubble will appear next to the field name.
 
@@ -85,7 +94,7 @@ You can switch the form to row view mode in [form settings](../form/README.md#cr
 
 ### Brands
 
-If you want to use information about the currently logged in user (e.g., their name, email, etc.) in a form item, you can use special tags. These tags will be automatically replaced with the appropriate values ​​when the form is displayed to the user. For non-logged in users, these tags will be replaced with an empty value. Enter the value in the **Prefilled value** field of the form item.
+If you want to use information about the currently logged in user (e.g., their name, email, etc.) in a form item, you can use special tags. These tags will be automatically replaced with the appropriate values ​​when the form is displayed to the user. For non-logged in users, these tags will be replaced with an empty value. Enter the value in the **Prefilled value** field (if available for the item type).
 
 Available brands are:
 
