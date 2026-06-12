@@ -470,14 +470,12 @@ public class SimpleQuery
 		int parameterIndex = 1;
 		for (Object parameter : parameters)
 		{
-			if (parameter instanceof Date)
+			if (parameter instanceof Date date)
 			{
-				Date date = (Date)parameter;
 				ps.setTimestamp(parameterIndex++, new Timestamp(date.getTime()));
 			}
-			else if (parameter instanceof Calendar)
+			else if (parameter instanceof Calendar date)
 			{
-				Calendar date = (Calendar) parameter;
 				ps.setTimestamp(parameterIndex++, new Timestamp(date.getTime().getTime()));
 			}
 			else
@@ -487,6 +485,15 @@ public class SimpleQuery
 
 			if (Logger.isLevel(Logger.DEBUG))
 			{
+				if (parameter!=null && parameter instanceof String sParam)
+				{
+					if (sParam.startsWith("[") && sParam.endsWith("]") && sParam.length()>100)
+					{
+						//probably pgvector, log only first 100 chars
+						parameter = sParam.substring(0, 100) + "... (length=" + sParam.length() + ")";
+					}
+				}
+
 				if (paramsLog.length()>1) paramsLog.append(", ");
 				if (parameter == null) paramsLog.append("null");
 				else paramsLog.append(String.valueOf(parameter));
