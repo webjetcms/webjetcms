@@ -73,6 +73,8 @@ public class FormMailAction extends HttpServlet
 	 */
 	public static final String FORM_HTML_DIR = "/WEB-INF/formhtml/";
 
+	private static final String NOBODY_EMAIL = "nobody@nowhere.com";
+
 	/**
 	 *  Zaslanie formularu z www stranky, nastavuje sa to cez:<br>
 	 *  <br>
@@ -352,6 +354,9 @@ public class FormMailAction extends HttpServlet
 		if (recipients != null && recipients.indexOf('@') == -1)
 		{
 			recipients = null;
+		}
+		if (Tools.isEmpty(recipients)) {
+			recipients = NOBODY_EMAIL;
 		}
 
 		String subject = "Formular z www stranky";
@@ -955,6 +960,10 @@ public class FormMailAction extends HttpServlet
 			}
 		}
 
+		if (emailAllowed == false && NOBODY_EMAIL.equals(recipients)) {
+			emailAllowed = true; //ak sa neposiela nikomu, tak je to v pohode
+		}
+
 		int formId = -1;
 		boolean validationFailed = isSpam || requiredFieldsOk==false || emailAllowed==false || areFilesOk==false || isCaptchOk==false || isFormNameOk==false || isCsrfCorrect==false;
 		if (validationFailed)
@@ -1356,10 +1365,10 @@ public class FormMailAction extends HttpServlet
 			{
 				//ked mame nastaveny interceptor je potrebne vojst nizsie aj ked nie je vyplneny email formularu (lebo sa to niekomu nezdalo vhodne)
 				//je to tak preto, aby sa interceptor vobec zavolal (TB-specific)
-				if ("nobody@nowhere.com".equals(recipients)==false) recipients = Constants.getString("emailProtectionSenderEmail");
+				if (NOBODY_EMAIL.equals(recipients)==false) recipients = Constants.getString("emailProtectionSenderEmail");
 			}
 
-			if (emailAllowed && "nobody@nowhere.com".equals(recipients)==false && recipients!=null && recipients.contains("@"))
+			if (emailAllowed && NOBODY_EMAIL.equals(recipients)==false && recipients!=null && recipients.contains("@"))
 			{
 				if (email == null || email.indexOf('@')==-1)
 				{
