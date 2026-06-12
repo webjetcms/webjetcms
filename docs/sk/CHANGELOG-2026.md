@@ -64,6 +64,10 @@
 
 - Logovanie - do [Logback MDC](https://logback.qos.ch/manual/mdc.html) doplnený atribút `sessionId` a prihlasovacieho mena používateľa `userLogin` (#OSK526).
 
+- Voliteľné polia - pridaná možnosť centrálne nastaviť vlastnosti [voliteľných polí](frontend/webpages/customfields/custom-fields-settings.md) v novej tabuľke v časti Nastavenia (#58413).
+
+![](frontend/webpages/customfields/custom-fields-settings-editor.png)
+
 ## 2026.18
 
 > WebJET CMS 2026.18 prináša **schvaľovanie zmien priečinkov** s podporou viacúrovňového schvaľovania a **testovanie prístupnosti** integrované priamo do automatizovaných testov.
@@ -104,10 +108,6 @@
 - Pridaná ikona na presun [kurzoru na ťažko dostupné miesto](redactor/webpages/working-in-editor/README.md#vkladanie-textu-na-ťažko-dostupné-miesta), ako napríklad za poslednú SVG ikonu v riadku a podobne (#osk105).
 
 ![](redactor/webpages/working-in-editor/wjmagicline-append.png)
-
-- Voliteľné polia - pridaná možnosť centrálne nastaviť vlastnosti [voliteľných polí](frontend/webpages/customfields/custom-fields-settings.md) v novej tabuľke v časti Nastavenia (#58413).
-
-![](frontend/webpages/customfields/custom-fields-settings-editor.png)
 
 ### Aplikácie
 
