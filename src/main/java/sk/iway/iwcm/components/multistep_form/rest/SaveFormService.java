@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.CryptoFactory;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PathFilter;
@@ -175,7 +176,7 @@ public class SaveFormService {
         form.setDuration(duration);
 
         String referer = request.getHeader("referer");
-        if(Tools.isNotEmpty(referer)) form.setReferer(referer);
+        if(Tools.isNotEmpty(referer)) form.setReferer(DB.prepareString(referer, 255));
         else Logger.info(this.getClass(), "Cannot determine referer URL for saved form, destinationUrl is empty. formName=" + formName + " docId=" + docId);
 
         String lng = "";

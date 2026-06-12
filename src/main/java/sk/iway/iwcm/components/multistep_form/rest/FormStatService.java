@@ -641,7 +641,7 @@ public class FormStatService {
 
         errorData.put("pieSystemErrorData",  valuesArray);
 
-        errorData.put("kokos", kokos(formName));
+        errorData.put("timelineErrorData", getTimelineErrorData(formName));
 
         return errorData;
     }
@@ -653,7 +653,7 @@ public class FormStatService {
         return obj;
     }
 
-    private JSONObject kokos(String formName) {
+    private JSONObject getTimelineErrorData(String formName) {
         // Create timestamp range of 30 days for log retrieval
         Timestamp startDate = new Timestamp(System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000);
         Timestamp endDate = new Timestamp(System.currentTimeMillis());
