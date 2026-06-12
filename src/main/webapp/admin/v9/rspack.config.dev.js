@@ -102,8 +102,33 @@ if (devReloadEnabled) {
 //Collect all .pug files for watching (pages + partials + modals + mixins)
 const allPugFiles = pugRenderer.getAllPugFiles(__dirname);
 
+//Collect all .js files in views/pages for watching (included by PUG templates via `include`)
+const glob = require("glob");
+const viewsPagesJsFiles = glob.sync("**/*.js", {
+    cwd: path.resolve(__dirname, "views/pages"),
+    absolute: true
+});
+
 //Map page .pug file paths to their PAGES entry for targeted recompilation
 const pugFileToPage = pugRenderer.createPugFileToPageMap(__dirname, common.PAGES);
+
+//Build reverse map: JS file absolute path -> array of PAGES entries that include it
+const jsFileToPages = new Map();
+common.PAGES.forEach(page => {
+    const pugPath = path.resolve(__dirname, "views/pages" + page + ".pug");
+    try {
+        const content = fs.readFileSync(pugPath, "utf8");
+        const includeRegex = /include\s+([\w./-]+\.js)/g;
+        let match;
+        while ((match = includeRegex.exec(content)) !== null) {
+            const jsAbsPath = path.resolve(path.dirname(pugPath), match[1]);
+            if (!jsFileToPages.has(jsAbsPath)) jsFileToPages.set(jsAbsPath, []);
+            jsFileToPages.get(jsAbsPath).push(page);
+        }
+    } catch (e) {
+        //PUG file might not exist (optional page), skip
+    }
+});
 
 /**
  * Custom rspack plugin that watches .pug files and re-compiles them on change.
@@ -112,21 +137,53 @@ const pugFileToPage = pugRenderer.createPugFileToPageMap(__dirname, common.PAGES
  */
 class PugWatchPlugin {
     apply(compiler) {
-        //Add all .pug files to watched dependencies so rspack detects changes
+        const viewsPagesDir = path.resolve(__dirname, "views/pages");
+
+        //Add all .pug files and views/pages .js files to watched dependencies so rspack detects changes
         compiler.hooks.afterCompile.tap("PugWatchPlugin", (compilation) => {
             allPugFiles.forEach(f => compilation.fileDependencies.add(f));
+            viewsPagesJsFiles.forEach(f => compilation.fileDependencies.add(f));
         });
 
-        //On watch rebuild, check if any .pug files changed and re-compile
+        //On watch rebuild, check if any .pug or views/pages .js files changed and re-compile
         compiler.hooks.watchRun.tap("PugWatchPlugin", (compiler) => {
             const changed = compiler.modifiedFiles;
             if (!changed) return;
 
             const changedPugFiles = [];
+            const changedViewsJsFiles = [];
             for (const f of changed) {
                 if (f.endsWith(".pug")) changedPugFiles.push(f);
+                else if (f.endsWith(".js") && f.startsWith(viewsPagesDir)) changedViewsJsFiles.push(f);
             }
-            if (changedPugFiles.length === 0) return;
+            if (changedPugFiles.length === 0 && changedViewsJsFiles.length === 0) return;
+
+            //If a JS file in views/pages changed, recompile only the PUG pages that include it
+            if (changedViewsJsFiles.length > 0) {
+                const pagesToRecompile = new Set();
+
+                changedViewsJsFiles.forEach(jsFile => {
+                    const pages = jsFileToPages.get(jsFile);
+                    if (Array.isArray(pages)) {
+                        pages.forEach(page => pagesToRecompile.add(page));
+                    }
+                });
+
+                if (pagesToRecompile.size === 0) return;
+
+                pagesToRecompile.forEach(page => {
+                    const startTime = Date.now();
+                    pugRenderer.compileSinglePugPage({
+                        baseDir: __dirname,
+                        data: WP_DATA,
+                        distDir,
+                        files: devFiles,
+                        page
+                    });
+                    logWithTimestamp("PUG re-compiled " + page + " in " + formatDuration(Date.now() - startTime));
+                });
+                return;
+            }
 
             //Check if any changed file is a shared partial (not in pages/)
             const hasSharedChange = changedPugFiles.some(f => !pugFileToPage.has(f));

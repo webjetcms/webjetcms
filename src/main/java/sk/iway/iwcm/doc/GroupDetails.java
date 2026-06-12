@@ -94,7 +94,7 @@ public class GroupDetails implements Cloneable, DocGroupInterface
 	@DataTableColumn(
 		renderFormat = "dt-format-text",
 		title = "[[#{groupedit.domain}]]",
-		className = "DTE_Field_Has_Checkbox",
+		className = "DTE_Field_Has_Checkbox noperms-ver-multiweb",
 		visible = false,
 		perms = "multiDomain",
 		editor = {

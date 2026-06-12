@@ -10,11 +10,63 @@
 
 ![](frontend/templates/templates-edit-advanced.png)
 
+- V dialógu vkladania obrázkov pridaná karta **Miniatúra** pre nastavenie parametrov [generovania zmenšených obrázkov](redactor/webpages/working-in-editor/README.md#karta-miniatúra) `thumbnail` (#58317).
+
+![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
+
+### Formuláre
+
+- Do viackrokových formulárov pridaná možnosť jednoducho nastavovať výberové polia a skupiny zaškrtávacích / výberových polí (#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced.png)
+
+- Do viackrokových formulárov pridaná možnosť prepojenia výberového poľa a skupiny zaškrtávacích / výberových polí na číselník (#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
+
+- Pridaná možnosť vo formulári nastaviť maximálnu kombinovaná veľkosť súboru, pôvodne sa dala nastavovať len veľkosť pre súbor, ak formulár obsahuje viac súborov je možné nastaviť maximálnu veľkosť pre všetky súbory spoločne (#58517).
+
+### Sémantické vyhľadávanie
+
+- Pridaná podpora [sémantického vyhľadávania](redactor/apps/semantic-search/README.md) postaveného na technológii vektorovej databázy `pgvector` a `OpenAI embeddings`. Umožňuje návštevníkom nájsť relevantné stránky na základe **významu otázky**, nielen zhody kľúčových slov (#211).
+
 ### Aplikácie
 
 - Pridaná nová aplikácia [Presmerovanie podľa jazyka](redactor/apps/language-redirect/README.md) na automatické presmerovanie návštevníkov na jazykovú verziu stránky podľa detekcie jazyka z HTTP hlavičky `Accept-Language`. Podporuje až 8 priradení jazykov na URL adresy, rešpektovanie jazykového cookie a možnosť presmerovania len na koreňovej URL (#58497).
 
 ![](redactor/apps/language-redirect/editor-basic.png)
+
+### Multiweb
+
+- Pridaná možnosť [vytvoriť novú doménu](install/multiweb/config.md) z riadiacej domény, vytvorí aj používateľa, skupinu šablón, šablónu a systémové stránky (#58525).
+- Pridané zobrazenie zoznamu skupín šablón (#58525).
+- V riadiacej doméne je možné upravovať všetky presmerovania domén.
+- V riadiacej doméne pridaná možnosť zobraziť všetky súbory.
+
+### Bezpečnosť
+
+- Pridaná podpora generovania `nonce` pre [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
+
+### Dokumentácia
+
+- Vytvorená nová sekcia [Prehľad nových vlastností](sales/README.md) ktorá obsahuje opisy nových vlastností a **funkcionalít WebJET CMS zrozumiteľným jazykom**, bez zbytočne technických formulácií (#58505).
+- Vytvorená sekcia [Riešenie problémov](sysadmin/troubleshooting/README.md) v manuáli pre prevádzku.
+
+### Pre programátora
+
+- Dátové tabuľky - pridaný nový typ poľa `OPTIONS` pre [dynamický zoznam hodnôt](developer/datatables-editor/standard-fields.md#options) v editore. Každý riadok obsahuje dva textové polia (kľúč a hodnota), podporuje pridávanie, odoberanie a zmenu poradia pomocou `drag & drop` (#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced.png)
+
+- Dátové tabuľky - pridaný nový typ poľa `ENUMERATION` pre [napojenie na číselníky](developer/datatables-editor/standard-fields.md#enumeration) v editore. Pole ukladá konfiguráciu vo formáte `enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY` a umožňuje nastaviť zdroj hodnôt (#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
+
+- Logovanie - do [Logback MDC](https://logback.qos.ch/manual/mdc.html) doplnený atribút `sessionId` a prihlasovacieho mena používateľa `userLogin` (#OSK526).
+
+- Voliteľné polia - pridaná možnosť centrálne nastaviť vlastnosti [voliteľných polí](frontend/webpages/customfields/custom-fields-settings.md) v novej tabuľke v časti Nastavenia (#58413).
+
+![](frontend/webpages/customfields/custom-fields-settings-editor.png)
 
 ## 2026.18
 
@@ -86,6 +138,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 ![](redactor/apps/multistep-form/stat-section.png)
 
 - Pre viackrokové formuláre pridaný stĺpec **Trvanie vyplnenia**, ktorý zobrazuje ako dlho trvalo vyplnenie formuláru používateľom (čas od jeho zobrazenia po odoslanie) (#58333).
+- Viackrokové formuláre - pridaná podpora pre podmienené zobrazenie/validovanie položky formulára na základe vytvorených podmienok. Viac v časti [Podmienené zobrazenie/validovanie položky](redactor/apps/multistep-form/README.md#podmienené-zobrazenievalidovanie-položky) (#58477).
 
 ### Galéria
 
@@ -209,7 +262,26 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+!> Upozornenie: po aktualizácii skontrolujte funkčnosť všetkých formulárov. Ak niektorý nejde odoslať, uložte znova jeho nastavenia.
+
+- AI asistent - upravené získanie odpovede pri použití `reasoning` v OpenAI (#244).
+- AI asistent - doplnená propagácia zmazania cache do uzlov clustra pri úprave asistenta.
 - Bezpečnosť - opravená možnosť nastaviť [meno HTTP hlavičky pre získanie IP adresy](sysadmin/pentests/README.md#konfigurácia) cez premennú `xForwardedForHeader`.
+- Bezpečnosť - opravené chyby Local File Inclusion, kontrola nahrávaných súborov a RCE. Zraniteľnosť sa netýka web stránok s nastavenými externými súbormi - nastavená konfiguračná premenná `cloudStaticFilesDir`. Ďakujeme Josef Korbel (Citadelo) za nahlásenie týchto zraniteľností. Možné dočasné riešenie bez aktualizácie je:
+  - zmazať alebo [aktualizovať](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/components/grideditor/phantom/phantom_sablona_ajax.jsp) súbor `/components/grideditor/phantom/phantom_sablona_ajax.jsp`
+  - do konfiguračnej premennej `pathFilterBlockedPaths` pridať hodnotu `,/components/grideditor/phantom/`
+  - [globálne pre celý server](install/external-configuration.md) môžete do `JAVA_OPTS` pridať systémovú premennú `-Dwebjet.pathFilterBlockedPaths=.DS_Store,debug.,config.properties,Thumbs.db,.git,.svn,/WEB-INF/,./,/components/grideditor/phantom/`
+- Bezpečnosť - pridaný CSRF token pre formulár pri vypnutej SPAM ochrane (#245).
+- Bezpečnosť - každé odoslanie formuláru kontroluje nastavenie formuláru v databáze, ak sa nenájde formulár nie je možné odoslať. Pôvodná verzia toto kontrolovala len na verejných uzloch clustra, teraz sa to kontroluje bez ohľadu na cluster. V prípade potreby vypnete funkčnosť nastavením konfiguračnej premennej `formAllowOnlyExistingFormsOnPublicNode` na hodnotu `false` (#245).
+- Bezpečnosť - opravená možnosť získania administrátorského účtu pri generovaní offline verzie (#245).
+- Formulár ľahko - upravené polia pre zadanie názvu poľa a tooltipu na jednoriadkový WYSIWYG editor, aby výsledok neobsahoval `P` element (#244).
+- Galéria - opravené vytvorenie záznamu v databáze pri kopírovaní súborov v prieskumníku. Záznam sa nevytvorí pre `o_` a `s_` obrázky (#58317-9).
+- Manažér dokumentov - doplnené filtrovanie súborov podľa dátumov platnosti (ak nie je platný rozsah dátumov, nezobrazia sa) a súborov ktoré nemajú nastavený atribút zobrazovať (#233).
+- Video - aktualizovaná knižnica `videojs` na prehrávanie lokálnych audio/video súborov z verzie 6.2.0 na verziu 8.23.6 (#233).
+- Video - opravené nastavenie odkazu na lokálny audio/video súbor pri editácii už vloženej aplikácie (#233).
+- Výkon - pridaný index v tabuľke `emails` podľa `click_hash` pre lepší výkon v Oracle databáze (#244).
+- Web stránky - doplnené zobrazenie `mp3` súborov vo výbere Média všetkých stránok/Videá (#233).
+- Web stránky - povolené vkladanie súborov typu `svg,webp,mp3` ak používateľ nemá povolené právo Kompletné menu v editore, hodnota nastavená v konfiguračnej premennej `FCKConfig.UploadFileTypes[Basic][image]` (#233).
 
 ## 2026.0.18
 

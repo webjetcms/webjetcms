@@ -38,6 +38,9 @@ public class SpringAppInitializer implements WebApplicationInitializer
 		//WebJET 9/2021
 		springConfigClasses.add("sk.iway.webjet.v9.V9SpringConfig");
 
+		// RAG module
+		springConfigClasses.add("sk.iway.iwcm.rag.pgvector.PgvectorSpringConfig");
+
 		if (initialized) {
 			String contextDbName = servletContext.getInitParameter("webjetDbname");
 			Logger.debug(getClass(),"SPRING: contextDbName="+contextDbName);

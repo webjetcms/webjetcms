@@ -219,6 +219,10 @@ public class FormSettingsEntity {
     )
     private Integer maxSizeInKilobytes;
 
+    @Column(name = "max_combined_size_in_kilobytes")
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title= "components.forms.file_restrictions.combined_file_size_in_kilobytes", className = "not-formsimple")
+    private Long maxCombinedSizeInKilobytes;
+
     @Column(name = "allowed_extensions")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "components.forms.file_restrictions.allowed_extensions", className = "not-formsimple")
     @Size(max = 255)

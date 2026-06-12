@@ -678,7 +678,9 @@ public class EditorService {
 	 * @param editedDoc
 	 */
 	private void setRootGroupL(int groupId, DocDetails editedDoc) {
-		List<GroupDetails> parentGroups = groupsDB.getParentGroups(groupId);
+		//use fresh instance
+		GroupsDB groupsDBFresh = GroupsDB.getInstance();
+		List<GroupDetails> parentGroups = groupsDBFresh.getParentGroups(groupId);
 		int[] rootGroupL = new int[3];
 		Arrays.fill(rootGroupL, 0);
 		int ind = 0;

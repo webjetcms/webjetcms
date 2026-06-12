@@ -6,14 +6,12 @@ import java.io.InputStreamReader;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.json.JSONObject;
+import org.jsoup.Jsoup;
 
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.CryptoFactory;
 import sk.iway.iwcm.FileTools;
@@ -42,6 +40,9 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.utils.Pair;
+
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 /**
  * Renders multi‑step form HTML for both on‑page and email contexts.
@@ -86,19 +87,19 @@ public class FormHtmlHandler {
 
     public FormHtmlHandler(String formName, HttpServletRequest request) {
         this.formStepsRepository = Tools.getSpringBean("formStepsRepository", FormStepsRepository.class);
-        if(this.formStepsRepository == null) throw new IllegalStateException("FormHtmlHandler was no aible to obtain FormStepsRepository");
+        if(this.formStepsRepository == null) throw new IllegalStateException("FormHtmlHandler was not able to obtain FormStepsRepository");
 
         this.formItemsRepository = Tools.getSpringBean("formItemsRepository", FormItemsRepository.class);
-        if(this.formItemsRepository == null) throw new IllegalStateException("FormHtmlHandler was no aible to obtain FormItemsRepository");
+        if(this.formItemsRepository == null) throw new IllegalStateException("FormHtmlHandler was not able to obtain FormItemsRepository");
 
         this.formSettingsRepository = Tools.getSpringBean("formSettingsRepository", FormSettingsRepository.class);
-        if(this.formSettingsRepository == null) throw new IllegalStateException("FormHtmlHandler was no aible to obtain FormSettingsRepository");
+        if(this.formSettingsRepository == null) throw new IllegalStateException("FormHtmlHandler was not able to obtain FormSettingsRepository");
 
         this.formName = formName;
 
         this.prop = Prop.getInstance(request);
         this.requiredLabelAdd = prop.getText("components.formsimple.requiredLabelAdd");
-        this.firstTimeHeadingSet = new HashSet<String>();
+        this.firstTimeHeadingSet = new HashSet<>();
 
         FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
         if (formSettings != null) {
@@ -124,7 +125,7 @@ public class FormHtmlHandler {
      */
     public final String getFormHtmlBeforeCss() {
         if(formHtmlBeforeCss == null) return "";
-        return new String(formHtmlBeforeCss);
+        return formHtmlBeforeCss;
     }
 
     /**
@@ -133,8 +134,8 @@ public class FormHtmlHandler {
      * @return pair of (inline <style> CSS, <link> tags); empty values if not available
      */
     public final Pair<String, String> getCssDataPair() {
-        if(cssDataPair == null) return new Pair<String,String>("", "");
-        return new Pair<String,String>(cssDataPair.first, cssDataPair.second);
+        if(cssDataPair == null) return new Pair<>("", "");
+        return new Pair<>(cssDataPair.first, cssDataPair.second);
     }
 
     /**
@@ -228,7 +229,15 @@ public class FormHtmlHandler {
      */
     private StringBuilder getStepItems(Long stepId, HttpServletRequest request) {
         StringBuilder stepItemsHtml = new StringBuilder();
+
+        FormConditionsHandler formConditionsHandler = new FormConditionsHandler(this.formName, request);
+        // isFieldHiddenByCondition requires data as JSONObject
+        JSONObject jsonObject = new JSONObject(this.formData);
+
         for(FormItemEntity stepItem : formItemsRepository.getAllStepItems(stepId, CloudToolsForCore.getDomainId())) {
+
+            // DO NOT ADD item from form step if its hidden by condition - for email render
+            if(isEmailRender == true && Tools.isTrue(formConditionsHandler.isFieldHiddenByCondition(stepItem, jsonObject))) continue;
 
             JSONObject item = new JSONObject(stepItem);
             String fieldType = item.getString("fieldType");
@@ -246,8 +255,13 @@ public class FormHtmlHandler {
 
                 stepItemsHtml.append(itemHtml);
             } else {
-                // !! its for show or for email... remaster item html
-                itemHtml = editFieldHtmlToEmailRender(itemHtml, stepItem);
+                if(MultistepFormsService.getRowViewItemTypes().contains(fieldType)) {
+                    // Do not change HTML, this html can be unbalanced like "</div><div class="row">" and its not valid ... so editFieldHtmlToEmailRender would return "<div class="row"></div>" because of Jsoup.parseBodyFragment
+                } else {
+                    // !! its for show or for email... remaster item html
+                    itemHtml = editFieldHtmlToEmailRender(itemHtml, stepItem);
+                }
+
                 stepItemsHtml.append(itemHtml);
             }
         }
@@ -357,7 +371,7 @@ public class FormHtmlHandler {
         this.cssDataPair = cssPair;
 
         // Set final value without CSS and without crypto to separe variable .... we need tthis value other logic like PDF version etc
-        this.formHtmlBeforeCss = new String(formHtmlAsText);
+        this.formHtmlBeforeCss = formHtmlAsText;
 
         //
         CryptoFactory cryptoFactory = new CryptoFactory();
@@ -481,7 +495,7 @@ public class FormHtmlHandler {
 				StringBuilder cssStyle = new StringBuilder("");
 
                 // base
-				String baseCssPaths[] = Tools.getTokens(temp.getBaseCssPath(), "\n");
+				String[] baseCssPaths = Tools.getTokens(temp.getBaseCssPath(), "\n");
 				if (group != null && Constants.getBoolean("multiDomainEnabled") == true && Tools.isNotEmpty(group.getDomainName())) {
                     for(String baseCssPath : baseCssPaths) {
                         //ak je cssko v /templates adresari uz domain alias nepridavame
@@ -496,7 +510,7 @@ public class FormHtmlHandler {
                 }
 
                 // temp
-				String tempCssLinks[] =  Tools.getTokens(temp.getCss(), "\n");
+				String[] tempCssLinks =  Tools.getTokens(temp.getCss(), "\n");
 				if (group != null && Constants.getBoolean("multiDomainEnabled") == true && Tools.isNotEmpty(group.getDomainName())) {
                     for(String tempCssLink : tempCssLinks) {
                         //ak je cssko v /templates adresari uz domain alias nepridavame
@@ -511,7 +525,7 @@ public class FormHtmlHandler {
                 }
 
                 // editor
-				String editorEditorCsses[] = Tools.getTokens(Constants.getString("editorEditorCss"), "\n");
+				String[] editorEditorCsses = Tools.getTokens(Constants.getString("editorEditorCss"), "\n");
                 for(String editorEditorCss : editorEditorCsses) {
                     editorEditorCss = FormMailAction.checkEmailCssVersion(editorEditorCss);
                     cssStyle.append(FileTools.readFileContent(editorEditorCss)).append('\n');
@@ -519,7 +533,7 @@ public class FormHtmlHandler {
                 }
 
                 // Form specific csss (from form settings)
-                String formSpecificCsses[] = Tools.getTokens(formSpecificCssStr, "\n");
+                String[] formSpecificCsses = Tools.getTokens(formSpecificCssStr, "\n");
                 for(String formSpecificCss : formSpecificCsses) {
                     formSpecificCss = FormMailAction.checkEmailCssVersion(formSpecificCss);
                     cssStyle.append(FileTools.readFileContent(formSpecificCss)).append('\n');
@@ -563,84 +577,70 @@ public class FormHtmlHandler {
         if (itemHtml.contains("!INCLUDE"))
             itemHtml = Tools.replaceRegex(itemHtml, "!INCLUDE\\(.*?\\)!", "<span class=\"form-control emailInput-text\">" + getFieldValue(stepItem.getItemFormId()) + "</span>", true);
 
-        //
         boolean radioCheckboxAsText = Constants.getBoolean("formMailRenderRadioCheckboxText");
+        String fieldValue = getFieldValue(stepItem.getItemFormId());
 
-        // Loop all inputs
-        String inputRegex = "<input.*?>";
-        Pattern inputPattern = Pattern.compile(inputRegex);
-        Matcher inputMatcher = inputPattern.matcher(itemHtml);
+        Document doc = Jsoup.parseBodyFragment(itemHtml);
 
-        while (inputMatcher.find()) {
-            String originalValue = inputMatcher.group();
+        // Pre-query all labels with 'for' attribute to avoid re-querying inside the loop
+        org.jsoup.select.Elements labelsWithFor = doc.select("label[for]");
 
-            if(itemHtml.contains("type=\"checkbox\"")) {
-                boolean isSelected = isCheckboxOrRadioSelected(originalValue, stepItem.getItemFormId());
-                if (radioCheckboxAsText) {
-                    String replacement = isSelected
-                        ? "<span class='inputcheckbox emailinput-cb input-checked'>[X]</span>"
-                        : "<span class='inputcheckbox emailinput-cb input-unchecked'>[&nbsp;]</span>";
-                    itemHtml = Tools.replace(itemHtml, originalValue, replacement);
-                } else {
-                    String replacement = isSelected
-                        ? "<input class='inputcheckbox emailinput-cb input-checked' type='checkbox' checked disabled>"
-                        : "<input class='inputcheckbox emailinput-cb input-unchecked' type='checkbox' disabled>";
-                    itemHtml = Tools.replace(itemHtml, originalValue, replacement);
+        // Loop input and handle text, radio and checkbox types
+        for (Element input : doc.select("input")) {
+            String inputType = input.attr("type");
+            if(Tools.isEmpty(inputType)) inputType = "";
+
+            if("radio".equals(inputType) || "checkbox".equals(inputType)) {
+                Element label = null;
+                for (Element l : labelsWithFor) {
+                    if (l.attr("for").equals(input.id())) {
+                        label = l;
+                        break;
+                    }
                 }
-            } else if (itemHtml.contains("type=\"radio\"")) {
-                boolean isSelected = isCheckboxOrRadioSelected(originalValue, stepItem.getItemFormId());
-                if (radioCheckboxAsText) {
-                    String replacement = isSelected
-                        ? "<span class='inputradio emailinput-radio input-checked'>[X]</span>"
-                        : "<span class='inputradio emailinput-radio input-unchecked'>[&nbsp;]</span>";
-                    itemHtml = Tools.replace(itemHtml, originalValue, replacement);
-                } else {
-                    String replacement = isSelected
-                        ? "<input class='inputradio emailinput-radio input-checked' type='radio' checked disabled>"
-                        : "<input class='inputradio emailinput-radio input-unchecked' type='radio' disabled>";
-                    itemHtml = Tools.replace(itemHtml, originalValue, replacement);
-                }
+                if (label != null) { label.text(input.val()); }
+
+                boolean isSelected = isCheckboxOrRadioSelected(input.val(), stepItem.getItemFormId());
+
+                if ("radio".equals(inputType))
+                    input.before( getHtmlForRadioInput(isSelected, radioCheckboxAsText) );
+                else
+                    input.before( getHtmlForCheckboxInput(isSelected, radioCheckboxAsText) );
+
+                input.remove();
             } else {
-                String fieldValue = getFieldValue(stepItem.getItemFormId());
-                itemHtml = Tools.replace(itemHtml, originalValue, "<span class=\"form-control emailInput-text\">" + fieldValue + "</span>");
+                input.before("<span class=\"form-control emailInput-text\">" + fieldValue + "</span>");
+                input.remove();
             }
         }
 
         // Loop all textareas
-        String textareaRegex = "<textarea.*?</textarea>";
-        Pattern textareaPattern = Pattern.compile(textareaRegex);
-        Matcher textareaMatcher = textareaPattern.matcher(itemHtml);
-
-        while (textareaMatcher.find()) {
-            String code = textareaMatcher.group();
-            String fieldValue = getFieldValue(stepItem.getItemFormId());
-            if (SaveFormService.isFilterHtml(code)) {
-                if (fieldValue != null) fieldValue = fieldValue.replaceAll("\\n", "<br/>");
+        for (Element textarea : doc.select("textarea")) {
+            String textareaValue = fieldValue;
+            if (SaveFormService.isFilterHtml(textarea.outerHtml())) {
+                if (textareaValue != null) textareaValue = textareaValue.replaceAll("\\n", "<br/>");
             }
-            itemHtml = Tools.replace(itemHtml, textareaMatcher.group(), "<span class=\"form-control emailInput-textarea\" style=\"height: auto;\">" + fieldValue + "</span>");
+            textarea.before("<span class=\"form-control emailInput-textarea\" style=\"height: auto;\">" + textareaValue + "</span>");
+            textarea.remove();
         }
 
         // Loop selects
-        String selectRegex = "(?s)<select.*?</select>";
-        Pattern selectPattern = Pattern.compile(selectRegex);
-        Matcher selectMatcher = selectPattern.matcher(itemHtml);
-
-        while (selectMatcher.find()) {
-            String fieldValue = getFieldValue(stepItem.getItemFormId());
-            itemHtml = Tools.replace(itemHtml, selectMatcher.group(), "<span class=\"form-control emailInput-select\">" + fieldValue + "</span>");
+        for (Element select : doc.select("select")) {
+            select.before("<span class=\"form-control emailInput-select\">" + fieldValue + "</span>");
+            select.remove();
         }
 
         // Remove help blocks
-        itemHtml = Tools.replaceRegex(itemHtml, "<div class=\"help-block.*?<\\/div>", "", false);
+        doc.select("div.help-block").remove();
 
-        return itemHtml;
+        return doc.body().html();
     }
 
-    private boolean isCheckboxOrRadioSelected(String itemHtml, String itemFormId) {
+    private boolean isCheckboxOrRadioSelected(String inputValue, String itemFormId) {
         String values = this.formData.get(itemFormId);
         if(Tools.isEmpty(values)) return false;
         for(String value : Tools.getTokens(values, ",")) {
-            if(itemHtml.contains("value=\"" + value + "\"") == true) return true;
+            if(value.equals(inputValue)) return true;
         }
         return false;
     }
@@ -669,6 +669,30 @@ public class FormHtmlHandler {
                 nextBtnLabel = prop.getText("components.mustistep.form.next_step");
         }
 
-        return new Pair<String,String>(backBtnLabel, nextBtnLabel);
+        return new Pair<>(backBtnLabel, nextBtnLabel);
+    }
+
+    private String getHtmlForRadioInput(boolean isSelected, boolean radioCheckboxAsText) {
+        if (radioCheckboxAsText) {
+            return isSelected
+                ? "<span class='inputradio emailinput-radio input-checked'>[X]</span>"
+                : "<span class='inputradio emailinput-radio input-unchecked'>[&nbsp;]</span>";
+        } else {
+            return isSelected
+                ? "<input class='inputradio emailinput-radio input-checked' type='radio' checked disabled>"
+                : "<input class='inputradio emailinput-radio input-unchecked' type='radio' disabled>";
+        }
+    }
+
+    private String getHtmlForCheckboxInput(boolean isSelected, boolean radioCheckboxAsText) {
+        if (radioCheckboxAsText) {
+            return isSelected
+                ? "<span class='inputcheckbox emailinput-cb input-checked'>[X]</span>"
+                : "<span class='inputcheckbox emailinput-cb input-unchecked'>[&nbsp;]</span>";
+        } else {
+            return isSelected
+                ? "<input class='inputcheckbox emailinput-cb input-checked' type='checkbox' checked disabled>"
+                : "<input class='inputcheckbox emailinput-cb input-unchecked' type='checkbox' disabled>";
+        }
     }
 }

@@ -50,6 +50,8 @@ import * as fieldTypeStaticText from './field-type-static-text';
 import * as fieldTypeWjupload from './field-type-wjupload';
 import * as fieldTypeImageRadio from './field-type-imageradio';
 import * as fieldTypeIcon from './field-type-icon';
+import * as fieldTypeOptions from './field-type-options';
+import * as fieldTypeEnumeration from './field-type-enumeration';
 import * as dtWJ from './datatables-wjfunctions';
 import * as CustomFields from './custom-fields';
 import * as ExportImport from './export-import';
@@ -1142,6 +1144,8 @@ export const dataTableInit = options => {
         $.fn.dataTable.Editor.fieldTypes.wjupload = fieldTypeWjupload.typeWjupload();
         $.fn.dataTable.Editor.fieldTypes.imageRadio = fieldTypeImageRadio.typeImageRadio();
         $.fn.dataTable.Editor.fieldTypes.icon = fieldTypeIcon.typeIcon();
+        $.fn.dataTable.Editor.fieldTypes.options = fieldTypeOptions.typeOptions();
+        $.fn.dataTable.Editor.fieldTypes.enumeration = fieldTypeEnumeration.typeEnumeration();
 
         fieldTypeSelectEditable.typeSelectEditable();
 
@@ -3142,11 +3146,14 @@ export const dataTableInit = options => {
                             if (selected) $(row).addClass("selected");
                             if (highlight) $(row).addClass("highlight");
 
+                            if(data.hasOwnProperty("rowClass")) {
+                                $(row).addClass(data.rowClass);
+                            }
+
                             if (data.hasOwnProperty("editorFields") && data.editorFields !== null && data.editorFields.hasOwnProperty("rowClass")) {
-
-
                                 if (data.editorFields.rowClass !== null) $(row).addClass(data.editorFields.rowClass);
                             }
+
                             if (DATA.onRowCallback!=null && typeof DATA.onRowCallback == "function") DATA.onRowCallback(TABLE, row, data);
                         },
                         stateSave: DATA.stateSave,

@@ -376,3 +376,21 @@ Scenario('webjet-toolbar', ({ I, Document }) => {
     I.amOnPage("/investicie/?language=" + I.getConfLng() + "&NO_WJTOOLBAR=false");
     Document.screenshot('/redactor/webpages/webjet-toolbar.png');
 });
+
+Scenario('thumb-servlet', ({ I, Document, DTE, i18n }) => {
+    var elementText = "Etiam orci";
+
+    Document.resetPageBuilderMode();
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
+    DTE.waitForEditor();
+
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.waitForElement(locate("div").withChild(locate("h3").withText(elementText)).find(locate(".fixedSize-160-160-5")), 10);
+    I.click(locate("div").withChild(locate("h3").withText(elementText)).find(locate(".fixedSize-160-160-5")));
+
+    I.waitForElement(locate("a.cke_dialog_tab").withText(i18n.get("Thumbnail")), 10);
+    I.click(locate("a.cke_dialog_tab").withText(i18n.get("Thumbnail")));
+
+    Document.screenshotElement( locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/image_dialog-thumb.png');
+});

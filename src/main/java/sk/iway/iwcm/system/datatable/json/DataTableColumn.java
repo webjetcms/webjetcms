@@ -733,6 +733,22 @@ public class DataTableColumn {
             }
             editor.setType("icon");
         }
+
+        if (dataTableColumnType == DataTableColumnType.OPTIONS) {
+            renderFormat = "dt-format-text";
+            if (editor == null) {
+                editor = new DataTableColumnEditor();
+            }
+            editor.setType("options");
+        }
+
+        if (dataTableColumnType == DataTableColumnType.ENUMERATION) {
+            renderFormat = "dt-format-text";
+            if (editor == null) {
+                editor = new DataTableColumnEditor();
+            }
+            editor.setType("enumeration");
+        }
     }
 
     private void setFinalProperties(Field field) {

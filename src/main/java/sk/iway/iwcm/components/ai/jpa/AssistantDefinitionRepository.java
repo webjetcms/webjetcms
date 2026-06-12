@@ -13,6 +13,8 @@ public interface AssistantDefinitionRepository extends DomainIdRepository<Assist
 
     Optional<AssistantDefinitionEntity> findByIdAndDomainId(Long id, Integer domainId);
 
+    Optional<AssistantDefinitionEntity> findFirstByGroupNameAndProviderAndDomainId(String groupName, String provider, Integer domainId);
+
     @Query("SELECT ade FROM AssistantDefinitionEntity ade WHERE ade.name = :name AND ade.provider = :provider AND ade.domainId = :domainId")
     List<AssistantDefinitionEntity> getEntitiesCount(@Param("name") String name, @Param("provider") String provider, @Param("domainId") Integer domainId);
 }

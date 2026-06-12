@@ -14,18 +14,19 @@ Vysvetlenie použitých piktogramov:
 
 ## 2026
 
-- [ ] Sémantické vyhľadávanie - využiť AI na zlepšenie vyhľadávania pomocou `RAG`.
+- [x] Sémantické vyhľadávanie - využiť AI na zlepšenie vyhľadávania pomocou `RAG` (#211).
 - [ ] `Headless` CMS - pripraviť REST rozhrania pre použitie WebJET CMS v `headless` móde.
 - [ ] Migrácia na `Spring Boot` projekt.
 - [x] Testovanie - pridať testovanie prístupnosti pomocou rozšírenia [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) (#58389).
 - [ ] Práva - pridať možnosť nastaviť práva len na čítanie a prípadne nastaviť len povolené ID na editáciu.
-- [ ] Formuláre - pridať možnosť nastaviť celkovú veľkosť príloh pre formulár, teraz sa dá nastaviť jedine per súbor.
+- [x] Formuláre - pridať možnosť nastaviť celkovú veľkosť príloh pre formulár, teraz sa dá nastaviť jedine per súbor (#58517).
 - [ ] Štatistika - upraviť zápis do `seo_bots` cez `StatWriteBuffer` pre menej konfliktov pri vysokom zaťažení a cluster databáze.
 - [x] Skripty - pridať možnosť nastaviť, či sa má skript vkladať aj v editore stránok, alebo nie (#58349).
-- [ ] Formuláre - pridať skupinu výberový a zaškrtávacích polí `radio/checkbox` napojenú na číselník, podobne ako máme pre `select` pole.
+- [x] Formuláre - pridať skupinu výberový a zaškrtávacích polí `radio/checkbox` napojenú na číselník, podobne ako máme pre `select` pole (#58517).
 - [ ] Zmazať pridružené súbory k web stránke keď ju zmažem - spýtať sa ale vopred používateľa, či súbory chce zmazať. Kontrolovať, či sa nepoužívajú niekde inde.
 - [ ] Mazanie dát - pridať možnosť mazať stránky a priečinky z koša. Vyriešiť aj možnosť mazanie dát spúšťať ako automatizovanú úlohu.
 - [ ] Nepoužívané súbory - spraviť možnosť získať zoznam nepoužívaných súborov - nikde v stránke sa nepoužívajú, ani v médiach atď. Bola na to API `FileTools.getDirFileUsage(currentDir, request)`. Pridať ako kartu do vlastností priečinka v prieskumníku.
+- [ ] Prieskumník - zamedziť prácu s priečinku pre Manažér dokumentov, aby sa so súbormi nedalo manipulovať mimo Manažér dokumentov.
 
 ## 2025
 
@@ -45,7 +46,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] `quill` - pridať možnosť nastaviť položky menu vrátane farieb.
 - [ ] Aplikácie - možnosť nákupu aplikácie pre OpenSource verziu (#55825).
 - [ ] Možnosť vykonať Thymeleaf kód v hlavičke/pätičke a možno aj v tele web stránky.
-- [ ] Bezpečnosť - pridať podporu generovania `nonce` pre `Content-Security-Policy` hlavičku, viď napr. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.
+- [x] Bezpečnosť - pridať podporu generovania `nonce` pre `Content-Security-Policy` hlavičku, viď napr. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee. (#58533)
 - [x] Formuláre - pridať možnosť volať Java triedu pre validáciu formuláru (#58161).
 - [x] Značky - filtrovať podľa aktuálnej domény aby to bolo rovnaké ako v iných častiach (#57837).
 - [x] Import používateľov - ak nie je zadané heslo, tak vygenerovať (pre nových používateľov), ak nie je posielaný stav `authorized` nastaviť na `true` (#58253).

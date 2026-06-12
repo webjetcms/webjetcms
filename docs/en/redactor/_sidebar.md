@@ -128,6 +128,7 @@
   - [Send page by email](/redactor/apps/send_link/README.md)
   - [Impressive Slideshow](/redactor/apps/app-impress_slideshow/README.md)
   - [Users](/redactor/apps/user/README.md)
+  - [Language Redirect](/redactor/apps/language-redirect/README.md)
   - [Proxy](/redactor/apps/proxy/README.md)
   - [Related pages](/redactor/apps/related-pages/README.md)
   - Reservations
@@ -145,7 +146,10 @@
   - [Document Embed](/redactor/apps/app-docsembed/README.md)
   - [Embed HTML code](/redactor/apps/app-htmlembed/README.md)
   - [Search Engines (SEO)](/redactor/apps/seo/README.md)
-  - [Search](/redactor/apps/search/README.md)
+  - Search
+    - [Search](/redactor/apps/search/README.md)
+    - [Semantic Search (RAG)](/redactor/apps/semantic-search/README.md)
+    - [Semantic index](/redactor/apps/semantic-search/embedding-chunks.md)
   - [View files](/redactor/apps/site-browser/README.md)
   - [Structure Mirroring](/redactor/apps/docmirroring/README.md)
 - Files

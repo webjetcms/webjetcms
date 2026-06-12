@@ -780,6 +780,20 @@ public class Modules
 		sub.setMenuIcon("refresh");
 		loadModule(sub);
 
+		// Embedding-chunks
+		sub = new ModuleInfo().setMenuOrder(7024);
+		sub.setLeftMenuNameKey("settings.embedding-chunks.title");
+		sub.setNameKey("settings.embedding-chunks.title");
+		sub.setPath("/admin/v9/settings/embedding-chunks/");
+		sub.setWjVersions("BPECDIM");
+		sub.setUserItem(true);
+		sub.setItemKey("embeddingChunks");
+		sub.setDefaultDisabled(true);
+		sub.setShowInLeftMenu(true);
+		sub.setGroup("config");
+		sub.setMenuIcon("database-search");
+		loadModule(sub);
+
 		// Editacia textov
 		sub = new ModuleInfo().setMenuOrder(7020);
 		sub.setLeftMenuNameKey("admin.conf_editor.edit_text");
@@ -822,6 +836,20 @@ public class Modules
 		sub.setGroup("config");
 		sub.setShowInLeftMenu(true);
 		sub.setMenuIcon("disc");
+		loadModule(sub);
+
+		// Custom fields
+		sub = new ModuleInfo().setMenuOrder(7120);
+		sub.setLeftMenuNameKey("settings.custom-fields.title");
+		sub.setNameKey("settings.custom-fields.title");
+		sub.setPath("/admin/v9/settings/custom-fields/");
+		sub.setWjVersions("BPECDIM");
+		sub.setUserItem(true);
+		sub.setItemKey("customFields");
+		sub.setDefaultDisabled(true);
+		sub.setShowInLeftMenu(true);
+		sub.setGroup("config");
+		sub.setMenuIcon("table-options");
 		loadModule(sub);
 
 		// Restartovat

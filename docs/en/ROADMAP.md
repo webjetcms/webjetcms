@@ -14,18 +14,19 @@ Explanation of the pictograms used:
 
 ## 2026
 
-- [ ] Semantic search - use AI to improve search with `RAG`.
+- [x] Semantic search - use AI to improve search with `RAG` (#211).
 - [ ] `Headless` CMS - prepare REST interfaces for using WebJET CMS in `headless` mode.
 - [ ] Migration to `Spring Boot` project.
 - [x] Testing - add accessibility testing using the [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) extension (#58389).
 - [ ] Rights - add the option to set read-only rights and optionally set only allowed IDs for editing.
-- [ ] Forms - add the option to set the total size of attachments for a form, now it can only be set per file.
+- [x] Forms - add option to set total attachment size for form, now can only be set per file (#58517).
 - [ ] Statistics - adjust write to `seo_bots` through `StatWriteBuffer` for fewer conflicts under high load and cluster database.
 - [x] Scripts - add option to set whether the script should also be inserted in the page editor or not (#58349).
-- [ ] Forms - add a group of selection and checkbox fields `radio/checkbox` connected to the code list, similar to what we have for the `select` field.
+- [x] Forms - add a group of selection and checkbox fields `radio/checkbox` connected to the number list, similar to what we have for the `select` field (#58517).
 - [ ] Delete files associated with a web page when I delete it - but ask the user in advance if they want to delete the files. Check if they are not being used somewhere else.
 - [ ] Data deletion - add the option to delete pages and folders from the trash. Also resolve the option to run data deletion as an automated task.
 - [ ] Unused files - make it possible to get a list of unused files - they are not used anywhere on the page, not even in media, etc. There was an API for this `FileTools.getDirFileUsage(currentDir, request)`. Add as a tab to the folder properties in explorer.
+- [ ] Explorer - prevent working with the Document Manager folder so that files cannot be manipulated outside of the Document Manager.
 
 ## 2025
 
@@ -45,12 +46,12 @@ Explanation of the pictograms used:
 - [ ] `quill` - ​​add the ability to set menu items including colors.
 - [ ] Applications - option to purchase the application for the OpenSource version (#55825).
 - [ ] Possibility to execute Thymeleaf code in the header/footer and possibly also in the body of the web page.
-- [ ] Security - add support for generating `nonce` for `Content-Security-Policy` header, see e.g. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.
+- [x] Security - add support for generating `nonce` for `Content-Security-Policy` header, see e.g. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee. (#58533)
 - [x] Forms - add the ability to call a Java class for form validation (#58161).
 - [x] Tags - filter by current domain to be the same as in other sections (#57837).
 - [x] User import - if no password is entered, generate one (for new users), if not sent, set status `authorized` to `true` (#58253).
 - [ ] In tests, somehow automatically check for the occurrence of `I\.waitForText\('.*?', '.*?'\);` and `I\.waitForText\(".*?", ".*?"\);`, which are incorrect waits without a defined time, will cause automated tests to crash.
-- [ ] Add an application to redirect the main page to `/sk/` or `/en/` depending on the browser language.
+- [x] Add an application to redirect the main page to `/sk/` or `/en/` depending on the browser language. (#58477)
 - [x] Modify configuration deletion so that when deleted, it is set to the original value defined in `Constants` (#57849).
 - [x] Gallery - when duplicating an image, allow changing the "Folder" so that we can duplicate images to a folder other than the current one (#57885).
 - [x] Mass email - audit changes in user groups (#58249).

@@ -41,6 +41,7 @@ import sk.iway.iwcm.components.response_header.rest.ResponseHeaderService;
 import sk.iway.iwcm.doc.ninja.Amp;
 import sk.iway.iwcm.doc.ninja.Ninja;
 import sk.iway.iwcm.doc.showdoc.ContentCapturingResponseWrapper;
+import sk.iway.iwcm.doc.showdoc.NonceHelper;
 import sk.iway.iwcm.doc.showdoc.StyleToHeadHelper;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
@@ -1701,7 +1702,7 @@ private static String combineCss(String cssStyle)
     }
 
     /**
-     * Forward request to JSP/Thymeleaf template with body processing.
+     * Forwards to a template and optionally processes the response body.
      * If showDocMoveStyleToHead is enabled, captures the response, extracts collected styles
      * from components, and inserts them into the head section.
      *
@@ -1714,8 +1715,15 @@ private static String combineCss(String cssStyle)
     private void forwardWithBodyProcessing(String forward, HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        if (StyleToHeadHelper.isMoveStyleToHeadEnabled(request)==false) {
-            // Feature disabled, use standard forward
+        // Check if body processing is needed (either style-to-head or CSP nonce injection)
+        boolean needsStyleProcessing = StyleToHeadHelper.isMoveStyleToHeadEnabled(request);
+        String cspNonce = SetCharacterEncodingFilter.getCurrentRequestBean() != null
+                ? SetCharacterEncodingFilter.getCurrentRequestBean().getCspNonce()
+                : null;
+        boolean needsProcessing = needsStyleProcessing || Tools.isNotEmpty(cspNonce);
+
+        if (needsProcessing == false) {
+            // No body processing needed, use standard forward
             request.getRequestDispatcher(forward).forward(request, response);
             return;
         }
@@ -1754,13 +1762,33 @@ private static String combineCss(String cssStyle)
         String capturedContent = responseWrapper.getCapturedContent();
 
         // Check if we have collected styles to insert
-        if (StyleToHeadHelper.hasCollectedStyles(request) && Tools.isNotEmpty(capturedContent)) {
+        if (needsStyleProcessing && StyleToHeadHelper.hasCollectedStyles(request) && Tools.isNotEmpty(capturedContent)) {
             // Insert styles into head section
             String styles = StyleToHeadHelper.getCollectedStyles(request);
             String processedHtml = StyleToHeadHelper.insertStylesIntoHead(capturedContent, styles);
 
             // Write processed content to original response
             capturedContent = processedHtml;
+        }
+
+        // Inject CSP nonce into <script>, <style>, and <link> tags
+        if (Tools.isNotEmpty(capturedContent) && Tools.isNotEmpty(cspNonce)) {
+            String contentSecurityPolicy = Constants.getString("contentSecurityPolicy");
+            PathFilter.setHeader(response, "Content-Security-Policy", "contentSecurityPolicy");
+            // Check each directive separately to skip nonce injection only for tag types
+            // whose corresponding CSP directive already allows unsafe-inline
+            boolean scriptSrcAllowsUnsafeInline = NonceHelper.isDirectiveAllowsUnsafeInline(contentSecurityPolicy, "script-src");
+            boolean styleSrcAllowsUnsafeInline = NonceHelper.isDirectiveAllowsUnsafeInline(contentSecurityPolicy, "style-src");
+            // Inject nonce into tags, skipping tag types whose directive allows unsafe-inline
+            capturedContent = NonceHelper.injectCspNonceIntoTags(capturedContent, cspNonce, !scriptSrcAllowsUnsafeInline, !styleSrcAllowsUnsafeInline);
+            // Process inline styles and event handlers for CSP compliance
+            // Only process if unsafe-inline is NOT allowed (since browser already allows them)
+            if (styleSrcAllowsUnsafeInline == false) {
+                capturedContent = NonceHelper.processInlineStyles(capturedContent, cspNonce);
+            }
+            if (scriptSrcAllowsUnsafeInline == false) {
+                capturedContent = NonceHelper.processInlineEventHandlers(capturedContent, cspNonce);
+            }
         }
 
         if (capturedContent != null) {

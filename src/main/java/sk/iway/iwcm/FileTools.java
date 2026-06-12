@@ -66,6 +66,8 @@ public class FileTools
 		//utility class
 	}
 
+	private static final String[] NOT_ALLOWED_FILE_TYPES = new String[] {"jsp", "class", "java", "php", "sh", "exe", "bat", "cmd", "com", "vbs", "wsf", "wsh", "ps1", "ps2", "psm1"};
+
 	/**
 	 * Skopiruje subor src do dest
 	 * @param src
@@ -446,35 +448,36 @@ public class FileTools
 
 	/**
 	 * Vrati naformatovanu velkost suboru v B, kB, MB
-	 * @param lengthLong
+	 * @param bytes
 	 * @param exactFormat - ak je nastavene na false, tak iba MB vracia s desatinnymi miestami
 	 * @return
 	 */
-	public static String getFormatFileSize(long lengthLong, boolean exactFormat)
+	public static String getFormatFileSize(long bytes, boolean exactFormat)
 	{
 		String length = "";
-		if (lengthLong > (1024 * 1024))
-		{
-			if (exactFormat)
-			{
-				length = decimalFormat.format(lengthLong / (1024d * 1024d)) + " MB";
-				Logger.debug(FileTools.class, "DecimalFormat: "+decimalFormatJednoMiesto.format(lengthLong / (1024d * 1024d)));
-			}
-			else
-			{
-				length = decimalFormatJednoMiesto.format(lengthLong / (1024d * 1024d)) + " MB";
-			}
+
+		if (bytes < 0) { return "0 B"; }
+        if (bytes < 1024) { return bytes + " B"; }
+
+        final String[] units = {"kB", "MB", "GB", "TB", "PB"};
+        double size = bytes;
+        int unitIndex = -1;
+
+        do {
+            size /= 1024;
+            unitIndex++;
+        } while (size >= 1024 && unitIndex < units.length - 1);
+
+        if (exactFormat) {
+			length = decimalFormat.format(size) + " " + units[unitIndex];
+			Logger.debug(FileTools.class, "DecimalFormat: "+decimalFormatJednoMiesto.format(size / (1024d * 1024d)));
+		} else if (unitIndex >= 1) {
+			// pre MB a vetsi pouzivame jedno desatinne miesto
+			length = decimalFormatJednoMiesto.format(size) + " " + units[unitIndex];
+		} else {
+			length = decimalFormatBezMiest.format(size) + " " + units[unitIndex];
 		}
-		else if (lengthLong > 1024)
-		{
-			if (exactFormat) length = decimalFormat.format(lengthLong / 1024d) + " kB";
-			else length = decimalFormatBezMiest.format(lengthLong / 1024d) + " kB";
-		}
-		else
-		{
-			if (exactFormat) length = decimalFormat.format(lengthLong) + " B";
-			else length = decimalFormatBezMiest.format(lengthLong) + " B";
-		}
+
 		return(length);
 	}
 
@@ -753,6 +756,17 @@ public class FileTools
 	{
 		return VideoConvert.isVideoFile(name);
 	}
+	public static boolean isAudioFile(String name)
+	{
+		if (name == null)
+			return false;
+		//.jpg is not equal to .JPG
+		name = name.toLowerCase();
+
+		return name.endsWith(".mp3") || name.endsWith(".wav") || name.endsWith(".ogg");
+	}
+
+
 	/**
 	 * Usortuje subory podla mena
 	 * @param arrayfile
@@ -904,14 +918,18 @@ public class FileTools
 		//zmenene z false na true pretoze potom sa zle plnili polia so subormi a padalo to dalej na NPE
 		if (fileName == null || Tools.isEmpty(fileName)) return true;
 
-		if (user!=null && user.isAdmin()) return true;
+		if ((user!=null && user.isAdmin()) || (user == null && RequestBean.isAdminLogged())) {
+			//allow all file types for admin users
+			return true;
+		}
 
-		String ext = FileTools.getFileExtension(fileName);
-		if (ext==null) return false;
+		String fileExt = getFileExtension(fileName).toLowerCase();
+		for (String ext : NOT_ALLOWED_FILE_TYPES) {
+			if (ext.equals(fileExt)) {
+				return false;
+			}
+		}
 
-		ext = ext.toLowerCase();
-
-		if (ext.equals("jsp") || ext.equals("class") || ext.equals("java")) return false;
 		if (FileBrowserTools.hasForbiddenSymbol(fileName)) return false;
 
 		return true;
@@ -1416,5 +1434,23 @@ public class FileTools
 		}
 
 		return ret;
+	}
+
+	/**
+	 * Format file size in human readable format from kilobytes, e.g. 1.5 MB, 200 kB, 500 B, etc.
+	 * @param kilobytes
+	 * @return
+	 */
+	public static String formatFileSizeFromKb(long kilobytes) {
+        return getFormatFileSize(kilobytes * 1024, true);
+    }
+
+	/**
+	 * Format file size in human readable format from bytes, e.g. 1.5 MB, 200 kB, 500 B, etc.
+	 * @param fileSize
+	 * @return
+	 */
+	public static String formatFileSize(long fileSize) {
+		return getFormatFileSize(fileSize, true);
 	}
 }

@@ -1,5 +1,7 @@
 package sk.iway.iwcm.components.multistep_form.jpa;
 
+import java.util.List;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -12,10 +14,13 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import sk.iway.iwcm.components.multistep_form.rest.MultistepFormsService;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
@@ -29,6 +34,8 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 @DataTableTabs(tabs = {
     @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
     @DataTableTab(id = "advanced", title = "datatable.tab.advanced"),
+    @DataTableTab(id = MultistepFormsService.VISIBILITY_TAB, title = "components.form_items_condition.visibility_tab"),
+    @DataTableTab(id = MultistepFormsService.REQUIREMENT_TAB, title = "components.form_items_condition.requirement_tab"),
     @DataTableTab(id = "stat", title = "components.form_items.stat_tab")
 })
 public class FormItemEntity extends BaseEditorFields {
@@ -82,6 +89,18 @@ public class FormItemEntity extends BaseEditorFields {
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.formsimple.value", hidden = true, tab = "advanced")
     private String value;
 
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "multistep_form.use_value_as_enumeration",  hidden = true, tab = "advanced")
+    private Boolean useValueAsEnumeration;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.OPTIONS, title = "multistep_form.value_as_options",  hidden = true, tab = "advanced")
+    private String valueAsOptions;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.ENUMERATION, title = "multistep_form.value_as_enumeration",  hidden = true, tab = "advanced")
+    private String valueAsEnumeration;
+
     @Column(name = "placeholder")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.formsimple.placeholder", hidden = true, tab = "advanced")
     private String placeholder;
@@ -90,6 +109,10 @@ public class FormItemEntity extends BaseEditorFields {
     @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.tooltip", className="quill-oneline", hidden = true, tab = "advanced")
     @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String tooltip;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.form_items.allowSaveWhenCondition", hidden = true, tab = "advanced")
+    private Boolean allowSaveWhenCondition;
 
     @Column(name = "show_stat")
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.form_items.show_stat", tab = "stat", hidden = true)
@@ -126,7 +149,40 @@ public class FormItemEntity extends BaseEditorFields {
     @Column(name = "regex_validation")
     private String regexValidation;
 
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title="&nbsp;",
+        tab = "visibilityConditions", className = "hide-on-create",
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/form-items-conditions?formName={formName}&itemId={id}&stepId={stepId}&conditionType=VISIBILITY"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.multistep_form.jpa.FormItemsConditionEntity"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "true"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "import,export,celledit"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-toggleStyle", value = "single"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-toggleSelector", value = "td")
+            }
+        )}
+    )
+    private List<FormItemsConditionEntity> visibilityConditions;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title="&nbsp;",
+        tab = "requirementConditions", className = "hide-on-create",
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/form-items-conditions?formName={formName}&itemId={id}&stepId={stepId}&conditionType=REQUIREMENT"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.multistep_form.jpa.FormItemsConditionEntity"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "true"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "import,export,celledit"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-toggleStyle", value = "single"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-toggleSelector", value = "td")
+            }
+        )}
+    )
+    private List<FormItemsConditionEntity> requirementConditions;
+
     @Column(name = "item_form_id")
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
     private String itemFormId;
 
     @Column(name = "error_count")

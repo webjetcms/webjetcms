@@ -183,12 +183,42 @@
         formItemsDataTable.on("draw", function() { loadStepPreview(); });
 
         formItemsDataTable.EDITOR.on( 'open', function( e, mode, action ) {
+
+            if("create" === action) {
+                ["visibilityConditions", "requirementConditions"].forEach(tabId => {
+                    $("#pills-dt-formItemsDataTable-" + tabId + "-tab").hide();
+                });
+            }
+
             if(itemsFirstLoad === true) {
                 itemsFirstLoad = false;
 
                 $("#DTE_Field_fieldType").on("change", function() {
                     const selectedFieldType = $(this).val();
                     const hiddenFieldsByType = formItemsDataTable.DATA.jsonOptions.hiddenFieldsByType;
+                    const inputTypeByFieldType = formItemsDataTable.DATA.jsonOptions.inputType;
+
+                    const editDialog = $("div.DTE.DTE_Action_Edit");
+                    if(editDialog != undefined && editDialog != null && editDialog.length) {
+                        // Its edit
+
+                        // Reset condition tabs before applying selected type specific hidden tabs.
+                        ["visibilityConditions", "requirementConditions"].forEach(tabId => {
+                            $("#pills-dt-formItemsDataTable-" + tabId + "-tab").show();
+                        });
+
+                        const hiddenTabsByType = formItemsDataTable.DATA.jsonOptions.hiddenTabsByType;
+                        hiddenTabsByType.forEach(tab => {
+                            if(tab.value === selectedFieldType) {
+                                let label = tab.label;
+                                if(label != null && label.trim().length > 0) {
+                                    label.split(",").map(s => s.trim()).forEach(tabId => {
+                                        $("#pills-dt-formItemsDataTable-" + tabId + "-tab").hide();
+                                    });
+                                }
+                            }
+                        });
+                    }
 
                     let fieldsToHide = [];
                     for(let i = 0; i < hiddenFieldsByType.length; i++) {
@@ -218,6 +248,38 @@
                         }
                     });
 
+                    // Special logic for value field
+                    setTimeout(() => {
+                        let inputType = "text";
+                        inputTypeByFieldType.forEach(type => {
+                            if(type.value === selectedFieldType) {
+                                inputType = type.label;
+                            }
+                        });
+                        //console.log("Selected field type: " + selectedFieldType + ", input type: " + inputType);
+
+                        if(formItemsDataTable.EDITOR.field("value").displayed() === true) {
+                            // It has meaning only if value field is showed
+                            if("iterable" === inputType) {
+                                formItemsDataTable.EDITOR.field("value").hide();
+
+                                formItemsDataTable.EDITOR.field("useValueAsEnumeration").show();
+                                toggleValueAsFields();
+                            } else {
+                                formItemsDataTable.EDITOR.field("value").show();
+
+                                formItemsDataTable.EDITOR.field("valueAsOptions").hide();
+                                formItemsDataTable.EDITOR.field("valueAsEnumeration").hide();
+                                formItemsDataTable.EDITOR.field("useValueAsEnumeration").hide();
+                            }
+                        } else {
+                            // value field is hidden, hide valueAsOptions too
+                            formItemsDataTable.EDITOR.field("valueAsOptions").hide();
+                            formItemsDataTable.EDITOR.field("valueAsEnumeration").hide();
+                            formItemsDataTable.EDITOR.field("useValueAsEnumeration").hide();
+                        }
+                    }, 500);
+
                     if(selectedFieldType !== formItemsDataTable.EDITOR.currentJson["fieldType"]) {
                         // Call only on real change
                         fetch(`/admin/rest/form-items/default-regex?fieldType=${selectedFieldType}`, {
@@ -235,6 +297,23 @@
                         .catch(err => console.error(err));
                     }
                 });
+
+                function toggleValueAsFields() {
+                    const useEnum = formItemsDataTable.EDITOR.field("useValueAsEnumeration").val();
+                    const checked = (Array.isArray(useEnum) ? useEnum[0] : useEnum) === true;
+                    if(checked) {
+                        formItemsDataTable.EDITOR.field("valueAsOptions").hide();
+                        formItemsDataTable.EDITOR.field("valueAsEnumeration").show();
+                    } else {
+                        formItemsDataTable.EDITOR.field("valueAsOptions").show();
+                        formItemsDataTable.EDITOR.field("valueAsEnumeration").hide();
+                    }
+                }
+
+                // add listener
+                document.getElementById("DTE_Field_useValueAsEnumeration_0").addEventListener("change",
+                    function() { toggleValueAsFields(); }
+                );
 
                 $("#DTE_Field_showStat_0").on("change", function() {
                     const statAllowed = formItemsDataTable.EDITOR.field("showStat").val()[0];
@@ -269,6 +348,40 @@
             }
         });
     });
+
+    let conditionsWithoutValue = ["EMPTY", "NOT_EMPTY"];
+    let visibilityConditionsDataTable = null;
+    let requirementConditionsDataTable = null;
+    window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
+        if (event.detail.conf.id == "DTE_Field_visibilityConditions" && visibilityConditionsDataTable == null) {
+            visibilityConditionsDataTable = event.detail.conf.datatable;
+            bindTableEvent(visibilityConditionsDataTable);
+        } else if(event.detail.conf.id == "DTE_Field_requirementConditions" && requirementConditionsDataTable == null) {
+            requirementConditionsDataTable = event.detail.conf.datatable;
+            bindTableEvent(requirementConditionsDataTable);
+        }
+    });
+
+    function bindTableEvent(table) {
+        table.EDITOR.on('open', function(e, mode, action) {
+            $("#" + table.DATA.id + "_modal #DTE_Field_operator").on("change", function() {
+                const operator = table.EDITOR.field("operator").val();
+                if(conditionsWithoutValue.includes(operator.toUpperCase())) {
+                    table.EDITOR.field("value").hide();
+                    table.EDITOR.field("caseInsensitive").hide();
+                } else {
+                    table.EDITOR.field("value").show();
+                    table.EDITOR.field("caseInsensitive").show();
+                }
+            });
+
+            if (table.DATA.id === "datatableFieldDTE_Field_visibilityConditions") {
+                $("#datatableFieldDTE_Field_visibilityConditions_modal #DTE_Field_infolabel").text("[[#{components.form_items_condition.infolabel.visibility}]]");
+            } else if (table.DATA.id === "datatableFieldDTE_Field_requirementConditions") {
+                $("#datatableFieldDTE_Field_requirementConditions_modal #DTE_Field_infolabel").text("[[#{components.form_items_condition.infolabel.requirement}]]");
+            }
+        });
+    }
 
     async function loadStepPreview() {
         if(loadingPreview === false) { loadingPreview = true; }
@@ -361,6 +474,7 @@
         border-top-right-radius: 6px !important;
         border-bottom-right-radius: 6px !important;
     }
+
     td.allow-html { pointer-events: none; }
     button.buttons-settings { display: none; }
     div.stepPreviewWrapper { background-color: #F3F3F6; }
@@ -374,7 +488,10 @@
     div.stepPreview form {
         pointer-events: none;
     }
-    div.dt-scroll-head { display: none; }
+
+    /* HIDE filter headers */
+    #formStepsDataTable_wrapper div.dt-scroll-head { display: none; }
+    #formItemsDataTable_wrapper div.dt-scroll-head { display: none; }
 
     /* Fix to width iframe */
     div.cleditorMain iframe { width: 100% !important; }

@@ -258,7 +258,7 @@ Scenario("number-keywords", ({ I, Browser, DT }) => {
 
     DT.filterContains("name", "rozpočet");
 
-    DT.checkTableRow("numberKeywordsDataTable", 1, [null, "rozpočet", "2", "2", "2"]);
+    DT.checkTableRow("numberKeywordsDataTable", 1, [null, "rozpočet", "3", "3", "3"]);
 
     I.click("button.btn-vue-jstree-item-edit");
     I.click( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk") );

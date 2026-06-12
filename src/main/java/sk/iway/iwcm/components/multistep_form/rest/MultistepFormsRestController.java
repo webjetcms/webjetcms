@@ -63,11 +63,11 @@ public class MultistepFormsRestController {
         }
     }
 
-    @GetMapping(value="/get-step", params={"form-name", "step-id"}, produces = MediaType.TEXT_HTML_VALUE)
+    @GetMapping(value="/get-step", params={"form-name", "step-id"})
     public ResponseEntity<String> getFormStepHtml(@RequestParam("form-name") String formName, @RequestParam("step-id") Long stepId, HttpServletRequest request) {
         String encoding = SetCharacterEncodingFilter.getEncoding();
         if (Tools.isEmpty(encoding)) encoding = "UTF-8"; // Fallback
-        String contentTypeWithCharset = MediaType.TEXT_HTML_VALUE + "; charset=" + encoding;
+        String contentTypeWithCharset = MediaType.APPLICATION_JSON_VALUE + "; charset=" + encoding;
 
         try {
             // This is call from outside (no admin section) - check that csrf is valid for this form
@@ -75,10 +75,16 @@ public class MultistepFormsRestController {
                 throw new IllegalStateException("Provided params to get stepHtml are invalid.");
 
             FormHtmlHandler formHtmlHandler = new FormHtmlHandler(formName, request);
+            FormConditionsHandler formConditionsHandler = new FormConditionsHandler(formName, request);
+
+            JSONObject result = new JSONObject();
+            result.put("html", formHtmlHandler.getFormStepHtml(stepId, request));
+            result.put("visibilityConditions", formConditionsHandler.getVisibilityConditions(stepId));
+            result.put("requirementConditions", formConditionsHandler.getRequirementConditions(stepId));
 
             return ResponseEntity.ok()
                 .header("Content-Type", contentTypeWithCharset)
-                .body( formHtmlHandler.getFormStepHtml(stepId, request) );
+                .body( result.toString() );
         } catch (Exception e) {
             Logger.error(MultistepFormsRestController.class, "getFormStepHtml() failed. " + e.getLocalizedMessage(), e);
             JSONObject response = new JSONObject();

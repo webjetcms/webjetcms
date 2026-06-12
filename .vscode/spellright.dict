@@ -2,6 +2,7 @@ AA
 accordion
 action
 admini
+administračné
 administračného
 administračnej
 administračnému
@@ -15,6 +16,7 @@ Ajax
 ajax-om
 aliasom
 aliasov
+aliasu
 aliasy
 Allure
 Amazon
@@ -96,6 +98,7 @@ branche
 breadcrumb
 build
 Builder
+Builderi
 buildu
 BVSSLA
 cachuje
@@ -104,6 +107,7 @@ Captcha
 Carousel
 CellVisibilityService
 Central
+Citadelo
 ckeditor
 ckeditora
 ckeditore
@@ -235,6 +239,7 @@ editácii
 editáciou
 editáciu
 editačné
+editačného
 editačný
 editujúcich
 elfinder
@@ -307,6 +312,8 @@ changelogu
 Chrome
 Chromium
 chunk
+chunkov
+chunku
 Id
 iframe
 ImageMagick
@@ -315,9 +322,11 @@ implementujúce
 implementujúcej
 implementujúcu
 INCLUDE
+indexovacej
 Info
 inicializovanie
 iniciálne
+Inkluzívny
 InnoDB
 Instagram
 integrujúce
@@ -328,8 +337,10 @@ invalidovaná
 issues
 javascript
 jazyka
+jazykmi
 jazykom
 jazykov
+jazyku
 jazyky
 JCrop
 JPA
@@ -347,10 +358,12 @@ klastrovom
 klikateľné
 klikateľnú
 klikateľný
+kombinujúce
 komitov
 komponenách
 komponentou
 konf
+konfigurovateľnosť
 konštruktor
 konštruktora
 konštruktore
@@ -359,6 +372,7 @@ konštruktory
 kontajnerizácii
 kontajnerizovaného
 kontroléra
+Korbel
 krokovania
 kurzívnym
 lang
@@ -374,6 +388,7 @@ LMS
 Load
 localhost
 lock
+Logback
 logovaní
 logovania
 Logovanie
@@ -394,6 +409,7 @@ mapstruct
 mapujúca
 markdown
 Markdown
+Matryoshka
 Maven
 md
 media
@@ -434,6 +450,7 @@ neprerobené
 nespárujú
 nevyhladateľná
 newsletter
+newsletterov
 Ninja
 Nothing
 notifikáciám
@@ -481,8 +498,10 @@ penetračnými
 perex
 perexu
 Persistent
+Personalizácia
 personalizáciu
 personalizovaných
+personalizovať
 perzistentná
 PGP
 phishingovým
@@ -516,10 +535,13 @@ Predpripravené
 Predpripravený
 predvolene
 Predvyplnená
+predvyplnené
+Predvyplnenie
 predvyplní
 pregenerovania
 Pregenerovať
 Preiteruje
+Prekryv
 prelínajúce
 preposielanie
 prerobenú
@@ -530,6 +552,7 @@ pretypujú
 pridávajúca
 prieskumníku
 PROD
+produktové
 produktových
 progress
 promo
@@ -648,11 +671,14 @@ stránkovaného
 streamovaná
 streamovanie
 streamovanú
+stresujúco
 Struts
 Sur
 SVG
 SVN
 System
+škálovateľné
+škálovateľnosť
 štýlovania
 štýlovanie
 štýlovaniu

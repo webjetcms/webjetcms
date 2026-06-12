@@ -732,3 +732,54 @@ Typ pole umožňující [nahrání souboru](field-file-upload.md).
     )
     private String file = "";
 ```
+
+## OPTIONS
+
+Typ pole pro dynamický seznam hodnot. V editoru se zobrazí jako seznam vstupních řádků, kde každý řádek obsahuje dvě textová pole (např. klíč a hodnota). Řádky lze přidávat, odebírat a měnit jejich pořadí pomocí `drag & drop`.
+
+Výsledná hodnota se ukládá jako řetězec, kde jednotlivé řádky jsou odděleny znakem `|` a hodnoty v rámci řádku jsou odděleny znakem `:`. Například: `key1:value1|key2:value2|key3:value3`.
+
+Pole nepodporuje AI tlačítko (`btn-ai`).
+
+```java
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPTIONS,
+        title = "components.myapp.options",
+        tab = "basic"
+    )
+    private String options = "";
+```
+
+![](../../redactor/apps/multistep-form/form-item-editor-advanced.png)
+
+## ENUMERATION
+
+Typ pole určený pro napojení na aplikaci číselníky. V editoru se zobrazí jeden řádek se třemi vstupy:
+
+- číslo (ID nebo název typu číselníku),
+- sloupec pro text (`label`) položky,
+- sloupec pro hodnotu (`value`) položky.
+
+Technicky se hodnota uloží ve formátu:
+
+`enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY`
+
+Příklad výsledné hodnoty: `enumeration-options|4|string1|string2`
+
+Podporované názvy sloupců jsou `string1` až `string12`, `decimal1` až `decimal4`, `boolean1` až `boolean4`, `date1` až `date4`.
+
+Příklad použití v entitě:
+
+```java
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.ENUMERATION,
+        title = "multistep_form.value_as_enumeration",
+        tab = "advanced"
+    )
+    private String valueAsEnumeration;
+```
+
+Tento typ se používá zejména u formulářů, kde je třeba dynamicky generovat `<option>` hodnoty ze zvoleného číselníku.
+
+![](../../redactor/apps/multistep-form/form-item-editor-advanced-enum.png)

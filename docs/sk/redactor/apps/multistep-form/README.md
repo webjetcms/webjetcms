@@ -63,11 +63,20 @@ Editor pre pridávanie a úpravu položiek je špeciálny tým, že mení svoj o
 - **Povolená hodnota** - pre pokročilú validáciu vstupu používateľa viete zvoliť ľubovoľný počet regulárnych výrazov, ktoré musia byť splnené, aby bol vstup platný. Viac sa o nich dozviete v sekcii [Regulárne výrazy](../form/regexps.md).
 - **Názov poľa** - názov, ktorý sa zobrazí používateľovi. Ak nie je zadaný použije sa názov zhodný s typom poľa.
 
-V karte Pokročilé môžete nastaviť ďalšie voliteľné parametre ako:
+V karte **Pokročilé** môžete nastaviť ďalšie voliteľné parametre ako:
 
 - **Krok formuláru** - krok, ku ktorému položka patrí, môžete tak ľahko položku presunúť do iného kroku.
 - **Poradie** - určuje poradie položky v rámci kroku.
-- **Predvyplnená hodnota** - hodnota, ktorá sa zobrazí vyplnená v poli, používateľ tak nemusí nastaviť hodnotu, ak je všeobecne známa. Pre polia typu výberové pole sem zadajte čiarkovou oddeľovaný zoznam hodnôt, napríklad `začiatočník,pokročilý,expert`.
+- **Predvyplnená hodnota** - hodnota, ktorá sa zobrazí vyplnená v poli, používateľ tak nemusí nastaviť hodnotu, ak je všeobecne známa. Toto pole sa zobrazuje iba ak nejde o položku typu výberové pole.
+- **Povolené možnosti** - pri položke typu výberové pole (select, checkbox skupina, radio skupina a pod.) môžete manuálne definovať zoznam možností. Každá možnosť sa skladá z dvoch hodnôt - textu, ktorý sa zobrazí používateľovi, a hodnoty, ktorá sa odošle pri odoslaní formulára. Možnosti je možné pridávať, odoberať a meniť ich poradie pomocou `drag & drop`. Toto pole sa zobrazuje iba ak nie je povolená možnosť **Použiť prepojenie na číselník**.
+
+![](form-item-editor-advanced.png)
+
+- **Použiť prepojenie na číselník** - prepínač, ktorý určuje, či sa možnosti výberového poľa zadávajú manuálne cez **Povolené možnosti**, alebo sa načítajú dynamicky z aplikácie [Číselníky](../../apps/enumeration/README.md).
+- **Prepojenie na číselník** - zobrazí sa pri položke typu výberové pole, ak je povolená možnosť **Použiť prepojenie na číselník**. Nastavíte číslo (ID) číselníka, stĺpec číselníka pre text zobrazený používateľovi a stĺpec pre odosielanú hodnotu. Možnosti sa tak generujú dynamicky z dát číselníka a pri zmene údajov v číselníku sa automaticky aktualizujú aj vo formulári.
+
+![](form-item-editor-advanced-enum.png)
+
 - **Zástupný text** - text, ktorý sa zobrazí v poli ako nápoveda pre používateľa ak nie je pole vyplnené (je prázdne).
 - **Tooltip** - ak zadáte hodnotu tooltipu, zobrazí sa pri názve poľa informačná bublina.
 
@@ -85,7 +94,7 @@ Formulár prepnete do režimu riadkového zobrazenia v [nastaveniach formuláru]
 
 ### Značky
 
-Ak chcete v položke formuláru použiť informácie o aktuálnom prihlásenom používateľovi (napr. jeho meno, email, atď.), môžete použiť špeciálne značky. Tieto značky sa automatický nahradia príslušnými hodnotami pri zobrazení formuláru používateľovi. Pre neprihlásených používateľov budú tieto značky nahradené prázdnou hodnotou. Hodnotu zadajte do poľa **Predvyplnená hodnota** položky formuláru.
+Ak chcete v položke formuláru použiť informácie o aktuálnom prihlásenom používateľovi (napr. jeho meno, email, atď.), môžete použiť špeciálne značky. Tieto značky sa automatický nahradia príslušnými hodnotami pri zobrazení formuláru používateľovi. Pre neprihlásených používateľov budú tieto značky nahradené prázdnou hodnotou. Hodnotu zadajte do poľa **Predvyplnená hodnota** (ak je pre daný typ položky dostupné).
 
 Dostupné značky sú:
 
@@ -109,6 +118,76 @@ Dostupné značky sú:
 - ```!LOGGED_USER_FIELDD!``` - voľné pole D
 - ```!LOGGED_USER_FIELDE!``` - voľné pole E
 - `!LOGGED_USER_GROUPS!` - zoznam skupín používateľov
+
+### Podmienené zobrazenie/validovanie položky
+
+Pre každú položku formulára môžete nastaviť pravidlá, ktoré dynamicky menia jej správanie podľa hodnôt iných položiek.
+
+K dispozícii sú dve samostatné karty:
+
+- **Zobrazenie** - určujú, či sa položka zobrazí alebo skryje (podmienky zobrazenia).
+- **Povinnosť** - určujú, či bude položka povinná alebo nepovinná (podmienky povinnosti).
+
+Obe karty používajú rovnaký typ pravidiel a rovnaký spôsob vyhodnocovania. Líšia sa iba výsledným efektom. Nastavenia z jednej karty neovplyvňujú nastavenia druhej karty.
+
+![](tab-visibilityConditions.png)
+
+!>**Upozornenie:** Systém nekontroluje, či sú zadané podmienky reálne splniteľné, preto ich nastavujte tak, aby mohli nastať. Vyhnite sa aj situáciám, keď má položka podmienené zobrazenie a zároveň sa jej hodnota používa v ďalšej podmienke, pretože môže vzniknúť mŕtva situácia. Rovnako neodporúčame meniť poradie krokov ak už máte nastavené podmienky, pretože môže nastať situácia, keď pole z kroku 1 čaká na hodnotu poľa z kroku 3, čo nebude fungovať správne.
+
+#### Kedy sú podmienky dostupné
+
+- Karty s podmienkami sa zobrazia iba pri editácii existujúcej položky (nie pri vytváraní novej).
+- Dostupnosť kariet závisí od typu poľa:
+  - Ak položka nepodporuje nastavenie **Povinné pole**, nebude dostupná ani karta **Podmienky povinnosti**.
+  - Pri grafických položkách (napr. medzera, nový riadok, prázdna bunka) podmienky nie sú dostupné, pretože nejde o interaktívne vstupné pole.
+- Ak sú nastavené **Podmienky povinnosti**, hodnota prepínača **Povinné pole** sa ignoruje.
+- V podmienkach môžete použiť iba položky z rovnakého alebo z predchádzajúcich krokov formulára.
+
+#### Ako vytvoriť podmienku
+
+Výsledné pravidlo vytvoríte kombináciou jednotlivých riadkov v tabuľke podmienok. Každý riadok predstavuje jednu podmienku s viacerými parametrami. Na jednu položku môžete pridať viac podmienok.
+
+Ide o plochú štruktúru (bez zátvoriek), takže nie je podporené vnáranie podmienok.
+
+Každá podmienka obsahuje tieto parametre:
+
+- **Pole formulára** - položka, ktorej hodnota sa použije pri vyhodnotení podmienky. Možnosti sú zoradené rovnako ako vo formulári.
+- **Podmienka porovnania** - spôsob porovnania hodnoty poľa:
+  - **rovná sa**
+  - **nerovná sa**
+  - **obsahuje**
+  - **neobsahuje**
+  - **začína na**
+  - **končí na**
+  - **je prázdne**
+  - **nie je prázdne**
+- **Porovnávaná hodnota** - hodnota, voči ktorej sa porovná obsah vybraného poľa.
+- **Ignorovať veľkosť písmen** - porovnanie nebude citlivé na veľké/malé písmená.
+- **Logický operátor** - spojenie s nasledujúcou podmienkou:
+  - `AND` - musia platiť obe podmienky,
+  - `OR` - stačí, ak platí aspoň jedna podmienka.
+
+![](tab-visibilityConditions-create.png)
+
+!>**Upozornenie:** Pri operátoroch **je prázdne** a **nie je prázdne** sa polia **Porovnávaná hodnota** a **Ignorovať veľkosť písmen** automaticky skryjú, pretože sa testuje iba existencia obsahu poľa, nie jeho konkrétna hodnota.
+
+#### Vyhodnocovanie pravidiel
+
+- Podmienky sa vyhodnocujú priebežne počas vypĺňania kroku.
+- Ak sú splnené **Podmienky zobrazenia**, pole sa zobrazí, inak sa skryje.
+- Ak sú splnené **Podmienky povinnosti**, pole je povinné, inak je nepovinné.
+- Skryté pole sa neodosiela a nevaliduje.
+- Ak je pole skryté, nikdy nemôže byť zároveň povinné.
+
+#### Dôležité obmedzenia
+
+- Podmienka nemôže odkazovať sama na seba. Ide o nepovolený stav a podmienka sa nebude dať uložiť.
+- Položku, ktorá je použitá v podmienkach iných položiek, nie je možné odstrániť.
+- Pri úprave takejto položky editor zobrazí upozornenie na závislé položky. Uloženie môžete povoliť v karte **Pokročilé** voľbou **Uložiť aj pri existujúcich závislých položkách**.
+
+Pri pokuse o úpravu alebo odstránenie položky, ktorá je použitá v podmienke inej položky, sa zobrazí chyba aj notifikácia so zoznamom závislých položiek.
+
+![](save-condition-error.png)
 
 ### Štatistika
 
@@ -136,7 +215,7 @@ Na konci každého kroku sa automatický vygeneruje tlačidlo, ktorého text sa 
 
 ![](real-form.png)
 
-!>**Upozornenie:** Náhľad formuláru sa vo výsledku môže graficky líšiť od skutočného zobrazenia vo webovej aplikácii, nakoľko záleží na použitej šablóne a štýloch stránky v ktorej bude formulár vložený. Náhľad slúži hlavne na predstavu o rozložení a obsahu formuláru.
+!>**Upozornenie:** Náhľad formuláru je orientačný a môže sa kompozične aj graficky líšiť od skutočného zobrazenia na stránke. V editore sa zobrazujú všetky položky bez ohľadu na nastavené podmienky, aby ste vedeli formulár lepšie navrhnúť a skontrolovať. Na reálnej stránke sa však formulár mení dynamicky podľa podmienok zobrazenia (niektoré polia sa môžu skryť alebo zobraziť podľa hodnôt iných polí) a zároveň podľa použitej šablóny a štýlov stránky, do ktorej je formulár vložený.
 
 ## Vloženie formuláru do stránky
 

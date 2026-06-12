@@ -4,6 +4,66 @@
 
 > Development version updated from the main repository.
 
+### Websites
+
+- Templates - added option to set the movement of `<style>` and `<link rel="stylesheet">` tags from the page body to `<head>` via [template option](frontend/templates/templates.md) with support for global configuration variable `showDocMoveStyleToHead`. Blocks in IE conditions, `noscript` and `script` remain in place (#231).
+
+![](frontend/templates/templates-edit-advanced.png)
+
+- Added **Thumbnail** tab in the image insertion dialog for setting parameters for [generating thumbnail images](redactor/webpages/working-in-editor/README.md#thumbnail-tab) `thumbnail` (#58317).
+
+![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
+
+### Forms
+
+- Added the ability to easily set up checkboxes and groups of checkboxes/select fields in multi-step forms (#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced.png)
+
+- Added the ability to link a selection field and a group of checkboxes/selection fields to a dial pad in multi-step forms (#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
+
+- Added the option to set the maximum combined file size in the form, previously only the size for a file could be set, if the form contains multiple files, it is possible to set the maximum size for all files together (#58517).
+
+### Semantic search
+
+- Added support for [semantic search](redactor/apps/semantic-search/README.md) built on the `pgvector` and `OpenAI embeddings` vector database technology. It allows visitors to find relevant pages based on **the meaning of the query**, not just keyword matching (#211).
+
+### Applications
+
+- Added new application [Language Redirect](redactor/apps/language-redirect/README.md) to automatically redirect visitors to the language version of the page based on language detection from the HTTP header `Accept-Language`. It supports up to 8 language assignments per URL, respecting the language cookie, and the option to redirect only to the root URL (#58497).
+
+![](redactor/apps/language-redirect/editor-basic.png)
+
+### Multiweb
+
+- Added option [create new domain](install/multiweb/config.md) from the control domain, it will also create user, template group, template and system pages (#58525).
+- Added template group list view (#58525).
+- All domain redirects can be edited in the control domain.
+- Added option to view all files in the management domain.
+
+### Safety
+
+- Added support for generating `nonce` for the [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) header (#58533).
+
+### Documentation
+
+- A new section [Overview of new features] (sales/README.md) has been created, which contains descriptions of new features and **functionalities of WebJET CMS in understandable language**, without unnecessarily technical formulations (#58505).
+- Created a [Troubleshooting] section (sysadmin/troubleshooting/README.md) in the operation manual.
+
+### For the programmer
+
+- Datatables - added a new field type `OPTIONS` for [dynamic list of values](developer/datatables-editor/standard-fields.md#options) in the editor. Each row contains two text fields (key and value), supports adding, removing and reordering using `drag & drop` (#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced.png)
+
+- Data tables - added a new field type `ENUMERATION` for [connection to enumeration tables](developer/datatables-editor/standard-fields.md#enumeration) in the editor. The field stores the configuration in `enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY` format and allows you to set the source of values ​​(#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
+
+- Logging - added attribute `sessionId` and user login name `userLogin` (#OSK526) to [Logback MDC](https://logback.qos.ch/manual/mdc.html).
+
 ## 2026.18
 
 > WebJET CMS 2026.18 brings **folder change approval** with support for multi-level approval and **accessibility testing** integrated directly into automated tests.
@@ -45,6 +105,10 @@
 
 ![](redactor/webpages/working-in-editor/wjmagicline-append.png)
 
+- Optional fields - added the ability to centrally set the properties of [optional fields](frontend/webpages/customfields/custom-fields-settings.md) in a new table in the Settings section (#58413).
+
+![](frontend/webpages/customfields/custom-fields-settings-editor.png)
+
 ### Applications
 
 Redesigned application properties settings in the editor from the old code in `JSP` to `Spring` applications. Applications automatically also get the ability to set [display on devices](custom-apps/appstore/README.md#conditional-display-applications). The design is consistent with the rest of the WebJET CMS and data tables (#57409).
@@ -74,6 +138,7 @@ Redesigned application properties settings in the editor from the old code in `J
 ![](redactor/apps/multistep-form/stat-section.png)
 
 - Added **Completion Duration** column for multi-step forms, which shows how long it took the user to complete the form (time from viewing to submission) (#58333).
+- Multi-step forms - added support for conditional display/validation of form items based on created conditions. More in the [Conditional display/validation of items] section (redactor/apps/multistep-form/README.md#conditional-displayvalidation-of-items) (#58477).
 
 ### Gallery
 
@@ -197,7 +262,15 @@ Redesigned application properties settings in the editor from the old code in `J
 
 > A patch version of the original version 2026.0.
 
+- AI assistant - modified getting an answer when using `reasoning` in OpenAI (#244).
 - Security - fixed the ability to set [HTTP header name for obtaining IP address](sysadmin/pentests/README.md#configuration) via the `xForwardedForHeader` variable.
+- Easy form - modified fields for entering field name and tooltip in a single-line WYSIWYG editor so that the result does not contain the `P` element (#244).
+- Document Manager - added filtering of files by validity dates (if the date range is not valid, they will not be displayed) and files that do not have the display attribute set (#233).
+- Video - updated library `videojs` for playing local audio/video files from version 6.2.0 to version 8.23.6 (#233).
+- Video - fixed setting of link to local audio/video file when editing an already inserted application (#233).
+- Performance - added index on table `emails` by `click_hash` for better performance in Oracle database (#244).
+- Web pages - added display of `mp3` files in the Media of all pages/Videos selection (#233).
+- Web pages - allowed to insert files of type `svg,webp,mp3` if the user does not have the Full menu right in the editor, the value set in the configuration variable `FCKConfig.UploadFileTypes[Basic][image]` (#233).
 
 ## 2026.0.18
 

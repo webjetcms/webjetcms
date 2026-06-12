@@ -3505,6 +3505,279 @@
         <void method="add">
             <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="author"><string>sivan</string></void>
+                <void property="date"><string>06.05.2026</string></void>
+                <void property="desc"><string>Vytvorenie tabulky form_items_conditions</string></void>
+                <void property="mysql">
+                    <string>
+                        CREATE TABLE form_items_conditions (
+                            id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                            form_name VARCHAR(255) NOT NULL,
+                            form_item_id INT NOT NULL,
+                            item_form_id VARCHAR(255) NOT NULL,
+                            condition_type VARCHAR(255) NOT NULL,
+                            operator VARCHAR(255) NOT NULL,
+                            value VARCHAR(255) NOT NULL,
+                            join_operator_type VARCHAR(255) NOT NULL,
+                            case_insensitive TINYINT(1) NOT NULL DEFAULT 0,
+                            sort_priority INT NOT NULL DEFAULT 0,
+                            domain_id INT NOT NULL DEFAULT 1
+                        );
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        CREATE TABLE form_items_conditions (
+                            id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+                            form_name NVARCHAR(255) NOT NULL,
+                            form_item_id INT NOT NULL,
+                            item_form_id NVARCHAR(255) NOT NULL,
+                            condition_type NVARCHAR(255) NOT NULL,
+                            operator NVARCHAR(255) NOT NULL,
+                            value NVARCHAR(255) NOT NULL,
+                            join_operator_type NVARCHAR(255) NOT NULL,
+                            case_insensitive BIT NOT NULL DEFAULT 0,
+                            sort_priority INT NOT NULL DEFAULT 0,
+                            domain_id INT NOT NULL DEFAULT 1
+                        );
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        CREATE TABLE form_items_conditions (
+                            id INTEGER NOT NULL PRIMARY KEY,
+                            form_name NVARCHAR2(255) NOT NULL,
+                            form_item_id INTEGER NOT NULL,
+                            item_form_id NVARCHAR2(255) NOT NULL,
+                            condition_type NVARCHAR2(255) NOT NULL,
+                            operator NVARCHAR2(255) NOT NULL,
+                            value NVARCHAR2(255) NOT NULL,
+                            join_operator_type NVARCHAR2(255) NOT NULL,
+                            case_insensitive NUMBER(1) DEFAULT 0 NOT NULL,
+                            sort_priority INTEGER DEFAULT 0 NOT NULL,
+                            domain_id INTEGER DEFAULT 1 NOT NULL
+                        );
+                        CREATE SEQUENCE S_form_items_conditions START WITH 1;
+                        CREATE TRIGGER T_form_items_conditions BEFORE INSERT ON form_items_conditions
+                            FOR EACH ROW
+                                DECLARE
+                                    val INTEGER|
+                                BEGIN
+                                    IF :new.id IS NULL THEN
+                                        SELECT S_form_items_conditions.nextval into val FROM dual|
+                                        :new.id:= val|
+                                    END IF|
+                                END|
+                        ;
+                    </string>
+                </void>
+                <void property="pgsql">
+                    <string>
+                        CREATE SEQUENCE S_form_items_conditions START WITH 1;
+                        CREATE TABLE form_items_conditions (
+                            id INT DEFAULT NEXTVAL('S_form_items_conditions') PRIMARY KEY NOT NULL,
+                            form_name VARCHAR(255) NOT NULL,
+                            form_item_id INT NOT NULL,
+                            item_form_id VARCHAR(255) NOT NULL,
+                            condition_type VARCHAR(255) NOT NULL,
+                            operator VARCHAR(255) NOT NULL,
+                            value VARCHAR(255) NOT NULL,
+                            join_operator_type VARCHAR(255) NOT NULL,
+                            case_insensitive BOOLEAN NOT NULL DEFAULT FALSE,
+                            sort_priority INT NOT NULL DEFAULT 0,
+                            domain_id INT NOT NULL DEFAULT 1
+                        );
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>21.04.2026</string></void>
+                <void property="desc"><string>rag_index_queue - create table for RAG indexing queue</string></void>
+                <void property="mysql"><string>
+                    CREATE TABLE rag_index_queue (
+                        id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                        entity_type VARCHAR(100) NOT NULL,
+                        entity_id INT NOT NULL,
+                        action VARCHAR(20) NOT NULL,
+                        domain_id INT DEFAULT 0 NOT NULL,
+                        create_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE KEY uq_rag_queue (entity_type, entity_id, action, domain_id)
+                    );
+                </string></void>
+                <void property="mssql"><string>
+                    CREATE TABLE rag_index_queue (
+                        [id] [INT] IDENTITY(1,1) PRIMARY KEY NOT NULL,
+                        [entity_type] [NVARCHAR](100) NOT NULL,
+                        [entity_id] [INT] NOT NULL,
+                        [action] [NVARCHAR](20) NOT NULL,
+                        [domain_id] [INT] DEFAULT 0 NOT NULL,
+                        [create_date] [DATETIME] DEFAULT GETDATE()
+                    ) ON [PRIMARY];
+                    CREATE UNIQUE INDEX uq_rag_queue ON rag_index_queue (entity_type, entity_id, action, domain_id);
+                </string></void>
+                <void property="oracle"><string>
+                    CREATE TABLE rag_index_queue (
+                        id INTEGER NOT NULL PRIMARY KEY,
+                        entity_type NVARCHAR2(100) NOT NULL,
+                        entity_id INTEGER NOT NULL,
+                        action NVARCHAR2(20) NOT NULL,
+                        domain_id INTEGER DEFAULT 0 NOT NULL,
+                        create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    );
+                    CREATE SEQUENCE S_rag_index_queue START WITH 1;
+                    CREATE TRIGGER T_rag_index_queue BEFORE INSERT ON rag_index_queue
+                        FOR EACH ROW
+                            DECLARE
+                                val INTEGER|
+                            BEGIN
+                                IF :new.id IS NULL THEN
+                                    SELECT S_rag_index_queue.nextval into val FROM dual|
+                                    :new.id:= val|
+                                END IF|
+                            END|
+                    ;
+                    CREATE UNIQUE INDEX uq_rag_queue ON rag_index_queue (entity_type, entity_id, action, domain_id);
+                </string></void>
+                <void property="pgsql"><string>
+                    CREATE SEQUENCE S_rag_index_queue START WITH 1;
+                    CREATE TABLE rag_index_queue (
+                        id INT DEFAULT NEXTVAL('S_rag_index_queue') PRIMARY KEY NOT NULL,
+                        entity_type VARCHAR(100) NOT NULL,
+                        entity_id INT NOT NULL,
+                        action VARCHAR(20) NOT NULL,
+                        domain_id INT DEFAULT 0 NOT NULL,
+                        create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE (entity_type, entity_id, action, domain_id)
+                    );
+                </string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>20.05.2026</string></void>
+                <void property="desc"><string>Create new table custom_fields for optional fields UI settings</string></void>
+                <void property="mysql">
+                    <string>
+                        CREATE TABLE custom_fields (
+                            id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                            alphabet CHAR(1) NOT NULL,
+                            class_name VARCHAR(255) NOT NULL,
+                            entity_id INT DEFAULT 0,
+                            label VARCHAR(255),
+                            type VARCHAR(50),
+                            tooltip TEXT,
+                            required TINYINT(1) DEFAULT 0,
+                            bonus_class_name VARCHAR(255) DEFAULT '',
+                            bonus_entity_id INT DEFAULT 0,
+                            domain_id INT NOT NULL DEFAULT 1,
+                            CONSTRAINT uk_custom_fields_class_alpha_entity UNIQUE (class_name, alphabet, entity_id, bonus_class_name, bonus_entity_id)
+                        );
+                        CREATE INDEX idx_custom_fields_class_entity ON custom_fields (class_name, entity_id);
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        CREATE TABLE custom_fields (
+                            id INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
+                            alphabet NVARCHAR(1) NOT NULL,
+                            class_name NVARCHAR(255) NOT NULL,
+                            entity_id INT DEFAULT 0,
+                            label NVARCHAR(255),
+                            type NVARCHAR(50),
+                            tooltip NTEXT,
+                            required BIT DEFAULT 0,
+                            bonus_class_name NVARCHAR(255) DEFAULT '',
+                            bonus_entity_id INT DEFAULT 0,
+                            domain_id INT NOT NULL DEFAULT 1,
+                            CONSTRAINT uk_custom_fields_class_alpha_entity UNIQUE (class_name, alphabet, entity_id, bonus_class_name, bonus_entity_id)
+                        );
+                        CREATE INDEX idx_custom_fields_class_entity ON custom_fields (class_name, entity_id);
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        CREATE TABLE custom_fields (
+                            id INTEGER PRIMARY KEY,
+                            alphabet NVARCHAR2(1) NOT NULL,
+                            class_name NVARCHAR2(255) NOT NULL,
+                            entity_id INTEGER DEFAULT 0,
+                            label NVARCHAR2(255),
+                            type NVARCHAR2(50),
+                            tooltip NCLOB,
+                            required SMALLINT DEFAULT 0,
+                            bonus_class_name NVARCHAR2(255) DEFAULT '',
+                            bonus_entity_id INTEGER DEFAULT 0,
+                            domain_id INTEGER NOT NULL DEFAULT 1
+                            CONSTRAINT uk_custom_fields_class_alpha_entity UNIQUE (class_name, alphabet, entity_id, bonus_class_name, bonus_entity_id)
+                        );
+                        CREATE INDEX idx_custom_fields_class_entity ON custom_fields (class_name, entity_id);
+                        CREATE SEQUENCE S_custom_fields START WITH 1;
+                        CREATE TRIGGER T_custom_fields BEFORE INSERT ON custom_fields
+                            FOR EACH ROW
+                                DECLARE
+                                    val INTEGER|
+                                BEGIN
+                                    IF :new.id IS NULL THEN
+                                        SELECT S_custom_fields.nextval into val FROM dual|
+                                        :new.id:= val|
+                                    END IF|
+                                END|
+                        ;
+                    </string>
+                </void>
+                <void property="pgsql">
+                    <string>
+                        CREATE TABLE custom_fields (
+                            id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY NOT NULL,
+                            alphabet CHAR(1) NOT NULL,
+                            class_name VARCHAR(255) NOT NULL,
+                            entity_id INT DEFAULT 0,
+                            label VARCHAR(255),
+                            type VARCHAR(50),
+                            tooltip TEXT,
+                            required BOOLEAN DEFAULT false,
+                            bonus_class_name VARCHAR(255) DEFAULT '',
+                            bonus_entity_id INT DEFAULT 0,
+                            domain_id INT NOT NULL DEFAULT 1
+                        );
+                        CREATE UNIQUE INDEX uk_custom_fields_class_alpha_entity ON custom_fields (class_name, alphabet, entity_id, bonus_class_name, bonus_entity_id);
+                        CREATE INDEX idx_custom_fields_class_entity ON custom_fields (class_name, entity_id);
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>28.05.2026</string></void>
+                <void property="desc"><string>form_settings - add max_combined_size_in_kilobytes column</string></void>
+                <void property="mysql"><string>ALTER TABLE form_settings ADD COLUMN max_combined_size_in_kilobytes BIGINT NULL</string></void>
+                <void property="mssql"><string>ALTER TABLE form_settings ADD max_combined_size_in_kilobytes BIGINT NULL</string></void>
+                <void property="oracle"><string>ALTER TABLE form_settings ADD (max_combined_size_in_kilobytes NUMBER(19,0) NULL)</string></void>
+                <void property="pgsql"><string>ALTER TABLE form_settings ADD COLUMN max_combined_size_in_kilobytes BIGINT NULL</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>jvyskoc</string></void>
+                <void property="date"><string>08.06.2026</string></void>
+                <void property="desc"><string>emails - click_hash index efficiency</string></void>
+                <void property="oracle"><string>
+                    CREATE INDEX EMAILS_CLICK_HASH_NLSSORT ON EMAILS (NLSSORT(CLICK_HASH, 'NLS_SORT=BINARY_AI'));
+                </string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
                 <void property="date"><string>22.05.2026</string></void>
                 <void property="desc"><string>forms - add referer, language columns</string></void>
                 <void property="mysql"><string>ALTER TABLE forms ADD COLUMN referer VARCHAR(255), ADD COLUMN language VARCHAR(3)</string></void>

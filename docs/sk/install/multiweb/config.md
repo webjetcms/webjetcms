@@ -8,7 +8,15 @@ Pre správne fungovanie je potrebné dodržať nasledovné požiadavky:
 
 ## Zriadenie novej domény
 
-Aktuálne je potrebné novú doménu vytvoriť nižšie uvedeným SQL príkazom. Výraz `DOMAIN-NAME` nahraďte za doménové meno. Prihlasovacie meno je `Heslo1`. Po pridaní je potrebné buď cez riadiacu doménu zmazať cache v Ovládací panel->Cache objekty kliknutím na zmazať všetko, alebo reštartovať aplikačný server.
+Novú doménu je možné zriadiť vytvorením nového koreňového priečinka v riadiacej doméne. Nastavením nadradeného priečinka na koreňový priečinok sa zobrazí možnosť zadať doménové meno. Zadajte názov priečinka, URL adresu nastavte na hodnotu `/` a zadajte hodnotu do pola Doména. Vytvorí sa:
+
+- zadaná doména
+- základná štruktúra `System` priečinka, hlavičky, pätičky
+- skupina šablón - páruje sa na základe zhody prefixu prekladových kľúčov a doménového aliasu, alebo ak priečinok obsahuje doménový alias
+- šablóna
+- používateľ `admin`, jeho heslo sa zobrazí v notifikácii
+
+Pre manuálne vytvorenie môžete použiť nižšie uvedený SQL príkaz. Výraz `DOMAIN-NAME` nahraďte za doménové meno. Prihlasovacie meno je `admin`, heslo je `Heslo1`. Po pridaní je potrebné buď cez riadiacu doménu zmazať cache v Ovládací panel->Cache objekty kliknutím na zmazať všetko, alebo reštartovať aplikačný server.
 
 ```sql
 INSERT INTO `groups` (`group_name`, `internal`, `parent_group_id`, `navbar`, `default_doc_id`, `temp_id`, `sort_priority`, `password_protected`, `menu_type`, `url_dir_name`, `sync_id`, `sync_status`, `html_head`, `logon_page_doc_id`, `domain_name`, `new_page_docid_template`, `install_name`, `field_a`, `field_b`, `field_c`, `field_d`, `logged_menu_type`, `link_group_id`)

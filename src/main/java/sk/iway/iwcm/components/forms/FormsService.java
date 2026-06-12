@@ -12,21 +12,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.persistence.criteria.Predicate;
-import jakarta.servlet.ServletOutputStream;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-
-import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
+import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import jakarta.persistence.criteria.Predicate;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.CryptoFactory;
 import sk.iway.iwcm.DB;
@@ -37,9 +36,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
-import sk.iway.iwcm.components.enumerations.EnumerationTypeDB;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
-import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
@@ -570,13 +567,12 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 
     /**
      * Zmaze zaznam z databazy
-     * + ak je to posledny zaznam vo formulari, zmaze aj definiciu formularu
      * + ak maze riadiaci zaznam (createDate je null) tak zmaze vsetky zaznamy
      * @param entity
      * @param id
      * @return
      */
-    public boolean deleteItem(E entity, long id, FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository) {
+    public boolean deleteItem(E entity, long id, FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository, FormSettingsRepository formSettingsRepository) {
         try {
             String formName = entity.getFormName();
             E entityDb = getById(id);
@@ -592,6 +588,8 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                 // Ak ma, zmaz aj steps/items (multistep forms)
                 formStepsRepository.deleteAllByFormNameAndDomainId(formName, domainId);
                 formItemsRepository.deleteAllByFormNameAndDomainId(formName, domainId);
+                // DO NOT DELETE maybe form is still in webpage and we just deleted form records
+                // formSettingsRepository.deleteByFormNameAndDomainId(formName, domainId);
             } else {
                 formsRepository.deleteById(id);
             }
@@ -684,46 +682,37 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 
     public static final String replaceFields(String html, String formName, String recipients, JSONObject item, String requiredLabelAdd, boolean isEmailRender, boolean rowView, Set<String> firstTimeHeadingSet, Prop prop, HttpServletRequest request)
     {
-        html = Tools.replace(html, "${formname}", formName);
-        html = Tools.replace(html, "${savedb}", formName);
-        html = Tools.replace(html, "${recipients}", recipients);
+        html = Tools.replace(Tools.getStringValue(html, ""), "${formname}", Tools.getStringValue(formName, ""));
+        html = Tools.replace(html, "${savedb}", Tools.getStringValue(formName, ""));
+        html = Tools.replace(html, "${recipients}", Tools.getStringValue(recipients, ""));
 
         if (item != null) {
             try {
-                String fieldType = "unknown";
-                //System.out.println("---------------------------- item="+item);
-                if (item != null) fieldType = item.getString("fieldType");
-
-                String value = "";
-                if (item.has("value")) {
-                    value = Tools.getStringValue(item.getString("value"), "");
-                }
+                String fieldType = item.optString("fieldType", "unknown");
+                String value = item.has("value") ? Tools.getStringValue(item.optString("value", ""), "") : "";
 
                 boolean required = false;
                 try {
                     required = "true".equals(item.getString("required"));
                 } catch (Exception ex) {
-                    try { required = item.getBoolean("required"); }
-                    catch (Exception ex2) {}
+                    required = item.optBoolean("required", false);
                 }
 
-                String label = Tools.getStringValue(item.getString("label"), "");
-                label = StringEscapeUtils.unescapeHtml4(label);
+                String label = StringEscapeUtils.unescapeHtml4(Tools.getStringValue(item.optString("label", ""), ""));
 
                 String placeholder = "";
                 if (item.has("placeholder")) {
-                    placeholder = Tools.getStringValue(item.getString("placeholder"), "");
-
+                    placeholder = Tools.getStringValue(item.optString("placeholder", ""), "");
                     if (Tools.isNotEmpty(placeholder)) {
                         placeholder = ResponseUtils.filter(placeholder);
 
                         //ak je zadany placeholder a nebol zadany label, tak label schovat
-                        if (Tools.isEmpty(Tools.getStringValue(item.getString("labelOriginal"), ""))) {
-                            if (isEmailRender==false) html = Tools.replace(html, "<label ", "<label class=\"d-none\" ");
+                        if (Tools.isEmpty(Tools.getStringValue(item.optString("labelOriginal", ""), ""))) {
+                            if (isEmailRender == false) html = Tools.replace(html, "<label ", "<label class=\"d-none\" ");
 
-                            //pretoze z label sa generuje potom ID/name elementu a potrebujeme polia rozlisovat (juts in case of JSP and rest only if they are checkboxes or radios)
+                            //pretoze z label sa generuje potom ID/name elementu a potrebujeme polia rozlisovat
                             label = placeholder;
-                            if (required &&Tools.isNotEmpty(requiredLabelAdd)) {
+                            if (required && Tools.isNotEmpty(requiredLabelAdd)) {
                                 placeholder += requiredLabelAdd;
                             }
                         }
@@ -732,9 +721,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 
                 String tooltip = "";
                 if (item.has("tooltip")) {
-                    tooltip = Tools.getStringValue(item.getString("tooltip"), "");
-                    tooltip = StringEscapeUtils.unescapeHtml4(tooltip);
-
+                    tooltip = StringEscapeUtils.unescapeHtml4(Tools.getStringValue(item.optString("tooltip", ""), ""));
                     if (Tools.isNotEmpty(tooltip)) {
                         tooltip = ResponseUtils.filter(tooltip);
                         tooltip = " " + Tools.replace(prop.getText("components.formsimple.tooltipCode"), "${label}", tooltip);
@@ -743,14 +730,13 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 
                 String labelSanitized = Jsoup.parse(label).text();
 
-                //New logic prepare ID in itemFormId, old logic gonna be kept for backward compatibility
-                String id = "";
-                if(item.has("itemFormId")) id = item.getString("itemFormId");
-                else id = DocTools.removeChars(label, true);
+                // Prefer explicit itemFormId; fallback keeps backward compatibility.
+                String id = Tools.getStringValue(item.optString("itemFormId", ""), "");
+                if (Tools.isEmpty(id)) id = DocTools.removeChars(label, true);
 
                 String classes = "";
                 if (required) {
-                    classes="required ";
+                    classes = "required ";
                     if (Tools.isNotEmpty(requiredLabelAdd)) {
                         //ak label konci na : pridaj required text pred dvojbodku
                         if (label.endsWith(":")) label = label.substring(0, label.lastIndexOf(":")) + requiredLabelAdd + ":";
@@ -761,55 +747,47 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                 if (isEmailRender) tooltip = "";
 
                 //skus zobrazit nadpis nad pole ak je definovany cez components.formsimple.firstTime.xxx
-                String firstTimeHeadingKey = "components.formsimple.firstTimeHeading."+fieldType;
-                String firstTimeHeading = prop.getText(firstTimeHeadingKey);
-                //System.out.println("firstTimeHeadingKey="+firstTimeHeadingKey+" firstTimeHeading="+firstTimeHeading);
-                if (Tools.isNotEmpty(firstTimeHeading) && firstTimeHeading.equals(firstTimeHeadingKey)==false && firstTimeHeadingSet.contains(label)==false)
-                {
+                String firstTimeHeadingKey = "components.formsimple.firstTimeHeading." + fieldType;
+                String firstTimeHeading = prop.getText(firstTimeHeadingKey, false);
+                if (firstTimeHeadingSet != null && Tools.isNotEmpty(firstTimeHeading) && firstTimeHeading.equals(firstTimeHeadingKey) == false && firstTimeHeadingSet.contains(label) == false) {
                     firstTimeHeadingSet.add(label);
-                    html = firstTimeHeading+html;
+                    html = firstTimeHeading + html;
                 }
 
                 //iterable - pre skupinu poli
                 int iterableSize = 0;
-                if (html.contains("${iterable}") && Tools.isNotEmpty(value))
-                {
+                if (html.contains("${iterable}") && Tools.isNotEmpty(value)) {
                     StringBuilder iterable = new StringBuilder();
-                    String iterableKey = "components.formsimple.iterable."+fieldType;
+                    String iterableKey = "components.formsimple.iterable." + fieldType;
                     String iterableCode = prop.getText(iterableKey);
-                    if (Tools.isNotEmpty(iterableCode) && iterableCode.equals(iterableKey)==false)
-                    {
-                        String delimiter = " ";
-                        if (value.contains("|")) delimiter = "|";
-                        else if (value.contains(",")) delimiter = ",";
+                    if (Tools.isNotEmpty(iterableCode) && iterableCode.equals(iterableKey) == false) {
+                        String[] values = parseIterableValues(value);
 
-                        String[] values = Tools.getTokens(value, delimiter, true);
                         int counter = 0;
                         iterableSize = values.length;
-                        for (String token : values)
-                        {
-                        String valueLabel = token;
-                        String code = iterableCode;
+                        for (String token : values) {
+                            String valueLabel = token;
+                            String code = iterableCode;
 
-                        int separator = token.indexOf(":");
-                        if (code.contains("${value-label}") && separator>0) {
-                            valueLabel = token.substring(0, separator);
-                            token = token.substring(separator+1);
-                        }
+                            int separator = token.indexOf(":");
+                            if (code.contains("${value-label}") && separator > 0) {
+                                valueLabel = token.substring(0, separator);
+                                token = token.substring(separator + 1);
+                            }
 
-                        code = Tools.replace(code, "${value}", token);
-                        code = Tools.replace(code, "${value-label}", valueLabel);
-                        code = Tools.replace(code, "${counter}", String.valueOf(counter));
+                            code = Tools.replace(code, "${value}", token);
+                            code = Tools.replace(code, "${value-label}", valueLabel);
+                            code = Tools.replace(code, "${counter}", String.valueOf(counter));
 
-                        iterable.append(code).append("\n");
-                        counter++;
+                            iterable.append(code).append("\n");
+                            counter++;
                         }
                     }
                     html = Tools.replace(html, "${iterable}", iterable.toString());
                 }
 
                 html = Tools.replace(html, "${id}", id);
-                html = Tools.replace(html, "${label}", isEmailRender && label.trim().endsWith(":") == false ? label+":" : label);
+                html = Tools.replace(html, "${label}", isEmailRender && label.trim().endsWith(":") == false ? label + ":" : label);
                 html = Tools.replace(html, "${labelSanitized}", labelSanitized);
                 html = Tools.replace(html, "${value}", value);
                 html = Tools.replace(html, "${valueSanitized}", DocTools.removeChars(value, true));
@@ -819,108 +797,76 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 
                 StringBuilder csError = new StringBuilder();
                 csError.append("<div class=\"help-block cs-error cs-error-").append(id);
-                if (iterableSize > 0)
-                {
-                    for (int counter = 0; counter < iterableSize; counter++)
-                    {
+                if (iterableSize > 0) {
+                    for (int counter = 0; counter < iterableSize; counter++) {
                         csError.append(" cs-error-").append(id).append("-").append(counter);
                     }
                 }
                 csError.append("\"></div>");
                 html = Tools.replace(html, "${cs-error}", csError.toString());
-
-                //zamena za hodnoty z ciselnika vo forme {enumeration-options|ID_CISELNIKA|MENO_VALUE|MENO_LABEL}
-                StringBuilder sb = null;
-                List<EnumerationDataBean> options;
-                String[] tokens;
-                int typeId;
-                int i = 0;
-                int startInd = html.indexOf("{enumeration-options");
-                int endInd;
-                if(html.contains("{enumeration-options"))
-                {
-                    while(startInd != -1 && i++ < 100)
-                    {
-                        endInd = html.indexOf("}", startInd);
-                        if(endInd != -1)
-                        {
-                        String enumOptions = html.substring(startInd, endInd+1);
-                        tokens = Tools.getTokens(html.substring(startInd+1, endInd), "|");
-                        if(tokens != null && tokens.length == 4)
-                        {
-                            typeId = Tools.getIntValue(tokens[1],0);
-                            //ziskam data na zaklade ID_CISELNIKA
-                            options = EnumerationDataDB.getEnumerationDataByType(typeId);
-                            if(options != null && options.size() > 0)
-                            {
-                                //ak zadame ze value ma byt enumeration_data_id, staci ak zadame v texte "id"
-                                if("id".equalsIgnoreCase(tokens[2])) tokens[2] = "enumerationDataId";
-                                if("id".equalsIgnoreCase(tokens[3])) tokens[3] = "enumerationDataId";
-                                EnumerationTypeBean currentType = EnumerationTypeDB.getEnumerationById(typeId);
-                                if(currentType != null && currentType.getEnumerationTypeId() > 0)
-                                {
-                                    //zamena alternativneho nazvu stlpca hodnoty za DB nazov
-                                    if (tokens[2].equalsIgnoreCase(currentType.getString1Name()))
-                                    tokens[2] = "string1";
-                                    else if (tokens[2].equalsIgnoreCase(currentType.getString2Name()))
-                                    tokens[2] = "string2";
-                                    else if (tokens[2].equalsIgnoreCase(currentType.getString3Name()))
-                                    tokens[2] = "string3";
-                                    else if (tokens[2].equalsIgnoreCase(currentType.getDecimal1Name()))
-                                    tokens[2] = "decimal1";
-                                    else if (tokens[2].equalsIgnoreCase(currentType.getDecimal2Name()))
-                                    tokens[2] = "decimal2";
-                                    else if (tokens[2].equalsIgnoreCase(currentType.getDecimal3Name()))
-                                    tokens[2] = "decimal3";
-                                    //zamena alternativneho nazvu stlpca label za DB nazov
-                                    if (tokens[3].equalsIgnoreCase(currentType.getString1Name()))
-                                    tokens[3] = "string1";
-                                    else if (tokens[3].equalsIgnoreCase(currentType.getString2Name()))
-                                    tokens[3] = "string2";
-                                    else if (tokens[3].equalsIgnoreCase(currentType.getString3Name()))
-                                    tokens[3] = "string3";
-                                    else if (tokens[3].equalsIgnoreCase(currentType.getDecimal1Name()))
-                                    tokens[3] = "decimal1";
-                                    else if (tokens[3].equalsIgnoreCase(currentType.getDecimal2Name()))
-                                    tokens[3] = "decimal2";
-                                    else if (tokens[3].equalsIgnoreCase(currentType.getDecimal3Name()))
-                                    tokens[3] = "decimal3";
-                                }
-                                for(EnumerationDataBean option : options)
-                                {
-                                    if(BeanUtils.getProperty(option, tokens[3]) != null) //value moze byt teoreticky prazdne, label nie
-                                    {
-                                    if(sb == null) sb = new StringBuilder();
-                                    sb.append("<option").append(" value=\"").append(BeanUtils.getProperty(option, tokens[2])).append("\">").append(BeanUtils.getProperty(option, tokens[3])).append("</option>");
-                                    }
-                                }
-                                if(sb != null)
-                                {
-                                    html = html.replace(enumOptions, sb.toString());
-                                    sb = null;
-                                }
-                            }
-                        }
-                        startInd = html.indexOf("{enumeration-options", endInd+1);
-                        }
-                        else //nenasiel som uz nikde
-                        {
-                        startInd = -1;
-                        }
-                    }
-                }
             } catch (Exception ex) {
                 sk.iway.iwcm.Logger.error(ex);
             }
        }
 
-       //System.out.println("html="+html);
-       if (rowView && html.startsWith("</div")==false) {
+       if (rowView && html.startsWith("</div") == false) {
           //ak to nie je ukoncovaci tag, obal to do div.col
-          html = "<div class=\"col\">"+html+"</div>";
+          html = "<div class=\"col\">" + html + "</div>";
        }
 
        return DocTools.updateUserCodes(UsersDB.getCurrentUser(request), new StringBuilder(html)).toString();
+    }
+
+    private static String[] parseIterableValues(String value) {
+        String normalized = Tools.getStringValue(value, "").trim();
+        if (Tools.isEmpty(normalized)) return new String[0];
+
+        String[] enumerationValues = resolveEnumerationIterableValues(normalized);
+        if (enumerationValues != null) return enumerationValues;
+
+        String delimiter = " ";
+        if (normalized.contains("|")) delimiter = "|";
+        else if (normalized.contains(",")) delimiter = ",";
+
+        return Tools.getTokens(normalized, delimiter, true);
+    }
+
+    private static String[] resolveEnumerationIterableValues(String value) {
+        String normalized = value;
+        if (normalized.startsWith("{") && normalized.endsWith("}")) {
+            normalized = normalized.substring(1, normalized.length() - 1).trim();
+        }
+
+        if (normalized.startsWith("enumeration-options") == false) return null;
+
+        String paramsText = normalized.substring("enumeration-options".length());
+        if (paramsText.startsWith("|")) paramsText = paramsText.substring(1);
+
+        String[] enumerationParams = Tools.getTokens(paramsText, "|", true);
+        if (enumerationParams == null || enumerationParams.length != 3) return new String[0];
+
+        int enumId = Tools.getIntValue(enumerationParams[0], -1);
+        List<EnumerationDataBean> enumObjects;
+        if (enumId > 0) enumObjects = EnumerationDataDB.getEnumerationDataByType(enumId);
+        else enumObjects = EnumerationDataDB.getEnumerationDataByType(enumerationParams[0]);
+
+        if (enumObjects == null || enumObjects.isEmpty()) return new String[0];
+
+        List<String> enumValues = new ArrayList<>();
+        for (EnumerationDataBean enumObject : enumObjects) {
+            try {
+                BeanWrapperImpl bw = new BeanWrapperImpl(enumObject);
+
+                String enumLabel = String.valueOf(bw.getPropertyValue(enumerationParams[1]));
+                String enumValue = String.valueOf(bw.getPropertyValue(enumerationParams[2]));
+
+                enumValues.add(enumLabel + ":" + enumValue);
+            } catch (Exception ex) {
+                Logger.error(null, ex);
+            }
+        }
+
+        return enumValues.toArray(new String[0]);
     }
 
     public boolean isFormNameUnique(String formName) {

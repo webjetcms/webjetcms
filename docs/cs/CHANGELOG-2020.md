@@ -37,7 +37,7 @@ ant deploy
 
 **JPA a Spring inicializace**
 
-JPA a Spring inicializace je přesunuta do package ```sk.iway.webjet.v9```. Z důvodu zpětné kompatibility jsme museli vyřešit problém s pojmenováním databázových tabulek ```_adminlog_``` a ```_properties_``` v Oracle DB. Tam se používá název ```webjet_adminlog``` a ```webjet_properties```. Jméno tabulky je ale přímo v JPA entitách. Využili jsme možnost použití interface ```SessionCustomizer```, který je implementován ve třídě [JpaSessionCustomizer](../src/main/java/cs/iway/webjet/v9/JpaSessionCustomizer.java). Ten při inicializaci JPA prochází všechny nalezené JPA entity a pro uvedené databázové tabulky v případě Oracle instalace změní hodnotu anotace.
+JPA a Spring inicializace je přesunuta do package ```sk.iway.webjet.v9```. Z důvodu zpětné kompatibility jsme museli vyřešit problém s pojmenováním databázových tabulek ```_adminlog_``` a ```_properties_``` v Oracle DB. Tam se používá název ```webjet_adminlog``` a ```webjet_properties```. Jméno tabulky je ale přímo v JPA entitách. Využili jsme možnost použití interface ```SessionCustomizer```, který je implementován ve třídě [JpaSessionCustomizer](../src/main/java/sk/iway/webjet/v9/JpaSessionCustomizer.java). Ten při inicializaci JPA prochází všechny nalezené JPA entity a pro uvedené databázové tabulky v případě Oracle instalace změní hodnotu anotace.
 
 Pro JPA jsme přidali korektní nastavení typu databáze (předchozí verze měla nastavenou jen možnost MariaDB).
 

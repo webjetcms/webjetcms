@@ -37,10 +37,17 @@ Scenario('Base screenshots', ({ I, DT, DTE, Document }) => {
     Document.screenshot("/redactor/apps/multistep-form/form-step-editor.png");
     DTE.cancel();
 
-    I.click( locate("table#formItemsDataTable > tbody > tr > td").withText("Meno") );
-    I.click(DT.btn.formItems_add_button);
+    I.click( locate("table#formStepsDataTable > tbody > tr > td").withText("Krok 2") );
+
+    I.waitForElement( locate("table#formItemsDataTable > tbody > tr > td").withText("Ako si sa dozvedel o kurze?"), 10 );
+    I.click( locate("table#formItemsDataTable > tbody > tr > td").withText("Ako si sa dozvedel o kurze?") );
+    I.click(DT.btn.formItems_edit_button);
     DTE.waitForEditor("formItemsDataTable");
     Document.screenshot("/redactor/apps/multistep-form/form-item-editor.png");
+
+    I.click("#pills-dt-formItemsDataTable-advanced-tab");
+    Document.screenshot("/redactor/apps/multistep-form/form-item-editor-advanced.png");
+
     DTE.cancel();
 
     I.amOnPage("/apps/form/admin/form-steps/?formName=Multistepform_rowView");

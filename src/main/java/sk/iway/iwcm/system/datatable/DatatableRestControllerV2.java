@@ -21,25 +21,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
-import jakarta.persistence.Id;
-import jakarta.persistence.Query;
-import jakarta.persistence.Table;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.Valid;
-import jakarta.validation.Validator;
-
 import org.eclipse.persistence.expressions.Expression;
 import org.eclipse.persistence.expressions.ExpressionBuilder;
 import org.eclipse.persistence.jpa.JpaEntityManager;
 import org.eclipse.persistence.queries.ReadAllQuery;
 import org.json.JSONObject;
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.NotReadablePropertyException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
@@ -67,6 +55,18 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import jakarta.persistence.Id;
+import jakarta.persistence.Query;
+import jakarta.persistence.Table;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
@@ -75,6 +75,8 @@ import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
+import sk.iway.iwcm.components.customfields.rest.CustomFieldsService;
 import sk.iway.iwcm.database.ActiveRecordBase;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.i18n.Prop;
@@ -769,6 +771,39 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	public void validateEditor(HttpServletRequest request, DatatableRequest<Long, T> target, Identity user, Errors errors, Long id, T entity) {}
 
 	/**
+	 * Validates required custom fields for the provided entity.
+	 *
+	 * <p>The method resolves required field alphabets via {@link CustomFieldsService} and checks
+	 * corresponding properties ({@code fieldX}) on the entity. Missing values are reported using
+	 * {@link Errors#rejectValue(String, String, String)} to keep validation consistent with editor
+	 * error handling.</p>
+	 *
+	 * <p>If a field property is not readable on the entity, the method logs the issue and continues
+	 * without failing the whole validation pass.</p>
+	 *
+	 * @param request current HTTP request
+	 * @param target datatable request wrapper
+	 * @param user current authenticated user
+	 * @param errors collector for validation errors
+	 * @param id entity identifier from request payload
+	 * @param entity entity instance to validate
+	 */
+	public void validateEditorForCustomFields(HttpServletRequest request, DatatableRequest<Long, T> target, Identity user, Errors errors, Long id, T entity) {
+		for(Character alphabet : CustomFieldsService.getRequiredFieldsAlphabets(new CustomFieldsSearchDto(entity))) {
+			try {
+				BeanWrapperImpl bw = new BeanWrapperImpl(entity);
+				Object value = bw.getPropertyValue("field" + alphabet);
+				if (value == null || Tools.isEmpty(String.valueOf(value))) {
+					errors.rejectValue("errorField.field" + alphabet, null, getProp().getText("settings.custom-fields.required-err")); //NOSONAR
+				}
+			} catch (NotReadablePropertyException ex) {
+				Logger.error(this.getClass(), "Error validating custom fields, property field" + alphabet + " not found in entity " + entity.getClass().getName(), ex);
+				// Failsafe: if property fieldX does not exist, simply skip validation for it
+			}
+		}
+	}
+
+	/**
 	 * Metoda volana pred zmazanim enity z DB, moze vykonat dodatocne akcie
 	 * napr. zmazanie suborov z disku, ulozenie do archivu,
 	 * alebo specialne kontroly prav
@@ -928,6 +963,9 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 						//Use separe binding result
 						BeanPropertyBindingResult entityBindingResult = new BeanPropertyBindingResult(binder.getTarget(), binder.getObjectName());
+
+						validateEditorForCustomFields(request, target, currentUser, entityBindingResult, key, value);
+
 						validateEditor(request, target, currentUser, entityBindingResult, key, value);
 
 						//If we DON'T WANT skip wrong data, push error back into main binding result
@@ -1093,18 +1131,43 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 							predicates.add(builder.equal(root.get(field), Double.valueOf(value)));
 						} else {
 
-							if (value.startsWith("^") && value.endsWith("$")) predicates.add(builder.equal(root.get(field), value.substring(1, value.length()-1)));
-							else {
-								if (value.startsWith("^")) value = value.substring(1)+"%";
-								else if (value.endsWith("$")) value = "%"+value.substring(0, value.length()-1);
-								else value = "%"+value+"%";
+							// In case of Enum we need to convert String value to Enum constant
+							Class<?> type = root.get(field).getJavaType();
+							if(type.isEnum()) {
+								String enumText = value != null ? value.trim() : "";
+								Object[] enumConstants = type.getEnumConstants();
+								Object enumValue = null;
 
-								if (Constants.DB_TYPE==Constants.DB_ORACLE && isJpaLowerField(field)) {
-									predicates.add(builder.like(builder.lower(root.get(field)), value.toLowerCase()));
-								} else if (Constants.DB_TYPE==Constants.DB_PGSQL) {
-									predicates.add(builder.like(builder.lower(builder.function("unaccent", String.class, root.get(field))), DB.internationalToEnglish(value).toLowerCase()));
+								if (enumConstants != null) {
+									for (Object enumConstant : enumConstants) {
+										Enum<?> constant = (Enum<?>) enumConstant;
+										if (constant.name().equals(enumText)) {
+											enumValue = constant;
+											break;
+										}
+									}
+								}
+
+								if (enumValue != null) {
+									predicates.add(builder.equal(root.get(field), enumValue));
 								} else {
-									predicates.add(builder.like(root.get(field), value));
+									//just log error, we dont want to break search if enum value is not correct
+									Logger.error(DatatableRestControllerV2.class, "Enum constant not found for value: " + enumText + " in enum type: " + type.getName());
+								}
+							} else {
+								if (value.startsWith("^") && value.endsWith("$")) predicates.add(builder.equal(root.get(field), value.substring(1, value.length()-1)));
+								else {
+									if (value.startsWith("^")) value = value.substring(1)+"%";
+									else if (value.endsWith("$")) value = "%"+value.substring(0, value.length()-1);
+									else value = "%"+value+"%";
+
+									if (Constants.DB_TYPE==Constants.DB_ORACLE && isJpaLowerField(field)) {
+										predicates.add(builder.like(builder.lower(root.get(field)), value.toLowerCase()));
+									} else if (Constants.DB_TYPE==Constants.DB_PGSQL) {
+										predicates.add(builder.like(builder.lower(builder.function("unaccent", String.class, root.get(field))), DB.internationalToEnglish(value).toLowerCase()));
+									} else {
+										predicates.add(builder.like(root.get(field), value));
+									}
 								}
 							}
 						}
