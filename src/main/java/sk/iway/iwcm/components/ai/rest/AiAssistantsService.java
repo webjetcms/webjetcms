@@ -381,9 +381,9 @@ public class AiAssistantsService {
         while (matcher.find()) {
             String replacement;
             if ("{inputText}".equals(matcher.group())) {
-                replacement = getSafeUserMacroValue(inputData.getInputValue(), UntrustedSource.INPUT_TEXT);
+                replacement = getSafeUserMacroValue(inputData.getInputValue(), UntrustedSource.INPUT_TEXT, inputData.getAssistantId());
             } else {
-                replacement = getSafeUserMacroValue(inputData.getUserPrompt(), UntrustedSource.USER_PROMPT);
+                replacement = getSafeUserMacroValue(inputData.getUserPrompt(), UntrustedSource.USER_PROMPT, inputData.getAssistantId());
             }
             matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
         }
@@ -392,9 +392,9 @@ public class AiAssistantsService {
         return sb.toString();
     }
 
-    private static String getSafeUserMacroValue(String value, UntrustedSource source) {
+    private static String getSafeUserMacroValue(String value, UntrustedSource source, Long assistantId) {
         String safeValue = PromptInjectionDefense.neutralizePromptMacroTokens(value);
-        return nvl(PromptInjectionDefense.wrapUntrustedText(safeValue, source), "");
+        return nvl(PromptInjectionDefense.wrapUntrustedText(safeValue, source, assistantId), "");
     }
 
     private static String nvl(String value, String defaultValue) {
