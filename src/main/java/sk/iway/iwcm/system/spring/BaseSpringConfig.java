@@ -155,12 +155,13 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
      * jeeff: toto potrebujeme ako default handler na staticke subory, v SpringAppInitializer sa bindne Spring dispatcher na / a on nehandluje css, html atd
      * https://stackoverflow.com/questions/29394493/spring-mvc-configuration-enable
      */
-    @Override
+    // Disabled for Spring Boot embedded server - static resources handled by Spring Boot auto-config
+    /*@Override
     public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
         Logger.println(BaseSpringConfig.class, "-------> configureDefaultServletHandling()");
         configurer.enable();
         SpringAppInitializer.dtDiff("configureDefaultServletHandling DONE");
-    }
+    }*/
 
     /*@Override
     public void configurePathMatch(PathMatchConfigurer configurer) {

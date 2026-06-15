@@ -36,7 +36,13 @@ public class SetupSpringConfig implements WebMvcConfigurer {
             }
         };
 
-        localeResolver.setDefaultLocale(new Locale(PageLng.getUserLngIso(Constants.getString("defaultLanguage")).replace("-", "_")));
+        // During embedded server startup, ServletContext may not be available yet.
+        // Use a fallback default locale when Cache/ServletContext is not available.
+        try {
+            localeResolver.setDefaultLocale(new Locale(PageLng.getUserLngIso(Constants.getString("defaultLanguage")).replace("-", "_")));
+        } catch (Exception e) {
+            localeResolver.setDefaultLocale(new Locale("sk")); // fallback
+        }
         return localeResolver;
     }
 
