@@ -133,6 +133,10 @@ configurations {
     }
  }
 
+bootRun {
+    systemProperties System.getProperties()
+}
+
 dependencies {
 
     // === Spring Boot 4.x starters (manages Spring 7.x versions) ===

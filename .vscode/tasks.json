@@ -36,7 +36,7 @@
         {
             "label": "appStartLocalDB",
             "type": "shell",
-            "command": "webjetDbname=/poolman-local.xml ./gradlew bootRun",
+            "command": "./gradlew bootRun -DwebjetDbname=/poolman-local.xml",
             "windows": {
                 "command": "SET webjetDbname=/poolman-local.xml && .\\gradlew.bat bootRun"
             },
