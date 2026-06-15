@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 import org.thymeleaf.spring6.SpringTemplateEngine;
@@ -23,7 +22,6 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.spring.webjet_component.WebjetMessageSource;
 
 @Configuration
-@EnableWebMvc
 public class SetupSpringConfig implements WebMvcConfigurer {
 
     @Bean

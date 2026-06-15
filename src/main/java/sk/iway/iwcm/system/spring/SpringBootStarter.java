@@ -2,15 +2,14 @@ package sk.iway.iwcm.system.spring;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 import org.springframework.boot.jpa.autoconfigure.JpaBaseConfiguration;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import sk.iway.iwcm.Logger;
-import sk.iway.iwcm.system.spring.components.SpringContext;
 
 /**
  * Spring Boot 4.x application starter (hybrid approach).
@@ -22,7 +21,6 @@ import sk.iway.iwcm.system.spring.components.SpringContext;
  */
 @SpringBootApplication(
     exclude = {
-        DataSourceAutoConfiguration.class,
         JpaBaseConfiguration.class,
         SecurityAutoConfiguration.class
     }
@@ -31,8 +29,10 @@ import sk.iway.iwcm.system.spring.components.SpringContext;
     "sk.iway.iwcm",
     "sk.iway.basecms",
     "sk.iway.aceintegration",
-    "sk.iway.iway"
+    "sk.iway.iway",
+    "sk.iway.webjet.v9"
 })
+@EnableWebMvc
 @EnableAutoConfiguration
 public class SpringBootStarter extends SpringBootServletInitializer {
 
@@ -47,18 +47,15 @@ public class SpringBootStarter extends SpringBootServletInitializer {
         }
 
         // Run Spring Boot application context
-        var context = new SpringApplicationBuilder(SpringBootStarter.class)
+        new SpringApplicationBuilder(SpringBootStarter.class)
             .profiles(args)
             .properties(
                 "spring.profiles.active:" + (System.getProperty("spring.profiles.active") != null ? System.getProperty("spring.profiles.active") : "default"),
+                "spring.main.allow-bean-definition-overriding:true",
                 "server.servlet.context-path:/",
                 "server.tomcat.basedir:."
             )
             .run(args);
-
-        // Store Spring context reference for legacy code access
-        SpringContext springContext = context.getBean(SpringContext.class);
-        springContext.setApplicationContext(context);
 
         Logger.info(SpringBootStarter.class, "Spring Boot context started successfully");
         Logger.info(SpringBootStarter.class, "=== WebJET CMS started ===");

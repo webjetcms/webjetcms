@@ -24,7 +24,6 @@ import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.web.servlet.config.annotation.DefaultServletHandlerConfigurer;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
@@ -37,7 +36,6 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 
 @Configuration
-@EnableWebMvc
 @EnableAsync
 @ComponentScan({
     "sk.iway.iwcm.system.spring.components"
