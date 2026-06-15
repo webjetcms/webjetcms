@@ -37,6 +37,7 @@ public final class PromptInjectionDefense {
     private static final int FLAGS = Pattern.CASE_INSENSITIVE | Pattern.DOTALL | Pattern.UNICODE_CASE;
     private static final int MAX_DECODE_DEPTH = 2;
     private static final int MAX_DECODE_CANDIDATES = 20;
+    private static final int MAX_ENCODED_TOKEN_LENGTH = 4096;
     private static final int MIN_DECODED_TEXT_LENGTH = 8;
 
     private static final List<Pattern> SUSPICIOUS_PATTERNS = List.of(
@@ -437,8 +438,11 @@ public final class PromptInjectionDefense {
         int candidateCount = 0;
 
         while (matcher.find() && candidateCount < MAX_DECODE_CANDIDATES) {
+            if (matcher.end() - matcher.start() > MAX_ENCODED_TOKEN_LENGTH) continue;
+
+            String token = matcher.group();
             candidateCount++;
-            String decoded = decodeBase64Text(matcher.group());
+            String decoded = decodeBase64Text(token);
             if (Tools.isNotEmpty(decoded)) {
                 decodedCandidates.add(decoded);
             }
@@ -456,8 +460,11 @@ public final class PromptInjectionDefense {
         int candidateCount = 0;
 
         while (matcher.find() && candidateCount < MAX_DECODE_CANDIDATES) {
+            if (matcher.end() - matcher.start() > MAX_ENCODED_TOKEN_LENGTH) continue;
+
+            String token = matcher.group();
             candidateCount++;
-            String decoded = decodeHexText(matcher.group());
+            String decoded = decodeHexText(token);
             if (Tools.isNotEmpty(decoded)) {
                 decodedCandidates.add(decoded);
             }
