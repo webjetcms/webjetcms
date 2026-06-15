@@ -29,6 +29,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
+import sk.iway.iwcm.components.ai.security.PromptInjectionDefense;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
@@ -44,6 +45,8 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
     private static final String PROVIDER_ID = "gemini";
     private static final String TITLE_KEY = "components.ai_assistants.provider.gemini.title";
     private static final String BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
+    private static final String RESPONSE_MODALITY_TEXT = "TEXT";
+    private static final String RESPONSE_MODALITY_IMAGE = "IMAGE";
 
     public String getProviderId() {
         return PROVIDER_ID;
@@ -103,12 +106,8 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
     }
 
     public HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) throws IOException {
-        // Build base request body
-        ObjectNode mainObject;
-        if(InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
-            mainObject = getBaseMainObjectWithImage(inputData, instructions, inputData.getUserPrompt());
-        else
-            mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+        ObjectNode mainObject = getTextResponseMainObject(instructions, inputData);
+        setResponseModality(mainObject, RESPONSE_MODALITY_TEXT);
 
         HttpPost httpPost = new HttpPost(BASE_URL + assistant.getModel() + ":generateContent");
         setHeaders(httpPost, request);
@@ -123,12 +122,8 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
     }
 
     public HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) throws IOException {
-        //Prepare body object
-        ObjectNode mainObject;
-        if(InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
-            mainObject = getBaseMainObjectWithImage(inputData, instructions, inputData.getUserPrompt());
-        else
-            mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+        ObjectNode mainObject = getTextResponseMainObject(instructions, inputData);
+        setResponseModality(mainObject, RESPONSE_MODALITY_TEXT);
 
         HttpPost httpPost = new HttpPost(BASE_URL + assistant.getModel() + ":streamGenerateContent");
         setHeaders(httpPost, request);
@@ -164,13 +159,8 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
     }
 
     public HttpRequestBase getImageResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request, Prop prop) throws IOException {
-        ObjectNode mainObject;
-        if(inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE))
-            //ITS IMAGE EDIT - I GOT IMAGE to edit AND I WILL RETURN IMAGE
-            mainObject = getBaseMainObjectWithImage(inputData, instructions);
-        else
-            //ITS IMAGE GENERATION - INPUT IS TEXT RETUN IMAGE
-            mainObject = getBaseMainObject(instructions);
+        ObjectNode mainObject = getImageResponseMainObject(instructions, inputData);
+        setResponseModality(mainObject, RESPONSE_MODALITY_IMAGE);
 
         HttpPost httpPost = new HttpPost( BASE_URL + assistant.getModel() + ":generateContent");
         setHeaders(httpPost, request);
@@ -234,5 +224,32 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
 
     public String  getModelForImageNameGeneration() {
         return Constants.getString("ai_gemini_generateFileNameModel");
+    }
+
+    private ObjectNode getTextResponseMainObject(String instructions, InputDataDTO inputData) throws IOException {
+        String systemInstructions = PromptInjectionDefense.hardenSystemInstructions(instructions);
+        String userPrompt = PromptInjectionDefense.getProtectedUserPrompt(inputData);
+
+        if(InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
+            return getTextMainObject(systemInstructions, inputData, userPrompt);
+
+        return getTextMainObject(systemInstructions, null, PromptInjectionDefense.getProtectedInputText(inputData), userPrompt);
+    }
+
+    private ObjectNode getImageResponseMainObject(String instructions, InputDataDTO inputData) throws IOException {
+        String securityInstructions = PromptInjectionDefense.getSecurityInstructions(instructions);
+        String taskInstructions = PromptInjectionDefense.getTaskInstructions(instructions);
+        String userPrompt = PromptInjectionDefense.getProtectedUserPrompt(inputData);
+
+        if(inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE))
+            //ITS IMAGE EDIT - I GOT IMAGE to edit AND I WILL RETURN IMAGE
+            return getTextMainObject(securityInstructions, inputData, taskInstructions, userPrompt);
+
+        //ITS IMAGE GENERATION - INPUT IS TEXT RETUN IMAGE
+        return getTextMainObject(securityInstructions, null, taskInstructions, PromptInjectionDefense.getProtectedInputText(inputData), userPrompt);
+    }
+
+    private void setResponseModality(ObjectNode mainObject, String responseModality) {
+        mainObject.putObject("generationConfig").putArray("responseModalities").add(responseModality);
     }
 }

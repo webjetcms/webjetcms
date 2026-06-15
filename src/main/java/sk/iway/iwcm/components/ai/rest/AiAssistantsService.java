@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import jakarta.persistence.Entity;
 
@@ -26,6 +28,8 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.providers.AiAssitantsInterface;
 import sk.iway.iwcm.components.ai.providers.IncludesHandler;
+import sk.iway.iwcm.components.ai.security.PromptInjectionDefense;
+import sk.iway.iwcm.components.ai.security.PromptInjectionDefense.UntrustedSource;
 import sk.iway.iwcm.editor.appstore.AppManager;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
@@ -42,6 +46,7 @@ public class AiAssistantsService {
     private static final String CLASS_FIELD_MAP_KEY = "AiAssistantsService_classFieldsMap";
     public static final String EMPTY_VALUE = "EMPTY_VALUE";
     private static final String CACHE_KEY_PREFIX = "AiAssistantsService.assistants-";
+    private static final Pattern USER_INPUT_MACRO_PATTERN = Pattern.compile("\\{inputText\\}|\\{userPrompt\\}");
 
     private final List<AiAssitantsInterface> aiAssitantsInterfaces;
 
@@ -330,21 +335,6 @@ public class AiAssistantsService {
             instructions = "{\nuserPrompt:{userPrompt}\ninputText:{inputText}\n}";
         }
 
-        if (instructions.contains("{inputText}") || instructions.contains("{userPrompt}")) {
-
-            //for append we must clear inputValue, because it will be duplicated into final result
-            if ("append".equals(inputData.getReplaceMode()) || "replace".equals(inputData.getReplaceMode())) inputData.setInputValue("");
-
-            instructions = Tools.replace(instructions, "{inputText}", nvl(inputData.getInputValue(), ""));
-            instructions = Tools.replace(instructions, "{userPrompt}", nvl(inputData.getUserPrompt(), ""));
-
-            //clear values, so it will be not appended into final prompt, clear both,
-            //because it instructions contains {userPrompt} we expect that it will contain also
-            //inputValue if it is required for the action
-            inputData.setInputValue("");
-            inputData.setUserPrompt("");
-        }
-
         //replace user language
         if (instructions.contains("{userLanguage}")) {
             RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
@@ -366,9 +356,45 @@ public class AiAssistantsService {
             }
         }
 
+        if (instructions.contains("{inputText}") || instructions.contains("{userPrompt}")) {
+            //for append we must clear inputValue, because it will be duplicated into final result
+            if ("append".equals(inputData.getReplaceMode()) || "replace".equals(inputData.getReplaceMode())) inputData.setInputValue("");
+
+            instructions = replaceUserInputMacros(instructions, inputData);
+
+            //clear values, so it will be not appended into final prompt, clear both,
+            //because it instructions contains {userPrompt} we expect that it will contain also
+            //inputValue if it is required for the action
+            inputData.setInputValue("");
+            inputData.setUserPrompt("");
+        }
+
         if (replacedIncludes != null && replacedIncludes.isEmpty()==false) instructions = IncludesHandler.addProtectedTokenInstructionRule(instructions);
 
         return instructions;
+    }
+
+    private static String replaceUserInputMacros(String instructions, InputDataDTO inputData) {
+        Matcher matcher = USER_INPUT_MACRO_PATTERN.matcher(instructions);
+        StringBuffer sb = new StringBuffer();
+
+        while (matcher.find()) {
+            String replacement;
+            if ("{inputText}".equals(matcher.group())) {
+                replacement = getSafeUserMacroValue(inputData.getInputValue(), UntrustedSource.INPUT_TEXT);
+            } else {
+                replacement = getSafeUserMacroValue(inputData.getUserPrompt(), UntrustedSource.USER_PROMPT);
+            }
+            matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+        }
+        matcher.appendTail(sb);
+
+        return sb.toString();
+    }
+
+    private static String getSafeUserMacroValue(String value, UntrustedSource source) {
+        String safeValue = PromptInjectionDefense.neutralizePromptMacroTokens(value);
+        return nvl(PromptInjectionDefense.wrapUntrustedText(safeValue, source), "");
     }
 
     private static String nvl(String value, String defaultValue) {

@@ -33,36 +33,60 @@ public abstract class GeminiSupportService extends SupportLogic {
     protected ObjectNode getBaseMainObjectWithImage(InputDataDTO inputData, String... parts) throws IOException {
         ObjectNode mainObject = MAPPER.createObjectNode();
         ArrayNode contentsArray = MAPPER.createArrayNode();
+        ArrayNode partsArray = MAPPER.createArrayNode();
 
-        // Add parts
+        // Add text parts.
         for (String part : parts)
-            if(Tools.isNotEmpty(part)) addTextPart(contentsArray, part);
+            if(Tools.isNotEmpty(part)) addTextPart(partsArray, part);
 
-        //Image input
+        // Image input.
         if(inputData != null && InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
-            addImagePart(contentsArray, inputData);
+            addImagePart(partsArray, inputData);
+
+        if (partsArray.size() > 0) addUserContent(contentsArray, partsArray);
 
         mainObject.set("contents", contentsArray);
         return mainObject;
     }
 
-    private void addTextPart(ArrayNode contentsArray, String value) {
+    protected ObjectNode getTextMainObject(String systemInstruction, InputDataDTO inputData, String... userParts) throws IOException {
+        ObjectNode mainObject = getBaseMainObjectWithImage(inputData, userParts);
+        ArrayNode contentsArray = (ArrayNode) mainObject.path("contents");
+        if (contentsArray.size() == 0) {
+            ArrayNode parts = MAPPER.createArrayNode();
+            addTextPart(parts, "Apply the task instructions to the provided data.");
+            addUserContent(contentsArray, parts);
+        }
+
+        if (Tools.isNotEmpty(systemInstruction)) {
+            ObjectNode systemContent = MAPPER.createObjectNode();
+            ArrayNode parts = MAPPER.createArrayNode();
+
+            ObjectNode partValue = MAPPER.createObjectNode();
+            partValue.put("text", systemInstruction);
+            parts.add(partValue);
+
+            systemContent.set(PARTS, parts);
+            mainObject.set("systemInstruction", systemContent);
+        }
+
+        return mainObject;
+    }
+
+    private void addUserContent(ArrayNode contentsArray, ArrayNode parts) {
         ObjectNode content = MAPPER.createObjectNode();
         content.put("role", "user");
-        ArrayNode parts = MAPPER.createArrayNode();
-
-        ObjectNode partValue = MAPPER.createObjectNode();
-        partValue.put("text", value);
-        parts.add(partValue);
-
         content.set(PARTS, parts);
         contentsArray.add(content);
     }
 
-    private void addImagePart(ArrayNode contentsArray, InputDataDTO inputData) throws IOException {
-        ObjectNode content = MAPPER.createObjectNode();
-        content.put("role", "user");
+    private void addTextPart(ArrayNode parts, String value) {
+        ObjectNode partValue = MAPPER.createObjectNode();
+        partValue.put("text", value);
+        parts.add(partValue);
+    }
 
+    private void addImagePart(ArrayNode parts, InputDataDTO inputData) throws IOException {
         ObjectNode inlineData = MAPPER.createObjectNode();
         inlineData.put("mime_type", inputData.getMimeType());
         inlineData.put("data", inputData.getFileAsBase64());
@@ -70,11 +94,7 @@ public abstract class GeminiSupportService extends SupportLogic {
         ObjectNode inlineDataPart = MAPPER.createObjectNode();
         inlineDataPart.set("inline_data", inlineData);
 
-        ArrayNode parts = MAPPER.createArrayNode();
         parts.add(inlineDataPart);
-
-        content.set(PARTS, parts);
-        contentsArray.add(content);
     }
 
     protected <T extends HttpRequestBase> void setHeaders(T http, HttpServletRequest request) {

@@ -32,6 +32,7 @@ import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.components.ai.rest.AiTempFileStorage;
+import sk.iway.iwcm.components.ai.security.PromptInjectionDefense;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
 import sk.iway.iwcm.i18n.Prop;
@@ -84,6 +85,8 @@ public abstract class SupportLogic implements SupportLogicInterface {
             //Handle replace of INCLUDE tags
             Map<Integer, String> replacedIncludes = IncludesHandler.replaceIncludesWithPlaceholders(inputData);
             String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, replacedIncludes);
+            PromptInjectionDefense.protectInputData(inputData);
+            instructions = PromptInjectionDefense.hardenSystemInstructions(instructions);
 
             try (CloseableHttpResponse response = HttpClients.createDefault().execute( getResponseRequest(instructions, inputData, assistant, request)) ) {
                 if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
@@ -120,6 +123,8 @@ public abstract class SupportLogic implements SupportLogicInterface {
             //Handle replace of INCLUDE tags
             Map<Integer, String> replacedIncludes = IncludesHandler.replaceIncludesWithPlaceholders(inputData);
             String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, replacedIncludes);
+            PromptInjectionDefense.protectInputData(inputData);
+            instructions = PromptInjectionDefense.hardenSystemInstructions(instructions);
 
             try (CloseableHttpResponse response = HttpClients.createDefault().execute( getStremResponseRequest(instructions, inputData, assistant, request) )) {
                 if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
@@ -157,6 +162,8 @@ public abstract class SupportLogic implements SupportLogicInterface {
             responseDto.setGeneratedFileName(generatedFileName.getFirst());
 
             String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, null);
+            PromptInjectionDefense.protectInputData(inputData);
+            instructions = PromptInjectionDefense.hardenSystemInstructions(instructions);
 
             try (CloseableHttpResponse response = HttpClients.createDefault().execute( getImageResponseRequest(instructions, inputData, assistant, request, prop) )) {
                 if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
