@@ -36,12 +36,12 @@
         {
             "label": "appStartLocalDB",
             "type": "shell",
-            "command": "./gradlew bootRun -DwebjetDbname=/poolman-local.xml",
+            "command": "./gradlew bootRun --debug-jvm -DwebjetDbname=/poolman-local.xml",
             "windows": {
-                "command": "SET webjetDbname=/poolman-local.xml && .\\gradlew.bat bootRun"
+                "command": ".\\gradlew.bat bootRun --debug-jvm -DwebjetDbname=/poolman-local.xml"
             },
             "group": "build",
-            "problemMatcher": {
+            "problemMatcherOLD": {
                 "owner": "shell",
                 "fileLocation": "relative",
                 "pattern": {
@@ -54,8 +54,8 @@
                 },
                 "background": {
                     "activeOnStart": true,
-                    "beginsPattern": "Listening for transport dt_socket at address: 5005",
-                    "endsPattern": "Listening for transport dt_socket at address: 5005",
+                    "beginsPattern": "o.s.w.s.DispatcherServlet - Completed initialization in",
+                    "endsPattern": "o.s.w.s.DispatcherServlet - Completed initialization in",
                 }
             },
             "isBackground": true,
@@ -382,9 +382,10 @@
         {
             "label": "appStop",
             "type": "shell",
-            "command": "./gradlew appStop; pkill -9 -f appStart",
+            "command": "pkill -9 -f bootRun",
             "windows": {
-                "command": ".\\gradlew.bat appStop"
+                "type": "shell",
+                "command": "Stop-Process -Name java -Force"
             },
             "group": "build",
             "problemMatcher": [],

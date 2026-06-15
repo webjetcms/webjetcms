@@ -1,24 +1,31 @@
 package sk.iway.iwcm.system.spring;
 
-import org.springframework.web.WebApplicationInitializer;
-import org.springframework.web.context.ContextLoaderListener;
-import org.springframework.web.context.request.RequestContextListener;
-import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
-import org.springframework.web.filter.CharacterEncodingFilter;
-import org.springframework.web.filter.DelegatingFilterProxy;
-import org.springframework.web.servlet.DispatcherServlet;
-
-import sk.iway.iwcm.*;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.doc.DebugTimer;
 
 import jakarta.servlet.FilterRegistration;
-import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRegistration.Dynamic;
-import java.util.ArrayList;
-import java.util.List;
+import net.sourceforge.stripes.controller.StripesFilterIway;
+import org.springframework.web.WebApplicationInitializer;
+import sk.iway.iwcm.PathFilter;
 
+/**
+ * Legacy WebApplicationInitializer for WebJET CMS.
+ *
+ * After migration to Spring Boot 4.x, this class is simplified:
+ * - Manual AnnotationConfigWebApplicationContext and ContextLoaderListener are REMOVED
+ *   (they caused "multiple ContextLoader* definitions" errors with Spring Boot)
+ * - Manual DispatcherServlet registration is REMOVED (Spring Boot auto-configures this)
+ * - Manual filter registrations are REMOVED (Spring Boot handles these via @Bean methods)
+ *
+ * This class now only registers Stripes framework filters, which are independent of
+ * the Spring application context. All other initialization is handled by Spring Boot
+ * through {@link SpringBootStarter}.
+ *
+ * For embedded server: ./gradlew bootRun
+ * For external Tomcat 11 deployment: ./gradlew war
+ */
 public class SpringAppInitializer implements WebApplicationInitializer
 {
 	private static DebugTimer dtGlobal = null;
@@ -26,152 +33,44 @@ public class SpringAppInitializer implements WebApplicationInitializer
 	@Override
 	public void onStartup(ServletContext servletContext) throws ServletException
 	{
-		List<String> springConfigClasses = new ArrayList<>();
 		dtGlobal = new DebugTimer("WebJET.init");
-		boolean initialized = InitServlet.initializeWebJET(dtGlobal, servletContext);
-		String installName = Constants.getInstallName();
 
-		Logger.println(this,"SPRING: onStartup");
-		AnnotationConfigWebApplicationContext ctx = new AnnotationConfigWebApplicationContext();
-		springConfigClasses.add("sk.iway.iwcm.system.spring.BaseSpringConfig");
+		// Initialize WebJET core (called by InitServlet during startup as well)
+		InitServlet.initializeWebJET(dtGlobal, servletContext);
 
-		//WebJET 9/2021
-		springConfigClasses.add("sk.iway.webjet.v9.V9SpringConfig");
+		// Register Stripes framework filter (independent of Spring context)
+		FilterRegistration.Dynamic stripesFilter = servletContext.addFilter(
+				"StripesFilter", new StripesFilterIway());
+		stripesFilter.addMappingForUrlPatterns(
+				java.util.EnumSet.of(jakarta.servlet.DispatcherType.REQUEST), true, "/*");
+		stripesFilter.addMappingForUrlPatterns(
+				java.util.EnumSet.of(jakarta.servlet.DispatcherType.REQUEST), true, "StripesDispatcher");
 
-		// RAG module
-		springConfigClasses.add("sk.iway.iwcm.rag.pgvector.PgvectorSpringConfig");
+		// Register Virtual Path Filter
+		servletContext.addFilter("Virtual Path Filter", new PathFilter())
+				.addMappingForUrlPatterns(
+						java.util.EnumSet.of(jakarta.servlet.DispatcherType.REQUEST), true, "/*");
 
-		if (initialized) {
-			String contextDbName = servletContext.getInitParameter("webjetDbname");
-			Logger.debug(getClass(),"SPRING: contextDbName="+contextDbName);
-			InitServlet.setContextDbName(contextDbName);
+		// Note: The following have been removed and are now handled by Spring Boot:
+		// - AnnotationConfigWebApplicationContext / ContextLoaderListener (caused "multiple ContextLoader" error)
+		// - DispatcherServlet (Spring Boot auto-configures this)
+		// - CharacterEncodingFilter (configured via application properties)
+		// - springSecurityFilterChain (Spring Security auto-configures via @Bean in SpringSecurityConf)
+		// - RequestContextListener (Spring Boot auto-configures this)
+		// - MultipartConfigElement (configured via application properties)
+		// - Manual package scanning (handled by @ComponentScan in SpringBootStarter)
 
-			if (Tools.isNotEmpty(installName)) {
-				springConfigClasses.add("sk.iway." + installName + ".SpringConfig");
-				Constants.setInstallName(installName);
-			}
-
-			String logInstallName = Constants.getLogInstallName();
-			if (Tools.isNotEmpty(logInstallName)) {
-				String logClassName = "sk.iway." + logInstallName + ".LogSpringConfig";
-				//over ci existuje trieda LogSpringConfig kvoli spatnej kompatibilite boli stare ako SpringConfig
-				try {
-					Class.forName(logClassName);
-					springConfigClasses.add(logClassName);
-				} catch (ClassNotFoundException e) {
-					//nenasiel sa LogSpringConfig, skusime teda pridat po starom
-					springConfigClasses.add("sk.iway." + logInstallName + ".SpringConfig");
-				}
-
-			}
-		}
-
-		ctx.setServletContext(servletContext);
-
-		Dynamic dynamic = servletContext.addServlet("springDispatcher", new DispatcherServlet(ctx));
-		dynamic.addMapping("/");
-		dynamic.setLoadOnStartup(1);
-
-		String stripesPostSize = Constants.getString("stripes.FileUpload.MaximumPostSize");
-		stripesPostSize = Tools.replace(stripesPostSize, "m", "000000");
-		stripesPostSize = Tools.replace(stripesPostSize, "g", "000000000");
-		long maxPostSize = Tools.getLongValue(stripesPostSize, 0L);
-
-		// Set servlet 3.0 multipart config
-		MultipartConfigElement multipartConfig = new MultipartConfigElement(
-			null,// location (null = default temp dir)
-			maxPostSize,  // maxFileSize
-			maxPostSize,  // maxRequestSize
-			65536    // fileSizeThreshold
-		);
-		dynamic.setMultipartConfig(multipartConfig);
-
-		CharacterEncodingFilter filter = new CharacterEncodingFilter();
-		filter.setEncoding(Constants.getString("defaultEncoding"));
-		servletContext.addFilter("SpringEncodingFilter", filter).addMappingForUrlPatterns(null, false, "/*");
-
-		if (initialized == false) {
-			//WebJET is not initialized - there is no DB connection, allow only setup
-			springConfigClasses.clear();
-			//we need this to handle localeResolver correctly during setup
-			springConfigClasses.add("sk.iway.iwcm.setup.SetupSpringConfig");
-			addScanPackagesInit(ctx);
-		} else {
-			loadSpringConfigs(springConfigClasses, ctx);
-			servletContext.addListener(RequestContextListener.class);
-			addScanPackages(ctx);
-			servletContext.addListener(new ContextLoaderListener(ctx));
-		}
-
-		servletContext.setAttribute("springContext", ctx);
-
-		if (initialized) {
-			// spring security filter
-			final DelegatingFilterProxy springSecurityFilterChain = new DelegatingFilterProxy("springSecurityFilterChain");
-			final FilterRegistration.Dynamic addedFilter = servletContext.addFilter("springSecurityFilterChain", springSecurityFilterChain);
-			addedFilter.addMappingForUrlPatterns(null, false, "/*");
-		} else {
-			//it is normally initialized in V9SpringConfig, but we need to add it here for setup/bad db connection
-			servletContext.addFilter("failedSetCharacterEncodingFilter", new SetCharacterEncodingFilter()).addMappingForUrlPatterns(null, false, "/*");
-		}
-
-		dtGlobal.diff("Spring onStartup done");
-
-		if (initialized) InitServlet.setSpringInitialized();
-	}
-
-	private void loadSpringConfigs(List<String> customConfigs, AnnotationConfigWebApplicationContext ctx) {
-
-		List<Class<?>> classList = new ArrayList<>();
-
-		// naplnenie pola tried
-		for (String customConfig : customConfigs) {
-			try {
-				Class<?> aClass = Class.forName(customConfig);
-				if (aClass != null) {
-					classList.add(aClass);
-					Logger.println(this, "SPRING: found custom config " + customConfig);
-				}
-				else {
-					Logger.println(this, "SPRING: NOT found custom config 1 " + customConfig);
-				}
-			} catch (Exception e) {
-				// config class asi neexistuje.
-				Logger.println(this, "SPRING: NOT found custom config 2 " + customConfig);
-			}
-
-		}
-
-		ctx.register(classList.toArray(new Class[classList.size()]));
-	}
-
-	private void addScanPackages(AnnotationConfigWebApplicationContext ctx) {
-		List<String> packages = new ArrayList<>();
-		packages.add("sk.iway.iwcm.system.spring");
-
-		String addPackages = Constants.getString("springAddPackages");
-		if (Tools.isNotEmpty(addPackages)) {
-			packages.addAll(Tools.getStringListValue(Tools.getTokens(addPackages, ",")));
-		}
-
-		if (packages.isEmpty()==false) {
-			Logger.println(getClass(), String.format("Spring scan packages: %s", Tools.join(packages, ", ")));
-			ctx.scan(packages.toArray(new String[packages.size()]));
-		}
+		InitServlet.setSpringInitialized();
 	}
 
 	/**
-	 * Packages for setup
-	 * @param ctx
+	 * Debug timing method - logs timing information for monitoring startup progress.
+	 * Called from various places throughout the application for debug timing.
+	 * @param message timing message to log
 	 */
-	private void addScanPackagesInit(AnnotationConfigWebApplicationContext ctx) {
-		List<String> packages = new ArrayList<>();
-		packages.add("sk.iway.iwcm.setup");
-		Logger.println(getClass(), String.format("Spring scan packages: %s", Tools.join(packages, ", ")));
-		ctx.scan(packages.toArray(new String[packages.size()]));
-	}
-
 	public static void dtDiff(String message) {
-		if (dtGlobal!=null) dtGlobal.diffInfo(message);
+		if (dtGlobal != null) {
+			dtGlobal.diffInfo(message);
+		}
 	}
 }

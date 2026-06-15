@@ -2,29 +2,26 @@ package sk.iway.iwcm.system.spring;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.jpa.autoconfigure.JpaBaseConfiguration;
-import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.system.context.ContextFilter;
 
 /**
- * Spring Boot 4.x application starter (hybrid approach).
- * This class provides the Spring Boot entry point while preserving
- * the existing WebApplicationInitializer-based initialization flow.
+ * Spring Boot 4.x application starter.
+ * This class provides the Spring Boot entry point for both embedded server
+ * and WAR deployment to external Tomcat 11.
  *
  * For embedded server: ./gradlew bootRun
  * For external Tomcat 11 deployment: ./gradlew war
  */
-@SpringBootApplication(
-    exclude = {
-        JpaBaseConfiguration.class,
-        SecurityAutoConfiguration.class
-    }
-)
+@SpringBootApplication
 @ComponentScan({
     "sk.iway.iwcm",
     "sk.iway.basecms",
@@ -32,8 +29,12 @@ import sk.iway.iwcm.Logger;
     "sk.iway.iway",
     "sk.iway.webjet.v9"
 })
-@EnableWebMvc
-@EnableAutoConfiguration
+@EnableAutoConfiguration(exclude = {
+    // JPA repositories auto-configuration is managed by BaseSpringConfig
+    DataJpaRepositoriesAutoConfiguration.class,
+    // Security auto-configuration is managed by SpringSecurityConf
+    SecurityAutoConfiguration.class
+})
 public class SpringBootStarter extends SpringBootServletInitializer {
 
     private static final String[] DEFAULT_PROFILES = {"default"};
@@ -69,5 +70,20 @@ public class SpringBootStarter extends SpringBootServletInitializer {
     @Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
         return application.sources(SpringBootStarter.class);
+    }
+
+    /**
+     * Register ContextFilter for embedded Spring Boot mode.
+     * This filter handles context path routing and was previously
+     * configured in web.xml for external Tomcat deployments.
+     */
+    @Bean
+    public FilterRegistrationBean<ContextFilter> contextFilterRegistration() {
+        FilterRegistrationBean<ContextFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(new ContextFilter());
+        registration.addUrlPatterns("/*");
+        registration.setOrder(1);
+        registration.setName("ContextFilter");
+        return registration;
     }
 }
