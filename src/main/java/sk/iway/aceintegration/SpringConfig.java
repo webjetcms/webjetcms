@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
  * http://docs.webjetcms.sk/latest/custom-apps/spring-config/
  */
 
-@Configuration
+@Configuration("aceintegrationSpringConfig")
 @ComponentScan({
     "sk.iway.aceintegration",
 })

@@ -6,9 +6,9 @@
         {
             "label": "appStart",
             "type": "shell",
-            "command": "webjetDbname=/poolman-local-mysqldevel.xml ./gradlew appStartDebug",
+            "command": "webjetDbname=/poolman-local-mysqldevel.xml ./gradlew bootRun",
             "windows": {
-                "command": "SET webjetDbname=/poolman-local-mysqldevel.xml && .\\gradlew.bat appStartDebug"
+                "command": "SET webjetDbname=/poolman-local-mysqldevel.xml && .\\gradlew.bat bootRun"
             },
             "group": "build",
             "problemMatcher": {
@@ -36,9 +36,9 @@
         {
             "label": "appStartLocalDB",
             "type": "shell",
-            "command": "webjetDbname=/poolman-local.xml ./gradlew appStartDebug",
+            "command": "webjetDbname=/poolman-local.xml ./gradlew bootRun",
             "windows": {
-                "command": "SET webjetDbname=/poolman-local.xml && .\\gradlew.bat appStartDebug"
+                "command": "SET webjetDbname=/poolman-local.xml && .\\gradlew.bat bootRun"
             },
             "group": "build",
             "problemMatcher": {
@@ -66,9 +66,9 @@
         {
             "label": "appStartDockerMariaDB",
             "type": "shell",
-            "command": "webjetDbname=/poolman-docker-mariadb.xml ./gradlew appStartDebug",
+            "command": "webjetDbname=/poolman-docker-mariadb.xml ./gradlew bootRun",
             "windows": {
-                "command": "SET webjetDbname=/poolman-docker-mariadb.xml && .\\gradlew.bat appStartDebug"
+                "command": "SET webjetDbname=/poolman-docker-mariadb.xml && .\\gradlew.bat bootRun"
             },
             "dependsOn": ["Docker DB MariaDB Start"],
             "group": "build",
@@ -97,9 +97,9 @@
         {
             "label": "appStartDockerMSSQL",
             "type": "shell",
-            "command": "webjetDbname=/poolman-docker-mssql.xml ./gradlew appStartDebug",
+            "command": "webjetDbname=/poolman-docker-mssql.xml ./gradlew bootRun",
             "windows": {
-                "command": "SET webjetDbname=/poolman-docker-mssql.xml && .\\gradlew.bat appStartDebug"
+                "command": "SET webjetDbname=/poolman-docker-mssql.xml && .\\gradlew.bat bootRun"
             },
             "dependsOn": ["Docker DB MSSQL Start"],
             "group": "build",
@@ -128,9 +128,9 @@
         {
             "label": "appStartDockerOracle",
             "type": "shell",
-            "command": "webjetDbname=/poolman-docker-oracle.xml ./gradlew appStartDebug",
+            "command": "webjetDbname=/poolman-docker-oracle.xml ./gradlew bootRun",
             "windows": {
-                "command": "SET webjetDbname=/poolman-docker-oracle.xml && .\\gradlew.bat appStartDebug"
+                "command": "SET webjetDbname=/poolman-docker-oracle.xml && .\\gradlew.bat bootRun"
             },
             "dependsOn": ["Docker DB Oracle Start"],
             "group": "build",
@@ -159,9 +159,9 @@
         {
             "label": "appStartDockerPgSQL",
             "type": "shell",
-            "command": "webjetDbname=/poolman-docker-pgsql.xml ./gradlew appStartDebug",
+            "command": "webjetDbname=/poolman-docker-pgsql.xml ./gradlew bootRun",
             "windows": {
-                "command": "SET webjetDbname=/poolman-docker-pgsql.xml && .\\gradlew.bat appStartDebug"
+                "command": "SET webjetDbname=/poolman-docker-pgsql.xml && .\\gradlew.bat bootRun"
             },
             "dependsOn": ["Docker DB PgSQL Start"],
             "group": "build",
@@ -190,7 +190,7 @@
         {
             "label": "appStartDemoDB",
             "type": "shell",
-            "command": "webjetDbname=/poolman-local-webjet9demo.xml ./gradlew appStartDebug",
+            "command": "webjetDbname=/poolman-local-webjet9demo.xml ./gradlew bootRun",
             "group": "build",
             "problemMatcher": {
                 "owner": "shell",
@@ -217,7 +217,7 @@
         {
             "label": "appStartTemplatesDB",
             "type": "shell",
-            "command": "webjetDbname=/poolman-local-democms.xml ./gradlew appStartDebug",
+            "command": "webjetDbname=/poolman-local-democms.xml ./gradlew bootRun",
             "group": "build",
             "problemMatcher": {
                 "owner": "shell",
@@ -244,7 +244,7 @@
         {
             "label": "appStartEshopDB",
             "type": "shell",
-            "command": "webjetDbname=/poolman-local-eshop.xml ./gradlew appStartDebug",
+            "command": "webjetDbname=/poolman-local-eshop.xml ./gradlew bootRun",
             "group": "build",
             "problemMatcher": {
                 "owner": "shell",
@@ -271,7 +271,7 @@
         {
             "label": "appStartMSSQL",
             "type": "shell",
-            "command": "webjetDbname=/poolman-local-mssql.xml ./gradlew appStartDebug",
+            "command": "webjetDbname=/poolman-local-mssql.xml ./gradlew bootRun",
             "group": "build",
             "problemMatcher": {
                 "owner": "shell",
@@ -298,7 +298,7 @@
         {
             "label": "appStartOracleDB",
             "type": "shell",
-            "command": "webjetDbname=/poolman-local-oracle.xml ./gradlew appStartDebug",
+            "command": "webjetDbname=/poolman-local-oracle.xml ./gradlew bootRun",
             "group": "build",
             "problemMatcher": {
                 "owner": "shell",
@@ -325,7 +325,7 @@
         {
             "label": "appStartPgSQLDB",
             "type": "shell",
-            "command": "webjetDbname=/poolman-local-pgsql.xml ./gradlew appStartDebug",
+            "command": "webjetDbname=/poolman-local-pgsql.xml ./gradlew bootRun",
             "group": "build",
             "problemMatcher": {
                 "owner": "shell",
@@ -352,9 +352,9 @@
         {
             "label": "appStartPssDB",
             "type": "shell",
-            "command": "webjetDbname=/poolman-local-pss.xml ./gradlew appStartDebug",
+            "command": "webjetDbname=/poolman-local-pss.xml ./gradlew bootRun",
             "windows": {
-                "command": "SET webjetDbname=/poolman-local-pss.xml && .\\gradlew.bat appStartDebug"
+                "command": "SET webjetDbname=/poolman-local-pss.xml && .\\gradlew.bat bootRun"
             },
             "group": "build",
             "problemMatcher": {

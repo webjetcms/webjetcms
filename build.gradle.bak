@@ -29,6 +29,9 @@ plugins {
 repositories {
     mavenCentral()
     maven {
+        url "https://repo.spring.io/milestone"
+    }
+    maven {
         url "https://pd4ml.tech/maven2/"
     }
     flatDir {
@@ -136,28 +139,14 @@ configurations {
 dependencies {
 
     // === Spring Boot 4.x starters (manages Spring 7.x versions) ===
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
-    // Spring Boot 4.1.0 BOM - manages all Spring Boot 4.x dependency versions
-    implementation platform('org.springframework.boot:spring-boot-dependencies:4.1.0')
-    implementation 'org.springframework.boot:spring-boot-starter-web:4.1.0'
-    implementation 'org.springframework.boot:spring-boot-starter-security:4.1.0'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:4.1.0'
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client:4.1.0'
-    implementation 'org.springframework.boot:spring-boot-starter-webflux:4.1.0'
-
-    // Spring Boot 4.x modular auto-configuration (replaces autoconfigure module)
-    implementation 'org.springframework.boot:spring-boot-jdbc:4.1.0'
-    implementation 'org.springframework.boot:spring-boot-jpa:4.1.0'
-    implementation 'org.springframework.boot:spring-boot-freemarker:4.1.0'
-    implementation 'org.springframework.boot:spring-boot-security:4.1.0'
-
-    // Spring Framework 7.x test utilities (MockHttpServletResponse)
-    implementation 'org.springframework:spring-test:7.0.0-M9'
-
-    // Pin Hibernate Validator to 9.0.0.Final for WebjetResourceBundleMessageInterpolator compatibility
-    implementation 'org.hibernate.validator:hibernate-validator:9.0.0.Final'
     // JSP support for embedded Tomcat 11
-    implementation 'org.apache.tomcat.embed:tomcat-embed-jasper:11.0.22'
+    implementation 'org.apache.tomcat.embed:tomcat-embed-jasper'
     runtimeOnly 'org.glassfish.web:jakarta.servlet.jsp.jstl:3.0.1'
 
     // WebAuthn/Passkeys
@@ -206,6 +195,7 @@ dependencies {
     implementation("org.freemarker:freemarker:2.3.34")
     implementation("com.google.code.gson:gson:2.13.2") //generate.jsp for pagebuilder, refactor to jackson
 
+    implementation("org.hibernate.validator:hibernate-validator:9.0.0.Final")
     implementation("jakarta.validation:jakarta.validation-api:3.0.2")
 
     implementation("org.apache.httpcomponents:httpclient:4.5.13")
@@ -305,8 +295,8 @@ dependencies {
     implementation("com.github.usefulness:webp-imageio:0.10.2")
 
     // Spring Boot 4.x test dependencies
-    testImplementation 'org.springframework.boot:spring-boot-starter-test:4.1.0'
-    testImplementation 'org.springframework.security:spring-security-test:7.0.0-M3'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
     // Spring Framework 7.0 requires JUnit 6 baseline
     testImplementation platform('org.junit:junit-bom:6.0.0')
     testImplementation 'org.junit.jupiter:junit-jupiter-api'

@@ -27,7 +27,7 @@ import sk.iway.iwcm.system.spring.webjet_component.WebjetMessageSource;
 public class SetupSpringConfig implements WebMvcConfigurer {
 
     @Bean
-    public AcceptHeaderLocaleResolver localeResolver() {
+    public AcceptHeaderLocaleResolver webjetLocaleResolver() {
         AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver() {
             @Override
             public Locale resolveLocale(HttpServletRequest request) {

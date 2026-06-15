@@ -35,7 +35,7 @@ public class WebjetComponentSpringConfig {
 
     // nastavenie message source pre validator
     @Bean
-    public Validator mvcValidator() {
+    public Validator webjetMvcValidator() {
         LocalValidatorFactoryBean validatorFactoryBean = new LocalValidatorFactoryBean();
 
         validatorFactoryBean.setMessageInterpolator(new WebjetResourceBundleMessageInterpolator());
@@ -65,7 +65,7 @@ public class WebjetComponentSpringConfig {
         view2.setApplicationContext(context);
 
         resolvers.add(view2);
-        resolvers.add(thymeleafViewResolver());
+        resolvers.add(webjetThymeleafViewResolver());
 
         WebjetViewResolver resolver = new WebjetViewResolver();
         resolver.setViewResolvers(resolvers);
@@ -75,25 +75,25 @@ public class WebjetComponentSpringConfig {
 
     /* THYMELEAF KONFIGURACIA, namapovana na / s vyhladavanim .html suborov */
     @Bean
-    public MessageSource messageSource() {
+    public MessageSource webjetMessageSource() {
         Logger.debug(WebjetComponentParser.class, "Spring: messageSource");
         WebjetMessageSource source = new WebjetMessageSource();
         return source;
     }
 
     @Bean
-    public SpringTemplateEngine templateEngine() {
+    public SpringTemplateEngine webjetTemplateEngine() {
         Logger.debug(WebjetComponentParser.class, "thymeleaf: templateEngine");
 
         SpringTemplateEngine templateEngine = new SpringTemplateEngine();
         templateEngine.setEnableSpringELCompiler(true);
         templateEngine.addDialect(new IwcmDialect());
-        templateEngine.setTemplateResolver(thymeleafTemplateResolver());
+        templateEngine.setTemplateResolver(webjetThymeleafTemplateResolver());
         return templateEngine;
     }
 
     @Bean
-    public SpringResourceTemplateResolver thymeleafTemplateResolver() {
+    public SpringResourceTemplateResolver webjetThymeleafTemplateResolver() {
         Logger.debug(WebjetComponentParser.class, "thymeleaf: thymeleafTemplateResolver");
 
         SpringResourceTemplateResolver templateResolver
@@ -109,12 +109,12 @@ public class WebjetComponentSpringConfig {
     }
 
     @Bean
-    public ThymeleafViewResolver thymeleafViewResolver() {
+    public ThymeleafViewResolver webjetThymeleafViewResolver() {
 
         Logger.debug(WebjetComponentParser.class, "thymeleaf: thymeleafViewResolver");
 
         ThymeleafViewResolver viewResolver = new ThymeleafViewResolver();
-        viewResolver.setTemplateEngine(templateEngine());
+        viewResolver.setTemplateEngine(webjetTemplateEngine());
         Logger.debug(WebjetComponentSpringConfig.class, "thymeleafViewResolver SETTING ENCODING: "+Constants.getString("defaultEncoding"));
         viewResolver.setCharacterEncoding(SetCharacterEncodingFilter.getEncoding());
         return viewResolver;
