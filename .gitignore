@@ -13,6 +13,9 @@ src/main/webapp/WEB-INF/fonts
 .classpath
 .settings
 
+# Ignore tomcat work folder
+work
+
 #WebJET imgcache a tmp adresar
 **/WEB-INF/imgcache
 **/WEB-INF/tmp

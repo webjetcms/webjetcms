@@ -61,6 +61,15 @@ public class WebjetViewResolver extends WebApplicationObjectSupport implements V
                 suffix = wjViewResolver.getSuffix();
             }
 
+            // FIX: If the view name ends with .jsp, route it directly to the JSP resolver
+            // without applying the .html suffix (which was causing FileNotFoundException)
+            if (viewNameLocal.endsWith(".jsp")) {
+                if (viewResolver instanceof WebjetInternalResourceViewResolver) {
+                    return viewResolver.resolveViewName(viewNameLocal, locale);
+                }
+                continue;
+            }
+
             if (Tools.isNotEmpty(prefix)) {
                 viewNameLocal = prefix + viewNameLocal;
             }
