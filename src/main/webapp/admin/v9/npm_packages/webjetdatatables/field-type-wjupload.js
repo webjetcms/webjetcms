@@ -24,7 +24,7 @@ function prepareUploader(conf) {
 
         adminUpload = window.AdminUpload({
             element: "#" + id,
-            destinationFolder: '/files/protected/',
+            destinationFolder: '/files/protected/upload/',
             writeDirectlyToDestination: false,
         });
 

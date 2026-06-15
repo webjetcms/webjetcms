@@ -173,6 +173,32 @@ public class WriteTagToolsForCore {
         {
             try
             {
+                //add CSRF token to formmail forms
+                if (replacedText.indexOf("/formmail.do")!=-1)
+                {
+                    String csrfToken = CSRF.getCsrfTokenInputFiled(request.getSession(), true) ;
+                    csrfToken += "<input type=\"hidden\" name=\"__lng\" value=\""+lng+"\"/>";
+                    //iterate over <form ...> tags, check for formmail and append CSRF token after <form ...> tag
+                    int failsafe = 0;
+                    int start = replacedText.indexOf("<form");
+                    while (failsafe++ <= 20 && start != -1)
+                    {
+                        int end = replacedText.indexOf(">", start);
+                        if (end > start)
+                        {
+                            String formTag = replacedText.substring(start, end + 1);
+                            if (formTag.contains("formmail.do"))
+                            {
+                                replacedText = new StringBuilder(replacedText.substring(0, end + 1)).append(csrfToken).append(replacedText.substring(end + 1));
+                                end = end + csrfToken.length(); //posun end index za pridany token
+                            }
+                            start = replacedText.indexOf("<form", end + 1);
+                        } else {
+                            break;
+                        }
+                    }
+                }
+
                 //vypis este informaciu o chybe odoslania formularu (ak nejaku mame)
                 String qs = (String)request.getAttribute("path_filter_query_string");
                 if (qs == null) qs = "";

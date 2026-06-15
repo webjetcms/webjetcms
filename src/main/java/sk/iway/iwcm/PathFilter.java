@@ -380,9 +380,10 @@ public class PathFilter implements Filter
 
 			req.setAttribute("path_filter_orig_docid", req.getParameter("docid"));
 
-			if ("true".equals(req.getHeader("userInServletContext")))
+			String userInServletContext = req.getHeader("userInServletContext");
+			if (Tools.isNotEmpty(userInServletContext))
 			{
-				Identity user2 = (Identity)Constants.getServletContext().getAttribute(Constants.USER_KEY);
+				Identity user2 = (Identity)Constants.getServletContext().getAttribute(Constants.USER_KEY+"_"+userInServletContext);
 				if (user2 != null)
 				{
 					LogonTools.setUserToSession(req.getSession(), user2);

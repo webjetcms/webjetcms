@@ -77,7 +77,9 @@ public class CloudToolsForCore {
         "conf.show_all_variables",
         "prop.show_all_texts",
         "cmp_mirroring",
-        "menuTemplatesGroup"
+        "menuTemplatesGroup",
+
+        "embeddingChunks"
     ));
 
     //disabled items for multiweb/InitServlet.isTypeCloud()
@@ -105,7 +107,9 @@ public class CloudToolsForCore {
         "users.perm_groups",
 
         "conf.show_all_variables",
-        "prop.show_all_texts"
+        "prop.show_all_texts",
+
+        "embeddingChunks"
     ));
     private static final Set<String> DISABLED_ITEMS_MULTIWEB_ALL = new HashSet<>(Arrays.asList(
         "make_zip_archive",

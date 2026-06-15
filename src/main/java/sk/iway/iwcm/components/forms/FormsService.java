@@ -567,7 +567,6 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 
     /**
      * Zmaze zaznam z databazy
-     * + ak je to posledny zaznam vo formulari, zmaze aj definiciu formularu
      * + ak maze riadiaci zaznam (createDate je null) tak zmaze vsetky zaznamy
      * @param entity
      * @param id
@@ -589,8 +588,8 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                 // Ak ma, zmaz aj steps/items (multistep forms)
                 formStepsRepository.deleteAllByFormNameAndDomainId(formName, domainId);
                 formItemsRepository.deleteAllByFormNameAndDomainId(formName, domainId);
-                // Zmaz nastavenia formulara
-                formSettingsRepository.deleteByFormNameAndDomainId(formName, domainId);
+                // DO NOT DELETE maybe form is still in webpage and we just deleted form records
+                // formSettingsRepository.deleteByFormNameAndDomainId(formName, domainId);
             } else {
                 formsRepository.deleteById(id);
             }

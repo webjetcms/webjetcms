@@ -686,7 +686,7 @@ public class Logger
 		}
 
 		if (message != null) {
-			if (message.contains("SELECT") || message.contains("INSERT") || message.contains("UPDATE") || message.contains("DELETE")) {
+			if (message.contains("SELECT") || message.contains("INSERT") || message.contains("UPDATE") || message.contains("DELETE") || message.contains("list: Query")) {
 				//use different color for SQL queries, to make them more visible in logs
 				level = "GREEN";
 			} else if (message.startsWith("GET ") || message.startsWith("POST ") || message.startsWith("PUT ") || message.startsWith("DELETE ")) {

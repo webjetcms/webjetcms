@@ -65,6 +65,10 @@
 
 - Logovanie - do [Logback MDC](https://logback.qos.ch/manual/mdc.html) doplnený atribút `sessionId` a prihlasovacieho mena používateľa `userLogin` (#OSK526).
 
+- Voliteľné polia - pridaná možnosť centrálne nastaviť vlastnosti [voliteľných polí](frontend/webpages/customfields/custom-fields-settings.md) v novej tabuľke v časti Nastavenia (#58413).
+
+![](frontend/webpages/customfields/custom-fields-settings-editor.png)
+
 ## 2026.18
 
 > WebJET CMS 2026.18 prináša **schvaľovanie zmien priečinkov** s podporou viacúrovňového schvaľovania a **testovanie prístupnosti** integrované priamo do automatizovaných testov.
@@ -105,10 +109,6 @@
 - Pridaná ikona na presun [kurzoru na ťažko dostupné miesto](redactor/webpages/working-in-editor/README.md#vkladanie-textu-na-ťažko-dostupné-miesta), ako napríklad za poslednú SVG ikonu v riadku a podobne (#osk105).
 
 ![](redactor/webpages/working-in-editor/wjmagicline-append.png)
-
-- Voliteľné polia - pridaná možnosť centrálne nastaviť vlastnosti [voliteľných polí](frontend/webpages/customfields/custom-fields-settings.md) v novej tabuľke v časti Nastavenia (#58413).
-
-![](frontend/webpages/customfields/custom-fields-settings-editor.png)
 
 ### Aplikácie
 
@@ -263,9 +263,20 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+!> Upozornenie: po aktualizácii skontrolujte funkčnosť všetkých formulárov. Ak niektorý nejde odoslať, uložte znova jeho nastavenia.
+
 - AI asistent - upravené získanie odpovede pri použití `reasoning` v OpenAI (#244).
+- AI asistent - doplnená propagácia zmazania cache do uzlov clustra pri úprave asistenta.
 - Bezpečnosť - opravená možnosť nastaviť [meno HTTP hlavičky pre získanie IP adresy](sysadmin/pentests/README.md#konfigurácia) cez premennú `xForwardedForHeader`.
+- Bezpečnosť - opravené chyby Local File Inclusion, kontrola nahrávaných súborov a RCE. Zraniteľnosť sa netýka web stránok s nastavenými externými súbormi - nastavená konfiguračná premenná `cloudStaticFilesDir`. Ďakujeme Josef Korbel (Citadelo) za nahlásenie týchto zraniteľností. Možné dočasné riešenie bez aktualizácie je:
+  - zmazať alebo [aktualizovať](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/components/grideditor/phantom/phantom_sablona_ajax.jsp) súbor `/components/grideditor/phantom/phantom_sablona_ajax.jsp`
+  - do konfiguračnej premennej `pathFilterBlockedPaths` pridať hodnotu `,/components/grideditor/phantom/`
+  - [globálne pre celý server](install/external-configuration.md) môžete do `JAVA_OPTS` pridať systémovú premennú `-Dwebjet.pathFilterBlockedPaths=.DS_Store,debug.,config.properties,Thumbs.db,.git,.svn,/WEB-INF/,./,/components/grideditor/phantom/`
+- Bezpečnosť - pridaný CSRF token pre formulár pri vypnutej SPAM ochrane (#245).
+- Bezpečnosť - každé odoslanie formuláru kontroluje nastavenie formuláru v databáze, ak sa nenájde formulár nie je možné odoslať. Pôvodná verzia toto kontrolovala len na verejných uzloch clustra, teraz sa to kontroluje bez ohľadu na cluster. V prípade potreby vypnete funkčnosť nastavením konfiguračnej premennej `formAllowOnlyExistingFormsOnPublicNode` na hodnotu `false` (#245).
+- Bezpečnosť - opravená možnosť získania administrátorského účtu pri generovaní offline verzie (#245).
 - Formulár ľahko - upravené polia pre zadanie názvu poľa a tooltipu na jednoriadkový WYSIWYG editor, aby výsledok neobsahoval `P` element (#244).
+- Galéria - opravené vytvorenie záznamu v databáze pri kopírovaní súborov v prieskumníku. Záznam sa nevytvorí pre `o_` a `s_` obrázky (#58317-9).
 - Manažér dokumentov - doplnené filtrovanie súborov podľa dátumov platnosti (ak nie je platný rozsah dátumov, nezobrazia sa) a súborov ktoré nemajú nastavený atribút zobrazovať (#233).
 - Video - aktualizovaná knižnica `videojs` na prehrávanie lokálnych audio/video súborov z verzie 6.2.0 na verziu 8.23.6 (#233).
 - Video - opravené nastavenie odkazu na lokálny audio/video súbor pri editácii už vloženej aplikácie (#233).
