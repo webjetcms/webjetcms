@@ -113,6 +113,7 @@ public class WebjetComponentSpringConfig {
 
         ThymeleafViewResolver viewResolver = new ThymeleafViewResolver();
         viewResolver.setTemplateEngine(webjetTemplateEngine());
+        viewResolver.setExcludedViewNames(new String[] {"*.jsp", "*.ftl"});
         Logger.debug(WebjetComponentSpringConfig.class, "thymeleafViewResolver SETTING ENCODING: "+Constants.getString("defaultEncoding"));
         viewResolver.setCharacterEncoding(SetCharacterEncodingFilter.getEncoding());
         return viewResolver;

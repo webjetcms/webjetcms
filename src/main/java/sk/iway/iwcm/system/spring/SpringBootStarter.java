@@ -1,5 +1,9 @@
 package sk.iway.iwcm.system.spring;
 
+import java.util.EnumSet;
+
+import jakarta.servlet.DispatcherType;
+
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -11,6 +15,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PathFilter;
+import net.sourceforge.stripes.controller.StripesFilterIway;
 import sk.iway.iwcm.system.context.ContextFilter;
 
 /**
@@ -84,6 +90,35 @@ public class SpringBootStarter extends SpringBootServletInitializer {
         registration.addUrlPatterns("/*");
         registration.setOrder(1);
         registration.setName("ContextFilter");
+        return registration;
+    }
+
+    /**
+     * Register StripesFilter for embedded Spring Boot mode.
+     * Required by legacy CSRF/token code paths that access Stripes configuration.
+     */
+    @Bean
+    public FilterRegistrationBean<StripesFilterIway> stripesFilterRegistration() {
+        FilterRegistrationBean<StripesFilterIway> registration = new FilterRegistrationBean<>();
+        registration.setFilter(new StripesFilterIway());
+        registration.addUrlPatterns("/*");
+        registration.addServletNames("StripesDispatcher");
+        registration.setDispatcherTypes(EnumSet.of(DispatcherType.REQUEST));
+        registration.setOrder(2);
+        registration.setName("StripesFilter");
+        return registration;
+    }
+
+    /**
+     * Register Virtual Path Filter for embedded Spring Boot mode.
+     */
+    @Bean
+    public FilterRegistrationBean<PathFilter> virtualPathFilterRegistration() {
+        FilterRegistrationBean<PathFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(new PathFilter());
+        registration.addUrlPatterns("/*");
+        registration.setOrder(3);
+        registration.setName("Virtual Path Filter");
         return registration;
     }
 }

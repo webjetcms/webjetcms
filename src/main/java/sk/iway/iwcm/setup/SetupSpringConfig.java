@@ -79,6 +79,7 @@ public class SetupSpringConfig implements WebMvcConfigurer {
 
         ThymeleafViewResolver viewResolver = new ThymeleafViewResolver();
         viewResolver.setTemplateEngine(templateEngine());
+        viewResolver.setExcludedViewNames(new String[] {"*.jsp", "*.ftl"});
         Logger.debug(SetupSpringConfig.class, "thymeleafViewResolver SETTING ENCODING: "+Constants.getString("defaultEncoding"));
         viewResolver.setCharacterEncoding(SetCharacterEncodingFilter.getEncoding());
         return viewResolver;
