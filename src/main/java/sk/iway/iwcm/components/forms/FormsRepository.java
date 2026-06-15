@@ -37,5 +37,5 @@ public interface FormsRepository extends FormsRepositoryInterface<FormsEntity>{
     Date findMinCreateDate(@Param("formName") String formName, @Param("domainId") Integer domainId);
 
     @Query("SELECT fe.id FROM FormsEntity fe WHERE fe.formName = :formName AND fe.domainId = :domainId AND fe.createDate IS NULL")
-    Optional<Integer> getFormId(@Param("formName") String formName, @Param("domainId") Integer domainId);
+    Optional<Long> getFormId(@Param("formName") String formName, @Param("domainId") Integer domainId);
 }

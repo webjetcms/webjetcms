@@ -108,20 +108,17 @@ public class FormStatService {
         StatContext context = new StatContext(prop, getColumnNames(formName, new UserDetails(request), prop), getAllowedItems(formName, null));
 
         allData.put("chartData", getFormStatChartData(allFormData, context));
-        allData.put("chartBonusData", getFormStatChartBonusData(formEntities, context));
+        allData.put("chartBonusData", getFormStatChartBonusData(formName, formEntities, context));
         allData.put("chartErrorData", getFormStatChartErrorData(formName, context));
 
         return allData;
     }
 
     /**
-     * Returns chart data for the given form.
-     *
-     * Note: the {@code itemFormId} parameter is currently validated for API compatibility,
-     * but this implementation returns chart data for all allowed form items.
+     * Returns chart data for the given form item.
      *
      * @param formName the form name identifier
-     * @param itemFormId compatibility parameter that must be non-empty
+     * @param itemFormId form item identifier that must be non-empty
      * @param request the HTTP request used to resolve localization
      * @return JSON array with chart data, or {@code null} when required parameters are empty
      */
@@ -129,7 +126,7 @@ public class FormStatService {
         if(Tools.isEmpty(formName) || Tools.isEmpty(itemFormId)) return null;
 
         Prop prop = Prop.getInstance(request);
-        StatContext context = new StatContext(prop, getColumnNames(formName, new UserDetails(request), prop), getAllowedItems(formName, null));
+        StatContext context = new StatContext(prop, getColumnNames(formName, new UserDetails(request), prop), getAllowedItems(formName, itemFormId));
 
         return getFormStatChartData(getAllFormData(formName), context);
     }
@@ -397,8 +394,6 @@ public class FormStatService {
      * @return JSONArray of {name, count} objects sorted by count descending
      */
     private JSONArray prepareDataForChart(List<String> values, int maxCountAllowed, boolean allowOtherCount, boolean compareInsensitive, Prop prop) {
-        JSONArray valuesArray = new JSONArray();
-
         Map<String, Integer> valueCountMap = new HashMap<>();
         // Preserve original display name for case-insensitive grouping
         Map<String, String> normalizedToOriginal = new HashMap<>();
@@ -412,6 +407,16 @@ public class FormStatService {
         } else {
             for(String value : values) valueCountMap.put(value, valueCountMap.getOrDefault(value, 0) + 1);
         }
+
+        return prepareAggregatedDataForChart(valueCountMap, normalizedToOriginal, maxCountAllowed, allowOtherCount, prop);
+    }
+
+    private JSONArray prepareAggregatedDataForChart(Map<String, Integer> valueCountMap, int maxCountAllowed, boolean allowOtherCount, Prop prop) {
+        return prepareAggregatedDataForChart(valueCountMap, new HashMap<>(), maxCountAllowed, allowOtherCount, prop);
+    }
+
+    private JSONArray prepareAggregatedDataForChart(Map<String, Integer> valueCountMap, Map<String, String> normalizedToOriginal, int maxCountAllowed, boolean allowOtherCount, Prop prop) {
+        JSONArray valuesArray = new JSONArray();
 
         //sort map DESC
         valueCountMap = valueCountMap.entrySet().stream()
@@ -528,7 +533,7 @@ public class FormStatService {
     private List<FormsEntity> getFormEntities(String formName) {
         List<FormsEntity> formEntities = new ArrayList<>();
 
-        String sql = "SELECT duration, create_date, referer, language FROM forms WHERE form_name = ? AND domain_id = ?";
+        String sql = "SELECT duration, create_date, language FROM forms WHERE form_name = ? AND domain_id = ?";
 
         List<Object> sqlParams = new ArrayList<>();
         sqlParams.add(formName);
@@ -556,7 +561,6 @@ public class FormStatService {
         FormsEntity formEntity = new FormsEntity();
         formEntity.setDuration( rs.getLong("duration") );
         formEntity.setCreateDate( rs.getTimestamp("create_date") );
-        formEntity.setReferer( rs.getString("referer") );
         formEntity.setLanguage( rs.getString("language") );
         return formEntity;
     }
@@ -575,24 +579,50 @@ public class FormStatService {
      * Builds bonus chart data for language and referrer distributions.
      * Uses shared context to reuse localization resources.
      *
+     * @param formName the form name identifier
      * @param formEntities list of form submissions
      * @param context shared context containing localization utilities
      * @return JSON object with {@code languageData} and {@code referrerData} arrays
      */
-    private JSONObject getFormStatChartBonusData(List<FormsEntity> formEntities, StatContext context) {
+    private JSONObject getFormStatChartBonusData(String formName, List<FormsEntity> formEntities, StatContext context) {
         List<String> languages = new ArrayList<>();
-        List<String> referrers = new ArrayList<>();
         for(FormsEntity entity : formEntities) {
+            if (entity.getCreateDate() == null) continue;
             languages.add(valueOrUnknown(entity.getLanguage()));
-
-            referrers.add(valueOrUnknown(entity.getReferer()));
         }
 
         JSONObject bonusData = new JSONObject();
         bonusData.put("languageData", prepareDataForChart(languages, PIE_TOP_COUNT, true, false, context.prop) );
-        bonusData.put("referrerData", prepareDataForChart(referrers, TABLE_TOP_COUNT, true, false, context.prop) );
+        bonusData.put("referrerData", prepareAggregatedDataForChart(getRefererCounts(formName), TABLE_TOP_COUNT, true, context.prop) );
 
         return bonusData;
+    }
+
+    /**
+     * Aggregates referrer values directly in the database to avoid loading the 255-character column for every row.
+     *
+     * @param formName the form name identifier
+     * @return map of referrer value to response count, with empty values merged into {@link #UNKNOWN_VALUE}
+     */
+    private Map<String, Integer> getRefererCounts(String formName) {
+        Map<String, Integer> refererCounts = new HashMap<>();
+
+        String sql = "SELECT referer, COUNT(*) AS referer_count FROM forms WHERE form_name = ? AND domain_id = ? AND create_date IS NOT NULL GROUP BY referer";
+
+        List<Object> sqlParams = new ArrayList<>();
+        sqlParams.add(formName);
+        sqlParams.add(CloudToolsForCore.getDomainId());
+
+        new ComplexQuery().setSql(sql).setParams(sqlParams.toArray()).list(new Mapper<String>() {
+            @Override
+            public String map(ResultSet rs) throws SQLException {
+                String referer = valueOrUnknown(rs.getString("referer"));
+                refererCounts.put(referer, refererCounts.getOrDefault(referer, 0) + rs.getInt("referer_count"));
+                return null;
+            }
+        });
+
+        return refererCounts;
     }
 
     private String valueOrUnknown(String value) {
@@ -607,22 +637,22 @@ public class FormStatService {
      * @return JSON object with {@code pieErrorData} and {@code tableErrorData} arrays
      */
     private JSONObject getFormStatChartErrorData(String formName, StatContext context) {
-        // Small shortcut to reuse generic chart aggregation logic.
-        List<String> kks = new ArrayList<>();
+        Map<String, Integer> errorCountsByField = new HashMap<>();
         int allFieldsErrors = 0;
         for(FormItemEntity entity : context.allowedItemsEntities.values()) {
             int count = (entity.getErrorCount() != null) ?  entity.getErrorCount() : 0;
             allFieldsErrors += count;
-            for(int i = 0; i < count; i++) {
-                kks.add( context.columnNames.get(entity.getItemFormId()) );
+            if(count > 0) {
+                String label = context.columnNames.get(entity.getItemFormId());
+                errorCountsByField.put(label, errorCountsByField.getOrDefault(label, 0) + count);
             }
         }
 
         JSONObject errorData = new JSONObject();
-        errorData.put("pieErrorData", prepareDataForChart(kks, PIE_TOP_COUNT, true, false, context.prop) );
-        errorData.put("tableErrorData", prepareDataForChart(kks, TABLE_TOP_COUNT, true, false, context.prop) );
+        errorData.put("pieErrorData", prepareAggregatedDataForChart(errorCountsByField, PIE_TOP_COUNT, true, context.prop) );
+        errorData.put("tableErrorData", prepareAggregatedDataForChart(errorCountsByField, TABLE_TOP_COUNT, true, context.prop) );
 
-        int formId = formsRepository.getFormId(formName, CloudToolsForCore.getDomainId()).orElse(-1);
+        int formId = formsRepository.getFormId(formName, CloudToolsForCore.getDomainId()).orElse(-1L).intValue();
 
         int getErrorsCount = 0;
         int saveErrorsCount = 0;
@@ -636,12 +666,12 @@ public class FormStatService {
         errorData.put("allErrorsCount", allFieldsErrors + getErrorsCount + saveErrorsCount);
 
         JSONArray valuesArray = new JSONArray();
-        valuesArray.put( getChartObject("getErrorsCount", getErrorsCount) );
-        valuesArray.put( getChartObject("saveErrorsCount", saveErrorsCount) );
+        valuesArray.put( getChartObject(context.prop.getText("components.multistep_form.system_errors.get_step"), getErrorsCount) );
+        valuesArray.put( getChartObject(context.prop.getText("components.multistep_form.system_errors.save_step"), saveErrorsCount) );
 
         errorData.put("pieSystemErrorData",  valuesArray);
 
-        errorData.put("timelineErrorData", getTimelineErrorData(formName));
+        errorData.put("timelineErrorData", getTimelineErrorData(formName, context));
 
         return errorData;
     }
@@ -653,23 +683,21 @@ public class FormStatService {
         return obj;
     }
 
-    private JSONObject getTimelineErrorData(String formName) {
+    private JSONObject getTimelineErrorData(String formName, StatContext context) {
         // Create timestamp range of 30 days for log retrieval
         Timestamp startDate = new Timestamp(System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000);
         Timestamp endDate = new Timestamp(System.currentTimeMillis());
 
-        int formId = formsRepository.getFormId(formName, CloudToolsForCore.getDomainId()).orElse(-1);
+        int formId = formsRepository.getFormId(formName, CloudToolsForCore.getDomainId()).orElse(-1L).intValue();
         List<AuditLogEntity> logs = auditRepository.findAllByLogTypeAndSubId1AndCreateDateBetween(Adminlog.TYPE_MULTISTEP_FORM_USERS, formId, startDate, endDate);
 
-        JSONObject kksA = new JSONObject();
-
+        JSONObject timelineErrorData = new JSONObject();
 
         Map<String, Map<Long, Integer>> dayErrorCounts = new HashMap<>();
         dayErrorCounts.put("gets",  new HashMap<>());
         dayErrorCounts.put("saves", new HashMap<>());
 
         for(AuditLogEntity log : logs) {
-
             if(log.getSubId2() == 1) {
                 // increment for timestamp
                 Date createDate = DateTools.setTimePart(log.getCreateDate(), 12, 0, 0, 0);
@@ -679,12 +707,10 @@ public class FormStatService {
                 Date createDate = DateTools.setTimePart(log.getCreateDate(), 12, 0, 0, 0);
                 dayErrorCounts.get("saves").put(createDate.getTime(), dayErrorCounts.get("saves").getOrDefault(createDate.getTime(), 0) + 1);
             }
-
         }
 
         // Map to jsonobject
         for(Map.Entry<String, Map<Long, Integer>> entry : dayErrorCounts.entrySet()) {
-            String key = entry.getKey();
             Map<Long, Integer> value = entry.getValue();
             JSONArray valuesArray = new JSONArray();
             for(Map.Entry<Long, Integer> innerEntry : value.entrySet()) {
@@ -694,9 +720,12 @@ public class FormStatService {
 
                 valuesArray.put( obj );
             }
-            kksA.put(key, valuesArray);
+            String key = entry.getKey();
+            if("gets".equals(key)) key = context.prop.getText("components.multistep_form.system_errors.get_step");
+            else if("saves".equals(key)) key = context.prop.getText("components.multistep_form.system_errors.save_step");
+            timelineErrorData.put(key, valuesArray);
         }
 
-        return kksA;
+        return timelineErrorData;
     }
 }

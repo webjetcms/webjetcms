@@ -344,7 +344,7 @@ public class MultistepFormsService {
 
     public final int getFormId(String formName) {
         if(Tools.isEmpty(formName)) return -1;
-        return formsRepository.getFormId(formName, CloudToolsForCore.getDomainId()).orElse(-1);
+        return formsRepository.getFormId(formName, CloudToolsForCore.getDomainId()).orElse(-1L).intValue();
     }
 
     /**

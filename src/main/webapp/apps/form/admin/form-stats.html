@@ -141,7 +141,7 @@
                 const pieSystemErrorsConfig = {
                     yAxeName: "count",
                     xAxeName: "name",
-                    chartTitle: '[[#{components.multistep_form.field_errors_chart.label}]]',
+                    chartTitle: '[[#{components.multistep_form.system_errors_chart.label}]]',
                     chartDivId: "form-stats-pieSystemErrors",
                     chartData: data.chartErrorData.pieSystemErrorData
                 };
@@ -273,7 +273,7 @@
                 <i class="ti ti-users"></i>
             </div>
             <div class="stat-card__content">
-                <span class="stat-card__title" data-th-text="#{components.multistep_form.convertion_rate}">CONVERTION RATE</span>
+                <span class="stat-card__title" data-th-text="#{components.multistep_form.conversion_rate}">CONVERSION RATE</span>
                 <span id="conversionRate" class="stat-card__value">0</span>
             </div>
         </div>
@@ -304,7 +304,7 @@
         </div>
     </div>
 
-    <div id="form-stats-lineKokos" class="amcharts"></div>
+    <div id="form-stats-lineTimelineErrors" class="amcharts"></div>
 </div>
 
 <li class="nav-item" id="filter">

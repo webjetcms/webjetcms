@@ -24,6 +24,7 @@ public class FormsEntity extends FormsEntityBasic {
     private Long duration;
 
     @Column(name = "referer")
+    @Size(max = 255)
     private String referer;
 
     @Column(name = "language")

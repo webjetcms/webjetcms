@@ -22,6 +22,7 @@ import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.SpamProtection;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.forms.FormsEntity;
 import sk.iway.iwcm.components.forms.FormsRepository;
@@ -176,6 +177,11 @@ public class SaveFormService {
         form.setDuration(duration);
 
         String referer = request.getHeader("referer");
+        if (DocTools.testXss(referer) == true) {
+            Logger.warn(this.getClass(), "Referer URL contains XSS code, will not be saved. formName=" + formName + " docId=" + docId + " referer=" + referer);
+            referer = null;
+        }
+
         if(Tools.isNotEmpty(referer)) form.setReferer(DB.prepareString(referer, 255));
         else Logger.info(this.getClass(), "Cannot determine referer URL for saved form, destinationUrl is empty. formName=" + formName + " docId=" + docId);
 
@@ -192,7 +198,7 @@ public class SaveFormService {
         }
 
         if(Tools.isNotEmpty(lng)) form.setLanguage(lng);
-        else Logger.info(this.getClass(), "Cannot determine language, that is sued on page where form is. formName=" + formName + " docId=" + docId);
+        else Logger.info(this.getClass(), "Cannot determine language used on the page where the form is embedded. formName=" + formName + " docId=" + docId);
 
         // For file save we need formId ... sooo save it as it is and then use id
         form.setData("-");
