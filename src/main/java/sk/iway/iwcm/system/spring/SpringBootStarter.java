@@ -289,4 +289,17 @@ public class SpringBootStarter extends SpringBootServletInitializer {
         registration.setName("GetProtectedFile");
         return registration;
     }
+
+    /**
+     * Register StripesDispatcher servlet for *.action URLs.
+     * Migrated from web.xml servlet-mapping.
+     */
+    @Bean
+    public ServletRegistrationBean<net.sourceforge.stripes.controller.DispatcherServlet> stripesDispatcherRegistration() {
+        ServletRegistrationBean<net.sourceforge.stripes.controller.DispatcherServlet> registration = new ServletRegistrationBean<>(
+            new net.sourceforge.stripes.controller.DispatcherServlet(), "*.action");
+        registration.setName("StripesDispatcher");
+        registration.setLoadOnStartup(1);
+        return registration;
+    }
 }
