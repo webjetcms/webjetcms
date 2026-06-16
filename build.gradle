@@ -133,10 +133,6 @@ configurations {
     }
  }
 
-bootRun {
-    systemProperties System.getProperties()
-}
-
 dependencies {
 
     // === Spring Boot 4.x starters (manages Spring 7.x versions) ===
@@ -447,6 +443,65 @@ jacoco {
     //set latest version
     toolVersion = "+"
 }
+
+bootRun {
+    // Migrated from gretty JVM args (old build.gradle before Spring Boot migration)
+    // These preserve the exact runtime behavior from the gretty/Tomcat setup
+    def webjetDbname = System.env.webjetDbname ?: '/poolman-local.xml'
+    jvmArgs = [
+        // AspectJ weaver agent (same as used in test task)
+        //"-javaagent:${configurations.agent.singleFile}",
+        // Recommended system properties for Tomcat (from old gretty config)
+        '-Dsun.net.client.defaultConnectTimeout=3000',
+        '-Dsun.net.client.defaultReadTimeout=3000',
+        '-Dfile.encoding=utf-8',
+        '-Duser.language=sk',
+        '-Duser.country=SK',
+        // Remote debug on port 5005
+        '-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005',
+        // WebJET configuration overrides (from old gretty config)
+        '-Dwebjet.smtpServer=mxrelay.dev.iway.sk',
+        "-DwebjetDbname=${webjetDbname}",
+        '-Dwebjet.serverMonitoringEnableJPA=true',
+        '-Dwebjet.webEnableIPs=1,2,3,4,5,6,7,8,9,0',
+        '-Dwebjet.adminEnableIPs=1,2,3,4,5,6,7,8,9,0',
+        '-Dwebjet.passwordAdminExpiryDays=0',
+        '-Dwebjet.loggerUseAnsiColors=true'
+    ]
+    systemProperties System.getProperties()
+}
+
+// Generate self-signed certificate for HTTPS (migrated from gretty's auto-generated keystore)
+// Gretty auto-generated build/gretty/https-keystore.p12; now generated via keytool
+task generateCertificate(type: Exec) {
+    group = 'build'
+    description = 'Generates self-signed certificate for embedded Tomcat HTTPS'
+    def certFile = file("${projectDir}/src/main/resources/certificates/https-keystore.p12")
+    def certDir = certFile.parentFile
+    onlyIf { !certFile.exists() }
+    doFirst {
+        certDir.mkdirs()
+    }
+    workingDir projectDir
+    // macOS: keytool, Linux: keytool (from JDK)
+    def keytool = 'keytool'
+    commandLine keytool,
+        '-genkeypair',
+        '-alias', 'tomcat',
+        '-keyalg', 'EC',
+        '-groupname', 'secp256r1',
+        '-keystore', certFile.absolutePath,
+        '-storetype', 'PKCS12',
+        '-storepass', 'changeit',
+        '-keypass', 'changeit',
+        '-validity', '365',
+        '-sigalg', 'SHA256withECDSA',
+        '-dname', 'CN=WebJET CMS, OU=Development, O=InterWay, L=Bratislava, C=SK',
+        '-ext', 'SAN=DNS:localhost,IP:127.0.0.1'
+}
+
+// Ensure certificate is generated before bootRun
+bootRun.dependsOn generateCertificate
 
 // === Migrated from gretty: embedded Tomcat 11 configuration ===
 // Development: ./gradlew bootRun

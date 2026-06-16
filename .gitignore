@@ -26,13 +26,14 @@ src/main/webapp/files/protected/backup/
 #node_modules nepotrebujeme
 node_modules/
 
-#lokalne JSP subory
+#lokalne subory
 localconf*.jsp
 scratchpad*.jsp
 /target
 .vscode\settings.json
 src/main/resources/poolman-local*.xml
 src/main/webapp/WEB-INF/update/
+src/main/resources/certificates/https-keystore.p12
 
 #logy
 *.log
