@@ -25,6 +25,8 @@ import java.util.List;
 import net.sourceforge.stripes.exception.StripesRuntimeException;
 import net.sourceforge.stripes.util.Log;
 import net.sourceforge.stripes.util.ReflectUtil;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
 
 /**
  * Provides a very simple API for accessing resources within an application server.
@@ -153,11 +155,22 @@ public abstract class VFS {
    * @throws IOException If I/O errors occur
    */
   protected static List<URL> getResources(String path) throws IOException {
+    //WebJET CMS FIX
 
-    //Tomcat 9.0.118/11.0.22 fix: it failed to start because of FS.getResources(sk/iway/aceintegration/CustomNavbar.class/...\u0000\u0000\u0000=\u0000?\u0007\u0000\u0002\u0001\u0000#sk/iway/aceintegration/CustomNavbar\u0007\u0000\u0004\u0001\u0000\u0010java/lang/Object\u0007\u0000\u0006\u0001\u0000 sk/iway/iwcm/doc/NavbarInterface\u0001\u0000\u0006<init>\u0001\u0000\u0003()V
-    if (path.endsWith(".class")==false) return Collections.emptyList();
+    //Logger.debug(VFS.class, "VFS.getResources(" + path + ")");
 
-    return Collections.list(Thread.currentThread().getContextClassLoader().getResources(path));
+    //Tomcat 9.0.118/11.0.22 fix: it failed to start because of NULL BYTE in path
+    //see also: https://github.com/StripesFramework/stripes/issues/117
+    if (path.indexOf(0) > -1) return Collections.emptyList();
+
+    //Logger.debug(VFS.class, "INITIALIZING VFS.getResources(" + path + ")");
+    try {
+      return Collections.list(Thread.currentThread().getContextClassLoader().getResources(path));
+    } catch (Exception e) {
+      //InitServlet.class because net.sourceforge.stripes package has no log level set
+      Logger.error(InitServlet.class, "VFS.getResources(" + path + ") failed", e);
+      return Collections.emptyList();
+    }
   }
 
   /** Return true if the {@link VFS} implementation is valid for the current environment. */
