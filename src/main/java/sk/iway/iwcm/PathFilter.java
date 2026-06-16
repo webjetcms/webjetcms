@@ -1070,6 +1070,21 @@ public class PathFilter implements Filter
 			}
 			else
 			{
+				if (("GET".equalsIgnoreCase(req.getMethod()) || "HEAD".equalsIgnoreCase(req.getMethod())) && path.endsWith("/") && (path.startsWith("/admin/") || path.startsWith("/components/")))
+				{
+					String indexJspPath = path + "index.jsp";
+					if (FileTools.isFile(indexJspPath))
+					{
+						res.setHeader("Pragma", "No-Cache");
+						res.setDateHeader("Expires", 0);
+						res.setHeader("Cache-Control", "no-Cache");
+
+						Logger.debug(PathFilter.class, "Forwarding directory to index.jsp: " + indexJspPath);
+						forwardSafely(indexJspPath, req, res);
+						return;
+					}
+				}
+
 				if ("/sitemap.xml".equals(path))
 				{
 					//nie je definovana stranka s URL /sitemap.xml, priamo forwardnem
