@@ -16,6 +16,7 @@ import org.apache.commons.text.StringEscapeUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -344,7 +345,7 @@ public class MultistepFormsService {
 
     public final int getFormId(String formName) {
         if(Tools.isEmpty(formName)) return -1;
-        return formsRepository.getFormId(formName, CloudToolsForCore.getDomainId()).orElse(-1L).intValue();
+        return formsRepository.getFormId(formName, CloudToolsForCore.getDomainId(), PageRequest.of(0, 1)).orElse(-1L).intValue();
     }
 
     /**
