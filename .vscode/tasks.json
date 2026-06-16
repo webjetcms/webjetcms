@@ -54,8 +54,8 @@
                 },
                 "background": {
                     "activeOnStart": true,
-                    "beginsPattern": "o.s.w.s.DispatcherServlet - Completed initialization in",
-                    "endsPattern": "o.s.w.s.DispatcherServlet - Completed initialization in",
+                    "beginsPattern": "=== WebJET CMS started ===",
+                    "endsPattern": "=== WebJET CMS started ===",
                 }
             },
             "isBackground": true,
