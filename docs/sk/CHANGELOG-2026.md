@@ -13,7 +13,12 @@
 - Bezpečnosť - opravené chyby Local File Inclusion, kontrola nahrávaných súborov a RCE. Zraniteľnosť sa netýka web stránok s nastavenými externými súbormi - nastavená konfiguračná premenná `cloudStaticFilesDir`. Ďakujeme Josef Korbel (Citadelo) za nahlásenie týchto zraniteľností. Možné dočasné riešenie bez aktualizácie je:
   - zmazať alebo [aktualizovať](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/components/grideditor/phantom/phantom_sablona_ajax.jsp) súbor `/components/grideditor/phantom/phantom_sablona_ajax.jsp`
   - do konfiguračnej premennej `pathFilterBlockedPaths` pridať hodnotu `,/components/grideditor/phantom/`
-  - [globálne pre celý server](install/external-configuration.md) môžete do `JAVA_OPTS` pridať systémovú premennú `-Dwebjet.pathFilterBlockedPaths=.DS_Store,debug.,config.properties,Thumbs.db,.git,.svn,/WEB-INF/,./,/components/grideditor/phantom/`
+  - [globálne pre celý server](install/external-configuration.md) môžete do `JAVA_OPTS` pridať systémovú premennú:
+
+```txt
+-Dwebjet.pathFilterBlockedPaths=.DS_Store,debug.,config.properties,Thumbs.db,.git,.svn,/WEB-INF/,./,/components/grideditor/phantom/
+```
+
 - Bezpečnosť - pridaný CSRF token pre formulár pri vypnutej SPAM ochrane (#245).
 - Bezpečnosť - každé odoslanie formuláru kontroluje nastavenie formuláru v databáze, ak sa nenájde formulár nie je možné odoslať. Pôvodná verzia toto kontrolovala len na verejných uzloch clustra, teraz sa to kontroluje bez ohľadu na cluster. V prípade potreby vypnete funkčnosť nastavením konfiguračnej premennej `formAllowOnlyExistingFormsOnPublicNode` na hodnotu `false` (#245).
 - Bezpečnosť - opravená možnosť získania administrátorského účtu pri generovaní offline verzie (#245).
