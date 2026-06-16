@@ -16,6 +16,8 @@
 
 ### Formuláre
 
+- [Štatistiky viackrokových formulárov](redactor/apps/multistep-form/stat.md) boli rozšírené o dátumový filter a pokročilé metriky zobrazení/pokusov/jazykov etc. (#58509).
+
 - Do viackrokových formulárov pridaná možnosť jednoducho nastavovať výberové polia a skupiny zaškrtávacích / výberových polí (#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced.png)

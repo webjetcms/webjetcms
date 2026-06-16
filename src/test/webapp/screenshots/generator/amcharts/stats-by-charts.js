@@ -22,3 +22,16 @@ Scenario('screenshot stat section 2', ({I, Document}) => {
 
     I.wjSetDefaultWindowSize();
 });
+
+Scenario('screenshot stat section 3', ({I, Document}) => {
+    // Advanced stats
+    I.amOnPage("/apps/form/admin/form-stats/?formName=mutistepform_advanced_error_stats");
+
+    I.clickCss(".form-switch");
+
+    Document.screenshot("/redactor/apps/multistep-form/stat-section-header-advanced.png");
+
+    I.resizeWindow(1280, 1950);
+
+    Document.screenshot("/redactor/apps/multistep-form/stat-section-advanced.png");
+});

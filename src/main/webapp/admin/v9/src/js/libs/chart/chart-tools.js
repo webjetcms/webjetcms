@@ -2198,6 +2198,7 @@ async function createTableChart(chartForm) {
 
     const table = document.createElement("table");
     table.classList.add("table");
+    table.classList.add("amchart-table");
 
     if (typeof chartForm.headerNames != "undefined" && chartForm.headerNames != null) {
         //create thead section with title and count
@@ -2225,10 +2226,10 @@ async function createTableChart(chartForm) {
     table.appendChild(tbody);
 
     const wrapper2 = document.createElement("div");
+    wrapper2.classList.add("amchart-table-wrapper");
     wrapper2.appendChild(table);
     wrapper2.style.position = "relative";
     wrapper2.style.width = "100%";
-    wrapper2.style.height = "100%";
 
     const chartContainer = document.getElementById(chartForm.chartDivId);
     if(chartContainer) {
