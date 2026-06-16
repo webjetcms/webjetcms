@@ -8,12 +8,13 @@ import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.response_header.jpa.ResponseHeaderEntity;
@@ -23,22 +24,7 @@ import sk.iway.iwcm.components.response_header.jpa.ResponseHeaderRepository;
 public class ResponseHeaderService {
 
     private static final String CACHE_KEY = "apps.response-header.headersList-";
-    private static final Integer CACHE_IN_MINUTES = 1440; //24 hours
-
-    private final ApplicationContext applicationContext;
-
-    public ResponseHeaderService(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
-
-    private ResponseHeaderRepository getResponseHeaderRepository() {
-        try {
-            return applicationContext.getBean(ResponseHeaderRepository.class);
-        } catch (Exception ex) {
-            Logger.error(ResponseHeaderService.class, ex);
-            return null;
-        }
-    }
+    private static final Integer cacheInMinutes = 1440; //24 hours
 
     public Map<String, ResponseHeaderEntity> getResponseHeaders(String url) {
         int domainId = CloudToolsForCore.getDomainId();
@@ -50,14 +36,19 @@ public class ResponseHeaderService {
         if(headersList == null) {
 
             //Cache is empty for this domain, lets fill it up with values from DB
-            ResponseHeaderRepository responseHeaderRepository = getResponseHeaderRepository();
-            if (responseHeaderRepository != null) {
-                headersList = responseHeaderRepository.findByDomainId(domainId);
+            //For that we need get Repository
+            //!! Bug fix, @Autowired does not work so we must get repostiry using "getSpringBean"
+            RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
+            if (requestBean != null) {
+                ResponseHeaderRepository rhr = requestBean.getSpringBean("responseHeaderRepository", ResponseHeaderRepository.class);
+
+                //Get DB data
+                headersList = rhr.findByDomainId(domainId);
             }
             if(headersList == null) headersList = new ArrayList<>();
 
             //Set new object to Cache, reasponse headers value from DB
-            Cache.getInstance().setObject(CACHE_KEY + domainId, headersList, CACHE_IN_MINUTES);
+            Cache.getInstance().setObject(CACHE_KEY + domainId, headersList, cacheInMinutes);
         }
 
         return  this.filterRequestHeadersByUrl(headersList, url);
@@ -100,10 +91,7 @@ public class ResponseHeaderService {
      */
     public static void setResponseHeaders(String path, HttpServletRequest request, HttpServletResponse response) {
         try {
-            ResponseHeaderService pes = Tools.getSpringBean("responseHeaderService", ResponseHeaderService.class);
-            if (pes == null) {
-                return;
-            }
+            ResponseHeaderService pes = new ResponseHeaderService();
             Map<String, ResponseHeaderEntity> headersMap = pes.getResponseHeaders(path);
             if (headersMap!=null) {
                 for(ResponseHeaderEntity header : headersMap.values()) {
@@ -136,7 +124,7 @@ public class ResponseHeaderService {
     public static void setContentLanguageHeader(String lngContryPair, boolean forceSet, HttpServletRequest request, HttpServletResponse response) {
         if (request.getAttribute("contentLanguageHeaderSet")==null || forceSet) {
             response.setHeader("Content-Language", lngContryPair);
-            response.setLocale(org.springframework.util.StringUtils.parseLocaleString(lngContryPair.replace('-', '_')));
+            response.setLocale(org.springframework.util.StringUtils.parseLocaleString(lngContryPair.replaceAll("-", "_")));
             request.setAttribute("contentLanguageHeaderSet", Boolean.TRUE);
         }
     }

@@ -23,10 +23,10 @@ src/main/webapp/images/gallery/test/subfolder1
 src/main/webapp/files/protected/backup/
 **/_tmp_*
 
-#node_modules nepotrebujeme
+#node_modules
 node_modules/
 
-#lokalne subory
+#local files
 localconf*.jsp
 scratchpad*.jsp
 /target
@@ -35,7 +35,7 @@ src/main/resources/poolman-local*.xml
 src/main/webapp/WEB-INF/update/
 src/main/resources/certificates/https-keystore.p12
 
-#logy
+#logs
 *.log
 
 #idea

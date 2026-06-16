@@ -503,23 +503,196 @@ task generateCertificate(type: Exec) {
 // Ensure certificate is generated before bootRun
 bootRun.dependsOn generateCertificate
 
-// === Migrated from gretty: embedded Tomcat 11 configuration ===
-// Development: ./gradlew bootRun
-// Production:  ./gradlew war (produces standard WAR for external Tomcat 11)
-// For executable WAR with embedded server: ./gradlew bootWar (requires Spring Boot plugin)
+//generovanie javadoc dokumentacie
+//generovat pocas buildu, aby sa dali generovat aj triedy, ktore tu nemame, napr. Constants
+javadoc {
+  failOnError = false
+  title = "WebJET CMS"
+  destinationDir = file('docs/javadoc')
+  options.addStringOption('Xdoclint:none', '-quiet')
+  options.addStringOption('Xmaxerrs', '65536')
+  options.addStringOption('Xmaxwarns', '65536')
+  include (
+        'sk/iway/iwcm/'
+  )
+  exclude (
+    '/de/innosystec/unrar/unpack/ComprDataIO.java',
+    'sun/reflect/generics/',
+    'sk/iway/iwcm/common/FileIndexerTools.java'
+  )
+}
 
-def mostRecentVersion(List<String> versions) {
-    if (versions == null || versions.isEmpty()) return versions[0]
-    def sorted = versions.sort { a, b ->
-        def verA = a.replaceAll(/[^0-9.]/, '').split('\\.')
-        def verB = b.replaceAll(/[^0-9.]/, '').split('\\.')
-        def len = Math.min(verA.length, verB.length)
-        for (int i = 0; i < len; i++) {
-            def numA = verA[i].isInteger() ? Integer.parseInt(verA[i]) : 0
-            def numB = verB[i].isInteger() ? Integer.parseInt(verB[i]) : 0
-            if (numA != numB) return numA <=> numB
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = System.getProperty("wjgroup")
+            artifactId = System.getProperty("wjname")
+            version = System.getProperty("wjversion")
+
+            pom {
+                name = 'webjet'
+                description = 'WebJET CMS - Web Content Management in Java/Spring'
+                url = 'https://www.webjetcms.com'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        name = 'Lubos Balat'
+                        email = 'info@webjet.eu'
+                        organization = 'InterWay, a. s.'
+                        organizationUrl = 'https://www.interway.sk'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/webjetcms/webjetcms.git'
+                    developerConnection = 'scm:git:ssh://github.com:/webjetcms/webjetcms.git'
+                    url = 'https://github.com/webjetcms/webjetcms/tree/master'
+                }
+            }
+
+            from components.java
         }
-        verA.length() <=> verB.length()
     }
-    return sorted[-1]
+}
+
+//vygeneruje POM subor pre maven deployment
+task writePom() {
+
+    dependsOn tasks.withType(GenerateMavenPom)
+
+    //vrati zo zadanych 2 cisel verzii najnovsiu verziu (napr. 1.11.1034,1.12.276=>1.12.276)
+    ext.mostRecentVersion = { List versions ->
+        def sorted = versions.sort(false) { a, b ->
+
+            List verA = a.tokenize('.')
+            List verB = b.tokenize('.')
+
+            def commonIndices = Math.min(verA.size(), verB.size())
+
+            for (int i = 0; i < commonIndices; ++i) {
+                if (verA[i].equals("+")) verA[i] = "0"
+                if (verB[i].equals("+")) verB[i] = "0"
+                def numA = 0;
+                try { numA = verA[i].replace("-SNAPSHOT", "").replace("-RC", "").toInteger(); } catch (Exception ex) {}
+                def numB = 0;
+                try { numB = verB[i].replace("-SNAPSHOT", "").replace("-RC", "").toInteger(); } catch (Exception ex) {}
+
+                if (numA != numB) {
+                    return numA <=> numB
+                }
+            }
+
+            // If we got this far then all the common indices are identical, so whichever version is longer must be more recent
+            verA.size() <=> verB.size()
+        }
+
+        //println "sorted versions: $sorted"
+        sorted[-1]
+    }
+
+    doLast {
+        //generate pom file
+        def wjversion = System.getProperty("wjversion");
+        if (wjversion == null) wjversion = "unknown"
+
+        /*pom {
+            project {
+                groupId 'sk.iway'
+                artifactId 'webjet'
+                version wjversion
+                name 'webjet'
+            }
+        }.writeTo("build/pom.xml")*/
+
+        // Get existing pom file
+        Node xml = new XmlParser().parse("build/publications/maven/pom-default.xml")
+        //verziu je mozne zadat v gradle ako 5.3.+, do POM to potrebujeme resolvnut na konkretnu verziu 5.3.22
+        Map resolvedVersionMap = new HashMap()
+        Set<ResolvedArtifact> resolvedArtifacts = configurations.runtimeClasspath.getResolvedConfiguration().getResolvedArtifacts()
+        //resolvedArtifacts.addAll(configurations.testImplementation.getResolvedConfiguration().getResolvedArtifacts())
+        resolvedArtifacts.each {
+            def group = it.getModuleVersion().getId().getGroup();
+            def version = it.getModuleVersion().getId().getVersion();
+            def currentVersion = resolvedVersionMap.get(it.getName());
+            def mostRecent = version;
+            if (currentVersion != null) mostRecent = mostRecentVersion([currentVersion, version]);
+
+            println("resolvedVersion: group="+group+" name="+it.getName()+" versionFull="+it.getModuleVersion()+" version="+version+" currentVersion="+currentVersion+" mostRecent="+mostRecent)
+            resolvedVersionMap.put(group + ":" + it.getName(), mostRecent);
+        }
+
+        // Update dependencies with resolved versions
+        Node dependencies = xml.dependencies.first();
+        Iterator<Node> i = dependencies.iterator();
+        while (i.hasNext()) {
+            it = i.next()
+            Node artifactId = it.get("artifactId").first()
+            def groupId = it.get("groupId").first().value().first()
+            def artifactName = artifactId.value().first()
+            def version = it.get("version").first().value().first()
+            //println "Checking: groupId: "+groupId+" artifactId:"+artifactName+" version="+version+" scope="+it.get("scope")
+
+            def artifactVersion = resolvedVersionMap.get(groupId + ":" + artifactName)
+            Node versionNode = it.get("version").first()
+            if (artifactVersion!=null) {
+                def mostRecent = mostRecentVersion([artifactVersion, version]);
+                //println "artifact version=" + artifactVersion + " mostRecent=" + mostRecent
+                if (mostRecent.equals(version)==false) {
+                    println "---> changing version: " + groupId + ":" + artifactName + " " + version + "->" + artifactVersion + " mostRecent=" + mostRecent
+                    versionNode.value = mostRecent
+                }
+            }
+
+            //zmaz exclusions, to tam fakt nepotrebujeme
+            it.remove(it.get("exclusions"))
+
+            //zmen scope z runtime na compile
+            Node scope = it.get("scope").first()
+            def scopeValue = scope.value().first()
+            //println "groupId: "+groupId+" artifactId:"+artifactName+" version="+version+" scope="+scopeValue
+            if ("runtime".equals(scopeValue)) scope.value = "compile";
+
+            if (artifactName.endsWith("servlet-api") || artifactName.endsWith(".jsp-api") || artifactName.endsWith(".el-api") || "jsr250-api".equals(artifactName)) scope.value = "provided";
+
+            if ("test".equals(scopeValue) || "8.9-SNAPSHOT-wj9".equals(version)) {
+                println "----> removing: "+artifactName
+                i.remove();
+            }
+
+            //remove sk.iway artifacts, they are packages to webjet-VERSION-libs.jar
+            if (groupId.startsWith("sk.iway") && "pd4ml".equals(artifactName)==false) {
+                println "----> removing: "+artifactName
+                i.remove();
+            }
+
+            //remove stripes, it is integrated with our changes in libs jar
+            if ("stripes".equals(artifactName)) {
+                println "----> removing: "+artifactName
+                i.remove();
+            }
+        }
+
+        // zapis pom subor
+        def printWriter = new PrintWriter(new FileWriter("build/updatezip/artifacts/webjetcms-"+wjversion+".pom"));
+        printWriter.println('<?xml version="1.0" encoding="UTF-8"?>');
+        XmlNodePrinter xmlNodePrinter = new XmlNodePrinter(printWriter)
+        xmlNodePrinter.with {
+            preserveWhitespace = true
+            expandEmptyElements = true
+        }
+        xmlNodePrinter.print(xml)
+
+        delete files("build/pom.xml")
+    }
+}
+
+tasks.withType(JavaCompile) {
+    //prevent warning messages during compile
+    options.compilerArgs += ['-Xlint:none']
+    //needed for Spring
+    options.compilerArgs += ['-parameters']
 }
