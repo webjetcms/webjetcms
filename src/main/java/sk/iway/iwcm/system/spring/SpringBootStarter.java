@@ -200,4 +200,93 @@ public class SpringBootStarter extends SpringBootServletInitializer {
         registration.setName("MultipleFileUploadAction");
         return registration;
     }
+
+    /**
+     * Register ThumbServlet for /admin/thumb/*, /thumb/*, /tumbn/* paths.
+     */
+    @Bean
+    public ServletRegistrationBean<sk.iway.iwcm.editor.ThumbServlet> thumbServletRegistration() {
+        ServletRegistrationBean<sk.iway.iwcm.editor.ThumbServlet> registration = new ServletRegistrationBean<>(
+            new sk.iway.iwcm.editor.ThumbServlet(), "/admin/thumb/*", "/thumb/*", "/tumbn/*");
+        registration.setName("thumbServlet");
+        return registration;
+    }
+
+    /**
+     * Register Captcha servlet for /captcha.jpg path.
+     */
+    @Bean
+    public ServletRegistrationBean<sk.iway.iwcm.system.captcha.CaptchaServlet> captchaServletRegistration() {
+        ServletRegistrationBean<sk.iway.iwcm.system.captcha.CaptchaServlet> registration = new ServletRegistrationBean<>(
+            new sk.iway.iwcm.system.captcha.CaptchaServlet(), "/captcha.jpg");
+        registration.setName("captchaServlet");
+        return registration;
+    }
+
+    /**
+     * Register Elfinder servlet for /admin/elfinder-connector/ path.
+     */
+    @Bean
+    public ServletRegistrationBean<sk.iway.iwcm.system.elfinder.ElfinderServlet> elfinderServletRegistration() {
+        ServletRegistrationBean<sk.iway.iwcm.system.elfinder.ElfinderServlet> registration = new ServletRegistrationBean<>(
+            new sk.iway.iwcm.system.elfinder.ElfinderServlet(), "/admin/elfinder-connector/");
+        registration.setName("elfinderServlet");
+        return registration;
+    }
+
+    /**
+     * Register Pdf servlet for /to.pdf/*, /topdf/* paths.
+     */
+    @Bean
+    public ServletRegistrationBean<sk.iway.iwcm.components.pdf.PdfServlet> pdfServletRegistration() {
+        ServletRegistrationBean<sk.iway.iwcm.components.pdf.PdfServlet> registration = new ServletRegistrationBean<>(
+            new sk.iway.iwcm.components.pdf.PdfServlet(), "/to.pdf/*", "/topdf/*");
+        registration.setName("pdfServlet");
+        return registration;
+    }
+
+    /**
+     * Register XhrFileUpload servlet for /XhrFileUpload path.
+     */
+    @Bean
+    public ServletRegistrationBean<sk.iway.iwcm.components.upload.XhrFileUploadServlet> xhrFileUploadServletRegistration() {
+        ServletRegistrationBean<sk.iway.iwcm.components.upload.XhrFileUploadServlet> registration = new ServletRegistrationBean<>(
+            new sk.iway.iwcm.components.upload.XhrFileUploadServlet(), "/XhrFileUpload");
+        registration.setName("XhrFileUpload");
+        return registration;
+    }
+
+    /**
+     * Register AdminUpload servlet for /admin/upload/chunk path.
+     */
+    @Bean
+    public ServletRegistrationBean<sk.iway.iwcm.admin.upload.AdminUploadServlet> adminUploadServletRegistration() {
+        ServletRegistrationBean<sk.iway.iwcm.admin.upload.AdminUploadServlet> registration = new ServletRegistrationBean<>(
+            new sk.iway.iwcm.admin.upload.AdminUploadServlet(), "/admin/upload/chunk");
+        registration.setName("AdminUpload");
+        return registration;
+    }
+
+    /**
+     * Register ExportSync servlet for /export.sync path.
+     */
+    @Bean
+    public ServletRegistrationBean<sk.iway.iwcm.sync.export.ExportSyncServlet> exportSyncServletRegistration() {
+        ServletRegistrationBean<sk.iway.iwcm.sync.export.ExportSyncServlet> registration = new ServletRegistrationBean<>(
+            new sk.iway.iwcm.sync.export.ExportSyncServlet(), "/export.sync");
+        registration.setName("exportSyncServlet");
+        return registration;
+    }
+
+    /**
+     * Register GetProtectedFile servlet for /files/protected/* path.
+     * Migrated from web.xml servlet-mapping.
+     */
+    @Bean
+    public ServletRegistrationBean<sk.iway.iwcm.doc.GetProtectedFileServlet> getProtectedFileServletRegistration() {
+        ServletRegistrationBean<sk.iway.iwcm.doc.GetProtectedFileServlet> registration = new ServletRegistrationBean<>(
+            new sk.iway.iwcm.doc.GetProtectedFileServlet(), "/files/protected/*");
+        registration.setName("GetProtectedFile");
+        return registration;
+    }
 }
