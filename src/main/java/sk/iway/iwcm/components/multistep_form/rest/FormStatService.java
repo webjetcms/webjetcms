@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.json.JSONArray;
@@ -32,6 +33,7 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.stat.rest.StatService;
 import sk.iway.iwcm.system.audit.jpa.AuditLogEntity;
 import sk.iway.iwcm.system.audit.jpa.AuditRepository;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
@@ -50,7 +52,6 @@ public class FormStatService {
     private final FormsRepository formsRepository;
     private final FormSettingsRepository formSettingsRepository;
     private final FormsServiceImpl formsService;
-
     private final AuditRepository auditRepository;
 
     @Autowired
@@ -58,7 +59,6 @@ public class FormStatService {
         this.formsRepository = formsRepository;
         this.formSettingsRepository = formSettingsRepository;
         this.formsService = formsService;
-
         this.auditRepository = auditRepository;
     }
 
@@ -66,15 +66,41 @@ public class FormStatService {
      * Thread-safe context object for sharing computed values across methods within a single request.
      * Each request creates its own instance on the stack, ensuring thread safety without synchronization.
      */
-    private static class StatContext {
+    private class StatContext {
+
+        final String formName;
+        final int formId;
+        final int domainId;
         final Prop prop;
+        final Date[] dateRange;
         final Map<String, String> columnNames;
         final Map<String, FormItemEntity> allowedItemsEntities;
 
-        StatContext(Prop prop, Map<String, String> columnNames, Map<String, FormItemEntity> allowedItemsEntities) {
-            this.prop = prop;
-            this.columnNames = columnNames;
-            this.allowedItemsEntities = allowedItemsEntities;
+        /**
+         * Creates a context for all form items or for one selected item.
+         *
+         * @param formName the form name identifier
+         * @param itemFormId optional form item identifier, or {@code null} for all items
+         * @param request the HTTP request used for localization and date filters
+         */
+        StatContext(String formName, String itemFormId, HttpServletRequest request) {
+            this.formName = formName;
+            this.domainId = CloudToolsForCore.getDomainId();
+            this.prop = Prop.getInstance(request);
+            this.formId = formsRepository.getFormId(this.formName, this.domainId).orElse(-1L).intValue();
+            this.columnNames = getColumnNames(this.formName, new UserDetails(request), this.prop);
+            this.allowedItemsEntities = getAllowedItems(this.formName, itemFormId);
+            this.dateRange = getDateRange(request);
+        }
+
+        /**
+         * Creates a context for all statistic-enabled items in a form.
+         *
+         * @param formName the form name identifier
+         * @param request the HTTP request used for localization and date filters
+         */
+        StatContext(String formName, HttpServletRequest request) {
+            this(formName, null, request);
         }
     }
 
@@ -92,24 +118,24 @@ public class FormStatService {
 
         JSONObject allData = new JSONObject();
 
+        // Create shared context - computed once and passed to all methods for thread safety
+        StatContext context = new StatContext(formName, request);
+
         // they contain ONLY bonus data like duration, dateCreated, etc..
-        List<FormsEntity> formEntities = getFormEntities(formName);
+        List<FormsEntity> formEntities = getFormEntities(context);
         allData.put("averageDuration", computeAverageDuration(formEntities));
-        allData.put("durationDays", computeDurationDays(formEntities));
+        allData.put("durationDays", computeDurationDays(context));
         allData.put("lastResponseDateTime", getLastResponseDateTime(formEntities));
-        allData.put("viewCount", getFormViewCount(formName));
+        allData.put("viewCount", getFormViewCount(context.formName));
+        allData.put("responseAttempts", getResponseAttempts(context.formName));
 
         // form data - aka users answers to fields
-        List<String> allFormData = getAllFormData(formName);
+        List<String> allFormData = getAllFormData(context);
         allData.put("totalResponses", allFormData.size());
 
-        // Create shared context - computed once and passed to all methods for thread safety
-        Prop prop = Prop.getInstance(request);
-        StatContext context = new StatContext(prop, getColumnNames(formName, new UserDetails(request), prop), getAllowedItems(formName, null));
-
         allData.put("chartData", getFormStatChartData(allFormData, context));
-        allData.put("chartBonusData", getFormStatChartBonusData(formName, formEntities, context));
-        allData.put("chartErrorData", getFormStatChartErrorData(formName, context));
+        allData.put("chartBonusData", getFormStatChartBonusData(formEntities, context));
+        allData.put("chartErrorData", getFormStatChartErrorData(context));
 
         return allData;
     }
@@ -125,13 +151,26 @@ public class FormStatService {
     public final JSONArray getFormStatChartData(String formName, String itemFormId, HttpServletRequest request) {
         if(Tools.isEmpty(formName) || Tools.isEmpty(itemFormId)) return null;
 
-        Prop prop = Prop.getInstance(request);
-        StatContext context = new StatContext(prop, getColumnNames(formName, new UserDetails(request), prop), getAllowedItems(formName, itemFormId));
+        // Create shared context - computed once and passed to all methods for thread safety
+        StatContext context = new StatContext(formName, itemFormId, request);
 
-        return getFormStatChartData(getAllFormData(formName), context);
+        return getFormStatChartData(getAllFormData(context), context);
     }
 
     /* ------------------------- */
+
+    /**
+     * Resolves the selected statistics date range from request parameters.
+     *
+     * @param request the HTTP request containing {@code dayDate} or {@code searchDayDate}
+     * @return date range accepted by statistics repository queries
+     */
+    private Date[] getDateRange(HttpServletRequest request) {
+        String stringRange = Tools.getStringValue(request.getParameter("dayDate"), "");
+        if(Tools.isEmpty(stringRange)) stringRange = Tools.getStringValue(request.getParameter("searchDayDate"), "");
+
+        return StatService.processDateRangeString(stringRange);
+    }
 
     /**
      * Finds the most recent response timestamp across all form entities.
@@ -151,30 +190,17 @@ public class FormStatService {
     }
 
     /**
-     * Computes number of days since the form creation timestamp.
-     * It first tries to read the creation epoch from a metadata row (row with null createDate),
-     * then falls back to the earliest response date.
+     * Calculates how many days have passed since the form was created.
+     * Falls back to the first response date when the creation timestamp is unavailable.
      *
-     * @param formEntities list of form submissions
-     * @return number of days as a string, or {@code "0"} when creation time cannot be derived
+     * @param context shared request statistics context
+     * @return number of elapsed days, {@code < 1} for same-day forms, or {@code 0} when unknown
      */
-    private String computeDurationDays(List<FormsEntity> formEntities) {
-        Long formCreationEpoch = null;
-        for(FormsEntity entity : formEntities) {
-            if(entity.getCreateDate() == null) {
-                formCreationEpoch = entity.getDuration();
-                break;
-            }
-        }
-
-        if(formCreationEpoch == null || formCreationEpoch <= 0L) {
+    private String computeDurationDays(StatContext context) {
+        Long formCreationEpoch = formsRepository.getFormCreationDuration(context.formName, context.domainId).orElse(null);
+        if(formCreationEpoch == null  || formCreationEpoch <= 0L) {
             //try to use first response as fallback
-            Date minDate = formEntities.stream()
-                    .map(FormsEntity::getCreateDate)
-                    .filter(d -> d != null)
-                    .min(Date::compareTo)
-                    .orElse(null);
-
+            Date minDate = formsRepository.getMinFormCreateDate(context.formName, context.domainId).orElse(null);
             if(minDate != null) {
                 formCreationEpoch = minDate.getTime() / 1000;
             }
@@ -183,6 +209,7 @@ public class FormStatService {
         if(formCreationEpoch == null || formCreationEpoch <= 0) return "0";
         long currentEpoch = Tools.getNow() / 1000;
         long durationDays = (currentEpoch - formCreationEpoch) / (60 * 60 * 24);
+        if(durationDays < 1) return "< 1";
         return String.valueOf(durationDays);
     }
 
@@ -198,17 +225,14 @@ public class FormStatService {
         int validCount = 0;
 
         for(FormsEntity entity : formEntities) {
-            if(entity.getCreateDate() != null) {
-                Long duration = entity.getDuration();
-                if(duration != null && duration > 0) {
-                    totalDuration += duration;
-                    validCount++;
-                }
+            Long duration = entity.getDuration();
+            if(duration != null && duration > 0) {
+                totalDuration += duration;
+                validCount++;
             }
         }
 
         long averageDuration = validCount > 0 ? totalDuration / validCount : 0L;
-
         long totalSeconds = averageDuration / 1000;
         long minutes = totalSeconds / 60;
         long seconds = totalSeconds % 60;
@@ -231,17 +255,16 @@ public class FormStatService {
     /**
      * Loads all persisted response payload strings for the given form using pagination.
      *
-     * @param formName the form name identifier
+     * @param context shared request statistics context
      * @return list of raw pipe-delimited response data strings
      */
-    private List<String> getAllFormData(String formName) {
+    private List<String> getAllFormData(StatContext context) {
         List<String> allFormData = new ArrayList<>();
-        int domainId = CloudToolsForCore.getDomainId();
         int pageNumber = 0;
         List<String> page;
         do {
             Pageable pageable = PageRequest.of(pageNumber, PAGE_SIZE);
-            page = formsRepository.getFormAllData(formName, domainId, pageable);
+            page = formsRepository.getFormAllData(context.formName, context.domainId, context.dateRange[0], context.dateRange[1], pageable);
             allFormData.addAll(page);
             pageNumber++;
         } while (page.size() == PAGE_SIZE);
@@ -332,6 +355,13 @@ public class FormStatService {
         return sortedData;
     }
 
+    /**
+     * Adds one parsed answer value to the grouped data map.
+     *
+     * @param data grouped answer values keyed by itemFormId
+     * @param key form item identifier
+     * @param value parsed answer value
+     */
     private void addMapValue(Map<String, List<String>> data, String key, String value) {
         data.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
     }
@@ -411,10 +441,29 @@ public class FormStatService {
         return prepareAggregatedDataForChart(valueCountMap, normalizedToOriginal, maxCountAllowed, allowOtherCount, prop);
     }
 
+    /**
+     * Converts pre-counted values into chart data.
+     *
+     * @param valueCountMap map of display value to occurrence count
+     * @param maxCountAllowed maximum number of distinct values to show
+     * @param allowOtherCount whether to aggregate excess values into an "Other" entry
+     * @param prop localization properties for the "Other" label
+     * @return JSONArray of {name, count} objects sorted by count descending
+     */
     private JSONArray prepareAggregatedDataForChart(Map<String, Integer> valueCountMap, int maxCountAllowed, boolean allowOtherCount, Prop prop) {
         return prepareAggregatedDataForChart(valueCountMap, new HashMap<>(), maxCountAllowed, allowOtherCount, prop);
     }
 
+    /**
+     * Converts pre-counted values into chart data, optionally restoring original display labels.
+     *
+     * @param valueCountMap map of normalized or display value to occurrence count
+     * @param normalizedToOriginal map of normalized values to their first original display value
+     * @param maxCountAllowed maximum number of distinct values to show
+     * @param allowOtherCount whether to aggregate excess values into an "Other" entry
+     * @param prop localization properties for the "Other" label
+     * @return JSONArray of {name, count} objects sorted by count descending
+     */
     private JSONArray prepareAggregatedDataForChart(Map<String, Integer> valueCountMap, Map<String, String> normalizedToOriginal, int maxCountAllowed, boolean allowOtherCount, Prop prop) {
         JSONArray valuesArray = new JSONArray();
 
@@ -527,19 +576,23 @@ public class FormStatService {
      * Loads all form submission rows for the given form and current domain.
      * The result contains only fields required for statistics processing.
      *
-     * @param formName the form name identifier
+     * @param context shared request statistics context
      * @return list of form entities used for metrics and bonus charts
      */
-    private List<FormsEntity> getFormEntities(String formName) {
+    private List<FormsEntity> getFormEntities(StatContext context) {
         List<FormsEntity> formEntities = new ArrayList<>();
 
-        String sql = "SELECT duration, create_date, language FROM forms WHERE form_name = ? AND domain_id = ?";
+        StringBuilder sql = new StringBuilder("SELECT duration, create_date, language FROM forms WHERE form_name = ? AND domain_id = ?");
 
         List<Object> sqlParams = new ArrayList<>();
-        sqlParams.add(formName);
-        sqlParams.add(CloudToolsForCore.getDomainId());
+        sqlParams.add(context.formName);
+        sqlParams.add(context.domainId);
 
-        new ComplexQuery().setSql(sql).setParams(sqlParams.toArray()).list(new Mapper<FormsEntity>() {
+        sql.append(" AND create_date BETWEEN ? AND ?");
+        sqlParams.add(new Timestamp(context.dateRange[0].getTime()));
+        sqlParams.add(new Timestamp(context.dateRange[1].getTime()));
+
+        new ComplexQuery().setSql(sql.toString()).setParams(sqlParams.toArray()).list(new Mapper<FormsEntity>() {
             @Override
 			public FormsEntity map(ResultSet rs) throws SQLException {
                 formEntities.add( resultSetToFormEntity(rs) );
@@ -575,25 +628,28 @@ public class FormStatService {
         return (viewCount == null || viewCount < 1) ? 0 : viewCount;
     }
 
+    private int getResponseAttempts(String formName) {
+        Integer responseAttempts = formSettingsRepository.getResponseAttempts(formName, CloudToolsForCore.getDomainId());
+        return (responseAttempts == null || responseAttempts < 1) ? 0 : responseAttempts;
+    }
+
     /**
      * Builds bonus chart data for language and referrer distributions.
      * Uses shared context to reuse localization resources.
      *
-     * @param formName the form name identifier
      * @param formEntities list of form submissions
      * @param context shared context containing localization utilities
      * @return JSON object with {@code languageData} and {@code referrerData} arrays
      */
-    private JSONObject getFormStatChartBonusData(String formName, List<FormsEntity> formEntities, StatContext context) {
+    private JSONObject getFormStatChartBonusData(List<FormsEntity> formEntities, StatContext context) {
         List<String> languages = new ArrayList<>();
         for(FormsEntity entity : formEntities) {
-            if (entity.getCreateDate() == null) continue;
             languages.add(valueOrUnknown(entity.getLanguage()));
         }
 
         JSONObject bonusData = new JSONObject();
         bonusData.put("languageData", prepareDataForChart(languages, PIE_TOP_COUNT, true, false, context.prop) );
-        bonusData.put("referrerData", prepareAggregatedDataForChart(getRefererCounts(formName), TABLE_TOP_COUNT, true, context.prop) );
+        bonusData.put("referrerData", prepareAggregatedDataForChart(getRefererCounts(context.formName, context.dateRange), TABLE_TOP_COUNT, true, context.prop) );
 
         return bonusData;
     }
@@ -602,18 +658,25 @@ public class FormStatService {
      * Aggregates referrer values directly in the database to avoid loading the 255-character column for every row.
      *
      * @param formName the form name identifier
+     * @param dateRange response creation date range
      * @return map of referrer value to response count, with empty values merged into {@link #UNKNOWN_VALUE}
      */
-    private Map<String, Integer> getRefererCounts(String formName) {
+    private Map<String, Integer> getRefererCounts(String formName, Date[] dateRange) {
         Map<String, Integer> refererCounts = new HashMap<>();
 
-        String sql = "SELECT referer, COUNT(*) AS referer_count FROM forms WHERE form_name = ? AND domain_id = ? AND create_date IS NOT NULL GROUP BY referer";
+        StringBuilder sql = new StringBuilder("SELECT referer, COUNT(*) AS referer_count FROM forms WHERE form_name = ? AND domain_id = ? AND create_date IS NOT NULL");
 
         List<Object> sqlParams = new ArrayList<>();
         sqlParams.add(formName);
         sqlParams.add(CloudToolsForCore.getDomainId());
 
-        new ComplexQuery().setSql(sql).setParams(sqlParams.toArray()).list(new Mapper<String>() {
+        sql.append(" AND create_date BETWEEN ? AND ?");
+        sqlParams.add(new Timestamp(dateRange[0].getTime()));
+        sqlParams.add(new Timestamp(dateRange[1].getTime()));
+
+        sql.append(" GROUP BY referer");
+
+        new ComplexQuery().setSql(sql.toString()).setParams(sqlParams.toArray()).list(new Mapper<String>() {
             @Override
             public String map(ResultSet rs) throws SQLException {
                 String referer = valueOrUnknown(rs.getString("referer"));
@@ -625,6 +688,12 @@ public class FormStatService {
         return refererCounts;
     }
 
+    /**
+     * Replaces empty values with the shared unknown bucket value.
+     *
+     * @param value value to normalize
+     * @return original value when present, otherwise {@link #UNKNOWN_VALUE}
+     */
     private String valueOrUnknown(String value) {
         return Tools.isNotEmpty(value) ? value : UNKNOWN_VALUE;
     }
@@ -636,7 +705,7 @@ public class FormStatService {
      * @param context shared context containing localization and column name mapping
      * @return JSON object with {@code pieErrorData} and {@code tableErrorData} arrays
      */
-    private JSONObject getFormStatChartErrorData(String formName, StatContext context) {
+    private JSONObject getFormStatChartErrorData(StatContext context) {
         Map<String, Integer> errorCountsByField = new HashMap<>();
         int allFieldsErrors = 0;
         for(FormItemEntity entity : context.allowedItemsEntities.values()) {
@@ -652,14 +721,18 @@ public class FormStatService {
         errorData.put("pieErrorData", prepareAggregatedDataForChart(errorCountsByField, PIE_TOP_COUNT, true, context.prop) );
         errorData.put("tableErrorData", prepareAggregatedDataForChart(errorCountsByField, TABLE_TOP_COUNT, true, context.prop) );
 
-        int formId = formsRepository.getFormId(formName, CloudToolsForCore.getDomainId()).orElse(-1L).intValue();
-
         int getErrorsCount = 0;
         int saveErrorsCount = 0;
 
-        if(formId > 0) {
-            getErrorsCount = auditRepository.getCountOfLogs(Adminlog.TYPE_MULTISTEP_FORM_USERS, formId, 1);
-            saveErrorsCount = auditRepository.getCountOfLogs(Adminlog.TYPE_MULTISTEP_FORM_USERS, formId, 2);
+        List<AuditLogEntity> logs = new ArrayList<>();
+        if(context.formId > 0) {
+            Timestamp dateFrom = new Timestamp(context.dateRange[0].getTime());
+            Timestamp dateTo = new Timestamp(context.dateRange[1].getTime());
+            logs = auditRepository.findAllByLogTypeAndSubId1AndCreateDateBetween(Adminlog.TYPE_MULTISTEP_FORM_USERS, context.formId, dateFrom, dateTo);
+            for(AuditLogEntity log : logs) {
+                if(log.getSubId2() == 1) getErrorsCount++;
+                else if(log.getSubId2() == 2) saveErrorsCount++;
+            }
         }
 
         errorData.put("systemErrorsCount", getErrorsCount + saveErrorsCount);
@@ -670,12 +743,18 @@ public class FormStatService {
         valuesArray.put( getChartObject(context.prop.getText("components.multistep_form.system_errors.save_step"), saveErrorsCount) );
 
         errorData.put("pieSystemErrorData",  valuesArray);
-
-        errorData.put("timelineErrorData", getTimelineErrorData(formName, context));
+        errorData.put("timelineErrorData", getTimelineErrorData(context, logs));
 
         return errorData;
     }
 
+    /**
+     * Creates one chart value object.
+     *
+     * @param name chart value label
+     * @param count chart value count
+     * @return JSON object with {@code name} and {@code count}
+     */
     private JSONObject getChartObject(String name, Integer count) {
         JSONObject obj = new JSONObject();
         obj.put("name", name);
@@ -683,19 +762,20 @@ public class FormStatService {
         return obj;
     }
 
-    private JSONObject getTimelineErrorData(String formName, StatContext context) {
-        // Create timestamp range of 30 days for log retrieval
-        Timestamp startDate = new Timestamp(System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000);
-        Timestamp endDate = new Timestamp(System.currentTimeMillis());
-
-        int formId = formsRepository.getFormId(formName, CloudToolsForCore.getDomainId()).orElse(-1L).intValue();
-        List<AuditLogEntity> logs = auditRepository.findAllByLogTypeAndSubId1AndCreateDateBetween(Adminlog.TYPE_MULTISTEP_FORM_USERS, formId, startDate, endDate);
-
+    /**
+     * Builds timeline data for system errors grouped by day and operation type.
+     *
+     * @param context shared context containing form and localization data
+     * @param logs audit log entries for the selected form and date range
+     * @return JSON object keyed by localized operation names with daily error counts
+     */
+    private JSONObject getTimelineErrorData(StatContext context, List<AuditLogEntity> logs) {
         JSONObject timelineErrorData = new JSONObject();
+        if(context.formId < 1) return timelineErrorData;
 
-        Map<String, Map<Long, Integer>> dayErrorCounts = new HashMap<>();
-        dayErrorCounts.put("gets",  new HashMap<>());
-        dayErrorCounts.put("saves", new HashMap<>());
+        TreeMap<String, Map<Long, Integer>> dayErrorCounts = new TreeMap<>();
+        dayErrorCounts.put("gets",  new TreeMap<>());
+        dayErrorCounts.put("saves", new TreeMap<>());
 
         for(AuditLogEntity log : logs) {
             if(log.getSubId2() == 1) {

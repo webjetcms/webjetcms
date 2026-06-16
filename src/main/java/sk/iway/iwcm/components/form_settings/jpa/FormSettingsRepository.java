@@ -32,4 +32,12 @@ public interface FormSettingsRepository extends DomainIdRepository<FormSettingsE
 
     @Query("SELECT fse.viewCount FROM FormSettingsEntity fse WHERE fse.formName = :formName AND fse.domainId = :domainId")
     Integer getViewCount(@Param("formName") String formName, @Param("domainId") Integer domainId);
+
+    @Query("SELECT fse.responseAttempts FROM FormSettingsEntity fse WHERE fse.formName = :formName AND fse.domainId = :domainId")
+    Integer getResponseAttempts(@Param("formName") String formName, @Param("domainId") Integer domainId);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE FormSettingsEntity fse SET fse.responseAttempts = COALESCE(fse.responseAttempts, 0) + 1 WHERE fse.formName = :formName AND fse.domainId = :domainId")
+    int incrementResponseAttempts(@Param("formName") String formName, @Param("domainId") Integer domainId);
 }

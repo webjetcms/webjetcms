@@ -30,6 +30,7 @@ export class StatsByCharts {
             // Create wrapper that holds everything
             const wrapper = document.createElement("div");
             wrapper.id = this.id;
+            wrapper.className = "hide-while-loading";
             target.appendChild(wrapper);
 
             this.wrapper = wrapper;

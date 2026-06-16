@@ -30,12 +30,15 @@ public interface FormsRepository extends FormsRepositoryInterface<FormsEntity>{
     @Query("UPDATE FormsEntity fe SET fe.formType = 'unknown' WHERE (fe.formType IS NULL OR fe.formType = '') AND fe.createDate IS NULL")
     void setUnknownFormType();
 
-    @Query("SELECT fe.data FROM FormsEntity fe WHERE fe.formName = :formName AND fe.domainId = :domainId AND fe.createDate IS NOT NULL")
-    List<String> getFormAllData(@Param("formName") String formName, @Param("domainId") Integer domainId, Pageable pageable);
-
-    @Query("SELECT MIN(fe.createDate) FROM FormsEntity fe WHERE fe.formName = :formName AND fe.domainId = :domainId AND fe.createDate IS NOT NULL")
-    Date findMinCreateDate(@Param("formName") String formName, @Param("domainId") Integer domainId);
+    @Query("SELECT fe.data FROM FormsEntity fe WHERE fe.formName = :formName AND fe.domainId = :domainId AND fe.createDate BETWEEN :dateFrom AND :dateTo")
+    List<String> getFormAllData(@Param("formName") String formName, @Param("domainId") Integer domainId, @Param("dateFrom") Date dateFrom, @Param("dateTo") Date dateTo, Pageable pageable);
 
     @Query("SELECT fe.id FROM FormsEntity fe WHERE fe.formName = :formName AND fe.domainId = :domainId AND fe.createDate IS NULL")
     Optional<Long> getFormId(@Param("formName") String formName, @Param("domainId") Integer domainId);
+
+    @Query("SELECT fe.duration FROM FormsEntity fe WHERE fe.formName = :formName AND fe.domainId = :domainId AND fe.createDate IS NULL")
+    Optional<Long> getFormCreationDuration(@Param("formName") String formName, @Param("domainId") Integer domainId);
+
+    @Query("SELECT MIN(fe.createDate) FROM FormsEntity fe WHERE fe.formName = :formName AND fe.domainId = :domainId AND fe.createDate IS NOT NULL")
+    Optional<Date> getMinFormCreateDate(@Param("formName") String formName, @Param("domainId") Integer domainId);
 }

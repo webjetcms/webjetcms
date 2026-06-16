@@ -621,6 +621,9 @@ public class MultistepFormsService {
                 // Set ok forward
                 if (Tools.isNotEmpty(formSettings.getForward())) forwardOk = formSettings.getForward();
 
+                // Because we are going save form for real now, add count to attempts of form submission
+                formSettingsRepository.incrementResponseAttempts(formName, CloudToolsForCore.getDomainId());
+
                 // HERE we can run custom saving of form
                 boolean continueWithSaving = customFormSave(formProcessor, formName, request, formSettings, iLastDocId);
 

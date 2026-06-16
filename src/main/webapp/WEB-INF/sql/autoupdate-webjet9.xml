@@ -3791,11 +3791,11 @@
             <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="author"><string>sivan</string></void>
                 <void property="date"><string>22.05.2026</string></void>
-                <void property="desc"><string>form_settings - add view_count column</string></void>
-                <void property="mysql"><string>ALTER TABLE form_settings ADD COLUMN view_count INT DEFAULT 0</string></void>
-                <void property="mssql"><string>ALTER TABLE form_settings ADD view_count INT DEFAULT 0</string></void>
-                <void property="oracle"><string>ALTER TABLE form_settings ADD (view_count INTEGER DEFAULT 0)</string></void>
-                <void property="pgsql"><string>ALTER TABLE form_settings ADD COLUMN view_count INT DEFAULT 0</string></void>
+                <void property="desc"><string>form_settings - add view_count and response_attempts columns</string></void>
+                <void property="mysql"><string>ALTER TABLE form_settings ADD COLUMN view_count INT DEFAULT 0, ADD COLUMN response_attempts INT DEFAULT 0</string></void>
+                <void property="mssql"><string>ALTER TABLE form_settings ADD view_count INT DEFAULT 0, response_attempts INT DEFAULT 0</string></void>
+                <void property="oracle"><string>ALTER TABLE form_settings ADD (view_count INTEGER DEFAULT 0, response_attempts INTEGER DEFAULT 0)</string></void>
+                <void property="pgsql"><string>ALTER TABLE form_settings ADD COLUMN view_count INT DEFAULT 0, ADD COLUMN response_attempts INT DEFAULT 0</string></void>
             </object>
         </void>
 

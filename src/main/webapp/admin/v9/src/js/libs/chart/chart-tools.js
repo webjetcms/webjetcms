@@ -725,6 +725,7 @@ export async function createAmchart(chartForm, update) {
     }
 
     //Add title to chart div
+    chartForm.chartTitle = await removeQuotes(chartForm.chartTitle);
     var htmlCode = '<h6 class="amchart-header">' + chartForm.chartTitle;
     $('#' + chartForm.chartDivId).before(htmlCode);
 
@@ -745,8 +746,23 @@ export async function createAmchart(chartForm, update) {
     }
 }
 
+function removeQuotes(str) {
+    if(str == undefined || str == null) return "";
+
+    if (str.startsWith('"')) {
+        str = str.slice(1);
+    }
+
+    if (str.endsWith('"')) {
+        str = str.slice(0, -1);
+    }
+
+  return str;
+}
+
 async function _createCustomChart(chartForm, update) {
     //Add title to chart div
+    chartForm.chartTitle = await removeQuotes(chartForm.chartTitle);
     var htmlCode = '<h6 class="amchart-header">' + chartForm.chartTitle;
     $('#' + chartForm.chartDivId).before(htmlCode);
 
@@ -1603,6 +1619,10 @@ export async function updateChart(chartForm) {
                 wordCloudSeries.data.setAll(chartForm.chartData);
             }
         }
+    } else if(chartForm instanceof TableChartForm) {
+        const tableDiv = document.getElementById(chartForm.chartDivId);
+        if(tableDiv) tableDiv.innerHTML = "";
+        createTableChart(chartForm);
     }
 }
 
