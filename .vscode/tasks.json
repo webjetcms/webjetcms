@@ -41,7 +41,7 @@
                 "command": ".\\gradlew.bat bootRun --debug-jvm -DwebjetDbname=/poolman-local.xml"
             },
             "group": "build",
-            "problemMatcherOLD": {
+            "problemMatcher": {
                 "owner": "shell",
                 "fileLocation": "relative",
                 "pattern": {
