@@ -10,6 +10,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -119,6 +120,84 @@ public class SpringBootStarter extends SpringBootServletInitializer {
         registration.addUrlPatterns("/*");
         registration.setOrder(3);
         registration.setName("Virtual Path Filter");
+        return registration;
+    }
+
+    /**
+     * Register ShowDoc servlet for /showdoc.do paths.
+     * Migrated from legacy servlet-mapping in web.xml to Spring Boot.
+     */
+    @Bean
+    public ServletRegistrationBean<sk.iway.iwcm.doc.ShowDoc> showDocServletRegistration() {
+        ServletRegistrationBean<sk.iway.iwcm.doc.ShowDoc> registration = new ServletRegistrationBean<>(
+            new sk.iway.iwcm.doc.ShowDoc(), "/showdoc.do");
+        registration.setName("ShowDoc");
+        return registration;
+    }
+
+    /**
+     * Register Preview servlet for /preview.do paths.
+     */
+    @Bean
+    public ServletRegistrationBean<sk.iway.iwcm.editor.PreviewServlet> previewServletRegistration() {
+        ServletRegistrationBean<sk.iway.iwcm.editor.PreviewServlet> registration = new ServletRegistrationBean<>(
+            new sk.iway.iwcm.editor.PreviewServlet(), "/preview.do");
+        registration.setName("previewServlet");
+        return registration;
+    }
+
+    /**
+     * Register FormMailAction servlet for /formmail.do paths.
+     */
+    @Bean
+    public ServletRegistrationBean<sk.iway.iwcm.form.FormMailActionServlet> formMailServletRegistration() {
+        ServletRegistrationBean<sk.iway.iwcm.form.FormMailActionServlet> registration = new ServletRegistrationBean<>(
+            new sk.iway.iwcm.form.FormMailActionServlet(), "/formmail.do");
+        registration.setName("FormMailAction");
+        return registration;
+    }
+
+    /**
+     * Register OfflineAction servlet for /admin/offline.do paths.
+     */
+    @Bean
+    public ServletRegistrationBean<sk.iway.iwcm.components.offline.OfflineAction> offlineServletRegistration() {
+        ServletRegistrationBean<sk.iway.iwcm.components.offline.OfflineAction> registration = new ServletRegistrationBean<>(
+            new sk.iway.iwcm.components.offline.OfflineAction(), "/admin/offline.do");
+        registration.setName("offlineServlet");
+        return registration;
+    }
+
+    /**
+     * Register DeleteServlet for /admin/docdel.do paths.
+     */
+    @Bean
+    public ServletRegistrationBean<sk.iway.iwcm.doc.DeleteServlet> deleteServletRegistration() {
+        ServletRegistrationBean<sk.iway.iwcm.doc.DeleteServlet> registration = new ServletRegistrationBean<>(
+            new sk.iway.iwcm.doc.DeleteServlet(), "/admin/docdel.do");
+        registration.setName("DelDoc");
+        return registration;
+    }
+
+    /**
+     * Register LogoffServlet for /logoff.do and /admin/logoff.do paths.
+     */
+    @Bean
+    public ServletRegistrationBean<sk.iway.iwcm.LogoffServlet> logoffServletRegistration() {
+        ServletRegistrationBean<sk.iway.iwcm.LogoffServlet> registration = new ServletRegistrationBean<>(
+            new sk.iway.iwcm.LogoffServlet(), "/logoff.do", "/admin/logoff.do");
+        registration.setName("LogOff");
+        return registration;
+    }
+
+    /**
+     * Register MultipleFileUploadAction servlet for /admin/multiplefileupload.do paths.
+     */
+    @Bean
+    public ServletRegistrationBean<sk.iway.iwcm.filebrowser.MultipleFileUploadAction> multipleFileUploadServletRegistration() {
+        ServletRegistrationBean<sk.iway.iwcm.filebrowser.MultipleFileUploadAction> registration = new ServletRegistrationBean<>(
+            new sk.iway.iwcm.filebrowser.MultipleFileUploadAction(), "/admin/multiplefileupload.do");
+        registration.setName("MultipleFileUploadAction");
         return registration;
     }
 }
