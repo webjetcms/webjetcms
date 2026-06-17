@@ -4,6 +4,10 @@
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+## 2026.0.25
+
+> Opravná verzia pôvodnej verzie 2026.0.
+
 !> Upozornenie: po aktualizácii skontrolujte funkčnosť všetkých formulárov. Ak niektorý nejde odoslať, uložte znova jeho nastavenia.
 
 - AI asistent - upravené získanie odpovede pri použití `reasoning` v OpenAI (#244).
