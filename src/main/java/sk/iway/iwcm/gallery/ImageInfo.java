@@ -1082,27 +1082,30 @@ public class ImageInfo {
    private int read() throws IOException {
       if (in != null) {
          return in.read();
-      } else {
+      } else if (din != null) {
          return din.readByte();
       }
+      return -1;
    }
 
    private int read(byte[] a) throws IOException {
       if (in != null) {
          return in.read(a);
-      } else {
+      } else if (din != null) {
          din.readFully(a);
          return a.length;
       }
+      return -1;
    }
 
    private int read(byte[] a, int offset, int num) throws IOException {
       if (in != null) {
          return in.read(a, offset, num);
-      } else {
+      } else if (din != null) {
          din.readFully(a, offset, num);
          return num;
       }
+      return -1;
    }
 
    private String readLine() throws IOException {

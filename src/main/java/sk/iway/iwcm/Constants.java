@@ -581,8 +581,8 @@ public class Constants {
 				"limity pre upload suborov cez editor v kB pre subory a skratene menu");
 		setString("FCKConfig.UploadFileTypes[Default][image]", "", mods(MOD_EDITOR, MOD_SECURITY),
 				"limity typov suborov pre upload cez editor pre obrazky a standardne menu"); // jpg,jpeg,png,gif,swf,mpg,mov,wmv,flv,avi,mp3,vma,wav
-		setString("FCKConfig.UploadFileTypes[Basic][image]", "jpg,jpeg,png,gif,mp4", mods(MOD_EDITOR, MOD_SECURITY),
-				"limity typov suborov pre upload cez editor pre obrazky a skratene menu, prednastavene na jpg,jpeg,png,gif,swf");
+		setString("FCKConfig.UploadFileTypes[Basic][image]", "jpg,jpeg,png,gif,svg,webp,mp3,mp4", mods(MOD_EDITOR, MOD_SECURITY),
+				"limity typov suborov pre upload cez editor pre obrazky a skratene menu, prednastavene na jpg,jpeg,png,gif,svg,webp,mp3,mp4");
 		setString("FCKConfig.UploadFileTypes[Default][file]", "", mods(MOD_EDITOR, MOD_SECURITY),
 				"limity typov suborov pre upload cez editor pre subory a standardne menu");
 		setString("FCKConfig.UploadFileTypes[Basic][file]", "doc,docx,xls,xlsx,pdf,zip,rtf",
@@ -1808,7 +1808,7 @@ public class Constants {
 		setString("userEditableTreeMenuType", "rows", mods("combine", MOD_EDITOR),
 				"Zobrazenie stomu vo web strankach pokial ma pouzivatel nastavene prava na adresar. Momentalne mozne hodnoty su tree alebo rows");
 
-		setString("prepositions", "bez,cez,do,k,medzi,na,o,od,okrem,po,pod,pre,pred,pri,proti,s,so,u,z,zo,v",
+		setString("prepositions", "bez,cez,do,k,medzi,na,o,od,okrem,po,pod,pre,pred,pri,proti,s,so,u,z,zo,v,a,i",
 				"config;editor", "zoznam predloziek");
 
 		setString("emailAttachmentsPublisher.pop3.host", "", "emailAttachmentsPublisher", "adresa na pop3");

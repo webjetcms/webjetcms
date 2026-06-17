@@ -66,6 +66,8 @@ public class FileTools
 		//utility class
 	}
 
+	private static final String[] NOT_ALLOWED_FILE_TYPES = new String[] {"jsp", "class", "java", "php", "sh", "exe", "bat", "cmd", "com", "vbs", "wsf", "wsh", "ps1", "ps2", "psm1"};
+
 	/**
 	 * Skopiruje subor src do dest
 	 * @param src
@@ -753,6 +755,17 @@ public class FileTools
 	{
 		return VideoConvert.isVideoFile(name);
 	}
+	public static boolean isAudioFile(String name)
+	{
+		if (name == null)
+			return false;
+		//.jpg is not equal to .JPG
+		name = name.toLowerCase();
+
+		return name.endsWith(".mp3") || name.endsWith(".wav") || name.endsWith(".ogg");
+	}
+
+
 	/**
 	 * Usortuje subory podla mena
 	 * @param arrayfile
@@ -904,14 +917,18 @@ public class FileTools
 		//zmenene z false na true pretoze potom sa zle plnili polia so subormi a padalo to dalej na NPE
 		if (fileName == null || Tools.isEmpty(fileName)) return true;
 
-		if (user!=null && user.isAdmin()) return true;
+		if ((user!=null && user.isAdmin()) || (user == null && RequestBean.isAdminLogged())) {
+			//allow all file types for admin users
+			return true;
+		}
 
-		String ext = FileTools.getFileExtension(fileName);
-		if (ext==null) return false;
+		String fileExt = getFileExtension(fileName).toLowerCase();
+		for (String ext : NOT_ALLOWED_FILE_TYPES) {
+			if (ext.equals(fileExt)) {
+				return false;
+			}
+		}
 
-		ext = ext.toLowerCase();
-
-		if (ext.equals("jsp") || ext.equals("class") || ext.equals("java")) return false;
 		if (FileBrowserTools.hasForbiddenSymbol(fileName)) return false;
 
 		return true;
