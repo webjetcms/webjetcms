@@ -193,8 +193,11 @@ else if (file.indexOf(".mp4") != -1) {
 %>
 	<% if (request.getAttribute("videojsIncluded")==null) { %>
 		<link href="/components/video/videojs/video-js.css" rel="stylesheet">
-		<!-- Support for IE8 -->
-		<script src="/components/video/videojs/videojs-ie8.min.js"></script>
+		<style>
+			.video-js .vjs-tech {
+				position: relative;
+			}
+		</style>
 	<% } %>
 
 <%
@@ -203,12 +206,11 @@ else if (file.indexOf(".mp4") != -1) {
 		sizeOptions = "style=\"width: 100%; height:auto; \"";
 
 		%>
-<style>
-	.video_<%=videoCounter%> .video-js{width:<%=percentageWidth%>% !important; height: auto; }
-	.video_<%=videoCounter%> .video-js.audio{width:<%=percentageWidth%>% !important; height: 30px; }
-</style>
-
-<%
+		<style>
+			.video_<%=videoCounter%> .video-js{width:<%=percentageWidth%>% !important; height: auto; }
+			.video_<%=videoCounter%> .video-js.audio{width:<%=percentageWidth%>% !important; height: 30px; }
+		</style>
+		<%
 	}
 
 	String poster = "";
@@ -222,12 +224,11 @@ else if (file.indexOf(".mp4") != -1) {
 	if(file.indexOf(".mp3")!=-1) {	%>
 		<div class="video-wrapper video_<%=videoCounter%>">
 
-				<audio controlsList="nodownload nofullscreen" id="video_<%=videoCounter%>" class="video-js audio video_align-<%=align%>" controls  data-setup="{}">
+				<audio controlsList="nodownload nofullscreen" id="video_<%=videoCounter%>" class="video-js audio video_align-<%=align%>" controls preload="auto" data-setup="{}">
 					<source src="<%= file %>" type='audio/mp3'>
 
 					<p class="vjs-no-js">
-						To view this video please enable JavaScript, and consider upgrading to a web browser that
-						<a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+						To view this video please enable JavaScript, and consider upgrading to a web browser that supports HTML5 video
 					</p>
 				</audio>
 		</div>
@@ -238,8 +239,7 @@ else if (file.indexOf(".mp4") != -1) {
 				<source src="<%= file %>" type='video/mp4'>
 
 				<p class="vjs-no-js">
-					To view this video please enable JavaScript, and consider upgrading to a web browser that
-					<a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+					To view this video please enable JavaScript, and consider upgrading to a web browser that supports HTML5 video
 				</p>
 			</video>
 		</div>

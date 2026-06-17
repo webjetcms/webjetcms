@@ -1272,7 +1272,7 @@ public class Tools
 				xForwardedForHeader = xForwardedForHeader.substring(0, xForwardedForHeader.length()-LAST_SUFFIX.length());
 				useFirstIP = false;
 			}
-			String xForwardedFor = request.getHeader("x-forwarded-for");
+			String xForwardedFor = request.getHeader(xForwardedForHeader);
 			if (xForwardedFor != null && xForwardedFor.length()>4) {
 				if ("unknown".equals(xForwardedFor)==false && xForwardedFor.indexOf(".")!=-1)
 				{

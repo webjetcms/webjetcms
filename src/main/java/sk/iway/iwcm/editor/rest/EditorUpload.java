@@ -3,9 +3,9 @@ package sk.iway.iwcm.editor.rest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,7 +17,8 @@ import sk.iway.iwcm.editor.UploadFileAction;
 @Controller
 public class EditorUpload {
 
-    @RequestMapping(path = "/admin/web-pages/upload/", method = RequestMethod.POST)
+    @PostMapping(path = "/admin/web-pages/upload/")
+    @PreAuthorize("@WebjetSecurityService.isAdmin()")
     public String submit(@RequestParam("uploadFile") MultipartFile uploadFile, HttpServletRequest request, HttpServletResponse response) {
         //Check that file is present
         if(uploadFile == null) return null;
