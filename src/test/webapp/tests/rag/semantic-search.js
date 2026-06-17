@@ -6,7 +6,8 @@ Before(({ I, login }) =>{
 
 Scenario('Set semantic search as wanted search', ({ I, DT, Document }) => {
     Document.setConfigValue("searchType", "semantic");
-    Document.setConfigValue("spamProtectionTimeout-search", "1");
+    Document.setConfigValue("searchType", "semantic");
+    Document.setConfigValue("ragSemanticSearchEnabled", "true");
 });
 
 const searchData = [
@@ -85,6 +86,7 @@ Scenario('Try semantic search', ({ I, DT, Document }) => {
 Scenario('Remove search preference', ({ I, DT, Document }) => {
     Document.setConfigValue("spamProtectionTimeout-search", "10");
     Document.setConfigValue("searchType", "db");
+    Document.setConfigValue("ragSemanticSearchEnabled", "false");
 });
 
 function checkTopFind(I, pageUrl, pageName) {
