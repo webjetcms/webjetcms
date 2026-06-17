@@ -103,6 +103,7 @@ Scenario('reservation screens - PAGE section', ({ I, Document }) => {
     Document.screenshotElement(getDayLocate("2032-06-16"), "/redactor/apps/reservation/day-book-app/old_or_booked_day.png");
     Document.screenshotElement(getDayLocate("2032-06-15"), "/redactor/apps/reservation/day-book-app/check_out_only_day.png");
 
+    I.wait(1);
     Document.screenshotElement(".ly-content .container", "/redactor/apps/reservation/day-book-app/app-table_A.png");
 
     Document.screenshotElement("#calendar", "/redactor/apps/reservation/day-book-app/calendar_base.png");

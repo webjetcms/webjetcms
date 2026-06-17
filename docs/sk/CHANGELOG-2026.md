@@ -36,6 +36,8 @@
 
 ![](redactor/apps/language-redirect/editor-basic.png)
 
+- Rezervácie - aplikácie **Rezervácia času** a **Rezervácia dní** majú zjednotený vizuálny štýl podľa kalendára `Vanilla Calendar`, upravené kontrastné farby buniek podľa `WCAG`, oddelené vizuálne CSS štýly do samostatných súborov a **Rezervácia času** zobrazuje v hodinových bunkách skutočnú cenu podľa cenníka rezervačného objektu (#58565).
+
 ### Multiweb
 
 - Pridaná možnosť [vytvoriť novú doménu](install/multiweb/config.md) z riadiacej domény, vytvorí aj používateľa, skupinu šablón, šablónu a systémové stránky (#58525).
