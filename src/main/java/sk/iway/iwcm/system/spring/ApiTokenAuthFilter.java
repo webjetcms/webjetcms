@@ -37,7 +37,11 @@ public class ApiTokenAuthFilter extends GenericFilterBean {
         boolean logged = logUserViaApiKey((HttpServletRequest)request, (HttpServletResponse)response);
         chain.doFilter(request, response);
 		if (logged && session != null) {
-			session.invalidate();
+			try {
+				session.invalidate();
+			} catch (IllegalStateException ex) {
+				// Session already invalidated
+			}
 		}
     }
 
