@@ -382,10 +382,10 @@
         {
             "label": "appStop",
             "type": "shell",
-            "command": "pkill -9 -f bootRun",
+            "command": "if pgrep -f \"org.gradle.launcher.GradleMain.*bootRun|SpringBootStarter\" >/dev/null; then pkill -15 -f \"org.gradle.launcher.GradleMain.*bootRun|SpringBootStarter\"; sleep 8; pkill -9 -f \"org.gradle.launcher.GradleMain.*bootRun|SpringBootStarter\" || true; fi",
             "windows": {
                 "type": "shell",
-                "command": "Stop-Process -Name java -Force"
+                "command": "$processes = Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'java.exe' -and $_.CommandLine -match 'bootRun|SpringBootStarter' }; if ($processes) { $processes | ForEach-Object { Stop-Process -Id $_.ProcessId -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 8; $processes = Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'java.exe' -and $_.CommandLine -match 'bootRun|SpringBootStarter' }; if ($processes) { $processes | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue } } }"
             },
             "group": "build",
             "problemMatcher": [],
