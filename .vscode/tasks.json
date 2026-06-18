@@ -36,9 +36,9 @@
         {
             "label": "appStartLocalDB",
             "type": "shell",
-            "command": "webjetDbname=/poolman-local.xml ./gradlew bootRun",
+            "command": "webjetDbname=/poolman-local.xml ./gradlew bootRun; exit_code=$?; if [[ $exit_code -eq 143 || $exit_code -eq 130 ]]; then exit 0; fi; exit $exit_code",
             "windows": {
-                "command": "SET webjetDbname=/poolman-local.xml && .\\gradlew.bat bootRun"
+                "command": "SET webjetDbname=/poolman-local.xml && .\\gradlew.bat bootRun || IF %ERRORLEVEL%==143 EXIT /B 0 || IF %ERRORLEVEL%==130 EXIT /B 0 || EXIT /B %ERRORLEVEL%"
             },
             "group": "build",
             "problemMatcher": {
@@ -382,10 +382,10 @@
         {
             "label": "appStop",
             "type": "shell",
-            "command": "if pgrep -f \"org.gradle.launcher.GradleMain.*bootRun|SpringBootStarter\" >/dev/null; then pkill -15 -f \"org.gradle.launcher.GradleMain.*bootRun|SpringBootStarter\"; sleep 8; pkill -9 -f \"org.gradle.launcher.GradleMain.*bootRun|SpringBootStarter\" || true; fi",
+            "command": "if pgrep -f 'bootRun' >/dev/null; then pkill -15 -f 'bootRun'; sleep 8; pkill -9 -f 'bootRun' || true; fi",
             "windows": {
                 "type": "shell",
-                "command": "$processes = Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'java.exe' -and $_.CommandLine -match 'bootRun|SpringBootStarter' }; if ($processes) { $processes | ForEach-Object { Stop-Process -Id $_.ProcessId -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 8; $processes = Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'java.exe' -and $_.CommandLine -match 'bootRun|SpringBootStarter' }; if ($processes) { $processes | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue } } }"
+                "command": "$processes = Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'java.exe' -and $_.CommandLine -match 'bootRun' }; if ($processes) { $processes | ForEach-Object { Stop-Process -Id $_.ProcessId -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 8; $processes = Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'java.exe' -and $_.CommandLine -match 'bootRun' }; if ($processes) { $processes | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue } } }"
             },
             "group": "build",
             "problemMatcher": [],
