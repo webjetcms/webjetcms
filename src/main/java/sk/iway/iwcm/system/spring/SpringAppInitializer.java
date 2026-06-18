@@ -3,14 +3,14 @@ package sk.iway.iwcm.system.spring;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.doc.DebugTimer;
 
-import jakarta.servlet.FilterRegistration;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
-import net.sourceforge.stripes.controller.StripesFilterIway;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.Logger;
 
 /**
  * WebApplicationInitializer for WebJET CMS Spring Boot startup.
@@ -29,6 +29,9 @@ public class SpringAppInitializer
 {
 	private static DebugTimer dtGlobal = null;
 
+	@Autowired(required = false)
+	private ApplicationContext applicationContext;
+
 	@Bean
     public org.springframework.boot.web.servlet.ServletContextInitializer springAppInitializerOnStartup() {
         return new org.springframework.boot.web.servlet.ServletContextInitializer() {
@@ -39,13 +42,21 @@ public class SpringAppInitializer
 				// Initialize WebJET core (called by InitServlet during startup as well)
 				InitServlet.initializeWebJET(dtGlobal, servletContext);
 
+				// Set the Spring ApplicationContext into ServletContext for legacy components
+				// that access it via Constants.getServletContext().getAttribute("springContext")
+				// This is used by SetCharacterEncodingFilter, RequestBean, WebjetEventPublisher, Tools and others
+				if (applicationContext != null) {
+					servletContext.setAttribute("springContext", applicationContext);
+					Logger.info(SpringAppInitializer.class, "Set Spring ApplicationContext into ServletContext");
+				}
+
 				// Note: The following have been removed and are now handled by Spring Boot:
 				// - AnnotationConfigWebApplicationContext / ContextLoaderListener (caused "multiple ContextLoader" error)
 				// - DispatcherServlet (Spring Boot auto-configures this)
-				// - CharacterEncodingFilter (configured via application properties)
+				// - CharacterEncodingFilter (now registered via FilterRegistrationBean in SpringBootStarter)
 				// - springSecurityFilterChain (Spring Security auto-configures via @Bean in SpringSecurityConf)
-				// - RequestContextListener (Spring Boot auto-configures this)
-				// - MultipartConfigElement (configured via application properties)
+				// - RequestContextListener (now registered via ServletListenerRegistrationBean in SpringBootStarter)
+				// - MultipartConfigElement (now registered via @Bean in SpringBootStarter)
 				// - Manual package scanning (handled by @ComponentScan in SpringBootStarter)
 				InitServlet.setSpringInitialized();
 				InitServlet.setWebjetInitialized();

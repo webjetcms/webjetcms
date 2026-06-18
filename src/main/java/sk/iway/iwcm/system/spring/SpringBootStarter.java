@@ -3,6 +3,7 @@ package sk.iway.iwcm.system.spring;
 import java.util.EnumSet;
 
 import jakarta.servlet.DispatcherType;
+import jakarta.servlet.MultipartConfigElement;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -11,12 +12,17 @@ import org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoCo
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
+import org.springframework.boot.web.servlet.ServletListenerRegistrationBean;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.web.filter.CharacterEncodingFilter;
 
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.Constants;
+import org.springframework.web.context.request.RequestContextListener;
 import net.sourceforge.stripes.controller.StripesFilterIway;
 import sk.iway.iwcm.system.context.ContextFilter;
 
@@ -80,6 +86,29 @@ public class SpringBootStarter extends SpringBootServletInitializer {
     }
 
     /**
+     * Register CharacterEncodingFilter for UTF-8 encoding support.
+     * This filter sets the character encoding for request/response based on configuration.
+     * Must be registered BEFORE other filters (order 0).
+     */
+    @Bean
+    public FilterRegistrationBean<CharacterEncodingFilter> characterEncodingFilterRegistration() {
+        FilterRegistrationBean<CharacterEncodingFilter> registration = new FilterRegistrationBean<>();
+        CharacterEncodingFilter filter = new CharacterEncodingFilter();
+        String encoding = Constants.getString("defaultEncoding");
+        if (Tools.isEmpty(encoding)) {
+            encoding = "UTF-8";
+        }
+        filter.setEncoding(encoding);
+        filter.setForceEncoding(true);
+        registration.setFilter(filter);
+        registration.addUrlPatterns("/*");
+        registration.setOrder(0); // Must be first (before all other filters)
+        registration.setName("SpringEncodingFilter");
+        Logger.info(SpringBootStarter.class, "Registered CharacterEncodingFilter with encoding: " + encoding);
+        return registration;
+    }
+
+    /**
      * Register ContextFilter for embedded Spring Boot mode.
      * This filter handles context path routing and was previously
      * configured in web.xml for external Tomcat deployments.
@@ -105,7 +134,7 @@ public class SpringBootStarter extends SpringBootServletInitializer {
         registration.addUrlPatterns("/*");
         registration.addServletNames("StripesDispatcher");
         registration.setDispatcherTypes(EnumSet.of(DispatcherType.REQUEST));
-        registration.setOrder(2);
+        registration.setOrder(3);
         registration.setName("StripesFilter");
         return registration;
     }
@@ -118,9 +147,48 @@ public class SpringBootStarter extends SpringBootServletInitializer {
         FilterRegistrationBean<PathFilter> registration = new FilterRegistrationBean<>();
         registration.setFilter(new PathFilter());
         registration.addUrlPatterns("/*");
-        registration.setOrder(3);
+        registration.setOrder(4);
         registration.setName("Virtual Path Filter");
         return registration;
+    }
+
+    /**
+     * Register RequestContextListener for embedded Spring Boot mode.
+     * Required for RequestContextHolder.getRequestAttributes() to work correctly.
+     * Used by multiple components that need access to the current request.
+     */
+    @Bean
+    public ServletListenerRegistrationBean<RequestContextListener> requestContextListenerRegistration() {
+        Logger.info(SpringBootStarter.class, "Registered RequestContextListener");
+        return new ServletListenerRegistrationBean<>(new RequestContextListener());
+    }
+
+    /**
+     * Configure multipart file upload settings based on Constants configuration.
+     * Migrated from legacy MultipartConfigElement in web.xml.
+     * Uses the "stripes.FileUpload.MaximumPostSize" configuration for max file size.
+     */
+    @Bean
+    public MultipartConfigElement multipartConfigElement() {
+        String stripesPostSize = Constants.getString("stripes.FileUpload.MaximumPostSize");
+        if (Tools.isEmpty(stripesPostSize)) {
+            stripesPostSize = "20m"; // default 20MB
+        }
+
+        // Convert human-readable format (10m, 1g) to bytes
+        stripesPostSize = Tools.replace(stripesPostSize, "m", "000000");
+        stripesPostSize = Tools.replace(stripesPostSize, "g", "000000000");
+        long maxPostSize = Tools.getLongValue(stripesPostSize, 20000000L); // default 20MB
+
+        Logger.info(SpringBootStarter.class, "Registered MultipartConfigElement with maxPostSize: " + maxPostSize + " bytes");
+
+        // location (null = default temp dir), maxFileSize, maxRequestSize, fileSizeThreshold
+        return new MultipartConfigElement(
+            null,           // location (null = default temp dir)
+            maxPostSize,    // maxFileSize
+            maxPostSize,    // maxRequestSize
+            65536           // fileSizeThreshold
+        );
     }
 
     /**

@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
@@ -22,6 +23,7 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.spring.webjet_component.WebjetMessageSource;
 
 @Configuration
+@Conditional(SetupModeCondition.class)
 public class SetupSpringConfig implements WebMvcConfigurer {
 
     @Bean
