@@ -10,6 +10,7 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.web.filter.GenericFilterBean;
@@ -32,10 +33,11 @@ public class ApiTokenAuthFilter extends GenericFilterBean {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+		HttpSession session = ((HttpServletRequest)request).getSession(false);
         boolean logged = logUserViaApiKey((HttpServletRequest)request, (HttpServletResponse)response);
         chain.doFilter(request, response);
-		if (logged) {
-			((HttpServletRequest)request).getSession().invalidate();
+		if (logged && session != null) {
+			session.invalidate();
 		}
     }
 

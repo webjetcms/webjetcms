@@ -3048,7 +3048,7 @@ export const dataTableInit = options => {
                         //console.log("sourceData=", sourceData);
 
                         if (sourceData.hasOwnProperty("error") && sourceData.error !== null && sourceData.error !== "") {
-                            if ("Access is denied" === sourceData.error || "Access Denied" === sourceData.error) {
+                            if ("Access is denied" === sourceData.error || "Access Denied" === sourceData.error || "exception: Access is denied" === sourceData.error) {
                                 WJ.notifyError(WJ.translate("datatables.accessDenied.title.js"), WJ.translate("datatables.accessDenied.desc.js"));
                                 return;
                             } else {

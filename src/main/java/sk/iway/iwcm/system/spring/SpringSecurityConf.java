@@ -17,6 +17,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.security.web.webauthn.management.PublicKeyCredentialUserEntityRepository;
 import org.springframework.security.web.webauthn.management.UserCredentialRepository;
@@ -108,7 +109,14 @@ public class SpringSecurityConf {
 		if (springSecurityAllowedAuths != null && springSecurityAllowedAuths.contains("basic")) {
 			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - httpBasic");
 			basicAuthEnabled = true; //NOSONAR
-			http.httpBasic(customizer -> {});
+			http.httpBasic(customizer -> customizer.authenticationEntryPoint((request, response, authException) -> {
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				response.setHeader("WWW-Authenticate", "Basic realm=\"Secure Area\"");
+				if (request.getRequestURI().contains("/rest/")) {
+					response.setContentType("application/json");
+					response.getWriter().write("{\"error\":\"Authentication required\",\"status\":401}");
+				}
+			}));
 		}
 
 		// OAuth2 login support
