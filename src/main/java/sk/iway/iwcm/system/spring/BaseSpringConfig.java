@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.web.config.PageableHandlerMethodArgumentResolverCustomizer;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.AbstractJacksonHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverters;
 import org.springframework.http.converter.ResourceHttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
@@ -26,6 +27,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.cfg.DateTimeFeature;
+
 import freemarker.core.Configurable;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -33,6 +38,7 @@ import sk.iway.iwcm.FreemarkerHelpers;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+
 import org.springframework.boot.web.error.ErrorPage;
 import org.springframework.boot.web.error.ErrorPageRegistrar;
 import org.springframework.http.HttpStatus;
@@ -99,10 +105,11 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
         Logger.println(BaseSpringConfig.class, "-------> configureMessageConverters(builder)");
 
         builder.registerDefaults();
-
-        // Note: AbstractJacksonHttpMessageConverter was removed in Spring 7.x.
-        // Jackson 3 configuration is handled by Spring Boot auto-configuration when available.
-        // For pure Spring Framework 7.x, default message converters are sufficient.
+        builder.configureMessageConverters(converter -> {
+            if (converter instanceof AbstractJacksonHttpMessageConverter<?> jacksonConverter) {
+                configureJackson3(jacksonConverter);
+            }
+        });
 
         StringHttpMessageConverter stringConverter = new StringHttpMessageConverter();
         List<MediaType> mediaTypes = new ArrayList<>();
@@ -114,6 +121,23 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
 
         //aby isla tlac do PDF (application/octet-stream)
         builder.addCustomConverter(new ResourceHttpMessageConverter(true));
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends ObjectMapper> void configureJackson3(AbstractJacksonHttpMessageConverter<T> jacksonConverter) {
+        //set for jackson 2 compatibility
+        //https://spring.io/blog/2025/10/07/introducing-jackson-3-support-in-spring
+        T mapper = (T) jacksonConverter.getMapper().rebuild()
+                .enable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .disable(DateTimeFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS)
+                .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+                .build();
+
+        jacksonConverter.registerMappersForType(Object.class, registrations -> {
+            for (MediaType mediaType : jacksonConverter.getSupportedMediaTypes()) {
+                registrations.put(mediaType, mapper);
+            }
+        });
     }
 
     @Override
@@ -157,7 +181,6 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
      * jeeff: toto potrebujeme ako default handler na staticke subory, v SpringAppInitializer sa bindne Spring dispatcher na / a on nehandluje css, html atd
      * https://stackoverflow.com/questions/29394493/spring-mvc-configuration-enable
      */
-    // Disabled for Spring Boot embedded server - static resources handled by Spring Boot auto-config
     /*@Override
     public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
         Logger.println(BaseSpringConfig.class, "-------> configureDefaultServletHandling()");
