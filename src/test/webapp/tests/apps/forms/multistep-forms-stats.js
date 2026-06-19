@@ -203,7 +203,7 @@ Scenario("Generate random data for nice charts", async ({ I }) => {
         // Inject the value via JS: set both the textarea and the iframe body, then trigger cleditor sync.
         let wysiwyg = weightedRandom(wysiwygs);
 
-        if (Math.random() < 0.9) {
+        if (Math.random() < 0.1) {
             wysiwyg += " <script>alert('XSS');</script>";
             failStatus = "probablySpamBot";
         }
