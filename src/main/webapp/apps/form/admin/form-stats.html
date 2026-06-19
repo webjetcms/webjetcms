@@ -33,24 +33,18 @@
         const pills = document.querySelector("ul#pills-form-stats");
         const element = document.getElementById("filter");
 
-        const input = document.getElementById("showAdvancedStats");
-        input.addEventListener("change", function() {
-            const chartContainer = document.getElementById("chartContainer");
+        const input = document.getElementById("expandBonusChartButton");
+        input.addEventListener("click", function() {
+            const expandBonusChart = document.getElementById("expandBonusChart");
             const bonusChartContainer = document.getElementById("bonusChartContainer");
 
-            if(this.checked === true) {
-                chartContainer.style.display = "none";
-                bonusChartContainer.style.display = "block";
-            } else {
-                chartContainer.style.display = "block";
-                bonusChartContainer.style.display = "none";
-            }
+            expandBonusChart.style.display = "none";
+            bonusChartContainer.style.display = "block";
 
-            const displayStyle = this.checked === true ? "block" : "none";
             advancedCards.forEach(id => {
                 const card = document.querySelector(`[data-stat-id="${id}"]`);
                 if(card) {
-                    card.style.display = displayStyle;
+                    card.style.display = "block";
                 }
             });
         });
@@ -68,7 +62,7 @@
                 momentLocale: window.userLng,
                 locale: window.userLng,
                 keyInput: false,
-                i18n: WJ.getDatetimei18n()
+                i18n: WJ.getDatetimeLocalization()
             });
         });
     }
@@ -256,7 +250,7 @@
             const lineSystemErrorsConfig = {
                 yAxeNames: ChartTools.getLineChartYAxeNameObjs(["count"], [undefined]),
                 xAxeName: "dayDate",
-                chartTitle: '[[#{stat.top.lineChart}]]',
+                chartTitle: '[[#{components.multistep_form.stat.step_stat}]]',
                 chartDivId: "form-stats-lineTimelineErrors",
                 chartData: ChartTools.convertDataForLineChart(data.chartErrorData.timelineErrorData),
                 dateType: ChartTools.DateType.Auto
@@ -401,7 +395,9 @@
 
 </div>
 
-<div id="chartContainer" class="row"></div>
+<div id="expandBonusChart" class="hide-while-loading mt-3 text-center">
+    <button id="expandBonusChartButton" class="btn btn-sm btn-outline-secondary" data-th-text="#{components.multistep_form.show_advanced_stats}">Show advanced stats</button>
+</div>
 
 <div id="bonusChartContainer" style="display:none;">
     <div class="row hide-while-loading">
@@ -429,6 +425,8 @@
     </div>
 </div>
 
+<div id="chartContainer" class="row"></div>
+
 <li class="nav-item" id="filter">
     <div class="row datatableInit">
 
@@ -439,13 +437,6 @@
                 <button class="filtrujem btn btn-sm btn-outline-secondary dt-filtrujem-dayDate" type="submit" aria-label="Filtrovať Dátum">
                     <i class="ti ti-search" aria-hidden="true"></i>
                 </button>
-            </div>
-        </div>
-
-        <div class="col-auto">
-            <div class="btn btn-sm custom-control form-switch" role="group" data-toggle="tooltip" data-th-title="#{components.multistep_form.show_advanced_stats}">
-                <input id="showAdvancedStats" type="checkbox" class="form-check-input" value="true" data-th-aria-label="#{components.multistep_form.show_advanced_stats}" />
-                <label for="showAdvancedStats" class="form-check-label is-icon-arrows-v" aria-hidden="true"></label>
             </div>
         </div>
 

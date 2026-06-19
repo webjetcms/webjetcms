@@ -87,7 +87,7 @@ public class FormStatService {
             this.formName = formName;
             this.domainId = CloudToolsForCore.getDomainId();
             this.prop = Prop.getInstance(request);
-            this.formId = formsRepository.getFormId(this.formName, this.domainId, PageRequest.of(0, 1)).orElse(-1L).intValue();
+            this.formId = formsRepository.getFormId(this.formName, this.domainId).orElse(-1L).intValue();
             this.columnNames = getColumnNames(this.formName, new UserDetails(request), this.prop);
             this.allowedItemsEntities = getAllowedItems(this.formName, itemFormId);
             this.dateRange = getDateRange(request);

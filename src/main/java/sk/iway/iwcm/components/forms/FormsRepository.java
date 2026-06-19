@@ -34,8 +34,8 @@ public interface FormsRepository extends FormsRepositoryInterface<FormsEntity>{
     List<String> getFormAllData(@Param("formName") String formName, @Param("domainId") Integer domainId, @Param("dateFrom") Date dateFrom, @Param("dateTo") Date dateTo, Pageable pageable);
 
     // By some mistake is there possibility that there are more than one records where fe.createDate IS NULL
-    @Query("SELECT fe.id FROM FormsEntity fe WHERE fe.formName = :formName AND fe.domainId = :domainId AND fe.createDate IS NULL ORDER BY fe.id ASC")
-    Optional<Long> getFormId(@Param("formName") String formName, @Param("domainId") Integer domainId, Pageable pageable);
+    @Query("SELECT MIN(fe.id) FROM FormsEntity fe WHERE fe.formName = :formName AND fe.domainId = :domainId AND fe.createDate IS NULL")
+    Optional<Long> getFormId(@Param("formName") String formName, @Param("domainId") Integer domainId);
 
     @Query("SELECT fe.duration FROM FormsEntity fe WHERE fe.formName = :formName AND fe.domainId = :domainId AND fe.createDate IS NULL")
     Optional<Long> getFormCreationDuration(@Param("formName") String formName, @Param("domainId") Integer domainId);

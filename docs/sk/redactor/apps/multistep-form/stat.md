@@ -17,7 +17,7 @@ V hornej časti stránky sa nachádzajú základné informačné karty:
 
 ![](stat-section-header.png)
 
-Po zapnutí prepínača **Zobraziť pokročilú štatistiku** sa zobrazia aj ďalšie karty:
+Po kliknutí na tlačidlo **Zobraziť pokročilú štatistiku** sa zobrazia aj ďalšie karty:
 
 | Karta | Popis |
 | --- | --- |
@@ -63,7 +63,7 @@ Dostupné možnosti konfigurácie grafu sú rovnaké ako nastavenia v karte [Št
 
 ## Pokročilá štatistika
 
-Prepínač **Zobraziť pokročilú štatistiku** prepne zobrazenie z grafov položiek formulára na rozšírené grafy správania používateľov a chýb.
+Kliknutím na tlačidlo **Zobraziť pokročilú štatistiku** sa zobrazia ďalšie štatistické informácie.
 
 | Graf | Popis |
 | --- | --- |

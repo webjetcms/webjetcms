@@ -1512,7 +1512,8 @@ const WJ = (() => {
      * Returns localized labels for date/time picker controls.
      * @returns {{previous: string, next: string, months: string[], weekdays: string[], hours: string, minutes: string, seconds: string, today: string}}
      */
-    function getDatetimei18n() {
+    function getDatetimeLocalization() {
+        //this is same code as in Datatable index.js datetime object
         return {
             previous: WJ.translate('datatables.button.prev.js'),
             next: WJ.translate('datatables.button.next.js'),
@@ -1802,8 +1803,8 @@ const WJ = (() => {
         base64decode: (encodedText) => {
             return base64decode(encodedText);
         },
-        getDatetimei18n: () => {
-            return getDatetimei18n();
+        getDatetimeLocalization: () => {
+            return getDatetimeLocalization();
         }
     };
 
