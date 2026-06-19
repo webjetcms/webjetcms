@@ -34,10 +34,7 @@ public class MyReservationDTO {
         setReservationRange(dateFrom, dateTo);
         this.price = price;
         this.accepted = accepted;
-        this.canDelete = Tools.isTrue(canDelete);
-
         this.canDelete = canDeleteReservation(dateFrom, accepted, allDay, cancelTimeBefore);
-
         this.deletePasswordRequired = isDeletePasswordRequired(reservationObjectPasswd);
     }
 

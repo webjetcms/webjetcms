@@ -35,7 +35,7 @@ import sk.iway.iwcm.users.UsersDB;
     nameKey = "components.reservation.my_reservations.title",
     descKey="components.reservation.my_reservations.desc",
     imagePath = "ti ti-calendar-user text-success bg-light",
-    galleryImages = "/apps/reservation/mvc/my-resevations-app-page.png",
+    galleryImages = "/apps/reservation/mvc/my-reservations-app-page.png",
     commonSettings = true
 )
 @Getter

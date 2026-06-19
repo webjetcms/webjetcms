@@ -41,7 +41,7 @@ Scenario('reservation screens - PAGE section', async ({ I, Document, i18n }) => 
 
     openMyReservations(I, "2051-04-01", "2052-06-30");
 
-    Document.screenshot("../../../src/main/webapp/apps/reservation/mvc/my-resevations-app-page"+i18n.getImgSuffix()+".png");
+    Document.screenshot("../../../src/main/webapp/apps/reservation/mvc/my-reservations-app-page"+i18n.getImgSuffix()+".png");
 
     Document.screenshotElement("#myReservationsApp", SCREENSHOT_PATH + "/app-page.png", 1400, 850);
     Document.screenshotElement("#myReservationsApp > form.row", SCREENSHOT_PATH + "/app-filter.png");

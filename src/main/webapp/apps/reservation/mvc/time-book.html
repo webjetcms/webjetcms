@@ -95,7 +95,7 @@
         $("#reservationDateHidden").val( reservationDate.val() );
         let reservationObjectId = $("#reservationObjectId");
         let currency = /*[[${currency}]]*/ "";
-        setAvailabilityClasses();
+        $(document).ready(setAvailabilityClasses);
 
         function addDays(days) {
             var chooseDate=new Date(reservationDate.val());
