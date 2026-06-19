@@ -149,9 +149,13 @@ Scenario('Gallery - Feature - to default again', ({ I, DT }) => {
     I.waitForElement("div.DTE_Action_Remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
+});
 
+Scenario('Gallery - Feature - to default again - dir', ({ I, DT }) => {
     I.say("Remove gallery folder");
     I.amOnPage("/admin/v9/apps/gallery/?dir=" + dirTo + "/" + testDirName);
+    I.jstreeWaitForLoader();
+    DT.waitForLoader();
     I.click(DT.btn.tree_delete_button);
     I.waitForElement("div.DTE_Action_Remove");
     I.click("Zmazať", "div.DTE_Action_Remove");

@@ -359,11 +359,14 @@ Scenario('Gallery - upload image test', ({I,DT, DTE}) => {
     I.clickCss('.cke_dialog_ui_button_cancel');
 
     I.amOnPage(`/admin/v9/apps/gallery/?dir=/images/gallery/apps/${autoName}`);
+    DT.waitForLoader();
+    I.jstreeWaitForLoader();
     I.say('Checking if folder icon is empty');
     I.dontSeeElement(`//a[contains(., "${autoName}")]/i[contains(@class, "ti-folder-filled")]`);
     I.seeElement(`//a[contains(., "${autoName}")]/i[contains(@class, "ti-folder")]`);
     I.click(DT.btn.tree_edit_button);
-    DT.waitForLoader();
+    DTE.waitForEditor('galleryDimensionDatatable');
+
     I.say('Checking size of the uploaded image')
     I.clickCss('#pills-dt-galleryDimensionDatatable-sizes-tab');
     I.seeInField('#DTE_Field_imageWidth', 200);
