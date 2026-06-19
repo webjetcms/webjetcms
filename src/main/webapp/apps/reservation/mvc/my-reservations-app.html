@@ -1,0 +1,171 @@
+<div class="container-fluid px-0" data-vc-theme="light" id="myReservationsApp">
+
+    <div data-th-if="${deleteMsg!=null}" class="alert alert-success" role="alert">
+        <span data-th-text="${deleteMsg}">Reservation deleted.</span>
+    </div>
+
+    <div data-th-if="${deleteError!=null}" class="alert alert-danger" role="alert">
+        <span data-th-text="${deleteError}">Reservation could not be deleted.</span>
+    </div>
+
+    <form class="row g-2 align-items-end mb-3" method="get" data-th-action="${request.getAttribute('ninja').page.urlPath}">
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+            <label class="form-label" for="reservation-date-from" data-th-text="#{components.reservation.reservation_list.date_from2}">Date from</label>
+            <input class="form-control" type="date" id="reservation-date-from" name="reservation-date-from" data-th-value="${reservationDateFrom}" />
+        </div>
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+            <label class="form-label" for="reservation-date-to" data-th-text="#{components.reservation.reservation_list.date_to2}">Date to</label>
+            <input class="form-control" type="date" id="reservation-date-to" name="reservation-date-to" data-th-value="${reservationDateTo}" />
+        </div>
+        <div class="col-12 col-md-auto">
+            <button type="submit" class="btn btn-primary" data-th-text="#{datatables.button.filter.js}">Filter</button>
+            <a class="btn btn-outline-secondary" data-th-href="${request.getAttribute('ninja').page.urlPath}" data-th-text="#{datatables.filter.remove.js}">Remove filter</a>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+
+        <table class="table table-striped table-hover align-middle mb-0" id="myReservationsTable">
+
+            <thead class="table-light">
+                <tr>
+                    <th scope="col" data-th-text="#{reservation.reservation_object.selected_object}">Reservation Object</th>
+                    <th scope="col" data-th-text="#{components.reservation.reservations.time_range}">Reservation Range</th>
+                    <th scope="col" class="text-end" data-th-text="#{components.reservation.reservations.price}">Price</th>
+                    <th scope="col" data-th-text="#{reservation.reservations.status}">Status</th>
+                    <th scope="col" class="text-end" data-th-text="#{reservation.reservations.delete}">Delete reservation</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr data-th-each="reservation : ${reservations}">
+                    <td data-th-text="${reservation.reservationObjectName}"></td>
+                    <td>
+                        <span class="d-inline-flex flex-column flex-sm-row align-items-sm-center gap-1">
+                            <span class="text-nowrap" data-th-text="${reservation.reservationRangeFrom}"></span>
+                            <span class="text-muted" data-th-if="${#strings.isEmpty(reservation.reservationRangeTo) == false}">-</span>
+                            <span class="text-nowrap" data-th-if="${#strings.isEmpty(reservation.reservationRangeTo) == false}" data-th-text="${reservation.reservationRangeTo}"></span>
+                        </span>
+                    </td>
+                    <td class="text-end" data-th-text="${reservation.price}"></td>
+
+                    <td data-th-if="${reservation.accepted == null}">
+                        <span class="badge bg-secondary" data-th-text="#{reservation.reservations.status.waiting}"></span>
+                    </td>
+                    <td data-th-if="${reservation.accepted == true}">
+                        <span class="badge bg-success" data-th-text="#{reservation.reservations.status.accepted}"></span>
+                    </td>
+                    <td data-th-if="${reservation.accepted == false}">
+                        <span class="badge bg-danger" data-th-text="#{reservation.reservations.status.denied}"></span>
+                    </td>
+                    <td class="text-end">
+                        <button data-th-if="${reservation.canDelete == true}" type="button" class="btn btn-sm btn-outline-danger reservation-delete-button" data-th-attr="data-reservation-id=${reservation.reservationId},data-delete-password-required=${reservation.deletePasswordRequired},data-reservation-object-name=${reservation.reservationObjectName}" data-th-text="#{button.delete}">Delete</button>
+                    </td>
+                </tr>
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <form id="myReservationsDeleteForm" method="post" class="d-none" data-th-action="${request.getAttribute('ninja').page.urlPath}">
+        <input type="hidden" name="deleteReservation" value="true" />
+        <input type="hidden" name="reservationId" />
+        <input type="hidden" name="reservation-date-from" data-th-value="${reservationDateFrom}" />
+        <input type="hidden" name="reservation-date-to" data-th-value="${reservationDateTo}" />
+        <input type="hidden" name="deletePassword" />
+        <button type="submit" id="myReservationsDeleteSubmit" class="d-none">Submit</button>
+    </form>
+
+    <script th:inline="javascript">
+    /*<![CDATA[*/
+        (function() {
+            var deleteForm = document.getElementById("myReservationsDeleteForm");
+            var deleteSubmitButton = document.getElementById("myReservationsDeleteSubmit");
+
+            function getPasswordMessage(button) {
+                var message = /*[[#{reservation.reservations.password_for_delete.msg_1.js}]]*/ "";
+                var objectName = button.getAttribute("data-reservation-object-name") || "";
+                return objectName === "" ? message : message + ": " + objectName;
+            }
+
+            function escapeHtml(text) {
+                var element = document.createElement("div");
+                element.textContent = text;
+                return element.innerHTML;
+            }
+
+            function submitDeleteForm(button, password) {
+                if(deleteForm == null) return;
+
+                var reservationIdInput = deleteForm.querySelector("input[name='reservationId']");
+                var passwordInput = deleteForm.querySelector("input[name='deletePassword']");
+                if(reservationIdInput != null) reservationIdInput.value = button.getAttribute("data-reservation-id") || "";
+                if(passwordInput != null) passwordInput.value = password;
+
+                if(deleteSubmitButton != null) {
+                    deleteSubmitButton.click();
+                    return;
+                }
+
+                deleteForm.submit();
+            }
+
+            function showEmptyPasswordMessage() {
+                var message = /*[[#{reservation.reservations.password_for_delete.msg_2.js}]]*/ "";
+                if(window.WJ != null && typeof window.WJ.notifyWarning === "function") {
+                    window.WJ.notifyWarning("", message);
+                } else {
+                    window.alert(message);
+                }
+            }
+
+            function askWithBrowserPrompt(button) {
+                var title = /*[[#{reservation.reservations.password_for_delete.title}]]*/ "";
+                var message = getPasswordMessage(button);
+                var promptMessage = title === "" ? message : title + "\n\n" + message;
+                var password = window.prompt(promptMessage);
+                if(password == null) return;
+                if(password.trim() === "") {
+                    showEmptyPasswordMessage();
+                    return;
+                }
+                submitDeleteForm(button, password);
+            }
+
+            function askWithWebjetPrompt(button) {
+                window.WJ.prompt({
+                    title: /*[[#{reservation.reservations.password_for_delete.title}]]*/ "",
+                    message: escapeHtml(getPasswordMessage(button)),
+                    btnOkText: /*[[#{button.delete}]]*/ "",
+                    success: function(password) {
+                        if(password == null) return;
+                        if(password.trim() === "") {
+                            showEmptyPasswordMessage();
+                            return;
+                        }
+                        submitDeleteForm(button, password);
+                    }
+                });
+            }
+
+            document.querySelectorAll(".reservation-delete-button").forEach(function(button) {
+                button.addEventListener("click", function() {
+                    if(button.getAttribute("data-delete-password-required") !== "true") {
+                        submitDeleteForm(button, "");
+                        return;
+                    }
+
+                    if(window.WJ != null && typeof window.WJ.prompt === "function") {
+                        askWithWebjetPrompt(button);
+                        return;
+                    }
+
+                    askWithBrowserPrompt(button);
+                });
+            });
+        })();
+    /*]]>*/
+    </script>
+
+</div>
