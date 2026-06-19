@@ -813,13 +813,16 @@ public class MultistepFormsService {
             }
 
             // XSS check of name
-            if (DocTools.testXss(fieldName) || fieldName.indexOf('"') != -1 || fieldName.indexOf('\'') != -1)
-                throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"), false, null);
+            if (DocTools.testXss(fieldName) || fieldName.indexOf('"') != -1 || fieldName.indexOf('\'') != -1) {
+                throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"), "probablySpamBot", false, null);
+            }
 
             // XSS check of values
-            for(String value : asArray(stepItem.getItemFormId(), received))
-                if(DocTools.testXss(value))
-                    throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"), false, null);
+            for(String value : asArray(stepItem.getItemFormId(), received)) {
+                if(DocTools.testXss(value)) {
+                    throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"), "probablySpamBot", false, null);
+                }
+            }
 
             // Check if field is required (static flag or dynamic requirement conditions) - IF requiredByFields is set (is not null) use it as higher priority indicator
             Boolean requiredByFields = formConditionsHandler.isFieldRequiredByCondition(stepItem, received);
@@ -833,7 +836,7 @@ public class MultistepFormsService {
                 } else if("wysiwyg".equalsIgnoreCase(stepItem.getFieldType())) {
                     if(values.length == 1) {
                         String value = values[0].trim();
-                        if (Tools.isEmpty(value) || "<br>".equals(value)) errors.put(itemFormId, fieldName + " - " + prop.getText("checkform.title.required"));
+                        if (Tools.isEmpty(value) || "<br>".equals(value) || "<p></p>".equals(value) || Tools.isEmpty(Html2Text.html2text(value))) errors.put(itemFormId, fieldName + " - " + prop.getText("checkform.title.required"));
                     }
                 }
             }
@@ -984,7 +987,7 @@ public class MultistepFormsService {
         if (restriction != null && restriction.getMaxCombinedSizeInKilobytes() > 0) {
             long totalSizeInKB = fileSizeMap.values().stream().mapToLong(Long::longValue).sum();
             if (totalSizeInKB > restriction.getMaxCombinedSizeInKilobytes()) {
-                throw new SaveFormException(prop.getText("components.forms.combined_files_to_big_err", FileTools.formatFileSizeFromKb(restriction.getMaxCombinedSizeInKilobytes())), false, null);
+                throw new SaveFormException(prop.getText("components.forms.combined_files_to_big_err", FileTools.formatFileSizeFromKb(restriction.getMaxCombinedSizeInKilobytes())), "bad_file", false, null);
             }
         }
     }
@@ -1159,12 +1162,14 @@ public class MultistepFormsService {
         Prop prop = Prop.getInstance(request);
 
         //test na cookies (spameri zvycajne nemaju nastavene)
-		if (request.getCookies() == null || request.getCookies().length == 0)
-            throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"), false, null);
+		if (request.getCookies() == null || request.getCookies().length == 0) {
+            throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"), "probablySpamBot", false, null);
+        }
 
         // Check CRSF
-		if (spamProtectionEnabled && checkCsrf(request) == false)
-            throw new SaveFormException(prop.getText("send_mail_error.probablySpamBotCsrf"), false, null);
+		if (checkCsrf(request) == false) {
+            throw new SaveFormException(prop.getText("send_mail_error.probablySpamBotCsrf"), "probablySpamBotCsrf", false, null);
+        }
     }
 
     /**

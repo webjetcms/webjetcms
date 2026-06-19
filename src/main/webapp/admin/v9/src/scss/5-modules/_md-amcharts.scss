@@ -65,7 +65,9 @@ div.amcharts:has(table.table) {
         max-width: 100%;
 
         &.amchart-table {
-            table-layout: fixed;
+            th {
+                white-space: nowrap;
+            }
         }
 
         tbody tr:hover {

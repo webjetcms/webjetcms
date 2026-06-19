@@ -30,6 +30,8 @@ import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
@@ -40,6 +42,7 @@ import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.forms.FormsEntity;
 import sk.iway.iwcm.components.multistep_form.rest.SaveFormService.FormFiles;
+import sk.iway.iwcm.components.multistep_form.support.SaveFormException;
 import sk.iway.iwcm.form.FormDetails;
 import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.i18n.Prop;
@@ -118,8 +121,9 @@ public class FormMailService {
 	 * @param htmlData   rendered form body HTML (will be transformed as needed)
 	 * @param request    current HTTP request used for context and headers
 	 */
-    public void sendMail(FormsEntity form, String recipients, String subject, FormFiles formFiles, boolean attachFiles, String cssData, StringBuilder htmlData, HttpServletRequest request) {
-		Prop prop = Prop.getInstance(request);
+    public void sendMail(FormsEntity form, String recipients, String subject, FormFiles formFiles, boolean attachFiles, String cssData, StringBuilder htmlData, HttpServletRequest request) throws SaveFormException{
+		String lng = PageLng.getUserLng(request);
+		Prop prop = Prop.getInstance(lng);
 		FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(form.getFormName(), CloudToolsForCore.getDomainId());
 
         String meno = null;
@@ -131,6 +135,12 @@ public class FormMailService {
 		//remove invalid emails
 		emailsList = emailsList.stream().filter(e -> Tools.isEmail(e)).collect(Collectors.toList());
         if(emailsList.size() > 0) email = emailsList.get(0);
+
+		//for multistep-form-stats.js
+		if ("relay.denied.email@onetimeusemail.com".equals(email))
+		{
+			throw new SaveFormException(prop.getText("checkform.emailNotSend"), "emailNotSend", true, null);
+		}
 
 		String emailEncoding = SetCharacterEncodingFilter.getEncoding();
 		String formMailEncoding = Constants.getString("formMailEncoding");
@@ -155,6 +165,7 @@ public class FormMailService {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Form ").append(form.getFormName());
 		String from = null;
+		boolean sendFailed = false;
 
         if ("nobody@nowhere.com".equals(recipients) == false && recipients != null && recipients.contains("@"))
 		{
@@ -334,6 +345,8 @@ public class FormMailService {
 				catch (Exception ex) {
 					Logger.error(FormMailService.class, ex);
 					sb.append(" sending to email ").append(recipients).append(" FAILED: ").append(ex.getMessage());
+					RequestBean.addAuditValue("formfail", "emailNotSend");
+					sendFailed = true;
 				}
 			}
 		} else {
@@ -354,6 +367,10 @@ public class FormMailService {
 		if (Tools.isNotEmpty(recipients)) sb.append("\n subject: ").append(subject);
 		sb.append("\n");
 
-		Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM,  sb.toString(), (long)form.getDocId(), form.getId());
+		Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM, sb.toString(), (long)form.getDocId(), form.getId());
+
+		if (sendFailed) {
+			throw new SaveFormException(prop.getText("checkform.emailNotSend"), "emailNotSend", true, null);
+		}
     }
 }

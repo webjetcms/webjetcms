@@ -723,6 +723,10 @@ public class FormStatService {
 
         int getErrorsCount = 0;
         int saveErrorsCount = 0;
+        int emailNotSendCount = 0;
+        int probablySpamBotCount = 0;
+        int badFileCount = 0;
+        int csrfErrorsCount = 0;
 
         List<AuditLogEntity> logs = new ArrayList<>();
         if(context.formId > 0) {
@@ -731,7 +735,19 @@ public class FormStatService {
             logs = auditRepository.findAllByLogTypeAndSubId1AndCreateDateBetween(Adminlog.TYPE_MULTISTEP_FORM_USERS, context.formId, dateFrom, dateTo);
             for(AuditLogEntity log : logs) {
                 if(log.getSubId2() == 1) getErrorsCount++;
-                else if(log.getSubId2() == 2) saveErrorsCount++;
+                else if(log.getSubId2() == 2) {
+
+                    if (log.getDescription().contains("formfail: emailNotSend")) {
+                        emailNotSendCount++;
+                    } else if (log.getDescription().contains("formfail: probablySpamBotCsrf")) {
+                        csrfErrorsCount++;
+                    } else if (log.getDescription().contains("formfail: probablySpamBot")) {
+                        probablySpamBotCount++;
+                    } else if (log.getDescription().contains("formfail: bad_file")) {
+                        badFileCount++;
+                    }
+                    saveErrorsCount++;
+                }
             }
         }
 
@@ -740,8 +756,11 @@ public class FormStatService {
 
         JSONArray valuesArray = new JSONArray();
         valuesArray.put( getChartObject(context.prop.getText("components.multistep_form.system_errors.get_step"), getErrorsCount) );
-        valuesArray.put( getChartObject(context.prop.getText("components.multistep_form.system_errors.save_step"), saveErrorsCount) );
-
+        valuesArray.put( getChartObject(context.prop.getText("components.multistep_form.system_errors.save_step"), saveErrorsCount - emailNotSendCount - probablySpamBotCount - badFileCount - csrfErrorsCount) );
+        valuesArray.put( getChartObject(context.prop.getText("components.multistep_form.system_errors.emailNotSend"), emailNotSendCount) );
+        valuesArray.put( getChartObject(context.prop.getText("components.multistep_form.system_errors.probablySpamBot"), probablySpamBotCount) );
+        valuesArray.put( getChartObject(context.prop.getText("components.multistep_form.system_errors.badFile"), badFileCount) );
+        valuesArray.put( getChartObject(context.prop.getText("components.multistep_form.system_errors.csrfErrors"), csrfErrorsCount) );
         errorData.put("pieSystemErrorData",  valuesArray);
         errorData.put("timelineErrorData", getTimelineErrorData(context, logs));
 
