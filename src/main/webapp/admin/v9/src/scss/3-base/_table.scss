@@ -1654,6 +1654,13 @@ table.dataTable thead > tr > th.dt-orderable-asc:hover, table.dataTable thead > 
     outline: none;
 }
 
+//history table - not publicable row
+#datatableFieldDTE_Field_editorFields-history tr.not-publicable {
+    td:nth-child(3) {
+        text-decoration: line-through;
+    }
+}
+
 //row reorder
 div.dt-rowReorder-float-parent {
     position: absolute;

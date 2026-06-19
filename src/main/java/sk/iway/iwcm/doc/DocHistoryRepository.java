@@ -15,7 +15,7 @@ import java.util.Optional;
 @Repository
 public interface DocHistoryRepository extends JpaRepository<DocHistory, Long>, JpaSpecificationExecutor<DocHistory> {
 
-    List<DocHistory> findByDocIdAndPublishStartDate(Integer docId, Date publishStartDate);
+    List<DocHistory> findByDocIdAndPublishStartDateBetween(Integer docId, Date publishStartDateFrom, Date publishStartDateTo);
 
     //
     @Query(value = "SELECT history_id FROM documents_history WHERE doc_id = ?1 AND history_id < ?2 AND publicable = ?3 AND author_id = ?4", nativeQuery=true)

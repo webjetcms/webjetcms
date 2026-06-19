@@ -218,6 +218,7 @@ export class WebPagesDatatable {
                             dt.rows({selected: true}).every( function ( rowIdx, tableLoop, rowLoop ) {
                                 var data = this.data();
                                 if (data.publishStartStringExtra==null) show = false;
+                                if (data.publicable !== true) show = false;
                                 count ++;
                             });
                             //console.log("show=", show, "count=", count);
@@ -275,6 +276,15 @@ export class WebPagesDatatable {
                         'title': window.WJ.translate('groupslist.compare'),
                         'data-toggle': 'tooltip'
                     }
+                });
+
+                historyTable.on( 'draw', function () {
+                    historyTable.rows().every(function() {
+                        var data = this.data();
+                        if (data.publicable === false) {
+                            $(this.node()).addClass('not-publicable');
+                        }
+                    });
                 });
             }
             if (event.detail.conf.id=="DTE_Field_editorFields.groupSchedulerPlannedChanges" ||

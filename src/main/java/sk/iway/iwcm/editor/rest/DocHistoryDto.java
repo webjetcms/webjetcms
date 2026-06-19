@@ -46,6 +46,9 @@ public class DocHistoryDto {
     @DataTableColumn(inputType = DataTableColumnType.DATETIME, title="editor.dateEnd")
 	private Date publishEndDate;
 
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+    private Boolean publicable;
+
     private boolean historyActual;
     private boolean disableAfterEnd;
     private BaseEditorFields editorFields;

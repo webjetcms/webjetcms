@@ -4,6 +4,8 @@
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+- Web stránky - opravená úprava stránky s budúcim dátumom publikovania. Zrušené plánované verzie sú v histórii zobrazené preškrtnutým písmom a nie je možné ich zmazať (#58573).
+
 ## 2026.0.25
 
 > Opravná verzia pôvodnej verzie 2026.0.
