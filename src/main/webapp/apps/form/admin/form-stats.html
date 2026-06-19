@@ -35,16 +35,13 @@
 
         const input = document.getElementById("expandBonusChartButton");
         input.addEventListener("click", function() {
-            const expandBonusChart = document.getElementById("expandBonusChart");
-            const bonusChartContainer = document.getElementById("bonusChartContainer");
-
             expandBonusChart.style.display = "none";
-            bonusChartContainer.style.display = "block";
+            $("#bonusChartContainer").slideDown(500);
 
             advancedCards.forEach(id => {
                 const card = document.querySelector(`[data-stat-id="${id}"]`);
                 if(card) {
-                    card.style.display = "block";
+                    $(card).slideDown(500);
                 }
             });
         });
@@ -384,7 +381,7 @@
     <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher" data-stat-id="conversionRate" style="display:none;">
         <div class="stat-card h-100 stat-card--gray">
             <div class="stat-card__icon">
-                <i class="ti ti-users"></i>
+                <i class="ti ti-chart-funnel"></i>
             </div>
             <div class="stat-card__content">
                 <span class="stat-card__title" data-th-text="#{components.multistep_form.conversion_rate}">CONVERSION RATE</span>
