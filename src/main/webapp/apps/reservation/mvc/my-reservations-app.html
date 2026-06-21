@@ -70,6 +70,7 @@
 
     <form id="myReservationsDeleteForm" method="post" class="d-none" data-th-action="${request.getAttribute('ninja').page.urlPath}">
         <input type="hidden" name="deleteReservation" value="true" />
+        <input type="hidden" name="__token" data-th-value="${csrfToken}" />
         <input type="hidden" name="reservationId" />
         <input type="hidden" name="reservation-date-from" data-th-value="${reservationDateFrom}" />
         <input type="hidden" name="reservation-date-to" data-th-value="${reservationDateTo}" />

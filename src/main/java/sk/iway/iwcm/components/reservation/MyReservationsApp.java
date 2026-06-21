@@ -22,6 +22,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.components.reservation.jpa.MyReservationDTO;
+import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.i18n.Prop;
@@ -57,6 +58,8 @@ public class MyReservationsApp extends WebjetComponentAbstract {
     @DefaultHandler
 	public String view(Model model, HttpServletRequest request)
 	{
+        model.addAttribute("csrfToken", CSRF.getCsrfToken(request.getSession(), true));
+
         prepareView(model, request);
         return VIEW_PATH;
 	}
@@ -64,6 +67,16 @@ public class MyReservationsApp extends WebjetComponentAbstract {
     public String deleteReservation(Model model, HttpServletRequest request) {
         Identity user = UsersDB.getCurrentUser(request);
         Prop prop = Prop.getInstance(request);
+
+        if ("POST".equalsIgnoreCase(request.getMethod()) && user != null) {
+            if (CSRF.verifyTokenAndDeleteIt(request) == false) {
+                Logger.debug(MyReservationsApp.class, "CSRF token invalid for deleteReservation");
+                model.addAttribute("deleteError", prop.getText(DELETE_ERROR_KEY));
+                prepareView(model, request);
+                return VIEW_PATH;
+            }
+        }
+
         int reservationId = Tools.getIntValue(request.getParameter(PARAM_RESERVATION_ID), -1);
         String deletePassword = request.getParameter(PARAM_DELETE_PASSWORD);
         if(deletePassword == null) deletePassword = "";
