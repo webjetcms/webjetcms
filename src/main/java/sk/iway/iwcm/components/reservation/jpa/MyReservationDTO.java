@@ -26,8 +26,9 @@ public class MyReservationDTO {
     private Boolean allDay;
     private Boolean canDelete;
     private Boolean deletePasswordRequired;
+    private String purpose;
 
-    public MyReservationDTO(Long reservationId, Date dateFrom, Date dateTo, BigDecimal price, Boolean accepted, String reservationObjectName, Boolean allDay, String reservationObjectPasswd, Integer cancelTimeBefore) {
+    public MyReservationDTO(Long reservationId, Date dateFrom, Date dateTo, BigDecimal price, Boolean accepted, String reservationObjectName, Boolean allDay, String reservationObjectPasswd, Integer cancelTimeBefore, String purpose) {
         this.reservationId = reservationId;
         this.reservationObjectName = reservationObjectName == null ? "" : reservationObjectName;
         this.allDay = allDay;
@@ -36,6 +37,7 @@ public class MyReservationDTO {
         this.accepted = accepted;
         this.canDelete = canDeleteReservation(dateFrom, accepted, allDay, cancelTimeBefore);
         this.deletePasswordRequired = isDeletePasswordRequired(reservationObjectPasswd);
+        this.purpose = purpose == null ? "" : purpose;
     }
 
     private void setReservationRange(Date dateFrom, Date dateTo) {

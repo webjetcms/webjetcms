@@ -25,21 +25,23 @@
 
     <div class="table-responsive">
 
-        <table class="table table-striped table-hover align-middle mb-0" id="myReservationsTable">
+        <table class="table table-striped table-hover align-middle mb-0 tabulkaStandard" id="myReservationsTable" data-th-aria-label="#{components.reservation.my_reservations.desc}">
 
             <thead class="table-light">
                 <tr>
                     <th scope="col" data-th-text="#{reservation.reservation_object.selected_object}">Reservation Object</th>
+                    <th scope="col" data-th-text="#{components.reservation.reservation_list.purpose}">Purpose</th>
                     <th scope="col" data-th-text="#{components.reservation.reservations.time_range}">Reservation Range</th>
                     <th scope="col" class="text-end" data-th-text="#{components.reservation.reservations.price}">Price</th>
                     <th scope="col" data-th-text="#{reservation.reservations.status}">Status</th>
-                    <th scope="col" class="text-end" data-th-text="#{reservation.reservations.delete}">Delete reservation</th>
+                    <th scope="col" class="text-center" data-th-text="#{reservation.reservations.action}">Action</th>
                 </tr>
             </thead>
 
             <tbody>
                 <tr data-th-each="reservation : ${reservations}">
                     <td data-th-text="${reservation.reservationObjectName}"></td>
+                    <td data-th-text="${reservation.purpose}"></td>
                     <td>
                         <span class="d-inline-flex flex-column flex-sm-row align-items-sm-center gap-1">
                             <span class="text-nowrap" data-th-text="${reservation.reservationRangeFrom}"></span>
@@ -50,16 +52,16 @@
                     <td class="text-end" data-th-text="${reservation.price}"></td>
 
                     <td data-th-if="${reservation.accepted == null}">
-                        <span class="badge bg-secondary" data-th-text="#{reservation.reservations.status.waiting}"></span>
+                        <span class="badge bg-secondary" role="status" data-th-text="#{reservation.reservations.status.waiting}"></span>
                     </td>
                     <td data-th-if="${reservation.accepted == true}">
-                        <span class="badge bg-success" data-th-text="#{reservation.reservations.status.accepted}"></span>
+                        <span class="badge bg-success" role="status" data-th-text="#{reservation.reservations.status.accepted}"></span>
                     </td>
                     <td data-th-if="${reservation.accepted == false}">
-                        <span class="badge bg-danger" data-th-text="#{reservation.reservations.status.denied}"></span>
+                        <span class="badge bg-danger" role="status" data-th-text="#{reservation.reservations.status.denied}"></span>
                     </td>
                     <td class="text-end">
-                        <button data-th-if="${reservation.canDelete == true}" type="button" class="btn btn-sm btn-outline-danger reservation-delete-button" data-th-attr="data-reservation-id=${reservation.reservationId},data-delete-password-required=${reservation.deletePasswordRequired},data-reservation-object-name=${reservation.reservationObjectName}" data-th-text="#{button.delete}">Delete</button>
+                        <button data-th-if="${reservation.canDelete == true}" type="button" class="btn btn-outline-danger reservation-delete-button" data-th-attr="data-reservation-id=${reservation.reservationId},data-delete-password-required=${reservation.deletePasswordRequired},data-reservation-object-name=${reservation.reservationObjectName}" data-th-text="#{button.delete}">Delete</button>
                     </td>
                 </tr>
             </tbody>
@@ -151,7 +153,11 @@
             }
 
             document.querySelectorAll(".reservation-delete-button").forEach(function(button) {
-                button.addEventListener("click", function() {
+                function handleActivation(e) {
+                    if (e.type === "keydown") {
+                        if (e.key !== "Enter" && e.key !== " ") return;
+                        e.preventDefault();
+                    }
                     if(button.getAttribute("data-delete-password-required") !== "true") {
                         submitDeleteForm(button, "");
                         return;
@@ -163,7 +169,10 @@
                     }
 
                     askWithBrowserPrompt(button);
-                });
+                }
+
+                button.addEventListener("click", handleActivation);
+                button.addEventListener("keydown", handleActivation);
             });
         })();
     /*]]>*/

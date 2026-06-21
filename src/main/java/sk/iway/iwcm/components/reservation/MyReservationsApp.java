@@ -171,7 +171,7 @@ public class MyReservationsApp extends WebjetComponentAbstract {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT r.reservation_id, r.date_from, r.date_to, r.price, r.accepted, ");
         sql.append("ro.name AS reservation_object_name, ro.reservation_for_all_day AS reservation_for_all_day, ");
-        sql.append("ro.passwd AS reservation_object_passwd, ro.cancel_time_befor AS cancel_time_befor ");
+        sql.append("r.purpose AS reservation_purpose, ro.passwd AS reservation_object_passwd, ro.cancel_time_befor AS cancel_time_befor ");
         sql.append("FROM reservation r ");
         sql.append("LEFT JOIN reservation_object ro ON r.reservation_object_id = ro.reservation_object_id AND r.domain_id = ro.domain_id ");
         return sql;
@@ -191,7 +191,8 @@ public class MyReservationsApp extends WebjetComponentAbstract {
                     DB.getDbString(rs, "reservation_object_name"),
                     DB.getBoolean(rs, "reservation_for_all_day"),
                     DB.getDbString(rs, "reservation_object_passwd"),
-                    DB.getInteger(rs, "cancel_time_befor")
+                    DB.getInteger(rs, "cancel_time_befor"),
+                    DB.getDbString(rs, "reservation_purpose")
                 );
             }
         };
