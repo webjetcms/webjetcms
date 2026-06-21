@@ -1,11 +1,10 @@
 const { I } = inject();
-const buttons = require('./buttons.js')
-
+import buttons from "./buttons.js";
 /**
  * Funkcie pre pracu s datatabulkou
  */
 
-module.exports = {
+export default {
     btn : buttons.btn,
 
     /**

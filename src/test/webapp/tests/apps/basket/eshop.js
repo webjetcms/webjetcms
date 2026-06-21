@@ -1,8 +1,7 @@
 Feature("apps.basket.eshop");
 
-const path = require("path");
-const SL = require("./SL");
-
+import path from "path";
+import SL from "./SL.js";
 let randomNumber;
 const firstTdSelector = "td.dt-select-td.sorting_1";
 

@@ -1,8 +1,7 @@
 Feature('admin.2fa');
 
-const http = require('http');
-const crypto = require('crypto');
-
+import http from "http";
+import crypto from "crypto";
 var randomLogin;
 const passwordRequirementsErr_nonAdmin = 'Vaše heslo nespĺňa bezpečnostné nastavenia aplikácie';
 

@@ -1,15 +1,14 @@
 const { I } = inject();
 
-const fexPost = require("./TempMail-fexpost");
-const mailSac = require("./TempMail-mailsac");
-const noopmail = require("./TempMail-noopmail");
-const verify32 = require("./TempMail-verify32");
-
+import fexPost from "./TempMail-fexpost.js";
+import mailSac from "./TempMail-mailsac.js";
+import noopmail from "./TempMail-noopmail.js";
+import verify32 from "./TempMail-verify32.js";
 /**
  * Funkcie pre pracu s https://tempmail.plus
  */
 
-module.exports = {
+export default {
 
     /**
      * If you change TempMail provider, run this SQL to update users in database:

@@ -1,7 +1,6 @@
 const { I } = inject();
-const allure = require("allure-js-commons");
-
-module.exports = {
+import * as allure from "allure-js-commons";
+export default {
 
     /**
      * a11y check method. Internally use axe and a11yhelper.js to check WCAG violations

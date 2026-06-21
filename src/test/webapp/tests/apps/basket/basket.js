@@ -1,7 +1,6 @@
 Feature('apps.basket');
 
-const SL = require("./SL.js");
-
+import SL from "./SL.js";
 var randomNumber, testerName;
 
 const BasketActions = {

@@ -1,5 +1,4 @@
-const assert = require('assert');
-
+import assert from "assert";
 Feature('apps.gallery.gallery');
 
 var randomNumber;
@@ -44,7 +43,6 @@ Scenario('zoznam fotografii-pamatanie velkosti', ({ I, DT }) => {
 });
 
 Scenario('oblast zaujmu', async ({ I, DT, DTE }) => {
-    const assert = require('assert');
     const generateRandomNum = num => Math.floor(Math.random() * num);
     let area = { w: null, h: null, x: null, y: null };
     I.amOnPage("/admin/v9/apps/gallery/");

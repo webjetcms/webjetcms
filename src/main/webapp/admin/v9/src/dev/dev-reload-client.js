@@ -70,7 +70,7 @@
     }
 
     function connect() {
-        if (navigator.appVersion.indexOf("Chrome/131") !== -1) { //NOSONAR
+        if (navigator.appVersion.indexOf("Chrome/148") !== -1) { //NOSONAR
             //codecept browser, skip live reload to avoid infinite wait until network idle
             return;
         }

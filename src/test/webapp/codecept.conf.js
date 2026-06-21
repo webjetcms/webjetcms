@@ -1,9 +1,3 @@
-const { setHeadlessWhen } = require('@codeceptjs/configure');
-
-// turn on headless mode when running with HEADLESS=true environment variable
-// HEADLESS=true npx codecept run
-setHeadlessWhen(process.env.HEADLESS);
-
 let url = process.env.CODECEPT_URL || "https://"+process.env.CODECEPT_DEFAULT_DOMAIN_NAME;
 let codeceptShow = process.env.CODECEPT_SHOW;
 let browser = process.env.CODECEPT_BROWSER || "chromium";
@@ -40,7 +34,7 @@ console.log("browser=", browser);
 console.log("restart=", restart);
 console.log("autoDelayEnabled=", autoDelayEnabled);
 
-exports.config = {
+export const config = {
   tests: './tests/**/*.js',
   output: '../../../build/test',
   helpers: {
@@ -97,7 +91,7 @@ exports.config = {
     FileSystem: {},
     A11yHelper: {
       require: './helpers/a11yhelper.js',
-      outputDir: '../../../build/test/allure-results',
+      outputDir: '../../../build/test/report',
       skipFailures: false,
       reporter: "html"
     }
@@ -115,28 +109,22 @@ exports.config = {
     a11y: './pages/a11y.js',
   },
   bootstrap: null,
-  mocha: {
-    //generovanie reportov do output adresara https://codecept.io/reports/#html
-    reporterOptions: {
-      reportDir: "../../../build/test/report"
-    }
-  },
   name: 'webapp',
   plugins: {
     retryFailedStep: {
       enabled: true
     },
-    screenshotOnFail: {
+    screenshot: {
       enabled: true,
       fullPageScreenshots: true
     },
-    allure: {
+    testomatio: {
       enabled: true,
-      require: "allure-codeceptjs",
-      resultsDir: "../../../build/test/allure-results",
+      require: '@testomatio/reporter/codecept',
+      html: true,
     },
-    pauseOnFail: {},
-    autoLogin: {
+    pause: {},
+    auth: {
       enabled: true,
       saveToFile: false,
       inject: 'login',

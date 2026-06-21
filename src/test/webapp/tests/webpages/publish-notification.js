@@ -1,5 +1,4 @@
-const moment = require("moment");
-
+import moment from "moment";
 Feature('webpages.publish-notification');
 
 const testWebpageAdmin = "/admin/v9/webpages/web-pages-list/?docid=104831";

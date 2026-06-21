@@ -1,7 +1,6 @@
 Feature('apps.file-archive.patterns');
 
-const SL = require("./SL.js");
-
+import SL from "./SL.js";
 let patternVirtualFileName, validPdfVirtualFileName;
 
 Before(({ login }) => {

@@ -82,7 +82,7 @@ function _addContext(newContextKey, newContextSelector) {
   }
 }
 
-module.exports = {
+export default {
   btn: buttons,
   actions: actions,
   addContext(newContextKey, newContextSelector) {

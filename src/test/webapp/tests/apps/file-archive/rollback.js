@@ -1,7 +1,6 @@
 Feature('apps.file-archive.rollback');
 
-const SL = require("./SL.js");
-
+import SL from "./SL.js";
 let randomNumber, virtualFileName;
 
 Before(({ I, login, DT }) => {

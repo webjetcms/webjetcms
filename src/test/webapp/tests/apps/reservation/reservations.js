@@ -1,5 +1,4 @@
-const SL = require("./shared-logic");
-
+import SL from "./shared-logic.js";
 Feature('apps.reservation.reservations');
 
 let randomNumber;

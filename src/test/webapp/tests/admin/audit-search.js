@@ -1,3 +1,5 @@
+import assert from "assert";
+
 Feature('admin.audit-search');
 
 /**
@@ -21,7 +23,6 @@ Scenario("filter podla datumu", async ({ I, DT }) => {
   const value = await I.grabTextFrom({css: '#datatableInit > tbody > tr:nth-child(1) > td.dt-style-date > div'});
   const regex = /\d\d\.01\.2020\s\d\d\:\d\d/g
   const ok = regex.test(value);
-  var assert = require('assert');
   assert.equal(ok, true);
 });
 
@@ -48,7 +49,6 @@ Scenario("filter podla user description", async ({ I, DT }) => {
   const value = await I.grabTextFrom({css: '#datatableInit > tbody > tr:nth-child(1) > td:nth-child(5) > div > a'});
   const regex = /Cron\sstarted\!/g
   const ok = regex.test(value);
-  var assert = require('assert');
   assert.equal(ok, true);
 });
 

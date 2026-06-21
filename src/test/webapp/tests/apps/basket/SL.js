@@ -1,4 +1,4 @@
-module.exports = {
+export default {
 
     PRODUCTS : "/apps/elektronicky-obchod/produkty/",
     ORDERS: "/apps/elektronicky-obchod/objednavky/",

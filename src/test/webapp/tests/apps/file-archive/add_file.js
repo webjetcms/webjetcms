@@ -1,7 +1,6 @@
 Feature('apps.file-archive.add_file');
 
-const SL = require("./SL.js");
-
+import SL from "./SL.js";
 Before(({ login }) => {
     login('admin');
 });

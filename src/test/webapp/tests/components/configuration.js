@@ -1,3 +1,5 @@
+import assert from "assert";
+
 Feature('components.configuration');
 
 var randomNumber, name, value;
@@ -122,7 +124,6 @@ Scenario("zmazanie konfiguracnej premennej @baseTest", ({ I, DT }) => {
 });
 
 Scenario("oznacovanie vyfiltrovanych riadkov", async ({ I }) => {
-    const assert = require('assert');
     I.see("Názov konfigurácie");
     I.fillField("input.dt-filter-name", "admin");
     I.pressKey('Enter', 'input.dt-filter-name');

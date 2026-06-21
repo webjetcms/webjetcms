@@ -1,7 +1,6 @@
 Feature('apps.basket.product-list');
 
-const SL = require("./SL");
-
+import SL from "./SL.js";
 let subcategory = "section.md-subcategory-selector > ul > li > a";
 
 Before(({ login }) => {

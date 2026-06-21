@@ -1,11 +1,10 @@
 const { I } = inject();
-const DT = require("./DT");
-
+import DT from "./DT.js";
 /**
  * Functions for working with the DataTable EDITOR
  */
 
-module.exports = {
+export default {
 
      /**
       * Selects a value in the dropdown in the DataTable editor

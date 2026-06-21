@@ -4,7 +4,7 @@ const { I } = inject();
  * Funkcie pre pracu s Browsermi
  */
 
-module.exports = {
+export default {
 
     getBrowserType() {
         let browserType = process.env.CODECEPT_BROWSER || "chromium";

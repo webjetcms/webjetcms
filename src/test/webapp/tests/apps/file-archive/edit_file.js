@@ -1,7 +1,6 @@
 Feature('apps.file-archive.edit_file');
 
-const SL = require("./SL.js");
-
+import SL from "./SL.js";
 let randomNumber;
 
 Before(({ I, login }) => {
