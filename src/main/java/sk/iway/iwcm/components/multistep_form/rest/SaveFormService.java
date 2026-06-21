@@ -18,6 +18,7 @@ import sk.iway.iwcm.CryptoFactory;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.SpamProtection;
 import sk.iway.iwcm.Tools;
@@ -185,8 +186,8 @@ public class SaveFormService {
         if(Tools.isNotEmpty(referer)) form.setReferer(DB.prepareString(referer, 255));
         else Logger.info(this.getClass(), "Cannot determine referer URL for saved form, destinationUrl is empty. formName=" + formName + " docId=" + docId);
 
-        String lng = "";
-        DocDetails doc = DocDB.getInstance().getDoc(docId);
+        String lng = null;
+        DocDetails doc = DocDB.getInstance().getBasicDocDetails(docId, false);
         if(doc != null) {
             GroupDetails group = doc.getGroup();
             if(group != null) lng = group.getLng();
@@ -196,6 +197,7 @@ public class SaveFormService {
                 if(temp != null) lng = temp.getLng();
             }
         }
+        if (Tools.isEmpty(lng)) lng = PageLng.getUserLng(request);
 
         if(Tools.isNotEmpty(lng)) form.setLanguage(lng);
         else Logger.info(this.getClass(), "Cannot determine language used on the page where the form is embedded. formName=" + formName + " docId=" + docId);

@@ -48,7 +48,7 @@ public class MultistepFormsRestController {
             if(Tools.isNotEmpty(sfe.getErrorRedirect()))
                 response.put("err_redirect", sfe.getErrorRedirect());
 
-            Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Error while saving form (or form step):" + formName + ". Error: " + sfe.getLocalizedMessage(), multistepFormsService.getFormId(formName), 2);
+            Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Error while saving form (or form step):" + formName + ". Error: " + sfe.getLocalizedMessage(), multistepFormsService.getFormId(formName), FormStatService.AUDIT_SUBID_ERROR_STEP_SAVE);
 
             return ResponseEntity.badRequest().body(response.toString());
         }
@@ -57,7 +57,7 @@ public class MultistepFormsRestController {
             Logger.error(MultistepFormsRestController.class, "saveForm() failed. " + e.getLocalizedMessage(), e);
             response.put("err_msg", Prop.getInstance(request).getText("datatable.error.unknown"));
 
-            Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Error while saving form (or form step):" + formName + ". Error: " + e.getLocalizedMessage(), multistepFormsService.getFormId(formName), 2);
+            Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Error while saving form (or form step):" + formName + ". Error: " + e.getLocalizedMessage(), multistepFormsService.getFormId(formName), FormStatService.AUDIT_SUBID_ERROR_STEP_SAVE);
 
             return ResponseEntity.badRequest().body(response.toString());
         }
@@ -90,7 +90,7 @@ public class MultistepFormsRestController {
             JSONObject response = new JSONObject();
             response.put("err_msg", Prop.getInstance(request).getText("datatable.error.unknown"));
 
-            Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Error while getting next form step. formName:" + formName + ", stepId:" + stepId + ". Error: " + e.getLocalizedMessage() , multistepFormsService.getFormId(formName), 1);
+            Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Error while getting next form step. formName:" + formName + ", stepId:" + stepId + ". Error: " + e.getLocalizedMessage() , multistepFormsService.getFormId(formName), FormStatService.AUDIT_SUBID_ERROR_STEP_GET);
 
             return ResponseEntity.badRequest()
                 .header("Content-Type", contentTypeWithCharset)

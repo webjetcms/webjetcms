@@ -49,6 +49,9 @@ public class FormStatService {
     private static final String UNKNOWN_VALUE = "unknown";
     private static final String NOT_ANSWERED = "components.stats_by_charts.unanswered";
 
+    public static final int AUDIT_SUBID_ERROR_STEP_GET = 1;
+    public static final int AUDIT_SUBID_ERROR_STEP_SAVE = 2;
+
     private final FormsRepository formsRepository;
     private final FormSettingsRepository formSettingsRepository;
     private final FormsServiceImpl formsService;
@@ -736,8 +739,8 @@ public class FormStatService {
             Timestamp dateTo = new Timestamp(context.dateRange[1].getTime());
             logs = auditRepository.findAllByLogTypeAndSubId1AndCreateDateBetween(Adminlog.TYPE_MULTISTEP_FORM_USERS, context.formId, dateFrom, dateTo);
             for(AuditLogEntity log : logs) {
-                if(log.getSubId2() == 1) getErrorsCount++;
-                else if(log.getSubId2() == 2) {
+                if(log.getSubId2() == AUDIT_SUBID_ERROR_STEP_GET) getErrorsCount++;
+                else if(log.getSubId2() == AUDIT_SUBID_ERROR_STEP_SAVE) {
 
                     if (log.getDescription().contains("formfail: emailNotSend")) {
                         emailNotSendCount++;
@@ -800,12 +803,12 @@ public class FormStatService {
         dayErrorCounts.put("successSave", new TreeMap<>());
 
         for(AuditLogEntity log : logs) {
-            if (log.getSubId2() == 1) {
+            if (log.getSubId2() == AUDIT_SUBID_ERROR_STEP_GET) {
                 Date createDate = DateTools.setTimePart(log.getCreateDate(), 12, 0, 0, 0);
                 dayErrorCounts.get("errorStepGet").put(
                     createDate.getTime(),
                     dayErrorCounts.get("errorStepGet").getOrDefault(createDate.getTime(), 0) + 1);
-            } else if (log.getSubId2() == 2) {
+            } else if (log.getSubId2() == AUDIT_SUBID_ERROR_STEP_SAVE) {
                 Date createDate = DateTools.setTimePart(log.getCreateDate(), 12, 0, 0, 0);
                 dayErrorCounts.get("errorStepSave").put(
                     createDate.getTime(),
