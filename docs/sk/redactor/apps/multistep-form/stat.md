@@ -71,9 +71,9 @@ Kliknutím na tlačidlo **Zobraziť pokročilú štatistiku** sa zobrazia ďalš
 | **Adresa nasadeného formulára** | Prehľad najčastejších URL adries stránok, z ktorých bol formulár odoslaný. Ak sa adresa nedá zistiť, zaradí sa do hodnoty `unknown`. |
 | **Počet chýb podľa položky** | Rozdelenie validačných chýb podľa položiek formulára. Zobrazí sa 5 najčastejších položiek, zvyšok sa zlúči do hodnoty **Ostatné**. |
 | **Počet chýb podľa akcie** | Rozdelenie systémových chýb podľa akcie **Získanie kroku** alebo **Uloženie kroku** v zvolenom období. |
-| **Časový vývoj systémových chýb** | Čiarový graf systémových chýb podľa dní a podľa akcie, pri ktorej chyba nastala. |
+| **Zobrazenie a odoslanie** | Čiarový graf odoslaní a systémových chýb podľa dní. |
 
-Pokročilé grafy sú pevne dané a nemajú samostatné tlačidlo nastavenia grafu. Dátumový filter **neovplyvňuje** graf typu **Počet chýb podľa akcie** a **Časový vývoj systémových chýb**, pretože tieto grafy zobrazujú priebežné počítadlá od nasadenia sledovania.
+Pokročilé grafy sú pevne dané a nemajú samostatné tlačidlo nastavenia grafu. Dátumový filter **ovplyvňuje** graf typu **Počet chýb podľa akcie** a **Časový vývoj systémových chýb**, dáta sú získavané z auditu.
 
 ![](stat-section-advanced.png)
 

@@ -54,7 +54,7 @@ export class StatsByCharts {
             if(destroyReponse === true) {
 
                 let chartDefType = newChartDef.type;
-                if(chartDefType != null && chartDefType != undefined && chartDefType.length) {
+                if(chartDefType != null && typeof chartDefType != "undefined" && chartDefType.length) {
                     chartDefType = chartDefType.toLowerCase();
                     newChartDef.type = chartDefType;
                 }
@@ -135,7 +135,7 @@ export class StatsByCharts {
                 chartContainer.prepend(button);
 
                 let chartDefType = chartDef.type;
-                if(chartDefType != null && chartDefType != undefined && chartDefType.length) {
+                if(chartDefType != null && typeof chartDefType != "undefined" && chartDefType.length) {
                     chartDefType = chartDefType.toLowerCase();
                     chartDef.type = chartDefType;
                 }

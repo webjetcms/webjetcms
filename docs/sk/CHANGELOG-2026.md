@@ -18,6 +18,8 @@
 
 - [Štatistiky viackrokových formulárov](redactor/apps/multistep-form/stat.md) boli rozšírené o dátumový filter a pokročilé metriky zobrazení/pokusov/jazykov etc. (#58509).
 
+![](redactor/apps/multistep-form/stat-section-advanced.png)
+
 - Do viackrokových formulárov pridaná možnosť jednoducho nastavovať výberové polia a skupiny zaškrtávacích / výberových polí (#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced.png)
@@ -69,6 +71,8 @@
 - Voliteľné polia - pridaná možnosť centrálne nastaviť vlastnosti [voliteľných polí](frontend/webpages/customfields/custom-fields-settings.md) v novej tabuľke v časti Nastavenia (#58413).
 
 ![](frontend/webpages/customfields/custom-fields-settings-editor.png)
+
+- Aktualizovaná knižnica [Tabler Icons](https://tabler.io/icons) na verziu 3.44.0, vyriešený problém so súčasným používaním `Outline` a `Filled` sád (#58509).
 
 ## 2026.18
 
