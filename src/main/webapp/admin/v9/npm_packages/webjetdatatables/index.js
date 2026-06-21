@@ -3817,6 +3817,15 @@ export const dataTableInit = options => {
         //console.log( 'Button ', buttonApi, 'config=', config );
         if (typeof config.className !="undefined" && config.className.indexOf("buttons-colvis")!=-1 && $('#' + DATA.id + '_wrapper button.buttons-columnVisibility').parents("div.colvisbtn_wrapper").length<1) {
 
+            // Keep valid semantics: avoid nested interactive <a> inside <button>.
+            $('#' + DATA.id + '_wrapper button.buttons-columnVisibility').each(function() {
+                var button = $(this);
+                var nestedLink = button.children('a.dropdown-item');
+                if (nestedLink.length > 0) {
+                    button.html(nestedLink.html());
+                }
+            });
+
             $('#' + DATA.id + '_wrapper button.buttons-columnVisibility span[data-toggle*="tooltip"]').tooltip({
                 placement: 'top',
                 trigger: 'hover',
