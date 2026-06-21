@@ -725,6 +725,7 @@ export async function createAmchart(chartForm, update) {
     }
 
     //Add title to chart div
+    chartForm.chartTitle = await removeQuotes(chartForm.chartTitle);
     var htmlCode = '<h6 class="amchart-header">' + chartForm.chartTitle;
     $('#' + chartForm.chartDivId).before(htmlCode);
 
@@ -745,8 +746,23 @@ export async function createAmchart(chartForm, update) {
     }
 }
 
+function removeQuotes(str) {
+    if(str == undefined || str == null) return "";
+
+    if (str.startsWith('"')) {
+        str = str.slice(1);
+    }
+
+    if (str.endsWith('"')) {
+        str = str.slice(0, -1);
+    }
+
+  return str;
+}
+
 async function _createCustomChart(chartForm, update) {
     //Add title to chart div
+    chartForm.chartTitle = await removeQuotes(chartForm.chartTitle);
     var htmlCode = '<h6 class="amchart-header">' + chartForm.chartTitle;
     $('#' + chartForm.chartDivId).before(htmlCode);
 
@@ -1603,6 +1619,10 @@ export async function updateChart(chartForm) {
                 wordCloudSeries.data.setAll(chartForm.chartData);
             }
         }
+    } else if(chartForm instanceof TableChartForm) {
+        const tableDiv = document.getElementById(chartForm.chartDivId);
+        if(tableDiv) tableDiv.innerHTML = "";
+        createTableChart(chartForm);
     }
 }
 
@@ -2178,6 +2198,7 @@ async function createTableChart(chartForm) {
 
     const table = document.createElement("table");
     table.classList.add("table");
+    table.classList.add("amchart-table");
 
     if (typeof chartForm.headerNames != "undefined" && chartForm.headerNames != null) {
         //create thead section with title and count
@@ -2205,10 +2226,10 @@ async function createTableChart(chartForm) {
     table.appendChild(tbody);
 
     const wrapper2 = document.createElement("div");
+    wrapper2.classList.add("amchart-table-wrapper");
     wrapper2.appendChild(table);
     wrapper2.style.position = "relative";
     wrapper2.style.width = "100%";
-    wrapper2.style.height = "100%";
 
     const chartContainer = document.getElementById(chartForm.chartDivId);
     if(chartContainer) {

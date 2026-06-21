@@ -43,6 +43,11 @@ public interface FormItemsRepository extends DomainIdRepository<FormItemEntity, 
     // Basically, we need find first only because joined radio buttons that have same itemFormId but are separate items
     FormItemEntity findFirstByFormNameAndItemFormIdAndDomainIdOrderBySortPriorityAsc(String formName, String itemFormId, Integer domainId);
 
+    @Transactional
+    @Modifying
+    @Query("UPDATE FormItemEntity fie SET fie.errorCount = COALESCE(fie.errorCount, 0) + 1 WHERE fie.formName = :formName AND fie.domainId = :domainId AND fie.itemFormId IN :itemFormIds")
+    int incrementErrorCountByItemFormIds(@Param("formName") String formName, @Param("domainId") Integer domainId, @Param("itemFormIds") List<String> itemFormIds);
+
     Integer countByFormNameAndStepIdAndSortPriorityAndIdNot(String formName, Long stepId, Integer sortPriority, Integer id);
 
     List<FormItemEntity> findAllByFormNameAndStepIdInAndDomainId(String formName, List<Integer> stepIds, Integer domainId);

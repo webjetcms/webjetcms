@@ -64,9 +64,9 @@ public class Adminlog
 	public static final int TYPE_FORM_EXPORT = 110;
 	public static final int TYPE_FORM_DELETE = 111;
 	public static final int TYPE_FORM_ARCHIVE = 112;
-   public static final int TYPE_FORM_VIEW = 113;
+    public static final int TYPE_FORM_VIEW = 113;
 	public static final int TYPE_FORM_REGEXP = 114;
-   public static final int TYPE_FORMMAIL = 120;
+    public static final int TYPE_FORMMAIL = 120;
 	public static final int TYPE_SENDMAIL = 130;
 	public static final int TYPE_JSPERROR = 140;
 	public static final int TYPE_SQLERROR = 150;
@@ -166,9 +166,9 @@ public class Adminlog
     public static final int TYPE_GDPR_USERS_DELETE = 1071;
     public static final int TYPE_GDPR_BASKET_INVOICES_DELETE = 1072;
     public static final int TYPE_GDPR_EMAILS_DELETE = 1073;
-	 public static final int TYPE_GDPR_REGEXP = 1074;
-	 public static final int TYPE_GDPR_DELETE = 1075;
-	 public static final int TYPE_GDPR_COOKIES = 1076;
+	public static final int TYPE_GDPR_REGEXP = 1074;
+	public static final int TYPE_GDPR_DELETE = 1075;
+	public static final int TYPE_GDPR_COOKIES = 1076;
 
 	//POZOR NAD hodnotu 10 000 je mozne pridavat len client specific polia, ktore sa zobrazia len ak sa v nazve nachadza install name
 	public static final int TYPE_CLONE_CLOUD_STRUCTURE = 10030;
@@ -190,6 +190,8 @@ public class Adminlog
 	public static final int TYPE_AI = 1064;
 
 	public static final int TYPE_SEARCH = 1065;
+	public static final int TYPE_MULTISTEP_FORM = 1066;
+	public static final int TYPE_MULTISTEP_FORM_USERS = 1067;
 
 	//toto musi byt public aby to vedel ziskat adminlog.jsp
 	private static final Integer[] TYPY_ARRAY;
