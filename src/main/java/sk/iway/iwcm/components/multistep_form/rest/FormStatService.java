@@ -53,13 +53,15 @@ public class FormStatService {
     private final FormSettingsRepository formSettingsRepository;
     private final FormsServiceImpl formsService;
     private final AuditRepository auditRepository;
+    private final MultistepFormsService multistepFormsService;
 
     @Autowired
-    public FormStatService(FormsRepository formsRepository, FormSettingsRepository formSettingsRepository, FormsServiceImpl formsService, AuditRepository auditRepository) {
+    public FormStatService(FormsRepository formsRepository, FormSettingsRepository formSettingsRepository, FormsServiceImpl formsService, AuditRepository auditRepository, MultistepFormsService multistepFormsService) {
         this.formsRepository = formsRepository;
         this.formSettingsRepository = formSettingsRepository;
         this.formsService = formsService;
         this.auditRepository = auditRepository;
+        this.multistepFormsService = multistepFormsService;
     }
 
     /**
@@ -87,7 +89,7 @@ public class FormStatService {
             this.formName = formName;
             this.domainId = CloudToolsForCore.getDomainId();
             this.prop = Prop.getInstance(request);
-            this.formId = formsRepository.getFormId(this.formName, this.domainId).orElse(-1L).intValue();
+            this.formId = multistepFormsService.getFormId(formName);
             this.columnNames = getColumnNames(this.formName, new UserDetails(request), this.prop);
             this.allowedItemsEntities = getAllowedItems(this.formName, itemFormId);
             this.dateRange = getDateRange(request);
@@ -101,6 +103,99 @@ public class FormStatService {
          */
         StatContext(String formName, HttpServletRequest request) {
             this(formName, null, request);
+        }
+
+        /**
+         * Resolves the selected statistics date range from request parameters.
+         *
+         * @param request the HTTP request containing {@code dayDate} or {@code searchDayDate}
+         * @return date range accepted by statistics repository queries
+         */
+        private Date[] getDateRange(HttpServletRequest request) {
+            String stringRange = Tools.getStringValue(request.getParameter("dayDate"), "");
+            if(Tools.isEmpty(stringRange)) stringRange = Tools.getStringValue(request.getParameter("searchDayDate"), "");
+
+            return StatService.processDateRangeString(stringRange);
+        }
+
+        /**
+         * Retrieves display column names for a form's fields.
+         * @param formName the form name identifier
+         * @param currentUser the current user
+         * @param prop localization properties
+         * @return map of itemFormId to localized column label
+         */
+        private Map<String, String> getColumnNames(String formName, UserDetails currentUser, Prop prop) {
+            HashMap<String, String> columnNamesMap = new LinkedHashMap<>();
+            for(LabelValue column : formsService.getColumnNames(formName, currentUser, prop).getColumns()) {
+                columnNamesMap.put(column.getValue(), column.getLabel());
+            }
+            return columnNamesMap;
+        }
+
+        /**
+         * Loads form items that are enabled for statistics ({@code show_stat=1}).
+         * Results are ordered by step and item priority.
+         * Consecutive radio items with the same {@code itemFormId} are collapsed to one record.
+         *
+         * @param formName the form name identifier
+         * @param itemFormId optional filter for a specific item, or {@code null} for all items
+         * @return ordered map of itemFormId to item configuration
+         */
+        private Map<String, FormItemEntity> getAllowedItems(String formName, String itemFormId) {
+            String sql = "SELECT item_form_id, value, field_type, chart_type, top_count, show_other_count, show_unanswered, compare_insensitive, color_scheme, error_count FROM form_items f, form_steps s WHERE f.form_name = ? AND f.domain_id = ? AND f.show_stat = 1 AND f.step_id=s.id";
+            List<Object> sqlParams = new ArrayList<>();
+            sqlParams.add(formName);
+            sqlParams.add(CloudToolsForCore.getDomainId());
+
+            if(Tools.isNotEmpty(itemFormId)) {
+                sql += " AND item_form_id = ?";
+                sqlParams.add(itemFormId);
+            }
+
+            sql += " ORDER BY s.sort_priority ASC, f.sort_priority ASC";
+
+            Map<String, FormItemEntity> values = new LinkedHashMap<>();
+            List<String> previous = new ArrayList<>();
+            previous.add("");
+            new ComplexQuery().setSql(sql).setParams(sqlParams.toArray()).list(new Mapper<FormItemEntity>() {
+                @Override
+                public FormItemEntity map(ResultSet rs) throws SQLException {
+                    FormItemEntity stepItem = resultSetToItemEntity(rs);
+
+                    // Radio buttons may be stored as separate rows; collapse consecutive rows with the same id.
+                    if("radio".equals(stepItem.getFieldType()) &&  previous.get(0).equals(stepItem.getItemFormId())) return null;
+                    previous.set(0, stepItem.getItemFormId());
+
+                    values.put(stepItem.getItemFormId(), stepItem);
+
+                    return null;
+                }
+            });
+
+            return values;
+        }
+
+        /**
+         * Maps one SQL row to {@link FormItemEntity} with statistics-related attributes.
+         *
+         * @param rs the current result set row
+         * @return populated form item entity
+         * @throws SQLException when a column value cannot be read
+         */
+        private FormItemEntity resultSetToItemEntity(ResultSet rs) throws SQLException {
+            FormItemEntity fe = new FormItemEntity();
+            fe.setItemFormId( rs.getString("item_form_id") );
+            fe.setValue( rs.getString("value") );
+            fe.setFieldType( rs.getString("field_type") );
+            fe.setChartType( rs.getString("chart_type") );
+            fe.setTopCount( rs.getInt("top_count") );
+            fe.setShowOtherCount( rs.getBoolean("show_other_count") );
+            fe.setShowUnanswered( rs.getBoolean("show_unanswered") );
+            fe.setCompareInsensitive( rs.getBoolean("compare_insensitive") );
+            fe.setColorScheme( rs.getString("color_scheme") );
+            fe.setErrorCount( rs.getInt("error_count") );
+            return fe;
         }
     }
 
@@ -158,19 +253,6 @@ public class FormStatService {
     }
 
     /* ------------------------- */
-
-    /**
-     * Resolves the selected statistics date range from request parameters.
-     *
-     * @param request the HTTP request containing {@code dayDate} or {@code searchDayDate}
-     * @return date range accepted by statistics repository queries
-     */
-    private Date[] getDateRange(HttpServletRequest request) {
-        String stringRange = Tools.getStringValue(request.getParameter("dayDate"), "");
-        if(Tools.isEmpty(stringRange)) stringRange = Tools.getStringValue(request.getParameter("searchDayDate"), "");
-
-        return StatService.processDateRangeString(stringRange);
-    }
 
     /**
      * Finds the most recent response timestamp across all form entities.
@@ -314,7 +396,7 @@ public class FormStatService {
                         addMapValue(allData, key, v);
                     }
                 } else if(fieldType.contains("select")) {
-                    String options[] = splitMultiValueTokens(allowedItem.getValue());
+                    String[] options = splitMultiValueTokens(allowedItem.getValue());
                     boolean found = false;
                     for(String option : options) {
                         if(option.endsWith(":" + value)) {
@@ -490,86 +572,6 @@ public class FormStatService {
         }
 
         return valuesArray;
-    }
-
-    /**
-     * Retrieves display column names for a form's fields.
-     * @param formName the form name identifier
-     * @param currentUser the current user
-     * @param prop localization properties
-     * @return map of itemFormId to localized column label
-     */
-    private Map<String, String> getColumnNames(String formName, UserDetails currentUser, Prop prop) {
-        HashMap<String, String> columnNames = new LinkedHashMap<>();
-        for(LabelValue column : formsService.getColumnNames(formName, currentUser, prop).getColumns()) {
-            columnNames.put(column.getValue(), column.getLabel());
-        }
-        return columnNames;
-    }
-
-    /**
-     * Loads form items that are enabled for statistics ({@code show_stat=1}).
-     * Results are ordered by step and item priority.
-     * Consecutive radio items with the same {@code itemFormId} are collapsed to one record.
-     *
-     * @param formName the form name identifier
-     * @param itemFormId optional filter for a specific item, or {@code null} for all items
-     * @return ordered map of itemFormId to item configuration
-     */
-    private Map<String, FormItemEntity> getAllowedItems(String formName, String itemFormId) {
-        String sql = "SELECT item_form_id, value, field_type, chart_type, top_count, show_other_count, show_unanswered, compare_insensitive, color_scheme, error_count FROM form_items f, form_steps s WHERE f.form_name = ? AND f.domain_id = ? AND f.show_stat = 1 AND f.step_id=s.id";
-        List<Object> sqlParams = new ArrayList<>();
-        sqlParams.add(formName);
-        sqlParams.add(CloudToolsForCore.getDomainId());
-
-        if(Tools.isNotEmpty(itemFormId)) {
-            sql += " AND item_form_id = ?";
-            sqlParams.add(itemFormId);
-        }
-
-        sql += " ORDER BY s.sort_priority ASC, f.sort_priority ASC";
-
-        Map<String, FormItemEntity> values = new LinkedHashMap<>();
-        List<String> previous = new ArrayList<>();
-        previous.add("");
-        new ComplexQuery().setSql(sql).setParams(sqlParams.toArray()).list(new Mapper<FormItemEntity>() {
-			@Override
-			public FormItemEntity map(ResultSet rs) throws SQLException {
-                FormItemEntity stepItem = resultSetToItemEntity(rs);
-
-                // Radio buttons may be stored as separate rows; collapse consecutive rows with the same id.
-                if("radio".equals(stepItem.getFieldType()) &&  previous.get(0).equals(stepItem.getItemFormId())) return null;
-                previous.set(0, stepItem.getItemFormId());
-
-                values.put(stepItem.getItemFormId(), stepItem);
-
-                return null;
-			}
-		});
-
-        return values;
-    }
-
-    /**
-     * Maps one SQL row to {@link FormItemEntity} with statistics-related attributes.
-     *
-     * @param rs the current result set row
-     * @return populated form item entity
-     * @throws SQLException when a column value cannot be read
-     */
-    private FormItemEntity resultSetToItemEntity(ResultSet rs) throws SQLException {
-        FormItemEntity fe = new FormItemEntity();
-        fe.setItemFormId( rs.getString("item_form_id") );
-        fe.setValue( rs.getString("value") );
-        fe.setFieldType( rs.getString("field_type") );
-        fe.setChartType( rs.getString("chart_type") );
-        fe.setTopCount( rs.getInt("top_count") );
-        fe.setShowOtherCount( rs.getBoolean("show_other_count") );
-        fe.setShowUnanswered( rs.getBoolean("show_unanswered") );
-        fe.setCompareInsensitive( rs.getBoolean("compare_insensitive") );
-        fe.setColorScheme( rs.getString("color_scheme") );
-        fe.setErrorCount( rs.getInt("error_count") );
-        return fe;
     }
 
     /**
@@ -762,7 +764,7 @@ public class FormStatService {
         valuesArray.put( getChartObject(context.prop.getText("components.multistep_form.system_errors.badFile"), badFileCount) );
         valuesArray.put( getChartObject(context.prop.getText("components.multistep_form.system_errors.csrfErrors"), csrfErrorsCount) );
         errorData.put("pieSystemErrorData",  valuesArray);
-        errorData.put("timelineErrorData", getTimelineErrorData(context, logs));
+        errorData.put("timelineErrorData", getTimelineErrorData(context, logs, context.dateRange[0], context.dateRange[1]));
 
         return errorData;
     }
@@ -788,40 +790,55 @@ public class FormStatService {
      * @param logs audit log entries for the selected form and date range
      * @return JSON object keyed by localized operation names with daily error counts
      */
-    private JSONObject getTimelineErrorData(StatContext context, List<AuditLogEntity> logs) {
+    private JSONObject getTimelineErrorData(StatContext context, List<AuditLogEntity> logs, Date dateFrom, Date dateTo) {
         JSONObject timelineErrorData = new JSONObject();
         if(context.formId < 1) return timelineErrorData;
 
-        TreeMap<String, Map<Long, Integer>> dayErrorCounts = new TreeMap<>();
-        dayErrorCounts.put("gets",  new TreeMap<>());
-        dayErrorCounts.put("saves", new TreeMap<>());
+        TreeMap<String, TreeMap<Long, Integer>> dayErrorCounts = new TreeMap<>();
+        dayErrorCounts.put("errorStepGet", new TreeMap<>());
+        dayErrorCounts.put("errorStepSave", new TreeMap<>());
+        dayErrorCounts.put("successSave", new TreeMap<>());
 
         for(AuditLogEntity log : logs) {
-            if(log.getSubId2() == 1) {
-                // increment for timestamp
+            if (log.getSubId2() == 1) {
                 Date createDate = DateTools.setTimePart(log.getCreateDate(), 12, 0, 0, 0);
-                dayErrorCounts.get("gets").put(createDate.getTime(), dayErrorCounts.get("gets").getOrDefault(createDate.getTime(), 0) + 1);
-            } else if(log.getSubId2() == 2) {
-                // increment for timestamp
+                dayErrorCounts.get("errorStepGet").put(
+                    createDate.getTime(),
+                    dayErrorCounts.get("errorStepGet").getOrDefault(createDate.getTime(), 0) + 1);
+            } else if (log.getSubId2() == 2) {
                 Date createDate = DateTools.setTimePart(log.getCreateDate(), 12, 0, 0, 0);
-                dayErrorCounts.get("saves").put(createDate.getTime(), dayErrorCounts.get("saves").getOrDefault(createDate.getTime(), 0) + 1);
+                dayErrorCounts.get("errorStepSave").put(
+                    createDate.getTime(),
+                    dayErrorCounts.get("errorStepSave").getOrDefault(createDate.getTime(), 0) + 1);
+            } else  {
+                Date createDate = DateTools.setTimePart(log.getCreateDate(), 12, 0, 0, 0);
+                dayErrorCounts.get("successSave").put(
+                    createDate.getTime(),
+                    dayErrorCounts.get("successSave").getOrDefault(createDate.getTime(), 0) + 1);
             }
         }
 
-        // Map to jsonobject
-        for(Map.Entry<String, Map<Long, Integer>> entry : dayErrorCounts.entrySet()) {
-            Map<Long, Integer> value = entry.getValue();
+        Date dateFromNorm = DateTools.setTimePart(dateFrom, 12, 0, 0, 0);
+        Date dateToNorm = DateTools.setTimePart(dateTo, 12, 0, 0, 0);
+        for (Map.Entry<String, TreeMap<Long, Integer>> entry : dayErrorCounts.entrySet()) {
+            TreeMap<Long, Integer> value = entry.getValue();
             JSONArray valuesArray = new JSONArray();
-            for(Map.Entry<Long, Integer> innerEntry : value.entrySet()) {
+            long cursor = dateFromNorm.getTime();
+            while (cursor <= dateToNorm.getTime()) {
                 JSONObject obj = new JSONObject();
-                obj.put("dayDate", innerEntry.getKey());
-                obj.put("count", innerEntry.getValue());
-
-                valuesArray.put( obj );
+                obj.put("dayDate", cursor);
+                obj.put("count", value.getOrDefault(cursor, 0));
+                valuesArray.put(obj);
+                cursor += 86400000L;
             }
             String key = entry.getKey();
-            if("gets".equals(key)) key = context.prop.getText("components.multistep_form.system_errors.get_step");
-            else if("saves".equals(key)) key = context.prop.getText("components.multistep_form.system_errors.save_step");
+            if ("errorStepGet".equals(key)) {
+                key = context.prop.getText("components.multistep_form.system_errors.error_get_step");
+            } else if ("errorStepSave".equals(key)) {
+                key = context.prop.getText("components.multistep_form.system_errors.error_save_step");
+            } else if ("successSave".equals(key)) {
+                key = context.prop.getText("components.multistep_form.system_errors.success_save_step");
+            }
             timelineErrorData.put(key, valuesArray);
         }
 

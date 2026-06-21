@@ -25,13 +25,13 @@ Scenario('screenshot stat section 2', ({I, Document}) => {
 
 Scenario('screenshot stat section 3', ({I, Document}) => {
     // Advanced stats
-    I.amOnPage("/apps/form/admin/form-stats/?formName=mutistepform_advanced_error_stats");
+    I.amOnPage("/apps/form/admin/form-stats/?formName=Multistepform_screens");
 
     I.clickCss("#expandBonusChartButton");
 
     Document.screenshot("/redactor/apps/multistep-form/stat-section-header-advanced.png");
 
-    I.resizeWindow(1280, 1950);
+    I.resizeWindow(1360, 2700);
 
     Document.screenshot("/redactor/apps/multistep-form/stat-section-advanced.png");
 });

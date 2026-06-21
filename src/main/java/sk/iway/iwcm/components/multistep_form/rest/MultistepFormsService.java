@@ -344,7 +344,14 @@ public class MultistepFormsService {
 
     public final int getFormId(String formName) {
         if(Tools.isEmpty(formName)) return -1;
-        return formsRepository.getFormId(formName, CloudToolsForCore.getDomainId()).orElse(-1L).intValue();
+        Long formId = formSettingsRepository.findId(formName, CloudToolsForCore.getDomainId());
+        return formId != null ? formId.intValue() : -1;
+    }
+
+    public static int getFormIdStatic(String formName) {
+        //get SpringBean
+        MultistepFormsService multistepFormsService = Tools.getSpringBean("multistepFormsService", MultistepFormsService.class);
+        return multistepFormsService.getFormId(formName);
     }
 
     /**

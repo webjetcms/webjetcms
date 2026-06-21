@@ -33,10 +33,6 @@ public interface FormsRepository extends FormsRepositoryInterface<FormsEntity>{
     @Query("SELECT fe.data FROM FormsEntity fe WHERE fe.formName = :formName AND fe.domainId = :domainId AND fe.createDate BETWEEN :dateFrom AND :dateTo")
     List<String> getFormAllData(@Param("formName") String formName, @Param("domainId") Integer domainId, @Param("dateFrom") Date dateFrom, @Param("dateTo") Date dateTo, Pageable pageable);
 
-    // By some mistake is there possibility that there are more than one records where fe.createDate IS NULL
-    @Query("SELECT MIN(fe.id) FROM FormsEntity fe WHERE fe.formName = :formName AND fe.domainId = :domainId AND fe.createDate IS NULL")
-    Optional<Long> getFormId(@Param("formName") String formName, @Param("domainId") Integer domainId);
-
     @Query("SELECT fe.duration FROM FormsEntity fe WHERE fe.formName = :formName AND fe.domainId = :domainId AND fe.createDate IS NULL")
     Optional<Long> getFormCreationDuration(@Param("formName") String formName, @Param("domainId") Integer domainId);
 
