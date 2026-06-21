@@ -27,6 +27,16 @@ Explanation of the pictograms used:
 - [ ] Data deletion - add the option to delete pages and folders from the trash. Also resolve the option to run data deletion as an automated task.
 - [ ] Unused files - make it possible to get a list of unused files - they are not used anywhere on the page, not even in media, etc. There was an API for this `FileTools.getDirFileUsage(currentDir, request)`. Add as a tab to the folder properties in explorer.
 - [ ] Explorer - prevent working with the Document Manager folder so that files cannot be manipulated outside of the Document Manager.
+- [x] +Forms - add more detailed statistics on errors in completed forms (#58509).
+- [x] +Websites - improve the user interface for entering `/thumb` images in the editor (#58525).
+- [x] +Optional fields - add the ability to define which fields are required (#58413).
+- [x] +Add an application to redirect the main page to `/sk/` or `/en/` depending on the browser language. (#58497)
+- [x] +For validation reasons, move all style references to the page header (#231).
+- [x] +Forms - ability to define conditional required fields and field display (#58477).
+- [x] +Applications - ability to define a CSS class for an embedded application, e.g. video for better indentation from the page text (#200).
+- [x] +Websites - add the ability to approve changes in website folders similarly to approving changes in websites, including viewing history and changes (#193).
+- [x] Add authorization option via `OAuth2`, option to use `mock` server https://github.com/navikt/mock-oauth2-server or https://github.com/patientsknowbest/fake-oauth2-server (#56665).
+- [x] +Add support for logging into administration via [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/) (#58369).
 
 ## 2025
 
@@ -51,14 +61,12 @@ Explanation of the pictograms used:
 - [x] Tags - filter by current domain to be the same as in other sections (#57837).
 - [x] User import - if no password is entered, generate one (for new users), if not sent, set status `authorized` to `true` (#58253).
 - [ ] In tests, somehow automatically check for the occurrence of `I\.waitForText\('.*?', '.*?'\);` and `I\.waitForText\(".*?", ".*?"\);`, which are incorrect waits without a defined time, will cause automated tests to crash.
-- [x] Add an application to redirect the main page to `/sk/` or `/en/` depending on the browser language. (#58477)
 - [x] Modify configuration deletion so that when deleted, it is set to the original value defined in `Constants` (#57849).
 - [x] Gallery - when duplicating an image, allow changing the "Folder" so that we can duplicate images to a folder other than the current one (#57885).
 - [x] Mass email - audit changes in user groups (#58249).
 - [x] File archive - convert to data tables (#57317).
 - [ ] Optional fields - add the ability to select multiple items for connection to the dialer.
 - [x] E-commerce - integration with payment gateway `GoPay` (#56609).
-- [x] Add authorization option via `OAuth2`, option to use `mock` server https://github.com/navikt/mock-oauth2-server or https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [ ] Authorization via ```SAML``` - ​​integrate the [Spring SAML](https://spring.io/projects/spring-security-saml) library for authentication against the ```ADFS/SAML``` server.
 - [x] Reservations - new app for all-day reservations (#57389).
 - [x] Applications - convert the application settings dialog in the web page editor from the old JSP to a data table (#57409).
@@ -68,7 +76,6 @@ Explanation of the pictograms used:
 - [ ] +Electronic store - add `JSON-LD` data to the email https://schema.seznam.cz/objednavky/dokumentace/.
 - [ ] + Dialer, Blog, News - adjust so that the dialer or news folder type selection is on the left, similar to the gallery/websites. Then the cards don't have to be displayed all at once.
 - [ ] +Translation keys - display a tree structure of translation keys for better orientation.
-- [x] +Add support for logging into administration via [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/) (#58369).
 - [ ] +Photo bank - add the option to set the file name before downloading from the photo bank, automatically set according to the search term.
 - [ ] +Gallery - if I set the perex image to an image in the gallery, download it from the photo bank, and rename the image to an existing one in the database (if the file is deleted from the disk), a duplicate entry will be created in the `gallery` table. Moreover, the other images `o_,s_` will not be renamed. It should be remembered that theoretically I can rename any one, it should detect that I am in the gallery and rename all versions.
 - [x] +Configuration - add option to set `Hikari` via `poolman.xml/ENV` such as `spring.datasource.hikari.idle-timeout=30000, spring.datasource.hikari.max-lifetime=1800000, spring.datasource.hikari.connection-timeout=30000` (#54273-61).

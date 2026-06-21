@@ -27,6 +27,16 @@ Vysvětlení použitých piktogramů:
 - [ ] Mazání dat - přidat možnost mazat stránky a složky z koše. Vyřešit také možnost mazání dat spouštět jako automatizovaný úkol.
 - [ ] Nepoužívané soubory - udělat možnost získat seznam nepoužívaných souborů - nikde ve stránce se nepoužívají, ani v médiích atp. Byla k tomu API `FileTools.getDirFileUsage(currentDir, request)`. Přidat jako kartu do vlastností složky v průzkumníku.
 - [ ] Průzkumník - zamezit práci se složkou pro Manažer dokumentů, aby se se soubory nedalo manipulovat mimo Manažer dokumentů.
+- [x] +Formuláře - přidat podrobnější statistiku chyb vyplněných formulářů (#58509).
+- [x] +Web stránky - zlepšit uživatelské rozhraní pro zadávání `/thumb` obrázků v editoru (#58525).
+- [x] +Volitelná pole - přidat možnost definovat která pole jsou povinná (#58413).
+- [x] +Doplnit aplikaci pro přesměrování hlavní stránky na `/sk/` nebo `/en/` podle jazyka prohlížeče. (#58497)
+- [x] +Z důvodu validace přesunout všechny odkazy na styly do hlavičky stránky (#231).
+- [x] +Formuláře - možnost definovat podmíněná povinná pole a zobrazení polí (#58477).
+- [x] +Aplikace - možnost definovat CSS třídu pro vloženou aplikaci, například. video pro lepší odsazení od textu stránky (#200).
+- [x] +Web stránky - přidat možnost schvalování změn ve složkách web stránky podobně jako se schvalují změny ve web stránkách, včetně zobrazení historie a změn (#193).
+- [x] Přidat možnost autorizace přes `OAuth2`, možnost použít `mock` server https://github.com/navikt/mock-oauth2-server nebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
+- [x] +Přidat podporu přihlašování se do administrace přes [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/) (#58369).
 
 ## 2025
 
@@ -51,14 +61,12 @@ Vysvětlení použitých piktogramů:
 - [x] Značky - filtrovat podle aktuální domény aby to bylo stejné jako v jiných částech (#57837).
 - [x] Import uživatelů - pokud není zadané heslo, tak vygenerovat (pro nové uživatele), pokud není posílaný stav `authorized` nastavit na `true` (#58253).
 - [ ] V testech nějak automatizovaně kontrolovat výskyt `I\.waitForText\('.*?', '.*?'\);` a `I\.waitForText\(".*?", ".*?"\);` což jsou nesprávná čekání bez definovaného času, způsobí zaseknutí automatizovaných testů.
-- [x] Doplnit aplikaci pro přesměrování hlavní stránky na `/sk/` nebo `/en/` podle jazyka prohlížeče. (#58477)
 - [x] Upravit vymazání konfigurace tak, že při vymazání se jí nastaví původní hodnota definovaná v `Constants` (#57849).
 - [x] Galerie - při duplikování obrázku umožnit změnu "Složka", abychom uměli duplikovat obrázky do jiné než aktuální složky (#57885).
 - [x] Hromadný email - auditovat změny ve skupinách uživatelů (#58249).
 - [x] Archiv souborů - předělat do datových tabulek (#57317).
 - [ ] Volitelná pole - přidat možnost výběru více položek pro napojení na číselník.
 - [x] Elektronický obchod - integrace na platební bránu `GoPay` (#56609).
-- [x] Přidat možnost autorizace přes `OAuth2`, možnost použít `mock` server https://github.com/navikt/mock-oauth2-server nebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [ ] Autorizace přes ```SAML``` - ​​integrovat knihovnu [Spring SAML](https://spring.io/projects/spring-security-saml) pro možnost autentifikace vůči ```ADFS/SAML``` serveru.
 - [x] Rezervace - nová aplikace pro celo denní rezervaci (#57389).
 - [x] Aplikace - předělat dialog nastavení aplikací v editoru web stránek ze starého JSP na datovou tabulku (#57409).
@@ -68,7 +76,6 @@ Vysvětlení použitých piktogramů:
 - [ ] +Elektronický obchod - do emailu přidat `JSON-LD` data https://schema.seznam.cz/objednávky/dokumentace/.
 - [ ] +Číselník, Blog, Novinky - upravit tak, aby výběr typu číselníku nebo složky pro novinky byl vlevo podobně jako v galerii/webových stránkách. Nemusí být pak karty ale vše najednou zobrazeno.
 - [ ] +Překladové klíče - zobrazovat stromovou strukturu překladových klíčů pro lepší orientaci.
-- [x] +Přidat podporu přihlašování se do administrace přes [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/) (#58369).
 - [ ] +Fotobanka - přidat možnost nastavit název souboru před stažením z fotobanky, automaticky nastavit podle hledaného výrazu.
 - [ ] +Galerie - pokud nastavuji perex obrázek na obrázek v galerii, stáhnu z fotobanky, a obrázek přejmenuji na existující v databázi (je-li soubor smazán z disku) tak vznikne v `gallery` tabulce duplicitní záznam. Navíc se nepřejmenují ostatní obrázky `o_,s_`. Třeba pamatovat na to, že teoreticky mohu přejmenovat libovolný, mělo by to detekovat, že jsem v galerii a přejmenovat všechny verze.
 - [x] +Konfigurace - doplnit možnost nastavení `Hikari` přes `poolman.xml/ENV` jako například `spring.datasource.hikari.idle-timeout=30000, spring.datasource.hikari.max-lifetime=1800000, spring.datasource.hikari.connection-timeout=30000` (#54273-61).
