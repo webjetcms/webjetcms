@@ -112,10 +112,8 @@ public class InitServlet extends HttpServlet
 				String clusterNodeName = Constants.getString("clusterMyNodeName");
 				if(startupTasks != null)
 				{
-					String clusterNodeType = "all-admin";
-					if (ClusterDB.isPublicNode()) {
-						clusterNodeType = "all-public";
-					}
+					//cron cluster node type as all-public / all-admin
+					String clusterNodeType = CronDB.getClusterNodeType();
 
 					for(CronTask t : startupTasks)
 					{

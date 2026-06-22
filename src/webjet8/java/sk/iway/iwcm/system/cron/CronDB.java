@@ -6,6 +6,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.system.cluster.ClusterDB;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -126,6 +127,19 @@ public class CronDB
 		Adminlog.add(Adminlog.TYPE_CRON, Adminlog.getChangelog(saved.getId(), saved, old), saved.getId().intValue(), -1);
 
 		return saved;
+	}
+
+	/**
+	 * Get cluster node type for current node.
+	 * If current node is public, return "all-public", otherwise return "all-admin"
+	 * @return
+	 */
+	public static String getClusterNodeType() {
+		String clusterNodeType = "all-admin";
+		if (ClusterDB.isPublicNode()) {
+			clusterNodeType = "all-public";
+		}
+		return clusterNodeType;
 	}
 
 }
