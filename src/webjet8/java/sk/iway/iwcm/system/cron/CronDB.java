@@ -134,7 +134,7 @@ public class CronDB
 	 * If current node is public, return "all-public", otherwise return "all-admin"
 	 * @return
 	 */
-	public static String getClusterNodeType() {
+	public static String getCronNodeType() {
 		String clusterNodeType = "all-admin";
 		if (ClusterDB.isPublicNode()) {
 			clusterNodeType = "all-public";

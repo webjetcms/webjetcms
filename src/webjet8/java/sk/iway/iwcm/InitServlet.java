@@ -113,7 +113,7 @@ public class InitServlet extends HttpServlet
 				if(startupTasks != null)
 				{
 					//cron cluster node type as all-public / all-admin
-					String clusterNodeType = CronDB.getClusterNodeType();
+					String clusterNodeType = CronDB.getCronNodeType();
 
 					for(CronTask t : startupTasks)
 					{
