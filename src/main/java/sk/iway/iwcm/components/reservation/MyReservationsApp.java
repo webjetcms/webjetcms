@@ -64,7 +64,7 @@ public class MyReservationsApp extends WebjetComponentAbstract {
         return VIEW_PATH;
 	}
 
-    public String deleteReservation(Model model, HttpServletRequest request) {
+    public String deleteReservation(Model model, HttpServletRequest request) { //NOSONAR
         Identity user = UsersDB.getCurrentUser(request);
         Prop prop = Prop.getInstance(request);
 

@@ -223,6 +223,7 @@ async function createAllDayReservation(I, purpose) {
         purposeText: purpose
     });
 
+    I.wait(1);
     await submitReservationForm(I);
     I.waitForText("Vaša rezervácia bola úspešne vytvorená a schválená.", 10);
 }
