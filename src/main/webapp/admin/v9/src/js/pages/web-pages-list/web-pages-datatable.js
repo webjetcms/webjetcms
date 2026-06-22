@@ -281,8 +281,11 @@ export class WebPagesDatatable {
                 historyTable.on( 'draw', function () {
                     historyTable.rows().every(function() {
                         var data = this.data();
-                        if (data.publicable === false) {
-                            $(this.node()).addClass('not-publicable');
+                        if (data.publicable === false && data.publishStartStringExtra != null && data.publishStartStringExtra != "") {
+                            //only if it is in future
+                            if (Date.now() < data.publishStartStringExtra) {
+                                $(this.node()).addClass('not-publicable');
+                            }
                         }
                     });
                 });

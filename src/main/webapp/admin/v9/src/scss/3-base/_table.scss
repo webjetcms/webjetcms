@@ -1656,7 +1656,7 @@ table.dataTable thead > tr > th.dt-orderable-asc:hover, table.dataTable thead > 
 
 //history table - not publicable row
 #datatableFieldDTE_Field_editorFields-history tr.not-publicable {
-    td:nth-child(3) {
+    td.dt-publish-start-string-extra {
         text-decoration: line-through;
     }
 }

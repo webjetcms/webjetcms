@@ -304,6 +304,7 @@ public class EditorService {
 			// zisti, ci v historii na ten isty datum a cas nema byt nieco vypublikovane
 			if (editedDoc.getPublishStartDate() != null && (editedDoc.getPublishStartDate().getTime()+60000)>Tools.getNow()) {
 				Date publishStartDate = editedDoc.getPublishStartDate();
+				// check if there is any other DocHistory with same publishStartDate (+-5 seconds)
 				Date publishStartDateFrom = new Date(publishStartDate.getTime() - 5000L);
 				Date publishStartDateTo = new Date(publishStartDate.getTime() + 5000L);
 				List<DocHistory> waitingForPublish = historyRepo.findByDocIdAndPublishStartDateBetween(editedDoc.getDocId(), publishStartDateFrom, publishStartDateTo);
