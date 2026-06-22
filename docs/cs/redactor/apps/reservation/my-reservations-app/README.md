@@ -84,5 +84,5 @@ Pokud rezervaci nelze smazat, aplikace zobrazí chybové hlášení s důvodem n
 
 Rezervace zobrazené v této aplikaci mohou vzniknout například přes aplikace:
 
-- [Rezervace času](../time-book-app/README.md),
-- [Rezervace dnů](../day-book-app/README.md).
+- [Rezervace času](../time-book-app/README.md)
+- [Rezervace dnů](../day-book-app/README.md)

@@ -84,5 +84,5 @@ If the reservation cannot be deleted, the application will display an error mess
 
 Reservations displayed in this application can be created through applications such as:
 
-- [Time booking](../time-book-app/README.md),
-- [Day booking](../day-book-app/README.md).
+- [Time booking](../time-book-app/README.md)
+- [Day booking](../day-book-app/README.md)
