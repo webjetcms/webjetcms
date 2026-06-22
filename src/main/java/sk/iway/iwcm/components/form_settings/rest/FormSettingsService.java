@@ -228,7 +228,15 @@ public class FormSettingsService {
 
     public static FormFileRestriction getFileRestriction(String formName, FormSettingsRepository formSettingsRepository) {
         FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
-        if(formSettings == null) return new FormFileRestriction();
+        if(formSettings == null) {
+            FormFileRestriction restriction = new FormFileRestriction();
+            restriction.setFormName(formName);
+            restriction.setAllowedExtensions("");
+            restriction.setMaxSizeInKilobytes(5000);
+            restriction.setPictureWidth(3000);
+            restriction.setPictureHeight(2000);
+            return restriction;
+        }
 
         FormFileRestriction restriction = new FormFileRestriction();
         restriction.setFormName(formName);

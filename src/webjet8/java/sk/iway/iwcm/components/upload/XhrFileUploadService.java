@@ -7,6 +7,7 @@ import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
@@ -16,6 +17,7 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
 import sk.iway.iwcm.system.stripes.MultipartWrapper;
+import sk.iway.iwcm.users.UsersDB;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -72,6 +74,15 @@ public class XhrFileUploadService {
             List<String> allowedExtensions = Tools.getStringListValue(Tools.getTokens(Constants.getString("xhrFileUploadAllowedExtensions", ALLOWED_EXTENSIONS), " "));
             if (!allowedExtensions.contains("*") && !allowedExtensions.contains(extension)) {
                 Logger.debug(XhrFileUploadService.class, "doPost, extension not allowed: "+extension);
+                XhrFileUploadResponse xhrFileUploadResponse = new XhrFileUploadResponse();
+                xhrFileUploadResponse.setError(prop.getText("components.forum.new.upload_not_allowed_filetype"));
+                xhrFileUploadResponse.setFile(name);
+                xhrFileUploadResponse.setSuccess(false);
+                return xhrFileUploadResponse;
+            }
+            Identity user = UsersDB.getCurrentUser(request);
+            if (FileTools.isFileAllowedForUpload(user, name) == false) {
+                Logger.debug(XhrFileUploadService.class, "doPost, file type not allowed (isAllowedFileType): "+name);
                 XhrFileUploadResponse xhrFileUploadResponse = new XhrFileUploadResponse();
                 xhrFileUploadResponse.setError(prop.getText("components.forum.new.upload_not_allowed_filetype"));
                 xhrFileUploadResponse.setFile(name);
@@ -238,7 +249,7 @@ public class XhrFileUploadService {
         while (dest.exists())
         {
             filename = originalFilename + "-" + counter;
-            if (originalFilename.contains("."))	filename = originalFilename.substring(0, originalFilename.lastIndexOf(".")) + "-" + counter + originalFilename.substring(originalFilename.lastIndexOf("."));
+            if (originalFilename != null && originalFilename.contains("."))	filename = originalFilename.substring(0, originalFilename.lastIndexOf(".")) + "-" + counter + originalFilename.substring(originalFilename.lastIndexOf("."));
             dest = new IwcmFile(dir, filename);
             counter++;
         }

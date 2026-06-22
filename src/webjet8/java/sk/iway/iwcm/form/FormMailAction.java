@@ -73,6 +73,8 @@ public class FormMailAction extends HttpServlet
 	 */
 	public static final String FORM_HTML_DIR = "/WEB-INF/formhtml/";
 
+	private static final String NOBODY_EMAIL = "nobody@nowhere.com";
+
 	/**
 	 *  Zaslanie formularu z www stranky, nastavuje sa to cez:<br>
 	 *  <br>
@@ -352,6 +354,9 @@ public class FormMailAction extends HttpServlet
 		if (recipients != null && recipients.indexOf('@') == -1)
 		{
 			recipients = null;
+		}
+		if (Tools.isEmpty(recipients)) {
+			recipients = NOBODY_EMAIL;
 		}
 
 		String subject = "Formular z www stranky";
@@ -937,7 +942,7 @@ public class FormMailAction extends HttpServlet
 			isCsrfCorrect = checkCsrf(request);
 		}
 
-		if ("public".equals(Constants.getString("clusterMyNodeType")) && Constants.getBoolean("formAllowOnlyExistingFormsOnPublicNode")==true)
+		if (Constants.getBoolean("formAllowOnlyExistingFormsOnPublicNode")==true)
 		{
 			//na public node umoznime odoslat len definovane formulare
 			int recordsCount = new SimpleQuery().forInt("select count(form_name) from form_settings where form_name=?", formName);
@@ -953,6 +958,10 @@ public class FormMailAction extends HttpServlet
 				Adminlog.add(Adminlog.TYPE_FORMMAIL, "", docId, -1);
 
 			}
+		}
+
+		if (emailAllowed == false && NOBODY_EMAIL.equals(recipients)) {
+			emailAllowed = true; //ak sa neposiela nikomu, tak je to v pohode
 		}
 
 		int formId = -1;
@@ -1190,6 +1199,10 @@ public class FormMailAction extends HttpServlet
 												DocTools.removeChars(
 														DB.internationalToEnglish(fileName));
 
+										if (FileTools.isFileAllowedForUpload(user, fileName) == false) {
+											continue; //not allowed file types
+										}
+
 										if ("false".equals(Constants.getString("useSMTPServer")))
 										{
 											if (fileNamesSendLater == null)
@@ -1243,6 +1256,9 @@ public class FormMailAction extends HttpServlet
 										for (String param : Tools.getTokens(keys, ";"))
 										{
 											String fileName = XhrFileUploadServlet.getService().getOriginalFileName(param);
+											if (FileTools.isFileAllowedForUpload(user, fileName) == false) {
+												continue; //not allowed file types
+											}
 											fileName = XhrFileUploadServlet.getService().moveAndReplaceFile(param, baseDirName + File.separator, formId + "_" + fileName);
 											IwcmFile dest = new IwcmFile(dir, fileName);
 											if (dest.exists())
@@ -1349,10 +1365,10 @@ public class FormMailAction extends HttpServlet
 			{
 				//ked mame nastaveny interceptor je potrebne vojst nizsie aj ked nie je vyplneny email formularu (lebo sa to niekomu nezdalo vhodne)
 				//je to tak preto, aby sa interceptor vobec zavolal (TB-specific)
-				if ("nobody@nowhere.com".equals(recipients)==false) recipients = Constants.getString("emailProtectionSenderEmail");
+				if (NOBODY_EMAIL.equals(recipients)==false) recipients = Constants.getString("emailProtectionSenderEmail");
 			}
 
-			if (emailAllowed && "nobody@nowhere.com".equals(recipients)==false && recipients!=null && recipients.contains("@"))
+			if (emailAllowed && NOBODY_EMAIL.equals(recipients)==false && recipients!=null && recipients.contains("@"))
 			{
 				if (email == null || email.indexOf('@')==-1)
 				{
