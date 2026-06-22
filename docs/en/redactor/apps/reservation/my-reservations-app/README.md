@@ -16,7 +16,9 @@ You can also add it directly as code to the page:
 !INCLUDE(sk.iway.iwcm.components.reservation.MyReservationsApp, device=&quot;&quot;, cacheMinutes=&quot;&quot;)!
 ```
 
-The application does not have its own specific settings. The data displayed is determined by the currently logged in user and the current domain.
+It is possible to set a booking object in the application. If it is selected, reservations will be displayed only for this booking object and the Reserved object column will not be displayed. If the selection field is empty, reservations from all booking objects will be displayed.
+
+The data displayed is determined by the currently logged in user and the current domain.
 
 !>**Warning:** the application is intended for logged in users. Unlogged visitors will not see any reservations.
 
@@ -33,7 +35,7 @@ At the top of the app are the **Date from** and **Date to** fields. You can use 
 
 ![](app-filter.png)
 
-If no filter is set, the app will automatically display bookings from the last 30 days, including future bookings.
+If no filter is set, the app will automatically display bookings from the last 2 months, including future bookings.
 
 When filtering, reservations that overlap with the specified interval will be displayed:
 

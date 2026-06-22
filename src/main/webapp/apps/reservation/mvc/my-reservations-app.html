@@ -29,7 +29,7 @@
 
             <thead class="table-light">
                 <tr>
-                    <th scope="col" data-th-text="#{reservation.reservation_object.selected_object}">Reservation Object</th>
+                    <th scope="col" data-th-if="${selectedReservationObjectId == null or selectedReservationObjectId == 0}" data-th-text="#{reservation.reservation_object.selected_object}">Reservation Object</th>
                     <th scope="col" data-th-text="#{components.reservation.reservation_list.purpose}">Purpose</th>
                     <th scope="col" data-th-text="#{components.reservation.reservations.time_range}">Reservation Range</th>
                     <th scope="col" class="text-end" data-th-text="#{components.reservation.reservations.price}">Price</th>
@@ -40,7 +40,7 @@
 
             <tbody>
                 <tr data-th-each="reservation : ${reservations}">
-                    <td data-th-text="${reservation.reservationObjectName}"></td>
+                    <td data-th-if="${selectedReservationObjectId == null or selectedReservationObjectId == 0}" data-th-text="${reservation.reservationObjectName}"></td>
                     <td data-th-text="${reservation.purpose}"></td>
                     <td>
                         <span class="d-inline-flex flex-column flex-sm-row align-items-sm-center gap-1">

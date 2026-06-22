@@ -7,9 +7,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,6 +27,8 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.components.reservation.jpa.MyReservationDTO;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectEntity;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectRepository;
 import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
@@ -30,6 +37,10 @@ import sk.iway.iwcm.system.annotations.DefaultHandler;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.annotations.WebjetComponent;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.editor.rest.ComponentRequest;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.OptionDto;
 
 @WebjetComponent("sk.iway.iwcm.components.reservation.MyReservationsApp")
 @WebjetAppStore(
@@ -50,9 +61,36 @@ public class MyReservationsApp extends WebjetComponentAbstract {
     private static final String PARAM_DELETE_PASSWORD = "deletePassword";
     private static final String DELETE_ERROR_KEY = "components.reservation.reservation_manager.deleteReservation.two";
 
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.reservation.add_object.title")
+    private Integer selectedReservationObjectId;
+
+    @JsonIgnore
+    private ReservationObjectRepository reservationObjectRepository;
+
+    @Autowired
+    public MyReservationsApp(ReservationObjectRepository reservationObjectRepository) {
+        this.reservationObjectRepository = reservationObjectRepository;
+    }
+
     @Override
     public void init(HttpServletRequest request, HttpServletResponse response) {
         Logger.debug(MyReservationsApp.class, "Init of MyReservationsApp app");
+    }
+
+    @Override
+    public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
+        Map<String, List<OptionDto>> options = new HashMap<>();
+        int domainId = CloudToolsForCore.getDomainId();
+
+        List<ReservationObjectEntity> objects = reservationObjectRepository.findAllByDomainId(domainId);
+        List<OptionDto> objectOptions = new ArrayList<>();
+        //add default / all option
+        objectOptions.add(new OptionDto("", "0", null));
+        for (ReservationObjectEntity obj : objects) {
+            objectOptions.add(new OptionDto(obj.getName(), String.valueOf(obj.getId()), null));
+        }
+        options.put("selectedReservationObjectId", objectOptions);
+        return options;
     }
 
     @DefaultHandler
@@ -113,7 +151,7 @@ public class MyReservationsApp extends WebjetComponentAbstract {
         String reservationDateTo = Tools.getRequestParameter(request, PARAM_DATE_TO);
 
         //default from last 2 months
-        if (Tools.isEmpty(reservationDateFrom) && Tools.isEmpty(reservationDateTo)) {
+        if(Tools.isEmpty(reservationDateFrom) && Tools.isEmpty(reservationDateTo)) {
             reservationDateFrom = LocalDateTime.now().minusMonths(2).toLocalDate().toString();
         }
 
@@ -126,6 +164,7 @@ public class MyReservationsApp extends WebjetComponentAbstract {
         model.addAttribute("reservationDateFrom", reservationDateFrom);
         model.addAttribute("reservationDateTo", reservationDateTo);
         model.addAttribute("reservations", reservations);
+        model.addAttribute("selectedReservationObjectId", selectedReservationObjectId);
     }
 
     private List<MyReservationDTO> getMyReservations(Integer userId, Integer domainId, String reservationDateFrom, String reservationDateTo) {
@@ -136,13 +175,15 @@ public class MyReservationsApp extends WebjetComponentAbstract {
 
         sql.append("WHERE r.user_id = ? AND r.domain_id = ? ");
 
+        // Filter by selected reservation object
+        Integer selectedObjectId = getSelectedReservationObjectId();
+        if (selectedObjectId != null && selectedObjectId > 0) {
+            sql.append("AND r.reservation_object_id = ? ");
+            params.add(selectedObjectId);
+        }
+
         LocalDate dateFrom = parseDateFilter(reservationDateFrom);
         LocalDate dateTo = parseDateFilter(reservationDateTo);
-
-        // Default range
-        if(dateFrom == null && dateTo == null) {
-            dateFrom = LocalDateTime.now().minusDays(30).toLocalDate();
-        }
 
         if(dateFrom != null) {
             sql.append("AND r.date_to >= ? ");

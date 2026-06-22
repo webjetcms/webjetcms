@@ -16,7 +16,9 @@ Pridať ju môžete aj priamo ako kód do stránky:
 !INCLUDE(sk.iway.iwcm.components.reservation.MyReservationsApp, device=&quot;&quot;, cacheMinutes=&quot;&quot;)!
 ```
 
-Aplikácia nemá vlastné špecifické nastavenia. Zobrazené údaje sa určujú podľa aktuálne prihláseného používateľa a aktuálnej domény.
+V aplikácii je možné nastaviť rezervačný objekt. Ak je zvolený zobrazia sa rezervácie len pre tento rezervačný objekt a nezobrazí sa stĺpec Rezervovaný objekt. Ak je výberové pole prázdne zobrazia sa rezervácie zo všetkých rezervačných objektov.
+
+Zobrazené údaje sa určujú podľa aktuálne prihláseného používateľa a aktuálnej domény.
 
 !>**Upozornenie:** aplikácia je určená pre prihlásených používateľov. Neprihlásenému návštevníkovi sa nezobrazia žiadne rezervácie.
 
@@ -33,7 +35,7 @@ V hornej časti aplikácie sa nachádzajú polia **Dátum od** a **Dátum do**. 
 
 ![](app-filter.png)
 
-Ak nie je nastavený žiadny filter, aplikácia automaticky zobrazí rezervácie od posledných 30 dní vrátane budúcich rezervácií.
+Ak nie je nastavený žiadny filter, aplikácia automaticky zobrazí rezervácie za posledné 2 mesiace, vrátane budúcich rezervácií.
 
 Pri filtrovaní sa zobrazia rezervácie, ktoré sa prekrývajú so zadaným intervalom:
 
