@@ -218,7 +218,7 @@ public class ClusterDB
 	}
 
 	public static boolean isPublicNode() {
-        String nodeType = Constants.getString("clusterMyNodeType", "");
+        String nodeType = Constants.getString("clusterMyNodeType");
         if (Tools.isEmpty(nodeType)) {
             return false;
         }
