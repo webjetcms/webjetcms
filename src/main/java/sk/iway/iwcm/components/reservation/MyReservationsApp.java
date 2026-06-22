@@ -111,6 +111,12 @@ public class MyReservationsApp extends WebjetComponentAbstract {
         Identity user = UsersDB.getCurrentUser(request);
         String reservationDateFrom = Tools.getRequestParameter(request, PARAM_DATE_FROM);
         String reservationDateTo = Tools.getRequestParameter(request, PARAM_DATE_TO);
+
+        //default from last 2 months
+        if (Tools.isEmpty(reservationDateFrom) && Tools.isEmpty(reservationDateTo)) {
+            reservationDateFrom = LocalDateTime.now().minusMonths(2).toLocalDate().toString();
+        }
+
         List<MyReservationDTO> reservations = new ArrayList<>();
 
         if(user != null) {
