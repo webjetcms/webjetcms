@@ -112,9 +112,14 @@ public class InitServlet extends HttpServlet
 				String clusterNodeName = Constants.getString("clusterMyNodeName");
 				if(startupTasks != null)
 				{
+					String clucterNodeType = "all-admin";
+					if (ClusterDB.isPublicNode()) {
+						clucterNodeType = "all-public";
+					}
+
 					for(CronTask t : startupTasks)
 					{
-						if(ClusterDB.isServerRunningInClusterMode()==false || "all".equals(t.getClusterNode()) || clusterNodeName.equals(t.getClusterNode()))
+						if(ClusterDB.isServerRunningInClusterMode()==false || "all".equals(t.getClusterNode()) || clusterNodeName.equals(t.getClusterNode()) || clucterNodeType.equals(t.getClusterNode()))
 						{
 							Logger.println(InitServlet.class, "Running cron job {"+t.getId()+"} "+t.getTask()+" "+t.getParams());
 							cf.runSimpleTaskOnce(t);

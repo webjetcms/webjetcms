@@ -5,6 +5,7 @@ import java.io.StringWriter;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+import sk.iway.Html2Text;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
@@ -19,28 +20,22 @@ import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.system.cluster.ClusterDB;
 
 public class FileArchivatorInsertLater
 {
     private static final String AUDIT_FILE_ARCHIVATOR_INSERT_LATER = "FileArchivatorInsertLater";
 
-    private static boolean isPublicNode() {
-        String nodeType = Constants.getString("clusterMyNodeType", "");
-        if (Tools.isEmpty(nodeType)) {
-            return false;
-        }
-        return !"full".equalsIgnoreCase(nodeType);
-    }
-
     public static void main(String[] args)
     {
-        if (isPublicNode()) {
+        if (ClusterDB.isPublicNode()) {
+            //only run this task on admin nodes because of database permissions
             return;
         }
 
         try
         {
-            //prevencia proti spusteniu naraz viacerymi nodmi
+            //prevent to run at the same time on different cluster nodes, because of possible file conflicts, so we add random sleep before start
             long rndSleep = ThreadLocalRandom.current().nextInt( 10000);
             Thread.sleep(rndSleep);
 
@@ -313,7 +308,7 @@ public class FileArchivatorInsertLater
             emails = Constants.getString("fileArchivSupportEmails");
 
         if(stav != 0) {
-            Adminlog.add(Adminlog.TYPE_CRON, AUDIT_FILE_ARCHIVATOR_INSERT_LATER + " saved error, stav=" +stav+" : \n"+text.toString().replace("<br/>","\n"), -1, -1);
+            Adminlog.add(Adminlog.TYPE_CRON, AUDIT_FILE_ARCHIVATOR_INSERT_LATER + " saved error, stav=" +stav+" : \n"+ Html2Text.html2text(text.toString()), -1, -1);
         }
 
         String[] emailsArray = Tools.getTokens(emails, ",", true);
