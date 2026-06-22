@@ -121,8 +121,15 @@ public class InitServlet extends HttpServlet
 					{
 						if(ClusterDB.isServerRunningInClusterMode()==false || "all".equals(t.getClusterNode()) || clusterNodeName.equals(t.getClusterNode()) || clusterNodeType.equals(t.getClusterNode()))
 						{
-							Logger.println(InitServlet.class, "Running cron job {"+t.getId()+"} "+t.getTask()+" "+t.getParams());
-							cf.runSimpleTaskOnce(t);
+							try
+							{
+								Logger.println(InitServlet.class, "Running cron job {"+t.getId()+"} "+t.getTask()+", clusterNode="+t.getClusterNode()+", params="+t.getParams());
+								cf.runSimpleTaskOnce(t);
+							}
+							catch (Exception e)
+							{
+								sk.iway.iwcm.Logger.error(e);
+							}
 						}
 					}
 				}

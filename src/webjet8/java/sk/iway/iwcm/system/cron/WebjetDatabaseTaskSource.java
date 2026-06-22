@@ -29,7 +29,7 @@ public class WebjetDatabaseTaskSource implements TaskSource
 	{
 		Logger.println(WebjetDatabaseTaskSource.class, "Loading cron tasks from database.");
 		List<CronTask> tasks = loadFromDatabase();
-		Logger.println(WebjetDatabaseTaskSource.class, String.format("%d tasks should run on this node", tasks.size()));
+		Logger.println(WebjetDatabaseTaskSource.class, String.format("%d tasks should run on this node (nodeName=%s, nodeType=%s)", tasks.size(), Constants.getString("clusterMyNodeName"), Constants.getString("clusterMyNodeType")));
 		return tasks;
 	}
 
