@@ -38,9 +38,9 @@ public class WebjetDatabaseTaskSource implements TaskSource
 		if (ClusterDB.isServerRunningInClusterMode()==false) return new ComplexQuery().setSql("SELECT * FROM crontab").list(CronDB.mapper);
 
 		//cron cluster node type as all-public / all-admin
-		String clusterNodeType = CronDB.getCronNodeType();
+		String cronNodeType = CronDB.getCronNodeType();
 
 		return new ComplexQuery().setSql("SELECT * FROM crontab WHERE cluster_node IS NULL OR cluster_node = '' OR cluster_node = 'all' OR cluster_node = ? OR cluster_node = ?").
-			setParams(Constants.getString("clusterMyNodeName"), clusterNodeType).list(CronDB.mapper);
+			setParams(Constants.getString("clusterMyNodeName"), cronNodeType).list(CronDB.mapper);
 	}
 }

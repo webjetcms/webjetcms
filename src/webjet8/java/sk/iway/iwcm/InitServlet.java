@@ -113,11 +113,11 @@ public class InitServlet extends HttpServlet
 				if(startupTasks != null)
 				{
 					//cron cluster node type as all-public / all-admin
-					String clusterNodeType = CronDB.getCronNodeType();
+					String cronNodeType = CronDB.getCronNodeType();
 
 					for(CronTask t : startupTasks)
 					{
-						if(ClusterDB.isServerRunningInClusterMode()==false || "all".equals(t.getClusterNode()) || clusterNodeName.equals(t.getClusterNode()) || clusterNodeType.equals(t.getClusterNode()))
+						if(ClusterDB.isServerRunningInClusterMode()==false || "all".equals(t.getClusterNode()) || clusterNodeName.equals(t.getClusterNode()) || cronNodeType.equals(t.getClusterNode()))
 						{
 							try
 							{
