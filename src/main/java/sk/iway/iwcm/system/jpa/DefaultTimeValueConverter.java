@@ -31,20 +31,17 @@ public class DefaultTimeValueConverter implements AttributeConverter<Date, Date>
     public static Date getValidTimeValue(Date oldDate) {
 
         if(oldDate == null) {
-            Calendar newInstance = Calendar.getInstance();
-            newInstance.set(2000, 0, 1, 0, 0, 0);
-            newInstance.set(Calendar.MILLISECOND, 0);
-            return newInstance.getTime();
+            return getValidTimeValue(0, 0, 0);
         }
 
         Calendar oldInstance = Calendar.getInstance();
         oldInstance.setTime(oldDate);
 
-        Calendar newInstance = Calendar.getInstance();
-        newInstance.set(2000, 0, 1, oldInstance.get(Calendar.HOUR_OF_DAY), oldInstance.get(Calendar.MINUTE), oldInstance.get(Calendar.SECOND));
-        newInstance.set(Calendar.MILLISECOND, 0);
-        //Return valid date time
-        return newInstance.getTime();
+        return getValidTimeValue(
+            oldInstance.get(Calendar.HOUR_OF_DAY),
+            oldInstance.get(Calendar.MINUTE),
+            oldInstance.get(Calendar.SECOND)
+        );
     }
 
     /**
