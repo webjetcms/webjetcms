@@ -59,7 +59,7 @@ public class SpringAppInitializer
 				// - MultipartConfigElement (now registered via @Bean in SpringBootStarter)
 				// - Manual package scanning (handled by @ComponentScan in SpringBootStarter)
 				InitServlet.setSpringInitialized();
-				InitServlet.setWebjetInitialized();
+				InitServlet.initAfterSpring();
 			}
 		};
 	}

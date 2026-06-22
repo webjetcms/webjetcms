@@ -87,13 +87,7 @@ public class InitServlet extends HttpServlet
 
 	private static String contextDbName = null;
 
-	/**
-	 *  Description of the Method
-	 *
-	 *@exception  ServletException  Description of the Exception
-	 */
-	@Override
-	public void init() throws ServletException
+	public static void initAfterSpring()
 	{
 		//not used anymore, initialized from spring on start
 		if (isSpringInitialized()) {
