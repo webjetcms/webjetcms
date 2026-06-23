@@ -192,7 +192,7 @@ public class HistoryDB extends DB
 					doc.setFieldT(DB.getDbString(rs, "field_t"));
 
 					doc.setRequireSsl(rs.getBoolean("require_ssl"));
-
+					doc.setSyncStatus(rs.getInt("sync_status"));
 
 					if ((doc.getHistoryApprovedBy()>0 && doc.getAuthorId()!=doc.getHistoryApprovedBy()) || doc.getHistoryDisapprovedBy()>0) {
 						if (doc.getHistoryApprovedBy()>0)
@@ -257,6 +257,7 @@ public class HistoryDB extends DB
 					{
 					  doc.setPublishStartStringExtra("&nbsp;");
 					}
+					doc.setSyncStatus(rs.getInt("sync_status"));
 
 					if (onlyNew && doc.isHistoryActual())
 					{

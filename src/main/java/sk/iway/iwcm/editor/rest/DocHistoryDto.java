@@ -49,6 +49,9 @@ public class DocHistoryDto {
     @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
     private Boolean publicable;
 
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+    private int syncStatus;
+
     private boolean historyActual;
     private boolean disableAfterEnd;
     private BaseEditorFields editorFields;

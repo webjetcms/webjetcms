@@ -2,7 +2,7 @@
 
 V karte História sa zobrazujú publikované historické verzie web stránky a **aktuálne rozpracované (ešte nepublikované) verzie**. Pri publikovaní rozpracovanej verzie sa z histórie zmažú dočasné/pracovné verzie stránky a v histórii sa ponechá publikovaná verzia.
 
-Plánované verzie (budúce) majú v stĺpci **Bude publikované** zobrazený dátum, kedy daná verzie bude/bola publikovaná. Ak máte naplánovanú stránku na publikovanie a chcete ju zrušiť stačí ju zmazať. Ak uložíte novú verziu stránky s rovnakým dátumom publikovania ako už existujúca naplánovaná verzia, pôvodná naplánovaná verzia sa automaticky zruší. Zrušené (nepublikovateľné) verzie majú dátum v stĺpci **Bude publikované** zobrazený preškrtnutým písmom.
+Plánované verzie majú v stĺpci **Bude publikované** zobrazený dátum, kedy daná verzie bude/bola publikovaná. Ak máte naplánovanú stránku na publikovanie a chcete ju zrušiť stačí ju zmazať. Zmazať ide len stránky plánované na publikovanie v budúcnosti. Ak uložíte novú verziu stránky s rovnakým dátumom publikovania ako už existujúca naplánovaná verzia, pôvodne naplánovanej verzia sa publikovanie zruší. Takéto verzie majú dátum v stĺpci **Bude publikované** zobrazený preškrtnutým písmom.
 
 Stránky, ktoré majú nastavenú možnosť **Odverejniť stránku po tomto dátume** zobrazujú dátum v stĺpci **Bude vypnuté**. V danom čase sa vypne verejné zobrazovanie web stránky (stránka nebude pre verejnosť dostupná). Ak potrebujete vypnutie stránky zrušiť je potrebné upraviť danú verziu a plánované vypnutie zrušiť jej znova uložením.
 

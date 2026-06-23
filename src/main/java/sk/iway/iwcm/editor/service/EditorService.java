@@ -311,7 +311,9 @@ public class EditorService {
 				if (waitingForPublish != null) {
 					for (DocHistory waiting : waitingForPublish) {
 						waiting.setPublicable(false);
-						waiting.setSyncStatus(1);
+						//by sync_status=2 we know that this record was waiting for publish, but now it is not publicable
+						//checked in web-pages-datatable.js to mark this record with strikethrough date
+						waiting.setSyncStatus(2);
 						historyRepo.save(waiting);
 					}
 				}

@@ -283,7 +283,7 @@ export class WebPagesDatatable {
                         var data = this.data();
                         if (data.publicable === false && data.publishStartStringExtra != null && data.publishStartStringExtra != "") {
                             //only if it is in future
-                            if (Date.now() < data.publishStartStringExtra) {
+                            if (Date.now() < data.publishStartStringExtra || data.syncStatus == 2) {
                                 $(this.node()).addClass('not-publicable');
                             }
                         }
