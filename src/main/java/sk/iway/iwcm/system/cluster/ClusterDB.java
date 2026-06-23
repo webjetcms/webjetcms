@@ -216,4 +216,12 @@ public class ClusterDB
 		String[] nodesAsArray = Tools.getTokens(clusterNames, ",");
 		return new ArrayList<>(Arrays.asList(nodesAsArray));
 	}
+
+	public static boolean isPublicNode() {
+        String nodeType = Constants.getString("clusterMyNodeType");
+        if (Tools.isEmpty(nodeType)) {
+            return false;
+        }
+        return "public".equalsIgnoreCase(nodeType);
+    }
 }

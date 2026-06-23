@@ -8,20 +8,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.CryptoFactory;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.SpamProtection;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.forms.FormsEntity;
 import sk.iway.iwcm.components.forms.FormsRepository;
@@ -31,6 +33,9 @@ import sk.iway.iwcm.components.multistep_form.support.SaveFormException;
 import sk.iway.iwcm.components.upload.XhrFileUploadServlet;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.TemplateDetails;
+import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -89,7 +94,7 @@ public class SaveFormService {
         if (Tools.isNotEmpty(formSettings.getForwardFail())) forwardFail = formSettings.getForwardFail();
 
         if (SpamProtection.canPost("form", null, request) == false) {
-            throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"), false, forwardFail);
+            throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"), "probablySpamBot", false, forwardFail);
         }
 
         String subject = null;
@@ -171,6 +176,31 @@ public class SaveFormService {
         form.setDocId(docId);
         form.setUserId(Long.valueOf(userId));
         form.setDuration(duration);
+
+        String referer = request.getHeader("referer");
+        if (DocTools.testXss(referer) == true) {
+            Logger.warn(this.getClass(), "Referer URL contains XSS code, will not be saved. formName=" + formName + " docId=" + docId + " referer=" + referer);
+            referer = null;
+        }
+
+        if(Tools.isNotEmpty(referer)) form.setReferer(DB.prepareString(referer, 255));
+        else Logger.info(this.getClass(), "Cannot determine referer URL for saved form, destinationUrl is empty. formName=" + formName + " docId=" + docId);
+
+        String lng = null;
+        DocDetails doc = DocDB.getInstance().getBasicDocDetails(docId, false);
+        if(doc != null) {
+            GroupDetails group = doc.getGroup();
+            if(group != null) lng = group.getLng();
+
+            if(Tools.isEmpty(lng)) {
+                TemplateDetails temp = TemplatesDB.getInstance().getTemplate(doc.getTempId());
+                if(temp != null) lng = temp.getLng();
+            }
+        }
+        if (Tools.isEmpty(lng)) lng = PageLng.getUserLng(request);
+
+        if(Tools.isNotEmpty(lng)) form.setLanguage(lng);
+        else Logger.info(this.getClass(), "Cannot determine language used on the page where the form is embedded. formName=" + formName + " docId=" + docId);
 
         // For file save we need formId ... sooo save it as it is and then use id
         form.setData("-");

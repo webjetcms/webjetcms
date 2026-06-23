@@ -1509,6 +1509,45 @@ const WJ = (() => {
     }
 
     /**
+     * Returns localized labels for date/time picker controls.
+     * @returns {{previous: string, next: string, months: string[], weekdays: string[], hours: string, minutes: string, seconds: string, today: string}}
+     */
+    function getDatetimeLocalization() {
+        //this is same code as in Datatable index.js datetime object
+        return {
+            previous: WJ.translate('datatables.button.prev.js'),
+            next: WJ.translate('datatables.button.next.js'),
+            months: [
+                WJ.translate('component.calendar.month.1'),
+                WJ.translate('component.calendar.month.2'),
+                WJ.translate('component.calendar.month.3'),
+                WJ.translate('component.calendar.month.4'),
+                WJ.translate('component.calendar.month.5'),
+                WJ.translate('component.calendar.month.6'),
+                WJ.translate('component.calendar.month.7'),
+                WJ.translate('component.calendar.month.8'),
+                WJ.translate('component.calendar.month.9'),
+                WJ.translate('component.calendar.month.10'),
+                WJ.translate('component.calendar.month.11'),
+                WJ.translate('component.calendar.month.12'),
+            ],
+            weekdays: [
+                WJ.translate('datatables.calendar.weekday.short.1.js'),
+                WJ.translate('datatables.calendar.weekday.short.2.js'),
+                WJ.translate('datatables.calendar.weekday.short.3.js'),
+                WJ.translate('datatables.calendar.weekday.short.4.js'),
+                WJ.translate('datatables.calendar.weekday.short.5.js'),
+                WJ.translate('datatables.calendar.weekday.short.6.js'),
+                WJ.translate('datatables.calendar.weekday.short.7.js'),
+            ],
+            hours: WJ.translate('datatables.calendar.hours.js'),
+            minutes: WJ.translate('datatables.calendar.minutes.js'),
+            seconds: WJ.translate('datatables.calendar.seconds.js'),
+            today: WJ.translate('datatables.calendar.today.js')
+        }
+    }
+
+    /**
      * Log debug message with timestamp and diff in ms from last log.
      * To enable/disable debug timer use debugTimer(true) as first call.
      * @param {*} message
@@ -1763,6 +1802,9 @@ const WJ = (() => {
         },
         base64decode: (encodedText) => {
             return base64decode(encodedText);
+        },
+        getDatetimeLocalization: () => {
+            return getDatetimeLocalization();
         }
     };
 

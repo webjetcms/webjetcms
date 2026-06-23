@@ -741,6 +741,7 @@ public class ReservationService {
         private String id;
         private String value;
         private String cssClass;
+        private String price;
 
         public ReservationTableCell(String id, String value, String cssClass) {
             this.id = id;
@@ -751,6 +752,8 @@ public class ReservationService {
         public String getId() { return id; }
         public String getValue() { return value; }
         public String getCssClass() { return cssClass; }
+        public String getPrice() { return price; }
+        public void setPrice(String price) { this.price = price; }
     }
 
     /**

@@ -23,9 +23,46 @@
             title: WJ.translate("forms.formsList.js"),
         }
     });
+
+    const advancedCards = ["viewCount", "responseAttempts", "errorsCount", "conversionRate"];
 </script>
 
 <script type="module" th:inline="javascript">
+
+    function insertFilterToStatsPills() {
+        const pills = document.querySelector("ul#pills-form-stats");
+        const element = document.getElementById("filter");
+
+        const input = document.getElementById("expandBonusChartButton");
+        input.addEventListener("click", function() {
+            expandBonusChart.style.display = "none";
+            $("#bonusChartContainer").slideDown(500);
+
+            advancedCards.forEach(id => {
+                const card = document.querySelector(`[data-stat-id="${id}"]`);
+                if(card) {
+                    $(card).slideDown(500);
+                }
+            });
+        });
+
+        pills.appendChild(element);
+
+        // Initialize datepicker on filter inputs
+        $('#filter .datepicker').each(function (key, dateInput) {
+            let $this = $(dateInput);
+            if ($this.hasClass("datepickerbinded")) return;
+            $this.addClass("datepickerbinded");
+
+            new $.fn.dataTable.Editor.DateTime($this, {
+                format: 'L',
+                momentLocale: window.userLng,
+                locale: window.userLng,
+                keyInput: false,
+                i18n: WJ.getDatetimeLocalization()
+            });
+        });
+    }
 
     window.domReady.add(function () {
         WJ.headerTabs({
@@ -38,57 +75,226 @@
                 { url: '/apps/form/admin/regexps/', title: WJ.translate('components.form.reg_exp.js'), active: false }
             ]
         });
+
+        insertFilterToStatsPills();
+        bindDateFilter();
+        loadStats();
     });
 
     import { StatsByCharts } from '/apps/_common/charts/stats-by-charts.js';
 
-    fetch("/rest/multistep-form-stat/get-stat-data?form-name=" + urlFormName)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById("responsesCount").textContent = data.totalResponses;
-            document.getElementById("averageDuration").textContent = data.averageDuration;
-            document.getElementById("durationDays").textContent = data.durationDays;
-            document.getElementById("lastResponseDateTime").textContent = data.lastResponseDateTime;
+    let statsChartsInstance = null;
+    let pieLanguagesChart;
+    let tableReferrersChart;
+    let pieFieldsErrorsChart;
+    let pieSystemErrorsChart;
+    let lineSystemErrorsChart;
 
-            let instance = new StatsByCharts(
-                {
-                    targetSelector: "#chartContainer",
-                    id: "form-stats",
-                    chartSettingBtnFn: (chartDef) => {
-                        WJ.openIframeModalDatatable({
-                            url: "/apps/form/admin/form-stats-table/?id=-1&formName=" + urlFormName + "&itemFormId=" + chartDef.id + "&showOnlyEditor=true",
-                            width: 850,
-                            height: 500,
-                            buttonTitleKey: "button.save"
-                        });
-                    }
-                }
-            );
+    function bindDateFilter() {
+        const filterButton = document.querySelector("#filter button.dt-filtrujem-dayDate");
+        if(filterButton == null || filterButton.dataset.binded === "true") return;
+        filterButton.dataset.binded = "true";
 
-            instance.createCharts(data.chartData);
-
-            window.addEventListener("stat-chart-update", async (e) => {
-                const chartId = e?.detail?.id;
-                if(chartId) {
-                    fetch("/rest/multistep-form-stat/get-chart-data?form-name=" + urlFormName + "&item-form-id=" + chartId)
-                        .then(response => response.json())
-                        .then(data => {
-                            instance.updateChart(data);
-                        })
-                        .catch(error => {
-                            console.error("Error fetching chart new data:", error);
-                        });
-                }
-            });
-        })
-        .catch(error => {
-            console.error("Error fetching stats:", error);
+        filterButton.addEventListener("click", function(e) {
+            e.preventDefault();
+            loadStats();
         });
 
+        document.querySelectorAll("#filter .form-date-div input.filter-input").forEach(input => {
+            input.addEventListener("keypress", function(e) {
+                if(e.key === "Enter") {
+                    e.preventDefault();
+                    loadStats();
+                }
+            });
+        });
+    }
+
+    function getStatUrl(path, params = {}) {
+        const searchParams = new URLSearchParams();
+        searchParams.set("form-name", urlFormName);
+
+        const dayDate = ChartTools.getDateRangeWithName("dayDate", 30);
+        if(dayDate !== "") searchParams.set("dayDate", dayDate);
+
+        Object.entries(params).forEach(([key, value]) => {
+            searchParams.set(key, value);
+        });
+
+        return path + "?" + searchParams.toString();
+    }
+
+    function updateStatCards(data) {
+        document.getElementById("responsesCount").textContent = data.totalResponses;
+        document.getElementById("averageDuration").textContent = data.averageDuration;
+        document.getElementById("durationDays").textContent = data.durationDays;
+        document.getElementById("lastResponseDateTime").textContent = data.lastResponseDateTime;
+        document.getElementById("viewCount").textContent = data.viewCount;
+        document.getElementById("responseAttempts").textContent = data.responseAttempts;
+        document.getElementById("errorsCount").textContent = data.chartErrorData.allErrorsCount;
+
+        const conversionRate = data.viewCount > 0 ? ((data.totalResponses / data.viewCount) * 100).toFixed(2) : "0.00";
+        document.getElementById("conversionRate").textContent = conversionRate + "%";
+    }
+
+    async function renderStatsCharts(data) {
+        if(statsChartsInstance == null) {
+            statsChartsInstance = new StatsByCharts({
+                targetSelector: "#chartContainer",
+                id: "form-stats",
+                chartSettingBtnFn: (chartDef) => {
+                    WJ.openIframeModalDatatable({
+                        url: "/apps/form/admin/form-stats-table/?id=-1&formName=" + encodeURIComponent(urlFormName) + "&itemFormId=" + encodeURIComponent(chartDef.id) + "&showOnlyEditor=true",
+                        width: 850,
+                        height: 500,
+                        buttonTitleKey: "button.save"
+                    });
+                }
+            });
+
+            statsChartsInstance.createCharts(data.chartData);
+            return;
+        }
+
+        await updateStatsCharts(data.chartData);
+    }
+
+    async function updateStatsCharts(chartsDefinitions) {
+        if(statsChartsInstance?.chartsInstances == null) return;
+
+        for(const chartDef of chartsDefinitions) {
+            const chartForm = statsChartsInstance.chartsInstances[chartDef.id];
+            if(chartForm == null) continue;
+
+            chartForm.chartData = chartDef.values;
+            if(chartForm instanceof ChartTools.TableChartForm && Array.isArray(chartDef.paramsNames)) {
+                chartForm.paramsNames = chartDef.paramsNames;
+            }
+
+            await ChartTools.updateChart(chartForm);
+        }
+    }
+
+    async function renderAdvancedCharts(data) {
+        if(pieLanguagesChart == null) {
+            await createAdvancedCharts(data);
+            return;
+        }
+
+        pieLanguagesChart.chartData = data.chartBonusData.languageData;
+        await ChartTools.updateChart(pieLanguagesChart);
+
+        tableReferrersChart.chartData = data.chartBonusData.referrerData;
+        await ChartTools.updateChart(tableReferrersChart);
+
+        pieFieldsErrorsChart.chartData = data.chartErrorData.pieErrorData;
+        await ChartTools.updateChart(pieFieldsErrorsChart);
+
+        pieSystemErrorsChart.chartData = data.chartErrorData.pieSystemErrorData;
+        await ChartTools.updateChart(pieSystemErrorsChart);
+
+        lineSystemErrorsChart.chartData = ChartTools.convertDataForLineChart(data.chartErrorData.timelineErrorData);
+        await ChartTools.updateChart(lineSystemErrorsChart);
+    }
+
+    async function createAdvancedCharts(data) {
+        window.initAmcharts().then(module => {
+            const pieLanguagesConfig = {
+                yAxeName: "count",
+                xAxeName: "name",
+                chartTitle: '[[#{components.multistep_form.languages_chart.label}]]',
+                chartDivId: "form-stats-pieLanguages",
+                chartData: data.chartBonusData.languageData
+            };
+            pieLanguagesChart = new ChartTools.PieChartForm(pieLanguagesConfig);
+            ChartTools.createAmchart(pieLanguagesChart);
+
+            const tableReferrersConfig = {
+                paramsNames: ["name", "count"],
+                chartTitle: '[[#{components.multistep_form.referrer_chart.label}]]',
+                chartDivId: "form-stats-tableReferrers",
+                chartData: data.chartBonusData.referrerData
+            };
+            tableReferrersChart = new ChartTools.TableChartForm(tableReferrersConfig);
+            tableReferrersChart.headerNames = [
+                window.WJ.translate("admin.welcome.bookmarks.dialog.urlAddress.js"),
+                window.WJ.translate("components.stats_by_charts.table.count.js")
+            ];
+            ChartTools.createAmchart(tableReferrersChart);
+
+            const pieFieldsErrorsConfig = {
+                yAxeName: "count",
+                xAxeName: "name",
+                chartTitle: '[[#{components.multistep_form.field_errors_chart.label}]]',
+                chartDivId: "form-stats-pieFieldsErrors",
+                chartData: data.chartErrorData.pieErrorData
+            };
+            pieFieldsErrorsChart = new ChartTools.PieChartForm(pieFieldsErrorsConfig);
+            pieFieldsErrorsChart.labelKey = "components.multistep_form.field_error_sum.label.js";
+            ChartTools.createAmchart(pieFieldsErrorsChart);
+
+            const pieSystemErrorsConfig = {
+                yAxeName: "count",
+                xAxeName: "name",
+                chartTitle: '[[#{components.multistep_form.system_errors_chart.label}]]',
+                chartDivId: "form-stats-pieSystemErrors",
+                chartData: data.chartErrorData.pieSystemErrorData
+            };
+            pieSystemErrorsChart = new ChartTools.PieChartForm(pieSystemErrorsConfig);
+            pieSystemErrorsChart.labelKey = "components.multistep_form.field_error_sum.label.js";
+            ChartTools.createAmchart(pieSystemErrorsChart);
+
+            const lineSystemErrorsConfig = {
+                yAxeNames: ChartTools.getLineChartYAxeNameObjs(["count"], [undefined]),
+                xAxeName: "dayDate",
+                chartTitle: '[[#{components.multistep_form.stat.step_stat}]]',
+                chartDivId: "form-stats-lineTimelineErrors",
+                chartData: ChartTools.convertDataForLineChart(data.chartErrorData.timelineErrorData),
+                dateType: ChartTools.DateType.Auto
+            };
+
+            lineSystemErrorsChart = new ChartTools.LineChartForm(lineSystemErrorsConfig);
+            ChartTools.createAmchart(lineSystemErrorsChart);
+        });
+    }
+
+    async function loadStats() {
+        WJ.showLoader();
+
+        try {
+            const response = await fetch(getStatUrl("/rest/multistep-form-stat/get-stat-data"));
+            const data = await response.json();
+
+            updateStatCards(data);
+            await renderStatsCharts(data);
+            await renderAdvancedCharts(data);
+        } catch(error) {
+            console.error("Error fetching stats:", error);
+        } finally {
+            WJ.hideLoader();
+        }
+    }
+
+    window.addEventListener("stat-chart-update", async (e) => {
+        const chartId = e?.detail?.id;
+        if(chartId == null || statsChartsInstance == null) return;
+
+        //console.log("chart-update event received for chartId:", chartId);
+        //WJ.showLoader();
+
+        try {
+            const response = await fetch(getStatUrl("/rest/multistep-form-stat/get-chart-data", {"item-form-id": chartId}));
+            const data = await response.json();
+            await updateStatsCharts(data);
+        } catch(error) {
+            console.error("Error fetching chart new data:", error);
+        }
+    });
 </script>
 
-<div class="row header-container g-3">
-    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher">
+<div class="row header-container hide-while-loading g-3">
+
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher" data-stat-id="responsesCount">
         <div class="stat-card h-100 stat-card--green">
             <div class="stat-card__icon">
                 <i class="ti ti-users"></i>
@@ -100,7 +306,7 @@
         </div>
     </div>
 
-    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher">
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher" data-stat-id="averageDuration">
         <div class="stat-card h-100 stat-card--blue">
             <div class="stat-card__icon">
                 <i class="ti ti-alarm"></i>
@@ -112,7 +318,7 @@
         </div>
     </div>
 
-    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher">
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher" data-stat-id="durationDays">
         <div class="stat-card h-100 stat-card--orange">
             <div class="stat-card__icon">
                 <i class="ti ti-calendar"></i>
@@ -124,7 +330,7 @@
         </div>
     </div>
 
-    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher">
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher" data-stat-id="lastResponseDateTime">
         <div class="stat-card h-100 stat-card--red">
             <div class="stat-card__icon">
                 <i class="ti ti-calendar-pause"></i>
@@ -135,9 +341,104 @@
             </div>
         </div>
     </div>
+
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher" data-stat-id="viewCount" style="display:none;">
+        <div class="stat-card h-100 stat-card--blue">
+            <div class="stat-card__icon">
+                <i class="ti ti-eye"></i>
+            </div>
+            <div class="stat-card__content">
+                <span class="stat-card__title" data-th-text="#{components.multistep_form.view_count}">VIEW COUNT</span>
+                <span id="viewCount" class="stat-card__value">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher" data-stat-id="responseAttempts" style="display:none;">
+        <div class="stat-card h-100 stat-card--orange">
+            <div class="stat-card__icon">
+                <i class="ti ti-send"></i>
+            </div>
+            <div class="stat-card__content">
+                <span class="stat-card__title" data-th-text="#{components.multistep_form.response_attempts}">RESPONSE ATTEMPTS</span>
+                <span id="responseAttempts" class="stat-card__value">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher" data-stat-id="errorsCount" style="display:none;">
+        <div class="stat-card h-100 stat-card--red">
+            <div class="stat-card__icon">
+                <i class="ti ti-exclamation-circle"></i>
+            </div>
+            <div class="stat-card__content">
+                <span class="stat-card__title" data-th-text="#{components.multistep_form.errors_count}">ERRORS COUNT</span>
+                <span id="errorsCount" class="stat-card__value">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher" data-stat-id="conversionRate" style="display:none;">
+        <div class="stat-card h-100 stat-card--gray">
+            <div class="stat-card__icon">
+                <i class="ti ti-chart-funnel"></i>
+            </div>
+            <div class="stat-card__content">
+                <span class="stat-card__title" data-th-text="#{components.multistep_form.conversion_rate}">CONVERSION RATE</span>
+                <span id="conversionRate" class="stat-card__value">0</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div id="expandBonusChart" class="hide-while-loading mt-3 text-center">
+    <button id="expandBonusChartButton" class="btn btn-sm btn-outline-secondary" data-th-text="#{components.multistep_form.show_advanced_stats}">Show advanced stats</button>
+</div>
+
+<div id="bonusChartContainer" style="display:none;">
+    <div class="row hide-while-loading">
+        <div class="col-6">
+            <div id="form-stats-pieLanguages" class="amcharts"></div>
+        </div>
+
+        <div class="col-6">
+            <div id="form-stats-tableReferrers" class="amcharts"></div>
+        </div>
+    </div>
+
+    <div class="row hide-while-loading">
+        <div class="col-12 col-xxxl-6">
+            <div id="form-stats-pieFieldsErrors" class="amcharts"></div>
+        </div>
+
+        <div class="col-12 col-xxxl-6">
+            <div id="form-stats-pieSystemErrors" class="amcharts"></div>
+        </div>
+    </div>
+
+    <div class="hide-while-loading">
+        <div id="form-stats-lineTimelineErrors" class="amcharts"></div>
+    </div>
 </div>
 
 <div id="chartContainer" class="row"></div>
+
+<li class="nav-item" id="filter">
+    <div class="row datatableInit">
+
+        <div class="col-auto form-date-div">
+            <div class="input-group" data-filter-type="date">
+                <input class="datepicker min form-control filter-input form-control-sm dt-datetime dt-filter-from-dayDate" type="text" placeholder="Od" aria-label="Dátum Od" autocomplete="off">
+                <input class="datepicker max form-control filter-input form-control-sm dt-datetime dt-filter-to-dayDate" type="text" placeholder="Do" aria-label="Dátum Do" autocomplete="off">
+                <button class="filtrujem btn btn-sm btn-outline-secondary dt-filtrujem-dayDate" type="submit" aria-label="Filtrovať Dátum">
+                    <i class="ti ti-search" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+
+    </div>
+</li>
 
 <style>
     .header-container {
@@ -165,11 +466,13 @@
     .stat-card--blue   { background: #D9DEFF; color: #003289; }
     .stat-card--orange { background: #FFDAA3; color: #4A3600; }
     .stat-card--red    { background: #FFD6D7; color: #790011; }
+    .stat-card--gray   { background: #DDDFE6; color: #353944; }
 
     .stat-card--green  .stat-card__icon { color: #51DCBD; }
     .stat-card--blue   .stat-card__icon { color: #B8C3FF; }
     .stat-card--orange .stat-card__icon { color: #F6BE3F; }
     .stat-card--red    .stat-card__icon { color: #FFB3B5; }
+    .stat-card--gray   .stat-card__icon { color: #C2C6D2; }
 
     .stat-card__icon {
         flex-shrink: 0;
@@ -202,6 +505,7 @@
         font-weight: 700;
         line-height: 1.1;
     }
+
     div.amcharts table.table tr td:nth-child(2), div.amcharts table.table tr th:nth-child(2) {
         text-align: right;
         padding-right: 15px;

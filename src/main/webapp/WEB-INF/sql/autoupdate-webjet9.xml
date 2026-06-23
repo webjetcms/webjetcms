@@ -3778,6 +3778,42 @@
         <void method="add">
             <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="author"><string>sivan</string></void>
+                <void property="date"><string>22.05.2026</string></void>
+                <void property="desc"><string>forms - add referer, language columns</string></void>
+                <void property="mysql"><string>ALTER TABLE forms ADD COLUMN referer VARCHAR(255), ADD COLUMN language VARCHAR(3)</string></void>
+                <void property="mssql"><string>ALTER TABLE forms ADD referer NVARCHAR(255), language NVARCHAR(3)</string></void>
+                <void property="oracle"><string>ALTER TABLE forms ADD (referer NVARCHAR2(255), language NVARCHAR2(3))</string></void>
+                <void property="pgsql"><string>ALTER TABLE forms ADD COLUMN referer VARCHAR(255), ADD COLUMN language VARCHAR(3)</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>22.05.2026</string></void>
+                <void property="desc"><string>form_settings - add view_count and response_attempts columns</string></void>
+                <void property="mysql"><string>ALTER TABLE form_settings ADD COLUMN view_count INT DEFAULT 0, ADD COLUMN response_attempts INT DEFAULT 0</string></void>
+                <void property="mssql"><string>ALTER TABLE form_settings ADD view_count INT DEFAULT 0, response_attempts INT DEFAULT 0</string></void>
+                <void property="oracle"><string>ALTER TABLE form_settings ADD (view_count INTEGER DEFAULT 0, response_attempts INTEGER DEFAULT 0)</string></void>
+                <void property="pgsql"><string>ALTER TABLE form_settings ADD COLUMN view_count INT DEFAULT 0, ADD COLUMN response_attempts INT DEFAULT 0</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>25.05.2026</string></void>
+                <void property="desc"><string>form_items - add error_count column</string></void>
+                <void property="mysql"><string>ALTER TABLE form_items ADD COLUMN error_count INT DEFAULT 0</string></void>
+                <void property="mssql"><string>ALTER TABLE form_items ADD error_count INT DEFAULT 0</string></void>
+                <void property="oracle"><string>ALTER TABLE form_items ADD (error_count INTEGER DEFAULT 0)</string></void>
+                <void property="pgsql"><string>ALTER TABLE form_items ADD COLUMN error_count INT DEFAULT 0</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
                 <void property="date"><string>22.06.2026</string></void>
                 <void property="desc"><string>custom_fields - add value column</string></void>
                 <void property="mysql"><string>ALTER TABLE custom_fields ADD COLUMN value TEXT NULL</string></void>
