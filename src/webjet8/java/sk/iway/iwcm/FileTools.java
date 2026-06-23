@@ -70,7 +70,22 @@ public class FileTools
 	public static final List<String> videoExtensions = Collections.unmodifiableList(Arrays.asList(
 				".mp4", ".wmv", ".mpeg", ".3gp", "mkv"));
 
-	private static final String[] NOT_ALLOWED_FILE_TYPES = new String[] {"jsp", "class", "java", "php", "sh", "exe", "bat", "cmd", "com", "vbs", "wsf", "wsh", "ps1", "ps2", "psm1"};
+	private static final String[] NOT_ALLOWED_FILE_TYPES = new String[] {
+		//JSP / Jasper engine (Tomcat maps *.jsp and *.jspx by default, others are common custom/legacy mappings or get compiled by Jasper)
+		"jsp", "jspx", "jspf", "jsw", "jsv", "jspa", "jhtml", "tag", "tagx", "tagf",
+		//Java sources / classes / deployable archives
+		"class", "java", "war", "ear",
+		//JSF / Facelets
+		"xhtml",
+		//Server Side Includes (SSI servlet)
+		"shtml", "shtm", "stm",
+		//PHP and its variants
+		"php", "php3", "php4", "php5", "php7", "pht", "phtml", "phar", "phps",
+		//ASP and its variants
+		"asp", "aspx", "ascx", "ashx", "asmx", "asax", "cer", "swf",
+		//Shell / OS scripts and executables
+		"sh", "exe", "bat", "cmd", "com", "vbs", "wsf", "wsh", "ps1", "ps2", "psm1"
+	};
 
 	/**
 	 * Skopiruje subor src do dest
