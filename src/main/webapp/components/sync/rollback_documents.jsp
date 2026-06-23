@@ -1,3 +1,4 @@
+<%@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld"%><iwcm:checkLogon admin="true" perms="cmp_sync"/>
 <%@page import="sk.iway.iwcm.i18n.Prop"%>
 <%@page import="sk.iway.iwcm.doc.GroupDetails"%>
 <%@page import="sk.iway.iwcm.doc.GroupPublisher"%>

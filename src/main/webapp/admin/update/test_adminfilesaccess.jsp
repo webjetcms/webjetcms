@@ -17,6 +17,48 @@ taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><iwcm:checkLogon admin="true" perms="modUpdate"/><%!
 
+private String[] safePages = new String[] {
+	"/components/_common/cleditor/jquery.cleditor.js.jsp",
+	"/components/_common/combine.jsp",
+	"/components/_common/fulltext_preview.jsp",
+	"/components/_common/image_info_ajax.jsp",
+	"/components/_common/javascript/ajax_form_send.js.jsp",
+	"/components/_common/javascript/page_functions.js.jsp",
+	"/components/_common/javascript/password_strenght.js.jsp",
+	"/components/_common/thymeleaf/write.jsp",
+	"/components/_common/universal_edit_dialog.jsp",
+	"/components/_common/universal_list.jsp",
+	"/components/_common/upload/upload.jsp",
+	"/components/_common/wysiwyg/empty.jsp",
+	"/components/_common/wysiwyg/wysiwyg.jsp",
+	"/components/adresar/main.jsp",
+	"/components/app-date/actual_year.jsp",
+	"/components/app-social_icon/social_icon.jsp",
+	"/components/app-testimonials/news.jsp",
+	"/components/banner/db_convert.jsp",
+	"/components/basket/repeat_payment.jsp",
+	"/components/basket/order_payment_reply.jsp",
+	"/components/basket/_invoice_security_guard.jsp",
+	"/components/basket/navbar.jsp",
+	"/components/basket/jscript.jsp",
+	"/components/basket/order_form.jsp",
+	"/components/basket/basket_page.jsp",
+	"/components/basket/basket_small.jsp",
+	"/components/basket/bootstrap_products.jsp",
+	"/components/basket/invoice_detail.jsp",
+	"/components/basket/js.jsp",
+	"/components/basket/product_perex.jsp",
+	"/components/basket/products.jsp",
+	"/components/blog/blog_user_toolbar.jsp",
+	"/components/bottom-public.jsp",
+	"/components/bottom-public-ajax.jsp",
+	"/components/top.jsp",
+	"/components/dialog.jsp",
+	"/components/content-block/template-content.jsp",
+	"/components/crypto/admin_keymanagement.jsp",
+
+};
+
 public static int downloadUrl(String url, String servletContextUserKey, StringBuilder data, StringBuilder statusHeader, Identity logUser)
 {
 	int responseStatus = -1;
@@ -101,24 +143,39 @@ public static int downloadUrl(String url, String servletContextUserKey, StringBu
 
 private boolean isAdminFile(String url, String fileContent)
 {
+	//check admin exceptions / safe files
+	for (String exc : safePages)
+	{
+		if (url.trim().equals(exc.trim())) return false;
+		if (Tools.replace(url.trim(), "/components/"+Constants.getInstallName()+"/", "/components/").equals(exc.trim())) return false;
+	}
+
+	//unsafe code, must be explicitly allowed
+	if (fileContent.contains("pageContext.include") || fileContent.contains("pageContext.forward") || fileContent.contains("request.getRequestDispatcher")) return true;
 
 	if (url.contains("admin")) return true;
 
 	if (fileContent.contains("admin")) return true;
 
+	if (fileContent.contains("iwcm:checkLogon")) return true;
+
+	//probably normal JSP component
+	if (fileContent.contains("PageParams")==false && fileContent.contains("PageLng")==false && fileContent.contains("WebJETEditorBody")==false) return true;
+
 	return false;
 }
 
-private void checkDir(String url, String servletContextUserKey, JspWriter out, String baseHref, Identity logUser) throws IOException
+private int checkDir(String url, String servletContextUserKey, JspWriter out, String baseHref, Identity logUser) throws IOException
 {
-	IwcmFile[] files = new IwcmFile(Tools.getRealPath(url)).listFiles();
+	IwcmFile[] files = FileTools.sortFilesByName(new IwcmFile(Tools.getRealPath(url)).listFiles());
+	int counter = 0;
 	for (IwcmFile f : files)
 	{
 //	    out.println(url+f.getName() + "<br>");
 
 		if (f.isDirectory())
 		{
-			checkDir(url+f.getName()+"/", servletContextUserKey, out, baseHref, logUser);
+			counter += checkDir(url+f.getName()+"/", servletContextUserKey, out, baseHref, logUser);
 		}
 		else if (f.getName().endsWith(".jsp"))
 		{
@@ -174,8 +231,11 @@ private void checkDir(String url, String servletContextUserKey, JspWriter out, S
 					out.println(ResponseUtils.filter(DB.prepareString(dataStr, 1000)) + "<br/>");
 				}
 			}
+
+			counter++;
 		}
 	}
+	return counter;
 }
 
 
@@ -207,13 +267,18 @@ if ("fix".equals(request.getParameter("act"))) {
 	if (componentName.startsWith("admin"))
 	{
 		baseUrl = "/"+componentName+"/";
+	} else if ("all".equals(componentName))
+	{
+		baseUrl = "/components/";
 	}
 
 	out.println("<h3>Testing: "+baseUrl+"</h3>");
 
 	String servletContextUserKey = sk.iway.Password.generateStringHash(64);
 
-	checkDir(baseUrl, servletContextUserKey, out, Tools.getBaseHref(request), logUser);
+	int counter = checkDir(baseUrl, servletContextUserKey, out, Tools.getBaseHref(request), logUser);
+
+	out.println("<h3>Found "+counter+" admin files</h3>");
 
 	Constants.getServletContext().removeAttribute(Constants.USER_KEY+"_"+servletContextUserKey);
 }
