@@ -4357,6 +4357,7 @@ public class InitServlet extends HttpServlet
 		files.add("/WEB-INF/classes/sk/iway/iwcm/editor/rest/ApproveController.java");
 		files.add("/WEB-INF/classes/sk/iway/iwcm/editor/rest/WebApproveRestController.java");
 		files.add("/WEB-INF/classes/sk/iway/iwcm/editor/service/ApproveService.java");
+		files.add("/components/htmlbox/editor_toolbar.jsp");
 
 		for (String file : files)
 		{

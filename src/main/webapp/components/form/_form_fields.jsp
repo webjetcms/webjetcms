@@ -7,7 +7,7 @@ taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
 taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%@
-page import="org.json.JSONArray"%><%
+page import="org.json.JSONArray"%><iwcm:checkLogon admin="true" perms="menuWebpages"/><%
 
 	int definingFormId = FormDB.searchOldNameForm(Tools.getRequestParameter(request, "form_name"));
 	if (definingFormId < 1)
