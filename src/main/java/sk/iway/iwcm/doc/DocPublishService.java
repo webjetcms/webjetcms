@@ -111,14 +111,14 @@ public class DocPublishService {
 			return;
 		}
 
-		dhr.updateActualAndSyncStatus(false, Tools.getTokensInt(sk.iway.iwcm.DB.getOnlyNumbersIn(historyIds), ","));
+		dhr.updateActual(false, Tools.getTokensInt(sk.iway.iwcm.DB.getOnlyNumbersIn(historyIds), ","));
 
 		//updatni zaznam v history, zrus publicable a nastav actual
 		dhr.updatePublicableAndActual(false, true, docDetails.getAuthorId(), true, docDetails.getHistoryId());
 
 		Logger.println(this,"pForm.getPublishStart()=" + docDetails.getPublishStart());
 
-		///Now is available
+		//Now is available
 		docDetails.setAvailable(true);
 		docDetails.setPerexGroupString( docDetails.getPerexGroupIdsString(true) );
 

@@ -21,7 +21,7 @@ public class DocHistoryDto {
     @DataTableColumn(inputType = DataTableColumnType.DATETIME, title = "history.date")
     private Long historySaveDate;
 
-    @DataTableColumn(inputType = DataTableColumnType.DATETIME, title="editor.willBePublishedAt")
+    @DataTableColumn(inputType = DataTableColumnType.DATETIME, title="editor.willBePublishedAt", className = "dt-publish-start-string-extra")
     private Date publishStartStringExtra;
 
     //obsahuje datum depublikovania (ak je nastavene disableAfterEnd)
@@ -45,6 +45,12 @@ public class DocHistoryDto {
 
     @DataTableColumn(inputType = DataTableColumnType.DATETIME, title="editor.dateEnd")
 	private Date publishEndDate;
+
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+    private Boolean publicable;
+
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+    private int syncStatus;
 
     private boolean historyActual;
     private boolean disableAfterEnd;
