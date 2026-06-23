@@ -15,6 +15,7 @@ Vysvětlení použitých piktogramů:
 ## 2026
 
 - [x] Sémantické vyhledávání - využít AI ke zlepšení vyhledávání pomocí `RAG` (#211).
+- [ ] AI - možnost použít malé lokální modely běžící přímo na CPU, minimálně pro Sémantické vyhledávání (#58561).
 - [ ] `Headless` CMS - připravit REST rozhraní pro použití WebJET CMS v `headless` módu.
 - [ ] Migrace na `Spring Boot` projekt.
 - [x] Testování - přidat testování přístupnosti pomocí rozšíření [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) (#58389).
@@ -27,6 +28,8 @@ Vysvětlení použitých piktogramů:
 - [ ] Mazání dat - přidat možnost mazat stránky a složky z koše. Vyřešit také možnost mazání dat spouštět jako automatizovaný úkol.
 - [ ] Nepoužívané soubory - udělat možnost získat seznam nepoužívaných souborů - nikde ve stránce se nepoužívají, ani v médiích atp. Byla k tomu API `FileTools.getDirFileUsage(currentDir, request)`. Přidat jako kartu do vlastností složky v průzkumníku.
 - [ ] Průzkumník - zamezit práci se složkou pro Manažer dokumentů, aby se se soubory nedalo manipulovat mimo Manažer dokumentů.
+- [ ] +Průzkumník - přidat právo pro nahrávání souborů s diakritikou (odstraňuje se pro `/images` a `/files` složky) (#58589).
+- [ ] +Web stránky - lepší integrovat manažer dokumentů pro vkládání odkazu do stránky - nová karta podobně jako je fotobanka u obrázků (#58593).
 - [x] +Formuláře - přidat podrobnější statistiku chyb vyplněných formulářů (#58509).
 - [x] +Web stránky - zlepšit uživatelské rozhraní pro zadávání `/thumb` obrázků v editoru (#58525).
 - [x] +Volitelná pole - přidat možnost definovat která pole jsou povinná (#58413).
@@ -37,6 +40,7 @@ Vysvětlení použitých piktogramů:
 - [x] +Web stránky - přidat možnost schvalování změn ve složkách web stránky podobně jako se schvalují změny ve web stránkách, včetně zobrazení historie a změn (#193).
 - [x] Přidat možnost autorizace přes `OAuth2`, možnost použít `mock` server https://github.com/navikt/mock-oauth2-server nebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [x] +Přidat podporu přihlašování se do administrace přes [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/) (#58369).
+
 
 ## 2025
 

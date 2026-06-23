@@ -274,6 +274,12 @@ Redesigned application properties settings in the editor from the old code in `J
 
 > A patch version of the original version 2026.0.
 
+- Web pages - cancelled [planned versions](redactor/webpages/history.md) are displayed in history with strikethrough and cannot be deleted (#58573).
+- File Archive - modified background task for publishing files - due to rights it is not executed on public node (#246).
+- Background jobs - added option to run [background job](admin/settings/cronjob/README.md) only on nodes in full configuration or on public nodes (#246).
+- Primary Key Generator - added automatic correction of table names and primary value column names (#246).
+- Security - fixed Local File Inclusion, upload file checking, and RCE bugs. Thanks to Josef Korbel (Citadelo) for reporting these vulnerabilities (#252).
+
 ## 2026.0.25
 
 > A patch version of the original version 2026.0.
@@ -284,7 +290,7 @@ Redesigned application properties settings in the editor from the old code in `J
 - AI assistant - added promotion of cache deletion to cluster nodes when editing the assistant.
 - Apache Tomcat - in version `9.0.118/11.0.22` the behavior of obtaining a list of Java classes was changed, which results in a malfunction of `Stripes Framework`. The modified version filters out incorrect file versions so that the start is correct. You can directly transfer the [VFS.java](https://github.com/webjetcms/webjetcms/blob/main/src/main/java/net/sourceforge/stripes/vfs/VFS.java) class to an older project, compile it in your project and use it without the need for an update.
 - Security - fixed the ability to set [HTTP header name for obtaining IP address](sysadmin/pentests/README.md#configuration) via the `xForwardedForHeader` variable.
-- Security - fixed Local File Inclusion, upload file checking and RCE errors. Vulnerability does not affect websites with external files set - configuration variable `cloudStaticFilesDir` set. Thanks to Josef Korbel (Citadelo) for reporting these vulnerabilities. Possible temporary solution without update is:
+- Security - fixed Local File Inclusion, upload file checking and RCE bugs. Thanks to Josef Korbel (Citadelo) for reporting these vulnerabilities (#252). A possible temporary solution without updating the entire WebJET CMS is:
   - delete or [update](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/components/grideditor/phantom/phantom_sablona_ajax.jsp) file `/components/grideditor/phantom/phantom_sablona_ajax.jsp`
   - if you have WebJET CMS newer than `2025.52`, add the value `,/components/grideditor/phantom/` to the configuration variable `pathFilterBlockedPaths`
   - if you have WebJET CMS newer than `2025.52` you can [globally for the entire server](install/external-configuration.md) add the system variable to `JAVA_OPTS`:
