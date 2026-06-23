@@ -131,6 +131,7 @@
                 <exclude name="**/apps/basecms/**"/>
                 <exclude name="**/apps/contact/**"/>
                 <exclude name="**/components/aceintegration/**"/>
+                <exclude name="**/components/eshop/**"/>
             </patternset>
         </unzip>
 
