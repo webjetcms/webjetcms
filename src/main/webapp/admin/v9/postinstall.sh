@@ -55,13 +55,15 @@ TABLER_ICONS_DIR="node_modules/@tabler/icons-webfont/dist"
 if [[ -f "$TABLER_ICONS_DIR/tabler-icons.scss" ]]; then
   cp "$TABLER_ICONS_DIR/tabler-icons-filled.scss" "$TABLER_ICONS_DIR/tabler-icons-filled-fixed.scss"
   # Add -filled suffix to all icon variable declarations
-  sed -i '' 's/\$ti-icon-\([a-z0-9-]*\):/\$ti-icon-\1-filled:/g' "$TABLER_ICONS_DIR/tabler-icons-filled-fixed.scss"
+  sed -i.bak 's/\$ti-icon-\([a-z0-9-]*\):/\$ti-icon-\1-filled:/g' "$TABLER_ICONS_DIR/tabler-icons-filled-fixed.scss"
   # Add -filled suffix to content references (but avoid double-adding if already -filled)
-  sed -i '' 's/content: \$ti-icon-\([a-z0-9-]*\);/content: \$ti-icon-\1-filled;/g' "$TABLER_ICONS_DIR/tabler-icons-filled-fixed.scss"
+  sed -i.bak 's/content: \$ti-icon-\([a-z0-9-]*\);/content: \$ti-icon-\1-filled;/g' "$TABLER_ICONS_DIR/tabler-icons-filled-fixed.scss"
   # Fix any accidental double -filled suffixes in content (e.g., -filled-filled)
-  sed -i '' 's/content: \$ti-icon-\([a-z0-9-]*\)-filled-filled;/content: \$ti-icon-\1-filled;/g' "$TABLER_ICONS_DIR/tabler-icons-filled-fixed.scss"
+  sed -i.bak 's/content: \$ti-icon-\([a-z0-9-]*\)-filled-filled;/content: \$ti-icon-\1-filled;/g' "$TABLER_ICONS_DIR/tabler-icons-filled-fixed.scss"
   # Add -filled suffix to CSS class selectors (e.g., .#{$ti-prefix}-caret-up:before -> .#{$ti-prefix}-caret-up-filled:before)
-  sed -i '' 's/\.\#{$ti-prefix}-\([a-z0-9-]*\):before/.#{$ti-prefix}-\1-filled:before/g' "$TABLER_ICONS_DIR/tabler-icons-filled-fixed.scss"
+  sed -i.bak 's/\.\#{$ti-prefix}-\([a-z0-9-]*\):before/.#{$ti-prefix}-\1-filled:before/g' "$TABLER_ICONS_DIR/tabler-icons-filled-fixed.scss"
+  # Clean up backup files
+  rm -f "$TABLER_ICONS_DIR/tabler-icons-filled-fixed.scss.bak"
   log "Successfully created and modified tabler icons -filled-fixed version"
 else
   log "WARNING: tabler icons SCSS not found at $TABLER_ICONS_DIR/tabler-icons.scss"
