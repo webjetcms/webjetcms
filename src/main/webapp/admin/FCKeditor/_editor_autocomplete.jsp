@@ -1,7 +1,7 @@
 <%@page import="java.util.Map"%><%@page import="java.util.List"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*, sk.iway.iwcm.doc.*, java.util.*, sk.iway.iwcm.i18n.*" %><%@
-taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><iwcm:checkLogon admin="true" perms="menuWebpages"/><%@page import="sk.iway.iwcm.tags.AutoCompleteHelper"%><%@page import="org.json.JSONArray"%><%
+taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><iwcm:checkLogon admin="true" perms="menuWebpages"/><%@page import="sk.iway.iwcm.tags.AutoCompleteHelper"%><%@page import="org.json.JSONArray"%><%@page import="sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity"%><%@page import="sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto"%><%@page import="sk.iway.iwcm.components.customfields.rest.CustomFieldsService"%><%
 	int templateId = Tools.getIntValue(Tools.getRequestParameter(request, "template"), 0);
 	if (templateId > 0) {
 		TemplateDetails temp = TemplatesDB.getInstance().getTemplate(templateId);
@@ -28,10 +28,31 @@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><iwcm:checkLogon admin="true" per
 	String[] values = null;
 	Map<String, String> valueTable = new Hashtable();
 	List<String> valueList = null;
-	Prop prop = Prop.getInstance(Constants.getString("defaultLanguage")); //Def language or nothing will be found
-	value = prop.getText(field.toLowerCase());
 
-	if (value.equals(field)) {
+	// CustomFieldsEntity has higher priority - check it first
+	String className = Tools.getRequestParameter(request, "className");
+	Long objectId = Tools.getLongValue(Tools.getRequestParameter(request, "objectId"), -1L);
+	if (Tools.isNotEmpty(className) && Tools.isNotEmpty(requestField)) {
+		char fieldAlphabet = Character.toUpperCase(requestField.charAt(0));
+		Map<Character, CustomFieldsEntity> customFields = CustomFieldsService.getCustomFieldsMap(new CustomFieldsSearchDto(className, objectId));
+		CustomFieldsEntity cfe = customFields.get(fieldAlphabet);
+		if (cfe != null && Tools.isNotEmpty(cfe.getValue())) {
+			value = cfe.getValue();
+		}
+	}
+
+	// Fallback to properties lookup
+	if (value == null) {
+		Prop prop = Prop.getInstance(Constants.getString("defaultLanguage")); //Def language or nothing will be found
+		value = prop.getText(field.toLowerCase());
+		if (value.equals(field)) {
+			value = null;
+		}
+	}
+
+	//System.out.println("Autocomplete for field: " + field + ", search: " + search + ", value: " + value);
+
+	if (value == null) {
 		out.println("[]");
 		return;
 	}

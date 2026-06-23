@@ -91,8 +91,8 @@ export class EditorAi {
                             inputField.find(".ql-toolbar").append($("<span class='ql-formats ql-formats-ai'></span>"));
                             inputField.find(".ql-formats-ai").append(button);
                         }
-                    } else if ("options"===column.type || "enumeration"===column.type) {
-                        //skip OPTIONS and ENUMERATION field type - AI button is not supported
+                    } else if ("options"===column.type || "enumeration"===column.type || "basicOptions"===column.type) {
+                        //skip OPTIONS, ENUMERATION, BASIC_OPTIONS field type - AI button is not supported
                     } else {
                         let inputField = $(field.dom.inputControl[0]).find(".form-control");
 

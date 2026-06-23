@@ -56,6 +56,8 @@ export function typeEnumeration() {
             let val3 = wrapper.find(".options-value-3 .filter-option-inner-inner").text();
 
             const val1 = val1Raw == null ? "" : String(val1Raw).trim();
+            if (val1.length === 0) { return ""; }
+
             val2 = val2 == null ? "" : String(val2).trim();
             val3 = val3 == null ? "" : String(val3).trim();
 
@@ -71,9 +73,12 @@ export function typeEnumeration() {
 
             //console.log("val1", val1, " val2", val2, " val3", val3);
 
-            if (val1.length === 0 || val2.length === 0 || val3.length === 0) {
-                return "";
+            // string1 is defautl column of enumeration that will be used
+            if(val2.length === 0 && val3.length === 0) {
+                val2 = "string1";
+                val3 = "string1";
             }
+
             return "enumeration-options" + "|" + val1 + "|" + val2 + "|" + val3;
         },
 

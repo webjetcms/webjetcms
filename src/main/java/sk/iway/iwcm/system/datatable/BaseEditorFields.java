@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
@@ -15,6 +16,7 @@ import lombok.Setter;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
 import sk.iway.iwcm.components.customfields.rest.CustomFieldsService;
 import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
@@ -44,6 +46,8 @@ public class BaseEditorFields {
     private List<Field> fieldsDefinition;
     //properties key prefix for fields definition, needs to be set for autocomplete field
     private String fieldsDefinitionKeyPrefix;
+    //class name of the bean, needs to be set for autocomplete field to lookup CustomFieldsEntity
+    private String fieldsDefinitionClassName;
 
     //poslanie notifikacie, je potrebne pri getOne alebo pri ulozeni
     private List<NotifyBean> notify;
@@ -80,41 +84,75 @@ public class BaseEditorFields {
 		Prop propType = Prop.getInstance(Constants.getString("defaultLanguage"));
         List<Field> fields = new ArrayList<>();
         fieldsDefinitionKeyPrefix = keyPrefix;
+        fieldsDefinitionClassName = bean.getClass().getName();
         Method method;
 
-        // Required fields by Custom-fields table configuration
-        List<Character> requiredFields = new ArrayList<>();
-        requiredFields = CustomFieldsService.getRequiredFieldsAlphabets(new CustomFieldsSearchDto(bean));
+        Map<Character, CustomFieldsEntity> customFields = CustomFieldsService.getCustomFieldsMap(new CustomFieldsSearchDto(bean));
 
         for (char alphabet = 'A'; alphabet <= lastAlphabet; alphabet++) {
 
             try {
+
+                CustomFieldsEntity cfe = customFields.get(alphabet);
+
                 Field field = new Field();
                 method = bean.getClass().getMethod("getField" + alphabet);
 
-                field.setRequired(requiredFields != null && requiredFields.contains(alphabet));
+                String type = "";
+                String typeKey = "";
+                String label = "";
+                if(cfe == null) {
+                    String labelKey = keyPrefix+".field_" + Character.toLowerCase(alphabet);
 
-                String labelKey = keyPrefix+".field_" + Character.toLowerCase(alphabet);
-                String label = prop.getText(labelKey);
+                    label = prop.getText(labelKey);
+                    typeKey = labelKey + ".type";
+                    type = propType.getText(typeKey);
 
-                String typeKey = labelKey + ".type";
-                String type = propType.getText(typeKey);
+                    field.setRequired(false);
+                } else {
+                    label = prop.getText( cfe.getLabel() );
+                    type = cfe.getValue();
+                    // typeKey = dont know
+                    field.setRequired( Tools.isTrue(cfe.getRequired()) );
+                }
 
                 FieldType fieldType = FieldType.asFieldType(type);
                 List<FieldValue> fieldValues = new ArrayList<>();
 
                 if (!type.equals(typeKey)) {
                     if (type.contains("|")) {
+
                         // multiple select
                         if(type.startsWith("multiple:")) {
                             type = type.replace("multiple:", "");
                             field.setMultiple(true);
                         }
-                        String values = type.substring(type.indexOf(":") + 1);
+
+                        // autocomplete
+                        if(type.startsWith("autocomplete:")) {
+                            type = type.replace("autocomplete:", "");
+                        }
+
+                        String values = type;
+
                         //ak zacina na znak | chceme mat moznost prvu hodnotu mat prazdnu
                         if (values.startsWith("|")) fieldValues.add(new FieldValue("", ""));
                         for (String value : Tools.getTokens(values, "|")) {
-                            fieldValues.add(new FieldValue(value, value));
+                            // Split only for strict label:value format (exactly one colon, both sides non-empty).
+                            int firstColon = value.indexOf(':');
+                            int lastColon = value.lastIndexOf(':');
+                            if (firstColon > -1 && lastColon > -1 && firstColon == lastColon) {
+                                String labelValue = value.substring(0, firstColon);
+                                String optionValue = value.substring(firstColon + 1);
+
+                                if(Tools.isEmpty(labelValue) || Tools.isEmpty(optionValue)) {
+                                    fieldValues.add(new FieldValue(value, value));
+                                } else {
+                                    fieldValues.add(new FieldValue(labelValue, optionValue));
+                                }
+                            } else {
+                                fieldValues.add(new FieldValue(value, value));
+                            }
                         }
                     }
 
@@ -294,7 +332,10 @@ public class BaseEditorFields {
                 field.setMaxlength(maxlength);
                 field.setWarninglength(warninglength);
                 if (warninglength>0) {
-                    field.setWarningMessage( prop.getText(keyPrefix+".field_" + Character.toUpperCase(alphabet)+".warningText", String.valueOf(warninglength)));
+                    if(cfe == null)
+                        field.setWarningMessage( prop.getText(keyPrefix+".field_" + Character.toUpperCase(alphabet)+".warningText", String.valueOf(warninglength)));
+                    else
+                        field.setWarningMessage( prop.getText(Tools.isEmpty(cfe.getTextWarningText()) ? "" : cfe.getTextWarningText(), String.valueOf(warninglength)));
                 }
                 if (fieldType != FieldType.TEXT) {
                     field.setTypeValues(fieldValues);
