@@ -81,6 +81,8 @@ public class FileTools
 		"shtml", "shtm", "stm",
 		//PHP and its variants
 		"php", "php3", "php4", "php5", "php7", "pht", "phtml", "phar", "phps",
+		//ASP and its variants
+		"asp", "aspx", "ascx", "ashx", "asmx", "asax", "cer", "swf",
 		//Shell / OS scripts and executables
 		"sh", "exe", "bat", "cmd", "com", "vbs", "wsf", "wsh", "ps1", "ps2", "psm1"
 	};
