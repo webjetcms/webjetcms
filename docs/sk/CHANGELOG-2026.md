@@ -64,7 +64,7 @@
 
 - Logovanie - do [Logback MDC](https://logback.qos.ch/manual/mdc.html) doplnený atribút `sessionId` a prihlasovacieho mena používateľa `userLogin` (#OSK526).
 
-- Voliteľné polia - pridaná možnosť centrálne nastaviť vlastnosti [voliteľných polí](frontend/webpages/customfields/custom-fields-settings.md) v novej tabuľke v časti Nastavenia (#58413).
+- Voliteľné polia - kompletne implementovaná funkčnosť [tabuľky voliteľných polí](frontend/webpages/customfields/custom-fields-settings.md) v časti Nastavenia. Umožňuje centrálne nastaviť vlastnosti polí bez editácie prekladových kľúčov. Podporované sú všetky typy polí (text, textarea, select, multiselect, autocomplete, enumeration, obrázok, odkaz, JSON a ďalšie) s typovo špecifickými nastaveniami ako maximálna dĺžka textu, možnosti výberu, prepojenie na číselníky alebo závislosť na iných poliach (#58529, #58413).
 
 ![](frontend/webpages/customfields/custom-fields-settings-editor.png)
 
