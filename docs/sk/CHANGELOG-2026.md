@@ -56,6 +56,7 @@
 ### Bezpečnosť
 
 - Pridaná podpora generovania `nonce` pre [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
+- AI asistenti - pridaná ochrana pred `prompt injection` útokmi s oddelením systémových inštrukcií od používateľského obsahu a detekciou kódovaných vstupov (#58549).
 
 ### Dokumentácia
 
