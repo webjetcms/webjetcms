@@ -9,6 +9,7 @@ import sk.iway.iwcm.dmail.Sender;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocBasic.FollowLinksMode;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.ShowDoc;
 import sk.iway.iwcm.doc.ninja.Ninja;
@@ -2287,6 +2288,18 @@ public class PathFilter implements Filter
 	 */
 	public static void setXRobotsTagValue(String url, HttpServletResponse response)
 	{
+		setXRobotsTagValue(url, response, null);
+	}
+
+	/**
+	 * Sets the X-Robots-Tag header. For a document, only restrictive directives
+	 * are emitted because index and follow are the default crawler behavior.
+	 * @param url URL or the NOT_SEARCHABLE_PAGE virtual path
+	 * @param response HTTP response
+	 * @param docDetails document settings, or null for URL-based configuration
+	 */
+	public static void setXRobotsTagValue(String url, HttpServletResponse response, DocDetails docDetails)
+	{
 		String xRobotsTagUrls = Constants.getString("xRobotsTagUrls");
 		if (Tools.isEmpty(xRobotsTagUrls)) return;
 
@@ -2297,7 +2310,12 @@ public class PathFilter implements Filter
 		{
 			if (ResponseHeaderService.isPathCorrect(path, url))
 			{
-				String xRobotsTagValue = Constants.getStringExecuteMacro("xRobotsTagValue");
+				String xRobotsTagValue;
+				if (docDetails != null && "NOT_SEARCHABLE_PAGE".equals(url)) {
+					xRobotsTagValue = getXRobotsTagValue(docDetails);
+				} else {
+					xRobotsTagValue = Constants.getStringExecuteMacro("xRobotsTagValue");
+				}
 				if (Tools.isNotEmpty(xRobotsTagValue))
 				{
 					response.setHeader("X-Robots-Tag", xRobotsTagValue);
@@ -2305,6 +2323,32 @@ public class PathFilter implements Filter
 				}
 			}
 		}
+	}
+
+	/**
+	 * Returns restrictive robots directives for the document.
+	 * @param docDetails document settings
+	 * @return noindex and/or nofollow, or an empty string
+	 */
+	public static String getXRobotsTagValue(DocDetails docDetails)
+	{
+		if (docDetails == null) return "all";
+
+		StringBuilder value = new StringBuilder();
+		if (docDetails.isSearchable() == false) value.append("noindex");
+
+		FollowLinksMode followLinksMode = docDetails.getFollowLinksMode();
+		boolean nofollow = FollowLinksMode.NOFOLLOW == followLinksMode
+			|| (FollowLinksMode.SEARCHABLE == followLinksMode && docDetails.isSearchable() == false);
+
+		if (nofollow) {
+			if (value.length() > 0) value.append(", ");
+			value.append("nofollow");
+		}
+
+		if (value.length() == 0) return "all";
+
+		return value.toString();
 	}
 
 	public static void setUaCompatibleAdmin(String path, HttpServletResponse response)

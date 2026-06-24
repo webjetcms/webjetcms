@@ -1346,10 +1346,7 @@ private static String combineCss(String cssStyle)
             updateCodes(request, null, doc_id);
         }
 
-        if (!doc.isSearchable())
-        {
-            PathFilter.setXRobotsTagValue("NOT_SEARCHABLE_PAGE", response);
-        }
+        PathFilter.setXRobotsTagValue("NOT_SEARCHABLE_PAGE", response, doc);
 
         String forward = temp.getForward();
         boolean allowAdminForward = false;

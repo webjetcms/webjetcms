@@ -157,11 +157,7 @@ public class Page {
     }
 
     public String getRobots(){
-        String robots = "";
-        if(doc!=null){
-            robots = doc.isSearchable() ? "index, follow" :  "noindex, follow";
-        }
-        return robots;
+        return PathFilter.getXRobotsTagValue(doc);
     }
 
     public String getUrl(){

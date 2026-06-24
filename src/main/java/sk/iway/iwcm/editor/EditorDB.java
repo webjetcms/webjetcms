@@ -345,6 +345,7 @@ public class EditorDB
 			editorForm.setGroupName(groupsDB.getPath(editorForm.getGroupId()));
 			editorForm.setTempId(doc.getTempId());
 			editorForm.setSearchable(doc.isSearchable());
+			editorForm.setFollowLinks(doc.getFollowLinks());
 			editorForm.setAvailable(doc.isAvailable());
 			editorForm.setShowInMenu(doc.isShowInMenu());
 			editorForm.setPasswordProtectedString(doc.getPasswordProtected());
@@ -839,8 +840,8 @@ public class EditorDB
 						"cacheable, sort_priority, header_doc_id, footer_doc_id, menu_doc_id, password_protected, html_head, "+
 						"html_data, perex_place, perex_image, perex_group, show_in_menu, event_date, virtual_path, right_menu_doc_id," +
 						"field_a, field_b, field_c, field_d, field_e, field_f, field_g, field_h, field_i, field_j, field_k, field_l, disable_after_end, " +
-						"field_m, field_n, field_o, field_p, field_q, field_r, field_s, field_t, require_ssl, file_name, root_group_l1, root_group_l2, root_group_l3)" +
-						"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+						"field_m, field_n, field_o, field_p, field_q, field_r, field_s, field_t, require_ssl, file_name, root_group_l1, root_group_l2, root_group_l3, follow_links)" +
+						"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 				if (requestPublish == false)
 				{
@@ -1013,6 +1014,7 @@ public class EditorDB
 				ps.setString(51, DB.prepareString(fileName,255));
 
 				DocDB.getRootGroupL(my_form.getGroupId(), ps, 52);
+				ps.setInt(55, my_form.getFollowLinks());
 
 				ps.execute();
 				ps.close();
@@ -1087,7 +1089,7 @@ public class EditorDB
 							"html_head=?, html_data=?, perex_place=?, perex_image=?, perex_group=?, show_in_menu=?, event_date=?, " +
 							"virtual_path=?, right_menu_doc_id=?, " +
 							"field_a=?, field_b=?, field_c=?, field_d=?, field_e=?, field_f=?, field_g=?, field_h=?, field_i=?, field_j=?, field_k=?, field_l=?, disable_after_end=?, " +
-							"field_m=?, field_n=?, field_o=?, field_p=?, field_q=?, field_r=?, field_s=?, field_t=?, require_ssl=?, file_name=?, root_group_l1=?, root_group_l2=?, root_group_l3=?, "+
+							"field_m=?, field_n=?, field_o=?, field_p=?, field_q=?, field_r=?, field_s=?, field_t=?, require_ssl=?, file_name=?, root_group_l1=?, root_group_l2=?, root_group_l3=?, follow_links=?, "+
 							"sync_status=1 "+
 							"WHERE doc_id=?";
 					//Logger.println(this,"UPDATING id=" + doc_id + " sql=" + sql);
@@ -1235,8 +1237,9 @@ public class EditorDB
 					ps.setString(51, DB.prepareString(fileName, 255));
 
 					DocDB.getRootGroupL(my_form.getGroupId(), ps, 52);
+					ps.setInt(55, my_form.getFollowLinks());
 
-					ps.setInt(55, my_form.getDocId());
+					ps.setInt(56, my_form.getDocId());
 
 					dt.diff("before execute call");
 
@@ -1366,8 +1369,8 @@ public class EditorDB
 						"approved_by, awaiting_approve, password_protected, html_head, html_data, publicable, perex_place, " +
 						"perex_image, perex_group, show_in_menu, event_date, virtual_path, right_menu_doc_id," +
 						"field_a, field_b, field_c, field_d, field_e, field_f, field_g, field_h, field_i, field_j, field_k, field_l, disable_after_end, " +
-						"field_m, field_n, field_o, field_p, field_q, field_r, field_s, field_t, require_ssl) "+
-						"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+						"field_m, field_n, field_o, field_p, field_q, field_r, field_s, field_t, require_ssl, follow_links) "+
+						"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 				//Logger.println(this,"INSERTING sql=" + sql);
 				ps = db_conn.prepareStatement(sql);
 				ps.setString(1, my_form.getTitle());
@@ -1544,6 +1547,7 @@ public class EditorDB
 				ps.setString(55, my_form.getFieldT());
 
 				ps.setBoolean(56, my_form.isRequireSsl());
+				ps.setInt(57, my_form.getFollowLinks());
 
 				ps.execute();
 				ps.close();
