@@ -2282,9 +2282,14 @@ public class PathFilter implements Filter
 	}
 
 	/**
-	 * Nastavenie hlavicky X-Robots-Tag, viz https://developers.google.com/webmasters/control-crawl-index/docs/robots_meta_tag
-	 * @param url
-	 * @param response
+	 * Sets the X-Robots-Tag response header for a URL using the configured
+	 * URL match rules and the default {@code xRobotsTagValue} constant.
+	 *
+	 * <p>This overload is intended for URL-based handling when no document-specific
+	 * metadata is available.</p>
+	 *
+	 * @param url requested URL to evaluate against {@code xRobotsTagUrls}
+	 * @param response HTTP response to update
 	 */
 	public static void setXRobotsTagValue(String url, HttpServletResponse response)
 	{
@@ -2292,11 +2297,19 @@ public class PathFilter implements Filter
 	}
 
 	/**
-	 * Sets the X-Robots-Tag header. For a document, only restrictive directives
-	 * are emitted because index and follow are the default crawler behavior.
-	 * @param url URL or the NOT_SEARCHABLE_PAGE virtual path
-	 * @param response HTTP response
-	 * @param docDetails document settings, or null for URL-based configuration
+	 * Sets the X-Robots-Tag response header when the URL matches one of the
+	 * configured {@code xRobotsTagUrls} patterns.
+	 *
+	 * <p>When {@code docDetails} is provided together with the special
+	 * {@code NOT_SEARCHABLE_PAGE} marker, the header value is derived from the
+	 * document state using {@link #getXRobotsTagValue(DocDetails)}. In all other
+	 * cases the value is loaded from the {@code xRobotsTagValue} configuration
+	 * constant.</p>
+	 *
+	 * @param url requested URL or the {@code NOT_SEARCHABLE_PAGE} marker
+	 * @param response HTTP response to update
+	 * @param docDetails document settings used for document-specific directives,
+	 *        or {@code null} for pure URL-based configuration
 	 */
 	public static void setXRobotsTagValue(String url, HttpServletResponse response, DocDetails docDetails)
 	{
@@ -2326,9 +2339,16 @@ public class PathFilter implements Filter
 	}
 
 	/**
-	 * Returns restrictive robots directives for the document.
-	 * @param docDetails document settings
-	 * @return noindex and/or nofollow, or an empty string
+	 * Builds the X-Robots-Tag value for a document from its searchability and
+	 * link-follow settings.
+	 *
+	 * <p>The result contains only restrictive directives because crawler defaults
+	 * already imply {@code index, follow}. The method returns {@code noindex},
+	 * {@code nofollow}, or both when required. If no restriction applies, it
+	 * returns {@code all}.</p>
+	 *
+	 * @param docDetails document settings used to determine robots directives
+	 * @return computed X-Robots-Tag value, or {@code all} when no restriction applies
 	 */
 	public static String getXRobotsTagValue(DocDetails docDetails)
 	{

@@ -152,7 +152,8 @@ Scenario('test-odpovede', ({I, DT, DTE}) => {
     I.see("content-language: cs-CZ");
 });
 
-/* x-robots-tag CHECK */
+/* meta robots CHECK */
+
 const robotsTestDocId = 166410;
 const robotsTestPage = "/apps/http-hlavicky/index_folow_behaviour.html";
 const followLinksOptions = {
@@ -189,7 +190,7 @@ async function checkRobotsHeader(I, expected) {
     I.assertEqual(robots, expected, "Expected meta robots do not match real value;");
 }
 
-Scenario("test x-robots-tag by page settings @current", async ({I, DTE}) => {
+Scenario("test meta robots by page settings", async ({I, DTE}) => {
     const settings = [
         { searchable: false, followLinks: followLinksOptions.searchable, expected: "noindex, nofollow" },
         { searchable: false, followLinks: followLinksOptions.follow, expected: "noindex" },

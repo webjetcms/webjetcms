@@ -79,8 +79,8 @@ Použité v :ghost:<code>head.jsp</code>
 
 ```html
 <meta property="og:image" content="${ninja.page.urlDomain}${ninja.page.seoImage}" />
-<meta property="og:image:width" content="${ninja.page.seoImageWidth}">
-<meta property="og:image:height" content="${ninja.page.seoImageHeight}">
+<meta property="og:image:width" content="${ninja.page.seoImageWidth}" />
+<meta property="og:image:height" content="${ninja.page.seoImageHeight}" />
 ```
 
 ## Url adresa *String*
@@ -125,8 +125,8 @@ Použité v :ghost:<code>head.jsp</code>
 
 ```html
 <meta property="og:image" content="${ninja.page.urlDomain}${ninja.page.seoImage}" />
-<meta property="og:image:width" content="${ninja.page.seoImageWidth}">
-<meta property="og:image:height" content="${ninja.page.seoImageHeight}">
+<meta property="og:image:width" content="${ninja.page.seoImageWidth}" />
+<meta property="og:image:height" content="${ninja.page.seoImageHeight}" />
 ```
 
 Použité v :ghost:<code>debug-info.jsp</code>

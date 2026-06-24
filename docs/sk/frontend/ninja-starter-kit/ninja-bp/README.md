@@ -110,8 +110,8 @@ lang="${ninja.temp.lngIso}" data-browser-name="${ninja.userAgent.browserName}" d
 <meta property="og:description" content="${ninja.page.seoDescription}" />
 <meta property="og:url" content="${ninja.page.url}" />
 <meta property="og:image" content="${ninja.page.urlDomain}${ninja.page.seoImage}" />
-<meta property="og:image:width" content="${ninja.page.seoImageWidth}">
-<meta property="og:image:height" content="${ninja.page.seoImageHeight}">
+<meta property="og:image:width" content="${ninja.page.seoImageWidth}" />
+<meta property="og:image:height" content="${ninja.page.seoImageHeight}" />
 <meta property="og:site_name" content="${ninja.temp.group.siteName}" />
 <meta property="og:type" content="website" />
 <meta property="og:locale" content="${ninja.temp.lngIsoUnderscore}" />
