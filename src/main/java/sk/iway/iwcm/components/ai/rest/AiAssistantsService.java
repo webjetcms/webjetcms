@@ -302,7 +302,7 @@ public class AiAssistantsService {
         String cacheKey = CACHE_KEY_PREFIX + CloudToolsForCore.getDomainId();
 
         @SuppressWarnings("unchecked")
-        List<AssistantDefinitionEntity> cachedAssistants = (List<AssistantDefinitionEntity>) c.getObject(cacheKey, List.class);
+        List<AssistantDefinitionEntity> cachedAssistants = c.getObject(cacheKey, List.class);
         if(cachedAssistants != null) {
             return cachedAssistants;
         }

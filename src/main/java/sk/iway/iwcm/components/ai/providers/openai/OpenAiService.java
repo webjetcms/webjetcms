@@ -229,7 +229,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
     private void appendPromptPart(StringBuilder prompt, String value) {
         if(Tools.isEmpty(value)) return;
-        if(prompt.length() > 0) prompt.append("\n\n");
+        if(prompt.isEmpty() == false) prompt.append("\n\n");
         prompt.append(value);
     }
 
