@@ -195,6 +195,7 @@ function openTimedReservationDate(I, dateValue) {
 
 function fillDateInput(I, selector, dateValue) {
     I.fillField(selector, dateValue.split("-").reverse().join("-"));
+    I.wait(2); //wait for datepicker to update the hidden field
     I.waitForValue(selector, dateValue, 10);
 }
 

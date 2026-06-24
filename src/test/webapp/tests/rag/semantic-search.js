@@ -74,6 +74,8 @@ Scenario('Try semantic search', ({ I, DT, Document }) => {
 
     searchData.forEach(({ pageName, pageUrl, questions }) => {
         questions.forEach(question => {
+            I.wait(1); //spam protection
+            I.say("Search for question: " + question);
             I.fillField('#searchWords', question);
             I.click(".smallSearchSubmit");
             I.waitForElement("h1.searchResultsH1", 20);
