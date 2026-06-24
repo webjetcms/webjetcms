@@ -210,7 +210,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         if (InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
             return getBaseMainObjectWithImage(systemInstructions, inputData, userPrompt);
 
-        return getBaseMainObject(instructions, PromptInjectionDefense.getProtectedInputText(inputData), userPrompt);
+        return getBaseMainObject(systemInstructions, PromptInjectionDefense.getProtectedInputText(inputData), userPrompt);
     }
 
     private String getImageResponsePrompt(String instructions, InputDataDTO inputData) {
