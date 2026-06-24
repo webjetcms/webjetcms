@@ -74,8 +74,10 @@ export function typeEnumeration() {
             //console.log("val1", val1, " val2", val2, " val3", val3);
 
             // string1 is default column of enumeration that will be used
-            if(val2.length === 0 && val3.length === 0) {
+            if (val2.length === 0) {
                 val2 = "string1";
+            }
+            if (val3.length === 0) {
                 val3 = "string1";
             }
 

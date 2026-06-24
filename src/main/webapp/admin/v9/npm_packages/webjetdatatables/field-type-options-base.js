@@ -9,7 +9,7 @@ import WJ from "../../src/js/webjet";
  * @param {function} config.clearRow - (row$) => clears the input values in a row
  * @param {function} config.getRowValue - (row$) => string|null value from one row (null = skip)
  * @param {function} config.parseValue - (part: string) => array of args to pass to createRowHtml
- * @param {function} [config.createHeader] - (conf) => jQuery header element (optional)
+ * @param {function} [config.createHeader] - (conf) => HTML string for header markup (optional)
  * @param {function} config.emptyRowArgs - () => array of args for an empty row
  * @returns field type definition
  */
