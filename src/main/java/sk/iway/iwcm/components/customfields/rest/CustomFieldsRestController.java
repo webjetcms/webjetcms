@@ -81,6 +81,8 @@ public class CustomFieldsRestController extends DatatableRestControllerV2<Custom
         }
 
         page.addOptions("alphabet", options, null, null, false);
+        page.addOptions("type", CustomFieldsService.getFieldsTypes(getProp()), "label", "value", false);
+        page.addOptions("specificFieldsVisibility", CustomFieldsService.getSpecificFieldVisibility(), "label", "value", false);
     }
 
     @Override
@@ -90,9 +92,21 @@ public class CustomFieldsRestController extends DatatableRestControllerV2<Custom
         if (entity.getEntityId() != null && entity.getEntityId() < 1) {
             entity.setEntityId(null);
         }
+
         if (entity.getBonusEntityId() != null && entity.getBonusEntityId() < 1) {
             entity.setBonusEntityId(null);
         }
+
+        if(ProcessItemAction.GETONE.equals(action)) {
+            entity = CustomFieldsService.fromEntity(entity);
+        }
+
+        return entity;
+    }
+
+    @Override
+    public CustomFieldsEntity processToEntity(CustomFieldsEntity entity, ProcessItemAction action) {
+        entity = CustomFieldsService.toEntity(entity);
         return entity;
     }
 

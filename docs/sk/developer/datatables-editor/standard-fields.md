@@ -739,6 +739,8 @@ Typ poľa pre dynamický zoznam hodnôt. V editore sa zobrazí ako zoznam vstupn
 
 Výsledná hodnota sa ukladá ako reťazec, kde jednotlivé riadky sú oddelené znakom `|` a hodnoty v rámci riadku sú oddelené znakom `:`. Napríklad: `key1:value1|key2:value2|key3:value3`.
 
+Ak zadáte len jednu hodnotu (`key1` bez `:`), použije sa rovnaká hodnota pre `label` aj `value`.
+
 Pole nepodporuje AI tlačidlo (`btn-ai`).
 
 ```java
@@ -751,6 +753,23 @@ Pole nepodporuje AI tlačidlo (`btn-ai`).
 ```
 
 ![](../../redactor/apps/multistep-form/form-item-editor-advanced.png)
+
+## BASIC_OPTIONS
+
+Typ poľa pre dynamický zoznam jednoduchých hodnôt (jeden vstup v riadku). V editore sa zobrazí zoznam textových polí, kde každý riadok reprezentuje jednu hodnotu.
+
+Výsledná hodnota sa ukladá ako reťazec oddelený znakom `|`, napr.: `hodnota1|hodnota2|hodnota3`.
+
+Typ je vhodný pre prípady, kde nepotrebujete dvojice `label:value`, ale iba zoznam základných možností (napr. pre `autocomplete` konfigurácie).
+
+```java
+    @DataTableColumn(
+        inputType = DataTableColumnType.BASIC_OPTIONS,
+        title = "components.myapp.autocompleteOptions",
+        tab = "advanced"
+    )
+    private String autocompleteOptions = "";
+```
 
 ## ENUMERATION
 

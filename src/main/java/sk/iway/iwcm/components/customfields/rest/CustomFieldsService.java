@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
@@ -22,15 +23,22 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsRepository;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.editor.appstore.AppManager;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 
+import sk.iway.iwcm.system.datatable.json.LabelValue;
+
 @Service
 public class CustomFieldsService {
+
+    private static final String FIELD_TYPE_KEY_PREFIX = "settings.custom-fields.type.";
 
     private static final String CLASS_FIELD_MAP_KEY = "CustomFieldsService_classFieldsMap";
     public static final Map<String, String> BONUS_PARAMS = Map.of(
@@ -40,32 +48,60 @@ public class CustomFieldsService {
     /* PUBLIC STATIC METHODS */
 
     /**
-     * Returns required custom field alphabets for the main entity context.
+     * Retrieves custom fields as a map indexed by their character alphabet key.
      *
-     * <p>If a bonus context can be derived from the main DTO, it is included automatically.</p>
+     * <p>Combines global fields (no entityId), specific entity fields, and bonus context fields
+     * with appropriate priority handling. Specific fields override global fields, and bonus fields
+     * have the highest priority.</p>
      *
-     * @param main main custom fields lookup context
-     * @return list of required field alphabet characters, or an empty list for invalid input
+     * @param main the search context containing className and entityId
+     * @return map of custom fields indexed by their single-character alphabet key, or empty map if invalid params
+     * @see #getCustomFields(CustomFieldsSearchDto)
      */
-    public static List<Character> getRequiredFieldsAlphabets(CustomFieldsSearchDto main) {
+    public static Map<Character, CustomFieldsEntity> getCustomFieldsMap(CustomFieldsSearchDto main) {
+        List<CustomFieldsEntity> customFields = getCustomFields(main);
+        return customFields.stream()
+            .collect(Collectors.toMap(
+                CustomFieldsEntity::getCharacterAlphabet,
+                customField -> customField
+            ));
+    }
+
+    /**
+     * Retrieves custom fields for the given search context.
+     *
+     * <p>Fetches global fields (no entityId), specific entity fields, and bonus context fields
+     * when available. Specific fields override global fields, and bonus fields have the highest priority.</p>
+     *
+     * @param main the search context containing className and entityId
+     * @return list of merged custom fields with priority handling, or empty list if invalid params
+     * @see #getCustomFields(CustomFieldsSearchDto, CustomFieldsSearchDto)
+     */
+    public static List<CustomFieldsEntity> getCustomFields(CustomFieldsSearchDto main) {
         if(main == null || main.isValid() == false) {
             Logger.error(CustomFieldsService.class, "Bad params for getRequiredFieldsAlphabets. Returning empty list.");
             return List.of();
         }
 
-        return getRequiredFieldsAlphabets(main, tryGetBonus(main));
+        return getCustomFields(main, tryGetBonus(main));
     }
 
     /**
-     * Returns required custom field alphabets merged from global, main and optional bonus context.
+     * Retrieves custom fields for the given main and bonus search contexts.
      *
-     * <p>Priority is applied in this order: global fields, main fields, bonus fields.</p>
+     * <p>Combines three field sources in priority order (lowest to highest):
+     * <ol>
+     * <li>Global fields - no entityId, apply to all entities of a class</li>
+     * <li>Specific fields - have matching entityId, override global fields</li>
+     * <li>Bonus fields - from bonus class context, have highest priority</li>
+     * </ol>
+     * </p>
      *
-     * @param main main custom fields lookup context
-     * @param bonus optional bonus context with highest priority
-     * @return list of required field alphabet characters, or an empty list for invalid input
+     * @param main primary search context with className and entityId
+     * @param bonus optional secondary context for bonus class fields; if null, only main context is used
+     * @return merged list of custom fields with priority-based deduplication, or empty list if invalid params
      */
-    public static List<Character> getRequiredFieldsAlphabets(CustomFieldsSearchDto main, CustomFieldsSearchDto bonus) {
+    public static List<CustomFieldsEntity> getCustomFields(CustomFieldsSearchDto main, CustomFieldsSearchDto bonus) {
 
         if(main == null || main.isValid() == false) {
             Logger.error(CustomFieldsService.class, "Bad params for getRequiredFieldsAlphabets. Returning empty list.");
@@ -94,9 +130,243 @@ public class CustomFieldsService {
             classCustomFields = bonusClassCustomFields;
         }
 
+        return classCustomFields;
+    }
+
+    /**
+     * Converts custom field configuration into its canonical string representation.
+     *
+     * <p>Transforms entity properties into a structured value format based on field type:
+     * <ul>
+     * <li>text: "text" or "text-{maxLength}" or "text-{maxLength}, warningLength-{warningLength}"</li>
+     * <li>select/multiselect: options string with optional leading | for non-required fields</li>
+     * <li>enumeration: "enumeration{_option1_option2}" with optional _null suffix</li>
+     * <li>docsIn: "docsIn_{groupId}" with optional _null suffix</li>
+     * <li>autocomplete: "autocomplete:{options}"</li>
+     * <li>json_group/json_doc: type name with optional _null suffix</li>
+     * </ul>
+     * </p>
+     *
+     * @param entity the custom field entity to convert
+     * @return the same entity with updated value field, never null
+     * @throws IllegalStateException if entity or its type is null/empty
+     * @see #fromEntity(CustomFieldsEntity)
+     */
+    public static CustomFieldsEntity toEntity(CustomFieldsEntity entity) {
+
+        if(entity == null || Tools.isEmpty(entity.getType())) throw new IllegalStateException("CustomFieldsEntity or its type must not be null/empty");
+
+        String type = entity.getType();
+
+        StringBuilder value = new StringBuilder("");
+        if("text".equals(type)) {
+            value.append("text");
+            if(entity.getTextMaxLength() != null) value.append("-").append(entity.getTextMaxLength());
+            if(entity.getTextWarningLength() != null) value.append(", warningLength-").append(entity.getTextWarningLength());
+        } else if("select".equals(type)) {
+            if(Tools.isFalse(entity.getRequired())) value.append("|"); //can be empty value
+            value.append(Tools.isNotEmpty(entity.getSelectOptions()) ? entity.getSelectOptions() : "");
+        } else if("multiselect".equals(type)) {
+            value.append("multiple:");
+            if(Tools.isFalse(entity.getRequired())) value.append("|"); //can be empty value
+            value.append(Tools.isNotEmpty(entity.getSelectOptions()) ? entity.getSelectOptions() : "");
+        } else if("json_group".equals(type) || "json_doc".equals(type)) {
+            value.append(type);
+            if(Tools.isFalse(entity.getRequired())) value.append("_null");
+        } else if("docsIn".equals(type)) {
+            value.append("docsIn_");
+            if(entity.getDocInGroup() != null) value.append(entity.getDocInGroup().getGroupId());
+            if(Tools.isFalse(entity.getRequired())) value.append("_null");
+        } else if("enumeration".equals(type)) {
+            String enumValue = entity.getEnumeration();
+            if(Tools.isNotEmpty(enumValue)) {
+                if(enumValue.startsWith("enumeration-options")) enumValue = enumValue.substring("enumeration-options".length());
+                enumValue = Tools.replace(enumValue, "|", "_");
+            } else {
+                enumValue = "";
+            }
+            value.append("enumeration").append(enumValue);
+            if(Tools.isFalse(entity.getRequired())) value.append("_null");
+        } else if("autocomplete".equals(type)) {
+            value.append("autocomplete:");
+            value.append(Tools.isNotEmpty(entity.getAutocompleteOptions()) ? entity.getAutocompleteOptions() : "");
+        } else {
+            value.append(type);
+        }
+
+        entity.setValue( value.toString() );
+
+        return entity;
+    }
+
+    /**
+     * Parses the canonical string representation back into custom field properties.
+     *
+     * <p>Reverse operation of {@link #toEntity(CustomFieldsEntity)}. Extracts type-specific
+     * properties from the value field:
+     * <ul>
+     * <li>text: parses maxLength and warningLength from value</li>
+     * <li>select/multiselect: extracts selectOptions</li>
+     * <li>enumeration: parses enumeration options from underscore-separated format</li>
+     * <li>docsIn: resolves groupId to GroupDetails object</li>
+     * <li>autocomplete: extracts autocompleteOptions</li>
+     * </ul>
+     * </p>
+     *
+     * @param entity the custom field entity with populated value field
+     * @return the same entity with type-specific properties set, or original if type/value empty
+     * @see #toEntity(CustomFieldsEntity)
+     */
+    public static CustomFieldsEntity fromEntity(CustomFieldsEntity entity) {
+        if (entity == null || Tools.isEmpty(entity.getType()) || Tools.isEmpty(entity.getValue())) return entity;
+
+        String type = entity.getType();
+        String value = entity.getValue();
+
+        if ("text".equals(type)) {
+            // value format: "text" or "text-{maxLength}" or "text-{maxLength}, warningLength-{warningLength}" or "text, warningLength-{warningLength}"
+            String remainder = value.startsWith("text-") ? value.substring(5) : value.startsWith("text") ? value.substring(4).trim() : value;
+            if (remainder.contains(", warningLength-")) {
+                int sepIdx = remainder.indexOf(", warningLength-");
+                String maxPart = remainder.substring(0, sepIdx).trim();
+                String warnPart = remainder.substring(sepIdx + 16).trim();
+                if (Tools.isNotEmpty(maxPart)) entity.setTextMaxLength(Tools.getIntValue(maxPart, 0) > 0 ? Tools.getIntValue(maxPart, 0) : null);
+                if (Tools.isNotEmpty(warnPart)) entity.setTextWarningLength(Tools.getIntValue(warnPart, 0) > 0 ? Tools.getIntValue(warnPart, 0) : null);
+            } else if (Tools.isNotEmpty(remainder)) {
+                entity.setTextMaxLength(Tools.getIntValue(remainder, 0) > 0 ? Tools.getIntValue(remainder, 0) : null);
+            }
+        } else if ("select".equals(type)) {
+            entity.setSelectOptions(value.startsWith("|") ? value.substring(1) : value);
+        } else if ("multiselect".equals(type)) {
+            String remainder = value.startsWith("multiple:") ? value.substring(9) : value;
+            entity.setSelectOptions(remainder.startsWith("|") ? remainder.substring(1) : remainder);
+        } else if ("docsIn".equals(type)) {
+            // value format: "docsIn_{groupId}" or "docsIn_{groupId}_null"
+            String remainder = value.startsWith("docsIn_") ? value.substring(7) : value;
+            if (remainder.endsWith("_null")) {
+                remainder = remainder.substring(0, remainder.length() - 5);
+            }
+            long groupId = Tools.getLongValue(remainder, -1L);
+            if (groupId > 0) {
+                GroupDetails group = GroupsDB.getInstance().getGroup((int) groupId);
+                if(group != null) entity.setDocInGroup(group);
+            }
+        } else if ("enumeration".equals(type)) {
+            // value format: "enumeration{_option1_option2}" or "enumeration{_option1_option2}_null"
+            String remainder = value.startsWith("enumeration") ? value.substring("enumeration".length()) : value;
+            if (remainder.endsWith("_null")) {
+                remainder = remainder.substring(0, remainder.length() - 5);
+            }
+
+            entity.setEnumeration("enumeration-options" + Tools.replace(remainder, "_", "|"));
+        } else if("autocomplete".equals(type)) {
+            String remainder = value.startsWith("autocomplete:") ? value.substring(13) : value;
+            entity.setAutocompleteOptions(remainder);
+        }
+
+        return entity;
+    }
+
+    /**
+     * Returns all available custom field types with localized labels.
+     *
+     * <p>Provides the complete list of supported field types for use in UI dropdowns or
+     * configuration interfaces. Labels are retrieved from the i18n property bundle using
+     * the key pattern "settings.custom-fields.type.{fieldType}".</p>
+     *
+     * @param prop the property bundle for label localization
+     * @return list of LabelValue pairs with localized type names and their identifiers
+     * @see #getFieldTypeLabel(Prop, String)
+     */
+    public static List<LabelValue> getFieldsTypes(Prop prop) {
+        return List.of(
+            new LabelValue( getFieldTypeLabel(prop, "text"), "text"),
+            new LabelValue( getFieldTypeLabel(prop, "textarea"), "textarea"),
+            new LabelValue( getFieldTypeLabel(prop, "select"), "select"),
+            new LabelValue( getFieldTypeLabel(prop, "multiselect"), "multiselect"),
+            new LabelValue( getFieldTypeLabel(prop, "boolean"), "boolean"),
+            new LabelValue( getFieldTypeLabel(prop, "number"), "number"),
+            new LabelValue( getFieldTypeLabel(prop, "date"), "date"),
+            new LabelValue( getFieldTypeLabel(prop, "none"), "none"),
+            new LabelValue( getFieldTypeLabel(prop, "autocomplete"), "autocomplete"),
+            new LabelValue( getFieldTypeLabel(prop, "image"), "image"),
+            new LabelValue( getFieldTypeLabel(prop, "link"), "link"),
+            new LabelValue( getFieldTypeLabel(prop, "json_group"), "json_group"),
+            new LabelValue( getFieldTypeLabel(prop, "json_doc"), "json_doc"),
+            new LabelValue( getFieldTypeLabel(prop, "dir"), "dir"),
+            new LabelValue( getFieldTypeLabel(prop, "docsIn"), "docsIn"),
+            new LabelValue( getFieldTypeLabel(prop, "enumeration"), "enumeration"),
+            new LabelValue( getFieldTypeLabel(prop, "uuid"), "uuid"),
+            new LabelValue( getFieldTypeLabel(prop, "color"), "color")
+        );
+    }
+
+    /**
+     * Retrieves the localized label for a custom field type.
+     *
+     * @param prop the property bundle for label localization
+     * @param fieldKey the field type key (e.g., "text", "select", "enumeration")
+     * @return the localized label, retrieved using key "settings.custom-fields.type.{fieldKey}"
+     */
+    public static String getFieldTypeLabel(Prop prop, String fieldKey) {
+        return prop.getText(FIELD_TYPE_KEY_PREFIX + fieldKey);
+    }
+
+    /**
+     * Returns the mapping of field types to their type-specific property names.
+     *
+     * <p>Specifies which properties should be visible in the UI editor for each field type.
+     * Used to control which configuration options are shown when editing custom fields of
+     * different types.</p>
+     *
+     * @return list of LabelValue pairs mapping field types to comma-separated property names
+     */
+    public static List<LabelValue> getSpecificFieldVisibility() {
+        return List.of(
+            new LabelValue("text", "textMaxLength,textWarningLength,warningText"),
+            new LabelValue("select", "selectOptions"),
+            new LabelValue("multiselect", "selectOptions"),
+            new LabelValue("autocomplete", "autocompleteOptions"),
+            new LabelValue("docsIn", "docInGroup"),
+            new LabelValue("enumeration", "enumeration")
+        );
+    }
+
+    /**
+     * Retrieves the alphabet characters of required custom fields for the given context.
+     *
+     * <p>Returns only fields marked as required, extracting the first character from
+     * their alphabet identifier. Automatically derives bonus context when applicable.</p>
+     *
+     * @param main the search context containing className and entityId
+     * @return list of single-character alphabet keys for required fields, or empty list if invalid params
+     * @see #getRequiredFieldsAlphabets(CustomFieldsSearchDto, CustomFieldsSearchDto)
+     */
+    public static List<Character> getRequiredFieldsAlphabets(CustomFieldsSearchDto main) {
+        if(main == null || main.isValid() == false) {
+            Logger.error(CustomFieldsService.class, "Bad params for getRequiredFieldsAlphabets. Returning empty list.");
+            return List.of();
+        }
+
+        return getRequiredFieldsAlphabets(main, tryGetBonus(main));
+    }
+
+    /**
+     * Retrieves the alphabet characters of required custom fields for the given contexts.
+     *
+     * <p>Filters custom fields from both main and bonus contexts to return only those marked as
+     * required, extracting the first character from each field's alphabet identifier. Maintains
+     * insertion order via LinkedHashSet.</p>
+     *
+     * @param main primary search context with className and entityId
+     * @param bonus optional secondary context for bonus class fields
+     * @return ordered list of single-character alphabet keys for required fields
+     * @see #getCustomFields(CustomFieldsSearchDto, CustomFieldsSearchDto)
+     */
+    public static List<Character> getRequiredFieldsAlphabets(CustomFieldsSearchDto main, CustomFieldsSearchDto bonus) {
         // return only required fields
         Set<Character> requiredAlphabets = new LinkedHashSet<>();
-        for(CustomFieldsEntity customField : classCustomFields) {
+        for(CustomFieldsEntity customField : getCustomFields(main, bonus)) {
             if(customField != null && Tools.isTrue(customField.getRequired()) && Tools.isEmpty(customField.getAlphabet()) == false) {
                 requiredAlphabets.add(customField.getAlphabet().charAt(0));
             }

@@ -201,6 +201,9 @@ Nastavuje typ poľa, viac v zozname [štandardných formulárových polí](stand
 - ```TEXTAREA``` - štandardné pole pre zadanie viacerých riadkov textu
 - ```SELECT``` - výberové pole, možnosti odporúčame odosielať cez [REST službu](../datatables/restcontroller.md#číselníky-pre-select-boxy)
 - ```MULTISELECT``` - výberové pole pre výber viacerých možností
+- ```OPTIONS``` - dynamický zoznam možností oddelený znakom ```|```, pričom jednotlivé položky sú vo formáte ```label:value``` (napr. ```Nízka:low|Stredná:medium|Vysoká:high```)
+- ```BASIC_OPTIONS``` - dynamický zoznam možností oddelený znakom ```|``` bez páru ```label:value```, teda jedna hodnota slúži zároveň ako text aj hodnota možnosti
+- ```ENUMERATION``` - výberové pole napojené na dáta z aplikácie Číselníky (```EnumerationDataBean```), v editore používa typ ```enumeration``` a v tabuľke sa štandardne vykresľuje ako text
 - ```BOOLEAN``` - zaškrtávacie pole s možnosťami ```true/false```
 - ```CHECKBOX``` - zaškrtávacie pole so špeciálnou hodnotou, možnosť pre vybranú aj nevybranú hodnotu je možné nastaviť atribútom editora ```@DataTableColumnEditorAttr(key = "unselectedValue", value = "")```
 - ```DISABLED``` - zobrazené pole nebude editovateľné

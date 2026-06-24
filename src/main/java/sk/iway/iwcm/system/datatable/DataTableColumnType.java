@@ -164,6 +164,11 @@ public enum DataTableColumnType {
     OPTIONS,
 
     /**
+     * Dynamic list of string options joined by | separator (single value, no key:value pair)
+     */
+    BASIC_OPTIONS,
+
+    /**
      * Select field populated from {@link sk.iway.iwcm.components.enumerations.model.EnumerationDataBean} values.
      * Renders as text ({@code dt-format-text}) and uses the enumeration editor type.
      */

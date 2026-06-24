@@ -107,6 +107,37 @@ v metóde ```fromDocDetails``` sú najskôr nastavené prefixy prekladových kľ
 
 Pre funkčnosť je potrebné aby daný bean obsahoval atribúty s názvom ```fieldX```, čo následne s volaním ```getFields``` vie priniesť voliteľné polia do ľubovoľného bean-u.
 
+## Priorita zdrojov konfigurácie
+
+Konfigurácia voliteľných polí sa skladá z dvoch zdrojov:
+
+1. prekladové kľúče (`editor.field_x`, `editor.field_x.type`, ...),
+2. záznamy z tabuľky `custom_fields`.
+
+Pri generovaní `fieldsDefinition` v `BaseEditorFields.getFields` sa aplikuje priorita:
+
+1. globálne nastavenie triedy (bez `entityId`),
+2. špecifické nastavenie pre konkrétnu entitu (`entityId`),
+3. bonus kontext (`bonusClassName` + `bonusEntityId`, napr. `TemplateDetails` pre `DocDetails`).
+
+Vyššia úroveň vždy prepíše nižšiu pre rovnaké písmeno poľa (`alphabet`).
+
+## Serializácia nastavení v `custom_fields.value`
+
+Nastavenia špecifické pre typ poľa sa ukladajú do stĺpca `custom_fields.value`.
+
+Používané formáty:
+
+- `text` / `text-120` / `text-120, warningLength-80`
+- `label1:value1|label2:value2` (`select`)
+- `multiple:label1:value1|label2:value2` (`multiselect`)
+- `autocomplete:Možnosť 1|Možnosť 2`
+- `docsIn_67` alebo `docsIn_67_null`
+- `enumeration_2_string1_string2` alebo `enumeration_2_string1_string2_null`
+- `json_group`/`json_doc` s voliteľným suffixom `_null`
+
+Transformáciu medzi editor poľami a internou hodnotou zabezpečujú metódy `CustomFieldsService.toEntity` a `CustomFieldsService.fromEntity`.
+
 ## Frontend
 
 Integrácia do editora datatabuľky je implementovaná v súbore [custom-fields.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/custom-fields.js). Pre každé pole z JSON objektu ```editorFields.fieldsDefinition``` sa získa nastavenie a nanovo sa v DOM strome vytvoria formulárové polia.
@@ -132,13 +163,17 @@ EDITOR.on('open', function (e, mode, action) {
 
 V prípade použitia ```multiple select``` tento ukladá hodnotu poľa ako ```Array```. Konverzia na String oddelený ```|``` pred odoslaním formuláru je zabezpečená pomocou metódy ```prepareCustomFieldsDataBeforeSend```, ktorá sa volá v [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js)
 
-```
+```javascript
 EDITOR.on('preSubmit', function (e, data, action) {
     ...
     prepareCustomFieldsDataBeforeSend(data)
     ...
 });
 ```
+
+Pri type `autocomplete` sa odosiela request na `/admin/FCKeditor/_editor_autocomplete.jsp` aj s parametrami `className` a `objectId`. Endpoint preto vie uprednostniť konfiguráciu z `custom_fields` pred fallbackom na prekladové kľúče.
+
+Pri typoch `select` a `multiselect` je podporovaný formát `label:value`. Ak hodnota neobsahuje presne jednu dvojbodku, použije sa rovnaký text pre `label` aj `value`.
 
 ## Premenovanie stĺpcov
 

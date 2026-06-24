@@ -1,8 +1,6 @@
 package sk.iway.iwcm.editor;
 
 import java.io.Serializable;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,8 +17,6 @@ import sk.iway.iwcm.LabelValueDetails;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
-import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
@@ -29,7 +25,6 @@ import sk.iway.iwcm.doc.PerexGroupBean;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.editor.rest.Field;
-import sk.iway.iwcm.editor.rest.FieldValue;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
@@ -1605,165 +1600,7 @@ public class EditorForm implements Serializable
 		this.contextPath = contextPath;
 	}
 
-	public List<Field> getFields() {
-		//tu musi byt getInstance aby sa prebral jazyk podla prihlaseneho usera
-		Prop prop = Prop.getInstance();
-		if (fields == null) {
-			fields = new ArrayList<>();
-			Method method;
-			for (char alphabet = 'A'; alphabet <= 'T'; alphabet++) {
-
-				try {
-					Field field = new Field();
-					method = this.getClass().getMethod("getField" + alphabet);
-
-					String labelKey = "editor.field_" + Character.toLowerCase(alphabet);
-					String label = prop.getText(labelKey);
-
-					String typeKey = labelKey + ".type";
-					String type = prop.getText(typeKey);
-
-					FieldType fieldType = FieldType.asFieldType(type);
-					List<FieldValue> fieldValues = new ArrayList<>();
-
-					if (!type.equals(typeKey)) {
-						if (type.contains("|")) {
-							String values = type.substring(type.indexOf(":") + 1);
-							for (String value : Tools.getTokens(values, "|")) {
-								fieldValues.add(new FieldValue(value, value));
-							}
-						}
-
-						if (type.startsWith("docsIn_")) {
-							//JICH - add
-							boolean isNull = false;
-							if (type.endsWith("_null")) {
-								isNull = true;
-								type = type.replace("_null", "");
-							}
-							//JICH - add end
-							String groupId = type.substring(type.indexOf("_") + 1);
-							int groupIdInt = Tools.getIntValue(groupId, 0);
-							if (groupIdInt > 0) {
-								GroupDetails group = GroupsDB.getInstance().getGroup(groupIdInt);
-								List<DocDetails> listOfDocs = DocDB.getInstance().getDocByGroup(groupIdInt);
-								if (listOfDocs != null) {
-									//JICH - add
-									if (isNull) {
-										fieldValues.add(new FieldValue("", ""));
-									}
-									//JICH - add end
-									for (DocDetails d : listOfDocs) {
-										if (group != null && group.getDefaultDocId() != d.getDocId()) {
-											fieldValues.add(new FieldValue(d.getTitle(), d.getDocId()));
-										}
-									}
-								}
-							}
-						}
-
-						if (type.startsWith("enumeration_")) {
-							boolean isNull = false;
-							if (type.endsWith("_null")) {
-								isNull = true;
-								type = type.replace("_null", "");
-							}
-
-							int enumerationId = Tools.getIntValue(type.substring(type.indexOf("_") + 1), 0);
-							if (enumerationId > 0) {
-								List<EnumerationDataBean> enumerationDataList = EnumerationDataDB.getEnumerationDataByType(enumerationId);
-								if (enumerationDataList != null) {
-									if (isNull) {
-										fieldValues.add(new FieldValue("", ""));
-									}
-									for (EnumerationDataBean enumData : enumerationDataList) {
-										fieldValues.add(new FieldValue(enumData.getString1(), enumData.getString1()));
-									}
-								}
-							}
-						}
-
-						//JICH - add
-						if (type.startsWith("custom-dialog")) {
-							//System.out.println(type);
-							String[] typeArray = type.split(",");
-							String dialogScript = "";
-							String displayScript = "";
-							if (typeArray.length > 1) dialogScript = typeArray[1];
-							if (typeArray.length > 2) displayScript = typeArray[2];
-
-							fieldValues.add(new FieldValue(dialogScript, displayScript));
-						}
-						//JICH - add end
-						else if (type.startsWith("file_archiv_link_insert_new")) {
-							// PRA: Zobrazi link na vyber suboru z archivu
-							FieldValue val = new FieldValue();
-							val.setType("file_archiv_link_insert_new");
-							fieldValues.add(val);
-						}
-					}
-
-					if (fieldType == null) {
-						fieldType = FieldType.TEXT;
-					}
-
-					String value = (String) method.invoke(this);
-
-                    //	TAN: textovym retazcom je mozne zadat maximalnu dlzku znakov v inpute alebo validaciu s odporucanym maximalnym poctom znakov inputu
-                    // priklad zadania textoveho kluca: text-120, warningLength-80
-					int maxlength = 255;
-					int warninglength = 0;
-					try
-                    {
-                        if (type.startsWith("text-")) {
-
-                            if (type.contains(",")) {
-                                String[] typeArray = type.split(",");
-                                String maxlengthstring = typeArray[0];
-                                String warninglengthstring = typeArray[1];
-
-                                maxlengthstring.substring(maxlengthstring.lastIndexOf("-") + 1);
-                                warninglengthstring.substring(warninglengthstring.lastIndexOf("-") + 1);
-
-                                maxlength = Integer.parseInt(maxlengthstring.replaceAll("[^0-9]", ""));
-                                warninglength = Integer.parseInt(warninglengthstring.replaceAll("[^0-9]", ""));
-                            } else {
-                                int pomlcka = type.indexOf("-");
-                                if (pomlcka > 0) maxlength = Tools.getIntValue(type.substring(pomlcka + 1), 255);
-                            }
-                        }
-                    }
-					catch (Exception ex)
-                    {
-                        sk.iway.iwcm.Logger.error(ex);
-                    }
-
-					field.setKey(Character.toLowerCase(alphabet) + "");
-					field.setLabel(label);
-					field.setValue(value);
-					field.setType(fieldType.name().toLowerCase());
-					field.setMaxlength(maxlength);
-					field.setWarninglength(warninglength);
-                    if (warninglength>0) {
-						field.setWarningMessage( prop.getText("editor.field_" + Character.toUpperCase(alphabet)+".warningText", String.valueOf(warninglength)));
-					}
-					if (fieldType != FieldType.TEXT) {
-						field.setTypeValues(fieldValues);
-					}
-
-					fields.add(field);
-				} catch (NoSuchMethodException e) {
-					sk.iway.iwcm.Logger.error(e);
-				} catch (IllegalAccessException e) {
-					sk.iway.iwcm.Logger.error(e);
-				} catch (InvocationTargetException e) {
-					sk.iway.iwcm.Logger.error(e);
-				}
-			}
-		}
-
-		return fields;
-	}
+	/* SIVAN: "public List<Field> getFields()" looks unused and this logic is already implemented in BaseEditorFields - so I am removing it #58529 */
 
 	public List<Map<String, Object>> getTemplates() {
 		if (templates == null) {
