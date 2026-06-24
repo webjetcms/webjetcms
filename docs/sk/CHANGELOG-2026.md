@@ -6,6 +6,8 @@
 
 ### Webové stránky
 
+- Ninja - doplnené generovanie a dokumentácia rozmerov SEO obrázka `og:image:width` a `og:image:height` (#OSK563).
+
 - Šablóny - pridaná možnosť nastaviť presun `<style>` a `<link rel="stylesheet">` značiek z tela stránky do `<head>` cez [voľbu v šablóne](frontend/templates/templates.md) s podporou globálnej konfiguračnej premennej `showDocMoveStyleToHead`. Bloky v IE podmienkach, `noscript` a `script` zostávajú na mieste (#231).
 
 ![](frontend/templates/templates-edit-advanced.png)

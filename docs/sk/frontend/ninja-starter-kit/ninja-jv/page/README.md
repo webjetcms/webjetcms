@@ -5,6 +5,8 @@
 | ${ninja.page.seoTitle} | *String* | Názov stránky (hodnota sa berie z voliteľného poľa R alebo ak je prázdne, tak z titulku) |
 | ${ninja.page.seoDescription} | *String* | Popis stránky (hodnota sa berie z voliteľného poľa S alebo ak je prázdne, tak z perexu) |
 | ${ninja.page.seoImage} | *String* | Odkaz na obrázok (hodnota sa berie z voliteľného poľa T alebo ak je prázdne, tak z perex obrázku) |
+| ${ninja.page.seoImageWidth} | *int* | Šírka SEO obrázka v pixeloch |
+| ${ninja.page.seoImageHeight} | *int* | Výška SEO obrázka v pixeloch |
 | ${ninja.page.url} | *String* | Url adresa |
 | ${ninja.page.urlDomain} | *String* | Doména |
 | ${ninja.page.urlPath} | *String* | Virtuálna adresa |
@@ -77,6 +79,8 @@ Použité v :ghost:<code>head.jsp</code>
 
 ```html
 <meta property="og:image" content="${ninja.page.urlDomain}${ninja.page.seoImage}" />
+<meta property="og:image:width" content="${ninja.page.seoImageWidth}">
+<meta property="og:image:height" content="${ninja.page.seoImageHeight}">
 ```
 
 ## Url adresa *String*
@@ -121,6 +125,8 @@ Použité v :ghost:<code>head.jsp</code>
 
 ```html
 <meta property="og:image" content="${ninja.page.urlDomain}${ninja.page.seoImage}" />
+<meta property="og:image:width" content="${ninja.page.seoImageWidth}">
+<meta property="og:image:height" content="${ninja.page.seoImageHeight}">
 ```
 
 Použité v :ghost:<code>debug-info.jsp</code>

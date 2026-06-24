@@ -6,15 +6,19 @@ import java.util.Optional;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.gallery.ImageInfo;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 
 public class Page {
     private Ninja ninja;
     private DocDetails doc;
+    private String seoImageInfoUrl;
+    private ImageInfo seoImageInfo;
 
     public Page(Ninja ninja) {
         this.ninja = ninja;
@@ -106,6 +110,43 @@ public class Page {
             }
         }
         return seoImage;
+    }
+
+    /**
+     * Returns the width of the SEO image in pixels.
+     *
+     * @return image width, or 0 if the image is missing or cannot be read
+     */
+    public int getSeoImageWidth() {
+        ImageInfo imageInfo = getSeoImageInfo();
+        return imageInfo == null ? 0 : imageInfo.getWidth();
+    }
+
+    /**
+     * Returns the height of the SEO image in pixels.
+     *
+     * @return image height, or 0 if the image is missing or cannot be read
+     */
+    public int getSeoImageHeight() {
+        ImageInfo imageInfo = getSeoImageInfo();
+        return imageInfo == null ? 0 : imageInfo.getHeight();
+    }
+
+    /**
+     * Returns cached image information for the current SEO image.
+     *
+     * @return image information, or null if the image is missing or cannot be read
+     */
+    private ImageInfo getSeoImageInfo() {
+        String seoImage = getSeoImage();
+        if (seoImage.equals(seoImageInfoUrl)) return seoImageInfo;
+
+        seoImageInfoUrl = seoImage;
+        seoImageInfo = null;
+        if (Tools.isNotEmpty(seoImage) && FileTools.isFile(seoImage)) {
+            seoImageInfo = new ImageInfo(seoImage);
+        }
+        return seoImageInfo;
     }
 
     public String getStringValue(String value, String defaultValue)
