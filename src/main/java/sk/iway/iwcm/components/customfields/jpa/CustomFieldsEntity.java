@@ -112,16 +112,17 @@ public class CustomFieldsEntity {
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "settings.custom-fields.textWarningLength", tab = "basic", hidden = true, className = "ai-off specific-field")
     private Integer textWarningLength;
 
-    @Transient
-    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title = "settings.custom-fields.textWarningText", tab = "basic", hidden = true, className = "ai-off specific-field")
-    private String textWarningText;
+    // I need to store it somewhere, now, only text supports it but in future maybe other fields will also use custom warning text
+    @Column(name="warning_text")
+    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title = "settings.custom-fields.warningText", tab = "basic", hidden = true, className = "ai-off specific-field")
+    private String warningText;
 
     @Transient
     @DataTableColumn(inputType = DataTableColumnType.OPTIONS, title = "settings.custom-fields.selectOptions", tab = "basic", hidden = true, className = "specific-field")
     private String selectOptions;
 
     @Transient
-    @DataTableColumn(inputType = DataTableColumnType.BASIC_OPTIONS, title = "", tab = "basic", hidden = true, className = "specific-field")
+    @DataTableColumn(inputType = DataTableColumnType.BASIC_OPTIONS, title = "settings.custom-fields.autocompleteOptions", tab = "basic", hidden = true, className = "specific-field")
     private String autocompleteOptions;
 
     @Transient

@@ -34,7 +34,12 @@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><iwcm:checkLogon admin="true" per
 	Long objectId = Tools.getLongValue(Tools.getRequestParameter(request, "objectId"), -1L);
 	if (Tools.isNotEmpty(className) && Tools.isNotEmpty(requestField)) {
 		char fieldAlphabet = Character.toUpperCase(requestField.charAt(0));
-		Map<Character, CustomFieldsEntity> customFields = CustomFieldsService.getCustomFieldsMap(new CustomFieldsSearchDto(className, objectId));
+
+		// We need to pass the templateId as a bonus parameter for DocDetails
+		CustomFieldsSearchDto searchDto = new CustomFieldsSearchDto(className, objectId);
+		searchDto.setBonusParam(templateId);
+
+		Map<Character, CustomFieldsEntity> customFields = CustomFieldsService.getCustomFieldsMap(searchDto);
 		CustomFieldsEntity cfe = customFields.get(fieldAlphabet);
 		if (cfe != null && Tools.isNotEmpty(cfe.getValue())) {
 			value = cfe.getValue();

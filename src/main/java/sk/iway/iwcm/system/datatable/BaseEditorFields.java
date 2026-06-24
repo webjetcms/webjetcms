@@ -335,7 +335,7 @@ public class BaseEditorFields {
                     if(cfe == null)
                         field.setWarningMessage( prop.getText(keyPrefix+".field_" + Character.toUpperCase(alphabet)+".warningText", String.valueOf(warninglength)));
                     else
-                        field.setWarningMessage( prop.getText(Tools.isEmpty(cfe.getTextWarningText()) ? "" : cfe.getTextWarningText(), String.valueOf(warninglength)));
+                        field.setWarningMessage( prop.getText(Tools.isEmpty(cfe.getWarningText()) ? "" : cfe.getWarningText(), String.valueOf(warninglength)));
                 }
                 if (fieldType != FieldType.TEXT) {
                     field.setTypeValues(fieldValues);

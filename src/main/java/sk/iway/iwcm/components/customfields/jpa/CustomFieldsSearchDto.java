@@ -128,4 +128,8 @@ public class CustomFieldsSearchDto {
     public Object getBonusParam() {
         return bonusParam;
     }
+
+    public void setBonusParam(Object bonusParam) {
+        this.bonusParam = bonusParam;
+    }
 }

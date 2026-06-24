@@ -46,12 +46,12 @@ block content
                     });
                 };
 
-                typeSelect.addEventListener("change", function() {
+                typeSelect.onchange = function() {
                     updateFieldVisibility(this.value);
-                });
+                };
 
-                // Trigger change event to apply initial visibility
-                typeSelect.dispatchEvent(new Event("change"));
+                // Apply initial visibility for currently selected type
+                updateFieldVisibility(typeSelect.value);
             });
         });
 

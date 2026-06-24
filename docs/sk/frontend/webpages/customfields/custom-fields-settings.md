@@ -14,7 +14,7 @@ Tabuľka obsahuje nasledovné stĺpce:
 | **Voliteľné pole** | Písmeno abecedy (A-Z), ktorým sa identifikuje voliteľné pole. Zodpovedá názvom polí `field_A`, `field_B` atď. |
 | **ID entity** | Voliteľné ID konkrétnej entity (napr. ID stránky). Ak nie je zadané, nastavenie sa aplikuje globálne pre všetky entity danej triedy. |
 | **Typ poľa** | Typ voliteľného poľa (napr. `text`, `textarea`, `boolean`, `number` atď.). |
-| **Popis poľa** | Popis (label), ktorý sa zobrazí pri voliteľnom poli v editore (môžete zadať prekladový kľuč). |
+| **Popis poľa** | Popis (label), ktorý sa zobrazí pri voliteľnom poli v editore (môžete zadať prekladový kľúč). |
 | **Tooltip poľa** | Text nápovedy, ktorý sa zobrazí po prejdení myšou ponad ikonu <i class="ti ti-info-circle"></i>. |
 | **Povinné pole** | Ak je nastavené na `true`, pole bude povinné a pri uložení entity sa skontroluje, či je vyplnené. |
 

@@ -38,7 +38,7 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
 @Service
 public class CustomFieldsService {
 
-    private static final String FIELD_TYPE_KET_PREFIX = "settings.custom-fields.type.";
+    private static final String FIELD_TYPE_KEY_PREFIX = "settings.custom-fields.type.";
 
     private static final String CLASS_FIELD_MAP_KEY = "CustomFieldsService_classFieldsMap";
     public static final Map<String, String> BONUS_PARAMS = Map.of(
@@ -165,11 +165,11 @@ public class CustomFieldsService {
             if(entity.getTextWarningLength() != null) value.append(", warningLength-").append(entity.getTextWarningLength());
         } else if("select".equals(type)) {
             if(Tools.isFalse(entity.getRequired())) value.append("|"); //can be empty value
-            value.append(entity.getSelectOptions());
+            value.append(Tools.isNotEmpty(entity.getSelectOptions()) ? entity.getSelectOptions() : "");
         } else if("multiselect".equals(type)) {
             value.append("multiple:");
             if(Tools.isFalse(entity.getRequired())) value.append("|"); //can be empty value
-            value.append(entity.getSelectOptions());
+            value.append(Tools.isNotEmpty(entity.getSelectOptions()) ? entity.getSelectOptions() : "");
         } else if("json_group".equals(type) || "json_doc".equals(type)) {
             value.append(type);
             if(Tools.isFalse(entity.getRequired())) value.append("_null");
@@ -182,11 +182,14 @@ public class CustomFieldsService {
             if(Tools.isNotEmpty(enumValue)) {
                 if(enumValue.startsWith("enumeration-options")) enumValue = enumValue.substring("enumeration-options".length());
                 enumValue = Tools.replace(enumValue, "|", "_");
+            } else {
+                enumValue = "";
             }
             value.append("enumeration").append(enumValue);
             if(Tools.isFalse(entity.getRequired())) value.append("_null");
         } else if("autocomplete".equals(type)) {
-            value.append("autocomplete:").append(entity.getAutocompleteOptions());
+            value.append("autocomplete:");
+            value.append(Tools.isNotEmpty(entity.getAutocompleteOptions()) ? entity.getAutocompleteOptions() : "");
         } else {
             value.append(type);
         }
@@ -306,7 +309,7 @@ public class CustomFieldsService {
      * @return the localized label, retrieved using key "settings.custom-fields.type.{fieldKey}"
      */
     public static String getFieldTypeLabel(Prop prop, String fieldKey) {
-        return prop.getText(FIELD_TYPE_KET_PREFIX + fieldKey);
+        return prop.getText(FIELD_TYPE_KEY_PREFIX + fieldKey);
     }
 
     /**
@@ -320,7 +323,7 @@ public class CustomFieldsService {
      */
     public static List<LabelValue> getSpecificFieldVisibility() {
         return List.of(
-            new LabelValue("text", "textMaxLength,textWarningLength,textWarningText"),
+            new LabelValue("text", "textMaxLength,textWarningLength,warningText"),
             new LabelValue("select", "selectOptions"),
             new LabelValue("multiselect", "selectOptions"),
             new LabelValue("autocomplete", "autocompleteOptions"),
