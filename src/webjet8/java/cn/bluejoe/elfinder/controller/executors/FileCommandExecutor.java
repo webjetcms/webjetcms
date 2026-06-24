@@ -33,6 +33,13 @@ public class FileCommandExecutor extends AbstractCommandExecutor
 		//response.setStatus(302);
 		//response.setHeader("Location", fsi.getPath());
 
+		if (fsi == null)
+		{
+			// /files/../protected/bankari/test-forward.txt
+			// /admin/elfinder-connector/?cmd=file&volumes=files&target=iwcm_1_L2ZpbGVzLy4uL3Byb3RlY3RlZC9iYW5rYXJpL3Rlc3QtZm9yd2FyZC50eHQ=
+			response.sendError(HttpServletResponse.SC_NOT_FOUND);
+			return;
+		}
 
 		String mime = fsi.getMimeType();
 
