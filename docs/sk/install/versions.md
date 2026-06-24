@@ -14,6 +14,9 @@ ext {
 
 Pričom aktuálne existujú nasledovné verzie WebJET:
 
+- `2026.18.25-jakarta` - stabilizovaná verzia 2026.18 s opravami z verzie 2026.0.25, nepribúdajú do nej denné zmeny.
+- `2026.0.25-jakarta` - stabilizovaná verzia 2025.0.25 s opravami chýb voči verzii 2026.0 (bez pridania vylepšení zo SNAPSHOT verzie).
+- `2026.0.25` - stabilizovaná verzia 2025.0.25 s opravami chýb voči verzii 2026.0 (bez pridania vylepšení zo SNAPSHOT verzie).
 - `2026.18-jakarta` - stabilizovaná verzia 2026.18, nepribúdajú do nej denné zmeny.
 - `2026.0.18-jakarta` - stabilizovaná verzia 2025.0.18 s opravami chýb voči verzii 2026.0 (bez pridania vylepšení zo SNAPSHOT verzie).
 - `2026.0.18` - stabilizovaná verzia 2025.0.18 s opravami chýb voči verzii 2026.0 (bez pridania vylepšení zo SNAPSHOT verzie).

@@ -30,6 +30,7 @@ export class StatsByCharts {
             // Create wrapper that holds everything
             const wrapper = document.createElement("div");
             wrapper.id = this.id;
+            wrapper.className = "hide-while-loading";
             target.appendChild(wrapper);
 
             this.wrapper = wrapper;
@@ -51,19 +52,26 @@ export class StatsByCharts {
 
             const destroyReponse = await this._destroyChartBeforeUpdate(newChartDef.id);
             if(destroyReponse === true) {
-                if(newChartDef.type === ChartTools.ChartType.Pie_Donut || newChartDef.type === ChartTools.ChartType.Pie_Classic) {
+
+                let chartDefType = newChartDef.type;
+                if(chartDefType != null && typeof chartDefType != "undefined" && chartDefType.length) {
+                    chartDefType = chartDefType.toLowerCase();
+                    newChartDef.type = chartDefType;
+                }
+
+                if(chartDefType === ChartTools.ChartType.Pie_Donut || chartDefType === ChartTools.ChartType.Pie_Classic) {
                     this._renderPieChart(newChartDef, chartUniqueId);
                 }
-                else if(newChartDef.type === ChartTools.ChartType.Bar_Vertical || newChartDef.type === ChartTools.ChartType.Bar_Horizontal) {
+                else if(chartDefType === ChartTools.ChartType.Bar_Vertical || chartDefType === ChartTools.ChartType.Bar_Horizontal) {
                     this._renderBarChart(newChartDef, chartUniqueId);
                 }
-                else if(newChartDef.type === ChartTools.ChartType.Table) {
+                else if(chartDefType === ChartTools.ChartType.Table) {
                     this._renderTableChart(newChartDef, chartUniqueId);
                 }
-                else if(newChartDef.type === ChartTools.ChartType.Word_Cloud) {
+                else if(chartDefType === ChartTools.ChartType.Word_Cloud) {
                     this._renderWordCloudChart(newChartDef, chartUniqueId);
                 }
-                else if(newChartDef.type === ChartTools.ChartType.Double_Pie) {
+                else if(chartDefType === ChartTools.ChartType.Double_Pie) {
                     this._renderDoublePieChart(newChartDef, chartUniqueId);
                 }
             }
@@ -126,19 +134,25 @@ export class StatsByCharts {
 
                 chartContainer.prepend(button);
 
-                if(chartDef.type === ChartTools.ChartType.Pie_Donut || chartDef.type === ChartTools.ChartType.Pie_Classic) {
+                let chartDefType = chartDef.type;
+                if(chartDefType != null && typeof chartDefType != "undefined" && chartDefType.length) {
+                    chartDefType = chartDefType.toLowerCase();
+                    chartDef.type = chartDefType;
+                }
+
+                if(chartDefType === ChartTools.ChartType.Pie_Donut || chartDefType === ChartTools.ChartType.Pie_Classic) {
                     this._renderPieChart(chartDef, chartUniqueId);
                 }
-                else if(chartDef.type === ChartTools.ChartType.Bar_Vertical || chartDef.type === ChartTools.ChartType.Bar_Horizontal) {
+                else if(chartDefType === ChartTools.ChartType.Bar_Vertical || chartDefType === ChartTools.ChartType.Bar_Horizontal) {
                     this._renderBarChart(chartDef, chartUniqueId);
                 }
-                else if(chartDef.type === ChartTools.ChartType.Table) {
+                else if(chartDefType === ChartTools.ChartType.Table) {
                     this._renderTableChart(chartDef, chartUniqueId);
                 }
-                else if(chartDef.type === ChartTools.ChartType.Word_Cloud) {
+                else if(chartDefType === ChartTools.ChartType.Word_Cloud) {
                     this._renderWordCloudChart(chartDef, chartUniqueId);
                 }
-                else if(chartDef.type === ChartTools.ChartType.Double_Pie) {
+                else if(chartDefType === ChartTools.ChartType.Double_Pie) {
                     this._renderDoublePieChart(chartDef, chartUniqueId);
                 }
             });

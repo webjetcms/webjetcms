@@ -30,7 +30,7 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 @Getter
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
-@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_FORMMAIL)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_MULTISTEP_FORM)
 @DataTableTabs(tabs = {
     @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
     @DataTableTab(id = "advanced", title = "datatable.tab.advanced"),
@@ -184,6 +184,9 @@ public class FormItemEntity extends BaseEditorFields {
     @Column(name = "item_form_id")
     @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
     private String itemFormId;
+
+    @Column(name = "error_count")
+    private Integer errorCount;
 
     @Column(name = "domain_id")
     private Integer domainId;

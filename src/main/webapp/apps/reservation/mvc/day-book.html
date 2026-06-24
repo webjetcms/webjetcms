@@ -1,5 +1,6 @@
 <script type="text/javascript" src="/components/_common/vannila-calendar-pro/index.js"></script>
 <link rel="stylesheet" type="text/css" href="/components/_common/vannila-calendar-pro/styles/index.css">
+<link rel="stylesheet" type="text/css" href="/apps/reservation/mvc/day-book.css">
 
 <div class="day-book-app">
 
@@ -9,7 +10,7 @@
 
     <div data-th-if="${errors!=null}" class="alert alert-danger">
         <p data-th-text="#{chat.form_fill_error}"></p>
-        <ul style="margin: 0px;">
+        <ul class="dayBookErrorList">
             <li data-th-each="err : ${errors}">
                 <span data-th-text="#{components.reservation.reservation_list.__${err.field}__}">zložený prekladový kľúč zo statického prefixu a dynamického mena poľa</span> - <span data-th-text="${err.defaultMessage}">chybová správa</span>
             </li>
@@ -185,21 +186,20 @@
 
                     if(btnEl) {
                         const day = btnEl.innerText;
-                        btnEl.style.flexDirection = 'column';
 
                         //dateEl.innerHTML += '<div class="${self.styles.dateRangeTooltip}" data-vc-date-range-tooltip="">Check-out only</div>';
 
                         if(isDisabled == true) {
                             btnEl.innerHTML = `
                                 <span>${day}</span>
-                                <span style="font-size: 15px;padding-top: 5px;">&nbsp;</span><i class="ti ti-calendar"></i>
-                                <span style="font-size: 15px;padding-top: 5px;">&nbsp;</span>
+                                <span class="dayBookCalendarMeta">&nbsp;</span><i class="ti ti-calendar"></i>
+                                <span class="dayBookCalendarMeta">&nbsp;</span>
                             `;
                         } else if(isCheckOutOnly == true) {
                             btnEl.innerHTML = `
                                 <span>${day}</span>
-                                <span style="font-size: 15px;padding-top: 5px;">-</span><i class="ti ti-calendar"></i>
-                                <span style="font-size: 15px;padding-top: 5px;">-</span>
+                                <span class="dayBookCalendarMeta">-</span><i class="ti ti-calendar"></i>
+                                <span class="dayBookCalendarMeta">-</span>
                             `;
 
                             //Add tooltip
@@ -207,8 +207,8 @@
                         } else {
                             btnEl.innerHTML = `
                                 <span>${day}</span>
-                                <span style="font-size: 15px;padding-top: 5px;">${reserved}/${maxReservationCount}</span><i class="ti ti-calendar"></i>
-                                <span style="font-size: 15px;padding-top: 5px;">${reservationPriceMap[dateParam]} ${currency}</span>
+                                <span class="dayBookCalendarMeta">${reserved}/${maxReservationCount}</span><i class="ti ti-calendar"></i>
+                                <span class="dayBookCalendarMeta">${reservationPriceMap[dateParam]} ${currency}</span>
                             `;
                         }
                     }
@@ -465,31 +465,3 @@
 
     </script>
 </div>
-
-<style>
-    .vc-date__btn {
-        font-size: 25px;
-        padding: 10px;
-        display: flex;
-    }
-
-    .vc-date {
-        padding-right: 1px;
-    }
-
-    .custom-popup {
-        font-size: 15px;
-        width: 150px;
-        min-height: 40px;
-        align-content: center;
-        text-align: center;
-        top: -40px;
-        background-color: #f1f5f9 !important;
-    }
-
-    .readonly-input {
-        background-color: var(--bs-secondary-bg);
-        opacity: 1;
-        cursor: default;
-    }
-</style>

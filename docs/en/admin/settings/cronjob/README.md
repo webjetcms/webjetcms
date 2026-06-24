@@ -22,7 +22,7 @@ In the record editor window, you can set:
 - **Run after startup** - Determines whether the task should be run automatically after WebJET starts (e.g. for data updates).
 - **Enabled** - Specifies whether the task is currently enabled or disabled. If enabled, it will run according to the specified schedule. If disabled, it will not run at all.
 - **Audited** - Specifies whether task execution records are recorded in an audit. This option is useful for tracking and auditing task execution.
-- **Runs on node** - Specifies which node or server the task should run on if you are working in a multi-node cluster environment.
+- **Runs on node** - Specifies which node or server the task should run on if you are working in a multi-node cluster environment. A value of `all` will run the task on all nodes, `all-admin` will run the task only on nodes in full configuration, and `all-public` will run the task only on public node (non-admin) nodes.
 
 ![](editor.png)
 

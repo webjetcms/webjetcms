@@ -56,15 +56,16 @@ Individual cells in the table have a specific status.
 
 A **Full** cell means that the maximum number of reservations for this booking object and hour of the day has been reached. As we can see, the cell may contain text like "2/2", which means that there are already 2 reservations out of 2.
 
-!>**Warning:** It may happen that this cell will have a status of e.g. "1/2" or "0/2". Such a situation occurs when a specific hour or a whole day is already in the past. So even if the maximum number of reservations has not been reached, it is not possible to add a new one.
-
 ![](app-cell-full.png)
+
+!>**Warning:** It may happen that this cell will have a status of e.g. "1/2" or "0/2". Such a situation occurs when a specific hour or a whole day is already in the past. So even if the maximum number of reservations has not been reached, it is not possible to add a new one.
 
 A **Free** cell basically means that it is possible to request a reservation for the property at this time (and this day).
 
 ![](app-cell-free.png)
 
 This cell means it is selected. The cell is selected by clicking on it (clicking on it again will deselect it).
+
 !>**Warning:** only available cells can be selected, i.e. those that are **free**.
 
 ### Reservation form
@@ -72,6 +73,7 @@ This cell means it is selected. The cell is selected by clicking on it (clicking
 This is a simple form with basic information about booking an object.
 
 These required fields are automatically pre-filled if you are a logged in user, but of course they can be changed. If you are accessing as a non-logged in user, you must enter them:
+
 - Name
 - Last name
 - Email
@@ -87,6 +89,7 @@ The fields **Booking period from-to** and **Booking price** cannot be changed an
 ## Adding a reservation
 
 To add a reservation, you must first select a time range in the table. However, adding a reservation has the following rules:
+
 - **You can only book 1 booking object at a time**. So if you select the range from 13:00 to 15:00 in the row for objectA and then try to select the range for booking objectB, the original selected range will automatically be completely deselected.
 - **You can only select 1 contiguous range**. You cannot select the range 13:00-15:00 and 16:00-17:00 at the same time, even if it is the same object. If you try to do so, the first selected range will be automatically canceled.
 - **The selected range cannot be interrupted by an unavailable time**. If you try to select the range 13:00-17:00 but the range 15:00-16:00 of the given object is already fully booked, the selected range will be automatically canceled.

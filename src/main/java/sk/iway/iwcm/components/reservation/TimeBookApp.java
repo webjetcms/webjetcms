@@ -1,8 +1,10 @@
 package sk.iway.iwcm.components.reservation;
 
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -196,6 +199,7 @@ public class TimeBookApp extends WebjetComponentAbstract {
         //datepicker require yyyy-MM-dd string as value
         SimpleDateFormat format = new SimpleDateFormat(ReservationService.FE_DATEPICKER_FORMAT);
         model.addAttribute("reservationDate", format.format(reservationDate));
+        model.addAttribute("currency", Constants.getString("basketProductCurrency"));
 
         /* Prepare list with hour that represent reservation range (joined by all reservation objects range) */
         Long minTimeStart = Long.MAX_VALUE;
@@ -212,19 +216,48 @@ public class TimeBookApp extends WebjetComponentAbstract {
 
         /* Figure out, how many reservations for current hour and reservation object are already used */
         Map<String, List<ReservationService.ReservationTableCell>> tableLines = new HashMap<>();
+        Identity user = UsersDB.getCurrentUser(request);
+        String email = request.getParameter("email");
+        if(Tools.isEmpty(email) && user != null) email = user.getEmail();
+        int userId = ReservationService.getUserToPay(email, Long.valueOf(-1), rr, request);
         for(ReservationObjectEntity roe : reservationObjectList) {
-            tableLines.put(roe.getName(), ReservationService.computeReservationUsageByHours(roe, rr, minTimeStart, maxTimeEnd, timeRanges.get(roe.getId())));
+            List<ReservationService.ReservationTableCell> tableCells = ReservationService.computeReservationUsageByHours(roe, rr, minTimeStart, maxTimeEnd, timeRanges.get(roe.getId()));
+            setTableCellPrices(tableCells, reservationDate, roe.getId(), userId);
+            tableLines.put(roe.getName(), tableCells);
         }
         model.addAttribute("tableLines", tableLines);
 
         ReservationEntity reservation = new ReservationEntity();
-        Identity user = UsersDB.getCurrentUser(request);
         if(user != null) {
             reservation.setName(user.getFirstName());
             reservation.setSurname(user.getLastName());
             reservation.setEmail(user.getEmail());
         }
         model.addAttribute("reservationEntity", reservation);
+    }
+
+    private void setTableCellPrices(List<ReservationService.ReservationTableCell> tableCells, Date reservationDate, Long reservationObjectId, int userId) {
+        for(ReservationService.ReservationTableCell tableCell : tableCells) {
+            if(Tools.isEmpty(tableCell.getValue())) continue;
+
+            String[] cellInfo = Tools.getTokens(tableCell.getId(), "_");
+            if(cellInfo.length != 2) continue;
+
+            int hour = Tools.getIntValue(cellInfo[1], -1);
+            if(hour < 0) continue;
+
+            Date timeFrom = DefaultTimeValueConverter.getValidTimeValue(hour, 0);
+            Date timeTo = DefaultTimeValueConverter.getValidTimeValue(hour + 1, 0);
+            Map<String, BigDecimal> prices = ReservationService.getMapOfPrices(reservationDate.getTime(), reservationDate.getTime(), timeFrom.getTime(), timeTo.getTime(), reservationObjectId, userId, ror, ropr);
+            tableCell.setPrice(formatCellPrice(prices == null ? null : prices.values()));
+        }
+    }
+
+    private String formatCellPrice(Collection<BigDecimal> prices) {
+        if(Tools.isEmpty(prices)) return "";
+
+        BigDecimal total = prices.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        return total.stripTrailingZeros().toPlainString();
     }
 
     public String returnError(String errorMsg, Date reservationDate, Model model, HttpServletRequest request) {

@@ -28,3 +28,10 @@ html.in-iframe, html.in-iframe-show-table {
     outline: 1px solid $danger;
     box-shadow: 0 0 12px $danger;
 }
+
+@media (min-width: 1900px) {
+    .col-xxxl-6 {
+        flex: 0 0 auto;
+        width: 50%;
+    }
+}

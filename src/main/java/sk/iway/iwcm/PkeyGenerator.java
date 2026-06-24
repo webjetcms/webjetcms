@@ -77,12 +77,15 @@ public class PkeyGenerator
     * @param key_name
     * @return
     */
-   private long getMaxValue(String table_name, String key_name)
+    private long getMaxValue(String name, String table_name, String key_name)
 	{
 		if (Tools.isEmpty(table_name) || Tools.isEmpty(key_name))
 		{
 			return -1;
 		}
+
+		table_name = fixTableName(name, table_name);
+		key_name = fixPkeyName(name, key_name);
 
 		String sql = "SELECT MAX(" + key_name + ") FROM " + table_name;
 		try{
@@ -95,7 +98,7 @@ public class PkeyGenerator
 		}
 		catch (Exception e)
 		{
-			Logger.error(PkeyGenerator.class, "Error executing PkeyGenerator max value, sql=" +sql+" error="+e.getMessage());
+			Logger.error(PkeyGenerator.class, "Error executing PkeyGenerator max value, name=" + name + ", sql=" +sql+" error="+e.getMessage());
 			return -1;
 		}
 	}
@@ -168,7 +171,7 @@ public class PkeyGenerator
 		//este nebol inicializovany, skus ziskat max hodnotu z DB a opravit tabulku
 		if (p.getMaxValue()==0)
 		{
-			long maxv = getMaxValue(p.getTableName(), p.getTablePkeyName());
+			long maxv = getMaxValue(p.getName(), p.getTableName(), p.getTablePkeyName());
 			if (p.getValue() < maxv)
 			{
 				//uloz novu maximalnu hodnotu do databazy
@@ -428,8 +431,8 @@ public class PkeyGenerator
 			db_conn = DBPool.getConnection();
 			ps = db_conn.prepareStatement("INSERT INTO pkey_generator (name, value, table_name, table_pkey_name) VALUES (?, 1, ?, ?)");
 			ps.setString(i++, keyName);
-			ps.setString(i++, keyName);
-			ps.setString(i++, keyName+"_id");
+			ps.setString(i++, fixTableName(keyName, keyName));
+			ps.setString(i++, fixPkeyName(keyName, keyName+"_id"));
 			ps.execute();
 			ps.close();
 			ps = null;
@@ -490,5 +493,46 @@ public class PkeyGenerator
 		}
 
 		return key;
+	}
+
+	private static String fixTableName(String keyName, String defaultValue) {
+		String tableName = defaultValue;
+		if ("basket_browser_id".equals(keyName)) tableName = "basket_item";
+		else if ("domain_limit_id".equals(keyName)) tableName = "domain_limits";
+		else if ("file_archiv_global_id".equals(keyName)) tableName = "file_archiv";
+		else if ("gallery_dimension".equals(keyName)) tableName = "gallery_dimension";
+		else if ("MediaGroup".equals(keyName)) tableName = "media_groups";
+
+		return tableName;
+	}
+
+	private static String fixPkeyName(String keyName, String defaultValue)
+	{
+		String pkeyName = defaultValue;
+		if ("banner_banners".equals(keyName)) pkeyName = "banner_id";
+		else if ("banner_doc".equals(keyName)) pkeyName = "id";
+		else if ("banner_gr".equals(keyName)) pkeyName = "id";
+		else if ("basket_browser_id".equals(keyName)) pkeyName = "browser_id";
+		else if ("captcha_dictionary".equals(keyName)) pkeyName = "id";
+		else if ("cookies".equals(keyName)) pkeyName = "cookie_id";
+		else if ("documents".equals(keyName)) pkeyName = "doc_id";
+		else if ("document_notes".equals(keyName)) pkeyName = "id";
+		else if ("domain_limits".equals(keyName)) pkeyName = "domain_limit_id";
+		else if ("domain_limit_id".equals(keyName)) pkeyName = "domain_limit_id";
+		else if ("domain_redirects".equals(keyName)) pkeyName = "redirect_id";
+		else if ("file_archiv_global_id".equals(keyName)) pkeyName = "global_id";
+		else if ("gallery".equals(keyName)) pkeyName = "image_id";
+		else if ("gallery_dimension".equals(keyName)) pkeyName = "dimension_id";
+		else if ("media_groups".equals(keyName)) pkeyName = "media_group_id";
+		else if ("rag_index_queue".equals(keyName)) pkeyName = "id";
+		else if ("reservation_object_price".equals(keyName)) pkeyName = "object_price_id";
+		else if ("reservation_object_times".equals(keyName)) pkeyName = "object_time_id";
+		else if ("restaurant_menu".equals(keyName)) pkeyName = "menu_id";
+		else if ("restaurant_menu_meals".equals(keyName)) pkeyName = "meals_id";
+		else if ("user_perm_groups".equals(keyName)) pkeyName = "group_id";
+		else if ("user_perm_groups_perms".equals(keyName)) pkeyName = "perm_id";
+		else if ("MediaGroup".equals(keyName)) pkeyName = "media_group_id";
+
+		return pkeyName;
 	}
 }
