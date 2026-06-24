@@ -181,7 +181,7 @@ public static int downloadUrl(String url, String servletContextUserKey, StringBu
 
 			//body obsahuje URL adresu, ktoru je treba stiahnut
 			HttpURLConnection conn = null;
-			URL urlObj = new URL(url);
+			URL urlObj = new URL(Tools.natUrl(url));
 			conn = (HttpURLConnection)urlObj.openConnection();
 
 			conn.setAllowUserInteraction(false);
