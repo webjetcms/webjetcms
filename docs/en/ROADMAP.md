@@ -15,6 +15,7 @@ Explanation of the pictograms used:
 ## 2026
 
 - [x] Semantic search - use AI to improve search with `RAG` (#211).
+- [ ] AI - possibility to use small local models running directly on the CPU, at least for Semantic Search (#58561).
 - [ ] `Headless` CMS - prepare REST interfaces for using WebJET CMS in `headless` mode.
 - [ ] Migration to `Spring Boot` project.
 - [x] Testing - add accessibility testing using the [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) extension (#58389).
@@ -27,6 +28,8 @@ Explanation of the pictograms used:
 - [ ] Data deletion - add the option to delete pages and folders from the trash. Also resolve the option to run data deletion as an automated task.
 - [ ] Unused files - make it possible to get a list of unused files - they are not used anywhere on the page, not even in media, etc. There was an API for this `FileTools.getDirFileUsage(currentDir, request)`. Add as a tab to the folder properties in explorer.
 - [ ] Explorer - prevent working with the Document Manager folder so that files cannot be manipulated outside of the Document Manager.
+- [ ] +Explorer - add permission to upload files with accented characters (removed for `/images` and `/files` folders) (#58589).
+- [ ] +Websites - better integrate document manager for inserting links into the page - new tab similar to Photobank for images (#58593).
 - [x] +Forms - add more detailed statistics on errors in completed forms (#58509).
 - [x] +Websites - improve the user interface for entering `/thumb` images in the editor (#58525).
 - [x] +Optional fields - add the ability to define which fields are required (#58413).
@@ -37,6 +40,7 @@ Explanation of the pictograms used:
 - [x] +Websites - add the ability to approve changes in website folders similarly to approving changes in websites, including viewing history and changes (#193).
 - [x] Add authorization option via `OAuth2`, option to use `mock` server https://github.com/navikt/mock-oauth2-server or https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [x] +Add support for logging into administration via [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/) (#58369).
+
 
 ## 2025
 

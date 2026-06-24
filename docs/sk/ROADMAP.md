@@ -15,6 +15,7 @@ Vysvetlenie použitých piktogramov:
 ## 2026
 
 - [x] Sémantické vyhľadávanie - využiť AI na zlepšenie vyhľadávania pomocou `RAG` (#211).
+- [ ] AI - možnosť použiť malé lokálne modely bežiace priamo na CPU, minimálne pre Sémantické vyhľadávanie (#58561).
 - [ ] `Headless` CMS - pripraviť REST rozhrania pre použitie WebJET CMS v `headless` móde.
 - [ ] Migrácia na `Spring Boot` projekt.
 - [x] Testovanie - pridať testovanie prístupnosti pomocou rozšírenia [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) (#58389).
@@ -27,6 +28,8 @@ Vysvetlenie použitých piktogramov:
 - [ ] Mazanie dát - pridať možnosť mazať stránky a priečinky z koša. Vyriešiť aj možnosť mazanie dát spúšťať ako automatizovanú úlohu.
 - [ ] Nepoužívané súbory - spraviť možnosť získať zoznam nepoužívaných súborov - nikde v stránke sa nepoužívajú, ani v médiach atď. Bola na to API `FileTools.getDirFileUsage(currentDir, request)`. Pridať ako kartu do vlastností priečinka v prieskumníku.
 - [ ] Prieskumník - zamedziť prácu s priečinku pre Manažér dokumentov, aby sa so súbormi nedalo manipulovať mimo Manažér dokumentov.
+- [ ] +Prieskumník - pridať právo pre nahrávanie súborov s diakritikou (odstraňuje sa pre `/images` a `/files` priečinky) (#58589).
+- [ ] +Web stránky - lepšie integrovať manažér dokumentov pre vkladanie odkazu do stránky - nová karta podobne ako je Fotobanka pri obrázkoch (#58593).
 - [x] +Formuláre - pridať podrobnejšiu štatistiku chýb vyplnených formulárov (#58509).
 - [x] +Web stránky - zlepšiť používateľské rozhranie pre zadávanie `/thumb` obrázkov v editore (#58525).
 - [x] +Voliteľné polia - pridať možnosť definovať ktoré polia sú povinné (#58413).
@@ -40,6 +43,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] Voliteľné polia – pridať možnosť nastaviť obmedzenie dĺžky textu pre pole typu `textarea`, podobne ako je to aktuálne možné pri poli typu `text`.
 - [ ] Datatabuľka – upraviť polia typu `Date` a `Datetime` tak, aby správne fungovala validácia `not null`.
 - [ ] Datatabuľka – upraviť spôsob mergovania upravenej entity tak, aby bolo možné vynulovať hodnoty typu `number`.
+
 
 ## 2025
 

@@ -4,7 +4,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ page import="sk.iway.iwcm.Tools" %>
 <%@ page import="sk.iway.iwcm.system.msg.AdminMessageBean" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
+<%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><iwcm:checkLogon admin="true"/>
 <script type="text/javascript" src="/admin/scripts/common.jsp"></script>
 <%
 	if(Tools.getRequestParameter(request, "remove")!=null)

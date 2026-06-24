@@ -274,6 +274,12 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 
 > Opravná verze původní verze 2026.0.
 
+- Web stránky - zrušeny [plánované verze](redactor/webpages/history.md) jsou v historii zobrazeny přeškrtnutým písmem a nelze je smazat (#58573).
+- Archiv souborů - upravená úloha na pozadí pro publikování souborů - z důvodu práv se neprovádí na veřejném uzlu (#246).
+- Úlohy na pozadí - přidána možnost spustit [úlohu na pozadí](admin/settings/cronjob/README.md) pouze na uzlech v plné konfiguraci nebo na veřejných uzlech (#246).
+- Generátor primárních klíčů - doplněna automatická oprava jmen tabulek a názvů sloupce s primární hodnotou (#246).
+- Bezpečnost - opravené chyby Local File Inclusion, kontrola nahrávaných souborů a RCE. Děkujeme Josef Korbel (Citadelo) za nahlášení těchto zranitelností (#252).
+
 ## 2026.0.25
 
 > Opravná verze původní verze 2026.0.
@@ -284,7 +290,7 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 - AI asistent - doplněná propagace smazání cache do uzlů clusteru při úpravě asistenta.
 - Apache Tomcat - ve verzi `9.0.118/11.0.22` bylo změněno chování získání seznamu Java tříd což má za následek nefunkčnost `Stripes Framework`. Upravená verze filtruje nesprávné verze souborů aby start proběhl korektně. Do staršího projektu můžete přenést přímo třídu [VFS.java](https://github.com/webjetcms/webjetcms/blob/main/src/main/java/net/sourceforge/stripes/vfs/VFS.java), zkompilovat ji ve vašem projektu a použít bez potřeby aktualizace.
 - Bezpečnost - opravena možnost nastavit [jméno HTTP hlavičky pro získání IP adresy](sysadmin/pentests/README.md#konfigurace) přes proměnnou `xForwardedForHeader`.
-- Bezpečnost - opravené chyby Local File Inclusion, kontrola nahrávaných souborů a RCE. Zranitelnost se netýká webových stránek s nastavenými externími soubory - nastavená konfigurační proměnná `cloudStaticFilesDir`. Děkujeme Josef Korbel (Citadelo) za nahlášení těchto zranitelností. Možné dočasné řešení bez aktualizace je:
+- Bezpečnost - opravené chyby Local File Inclusion, kontrola nahrávaných souborů a RCE. Děkujeme Josef Korbel (Citadelo) za nahlášení těchto zranitelností (#252). Možné dočasné řešení bez aktualizace celého WebJET CMS je:
   - smazat nebo [aktualizovat](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/components/grideditor/phantom/phantom_sablona_ajax.jsp) soubor `/components/grideditor/phantom/phantom_sablona_ajax.jsp`
   - pokud máte WebJET CMS novější než `2025.52` do konfigurační proměnné `pathFilterBlockedPaths` přidat hodnotu `,/components/grideditor/phantom/`
   - pokud máte WebJET CMS novější než `2025.52` můžete [globálně pro celý server](install/external-configuration.md) do `JAVA_OPTS` přidat systémovou proměnnou:
