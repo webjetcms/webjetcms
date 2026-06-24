@@ -10,7 +10,7 @@ const docClass = "sk.iway.iwcm.doc.DocDetails";
 
 const templateId = "4319";
 const templateClass = "sk.iway.iwcm.doc.TemplateDetails";
-const tooltipText = "autotest-custom-fields-required";
+const tooltipText = "autotest-custom-fields-required-tooltip";
 const requiredOverrideAlphabet = "K";
 const overrideAlphabet = "T";
 const overrideGlobalLabel = "autotest-custom-fields-global-text";
@@ -88,7 +88,7 @@ Scenario('Custom fields required logic test @screenshot', async ({ I, DT, DTE, D
 
     I.say("Now test duplicity check");
     I.amOnPage("/admin/v9/settings/custom-fields/");
-    addCustomFieldSetting(I, DTE, docClass, requiredOverrideAlphabet.toLowerCase(), null, false, "Kombinácia polí „Použiť pre entitu“, „Označenie poľa“ a „ID entity“ musí byť jedinečná. Zadajte inú hodnotu pre jedno z týchto polí.");
+    addCustomFieldSetting(I, DTE, docClass, requiredOverrideAlphabet.toLowerCase(), null, false, "Kombinácia polí „Použiť pre entitu“, „Voliteľné pole“, „ID entity“, „Závislé od entity“ a „ID závislej entity“ musí byť jedinečná. Zadajte inú hodnotu pre jedno z týchto polí.");
 
     I.say("Try save it but for specific entityId - should pass");
     I.fillField("#DTE_Field_entityId", docId_1);
@@ -139,7 +139,7 @@ Scenario('Custom fields entity override applies type label and options', async (
     await checkDocCustomFieldSelect(I, DT, DTE, docId_1, overrideAlphabet, overrideSpecificLabel, [overrideOptionOne, overrideOptionTwo], overrideGlobalLabel);
 
     I.say("Another entity should keep global custom field settings");
-    checkDocCustomFieldText(I, DT, DTE, docId_2, overrideAlphabet, overrideGlobalLabel, 12, overrideSpecificLabel);
+    await checkDocCustomFieldText(I, DT, DTE, docId_2, overrideAlphabet, overrideGlobalLabel, 12, overrideSpecificLabel);
 });
 
 Scenario('Custom fields render all supported field types', async ({ I, DT, DTE }) => {
@@ -230,7 +230,7 @@ function checkDocCustomFields(I, DTE, docId, requiredFields, notRequiredFields) 
     });
 }
 
-function checkDocCustomFieldText(I, DT, DTE, docId, alphabet, label, maxLength, notExpectedLabel) {
+async function checkDocCustomFieldText(I, DT, DTE, docId, alphabet, label, maxLength, notExpectedLabel) {
     openDocFieldsTab(I, DT, DTE, docId);
 
     const fieldSelector = "#datatableInit_modal div.DTE_Field_Name_field" + alphabet;
@@ -238,6 +238,7 @@ function checkDocCustomFieldText(I, DT, DTE, docId, alphabet, label, maxLength, 
     I.seeElement( locate(fieldSelector + " label").withText(label) );
     I.dontSee(notExpectedLabel, fieldSelector);
     I.seeElementInDOM(fieldSelector + " input#DTE_Field_field" + alphabet + "[type='text'][maxlength='" + maxLength + "']");
+    await checkCustomFieldTooltip(I, fieldSelector, tooltipText);
 
     DTE.cancel();
 }
@@ -263,8 +264,21 @@ async function checkDocCustomFieldSelect(I, DT, DTE, docId, alphabet, label, exp
     }, { fieldSelector, expectedOptions });
 
     I.assertTrue(optionsPresent, "Entity-specific select options must be applied to the custom field");
+    await checkCustomFieldTooltip(I, fieldSelector, tooltipText);
 
     DTE.cancel();
+}
+
+async function checkCustomFieldTooltip(I, fieldSelector, expectedTooltip) {
+    const actualTooltip = await I.executeScript((fieldSelector) => {
+        const tooltip = document.querySelector(fieldSelector + " button.btn-tooltip");
+        if(tooltip == null) return null;
+
+        return tooltip.getAttribute("title") || tooltip.getAttribute("data-bs-original-title") || tooltip.getAttribute("data-original-title");
+    }, fieldSelector);
+
+    const sanitizedTooltip = actualTooltip?.replace(/(?:<br\s*\/?>\s*)+$/gi, "");
+    I.assertEqual(expectedTooltip, sanitizedTooltip, "Custom field tooltip must use configured value");
 }
 
 function openDocFieldsTab(I, DT, DTE, docId) {

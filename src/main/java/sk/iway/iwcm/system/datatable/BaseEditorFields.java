@@ -101,17 +101,22 @@ public class BaseEditorFields {
                 String type = "";
                 String typeKey = "";
                 String label = "";
+                String tooltip = null;
                 if(cfe == null) {
                     String labelKey = keyPrefix+".field_" + Character.toLowerCase(alphabet);
 
                     label = prop.getText(labelKey);
                     typeKey = labelKey + ".type";
                     type = propType.getText(typeKey);
+                    String tooltipKey = labelKey + ".tooltip";
+                    String translatedTooltip = prop.getText(tooltipKey);
+                    if (tooltipKey.equals(translatedTooltip) == false) tooltip = translatedTooltip;
 
                     field.setRequired(false);
                 } else {
                     label = prop.getText( cfe.getLabel() );
                     type = cfe.getValue();
+                    if (Tools.isNotEmpty(cfe.getTooltip())) tooltip = prop.getText(cfe.getTooltip());
                     // typeKey = dont know
                     field.setRequired( Tools.isTrue(cfe.getRequired()) );
                 }
@@ -305,6 +310,7 @@ public class BaseEditorFields {
 
                 field.setKey(Character.toLowerCase(alphabet) + "");
                 field.setLabel(label);
+                field.setTooltip(tooltip);
 
                 if("json_group".equals(type)) {
                     int groupId = Tools.getIntValue(value, -1);
