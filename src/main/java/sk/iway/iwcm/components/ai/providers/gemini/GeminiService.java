@@ -230,7 +230,7 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
         String systemInstructions = PromptInjectionDefense.hardenSystemInstructions(instructions);
         String userPrompt = PromptInjectionDefense.getProtectedUserPrompt(inputData);
 
-        if(InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
+        if (InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
             return getTextMainObject(systemInstructions, inputData, userPrompt);
 
         return getTextMainObject(systemInstructions, null, PromptInjectionDefense.getProtectedInputText(inputData), userPrompt);
@@ -241,7 +241,7 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
         String taskInstructions = PromptInjectionDefense.getTaskInstructions(instructions);
         String userPrompt = PromptInjectionDefense.getProtectedUserPrompt(inputData);
 
-        if(inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE))
+        if (inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE))
             //ITS IMAGE EDIT - I GOT IMAGE to edit AND I WILL RETURN IMAGE
             return getTextMainObject(securityInstructions, inputData, taskInstructions, userPrompt);
 

@@ -49,8 +49,8 @@ public abstract class GeminiSupportService extends SupportLogic {
         return mainObject;
     }
 
-    protected ObjectNode getTextMainObject(String systemInstruction, InputDataDTO inputData, String... userParts) throws IOException {
-        ObjectNode mainObject = getBaseMainObjectWithImage(inputData, userParts);
+    protected ObjectNode getTextMainObject(String systemInstruction, InputDataDTO inputData, String... userContents) throws IOException {
+        ObjectNode mainObject = getBaseMainObjectWithImage(inputData, userContents);
         ArrayNode contentsArray = (ArrayNode) mainObject.path("contents");
         if (contentsArray.size() == 0) {
             ArrayNode parts = MAPPER.createArrayNode();

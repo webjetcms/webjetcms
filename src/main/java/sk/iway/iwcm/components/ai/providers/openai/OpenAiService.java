@@ -207,10 +207,10 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         String systemInstructions = PromptInjectionDefense.hardenSystemInstructions(instructions);
         String userPrompt = PromptInjectionDefense.getProtectedUserPrompt(inputData);
 
-        if(InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
+        if (InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
             return getBaseMainObjectWithImage(systemInstructions, inputData, userPrompt);
 
-        return getBaseMainObject(systemInstructions, PromptInjectionDefense.getProtectedInputText(inputData), userPrompt);
+        return getBaseMainObject(instructions, PromptInjectionDefense.getProtectedInputText(inputData), userPrompt);
     }
 
     private String getImageResponsePrompt(String instructions, InputDataDTO inputData) {
@@ -218,8 +218,8 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         appendPromptPart(prompt, PromptInjectionDefense.getSecurityInstructions(instructions));
         appendPromptPart(prompt, PromptInjectionDefense.getTaskInstructions(instructions));
 
-        if(inputData != null) {
-            if(InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()) == false)
+        if (inputData != null) {
+            if (InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()) == false)
                 appendPromptPart(prompt, PromptInjectionDefense.getProtectedInputText(inputData));
             appendPromptPart(prompt, PromptInjectionDefense.getProtectedUserPrompt(inputData));
         }
