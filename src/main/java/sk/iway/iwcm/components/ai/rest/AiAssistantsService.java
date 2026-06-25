@@ -356,7 +356,18 @@ public class AiAssistantsService {
             }
         }
 
-        instructions = replaceUserInputMacros(instructions, inputData);
+        if (instructions.contains("{inputText}") || instructions.contains("{userPrompt}")) {
+            //for append we must clear inputValue, because it will be duplicated into final result
+            if ("append".equals(inputData.getReplaceMode()) || "replace".equals(inputData.getReplaceMode())) inputData.setInputValue("");
+
+            instructions = replaceUserInputMacros(instructions, inputData);
+
+            //clear values, so it will be not appended into final prompt, clear both,
+            //because it instructions contains {userPrompt} we expect that it will contain also
+            //inputValue if it is required for the action
+            inputData.setInputValue("");
+            inputData.setUserPrompt("");
+        }
         instructions = applyBonusParamsMacro(instructions, inputData.getBonusParams());
 
         if (replacedIncludes != null && replacedIncludes.isEmpty()==false) instructions = IncludesHandler.addProtectedTokenInstructionRule(instructions);
