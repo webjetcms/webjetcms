@@ -12,8 +12,7 @@ import com.github.jk1.license.filter.LicenseBundleNormalizer
 plugins {
     id 'java'
     id 'war'
-    //https://github.com/gretty-gradle-plugin/gretty
-    id 'org.gretty' version "5.0.1"
+    id 'org.springframework.boot' version '4.1.0'
     //https://plugins.gradle.org/plugin/io.freefair.lombok
     id "io.freefair.lombok" version "8.11"
     //http://jeremylong.github.io/DependencyCheck/dependency-check-gradle/index.html
@@ -42,10 +41,7 @@ ext {
     lombokVersion = "1.18.34";
     lombokMapstructBindingVersion = "0.2.0";
     mapstructVersion = "1.6.1";
-    springVersion = "7.0.+";
-    springDataVersion = "4.0.+";
-    springSecurityVersion = "7.0.+";
-    allureVersion = "2.32.0";
+    //Spring Boot 4.x manages Spring 7.x, Spring Data 4.x, Spring Security 7.x versions
     //do not forget to download https://mvnrepository.com/artifact/org.aspectj/aspectjtools
     //jar to ant/aspectj and update version in ant/compile.xml file
     aspectJVersion = '1.9.25.1';
@@ -139,6 +135,36 @@ configurations {
 
 dependencies {
 
+    // === Spring Boot 4.x starters (manages Spring 7.x versions) ===
+
+    // Spring Boot 4.1.0 BOM - manages all Spring Boot 4.x dependency versions
+    implementation platform('org.springframework.boot:spring-boot-dependencies:4.1.0')
+    implementation 'org.springframework.boot:spring-boot-starter-web:4.1.0'
+    implementation 'org.springframework.boot:spring-boot-starter-security:4.1.0'
+    implementation('org.springframework.boot:spring-boot-starter-data-jpa:4.1.0') { exclude group: 'org.springframework.boot', module: 'spring-boot-jdbc' }
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client:4.1.0'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux:4.1.0'
+
+    // Spring Boot 4.x modular auto-configuration (replaces autoconfigure module)
+    //     implementation 'org.springframework.boot:spring-boot-jdbc:4.1.0'
+    implementation 'org.springframework.boot:spring-boot-freemarker:4.1.0'
+    implementation 'org.springframework.boot:spring-boot-security:4.1.0'
+
+    // Spring Framework 7.x test utilities (MockHttpServletResponse)
+    implementation 'org.springframework:spring-test:7.0.0-M9'
+
+    // Pin Hibernate Validator to 9.0.0.Final for WebjetResourceBundleMessageInterpolator compatibility
+    implementation 'org.hibernate.validator:hibernate-validator:9.0.0.Final'
+    // JSP support for embedded Tomcat 11
+    implementation 'org.apache.tomcat.embed:tomcat-embed-jasper:11.0.22'
+    runtimeOnly 'org.glassfish.web:jakarta.servlet.jsp.jstl:3.0.1'
+
+    // WebAuthn/Passkeys
+    implementation 'org.springframework.security:spring-security-webauthn:7.0.0-M3'
+
+    // OpenAPI/Swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.0'
+
     //based on https://github.com/mapstruct/mapstruct-examples/blob/main/mapstruct-lombok/build.gradle
     implementation "org.mapstruct:mapstruct:${mapstructVersion}"
     //implementation "org.projectlombok:lombok:${lombokVersion}"
@@ -179,7 +205,6 @@ dependencies {
     implementation("org.freemarker:freemarker:2.3.34")
     implementation("com.google.code.gson:gson:2.13.2") //generate.jsp for pagebuilder, refactor to jackson
 
-    implementation("org.hibernate.validator:hibernate-validator:9.0.0.Final")
     implementation("jakarta.validation:jakarta.validation-api:3.0.2")
 
     implementation("org.apache.httpcomponents:httpclient:4.5.13")
@@ -209,24 +234,9 @@ dependencies {
     implementation("org.apache.poi:poi-scratchpad:5.4.1")
     implementation("org.apache.poi:poi:5.4.1")
     implementation("io.github.duckasteroid.cdb:sg-cdb-library:1.0.3")
-    implementation("org.springframework:spring-aop:${springVersion}")
-    implementation("org.springframework:spring-beans:${springVersion}")
-    implementation("org.springframework:spring-context:${springVersion}")
-    implementation("org.springframework.data:spring-data-commons:${springDataVersion}")
-    implementation("org.springframework.data:spring-data-jpa:${springDataVersion}")
-    implementation("org.springframework:spring-orm:${springVersion}")
-    implementation("org.springframework:spring-tx:${springVersion}")
-    implementation("org.springframework.security:spring-security-web:${springSecurityVersion}")
-    implementation("org.springframework.security:spring-security-config:${springSecurityVersion}")
-    implementation("org.springframework.security:spring-security-oauth2-client:${springSecurityVersion}")
-    implementation("org.springframework.security:spring-security-oauth2-core:${springSecurityVersion}")
-    implementation("org.springframework.security:spring-security-oauth2-jose:${springSecurityVersion}")
+    // Spring Framework 7.x dependencies are managed by Spring Boot 4.x starters above
     //WebAuthn/PassKey support - separated module in Spring Security 7
-    implementation("org.springframework.security:spring-security-webauthn:${springSecurityVersion}")
-    implementation("org.springframework:spring-webmvc:${springVersion}")
-    implementation("org.springframework:spring-context-support:${springVersion}")
-    implementation("org.springframework:spring-test:${springVersion}")
-    //implementation("org.springframework:spring-messaging:${springVersion}")
+    // Spring Framework 7.x dependencies are managed by Spring Boot 4.x starters above
 
     // https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-jaxrs2-jakarta for OpenAPI generation with integration API
     implementation("io.swagger.core.v3:swagger-jaxrs2-jakarta:2.2.30")
@@ -293,8 +303,9 @@ dependencies {
     // Source: https://mvnrepository.com/artifact/com.github.usefulness/webp-imageio - supports both read AND write via JNI native libwebp v1.5.0
     implementation("com.github.usefulness:webp-imageio:0.10.2")
 
-    testImplementation group: 'org.springframework', name: 'spring-test', version: "${springVersion}"
-    testImplementation group: 'org.springframework', name: 'spring-web', version: "${springVersion}"
+    // Spring Boot 4.x test dependencies
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:4.1.0'
+    testImplementation 'org.springframework.security:spring-security-test:7.0.0-M3'
     // Spring Framework 7.0 requires JUnit 6 baseline
     testImplementation platform('org.junit:junit-bom:6.0.0')
     testImplementation 'org.junit.jupiter:junit-jupiter-api'
@@ -433,93 +444,65 @@ jacoco {
     toolVersion = "+"
 }
 
-gretty {
-    // supported values:
-    // 'jetty7', 'jetty8', 'jetty9', 'jetty9.3', 'jetty9.4', 'tomcat7', 'tomcat8'
-    servletContainer = 'tomcat11'
-    contextPath = ''
-    httpPort = 80
-    httpsEnabled = true
-    httpsPort = 443
-    //hard mod spusti WJ rovno z src/main/webapp co zrychli start (netreba kopirovat JSP subory niekde inde)
-    inplaceMode = 'hard'
-    //scanovania pre hotswap
-    scanInterval = 0
-    scanner = 'jetty'
-    scanDir "${projectDir}/build/classes/java/main"
-    fastReload = true
-    //managedClassReload = true - nie je mozne pouzit s Java > 8
-    //chceme aby sa tomcat nereloadol po zmene triedy, v IDE je potrebne kliknut na Hot Code Replace pre aplikovanie zmeny v triede
-    reloadOnClassChange = false
-    debugSuspend = false
-
-    //extraResourceBase 'src/webjet8/webapp'
-
-    //JVM parametre
+bootRun {
+    // Migrated from gretty JVM args (old build.gradle before Spring Boot migration)
+    // These preserve the exact runtime behavior from the gretty/Tomcat setup
+    def webjetDbname = System.env.webjetDbname ?: '/poolman-local.xml'
     jvmArgs = [
-        //odporucane premenne pre Tomcat
-        '-Dsun.net.client.defaultConnectTimeout=300000',
-        '-Dsun.net.client.defaultReadTimeout=300000',
+        // AspectJ weaver agent (same as used in test task)
+        //"-javaagent:${configurations.agent.singleFile}",
+        // Recommended system properties for Tomcat (from old gretty config)
+        '-Dsun.net.client.defaultConnectTimeout=3000',
+        '-Dsun.net.client.defaultReadTimeout=3000',
         '-Dfile.encoding=utf-8',
         '-Duser.language=sk',
         '-Duser.country=SK',
-        //povolenie remote debug na porte 5005
+        // Remote debug on port 5005
         '-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005',
-        //lokalny poolman-local.xml subor
-        //'-DwebjetPoolmanPath=/poolman-local.xml',
-        //Uprava konfiguracie pre WebJET, tymto sa prepisuju hodnoty z databazy v Ovladaci panel->Konfiguracia
-        //'-Dwebjet.useSMTPServer=true',
+        // WebJET configuration overrides (from old gretty config)
         '-Dwebjet.smtpServer=mxrelay.dev.iway.sk',
-        "-DwebjetDbname=${System.env.webjetDbname}",
+        "-DwebjetDbname=${webjetDbname}",
+        "-DWEBJET_KEYSTORE_PATH=" + file("${projectDir}/build/classes/java/main/certificates/https-keystore.p12").absolutePath,
         '-Dwebjet.serverMonitoringEnableJPA=true',
         '-Dwebjet.webEnableIPs=1,2,3,4,5,6,7,8,9,0',
         '-Dwebjet.adminEnableIPs=1,2,3,4,5,6,7,8,9,0',
         '-Dwebjet.passwordAdminExpiryDays=0',
         '-Dwebjet.loggerUseAnsiColors=true'
     ]
+    systemProperties System.getProperties()
+}
 
-    //enable jacoco also for appStart and appStartDebug tasks
-    afterEvaluate {
-        tasks.appStart {
-            file("${rootDir}/build/jacoco/appStart.exec").delete()
-            jacoco {
-                enabled = true
-            }
-            finalizedBy tasks.generateJacocoReport
-        }
-        tasks.appStartDebug {
-            file("${rootDir}/build/jacoco/appStartDebug.exec").delete()
-            jacoco {
-                //enabled = true
-            }
-            //finalizedBy tasks.generateJacocoReport
-        }
-        tasks.appAfterIntegrationTest {
-            finalizedBy tasks.generateJacocoReport
-        }
+// Generate self-signed certificate for HTTPS (migrated from gretty's auto-generated keystore)
+// Gretty auto-generated build/gretty/https-keystore.p12; now writes to build output directory via keytool
+task generateCertificate(type: Exec) {
+    group = 'build'
+    description = 'Generates self-signed certificate for embedded Tomcat HTTPS'
+    def certFile = file("${projectDir}/build/classes/java/main/certificates/https-keystore.p12")
+    def certDir = certFile.parentFile
+    onlyIf { !certFile.exists() }
+    doFirst {
+        certDir.mkdirs()
     }
+    workingDir projectDir
+    // macOS: keytool, Linux: keytool (from JDK)
+    def keytool = 'keytool'
+    commandLine keytool,
+        '-genkeypair',
+        '-alias', 'tomcat',
+        '-keyalg', 'EC',
+        '-groupname', 'secp256r1',
+        '-keystore', certFile.absolutePath,
+        '-storetype', 'PKCS12',
+        '-storepass' , System.getenv('WEBJET_HTTPS_KEYSTORE_PASSWORD') ?: 'changeit',
+        '-keypass' , System.getenv('WEBJET_HTTPS_KEYSTORE_PASSWORD') ?: 'changeit',
+        '-validity', '365',
+        '-sigalg', 'SHA256withECDSA',
+        '-dname', 'CN=WebJET CMS, OU=Development, O=InterWay, L=Bratislava, C=SK',
+        '-ext', 'SAN=DNS:localhost,IP:127.0.0.1'
 }
 
-//generate HTML report from jacoco.exec files
-task('generateJacocoReport', type: JacocoReport) {
-
-  executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
-
-  sourceDirectories.setFrom project.files(project.sourceSets.main.allSource.srcDirs)
-  classDirectories.setFrom project.sourceSets.main.output
-
-  def reportDir = project.reporting.file("${rootDir}/build/jacoco/report")
-  def reportFileXml = project.reporting.file("${rootDir}/build/jacoco/report/cov.xml")
-  reports {
-    xml.required = true
-    xml.outputLocation = reportFileXml
-    csv.required = true
-    html.outputLocation = reportDir
-  }
-  doLast {
-    System.out.println "Jacoco report for server created: file://${reportDir.toURI().path}index.html"
-  }
-}
+// Ensure certificate is generated before bootRun
+bootRun.dependsOn generateCertificate
 
 //generovanie javadoc dokumentacie
 //generovat pocas buildu, aby sa dali generovat aj triedy, ktore tu nemame, napr. Constants

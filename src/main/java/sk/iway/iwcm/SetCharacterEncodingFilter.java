@@ -572,6 +572,8 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 			long timeTaken = System.currentTimeMillis() - startTime;
 			if(Constants.getBoolean("serverMonitoringEnablePerformance"))
 				savePerformanceMeasure(request, timeTaken, memoryConsumed.diff());
+
+			//Logger.error(SetCharacterEncodingFilter.class, "path="+request.getRequestURI()+" responseCode="+response.getStatus());
    	}
    	finally
    	{

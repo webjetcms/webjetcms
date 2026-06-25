@@ -30,6 +30,7 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.tags.support.ResponseUtils;
+import sk.iway.iwcm.system.spring.components.SpringContext;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -3240,10 +3241,25 @@ public class Tools
 	 * @return
 	 */
 	public static ApplicationContext getSpringContext() {
+		ApplicationContext context = SpringContext.getApplicationContext();
+		if (context != null) {
+			return context;
+		}
+
 		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
-		ApplicationContext context;
-      	if (requestBean == null) context = (ApplicationContext) Constants.getServletContext().getAttribute("springContext");
-		else context = requestBean.getSpringContext();
+		if (requestBean != null) {
+			context = requestBean.getSpringContext();
+			if (context != null) {
+				return context;
+			}
+		}
+
+		if (Constants.getServletContext() != null) {
+			context = (ApplicationContext) Constants.getServletContext().getAttribute("springContext");
+			if (context != null) {
+				return context;
+			}
+		}
 
 		return context;
 	}

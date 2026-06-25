@@ -157,13 +157,13 @@ public abstract class VFS {
   protected static List<URL> getResources(String path) throws IOException {
     //WebJET CMS FIX
 
-    //Logger.debug(VFS.class, "VFS.getResources(" + path + ")");
+    Logger.debug(InitServlet.class, "VFS.getResources(" + path + ")");
 
     //Tomcat 9.0.118/11.0.22 fix: it failed to start because of NULL BYTE in path
     //see also: https://github.com/StripesFramework/stripes/issues/117
     if (path.indexOf(0) > -1) return Collections.emptyList();
 
-    //Logger.debug(VFS.class, "INITIALIZING VFS.getResources(" + path + ")");
+    Logger.debug(InitServlet.class, "INITIALIZING VFS.getResources(" + path + ")");
     try {
       return Collections.list(Thread.currentThread().getContextClassLoader().getResources(path));
     } catch (Exception e) {

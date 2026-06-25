@@ -7,7 +7,6 @@ import org.springframework.transaction.TransactionSystemException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.server.ResponseStatusException;
@@ -16,7 +15,6 @@ import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatableFieldError;
 import sk.iway.iwcm.system.datatable.DatatableResponse;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
@@ -42,7 +40,6 @@ import java.util.stream.Collectors;
  *  	- stara sa len o vynimky z tried, ktore maju anotaciu '@Datatable'
  *
  */
-@ControllerAdvice(annotations = {Datatable.class})
 public class DatatableExceptionHandlerV2
 {
 	@ResponseBody

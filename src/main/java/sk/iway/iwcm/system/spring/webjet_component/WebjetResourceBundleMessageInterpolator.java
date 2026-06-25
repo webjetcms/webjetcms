@@ -14,8 +14,8 @@ import jakarta.el.ExpressionFactory;
 import jakarta.validation.MessageInterpolator;
 import jakarta.validation.ValidationException;
 
-import org.hibernate.validator.internal.engine.messageinterpolation.InterpolationTerm;
 import org.hibernate.validator.internal.engine.messageinterpolation.InterpolationTermType;
+import org.hibernate.validator.internal.engine.messageinterpolation.TermInterpolator;
 import org.hibernate.validator.internal.engine.messageinterpolation.parser.MessageDescriptorFormatException;
 import org.hibernate.validator.internal.engine.messageinterpolation.parser.Token;
 import org.hibernate.validator.internal.engine.messageinterpolation.parser.TokenCollector;
@@ -35,6 +35,7 @@ import sk.iway.iwcm.Logger;
 public class WebjetResourceBundleMessageInterpolator implements MessageInterpolator {
     private boolean cachingEnabled = false;
     private ExpressionFactory expressionFactory;
+    private final TermInterpolator termInterpolator;
 
     private static final Log LOG = LoggerFactory.make(MethodHandles.lookup());
     private final Locale defaultLocale;
@@ -50,7 +51,6 @@ public class WebjetResourceBundleMessageInterpolator implements MessageInterpola
 
     public WebjetResourceBundleMessageInterpolator() {
         this(new MessageSourceResourceBundleLocator( new WebjetMessageSource()), new PlatformResourceBundleLocator("org.hibernate.validator.ValidationMessages"), false);
-        this.expressionFactory = buildExpressionFactory();
     }
 
     public WebjetResourceBundleMessageInterpolator(ResourceBundleLocator userResourceBundleLocator, ResourceBundleLocator contributorResourceBundleLocator, boolean cacheMessages) {
@@ -69,6 +69,8 @@ public class WebjetResourceBundleMessageInterpolator implements MessageInterpola
 
         this.defaultResourceBundleLocator = new PlatformResourceBundleLocator("org.hibernate.validator.ValidationMessages");
         this.cachingEnabled = cacheMessages;
+        this.expressionFactory = buildExpressionFactory();
+        this.termInterpolator = new TermInterpolator(this.expressionFactory);
         if (this.cachingEnabled) {
             this.tokenizedParameterMessages = new ConcurrentReferenceHashMap<>(100, 0.75F, 16, ConcurrentReferenceHashMap.ReferenceType.SOFT, ConcurrentReferenceHashMap.ReferenceType.SOFT, EnumSet.noneOf(ConcurrentReferenceHashMap.Option.class));
             this.tokenizedELMessages = new ConcurrentReferenceHashMap<>(100, 0.75F, 16, ConcurrentReferenceHashMap.ReferenceType.SOFT, ConcurrentReferenceHashMap.ReferenceType.SOFT, EnumSet.noneOf(ConcurrentReferenceHashMap.Option.class));
@@ -106,8 +108,8 @@ public class WebjetResourceBundleMessageInterpolator implements MessageInterpola
         String resolvedMessage = this.resolveMessage(message, locale);
 
         if (resolvedMessage.indexOf(123) > -1) {
-            resolvedMessage = this.interpolateExpression(new TokenIterator(this.getParameterTokens(resolvedMessage, this.tokenizedParameterMessages, InterpolationTermType.PARAMETER)), context, locale);
-            resolvedMessage = this.interpolateExpression(new TokenIterator(this.getParameterTokens(resolvedMessage, this.tokenizedELMessages, InterpolationTermType.EL)), context, locale);
+            resolvedMessage = this.interpolateExpression(new TokenIterator(resolvedMessage, this.getParameterTokens(resolvedMessage, this.tokenizedParameterMessages, InterpolationTermType.PARAMETER)), context, locale);
+            resolvedMessage = this.interpolateExpression(new TokenIterator(resolvedMessage, this.getParameterTokens(resolvedMessage, this.tokenizedELMessages, InterpolationTermType.EL)), context, locale);
         }
 
         resolvedMessage = this.replaceEscapedLiterals(resolvedMessage);
@@ -162,7 +164,7 @@ public class WebjetResourceBundleMessageInterpolator implements MessageInterpola
 
     private String interpolateBundleMessage(String message, ResourceBundle bundle, Locale locale, boolean recursive) throws MessageDescriptorFormatException {
         TokenCollector tokenCollector = new TokenCollector(message, InterpolationTermType.PARAMETER);
-        TokenIterator tokenIterator = new TokenIterator(tokenCollector.getTokenList());
+        TokenIterator tokenIterator = new TokenIterator(message, tokenCollector.getTokenList());
 
         while(tokenIterator.hasMoreInterpolationTerms()) {
             String term = tokenIterator.nextInterpolationTerm();
@@ -206,8 +208,7 @@ public class WebjetResourceBundleMessageInterpolator implements MessageInterpola
     }
 
     public String interpolate(Context context, Locale locale, String message) {
-        InterpolationTerm expression = new InterpolationTerm(message, locale, expressionFactory);
-        return expression.interpolate(context);
+        return this.termInterpolator.interpolate(context, message, locale);
     }
 
     private static ExpressionFactory buildExpressionFactory() {

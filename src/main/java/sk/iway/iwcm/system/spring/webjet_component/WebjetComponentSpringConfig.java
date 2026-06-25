@@ -4,10 +4,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.validation.Validator;
+import jakarta.validation.Validator;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.servlet.ViewResolver;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.view.JstlView;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerView;
 import org.thymeleaf.spring6.SpringTemplateEngine;
@@ -23,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
-@EnableWebMvc
 public class WebjetComponentSpringConfig {
 
     final
@@ -35,7 +33,7 @@ public class WebjetComponentSpringConfig {
 
     // nastavenie message source pre validator
     @Bean
-    public Validator mvcValidator() {
+    public Validator validator() {
         LocalValidatorFactoryBean validatorFactoryBean = new LocalValidatorFactoryBean();
 
         validatorFactoryBean.setMessageInterpolator(new WebjetResourceBundleMessageInterpolator());
@@ -65,7 +63,7 @@ public class WebjetComponentSpringConfig {
         view2.setApplicationContext(context);
 
         resolvers.add(view2);
-        resolvers.add(thymeleafViewResolver());
+        resolvers.add(webjetThymeleafViewResolver());
 
         WebjetViewResolver resolver = new WebjetViewResolver();
         resolver.setViewResolvers(resolvers);
@@ -75,25 +73,25 @@ public class WebjetComponentSpringConfig {
 
     /* THYMELEAF KONFIGURACIA, namapovana na / s vyhladavanim .html suborov */
     @Bean
-    public MessageSource messageSource() {
+    public MessageSource webjetMessageSource() {
         Logger.debug(WebjetComponentParser.class, "Spring: messageSource");
         WebjetMessageSource source = new WebjetMessageSource();
         return source;
     }
 
     @Bean
-    public SpringTemplateEngine templateEngine() {
+    public SpringTemplateEngine webjetTemplateEngine() {
         Logger.debug(WebjetComponentParser.class, "thymeleaf: templateEngine");
 
         SpringTemplateEngine templateEngine = new SpringTemplateEngine();
         templateEngine.setEnableSpringELCompiler(true);
         templateEngine.addDialect(new IwcmDialect());
-        templateEngine.setTemplateResolver(thymeleafTemplateResolver());
+        templateEngine.setTemplateResolver(webjetThymeleafTemplateResolver());
         return templateEngine;
     }
 
     @Bean
-    public SpringResourceTemplateResolver thymeleafTemplateResolver() {
+    public SpringResourceTemplateResolver webjetThymeleafTemplateResolver() {
         Logger.debug(WebjetComponentParser.class, "thymeleaf: thymeleafTemplateResolver");
 
         SpringResourceTemplateResolver templateResolver
@@ -109,12 +107,13 @@ public class WebjetComponentSpringConfig {
     }
 
     @Bean
-    public ThymeleafViewResolver thymeleafViewResolver() {
+    public ThymeleafViewResolver webjetThymeleafViewResolver() {
 
         Logger.debug(WebjetComponentParser.class, "thymeleaf: thymeleafViewResolver");
 
         ThymeleafViewResolver viewResolver = new ThymeleafViewResolver();
-        viewResolver.setTemplateEngine(templateEngine());
+        viewResolver.setTemplateEngine(webjetTemplateEngine());
+        viewResolver.setExcludedViewNames(new String[] {"*.jsp", "*.ftl"});
         Logger.debug(WebjetComponentSpringConfig.class, "thymeleafViewResolver SETTING ENCODING: "+Constants.getString("defaultEncoding"));
         viewResolver.setCharacterEncoding(SetCharacterEncodingFilter.getEncoding());
         return viewResolver;

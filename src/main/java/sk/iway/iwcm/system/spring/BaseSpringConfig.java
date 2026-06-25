@@ -24,8 +24,6 @@ import org.springframework.http.converter.ResourceHttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.web.servlet.config.annotation.DefaultServletHandlerConfigurer;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
@@ -41,8 +39,11 @@ import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 
+import org.springframework.boot.web.error.ErrorPage;
+import org.springframework.boot.web.error.ErrorPageRegistrar;
+import org.springframework.http.HttpStatus;
+
 @Configuration
-@EnableWebMvc
 @EnableAsync
 @ComponentScan({
     "sk.iway.iwcm.system.spring.components"
@@ -94,7 +95,7 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
      * @return
      */
     @Bean
-    PageableHandlerMethodArgumentResolverCustomizer sortCustomizer() {
+    PageableHandlerMethodArgumentResolverCustomizer webjetSortCustomizer() {
         Logger.println(BaseSpringConfig.class, "-------> sortCustomizer()");
         return p -> p.setMaxPageSize(Integer.MAX_VALUE);
     }
@@ -180,15 +181,33 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
      * jeeff: toto potrebujeme ako default handler na staticke subory, v SpringAppInitializer sa bindne Spring dispatcher na / a on nehandluje css, html atd
      * https://stackoverflow.com/questions/29394493/spring-mvc-configuration-enable
      */
-    @Override
+    /*@Override
     public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
         Logger.println(BaseSpringConfig.class, "-------> configureDefaultServletHandling()");
         configurer.enable();
         SpringAppInitializer.dtDiff("configureDefaultServletHandling DONE");
-    }
+    }*/
 
     /*@Override
     public void configurePathMatch(PathMatchConfigurer configurer) {
         configurer.setUseTrailingSlashMatch(true); // Povolí zlučovanie trailing slash
     }*/
+
+    /**
+     * Register JSP error pages for 404, 403, and 500 status codes.
+     * In Spring Boot 4.x, BasicErrorController and ErrorController are removed.
+     * We register error pages directly with the embedded server (Tomcat)
+     * so that error responses dispatch to the JSP files.
+     */
+    @Bean
+    public ErrorPageRegistrar errorPageRegistrar() {
+        return registry -> {
+            Logger.println(BaseSpringConfig.class, "-------> Registering JSP error pages");
+            registry.addErrorPages(
+                new ErrorPage(HttpStatus.NOT_FOUND, "/404.jsp"),
+                new ErrorPage(HttpStatus.FORBIDDEN, "/403.jsp"),
+                new ErrorPage(HttpStatus.INTERNAL_SERVER_ERROR, "/500.jsp")
+            );
+        };
+    }
 }

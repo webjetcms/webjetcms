@@ -6,8 +6,8 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 import org.thymeleaf.spring6.SpringTemplateEngine;
@@ -23,11 +23,11 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.spring.webjet_component.WebjetMessageSource;
 
 @Configuration
-@EnableWebMvc
+@Conditional(SetupModeCondition.class)
 public class SetupSpringConfig implements WebMvcConfigurer {
 
     @Bean
-    public AcceptHeaderLocaleResolver localeResolver() {
+    public AcceptHeaderLocaleResolver webjetLocaleResolver() {
         AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver() {
             @Override
             public Locale resolveLocale(HttpServletRequest request) {
@@ -38,7 +38,13 @@ public class SetupSpringConfig implements WebMvcConfigurer {
             }
         };
 
-        localeResolver.setDefaultLocale(new Locale(PageLng.getUserLngIso(Constants.getString("defaultLanguage")).replace("-", "_")));
+        // During embedded server startup, ServletContext may not be available yet.
+        // Use a fallback default locale when Cache/ServletContext is not available.
+        try {
+            localeResolver.setDefaultLocale(new Locale(PageLng.getUserLngIso(Constants.getString("defaultLanguage")).replace("-", "_")));
+        } catch (Exception e) {
+            localeResolver.setDefaultLocale(new Locale("sk")); // fallback
+        }
         return localeResolver;
     }
 
@@ -75,6 +81,7 @@ public class SetupSpringConfig implements WebMvcConfigurer {
 
         ThymeleafViewResolver viewResolver = new ThymeleafViewResolver();
         viewResolver.setTemplateEngine(templateEngine());
+        viewResolver.setExcludedViewNames(new String[] {"*.jsp", "*.ftl"});
         Logger.debug(SetupSpringConfig.class, "thymeleafViewResolver SETTING ENCODING: "+Constants.getString("defaultEncoding"));
         viewResolver.setCharacterEncoding(SetCharacterEncodingFilter.getEncoding());
         return viewResolver;
