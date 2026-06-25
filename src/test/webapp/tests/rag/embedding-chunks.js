@@ -257,6 +257,10 @@ Scenario('Set CronJob to higher interval', ({ I, DT, DTE }) => {
     setRagCronJob(I, DT, DTE, true, "*/30");
 });
 
+Scenario('Disable rag semantic search', ({ I, DT, Document }) => {
+    Document.setConfigValue("ragSemanticSearchEnabled", "false");
+});
+
 function selectTree(I, buttonSelector, nodesArr) {
     I.clickCss(buttonSelector);
     I.waitForVisible("#jsTree", 10);

@@ -25,6 +25,7 @@ import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
@@ -32,6 +33,7 @@ import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.components.ai.rest.AiTempFileStorage;
+import sk.iway.iwcm.components.ai.security.PromptInjectionDefense;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
 import sk.iway.iwcm.i18n.Prop;
@@ -69,7 +71,7 @@ public abstract class SupportLogic implements SupportLogicInterface {
             JsonNode root = new ObjectMapper().readTree(value);
             return extractModels(root);
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.error(SupportLogic.class, "Error processing models " + e.getMessage());
         }
 
         return supportedValues;
@@ -84,6 +86,8 @@ public abstract class SupportLogic implements SupportLogicInterface {
             //Handle replace of INCLUDE tags
             Map<Integer, String> replacedIncludes = IncludesHandler.replaceIncludesWithPlaceholders(inputData);
             String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, replacedIncludes);
+            PromptInjectionDefense.protectInputData(inputData);
+            instructions = PromptInjectionDefense.hardenSystemInstructions(instructions);
 
             try (CloseableHttpResponse response = HttpClients.createDefault().execute( getResponseRequest(instructions, inputData, assistant, request)) ) {
                 if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
@@ -120,6 +124,8 @@ public abstract class SupportLogic implements SupportLogicInterface {
             //Handle replace of INCLUDE tags
             Map<Integer, String> replacedIncludes = IncludesHandler.replaceIncludesWithPlaceholders(inputData);
             String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, replacedIncludes);
+            PromptInjectionDefense.protectInputData(inputData);
+            instructions = PromptInjectionDefense.hardenSystemInstructions(instructions);
 
             try (CloseableHttpResponse response = HttpClients.createDefault().execute( getStremResponseRequest(instructions, inputData, assistant, request) )) {
                 if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
@@ -157,6 +163,8 @@ public abstract class SupportLogic implements SupportLogicInterface {
             responseDto.setGeneratedFileName(generatedFileName.getFirst());
 
             String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, null);
+            PromptInjectionDefense.protectInputData(inputData);
+            instructions = PromptInjectionDefense.hardenSystemInstructions(instructions);
 
             try (CloseableHttpResponse response = HttpClients.createDefault().execute( getImageResponseRequest(instructions, inputData, assistant, request, prop) )) {
                 if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
@@ -193,7 +201,7 @@ public abstract class SupportLogic implements SupportLogicInterface {
                         responseDto.addTempFile(tmpFileName);
                     } catch (IOException ioe) {
                         // Log and continue with next image
-                        ioe.printStackTrace();
+                        Logger.error(SupportLogic.class, "Error processing image " + ioe.getMessage());
                     }
                 }
 
@@ -273,7 +281,7 @@ public abstract class SupportLogic implements SupportLogicInterface {
             if(Tools.isNotEmpty(response.getError())) return new Pair<>(defaultFileName, 0);
             return new Pair<>(response.getResponse(), response.getTotalTokens());
         } catch(Exception e) {
-            e.printStackTrace();
+            Logger.error(SupportLogic.class, "Error processing image name " + e.getMessage());
             return new Pair<>(defaultFileName, 0);
         }
     }
@@ -318,7 +326,9 @@ public abstract class SupportLogic implements SupportLogicInterface {
         try {
             Adminlog.add(Adminlog.TYPE_AI, sb.toString(), totalTokens, -1);
             AiStatService.addRecord(assistant.getId(), totalTokens, statRepo, request);
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            Logger.error(SupportLogic.class, "Error processing adminlog " + e.getMessage());
+         }
 
         responseDto.setTotalTokens(totalTokens);
     }

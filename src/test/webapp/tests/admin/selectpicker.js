@@ -213,7 +213,7 @@ Scenario('BUG-zobrazenie selectov vo vnorenej DT',  async({ I, DTE, Document }) 
     I.amOnPage("/admin/v9/users/user-groups/?id=2");
     DTE.waitForEditor("userGroupsDataTable");
     I.clickCss("#pills-dt-userGroupsDataTable-sites-tab");
-    I.wait(1);
+    I.wait(2); //wait for animation to finish
     await Document.compareScreenshotElement("#datatableFieldDTE_Field_docDetailsList_wrapper th.dt-th-title div.input-group div.filter-option", "autotest-bug-zobrazenie-selectov-vo-vnorenej-dt.png", null, null, 10);
 
     DTE.cancel();

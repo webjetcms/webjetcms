@@ -7,6 +7,7 @@ Before(({ I, login }) =>{
 Scenario('Set semantic search as wanted search', ({ I, DT, Document }) => {
     Document.setConfigValue("searchType", "semantic");
     Document.setConfigValue("spamProtectionTimeout-search", "1");
+    Document.setConfigValue("ragSemanticSearchEnabled", "true");
 });
 
 const searchData = [
@@ -68,16 +69,17 @@ const searchData = [
 ];
 
 Scenario('Try semantic search', ({ I, DT, Document }) => {
-    I.amOnPage("/apps/vyhladavanie/semanticke-vyhladavanie.html?");
+    I.amOnPage("/apps/vyhladavanie/semanticke-vyhladavanie.html");
     I.waitForVisible("#searchWords", 5);
 
     searchData.forEach(({ pageName, pageUrl, questions }) => {
         questions.forEach(question => {
+            I.wait(1); //spam protection
+            I.say("Search for question: " + question);
             I.fillField('#searchWords', question);
             I.click(".smallSearchSubmit");
             I.waitForElement("h1.searchResultsH1", 20);
             checkTopFind(I, pageUrl, pageName);
-            I.wait(1);
         });
     });
 });
@@ -85,6 +87,7 @@ Scenario('Try semantic search', ({ I, DT, Document }) => {
 Scenario('Remove search preference', ({ I, DT, Document }) => {
     Document.setConfigValue("spamProtectionTimeout-search", "10");
     Document.setConfigValue("searchType", "db");
+    Document.setConfigValue("ragSemanticSearchEnabled", "false");
 });
 
 function checkTopFind(I, pageUrl, pageName) {

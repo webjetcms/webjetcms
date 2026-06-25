@@ -31,6 +31,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
+import sk.iway.iwcm.components.ai.security.PromptInjectionDefense;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
@@ -98,11 +99,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
     }
 
     public HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) throws IOException {
-        ObjectNode mainObject;
-        if(InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
-            mainObject = getBaseMainObjectWithImage(instructions, inputData, inputData.getUserPrompt());
-        else
-            mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+        ObjectNode mainObject = getTextResponseMainObject(instructions, inputData);
 
         mainObject.put(MODEL.value(), assistant.getModel());
         mainObject.put(STORE.value(), !assistant.getUseTemporal());
@@ -140,11 +137,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
     }
 
     public HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) throws IOException {
-        ObjectNode mainObject;
-        if(InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
-            mainObject = getBaseMainObjectWithImage(instructions, inputData, inputData.getUserPrompt());
-        else
-            mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+        ObjectNode mainObject = getTextResponseMainObject(instructions, inputData);
 
         mainObject.put(MODEL.value(), assistant.getModel());
         mainObject.put(STORE.value(), !assistant.getUseTemporal());
@@ -166,12 +159,13 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
 
     public HttpRequestBase getImageResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request, Prop prop) throws IOException {
+        String imagePrompt = getImageResponsePrompt(instructions, inputData);
         if(inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE)) {
             //ITS IMAGE EDIT - I GOT IMAGE to edit AND I WILL RETURN IMAGE
-            return getEditImagePost(inputData, assistant.getModel(), instructions, prop);
+            return getEditImagePost(inputData, assistant.getModel(), imagePrompt, prop);
         } else {
             //ITS IMAGE GENERATION - INPUT IS TEXT RETUN IMAGE
-            return getCreateImagePost(inputData, assistant.getModel(), instructions);
+            return getCreateImagePost(inputData, assistant.getModel(), imagePrompt);
         }
     }
 
@@ -207,6 +201,36 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
     public String getImageBase64(JsonNode jsonNodeRes, JsonNode jsonImage) {
         return jsonImage.path("b64_json").asText(null);
+    }
+
+    private ObjectNode getTextResponseMainObject(String instructions, InputDataDTO inputData) throws IOException {
+        String systemInstructions = PromptInjectionDefense.hardenSystemInstructions(instructions);
+        String userPrompt = PromptInjectionDefense.getProtectedUserPrompt(inputData);
+
+        if (InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
+            return getBaseMainObjectWithImage(systemInstructions, inputData, userPrompt);
+
+        return getBaseMainObject(systemInstructions, PromptInjectionDefense.getProtectedInputText(inputData), userPrompt);
+    }
+
+    private String getImageResponsePrompt(String instructions, InputDataDTO inputData) {
+        StringBuilder prompt = new StringBuilder();
+        appendPromptPart(prompt, PromptInjectionDefense.getSecurityInstructions(instructions));
+        appendPromptPart(prompt, PromptInjectionDefense.getTaskInstructions(instructions));
+
+        if (inputData != null) {
+            if (InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()) == false)
+                appendPromptPart(prompt, PromptInjectionDefense.getProtectedInputText(inputData));
+            appendPromptPart(prompt, PromptInjectionDefense.getProtectedUserPrompt(inputData));
+        }
+
+        return prompt.toString();
+    }
+
+    private void appendPromptPart(StringBuilder prompt, String value) {
+        if(Tools.isEmpty(value)) return;
+        if(prompt.isEmpty() == false) prompt.append("\n\n");
+        prompt.append(value);
     }
 
     public String getModelForImageNameGeneration() {

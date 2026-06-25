@@ -247,7 +247,7 @@ Scenario('test Gemini AI image answers - no user input', async ({I, DTE}) => {
     startAssistant(I, "perexImage", "Odstrániť pozadie", geminiId);
     checkBaseWaitDialog(I, "Odstrániť pozadie", geminiId, "ti.ti-photo-x");
     waiToEndImage(I);
-    checkImages(I, 1);
+    checkImages(I, 1, false);
     checkImageInfo(I);
 });
 

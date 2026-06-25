@@ -137,7 +137,7 @@
     - [List of reservation objects](/redactor/apps/reservation/reservation-objects/README.md)
     - [Reservation App](/redactor/apps/reservation/reservation-app/README.md)
     - [Time Reservation Application](/redactor/apps/reservation/time-book-app/README.md)
-    - [Day Book Application](/redactor/apps/reservation/day-book-app/README.md)
+    - [My Reservations App](/redactor/apps/reservation/my-reservations-app/README.md)
   - [Scripts](/redactor/apps/insert-script/README.md)
   - [Slider](/redactor/apps/slider/README.md)
   - [Slit slider](/redactor/apps/app-slit_slider/README.md)

@@ -246,6 +246,7 @@ public class SemanticIndexService {
             String language = GroupMirroringServiceV9.getLanguage(doc.getGroup());
             String domainName = DocDB.getInstance().getDomain(docId);
             int domainId = GroupsDB.getDomainId(domainName);
+            if (domainId < 1) domainId = 1; // for non multi domain web GroupDB returns -1 as domainId, but CloudToolsForCore returns 1
 
             Date now = new Date();
             List<EmbeddingChunkEntity> chunksToStore = new ArrayList<>(chunks.size());

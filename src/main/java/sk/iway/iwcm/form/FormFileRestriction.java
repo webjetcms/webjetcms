@@ -1,6 +1,7 @@
 package sk.iway.iwcm.form;
 
 import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.ImageTools;
 import sk.iway.iwcm.components.upload.XhrFileUploadService;
@@ -107,6 +108,11 @@ public class FormFileRestriction
 
 	private boolean hasAllowedExtension(String fileName)
 	{
+		//for FormMail we never want to allow unsafe file types
+		Identity fakeUser = new Identity();
+		fakeUser.setAdmin(false);
+		if (FileTools.isFileAllowedForUpload(fakeUser, fileName)==false) return false; //check global file type restrictions first
+
 		if (Tools.isEmpty(allowedExtensions))
 			return true;
 

@@ -66,6 +66,23 @@ public class FileTools
 		//utility class
 	}
 
+	private static final String[] NOT_ALLOWED_FILE_TYPES = new String[] {
+		//JSP / Jasper engine (Tomcat maps *.jsp and *.jspx by default, others are common custom/legacy mappings or get compiled by Jasper)
+		"jsp", "jspx", "jspf", "jsw", "jsv", "jspa", "jhtml", "tag", "tagx", "tagf",
+		//Java sources / classes / deployable archives
+		"class", "java", "war", "ear",
+		//JSF / Facelets
+		"xhtml",
+		//Server Side Includes (SSI servlet)
+		"shtml", "shtm", "stm",
+		//PHP and its variants
+		"php", "php3", "php4", "php5", "php7", "pht", "phtml", "phar", "phps",
+		//ASP and its variants
+		"asp", "aspx", "ascx", "ashx", "asmx", "asax", "cer", "swf",
+		//Shell / OS scripts and executables
+		"sh", "exe", "bat", "cmd", "com", "vbs", "wsf", "wsh", "ps1", "ps2", "psm1"
+	};
+
 	/**
 	 * Skopiruje subor src do dest
 	 * @param src
@@ -916,14 +933,18 @@ public class FileTools
 		//zmenene z false na true pretoze potom sa zle plnili polia so subormi a padalo to dalej na NPE
 		if (fileName == null || Tools.isEmpty(fileName)) return true;
 
-		if (user!=null && user.isAdmin()) return true;
+		if ((user!=null && user.isAdmin()) || (user == null && RequestBean.isAdminLogged())) {
+			//allow all file types for admin users
+			return true;
+		}
 
-		String ext = FileTools.getFileExtension(fileName);
-		if (ext==null) return false;
+		String fileExt = getFileExtension(fileName).toLowerCase();
+		for (String ext : NOT_ALLOWED_FILE_TYPES) {
+			if (ext.equals(fileExt)) {
+				return false;
+			}
+		}
 
-		ext = ext.toLowerCase();
-
-		if (ext.equals("jsp") || ext.equals("class") || ext.equals("java")) return false;
 		if (FileBrowserTools.hasForbiddenSymbol(fileName)) return false;
 
 		return true;
