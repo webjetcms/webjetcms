@@ -206,3 +206,21 @@ Scenario("test meta robots by page settings", async ({I, DTE}) => {
         await checkRobotsHeader(I, setting.expected);
     }
 });
+
+Scenario("test SEO image dimensions", async ({I}) => {
+    I.amOnPage("/showdoc.do?docid=141");
+
+    const widthA = await I.grabAttributeFrom('meta[property="og:image:width"]', "content");
+    const heightA = await I.grabAttributeFrom('meta[property="og:image:height"]', "content");
+
+    I.assertEqual(widthA, "265");
+    I.assertEqual(heightA, "225");
+
+    I.amOnPage("/showdoc.do?docid=92");
+
+    const widthB = await I.grabAttributeFrom('meta[property="og:image:width"]', "content");
+    const heightB = await I.grabAttributeFrom('meta[property="og:image:height"]', "content");
+
+    I.assertEqual(widthB, "0");
+    I.assertEqual(heightB, "0");
+});

@@ -120,7 +120,7 @@ public class Page {
         String seoImage = getSeoImage();
         if (Tools.isEmpty(seoImage) || !FileTools.isFile(seoImage)) return 0;
 
-        int[] dimensions = GalleryDBTools.getImageSize(new IwcmFile(seoImage));
+        int[] dimensions = GalleryDBTools.getImageSize(new IwcmFile(Tools.getRealPath(seoImage)));
         return dimensions != null && dimensions.length > 0 ? dimensions[0] : 0;
     }
 
@@ -133,7 +133,7 @@ public class Page {
         String seoImage = getSeoImage();
         if (Tools.isEmpty(seoImage) || !FileTools.isFile(seoImage)) return 0;
 
-        int[] dimensions = GalleryDBTools.getImageSize(new IwcmFile(seoImage));
+        int[] dimensions = GalleryDBTools.getImageSize(new IwcmFile(Tools.getRealPath(seoImage)));
         return dimensions != null && dimensions.length > 1 ? dimensions[1] : 0;
     }
 
