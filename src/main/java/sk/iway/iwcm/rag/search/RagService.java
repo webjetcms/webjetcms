@@ -60,7 +60,7 @@ public class RagService {
         AssistantDefinitionEntity assistant = null;
         Long assistantId = Tools.getLongValue(pageParams.getValue("ragAssistantId", ""), -1L);
         if(assistantId != null && assistantId > 0) {
-            Optional<AssistantDefinitionEntity> opt = assistantRepository.findById(assistantId);
+            Optional<AssistantDefinitionEntity> opt = assistantRepository.findByIdAndDomainId(assistantId, domainId);
             if(opt.isPresent()) {
                 assistant = opt.get();
             }

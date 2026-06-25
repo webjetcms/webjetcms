@@ -35,6 +35,7 @@ import sk.iway.iwcm.components.file_archiv.FileArchivatorBean;
 import sk.iway.iwcm.components.file_archiv.FileArchivatorDB;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.rag.search.SemanticSearchService;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.users.UsersDB;
@@ -80,7 +81,11 @@ public class SearchAction
 		}
 		if ("semantic".equals(searchType) || "hybrid".equals(searchType) || "true".equals(request.getParameter("useSemantic")) || pageParams.getBooleanValue("useSemantic", false))
 		{
-			return SemanticSearchAction.search(request, response);
+			if (isSemanticSearchAvailable()) {
+				return SemanticSearchAction.search(request, response);
+			}
+
+			Logger.debug(SearchAction.class, "Semantic/hybrid search requested but semantic search is not available, falling back to database search");
 		}
 
 		// ELSE - standard database search
@@ -1697,4 +1702,18 @@ public class SearchAction
     public static String[] getCheckInputParams() {
 		return SearchTools.getCheckInputParams();
     }
+
+	/**
+	 * Checks whether semantic search service and vector store are available.
+	 * If unavailable, caller should fall back to standard database search.
+	 */
+	private static boolean isSemanticSearchAvailable() {
+		try {
+			SemanticSearchService semanticSearchService = Tools.getSpringBean("semanticSearchService", SemanticSearchService.class);
+			return semanticSearchService != null && semanticSearchService.isAvailable();
+		} catch (RuntimeException ex) {
+			Logger.error(SearchAction.class, "Failed to resolve semanticSearchService, falling back to database search: " + ex.getMessage());
+			return false;
+		}
+	}
 }
