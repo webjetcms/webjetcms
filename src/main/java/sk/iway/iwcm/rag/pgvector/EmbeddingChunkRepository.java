@@ -21,13 +21,13 @@ public interface EmbeddingChunkRepository extends DomainIdRepository<EmbeddingCh
 
     @Transactional
     @Modifying
-    @Query("DELETE FROM EmbeddingChunkEntity c WHERE c.entityType = :entityType AND c.entityId = :entityId")
-    void deleteByEntityTypeAndEntityId(@Param("entityType") RagEntityType entityType, @Param("entityId") Long entityId);
+    @Query("DELETE FROM EmbeddingChunkEntity c WHERE c.entityType = :entityType AND c.entityId = :entityId AND c.domainId = :domainId")
+    void deleteByEntityTypeAndEntityIdAndDomainId(@Param("entityType") RagEntityType entityType, @Param("entityId") Long entityId, @Param("domainId") Integer domainId);
 
     @Transactional
     @Modifying
-    @Query("DELETE FROM EmbeddingChunkEntity c WHERE c.entityType = :entityType AND c.entityId = :entityId AND c.embeddingModel = :embeddingModel")
-    void deleteByEntityTypeAndEntityIdAndEmbeddingModel(@Param("entityType") RagEntityType entityType, @Param("entityId") Long entityId, @Param("embeddingModel") String embeddingModel);
+    @Query("DELETE FROM EmbeddingChunkEntity c WHERE c.entityType = :entityType AND c.entityId = :entityId AND c.embeddingModel = :embeddingModel AND c.domainId = :domainId")
+    void deleteByEntityTypeAndEntityIdAndEmbeddingModelAndDomainId(@Param("entityType") RagEntityType entityType, @Param("entityId") Long entityId, @Param("embeddingModel") String embeddingModel, @Param("domainId") Integer domainId);
 
     @Query("SELECT DISTINCT c.entityType FROM EmbeddingChunkEntity c WHERE c.domainId = :domainId")
     List<RagEntityType> findDistinctEntityTypes(@Param("domainId") Integer domainId);

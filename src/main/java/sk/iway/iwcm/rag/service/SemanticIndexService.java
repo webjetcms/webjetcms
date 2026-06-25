@@ -154,7 +154,7 @@ public class SemanticIndexService {
     private void processEntity(RagIndexAction action, RagEntityType entityType, int entityId) {
         if (entityType == RagEntityType.DOCUMENT) {
             if (action == RagIndexAction.DELETE) {
-                embeddingChunkRepository.deleteByEntityTypeAndEntityId(DocDetailsContentExtractor.ENTITY_TYPE, (long) entityId);
+                embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainId(DocDetailsContentExtractor.ENTITY_TYPE, (long) entityId, CloudToolsForCore.getDomainId());
             } else if(action == RagIndexAction.INDEX) {
                 indexDocument(entityId);
             } else {
@@ -183,14 +183,14 @@ public class SemanticIndexService {
             String text = contentExtractor.extractText(doc);
             if (Tools.isEmpty(text)) {
                 // Empty document, remove any existing embeddings
-                embeddingChunkRepository.deleteByEntityTypeAndEntityId(DocDetailsContentExtractor.ENTITY_TYPE, entityId);
+                embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainId(DocDetailsContentExtractor.ENTITY_TYPE, entityId, CloudToolsForCore.getDomainId());
                 return;
             }
 
             // Step 2: Chunk
             List<String> chunks = chunker.chunk(text);
             if (chunks.isEmpty()) {
-                embeddingChunkRepository.deleteByEntityTypeAndEntityId(DocDetailsContentExtractor.ENTITY_TYPE, entityId);
+                embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainId(DocDetailsContentExtractor.ENTITY_TYPE, entityId, CloudToolsForCore.getDomainId());
                 return;
             }
 
@@ -241,7 +241,7 @@ public class SemanticIndexService {
             }
 
             // Step 4: Delete old chunks via repository and save new entities
-            embeddingChunkRepository.deleteByEntityTypeAndEntityId(DocDetailsContentExtractor.ENTITY_TYPE, entityId);
+            embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainId(DocDetailsContentExtractor.ENTITY_TYPE, entityId, CloudToolsForCore.getDomainId());
 
             String language = GroupMirroringServiceV9.getLanguage(doc.getGroup());
             String domainName = DocDB.getInstance().getDomain(docId);
@@ -300,7 +300,7 @@ public class SemanticIndexService {
             String model = embeddingProvider.getDefaultModel();
 
             // Delete existing chunks for this entity/model and save error marker via repository
-            embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndEmbeddingModel(DocDetailsContentExtractor.ENTITY_TYPE, entityId, model);
+            embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndEmbeddingModelAndDomainId(DocDetailsContentExtractor.ENTITY_TYPE, entityId, model, domainId);
 
             String truncatedMessage = e.getMessage() != null && e.getMessage().length() > 500
                 ? e.getMessage().substring(0, 500) : e.getMessage();
