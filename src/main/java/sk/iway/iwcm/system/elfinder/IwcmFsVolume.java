@@ -94,12 +94,9 @@ public class IwcmFsVolume implements FsVolume
 		if (canWrite(f))
 		{
 			//odstran diakritiku
-			if (f.getVirtualPath().startsWith("/files") || f.getVirtualPath().startsWith("/images"))
-			{
-				String newDir = DB.internationalToEnglish(DocTools.removeCharsDir(f.getName(), true).toLowerCase());
-				IwcmFile f2 = new IwcmFile(f.getParentFile(), newDir);
-				fsii.setFile(f2);
-			}
+			String newDir = removeSpecialChars(f.getName(), f.getVirtualPath(), sk.iway.iwcm.system.elfinder.FsService.getCurrentUser()).toLowerCase();
+			IwcmFile f2 = new IwcmFile(f.getParentFile(), newDir);
+			fsii.setFile(f2);
 
 			fsii.getFile().mkdirs();
 
@@ -516,11 +513,17 @@ public class IwcmFsVolume implements FsVolume
 	 * @return
 	 * @throws IOException
 	 */
-	public static String removeSpecialChars(String name, FsItemEx fsi) throws IOException {
-		if (fsi.getPath().startsWith("/files") || fsi.getPath().startsWith("/images"))
-		{
-			name = DB.internationalToEnglish(name);
-			name = DocTools.removeCharsDir(name, true).toLowerCase();
+	public static String removeSpecialChars(String name, FsItemEx fsi, Identity user) throws IOException {
+		return removeSpecialChars(name, fsi.getPath(), user);
+	}
+
+	public static String removeSpecialChars(String name, String path, Identity user) throws IOException {
+		if (path.startsWith("/files") || path.startsWith("/images") || path.startsWith("/shared")) {
+			// If user has special permission, he can
+			if(user == null || user.isEnabledItem("fbrowser_allow_diacritics") == false) {
+				name = DB.internationalToEnglish(name);
+				name = DocTools.removeCharsDir(name, true).toLowerCase();
+			}
 		}
 		return name;
 	}
