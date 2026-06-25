@@ -266,6 +266,7 @@ public class SpringBootStarter extends SpringBootServletInitializer {
         ServletRegistrationBean<sk.iway.iwcm.filebrowser.MultipleFileUploadAction> registration = new ServletRegistrationBean<>(
             new sk.iway.iwcm.filebrowser.MultipleFileUploadAction(), "/admin/multiplefileupload.do");
         registration.setName("MultipleFileUploadAction");
+        registration.setMultipartConfig(multipartConfigElement());
         return registration;
     }
 
@@ -321,6 +322,7 @@ public class SpringBootStarter extends SpringBootServletInitializer {
         ServletRegistrationBean<sk.iway.iwcm.components.upload.XhrFileUploadServlet> registration = new ServletRegistrationBean<>(
             new sk.iway.iwcm.components.upload.XhrFileUploadServlet(), "/XhrFileUpload");
         registration.setName("XhrFileUpload");
+        registration.setMultipartConfig(multipartConfigElement());
         return registration;
     }
 
@@ -332,6 +334,7 @@ public class SpringBootStarter extends SpringBootServletInitializer {
         ServletRegistrationBean<sk.iway.iwcm.admin.upload.AdminUploadServlet> registration = new ServletRegistrationBean<>(
             new sk.iway.iwcm.admin.upload.AdminUploadServlet(), "/admin/upload/chunk");
         registration.setName("AdminUpload");
+        registration.setMultipartConfig(multipartConfigElement());
         return registration;
     }
 
