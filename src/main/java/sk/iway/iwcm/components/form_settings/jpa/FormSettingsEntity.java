@@ -245,6 +245,13 @@ public class FormSettingsEntity {
     @Column(name = "use_form_mail_doc_id")
     private Integer useFormMailDocId;
 
+    // !! this is not real setting, we use it just to store for form stat
+    @Column(name = "view_count")
+    private Integer viewCount;
+
+    @Column(name = "response_attempts")
+    private Integer responseAttempts;
+
     @Transient
     @DataTableColumn(inputType = DataTableColumnType.JSON, title="editor.form.use_form_mail_doc_id", className="dt-tree-page-null")
     private transient DocDetailsDto useFormMailDoc;

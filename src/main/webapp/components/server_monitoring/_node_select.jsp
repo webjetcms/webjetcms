@@ -1,8 +1,9 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*"%><%@ 
-taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<%@page import="sk.iway.iwcm.system.cluster.ClusterDB"%>
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*"%><%@
+taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%><%@
+taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld"%>
+<%@page import="sk.iway.iwcm.system.cluster.ClusterDB"%><iwcm:checkLogon admin="true" perms="cmp_server_monitoring"/>
 <c:if test="<%=ClusterDB.isServerRunningInClusterMode()%>">
 	<select name="node">
 		<optgroup label="<iwcm:text key="components.monitoring.this_node"/>">

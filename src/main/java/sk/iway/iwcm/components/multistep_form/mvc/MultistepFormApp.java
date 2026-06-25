@@ -5,14 +5,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Identity;
@@ -113,6 +112,9 @@ public class MultistepFormApp extends WebjetComponentAbstract {
 
         //Get and set first step id
         model.addAttribute("stepId", formStepsRepository.getFirstStepId(formName, CloudToolsForCore.getDomainId()).orElse(-1L));
+
+        // Increment form view count
+        formSettingsRepository.incrementFormViewCount(formName, CloudToolsForCore.getDomainId());
 
         return VIEW_PATH;
     }

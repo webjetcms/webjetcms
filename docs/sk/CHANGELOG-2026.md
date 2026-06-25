@@ -16,6 +16,10 @@
 
 ### Formuláre
 
+- [Štatistiky viackrokových formulárov](redactor/apps/multistep-form/stat.md) boli rozšírené o dátumový filter a pokročilé metriky zobrazení/pokusov/jazykov etc. (#58509).
+
+![](redactor/apps/multistep-form/stat-section-advanced.png)
+
 - Do viackrokových formulárov pridaná možnosť jednoducho nastavovať výberové polia a skupiny zaškrtávacích / výberových polí (#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced.png)
@@ -36,6 +40,12 @@
 
 ![](redactor/apps/language-redirect/editor-basic.png)
 
+- Rezervácie - aplikácie **Rezervácia času** a **Rezervácia dní** majú zjednotený vizuálny štýl podľa kalendára `Vanilla Calendar`, upravené kontrastné farby buniek podľa `WCAG`, oddelené vizuálne CSS štýly do samostatných súborov a **Rezervácia času** zobrazuje v hodinových bunkách skutočnú cenu podľa cenníka rezervačného objektu (#58565).
+
+- Rezervácie - pridaná nová aplikácia [Moje rezervácie](redactor/apps/reservation/my-reservations-app/README.md), ktorá prihlásenému používateľovi zobrazí prehľad jeho rezervácií, stavom rezervácie a možnosťou zmazania povolených budúcich rezervácií (#58565).
+
+![](redactor/apps/reservation/my-reservations-app/app-page.png)
+
 ### Multiweb
 
 - Pridaná možnosť [vytvoriť novú doménu](install/multiweb/config.md) z riadiacej domény, vytvorí aj používateľa, skupinu šablón, šablónu a systémové stránky (#58525).
@@ -46,6 +56,7 @@
 ### Bezpečnosť
 
 - Pridaná podpora generovania `nonce` pre [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
+- AI asistenti - pridaná ochrana pred `prompt injection` útokmi s oddelením systémových inštrukcií od používateľského obsahu a detekciou kódovaných vstupov (#58549).
 
 ### Dokumentácia
 
@@ -67,6 +78,9 @@
 - Voliteľné polia - pridaná možnosť centrálne nastaviť vlastnosti [voliteľných polí](frontend/webpages/customfields/custom-fields-settings.md) v novej tabuľke v časti Nastavenia (#58413).
 
 ![](frontend/webpages/customfields/custom-fields-settings-editor.png)
+
+- Aktualizovaná knižnica [Tabler Icons](https://tabler.io/icons) na verziu 3.44.0, vyriešený problém so súčasným používaním `Outline` a `Filled` sád (#58509).
+- Web stránky - ak potrebujete mať prázdny prvý riadok v konfiguračnej premennej `imageMagickCustomParams*` pre [nastavenie vlastných parametrov](redactor/apps/gallery/README.md#vlastné-parametre-imagemagick) `ImageMagick` zadajte hodnotu `---`.
 
 ## 2026.18
 
@@ -262,16 +276,26 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+- Web stránky - zrušené [plánované verzie](redactor/webpages/history.md) sú v histórii zobrazené preškrtnutým písmom a nie je možné ich zmazať (#58573).
+- Archív súborov - upravená úloha na pozadí pre publikovanie súborov - z dôvodu práv sa nevykonáva na verejnom uzle (#246).
+- Úlohy na pozadí - pridaná možnosť spustiť [úlohu na pozadí](admin/settings/cronjob/README.md) len na uzloch v plnej konfigurácii alebo na verejných uzloch (#246).
+- Generátor primárnych kľúčov - doplnená automatická oprava mien tabuliek a názvov stĺpca s primárnou hodnotou (#246).
+- Bezpečnosť - opravené chyby Local File Inclusion, kontrola nahrávaných súborov a RCE. Ďakujeme Josef Korbel (Citadelo) za nahlásenie týchto zraniteľností (#252).
+
+## 2026.0.25
+
+> Opravná verzia pôvodnej verzie 2026.0.
+
 !> Upozornenie: po aktualizácii skontrolujte funkčnosť všetkých formulárov. Ak niektorý nejde odoslať, uložte znova jeho nastavenia.
 
 - AI asistent - upravené získanie odpovede pri použití `reasoning` v OpenAI (#244).
 - AI asistent - doplnená propagácia zmazania cache do uzlov clustra pri úprave asistenta.
 - Apache Tomcat - vo verzii `9.0.118/11.0.22` bolo zmenené správanie získania zoznamu Java tried čo má za následok nefunkčnosť `Stripes Framework`. Upravená verzia filtruje nesprávne verzie súborov aby štart prebehol korektne. Do staršieho projektu môžete preniesť priamo triedu [VFS.java](https://github.com/webjetcms/webjetcms/blob/main/src/main/java/net/sourceforge/stripes/vfs/VFS.java), skompilovať ju vo vašom projekte a použiť bez potreby aktualizácie.
 - Bezpečnosť - opravená možnosť nastaviť [meno HTTP hlavičky pre získanie IP adresy](sysadmin/pentests/README.md#konfigurácia) cez premennú `xForwardedForHeader`.
-- Bezpečnosť - opravené chyby Local File Inclusion, kontrola nahrávaných súborov a RCE. Zraniteľnosť sa netýka web stránok s nastavenými externými súbormi - nastavená konfiguračná premenná `cloudStaticFilesDir`. Ďakujeme Josef Korbel (Citadelo) za nahlásenie týchto zraniteľností. Možné dočasné riešenie bez aktualizácie je:
+- Bezpečnosť - opravené chyby Local File Inclusion, kontrola nahrávaných súborov a RCE. Ďakujeme Josef Korbel (Citadelo) za nahlásenie týchto zraniteľností (#252). Možné dočasné riešenie bez aktualizácie celého WebJET CMS je:
   - zmazať alebo [aktualizovať](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/components/grideditor/phantom/phantom_sablona_ajax.jsp) súbor `/components/grideditor/phantom/phantom_sablona_ajax.jsp`
-  - do konfiguračnej premennej `pathFilterBlockedPaths` pridať hodnotu `,/components/grideditor/phantom/`
-  - [globálne pre celý server](install/external-configuration.md) môžete do `JAVA_OPTS` pridať systémovú premennú:
+  - ak máte WebJET CMS novší ako `2025.52` do konfiguračnej premennej `pathFilterBlockedPaths` pridať hodnotu `,/components/grideditor/phantom/`
+  - ak máte WebJET CMS novší ako `2025.52` môžete [globálne pre celý server](install/external-configuration.md) do `JAVA_OPTS` pridať systémovú premennú:
 
 ```txt
 -Dwebjet.pathFilterBlockedPaths=.DS_Store,debug.,config.properties,Thumbs.db,.git,.svn,/WEB-INF/,./,/components/grideditor/phantom/

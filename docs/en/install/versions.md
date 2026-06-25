@@ -14,6 +14,9 @@ ext {
 
 Currently, the following versions of WebJET exist:
 
+- `2026.18.25-jakarta` - ​​stabilized version 2026.18 with fixes from version 2026.0.25, no daily changes added.
+- `2026.0.25-jakarta` - ​​stabilized version 2025.0.25 with bug fixes compared to version 2026.0 (without adding improvements from the SNAPSHOT version).
+- `2026.0.25` - ​​stabilized version 2025.0.25 with bug fixes compared to version 2026.0 (without adding improvements from the SNAPSHOT version).
 - `2026.18-jakarta` - ​​stabilized version 2026.18, no daily changes are added to it.
 - `2026.0.18-jakarta` - ​​stabilized version 2025.0.18 with bug fixes compared to version 2026.0 (without adding improvements from the SNAPSHOT version).
 - `2026.0.18` - ​​stabilized version 2025.0.18 with bug fixes compared to version 2026.0 (without adding improvements from the SNAPSHOT version).

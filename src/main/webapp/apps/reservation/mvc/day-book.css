@@ -1,0 +1,78 @@
+.day-book-app {
+    --reservation-accessible-blue: #0369a1;
+    --reservation-accessible-blue-soft: #ecfeff;
+    --reservation-accessible-rose: #be123c;
+    --reservation-accessible-rose-soft: #fff1f2;
+}
+
+.dayBookErrorList {
+    margin: 0;
+}
+
+.day-book-app .vc-date__btn {
+    display: flex;
+    flex-direction: column;
+    font-size: 25px;
+    padding: 10px;
+}
+
+.dayBookCalendarMeta {
+    font-size: 15px;
+    padding-top: 5px;
+}
+
+.day-book-app .vc-date {
+    padding-right: 1px;
+}
+
+.day-book-app .custom-popup {
+    align-content: center;
+    background-color: #f1f5f9 !important;
+    font-size: 15px;
+    min-height: 40px;
+    text-align: center;
+    top: -40px;
+    width: 150px;
+}
+
+.day-book-app [data-vc-theme=light] .vc-date[data-vc-date-today] .vc-date__btn {
+    color: var(--reservation-accessible-blue) !important;
+}
+
+.day-book-app [data-vc-theme=light] .vc-week__day[data-vc-week-day-off],
+.day-book-app [data-vc-theme=light] .vc-date[data-vc-date-weekend]:not([data-vc-date-disabled]) .vc-date__btn,
+.day-book-app [data-vc-theme=light] .vc-date[data-vc-date-holiday]:not([data-vc-date-disabled]) .vc-date__btn,
+.day-book-app [data-vc-theme=light] .vc-date[data-vc-date-weekend][data-vc-date-today]:not([data-vc-date-disabled]) .vc-date__btn,
+.day-book-app [data-vc-theme=light] .vc-date[data-vc-date-holiday][data-vc-date-today]:not([data-vc-date-disabled]) .vc-date__btn {
+    color: var(--reservation-accessible-rose) !important;
+}
+
+.day-book-app [data-vc-theme=light] .vc-date[data-vc-date-selected] .vc-date__btn,
+.day-book-app [data-vc-theme=light] .vc-date[data-vc-date-selected] .vc-date__btn:hover {
+    --tw-bg-opacity: 1;
+    background-color: var(--reservation-accessible-blue) !important;
+    color: #fff !important;
+}
+
+.day-book-app [data-vc-theme=light] .vc-date[data-vc-date-weekend][data-vc-date-selected]:not([data-vc-date-disabled]) .vc-date__btn,
+.day-book-app [data-vc-theme=light] .vc-date[data-vc-date-holiday][data-vc-date-selected]:not([data-vc-date-disabled]) .vc-date__btn,
+.day-book-app [data-vc-theme=light] .vc-date[data-vc-date-weekend][data-vc-date-selected]:not([data-vc-date-disabled]) .vc-date__btn:hover,
+.day-book-app [data-vc-theme=light] .vc-date[data-vc-date-holiday][data-vc-date-selected]:not([data-vc-date-disabled]) .vc-date__btn:hover {
+    --tw-bg-opacity: 1;
+    background-color: var(--reservation-accessible-rose) !important;
+    color: #fff !important;
+}
+
+.day-book-app [data-vc-theme=light] .vc-date[data-vc-date-disabled] .vc-date__btn,
+.day-book-app [data-vc-theme=light] .vc-date[data-vc-date-weekend][data-vc-date-disabled] .vc-date__btn,
+.day-book-app [data-vc-theme=light] .vc-date[data-vc-date-holiday][data-vc-date-disabled] .vc-date__btn,
+.day-book-app [data-vc-theme=light] .vc-date[data-vc-date-weekend][data-vc-date-today][data-vc-date-disabled] .vc-date__btn,
+.day-book-app [data-vc-theme=light] .vc-date[data-vc-date-holiday][data-vc-date-today][data-vc-date-disabled] .vc-date__btn {
+    color: #cbd5e1 !important;
+}
+
+.day-book-app .readonly-input {
+    background-color: var(--bs-secondary-bg);
+    cursor: default;
+    opacity: 1;
+}

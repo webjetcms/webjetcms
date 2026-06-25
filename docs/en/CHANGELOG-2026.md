@@ -16,6 +16,10 @@
 
 ### Forms
 
+- [Multistep form statistics](redactor/apps/multistep-form/stat.md) has been extended with a date filter and advanced metrics for views/attempts/languages ​​etc. (#58509).
+
+![](redactor/apps/multistep-form/stat-section-advanced.png)
+
 - Added the ability to easily set up checkboxes and groups of checkboxes/select fields in multi-step forms (#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced.png)
@@ -35,6 +39,12 @@
 - Added new application [Language Redirect](redactor/apps/language-redirect/README.md) to automatically redirect visitors to the language version of the page based on language detection from the HTTP header `Accept-Language`. It supports up to 8 language assignments per URL, respecting the language cookie, and the option to redirect only to the root URL (#58497).
 
 ![](redactor/apps/language-redirect/editor-basic.png)
+
+- Reservations - the **Time Reservation** and **Day Reservation** applications have a unified visual style according to the `Vanilla Calendar` calendar, adjusted contrasting cell colors according to `WCAG`, separated visual CSS styles into separate files, and **Time Reservation** displays the actual price in the hourly cells according to the price list of the reservation object (#58565).
+
+- Reservations - a new application [My Reservations] (redactor/apps/reservation/my-reservations-app/README.md) has been added, which will show the logged-in user an overview of their reservations, reservation status, and the option to delete allowed future reservations (#58565).
+
+![](editor/apps/reservation/my-reservations-app/app-page.png)
 
 ### Multiweb
 
@@ -63,6 +73,12 @@
 ![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
 
 - Logging - added attribute `sessionId` and user login name `userLogin` (#OSK526) to [Logback MDC](https://logback.qos.ch/manual/mdc.html).
+
+- Optional fields - added the ability to centrally set the properties of [optional fields](frontend/webpages/customfields/custom-fields-settings.md) in a new table in the Settings section (#58413).
+
+![](frontend/webpages/customfields/custom-fields-settings-editor.png)
+
+- Updated [Tabler Icons](https://tabler.io/icons) library to version 3.44.0, fixed issue with simultaneous use of `Outline` and `Filled` sets (#58509).
 
 ## 2026.18
 
@@ -104,10 +120,6 @@
 - Added an icon to move the [cursor to a hard-to-reach place](redactor/webpages/working-in-editor/README.md#inserting-text-in-hard-to-reach-places), such as behind the last SVG icon in a line and the like (#osk105).
 
 ![](redactor/webpages/working-in-editor/wjmagicline-append.png)
-
-- Optional fields - added the ability to centrally set the properties of [optional fields](frontend/webpages/customfields/custom-fields-settings.md) in a new table in the Settings section (#58413).
-
-![](frontend/webpages/customfields/custom-fields-settings-editor.png)
 
 ### Applications
 
@@ -262,9 +274,36 @@ Redesigned application properties settings in the editor from the old code in `J
 
 > A patch version of the original version 2026.0.
 
+- Web pages - cancelled [planned versions](redactor/webpages/history.md) are displayed in history with strikethrough and cannot be deleted (#58573).
+- File Archive - modified background task for publishing files - due to rights it is not executed on public node (#246).
+- Background jobs - added option to run [background job](admin/settings/cronjob/README.md) only on nodes in full configuration or on public nodes (#246).
+- Primary Key Generator - added automatic correction of table names and primary value column names (#246).
+- Security - fixed Local File Inclusion, upload file checking, and RCE bugs. Thanks to Josef Korbel (Citadelo) for reporting these vulnerabilities (#252).
+
+## 2026.0.25
+
+> A patch version of the original version 2026.0.
+
+!> Warning: after the update, check the functionality of all forms. If any cannot be submitted, save its settings again.
+
 - AI assistant - modified getting an answer when using `reasoning` in OpenAI (#244).
+- AI assistant - added promotion of cache deletion to cluster nodes when editing the assistant.
+- Apache Tomcat - in version `9.0.118/11.0.22` the behavior of obtaining a list of Java classes was changed, which results in a malfunction of `Stripes Framework`. The modified version filters out incorrect file versions so that the start is correct. You can directly transfer the [VFS.java](https://github.com/webjetcms/webjetcms/blob/main/src/main/java/net/sourceforge/stripes/vfs/VFS.java) class to an older project, compile it in your project and use it without the need for an update.
 - Security - fixed the ability to set [HTTP header name for obtaining IP address](sysadmin/pentests/README.md#configuration) via the `xForwardedForHeader` variable.
+- Security - fixed Local File Inclusion, upload file checking and RCE bugs. Thanks to Josef Korbel (Citadelo) for reporting these vulnerabilities (#252). A possible temporary solution without updating the entire WebJET CMS is:
+  - delete or [update](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/components/grideditor/phantom/phantom_sablona_ajax.jsp) file `/components/grideditor/phantom/phantom_sablona_ajax.jsp`
+  - if you have WebJET CMS newer than `2025.52`, add the value `,/components/grideditor/phantom/` to the configuration variable `pathFilterBlockedPaths`
+  - if you have WebJET CMS newer than `2025.52` you can [globally for the entire server](install/external-configuration.md) add the system variable to `JAVA_OPTS`:
+
+```txt
+-Dwebjet.pathFilterBlockedPaths=.DS_Store,debug.,config.properties,Thumbs.db,.git,.svn,/WEB-INF/,./,/components/grideditor/phantom/
+```
+
+- Security - added CSRF token for form when SPAM protection is disabled (#245).
+- Security - each form submission checks the form settings in the database, if the form is not found, it cannot be submitted. The original version checked this only on public cluster nodes, now it is checked regardless of the cluster. If necessary, disable the functionality by setting the configuration variable `formAllowOnlyExistingFormsOnPublicNode` to the value `false` (#245).
+- Security - fixed the possibility of obtaining an administrator account when generating an offline version (#245).
 - Easy form - modified fields for entering field name and tooltip in a single-line WYSIWYG editor so that the result does not contain the `P` element (#244).
+- Gallery - fixed database record creation when copying files in explorer. Record is not created for `o_` and `s_` images (#58317-9).
 - Document Manager - added filtering of files by validity dates (if the date range is not valid, they will not be displayed) and files that do not have the display attribute set (#233).
 - Video - updated library `videojs` for playing local audio/video files from version 6.2.0 to version 8.23.6 (#233).
 - Video - fixed setting of link to local audio/video file when editing an already inserted application (#233).

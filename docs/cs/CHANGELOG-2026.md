@@ -16,6 +16,10 @@
 
 ### Formuláře
 
+- [Statistiky vícekrokových formulářů](redactor/apps/multistep-form/stat.md) byly rozšířeny o datový filtr a pokročilé metriky zobrazení/pokusů/jazyků etc. (#58509).
+
+![](redactor/apps/multistep-form/stat-section-advanced.png)
+
 - Do vícekrokových formulářů přidána možnost jednoduše nastavovat výběrová pole a skupiny zaškrtávacích / výběrových polí (#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced.png)
@@ -35,6 +39,12 @@
 - Přidána nová aplikace [Přesměrování podle jazyka](redactor/apps/language-redirect/README.md) pro automatické přesměrování návštěvníků na jazykovou verzi stránky podle detekce jazyka z HTTP hlavičky `Accept-Language`. Podporuje až 8 přiřazení jazyků na URL adresy, respektování jazykového cookie a možnost přesměrování pouze na kořenové URL (#58497).
 
 ![](redactor/apps/language-redirect/editor-basic.png)
+
+- Rezervace - aplikace **Rezervace času** a **Rezervace dní** mají sjednocený vizuální styl podle kalendáře `Vanilla Calendar`, upravené kontrastní barvy buněk podle `WCAG`, oddělené vizuální CSS styly do samostatných souborů a **Rezervace času** zobrazuje v hodinových buňkách skutečnou cenu dle ceníku.
+
+- Rezervace - přidána nová aplikace [Moje rezervace](redactor/apps/reservation/my-reservations-app/README.md), která přihlášenému uživateli zobrazí přehled jeho rezervací, stavem rezervace a možností smazání povolených budoucích rezervací (#58565).
+
+![](redactor/apps/reservation/my-reservations-app/app-page.png)
 
 ### Multiweb
 
@@ -63,6 +73,12 @@
 ![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
 
 - Logování - do [Logback MDC](https://logback.qos.ch/manual/mdc.html) doplněn atribut `sessionId` a přihlašovacího jména uživatele `userLogin` (#OSK526).
+
+- Volitelná pole - přidána možnost centrálně nastavit vlastnosti [volitelných polí](frontend/webpages/customfields/custom-fields-settings.md) v nové tabulce v části Nastavení (#58413).
+
+![](frontend/webpages/customfields/custom-fields-settings-editor.png)
+
+- Aktualizovaná knihovna [Tabler Icons](https://tabler.io/icons) na verzi 3.44.0, vyřešen problém se současným používáním `Outline` a `Filled` sad (#58509).
 
 ## 2026.18
 
@@ -104,10 +120,6 @@
 - Přidána ikona pro přesun [kurzoru na těžko dostupné místo](redactor/webpages/working-in-editor/README.md#vkládání-textu-na-těžko-dostupná-místa), jako například za poslední SVG ikonu v řádku a podobně (#osk105).
 
 ![](redactor/webpages/working-in-editor/wjmagicline-append.png)
-
-- Volitelná pole - přidána možnost centrálně nastavit vlastnosti [volitelných polí](frontend/webpages/customfields/custom-fields-settings.md) v nové tabulce v části Nastavení (#58413).
-
-![](frontend/webpages/customfields/custom-fields-settings-editor.png)
 
 ### Aplikace
 
@@ -262,9 +274,36 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 
 > Opravná verze původní verze 2026.0.
 
+- Web stránky - zrušeny [plánované verze](redactor/webpages/history.md) jsou v historii zobrazeny přeškrtnutým písmem a nelze je smazat (#58573).
+- Archiv souborů - upravená úloha na pozadí pro publikování souborů - z důvodu práv se neprovádí na veřejném uzlu (#246).
+- Úlohy na pozadí - přidána možnost spustit [úlohu na pozadí](admin/settings/cronjob/README.md) pouze na uzlech v plné konfiguraci nebo na veřejných uzlech (#246).
+- Generátor primárních klíčů - doplněna automatická oprava jmen tabulek a názvů sloupce s primární hodnotou (#246).
+- Bezpečnost - opravené chyby Local File Inclusion, kontrola nahrávaných souborů a RCE. Děkujeme Josef Korbel (Citadelo) za nahlášení těchto zranitelností (#252).
+
+## 2026.0.25
+
+> Opravná verze původní verze 2026.0.
+
+!> Upozornění: po aktualizaci zkontrolujte funkčnost všech formulářů. Pokud některý nelze odeslat, uložte znovu jeho nastavení.
+
 - AI asistent - upravené získání odpovědi při použití `reasoning` v OpenAI (#244).
+- AI asistent - doplněná propagace smazání cache do uzlů clusteru při úpravě asistenta.
+- Apache Tomcat - ve verzi `9.0.118/11.0.22` bylo změněno chování získání seznamu Java tříd což má za následek nefunkčnost `Stripes Framework`. Upravená verze filtruje nesprávné verze souborů aby start proběhl korektně. Do staršího projektu můžete přenést přímo třídu [VFS.java](https://github.com/webjetcms/webjetcms/blob/main/src/main/java/net/sourceforge/stripes/vfs/VFS.java), zkompilovat ji ve vašem projektu a použít bez potřeby aktualizace.
 - Bezpečnost - opravena možnost nastavit [jméno HTTP hlavičky pro získání IP adresy](sysadmin/pentests/README.md#konfigurace) přes proměnnou `xForwardedForHeader`.
+- Bezpečnost - opravené chyby Local File Inclusion, kontrola nahrávaných souborů a RCE. Děkujeme Josef Korbel (Citadelo) za nahlášení těchto zranitelností (#252). Možné dočasné řešení bez aktualizace celého WebJET CMS je:
+  - smazat nebo [aktualizovat](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/components/grideditor/phantom/phantom_sablona_ajax.jsp) soubor `/components/grideditor/phantom/phantom_sablona_ajax.jsp`
+  - pokud máte WebJET CMS novější než `2025.52` do konfigurační proměnné `pathFilterBlockedPaths` přidat hodnotu `,/components/grideditor/phantom/`
+  - pokud máte WebJET CMS novější než `2025.52` můžete [globálně pro celý server](install/external-configuration.md) do `JAVA_OPTS` přidat systémovou proměnnou:
+
+```txt
+-Dwebjet.pathFilterBlockedPaths=.DS_Store,debug.,config.properties,Thumbs.db,.git,.svn,/WEB-INF/,./,/components/grideditor/phantom/
+```
+
+- Bezpečnost - přidán CSRF token pro formulář při vypnuté SPAM ochraně (#245).
+- Bezpečnost - každé odeslání formuláře kontroluje nastavení formuláře v databázi, pokud se nenajde formulář nelze odeslat. Původní verze toto kontrolovala pouze na veřejných uzlech clusteru, nyní se to kontroluje bez ohledu na cluster. V případě potřeby vypnete funkčnost nastavením konfigurační proměnné `formAllowOnlyExistingFormsOnPublicNode` na hodnotu `false` (#245).
+- Bezpečnost - opravena možnost získání administrátorského účtu při generování offline verze (#245).
 - Formulář snadno - upravená pole pro zadání názvu pole a tooltipu na jednořádkový WYSIWYG editor, aby výsledek neobsahoval `P` element (#244).
+- Galerie - opraveno vytvoření záznamu v databázi při kopírování souborů v průzkumníku. Záznam se nevytvoří pro `o_` a `s_` obrázky (#58317-9).
 - Manažer dokumentů - doplněné filtrování souborů podle dat platnosti (není-li platný rozsah dat, nezobrazí se) a souborů které nemají nastavený atribut zobrazovat (#233).
 - Video - aktualizovaná knihovna `videojs` pro přehrávání lokálních audio/video souborů z verze 6.2.0 na verzi 8.23.6 (#233).
 - Video - opraveno nastavení odkazu na lokální audio/video soubor při editaci již vložené aplikace (#233).

@@ -106,12 +106,22 @@ public class InitServlet extends HttpServlet
 				String clusterNodeName = Constants.getString("clusterMyNodeName");
 				if(startupTasks != null)
 				{
+					//cron cluster node type as all-public / all-admin
+					String cronNodeType = CronDB.getCronNodeType();
+
 					for(CronTask t : startupTasks)
 					{
-						if(ClusterDB.isServerRunningInClusterMode()==false || "all".equals(t.getClusterNode()) || clusterNodeName.equals(t.getClusterNode()))
+						if(ClusterDB.isServerRunningInClusterMode()==false || "all".equals(t.getClusterNode()) || clusterNodeName.equals(t.getClusterNode()) || cronNodeType.equals(t.getClusterNode()))
 						{
-							Logger.println(InitServlet.class, "Running cron job {"+t.getId()+"} "+t.getTask()+" "+t.getParams());
-							cf.runSimpleTaskOnce(t);
+							try
+							{
+								Logger.println(InitServlet.class, "Running cron job {"+t.getId()+"} "+t.getTask()+", clusterNode="+t.getClusterNode()+", params="+t.getParams());
+								cf.runSimpleTaskOnce(t);
+							}
+							catch (Exception e)
+							{
+								sk.iway.iwcm.Logger.error(e);
+							}
 						}
 					}
 				}

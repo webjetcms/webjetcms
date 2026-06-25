@@ -3,7 +3,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %>
 <%@ page language="java" pageEncoding="utf-8" import="java.net.*,java.util.*,sk.iway.iwcm.system.msg.*,sk.iway.iwcm.users.*,sk.iway.iwcm.Tools" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
+<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><iwcm:checkLogon admin="true"/>
 <%
 
 String recipient = Tools.getRequestParameter(request, "recipient");

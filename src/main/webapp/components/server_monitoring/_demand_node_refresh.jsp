@@ -9,7 +9,7 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@page import="sk.iway.iwcm.system.monitoring.MonitoringDB"%>
 <%@page import="sk.iway.iwcm.database.SimpleQuery"%>
 <%@page import="sk.iway.iwcm.system.cluster.ClusterDB"%>
-<iwcm:menu name="cmp_server_monitoring">
+<iwcm:checkLogon admin="true" perms="cmp_server_monitoring"/><iwcm:menu name="cmp_server_monitoring">
 <%
 	String node = Tools.getRequestParameter(request, "node");
 	ClusterDB.addRefreshClusterMonitoring(node, MonitoringDB.class);

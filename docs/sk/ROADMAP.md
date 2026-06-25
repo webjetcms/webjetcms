@@ -15,6 +15,7 @@ Vysvetlenie použitých piktogramov:
 ## 2026
 
 - [x] Sémantické vyhľadávanie - využiť AI na zlepšenie vyhľadávania pomocou `RAG` (#211).
+- [ ] AI - možnosť použiť malé lokálne modely bežiace priamo na CPU, minimálne pre Sémantické vyhľadávanie (#58561).
 - [ ] `Headless` CMS - pripraviť REST rozhrania pre použitie WebJET CMS v `headless` móde.
 - [ ] Migrácia na `Spring Boot` projekt.
 - [x] Testovanie - pridať testovanie prístupnosti pomocou rozšírenia [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) (#58389).
@@ -27,6 +28,19 @@ Vysvetlenie použitých piktogramov:
 - [ ] Mazanie dát - pridať možnosť mazať stránky a priečinky z koša. Vyriešiť aj možnosť mazanie dát spúšťať ako automatizovanú úlohu.
 - [ ] Nepoužívané súbory - spraviť možnosť získať zoznam nepoužívaných súborov - nikde v stránke sa nepoužívajú, ani v médiach atď. Bola na to API `FileTools.getDirFileUsage(currentDir, request)`. Pridať ako kartu do vlastností priečinka v prieskumníku.
 - [ ] Prieskumník - zamedziť prácu s priečinku pre Manažér dokumentov, aby sa so súbormi nedalo manipulovať mimo Manažér dokumentov.
+- [ ] +Prieskumník - pridať právo pre nahrávanie súborov s diakritikou (odstraňuje sa pre `/images` a `/files` priečinky) (#58589).
+- [ ] +Web stránky - lepšie integrovať manažér dokumentov pre vkladanie odkazu do stránky - nová karta podobne ako je Fotobanka pri obrázkoch (#58593).
+- [x] +Formuláre - pridať podrobnejšiu štatistiku chýb vyplnených formulárov (#58509).
+- [x] +Web stránky - zlepšiť používateľské rozhranie pre zadávanie `/thumb` obrázkov v editore (#58525).
+- [x] +Voliteľné polia - pridať možnosť definovať ktoré polia sú povinné (#58413).
+- [x] +Doplniť aplikáciu pre presmerovanie hlavnej stránky na `/sk/` alebo `/en/` podľa jazyka prehliadača. (#58497)
+- [x] +Z dôvodu validácie presunúť všetky odkazy na štýly do hlavičky stránky (#231).
+- [x] +Formuláre - možnosť definovať podmienené povinné polia a zobrazenie polí (#58477).
+- [x] +Aplikácie - možnosť definovať CSS triedu pre vloženú aplikáciu, napr. video pre lepšie odsadenie od textu stránky (#200).
+- [x] +Web stránky - pridať možnosť schvaľovania zmien v priečinkoch web stránky podobne ako sa schvaľujú zmeny vo web stránkach, vrátane zobrazenia histórie a zmien (#193).
+- [x] Pridať možnosť autorizácie cez `OAuth2`, možnosť použiť `mock` server https://github.com/navikt/mock-oauth2-server alebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
+- [x] +Pridať podporu prihlasovania sa do administrácie cez [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/) (#58369).
+
 
 ## 2025
 
@@ -51,14 +65,12 @@ Vysvetlenie použitých piktogramov:
 - [x] Značky - filtrovať podľa aktuálnej domény aby to bolo rovnaké ako v iných častiach (#57837).
 - [x] Import používateľov - ak nie je zadané heslo, tak vygenerovať (pre nových používateľov), ak nie je posielaný stav `authorized` nastaviť na `true` (#58253).
 - [ ] V testoch nejako automatizovane kontrolovať výskyt `I\.waitForText\('.*?', '.*?'\);` a `I\.waitForText\(".*?", ".*?"\);` čo sú nesprávne čakania bez definovaného času, spôsobia zaseknutie automatizovaných testov.
-- [x] Doplniť aplikáciu pre presmerovanie hlavnej stránky na `/sk/` alebo `/en/` podľa jazyka prehliadača. (#58477)
 - [x] Upraviť vymazanie konfigurácie tak, že pri vymazaní sa jej nastaví pôvodná hodnota definovaná v `Constants` (#57849).
 - [x] Galéria - pri duplikovaní obrázka umožniť zmenu "Priečinok", aby sme vedeli duplikovať obrázky do iného ako aktuálneho priečinka (#57885).
 - [x] Hromadný email - auditovať zmeny v skupinách používateľov (#58249).
 - [x] Archív súborov - prerobiť do dátových tabuliek (#57317).
 - [ ] Voliteľné polia - pridať možnosť výberu viac položiek pre napojenie na číselník.
 - [x] Elektronický obchod - integrácia na platobnú bránu `GoPay` (#56609).
-- [x] Pridať možnosť autorizácie cez `OAuth2`, možnosť použiť `mock` server https://github.com/navikt/mock-oauth2-server alebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [ ] Autorizácia cez ```SAML``` - integrovať knižnicu [Spring SAML](https://spring.io/projects/spring-security-saml) pre možnosť autentifikácie voči ```ADFS/SAML``` serveru.
 - [x] Rezervácie - nová aplikácia pre celo dennú rezerváciu (#57389).
 - [x] Aplikácie - prerobiť dialóg nastavenia aplikácií v editore web stránok zo starého JSP na dátovú tabuľku (#57409).
@@ -68,7 +80,6 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Elektronický obchod - do emailu pridať `JSON-LD` dáta https://schema.seznam.cz/objednavky/dokumentace/.
 - [ ] +Číselník, Blog, Novinky - upraviť tak, aby výber typu číselníka alebo priečinka pre novinky bol vľavo podobne ako v galérii/webových stránkach. Nemusia byť potom karty ale všetko naraz zobrazené.
 - [ ] +Prekladové kľúče - zobrazovať stromovú štruktúru prekladových kľúčov pre lepšiu orientáciu.
-- [x] +Pridať podporu prihlasovania sa do administrácie cez [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/) (#58369).
 - [ ] +Fotobanka - pridať možnosť nastaviť názov súboru pred stiahnutím z fotobanky, automaticky nastaviť podľa hľadaného výrazu.
 - [ ] +Galéria - ak nastavujem perex obrázok na obrázok v galérii, stiahnem z fotobanky, a obrázok premenujem na existujúci v databáze (ak je súbor zmazaný z disku) tak vznikne v `gallery` tabuľke duplicitný záznam. Naviac sa nepremenujú ostatné obrázky `o_,s_`. Treba pamätať na to, že teoreticky môžem premenovať ľubovoľný, malo by to detegovať, že som v galérii a premenovať všetky verzie.
 - [x] +Konfigurácia - doplniť možnosť nastavenia `Hikari` cez `poolman.xml/ENV` ako napríklad `spring.datasource.hikari.idle-timeout=30000, spring.datasource.hikari.max-lifetime=1800000, spring.datasource.hikari.connection-timeout=30000` (#54273-61).

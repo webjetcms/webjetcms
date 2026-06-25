@@ -15,7 +15,7 @@ import java.util.Optional;
 @Repository
 public interface DocHistoryRepository extends JpaRepository<DocHistory, Long>, JpaSpecificationExecutor<DocHistory> {
 
-    List<DocHistory> findByDocIdAndPublishStartDate(Integer docId, Date publishStartDate);
+    List<DocHistory> findByDocIdAndPublishStartDateBetween(Integer docId, Date publishStartDateFrom, Date publishStartDateTo);
 
     //
     @Query(value = "SELECT history_id FROM documents_history WHERE doc_id = ?1 AND history_id < ?2 AND publicable = ?3 AND author_id = ?4", nativeQuery=true)
@@ -39,7 +39,7 @@ public interface DocHistoryRepository extends JpaRepository<DocHistory, Long>, J
     //
     @Transactional
     @Modifying
-    @Query(value = "UPDATE DocHistory SET actual = :actual, awaitingApprove = :awaitingApprove, syncStatus = 1 WHERE id IN :historyIds")
+    @Query(value = "UPDATE DocHistory SET actual = :actual, awaitingApprove = :awaitingApprove WHERE id IN :historyIds")
     public void updateActualHistory(@Param("actual")boolean actual, @Param("awaitingApprove")String awaitingApprove, @Param("historyIds")List<Integer> historyIds);
 
     @Transactional
@@ -75,8 +75,8 @@ public interface DocHistoryRepository extends JpaRepository<DocHistory, Long>, J
 
     @Transactional
     @Modifying
-    @Query(value = "UPDATE DocHistory dh SET dh.actual = :actual, dh.syncStatus = 1 WHERE dh.id IN :historyIds")
-    public void updateActualAndSyncStatus(@Param("actual")boolean actual, @Param("historyIds")int[] historyIds);
+    @Query(value = "UPDATE DocHistory dh SET dh.actual = :actual WHERE dh.id IN :historyIds")
+    public void updateActual(@Param("actual")boolean actual, @Param("historyIds")int[] historyIds);
 
     @Transactional
     @Modifying

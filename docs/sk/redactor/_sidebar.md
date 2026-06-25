@@ -137,7 +137,7 @@
     - [Zoznam rezervačných objektov](/redactor/apps/reservation/reservation-objects/README.md)
     - [Aplikácia Rezervácie](/redactor/apps/reservation/reservation-app/README.md)
     - [Aplikácia Rezervácia času](/redactor/apps/reservation/time-book-app/README.md)
-    - [Aplikácia Rezervácia dní](/redactor/apps/reservation/day-book-app/README.md)
+    - [Aplikácia Moje rezervácie](/redactor/apps/reservation/my-reservations-app/README.md)
   - [Skripty](/redactor/apps/insert-script/README.md)
   - [Slider](/redactor/apps/slider/README.md)
   - [Slit slider](/redactor/apps/app-slit_slider/README.md)
