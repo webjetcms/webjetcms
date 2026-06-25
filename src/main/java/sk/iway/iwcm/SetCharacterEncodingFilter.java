@@ -573,7 +573,7 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 			if(Constants.getBoolean("serverMonitoringEnablePerformance"))
 				savePerformanceMeasure(request, timeTaken, memoryConsumed.diff());
 
-			Logger.error(SetCharacterEncodingFilter.class, "path="+request.getRequestURI()+" responseCode="+response.getStatus());
+			//Logger.error(SetCharacterEncodingFilter.class, "path="+request.getRequestURI()+" responseCode="+response.getStatus());
    	}
    	finally
    	{

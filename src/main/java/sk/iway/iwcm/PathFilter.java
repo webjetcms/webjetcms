@@ -234,8 +234,6 @@ public class PathFilter implements Filter
 				return;
 			}
 
-			Logger.debug(PathFilter.class, path);
-
 			//Logger.println(this,"query string PATH FILTER=" + req.getQueryString());
 			String qs = req.getQueryString();
 			boolean isFirstPathFilterCall = (req.getAttribute("path_filter_orig_path")==null);
@@ -893,7 +891,7 @@ public class PathFilter implements Filter
 					setStaticContentHeaders(path, user, req, res);
 					setXRobotsTagValue(path, res);
 
-					Logger.debug(PathFilter.class, "Sending DIST file: " + f.getAbsolutePath());
+					//Logger.debug(PathFilter.class, "Sending DIST file: " + f.getAbsolutePath());
 					FilePathTools.writeFileOut(f, req, res);
 
 					return;
@@ -2132,7 +2130,7 @@ public class PathFilter implements Filter
 		if (path.contains("assets")) myCacheStaticContentSeconds = 60 * 60 * 24 * 7;
 		if (path.contains("_common")) myCacheStaticContentSeconds = 60 * 60 * 24 * 7;
 		if (path.contains("/admin/images/")) myCacheStaticContentSeconds = 60 * 60 * 24 * 7;
-		if (path.contains("/admin/v9/dist/") && myCacheStaticContentSeconds<301) myCacheStaticContentSeconds = 60 * 5;
+		if (path.contains("/admin/v9/dist/") && myCacheStaticContentSeconds<301) myCacheStaticContentSeconds = 60 * 30;
 
 		if (myCacheStaticContentSeconds < cacheStaticContentSeconds) myCacheStaticContentSeconds = cacheStaticContentSeconds;
 
