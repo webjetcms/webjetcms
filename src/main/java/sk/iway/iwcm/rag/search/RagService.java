@@ -52,7 +52,7 @@ public class RagService {
         Prop prop = Prop.getInstance(request);
         if(Tools.isEmpty(question) || vectorChunkResults == null || vectorChunkResults.isEmpty()) {
             Logger.debug(RagService.class, "Cannot answer RAG question because question is empty or no retrieved chunks. question=" + question + ", vectorChunkResults=" + (vectorChunkResults == null ? "null" : vectorChunkResults.size()));
-            return prop.getText("components.search.rag_answer.cant_answer");
+            return null;
         }
 
         PageParams pageParams = new PageParams(request);
@@ -84,7 +84,7 @@ public class RagService {
         List<MergedContextBlock> contextBlocks = postProcessor.process(vectorChunkResults);
         if(contextBlocks.isEmpty()) {
             Logger.debug(RagService.class, "Cannot answer RAG question because no chunks survived post-processing. question=" + question);
-            return prop.getText("components.search.rag_answer.cant_answer");
+            return null;
         }
 
         InputDataDTO inputData = new InputDataDTO();
@@ -104,11 +104,11 @@ public class RagService {
             AssistantResponseDTO responseDto = aiService.getAiResponse(inputData, statRepo, assistantRepository, request);
             String ragAnswer = responseDto.getResponse();
 
-            if(Tools.isEmpty(ragAnswer)) return prop.getText("components.search.rag_answer.cant_answer");
+            if(Tools.isEmpty(ragAnswer)) return null;
 
             ragAnswer = ragAnswer.trim();
 
-            if(isCannotAnswerResponse(ragAnswer)) return prop.getText("components.search.rag_answer.cant_answer");
+            if(isCannotAnswerResponse(ragAnswer)) return null;
 
             return ragAnswer;
         } catch (Exception e) {

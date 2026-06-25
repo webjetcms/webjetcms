@@ -24,7 +24,6 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.rest.AiService;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
-import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.rag.vectorstore.VectorSearchResult;
 import sk.iway.iwcm.test.BaseWebjetTest;
 import sk.iway.iwcm.test.TestRequest;
@@ -93,7 +92,7 @@ class RagServiceTest extends BaseWebjetTest {
 
         String answer = ragService.answerQuestion("Unknown?", 1, List.of(chunk(100L, 0, "Known text.", 0.91d)), request);
 
-        assertEquals(Prop.getInstance(request).getText("components.search.rag_answer.cant_answer"), answer);
+        assertEquals(null, answer);
     }
 
     /**
@@ -103,7 +102,7 @@ class RagServiceTest extends BaseWebjetTest {
     void answerQuestionDoesNotCallAiWhenChunksAreEmpty() throws Exception {
         String answer = ragService.answerQuestion("Question?", 1, List.of(), request);
 
-        assertEquals(Prop.getInstance(request).getText("components.search.rag_answer.cant_answer"), answer);
+        assertEquals(null, answer);
         verify(aiService, never()).getAiResponse(any(), any(), any(), any());
     }
 

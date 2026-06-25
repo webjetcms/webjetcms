@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -67,6 +68,8 @@ import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.rag.pgvector.EmbeddingChunkRepository;
+import sk.iway.iwcm.rag.pgvector.PgvectorJpaConfig;
 import sk.iway.iwcm.stat.StatNewDB;
 import sk.iway.iwcm.stripes.SyncDirAction;
 import sk.iway.iwcm.sync.WarningListener;
@@ -153,6 +156,8 @@ public class UpdateDatabase
 		updateFormAttributesTable();
 
 		parseFormsByType();
+
+		ragUpdateDatabase();
 
 		if(InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
 			DomainIdUpdateService.updateExportDatDomainId();
@@ -2756,5 +2761,68 @@ public class UpdateDatabase
 		}
 
 		saveSuccessUpdate(note);
+	}
+
+	public static void ragUpdateDatabase() {
+
+		String note = "25.06.2026 [sivan] pridanie stlpcov root_group_l1, root_group_l2, root_group_l3, group_id do tabulky rag_embedding_chunks a ich vyplnennie.";
+		if (isAllreadyUpdated(note)) return;
+
+		String databaseName = PgvectorJpaConfig.getRagDataSourceName();
+		if (Tools.isEmpty(databaseName)) return;
+
+		String tableName = "rag_embedding_chunks";
+		String[] requiredColumns = {"root_group_l1", "root_group_l2", "root_group_l3", "group_id"};
+
+		//phase 1: add the required columns (skip whole update if the table does not exist)
+		try (Connection connection = DBPool.getConnection(databaseName)) {
+			DatabaseMetaData metadata = connection.getMetaData();
+			boolean tableExists;
+			try (ResultSet tables = metadata.getTables(connection.getCatalog(), null, tableName, new String[] {"TABLE"})) {
+				tableExists = tables.next();
+			}
+			if (tableExists == false) return;
+
+			try (Statement statement = connection.createStatement()) {
+				for (String column : requiredColumns) {
+					//ADD COLUMN IF NOT EXISTS makes this idempotent without reading metadata first
+					statement.execute("ALTER TABLE " + tableName + " ADD COLUMN IF NOT EXISTS " + column + " INT");
+				}
+			}
+		} catch (Exception e) {
+			Logger.error(UpdateDatabase.class, "Error updating RAG database: " + e.getMessage());
+			return;
+		}
+
+		//phase 2: fill the group data, mark the update as done only when everything succeeded
+		boolean fillSuccess = true;
+		try {
+			EmbeddingChunkRepository embeddingChunkRepository = Tools.getSpringBean("embeddingChunkRepository", EmbeddingChunkRepository.class);
+			if(embeddingChunkRepository == null) throw new IllegalStateException("Error filling RAG document group because EmbeddingChunkRepository is null");
+
+			List<Long> documentIds = embeddingChunkRepository.findDistinctDocumentEntityIdsWithIncompleteGroupData();
+
+			for (Long documentId : documentIds) {
+				if (documentId == null || documentId < 1 || documentId > Integer.MAX_VALUE) continue;
+
+				DocDetails doc = DocDB.getInstance().getDoc(documentId.intValue());
+				if (doc == null) continue;
+
+				int[] rootGroups = DocDB.getRootGroupL(doc.getGroupId(), null, -1);
+				embeddingChunkRepository.updateDocumentGroupData(
+					documentId,
+					doc.getGroupId(),
+					rootGroups[0],
+					rootGroups[1],
+					rootGroups[2]
+				);
+			}
+		} catch (Exception e) {
+			fillSuccess = false;
+			Logger.error(UpdateDatabase.class, "Error filling RAG document group data: " + e.getMessage());
+		}
+
+		//do not mark as done on failure, so the backfill is retried on the next startup
+		if (fillSuccess) saveSuccessUpdate(note);
 	}
 }

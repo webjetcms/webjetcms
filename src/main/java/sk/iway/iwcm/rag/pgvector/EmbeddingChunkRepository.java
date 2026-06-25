@@ -34,4 +34,18 @@ public interface EmbeddingChunkRepository extends DomainIdRepository<EmbeddingCh
 
     @Query("SELECT DISTINCT c.entityId FROM EmbeddingChunkEntity c WHERE c.entityType = :entityType AND c.domainId = :domainId")
     List<Integer> findDistinctEntityIdsByEntityTypeAndDomainId(RagEntityType entityType, Integer domainId);
+
+    @Query("SELECT DISTINCT c.entityId FROM EmbeddingChunkEntity c WHERE c.entityType = sk.iway.iwcm.rag.service.RagEntityType.DOCUMENT AND (c.groupId IS NULL OR c.rootGroupL1 IS NULL OR c.rootGroupL2 IS NULL OR c.rootGroupL3 IS NULL)")
+    List<Long> findDistinctDocumentEntityIdsWithIncompleteGroupData();
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE EmbeddingChunkEntity c SET c.groupId = :groupId, c.rootGroupL1 = :rootGroupL1, c.rootGroupL2 = :rootGroupL2, c.rootGroupL3 = :rootGroupL3 WHERE c.entityType = sk.iway.iwcm.rag.service.RagEntityType.DOCUMENT AND c.entityId = :entityId")
+    int updateDocumentGroupData(
+        @Param("entityId") Long entityId,
+        @Param("groupId") Integer groupId,
+        @Param("rootGroupL1") Integer rootGroupL1,
+        @Param("rootGroupL2") Integer rootGroupL2,
+        @Param("rootGroupL3") Integer rootGroupL3
+    );
 }

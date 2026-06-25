@@ -9,7 +9,7 @@ Voliteľne môže nad rovnakým indexom zobraziť aj **RAG odpoveď** - krátku 
 - Pri sémantickom vyhľadávaní sa zobrazí zoznam relevantných stránok zoradený podľa podobnosti významu otázky.
 - Pri hybridnom vyhľadávaní sa kombinuje sémantické poradie s fulltextovou zhodou v indexovaných textoch.
 - Pri povolenej RAG odpovedi sa nad výsledkami zobrazí blok **Odpoveď AI z vyhľadávania**.
-- Ak odpoveď nie je možné zostaviť z indexovaného obsahu, zobrazí sa text **Nemám dostatok informácií na zodpovedanie tejto otázky.**
+- Ak odpoveď nie je možné zostaviť z indexovaného obsahu, nezobrazí sa žiadná RAG odpoveď.
 
 ## Nastavenie sémantického vyhľadávania
 

@@ -84,10 +84,31 @@ Scenario('Try semantic search', ({ I, DT, Document }) => {
     });
 });
 
+Scenario('Try RAG answer', ({ I, Document }) => {
+    Document.setConfigValue("ragSemanticSearchEnabled", "true");
+    Document.setConfigValue("ragAnswerAllowed", "true");
+
+    I.amOnPage("/apps/vyhladavanie/semantic-search.html");
+    I.waitForVisible("#searchWords", 5);
+
+    I.fillField("#searchWords", "Aky alkohol predava McGregor");
+    I.click(".smallSearchSubmit");
+    I.waitForVisible("p.ragAnswer", 60);
+
+    // Spam wait before requsts
+    I.wait(30);
+
+    I.fillField("#searchWords", "Ake je dnes pocasie v BA.");
+    I.click(".smallSearchSubmit");
+    I.waitForElement("h1.searchResultsH1", 60);
+    I.dontSeeElement("p.ragAnswer");
+});
+
 Scenario('Remove search preference', ({ I, DT, Document }) => {
     Document.setConfigValue("spamProtectionTimeout-search", "10");
     Document.setConfigValue("searchType", "db");
     Document.setConfigValue("ragSemanticSearchEnabled", "false");
+    Document.setConfigValue("ragAnswerAllowed", "false");
 });
 
 function checkTopFind(I, pageUrl, pageName) {
