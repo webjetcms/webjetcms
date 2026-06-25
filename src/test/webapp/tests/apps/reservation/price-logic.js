@@ -57,6 +57,7 @@ function checkUserReservationPrice(I, reservationDate, slots, expectedPrice) {
     I.pressKey("Tab");
     for (const slot of slots) {
         I.click(locate(`td[id='${slot}'].free`));
+        I.wait(1);
     }
     I.seeInField("#price", expectedPrice);
 }

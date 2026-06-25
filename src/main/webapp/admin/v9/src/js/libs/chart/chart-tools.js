@@ -725,7 +725,7 @@ export async function createAmchart(chartForm, update) {
     }
 
     //Add title to chart div
-    chartForm.chartTitle = await removeQuotes(chartForm.chartTitle);
+    chartForm.chartTitle = removeQuotes(chartForm.chartTitle);
     var htmlCode = '<h6 class="amchart-header">' + chartForm.chartTitle;
     $('#' + chartForm.chartDivId).before(htmlCode);
 
@@ -762,7 +762,7 @@ function removeQuotes(str) {
 
 async function _createCustomChart(chartForm, update) {
     //Add title to chart div
-    chartForm.chartTitle = await removeQuotes(chartForm.chartTitle);
+    chartForm.chartTitle = removeQuotes(chartForm.chartTitle);
     var htmlCode = '<h6 class="amchart-header">' + chartForm.chartTitle;
     $('#' + chartForm.chartDivId).before(htmlCode);
 

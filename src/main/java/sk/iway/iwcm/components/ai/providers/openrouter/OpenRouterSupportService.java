@@ -59,15 +59,46 @@ public abstract class OpenRouterSupportService extends SupportLogic {
         if(inputData != null && InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
             addImageContent(contentArray, inputData);
 
-        ObjectNode message = MAPPER.createObjectNode();
-        message.put("role", "user");
-        message.set("content", contentArray);
-
         ArrayNode messagesArray = MAPPER.createArrayNode();
-        messagesArray.add(message);
+        addContentMessage(messagesArray, "user", contentArray);
 
         mainObject.set("messages", messagesArray);
         return mainObject;
+    }
+
+    protected ObjectNode getChatMainObject(String systemContent, InputDataDTO inputData, String... userContents) throws IOException {
+        ObjectNode mainObject = MAPPER.createObjectNode();
+        ArrayNode messagesArray = MAPPER.createArrayNode();
+
+        if (Tools.isNotEmpty(systemContent)) addTextMessage(messagesArray, "system", systemContent);
+
+        ArrayNode contentArray = MAPPER.createArrayNode();
+        for (String content : userContents)
+            if (Tools.isNotEmpty(content)) addContent(contentArray, content);
+
+        if(inputData != null && InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
+            addImageContent(contentArray, inputData);
+
+        if (contentArray.size() == 0) addContent(contentArray, "Apply the task instructions to the provided data.");
+
+        if (contentArray.size() > 0) addContentMessage(messagesArray, "user", contentArray);
+
+        mainObject.set("messages", messagesArray);
+        return mainObject;
+    }
+
+    private void addTextMessage(ArrayNode messagesArray, String role, String value) {
+        ObjectNode message = MAPPER.createObjectNode();
+        message.put("role", role);
+        message.put("content", value);
+        messagesArray.add(message);
+    }
+
+    private void addContentMessage(ArrayNode messagesArray, String role, ArrayNode contentArray) {
+        ObjectNode message = MAPPER.createObjectNode();
+        message.put("role", role);
+        message.set("content", contentArray);
+        messagesArray.add(message);
     }
 
     protected void addImageContent(ArrayNode contentArray, InputDataDTO inputData) throws IOException {
