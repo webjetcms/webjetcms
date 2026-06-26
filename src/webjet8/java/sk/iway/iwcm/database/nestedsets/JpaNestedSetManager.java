@@ -439,7 +439,7 @@ public class JpaNestedSetManager implements NestedSetManager
 			catch (Exception e)
 			{
 				sk.iway.iwcm.Logger.error(e);
-				em.getTransaction().rollback();
+				if (em.getTransaction().isActive()) em.getTransaction().rollback();
 			}
 
 		}
