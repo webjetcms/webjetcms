@@ -1,0 +1,300 @@
+package sk.iway.iwcm.headless.rest;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.DocDB;
+import sk.iway.iwcm.DocDetails;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.UsersDB;
+import sk.iway.iwcm.headless.dto.ErrorResponse;
+import sk.iway.iwcm.headless.dto.FieldError;
+import sk.iway.iwcm.headless.dto.NavigationItem;
+import sk.iway.iwcm.headless.dto.PageResponse;
+import sk.iway.iwcm.headless.service.HeadlessNavigationService;
+import sk.iway.iwcm.headless.service.HeadlessPageService;
+import sk.iway.iwcm.system.spring.services.WebjetSecurityService;
+import sk.iway.iwcm.users.UserDetails;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * REST controller for headless page retrieval and navigation with content negotiation.
+ * Supports GET /rest/headless/v1/pages/by-path and GET /rest/headless/v1/navigation.
+ */
+@RestController
+@RequestMapping("/rest/headless/v1")
+@Tag(name = "Headless Pages", description = "Page retrieval endpoints for headless consumption")
+public class HeadlessPageRestController {
+
+    @Autowired
+    private HeadlessPageService headlessPageService;
+
+    @Autowired
+    private HeadlessNavigationService headlessNavigationService;
+
+    @Autowired
+    private WebjetSecurityService webjetSecurityService;
+
+    @Autowired(required = false)
+    private ObjectMapper objectMapper;
+
+    // ==================== Page Endpoints ====================
+
+    /**
+     * Get page by virtual path with content negotiation.
+     */
+    @GetMapping(value = {"/pages/by-path", "/pages/by-path/{path:.+}"},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_HTML_VALUE})
+    @Operation(
+            summary = "Get page by path",
+            description = "Retrieves a page by its virtual path with content negotiation support.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Page found"),
+                    @ApiResponse(responseCode = "401", description = "IP not allowed"),
+                    @ApiResponse(responseCode = "403", description = "Preview requested without admin session"),
+                    @ApiResponse(responseCode = "404", description = "Page not found")
+            }
+    )
+    public Object getPageByPath(
+            @Parameter(required = true) @RequestParam(name = "path", required = true) String path,
+            @Parameter(description = "Language override") @RequestParam(name = "lng", required = false, defaultValue = "") String lng,
+            @Parameter(description = "Preview mode - requires admin session") @RequestParam(name = "preview", required = false, defaultValue = "false") String preview,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+
+        path = normalizePath(path);
+
+        if (Tools.isEmpty(path)) {
+            return createErrorResponse(400, "Bad Request", "Path parameter is required.");
+        }
+
+        String domain = DocDB.getDomain(request);
+        int docId = DocDB.getInstance().getVirtualPathDocId(path, domain);
+        if (docId < 1) {
+            return createErrorResponse(404, "Not Found", "Page not found: " + path);
+        }
+
+        boolean isPreview = "true".equalsIgnoreCase(preview);
+        if (isPreview && !webjetSecurityService.isAdmin()) {
+            return createErrorResponse(403, "Forbidden", "Admin session required for preview mode.");
+        }
+
+        PageResponse pageResponse = headlessPageService.resolvePage(path, lng, isPreview, request, response);
+        if (pageResponse == null) {
+            return createErrorResponse(404, "Not Found", "Page not found: " + path);
+        }
+
+        String acceptHeader = request.getHeader("Accept");
+        if (isHtmlRequest(acceptHeader)) {
+            String htmlBody = headlessPageService.renderPageBody(pageResponse.getDocId(), request, response);
+            response.setContentType(MediaType.TEXT_HTML_VALUE);
+            response.setCharacterEncoding("UTF-8");
+            return htmlBody;
+        }
+
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        try {
+            String json = objectMapper.writeValueAsString(pageResponse);
+            return json;
+        } catch (JsonProcessingException e) {
+            return createErrorResponse(500, "Internal Server Error", "Failed to serialize page response.");
+        }
+    }
+
+    /**
+     * Get preview page by document ID (requires admin session).
+     */
+    @GetMapping(value = "/preview/pages/by-id", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_HTML_VALUE})
+    @Operation(
+            summary = "Get preview page by ID",
+            description = "Retrieves a page by document ID for preview (unpublished/draft content). Admin session required.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Page found"),
+                    @ApiResponse(responseCode = "403", description = "Admin session required"),
+                    @ApiResponse(responseCode = "404", description = "Page not found")
+            }
+    )
+    public Object getPreviewPageById(
+            @Parameter(required = true) @RequestParam(name = "docId", required = true) int docId,
+            @Parameter(description = "Language override") @RequestParam(name = "lng", required = false, defaultValue = "") String lng,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+
+        // Strict admin session check
+        if (!webjetSecurityService.isAdmin()) {
+            return createErrorResponse(403, "Forbidden", "Admin session required for preview.");
+        }
+
+        // Load document with cache bypass (preview should show latest draft)
+        DocDetails doc = DocDB.getInstance().getDoc(docId, -1, false);
+        if (doc == null) {
+            return createErrorResponse(404, "Not Found", "Document not found: " + docId);
+        }
+
+        // Build PageResponse
+        PageResponse pageResponse = new PageResponse(
+                doc.getDocId(),
+                doc.getTitle(),
+                doc.getVirtualPath(),
+                getLanguage(doc, lng),
+                headlessPageService.extractBody(doc)
+        );
+
+        pageResponse.setSeo(headlessPageService.buildSeoMetadata(doc));
+
+        String acceptHeader = request.getHeader("Accept");
+        if (isHtmlRequest(acceptHeader)) {
+            String htmlBody = headlessPageService.renderPageBody(docId, request, response);
+            response.setContentType(MediaType.TEXT_HTML_VALUE);
+            response.setCharacterEncoding("UTF-8");
+            return htmlBody;
+        }
+
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        try {
+            String json = objectMapper.writeValueAsString(pageResponse);
+            return json;
+        } catch (JsonProcessingException e) {
+            return createErrorResponse(500, "Internal Server Error", "Failed to serialize page response.");
+        }
+    }
+
+    // ==================== Navigation Endpoints ====================
+
+    /**
+     * Get navigation tree/list.
+     */
+    @GetMapping(value = "/navigation", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(
+            summary = "Get navigation tree",
+            description = "Retrieves the navigation tree starting from a root group or path.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Navigation tree returned"),
+                    @ApiResponse(responseCode = "401", description = "IP not allowed"),
+                    @ApiResponse(responseCode = "404", description = "Root not found")
+            }
+    )
+    public ResponseEntity<List<NavigationItem>> getNavigation(
+            @Parameter(description = "Virtual path of the root group") @RequestParam(name = "rootPath", required = false) String rootPath,
+            @Parameter(description = "Group ID to start from") @RequestParam(name = "rootGroupId", required = false) String rootGroupId,
+            @Parameter(description = "Maximum depth (0 = unlimited)") @RequestParam(name = "depth", required = false, defaultValue = "0") int depth,
+            @Parameter(description = "Language override") @RequestParam(name = "lng", required = false, defaultValue = "") String lng,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+
+        if (Tools.isEmpty(rootPath) && Tools.isEmpty(rootGroupId)) {
+            return createNavigationErrorResponse(400, "Bad Request", 
+                    "Either rootPath or rootGroupId parameter is required.");
+        }
+
+        String domain = DocDB.getDomain(request);
+        int startGroupId;
+
+        if (Tools.isNotEmpty(rootPath)) {
+            startGroupId = resolveRootGroupId(rootPath);
+        } else {
+            try {
+                startGroupId = Integer.parseInt(rootGroupId);
+            } catch (NumberFormatException e) {
+                return createNavigationErrorResponse(400, "Bad Request", "Invalid rootGroupId value.");
+            }
+        }
+
+        if (startGroupId <= 0) {
+            return createNavigationErrorResponse(404, "Not Found", "Root group not found.");
+        }
+
+        List<NavigationItem> navigation = headlessNavigationService.buildNavigation(
+                rootPath, rootGroupId, depth, lng, request.getSession());
+
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        return new ResponseEntity<>(navigation, HttpStatus.OK);
+    }
+
+    // ==================== Helpers ====================
+
+    private String normalizePath(String path) {
+        if (Tools.isEmpty(path)) {
+            return "";
+        }
+        path = path.trim();
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        if (path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+        return path;
+    }
+
+    private boolean isHtmlRequest(String acceptHeader) {
+        if (Tools.isEmpty(acceptHeader)) {
+            return false;
+        }
+        String lower = acceptHeader.toLowerCase();
+        return lower.contains("text/html") && !lower.contains("application/json");
+    }
+
+    private int resolveRootGroupId(String rootPath) {
+        if (Tools.isEmpty(rootPath)) {
+            return 0;
+        }
+        int docId = DocDB.getInstance().getVirtualPathDocId(rootPath, DocDB.getDomainFromSession(null));
+        if (docId > 0) {
+            DocDetails doc = DocDB.getInstance().getDoc(docId);
+            if (doc != null) {
+                return doc.getGroupId();
+            }
+        }
+        return 0;
+    }
+
+    private String getLanguage(DocDetails doc, String lng) {
+        if (Tools.isNotEmpty(lng)) {
+            return lng;
+        }
+        sk.iway.iwcm.PageLng pageLng = sk.iway.iwcm.PageLng.getByDocId(doc.getDocId());
+        if (pageLng != null) {
+            return pageLng.getLngCode();
+        }
+        return sk.iway.iwcm.Constants.getString("defaultLanguage");
+    }
+
+    private ResponseEntity<ErrorResponse> createErrorResponse(int status, String error, String message) {
+        ErrorResponse errorResponse = new ErrorResponse(status, error, message);
+        return new ResponseEntity<>(errorResponse, org.springframework.http.HttpStatus.valueOf(status));
+    }
+
+    private ResponseEntity<ErrorResponse> createValidationErrorResponse(List<FieldError> fieldErrors) {
+        ErrorResponse errorResponse = new ErrorResponse(400, "Validation Error", "Request validation failed.");
+        errorResponse.setFieldErrors(fieldErrors);
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    private ResponseEntity<List<NavigationItem>> createNavigationErrorResponse(int status, String error, String message) {
+        return new ResponseEntity<>(new ArrayList<>(), org.springframework.http.HttpStatus.valueOf(status));
+    }
+}

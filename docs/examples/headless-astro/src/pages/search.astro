@@ -1,0 +1,57 @@
+---
+import { search } from '../lib/api';
+
+const query = Astro.url.searchParams.get('q') || '';
+const page = parseInt(Astro.url.searchParams.get('page') || '0');
+
+let results = null;
+let error = '';
+
+if (query) {
+  try {
+    results = await search(query, page);
+  } catch (e: unknown) {
+    error = e instanceof Error ? e.message : 'Search failed';
+  }
+}
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Search - Headless CMS Demo</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; }
+    .search-form { margin-bottom: 20px; }
+    .search-form input { padding: 10px; width: 300px; border: 1px solid #ccc; border-radius: 4px; }
+    .search-form button { padding: 10px 20px; background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    .result { padding: 15px; border-bottom: 1px solid #eee; }
+    .result a { color: #0066cc; text-decoration: none; }
+    .snippet { color: #666; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <h1>Search</h1>
+
+  <form class="search-form" action="/search" method="GET">
+    <input type="text" name="q" value={query} placeholder="Search..." />
+    <button type="submit">Search</button>
+  </form>
+
+  {#if error}
+    <p style="color: #d32f2f;">{error}</p>
+  {#else if results && results.items.length > 0}
+    <p>{results.totalElements} results found</p>
+    {#each results.items as item}
+      <div class="result">
+        <a href={`/?path=${item.virtualPath}`}>{item.title}</a>
+        <p class="snippet">{item.snippet}</p>
+      </div>
+    {/each}
+  {#else if query}
+    <p>No results found for "<strong>{query}</strong>"</p>
+  {/if}
+</body>
+</html>

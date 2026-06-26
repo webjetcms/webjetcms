@@ -1,0 +1,48 @@
+---
+import { getPage } from '../../lib/api';
+
+const docId = parseInt(Astro.params.docId);
+let page = null;
+let error = '';
+
+try {
+  const response = await fetch(`/rest/headless/v1/preview/pages/by-id?docId=${docId}`);
+  if (response.ok) {
+    page = await response.json();
+  } else {
+    error = 'Page not found or access denied.';
+  }
+} catch (e: unknown) {
+  error = e instanceof Error ? e.message : 'Unknown error';
+}
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preview: {page?.title || 'Loading...'} - Headless CMS Demo</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; }
+    .preview-banner { background: #fff3cd; padding: 10px; border-radius: 8px; margin-bottom: 20px; }
+    .content { background: #fafafa; padding: 20px; border-radius: 8px; }
+    .error { color: #d32f2f; background: #ffebee; padding: 15px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  {#if page}
+    <div class="preview-banner">
+      <strong>Preview Mode</strong> — Unpublished content
+    </div>
+    <div class="content">
+      <h1>{page.title}</h1>
+      <div innerHTML:raw={page.body} />
+    </div>
+  {#else}
+    <div class="error">
+      <strong>Error:</strong> {error || 'Page not found.'}
+    </div>
+  {/if}
+</body>
+</html>
