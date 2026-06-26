@@ -526,6 +526,7 @@ public class UrlRedirectDB
 	public static void save(UrlRedirectBean urlRedirect)
 	{
 		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();
+		boolean saved = false;
 		if(urlRedirect.getUrlRedirectId()==null || urlRedirect.getUrlRedirectId()<1)
 		{
 			urlRedirect.setInsertDate(new Date());
@@ -545,11 +546,16 @@ public class UrlRedirectDB
 				urlRedirect.setUrlRedirectId(0L);
 			em.persist(urlRedirect);
 			em.getTransaction().commit();
+			saved = true;
 		}catch (Exception e) {
-			em.getTransaction().rollback();
+			if (em.getTransaction().isActive()) em.getTransaction().rollback();
+			Logger.error(UrlRedirectDB.class, "save failed", e);
 		} finally{
 			em.close();
 		}
+
+		if (!saved) return;
+
 		addToCache(urlRedirect);
 
 		if(Tools.isNotEmpty(urlRedirect.getOldUrl()) && urlRedirect.getOldUrl().startsWith(regExpPrefix))
