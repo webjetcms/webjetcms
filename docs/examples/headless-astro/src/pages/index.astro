@@ -1,18 +1,5 @@
 ---
-import { getPage, getNavigation } from '../lib/api';
-
-// Read path from query param (set by middleware redirect)
-const pathFromQuery = Astro.url.searchParams.get('path');
-const apiPath = pathFromQuery || '/';
-
-let page = null;
-let error = '';
-
-try {
-  page = await getPage(apiPath);
-} catch (e: unknown) {
-  error = e instanceof Error ? e.message : 'Unknown error';
-}
+import { getNavigation } from '../lib/api';
 
 const nav = await getNavigation('/', undefined, 2);
 ---
@@ -22,20 +9,16 @@ const nav = await getNavigation('/', undefined, 2);
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{page?.title || 'Headless CMS Demo'}</title>
+  <title>Headless CMS Demo</title>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; }
     nav { background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
     nav a { display: block; padding: 5px 0; color: #0066cc; text-decoration: none; }
     nav a:hover { text-decoration: underline; }
-    .content { background: #fafafa; padding: 20px; border-radius: 8px; }
-    .error { color: #d32f2f; background: #ffebee; padding: 15px; border-radius: 8px; }
-    h1 { color: #333; }
   </style>
 </head>
 <body>
   <h1>WebJET CMS Headless Demo</h1>
-
   <nav>
     <h3>Navigation</h3>
     {nav.map((item: any) => (
@@ -45,17 +28,11 @@ const nav = await getNavigation('/', undefined, 2);
       <a href={child.virtualPath}>  {child.title}</a>
     ))}
   </nav>
-
-  {error ? (
-    <div class="error"><strong>Error:</strong> {error}</div>
-  ) : page ? (
-    <div class="content">
-      <h1>{page.title}</h1>
-      <p>Path: {page.virtualPath} | Language: {page.language}</p>
-      <div innerHTML:raw={page.body} />
-    </div>
-  ) : (
-    <p>Enter a path: <code>/:path</code></p>
-  )}
+  <script is:inline>
+    const path = new URLSearchParams(window.location.search).get('path');
+    if (path) {
+      window.location.href = path;
+    }
+  </script>
 </body>
 </html>
