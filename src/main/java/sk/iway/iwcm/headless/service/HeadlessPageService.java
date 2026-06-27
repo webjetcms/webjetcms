@@ -18,6 +18,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.EditorToolsForCore;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.headless.dto.PageResponse;
 import sk.iway.iwcm.headless.dto.SeoMetadata;
@@ -81,7 +82,7 @@ public class HeadlessPageService {
                 doc.getTitle(),
                 doc.getVirtualPath(),
                 getLanguage(doc, lng),
-                extractBody(doc)
+                extractBody(doc, request)
         );
 
         // Add SEO metadata
@@ -126,20 +127,13 @@ public class HeadlessPageService {
     /**
      * Extracts the body content from a document.
      */
-    public String extractBody(DocDetails doc) {
+    public String extractBody(DocDetails doc, HttpServletRequest request) {
         String data = doc.getData();
         if (Tools.isEmpty(data)) {
             return "";
         }
-        // Extract body content - strip HTML wrapper if present
-        int bodyStart = data.toLowerCase().indexOf("<body");
-        if (bodyStart >= 0) {
-            int bodyEnd = data.toLowerCase().indexOf("</body>", bodyStart);
-            if (bodyEnd >= 0) {
-                bodyEnd += "</body>".length();
-                return data.substring(bodyStart, bodyEnd);
-            }
-        }
+        //execute INCLUDE apps
+        data = EditorToolsForCore.renderIncludes(doc, false, request);
         return data;
     }
 

@@ -161,7 +161,7 @@ public class HeadlessPageRestController {
                 doc.getTitle(),
                 doc.getVirtualPath(),
                 getLanguage(doc, lng),
-                headlessPageService.extractBody(doc)
+                headlessPageService.extractBody(doc, request)
         );
 
         pageResponse.setSeo(headlessPageService.buildSeoMetadata(doc));
