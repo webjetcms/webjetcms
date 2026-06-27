@@ -28,11 +28,5 @@ const nav = await getNavigation('/', undefined, 2);
       <a href={child.virtualPath}>  {child.title}</a>
     ))}
   </nav>
-  <script is:inline>
-    const path = new URLSearchParams(window.location.search).get('path');
-    if (path) {
-      window.location.href = path;
-    }
-  </script>
 </body>
 </html>

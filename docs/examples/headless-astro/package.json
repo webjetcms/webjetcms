@@ -6,11 +6,10 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "stop": "astro dev stop"
   },
   "dependencies": {
-    "astro": "^4.16.19",
-    "esbuild": "^0.28.1",
-    "vite": "^6.4.3"
+    "astro": "^7.0.3"
   }
 }
