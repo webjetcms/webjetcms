@@ -1,9 +1,11 @@
 ---
 import { getPage, getNavigation } from '../lib/api';
 
-// Astro 7: Astro.url.searchParams funguje vo frontmáte
+const pathFromUrl = Astro.url.pathname || '/';
 const pathFromQuery = Astro.url.searchParams.get('path');
-const apiPath = pathFromQuery || '/';
+const apiPath = pathFromQuery
+  ? (pathFromQuery.startsWith('/') ? pathFromQuery : `/${pathFromQuery}`)
+  : pathFromUrl;
 
 let page = null;
 let error = '';
