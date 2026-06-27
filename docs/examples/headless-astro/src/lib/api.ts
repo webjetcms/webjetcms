@@ -3,7 +3,7 @@
  * Provides methods for page retrieval, navigation, search, and form submission.
  */
 
-const API_BASE = '/rest/headless/v1';
+const API_BASE = 'http://iwcm.interway.sk/rest/headless/v1';
 
 export interface PageResponse {
   docId: number;

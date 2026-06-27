@@ -10,6 +10,10 @@ import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.TemplateDetails;
+import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
@@ -233,21 +237,13 @@ public class HeadlessPageService {
         if (Tools.isNotEmpty(lng)) {
             return lng;
         }
-        // Query database for lng_code since DocDetails doesn't expose it
-        try (Connection conn = DBPool.getConnection()) {
-            java.sql.PreparedStatement ps = conn.prepareStatement(
-                    "SELECT lng_code FROM documents WHERE doc_id=?");
-            ps.setInt(1, doc.getDocId());
-            try (java.sql.ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    String lngCode = rs.getString("lng_code");
-                    if (Tools.isNotEmpty(lngCode)) {
-                        return lngCode;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            Logger.error(HeadlessPageService.class, "getLanguage", e);
+        GroupDetails group = GroupsDB.getInstance().getGroup(doc.getGroupId());
+        if (group != null && Tools.isNotEmpty(group.getLng())) {
+            return group.getLng();
+        }
+        TemplateDetails template = TemplatesDB.getInstance().getTemplate(doc.getTempId());
+        if (template != null && Tools.isNotEmpty(template.getLng())) {
+            return template.getLng();
         }
         return Constants.getString("defaultLanguage");
     }

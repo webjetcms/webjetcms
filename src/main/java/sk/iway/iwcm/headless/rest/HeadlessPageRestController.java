@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.headless.dto.ErrorResponse;
 import sk.iway.iwcm.headless.dto.FieldError;
@@ -29,7 +30,7 @@ import sk.iway.iwcm.headless.dto.NavigationItem;
 import sk.iway.iwcm.headless.dto.PageResponse;
 import sk.iway.iwcm.headless.service.HeadlessNavigationService;
 import sk.iway.iwcm.headless.service.HeadlessPageService;
-import sk.iway.iwcm.system.spring.services.WebjetSecurityService;
+import sk.iway.iwcm.users.UsersDB;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,17 +44,18 @@ import java.util.List;
 @Tag(name = "Headless Pages", description = "Page retrieval endpoints for headless consumption")
 public class HeadlessPageRestController {
 
-    @Autowired
-    private HeadlessPageService headlessPageService;
+    private final HeadlessPageService headlessPageService;
+    private final HeadlessNavigationService headlessNavigationService;
+    private final ObjectMapper objectMapper;
 
     @Autowired
-    private HeadlessNavigationService headlessNavigationService;
-
-    @Autowired
-    private WebjetSecurityService webjetSecurityService;
-
-    @Autowired(required = false)
-    private ObjectMapper objectMapper;
+    public HeadlessPageRestController(
+            HeadlessPageService headlessPageService,
+            HeadlessNavigationService headlessNavigationService) {
+        this.headlessPageService = headlessPageService;
+        this.headlessNavigationService = headlessNavigationService;
+        this.objectMapper = new ObjectMapper();
+    }
 
     // ==================== Page Endpoints ====================
 
@@ -92,8 +94,11 @@ public class HeadlessPageRestController {
         }
 
         boolean isPreview = "true".equalsIgnoreCase(preview);
-        if (isPreview && !webjetSecurityService.isAdmin()) {
-            return createErrorResponse(403, "Forbidden", "Admin session required for preview mode.");
+        if (isPreview) {
+            Identity user = UsersDB.getCurrentUser(request);
+            if (user == null || !user.isAdmin()) {
+                return createErrorResponse(403, "Forbidden", "Admin session required for preview mode.");
+            }
         }
 
         PageResponse pageResponse = headlessPageService.resolvePage(path, lng, isPreview, request, response);
@@ -139,7 +144,8 @@ public class HeadlessPageRestController {
             HttpServletResponse response) {
 
         // Strict admin session check
-        if (!webjetSecurityService.isAdmin()) {
+        Identity user = UsersDB.getCurrentUser(request);
+        if (user == null || !user.isAdmin()) {
             return createErrorResponse(403, "Forbidden", "Admin session required for preview.");
         }
 
@@ -238,11 +244,8 @@ public class HeadlessPageRestController {
             return "";
         }
         path = path.trim();
-        if (path.startsWith("/")) {
-            path = path.substring(1);
-        }
-        if (path.endsWith("/")) {
-            path = path.substring(0, path.length() - 1);
+        if (path.startsWith("/")==false) {
+            path = "/" + path; //NOSONAR
         }
         return path;
     }

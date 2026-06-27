@@ -2,7 +2,6 @@ package sk.iway.iwcm.headless.service;
 
 import jakarta.servlet.http.HttpSession;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.doc.DocDB;
@@ -21,9 +20,6 @@ import java.util.List;
  */
 @Service("HeadlessNavigationService")
 public class HeadlessNavigationService {
-
-    @Autowired
-    private GroupsDB groupsDB;
 
     /**
      * Builds a navigation tree from a given root group or path.
@@ -55,7 +51,7 @@ public class HeadlessNavigationService {
         }
 
         // Build navigation tree from groups
-        List<GroupDetails> groups = groupsDB.getGroupsTree(startGroupId, true, false, true, depth > 0 ? depth : null);
+        List<GroupDetails> groups = GroupsDB.getInstance().getGroupsTree(startGroupId, true, false, true, depth > 0 ? depth : null);
         if (groups == null || groups.isEmpty()) {
             return result;
         }
@@ -115,7 +111,7 @@ public class HeadlessNavigationService {
         }
 
         // Check for children
-        List<GroupDetails> children = groupsDB.getGroupsTree(group.getGroupId(), false, false, true);
+        List<GroupDetails> children = GroupsDB.getInstance().getGroupsTree(group.getGroupId(), false, false, true);
         if (children != null && !children.isEmpty()) {
             item.setHasChildren(true);
             List<NavigationItem> childItems = new ArrayList<>();
