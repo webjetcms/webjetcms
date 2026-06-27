@@ -1,12 +1,15 @@
 ---
 import { getPage, getNavigation } from '../lib/api';
 
-const path = Astro.url.searchParams.get('path') || '/';
+// Read path from query param (set by middleware redirect)
+const pathFromQuery = Astro.url.searchParams.get('path');
+const apiPath = pathFromQuery || '/';
+
 let page = null;
 let error = '';
 
 try {
-  page = await getPage(path);
+  page = await getPage(apiPath);
 } catch (e: unknown) {
   error = e instanceof Error ? e.message : 'Unknown error';
 }
@@ -19,7 +22,7 @@ const nav = await getNavigation('/', undefined, 2);
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Headless CMS Demo</title>
+  <title>{page?.title || 'Headless CMS Demo'}</title>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; }
     nav { background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
@@ -36,10 +39,10 @@ const nav = await getNavigation('/', undefined, 2);
   <nav>
     <h3>Navigation</h3>
     {nav.map((item: any) => (
-      <a href={`/?path=${item.virtualPath}`}>{item.title}</a>
+      <a href={item.virtualPath}>{item.title}</a>
     ))}
     {nav.flatMap((item: any) => item.children || []).map((child: any) => (
-      <a href={`/?path=${child.virtualPath}`}>  {child.title}</a>
+      <a href={child.virtualPath}>  {child.title}</a>
     ))}
   </nav>
 
@@ -52,7 +55,7 @@ const nav = await getNavigation('/', undefined, 2);
       <div innerHTML:raw={page.body} />
     </div>
   ) : (
-    <p>Enter a path in the URL: <code>?path=/about</code></p>
+    <p>Enter a path: <code>/:path</code></p>
   )}
 </body>
 </html>
