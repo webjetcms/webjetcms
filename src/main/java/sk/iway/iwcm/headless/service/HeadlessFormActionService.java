@@ -3,11 +3,9 @@ package sk.iway.iwcm.headless.service;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.headless.dto.FieldError;
 import sk.iway.iwcm.headless.dto.FormResult;
 import sk.iway.iwcm.headless.dto.FormSubmitRequest;
@@ -31,8 +29,8 @@ public class HeadlessFormActionService {
      * @param response    the HTTP response
      * @return FormResult with success/error status
      */
-    public FormResult processFormSubmission(FormSubmitRequest request, 
-                                           HttpServletRequest httpRequest, 
+    public FormResult processFormSubmission(FormSubmitRequest request,
+                                           HttpServletRequest httpRequest,
                                            HttpServletResponse response) {
         FormResult formResult = new FormResult();
         formResult.setSuccess(false);
@@ -87,7 +85,7 @@ public class HeadlessFormActionService {
             formResult.setMessage("Form submitted successfully.");
 
         } catch (Exception e) {
-            sk.iway.iwcm.Logger.error("HeadlessFormActionService.processFormSubmission", e);
+            sk.iway.iwcm.Logger.error(HeadlessFormActionService.class, "HeadlessFormActionService.processFormSubmission", e);
             formResult.setMessage("Form processing error: " + e.getMessage());
         }
 
@@ -101,10 +99,10 @@ public class HeadlessFormActionService {
         List<FieldError> errors = new ArrayList<>();
 
         // Check form identification
-        if (Tools.isEmpty(request.getFormId()) 
-                && Tools.isEmpty(request.getFormName()) 
+        if (Tools.isEmpty(request.getFormId())
+                && Tools.isEmpty(request.getFormName())
                 && Tools.isEmpty(request.getComponentKey())) {
-            errors.add(new FieldError("formId/formName/componentKey", 
+            errors.add(new FieldError("formId/formName/componentKey",
                     "One of formId, formName, or componentKey is required."));
         }
 

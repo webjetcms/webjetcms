@@ -20,10 +20,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import sk.iway.iwcm.DocDB;
-import sk.iway.iwcm.DocDetails;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.UsersDB;
 import sk.iway.iwcm.headless.dto.ErrorResponse;
 import sk.iway.iwcm.headless.dto.FieldError;
 import sk.iway.iwcm.headless.dto.NavigationItem;
@@ -31,11 +30,9 @@ import sk.iway.iwcm.headless.dto.PageResponse;
 import sk.iway.iwcm.headless.service.HeadlessNavigationService;
 import sk.iway.iwcm.headless.service.HeadlessPageService;
 import sk.iway.iwcm.system.spring.services.WebjetSecurityService;
-import sk.iway.iwcm.users.UserDetails;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * REST controller for headless page retrieval and navigation with content negotiation.
@@ -205,7 +202,7 @@ public class HeadlessPageRestController {
             HttpServletResponse response) {
 
         if (Tools.isEmpty(rootPath) && Tools.isEmpty(rootGroupId)) {
-            return createNavigationErrorResponse(400, "Bad Request", 
+            return createNavigationErrorResponse(400, "Bad Request",
                     "Either rootPath or rootGroupId parameter is required.");
         }
 
@@ -262,7 +259,7 @@ public class HeadlessPageRestController {
         if (Tools.isEmpty(rootPath)) {
             return 0;
         }
-        int docId = DocDB.getInstance().getVirtualPathDocId(rootPath, DocDB.getDomainFromSession(null));
+        int docId = DocDB.getInstance().getVirtualPathDocId(rootPath, "");
         if (docId > 0) {
             DocDetails doc = DocDB.getInstance().getDoc(docId);
             if (doc != null) {
@@ -276,10 +273,7 @@ public class HeadlessPageRestController {
         if (Tools.isNotEmpty(lng)) {
             return lng;
         }
-        sk.iway.iwcm.PageLng pageLng = sk.iway.iwcm.PageLng.getByDocId(doc.getDocId());
-        if (pageLng != null) {
-            return pageLng.getLngCode();
-        }
+        // Use the lng parameter directly since DocDetails doesn't expose lng_code
         return sk.iway.iwcm.Constants.getString("defaultLanguage");
     }
 

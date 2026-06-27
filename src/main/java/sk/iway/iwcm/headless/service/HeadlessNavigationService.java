@@ -5,9 +5,10 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import sk.iway.iwcm.DocDB;
-import sk.iway.iwcm.DocDetails;
-import sk.iway.iwcm.GroupsDB;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.headless.dto.NavigationItem;
@@ -77,7 +78,7 @@ public class HeadlessNavigationService {
         }
 
         // Try to resolve via DocDB
-        int docId = DocDB.getInstance().getVirtualPathDocId(rootPath, DocDB.getDomainFromSession(null));
+        int docId = DocDB.getInstance().getVirtualPathDocId(rootPath, "");
         if (docId > 0) {
             DocDetails doc = DocDB.getInstance().getDoc(docId);
             if (doc != null) {
@@ -107,10 +108,8 @@ public class HeadlessNavigationService {
                     item.setLanguage(lng);
                 } else if (doc.getGroupId() > 0) {
                     // Try to get language from document
-                    sk.iway.iwcm.PageLng pageLng = sk.iway.iwcm.PageLng.getByDocId(doc.getDocId());
-                    if (pageLng != null) {
-                        item.setLanguage(pageLng.getLngCode());
-                    }
+                    // Language from document default - use constant
+                    item.setLanguage(Constants.getString("defaultLanguage"));
                 }
             }
         }

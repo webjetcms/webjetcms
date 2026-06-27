@@ -4,11 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import sk.iway.iwcm.DocDB;
-import sk.iway.iwcm.DocDetails;
-import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.DocTools;
-import sk.iway.iwcm.system.fulltext.indexed.Documents;
+import sk.iway.iwcm.doc.DocDetails;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -33,12 +29,7 @@ public class HeadlessSearchService {
      * @return paginated page of matching documents
      */
     public Page<DocDetails> searchDocuments(String query, Pageable pageable, String scope, String lng) {
-        // Try to use existing fulltext index first
-        if (Tools.getBoolean("fulltextSearchEnabled", false)) {
-            return searchWithFulltext(query, pageable, scope, lng);
-        }
-
-        // Fallback: simple SQL LIKE search
+        // Use SQL LIKE search
         return searchWithLike(query, pageable, scope, lng);
     }
 
@@ -46,18 +37,7 @@ public class HeadlessSearchService {
      * Search using existing fulltext index (Documents class).
      */
     private Page<DocDetails> searchWithFulltext(String query, Pageable pageable, String scope, String lng) {
-        try {
-            Documents fulltext = Documents.getInstance();
-            if (fulltext != null) {
-                // Use existing fulltext search
-                List<DocDetails> results = fulltext.search(query, scope);
-                return buildPage(results, pageable);
-            }
-        } catch (Exception e) {
-            sk.iway.iwcm.Logger.error("HeadlessSearchService.searchWithFulltext", e);
-        }
-
-        // Fall back to LIKE search if fulltext is not available
+        // Fulltext index not available in this version
         return searchWithLike(query, pageable, scope, lng);
     }
 
@@ -99,7 +79,7 @@ public class HeadlessSearchService {
                 }
             }
         } catch (Exception e) {
-            sk.iway.iwcm.Logger.error("HeadlessSearchService.searchWithLike", e);
+            sk.iway.iwcm.Logger.error(HeadlessSearchService.class, "HeadlessSearchService.searchWithLike", e);
         }
 
         return buildPage(allDocs, pageable);

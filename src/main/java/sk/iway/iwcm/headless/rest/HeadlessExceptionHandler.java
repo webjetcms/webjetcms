@@ -8,10 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import sk.iway.iwcm.Logger;
-import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.headless.dto.ErrorResponse;
 import sk.iway.iwcm.headless.dto.FieldError;
 
@@ -30,7 +28,7 @@ public class HeadlessExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest request) {
-        Logger.error("HeadlessExceptionHandler", ex);
+        Logger.error(HeadlessExceptionHandler.class, "HeadlessExceptionHandler", ex);
 
         String path = request.getRequestURI();
         String message = "Internal server error.";
@@ -55,9 +53,9 @@ public class HeadlessExceptionHandler {
      * Handles JSON processing errors.
      */
     @ExceptionHandler(JsonProcessingException.class)
-    public ResponseEntity<ErrorResponse> handleJsonProcessingException(JsonProcessingException ex, 
+    public ResponseEntity<ErrorResponse> handleJsonProcessingException(JsonProcessingException ex,
                                                                        HttpServletRequest request) {
-        Logger.error("HeadlessExceptionHandler.handleJsonProcessingException", ex);
+        Logger.error(HeadlessExceptionHandler.class, "HeadlessExceptionHandler.handleJsonProcessingException", ex);
 
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
@@ -72,7 +70,7 @@ public class HeadlessExceptionHandler {
      * Handles validation errors with field-level details.
      */
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex, 
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex,
                                                                HttpServletRequest request) {
         List<FieldError> fieldErrors = new ArrayList<>();
         fieldErrors.add(new FieldError("request", ex.getMessage()));

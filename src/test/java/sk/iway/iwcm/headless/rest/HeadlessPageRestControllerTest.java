@@ -4,15 +4,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.headless.dto.ErrorResponse;
 import sk.iway.iwcm.headless.dto.FieldError;
 import sk.iway.iwcm.headless.dto.FormResult;
@@ -35,7 +33,7 @@ import java.util.Map;
  * Unit tests for HeadlessPageRestController and HeadlessActionsRestController.
  * Tests DTO serialization, content negotiation, and error handling.
  */
-@ExtendWith(MockitoExtension.class)
+
 class HeadlessPageRestControllerTest {
 
     @Mock
@@ -61,6 +59,7 @@ class HeadlessPageRestControllerTest {
 
     @BeforeEach
     void setUp() {
+        MockitoAnnotations.openMocks(this);
         // Reset mocks for each test
     }
 
@@ -184,20 +183,20 @@ class HeadlessPageRestControllerTest {
 
     @Test
     void testFormSubmitRequestSerialization() {
-        FormSubmitRequest request = new FormSubmitRequest();
-        request.setFormId("contact-form");
-        request.setPagePath("/contact");
+        FormSubmitRequest formRequest = new FormSubmitRequest();
+        formRequest.setFormId("contact-form");
+        formRequest.setPagePath("/contact");
 
         Map<String, String> fields = new HashMap<>();
         fields.put("name", "John Doe");
         fields.put("email", "john@example.com");
-        request.setFields(fields);
+        formRequest.setFields(fields);
 
-        assertEquals("contact-form", request.getFormId());
-        assertEquals("/contact", request.getPagePath());
-        assertEquals(2, request.getFields().size());
-        assertEquals("John Doe", request.getFields().get("name"));
-        assertEquals("john@example.com", request.getFields().get("email"));
+        assertEquals("contact-form", formRequest.getFormId());
+        assertEquals("/contact", formRequest.getPagePath());
+        assertEquals(2, formRequest.getFields().size());
+        assertEquals("John Doe", formRequest.getFields().get("name"));
+        assertEquals("john@example.com", formRequest.getFields().get("email"));
     }
 
     // ==================== Content Negotiation Tests ====================
@@ -208,7 +207,7 @@ class HeadlessPageRestControllerTest {
         // Use reflection to test the private method
         String acceptHeader = "text/html,application/xhtml+xml";
         // This tests the logic: contains text/html and NOT application/json
-        assertFalse(acceptHeader.toLowerCase().contains("text/html") 
+        assertFalse(acceptHeader.toLowerCase().contains("text/html")
                 && !acceptHeader.toLowerCase().contains("application/json"));
     }
 
@@ -216,21 +215,21 @@ class HeadlessPageRestControllerTest {
     void testIsHtmlRequest_withJson() {
         String acceptHeader = "application/json, text/html";
         // Contains application/json, so should NOT be treated as HTML-only
-        assertFalse(acceptHeader.toLowerCase().contains("text/html") 
+        assertFalse(acceptHeader.toLowerCase().contains("text/html")
                 && !acceptHeader.toLowerCase().contains("application/json"));
     }
 
     @Test
     void testIsHtmlRequest_withOnlyHtml() {
         String acceptHeader = "text/html";
-        assertTrue(acceptHeader.toLowerCase().contains("text/html") 
+        assertTrue(acceptHeader.toLowerCase().contains("text/html")
                 && !acceptHeader.toLowerCase().contains("application/json"));
     }
 
     @Test
     void testIsHtmlRequest_withNull() {
-        assertFalse(Tools.isEmpty(null) == false);
-        assertTrue(Tools.isEmpty(null));
+        assertFalse(Tools.isEmpty((String) null) == false);
+        assertTrue(Tools.isEmpty((String) null));
     }
 
     // ==================== Path Normalization Tests ====================

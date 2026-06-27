@@ -2,11 +2,8 @@ package sk.iway.iwcm.headless.rest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -31,7 +28,7 @@ import java.util.Map;
  * Unit tests for HeadlessActionsRestController.
  * Tests form validation, search result handling, and error responses.
  */
-@ExtendWith(MockitoExtension.class)
+
 class HeadlessActionsRestControllerTest {
 
     @Mock
@@ -53,26 +50,26 @@ class HeadlessActionsRestControllerTest {
 
     @Test
     void testValidateFormSubmitRequest_withAllFields() {
-        FormSubmitRequest request = new FormSubmitRequest();
-        request.setFormId("contact-form");
-        request.setComponentKey("contact");
-        
+        FormSubmitRequest formRequest = new FormSubmitRequest();
+        formRequest.setFormId("contact-form");
+        formRequest.setComponentKey("contact");
+
         Map<String, String> fields = new HashMap<>();
         fields.put("name", "John");
         fields.put("email", "john@example.com");
-        request.setFields(fields);
+        formRequest.setFields(fields);
 
         // Should pass validation - has formId and fields
-        List<FieldError> errors = validateFormSubmitRequest(request);
+        List<FieldError> errors = validateFormSubmitRequest(formRequest);
         assertTrue(errors.isEmpty(), "Should have no validation errors");
     }
 
     @Test
     void testValidateFormSubmitRequest_missingFormId() {
-        FormSubmitRequest request = new FormSubmitRequest();
-        request.setFields(new HashMap<>());
+        FormSubmitRequest formRequest = new FormSubmitRequest();
+        formRequest.setFields(new HashMap<>());
 
-        List<FieldError> errors = validateFormSubmitRequest(request);
+        List<FieldError> errors = validateFormSubmitRequest(formRequest);
         assertFalse(errors.isEmpty());
         assertEquals(1, errors.size());
         assertEquals("formId/formName/componentKey", errors.get(0).getField());
@@ -80,10 +77,10 @@ class HeadlessActionsRestControllerTest {
 
     @Test
     void testValidateFormSubmitRequest_emptyFields() {
-        FormSubmitRequest request = new FormSubmitRequest();
-        request.setFormId("contact-form");
+        FormSubmitRequest formRequest = new FormSubmitRequest();
+        formRequest.setFormId("contact-form");
 
-        List<FieldError> errors = validateFormSubmitRequest(request);
+        List<FieldError> errors = validateFormSubmitRequest(formRequest);
         assertFalse(errors.isEmpty());
         assertEquals(1, errors.size());
         assertEquals("fields", errors.get(0).getField());
@@ -91,10 +88,10 @@ class HeadlessActionsRestControllerTest {
 
     @Test
     void testValidateFormSubmitRequest_noIdentification() {
-        FormSubmitRequest request = new FormSubmitRequest();
-        request.setFields(new HashMap<>());
+        FormSubmitRequest formRequest = new FormSubmitRequest();
+        formRequest.setFields(new HashMap<>());
 
-        List<FieldError> errors = validateFormSubmitRequest(request);
+        List<FieldError> errors = validateFormSubmitRequest(formRequest);
         assertFalse(errors.isEmpty());
         assertEquals(2, errors.size()); // Missing form identification + missing fields
     }
@@ -211,7 +208,7 @@ class HeadlessActionsRestControllerTest {
     @Test
     void testErrorResponseWithFieldErrors() {
         ErrorResponse errorResponse = new ErrorResponse(400, "Validation Error", "Request validation failed.");
-        
+
         List<FieldError> fieldErrors = new ArrayList<>();
         fieldErrors.add(new FieldError("field1", "Error 1"));
         fieldErrors.add(new FieldError("field2", "Error 2"));
@@ -261,10 +258,10 @@ class HeadlessActionsRestControllerTest {
     private List<FieldError> validateFormSubmitRequest(FormSubmitRequest request) {
         List<FieldError> errors = new ArrayList<>();
 
-        if (Tools.isEmpty(request.getFormId()) 
-                && Tools.isEmpty(request.getFormName()) 
+        if (Tools.isEmpty(request.getFormId())
+                && Tools.isEmpty(request.getFormName())
                 && Tools.isEmpty(request.getComponentKey())) {
-            errors.add(new FieldError("formId/formName/componentKey", 
+            errors.add(new FieldError("formId/formName/componentKey",
                     "One of formId, formName, or componentKey is required."));
         }
 

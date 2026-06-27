@@ -8,24 +8,20 @@ import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Constants;
-import sk.iway.iwcm.DocDB;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.Logger;
-import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.UsersDB;
-import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.headless.dto.PageResponse;
 import sk.iway.iwcm.headless.dto.SeoMetadata;
-import sk.iway.iwcm.headless.dto.NavigationItem;
 import sk.iway.iwcm.system.spring.WebjetComponentParserInterface;
 import sk.iway.iwcm.system.spring.services.WebjetSecurityService;
-import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.Identity;
 
 import java.sql.Connection;
-import java.util.List;
-import java.util.Locale;
 
 /**
  * Service responsible for resolving pages by path and rendering them
@@ -70,7 +66,7 @@ public class HeadlessPageService {
         }
 
         // Check access permissions
-        UserDetails currentUser = UsersDB.getCurrentUser(request.getSession());
+        Identity currentUser = UsersDB.getCurrentUser(request.getSession());
         if (!DocDB.canAccess(doc, currentUser)) {
             return null;
         }
@@ -118,7 +114,7 @@ public class HeadlessPageService {
                 }
             }
         } catch (Exception e) {
-            Logger.error("HeadlessPageService.renderPageBody", e);
+            Logger.error(HeadlessPageService.class, "HeadlessPageService.renderPageBody", e);
         }
         return getDocData(docId, request);
     }
@@ -126,7 +122,7 @@ public class HeadlessPageService {
     /**
      * Extracts the body content from a document.
      */
-    private String extractBody(DocDetails doc) {
+    public String extractBody(DocDetails doc) {
         String data = doc.getData();
         if (Tools.isEmpty(data)) {
             return "";
@@ -151,13 +147,13 @@ public class HeadlessPageService {
             java.sql.PreparedStatement ps = conn.prepareStatement(
                     "SELECT doc_data FROM documents WHERE doc_id=? AND domain_id=?");
             ps.setInt(1, docId);
-            ps.setInt(2, DocDB.getDomainId(request));
+            ps.setInt(2, sk.iway.iwcm.common.CloudToolsForCore.getDomainId());
             java.sql.ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 return rs.getString("doc_data");
             }
         } catch (Exception e) {
-            Logger.error("HeadlessPageService.getDocData", e);
+            Logger.error(HeadlessPageService.class, "HeadlessPageService.getDocData", e);
         }
         return "";
     }
@@ -165,7 +161,7 @@ public class HeadlessPageService {
     /**
      * Builds SEO metadata from document fields.
      */
-    private SeoMetadata buildSeoMetadata(DocDetails doc) {
+    public SeoMetadata buildSeoMetadata(DocDetails doc) {
         SeoMetadata seo = new SeoMetadata();
         String data = doc.getData();
 
@@ -237,9 +233,21 @@ public class HeadlessPageService {
         if (Tools.isNotEmpty(lng)) {
             return lng;
         }
-        PageLng pageLng = PageLng.getByDocId(doc.getDocId());
-        if (pageLng != null) {
-            return pageLng.getLngCode();
+        // Query database for lng_code since DocDetails doesn't expose it
+        try (Connection conn = DBPool.getConnection()) {
+            java.sql.PreparedStatement ps = conn.prepareStatement(
+                    "SELECT lng_code FROM documents WHERE doc_id=?");
+            ps.setInt(1, doc.getDocId());
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String lngCode = rs.getString("lng_code");
+                    if (Tools.isNotEmpty(lngCode)) {
+                        return lngCode;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Logger.error(HeadlessPageService.class, "getLanguage", e);
         }
         return Constants.getString("defaultLanguage");
     }
@@ -274,20 +282,32 @@ public class HeadlessPageService {
                     content.append(new String(b, off, len));
                 }
 
-                @Override
                 public boolean isCommitted() {
                     return false;
                 }
 
-                @Override
+                // Abstract method in ServletOutputStream - must implement
+                public void setWriteListener(jakarta.servlet.WriteListener listener) {
+                    // not supported in sync mode
+                }
+
+                // Abstract method in ServletOutputStream - must implement
+                public boolean isReady() {
+                    return true;
+                }
+
                 public void flushBuffer() {
                     // no-op for capture
                 }
 
-                @Override
                 public java.io.PrintWriter getWriter() {
-                    return new java.io.PrintWriter(new java.io.BufferedWriter(
-                            new java.io.OutputStreamWriter(getOutputStream(), getCharacterEncoding())));
+                    try {
+                        return new java.io.PrintWriter(new java.io.BufferedWriter(
+                                new java.io.OutputStreamWriter(getOutputStream(), getCharacterEncoding())), false);
+                    } catch (java.io.UnsupportedEncodingException e) {
+                        return new java.io.PrintWriter(new java.io.BufferedWriter(
+                                new java.io.OutputStreamWriter(getOutputStream())), false);
+                    }
                 }
             };
         }

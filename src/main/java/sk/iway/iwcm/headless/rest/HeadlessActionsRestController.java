@@ -26,10 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import sk.iway.iwcm.DocDB;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.DocTools;
-import sk.iway.iwcm.headless.dto.ErrorResponse;
 import sk.iway.iwcm.headless.dto.FieldError;
 import sk.iway.iwcm.headless.dto.FormResult;
 import sk.iway.iwcm.headless.dto.FormSubmitRequest;
@@ -37,12 +34,9 @@ import sk.iway.iwcm.headless.dto.SearchResultItem;
 import sk.iway.iwcm.headless.dto.SearchResults;
 import sk.iway.iwcm.headless.service.HeadlessFormActionService;
 import sk.iway.iwcm.headless.service.HeadlessSearchService;
-import sk.iway.iwcm.system.fulltext.indexed.Documents;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 /**
  * REST controller for headless actions (forms submit and search).
@@ -161,7 +155,7 @@ public class HeadlessActionsRestController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "doc_id"));
 
         // Execute search via service
-        Page<sk.iway.iwcm.DocDetails> docPage = headlessSearchService.searchDocuments(
+        Page<sk.iway.iwcm.doc.DocDetails> docPage = headlessSearchService.searchDocuments(
                 q.trim(), pageable, scope, lng);
 
         // Build response
@@ -172,7 +166,7 @@ public class HeadlessActionsRestController {
         searchResults.setTotalPages(docPage.getTotalPages());
 
         List<SearchResultItem> items = new ArrayList<>();
-        for (sk.iway.iwcm.DocDetails doc : docPage.getContent()) {
+        for (sk.iway.iwcm.doc.DocDetails doc : docPage.getContent()) {
             SearchResultItem item = new SearchResultItem();
             item.setDocId(doc.getDocId());
             item.setTitle(doc.getTitle());
@@ -183,10 +177,7 @@ public class HeadlessActionsRestController {
             String snippet = extractSnippet(doc.getData(), q);
             item.setSnippet(snippet);
 
-            sk.iway.iwcm.PageLng pageLng = sk.iway.iwcm.PageLng.getByDocId(doc.getDocId());
-            if (pageLng != null) {
-                item.setLanguage(pageLng.getLngCode());
-            }
+            // Language is determined by the request parameter 'lng', not by the document
 
             items.add(item);
         }
@@ -203,10 +194,10 @@ public class HeadlessActionsRestController {
     private List<FieldError> validateFormSubmitRequest(FormSubmitRequest request) {
         List<FieldError> errors = new ArrayList<>();
 
-        if (Tools.isEmpty(request.getFormId()) 
-                && Tools.isEmpty(request.getFormName()) 
+        if (Tools.isEmpty(request.getFormId())
+                && Tools.isEmpty(request.getFormName())
                 && Tools.isEmpty(request.getComponentKey())) {
-            errors.add(new FieldError("formId/formName/componentKey", 
+            errors.add(new FieldError("formId/formName/componentKey",
                     "One of formId, formName, or componentKey is required."));
         }
 
@@ -224,10 +215,10 @@ public class HeadlessActionsRestController {
 
         // Strip HTML tags for snippet extraction
         String text = data.replaceAll("<[^>]*>", " ").replaceAll("\\s+", " ").trim();
-        
+
         String lowerText = text.toLowerCase();
         String lowerQuery = query.toLowerCase();
-        
+
         int idx = lowerText.indexOf(lowerQuery);
         if (idx < 0) {
             // No match, return beginning
