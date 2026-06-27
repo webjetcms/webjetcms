@@ -49,7 +49,7 @@ export const onRequest = async (context: any, next: any) => {
   const contentHtml = error 
     ? `<div class="error"><strong>Error:</strong> ${error}</div>`
     : page 
-      ? `<div class="content"><h1>${page.title}</h1><p>Path: ${page.virtualPath} | Language: ${page.language}</p><div innerHTML:raw="${page.body}"></div></div>`
+      ? `<div class="content"><h1>${page.title}</h1><p>Path: ${page.virtualPath} | Language: ${page.language}</p>${page.body}</div>`
       : `<p>Enter a path: <code>/:path</code></p>`;
 
   const html = `<!DOCTYPE html>
