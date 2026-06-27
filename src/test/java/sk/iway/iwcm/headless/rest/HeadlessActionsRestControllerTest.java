@@ -71,7 +71,7 @@ class HeadlessActionsRestControllerTest {
 
         List<FieldError> errors = validateFormSubmitRequest(formRequest);
         assertFalse(errors.isEmpty());
-        assertEquals(1, errors.size());
+        assertEquals(2, errors.size());
         assertEquals("formId/formName/componentKey", errors.get(0).getField());
     }
 

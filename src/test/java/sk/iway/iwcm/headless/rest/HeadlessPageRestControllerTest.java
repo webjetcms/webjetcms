@@ -203,11 +203,11 @@ class HeadlessPageRestControllerTest {
 
     @Test
     void testIsHtmlRequest_withTextHtml() {
-        HeadlessPageRestController controller = new HeadlessPageRestController();
+        HeadlessPageRestController controller = new HeadlessPageRestController(headlessPageService, headlessNavigationService);
         // Use reflection to test the private method
         String acceptHeader = "text/html,application/xhtml+xml";
         // This tests the logic: contains text/html and NOT application/json
-        assertFalse(acceptHeader.toLowerCase().contains("text/html")
+        assertTrue(acceptHeader.toLowerCase().contains("text/html")
                 && !acceptHeader.toLowerCase().contains("application/json"));
     }
 
