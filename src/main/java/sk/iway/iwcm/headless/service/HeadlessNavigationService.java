@@ -25,26 +25,14 @@ public class HeadlessNavigationService {
      * Builds a navigation tree from a given root group or path.
      *
      * @param rootPath   virtual path of the root group (e.g., "/" for root)
-     * @param rootGroupId group ID to start from (alternative to rootPath)
+     * @param startGroupId group ID to start from (alternative to rootPath)
      * @param depth      maximum depth to traverse (0 = unlimited)
      * @param lng        optional language override
      * @param session    HTTP session for user context
      * @return list of top-level navigation items with children
      */
-    public List<NavigationItem> buildNavigation(String rootPath, String rootGroupId, int depth, String lng, HttpSession session) {
+    public List<NavigationItem> buildNavigation(String rootPath, int startGroupId, int depth, String lng, HttpSession session) {
         List<NavigationItem> result = new ArrayList<>();
-
-        int startGroupId;
-
-        if (Tools.isNotEmpty(rootPath)) {
-            // Resolve root group from path
-            startGroupId = resolveRootGroupId(rootPath);
-        } else if (Tools.isNotEmpty(rootGroupId)) {
-            startGroupId = Integer.parseInt(rootGroupId);
-        } else {
-            // Default to root (group 0)
-            startGroupId = 0;
-        }
 
         if (startGroupId <= 0) {
             return result;

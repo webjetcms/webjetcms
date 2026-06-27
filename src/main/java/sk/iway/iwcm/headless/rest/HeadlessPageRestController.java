@@ -22,8 +22,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.headless.dto.ErrorResponse;
 import sk.iway.iwcm.headless.dto.FieldError;
 import sk.iway.iwcm.headless.dto.NavigationItem;
@@ -215,7 +218,7 @@ public class HeadlessPageRestController {
         int startGroupId;
 
         if (Tools.isNotEmpty(rootPath)) {
-            startGroupId = resolveRootGroupId(rootPath);
+            startGroupId = resolveRootGroupId(rootPath, request);
         } else {
             try {
                 startGroupId = Integer.parseInt(rootGroupId);
@@ -229,7 +232,7 @@ public class HeadlessPageRestController {
         }
 
         List<NavigationItem> navigation = headlessNavigationService.buildNavigation(
-                rootPath, rootGroupId, depth, lng, request.getSession());
+                rootPath, startGroupId, depth, lng, request.getSession());
 
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
@@ -257,18 +260,27 @@ public class HeadlessPageRestController {
         return lower.contains("text/html") && !lower.contains("application/json");
     }
 
-    private int resolveRootGroupId(String rootPath) {
+    private int resolveRootGroupId(String rootPath, HttpServletRequest request) {
         if (Tools.isEmpty(rootPath)) {
             return 0;
         }
-        int docId = DocDB.getInstance().getVirtualPathDocId(rootPath, "");
+        String domain = DocDB.getDomain(request);
+        int docId = DocDB.getInstance().getVirtualPathDocId(rootPath, domain);
         if (docId > 0) {
             DocDetails doc = DocDB.getInstance().getDoc(docId);
             if (doc != null) {
-                return doc.getGroupId();
+                //find parent groups
+                List<GroupDetails> parents = GroupsDB.getInstance().getParentGroups(doc.getGroupId());
+                if (parents != null && !parents.isEmpty()) {
+                    return parents.get(parents.size() - 1).getGroupId(); // Return the top-level parent group ID
+                }
             }
         }
-        return 0;
+        int domainId = CloudToolsForCore.getDomainId(); // Default to root group for the domain
+        if (domainId > 0) {
+            return domainId; // Return the domain's root group ID
+        }
+        return 0; // Default to root group
     }
 
     private String getLanguage(DocDetails doc, String lng) {
