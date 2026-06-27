@@ -9,7 +9,8 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "@astrojs/node": "^8.0.0",
-    "astro": "^4.0.0"
+    "astro": "^4.16.19",
+    "esbuild": "^0.28.1",
+    "vite": "^6.4.3"
   }
 }

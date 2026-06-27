@@ -40,18 +40,20 @@ if (query) {
     <button type="submit">Search</button>
   </form>
 
-  {#if error}
-    <p style="color: #d32f2f;">{error}</p>
-  {#else if results && results.items.length > 0}
-    <p>{results.totalElements} results found</p>
-    {#each results.items as item}
-      <div class="result">
-        <a href={`/?path=${item.virtualPath}`}>{item.title}</a>
-        <p class="snippet">{item.snippet}</p>
-      </div>
-    {/each}
-  {#else if query}
+  {error ? (
+    <p style={{color: '#d32f2f'}}>{error}</p>
+  ) : (results && (results as any).items.length > 0) ? (
+    <>
+      <p>{(results as any).totalElements} results found</p>
+      {(results as any).items.map((item: any) => (
+        <div class="result">
+          <a href={`/?path=${item.virtualPath}`}>{item.title}</a>
+          <p class="snippet">{item.snippet}</p>
+        </div>
+      ))}
+    </>
+  ) : query ? (
     <p>No results found for "<strong>{query}</strong>"</p>
-  {/if}
+  ) : null}
 </body>
 </html>
