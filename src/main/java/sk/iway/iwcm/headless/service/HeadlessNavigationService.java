@@ -23,6 +23,7 @@ public class HeadlessNavigationService {
 
     /**
      * Builds a navigation tree from a given root group or path.
+     * Uses GroupsDB.getGroups() recursively (similar to MenuULLI.doTree).
      *
      * @param rootPath   virtual path of the root group (e.g., "/" for root)
      * @param startGroupId group ID to start from (alternative to rootPath)
@@ -34,20 +35,35 @@ public class HeadlessNavigationService {
     public List<NavigationItem> buildNavigation(String rootPath, int startGroupId, int depth, String lng, HttpSession session) {
         List<NavigationItem> result = new ArrayList<>();
 
-        if (startGroupId <= 0) {
+        int rootGroup = startGroupId;
+        if (rootGroup <= 0 && Tools.isNotEmpty(rootPath)) {
+            rootGroup = resolveRootGroupId(rootPath);
+        }
+
+        if (rootGroup <= 0) {
             return result;
         }
 
-        // Build navigation tree from groups
-        List<GroupDetails> groups = GroupsDB.getInstance().getGroupsTree(startGroupId, true, false, true, depth > 0 ? depth : null);
-        if (groups == null || groups.isEmpty()) {
+        // Get root group details
+        GroupDetails rootGroupDetails = GroupsDB.getInstance().getGroup(rootGroup);
+        if (rootGroupDetails == null) {
             return result;
         }
 
-        // Convert groups to NavigationItems
-        for (GroupDetails group : groups) {
-            NavigationItem item = convertGroupToNavigationItem(group, lng, 0, session);
-            result.add(item);
+        // Skip groups with MENU_TYPE_NOSUB (no submenu)
+        if (rootGroupDetails.getMenuType() == GroupDetails.MENU_TYPE_NOSUB) {
+            return result;
+        }
+
+        // Build navigation tree using getGroups (recursive, like MenuULLI.doTree)
+        List<GroupDetails> children = GroupsDB.getInstance().getGroups(rootGroup);
+        if (children != null && !children.isEmpty()) {
+            for (GroupDetails child : children) {
+                NavigationItem item = convertGroupToNavigationItem(child, lng, 0, session, depth);
+                if (item != null) {
+                    result.add(item);
+                }
+            }
         }
 
         return result;
@@ -76,8 +92,26 @@ public class HeadlessNavigationService {
 
     /**
      * Converts a GroupDetails to a NavigationItem with children.
+     * Skips internal groups and groups with MENU_TYPE_NOSUB.
+     *
+     * @param group the group details
+     * @param lng optional language override
+     * @param level current depth level
+     * @param session HTTP session for user context
+     * @param depth maximum depth (0 = unlimited)
+     * @return NavigationItem or null if group should be skipped
      */
-    private NavigationItem convertGroupToNavigationItem(GroupDetails group, String lng, int level, HttpSession session) {
+    private NavigationItem convertGroupToNavigationItem(GroupDetails group, String lng, int level, HttpSession session, int depth) {
+        // Skip internal groups (not shown in menu)
+        if (group.isInternal()) {
+            return null;
+        }
+
+        // Skip groups with MENU_TYPE_NOSUB (no submenu)
+        if (group.getMenuType() == GroupDetails.MENU_TYPE_NOSUB) {
+            return null;
+        }
+
         NavigationItem item = new NavigationItem();
         item.setTitle(group.getNavbarName());
         item.setLevel(level);
@@ -91,22 +125,32 @@ public class HeadlessNavigationService {
                 if (Tools.isNotEmpty(lng)) {
                     item.setLanguage(lng);
                 } else if (doc.getGroupId() > 0) {
-                    // Try to get language from document
-                    // Language from document default - use constant
                     item.setLanguage(Constants.getString("defaultLanguage"));
                 }
             }
         }
 
-        // Check for children
-        List<GroupDetails> children = GroupsDB.getInstance().getGroupsTree(group.getGroupId(), false, false, true);
-        if (children != null && !children.isEmpty()) {
-            item.setHasChildren(true);
-            List<NavigationItem> childItems = new ArrayList<>();
-            for (GroupDetails child : children) {
-                childItems.add(convertGroupToNavigationItem(child, lng, level + 1, session));
+        // Recursively get children using getGroups (like MenuULLI.doTree)
+        int nextLevel = depth > 0 ? level + 1 : level + 1;
+        if (depth <= 0 || nextLevel <= depth) {
+            List<GroupDetails> children = GroupsDB.getInstance().getGroups(group.getGroupId());
+            if (children != null && !children.isEmpty()) {
+                List<NavigationItem> childItems = new ArrayList<>();
+                for (GroupDetails child : children) {
+                    NavigationItem childItem = convertGroupToNavigationItem(child, lng, level + 1, session, depth);
+                    if (childItem != null) {
+                        childItems.add(childItem);
+                    }
+                }
+                if (!childItems.isEmpty()) {
+                    item.setHasChildren(true);
+                    item.setChildren(childItems);
+                } else {
+                    item.setHasChildren(false);
+                }
+            } else {
+                item.setHasChildren(false);
             }
-            item.setChildren(childItems);
         } else {
             item.setHasChildren(false);
         }

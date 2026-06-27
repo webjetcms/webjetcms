@@ -1,7 +1,7 @@
 import { defineConfig } from 'astro/config';
 
 const backendOrigin = process.env.HEADLESS_BACKEND_ORIGIN || 'http://iwcm.interway.sk';
-const proxyPrefixes = (process.env.HEADLESS_PROXY_PREFIXES || '/images,/files,/thumb,/apps,/components')
+const proxyPrefixes = (process.env.HEADLESS_PROXY_PREFIXES || '/images,/files,/thumb,/components')
   .split(',')
   .map((value) => value.trim())
   .filter(Boolean)
