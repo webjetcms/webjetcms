@@ -30,7 +30,6 @@ public class HeadlessExceptionHandler {
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest request) {
         Logger.error(HeadlessExceptionHandler.class, "HeadlessExceptionHandler", ex);
 
-        String path = request.getRequestURI();
         String message = "Internal server error.";
 
         // Provide more specific messages for known exceptions

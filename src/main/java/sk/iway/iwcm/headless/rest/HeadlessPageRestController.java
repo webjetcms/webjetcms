@@ -212,7 +212,6 @@ public class HeadlessPageRestController {
                     "Either rootPath or rootGroupId parameter is required.");
         }
 
-        String domain = DocDB.getDomain(request);
         int startGroupId;
 
         if (Tools.isNotEmpty(rootPath)) {
