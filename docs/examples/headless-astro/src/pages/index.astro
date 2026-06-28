@@ -1,7 +1,14 @@
 ---
-import { getNavigation } from '../lib/api';
+import { getNavigationWithHeaders } from '../lib/api';
 
-const nav = await getNavigation('/', undefined, 3);
+const navResult = await getNavigationWithHeaders(Astro.request, '/', undefined, 3);
+const nav = navResult.data;
+
+// Forward Set-Cookie headers to the browser
+const setCookie = navResult.headers.get('set-cookie');
+if (setCookie) {
+  Astro.response.headers.append('Set-Cookie', setCookie);
+}
 ---
 
 <!DOCTYPE html>

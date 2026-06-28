@@ -1,5 +1,5 @@
 ---
-import { search } from '../lib/api';
+import { searchWithHeaders } from '../lib/api';
 import '../styles/navigation.css';
 
 const query = Astro.url.searchParams.get('q') || '';
@@ -11,7 +11,14 @@ let searchError = '';
 
 if (query.trim().length > 0) {
   try {
-    results = await search(query.trim(), pageNum, pageSize);
+    const searchResult = await searchWithHeaders(query.trim(), Astro.request, pageNum, pageSize);
+    results = searchResult.data;
+    
+    // Forward Set-Cookie headers to the browser
+    const setCookie = searchResult.headers.get('set-cookie');
+    if (setCookie) {
+      Astro.response.headers.append('Set-Cookie', setCookie);
+    }
   } catch (e: unknown) {
     searchError = e instanceof Error ? e.message : 'Search failed';
   }
