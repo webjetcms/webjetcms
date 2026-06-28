@@ -13,7 +13,7 @@ if (query.trim().length > 0) {
   try {
     const searchResult = await searchWithHeaders(query.trim(), Astro.request, pageNum, pageSize);
     results = searchResult.data;
-    
+
     // Forward Set-Cookie headers to the browser
     const setCookie = searchResult.headers.get('set-cookie');
     if (setCookie) {
