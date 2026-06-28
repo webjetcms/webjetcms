@@ -890,3 +890,81 @@ When used as implementation prompt:
 - Do not skip strict checks from section 21.
 - Treat section 20 examples as contract source for first implementation.
 - Keep changes minimal and additive to reduce regression risk.
+
+## 25. Frontend (Astro) Session and Cookie Management
+
+When consuming headless endpoints from a decoupled frontend (e.g., Astro), session management requires special handling:
+
+### Problem
+- Backend runs on domain A (e.g., `cms.iway.sk`), frontend on domain B (e.g., `iwcm.interway.sk`).
+- Cookies from backend have domain scope set to backend domain only.
+- Frontend cannot store or directly access backend cookies due to browser SameSite/CORS policies.
+- Session persistence across multiple API calls fails.
+
+### Solution Pattern: Transparent Cookie Forwarding
+
+**Client-side (browser):**
+- Makes HTTP requests to frontend server (domain B) normally; no special cookie handling needed.
+
+**Frontend server-side (Astro/Node):**
+
+1. **Outbound API calls** - Forward incoming request cookies to backend:
+   ```typescript
+   function createFetchOptions(request?: Request): RequestInit {
+     const options: RequestInit = {};
+     if (request) {
+       const cookies = request.headers.get('cookie');
+       if (cookies) {
+         options.headers = { 'cookie': cookies };
+       }
+     }
+     return options;
+   }
+   ```
+
+2. **API wrapper functions** - Return both data and response headers:
+   ```typescript
+   export async function getPage(
+     path: string,
+     request?: Request
+   ): Promise<{ data: PageResponse; headers: Headers }> {
+     const response = await fetch(`${API_BASE}/pages/by-path?path=${path}`,
+       createFetchOptions(request)
+     );
+     return { data: await response.json(), headers: response.headers };
+   }
+   ```
+
+3. **In Astro components** - Extract `Set-Cookie` from API response and append to frontend response:
+   ```astro
+   ---
+   const result = await getPage(path, Astro.request);
+   const setCookie = result.headers.get('set-cookie');
+   if (setCookie) {
+     Astro.response.headers.append('Set-Cookie', setCookie);
+   }
+   ---
+   ```
+
+**Flow:**
+1. Browser sends request to `iwcm.interway.sk` (frontend).
+2. Frontend extracts `Cookie` header from browser request.
+3. Frontend forwards cookie in fetch to `cms.iway.sk` (backend).
+4. Backend processes request with session cookie, returns updated `Set-Cookie`.
+5. Frontend extracts `Set-Cookie` from backend response.
+6. Frontend appends `Set-Cookie` to browser response.
+7. Browser stores cookie scoped to backend domain (as directed).
+8. On next request, browser sends both frontend + backend cookies.
+9. Frontend extracts backend cookies and forwards them to backend again.
+
+**Key Requirements:**
+- Backend `Set-Cookie` must **not** have `SameSite=Strict` (use `Lax` or `None` with `Secure`).
+- Backend `Set-Cookie` domain scope must match actual backend domain (not frontend domain).
+- Frontend must always pass through `Set-Cookie` headers in responses.
+- All API wrapper functions must expose response headers, not just data.
+
+**Implementation Pattern for API Modules:**
+- Provide only `getPage()` style functions (new: `getPage()` → `{ data, headers }`).
+- Always require `request` parameter in server-side functions to enable cookie forwarding.
+
+This pattern enables seamless multi-domain session persistence without requiring the frontend to manage tokens or cookies explicitly.

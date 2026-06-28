@@ -72,10 +72,10 @@ export interface FormResult {
 }
 
 /**
- * Get a page by its virtual path with response headers (including Set-Cookie).
- * Pass the Astro request to forward cookies server-side.
+ * Get a page by its virtual path.
+ * Always pass Astro.request to forward cookies from browser to backend and vice versa.
  */
-export async function getPageWithHeaders(
+export async function getPage(
   path: string,
   lng?: string,
   request?: Request
@@ -98,25 +98,10 @@ export async function getPageWithHeaders(
 }
 
 /**
- * Get a page by its virtual path.
- * @deprecated Use getPageWithHeaders() in server-side code to handle cookies properly.
+ * Get the navigation tree.
+ * Always pass Astro.request to forward cookies from browser to backend and vice versa.
  */
-export async function getPage(path: string, lng?: string): Promise<PageResponse> {
-  const params = new URLSearchParams({ path });
-  if (lng) params.set('lng', lng);
-
-  const response = await fetch(`${API_BASE}/pages/by-path?${params}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch page: ${response.statusText}`);
-  }
-  return response.json();
-}
-
-/**
- * Get the navigation tree with response headers (including Set-Cookie).
- * Pass the Astro request to forward cookies server-side.
- */
-export async function getNavigationWithHeaders(
+export async function getNavigation(
   request?: Request,
   rootPath?: string,
   rootGroupId?: string,
@@ -142,31 +127,15 @@ export async function getNavigationWithHeaders(
 }
 
 /**
- * Get the navigation tree.
- * @deprecated Use getNavigationWithHeaders() in server-side code to handle cookies properly.
+ * Search documents.
+ * Always pass Astro.request to forward cookies from browser to backend and vice versa.
+ *
+ * @param query  search query string
+ * @param request Astro request object for cookie forwarding
+ * @param page   0-based page number (default 0)
+ * @param size   results per page (default 20)
  */
-export async function getNavigation(
-  rootPath?: string,
-  rootGroupId?: string,
-  depth?: number
-): Promise<NavigationItem[]> {
-  const params = new URLSearchParams();
-  if (rootPath) params.set('rootPath', rootPath);
-  if (rootGroupId) params.set('rootGroupId', rootGroupId);
-  if (depth) params.set('depth', String(depth));
-
-  const response = await fetch(`${API_BASE}/navigation?${params}`);
-  if (!response.ok) {
-    return [];
-  }
-  return response.json();
-}
-
-/**
- * Search documents with response headers (including Set-Cookie).
- * Pass the Astro request to forward cookies server-side.
- */
-export async function searchWithHeaders(
+export async function search(
   query: string,
   request?: Request,
   page: number = 0,
@@ -192,31 +161,10 @@ export async function searchWithHeaders(
 }
 
 /**
- * Search documents.
- * @param query  search query string
- * @param page   0-based page number (default 0)
- * @param size   results per page (default 20)
- * @deprecated Use searchWithHeaders() in server-side code to handle cookies properly.
+ * Submit a form.
+ * Always pass Astro.request to forward cookies from browser to backend and vice versa.
  */
-export async function search(
-  query: string,
-  page: number = 0,
-  size: number = 20
-): Promise<SearchResults> {
-  const params = new URLSearchParams({ q: query, page: String(page), size: String(size) });
-
-  const response = await fetch(`${API_BASE}/actions/search?${params}`);
-  if (!response.ok) {
-    return { items: [], page, size, totalElements: 0, totalPages: 0 };
-  }
-  return response.json();
-}
-
-/**
- * Submit a form with response headers (including Set-Cookie).
- * Pass the Astro request to forward cookies server-side.
- */
-export async function submitFormWithHeaders(
+export async function submitForm(
   formId: string,
   fields: Record<string, string>,
   request?: Request
@@ -244,24 +192,4 @@ export async function submitFormWithHeaders(
     data: await response.json(),
     headers: response.headers,
   };
-}
-
-/**
- * Submit a form.
- * @deprecated Use submitFormWithHeaders() in server-side code to handle cookies properly.
- */
-export async function submitForm(
-  formId: string,
-  fields: Record<string, string>
-): Promise<FormResult> {
-  const response = await fetch(`${API_BASE}/actions/forms/submit`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ formId, fields }),
-  });
-
-  if (!response.ok) {
-    return { success: false, message: 'Form submission failed.' };
-  }
-  return response.json();
 }

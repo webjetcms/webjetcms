@@ -1,5 +1,5 @@
 ---
-import { getPageWithHeaders, getNavigationWithHeaders } from '../lib/api';
+import { getPage, getNavigation } from '../lib/api';
 import '../styles/navigation.css';
 
 const pathFromUrl = Astro.url.pathname || '/';
@@ -12,7 +12,7 @@ let page = null;
 let error = '';
 
 try {
-  const result = await getPageWithHeaders(apiPath, undefined, Astro.request);
+  const result = await getPage(apiPath, undefined, Astro.request);
   page = result.data;
 
   // Forward Set-Cookie headers to the browser
@@ -24,7 +24,7 @@ try {
   error = e instanceof Error ? e.message : 'Unknown error';
 }
 
-const navResult = await getNavigationWithHeaders(Astro.request, apiPath, undefined, 2);
+const navResult = await getNavigation(Astro.request, apiPath, undefined, 2);
 const nav = navResult.data;
 
 // Forward Set-Cookie headers to the browser

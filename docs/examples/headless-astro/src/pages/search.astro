@@ -1,5 +1,5 @@
 ---
-import { searchWithHeaders } from '../lib/api';
+import { search } from '../lib/api';
 import '../styles/navigation.css';
 
 const query = Astro.url.searchParams.get('q') || '';
@@ -11,7 +11,7 @@ let searchError = '';
 
 if (query.trim().length > 0) {
   try {
-    const searchResult = await searchWithHeaders(query.trim(), Astro.request, pageNum, pageSize);
+    const searchResult = await search(query.trim(), Astro.request, pageNum, pageSize);
     results = searchResult.data;
 
     // Forward Set-Cookie headers to the browser
