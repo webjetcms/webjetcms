@@ -57,47 +57,39 @@ import sk.iway.iwcm.users.UsersDB;
  */
 public class SearchAction
 {
+	private SearchAction()
+	{
+	}
 
 	/**
 	 * Identifikator 'score' pri pouziti oracletext hodnota 10 je cisto nahodna, ide o to aby v dotaze bolo pouzite to iste cislo :)
 	 */
 	private static int ORACLE_TEXT_CONTAINS_IDENTIFIER = 10; //NOSONAR
 
-	public static String search(HttpServletRequest request, HttpServletResponse response)
+	private static String resolveForward(String lng, String pForward)
 	{
-		PageParams pageParams = new PageParams(request);
-
-		String searchType = Constants.getString("searchType");
-		if ("lucene".equals(searchType) || Constants.getBoolean("luceneAsDefaultSearch") || "true".equals(request.getParameter("useLucene")) || pageParams.getBooleanValue("useLucene", false))
-		{
-			//parameter useLucene=true je mozne pouzit pri porovnani standardneho a lucene vyhladavania
-			return LuceneSearchAction.search(request);
-		}
-		if ("semantic".equals(searchType) || "true".equals(request.getParameter("useSemantic")) || pageParams.getBooleanValue("useSemantic", false))
-		{
-			return SemanticSearchAction.search(request, response);
-		}
-
-		// ELSE - standardne databazove vyhladavanie
-
-		Identity user = UsersDB.getCurrentUser(request);
-
-		String forward = "success";
-		String error = "error";
-		boolean english = false;
-		if (request.getParameter("lng") != null)
-		{
-			english = true;
-			forward = "english";
-		}
-		String pForward = request.getParameter("forward");
+		String forward = lng != null ? "english" : "success";
 		if (pForward != null && pForward.endsWith(".jsp"))
 		{
 			forward = "/templates/" + pForward;
 		}
-		String searchGroupsParam = getParamAttribute("rootGroup", request, Integer.toString(Constants.getInt("rootGroupId")));
+		return forward;
+	}
+
+	public static SearchActionOutput search(SearchActionInput input)
+	{
+		Identity user = input.getUser();
+
+		String forward = resolveForward(input.getParameter("lng"), input.getParameter("forward"));
+		String error = "error";
+		boolean english = input.getParameter("lng") != null;
+
+		SearchActionOutput output = new SearchActionOutput();
+		output.setForward(forward);
+
+		String searchGroupsParam = getParamAttribute("rootGroup", input, Integer.toString(Constants.getInt("rootGroupId")));
 		if (searchGroupsParam!=null) searchGroupsParam = searchGroupsParam.replace('+', ',');
-		String[] groupIdParams = request.getParameterValues("groupId");
+		String[] groupIdParams = input.getParameterValues("groupId");
 		if (groupIdParams != null && groupIdParams.length>0)
 		{
 			int i;
@@ -109,33 +101,26 @@ public class SearchAction
 			}
 		}
 
-		boolean searchDetaultInTitle = Constants.getBoolean("searchDetaultInTitle") || "true".equals(request.getParameter("searchDetaultInTitle"));
-
-		boolean searchAlsoProtectedPages = pageParams.getBooleanValue("searchAlsoProtectedPages", false);
+		boolean searchDetaultInTitle = Constants.getBoolean("searchDetaultInTitle") || "true".equals(input.getParameter("searchDetaultInTitle"));
+		boolean searchAlsoProtectedPages = input.getBooleanValue("searchAlsoProtectedPages", false);
 
 		String searchFileNameQuery = null;
 
 		StringTokenizer st = new StringTokenizer(searchGroupsParam, ",+; ");
 		GroupsDB groupsDB = GroupsDB.getInstance();
-		//tu si poznacim zadane root groups a tie nebudem neskor povazovat za internal folders
 		Map<Integer, Integer> rootGroupIdsTable = new Hashtable<>();
-		List<DocDetails> docsInGroups = null; //vsetky stranky v zadanych adresaroch
+		List<DocDetails> docsInGroups = null;
 		List<GroupDetails> searchGroupsArray = null;
 		DebugTimer dtt = new DebugTimer("SearchAction DUPLICITY");
-		//ak je TRUE, tak chcem kontrolovat duplicitu pre multikategorie
-		boolean checkDuplicity = pageParams.getBooleanValue("checkDuplicity", false);
+		boolean checkDuplicity = input.getBooleanValue("checkDuplicity", false);
 		DocDB docDB = DocDB.getInstance();
 		while (st.hasMoreTokens())
 		{
 			try
 			{
-				//schvalne je tu Integer.parseInt aby to pripadne padlo na exception
 				int searchRootGroupId = Integer.parseInt(st.nextToken());
 
 				rootGroupIdsTable.put(Integer.valueOf(searchRootGroupId), Integer.valueOf(1));
-
-				//v stlpci file_name mame ulozenu cestu k adresaru, nieco ako /Slovensky/InterWay/Produkty/Nejaky Produkt/
-				//nad tym limitujeme adresare (interne adresare to maju v databaze prazdne)
 
 				GroupDetails fileNameGrp = groupsDB.getGroup(searchRootGroupId);
 				if (fileNameGrp != null)
@@ -180,7 +165,6 @@ public class SearchAction
 						if(entry.getValue() != Boolean.FALSE)
 						{
 							Integer docId = entry.getKey();
-							//ziskam zoznam docId, ktore su rovnake k danej stranke
 							slavesMasterForDoc = null;
 
 							if(slavesMasterForDoc == null) slavesMasterForDoc = new ArrayList<>();
@@ -188,13 +172,10 @@ public class SearchAction
 							Integer masterId = docDB.getSlavesMasterMappings().get(docId);
 							if(masterId != null)
 							{
-								//ak sa master nachadza v zozname stranok, tak ponecham master miesto slave a vymazem vsetky slave stranky danej master stranky
-								//v opacnom pripade vymazem vsetky ostatne slaves
 								boolean containsMaster = docsInGroupsHm.get(masterId) != null && docsInGroupsHm.get(masterId) == Boolean.TRUE;
 								Integer[] slaves = docDB.getMasterMappings().get(masterId);
 								if(slaves != null)
 								{
-									//aby preskocilo pri iteracii master
 									if(containsMaster) docsInGroupsHm.put(masterId, Boolean.FALSE);
 									for(Integer slave : slaves)
 										if(containsMaster || (!containsMaster && slave.intValue() != docId.intValue())) slavesMasterForDoc.add(slave);
@@ -202,11 +183,9 @@ public class SearchAction
 							}
 							else
 							{
-								//ak docId je master, tak pridam do duplicitnych vsetky jeho slaves
 								Integer[] slaves = docDB.getMasterMappings().get(docId);
 								if(slaves != null) slavesMasterForDoc.addAll(Arrays.asList(slaves));
 							}
-							//odstranim ich zo zonamu stranok
 							if(slavesMasterForDoc != null && slavesMasterForDoc.size() > 0)
 							{
 								for(Integer sm: slavesMasterForDoc)
@@ -225,20 +204,19 @@ public class SearchAction
 		}
 		dtt.diff("after docIdsNotIn");
 
-		//Logger.println(this,"searchGroups=" + searchGroups);
 		int perPage = 10;
 		try
 		{
-			if (getParamAttribute("perpage", request, "10") != null)
+			if (getParamAttribute("perpage", input, "10") != null)
 			{
-				perPage = Integer.parseInt(getParamAttribute("perpage", request, "10"));
+				perPage = Integer.parseInt(getParamAttribute("perpage", input, "10"));
 			}
 		}
 		catch (Exception ex)
 		{
 			sk.iway.iwcm.Logger.error(ex);
 		}
-		String rq = request.getParameter("index");
+		String rq = input.getParameter("index");
 		int index;
 		boolean hasAnotherPage;
 		if (rq == null)
@@ -257,64 +235,51 @@ public class SearchAction
 				sk.iway.iwcm.Logger.error(e);
 			}
 		}
-		// **********************************
-		//String words = my_form.getWords();
-		String words = request.getParameter("words");
+
+		String words = input.getParameter("words");
 		if (Tools.isEmpty(words))
 		{
-			words = (String)request.getAttribute("words");
+			words = (String)input.getAttribute("words");
 		   if (words == null) words = "";
 		}
-		String text = request.getParameter("text");
+		String text = input.getParameter("text");
 		if (Tools.isNotEmpty(text))
 		{
 			words = text;
 		}
       if ("tatrabanka".equals(Constants.getInstallName()))
       {
-         //fix na TB, ale inak rozumne som to nevedel spravit
-         //vo fulltexte to mame ako TatraPay TB cize s medzerou kvoli sup
          words = Tools.replace(words, "TB", " TB");
       }
 
-		//aby sme vedeli vnutit slovo pre vyhladavanie
-		if (Tools.isNotEmpty((String)request.getAttribute("forceWords")))
+		if (Tools.isNotEmpty((String)input.getAttribute("forceWords")))
 		{
-			words = (String)request.getAttribute("forceWords");
+			words = (String)input.getAttribute("forceWords");
 		}
 
-		//Logger.println(this,"Search words1="+words);
-
-		//Logger.println(this,"Search words ASC="+words);
-		//Logger.println(this,"Perpage=" + perPage + ", words=" + words);
 		String pom;
 		int i;
 		words = words.replace('\'', ' ');
-		//words = words.replace('\"', ' '); - zakomentovane aby sa dal hladat vyraz
 		words = words.replace(',', ' ');
 		words = words.replace('.', ' ');
 		words = words.replace(';', ' ');
 
-		//nebezpecne znaky odpaz
 		if (Tools.isNotEmpty(Constants.getString("searchActionOmitCharacters")))
 		{
 			words = words.replaceAll("["+Constants.getString("searchActionOmitCharacters")+"]", "");
 		}
 
-		//	otestuj, ci su zadane fields parametre
-		boolean hasInputParams = hasInputParams(request);
+		boolean hasInputParams = hasInputParams(input);
 
-		if ("***".equals(request.getAttribute("forceWords")))
+		if ("***".equals(input.getAttribute("forceWords")))
 		{
 			words = "";
 			hasInputParams = true;
 		}
 
-		request.removeAttribute("forceWords");
+		input.removeAttribute("forceWords");
 
-		//toto je zadany text na vyhladavanie bez nebezpecnych znakov
 		String wordsAscii = DB.internationalToEnglish(words);
-		// odstranenie jedno - dvoj znakovych slov
 		StringTokenizer sTok = new StringTokenizer(words);
 		words = "";
 		String wordsMysql = "";
@@ -341,7 +306,7 @@ public class SearchAction
 						wordsMysqlBuilder.append(' ').append(pom);
 					}
 					else if (pom.startsWith("+") || pom.startsWith("-") || pom.startsWith("~") || pom.startsWith("<")
-								|| pom.startsWith("(") || pom.startsWith("*") || pom.endsWith("*"))
+							|| pom.startsWith("(") || pom.startsWith("*") || pom.endsWith("*"))
 					{
 						wordsMysqlBuilder.append(' ').append(pom);
 					}
@@ -358,47 +323,19 @@ public class SearchAction
 		words = words.trim();
 		wordsMysql = wordsMysqlBuilder.toString();
 		wordsMysql = DB.internationalToEnglish(wordsMysql).trim();
-		//Logger.println(this,"Perpage=" + perPage + ", words=" + words);
-		long wait;
 
 		Logger.debug(null, "Search in Title: " +index);
 
 		if (words.length() == 0 && hasInputParams==false)
 		{
-			//nemame co vyhladavat
-
-			//session.setAttribute("words", "");
-			request.setAttribute("aList", new ArrayList<SearchDetails>());
-			//session.setAttribute("offset", Integer.valueOf(0));
-			//session.setAttribute("length", Integer.valueOf(perPage));
-			request.setAttribute("wrong", "true");
-			request.setAttribute("emptyrequest", "true");
-			return (forward);
-		}
-
-		//ochrana proti DOS utoku
-		if (request.getAttribute("disableSearchSpamProtection")==null && request.getAttribute("forceWords")==null && rq == null)	//len ak ide o samotne vyhladavanie, nie o zobrazenie dalsej stranky vyhladavania
-		{
-			if ((wait=SpamProtection.getWaitTimeout("search", request)) != 0)
-			{
-				//prekrocil sa hodinovy limit
-				request.setAttribute("wrong", "true");
-				request.setAttribute("crossHourlyLimit", "true");
-				request.setAttribute("wait", (wait/60/1000));
-				return (forward);
-			}
-
-			if (!SpamProtection.canPost("search", "", request))
-			{
-				//prekrocil sa cas medzi dvoma prehladavaniami
-				request.setAttribute("wrong", "true");
-				request.setAttribute("crossTimeout", "true");
-				return (forward);
-			}
+			output.setResults(new ArrayList<SearchDetails>());
+			output.setWrong(true);
+			output.setEmptyRequest(true);
+			return output;
 		}
 
 		String sesWord;
-		sesWord = (String) request.getAttribute("words");
+		sesWord = (String) input.getAttribute("words");
 		if (sesWord == null)
 		{
 			sesWord = "";
@@ -425,13 +362,11 @@ public class SearchAction
 				sql.append("SELECT TOP ")
 					.append(limit)
 					.append(' ').append(D_DOCUMENT_FIELDS).append(", data_asc FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE (CONTAINS(data_asc, ?) ");
-				//	teraz hladame zaroven aj v title
-				if (searchDetaultInTitle && request.getParameter("words")!=null) sql.append(" OR title LIKE ? ");
+				if (searchDetaultInTitle && input.getParameter("words")!=null) sql.append(" OR title LIKE ? ");
 				sql.append(") ");
 
 				sqlTotalResults = "SELECT count(d.doc_id) as totalr FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE (CONTAINS(data_asc, ?) ";
-				//	teraz hladame zaroven aj v title
-				if (searchDetaultInTitle && request.getParameter("words")!=null) sqlTotalResults += " OR title LIKE ? ";
+				if (searchDetaultInTitle && input.getParameter("words")!=null) sqlTotalResults += " OR title LIKE ? ";
 				sqlTotalResults += ") ";
 
 				if (words.length() == 0)
@@ -471,42 +406,32 @@ public class SearchAction
 					}
 					else
 					{
-						//ked je prazdne oracleKeywords, tak to musi ist takot, inak hlasi: text query parser syntax error on line 1, column 1
 						sql.append("SELECT * FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE");
 						sqlTotalResults = "SELECT count(d.doc_id) as totalr FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE";
 					}
-						//	teraz hladame zaroven aj v title
 				}
 				else
 				{
-					//ak mame viac slov pre LIKE command nahradime medzeru za percento pre hladanie viac slov
 					String wordsForLike = Tools.replace(words, " ", "%");
 					String wordsAsciiForLike = Tools.replace(wordsAscii, " ", "%");
 
 					sql.append("SELECT ").append(D_DOCUMENT_FIELDS).append(" FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE (data_asc LIKE '%").append(DB.removeSlashes(wordsAsciiForLike.toLowerCase())).append("%' ");
-					//	teraz hladame zaroven aj v title
-					if (searchDetaultInTitle && request.getParameter("words")!=null) sql.append(" OR title LIKE '%").append(DB.removeSlashes(wordsForLike)).append("%' ");
+					if (searchDetaultInTitle && input.getParameter("words")!=null) sql.append(" OR title LIKE '%").append(DB.removeSlashes(wordsForLike)).append("%' ");
 					sql.append(") ");
 
 					sqlTotalResults = "SELECT count(d.doc_id) as totalr FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE (data_asc LIKE '%" + DB.removeSlashes(wordsAsciiForLike.toLowerCase()) + "%' ";
-					//	teraz hladame zaroven aj v title
-					if (searchDetaultInTitle && request.getParameter("words")!=null) sqlTotalResults += " OR title LIKE '%" + DB.removeSlashes(wordsForLike) + "%' ";
+					if (searchDetaultInTitle && input.getParameter("words")!=null) sqlTotalResults += " OR title LIKE '%" + DB.removeSlashes(wordsForLike) + "%' ";
 					sqlTotalResults += ") ";
 				}
-
-				//Logger.println(SearchAction.class,"search ORA sql:\n"+sql);
-				//Logger.println(SearchAction.class,"search ORA sqlTotalResults:\n"+sqlTotalResults);
 			}
 			else if (Constants.DB_TYPE == Constants.DB_PGSQL)
 			{
-				//PostgreSQL
 				sql.append("SELECT ").append((perexGroupUseJoin ? "DISTINCT " : "")+D_DOCUMENT_FIELDS).append(" FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE ( to_tsvector(data_asc) @@ to_tsquery(?) ");
 
 				if (searchDetaultInTitle)
 				{
 					sql.append(" OR data_asc ILIKE ? ");
-					//	teraz hladame zaroven aj v title
-					if (request.getParameter("words")!=null) sql.append(" OR title ILIKE ? ");
+					if (input.getParameter("words")!=null) sql.append(" OR title ILIKE ? ");
 				}
 				sql.append(") ");
 
@@ -515,8 +440,7 @@ public class SearchAction
 				if (searchDetaultInTitle)
 				{
 					sqlTotalResults += " OR data_asc ILIKE ? ";
-					//	teraz hladame zaroven aj v title
-					if (request.getParameter("words")!=null) sqlTotalResults += " OR title ILIKE ? ";
+					if (input.getParameter("words")!=null) sqlTotalResults += " OR title ILIKE ? ";
 				}
 				sqlTotalResults += ") ";
 
@@ -524,19 +448,17 @@ public class SearchAction
 				{
 					sql.delete(0, sql.length());
 					sql.append("SELECT ").append((perexGroupUseJoin ? "DISTINCT " : "")+D_DOCUMENT_FIELDS).append(" FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE title IS NOT NULL ");
-					sqlTotalResults = "SELECT count("+(perexGroupUseJoin ? "DISTINCT " : "")+"d.doc_id) AS totalr " + " FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE title IS NOT NULL ";
+					sqlTotalResults = "SELECT count("+(perexGroupUseJoin ? "DISTINCT " : "")+"d.doc_id) AS totalr FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE title IS NOT NULL ";
 				}
 			}
 			else
 			{
-				//MySQL
 				sql.append("SELECT ").append((perexGroupUseJoin ? "DISTINCT " : "")+D_DOCUMENT_FIELDS).append(" FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE ( MATCH(title, data_asc) AGAINST (? IN BOOLEAN MODE) ");
 
 				if (searchDetaultInTitle)
 				{
 					sql.append(" OR data_asc LIKE ? ");
-					//	teraz hladame zaroven aj v title
-					if (request.getParameter("words")!=null) sql.append(" OR title LIKE ? ");
+					if (input.getParameter("words")!=null) sql.append(" OR title LIKE ? ");
 				}
 				sql.append(") ");
 
@@ -545,8 +467,7 @@ public class SearchAction
 				if (searchDetaultInTitle)
 				{
 					sqlTotalResults += " OR data_asc LIKE ? ";
-					//	teraz hladame zaroven aj v title
-					if (request.getParameter("words")!=null) sqlTotalResults += " OR title LIKE ? ";
+					if (input.getParameter("words")!=null) sqlTotalResults += " OR title LIKE ? ";
 				}
 				sqlTotalResults += ") ";
 
@@ -554,14 +475,12 @@ public class SearchAction
 				{
 					sql.delete(0, sql.length());
 					sql.append("SELECT ").append((perexGroupUseJoin ? "DISTINCT " : "")+D_DOCUMENT_FIELDS).append(" FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE title IS NOT NULL ");
-					sqlTotalResults = "SELECT count("+(perexGroupUseJoin ? "DISTINCT " : "")+"d.doc_id) AS totalr " + " FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE title IS NOT NULL ";
+					sqlTotalResults = "SELECT count("+(perexGroupUseJoin ? "DISTINCT " : "")+"d.doc_id) AS totalr FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE title IS NOT NULL ";
 				}
 			}
-			//Logger.println(this,"en groups="+en_groups);
+
 			if (Tools.isNotEmpty(searchFileNameQuery))
 			{
-				//v stlpce file_name mame ulozenu cestu k adresaru, nieco ako /Slovensky/InterWay/Produkty/Nejaky Produkt/
-				//nad tym limitujeme adresare
 				sql.append(" AND (").append(searchFileNameQuery).append(") ");
 				sqlTotalResults += " AND (" + searchFileNameQuery + ") ";
 			}
@@ -575,7 +494,6 @@ public class SearchAction
 			{
 				if (user.isAdmin()==false || Constants.getBoolean("adminCheckUserGroups"))
 				{
-					//skupiny pre web stranky
 					StringBuilder sqlProtected = new StringBuilder(" AND (password_protected IS null OR password_protected=''");
 					StringTokenizer stu = new StringTokenizer(user.getUserGroupsIds(), ",");
 					while (stu.hasMoreTokens())
@@ -593,27 +511,23 @@ public class SearchAction
 				}
 			}
 
-			//dodatocne parametre
-			sql.append(addInputParamsSQL(request));
-			sqlTotalResults += addInputParamsSQL(request);
+			sql.append(addInputParamsSQL(input));
+			sqlTotalResults += addInputParamsSQL(input);
 
 			sql.append(" AND searchable="+DB.getBooleanSql(true)+" AND available="+DB.getBooleanSql(true)+" AND (external_link IS NULL OR external_link NOT LIKE '/files/protected%') ");
 
 			if (Constants.getBoolean("multiDomainEnabled")) {
-				//we must filter by domain using root_group_l1
-				String domainName = DocDB.getDomain(request);
+				String domainName = input.getDomainName();
 				if (Tools.isNotEmpty(domainName)) {
 					List<Integer> rootGroupIds = new ArrayList<>();
 
 					List<GroupDetails> rootGroups = GroupsDB.getRootGroups();
 					for (GroupDetails rootGroup : rootGroups) {
 						if (domainName.equals(rootGroup.getDomainName())) {
-							//add ID to list
 							rootGroupIds.add(rootGroup.getGroupId());
 						}
 					}
 
-					//add ids into SQL query as root_group_l1 IN (...)
 					if (rootGroupIds.size() > 0) {
 						sql.append(" AND root_group_l1 IN (");
 						sqlTotalResults += " AND root_group_l1 IN (";
@@ -631,17 +545,18 @@ public class SearchAction
 				}
 			}
 
-			String searchWhereSql = (String)request.getAttribute("searchWhereSql");
+			String searchWhereSql = (String)input.getAttribute("searchWhereSql");
 			if (Tools.isNotEmpty(searchWhereSql))
 			{
 				sql.append(' ').append(searchWhereSql);
 				sqlTotalResults += " "+searchWhereSql;
-				request.removeAttribute("searchWhereSql");
+				input.removeAttribute("searchWhereSql");
 			}
 
 			String afterWhere =  sql.toString().indexOf("WHERE") != -1 ? sql.toString().substring(sql.toString().indexOf("WHERE")) : "";
 			boolean notFoundPublishStartEnd = afterWhere.indexOf("publish_start") == -1 && afterWhere.indexOf("publish_end") == -1;
-			request.setAttribute("notFoundPublishStartEnd", String.valueOf(notFoundPublishStartEnd));
+			output.setNotFoundPublishStartEnd(notFoundPublishStartEnd);
+			input.setAttribute("notFoundPublishStartEnd", String.valueOf(notFoundPublishStartEnd));
 			if(notFoundPublishStartEnd && Constants.getBoolean("showOnlyActualPublishedDoc"))
 			{
 				String sqlTmp = " AND (publish_start IS NULL OR publish_start <= ?) AND (publish_end IS NULL OR publish_end >= ?) ";
@@ -649,7 +564,6 @@ public class SearchAction
 				sqlTotalResults += sqlTmp;
 			}
 
-			//ak mame nejake duplicity, vynecham z vyhladavania
 			if(Tools.isNotEmpty(docIdsNotIn.toString()))
 			{
 				sql.append(" AND d.doc_id NOT IN ("+docIdsNotIn.substring(0, docIdsNotIn.length()-1)+") ");
@@ -657,8 +571,8 @@ public class SearchAction
 			}
 
 			String order_var = "ASC";
-			String order = getParamAttribute("order", request, "asc");
-			String orderType = getParamAttribute("orderType", request, "sort_priority");
+			String order = getParamAttribute("order", input, "asc");
+			String orderType = getParamAttribute("orderType", input, "sort_priority");
 			if ("desc".equalsIgnoreCase(order))
 			{
 				order_var = "DESC";
@@ -676,7 +590,6 @@ public class SearchAction
 				orderType = "sort_priority";
 				if (Constants.DB_TYPE == Constants.DB_ORACLE && Constants.getBoolean("searchUseOracleText"))
 				{
-					//sortni to podla score
 					orderType = "SCORE("+ORACLE_TEXT_CONTAINS_IDENTIFIER+")";
 				}
 			}
@@ -694,14 +607,13 @@ public class SearchAction
 			}
 			sql.append(" ORDER BY ").append(orderType).append(' ').append(order_var);
 
-			//dalsie order by
 			for (i=2; i<=5; i++)
 			{
-				orderType = getParamAttribute("orderType"+i, request, null);
+				orderType = getParamAttribute("orderType"+i, input, null);
 				if (Tools.isNotEmpty(orderType))
 				{
 					order_var = "ASC";
-					order = getParamAttribute("order"+i, request, "asc");
+					order = getParamAttribute("order"+i, input, "asc");
 					if ("desc".equalsIgnoreCase(order))
 					{
 						order_var = "DESC";
@@ -716,7 +628,6 @@ public class SearchAction
 						orderType = "sort_priority";
 						if (Constants.DB_TYPE == Constants.DB_ORACLE && Constants.getBoolean("searchUseOracleText"))
 						{
-							//sortni to podla score
 							orderType = "SCORE("+ORACLE_TEXT_CONTAINS_IDENTIFIER+")";
 						}
 					}
@@ -736,21 +647,17 @@ public class SearchAction
 			sqlTotalResults += " AND searchable="+DB.getBooleanSql(true)+" AND available="+DB.getBooleanSql(true)+" AND (external_link IS NULL OR external_link NOT LIKE '/files/protected%') ";
 			if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL)
 			{
-				//vsetky normalne DB okrem MSSQL nieco taketo poznaju
 				if (Constants.DB_TYPE == Constants.DB_PGSQL) sql.append(" OFFSET ").append(index).append(" LIMIT ").append((perPage * 3 + 1));
 				else sql.append(" LIMIT ").append(index).append(", ").append((perPage * 3 + 1));
 
 				sql.append(' ');
-				//ps.setInt(3, index);
-				//ps.setInt(4, perPage + 1);
 			}
 			sTok = new StringTokenizer(words);
-			if(sql != null) //toto je kvoli Oracle verzii
+			if(sql != null)
 				sql = new StringBuilder(Tools.replace(sql.toString(), "WHERE AND", "WHERE"));
 			if(Tools.isNotEmpty(sqlTotalResults))
 				sqlTotalResults = Tools.replace(sqlTotalResults, "WHERE AND", "WHERE");
 
-			// text to find
 			Logger.debug(SearchAction.class,"words: " + words);
 			Logger.debug(SearchAction.class,"wordsAscii: " + wordsAscii);
 			Logger.debug(SearchAction.class,"wordsMysql: " + wordsMysql);
@@ -766,63 +673,51 @@ public class SearchAction
 			psIndex = 1;
 			if (Constants.DB_TYPE == Constants.DB_ORACLE)
 			{
-				//pre oracle to mam rovno v query
-
-				//musime este doplnit hodnoty pre parametre v requeste
-				psIndex = addInputParamsSQL(request, ps, psIndex);
+				psIndex = addInputParamsSQL(input, ps, psIndex);
 			}
 			else if (Constants.DB_TYPE == Constants.DB_MYSQL)
 			{
-				//Logger.println(this,"nastavujem params: " + wordsMysql + " " + index + " " + perPage);
 				if (words.length()>0)
 				{
 					ps.setString(psIndex++, wordsMysql);
 					if (searchDetaultInTitle)
 					{
 						ps.setString(psIndex++, "%"+wordsAscii+"%");
-						if (request.getParameter("words")!=null) ps.setString(psIndex++, "%"+words+"%");
+						if (input.getParameter("words")!=null) ps.setString(psIndex++, "%"+words+"%");
 					}
 				}
-				//jeeff: toto som presunul rovno do SQL query, novemu MySQL driveru
-				// to robilo problem (mozno len bug)
-				//ps.setInt(3, index);
-				//ps.setInt(4, perPage + 1);
-
-				psIndex = addInputParamsSQL(request, ps, psIndex);
+				psIndex = addInputParamsSQL(input, ps, psIndex);
 			}
 			else if (Constants.DB_TYPE == Constants.DB_PGSQL)
 			{
-				//Logger.println(this,"nastavujem params: " + wordsMysql + " " + index + " " + perPage);
 				if (words.length()>0)
 				{
 					ps.setString(psIndex++, Tools.replace(DB.internationalToEnglish(words.trim()).toLowerCase(), " ", " & "));
 					if (searchDetaultInTitle)
 					{
 						ps.setString(psIndex++, wordsAscii);
-						if (request.getParameter("words")!=null) ps.setString(psIndex++, words);
+						if (input.getParameter("words")!=null) ps.setString(psIndex++, words);
 					}
 				}
-				psIndex = addInputParamsSQL(request, ps, psIndex);
+				psIndex = addInputParamsSQL(input, ps, psIndex);
 			}
 			else
 			{
 				if (words.length()>0)
 				{
-					//MSSQL vetva
 					StringBuilder mssqlContainsMatcher = toMssqlContainsSearch(wordsAscii);
 
 					if(mssqlContainsMatcher.length() > 0)
 					{
 						ps.setString(psIndex++, mssqlContainsMatcher.toString());
-						//	title
-						if (searchDetaultInTitle && request.getParameter("words")!=null) ps.setString(psIndex++, "%"+wordsAscii+"%");
+						if (searchDetaultInTitle && input.getParameter("words")!=null) ps.setString(psIndex++, "%"+wordsAscii+"%");
 					}
 					else
 					{
 						ps.setString(psIndex++, wordsAscii);
 					}
 				}
-				psIndex = addInputParamsSQL(request, ps, psIndex);
+				psIndex = addInputParamsSQL(input, ps, psIndex);
 			}
 			if(notFoundPublishStartEnd &&  Constants.getBoolean("showOnlyActualPublishedDoc"))
 			{
@@ -836,13 +731,10 @@ public class SearchAction
 
 			if (Constants.DB_TYPE == Constants.DB_MSSQL || Constants.DB_TYPE == Constants.DB_ORACLE)
 			{
-				//movni sa
 				if (index > 0)
 				{
-					//Logger.println(this,"RS move: "+index);
 					for (i = 0; i < index; i++)
 					{
-						//rs.absolute(index);
 						rs.next();
 					}
 				}
@@ -851,7 +743,7 @@ public class SearchAction
 			SearchDetails qDet;
 			String link;
 
-			String ttf = getTextToFind(request);
+			String ttf = getTextToFind(input);
 			dt.diff("after prepare TTF");
 
 			while (aList.size()<perPage && rs.next())
@@ -884,18 +776,15 @@ public class SearchAction
 					}
 				}
 
-				//vymazeme mu data, ak by sa nieco pototo aby sa nezobrazila cela stranka
 				qDet.setData("");
 
 				GroupDetails group = groupsDB.getGroup(qDet.getGroupId());
 
-				//nastav prava stranke (aby sa dalo detekovat vo vysledkoch a zobrazit napr. obrazok zamku)
 				if (Tools.isEmpty(qDet.getPasswordProtected()) && group != null && Tools.isNotEmpty(group.getPasswordProtected()))
 				{
 					qDet.setPasswordProtected(group.getPasswordProtected());
 				}
 
-				//dokumenty v internal foldroch neprehladavame (okrem root groups)
 				if (group != null)
 				{
 					if (rootGroupIdsTable.get(Integer.valueOf(group.getGroupId()))==null && group.isInternal())
@@ -909,15 +798,13 @@ public class SearchAction
 				}
 				else
 				{
-					//group uz neexistuje...
 					link = null;
 				}
 				try
 				{
 					if (qDet.getExternalLink().startsWith("/files/"))
 					{
-						//navbar pre subory generujem bez moznosti kliknutia na odkaz
-						String[] fileLink = MultiDomainFilter.fixDomainPaths(qDet.getExternalLink(), request).split("\\/");
+						String[] fileLink = MultiDomainFilter.fixDomainPaths(qDet.getExternalLink(), null).split("\\/");
 						link = "";
 						for (int p=0; p<fileLink.length-1; p++)
 						{
@@ -925,8 +812,7 @@ public class SearchAction
 							if (Tools.isEmpty(link)) link = part;
 							else link += " "+Constants.getString("navbarSeparator")+" "+part; //NOSONAR
 						}
-						//skontroluj ci subor skutocne existuje
-						if (request.getAttribute("searchDontCheckFile")==null)
+						if (input.getAttribute("searchDontCheckFile")==null)
 						{
 							IwcmFile iwf = new IwcmFile(Tools.getRealPath(qDet.getExternalLink()));
 							if (iwf.exists()==false)
@@ -937,7 +823,6 @@ public class SearchAction
 								continue;
 							}
 						}
-						//ak je aktivny file archiv nahrad meno suboru za virtual file name
 						FileArchivatorBean fab = FileArchivatorDB.getByUrl(qDet.getExternalLink());
 						if (fab != null)
 						{
@@ -960,14 +845,13 @@ public class SearchAction
 					qDet.setLink(link);
 				}
 
-				SearchSnippet searchSnippet = new SearchSnippet(qDet, ttf, request);
+				SearchSnippet searchSnippet = new SearchSnippet(qDet, ttf, input.getBooleanValue("fastSnippet", false));
 				String snippet = searchSnippet.getSnippet();
 
 				if (Tools.isEmpty(snippet)) snippet = "&nbsp;";
 				qDet.setData(snippet);
 				dt.diff("after snippet, size="+qDet.getData().length());
 
-				//Logger.println(this,"PRIDAVAM DO ZOZNAMU: " + qDet.getTitle());
 				aList.add(qDet);
 			}
 
@@ -993,10 +877,11 @@ public class SearchAction
 		catch (Exception e)
 		{
 			sk.iway.iwcm.Logger.error(e);
-			request.setAttribute("wrong", "true");
-			request.setAttribute("notfound", "true");
-			request.setAttribute("err_msg", "Chyba pri práci s databázou...");
-			return (error);
+			output.setWrong(true);
+			output.setNotFound(true);
+			output.setErrorMessage("Chyba pri práci s databázou...");
+			output.setForward(error);
+			return output;
 		}
 		finally
 		{
@@ -1009,86 +894,116 @@ public class SearchAction
 			catch (Exception e)
 			{
 				sk.iway.iwcm.Logger.error(e);
-				request.setAttribute("err_msg", "Chyba pri práci s databázou...");
+				output.setErrorMessage("Chyba pri práci s databázou...");
 			}
 		}
 
-		totalResults = getResultsCount(sqlTotalResults, request, words, wordsAscii, wordsMysql, aList.size(), hasAnotherPage);
-		request.setAttribute("words", words);
-		request.setAttribute("aList", aList);
+		totalResults = getResultsCount(sqlTotalResults, input, words, wordsAscii, wordsMysql, aList.size(), hasAnotherPage);
+		output.setWords(words);
+		output.setResults(aList);
 		if (aList.isEmpty())
 		{
-			request.setAttribute("wrong", "true");
-			request.setAttribute("notfound", "true");
-			return (forward);
+			output.setWrong(true);
+			output.setNotFound(true);
+			return output;
 		}
-		String paramsLink = "";
 		StringBuilder paramsLinkBuilder = new StringBuilder();
-		Enumeration<String> e = request.getParameterNames();
+		Enumeration<String> parameterNames = input.getParameterNames();
 		String name;
-		while (e.hasMoreElements())
+		while (parameterNames.hasMoreElements())
 		{
-			name = e.nextElement();
+			name = parameterNames.nextElement();
 			if ("index".equals(name) || "docid".equals(name)) continue;
 
-			String[] values = request.getParameterValues(name);
-		   for (int v=0; v<values.length; v++)
+			String[] values = input.getParameterValues(name);
+		   for (int v=0; values != null && v<values.length; v++)
 		   {
 		   	paramsLinkBuilder.append("&amp;").append(Tools.URLEncode(name)).append('=').append(Tools.URLEncode(values[v]));
 		   }
 		}
-		paramsLink = paramsLinkBuilder.toString();
-		request.setAttribute("paramsLink", paramsLink);
+		String paramsLink = paramsLinkBuilder.toString();
+		output.setParamsLink(paramsLink);
 
-		//vypocitaj celkove pocty
-		request.setAttribute("fromIndex", Integer.toString( (index + 1)));
+		output.setFromIndex(index + 1);
 		int toIndex = index + aList.size();
-		request.setAttribute("toIndex", Integer.toString(toIndex));
-		//
+		output.setToIndex(toIndex);
 		if(pocetVynechanychSuborov > 0 && totalResults >= pocetVynechanychSuborov)
         {
             totalResults = totalResults - pocetVynechanychSuborov;
         }
 		Logger.debug(SearchAction.class, "totalResults="+totalResults);
-		request.setAttribute("totalResults", Integer.toString(totalResults));
+		output.setTotalResults(totalResults);
 
-		//vytvor pages
-		preparePages(request, perPage, index, totalResults, paramsLink,"search.do");
+		output.setPages(preparePages(perPage, index, totalResults, paramsLink,"search.do"));
 
 		if (totalResults > toIndex)
 		{
 			if (!english)
 			{
-				request.setAttribute("next", "<a href=\"search.do?index=" + (index + perPage) + paramsLink + "\"> Ďalej &gt;&gt;&gt; </a>");
+				output.setNext("<a href=\"search.do?index=" + (index + perPage) + paramsLink + "\"> Ďalej &gt;&gt;&gt; </a>");
 			}
 			else
 			{
-				request.setAttribute("next", "<a href=\"search.do?index=" + (index + perPage) + paramsLink + "\"> Next &gt;&gt;&gt; </a>");
+				output.setNext("<a href=\"search.do?index=" + (index + perPage) + paramsLink + "\"> Next &gt;&gt;&gt; </a>");
 			}
 
-			request.setAttribute("nextHref", "search.do?index=" + (index + perPage) + paramsLink);
-		}
-		else
-		{
-			//request.setAttribute("next", NEXT);
+			output.setNextHref("search.do?index=" + (index + perPage) + paramsLink);
 		}
 		if (index != 0)
 		{
 			if (!english)
 			{
-				request.setAttribute("prev", "<a href=\"search.do?index=" + (index - perPage) + paramsLink + "\"> &lt;&lt;&lt; Späť </a>");
+				output.setPrev("<a href=\"search.do?index=" + (index - perPage) + paramsLink + "\"> &lt;&lt;&lt; Späť </a>");
 			}
 			else
 			{
-				request.setAttribute("prev", "<a href=\"search.do?index=" + (index - perPage) + paramsLink + "\"> &lt;&lt;&lt; Back </a>");
+				output.setPrev("<a href=\"search.do?index=" + (index - perPage) + paramsLink + "\"> &lt;&lt;&lt; Back </a>");
 			}
-			request.setAttribute("prevHref", "search.do?index=" + (index - perPage)	+ paramsLink);
-		}
-		else
-		{
-			//request.setAttribute("prev", PREV);
+			output.setPrevHref("search.do?index=" + (index - perPage) + paramsLink);
 		}
 
+		return output;
+	}
+
+	public static String search(HttpServletRequest request, HttpServletResponse response)
+	{
+		PageParams pageParams = new PageParams(request);
+
+		String searchType = Constants.getString("searchType");
+		if ("lucene".equals(searchType) || Constants.getBoolean("luceneAsDefaultSearch") || "true".equals(request.getParameter("useLucene")) || pageParams.getBooleanValue("useLucene", false))
+		{
+			return LuceneSearchAction.search(request);
+		}
+		if ("semantic".equals(searchType) || "true".equals(request.getParameter("useSemantic")) || pageParams.getBooleanValue("useSemantic", false))
+		{
+			return SemanticSearchAction.search(request, response);
+		}
+
+		String forward = resolveForward(request.getParameter("lng"), request.getParameter("forward"));
+		long wait;
+		if (request.getAttribute("disableSearchSpamProtection")==null && request.getAttribute("forceWords")==null && request.getParameter("index") == null)
+		{
+			if ((wait=SpamProtection.getWaitTimeout("search", request)) != 0)
+			{
+				request.setAttribute("wrong", "true");
+				request.setAttribute("crossHourlyLimit", "true");
+				request.setAttribute("wait", (wait/60/1000));
+				return forward;
+			}
+
+			if (!SpamProtection.canPost("search", "", request))
+			{
+				request.setAttribute("wrong", "true");
+				request.setAttribute("crossTimeout", "true");
+				return forward;
+			}
+		}
+
+		SearchActionInput input = SearchActionInput.fromRequest(request);
+		input.setUser(UsersDB.getCurrentUser(request));
+		input.setDomainName(DocDB.getDomain(request));
+		SearchActionOutput output = search(input);
+		output.applyToRequest(request);
 		String searchTerm = request.getParameter("words");
 		if (Tools.isEmpty(searchTerm)) searchTerm = request.getParameter("text");
 		if (Tools.isNotEmpty(searchTerm))
@@ -1096,13 +1011,19 @@ public class SearchAction
 			StatDB.addStatSearchLocal(searchTerm, Tools.getIntValue(request.getParameter("docid"), -1), request);
 		}
 
-		return (forward);
+		return output.getForward();
 	}
 
 	protected static void preparePages(HttpServletRequest request, int perPage, int index, int totalResults, String paramsLink, String searchAction)
 	{
-		List<LabelValueDetails> pages = new LinkedList<>();
 		request.removeAttribute("pages");
+		List<LabelValueDetails> pages = preparePages(perPage, index, totalResults, paramsLink, searchAction);
+		if (pages.size()>1) request.setAttribute("pages", pages);
+	}
+
+	protected static List<LabelValueDetails> preparePages(int perPage, int index, int totalResults, String paramsLink, String searchAction)
+	{
+		List<LabelValueDetails> pages = new LinkedList<>();
 		boolean paging = totalResults > perPage;
 		int page = (index / perPage) + 1;
 		if (paging)
@@ -1116,19 +1037,19 @@ public class SearchAction
 				{
 					if (p == page)
 					{
-						lv_page = new LabelValueDetails(Integer.toString(p), "");//aktualna strana
+						lv_page = new LabelValueDetails(Integer.toString(p), "");
 					}
 					else
 					{
-						lv_page = new LabelValueDetails(Integer.toString(p), searchAction+"?index=" + (start) + paramsLink);
+						lv_page = new LabelValueDetails(Integer.toString(p), searchAction+"?index=" + start + paramsLink);
 					}
 					pages.add(lv_page);
 					p++;
 					start = start + perPage;
 				}
 			}
-			if (pages.size()>1) request.setAttribute("pages", pages);
 		}
+		return pages;
 	}
 
 	private static StringBuilder toMssqlContainsSearch(String words)
@@ -1204,6 +1125,32 @@ public class SearchAction
 		return (ret);
 	}
 
+	protected static String getParamAttribute(String name, SearchActionInput input, String defaultValue)
+	{
+		String ret = input.getParameter(name);
+		if (ret == null)
+		{
+			Object attribute = input.getAttribute(name);
+			ret = attribute instanceof String ? (String) attribute : defaultValue;
+		}
+		else if (Constants.containsKey("searchActionOmitCharacters"))
+		{
+			ret = ret.replaceAll("["+Constants.getString("searchActionOmitCharacters")+"]", "");
+		}
+		if (ret != null)
+		{
+			ret = ret.replace('\'', ' ');
+			ret = ret.replace('\"', ' ');
+			ret = ret.replace(',', ' ');
+			if (name.indexOf("publish")==-1)
+			{
+				ret = ret.replace('.', ' ');
+			}
+			ret = ret.replace(';', ' ');
+		}
+		return ret;
+	}
+
 	/**
 	 * Vrati parameter, alebo atribut bez escapovania zlych hodnot, je mozne nastavit len za pouzitia PreparedStatement
 	 * @param name
@@ -1229,6 +1176,21 @@ public class SearchAction
 			}
 		}
 		return (ret);
+	}
+
+	protected static String getParamAttributeUnsafe(String name, SearchActionInput input, String defaultValue)
+	{
+		String ret = input.getParameter(name);
+		if (ret == null)
+		{
+			Object attribute = input.getAttribute(name);
+			ret = attribute instanceof String ? (String) attribute : defaultValue;
+		}
+		else if (Constants.containsKey("searchActionOmitCharacters"))
+		{
+			ret = ret.replaceAll("["+Constants.getString("searchActionOmitCharacters")+"]", "");
+		}
+		return ret;
 	}
 
 
@@ -1357,6 +1319,108 @@ public class SearchAction
 		return totalResults;
 	}
 
+	private static int getResultsCount(String sqlTotalResults, SearchActionInput input, String words, String wordsAscii, String wordsMysql, int fetchedCount, boolean hasAnotherPage)
+	{
+		if (fetchedCount == 0)
+			return 0;
+
+		int resultsPerPage = Integer.parseInt(getParamAttribute("perpage", input, "10"));
+		int index = input.getParameter("index") != null ? Integer.parseInt(input.getParameter("index")) : 0;
+
+		if (Constants.getBoolean("searchActionOptimize") && hasAnotherPage)
+			return index + resultsPerPage + resultsPerPage;
+
+		Connection db_conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		int totalResults = 0;
+
+		try
+		{
+			Logger.debug(SearchAction.class,"search sql TOTAL="+sqlTotalResults);
+			db_conn = DBPool.getConnectionReadUncommited();
+			int psIndex = 1;
+			ps = db_conn.prepareStatement(sqlTotalResults);
+			if (Constants.DB_TYPE == Constants.DB_ORACLE)
+			{
+				psIndex = addInputParamsSQL(input, ps, psIndex);
+			}
+			else if (Constants.DB_TYPE == Constants.DB_MYSQL)
+			{
+				if (words.isEmpty()==false)
+				{
+					ps.setString(psIndex++, wordsMysql);
+					if (Constants.getBoolean("searchDetaultInTitle") || "true".equals(input.getParameter("searchDetaultInTitle")))
+					{
+						ps.setString(psIndex++, "%"+wordsAscii+"%");
+						if (input.getParameter("words")!=null) ps.setString(psIndex++, "%"+words+"%");
+					}
+				}
+				psIndex = addInputParamsSQL(input, ps, psIndex);
+			}
+			else if (Constants.DB_TYPE == Constants.DB_PGSQL)
+			{
+				if (words.isEmpty()==false)
+				{
+					ps.setString(psIndex++, Tools.replace(DB.internationalToEnglish(words).toLowerCase(), " ", " & "));
+					if (Constants.getBoolean("searchDetaultInTitle") || "true".equals(input.getParameter("searchDetaultInTitle")))
+					{
+						ps.setString(psIndex++, "%"+wordsAscii+"%");
+						if (input.getParameter("words")!=null) ps.setString(psIndex++, "%"+words+"%");
+					}
+				}
+				psIndex = addInputParamsSQL(input, ps, psIndex);
+			}
+			else
+			{
+				if (words.isEmpty()==false)
+				{
+					StringBuilder mssqlSearch = toMssqlContainsSearch(wordsAscii);
+					if (mssqlSearch.isEmpty()==false)
+					{
+						ps.setString(psIndex++, mssqlSearch.toString());
+					}
+					else
+					{
+						ps.setString(psIndex++, wordsAscii);
+					}
+					if ((Constants.getBoolean("searchDetaultInTitle") || "true".equals(input.getParameter("searchDetaultInTitle"))) && input.getParameter("words")!=null) {
+						ps.setString(psIndex++, "%"+words+"%");
+					}
+				}
+				psIndex = addInputParamsSQL(input, ps, psIndex);
+			}
+			if("true".equals(input.getAttribute("notFoundPublishStartEnd")) && Constants.getBoolean("showOnlyActualPublishedDoc"))
+			{
+				Date now = new Date();
+				ps.setTimestamp(psIndex++, new Timestamp(now.getTime()));
+				ps.setTimestamp(psIndex++, new Timestamp(now.getTime()));
+			}
+			rs = ps.executeQuery();
+			if (rs.next())
+			{
+				totalResults = rs.getInt("totalr");
+			}
+			Logger.debug(SearchAction.class, "totalResults="+totalResults);
+		}
+		catch (Exception ex)
+		{
+			sk.iway.iwcm.Logger.error(ex);
+		}
+		finally
+		{
+			try
+			{
+				if (rs != null) rs.close();
+				if (ps != null) ps.close();
+				if (db_conn != null) db_conn.close();
+			}
+			catch (Exception ex2){sk.iway.iwcm.Logger.error(ex2);}
+		}
+
+		return totalResults;
+	}
+
 	/**
 	 * Vrati SQL prikaz pre pridanie parametrov field_a, field_b... (ak su zadane)
 	 * @param request
@@ -1450,6 +1514,72 @@ public class SearchAction
 			ret.append(" AND ( (publish_start IS NOT NULL AND publish_start >= ?) OR (publish_start IS NULL AND date_created >= ?) ) AND ( (publish_end IS NOT NULL AND publish_end <= ?) OR (publish_end IS NULL AND date_created <= ?) ) ");
 		}
 		return(ret).toString();
+	}
+
+	public static String addInputParamsSQL(SearchActionInput input)
+	{
+		StringBuilder ret = new StringBuilder();
+		int len = SearchTools.checkInputParams.length;
+		String dateText = getParamAttributeUnsafe("dateText", input, null);
+		boolean checkPublishDates = dateText == null || "custom".equals(dateText);
+
+		for (int i=0; i<len; i++)
+		{
+			String param = getParamAttributeUnsafe(SearchTools.checkInputParams[i], input, null);
+			if (Tools.isNotEmpty(param))
+			{
+				if (SearchTools.checkInputParams[i].equals("publish_start"))
+				{
+					if (checkPublishDates) ret.append(" AND ( (publish_start IS NOT NULL AND publish_start >= ?) OR (publish_start IS NULL AND date_created >= ?) ) ");
+				}
+				else if (SearchTools.checkInputParams[i].equals("publish_start_lt"))
+				{
+					if (checkPublishDates) ret.append(" AND ( (publish_start IS NOT NULL AND publish_start <= ?) OR (publish_start IS NULL AND date_created <= ?) ) ");
+				}
+				else if (SearchTools.checkInputParams[i].equals("publish_end"))
+				{
+					if (checkPublishDates) ret.append(" AND ( (publish_end IS NOT NULL AND publish_end <= ?) OR (publish_end IS NULL AND date_created <= ?) ) ");
+				}
+				else if (SearchTools.checkInputParams[i].equals("publish_end_gt"))
+				{
+					if (checkPublishDates) ret.append(" AND ( (publish_end IS NOT NULL AND publish_end >= ?) OR (publish_end IS NULL AND date_created >= ?) ) ");
+				}
+				else if (SearchTools.checkInputParams[i].equals("temp_id"))
+				{
+					ret.append(" AND ").append(SearchTools.checkInputParams[i]).append(" = ? ");
+				}
+				else if (SearchTools.checkInputParams[i].equals("keyword"))
+				{
+					if(Constants.getBoolean("perexGroupUseJoin")) ret.append(" AND p.perex_group_id = ? ");
+					else ret.append(" AND ( perex_group LIKE ? ) ");
+				}
+				else
+				{
+					StringTokenizer st = new StringTokenizer(param);
+					if (st.countTokens()<2 || param.startsWith("\""))
+					{
+						ret.append(" AND ").append(SearchTools.checkInputParams[i]).append(" LIKE ?");
+					}
+					else
+					{
+						String mode = getInputParamMode(SearchTools.checkInputParams[i], input);
+						ret.append(" AND (");
+						while (st.hasMoreTokens())
+						{
+							st.nextToken();
+							ret.append(SearchTools.checkInputParams[i]).append(" LIKE ? ");
+							if (st.hasMoreTokens()) ret.append(mode).append(' ');
+						}
+						ret.append(") ");
+					}
+				}
+			}
+		}
+		if (checkPublishDates==false && Tools.isNotEmpty(dateText))
+		{
+			ret.append(" AND ( (publish_start IS NOT NULL AND publish_start >= ?) OR (publish_start IS NULL AND date_created >= ?) ) AND ( (publish_end IS NOT NULL AND publish_end <= ?) OR (publish_end IS NULL AND date_created <= ?) ) ");
+		}
+		return ret.toString();
 	}
 
 	/**
@@ -1571,6 +1701,106 @@ public class SearchAction
 		return(psIndex);
 	}
 
+	public static int addInputParamsSQL(SearchActionInput input, PreparedStatement ps, int psIndex) throws SQLException
+	{
+		int len = SearchTools.checkInputParams.length;
+		String dateText = getParamAttributeUnsafe("dateText", input, null);
+		boolean checkPublishDates = dateText == null || "custom".equals(dateText);
+
+		for (int i=0; i<len; i++)
+		{
+			String param = getParamAttributeUnsafe(SearchTools.checkInputParams[i], input, null);
+			if (Tools.isNotEmpty(param))
+			{
+				Logger.debug(SearchAction.class, "addPram "+psIndex+" "+ SearchTools.checkInputParams[i]+"="+param);
+				if (SearchTools.checkInputParams[i].equals("publish_start"))
+				{
+					if (checkPublishDates)
+					{
+						long d = DB.getTimestamp(param, "0:00");
+						ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(d, 1970, 3000)));
+						ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(d, 1970, 3000)));
+					}
+				}
+				else if (SearchTools.checkInputParams[i].equals("publish_start_lt"))
+				{
+					if (checkPublishDates)
+					{
+						long d = DB.getTimestamp(param);
+						ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(d, 1970, 3000)));
+						ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(d, 1970, 3000)));
+					}
+				}
+				else if (SearchTools.checkInputParams[i].equals("publish_end"))
+				{
+					if (checkPublishDates)
+					{
+						long d = DB.getTimestamp(param, "23:59");
+						ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(d, 1970, 3000)));
+						ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(d, 1970, 3000)));
+					}
+				}
+				else if (SearchTools.checkInputParams[i].equals("publish_end_gt"))
+				{
+					if (checkPublishDates)
+					{
+						long d = DB.getTimestamp(param);
+						ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(d, 1970, 3000)));
+						ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(d, 1970, 3000)));
+					}
+				}
+				else if (SearchTools.checkInputParams[i].equals("temp_id"))
+				{
+					ps.setInt(psIndex++, Tools.getIntValue(param, 0));
+				}
+				else if (SearchTools.checkInputParams[i].equals("keyword"))
+				{
+					int perexGroupId = 0;
+					DocDB docDB = DocDB.getInstance();
+					PerexGroupBean pgb = docDB.getPerexGroup(-1, param);
+					if (pgb != null) perexGroupId = pgb.getPerexGroupId();
+
+					if(Constants.getBoolean("perexGroupUseJoin")) ps.setInt(psIndex++, perexGroupId);
+					else ps.setString(psIndex++, "%,"+perexGroupId+",%");
+				}
+				else
+				{
+					StringTokenizer st = new StringTokenizer(param);
+					if (st.countTokens()<2 || param.startsWith("\""))
+					{
+						ps.setString(psIndex++, "%"+Tools.replace(param, "\"", "")+"%");
+					}
+					else
+					{
+						while (st.hasMoreTokens())
+						{
+							ps.setString(psIndex++, "%"+st.nextToken()+"%");
+						}
+					}
+				}
+			}
+		}
+		if (checkPublishDates==false && Tools.isNotEmpty(dateText))
+		{
+			Calendar cal = Calendar.getInstance();
+			long dEnd = DB.getTimestamp(Tools.formatDate(cal.getTimeInMillis()), "23:59");
+			if ("lastWeek".equals(dateText))
+			{
+				cal.add(Calendar.WEEK_OF_YEAR, -1);
+			}
+			else if ("lastMonth".equals(dateText))
+			{
+				cal.add(Calendar.MONTH, -1);
+			}
+			long dStart = DB.getTimestamp(Tools.formatDate(cal.getTimeInMillis()), "0:00");
+			ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(dStart, 1970, 3000)));
+			ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(dStart, 1970, 3000)));
+			ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(dEnd, 1970, 3000)));
+			ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(dEnd, 1970, 3000)));
+		}
+		return psIndex;
+	}
+
 	/**
 	 * Vrati true, ak niektory z dodatocnych parametrov nie je prazdny
 	 * @param request
@@ -1597,6 +1827,20 @@ public class SearchAction
 		return(false);
 	}
 
+	public static boolean hasInputParams(SearchActionInput input)
+	{
+		int len = SearchTools.checkInputParams.length;
+		for (int i=0; i<len; i++)
+		{
+			String param = getParamAttribute(SearchTools.checkInputParams[i], input, null);
+			if (Tools.isNotEmpty(param))
+			{
+				return true;
+			}
+		}
+		return Tools.isNotEmpty(input.getParameter("dateText"));
+	}
+
 	/**
 	 *
 	 * @param name
@@ -1606,6 +1850,13 @@ public class SearchAction
 	public static String getInputParamMode(String name, HttpServletRequest request)
 	{
 		String value = getParamAttribute(name+"_mode", request, "AND");
+		if ("OR".equalsIgnoreCase(value)) return "OR";
+		return "AND";
+	}
+
+	public static String getInputParamMode(String name, SearchActionInput input)
+	{
+		String value = getParamAttribute(name+"_mode", input, "AND");
 		if ("OR".equalsIgnoreCase(value)) return "OR";
 		return "AND";
 	}
@@ -1646,6 +1897,33 @@ public class SearchAction
 		return ttf;
 	}
 
+	public static String getTextToFind(SearchActionInput input)
+	{
+		String words = getParamAttribute("words", input, null);
+		String text = getParamAttribute("text", input, null);
+
+		String ttf = words;
+		if (text != null)
+		{
+			if (ttf == null) ttf = text;
+			else ttf += " " + text;
+		}
+
+		int len = SearchTools.checkInputParams.length;
+		for (int i=0; i<len; i++)
+		{
+			String param = getParamAttribute(SearchTools.checkInputParams[i], input, null);
+			if (Tools.isNotEmpty(param))
+			{
+				if (ttf == null) ttf = param;
+				else ttf += " " + param;
+			}
+		}
+
+		if (ttf == null) return "";
+		return ttf;
+	}
+
 	/**
 	 * Vrati true ak je pre danu stranku lepsie pouzit rychle generovanie snippetu
 	 * @param doc
@@ -1658,6 +1936,12 @@ public class SearchAction
 		boolean shouldDoQuickSnippet = doc.getDataOriginal().length()>searchQuickSnippetSize || (request!=null && "true".equals(request.getParameter("fastSnippet")));
 
 		return shouldDoQuickSnippet;
+	}
+
+	public static boolean shouldDoQuickSnippet(SearchDetails doc, boolean fastSnippet)
+	{
+		int searchQuickSnippetSize = Constants.getInt("searchQuickSnippetSize");
+		return doc.getDataOriginal().length()>searchQuickSnippetSize || fastSnippet;
 	}
 
 	/**
