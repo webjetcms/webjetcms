@@ -90,6 +90,10 @@ export async function getNavigation(
 
 /**
  * Search documents.
+ *
+ * @param query  search query string
+ * @param page   0-based page number (default 0)
+ * @param size   results per page (default 20)
  */
 export async function search(
   query: string,
@@ -112,7 +116,7 @@ export async function submitForm(
   formId: string,
   fields: Record<string, string>
 ): Promise<FormResult> {
-  const response = await fetch(`${API_BASE}/actions/forms/submit`, {
+  const response = fetch(`${API_BASE}/actions/forms/submit`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ formId, fields }),
