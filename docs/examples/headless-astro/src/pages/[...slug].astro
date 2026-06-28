@@ -67,6 +67,8 @@ const contentHtml = error
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{page?.title || 'Headless CMS Demo'}</title>
+  <script is:inline src="/components/form/check_form.js" />
+  <script is:inline src="/components/_common/javascript/ajax_form_send.js.jsp" />
   <style>
     body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; }
     .search-form { margin-top: 12px; display: flex; gap: 8px; }

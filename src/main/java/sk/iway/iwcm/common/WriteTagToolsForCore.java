@@ -133,9 +133,9 @@ public class WriteTagToolsForCore {
                     if (replacedText.indexOf("useFormDocId") == -1)
                     {
                         if (url.indexOf('?') != -1)
-                            url += "&amp;useFormDocId=" + request.getParameter("docid");
+                            url += "&amp;useFormDocId=" + Tools.getDocId(request);
                         else
-                            url += "?useFormDocId=" + request.getParameter("docid");
+                            url += "?useFormDocId=" + Tools.getDocId(request);
                     }
                     // uprav URL
                     int recStart = url.indexOf("recipients=");

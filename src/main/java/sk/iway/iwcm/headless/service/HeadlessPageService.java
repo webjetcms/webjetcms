@@ -19,6 +19,7 @@ import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.EditorToolsForCore;
+import sk.iway.iwcm.common.WriteTagToolsForCore;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.headless.dto.PageResponse;
 import sk.iway.iwcm.headless.dto.SeoMetadata;
@@ -75,6 +76,9 @@ public class HeadlessPageService {
         if (!DocDB.canAccess(doc, currentUser)) {
             return null;
         }
+
+        // set request object of page
+        request.setAttribute("docDetails", doc);
 
         // Build PageResponse
         PageResponse pageResponse = new PageResponse(
@@ -134,6 +138,8 @@ public class HeadlessPageService {
         }
         //execute INCLUDE apps
         data = EditorToolsForCore.renderIncludes(doc, false, request);
+        //add CSRF tokens to forms
+        data = WriteTagToolsForCore.preventSpam(new StringBuilder(data), request).toString();
         return data;
     }
 
