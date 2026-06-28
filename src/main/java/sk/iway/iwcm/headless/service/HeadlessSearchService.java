@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.SearchAction;
 import sk.iway.iwcm.doc.SearchActionInput;
@@ -41,6 +42,8 @@ public class HeadlessSearchService {
         input.setParameter("page", String.valueOf(pageable.getPageNumber() + 1)); // 1-based
         if (scope != null && !scope.isEmpty()) {
             input.setParameter("groupId", scope);
+        } else {
+            input.setParameter("groupId", ""+CloudToolsForCore.getDomainId());
         }
         if (lng != null && !lng.isEmpty()) {
             input.setParameter("lng", lng);
@@ -50,8 +53,7 @@ public class HeadlessSearchService {
         SearchActionOutput output = SearchAction.search(input);
 
         // Check for errors
-        if (output.isWrong() || output.isNotFound() || output.isCrossTimeout()
-                || output.isCrossHourlyLimit() || output.isNotFoundPublishStartEnd()) {
+        if (output.isWrong() || output.isNotFound() || output.isCrossTimeout() || output.isCrossHourlyLimit()) {
             return buildEmptyPage(pageable);
         }
 

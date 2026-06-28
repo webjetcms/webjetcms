@@ -1,6 +1,6 @@
 ---
-import { search } from '../../lib/api';
-import '../../styles/navigation.css';
+import { search } from '../lib/api';
+import '../styles/navigation.css';
 
 const query = Astro.url.searchParams.get('q') || '';
 const pageNum = parseInt(Astro.url.searchParams.get('page') || '0', 10) || 0;
@@ -34,7 +34,7 @@ if (query.trim().length > 0) {
       flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;
     }
     .search-form button {
-      padding: 8px 16px; background: #0066cc; color: #fff; border: none; border-radius: 4px;
+      padding: 8px 12px; background: #0066cc; color: #fff; border: none; border-radius: 4px;
       cursor: pointer; font-size: 14px;
     }
     .search-form button:hover { background: #0055aa; }
