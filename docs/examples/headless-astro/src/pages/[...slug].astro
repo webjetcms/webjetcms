@@ -69,9 +69,6 @@ const contentHtml = error
   <title>{page?.title || 'Headless CMS Demo'}</title>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; }
-    nav { background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-    nav a { display: block; padding: 5px 0; color: #0066cc; text-decoration: none; }
-    nav a:hover { text-decoration: underline; }
     .search-form { margin-top: 12px; display: flex; gap: 8px; }
     .search-form input[type="text"] {
       flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;
@@ -86,11 +83,12 @@ const contentHtml = error
 <body>
   <h1>WebJET CMS Headless Demo</h1>
 
+  <form class="search-form" action="/search" method="get">
+    <input type="text" name="q" placeholder="Search documents..." aria-label="Search" />
+    <button type="submit">Search</button>
+  </form>
+
   <nav set:html={navHtml}>
-    <form class="search-form" action="/search" method="get">
-      <input type="text" name="q" placeholder="Search documents..." aria-label="Search" />
-      <button type="submit">Search</button>
-    </form>
   </nav>
   {error ? (
     <div class="error"><strong>Error:</strong> {error}</div>
