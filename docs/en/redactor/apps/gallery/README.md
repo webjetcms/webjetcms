@@ -160,6 +160,8 @@ When combining parameters, the rows are combined separately - row 1 of the basic
 
 If the custom parameters contain the `compression-level` or `quality` setting, any existing `-quality` parameter will be automatically removed from the command to avoid a conflict.
 
+If you need to have an empty value on the first line, enter the expression `---`, which is processed as an empty value (it is not possible to enter an empty value on the first line because when saving and reading values ​​from the database, whitespace characters are cut off at the beginning and end).
+
 ### Reducing the size of the original image
 
 If the original image takes up a lot of disk space, it is possible to set its size to be reduced during upload using configuration variables:
