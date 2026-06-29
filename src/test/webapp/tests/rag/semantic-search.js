@@ -91,7 +91,7 @@ Scenario('Try RAG answer', ({ I, Document }) => {
     I.amOnPage("/apps/vyhladavanie/semanticke-vyhladavanie.html");
     I.waitForVisible("#searchWords", 5);
 
-    I.fillField("#searchWords", "ako mcgregor zarába viac peňazí?");
+    I.fillField("#searchWords", "ako mcgregor zarába?");
     I.click(".smallSearchSubmit");
     I.waitForVisible(".rag-answer", 60);
     I.see("Proper No. Twelve", ".rag-answer p");
