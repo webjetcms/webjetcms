@@ -368,6 +368,7 @@ public class AiAssistantsService {
             inputData.setInputValue("");
             inputData.setUserPrompt("");
         }
+        instructions = applyBonusParamsMacro(instructions, inputData.getBonusParams());
 
         if (replacedIncludes != null && replacedIncludes.isEmpty()==false) instructions = IncludesHandler.addProtectedTokenInstructionRule(instructions);
 
@@ -404,6 +405,23 @@ public class AiAssistantsService {
         value = value.replace("\n", " ").replace("\r", " ").replace("\"", "\\\"").replace("'", "\\'");
 
         return value;
+    }
+
+    private static String applyBonusParamsMacro(String instructions, Map<String, String> bonusParams) {
+
+        if(bonusParams == null || bonusParams.isEmpty() || Tools.isEmpty(instructions)) return instructions;
+
+        for (Map.Entry<String, String> entry : bonusParams.entrySet()) {
+            String value = entry.getValue();
+            if(Tools.isEmpty(value)) continue;
+
+            String macro = "{"+entry.getKey()+"}";
+            if (instructions.contains(macro)) {
+                instructions = Tools.replace(instructions, macro, value);
+            }
+        }
+
+        return instructions;
     }
 
     private String getNoPermittedString(Prop prop) {

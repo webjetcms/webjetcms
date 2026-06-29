@@ -3,20 +3,30 @@ package sk.iway.iwcm.rag.search;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import sk.iway.iwcm.Constants;
+import jakarta.servlet.http.HttpServletRequest;
+import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.ai.providers.ProviderCallException;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.rag.embedding.EmbeddingBatchResult;
 import sk.iway.iwcm.rag.embedding.EmbeddingProvider;
 import sk.iway.iwcm.rag.service.RagEmbeddingStatService;
-import sk.iway.iwcm.rag.vectorstore.VectorStore;
+import sk.iway.iwcm.rag.service.RagEntityType;
+import sk.iway.iwcm.rag.service.RagSettingsService;
 import sk.iway.iwcm.rag.vectorstore.VectorSearchResult;
+import sk.iway.iwcm.rag.vectorstore.VectorStore;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
 /**
  * Service for semantic search over document embeddings.
@@ -35,11 +45,15 @@ public class SemanticSearchService {
     private final VectorStore vectorStore;
     private final RagEmbeddingStatService ragEmbeddingStatService;
 
+    private final RagService ragService;
+
     @Autowired
-    public SemanticSearchService(EmbeddingProvider embeddingProvider, VectorStore vectorStore, RagEmbeddingStatService ragEmbeddingStatService) {
+    public SemanticSearchService(EmbeddingProvider embeddingProvider, VectorStore vectorStore, RagEmbeddingStatService ragEmbeddingStatService, RagService ragService) {
         this.embeddingProvider = embeddingProvider;
         this.vectorStore = vectorStore;
         this.ragEmbeddingStatService = ragEmbeddingStatService;
+
+        this.ragService = ragService;
     }
 
     /**
@@ -50,16 +64,28 @@ public class SemanticSearchService {
      * @param domainId domain to search in (null for all)
      * @param language language filter (null for all)
      * @param maxResults maximum number of unique documents to return
+     * @param entityType entity type to filter by
+     * @param request current request with component PageParams and rootGroup attributes
      * @return list of document IDs with their best similarity scores
      */
-    public List<SemanticSearchResult> search(String query, Integer domainId, String language, int maxResults) {
-        if (vectorStore.isAvailable() == false) {
-            Logger.debug(SemanticSearchService.class, "Vector store not available, returning empty results");
+    public List<SemanticSearchResult> search(String query, Integer domainId, String language, int maxResults, RagEntityType entityType, HttpServletRequest request) {
+        if (vectorStore.isAvailableAndInitialized() == false) {
+            // If vector store is not available or not initialized, we cannot perform semantic search, return empty results
+            Logger.debug(SemanticSearchService.class, "Vector store not available or initialized, returning empty results");
             return List.of();
         }
 
         String model = embeddingProvider.getDefaultModel();
-        EmbeddingBatchResult embeddingResult = embeddingProvider.embedWithUsage(List.of(query), model);
+        EmbeddingBatchResult embeddingResult;
+
+        try {
+            embeddingResult = embeddingProvider.embedWithUsage(List.of(query), model);
+        } catch (ProviderCallException e) {
+            Logger.error(SemanticSearchService.class, "Error generating query embedding: " + e.getMessage(), e);
+            Adminlog.add(Adminlog.TYPE_SEARCH, "Error generating query embedding: " + e.getMessage(), null, null);
+            return List.of();
+        }
+
         List<float[]> queryEmbeddings = embeddingResult.getEmbeddings();
         if (queryEmbeddings.isEmpty()) {
             Logger.error(SemanticSearchService.class, "Failed to generate query embedding");
@@ -74,26 +100,73 @@ public class SemanticSearchService {
             return List.of();
         }
 
-        double minimumSimilarity = Tools.getDoubleValue(Constants.getString("ragSemanticSearchMinSimilarity"), 0.2d);
-        int minimumResults = Constants.getInt("ragSemanticSearchMinResults");
+        PageParams pageParams = new PageParams(request);
+
+        double minimumSimilarity = RagSettingsService.getSemanticMinimumSimilarity(pageParams);
+        int minimumResults = RagSettingsService.getSemanticMinimumResults(pageParams);
         int minimumResultsForCall = Math.min(Math.max(0, minimumResults), Math.max(0, maxResults));
 
-        int chunkFetchMultiplier = Math.max(1, Constants.getInt("ragHybridChunkFetchMultiplier"));
+        int chunkFetchMultiplier = Math.max(1, RagSettingsService.getHybridChunkFetchMultiplier(pageParams));
         int chunkLimit = Math.max(1, maxResults * chunkFetchMultiplier);
 
-        List<VectorSearchResult> vectorChunkResults = vectorStore.search(queryEmbedding, model, domainId, language, chunkLimit);
+        Map<String, Object> bonusParams = null;
+        String rootGroupString = String.valueOf(request.getAttribute("rootGroup"));
+        if(Tools.isNotEmpty(rootGroupString)) {
+            GroupsDB groupsDB = GroupsDB.getInstance();
 
-        boolean useHybridSearch = shouldUseHybridSearch(query, vectorChunkResults, minimumResultsForCall);
+            int[] rootGroupsIds = Tools.getTokensInt(rootGroupString, "+");
+
+            // Prefer indexed root-group columns for the first three levels, but keep full subtree
+            // in group_id as well to preserve deep-folder scoping.
+            Set<Integer> first3LayersGroups = new HashSet<>();
+            for(int rootGroupId : rootGroupsIds) {
+                if(rootGroupId < 1) continue;
+
+                for(GroupDetails group : groupsDB.getGroupsTree(rootGroupId, true, false, false, 2)) {
+                    first3LayersGroups.add( group.getGroupId() );
+                }
+            }
+
+            Set<Integer> restGroups = new HashSet<>();
+            for(int rootGroupId : rootGroupsIds) {
+                if(rootGroupId < 1) continue;
+
+                for(GroupDetails group : groupsDB.getGroupsTree(rootGroupId, false, true)) {
+                    restGroups.add(group.getGroupId());
+                }
+            }
+
+            bonusParams = new HashMap<>();
+            bonusParams.put("rootGroupL1", first3LayersGroups);
+            bonusParams.put("rootGroupL2", first3LayersGroups);
+            bonusParams.put("rootGroupL3", first3LayersGroups);
+            bonusParams.put("rootGroups", restGroups);
+        }
+
+        List<VectorSearchResult> vectorChunkResults = vectorStore.search(queryEmbedding, model, entityType, domainId, language, chunkLimit, bonusParams);
+
+        boolean useHybridSearch = shouldUseHybridSearch(query, vectorChunkResults, minimumResultsForCall, pageParams);
         List<VectorSearchResult> chunkResults = vectorChunkResults;
         if (useHybridSearch) {
-            List<VectorSearchResult> fulltextChunkResults = vectorStore.searchFulltext(query, model, domainId, language, chunkLimit);
+            if(bonusParams == null) bonusParams = new HashMap<>();
+            bonusParams.put("hybridFtsUseIlikeFallback", RagSettingsService.getHybridFtsUseIlikeFallback(pageParams));
+
+            List<VectorSearchResult> fulltextChunkResults = vectorStore.searchFulltext(query, model, entityType, domainId, language, chunkLimit, bonusParams);
             if (fulltextChunkResults.isEmpty() == false) {
-                List<VectorSearchResult> mergedChunkResults = mergeChunkResultsWithRrf(vectorChunkResults, fulltextChunkResults);
+                List<VectorSearchResult> mergedChunkResults = mergeChunkResultsWithRrf(vectorChunkResults, fulltextChunkResults, pageParams);
                 if (mergedChunkResults.isEmpty() == false) {
                     chunkResults = mergedChunkResults;
                 }
             }
         }
+
+        // Generate answers from raw vector chunks because the answer post-processor has its own context merge rules.
+        String answer = null;
+        if(RagSettingsService.isAnswerAllowed(pageParams)) {
+            answer = ragService.answerQuestion(query, domainId, chunkResults, request);
+            answer = AllowSafeHtmlAttributeConverter.sanitize(answer);
+        }
+        request.setAttribute("ragAnswer", Tools.isEmpty(answer) ? null : answer);
 
         List<SemanticSearchResult> sortedResults = aggregateByDocumentBestScore(chunkResults);
 
@@ -102,18 +175,15 @@ public class SemanticSearchService {
             .toList();
     }
 
-    boolean shouldUseHybridSearch(String query, List<VectorSearchResult> vectorChunkResults, int minimumResultsForCall) {
-        if (Constants.getBoolean("ragHybridSearchEnabled") == false) return false;
+    boolean shouldUseHybridSearch(String query, List<VectorSearchResult> vectorChunkResults, int minimumResultsForCall, PageParams pageParams) {
+        if (RagSettingsService.isHybridSearchEnabled(pageParams) == false) return false;
 
-        String mode = Tools.getStringValue(Constants.getString("ragHybridSearchMode"), "off").toLowerCase();
+        String mode = RagSettingsService.getHybridSearchMode(pageParams).toLowerCase();
         return switch (mode) {
             case HYBRID_MODE_ALWAYS -> true;
-            case HYBRID_MODE_SHORT_QUERY_ONLY -> isShortQuery(query);
+            case HYBRID_MODE_SHORT_QUERY_ONLY -> isShortQuery(query, pageParams);
             case HYBRID_MODE_FALLBACK_ON_LOW_VECTOR -> {
-                double topSimilarityThreshold = Tools.getDoubleValue(
-                    Constants.getString("ragHybridFallbackTopSimilarity"),
-                    0.35d
-                );
+                double topSimilarityThreshold = RagSettingsService.getHybridFallbackTopSimilarity(pageParams);
 
                 boolean lowTopSimilarity = getTopSimilarity(vectorChunkResults) < topSimilarityThreshold;
                 boolean fewResults = vectorChunkResults.size() < minimumResultsForCall;
@@ -123,12 +193,12 @@ public class SemanticSearchService {
         };
     }
 
-    private boolean isShortQuery(String query) {
+    private boolean isShortQuery(String query, PageParams pageParams) {
         String normalizedQuery = Tools.getStringValue(query, "").trim();
         if (normalizedQuery.isEmpty()) return false;
 
-        int maxChars = Math.max(1, Constants.getInt("ragHybridShortQueryMaxChars", 12));
-        int maxTerms = Math.max(1, Constants.getInt("ragHybridShortQueryMaxTerms", 2));
+        int maxChars = Math.max(1, RagSettingsService.getHybridShortQueryMaxChars(pageParams));
+        int maxTerms = Math.max(1, RagSettingsService.getHybridShortQueryMaxTerms(pageParams));
         int termCount = normalizedQuery.split("\\s+").length;
 
         return normalizedQuery.length() <= maxChars || termCount <= maxTerms;
@@ -141,14 +211,14 @@ public class SemanticSearchService {
         return topSimilarity == null ? 0d : topSimilarity.doubleValue();
     }
 
-    List<VectorSearchResult> mergeChunkResultsWithRrf(List<VectorSearchResult> vectorChunkResults, List<VectorSearchResult> fulltextChunkResults) {
+    List<VectorSearchResult> mergeChunkResultsWithRrf(List<VectorSearchResult> vectorChunkResults, List<VectorSearchResult> fulltextChunkResults, PageParams pageParams) {
         if ((vectorChunkResults == null || vectorChunkResults.isEmpty()) && (fulltextChunkResults == null || fulltextChunkResults.isEmpty())) {
             return List.of();
         }
 
-        double vectorWeight = Tools.getDoubleValue(Constants.getString("ragHybridVectorWeight"), 0.7d);
-        double fulltextWeight = Tools.getDoubleValue(Constants.getString("ragHybridFtsWeight"), 0.3d);
-        int rrfK = Math.max(1, Constants.getInt("ragHybridRrfK", 60));
+        double vectorWeight = RagSettingsService.getHybridVectorWeight(pageParams);
+        double fulltextWeight = RagSettingsService.getHybridFtsWeight(pageParams);
+        int rrfK = Math.max(1, RagSettingsService.getHybridRrfK(pageParams));
         double rrfNormalizationFactor = rrfK + 1d;
 
         Map<String, Double> scoreByChunkKey = new HashMap<>();
@@ -257,10 +327,7 @@ public class SemanticSearchService {
         return filteredResults;
     }
 
-    /**
-     * Check if semantic search is enabled and available.
-     */
     public boolean isAvailable() {
-        return Constants.getBoolean("ragSemanticSearchEnabled") && vectorStore.isAvailable();
+        return vectorStore.isAvailableAndInitialized();
     }
 }

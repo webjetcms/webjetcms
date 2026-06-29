@@ -6,7 +6,6 @@ import java.util.List;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
@@ -15,6 +14,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.rag.search.SemanticSearchResult;
 import sk.iway.iwcm.rag.search.SemanticSearchService;
+import sk.iway.iwcm.rag.service.RagEntityType;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -62,9 +62,6 @@ public class SemanticSearchAction {
 		}
 
 		words = words.replace('\'', ' ').replace(',', ' ').replace('.', ' ').replace(';', ' ');
-		if (Tools.isNotEmpty(Constants.getString("searchActionOmitCharacters"))) {
-			words = words.replaceAll("[" + Constants.getString("searchActionOmitCharacters") + "]", "");
-		}
 		words = words.trim();
 
 		if (words.isEmpty()) {
@@ -108,7 +105,7 @@ public class SemanticSearchAction {
 
 			// Fetch max 3 pages of results from semantic search, we will do pagination in Java after filtering non-searchable documents
 			int maxFetch = perPage * 3;
-			List<SemanticSearchResult> semanticResults = semanticSearchService.search(words, domainId, language, maxFetch);
+			List<SemanticSearchResult> semanticResults = semanticSearchService.search(words, domainId, language, maxFetch, RagEntityType.DOCUMENT, request);
 
 			// Apply pagination - skip results before index
 			int totalResults = semanticResults.size();
