@@ -416,7 +416,7 @@ public class SearchApp extends WebjetComponentAbstract {
 
         for(AssistantDefinitionEntity assistant : adr.findAllByClassNameAndDomainId(RagService.class.getName(), CloudToolsForCore.getDomainId())) {
             StringBuilder sb = new StringBuilder();
-            sb.append( prop.getText(assistant.getDescription()) ).append(" (").append(assistant.getName()).append(" + ").append(assistant.getProvider()).append(")");
+            sb.append( prop.getText(assistant.getDescription()) ).append(" (").append(assistant.getName()).append(" - ").append(assistant.getProvider()).append(")");
 
             assistantsList.add(
                 new OptionDto(

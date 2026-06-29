@@ -276,7 +276,7 @@ public class ConstantsV9 {
 
 		/* ***** ***** ***** RAG SECTION ***** ***** ***** */
 
-		Constants.setBoolean("ragSemanticSearchEnabled", false, Constants.MOD_RAG, "Povolí semantické vyhľadávanie nad vektorovou databázou pgvector.");
+		Constants.setBoolean("ragSemanticSearchEnabled", false, Constants.MOD_RAG, "Povolí sémantické vyhľadávanie nad vektorovou databázou pgvector.");
 
 		/* RAG - PGVECTOR STORE */
 		Constants.setInt("ragSearchEfSearch", 40, Constants.MOD_RAG, "HNSW index parameter ef_search — čím vyššia hodnota, tým lepší recall ale pomalšie vyhľadávanie. Default je 40, pre väčšie datasety zvážte zvýšenie na 100 alebo viac.");
@@ -284,13 +284,13 @@ public class ConstantsV9 {
 
 		/* RAG - EMBEDDING */
 		Constants.setInt("ragEmbeddingDimensions", 1536, Constants.MOD_RAG, "Počet dimenzií embedding vektora generovaného pre RAG. Hodnota musí zodpovedať použitému modelu a definícii stĺpca vo vektorovej databáze.");
-		Constants.setString("ragEmbeddingModel", "text-embedding-3-small", Constants.MOD_RAG, "Názov embedding modelu použitého na generovanie vektorov pre RAG indexovanie a semantické vyhľadávanie.");
+		Constants.setString("ragEmbeddingModel", "text-embedding-3-small", Constants.MOD_RAG, "Názov embedding modelu použitého na generovanie vektorov pre RAG indexovanie a sémantické vyhľadávanie.");
 		Constants.setInt("ragEmbeddingChunkSize", 1000, Constants.MOD_RAG, "Maximálna veľkosť jedného textového chunku v znakoch pri rozdeľovaní dokumentov pre RAG indexovanie.");
 		Constants.setInt("ragEmbeddingChunkOverlap", 200, Constants.MOD_RAG, "Počet znakov, ktoré sa majú prekrývať medzi susednými chunkmi pri rozdeľovaní textu pre RAG indexovanie.");
 
 		/* RAG - SEMANTIC SEARCH */
-		Constants.setString("ragSemanticSearchMinSimilarity", "0.2", Constants.MOD_RAG, "Minimálna hodnota similarity pre výsledky semantického vyhľadávania. Ak je hodnota mimo intervalu 0-1, použije sa najbližšia hranica.");
-		Constants.setInt("ragSemanticSearchMinResults", 3, Constants.MOD_RAG, "Minimálny počet výsledkov semantického vyhľadávania. Ak ich je po filtrovaní menej, doplnia sa podľa najvyššej similarity.");
+		Constants.setString("ragSemanticSearchMinSimilarity", "0.2", Constants.MOD_RAG, "Minimálna hodnota similarity pre výsledky sémantického vyhľadávania. Ak je hodnota mimo intervalu 0-1, použije sa najbližšia hranica.");
+		Constants.setInt("ragSemanticSearchMinResults", 3, Constants.MOD_RAG, "Minimálny počet výsledkov sémantického vyhľadávania. Ak ich je po filtrovaní menej, doplnia sa podľa najvyššej similarity.");
 
 		/* RAG - HYBRID */
 		Constants.setBoolean("ragHybridSearchEnabled", true, Constants.MOD_RAG, "Zapne hybridné vyhľadávanie nad rag_embedding_chunks kombinujúce vektorové a fulltext výsledky.");
@@ -314,7 +314,7 @@ public class ConstantsV9 {
 		Constants.setInt("ragAnswerMaxCharacters", 6000, Constants.MOD_RAG, "Maximalny celkovy pocet znakov post-processovaneho kontextu, ktory sa pouzije pri generovani RAG odpovede.");
 		Constants.setInt("ragAnswerMaxMergedBlockCharacters", 2200, Constants.MOD_RAG, "Maximalny pocet znakov jedneho zluceneho kontextoveho bloku po spojeni susednych chunkov pre RAG odpoved.");
 
-		Constants.setString("searchType", "db", Constants.MOD_CONFIG, "Typ vyhladavania: db (databazove), lucene (Lucene fulltext), semantic (semanticke vyhladavanie cez pgvector), hybrid (kombinace vektoroveho a fulltext vyhledavania)");
+		Constants.setString("searchType", "db", Constants.MOD_CONFIG, "Typ vyhladavania: db (databazove), lucene (Lucene fulltext), semantic (sémanticke vyhladavanie cez pgvector), hybrid (kombinace vektoroveho a fulltext vyhledavania)");
 	}
 
 	/**

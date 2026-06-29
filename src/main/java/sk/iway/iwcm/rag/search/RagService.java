@@ -22,7 +22,6 @@ import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.components.ai.rest.AiService;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
-import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.rag.service.RagSettingsService;
 import sk.iway.iwcm.rag.vectorstore.VectorSearchResult;
 
@@ -49,7 +48,6 @@ public class RagService {
     }
 
     public String answerQuestion(String question, Integer domainId, List<VectorSearchResult> vectorChunkResults, HttpServletRequest request) {
-        Prop prop = Prop.getInstance(request);
         if(Tools.isEmpty(question) || vectorChunkResults == null || vectorChunkResults.isEmpty()) {
             Logger.debug(RagService.class, "Cannot answer RAG question because question is empty or no retrieved chunks. question=" + question + ", vectorChunkResults=" + (vectorChunkResults == null ? "null" : vectorChunkResults.size()));
             return null;
@@ -204,7 +202,7 @@ public class RagService {
     private AssistantDefinitionEntity buildAssistant(Integer domainId) {
         AssistantDefinitionEntity assistant = new AssistantDefinitionEntity();
         assistant.setName(RAG_ASSIST_NAME);
-        assistant.setDescription("RAG search assistant.");
+        assistant.setDescription("RAG search assistant");
         assistant.setAction( SupportedActions.GENERATE_TEXT.getAction() );
         assistant.setClassName( RagService.class.getName() );
         assistant.setFieldFrom("");
@@ -235,6 +233,7 @@ public class RagService {
         return model;
     }
 
+    @SuppressWarnings("java:S3400")
     private String getInstructions() {
        return """
             {

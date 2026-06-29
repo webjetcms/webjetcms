@@ -5,7 +5,6 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import sk.iway.iwcm.rag.vectorstore.VectorSearchResult;
 
@@ -102,7 +101,7 @@ public class RagChunkPostProcessor {
 
         // Sort by similarity descending and take top K
         List<VectorSearchResult> ranked = new ArrayList<>(chunks);
-        ranked.sort(Comparator.comparingDouble((VectorSearchResult c) -> getSimilarity(c)).reversed());
+        ranked.sort(Comparator.comparingDouble(this::getSimilarity).reversed());
 
         int limit = Math.min(topK, ranked.size());
         List<VectorSearchResult> topChunks = new ArrayList<>(ranked.subList(0, limit));
@@ -113,7 +112,7 @@ public class RagChunkPostProcessor {
         // Apply soft similarity: remove chunks below adaptive threshold, but always keep at least 1
         List<VectorSearchResult> aboveThreshold = topChunks.stream()
                 .filter(c -> getSimilarity(c) >= adaptiveThreshold)
-                .collect(Collectors.toList());
+                .toList();
 
         if (aboveThreshold.isEmpty()) {
             // All top-K chunks are below threshold — keep the single best result

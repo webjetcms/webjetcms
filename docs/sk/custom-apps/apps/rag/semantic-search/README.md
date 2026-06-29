@@ -177,7 +177,7 @@ Výsledkom sú objekty [MergedContextBlock](../../../../../../src/main/java/sk/i
 - model: hodnota `ragAnswerModel`,
 - trieda: `sk.iway.iwcm.rag.search.RagService`.
 
-V editore aplikácie sa zobrazia aj vlastné asistenty v aktuálnej doméne, ktoré majú rovnakú hodnotu `className`.
+V editore aplikácie sa zobrazia aj asistenti v aktuálnej doméne, ktoré majú rovnakú hodnotu `className`.
 
 Asistent dostane backendom pripravené makrá:
 

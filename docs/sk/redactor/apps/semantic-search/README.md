@@ -4,12 +4,14 @@ Sémantické vyhľadávanie umožňuje návštevníkom nájsť relevantné strá
 
 Voliteľne môže nad rovnakým indexom zobraziť aj **RAG odpoveď** - krátku odpoveď vygenerovanú AI iba z nájdeného obsahu webu. Odpoveď sa zobrazí nad klasickým zoznamom výsledkov vyhľadávania.
 
+![](rag-result.png)
+
 ## Čo návštevník uvidí
 
 - Pri sémantickom vyhľadávaní sa zobrazí zoznam relevantných stránok zoradený podľa podobnosti významu otázky.
 - Pri hybridnom vyhľadávaní sa kombinuje sémantické poradie s fulltextovou zhodou v indexovaných textoch.
 - Pri povolenej RAG odpovedi sa nad výsledkami zobrazí blok **Odpoveď AI z vyhľadávania**.
-- Ak odpoveď nie je možné zostaviť z indexovaného obsahu, nezobrazí sa žiadná RAG odpoveď.
+- Ak odpoveď nie je možné zostaviť z indexovaného obsahu, nezobrazí sa žiadna RAG odpoveď.
 
 ## Nastavenie sémantického vyhľadávania
 
@@ -42,7 +44,7 @@ Sémantické vyhľadávanie sa používa cez aplikáciu **Vyhľadávanie** vlož
 
 Ak je niektorá možnosť označená ako **aktuálne nepovolené**, najskôr povoľte príslušnú globálnu konfiguračnú premennú.
 
-### Karta Semantické nastavenia
+### Karta Sémantické nastavenia
 
 Umožňuje prepísať globálne hodnoty pre konkrétnu vloženú aplikáciu:
 
@@ -60,9 +62,9 @@ Umožňuje nastaviť, kedy sa má k vektorovému vyhľadávaniu pridať fulltext
 - **Prahová podobnosť pre fallback** - hranica pre režim `fallback_on_low_vector`.
 - **Váhy vektorovej a fulltextovej vetvy** - určujú výsledné poradie pri kombinovaní cez RRF.
 - **Koeficient načítania blokov** - koľko textových častí sa načíta pred agregáciou na dokumenty.
-- **Použiť ILIKE fallback pre fulltext** - použije jednoduché textové hľadanie, ak PostgreSQL fulltext nič nenájde.
+- **Použiť `ILIKE` fallback pre fulltext** - použije jednoduché textové hľadanie, ak PostgreSQL fulltext nič nenájde.
 
-### Karta Nastavenia RAG
+### Karta RAG nastavenia
 
 RAG odpoveď sa generuje až po vyhľadaní relevantných častí obsahu. Nastaviť možno:
 

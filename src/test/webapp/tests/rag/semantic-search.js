@@ -84,7 +84,7 @@ Scenario('Try semantic search', ({ I, DT, Document }) => {
     });
 });
 
-Scenario('Try RAG answer', ({ I, Document }) => {
+Scenario('Try RAG answer @screenshot', ({ I, Document }) => {
     Document.setConfigValue("ragSemanticSearchEnabled", "true");
     Document.setConfigValue("ragAnswerAllowed", "true");
 
@@ -94,7 +94,11 @@ Scenario('Try RAG answer', ({ I, Document }) => {
     I.fillField("#searchWords", "ako mcgregor zarába?");
     I.click(".smallSearchSubmit");
     I.waitForVisible(".rag-answer", 60);
-    I.see("Proper No. Twelve", ".rag-answer p");
+    I.see("Proper No. Twelve", ".rag-answer");
+
+    I.pressKey("ArrowDown");
+    I.pressKey("ArrowDown");
+    Document.screenshot("/redactor/apps/semantic-search/rag-result.png");
 
     // Spam wait before requsts
     I.wait(30);
