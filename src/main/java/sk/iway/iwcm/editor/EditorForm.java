@@ -22,6 +22,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocBasic.FollowLinksMode;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
@@ -69,6 +70,7 @@ public class EditorForm implements Serializable
 	private String publishEnd = "";
 	private String publishEndTime = "";
 	private boolean searchable;
+	private int followLinks = FollowLinksMode.SEARCHABLE.getValue();
 	private boolean available;
 	private boolean cacheable;
 	private boolean publicable;
@@ -176,6 +178,7 @@ public class EditorForm implements Serializable
 		publishEnd = doc.getPublishEndString();
 		publishEndTime = doc.getPublishEndTimeString();
 		searchable = doc.isSearchable();
+		followLinks = doc.getFollowLinks();
 		available  = doc.isAvailable();
 		cacheable = doc.isCacheable();
 		publicable = doc.isPublicable();
@@ -246,6 +249,7 @@ public class EditorForm implements Serializable
 		doc.setPublishEndTimeString(publishEndTime);
 		if (Tools.isNotEmpty(publishEnd)) doc.setPublishEnd(DB.getTimestamp(publishEnd, publishEndTime));
 		doc.setSearchable(searchable);
+		doc.setFollowLinks(followLinks);
 		doc.setAvailable(available);
 		doc.setCacheable(cacheable);
 		doc.setPublicable(publicable);
@@ -723,6 +727,16 @@ public class EditorForm implements Serializable
 	public boolean isSearchable()
 	{
 		return searchable;
+	}
+
+	public int getFollowLinks()
+	{
+		return FollowLinksMode.fromValue(followLinks).getValue();
+	}
+
+	public void setFollowLinks(int followLinks)
+	{
+		this.followLinks = FollowLinksMode.fromValue(followLinks).getValue();
 	}
 
 	/**

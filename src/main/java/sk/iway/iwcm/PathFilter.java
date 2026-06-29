@@ -9,6 +9,7 @@ import sk.iway.iwcm.dmail.Sender;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocBasic.FollowLinksMode;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.ShowDoc;
 import sk.iway.iwcm.doc.ninja.Ninja;
@@ -2281,11 +2282,36 @@ public class PathFilter implements Filter
 	}
 
 	/**
-	 * Nastavenie hlavicky X-Robots-Tag, viz https://developers.google.com/webmasters/control-crawl-index/docs/robots_meta_tag
-	 * @param url
-	 * @param response
+	 * Sets the X-Robots-Tag response header for a URL using the configured
+	 * URL match rules and the default {@code xRobotsTagValue} constant.
+	 *
+	 * <p>This overload is intended for URL-based handling when no document-specific
+	 * metadata is available.</p>
+	 *
+	 * @param url requested URL to evaluate against {@code xRobotsTagUrls}
+	 * @param response HTTP response to update
 	 */
 	public static void setXRobotsTagValue(String url, HttpServletResponse response)
+	{
+		setXRobotsTagValue(url, response, null);
+	}
+
+	/**
+	 * Sets the X-Robots-Tag response header when the URL matches one of the
+	 * configured {@code xRobotsTagUrls} patterns.
+	 *
+	 * <p>When {@code docDetails} is provided together with the special
+	 * {@code NOT_SEARCHABLE_PAGE} marker, the header value is derived from the
+	 * document state using {@link #getXRobotsTagValue(DocDetails)}. In all other
+	 * cases the value is loaded from the {@code xRobotsTagValue} configuration
+	 * constant.</p>
+	 *
+	 * @param url requested URL or the {@code NOT_SEARCHABLE_PAGE} marker
+	 * @param response HTTP response to update
+	 * @param docDetails document settings used for document-specific directives,
+	 *        or {@code null} for pure URL-based configuration
+	 */
+	public static void setXRobotsTagValue(String url, HttpServletResponse response, DocDetails docDetails)
 	{
 		String xRobotsTagUrls = Constants.getString("xRobotsTagUrls");
 		if (Tools.isEmpty(xRobotsTagUrls)) return;
@@ -2297,7 +2323,12 @@ public class PathFilter implements Filter
 		{
 			if (ResponseHeaderService.isPathCorrect(path, url))
 			{
-				String xRobotsTagValue = Constants.getStringExecuteMacro("xRobotsTagValue");
+				String xRobotsTagValue;
+				if (docDetails != null && "NOT_SEARCHABLE_PAGE".equals(url)) {
+					xRobotsTagValue = getXRobotsTagValue(docDetails);
+				} else {
+					xRobotsTagValue = Constants.getStringExecuteMacro("xRobotsTagValue");
+				}
 				if (Tools.isNotEmpty(xRobotsTagValue))
 				{
 					response.setHeader("X-Robots-Tag", xRobotsTagValue);
@@ -2305,6 +2336,39 @@ public class PathFilter implements Filter
 				}
 			}
 		}
+	}
+
+	/**
+	 * Builds the X-Robots-Tag value for a document from its searchability and
+	 * link-follow settings.
+	 *
+	 * <p>The result contains only restrictive directives because crawler defaults
+	 * already imply {@code index, follow}. The method returns {@code noindex},
+	 * {@code nofollow}, or both when required. If no restriction applies, it
+	 * returns {@code all}.</p>
+	 *
+	 * @param docDetails document settings used to determine robots directives
+	 * @return computed X-Robots-Tag value, or {@code all} when no restriction applies
+	 */
+	public static String getXRobotsTagValue(DocDetails docDetails)
+	{
+		if (docDetails == null) return "all";
+
+		StringBuilder value = new StringBuilder();
+		if (docDetails.isSearchable() == false) value.append("noindex");
+
+		FollowLinksMode followLinksMode = docDetails.getFollowLinksMode();
+		boolean nofollow = FollowLinksMode.NOFOLLOW == followLinksMode
+			|| (FollowLinksMode.SEARCHABLE == followLinksMode && docDetails.isSearchable() == false);
+
+		if (nofollow) {
+			if (value.length() > 0) value.append(", ");
+			value.append("nofollow");
+		}
+
+		if (value.length() == 0) return "all";
+
+		return value.toString();
 	}
 
 	public static void setUaCompatibleAdmin(String path, HttpServletResponse response)
