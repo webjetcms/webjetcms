@@ -26,6 +26,7 @@ import sk.iway.iwcm.rag.service.RagEntityType;
 import sk.iway.iwcm.rag.service.RagSettingsService;
 import sk.iway.iwcm.rag.vectorstore.VectorSearchResult;
 import sk.iway.iwcm.rag.vectorstore.VectorStore;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
 /**
  * Service for semantic search over document embeddings.
@@ -163,7 +164,7 @@ public class SemanticSearchService {
         String answer = null;
         if(RagSettingsService.isAnswerAllowed(pageParams)) {
             answer = ragService.answerQuestion(query, domainId, chunkResults, request);
-            answer = Tools.escapeHtml(answer); // just in case
+            answer = AllowSafeHtmlAttributeConverter.sanitize(answer);
         }
         request.setAttribute("ragAnswer", Tools.isEmpty(answer) ? null : answer);
 

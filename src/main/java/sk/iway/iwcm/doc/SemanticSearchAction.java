@@ -6,7 +6,6 @@ import java.util.List;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
@@ -63,9 +62,6 @@ public class SemanticSearchAction {
 		}
 
 		words = words.replace('\'', ' ').replace(',', ' ').replace('.', ' ').replace(';', ' ');
-		if (Tools.isNotEmpty(Constants.getString("searchActionOmitCharacters"))) {
-			words = words.replaceAll("[" + Constants.getString("searchActionOmitCharacters") + "]", "");
-		}
 		words = words.trim();
 
 		if (words.isEmpty()) {

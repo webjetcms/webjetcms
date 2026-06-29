@@ -88,20 +88,21 @@ Scenario('Try RAG answer', ({ I, Document }) => {
     Document.setConfigValue("ragSemanticSearchEnabled", "true");
     Document.setConfigValue("ragAnswerAllowed", "true");
 
-    I.amOnPage("/apps/vyhladavanie/semantic-search.html");
+    I.amOnPage("/apps/vyhladavanie/semanticke-vyhladavanie.html");
     I.waitForVisible("#searchWords", 5);
 
-    I.fillField("#searchWords", "Aky alkohol predava McGregor");
+    I.fillField("#searchWords", "ako mcgregor zarába viac peňazí?");
     I.click(".smallSearchSubmit");
-    I.waitForVisible("p.ragAnswer", 60);
+    I.waitForVisible(".rag-answer", 60);
+    I.see("Proper No. Twelve", ".rag-answer p");
 
     // Spam wait before requsts
     I.wait(30);
 
-    I.fillField("#searchWords", "Ake je dnes pocasie v BA.");
+    I.fillField("#searchWords", "Ake je dnes pocasie v BA?");
     I.click(".smallSearchSubmit");
     I.waitForElement("h1.searchResultsH1", 60);
-    I.dontSeeElement("p.ragAnswer");
+    I.dontSeeElement(".rag-answer");
 });
 
 Scenario('Remove search preference', ({ I, DT, Document }) => {

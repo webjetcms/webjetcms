@@ -183,7 +183,7 @@ public class RagService {
             }
         } while(changed);
 
-        return CANNOT_ANSWER_SENTINEL.equalsIgnoreCase(normalized);
+        return normalized.contains(CANNOT_ANSWER_SENTINEL);
     }
 
     private AssistantDefinitionEntity getOrCreateAssistant(Integer domainId) {
@@ -254,6 +254,7 @@ public class RagService {
                     "Format bullets with each item on a new line.",
                     "Do not add follow-up offers, suggestions, or questions at the end. Just answer the userQuestion."
                 ],
+                "output_format": "html",
                 "retrievedContext": {retrievedContext}
             }
         """;
