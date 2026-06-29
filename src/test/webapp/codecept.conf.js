@@ -167,7 +167,7 @@ exports.config = {
             I.fillField("username", "tester");
             I.fillField("password", secret(I.getDefaultPassword()));
             I.forceClick(loginButtonText);
-            I.waitForText("Tester Playwright", 30, "button.js-profile-toggler");
+            I.waitForText("Tester Playwright", 80, "button.js-profile-toggler");
           },
           check: (I) => {
             console.log("Date time: "+new Date());

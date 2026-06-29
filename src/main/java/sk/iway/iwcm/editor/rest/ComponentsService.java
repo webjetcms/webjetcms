@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
@@ -129,7 +130,9 @@ public class ComponentsService {
                     annotation = field.getAnnotation(DataTableColumn.class);
                 }
 
-                value = retypeValue(propertyDescriptor.getPropertyType(), pageParams.getValue(paramName, ""), field, annotation);
+                boolean isNullable = field.isAnnotationPresent(Nullable.class);
+
+                value = retypeValue(propertyDescriptor.getPropertyType(), pageParams.getValue(paramName, ""), field, annotation, isNullable);
                 writeMethod.invoke(bean, value);
             } catch (IllegalAccessException | InvocationTargetException | NoSuchFieldException | IllegalArgumentException e) {
                 sk.iway.iwcm.Logger.error(e);
@@ -173,8 +176,13 @@ public class ComponentsService {
      * @param value String
      * @return Object
      */
-    private static Object retypeValue(Class<?> parameterType, String value, java.lang.reflect.Field field, DataTableColumn annotation) {
+    private static Object retypeValue(Class<?> parameterType, String value, java.lang.reflect.Field field, DataTableColumn annotation, boolean isNullable) {
         if (value == null || "null".equals(value)) {
+            return null;
+        }
+
+        if (isNullable && Tools.isEmpty(value) && Number.class.isAssignableFrom(parameterType)) {
+            // if field is nullable and value is empty and parameterType is number, return null (instead of 0 or other default value)
             return null;
         }
 

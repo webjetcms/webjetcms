@@ -4,10 +4,11 @@ Before(({ I, login }) =>{
     login('admin');
 });
 
-Scenario('Set semantic search as wanted search', ({ I, DT, Document }) => {
+Scenario('Set semantic search as wanted search @screenshot', ({ I, DT, Document }) => {
     Document.setConfigValue("searchType", "semantic");
     Document.setConfigValue("spamProtectionTimeout-search", "1");
     Document.setConfigValue("ragSemanticSearchEnabled", "true");
+    Document.setConfigValue("ragAnswerAllowed", "false");
 });
 
 const searchData = [
@@ -84,10 +85,40 @@ Scenario('Try semantic search', ({ I, DT, Document }) => {
     });
 });
 
-Scenario('Remove search preference', ({ I, DT, Document }) => {
+Scenario('Try RAG answer @screenshot', ({ I, Document }) => {
+    Document.setConfigValue("ragSemanticSearchEnabled", "true");
+    Document.setConfigValue("ragAnswerAllowed", "true");
+
+    I.amOnPage("/apps/vyhladavanie/semanticke-vyhladavanie.html");
+    I.waitForVisible("#searchWords", 5);
+
+    I.fillField("#searchWords", "ako mcgregor zarába?");
+    I.click(".smallSearchSubmit");
+    I.waitForVisible(".rag-answer", 60);
+    I.see("Proper No. Twelve", ".rag-answer");
+
+    I.pressKey("ArrowDown");
+    I.pressKey("ArrowDown");
+    I.executeScript(() => {
+        //nicer screenshot
+        $("div.search a[href='/apps/vyhladavanie/semantic_parent/'").find("strong").html("McGrerorov obchodný úder")
+    });
+    Document.screenshot("/redactor/apps/semantic-search/rag-result.png");
+
+    // Spam wait before requsts
+    I.wait(30);
+
+    I.fillField("#searchWords", "Ake je dnes pocasie v BA?");
+    I.click(".smallSearchSubmit");
+    I.waitForElement("h1.searchResultsH1", 60);
+    I.dontSeeElement(".rag-answer");
+});
+
+Scenario('Remove search preference @screenshot', ({ I, DT, Document }) => {
     Document.setConfigValue("spamProtectionTimeout-search", "10");
     Document.setConfigValue("searchType", "db");
     Document.setConfigValue("ragSemanticSearchEnabled", "false");
+    Document.setConfigValue("ragAnswerAllowed", "false");
 });
 
 function checkTopFind(I, pageUrl, pageName) {
