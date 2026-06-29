@@ -8,6 +8,7 @@ Scenario('Set semantic search as wanted search', ({ I, DT, Document }) => {
     Document.setConfigValue("searchType", "semantic");
     Document.setConfigValue("spamProtectionTimeout-search", "1");
     Document.setConfigValue("ragSemanticSearchEnabled", "true");
+    Document.setConfigValue("ragAnswerAllowed", "false");
 });
 
 const searchData = [
