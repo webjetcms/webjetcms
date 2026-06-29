@@ -71,6 +71,7 @@ src/main/webapp/templates/se*
 src/main/webapp/templates/sp*
 src/main/webapp/templates/el*
 src/main/webapp/templates/tenis*
+docs/examples/headless-astro/dist/
 
 #javadoc je generovany, nema zmysel ho mat v gite
 /docs/developer/javadoc
