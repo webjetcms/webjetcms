@@ -4,7 +4,7 @@ Before(({ I, login }) =>{
     login('admin');
 });
 
-Scenario('Set semantic search as wanted search', ({ I, DT, Document }) => {
+Scenario('Set semantic search as wanted search @screenshot', ({ I, DT, Document }) => {
     Document.setConfigValue("searchType", "semantic");
     Document.setConfigValue("spamProtectionTimeout-search", "1");
     Document.setConfigValue("ragSemanticSearchEnabled", "true");
@@ -99,6 +99,10 @@ Scenario('Try RAG answer @screenshot', ({ I, Document }) => {
 
     I.pressKey("ArrowDown");
     I.pressKey("ArrowDown");
+    I.executeScript(() => {
+        //nicer screenshot
+        $("div.search a[href='/apps/vyhladavanie/semantic_parent/'").find("strong").html("McGrerorov obchodný úder")
+    });
     Document.screenshot("/redactor/apps/semantic-search/rag-result.png");
 
     // Spam wait before requsts
@@ -110,7 +114,7 @@ Scenario('Try RAG answer @screenshot', ({ I, Document }) => {
     I.dontSeeElement(".rag-answer");
 });
 
-Scenario('Remove search preference', ({ I, DT, Document }) => {
+Scenario('Remove search preference @screenshot', ({ I, DT, Document }) => {
     Document.setConfigValue("spamProtectionTimeout-search", "10");
     Document.setConfigValue("searchType", "db");
     Document.setConfigValue("ragSemanticSearchEnabled", "false");
