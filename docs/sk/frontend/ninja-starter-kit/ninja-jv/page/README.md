@@ -167,26 +167,26 @@ Použité v :ghost:<code>debug-info.jsp</code>
 
 ## Nastavenie indexovania *String*
 
-Vráti hodnotu pre SEO direktívy podľa polí **Prehľadávať** a **Sledovanie odkazov vyhľadávačmi** v editore webovej stránky. Rovnaká hodnota sa použije aj v HTTP hlavičke `X-Robots-Tag`, ak je jej generovanie pre webové stránky povolené konfiguráciou.
+Vráti hodnotu pre SEO direktívy podľa polí **Prehľadávať** a **Nasledovanie odkazov vyhľadávačmi** v editore webovej stránky. Rovnaká hodnota sa použije aj v HTTP hlavičke `X-Robots-Tag`, ak je jej generovanie pre webové stránky povolené konfiguráciou.
 
-Pole **Sledovanie odkazov vyhľadávačmi** podporuje možnosti:
+Pole **Nasledovanie odkazov vyhľadávačmi** podporuje možnosti:
 
-- **Podľa nastavenia Prehľadávať** - pri povolenom prehľadávaní povolí sledovanie odkazov, pri zakázanom prehľadávaní ho zakáže.
-- **Povoliť sledovanie odkazov** - nastaví `follow` nezávisle od poľa **Prehľadávať**.
-- **Zakázať sledovanie odkazov** - nastaví `nofollow` nezávisle od poľa **Prehľadávať**.
+- **Podľa nastavenia Prehľadávať** - pri povolenom prehľadávaní povolí nasledovanie odkazov, pri zakázanom prehľadávaní ho zakáže.
+- **Povoliť nasledovanie odkazov** - nastaví `follow` nezávisle od poľa **Prehľadávať**.
+- **Zakázať nasledovanie odkazov** - nastaví `nofollow` nezávisle od poľa **Prehľadávať**.
 
 Predvolená hodnota je **Podľa nastavenia Prehľadávať**, ktorá zachováva spoločné riadenie indexovania a sledovania odkazov pre existujúce stránky.
 
-Výsledná hodnota obsahuje `all`, ak indexovanie ani sledovanie odkazov nie je obmedzené. V ostatných prípadoch obsahuje iba obmedzujúce direktívy `noindex` a/alebo `nofollow`:
+Výsledná hodnota obsahuje `all`, ak indexovanie ani nasledovanie odkazov nie je obmedzené. V ostatných prípadoch obsahuje iba obmedzujúce direktívy `noindex` a/alebo `nofollow`:
 
-| Prehľadávať | Sledovanie odkazov vyhľadávačmi | `${ninja.page.robots}` / `X-Robots-Tag` |
+| Prehľadávať | Nasledovanie odkazov vyhľadávačmi | `${ninja.page.robots}` / `X-Robots-Tag` |
 | --- | --- | --- |
 | Áno | Podľa nastavenia Prehľadávať | `all` |
-| Áno | Povoliť sledovanie odkazov | `all` |
-| Áno | Zakázať sledovanie odkazov | `nofollow` |
+| Áno | Povoliť nasledovanie odkazov | `all` |
+| Áno | Zakázať nasledovanie odkazov | `nofollow` |
 | Nie | Podľa nastavenia Prehľadávať | `noindex, nofollow` |
-| Nie | Povoliť sledovanie odkazov | `noindex` |
-| Nie | Zakázať sledovanie odkazov | `noindex, nofollow` |
+| Nie | Povoliť nasledovanie odkazov | `noindex` |
+| Nie | Zakázať nasledovanie odkazov | `noindex, nofollow` |
 
 ```java
 ${ninja.page.robots}

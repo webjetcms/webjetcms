@@ -158,8 +158,8 @@ const robotsTestDocId = 166410;
 const robotsTestPage = "/apps/http-hlavicky/index_folow_behaviour.html";
 const followLinksOptions = {
     searchable: "Podľa nastavenia Prehľadávať",
-    follow: "Povoliť sledovanie odkazov",
-    nofollow: "Zakázať sledovanie odkazov"
+    follow: "Povoliť nasledovanie odkazov",
+    nofollow: "Zakázať nasledovanie odkazov"
 };
 
 async function setRobotsSettings(I, DTE, searchable, followLinks) {
