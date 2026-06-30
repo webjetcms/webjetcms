@@ -45,7 +45,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/rest/headless/v1")
 @Tag(name = "Headless Pages", description = "Page retrieval endpoints for headless consumption")
-public class HeadlessPageRestController {
+public class HeadlessPageRestController extends sk.iway.iwcm.rest.RestController {
 
     private final HeadlessPageService headlessPageService;
     private final HeadlessNavigationService headlessNavigationService;
@@ -84,6 +84,7 @@ public class HeadlessPageRestController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
+        isIpAddressAllowed(request);
         path = normalizePath(path);
 
         if (Tools.isEmpty(path)) {
@@ -145,6 +146,8 @@ public class HeadlessPageRestController {
             @Parameter(description = "Language override") @RequestParam(name = "lng", required = false, defaultValue = "") String lng,
             HttpServletRequest request,
             HttpServletResponse response) {
+
+        isIpAddressAllowed(request);
 
         // Strict admin session check
         Identity user = UsersDB.getCurrentUser(request);
@@ -210,6 +213,7 @@ public class HeadlessPageRestController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
+        isIpAddressAllowed(request);
         if (Tools.isEmpty(rootPath) && Tools.isEmpty(rootGroupId)) {
             return createNavigationErrorResponse(400, "Bad Request",
                     "Either rootPath or rootGroupId parameter is required.");

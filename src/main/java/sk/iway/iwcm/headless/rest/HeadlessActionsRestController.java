@@ -46,7 +46,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/rest/headless/v1/actions")
 @Tag(name = "Headless Actions", description = "Form submission and search endpoints for headless consumption")
-public class HeadlessActionsRestController {
+public class HeadlessActionsRestController extends sk.iway.iwcm.rest.RestController {
 
     @Autowired
     private HeadlessFormActionService headlessFormActionService;
@@ -81,6 +81,7 @@ public class HeadlessActionsRestController {
             HttpServletRequest httpRequest,
             HttpServletResponse response) {
 
+        isIpAddressAllowed(httpRequest);
         // Validate request body
         List<FieldError> validationErrors = validateFormSubmitRequest(request);
         if (!validationErrors.isEmpty()) {
@@ -138,6 +139,7 @@ public class HeadlessActionsRestController {
             HttpServletRequest httpRequest,
             HttpServletResponse response) {
 
+        isIpAddressAllowed(httpRequest);
         // Validate query
         if (Tools.isEmpty(q)) {
             return createSearchErrorResponse(400, "Bad Request", "Search query 'q' is required.");
