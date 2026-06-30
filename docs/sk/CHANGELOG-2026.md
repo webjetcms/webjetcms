@@ -6,6 +6,8 @@
 
 ### Webové stránky
 
+- SEO - pridané samostatné nastavenie **Nasledovanie odkazov vyhľadávačmi** s možnosťami **Podľa nastavenia Prehľadávať**, **Povoliť nasledovanie odkazov** (`follow`) a **Zakázať nasledovanie odkazov** (`nofollow`). HTTP hlavička `X-Robots-Tag` a Ninja `${ninja.page.robots}` používajú rovnakú logiku: pri indexovaní bez obmedzení vrátia `all`, inak kombináciu direktív `noindex` a `nofollow` podľa nastavenia stránky. Viac v [dokumentácii Ninja](frontend/ninja-starter-kit/ninja-jv/page/README.md#nastavenie-indexovania-string) (#OSK563).
+- Ninja - doplnené [generovanie rozmerov](frontend/ninja-starter-kit/ninja-bp/page/README.md) SEO obrázka `og:image:width` a `og:image:height` (#OSK563).
 - Šablóny - pridaná možnosť nastaviť presun `<style>` a `<link rel="stylesheet">` značiek z tela stránky do `<head>` cez [voľbu v šablóne](frontend/templates/templates.md) s podporou globálnej konfiguračnej premennej `showDocMoveStyleToHead`. Bloky v IE podmienkach, `noscript` a `script` zostávajú na mieste (#231).
 
 ![](frontend/templates/templates-edit-advanced.png)
@@ -33,6 +35,10 @@
 ### Sémantické vyhľadávanie
 
 - Pridaná podpora [sémantického vyhľadávania](redactor/apps/semantic-search/README.md) postaveného na technológii vektorovej databázy `pgvector` a `OpenAI embeddings`. Umožňuje návštevníkom nájsť relevantné stránky na základe **významu otázky**, nielen zhody kľúčových slov (#211).
+
+- Doplnený hybridný režim sémantického vyhľadávania a voliteľná RAG odpoveď z indexovaného obsahu. Aplikácia **Vyhľadávanie** má nové nastavenia pre typ vyhľadávania, hybridné správanie, výber AI asistenta a limity kontextu odpovede (#58521).
+
+![](redactor/apps/semantic-search/rag-result.png)
 
 ### Aplikácie
 
@@ -285,6 +291,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Úlohy na pozadí - pridaná možnosť spustiť [úlohu na pozadí](admin/settings/cronjob/README.md) len na uzloch v plnej konfigurácii alebo na verejných uzloch (#246).
 - Generátor primárnych kľúčov - doplnená automatická oprava mien tabuliek a názvov stĺpca s primárnou hodnotou (#246).
 - Bezpečnosť - opravené chyby Local File Inclusion, kontrola nahrávaných súborov a RCE. Ďakujeme Josef Korbel (Citadelo) za nahlásenie týchto zraniteľností (#252).
+- JPA - opravené viac násobné ukončenie databázovej transakcie pri importe presmerovaní (#256).
 
 ## 2026.0.25
 

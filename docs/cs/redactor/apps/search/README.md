@@ -6,6 +6,8 @@ Nabídněte návštěvníkům možnost rychlého a přesného vyhledávání př
 
 V nastaveních lze nastavit:
 
+- Typ vyhledávání - pro konkrétní vloženou aplikaci lze použít databázové, Lucene, sémantické nebo hybridní vyhledávání. Hodnota **Podle konfigurace** použije globální konfigurační proměnnou `searchType`.
+- Přidat odpověď RAG - zapne zobrazení AI odpovědi nad výsledky vyhledávání, pokud je globálně povolena proměnná `ragAnswerAllowed` a používá se sémantické nebo hybridní vyhledávání.
 - Adresář - ID složek web stránek pro vyhledávání, hledá se iv podsložkách
 - Počet odkazů na stránku - počet záznamů na jednu stranu vyhledávání
 - Kontrolovat duplicitu - pokud se web stránka nachází ve více složkách, zapne se kontrola duplicit. Zvyšuje zátěž na server.
@@ -28,20 +30,26 @@ Systém podporuje následující typy vyhledávání:
   - Nastavte konfigurační proměnnou `luceneAsDefaultSearch` na hodnotu `true`, nebo proměnnou `searchType` na hodnotu `lucene`.
   - Spusťte prvotní indexování přes `/components/search/lucene_console.jsp`.
 - **Sémantické vyhledávání** – vyhledávání pomocí pgvector.
-  - Nastavte proměnnou `searchType` na hodnotu `semantic`, povolte sémantické vyhledávání nastavením proměnné `ragSemanticSearchEnabled` na `true`.
+  - Nastavte proměnnou `searchType` na hodnotu `semantic`, nebo zvolte typ přímo v aplikaci. Povolte sémantické vyhledávání nastavením proměnné `ragSemanticSearchEnabled` na `true`.
+  - Více se dočtete v části [Sémantické vyhledávání](../semantic-search/README.md).
+- **Hybridní vyhledávání** – kombinuje sémantické vyhledávání s fulltextem nad indexovanými částmi textu.
+  - Nastavte proměnnou `searchType` na hodnotu `hybrid`, nebo zvolte typ přímo v aplikaci. Musí být povoleno `ragSemanticSearchEnabled=true` i `ragHybridSearchEnabled=true`.
   - Více se dočtete v části [Sémantické vyhledávání](../semantic-search/README.md).
 
 !>**Upozornění:** Konfigurační proměnná `luceneAsDefaultSearch` má vyšší prioritu než proměnná `searchType`. Pokud je tedy `luceneAsDefaultSearch=true`, bude se používat Lucene bez ohledu na nastavenou hodnotu proměnné `searchType`.
 
+RAG odpověď není samostatný typ vyhledávání. Je to doplněk k sémantickému nebo hybridnímu vyhledávání, který z nalezeného kontextu vygeneruje krátkou odpověď a zobrazí ji před seznamem výsledků.
+
 ### Porovnání typů vyhledávání
 
-| | Databázové (`db`) | Lucene | Sémantické (`semantic`) |
-| --- | --- | --- | --- |
-| Technologie | SQL LIKE / FULLTEXT | `Apache Lucene` | `OpenAI embeddings` + `pgvector` |
-| Shoda | Klíčová slova | Klíčová slova + skloňování | Sémantický význam |
-| Výsledky bez shody slov | Ne | Částečně | Ano |
-| Požadavky | Primární DB | Lucene index | `PostgreSQL` + `pgvector` + `OpenAI` |
-| Cena | Zdarma | Zdarma | OpenAI API (placené) |
+| | Databázové (`db`) | Lucene | Sémantické (`semantic`) | Hybridní (`hybrid`) |
+| --- | --- | --- | --- | --- |
+| Technologie | SQL LIKE / FULLTEXT | `Apache Lucene` | `OpenAI embeddings` + `pgvector` | `pgvector` + fulltext nad chunky |
+| Shoda | Klíčová slova | Klíčová slova + skloňování | Sémantický význam | Sémantický význam i přesná slova |
+| Výsledky bez shody slov | Ne | Částečně | Ano | Ano |
+| Vhodné pro krátké dotazy | Omezeno | Ano | Částečně | Ano |
+| Požadavky | Primární DB | Lucene index | `PostgreSQL` + `pgvector` + `OpenAI` | `PostgreSQL` + `pgvector` + `OpenAI` |
+| Cena | Zdarma | Zdarma | OpenAI API (placené) | OpenAI API (placené) |
 
 ## Zobrazení aplikace
 

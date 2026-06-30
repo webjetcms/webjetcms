@@ -2461,7 +2461,7 @@ public class DocDB extends DB
 		try
 		{
 			db_conn = DBPool.getConnection();
-			String sql = "SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, searchable, show_in_menu, show_in_navbar, show_in_sitemap, logged_show_in_menu, logged_show_in_sitemap, logged_show_in_navbar, sort_priority, password_protected, temp_id, date_created, field_a, field_b, field_c FROM documents";
+			String sql = "SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, searchable, follow_links, show_in_menu, show_in_navbar, show_in_sitemap, logged_show_in_menu, logged_show_in_sitemap, logged_show_in_navbar, sort_priority, password_protected, temp_id, date_created, field_a, field_b, field_c FROM documents";
 
 			ps = db_conn.prepareStatement(sql);
 			rs = ps.executeQuery();
@@ -2479,6 +2479,7 @@ public class DocDB extends DB
 				doc.setVirtualPath(normalizeVirtualPath(DB.getDbString(rs, "virtual_path")));
 				doc.setAvailable(rs.getBoolean("available"));
 				doc.setSearchable(rs.getBoolean("searchable"));
+				doc.setFollowLinks(rs.getInt("follow_links"));
 				doc.setShowInMenu(rs.getBoolean("show_in_menu"));
 				doc.setShowInSitemap(DB.getBoolean(rs, "show_in_sitemap"));
 				doc.setShowInNavbar(DB.getBoolean(rs, "show_in_navbar"));
@@ -3325,6 +3326,7 @@ public class DocDB extends DB
 			}
 
 			doc.setSearchable(rs.getBoolean("searchable"));
+			doc.setFollowLinks(rs.getInt("follow_links"));
 			doc.setGroupId(rs.getInt("group_id"));
 			doc.setAvailable(rs.getBoolean("available"));
 			doc.setShowInMenu(rs.getBoolean("show_in_menu"));
@@ -4489,8 +4491,8 @@ public class DocDB extends DB
 					"publish_start, publish_end, author_id, group_id, temp_id, searchable, available, " +
 					"cacheable, sort_priority, header_doc_id, footer_doc_id, menu_doc_id, password_protected, html_head, "+
 					"html_data, perex_place, perex_image, perex_group, show_in_menu, event_date, right_menu_doc_id," +
-					"field_a, field_b, field_c, field_d, field_e, field_f, field_g, field_h, field_i, field_j, field_k, field_l, disable_after_end, virtual_path, require_ssl, file_name, field_m, field_n, field_o, field_p, field_q, field_r, field_s, field_t, root_group_l1, root_group_l2, root_group_l3) " +
-					"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+					"field_a, field_b, field_c, field_d, field_e, field_f, field_g, field_h, field_i, field_j, field_k, field_l, disable_after_end, virtual_path, require_ssl, file_name, field_m, field_n, field_o, field_p, field_q, field_r, field_s, field_t, root_group_l1, root_group_l2, root_group_l3, follow_links) " +
+					"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 			if (docDetails.getDocId() > 0)
 			{
@@ -4498,7 +4500,7 @@ public class DocDB extends DB
 						"publish_start=?, publish_end=?, author_id=?, group_id=?, temp_id=?, searchable=?, available=?, " +
 						"cacheable=?, sort_priority=?, header_doc_id=?, footer_doc_id=?, menu_doc_id=?, password_protected=?, html_head=?, "+
 						"html_data=?, perex_place=?, perex_image=?, perex_group=?, show_in_menu=?, event_date=?, right_menu_doc_id=?," +
-						"field_a=?, field_b=?, field_c=?, field_d=?, field_e=?, field_f=?, field_g=?, field_h=?, field_i=?, field_j=?, field_k=?, field_l=?, disable_after_end=?, virtual_path=?, require_ssl=?, file_name=?, field_m=?, field_n=?, field_o=?, field_p=?, field_q=?, field_r=?, field_s=?, field_t=?, root_group_l1=?, root_group_l2=?, root_group_l3=?, sync_status=1 " +
+						"field_a=?, field_b=?, field_c=?, field_d=?, field_e=?, field_f=?, field_g=?, field_h=?, field_i=?, field_j=?, field_k=?, field_l=?, disable_after_end=?, virtual_path=?, require_ssl=?, file_name=?, field_m=?, field_n=?, field_o=?, field_p=?, field_q=?, field_r=?, field_s=?, field_t=?, root_group_l1=?, root_group_l2=?, root_group_l3=?, follow_links=?, sync_status=1 " +
 						"WHERE doc_id=?";
 			}
 
@@ -4676,10 +4678,11 @@ public class DocDB extends DB
 			ps.setString(51, docDetails.getFieldT());
 
 			DocDB.getRootGroupL(docDetails.getGroupId(), ps, 52);
+			ps.setInt(55, docDetails.getFollowLinks());
 
 			if (docDetails.getDocId() > 0)
 			{
-				ps.setInt(55, docDetails.getDocId());
+				ps.setInt(56, docDetails.getDocId());
 			}
 
 			ps.execute();
@@ -4997,7 +5000,7 @@ public class DocDB extends DB
 		try
 		{
 			db_conn = DBPool.getConnection();
-			String sql = "SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, searchable, show_in_menu, sort_priority, password_protected, temp_id, date_created, field_a, field_b, field_c FROM documents WHERE doc_id=?";
+			String sql = "SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, searchable, follow_links, show_in_menu, sort_priority, password_protected, temp_id, date_created, field_a, field_b, field_c FROM documents WHERE doc_id=?";
 
 			ps = db_conn.prepareStatement(sql);
 			ps.setInt(1, docId);
@@ -5031,6 +5034,7 @@ public class DocDB extends DB
 				doc.setVirtualPath(normalizeVirtualPath(DB.getDbString(rs, "virtual_path")));
 				doc.setAvailable(rs.getBoolean("available"));
 				doc.setSearchable(rs.getBoolean("searchable"));
+				doc.setFollowLinks(rs.getInt("follow_links"));
 				doc.setShowInMenu(rs.getBoolean("show_in_menu"));
 				doc.setSortPriority(rs.getInt("sort_priority"));
 				doc.setPasswordProtected(DB.getDbString(rs, "password_protected"));
@@ -6069,6 +6073,7 @@ public class DocDB extends DB
 			properties.put("isAvailable", d.isAvailable());
 			properties.put("isCacheable", d.isCacheable());
 			properties.put("isSearchable", d.isSearchable());
+			properties.put("followLinks", d.getFollowLinks());
 			properties.put("isShowInMenu", d.isShowInMenu());
 			properties.put("isRequireSsl", d.isRequireSsl());
 			properties.put("isForum", String.valueOf(getForumStatus(d, temp)));
@@ -6334,7 +6339,7 @@ public class DocDB extends DB
 
 		sqlFields.append("d.doc_id, ");
 		if (includeDataField) sqlFields.append("d.data, ");
-		sqlFields.append("d.date_created, d.publish_start, d.publish_end, d.author_id, d.searchable, d.group_id, d.available, d.show_in_menu, d.password_protected, d.cacheable, d.external_link, d.virtual_path, d. temp_id, d.title, d.navbar, d.file_name, d.sort_priority, d.header_doc_id, d.footer_doc_id, d.menu_doc_id, d.right_menu_doc_id, d.html_head, d.html_data, d.perex_place, d.perex_image, d.perex_group, d.event_date, d.sync_id, d.sync_status, d.field_a, d.field_b, d.field_c, d.field_d, d.field_e, d.field_f, d.field_g, d.field_h, d.field_i, d.field_j, d.field_k, d.field_l, d.disable_after_end, d.forum_count, d.views_total, d.field_m, d.field_n, d.field_o, d.field_p, d.field_q, d.field_r, d.field_s, d.field_t, d.require_ssl");
+		sqlFields.append("d.date_created, d.publish_start, d.publish_end, d.author_id, d.searchable, d.follow_links, d.group_id, d.available, d.show_in_menu, d.password_protected, d.cacheable, d.external_link, d.virtual_path, d. temp_id, d.title, d.navbar, d.file_name, d.sort_priority, d.header_doc_id, d.footer_doc_id, d.menu_doc_id, d.right_menu_doc_id, d.html_head, d.html_data, d.perex_place, d.perex_image, d.perex_group, d.event_date, d.sync_id, d.sync_status, d.field_a, d.field_b, d.field_c, d.field_d, d.field_e, d.field_f, d.field_g, d.field_h, d.field_i, d.field_j, d.field_k, d.field_l, d.disable_after_end, d.forum_count, d.views_total, d.field_m, d.field_n, d.field_o, d.field_p, d.field_q, d.field_r, d.field_s, d.field_t, d.require_ssl");
 
 		String[] additionalFields = DataAccessHelper.getDocFields();
 		if (additionalFields!=null && additionalFields.length>0) {

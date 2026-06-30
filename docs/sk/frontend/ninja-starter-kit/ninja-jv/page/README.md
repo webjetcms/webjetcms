@@ -5,11 +5,13 @@
 | ${ninja.page.seoTitle} | *String* | Názov stránky (hodnota sa berie z voliteľného poľa R alebo ak je prázdne, tak z titulku) |
 | ${ninja.page.seoDescription} | *String* | Popis stránky (hodnota sa berie z voliteľného poľa S alebo ak je prázdne, tak z perexu) |
 | ${ninja.page.seoImage} | *String* | Odkaz na obrázok (hodnota sa berie z voliteľného poľa T alebo ak je prázdne, tak z perex obrázku) |
+| ${ninja.page.seoImageWidth} | *int* | Šírka SEO obrázka v pixeloch |
+| ${ninja.page.seoImageHeight} | *int* | Výška SEO obrázka v pixeloch |
 | ${ninja.page.url} | *String* | Url adresa |
 | ${ninja.page.urlDomain} | *String* | Doména |
 | ${ninja.page.urlPath} | *String* | Virtuálna adresa |
 | ${ninja.page.urlParameters} | *Map* | Parametre z URL adresy |
-| ${ninja.page.robots} | *String* | Nastavenie indexovania |
+| ${ninja.page.robots} | *String* | Nastavenie indexovania a sledovania odkazov vyhľadávačmi |
 | ${ninja.page.doc} | *DocDetails* | Všetky vlastnosti |
 | ${ninja.page.title} | *String* | Titulok stránky s nahradenou medzerou za ```&nbsp;``` entitu po spojke (```Peter a Miro aj Fero -> Peter a&nbsp;Miro aj&nbsp;Fero```) |
 | ${ninja.page.perex} | *String* | Perex stránky s nahradenou medzerou za ```&nbsp;``` entitu po spojke |
@@ -77,6 +79,8 @@ Použité v :ghost:<code>head.jsp</code>
 
 ```html
 <meta property="og:image" content="${ninja.page.urlDomain}${ninja.page.seoImage}" />
+<meta property="og:image:width" content="${ninja.page.seoImageWidth}" />
+<meta property="og:image:height" content="${ninja.page.seoImageHeight}" />
 ```
 
 ## Url adresa *String*
@@ -121,6 +125,8 @@ Použité v :ghost:<code>head.jsp</code>
 
 ```html
 <meta property="og:image" content="${ninja.page.urlDomain}${ninja.page.seoImage}" />
+<meta property="og:image:width" content="${ninja.page.seoImageWidth}" />
+<meta property="og:image:height" content="${ninja.page.seoImageHeight}" />
 ```
 
 Použité v :ghost:<code>debug-info.jsp</code>
@@ -161,7 +167,26 @@ Použité v :ghost:<code>debug-info.jsp</code>
 
 ## Nastavenie indexovania *String*
 
-Ak má webová stránka zaškrtnuté `Prehľadávateľné` v záložke Rozšírené údaje, tak vráti hodnotu `index, follow`, ak nie tak `nofollow`. Hodnotu zaškrtnutia vracia metóda :carousel_horse: `isSearchable()`.
+Vráti hodnotu pre SEO direktívy podľa polí **Prehľadávať** a **Nasledovanie odkazov vyhľadávačmi** v editore webovej stránky. Rovnaká hodnota sa použije aj v HTTP hlavičke `X-Robots-Tag`, ak je jej generovanie pre webové stránky povolené konfiguráciou.
+
+Pole **Nasledovanie odkazov vyhľadávačmi** podporuje možnosti:
+
+- **Podľa nastavenia Prehľadávať** - pri povolenom prehľadávaní povolí nasledovanie odkazov, pri zakázanom prehľadávaní ho zakáže.
+- **Povoliť nasledovanie odkazov** - nastaví `follow` nezávisle od poľa **Prehľadávať**.
+- **Zakázať nasledovanie odkazov** - nastaví `nofollow` nezávisle od poľa **Prehľadávať**.
+
+Predvolená hodnota je **Podľa nastavenia Prehľadávať**, ktorá zachováva spoločné riadenie indexovania a sledovania odkazov pre existujúce stránky.
+
+Výsledná hodnota obsahuje `all`, ak indexovanie ani nasledovanie odkazov nie je obmedzené. V ostatných prípadoch obsahuje iba obmedzujúce direktívy `noindex` a/alebo `nofollow`:
+
+| Prehľadávať | Nasledovanie odkazov vyhľadávačmi | `${ninja.page.robots}` / `X-Robots-Tag` |
+| --- | --- | --- |
+| Áno | Podľa nastavenia Prehľadávať | `all` |
+| Áno | Povoliť nasledovanie odkazov | `all` |
+| Áno | Zakázať nasledovanie odkazov | `nofollow` |
+| Nie | Podľa nastavenia Prehľadávať | `noindex, nofollow` |
+| Nie | Povoliť nasledovanie odkazov | `noindex` |
+| Nie | Zakázať nasledovanie odkazov | `noindex, nofollow` |
 
 ```java
 ${ninja.page.robots}
