@@ -1,6 +1,6 @@
 ---
 import { getPage, getNavigation } from '../lib/api';
-import '../styles/navigation.css';
+import Layout from '../layouts/Layout.astro';
 
 const pathFromUrl = Astro.url.pathname || '/';
 const pathFromQuery = Astro.url.searchParams.get('path');
@@ -32,107 +32,25 @@ const navSetCookie = navResult.headers.get('set-cookie');
 if (navSetCookie) {
   Astro.response.headers.append('Set-Cookie', navSetCookie);
 }
-
-// Build nested navigation HTML with expand/collapse
-function buildNavHtml(items: any[], level: number): string {
-  if (!items || items.length === 0) return '';
-
-  const tag = level === 0 ? 'ul' : 'ul';
-  const className = level === 0 ? 'nav-main' : 'nav-children';
-
-  let html = `<${tag} class="${className}">`;
-
-  for (const item of items) {
-    const hasChildren = item.children && item.children.length > 0;
-    const href = item.virtualPath ? `href="${item.virtualPath}"` : '';
-
-    html += `<li class="nav-item${hasChildren ? ' has-children' : ''}">`;
-    html += `<a href="${item.virtualPath}" class="nav-link"${href ? '' : ' style="pointer-events:none;"'}>`;
-    html += item.title;
-    if (hasChildren) {
-      html += ' <span class="nav-toggle">+</span>';
-    }
-    html += '</a>';
-
-    if (hasChildren) {
-      html += buildNavHtml(item.children, level + 1);
-    }
-
-    html += '</li>';
-  }
-
-  html += `</${tag}>`;
-  return html;
-}
-
-const navHtml = nav ? buildNavHtml(nav, 0) : '';
-
-// Build content HTML with body embedded directly
-const contentHtml = error
-  ? `<div class="error"><strong>Error:</strong> ${error}</div>`
-  : page
-    ? `<div class="content"><h1>${page.title}</h1><p>Path: ${page.virtualPath} | Language: ${page.language}</p>${page.body}</div>`
-    : `<p>Enter a path: <code>/:path</code></p>`;
 ---
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{page?.title || 'Headless CMS Demo'}</title>
-  <script is:inline src="/components/form/check_form.js" />
-  <script is:inline src="/components/_common/javascript/ajax_form_send.js.jsp" />
-  <style>
-    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; }
-    .search-form { margin-top: 12px; display: flex; gap: 8px; }
-    .search-form input[type="text"] {
-      flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;
-    }
-    .search-form button {
-      padding: 8px 16px; background: #0066cc; color: #fff; border: none; border-radius: 4px;
-      cursor: pointer; font-size: 14px;
-    }
-    .search-form button:hover { background: #0055aa; }
-  </style>
-</head>
-<body>
-  <h1>WebJET CMS Headless Demo</h1>
-
-  <form class="search-form" action="/search" method="get">
-    <input type="text" name="q" placeholder="Search documents..." aria-label="Search" />
-    <button type="submit">Search</button>
-  </form>
-
-  <nav set:html={navHtml}>
-  </nav>
+<Layout title={page?.title || 'WebJET CMS — Headless Demo'} navItems={nav} currentPath={apiPath}>
+  <script is:inline src="/components/form/check_form.js"></script>
+  <script is:inline src="/components/_common/javascript/ajax_form_send.js.jsp"></script>
   {error ? (
     <div class="error"><strong>Error:</strong> {error}</div>
   ) : page ? (
-    <div class="content">
+    <article class="content">
       <h1>{page.title}</h1>
-      <p>Path: {page.virtualPath} | Language: {page.language}</p>
-      <div set:html={page.body}></div>
-    </div>
+      <p class="content-meta">
+        <span>{page.virtualPath}</span>
+        {page.language && <span> &middot; {page.language}</span>}
+      </p>
+      <div class="content-body" set:html={page.body}></div>
+    </article>
   ) : (
-    <p>Enter a path: <code>/:path</code></p>
+    <div class="empty-state">
+      <p>Enter a path to load a page.</p>
+    </div>
   )}
-
-  <script is:inline>
-    // Handle expand/collapse for nested menu items
-    document.querySelectorAll('.nav-toggle').forEach(function(toggle) {
-      toggle.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        var parentLi = this.closest('.has-children');
-        var childrenUl = parentLi.querySelector('.nav-children');
-        if (childrenUl) {
-          var isExpanded = childrenUl.classList.contains('expanded');
-          childrenUl.classList.toggle('expanded');
-          this.textContent = isExpanded ? '+' : '-';
-        }
-      });
-    });
-  </script>
-</body>
-</html>
+</Layout>

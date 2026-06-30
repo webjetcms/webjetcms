@@ -1,5 +1,6 @@
 ---
 import { getNavigation } from '../lib/api';
+import Layout from '../layouts/Layout.astro';
 
 const navResult = await getNavigation(Astro.request, '/', undefined, 3);
 const nav = navResult.data;
@@ -9,31 +10,29 @@ const setCookie = navResult.headers.get('set-cookie');
 if (setCookie) {
   Astro.response.headers.append('Set-Cookie', setCookie);
 }
+
+const topItems = nav.slice(0, 8);
 ---
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Headless CMS Demo</title>
-  <style>
-    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; }
-    nav { background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-    nav a { display: block; padding: 5px 0; color: #0066cc; text-decoration: none; }
-    nav a:hover { text-decoration: underline; }
-  </style>
-</head>
-<body>
-  <h1>WebJET CMS Headless Demo</h1>
-  <nav>
-    <h3>Navigation</h3>
-    {nav.map((item: any) => (
-      <a href={item.virtualPath}>{item.title}</a>
-    ))}
-    {nav.flatMap((item: any) => item.children || []).map((child: any) => (
-      <a href={child.virtualPath}>  {child.title}</a>
-    ))}
-  </nav>
-</body>
-</html>
+<Layout title="WebJET CMS — Headless Demo" navItems={nav} currentPath="/">
+  <div class="welcome-hero">
+    <span class="badge">Headless CMS</span>
+    <h1>WebJET CMS<br />Headless Integration</h1>
+    <p>
+      This is a proof-of-concept demonstrating WebJET CMS as a headless backend.
+      Content is served via REST API and rendered by this Astro application.
+      Use the navigation on the left or search to explore pages.
+    </p>
+  </div>
+
+  {topItems.length > 0 && (
+    <div class="welcome-links">
+      {topItems.map((item: any) => (
+        <a href={item.virtualPath} class="welcome-link-card">
+          <div class="card-title">{item.title}</div>
+          <div class="card-path">{item.virtualPath}</div>
+        </a>
+      ))}
+    </div>
+  )}
+</Layout>

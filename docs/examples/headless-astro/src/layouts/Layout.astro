@@ -1,0 +1,109 @@
+---
+import '../styles/global.css';
+import type { NavigationItem } from '../lib/api';
+
+export interface Props {
+  title: string;
+  navItems?: NavigationItem[];
+  currentPath?: string;
+  searchQuery?: string;
+}
+
+const { title, navItems = [], currentPath = '/', searchQuery = '' } = Astro.props;
+
+function buildNavHtml(items: NavigationItem[], level: number, activePath: string): string {
+  if (!items || items.length === 0) return '';
+
+  const className = level === 0 ? 'nav-main' : 'nav-children';
+  let html = `<ul class="${className}">`;
+
+  for (const item of items) {
+    const hasChildren = !!(item.children && item.children.length > 0);
+    const isActive = item.virtualPath === activePath;
+
+    html += `<li class="nav-item${hasChildren ? ' has-children' : ''}">`;
+    html += `<a href="${item.virtualPath}" class="nav-link${isActive ? ' active' : ''}"${!item.virtualPath ? ' style="pointer-events:none;"' : ''}>`;
+    html += item.title;
+    if (hasChildren) {
+      html += ' <span class="nav-toggle">+</span>';
+    }
+    html += '</a>';
+
+    if (hasChildren) {
+      html += buildNavHtml(item.children!, level + 1, activePath);
+    }
+
+    html += '</li>';
+  }
+
+  html += '</ul>';
+  return html;
+}
+
+const navHtml = buildNavHtml(navItems, 0, currentPath);
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title}</title>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/" class="logo">
+        <div class="logo-icon">W</div>
+        <span class="logo-text">WebJET <span>CMS</span></span>
+      </a>
+      <nav class="header-nav">
+        <a href="/">Home</a>
+        <a href="/search">Search</a>
+      </nav>
+      <div class="header-spacer"></div>
+      <form class="header-search" action="/search" method="get">
+        <input type="text" name="q" value={searchQuery} placeholder="Search documents…" aria-label="Search" />
+        <button type="submit">Search</button>
+      </form>
+    </div>
+  </header>
+
+  <div class="page-wrapper">
+    <aside class="sidebar">
+      {navItems.length > 0 ? (
+        <>
+          <div class="sidebar-title">Navigation</div>
+          <nav set:html={navHtml}></nav>
+        </>
+      ) : (
+        <div class="sidebar-title">No navigation</div>
+      )}
+    </aside>
+
+    <main class="main-content">
+      <slot />
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <p>&copy; 2026 InterWay, a.s. &mdash; <a href="https://www.webjetcms.sk" target="_blank" rel="noopener">WebJET CMS</a> &mdash; Headless CMS Demo</p>
+  </footer>
+
+  <script is:inline>
+    document.querySelectorAll('.nav-toggle').forEach(function(toggle) {
+      toggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var parentLi = this.closest('.has-children');
+        var childrenUl = parentLi.querySelector('.nav-children');
+        if (childrenUl) {
+          var isExpanded = childrenUl.classList.contains('expanded');
+          childrenUl.classList.toggle('expanded');
+          this.textContent = isExpanded ? '+' : '-';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
