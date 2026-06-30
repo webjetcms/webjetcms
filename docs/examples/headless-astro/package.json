@@ -10,6 +10,7 @@
     "stop": "astro dev stop"
   },
   "dependencies": {
-    "astro": "^7.0.3"
+    "astro": "^7.0.3",
+    "bootstrap": "^5.3.8"
   }
 }
