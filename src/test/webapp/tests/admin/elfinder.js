@@ -46,7 +46,7 @@ Scenario('file usage', async ({I, DT}) => {
     //I.switchTo("#modalIframe");
     I.switchTo("#modalIframeIframeElement");
 
-    I.see("Názov súboru");
+    I.waitForText("Názov súboru", 20);
     I.see("Zmeniť názov vo všetkých súboroch");
 
     getFileUsage(I, DT, "#datatableFieldDTE_Field_docDetailsList_processing");
@@ -262,7 +262,7 @@ Scenario('folder for new page by title', ({I, DTE, Browser}) => {
 })
 
 Scenario('CVE-2022-26960', async ({I}) => {
-    I.amOnPage("/admin/v9/");
+    I.amOnPage("/admin/v9/templates/temps-groups-list/");
     ///files/protected/bankari/test-forward.txt
     await I.executeScript(function(){
         window.location.href="/admin/elfinder-connector/?cmd=file&volumes=files&target=iwcm_1_L2ZpbGVzL3Byb3RlY3RlZC9iYW5rYXJpL3Rlc3QtZm9yd2FyZC50eHQ_E";
@@ -277,7 +277,7 @@ Scenario('CVE-2022-26960', async ({I}) => {
     I.dontSee("This is test file for fileforward after logon");
     I.dontSee("Server");
 
-    I.amOnPage("/admin/v9/");
+    I.amOnPage("/admin/v9/templates/temps-groups-list/");
     ///files/../protected/bankari/test-forward.txt
     await I.executeScript(function(){
         window.location.href="/admin/elfinder-connector/?cmd=file&volumes=files&target=iwcm_1_L2ZpbGVzLy4uL3Byb3RlY3RlZC9iYW5rYXJpL3Rlc3QtZm9yd2FyZC50eHQ=";
@@ -327,7 +327,7 @@ async function testFileDiacritics(I, allowDiacritics) {
     checkCorrectTitle(I, renamedFileName);
     await deleteTestFiles(I);
 
-    I.amOnPage("/admin/v9/");
+    I.amOnPage("/admin/v9/templates/temps-groups-list/");
     I.amOnPage(pageUrl);
     I.clickCss("#nav-iwcm_2_L2ZpbGVz"); //files
     createFolder(I, 'ľščťú žýáíéô');
@@ -450,7 +450,7 @@ function checkCorrectTitle(I, expectedTitle) {
 
 async function deleteTestFiles(I) {
     I.say('Deleting uploaded files');
-    I.amOnPage("/admin/v9/");
+    I.amOnPage("/admin/v9/templates/temps-groups-list/");
     I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVz');
     let fileNames = ['lsctu-zyaieo.png', 'ľščťú-žýáíéô.png', 'ľščťú žýáíéô.png', 'lsctu zyaieo.png',
         'lsctu-zyaieo', 'ľščťú-žýáíéô', 'ľščťú žýáíéô', 'lsctu zyaieo'];
@@ -459,7 +459,7 @@ async function deleteTestFiles(I) {
     }
 
     //otherwise hash change will not work
-    I.amOnPage("/admin/v9/");
+    I.amOnPage("/admin/v9/templates/temps-groups-list/");
     I.amOnPage("/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVzL3Rlc3QtbW92ZS1kaXI_E");
     fileNames = ['outer', 'inner'];
     for (const fileName of fileNames) {
