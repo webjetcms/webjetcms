@@ -67,6 +67,66 @@ public class SearchAction
 	 */
 	private static int ORACLE_TEXT_CONTAINS_IDENTIFIER = 10; //NOSONAR
 
+	public static String search(HttpServletRequest request, HttpServletResponse response)
+	{
+		PageParams pageParams = new PageParams(request);
+
+		String searchType = pageParams.getValue("searchType", "");
+		if(Tools.isEmpty(searchType) || "auto".equals(searchType)) {
+			// Empty and auto keep the globally configured search type.
+			searchType = Constants.getString("searchType");
+		}
+
+		if ("lucene".equals(searchType) || Constants.getBoolean("luceneAsDefaultSearch") || "true".equals(request.getParameter("useLucene")) || pageParams.getBooleanValue("useLucene", false))
+		{
+			// useLucene=true allows comparing standard database search with Lucene search.
+			return LuceneSearchAction.search(request);
+		}
+		if ("semantic".equals(searchType) || "hybrid".equals(searchType) || "true".equals(request.getParameter("useSemantic")) || pageParams.getBooleanValue("useSemantic", false))
+		{
+			if (isSemanticSearchAvailable()) {
+				return SemanticSearchAction.search(request, response);
+			}
+
+			Logger.debug(SearchAction.class, "Semantic/hybrid search requested but semantic search is not available, falling back to database search");
+		}
+		// ELSE - standard database search
+
+		String forward = resolveForward(request.getParameter("lng"), request.getParameter("forward"));
+		long wait;
+		if (request.getAttribute("disableSearchSpamProtection")==null && request.getAttribute("forceWords")==null && request.getParameter("index") == null)
+		{
+			if ((wait=SpamProtection.getWaitTimeout("search", request)) != 0)
+			{
+				request.setAttribute("wrong", "true");
+				request.setAttribute("crossHourlyLimit", "true");
+				request.setAttribute("wait", (wait/60/1000));
+				return forward;
+			}
+
+			if (!SpamProtection.canPost("search", "", request))
+			{
+				request.setAttribute("wrong", "true");
+				request.setAttribute("crossTimeout", "true");
+				return forward;
+			}
+		}
+
+		SearchActionInput input = SearchActionInput.fromRequest(request);
+		input.setUser(UsersDB.getCurrentUser(request));
+		input.setDomainName(DocDB.getDomain(request));
+		SearchActionOutput output = search(input);
+		output.applyToRequest(request);
+		String searchTerm = request.getParameter("words");
+		if (Tools.isEmpty(searchTerm)) searchTerm = request.getParameter("text");
+		if (Tools.isNotEmpty(searchTerm))
+		{
+			StatDB.addStatSearchLocal(searchTerm, Tools.getIntValue(request.getParameter("docid"), -1), request);
+		}
+
+		return output.getForward();
+	}
+
 	private static String resolveForward(String lng, String pForward)
 	{
 		String forward = lng != null ? "english" : "success";
@@ -964,66 +1024,6 @@ public class SearchAction
 		}
 
 		return output;
-	}
-
-	public static String search(HttpServletRequest request, HttpServletResponse response)
-	{
-		PageParams pageParams = new PageParams(request);
-
-		String searchType = pageParams.getValue("searchType", "");
-		if(Tools.isEmpty(searchType) || "auto".equals(searchType)) {
-			// Empty and auto keep the globally configured search type.
-			searchType = Constants.getString("searchType");
-		}
-
-		if ("lucene".equals(searchType) || Constants.getBoolean("luceneAsDefaultSearch") || "true".equals(request.getParameter("useLucene")) || pageParams.getBooleanValue("useLucene", false))
-		{
-			// useLucene=true allows comparing standard database search with Lucene search.
-			return LuceneSearchAction.search(request);
-		}
-		if ("semantic".equals(searchType) || "hybrid".equals(searchType) || "true".equals(request.getParameter("useSemantic")) || pageParams.getBooleanValue("useSemantic", false))
-		{
-			if (isSemanticSearchAvailable()) {
-				return SemanticSearchAction.search(request, response);
-			}
-
-			Logger.debug(SearchAction.class, "Semantic/hybrid search requested but semantic search is not available, falling back to database search");
-		}
-		// ELSE - standard database search
-
-		String forward = resolveForward(request.getParameter("lng"), request.getParameter("forward"));
-		long wait;
-		if (request.getAttribute("disableSearchSpamProtection")==null && request.getAttribute("forceWords")==null && request.getParameter("index") == null)
-		{
-			if ((wait=SpamProtection.getWaitTimeout("search", request)) != 0)
-			{
-				request.setAttribute("wrong", "true");
-				request.setAttribute("crossHourlyLimit", "true");
-				request.setAttribute("wait", (wait/60/1000));
-				return forward;
-			}
-
-			if (!SpamProtection.canPost("search", "", request))
-			{
-				request.setAttribute("wrong", "true");
-				request.setAttribute("crossTimeout", "true");
-				return forward;
-			}
-		}
-
-		SearchActionInput input = SearchActionInput.fromRequest(request);
-		input.setUser(UsersDB.getCurrentUser(request));
-		input.setDomainName(DocDB.getDomain(request));
-		SearchActionOutput output = search(input);
-		output.applyToRequest(request);
-		String searchTerm = request.getParameter("words");
-		if (Tools.isEmpty(searchTerm)) searchTerm = request.getParameter("text");
-		if (Tools.isNotEmpty(searchTerm))
-		{
-			StatDB.addStatSearchLocal(searchTerm, Tools.getIntValue(request.getParameter("docid"), -1), request);
-		}
-
-		return output.getForward();
 	}
 
 	protected static void preparePages(HttpServletRequest request, int perPage, int index, int totalResults, String paramsLink, String searchAction)
