@@ -193,3 +193,84 @@ export async function submitForm(
     headers: response.headers,
   };
 }
+
+// ==================== News API Types ====================
+
+export interface HeadlessNewsItem {
+  docId: number;
+  title: string;
+  virtualPath: string;
+  language?: string;
+  perex?: string;
+  data?: string;
+  publishStart?: string;
+  publishEnd?: string;
+  groupId: number;
+  templateName?: string;
+  available: boolean;
+  createDate?: string;
+}
+
+export interface HeadlessNewsResponse {
+  items: HeadlessNewsItem[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface HeadlessNewsRequest {
+  groupIds: number[];
+  alsoSubGroups?: boolean;
+  publishType?: string;
+  order?: string;
+  ascending?: boolean;
+  paging?: boolean;
+  pageSize?: number;
+  offset?: number;
+  perexNotRequired?: boolean;
+  loadData?: boolean;
+  checkDuplicity?: boolean;
+  perexGroup?: number[];
+  perexGroupNot?: number[];
+}
+
+/**
+ * List news via the headless API.
+ * Accepts NewsActionBean-compatible parameters and returns a paginated response.
+ * Always pass Astro.request to forward cookies from browser to backend and vice versa.
+ *
+ * @param request  news request parameters (groupIds required)
+ * @param request_ Astro request object for cookie forwarding
+ */
+export async function listNews(
+  request: HeadlessNewsRequest,
+  request_?: Request
+): Promise<{ data: HeadlessNewsResponse; headers: Headers }> {
+  const options = createFetchOptions(request_);
+
+  const response = await fetch(
+    `${API_BASE}/news`,
+    {
+      ...options,
+      method: 'POST',
+      headers: {
+        ...options.headers,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+    }
+  );
+
+  if (!response.ok) {
+    return {
+      data: { items: [], page: 0, size: 0, totalElements: 0, totalPages: 0 },
+      headers: new Headers(),
+    };
+  }
+
+  return {
+    data: await response.json(),
+    headers: response.headers,
+  };
+}

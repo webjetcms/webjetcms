@@ -302,3 +302,131 @@ export async function submitForm(formData: Record<string, string>): Promise<any>
   return response.json();
 }
 ```
+
+### News Listing
+
+#### POST /rest/headless/v1/news
+
+Lists news items via the headless API with NewsActionBean-compatible parameters.
+Accepts a JSON body representing the include parameters and returns a list of
+DocDetails items with pagination metadata.
+
+**Request Body:**
+
+```json
+{
+  "groupIds": [24],
+  "alsoSubGroups": false,
+  "publishType": "new",
+  "order": "date",
+  "ascending": false,
+  "paging": false,
+  "pageSize": 10,
+  "offset": 0,
+  "perexNotRequired": false,
+  "loadData": false,
+  "checkDuplicity": false,
+  "perexGroup": [],
+  "perexGroupNot": []
+}
+```
+
+**Parameter Mapping (NewsActionBean Parity):**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `groupIds` | `int[]` | (required) | Group IDs to filter news by |
+| `alsoSubGroups` | `boolean` | `false` | Include subgroups |
+| `publishType` | `string` | `"new"` | `new`, `old`, `all`, `next`, `valid` |
+| `order` | `string` | `"date"` | `date`, `title`, `id`, `priority`, `place`, `event_date`, `save_date` |
+| `ascending` | `boolean` | `false` | Sort direction (true = ascending) |
+| `paging` | `boolean` | `false` | Enable pagination |
+| `pageSize` | `int` | `10` | Results per page |
+| `offset` | `int` | `0` | Result offset |
+| `perexNotRequired` | `boolean` | `false` | Whether perex is required |
+| `loadData` | `boolean` | `false` | Whether to load document data |
+| `checkDuplicity` | `boolean` | `false` | Filter duplicate documents |
+| `perexGroup` | `int[]` | `[]` | Perex group IDs to include |
+| `perexGroupNot` | `int[]` | `[]` | Perex group IDs to exclude |
+
+**Response:**
+
+```json
+{
+  "items": [
+    {
+      "docId": 100,
+      "title": "Sample News Article",
+      "virtualPath": "/news/sample-article",
+      "language": "en",
+      "perex": "/images/perex.jpg",
+      "data": "<p>News body content</p>",
+      "publishStart": "2025-01-01T00:00:00",
+      "publishEnd": null,
+      "groupId": 24,
+      "templateName": "news-article",
+      "available": true,
+      "createDate": "2025-01-01T00:00:00"
+    }
+  ],
+  "page": 1,
+  "size": 10,
+  "totalElements": 1,
+  "totalPages": 1
+}
+```
+
+**Validation Error Response:**
+
+```json
+{
+  "status": 400,
+  "error": "Validation Error",
+  "message": "Request validation failed.",
+  "fieldErrors": [
+    {
+      "field": "groupIds",
+      "message": "At least one group ID is required."
+    }
+  ]
+}
+```
+
+**Example:**
+
+```bash
+curl -X POST \
+  "https://example.com/rest/headless/v1/news" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "groupIds": [24],
+    "publishType": "new",
+    "order": "date",
+    "ascending": false,
+    "paging": false,
+    "pageSize": 10,
+    "offset": 0
+  }'
+```
+
+**Publish Type Behavior:**
+
+| Value | Behavior |
+|-------|----------|
+| `new` | Only currently published news (publish_start <= now AND (publish_end IS NULL OR publish_end >= now)) |
+| `old` | Only expired news (publish_end <= now) |
+| `all` | No publish filtering |
+| `next` | Only future news (publish_start >= now) |
+| `valid` | Same as `new` |
+
+**Ordering Options:**
+
+| Value | Database Field |
+|-------|---------------|
+| `date` | `publish_start` |
+| `title` | `title` |
+| `id` | `doc_id` |
+| `priority` | `sort_priority` |
+| `place` | `perex_place` |
+| `event_date` | `event_date` |
+| `save_date` | `date_created` |
