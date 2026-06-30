@@ -62,6 +62,7 @@
 ### Iné menšie zmeny
 
 - Prieskumník - pridané právo **Povoliť nahrávanie súborov s diakritikou**, ktoré umožňuje zachovať diakritiku pri nahrávaní, vytváraní a premenovaní súborov a priečinkov v priečinkoch `/files`, `/images` a `/shared`. Bez tohto práva sa názvy naďalej automaticky upravia bez diakritiky (#58589).
+- Prihlásenie - zrýchlené načítanie úvodnej stránky v administrácii - pridaná vyrovnávacia pamäť pre zoznam posledných stránok, zmenených stránok a auditných záznamov (#58589).
 
 ### Bezpečnosť
 
