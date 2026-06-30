@@ -86,7 +86,7 @@ public class IwcmFsVolume implements FsVolume
 	}
 
 	@Override
-	public void createFolder(FsItem fsi) throws IOException
+	public void createFolder(FsItem fsi, FsItemEx fsie) throws IOException
 	{
 		IwcmFsItem fsii = (IwcmFsItem) fsi;
 		IwcmFile f = asFile(fsi);
@@ -94,7 +94,7 @@ public class IwcmFsVolume implements FsVolume
 		if (canWrite(f))
 		{
 			//odstran diakritiku
-			String newDir = removeSpecialChars(f.getName(), f.getVirtualPath(), sk.iway.iwcm.system.elfinder.FsService.getCurrentUser()).toLowerCase();
+			String newDir = removeSpecialChars(f.getName(), f.getVirtualPath(), fsie, sk.iway.iwcm.system.elfinder.FsService.getCurrentUser());
 			IwcmFile f2 = new IwcmFile(f.getParentFile(), newDir);
 			fsii.setFile(f2);
 
@@ -514,10 +514,11 @@ public class IwcmFsVolume implements FsVolume
 	 * @throws IOException
 	 */
 	public static String removeSpecialChars(String name, FsItemEx fsi, Identity user) throws IOException {
-		return removeSpecialChars(name, fsi.getPath(), user);
+		return removeSpecialChars(name, fsi.getPath(), fsi, user);
 	}
 
-	public static String removeSpecialChars(String name, String path, Identity user) throws IOException {
+	public static String removeSpecialChars(String name, String path, FsItemEx fsi, Identity user) throws IOException {
+		user = filterUserByFsi(user, fsi);
 		if (path.startsWith("/files") || path.startsWith("/images") || path.startsWith("/shared")) {
 			// If user has special permission, he can
 			if(user == null || user.isEnabledItem("fbrowser_allow_diacritics") == false) {
@@ -526,5 +527,21 @@ public class IwcmFsVolume implements FsVolume
 			}
 		}
 		return name;
+	}
+
+	/**
+	 * fbrowser_allow_diacritics is allowed only in FileBrowser, not image/file dialog in webpages
+	 * @param user
+	 * @param fsi
+	 * @return
+	 */
+	private static Identity filterUserByFsi(Identity user, FsItemEx fsi) {
+		int serviceType = -1;
+		if (fsi.getService() != null && fsi.getService() instanceof sk.iway.iwcm.system.elfinder.FsService fs) {
+			serviceType = fs.getSelectedType();
+		}
+		//allow upload diacritics only in file FileBrowser (Prieskumnik) not in image/link dialog in webpages
+		if (serviceType == FsService.TYPE_ALL || serviceType == FsService.TYPE_FILES || serviceType == FsService.TYPE_PAGES) return user;
+		return null;
 	}
 }

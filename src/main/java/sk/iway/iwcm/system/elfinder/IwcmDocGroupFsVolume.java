@@ -105,7 +105,7 @@ public class IwcmDocGroupFsVolume implements FsVolume
 	}
 
 	@Override
-	public void createFolder(FsItem fsi) throws IOException
+	public void createFolder(FsItem fsi, FsItemEx fsie) throws IOException
 	{
 		//asFile(fsi).mkdirs();
 		IwcmDocGroupItem item = asDocGroup(fsi);
@@ -566,7 +566,7 @@ public class IwcmDocGroupFsVolume implements FsVolume
 		newGroup.setGroupName(itemSrc.getGroup().getGroupName());
 
 		IwcmDocGroupItem itemNewGroup = new IwcmDocGroupItem(this, newGroup);
-		createFolder((FsItem)itemNewGroup);
+		createFolder((FsItem)itemNewGroup, src);
 
 		for (FsItemEx c : src.listChildren())
 		{

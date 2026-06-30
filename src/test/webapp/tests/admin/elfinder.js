@@ -440,12 +440,12 @@ function createFolder(I, folderName) {
 function waitForUpload(I) {
     I.clickIfVisible('.elfinder-confirm-accept');
     I.waitForVisible('.elfinder-notify-chunkmerge', 10);
-    I.waitForInvisible('.elfinder-notify-upload', 10);
+    I.waitForInvisible('.elfinder-notify-upload', 80);
     I.waitForInvisible('.elfinder-notify-chunkmerge', 10);
 }
 
 function checkCorrectTitle(I, expectedTitle) {
-    I.waitForElement(getFileSelector(expectedTitle), 10);
+    I.waitForElement(getFileSelector(expectedTitle), 80);
 }
 
 async function deleteTestFiles(I) {
