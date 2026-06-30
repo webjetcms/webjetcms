@@ -13,6 +13,9 @@ const valueC = "Celková hodnota top 10 krajín presahuje 62 biliónov dolárov 
 
 Scenario('Allow rag semantic search', ({ I, DT, Document }) => {
     Document.setConfigValue("ragSemanticSearchEnabled", "true");
+
+    // DELETE FROM rag_embedding_chunks;
+    // /Aplikácie/Vyhľadávanie/semantic_parent - DO NOT check include subdirs
 });
 
 Scenario('Chunks - base test', ({ I, DT }) => {
@@ -33,6 +36,7 @@ Scenario('Chunks - base test', ({ I, DT }) => {
     I.say("Check default dir");
     checkPathInRootDir(I, "Všetky priečinky");
     I.uncheckOption("#includeSubfolders");
+    DT.waitForLoader();
 
     I.say("See subfolder value");
     DT.filterContains("chunkText", valueA);
@@ -64,6 +68,7 @@ Scenario('Chunks test + run deleting index action', ({ I, DT }) => {
     I.say("Check pre-selected root dir");
     checkPathInRootDir(I, rootDirPath);
     I.uncheckOption("#includeSubfolders");
+    DT.waitForLoader();
 
     I.say("Check that index action buttons are there");
     I.seeElement("button.btnAddIndex");
@@ -163,7 +168,7 @@ Scenario('After removing action - checks', ({ I, DT }) => {
     I.clickCss("button.btnRemoveIndex");
     I.waitForVisible("#modalIframeIframeElement");
     I.switchTo("#modalIframeIframeElement");
-    I.seeElement("#editorApprootDir input[value='" + rootDirPath + "']");
+    I.waitForElement("#editorApprootDir input[value='" + rootDirPath + "']", 10);
 
     I.say("Parent folder should be unchanged");
     checkIndexingStatusValues(I, 1, 5, 5, 0);
@@ -243,7 +248,7 @@ Scenario('After adding action - checks', ({ I, DT }) => {
     I.clickCss("button.btnAddIndex");
     I.waitForVisible("#modalIframeIframeElement");
     I.switchTo("#modalIframeIframeElement");
-    I.seeElement("#editorApprootDir input[value='" + rootDirPath + "']");
+    I.waitForElement("#editorApprootDir input[value='" + rootDirPath + "']", 10);
     checkIndexingStatusValues(I, 1, 5, 5, 0);
 
     I.say("Include sub-folders");
@@ -277,7 +282,8 @@ function selectTree(I, buttonSelector, nodesArr) {
 }
 
 function checkIndexingStatusValues(I, allGroups, allDoc, indexedDoc, queuedDoc) {
-    I.seeElement(locate("#allGroups").withText(allGroups + ""));
+    I.waitForElement("#allGroups", 10);
+    I.waitForElement(locate("#allGroups").withText(allGroups + ""), 10);
     I.seeElement(locate("#allDoc").withText(allDoc + ""));
     I.seeElement(locate("#indexedDoc").withText(indexedDoc + ""));
     I.seeElement(locate("#queuedDoc").withText(queuedDoc + ""));

@@ -1015,8 +1015,8 @@ public class Constants {
 
 		setString("htmlToPdfReadonlyDocIds", "", MOD_SECURITY,
 				"zoznam docId stranok oddeleny medzerou, +, alebo ;, ktorym sa pri konverzii do PDF nastavi readonly, tzn. obsah PDF sa nebude moct kopirovat, editovat.");
-		setString("editorSingleCharNbsp", "a,i,o,u,s,so,z,zo,v,vo,na,do,od,pre,k,\\d+\\.?", MOD_EDITOR,
-				"Pre kazdu spojku v zozname sa medzera za nou nahradza &nbsp;");
+		setString("editorSingleCharNbsp", "a,i,o,u,s,so,z,zo,v,vo,na,do,od,pre,k,\\d+(?:[.§§§]\\d+)?\\.?", MOD_EDITOR,
+				"Pre kazdu spojku v zozname sa medzera za nou nahradza &nbsp;. Ak potrebujete v regexp znak ciarka pouzite §§§ ten sa naradí po parsingu za ciarku.");
 
 		setBoolean("zmluvyApprovEditChanges", false, "zmluvy",
 				"Pokial je nastavena hodnota na true, tak editovanu zmluvu bude treba opatovne schvalit na publikaciu. E-mail o zmene sa posle schvalovatelom ci je hodnota true alebo false.");

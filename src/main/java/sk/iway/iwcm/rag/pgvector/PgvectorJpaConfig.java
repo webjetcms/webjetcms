@@ -78,16 +78,16 @@ public class PgvectorJpaConfig {
 
     /**
      * Returns the datasource name for RAG pgvector operations.
-     * If primary DB is PostgreSQL, use it directly.
-     * If a secondary 'rag_jpa' datasource exists, use that.
+        * If a secondary 'rag_jpa' datasource exists, use it.
+        * Otherwise, if primary DB is PostgreSQL, use 'iwcm', because it can run pgvector extension.
      * Otherwise return null (RAG not available).
      */
     public static String getRagDataSourceName() {
-        if (Constants.DB_TYPE == Constants.DB_PGSQL) {
-            return "iwcm";
-        }
         if (DBPool.getInstance().getDataSource(RAG_DATASOURCE_NAME) != null) {
             return RAG_DATASOURCE_NAME;
+        }
+        if (Constants.DB_TYPE == Constants.DB_PGSQL) {
+            return "iwcm";
         }
         return null;
     }

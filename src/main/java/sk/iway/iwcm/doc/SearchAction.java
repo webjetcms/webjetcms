@@ -35,6 +35,7 @@ import sk.iway.iwcm.components.file_archiv.FileArchivatorBean;
 import sk.iway.iwcm.components.file_archiv.FileArchivatorDB;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.rag.search.SemanticSearchService;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.users.UsersDB;
@@ -969,15 +970,26 @@ public class SearchAction
 	{
 		PageParams pageParams = new PageParams(request);
 
-		String searchType = Constants.getString("searchType");
+		String searchType = pageParams.getValue("searchType", "");
+		if(Tools.isEmpty(searchType) || "auto".equals(searchType)) {
+			// Empty and auto keep the globally configured search type.
+			searchType = Constants.getString("searchType");
+		}
+
 		if ("lucene".equals(searchType) || Constants.getBoolean("luceneAsDefaultSearch") || "true".equals(request.getParameter("useLucene")) || pageParams.getBooleanValue("useLucene", false))
 		{
+			// useLucene=true allows comparing standard database search with Lucene search.
 			return LuceneSearchAction.search(request);
 		}
-		if ("semantic".equals(searchType) || "true".equals(request.getParameter("useSemantic")) || pageParams.getBooleanValue("useSemantic", false))
+		if ("semantic".equals(searchType) || "hybrid".equals(searchType) || "true".equals(request.getParameter("useSemantic")) || pageParams.getBooleanValue("useSemantic", false))
 		{
-			return SemanticSearchAction.search(request, response);
+			if (isSemanticSearchAvailable()) {
+				return SemanticSearchAction.search(request, response);
+			}
+
+			Logger.debug(SearchAction.class, "Semantic/hybrid search requested but semantic search is not available, falling back to database search");
 		}
+		// ELSE - standard database search
 
 		String forward = resolveForward(request.getParameter("lng"), request.getParameter("forward"));
 		long wait;
@@ -1976,4 +1988,18 @@ public class SearchAction
     public static String[] getCheckInputParams() {
 		return SearchTools.getCheckInputParams();
     }
+
+	/**
+	 * Checks whether semantic search service and vector store are available.
+	 * If unavailable, caller should fall back to standard database search.
+	 */
+	private static boolean isSemanticSearchAvailable() {
+		try {
+			SemanticSearchService semanticSearchService = Tools.getSpringBean("semanticSearchService", SemanticSearchService.class);
+			return semanticSearchService != null && semanticSearchService.isAvailable();
+		} catch (RuntimeException ex) {
+			Logger.error(SearchAction.class, "Failed to resolve semanticSearchService, falling back to database search: " + ex.getMessage());
+			return false;
+		}
+	}
 }

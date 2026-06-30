@@ -34,6 +34,10 @@
 
 - Přidána podpora [sémantického vyhledávání](redactor/apps/semantic-search/README.md) postaveného na technologii vektorové databáze `pgvector` a `OpenAI embeddings`. Umožňuje návštěvníkům najít relevantní stránky na základě **významu otázky**, nejen shody klíčových slov (#211).
 
+- Doplněný hybridní režim sémantického vyhledávání a volitelná RAG odpověď z indexovaného obsahu. Aplikace **Vyhledávání** má nová nastavení pro typ vyhledávání, hybridní chování, výběr AI asistenta a limity kontextu odpovědi (#58521).
+
+![](redactor/apps/semantic-search/rag-result.png)
+
 ### Aplikace
 
 - Přidána nová aplikace [Přesměrování podle jazyka](redactor/apps/language-redirect/README.md) pro automatické přesměrování návštěvníků na jazykovou verzi stránky podle detekce jazyka z HTTP hlavičky `Accept-Language`. Podporuje až 8 přiřazení jazyků na URL adresy, respektování jazykového cookie a možnost přesměrování pouze na kořenové URL (#58497).
@@ -56,6 +60,7 @@
 ### Bezpečnost
 
 - Přidána podpora generování `nonce` pro [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
+- AI asistenti - přidána ochrana před `prompt injection` útoky s oddělením systémových instrukcí od uživatelského obsahu a detekcí kódovaných vstupů (#58549).
 
 ### Dokumentace
 
@@ -79,6 +84,7 @@
 ![](frontend/webpages/customfields/custom-fields-settings-editor.png)
 
 - Aktualizovaná knihovna [Tabler Icons](https://tabler.io/icons) na verzi 3.44.0, vyřešen problém se současným používáním `Outline` a `Filled` sad (#58509).
+- Web stránky - pokud potřebujete mít prázdný první řádek v konfigurační proměnné `imageMagickCustomParams*` pro [nastavení vlastních parametrů](redactor/apps/gallery/README.md#vlastní-parametry-imagemagick) `ImageMagick` zadejte hodnotu `---`.
 
 ## 2026.18
 
@@ -279,6 +285,7 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 - Úlohy na pozadí - přidána možnost spustit [úlohu na pozadí](admin/settings/cronjob/README.md) pouze na uzlech v plné konfiguraci nebo na veřejných uzlech (#246).
 - Generátor primárních klíčů - doplněna automatická oprava jmen tabulek a názvů sloupce s primární hodnotou (#246).
 - Bezpečnost - opravené chyby Local File Inclusion, kontrola nahrávaných souborů a RCE. Děkujeme Josef Korbel (Citadelo) za nahlášení těchto zranitelností (#252).
+- JPA - opraveno vícenásobné ukončení databázové transakce při importu přesměrování (#256).
 
 ## 2026.0.25
 

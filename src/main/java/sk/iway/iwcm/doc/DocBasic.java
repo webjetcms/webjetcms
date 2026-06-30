@@ -59,6 +59,28 @@ public class DocBasic implements DocGroupInterface, Serializable
 	private static final BigDecimal VALUE_OF_1 = new BigDecimal(1);
 	private static final BigDecimal VALUE_OF_100 = new BigDecimal(100);
 
+	public enum FollowLinksMode {
+		SEARCHABLE(0),
+		FOLLOW(1),
+		NOFOLLOW(2);
+
+		private final int value;
+
+		FollowLinksMode(int value) {
+			this.value = value;
+		}
+
+		public int getValue() {
+			return value;
+		}
+
+		public static FollowLinksMode fromValue(int value) {
+			if (value == FOLLOW.value) return FOLLOW;
+			if (value == NOFOLLOW.value) return NOFOLLOW;
+			return SEARCHABLE;
+		}
+	}
+
 	@Column(name = "group_id")
 	private int groupId = 0;
 
@@ -203,6 +225,21 @@ public class DocBasic implements DocGroupInterface, Serializable
 		}
 	)
 	private boolean searchable = false;
+
+	@Column(name = "follow_links")
+	@DataTableColumn(inputType = DataTableColumnType.SELECT, title="editor.follow_links", tab="basic",
+		visible = false,
+		editor = {
+			@DataTableColumnEditor(
+				options = {
+					@DataTableColumnEditorAttr(key = "editor.follow_links.searchable", value = "0"),
+					@DataTableColumnEditorAttr(key = "editor.follow_links.follow", value = "1"),
+					@DataTableColumnEditorAttr(key = "editor.follow_links.nofollow", value = "2")
+				}
+			)
+		}
+	)
+	private int followLinks = FollowLinksMode.SEARCHABLE.getValue();
 
 	@Column(name = "cacheable")
 	@DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title="editor.cache", tab="basic",
@@ -1887,6 +1924,27 @@ public class DocBasic implements DocGroupInterface, Serializable
 
 	public void setSearchable(boolean searchable) {
 		this.searchable = searchable;
+	}
+
+	@JsonIgnore
+	public FollowLinksMode getFollowLinksMode() {
+		return FollowLinksMode.fromValue(followLinks);
+	}
+
+	public void setFollowLinksMode(FollowLinksMode followLinksMode) {
+		if (followLinksMode == null) {
+			this.followLinks = FollowLinksMode.SEARCHABLE.getValue();
+		} else {
+			this.followLinks = followLinksMode.getValue();
+		}
+	}
+
+	public int getFollowLinks() {
+		return getFollowLinksMode().getValue();
+	}
+
+	public void setFollowLinks(int followLinks) {
+		setFollowLinksMode(FollowLinksMode.fromValue(followLinks));
 	}
 
 	public void setCacheable(boolean cacheable) {
