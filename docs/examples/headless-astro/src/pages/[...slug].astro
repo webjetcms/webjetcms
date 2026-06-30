@@ -35,8 +35,6 @@ if (navSetCookie) {
 ---
 
 <Layout title={page?.title || 'WebJET CMS — Headless Demo'} navItems={nav} currentPath={apiPath}>
-  <script is:inline src="/components/form/check_form.js"></script>
-  <script is:inline src="/components/_common/javascript/ajax_form_send.js.jsp"></script>
   {error ? (
     <div class="error"><strong>Error:</strong> {error}</div>
   ) : page ? (
