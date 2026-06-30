@@ -60,7 +60,6 @@ public class EditorUtils {
 				StringBuffer sb = new StringBuffer();
 				String conjunctionPattern = conjunctions.replace(',', '|');
 				//fix regexp / comma symbol
-				conjunctionPattern = Tools.replace(conjunctionPattern, "[.|]", "[.,]");
 				conjunctionPattern = Tools.replace(conjunctionPattern, "§§§", ",");
 
 				String replacePattern = "(?i)(\\s|&nbsp;)(" + conjunctionPattern + ")\\s";
