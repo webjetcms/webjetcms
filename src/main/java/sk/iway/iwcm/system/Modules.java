@@ -737,6 +737,17 @@ public class Modules
 		setAvailable(sub);
 		files.addSubmenu(sub);
 
+		sub = new ModuleInfo();
+		sub.setNameKey("menu.fbrowser.allowFileDiacritics");
+		sub.setPath("javascript:void()");
+		sub.setWjVersions("BPECDIMO");
+		sub.setUserItem(true);
+		sub.setItemKey("fbrowser_allow_diacritics");
+		sub.setDefaultDisabled(true);
+		sub.setMenuIcon("text-spellcheck");
+		setAvailable(sub);
+		files.addSubmenu(sub);
+
 		loadModule(files);
 
 

@@ -86,7 +86,7 @@ public class IwcmFsVolume implements FsVolume
 	}
 
 	@Override
-	public void createFolder(FsItem fsi) throws IOException
+	public void createFolder(FsItem fsi, FsItemEx fsie) throws IOException
 	{
 		IwcmFsItem fsii = (IwcmFsItem) fsi;
 		IwcmFile f = asFile(fsi);
@@ -94,12 +94,9 @@ public class IwcmFsVolume implements FsVolume
 		if (canWrite(f))
 		{
 			//odstran diakritiku
-			if (f.getVirtualPath().startsWith("/files") || f.getVirtualPath().startsWith("/images"))
-			{
-				String newDir = DB.internationalToEnglish(DocTools.removeCharsDir(f.getName(), true).toLowerCase());
-				IwcmFile f2 = new IwcmFile(f.getParentFile(), newDir);
-				fsii.setFile(f2);
-			}
+			String newDir = removeSpecialChars(f.getName(), f.getVirtualPath(), fsie, sk.iway.iwcm.system.elfinder.FsService.getCurrentUser());
+			IwcmFile f2 = new IwcmFile(f.getParentFile(), newDir);
+			fsii.setFile(f2);
 
 			fsii.getFile().mkdirs();
 
@@ -516,12 +513,35 @@ public class IwcmFsVolume implements FsVolume
 	 * @return
 	 * @throws IOException
 	 */
-	public static String removeSpecialChars(String name, FsItemEx fsi) throws IOException {
-		if (fsi.getPath().startsWith("/files") || fsi.getPath().startsWith("/images"))
-		{
-			name = DB.internationalToEnglish(name);
-			name = DocTools.removeCharsDir(name, true).toLowerCase();
+	public static String removeSpecialChars(String name, FsItemEx fsi, Identity user) throws IOException {
+		return removeSpecialChars(name, fsi.getPath(), fsi, user);
+	}
+
+	public static String removeSpecialChars(String name, String path, FsItemEx fsi, Identity user) throws IOException {
+		user = filterUserByFsi(user, fsi);
+		if (path.startsWith("/files") || path.startsWith("/images") || path.startsWith("/shared")) {
+			// If user has special permission, he can
+			if(user == null || user.isEnabledItem("fbrowser_allow_diacritics") == false) {
+				name = DB.internationalToEnglish(name);
+				name = DocTools.removeCharsDir(name, true).toLowerCase();
+			}
 		}
 		return name;
+	}
+
+	/**
+	 * fbrowser_allow_diacritics is allowed only in FileBrowser, not image/file dialog in webpages
+	 * @param user
+	 * @param fsi
+	 * @return
+	 */
+	private static Identity filterUserByFsi(Identity user, FsItemEx fsi) {
+		int serviceType = -1;
+		if (fsi.getService() != null && fsi.getService() instanceof sk.iway.iwcm.system.elfinder.FsService fs) {
+			serviceType = fs.getSelectedType();
+		}
+		//allow upload diacritics only in file FileBrowser (Prieskumnik) not in image/link dialog in webpages
+		if (serviceType == FsService.TYPE_ALL || serviceType == FsService.TYPE_FILES || serviceType == FsService.TYPE_PAGES) return user;
+		return null;
 	}
 }

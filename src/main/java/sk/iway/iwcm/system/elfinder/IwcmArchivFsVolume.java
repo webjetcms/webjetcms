@@ -10,6 +10,7 @@ import java.util.List;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 
+import cn.bluejoe.elfinder.controller.executor.FsItemEx;
 import cn.bluejoe.elfinder.service.FsItem;
 import cn.bluejoe.elfinder.service.FsVolume;
 import cn.bluejoe.elfinder.util.MimeTypesUtils;
@@ -37,7 +38,7 @@ public class IwcmArchivFsVolume implements FsVolume {
     }
 
     @Override
-    public void createFolder(FsItem fsi) throws IOException {
+    public void createFolder(FsItem fsi, FsItemEx fsie) throws IOException {
         throw new NotImplementedException();
     }
 
