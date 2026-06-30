@@ -507,3 +507,25 @@ body {
 
   .header-nav { display: none; }
 }
+
+/* ===== News ===== */
+.md-news-subpage a {
+  position: relative;
+  display: block;
+}
+.md-news-subpage span.tag {
+  display: block;
+  padding: 0 10px;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  font-size: 11px;
+  color: #fff;
+  text-transform: uppercase;
+}
+.md-news-subpage span.tag.c1 {
+  background: #ffaa00;
+}
+.md-news-subpage span.tag.c2 {
+  background: #00a3e0;
+}
