@@ -30,6 +30,7 @@ export default defineConfig({
       host: process.env.HEADLESS_HOST || '127.0.0.1',
       port: parseInt(process.env.HEADLESS_PORT || '3000'),
       allowedHosts: [
+        'headless.interway.sk',
         'iwcm.interway.sk',
         'localhost',
         '127.0.0.1',
