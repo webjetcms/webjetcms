@@ -163,6 +163,40 @@ Responses:
 - 200 search result envelope.
 - 400 for invalid query.
 
+
+### 6.6 REST IP Protection Pattern (Mandatory)
+
+All new REST controllers in the `sk.iway.iwcm.headless.rest` package (and any future headless REST services) **must** inherit IP protection from the base `sk.iway.iwcm.rest.RestController` class.
+
+**Implementation requirements:**
+1. Every new REST controller must extend `sk.iway.iwcm.rest.RestController` (fully qualified name to avoid conflict with Spring's `@RestController`).
+2. Call `isIpAddressAllowed(HttpServletRequest request)` at the **start** of every endpoint method body, before any business logic.
+3. The method reads IP whitelist from config keys:
+   - `restAllowedIpAddresses-{ClassName}` (class-specific, takes priority)
+   - `restAllowedIpAddresses` (shared fallback)
+4. If the IP is not allowed, the method throws a 401 `ResponseStatusException`.
+5. Use `"*"` as the config value to allow all IPs.
+
+**Example pattern:**
+```java
+@RestController
+@RequestMapping("/rest/headless/v1/example")
+public class ExampleRestController extends sk.iway.iwcm.rest.RestController {
+
+    @GetMapping("/data")
+    public ResponseEntity<DataResponse> getData(HttpServletRequest request) {
+        isIpAddressAllowed(request);  // Must be first line
+        // ... business logic
+    }
+}
+```
+
+**Configuration keys to set (in properties/config):**
+- `restAllowedIpAddresses-ExampleRestController` — class-specific whitelist
+- `restAllowedIpAddresses` — shared fallback for all REST controllers
+
+**Note:** The `isIpAddressAllowed` method is inherited from `sk.iway.iwcm.rest.RestController` — do not re-implement it.
+
 ## 7. JSON Contracts
 
 ### 7.1 PageResponse
