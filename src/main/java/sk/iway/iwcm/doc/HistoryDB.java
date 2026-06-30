@@ -155,7 +155,7 @@ public class HistoryDB extends DB
 					doc.setGroupId(rs.getInt("group_id"));
 					doc.setTempId(rs.getInt("temp_id"));
 					doc.setSearchable(rs.getBoolean("searchable"));
-					doc.setFollowLinks(rs.getInt("follow_links"));
+					try { doc.setFollowLinks(rs.getInt("follow_links")); } catch (Exception ex) { doc.setFollowLinks(0); }
 					doc.setAvailable(rs.getBoolean("available"));
 					doc.setPasswordProtected(getDbString(rs, "password_protected"));
 					doc.setCacheable(rs.getBoolean("cacheable"));
@@ -297,7 +297,7 @@ public class HistoryDB extends DB
 					doc.setGroupId(rs.getInt("group_id"));
 					doc.setTempId(rs.getInt("temp_id"));
 					doc.setSearchable(rs.getBoolean("searchable"));
-					doc.setFollowLinks(rs.getInt("follow_links"));
+					try { doc.setFollowLinks(rs.getInt("follow_links")); } catch (Exception ex) { doc.setFollowLinks(0); }
 					doc.setAvailable(rs.getBoolean("available"));
 					doc.setPasswordProtected(getDbString(rs, "password_protected"));
 					doc.setCacheable(rs.getBoolean("cacheable"));

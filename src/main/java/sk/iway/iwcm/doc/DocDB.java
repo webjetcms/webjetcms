@@ -2479,7 +2479,7 @@ public class DocDB extends DB
 				doc.setVirtualPath(normalizeVirtualPath(DB.getDbString(rs, "virtual_path")));
 				doc.setAvailable(rs.getBoolean("available"));
 				doc.setSearchable(rs.getBoolean("searchable"));
-				doc.setFollowLinks(rs.getInt("follow_links"));
+				try { doc.setFollowLinks(rs.getInt("follow_links")); } catch (Exception ex) { doc.setFollowLinks(0); }
 				doc.setShowInMenu(rs.getBoolean("show_in_menu"));
 				doc.setShowInSitemap(DB.getBoolean(rs, "show_in_sitemap"));
 				doc.setShowInNavbar(DB.getBoolean(rs, "show_in_navbar"));
@@ -3326,7 +3326,7 @@ public class DocDB extends DB
 			}
 
 			doc.setSearchable(rs.getBoolean("searchable"));
-			doc.setFollowLinks(rs.getInt("follow_links"));
+			try { doc.setFollowLinks(rs.getInt("follow_links")); } catch (Exception ex) { doc.setFollowLinks(0); }
 			doc.setGroupId(rs.getInt("group_id"));
 			doc.setAvailable(rs.getBoolean("available"));
 			doc.setShowInMenu(rs.getBoolean("show_in_menu"));
@@ -5034,7 +5034,7 @@ public class DocDB extends DB
 				doc.setVirtualPath(normalizeVirtualPath(DB.getDbString(rs, "virtual_path")));
 				doc.setAvailable(rs.getBoolean("available"));
 				doc.setSearchable(rs.getBoolean("searchable"));
-				doc.setFollowLinks(rs.getInt("follow_links"));
+				try { doc.setFollowLinks(rs.getInt("follow_links")); } catch (Exception ex) { doc.setFollowLinks(0); }
 				doc.setShowInMenu(rs.getBoolean("show_in_menu"));
 				doc.setSortPriority(rs.getInt("sort_priority"));
 				doc.setPasswordProtected(DB.getDbString(rs, "password_protected"));
