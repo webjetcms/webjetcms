@@ -13,9 +13,22 @@ function createFetchOptions(request?: Request): RequestInit {
   const options: RequestInit = {};
 
   if (request) {
+    const headers: Record<string, string> = {};
+
+    // Forward cookies from browser to CMS backend
     const cookies = request.headers.get('cookie');
     if (cookies) {
-      options.headers = { 'cookie': cookies };
+      headers['cookie'] = cookies;
+    }
+
+    // Forward Referer header to prevent XSRF rejection by CMS backend
+    const referer = request.headers.get('referer');
+    if (referer) {
+      headers['referer'] = referer;
+    }
+
+    if (Object.keys(headers).length > 0) {
+      options.headers = headers;
     }
   }
 
