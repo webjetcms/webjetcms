@@ -38,3 +38,10 @@ Generovanie obrázkov zaťažuje server, je teda chránené SPAM ochranou. Použ
 - `spamProtectionTimeout-ThumbServlet` - čas medzi HTTP požiadavkami, nastavené na hodnotu `-2` pre vypnutie, keďže na stránke môže byť viacero obrázkov, ktoré sa generujú naraz.
 - `spamProtectionHourlyLimit-ThumbServlet` - maximálny počet vygenerovaných obrázkov z jednej IP adresy za hodinu, predvolene nastavené na hodnotu `300`.
 - `cloudCloneAllowedIps` - zoznam začiatkov IP adries oddelených čiarkou pre ktoré sa obmedzenie nebude aplikovať, predvolene prázdne (nepoužije sa).
+- `thumbServletAllowedSizes` - zoznam povolených rozmerov súborov pre generovanie obrázka. Generuje sa vo formáte `{width}x{height}ip{ip}{noip}c{color}q{quality}`, parametre ktoré nie sú zadané nie su použité. Odporúčame použiť režim `learn` na prvotné nastavenie a následne nastaviť režim `check`.
+- `thumbServletAllowedSizeMode` - Nastavuje režim povolených rozmerov pre generovanie obrázka. Možné hodnoty:
+    - `learn` - pridá hodnotu ak nie je v zozname
+    - `deny` - zakáže akékoľvek generovanie nových obrázkov
+    - `allow` - povolí všetky rozmery
+    - `check` - povolí len zadané hodnoty
+    - ak je prihlásený administrátor automaticky platí režim learn.
