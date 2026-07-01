@@ -34,7 +34,6 @@ import sk.iway.iwcm.gallery.GalleryDB;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
 import sk.iway.iwcm.system.ConfDB;
-import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.context.ContextFilter;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.users.UsersDB;
@@ -799,8 +798,8 @@ public class ThumbServlet extends HttpServlet
 	}
 
 	private static boolean isSizePartInMap(String sizePart) {
-		if (allowedSizes == null) {
-			allowedSizes = new HashSet<>();
+		if (allowedSizes == null || allowedSizes.isEmpty()) {
+			if (allowedSizes == null) allowedSizes = new HashSet<>();
 			String allowedSizesStr = Constants.getString("thumbServletAllowedSizes");
 			if (Tools.isNotEmpty(allowedSizesStr)) {
 				String[] sizes = Tools.getTokens(allowedSizesStr, ",\n");
@@ -808,10 +807,6 @@ public class ThumbServlet extends HttpServlet
 					allowedSizes.add(size.trim());
 				}
 			}
-		}
-		if (allowedSizes.isEmpty()) {
-			// If no sizes are defined, allow all sizes
-			return false;
 		}
 		return allowedSizes.contains(sizePart);
 	}
@@ -835,10 +830,14 @@ public class ThumbServlet extends HttpServlet
 		ConfDB.setName("thumbServletAllowedSizes", currentValue, true);
 
 		//reset cache
-		allowedSizes = null;
+		cleanAllowedSizesCache();
 	}
 
 	public static void cleanAllowedSizesCache() {
-		allowedSizes = null;
+		try {
+			if (allowedSizes != null) allowedSizes.clear();
+		} catch (Exception e) {
+			allowedSizes = null;
+		}
 	}
 }
