@@ -4,6 +4,9 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,6 +33,8 @@ import sk.iway.iwcm.gallery.GalleryBean;
 import sk.iway.iwcm.gallery.GalleryDB;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.system.ConfDB;
+import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.context.ContextFilter;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.users.UsersDB;
@@ -59,6 +64,8 @@ public class ThumbServlet extends HttpServlet
 	private static Pattern pattern = Pattern.compile("[a-z\\-_0-9A-Z]*-(\\d+)x(\\d+)(ip(\\d))?(c([\\da-f]+))?(q(\\d+))?\\.[a-z]{3,4}\\b");
 
 	//public static final String CACHE_DIR = "/WEB-INF/imgcache/";
+
+	private static Set<String> allowedSizes = null;
 
 
 	@Override
@@ -351,6 +358,15 @@ public class ThumbServlet extends HttpServlet
 				{
 					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 					return;
+				}
+
+				if (canPost == true) {
+					boolean isSizeAllowd = isSizeAllowed(realPathSmall, user);
+					if (isSizeAllowd == false)
+					{
+						response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+						return;
+					}
 				}
 
 				String thumbWriteServer = Constants.getString("thumbWriteServer");
@@ -749,5 +765,79 @@ public class ThumbServlet extends HttpServlet
 			sk.iway.iwcm.Logger.error(e);
 		}
 		return realPathSmall;
+	}
+
+	/**
+	 * Checks if the requested size is allowed based on the configuration and user permissions
+	 * @param realPathSmall
+	 * @param user
+	 * @return
+	 */
+	public static boolean isSizeAllowed(String realPathSmall, Identity user) {
+		// ...imgcache/images/image-730x401ip5ncff00ffq90.jpg -> 730x401ip5ncff00ffq90
+		int lastDashIndex = realPathSmall.lastIndexOf('-');
+		int lastDotIndex = realPathSmall.lastIndexOf('.');
+		if (lastDashIndex == -1 || lastDotIndex == -1 || lastDotIndex < lastDashIndex) return false;
+		String sizePart = realPathSmall.substring(lastDashIndex + 1, lastDotIndex);
+
+		// verify that sizePart is allowed
+		if (isSizePartInMap(sizePart)) {
+			return true;
+		}
+
+		String mode = Constants.getString("thumbServletAllowedSizesMode");
+		if ("deny".equals(mode)) return false;
+
+		if ("learn".equals(mode) || (user != null && user.isAdmin())) {
+			//add sizePart to allowed sizes
+			addSizePartToMap(sizePart);
+			return true; // Admins can request any size
+		}
+
+		return false;
+	}
+
+	private static boolean isSizePartInMap(String sizePart) {
+		if (allowedSizes == null) {
+			allowedSizes = new HashSet<>();
+			String allowedSizesStr = Constants.getString("thumbServletAllowedSizes");
+			if (Tools.isNotEmpty(allowedSizesStr)) {
+				String[] sizes = Tools.getTokens(allowedSizesStr, ",\n");
+				for (String size : sizes) {
+					allowedSizes.add(size.trim());
+				}
+			}
+		}
+		if (allowedSizes.isEmpty()) {
+			// If no sizes are defined, allow all sizes
+			return false;
+		}
+		return allowedSizes.contains(sizePart);
+	}
+
+	private static void addSizePartToMap(String sizePart) {
+		String currentValue = Constants.getString("thumbServletAllowedSizes");
+		String separator = "\n";
+		if (currentValue != null && currentValue.contains(",")) {
+			separator = ",";
+		}
+
+		if (Tools.isNotEmpty(currentValue)) currentValue += separator + sizePart;
+		else currentValue = sizePart;
+
+		//sort values
+		String[] sizes = Tools.getTokens(currentValue, ",\n");
+		Arrays.sort(sizes);
+		currentValue = String.join(separator, sizes);
+
+		//save do database
+		ConfDB.setName("thumbServletAllowedSizes", currentValue, true);
+
+		//reset cache
+		allowedSizes = null;
+	}
+
+	public static void cleanAllowedSizesCache() {
+		allowedSizes = null;
 	}
 }

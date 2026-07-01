@@ -22,7 +22,9 @@ import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.ninja.Ninja;
+import sk.iway.iwcm.editor.ThumbServlet;
 import sk.iway.iwcm.stat.StatDB;
+import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
@@ -246,6 +248,13 @@ public class ConfDB
 		return value;
 	}
 
+	public static boolean setName(String nameParam, String value, boolean refreshCluster)
+	{
+		boolean ret = setName(nameParam, value);
+		if (ret && refreshCluster) ClusterDB.addRefresh("sk.iway.iwcm.system.ConfDB-" + nameParam);
+		return ret;
+	}
+
 	public static boolean setName(String nameParam, String value)
 	{
 		if (Tools.isEmpty(nameParam)) return false;
@@ -360,6 +369,7 @@ public class ConfDB
 			else if ("multiDomainFolders".equals(name)) MultiDomainFilter.clearDomainFolders();
 			else if ("xssHtmlAllowedFields".equals(name)) DB.resetHtmlAllowedFields();
 			else if ("ninjaNbspReplaceRegex".equals(name)) Ninja.resetNbspReplaceRegex();
+			else if ("thumbServletAllowedSizes".equals(name)) ThumbServlet.cleanAllowedSizesCache();
 			Constants.setString(name, value);
 		}
 	}
