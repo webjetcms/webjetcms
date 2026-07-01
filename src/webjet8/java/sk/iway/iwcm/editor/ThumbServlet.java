@@ -774,6 +774,9 @@ public class ThumbServlet extends HttpServlet
 	 * @return
 	 */
 	public static boolean isSizeAllowed(String realPathSmall, Identity user) {
+		String mode = Constants.getString("thumbServletAllowedSizeMode");
+		if ("deny".equals(mode)) return false;
+
 		// ...imgcache/images/image-730x401ip5ncff00ffq90.jpg -> 730x401ip5ncff00ffq90
 		int lastDashIndex = realPathSmall.lastIndexOf('-');
 		int lastDotIndex = realPathSmall.lastIndexOf('.');
@@ -784,9 +787,6 @@ public class ThumbServlet extends HttpServlet
 		if (isSizePartInMap(sizePart)) {
 			return true;
 		}
-
-		String mode = Constants.getString("thumbServletAllowedSizesMode");
-		if ("deny".equals(mode)) return false;
 
 		if ("learn".equals(mode) || (user != null && user.isAdmin())) {
 			//add sizePart to allowed sizes
