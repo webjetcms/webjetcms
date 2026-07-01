@@ -77,18 +77,18 @@ if (navSetCookie) {
             <div class="news-item">
               <a href="${item.virtualPath}">${item.title}</a>
               <div class="news-meta">
-                ${item.virtualPath ? \`<span>\${item.virtualPath}</span>\` : ''}
-                ${item.language ? \`<span> &middot; \${item.language}</span>\` : ''}
+                ${item.virtualPath ? `<span>${item.virtualPath}</span>` : ''}
+                ${item.language ? `<span> &middot; ${item.language}</span>` : ''}
               </div>
-              ${item.perex ? \`<div class="news-perex">\${item.perex}</div>\` : ''}
+              ${item.perex ? `<div class="news-perex">${item.perex}</div>` : ''}
             </div>
-          \`).join('');
+          `).join('');
         } else {
           root.innerHTML = '<div class="no-results"><p>No news items found.</p></div>';
         }
       } catch (e: unknown) {
         const message = e instanceof Error ? e.message : 'Unknown error';
-        root.innerHTML = \`<div class="error"><strong>Error:</strong> \${message}</div>\`;
+        root.innerHTML = `<div class="error"><strong>Error:</strong> ${message}</div>`;
       }
     }
 
