@@ -4,9 +4,11 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -64,7 +66,7 @@ public class ThumbServlet extends HttpServlet
 
 	//public static final String CACHE_DIR = "/WEB-INF/imgcache/";
 
-	private static Set<String> allowedSizes = null;
+	private static final AtomicReference<Set<String>> allowedSizesRef = new AtomicReference<>();
 
 
 	@Override
@@ -774,7 +776,7 @@ public class ThumbServlet extends HttpServlet
 	 */
 	public static boolean isSizeAllowed(String realPathSmall, Identity user) {
 		String mode = Constants.getString("thumbServletAllowedSizeMode");
-		if ("deny".equals(mode)) return false;
+		if ("deny".equals(mode) && (user == null || user.isAdmin()==false)) return false;
 		else if ("allow".equals(mode)) return true;
 
 		// ...imgcache/images/image-730x401ip5ncff00ffq90.jpg -> 730x401ip5ncff00ffq90
@@ -798,46 +800,69 @@ public class ThumbServlet extends HttpServlet
 	}
 
 	private static boolean isSizePartInMap(String sizePart) {
-		if (allowedSizes == null || allowedSizes.isEmpty()) {
-			if (allowedSizes == null) allowedSizes = new HashSet<>();
-			String allowedSizesStr = Constants.getString("thumbServletAllowedSizes");
-			if (Tools.isNotEmpty(allowedSizesStr)) {
-				String[] sizes = Tools.getTokens(allowedSizesStr, ",\n");
-				for (String size : sizes) {
-					allowedSizes.add(size.trim());
-				}
+		Set<String> allowedSizes = allowedSizesRef.get();
+		if (allowedSizes == null) {
+			Set<String> loadedAllowedSizes = loadAllowedSizesSnapshot();
+			if (allowedSizesRef.compareAndSet(null, loadedAllowedSizes)) {
+				allowedSizes = loadedAllowedSizes;
+			} else {
+				allowedSizes = allowedSizesRef.get();
 			}
 		}
-		return allowedSizes.contains(sizePart);
+
+		return allowedSizes != null && allowedSizes.contains(sizePart);
 	}
 
 	private static void addSizePartToMap(String sizePart) {
-		String currentValue = Constants.getString("thumbServletAllowedSizes");
-		String separator = "\n";
-		if (currentValue != null && currentValue.contains(",")) {
-			separator = ",";
+		while (true) {
+			Set<String> allowedSizes = allowedSizesRef.get();
+			if (allowedSizes == null) {
+				Set<String> loadedAllowedSizes = loadAllowedSizesSnapshot();
+				if (allowedSizesRef.compareAndSet(null, loadedAllowedSizes)) {
+					allowedSizes = loadedAllowedSizes;
+				} else {
+					continue;
+				}
+			}
+
+			if (allowedSizes.contains(sizePart)) {
+				return;
+			}
+
+			TreeSet<String> updatedAllowedSizes = new TreeSet<>(allowedSizes);
+			updatedAllowedSizes.add(sizePart);
+			Set<String> updatedSnapshot = Collections.unmodifiableSet(updatedAllowedSizes);
+
+			if (allowedSizesRef.compareAndSet(allowedSizes, updatedSnapshot)) {
+				String currentValue = Constants.getString("thumbServletAllowedSizes");
+				String separator = "\n";
+				if (currentValue != null && currentValue.contains(",")) {
+					separator = ",";
+				}
+
+				ConfDB.setName("thumbServletAllowedSizes", String.join(separator, updatedAllowedSizes), true);
+				return;
+			}
+		}
+	}
+
+	private static Set<String> loadAllowedSizesSnapshot() {
+		Set<String> loadedAllowedSizes = new HashSet<>();
+		String allowedSizesStr = Constants.getString("thumbServletAllowedSizes");
+		if (Tools.isNotEmpty(allowedSizesStr)) {
+			String[] sizes = Tools.getTokens(allowedSizesStr, ",\n");
+			for (String size : sizes) {
+				if (size != null) {
+					String normalizedSize = size.trim();
+					if (normalizedSize.isEmpty() == false) loadedAllowedSizes.add(normalizedSize);
+				}
+			}
 		}
 
-		if (Tools.isNotEmpty(currentValue)) currentValue += separator + sizePart;
-		else currentValue = sizePart;
-
-		//sort values
-		String[] sizes = Tools.getTokens(currentValue, ",\n");
-		Arrays.sort(sizes);
-		currentValue = String.join(separator, sizes);
-
-		//save do database
-		ConfDB.setName("thumbServletAllowedSizes", currentValue, true);
-
-		//reset cache
-		cleanAllowedSizesCache();
+		return Collections.unmodifiableSet(loadedAllowedSizes);
 	}
 
 	public static void cleanAllowedSizesCache() {
-		try {
-			if (allowedSizes != null) allowedSizes.clear();
-		} catch (Exception e) {
-			allowedSizes = null;
-		}
+		allowedSizesRef.set(null);
 	}
 }
