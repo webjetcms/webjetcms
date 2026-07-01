@@ -1,7 +1,6 @@
 package sk.iway.iwcm.headless.service;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,9 +9,9 @@ import org.mockito.Mock;
 import java.util.ArrayList;
 import java.util.List;
 
-import sk.iway.iway.iwcm.headless.dto.HeadlessNewsItem;
-import sk.iway.iway.iwcm.headless.dto.HeadlessNewsRequest;
-import sk.iway.iway.iwcm.headless.dto.HeadlessNewsResponse;
+import sk.iway.iwcm.headless.dto.HeadlessNewsItem;
+import sk.iway.iwcm.headless.dto.HeadlessNewsRequest;
+import sk.iway.iwcm.headless.dto.HeadlessNewsResponse;
 
 /**
  * Unit tests for HeadlessNewsService DTO mapping and validation logic.
@@ -23,7 +22,7 @@ class HeadlessNewsServiceTest {
     private HeadlessNewsService service;
 
     @Mock
-    private sk.iway.iway.iwcm.doc.GroupsDB groupsDB;
+    private sk.iway.iwcm.doc.GroupsDB groupsDB;
 
     @BeforeEach
     void setUp() {
@@ -128,7 +127,7 @@ class HeadlessNewsServiceTest {
         item.setPerex("/images/perex.jpg");
         item.setData("<p>Body content</p>");
         item.setGroupId(24);
-        item.setTemplateName("news");
+        item.setTempId(42);
         item.setAvailable(true);
 
         assertEquals(42, item.getDocId());
@@ -138,7 +137,7 @@ class HeadlessNewsServiceTest {
         assertEquals("/images/perex.jpg", item.getPerex());
         assertEquals("<p>Body content</p>", item.getData());
         assertEquals(24, item.getGroupId());
-        assertEquals("news", item.getTemplateName());
+        assertEquals(42, item.getTempId());
         assertTrue(item.isAvailable());
     }
 

@@ -206,9 +206,9 @@ export interface HeadlessNewsItem {
   publishStart?: string;
   publishEnd?: string;
   groupId: number;
-  templateName?: string;
+  tempId: number;
   available: boolean;
-  createDate?: string;
+  dateCreated: number;
 }
 
 export interface HeadlessNewsResponse {

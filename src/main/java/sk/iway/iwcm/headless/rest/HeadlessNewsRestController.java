@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.headless.dto.ErrorResponse;
+import sk.iway.iwcm.components.news.NewsActionBean;
+import sk.iway.iwcm.components.news.NewsQuery;
 import sk.iway.iwcm.headless.dto.FieldError;
 import sk.iway.iwcm.headless.dto.HeadlessNewsRequest;
 import sk.iway.iwcm.headless.dto.HeadlessNewsResponse;
@@ -157,9 +157,13 @@ public class HeadlessNewsRestController extends sk.iway.iwcm.rest.RestController
         return errors;
     }
 
-    private ResponseEntity<ErrorResponse> createValidationErrorResponse(List<FieldError> fieldErrors) {
-        ErrorResponse errorResponse = new ErrorResponse(400, "Validation Error", "Request validation failed.");
-        errorResponse.setFieldErrors(fieldErrors);
+    private ResponseEntity<HeadlessNewsResponse> createValidationErrorResponse(List<FieldError> fieldErrors) {
+        HeadlessNewsResponse errorResponse = new HeadlessNewsResponse();
+        errorResponse.setItems(new ArrayList<>());
+        errorResponse.setPage(0);
+        errorResponse.setSize(0);
+        errorResponse.setTotalElements(0);
+        errorResponse.setTotalPages(0);
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 }

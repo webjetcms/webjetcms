@@ -10,14 +10,14 @@ import org.mockito.Mock;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import sk.iway.iway.iwcm.Tools;
-import sk.iway.iway.iwcm.headless.dto.ErrorResponse;
-import sk.iway.iway.iwcm.headless.dto.FieldError;
-import sk.iway.iway.iwcm.headless.dto.HeadlessNewsItem;
-import sk.iway.iway.iwcm.headless.dto.HeadlessNewsRequest;
-import sk.iway.iway.iwcm.headless.dto.HeadlessNewsResponse;
-import sk.iway.iway.iwcm.headless.service.HeadlessNewsService;
-import sk.iway.iway.iwcm.system.spring.services.WebjetSecurityService;
+import sk.iway.iwcm.components.news.NewsActionBean;
+import sk.iway.iwcm.components.news.NewsQuery;
+import sk.iway.iwcm.headless.dto.FieldError;
+import sk.iway.iwcm.headless.dto.HeadlessNewsItem;
+import sk.iway.iwcm.headless.dto.HeadlessNewsRequest;
+import sk.iway.iwcm.headless.dto.HeadlessNewsResponse;
+import sk.iway.iwcm.headless.service.HeadlessNewsService;
+import sk.iway.iwcm.system.spring.services.WebjetSecurityService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -91,8 +91,9 @@ class HeadlessNewsRestControllerTest {
         item.setPerex("Test perex image URL");
         item.setData("<p>News body content</p>");
         item.setGroupId(24);
-        item.setTemplateName("news-article");
+        item.setTempId(42);
         item.setAvailable(true);
+        item.setDateCreated(1704067200000L);
 
         assertEquals(100, item.getDocId());
         assertEquals("Test News Article", item.getTitle());
@@ -101,8 +102,9 @@ class HeadlessNewsRestControllerTest {
         assertEquals("Test perex image URL", item.getPerex());
         assertEquals("<p>News body content</p>", item.getData());
         assertEquals(24, item.getGroupId());
-        assertEquals("news-article", item.getTemplateName());
+        assertEquals(42, item.getTempId());
         assertTrue(item.isAvailable());
+        assertEquals(1704067200000L, item.getDateCreated());
     }
 
     @Test
@@ -148,7 +150,6 @@ class HeadlessNewsRestControllerTest {
     @Test
     void testValidateRequest_missingGroupIds() {
         HeadlessNewsRequest req = new HeadlessNewsRequest();
-        // groupIds is null by default
 
         List<FieldError> errors = validateRequest(req);
         assertFalse(errors.isEmpty(), "Should have validation errors for missing groupIds");
@@ -250,13 +251,17 @@ class HeadlessNewsRestControllerTest {
         List<FieldError> fieldErrors = new ArrayList<>();
         fieldErrors.add(new FieldError("groupIds", "At least one group ID is required."));
 
-        ErrorResponse errorResponse = new ErrorResponse(400, "Validation Error", "Request validation failed.");
-        errorResponse.setFieldErrors(fieldErrors);
+        HeadlessNewsResponse errorResponse = new HeadlessNewsResponse();
+        errorResponse.setItems(new ArrayList<>());
+        errorResponse.setPage(0);
+        errorResponse.setSize(0);
+        errorResponse.setTotalElements(0);
+        errorResponse.setTotalPages(0);
 
-        assertEquals(400, errorResponse.getStatus());
-        assertEquals("Validation Error", errorResponse.getError());
-        assertEquals("Request validation failed.", errorResponse.getMessage());
-        assertEquals(1, errorResponse.getFieldErrors().size());
+        assertEquals(0, errorResponse.getItems().size());
+        assertEquals(0, errorResponse.getPage());
+        assertEquals(0, errorResponse.getTotalElements());
+        assertEquals(0, errorResponse.getTotalPages());
     }
 
     // ==================== Helper Methods ====================
@@ -273,8 +278,7 @@ class HeadlessNewsRestControllerTest {
         String publishType = request.getPublishType();
         if (publishType != null && !publishType.isEmpty()) {
             boolean valid = false;
-            for (sk.iway.iway.iwcm.components.news.NewsActionBean.PublishType pt :
-                    sk.iway.iway.iwcm.components.news.NewsActionBean.PublishType.values()) {
+            for (NewsActionBean.PublishType pt : NewsActionBean.PublishType.values()) {
                 if (pt.name().equalsIgnoreCase(publishType)) {
                     valid = true;
                     break;
@@ -283,6 +287,18 @@ class HeadlessNewsRestControllerTest {
             if (!valid) {
                 errors.add(new FieldError("publishType",
                         "Invalid publishType. Must be one of: new, old, all, next, valid."));
+            }
+        }
+
+        // Validate order if provided
+        String order = request.getOrder();
+        if (order != null && !order.isEmpty()) {
+            boolean valid = false;
+            try {
+                NewsQuery.OrderEnum.valueOf(order.toUpperCase());
+                valid = true;
+            } catch (IllegalArgumentException e) {
+                // ignore, will default to date
             }
         }
 

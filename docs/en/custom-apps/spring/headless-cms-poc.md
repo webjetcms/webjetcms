@@ -364,9 +364,9 @@ DocDetails items with pagination metadata.
       "publishStart": "2025-01-01T00:00:00",
       "publishEnd": null,
       "groupId": 24,
-      "templateName": "news-article",
+      "tempId": 42,
       "available": true,
-      "createDate": "2025-01-01T00:00:00"
+      "dateCreated": 1704067200000
     }
   ],
   "page": 1,

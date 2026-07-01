@@ -3,7 +3,6 @@ package sk.iway.iwcm.headless.service;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -173,7 +172,7 @@ public class HeadlessNewsService {
             case OLD:
                 // Only expired news (publish_end <= now)
                 query.addCriteria(DatabaseCriteria.and(
-                        DatabaseCriteria.notNull(FieldEnum.PUBLISH_END),
+                        DatabaseCriteria.isNotNull(FieldEnum.PUBLISH_END),
                         DatabaseCriteria.lessEqual(FieldEnum.PUBLISH_END, now)
                 ));
                 break;
@@ -258,12 +257,12 @@ public class HeadlessNewsService {
 
             item.setPerex(doc.getPerexImage());
             item.setData(doc.getData());
-            item.setPublishStart(doc.getPublishStart());
-            item.setPublishEnd(doc.getPublishEnd());
+            item.setPublishStart(doc.getPublishStartDate());
+            item.setPublishEnd(doc.getPublishEndDate());
             item.setGroupId(doc.getGroupId());
-            item.setTemplateName(doc.getTemplateName());
+            item.setTempId(doc.getTempId());
             item.setAvailable(doc.isAvailable());
-            item.setCreateDate(doc.getCreateDate());
+            item.setDateCreated(doc.getDateCreated());
 
             items.add(item);
         }

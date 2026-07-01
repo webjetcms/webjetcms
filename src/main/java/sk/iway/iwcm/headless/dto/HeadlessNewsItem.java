@@ -21,9 +21,9 @@ public class HeadlessNewsItem {
     private Date publishStart;
     private Date publishEnd;
     private int groupId;
-    private String templateName;
+    private int tempId;
     private boolean available;
-    private Date createDate;
+    private long dateCreated;
 
     public HeadlessNewsItem() {
     }
@@ -100,12 +100,12 @@ public class HeadlessNewsItem {
         this.groupId = groupId;
     }
 
-    public String getTemplateName() {
-        return templateName;
+    public int getTempId() {
+        return tempId;
     }
 
-    public void setTemplateName(String templateName) {
-        this.templateName = templateName;
+    public void setTempId(int tempId) {
+        this.tempId = tempId;
     }
 
     public boolean isAvailable() {
@@ -116,11 +116,11 @@ public class HeadlessNewsItem {
         this.available = available;
     }
 
-    public Date getCreateDate() {
-        return createDate;
+    public long getDateCreated() {
+        return dateCreated;
     }
 
-    public void setCreateDate(Date createDate) {
-        this.createDate = createDate;
+    public void setDateCreated(long dateCreated) {
+        this.dateCreated = dateCreated;
     }
 }
