@@ -1,0 +1,97 @@
+---
+import { getNavigation } from '../lib/api';
+import Layout from '../layouts/Layout.astro';
+
+const NEWS_GROUP_ID = 24;
+const NEWS_PAGE_SIZE = 10;
+
+const navResult = await getNavigation(Astro.request, '/', undefined, 2);
+const nav = navResult.data;
+
+// Forward Set-Cookie headers to the browser
+const navSetCookie = navResult.headers.get('set-cookie');
+if (navSetCookie) {
+  Astro.response.headers.append('Set-Cookie', navSetCookie);
+}
+---
+
+<Layout
+  title={`News (Client) — WebJET CMS`}
+  navItems={nav}
+  currentPath="/news-client"
+>
+  <div class="news-header">
+    <h1>News (Client-Side)</h1>
+    <p>Client-side rendered news listing via Astro proxy transport.</p>
+  </div>
+
+  <div id="news-client-root" class="news-list"
+       data-news-group-id={NEWS_GROUP_ID}
+       data-news-page-size={NEWS_PAGE_SIZE}>
+    <div class="loading">Loading news...</div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://cms.iway.sk/rest/headless/v1';
+
+    async function loadNews() {
+      const root = document.getElementById('news-client-root');
+      if (!root) return;
+
+      const NEWS_GROUP_ID = parseInt(root.dataset.newsGroupId || '24', 10);
+      const NEWS_PAGE_SIZE = parseInt(root.dataset.pageSize || '10', 10);
+
+      try {
+        console.log("Loading news");
+        const response = await fetch(`${API_BASE}/news`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            groupIds: [NEWS_GROUP_ID],
+            alsoSubGroups: false,
+            publishType: 'new',
+            order: 'date',
+            ascending: false,
+            paging: false,
+            pageSize: NEWS_PAGE_SIZE,
+            offset: 0,
+            perexNotRequired: false,
+            loadData: false,
+            checkDuplicity: false,
+            perexGroup: [],
+            perexGroupNot: [],
+          }),
+        });
+
+        console.log("Response=", response);
+
+        if (!response.ok) {
+          root.innerHTML = `<div class="error"><strong>Error:</strong> Failed to load news (${response.status})</div>`;
+          return;
+        }
+
+        const data = await response.json();
+
+        if (data.items && data.items.length > 0) {
+          root.innerHTML = data.items.map((item: any) => `
+            <div class="news-item">
+              <a href="${item.virtualPath}">${item.title}</a>
+              <div class="news-meta">
+                ${item.virtualPath ? `<span>${item.virtualPath}</span>` : ''}
+                ${item.language ? `<span> &middot; ${item.language}</span>` : ''}
+              </div>
+              ${item.perex ? `<div class="news-perex">${item.perex}</div>` : ''}
+            </div>
+          `).join('');
+        } else {
+          root.innerHTML = '<div class="no-results"><p>No news items found.</p></div>';
+        }
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'Unknown error';
+        root.innerHTML = `<div class="error"><strong>Error:</strong> ${message}</div>`;
+      }
+    }
+
+    loadNews();
+  </script>
+</Layout>

@@ -617,7 +617,7 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 		}
 
    		PathFilter.setHeader(res, "X-Frame-Options", "xFrameOptions");
-		PathFilter.setAccessControlAllowOrigin(path, res);
+		PathFilter.setAccessControlAllowOrigin(path, req, res);
 		PathFilter.setHeader(res, "X-XSS-Protection", "xXssProtection");
 		PathFilter.setHeader(res, "Server", "serverName");
 		if (Tools.isSecure(req))

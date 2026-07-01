@@ -1,0 +1,89 @@
+---
+import { listNews, getNavigation } from '../lib/api';
+import Layout from '../layouts/Layout.astro';
+
+// Server-side rendering: fetches news directly from CMS at render time
+const NEWS_GROUP_ID = 24;
+const NEWS_PAGE_SIZE = 10;
+
+let newsResult: any = { items: [], page: 1, size: NEWS_PAGE_SIZE, totalElements: 0, totalPages: 0 };
+let newsError = '';
+
+try {
+  const result = await listNews(
+    {
+      groupIds: [NEWS_GROUP_ID],
+      alsoSubGroups: false,
+      publishType: 'new',
+      order: 'date',
+      ascending: false,
+      paging: false,
+      pageSize: NEWS_PAGE_SIZE,
+      offset: 0,
+      perexNotRequired: false,
+      loadData: false,
+      checkDuplicity: false,
+      perexGroup: [],
+      perexGroupNot: [],
+    },
+    Astro.request
+  );
+  newsResult = result.data;
+
+  // Forward Set-Cookie headers to the browser
+  const setCookie = result.headers.get('set-cookie');
+  if (setCookie) {
+    Astro.response.headers.append('Set-Cookie', setCookie);
+  }
+} catch (e: unknown) {
+  newsError = e instanceof Error ? e.message : 'Failed to load news';
+}
+
+const navResult = await getNavigation(Astro.request, '/', undefined, 2);
+const nav = navResult.data;
+
+// Forward Set-Cookie headers to the browser
+const navSetCookie = navResult.headers.get('set-cookie');
+if (navSetCookie) {
+  Astro.response.headers.append('Set-Cookie', navSetCookie);
+}
+---
+
+<Layout
+  title={`News — WebJET CMS`}
+  navItems={nav}
+  currentPath="/news"
+>
+  <div class="news-header">
+    <h1>News</h1>
+    <p>Server-side rendered news listing from WebJET CMS headless API.</p>
+  </div>
+
+  {newsError ? (
+    <div class="error"><strong>Error:</strong> {newsError}</div>
+  ) : newsResult.items && newsResult.items.length > 0 ? (
+    <>
+      <div class="news-list">
+        {newsResult.items.map((item: any) => (
+          <div class="news-item">
+            <a href={item.virtualPath}>{item.title}</a>
+            <div class="news-meta">
+              {item.virtualPath && <span>{item.virtualPath}</span>}
+              {item.language && <span> &middot; {item.language}</span>}
+            </div>
+            {item.perex && <div class="news-perex">{item.perex}</div>}
+          </div>
+        ))}
+      </div>
+      {newsResult.totalPages > 1 && (
+        <div class="pagination">
+          <span class="current">Page {newsResult.page} of {newsResult.totalPages}</span>
+        </div>
+      )}
+    </>
+  ) : (
+    <div class="no-results">
+      <p>No news items found for the configured group.</p>
+    </div>
+  )}
+</Layout>

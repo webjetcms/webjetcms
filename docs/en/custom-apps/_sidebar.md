@@ -7,7 +7,8 @@
   - [Token Authorization](/custom-apps/spring/api-auth.md)
   - [Securing REST services](/custom-apps/spring/rest-url.md)
   - [Spring DATA WebJET CMS repository extension](/custom-apps/spring/repository-extend.md)
-  - [Public Services](/custom-apps/spring/public-services.md)
+    - [Public Services](/custom-apps/spring/public-services.md)
+  - [Headless CMS POC](/custom-apps/spring/headless-cms-poc.md)
 - Applications
   - [Customize Administration](/custom-apps/apps/customize-admin.md)
   - [Item in the admin section menu](/custom-apps/admin-menu-item/)

@@ -243,7 +243,7 @@ public class PathFilter implements Filter
 
 			setNginxProxyMode(req, res);
 			setXFrameOptions(res);
-			setAccessControlAllowOrigin(path, res);
+			setAccessControlAllowOrigin(path, req, res);
 			setXXssProtection(res);
 			setFeaturePolicy(res);
 			setXRobotsTagValue(path, res);
@@ -2419,13 +2419,34 @@ public class PathFilter implements Filter
 	 * @param url
 	 * @param response
 	 */
-	public static void setAccessControlAllowOrigin(String url, HttpServletResponse response)
+	public static void setAccessControlAllowOrigin(String url, HttpServletRequest request, HttpServletResponse response)
 	{
 		String accessControlAllowOriginUrls = Constants.getString("accessControlAllowOriginUrls");
 		if (Tools.isEmpty(accessControlAllowOriginUrls)) return;
 
 		String[] paths = Tools.getTokens(accessControlAllowOriginUrls, ",", true);
 		String accessControlAllowOriginValue = Constants.getStringExecuteMacro("accessControlAllowOriginValue");
+
+		String referer = request.getHeader("Referer");
+		//remove path, keep just protocol, domain and port
+		if (Tools.isNotEmpty(referer)) {
+			int index = referer.indexOf("/", 8); //skip http:// or https://
+			if (index != -1) {
+				referer = referer.substring(0, index);
+			}
+		}
+
+		//accessControlAllowOriginValue can have multiple lines, check it through referer header and match it
+		String[] accessControlAllowOriginValues = Tools.getTokens(accessControlAllowOriginValue, ",\n", true);
+		accessControlAllowOriginValue = null; //will use first row as default
+		for (String domain : accessControlAllowOriginValues) {
+			if (accessControlAllowOriginValue == null && Tools.isNotEmpty(domain)) accessControlAllowOriginValue = domain;
+			if (Tools.isNotEmpty(domain) && domain.contains(referer)) {
+				accessControlAllowOriginValue = domain;
+				break;
+			}
+		}
+
 		for (String path : paths)
 		{
 			if (ResponseHeaderService.isPathCorrect(path, url))

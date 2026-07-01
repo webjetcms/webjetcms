@@ -1,0 +1,54 @@
+---
+import { getPage, getNavigation } from '../lib/api';
+import Layout from '../layouts/Layout.astro';
+
+const pathFromUrl = Astro.url.pathname || '/';
+const pathFromQuery = Astro.url.searchParams.get('path');
+const apiPath = pathFromQuery
+  ? (pathFromQuery.startsWith('/') ? pathFromQuery : `/${pathFromQuery}`)
+  : pathFromUrl;
+
+let page = null;
+let error = '';
+
+try {
+  const result = await getPage(apiPath, undefined, Astro.request);
+  page = result.data;
+
+  // Forward Set-Cookie headers to the browser
+  const setCookie = result.headers.get('set-cookie');
+  if (setCookie) {
+    Astro.response.headers.append('Set-Cookie', setCookie);
+  }
+} catch (e: unknown) {
+  error = e instanceof Error ? e.message : 'Unknown error';
+}
+
+const navResult = await getNavigation(Astro.request, apiPath, undefined, 2);
+const nav = navResult.data;
+
+// Forward Set-Cookie headers to the browser
+const navSetCookie = navResult.headers.get('set-cookie');
+if (navSetCookie) {
+  Astro.response.headers.append('Set-Cookie', navSetCookie);
+}
+---
+
+<Layout title={page?.title || 'WebJET CMS — Headless Demo'} navItems={nav} currentPath={apiPath}>
+  {error ? (
+    <div class="error"><strong>Error:</strong> {error}</div>
+  ) : page ? (
+    <article class="content">
+      <h1>{page.title}</h1>
+      <p class="content-meta">
+        <span>{page.virtualPath}</span>
+        {page.language && <span> &middot; {page.language}</span>}
+      </p>
+      <div class="content-body" set:html={page.body}></div>
+    </article>
+  ) : (
+    <div class="empty-state">
+      <p>Enter a path to load a page.</p>
+    </div>
+  )}
+</Layout>
