@@ -776,6 +776,7 @@ public class ThumbServlet extends HttpServlet
 	public static boolean isSizeAllowed(String realPathSmall, Identity user) {
 		String mode = Constants.getString("thumbServletAllowedSizeMode");
 		if ("deny".equals(mode)) return false;
+		else if ("allow".equals(mode)) return true;
 
 		// ...imgcache/images/image-730x401ip5ncff00ffq90.jpg -> 730x401ip5ncff00ffq90
 		int lastDashIndex = realPathSmall.lastIndexOf('-');
