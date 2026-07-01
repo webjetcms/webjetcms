@@ -430,3 +430,10 @@ curl -X POST \
 | `place` | `perex_place` |
 | `event_date` | `event_date` |
 | `save_date` | `date_created` |
+
+## WebJET CMS config
+
+To allow REST calls from Astro app you need to set following configuration values in WebJET CMS:
+
+- `xsrfReferers` - add `,astro.domain.name` to the end of current value
+- `accessControlAllowOriginValue` - add `,https://astro.domain.name:port` to the end of current value
