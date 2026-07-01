@@ -25,20 +25,24 @@ if (navSetCookie) {
     <p>Client-side rendered news listing via Astro proxy transport.</p>
   </div>
 
-  <div id="news-client-root" class="news-list">
+  <div id="news-client-root" class="news-list"
+       data-news-group-id={NEWS_GROUP_ID}
+       data-news-page-size={NEWS_PAGE_SIZE}>
     <div class="loading">Loading news...</div>
   </div>
 
   <script>
     const API_BASE = 'http://cms.iway.sk/rest/headless/v1';
-    const NEWS_GROUP_ID = {NEWS_GROUP_ID};
-    const NEWS_PAGE_SIZE = {NEWS_PAGE_SIZE};
 
     async function loadNews() {
       const root = document.getElementById('news-client-root');
       if (!root) return;
 
+      const NEWS_GROUP_ID = parseInt(root.dataset.newsGroupId || '24', 10);
+      const NEWS_PAGE_SIZE = parseInt(root.dataset.pageSize || '10', 10);
+
       try {
+        console.log("Loading news");
         const response = await fetch(`${API_BASE}/news`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -59,6 +63,8 @@ if (navSetCookie) {
           }),
         });
 
+        console.log("Response=", response);
+
         if (!response.ok) {
           root.innerHTML = `<div class="error"><strong>Error:</strong> Failed to load news (${response.status})</div>`;
           return;
@@ -71,18 +77,18 @@ if (navSetCookie) {
             <div class="news-item">
               <a href="${item.virtualPath}">${item.title}</a>
               <div class="news-meta">
-                ${item.virtualPath ? `<span>${item.virtualPath}</span>` : ''}
-                ${item.language ? `<span> &middot; ${item.language}</span>` : ''}
+                ${item.virtualPath ? \`<span>\${item.virtualPath}</span>\` : ''}
+                ${item.language ? \`<span> &middot; \${item.language}</span>\` : ''}
               </div>
-              ${item.perex ? `<div class="news-perex">${item.perex}</div>` : ''}
+              ${item.perex ? \`<div class="news-perex">\${item.perex}</div>\` : ''}
             </div>
-          `).join('');
+          \`).join('');
         } else {
           root.innerHTML = '<div class="no-results"><p>No news items found.</p></div>';
         }
       } catch (e: unknown) {
         const message = e instanceof Error ? e.message : 'Unknown error';
-        root.innerHTML = `<div class="error"><strong>Error:</strong> ${message}</div>`;
+        root.innerHTML = \`<div class="error"><strong>Error:</strong> \${message}</div>\`;
       }
     }
 
