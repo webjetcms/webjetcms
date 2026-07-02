@@ -281,40 +281,42 @@ public class ConfDB
 			{
 				//nacitaj data z DB
 				db_conn = DBPool.getConnection();
+				if (db_conn != null) {
 
-				String sqlUpdate = "UPDATE " + ConfDB.CONF_TABLE_NAME + " SET value=?, date_changed=? WHERE name=?";
-				if (SetCharacterEncodingFilter.getCurrentRequestBean() != null &&
-					SetCharacterEncodingFilter.getCurrentRequestBean().getUserId() > 0)
-				{
-					StringBuilder message = new StringBuilder("Nastavena konfiguracna premenna: ").append(name).append('\n');
-					if (Tools.isNotEmpty(Constants.getString(name)))
-						message.append(Constants.getString(name)).append(" -> ");
-					message.append(value);
-					Adminlog.add(Adminlog.TYPE_CONF_UPDATE, message.toString(), -1, -1);
-				}
-				psInsert = db_conn.prepareStatement(sqlUpdate);
-				psInsert.setString(1, value);
-				psInsert.setTimestamp(2, new java.sql.Timestamp(Tools.getNow()));
-				psInsert.setString(3, name);
-				int update = psInsert.executeUpdate();
-				psInsert.close();
-				psInsert = null;
-				if (update < 1)
-				{
-					String sqlIns = "INSERT INTO " + ConfDB.CONF_TABLE_NAME + " (name, value, date_changed) VALUES (?,?,?)";
-					psInsert = db_conn.prepareStatement(sqlIns);
-					psInsert.setString(1, name);
-					psInsert.setString(2, value);
-					psInsert.setTimestamp(3, new java.sql.Timestamp(Tools.getNow()));
-					psInsert.execute();
+					String sqlUpdate = "UPDATE " + ConfDB.CONF_TABLE_NAME + " SET value=?, date_changed=? WHERE name=?";
+					if (SetCharacterEncodingFilter.getCurrentRequestBean() != null &&
+						SetCharacterEncodingFilter.getCurrentRequestBean().getUserId() > 0)
+					{
+						StringBuilder message = new StringBuilder("Nastavena konfiguracna premenna: ").append(name).append('\n');
+						if (Tools.isNotEmpty(Constants.getString(name)))
+							message.append(Constants.getString(name)).append(" -> ");
+						message.append(value);
+						Adminlog.add(Adminlog.TYPE_CONF_UPDATE, message.toString(), -1, -1);
+					}
+					psInsert = db_conn.prepareStatement(sqlUpdate);
+					psInsert.setString(1, value);
+					psInsert.setTimestamp(2, new java.sql.Timestamp(Tools.getNow()));
+					psInsert.setString(3, name);
+					int update = psInsert.executeUpdate();
 					psInsert.close();
 					psInsert = null;
-				}
-				ret = true;
-				//refreshni hodnotu v Constants, odporucany je ale aj tak restart
+					if (update < 1)
+					{
+						String sqlIns = "INSERT INTO " + ConfDB.CONF_TABLE_NAME + " (name, value, date_changed) VALUES (?,?,?)";
+						psInsert = db_conn.prepareStatement(sqlIns);
+						psInsert.setString(1, name);
+						psInsert.setString(2, value);
+						psInsert.setTimestamp(3, new java.sql.Timestamp(Tools.getNow()));
+						psInsert.execute();
+						psInsert.close();
+						psInsert = null;
+					}
+					ret = true;
+					//refreshni hodnotu v Constants, odporucany je ale aj tak restart
 
-				db_conn.close();
-				db_conn = null;
+					db_conn.close();
+					db_conn = null;
+				}
 			}
 			setConstantValueImpl(name, value);
 

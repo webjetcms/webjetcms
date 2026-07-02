@@ -10,6 +10,12 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -323,5 +329,314 @@ class ThumbServletIsSizeAllowedTest extends BaseWebjetTest {
 
         assertTrue(ThumbServlet.isSizeAllowed(VALID_PATH_2, null),
             "simple width x height size should be extracted correctly");
+    }
+
+    // --- Multithread tests ---
+
+    @Test
+    void testConcurrentReads_NoExceptions() throws Exception {
+        // Setup: add some allowed sizes
+        Constants.setString("thumbServletAllowedSizeMode", "");
+        Constants.setString("thumbServletAllowedSizes", "730x401ip5,200x150,100x100,300x200");
+        ThumbServlet.cleanAllowedSizesCache();
+
+        int threadCount = 100;
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(threadCount);
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger errorCount = new AtomicInteger(0);
+
+        // Create tasks that all read concurrently
+        for (int i = 0; i < threadCount; i++) {
+            executor.submit(() -> {
+                try {
+                    startLatch.await(); // Wait for all threads to be ready
+
+                    // Each thread reads multiple times
+                    for (int j = 0; j < 100; j++) {
+                        boolean result = ThumbServlet.isSizeAllowed(VALID_PATH, null);
+                        if (result) {
+                            successCount.incrementAndGet();
+                        }
+                    }
+                } catch (Exception e) {
+                    errorCount.incrementAndGet();
+                } finally {
+                    doneLatch.countDown();
+                }
+            });
+        }
+
+        // Start all threads at once
+        startLatch.countDown();
+
+        // Wait for all threads to complete
+        boolean completed = doneLatch.await(30, TimeUnit.SECONDS);
+        executor.shutdown();
+
+        assertTrue(completed, "All threads should complete within timeout");
+        assertEquals(0, errorCount.get(), "No errors should occur during concurrent reads");
+        assertEquals(threadCount * 100, successCount.get(), "All reads should succeed");
+    }
+
+    @Test
+    void testConcurrentReadsWithOneWriter_ThreadSafe() throws Exception {
+        // Setup: learn mode allows writing new sizes
+        Constants.setString("thumbServletAllowedSizeMode", "learn");
+        Constants.setString("thumbServletAllowedSizes", "100x100");
+        ThumbServlet.cleanAllowedSizesCache();
+
+        int readerCount = 90;
+        int writerCount = 10;
+        int totalThreads = readerCount + writerCount;
+        ExecutorService executor = Executors.newFixedThreadPool(totalThreads);
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(totalThreads);
+        AtomicInteger readSuccessCount = new AtomicInteger(0);
+        AtomicInteger writeSuccessCount = new AtomicInteger(0);
+        AtomicInteger errorCount = new AtomicInteger(0);
+
+        // Create reader tasks (90% of threads) - read existing size
+        for (int i = 0; i < readerCount; i++) {
+            executor.submit(() -> {
+                try {
+                    startLatch.await();
+
+                    for (int j = 0; j < 50; j++) {
+                        // Read existing size
+                        String existingPath = "/WEB-INF/imgcache/images/test-100x100.jpg";
+                        boolean result = ThumbServlet.isSizeAllowed(existingPath, null);
+                        if (result) {
+                            readSuccessCount.incrementAndGet();
+                        }
+                    }
+                } catch (Exception e) {
+                    errorCount.incrementAndGet();
+                } finally {
+                    doneLatch.countDown();
+                }
+            });
+        }
+
+        // Create writer tasks (10% of threads) - add new sizes
+        for (int i = 0; i < writerCount; i++) {
+            final int writerId = i;
+            executor.submit(() -> {
+                try {
+                    startLatch.await();
+
+                    for (int j = 0; j < 10; j++) {
+                        // Write new size - each writer writes unique sizes
+                        String newPath = "/WEB-INF/imgcache/images/test-" + (200 + writerId) + "x" + (150 + j) + ".jpg";
+                        boolean result = ThumbServlet.isSizeAllowed(newPath, adminUser);
+                        if (result) {
+                            writeSuccessCount.incrementAndGet();
+                        }
+                    }
+                } catch (Exception e) {
+                    errorCount.incrementAndGet();
+                } finally {
+                    doneLatch.countDown();
+                }
+            });
+        }
+
+        // Start all threads at once
+        startLatch.countDown();
+
+        // Wait for completion
+        boolean completed = doneLatch.await(30, TimeUnit.SECONDS);
+        executor.shutdown();
+
+        assertTrue(completed, "All threads should complete within timeout");
+        assertEquals(0, errorCount.get(), "No errors should occur during concurrent access");
+        assertEquals(readerCount * 50, readSuccessCount.get(), "All reads of existing size should succeed");
+        assertEquals(writerCount * 10, writeSuccessCount.get(), "All writes should succeed in learn mode");
+    }
+
+    @Test
+    void testConcurrentWritesSameSize_NoDuplicates() throws Exception {
+        // Setup: learn mode, empty allowed sizes
+        Constants.setString("thumbServletAllowedSizeMode", "learn");
+        Constants.setString("thumbServletAllowedSizes", "");
+        ThumbServlet.cleanAllowedSizesCache();
+
+        int threadCount = 50;
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(threadCount);
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger errorCount = new AtomicInteger(0);
+
+        // All threads try to add the same size concurrently
+        String samePath = "/WEB-INF/imgcache/images/test-999x888.jpg";
+
+        for (int i = 0; i < threadCount; i++) {
+            executor.submit(() -> {
+                try {
+                    startLatch.await();
+
+                    boolean result = ThumbServlet.isSizeAllowed(samePath, adminUser);
+                    if (result) {
+                        successCount.incrementAndGet();
+                    }
+                } catch (Exception e) {
+                    errorCount.incrementAndGet();
+                } finally {
+                    doneLatch.countDown();
+                }
+            });
+        }
+
+        startLatch.countDown();
+        boolean completed = doneLatch.await(30, TimeUnit.SECONDS);
+        executor.shutdown();
+
+        assertTrue(completed, "All threads should complete within timeout");
+        assertEquals(0, errorCount.get(), "No errors should occur");
+        assertEquals(threadCount, successCount.get(), "All threads should succeed");
+    }
+
+    @Test
+    void testCheckMode_ConcurrentAdminWritesAndUserReads() throws Exception {
+        // Setup: check mode - only admins can add, users can only read existing
+        Constants.setString("thumbServletAllowedSizeMode", "check");
+        Constants.setString("thumbServletAllowedSizes", "100x100");
+        ThumbServlet.cleanAllowedSizesCache();
+
+        int userReaderCount = 80;
+        int adminWriterCount = 10;
+        int userWriterCount = 10; // These should fail to add new sizes
+        int totalThreads = userReaderCount + adminWriterCount + userWriterCount;
+
+        ExecutorService executor = Executors.newFixedThreadPool(totalThreads);
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(totalThreads);
+
+        AtomicInteger userReadSuccess = new AtomicInteger(0);
+        AtomicInteger adminWriteSuccess = new AtomicInteger(0);
+        AtomicInteger userWriteFail = new AtomicInteger(0);
+        AtomicInteger errorCount = new AtomicInteger(0);
+
+        // User readers - read existing size
+        for (int i = 0; i < userReaderCount; i++) {
+            executor.submit(() -> {
+                try {
+                    startLatch.await();
+                    String existingPath = "/WEB-INF/imgcache/images/test-100x100.jpg";
+                    if (ThumbServlet.isSizeAllowed(existingPath, nonAdminUser)) {
+                        userReadSuccess.incrementAndGet();
+                    }
+                } catch (Exception e) {
+                    errorCount.incrementAndGet();
+                } finally {
+                    doneLatch.countDown();
+                }
+            });
+        }
+
+        // Admin writers - add new sizes
+        for (int i = 0; i < adminWriterCount; i++) {
+            final int writerId = i;
+            executor.submit(() -> {
+                try {
+                    startLatch.await();
+                    String newPath = "/WEB-INF/imgcache/images/test-" + (300 + writerId) + "x200.jpg";
+                    if (ThumbServlet.isSizeAllowed(newPath, adminUser)) {
+                        adminWriteSuccess.incrementAndGet();
+                    }
+                } catch (Exception e) {
+                    errorCount.incrementAndGet();
+                } finally {
+                    doneLatch.countDown();
+                }
+            });
+        }
+
+        // User writers - try to add new sizes (should fail)
+        for (int i = 0; i < userWriterCount; i++) {
+            final int writerId = i;
+            executor.submit(() -> {
+                try {
+                    startLatch.await();
+                    String newPath = "/WEB-INF/imgcache/images/test-" + (500 + writerId) + "x400.jpg";
+                    if (ThumbServlet.isSizeAllowed(newPath, nonAdminUser) == false) {
+                        userWriteFail.incrementAndGet();
+                    }
+                } catch (Exception e) {
+                    errorCount.incrementAndGet();
+                } finally {
+                    doneLatch.countDown();
+                }
+            });
+        }
+
+        startLatch.countDown();
+        boolean completed = doneLatch.await(30, TimeUnit.SECONDS);
+        executor.shutdown();
+
+        assertTrue(completed, "All threads should complete within timeout");
+        assertEquals(0, errorCount.get(), "No exceptions should occur");
+        assertEquals(userReaderCount, userReadSuccess.get(), "All user reads of existing size should succeed");
+        assertEquals(adminWriterCount, adminWriteSuccess.get(), "All admin writes should succeed");
+        assertEquals(userWriterCount, userWriteFail.get(), "All user writes of new sizes should fail");
+    }
+
+    @Test
+    void testConcurrentCacheCleanAndAccess() throws Exception {
+        // Test that cache cleaning during concurrent access doesn't cause issues
+        Constants.setString("thumbServletAllowedSizeMode", "");
+        Constants.setString("thumbServletAllowedSizes", "730x401ip5,200x150");
+        ThumbServlet.cleanAllowedSizesCache();
+
+        int readerCount = 90;
+        int cleanerCount = 10;
+        int totalThreads = readerCount + cleanerCount;
+
+        ExecutorService executor = Executors.newFixedThreadPool(totalThreads);
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(totalThreads);
+        AtomicInteger errorCount = new AtomicInteger(0);
+
+        // Reader threads
+        for (int i = 0; i < readerCount; i++) {
+            executor.submit(() -> {
+                try {
+                    startLatch.await();
+                    for (int j = 0; j < 100; j++) {
+                        // Just call the method - it should not throw
+                        ThumbServlet.isSizeAllowed(VALID_PATH, null);
+                    }
+                } catch (Exception e) {
+                    errorCount.incrementAndGet();
+                } finally {
+                    doneLatch.countDown();
+                }
+            });
+        }
+
+        // Cache cleaner threads
+        for (int i = 0; i < cleanerCount; i++) {
+            executor.submit(() -> {
+                try {
+                    startLatch.await();
+                    for (int j = 0; j < 10; j++) {
+                        ThumbServlet.cleanAllowedSizesCache();
+                    }
+                } catch (Exception e) {
+                    errorCount.incrementAndGet();
+                } finally {
+                    doneLatch.countDown();
+                }
+            });
+        }
+
+        startLatch.countDown();
+        boolean completed = doneLatch.await(30, TimeUnit.SECONDS);
+        executor.shutdown();
+
+        assertTrue(completed, "All threads should complete within timeout");
+        assertEquals(0, errorCount.get(), "No exceptions should occur during concurrent cache clean and access");
     }
 }
