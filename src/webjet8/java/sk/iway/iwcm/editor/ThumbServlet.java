@@ -790,7 +790,7 @@ public class ThumbServlet extends HttpServlet
 			return true;
 		}
 
-		if ("learn".equals(mode) || (user != null && user.isAdmin())) {
+		if ("learn".equals(mode) || ("check".equals(mode) && user != null && user.isAdmin())) {
 			//add sizePart to allowed sizes
 			addSizePartToMap(sizePart);
 			return true; // Admins can request any size

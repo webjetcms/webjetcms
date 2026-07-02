@@ -43,7 +43,7 @@ Generovanie obrázkov zaťažuje server, je teda chránené SPAM ochranou. Použ
   - `learn` - pridá hodnotu ak nie je v zozname
   - `deny` - zakáže akékoľvek generovanie nových obrázkov
   - `allow` - povolí všetky rozmery
-  - `check` - povolí len zadané hodnoty
-  - ak je prihlásený administrátor automaticky platí režim learn.
+  - `strict` - povolí len zadané hodnoty
+  - `check` - povolí len zadané hodnoty, ale ak je prihlásený administrátor, automaticky pridá nový rozmer do zoznamu
 
 V prípade viac uzlovej inštalácie môžete na verejné uzly nastaviť cez [externú konfiguráciu](../../install/external-configuration.md) režim `deny` a generovať náhľadové obrázky len na administrátorských uzloch.
