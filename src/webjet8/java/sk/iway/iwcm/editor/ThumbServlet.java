@@ -66,7 +66,8 @@ public class ThumbServlet extends HttpServlet
 
 	//public static final String CACHE_DIR = "/WEB-INF/imgcache/";
 
-	private static final AtomicReference<Set<String>> allowedSizesRef = new AtomicReference<>();
+	// Package-private for testing purposes
+	static final AtomicReference<Set<String>> allowedSizesRef = new AtomicReference<>();
 
 
 	@Override
