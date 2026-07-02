@@ -40,8 +40,10 @@ Generovanie obrázkov zaťažuje server, je teda chránené SPAM ochranou. Použ
 - `cloudCloneAllowedIps` - zoznam začiatkov IP adries oddelených čiarkou pre ktoré sa obmedzenie nebude aplikovať, predvolene prázdne (nepoužije sa).
 - `thumbServletAllowedSizes` - zoznam povolených rozmerov súborov pre generovanie obrázka. Generuje sa vo formáte `{width}x{height}ip{ip}{noip}c{color}q{quality}`, napríklad `730x401ip5ncff00ffq90`. Parametre ktoré nie sú zadané nie su použité, napríklad `430x405` alebo `730x404ip5`. Odporúčame použiť režim `learn` na prvotné nastavenie a následne nastaviť režim `check`.
 - `thumbServletAllowedSizeMode` - Nastavuje režim povolených rozmerov pre generovanie obrázka. Možné hodnoty:
-    - `learn` - pridá hodnotu ak nie je v zozname
-    - `deny` - zakáže akékoľvek generovanie nových obrázkov
-    - `allow` - povolí všetky rozmery
-    - `check` - povolí len zadané hodnoty
-    - ak je prihlásený administrátor automaticky platí režim learn.
+  - `learn` - pridá hodnotu ak nie je v zozname
+  - `deny` - zakáže akékoľvek generovanie nových obrázkov
+  - `allow` - povolí všetky rozmery
+  - `check` - povolí len zadané hodnoty
+  - ak je prihlásený administrátor automaticky platí režim learn.
+
+V prípade viac uzlovej inštalácie môžete na verejné uzly nastaviť cez [externú konfiguráciu](../../install/external-configuration.md) režim `deny` a generovať náhľadové obrázky len na administrátorských uzloch.

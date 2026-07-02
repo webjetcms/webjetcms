@@ -16,6 +16,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -78,7 +79,6 @@ import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.utils.Pair;
 
-
 /**
  *  Aktualizuje databazu
  *
@@ -138,6 +138,8 @@ public class UpdateDatabase
 		statErrorAddDomainId();
 
 		updateInvoiceContacts();
+
+		setThumbServletAllowedSizeMode();
 
 		Logger.println(UpdateDatabase.class,"----- Database updated  -----");
 	}
@@ -2520,6 +2522,33 @@ public class UpdateDatabase
 
 		//zapis do DB, ze je to aktualizovane
 		saveSuccessUpdate(note);
+	}
+
+	/**
+	 * Set thumbServletAllowedSizeMode to check ONE MONTH after first update
+	 */
+	private static void setThumbServletAllowedSizeMode() {
+		String firstNote = "01.07.2026 [lbalat] nastavenie thumbServletAllowedSizeMode na auto";
+		String secondNote = "01.07.2026 [lbalat] nastavenie thumbServletAllowedSizeMode na check";
+
+		if ("learn".equals(Constants.getString("thumbServletAllowedSizeMode")) == false) return;
+		if (isAllreadyUpdated(secondNote)) return;
+
+		if (isAllreadyUpdated(firstNote) == false) {
+			//set first note to check date when it was updated
+			saveSuccessUpdate(firstNote);
+		} else {
+			//check if it is older than one month
+			Calendar cal = Calendar.getInstance();
+			cal.add(Calendar.MONTH, -1);
+			Date oneMonthBefore = cal.getTime();
+			int count = new SimpleQuery().forInt("SELECT count(*) FROM "+ConfDB.DB_TABLE_NAME+" WHERE note = ? AND create_date < ?", firstNote, oneMonthBefore);
+			if (count > 0) {
+				//set second note to check date when it was updated
+				saveSuccessUpdate(secondNote);
+				ConfDB.setName("thumbServletAllowedSizeMode", "check", true);
+			}
+		}
 	}
 
 	public static void updateFormAttributesTable()
