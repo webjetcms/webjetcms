@@ -2441,7 +2441,7 @@ public class PathFilter implements Filter
 		accessControlAllowOriginValue = null; //will use first row as default
 		for (String domain : accessControlAllowOriginValues) {
 			if (accessControlAllowOriginValue == null && Tools.isNotEmpty(domain)) accessControlAllowOriginValue = domain;
-			if (Tools.isNotEmpty(domain) && domain.contains(referer)) {
+			if (Tools.isNotEmpty(domain) && Tools.isNotEmpty(referer) && domain.contains(referer)) {
 				accessControlAllowOriginValue = domain;
 				break;
 			}
