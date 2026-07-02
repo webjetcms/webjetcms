@@ -306,6 +306,11 @@ public class ThumbServlet extends HttpServlet
 			fillColor = DocTools.removeChars(fillColor).toLowerCase().trim();
 			if (fillColor.length()!=6) fillColor = FILL_COLOR_DEFAULT;
 
+			//sometimes w/h for ip1/2 will be zero but it is not important because it will be calculated
+			//like fixedSize-160-0-1
+			if (ip == 1) height = width;
+			else if (ip == 2) width = height;
+
 			Logger.debug(ThumbServlet.class, "Farba: "+fillColor);
 			//osetrenie stavov
 			if (width > Constants.getInt("imageMaxThumbsWidth") || height > Constants.getInt("imageMaxThumbsHeight") || width < 1 || height < 1 || fillColor.length()!=6)

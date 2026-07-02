@@ -11,6 +11,7 @@
 - Bezpečnosť - opravené chyby Local File Inclusion, kontrola nahrávaných súborov a RCE. Ďakujeme Josef Korbel (Citadelo) za nahlásenie týchto zraniteľností (#252).
 - Bezpečnosť - pridaná [kontrola povolených rozmerov](frontend/thumb-servlet/README.md#obmedzenia) generovania `/thumb` obrázkov, prvý mesiac v režime učenia a následne po reštarte WebJETu v režime kontroly.
 - JPA - opravené viac násobné ukončenie databázovej transakcie pri importe presmerovaní (#256).
+- `/thumb` - opravené generovanie obrázka pri `ip=1/2` a nulovej veľkosti `w/h` parametra (#58317-10).
 
 ## 2026.0.25
 
