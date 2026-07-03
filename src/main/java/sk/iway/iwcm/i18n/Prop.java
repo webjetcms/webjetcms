@@ -389,7 +389,7 @@ public class Prop
 				}
 
 				//only log actual i18n keys (those containing a dot) to avoid logging plain text values
-				if (key.contains(".")) Logger.warn(Prop.class, "Missing text for key: [" + key + "] in language: [" + language + "]");
+				//if (key.contains(".")) Logger.warn(Prop.class, "Missing text for key: [" + key + "] in language: [" + language + "]");
 			} catch (Exception ex) {
 				//do nothing not important if we fail to add missing key, just log it, probably java.util.ConcurrentModificationException
 			}
