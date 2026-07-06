@@ -4,6 +4,26 @@ This section contains descriptions of the features and **functionalities of WebJ
 
 ---
 
+## AI answer directly in web search
+
+WebJET CMS extends search with the ability to display **brief AI answers above the results**. Visitors no longer have to click through multiple pages to find basic information. The system first finds relevant parts of the content and then creates a clear answer from them, which helps to understand the topic faster and continue to the right content.
+
+From a customer perspective, this results in **faster information delivery**, a better user experience, and a higher likelihood of the visitor staying on the site. The feature is especially useful for large portals, product sites, and customer zones, where people often ask questions in natural language. The new settings also allow you to choose whether to use classic, semantic, or **hybrid search** (a combination of question meaning and full text), so that results can be tailored to a specific type of content.
+
+An important advantage is **control and safer operation**. The answer is created only from indexed web content, while it is possible to set context limits, similarity and AI assistant selection. The organization thus gains modern functionality, but with clear rules over output quality, costs and operational risk. The solution is also **extensible** via configuration and API (interface for connecting to other systems), which is important for corporate and enterprise deployments.
+
+![](../../redactor/apps/semantic-search/rag-result.png)
+
+**Main benefits:**
+
+- **Faster path to the answer**: The visitor gets the gist of the information right above the search results.
+- **Higher satisfaction and lower bounce rates**: Less searching and clicking means a smoother user experience.
+- **Better relevance of results**: Hybrid mode combines the benefits of semantic and fulltext according to the type of query.
+- **Control over quality and costs**: Adjustable context, similarity, and assistant selection limits help keep responses accurate and efficient.
+- **Extensibility for enterprise projects**: The function can be customized through configuration and connections to existing customer processes.
+
+Detailed documentation: [Semantic Search (RAG)](../../redactor/apps/semantic-search/README.md)
+
 ## Smart search by question meaning
 
 WebJET CMS delivers **semantic search** that goes beyond keyword matching, but also understands **the meaning of the user query**. This means that visitors will find relevant content even when they don't use the exact wording from the web. The result is a more natural search that behaves more closely to how people actually ask questions.

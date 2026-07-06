@@ -43,7 +43,8 @@ Vysvetlenie použitých piktogramov:
 - [ ] Voliteľné polia – pridať možnosť nastaviť obmedzenie dĺžky textu pre pole typu `textarea`, podobne ako je to aktuálne možné pri poli typu `text`.
 - [ ] Datatabuľka – upraviť polia typu `Date` a `Datetime` tak, aby správne fungovala validácia `not null`.
 - [ ] Datatabuľka – upraviť spôsob mergovania upravenej entity tak, aby bolo možné vynulovať hodnoty typu `number`.
-
+- [ ] +Presmerovania - rozlíšiť v databáze automaticky vytvorené presmerovanie (hľadaj premennú `editorDisableAutomaticRedirect`) od manuálne vytvoreného, možnosť podľa toho filtrovať v UI (zobraziť len manuálne vytvorené presmerovania).
+- [ ] +Presmerovania - doplniť funkciu čistenia presmerovaní - zmaže staré presmerovania (bolo pôvodne `aaa-bbb` a potom vzniklo `aaa-ccc` takže `aaa-bbb` nemá zmysel = zmaže sa) a skontroluje cyklické presmerovania v ktorom zmaže posledný krok. Tiež optimalizovať presmerovania `aaa-bbb-ccc` na `aaa-ccc`.
 
 ## 2025
 

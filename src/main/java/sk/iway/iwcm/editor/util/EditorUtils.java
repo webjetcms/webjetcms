@@ -59,6 +59,9 @@ public class EditorUtils {
 				Matcher matcher = tagPattern.matcher(text);
 				StringBuffer sb = new StringBuffer();
 				String conjunctionPattern = conjunctions.replace(',', '|');
+				//fix regexp / comma symbol
+				conjunctionPattern = Tools.replace(conjunctionPattern, "§§§", ",");
+
 				String replacePattern = "(?i)(\\s|&nbsp;)(" + conjunctionPattern + ")\\s";
 
 				while (matcher.find()) {

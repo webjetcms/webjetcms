@@ -85,7 +85,7 @@ class ImageToolsTest extends BaseWebjetTest {
     @Test
     void testEmptyFirstLineOnlyOutputParams() {
         // Empty first line = only output params (after operation)
-        Constants.setString("imageMagickCustomParams_png", "\n-define png:compression-level=9");
+        Constants.setString("imageMagickCustomParams_png", "---\n-define png:compression-level=9");
 
         List<String> args = createResizeArgs("input.png", "output.png");
         ImageTools.addImageMagickCustomParams(args);
@@ -105,7 +105,7 @@ class ImageToolsTest extends BaseWebjetTest {
     void testCombineBaseAndExtParams() {
         // Base params with 2 lines + ext params with 2 lines
         Constants.setString("imageMagickCustomParams", "-filter Lanczos\n-interlace Plane");
-        Constants.setString("imageMagickCustomParams_jpg", "\n-define jpeg:optimize-coding=true");
+        Constants.setString("imageMagickCustomParams_jpg", "---\n-define jpeg:optimize-coding=true");
 
         List<String> args = createResizeArgs("input.jpg", "output.jpg");
         ImageTools.addImageMagickCustomParams(args);
@@ -138,7 +138,7 @@ class ImageToolsTest extends BaseWebjetTest {
     @Test
     void testQualityParamRemoval() {
         // When custom params contain quality, existing -quality should be removed
-        Constants.setString("imageMagickCustomParams_webp", "\n-quality 80 -define webp:method=6");
+        Constants.setString("imageMagickCustomParams_webp", "---\n-quality 80 -define webp:method=6");
 
         List<String> args = new ArrayList<>();
         args.add("/usr/bin/magick");

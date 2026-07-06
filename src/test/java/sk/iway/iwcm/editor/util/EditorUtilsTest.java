@@ -48,6 +48,18 @@ class EditorUtilsTest extends BaseWebjetTest {
         docDetails.setData("Test a&nbsp;v&nbsp;case");
         EditorUtils.nonBreakingSpaceReplacement(docDetails);
         assertEquals("Test a&nbsp;v&nbsp;case", docDetails.getData());
+
+        docDetails.setData("Technológie, ktoré 25 Gbit/s vašim deťom");
+        EditorUtils.nonBreakingSpaceReplacement(docDetails);
+        assertEquals("Technológie, ktoré 25&nbsp;Gbit/s vašim deťom", docDetails.getData());
+
+        docDetails.setData("Technológie, ktoré 2,5 Gbit/s vašim deťom");
+        EditorUtils.nonBreakingSpaceReplacement(docDetails);
+        assertEquals("Technológie, ktoré 2,5&nbsp;Gbit/s vašim deťom", docDetails.getData());
+
+        docDetails.setData("Technológie, ktoré 2.5 Gbit/s vašim deťom");
+        EditorUtils.nonBreakingSpaceReplacement(docDetails);
+        assertEquals("Technológie, ktoré 2.5&nbsp;Gbit/s vašim deťom", docDetails.getData());
     }
 
     @Test

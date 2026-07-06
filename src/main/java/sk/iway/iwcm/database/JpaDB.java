@@ -203,7 +203,7 @@ public class JpaDB<T extends ActiveRecordBase>
 		{
 			try
 			{
-				em.getTransaction().rollback();
+				if (em.getTransaction().isActive()) em.getTransaction().rollback();
 			}
 			catch (Exception e2)
 			{
@@ -234,7 +234,7 @@ public class JpaDB<T extends ActiveRecordBase>
 			em.getTransaction().commit();
 			return true;
 		}catch (Exception e) {
-			em.getTransaction().rollback();
+			if (em.getTransaction().isActive()) em.getTransaction().rollback();
 			sk.iway.iwcm.Logger.error(e);
 		}finally{
 			JpaTools.getEclipseLinkEntityManager(dbName).close();

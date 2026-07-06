@@ -591,6 +591,11 @@ public class ImageTools
 		//check custom params by Constants key imageMagickCustomParams_[mode]_[ext], for example imageMagickCustomParams_resize_jpg, then imageMagickCustomParams_resize, then imageMagickCustomParams_jpg then imageMagickCustomParams
 		String customParamsKey = "imageMagickCustomParams_" + operation + "_" + ext;
 		String customParams = Constants.getString(customParamsKey);
+
+		//remove first line NON WHITESPACE character (because Constants are trimed when reading from DB)
+		if (Tools.isNotEmpty(customParamsKey) && customParamsKey.startsWith("---")) customParamsKey = customParamsKey.substring(3);
+		if (Tools.isNotEmpty(customParams) && customParams.startsWith("---")) customParams = customParams.substring(3);
+
 		if (Tools.isEmpty(customParams)) {
 			customParamsKey = "imageMagickCustomParams_" + operation;
 			customParams = Constants.getString(customParamsKey);
@@ -617,6 +622,12 @@ public class ImageTools
 				outputParams = customParams.substring(newlineIndex + 1).trim();
 			} else {
 				inputParams = customParams.trim();
+				outputParams = "";
+			}
+			if ("---".equals(inputParams)) {
+				inputParams = "";
+			}
+			if ("---".equals(outputParams)) {
 				outputParams = "";
 			}
 
@@ -692,6 +703,9 @@ public class ImageTools
 	}
 
 	private static String combineLine(String a, String b) {
+		if (a.startsWith("---")) a = a.substring(3);
+		if (b.startsWith("---")) b = b.substring(3);
+
 		if (Tools.isEmpty(a)) return Tools.isNotEmpty(b) ? b : "";
 		if (Tools.isEmpty(b)) return a;
 		return a + " " + b;

@@ -20,6 +20,7 @@ public enum FieldEnum
 	PUBLISH_END(Date.class),
 	AUTHOR_ID(Integer.class),
 	SEARCHABLE(Boolean.class),
+	FOLLOW_LINKS(Integer.class),
 	GROUP_ID(Integer.class),
 	AVAILABLE(Boolean.class),
 	SHOW_IN_MENU(Boolean.class),
@@ -68,24 +69,24 @@ public enum FieldEnum
 	FORUM_COUNT(Integer.class),
 	VIEWS_TOTAL(Integer.class),
 	REQUIRE_SSL(Boolean.class);
-	
+
 	private Class<?> fieldType;
-	
+
 	private FieldEnum (Class<?> fieldType)
 	{
 		this.fieldType = fieldType;
 	}
-	
+
 	public Class<?> getFieldType()
 	{
 		return fieldType;
 	}
-	
+
 	public String getFieldTypeString()
 	{
 		return fieldType.getSimpleName();
 	}
-	
+
 	public String getDbName()
 	{
 		return "d."+this.name().toLowerCase();
@@ -99,7 +100,7 @@ public enum FieldEnum
 		{
 			if (!data && field.name().equalsIgnoreCase("data"))
 				continue;
-			if (addcomma) 
+			if (addcomma)
 				sb.append(",");
 			sb.append(field.getDbName());
 			addcomma = true;
@@ -116,7 +117,7 @@ public enum FieldEnum
 	{
 		return getFields(false);
 	}
-	
+
 	public String getTranslate()
 	{
 		return Prop.getInstance().getText("news.field_enum." + name().toLowerCase());

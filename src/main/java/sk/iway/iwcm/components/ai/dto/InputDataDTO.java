@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
@@ -12,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 import lombok.Getter;
@@ -66,6 +68,12 @@ public class InputDataDTO {
 
     // timestamp from FE when assistant was called, used as part of running assiatnt task id
     Long timestamp;
+
+    /**
+     * Trusted extra prompt parameters prepared on backend only.
+     */
+    @JsonIgnore
+    Map<String, String> bonusParams = new LinkedHashMap<>();
 
     public void removeHtml() {
         if(Tools.isEmpty(inputValue)) return;

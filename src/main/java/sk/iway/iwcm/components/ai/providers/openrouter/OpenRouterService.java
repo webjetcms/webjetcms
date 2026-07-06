@@ -27,6 +27,7 @@ import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
 import sk.iway.iwcm.components.ai.providers.gemini.GeminiService;
+import sk.iway.iwcm.components.ai.security.PromptInjectionDefense;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
@@ -84,12 +85,7 @@ public class OpenRouterService extends OpenRouterSupportService implements AiInt
     }
 
     public HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) throws IOException {
-        // Build base request body
-        ObjectNode mainObject;
-        if(InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
-            mainObject = getBaseMainObjectWithImage(inputData, instructions, inputData.getUserPrompt());
-        else
-            mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+        ObjectNode mainObject = getTextResponseMainObject(instructions, inputData);
 
         mainObject.put(MODEL, assistant.getModel());
 
@@ -109,12 +105,7 @@ public class OpenRouterService extends OpenRouterSupportService implements AiInt
     }
 
     public HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) throws IOException {
-        // Build base request body
-        ObjectNode mainObject;
-        if(InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
-            mainObject = getBaseMainObjectWithImage(inputData, instructions, inputData.getUserPrompt());
-        else
-            mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+        ObjectNode mainObject = getTextResponseMainObject(instructions, inputData);
 
         mainObject.put(MODEL, assistant.getModel());
         mainObject.put("stream", true);
@@ -132,16 +123,10 @@ public class OpenRouterService extends OpenRouterSupportService implements AiInt
     }
 
     public HttpRequestBase getImageResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request, Prop prop) throws IOException {
-        ObjectNode mainObject;
-        if(inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE)) {
-            //ITS IMAGE EDIT - I GOT IMAGE to edit AND I WILL RETURN IMAGE
-            mainObject = getBaseMainObjectWithImage(inputData, instructions);
-        } else {
-            //ITS IMAGE GENERATION - INPUT IS TEXT RETUN IMAGE
-            mainObject = getBaseMainObject(instructions);
-        }
+        ObjectNode mainObject = getImageResponseMainObject(instructions, inputData);
 
         mainObject.put(MODEL, assistant.getModel());
+        mainObject.putArray("modalities").add("image").add("text");
 
         HttpPost httpPost = new HttpPost(RESPONSES_URL);
         setHeaders(httpPost, true);
@@ -202,6 +187,29 @@ public class OpenRouterService extends OpenRouterSupportService implements AiInt
 
     public String getModelForImageNameGeneration() {
        return Constants.getString("ai_openRouter_generateFileNameModel");
+    }
+
+    private ObjectNode getTextResponseMainObject(String instructions, InputDataDTO inputData) throws IOException {
+        String systemInstructions = PromptInjectionDefense.hardenSystemInstructions(instructions);
+        String userPrompt = PromptInjectionDefense.getProtectedUserPrompt(inputData);
+
+        if (InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
+            return getChatMainObject(systemInstructions, inputData, userPrompt);
+
+        return getChatMainObject(systemInstructions, null, PromptInjectionDefense.getProtectedInputText(inputData), userPrompt);
+    }
+
+    private ObjectNode getImageResponseMainObject(String instructions, InputDataDTO inputData) throws IOException {
+        String securityInstructions = PromptInjectionDefense.getSecurityInstructions(instructions);
+        String taskInstructions = PromptInjectionDefense.getTaskInstructions(instructions);
+        String userPrompt = PromptInjectionDefense.getProtectedUserPrompt(inputData);
+
+        if (inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE))
+            //ITS IMAGE EDIT - I GOT IMAGE to edit AND I WILL RETURN IMAGE
+            return getChatMainObject(securityInstructions, inputData, taskInstructions, userPrompt);
+
+        //ITS IMAGE GENERATION - INPUT IS TEXT RETUN IMAGE
+        return getChatMainObject(securityInstructions, null, taskInstructions, PromptInjectionDefense.getProtectedInputText(inputData), userPrompt);
     }
 
     public String getBonusHtml(AssistantDefinitionEntity assistant, Prop prop) {
