@@ -739,6 +739,8 @@ Field type for a dynamic list of values. In the editor, it appears as a list of 
 
 The resulting value is stored as a string, where individual lines are separated by the `|` character and values ​​within a line are separated by the `:` character. For example: `key1:value1|key2:value2|key3:value3`.
 
+If you specify only one value (`key1` without `:`), the same value will be used for both `label` and `value`.
+
 The field does not support the AI ​​button (`btn-ai`).
 
 ```java
@@ -751,6 +753,23 @@ The field does not support the AI ​​button (`btn-ai`).
 ```
 
 ![](../../redactor/apps/multistep-form/form-item-editor-advanced.png)
+
+## OPTIONS_SIMPLE
+
+Field type for a dynamic list of simple values ​​(one entry per line). The editor displays a list of text fields, where each line represents one value.
+
+The resulting value is stored as a string separated by the `|` character, e.g.: `hodnota1|hodnota2|hodnota3`.
+
+The type is suitable for cases where you don't need `label:value` pairs, but only a list of basic options (e.g. for `autocomplete` configurations).
+
+```java
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPTIONS_SIMPLE,
+        title = "components.myapp.autocompleteOptions",
+        tab = "advanced"
+    )
+    private String autocompleteOptions = "";
+```
 
 ## ENUMERATION
 

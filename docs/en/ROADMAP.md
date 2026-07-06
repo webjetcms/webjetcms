@@ -40,7 +40,11 @@ Explanation of the pictograms used:
 - [x] +Websites - add the ability to approve changes in website folders similarly to approving changes in websites, including viewing history and changes (#193).
 - [x] Add authorization option via `OAuth2`, option to use `mock` server https://github.com/navikt/mock-oauth2-server or https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [x] +Add support for logging into administration via [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/) (#58369).
-
+- [x] Optional fields – add the ability to set a text length limit for a field of type `textarea`, similar to what is currently possible for a field of type `text`.
+- [ ] Datatable – edit fields of type `Date` and `Datetime` so that validation `not null` works correctly.
+- [ ] Datatable – modify the `mergovania` method of the modified entity so that values ​​of type `number` can be reset.
+- [ ] +Redirects - distinguish automatically created redirects in the database (look for the variable `editorDisableAutomaticRedirect`) from manually created ones, possibility to filter accordingly in the UI (show only manually created redirects).
+- [ ] +Redirects - add redirect cleaning function - deletes old redirects (it was originally `aaa-bbb` and then `aaa-ccc` was created so `aaa-bbb` has no meaning = it will be deleted) and checks for cyclic redirects in which it deletes the last step. Also optimize redirects `aaa-bbb-ccc` to `aaa-ccc`.
 
 ## 2025
 

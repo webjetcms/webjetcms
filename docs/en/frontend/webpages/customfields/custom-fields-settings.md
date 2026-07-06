@@ -1,8 +1,6 @@
 # Optional Fields Table
 
-The Optional Fields table allows you to centrally set the properties of optional fields for various entities in the system. The settings are located in the `Nastavenia` menu under the `Voliteľné polia` item. Using this table, you can set the parameters of a mandatory field without having to edit translation keys.
-
-!>**Note:** Currently ONLY the **Required Field** parameter setting works, the rest of the settings will be implemented in the future.
+The Optional Fields table allows you to centrally set the properties of optional fields for various entities in the system. The settings are located in the `Nastavenia` menu under the `Voliteľné polia` item. Using this table, you can change the field type, description, obligation, tooltip, and type-specific parameters without having to edit translation keys.
 
 ![](custom-fields-settings-datatable.png)
 
@@ -16,11 +14,32 @@ The table contains the following columns:
 | **Optional field** | The letter of the alphabet (AZ) that identifies the optional field. Corresponds to the field names `field_A`, `field_B`, etc. |
 | **Entity ID** | Optional ID of a specific entity (e.g. page ID). If not specified, the setting is applied globally to all entities of the given class. |
 | **Field type** | The type of optional field (e.g. `text`, `textarea`, `boolean`, `number`, etc.). |
-| **Field description** | The description (label) that will be displayed next to the optional field in the editor. |
+| **Field description** | The label that will appear next to the optional field in the editor (you can enter a translation key). |
 | **Field tooltip** | The tooltip text that appears when you hover over an icon<i class="ti ti-info-circle"></i> . |
 | **Required field** | If set to `true`, the field will be required and will be checked for completion when the entity is saved. |
 
 ![](custom-fields-settings-editor.png)
+
+## Supported field types
+
+In the **Field type** field, the available types are:
+
+- `text`, `textarea`, `select`, `multiselect`, `boolean`, `number`, `date`, `none`
+- `autocomplete`, `image`, `link`, `json_group`, `json_doc`, `dir`, `docsIn`, `enumeration`, `uuid`, `color`
+
+## Settings by type
+
+When changing a field type, additional fields that belong only to that type are dynamically displayed in the editor:
+
+| Field type | Additional settings |
+| --- | --- |
+| `text` | **Maximum text length**, **Text length for warning display**, **Warning text** |
+| `select`, `multiselect` | **Options for the selection field** (editor type `OPTIONS`, lines `label:value`) |
+| `autocomplete` | list of options (editor of type `OPTIONS_SIMPLE`, single-valued rows) |
+| `docsIn` | **Website Folder Selection** (specifies the source of the pages for selection) |
+| `enumeration` | **Link to codebook** (`codebook ID`, `label` column, `value` column) |
+
+If **Required field** is disabled for types `select`, `multiselect`, `docsIn`, `enumeration`, `json_group`, `json_doc`, the editor will automatically offer an empty value.
 
 In the Dependent on tab, the following fields can be set:
 
@@ -43,7 +62,7 @@ For example, for a web page (`DocDetails`), field A can be set as mandatory glob
 
 ## Validation
 
-The combination of fields `Použiť pre entitu`, `Označenie poľa` and `ID entity` must be unique. The system will not allow a duplicate record to be created with the same combination of these values.
+The combination of fields `Použiť pre entitu`, `Voliteľné pole`, `ID entity`, `Závislé od entity` and `ID závislej entity` must be unique. The system will not allow you to create a duplicate record with the same combination of these values.
 
 ## Required fields
 

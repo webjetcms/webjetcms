@@ -5,11 +5,13 @@
 | ${ninja.page.seoTitle} | *String* | Název stránky (hodnota se bere z volitelného pole R nebo je-li prázdné, tak z titulku) |
 | ${ninja.page.seoDescription} | *String* | Popis stránky (hodnota se bere z volitelného pole S nebo je-li prázdné, tak z perexu) |
 | ${ninja.page.seoImage} | *String* | Odkaz na obrázek (hodnota se bere z volitelného pole T nebo pokud je prázdné, tak z perex obrázku) |
+| ${ninja.page.seoImageWidth} | *int* | Šířka SEO obrázku v pixelech |
+| ${ninja.page.seoImageHeight} | *int* | Výška SEO obrázku v pixelech |
 | ${ninja.page.url} | *String* | Url adresa |
 | ${ninja.page.urlDomain} | *String* | Doména |
 | ${ninja.page.urlPath} | *String* | Virtuální adresa |
 | ${ninja.page.urlParameters} | *Map* | Parametry z URL adresy |
-| ${ninja.page.robots} | *String* | Nastavení indexování |
+| ${ninja.page.robots} | *String* | Nastavení indexování a sledování odkazů vyhledávači |
 | ${ninja.page.doc} | *DocDetails* | Všechny vlastnosti |
 | ${ninja.page.title} | *String* | Titulek stránky s nahrazenou mezerou za `````` entitu po spojce (```Peter a Miro i Fero -> Peter a Miro i Fero```) |
 | ${ninja.page.perex} | *String* | Perex stránky s nahrazenou mezerou za `````` entitu po spojce |
@@ -77,6 +79,8 @@ Použité v :ghost:<code>head.jsp</code>
 
 ```html
 <meta property="og:image" content="${ninja.page.urlDomain}${ninja.page.seoImage}" />
+<meta property="og:image:width" content="${ninja.page.seoImageWidth}" />
+<meta property="og:image:height" content="${ninja.page.seoImageHeight}" />
 ```
 
 ## Url adresa *String*
@@ -121,6 +125,8 @@ Použité v :ghost:<code>head.jsp</code>
 
 ```html
 <meta property="og:image" content="${ninja.page.urlDomain}${ninja.page.seoImage}" />
+<meta property="og:image:width" content="${ninja.page.seoImageWidth}" />
+<meta property="og:image:height" content="${ninja.page.seoImageHeight}" />
 ```
 
 Použité v :ghost:<code>debug-info.jsp</code>
@@ -161,7 +167,26 @@ Použité v :ghost:<code>debug-info.jsp</code>
 
 ## Nastavení indexování *String*
 
-Pokud má webová stránka zaškrtnuto `Prehľadávateľné` v záložce Rozšířené údaje, tak vrátí hodnotu `index, follow`, ne-li tak `nofollow`. Hodnotu zaškrtnutí vrací metoda :carousel_horse: `isSearchable()`.
+Vrátí hodnotu pro SEO direktivy podle polí **Procházet** a **Následování odkazů vyhledávači** v editoru webové stránky. Stejná hodnota se použije i v HTTP hlavičce `X-Robots-Tag`, pokud je její generování pro webové stránky povoleno konfigurací.
+
+Pole **Následujení odkazů vyhledávači** podporuje možnosti:
+
+- **Podle nastavení Procházet** - při povoleném prohledávání povolí následování odkazů, při zakázaném prohledávání ho zakáže.
+- **Povolit následování odkazů** - nastaví `follow` nezávisle na poli **Procházet**.
+- **Zakázat následování odkazů** - nastaví `nofollow` nezávisle na poli **Procházet**.
+
+Výchozí hodnota je **Podle nastavení Procházet**, která zachovává společné řízení indexování a sledování odkazů pro stávající stránky.
+
+Výsledná hodnota obsahuje `all`, pokud indexování ani následování odkazů není omezeno. V ostatních případech obsahuje pouze omezující direktivy `noindex` a/nebo `nofollow`:
+
+| Procházet | Následování odkazů vyhledávači | `${ninja.page.robots}` / `X-Robots-Tag` |
+| --- | --- | --- |
+| Ano | Podle nastavení Procházet | `all` |
+| Ano | Povolit následování odkazů | `all` |
+| Ano | Zakázat následování odkazů | `nofollow` |
+| Ne | Podle nastavení Procházet | `noindex, nofollow` |
+| Ne | Povolit následování odkazů | `noindex` |
+| Ne | Zakázat následování odkazů | `noindex, nofollow` |
 
 ```java
 ${ninja.page.robots}
