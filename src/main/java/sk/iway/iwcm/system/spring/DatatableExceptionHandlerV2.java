@@ -152,7 +152,9 @@ public class DatatableExceptionHandlerV2
 				//failsafe
 			}
 			response.setError(err);
-			Logger.error(DatatableExceptionHandlerV2.class, "TransactionSystemException: " + ex.getMessage());
+			String message = ex.getMessage();
+			if (message != null && message.contains("Could not commit JPA transaction")) Logger.error(DatatableExceptionHandlerV2.class, "TransactionSystemException: " + ex.getMessage(), ex);
+			else Logger.error(DatatableExceptionHandlerV2.class, "TransactionSystemException: " + ex.getMessage());
 		} else {
 			response.setError(ex.getMessage());
 			Logger.error(DatatableExceptionHandlerV2.class, "TransactionSystemException, exception: " + ex.getMessage(), ex);
