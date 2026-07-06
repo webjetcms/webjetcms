@@ -3825,6 +3825,7 @@
 
         <void method="add">
             <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
                 <void property="date"><string>24.06.2026</string></void>
                 <void property="desc"><string>documents - add follow_links setting</string></void>
                 <void property="mysql"><string>ALTER TABLE documents ADD COLUMN follow_links TINYINT NOT NULL DEFAULT 0; ALTER TABLE documents_history ADD COLUMN follow_links TINYINT NOT NULL DEFAULT 0;</string></void>

@@ -58,8 +58,10 @@ public class CustomFieldsService {
      * @return map of custom fields indexed by their single-character alphabet key, or empty map if invalid params
      * @see #getCustomFields(CustomFieldsSearchDto)
      */
+    @SuppressWarnings("null")
     public static Map<Character, CustomFieldsEntity> getCustomFieldsMap(CustomFieldsSearchDto main) {
         List<CustomFieldsEntity> customFields = getCustomFields(main);
+
         return customFields.stream()
             .collect(Collectors.toMap(
                 CustomFieldsEntity::getCharacterAlphabet,

@@ -92,7 +92,6 @@ public class CustomFieldsRestController extends DatatableRestControllerV2<Custom
         if (entity.getEntityId() != null && entity.getEntityId() < 1) {
             entity.setEntityId(null);
         }
-
         if (entity.getBonusEntityId() != null && entity.getBonusEntityId() < 1) {
             entity.setBonusEntityId(null);
         }

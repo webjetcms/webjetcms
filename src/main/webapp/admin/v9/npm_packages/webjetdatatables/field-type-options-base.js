@@ -37,7 +37,7 @@ export function createOptionsFieldType(config) {
                 if (afterElement == null) {
                     container.appendChild(dragging);
                 } else {
-                    container.insertBefore(dragging, afterElement);
+                    afterElement.before(dragging);
                 }
             }
         });
@@ -135,8 +135,10 @@ export function createOptionsFieldType(config) {
             conf._wrapper.find("." + cls.inputs).empty();
             if (val && val.length > 0) {
                 let parts;
-                if (val.indexOf("|") != -1) parts = val.split("|");
-                else parts = val.split(",");
+
+                if (val.indexOf("|") == -1) parts = val.split(",");
+                else parts = val.split("|");
+
                 for (let i = 0; i < parts.length; i++) {
                     addInputRow(conf, ...parseValue(parts[i]));
                 }

@@ -111,8 +111,17 @@ Scenario('Custom fields required logic test @screenshot', async ({ I, DT, DTE, D
 
     I.clickCss("button.buttons-create");
     DTE.waitForEditor("customFieldsDataTable");
+    DTE.fillField("className", "sk.iway.iwcm.doc.DocDetails");
+    DTE.selectOption("alphabet", "C");
+    DTE.selectOption("type", "Výberové pole");
+    I.checkOption("#DTE_Field_required_0");
+    I.fillField("input.options-value-1", "Mac OS");
+    I.fillField("input.options-value-2", "macos");
+    I.click("button.options-add-btn");
 
     Document.screenshotElement("div.DTE_Action_Create", "/frontend/webpages/customfields/custom-fields-settings-editor.png");
+
+    DTE.cancel();
 
     I.say("GO check that only DOC with this TEMP is affected - bonus TEMP has highest priority");
     checkDocCustomFields(I, DTE, docId_1, ["F", requiredOverrideAlphabet, "H", "I"], ["J"]);
