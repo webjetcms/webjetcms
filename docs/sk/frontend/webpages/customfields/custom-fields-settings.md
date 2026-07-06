@@ -35,7 +35,7 @@ Pri zmene typu poľa sa v editore dynamicky zobrazia doplnkové polia, ktoré pa
 | --- | --- |
 | `text` | **Maximálna dĺžka textu**, **Dĺžka textu pre zobrazenie varovania**, **Text varovania** |
 | `select`, `multiselect` | **Možnosti pre výberové pole** (editor typu `OPTIONS`, riadky `label:value`) |
-| `autocomplete` | zoznam možností (editor typu `BASIC_OPTIONS`, riadky s jednou hodnotou) |
+| `autocomplete` | zoznam možností (editor typu `OPTIONS_BASIC`, riadky s jednou hodnotou) |
 | `docsIn` | **Výber priečinka webových stránok** (určí zdroj stránok pre výber) |
 | `enumeration` | **Prepojenie na číselník** (`ID číselníka`, `label` stĺpec, `value` stĺpec) |
 

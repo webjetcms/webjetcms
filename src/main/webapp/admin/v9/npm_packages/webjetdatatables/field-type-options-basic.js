@@ -6,30 +6,30 @@ import { createOptionsFieldType } from "./field-type-options-base";
  * Unlike OPTIONS, this has only a single value per row (no key:value pair).
  * @returns field type definition
  */
-export function typeBasicOptions() {
+export function typeOptionsBasic() {
     return createOptionsFieldType({
-        prefix: "basic-options",
+        prefix: "options-basic",
 
         createRowHtml: function (conf, value) {
             const row = $(`
-                <div class="input-group mb-2 basic-options-input-row">
-                    <span class="input-group-text basic-options-drag-handle" style="cursor: grab;"><i class="ti ti-caret-up-down"></i></span>
-                    <input type="text" class="form-control basic-options-value" value="" />
-                    <button class="btn btn-outline-danger basic-options-remove-btn" type="button" title="${WJ.translate("button.delete")}">
+                <div class="input-group mb-2 options-basic-input-row">
+                    <span class="input-group-text options-basic-drag-handle" style="cursor: grab;"><i class="ti ti-caret-up-down"></i></span>
+                    <input type="text" class="form-control options-basic-value" value="" />
+                    <button class="btn btn-outline-danger options-basic-remove-btn" type="button" title="${WJ.translate("button.delete")}">
                         <i class="ti ti-trash"></i>
                     </button>
                 </div>
             `);
-            row.find(".basic-options-value").val(value || "");
+            row.find(".options-basic-value").val(value || "");
             return row;
         },
 
         clearRow: function (row) {
-            row.find(".basic-options-value").val("");
+            row.find(".options-basic-value").val("");
         },
 
         getRowValue: function (row) {
-            const raw = row.find(".basic-options-value").val();
+            const raw = row.find(".options-basic-value").val();
             const val = (raw == null ? "" : String(raw)).trim();
             return val.length > 0 ? val : null;
         },

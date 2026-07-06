@@ -122,7 +122,7 @@ public class CustomFieldsEntity {
     private String selectOptions;
 
     @Transient
-    @DataTableColumn(inputType = DataTableColumnType.BASIC_OPTIONS, title = "settings.custom-fields.autocompleteOptions", tab = "basic", hidden = true, className = "specific-field")
+    @DataTableColumn(inputType = DataTableColumnType.OPTIONS_BASIC, title = "settings.custom-fields.autocompleteOptions", tab = "basic", hidden = true, className = "specific-field")
     private String autocompleteOptions;
 
     @Transient

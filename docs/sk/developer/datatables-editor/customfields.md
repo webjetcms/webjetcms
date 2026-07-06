@@ -116,9 +116,10 @@ Konfigurácia voliteľných polí sa skladá z dvoch zdrojov:
 
 Pri generovaní `fieldsDefinition` v `BaseEditorFields.getFields` sa aplikuje priorita:
 
-1. globálne nastavenie triedy (bez `entityId`),
-2. špecifické nastavenie pre konkrétnu entitu (`entityId`),
-3. bonus kontext (`bonusClassName` + `bonusEntityId`, napr. `TemplateDetails` pre `DocDetails`).
+1. prekladový kľúč
+2. globálne nastavenie triedy (bez `entityId`),
+3. špecifické nastavenie pre konkrétnu entitu (`entityId`),
+4. bonus kontext (`bonusClassName` + `bonusEntityId`, napr. `TemplateDetails` pre `DocDetails`).
 
 Vyššia úroveň vždy prepíše nižšiu pre rovnaké písmeno poľa (`alphabet`).
 
@@ -171,7 +172,7 @@ EDITOR.on('preSubmit', function (e, data, action) {
 });
 ```
 
-Pri type `autocomplete` sa odosiela request na `/admin/FCKeditor/_editor_autocomplete.jsp` aj s parametrami `className` a `objectId`. Endpoint preto vie uprednostniť konfiguráciu z `custom_fields` pred fallbackom na prekladové kľúče.
+Pri type `autocomplete` sa odosiela request na `/admin/FCKeditor/_editor_autocomplete.jsp` aj s parametrami `className` a `objectId`. Endpoint preto vie uprednostniť konfiguráciu z `custom_fields` pred generickým prekladovým kľúčom.
 
 Pri typoch `select` a `multiselect` je podporovaný formát `label:value`. Ak hodnota neobsahuje presne jednu dvojbodku, použije sa rovnaký text pre `label` aj `value`.
 

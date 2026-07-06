@@ -754,7 +754,7 @@ Pole nepodporuje AI tlačidlo (`btn-ai`).
 
 ![](../../redactor/apps/multistep-form/form-item-editor-advanced.png)
 
-## BASIC_OPTIONS
+## OPTIONS_BASIC
 
 Typ poľa pre dynamický zoznam jednoduchých hodnôt (jeden vstup v riadku). V editore sa zobrazí zoznam textových polí, kde každý riadok reprezentuje jednu hodnotu.
 
@@ -764,7 +764,7 @@ Typ je vhodný pre prípady, kde nepotrebujete dvojice `label:value`, ale iba zo
 
 ```java
     @DataTableColumn(
-        inputType = DataTableColumnType.BASIC_OPTIONS,
+        inputType = DataTableColumnType.OPTIONS_BASIC,
         title = "components.myapp.autocompleteOptions",
         tab = "advanced"
     )

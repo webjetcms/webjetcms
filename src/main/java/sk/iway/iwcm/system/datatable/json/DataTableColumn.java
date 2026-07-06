@@ -742,12 +742,12 @@ public class DataTableColumn {
             editor.setType("options");
         }
 
-        if (dataTableColumnType == DataTableColumnType.BASIC_OPTIONS) {
+        if (dataTableColumnType == DataTableColumnType.OPTIONS_BASIC) {
             renderFormat = "dt-format-text";
             if (editor == null) {
                 editor = new DataTableColumnEditor();
             }
-            editor.setType("basicOptions");
+            editor.setType("optionsBasic");
         }
 
         if (dataTableColumnType == DataTableColumnType.ENUMERATION) {
