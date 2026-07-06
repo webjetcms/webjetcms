@@ -1,0 +1,82 @@
+<div class="dt-header-row clearfix">
+    <div class="row">
+        <div class="col-auto">
+            <div class="dt-buttons">
+                <button class="btn btn-sm btn-outline-secondary buttons-jstree-settings buttons-right" data-toggle="tooltip" data-th-title="#{datatables.button.settings.js}">
+                    <span><i class="ti ti-adjustments-horizontal"></i></span>
+                </button>
+
+                <button class="btn btn-sm btn-outline-secondary buttons-refresh buttons-right" data-toggle="tooltip" data-th-title="#{datatables.button.reload.js}">
+                    <span><i class="ti ti-refresh"></i></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="SomStromcek" class="hide-while-loading" data-rest-url="/admin/rest/components/archive/tree" data-rest-param-name="id">
+    <ul>
+    </ul>
+</div>
+
+<!-- jstree settings modal -->
+<div class="modal DTED fade" id="jstreeSettingsModal" tabindex="-1" role="dialog" aria-labelledby="jstreeSettingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+        <div class="DTE_Action_Edit modal-content">
+            <div class="modal-header">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <h5 class="modal-title ui-draggable-handle" data-th-text="#{datatables.button.settings.js}"></h5>
+                    </div>
+                </div>
+            </div>
+            <div class="DTE_Body modal-body modal-body-notabs">
+                <div class="modal-body-bg">
+                    <div class="DTE_Action_Edit tab-content" id="pills-jstreesettingsData">
+                        <div class="tab-pane fade show active" id="pills-jstreesetting-basic" role="tabpanel" aria-labelledby="pills-jstreesetting-basic-tab">
+                            <div class="form-group row DTE_Field_Type_select DTE_Field_treeWidth">
+                                <label class="col-sm-4 col-form-label" for="jstree-settings-treeWidth" data-th-text="#{webpages.jstree.treeWidth}"></label>
+                                <div class="col-sm-7">
+                                    <div class="DTE_Field_InputControl">
+                                        <select class="form-control form-select col-12" id="jstree-settings-treeWidth">
+                                            <option value="1">1:11</option>
+                                            <option value="2">2:10</option>
+                                            <option value="3">3:9</option>
+                                            <option value="4">4:8</option>
+                                            <option value="5">5:7</option>
+                                            <option value="6">6:6</option>
+                                            <option value="7">7:5</option>
+                                            <option value="8">8:4</option>
+                                            <option value="9">9:3</option>
+                                            <option value="10">10:2</option>
+                                            <option value="11">11:1</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-1 form-group-tooltip">
+                                    <button class="btn btn-link" type="button" data-toggle="tooltip" data-th-title="#{webpages.jstree.treeWidth.tooltip}">
+                                        <i class="ti ti-info-circle"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer DTE_Footer">
+                <div class="DTE_Form_Error"></div>
+                <span class="buttons-footer-left">
+                    <button class="btn btn-link" type="button" onclick="WJ.showHelpWindow()">
+                        <i class="ti ti-help"></i> <span data-th-text="#{button.help}"></span>
+                    </button>
+                </span>
+                <button class="btn btn-outline-secondary btn-close-editor" type="button" data-bs-dismiss="modal">
+                    <i class="ti ti-x"></i> <span data-th-text="#{button.cancel}"></span>
+                </button>
+                <button id="jstree-settings-submit" class="btn btn-primary" type="button">
+                    <i class="ti ti-check"></i> <span data-th-text="#{button.submit}"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

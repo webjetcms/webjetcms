@@ -60,6 +60,8 @@ public class AdminUploadServlet extends HttpServlet
         boolean writeDirectlyToDestination = "true".equals(request.getParameter("writeDirectlyToDestination"));
         String overwriteMode = request.getParameter("overwriteMode");
         boolean isBase64 = "base64".equals(request.getParameter("encoding"));
+        String uploadType = Tools.getStringValue(request.getParameter("uploadType"), "");
+        boolean saveIntoArchive = "fileArchive".equals(uploadType);
 
         JSONObject output = new JSONObject();
 
@@ -68,8 +70,9 @@ public class AdminUploadServlet extends HttpServlet
 			Part filePart = request.getPart("file");
 			name = filePart.getSubmittedFileName();
         }
+        String originalName = name;
 
-        if (destinationFolder!=null && (destinationFolder.startsWith("/files") || destinationFolder.startsWith("/images") || destinationFolder.startsWith("/shared"))) {
+        if (destinationFolder!=null && (saveIntoArchive || destinationFolder.startsWith("/files") || destinationFolder.startsWith("/images") || destinationFolder.startsWith("/shared"))) {
             name = DB.internationalToEnglish(name);
             name = DocTools.removeCharsDir(name, true).toLowerCase();
         }
@@ -81,14 +84,13 @@ public class AdminUploadServlet extends HttpServlet
         long fileSize = Tools.getLongValue(request.getHeader("Content-Length"), Long.MAX_VALUE);
         if (request.getParameter("dztotalfilesize")!=null) fileSize = Tools.getLongValue(request.getParameter("dztotalfilesize"), fileSize);
 
-        String uploadType = Tools.getStringValue(request.getParameter("uploadType"), ""); //typ uploadu (image/file)
         String extension = FileTools.getFileExtension(name);
 
         String errorKey = null;
         if (user == null || user.isAdmin()==false) {
             errorKey = "admin.logon.timeoutTitle";
         }
-        else if (Tools.isNotEmpty(destinationFolder) && "/files/protected/upload/".equals(destinationFolder)==false && "/files/protected/feedback-form/".equals(destinationFolder)==false && user.isFolderWritable(destinationFolder)==false) {
+        else if (saveIntoArchive == false && Tools.isNotEmpty(destinationFolder) && "/files/protected/upload/".equals(destinationFolder)==false && "/files/protected/feedback-form/".equals(destinationFolder)==false && user.isFolderWritable(destinationFolder)==false) {
             // /files/protected/upload/ is allowed because of field-type-wjupload.js default folder
             // /files/protected/feedback-form/ je natvrdo povolene, aby bolo mozne nahrat subory k feedback-form
             errorKey = "admin.upload_iframe.wrong_upload_dir";
@@ -99,6 +101,12 @@ public class AdminUploadServlet extends HttpServlet
 
         if (destinationFolder == null) {
             errorKey = "admin.upload_iframe.wrong_upload_dir";
+        } else if (saveIntoArchive) {
+            String referer = request.getHeader("referer");
+            errorKey = FileArchiveUploadService.validateArchiveUploadPermission(user, destinationFolder, referer);
+            if (errorKey == null) {
+                destinationFolder = FileArchiveUploadService.normalizeArchiveFolder(destinationFolder);
+            }
         } else if (destinationFolder.startsWith("/images") || destinationFolder.startsWith("/files") || destinationFolder.startsWith("/shared")) {
             //pre bezpecnost povolujeme len tieto priecinky na upload, kedze ten sa definuje cez parameter destinationFolder
         } else {
@@ -184,7 +192,7 @@ public class AdminUploadServlet extends HttpServlet
                     IwcmFile outputFile = null;
                     String destinationVirtualPath = "";
 
-                    if (writeDirectlyToDestination && Tools.isNotEmpty(destinationFolder) && FileBrowserTools.hasForbiddenSymbol(destinationFolder)==false)
+                    if (saveIntoArchive == false && writeDirectlyToDestination && Tools.isNotEmpty(destinationFolder) && FileBrowserTools.hasForbiddenSymbol(destinationFolder)==false)
                     {
                         IwcmFile dirFile = new IwcmFile(Tools.getRealPath(destinationFolder));
                         if (dirFile.exists()==false) dirFile.mkdirs();
@@ -268,7 +276,14 @@ public class AdminUploadServlet extends HttpServlet
                     catch (JSONException e) {
                         Logger.error(AdminUploadServlet.class, e);
                     }
-                    if (outputFile != null) temporary.put(random, new PathHolder(name, outputFile.getAbsolutePath(), Tools.getNow()));
+                    if (outputFile != null) {
+                        temporary.put(random, new PathHolder(name, outputFile.getAbsolutePath(), Tools.getNow()));
+
+                        if (saveIntoArchive && writeDirectlyToDestination) {
+                            Prop prop = Prop.getInstance(request);
+                            FileArchiveUploadService.saveNewArchiveFile(user, prop, destinationFolder, name, originalName, random, output);
+                        }
+                    }
                 }
                 catch (IOException ioe)
                 {
@@ -331,8 +346,9 @@ public class AdminUploadServlet extends HttpServlet
      * @return - true ak subor existoval a zmazal sa
      */
     public static boolean deleteTempFile(String fileKey) {
-        if (temporary.containsKey(fileKey)) {
-            IwcmFile file = new IwcmFile(temporary.get(fileKey).getTempPath());
+        PathHolder pathHolder = temporary.remove(fileKey);
+        if (pathHolder != null) {
+            IwcmFile file = new IwcmFile(pathHolder.getTempPath());
             if (file.exists()) return file.delete();
         }
 

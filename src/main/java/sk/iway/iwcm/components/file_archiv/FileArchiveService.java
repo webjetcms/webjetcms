@@ -795,7 +795,11 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 
 	public static final Long getId(String filePath, String fileName, FileArchiveRepository far) {
 		if(Tools.isEmpty(filePath) || Tools.isEmpty(fileName)) return -1L;
-		filePath = FileArchivSupportMethodsService.normalizeToOldPath(filePath);
-		return far.findIdByFilePathAndFileName(filePath, fileName, CloudToolsForCore.getDomainId()).map(Long::longValue).orElse(-1L);
+		String oldFilePath = FileArchivSupportMethodsService.normalizeToOldPath(filePath);
+		Long id = far.findIdByFilePathAndFileName(oldFilePath, fileName, CloudToolsForCore.getDomainId()).map(val -> val != null ? val.longValue() : -1L).orElse(-1L);
+		if(id > 0) return id;
+
+		String normalizedFilePath = FileArchivSupportMethodsService.normalizePath(filePath);
+		return far.findIdByFilePathAndFileName(normalizedFilePath, fileName, CloudToolsForCore.getDomainId()).map(val -> val != null ? val.longValue() : -1L).orElse(-1L);
 	}
 }

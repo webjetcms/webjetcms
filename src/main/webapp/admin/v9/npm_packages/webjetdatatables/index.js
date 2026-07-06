@@ -576,6 +576,9 @@ export const dataTableInit = options => {
         if (false === DATA.nestedModal) {
             //urci dynamicky pocet zaznamov
             var height = $(window).height();
+            //subtract custom offset set via CSS custom property --dt-autoheight-offset (e.g. for fixed bottom elements)
+            var customOffset = parseInt(getComputedStyle(document.body).getPropertyValue('--dt-autoheight-offset')) || 0;
+            height -= customOffset;
 
             var headerHeight = $("div.ly-header").outerHeight();
             var breadcrumbHeight = 0;

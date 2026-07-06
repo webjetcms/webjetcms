@@ -34,7 +34,7 @@
 html.in-iframe, html.in-iframe-show-table {
     .ly-content-wrapper {
         padding-left: 0px;
-        padding-top: 0px;
+        padding-top: 0px !important;
     }
     div.dt-container .dt-header-row .row, .col-md-4.tree-col .dt-header-row .row {
         margin-left: -15px;

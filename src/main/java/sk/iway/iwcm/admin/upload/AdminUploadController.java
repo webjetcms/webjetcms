@@ -9,7 +9,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.users.UsersDB;
 
 @Controller
 @RequestMapping("/admin/upload/")
@@ -36,6 +39,9 @@ public class AdminUploadController {
     @ResponseBody
     public String overwrite(@RequestParam String fileKey, @RequestParam String destinationFolder, @RequestParam String fileName, @RequestParam String uploadType, HttpServletRequest request)
     {
+        if ("fileArchive".equals(uploadType)) {
+            return processArchiveFile(fileKey, destinationFolder, fileName, false, request);
+        }
         return processOverwrite(fileKey, destinationFolder, fileName, false, request);
     }
 
@@ -43,7 +49,33 @@ public class AdminUploadController {
     @ResponseBody
     public String keepboth(@RequestParam String fileKey, @RequestParam String destinationFolder, @RequestParam String fileName, @RequestParam String uploadType, HttpServletRequest request)
     {
+        if ("fileArchive".equals(uploadType)) {
+            return processArchiveFile(fileKey, destinationFolder, fileName, true, request);
+        }
         return processOverwrite(fileKey, destinationFolder, fileName, true, request);
+    }
+
+    private static String processArchiveFile(String fileKey, String destinationFolder, String fileName, boolean keepBoth, HttpServletRequest request) {
+        JSONObject output = new JSONObject();
+        Prop prop = Prop.getInstance(request);
+        Identity user = UsersDB.getCurrentUser(request);
+        String referer = request.getHeader("referer");
+
+        String errorKey = FileArchiveUploadService.validateArchiveUploadPermission(user, destinationFolder, referer);
+        if (errorKey != null) {
+            output.put("success", false);
+            output.put("error", prop.getText(errorKey));
+            return output.toString();
+        }
+
+        String archiveFolder = FileArchiveUploadService.normalizeArchiveFolder(destinationFolder);
+        if (keepBoth) {
+            FileArchiveUploadService.uploadNewArchiveFileVersion(user, prop, archiveFolder, fileName, fileKey, output);
+        } else {
+            FileArchiveUploadService.overwriteArchiveFile(user, prop, archiveFolder, fileName, fileKey, output);
+        }
+
+        return output.toString();
     }
 
     /**

@@ -36,7 +36,7 @@
 
 //Inside DTED when it's field in table editor
 .DTED {
-    #upload-wrapper {
+    .upload-wrapper {
         position: relative !important;
         bottom: 0 !important;
         right: 0 !important;
@@ -53,7 +53,7 @@
     //     }
     // }
     
-    #toast-container-upload {
+    .toast-container-upload {
         overflow: hidden !important;
         
         .toast-dzpreview {
@@ -90,7 +90,8 @@
     }
 }
 
-#upload-wrapper {
+#upload-wrapper,
+.upload-wrapper {
     position: fixed;
     z-index: 999999;
 
@@ -185,10 +186,12 @@
     }
 }
 
-#toast-container-upload * {
+#toast-container-upload *,
+.toast-container-upload * {
     box-sizing: border-box;
   }
-#toast-container-upload > div {
+#toast-container-upload > div,
+.toast-container-upload > div {
     border: 0px;
     border-bottom: 1px solid #dddfe6;
     position: relative;
@@ -309,7 +312,8 @@
     }
 }
 
-#toast-container-upload {
+#toast-container-upload,
+.toast-container-upload {
 
     max-height: 270px;
     overflow: auto;
@@ -391,12 +395,14 @@
 }
 
 
-#toast-container-upload > div.toast.toast-dzpreview {
+#toast-container-upload > div.toast.toast-dzpreview,
+.toast-container-upload > div.toast.toast-dzpreview {
     color: black;
     background-color: white;
 }
 
-#toast-container-upload > div.toast.toast-dzpreview:hover {
+#toast-container-upload > div.toast.toast-dzpreview:hover,
+.toast-container-upload > div.toast.toast-dzpreview:hover {
     opacity: 1;
     background-color: #f3f3f6;
 }
