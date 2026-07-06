@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -17,6 +18,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -81,7 +83,6 @@ import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.utils.Pair;
 
-
 /**
  *  Aktualizuje databazu
  *
@@ -93,6 +94,7 @@ import sk.iway.iwcm.utils.Pair;
  *@created      Nedele, 2004, marec 7
  *@modified     $Date: 2004/03/14 20:23:31 $
  */
+@SuppressWarnings({"java:S6912", "java:S6905", "java:S2077"})
 public class UpdateDatabase
 {
 	protected UpdateDatabase() {
@@ -143,6 +145,8 @@ public class UpdateDatabase
 		updateInvoiceContacts();
 
 		setIsDeleteDocHistory();
+
+		setThumbServletAllowedSizeMode();
 
 		Logger.println(UpdateDatabase.class,"----- Database updated  -----");
 	}
@@ -228,7 +232,7 @@ public class UpdateDatabase
 		Scanner scanner;
 		try
 		{
-			scanner = new Scanner(new File(Tools.getRealPath("/WEB-INF/sql/stopwords.csv")),"UTF-8");
+			scanner = new Scanner(new File(Tools.getRealPath("/WEB-INF/sql/stopwords.csv")), StandardCharsets.UTF_8.name());
 			while (scanner.hasNextLine())
 			{
 				fileCount++;
@@ -258,7 +262,7 @@ public class UpdateDatabase
 
 				ps = db_conn.prepareStatement("insert into stopword (word,language) values (?,?)");
 				scanner.close();
-				scanner = new Scanner(new File(Tools.getRealPath("/WEB-INF/sql/stopwords.csv")),"UTF-8");
+				scanner = new Scanner(new File(Tools.getRealPath("/WEB-INF/sql/stopwords.csv")), StandardCharsets.UTF_8.name());
 
 				while (scanner.hasNext())
 				{
@@ -268,7 +272,7 @@ public class UpdateDatabase
 					String language = split[1].trim();
 					ps.setString(1, stopword);
 					ps.setString(2, language);
-					ps.executeUpdate();
+					ps.execute();
 				}
 				ps.close();
 				db_conn.close();
@@ -2333,7 +2337,7 @@ public class UpdateDatabase
 		saveSuccessUpdate(note);
 	}
 
-	private static int getDomainIdBasedOnUrl(String url) throws Exception {
+	private static int getDomainIdBasedOnUrl(String url) {
 		int domainId = 1;
 		if( Tools.isNotEmpty(url) ) {
 			DocDetails doc = WebpagesService.getBasicDocFromUrl(url);
@@ -2527,6 +2531,33 @@ public class UpdateDatabase
 
 		//zapis do DB, ze je to aktualizovane
 		saveSuccessUpdate(note);
+	}
+
+	/**
+	 * Set thumbServletAllowedSizeMode to check ONE MONTH after first update
+	 */
+	private static void setThumbServletAllowedSizeMode() {
+		String firstNote = "01.07.2026 [lbalat] nastavenie thumbServletAllowedSizeMode na auto";
+		String secondNote = "01.07.2026 [lbalat] nastavenie thumbServletAllowedSizeMode na check";
+
+		if ("learn".equals(Constants.getString("thumbServletAllowedSizeMode")) == false) return;
+		if (isAllreadyUpdated(secondNote)) return;
+
+		if (isAllreadyUpdated(firstNote) == false) {
+			//set first note to check date when it was updated
+			saveSuccessUpdate(firstNote);
+		} else {
+			//check if it is older than one month
+			Calendar cal = Calendar.getInstance();
+			cal.add(Calendar.MONTH, -1);
+			Date oneMonthBefore = cal.getTime();
+			int count = new SimpleQuery().forInt("SELECT count(*) FROM "+ConfDB.DB_TABLE_NAME+" WHERE note = ? AND create_date < ?", firstNote, oneMonthBefore);
+			if (count > 0) {
+				//set second note to check date when it was updated
+				saveSuccessUpdate(secondNote);
+				ConfDB.setName("thumbServletAllowedSizeMode", "check", true);
+			}
+		}
 	}
 
 	public static void updateFormAttributesTable()
