@@ -6,6 +6,8 @@
 
 ### Webové stránky
 
+- SEO - pridané samostatné nastavenie **Nasledovanie odkazov vyhľadávačmi** s možnosťami **Podľa nastavenia Prehľadávať**, **Povoliť nasledovanie odkazov** (`follow`) a **Zakázať nasledovanie odkazov** (`nofollow`). HTTP hlavička `X-Robots-Tag` a Ninja `${ninja.page.robots}` používajú rovnakú logiku: pri indexovaní bez obmedzení vrátia `all`, inak kombináciu direktív `noindex` a `nofollow` podľa nastavenia stránky. Viac v [dokumentácii Ninja](frontend/ninja-starter-kit/ninja-jv/page/README.md#nastavenie-indexovania-string) (#OSK563).
+- Ninja - doplnené [generovanie rozmerov](frontend/ninja-starter-kit/ninja-bp/page/README.md) SEO obrázka `og:image:width` a `og:image:height` (#OSK563).
 - Šablóny - pridaná možnosť nastaviť presun `<style>` a `<link rel="stylesheet">` značiek z tela stránky do `<head>` cez [voľbu v šablóne](frontend/templates/templates.md) s podporou globálnej konfiguračnej premennej `showDocMoveStyleToHead`. Bloky v IE podmienkach, `noscript` a `script` zostávajú na mieste (#231).
 
 ![](frontend/templates/templates-edit-advanced.png)
@@ -34,6 +36,10 @@
 
 - Pridaná podpora [sémantického vyhľadávania](redactor/apps/semantic-search/README.md) postaveného na technológii vektorovej databázy `pgvector` a `OpenAI embeddings`. Umožňuje návštevníkom nájsť relevantné stránky na základe **významu otázky**, nielen zhody kľúčových slov (#211).
 
+- Doplnený hybridný režim sémantického vyhľadávania a voliteľná RAG odpoveď z indexovaného obsahu. Aplikácia **Vyhľadávanie** má nové nastavenia pre typ vyhľadávania, hybridné správanie, výber AI asistenta a limity kontextu odpovede (#58521).
+
+![](redactor/apps/semantic-search/rag-result.png)
+
 ### Aplikácie
 
 - Pridaná nová aplikácia [Presmerovanie podľa jazyka](redactor/apps/language-redirect/README.md) na automatické presmerovanie návštevníkov na jazykovú verziu stránky podľa detekcie jazyka z HTTP hlavičky `Accept-Language`. Podporuje až 8 priradení jazykov na URL adresy, rešpektovanie jazykového cookie a možnosť presmerovania len na koreňovej URL (#58497).
@@ -52,6 +58,11 @@
 - Pridané zobrazenie zoznamu skupín šablón (#58525).
 - V riadiacej doméne je možné upravovať všetky presmerovania domén.
 - V riadiacej doméne pridaná možnosť zobraziť všetky súbory.
+
+### Iné menšie zmeny
+
+- Prieskumník - pridané právo **Povoliť nahrávanie súborov s diakritikou**, ktoré umožňuje zachovať diakritiku pri nahrávaní, vytváraní a premenovaní súborov a priečinkov v priečinkoch `/files`, `/images` a `/shared`. Bez tohto práva sa názvy naďalej automaticky upravia bez diakritiky (#58589).
+- Prihlásenie - zrýchlené načítanie úvodnej stránky v administrácii - pridaná vyrovnávacia pamäť pre zoznam posledných stránok, zmenených stránok a auditných záznamov (#58589).
 
 ### Bezpečnosť
 
@@ -276,11 +287,16 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+!> Upozornenie: po aktualizácii skontrolujte funkčnosť generovania `/thumb` obrázkov a [nastavenie povolených rozmerov](frontend/thumb-servlet/README.md#obmedzenia).
+
 - Web stránky - zrušené [plánované verzie](redactor/webpages/history.md) sú v histórii zobrazené preškrtnutým písmom a nie je možné ich zmazať (#58573).
 - Archív súborov - upravená úloha na pozadí pre publikovanie súborov - z dôvodu práv sa nevykonáva na verejnom uzle (#246).
 - Úlohy na pozadí - pridaná možnosť spustiť [úlohu na pozadí](admin/settings/cronjob/README.md) len na uzloch v plnej konfigurácii alebo na verejných uzloch (#246).
 - Generátor primárnych kľúčov - doplnená automatická oprava mien tabuliek a názvov stĺpca s primárnou hodnotou (#246).
 - Bezpečnosť - opravené chyby Local File Inclusion, kontrola nahrávaných súborov a RCE. Ďakujeme Josef Korbel (Citadelo) za nahlásenie týchto zraniteľností (#252).
+- Bezpečnosť - pridaná [kontrola povolených rozmerov](frontend/thumb-servlet/README.md#obmedzenia) generovania `/thumb` obrázkov, prvý mesiac v režime učenia a následne po reštarte WebJETu v režime kontroly (#259).
+- JPA - opravené viac násobné ukončenie databázovej transakcie pri importe presmerovaní (#256).
+- `/thumb` - opravené generovanie obrázka pri `ip=1/2` a nulovej veľkosti `w/h` parametra (#58317-10).
 
 ## 2026.0.25
 

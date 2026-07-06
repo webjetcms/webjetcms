@@ -5,7 +5,6 @@ import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -34,6 +33,7 @@ import sk.iway.iwcm.stat.SessionDetails;
 import sk.iway.iwcm.stat.SessionHolder;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
+import sk.iway.iwcm.system.spring.events.WebjetEventType;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -53,6 +53,7 @@ public class DashboardListener {
      * @param event
      */
     @EventListener(condition = "#event.clazz eq 'sk.iway.iwcm.admin.ThymeleafEvent' && event.source.page=='dashboard'")
+    @SuppressWarnings("unchecked")
     protected void setOverviewData(final WebjetEvent<ThymeleafEvent> event) {
         try {
             DebugTimer dt = new DebugTimer("DashboardListener");
@@ -97,25 +98,43 @@ public class DashboardListener {
 
             int size = Constants.getInt("dashboardRecentSize");
 
-            // posledne stranky
-            List<DocDetails> recentPages = AdminTools.getMyRecentPages(user, size);
-            List<DocDetailsDto> recentPagesDto = recentPages.stream().map(DocDetailsDto::new)
-                    .collect(Collectors.toList());
+            //use cached result
+            Cache cache = Cache.getInstance();
+            String CACHE_KEY = "DashboardListener.recentPages." + user.getUserId();
+            List<DocDetailsDto> recentPagesDto = cache.getObject(CACHE_KEY, List.class);
+            if (recentPagesDto == null) {
+                // posledne stranky
+                List<DocDetails> recentPages = AdminTools.getMyRecentPages(user, size);
+                recentPagesDto = recentPages.stream().map(DocDetailsDto::new).toList();
+                cache.setObjectSeconds(CACHE_KEY, recentPagesDto, 60*30, true);
+            }
             model.addAttribute("overviewRecentPages", JsonTools.objectToJSON(recentPagesDto));
             dt.diff("After recent pages");
 
-            // zmenene stranky
-            List<DocDetails> changedPages = AdminTools.getRecentPages(40, user);
-            List<DocDetailsDto> changedPagesDto = changedPages.stream().limit(size).map(DocDetailsDto::new)
-                    .collect(Collectors.toList());
+
+            CACHE_KEY = "DashboardListener.changedPages." + user.getUserId();
+            List<DocDetailsDto> changedPagesDto = cache.getObject(CACHE_KEY, List.class);
+            if (changedPagesDto == null) {
+                // zmenene stranky
+                List<DocDetails> changedPages = AdminTools.getRecentPages(40, user);
+                changedPagesDto = changedPages.stream().limit(size).map(DocDetailsDto::new).toList();
+                cache.setObjectSeconds(CACHE_KEY, changedPagesDto, 60*30, true);
+            }
             model.addAttribute("overviewChangedPages", JsonTools.objectToJSON(changedPagesDto));
             dt.diff("After changed pages");
 
             // audit
-            List<AdminlogBean> adminlog = Adminlog.getLastEvents(size);
-            List<AuditDto> adminlogDto;
-            if (user.isEnabledItem("cmp_adminlog")) adminlogDto = adminlog.stream().map(AuditDto::new).collect(Collectors.toList());
-            else adminlogDto = new ArrayList<>();
+            CACHE_KEY = "DashboardListener.audit." + user.getUserId();
+            List<AuditDto> adminlogDto = new ArrayList<>();
+            if (user.isEnabledItem("cmp_adminlog")) {
+                adminlogDto = cache.getObject(CACHE_KEY, List.class);
+                if (adminlogDto == null) {
+                    List<AdminlogBean> adminlog = Adminlog.getLastEvents(size);
+                    adminlogDto = adminlog.stream().map(AuditDto::new).toList();
+                    //cache for 5 minutes
+                    cache.setObjectSeconds(CACHE_KEY, adminlogDto, 60*5, true);
+                }
+            }
             model.addAttribute("overviewAdminlog", JsonTools.objectToJSON(adminlogDto));
             dt.diff("After adminlog");
 
@@ -184,6 +203,14 @@ public class DashboardListener {
 
         } catch (JsonProcessingException e) {
             Logger.error(DashboardListener.class, e);
+        }
+    }
+
+    @EventListener(condition = "#event.clazz eq 'sk.iway.iwcm.doc.DocDetails'")
+    public void pageSaved(final WebjetEvent<DocDetails> event) {
+        if (event.getEventType().equals(WebjetEventType.AFTER_SAVE)) {
+            Cache cache = Cache.getInstance();
+            cache.removeObjectStartsWithName("DashboardListener.", true);
         }
     }
 }

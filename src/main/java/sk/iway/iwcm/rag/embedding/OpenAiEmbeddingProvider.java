@@ -21,8 +21,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import sk.iway.iwcm.Constants;
-import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 import sk.iway.iwcm.components.ai.providers.openai.OpenAiSupportService;
 
 /**
@@ -36,18 +36,17 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Override
-    public List<float[]> embed(List<String> texts, String model) {
+    public List<float[]> embed(List<String> texts, String model) throws ProviderCallException {
         return embedWithUsage(texts, model).getEmbeddings();
     }
 
     @Override
-    public EmbeddingBatchResult embedWithUsage(List<String> texts, String model) {
+    public EmbeddingBatchResult embedWithUsage(List<String> texts, String model) throws ProviderCallException {
         if (texts == null || texts.isEmpty()) return EmbeddingBatchResult.empty();
 
         String apiKey = OpenAiSupportService.getApiKey();
         if (Tools.isEmpty(apiKey)) {
-            Logger.error(OpenAiEmbeddingProvider.class, "OpenAI API key is not configured (ai_openAiAuthKey)");
-            return EmbeddingBatchResult.empty();
+            throw new ProviderCallException("OpenAI API key is not configured (ai_openAiAuthKey)");
         }
 
         if (Tools.isEmpty(model)) model = getDefaultModel();
@@ -92,8 +91,7 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
                 String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
 
                 if (statusCode < 200 || statusCode >= 300) {
-                    Logger.error(OpenAiEmbeddingProvider.class, "OpenAI embeddings API error " + statusCode + ": " + responseBody);
-                    return EmbeddingBatchResult.empty();
+                    throw new ProviderCallException("OpenAI embeddings API error " + statusCode + ": " + responseBody);
                 }
 
                 JsonNode root = MAPPER.readTree(responseBody);
@@ -102,8 +100,7 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
                 return new EmbeddingBatchResult(embeddings, usedTokens);
             }
         } catch (IOException e) {
-            Logger.error(OpenAiEmbeddingProvider.class, "Error calling OpenAI embeddings API: " + e.getMessage());
-            return EmbeddingBatchResult.empty();
+            throw new ProviderCallException("Error calling OpenAI embeddings API: " + e.getMessage());
         }
     }
 

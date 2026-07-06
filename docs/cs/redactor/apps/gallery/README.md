@@ -160,6 +160,8 @@ Při kombinování parametrů se řádky kombinují samostatně - řádek 1 zák
 
 Pokud vlastní parametry obsahují nastavení `compression-level` nebo `quality`, automaticky se odstraní případný existující parametr `-quality` z příkazu, aby nedošlo ke konfliktu.
 
+Pokud potřebujete mít hodnotu na prvním řádku prázdnou zadejte výraz `---`, ten je zpracován jako prázdná hodnota (nelze zadat prázdnou hodnotu na prvním řádku, protože při uložení a čtení hodnot z databáze se na začátku a konci odříznou bílé znaky).
+
 ### Zmenšení rozměrů originál obrázku
 
 Pokud vám originál obrázek zabírá na disku hodně místa, je možné nastavit jeho zmenšení při nahrání pomocí konfiguračních proměnných:

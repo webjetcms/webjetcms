@@ -6,10 +6,13 @@ import java.util.Optional;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.GalleryDBTools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 
 public class Page {
@@ -108,6 +111,32 @@ public class Page {
         return seoImage;
     }
 
+    /**
+     * Returns the width of the SEO image in pixels.
+     *
+     * @return image width, or 0 if the image is missing or cannot be read
+     */
+    public int getSeoImageWidth() {
+        String seoImage = getSeoImage();
+        if (Tools.isEmpty(seoImage) || !FileTools.isFile(seoImage)) return 0;
+
+        int[] dimensions = GalleryDBTools.getImageSize(new IwcmFile(Tools.getRealPath(seoImage)));
+        return dimensions != null && dimensions.length > 0 ? dimensions[0] : 0;
+    }
+
+    /**
+     * Returns the height of the SEO image in pixels.
+     *
+     * @return image height, or 0 if the image is missing or cannot be read
+     */
+    public int getSeoImageHeight() {
+        String seoImage = getSeoImage();
+        if (Tools.isEmpty(seoImage) || !FileTools.isFile(seoImage)) return 0;
+
+        int[] dimensions = GalleryDBTools.getImageSize(new IwcmFile(Tools.getRealPath(seoImage)));
+        return dimensions != null && dimensions.length > 1 ? dimensions[1] : 0;
+    }
+
     public String getStringValue(String value, String defaultValue)
     {
         String ret = defaultValue;
@@ -116,11 +145,7 @@ public class Page {
     }
 
     public String getRobots(){
-        String robots = "";
-        if(doc!=null){
-            robots = doc.isSearchable() ? "index, follow" :  "noindex, follow";
-        }
-        return robots;
+        return PathFilter.getXRobotsTagValue(doc);
     }
 
     public String getUrl(){

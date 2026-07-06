@@ -1,44 +1,57 @@
 # Sémantické vyhľadávanie (RAG)
 
-Sémantické vyhľadávanie umožňuje návštevníkom nájsť relevantné stránky na základe **významu otázky**, nielen zhody kľúčových slov. Využíva technológiu postavenú na vektorovej databáze [pgvector](https://github.com/pgvector/pgvector) a vektoroch generovaných cez OpenAI API.
+Sémantické vyhľadávanie umožňuje návštevníkom nájsť relevantné stránky podľa **významu otázky**, nielen podľa zhody kľúčových slov. Využíva vektorovú databázu [pgvector](https://github.com/pgvector/pgvector) a embedding vektory generované cez OpenAI API.
+
+Nad rovnakým indexom je možné použiť aj:
+
+- **hybridné vyhľadávanie** - kombináciu vektorového vyhľadávania a fulltextu nad textom chunkov,
+- **RAG odpoveď** - AI odpoveď vygenerovanú iba z nájdeného kontextu.
 
 ## Ako to funguje
 
-Systém pracuje v dvoch fázach:
+Systém pracuje v dvoch hlavných fázach: indexovanie a online vyhľadávanie.
 
 ### 1. Indexovanie
 
-Keď je webová stránka uložená alebo zmenená, systém ju zaradí do fronty na indexovanie. Úloha na pozadí ([RagIndexCronTask](../../../../../../src/main/java/sk/iway/iwcm/rag/service/RagIndexCronTask.java)) pravidelne spracúva frontu:
+Keď je webová stránka uložená, obnovená z koša alebo zmazaná, listener [DocSaveEventListener](../../../../../../src/main/java/sk/iway/iwcm/rag/listener/DocSaveEventListener.java) zaradí požiadavku do fronty. Úloha na pozadí [RagIndexCronTask](../../../../../../src/main/java/sk/iway/iwcm/rag/service/RagIndexCronTask.java) následne spracúva frontu cez [SemanticIndexService](../../../../../../src/main/java/sk/iway/iwcm/rag/service/SemanticIndexService.java).
 
-1. **Extrakcia obsahu** – z `DocDetails` sa extrahuje čistý text (názov + perex + telo stránky bez HTML tagov).
-2. **Rozdelenie na časti (chunking)** – text sa rozdelí na prekrývajúce sa časti pomocou algoritmu posuvného okna (`SlidingWindowChunker`). Predvolená veľkosť časti je 500 znakov s prekryvom 100 znakov.
-3. **Generovanie vektorov** – každá časť sa odošle do OpenAI API (`/v1/embeddings`) a vráti sa vektor s 1 536 dimenziami (model `text-embedding-3-small`).
-4. **Uloženie do databázy** – vektory sa uložia do tabuľky `rag_embedding_chunks` v `PostgreSQL` databáze s rozšírením `pgvector`.
+Proces indexovania:
 
-### 2. Vyhľadávanie (online)
+1. **Extrakcia obsahu** - z `DocDetails` sa získa čistý text bez HTML značiek cez [DocDetailsContentExtractor](../../../../../../src/main/java/sk/iway/iwcm/rag/indexing/DocDetailsContentExtractor.java).
+2. **Rozdelenie na časti** - text sa rozdelí pomocou [SlidingWindowChunker](../../../../../../src/main/java/sk/iway/iwcm/rag/indexing/SlidingWindowChunker.java). Používajú sa konfiguračné premenné `ragEmbeddingChunkSize` a `ragEmbeddingChunkOverlap`.
+3. **Opätovné použitie embeddingov** - pre každý chunk sa vypočíta hash. Ak sa text chunku nezmenil a embedding má správnu dimenziu, použije sa existujúci vektor.
+4. **Generovanie embeddingov** - nové alebo zmenené chunky sa odošlú do OpenAI API (`/v1/embeddings`) cez [OpenAiEmbeddingProvider](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/OpenAiEmbeddingProvider.java).
+5. **Uloženie do databázy** - metadáta chunkov sa ukladajú cez JPA repozitár [EmbeddingChunkRepository](../../../../../../src/main/java/sk/iway/iwcm/rag/pgvector/EmbeddingChunkRepository.java), samotný `vector(N)` stĺpec sa aktualizuje natívnym SQL cez [PgVectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/PgVectorStore.java).
+
+Chunking preferuje prirodzené hranice textu: odsek, riadok, vetu, medzeru a až potom tvrdé rozdelenie podľa limitu. Pri desatinných číslach sa bodka nepovažuje za koniec vety.
+
+### 2. Vyhľadávanie
 
 Keď návštevník zadá vyhľadávací dotaz:
 
-1. Dotaz sa prevedie na embedding vektor cez OpenAI API.
-2. Vykoná sa vektorové vyhľadávanie v databáze (kosínusová podobnosť).
-3. Výsledky sa agregujú podľa dokumentu – za každý dokument sa vyberie najlepší chunk.
-4. Dokumenty sa vrátia zoradené podľa podobnosti a zobrazia sa rovnakým spôsobom ako výsledky štandardného vyhľadávania.
+1. [SearchAction](../../../../../../src/main/java/sk/iway/iwcm/doc/SearchAction.java) určí typ vyhľadávania z parametra aplikácie `searchType`. Pri hodnote `auto` alebo prázdnej hodnote použije globálnu konfiguračnú premennú `searchType`.
+2. Pri hodnote `semantic` alebo `hybrid` sa použije [SemanticSearchAction](../../../../../../src/main/java/sk/iway/iwcm/doc/SemanticSearchAction.java).
+3. [SemanticSearchService](../../../../../../src/main/java/sk/iway/iwcm/rag/search/SemanticSearchService.java) vygeneruje embedding dotazu a vyhľadá najbližšie chunky v pgvector databáze.
+4. Výsledky sa obmedzia podľa domény, jazyka, typu entity a podľa priečinkov zvolených v aplikácii **Vyhľadávanie**.
+5. Ak je povolený hybridný režim, spustí sa aj fulltext nad `rag_embedding_chunks.chunk_text` a výsledky sa spoja cez `RRF` (Reciprocal Rank Fusion).
+6. Výsledné chunky sa agregujú na dokumenty a dokumenty sa zobrazia rovnakým spôsobom ako pri štandardnom vyhľadávaní.
+7. Ak je povolená RAG odpoveď, z nájdených chunkov sa ešte pripraví kontext pre AI odpoveď.
 
 ## Požiadavky
 
-- **PostgreSQL** s rozšírením **pgvector** (obraz: `pgvector/pgvector:pg18-trixie` alebo novší)
-- **OpenAI API kľúč** – ten istý, ktorý sa používa pre AI asistentov (`ai_openAiAuthKey`)
-- Sémantické vyhľadávanie funguje **len v PostgreSQL**. Pre ostatné databázy (MySQL/MariaDB, MSSQL, Oracle) je potrebné nastaviť samostatnú vektorovú databázu cez datasource `rag_jpa`. Môžete teda používať napríklad MariaDB pre databázu WebJET CMS a samostatnú PostgreSQL pre vektorovú časť.
+- **PostgreSQL** s rozšírením **pgvector** (obraz: `pgvector/pgvector:pg18-trixie` alebo novší).
+- **OpenAI API kľúč** - používa sa rovnaký kľúč ako pre AI asistentov (`ai_openAiAuthKey`).
+- Sémantické vyhľadávanie funguje len nad PostgreSQL/pgvector úložiskom. Ak primárna databáza WebJET CMS nie je PostgreSQL, nastavte samostatnú PostgreSQL databázu cez datasource `rag_jpa`.
 
 ### PostgreSQL ako primárna databáza
 
 Ak WebJET CMS beží priamo na PostgreSQL, vektorová databáza sa použije automaticky bez ďalšej konfigurácie.
 
-Musí byť iba nastavený datasource ako v prípade [poolman-docker-pgsql.xml](../../../../../../src/main/resources/poolman-docker-pgsql.xml).
+Musí byť nastavený datasource ako v prípade [poolman-docker-pgsql.xml](../../../../../../src/main/resources/poolman-docker-pgsql.xml).
 
-### Samostatná vektorová databáza (vedľajšia)
+### Samostatná vektorová databáza
 
-Ak primárna databáza nie je PostgreSQL, vytvorte Docker kontajner s `pgvector`.
+Ak primárna databáza nie je PostgreSQL, vytvorte Docker kontajner s pgvector.
 
 Pre lokálny vývoj je pripravený súbor [.devcontainer/db/docker-compose-rag-pgsql.yml](../../../../../../.devcontainer/db/docker-compose-rag-pgsql.yml):
 
@@ -46,7 +59,7 @@ Pre lokálny vývoj je pripravený súbor [.devcontainer/db/docker-compose-rag-p
 docker compose -f .devcontainer/db/docker-compose-rag-pgsql.yml up -d
 ```
 
-už s nakonfigurovanými datasource:
+Príklady datasource konfigurácie:
 
 - [poolman-docker-mariadb.xml](../../../../../../src/main/resources/poolman-docker-mariadb.xml)
 - [poolman-docker-mssql.xml](../../../../../../src/main/resources/poolman-docker-mssql.xml)
@@ -54,44 +67,58 @@ už s nakonfigurovanými datasource:
 
 ## Konfigurácia
 
-Aktivácia a nastavenie sémantického vyhľadávania v [Konfigurácia](../../../../admin/setup/configuration/README.md):
+Aktivácia a nastavenie sa robí v [Konfigurácii](../../../../admin/setup/configuration/README.md).
+
+### Základné nastavenia
 
 | Premenná | Predvolená hodnota | Popis |
 | --- | --- | --- |
-| `ragSemanticSearchEnabled` | `false` | Zapne sémantické vyhľadávanie. Nastavte na `true` pre aktiváciu. |
-| `ragEmbeddingModel` | `text-embedding-3-small` | Názov OpenAI embedding modelu |
-| `ragEmbeddingDimensions` | `1536` | Počet dimenzií vektora. Musí zodpovedať použitému modelu a tabuľke v databáze. |
-| `ragChunkSize` | `1000` | Maximálna veľkosť jednej časti textu v znakoch. |
-| `ragChunkOverlap` | `200` | Počet znakov, o ktoré sa susedné časti prekrývajú. |
-| `searchType` | `db` | Typ vyhľadávania: `db` (databázové), `lucene` (Lucene fulltext), `semantic` (sémantické). |
-| `ragSemanticSearchMinSimilarity` | `0.2` | minimálna hodnota similarity pre výsledky. Hodnota mimo intervalu 0-1 sa orezáva na najbližšiu hranicu |
-| `ragSemanticSearchMinResults` | `3` | minimálny počet výsledkov sémantického vyhľadávania; pri menšom počte sa doplnia podľa najvyššej similarity |
-| `ragSearchEfSearch` | `40` | `HNSW` index parameter `ef_search` — čím vyššia hodnota, tým lepší recall ale pomalšie vyhľadávanie. Default je 40, pre väčšie web sídla zvážte zvýšenie na 100 alebo viac. |
-| `ragSearchDistanceMetric` | `cosine` | Metrika vzdialenosti pre `pgvector` vyhľadávanie. Možné hodnoty: 'cosine' (kosínusová vzdialenosť), 'inner_product' (vnútorný súčin, rýchlejší pre normalizované vektory), 'l2' (euklidovská vzdialenosť). Zmena vyžaduje reindex `HNSW` indexu. |
+| `ragSemanticSearchEnabled` | `false` | Zapne sémantické vyhľadávanie nad vektorovou databázou pgvector. |
+| `searchType` | `db` | Globálny typ vyhľadávania: `db`, `lucene`, `semantic`, `hybrid`. |
+| `luceneAsDefaultSearch` | `false` | Ak je `true`, Lucene má vyššiu prioritu než `searchType`. |
 
-!> Pre aktiváciu sémantického vyhľadávania nastavte `ragSemanticSearchEnabled=true` **aj** `searchType=semantic`.
+!> Pre aktiváciu sémantického vyhľadávania nastavte `ragSemanticSearchEnabled=true` a použite `searchType=semantic` alebo `searchType=hybrid`. Typ vyhľadávania možno prepísať aj lokálne v aplikácii **Vyhľadávanie**.
 
-!>**Upozornenie:** pri zmene konfiguračnej premennej `ragEmbeddingDimensions` sa vymaže celá tabuľka `rag_embedding_chunks`, pretože vektory nebudú kompatibilné. Zvážte zálohu dát pred zmenou tejto hodnoty. Tabuľka sa automaticky znova vytvorí s novou dimenziou.
+### Embedding a indexovanie
 
-Nastavte [automatizovanú úlohu](../../../../admin/settings/cronjob/README.md) s hodnotou `sk.iway.iwcm.rag.service.RagIndexCronTask` spúšťanú napríklad každých 5 minút - hodnota `*/5` v poli Minúta.
+| Premenná | Predvolená hodnota | Popis |
+| --- | --- | --- |
+| `ragEmbeddingModel` | `text-embedding-3-small` | Názov OpenAI embedding modelu. |
+| `ragEmbeddingDimensions` | `1536` | Počet dimenzií vektora. Musí zodpovedať použitému modelu a databázovej tabuľke. |
+| `ragEmbeddingChunkSize` | `1000` | Maximálna veľkosť jednej časti textu v znakoch. |
+| `ragEmbeddingChunkOverlap` | `200` | Počet znakov, o ktoré sa susedné chunky prekrývajú. |
 
-### Hybridné vyhľadávanie (vector + fulltext)
+!>**Upozornenie:** Staršie názvy `ragChunkSize` a `ragChunkOverlap` sa už nepoužívajú.
 
-Pri režime `short_query_only` sa fulltext zapína najmä pre krátke dotazy, kde môže byť samotná vektorová podobnosť menej stabilná.
+!>**Upozornenie:** Pri zmene `ragEmbeddingDimensions` sa vymažú dáta pre aktuálny embedding model, pretože vektory nebudú kompatibilné. Po zmene modelu alebo dimenzie spustite úplné indexovanie obsahu.
 
-Pri režime `fallback_on_low_vector` sa fulltext vykoná iba vtedy, keď je top vektorová similarity nízka alebo je príliš málo výsledkov.
+### Vektorové vyhľadávanie
 
-Výsledky sa spájajú pomocou `RRF` (Reciprocal Rank Fusion). V praxi to znamená, že sa neporovnávajú samotné čísla similarity medzi vektorovou a fulltext vetvou, ale iba ich poradie v každej vetve.
+| Premenná | Predvolená hodnota | Popis |
+| --- | --- | --- |
+| `ragSearchEfSearch` | `40` | Parameter `HNSW` indexu `ef_search`. Vyššia hodnota zlepšuje recall, ale môže spomaliť vyhľadávanie. |
+| `ragSearchDistanceMetric` | `cosine` | Metrika vzdialenosti: `cosine`, `inner_product`, `l2`. Zmena vyžaduje reindex `HNSW` indexu. |
+| `ragSemanticSearchMinSimilarity` | `0.2` | Minimálna hodnota similarity pre výsledky. Používa sa spolu s adaptívnym prahom podľa najlepšieho výsledku. |
+| `ragSemanticSearchMinResults` | `3` | Minimálny počet výsledkov, ktoré sa vrátia aj pri prísnejšom prahu similarity. |
 
-Zjednodušene:
+### Hybridné vyhľadávanie
 
-1. Vektorové vyhľadávanie vráti zoznam výsledkov zoradený od najlepšieho po horšie.
-2. Fulltext vyhľadávanie vráti svoj vlastný zoznam zoradený od najlepšieho po horšie.
-3. Každý výsledok dostane body podľa pozície v zozname, kde lepšie umiestnenie znamená viac bodov.
-4. Ak sa ten istý chunk objaví v oboch vetvách, body sa mu sčítajú.
-5. Potom sa výsledky zoradia podľa súčtu bodov a až z toho sa vyberú dokumenty.
+Hybridné vyhľadávanie kombinuje vektorové výsledky a fulltextové výsledky nad `rag_embedding_chunks.chunk_text`. Používa sa vtedy, keď je povolené `ragHybridSearchEnabled` a režim hybridného vyhľadávania nie je `off`.
 
-Týmto spôsobom môže byť výsledok, ktorý je mierne slabší vo vektore, ale veľmi dobrý vo fulltexte, posunutý vyššie. Naopak, výsledok, ktorý je silný len v jednej vetve, neprebije kombinovaný výsledok z oboch vetiev len náhodne veľkým číslom similarity.
+| Premenná | Predvolená hodnota | Popis |
+| --- | --- | --- |
+| `ragHybridSearchEnabled` | `true` | Globálne povolí hybridné vyhľadávanie. |
+| `ragHybridSearchMode` | `short_query_only` | Režim: `off`, `always`, `short_query_only`, `fallback_on_low_vector`. |
+| `ragHybridShortQueryMaxChars` | `12` | Maximálna dĺžka dotazu v znakoch pre režim `short_query_only`. |
+| `ragHybridShortQueryMaxTerms` | `2` | Maximálny počet slov dotazu pre režim `short_query_only`. |
+| `ragHybridFallbackTopSimilarity` | `0.35` | Prah najlepšej vektorovej similarity pre režim `fallback_on_low_vector`. |
+| `ragHybridVectorWeight` | `0.7` | Váha vektorového poradia pri RRF merge. |
+| `ragHybridFtsWeight` | `0.3` | Váha fulltextového poradia pri RRF merge. |
+| `ragHybridRrfK` | `60` | Parameter `k` pre Reciprocal Rank Fusion. |
+| `ragHybridChunkFetchMultiplier` | `3` | Násobič počtu chunkov načítaných oproti požadovanému počtu výsledkov. |
+| `ragHybridFtsUseIlikeFallback` | `true` | Ak PostgreSQL FTS vráti prázdny výsledok, použije fallback cez `ILIKE`. |
+
+V lokálnom nastavení aplikácie má hodnota `searchType=semantic` význam čistého vektorového vyhľadávania bez hybridnej vetvy. Hodnota `searchType=hybrid` použije hybrid, ak je globálne povolený.
 
 ```mermaid
 flowchart TD
@@ -109,83 +136,166 @@ flowchart TD
 	D --> O[Finálny zoznam výsledkov]
 ```
 
-Možné je nastaviť nasledovné konfiguračné premenné:
+## RAG odpoveď vo vyhľadávaní
+
+RAG odpoveď je voliteľný doplnok sémantického alebo hybridného vyhľadávania. Po nájdení relevantných chunkov sa pripraví obmedzený kontext a odošle sa AI asistentovi. Odpoveď sa zobrazí nad zoznamom výsledkov v JSP šablóne [search.jsp](../../../../../../src/main/webapp/components/search/search.jsp).
+
+### Konfigurácia RAG odpovede
 
 | Premenná | Predvolená hodnota | Popis |
 | --- | --- | --- |
-| `ragHybridSearchEnabled` | `true` | Zapne hybridné vyhľadávanie kombinujúce vektorové a fulltext výsledky nad `rag_embedding_chunks.chunk_text`. |
-| `ragHybridSearchMode` | `short_query_only` | Režim hybridného vyhľadávania: `off`, `always`, `short_query_only`, `fallback_on_low_vector`. |
-| `ragHybridShortQueryMaxChars` | `12` | Maximálna dĺžka dotazu v znakoch pre režim `short_query_only`. |
-| `ragHybridShortQueryMaxTerms` | `2` | Maximálny počet slov dotazu pre režim `short_query_only`. |
-| `ragHybridFallbackTopSimilarity` | `0.35` | Prah top similarity pre režim `fallback_on_low_vector`. |
-| `ragHybridVectorWeight` | `0.7` | Váha vektorového poradia pri RRF merge. |
-| `ragHybridFtsWeight` | `0.3` | Váha fulltext poradia pri RRF merge. |
-| `ragHybridRrfK` | `60` | Parameter `k` pre Reciprocal Rank Fusion. |
-| `ragHybridChunkFetchMultiplier` | `3` | Násobič počtu chunkov načítaných oproti požadovanému počtu výsledkov. |
-| `ragHybridFtsUseIlikeFallback` | `true` | Ak FTS vráti prázdny výsledok, použije sa fallback cez `ILIKE` nad `chunk_text`. |
+| `ragAnswerAllowed` | `false` | Globálne povolí generovanie RAG odpovede vo vyhľadávaní. |
+| `ragAnswerModel` | `gpt-5.4-mini` | Predvolený model pre automaticky vytvoreného RAG asistenta. |
+| `ragAnswerMinSimilarity` | `0.3` | Mäkký prah similarity pre chunky vstupujúce do kontextu odpovede. |
+| `ragAnswerTopK` | `12` | Počet najrelevantnejších chunkov použitých pred post-processingom. |
+| `ragAnswerMaxChunkGap` | `1` | Maximálna medzera medzi indexmi chunkov, ktoré sa ešte môžu zlúčiť. Hodnota `1` znamená susedné chunky. |
+| `ragAnswerMaxBlocks` | `4` | Maximálny počet zlúčených kontextových blokov odoslaných modelu. |
+| `ragAnswerMaxCharacters` | `6000` | Maximálny celkový počet znakov kontextu. |
+| `ragAnswerMaxMergedBlockCharacters` | `2200` | Maximálny počet znakov jedného zlúčeného kontextového bloku. |
 
-### Odporúčania pre slovenský a český obsah
+V aplikácii **Vyhľadávanie** možno tieto hodnoty prepísať lokálne. Prázdne čísla znamenajú použitie globálnej konfigurácie.
 
-Predvolené hodnoty (`text-embedding-3-small`, `chunkSize=1000`, `chunkOverlap=200`) sú vyvážený kompromis medzi cenou, rýchlosťou a presnosťou pre bežné web stránky v slovenčine a češtine.
+### Post-processing kontextu
 
-Pri ladení sa riaďte týmito odporúčaniami:
+[RagChunkPostProcessor](../../../../../../src/main/java/sk/iway/iwcm/rag/search/RagChunkPostProcessor.java) pripravuje kontext pre model:
 
-- **Veľkosť časti (`ragChunkSize`)** – pre webové stránky v SK/CZ je vhodný rozsah **800–1 200 znakov** (cca 6–10 viet). Pri kratších častiach sa stráca kontext odseku, pri dlhších klesá presnosť výberu konkrétnej pasáže.
-- **Prekryv (`ragChunkOverlap`)** – udržiavajte pomer **15–25 %** zo `ragChunkSize`. Prekryv zabraňuje strate kontextu na hraniciach medzi časťami.
-- **Limit modelu** – modely `text-embedding-3-*` zvládnu max. 8 191 tokenov na jeden vstup. Pri slovenčine a češtine je to s rezervou ~6 000 znakov, takže pri odporúčanom rozsahu chunku nie je potrebné sa o limit obávať.
-- **Vyhodnotenie kvality** – pripravte si testovaciu sadu 10–20 reprezentatívnych otázok v slovenčine/češtine a porovnávajte TOP-5 výsledky pri rôznych nastaveniach modelu a veľkosti chunku.
+1. zoradí chunky podľa similarity a vyberie top K,
+2. použije adaptívny prah similarity, ale nikdy nevyhodí všetko, ak existuje aspoň jeden použiteľný výsledok,
+3. zoskupí chunky podľa entity,
+4. zlúči susedné chunky a odstráni duplicitný text z prekrytia,
+5. obmedzí počet blokov a celkový počet znakov.
 
-### Alternatívne embedding modely
+Výsledkom sú objekty [MergedContextBlock](../../../../../../src/main/java/sk/iway/iwcm/rag/search/MergedContextBlock.java), ktoré sa odosielajú modelu ako JSON.
 
-Predvolený model `text-embedding-3-small` je viacjazyčný a slovenčinu/češtinu zvláda v dostatočnej kvalite pre väčšinu webových projektov. Ak požadujete vyššiu presnosť pre slovanské jazyky, k dispozícii sú tieto alternatívy:
+### AI asistent
 
-| Model | `ragEmbeddingModel` | `ragEmbeddingDimensions` | Kvalita pre SK/CZ | Poznámka |
-| --- | --- | --- | --- | --- |
-| OpenAI `text-embedding-3-small` | `text-embedding-3-small` | `1536` | Dobrá | Predvolený model – lacný a rýchly. |
-| OpenAI `text-embedding-3-large` | `text-embedding-3-large` | `3072` | Vysoká | Najpresnejší OpenAI viacjazyčný model, cca 6× drahší než `small`. |
-| OpenAI `text-embedding-3-large` (skrátený) | `text-embedding-3-large` | `1024` alebo `1536` | Vysoká | Vďaka technike `Matryoshka` (MRL) je možné vektor bezpečne skrátiť bez výraznej straty kvality. Ušetríte miesto v databáze a zrýchlite vyhľadávanie pri zachovaní vyššej presnosti než `small`. |
+[RagService](../../../../../../src/main/java/sk/iway/iwcm/rag/search/RagService.java) používa AI asistentov WebJET CMS. Ak nie je vybraný konkrétny asistent, systém nájde alebo vytvorí predvoleného asistenta:
 
-!>**Upozornenie:** všetky vektory v tabuľke `rag_embedding_chunks` musia pochádzať z toho istého modelu a mať rovnakú dimenziu. Pri zmene modelu alebo dimenzie sa tabuľka vymaže a musíte spustiť úplnú indexáciu obsahu.
+- názov: `RAG-SEARCH`,
+- skupina: `92-rag-answer`,
+- provider: `openai`,
+- model: hodnota `ragAnswerModel`,
+- trieda: `sk.iway.iwcm.rag.search.RagService`.
 
-#### Čo je Matryoshka (MRL)
+V editore aplikácie sa zobrazia aj asistenti v aktuálnej doméne, ktoré majú rovnakú hodnotu `className`.
 
-Modely `text-embedding-3-small` aj `text-embedding-3-large` sú trénované technikou `Matryoshka Representation Learning`. Najdôležitejšie informácie sú sústredené na začiatku vektora, takže vektor je možné **bezpečne skrátiť** (napr. použiť iba prvých 1 024 alebo 1 536 hodnôt z 3 072) bez geometrického rozpadu reprezentácie.
+Asistent dostane backendom pripravené makrá:
 
-V praxi to znamená, že môžete použiť kvalitnejší `text-embedding-3-large`, ale výstup si nechať vrátiť napríklad v 1 536 dimenziách – získate vyššiu presnosť než `small@1536` pri rovnakej veľkosti tabuľky aj rovnakej rýchlosti vyhľadávania.
+| Makro | Hodnota |
+| --- | --- |
+| `{userQuestion}` | Otázka používateľa ako JSON string. |
+| `{retrievedContext}` | JSON pole zlúčených kontextových blokov. |
+
+Makrá `bonusParams` sú ignorované pri verejných REST volaniach asistenta a nastavujú sa iba na backende. Odpoveď musí vychádzať len z `retrievedContext`. Ak model vráti sentinel `CANNOT_ANSWER_QUESTION`, používateľovi sa zobrazí lokalizovaná fallback odpoveď.
+
+```mermaid
+flowchart TD
+	Q[Otázka používateľa] --> S[Sémantické alebo hybridné vyhľadávanie]
+	S --> C[Relevantné chunky]
+	C --> P[RagChunkPostProcessor]
+	P --> B[Zlúčené kontextové bloky]
+	B --> A[AI asistent]
+	A --> R[RAG odpoveď]
+	R --> JSP[Zobrazenie nad výsledkami vyhľadávania]
+```
 
 ## Používanie v šablónach
 
-Sémantické vyhľadávanie sa aktivuje rovnako ako štandardné vyhľadávanie – vložením aplikácie **Vyhľadávanie** do stránky. Rozdiel je len v nastavení parametra `searchType`.
+Sémantické vyhľadávanie sa aktivuje vložením aplikácie **Vyhľadávanie** do stránky. Typ vyhľadávania možno nastaviť globálne alebo priamo v parametri aplikácie.
 
-### Globálne zapnutie cez konfiguráciu
+Globálne nastavenie:
 
-Nastavte `searchType=semantic` v konfigurácii WebJET CMS. Všetky vyhľadávania budú používať vektory.
+```properties
+ragSemanticSearchEnabled=true
+searchType=semantic
+```
+
+Príklad lokálneho nastavenia aplikácie:
+
+```html
+!INCLUDE(/components/search/search.jsp, searchType=hybrid, answerAllowed=trueValue)!
+```
+
+Vybrané parametre aplikácie:
+
+| Parameter | Hodnoty | Popis |
+| --- | --- | --- |
+| `searchType` | `auto`, `db`, `lucene`, `semantic`, `hybrid` | Typ vyhľadávania pre konkrétnu aplikáciu. |
+| `answerAllowed` | `auto`, `trueValue`, `falseValue` | Lokálne zapnutie alebo vypnutie RAG odpovede. |
+| `semanticSearchMinSimilarity` | číslo | Lokálna hodnota `ragSemanticSearchMinSimilarity`. |
+| `semanticSearchMinResults` | číslo | Lokálna hodnota `ragSemanticSearchMinResults`. |
+| `hybridSearchMode` | `auto`, `off`, `always`, `short_query_only`, `fallback_on_low_vector` | Lokálny režim hybridného vyhľadávania. |
+| `hybridFtsUseIlikeFallback` | `auto`, `trueValue`, `falseValue` | Lokálny fallback pre fulltext. |
+| `ragAssistantId` | ID asistenta alebo `-1` | Výber asistenta pre RAG odpoveď. |
 
 ## Automatické indexovanie
 
 Systém automaticky zaradí stránku do indexovacej fronty pri jej:
 
-- **Uložení** (vytvorenie alebo úprava)
-- **Zmazaní** (embedding sa vymaže z vektorovej databázy)
+- **uložení** - vytvorenie alebo úprava stránky,
+- **obnovení z koša** - stránka sa znovu indexuje,
+- **zmazaní** - embeddingy sa odstránia z vektorovej databázy.
 
-Toto zabezpečuje listener [DocSaveEventListener](../../../../../../src/main/java/sk/iway/iwcm/rag/listener/DocSaveEventListener.java), ktorý reaguje na udalosti ukladania dokumentov.
+Manuálne indexovanie v administrácii pracuje iba so stránkami, ktoré sú povolené pre vyhľadávanie.
 
 ## Automatizované úlohy
 
 Frontu spracúva automatizovaná úloha [sk.iway.iwcm.rag.service.RagIndexCronTask](../../../../../../src/main/java/sk/iway/iwcm/rag/service/RagIndexCronTask.java). Odporúčané nastavenie je spúšťanie každých 5 minút.
 
-Cron úloha je bezpečná voči súbežnému spusteniu – pri behu sa nastaví príznak v cache s platnosťou 60 minút. Chybné záznamy sa nevymažú a opätovne sa spracujú pri ďalšom behu.
+Cron úloha je bezpečná voči súbežnému spusteniu. Pri behu sa nastaví príznak v cache s platnosťou 60 minút a pri pomalšom spracovaní sa jeho platnosť obnovuje. Spracované položky sa z fronty vymažú dávkovo; pri chybe mazania sa použije mazanie po riadkoch. Chyby pri indexovaní konkrétnej stránky sa uložia ako stav **ERROR** v tabuľke chunkov. Ak zlyhá spracovanie položky ešte na úrovni fronty, položka zostane vo fronte a opätovne sa spracuje pri ďalšom behu.
 
 ## Databázová schéma
 
-Systém vytvára dve tabuľky (automatická aktualizácia cez `autoupdate-webjet9.xml`):
+Systém vytvára dve tabuľky:
 
 ### `rag_index_queue`
 
 Fronta pre asynchrónne indexovanie. Implementované triedou [IndexQueueEntity](../../../../../../src/main/java/sk/iway/iwcm/rag/jpa/IndexQueueEntity.java).
 
-### `rag_embedding_chunks` (pgvector databáza)
+### `rag_embedding_chunks`
 
-Uložené embedding vektory. Implementované triedou [EmbeddingChunkEntity](../../../../../../src/main/java/sk/iway/iwcm/rag/pgvector/EmbeddingChunkEntity.java).
+Uložené embedding vektory a metadáta chunkov. Implementované triedou [EmbeddingChunkEntity](../../../../../../src/main/java/sk/iway/iwcm/rag/pgvector/EmbeddingChunkEntity.java).
 
-!>**Upozornenie:** Stĺpec `embedding` je typu `vector(N)` – natívny pgvector typ. Nie je mapovaný cez JPA, všetky operácie s vektormi prebiehajú cez natívne SQL dotazy v triede [PgVectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/PgVectorStore.java).
+Dôležité stĺpce:
+
+- `entity_type`, `entity_id`, `chunk_index` - identifikácia zdrojovej entity a poradia chunku.
+- `chunk_text` - text použitý na embedding a fulltext.
+- `content_hash` - hash textu chunku pre opätovné použitie embeddingu.
+- `embedding` - natívny pgvector typ `vector(N)`.
+- `embedding_model`, `dimensions` - model a dimenzia embeddingu.
+- `language`, `domain_id` - jazyk a doména.
+- `group_id`, `root_group_l1`, `root_group_l2`, `root_group_l3` - optimalizované filtrovanie dokumentov podľa priečinkov.
+- `status`, `error_message` - stav spracovania.
+
+!>**Upozornenie:** Stĺpec `embedding` nie je mapovaný cez JPA. Všetky operácie s vektormi prebiehajú cez natívne SQL dotazy v triede [PgVectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/PgVectorStore.java).
+
+Pri inicializácii schémy sa doplnia chýbajúce stĺpce `group_id` a `root_group_l1..3`. Existujúce dáta však nemajú tieto hodnoty spätne vyplnené, preto po aktualizácii spustite opätovné indexovanie.
+
+## Odporúčania pre slovenský a český obsah
+
+Predvolené hodnoty (`text-embedding-3-small`, `ragEmbeddingChunkSize=1000`, `ragEmbeddingChunkOverlap=200`) sú vyvážený kompromis medzi cenou, rýchlosťou a presnosťou pre bežné web stránky v slovenčine a češtine.
+
+Pri ladení sa riaďte týmito odporúčaniami:
+
+- **Veľkosť časti (`ragEmbeddingChunkSize`)** - pre webové stránky v SK/CZ je vhodný rozsah **800-1 200 znakov**. Pri kratších častiach sa stráca kontext odseku, pri dlhších klesá presnosť výberu konkrétnej pasáže.
+- **Prekryv (`ragEmbeddingChunkOverlap`)** - udržiavajte pomer **15-25 %** z `ragEmbeddingChunkSize`. Prekryv zabraňuje strate kontextu na hraniciach medzi časťami.
+- **Limit modelu** - modely `text-embedding-3-*` zvládnu max. 8 191 tokenov na jeden vstup. Pri slovenčine a češtine je to s rezervou približne 6 000 znakov.
+- **Vyhodnotenie kvality** - pripravte si 10-20 reprezentatívnych otázok v slovenčine alebo češtine a porovnávajte TOP-5 výsledky pri rôznych nastaveniach.
+
+## Alternatívne embedding modely
+
+Predvolený model `text-embedding-3-small` je viacjazyčný a slovenčinu/češtinu zvláda v dostatočnej kvalite pre väčšinu webových projektov. Ak požadujete vyššiu presnosť, k dispozícii sú tieto alternatívy:
+
+| Model | `ragEmbeddingModel` | `ragEmbeddingDimensions` | Kvalita pre SK/CZ | Poznámka |
+| --- | --- | --- | --- | --- |
+| OpenAI `text-embedding-3-small` | `text-embedding-3-small` | `1536` | Dobrá | Predvolený model - lacný a rýchly. |
+| OpenAI `text-embedding-3-large` | `text-embedding-3-large` | `3072` | Vysoká | Najpresnejší OpenAI viacjazyčný model, drahší než `small`. |
+| OpenAI `text-embedding-3-large` skrátený | `text-embedding-3-large` | `1024` alebo `1536` | Vysoká | Vďaka MRL je možné vektor skrátiť bez výraznej straty kvality. |
+
+!>**Upozornenie:** Všetky vektory v tabuľke `rag_embedding_chunks` musia pochádzať z rovnakého modelu a mať rovnakú dimenziu. Pri zmene modelu alebo dimenzie musíte spustiť úplnú indexáciu obsahu.
+
+### Čo je Matryoshka (MRL)
+
+Modely `text-embedding-3-small` aj `text-embedding-3-large` sú trénované technikou `Matryoshka Representation Learning`. Najdôležitejšie informácie sú sústredené na začiatku vektora, takže vektor je možné bezpečne skrátiť, napríklad použiť iba prvých 1 024 alebo 1 536 hodnôt z 3 072.
+
+V praxi to znamená, že môžete použiť kvalitnejší `text-embedding-3-large`, ale výstup si nechať vrátiť napríklad v 1 536 dimenziách. Získate vyššiu presnosť než `small@1536` pri rovnakej veľkosti tabuľky aj podobnej rýchlosti vyhľadávania.

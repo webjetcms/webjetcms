@@ -135,7 +135,7 @@ Scenario('test-odpovede', ({I, DT, DTE}) => {
     I.see("x-webjet-suffix: true");
     //custom xRobotsTag value
     I.dontSee("x-robots-tag: noindex, nofollow");
-    I.see("x-robots-tag: index, follow");
+    I.see("x-robots-tag: all");
 
     I.amOnPage("/apps/http-hlavicky/rest-volanie.html");
     I.waitForText("content-language", 10, "#response");
@@ -150,4 +150,77 @@ Scenario('test-odpovede', ({I, DT, DTE}) => {
     I.amOnPage("/files/cz/http-headers.html");
     I.waitForText("content-language", 10, "#response");
     I.see("content-language: cs-CZ");
+});
+
+/* meta robots CHECK */
+
+const robotsTestDocId = 166410;
+const robotsTestPage = "/apps/http-hlavicky/index_folow_behaviour.html";
+const followLinksOptions = {
+    searchable: "Podľa nastavenia Prehľadávať",
+    follow: "Povoliť nasledovanie odkazov",
+    nofollow: "Zakázať nasledovanie odkazov"
+};
+
+async function setRobotsSettings(I, DTE, searchable, followLinks) {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + robotsTestDocId);
+    DTE.waitForEditor();
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
+    I.waitForVisible("#DTE_Field_searchable_0", 10);
+
+    if(searchable === true) {
+        I.checkOption('#DTE_Field_searchable_0');
+    } else {
+        I.uncheckOption('#DTE_Field_searchable_0');
+    }
+
+    DTE.selectOption("followLinks", followLinks);
+    DTE.save();
+}
+
+async function checkRobotsHeader(I, expected) {
+    I.amOnPage(robotsTestPage + "?NO_WJTOOLBAR=true");
+    I.waitForText("index_folow_behaviour", 10);
+
+    const robots = await I.grabAttributeFrom(
+        'meta[name="robots"]',
+        'content'
+    );
+
+    I.assertEqual(robots, expected, "Expected meta robots do not match real value;");
+}
+
+Scenario("test meta robots by page settings", async ({I, DTE}) => {
+    const settings = [
+        { searchable: false, followLinks: followLinksOptions.searchable, expected: "noindex, nofollow" },
+        { searchable: false, followLinks: followLinksOptions.follow, expected: "noindex" },
+        { searchable: false, followLinks: followLinksOptions.nofollow, expected: "noindex, nofollow" },
+        { searchable: true, followLinks: followLinksOptions.nofollow, expected: "nofollow" },
+        { searchable: true, followLinks: followLinksOptions.follow, expected: "all" },
+        { searchable: true, followLinks: followLinksOptions.searchable, expected: "all" }
+    ];
+
+    for (const setting of settings) {
+        I.say("Searchable: " + setting.searchable + ", follow links: " + setting.followLinks);
+        await setRobotsSettings(I, DTE, setting.searchable, setting.followLinks);
+        await checkRobotsHeader(I, setting.expected);
+    }
+});
+
+Scenario("test SEO image dimensions", async ({I}) => {
+    I.amOnPage("/showdoc.do?docid=141");
+
+    const widthA = await I.grabAttributeFrom('meta[property="og:image:width"]', "content");
+    const heightA = await I.grabAttributeFrom('meta[property="og:image:height"]', "content");
+
+    I.assertEqual(widthA, "265");
+    I.assertEqual(heightA, "225");
+
+    I.amOnPage("/showdoc.do?docid=92");
+
+    const widthB = await I.grabAttributeFrom('meta[property="og:image:width"]', "content");
+    const heightB = await I.grabAttributeFrom('meta[property="og:image:height"]', "content");
+
+    I.assertEqual(widthB, "0");
+    I.assertEqual(heightB, "0");
 });

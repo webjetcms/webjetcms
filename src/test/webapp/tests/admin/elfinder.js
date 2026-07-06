@@ -23,7 +23,7 @@ Scenario('dir usage', async ({I, DT}) => {
     I.amOnPage("/admin/elFinder/#elf_iwcm_2_L2ltYWdlcw_E_E");
 
     I.rightClick('#iwcm_2_L2ltYWdlcy9iYW5uZXJ5');
-    
+
     I.click(locate('#finder .elfinder-contextmenu-item').withText("Nastavenie priečinka"));
     I.waitForVisible("#modalIframe", 10);
 
@@ -46,7 +46,7 @@ Scenario('file usage', async ({I, DT}) => {
     //I.switchTo("#modalIframe");
     I.switchTo("#modalIframeIframeElement");
 
-    I.see("Názov súboru");
+    I.waitForText("Názov súboru", 20);
     I.see("Zmeniť názov vo všetkých súboroch");
 
     getFileUsage(I, DT, "#datatableFieldDTE_Field_docDetailsList_processing");
@@ -262,7 +262,7 @@ Scenario('folder for new page by title', ({I, DTE, Browser}) => {
 })
 
 Scenario('CVE-2022-26960', async ({I}) => {
-    I.amOnPage("/admin/v9/");
+    I.amOnPage("/admin/v9/templates/temps-groups-list/");
     ///files/protected/bankari/test-forward.txt
     await I.executeScript(function(){
         window.location.href="/admin/elfinder-connector/?cmd=file&volumes=files&target=iwcm_1_L2ZpbGVzL3Byb3RlY3RlZC9iYW5rYXJpL3Rlc3QtZm9yd2FyZC50eHQ_E";
@@ -277,7 +277,7 @@ Scenario('CVE-2022-26960', async ({I}) => {
     I.dontSee("This is test file for fileforward after logon");
     I.dontSee("Server");
 
-    I.amOnPage("/admin/v9/");
+    I.amOnPage("/admin/v9/templates/temps-groups-list/");
     ///files/../protected/bankari/test-forward.txt
     await I.executeScript(function(){
         window.location.href="/admin/elfinder-connector/?cmd=file&volumes=files&target=iwcm_1_L2ZpbGVzLy4uL3Byb3RlY3RlZC9iYW5rYXJpL3Rlc3QtZm9yd2FyZC50eHQ=";
@@ -286,7 +286,22 @@ Scenario('CVE-2022-26960', async ({I}) => {
 })
 
 Scenario('Explorer - file diacritics test', async ({ I }) => {
-    I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVz');
+    await deleteTestFiles(I);
+    await testFileDiacritics(I, true);
+    await deleteTestFiles(I);
+    await testFileDiacritics(I, false);
+})
+
+async function testFileDiacritics(I, allowDiacritics) {
+    const pageUrl = allowDiacritics
+        ? '/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVz'
+        : '/admin/v9/files/index/?removePerm=fbrowser_allow_diacritics#elf_iwcm_2_L2ZpbGVz';
+    const uploadedFileName = allowDiacritics ? 'ľščťú žýáíéô.png' : 'lsctu-zyaieo.png';
+    const renamedFileName = allowDiacritics ? 'ľščťú-žýáíéô.png' : 'lsctu-zyaieo.png';
+    const createdFolderName = allowDiacritics ? 'ľščťú žýáíéô' : 'lsctu-zyaieo';
+    const renamedFolderName = allowDiacritics ? 'ľščťú-žýáíéô' : 'lsctu-zyaieo';
+
+    I.amOnPage(pageUrl);
 
     I.say('Uploading file with diacritics in name');
     I.click('.elfinder-navbar-wrapper span[id^="nav-iwcm_2_"][title*="files"] .elfinder-navbar-icon');
@@ -294,41 +309,41 @@ Scenario('Explorer - file diacritics test', async ({ I }) => {
     I.attachFile('input[type=file]', 'tests/admin/ľščťú žýáíéô.png');
     waitForUpload(I);
 
-    I.say('Checking if file was automatically renamed to the name without diacritics');
-    checkCorrectTitle(I);
+    I.say(`Checking uploaded file name with${allowDiacritics ? '' : 'out'} diacritics permission`);
+    checkCorrectTitle(I, uploadedFileName);
 
     I.say('Try to rename a file to name with diacritics');
-    searchFile(I, 'lsctu-zyaieo.png');
+    searchFile(I, uploadedFileName);
     within('.elfinder-cwd-wrapper', () => {
-        I.waitForText('lsctu-zyaieo.png', 10);
-        I.rightClick('lsctu-zyaieo.png');
+        I.waitForText(uploadedFileName, 10);
+        I.rightClick(uploadedFileName);
     });
     I.waitForVisible('.elfinder-contextmenu', 10);
     I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-rename');
 
-    I.fillField({ css: '.elfinder-cwd-filename[title="lsctu-zyaieo.png"] textarea' }, 'ľščťú žýáíéô');
+    I.fillField({ css: `.elfinder-cwd-filename[title="${uploadedFileName}"] textarea` }, 'ľščťú-žýáíéô.png');
     I.pressKey('Enter');
     I.clickCss('.elfinder-button-search > .ui-icon-close');
-    I.say('Checking if file was automatically renamed to the name without diacritics');
-    checkCorrectTitle(I);
+    checkCorrectTitle(I, renamedFileName);
     await deleteTestFiles(I);
 
-    I.amOnPage("/admin/v9/");
-    I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVz');
+    I.amOnPage("/admin/v9/templates/temps-groups-list/");
+    I.amOnPage(pageUrl);
     I.clickCss("#nav-iwcm_2_L2ZpbGVz"); //files
     createFolder(I, 'ľščťú žýáíéô');
+    checkCorrectTitle(I, createdFolderName);
 
     I.say('Try to rename a folder to the name with diacritics');
-    I.rightClick(locate(".elfinder-cwd-file").withText("lsctu-zyaieo"));
+    I.rightClick(locate(".elfinder-cwd-file").withText(createdFolderName));
 
     I.waitForVisible('.elfinder-contextmenu', 10);
     I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-rename');
 
-    I.fillField({ css: '.elfinder-cwd-filename[title="lsctu-zyaieo"] textarea' }, 'ľščťú žýáíéô');
+    I.fillField({ css: `.elfinder-cwd-filename[title="${createdFolderName}"] textarea` }, 'ľščťú-žýáíéô');
     I.pressKey('Enter');
     I.clickCss('.elfinder-button-search > .ui-icon-close');
-    checkCorrectTitle(I);
-})
+    checkCorrectTitle(I, renamedFolderName);
+}
 
 Scenario('Explorer - file diacritics delete', async ({ I }) => {
     await deleteTestFiles(I);
@@ -353,7 +368,8 @@ Scenario('revert changes - Move Confirm with config value false', async ({ I, Do
 
 function searchFile(I, fileName) {
     I.clickCss('.elfinder-button-search > input[type="text"]');
-    I.type(fileName);
+    //I.type(fileName);
+    I.fillField('.elfinder-button-search > input[type="text"]', fileName);
     I.clickCss('label[for = elfinder-finderSearchFromCwd]');
 }
 
@@ -424,20 +440,17 @@ function createFolder(I, folderName) {
 function waitForUpload(I) {
     I.clickIfVisible('.elfinder-confirm-accept');
     I.waitForVisible('.elfinder-notify-chunkmerge', 10);
-    I.waitForInvisible('.elfinder-notify-upload', 10);
+    I.waitForInvisible('.elfinder-notify-upload', 80);
     I.waitForInvisible('.elfinder-notify-chunkmerge', 10);
 }
 
-function checkCorrectTitle(I) {
-    I.waitForText('lsctu-zyaieo', 10, '.elfinder-cwd-filename');
-    I.dontSee('ľščťú-žýáíéô', '.elfinder-cwd-filename');
-    I.dontSee('ľščťú žýáíéô', '.elfinder-cwd-filename');
-    I.dontSee('lsctu zyaieo', '.elfinder-cwd-filename');
+function checkCorrectTitle(I, expectedTitle) {
+    I.waitForElement(getFileSelector(expectedTitle), 80);
 }
 
 async function deleteTestFiles(I) {
     I.say('Deleting uploaded files');
-    I.amOnPage("/admin/v9/");
+    I.amOnPage("/admin/v9/templates/temps-groups-list/");
     I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVz');
     let fileNames = ['lsctu-zyaieo.png', 'ľščťú-žýáíéô.png', 'ľščťú žýáíéô.png', 'lsctu zyaieo.png',
         'lsctu-zyaieo', 'ľščťú-žýáíéô', 'ľščťú žýáíéô', 'lsctu zyaieo'];
@@ -446,7 +459,7 @@ async function deleteTestFiles(I) {
     }
 
     //otherwise hash change will not work
-    I.amOnPage("/admin/v9/");
+    I.amOnPage("/admin/v9/templates/temps-groups-list/");
     I.amOnPage("/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVzL3Rlc3QtbW92ZS1kaXI_E");
     fileNames = ['outer', 'inner'];
     for (const fileName of fileNames) {

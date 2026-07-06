@@ -1,5 +1,25 @@
 @charset "UTF-8";
 
 .md-search {
-    
+
+}
+
+.ly-content {
+    input.smallSearchInput {
+        width: 93%;
+    }
+}
+
+div.rag-answer {
+    border: 1px solid #8a3eff;
+    display: block;
+    .card-title {
+        color: #8a3eff;
+    }
+    p {
+        padding-bottom: 4px;
+    }
+    p:last-child {
+        padding-bottom: 0px;
+    }
 }

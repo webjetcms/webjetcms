@@ -4,11 +4,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import cn.bluejoe.elfinder.controller.executor.FsItemEx;
+
 public interface FsVolume
 {
 	void createFile(FsItem fsi) throws IOException;
 
-	void createFolder(FsItem fsi) throws IOException;
+	void createFolder(FsItem fsi, FsItemEx fsie) throws IOException;
 
 	boolean deleteFile(FsItem fsi) throws IOException;
 
