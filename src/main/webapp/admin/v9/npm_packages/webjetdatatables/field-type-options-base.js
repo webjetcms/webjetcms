@@ -4,7 +4,7 @@ import WJ from "../../src/js/webjet";
  * Base factory for OPTIONS-style field types (drag-reorderable list of inputs joined by "|").
  *
  * @param {object} config
- * @param {string} config.prefix - CSS class prefix (e.g. "options" or "options-basic")
+ * @param {string} config.prefix - CSS class prefix (e.g. "options" or "options-simple")
  * @param {function} config.createRowHtml - (conf) => jQuery row element with inputs
  * @param {function} config.clearRow - (row$) => clears the input values in a row
  * @param {function} config.getRowValue - (row$) => string|null value from one row (null = skip)
