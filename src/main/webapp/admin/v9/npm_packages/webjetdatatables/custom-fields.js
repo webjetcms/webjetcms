@@ -45,6 +45,30 @@ function disableField(isDisabled) {
     return 'disabled="disabled"';
 }
 
+function updateTooltip(container, tooltip) {
+    const oldTooltip = container.find(".form-group-tooltip button.btn-tooltip");
+    if(oldTooltip.length > 0) {
+        try {
+            oldTooltip.tooltip("dispose");
+        } catch (e) {
+            // Tooltip may not be initialized yet.
+        }
+    }
+    container.find(".form-group-tooltip").remove();
+
+    if(tooltip === undefined || tooltip === null || tooltip.length < 1) return;
+
+    const tooltipText = WJ.escapeHtml(WJ.parseMarkdown(tooltip));
+    const tooltipHtml = '<div class="col-sm-1 form-group-tooltip"><button type="button" tabindex="-1" class="btn btn-link btn-tooltip" data-toggle="tooltip" title="' + tooltipText + '" data-html="true"><i class="ti ti-info-circle"></i></button></div>';
+    container.find('[data-dte-e="input"]').first().after(tooltipHtml);
+    container.find(".form-group-tooltip button.btn-tooltip").tooltip({
+        placement: 'top',
+        trigger: 'hover',
+        html: true,
+        delay: { "show": 300, "hide": 0 }
+    });
+}
+
 function isDateEmpty(dateValue) {
     if(dateValue === undefined || dateValue === null || dateValue.length < 1 || (dateValue.trim()).length < 1) return true;
     else return false;
@@ -312,6 +336,8 @@ export function update(EDITOR, action) {
             container.removeClass('required');
         }
 
+        updateTooltip(container, v.tooltip);
+
         //For every field, remove params s.opts._input AND s.opts.renderFormat -> they can be still set from previous field initialization
         //If previous field was quill, it will make problem with saving
         EDITOR.field(customPrefix + identifier).s.opts._input = "";
@@ -383,7 +409,9 @@ export function update(EDITOR, action) {
         }
         else if (v.type == 'autocomplete') {
 
-            new AutoCompleter("#"+datatable.DATA.id+"_modal .DTE_Field_Name_field" + identifier + " input.autocomplete").setUrl('/admin/FCKeditor/_editor_autocomplete.jsp?keyPrefix=' + json.editorFields?.fieldsDefinitionKeyPrefix + '&template=' + json.tempId + '&field=' + identifier).transform();
+            new AutoCompleter("#" + datatable.DATA.id + "_modal .DTE_Field_Name_field" + identifier + " input.autocomplete")
+                    .setUrl('/admin/FCKeditor/_editor_autocomplete.jsp?keyPrefix=' + json.editorFields?.fieldsDefinitionKeyPrefix + '&className=' + encodeURIComponent(json.editorFields?.fieldsDefinitionClassName || '') + '&objectId=' + json.id + '&template=' + json.tempId + '&field=' + identifier)
+                    .transform();
 
         } else if (v.type == "dir") {
             let conf = {};

@@ -6,6 +6,8 @@
 
 ### Webové stránky
 
+- SEO - přidáno samostatné nastavení **Následujení odkazů vyhledávači** s možnostmi **Podle nastavení Procházet**, **Povolit následování odkazů** (`follow`) a **Zakázat následování odkazů** (`nofollow`). HTTP hlavička `X-Robots-Tag` a Ninja `${ninja.page.robots}` používají stejnou logiku: při indexování bez omezení vrátí `all`, jinak kombinaci direktiv `noindex` a `nofollow` podle nastavení stránky. Více v [dokumentaci Ninja](frontend/ninja-starter-kit/ninja-jv/page/README.md#nastavení-indexování-string) (#OSK563).
+- Ninja - doplněno [generování rozměrů](frontend/ninja-starter-kit/ninja-bp/README.md) SEO obrázku `og:image:width` a `og:image:height` (#OSK563).
 - Šablony - přidána možnost nastavit přesun `<style>` a `<link rel="stylesheet">` značek z těla stránky do `<head>` přes [volbu v šabloně](frontend/templates/templates.md) s podporou globální konfigurační proměnné `showDocMoveStyleToHead`. Bloky v IE podmínkách, `noscript` a `script` zůstávají na místě (#231).
 
 ![](frontend/templates/templates-edit-advanced.png)
@@ -50,12 +52,25 @@
 
 ![](redactor/apps/reservation/my-reservations-app/app-page.png)
 
+### Volitelná pole
+
+- Kompletně implementovaná funkčnost [nastavení volitelných polí](frontend/webpages/customfields/custom-fields-settings.md). Umožňuje centrálně nastavit vlastnosti polí bez editace překladových klíčů. Podporovány jsou všechny typy polí (text, textarea, select, multiselect, autocomplete, enumeration, obrázek, odkaz, JSON a další) s typově specifickými nastaveními jako maximální délka textu, možnosti výběru, propojení na číselníky nebo závislost na jiných polích. Uživatelské rozhraní nabízí také jednoduchý způsob nastavení možných hodnot pro výběrová/autocomplete pole (#58529).
+
+![](frontend/webpages/customfields/custom-fields-settings-editor.png)
+
+- Přidána možnost nastavit volitelné pole jako povinné (#58413).
+
 ### Multiweb
 
 - Přidána možnost [vytvořit novou doménu](install/multiweb/config.md) z řídicí domény, vytvoří také uživatele, skupinu šablon, šablonu a systémové stránky (#58525).
 - Přidáno zobrazení seznamu skupin šablon (#58525).
 - V řídící doméně je možné upravovat všechna přesměrování domén.
 - V řídicí doméně přidána možnost zobrazit všechny soubory.
+
+### Jiné menší změny
+
+- Průzkumník - přidáno právo **Povolit nahrávání souborů s diakritikou**, které umožňuje zachovat diakritiku při nahrávání, vytváření a přejmenování souborů a složek ve složkách `/files`, `/images` a `/shared`. Bez tohoto práva se názvy nadále automaticky upraví bez diakritiky (#58589).
+- Přihlášení - zrychlené načtení úvodní stránky v administraci - přidána vyrovnávací paměť pro seznam posledních stránek, změněných stránek a auditních záznamů (#58589).
 
 ### Bezpečnost
 
@@ -78,11 +93,6 @@
 ![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
 
 - Logování - do [Logback MDC](https://logback.qos.ch/manual/mdc.html) doplněn atribut `sessionId` a přihlašovacího jména uživatele `userLogin` (#OSK526).
-
-- Volitelná pole - přidána možnost centrálně nastavit vlastnosti [volitelných polí](frontend/webpages/customfields/custom-fields-settings.md) v nové tabulce v části Nastavení (#58413).
-
-![](frontend/webpages/customfields/custom-fields-settings-editor.png)
-
 - Aktualizovaná knihovna [Tabler Icons](https://tabler.io/icons) na verzi 3.44.0, vyřešen problém se současným používáním `Outline` a `Filled` sad (#58509).
 - Web stránky - pokud potřebujete mít prázdný první řádek v konfigurační proměnné `imageMagickCustomParams*` pro [nastavení vlastních parametrů](redactor/apps/gallery/README.md#vlastní-parametry-imagemagick) `ImageMagick` zadejte hodnotu `---`.
 
@@ -280,12 +290,16 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 
 > Opravná verze původní verze 2026.0.
 
+!> Upozornění: po aktualizaci zkontrolujte funkčnost generování `/thumb` obrázků a [nastavení povolených rozměrů](frontend/thumb-servlet/README.md#omezení).
+
 - Web stránky - zrušeny [plánované verze](redactor/webpages/history.md) jsou v historii zobrazeny přeškrtnutým písmem a nelze je smazat (#58573).
 - Archiv souborů - upravená úloha na pozadí pro publikování souborů - z důvodu práv se neprovádí na veřejném uzlu (#246).
 - Úlohy na pozadí - přidána možnost spustit [úlohu na pozadí](admin/settings/cronjob/README.md) pouze na uzlech v plné konfiguraci nebo na veřejných uzlech (#246).
 - Generátor primárních klíčů - doplněna automatická oprava jmen tabulek a názvů sloupce s primární hodnotou (#246).
 - Bezpečnost - opravené chyby Local File Inclusion, kontrola nahrávaných souborů a RCE. Děkujeme Josef Korbel (Citadelo) za nahlášení těchto zranitelností (#252).
+- Bezpečnost - přidána [kontrola povolených rozměrů](frontend/thumb-servlet/README.md#omezení) generování `/thumb` obrázků, první měsíc v režimu učení a následně po restartu WebJETu v režimu kontroly (#259).
 - JPA - opraveno vícenásobné ukončení databázové transakce při importu přesměrování (#256).
+- `/thumb` - ​​opraveno generování obrázku u `ip=1/2` a nulové velikosti `w/h` parametru (#58317-10).
 
 ## 2026.0.25
 

@@ -5,11 +5,13 @@
 | ${ninja.page.seoTitle} | *String* | Page name (value is taken from optional field R or if empty, from title) |
 | ${ninja.page.seoDescription} | *String* | Page description (value is taken from optional field S or if empty, from perex) |
 | ${ninja.page.seoImage} | *String* | Image link (value is taken from optional field T or if empty, from the image itself) |
+| ${ninja.page.seoImageWidth} | *int* | SEO image width in pixels |
+| ${ninja.page.seoImageHeight} | *int* | SEO image height in pixels |
 | ${ninja.page.url} | *String* | URL address |
 | ${ninja.page.urlDomain} | *String* | Domain |
 | ${ninja.page.urlPath} | *String* | Virtual address |
 | ${ninja.page.urlParameters} | *Map* | Parameters from the URL address |
-| ${ninja.page.robots} | *String* | Indexing settings |
+| ${ninja.page.robots} | *String* | Setting up indexing and link tracking by search engines |
 | ${ninja.page.doc} | *DocDetails* | All features |
 | ${ninja.page.title} | *String* | Page title with space replaced by ``` ``` entity after the conjunction (```Peter and Miro and Fero -> Peter and Miro and Fero```) |
 | ${ninja.page.perex} | *String* | Perex pages with space replaced by ``` ``` entity after the connector |
@@ -77,6 +79,8 @@ Used in :ghost:<code>head.jsp</code>
 
 ```html
 <meta property="og:image" content="${ninja.page.urlDomain}${ninja.page.seoImage}" />
+<meta property="og:image:width" content="${ninja.page.seoImageWidth}" />
+<meta property="og:image:height" content="${ninja.page.seoImageHeight}" />
 ```
 
 ## URL address *String*
@@ -121,6 +125,8 @@ Used in :ghost:<code>head.jsp</code>
 
 ```html
 <meta property="og:image" content="${ninja.page.urlDomain}${ninja.page.seoImage}" />
+<meta property="og:image:width" content="${ninja.page.seoImageWidth}" />
+<meta property="og:image:height" content="${ninja.page.seoImageHeight}" />
 ```
 
 Used in :ghost:<code>debug-info.jsp</code>
@@ -161,7 +167,26 @@ Used in :ghost:<code>debug-info.jsp</code>
 
 ## Indexing settings *String*
 
-If the website has `Prehľadávateľné` checked in the Advanced Data tab, it returns the value `index, follow`, otherwise `nofollow`. The checkmark value is returned by the :carousel_horse: `isSearchable()` method.
+Returns the value for SEO directives according to the **Crawl** and **Search Engine Follow** fields in the website editor. The same value will also be used in the HTTP header `X-Robots-Tag` if its generation is enabled for websites by configuration.
+
+The **Search engine following** field supports the following options:
+
+- **According to the Browse setting** - when browsing is enabled, it allows following links, when browsing is disabled, it disables it.
+- **Enable following links** - sets `follow` independently of the **Browse** field.
+- **Disable following links** - sets `nofollow` independently of the **Browse** field.
+
+The default value is **By Crawl Settings**, which maintains common control over indexing and link tracking for existing pages.
+
+The resulting value contains `all` if neither indexing nor following links is restricted. Otherwise, it contains only the restrictive directives `noindex` and/or `nofollow`:
+
+| Browse | Following links by search engines | `${ninja.page.robots}` / `X-Robots-Tag` |
+| --- | --- | --- |
+| Yes | By setting Browse | `all` |
+| Yes | Allow following links | `all` |
+| Yes | Disable following links | `nofollow` |
+| No | By setting Browse | `noindex, nofollow` |
+| No | Allow following links | `noindex` |
+| No | Disable following links | `noindex, nofollow` |
 
 ```java
 ${ninja.page.robots}
