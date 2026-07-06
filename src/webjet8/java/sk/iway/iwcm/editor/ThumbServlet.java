@@ -51,7 +51,7 @@ import sk.iway.iwcm.users.UsersDB;
  *@created      Nedela, 2004, apr 18
  *@modified     $Date: $
  */
-@SuppressWarnings({"java:S1075", "java:S1989"})
+@SuppressWarnings({"java:S1075", "java:S1989", "java:S3776"})
 @WebServlet(name = "thumbServlet", urlPatterns = {"/admin/thumb/*", "/thumb/*", "/tumbn/*"})
 public class ThumbServlet extends HttpServlet
 {
@@ -371,7 +371,7 @@ public class ThumbServlet extends HttpServlet
 					boolean isSizeAllowd = isSizeAllowed(realPathSmall, user);
 					if (isSizeAllowd == false)
 					{
-						response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+						response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 						return;
 					}
 				}
@@ -782,7 +782,12 @@ public class ThumbServlet extends HttpServlet
 	 */
 	public static boolean isSizeAllowed(String realPathSmall, Identity user) {
 		String mode = Constants.getString("thumbServletAllowedSizeMode");
-		if ("deny".equals(mode) && (user == null || user.isAdmin()==false)) return false;
+		if ("deny".equals(mode)) {
+			if (user != null && user.isAdmin()) {
+				return true; // Admins can request any size
+			}
+			return false; // Deny all other users
+		}
 		else if ("allow".equals(mode)) return true;
 
 		// ...imgcache/images/image-730x401ip5ncff00ffq90.jpg -> 730x401ip5ncff00ffq90

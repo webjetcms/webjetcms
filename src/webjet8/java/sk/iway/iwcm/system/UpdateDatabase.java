@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -90,6 +91,7 @@ import sk.iway.iwcm.utils.Pair;
  *@created      Nedele, 2004, marec 7
  *@modified     $Date: 2004/03/14 20:23:31 $
  */
+@SuppressWarnings({"java:S6912", "java:S6905", "java:S2077"})
 public class UpdateDatabase
 {
 	protected UpdateDatabase() {
@@ -223,7 +225,7 @@ public class UpdateDatabase
 		Scanner scanner;
 		try
 		{
-			scanner = new Scanner(new File(Tools.getRealPath("/WEB-INF/sql/stopwords.csv")),"UTF-8");
+			scanner = new Scanner(new File(Tools.getRealPath("/WEB-INF/sql/stopwords.csv")), StandardCharsets.UTF_8.name());
 			while (scanner.hasNextLine())
 			{
 				fileCount++;
@@ -253,7 +255,7 @@ public class UpdateDatabase
 
 				ps = db_conn.prepareStatement("insert into stopword (word,language) values (?,?)");
 				scanner.close();
-				scanner = new Scanner(new File(Tools.getRealPath("/WEB-INF/sql/stopwords.csv")),"UTF-8");
+				scanner = new Scanner(new File(Tools.getRealPath("/WEB-INF/sql/stopwords.csv")), StandardCharsets.UTF_8.name());
 
 				while (scanner.hasNext())
 				{
@@ -263,7 +265,7 @@ public class UpdateDatabase
 					String language = split[1].trim();
 					ps.setString(1, stopword);
 					ps.setString(2, language);
-					ps.executeUpdate();
+					ps.execute();
 				}
 				ps.close();
 				db_conn.close();
@@ -2328,7 +2330,7 @@ public class UpdateDatabase
 		saveSuccessUpdate(note);
 	}
 
-	private static int getDomainIdBasedOnUrl(String url) throws Exception {
+	private static int getDomainIdBasedOnUrl(String url) {
 		int domainId = 1;
 		if( Tools.isNotEmpty(url) ) {
 			DocDetails doc = WebpagesService.getBasicDocFromUrl(url);
