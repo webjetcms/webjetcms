@@ -164,11 +164,10 @@ public class CustomFieldsService {
             if(entity.getTextMaxLength() != null) value.append("-").append(entity.getTextMaxLength());
             if(entity.getTextWarningLength() != null) value.append(", warningLength-").append(entity.getTextWarningLength());
         } else if("select".equals(type)) {
-            if(Tools.isFalse(entity.getRequired())) value.append("|"); //can be empty value
+            if(Tools.isFalse(entity.getRequired())) value.append("|"); //user can select umpty value
             value.append(Tools.isNotEmpty(entity.getSelectOptions()) ? entity.getSelectOptions() : "");
         } else if("multiselect".equals(type)) {
             value.append("multiple:");
-            if(Tools.isFalse(entity.getRequired())) value.append("|"); //can be empty value
             value.append(Tools.isNotEmpty(entity.getSelectOptions()) ? entity.getSelectOptions() : "");
         } else if("json_group".equals(type) || "json_doc".equals(type)) {
             value.append(type);
