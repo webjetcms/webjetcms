@@ -95,6 +95,7 @@
 - Logovanie - do [Logback MDC](https://logback.qos.ch/manual/mdc.html) doplnený atribút `sessionId` a prihlasovacieho mena používateľa `userLogin` (#OSK526).
 - Aktualizovaná knižnica [Tabler Icons](https://tabler.io/icons) na verziu 3.44.0, vyriešený problém so súčasným používaním `Outline` a `Filled` sád (#58509).
 - Web stránky - ak potrebujete mať prázdny prvý riadok v konfiguračnej premennej `imageMagickCustomParams*` pre [nastavenie vlastných parametrov](redactor/apps/gallery/README.md#vlastné-parametre-imagemagick) `ImageMagick` zadajte hodnotu `---`.
+- Prekladové kľúče - upravené auditovanie chýbajúcich prekladových kľúčov - vylúčené auditovanie ak sa neskôr testuje, či kľúč skutočne existuje (#261).
 
 ## 2026.18
 
