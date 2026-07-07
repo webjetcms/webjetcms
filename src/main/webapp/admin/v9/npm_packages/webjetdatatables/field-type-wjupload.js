@@ -252,6 +252,14 @@ export function typeWjupload() {
 
             conf._input.find(".btn-outline-secondary").on("click", function() {
                 cleanUploader(conf);
+
+                // Re-prepare the uploader so that event listeners are re-registered
+                // and the user can upload a new file after canceling.
+                if (conf._interval != null) {
+                    clearInterval(conf._interval);
+                    conf._interval = null;
+                }
+                conf._interval = setInterval(prepareUploader, 500, conf);
             });
 
             return htmlCode;
