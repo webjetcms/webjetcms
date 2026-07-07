@@ -56,7 +56,12 @@ function bindUploadLimitGuard(uploadInstance, maxFiles) {
 }
 
 function cleanUploader(conf) {
-    $("#" + conf._id).show();
+    // AdminUpload hides the dropzone during upload via visibility/opacity (not display),
+    // so restore both here, otherwise the dropzone stays invisible after cancel.
+    $("#" + conf._id).css({ visibility: "visible", opacity: 1 }).show();
+
+    // Always clear transient upload key to prevent stale value reuse across editor opens.
+    conf.uploadedFileKey = "";
 
     //Remove all files + force stop uploading actual files
     if(conf._adminUpload != null) conf._adminUpload.removeAllFiles(true);
@@ -76,6 +81,29 @@ function cleanUploader(conf) {
     conf._input.filter(".upload-wrapper").hide();
 }
 
+function destroyExistingUploader(conf, dropzoneElement) {
+    // Remove the previously registered global event listeners so they don't accumulate
+    // (and keep firing) across multiple editor opens.
+    if (conf._eventListeners) {
+        for (const [event, handler] of conf._eventListeners) {
+            window.removeEventListener(event, handler);
+        }
+        conf._eventListeners = null;
+    }
+
+    // Destroy any Dropzone instance still attached to this element. Dropzone stores the
+    // instance on the element via the ".dropzone" property; attaching a new one without
+    // destroying it first throws "Dropzone already attached."
+    if (dropzoneElement != null && dropzoneElement.dropzone != null) {
+        try {
+            dropzoneElement.dropzone.destroy();
+        } catch (e) {
+            // Ignore destroy errors, the element will be reinitialized anyway.
+        }
+    }
+    conf._adminUpload = null;
+}
+
 function prepareUploader(conf) {
     let id = conf._id;
 
@@ -83,6 +111,8 @@ function prepareUploader(conf) {
     if(dropzone.length > 0) {
         clearInterval(conf._interval);
         conf._interval = null;
+
+        destroyExistingUploader(conf, dropzone[0]);
 
         const maxFiles = resolveUploadMaxFiles(conf);
 

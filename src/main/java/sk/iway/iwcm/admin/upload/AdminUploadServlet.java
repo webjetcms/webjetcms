@@ -312,7 +312,7 @@ public class AdminUploadServlet extends HttpServlet
     public static String moveAndReplaceFile(String fileKey, String destinationFolder, String fileNameParam) throws IOException
     {
         String fileName = fileNameParam;
-        if (temporary.containsKey(fileKey))
+        if (Tools.isNotEmpty(fileKey) && temporary.containsKey(fileKey))
         {
             IwcmFile dirFile = new IwcmFile(Tools.getRealPath(destinationFolder));
             if (dirFile.exists()==false) dirFile.mkdirs();
@@ -431,7 +431,7 @@ public class AdminUploadServlet extends HttpServlet
 	 */
 	public static String getTempFilePath(String fileKey)
 	{
-		if (temporary.containsKey(fileKey))
+		if (Tools.isNotEmpty(fileKey) && temporary.containsKey(fileKey))
 		{
 			return temporary.get(fileKey).getTempPath();
 		}
@@ -444,7 +444,7 @@ public class AdminUploadServlet extends HttpServlet
      * @return
      */
     public static String getOriginalFileName(String fileKey) {
-        if (temporary.containsKey(fileKey))
+        if (Tools.isNotEmpty(fileKey) && temporary.containsKey(fileKey))
 		{
 			return temporary.get(fileKey).getFileName();
 		}

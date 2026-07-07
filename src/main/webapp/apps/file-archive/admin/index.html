@@ -141,7 +141,6 @@
         if (somStromcek == null) somStromcek = $('#SomStromcek');
         let url = somStromcek.data("rest-url");
         if (dir != null) url = WJ.urlUpdateParam(url, "dir", dir);
-        console.log("getJstreeUrl, url=", url);
         return url;
     }
 
@@ -174,6 +173,24 @@
         if (fileArchiveDataTable) {
             fileArchiveDataTable.ajax.reload();
         }
+    }
+
+    function getCurrentArchiveTreePath() {
+        var tree = $('#SomStromcek').jstree(true);
+        if (!tree) return fileArchiveSelectedDir;
+
+        var selected = tree.get_selected();
+        if (!selected || selected.length === 0) return fileArchiveSelectedDir;
+
+        var selectedNode = tree.get_node(selected[0]);
+        if (!selectedNode) return fileArchiveSelectedDir;
+
+        var treePath = selectedNode.original && selectedNode.original.virtualPath
+            ? selectedNode.original.virtualPath
+            : selectedNode.id;
+
+        if (!treePath) return treePath;
+        return treePath.charAt(treePath.length - 1) === "/" ? treePath : treePath + "/";
     }
 
     window.domReady.add(function () {
@@ -376,13 +393,15 @@
 
         fileArchiveAdminUpload.on("addedfile", function() {
             setArchiveSubmitDisabled(true);
-            console.log("Upload added file, fileArchiveAdminUpload=", fileArchiveAdminUpload);
         });
 
         fileArchiveAdminUpload.on("error", function(file) {
-            console.log("Upload error, file=", file);
             setArchiveSubmitDisabled(false);
             fileArchiveAdminUpload.removeFile(file);
+        });
+
+        fileArchiveAdminUpload.on("success", function(file) {
+            fileArchiveDataTable.ajax.reload();
         });
 
         //Initialize tree
@@ -465,6 +484,7 @@
 
                 fileArchiveDataTable.EDITOR.field("editorFields.file").show();
                 fileArchiveDataTable.EDITOR.field("editorFields.dir").show();
+                fileArchiveDataTable.EDITOR.field("editorFields.dir").val(getCurrentArchiveTreePath());
                 fileArchiveDataTable.EDITOR.field("editorFields.saveLater").show();
                 fileArchiveDataTable.EDITOR.field("editorFields.saveAfterSelect").hide();
             } else if(action === 'edit') {
@@ -635,7 +655,6 @@
 </script>
 
 <div id="dt-upload" class="drop-zone-box dropzone" style="visibility: hidden; opacity: 0"></div>
-
 
 <div id="upload-wrapper" style="display: none;">
     <div class="upload-wrapper-header">

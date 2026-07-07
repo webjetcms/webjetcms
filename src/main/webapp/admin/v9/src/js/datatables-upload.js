@@ -119,6 +119,34 @@ function adminUploadInit(options) {
                 dzButton.setAttribute('aria-label', label);
             }
 
+            // Add a deterministic class to the generated hidden file input so that multiple
+            // input.dz-hidden-input elements on the same page can be distinguished.
+            // The class is derived from the dropzone element id (or upload type/destination folder
+            // as a fallback), never a random value. Dropzone recreates the hidden input after every
+            // file selection, so we hook the property setter to re-apply the class each time.
+            var identifierSource = (this.element && this.element.id) ? this.element.id : (uploadType + '-' + destinationFolder);
+            var hiddenInputClass = String(identifierSource).replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
+            if (hiddenInputClass) {
+                hiddenInputClass = 'dz-hidden-input-' + hiddenInputClass;
+                var applyHiddenInputClass = function (input) {
+                    if (input && input.classList) {
+                        input.classList.add(hiddenInputClass);
+                    }
+                };
+                var currentHiddenFileInput = this.hiddenFileInput;
+                applyHiddenInputClass(currentHiddenFileInput);
+                Object.defineProperty(this, 'hiddenFileInput', {
+                    configurable: true,
+                    get: function () {
+                        return currentHiddenFileInput;
+                    },
+                    set: function (input) {
+                        currentHiddenFileInput = input;
+                        applyHiddenInputClass(input);
+                    }
+                });
+            }
+
             $(document).on('initAddedFileFromImageOutside', (e, file) => {
                 fromImageEditor = true;
                 this.emit('addedfile', file);
@@ -288,6 +316,7 @@ function adminUploadInit(options) {
 
     function createFileToaster(file) {
         uploadWrapper.show();
+        uploadElement.css('display', 'none');
         uploadElement.css('visibility', 'hidden');
         uploadElement.css('opacity', 0);
 
@@ -497,6 +526,7 @@ window.addEventListener('dragenter', function (e) {
 
     lastTarget = e.target; // cache the last target here
     // unhide our dropzone overlay
+    $(fullscreenDropZone).css('display', '');
     $(fullscreenDropZone).css('visibility', '');
     $(fullscreenDropZone).css('opacity', 1);
 });
@@ -514,6 +544,7 @@ window.addEventListener('dragleave', function (e) {
 
     if (e.target === lastTarget || e.target === document) {
         setTimeout(function () {
+            $('#dt-upload').css('display', 'none');
             $('#dt-upload').css('visibility', 'hidden');
             $('#dt-upload').css('opacity', 0);
         }, 5000);
