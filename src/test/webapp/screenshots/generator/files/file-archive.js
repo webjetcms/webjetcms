@@ -36,14 +36,14 @@ Scenario('Base screens', ({ I, DT, DTE, Document, i18n }) => {
     I.uncheckOption("#DTE_Field_editorFields-saveLater_0");
 
     //Attach file
-    I.attachFile('input.dz-hidden-input', 'tests/apps/file-archive/docs/' + invalidPngFileName);
+    I.attachFile('input.dz-hidden-input.dz-hidden-input-DTE_Field_editorFields-file', 'tests/apps/file-archive/docs/' + invalidPngFileName);
     DTE.save();
     Document.screenshotElement("div.DTE_Field_Type_wjupload", "/redactor/files/file-archive/invalid-file-type.png");
 
     I.say("Save good file - but duplicity");
     I.click( locate("div.upload-wrapper").find("button.btn-outline-secondary") );
     DTE.fillField('virtualFileName', "testScreenshot-CANT_SAVE");
-    I.attachFile('input.dz-hidden-input', 'tests/apps/file-archive/docs/' + validPdfFileName);
+    I.attachFile('input.dz-hidden-input.dz-hidden-input-DTE_Field_editorFields-file', 'tests/apps/file-archive/docs/' + validPdfFileName);
     DTE.save();
 
     I.waitForVisible("div.toast.toast-warning");
@@ -67,7 +67,7 @@ Scenario('Edit and actions screens', ({ I, DT, DTE, Document, i18n }) => {
 
     I.click(mainBase);
     DTE.waitForEditor('fileArchiveDataTable');
-    I.resizeWindow(1280, 850);
+    I.resizeWindow(1280, 950);
     Document.screenshotElement(".DTE.modal-content.DTE_Action_Edit", "/redactor/files/file-archive/editor_edit_base.png");
 
     I.selectOption('select#DTE_Field_editorFields-uploadType', i18n.get("Replace current document"));
@@ -116,7 +116,7 @@ Scenario('Upload file field for DOC', ({ I, DTE, Document, i18n }) => {
     Document.screenshotElement("div.DTE_Field_Type_wjupload", "/developer/datatables-editor/field-uploadFile.png");
 
     //Attach file
-    I.attachFile('input.dz-hidden-input', 'tests/apps/file-archive/docs/' + validPdfFileName);
+    I.attachFile('input.dz-hidden-input.dz-hidden-input-DTE_Field_editorFields-file', 'tests/apps/file-archive/docs/' + validPdfFileName);
 
     I.say("Screen while loading");
     Document.screenshotElement("div.DTE_Field_Type_wjupload", "/developer/datatables-editor/field-uploadFile-loading.png");
@@ -135,15 +135,17 @@ Scenario('Managers screens', ({ I, Document }) => {
 
 Scenario('Export', ({ I, Document, i18n }) => {
     I.say("EXPORT - only main files");
-        I.resizeWindow(1280, 700);
+        I.resizeWindow(1280, 500);
         I.amOnPage("/components/file_archiv/export_archiv.jsp");
         I.waitForVisible("#exportArchiveFileForm");
         Document.screenshot("/redactor/files/file-archive/export_base.png");
 
+        I.resizeWindow(1280, 700);
         I.clickCss("input#btnOk");
         I.waitForText(i18n.get("Please wait, EXPORT of documents is in progress and may take several minutes."), 30);
         Document.screenshot("/redactor/files/file-archive/export_main_only.png");
 
+        I.resizeWindow(1280, 500);
         I.say("Remove file");
         I.click( locate("#dialogCentralRow").find("input.button100") );
         I.waitForText(i18n.get("was successfully deleted"), 30);
@@ -278,6 +280,7 @@ Scenario('File archive editor app', async ({ I, DT, DTE,  Document, i18n }) => {
         $(".collapsible").click();
     });
 
+    I.resizeWindow(1280, 850);
     Document.screenshot("/redactor/files/file-archive/app-expanded.png");
 
     I.clickCss("tr.collapsible td a");
