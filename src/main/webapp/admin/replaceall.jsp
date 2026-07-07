@@ -51,6 +51,30 @@ public String getGroupIds(String groupIds)
 	return searchGroups;
 }
 
+public void printDebug(String text)
+{
+	/*byte[] dataBytes = text.getBytes();
+	for (int i = 0; i < dataBytes.length; i++) {
+		byte b = dataBytes[i];
+		if (b == 10 || b == 13) b = 32;
+		System.out.println(i + ": " + new String(new byte[]{b}) + ": " + dataBytes[i]);
+	}*/
+}
+
+public String normalizeCrLf(String text) {
+	if (text == null) return null;
+	String normalized = Tools.replace(text, "\r\n", "\n");
+	normalized = Tools.replace(normalized, "\r", "\n");
+	return normalized;
+}
+
+public String replace(String src, String oldStr, String newStr) {
+	src = normalizeCrLf(src);
+	oldStr = normalizeCrLf(oldStr);
+	newStr = normalizeCrLf(newStr);
+	return Tools.replace(src, oldStr, newStr);
+}
+
 public List<DocDetails> replaceTextDocuments(String oldText, String newText, String rootGroupIds, boolean replace)
 {
 	List<DocDetails> docs = new ArrayList<DocDetails>();
@@ -59,7 +83,14 @@ public List<DocDetails> replaceTextDocuments(String oldText, String newText, Str
 		//ziskaj udaje z db
 		Connection db_conn = DBPool.getConnection();
 
-		String sql = "SELECT doc_id, data, title, navbar, html_head, html_data, virtual_path, perex_image FROM documents WHERE (data LIKE ? OR title LIKE ? OR navbar LIKE ? OR virtual_path LIKE ? OR perex_image LIKE ?)";
+		boolean normalizeLineEndingsForLike = oldText != null && (oldText.indexOf('\n') != -1 || oldText.indexOf('\r') != -1);
+
+		String dataColumn = normalizeLineEndingsForLike ? getSqlNormalizedLineEndingColumn("data") : "data";
+		String titleColumn = normalizeLineEndingsForLike ? getSqlNormalizedLineEndingColumn("title") : "title";
+		String navbarColumn = normalizeLineEndingsForLike ? getSqlNormalizedLineEndingColumn("navbar") : "navbar";
+		String perexImageColumn = normalizeLineEndingsForLike ? getSqlNormalizedLineEndingColumn("perex_image") : "perex_image";
+
+		String sql = "SELECT doc_id, data, title, navbar, html_head, html_data, virtual_path, perex_image FROM documents WHERE ("+dataColumn+" LIKE ? OR "+titleColumn+" LIKE ? OR "+navbarColumn+" LIKE ? OR virtual_path LIKE ? OR "+perexImageColumn+" LIKE ?)";
 
 		if (Tools.isNotEmpty(rootGroupIds))
 		{
@@ -70,12 +101,21 @@ public List<DocDetails> replaceTextDocuments(String oldText, String newText, Str
 			}
 		}
 
+		String virtualPath = DocTools.removeCharsDir(oldText, true).toLowerCase();
+		//HTML code is removed, so for this case use original because it will find all data
+		if (Tools.isEmpty(virtualPath)) virtualPath = oldText;
+
+		String oldTextForLike = oldText;
+		if (normalizeLineEndingsForLike) oldTextForLike = normalizeLineEndingsValue(oldTextForLike);
+
 		PreparedStatement ps = db_conn.prepareStatement(sql);
-		ps.setString(1, "%"+oldText+"%");
-		ps.setString(2, "%"+oldText+"%");
-		ps.setString(3, "%"+oldText+"%");
-		ps.setString(4, "%"+ DocTools.removeCharsDir(oldText, true).toLowerCase()+"%");
-		ps.setString(5, "%"+oldText+"%");
+		ps.setString(1, "%"+oldTextForLike+"%");
+		ps.setString(2, "%"+oldTextForLike+"%");
+		ps.setString(3, "%"+oldTextForLike+"%");
+		ps.setString(4, "%"+virtualPath+"%");
+		ps.setString(5, "%"+oldTextForLike+"%");
+
+		Logger.debug(DocDB.class, "replaceall.jsp SQL: "+sql);
 
 		ResultSet rs = ps.executeQuery();
 		DocDetails doc;
@@ -106,24 +146,24 @@ public List<DocDetails> replaceTextDocuments(String oldText, String newText, Str
 
 				Logger.println(this,"updating data in document: "+doc.getTitle());
 
-				doc.setData(DB.replace(doc.getData(), oldText, newText));
+				doc.setData(replace(doc.getData(), oldText, newText));
 
 				int psCounter = 1;
 				ps = db_conn.prepareStatement("UPDATE documents SET data=?, data_asc=?, title=?, navbar=?, html_head=?, html_data=?, virtual_path=?, perex_image=?, sync_status=1 WHERE doc_id=?");
 
-				doc.setData(Tools.replace(doc.getData(), oldText, newText));
+				doc.setData(replace(doc.getData(), oldText, newText));
 
 				DB.setClob(ps, psCounter++, doc.getData());
 				DB.setClob(ps, psCounter++, DB.internationalToEnglish(doc.getData()).toLowerCase());
-				ps.setString(psCounter++, Tools.replace(doc.getTitle(), oldText, newText));
-				DB.setClob(ps, psCounter++, Tools.replace(doc.getNavbar(), oldText, newText));
-				DB.setClob(ps, psCounter++, Tools.replace(doc.getHtmlHead(), oldText, newText));
-				DB.setClob(ps, psCounter++, Tools.replace(doc.getHtmlData(), oldText, newText));
+				ps.setString(psCounter++, replace(doc.getTitle(), oldText, newText));
+				DB.setClob(ps, psCounter++, replace(doc.getNavbar(), oldText, newText));
+				DB.setClob(ps, psCounter++, replace(doc.getHtmlHead(), oldText, newText));
+				DB.setClob(ps, psCounter++, replace(doc.getHtmlData(), oldText, newText));
 
 				String oldUrl = doc.getVirtualPath();
-				String newUrl = Tools.replace(doc.getVirtualPath(), DocTools.removeCharsDir(oldText, true).toLowerCase(), DocTools.removeCharsDir(newText, true).toLowerCase());
+				String newUrl = replace(doc.getVirtualPath(), DocTools.removeCharsDir(oldText, true).toLowerCase(), DocTools.removeCharsDir(newText, true).toLowerCase());
 				ps.setString(psCounter++, newUrl);
-				ps.setString(psCounter++, Tools.replace(doc.getPerexImage() , oldText, newText));
+				ps.setString(psCounter++, replace(doc.getPerexImage() , oldText, newText));
 				ps.setInt(psCounter++, doc.getDocId());
 				ps.executeUpdate();
 				ps.close();
@@ -147,6 +187,50 @@ public List<DocDetails> replaceTextDocuments(String oldText, String newText, Str
 	return(docs);
 }
 
+private String getSqlCharFunction(int asciiCode)
+{
+	if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL)
+	{
+		return "CHR("+asciiCode+")";
+	}
+
+	return "CHAR("+asciiCode+")";
+}
+
+private String getSqlCrLfExpression()
+{
+	String crChar = getSqlCharFunction(13);
+	String lfChar = getSqlCharFunction(10);
+
+	if (Constants.DB_TYPE == Constants.DB_MYSQL)
+	{
+		return "CONCAT("+crChar+", "+lfChar+")";
+	}
+	if (Constants.DB_TYPE == Constants.DB_MSSQL)
+	{
+		return crChar+"+"+lfChar;
+	}
+
+	return crChar+"||"+lfChar;
+}
+
+private String getSqlNormalizedLineEndingColumn(String columnName)
+{
+	String crlf = getSqlCrLfExpression();
+	String crChar = getSqlCharFunction(13);
+	String lfChar = getSqlCharFunction(10);
+	return "REPLACE(REPLACE("+columnName+", "+crlf+", "+lfChar+"), "+crChar+", "+lfChar+")";
+}
+
+private String normalizeLineEndingsValue(String value)
+{
+	if (value == null) return "";
+
+	String normalized = Tools.replace(value, "\r\n", "\n");
+	normalized = Tools.replace(normalized, "\r", "\n");
+	return normalized;
+}
+
 public List<GroupDetails> replaceTextGroups(String oldText, String newText, String rootGroupIds, boolean replace)
 {
 	List<GroupDetails> groups = new ArrayList<GroupDetails>();
@@ -155,7 +239,11 @@ public List<GroupDetails> replaceTextGroups(String oldText, String newText, Stri
 		//ziskaj udaje z db
 		Connection db_conn = DBPool.getConnection();
 
-		String sql = "SELECT group_id, group_name, navbar FROM groups WHERE group_name LIKE ? OR navbar LIKE ?";
+		boolean normalizeLineEndingsForLike = oldText != null && (oldText.indexOf('\n') != -1 || oldText.indexOf('\r') != -1);
+		String groupNameColumn = normalizeLineEndingsForLike ? getSqlNormalizedLineEndingColumn("group_name") : "group_name";
+		String navbarColumn = normalizeLineEndingsForLike ? getSqlNormalizedLineEndingColumn("navbar") : "navbar";
+
+		String sql = "SELECT group_id, group_name, navbar FROM groups WHERE "+groupNameColumn+" LIKE ? OR "+navbarColumn+" LIKE ?";
 
 		if (Tools.isNotEmpty(rootGroupIds))
 		{
@@ -166,9 +254,12 @@ public List<GroupDetails> replaceTextGroups(String oldText, String newText, Stri
 			}
 		}
 
+		String oldTextForLike = oldText;
+		if (normalizeLineEndingsForLike) oldTextForLike = normalizeLineEndingsValue(oldTextForLike);
+
 		PreparedStatement ps = db_conn.prepareStatement(sql);
-		ps.setString(1, "%"+oldText+"%");
-		ps.setString(2, "%"+oldText+"%");
+		ps.setString(1, "%"+oldTextForLike+"%");
+		ps.setString(2, "%"+oldTextForLike+"%");
 		ResultSet rs = ps.executeQuery();
 		GroupDetails group;
 		while (rs.next())
@@ -191,7 +282,7 @@ public List<GroupDetails> replaceTextGroups(String oldText, String newText, Stri
 			{
 				group = iter.next();
 
-				Logger.println(this,"updating data in group: "+group.getGroupIdName());
+				Logger.debug(DocDB.class, "updating data in group: "+group.getGroupIdName());
 
 				int psCounter = 1;
 				ps = db_conn.prepareStatement("UPDATE groups SET group_name=?, navbar=? WHERE group_id=?");
@@ -332,23 +423,20 @@ public List<GroupDetails> replaceTextGroups(String oldText, String newText, Stri
 			<br/>
 			<br/>
 
-
 			<iwcm:present name="replacedPages">
-				<strong>Uravené stránky:</strong>
+				<strong>Upravené stránky:</strong>
 				<br>
 				<table cellspacing=2 cellpadding=0>
 					<tr>
-					</tr>
-					<tr>
-					<th>DocID</th>
-					<th><iwcm:text key="editor.title"/></th>
-					<th>URL</th>
+						<th>DocID</th>
+						<th><iwcm:text key="editor.title"/></th>
+						<th>URL</th>
 					</tr>
 				<iwcm:iterate name="replacedPages" id="doc" type="sk.iway.iwcm.doc.DocDetails">
 					<tr>
-					<td><iwcm:beanWrite name="doc" property="docId"/></td>
-					<td><a href="/showdoc.do?docid=<iwcm:beanWrite name="doc" property="docId"/>" target="_blank"><iwcm:beanWrite name="doc" property="title"/></a></td>
-					<td><iwcm:beanWrite name="doc" property="virtualPath"/></td>
+						<td><iwcm:beanWrite name="doc" property="docId"/></td>
+						<td><a href="/showdoc.do?docid=<iwcm:beanWrite name="doc" property="docId"/>" target="_blank"><iwcm:beanWrite name="doc" property="title"/></a></td>
+						<td><iwcm:beanWrite name="doc" property="virtualPath"/></td>
 					</tr>
 				</iwcm:iterate>
 				</table>
@@ -360,10 +448,8 @@ public List<GroupDetails> replaceTextGroups(String oldText, String newText, Stri
 				<br>
 				<table cellspacing=2 cellpadding=0>
 					<tr>
-					</tr>
-					<tr>
-					<th>GroupID</th>
-					<th><iwcm:text key="editor.title"/></th>
+						<th>GroupID</th>
+						<th><iwcm:text key="editor.title"/></th>
 					</tr>
 				<iwcm:iterate name="replacedGroups" id="group" type="sk.iway.iwcm.doc.GroupDetails">
 					<tr>

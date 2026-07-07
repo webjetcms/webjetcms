@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-mssql
+      platforms:
+        - linux/amd64
     platform: linux/amd64
     container_name: webjetcms-mssql
     environment:
