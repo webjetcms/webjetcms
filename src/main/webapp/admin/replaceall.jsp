@@ -51,16 +51,6 @@ public String getGroupIds(String groupIds)
 	return searchGroups;
 }
 
-public void printDebug(String text)
-{
-	/*byte[] dataBytes = text.getBytes();
-	for (int i = 0; i < dataBytes.length; i++) {
-		byte b = dataBytes[i];
-		if (b == 10 || b == 13) b = 32;
-		System.out.println(i + ": " + new String(new byte[]{b}) + ": " + dataBytes[i]);
-	}*/
-}
-
 public String normalizeCrLf(String text) {
 	if (text == null) return null;
 	String normalized = Tools.replace(text, "\r\n", "\n");
@@ -293,8 +283,8 @@ public List<GroupDetails> replaceTextGroups(String oldText, String newText, Stri
 				int psCounter = 1;
 				ps = db_conn.prepareStatement("UPDATE groups SET group_name=?, navbar=? WHERE group_id=?");
 
-				ps.setString(psCounter++, Tools.replace(group.getGroupName(), oldText, newText));
-				ps.setString(psCounter++, Tools.replace(group.getNavbarName(), oldText, newText));
+				ps.setString(psCounter++, replace(group.getGroupName(), oldText, newText));
+				ps.setString(psCounter++, replace(group.getNavbarName(), oldText, newText));
 
 				ps.setInt(psCounter++, group.getGroupId());
 				ps.executeUpdate();
