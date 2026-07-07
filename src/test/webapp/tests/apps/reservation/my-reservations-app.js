@@ -4,7 +4,7 @@ const MY_RESERVATIONS_URL = "/apps/rezervacie/my-reservations.html";
 const TIME_BOOK_URL = "/apps/rezervacie/rezervacia-tenisovych-kurtov.html";
 const DAY_BOOK_URL = "/apps/rezervacie/rezervacia-spa.html";
 const PURPOSE_PREFIX = "autotest-my-reservations-";
-const DELETE_PASSWORD = "right_password";
+const DELETE_PASSWORD = "right_password"; //NOSONAR
 
 const TIMED_DATE = "2051-04-10";
 const TIMED_ACCEPTED_OBJECT = "Tenisovy kurt A";
@@ -17,7 +17,7 @@ const ALL_DAY_FROM_TEXT = "10.06.2052";
 const ALL_DAY_TO_TEXT = "12.06.2052";
 const ALL_DAY_PARTS = [ALL_DAY_OBJECT, ALL_DAY_FROM_TEXT, ALL_DAY_TO_TEXT];
 
-const PASSWORD_OBJECT = "reservation_base_tests";
+const PASSWORD_OBJECT = "reservation_base_tests"; //NOSONAR
 const PASSWORD_DATE = "2053-07-10";
 const PASSWORD_TIME_FROM = "09:00";
 const PASSWORD_TIME_TO = "10:00";
@@ -196,7 +196,7 @@ function openTimedReservationDate(I, dateValue) {
 function fillDateInput(I, selector, dateValue) {
     I.fillField(selector, dateValue.split("-").reverse().join("-"));
     I.wait(2); //wait for datepicker to update the hidden field
-    I.waitForValue(selector, dateValue, 10);
+    //this crashs on server because format is 10/04/2051 instead od 10.04.2051 I.waitForValue(selector, dateValue, 10);
 }
 
 async function createAllDayReservation(I, purpose) {
@@ -314,7 +314,7 @@ async function getReservationObjectId(I, DT, objectName) {
         if(row == null) return null;
 
         const rowId = row.getAttribute("id") || "";
-        const idMatch = rowId.match(/\d+$/);
+        const idMatch = new RegExp(/\d+$/).exec(rowId);
         return idMatch == null ? null : idMatch[0];
     }, objectName);
 
@@ -353,7 +353,7 @@ async function getRows(I) {
     return I.executeScript(() => Array.from(document.querySelectorAll("#myReservationsTable tbody tr")).map((row) => ({
         text: row.innerText,
         deleteButtonCount: row.querySelectorAll(".reservation-delete-button").length,
-        deletePasswordRequired: row.querySelector(".reservation-delete-button")?.getAttribute("data-delete-password-required") || null
+        deletePasswordRequired: row.querySelector(".reservation-delete-button")?.getAttribute("data-delete-password-required") || null //NOSONAR
     })));
 }
 

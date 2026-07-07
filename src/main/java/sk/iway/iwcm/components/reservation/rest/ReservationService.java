@@ -496,7 +496,7 @@ public class ReservationService {
      */
     public void throwError(String errorTextKey) {
         Prop prop = Prop.getInstance();
-        String message = prop.getText(errorTextKey);
+        String message = prop.getText(errorTextKey, false);
         throw new IllegalArgumentException(message);
     }
 

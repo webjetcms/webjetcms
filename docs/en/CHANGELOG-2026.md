@@ -6,6 +6,8 @@
 
 ### Websites
 
+- SEO - added a separate setting **Search engine tracking** with options **According to crawl settings**, **Enable tracking** (`follow`) and **Disable tracking** (`nofollow`). HTTP header `X-Robots-Tag` and Ninja `${ninja.page.robots}` use the same logic: when indexing without restrictions, they return `all`, otherwise a combination of directives `noindex` and `nofollow` according to the page settings. More in [Ninja documentation](frontend/ninja-starter-kit/ninja-jv/page/README.md#indexing-settings-string) (#OSK563).
+- Ninja - added [dimension generation](frontend/ninja-starter-kit/ninja-bp/README.md) SEO image `og:image:width` and `og:image:height` (#OSK563).
 - Templates - added option to set the movement of `<style>` and `<link rel="stylesheet">` tags from the page body to `<head>` via [template option](frontend/templates/templates.md) with support for global configuration variable `showDocMoveStyleToHead`. Blocks in IE conditions, `noscript` and `script` remain in place (#231).
 
 ![](frontend/templates/templates-edit-advanced.png)
@@ -34,6 +36,10 @@
 
 - Added support for [semantic search](redactor/apps/semantic-search/README.md) built on the `pgvector` and `OpenAI embeddings` vector database technology. It allows visitors to find relevant pages based on **the meaning of the query**, not just keyword matching (#211).
 
+- Added hybrid semantic search mode and optional RAG response from indexed content. The **Search** app has new settings for search type, hybrid behavior, AI assistant selection, and response context limits (#58521).
+
+![](redactor/apps/semantic-search/rag-result.png)
+
 ### Applications
 
 - Added new application [Language Redirect](redactor/apps/language-redirect/README.md) to automatically redirect visitors to the language version of the page based on language detection from the HTTP header `Accept-Language`. It supports up to 8 language assignments per URL, respecting the language cookie, and the option to redirect only to the root URL (#58497).
@@ -46,6 +52,14 @@
 
 ![](editor/apps/reservation/my-reservations-app/app-page.png)
 
+### Optional fields
+
+- Fully implemented [custom field settings] functionality (frontend/webpages/customfields/custom-fields-settings.md). Allows you to centrally set field properties without editing translation keys. All field types are supported (text, textarea, select, multiselect, autocomplete, enumeration, image, link, JSON and more) with type-specific settings such as maximum text length, selection options, linking to code lists or dependency on other fields. The user interface also offers an easy way to set possible values ​​for select/autocomplete fields (#58529).
+
+![](frontend/webpages/customfields/custom-fields-settings-editor.png)
+
+- Added option to set optional field as required (#58413).
+
 ### Multiweb
 
 - Added option [create new domain](install/multiweb/config.md) from the control domain, it will also create user, template group, template and system pages (#58525).
@@ -53,9 +67,15 @@
 - All domain redirects can be edited in the control domain.
 - Added option to view all files in the management domain.
 
+### Other minor changes
+
+- Explorer - added right **Allow uploading files with accents**, which allows preserving accents when uploading, creating, and renaming files and folders in folders `/files`, `/images`, and `/shared`. Without this right, names will continue to be automatically edited without accents (#58589).
+- Login - faster loading of the home page in the administration - added cache for the list of recent pages, changed pages and audit logs (#58589).
+
 ### Safety
 
 - Added support for generating `nonce` for the [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) header (#58533).
+- AI assistants - added protection against `prompt injection` attacks with separation of system instructions from user content and detection of coded inputs (#58549).
 
 ### Documentation
 
@@ -73,12 +93,8 @@
 ![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
 
 - Logging - added attribute `sessionId` and user login name `userLogin` (#OSK526) to [Logback MDC](https://logback.qos.ch/manual/mdc.html).
-
-- Optional fields - added the ability to centrally set the properties of [optional fields](frontend/webpages/customfields/custom-fields-settings.md) in a new table in the Settings section (#58413).
-
-![](frontend/webpages/customfields/custom-fields-settings-editor.png)
-
 - Updated [Tabler Icons](https://tabler.io/icons) library to version 3.44.0, fixed issue with simultaneous use of `Outline` and `Filled` sets (#58509).
+- Web pages - if you need to have an empty first line in the configuration variable `imageMagickCustomParams*` for [custom parameter settings](redactor/apps/gallery/README.md#custom-parameters-imagemagick) `ImageMagick` enter the value `---`.
 
 ## 2026.18
 
@@ -274,11 +290,16 @@ Redesigned application properties settings in the editor from the old code in `J
 
 > A patch version of the original version 2026.0.
 
+!> Warning: after updating, check the functionality of generating `/thumb` images and [setting allowed dimensions](frontend/thumb-servlet/README.md#restrictions).
+
 - Web pages - cancelled [planned versions](redactor/webpages/history.md) are displayed in history with strikethrough and cannot be deleted (#58573).
 - File Archive - modified background task for publishing files - due to rights it is not executed on public node (#246).
 - Background jobs - added option to run [background job](admin/settings/cronjob/README.md) only on nodes in full configuration or on public nodes (#246).
 - Primary Key Generator - added automatic correction of table names and primary value column names (#246).
 - Security - fixed Local File Inclusion, upload file checking, and RCE bugs. Thanks to Josef Korbel (Citadelo) for reporting these vulnerabilities (#252).
+- Security - added [checking allowed dimensions](frontend/thumb-servlet/README.md#restrictions) for generating `/thumb` images, first month in learning mode and then after restarting WebJET in checking mode (#259).
+- JPA - fixed multiple database transaction terminations during import redirection (#256).
+- `/thumb` - ​​fixed image generation with `ip=1/2` and zero size of `w/h` parameter (#58317-10).
 
 ## 2026.0.25
 

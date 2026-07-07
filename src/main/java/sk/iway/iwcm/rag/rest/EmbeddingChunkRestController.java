@@ -22,6 +22,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -70,9 +71,15 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
     @Override
     public Page<EmbeddingChunkEntity> getAllItems(Pageable pageable) {
 
-        if (vectorStore.isAvailable() == false && vectorStore.initializeSchema() == false) {
-            // Error will be throwed by PgVectorStore
+        if (vectorStore.isAvailable() == false) {
+            // If vector store is not available (not allowed or available)
             return new DatatablePageImpl<>( new ArrayList<>() );
+        } else if (vectorStore.isAvailableAndInitialized() == false) {
+            // Vector store is available but not initialized, we can try to initialize it
+            if(vectorStore.initializeSchema() == false) {
+                // Inicialization failed, return empty results, error will be logged by vector store
+                return new DatatablePageImpl<>( new ArrayList<>() );
+            }
         }
 
         // Check if entityType is set and valid
@@ -117,7 +124,13 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
 
     @Override
     public void getOptions(DatatablePageImpl<EmbeddingChunkEntity> page) {
-        page.addOptions("entityType", chunkRepository.findDistinctEntityTypes(CloudToolsForCore.getDomainId()).stream().map(Enum::name).toList());
+        if (vectorStore.isAvailableAndInitialized() == true) {
+            page.addOptions("entityType", chunkRepository.findDistinctEntityTypes(CloudToolsForCore.getDomainId()).stream().map(Enum::name).toList());
+        } else {
+            // Store is not available or not initialized (if needed), init is handled by getAlItems
+            page.addOptions("entityType", new ArrayList<>() );
+        }
+
         page.addOptions("language", Arrays.asList( Constants.getArray("languages") ));
 
         super.getOptions(page);
@@ -178,6 +191,13 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
         response.put("totalGroups", data.getFirst());
         response.put("totalDocuments", data.getSecond() != null ? data.getSecond().size() : 0);
 
+        if (vectorStore.isAvailableAndInitialized() == false) {
+            // Cannot check indexed status if vector store is not available or not initialized, return 0 for both indexed and queued
+            response.put("indexedDocuments", 0);
+            response.put("queuedDocuments", 0);
+            return response;
+        }
+
         Set<Integer> indexedDocIds = chunkRepository
                 .findDistinctEntityIdsByEntityTypeAndDomainId(RagEntityType.DOCUMENT, CloudToolsForCore.getDomainId())
                 .stream().collect(Collectors.toSet());
@@ -231,7 +251,7 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
             List<Integer> rootGroupsIds = new SimpleQuery().forListInteger("SELECT group_id FROM groups WHERE parent_group_id = 0 AND domain_name = ? AND group_name != 'System'", CloudToolsForCore.getDomainName());
             if(rootGroupsIds.isEmpty()) return null;
             String idsJoined = rootGroupsIds.stream().map(String::valueOf).collect(Collectors.joining(","));
-            docIds = new SimpleQuery().forListInteger("SELECT doc_id FROM documents WHERE root_group_l1 IN (" + idsJoined + ") AND searchable = true");
+            docIds = new SimpleQuery().forListInteger("SELECT doc_id FROM documents WHERE root_group_l1 IN (" + idsJoined + ") AND searchable = "+DB.getBooleanSql(true));
 
             allGroupCount = rootGroupsIds.size();
         } else {

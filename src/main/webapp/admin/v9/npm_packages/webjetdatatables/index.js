@@ -51,6 +51,7 @@ import * as fieldTypeWjupload from './field-type-wjupload';
 import * as fieldTypeImageRadio from './field-type-imageradio';
 import * as fieldTypeIcon from './field-type-icon';
 import * as fieldTypeOptions from './field-type-options';
+import * as fieldTypeOptionsSimple from './field-type-options-simple';
 import * as fieldTypeEnumeration from './field-type-enumeration';
 import * as dtWJ from './datatables-wjfunctions';
 import * as CustomFields from './custom-fields';
@@ -1145,6 +1146,7 @@ export const dataTableInit = options => {
         $.fn.dataTable.Editor.fieldTypes.imageRadio = fieldTypeImageRadio.typeImageRadio();
         $.fn.dataTable.Editor.fieldTypes.icon = fieldTypeIcon.typeIcon();
         $.fn.dataTable.Editor.fieldTypes.options = fieldTypeOptions.typeOptions();
+        $.fn.dataTable.Editor.fieldTypes.optionsSimple = fieldTypeOptionsSimple.typeOptionsSimple();
         $.fn.dataTable.Editor.fieldTypes.enumeration = fieldTypeEnumeration.typeEnumeration();
 
         fieldTypeSelectEditable.typeSelectEditable();

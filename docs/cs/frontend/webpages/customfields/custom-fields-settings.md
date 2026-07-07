@@ -1,8 +1,6 @@
 # Tabulka Volitelná pole
 
-Tabulka Volitelná pole umožňuje centrálně nastavit vlastnosti volitelných polí pro různé entity v systému. Nastavení jsou uvedena v menu `Nastavenia` pod položkou `Voliteľné polia`. Pomocí této tabulky lze nastavit parametry povinného pole bez potřeby editace překladových klíčů.
-
-!>**Upozornění:** Aktuálně funguje nastavení POUZE parametru **Povinné pole**, zbytek nastavení bude implementován v budoucnosti.
+Tabulka Volitelná pole umožňuje centrálně nastavit vlastnosti volitelných polí pro různé entity v systému. Nastavení jsou uvedena v menu `Nastavenia` pod položkou `Voliteľné polia`. Pomocí této tabulky lze měnit typ pole, popis, povinnost, tooltip i typově specifické parametry bez potřeby editace překladových klíčů.
 
 ![](custom-fields-settings-datatable.png)
 
@@ -16,11 +14,32 @@ Tabulka obsahuje následující sloupce:
 | **Volitelné pole** | Písmeno abecedy (AZ), kterým se identifikuje volitelné pole. Odpovídá názvem polí `field_A`, `field_B` atp. |
 | **ID entity** | Volitelné ID konkrétní entity (např. ID stránky). Pokud není zadáno, nastavení se aplikuje globálně pro všechny entity dané třídy. |
 | **Typ pole** | Typ volitelného pole (např. `text`, `textarea`, `boolean`, `number` atd.). |
-| **Popis pole** | Popis (label), který se zobrazí u volitelného pole v editoru. |
+| **Popis pole** | Popis (label), který se zobrazí u volitelného pole v editoru (můžete zadat překladový klíč). |
 | **Tooltip pole** | Text nápovědy, který se zobrazí po najetí myší přes ikonu<i class="ti ti-info-circle"></i> . |
 | **Povinné pole** | Pokud je nastaveno na `true`, pole bude povinné a při uložení entity se zkontroluje, zda je vyplněno. |
 
 ![](custom-fields-settings-editor.png)
+
+## Podporované typy pole
+
+V poli **Typ pole** jsou dostupné typy:
+
+- `text`, `textarea`, `select`, `multiselect`, `boolean`, `number`, `date`, `none`
+- `autocomplete`, `image`, `link`, `json_group`, `json_doc`, `dir`, `docsIn`, `enumeration`, `uuid`, `color`
+
+## Nastavení podle typu
+
+Při změně typu pole se v editoru dynamicky zobrazí doplňková pole, která patří pouze k danému typu:
+
+| Typ pole | Doplňková nastavení |
+| --- | --- |
+| `text` | **Maximální délka textu**, **Délka textu pro zobrazení varování**, **Text varování** |
+| `select`, `multiselect` | **Možnosti pro výběrové pole** (editor typu `OPTIONS`, řádky `label:value`) |
+| `autocomplete` | seznam možností (editor typu `OPTIONS_SIMPLE`, řádky s jednou hodnotou) |
+| `docsIn` | **Výběr složky webových stránek** (určí zdroj stránek pro výběr) |
+| `enumeration` | **Propojení na číselník** (`ID číselníku`, `label` sloupec, `value` sloupec) |
+
+Pokud je u typů `select`, `multiselect`, `docsIn`, `enumeration`, `json_group`, `json_doc` vypnuto **Povinné pole**, editor automaticky nabídne i prázdnou hodnotu.
 
 V kartě Závislé od lze nastavit pole:
 
@@ -43,7 +62,7 @@ Např. pro web stránku (`DocDetails`) lze nastavit pole A jako povinné globál
 
 ## Validace
 
-Kombinace polí `Použiť pre entitu`, `Označenie poľa` a `ID entity` musí být jedinečná. Systém nedovolí vytvořit duplicitní záznam se stejnou kombinací těchto hodnot.
+Kombinace polí `Použiť pre entitu`, `Voliteľné pole`, `ID entity`, `Závislé od entity` a `ID závislej entity` musí být jedinečná. Systém nedovolí vytvořit duplicitní záznam se stejnou kombinací těchto hodnot.
 
 ## Povinná pole
 

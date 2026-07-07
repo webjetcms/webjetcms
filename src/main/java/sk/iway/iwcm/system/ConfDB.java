@@ -22,7 +22,9 @@ import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.ninja.Ninja;
+import sk.iway.iwcm.editor.ThumbServlet;
 import sk.iway.iwcm.stat.StatDB;
+import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
@@ -246,6 +248,13 @@ public class ConfDB
 		return value;
 	}
 
+	public static boolean setName(String nameParam, String value, boolean refreshCluster)
+	{
+		boolean ret = setName(nameParam, value);
+		if (ret && refreshCluster) ClusterDB.addRefresh("sk.iway.iwcm.system.ConfDB-" + nameParam);
+		return ret;
+	}
+
 	public static boolean setName(String nameParam, String value)
 	{
 		if (Tools.isEmpty(nameParam)) return false;
@@ -272,40 +281,42 @@ public class ConfDB
 			{
 				//nacitaj data z DB
 				db_conn = DBPool.getConnection();
+				if (db_conn != null) {
 
-				String sqlUpdate = "UPDATE " + ConfDB.CONF_TABLE_NAME + " SET value=?, date_changed=? WHERE name=?";
-				if (SetCharacterEncodingFilter.getCurrentRequestBean() != null &&
-					SetCharacterEncodingFilter.getCurrentRequestBean().getUserId() > 0)
-				{
-					StringBuilder message = new StringBuilder("Nastavena konfiguracna premenna: ").append(name).append('\n');
-					if (Tools.isNotEmpty(Constants.getString(name)))
-						message.append(Constants.getString(name)).append(" -> ");
-					message.append(value);
-					Adminlog.add(Adminlog.TYPE_CONF_UPDATE, message.toString(), -1, -1);
-				}
-				psInsert = db_conn.prepareStatement(sqlUpdate);
-				psInsert.setString(1, value);
-				psInsert.setTimestamp(2, new java.sql.Timestamp(Tools.getNow()));
-				psInsert.setString(3, name);
-				int update = psInsert.executeUpdate();
-				psInsert.close();
-				psInsert = null;
-				if (update < 1)
-				{
-					String sqlIns = "INSERT INTO " + ConfDB.CONF_TABLE_NAME + " (name, value, date_changed) VALUES (?,?,?)";
-					psInsert = db_conn.prepareStatement(sqlIns);
-					psInsert.setString(1, name);
-					psInsert.setString(2, value);
-					psInsert.setTimestamp(3, new java.sql.Timestamp(Tools.getNow()));
-					psInsert.execute();
+					String sqlUpdate = "UPDATE " + ConfDB.CONF_TABLE_NAME + " SET value=?, date_changed=? WHERE name=?";
+					if (SetCharacterEncodingFilter.getCurrentRequestBean() != null &&
+						SetCharacterEncodingFilter.getCurrentRequestBean().getUserId() > 0)
+					{
+						StringBuilder message = new StringBuilder("Nastavena konfiguracna premenna: ").append(name).append('\n');
+						if (Tools.isNotEmpty(Constants.getString(name)))
+							message.append(Constants.getString(name)).append(" -> ");
+						message.append(value);
+						Adminlog.add(Adminlog.TYPE_CONF_UPDATE, message.toString(), -1, -1);
+					}
+					psInsert = db_conn.prepareStatement(sqlUpdate);
+					psInsert.setString(1, value);
+					psInsert.setTimestamp(2, new java.sql.Timestamp(Tools.getNow()));
+					psInsert.setString(3, name);
+					int update = psInsert.executeUpdate();
 					psInsert.close();
 					psInsert = null;
-				}
-				ret = true;
-				//refreshni hodnotu v Constants, odporucany je ale aj tak restart
+					if (update < 1)
+					{
+						String sqlIns = "INSERT INTO " + ConfDB.CONF_TABLE_NAME + " (name, value, date_changed) VALUES (?,?,?)";
+						psInsert = db_conn.prepareStatement(sqlIns);
+						psInsert.setString(1, name);
+						psInsert.setString(2, value);
+						psInsert.setTimestamp(3, new java.sql.Timestamp(Tools.getNow()));
+						psInsert.execute();
+						psInsert.close();
+						psInsert = null;
+					}
+					ret = true;
+					//refreshni hodnotu v Constants, odporucany je ale aj tak restart
 
-				db_conn.close();
-				db_conn = null;
+					db_conn.close();
+					db_conn = null;
+				}
 			}
 			setConstantValueImpl(name, value);
 
@@ -360,6 +371,7 @@ public class ConfDB
 			else if ("multiDomainFolders".equals(name)) MultiDomainFilter.clearDomainFolders();
 			else if ("xssHtmlAllowedFields".equals(name)) DB.resetHtmlAllowedFields();
 			else if ("ninjaNbspReplaceRegex".equals(name)) Ninja.resetNbspReplaceRegex();
+			else if ("thumbServletAllowedSizes".equals(name)) ThumbServlet.cleanAllowedSizesCache();
 			Constants.setString(name, value);
 		}
 	}

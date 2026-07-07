@@ -13,7 +13,7 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
 
     @Test
     void filterResultsBySimilarityAddsFallbackWhenThresholdKeepsTooFew() {
-        SemanticSearchService service = new SemanticSearchService(null, null, null);
+        SemanticSearchService service = new SemanticSearchService(null, null, null, null);
 
         List<SemanticSearchResult> results = List.of(
             new SemanticSearchResult(1L, 0.90),
@@ -32,7 +32,7 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
 
     @Test
     void filterResultsBySimilarityKeepsAllStrongResults() {
-        SemanticSearchService service = new SemanticSearchService(null, null, null);
+        SemanticSearchService service = new SemanticSearchService(null, null, null, null);
 
         List<SemanticSearchResult> results = List.of(
             new SemanticSearchResult(1L, 0.95),
@@ -50,7 +50,7 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
 
     @Test
     void filterResultsBySimilarityUsesConfiguredFloorWhenTopSimilarityIsLow() {
-        SemanticSearchService service = new SemanticSearchService(null, null, null);
+        SemanticSearchService service = new SemanticSearchService(null, null, null, null);
 
         List<SemanticSearchResult> results = List.of(
             new SemanticSearchResult(1L, 0.25),
@@ -69,7 +69,7 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
 
     @Test
     void filterResultsBySimilarityReturnsEmptyForEmptyInput() {
-        SemanticSearchService service = new SemanticSearchService(null, null, null);
+        SemanticSearchService service = new SemanticSearchService(null, null, null, null);
 
         List<SemanticSearchResult> filtered = service.filterResultsBySimilarity(List.of(), 0.2d, 3);
 
@@ -78,7 +78,7 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
 
     @Test
     void mergeChunkResultsWithRrfBoostsChunksPresentInBothSources() {
-        SemanticSearchService service = new SemanticSearchService(null, null, null);
+        SemanticSearchService service = new SemanticSearchService(null, null, null, null);
 
         List<VectorSearchResult> vectorResults = List.of(
             new VectorSearchResult(1L, "document", 10L, 0, "vector-1", 0.90),
@@ -90,7 +90,7 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
             new VectorSearchResult(3L, "document", 30L, 0, "fts-3", 0.70)
         );
 
-        List<VectorSearchResult> merged = service.mergeChunkResultsWithRrf(vectorResults, fulltextResults);
+        List<VectorSearchResult> merged = service.mergeChunkResultsWithRrf(vectorResults, fulltextResults, null);
 
         assertEquals(3, merged.size());
         assertEquals(2L, merged.get(0).getChunkId());

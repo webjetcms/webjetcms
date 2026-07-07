@@ -40,6 +40,7 @@ import sk.iway.iwcm.gallery.VideoConvert;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
+import sk.iway.iwcm.system.elfinder.IwcmFsVolume;
 import sk.iway.iwcm.system.metadata.MetadataCleaner;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -319,14 +320,9 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 				String uploadType = "file";
 				if(dir.getPath().startsWith("/images")) uploadType = "image";
 
-				if (dir.getPath().startsWith("/files") || dir.getPath().startsWith("/images") || dir.getPath().startsWith("/shared"))
-				{
-					fileName = DB.internationalToEnglish(fileName);
-					fileName = DocTools.removeCharsDir(fileName, true).toLowerCase();
-
-					directory = DB.internationalToEnglish(directory);
-					directory = DocTools.removeCharsDir(directory, true).toLowerCase();
-				}
+				//
+				fileName = IwcmFsVolume.removeSpecialChars(fileName, dir, user);
+				directory = IwcmFsVolume.removeSpecialChars(directory, dir, user);
 
 				String realPathDir = Tools.getRealPath(dir.getPath());
 				File file = new File(realPathDir);

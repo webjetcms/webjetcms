@@ -4,6 +4,26 @@ Táto sekcia obsahuje opisy vlastností a **funkcionalít WebJET CMS zrozumiteľ
 
 ---
 
+## AI odpoveď priamo vo vyhľadávaní webu
+
+WebJET CMS rozširuje vyhľadávanie o možnosť zobraziť **stručnú AI odpoveď nad výsledkami**. Návštevník už nemusí preklikávať viac stránok, aby sa dopátral k základnej informácii. Systém najprv nájde relevantné časti obsahu a následne z nich vytvorí prehľadnú odpoveď, ktorá pomáha rýchlejšie pochopiť tému a pokračovať na správny obsah.
+
+Z pohľadu zákazníka to prináša **rýchlejšie doručenie informácie**, lepší používateľský zážitok a vyššiu pravdepodobnosť, že návštevník na webe zostane. Funkcia je užitočná najmä pre rozsiahle portály, produktové weby a zákaznícke zóny, kde ľudia často kladú otázky prirodzeným jazykom. Nové nastavenia zároveň umožňujú zvoliť, či sa použije klasické, sémantické alebo **hybridné vyhľadávanie** (kombinácia významu otázky a fulltextu), takže výsledky sa dajú prispôsobiť konkrétnemu typu obsahu.
+
+Dôležitou výhodou je **kontrola a bezpečnejšia prevádzka**. Odpoveď sa tvorí iba z indexovaného obsahu webu, pričom je možné nastaviť limity kontextu, podobnosti a výber AI asistenta. Organizácia tak získava modernú funkcionalitu, ale s jasnými pravidlami nad kvalitou výstupu, nákladmi a prevádzkovým rizikom. Riešenie je zároveň **rozšíriteľné** cez konfiguráciu a API (rozhranie pre prepojenie s inými systémami), čo je dôležité pri firemných a enterprise nasadeniach.
+
+![](../../redactor/apps/semantic-search/rag-result.png)
+
+**Hlavné benefity:**
+
+- **Rýchlejšia cesta k odpovedi**: Návštevník dostane podstatu informácie hneď nad výsledkami vyhľadávania.
+- **Vyššia spokojnosť a nižší odchod z webu**: Menej hľadania a preklikávania znamená plynulejší používateľský zážitok.
+- **Lepšia relevantnosť výsledkov**: Hybridný režim spája výhody sémantiky a fulltextu podľa typu dopytu.
+- **Kontrola nad kvalitou a nákladmi**: Nastaviteľné limity kontextu, podobnosti a voľba asistenta pomáhajú držať odpovede presné a efektívne.
+- **Rozšíriteľnosť pre enterprise projekty**: Funkciu možno prispôsobiť konfiguráciou aj prepojeniami na existujúce procesy zákazníka.
+
+Podrobná dokumentácia: [Sémantické vyhľadávanie (RAG)](../../redactor/apps/semantic-search/README.md)
+
 ## Inteligentné vyhľadávanie podľa významu otázky
 
 WebJET CMS prináša **sémantické vyhľadávanie**, ktoré nepracuje len so zhodou kľúčových slov, ale rozumie aj **významu používateľského dopytu**. Návštevník tak nájde relevantný obsah aj vtedy, keď nepoužije presnú formuláciu z webu. Výsledkom je prirodzenejšie vyhľadávanie, ktoré sa správa bližšie tomu, ako ľudia reálne kladú otázky.

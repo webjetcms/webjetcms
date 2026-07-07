@@ -684,9 +684,8 @@ public class GridEditorController {
 
     private String getTextKey(HttpServletRequest request, String textKey){
 
-
         Prop prop = Prop.getInstance(request);
-        String value = prop.getText(Tools.replace( textKeyPrefix+Tools.replace(textKey, "/", ".") , "..", "."));
+        String value = prop.getText(Tools.replace( textKeyPrefix+Tools.replace(textKey, "/", ".") , "..", "."), false);
 
         // ak nema taky kluc - vrat relativnu cestu od /grideditor/data/
         if(value.indexOf(textKeyPrefix) == 0)

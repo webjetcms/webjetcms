@@ -742,6 +742,14 @@ public class DataTableColumn {
             editor.setType("options");
         }
 
+        if (dataTableColumnType == DataTableColumnType.OPTIONS_SIMPLE) {
+            renderFormat = "dt-format-text";
+            if (editor == null) {
+                editor = new DataTableColumnEditor();
+            }
+            editor.setType("optionsSimple");
+        }
+
         if (dataTableColumnType == DataTableColumnType.ENUMERATION) {
             renderFormat = "dt-format-text";
             if (editor == null) {

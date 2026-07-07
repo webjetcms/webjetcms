@@ -14,14 +14,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
-import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Logger;
@@ -368,7 +368,7 @@ public class AiService {
                     ai.setTo(toField);
                     ai.setToDefinition(ade.getFieldTo());
                     if (Tools.isEmpty(ade.getDescription())) ai.setDescription(ade.getName());
-                    else ai.setDescription(prop.getText(ade.getDescription()));
+                    else ai.setDescription(prop.getText(ade.getDescription(), false));
                     ai.setProvider(ade.getProvider());
 
                     String providerTitleKey = "components.ai_assistants.provider."+ade.getProvider()+".title";

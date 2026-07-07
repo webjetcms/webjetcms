@@ -201,7 +201,7 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
 
                     //Save changes entity
                     reservationRepository.save(entity);
-                    addNotify(new NotifyBean(acceptanceTitle, getProp().getText(error), NotifyType.ERROR, 15000));
+                    addNotify(new NotifyBean(acceptanceTitle, getProp().getText(error, false), NotifyType.ERROR, 15000));
                     return true;
                 }
             }
@@ -216,7 +216,7 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
 
                 //Save changes entity
                 reservationRepository.save(entity);
-                addNotify(new NotifyBean(acceptanceTitle, getProp().getText(error2), NotifyType.ERROR, 15000));
+                addNotify(new NotifyBean(acceptanceTitle, getProp().getText(error2, false), NotifyType.ERROR, 15000));
                 return true;
             }
 

@@ -158,7 +158,7 @@ public class MessageDB
 			if (mamZmenu)
 				em.getTransaction().commit();
 			else
-				em.getTransaction().rollback();
+				if (em.getTransaction().isActive()) em.getTransaction().rollback();
 		}
 
 		return messages;

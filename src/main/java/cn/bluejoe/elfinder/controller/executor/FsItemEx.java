@@ -64,7 +64,7 @@ public class FsItemEx
 
 	public void createFolder() throws IOException
 	{
-		_v.createFolder(_f);
+		_v.createFolder(_f, this);
 	}
 
 	public boolean delete() throws IOException
