@@ -124,6 +124,8 @@ function adminUploadInit(options) {
             // The class is derived from the dropzone element id (or upload type/destination folder
             // as a fallback), never a random value. Dropzone recreates the hidden input after every
             // file selection, so we hook the property setter to re-apply the class each time.
+            // NOTE: This overrides Dropzone's internal hiddenFileInput property with a getter/setter.
+            // If Dropzone changes how it manages this property, this may break.
             var identifierSource = (this.element && this.element.id) ? this.element.id : (uploadType + '-' + destinationFolder);
             var hiddenInputClass = String(identifierSource).replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
             if (hiddenInputClass) {

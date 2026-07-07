@@ -391,18 +391,20 @@
         });
         $("#upload-toastr-template.file-archive-upload-template").remove();
 
-        fileArchiveAdminUpload.on("addedfile", function() {
-            setArchiveSubmitDisabled(true);
-        });
+        if (fileArchiveAdminUpload) {
+            fileArchiveAdminUpload.on("addedfile", function() {
+                setArchiveSubmitDisabled(true);
+            });
 
-        fileArchiveAdminUpload.on("error", function(file) {
-            setArchiveSubmitDisabled(false);
-            fileArchiveAdminUpload.removeFile(file);
-        });
+            fileArchiveAdminUpload.on("error", function(file) {
+                setArchiveSubmitDisabled(false);
+                fileArchiveAdminUpload.removeFile(file);
+            });
 
-        fileArchiveAdminUpload.on("success", function(file) {
-            fileArchiveDataTable.ajax.reload();
-        });
+            fileArchiveAdminUpload.on("success", function(file) {
+                fileArchiveDataTable.ajax.reload();
+            });
+        }
 
         //Initialize tree
         var somStromcek = $('#SomStromcek');

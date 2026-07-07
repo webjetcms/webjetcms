@@ -795,6 +795,9 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 
 	public static final Long getId(String filePath, String fileName, FileArchiveRepository far) {
 		if(Tools.isEmpty(filePath) || Tools.isEmpty(fileName)) return -1L;
+		// Dual lookup: legacy records may store paths in the old format (without leading slash),
+		// while new records use the normalized format. Try the old format first for backward
+		// compatibility, then fall back to the current normalized format.
 		String oldFilePath = FileArchivSupportMethodsService.normalizeToOldPath(filePath);
 		Long id = far.findIdByFilePathAndFileName(oldFilePath, fileName, CloudToolsForCore.getDomainId()).map(val -> val != null ? val.longValue() : -1L).orElse(-1L);
 		if(id > 0) return id;

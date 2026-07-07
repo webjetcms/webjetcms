@@ -42,6 +42,11 @@ public class FileArchiveListener {
             }
         } catch (Exception ex) {
             Logger.error(getClass(), ex);
+            // Set empty defaults so the frontend does not fail on missing model attributes
+            ModelMap model = event.getSource().getModel();
+            if (!model.containsAttribute("fileArchiveAcceptedFiles")) {
+                model.addAttribute("fileArchiveAcceptedFiles", new String[0]);
+            }
         }
     }
 

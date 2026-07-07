@@ -1144,10 +1144,15 @@ export class DatatablesCkEditor {
 							//auto-select file archive tab if URL starts with configured file archive root
 							try {
 								var currentUrl = getCurrentUrl();
-								var fileArchiveTreeDir = "#sym:fileArchiveTreeDir ";
-								if (!fileArchiveTreeDir || fileArchiveTreeDir.indexOf("#sym:") === 0) {
-									fileArchiveTreeDir = "/files/archiv/";
-								}
+								// Try to read the archive root path from the file archive iframe (set by Thymeleaf in index.html).
+								// Falls back to the default /files/archiv/ if the iframe is not yet loaded.
+								var fileArchiveTreeDir = "/files/archiv/";
+								try {
+									var faIframe = dialog.getElement().$.querySelector('#wjLinkFileArchiveIframeElement');
+									if (faIframe && faIframe.contentWindow && faIframe.contentWindow.fileArchiveSelectedDir) {
+										fileArchiveTreeDir = faIframe.contentWindow.fileArchiveSelectedDir;
+									}
+								} catch (ex) {}
 								if (fileArchiveTreeDir.charAt(fileArchiveTreeDir.length-1) === '/') {
 									fileArchiveTreeDir = fileArchiveTreeDir.substring(0, fileArchiveTreeDir.length-1);
 								}
