@@ -1,3 +1,9 @@
+/**
+ * Resolves the maximum number of files allowed for upload based on the editor field configuration.
+ * Checks className and data-attributes in order of precedence.
+ * @param {object} conf - DataTable Editor field configuration
+ * @returns {number|null} max file count, or null for unlimited
+ */
 function resolveUploadMaxFiles(conf) {
     // UPLOAD column type is single-file by default.
     let maxFiles = 1;
@@ -37,6 +43,12 @@ function resolveUploadMaxFiles(conf) {
     return maxFiles;
 }
 
+/**
+ * Binds extra file-count guards on the Dropzone instance to prevent more files
+ * than allowed (handles edge cases not caught by Dropzone's built-in maxFiles).
+ * @param {object} uploadInstance - the AdminUpload/Dropzone instance
+ * @param {number|null} maxFiles - maximum allowed files, or null for unlimited
+ */
 function bindUploadLimitGuard(uploadInstance, maxFiles) {
     if (uploadInstance == null || maxFiles == null || maxFiles <= 0) {
         return;
@@ -55,6 +67,12 @@ function bindUploadLimitGuard(uploadInstance, maxFiles) {
     });
 }
 
+/**
+ * Resets the uploader UI state for the given field configuration.
+ * Restores dropzone visibility, clears the upload key, removes all queued files,
+ * detaches global event listeners from previous sessions, and hides the upload wrapper.
+ * @param {object} conf - DataTable Editor field configuration
+ */
 function cleanUploader(conf) {
     // AdminUpload hides the dropzone during upload via visibility/opacity (not display),
     // so restore both here, otherwise the dropzone stays invisible after cancel.
@@ -81,6 +99,13 @@ function cleanUploader(conf) {
     conf._input.filter(".upload-wrapper").hide();
 }
 
+/**
+ * Destroys a previously initialized Dropzone instance and removes its global event listeners.
+ * Must be called before creating a new Dropzone on the same element to avoid
+ * "Dropzone already attached" errors.
+ * @param {object} conf - DataTable Editor field configuration
+ * @param {HTMLElement} dropzoneElement - the DOM element with the attached Dropzone
+ */
 function destroyExistingUploader(conf, dropzoneElement) {
     // Remove the previously registered global event listeners so they don't accumulate
     // (and keep firing) across multiple editor opens.
@@ -104,6 +129,12 @@ function destroyExistingUploader(conf, dropzoneElement) {
     conf._adminUpload = null;
 }
 
+/**
+ * Initializes the AdminUpload/Dropzone instance for the editor field once the DOM element is ready.
+ * Called via setInterval until the dropzone element appears, then clears the interval.
+ * Configures upload events (success, error, addedfile) and binds them to the editor's save button.
+ * @param {object} conf - DataTable Editor field configuration
+ */
 function prepareUploader(conf) {
     let id = conf._id;
 
@@ -176,6 +207,13 @@ function prepareUploader(conf) {
     }
 }
 
+/**
+ * DataTable Editor custom field type for file uploads using Dropzone.
+ * Provides create/get/set methods for the editor field lifecycle.
+ * Each instance renders its own dropzone, upload wrapper, and toast container
+ * with unique IDs to support multiple upload fields on the same page.
+ * @returns {object} DataTable Editor field type definition
+ */
 export function typeWjupload() {
     return {
         create: function ( conf ) {

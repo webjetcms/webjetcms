@@ -1005,6 +1005,8 @@ export class DatatablesCkEditor {
 					dialogDefinition.minWidth = 800;
 					dialogDefinition.minHeight = 445;
 
+					// Add "File Archive" tab to the CKEditor link dialog if the user has file archive permission.
+					// The tab embeds an iframe pointing to the file archive admin page.
 					if (WJ.hasPermission("cmp_file_archiv")) {
 						var fileArchiveTitle = WJ.escapeHtml(WJ.translate("components.file_archiv.name"));
 						dialogDefinition.addContents(
@@ -1028,6 +1030,7 @@ export class DatatablesCkEditor {
 					{
 						var dialog = this;
 
+						/** Returns the current URL value from the link dialog's URL field. */
 						function getCurrentUrl() {
 							try {
 								return dialog.getContentElement("info", "url").getValue() || '';
@@ -1036,10 +1039,12 @@ export class DatatablesCkEditor {
 							}
 						}
 
+						/** Checks if a URL is an absolute server path (starts with "/"). */
 						function isAbsolutePath(url) {
 							return url && url.indexOf('/') === 0;
 						}
 
+						/** Synchronizes the wj_link elFinder iframe with the given URL, optionally navigating to its folder. */
 						function syncWjLinkFrame(url, shouldNavigate) {
 							try {
 								var wjIframe = dialog.iframeElement;
@@ -1053,6 +1058,7 @@ export class DatatablesCkEditor {
 							} catch (ex) {}
 						}
 
+						/** Synchronizes the file archive iframe with the given URL, optionally navigating the archive tree. */
 						function syncFileArchiveFrame(url, shouldNavigate, dialogElement) {
 							try {
 								var container = dialogElement || dialog.getElement().$;

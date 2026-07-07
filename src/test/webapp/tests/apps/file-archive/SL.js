@@ -46,7 +46,12 @@ module.exports = {
 
     // == File archive functions ==
 
-    // Open the archive with the parent folder of the file selected in the tree.
+    /**
+     * Opens the file archive page with the tree navigated to the parent folder of the given file path.
+     * Normalizes the path to ensure a leading slash, extracts the parent directory,
+     * and navigates to the archive page with the dir query parameter set.
+     * @param {string} filePath - full virtual path to a file (e.g. "/files/archiv/folder/file.pdf")
+     */
     openFileArchive(filePath) {
         const normalizedFilePath = filePath.startsWith('/') ? filePath : '/' + filePath;
         const parentFolder = normalizedFilePath.substring(0, normalizedFilePath.lastIndexOf('/'));

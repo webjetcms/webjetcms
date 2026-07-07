@@ -20,12 +20,25 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.elfinder.DirTreeItem;
 
+/**
+ * REST controller providing the jsTree folder structure for the file archive.
+ * Supports lazy-loading of subdirectories within the configured archive root path.
+ * Directory creation, deletion, and move operations are intentionally disabled.
+ */
 @RestController
 @Datatable
 @RequestMapping(value = "/admin/rest/components/archive/tree")
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_file_archiv')")
 public class FileArchiveTreeRestController extends JsTreeRestController<DirTreeItem> {
 
+    /**
+     * Returns the directory tree data for jsTree.
+     * For root requests, returns the archive root node with its children flag.
+     * For sub-folder requests, returns the immediate child directories.
+     * Validates that the requested path is within the archive root to prevent path traversal.
+     * @param result - map to populate with "result", "items" or "error"
+     * @param item - jsTree move item containing the requested node id
+     */
     @Override
     protected void tree(Map<String, Object> result, JsTreeMoveItem item) {
         String rootPath = normalizeVirtualPath(FileArchivatorKit.getArchivPath());
@@ -102,6 +115,12 @@ public class FileArchiveTreeRestController extends JsTreeRestController<DirTreeI
         setError(result, "admin.operationPermissionDenied");
     }
 
+    /**
+     * Normalizes a virtual path by URL-decoding, converting backslashes to forward slashes,
+     * ensuring a leading slash, resolving ".." segments, and removing trailing slashes.
+     * @param path - raw virtual path (may be URL-encoded)
+     * @return normalized path, or empty string if the path is invalid
+     */
     static String normalizeVirtualPath(String path) {
         if (Tools.isEmpty(path)) {
             return "";
@@ -126,6 +145,12 @@ public class FileArchiveTreeRestController extends JsTreeRestController<DirTreeI
         }
     }
 
+    /**
+     * Checks whether the given path is equal to or a descendant of the root path.
+     * @param path - the path to check
+     * @param rootPath - the root path boundary
+     * @return true if path is within the root
+     */
     static boolean isWithinRoot(String path, String rootPath) {
         if (Tools.isEmpty(path) || Tools.isEmpty(rootPath)) {
             return false;
@@ -133,16 +158,34 @@ public class FileArchiveTreeRestController extends JsTreeRestController<DirTreeI
         return path.equals(rootPath) || path.startsWith(rootPath + "/");
     }
 
+    /**
+     * Determines if the jsTree request id represents a root-level request.
+     * @param id - the jsTree node id
+     * @return true for empty, "0", "-1", or "#" ids
+     */
     private boolean isRootRequest(String id) {
         return Tools.isEmpty(id) || "0".equals(id) || "-1".equals(id) || "#".equals(id);
     }
 
+    /**
+     * Checks whether the given directory has subdirectories that are within the archive root.
+     * @param directory - the directory to inspect
+     * @param rootDirectory - the archive root directory (used for canonical path validation)
+     * @return true if the directory has at least one valid child directory
+     */
     private boolean hasSubdirectories(IwcmFile directory, IwcmFile rootDirectory) {
         IwcmFile[] children = directory.listFiles(
                 child -> child.isDirectory() && isWithinCanonicalRoot(child, rootDirectory));
         return children != null && children.length > 0;
     }
 
+    /**
+     * Validates that the directory's canonical path is within the root directory's canonical path.
+     * Prevents path traversal attacks by comparing normalized absolute paths.
+     * @param directory - the directory to validate
+     * @param rootDirectory - the root directory boundary
+     * @return true if the directory is within the root
+     */
     private boolean isWithinCanonicalRoot(IwcmFile directory, IwcmFile rootDirectory) {
         String directoryPath = directory.getCanonicalPath();
         String rootPath = rootDirectory.getCanonicalPath();
@@ -159,6 +202,11 @@ public class FileArchiveTreeRestController extends JsTreeRestController<DirTreeI
         }
     }
 
+    /**
+     * Sets an error response in the result map with a localized message.
+     * @param result - the result map to populate
+     * @param messageKey - the i18n key for the error message
+     */
     private void setError(Map<String, Object> result, String messageKey) {
         result.put("result", false);
         result.put("error", getProp().getText(messageKey));

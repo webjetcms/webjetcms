@@ -27,6 +27,25 @@ import $ from 'jquery';
 import Dropzone from 'dropzone/dist/dropzone.js';
 
 Dropzone.autoDiscover = false;
+/**
+ * Initializes an AdminUpload Dropzone instance on the given element.
+ * Handles chunked uploads, file conflict resolution (skip/overwrite/keepboth),
+ * progress tracking via toast notifications, and dispatches custom window events
+ * (WJ.AdminUpload.success, WJ.AdminUpload.error, WJ.AdminUpload.addedfile).
+ *
+ * UI elements (upload wrapper, toast container, template) are resolved relative
+ * to the dropzone element to support multiple independent upload zones on one page.
+ *
+ * @param {object} options - configuration options
+ * @param {string|HTMLElement} options.element - CSS selector or DOM element for the dropzone
+ * @param {number|null} [options.maxFiles] - max files allowed, null for unlimited
+ * @param {string} [options.acceptedFiles] - comma-separated accepted MIME types/extensions
+ * @param {string} [options.uploadType] - upload type identifier (e.g. "fileArchive")
+ * @param {string} [options.destinationFolder] - target upload folder path
+ * @param {boolean} [options.writeDirectlyToDestination] - if true, writes directly to destination
+ * @param {string} [options.overwriteMode] - default conflict mode ("skip", "overwrite", "keepboth")
+ * @returns {Dropzone} the initialized Dropzone instance
+ */
 function adminUploadInit(options) {
     var element = document.querySelector(options.element) || options.element;
     var uploadElement = $(element);
@@ -38,6 +57,12 @@ function adminUploadInit(options) {
     var writeDirectlyToDestination = options.writeDirectlyToDestination || false;
     var overwriteMode = options.overwriteMode || '';
 
+    /**
+     * Finds an upload UI element by CSS selector, searching first among siblings
+     * of the dropzone element, then within its parent container.
+     * @param {string} selector - jQuery CSS selector
+     * @returns {jQuery} the matched element
+     */
     function findUploadUiElement(selector) {
         var uploadUiElement = uploadElement.siblings(selector).first();
         if (uploadUiElement.length === 0) {
@@ -521,6 +546,8 @@ window.addEventListener('dragenter', function (e) {
 
     if (blockDragEnter) return;
 
+    // Skip fullscreen drop overlay if the main dropzone element doesn't exist or is disabled
+    // (e.g. when the upload field is inside an iframe or another component controls the dropzone)
     var fullscreenDropZone = document.getElementById('dt-upload');
     if (fullscreenDropZone == null || (fullscreenDropZone.dropzone && fullscreenDropZone.dropzone.disabled === true)) {
         return;

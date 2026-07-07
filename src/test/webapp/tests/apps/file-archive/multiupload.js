@@ -106,6 +106,12 @@ Scenario('Delete multiupload file archive entities', async ({ I, DT, Document })
     Document.resetPageBuilderMode();
 });
 
+/**
+ * Creates a temporary copy of a test document for upload.
+ * @param {string} sourceName - name of the source file in the docs directory
+ * @param {string} targetName - desired name for the copy in the temp directory
+ * @returns {{fileName: string, filePath: string, virtualName: string}} upload file descriptor
+ */
 function createUploadFile(sourceName, targetName) {
     const sourcePath = path.join(DOCS_DIR, sourceName);
     const targetPath = path.join(tmpDir, targetName);
@@ -118,6 +124,12 @@ function createUploadFile(sourceName, targetName) {
     };
 }
 
+/**
+ * Programmatically selects the "multiupload" folder in the file archive jsTree
+ * by opening its parent node and selecting it.
+ * @param {CodeceptJS.I} I - CodeceptJS actor
+ * @param {object} DT - DataTable helper
+ */
 function selectMultiuploadFolder(I, DT) {
     I.waitForElement("#SomStromcek", 20);
     I.executeScript(() => {
@@ -137,6 +149,14 @@ function selectMultiuploadFolder(I, DT) {
     DT.waitForLoader("fileArchiveDataTable");
 }
 
+/**
+ * Uploads files to the file archive dropzone using Playwright's setInputFiles API.
+ * Waits for each file's toast notification to reach the expected status.
+ * @param {CodeceptJS.I} I - CodeceptJS actor
+ * @param {Array} files - array of file descriptors from createUploadFile()
+ * @param {string} [expectedStatus='success'] - expected upload status in toast
+ * @param {string|null} [frameSelector=null] - iframe selector if uploading inside an iframe
+ */
 function uploadFilesToDropzone(I, files, expectedStatus = "success", frameSelector = null) {
     I.waitForElement(DROPZONE_INPUT, 20);
     I.usePlaywrightTo("upload files to file archive dropzone", async ({ page }) => {
@@ -153,6 +173,13 @@ function uploadFilesToDropzone(I, files, expectedStatus = "success", frameSelect
     }
 }
 
+/**
+ * Deletes all file archive rows whose virtualFileName contains the given prefix.
+ * Navigates to the archive folder, filters by prefix, and bulk-deletes matching records.
+ * @param {CodeceptJS.I} I - CodeceptJS actor
+ * @param {object} DT - DataTable helper
+ * @param {string} prefix - the virtualFileName prefix to filter by
+ */
 async function deleteArchiveRowsByPrefix(I, DT, prefix) {
     SL.openFileArchive(ARCHIVE_FOLDER + "cleanup.pdf");
     DT.filterContains("virtualFileName", prefix);
