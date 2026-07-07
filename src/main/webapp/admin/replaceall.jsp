@@ -219,7 +219,13 @@ private String getSqlNormalizedLineEndingColumn(String columnName)
 	String crlf = getSqlCrLfExpression();
 	String crChar = getSqlCharFunction(13);
 	String lfChar = getSqlCharFunction(10);
-	return "REPLACE(REPLACE("+columnName+", "+crlf+", "+lfChar+"), "+crChar+", "+lfChar+")";
+	String searchableColumn = columnName;
+	if (Constants.DB_TYPE == Constants.DB_MSSQL)
+	{
+		// SQL Server REPLACE does not support ntext/text directly.
+		searchableColumn = "CAST("+columnName+" AS NVARCHAR(MAX))";
+	}
+	return "REPLACE(REPLACE("+searchableColumn+", "+crlf+", "+lfChar+"), "+crChar+", "+lfChar+")";
 }
 
 private String normalizeLineEndingsValue(String value)
