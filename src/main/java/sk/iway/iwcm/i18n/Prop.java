@@ -381,7 +381,9 @@ public class Prop
 			String urlAddress = "";
 			RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
 			if (rb != null) {
-				urlAddress = rb.getBaseHref() + rb.getUrl();
+				String baseHref = rb.getBaseHref();
+				if (baseHref == null) baseHref = "";
+				urlAddress = baseHref + rb.getUrl();
 				if (Tools.isNotEmpty(rb.getQueryString())) urlAddress += "?" + rb.getQueryString();
 			}
 
