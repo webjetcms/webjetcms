@@ -68,18 +68,18 @@ Scenario('Interny adresar', ({ I, DT, DTE }) => {
      I.seeElement(locate('.jstree-node.jstree-leaf').withText(auto_folder_public)); // nema classu .is-internal
      I.wait(1);
 
-     // TODO - aplikovat na vsetky podpriecinky nefunguje - switch sa po ulozeni zjavne neaplikuje do nastaveni - znovu po otvoreni uprav priecinka switch nie je ulozeny
+     // aplikovat na vsetky podpriecinky nefunguje - switch sa po ulozeni zjavne neaplikuje do nastaveni - znovu po otvoreni uprav priecinka switch nie je ulozeny
      // 5. interny adresar - aplikovanie na vsetky podadresare - INTERNY ADRESAR
      I.say('5. Interny adresar - aplikovanie na vsetky podadresare');
      I.click('.btn.btn-sm.buttons-selected.buttons-edit.btn-warning');
      I.waitForText('Aplikovať na všetky podpriečinky', 5);
      //nefunguje spolahlivo - I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-forceInternalToSubgroups_0')); // aplikovat na vsetky podpriecinky
-     I.click("Aplikovať na všetky podpriečinky", "div.DTE_Field_Name_editorFields\\.forceInternalToSubgroups")
+     I.click("Aplikovať na všetky podpriečinky", "div.DTE_Field_Name_editorFields\\.forceInternalToSubgroups"); //NOSONAR
      DTE.save();
      I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
      I.waitForText(auto_name, 15);
      DT.waitForLoader();
-     I.seeElement(locate('.jstree-node.is-internal.jstree-closed').withText(auto_name));
+     I.waitForElement(locate('.jstree-node.is-internal.jstree-closed').withText(auto_name), 5);
      I.click(locate('.jstree-anchor').withText(auto_name));
      I.see(auto_folder_internal, '.jstree-node.is-internal.jstree-leaf');
      I.seeTextEquals(auto_folder_public, locate('.jstree-node.is-internal.jstree-leaf').withText(auto_folder_public));
@@ -98,7 +98,7 @@ Scenario('Interny adresar', ({ I, DT, DTE }) => {
      I.see(auto_folder_public, '.jstree-node.jstree-leaf');
      I.wait(1);
 
-     // TODO - po zmene subfoldera a jeho podpriecinkov priecinka name-autotest - nemenit matersky folder
+     // po zmene subfoldera a jeho podpriecinkov priecinka name-autotest - nemenit matersky folder
      // 7. vytvorenie verejneho a interneho podadresara v podadresari public_folder-autotest + zmena na interne + kontrola zmien
      I.say('7. Vytvorenie verejneho a interneho podadresara v podadresari public_folder-autotest');
      I.click(locate('.jstree-anchor').withText(auto_folder_public));
@@ -119,7 +119,7 @@ Scenario('Interny adresar', ({ I, DT, DTE }) => {
      I.wait(1);
      // kontrola zmeny
      I.click(locate('.jstree-anchor').withText(auto_name));
-     I.see(auto_folder_public, '.jstree-node.is-internal.jstree-closed'); // public_folder-autotest = zmenene na internal
+     I.waitForText(auto_folder_public, 5, '.jstree-node.is-internal.jstree-closed'); // public_folder-autotest = zmenene na internal
      I.click(locate('.jstree-node.is-internal.jstree-closed').withText(auto_folder_public).find('.jstree-icon.jstree-ocl'));
      I.see(sub_folder_public, '.jstree-node.is-internal.jstree-leaf'); // sub_folder_public-autotest = zmenene na internal
      I.see(auto_name, '.jstree-anchor.jstree-clicked'); // name-autotest = nezmenene = public

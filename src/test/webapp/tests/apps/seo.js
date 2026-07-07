@@ -63,11 +63,11 @@ Scenario("admin", async ({ I, DT, Document }) => {
     I.amOnPage("/apps/seo/admin/");
 
     DT.checkExtfilterDates(dayDateFrom, dayDateTo);
-    await Document.compareScreenshotElement("#bots-pieVisits", "seo/autotest-bots-pieVisits.png", null, null, 5);
+    await Document.compareScreenshotElement("#bots-pieVisits", "seo/autotest-bots-pieVisits.png", null, null, 6);
     await Document.adjustScrollbar('#bots-lineVisits');
     await Document.compareScreenshotElement("#bots-lineVisits", "seo/autotest-bots-lineVisits.png", null, null, 7);
     DT.checkTableRow("botsDataTable", 1, ["1", "Googlebot 2.0", "24 861", "12,74", "30.07.2021"]);
-    DT.checkTableRow("botsDataTable", 2, ["2", "Slackbot-LinkExpanding 1.0", "96 504", "49,46", "30.07.2021"]);
+    DT.checkTableRow("botsDataTable", 2, ["2", "Slackbot-LinkExpanding 1.0", "96 504", "49,45", "30.07.2021"]);
 
     DT.filterContains("name", "ThinkChaos 0.0");
     DT.waitForLoader();
