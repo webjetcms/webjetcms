@@ -5,6 +5,10 @@ Aplikácia pre manažment dokumentov a ich verzií na jednom mieste. Umožňuje 
 ## Dokumenty
 
 V zobrazenom zozname vidíme všetky dokumenty, ktoré boli vložené do manažéra v aktuálne zvolenej doméne. Prednastavené je filtrovanie, ktoré zobrazuje iba **hlavné dokumenty**, inak povedané aktuálne verzie dokumentov.
+Na ľavej strane sa nachádza **stromová štruktúra priečinkov** (JSTREE), ktorá umožňuje prechádzať priečinky archívu a filtrovať dokumenty podľa zvoleného priečinka. Po kliknutí na priečinok v strome sa v tabuľke zobrazia iba dokumenty patriace do daného priečinka. Nad stromom sa nachádzajú tlačidlá:
+
+- <i class="ti ti-refresh"></i> - **Obnoviť** - obnoví stromovú štruktúru priečinkov
+- <i class="ti ti-adjustments-horizontal"></i> - **Nastavenia** - umožňuje nastaviť šírku stromovej štruktúry voči tabuľke
 
 ![](datatable.png)
 
@@ -35,7 +39,7 @@ Karta obsahuje základné informácie pre vloženie dokumentu.
 - **Názov** - zadajte meno dokumentu, ktoré sa bude na stránke zobrazovať (ako odkaz na dokument). Pole je **povinné**. Môže obsahovať diakritiku, medzery, špeciálne znaky.
 - **Platnosť od** - nastavenie dátumu a času začiatku platnosti dokumentu
 - **Platnosť do** - nastavenie dátumu a času konca platnosti dokumentu
-- **Cieľový adresár pre upload dokumentu** -  vyberte adresár, do ktorého chcete dokument nahrať (neskôr Vám to poslúži pri filtrovaní zobrazenia dokumentov na stránke). Prednastavený cieľový adresár nastavíte konfiguračnou premennou ```fileArchivDefaultDirPath```. Používateľ si bude môcť zvoliť aj pod-priečinok.
+- **Cieľový adresár pre upload dokumentu** – vyberte adresár, do ktorého chcete dokument nahrať. Neskôr ho môžete využiť pri filtrovaní zobrazenia dokumentov na stránke. Prednastavený cieľový adresár určíte výberom konkrétneho priečinka v stromovej štruktúre. Tento priečinok sa následne automaticky predvyplní ako cieľový adresár. Používateľ si zároveň bude môcť zvoliť aj jeho podpriečinok.
 - **Súbor** - pole pre nahratie súboru, ktorý reprezentuje dokument. Viac o poli ```UPLAOD``` sa dočítate [tu](../../../developer/datatables-editor/field-file-upload.md). Povolené prípony súboru nastavíte pomocou konfiguračnej premennej ```fileArchivAllowExt```.
 - **Nahrať dokument neskôr** - v prípade potreby nahrania dokumentu do manažéra v presný čas a dátum, je možné nastaviť nahranie dokumentu automaticky v budúcnosti. Výberom možnosti sa Vám zobrazia ukryté polia
   - **Nahrať po** - výber dátumu a času, po ktorom sa má dokumentu nahrať
@@ -69,7 +73,7 @@ V karte Voliteľné polia viete dokumentu nastavovať voliteľné atribúty (hod
 
 ### Postup vloženia nového dokumentu
 
-Najprv je potrebné vyplniť povinné polia **Názov**. **Cieľový adresár pre upload dokumentu** je taktiež povinná hodnota, ktorá sa pred-vyplní automaticky, no viete ju zmeniť. Následné musíte vložiť súbor (reprezentujúci dokument) s povolenou príponou. Po úspešnom nahratí súboru môžete uložiť nový záznam do manažéra.
+Najprv je potrebné vyplniť povinné polia **Názov**. **Cieľový adresár pre upload dokumentu** je taktiež povinná hodnota, ktorá sa pred-vyplní automaticky podľa aktuálne zvoleného priečinka v stromovej štruktúre, no viete ju zmeniť. Následné musíte vložiť súbor (reprezentujúci dokument) s povolenou príponou. Po úspešnom nahratí súboru môžete uložiť nový záznam do manažéra.
 
 Ak ste nahrali súbor zo zlým formátom, validácia záznam neuloží, a pripomenie, ktoré prípony súboru sú povolené na nahratie.
 
