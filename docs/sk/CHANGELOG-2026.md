@@ -7,7 +7,7 @@
 ### Webové stránky
 
 - SEO - pridané samostatné nastavenie **Nasledovanie odkazov vyhľadávačmi** s možnosťami **Podľa nastavenia Prehľadávať**, **Povoliť nasledovanie odkazov** (`follow`) a **Zakázať nasledovanie odkazov** (`nofollow`). HTTP hlavička `X-Robots-Tag` a Ninja `${ninja.page.robots}` používajú rovnakú logiku: pri indexovaní bez obmedzení vrátia `all`, inak kombináciu direktív `noindex` a `nofollow` podľa nastavenia stránky. Viac v [dokumentácii Ninja](frontend/ninja-starter-kit/ninja-jv/page/README.md#nastavenie-indexovania-string) (#OSK563).
-- Ninja - doplnené [generovanie rozmerov](frontend/ninja-starter-kit/ninja-bp/page/README.md) SEO obrázka `og:image:width` a `og:image:height` (#OSK563).
+- Ninja - doplnené [generovanie rozmerov](frontend/ninja-starter-kit/ninja-bp/README.md) SEO obrázka `og:image:width` a `og:image:height` (#OSK563).
 - Šablóny - pridaná možnosť nastaviť presun `<style>` a `<link rel="stylesheet">` značiek z tela stránky do `<head>` cez [voľbu v šablóne](frontend/templates/templates.md) s podporou globálnej konfiguračnej premennej `showDocMoveStyleToHead`. Bloky v IE podmienkach, `noscript` a `script` zostávajú na mieste (#231).
 
 ![](frontend/templates/templates-edit-advanced.png)
@@ -52,6 +52,14 @@
 
 ![](redactor/apps/reservation/my-reservations-app/app-page.png)
 
+### Voliteľné polia
+
+- Kompletne implementovaná funkčnosť [nastavenia voliteľných polí](frontend/webpages/customfields/custom-fields-settings.md). Umožňuje centrálne nastaviť vlastnosti polí bez editácie prekladových kľúčov. Podporované sú všetky typy polí (text, textarea, select, multiselect, autocomplete, enumeration, obrázok, odkaz, JSON a ďalšie) s typovo špecifickými nastaveniami ako maximálna dĺžka textu, možnosti výberu, prepojenie na číselníky alebo závislosť na iných poliach. Používateľské rozhranie ponúka aj jednoduchý spôsob nastavenia možných hodnôt pre výberové/autocomplete polia (#58529).
+
+![](frontend/webpages/customfields/custom-fields-settings-editor.png)
+
+- Pridaná možnosť nastaviť voliteľné pole ako povinné (#58413).
+
 ### Multiweb
 
 - Pridaná možnosť [vytvoriť novú doménu](install/multiweb/config.md) z riadiacej domény, vytvorí aj používateľa, skupinu šablón, šablónu a systémové stránky (#58525).
@@ -85,13 +93,9 @@
 ![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
 
 - Logovanie - do [Logback MDC](https://logback.qos.ch/manual/mdc.html) doplnený atribút `sessionId` a prihlasovacieho mena používateľa `userLogin` (#OSK526).
-
-- Voliteľné polia - pridaná možnosť centrálne nastaviť vlastnosti [voliteľných polí](frontend/webpages/customfields/custom-fields-settings.md) v novej tabuľke v časti Nastavenia (#58413).
-
-![](frontend/webpages/customfields/custom-fields-settings-editor.png)
-
 - Aktualizovaná knižnica [Tabler Icons](https://tabler.io/icons) na verziu 3.44.0, vyriešený problém so súčasným používaním `Outline` a `Filled` sád (#58509).
 - Web stránky - ak potrebujete mať prázdny prvý riadok v konfiguračnej premennej `imageMagickCustomParams*` pre [nastavenie vlastných parametrov](redactor/apps/gallery/README.md#vlastné-parametre-imagemagick) `ImageMagick` zadajte hodnotu `---`.
+- Prekladové kľúče - upravené auditovanie chýbajúcich prekladových kľúčov - vylúčené auditovanie ak sa neskôr testuje, či kľúč skutočne existuje (#261).
 
 ## 2026.18
 

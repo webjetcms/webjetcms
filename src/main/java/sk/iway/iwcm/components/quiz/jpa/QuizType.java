@@ -10,7 +10,7 @@ public enum QuizType {
         String key = "components.quiz.type." + name().toLowerCase();
         String result = key;
         try {
-            result = Prop.getInstance().getText(key);
+            result = Prop.getInstance().getText(key, false);
         } catch (Exception ex) {}
         return result.equals(key) ? name() : result;
     }

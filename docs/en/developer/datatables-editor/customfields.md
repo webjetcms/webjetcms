@@ -107,6 +107,38 @@ In the ```fromDocDetails``` method, the translation key prefixes are first set f
 
 For functionality, it is necessary that the given bean contains attributes named ```fieldX```, which can then bring optional fields to any bean with a call to ```getFields```.
 
+## Configuration resource priority
+
+The configuration of optional fields consists of two sources:
+
+1. translation keys (`editor.field_x`, `editor.field_x.type`, ...),
+2. records from table `custom_fields`.
+
+When generating `fieldsDefinition` in `BaseEditorFields.getFields`, the priority is applied:
+
+1. translation key
+2. global class setting (without `entityId`),
+3. specific setting for a particular entity (`entityId`),
+4. bonus context (`bonusClassName` + `bonusEntityId`, e.g. `TemplateDetails` for `DocDetails`).
+
+A higher level always overrides a lower one for the same field letter (`alphabet`).
+
+## Serialization of settings in `custom_fields.value`
+
+Field type-specific settings are stored in the `custom_fields.value` column.
+
+Formats used:
+
+- `text` / `text-120` / `text-120, warningLength-80`
+- `label1:value1|label2:value2` (`select`)
+- `multiple:label1:value1|label2:value2` (`multiselect`)
+- `autocomplete:Možnosť 1|Možnosť 2`
+- `docsIn_67` or `docsIn_67_null`
+- `enumeration_2_string1_string2` or `enumeration_2_string1_string2_null`
+- `json_group` /`json_doc` with optional suffix `_null`
+
+The transformation between the field editor and the internal value is provided by the `CustomFieldsService.toEntity` and `CustomFieldsService.fromEntity` methods.
+
 ## Frontend
 
 Integration into the datatable editor is implemented in the file [custom-fields.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/custom-fields.js). For each field, the settings are retrieved from the JSON object ```editorFields.fieldsDefinition``` and the form fields are recreated in the DOM tree.
@@ -132,13 +164,17 @@ EDITOR.on('open', function (e, mode, action) {
 
 In case of using ```multiple select``` this stores the field value as ```Array```. Conversion to String separated by ```|``` before submitting the form is provided by the method ```prepareCustomFieldsDataBeforeSend```, which is called in [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js)
 
-```
+```javascript
 EDITOR.on('preSubmit', function (e, data, action) {
     ...
     prepareCustomFieldsDataBeforeSend(data)
     ...
 });
 ```
+
+For type `autocomplete`, the request is sent to `/admin/FCKeditor/_editor_autocomplete.jsp` with parameters `className` and `objectId`. Therefore, the endpoint can prefer the configuration from `custom_fields` over the generic translation key.
+
+For types `select` and `multiselect`, the format `label:value` is supported. If the value does not contain exactly one colon, the same text is used for both `label` and `value`.
 
 ## Renaming columns
 
