@@ -32,9 +32,9 @@ public class ReservationApp extends WebjetComponentAbstract {
     private String reservationType;
 
     @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "componentIframeWindowTabList", title = "&nbsp;")
-    private String iframe = "/components/reservation/admin_reservation_list.jsp";
+    private String iframe = "/apps/reservation/admin/";
 
     @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "componentIframeWindowTabListObjects", title = "&nbsp;")
-    private String iframe2 = "/components/reservation/admin_object_list.jsp";
+    private String iframe2 = "/apps/reservation/admin/reservation-objects/";
 
 }

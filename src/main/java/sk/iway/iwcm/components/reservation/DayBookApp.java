@@ -119,7 +119,7 @@ public class DayBookApp extends WebjetComponentAbstract {
                 if(roe == null) {
                     //Error
                     prepareDayBookApp(model, request, entity, true);
-                    model.addAttribute("customError", prop.getText(ERROR_MSG));
+                    model.addAttribute("customError", prop.getText(ERROR_MSG, false));
                     return VIEW_PATH;
                 }
 

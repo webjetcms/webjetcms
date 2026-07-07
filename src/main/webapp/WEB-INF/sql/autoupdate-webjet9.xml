@@ -3847,5 +3847,17 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>07.07.2026</string></void>
+                <void property="desc"><string>form_regular_exp - fix translation keys</string></void>
+                <void property="mysql"><string>UPDATE form_regular_exp SET title='checkform.title.email' WHERE title='checkform.title.email2';UPDATE form_regular_exp SET title='checkform.title.safeChars' WHERE title='checkform.title.safeChars2';</string></void>
+                <void property="mssql"><string>UPDATE form_regular_exp SET title='checkform.title.email' WHERE title='checkform.title.email2';UPDATE form_regular_exp SET title='checkform.title.safeChars' WHERE title='checkform.title.safeChars2';</string></void>
+                <void property="oracle"><string>UPDATE form_regular_exp SET title='checkform.title.email' WHERE title='checkform.title.email2';UPDATE form_regular_exp SET title='checkform.title.safeChars' WHERE title='checkform.title.safeChars2';</string></void>
+                <void property="pgsql"><string>UPDATE form_regular_exp SET title='checkform.title.email' WHERE title='checkform.title.email2';UPDATE form_regular_exp SET title='checkform.title.safeChars' WHERE title='checkform.title.safeChars2';</string></void>
+            </object>
+        </void>
+
     </object>
 </java>

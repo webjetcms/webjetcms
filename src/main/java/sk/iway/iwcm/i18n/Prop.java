@@ -373,14 +373,17 @@ public class Prop
 		value = checkDomainAlias(key, value);
 
 		if (checkMissing && value.equals(key) && key.endsWith(".tooltip")==false && key.startsWith("displaytag.")==false && key.startsWith("[[#{")==false &&
-			key.startsWith("components.translation_key.")==false && "&nbsp;".equals(key)==false && "ID".equals(key)==false && key.endsWith(".id")==false)
+			key.startsWith("components.translation_key.")==false && "&nbsp;".equals(key)==false && "ID".equals(key)==false && key.endsWith(".id")==false && key.contains("autotest")==false)
 		{
 			//chybajuci string, pridaj ho do chybajucich
 			missingTexts.putIfAbsent(language, Collections.synchronizedSet(new HashSet<MissingKeysDto>()));
 
 			String urlAddress = "";
 			RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
-			if (rb != null) urlAddress = rb.getUrl();
+			if (rb != null) {
+				urlAddress = rb.getBaseHref() + rb.getUrl();
+				if (Tools.isNotEmpty(rb.getQueryString())) urlAddress += "?" + rb.getQueryString();
+			}
 
 			//check if key was allready set as missing, if yes -> just update lastMissing date value
 			try {
@@ -397,11 +400,10 @@ public class Prop
 				//if key is missing first time, add new MissingKeysDto variable into set of missing keys
 				if(!present) {
 					missingTexts.get(language).add(new MissingKeysDto(key, new Date(), language, urlAddress));
-				}
-
-				//only log actual i18n keys (those containing a dot) to avoid logging plain text values
-				if (key.contains(".")) {
-					Logger.warn(Prop.class, "Missing text for key: [" + key + "] in language: [" + language + "]");
+					//only log actual i18n keys (those containing a dot) to avoid logging plain text values
+					if (key.contains(".")) {
+						Logger.warn(Prop.class, "Missing text for key: [" + key + "] in language: [" + language + "]");
+					}
 				}
 			} catch (Exception ex) {
 				//do nothing not important if we fail to add missing key, just log it, probably java.util.ConcurrentModificationException
