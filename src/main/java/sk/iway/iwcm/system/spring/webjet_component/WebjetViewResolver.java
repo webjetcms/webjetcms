@@ -16,10 +16,23 @@ import sk.iway.iwcm.Tools;
 import java.util.*;
 
 // vracia vhodny view z viewResolverov na zaklade cesty
-public class WebjetViewResolver extends WebApplicationObjectSupport implements ViewResolver {
+public class WebjetViewResolver extends WebApplicationObjectSupport implements ViewResolver, Ordered {
 
     private String viewFolder;
     private List<ViewResolver> viewResolvers;
+
+    /**
+    * In Spring Boot, the main DispatcherServlet is automatically configured with its own
+    * view resolvers (e.g. InternalResourceViewResolver), which have LOWEST_PRECEDENCE and
+    * ALWAYS return a view (forward) even if the file does not exist. In order to use this WebJET
+    * resolver, which looks for a real .jsp/.ftl/.html file and returns null if not found (and thus
+    * drops other resolvers including forward:/redirect:), must have a higher priority
+    * than the default resolvers. Returning LOWEST_PRECEDENCE - 100 will rank it just ahead of them.
+    */
+    @Override
+    public int getOrder() {
+        return Ordered.LOWEST_PRECEDENCE - 100;
+    }
 
     /**
      * Normalizes a path by collapsing multiple consecutive slashes into a single slash.
