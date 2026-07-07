@@ -368,7 +368,7 @@ public class AiService {
                     ai.setTo(toField);
                     ai.setToDefinition(ade.getFieldTo());
                     if (Tools.isEmpty(ade.getDescription())) ai.setDescription(ade.getName());
-                    else ai.setDescription(prop.getText(ade.getDescription()));
+                    else ai.setDescription(prop.getText(ade.getDescription(), false));
                     ai.setProvider(ade.getProvider());
 
                     String providerTitleKey = "components.ai_assistants.provider."+ade.getProvider()+".title";

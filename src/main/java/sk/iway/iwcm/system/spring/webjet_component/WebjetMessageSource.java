@@ -39,7 +39,7 @@ public class WebjetMessageSource implements MessageSource {
         } catch (Exception ex) {
             Logger.error(WebjetMessageSource.class, ex);
         }
-        return getProp(locale).getText(s);
+        return getProp(locale).getText(s, false);
     }
 
     @Override

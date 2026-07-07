@@ -28,8 +28,8 @@ public class ModuleComparator implements Comparator<AppBean>
 	@Override
 	public int compare(AppBean m1, AppBean m2)
 	{
-		String name1 = DB.internationalToEnglish(prop.getText(m1.getNameKey()));
-		String name2 = DB.internationalToEnglish(prop.getText(m2.getNameKey()));
+		String name1 = DB.internationalToEnglish(prop.getText(m1.getNameKey(), false));
+		String name2 = DB.internationalToEnglish(prop.getText(m2.getNameKey(), false));
 
 		boolean custom1 = m1.getCustom();
 		boolean custom2 = m2.getCustom();

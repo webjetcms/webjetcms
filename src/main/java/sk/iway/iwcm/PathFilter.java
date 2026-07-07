@@ -1116,7 +1116,7 @@ public class PathFilter implements Filter
 										String CONF_KEY = jspFileName.substring(0, jspFileName.lastIndexOf('.')).replace('/', '.').substring(1);
 										Prop prop = Prop.getInstance(req);
 										//ak kluc neexistuje pouzijeme
-										if (prop.getText(CONF_KEY+".conf.propSearchKey").equals(CONF_KEY+".conf.propSearchKey") && prop.getText(CONF_KEY+".conf").equals(CONF_KEY+".conf"))
+										if (prop.getText(CONF_KEY+".conf.propSearchKey", false).equals(CONF_KEY+".conf.propSearchKey") && prop.getText(CONF_KEY+".conf", false).equals(CONF_KEY+".conf"))
 										{
 											Logger.debug(PathFilter.class, "forwarding to:"+pathBezDruhejCasti);
 											req.getRequestDispatcher(WriteTagToolsForCore.getCustomPage(pathBezDruhejCasti, req)).forward(req, res);

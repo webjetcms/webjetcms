@@ -728,7 +728,7 @@ public class CloudToolsForCore {
 		{
 			String key = getTextKey(text);
 			//Logger.debug(CloudToolsForCore.class, "Text="+text+" key="+key);
-			if ((prop==null || prop.getText(key).equals(key)) && textyToAdd.containsKey(key)==false)
+			if ((prop==null || prop.getText(key, false).equals(key)) && textyToAdd.containsKey(key)==false)
 			{
 				//Logger.debug(CloudToolsForCore.class, "++++adding: "+key+"="+text);
 				textyToAdd.put(key, text);

@@ -173,13 +173,13 @@ public class CookieManagerRestController extends DatatableRestControllerV2<Cooki
         String purpouseKey = "components.gdpr.cookies." + entity.getCookieName() + ".purpouse";
         String validityKey = "components.gdpr.cookies." + entity.getCookieName() + ".validity";
 
-        String text = prop.getText(providerKey);
+        String text = prop.getText(providerKey, false);
         entity.setProvider(text);
 
-        text = prop.getText(purpouseKey);
+        text = prop.getText(purpouseKey, false);
         entity.setPurpouse(text);
 
-        text = prop.getText(validityKey);
+        text = prop.getText(validityKey, false);
         entity.setValidity(text);
     }
 

@@ -149,17 +149,17 @@ public class BeanDiffPrinter
 								if(titleKey == null) titleKey = field.getName();
 								if(titleKey.startsWith("[[#{") && titleKey.endsWith("}]]")) titleKey = titleKey.substring(4, titleKey.length() - 3);
 
-								translated.put(field.getName(), prop.getText(titleKey) );
+								translated.put(field.getName(), prop.getText(titleKey, false) );
 								isDatatable = true;
 							} else {
 								String fieldName = field.getName();
 								String key = "beandiff." + className.toLowerCase() + "." + fieldName;
-								String translation = prop.getText(key);
+								String translation = prop.getText(key, false);
 								if (Tools.isNotEmpty(translation) && translation.equals(key)==false) {
 									translated.put(fieldName, translation);
 								} else {
 									key = "editor." + fieldName;
-									translation = prop.getText(key);
+									translation = prop.getText(key, false);
 									if (Tools.isNotEmpty(translation) && translation.equals(key)==false) {
 										translated.put(fieldName, translation);
 									}
