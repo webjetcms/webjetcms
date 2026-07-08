@@ -286,4 +286,84 @@
    <cve>CVE-2026-2950</cve>
  </suppress>
 
+ <!-- we do not use such path traversal example -->
+ <suppress>
+   <notes><![CDATA[
+   file name: pdfbox-3.0.7.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/org\.apache\.pdfbox/pdfbox@.*$</packageUrl>
+   <cve>CVE-2026-33929</cve>
+ </suppress>
+ <suppress>
+   <notes><![CDATA[
+   file name: pdfbox-io-3.0.7.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/org\.apache\.pdfbox/pdfbox-io@.*$</packageUrl>
+   <cve>CVE-2026-33929</cve>
+ </suppress>
+
+ <!-- we do not use toSvg() export -->
+ <suppress>
+   <notes><![CDATA[
+   file name: fabric:5.5.1
+   ]]></notes>
+   <packageUrl regex="true">^pkg:npm/fabric@.*$</packageUrl>
+   <vulnerabilityName>CVE-2026-27013</vulnerabilityName>
+ </suppress>
+ <suppress>
+   <notes><![CDATA[
+   file name: fabric:5.5.1
+   ]]></notes>
+   <packageUrl regex="true">^pkg:npm/fabric@.*$</packageUrl>
+   <vulnerabilityName>GHSA-hfvx-25r5-qc3w</vulnerabilityName>
+ </suppress>
+
+ <!-- we are using latest 4.x version and connecting only to trusted sources -->
+ <suppress>
+    <notes><![CDATA[
+    file name: httpcore-4.4.13.jar
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.httpcomponents/httpcore@.*$</packageUrl>
+    <cve>CVE-2026-54399</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+    file name: httpcore-4.4.13.jar
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.httpcomponents/httpcore@.*$</packageUrl>
+    <cve>CVE-2026-54428</cve>
+ </suppress>
+
+ <!-- This vulnerability is fixed in 2.18.9, 2.21.5, and 3.1.4 -->
+ <suppress>
+   <notes><![CDATA[
+   file name: jackson-databind-2.22.0.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/com\.fasterxml\.jackson\.core/jackson-databind@.*$</packageUrl>
+   <cve>CVE-2026-54515</cve>
+ </suppress>
+
+ <!-- Bug was in python version, not java version -->
+ <suppress>
+   <notes><![CDATA[
+   file name: protobuf-java-4.33.0.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/com\.google\.protobuf/protobuf-java@.*$</packageUrl>
+   <cve>CVE-2026-0994</cve>
+ </suppress>
+
+  <!--
+   log4j-over-slf4j is just a bridge between the log4j 1.x API and slf4j/logback, it does not contain
+   the vulnerable classes (JMSAppender, SocketServer, Chainsaw). CVE-2020-9493 and
+   CVE-2022-23307 concern the original Apache log4j 1.2.x, not this library.
+  -->
+  <suppress>
+    <notes><![CDATA[
+    file name: log4j-over-slf4j
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.slf4j/log4j-over-slf4j@.*$</packageUrl>
+    <cve>CVE-2020-9493</cve>
+    <cve>CVE-2022-23307</cve>
+  </suppress>
+
 </suppressions>
