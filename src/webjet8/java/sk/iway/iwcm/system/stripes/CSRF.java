@@ -216,6 +216,8 @@ public class CSRF
 		{
 			sk.iway.iwcm.Logger.error(e);
 		}
+
+		Tools.sessionSetAttribute(session, SESSION_KEY, tokenList);
 	}
 
 	/**
