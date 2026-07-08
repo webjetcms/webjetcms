@@ -231,7 +231,7 @@ Scenario("stat-groupTree-perms", async ({ I }) => {
 
     I.say("Overenie že sa nenaství ROOT priečinok keď uživateľ má obmedzené priečinky.");
     I.relogin("tester2");
-    I.amOnPage("/apps/stat/admin?removePerm=cmp_stat_seeallgroups");
+    I.amOnPage("/apps/stat/admin/?removePerm=cmp_stat_seeallgroups");
     I.dontSee("Prihlásenia", "div.md-main-menu");
     I.dontSee("Aktuálni návštevníci", "div.md-main-menu");
     const caseB = await I.grabValueFrom("#editorApprootDir > section > div > div > div > div > input");

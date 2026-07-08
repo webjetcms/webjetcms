@@ -194,18 +194,22 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
     }*/
 
     /**
-     * Register JSP error pages for 404, 403, and 500 status codes.
+     * Register JSP error pages for common HTTP error codes.
      * In Spring Boot 4.x, BasicErrorController and ErrorController are removed.
      * We register error pages directly with the embedded server (Tomcat)
      * so that error responses dispatch to the JSP files.
+     * Mirrors the web.xml &lt;error-page&gt; entries used in the external Tomcat deployment.
      */
     @Bean
     public ErrorPageRegistrar errorPageRegistrar() {
         return registry -> {
             Logger.println(BaseSpringConfig.class, "-------> Registering JSP error pages");
             registry.addErrorPages(
-                new ErrorPage(HttpStatus.NOT_FOUND, "/404.jsp"),
+                new ErrorPage(HttpStatus.BAD_REQUEST, "/403.jsp"),
+                new ErrorPage(HttpStatus.UNAUTHORIZED, "/403.jsp"),
                 new ErrorPage(HttpStatus.FORBIDDEN, "/403.jsp"),
+                new ErrorPage(HttpStatus.NOT_FOUND, "/404.jsp"),
+                new ErrorPage(HttpStatus.METHOD_NOT_ALLOWED, "/403.jsp"),
                 new ErrorPage(HttpStatus.INTERNAL_SERVER_ERROR, "/500.jsp")
             );
         };

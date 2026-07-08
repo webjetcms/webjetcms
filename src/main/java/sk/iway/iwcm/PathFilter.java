@@ -202,6 +202,14 @@ public class PathFilter implements Filter
 		HttpServletRequest req = (HttpServletRequest) servletRequest;
 		HttpServletResponse res = (HttpServletResponse) servletResponse;
 
+		// For ERROR dispatches (e.g. Tomcat error page forwarding to /404.jsp), skip all routing
+		// logic and pass directly to the servlet chain so the JspServlet can serve the error page.
+		if (DispatcherType.ERROR == req.getDispatcherType()) {
+			//not required? - call /formmail.do? to get 404.jsp
+			//chain.doFilter(servletRequest, servletResponse);
+			//return;
+		}
+
 		try
 		{
 			if (passwordProtected==null) reloadProtectedDirs();
