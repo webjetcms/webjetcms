@@ -291,6 +291,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+## 2026.0.28
+
+> Opravná verzia pôvodnej verzie 2026.0.
+
 !> Upozornenie: po aktualizácii skontrolujte funkčnosť generovania `/thumb` obrázkov a [nastavenie povolených rozmerov](frontend/thumb-servlet/README.md#obmedzenia).
 
 - Web stránky - zrušené [plánované verzie](redactor/webpages/history.md) sú v histórii zobrazené preškrtnutým písmom a nie je možné ich zmazať (#58573).
@@ -299,6 +303,9 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Generátor primárnych kľúčov - doplnená automatická oprava mien tabuliek a názvov stĺpca s primárnou hodnotou (#246).
 - Bezpečnosť - opravené chyby Local File Inclusion, kontrola nahrávaných súborov a RCE. Ďakujeme Josef Korbel (Citadelo) za nahlásenie týchto zraniteľností (#252).
 - Bezpečnosť - pridaná [kontrola povolených rozmerov](frontend/thumb-servlet/README.md#obmedzenia) generovania `/thumb` obrázkov, prvý mesiac v režime učenia a následne po reštarte WebJETu v režime kontroly (#259).
+- Bezpečnosť - aktualizované knižnice `jackson-annotations` (2.22), `jackson-databind` (2.22.0), `logback-core/classic` (1.5.37) a `tink` (1.22.0). Z dôvodu spätnej kompatibility v opravnej verzii nebola realizovaná migrácia `Apache HttpClient` z 4.x na 5.x, ale WebJET sa typicky pripája na bezpečné/vnútorné API/domény (#264).
+- Aktualizované premosťovacie knižnice `slf4j-api`, `jcl-over-slf4j` a `log4j-over-slf4j` na verziu `2.0.18`. Zároveň sú v `dependency-check` potlačené falošne hlásené zraniteľnosti `CVE-2020-9493` a `CVE-2022-23307`, ktoré sa týkajú pôvodného `Apache log4j 1.2.x`, nie premostenia `log4j-over-slf4j` (#264).
+- Aktualizovaná knižnica `swagger-ui` na verziu 5.32.8 (#264).
 - JPA - opravené viac násobné ukončenie databázovej transakcie pri importe presmerovaní (#256).
 - `/thumb` - opravené generovanie obrázka pri `ip=1/2` a nulovej veľkosti `w/h` parametra (#58317-10).
 - Hromadné úpravy - upravené hľadanie/nahradenie viac riadkového HTML kódu v `replaceall` skripte (#262).
