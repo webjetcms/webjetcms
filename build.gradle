@@ -44,7 +44,7 @@ ext {
     mapstructVersion = "1.6.1";
     springVersion = "7.0.+";
     springDataVersion = "4.0.+";
-    springSecurityVersion = "7.0.+";
+    springSecurityVersion = "7.1.+";
     allureVersion = "2.32.0";
     //do not forget to download https://mvnrepository.com/artifact/org.aspectj/aspectjtools
     //jar to ant/aspectj and update version in ant/compile.xml file
@@ -223,6 +223,8 @@ dependencies {
     implementation("org.springframework.security:spring-security-oauth2-jose:${springSecurityVersion}")
     //WebAuthn/PassKey support - separated module in Spring Security 7
     implementation("org.springframework.security:spring-security-webauthn:${springSecurityVersion}")
+        //update webauthn version
+        implementation("tools.jackson.core:jackson-databind:3.2.0")
     implementation("org.springframework:spring-webmvc:${springVersion}")
     implementation("org.springframework:spring-context-support:${springVersion}")
     implementation("org.springframework:spring-test:${springVersion}")
@@ -292,7 +294,7 @@ dependencies {
     implementation 'com.github.ua-parser:uap-java:1.6.1'
 
     // Source: https://mvnrepository.com/artifact/com.github.usefulness/webp-imageio - supports both read AND write via JNI native libwebp v1.5.0
-    implementation("com.github.usefulness:webp-imageio:0.10.2")
+    implementation("com.github.usefulness:webp-imageio:0.11.0")
 
     testImplementation group: 'org.springframework', name: 'spring-test', version: "${springVersion}"
     testImplementation group: 'org.springframework', name: 'spring-web', version: "${springVersion}"

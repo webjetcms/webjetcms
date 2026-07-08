@@ -94,6 +94,15 @@
    <cve>CVE-2026-54515</cve>
  </suppress>
 
+ <!-- not 7.x version mentioned: Affected versions: Spring Security 5.7.0 through 5.7.24; 5.8.0 through 5.8.26; 6.3.0 through 6.3.17; 6.4.0 through 6.4.17; 6.5.0 through 6.5.10. -->
+ <suppress>
+    <notes><![CDATA[
+    file name: spring-security-web-7.1.0.jar
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring-security-web@.*$</packageUrl>
+    <vulnerabilityName>CVE-2026-47838</vulnerabilityName>
+ </suppress>
+
  <!-- Bug was in python version, not java version -->
  <suppress>
    <notes><![CDATA[
