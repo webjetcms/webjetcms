@@ -49,6 +49,7 @@ public class WebjetComponentSpringConfig {
         WebjetInternalResourceViewResolver view = new WebjetInternalResourceViewResolver();
         view.setViewClass(JstlView.class);
         view.setSuffix(".jsp");
+        view.setCache(false);
         view.setOrder(1);
         view.setApplicationContext(context);
 

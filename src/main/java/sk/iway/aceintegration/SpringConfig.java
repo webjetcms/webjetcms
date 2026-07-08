@@ -5,9 +5,13 @@ import java.io.File;
 import org.apache.catalina.session.FileStore;
 import org.apache.catalina.session.PersistentManager;
 import org.springframework.boot.tomcat.TomcatContextCustomizer;
+import org.springframework.boot.web.server.MimeMappings;
+import org.springframework.boot.web.server.servlet.ConfigurableServletWebServerFactory;
 import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.apache.catalina.connector.Connector;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -36,6 +40,19 @@ public class SpringConfig {
             httpConnector.setPort(80);
             httpConnector.setRedirectPort(443);
             factory.addAdditionalConnectors(httpConnector);
+        };
+    }
+
+    /**
+     * Adds WebJET default MIME mappings and keeps room for customer overrides.
+     */
+    @Bean("webjetTomcatMimeMappingsCustomizer")
+    @Order(Ordered.LOWEST_PRECEDENCE - 100)
+    public WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> tomcatMimeMappingsCustomizer() {
+        return factory -> {
+            MimeMappings mimeMappings = new MimeMappings();
+            mimeMappings.add("properties", "text/plain");
+            factory.addMimeMappings(mimeMappings);
         };
     }
 
