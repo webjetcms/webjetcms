@@ -55,13 +55,13 @@ public class WebJETPerformanceProfiler extends PerformanceProfiler
 
     public boolean shouldLogProfile(Profile profile)
     {
+        if (shouldLogProfile() == false)
+        {
+            return false;
+        }
         Class<?> domainClass = profile.getDomainClass();
         if (domainClass == null) {
             // sekvencne / interne dotazy (NEXTVAL, DDL, ...) nemaju entitu
-            return false;
-        }
-        if (shouldLogProfile() == false)
-        {
             return false;
         }
         String className = domainClass.getSimpleName();
