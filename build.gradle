@@ -178,7 +178,7 @@ dependencies {
     implementation("org.apache.httpcomponents:fluent-hc:4.5.14")
     implementation("org.apache.httpcomponents:httpmime:4.5.14")
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.22")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
     implementation("sk.iway:wjjcaptcha:1.0-SNAPSHOT")
     //implementation("net.htmlparser.jericho:jericho-html:3.1")
     //implementation("joda-time:joda-time:2.10.13")
