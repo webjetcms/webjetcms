@@ -217,7 +217,7 @@ public class CSRF
 			sk.iway.iwcm.Logger.error(e);
 		}
 
-		//this forces update list in redis
+		//this update tokenList also in redis
 		Tools.sessionSetAttribute(session, SESSION_KEY, tokenList);
 	}
 
