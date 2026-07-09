@@ -309,6 +309,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - JPA - opravené viac násobné ukončenie databázovej transakcie pri importe presmerovaní (#256).
 - `/thumb` - opravené generovanie obrázka pri `ip=1/2` a nulovej veľkosti `w/h` parametra (#58317-10).
 - Hromadné úpravy - upravené hľadanie/nahradenie viac riadkového HTML kódu v `replaceall` skripte (#262).
+- Cluster - upravené nastavenie CSRF tokenov v `session` tak, aby sa zmena distribuovala aj v `redis` (#265).
 
 ## 2026.0.25
 
