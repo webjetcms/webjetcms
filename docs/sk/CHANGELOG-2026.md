@@ -16,6 +16,10 @@
 
 ![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
 
+- V dialógu vkladania odkazu pridaná karta Manažér dokumentov pre jednoduché vkladanie odkazov na súbory v manažérovi dokumentov, nahrávanie nových súborov a ich správu (#260).
+
+![](redactor/webpages/working-in-editor/link_dialog-file-archive.png)
+
 ### Formuláre
 
 - [Štatistiky viackrokových formulárov](redactor/apps/multistep-form/stat.md) boli rozšírené o dátumový filter a pokročilé metriky zobrazení/pokusov/jazykov etc. (#58509).
@@ -51,6 +55,10 @@
 - Rezervácie - pridaná nová aplikácia [Moje rezervácie](redactor/apps/reservation/my-reservations-app/README.md), ktorá prihlásenému používateľovi zobrazí prehľad jeho rezervácií, stavom rezervácie a možnosťou zmazania povolených budúcich rezervácií (#58565).
 
 ![](redactor/apps/reservation/my-reservations-app/app-page.png)
+
+- Manažér dokumentov - pridané zobrazenie stromovej štruktúry priečinkov, možnosť nahrať viac súborov naraz cez drag&drop (#260).
+
+![](redactor/files/file-archive/datatable.png)
 
 ### Voliteľné polia
 

@@ -33,6 +33,8 @@ Scenario('editor', ({I, DTE, Document}) => {
 });
 
 Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
+    Document.setConfigValue("ckeditor_svgIcon_path", "");
+    Document.setConfigValue('editorFontAwesomeCssPath', "");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=100605");
     DTE.waitForEditor();
 
@@ -40,7 +42,7 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
 
     Document.screenshotElement('.DTE.DTE_Action_Edit.modal-content','/redactor/webpages/working-in-editor/editor_preview.png')
     I.clickCss('#cke_11');
-    Document.screenshotElement('#cke_119','/redactor/webpages/working-in-editor/roletka.png');
+    Document.screenshotElement('#cke_118','/redactor/webpages/working-in-editor/roletka.png');
     I.clickCss('#cke_11');
 
     const selectorsAndPaths = [
@@ -88,6 +90,10 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
         I.switchTo();
         Document.screenshotElement( locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/link_dialog.png');
 
+        I.click(locate(".cke_dialog_tabs a.cke_dialog_tab:nth-child(5)"));
+        Document.screenshot('/redactor/webpages/working-in-editor/link_dialog-file-archive.png');
+        I.click(locate(".cke_dialog_tabs a.cke_dialog_tab:nth-child(1)"));
+
         //link to page doalog
         I.switchTo( locate(".cke_dialog.cke_browser_webkit.cke_ltr").find("iframe#wjLinkIframe") );
         I.clickCss("#nav-iwcm_doc_group_volume_");
@@ -120,6 +126,7 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
             I.switchTo();
             Document.screenshotElement( locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/image_dialog-pixabay.png');
             I.switchTo("#wjImagePixabayIframeElement");
+            I.waitForElement('img[src*="https://cdn.pixabay.com/photo/"]', 10);
             I.clickCss('img[src*="https://cdn.pixabay.com/photo/"]');
             I.waitForVisible("#imageModal > div.modal-dialog");
             I.switchTo();
@@ -171,7 +178,7 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
         Document.screenshotElement(locate('.cke.cke_reset_all.cke_1.cke_panel.cke_panel.cke_ltr').last(),'/redactor/webpages/working-in-editor/table_preview.png');
         I.switchTo(locate('.cke.cke_reset_all.cke_1.cke_panel.cke_panel.cke_ltr').last());
         I.switchTo();
-        I.switchTo("#cke_590_frame");
+        I.switchTo("#cke_645_frame");
         I.waitForElement('.cke_colormore', 10);
         I.clickCss('.cke_colormore');
         I.switchTo();
@@ -216,9 +223,9 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
     Document.screenshotElement( locate('.cke_dialog.cke_browser_webkit.cke_ltr.cke_single_page').last(),'/redactor/webpages/working-in-editor/specialchar_dialog.png');
     I.clickCss(".cke_dialog_ui_button_cancel");
 
-    I.clickCss('#cke_47');
-    Document.screenshot('/redactor/apps/htmlbox/htmlbox_dialog.png');
-    I.clickCss(".cke_dialog_ui_button_cancel");
+    //I.clickCss('#cke_47');
+    //Document.screenshot('/redactor/apps/htmlbox/htmlbox_dialog.png');
+    //I.clickCss(".cke_dialog_ui_button_cancel");
 });
 
 Scenario('editor - magicline', async ({ I, DTE, Document, Apps, Browser }) => {

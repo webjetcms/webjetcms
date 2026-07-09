@@ -86,6 +86,8 @@ table.cke_dialog {
             padding: 5px 5px 3px 5px;
             right: 16px;
             top: 8px;
+            background-color: #F3F3F6 !important; //vlastnosti odrazkoveho zoznamu problem
+            opacity: 1;
 
             .cke_label {
                 display: contents;
@@ -142,6 +144,7 @@ table.cke_dialog {
             right: 52px;
             top: 8px;
             z-index: 5;
+            background-color: #F3F3F6 !important; //vlastnosti odrazkoveho zoznamu problem
             cursor: pointer;
 
             .cke_label {
