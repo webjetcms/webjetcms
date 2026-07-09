@@ -588,7 +588,17 @@ task writePom() {
         }
 
         //println "sorted versions: $sorted"
-        sorted[-1]
+        def result = sorted[-1]
+
+        // If versions are the same after comparison, prefer the specific version without the '+' over the placeholder
+        if (sorted.size() >= 2 && result.contains("+")) {
+            def alternative = sorted[-2]
+            if (!alternative.contains("+")) {
+                result = alternative
+            }
+        }
+
+        result
     }
 
     doLast {
