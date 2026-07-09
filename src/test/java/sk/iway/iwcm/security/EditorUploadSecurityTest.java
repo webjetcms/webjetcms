@@ -9,7 +9,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import static org.junit.jupiter.api.Assertions.*;
 

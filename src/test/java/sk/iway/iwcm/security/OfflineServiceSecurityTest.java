@@ -10,8 +10,8 @@ import sk.iway.iwcm.Identity;
 import sk.iway.Password;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
