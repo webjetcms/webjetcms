@@ -95,6 +95,7 @@
 - Logging - added attribute `sessionId` and user login name `userLogin` (#OSK526) to [Logback MDC](https://logback.qos.ch/manual/mdc.html).
 - Updated [Tabler Icons](https://tabler.io/icons) library to version 3.44.0, fixed issue with simultaneous use of `Outline` and `Filled` sets (#58509).
 - Web pages - if you need to have an empty first line in the configuration variable `imageMagickCustomParams*` for [custom parameter settings](redactor/apps/gallery/README.md#custom-parameters-imagemagick) `ImageMagick` enter the value `---`.
+- Translation keys - adjusted auditing of missing translation keys - excluded auditing if later testing whether the key actually exists (#261).
 
 ## 2026.18
 
@@ -290,6 +291,10 @@ Redesigned application properties settings in the editor from the old code in `J
 
 > A patch version of the original version 2026.0.
 
+## 2026.0.28
+
+> A patch version of the original version 2026.0.
+
 !> Warning: after updating, check the functionality of generating `/thumb` images and [setting allowed dimensions](frontend/thumb-servlet/README.md#restrictions).
 
 - Web pages - cancelled [planned versions](redactor/webpages/history.md) are displayed in history with strikethrough and cannot be deleted (#58573).
@@ -298,8 +303,13 @@ Redesigned application properties settings in the editor from the old code in `J
 - Primary Key Generator - added automatic correction of table names and primary value column names (#246).
 - Security - fixed Local File Inclusion, upload file checking, and RCE bugs. Thanks to Josef Korbel (Citadelo) for reporting these vulnerabilities (#252).
 - Security - added [checking allowed dimensions](frontend/thumb-servlet/README.md#restrictions) for generating `/thumb` images, first month in learning mode and then after restarting WebJET in checking mode (#259).
+- Security - updated libraries `jackson-annotations` (2.22), `jackson-databind` (2.22.0), `logback-core/classic` (1.5.37) and `tink` (1.22.0). Due to backward compatibility, the `Apache HttpClient` migration from 4.x to 5.x was not implemented in the patch release, but WebJET typically connects to secure/internal APIs/domains (#264).
+- Updated bridging libraries `slf4j-api`, `jcl-over-slf4j` and `log4j-over-slf4j` to version `2.0.18`. At the same time, falsely reported vulnerabilities `CVE-2020-9493` and `CVE-2022-23307`, which relate to the original `Apache log4j 1.2.x`, not the `log4j-over-slf4j` bridging, are suppressed in `dependency-check` (#264).
+- Updated library `swagger-ui` to version 5.32.8 (#264).
 - JPA - fixed multiple database transaction terminations during import redirection (#256).
 - `/thumb` - ​​fixed image generation with `ip=1/2` and zero size of `w/h` parameter (#58317-10).
+- Bulk edits - fixed multi-line HTML code search/replace in `replaceall` script (#262).
+- Cluster - adjusted CSRF token settings in `session` so that the change is also distributed in `redis` (#265).
 
 ## 2026.0.25
 
