@@ -44,7 +44,7 @@ ext {
     mapstructVersion = "1.6.1";
     springVersion = "7.0.+";
     springDataVersion = "4.0.+";
-    springSecurityVersion = "7.0.+";
+    springSecurityVersion = "7.1.+";
     allureVersion = "2.32.0";
     //do not forget to download https://mvnrepository.com/artifact/org.aspectj/aspectjtools
     //jar to ant/aspectj and update version in ant/compile.xml file
@@ -602,7 +602,17 @@ task writePom() {
         }
 
         //println "sorted versions: $sorted"
-        sorted[-1]
+        def result = sorted[-1]
+
+        // Ak sú verzie rovnaké po porovnaní, preferuj konkrétnu verziu bez '+' pred placeholderom
+        if (sorted.size() >= 2 && result.contains("+")) {
+            def alternative = sorted[-2]
+            if (!alternative.contains("+")) {
+                result = alternative
+            }
+        }
+
+        result
     }
 
     doLast {
