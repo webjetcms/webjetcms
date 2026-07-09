@@ -13,7 +13,7 @@
         taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%@
         taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %><%@
         taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
-        taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%>
+        taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><iwcm:checkLogon admin="true" perms="cmp_news"/>
 
 <%
     String[] tmpPerexGroups = request.getParameterValues("perexGroups");

@@ -9,9 +9,9 @@ name: Java CI with Gradle
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "hotfix/2026.0-main" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "hotfix/2026.0-main" ]
 
 jobs:
   build:

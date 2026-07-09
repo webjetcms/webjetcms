@@ -97,6 +97,8 @@ public class CronjobController extends DatatableRestControllerV2<CronTask, Long>
     public List<String> getNodes(@RequestParam String term) {
         List<String> nodes = new ArrayList<>();
         nodes.add("all");
+        nodes.add("all-admin");
+        nodes.add("all-public");
         nodes.addAll(ClusterDB.getClusterNodeNamesExpandedAuto());
         return nodes;
     }

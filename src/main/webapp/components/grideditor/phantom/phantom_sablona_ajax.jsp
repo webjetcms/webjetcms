@@ -48,7 +48,7 @@ if (Tools.isEmpty(forward)) {
     request.setAttribute("disableInlineEditing", true);
 
     Ninja.includeNinja(request);
-    if (forward.endsWith(".jsp")) {
+    if (forward.endsWith(".jsp") || forward.endsWith(".jspx")) {
         pageContext.include(forward);
     } else {
         request.setAttribute("thymeleafTemplateFile", forward);

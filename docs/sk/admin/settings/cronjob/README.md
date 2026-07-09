@@ -22,7 +22,7 @@ V okne editora záznamu je možné nastaviť:
 - **Spúšťanie po štarte** - Určuje, či sa má úloha spustiť automaticky po štarte WebJET (napr. pre aktualizáciu údajov).
 - **Povolené** - Určuje, či je úloha aktuálne povolená alebo zakázaná. Ak je povolená, bude sa vykonávať podľa zadaného časového harmonogramu. Ak je zakázaná, nebude sa spúšťať vôbec.
 - **Auditované** - Určuje, či sú záznamy o vykonaní úlohy zaznamenávané v audite. Táto možnosť je užitočná pre sledovanie a kontrolu vykonávania úloh.
-- **Beží na uzle** - Určuje, na ktorom uzle alebo serveri sa má úloha vykonávať, ak pracujete v prostredí s viacerými uzlami clustra.
+- **Beží na uzle** - Určuje, na ktorom uzle alebo serveri sa má úloha vykonávať, ak pracujete v prostredí s viacerými uzlami clustra. Hodnota `all` spustí úlohu na všetkých uzloch, `all-admin` len na uzloch v plnej konfigurácii a `all-public` len na uzloch typu verejný uzol (bez administrácie).
 
 ![](editor.png)
 

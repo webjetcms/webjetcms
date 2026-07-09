@@ -197,6 +197,26 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+## 2026.0.28
+
+> Opravná verzia pôvodnej verzie 2026.0.
+
+!> Upozornenie: po aktualizácii skontrolujte funkčnosť generovania `/thumb` obrázkov a [nastavenie povolených rozmerov](frontend/thumb-servlet/README.md#obmedzenia).
+
+- Web stránky - zrušené [plánované verzie](redactor/webpages/history.md) sú v histórii zobrazené preškrtnutým písmom a nie je možné ich zmazať (#58573).
+- Archív súborov - upravená úloha na pozadí pre publikovanie súborov - z dôvodu práv sa nevykonáva na verejnom uzle (#246).
+- Úlohy na pozadí - pridaná možnosť spustiť [úlohu na pozadí](admin/settings/cronjob/README.md) len na uzloch v plnej konfigurácii alebo na verejných uzloch (#246).
+- Generátor primárnych kľúčov - doplnená automatická oprava mien tabuliek a názvov stĺpca s primárnou hodnotou (#246).
+- Bezpečnosť - opravené chyby Local File Inclusion, kontrola nahrávaných súborov a RCE. Ďakujeme Josef Korbel (Citadelo) za nahlásenie týchto zraniteľností (#252).
+- Bezpečnosť - pridaná [kontrola povolených rozmerov](frontend/thumb-servlet/README.md#obmedzenia) generovania `/thumb` obrázkov, prvý mesiac v režime učenia a následne po reštarte WebJETu v režime kontroly (#259).
+- Bezpečnosť - aktualizované knižnice `jackson-annotations` (2.22), `jackson-databind` (2.22.0), `logback-core/classic` (1.5.37) a `tink` (1.22.0). Z dôvodu spätnej kompatibility v opravnej verzii nebola realizovaná migrácia `Apache HttpClient` z 4.x na 5.x, ale WebJET sa typicky pripája na bezpečné/vnútorné API/domény (#264).
+- Aktualizované premosťovacie knižnice `slf4j-api`, `jcl-over-slf4j` a `log4j-over-slf4j` na verziu `2.0.18`. Zároveň sú v `dependency-check` potlačené falošne hlásené zraniteľnosti `CVE-2020-9493` a `CVE-2022-23307`, ktoré sa týkajú pôvodného `Apache log4j 1.2.x`, nie premostenia `log4j-over-slf4j` (#264).
+- Aktualizovaná knižnica `swagger-ui` na verziu 5.32.8 (#264).
+- JPA - opravené viac násobné ukončenie databázovej transakcie pri importe presmerovaní (#256).
+- `/thumb` - opravené generovanie obrázka pri `ip=1/2` a nulovej veľkosti `w/h` parametra (#58317-10).
+- Hromadné úpravy - upravené hľadanie/nahradenie viac riadkového HTML kódu v `replaceall` skripte (#262).
+- Cluster - upravené nastavenie CSRF tokenov v `session` tak, aby sa zmena distribuovala aj v `redis` (#265).
+
 ## 2026.0.25
 
 > Opravná verzia pôvodnej verzie 2026.0.
@@ -207,10 +227,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - AI asistent - doplnená propagácia zmazania cache do uzlov clustra pri úprave asistenta.
 - Apache Tomcat - vo verzii `9.0.118/11.0.22` bolo zmenené správanie získania zoznamu Java tried čo má za následok nefunkčnosť `Stripes Framework`. Upravená verzia filtruje nesprávne verzie súborov aby štart prebehol korektne. Do staršieho projektu môžete preniesť priamo triedu [VFS.java](https://github.com/webjetcms/webjetcms/blob/main/src/main/java/net/sourceforge/stripes/vfs/VFS.java), skompilovať ju vo vašom projekte a použiť bez potreby aktualizácie.
 - Bezpečnosť - opravená možnosť nastaviť [meno HTTP hlavičky pre získanie IP adresy](sysadmin/pentests/README.md#konfigurácia) cez premennú `xForwardedForHeader`.
-- Bezpečnosť - opravené chyby Local File Inclusion, kontrola nahrávaných súborov a RCE. Zraniteľnosť sa netýka web stránok s nastavenými externými súbormi - nastavená konfiguračná premenná `cloudStaticFilesDir`. Ďakujeme Josef Korbel (Citadelo) za nahlásenie týchto zraniteľností. Možné dočasné riešenie bez aktualizácie je:
+- Bezpečnosť - opravené chyby Local File Inclusion, kontrola nahrávaných súborov a RCE. Ďakujeme Josef Korbel (Citadelo) za nahlásenie týchto zraniteľností (#252). Možné dočasné riešenie bez aktualizácie celého WebJET CMS je:
   - zmazať alebo [aktualizovať](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/components/grideditor/phantom/phantom_sablona_ajax.jsp) súbor `/components/grideditor/phantom/phantom_sablona_ajax.jsp`
-  - do konfiguračnej premennej `pathFilterBlockedPaths` pridať hodnotu `,/components/grideditor/phantom/`
-  - [globálne pre celý server](install/external-configuration.md) môžete do `JAVA_OPTS` pridať systémovú premennú:
+  - ak máte WebJET CMS novší ako `2025.52` do konfiguračnej premennej `pathFilterBlockedPaths` pridať hodnotu `,/components/grideditor/phantom/`
+  - ak máte WebJET CMS novší ako `2025.52` môžete [globálne pre celý server](install/external-configuration.md) do `JAVA_OPTS` pridať systémovú premennú:
 
 ```txt
 -Dwebjet.pathFilterBlockedPaths=.DS_Store,debug.,config.properties,Thumbs.db,.git,.svn,/WEB-INF/,./,/components/grideditor/phantom/

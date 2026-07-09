@@ -9,7 +9,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ page import="sk.iway.iwcm.stat.Column" %>
 <%@ page import="sk.iway.iwcm.users.UserGroupDetails" %>
 <%@ page import="sk.iway.iwcm.users.UserGroupsDB" %>
-<%@ page import="java.util.List" %>
+<%@ page import="java.util.List" %><iwcm:checkLogon admin="true" perms="menuWebpages"/>
 <%
 Prop prop = Prop.getInstance(request);
 

@@ -13,7 +13,7 @@ taglib prefix="display"
 taglib prefix="stripes"
 	uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib
-	prefix="c" uri="http://java.sun.com/jsp/jstl/core"%><iwcm:checkLogon admin="true" perms="cmp_app-slit_slider"/>
+	prefix="c" uri="http://java.sun.com/jsp/jstl/core"%><iwcm:checkLogon admin="true" perms="menuWebpages"/>
 
 <%
 	Identity user = UsersDB.getCurrentUser(request);
