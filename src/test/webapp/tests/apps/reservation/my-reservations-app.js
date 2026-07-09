@@ -6,7 +6,7 @@ const DAY_BOOK_URL = "/apps/rezervacie/rezervacia-spa.html";
 const PURPOSE_PREFIX = "autotest-my-reservations-";
 const DELETE_PASSWORD = "right_password"; //NOSONAR
 
-const TIMED_DATE = "2051-04-10";
+const TIMED_DATE = "2051-04-10"; //YYYY-MM-DD format
 const TIMED_ACCEPTED_OBJECT = "Tenisovy kurt A";
 const TIMED_WAITING_OBJECT = "Tenisovy kurt B";
 const TIMED_ACCEPTED_PARTS = [TIMED_ACCEPTED_OBJECT, "10.04.2051 13:00", "15:00"];
@@ -194,9 +194,20 @@ function openTimedReservationDate(I, dateValue) {
 }
 
 function fillDateInput(I, selector, dateValue) {
-    I.fillField(selector, dateValue.split("-").reverse().join("-"));
+    let browserLang = process.env.CODECEPT_BROWSER_LANG || "sk";
+    //const originalDateValue = dateValue;
+
+    //for en lang we must convert date to EN format MM/DD/YYYY
+    if (browserLang === "en") {
+        const [year, month, day] = dateValue.split("-");
+        dateValue = `${month}/${day}/${year}`;
+        I.fillField(selector, dateValue);
+    } else {
+        I.fillField(selector, dateValue.split("-").reverse().join("-"));
+    }
+
     I.wait(2); //wait for datepicker to update the hidden field
-    //this crashs on server because format is 10/04/2051 instead od 10.04.2051 I.waitForValue(selector, dateValue, 10);
+    I.waitForValue(selector, dateValue, 10);
 }
 
 async function createAllDayReservation(I, purpose) {
