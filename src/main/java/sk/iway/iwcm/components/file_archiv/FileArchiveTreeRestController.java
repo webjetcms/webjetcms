@@ -19,6 +19,7 @@ import sk.iway.iwcm.admin.jstree.JsTreeRestController;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.elfinder.DirTreeItem;
+import sk.iway.iwcm.system.elfinder.DirTreeRestController;
 
 /**
  * REST controller providing the jsTree folder structure for the file archive.
@@ -72,6 +73,7 @@ public class FileArchiveTreeRestController extends JsTreeRestController<DirTreeI
             rootItem.setParent("#");
             rootItem.setChildren(hasSubdirectories(rootDirectory, rootDirectory));
             rootItem.getState().setOpened(true);
+            rootItem.setIcon("ti ti-folder-filled");
 
             result.put("result", true);
             result.put("items", List.of(rootItem));
@@ -87,9 +89,15 @@ public class FileArchiveTreeRestController extends JsTreeRestController<DirTreeI
         List<DirTreeItem> items = new ArrayList<>();
         for (IwcmFile child : FileTools.sortFilesByName(directories)) {
             DirTreeItem treeItem = new DirTreeItem(child);
+            treeItem.setIcon("ti ti-folder-filled");
             treeItem.setChildren(hasSubdirectories(child, rootDirectory));
             items.add(treeItem);
         }
+
+        //filter items
+        JsTreeMoveItem configItem = new JsTreeMoveItem();
+        configItem.setSkipFoldersConst("fileArchivInsertLaterDirPath");
+        items = DirTreeRestController.getAllowedFolders(items, configItem);
 
         result.put("result", true);
         result.put("items", items);
@@ -128,13 +136,13 @@ public class FileArchiveTreeRestController extends JsTreeRestController<DirTreeI
 
         String decodedPath = Tools.URLDecode(path).replace('\\', '/');
         if (!decodedPath.startsWith("/")) {
-            decodedPath = "/" + decodedPath;
+            decodedPath = "/" + decodedPath; //NOSONAR
         }
 
         try {
             String normalizedPath = Path.of(decodedPath).normalize().toString().replace(File.separatorChar, '/');
             if (!normalizedPath.startsWith("/")) {
-                normalizedPath = "/" + normalizedPath;
+                normalizedPath = "/" + normalizedPath; //NOSONAR
             }
             if (normalizedPath.length() > 1 && normalizedPath.endsWith("/")) {
                 normalizedPath = normalizedPath.substring(0, normalizedPath.length() - 1);

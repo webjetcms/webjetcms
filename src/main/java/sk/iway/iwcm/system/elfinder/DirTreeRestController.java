@@ -152,7 +152,7 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
      * @param origItem
      * @return
      */
-    private List<DirTreeItem> getAllowedFolders( List<DirTreeItem> itemsToCheck, JsTreeMoveItem origItem) {
+    public static List<DirTreeItem> getAllowedFolders( List<DirTreeItem> itemsToCheck, JsTreeMoveItem origItem) {
         if(Tools.isNotEmpty(origItem.getSkipFoldersConst())) {
             String skipFoldersString = Constants.getString(origItem.getSkipFoldersConst());
             String[] skipFolders = Tools.getTokens(skipFoldersString, ",\n", true);
@@ -193,7 +193,7 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
      * @param skipFolders - array of folders paths to skip
      * @return
      */
-    private boolean hasAllowedChildren(DirTreeItem item, String[] skipFolders) {
+    private static boolean hasAllowedChildren(DirTreeItem item, String[] skipFolders) {
         IwcmFile directory = new IwcmFile(Tools.getRealPath(item.getVirtualPath()));
 
         IwcmFile[] subfiles = directory.listFiles();
@@ -225,21 +225,17 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
     protected void move(Map<String, Object> result, JsTreeMoveItem item) {
         result.put("result", false);
         result.put("error", getProp().getText("components.jstree.access_denied__group"));
-        return;
     }
 
     @Override
     protected void save(Map<String, Object> result, DirTreeItem item) {
         result.put("result", false);
         result.put("error", getProp().getText("components.jstree.access_denied__group"));
-        return;
     }
 
     @Override
     protected void delete(Map<String, Object> result, DirTreeItem item) {
-        result.put("result", false);
-        result.put("error", getProp().getText("components.jstree.access_denied__group"));
-        return;
+        save(result, item);
     }
 
     @Override

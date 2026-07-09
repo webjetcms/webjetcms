@@ -123,10 +123,14 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
             I.switchTo("#wjImagePixabayIframeElement");
             I.fillField("#search", "car");
             I.clickCss('button[type="submit"]');
+
+            I.waitForElement('img[src*="https://cdn.pixabay.com/photo/"]', 10); //wait for images to load
+            I.wait(2);
+
             I.switchTo();
             Document.screenshotElement( locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/image_dialog-pixabay.png');
             I.switchTo("#wjImagePixabayIframeElement");
-            I.waitForElement('img[src*="https://cdn.pixabay.com/photo/"]', 10);
+
             I.clickCss('img[src*="https://cdn.pixabay.com/photo/"]');
             I.waitForVisible("#imageModal > div.modal-dialog");
             I.switchTo();

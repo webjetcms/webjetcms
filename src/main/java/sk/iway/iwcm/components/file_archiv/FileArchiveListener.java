@@ -81,6 +81,7 @@ public class FileArchiveListener {
         rootItem.setParent("#");
         rootItem.setChildren(hasSubdirectories(rootDirectory));
         rootItem.getState().setOpened(true);
+        rootItem.setIcon("ti ti-folder-filled");
         if (dir.equals(rootPath)) {
             rootItem.getState().setSelected(true);
         }
@@ -101,6 +102,7 @@ public class FileArchiveListener {
                             DirTreeItem childItem = new DirTreeItem(child);
                             childItem.setParent(currentPath.toString());
                             childItem.setChildren(hasSubdirectories(child));
+                            childItem.setIcon("ti ti-folder-filled");
 
                             String childPath = child.getVirtualPath();
                             if (dir.startsWith(childPath + "/") || dir.equals(childPath)) {
