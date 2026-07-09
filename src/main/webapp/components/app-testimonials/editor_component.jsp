@@ -6,7 +6,7 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="java.io.*,sk.iway.iwcm.*, org.apache.commons.codec.binary.Base64, sk.iway.iwcm.i18n.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<iwcm:checkLogon admin="true" perms="cmp_testimonials"/>
+<iwcm:checkLogon admin="true" perms="menuWebpages"/>
 <%@page import="sk.iway.iwcm.gallery.*"%>
 <%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%

@@ -1,7 +1,7 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" %>
-<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
+<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><iwcm:checkLogon admin="true" perms="menuWebpages"/>
 <%
     request.setAttribute("cmpName", "form");
     request.setAttribute("iconLink", "/components/app-date/editoricon.png");

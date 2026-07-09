@@ -1,7 +1,7 @@
 <%@page import="org.json.JSONObject"%><%@page import="org.json.JSONArray"%><%@page import="java.util.*"%><%@page import="sk.iway.iwcm.doc.*"%><%@page import="sk.iway.iwcm.users.UsersDB"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "application/json");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*"
-%>
+%><%@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld"%><iwcm:checkLogon admin="true" perms="cmp_news"/>
 <%@ page import="sk.iway.iwcm.common.DocTools" %><%
 
 	//System.out.println("preview.editorDomainName="+session.getAttribute("preview.editorDomainName"));

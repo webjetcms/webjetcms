@@ -1,4 +1,4 @@
-<%@page import="sk.iway.iwcm.gallery.VideoConvert"%>
+<%@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld"%><iwcm:checkLogon admin="true"/><%@page import="sk.iway.iwcm.gallery.VideoConvert"%>
 <%@page import="org.json.JSONObject"%><%@page import="sk.iway.iwcm.gallery.ImageInfo"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %><%@

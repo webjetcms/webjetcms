@@ -29,7 +29,7 @@ public class WebjetDatabaseTaskSource implements TaskSource
 	{
 		Logger.println(WebjetDatabaseTaskSource.class, "Loading cron tasks from database.");
 		List<CronTask> tasks = loadFromDatabase();
-		Logger.println(WebjetDatabaseTaskSource.class, String.format("%d tasks should run on this node", tasks.size()));
+		Logger.println(WebjetDatabaseTaskSource.class, String.format("%d tasks should run on this node (nodeName=%s, nodeType=%s)", tasks.size(), Constants.getString("clusterMyNodeName"), Constants.getString("clusterMyNodeType")));
 		return tasks;
 	}
 
@@ -37,7 +37,10 @@ public class WebjetDatabaseTaskSource implements TaskSource
 	{
 		if (ClusterDB.isServerRunningInClusterMode()==false) return new ComplexQuery().setSql("SELECT * FROM crontab").list(CronDB.mapper);
 
-		return new ComplexQuery().setSql("SELECT * FROM crontab WHERE cluster_node IS NULL OR cluster_node = '' OR cluster_node = 'all' OR cluster_node = ?").
-			setParams(Constants.getString("clusterMyNodeName")).list(CronDB.mapper);
+		//cron cluster node type as all-public / all-admin
+		String cronNodeType = CronDB.getCronNodeType();
+
+		return new ComplexQuery().setSql("SELECT * FROM crontab WHERE cluster_node IS NULL OR cluster_node = '' OR cluster_node = 'all' OR cluster_node = ? OR cluster_node = ?").
+			setParams(Constants.getString("clusterMyNodeName"), cronNodeType).list(CronDB.mapper);
 	}
 }

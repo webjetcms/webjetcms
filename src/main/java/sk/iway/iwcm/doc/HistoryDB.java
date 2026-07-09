@@ -127,6 +127,7 @@ public class HistoryDB extends DB
 					doc.setHistoryApproveDate(getDbDateTime(rs, "approve_date", serverName));
 					doc.setHistoryDisapprovedBy(rs.getInt("disapproved_by"));
 
+					doc.setPublicable(rs.getBoolean("publicable"));
 					if (rs.getBoolean("publicable"))
 					{
 						//zistuje ci stranka bude niekedy publikovana alebo uz nie
@@ -191,7 +192,7 @@ public class HistoryDB extends DB
 					doc.setFieldT(DB.getDbString(rs, "field_t"));
 
 					doc.setRequireSsl(rs.getBoolean("require_ssl"));
-
+					doc.setSyncStatus(rs.getInt("sync_status"));
 
 					if ((doc.getHistoryApprovedBy()>0 && doc.getAuthorId()!=doc.getHistoryApprovedBy()) || doc.getHistoryDisapprovedBy()>0) {
 						if (doc.getHistoryApprovedBy()>0)
@@ -247,6 +248,7 @@ public class HistoryDB extends DB
 					doc.setHistoryActual(rs.getBoolean("actual"));
 					doc.setHistoryApproveDate(getDbDateTime(rs, "approve_date", serverName));
 
+					doc.setPublicable(rs.getBoolean("publicable"));
 					if (rs.getBoolean("publicable") || rs.getBoolean("publish_after_start")) //zistuje ci stranka bude
 																// niekedy publikovana alebo uz
 																// nie
@@ -255,6 +257,7 @@ public class HistoryDB extends DB
 					{
 					  doc.setPublishStartStringExtra("&nbsp;");
 					}
+					doc.setSyncStatus(rs.getInt("sync_status"));
 
 					if (onlyNew && doc.isHistoryActual())
 					{

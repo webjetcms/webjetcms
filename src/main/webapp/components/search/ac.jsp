@@ -9,6 +9,12 @@ page import="java.util.Collection"%><%@
 page import="org.json.JSONArray"%><%@
 page pageEncoding="utf-8" import="sk.iway.iwcm.*"
 %><%
+if (Constants.getBoolean("luceneAsDefaultSearch")==false)
+{
+	// Lucene search is not enabled
+	return;
+}
+
 String term = Tools.getRequestParameterUnsafe(request, "words");
 String lang = Tools.getRequestParameter(request, "lang");
 

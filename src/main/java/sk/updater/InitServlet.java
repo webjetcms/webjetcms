@@ -4352,6 +4352,8 @@ public class InitServlet extends HttpServlet
         files.add("/components/news/editor_component_velocity.jsp");
         files.add("/components/news/perex_group_not.jsp");
 
+		files.add("/components/htmlbox/editor_toolbar.jsp");
+
 		for (String file : files)
 		{
 			File f = new File(sc.getRealPath(file));

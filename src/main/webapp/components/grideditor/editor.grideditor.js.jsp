@@ -1,6 +1,6 @@
 <%@ page import="sk.iway.iwcm.Tools"%><%@ page import="sk.iway.iwcm.doc.DocDetails"%><%@ page import="sk.iway.iwcm.doc.GroupDetails"%><%@ page import="sk.iway.iwcm.doc.GroupsDB"%><%@ page import="sk.iway.iwcm.doc.DocDB"%><%@ page pageEncoding="utf-8" contentType="text/javascript" %>
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/javascript");%>
-    <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
+    <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><iwcm:checkLogon admin="true" perms="menuWebpages"/>
 
     (function( $ ){
 

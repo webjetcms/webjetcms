@@ -553,8 +553,7 @@ Scenario("vyplnenie formsimple spamProtection=false - revert config @singlethrea
     Document.setConfigValue("spamProtection", "true");
 });
 
-Scenario("prohibited file upload", ({ I, DT, Document }) => {
-    const filePath = 'tests/apps/forms/test.jsp';
+function prohibitedFileUpload(filePath, I, DT) {
     let text = "Single file test "+randomNumber;
     I.amOnPage("/apps/formular/formular-upload.html");
     I.attachFile('input[accept=".gif,.png,.jpg,.jpeg,.svg"]', filePath);
@@ -574,4 +573,11 @@ Scenario("prohibited file upload", ({ I, DT, Document }) => {
     DT.waitForLoader();
     DT.filterContains("col_meno-a-priezvisko", text);
     I.see("Záznamy 0 až 0", ".dt-info");
+}
+
+Scenario("prohibited file upload", ({ I, DT, Document }) => {
+    prohibitedFileUpload('tests/apps/forms/test.jsp', I, DT);
+    //spam protection wait
+    Document.deleteAllCacheObjects(false);
+    prohibitedFileUpload('tests/apps/forms/test.jspx', I, DT);
 });
