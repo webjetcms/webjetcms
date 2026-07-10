@@ -1079,11 +1079,21 @@ public class PathFilter implements Filter
 			}
 			else
 			{
-				if (("GET".equalsIgnoreCase(req.getMethod()) || "HEAD".equalsIgnoreCase(req.getMethod())) && path.endsWith("/") && (path.startsWith("/admin/") || path.startsWith("/components/")))
+				if (("GET".equalsIgnoreCase(req.getMethod()) || "HEAD".equalsIgnoreCase(req.getMethod())) && isIndexJspDirectoryPath(path))
 				{
-					String indexJspPath = path + "index.jsp";
+					String indexJspPath = path.endsWith("/") ? path + "index.jsp" : path + "/index.jsp";
 					if (FileTools.isFile(indexJspPath))
 					{
+						if (path.endsWith("/")==false)
+						{
+							StringBuilder redirectPath = new StringBuilder(req.getContextPath()).append(path).append('/');
+							//for safety concerns commented out - you should use correct URL with / at the end if (Tools.isNotEmpty(qs)) redirectPath.append('?').append(qs);
+
+							res.setStatus(HttpServletResponse.SC_FOUND);
+							res.setHeader("Location", Tools.sanitizeHttpHeaderParam(redirectPath.toString()));
+							return;
+						}
+
 						res.setHeader("Pragma", "No-Cache");
 						res.setDateHeader("Expires", 0);
 						res.setHeader("Cache-Control", "no-Cache");
@@ -1376,6 +1386,11 @@ public class PathFilter implements Filter
 			}
 		}
 		return false;
+	}
+
+	private boolean isIndexJspDirectoryPath(String path)
+	{
+		return path.equals("/admin") || path.startsWith("/admin/") || path.equals("/components") || path.startsWith("/components/");
 	}
 
 
