@@ -122,19 +122,18 @@ function adminUploadInit(options) {
         chunkSize: 2000000,
         forceChunking: true,
 
-        dictDefaultMessage: '<i class="ti ti-upload" aria-hidden="true"></i>',
+        dictDefaultMessage: '<i class="ti ti-upload" aria-hidden="true"></i><span><br/>' + WJ.translate("admin.dragDropFiles.dragFilesHereOrClick") + '</span>',
+        dictFileTooBig: WJ.translate("admin.dragDropFiles.dictFileTooBig"),
+        dictResponseError: WJ.translate("admin.dragDropFiles.dictResponseError"),
+        dictCancelUpload: WJ.translate("admin.dragDropFiles.dictCancelUpload"),
+        dictCancelUploadConfirmation: WJ.translate("admin.dragDropFiles.dictCancelUploadConfirmation"),
+        dictRemoveFile: WJ.translate("admin.dragDropFiles.dictRemoveFile"),
+        dictMaxFilesExceeded: WJ.translate("admin.dragDropFiles.dictMaxFilesExceeded"),
+        dictInvalidFileType: WJ.translate("admin.dragDropFiles.dictInvalidFileType"),
+
         headers: {
             'X-CSRF-TOKEN': window.csrfToken,
         },
-
-        /*dictDefaultMessage: "<iwcm:text key="admin.dragDropFiles.dragFilesHereOrClick"/>",
-        dictFileTooBig: "<iwcm:text key="admin.dragDropFiles.dictFileTooBig"/>",
-        dictResponseError: "<iwcm:text key="admin.dragDropFiles.dictResponseError"/>",
-        dictCancelUpload: "<iwcm:text key="admin.dragDropFiles.dictCancelUpload"/>",
-        dictCancelUploadConfirmation: "<iwcm:text key="admin.dragDropFiles.dictCancelUploadConfirmation"/>",
-        dictRemoveFile: "<iwcm:text key="admin.dragDropFiles.dictRemoveFile"/>",
-        dictMaxFilesExceeded: "<iwcm:text key="admin.dragDropFiles.dictMaxFilesExceeded"/>",
-        */
 
         init: function () {
             // Set aria-label on the generated dz-button

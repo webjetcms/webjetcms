@@ -52,10 +52,10 @@
     //         }
     //     }
     // }
-    
+
     .toast-container-upload {
         overflow: hidden !important;
-        
+
         .toast-dzpreview {
             padding: 0px !important;
             border: 0px !important;
@@ -73,14 +73,17 @@
 
             span {max-width: 360px;}
         }
-    } 
-    
+    }
+
     .dropzone {
         min-height: 50px !important;
-        height: 75px !important;
+        height: 105px !important;
         border-radius: 6px !important;
         .dz-message {
             margin: 0 0 !important;
+        }
+        &.dz-drag-hover {
+            background-color: $nice-gray-100;
         }
     }
 
@@ -204,7 +207,7 @@
     font-size: 13px;
     padding-top: 9px;
     padding-bottom: 9px;
-    padding-right: 15px;
+    padding-right: 12px;
     box-shadow: unset;
     transition: all .4s ease;
 
@@ -237,10 +240,14 @@
         top: 4px;
     }
 
-    i.ti-polaroid {
+    i.ti-polaroid, div.toast-message > i.ti:first-of-type {
         color: #007eff;
         padding-left: 12px;
         padding-right: 7px;
+    }
+    div.toast-message i.ti-spin {
+        padding-left: 0px;
+        padding-right: 0px;
     }
 
     i.ti-circle-check {
@@ -405,4 +412,15 @@
 .toast-container-upload > div.toast.toast-dzpreview:hover {
     opacity: 1;
     background-color: #f3f3f6;
+}
+
+.ly-container > .dropzone, .ly-container .datatable-col > .dropzone {
+    .dz-button {
+        position: absolute;
+        top: 40%;
+        span {
+            //hide text message
+            display: none;
+        }
+    }
 }
