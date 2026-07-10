@@ -13,6 +13,7 @@ import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.ThymeleafEvent;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.elfinder.DirTreeItem;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
@@ -49,7 +50,7 @@ public class FileArchiveListener {
             }
 
             if (Tools.isNotEmpty(rootPath) && FileArchiveTreeRestController.isWithinRoot(dir, rootPath)) {
-                model.addAttribute("treeInitialJson", JsonTools.objectToJSON(getTreeInitialJson(dir, rootPath)));
+                model.addAttribute("treeInitialJson", JsonTools.objectToJSON(getTreeInitialJson(dir, rootPath, Prop.getInstance(event.getSource().getRequest()))));
             }
         } catch (Exception ex) {
             Logger.error(getClass(), ex);
@@ -68,7 +69,7 @@ public class FileArchiveListener {
      * @param rootPath - the archive root directory path
      * @return list of DirTreeItem nodes to be serialized as JSON for jsTree
      */
-    private List<DirTreeItem> getTreeInitialJson(String dir, String rootPath) {
+    private List<DirTreeItem> getTreeInitialJson(String dir, String rootPath, Prop prop) {
         List<DirTreeItem> treeInitialJson = new ArrayList<>();
 
         IwcmFile rootDirectory = IwcmFile.fromVirtualPath(rootPath);
@@ -78,6 +79,7 @@ public class FileArchiveListener {
 
         // Add root item
         DirTreeItem rootItem = new DirTreeItem(rootDirectory);
+        rootItem.setText(prop.getText("components.file_archiv.title"));
         rootItem.setParent("#");
         rootItem.setChildren(hasSubdirectories(rootDirectory));
         rootItem.getState().setOpened(true);

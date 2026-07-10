@@ -16,6 +16,7 @@ import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeMoveItem;
 import sk.iway.iwcm.admin.jstree.JsTreeRestController;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.elfinder.DirTreeItem;
@@ -69,7 +70,9 @@ public class FileArchiveTreeRestController extends JsTreeRestController<DirTreeI
         }
 
         if (addRoot) {
+            Prop prop = Prop.getInstance(getRequest());
             DirTreeItem rootItem = new DirTreeItem(rootDirectory);
+            rootItem.setText(prop.getText("components.file_archiv.title"));
             rootItem.setParent("#");
             rootItem.setChildren(hasSubdirectories(rootDirectory, rootDirectory));
             rootItem.getState().setOpened(true);
