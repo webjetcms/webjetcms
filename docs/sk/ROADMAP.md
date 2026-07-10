@@ -29,7 +29,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] Nepoužívané súbory - spraviť možnosť získať zoznam nepoužívaných súborov - nikde v stránke sa nepoužívajú, ani v médiach atď. Bola na to API `FileTools.getDirFileUsage(currentDir, request)`. Pridať ako kartu do vlastností priečinka v prieskumníku.
 - [ ] Prieskumník - zamedziť prácu s priečinku pre Manažér dokumentov, aby sa so súbormi nedalo manipulovať mimo Manažér dokumentov.
 - [ ] +Prieskumník - pridať právo pre nahrávanie súborov s diakritikou (odstraňuje sa pre `/images` a `/files` priečinky) (#58589).
-- [ ] +Web stránky - lepšie integrovať manažér dokumentov pre vkladanie odkazu do stránky - nová karta podobne ako je Fotobanka pri obrázkoch (#58593).
+- [x] +Web stránky - lepšie integrovať manažér dokumentov pre vkladanie odkazu do stránky - nová karta podobne ako je Fotobanka pri obrázkoch (#58593).
 - [x] +Formuláre - pridať podrobnejšiu štatistiku chýb vyplnených formulárov (#58509).
 - [x] +Web stránky - zlepšiť používateľské rozhranie pre zadávanie `/thumb` obrázkov v editore (#58525).
 - [x] +Voliteľné polia - pridať možnosť definovať ktoré polia sú povinné (#58413).

@@ -4,15 +4,18 @@ import java.io.File;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeMoveItem;
 import sk.iway.iwcm.admin.jstree.JsTreeRestController;
@@ -21,6 +24,13 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.elfinder.DirTreeItem;
 import sk.iway.iwcm.system.elfinder.DirTreeRestController;
+
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+import sk.iway.iwcm.common.FileBrowserTools;
+import sk.iway.iwcm.system.elfinder.FsService;
+import sk.iway.iwcm.system.elfinder.IwcmFsVolume;
 
 /**
  * REST controller providing the jsTree folder structure for the file archive.
@@ -222,4 +232,106 @@ public class FileArchiveTreeRestController extends JsTreeRestController<DirTreeI
         result.put("result", false);
         result.put("error", getProp().getText(messageKey));
     }
+
+    private void setError(Map<String, Object> result, String messageKey, String... params) {
+        result.put("result", false);
+        result.put("error", getProp().getTextWithParams(messageKey, params));
+    }
+
+    /**
+     * Creates a new folder within the archive root.
+     * Validates the folder name (forbidden symbols check), normalizes it
+     * (diacritics → English, special chars removed, lowercase), and creates
+     * the folder under the specified parent path.
+     * @param result - map to populate with "result", "item" or "error"
+     * @param name - the requested folder name
+     * @param parentPath - the parent directory path (virtual path)
+     */
+    @PostMapping("create")
+    @PreAuthorize("@WebjetSecurityService.hasPermission('menuFileArchivManagerCategory')")
+    protected ResponseEntity<Map<String, Object>> createFolder(@RequestBody CreateFolderRequest request) {
+        Map<String, Object> result = new HashMap<>();
+
+        String name = request != null ? request.getName() : null;
+        String parentPath = request != null ? request.getParentPath() : null;
+
+        if (Tools.isEmpty(name) || Tools.isEmpty(parentPath)) {
+            setError(result, "admin.operationPermissionDenied");
+            return ResponseEntity.ok(result);
+        }
+
+        // Validate: check for forbidden symbols
+        if (FileBrowserTools.hasForbiddenSymbol(name)) {
+            setError(result, "components.elfinder.commands.error.banned_character");
+            return ResponseEntity.ok(result);
+        }
+
+        // Normalize: diacritics → English, special chars → hyphens, lowercase
+        String normalizedName;
+        String rootPath = normalizeVirtualPath(FileArchivatorKit.getArchivPath());
+        String normalizedParent = normalizeVirtualPath(parentPath);
+
+        if (Tools.isEmpty(rootPath) || !isWithinRoot(normalizedParent, rootPath)) {
+            setError(result, "admin.operationPermissionDenied");
+            return ResponseEntity.ok(result);
+        }
+
+        IwcmFile parentDir = IwcmFile.fromVirtualPath(normalizedParent);
+        if (!parentDir.exists() || !parentDir.isDirectory()) {
+            setError(result, "dirAction.err.dirDoesntExist");
+            return ResponseEntity.ok(result);
+        }
+
+        // Create FsItemEx for normalization context
+        normalizedName = IwcmFsVolume.removeSpecialChars(name, normalizedParent, FsService.TYPE_FILES, getUser());
+
+        if (Tools.isEmpty(normalizedName)) {
+            setError(result, "admin.operationPermissionDenied");
+            return ResponseEntity.ok(result);
+        }
+
+        // Create the folder
+        IwcmFile rootDirectory = IwcmFile.fromVirtualPath(rootPath);
+
+        if (!isWithinCanonicalRoot(parentDir, rootDirectory)) {
+            setError(result, "admin.operationPermissionDenied");
+            return ResponseEntity.ok(result);
+        }
+
+        parentDir.mkdirs();
+        Identity user = getUser();
+        if (user == null || user.isFolderWritable(normalizedParent)==false) {
+            setError(result, "admin.operationPermissionDenied");
+            return ResponseEntity.ok(result);
+        }
+
+        String newFolderPath = normalizedParent + "/" + normalizedName; //NOSONAR
+        IwcmFile newFolder = IwcmFile.fromVirtualPath(newFolderPath);
+        if (newFolder.exists()) {
+            setError(result, "java.GalleryTreeRestController.directory_already_exists", normalizedName);
+            return ResponseEntity.ok(result);
+        }
+        newFolder.mkdirs();
+        if (!newFolder.exists()) {
+            setError(result, "dirAction.err.dirDoesntExist");
+            return ResponseEntity.ok(result);
+        }
+
+        result.put("result", true);
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Request body for creating a folder.
+     */
+    protected static class CreateFolderRequest {
+        private String name;
+        private String parentPath;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getParentPath() { return parentPath; }
+        public void setParentPath(String parentPath) { this.parentPath = parentPath; }
+    }
+
 }

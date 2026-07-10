@@ -2,6 +2,10 @@
     <div class="row">
         <div class="col-auto">
             <div class="dt-buttons">
+                <button data-th-if="${layout.hasPermission('menuFileArchivManagerCategory')}" id="btn-create-folder" class="btn btn-sm buttons-create btn-success noperms-menuFileArchivManagerCategory" data-toggle="tooltip" data-th-title="#{button.add}">
+                    <span><i class="ti ti-plus"></i></span>
+                </button>
+
                 <button class="btn btn-sm btn-outline-secondary buttons-jstree-settings buttons-right" data-toggle="tooltip" data-th-title="#{datatables.button.settings.js}">
                     <span><i class="ti ti-adjustments-horizontal"></i></span>
                 </button>
@@ -76,6 +80,46 @@
                 <button id="jstree-settings-submit" class="btn btn-primary" type="button">
                     <i class="ti ti-check"></i> <span data-th-text="#{button.submit}"></span>
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create folder modal -->
+<div class="modal DTED fade" id="createFolderModal" tabindex="-1" role="dialog" aria-labelledby="createFolderModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="DTE_Action_Edit modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createFolderModalLabel" data-th-text="#{button.add}">Create New Folder</h5>
+            </div>
+            <div class="DTE_Body modal-body modal-body-notabs">
+                <div class="modal-body-bg">
+                    <div class="DTE_Action_Edit tab-content">
+                        <div class="tab-pane fade show active" role="tabpanel">
+                            <div class="DTE_Field form-group row DTE_Field_Type_text required">
+                                <label for="create-folder-name-input" data-th-text="#{components.file_archiv.folder_name}" class="col-sm-4 col-form-label">Folder Name</label>
+                                <div class="col-sm-7">
+                                    <div class="DTE_Field_InputControl">
+                                        <input type="text" class="form-control" id="create-folder-name-input" data-th-placeholder="#{components.file_archiv.folder_name_placeholder}" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer DTE_Footer">
+                <div class="DTE_Footer_Content"></div>
+                <div data-dte-e="form_error" class="DTE_Form_Error" style="display: none;"></div>
+                <div class="DTE_Form_Buttons">
+                    <span class="buttons-footer-left"></span>
+                    <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">
+                        <i class="ti ti-x"></i> <span data-th-text="#{button.cancel}">Cancel</span>
+                    </button>
+                    <button class="btn btn-primary" id="btn-create-folder-submit" type="button">
+                        <i class="ti ti-check"></i> <span data-th-text="#{button.submit}">Create</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

@@ -237,7 +237,72 @@
     }, 10);
 
     window.domReady.add(function () {
-        //window.helpLink = "/redactor/webpages/perexgroups";
+        // Create folder button handler
+        var createFolderModal = null;
+        $("button#btn-create-folder").on("click", function() {
+            if (createFolderModal == null) {
+                createFolderModal = new bootstrap.Modal(document.getElementById('createFolderModal'), {
+                    keyboard: false,
+                    backdrop: 'static'
+                });
+            }
+            $("#create-folder-name-input").val("");
+            createFolderModal.show();
+            setTimeout(function() {
+                $("#create-folder-name-input").focus();
+            }, 600);
+        });
+
+        $("#btn-create-folder-submit").on("click", function() {
+            var name = $("#create-folder-name-input").val().trim();
+            if (!name) {
+                $("#create-folder-name-input").addClass("is-invalid");
+                return;
+            }
+            $("#create-folder-name-input").removeClass("is-invalid");
+
+            var tree = $("#SomStromcek").jstree(true);
+            if (!tree) return;
+
+            var selected = tree.get_selected();
+            var parentId = selected && selected.length > 0 ? selected[0] : "#";
+
+            $("#btn-create-folder-submit").prop("disabled", true);
+            $("#createFolderModal .DTE_Form_Error").text("").hide();
+
+            $.ajax({
+                url: "/admin/rest/components/archive/tree/create",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ name: name, parentPath: parentId }),
+                success: function(response) {
+                    $("#btn-create-folder-submit").prop("disabled", false);
+                    if (response.result === true) {
+                        tree.refresh();
+                        createFolderModal.hide();
+                    } else {
+                        $("#createFolderModal .DTE_Form_Error").text(response.error || WJ.translate("datatables.error.system.js")).show();
+                    }
+                },
+                error: function(xhr) {
+                    $("#btn-create-folder-submit").prop("disabled", false);
+                    var errorMsg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : WJ.translate("datatables.error.system.js");
+                    $("#createFolderModal .DTE_Form_Error").text(errorMsg).show();
+                }
+            });
+        });
+
+        $("#createFolderModal").on("hidden.bs.modal", function() {
+            $("#create-folder-name-input").removeClass("is-invalid").val("");
+        });
+
+        $("#create-folder-name-input").on("keypress", function(e) {
+            if (e.which === 13) {
+                $("#btn-create-folder-submit").trigger("click");
+            }
+        });
+
+        window.helpLink = "/redactor/files/file-archive/README";
 
         if (isCkEditorLinkDialog()) {
             $("body").addClass("file-archive-link-dialog");
