@@ -4,11 +4,11 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.json.JSONObject;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.i18n.Prop;
@@ -18,7 +18,7 @@ import sk.iway.iwcm.users.UsersDB;
  * REST controller handling file upload conflict resolution (skip, overwrite, keep-both).
  * Supports both standard file uploads and file archive uploads.
  */
-@Controller
+@RestController
 @RequestMapping("/admin/upload/")
 public class AdminUploadController {
 
@@ -30,7 +30,6 @@ public class AdminUploadController {
      * @return JSON with "success" flag
      */
     @PostMapping(path="/skipkey", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
     public String skipkey(@RequestParam String fileKey, HttpServletRequest request)
     {
         JSONObject output = new JSONObject();
@@ -57,7 +56,7 @@ public class AdminUploadController {
      * @return JSON with operation result
      */
     @PostMapping(path="/overwrite", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
+
     public String overwrite(@RequestParam String fileKey, @RequestParam String destinationFolder, @RequestParam String fileName, @RequestParam String uploadType, HttpServletRequest request)
     {
         if ("fileArchive".equals(uploadType)) {
@@ -77,7 +76,7 @@ public class AdminUploadController {
      * @return JSON with operation result
      */
     @PostMapping(path="/keepboth", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
+
     public String keepboth(@RequestParam String fileKey, @RequestParam String destinationFolder, @RequestParam String fileName, @RequestParam String uploadType, HttpServletRequest request)
     {
         if ("fileArchive".equals(uploadType)) {

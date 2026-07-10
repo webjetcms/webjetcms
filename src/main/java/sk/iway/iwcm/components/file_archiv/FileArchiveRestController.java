@@ -349,6 +349,7 @@ public class FileArchiveRestController extends DatatableRestControllerV2<FileArc
         return entity;
     }
 
+    @SuppressWarnings("java:S3516")
     @Override
     public boolean processAction(FileArchivatorBean entity, String action) {
         //Check, that this is main version
