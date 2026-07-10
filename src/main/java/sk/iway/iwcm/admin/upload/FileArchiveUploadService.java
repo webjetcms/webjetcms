@@ -79,7 +79,10 @@ public class FileArchiveUploadService {
             entity.setDateInsert(new Date());
             entity.setFilePath(destinationFolder);
             entity.setShowFile(true);
-            entity.setVirtualFileName(FileTools.getFileNameWithoutExtension(originalName));
+            String name = FileTools.getFileNameWithoutExtension(originalName);
+            //replace -_ and other symbols with space
+            name = name.replaceAll("[-_]+", " ");
+            entity.setVirtualFileName(name);
 
             FileArchivatorEditorFields editorFields = new FileArchivatorEditorFields();
             editorFields.setDir(destinationFolder);
