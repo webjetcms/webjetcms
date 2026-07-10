@@ -16,7 +16,7 @@ plugins {
     //https://plugins.gradle.org/plugin/io.freefair.lombok
     id "io.freefair.lombok" version "8.11"
     //http://jeremylong.github.io/DependencyCheck/dependency-check-gradle/index.html
-    id "org.owasp.dependencycheck" version "12.2.0"
+    id "org.owasp.dependencycheck" version "12.2.2"
     id 'maven-publish'
     //https://docs.gradle.org/current/userguide/jacoco_plugin.html
     id 'jacoco'
@@ -207,11 +207,11 @@ dependencies {
 
     implementation("jakarta.validation:jakarta.validation-api:3.0.2")
 
-    implementation("org.apache.httpcomponents:httpclient:4.5.13")
-    implementation("org.apache.httpcomponents:fluent-hc:4.5.13")
-    implementation("org.apache.httpcomponents:httpmime:4.5.13")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.21")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.21.2")
+    implementation("org.apache.httpcomponents:httpclient:4.5.14")
+    implementation("org.apache.httpcomponents:fluent-hc:4.5.14")
+    implementation("org.apache.httpcomponents:httpmime:4.5.14")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.22")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.0")
     implementation("sk.iway:wjjcaptcha:1.0-SNAPSHOT")
     //implementation("net.htmlparser.jericho:jericho-html:3.1")
     //implementation("joda-time:joda-time:2.10.13")
@@ -237,6 +237,8 @@ dependencies {
     // Spring Framework 7.x dependencies are managed by Spring Boot 4.x starters above
     //WebAuthn/PassKey support - separated module in Spring Security 7
     // Spring Framework 7.x dependencies are managed by Spring Boot 4.x starters above
+        //update webauthn version
+        implementation("tools.jackson.core:jackson-databind:3.2.0")
 
     // https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-jaxrs2-jakarta for OpenAPI generation with integration API
     implementation("io.swagger.core.v3:swagger-jaxrs2-jakarta:2.2.30")
@@ -256,14 +258,15 @@ dependencies {
     // https://mvnrepository.com/artifact/org.eclipse.angus/angus-mail = jakarta.mail/javax.mail api and implementation
     implementation("org.eclipse.angus:angus-mail:2.0.5")
 
-    implementation("com.google.crypto.tink:tink:1.19.0")
+    implementation("com.google.crypto.tink:tink:1.22.0")
     //implementation("com.google.protobuf:protobuf-java:3.21.7")
-    implementation("ch.qos.logback:logback-core:1.5.29")
-    implementation("ch.qos.logback:logback-classic:1.5.29")
-    implementation("org.slf4j:slf4j-api:2.0.16")
-    implementation("org.slf4j:jcl-over-slf4j:2.0.16")
-    implementation("org.slf4j:log4j-over-slf4j:2.0.16")
-    implementation("org.apache.logging.log4j:log4j-to-slf4j:2.25.4")
+    implementation("ch.qos.logback:logback-core:1.5.37")
+    implementation("ch.qos.logback:logback-classic:1.5.37")
+    //verzia je zjednotena s slf4j-api, ktore je aj tak resolvnute na 2.0.17 cez logback
+    implementation("org.slf4j:slf4j-api:2.0.18")
+    implementation("org.slf4j:jcl-over-slf4j:2.0.18")
+    implementation("org.slf4j:log4j-over-slf4j:2.0.18")
+    implementation("org.apache.logging.log4j:log4j-to-slf4j:2.26.1")
     //implementation("com.google.code.findbugs:jsr305:3.0.2")
     implementation("org.aspectj:aspectjrt:${aspectJVersion}")
     implementation("org.aspectj:aspectjweaver:${aspectJVersion}")
@@ -295,13 +298,13 @@ dependencies {
     implementation 'com.sun.xml.bind:jaxb-impl:4.0.5'
 
     // https://mvnrepository.com/artifact/org.postgresql/postgresql
-    runtimeOnly 'org.postgresql:postgresql:42.7.11'
+    runtimeOnly 'org.postgresql:postgresql:42.7.13'
 
     //UserAgent parser - https://github.com/ua-parser/uap-java
     implementation 'com.github.ua-parser:uap-java:1.6.1'
 
     // Source: https://mvnrepository.com/artifact/com.github.usefulness/webp-imageio - supports both read AND write via JNI native libwebp v1.5.0
-    implementation("com.github.usefulness:webp-imageio:0.10.2")
+    implementation("com.github.usefulness:webp-imageio:0.11.0")
 
     // Spring Boot 4.x test dependencies
     testImplementation 'org.springframework.boot:spring-boot-starter-test:4.1.0'
