@@ -22,3 +22,9 @@ Scenario('p39: contrast between default vs hover vs focus', async ({ I, a11y }) 
     //TODO: check contrast between default vs hover vs focus on buttons and links
     await a11y.check();
 });
+
+Scenario("p53: missing skip to content @current", async ({ I, DTE, a11y }) => {
+    I.amOnPage("/admin/v9/templates/temps-list/");
+
+    await a11y.check();
+});
