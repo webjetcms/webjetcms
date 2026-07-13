@@ -40,13 +40,5 @@ const topItems = nav.slice(0, 8);
       <div class="card-title">News</div>
       <div class="card-path">/news/</div>
     </a>
-
-  {topItems.map((item: any) => (
-      <a href={item.virtualPath} class="welcome-link-card">
-        <div class="card-title">{item.title}</div>
-        <div class="card-path">{item.virtualPath}</div>
-      </a>
-  ))}
-
   </div>
 </Layout>
