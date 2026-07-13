@@ -174,40 +174,6 @@ export async function search(
   };
 }
 
-/**
- * Submit a form.
- * Always pass Astro.request to forward cookies from browser to backend and vice versa.
- */
-export async function submitForm(
-  formId: string,
-  fields: Record<string, string>,
-  request?: Request
-): Promise<{ data: FormResult; headers: Headers }> {
-  const options = createFetchOptions(request);
-
-  const response = await fetch(`${API_BASE}/actions/forms/submit`, {
-    ...options,
-    method: 'POST',
-    headers: {
-      ...options.headers,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ formId, fields }),
-  });
-
-  if (!response.ok) {
-    return {
-      data: { success: false, message: 'Form submission failed.' },
-      headers: new Headers(),
-    };
-  }
-
-  return {
-    data: await response.json(),
-    headers: response.headers,
-  };
-}
-
 // ==================== News API Types ====================
 
 export interface HeadlessNewsItem {

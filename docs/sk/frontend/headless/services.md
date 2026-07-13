@@ -237,58 +237,6 @@ curl "https://cms.example.com/rest/headless/v1/actions/search?q=produkt&page=0&s
 
 ---
 
-## Formuláre
-
-### POST `/rest/headless/v1/actions/forms/submit`
-
-Odošle formulár definovaný v CMS.
-
-**Content-Type:** `application/json`
-
-**Telo požiadavky:**
-
-```json
-{
-  "formId": "kontaktny-formular",
-  "fields": {
-    "meno": "Ján Novák",
-    "email": "jan@example.com",
-    "sprava": "Dobrý deň, mám otázku..."
-  }
-}
-```
-
-| Pole | Typ | Popis |
-| --- | --- | --- |
-| `formId` | `string` | ID formulára z CMS |
-| `fields` | `object` | Mapa polí `{ nazovPola: hodnota }` |
-
-**Odpoveď (úspech):**
-
-```json
-{
-  "success": true,
-  "message": "Formulár bol úspešne odoslaný."
-}
-```
-
-**Odpoveď (chyba validácie):**
-
-```json
-{
-  "success": false,
-  "message": "Formulár obsahuje chyby.",
-  "fieldErrors": [
-    {
-      "field": "email",
-      "message": "Neplatná e-mailová adresa."
-    }
-  ]
-}
-```
-
----
-
 ## Posielanie cookies
 
 Väčšina služieb vracia v odpovedi `Set-Cookie` hlavičku (napr. session ID). Frontend musí túto hlavičku posúvať prehliadaču, aby sa zachoval stav session (prihlásenie, jazykové nastavenie, …).

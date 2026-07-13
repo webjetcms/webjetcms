@@ -3,7 +3,6 @@ package sk.iway.iwcm.headless.service;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.DBPool;
@@ -24,7 +23,6 @@ import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.headless.dto.PageResponse;
 import sk.iway.iwcm.headless.dto.SeoMetadata;
 import sk.iway.iwcm.system.spring.WebjetComponentParserInterface;
-import sk.iway.iwcm.system.spring.services.WebjetSecurityService;
 import sk.iway.iwcm.Identity;
 
 import java.sql.Connection;
@@ -33,11 +31,8 @@ import java.sql.Connection;
  * Service responsible for resolving pages by path and rendering them
  * for the headless API. Reuses existing ShowDoc/ComponentParser internals.
  */
-@Service("HeadlessPageService")
+@Service
 public class HeadlessPageService {
-
-    @Autowired
-    private WebjetSecurityService webjetSecurityService;
 
     /**
      * Resolves a page by its virtual path and returns a PageResponse.
@@ -252,7 +247,8 @@ public class HeadlessPageService {
      * Checks if the user has admin session for preview access.
      */
     public boolean hasAdminSession(HttpServletRequest request) {
-        return webjetSecurityService.isAdmin();
+        Identity user = UsersDB.getCurrentUser(request.getSession());
+        return user != null && user.isAdmin();
     }
 
     /**

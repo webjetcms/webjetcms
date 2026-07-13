@@ -18,7 +18,7 @@ import java.util.List;
 /**
  * Service for building navigation trees from the WebJET CMS group structure.
  */
-@Service("HeadlessNavigationService")
+@Service
 public class HeadlessNavigationService {
 
     /**

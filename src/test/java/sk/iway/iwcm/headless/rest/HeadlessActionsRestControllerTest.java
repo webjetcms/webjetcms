@@ -11,11 +11,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.headless.dto.ErrorResponse;
 import sk.iway.iwcm.headless.dto.FieldError;
-import sk.iway.iwcm.headless.dto.FormResult;
 import sk.iway.iwcm.headless.dto.FormSubmitRequest;
 import sk.iway.iwcm.headless.dto.SearchResultItem;
 import sk.iway.iwcm.headless.dto.SearchResults;
-import sk.iway.iwcm.headless.service.HeadlessFormActionService;
 import sk.iway.iwcm.headless.service.HeadlessSearchService;
 import sk.iway.iwcm.system.spring.services.WebjetSecurityService;
 
@@ -30,9 +28,6 @@ import java.util.Map;
  */
 
 class HeadlessActionsRestControllerTest {
-
-    @Mock
-    private HeadlessFormActionService headlessFormActionService;
 
     @Mock
     private HeadlessSearchService headlessSearchService;
@@ -152,45 +147,6 @@ class HeadlessActionsRestControllerTest {
         assertEquals(0, results.getTotalPages());
         assertNotNull(results.getItems());
         assertTrue(results.getItems().isEmpty());
-    }
-
-    // ==================== Form Processing Tests ====================
-
-    @Test
-    void testFormResultSuccess() {
-        FormResult formResult = new FormResult();
-        formResult.setSuccess(true);
-        formResult.setMessage("Form submitted successfully.");
-
-        assertTrue(formResult.isSuccess());
-        assertEquals("Form submitted successfully.", formResult.getMessage());
-        assertNull(formResult.getFieldErrors());
-    }
-
-    @Test
-    void testFormResultFailure() {
-        FormResult formResult = new FormResult();
-        formResult.setSuccess(false);
-        formResult.setMessage("Validation failed.");
-
-        List<FieldError> fieldErrors = new ArrayList<>();
-        fieldErrors.add(new FieldError("email", "Invalid email"));
-        fieldErrors.add(new FieldError("phone", "Phone is required"));
-        formResult.setFieldErrors(fieldErrors);
-
-        assertFalse(formResult.isSuccess());
-        assertEquals("Validation failed.", formResult.getMessage());
-        assertEquals(2, formResult.getFieldErrors().size());
-    }
-
-    @Test
-    void testFormResultMinimal() {
-        FormResult formResult = new FormResult();
-        formResult.setSuccess(false);
-
-        assertFalse(formResult.isSuccess());
-        assertNull(formResult.getMessage());
-        assertNull(formResult.getFieldErrors());
     }
 
     // ==================== Error Response Tests ====================

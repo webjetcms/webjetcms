@@ -154,7 +154,7 @@ Centrálny TypeScript súbor, ktorý obaľuje všetky headless REST volania. Kľ
 2. Posúva `Referer` hlavičku (ochrana pred XSRF zamietnutím zo strany backendu)
 
 ```typescript
-import { getPage, getNavigation, search, submitForm, listNews } from '../lib/api';
+import { getPage, getNavigation, search, listNews } from '../lib/api';
 ```
 
 ### Dostupné funkcie
@@ -164,7 +164,6 @@ import { getPage, getNavigation, search, submitForm, listNews } from '../lib/api
 | `getPage(path, lng?, request?)` | GET `/pages/by-path` | Načíta obsah stránky |
 | `getNavigation(request?, rootPath?, rootGroupId?, depth?)` | GET `/navigation` | Načíta navigačný strom |
 | `search(query, request?, page?, size?)` | GET `/actions/search` | Fulltext hľadanie |
-| `submitForm(formId, fields, request?)` | POST `/actions/forms/submit` | Odošle formulár |
 | `listNews(request, request_?)` | POST `/news` | Načíta zoznam noviniek |
 
 ---

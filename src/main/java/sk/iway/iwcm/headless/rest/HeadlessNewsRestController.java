@@ -133,10 +133,8 @@ public class HeadlessNewsRestController extends sk.iway.iwcm.rest.RestController
         // Validate order if provided
         String order = request.getOrder();
         if (order != null && !order.isEmpty()) {
-            boolean valid = false;
             try {
                 NewsQuery.OrderEnum.valueOf(order.toUpperCase());
-                valid = true;
             } catch (IllegalArgumentException e) {
                 // ignore, will default to date
             }

@@ -27,7 +27,7 @@ import sk.iway.iwcm.common.CloudToolsForCore;
  * Returns DocDetails directly — no DTO projection — so all document
  * properties are available to the consumer.
  */
-@Service("HeadlessNewsService")
+@Service
 public class HeadlessNewsService {
 
     /**
@@ -100,8 +100,6 @@ public class HeadlessNewsService {
 
         List<Integer> groupIds = request.getGroupIds();
         if (groupIds != null && !groupIds.isEmpty()) {
-            int subGroupsDepth = -1; // default: unlimited
-
             GroupsDB gdb = GroupsDB.getInstance();
             for (Integer groupId : groupIds) {
                 GroupDetails group = gdb.getGroup(groupId);

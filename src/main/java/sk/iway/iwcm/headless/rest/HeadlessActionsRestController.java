@@ -1,8 +1,5 @@
 package sk.iway.iwcm.headless.rest;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -20,19 +17,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.headless.dto.FieldError;
-import sk.iway.iwcm.headless.dto.FormResult;
-import sk.iway.iwcm.headless.dto.FormSubmitRequest;
 import sk.iway.iwcm.headless.dto.SearchResultItem;
 import sk.iway.iwcm.headless.dto.SearchResults;
-import sk.iway.iwcm.headless.service.HeadlessFormActionService;
 import sk.iway.iwcm.headless.service.HeadlessSearchService;
 
 import java.util.ArrayList;
@@ -48,63 +39,11 @@ import java.util.List;
 @Tag(name = "Headless Actions", description = "Form submission and search endpoints for headless consumption")
 public class HeadlessActionsRestController extends sk.iway.iwcm.rest.RestController {
 
-    @Autowired
-    private HeadlessFormActionService headlessFormActionService;
+    private final HeadlessSearchService headlessSearchService;
 
     @Autowired
-    private HeadlessSearchService headlessSearchService;
-
-    @Autowired(required = false)
-    private ObjectMapper objectMapper;
-
-    // ==================== Forms Endpoints ====================
-
-    /**
-     * Submit a form via the headless API.
-     *
-     * @param request   the form submission request body
-     * @param httpRequest the HTTP request
-     * @param response  the HTTP response
-     * @return FormResult with success/error status
-     */
-    @PostMapping(value = "/forms/submit", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(
-            summary = "Submit a form",
-            description = "Submits a form through the headless API. Supports form identification by formId, formName, or componentKey.",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Form processed successfully"),
-                    @ApiResponse(responseCode = "400", description = "Validation errors")
-            }
-    )
-    public ResponseEntity<FormResult> submitForm(
-            @RequestBody FormSubmitRequest request,
-            HttpServletRequest httpRequest,
-            HttpServletResponse response) {
-
-        isIpAddressAllowed(httpRequest);
-        // Validate request body
-        List<FieldError> validationErrors = validateFormSubmitRequest(request);
-        if (!validationErrors.isEmpty()) {
-            return createValidationErrorResponse(validationErrors);
-        }
-
-        // Process form submission via service
-        FormResult formResult = headlessFormActionService.processFormSubmission(
-                request, httpRequest, response);
-
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setCharacterEncoding("UTF-8");
-        try {
-            String json = objectMapper.writeValueAsString(formResult);
-            // Parse back to FormResult for proper typing
-            FormResult result = objectMapper.readValue(json, FormResult.class);
-            return new ResponseEntity<>(result, HttpStatus.OK);
-        } catch (JsonProcessingException e) {
-            FormResult errorResult = new FormResult();
-            errorResult.setSuccess(false);
-            errorResult.setMessage("Failed to process form submission.");
-            return new ResponseEntity<>(errorResult, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public HeadlessActionsRestController(HeadlessSearchService headlessSearchService) {
+        this.headlessSearchService = headlessSearchService;
     }
 
     // ==================== Search Endpoints ====================
@@ -193,23 +132,6 @@ public class HeadlessActionsRestController extends sk.iway.iwcm.rest.RestControl
 
     // ==================== Helpers ====================
 
-    private List<FieldError> validateFormSubmitRequest(FormSubmitRequest request) {
-        List<FieldError> errors = new ArrayList<>();
-
-        if (Tools.isEmpty(request.getFormId())
-                && Tools.isEmpty(request.getFormName())
-                && Tools.isEmpty(request.getComponentKey())) {
-            errors.add(new FieldError("formId/formName/componentKey",
-                    "One of formId, formName, or componentKey is required."));
-        }
-
-        if (request.getFields() == null || request.getFields().isEmpty()) {
-            errors.add(new FieldError("fields", "Form fields payload is required."));
-        }
-
-        return errors;
-    }
-
     private String extractSnippet(String data, String query) {
         if (Tools.isEmpty(data) || Tools.isEmpty(query)) {
             return "";
@@ -240,14 +162,6 @@ public class HeadlessActionsRestController extends sk.iway.iwcm.rest.RestControl
         }
 
         return snippet;
-    }
-
-    private ResponseEntity<FormResult> createValidationErrorResponse(List<FieldError> fieldErrors) {
-        FormResult errorResult = new FormResult();
-        errorResult.setSuccess(false);
-        errorResult.setMessage("Validation failed.");
-        errorResult.setFieldErrors(fieldErrors);
-        return new ResponseEntity<>(errorResult, HttpStatus.BAD_REQUEST);
     }
 
     private ResponseEntity<SearchResults> createSearchErrorResponse(int status, String error, String message) {

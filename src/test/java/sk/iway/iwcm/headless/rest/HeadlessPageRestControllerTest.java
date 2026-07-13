@@ -13,12 +13,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.headless.dto.ErrorResponse;
 import sk.iway.iwcm.headless.dto.FieldError;
-import sk.iway.iwcm.headless.dto.FormResult;
 import sk.iway.iwcm.headless.dto.FormSubmitRequest;
 import sk.iway.iwcm.headless.dto.PageResponse;
 import sk.iway.iwcm.headless.dto.SearchResultItem;
 import sk.iway.iwcm.headless.dto.SearchResults;
-import sk.iway.iwcm.headless.service.HeadlessFormActionService;
 import sk.iway.iwcm.headless.service.HeadlessNavigationService;
 import sk.iway.iwcm.headless.service.HeadlessPageService;
 import sk.iway.iwcm.headless.service.HeadlessSearchService;
@@ -41,9 +39,6 @@ class HeadlessPageRestControllerTest {
 
     @Mock
     private HeadlessNavigationService headlessNavigationService;
-
-    @Mock
-    private HeadlessFormActionService headlessFormActionService;
 
     @Mock
     private HeadlessSearchService headlessSearchService;
@@ -134,34 +129,6 @@ class HeadlessPageRestControllerTest {
         assertEquals(100, results.getTotalElements());
         assertEquals(5, results.getTotalPages());
         assertEquals(1, results.getItems().size());
-    }
-
-    @Test
-    void testFormResultSerialization() {
-        FormResult formResult = new FormResult();
-        formResult.setSuccess(true);
-        formResult.setMessage("Success");
-
-        assertTrue(formResult.isSuccess());
-        assertEquals("Success", formResult.getMessage());
-    }
-
-    @Test
-    void testFormResultWithFieldErrors() {
-        FormResult formResult = new FormResult();
-        formResult.setSuccess(false);
-        formResult.setMessage("Validation failed");
-
-        List<FieldError> fieldErrors = new ArrayList<>();
-        fieldErrors.add(new FieldError("email", "Invalid email address"));
-        fieldErrors.add(new FieldError("name", "Name is required"));
-        formResult.setFieldErrors(fieldErrors);
-
-        assertFalse(formResult.isSuccess());
-        assertEquals("Validation failed", formResult.getMessage());
-        assertEquals(2, formResult.getFieldErrors().size());
-        assertEquals("email", formResult.getFieldErrors().get(0).getField());
-        assertEquals("Invalid email address", formResult.getFieldErrors().get(0).getMessage());
     }
 
     @Test

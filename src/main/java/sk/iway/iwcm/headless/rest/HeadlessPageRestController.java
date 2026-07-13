@@ -28,7 +28,6 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.headless.dto.ErrorResponse;
-import sk.iway.iwcm.headless.dto.FieldError;
 import sk.iway.iwcm.headless.dto.NavigationItem;
 import sk.iway.iwcm.headless.dto.PageResponse;
 import sk.iway.iwcm.headless.service.HeadlessNavigationService;
@@ -298,12 +297,6 @@ public class HeadlessPageRestController extends sk.iway.iwcm.rest.RestController
     private ResponseEntity<ErrorResponse> createErrorResponse(int status, String error, String message) {
         ErrorResponse errorResponse = new ErrorResponse(status, error, message);
         return new ResponseEntity<>(errorResponse, org.springframework.http.HttpStatus.valueOf(status));
-    }
-
-    private ResponseEntity<ErrorResponse> createValidationErrorResponse(List<FieldError> fieldErrors) {
-        ErrorResponse errorResponse = new ErrorResponse(400, "Validation Error", "Request validation failed.");
-        errorResponse.setFieldErrors(fieldErrors);
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     private ResponseEntity<List<NavigationItem>> createNavigationErrorResponse(int status, String error, String message) {
