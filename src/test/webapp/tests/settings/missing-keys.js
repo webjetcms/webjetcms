@@ -1,10 +1,12 @@
 Feature('settings.missing-keys');
 
-var missing_key_a = "Zoznam kontaktov";
-var missing_key_b = "Upload example";
+var missing_key_a = "Prompt JSON to XML Converter";
+var missing_key_b = "components.crontab.menu";
 
 Before(({ I, login }) =>{
     login('admin');
+    I.amOnPage("/admin/modules_allinfo.jsp");
+    I.amOnPage("/admin/v9/settings/ai-assistants/");
     I.amOnPage("/admin/v9/settings/missing-keys/");
 });
 

@@ -148,7 +148,8 @@ public class GalleryDimension {
                 attr = {
                     @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before"),
                     @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "gallery.normal_size")
-                }
+                },
+                message = "gallery.normal_size.set_0_to_keep_original"
             )
         }
     )
@@ -160,7 +161,12 @@ public class GalleryDimension {
         inputType = DataTableColumnType.TEXT_NUMBER,
         title = "gallery.image_height",
         renderFormat = "dt-format-number",
-        tab = "sizes"
+        tab = "sizes",
+        editor = {
+            @DataTableColumnEditor(
+                message = "gallery.normal_size.set_0_to_keep_original"
+            )
+        }
     )
     private Integer normalHeight = 560;
     //Tab rozmery - END

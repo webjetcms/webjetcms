@@ -35,15 +35,17 @@ Scenario('Excel import', ({I, DT, DTE}) => {
     I.seeInField("#DTE_Field_phone", "+421 90");
 });
 
-Scenario('Excel import-zmazanie', ({I, DT}) => {
+Scenario('Excel import-zmazanie', ({I, DT, DTE}) => {
     I.amOnPage("/apps/contact/admin/");
     DT.filterContains("name", "test5");
     I.see("test5", "#dataTable");
     I.see("Záznamy 1 až 1 z 1");
 
+    DT.waitForLoader();
     I.click(".buttons-select-all");
+    DT.waitForLoader();
     I.click("button.buttons-remove");
-    I.waitForElement("div.DTE_Action_Remove");
+    DTE.waitForEditor("dataTable");
     I.waitForText("Naozaj chcete zmazať položku?", 5);
     I.click("Zmazať", "div.DTE_Action_Remove");
 

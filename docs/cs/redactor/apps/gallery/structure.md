@@ -45,7 +45,7 @@ Karta nabízí možnosti, které se aplikují na obrázky galerie:
 - **Přegenerovat obrázky** - pokud je možnost zvolena, nově vygeneruje velikosti všech obrázků v galerii podle aktuálních nastavení
 - **Aplikovat na všechny podsložky** - pokud je možnost zvolena, nastavení se použije i na všechny podřazené složky
 - **Velikost malého obrázku** - šířka a výška obrázku
-- **Maximální velikost velkého obrázku (pokud nezadáte, ponechá se originál)** - šířka a výška obrázku
+- **Maximální velikost velkého obrázku** - šířka a výška obrázku, pokud zadáte do obou polí hodnotu 0 zachová se originální velikost nahraného obrázku
 
 ![](dir-sizes-tab.png)
 

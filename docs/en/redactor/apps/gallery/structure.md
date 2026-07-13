@@ -45,7 +45,7 @@ The tab offers options that apply to gallery images:
 - **Regenerate images** - if selected, will regenerate the sizes of all images in the gallery according to the current settings
 - **Apply to all subfolders** - if the option is selected, the setting will also be applied to all subfolders
 - **Small image size** - width and height of the image
-- **Maximum size of large image (if not specified, original will be kept)** - width and height of image
+- **Maximum size of large image** - width and height of the image, if you enter 0 in both fields, the original size of the uploaded image will be preserved
 
 ![](dir-sizes-tab.png)
 

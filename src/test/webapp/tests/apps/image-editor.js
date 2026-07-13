@@ -27,7 +27,7 @@ Scenario('Pixabay - test image source after adding', async ({ I, DTE }) => {
     I.fillField('#search', 'letters, alphabet, animals, nature, abcd');
     I.wait(1);
     I.click('button[type="submit"]');
-    I.waitForElement('.pixabayBox .col-xs-3 a:first-child', 10);
+    I.waitForElement('.pixabayBox .col-xs-3 a:first-child', 40);
     I.wait(1);
     I.click('.pixabayBox .col-xs-3 a:first-child');
     DTE.waitForModal('imageModal');

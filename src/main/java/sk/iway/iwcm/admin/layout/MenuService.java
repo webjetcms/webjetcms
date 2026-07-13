@@ -525,7 +525,7 @@ public class MenuService {
 
             MenuBean children = (new MenuBean())
             .setGroup(rootItem.getGroup())
-            .setText(prop.getText(getLeftMenuNameKeyV9(m.getLeftMenuNameKey())))
+            .setText(prop.getText(getLeftMenuNameKeyV9(m.getLeftMenuNameKey()), false))
             .setHref(getMenuLinkV9(m))
             .setIcon(getIcon9(m));
 //                .setCustom(m.isCustom());
@@ -539,7 +539,7 @@ public class MenuService {
                 for (ModuleInfo sub : subMenus) {
                     MenuBean third = (new MenuBean())
                         .setGroup(rootItem.getGroup())
-                        .setText(prop.getText(getLeftMenuNameKeyV9(sub.getLeftMenuNameKey())))
+                        .setText(prop.getText(getLeftMenuNameKeyV9(sub.getLeftMenuNameKey()), false))
                         .setHref(getMenuLinkV9(sub));
 
                     thirdChildrens.add(third);
