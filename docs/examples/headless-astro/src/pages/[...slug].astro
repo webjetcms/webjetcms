@@ -29,6 +29,7 @@ try {
 } catch (e: unknown) {
   const err = e instanceof Error ? e : new Error(String(e));
   console.error(`[slug].astro] Error loading page at ${apiPath}:`, err);
+  // @ts-ignore - import.meta.env is valid in Astro SSR context
   if (import.meta.env.DEV) {
     throw err;
   }
