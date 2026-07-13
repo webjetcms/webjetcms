@@ -16,8 +16,8 @@ Explanation of the pictograms used:
 
 - [x] Semantic search - use AI to improve search with `RAG` (#211).
 - [ ] AI - possibility to use small local models running directly on the CPU, at least for Semantic Search (#58561).
-- [ ] `Headless` CMS - prepare REST interfaces for using WebJET CMS in `headless` mode.
-- [ ] Migration to `Spring Boot` project.
+- [ ] `Headless` CMS - prepare REST interfaces for using WebJET CMS in `headless` mode (#58597).
+- [ ] Migration to `Spring Boot` project (#58569).
 - [x] Testing - add accessibility testing using the [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) extension (#58389).
 - [ ] Rights - add the option to set read-only rights and optionally set only allowed IDs for editing.
 - [x] Forms - add option to set total attachment size for form, now can only be set per file (#58517).
@@ -25,10 +25,10 @@ Explanation of the pictograms used:
 - [x] Scripts - add option to set whether the script should also be inserted in the page editor or not (#58349).
 - [x] Forms - add a group of selection and checkbox fields `radio/checkbox` connected to the number list, similar to what we have for the `select` field (#58517).
 - [ ] Delete files associated with a web page when I delete it - but ask the user in advance if they want to delete the files. Check if they are not being used somewhere else.
-- [ ] Data deletion - add the option to delete pages and folders from the trash. Also resolve the option to run data deletion as an automated task.
-- [ ] Unused files - make it possible to get a list of unused files - they are not used anywhere on the page, not even in media, etc. There was an API for this `FileTools.getDirFileUsage(currentDir, request)`. Add as a tab to the folder properties in explorer.
+- [ ] Data deletion - add the option to delete pages and folders from the trash. Also fix the option to run data deletion as an automated task (#58617).
+- [ ] Unused files - make it possible to get a list of unused files - they are not used anywhere on the page, not even in media, etc. There was an API for this `FileTools.getDirFileUsage(currentDir, request)`. Add as a tab to folder properties in explorer (#58621).
 - [ ] Explorer - prevent working with the Document Manager folder so that files cannot be manipulated outside of the Document Manager.
-- [ ] +Explorer - add permission to upload files with accented characters (removed for `/images` and `/files` folders) (#58589).
+- [x] +Explorer - add permission to upload files with accented characters (removed for `/images` and `/files` folders) (#58589).
 - [ ] +Websites - better integrate document manager for inserting links into the page - new tab similar to Photobank for images (#58593).
 - [x] +Forms - add more detailed statistics on errors in completed forms (#58509).
 - [x] +Websites - improve the user interface for entering `/thumb` images in the editor (#58525).
@@ -44,8 +44,15 @@ Explanation of the pictograms used:
 - [ ] Datatable – edit fields of type `Date` and `Datetime` so that validation `not null` works correctly.
 - [ ] Datatable – modify the `mergovania` method of the modified entity so that values ​​of type `number` can be reset.
 - [ ] +Redirects - distinguish automatically created redirects in the database (look for the variable `editorDisableAutomaticRedirect`) from manually created ones, possibility to filter accordingly in the UI (show only manually created redirects).
-- [ ] +Redirects - add redirect cleaning function - deletes old redirects (it was originally `aaa-bbb` and then `aaa-ccc` was created so `aaa-bbb` has no meaning = it will be deleted) and checks for cyclic redirects in which it deletes the last step. Also optimize redirects `aaa-bbb-ccc` to `aaa-ccc`.
-- +Gallery - add the option to set a different way to resize a large image, e.g. Crop to fit is applied to a small image (they want it to be square) and exact width is applied to a large image (preserves aspect ratio). By default, the value will be NULL=same as for a small image.
+- [ ] +Redirects - add redirect cleaning function - deletes old redirects (it was originally `aaa-bbb` and then `aaa-ccc` was created so `aaa-bbb` has no meaning = it is deleted) and checks for cyclic redirects in which it deletes the last step. Also optimize redirects `aaa-bbb-ccc` to `aaa-ccc` (#58629).
+- +Gallery - add the option to set a different way to resize a large image, e.g. Crop to fit is applied to a small image (they want it to be square) and exact width is applied to a large image (preserves aspect ratio). By default, the value will be NULL=same as for a small image (#58633).
+- [ ] Optional fields - add the ability to select multiple items for connection to the dialer (#58637).
+- [ ] +Numbers - add the ability to define the field type for a string like we have in optional fields (#58641).
+- [ ] +Photo bank - add the option to set the file name before downloading from the photo bank, automatically set according to the search term (#58645).
+- [ ] +Background tasks - the option to manually run the task on `node`, which the task is set to, will now run on `node` where the user is logged in.
+- [ ] + Dialer, Blog, News - adjust so that the dialer or news folder type selection is on the left, similar to the gallery/websites. Then the cards don't have to be displayed all at once.
+- [ ] +Translation keys - display a tree structure of translation keys for better orientation.
+- [ ] +Configuration - add the option to set a variable only for the current node (do not save it to the database - just set it to the Constants object), add a "Set temporarily" checkbox there with an info icon that the value is set only temporarily and upon restart the value as in the database will be restored.
 
 ## 2025
 
@@ -74,18 +81,13 @@ Explanation of the pictograms used:
 - [x] Gallery - when duplicating an image, allow changing the "Folder" so that we can duplicate images to a folder other than the current one (#57885).
 - [x] Mass email - audit changes in user groups (#58249).
 - [x] File archive - convert to data tables (#57317).
-- [ ] Optional fields - add the ability to select multiple items for connection to the dialer.
 - [x] E-commerce - integration with payment gateway `GoPay` (#56609).
 - [ ] Authorization via ```SAML``` - ​​integrate the [Spring SAML](https://spring.io/projects/spring-security-saml) library for authentication against the ```ADFS/SAML``` server.
 - [x] Reservations - new app for all-day reservations (#57389).
 - [x] Applications - convert the application settings dialog in the web page editor from the old JSP to a data table (#57409).
 - [x] Mass email - optimization of recipient list creation (#57537).
-- [ ] +Background tasks - the option to manually run the task on `node`, which the task is set to, will now run on `node` where the user is logged in.
 - [ ] +Forms - disable `GET` call to `FormMail/FormMailAjax`.
 - [ ] +Electronic store - add `JSON-LD` data to the email https://schema.seznam.cz/objednavky/dokumentace/.
-- [ ] + Dialer, Blog, News - adjust so that the dialer or news folder type selection is on the left, similar to the gallery/websites. Then the cards don't have to be displayed all at once.
-- [ ] +Translation keys - display a tree structure of translation keys for better orientation.
-- [ ] +Photo bank - add the option to set the file name before downloading from the photo bank, automatically set according to the search term.
 - [ ] +Gallery - if I set the perex image to an image in the gallery, download it from the photo bank, and rename the image to an existing one in the database (if the file is deleted from the disk), a duplicate entry will be created in the `gallery` table. Moreover, the other images `o_,s_` will not be renamed. It should be remembered that theoretically I can rename any one, it should detect that I am in the gallery and rename all versions.
 - [x] +Configuration - add option to set `Hikari` via `poolman.xml/ENV` such as `spring.datasource.hikari.idle-timeout=30000, spring.datasource.hikari.max-lifetime=1800000, spring.datasource.hikari.connection-timeout=30000` (#54273-61).
 - [ ] Datatable - fix counting of marked rows after deleting them.
@@ -96,8 +98,6 @@ Explanation of the pictograms used:
 - [ ] +Datatables - add the ability to sort by multiple columns by clicking with the `SHIFT` key.
 - [ ] +Datatables - add the `hideOnDuplicate` option for cards in the editor, don't forget the `DataTableTab` class so that it can also be set in the annotation.
 - [ ] +Explorer - add the option to move to the parent folder in the Media of this page.
-- [ ] +Configuration - in case of `cluster` installation, add the option to set the variable only for the current node (do not save it to the database). Originally, this was solved by the `applyToAllClusterNodes` selection field.
-- [ ] +Numbers - add the ability to define the field type for a string like we have in optional fields.
 - [x] +Statistics - add a summary number of Views and Visits to the traffic section for an easy overview of the total traffic for the selected period (sum of the numbers in the table). It could be added `footerCallback` - ​​https://datatables.net/examples/advanced_init/footer_callback.html (#57929).
 - [x] +Structure mirroring - add option to delete `sync_id` values ​​for selected folder (recursively). To make it easy to cancel/reset synchronization. Also there is a problem that I clone `SK,DE,EN` then disable `DE` and want to have only `EN` but mirroring still applies changes to `DE` folder (#57561).
 - [ ] +Add `autoupdate` verification to GitHub tests for all supported database servers - i.e. initialize an empty database and verify all `autoupdate` and verify that they pass without error. Make it a separate pipeline.
