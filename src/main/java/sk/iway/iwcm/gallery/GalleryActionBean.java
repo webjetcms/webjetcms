@@ -302,7 +302,7 @@ public class GalleryActionBean extends WebJETActionBean
 			String smallFileUrl = file.substring(0, file.lastIndexOf('_')) + "_" + width + "_" + height + "." + extension;
 			String realPathFileSmall = Tools.getRealPath(smallFileUrl);
 
-			FileTools.downloadFile(img, file);
+			FileTools.downloadFile(img, file, null, 0, 120);
 
 			//save pixabay image URL for later use
 			if(this.img.contains(PIXABAY)) {

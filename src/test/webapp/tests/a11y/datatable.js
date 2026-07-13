@@ -37,6 +37,8 @@ Scenario('editor - with error messages', async ({ I, DT, DTE, a11y }) => {
 
 Scenario("toggle buttons", async ({ I, DT, a11y }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
+    DT.waitForLoader();
+    I.jstreeWaitForLoader();
     await a11y.check();
 });
 

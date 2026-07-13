@@ -132,7 +132,7 @@ module.exports = {
       */
      waitForModalClose(id) {
           if (typeof id == "undefined") { id = "datatableInit_modal"; }
-          I.waitForInvisible("#" + id);
+          I.waitForInvisible("#" + id, 30);
           I.wait(0.2);
      },
 

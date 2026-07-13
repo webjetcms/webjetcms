@@ -95,6 +95,7 @@
 - Logování - do [Logback MDC](https://logback.qos.ch/manual/mdc.html) doplněn atribut `sessionId` a přihlašovacího jména uživatele `userLogin` (#OSK526).
 - Aktualizovaná knihovna [Tabler Icons](https://tabler.io/icons) na verzi 3.44.0, vyřešen problém se současným používáním `Outline` a `Filled` sad (#58509).
 - Web stránky - pokud potřebujete mít prázdný první řádek v konfigurační proměnné `imageMagickCustomParams*` pro [nastavení vlastních parametrů](redactor/apps/gallery/README.md#vlastní-parametry-imagemagick) `ImageMagick` zadejte hodnotu `---`.
+- Překladové klíče - upravené auditování chybějících překladových klíčů - vyloučené auditování pokud se později testuje, zda klíč skutečně existuje (#261).
 
 ## 2026.18
 
@@ -290,6 +291,10 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 
 > Opravná verze původní verze 2026.0.
 
+## 2026.0.28
+
+> Opravná verze původní verze 2026.0.
+
 !> Upozornění: po aktualizaci zkontrolujte funkčnost generování `/thumb` obrázků a [nastavení povolených rozměrů](frontend/thumb-servlet/README.md#omezení).
 
 - Web stránky - zrušeny [plánované verze](redactor/webpages/history.md) jsou v historii zobrazeny přeškrtnutým písmem a nelze je smazat (#58573).
@@ -298,8 +303,13 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 - Generátor primárních klíčů - doplněna automatická oprava jmen tabulek a názvů sloupce s primární hodnotou (#246).
 - Bezpečnost - opravené chyby Local File Inclusion, kontrola nahrávaných souborů a RCE. Děkujeme Josef Korbel (Citadelo) za nahlášení těchto zranitelností (#252).
 - Bezpečnost - přidána [kontrola povolených rozměrů](frontend/thumb-servlet/README.md#omezení) generování `/thumb` obrázků, první měsíc v režimu učení a následně po restartu WebJETu v režimu kontroly (#259).
+- Bezpečnost - aktualizované knihovny `jackson-annotations` (2.22), `jackson-databind` (2.22.0), `logback-core/classic` (1.5.37) a `tink` (1.22.0). Z důvodu zpětné kompatibility v opravné verzi nebyla realizována migrace `Apache HttpClient` z 4.x na 5.x, ale WebJET se typicky připojuje na bezpečné/vnitřní API/domény (#264).
+- Aktualizované přemosťovací knihovny `slf4j-api`, `jcl-over-slf4j` a `log4j-over-slf4j` na verzi `2.0.18`. Zároveň jsou v `dependency-check` potlačeny falešně hlášené zranitelnosti `CVE-2020-9493` a `CVE-2022-23307`, které se týkají původního `Apache log4j 1.2.x`, ne přemostění `log4j-over-slf4j` (#264).
+- Aktualizovaná knihovna `swagger-ui` na verzi 5.32.8 (#264).
 - JPA - opraveno vícenásobné ukončení databázové transakce při importu přesměrování (#256).
 - `/thumb` - ​​opraveno generování obrázku u `ip=1/2` a nulové velikosti `w/h` parametru (#58317-10).
+- Hromadné úpravy - upravené hledání/nahrazení více řádkového HTML kódu v `replaceall` skriptu (#262).
+- Cluster - upravené nastavení CSRF tokenů v `session` tak, aby se změna distribuovala i v `redis` (#265).
 
 ## 2026.0.25
 
