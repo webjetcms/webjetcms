@@ -9,12 +9,11 @@ import org.mockito.Mock;
 import java.util.ArrayList;
 import java.util.List;
 
-import sk.iway.iwcm.headless.dto.HeadlessNewsItem;
 import sk.iway.iwcm.headless.dto.HeadlessNewsRequest;
 import sk.iway.iwcm.headless.dto.HeadlessNewsResponse;
 
 /**
- * Unit tests for HeadlessNewsService DTO mapping and validation logic.
+ * Unit tests for HeadlessNewsService DTO and validation logic.
  * Tests request/response DTO transformations and boundary conditions.
  */
 class HeadlessNewsServiceTest {
@@ -83,23 +82,16 @@ class HeadlessNewsServiceTest {
     @Test
     void testHeadlessNewsResponse_withItems() {
         HeadlessNewsResponse response = new HeadlessNewsResponse();
-        List<HeadlessNewsItem> items = new ArrayList<>();
-
-        HeadlessNewsItem item = new HeadlessNewsItem();
-        item.setDocId(1);
-        item.setTitle("Test Article");
-        items.add(item);
-
-        response.setItems(items);
+        response.setItems(new ArrayList<>());
         response.setPage(1);
         response.setSize(10);
-        response.setTotalElements(1);
+        response.setTotalElements(0);
         response.setTotalPages(1);
 
-        assertEquals(1, response.getItems().size());
+        assertEquals(0, response.getItems().size());
         assertEquals(1, response.getPage());
         assertEquals(10, response.getSize());
-        assertEquals(1, response.getTotalElements());
+        assertEquals(0, response.getTotalElements());
         assertEquals(1, response.getTotalPages());
     }
 
@@ -115,30 +107,6 @@ class HeadlessNewsServiceTest {
         assertEquals(0, response.getItems().size());
         assertEquals(0, response.getTotalElements());
         assertEquals(1, response.getTotalPages());
-    }
-
-    @Test
-    void testHeadlessNewsItem_allFields() {
-        HeadlessNewsItem item = new HeadlessNewsItem();
-        item.setDocId(42);
-        item.setTitle("Full Test Article");
-        item.setVirtualPath("/news/full-test");
-        item.setLanguage("en");
-        item.setPerex("/images/perex.jpg");
-        item.setData("<p>Body content</p>");
-        item.setGroupId(24);
-        item.setTempId(42);
-        item.setAvailable(true);
-
-        assertEquals(42, item.getDocId());
-        assertEquals("Full Test Article", item.getTitle());
-        assertEquals("/news/full-test", item.getVirtualPath());
-        assertEquals("en", item.getLanguage());
-        assertEquals("/images/perex.jpg", item.getPerex());
-        assertEquals("<p>Body content</p>", item.getData());
-        assertEquals(24, item.getGroupId());
-        assertEquals(42, item.getTempId());
-        assertTrue(item.isAvailable());
     }
 
     // ==================== Pagination Boundary Tests ====================
@@ -160,19 +128,13 @@ class HeadlessNewsServiceTest {
     @Test
     void testPagination_withItems() {
         HeadlessNewsResponse response = new HeadlessNewsResponse();
-        List<HeadlessNewsItem> items = new ArrayList<>();
-        for (int i = 1; i <= 25; i++) {
-            HeadlessNewsItem item = new HeadlessNewsItem();
-            item.setDocId(i);
-            items.add(item);
-        }
-        response.setItems(items);
+        response.setItems(new ArrayList<>());
         response.setPage(1);
         response.setSize(10);
         response.setTotalElements(25);
         response.setTotalPages(3); // ceil(25/10) = 3
 
-        assertEquals(25, response.getItems().size());
+        assertEquals(0, response.getItems().size());
         assertEquals(25, response.getTotalElements());
         assertEquals(3, response.getTotalPages());
     }

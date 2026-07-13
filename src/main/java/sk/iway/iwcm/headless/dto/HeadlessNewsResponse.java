@@ -4,14 +4,16 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.List;
 
+import sk.iway.iwcm.doc.DocDetails;
+
 /**
  * Paginated response envelope for the headless news listing endpoint.
- * Contains news items and pagination metadata.
+ * Contains news items (DocDetails) and pagination metadata.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class HeadlessNewsResponse {
 
-    private List<HeadlessNewsItem> items;
+    private List<DocDetails> items;
     private int page;
     private int size;
     private long totalElements;
@@ -20,11 +22,11 @@ public class HeadlessNewsResponse {
     public HeadlessNewsResponse() {
     }
 
-    public List<HeadlessNewsItem> getItems() {
+    public List<DocDetails> getItems() {
         return items;
     }
 
-    public void setItems(List<HeadlessNewsItem> items) {
+    public void setItems(List<DocDetails> items) {
         this.items = items;
     }
 

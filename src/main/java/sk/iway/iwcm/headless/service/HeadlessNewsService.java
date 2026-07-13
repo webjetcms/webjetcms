@@ -15,7 +15,6 @@ import sk.iway.iwcm.components.news.criteria.DatabaseCriteria;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
-import sk.iway.iwcm.headless.dto.HeadlessNewsItem;
 import sk.iway.iwcm.headless.dto.HeadlessNewsRequest;
 import sk.iway.iwcm.headless.dto.HeadlessNewsResponse;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -25,6 +24,8 @@ import sk.iway.iwcm.common.CloudToolsForCore;
  * Translates HeadlessNewsRequest parameters to NewsQuery behavior,
  * preserving core NewsActionBean semantics for ordering, publish filtering,
  * group filtering, paging, and offset.
+ * Returns DocDetails directly — no DTO projection — so all document
+ * properties are available to the consumer.
  */
 @Service("HeadlessNewsService")
 public class HeadlessNewsService {
@@ -39,27 +40,25 @@ public class HeadlessNewsService {
         // Build and execute NewsQuery
         NewsQuery query = buildNewsQuery(request);
 
-        // Get the raw news list from NewsQuery
+        // Get the raw news list from NewsQuery — already DocDetails
         List<DocDetails> docDetailsList = query.getNewsList();
 
-        // Build response items from DocDetails
-        List<HeadlessNewsItem> items = buildNewsItems(docDetailsList, request);
-
-        // Build pagination metadata
+        // Build response — no DTO mapping, use DocDetails directly
         HeadlessNewsResponse response = new HeadlessNewsResponse();
-        response.setItems(items);
+        response.setItems(docDetailsList);
 
+        int count = docDetailsList.size();
         if (request.getPaging() != null && request.getPaging()) {
             response.setPage(request.getOffset() / Math.max(request.getPageSize(), 1) + 1);
             response.setSize(request.getPageSize());
-            response.setTotalElements(items.size());
-            response.setTotalPages((int) Math.ceil((double) items.size() / Math.max(request.getPageSize(), 1)));
+            response.setTotalElements(count);
+            response.setTotalPages((int) Math.ceil((double) count / Math.max(request.getPageSize(), 1)));
         } else {
             // No paging: return all results as a single page
             response.setPage(1);
             response.setSize(request.getPageSize());
-            response.setTotalElements(items.size());
-            response.setTotalPages(items.isEmpty() ? 1 : 1);
+            response.setTotalElements(count);
+            response.setTotalPages(count == 0 ? 1 : 1);
         }
 
         return response;
@@ -237,36 +236,5 @@ public class HeadlessNewsService {
                 query.setInitialOffset(offset);
             }
         }
-    }
-
-    /**
-     * Converts DocDetails list to HeadlessNewsItem list.
-     */
-    private List<HeadlessNewsItem> buildNewsItems(List<DocDetails> docDetailsList, HeadlessNewsRequest request) {
-        List<HeadlessNewsItem> items = new ArrayList<>();
-
-        for (DocDetails doc : docDetailsList) {
-            HeadlessNewsItem item = new HeadlessNewsItem();
-            item.setDocId(doc.getDocId());
-            item.setTitle(doc.getTitle());
-            item.setVirtualPath(doc.getVirtualPath());
-
-            // Language from request parameter or default
-            // (no lng parameter in request, so use default)
-            item.setLanguage(sk.iway.iwcm.Constants.getString("defaultLanguage"));
-
-            item.setPerex(doc.getPerexImage());
-            item.setData(doc.getData());
-            item.setPublishStart(doc.getPublishStartDate());
-            item.setPublishEnd(doc.getPublishEndDate());
-            item.setGroupId(doc.getGroupId());
-            item.setTempId(doc.getTempId());
-            item.setAvailable(doc.isAvailable());
-            item.setDateCreated(doc.getDateCreated());
-
-            items.add(item);
-        }
-
-        return items;
     }
 }

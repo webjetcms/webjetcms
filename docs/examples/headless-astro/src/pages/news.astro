@@ -36,7 +36,12 @@ try {
     Astro.response.headers.append('Set-Cookie', setCookie);
   }
 } catch (e: unknown) {
-  newsError = e instanceof Error ? e.message : 'Failed to load news';
+  const err = e instanceof Error ? e : new Error(String(e));
+  console.error('[news.astro] Error loading news:', err);
+  if (import.meta.env.DEV) {
+    throw err;
+  }
+  newsError = err.message;
 }
 
 const navResult = await getNavigation(Astro.request, '/', undefined, 2);
@@ -47,6 +52,18 @@ const navSetCookie = navResult.headers.get('set-cookie');
 if (navSetCookie) {
   Astro.response.headers.append('Set-Cookie', navSetCookie);
 }
+
+// Helper: build tag spans from perexGroup
+function renderTags(perexGroup: number[] | undefined) {
+  if (!perexGroup || !Array.isArray(perexGroup)) return null;
+  const tags: { class: string; text: string }[] = [];
+  for (const pg of perexGroup) {
+    if (pg === 1) tags.push({ class: 'tag c1', text: 'Investície' });
+    if (pg === 2) tags.push({ class: 'tag c2', text: 'Podnikanie' });
+  }
+  if (tags.length === 0) return null;
+  //return <>{tags.map(t => <span class={t.class}>{t.text}</span>)}</>;
+}
 ---
 
 <Layout
@@ -54,36 +71,44 @@ if (navSetCookie) {
   navItems={nav}
   currentPath="/news"
 >
-  <div class="news-header">
-    <h1>News</h1>
-    <p>Server-side rendered news listing from WebJET CMS headless API.</p>
-  </div>
+  <section class="md-news-subpage">
+    <div class="container">
+      {newsError ? (
+        <div class="error"><strong>Error:</strong> {newsError}</div>
+      ) : newsResult.items && newsResult.items.length > 0 ? (
+        newsResult.items.map((item: any) => {
+          // Thumbnail URL from perexImageNormal (DocDetails property)
+          const thumbSrc = item.perexImage
+            ? `/thumb${item.perexImage}?w=400&h=300&ip=6`
+            : '';
 
-  {newsError ? (
-    <div class="error"><strong>Error:</strong> {newsError}</div>
-  ) : newsResult.items && newsResult.items.length > 0 ? (
-    <>
-      <div class="news-list">
-        {newsResult.items.map((item: any) => (
-          <div class="news-item">
-            <a href={item.virtualPath}>{item.title}</a>
-            <div class="news-meta">
-              {item.virtualPath && <span>{item.virtualPath}</span>}
-              {item.language && <span> &middot; {item.language}</span>}
+          // perexPre text (DocDetails property)
+          const perexText = item.htmlData || '';
+
+          return (
+            <div class="row justify-content-md-center">
+              <div class="col-sm-2">
+                {thumbSrc ? (
+                  <a href={item.virtualPath}>
+                    <img src={thumbSrc} class="img-responsive" alt={item.title} />
+                  </a>
+                ) : (
+                  <a href={item.virtualPath}>{item.title}</a>
+                )}
+                {renderTags(item.perexGroups)}
+              </div>
+              <div class="col-sm-6">
+                <h3><a href={item.virtualPath}>{item.title}</a></h3>
+                <p>{perexText}</p>
+              </div>
             </div>
-            {item.perex && <div class="news-perex">{item.perex}</div>}
-          </div>
-        ))}
-      </div>
-      {newsResult.totalPages > 1 && (
-        <div class="pagination">
-          <span class="current">Page {newsResult.page} of {newsResult.totalPages}</span>
+          );
+        })
+      ) : (
+        <div class="no-results">
+          <p>No news items found for the configured group.</p>
         </div>
       )}
-    </>
-  ) : (
-    <div class="no-results">
-      <p>No news items found for the configured group.</p>
     </div>
-  )}
+  </section>
 </Layout>

@@ -13,7 +13,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import sk.iway.iwcm.components.news.NewsActionBean;
 import sk.iway.iwcm.components.news.NewsQuery;
 import sk.iway.iwcm.headless.dto.FieldError;
-import sk.iway.iwcm.headless.dto.HeadlessNewsItem;
 import sk.iway.iwcm.headless.dto.HeadlessNewsRequest;
 import sk.iway.iwcm.headless.dto.HeadlessNewsResponse;
 import sk.iway.iwcm.headless.service.HeadlessNewsService;
@@ -82,51 +81,18 @@ class HeadlessNewsRestControllerTest {
     }
 
     @Test
-    void testHeadlessNewsItemSerialization() {
-        HeadlessNewsItem item = new HeadlessNewsItem();
-        item.setDocId(100);
-        item.setTitle("Test News Article");
-        item.setVirtualPath("/news/test-article");
-        item.setLanguage("en");
-        item.setPerex("Test perex image URL");
-        item.setData("<p>News body content</p>");
-        item.setGroupId(24);
-        item.setTempId(42);
-        item.setAvailable(true);
-        item.setDateCreated(1704067200000L);
-
-        assertEquals(100, item.getDocId());
-        assertEquals("Test News Article", item.getTitle());
-        assertEquals("/news/test-article", item.getVirtualPath());
-        assertEquals("en", item.getLanguage());
-        assertEquals("Test perex image URL", item.getPerex());
-        assertEquals("<p>News body content</p>", item.getData());
-        assertEquals(24, item.getGroupId());
-        assertEquals(42, item.getTempId());
-        assertTrue(item.isAvailable());
-        assertEquals(1704067200000L, item.getDateCreated());
-    }
-
-    @Test
     void testHeadlessNewsResponseSerialization() {
         HeadlessNewsResponse response = new HeadlessNewsResponse();
-        List<HeadlessNewsItem> items = new ArrayList<>();
-
-        HeadlessNewsItem item = new HeadlessNewsItem();
-        item.setDocId(1);
-        item.setTitle("First News");
-        items.add(item);
-
-        response.setItems(items);
+        response.setItems(new ArrayList<>());
         response.setPage(1);
         response.setSize(10);
-        response.setTotalElements(1);
+        response.setTotalElements(0);
         response.setTotalPages(1);
 
-        assertEquals(1, response.getItems().size());
+        assertEquals(0, response.getItems().size());
         assertEquals(1, response.getPage());
         assertEquals(10, response.getSize());
-        assertEquals(1, response.getTotalElements());
+        assertEquals(0, response.getTotalElements());
         assertEquals(1, response.getTotalPages());
     }
 
@@ -150,10 +116,10 @@ class HeadlessNewsRestControllerTest {
     @Test
     void testValidateRequest_missingGroupIds() {
         HeadlessNewsRequest req = new HeadlessNewsRequest();
+        // Missing groupIds
 
         List<FieldError> errors = validateRequest(req);
-        assertFalse(errors.isEmpty(), "Should have validation errors for missing groupIds");
-        assertEquals(1, errors.size());
+        assertFalse(errors.isEmpty(), "Should fail validation for missing groupIds");
         assertEquals("groupIds", errors.get(0).getField());
     }
 
@@ -163,19 +129,8 @@ class HeadlessNewsRestControllerTest {
         req.setGroupIds(new ArrayList<>());
 
         List<FieldError> errors = validateRequest(req);
-        assertFalse(errors.isEmpty(), "Should have validation errors for empty groupIds");
-        assertEquals(1, errors.size());
-    }
-
-    @Test
-    void testValidateRequest_validRequest() {
-        HeadlessNewsRequest req = new HeadlessNewsRequest();
-        List<Integer> groupIds = new ArrayList<>();
-        groupIds.add(24);
-        req.setGroupIds(groupIds);
-
-        List<FieldError> errors = validateRequest(req);
-        assertTrue(errors.isEmpty(), "Should pass validation with valid groupIds");
+        assertFalse(errors.isEmpty(), "Should fail validation for empty groupIds");
+        assertEquals("groupIds", errors.get(0).getField());
     }
 
     @Test

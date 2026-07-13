@@ -8,6 +8,12 @@ const apiPath = pathFromQuery
   ? (pathFromQuery.startsWith('/') ? pathFromQuery : `/${pathFromQuery}`)
   : pathFromUrl;
 
+// Reject static assets (files with extensions) and non-page paths
+// Only allow paths ending with / or .html
+if (pathFromUrl !== '/' && !pathFromUrl.endsWith('/') && !pathFromUrl.endsWith('.html')) {
+  return new Response('Not found', { status: 404 });
+}
+
 let page = null;
 let error = '';
 
@@ -21,7 +27,12 @@ try {
     Astro.response.headers.append('Set-Cookie', setCookie);
   }
 } catch (e: unknown) {
-  error = e instanceof Error ? e.message : 'Unknown error';
+  const err = e instanceof Error ? e : new Error(String(e));
+  console.error(`[slug].astro] Error loading page at ${apiPath}:`, err);
+  if (import.meta.env.DEV) {
+    throw err;
+  }
+  error = err.message;
 }
 
 const navResult = await getNavigation(Astro.request, apiPath, undefined, 2);
