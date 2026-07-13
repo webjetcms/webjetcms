@@ -116,6 +116,7 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document, TempMail}) => {
             I.say('Test valid price value - MAX');
                 payment(I, DTE, 100000, false, false, true);
             I.say("Create new payment");
+                DT.waitForLoader();
                 payment(I, DTE, 100, false, false, false);
 
             DT.filterSelect("confirmed", "Áno");

@@ -195,13 +195,12 @@ function openTimedReservationDate(I, dateValue) {
 
 function fillDateInput(I, selector, dateValue) {
     let browserLang = process.env.CODECEPT_BROWSER_LANG || "sk";
-    //const originalDateValue = dateValue;
 
     //for en lang we must convert date to EN format MM/DD/YYYY
     if (browserLang === "en") {
         const [year, month, day] = dateValue.split("-");
-        dateValue = `${month}/${day}/${year}`;
-        I.fillField(selector, dateValue);
+        let dateValueEn = `${month}/${day}/${year}`;
+        I.fillField(selector, dateValueEn);
     } else {
         I.fillField(selector, dateValue.split("-").reverse().join("-"));
     }
