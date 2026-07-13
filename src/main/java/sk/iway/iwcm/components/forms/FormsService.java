@@ -294,7 +294,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 
                 for(FormItemEntity fie : formItemsRepository.findAllByFormNameAndDomainId(fe.getFormName(), fe.getDomainId())) {
                     StringBuilder itemName = new StringBuilder(MultistepFormsService.getFieldName(fie, prop));
-                    if(stepNames != null && stepNames.size() > 1) itemName.append(" (").append(stepNames.get(fie.getStepId().longValue())).append(")");
+                    if(stepNames != null && stepNames.size() > 1) itemName.append(" (").append(stepNames.get(fie.getStepId())).append(")");
                     itemNames.put(fie.getItemFormId(), itemName.toString());
                 }
             }
@@ -580,9 +580,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
             int domainId = CloudToolsForCore.getDomainId();
             if (domainId != entityDb.getDomainId()) return false;
 
-            int count = formsRepository.countAllByFormNameAndDomainId(formName, domainId);
-
-            if (entityDb.getCreateDate()==null || count <= 2) {
+            if (entityDb.getCreateDate() == null) {
                 //zmaz vsetky podla mena formu, ak su uz len 2 zaznamy (cize riadiaci + jeden form) zmaz tiez vsetko
                 formsRepository.deleteByFormNameAndDomainId(formName, domainId);
                 // Ak ma, zmaz aj steps/items (multistep forms)
@@ -591,6 +589,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                 // DO NOT DELETE maybe form is still in webpage and we just deleted form records
                 // formSettingsRepository.deleteByFormNameAndDomainId(formName, domainId);
             } else {
+                // remove form filled record
                 formsRepository.deleteById(id);
             }
 

@@ -122,8 +122,7 @@ public class FormMailService {
 	 * @param request    current HTTP request used for context and headers
 	 */
     public void sendMail(FormsEntity form, String recipients, String subject, FormFiles formFiles, boolean attachFiles, String cssData, StringBuilder htmlData, HttpServletRequest request) throws SaveFormException{
-		String lng = PageLng.getUserLng(request);
-		Prop prop = Prop.getInstance(lng);
+		Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
 		FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(form.getFormName(), CloudToolsForCore.getDomainId());
 
         String meno = null;

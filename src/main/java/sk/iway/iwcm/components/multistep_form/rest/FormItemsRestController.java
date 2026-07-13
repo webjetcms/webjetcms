@@ -74,11 +74,11 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         DatatablePageImpl<FormItemEntity> page = new DatatablePageImpl<>(super.getAllItemsIncludeSpecSearch(new FormItemEntity(), pageable));
 
         //
-        Integer lastStep = null;
+        Long lastStep = null;
         boolean even = false;
         for(FormItemEntity item : page.getContent()) {
             if(lastStep == null) lastStep = item.getStepId();
-            else if(lastStep.intValue() != item.getStepId().intValue()) {
+            else if(!lastStep.equals(item.getStepId())) {
                 lastStep = item.getStepId();
                 even = !even;
             }
@@ -171,7 +171,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
             entity.setShowOtherCount(true);
 
             int stepId = Tools.getIntValue(getRequest().getParameter("stepId"), -1);
-            if(stepId != -1) entity.setStepId(stepId);
+            if(stepId != -1) entity.setStepId( Long.valueOf(stepId) );
         } else {
             entity = formItemsRepository.getReferenceById(id);
         }

@@ -49,7 +49,7 @@ public class FormItemEntity extends BaseEditorFields {
 
     @Column(name = "step_id")
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.form_items.step", hidden = true, tab = "advanced")
-    private Integer stepId;
+    private Long stepId;
 
     @Column(name = "sort_priority")
     @DataTableColumn(inputType = DataTableColumnType.ROW_REORDER, title = "", className = "icon-only", filter = false, tab = "advanced")
@@ -67,6 +67,10 @@ public class FormItemEntity extends BaseEditorFields {
     @Transient
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.form_items.item_preview", hidden = true, hiddenEditor = true, className = "allow-html")
     private transient String generatedItem;
+
+    @Column(name = "item_form_id")
+    @DataTableColumn(inputType = DataTableColumnType.DISABLED, title = "components.form_items.item_form_id", className = "ai-off", hidden = true, tab = "basic")
+    private String itemFormId;
 
     @Column(name = "field_type")
     @NotBlank
@@ -149,6 +153,10 @@ public class FormItemEntity extends BaseEditorFields {
     @Column(name = "regex_validation")
     private String regexValidation;
 
+    @Column(name = "custom_error")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.form_items.custom_error", hidden = true, tab = "advanced")
+    private String customError;
+
     @Transient
     @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title="&nbsp;",
         tab = "visibilityConditions", className = "hide-on-create",
@@ -180,10 +188,6 @@ public class FormItemEntity extends BaseEditorFields {
         )}
     )
     private List<FormItemsConditionEntity> requirementConditions;
-
-    @Column(name = "item_form_id")
-    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
-    private String itemFormId;
 
     @Column(name = "error_count")
     private Integer errorCount;

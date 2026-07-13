@@ -24,6 +24,7 @@ import sk.iway.iwcm.SpamProtection;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.SearchTools;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.forms.FormsEntity;
 import sk.iway.iwcm.components.forms.FormsRepository;
@@ -33,9 +34,6 @@ import sk.iway.iwcm.components.multistep_form.support.SaveFormException;
 import sk.iway.iwcm.components.upload.XhrFileUploadServlet;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
-import sk.iway.iwcm.doc.GroupDetails;
-import sk.iway.iwcm.doc.TemplateDetails;
-import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -44,6 +42,7 @@ import sk.iway.iwcm.tags.WriteTag;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.utils.Pair;
 
 @Service
 public class SaveFormService {
@@ -89,7 +88,7 @@ public class SaveFormService {
      */
     public final void saveFormAnswers(String formName, FormSettingsEntity formSettings, Integer iLastDocId, HttpServletRequest request) throws SaveFormException, IOException {
 
-        Prop prop = Prop.getInstance(request);
+        Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
         String forwardFail = null;
         if (Tools.isNotEmpty(formSettings.getForwardFail())) forwardFail = formSettings.getForwardFail();
 
@@ -121,7 +120,7 @@ public class SaveFormService {
             if(Tools.isNotEmpty(forwardFail)) throw new SaveFormException(sfe.getMessage(), false, forwardFail);
             else throw sfe;
         } catch (Exception ex) {
-            if(Tools.isNotEmpty(forwardFail)) throw new SaveFormException(Prop.getInstance(request).getText("datatable.error.unknown"), ex.getCause(), false, forwardFail);
+            if(Tools.isNotEmpty(forwardFail)) throw new SaveFormException(Prop.getInstance( PageLng.getUserLng(request) ).getText("datatable.error.unknown"), ex.getCause(), false, forwardFail);
             else throw ex;
         }
     }
@@ -186,22 +185,6 @@ public class SaveFormService {
         if(Tools.isNotEmpty(referer)) form.setReferer(DB.prepareString(referer, 255));
         else Logger.info(this.getClass(), "Cannot determine referer URL for saved form, destinationUrl is empty. formName=" + formName + " docId=" + docId);
 
-        String lng = null;
-        DocDetails doc = DocDB.getInstance().getBasicDocDetails(docId, false);
-        if(doc != null) {
-            GroupDetails group = doc.getGroup();
-            if(group != null) lng = group.getLng();
-
-            if(Tools.isEmpty(lng)) {
-                TemplateDetails temp = TemplatesDB.getInstance().getTemplate(doc.getTempId());
-                if(temp != null) lng = temp.getLng();
-            }
-        }
-        if (Tools.isEmpty(lng)) lng = PageLng.getUserLng(request);
-
-        if(Tools.isNotEmpty(lng)) form.setLanguage(lng);
-        else Logger.info(this.getClass(), "Cannot determine language used on the page where the form is embedded. formName=" + formName + " docId=" + docId);
-
         // For file save we need formId ... sooo save it as it is and then use id
         form.setData("-");
         form = formsRepository.save(form);
@@ -212,8 +195,53 @@ public class SaveFormService {
         FormFiles formFiles = new FormFiles(); // in form files we store all needed files, files names etc.
         setFormDataBeforeSave(form, formName, request, formFiles, formSettings);
 
-        // set html
-        formHtmlHandler.setFormHtml(form, request, docId);
+        boolean forceTextPlain = Tools.isTrue(formSettings.getForceTextPlain());
+        String emailHtml;
+        String emailCss;
+        String pdfVersionHtml;
+
+        if (formSettings.getUseFormMailDocId() != null && formSettings.getUseFormMailDocId() > 0) {
+            // Use HTML from the specified page as mail template and populate form values into it
+            int mailDocId = formSettings.getUseFormMailDocId();
+            DocDetails mailDoc = DocDB.getInstance().getDoc(mailDocId, -1, false);
+            if (mailDoc != null) {
+                String pageHtml = FormMailAction.getCroppedHTML(mailDoc.getData());
+                StringBuilder formHtml = MultistepFormsService.updateFormValues(formName, request, new StringBuilder(pageHtml));
+
+                Pair<String, String> cssPair = FormHtmlHandler.getCssDataLink(mailDocId, forceTextPlain);
+                emailCss = cssPair != null ? cssPair.first : "";
+                String cssLink = cssPair != null ? cssPair.second : "";
+
+                if (forceTextPlain || Constants.getBoolean("formMailSendPlainText")) {
+                    emailHtml = SearchTools.htmlToPlain(formHtml.toString());
+                } else {
+                    emailHtml = SearchTools.removeCommands(formHtml.toString());
+                }
+
+                pdfVersionHtml = FormHtmlHandler.appendStyle(emailHtml, emailCss, null, forceTextPlain);
+
+                // set form.html for DB storage
+                CryptoFactory cryptoFactory = new CryptoFactory();
+                String publicKey = formSettings.getEncryptKey();
+                String htmlWithStyle = FormHtmlHandler.appendStyle(emailHtml, cssLink, null, forceTextPlain);
+                if (Tools.isNotEmpty(publicKey))
+                    form.setHtml(cryptoFactory.encrypt(htmlWithStyle, publicKey));
+                else
+                    form.setHtml(htmlWithStyle);
+            } else {
+                // fallback to normal rendering if doc not found
+                formHtmlHandler.setFormHtml(form, request, docId);
+                emailHtml = formHtmlHandler.getFormHtmlBeforeCss();
+                emailCss = formHtmlHandler.getCssDataPair() != null ? formHtmlHandler.getCssDataPair().getFirst() : "";
+                pdfVersionHtml = formHtmlHandler.getFormPdfVersion();
+            }
+        } else {
+            // set html using standard multistep form rendering
+            formHtmlHandler.setFormHtml(form, request, docId);
+            emailHtml = formHtmlHandler.getFormHtmlBeforeCss();
+            emailCss = formHtmlHandler.getCssDataPair() != null ? formHtmlHandler.getCssDataPair().getFirst() : "";
+            pdfVersionHtml = formHtmlHandler.getFormPdfVersion();
+        }
 
         form = formsRepository.save(form);
 
@@ -222,7 +250,7 @@ public class SaveFormService {
         // NEW PART
         String pdfUrl = "";
         if(Tools.isTrue(formSettings.getIsPdf())) {
-			pdfUrl = FormMailAction.saveFormAsPdf(formHtmlHandler.getFormPdfVersion(), form.getId().intValue(), request);
+			pdfUrl = FormMailAction.saveFormAsPdf(pdfVersionHtml, form.getId().intValue(), request);
 			IwcmFile pdfFile =  new IwcmFile(pdfUrl);
 			formFiles.getFileNames().put(pdfFile.getName(), pdfFile.getName());
 			formFiles.getFileNamesSendLater().append(FormMailAction.FORM_FILE_DIR).append(pdfFile.getName()).append(";").append(pdfFile.getName());
@@ -249,7 +277,7 @@ public class SaveFormService {
         }
 
         // SEND MAIL
-        formMailService.sendMail(form, recipients, subject, formFiles, attachFiles, formHtmlHandler.getCssDataPair().getFirst(), new StringBuilder(formHtmlHandler.getFormHtmlBeforeCss()), request);
+        formMailService.sendMail(form, recipients, subject, formFiles, attachFiles, emailCss, new StringBuilder(emailHtml), request);
 
         return null;
     }
@@ -274,7 +302,7 @@ public class SaveFormService {
 
         CryptoFactory cryptoFactory = new CryptoFactory();
 		String publicKey = formSettings.getEncryptKey();
-        Prop prop = Prop.getInstance(request);
+        Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
 
         //Fields in order
         for(FormItemEntity stepItem : MultistepFormsService.getFormItemsForValidation(formName)) {

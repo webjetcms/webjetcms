@@ -198,6 +198,8 @@
                     const hiddenFieldsByType = formItemsDataTable.DATA.jsonOptions.hiddenFieldsByType;
                     const inputTypeByFieldType = formItemsDataTable.DATA.jsonOptions.inputType;
 
+                    let itsCreateAction = false;
+
                     const editDialog = $("div.DTE.DTE_Action_Edit");
                     if(editDialog != undefined && editDialog != null && editDialog.length) {
                         // Its edit
@@ -218,6 +220,12 @@
                                 }
                             }
                         });
+
+                        //
+                        itsCreateAction = false;
+                    } else {
+                        console.log("Its create, not edit, so no need to hide tabs");
+                        itsCreateAction = true;
                     }
 
                     let fieldsToHide = [];
@@ -235,8 +243,16 @@
                         .split(',')
                         .map(s => s.trim());
 
+                    const hiddenOnCreate = hiddenFieldsByType
+                        .find(field => field.value === "hiddenOnCreate")
+                        ?.label
+                        .split(',')
+                        .map(s => s.trim());
+
                     formItemsDataTable.EDITOR.fields().forEach(function(fieldName) {
                         if(fieldsToHide.includes(fieldName)) {
+                            formItemsDataTable.EDITOR.field(fieldName).hide();
+                        } else if(itsCreateAction && hiddenOnCreate.includes(fieldName)) {
                             formItemsDataTable.EDITOR.field(fieldName).hide();
                         } else if(allwaysHidden.includes(fieldName) == false) {
                             formItemsDataTable.EDITOR.field(fieldName).show();
@@ -395,7 +411,7 @@
         }
 
         const stepId = selectedStep[0].getAttribute("id");
-        const getStepUrl = `/admin/rest/form-steps/get-step?form-name=${encodeURIComponent(urlFormName)}&step-id=${encodeURIComponent(stepId)}`;
+        const getStepUrl = `/admin/rest/form-steps/get-step?form-name=${encodeURIComponent(urlFormName)}&step-id=${encodeURIComponent(stepId)}&language=${encodeURIComponent(window.userLng)}`;
         try {
             const r = await fetch(getStepUrl, { method: 'GET', headers: { 'Accept': 'text/html,application/json', "X-CSRF-Token": window.csrfToken } });
             if (!r.ok) {

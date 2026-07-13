@@ -14,6 +14,7 @@ export class MultistepForm {
      * @param {string} [options.formName] - Form identifier used by the backend.
      * @param {string|number} [options.stepId] - Initial step identifier to load.
      * @param {string} [options.csrf] - CSRF token added to POST requests.
+        * @param {string} [options.language] - Language code appended to backend requests.
      */
     constructor(options = {}) {
         // Preferred container selector; defaults to body > article > div.container
@@ -22,6 +23,7 @@ export class MultistepForm {
         this.formName = options.formName || '';
         this.stepId = options.stepId || '';
         this.csrf = options.csrf || '';
+        this.language = options.language || '';
 
         // Localized messages provided by the page (preferred), with safe fallbacks
         this.successMessage = options.successMessage || 'Operation completed successfully.';
@@ -98,7 +100,7 @@ export class MultistepForm {
             console.warn('Missing formName or stepId; skipping load.');
             return;
         }
-        const url = `/rest/multistep-form/get-step?form-name=${encodeURIComponent(formName)}&step-id=${encodeURIComponent(stepId)}`;
+        const url = `/rest/multistep-form/get-step?form-name=${encodeURIComponent(formName)}&step-id=${encodeURIComponent(stepId)}&language=${encodeURIComponent(this.language || '')}`;
         try {
             const r = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json', "X-CSRF-Token": this.csrf } });
             if (!r.ok) {
@@ -162,30 +164,40 @@ export class MultistepForm {
     async doValidationAndSave(event) {
         event.preventDefault();
         const form = event.currentTarget;
-        const url = form.action;
+
+        // Generate reCaptcha V3 token if the captcha widget is present
+        const recaptchaInput = form.querySelector('#g-recaptcha-response[data-type="V3"]');
+        if (recaptchaInput && window.grecaptcha && typeof window.wjFormSubmit === 'function') {
+            await new Promise((resolve) => {
+                wjFormSubmit(form, resolve);
+            });
+        }
+
+        const url = new URL(form.getAttribute('action'), window.location.origin);
+        url.searchParams.set('language', this.language || '');
 
         const result = {};
         form.querySelectorAll('input, textarea, select').forEach(el => {
-            if (!el.name) return;
+            if (!el.id) return;
             // Skip fields hidden by visibility conditions
             if (this._isFieldHidden(el.closest('.form-group') || el.parentElement)) return;
             if (el.type === 'checkbox' || el.type === 'radio') {
                 if (!el.checked) return;
             }
             const value = el.value;
-            if (Object.hasOwn(result, el.name)) {
-                if (Array.isArray(result[el.name])) {
-                    result[el.name].push(value);
+            if (Object.hasOwn(result, el.id)) {
+                if (Array.isArray(result[el.id])) {
+                    result[el.id].push(value);
                 } else {
-                    result[el.name] = [result[el.name], value];
+                    result[el.id] = [result[el.id], value];
                 }
             } else {
-                result[el.name] = value;
+                result[el.id] = value;
             }
         });
 
         try {
-            const resp = await fetch(url, {
+            const resp = await fetch(url.toString(), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -661,7 +673,7 @@ export class MultistepForm {
      */
     _getFieldValue(fieldId) {
         // Check radio buttons first
-        const radios = this.wrapper.querySelectorAll(`input[type="radio"][name="${fieldId}"]`);
+        const radios = this.wrapper.querySelectorAll(`input[type="radio"][id="${fieldId}"]`);
         if (radios.length > 0) {
             for (const radio of radios) {
                 if (radio.checked) return radio.value;
@@ -670,7 +682,7 @@ export class MultistepForm {
         }
 
         // Check checkboxes
-        const checkboxes = this.wrapper.querySelectorAll(`input[type="checkbox"][name="${fieldId}"]`);
+        const checkboxes = this.wrapper.querySelectorAll(`input[type="checkbox"][id="${fieldId}"]`);
         if (checkboxes.length > 0) {
             const checked = [];
             checkboxes.forEach(cb => { if (cb.checked) checked.push(cb.value); });
@@ -701,8 +713,6 @@ export class MultistepForm {
      */
     async postSaveAction(response) {
         this.hideErrors();
-
-        //debugger;
 
         const forwardUrl = response.forward;
         if (forwardUrl) {
