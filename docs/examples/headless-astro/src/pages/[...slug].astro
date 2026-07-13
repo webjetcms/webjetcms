@@ -8,6 +8,34 @@ const apiPath = pathFromQuery
   ? (pathFromQuery.startsWith('/') ? pathFromQuery : `/${pathFromQuery}`)
   : pathFromUrl;
 
+// Paths owned by dedicated .astro pages. This catch-all route only matches a
+// dedicated page's path when that page failed to compile (e.g. a syntax error),
+// which makes its route disappear and silently falls through to here.
+// When that happens, re-import the offending page module to re-trigger Vite
+// compilation so the REAL compiler error (with file name and line number) is
+// surfaced to the developer, instead of masking it by rendering unrelated CMS
+// content or a useless stack trace pointing to this catch-all file.
+const RESERVED_PAGE_MODULES: Record<string, () => Promise<unknown>> = {
+  '/': () => import('./index.astro'),
+  '/news': () => import('./news.astro'),
+  '/news-client': () => import('./news-client.astro'),
+  '/search': () => import('./search.astro'),
+};
+const normalizedPath = pathFromUrl !== '/' && pathFromUrl.endsWith('/')
+  ? pathFromUrl.slice(0, -1)
+  : pathFromUrl;
+if (!pathFromQuery && normalizedPath in RESERVED_PAGE_MODULES) {
+  // Re-import the dedicated page. If it has a compile/syntax error this throws
+  // the actual Vite/Astro compiler error pointing at the exact line in that page.
+  await RESERVED_PAGE_MODULES[normalizedPath]();
+  // Import unexpectedly succeeded: the page compiles but still fell through here.
+  throw new Error(
+    `Route "${normalizedPath}" is owned by a dedicated page ` +
+    `(src/pages${normalizedPath === '/' ? '/index' : normalizedPath}.astro) but the request ` +
+    `fell through to the catch-all [...slug].astro. Fix the routing or the page source.`
+  );
+}
+
 // Reject static assets (files with extensions) and non-page paths
 // Only allow paths ending with / or .html
 if (pathFromUrl !== '/' && !pathFromUrl.endsWith('/') && !pathFromUrl.endsWith('.html')) {
