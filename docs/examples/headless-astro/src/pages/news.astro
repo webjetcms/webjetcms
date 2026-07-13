@@ -54,16 +54,15 @@ if (navSetCookie) {
   Astro.response.headers.append('Set-Cookie', navSetCookie);
 }
 
-// Helper: build tag spans from perexGroup
-function renderTags(perexGroup: number[] | undefined) {
-  if (!perexGroup || !Array.isArray(perexGroup)) return null;
+// Helper: build tag data from perexGroup (rendered in the template below)
+function buildTags(perexGroup: number[] | undefined) {
+  if (!perexGroup || !Array.isArray(perexGroup)) return [];
   const tags: { class: string; text: string }[] = [];
   for (const pg of perexGroup) {
     if (pg === 1) tags.push({ class: 'tag c1', text: 'Investície' });
     if (pg === 2) tags.push({ class: 'tag c2', text: 'Podnikanie' });
   }
-  if (tags.length === 0) return null;
-  //return <>{tags.map(t => <span class={t.class}>{t.text}</span>)}</>;
+  return tags;
 }
 ---
 
@@ -89,14 +88,14 @@ function renderTags(perexGroup: number[] | undefined) {
           return (
             <div class="row justify-content-md-center">
               <div class="col-sm-2">
-                {thumbSrc ? (
+                {thumbSrc && (
                   <a href={item.virtualPath}>
                     <img src={thumbSrc} class="img-responsive" alt={item.title} />
                   </a>
-                ) : (
-                  <a href={item.virtualPath}>{item.title}</a>
                 )}
-                {renderTags(item.perexGroups)}
+                {buildTags(item.perexGroups).map((t) => (
+                  <span class={t.class}>{t.text}</span>
+                ))}
               </div>
               <div class="col-sm-6">
                 <h3><a href={item.virtualPath}>{item.title}</a></h3>
