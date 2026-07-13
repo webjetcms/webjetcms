@@ -45,6 +45,7 @@ Vysvětlení použitých piktogramů:
 - [ ] Datatabulka – upravit způsob `mergovania` upravené entity tak, aby bylo možné vynulovat hodnoty typu `number`.
 - [ ] +Přesměrování - rozlišit v databázi automaticky vytvořené přesměrování (hledej proměnnou `editorDisableAutomaticRedirect`) od manuálně vytvořeného, ​​možnost podle toho filtrovat v UI (zobrazit jen manuálně vytvořená přesměrování).
 - [ ] +Přesměrování - doplnit funkci čištění přesměrování - smaže staré přesměrování (bylo původně `aaa-bbb` a pak vzniklo `aaa-ccc` takže `aaa-bbb` nemá smysl = smaže se) a zkontroluje cyklické přesměrování ve kterém smaže poslední krok. Také optimalizovat přesměrování `aaa-bbb-ccc` na `aaa-ccc`.
+- +Galerie - přidat možnost nastavit jiný způsob změny velikosti na velký obrázek. na malý obrázek se aplikuje Oříznout na míru (chtějí mít čtverec) a na velký přesná šířka (zachová poměr stran). Ve výchozím nastavení bude hodnota NULL=stejně jako pro malý obrázek.
 
 ## 2025
 
