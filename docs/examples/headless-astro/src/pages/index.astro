@@ -25,29 +25,20 @@ const topItems = nav.slice(0, 8);
     </p>
   </div>
 
-  <div class="demo-links">
-    <a href="/news" class="demo-link-card">
-      <div class="card-title">News (Server-Side)</div>
-      <div class="card-path">/news</div>
+  <p>Examples:</p>
+
+  <div class="welcome-links">
+    <a href="/apps/galeria/" class="welcome-link-card">
+      <div class="card-title">Gallery</div>
+      <div class="card-path">/apps/galeria/</div>
     </a>
-    <a href="/news-client" class="demo-link-card">
-      <div class="card-title">News (Client-Side)</div>
-      <div class="card-path">/news-client</div>
+    <a href="/apps/multistep-formular/for-screenshots.html" class="welcome-link-card">
+      <div class="card-title">Multistep Form</div>
+      <div class="card-path">/apps/multistep-formular/for-screenshots.html</div>
     </a>
-    <a href="/search" class="demo-link-card">
-      <div class="card-title">Search</div>
-      <div class="card-path">/search</div>
+    <a href="/news/" class="welcome-link-card">
+      <div class="card-title">News</div>
+      <div class="card-path">/news/</div>
     </a>
   </div>
-
-  {topItems.length > 0 && (
-    <div class="welcome-links">
-      {topItems.map((item: any) => (
-        <a href={item.virtualPath} class="welcome-link-card">
-          <div class="card-title">{item.title}</div>
-          <div class="card-path">{item.virtualPath}</div>
-        </a>
-      ))}
-    </div>
-  )}
 </Layout>

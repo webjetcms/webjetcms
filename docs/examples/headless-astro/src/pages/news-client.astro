@@ -98,10 +98,8 @@ if (navSetCookie) {
             }
 
             // Tags from perexGroup
-            console.log('perexGroups:', item.perexGroups);
             if (item.perexGroups && Array.isArray(item.perexGroups)) {
               for (const pg of item.perexGroups) {
-                console.log('perexGroups item:', pg);
                 if (pg === 1 || pg === 2) {
                   const span = document.createElement('span');
                   span.className = pg === 1 ? 'tag c1' : 'tag c2';

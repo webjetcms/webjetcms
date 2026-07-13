@@ -1,7 +1,7 @@
 import { defineConfig } from 'astro/config';
 
 const backendOrigin = process.env.HEADLESS_BACKEND_ORIGIN || 'http://cms.iway.sk';
-const proxyPrefixes = (process.env.HEADLESS_PROXY_PREFIXES || '/images/,/files/,/thumb/,/shared/,/components,/FormMailAjax.action,/rest/')
+const proxyPrefixes = (process.env.HEADLESS_PROXY_PREFIXES || '/images/,/files/,/thumb/,/shared/,/components,/FormMailAjax.action,/rest/,/apps/form/mvc/')
   .split(',')
   .map((value) => value.trim())
   .filter(Boolean)
