@@ -3,7 +3,7 @@ import { getNavigation } from '../lib/api';
 import Layout from '../layouts/Layout.astro';
 
 const NEWS_GROUP_ID = 24;
-const NEWS_PAGE_SIZE = 10;
+const NEWS_PAGE_SIZE = 5;
 
 const navResult = await getNavigation(Astro.request, '/', undefined, 2);
 const nav = navResult.data;
@@ -40,12 +40,15 @@ if (navSetCookie) {
       return div.innerHTML;
     }
 
-    async function loadNews() {
+    async function loadNews(page = 1) {
       const root = document.getElementById('news-client-root');
       if (!root) return;
 
       const NEWS_GROUP_ID = parseInt(root.dataset.newsGroupId || '24', 10);
-      const NEWS_PAGE_SIZE = parseInt(root.dataset.pageSize || '10', 10);
+      const NEWS_PAGE_SIZE = parseInt(root.dataset.newsPageSize || '10', 10);
+      const requestedPage = Math.max(1, page);
+
+      root.innerHTML = '<div class="loading">Loading news...</div>';
 
       try {
         const response = await fetch(`${API_BASE}/news`, {
@@ -57,9 +60,9 @@ if (navSetCookie) {
             publishType: 'new',
             order: 'date',
             ascending: false,
-            paging: false,
+            paging: true,
             pageSize: NEWS_PAGE_SIZE,
-            offset: 0,
+            offset: (requestedPage - 1) * NEWS_PAGE_SIZE,
             perexNotRequired: false,
             loadData: false,
             checkDuplicity: false,
@@ -129,6 +132,36 @@ if (navSetCookie) {
 
             row.appendChild(colRight);
             root.appendChild(row);
+          }
+
+          if (data.totalPages > 1) {
+            const pagination = document.createElement('div');
+            pagination.className = 'pagination';
+
+            const previousPage = document.createElement(data.page > 1 ? 'button' : 'span');
+            previousPage.textContent = '\u00ab Prev';
+            if (data.page > 1) {
+              previousPage.addEventListener('click', () => loadNews(data.page - 1));
+            } else {
+              previousPage.className = 'disabled';
+            }
+            pagination.appendChild(previousPage);
+
+            const currentPage = document.createElement('span');
+            currentPage.className = 'current';
+            currentPage.textContent = `Page ${data.page} of ${data.totalPages}`;
+            pagination.appendChild(currentPage);
+
+            const nextPage = document.createElement(data.page < data.totalPages ? 'button' : 'span');
+            nextPage.textContent = 'Next \u00bb';
+            if (data.page < data.totalPages) {
+              nextPage.addEventListener('click', () => loadNews(data.page + 1));
+            } else {
+              nextPage.className = 'disabled';
+            }
+            pagination.appendChild(nextPage);
+
+            root.appendChild(pagination);
           }
         } else {
           root.innerHTML = '<div class="no-results"><p>No news items found.</p></div>';

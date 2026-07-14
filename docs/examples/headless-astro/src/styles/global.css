@@ -367,21 +367,24 @@ body {
 .pagination {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   margin-top: 24px;
 }
 
-.pagination a, .pagination span {
+.pagination a, .pagination span, .pagination button {
   padding: 6px 14px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   font-size: 13px;
   text-decoration: none;
   color: var(--accent);
+  background: transparent;
+  cursor: pointer;
   transition: background 0.12s;
 }
 
-.pagination a:hover { background: #eef2ff; }
+.pagination a:hover, .pagination button:hover { background: #eef2ff; }
 
 .pagination span.disabled {
   color: var(--text-light);

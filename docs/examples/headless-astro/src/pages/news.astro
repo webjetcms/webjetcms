@@ -4,7 +4,9 @@ import Layout from '../layouts/Layout.astro';
 
 // Server-side rendering: fetches news directly from CMS at render time
 const NEWS_GROUP_ID = 24;
-const NEWS_PAGE_SIZE = 10;
+const NEWS_PAGE_SIZE = 5;
+const requestedPage = parseInt(Astro.url.searchParams.get('page') || '1', 10);
+const newsPage = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
 
 let newsResult: any = { items: [], page: 1, size: NEWS_PAGE_SIZE, totalElements: 0, totalPages: 0 };
 let newsError = '';
@@ -17,9 +19,9 @@ try {
       publishType: 'new',
       order: 'date',
       ascending: false,
-      paging: false,
+      paging: true,
       pageSize: NEWS_PAGE_SIZE,
-      offset: 0,
+      offset: (newsPage - 1) * NEWS_PAGE_SIZE,
       perexNotRequired: false,
       loadData: false,
       checkDuplicity: false,
@@ -76,7 +78,8 @@ function buildTags(perexGroup: number[] | undefined) {
       {newsError ? (
         <div class="error"><strong>Error:</strong> {newsError}</div>
       ) : newsResult.items && newsResult.items.length > 0 ? (
-        newsResult.items.map((item: any) => {
+        <>
+        {newsResult.items.map((item: any) => {
           // Thumbnail URL from perexImageNormal (DocDetails property)
           const thumbSrc = item.perexImage
             ? `/thumb${item.perexImage}?w=400&h=300&ip=6`
@@ -103,7 +106,23 @@ function buildTags(perexGroup: number[] | undefined) {
               </div>
             </div>
           );
-        })
+        })}
+        {newsResult.totalPages > 1 && (
+        <div class="pagination">
+          {newsResult.page > 1 ? (
+            <a href={`/news?page=${newsResult.page - 1}`}>&laquo; Prev</a>
+          ) : (
+            <span class="disabled">&laquo; Prev</span>
+          )}
+          <span class="current">Page {newsResult.page} of {newsResult.totalPages}</span>
+          {newsResult.page < newsResult.totalPages ? (
+            <a href={`/news?page=${newsResult.page + 1}`}>Next &raquo;</a>
+          ) : (
+            <span class="disabled">Next &raquo;</span>
+          )}
+        </div>
+        )}
+        </>
       ) : (
         <div class="no-results">
           <p>No news items found for the configured group.</p>
