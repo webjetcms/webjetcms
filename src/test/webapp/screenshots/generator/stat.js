@@ -126,7 +126,7 @@ Scenario("ext filter - screenshots", ({ I, Document }) => {
 
 Scenario("Obmedzene prava na adresare", async ({ I, Document }) => {
     I.relogin("tester2");
-    I.amOnPage("/apps/stat/admin?removePerm=cmp_stat_seeallgroups");
+    I.amOnPage("/apps/stat/admin/?removePerm=cmp_stat_seeallgroups");
 
     Document.screenshotElement("#editorApprootDir", "/redactor/apps/stat/stats-groupSelect.png");
 

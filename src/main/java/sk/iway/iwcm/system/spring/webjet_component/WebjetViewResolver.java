@@ -16,10 +16,35 @@ import sk.iway.iwcm.Tools;
 import java.util.*;
 
 // vracia vhodny view z viewResolverov na zaklade cesty
-public class WebjetViewResolver extends WebApplicationObjectSupport implements ViewResolver {
+public class WebjetViewResolver extends WebApplicationObjectSupport implements ViewResolver, Ordered {
 
     private String viewFolder;
     private List<ViewResolver> viewResolvers;
+
+    /**
+    * In Spring Boot, the main DispatcherServlet is automatically configured with its own
+    * view resolvers (e.g. InternalResourceViewResolver), which have LOWEST_PRECEDENCE and
+    * ALWAYS return a view (forward) even if the file does not exist. In order to use this WebJET
+    * resolver, which looks for a real .jsp/.ftl/.html file and returns null if not found (and thus
+    * drops other resolvers including forward:/redirect:), must have a higher priority
+    * than the default resolvers. Returning LOWEST_PRECEDENCE - 100 will rank it just ahead of them.
+    */
+    @Override
+    public int getOrder() {
+        return Ordered.LOWEST_PRECEDENCE - 100;
+    }
+
+    /**
+     * Normalizes a path by collapsing multiple consecutive slashes into a single slash.
+     * This fixes the double-slash issue in path construction (e.g., "//admin/..." -> "/admin/...").
+     */
+    private String normalizePath(String path) {
+        if (path == null || path.isEmpty()) {
+            return path;
+        }
+        // Collapse multiple slashes into single slash, but preserve leading slash
+        return path.replaceAll("/{2,}", "/");
+    }
 
     public View resolveViewName(@NonNull String viewName, @NonNull Locale locale) throws Exception {
         if (viewResolvers == null) {
@@ -61,6 +86,15 @@ public class WebjetViewResolver extends WebApplicationObjectSupport implements V
                 suffix = wjViewResolver.getSuffix();
             }
 
+            // FIX: If the view name ends with .jsp, route it directly to the JSP resolver
+            // without applying the .html suffix (which was causing FileNotFoundException)
+            if (viewNameLocal.endsWith(".jsp")) {
+                if (viewResolver instanceof WebjetInternalResourceViewResolver) {
+                    return viewResolver.resolveViewName(viewNameLocal, locale);
+                }
+                continue;
+            }
+
             if (Tools.isNotEmpty(prefix)) {
                 viewNameLocal = prefix + viewNameLocal;
             }
@@ -74,8 +108,40 @@ public class WebjetViewResolver extends WebApplicationObjectSupport implements V
             // cesta s installName
             List<String> paths = getPaths(viewNameLocal);
             for (String path : paths) {
-                if (FileTools.isFile(path)) {
-                    return viewResolver.resolveViewName(Tools.replace(path, suffix, ""), locale);
+                String normalizedPath = normalizePath(path);
+                if (FileTools.isFile(normalizedPath)) {
+                    return viewResolver.resolveViewName(Tools.replace(normalizedPath, suffix, ""), locale);
+                }
+            }
+
+            // FIX: If Thymeleaf suffix (.html) was used and file not found,
+            // try the JSP resolver with .jsp suffix as fallback.
+            // This handles the case where the actual file is .jsp but the view name
+            // doesn't explicitly end with .jsp (e.g., "/admin/skins/webjet8/logon-spring").
+            if (viewResolver instanceof ThymeleafViewResolver && suffix != null && suffix.equals(".html")) {
+                for (ViewResolver otherResolver : viewResolvers) {
+                    if (otherResolver instanceof WebjetInternalResourceViewResolver) {
+                        // Try with .jsp suffix
+                        String jspPath = viewName;
+                        if (Tools.isNotEmpty(prefix)) {
+                            jspPath = prefix + viewName;
+                        }
+                        List<String> jspPaths = getPaths(jspPath);
+                        for (String jspPathCandidate : jspPaths) {
+                            String jspFile = normalizePath(jspPathCandidate);
+                            // Replace .html with .jsp if suffix was .html
+                            if (jspFile.endsWith(".html")) {
+                                jspFile = jspFile.substring(0, jspFile.length() - 5) + ".jsp";
+                            } else {
+                                jspFile = jspFile + ".jsp";
+                            }
+                            if (FileTools.isFile(jspFile)) {
+                                Logger.debug(WebjetViewResolver.class, "Falling back to JSP: " + jspFile);
+                                return otherResolver.resolveViewName(Tools.replace(jspFile, ".jsp", ""), locale);
+                            }
+                        }
+                        break;
+                    }
                 }
             }
         }
@@ -107,8 +173,9 @@ public class WebjetViewResolver extends WebApplicationObjectSupport implements V
             tokens2.add(tokens2.size() - 1, viewFolder);
         }
 
-        result.add("/" + Tools.join(tokens2, "/"));
-        result.add("/" + Tools.join(tokens1, "/"));
+        // Normalize paths to collapse double slashes (e.g., "//admin/..." -> "/admin/...")
+        result.add(normalizePath("/" + Tools.join(tokens2, "/")));
+        result.add(normalizePath("/" + Tools.join(tokens1, "/")));
 
         return result;
     }
