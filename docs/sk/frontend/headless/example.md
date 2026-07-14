@@ -174,7 +174,12 @@ Vlastnosti:
 
 Používa API: `POST /rest/headless/v1/news` (volané priamo z browsera)
 
-> Poznámka: Pre client-side volania musí mať backend nakonfigurovanú CORS politiku (`accessControlAllowOriginUrls`, `accessControlAllowOriginValue`).
+> Poznámka: Pre client-side volania musí mať backend nakonfigurovanú CORS politiku v konfiguračnej premennej `accessControlAllowOriginValue`. Napríklad:
+
+```txt
+{HTTP_PROTOCOL}://{SERVER_NAME}:{HTTP_PORT}
+http://headless.example.com:3000,https://headless.example.com:8443
+```
 
 ---
 
@@ -236,3 +241,90 @@ Konfigurácia automaticky proxy-uje požiadavky na obrázky, `/thumb`, súbory a
 // Prefixy, ktoré sa presmerujú na CMS backend
 /images/, /files/, /thumb/, /shared/, /components, /FormMailAjax.action, /rest/
 ```
+
+## Nasadenie na server (Node.js)
+
+Ukážka je nastavená na SSR režim s Node adaptérom (`@astrojs/node`) a v produkcii sa spúšťa ako Node server.
+
+### 1. Build aplikácie
+
+```bash
+cd docs/examples/headless-astro
+nvm use 22.12
+npm ci
+npm run build
+```
+
+### 2. Spustenie produkčného servera
+
+```bash
+cd docs/examples/headless-astro
+npm run start
+```
+
+Skript `start` spúšťa `node ./dist/server/entry.mjs`.
+
+### 3. Premenné prostredia pre produkciu
+
+Minimálne nastavte:
+
+```bash
+PUBLIC_API_BASE=https://cms.vasadomena.sk/rest/headless/v1
+HEADLESS_HOST=0.0.0.0
+HEADLESS_PORT=3000
+```
+
+Odporúčanie pre produkciu:
+
+- Nenechávajte zapnuté `NODE_TLS_REJECT_UNAUTHORIZED=0`.
+- Pred Node server dajte reverzný proxy server (napr. Nginx/Apache) a TLS ukončujte na 443.
+
+## Nasadenie na Vercel alebo Cloudflare
+
+Pre tieto platformy zmeňte Astro adapter podľa cieľa nasadenia.
+
+### Vercel
+
+1. Nainštalujte adapter:
+
+```bash
+npm install @astrojs/vercel
+```
+
+1. V `astro.config.mjs` zmeňte import a adapter konfiguráciu:
+
+```javascript
+import vercel from '@astrojs/vercel';
+
+export default defineConfig({
+  output: 'server',
+  adapter: vercel(),
+  // ...ostatná konfigurácia
+});
+```
+
+1. Deploy rieši Vercel build pipeline, lokálny `npm run start` už netreba.
+
+### Cloudflare (Workers)
+
+1. Nainštalujte adapter:
+
+```bash
+npm install @astrojs/cloudflare
+```
+
+1. V `astro.config.mjs` zmeňte import a adapter konfiguráciu:
+
+```javascript
+import cloudflare from '@astrojs/cloudflare';
+
+export default defineConfig({
+  output: 'server',
+  adapter: cloudflare(),
+  // ...ostatná konfigurácia
+});
+```
+
+1. Následne nasadzujete ako Cloudflare Worker (typicky cez `wrangler`).
+
+Poznámka: Pri zmene adaptera ponechajte `output: 'server'`, ale vždy používajte len jeden adapter podľa cieľovej platformy.

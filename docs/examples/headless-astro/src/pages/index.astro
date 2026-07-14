@@ -21,7 +21,10 @@ const topItems = nav.slice(0, 8);
     <p>
       This is a proof-of-concept demonstrating WebJET CMS as a headless backend.
       Content is served via REST API and rendered by this Astro application.
-      Use the navigation on the left, search, or the news demos below.
+      Use the navigation on the left, search, or the demos below.
+    </p>
+    <p>
+      There is two example of News app - News SSE with Server Side Rendering and News CSR with Client Side Rendering. You can switch between them using the navigation on the top.
     </p>
   </div>
 
@@ -39,6 +42,10 @@ const topItems = nav.slice(0, 8);
     <a href="/news/" class="welcome-link-card">
       <div class="card-title">News</div>
       <div class="card-path">/news/</div>
+    </a>
+    <a href="/apps/cookies-lista/" class="welcome-link-card">
+      <div class="card-title">Cookies Consent</div>
+      <div class="card-path">/apps/cookies-lista/</div>
     </a>
   </div>
 </Layout>

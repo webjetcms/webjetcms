@@ -1,4 +1,5 @@
 import { defineConfig } from 'astro/config';
+import node from '@astrojs/node';
 import fs from 'node:fs';
 import { loadEnv } from 'vite';
 
@@ -57,6 +58,9 @@ const proxy = Object.fromEntries(
 
 export default defineConfig({
   output: 'server',
+  adapter: node({
+    mode: 'standalone',
+  }),
   server: {
     host: env.HEADLESS_HOST || '127.0.0.1',
     port: Number.parseInt(env.HEADLESS_PORT || '3000'),

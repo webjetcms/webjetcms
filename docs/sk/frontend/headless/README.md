@@ -2,14 +2,15 @@
 
 WebJET CMS podporuje **headless** prevádzkový režim, v ktorom slúži ako čisto `backend` CMS. Obsah, navigácia, vyhľadávanie a formuláre sú dostupné cez REST API. Frontend aplikácia (napr. Astro, Next.js, Vue, React alebo akýkoľvek HTTP klient) si dáta stiahne a zobrazuje ich podľa vlastných šablón.
 
+V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať menšie web stránky vytvorené v rôznych technológiách, ktoré konzumujú a zobrazujú obsah z CMS systému.
+
 ## Ako to funguje
 
-```txt
-Prehliadač → Frontend aplikácia (Astro / React / …)
-                  ↓  REST API volania
-             WebJET CMS backend
-                  ↓
-             Databáza / súborový systém
+```mermaid
+flowchart TD
+    A[Internet Browser] --> B[Frontend app<br/>Astro / React / ...]
+    B -->|REST API calls| C[WebJET CMS backend]
+    C --> D[Database / file system]
 ```
 
 - Všetky REST služby sú dostupné na ceste `/rest/headless/v1/`.
