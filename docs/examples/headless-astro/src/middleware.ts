@@ -24,7 +24,7 @@ import { defineMiddleware } from 'astro:middleware';
  *
  * This middleware forwards genuine CMS requests: if a request does not match any
  * dedicated page (Astro returns 404), it is rewritten to the CMS renderer, passing
- * the original path via the `path` query parameter.
+ * the original pathname and query separately to the CMS renderer.
  */
 export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname, search } = context.url;
@@ -49,6 +49,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return response;
   }
 
-  const originalPath = `${pathname}${search}`;
-  return context.rewrite(`/cms/render?path=${encodeURIComponent(originalPath)}`);
+  return context.rewrite(
+    `/cms/render?path=${encodeURIComponent(pathname)}&query=${encodeURIComponent(search)}`
+  );
 });

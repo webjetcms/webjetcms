@@ -127,7 +127,7 @@ Používa API: `getNavigation()`
 
 Obsah z CMS je obsluhovaný kombináciou middleware a CMS render:
 
-- **`middleware.ts`** zachytí každú 404 odpoveď od dedikovaných stránok a prepisuje URL na `/cms/render?path=<originálna-cesta>` (interný Astro `rewrite`).
+- **`middleware.ts`** zachytí každú 404 odpoveď od dedikovaných stránok a prepisuje URL na `/cms/render?path=<originálna-cesta>&query=<pôvodné-parametre>` (interný Astro `rewrite`). Cesta sa posiela do CMS API bez URL parametrov, aby sa správne našla stránka; pôvodné parametre zostávajú dostupné rendereru.
 - **`cms/[...slug].astro`** je CMS renderer – číta parameter `path`, zavolá API `GET /rest/headless/v1/pages/by-path?path=<cesta>` a zobrazí HTML obsah.
 
 CMS catch-all je úmyselne umiestnený pod `/cms/`, nie v root `pages/`. Vďaka tomu neprepisuje dedikované stránky (napr. `/news`, `/search`) a Astro správne zobrazí skutočnú chybu pri chybe kompilovania dedikovanej stránky (bez silent fallback na CMS).

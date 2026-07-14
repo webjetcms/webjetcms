@@ -11,9 +11,10 @@ import Layout from '../../layouts/Layout.astro';
 // error. Living under /cms/ guarantees a broken dedicated page has no fallback
 // route, so Astro surfaces the actual compiler error in the browser.
 //
-// The original request path is forwarded by the middleware via the `path` query
-// parameter.
+// The original request pathname and query are forwarded separately by the middleware.
 const apiPath = Astro.url.searchParams.get('path') || '/';
+const originalQuery = Astro.url.searchParams.get('query') || '';
+const originalPath = `${apiPath}${originalQuery}`;
 
 let page = null;
 let error = '';
@@ -48,7 +49,7 @@ if (navSetCookie) {
 }
 ---
 
-<Layout title={page?.title || 'WebJET CMS — Headless Demo'} navItems={nav} currentPath={apiPath}>
+<Layout title={page?.title || 'WebJET CMS — Headless Demo'} navItems={nav} currentPath={originalPath}>
   {error ? (
     <div class="error"><strong>Error:</strong> {error}</div>
   ) : page ? (
