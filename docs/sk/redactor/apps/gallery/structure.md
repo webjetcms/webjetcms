@@ -45,7 +45,7 @@ Karta ponúka možnosti, ktoré sa aplikujú na obrázky galérie:
 - **Pregenerovať obrázky** - ak je možnosť zvolená, nanovo vygeneruje veľkosti všetkých obrázkov v galérii podľa aktuálnych nastavení
 - **Aplikovať na všetky podpriečinky** - ak je možnosť zvolená, nastavenie sa použije aj na všetky podradené priečinky
 - **Veľkosť malého obrázku** - šírka a výška obrázku
-- **Maximálna veľkosť veľkého obrázku (ak nezadáte, ponechá sa originál)** - šírka a výška obrázku
+- **Maximálna veľkosť veľkého obrázku** - šírka a výška obrázku, ak zadáte do oboch polí hodnotu 0 zachová sa originálna veľkosť nahraného obrázka
 
 ![](dir-sizes-tab.png)
 
