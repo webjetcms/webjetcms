@@ -157,6 +157,8 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.appinquirysimple",
     "sk.iway.iwcm.components.appmap",
     "sk.iway.iwcm.components.apptestimonials",
+    "sk.iway.iwcm.headless.rest",
+    "sk.iway.iwcm.headless.service",
     "sk.iway.iwcm.rag.embedding",
     "sk.iway.iwcm.rag.indexing",
     "sk.iway.iwcm.rag.listener",

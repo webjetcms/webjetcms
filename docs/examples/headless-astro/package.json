@@ -1,0 +1,20 @@
+{
+  "name": "headless-astro-demo",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "dev:https": "HEADLESS_HTTPS=true astro dev",
+    "build": "astro build",
+    "start": "node ./dist/server/entry.mjs",
+    "preview": "astro preview",
+    "stop": "astro dev stop",
+    "cert:generate": "mkdir -p .cert && openssl req -x509 -newkey rsa:2048 -sha256 -nodes -keyout .cert/localhost-key.pem -out .cert/localhost.pem -days 825 -subj '/CN=localhost'"
+  },
+  "dependencies": {
+    "@astrojs/node": "^11.0.2",
+    "astro": "^7.0.9",
+    "bootstrap": "^5.3.8"
+  }
+}

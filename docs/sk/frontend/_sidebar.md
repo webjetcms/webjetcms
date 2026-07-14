@@ -53,5 +53,7 @@
 - Generovanie obrázkov
   - [Thumb servlet](/frontend/thumb-servlet/README.md)
   - [Bod záujmu](/frontend/thumb-servlet/interest-point.md)
-
-
+- Headless CMS
+  - [Headless režim](/frontend/headless/README.md)
+  - [Headless služby](/frontend/headless/services.md)
+  - [Ukážka headless aplikácie](/frontend/headless/example.md)

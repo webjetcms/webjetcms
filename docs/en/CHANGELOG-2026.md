@@ -16,6 +16,16 @@
 
 ![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
 
+### Headless mode
+
+Added [headless mode support](frontend/headless/README.md), in which WebJET CMS serves purely as a `backend` CMS. Content, navigation, search and forms are accessible via REST API. Frontend application (e.g. Astro, Next.js, Vue, React or any HTTP client) will download the data and display it according to its own templates (#258).
+
+![](frontend/headless/home.png)
+
+In one WebJET CMS you can have multiple (dozens) domains and subsequently have smaller websites created in different technologies that consume and display content from the CMS system. Inserting standard applications such as photo galleries, forms, GDPR cookies, and the like is also supported.
+
+![](frontend/headless/gallery.png)
+
 ### Forms
 
 - [Multistep form statistics](redactor/apps/multistep-form/stat.md) has been extended with a date filter and advanced metrics for views/attempts/languages ​​etc. (#58509).
