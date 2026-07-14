@@ -1,4 +1,5 @@
 import { defineConfig } from 'astro/config';
+import fs from 'node:fs';
 import { loadEnv } from 'vite';
 
 // Load all variables from .env (prefix '' = load everything, not just PUBLIC_)
@@ -19,6 +20,24 @@ function getBackendOrigin() {
 }
 
 const backendOrigin = getBackendOrigin();
+const isHttpsEnabled = ['1', 'true', 'yes', 'on'].includes((env.HEADLESS_HTTPS || '').toLowerCase());
+
+function getHttpsOptions() {
+  const keyPath = env.HEADLESS_HTTPS_KEY || './.cert/localhost-key.pem';
+  const certPath = env.HEADLESS_HTTPS_CERT || './.cert/localhost.pem';
+
+  if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+    return {
+      key: fs.readFileSync(keyPath),
+      cert: fs.readFileSync(certPath),
+    };
+  }
+
+  // Fallback to Vite's default HTTPS behavior when cert files are not present.
+  return {};
+}
+
+const httpsOptions = getHttpsOptions();
 const proxyPrefixes = (env.HEADLESS_PROXY_PREFIXES || '/images/,/files/,/thumb/,/shared/,/components,/FormMailAjax.action,/rest/,/apps/form/mvc/')
   .split(',')
   .map((value) => value.trim())
@@ -40,13 +59,15 @@ export default defineConfig({
   output: 'server',
   server: {
     host: env.HEADLESS_HOST || '127.0.0.1',
-    port: parseInt(env.HEADLESS_PORT || '3000'),
+    port: Number.parseInt(env.HEADLESS_PORT || '3000'),
+    https: isHttpsEnabled == true ? httpsOptions : false,
   },
   vite: {
     server: {
       proxy,
       host: env.HEADLESS_HOST || '127.0.0.1',
-      port: parseInt(env.HEADLESS_PORT || '3000'),
+      port: Number.parseInt(env.HEADLESS_PORT || '3000'),
+      https: isHttpsEnabled == true ? httpsOptions : false,
       allowedHosts: [
         'headless.interway.sk',
         'iwcm.interway.sk',
@@ -57,7 +78,8 @@ export default defineConfig({
     preview: {
       proxy,
       host: env.HEADLESS_HOST || '127.0.0.1',
-      port: parseInt(env.HEADLESS_PORT || '3000'),
+      port: Number.parseInt(env.HEADLESS_PORT || '3000'),
+      https: isHttpsEnabled == true ? httpsOptions : false,
     },
   },
 });

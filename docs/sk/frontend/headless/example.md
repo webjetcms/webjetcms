@@ -35,10 +35,53 @@ PUBLIC_API_BASE=https://cms.example.com/rest/headless/v1
 #HEADLESS_PROXY_PREFIXES=/images/,/files/,/thumb/,/shared/,/components,/FormMailAjax.action,/rest/,/apps/form/mvc/
 #HEADLESS_HOST=127.0.0.1
 #HEADLESS_PORT=3000
+#HEADLESS_HTTPS=true
+#HEADLESS_HTTPS_CERT=./.cert/localhost.pem
+#HEADLESS_HTTPS_KEY=./.cert/localhost-key.pem
 
 # Disable SSL certificate verification for local development with self-signed certificates
 #NODE_TLS_REJECT_UNAUTHORIZED=0
 ```
+
+## HTTPS režim v lokálnom vývoji
+
+Ak backend posiela session cookie s príznakom `Secure`, frontend musí bežať na HTTPS, inak prehliadač cookie zahodí.
+
+### 1. Vygenerovanie self-signed certifikátu
+
+```bash
+cd docs/examples/headless-astro
+npm run cert:generate
+```
+
+Tento príkaz vytvorí súbory:
+
+- `.cert/localhost.pem`
+- `.cert/localhost-key.pem`
+
+### 2. Zapnutie HTTPS v `.env`
+
+Do súboru `.env` pridajte (alebo odkomentujte):
+
+```bash
+HEADLESS_HTTPS=true
+HEADLESS_HTTPS_CERT=./.cert/localhost.pem
+HEADLESS_HTTPS_KEY=./.cert/localhost-key.pem
+```
+
+### 3. Spustenie Astro servera cez HTTPS
+
+```bash
+cd docs/examples/headless-astro
+npm run dev:https
+```
+
+Frontend potom beží na adrese `https://127.0.0.1:3000` (resp. podľa `HEADLESS_HOST` a `HEADLESS_PORT`).
+
+### Poznámky
+
+- Pri self-signed certifikáte je pri prvom otvorení stránky bežné bezpečnostné upozornenie v prehliadači.
+- Pre Astro 7 použite Node.js verziu minimálne `22.12.0`.
 
 ## Štruktúra projektu
 
