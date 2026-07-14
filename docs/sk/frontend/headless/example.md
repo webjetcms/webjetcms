@@ -93,9 +93,11 @@ src/
     api.ts         – TypeScript klient pre všetky headless REST endpointy
   layouts/
     Layout.astro   – Spoločný layout s navigáciou a search boxom
+  middleware.ts      – Smerovanie CMS stránok: presmerovania 404 na /cms/[...slug]
   pages/
     index.astro        – Domovská stránka
-    [...slug].astro    – Dynamická stránka (obsah z CMS podľa URL)
+    cms/
+      [...slug].astro  – CMS renderer (obsah z CMS podľa URL, volaný cez middleware)
     news.astro         – Novinky (server-side rendering)
     news-client.astro  – Novinky (client-side rendering, volanie z browsera)
     search.astro       – Fulltext vyhľadávanie
@@ -119,15 +121,20 @@ Používa API: `getNavigation()`
 
 ---
 
-### `/[...slug]` – Dynamická stránka (`[...slug].astro`)
+### Dynamické CMS stránky (`cms/[...slug].astro` + `middleware.ts`)
 
 ![](gallery.png)
 
-Univerzálna stránka, ktorá načíta obsah z CMS podľa aktuálnej URL cesty. Napríklad pre `/o-nas` zavolá API `/rest/headless/v1/pages/by-path?path=/o-nas` a zobrazí vrátenú HTML obsahovú časť.
+Obsah z CMS je obsluhovaný kombináciou middleware a CMS render:
+
+- **`middleware.ts`** zachytí každú 404 odpoveď od dedikovaných stránok a prepisuje URL na `/cms/render?path=<originálna-cesta>` (interný Astro `rewrite`).
+- **`cms/[...slug].astro`** je CMS renderer – číta parameter `path`, zavolá API `GET /rest/headless/v1/pages/by-path?path=<cesta>` a zobrazí HTML obsah.
+
+CMS catch-all je úmyselne umiestnený pod `/cms/`, nie v root `pages/`. Vďaka tomu neprepisuje dedikované stránky (napr. `/news`, `/search`) a Astro správne zobrazí skutočnú chybu pri chybe kompilovania dedikovanej stránky (bez silent fallback na CMS).
 
 Vlastnosti:
 
-- Automatický fallback na 404 ak stránka neexistuje
+- Automatický fallback na 404 ak stránka neexistuje v CMS
 - SEO meta tagy (`<title>`, `<meta description>`) zo SEO metadát stránky
 - Navigácia načítaná z CMS
 - Posielanie `Set-Cookie` hlavičiek (session cookies) prehliadaču
@@ -251,7 +258,7 @@ Konfigurácia automaticky proxy-uje požiadavky na obrázky, `/thumb`, súbory a
 
 ```txt
 // Prefixy, ktoré sa presmerujú na CMS backend
-/images/, /files/, /thumb/, /shared/, /components, /FormMailAjax.action, /rest/
+/images/, /files/, /thumb/, /shared/, /components, /FormMailAjax.action, /rest/, /apps/form/mvc/
 ```
 
 ![](multistep-form.png)

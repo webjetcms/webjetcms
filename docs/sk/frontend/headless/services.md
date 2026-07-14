@@ -157,8 +157,8 @@ Vráti stránkovaný zoznam noviniek. Používa POST kvôli zložitejšej vstupn
 | --- | --- | --- |
 | `groupIds` | `number[]` | **Povinné.** Zoznam ID skupín noviniek |
 | `alsoSubGroups` | `boolean` | Zahrnúť aj podskupiny (predvolene `false`) |
-| `publishType` | `string` | Filter publikovania: `new` = aktuálne, `archive` = archív |
-| `order` | `string` | Zoradenie: `date`, `title`, `priority` |
+| `publishType` | `string` | Filter publikovania: `new` = aktuálne, `old` = archív (vypršané), `all` = všetky, `next` = budúce, `valid` = aktuálne vrátane dátumu konca |
+| `order` | `string` | Zoradenie: `date`, `title`, `priority`, `id` |
 | `ascending` | `boolean` | `true` = vzostupne, `false` = zostupne |
 | `paging` | `boolean` | Zapnúť stránkovanie (predvolene `false`) |
 | `pageSize` | `number` | Počet položiek na stránku |
@@ -187,7 +187,7 @@ Vráti stránkovaný zoznam noviniek. Používa POST kvôli zložitejšej vstupn
       "available": true
     }
   ],
-  "page": 0,
+  "page": 1,
   "size": 10,
   "totalElements": 42,
   "totalPages": 5
@@ -230,8 +230,8 @@ curl "https://cms.example.com/rest/headless/v1/actions/search?q=produkt&page=0&s
       "title": "Produkt XY",
       "virtualPath": "/produkty/produkt-xy",
       "language": "sk",
-      "perex": "Krátky popis produktu.",
-      "snippet": "...text so zvýrazneným <b>produktom</b>..."
+      "perex": "/images/news/produkt-xy.jpg",
+      "snippet": "...text so zvýrazneným produktom..."
     }
   ],
   "page": 0,

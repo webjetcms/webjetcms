@@ -123,9 +123,12 @@ V ukážkovej Astro aplikácii je proxy nakonfigurovaná automaticky v `astro.co
 | premenná | Popis | Predvolená hodnota |
 | --- | --- | --- |
 | `PUBLIC_API_BASE` | Úplná cesta na Headless API | `https://cms.example.com/rest/headless/v1` |
-| `HEADLESS_PROXY_PREFIXES` | Prefixy URL, ktoré sa proxy-ujú na backend | `/images/,/files/,/thumb/,/shared/,/components,/FormMailAjax.action,/rest/` |
+| `HEADLESS_PROXY_PREFIXES` | Prefixy URL, ktoré sa proxy-ujú na backend | `/images/,/files/,/thumb/,/shared/,/components,/FormMailAjax.action,/rest/,/apps/form/mvc/` |
 | `HEADLESS_HOST` | Host, na ktorom počúva frontend server | `127.0.0.1` |
 | `HEADLESS_PORT` | Port frontend-u | `3000` |
+| `HEADLESS_HTTPS` | Zapne HTTPS pre frontend server (`true`/`false`) | `false` |
+| `HEADLESS_HTTPS_CERT` | Cesta k SSL certifikátu (PEM) | `./.cert/localhost.pem` |
+| `HEADLESS_HTTPS_KEY` | Cesta k SSL kľúču (PEM) | `./.cert/localhost-key.pem` |
 
 ## Ďalšie zdroje
 
