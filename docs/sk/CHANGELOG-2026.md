@@ -16,7 +16,7 @@
 
 ![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
 
-- V dialógu vkladania odkazu pridaná karta Manažér dokumentov pre jednoduché vkladanie odkazov na súbory v manažérovi dokumentov, nahrávanie nových súborov a ich správu (#260).
+- V dialógu vkladania odkazu pridaná karta [Manažér dokumentov](redactor/files/file-archive/README.md) pre jednoduché vkladanie odkazov na súbory v manažérovi dokumentov, nahrávanie nových súborov a ich správu. Viac sa dozviete v časti [Odkazy na súbory a nahrávanie súborov](redactor/webpages/working-in-editor/README.md#odkazy-na-súbory-a-nahrávanie-súborov) (#58593).
 
 ![](redactor/webpages/working-in-editor/link_dialog-file-archive.png)
 
@@ -56,9 +56,13 @@
 
 ![](redactor/apps/reservation/my-reservations-app/app-page.png)
 
-- Manažér dokumentov - pridané zobrazenie stromovej štruktúry priečinkov, možnosť nahrať viac súborov naraz cez drag&drop (#260).
+- Manažér dokumentov - pridané zobrazenie stromovej štruktúry priečinkov (#58593).
 
 ![](redactor/files/file-archive/datatable.png)
+
+- Manažér dokumentov - pridaná možnosť nahrať viac súborov naraz cez `drag&drop` (#58593).
+
+![](redactor/files/file-archive/drag-drop-upload-dialog.png)
 
 ### Voliteľné polia
 

@@ -4,13 +4,23 @@ Aplikácia pre manažment dokumentov a ich verzií na jednom mieste. Umožňuje 
 
 ## Dokumenty
 
-V zobrazenom zozname vidíme všetky dokumenty, ktoré boli vložené do manažéra v aktuálne zvolenej doméne. Prednastavené je filtrovanie, ktoré zobrazuje iba **hlavné dokumenty**, inak povedané aktuálne verzie dokumentov.
-Na ľavej strane sa nachádza **stromová štruktúra priečinkov** (JSTREE), ktorá umožňuje prechádzať priečinky archívu a filtrovať dokumenty podľa zvoleného priečinka. Po kliknutí na priečinok v strome sa v tabuľke zobrazia iba dokumenty patriace do daného priečinka. Nad stromom sa nachádzajú tlačidlá:
+V zobrazenom zozname vidíme všetky dokumenty, ktoré boli vložené do manažéra v aktuálne zvolenej doméne. Prednastavené je filtrovanie, ktoré zobrazuje iba **hlavné dokumenty**, inak povedané aktuálne verzie dokumentov.
 
+Na ľavej strane sa nachádza **stromová štruktúra priečinkov** (JSTREE), ktorá umožňuje prechádzať priečinky archívu a filtrovať dokumenty podľa zvoleného priečinka. Strom zobrazuje priečinky z koreňového adresára archívu nastaveného konfiguračnou premennou `fileArchivDefaultDirPath` (štandardne `files/archiv/`). Priečinok pre naplánované nahrávanie z konfiguračnej premennej `fileArchivInsertLaterDirPath` sa v strome nezobrazuje.
+
+Po kliknutí na priečinok v strome sa v tabuľke zobrazia iba dokumenty patriace do daného priečinka. Zvolený priečinok sa zároveň použije ako cieľový adresár pre [hromadné nahrávanie súborov](#hromadné-nahrávanie-súborov) a automaticky sa predvyplní pri vytváraní nového dokumentu cez editor.
+
+Nad stromom sa nachádzajú tlačidlá:
+
+- <i class="ti ti-plus"></i> - **Pridať** - vytvorí nový podpriečinok v aktuálne označenom priečinku. Tlačidlo sa zobrazuje používateľom s právom `menuFileArchivManagerCategory` a vytvorenie priečinka vyžaduje právo zápisu do zvoleného priečinka.
 - <i class="ti ti-refresh"></i> - **Obnoviť** - obnoví stromovú štruktúru priečinkov
 - <i class="ti ti-adjustments-horizontal"></i> - **Nastavenia** - umožňuje nastaviť šírku stromovej štruktúry voči tabuľke
 
 ![](datatable.png)
+
+Pri vytváraní priečinka zadajte jeho názov a potvrďte formulár. Názov sa pri vytvorení upraví do bezpečného tvaru pre URL adresu a súborový systém.
+
+![](add_folder.png)
 
 ### Stav dokumentov
 
@@ -39,7 +49,7 @@ Karta obsahuje základné informácie pre vloženie dokumentu.
 - **Názov** - zadajte meno dokumentu, ktoré sa bude na stránke zobrazovať (ako odkaz na dokument). Pole je **povinné**. Môže obsahovať diakritiku, medzery, špeciálne znaky.
 - **Platnosť od** - nastavenie dátumu a času začiatku platnosti dokumentu
 - **Platnosť do** - nastavenie dátumu a času konca platnosti dokumentu
-- **Cieľový adresár pre upload dokumentu** – vyberte adresár, do ktorého chcete dokument nahrať. Neskôr ho môžete využiť pri filtrovaní zobrazenia dokumentov na stránke. Prednastavený cieľový adresár určíte výberom konkrétneho priečinka v stromovej štruktúre. Tento priečinok sa následne automaticky predvyplní ako cieľový adresár. Používateľ si zároveň bude môcť zvoliť aj jeho podpriečinok.
+- **Cieľový adresár pre upload dokumentu** - vyberte adresár, do ktorého chcete dokument nahrať. Neskôr ho môžete využiť pri filtrovaní zobrazenia dokumentov na stránke. Prednastavený cieľový adresár určíte výberom konkrétneho priečinka v stromovej štruktúre. Tento priečinok sa následne automaticky predvyplní ako cieľový adresár. Používateľ si zároveň bude môcť zvoliť aj jeho podpriečinok.
 - **Súbor** - pole pre nahratie súboru, ktorý reprezentuje dokument. Viac o poli ```UPLAOD``` sa dočítate [tu](../../../developer/datatables-editor/field-file-upload.md). Povolené prípony súboru nastavíte pomocou konfiguračnej premennej ```fileArchivAllowExt```.
 - **Nahrať dokument neskôr** - v prípade potreby nahrania dokumentu do manažéra v presný čas a dátum, je možné nastaviť nahranie dokumentu automaticky v budúcnosti. Výberom možnosti sa Vám zobrazia ukryté polia
   - **Nahrať po** - výber dátumu a času, po ktorom sa má dokumentu nahrať
@@ -237,6 +247,24 @@ Vymazaním hlavného dokumentu (ktorý nie je vzor) sa vymažú aj všetky histo
 !>**Upozornenie:** hlavný dokument sa nedá vymazať, pokiaľ má čakajúcu verziu na nahratie.
 
 Ako aj pri mazaní vzorov, tieto naplánované verzie sa dajú vymazať **IBA** pomocou tabuľky v karte **Čakajúce**.
+
+## Hromadné nahrávanie súborov
+
+Súbory môžete do aktuálne zvoleného priečinka nahrať aj priamo zo zoznamu dokumentov. Presuňte jeden alebo viac súborov z počítača nad stránku manažéra dokumentov. Nahrávanie používa aktuálne označený priečinok v stromovej štruktúre a povolené prípony súborov z konfiguračnej premennej `fileArchivAllowExt`.
+
+Počas nahrávania sa zobrazí panel s priebehom pre jednotlivé súbory aj celkovým priebehom. Po úspešnom nahratí sa pre každý súbor vytvorí samostatný hlavný dokument, jeho názov sa predvyplní z mena súboru bez prípony a tabuľka sa automaticky obnoví.
+
+![](drag-drop-upload-dialog.png)
+
+Ak už v zvolenom priečinku existuje súbor s rovnakým reálnym menom, nahrávanie sa pozastaví a pri danom súbore sa zobrazia možnosti:
+
+- **Preskočiť** - nahraný súbor sa zahodí a existujúci dokument zostane bez zmeny.
+- **Nahradiť** - existujúci hlavný dokument sa nahradí novým súborom bez vytvorenia historickej verzie.
+- **Nová verzia** - nový súbor sa uloží ako aktuálna verzia dokumentu a pôvodný súbor sa presunie medzi historické verzie.
+
+V spodnej časti panelu môžete rovnakú voľbu použiť naraz pre všetky súbory čakajúce na rozhodnutie.
+
+![](drag-drop-upload-duplicity-dialog.png)
 
 ## Vyhľadávanie a indexovanie
 
