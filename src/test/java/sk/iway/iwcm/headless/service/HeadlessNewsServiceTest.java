@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -12,11 +13,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.news.NewsQuery;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.headless.dto.HeadlessNewsRequest;
 import sk.iway.iwcm.headless.dto.HeadlessNewsResponse;
 
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for HeadlessNewsService DTO and validation logic.
@@ -148,6 +153,36 @@ class HeadlessNewsServiceTest {
     void testNormalizePageSizeUsesDefaultForMissingOrInvalidValues() {
         assertEquals(10, HeadlessNewsService.normalizePageSize(null));
         assertEquals(10, HeadlessNewsService.normalizePageSize(0));
+    }
+
+    @Test
+    void listNewsUsesUnpagedCountForPaginationTotals() {
+        HeadlessNewsRequest request = new HeadlessNewsRequest();
+        request.setPublishType("all");
+        request.setPaging(true);
+        request.setPageSize(10);
+        request.setOffset(10);
+
+        DocDetails doc = new DocDetails();
+        doc.setDocId(1);
+        try (MockedStatic<CloudToolsForCore> cloudToolsMock = mockStatic(CloudToolsForCore.class);
+                MockedConstruction<NewsQuery> queries = mockConstruction(NewsQuery.class, (query, context) -> {
+                    when(query.setPageSize(anyInt())).thenReturn(query);
+                    when(query.setPage(anyInt())).thenReturn(query);
+                    when(query.getNewsCount()).thenReturn(25);
+                    when(query.getNewsList()).thenReturn(List.of(doc));
+                })) {
+            cloudToolsMock.when(CloudToolsForCore::getDomainId).thenReturn(0);
+
+            HeadlessNewsResponse response = new HeadlessNewsService().listNews(request);
+
+            assertEquals(2, queries.constructed().size());
+            assertEquals(2, response.getPage());
+            assertEquals(10, response.getSize());
+            assertEquals(25, response.getTotalElements());
+            assertEquals(3, response.getTotalPages());
+            assertEquals(List.of(doc), response.getItems());
+        }
     }
 
     // ==================== Publish Type Tests ====================
