@@ -17,10 +17,27 @@ npm install
 npm run dev
 ```
 
-Aplikácia štandardne beží na `http://localhost:3000`. CMS backend je prednastavený na `http://cms.iway.sk` – zmeňte ho cez environment premennú:
+Aplikácia štandardne beží na `http://localhost:3000`. CMS backend a ďalšie nastavenia sa konfigurujú cez súbor `.env` v adresári projektu. Skopírujte `.env.example` ako základ:
 
 ```bash
-HEADLESS_BACKEND_ORIGIN=https://vas-cms.example.com npm run dev
+cd docs/examples/headless-astro
+cp .env.example .env
+```
+
+Upravte `.env` podľa vašej inštalácie:
+
+```bash
+# Headless CMS API endpoint (full path including /rest/headless/v1)
+# Update this to match your Headless CMS server
+PUBLIC_API_BASE=https://cms.example.com/rest/headless/v1
+
+#Optional variables
+#HEADLESS_PROXY_PREFIXES=/images/,/files/,/thumb/,/shared/,/components,/FormMailAjax.action,/rest/,/apps/form/mvc/
+#HEADLESS_HOST=127.0.0.1
+#HEADLESS_PORT=3000
+
+# Disable SSL certificate verification for local development with self-signed certificates
+#NODE_TLS_REJECT_UNAUTHORIZED=0
 ```
 
 ## Štruktúra projektu
