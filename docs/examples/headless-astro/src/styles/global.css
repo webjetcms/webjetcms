@@ -115,7 +115,7 @@ body {
 
 .header-nav a:hover {
   color: #f1f5f9;
-  background: rgba(255, 255, 255, 0.08);
+  background: #222a3b;
 }
 
 .header-spacer { flex: 1; }
@@ -132,7 +132,7 @@ body {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 6px;
-  color: #f1f5f9;
+  color: var(--bg-sidebar);
   font-size: 13px;
   outline: none;
   transition: border-color 0.15s, background 0.15s;

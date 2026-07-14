@@ -274,10 +274,6 @@ public class HeadlessPageService {
                     content.append(new String(b, off, len));
                 }
 
-                public boolean isCommitted() {
-                    return false;
-                }
-
                 // Abstract method in ServletOutputStream - must implement
                 public void setWriteListener(jakarta.servlet.WriteListener listener) {
                     // not supported in sync mode
@@ -286,20 +282,6 @@ public class HeadlessPageService {
                 // Abstract method in ServletOutputStream - must implement
                 public boolean isReady() {
                     return true;
-                }
-
-                public void flushBuffer() {
-                    // no-op for capture
-                }
-
-                public java.io.PrintWriter getWriter() {
-                    try {
-                        return new java.io.PrintWriter(new java.io.BufferedWriter(
-                                new java.io.OutputStreamWriter(getOutputStream(), getCharacterEncoding())), false);
-                    } catch (java.io.UnsupportedEncodingException e) {
-                        return new java.io.PrintWriter(new java.io.BufferedWriter(
-                                new java.io.OutputStreamWriter(getOutputStream())), false);
-                    }
                 }
             };
         }

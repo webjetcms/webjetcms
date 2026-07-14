@@ -50,9 +50,6 @@ public class HeadlessNewsRequest {
     /** Perex group IDs to exclude (maps to NewsActionBean.perexGroupNot). */
     private List<Integer> perexGroupNot;
 
-    public HeadlessNewsRequest() {
-    }
-
     public List<Integer> getGroupIds() {
         return groupIds;
     }

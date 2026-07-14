@@ -19,9 +19,6 @@ public class HeadlessNewsResponse {
     private long totalElements;
     private int totalPages;
 
-    public HeadlessNewsResponse() {
-    }
-
     public List<DocDetails> getItems() {
         return items;
     }

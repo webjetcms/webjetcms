@@ -11,16 +11,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.headless.dto.ErrorResponse;
 import sk.iway.iwcm.headless.dto.FieldError;
-import sk.iway.iwcm.headless.dto.FormSubmitRequest;
 import sk.iway.iwcm.headless.dto.SearchResultItem;
 import sk.iway.iwcm.headless.dto.SearchResults;
 import sk.iway.iwcm.headless.service.HeadlessSearchService;
 import sk.iway.iwcm.system.spring.services.WebjetSecurityService;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Unit tests for HeadlessActionsRestController.
@@ -40,56 +37,6 @@ class HeadlessActionsRestControllerTest {
 
     @Mock
     private HttpServletResponse response;
-
-    // ==================== Form Validation Tests ====================
-
-    @Test
-    void testValidateFormSubmitRequest_withAllFields() {
-        FormSubmitRequest formRequest = new FormSubmitRequest();
-        formRequest.setFormId("contact-form");
-        formRequest.setComponentKey("contact");
-
-        Map<String, String> fields = new HashMap<>();
-        fields.put("name", "John");
-        fields.put("email", "john@example.com");
-        formRequest.setFields(fields);
-
-        // Should pass validation - has formId and fields
-        List<FieldError> errors = validateFormSubmitRequest(formRequest);
-        assertTrue(errors.isEmpty(), "Should have no validation errors");
-    }
-
-    @Test
-    void testValidateFormSubmitRequest_missingFormId() {
-        FormSubmitRequest formRequest = new FormSubmitRequest();
-        formRequest.setFields(new HashMap<>());
-
-        List<FieldError> errors = validateFormSubmitRequest(formRequest);
-        assertFalse(errors.isEmpty());
-        assertEquals(2, errors.size());
-        assertEquals("formId/formName/componentKey", errors.get(0).getField());
-    }
-
-    @Test
-    void testValidateFormSubmitRequest_emptyFields() {
-        FormSubmitRequest formRequest = new FormSubmitRequest();
-        formRequest.setFormId("contact-form");
-
-        List<FieldError> errors = validateFormSubmitRequest(formRequest);
-        assertFalse(errors.isEmpty());
-        assertEquals(1, errors.size());
-        assertEquals("fields", errors.get(0).getField());
-    }
-
-    @Test
-    void testValidateFormSubmitRequest_noIdentification() {
-        FormSubmitRequest formRequest = new FormSubmitRequest();
-        formRequest.setFields(new HashMap<>());
-
-        List<FieldError> errors = validateFormSubmitRequest(formRequest);
-        assertFalse(errors.isEmpty());
-        assertEquals(2, errors.size()); // Missing form identification + missing fields
-    }
 
     // ==================== Search Result Tests ====================
 
@@ -194,7 +141,7 @@ class HeadlessActionsRestControllerTest {
 
         assertNotNull(snippet);
         // Should return beginning of text when no match found
-        assertTrue(snippet.length() > 0);
+        assertFalse(snippet.isEmpty());
     }
 
     @Test
@@ -210,23 +157,6 @@ class HeadlessActionsRestControllerTest {
     }
 
     // ==================== Helper Methods ====================
-
-    private List<FieldError> validateFormSubmitRequest(FormSubmitRequest request) {
-        List<FieldError> errors = new ArrayList<>();
-
-        if (Tools.isEmpty(request.getFormId())
-                && Tools.isEmpty(request.getFormName())
-                && Tools.isEmpty(request.getComponentKey())) {
-            errors.add(new FieldError("formId/formName/componentKey",
-                    "One of formId, formName, or componentKey is required."));
-        }
-
-        if (request.getFields() == null || request.getFields().isEmpty()) {
-            errors.add(new FieldError("fields", "Form fields payload is required."));
-        }
-
-        return errors;
-    }
 
     private String extractSnippet(String data, String query) {
         if (Tools.isEmpty(data) || Tools.isEmpty(query)) {
