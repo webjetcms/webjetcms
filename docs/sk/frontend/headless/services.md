@@ -194,6 +194,8 @@ Vráti stránkovaný zoznam noviniek. Používa POST kvôli zložitejšej vstupn
 }
 ```
 
+Headless API pre novinky teraz povoľuje načítať iba adresáre nakonfigurované v premennej `newsAdminGroupIds` a ich podadresáre, čím zabraňuje načítaniu noviniek z nepovolených adresárov.
+
 ---
 
 ## Vyhľadávanie

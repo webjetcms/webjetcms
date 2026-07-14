@@ -21,10 +21,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.components.news.NewsActionBean;
 import sk.iway.iwcm.components.news.NewsQuery;
+import sk.iway.iwcm.components.news.NewsRestController;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.headless.dto.FieldError;
 import sk.iway.iwcm.headless.dto.HeadlessNewsRequest;
 import sk.iway.iwcm.headless.dto.HeadlessNewsResponse;
 import sk.iway.iwcm.headless.service.HeadlessNewsService;
+import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,8 +57,8 @@ public class HeadlessNewsRestController extends sk.iway.iwcm.rest.RestController
     /**
      * List news via the headless API.
      *
-     * @param request   the news request parameters (NewsActionBean-compatible)
-     * @param httpRequest the HTTP request
+     * @param newsRequest   the news request parameters (NewsActionBean-compatible)
+     * @param request the HTTP request
      * @param response  the HTTP response
      * @return HeadlessNewsResponse with news items and pagination
      */
@@ -69,23 +73,23 @@ public class HeadlessNewsRestController extends sk.iway.iwcm.rest.RestController
             }
     )
     public ResponseEntity<HeadlessNewsResponse> listNews(
-            @RequestBody HeadlessNewsRequest request,
-            HttpServletRequest httpRequest,
+            @RequestBody HeadlessNewsRequest newsRequest,
+            HttpServletRequest request,
             HttpServletResponse response) {
 
         // Check IP whitelist first (inherited from RestController)
-        isIpAddressAllowed(httpRequest);
+        isIpAddressAllowed(request);
 
         // Validate request body
-        List<FieldError> validationErrors = validateRequest(request);
+        List<FieldError> validationErrors = validateRequest(newsRequest, request);
         if (!validationErrors.isEmpty()) {
             return createValidationErrorResponse(validationErrors);
         }
 
-        request.setPageSize(HeadlessNewsService.normalizePageSize(request.getPageSize()));
+        newsRequest.setPageSize(HeadlessNewsService.normalizePageSize(newsRequest.getPageSize()));
 
         // Execute news query via service
-        HeadlessNewsResponse newsResponse = headlessNewsService.listNews(request);
+        HeadlessNewsResponse newsResponse = headlessNewsService.listNews(newsRequest);
 
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
@@ -108,12 +112,14 @@ public class HeadlessNewsRestController extends sk.iway.iwcm.rest.RestController
      * Validates the headless news request.
      * Returns field-level errors for invalid/missing parameters.
      */
-    private List<FieldError> validateRequest(HeadlessNewsRequest request) {
+    private List<FieldError> validateRequest(HeadlessNewsRequest request, HttpServletRequest httpRequest) {
         List<FieldError> errors = new ArrayList<>();
 
         // groupIds is required - must provide at least one group
         if (request.getGroupIds() == null || request.getGroupIds().isEmpty()) {
             errors.add(new FieldError("groupIds", "At least one group ID is required."));
+        } else if (!areNewsGroupsAllowed(request.getGroupIds(), httpRequest)) {
+            errors.add(new FieldError("groupIds", "One or more group IDs are not allowed for news."));
         }
 
         // Validate publishType if provided
@@ -155,6 +161,18 @@ public class HeadlessNewsRestController extends sk.iway.iwcm.rest.RestController
         }
 
         return errors;
+    }
+
+    private boolean areNewsGroupsAllowed(List<Integer> groupIds, HttpServletRequest httpRequest) {
+        List<LabelValue> allowedGroups = NewsRestController.convertIdsToNamePair(
+                "constant:newsAdminGroupIds", null, httpRequest);
+        int[] allowedGroupIds = allowedGroups.stream()
+                .mapToInt(group -> Tools.getIntValue(group.getValue().replace("*", ""), -1))
+                .filter(groupId -> groupId > 0)
+                .toArray();
+        int[] allowedGroupsWithSubgroups = GroupsDB.getInstance().expandGroupIdsToChilds(allowedGroupIds, true);
+
+        return groupIds.stream().allMatch(groupId -> Tools.containsOneItem(allowedGroupsWithSubgroups, groupId));
     }
 
     private ResponseEntity<HeadlessNewsResponse> createValidationErrorResponse(List<FieldError> fieldErrors) {

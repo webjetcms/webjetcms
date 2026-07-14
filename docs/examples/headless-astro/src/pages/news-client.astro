@@ -53,7 +53,7 @@ if (navSetCookie) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             groupIds: [NEWS_GROUP_ID],
-            alsoSubGroups: false,
+            alsoSubGroups: true,
             publishType: 'new',
             order: 'date',
             ascending: false,
