@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -154,6 +155,7 @@ public class FormItemEntity extends BaseEditorFields {
     private String regexValidation;
 
     @Column(name = "custom_error")
+    @Size(max = 255)
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.form_items.custom_error", hidden = true, tab = "advanced")
     private String customError;
 

@@ -359,7 +359,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
 
     private IllegalStateException duplicationError(String debugError) {
         Logger.debug(this, debugError);
-        return new IllegalStateException("NO");
+        return new IllegalStateException("Form duplication failed: " + debugError);
     }
 
     /**

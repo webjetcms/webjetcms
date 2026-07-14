@@ -34,6 +34,9 @@ import sk.iway.iwcm.components.multistep_form.support.SaveFormException;
 import sk.iway.iwcm.components.upload.XhrFileUploadServlet;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.TemplateDetails;
+import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -184,6 +187,22 @@ public class SaveFormService {
 
         if(Tools.isNotEmpty(referer)) form.setReferer(DB.prepareString(referer, 255));
         else Logger.info(this.getClass(), "Cannot determine referer URL for saved form, destinationUrl is empty. formName=" + formName + " docId=" + docId);
+
+        String lng = null;
+        DocDetails doc = DocDB.getInstance().getBasicDocDetails(docId, false);
+        if(doc != null) {
+            GroupDetails group = doc.getGroup();
+            if(group != null) lng = group.getLng();
+
+            if(Tools.isEmpty(lng)) {
+                TemplateDetails temp = TemplatesDB.getInstance().getTemplate(doc.getTempId());
+                if(temp != null) lng = temp.getLng();
+            }
+        }
+        if (Tools.isEmpty(lng)) lng = PageLng.getUserLng(request);
+
+        if(Tools.isNotEmpty(lng)) form.setLanguage(lng);
+        else Logger.info(this.getClass(), "Cannot determine language used on the page where the form is embedded. formName=" + formName + " docId=" + docId);
 
         // For file save we need formId ... sooo save it as it is and then use id
         form.setData("-");

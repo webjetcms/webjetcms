@@ -224,12 +224,12 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         }
 
         // sort_priority bugfix - when new item have same sort_priority as existing one, get max sort_priority for step and add 10
-        int samePriorityCount = formItemsRepository.countByFormNameAndStepIdAndSortPriorityAndIdNot(entity.getFormName(), entity.getStepId().longValue(), entity.getSortPriority(), entity.getId() != null ? entity.getId().intValue() : -1);
+        int samePriorityCount = formItemsRepository.countByFormNameAndStepIdAndSortPriorityAndIdNot(entity.getFormName(), entity.getStepId(), entity.getSortPriority(), entity.getId() != null ? entity.getId().intValue() : -1);
         if(samePriorityCount > 0) {
             int maxSortPriority = formItemsRepository.findAll((root, query, builder) ->
                     builder.and(
                         builder.equal(root.get("formName"), entity.getFormName()),
-                        builder.equal(root.get("stepId"), entity.getStepId().longValue())
+                        builder.equal(root.get("stepId"), entity.getStepId())
                     ),
                     PageRequest.of(0, 1, Sort.by(Sort.Order.desc("sortPriority")))
                 ).getContent().stream()
