@@ -15,6 +15,7 @@ let uploadPrefix;
 let tmpDir;
 let standaloneFiles;
 let ckeditorFile;
+let duplicateActionFiles;
 
 Before(({ I, login }) => {
     login('admin');
@@ -27,6 +28,27 @@ Before(({ I, login }) => {
             createUploadFile("archive_file_test_second.pdf", uploadPrefix + "-standalone-b.pdf")
         ];
         ckeditorFile = createUploadFile("archive_replace.pdf", uploadPrefix + "-ckeditor.pdf");
+        duplicateActionFiles = [
+            {
+                buttonClass: "btn-toast-skip",
+                initial: createUploadFile("archive_file_test.pdf", uploadPrefix + "-duplicate-skip.pdf", "duplicate-initial"),
+                duplicate: createUploadFile("archive_file_test_second.pdf", uploadPrefix + "-duplicate-skip.pdf", "duplicate-repeat"),
+                expectedMainContent: "archive_file_test.png"
+            },
+            {
+                buttonClass: "btn-toast-overwrite",
+                initial: createUploadFile("archive_file_test.pdf", uploadPrefix + "-duplicate-overwrite.pdf", "duplicate-initial"),
+                duplicate: createUploadFile("archive_file_test_second.pdf", uploadPrefix + "-duplicate-overwrite.pdf", "duplicate-repeat"),
+                expectedMainContent: "archive_file_test_second.png"
+            },
+            {
+                buttonClass: "btn-toast-keepboth",
+                initial: createUploadFile("archive_file_test.pdf", uploadPrefix + "-duplicate-keepboth.pdf", "duplicate-initial"),
+                duplicate: createUploadFile("archive_file_test_third.pdf", uploadPrefix + "-duplicate-keepboth.pdf", "duplicate-repeat"),
+                expectedMainContent: "archive_file_test_third.png",
+                expectedHistoryContent: "archive_file_test.png"
+            }
+        ];
     }
 });
 
@@ -39,7 +61,7 @@ Scenario('Upload multiple files directly to file archive folder', async ({ I, DT
     DT.waitForLoader("fileArchiveDataTable");
 
     for (const file of standaloneFiles) {
-        DT.filterEquals("virtualFileName", file.virtualName);
+        DT.filterContains("virtualFileName", file.virtualName);
         I.see(file.virtualName, "#fileArchiveDataTable");
         I.see(file.fileName, "#fileArchiveDataTable");
         I.see("files/archiv/multiupload", "#fileArchiveDataTable");
@@ -51,6 +73,45 @@ Scenario('Upload multiple files directly to file archive folder', async ({ I, DT
         await SL.checkFileContent(file.fileName, null, false);
     }
 
+});
+
+Scenario('Resolve duplicate multiupload files with all action buttons @screenshot', async ({ I, DT, Document }) => {
+    I.amOnPage(SL.fileArchive);
+    I.resizeWindow(1400, 850);
+    DT.waitForLoader("fileArchiveDataTable");
+    selectMultiuploadFolder(I, DT);
+
+    uploadFilesToDropzone(I, duplicateActionFiles.map(file => file.initial));
+    Document.screenshotElement("#upload-wrapper", "/redactor/files/file-archive/drag-drop-upload-dialog.png");
+    DT.waitForLoader("fileArchiveDataTable");
+
+    for (const file of duplicateActionFiles) {
+        DT.filterContains("virtualFileName", file.initial.virtualName);
+        I.see(file.initial.virtualName, "#fileArchiveDataTable");
+        I.see(file.initial.fileName, "#fileArchiveDataTable");
+    }
+
+    I.amOnPage(SL.fileArchive);
+    DT.waitForLoader("fileArchiveDataTable");
+    selectMultiuploadFolder(I, DT);
+
+    uploadFilesToDropzone(I, duplicateActionFiles.map(file => file.duplicate), "exist");
+    Document.screenshotElement("#upload-wrapper", "/redactor/files/file-archive/drag-drop-upload-duplicity-dialog.png");
+
+    for (const file of duplicateActionFiles) {
+        clickDuplicateUploadAction(I, file.duplicate, file.buttonClass);
+    }
+    DT.waitForLoader("fileArchiveDataTable");
+
+    for (const file of duplicateActionFiles) {
+        I.amOnPage(ELFINDER_MULTUPLOAD);
+        await SL.checkFileContent(file.initial.fileName, file.expectedMainContent);
+    }
+
+    I.amOnPage(ELFINDER_MULTUPLOAD);
+    I.dontSeeElement(".elfinder-cwd-filename[title='" + SL.getVersionName(duplicateActionFiles[0].initial.fileName, 1) + "']");
+    I.dontSeeElement(".elfinder-cwd-filename[title='" + SL.getVersionName(duplicateActionFiles[1].initial.fileName, 1) + "']");
+    await SL.checkFileContent(SL.getVersionName(duplicateActionFiles[2].initial.fileName, 1), duplicateActionFiles[2].expectedHistoryContent);
 });
 
 Scenario('Upload and select file archive link in CKEditor', async ({ I, DT, DTE, Document }) => {
@@ -81,7 +142,7 @@ Scenario('Upload and select file archive link in CKEditor', async ({ I, DT, DTE,
     uploadFilesToDropzone(I, [ckeditorFile], "success", "#wjLinkFileArchiveIframeElement");
     DT.waitForLoader("fileArchiveDataTable");
 
-    DT.filterEquals("virtualFileName", ckeditorFile.virtualName);
+    DT.filterContains("virtualFileName", ckeditorFile.virtualName);
     I.click(locate("#fileArchiveDataTable tbody .dt-row-edit a").withText(ckeditorFile.virtualName));
 
     const expectedUrl = ARCHIVE_FOLDER + ckeditorFile.fileName;
@@ -94,7 +155,7 @@ Scenario('Upload and select file archive link in CKEditor', async ({ I, DT, DTE,
     I.assertContain(htmlCode, expectedUrl);
 });
 
-Scenario('Delete multiupload file archive entities', async ({ I, DT, Document }) => {
+Scenario('Delete multiupload file archive entities @screenshot', async ({ I, DT, Document }) => {
     await deleteArchiveRowsByPrefix(I, DT, uploadPrefix);
 
     const wasRemovedByElfinder = await SL.removeFileByElfinder(".elfinder-cwd-filename[title^='" + uploadPrefix + "']", ELFINDER_MULTUPLOAD);
@@ -106,21 +167,36 @@ Scenario('Delete multiupload file archive entities', async ({ I, DT, Document })
     Document.resetPageBuilderMode();
 });
 
+Scenario('Add folder btn visibility test', ({ I, DT }) => {
+    const addFolderPerm = "menuFileArchivManagerCategory";
+
+    I.amOnPage("/apps/file-archive/admin/");
+    DT.waitForLoader();
+    I.waitForVisible("button#btn-create-folder", 5);
+
+    I.amOnPage("/apps/file-archive/admin/" + "?removePerm=" + addFolderPerm);
+    DT.waitForLoader();
+    I.dontSeeElement("button#btn-create-folder");
+});
+
 /**
  * Creates a temporary copy of a test document for upload.
  * @param {string} sourceName - name of the source file in the docs directory
  * @param {string} targetName - desired name for the copy in the temp directory
+ * @param {string|null} variant - optional temp subdirectory for same-name replacement fixtures
  * @returns {{fileName: string, filePath: string, virtualName: string}} upload file descriptor
  */
-function createUploadFile(sourceName, targetName) {
+function createUploadFile(sourceName, targetName, variant = null) {
     const sourcePath = path.join(DOCS_DIR, sourceName);
-    const targetPath = path.join(tmpDir, targetName);
+    const targetDir = variant == null ? tmpDir : path.join(tmpDir, variant);
+    fs.mkdirSync(targetDir, { recursive: true });
+    const targetPath = path.join(targetDir, targetName);
     fs.copyFileSync(sourcePath, targetPath);
 
     return {
         fileName: targetName,
         filePath: targetPath,
-        virtualName: targetName.replace(/\.[^.]+$/, "")
+        virtualName: targetName.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ")
     };
 }
 
@@ -174,6 +250,26 @@ function uploadFilesToDropzone(I, files, expectedStatus = "success", frameSelect
 }
 
 /**
+ * Clicks one duplicate-resolution action in the latest toast for the given file.
+ * @param {CodeceptJS.I} I - CodeceptJS actor
+ * @param {{fileName: string}} file - upload file descriptor
+ * @param {string} buttonClass - toast action button class
+ */
+function clickDuplicateUploadAction(I, file, buttonClass) {
+    I.usePlaywrightTo("resolve duplicate upload action", async ({ page }) => {
+        const toast = page.locator("#toast-container-upload div.toast", { hasText: file.fileName }).last();
+        await toast.waitFor({ state: "visible", timeout: 20000 });
+        await toast.locator("." + buttonClass).click();
+        await page.waitForFunction(({ fileName }) => {
+            const toasts = Array.from(document.querySelectorAll("#toast-container-upload div.toast"))
+                .filter(toast => toast.textContent.includes(fileName));
+            const latestToast = toasts[toasts.length - 1];
+            return latestToast != null && latestToast.getAttribute("data-upload-status") === "success";
+        }, { fileName: file.fileName }, { timeout: 60000 });
+    });
+}
+
+/**
  * Deletes all file archive rows whose virtualFileName contains the given prefix.
  * Navigates to the archive folder, filters by prefix, and bulk-deletes matching records.
  * @param {CodeceptJS.I} I - CodeceptJS actor
@@ -182,7 +278,7 @@ function uploadFilesToDropzone(I, files, expectedStatus = "success", frameSelect
  */
 async function deleteArchiveRowsByPrefix(I, DT, prefix) {
     SL.openFileArchive(ARCHIVE_FOLDER + "cleanup.pdf");
-    DT.filterContains("virtualFileName", prefix);
+    DT.filterContains("virtualFileName", prefix.replace(/[-_]+/g, " "));
 
     const recordCount = await DT.getRecordCount("fileArchiveDataTable");
     if (recordCount > 0) {

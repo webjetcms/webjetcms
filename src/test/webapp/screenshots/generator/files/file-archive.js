@@ -14,7 +14,15 @@ Scenario('Base screens', ({ I, DT, DTE, Document, i18n }) => {
 
     I.amOnPage('/apps/file-archive/admin/');
 
+    // For better screenshots
+    I.resizeWindow(1400, 850);
+
     Document.screenshot("/redactor/files/file-archive/datatable.png");
+
+    I.clickCss("button#btn-create-folder");
+    I.waitForVisible("#createFolderModal div.DTE_Action_Edit.modal-content", 5);
+    Document.screenshotElement("#createFolderModal div.DTE_Action_Edit.modal-content", "/redactor/files/file-archive/add_folder.png");
+    I.clickCss("#createFolderModal div.DTE_Form_Buttons button.btn-outline-secondary");
 
     DT.filterSelect("editorFields.statusIcons", i18n.get('All document versions'));
     Document.screenshot("/redactor/files/file-archive/datatable_allFiles.png");
