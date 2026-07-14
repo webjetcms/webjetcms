@@ -30,6 +30,9 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 @Service
 public class HeadlessNewsService {
 
+    public static final int MAX_PAGE_SIZE = 100;
+    private static final int DEFAULT_PAGE_SIZE = 10;
+
     /**
      * Executes a headless news query based on the request parameters.
      *
@@ -37,8 +40,17 @@ public class HeadlessNewsService {
      * @return paginated response with news items
      */
     public HeadlessNewsResponse listNews(HeadlessNewsRequest request) {
-        // Build and execute NewsQuery
-        NewsQuery query = buildNewsQuery(request);
+        int pageSize = normalizePageSize(request.getPageSize());
+        boolean paging = request.getPaging() != null && request.getPaging();
+        request.setPageSize(pageSize);
+
+        int totalElements = 0;
+        if (paging) {
+            totalElements = buildNewsQuery(request, false).getNewsCount();
+        }
+
+        // Build and execute the paged NewsQuery
+        NewsQuery query = buildNewsQuery(request, true);
 
         // Get the raw news list from NewsQuery — already DocDetails
         List<DocDetails> docDetailsList = query.getNewsList();
@@ -47,18 +59,17 @@ public class HeadlessNewsService {
         HeadlessNewsResponse response = new HeadlessNewsResponse();
         response.setItems(docDetailsList);
 
-        int count = docDetailsList.size();
-        if (request.getPaging() != null && request.getPaging()) {
-            response.setPage(request.getOffset() / Math.max(request.getPageSize(), 1) + 1);
-            response.setSize(request.getPageSize());
-            response.setTotalElements(count);
-            response.setTotalPages((int) Math.ceil((double) count / Math.max(request.getPageSize(), 1)));
+        if (paging) {
+            response.setPage(request.getOffset() / pageSize + 1);
+            response.setSize(pageSize);
+            response.setTotalElements(totalElements);
+            response.setTotalPages((int) Math.ceil((double) totalElements / pageSize));
         } else {
             // No paging: return all results as a single page
             response.setPage(1);
-            response.setSize(request.getPageSize());
-            response.setTotalElements(count);
-            response.setTotalPages(count == 0 ? 1 : 1);
+            response.setSize(pageSize);
+            response.setTotalElements(docDetailsList.size());
+            response.setTotalPages(1);
         }
 
         return response;
@@ -68,7 +79,7 @@ public class HeadlessNewsService {
      * Builds a NewsQuery from the request parameters.
      * Maps HeadlessNewsRequest fields to NewsQuery behavior.
      */
-    private NewsQuery buildNewsQuery(HeadlessNewsRequest request) {
+    private NewsQuery buildNewsQuery(HeadlessNewsRequest request, boolean applyPaging) {
         NewsQuery query = new NewsQuery();
 
         // Apply group filtering
@@ -80,8 +91,9 @@ public class HeadlessNewsService {
         // Apply ordering
         addOrdering(query, request);
 
-        // Apply paging parameters
-        addPaging(query, request);
+        if (applyPaging) {
+            addPaging(query, request);
+        }
 
         // Set loadData flag
         if (request.getLoadData() != null) {
@@ -228,7 +240,7 @@ public class HeadlessNewsService {
      */
     private void addPaging(NewsQuery query, HeadlessNewsRequest request) {
         boolean paging = request.getPaging() != null && request.getPaging();
-        int pageSize = request.getPageSize() != null ? request.getPageSize() : 10;
+        int pageSize = normalizePageSize(request.getPageSize());
         int offset = request.getOffset() != null ? request.getOffset() : 0;
 
         if (paging) {
@@ -242,5 +254,12 @@ public class HeadlessNewsService {
                 query.setInitialOffset(offset);
             }
         }
+    }
+
+    public static int normalizePageSize(Integer pageSize) {
+        if (pageSize == null || pageSize < 1) {
+            return DEFAULT_PAGE_SIZE;
+        }
+        return Math.min(pageSize, MAX_PAGE_SIZE);
     }
 }

@@ -82,6 +82,8 @@ public class HeadlessNewsRestController extends sk.iway.iwcm.rest.RestController
             return createValidationErrorResponse(validationErrors);
         }
 
+        request.setPageSize(HeadlessNewsService.normalizePageSize(request.getPageSize()));
+
         // Execute news query via service
         HeadlessNewsResponse newsResponse = headlessNewsService.listNews(request);
 

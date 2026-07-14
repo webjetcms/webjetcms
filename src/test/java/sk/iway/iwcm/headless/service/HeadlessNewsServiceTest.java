@@ -138,6 +138,18 @@ class HeadlessNewsServiceTest {
         assertEquals(3, response.getTotalPages());
     }
 
+    @Test
+    void testNormalizePageSizeCapsLargeRequests() {
+        assertEquals(HeadlessNewsService.MAX_PAGE_SIZE, HeadlessNewsService.normalizePageSize(101));
+        assertEquals(HeadlessNewsService.MAX_PAGE_SIZE, HeadlessNewsService.normalizePageSize(1000));
+    }
+
+    @Test
+    void testNormalizePageSizeUsesDefaultForMissingOrInvalidValues() {
+        assertEquals(10, HeadlessNewsService.normalizePageSize(null));
+        assertEquals(10, HeadlessNewsService.normalizePageSize(0));
+    }
+
     // ==================== Publish Type Tests ====================
 
     @Test

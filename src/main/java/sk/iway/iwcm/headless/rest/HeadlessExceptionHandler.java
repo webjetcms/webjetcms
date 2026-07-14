@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.headless.dto.ErrorResponse;
 import sk.iway.iwcm.headless.dto.FieldError;
 
@@ -32,11 +33,13 @@ public class HeadlessExceptionHandler {
 
         String message = "Internal server error.";
 
-        // Provide more specific messages for known exceptions
-        if (ex.getCause() != null) {
-            message = ex.getCause().getMessage();
-        } else if (ex.getMessage() != null && !ex.getMessage().isEmpty()) {
-            message = ex.getMessage();
+        // Provide more specific messages for known exceptions if admin is logged in
+        if (RequestBean.isAdminLogged()) {
+            if (ex.getCause() != null) {
+                message = ex.getCause().getMessage();
+            } else if (ex.getMessage() != null && !ex.getMessage().isEmpty()) {
+                message = ex.getMessage();
+            }
         }
 
         ErrorResponse errorResponse = new ErrorResponse(
@@ -56,10 +59,15 @@ public class HeadlessExceptionHandler {
                                                                        HttpServletRequest request) {
         Logger.error(HeadlessExceptionHandler.class, "HeadlessExceptionHandler.handleJsonProcessingException", ex);
 
+        String message = "Invalid JSON payload.";
+        if (RequestBean.isAdminLogged()) {
+            message += " " + ex.getOriginalMessage();
+        }
+
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 "Bad Request",
-                "Invalid JSON payload: " + ex.getOriginalMessage()
+                message
         );
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
@@ -74,10 +82,15 @@ public class HeadlessExceptionHandler {
         List<FieldError> fieldErrors = new ArrayList<>();
         fieldErrors.add(new FieldError("request", ex.getMessage()));
 
+        String message = "Validation failed.";
+        if (RequestBean.isAdminLogged()) {
+            message += " " + ex.getMessage();
+        }
+
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 "Bad Request",
-                ex.getMessage()
+                message
         );
         errorResponse.setFieldErrors(fieldErrors);
 
