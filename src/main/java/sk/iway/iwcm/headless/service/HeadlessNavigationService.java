@@ -9,6 +9,7 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.headless.dto.NavigationItem;
 
@@ -20,6 +21,16 @@ import java.util.List;
  */
 @Service
 public class HeadlessNavigationService {
+
+    /**
+     * Checks whether a group belongs to the current domain.
+     *
+     * @param groupId the group ID to validate
+     * @return true when the group belongs to the current domain
+     */
+    public static boolean isGroupOnCurrentDomain(int groupId) {
+        return groupId > 0 && CloudToolsForCore.isGroupFromMyDomain(groupId);
+    }
 
     /**
      * Builds a navigation tree from a given root group or path.
@@ -41,6 +52,10 @@ public class HeadlessNavigationService {
         }
 
         if (rootGroup <= 0) {
+            return result;
+        }
+
+        if (isGroupOnCurrentDomain(rootGroup) == false) {
             return result;
         }
 
@@ -102,6 +117,10 @@ public class HeadlessNavigationService {
      * @return NavigationItem or null if group should be skipped
      */
     private NavigationItem convertGroupToNavigationItem(GroupDetails group, String lng, int level, HttpSession session, int depth) {
+        if (isGroupOnCurrentDomain(group.getGroupId()) == false) {
+            return null;
+        }
+
         // Skip internal groups (not shown in menu)
         if (group.isInternal()) {
             return null;

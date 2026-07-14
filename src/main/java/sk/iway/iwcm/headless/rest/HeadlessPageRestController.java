@@ -159,6 +159,9 @@ public class HeadlessPageRestController extends sk.iway.iwcm.rest.RestController
         if (doc == null) {
             return createErrorResponse(404, "Not Found", "Document not found: " + docId);
         }
+        if (HeadlessNavigationService.isGroupOnCurrentDomain(doc.getGroupId()) == false) {
+            return createErrorResponse(404, "Not Found", "Document not found: " + docId);
+        }
 
         // Build PageResponse
         PageResponse pageResponse = new PageResponse(

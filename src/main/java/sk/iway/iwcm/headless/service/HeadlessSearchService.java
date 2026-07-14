@@ -41,6 +41,9 @@ public class HeadlessSearchService {
         input.setParameter("perpage", String.valueOf(pageable.getPageSize()));
         input.setParameter("page", String.valueOf(pageable.getPageNumber() + 1)); // 1-based
         if (scope != null && !scope.isEmpty()) {
+            if (isScopeOnCurrentDomain(scope) == false) {
+                return buildEmptyPage(pageable);
+            }
             input.setParameter("groupId", scope);
         } else {
             input.setParameter("groupId", ""+CloudToolsForCore.getDomainId());
@@ -73,5 +76,19 @@ public class HeadlessSearchService {
 
     private Page<DocDetails> buildEmptyPage(Pageable pageable) {
         return new DatatablePageImpl<>(new ArrayList<>(), pageable, 0);
+    }
+
+    private boolean isScopeOnCurrentDomain(String scope) {
+        String[] groupIds = scope.split(",");
+        for (String groupId : groupIds) {
+            try {
+                if (HeadlessNavigationService.isGroupOnCurrentDomain(Integer.parseInt(groupId.trim())) == false) {
+                    return false;
+                }
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+        return true;
     }
 }

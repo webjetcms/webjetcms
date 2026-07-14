@@ -2,15 +2,21 @@ package sk.iway.iwcm.headless.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.headless.dto.HeadlessNewsRequest;
 import sk.iway.iwcm.headless.dto.HeadlessNewsResponse;
+
+import static org.mockito.Mockito.mockStatic;
 
 /**
  * Unit tests for HeadlessNewsService DTO and validation logic.
@@ -18,15 +24,8 @@ import sk.iway.iwcm.headless.dto.HeadlessNewsResponse;
  */
 class HeadlessNewsServiceTest {
 
-    private HeadlessNewsService service;
-
     @Mock
     private sk.iway.iwcm.doc.GroupsDB groupsDB;
-
-    @BeforeEach
-    void setUp() {
-        service = new HeadlessNewsService();
-    }
 
     // ==================== Request DTO Tests ====================
 
@@ -181,5 +180,26 @@ class HeadlessNewsServiceTest {
 
         req.setAscending(false);
         assertFalse(req.getAscending());
+    }
+
+    @Test
+    void testGroupFromAnotherDomainIsRejected() {
+        try (MockedStatic<CloudToolsForCore> cloudToolsMock = mockStatic(CloudToolsForCore.class)) {
+            cloudToolsMock.when(() -> CloudToolsForCore.isGroupFromMyDomain(42)).thenReturn(false);
+
+            assertFalse(HeadlessNavigationService.isGroupOnCurrentDomain(42));
+        }
+    }
+
+    @Test
+    void testSearchReturnsNoResultsForGroupFromAnotherDomain() {
+        try (MockedStatic<CloudToolsForCore> cloudToolsMock = mockStatic(CloudToolsForCore.class)) {
+            cloudToolsMock.when(() -> CloudToolsForCore.isGroupFromMyDomain(42)).thenReturn(false);
+
+            Page<DocDetails> result = new HeadlessSearchService().searchDocuments(
+                    "test", PageRequest.of(0, 10), "42", null);
+
+            assertTrue(result.isEmpty());
+        }
     }
 }

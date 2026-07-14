@@ -102,6 +102,10 @@ public class HeadlessNewsService {
         if (groupIds != null && !groupIds.isEmpty()) {
             GroupsDB gdb = GroupsDB.getInstance();
             for (Integer groupId : groupIds) {
+                if (groupId == null || HeadlessNavigationService.isGroupOnCurrentDomain(groupId) == false) {
+                    query.addCriteria(DatabaseCriteria.in(FieldEnum.GROUP_ID, List.of(-1)));
+                    return;
+                }
                 GroupDetails group = gdb.getGroup(groupId);
                 if (group != null) {
                     groupIdsExpanded.add(group.getGroupId());
@@ -109,7 +113,9 @@ public class HeadlessNewsService {
                         List<GroupDetails> subGroups = gdb.getGroupsTree(
                                 group.getGroupId(), false, false);
                         for (GroupDetails subGroup : subGroups) {
-                            groupIdsExpanded.add(subGroup.getGroupId());
+                            if (HeadlessNavigationService.isGroupOnCurrentDomain(subGroup.getGroupId())) {
+                                groupIdsExpanded.add(subGroup.getGroupId());
+                            }
                         }
                     }
                 }
@@ -117,6 +123,8 @@ public class HeadlessNewsService {
 
             if (!groupIdsExpanded.isEmpty()) {
                 query.addCriteria(DatabaseCriteria.in(FieldEnum.GROUP_ID, groupIdsExpanded));
+            } else {
+                query.addCriteria(DatabaseCriteria.in(FieldEnum.GROUP_ID, List.of(-1)));
             }
         } else {
             // Default: use current domain's root group
