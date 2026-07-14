@@ -16,6 +16,16 @@
 
 ![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
 
+### Headless režim
+
+Přidána [podpora headless režimu](frontend/headless/README.md), ve kterém WebJET CMS slouží čistě jako `backend` CMS. Obsah, navigace, vyhledávání a formuláře jsou dostupné přes REST API. Frontend aplikace (např. Astro, Next.js, Vue, React nebo jakýkoli HTTP klient) si data stáhne a zobrazuje je podle vlastních šablon (#258).
+
+![](frontend/headless/home.png)
+
+V jednom WebJET CMS můžete mít více (desítky) domén a následně mít menší web stránky vytvořené v různých technologiích, které konzumují a zobrazují obsah z CMS systému. Podporováno je také vkládání standardní aplikací jako foto galerie, formuláře, GDPR cookies a podobně.
+
+![](frontend/headless/gallery.png)
+
 ### Formuláře
 
 - [Statistiky vícekrokových formulářů](redactor/apps/multistep-form/stat.md) byly rozšířeny o datový filtr a pokročilé metriky zobrazení/pokusů/jazyků etc. (#58509).
