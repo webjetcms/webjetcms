@@ -47,6 +47,40 @@ Backend kontroluje `Referer` hlavičku pri POST požiadavkách (ochrana pred XSR
 
 Pre klientske (browser) volania nie je XSRF kontrola aktívna, keďže `Referer` posiela prehliadač sám.
 
+## Konfigurácia frontend
+
+Frontend aplikácia sa konfiguruje cez `.env` súbor (jednotný formát pre viaceré frameworky).
+
+### Nastavenie API endpoint
+
+Vytvorte `.env` súbor v koreňovom adresári projektu:
+
+```bash
+# .env
+PUBLIC_API_BASE=https://cms.iway.sk/rest/headless/v1
+```
+
+**Poznámka:** Prefix `PUBLIC_` je potrebný pre Astro – znamená, že premenná bude dostupná aj v prehliadači. V klientskom kóde sa získava ako:
+
+```typescript
+const apiBase = import.meta.env.PUBLIC_API_BASE;
+```
+
+### Konfigurácia podľa prostredia
+
+Môžete vytvoriť viacero `.env` súborov:
+
+- `.env` – predvolené nastavenia
+- `.env.local` – lokálne nastavenia (nebude commitnuté do Gitu)
+- `.env.production` – produkčné nastavenia (ak frontend zostavujete s `--mode production`)
+
+Príklad `.env.example`:
+
+```bash
+# .env.example
+PUBLIC_API_BASE=https://cms.example.com/rest/headless/v1
+```
+
 ## Proxy pre statický obsah
 
 Frontend aplikácia zvyčajne potrebuje tiež slúžiť obrázky, súbory a `/thumb` priamo z CMS backendu. Odporúčame nakonfigurovať reverse proxy pre prefixy:
@@ -60,14 +94,18 @@ Frontend aplikácia zvyčajne potrebuje tiež slúžiť obrázky, súbory a `/th
 /rest/
 ```
 
-V ukážkovej Astro aplikácii je proxy nakonfigurovaná v `astro.config.mjs` cez environment premenné:
+V ukážkovej Astro aplikácii je proxy nakonfigurovaná automaticky v `astro.config.mjs`:
 
-| ENV premenná | Popis | Predvolená hodnota |
+- **Backend origin sa počíta automaticky** z `PUBLIC_API_BASE` (odstránením `/rest/headless/v1`).
+
+Ďalšie dostupné premenné v `.env` súbore:
+
+| premenná | Popis | Predvolená hodnota |
 | --- | --- | --- |
-| `HEADLESS_BACKEND_ORIGIN` | URL CMS backendu | `http://cms.iway.sk` |
+| `PUBLIC_API_BASE` | Úplná cesta na Headless API | `https://cms.example.com/rest/headless/v1` |
 | `HEADLESS_PROXY_PREFIXES` | Prefixy URL, ktoré sa proxy-ujú na backend | `/images/,/files/,/thumb/,/shared/,/components,/FormMailAjax.action,/rest/` |
 | `HEADLESS_HOST` | Host, na ktorom počúva frontend server | `127.0.0.1` |
-| `HEADLESS_PORT` | Port frontendu | `3000` |
+| `HEADLESS_PORT` | Port frontend-u | `3000` |
 
 ## Ďalšie zdroje
 

@@ -3,7 +3,7 @@
  * Provides methods for page retrieval, navigation, search, and form submission.
  */
 
-const API_BASE = 'http://cms.iway.sk/rest/headless/v1';
+const API_BASE = import.meta.env.PUBLIC_API_BASE;
 
 /**
  * Helper to create fetch options with cookies from Astro request.

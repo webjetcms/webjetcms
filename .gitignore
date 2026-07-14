@@ -35,6 +35,11 @@ src/main/resources/poolman-local*.xml
 src/main/webapp/WEB-INF/update/
 src/main/resources/certificates/https-keystore.p12
 
+# Environment variables (keep .env.example only)
+.env
+.env.local
+.env.*.local
+
 #logs
 *.log
 

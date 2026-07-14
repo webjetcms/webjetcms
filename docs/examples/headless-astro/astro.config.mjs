@@ -1,7 +1,25 @@
 import { defineConfig } from 'astro/config';
+import { loadEnv } from 'vite';
 
-const backendOrigin = process.env.HEADLESS_BACKEND_ORIGIN || 'http://cms.iway.sk';
-const proxyPrefixes = (process.env.HEADLESS_PROXY_PREFIXES || '/images/,/files/,/thumb/,/shared/,/components,/FormMailAjax.action,/rest/,/apps/form/mvc/')
+// Load all variables from .env (prefix '' = load everything, not just PUBLIC_)
+const env = loadEnv(process.env.NODE_ENV || 'development', process.cwd(), '');
+
+// Apply non-PUBLIC_ variables to process.env so Node.js runtime settings work
+// (e.g. NODE_TLS_REJECT_UNAUTHORIZED for self-signed certificates in local dev)
+for (const [key, value] of Object.entries(env)) {
+  if (!key.startsWith('PUBLIC_') && !(key in process.env)) {
+    process.env[key] = value;
+  }
+}
+
+// Extract backend origin from PUBLIC_API_BASE or use environment variable
+function getBackendOrigin() {
+  const apiBase = env.PUBLIC_API_BASE;
+  return apiBase.substring(0, apiBase.indexOf('/', 8)); // Extract origin from URL
+}
+
+const backendOrigin = getBackendOrigin();
+const proxyPrefixes = (env.HEADLESS_PROXY_PREFIXES || '/images/,/files/,/thumb/,/shared/,/components,/FormMailAjax.action,/rest/,/apps/form/mvc/')
   .split(',')
   .map((value) => value.trim())
   .filter(Boolean)
@@ -21,14 +39,14 @@ const proxy = Object.fromEntries(
 export default defineConfig({
   output: 'server',
   server: {
-    host: process.env.HEADLESS_HOST || '127.0.0.1',
-    port: parseInt(process.env.HEADLESS_PORT || '3000'),
+    host: env.HEADLESS_HOST || '127.0.0.1',
+    port: parseInt(env.HEADLESS_PORT || '3000'),
   },
   vite: {
     server: {
       proxy,
-      host: process.env.HEADLESS_HOST || '127.0.0.1',
-      port: parseInt(process.env.HEADLESS_PORT || '3000'),
+      host: env.HEADLESS_HOST || '127.0.0.1',
+      port: parseInt(env.HEADLESS_PORT || '3000'),
       allowedHosts: [
         'headless.interway.sk',
         'iwcm.interway.sk',
@@ -38,8 +56,9 @@ export default defineConfig({
     },
     preview: {
       proxy,
-      host: process.env.HEADLESS_HOST || '127.0.0.1',
-      port: parseInt(process.env.HEADLESS_PORT || '3000'),
+      host: env.HEADLESS_HOST || '127.0.0.1',
+      port: parseInt(env.HEADLESS_PORT || '3000'),
     },
   },
 });
+
