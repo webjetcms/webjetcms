@@ -178,21 +178,28 @@ export class MultistepForm {
 
         const result = {};
         form.querySelectorAll('input, textarea, select').forEach(el => {
-            if (!el.id) return;
+
+            // Checkbox/radio options of a group share one name but have unique ids
+            // (id="${id}-${value}"), so collect them by name to keep grouped values
+            // together. Other fields are matched by id after the NAME->ID change, with
+            // a name fallback for id-less elements (e.g. the multiupload dropzone inputs).
+            const isGrouped = el.type === 'checkbox' || el.type === 'radio';
+            const key = isGrouped ? (el.name || el.id) : (el.id || el.name);
+            if (!key) return;
             // Skip fields hidden by visibility conditions
             if (this._isFieldHidden(el.closest('.form-group') || el.parentElement)) return;
             if (el.type === 'checkbox' || el.type === 'radio') {
                 if (!el.checked) return;
             }
             const value = el.value;
-            if (Object.hasOwn(result, el.id)) {
-                if (Array.isArray(result[el.id])) {
-                    result[el.id].push(value);
+            if (Object.hasOwn(result, key)) {
+                if (Array.isArray(result[key])) {
+                    result[key].push(value);
                 } else {
-                    result[el.id] = [result[el.id], value];
+                    result[key] = [result[key], value];
                 }
             } else {
-                result[el.id] = value;
+                result[key] = value;
             }
         });
 

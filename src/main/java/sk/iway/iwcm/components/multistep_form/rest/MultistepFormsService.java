@@ -1317,21 +1317,57 @@ public class MultistepFormsService {
 
     private JSONObject removeFormCounter(JSONObject received, int formCounter) {
         // loop received and remove form counter + "-" as prefix from keys
-        String prefix = formCounter + "-";
+        String prefix = "f" + formCounter + "-";
         JSONObject cleaned = new JSONObject();
         for (String key : received.keySet()) {
+            Object value = received.get(key);
+
+            // The multiupload marker input value references a field name that is
+            // rendered with the form-counter prefix, strip it so it matches the
+            // counter-stripped keys used later in validateFileFields().
+            if ("Multiupload.formElementName".equals(key)) {
+                value = removeFormCounterFromValue(value, prefix);
+            }
+
             if (key.startsWith(prefix)) {
-                cleaned.put(key.substring(prefix.length()), received.get(key));
+                cleaned.put(key.substring(prefix.length()), value);
             } else {
-                cleaned.put(key, received.get(key));
+                cleaned.put(key, value);
             }
         }
         return cleaned;
     }
 
+    /**
+     * Strip the form-counter prefix from a value that references a field name.
+     * Handles both a single string value and a JSON array of values.
+     *
+     * @param value  raw value (String or JSONArray)
+     * @param prefix form-counter prefix to remove (e.g. {@code f1-})
+     * @return value with the prefix removed from string entries
+     */
+    private Object removeFormCounterFromValue(Object value, String prefix) {
+        if (value instanceof String s) {
+            return s.startsWith(prefix) ? s.substring(prefix.length()) : s;
+        }
+        if (value instanceof JSONArray arr) {
+            JSONArray result = new JSONArray();
+            for (int i = 0; i < arr.length(); i++) {
+                Object item = arr.opt(i);
+                if (item instanceof String s && s.startsWith(prefix)) {
+                    result.put(s.substring(prefix.length()));
+                } else {
+                    result.put(item);
+                }
+            }
+            return result;
+        }
+        return value;
+    }
+
     private Map<String, String> addFormCounter(Map<String, String> received, int formCounter) {
         // loop received and add form counter + "-" as prefix to keys
-        String prefix = formCounter + "-";
+        String prefix = "f" + formCounter + "-";
         Map<String, String> prefixed = new HashMap<>();
         for (String key : received.keySet()) {
             if (key.startsWith(prefix)) {

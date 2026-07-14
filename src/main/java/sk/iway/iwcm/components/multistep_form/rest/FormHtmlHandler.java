@@ -266,7 +266,7 @@ public class FormHtmlHandler {
             if(isEmailRender == true && Tools.isTrue(formConditionsHandler.isFieldHiddenByCondition(stepItem, jsonObject))) continue;
 
             // When render for page not email, add form counter as prefix
-            if(isEmailRender == false) stepItem.setItemFormId(this.formCounter + "-" + stepItem.getItemFormId());
+            if(isEmailRender == false) stepItem.setItemFormId("f" + this.formCounter + "-" + stepItem.getItemFormId());
 
             JSONObject item = new JSONObject(stepItem);
             String fieldType = item.getString("fieldType");

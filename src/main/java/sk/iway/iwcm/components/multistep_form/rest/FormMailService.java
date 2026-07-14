@@ -95,7 +95,10 @@ public class FormMailService {
 			//
 			comboArr[0] = comboArr[0].replaceFirst("-\\d+$", "");
 
-            if(fieldsNames.contains(comboArr[0].toLowerCase()))
+            // Match a field name that starts with one of the configured names
+            // (e.g. configured "email" matches field "emailova-adresa")
+            String fieldName = comboArr[0].toLowerCase();
+            if(fieldsNames.stream().anyMatch(name -> fieldName.startsWith(name)))
                 foundValues.add(comboArr[1]);
         }
 
