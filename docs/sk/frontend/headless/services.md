@@ -24,6 +24,8 @@ Odpovede sú vo formáte JSON. Chybové odpovede majú štruktúru:
 
 Vráti obsah stránky podľa jej virtuálnej cesty.
 
+![](gallery.png)
+
 **Parametre (query string):**
 
 | Parameter | Povinný | Popis |
@@ -127,6 +129,8 @@ curl "https://cms.example.com/rest/headless/v1/navigation?rootPath=/&depth=2"
 
 Vráti stránkovaný zoznam noviniek. Používa POST kvôli zložitejšej vstupnej štruktúre.
 
+![](news.png)
+
 **Content-Type:** `application/json`
 
 **Telo požiadavky (HeadlessNewsRequest):**
@@ -198,6 +202,8 @@ Vráti stránkovaný zoznam noviniek. Používa POST kvôli zložitejšej vstupn
 
 Fulltextové vyhľadávanie v dokumentoch.
 
+![](search.png)
+
 **Parametre:**
 
 | Parameter | Povinný | Popis |
@@ -240,6 +246,8 @@ curl "https://cms.example.com/rest/headless/v1/actions/search?q=produkt&page=0&s
 ## Posielanie cookies
 
 Väčšina služieb vracia v odpovedi `Set-Cookie` hlavičku (napr. session ID). Frontend musí túto hlavičku posúvať prehliadaču, aby sa zachoval stav session (prihlásenie, jazykové nastavenie, …).
+
+![](gdpr-cookies.png)
 
 Príklad v Astro (server-side):
 

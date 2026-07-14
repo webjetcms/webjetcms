@@ -2,6 +2,8 @@
 
 V adresári [docs/examples/headless-astro/](../../../examples/headless-astro/) sa nachádza kompletná ukážková aplikácia postavená na frameworku **[Astro 7](https://astro.build)**, ktorá demonštruje headless integráciu s WebJET CMS.
 
+![](home.png)
+
 ## Technológie
 
 - **Astro 7** – SSR (server-side rendering) framework
@@ -105,6 +107,8 @@ src/
 
 ### `/` – Domovská stránka (`index.astro`)
 
+![](home.png)
+
 Zobrazí úvodnú stránku s:
 
 - Uvítacou sekciou s opisom headless demo
@@ -116,6 +120,8 @@ Používa API: `getNavigation()`
 ---
 
 ### `/[...slug]` – Dynamická stránka (`[...slug].astro`)
+
+![](gallery.png)
 
 Univerzálna stránka, ktorá načíta obsah z CMS podľa aktuálnej URL cesty. Napríklad pre `/o-nas` zavolá API `/rest/headless/v1/pages/by-path?path=/o-nas` a zobrazí vrátenú HTML obsahovú časť.
 
@@ -131,6 +137,8 @@ Používa API: `getPage()`, `getNavigation()`
 ---
 
 ### `/news` – Novinky SSR (`news.astro`)
+
+![](news.png)
 
 Server-side rendered zoznam noviniek zo skupiny s ID `24`. Renderovanie prebieha na serveri pri každej požiadavke (Astro SSR).
 
@@ -163,6 +171,8 @@ await listNews({
 
 ### `/news-client` – Novinky CSR (`news-client.astro`)
 
+![](news-client.png)
+
 Client-side rendered zoznam noviniek. HTML stránka sa načíta prázdna a JavaScript v prehliadači volá API priamo z browsera.
 
 Vlastnosti:
@@ -184,6 +194,8 @@ http://headless.example.com:3000,https://headless.example.com:8443
 ---
 
 ### `/search` – Vyhľadávanie (`search.astro`)
+
+![](search.png)
 
 Server-side fulltext vyhľadávanie cez CMS. Výsledky sa zobrazujú ihneď po odoslaní search formulára.
 
@@ -241,6 +253,8 @@ Konfigurácia automaticky proxy-uje požiadavky na obrázky, `/thumb`, súbory a
 // Prefixy, ktoré sa presmerujú na CMS backend
 /images/, /files/, /thumb/, /shared/, /components, /FormMailAjax.action, /rest/
 ```
+
+![](multistep-form.png)
 
 ## Nasadenie na server (Node.js)
 

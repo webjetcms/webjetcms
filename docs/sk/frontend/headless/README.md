@@ -2,6 +2,8 @@
 
 WebJET CMS podporuje **headless** prevádzkový režim, v ktorom slúži ako čisto `backend` CMS. Obsah, navigácia, vyhľadávanie a formuláre sú dostupné cez REST API. Frontend aplikácia (napr. Astro, Next.js, Vue, React alebo akýkoľvek HTTP klient) si dáta stiahne a zobrazuje ich podľa vlastných šablón.
 
+![](home.png)
+
 V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať menšie web stránky vytvorené v rôznych technológiách, ktoré konzumujú a zobrazujú obsah z CMS systému.
 
 ## Ako to funguje
@@ -15,6 +17,10 @@ flowchart TD
 
 - Všetky REST služby sú dostupné na ceste `/rest/headless/v1/`.
 - Autentifikácia je riešená cez session cookies – frontend musí cookies zo CMS posúvať späť prehliadaču (`Set-Cookie` hlavičky).
+
+Na serverovej strane sú vykonané aj aplikácie, ktoré môžu byť tiež integrované. Typicky ale vyžadujú `jQuery/Bootstrap`, samozrejme môžete [naprogramovať vlastnú aplikáciu](../../custom-apps/README.md) s technológiou, ktoru na frontend používate.
+
+![](gallery.png)
 
 ## Konfiguračné premenné
 
@@ -79,7 +85,20 @@ Príklad `.env.example`:
 
 ```bash
 # .env.example
+# Headless CMS API endpoint (full path including /rest/headless/v1)
+# Update this to match your Headless CMS server
 PUBLIC_API_BASE=https://cms.example.com/rest/headless/v1
+
+# Optional variables
+#HEADLESS_PROXY_PREFIXES=/images/,/files/,/thumb/,/shared/,/components,/FormMailAjax.action,/rest/,/apps/form/mvc/
+#HEADLESS_HOST=127.0.0.1
+#HEADLESS_PORT=3000
+#HEADLESS_HTTPS=true
+#HEADLESS_HTTPS_CERT=./.cert/localhost.pem
+#HEADLESS_HTTPS_KEY=./.cert/localhost-key.pem
+
+# Disable SSL certificate verification for local development with self-signed certificates
+#NODE_TLS_REJECT_UNAUTHORIZED=0
 ```
 
 ## Proxy pre statický obsah
