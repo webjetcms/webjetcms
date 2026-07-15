@@ -2,12 +2,14 @@ Feature('apps.forms.multistep-forms');
 
 var randomNumber;
 var newMultistepFormName;
+var duplicatedMultistepFormName;
 var specialFormName;
 Before(({ I, DT, login }) => {
     login('admin');
     if (typeof randomNumber=="undefined") {
         randomNumber = I.getRandomText();
         newMultistepFormName = "multistepform_" + randomNumber;
+        duplicatedMultistepFormName = "multistepform_duplicate_autotest_" + randomNumber;
         specialFormName = "multistep_new_logic_" + randomNumber;
     }
 
@@ -421,17 +423,69 @@ Scenario('Change form_settings and test it No.2', async ({ I, DT, DTE, TempMail 
     await TempMail.destroyInbox(baseUserMail);
 });
 
-Scenario('Remove form and test it', ({ I, DT }) => {
+Scenario('Duplicate multistep form', async ({ I, DT, DTE, TempMail }) => {
     I.amOnPage("/apps/form/admin/");
 
     DT.filterEquals("formName", newMultistepFormName);
-    I.clickCss("td.dt-select-td");
-    I.click("button.buttons-remove");
-    I.waitForElement("div.DTE_Action_Remove");
-    I.waitForText("Naozaj chcete zmazať položku?", 5);
-    I.click("Zmazať", "div.DTE_Action_Remove");
+    I.clickCss("#formsDataTable td.dt-select-td");
+    I.clickCss("#formsDataTable_wrapper button.btn-duplicate");
+    DTE.waitForEditor("formsDataTable");
 
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    DTE.fillField("formName", duplicatedMultistepFormName);
+    DTE.save();
+
+    I.say("Check duplicated form settings");
+    DT.filterEquals("formName", duplicatedMultistepFormName);
+    I.waitForText(duplicatedMultistepFormName, 10, "#formsDataTable");
+    I.clickCss("#formsDataTable td.dt-select-td");
+    I.clickCss("#formsDataTable_wrapper button.buttons-edit");
+    DTE.waitForEditor("formsDataTable");
+
+    I.seeInField("#DTE_Field_formSettings-recipients", baseAdminMail + TempMail.getTempMailDomain());
+    I.clickCss("#pills-dt-formsDataTable-settings-email-tab");
+    I.seeInField("#DTE_Field_formSettings-emailTextBefore", "START form text");
+    I.seeInField("#DTE_Field_formSettings-emailTextAfter", "END form text");
+    DTE.cancel();
+
+    I.say("Check duplicated steps and items");
+    I.amOnPage("/apps/form/admin/form-steps/?formName=" + duplicatedMultistepFormName);
+    I.waitForVisible("#formStepsDataTable_wrapper");
+    I.waitForElement(locate("#formStepsDataTable tbody tr.selected").withText("Krok 1"));
+
+    const stepsCount = await I.grabNumberOfVisibleElements("#formStepsDataTable tbody tr");
+    I.assertEqual(stepsCount, 2, "Duplicated form should contain both form steps");
+
+    I.waitForText("Vase meno", 10, "#formItemsDataTable");
+    const firstStepItemsCount = await I.grabNumberOfVisibleElements("#formItemsDataTable tbody tr");
+    I.assertEqual(firstStepItemsCount, 5, "Duplicated first step should contain all form items");
+
+    I.click(locate("#formStepsDataTable tbody tr").withText("Krok 2"));
+    DT.waitForLoader("formItemsDataTable");
+    I.waitForText("Pridajte obrazky", 10, "#formItemsDataTable");
+    const secondStepItemsCount = await I.grabNumberOfVisibleElements("#formItemsDataTable tbody tr");
+    I.assertEqual(secondStepItemsCount, 3, "Duplicated second step should contain all form items");
+});
+
+Scenario('Delete all form records and keep form definition', ({ I, DT }) => {
+    I.amOnPage("/apps/form/admin/detail/?formName=" + newMultistepFormName);
+    DT.waitForLoader("formDetailDataTable");
+    I.dontSee("Nenašli sa žiadne vyhovujúce záznamy", "#formDetailDataTable");
+
+    DT.deleteAll("formDetailDataTable");
+    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10, "#formDetailDataTable");
+    I.see("Záznamy 0 až 0 z 0", "#formDetailDataTable_wrapper");
+
+    I.say("The empty form must remain in the forms list");
+    I.amOnPage("/apps/form/admin/");
+    DT.filterEquals("formName", newMultistepFormName);
+    I.waitForText(newMultistepFormName, 10, "#formsDataTable");
+});
+
+Scenario('Remove original and duplicated form definitions', ({ I, DT }) => {
+    I.amOnPage("/apps/form/admin/");
+
+    removeFormDefinition(I, DT, newMultistepFormName);
+    removeFormDefinition(I, DT, duplicatedMultistepFormName);
 });
 
 Scenario('Insert and test multiple forms in one page - before clear page', ({ I, DTE, Apps }) => {
@@ -683,6 +737,18 @@ function compareTwoHtml(I, actualHtml, expectedHtml) {
             normalize(expectedHtml),
             'Form HTML does not match exactly'
         );
+}
+
+function removeFormDefinition(I, DT, formName) {
+    DT.filterEquals("formName", formName);
+    I.waitForText(formName, 10, "#formsDataTable");
+    I.clickCss("#formsDataTable td.dt-select-td");
+    I.clickCss("#formsDataTable_wrapper button.buttons-remove");
+    I.waitForElement("div.DTE_Action_Remove");
+    I.waitForText("Naozaj chcete zmazať položku?", 5);
+    I.click("Zmazať", "div.DTE_Action_Remove");
+    DT.waitForLoader("formsDataTable");
+    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10, "#formsDataTable");
 }
 
 function createAndFillFormItem(I, DT,  DTE, fieldType, required, label, value, tooltip, placeholder) {
