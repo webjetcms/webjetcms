@@ -16,7 +16,7 @@ Vysvětlení použitých piktogramů:
 
 - [x] Sémantické vyhledávání - využít AI ke zlepšení vyhledávání pomocí `RAG` (#211).
 - [ ] AI - možnost použít malé lokální modely běžící přímo na CPU, minimálně pro Sémantické vyhledávání (#58561).
-- [ ] `Headless` CMS - připravit REST rozhraní pro použití WebJET CMS v `headless` módu (#58597).
+- [x] `Headless` CMS - připravit REST rozhraní pro použití WebJET CMS v `headless` módu (#58597) (#258).
 - [ ] Migrace na `Spring Boot` projekt (#58569).
 - [x] Testování - přidat testování přístupnosti pomocí rozšíření [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) (#58389).
 - [ ] Práva - přidat možnost nastavit práva jen na čtení a případně nastavit pouze povolené ID pro editaci.

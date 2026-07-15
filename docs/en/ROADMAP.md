@@ -16,7 +16,7 @@ Explanation of the pictograms used:
 
 - [x] Semantic search - use AI to improve search with `RAG` (#211).
 - [ ] AI - possibility to use small local models running directly on the CPU, at least for Semantic Search (#58561).
-- [ ] `Headless` CMS - prepare REST interfaces for using WebJET CMS in `headless` mode (#58597).
+- [x] `Headless` CMS - prepare REST interfaces for using WebJET CMS in `headless` mode (#58597) (#258).
 - [ ] Migration to `Spring Boot` project (#58569).
 - [x] Testing - add accessibility testing using the [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) extension (#58389).
 - [ ] Rights - add the option to set read-only rights and optionally set only allowed IDs for editing.
