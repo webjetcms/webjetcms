@@ -99,6 +99,7 @@ public class RedirectRestController extends DatatableRestControllerV2<UrlRedirec
     @Override
     public UrlRedirectBean insertItem(UrlRedirectBean entity) {
         // Use UrlRedirectDB to save and update cache
+        entity.setManualRedirect(Boolean.TRUE);
         UrlRedirectDB.save(entity);
         return entity;
     }

@@ -1,6 +1,12 @@
 Feature('webpages.redirects');
 
 let randomNumber;
+let manualRedirectOldUrl;
+let manualRedirectNewUrl;
+
+const redirectWrapper = "#redirectTable_wrapper";
+const redirectTable = "redirectTable";
+const automaticRedirectOldUrl = "/images/drag-drop-test/lighthouse.jpg";
 
 Before(({ I, login }) => {
     login('admin');
@@ -9,6 +15,9 @@ Before(({ I, login }) => {
     if (typeof randomNumber=="undefined") {
         randomNumber = I.getRandomText();
     }
+
+    manualRedirectOldUrl = "/manual-redirect-autotest-" + randomNumber + ".html";
+    manualRedirectNewUrl = "/manual-redirect-target-autotest-" + randomNumber + ".html";
 });
 
 Scenario('redirects-zakladne testy @baseTest', async ({ I, DataTables }) => {
@@ -18,6 +27,89 @@ Scenario('redirects-zakladne testy @baseTest', async ({ I, DataTables }) => {
         requiredFields: ['oldUrl', 'newUrl'],
         perms: 'cmp_redirects'
     });
+});
+
+Scenario('Manual redirect filter and row class @screenshot', ({ I, DT, DTE, Document }) => {
+    const tableBody = redirectWrapper + " .dt-scroll-body";
+
+    I.say("Create a manual redirect through RedirectRestController");
+    I.clickCss(redirectWrapper + " button.buttons-create");
+    DTE.waitForEditor(redirectTable);
+    DTE.fillField("oldUrl", manualRedirectOldUrl);
+    DTE.fillField("newUrl", manualRedirectNewUrl);
+    DTE.save(redirectTable);
+
+    Document.screenshot("/redactor/webpages/redirects/redirect-path.png");
+
+    I.say("Verify that the manual redirect row has the expected CSS class");
+    DT.filterEquals("oldUrl", manualRedirectOldUrl);
+    I.waitForText(manualRedirectOldUrl, 10, tableBody);
+    I.seeElement(locate("#redirectTable tbody tr.is-manual-redirect").withText(manualRedirectOldUrl));
+
+    I.say("Verify that an automatic redirect is visible without the manual-only filter");
+    DT.filterEquals("oldUrl", automaticRedirectOldUrl);
+    I.see(automaticRedirectOldUrl, tableBody);
+    I.dontSeeElement(locate("#redirectTable tbody tr.is-manual-redirect").withText(automaticRedirectOldUrl));
+
+    I.say("Enable the manual-only filter and verify that the automatic redirect is excluded");
+    I.checkOption("#manualRedirectFilter");
+    DT.waitForLoader(redirectTable);
+    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10, tableBody);
+
+    I.say("Verify that the manual redirect remains visible with the filter enabled");
+    DT.filterEquals("oldUrl", manualRedirectOldUrl);
+    I.waitForText(manualRedirectOldUrl, 10, tableBody);
+    I.seeElement(locate("#redirectTable tbody tr.is-manual-redirect").withText(manualRedirectOldUrl));
+
+    Document.screenshot("/redactor/webpages/redirects/redirect-path-filtered.png");
+
+    I.uncheckOption("#manualRedirectFilter");
+    DT.waitForLoader(redirectTable);
+
+    I.say("Change the redirect to automatic and verify that the value persists");
+    I.click(manualRedirectOldUrl, tableBody);
+    DTE.waitForEditor(redirectTable);
+    I.seeCheckboxIsChecked("#DTE_Field_manualRedirect_0");
+    I.uncheckOption("#DTE_Field_manualRedirect_0");
+    DTE.save(redirectTable);
+
+    I.refreshPage();
+    DT.waitForLoader(redirectTable);
+    DT.filterEquals("oldUrl", manualRedirectOldUrl);
+    I.waitForText(manualRedirectOldUrl, 10, tableBody);
+    I.dontSeeElement(locate("#redirectTable tbody tr.is-manual-redirect").withText(manualRedirectOldUrl));
+
+    I.click(manualRedirectOldUrl, tableBody);
+    DTE.waitForEditor(redirectTable);
+    I.dontSeeCheckboxIsChecked("#DTE_Field_manualRedirect_0");
+
+    I.say("Change the redirect back to manual and verify that the value persists");
+    I.checkOption("#DTE_Field_manualRedirect_0");
+    DTE.save(redirectTable);
+
+    I.refreshPage();
+    DT.waitForLoader(redirectTable);
+    DT.filterEquals("oldUrl", manualRedirectOldUrl);
+    I.waitForText(manualRedirectOldUrl, 10, tableBody);
+    I.seeElement(locate("#redirectTable tbody tr.is-manual-redirect").withText(manualRedirectOldUrl));
+
+    I.click(manualRedirectOldUrl, tableBody);
+    DTE.waitForEditor(redirectTable);
+    I.seeCheckboxIsChecked("#DTE_Field_manualRedirect_0");
+    DTE.cancel(redirectTable);
+});
+
+Scenario('Manual redirect filter cleanup @screenshot', async ({ I, DT }) => {
+    // Marked as @screenshot so it clean used entities after use
+    const tableBody = redirectWrapper + " .dt-scroll-body";
+
+    DT.filterEquals("oldUrl", manualRedirectOldUrl);
+    const rowCount = await I.grabNumberOfVisibleElements("#redirectTable tbody tr td.dt-row-edit");
+    if (rowCount > 0) {
+        DT.deleteAll(redirectTable);
+        DT.waitForLoader(redirectTable);
+    }
+    I.dontSee(manualRedirectOldUrl, tableBody);
 });
 
 Scenario('export import testovanie', ({ I, DT }) => {
@@ -106,10 +198,10 @@ Scenario('XLS import onlynew', async ({I, DT, DTE}) => {
     I.say("Delete old data");
     var totalRows = await I.getTotalRows();
     if (totalRows > 0) {
-        DT.deleteAll();
+        DT.deleteAll(redirectTable);
     }
 
-    I.dontSee(oldUrl, "#datatableInit_wrapper .dt-scroll-body");
+    I.dontSee(oldUrl, redirectWrapper + " .dt-scroll-body");
 
     //
     I.say("Import excel as APPEND")
@@ -123,28 +215,28 @@ Scenario('XLS import onlynew', async ({I, DT, DTE}) => {
     DT.waitForLoader();
 
     //Check inserted names, records and statuses
-    I.waitForText(oldUrl, 15, "#datatableInit_wrapper .dt-scroll-body");
-    I.see(oldUrlSecond, "#datatableInit_wrapper .dt-scroll-body");
-    I.see(newUrl+"-xls", "#datatableInit_wrapper .dt-scroll-body");
+    I.waitForText(oldUrl, 15, redirectWrapper + " .dt-scroll-body");
+    I.see(oldUrlSecond, redirectWrapper + " .dt-scroll-body");
+    I.see(newUrl+"-xls", redirectWrapper + " .dt-scroll-body");
 
 
     //
     I.say("Edit newUrl");
     DT.filterContains("oldUrl", oldUrl);
-    I.click(oldUrl, "#datatableInit_wrapper .dt-scroll-body");
-    DTE.waitForEditor();
+    I.click(oldUrl, redirectWrapper + " .dt-scroll-body");
+    DTE.waitForEditor(redirectTable);
     I.fillField("#DTE_Field_newUrl", newUrl+"-edited");
-    DTE.save();
+    DTE.save(redirectTable);
 
     DT.waitForLoader();
-    I.dontSee(newUrl+"-xls", "#datatableInit_wrapper .dt-scroll-body");
+    I.dontSee(newUrl+"-xls", redirectWrapper + " .dt-scroll-body");
 
     //
     I.say("Delete second row to verify it will be imported again");
     DT.filterContains("oldUrl", oldUrlSecond);
-    I.see(oldUrlSecond, "#datatableInit_wrapper .dt-scroll-body");
-    DT.deleteAll();
-    I.dontSee(oldUrlSecond, "#datatableInit_wrapper .dt-scroll-body");
+    I.see(oldUrlSecond, redirectWrapper + " .dt-scroll-body");
+    DT.deleteAll(redirectTable);
+    I.dontSee(oldUrlSecond, redirectWrapper + " .dt-scroll-body");
 
     //
     I.say("Reimport in onlyNew mode");
@@ -165,24 +257,24 @@ Scenario('XLS import onlynew', async ({I, DT, DTE}) => {
     DT.filterContains("oldUrl", "/oldurl-onlynew-");
 
     //Check inserted names, records and statuses
-    I.waitForText(oldUrl, 15, "#datatableInit_wrapper .dt-scroll-body");
-    I.see(newUrl+"-edited", "#datatableInit_wrapper .dt-scroll-body");
-    I.dontSee(newUrl+"-xls", "#datatableInit_wrapper .dt-scroll-body");
-    I.see(oldUrlSecond, "#datatableInit_wrapper .dt-scroll-body");
+    I.waitForText(oldUrl, 15, redirectWrapper + " .dt-scroll-body");
+    I.see(newUrl+"-edited", redirectWrapper + " .dt-scroll-body");
+    I.dontSee(newUrl+"-xls", redirectWrapper + " .dt-scroll-body");
+    I.see(oldUrlSecond, redirectWrapper + " .dt-scroll-body");
 
 
     //refresh data
     I.clickCss("div.dt-buttons button.buttons-refresh");
     DT.waitForLoader();
-    I.waitForText(oldUrl, 15, "#datatableInit_wrapper .dt-scroll-body");
-    I.see(newUrl+"-edited", "#datatableInit_wrapper .dt-scroll-body");
-    I.dontSee(newUrl+"-xls", "#datatableInit_wrapper .dt-scroll-body");
-    I.see(oldUrlSecond, "#datatableInit_wrapper .dt-scroll-body");
+    I.waitForText(oldUrl, 15, redirectWrapper + " .dt-scroll-body");
+    I.see(newUrl+"-edited", redirectWrapper + " .dt-scroll-body");
+    I.dontSee(newUrl+"-xls", redirectWrapper + " .dt-scroll-body");
+    I.see(oldUrlSecond, redirectWrapper + " .dt-scroll-body");
 
     //
     I.say("Delete old data");
     DT.filterContains("oldUrl", "/oldurl-onlynew-");
-    DT.deleteAll();
+    DT.deleteAll(redirectTable);
  });
 
  //TODO: testy funkcnosti presmerovani
@@ -238,7 +330,7 @@ Scenario('Post publish, validation', async ({ I, DT, Document }) => {
     I.say("Remove autotest redirects");
     I.amOnPage("/admin/v9/settings/redirect/");
     DT.filterStartsWith("oldUrl", toRedirectUrl_prefix + randomNumber);
-    const rowCount = await I.grabNumberOfVisibleElements('#datatableInit > tbody > tr > td.dt-row-edit');
+    const rowCount = await I.grabNumberOfVisibleElements('#redirectTable > tbody > tr > td.dt-row-edit');
     if(rowCount > 0) {
         I.clickCss("button.buttons-select-all");
         I.clickCss("button.buttons-remove");
@@ -263,11 +355,11 @@ function testPublishingAndValidity(I, DT, DTE, Document, toRedirectUrl, useCache
     I.say("Create redirect bean");
         I.amOnPage("/admin/v9/settings/redirect/");
         I.clickCss("button.buttons-create");
-        DTE.waitForEditor();
+        DTE.waitForEditor(redirectTable);
 
         I.fillField("#DTE_Field_oldUrl", toRedirectUrl);
         I.fillField("#DTE_Field_newUrl", baseUrl);
-        DTE.save();
+        DTE.save(redirectTable);
 
     I.say("Test redirect works");
         I.amOnPage(toRedirectUrl);
@@ -304,7 +396,7 @@ function updateEntityAndTest(I, DT, DTE, toRedirectUrl, publishDate, validToDate
     I.amOnPage("/admin/v9/settings/redirect/");
     DT.filterEquals("oldUrl", toRedirectUrl);
     I.click(toRedirectUrl);
-    DTE.waitForEditor();
+    DTE.waitForEditor(redirectTable);
 
     if(publishDate !== null) {
         I.fillField("#DTE_Field_publishDate", I.formatDateTime(publishDate) );
@@ -320,7 +412,7 @@ function updateEntityAndTest(I, DT, DTE, toRedirectUrl, publishDate, validToDate
     }
     I.clickCss(".DTE_Field_Name_oldUrl");
 
-    DTE.save();
+    DTE.save(redirectTable);
 
     if(shouldRedirect === true) {
         I.amOnPage(toRedirectUrl);

@@ -3,6 +3,11 @@ package sk.iway.iwcm.system;
 import java.io.Serializable;
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import lombok.Getter;
+import lombok.Setter;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -14,9 +19,6 @@ import jakarta.persistence.TableGenerator;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.ActiveRecordRepository;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
@@ -39,6 +41,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 @Table(name="url_redirect")
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_REDIRECT_UPDATE)
+@Getter
+@Setter
 public class UrlRedirectBean extends ActiveRecordRepository implements Serializable
 {
 	private static final long serialVersionUID = -1L;
@@ -145,13 +149,12 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
     )
 	String description;
 
-	public Long getUrlRedirectId() {
-		return urlRedirectId;
-	}
-
-	public void setUrlRedirectId(Long urlRedirectId) {
-		this.urlRedirectId = urlRedirectId;
-	}
+	@Column(name="manual_redirect", nullable=false)
+	@DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title = "components.redirect.manual_redirect"
+    )
+	Boolean manualRedirect;
 
 	public Date getInsertDate()
 	{
@@ -161,46 +164,6 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
 	public void setInsertDate(Date insertDate)
 	{
 		this.insertDate = insertDate == null ? null : (Date) insertDate.clone();
-	}
-
-	public String getOldUrl()
-	{
-		return oldUrl;
-	}
-
-	public void setOldUrl(String oldUrl)
-	{
-		this.oldUrl = oldUrl;
-	}
-
-	public Integer getRedirectCode()
-	{
-		return redirectCode;
-	}
-
-	public void setRedirectCode(Integer redirectCode)
-	{
-		this.redirectCode = redirectCode;
-	}
-
-	public String getDomainName()
-	{
-		return domainName;
-	}
-
-	public void setDomainName(String domainName)
-	{
-		this.domainName = domainName;
-	}
-
-	public String getNewUrl()
-	{
-		return newUrl;
-	}
-
-	public void setNewUrl(String newUrl)
-	{
-		this.newUrl = newUrl;
 	}
 
 	@Override
@@ -215,32 +178,8 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
 		setUrlRedirectId(id);
 	}
 
-	public Date getPublishDate() {
-		return publishDate;
-	}
-
-	public void setPublishDate(Date publishDate) {
-		this.publishDate = publishDate;
-	}
-
 	@JsonIgnore
 	public String getPublishTime() {
 		return Tools.formatTime(this.getPublishDate());
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	public Date getValidTo() {
-		return validTo;
-	}
-
-	public void setValidTo(Date validTo) {
-		this.validTo = validTo;
 	}
 }

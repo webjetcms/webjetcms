@@ -7,9 +7,8 @@ Before(({login }) => {
 Scenario('redirects screenshots', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/settings/redirect/");
 
-    Document.screenshot("/redactor/webpages/redirects/redirect-path.png");
-    I.click(DT.btn.add_button);
-    DTE.waitForEditor();
+    I.click("#redirectTable_wrapper button.buttons-create");
+    DTE.waitForEditor("redirectTable");
     DTE.fillField('oldUrl', '/test-stavov/virtualpath/podla-title.html');
     DTE.fillField('newUrl', '/test-stavov/virtualpath/podla-zmena-title.html');
     DTE.fillField('redirectCode', '301');

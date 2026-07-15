@@ -104,6 +104,7 @@ public class UrlRedirectDB
 		urlRedirect.setDomainName(domainName);
 		urlRedirect.setRedirectCode(redirectCode);
 		urlRedirect.setInsertDate(new Date());
+		urlRedirect.setManualRedirect(Boolean.FALSE);
 		save(urlRedirect);
 	}
 
@@ -530,11 +531,15 @@ public class UrlRedirectDB
 		if(urlRedirect.getUrlRedirectId()==null || urlRedirect.getUrlRedirectId()<1)
 		{
 			urlRedirect.setInsertDate(new Date());
+			if (urlRedirect.getManualRedirect() == null) urlRedirect.setManualRedirect(Boolean.FALSE);
 		}
 		else
 		{
 			em.detach(urlRedirect);
 			UrlRedirectBean oldRedirect = getById(urlRedirect.getUrlRedirectId());
+			if (urlRedirect.getManualRedirect() == null) {
+				urlRedirect.setManualRedirect(Boolean.valueOf(Boolean.TRUE.equals(oldRedirect.getManualRedirect())));
+			}
 			removeRedirectFromCache(oldRedirect);
 		}
 
