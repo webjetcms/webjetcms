@@ -368,6 +368,15 @@ public class UrlRedirectDB
 	}
 
 	/**
+	 * Rebuilds the redirects cache after a bulk operation so subsequent requests
+	 * use the latest database state. This method does nothing when redirect caching
+	 * is disabled.
+	 */
+	public static void refreshCache() {
+		if (Constants.getBoolean("cacheUrlRedirects")) reloadCache();
+	}
+
+	/**
 	 * Zisti ci ma zmysel vykonat reload odkazov.
 	 * @return
 	 */
