@@ -244,10 +244,28 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
         for (EmailsEntity email : emails) {
             email.setId(null);
             email.setCampainId(entity.getId());
-            email.setCreateDate(new Date());
-            email.setCreatedByUserId(getUser().getUserId());
+            email.setUrl(entity.getUrl());
+            email.setSubject(entity.getSubject());
+            email.setSenderName(entity.getSenderName());
+            email.setSenderEmail(entity.getSenderEmail());
+            email.setReplyTo(entity.getReplyTo());
+            email.setCcEmail(entity.getCcEmail());
+            email.setBccEmail(entity.getBccEmail());
+            email.setSendAt(entity.getSendAt());
+            email.setAttachments(entity.getAttachments());
+            email.setCreateDate(entity.getCreateDate());
+            email.setCreatedByUserId(entity.getCreatedByUserId());
+            email.setDomainId(entity.getDomainId());
+            email.setSentDate(null);
+            email.setSeenDate(null);
+            email.setDisabled(true);
+            email.setRetry(0);
 
             emailsRepository.save(email);
         }
+
+        entity.setCountOfRecipients(emails.size());
+        entity.setCountOfSentMails(0);
+        campaingsRepository.save(entity);
     }
 }
