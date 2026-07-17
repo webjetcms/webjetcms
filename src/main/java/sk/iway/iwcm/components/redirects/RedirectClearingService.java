@@ -24,7 +24,8 @@ import sk.iway.iwcm.system.UrlRedirectBean;
  * Analyzes exact redirects and executes the resulting immutable clearing plan.
  * Analysis selects preferred targets, breaks cycles, compresses chains, and
  * removes duplicates without recursive traversal or per-row database queries.
- * Global redirects take precedence over domain-specific redirects in every phase.
+ * Every named domain is analyzed independently. Redirects with a {@code null}
+ * or empty domain form one additional independent domain scope.
  */
 @Service
 public class RedirectClearingService {
@@ -50,7 +51,7 @@ public class RedirectClearingService {
      * Loads exact redirects accessible from the selected domain and prepares a
      * clearing plan without modifying the database.
      *
-     * @param currentDomain selected domain; {@code null} and an empty value mean global scope
+     * @param currentDomain selected domain; {@code null} and an empty value mean the unnamed domain scope
      * @return immutable clearing plan
      */
     public RedirectClearingPlan analyze(String currentDomain) {
@@ -90,8 +91,8 @@ public class RedirectClearingService {
         Map<GraphKey, Map<String, Edge>> graphs = new LinkedHashMap<>();
         for (Map.Entry<LogicalKey, List<Candidate>> entry : versions.entrySet()) {
             List<Candidate> versionRecords = entry.getValue();
-            Candidate preferredNewest = preferredNewest(versionRecords);
-            String winningTarget = preferredNewest.originalNewUrl;
+            Candidate newest = newest(versionRecords);
+            String winningTarget = newest.originalNewUrl;
 
             List<Candidate> winningRecords = new ArrayList<>();
             for (Candidate candidate : versionRecords) {
@@ -186,7 +187,7 @@ public class RedirectClearingService {
     }
 
     /**
-     * Normalizes both representations of a global domain to an empty string.
+     * Normalizes both representations of the unnamed domain scope to an empty string.
      *
      * @param domain domain value to normalize
      * @return empty string for {@code null} or empty input, otherwise the original value
@@ -206,25 +207,10 @@ public class RedirectClearingService {
     }
 
     /**
-     * Selects the newest global candidate when present; otherwise selects the
-     * newest domain-specific candidate.
+     * Detects cycles iteratively and removes the newest edge from each cycle.
+     * The supplied graph contains redirects from exactly one domain scope.
      *
-     * @param candidates candidates to compare
-     * @return preferred newest candidate
-     */
-    private static Candidate preferredNewest(Collection<Candidate> candidates) {
-        List<Candidate> globalCandidates = candidates.stream()
-            .filter(Candidate::isGlobal)
-            .toList();
-        return newest(globalCandidates.isEmpty() ? candidates : globalCandidates);
-    }
-
-    /**
-     * Detects cycles iteratively and removes one edge from each cycle. A local
-     * edge is preferred for removal; a global edge is removed only from a cycle
-     * containing no local edge.
-     *
-     * @param graph redirect graph for one validity interval
+     * @param graph redirect graph for one domain and validity interval
      */
     private static void breakCycles(Map<String, Edge> graph) {
         Set<String> completed = new HashSet<>();
@@ -243,11 +229,7 @@ public class RedirectClearingService {
                 Integer cycleStart = pathIndexes.get(current);
                 if (cycleStart != null) {
                     List<Edge> cycleEdges = path.subList(cycleStart, path.size());
-                    List<Edge> localCycleEdges = cycleEdges.stream()
-                        .filter(edgeToRemove -> !edgeToRemove.isGlobal())
-                        .toList();
-                    Collection<Edge> removableEdges = localCycleEdges.isEmpty() ? cycleEdges : localCycleEdges;
-                    Edge newestCycleEdge = removableEdges.stream()
+                    Edge newestCycleEdge = cycleEdges.stream()
                         .max(Comparator.comparing(Edge::newestCandidate, AGE_COMPARATOR))
                         .orElseThrow();
                     newestCycleEdge.removed = true;
@@ -265,27 +247,15 @@ public class RedirectClearingService {
     }
 
     /**
-     * Compresses global and local chains using separate traversal scopes.
+     * Resolves terminal URLs with path compression inside one domain scope.
      *
-     * @param graph acyclic redirect graph for one validity interval
+     * @param graph acyclic redirect graph for one domain and validity interval
      */
     private static void optimizeChains(Map<String, Edge> graph) {
-        optimizeChains(graph, true);
-        optimizeChains(graph, false);
-    }
-
-    /**
-     * Resolves terminal URLs with path compression. Global traversal follows only
-     * global edges, while local traversal may follow both local and global edges.
-     *
-     * @param graph acyclic redirect graph
-     * @param globalScope {@code true} to optimize global edges, {@code false} for local edges
-     */
-    private static void optimizeChains(Map<String, Edge> graph, boolean globalScope) {
         Map<String, String> terminals = new HashMap<>();
 
         for (Edge start : graph.values()) {
-            if (start.removed || start.isGlobal() != globalScope || terminals.containsKey(start.source)) continue;
+            if (start.removed || terminals.containsKey(start.source)) continue;
 
             List<Edge> path = new ArrayList<>();
             String current = start.source;
@@ -296,7 +266,7 @@ public class RedirectClearingService {
                 if (terminal != null) break;
 
                 Edge edge = graph.get(current);
-                if (edge == null || edge.removed || (globalScope && !edge.isGlobal())) {
+                if (edge == null || edge.removed) {
                     terminal = current;
                     break;
                 }
@@ -308,17 +278,14 @@ public class RedirectClearingService {
             for (int index = path.size() - 1; index >= 0; index--) {
                 Edge edge = path.get(index);
                 terminals.put(edge.source, terminal);
-                if (edge.isGlobal() == globalScope) {
-                    for (Candidate candidate : edge.candidates) candidate.resultNewUrl = terminal;
-                }
+                for (Candidate candidate : edge.candidates) candidate.resultNewUrl = terminal;
             }
         }
     }
 
     /**
-     * Marks duplicate final redirects for deletion. The oldest global record is
-     * preserved when present; otherwise the oldest record is preserved separately
-     * for every domain.
+     * Marks duplicate final redirects for deletion. Duplicate keys include the
+     * normalized domain, so every domain scope preserves its own oldest record.
      *
      * @param candidates analyzed redirect candidates
      */
@@ -334,29 +301,9 @@ public class RedirectClearingService {
         for (List<Candidate> duplicateRecords : duplicates.values()) {
             if (duplicateRecords.size() < 2) continue;
 
-            List<Candidate> globalRecords = duplicateRecords.stream()
-                .filter(Candidate::isGlobal)
-                .toList();
-            if (!globalRecords.isEmpty()) {
-                Candidate oldestGlobal = globalRecords.stream().min(AGE_COMPARATOR).orElseThrow();
-                for (Candidate candidate : duplicateRecords) {
-                    if (candidate != oldestGlobal) candidate.action = ActionType.DELETE_DUPLICATE;
-                }
-                continue;
-            }
-
-            Map<String, List<Candidate>> recordsByDomain = duplicateRecords.stream()
-                .collect(Collectors.groupingBy(
-                    candidate -> candidate.domain,
-                    LinkedHashMap::new,
-                    Collectors.toList()
-                ));
-            for (List<Candidate> domainRecords : recordsByDomain.values()) {
-                if (domainRecords.size() < 2) continue;
-                Candidate oldest = domainRecords.stream().min(AGE_COMPARATOR).orElseThrow();
-                for (Candidate candidate : domainRecords) {
-                    if (candidate != oldest) candidate.action = ActionType.DELETE_DUPLICATE;
-                }
+            Candidate oldest = duplicateRecords.stream().min(AGE_COMPARATOR).orElseThrow();
+            for (Candidate candidate : duplicateRecords) {
+                if (candidate != oldest) candidate.action = ActionType.DELETE_DUPLICATE;
             }
         }
     }
@@ -423,15 +370,11 @@ public class RedirectClearingService {
         }
 
         LogicalKey logicalKey() {
-            return new LogicalKey(oldUrl, dateValue(publishDate), dateValue(validTo));
+            return new LogicalKey(domain, oldUrl, dateValue(publishDate), dateValue(validTo));
         }
 
         DuplicateKey duplicateKey() {
-            return new DuplicateKey(oldUrl, resultNewUrl);
-        }
-
-        boolean isGlobal() {
-            return domain.isEmpty();
+            return new DuplicateKey(domain, oldUrl, resultNewUrl);
         }
 
         RedirectClearingAction toAction() {
@@ -465,27 +408,23 @@ public class RedirectClearingService {
         }
 
         Candidate newestCandidate() {
-            return preferredNewest(candidates);
-        }
-
-        boolean isGlobal() {
-            return candidates.stream().anyMatch(Candidate::isGlobal);
+            return newest(candidates);
         }
     }
 
-    /** Groups competing targets by source URL and validity interval. */
-    private record LogicalKey(String oldUrl, Long publishDate, Long validTo) {
+    /** Groups competing targets by domain, source URL, and validity interval. */
+    private record LogicalKey(String domain, String oldUrl, Long publishDate, Long validTo) {
         GraphKey graphKey() {
-            return new GraphKey(publishDate, validTo);
+            return new GraphKey(domain, publishDate, validTo);
         }
     }
 
-    /** Separates redirect graphs by validity interval. */
-    private record GraphKey(Long publishDate, Long validTo) {
+    /** Separates redirect graphs by domain and validity interval. */
+    private record GraphKey(String domain, Long publishDate, Long validTo) {
     }
 
-    /** Identifies redirects with the same source and final target URL. */
-    private record DuplicateKey(String oldUrl, String newUrl) {
+    /** Identifies redirects with the same domain, source, and final target URL. */
+    private record DuplicateKey(String domain, String oldUrl, String newUrl) {
     }
 
     /**

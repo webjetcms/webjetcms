@@ -83,68 +83,6 @@ Scenario('Filter by actual domain', ({ I, DT, Document }) => {
     I.see("mirroring.tau27.iway.sk");
 });
 
-// TODO -  Tests are here but for test to work, the selected domain must have CLEANED redirects, so we can test that numbers are ok + we need to run clearing so we test it works
-//      -  The question is if its OK to run upon our DB
-
-// Scenario('Redirect cleaning preview and execution @singlethread', async ({ I, DT, DTE }) => {
-//     const prefix = "/autotest-redirect-clearing-" + randomNumber;
-//     const finalUrl = "/tseer/ai-buttons-test.html";
-
-//     I.say("Remove leftover redirect cleaning test data");
-//     I.amOnPage("/admin/v9/settings/redirect/");
-//     DT.filterStartsWith("oldUrl", prefix);
-//     if (await I.getTotalRows() > 0) {
-//         DT.deleteAll();
-//     }
-
-//     I.say("Create old, duplicate, chained and cyclic redirects");
-//     createRedirect(I, DTE, prefix + "-old", prefix + "-old-first");
-//     createRedirect(I, DTE, prefix + "-old", prefix + "-old-final");
-//     createRedirect(I, DTE, prefix + "-duplicate", finalUrl);
-//     createRedirect(I, DTE, prefix + "-duplicate", finalUrl);
-//     createRedirect(I, DTE, prefix + "-chain-a", prefix + "-chain-b");
-//     createRedirect(I, DTE, prefix + "-chain-b", finalUrl);
-//     createRedirect(I, DTE, prefix + "-cycle-a", prefix + "-cycle-b");
-//     createRedirect(I, DTE, prefix + "-cycle-b", prefix + "-cycle-a");
-
-//     I.say("Analyze and verify the read-only preview");
-//     I.amOnPage("/admin/v9/settings/redirect-clearing/");
-//     DT.waitForLoader("redirectClearingTable");
-//     I.dontSeeElement("#redirectClearingTable_wrapper button.buttons-create");
-//     I.clickCss("#redirectClearingTable_wrapper button.buttons-analyze-redirects");
-//     I.waitForText(prefix + "-old-first", 40, "#redirectClearingTable_wrapper");
-//     I.see("Zmazať starú verziu", "#redirectClearingTable_wrapper");
-//     I.see("Zmazať duplikát", "#redirectClearingTable_wrapper");
-//     I.see("Skrátiť reťazec", "#redirectClearingTable_wrapper");
-//     I.see("Zmazať krok cyklu", "#redirectClearingTable_wrapper");
-//     I.seeElement("#redirectClearingTable_wrapper button.buttons-execute-clearing:not(.disabled)");
-
-//     I.say("Execute the complete snapshot");
-//     I.clickCss("#redirectClearingTable_wrapper button.buttons-execute-clearing");
-//     I.waitForText("Vykonať čistenie presmerovaní?", 10, "#toast-container-webjet");
-//     I.see("Zmení sa 1 a zmaže 3 záznamov", "#toast-container-webjet");
-//     I.click("Potvrdiť", "div.toastr-buttons");
-//     I.waitForText("Čistenie dokončené", 40, "#toast-container-webjet");
-//     I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 40, "#redirectClearingTable_wrapper");
-
-//     I.say("Verify the resulting redirects in the main table and in a request");
-//     I.amOnPage("/admin/v9/settings/redirect/");
-//     DT.filterEquals("oldUrl", prefix + "-chain-a");
-//     I.waitForText(finalUrl, 10, "#datatableInit_wrapper");
-//     I.amOnPage(prefix + "-chain-a");
-//     I.seeInCurrentUrl(finalUrl);
-//     I.see("AI BUTTONS TEST");
-
-//     I.say("Delete redirect cleaning test data");
-//     I.amOnPage("/admin/v9/settings/redirect/");
-//     DT.filterStartsWith("oldUrl", prefix);
-//     DT.deleteAll();
-// });
-
-// Scenario('Redirect cleaning permissions', ({ DT }) => {
-//     DT.checkPerms("cmp_redirects", "/admin/v9/settings/redirect-clearing/", "redirectClearingTable");
-// });
-
 Scenario('odhlasenie', ({ I }) => {
     I.amOnPage('/logoff.do?forward=/admin/');
 });
@@ -402,3 +340,80 @@ function createRedirect(I, DTE, oldUrl, newUrl) {
     I.fillField("#DTE_Field_newUrl", newUrl);
     DTE.save();
 }
+
+Scenario('Redirect cleaning preview and execution @singlethread @current', async ({ I, DT, DTE, Document }) => {
+
+    // Use an isolated named domain and verify that neither it nor the shared unnamed scope has pending actions.
+
+    Document.switchDomain("test23.tau27.iway.sk");
+
+    const cleanupPrefix = "/autotest-redirect-clearing-";
+    const prefix = cleanupPrefix + randomNumber;
+    const finalUrl = "/tseer/ai-buttons-test.html";
+
+    I.say("Remove leftover redirect cleaning test data");
+    I.amOnPage("/admin/v9/settings/redirect/");
+    DT.filterStartsWith("oldUrl", cleanupPrefix);
+    if (await I.getTotalRows() > 0) {
+        DT.deleteAll();
+    }
+
+    I.say("Verify there are no unrelated redirect cleaning actions");
+    I.amOnPage("/admin/v9/settings/redirect-clearing/");
+    DT.waitForLoader("redirectClearingTable");
+    I.clickCss("#redirectClearingTable_wrapper button.buttons-analyze-redirects");
+    I.waitForText("Analýza dokončená: 0 aktualizácií, 0 zmazaní", 40, "#toast-container-webjet");
+    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 40, "#redirectClearingTable_wrapper");
+    I.seeElement("#redirectClearingTable_wrapper button.buttons-execute-clearing.disabled");
+
+    I.say("Create old, duplicate, chained and cyclic redirects");
+    I.amOnPage("/admin/v9/settings/redirect/");
+    DT.waitForLoader();
+    createRedirect(I, DTE, prefix + "-old", prefix + "-old-first");
+    createRedirect(I, DTE, prefix + "-old", prefix + "-old-final");
+    createRedirect(I, DTE, prefix + "-duplicate", finalUrl);
+    createRedirect(I, DTE, prefix + "-duplicate", finalUrl);
+    createRedirect(I, DTE, prefix + "-chain-a", prefix + "-chain-b");
+    createRedirect(I, DTE, prefix + "-chain-b", finalUrl);
+    createRedirect(I, DTE, prefix + "-cycle-a", prefix + "-cycle-b");
+    createRedirect(I, DTE, prefix + "-cycle-b", prefix + "-cycle-a");
+
+    I.say("Analyze and verify the read-only preview");
+    I.amOnPage("/admin/v9/settings/redirect-clearing/");
+    DT.waitForLoader("redirectClearingTable");
+    I.dontSeeElement("#redirectClearingTable_wrapper button.buttons-create");
+    I.clickCss("#redirectClearingTable_wrapper button.buttons-analyze-redirects");
+    I.waitForText(prefix + "-old-first", 40, "#redirectClearingTable_wrapper");
+    I.see("Zmazať starú verziu", "#redirectClearingTable_wrapper");
+    I.see("Zmazať duplikát", "#redirectClearingTable_wrapper");
+    I.see("Skrátiť reťazec", "#redirectClearingTable_wrapper");
+    I.see("Zmazať krok cyklu", "#redirectClearingTable_wrapper");
+    I.seeElement("#redirectClearingTable_wrapper button.buttons-execute-clearing:not(.disabled)");
+
+    I.say("Execute the complete snapshot");
+    I.clickCss("#redirectClearingTable_wrapper button.buttons-execute-clearing");
+    I.waitForText("Vykonať čistenie presmerovaní?", 10, "#toast-container-webjet");
+    I.see("Zmení sa 1 a zmaže 3 záznamov", "#toast-container-webjet");
+    I.click("Potvrdiť", "div.toastr-buttons");
+    I.waitForText("Čistenie dokončené", 40, "#toast-container-webjet");
+    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 40, "#redirectClearingTable_wrapper");
+
+    I.say("Verify the resulting redirects in the main table and in a request");
+    I.amOnPage("/admin/v9/settings/redirect/");
+    DT.filterEquals("oldUrl", prefix + "-chain-a");
+    I.waitForText(finalUrl.substring(1), 10, "#datatableInit_wrapper");
+    I.amOnPage(prefix + "-chain-a");
+    I.seeInCurrentUrl(finalUrl);
+
+    I.say("Delete redirect cleaning test data");
+    I.amOnPage("/admin/v9/settings/redirect/");
+    DT.filterStartsWith("oldUrl", cleanupPrefix);
+    DT.deleteAll();
+});
+
+Scenario('Redirect cleaning permissions @current', ({ I, DT }) => {
+    DT.checkPerms("cmp_redirects", "/admin/v9/settings/redirect-clearing/", "redirectClearingTable");
+
+    // logout to refresh domain to default one
+    I.logout();
+});

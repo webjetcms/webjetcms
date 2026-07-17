@@ -42,14 +42,14 @@ class RedirectClearingServiceTest {
     }
 
     @Test
-    void globalTargetWinsOverNewerLocalTarget() {
-        UrlRedirectBean olderGlobal = redirect(4, "/old", "/global", null, 100L, null, null, 301);
-        UrlRedirectBean newerLocal = redirect(5, "/old", "/local", "example.com", 200L, null, null, 302);
+    void namedAndUnnamedTargetsDoNotCompete() {
+        UrlRedirectBean unnamed = redirect(4, "/old", "/unnamed", null, 100L, null, null, 301);
+        UrlRedirectBean named = redirect(5, "/old", "/named", "example.com", 200L, null, null, 302);
 
-        RedirectClearingPlan plan = service.analyze("example.com", List.of(newerLocal, olderGlobal));
+        RedirectClearingPlan plan = service.analyze("example.com", List.of(named, unnamed));
 
         assertFalse(hasAction(plan, 4));
-        assertAction(plan, 5, ActionType.DELETE_OLD, null);
+        assertFalse(hasAction(plan, 5));
     }
 
     @Test
@@ -66,20 +66,20 @@ class RedirectClearingServiceTest {
     }
 
     @Test
-    void globalDuplicateWinsEvenWhenLocalRecordIsOlder() {
-        UrlRedirectBean olderLocal = redirect(20, "/old", "/new", "example.com", 100L, null, null, 301);
-        UrlRedirectBean newerGlobal = redirect(21, "/old", "/new", null, 300L, 1_000L, 2_000L, 302);
-        UrlRedirectBean olderGlobal = redirect(22, "/old", "/new", "", 200L, 1_000L, 2_000L, 307);
+    void duplicatesAreRemovedOnlyWithinTheSameDomain() {
+        UrlRedirectBean named = redirect(20, "/old", "/new", "example.com", 100L, null, null, 301);
+        UrlRedirectBean newerUnnamed = redirect(21, "/old", "/new", null, 300L, 1_000L, 2_000L, 302);
+        UrlRedirectBean olderUnnamed = redirect(22, "/old", "/new", "", 200L, 1_000L, 2_000L, 307);
 
-        RedirectClearingPlan plan = service.analyze("example.com", List.of(olderLocal, newerGlobal, olderGlobal));
+        RedirectClearingPlan plan = service.analyze("example.com", List.of(named, newerUnnamed, olderUnnamed));
 
-        assertAction(plan, 20, ActionType.DELETE_DUPLICATE, null);
+        assertFalse(hasAction(plan, 20));
         assertAction(plan, 21, ActionType.DELETE_DUPLICATE, null);
         assertFalse(hasAction(plan, 22));
     }
 
     @Test
-    void globalTargetWinsBeforeLocalChainOptimization() {
+    void equalFinalTargetsInDifferentDomainsAreNotDeduplicated() {
         List<UrlRedirectBean> redirects = List.of(
             redirect(30, "/a", "/target", "", 300L, null, null, 302),
             redirect(31, "/a", "/b", "example.com", 100L, null, null, 301),
@@ -89,7 +89,7 @@ class RedirectClearingServiceTest {
         RedirectClearingPlan plan = service.analyze("example.com", redirects);
 
         assertFalse(hasAction(plan, 30));
-        assertAction(plan, 31, ActionType.DELETE_OLD, null);
+        assertAction(plan, 31, ActionType.UPDATE_OPTIMIZE, "/target");
         assertFalse(hasAction(plan, 32));
     }
 
@@ -146,7 +146,7 @@ class RedirectClearingServiceTest {
     }
 
     @Test
-    void removesLocalStepFromMixedCycleBeforeNewerGlobalStep() {
+    void namedAndUnnamedRedirectsDoNotFormMixedCycles() {
         List<UrlRedirectBean> redirects = List.of(
             redirect(6, "/a", "/b", null, 300L, null, null, 302),
             redirect(7, "/b", "/a", "example.com", 100L, null, null, 302)
@@ -155,11 +155,11 @@ class RedirectClearingServiceTest {
         RedirectClearingPlan plan = service.analyze("example.com", redirects);
 
         assertFalse(hasAction(plan, 6));
-        assertAction(plan, 7, ActionType.DELETE_CYCLE, null);
+        assertFalse(hasAction(plan, 7));
     }
 
     @Test
-    void removesNewestGlobalStepWhenCycleHasNoLocalStep() {
+    void nullAndEmptyDomainsFormOneCycleScope() {
         List<UrlRedirectBean> redirects = List.of(
             redirect(8, "/a", "/b", null, 100L, null, null, 302),
             redirect(9, "/b", "/a", "", 200L, null, null, 302)
@@ -172,7 +172,7 @@ class RedirectClearingServiceTest {
     }
 
     @Test
-    void localDuplicateDoesNotInfluenceAgeOfGlobalCycleStep() {
+    void namedDuplicateDoesNotInfluenceUnnamedCycle() {
         List<UrlRedirectBean> redirects = List.of(
             redirect(12, "/a", "/b", null, 100L, null, null, 302),
             redirect(13, "/a", "/b", "example.com", 1_000L, null, null, 302),
@@ -182,7 +182,7 @@ class RedirectClearingServiceTest {
         RedirectClearingPlan plan = service.analyze("example.com", redirects);
 
         assertFalse(hasAction(plan, 12));
-        assertAction(plan, 13, ActionType.DELETE_DUPLICATE, null);
+        assertFalse(hasAction(plan, 13));
         assertAction(plan, 14, ActionType.DELETE_CYCLE, null);
     }
 
@@ -220,7 +220,7 @@ class RedirectClearingServiceTest {
     }
 
     @Test
-    void localChainsCanUseGlobalRedirects() {
+    void chainsAreOptimizedOnlyInsideTheSameDomain() {
         List<UrlRedirectBean> redirects = List.of(
             redirect(1, "/a", "/b", "example.com", 100L, null, null, 302),
             redirect(2, "/b", "/c", null, 200L, null, null, 302),
@@ -230,14 +230,14 @@ class RedirectClearingServiceTest {
 
         RedirectClearingPlan plan = service.analyze("example.com", redirects);
 
-        assertAction(plan, 1, ActionType.UPDATE_OPTIMIZE, "/c");
+        assertFalse(hasAction(plan, 1));
         assertFalse(hasAction(plan, 2));
         assertAction(plan, 3, ActionType.UPDATE_OPTIMIZE, "/z");
         assertFalse(hasAction(plan, 4));
     }
 
     @Test
-    void globalChainsDoNotUseLocalRedirects() {
+    void unnamedChainsDoNotUseNamedRedirects() {
         List<UrlRedirectBean> redirects = List.of(
             redirect(10, "/a", "/b", null, 100L, null, null, 302),
             redirect(11, "/b", "/c", "example.com", 200L, null, null, 302)

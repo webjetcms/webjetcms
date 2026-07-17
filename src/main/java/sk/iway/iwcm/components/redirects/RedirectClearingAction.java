@@ -18,41 +18,38 @@ public class RedirectClearingAction implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    /**
-     * Operations produced by redirect clearing analysis. Global redirects take
-     * precedence over domain-specific redirects for every operation.
-     */
+    /** Operations produced by redirect clearing analysis inside one domain scope. */
     public enum ActionType {
         /**
-         * Removes a redirect target that loses precedence to the selected target.
-         * For example, if global {@code /a -> /b} and newer domain-specific
-         * {@code /a -> /c} records exist, the domain-specific record is removed.
-         * Within the same scope, the newest target takes precedence.
+         * Removes an obsolete target superseded by the newest target in the same
+         * domain and validity interval. For example, two redirects in
+         * {@code example.com}, {@code /a -> /b} followed by {@code /a -> /c},
+         * result in deletion of {@code /a -> /b}. A redirect without a domain
+         * does not compete with either record.
          */
         DELETE_OLD,
 
         /**
-         * Removes a redirect step responsible for a cycle while protecting global redirects.
-         * For example, in a mixed global/local cycle {@code /a -> /b -> /a},
-         * the newest local step is removed. The newest global step is removed only
-         * when the cycle contains no local step.
+         * Removes the newest redirect step responsible for a cycle inside one
+         * domain. For example, same-domain redirects {@code /a -> /b} and
+         * {@code /b -> /a} form a cycle, while the same URLs split between a
+         * named and unnamed domain do not.
          */
         DELETE_CYCLE,
 
         /**
-         * Removes a duplicate while preferring a global redirect over a domain-specific one.
-         * For example, if global and domain-specific {@code /a -> /b} records exist,
-         * the domain-specific record is removed. Among records with the same scope,
-         * the oldest record is preserved.
+         * Removes a duplicate while preserving the oldest record in the same
+         * domain. For example, duplicate {@code /a -> /b} records in
+         * {@code example.com} are reduced to the oldest one, but an equal redirect
+         * without a domain is preserved as a separate record.
          */
         DELETE_DUPLICATE,
 
         /**
-         * Shortens a redirect chain by updating only its target URL.
-         * For example, local {@code /a -> /b} followed by global {@code /b -> /c}
-         * is optimized to local {@code /a -> /c}. Global {@code /a -> /b} followed
-         * by local {@code /b -> /c} remains unchanged because a local redirect must
-         * not influence a global redirect.
+         * Shortens a redirect chain by updating only its target URL. For example,
+         * same-domain {@code /a -> /b -> /c} is optimized to {@code /a -> /c}.
+         * If {@code /a -> /b} belongs to a named domain and {@code /b -> /c} has
+         * no domain, neither redirect is changed because chains never cross domains.
          */
         UPDATE_OPTIMIZE
     }
