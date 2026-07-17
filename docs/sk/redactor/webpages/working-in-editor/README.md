@@ -165,15 +165,19 @@ Po zadaní a vyhľadaní výrazu, Vám budú ponúknuté vyhovujúce obrázky. P
 
 ![](image_dialog-pixabay.png)
 
-Po kliknutí na niektorý z ponúkaných obrázkov sa zobrazí dialóg, s náhľadom a hodnotami **šírka** / **výška** daného obrázka.
+Po kliknutí na niektorý z ponúkaných obrázkov sa zobrazí dialóg s náhľadom, poľom **Názov súboru** a hodnotami **šírka** / **výška** daného obrázka.
+
+Pole **Názov súboru** sa automaticky predvyplní podľa posledného vyhľadaného výrazu, ale pred uložením ho môžete upraviť. WebJET názov automaticky prevedie na malé písmená, odstráni diakritiku a nepovolené znaky a medzery nahradí pomlčkami. Príponu súboru nezadávajte, WebJET ju zistí podľa zdrojového obrázka a jej typ zobrazí ikonou napravo od názvu.
 
 ![](image_dialog-pixabay-add.png)
 
 Ak si želáte zmeniť rozmery obrázka, môžete upraviť hodnotu **šírka** a jeho **výška** sa automaticky vypočíta podľa pôvodného pomeru obrázka.
 
+Rozmery obrázka sa do názvu súboru nepridávajú. Ak názov nezadáte alebo súbor s rovnakým názvom už existuje vo zvolenom priečinku, zobrazí sa upozornenie a obrázok sa neuloží. Existujúci súbor sa neprepíše.
+
 ![](image_dialog-pixabay-add2.png)
 
-Následne po kliknutí na tlačidlo **Uložiť do WebJET** sa obrázok stiahne a uloží. Automaticky sa prepne karta na **Obsah**, kde máte okamžite tento obrázok dostupný.
+Následne po kliknutí na tlačidlo **Uložiť do WebJET** sa obrázok stiahne a uloží pod zvoleným názvom. Automaticky sa prepne karta na **Obsah**, kde máte okamžite tento obrázok dostupný.
 
 ![](image_dialog-pixabay-save.png)
 

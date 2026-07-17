@@ -1,11 +1,18 @@
 package sk.iway.iwcm.gallery;
 
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.parser.Parser;
 
 import net.sourceforge.stripes.action.DefaultHandler;
 import net.sourceforge.stripes.action.ForwardResolution;
@@ -15,6 +22,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FileIndexerTools;
 import sk.iway.iwcm.common.UploadFileTools;
 import sk.iway.iwcm.components.gallery.GalleryService;
@@ -57,6 +65,7 @@ public class GalleryActionBean extends WebJETActionBean
 	int itemsCount;
 
 	private String img;
+	private String fileName;
 	private int width;
 	private int height;
 	private String virtualPath;
@@ -265,12 +274,19 @@ public class GalleryActionBean extends WebJETActionBean
 	public Resolution saveImage()
 	{
 		JSONObject result = new JSONObject();
+		IwcmFile temporaryFile = null;
 
 		try {
 			List<String> errors = new ArrayList<>();
+			Prop prop = Prop.getInstance(getRequest());
 
 			if(Tools.isEmpty(img)) {
 				errors.add("Img can not be empty");
+			}
+
+			String sanitizedFileName = sanitizeFileName(fileName);
+			if(Tools.isEmpty(sanitizedFileName)) {
+				errors.add(prop.getText("editor.upload_iframe.enterFileName"));
 			}
 
 			if(Tools.isEmpty(virtualPath)) {
@@ -285,36 +301,52 @@ public class GalleryActionBean extends WebJETActionBean
 				errors.add("Height can not be zero");
 			}
 
-			if (errors.size() > 0) {
-				result.put("errors", new JSONArray(errors));
-				result.put("result", false);
-
-				return new StreamingResolution("application/json", result.toString());
+			String extension = getImageExtension(img);
+			if(Tools.isEmpty(extension) || FileTools.isImage("image." + extension) == false) {
+				errors.add(prop.getText("components.forum.new.upload_not_allowed_filetype"));
 			}
 
+			if (errors.size() > 0) {
+				return getSaveImageErrorResponse(result, errors);
+			}
 
-			String filename = img.substring(img.lastIndexOf('/') + 1);
-			String extension = filename.substring(filename.lastIndexOf('.') + 1);
-
-			String file = virtualPath + "/" + filename;
-			String realPathFile = Tools.getRealPath(file);
-
-			String smallFileUrl = file.substring(0, file.lastIndexOf('_')) + "_" + width + "_" + height + "." + extension;
+			String targetFileName = sanitizedFileName + "." + extension;
+			String smallFileUrl = virtualPath + "/" + targetFileName;
 			String realPathFileSmall = Tools.getRealPath(smallFileUrl);
 
-			FileTools.downloadFile(img, file, null, 0, 120);
+			if (FileTools.exists(smallFileUrl)) {
+				errors.add(prop.getText("multiple_files_upload.file_exist"));
+				return getSaveImageErrorResponse(result, errors);
+			}
+
+			String file = virtualPath + "/.pixabay-" + UUID.randomUUID() + "." + extension;
+			String realPathFile = Tools.getRealPath(file);
+			temporaryFile = new IwcmFile(realPathFile);
+
+			if (FileTools.downloadFile(img, file, null, 0, 120) == false) {
+				errors.add(prop.getText("gallery.resizing.error_2"));
+				return getSaveImageErrorResponse(result, errors);
+			}
 
 			//save pixabay image URL for later use
 			if(this.img.contains(PIXABAY)) {
 				GalleryService.savePixabayImageUrl(realPathFileSmall.substring(realPathFileSmall.lastIndexOf('/') + 1), this.img);
 			}
 
-			GalleryDB.resizePicture(realPathFile, realPathFileSmall, width, height);
-
-			new IwcmFile(realPathFile).delete();
+			if ("svg".equals(extension)) {
+				sanitizeSvgFile(temporaryFile);
+				FileTools.copyFile(temporaryFile, new IwcmFile(realPathFileSmall));
+			}
+			else {
+				GalleryDB.resizePicture(realPathFile, realPathFileSmall, width, height);
+			}
 
 			//ak je treba, aplikujem vodotlac na obrazky
 			IwcmFile newFileIwcm = new IwcmFile(realPathFileSmall);
+			if (newFileIwcm.exists() == false) {
+				errors.add(prop.getText("gallery.resizing.error_2"));
+				return getSaveImageErrorResponse(result, errors);
+			}
 			GalleryDB.applyWatermarkOnUpload(newFileIwcm);
 
 			if (GalleryDB.isGalleryFolder(virtualPath))
@@ -323,7 +355,7 @@ public class GalleryActionBean extends WebJETActionBean
 			}
 			else if (Constants.getBoolean("imageAlwaysCreateGalleryBean"))
 			{
-				GalleryDB.setImage(virtualPath, filename);
+				GalleryDB.setImage(virtualPath, targetFileName);
 			}
 
 			//ak existuje adresar files, treba indexovat
@@ -341,8 +373,85 @@ public class GalleryActionBean extends WebJETActionBean
 		catch (Exception e)
 		{
 			sk.iway.iwcm.Logger.error(e);
+			result.put("result", false);
+		}
+		finally
+		{
+			if (temporaryFile != null) temporaryFile.delete();
 		}
 
+		return new StreamingResolution("application/json", result.toString());
+	}
+
+	private String sanitizeFileName(String value)
+	{
+		if (Tools.isEmpty(value)) return "";
+
+		String sanitized = Tools.replace(value, "\\", "-");
+		sanitized = Tools.replace(sanitized, "/", "-");
+		sanitized = Tools.replace(sanitized, ".", "-");
+		sanitized = DocTools.removeCharsDir(sanitized, true).toLowerCase();
+		sanitized = sanitized.replaceAll("[^a-z0-9_-]", "-");
+		sanitized = sanitized.replaceAll("(_-|-_)+", "-");
+		sanitized = sanitized.replaceAll("-+", "-");
+		sanitized = sanitized.replaceAll("_+", "_");
+		return sanitized.replaceAll("^[-_]+|[-_]+$", "");
+	}
+
+	private String getImageExtension(String imageUrl)
+	{
+		if (Tools.isEmpty(imageUrl)) return "";
+
+		try {
+			String extension = FileTools.getFileExtension(URI.create(imageUrl).getPath());
+			if ("jpeg".equals(extension)) return "jpg";
+			return extension;
+		}
+		catch (Exception e) {
+			return "";
+		}
+	}
+
+	/**
+	 * Sanitize SVG file by removing script elements and on* event attributes
+	 * to prevent XSS attacks when the SVG is served to browsers.
+	 */
+	private void sanitizeSvgFile(IwcmFile svgFile)
+	{
+		try {
+			String content = FileTools.readFileContent(svgFile.getAbsolutePath());
+			Document doc = Jsoup.parse(content, "", Parser.xmlParser());
+
+			// Remove script elements
+			doc.select("script").remove();
+
+			// Remove on* event handler attributes from all elements
+			for (Element el : doc.select("*")) {
+				el.attributes().asList().stream()
+					.filter(attr -> attr.getKey().toLowerCase().startsWith("on"))
+					.forEach(attr -> el.removeAttr(attr.getKey()));
+			}
+
+			// Remove href attributes with javascript: protocol
+			for (Element el : doc.select("[href], [xlink:href]")) {
+				String href = el.hasAttr("href") ? el.attr("href") : el.attr("xlink:href");
+				if (href.replaceAll("\\s", "").toLowerCase().startsWith("javascript:")) {
+					el.removeAttr("href");
+					el.removeAttr("xlink:href");
+				}
+			}
+
+			FileTools.saveFileContent(svgFile.getAbsolutePath(), doc.html(), StandardCharsets.UTF_8.name());
+		}
+		catch (Exception e) {
+			sk.iway.iwcm.Logger.error(e);
+		}
+	}
+
+	private Resolution getSaveImageErrorResponse(JSONObject result, List<String> errors)
+	{
+		result.put("errors", new JSONArray(errors));
+		result.put("result", false);
 		return new StreamingResolution("application/json", result.toString());
 	}
 
@@ -354,6 +463,16 @@ public class GalleryActionBean extends WebJETActionBean
 	public void setImg(String img)
 	{
 		this.img = img;
+	}
+
+	public String getFileName()
+	{
+		return fileName;
+	}
+
+	public void setFileName(String fileName)
+	{
+		this.fileName = fileName;
 	}
 
 	public int getWidth()

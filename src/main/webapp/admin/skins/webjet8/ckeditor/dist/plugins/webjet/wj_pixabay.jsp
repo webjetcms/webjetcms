@@ -22,6 +22,9 @@ div.results { background-color: white; padding: 5px; padding-top: 10px; }
 div.pixabayBox { margin: 0px; }
 .pixabayBox .imageSearch { padding: 10px; padding-top: 10px; }
 .pixabayBox .paging { padding-top: 10px; }
+.pixabayBox #imageModal .imageExtension { background-color: transparent; border-right: var(--bs-border-width) solid var(--bs-border-color); justify-content: center; min-width: 48px; }
+.pixabayBox #imageModal .imageExtension .ti { font-size: 24px; }
+.pixabayBox #imageModal #imageName.is-invalid + .imageExtension { border-color: var(--bs-form-invalid-border-color, #dc3545); }
 div.no_results { color: red; font-weight: bold; text-align: center; }
 </style>
 
@@ -39,7 +42,8 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 				itemsPerPage: 8,
 				itemsPerRow: 4,
 				page: 1,
-				pagesCount: 0
+				pagesCount: 0,
+				search: ''
 			};
 
 		var cache = {};
@@ -121,6 +125,7 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 				self.elements.results.on('click', 'a', function(e){
 					var src = $(this).find('img').first().prop('src');
 					var img = $(this).prop('href');
+					var extension = self.getImageExtension(img);
 
 					var width = $(this).data('width');
 					var height = $(this).data('height');
@@ -129,6 +134,9 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 					$('#imageModal').find('img').first().data('img', img);
 					$('#imageModal').find('img').first().data('width', width);
 					$('#imageModal').find('img').first().data('height', height);
+					$('#imageModal #imageName').val(self.sanitizeFileName(self.settings.search));
+					self.clearFileNameError();
+					self.setImageExtension(extension);
 
 					$('#imageModal').modal('show');
 					$('#imageModal #imageWidth').val('${defaultWidth}').keyup();
@@ -177,6 +185,13 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 					self.checkInputs();
 				});
 
+				$('#imageModal #imageName').on('input', function(){
+					self.clearFileNameError();
+				}).on('blur', function(){
+					$(this).val(self.sanitizeFileName($(this).val()));
+					self.checkInputs();
+				});
+
 				$('#imageModal .saveImage').click(function(){
 
 					var url = '/components/gallery/admin_save_image_ajax_utf-8.jsp';
@@ -187,6 +202,8 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 					data.img = $('#imageModal').find('img').first().data('img');
 					data.height = $('#imageModal #imageHeight').val();
 					data.width = $('#imageModal #imageWidth').val();
+					data.fileName = self.sanitizeFileName($('#imageModal #imageName').val());
+					$('#imageModal #imageName').val(data.fileName);
 
 					var errors = [];
 
@@ -220,7 +237,8 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 
 								$('#imageModal .errors').hide();
 								$('#imageModal').modal('hide');
-								$('#imageModal #imageHeight, #imageModal #imageWidth').val('');
+								$('#imageModal #imageHeight, #imageModal #imageWidth, #imageModal #imageName').val('');
+								self.setImageExtension('');
 
 								setTimeout(function()
 								{
@@ -249,6 +267,13 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 								}, 500);
 							}
 							else {
+								var duplicateError = $('#imageNameDuplicateError').data('server-message');
+								if ($.inArray(duplicateError, data.errors) != -1) {
+									$('#imageModal .errors').hide();
+									self.showFileNameError('duplicate');
+									return;
+								}
+
 								$('#imageModal .errors').empty();
 								var html = '<ul>';
 
@@ -272,6 +297,7 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 			},
 			getJSON: function( search, page ) {
 				var self = this;
+				self.settings.search = search;
 
 				//Metronic.blockUI({target: $('.results'), iconOnly: true});
 
@@ -405,14 +431,50 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 				image = image.replace('_640', size);
 				return image;
 			},
+			getImageExtension: function( image ) {
+				var path = new URL(image, window.location.href).pathname;
+				var filename = path.substring(path.lastIndexOf('/') + 1);
+				var extension = filename.indexOf('.') == -1 ? '' : filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
+				return extension == 'jpeg' ? 'jpg' : extension;
+			},
+			setImageExtension: function( extension ) {
+				var element = $('#imageModal .imageExtension');
+				element.empty().removeAttr('title role aria-label');
+
+				if (extension == '') return;
+
+				var fileTypeIcons = ['jpg', 'png', 'svg', 'bmp'];
+				var icon = fileTypeIcons.indexOf(extension) == -1 ? 'ti-file' : 'ti-' + extension;
+				$('<i>', { 'class': 'ti ' + icon, 'aria-hidden': 'true' }).appendTo(element);
+				element.attr({
+					title: extension.toUpperCase(),
+					role: 'img',
+					'aria-label': extension.toUpperCase()
+				});
+			},
+			clearFileNameError: function() {
+				var fileName = $('#imageModal #imageName');
+				fileName.removeClass('is-invalid').removeAttr('aria-invalid').removeData('error-type');
+				$('#imageModal .imageNameError').hide();
+			},
+			showFileNameError: function( errorType ) {
+				var fileName = $('#imageModal #imageName');
+				this.clearFileNameError();
+				fileName.addClass('is-invalid').attr('aria-invalid', 'true').data('error-type', errorType);
+				$('#imageName' + (errorType == 'duplicate' ? 'Duplicate' : 'Required') + 'Error').show();
+			},
+			sanitizeFileName: function( fileName ) {
+				fileName = WJ.fixFileName(fileName).replace(/\./g, '-');
+				return fileName.replace(/^[-_]+|[-_]+$/g, '');
+			},
 			checkInputs: function() {
 				var result = true;
 
 				$('#imageModal #imageHeight, #imageModal #imageWidth').each(function(i,v){
 					var el = $(this);
 					var val = el.val();
-					var formGroup = el.parents('.form-group').first();
-					var tooltip = el.prev('.tooltips');
+					var formGroup = el.closest('.row');
+					var tooltip = el.closest('.input-icon').find('.tooltips');
 
 					if (val == "" || isNaN(parseInt(val))) {
 						result = false;
@@ -424,6 +486,18 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 						tooltip.hide();
 					}
 				});
+
+				var fileName = $('#imageModal #imageName');
+				if (fileName.val() == '') {
+					result = false;
+					this.showFileNameError('required');
+				}
+				else if (fileName.data('error-type') == 'duplicate') {
+					result = false;
+				}
+				else {
+					this.clearFileNameError();
+				}
 
 				return result;
 			}
@@ -491,7 +565,20 @@ $(document).ready(function(){
 						<div class="col-sm-8">
 							<form class="form-horizontal" role="form">
                                 <div class="form-body">
-                                	<div class="row">
+									<div class="row">
+										<div class="col-xs-2">
+											<label for="imageName" class="control-label"><iwcm:text key="fbrowse.file_name"/></label>
+										</div>
+										<div class="col-xs-10">
+											<div class="input-group">
+												<input type="text" class="form-control" id="imageName" aria-describedby="imageNameRequiredError imageNameDuplicateError" />
+												<span class="input-group-text imageExtension"></span>
+											</div>
+											<div id="imageNameRequiredError" class="form-text text-danger small imageNameError" style="display: none;"><iwcm:text key="editor.upload_iframe.enterFileName"/></div>
+											<div id="imageNameDuplicateError" class="form-text text-danger small imageNameError" data-server-message="<iwcm:text key="multiple_files_upload.file_exist"/>" style="display: none;"><iwcm:text key="pixabay.modal.imageNameDuplicateError"/></div>
+										</div>
+									</div>
+									<div class="row">
 										<div class="col-xs-2">
                                         	<label for="imageWidth" class="control-label"><iwcm:text key="editor.table.width"/></label>
 										</div>
