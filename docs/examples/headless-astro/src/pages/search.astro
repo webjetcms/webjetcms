@@ -1,0 +1,91 @@
+---
+import { search, getNavigation } from '../lib/api';
+import Layout from '../layouts/Layout.astro';
+
+const query = Astro.url.searchParams.get('q') || '';
+const pageNum = parseInt(Astro.url.searchParams.get('page') || '0', 10) || 0;
+const pageSize = 20;
+
+let results: any = { items: [], page: 0, size: pageSize, totalElements: 0, totalPages: 0 };
+let searchError = '';
+
+if (query.trim().length > 0) {
+  try {
+    const searchResult = await search(query.trim(), Astro.request, pageNum, pageSize);
+    results = searchResult.data;
+
+    // Forward Set-Cookie headers to the browser
+    const setCookie = searchResult.headers.get('set-cookie');
+    if (setCookie) {
+      Astro.response.headers.append('Set-Cookie', setCookie);
+    }
+  } catch (e: unknown) {
+    searchError = e instanceof Error ? e.message : 'Search failed';
+  }
+}
+
+const navResult = await getNavigation(Astro.request, '/', undefined, 2);
+const nav = navResult.data;
+
+// Forward Set-Cookie headers to the browser
+const navSetCookie = navResult.headers.get('set-cookie');
+if (navSetCookie) {
+  Astro.response.headers.append('Set-Cookie', navSetCookie);
+}
+---
+
+<Layout
+  title={query ? `Search: ${query} — WebJET CMS` : 'Search — WebJET CMS'}
+  navItems={nav}
+  currentPath="/search"
+  searchQuery={query}
+>
+  <div class="search-header">
+    <h1>{query ? `Results for “${query}”` : 'Search Documents'}</h1>
+    {!searchError && query && results.totalElements !== undefined && (
+      <p>{results.totalElements} result{results.totalElements !== 1 ? 's' : ''} found</p>
+    )}
+  </div>
+
+  {searchError ? (
+    <div class="error"><strong>Error:</strong> {searchError}</div>
+  ) : query.trim().length === 0 ? (
+    <div class="empty-state">
+      <p>Enter a search term in the header to find documents.</p>
+    </div>
+  ) : results.items && results.items.length > 0 ? (
+    <>
+      {results.items.map((item: any) => (
+        <div class="result-item">
+          <a href={item.virtualPath}>{item.title}</a>
+          <div class="result-meta">
+            {item.virtualPath && <span>{item.virtualPath}</span>}
+            {item.language && <span> &middot; {item.language}</span>}
+          </div>
+          {item.perex && <div class="result-snippet">{item.perex}</div>}
+          {!item.perex && item.snippet && <div class="result-snippet">{item.snippet}</div>}
+        </div>
+      ))}
+      {results.totalPages > 1 && (
+        <div class="pagination">
+          {results.page > 0 ? (
+            <a href={`/search?q=${encodeURIComponent(query)}&page=${results.page - 1}`}>&laquo; Prev</a>
+          ) : (
+            <span class="disabled">&laquo; Prev</span>
+          )}
+          <span class="current">Page {results.page + 1} of {results.totalPages}</span>
+          {results.page < results.totalPages - 1 ? (
+            <a href={`/search?q=${encodeURIComponent(query)}&page=${results.page + 1}`}>Next &raquo;</a>
+          ) : (
+            <span class="disabled">Next &raquo;</span>
+          )}
+        </div>
+      )}
+    </>
+  ) : (
+    <div class="no-results">
+      <p>No results found for "<strong>{query}</strong>".</p>
+      <p>Try different keywords or browse the navigation.</p>
+    </div>
+  )}
+</Layout>

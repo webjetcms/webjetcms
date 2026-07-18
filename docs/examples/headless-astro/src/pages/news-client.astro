@@ -1,0 +1,177 @@
+---
+import { getNavigation } from '../lib/api';
+import Layout from '../layouts/Layout.astro';
+
+const NEWS_GROUP_ID = 24;
+const NEWS_PAGE_SIZE = 5;
+
+const navResult = await getNavigation(Astro.request, '/', undefined, 2);
+const nav = navResult.data;
+
+// Forward Set-Cookie headers to the browser
+const navSetCookie = navResult.headers.get('set-cookie');
+if (navSetCookie) {
+  Astro.response.headers.append('Set-Cookie', navSetCookie);
+}
+---
+
+<Layout
+  title={`News (Client) — WebJET CMS`}
+  navItems={nav}
+  currentPath="/news-client"
+>
+  <section class="md-news-subpage">
+    <div class="container">
+      <div id="news-client-root" class="news-list"
+           data-news-group-id={NEWS_GROUP_ID}
+           data-news-page-size={NEWS_PAGE_SIZE}>
+        <div class="loading">Loading news...</div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const API_BASE = import.meta.env.PUBLIC_API_BASE;
+    console.log('API_BASE:', API_BASE);
+
+    function escapeHtml(str: string): string {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    async function loadNews(page = 1) {
+      const root = document.getElementById('news-client-root');
+      if (!root) return;
+
+      const NEWS_GROUP_ID = parseInt(root.dataset.newsGroupId || '24', 10);
+      const NEWS_PAGE_SIZE = parseInt(root.dataset.newsPageSize || '10', 10);
+      const requestedPage = Math.max(1, page);
+
+      root.innerHTML = '<div class="loading">Loading news...</div>';
+
+      try {
+        const response = await fetch(`${API_BASE}/news`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            groupIds: [NEWS_GROUP_ID],
+            alsoSubGroups: true,
+            publishType: 'new',
+            order: 'date',
+            ascending: false,
+            paging: true,
+            pageSize: NEWS_PAGE_SIZE,
+            offset: (requestedPage - 1) * NEWS_PAGE_SIZE,
+            perexNotRequired: false,
+            loadData: false,
+            checkDuplicity: false,
+            perexGroup: [],
+            perexGroupNot: [],
+          }),
+        });
+
+        if (!response.ok) {
+          root.innerHTML = `<div class="error"><strong>Error:</strong> Failed to load news (${response.status})</div>`;
+          return;
+        }
+
+        const data = await response.json();
+
+        if (data.items && data.items.length > 0) {
+          // Use DOM creation instead of innerHTML for safety
+          root.innerHTML = '';
+          for (const item of data.items) {
+            const row = document.createElement('div');
+            row.className = 'row justify-content-md-center';
+
+            // Left column (col-sm-2)
+            const colLeft = document.createElement('div');
+            colLeft.className = 'col-sm-2';
+
+            // Image link with thumb URL
+            if (item.perexImage) {
+              const a = document.createElement('a');
+              a.href = item.virtualPath;
+              const img = document.createElement('img');
+              img.src = `/thumb${item.perexImage}?w=400&h=300&ip=6`;
+              img.className = 'img-responsive';
+              img.alt = escapeHtml(item.title);
+              a.appendChild(img);
+              colLeft.appendChild(a);
+            }
+
+            // Tags from perexGroup
+            if (item.perexGroups && Array.isArray(item.perexGroups)) {
+              for (const pg of item.perexGroups) {
+                if (pg === 1 || pg === 2) {
+                  const span = document.createElement('span');
+                  span.className = pg === 1 ? 'tag c1' : 'tag c2';
+                  span.textContent = pg === 1 ? 'Investície' : 'Podnikanie';
+                  colLeft.appendChild(span);
+                }
+              }
+            }
+
+            row.appendChild(colLeft);
+
+            // Right column (col-sm-6)
+            const colRight = document.createElement('div');
+            colRight.className = 'col-sm-6';
+
+            const h3 = document.createElement('h3');
+            const titleLink = document.createElement('a');
+            titleLink.href = item.virtualPath;
+            titleLink.textContent = item.title;
+            h3.appendChild(titleLink);
+            colRight.appendChild(h3);
+
+            const p = document.createElement('p');
+            p.textContent = item.htmlData || '';
+            colRight.appendChild(p);
+
+            row.appendChild(colRight);
+            root.appendChild(row);
+          }
+
+          if (data.totalPages > 1) {
+            const pagination = document.createElement('div');
+            pagination.className = 'pagination';
+
+            const previousPage = document.createElement(data.page > 1 ? 'button' : 'span');
+            previousPage.textContent = '\u00ab Prev';
+            if (data.page > 1) {
+              previousPage.addEventListener('click', () => loadNews(data.page - 1));
+            } else {
+              previousPage.className = 'disabled';
+            }
+            pagination.appendChild(previousPage);
+
+            const currentPage = document.createElement('span');
+            currentPage.className = 'current';
+            currentPage.textContent = `Page ${data.page} of ${data.totalPages}`;
+            pagination.appendChild(currentPage);
+
+            const nextPage = document.createElement(data.page < data.totalPages ? 'button' : 'span');
+            nextPage.textContent = 'Next \u00bb';
+            if (data.page < data.totalPages) {
+              nextPage.addEventListener('click', () => loadNews(data.page + 1));
+            } else {
+              nextPage.className = 'disabled';
+            }
+            pagination.appendChild(nextPage);
+
+            root.appendChild(pagination);
+          }
+        } else {
+          root.innerHTML = '<div class="no-results"><p>No news items found.</p></div>';
+        }
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'Unknown error';
+        root.innerHTML = `<div class="error"><strong>Error:</strong> ${message}</div>`;
+      }
+    }
+
+    loadNews();
+  </script>
+</Layout>
