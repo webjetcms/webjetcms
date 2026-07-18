@@ -96,6 +96,15 @@ To create a link to a document/file, select the text that should be the link, cl
 
 ![](link_dialog.png)
 
+- if you have the right to **Document Manager** (`cmp_file_archiv`), the **Document Manager** tab will also appear in the **Link** dialog.
+  - The tab contains a tree structure of archive folders and a table of documents from the selected folder.
+  - By clicking on the document name, its URL address will be automatically copied into the URL field.
+  - If the required document is not yet in the archive, you can upload it directly in this tab by dragging the file from your computer (`drag&drop`) into the dialog. The file will be uploaded to the currently selected folder in the tree.
+  - When uploading multiple files or when the real file name is duplicated, the same options will be displayed as in the document manager: **Skip**, **Replace**, or **New version**.
+  - Confirm OK, which will create a link to the file from the document manager at the marked location.
+
+![](link_dialog-file-archive.png)
+
 - if the document is **intended only for the current web page**, it is necessary to select the item “Media of this page” and then the item “Files”.
   - You search for a document, click on it, and the link to the document is automatically copied into the URL field.
   - If the required document is not in the list, you can use the ```drag&drop``` function to upload a document from your computer.
