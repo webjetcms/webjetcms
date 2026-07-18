@@ -29,7 +29,7 @@ Explanation of the pictograms used:
 - [ ] Unused files - make it possible to get a list of unused files - they are not used anywhere on the page, not even in media, etc. There was an API for this `FileTools.getDirFileUsage(currentDir, request)`. Add as a tab to folder properties in explorer (#58621).
 - [ ] Explorer - prevent working with the Document Manager folder so that files cannot be manipulated outside of the Document Manager.
 - [x] +Explorer - add permission to upload files with accented characters (removed for `/images` and `/files` folders) (#58589).
-- [ ] +Websites - better integrate document manager for inserting links into the page - new tab similar to Photobank for images (#58593).
+- [x] +Websites - better integrate document manager for inserting links into the page - new tab similar to Photobank for images (#58593).
 - [x] +Forms - add more detailed statistics on errors in completed forms (#58509).
 - [x] +Websites - improve the user interface for entering `/thumb` images in the editor (#58525).
 - [x] +Optional fields - add the ability to define which fields are required (#58413).
@@ -53,6 +53,8 @@ Explanation of the pictograms used:
 - [ ] + Dialer, Blog, News - adjust so that the dialer or news folder type selection is on the left, similar to the gallery/websites. Then the cards don't have to be displayed all at once.
 - [ ] +Translation keys - display a tree structure of translation keys for better orientation.
 - [ ] +Configuration - add the option to set a variable only for the current node (do not save it to the database - just set it to the Constants object), add a "Set temporarily" checkbox there with an info icon that the value is set only temporarily and upon restart the value as in the database will be restored.
+- [ ] Explorer - fix displaying files with special characters (for example `@`).
+- [ ] Automatically delete `temp` files that may accumulate.
 
 ## 2025
 

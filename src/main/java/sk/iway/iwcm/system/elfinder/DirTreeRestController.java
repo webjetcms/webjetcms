@@ -152,26 +152,16 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
      * @param origItem
      * @return
      */
-    private List<DirTreeItem> getAllowedFolders( List<DirTreeItem> itemsToCheck, JsTreeMoveItem origItem) {
+    public static List<DirTreeItem> getAllowedFolders( List<DirTreeItem> itemsToCheck, JsTreeMoveItem origItem) {
         if(Tools.isNotEmpty(origItem.getSkipFoldersConst())) {
             String skipFoldersString = Constants.getString(origItem.getSkipFoldersConst());
             String[] skipFolders = Tools.getTokens(skipFoldersString, ",\n", true);
 
             List<DirTreeItem> allowedFolders = new ArrayList<>();
             for(DirTreeItem entity : itemsToCheck) {
-                boolean skip = false;
-                String virtualPath = entity.getVirtualPath();
-                if(virtualPath.endsWith("/") == false)
-                    virtualPath += "/";
+                boolean skip = isSkippedFolder(entity.getVirtualPath(), skipFolders);
 
-                for(int i = 0; i < skipFolders.length; i++) {
-                    if(virtualPath.contains(skipFolders[i])) {
-                        skip = true;
-                        break;
-                    }
-                }
-
-                if(skip == false) {
+                if(skip == false && hasOnlySkippedContent(entity, skipFolders) == false) {
                     allowedFolders.add(entity);
                 }
             }
@@ -193,27 +183,58 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
      * @param skipFolders - array of folders paths to skip
      * @return
      */
-    private boolean hasAllowedChildren(DirTreeItem item, String[] skipFolders) {
+    private static boolean hasAllowedChildren(DirTreeItem item, String[] skipFolders) {
         IwcmFile directory = new IwcmFile(Tools.getRealPath(item.getVirtualPath()));
 
         IwcmFile[] subfiles = directory.listFiles();
         for (IwcmFile f : subfiles) {
             if (f.isFile()) continue;
 
-            boolean valid = true;
-            String virtualPath = f.getVirtualPath();
-            if(virtualPath.endsWith("/") == false)
-                virtualPath += "/";
-
-            for(int i = 0; i < skipFolders.length; i++) {
-                if(virtualPath.contains(skipFolders[i])) {
-                    valid = false;
-                    break;
-                }
-            }
-
-            if(valid) {
+            if(isSkippedFolder(f.getVirtualPath(), skipFolders) == false && hasOnlySkippedContent(f, skipFolders) == false) {
                 //At least one is allowed - return true
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Return TRUE when folder content has no visible value after applying skipFolders.
+     * Files or at least one allowed subfolder keep the parent folder visible.
+     * @param item - parent folder
+     * @param skipFolders - array of folders paths to skip
+     * @return
+     */
+    private static boolean hasOnlySkippedContent(DirTreeItem item, String[] skipFolders) {
+        IwcmFile directory = new IwcmFile(Tools.getRealPath(item.getVirtualPath()));
+
+        return hasOnlySkippedContent(directory, skipFolders);
+    }
+
+    private static boolean hasOnlySkippedContent(IwcmFile directory, String[] skipFolders) {
+
+        IwcmFile[] subfiles = directory.listFiles();
+        boolean hasSkippedFolder = false;
+        for (IwcmFile f : subfiles) {
+            if (f.isFile()) return false;
+
+            if(isSkippedFolder(f.getVirtualPath(), skipFolders) || hasOnlySkippedContent(f, skipFolders)) {
+                hasSkippedFolder = true;
+            } else {
+                return false;
+            }
+        }
+
+        return hasSkippedFolder;
+    }
+
+    private static boolean isSkippedFolder(String virtualPath, String[] skipFolders) {
+        if(virtualPath.endsWith("/") == false)
+            virtualPath += "/";
+
+        for(int i = 0; i < skipFolders.length; i++) {
+            if(virtualPath.contains(skipFolders[i])) {
                 return true;
             }
         }
@@ -225,21 +246,17 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
     protected void move(Map<String, Object> result, JsTreeMoveItem item) {
         result.put("result", false);
         result.put("error", getProp().getText("components.jstree.access_denied__group"));
-        return;
     }
 
     @Override
     protected void save(Map<String, Object> result, DirTreeItem item) {
         result.put("result", false);
         result.put("error", getProp().getText("components.jstree.access_denied__group"));
-        return;
     }
 
     @Override
     protected void delete(Map<String, Object> result, DirTreeItem item) {
-        result.put("result", false);
-        result.put("error", getProp().getText("components.jstree.access_denied__group"));
-        return;
+        save(result, item);
     }
 
     @Override
