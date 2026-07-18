@@ -391,6 +391,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Webové stránky - opravená uzatváracia značka `</link>`, správne nahradená za `/>`, keďže `link` je prázdny element (#osk498).
 - Webové stránky - opravená chyba odstránenia časovej zložky pri nastavení dátumu konania (#54273-89).
 - Webové stránky - pridaná možnosť [nastaviť JavaScript funkciu](frontend/setup/config.md) pre `target="_blank"` odkazy, predvolene nastavené na `return openTargetBlank(this, event)`. Hodnota sa nastavuje v konfiguračnej premennej `editorTargetBlankFunction`, ak je nastavené na prázdnu hodnotu `onclick` funkcia sa nenastaví (#225).
+- Hromadný email - opravené vytváranie kampaní a emailov pri duplikovaní kampane (#58649).
 
 Jakarta verzia:
 
