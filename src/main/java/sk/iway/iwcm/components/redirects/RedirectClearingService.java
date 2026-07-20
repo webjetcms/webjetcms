@@ -209,7 +209,6 @@ public class RedirectClearingService {
      * @param plan immutable plan to execute
      * @return counts of updated, deleted, and skipped records
      */
-    @Transactional
     public ExecutionResult execute(RedirectClearingPlan plan) {
         String analyzedDomain = plan.getAnalyzedDomain();
 
