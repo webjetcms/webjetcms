@@ -21,9 +21,12 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.RedirectsRepository;
 import sk.iway.iwcm.system.UrlRedirectBean;
 import sk.iway.iwcm.system.UrlRedirectDB;
+import sk.iway.iwcm.system.UrlRedirectEditorFields;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 
 @RestController
@@ -41,7 +44,26 @@ public class RedirectRestController extends DatatableRestControllerV2<UrlRedirec
     public Page<UrlRedirectBean> getAllItems(Pageable pageable) {
         //Redirect this throu spec search
         DatatablePageImpl<UrlRedirectBean> page = new DatatablePageImpl<>(getAllItemsIncludeSpecSearch(new UrlRedirectBean(), pageable));
+        page.addOptions("editorFields.statusIcons", getStatusIconOptions(), "label", "value", false);
         return page;
+    }
+
+    @Override
+    public UrlRedirectBean processFromEntity(UrlRedirectBean entity, ProcessItemAction action) {
+        if (entity == null) return null;
+
+        UrlRedirectEditorFields editorFields = new UrlRedirectEditorFields();
+        editorFields.fromUrlRedirect(entity);
+        entity.setEditorFields(editorFields);
+
+        return entity;
+    }
+
+    private List<LabelValue> getStatusIconOptions() {
+        return List.of(
+            new LabelValue("<i class=\"ti ti-user-filled\" style=\"color: #000000;\"></i> " + getProp().getText("components.redirect.manual_redirect"), "manualRedirect:eq:true"),
+            new LabelValue("<i class=\"ti ti-keyframes\" style=\"color: #000000;\"></i> " + getProp().getText("components.redirect.automatic"), "manualRedirect:eq:false")
+        );
     }
 
     @Override

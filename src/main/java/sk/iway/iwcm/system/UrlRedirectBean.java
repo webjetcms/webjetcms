@@ -16,6 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -25,6 +26,7 @@ import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 
 /**
  *  UrlRedirectBean.java
@@ -156,6 +158,10 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
 		defaultValue = "true"
     )
 	Boolean manualRedirect;
+
+	@Transient
+	@DataTableColumnNested
+	private transient UrlRedirectEditorFields editorFields = null;
 
 	public Date getInsertDate()
 	{
