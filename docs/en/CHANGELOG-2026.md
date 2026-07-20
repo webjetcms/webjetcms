@@ -6,6 +6,10 @@
 
 ### Websites
 
+- Redirects - user-created redirects are distinguished from automatic ones (marked with a gray background) and can be [filtered in the redirect list] separately (redactor/webpages/redirects/README.md#automatic-and-user-created-redirects) (#58625).
+
+![](editor/webpages/redirects/redirect-path.png)
+
 - SEO - added a separate setting **Search engine tracking** with options **According to crawl settings**, **Enable tracking** (`follow`) and **Disable tracking** (`nofollow`). HTTP header `X-Robots-Tag` and Ninja `${ninja.page.robots}` use the same logic: when indexing without restrictions, they return `all`, otherwise a combination of directives `noindex` and `nofollow` according to the page settings. More in [Ninja documentation](frontend/ninja-starter-kit/ninja-jv/page/README.md#indexing-settings-string) (#OSK563).
 - Ninja - added [dimension generation](frontend/ninja-starter-kit/ninja-bp/README.md) SEO image `og:image:width` and `og:image:height` (#OSK563).
 - Templates - added option to set the movement of `<style>` and `<link rel="stylesheet">` tags from the page body to `<head>` via [template option](frontend/templates/templates.md) with support for global configuration variable `showDocMoveStyleToHead`. Blocks in IE conditions, `noscript` and `script` remain in place (#231).
