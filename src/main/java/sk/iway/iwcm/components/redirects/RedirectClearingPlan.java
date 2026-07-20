@@ -25,7 +25,10 @@ class RedirectClearingPlan implements Serializable {
     /** Number of database records loaded for analysis. */
     private final int analyzedRecords;
 
-    /** Number of records excluded because they are not analyzable exact redirects. */
+    /**
+     * Number of records excluded from analysis: regular-expression redirects,
+     * dated redirects, and redirects with an empty source or target URL.
+     */
     private final int ignoredRecords;
 
     /**
@@ -34,7 +37,8 @@ class RedirectClearingPlan implements Serializable {
      * @param analyzedDomain normalized selected domain
      * @param actions operations produced by analysis
      * @param analyzedRecords number of loaded redirect records
-     * @param ignoredRecords number of ignored redirect records
+     * @param ignoredRecords number of regular-expression, dated, or invalid
+     *        empty-URL redirect records excluded from analysis
      */
     RedirectClearingPlan(String analyzedDomain, List<RedirectClearingAction> actions, int analyzedRecords, int ignoredRecords) {
         this.analyzedDomain = analyzedDomain;

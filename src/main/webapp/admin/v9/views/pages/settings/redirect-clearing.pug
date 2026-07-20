@@ -39,7 +39,7 @@ block content
             }
 
             redirectClearingTable.button().add(1, {
-                text: '<i class="ti ti-scan"></i><span>[[\#{components.redirect.clearing.analyze}]]</span>',
+                text: '<i class="ti ti-scan"></i>',
                 action: function () {
                     if (actionRunning) return;
                     setRunning(true);
@@ -53,7 +53,7 @@ block content
             });
 
             redirectClearingTable.button().add(2, {
-                text: '<i class="ti ti-trash-check"></i><span>[[\#{components.redirect.clearing.execute}]]</span>',
+                text: '<i class="ti ti-trash"></i>',
                 action: function () {
                     if (actionRunning || planSummary.updates + planSummary.deletes === 0) return;
                     let note = '[[\#{components.redirect.clearing.confirmMessage}]]'

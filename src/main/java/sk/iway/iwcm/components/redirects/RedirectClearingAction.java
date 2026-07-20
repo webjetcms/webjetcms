@@ -18,14 +18,18 @@ public class RedirectClearingAction implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    /** Operations produced by redirect clearing analysis inside one domain scope. */
+    /**
+     * Operations produced by redirect clearing analysis inside one domain
+     * scope. Regular-expression redirects and redirects with a publication or
+     * validity end date are excluded from analysis and never receive an action.
+     */
     public enum ActionType {
         /**
          * Removes an obsolete target superseded by the newest target in the same
-         * domain and validity interval. For example, two redirects in
-         * {@code example.com}, {@code /a -> /b} followed by {@code /a -> /c},
-         * result in deletion of {@code /a -> /b}. A redirect without a domain
-         * does not compete with either record.
+         * domain. For example, two unconditional redirects in {@code example.com},
+         * {@code /a -> /b} followed by {@code /a -> /c}, result in deletion of
+         * {@code /a -> /b}. A redirect without a domain does not compete with
+         * either record, and a dated redirect is excluded from the comparison.
          */
         DELETE_OLD,
 

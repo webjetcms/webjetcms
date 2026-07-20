@@ -29,7 +29,7 @@ class RedirectClearingServiceTest {
     private final RedirectClearingService service = new RedirectClearingService(null);
 
     @Test
-    void deletesOldTargetsWithinTheSameScheduleOnly() {
+    void deletesOldTargetsAndIgnoresScheduledRedirects() {
         UrlRedirectBean old = redirect(1, "aaa", "bbb", "example.com", 100L, null, null, 301);
         UrlRedirectBean newest = redirect(2, "aaa", "ccc", "example.com", 200L, null, null, 302);
         UrlRedirectBean otherSchedule = redirect(3, "aaa", "ddd", "example.com", 300L, 1_000L, 2_000L, 307);
@@ -39,6 +39,7 @@ class RedirectClearingServiceTest {
         assertAction(plan, 1, ActionType.DELETE_OLD, null);
         assertFalse(hasAction(plan, 2));
         assertFalse(hasAction(plan, 3));
+        assertEquals(1, plan.getIgnoredRecords());
     }
 
     @Test
@@ -53,10 +54,10 @@ class RedirectClearingServiceTest {
     }
 
     @Test
-    void duplicateComparisonIgnoresCodeAndScheduleAndKeepsOldest() {
+    void duplicateComparisonIgnoresCodeAndKeepsOldest() {
         UrlRedirectBean oldest = redirect(10, "/old", "/new", "example.com", null, null, null, 301);
-        UrlRedirectBean newer = redirect(11, "/old", "/new", "example.com", 100L, 1_000L, 2_000L, 302);
-        UrlRedirectBean newest = redirect(12, "/old", "/new", "example.com", 200L, 3_000L, 4_000L, 307);
+        UrlRedirectBean newer = redirect(11, "/old", "/new", "example.com", 100L, null, null, 302);
+        UrlRedirectBean newest = redirect(12, "/old", "/new", "example.com", 200L, null, null, 307);
 
         RedirectClearingPlan plan = service.analyze("example.com", List.of(newest, newer, oldest));
 
@@ -68,8 +69,8 @@ class RedirectClearingServiceTest {
     @Test
     void duplicatesAreRemovedOnlyWithinTheSameDomain() {
         UrlRedirectBean named = redirect(20, "/old", "/new", "example.com", 100L, null, null, 301);
-        UrlRedirectBean newerUnnamed = redirect(21, "/old", "/new", null, 300L, 1_000L, 2_000L, 302);
-        UrlRedirectBean olderUnnamed = redirect(22, "/old", "/new", "", 200L, 1_000L, 2_000L, 307);
+        UrlRedirectBean newerUnnamed = redirect(21, "/old", "/new", null, 300L, null, null, 302);
+        UrlRedirectBean olderUnnamed = redirect(22, "/old", "/new", "", 200L, null, null, 307);
 
         RedirectClearingPlan plan = service.analyze("example.com", List.of(named, newerUnnamed, olderUnnamed));
 
@@ -202,20 +203,18 @@ class RedirectClearingServiceTest {
     }
 
     @Test
-    void deduplicatesRecordsThatBecomeEqualAfterOptimization() {
-        Date firstSchedule = new Date(1_000);
-        Date secondSchedule = new Date(2_000);
+    void deduplicatesChainSourceRecordsAfterOptimization() {
         List<UrlRedirectBean> redirects = List.of(
-            redirect(1, "/a", "/b", "example.com", 100L, firstSchedule.getTime(), null, 301),
-            redirect(2, "/b", "/target", "example.com", 100L, firstSchedule.getTime(), null, 301),
-            redirect(3, "/a", "/c", "example.com", 200L, secondSchedule.getTime(), null, 302),
-            redirect(4, "/c", "/target", "example.com", 200L, secondSchedule.getTime(), null, 302)
+            redirect(1, "/a", "/b", "example.com", 100L, null, null, 301),
+            redirect(2, "/a", "/b", "example.com", 200L, null, null, 302),
+            redirect(3, "/b", "/target", "example.com", 300L, null, null, 301)
         );
 
         RedirectClearingPlan plan = service.analyze("example.com", redirects);
 
         assertAction(plan, 1, ActionType.UPDATE_OPTIMIZE, "/target");
-        assertAction(plan, 3, ActionType.DELETE_DUPLICATE, null);
+        assertAction(plan, 2, ActionType.DELETE_DUPLICATE, null);
+        assertFalse(hasAction(plan, 3));
         assertUniqueActionIds(plan);
     }
 
@@ -250,17 +249,19 @@ class RedirectClearingServiceTest {
     }
 
     @Test
-    void ignoresRegexpAndInvalidUrls() {
+    void ignoresRegexpScheduledAndInvalidRedirects() {
         List<UrlRedirectBean> redirects = List.of(
             redirect(1, "regexp:^/old", "/new", "example.com", 100L, null, null, 302),
             redirect(2, "", "/new", "example.com", 100L, null, null, 302),
-            redirect(3, "/old", "", "example.com", 100L, null, null, 302)
+            redirect(3, "/old", "", "example.com", 100L, null, null, 302),
+            redirect(4, "/published", "/new", "example.com", 100L, 1_000L, null, 302),
+            redirect(5, "/expires", "/new", "example.com", 100L, null, 2_000L, 302)
         );
 
         RedirectClearingPlan plan = service.analyze("example.com", redirects);
 
         assertTrue(plan.isEmpty());
-        assertEquals(3, plan.getIgnoredRecords());
+        assertEquals(5, plan.getIgnoredRecords());
     }
 
     @Test

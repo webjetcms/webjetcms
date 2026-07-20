@@ -21,7 +21,12 @@ import sk.iway.iwcm.system.RedirectsRepository;
 import sk.iway.iwcm.system.UrlRedirectBean;
 
 /**
- * Analyzes exact redirects and executes the resulting immutable clearing plan.
+ * Analyzes unconditional exact redirects and executes the resulting immutable
+ * clearing plan.
+ *
+ * Regular-expression redirects and redirects with either a
+ * publication date or a validity end date are ignored.
+ *
  * Analysis selects preferred targets, breaks cycles, compresses chains, and
  * removes duplicates without recursive traversal or per-row database queries.
  * Every named domain is analyzed independently. Redirects with a {@code null}
@@ -178,12 +183,15 @@ public class RedirectClearingService {
 
     /**
      * @param redirect database redirect to inspect
-     * @return whether the record is a non-empty exact redirect supported by clearing
+     * @return whether the record is a non-empty, unconditional exact redirect
+     *         supported by clearing
      */
     private static boolean isAnalyzable(UrlRedirectBean redirect) {
         return Tools.isNotEmpty(redirect.getOldUrl()) &&
             Tools.isNotEmpty(redirect.getNewUrl()) &&
-            !redirect.getOldUrl().startsWith("regexp:");
+            !redirect.getOldUrl().startsWith("regexp:") &&
+            redirect.getPublishDate() == null &&
+            redirect.getValidTo() == null;
     }
 
     /**
@@ -210,7 +218,7 @@ public class RedirectClearingService {
      * Detects cycles iteratively and removes the newest edge from each cycle.
      * The supplied graph contains redirects from exactly one domain scope.
      *
-     * @param graph redirect graph for one domain and validity interval
+     * @param graph redirect graph for one domain
      */
     private static void breakCycles(Map<String, Edge> graph) {
         Set<String> completed = new HashSet<>();
@@ -249,7 +257,7 @@ public class RedirectClearingService {
     /**
      * Resolves terminal URLs with path compression inside one domain scope.
      *
-     * @param graph acyclic redirect graph for one domain and validity interval
+     * @param graph acyclic redirect graph for one domain
      */
     private static void optimizeChains(Map<String, Edge> graph) {
         Map<String, String> terminals = new HashMap<>();
@@ -370,7 +378,7 @@ public class RedirectClearingService {
         }
 
         LogicalKey logicalKey() {
-            return new LogicalKey(domain, oldUrl, dateValue(publishDate), dateValue(validTo));
+            return new LogicalKey(domain, oldUrl);
         }
 
         DuplicateKey duplicateKey() {
@@ -412,26 +420,18 @@ public class RedirectClearingService {
         }
     }
 
-    /** Groups competing targets by domain, source URL, and validity interval. */
-    private record LogicalKey(String domain, String oldUrl, Long publishDate, Long validTo) {
+    /** Groups competing targets by domain and source URL. */
+    private record LogicalKey(String domain, String oldUrl) {
         GraphKey graphKey() {
-            return new GraphKey(domain, publishDate, validTo);
+            return new GraphKey(domain);
         }
     }
 
-    /** Separates redirect graphs by domain and validity interval. */
-    private record GraphKey(String domain, Long publishDate, Long validTo) {
+    /** Separates redirect graphs by domain. */
+    private record GraphKey(String domain) {
     }
 
     /** Identifies redirects with the same domain, source, and final target URL. */
     private record DuplicateKey(String domain, String oldUrl, String newUrl) {
-    }
-
-    /**
-     * @param date date to convert
-     * @return epoch milliseconds, or {@code null} when the date is absent
-     */
-    private static Long dateValue(java.util.Date date) {
-        return date == null ? null : date.getTime();
     }
 }
