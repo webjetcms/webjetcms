@@ -134,7 +134,7 @@ public class RedirectClearingAction implements Serializable {
     private Date insertDate;
 
     /**
-     * Creates an empty action required by DataTable and session deserialization.
+     * Creates an empty action required by DataTable and cached snapshot deserialization.
      */
     public RedirectClearingAction() {
         // Required for deserialization.

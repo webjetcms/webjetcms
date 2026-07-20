@@ -9,82 +9,65 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.components.redirects.RedirectClearingAction.ActionType;
-import sk.iway.iwcm.components.redirects.RedirectClearingService.ExecutionResult;
+import sk.iway.iwcm.components.redirects.RedirectClearingPlanCoordinator.OperationInProgressException;
+import sk.iway.iwcm.components.redirects.RedirectClearingPlanCoordinator.OperationType;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.UrlRedirectDB;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 
-class RedirectClearingRestControllerTest {
-
-    @Test
-    void successfulExecutionClearsSnapshotAndRefreshesCacheOnce() {
-        RedirectClearingService service = mock(RedirectClearingService.class);
-        RedirectClearingRestController controller = controller(service);
-        RedirectClearingPlan plan = plan();
-        when(service.analyze("example.com")).thenReturn(plan);
-        when(service.execute(plan, "example.com")).thenReturn(new ExecutionResult(1, 0, 0));
-
-        try (
-            MockedStatic<CloudToolsForCore> cloud = mockStatic(CloudToolsForCore.class);
-            MockedStatic<UrlRedirectDB> redirects = mockStatic(UrlRedirectDB.class)
-        ) {
-            cloud.when(CloudToolsForCore::getDomainName).thenReturn("example.com");
-
-            assertTrue(controller.processAction(null, "analyze"));
-            assertEquals(1, controller.getAllItems(PageRequest.of(0, 10)).getTotalElements());
-            assertTrue(controller.processAction(null, "execute"));
-
-            redirects.verify(UrlRedirectDB::refreshCache, org.mockito.Mockito.times(1));
-            assertEquals(0, controller.getAllItems(PageRequest.of(0, 10)).getTotalElements());
-            verify(service).execute(plan, "example.com");
-        }
-    }
+class RedirectClearingRestControllerTest extends RedirectClearingTestSupport {
 
     @Test
-    void failedExecutionPreservesSnapshotForRetry() {
-        RedirectClearingService service = mock(RedirectClearingService.class);
-        RedirectClearingRestController controller = controller(service);
-        RedirectClearingPlan plan = plan();
-        when(service.analyze("example.com")).thenReturn(plan);
-        when(service.execute(plan, "example.com")).thenThrow(new IllegalStateException("database failure"));
+    void analysisPassesCheckboxValueAndReturnsCachedScopeSummary() {
+        RedirectClearingPlanCoordinator coordinator = mock(RedirectClearingPlanCoordinator.class);
+        RedirectClearingRestController controller = controller(coordinator);
+        ((MockHttpServletRequest) controller.getRequest()).setParameter("customData", "true");
+        RedirectClearingPlan plan = plan(17, true);
+        when(coordinator.analyze(17, true)).thenReturn(plan);
+        when(coordinator.getPlan(17)).thenReturn(plan);
 
         try (MockedStatic<CloudToolsForCore> cloud = mockStatic(CloudToolsForCore.class)) {
-            cloud.when(CloudToolsForCore::getDomainName).thenReturn("example.com");
+            cloud.when(CloudToolsForCore::getDomainId).thenReturn(17);
 
             assertTrue(controller.processAction(null, "analyze"));
-            assertThrows(RuntimeException.class, () -> controller.processAction(null, "execute"));
-            assertEquals(1, controller.getAllItems(PageRequest.of(0, 10)).getTotalElements());
+            Page<RedirectClearingAction> page = controller.getAllItems(PageRequest.of(0, 10));
+
+            verify(coordinator).analyze(17, true);
+            Map<String, Long> summary = ((DatatablePageImpl<?>) page).getSummary();
+            assertEquals(1L, summary.get("planAvailable"));
+            assertEquals(1L, summary.get("includeUnnamed"));
         }
     }
 
     @Test
-    void changingCurrentDomainInvalidatesSnapshot() {
-        RedirectClearingService service = mock(RedirectClearingService.class);
-        RedirectClearingRestController controller = controller(service);
-        when(service.analyze("example.com")).thenReturn(plan());
+    void reportsTheOperationWhichBlocksAnAction() {
+        RedirectClearingPlanCoordinator coordinator = mock(RedirectClearingPlanCoordinator.class);
+        RedirectClearingRestController controller = controller(coordinator);
+        when(coordinator.analyze(5, false))
+            .thenThrow(new OperationInProgressException(OperationType.EXECUTE));
 
         try (MockedStatic<CloudToolsForCore> cloud = mockStatic(CloudToolsForCore.class)) {
-            cloud.when(CloudToolsForCore::getDomainName).thenReturn("example.com", "other.example");
+            cloud.when(CloudToolsForCore::getDomainId).thenReturn(5);
 
-            assertTrue(controller.processAction(null, "analyze"));
-            assertEquals(0, controller.getAllItems(PageRequest.of(0, 10)).getTotalElements());
+            RuntimeException exception = assertThrows(RuntimeException.class, () -> controller.processAction(null, "analyze"));
+            assertEquals("components.redirect.clearing.busyExecute", exception.getMessage());
         }
     }
 
-    private static RedirectClearingRestController controller(RedirectClearingService service) {
+    private static RedirectClearingRestController controller(RedirectClearingPlanCoordinator coordinator) {
         Prop prop = mock(Prop.class);
         when(prop.getText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
         when(prop.getText(anyString(), anyString(), anyString(), anyString()))
             .thenAnswer(invocation -> invocation.getArgument(0));
-        RedirectClearingRestController controller = new RedirectClearingRestController(service) {
+        RedirectClearingRestController controller = new RedirectClearingRestController(coordinator) {
             @Override
             public Prop getProp() {
                 return prop;
@@ -94,19 +77,4 @@ class RedirectClearingRestControllerTest {
         return controller;
     }
 
-    private static RedirectClearingPlan plan() {
-        RedirectClearingAction action = new RedirectClearingAction(
-            1L,
-            ActionType.UPDATE_OPTIMIZE,
-            "/old",
-            "/middle",
-            "/target",
-            "example.com",
-            301,
-            null,
-            null,
-            null
-        );
-        return new RedirectClearingPlan("example.com", List.of(action), 1, 0);
-    }
 }

@@ -18,16 +18,22 @@ import org.springframework.transaction.annotation.Transactional;
 public interface RedirectsRepository extends JpaRepository<UrlRedirectBean, Long>, JpaSpecificationExecutor<UrlRedirectBean> {
 
     /**
-     * Loads redirects belonging to the selected domain together with redirects
+     * Loads redirects belonging to the selected domain and optionally redirects
      * from the independent unnamed scope represented by a {@code null} or empty
      * domain. The clearing service never combines these scopes during analysis.
      *
      * @param domainName normalized selected domain
+     * @param includeUnnamed whether redirects without a domain are included
+     *        alongside a selected named domain
      * @return redirects accessible from the selected domain
      */
     @Query("SELECT redirect FROM UrlRedirectBean redirect WHERE " +
-        "(redirect.domainName = :domainName OR redirect.domainName IS NULL OR redirect.domainName = '')")
-    List<UrlRedirectBean> findAllForRedirectClearing(@Param("domainName") String domainName);
+        "(redirect.domainName = :domainName OR " +
+        "((:includeUnnamed = true OR :domainName = '') AND (redirect.domainName IS NULL OR redirect.domainName = '')))")
+    List<UrlRedirectBean> findAllForRedirectClearing(
+        @Param("domainName") String domainName,
+        @Param("includeUnnamed") boolean includeUnnamed
+    );
 
     /**
      * Bulk update of the target URL for redirect clearing, restricted to records accessible from the current domain.

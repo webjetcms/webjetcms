@@ -43,7 +43,8 @@ block content
                 action: function () {
                     if (actionRunning) return;
                     setRunning(true);
-                    redirectClearingTable.executeAction("analyze", true);
+                    let includeUnnamed = String($("#redirectClearingIncludeUnnamed").is(":checked"));
+                    redirectClearingTable.executeAction("analyze", true, null, null, includeUnnamed);
                 },
                 className: 'btn btn-warning buttons-analyze-redirects',
                 attr: {
@@ -80,6 +81,9 @@ block content
                 if (json && json.summary) {
                     planSummary.updates = Number(json.summary.updates || 0);
                     planSummary.deletes = Number(json.summary.deletes || 0);
+                    if (Number(json.summary.planAvailable || 0) > 0) {
+                        $("#redirectClearingIncludeUnnamed").prop("checked", Number(json.summary.includeUnnamed || 0) > 0);
+                    }
                 }
             });
 
@@ -98,5 +102,8 @@ block content
     div.alert.alert-info.mb-3.mt-3(role="alert")
         i.ti.ti-info-circle.me-2
         span(data-th-text="#{components.redirect.clearing.description}") Redirect cleaning preview
+        div.form-check.form-switch.mt-2
+            input.form-check-input#redirectClearingIncludeUnnamed(type="checkbox")
+            label.form-check-label(for="redirectClearingIncludeUnnamed" data-th-text="#{components.redirect.clearing.includeUnnamed}") Include redirects without domain
 
     <table id="redirectClearingTable" class="datatableInit table"></table>

@@ -10,13 +10,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.Getter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.redirects.RedirectClearingAction.ActionType;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.system.RedirectsRepository;
 import sk.iway.iwcm.system.UrlRedirectBean;
 
@@ -42,43 +47,101 @@ public class RedirectClearingService {
         .thenComparing(Candidate::id, Comparator.nullsFirst(Comparator.naturalOrder()));
 
     private final RedirectsRepository redirectsRepository;
+    private final IntFunction<String> domainNameResolver;
 
     /**
      * Creates the redirect clearing service.
      *
      * @param redirectsRepository repository used to load and modify redirects
      */
+    @Autowired
     public RedirectClearingService(RedirectsRepository redirectsRepository) {
+        this(redirectsRepository, RedirectClearingService::resolveDomainName);
+    }
+
+    /**
+     * Creates a service with an explicit domain resolver for focused tests.
+     *
+     * @param redirectsRepository repository used to load and modify redirects
+     * @param domainNameResolver resolves a root group ID to its domain name
+     */
+    RedirectClearingService(RedirectsRepository redirectsRepository, IntFunction<String> domainNameResolver) {
         this.redirectsRepository = redirectsRepository;
+        this.domainNameResolver = domainNameResolver;
     }
 
     /**
      * Loads exact redirects accessible from the selected domain and prepares a
      * clearing plan without modifying the database.
      *
-     * @param currentDomain selected domain; {@code null} and an empty value mean the unnamed domain scope
+     * @param currentDomainId selected application domain ID
+     * @param includeUnnamed whether the independent unnamed scope is included
+     *        alongside the selected named domain
      * @return immutable clearing plan
      */
-    public RedirectClearingPlan analyze(String currentDomain) {
-        String normalizedDomain = normalizeDomain(currentDomain);
-        List<UrlRedirectBean> redirects = redirectsRepository.findAllForRedirectClearing(normalizedDomain);
-        return analyze(normalizedDomain, redirects);
+    public RedirectClearingPlan analyze(int currentDomainId, boolean includeUnnamed) {
+        String normalizedDomain = normalizeDomain(domainNameResolver.apply(currentDomainId));
+        List<UrlRedirectBean> redirects = redirectsRepository.findAllForRedirectClearing(normalizedDomain, includeUnnamed);
+        return analyze(currentDomainId, normalizedDomain, includeUnnamed, redirects);
+    }
+
+    /**
+     * Resolves the domain name from its root group ID. A missing root group is
+     * rejected to avoid accidentally treating an invalid domain as unnamed.
+     *
+     * @param domainId selected root group ID
+     * @return domain name stored on the root group
+     */
+    private static String resolveDomainName(int domainId) {
+        GroupDetails rootGroup = GroupsDB.getInstance().getGroup(domainId);
+        if (rootGroup == null) {
+            throw new IllegalStateException("Unable to resolve redirect clearing domain ID: " + domainId);
+        }
+        return rootGroup.getDomainName();
     }
 
     /**
      * Analyzes a supplied redirect collection. This package-level entry point is
-     * used by tests and applies the same rules as {@link #analyze(String)}.
+     * used by tests and includes both the selected named scope and the unnamed
+     * scope, matching the legacy analysis behavior.
      *
      * @param currentDomain selected domain
      * @param redirects redirects to analyze
      * @return immutable clearing plan
      */
     RedirectClearingPlan analyze(String currentDomain, List<UrlRedirectBean> redirects) {
+        return analyze(-1, currentDomain, true, redirects);
+    }
+
+    /**
+     * Analyzes a supplied redirect collection with an explicit unnamed-scope
+     * selection. Records outside the selected scopes are not counted as ignored.
+     *
+     * @param currentDomain selected domain
+     * @param includeUnnamed whether the independent unnamed scope is included
+     *        alongside the selected named domain
+     * @param redirects redirects available to the analysis
+     * @return immutable clearing plan
+     */
+    RedirectClearingPlan analyze(String currentDomain, boolean includeUnnamed, List<UrlRedirectBean> redirects) {
+        return analyze(-1, currentDomain, includeUnnamed, redirects);
+    }
+
+    /** Performs analysis for an application domain and its selected scopes. */
+    private RedirectClearingPlan analyze(
+        int currentDomainId,
+        String currentDomain,
+        boolean includeUnnamed,
+        List<UrlRedirectBean> redirects
+    ) {
         String normalizedCurrentDomain = normalizeDomain(currentDomain);
         List<Candidate> candidates = new ArrayList<>();
+        int analyzedRecords = 0;
         int ignoredRecords = 0;
 
         for (UrlRedirectBean redirect : redirects) {
+            if (!isInScope(redirect, normalizedCurrentDomain, includeUnnamed)) continue;
+            analyzedRecords++;
             if (!isAnalyzable(redirect)) {
                 ignoredRecords++;
                 continue;
@@ -128,24 +191,27 @@ public class RedirectClearingService {
             if (candidate.action != null) actions.add(candidate.toAction());
         }
 
-        return new RedirectClearingPlan(normalizedCurrentDomain, actions, redirects.size(), ignoredRecords);
+        return new RedirectClearingPlan(
+            currentDomainId,
+            normalizedCurrentDomain,
+            includeUnnamed,
+            actions,
+            analyzedRecords,
+            ignoredRecords
+        );
     }
 
     /**
      * Executes exactly the actions stored in a previously analyzed plan. Updates
      * and deletes are grouped into batches of at most 500 identifiers. Records no
-     * longer accessible from the selected domain are skipped by repository queries.
+     * longer accessible from the analyzed domain are skipped by repository queries.
      *
      * @param plan immutable plan to execute
-     * @param currentDomain currently selected domain
      * @return counts of updated, deleted, and skipped records
-     * @throws IllegalStateException when the plan belongs to another domain
      */
-    public ExecutionResult execute(RedirectClearingPlan plan, String currentDomain) {
-        String normalizedCurrentDomain = normalizeDomain(currentDomain);
-        if (!Objects.equals(plan.getAnalyzedDomain(), normalizedCurrentDomain)) {
-            throw new IllegalStateException("Redirect clearing plan belongs to another domain");
-        }
+    @Transactional
+    public ExecutionResult execute(RedirectClearingPlan plan) {
+        String analyzedDomain = plan.getAnalyzedDomain();
 
         int updated = 0;
         int deleted = 0;
@@ -169,9 +235,9 @@ public class RedirectClearingService {
 
             int batchUpdated = 0;
             for (Map.Entry<String, List<Long>> entry : updatesByTarget.entrySet()) {
-                batchUpdated += redirectsRepository.updateNewUrlForRedirectClearing(entry.getValue(), entry.getKey(), normalizedCurrentDomain);
+                batchUpdated += redirectsRepository.updateNewUrlForRedirectClearing(entry.getValue(), entry.getKey(), analyzedDomain);
             }
-            int batchDeleted = deleteIds.isEmpty() ? 0 : redirectsRepository.deleteForRedirectClearing(deleteIds, normalizedCurrentDomain);
+            int batchDeleted = deleteIds.isEmpty() ? 0 : redirectsRepository.deleteForRedirectClearing(deleteIds, analyzedDomain);
 
             updated += batchUpdated;
             deleted += batchDeleted;
@@ -179,6 +245,15 @@ public class RedirectClearingService {
         }
 
         return new ExecutionResult(updated, deleted, skipped);
+    }
+
+    /**
+     * Tests whether a redirect belongs to the selected named scope or, when
+     * requested, the independent unnamed scope.
+     */
+    private static boolean isInScope(UrlRedirectBean redirect, String currentDomain, boolean includeUnnamed) {
+        String redirectDomain = normalizeDomain(redirect.getDomainName());
+        return Objects.equals(redirectDomain, currentDomain) || (includeUnnamed && redirectDomain.isEmpty());
     }
 
     /**

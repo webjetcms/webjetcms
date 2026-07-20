@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -23,8 +22,10 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.redirects.RedirectClearingAction.ActionType;
+import sk.iway.iwcm.components.redirects.RedirectClearingPlanCoordinator.MissingPlanException;
+import sk.iway.iwcm.components.redirects.RedirectClearingPlanCoordinator.OperationInProgressException;
+import sk.iway.iwcm.components.redirects.RedirectClearingPlanCoordinator.OperationType;
 import sk.iway.iwcm.components.redirects.RedirectClearingService.ExecutionResult;
-import sk.iway.iwcm.system.UrlRedirectDB;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
@@ -35,9 +36,11 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
 /**
  * Read-only DataTable controller for redirect clearing previews.
  * <p>
- * Analysis stores one immutable plan in the current HTTP session. Paging,
- * filtering, and sorting operate on that snapshot, while execution applies the
- * complete snapshot regardless of the visible page or selected rows.
+ * Analysis stores one immutable plan in the application cache for the current
+ * domain ID. All authorized administrators in that domain share the preview,
+ * while paging, filtering, and sorting operate on the cached snapshot.
+ * Execution applies the complete snapshot regardless of the visible page or
+ * selected rows.
  */
 @RestController
 @Datatable
@@ -45,26 +48,24 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('cmp_redirects')")
 public class RedirectClearingRestController extends DatatableRestControllerV2<RedirectClearingAction, Long> {
 
-    private static final String SESSION_PLAN_KEY = RedirectClearingRestController.class.getName() + ".plan";
-
-    private final RedirectClearingService clearingService;
+    private final RedirectClearingPlanCoordinator coordinator;
 
     @Autowired
-    public RedirectClearingRestController(RedirectClearingService clearingService) {
+    public RedirectClearingRestController(RedirectClearingPlanCoordinator coordinator) {
         super(null);
-        this.clearingService = clearingService;
+        this.coordinator = coordinator;
     }
 
     @Override
     public Page<RedirectClearingAction> getAllItems(Pageable pageable) {
-        RedirectClearingPlan plan = getCurrentPlan();
+        RedirectClearingPlan plan = coordinator.getPlan( CloudToolsForCore.getDomainId() );
         List<RedirectClearingAction> actions = plan == null ? List.of() : plan.getActions();
         return createPage(actions, pageable, Map.of(), plan);
     }
 
     @Override
     public Page<RedirectClearingAction> searchItem(Map<String, String> params, Pageable pageable, RedirectClearingAction search) {
-        RedirectClearingPlan plan = getCurrentPlan();
+        RedirectClearingPlan plan = coordinator.getPlan( CloudToolsForCore.getDomainId() );
         List<RedirectClearingAction> actions = plan == null ? List.of() : plan.getActions();
         return createPage(actions, pageable, params, plan);
     }
@@ -106,15 +107,15 @@ public class RedirectClearingRestController extends DatatableRestControllerV2<Re
     }
 
     /**
-     * Analyzes redirects for the selected domain, replaces the session plan, and
-     * requests a DataTable reload.
+     * Analyzes redirects for the selected domain and optionally for the unnamed
+     * scope, then atomically replaces the shared cached plan.
      *
      * @return {@code true} when analysis completes
      */
     private boolean analyze() {
         try {
-            RedirectClearingPlan plan = clearingService.analyze(getCurrentDomain());
-            getRequest().getSession().setAttribute(SESSION_PLAN_KEY, plan);
+            boolean includeUnnamed = Tools.getBooleanValue(getRequest().getParameter("customData"), false);
+            RedirectClearingPlan plan = coordinator.analyze(CloudToolsForCore.getDomainId(), includeUnnamed);
             addNotify(new NotifyBean(
                 getProp().getText("components.redirect.clearing.title"),
                 getProp().getText(
@@ -128,6 +129,9 @@ public class RedirectClearingRestController extends DatatableRestControllerV2<Re
             ));
             setForceReload(true);
             return true;
+        } catch (OperationInProgressException exception) {
+            throwBusyError(exception.getActiveOperation());
+            return false;
         } catch (RuntimeException exception) {
             Logger.error(RedirectClearingRestController.class, "Redirect clearing analysis failed", exception);
             throwError("components.redirect.clearing.analyzeError");
@@ -136,32 +140,25 @@ public class RedirectClearingRestController extends DatatableRestControllerV2<Re
     }
 
     /**
-     * Executes the exact session plan, removes it after success, and refreshes
-     * the redirect cache once.
+     * Executes the exact shared plan. The coordinator removes it and refreshes
+     * the redirect cache after successful execution.
      *
      * @return {@code true} when execution completes
      */
     private boolean execute() {
-        RedirectClearingPlan plan = getCurrentPlan();
-        if (plan == null || plan.isEmpty()) {
-            throwError("components.redirect.clearing.noPlan");
-            return false;
-        }
-
         ExecutionResult result;
         try {
-            result = clearingService.execute(plan, getCurrentDomain());
+            result = coordinator.execute( CloudToolsForCore.getDomainId() );
+        } catch (OperationInProgressException exception) {
+            throwBusyError(exception.getActiveOperation());
+            return false;
+        } catch (MissingPlanException exception) {
+            throwError("components.redirect.clearing.noPlan");
+            return false;
         } catch (RuntimeException exception) {
             Logger.error(RedirectClearingRestController.class, "Redirect clearing execution failed", exception);
             throwError("components.redirect.clearing.executeError");
             return false;
-        }
-
-        getRequest().getSession().removeAttribute(SESSION_PLAN_KEY);
-        try {
-            UrlRedirectDB.refreshCache();
-        } catch (RuntimeException exception) {
-            Logger.error(RedirectClearingRestController.class, "Redirect cache refresh failed after clearing", exception);
         }
 
         addNotify(new NotifyBean(
@@ -180,27 +177,15 @@ public class RedirectClearingRestController extends DatatableRestControllerV2<Re
     }
 
     /**
-     * Returns the plan for the currently selected domain. A plan created for a
-     * different domain is removed from the session.
+     * Reports which operation currently owns the domain lock.
      *
-     * @return current plan, or {@code null} when absent or invalid
+     * @param activeOperation operation started by another administrator
      */
-    private RedirectClearingPlan getCurrentPlan() {
-        Object value = getRequest().getSession().getAttribute(SESSION_PLAN_KEY);
-        if (!(value instanceof RedirectClearingPlan plan)) return null;
-
-        if (!Objects.equals(plan.getAnalyzedDomain(), RedirectClearingService.normalizeDomain(getCurrentDomain()))) {
-            getRequest().getSession().removeAttribute(SESSION_PLAN_KEY);
-            return null;
-        }
-        return plan;
-    }
-
-    /**
-     * @return normalized currently selected domain
-     */
-    private String getCurrentDomain() {
-        return RedirectClearingService.normalizeDomain(CloudToolsForCore.getDomainName());
+    private void throwBusyError(OperationType activeOperation) {
+        String key = activeOperation == OperationType.ANALYZE
+            ? "components.redirect.clearing.busyAnalyze"
+            : "components.redirect.clearing.busyExecute";
+        throwError(key);
     }
 
     /**
@@ -235,6 +220,8 @@ public class RedirectClearingRestController extends DatatableRestControllerV2<Re
         );
         page.addSummary("updates", plan == null ? 0L : (long) plan.getUpdateCount());
         page.addSummary("deletes", plan == null ? 0L : (long) plan.getDeleteCount());
+        page.addSummary("planAvailable", plan == null ? 0L : 1L);
+        page.addSummary("includeUnnamed", plan != null && plan.isIncludeUnnamed() ? 1L : 0L);
         return page;
     }
 

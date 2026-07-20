@@ -8,16 +8,23 @@ import java.util.List;
 import lombok.Getter;
 
 /**
- * Immutable serializable snapshot of redirect clearing analysis for one selected domain.
- * The snapshot is stored in the HTTP session and executed without recalculating its actions.
+ * Immutable serializable snapshot of redirect clearing analysis for one domain.
+ * The snapshot is shared through the application cache and executed without
+ * recalculating its actions.
  */
 @Getter
 class RedirectClearingPlan implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /** Domain ID used as the shared application cache scope. */
+    private final int analyzedDomainId;
+
     /** Normalized domain for which this plan was prepared. */
     private final String analyzedDomain;
+
+    /** Whether the unnamed scope was explicitly included alongside a named domain. */
+    private final boolean includeUnnamed;
 
     /** Immutable list of operations to execute. */
     private final List<RedirectClearingAction> actions;
@@ -34,14 +41,26 @@ class RedirectClearingPlan implements Serializable {
     /**
      * Creates an immutable clearing snapshot.
      *
-     * @param analyzedDomain normalized selected domain
+     * @param analyzedDomainId selected domain ID
+     * @param analyzedDomain normalized selected domain name
+     * @param includeUnnamed whether the unnamed scope was explicitly included
+     *        alongside a named domain
      * @param actions operations produced by analysis
      * @param analyzedRecords number of loaded redirect records
      * @param ignoredRecords number of regular-expression, dated, or invalid
      *        empty-URL redirect records excluded from analysis
      */
-    RedirectClearingPlan(String analyzedDomain, List<RedirectClearingAction> actions, int analyzedRecords, int ignoredRecords) {
+    RedirectClearingPlan(
+        int analyzedDomainId,
+        String analyzedDomain,
+        boolean includeUnnamed,
+        List<RedirectClearingAction> actions,
+        int analyzedRecords,
+        int ignoredRecords
+    ) {
+        this.analyzedDomainId = analyzedDomainId;
         this.analyzedDomain = analyzedDomain;
+        this.includeUnnamed = includeUnnamed;
         this.actions = Collections.unmodifiableList(new ArrayList<>(actions));
         this.analyzedRecords = analyzedRecords;
         this.ignoredRecords = ignoredRecords;

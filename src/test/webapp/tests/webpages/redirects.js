@@ -359,7 +359,7 @@ function createDatedRedirect(I, DTE, oldUrl, newUrl, publishDate, validTo) {
 
 Scenario('Redirect cleaning preview and execution @singlethread @current', async ({ I, DT, DTE, Document }) => {
 
-    // Use an isolated named domain and verify that neither it nor the shared unnamed scope has pending actions.
+    // Use an isolated named domain. The unnamed scope is intentionally excluded from this E2E cleanup.
 
     Document.switchDomain("test23.tau27.iway.sk");
 
@@ -384,6 +384,8 @@ Scenario('Redirect cleaning preview and execution @singlethread @current', async
     I.say("Verify there are no unrelated redirect cleaning actions");
     I.amOnPage("/admin/v9/settings/redirect-clearing/");
     DT.waitForLoader("redirectClearingTable");
+    I.seeElement("#redirectClearingIncludeUnnamed");
+    I.dontSeeCheckboxIsChecked("#redirectClearingIncludeUnnamed");
     I.clickCss("#redirectClearingTable_wrapper button.buttons-analyze-redirects");
     I.waitForText("Analýza dokončená: 0 aktualizácií, 0 zmazaní", 40, "#toast-container-webjet");
     I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 40, "#redirectClearingTable_wrapper");
@@ -423,6 +425,14 @@ Scenario('Redirect cleaning preview and execution @singlethread @current', async
     I.dontSee(regexOldUrl, "#redirectClearingTable_wrapper");
     I.dontSee(publishDateOldUrl, "#redirectClearingTable_wrapper");
     I.dontSee(validToOldUrl, "#redirectClearingTable_wrapper");
+    I.seeElement("#redirectClearingTable_wrapper button.buttons-execute-clearing:not(.disabled)");
+    I.dontSeeCheckboxIsChecked("#redirectClearingIncludeUnnamed");
+
+    I.say("Reopen the page and verify the shared cached preview");
+    I.amOnPage("/admin/v9/settings/redirect-clearing/");
+    DT.waitForLoader("redirectClearingTable");
+    I.waitForText(prefix + "-old-first", 40, "#redirectClearingTable_wrapper");
+    I.dontSeeCheckboxIsChecked("#redirectClearingIncludeUnnamed");
     I.seeElement("#redirectClearingTable_wrapper button.buttons-execute-clearing:not(.disabled)");
 
     I.say("Execute the complete snapshot");
