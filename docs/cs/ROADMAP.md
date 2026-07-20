@@ -43,7 +43,7 @@ Vysvětlení použitých piktogramů:
 - [x] Volitelná pole – přidat možnost nastavit omezení délky textu pro pole typu `textarea`, podobně jako je to aktuálně možné u pole typu `text`.
 - [ ] Datatabulka – upravit pole typu `Date` a `Datetime` tak, aby správně fungovala validace `not null`.
 - [ ] Datatabulka – upravit způsob `mergovania` upravené entity tak, aby bylo možné vynulovat hodnoty typu `number`.
-- [ ] +Přesměrování - rozlišit v databázi automaticky vytvořené přesměrování (hledej proměnnou `editorDisableAutomaticRedirect`) od manuálně vytvořeného, ​​možnost podle toho filtrovat v UI (zobrazit jen manuálně vytvořená přesměrování).
+- [x] +Přesměrování - rozlišit v databázi automaticky vytvořené přesměrování (hledej proměnnou `editorDisableAutomaticRedirect`) od manuálně vytvořeného, ​​možnost podle toho filtrovat v UI (zobrazit jen manuálně vytvořené přesměrování) (#58625).
 - [ ] +Přesměrování - doplnit funkci čištění přesměrování - smaže staré přesměrování (bylo původně `aaa-bbb` a pak vzniklo `aaa-ccc` takže `aaa-bbb` nemá smysl = smaže se) a zkontroluje cyklické přesměrování ve kterém smaže poslední krok. Také optimalizovat přesměrování `aaa-bbb-ccc` na `aaa-ccc` (#58629).
 - +Galerie - přidat možnost nastavit jiný způsob změny velikosti na velký obrázek. na malý obrázek se aplikuje Oříznout na míru (chtějí mít čtverec) a na velký přesná šířka (zachová poměr stran). Ve výchozím nastavení bude hodnota NULL=stejně jako pro malý obrázek (#58633).
 - [ ] Volitelná pole - přidat možnost výběru více položek pro napojení na číselník (#58637).

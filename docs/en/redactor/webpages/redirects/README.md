@@ -2,7 +2,7 @@
 
 ## Road rerouting
 
-Displays a list of existing redirects that will be executed if the specified URL does not exist. Redirects are created automatically when the URL of an existing page changes or when the directory structure changes.
+Displays a list of existing redirects that will be executed if the specified URL does not exist. Redirects can be created automatically, more in the [Automatic and user-created redirects](#automatic-and-user-created-redirects) section.
 
 ![](redirect-path.png)
 
@@ -16,6 +16,19 @@ The value of the [redirect code](https://developer.mozilla.org/en-US/docs/Web/HT
 You can also set the validity of the redirect for certain dates, by entering either the start or end dates, or both. Redirects that are no longer valid will be displayed in red in the table. You can enter information about what the redirect is for in the note field.
 
 ![](path-editor.png)
+
+### Automatic and user-created redirects
+
+Redirects are created automatically when the URL of an existing page changes or when the directory structure changes. The automatic creation of redirects is controlled by the configuration variable `editorDisableAutomaticRedirect`:
+
+- `false` - ​​default value, WebJET CMS will automatically create a redirect from the old URL to the new one.
+- `true` - ​​automatic creation of redirects is disabled.
+
+Setting the configuration variable does not affect user-created redirects. Automatically created redirects are highlighted in gray in the table. You can use the **User-created** toggle above the table to display only user-created redirects.
+
+![](redirect-path-filtered.png)
+
+!> **Note:** Redirects that existed before the database update are considered to be automatically created. In the redirect editor, you can change the value of the **User-created** field to mark existing redirects as user-created, if necessary.
 
 ### Redirects via regular expressions
 

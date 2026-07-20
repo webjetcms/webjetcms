@@ -2,7 +2,7 @@
 
 ## Presmerovania ciest
 
-Zobrazuje zoznam existujúcich presmerovaní, ktoré sa vykonajú, ak zadaná URL adresa neexistuje. Presmerovania vznikajú automaticky pri zmene URL adresy existujúcej stránky alebo pri zmene adresárovej štruktúry.
+Zobrazuje zoznam existujúcich presmerovaní, ktoré sa vykonajú, ak zadaná URL adresa neexistuje. Presmerovania môžu vznikajú automaticky, viac v časti [Automatické a používateľom vytvorené presmerovania](#automatické-a-používateľom-vytvorené-presmerovania).
 
 ![](redirect-path.png)
 
@@ -16,6 +16,19 @@ Hodnota poľa [presmerovací kód](https://developer.mozilla.org/en-US/docs/Web/
 Môžete nastaviť aj platnosť presmerovania pre určité dátumy, zadaním buď začiatku, alebo konca, alebo oboch dátumov. Presmerovania, ktoré už nie sú časovo platné, sa zobrazia červenou farbou v tabuľke. Do poľa poznámka môžete zadať informáciu, na čo presmerovanie slúži.
 
 ![](path-editor.png)
+
+### Automatické a používateľom vytvorené presmerovania
+
+Presmerovania vznikajú automaticky pri zmene URL adresy existujúcej stránky alebo pri zmene adresárovej štruktúry. Automatické vytváranie presmerovaní riadi konfiguračná premenná `editorDisableAutomaticRedirect`:
+
+- `false` - predvolená hodnota, WebJET CMS automaticky vytvorí presmerovanie zo starej URL adresy na novú.
+- `true` - automatické vytváranie presmerovaní je vypnuté.
+
+Nastavenie konfiguračnej premennej nemá vplyv na používateľom vytvárané presmerovania. Automaticky vytvorené presmerovania sú v tabuľke odlíšené šedou farbou písma. Pomocou prepínača **Vytvorené používateľom** nad tabuľkou môžete zobraziť iba používateľom vytvorené presmerovania.
+
+![](redirect-path-filtered.png)
+
+!> **Upozornenie:** Presmerovania existujúce pred aktualizáciou databázy sa považujú za automaticky vytvorené. V editore presmerovania môžete hodnotu poľa **Vytvorené používateľom** zmeniť a existujúce presmerovania tak podľa potreby označiť ako používateľom vytvorené.
 
 ### Presmerovania cez regulárne výrazy
 

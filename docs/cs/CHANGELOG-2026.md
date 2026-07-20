@@ -6,6 +6,10 @@
 
 ### Webové stránky
 
+- Přesměrování - přesměrování vytvořená uživatelem jsou odlišena od automatických (označeno šedým pozadím) a lze je samostatně [filtrovat v seznamu přesměrování](redactor/webpages/redirects/README.md#automatické-a-uživatelem-vytvořené-přesměrování) (#58625).
+
+![](redactor/webpages/redirects/redirect-path.png)
+
 - SEO - přidáno samostatné nastavení **Následujení odkazů vyhledávači** s možnostmi **Podle nastavení Procházet**, **Povolit následování odkazů** (`follow`) a **Zakázat následování odkazů** (`nofollow`). HTTP hlavička `X-Robots-Tag` a Ninja `${ninja.page.robots}` používají stejnou logiku: při indexování bez omezení vrátí `all`, jinak kombinaci direktiv `noindex` a `nofollow` podle nastavení stránky. Více v [dokumentaci Ninja](frontend/ninja-starter-kit/ninja-jv/page/README.md#nastavení-indexování-string) (#OSK563).
 - Ninja - doplněno [generování rozměrů](frontend/ninja-starter-kit/ninja-bp/README.md) SEO obrázku `og:image:width` a `og:image:height` (#OSK563).
 - Šablony - přidána možnost nastavit přesun `<style>` a `<link rel="stylesheet">` značek z těla stránky do `<head>` přes [volbu v šabloně](frontend/templates/templates.md) s podporou globální konfigurační proměnné `showDocMoveStyleToHead`. Bloky v IE podmínkách, `noscript` a `script` zůstávají na místě (#231).
