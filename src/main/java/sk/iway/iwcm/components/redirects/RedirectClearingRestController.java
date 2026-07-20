@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -112,6 +113,7 @@ public class RedirectClearingRestController extends DatatableRestControllerV2<Re
      *
      * @return {@code true} when analysis completes
      */
+    @Transactional(transactionManager = "webjet2022TransactionManager", readOnly = true)
     private boolean analyze() {
         try {
             boolean includeUnnamed = Tools.getBooleanValue(getRequest().getParameter("customData"), false);
@@ -225,35 +227,45 @@ public class RedirectClearingRestController extends DatatableRestControllerV2<Re
         return page;
     }
 
-    /**
-     * Tests a preview row against every supported DataTable filter.
-     *
-     * @param action preview row
-     * @param params DataTable search parameters
-     * @return {@code true} when all supported filters match
-     */
+    /** Filter/sort value type driving the matcher and comparator. */
+    private enum FilterType { TEXT, NUMBER, DATE }
+
+    /** Filterable and sortable column; the extractor serves both. */
+    private record Column(FilterType type, Function<RedirectClearingAction, ? extends Comparable<?>> extractor) {}
+
+    /** Single source of truth for supported columns, keyed by DataTable property name. */
+    private static final Map<String, Column> COLUMNS = Map.of(
+        "id", new Column(FilterType.NUMBER, RedirectClearingAction::getId),
+        "action", new Column(FilterType.TEXT, RedirectClearingAction::getAction),
+        "oldUrl", new Column(FilterType.TEXT, RedirectClearingAction::getOldUrl),
+        "currentNewUrl", new Column(FilterType.TEXT, RedirectClearingAction::getCurrentNewUrl),
+        "proposedNewUrl", new Column(FilterType.TEXT, RedirectClearingAction::getProposedNewUrl),
+        "domainName", new Column(FilterType.TEXT, RedirectClearingAction::getDomainName),
+        "redirectCode", new Column(FilterType.NUMBER, RedirectClearingAction::getRedirectCode),
+        "insertDate", new Column(FilterType.DATE, RedirectClearingAction::getInsertDate)
+    );
+
+    /** Tests a row against all filters; unknown keys never exclude a row. */
     private boolean matchesAll(RedirectClearingAction action, Map<String, String> params) {
         for (Map.Entry<String, String> entry : params.entrySet()) {
             String key = getCleanKey(entry.getKey());
             String value = entry.getValue();
             if (Tools.isEmpty(value) || "page".equals(key) || "size".equals(key) || "sort".equals(key)) continue;
 
-            boolean matches = switch (key) {
-                case "id" -> matchesNumber(action.getId(), value);
-                case "action" -> action.getAction() != null && action.getAction().name().equals(getCleanValue(value));
-                case "oldUrl" -> matchesText(action.getOldUrl(), value);
-                case "currentNewUrl" -> matchesText(action.getCurrentNewUrl(), value);
-                case "proposedNewUrl" -> matchesText(action.getProposedNewUrl(), value);
-                case "domainName" -> matchesText(action.getDomainName(), value);
-                case "redirectCode" -> matchesNumber(action.getRedirectCode(), value);
-                case "publishDate" -> matchesDate(action.getPublishDate(), value);
-                case "validTo" -> matchesDate(action.getValidTo(), value);
-                case "insertDate" -> matchesDate(action.getInsertDate(), value);
-                default -> true;
-            };
-            if (!matches) return false;
+            Column column = COLUMNS.get(key);
+            if (column != null && !matches(column, action, value)) return false;
         }
         return true;
+    }
+
+    /** Applies one column filter using the type-appropriate matcher. */
+    private static boolean matches(Column column, RedirectClearingAction action, String value) {
+        Comparable<?> field = column.extractor().apply(action);
+        return switch (column.type()) {
+            case TEXT -> matchesText(field == null ? null : String.valueOf(field), value);
+            case NUMBER -> matchesNumber((Number) field, value);
+            case DATE -> matchesDate((Date) field, value);
+        };
     }
 
     /**
@@ -324,55 +336,17 @@ public class RedirectClearingRestController extends DatatableRestControllerV2<Re
         return Tools.isEmpty(toValue) || timestamp < Tools.getLongValue(toValue, Long.MAX_VALUE);
     }
 
-    /**
-     * Builds a stable comparator chain from the requested DataTable sort.
-     *
-     * @param sort requested sort fields
-     * @return comparator, or {@code null} when no supported field is requested
-     */
+    /** Builds a stable comparator chain from the requested sort, nulls first. */
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private static Comparator<RedirectClearingAction> buildComparator(Sort sort) {
         Comparator<RedirectClearingAction> result = null;
         for (Sort.Order order : sort) {
-            Comparator<RedirectClearingAction> fieldComparator = comparatorFor(order.getProperty());
-            if (fieldComparator == null) continue;
-            if (order.isDescending()) fieldComparator = fieldComparator.reversed();
-            result = result == null ? fieldComparator : result.thenComparing(fieldComparator);
+            Column column = COLUMNS.get(order.getProperty());
+            if (column == null) continue;
+            Comparator<RedirectClearingAction> field = Comparator.comparing(column.extractor(), Comparator.nullsFirst((Comparator) Comparator.naturalOrder()));
+            if (order.isDescending()) field = field.reversed();
+            result = result == null ? field : result.thenComparing(field);
         }
         return result;
-    }
-
-    /**
-     * Resolves a nullable comparator for a supported DTO property.
-     *
-     * @param property DTO property name
-     * @return property comparator, or {@code null} for an unsupported property
-     */
-    private static Comparator<RedirectClearingAction> comparatorFor(String property) {
-        return switch (property) {
-            case "id" -> nullableComparator(RedirectClearingAction::getId);
-            case "action" -> nullableComparator(RedirectClearingAction::getAction);
-            case "oldUrl" -> nullableComparator(RedirectClearingAction::getOldUrl);
-            case "currentNewUrl" -> nullableComparator(RedirectClearingAction::getCurrentNewUrl);
-            case "proposedNewUrl" -> nullableComparator(RedirectClearingAction::getProposedNewUrl);
-            case "domainName" -> nullableComparator(RedirectClearingAction::getDomainName);
-            case "redirectCode" -> nullableComparator(RedirectClearingAction::getRedirectCode);
-            case "publishDate" -> nullableComparator(RedirectClearingAction::getPublishDate);
-            case "validTo" -> nullableComparator(RedirectClearingAction::getValidTo);
-            case "insertDate" -> nullableComparator(RedirectClearingAction::getInsertDate);
-            default -> null;
-        };
-    }
-
-    /**
-     * Creates a natural-order comparator that places {@code null} values first.
-     *
-     * @param extractor property extractor
-     * @param <V> comparable property type
-     * @return nullable property comparator
-     */
-    private static <V extends Comparable<? super V>> Comparator<RedirectClearingAction> nullableComparator(
-        Function<RedirectClearingAction, V> extractor
-    ) {
-        return Comparator.comparing(extractor, Comparator.nullsFirst(Comparator.naturalOrder()));
     }
 }

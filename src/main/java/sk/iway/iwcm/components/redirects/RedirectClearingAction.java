@@ -111,22 +111,6 @@ public class RedirectClearingAction implements Serializable {
 
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
-        title = "components.banner.dateFrom",
-        hiddenEditor = true,
-        sortAfter = "redirectCode"
-    )
-    private Date publishDate;
-
-    @DataTableColumn(
-        inputType = DataTableColumnType.DATETIME,
-        title = "components.banner.dateTo",
-        hiddenEditor = true,
-        sortAfter = "publishDate"
-    )
-    private Date validTo;
-
-    @DataTableColumn(
-        inputType = DataTableColumnType.DATETIME,
         title = "components.redirect.admin_list.datum_vlozenia",
         hiddenEditor = true,
         sortAfter = "validTo"
@@ -150,8 +134,6 @@ public class RedirectClearingAction implements Serializable {
      * @param proposedNewUrl optimized target URL, or {@code null} for delete actions
      * @param domainName original redirect domain
      * @param redirectCode HTTP redirect status code
-     * @param publishDate validity interval start
-     * @param validTo validity interval end
      * @param insertDate redirect creation timestamp
      */
     public RedirectClearingAction(
@@ -172,8 +154,6 @@ public class RedirectClearingAction implements Serializable {
         this.proposedNewUrl = proposedNewUrl;
         this.domainName = domainName;
         this.redirectCode = redirectCode;
-        this.publishDate = publishDate;
-        this.validTo = validTo;
         this.insertDate = insertDate;
     }
 
