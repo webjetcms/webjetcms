@@ -152,7 +152,8 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
 	@Column(name="manual_redirect", nullable=false)
 	@DataTableColumn(
         inputType = DataTableColumnType.BOOLEAN,
-        title = "components.redirect.manual_redirect"
+        title = "components.redirect.manual_redirect",
+		defaultValue = "true"
     )
 	Boolean manualRedirect;
 
