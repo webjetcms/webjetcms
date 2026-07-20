@@ -17,18 +17,18 @@ Môžete nastaviť aj platnosť presmerovania pre určité dátumy, zadaním bu�
 
 ![](path-editor.png)
 
-### Automatické a manuálne presmerovania
+### Automatické a používateľom vytvorené presmerovania
 
 Presmerovania vznikajú automaticky pri zmene URL adresy existujúcej stránky alebo pri zmene adresárovej štruktúry. Automatické vytváranie presmerovaní riadi konfiguračná premenná `editorDisableAutomaticRedirect`:
 
 - `false` - predvolená hodnota, WebJET CMS automaticky vytvorí presmerovanie zo starej URL adresy na novú.
 - `true` - automatické vytváranie presmerovaní je vypnuté.
 
-Nastavenie konfiguračnej premennej nemá vplyv na manuálne vytváranie presmerovaní. Manuálne vytvorené presmerovania sú v tabuľke odlíšené farebným pozadím. Pomocou prepínača **Manuálne presmerovanie** nad tabuľkou môžete zobraziť iba manuálne vytvorené presmerovania.
+Nastavenie konfiguračnej premennej nemá vplyv na používateľom vytvárané presmerovania. Používateľom vytvorené presmerovania sú v tabuľke odlíšené farebným pozadím. Pomocou prepínača **Vytvorené používateľom** nad tabuľkou môžete zobraziť iba používateľom vytvorené presmerovania.
 
 ![](redirect-path-filtered.png)
 
-!> **Upozornenie:** Presmerovania existujúce pred aktualizáciou databázy sa považujú za automaticky vytvorené. V editore presmerovania môžete hodnotu poľa **Manuálne presmerovanie** zmeniť a existujúce presmerovania tak podľa potreby označiť ako manuálne.
+!> **Upozornenie:** Presmerovania existujúce pred aktualizáciou databázy sa považujú za automaticky vytvorené. V editore presmerovania môžete hodnotu poľa **Vytvorené používateľom** zmeniť a existujúce presmerovania tak podľa potreby označiť ako používateľom vytvorené.
 
 ### Presmerovania cez regulárne výrazy
 

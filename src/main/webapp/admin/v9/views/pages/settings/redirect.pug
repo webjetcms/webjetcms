@@ -4,18 +4,7 @@ block content
 
     script.
         var redirectTable;
-
-        WJ.breadcrumb({
-            id: 'redirect',
-            tabs: [
-                { url: '#dateRange', title: '{filter}', active: false }
-            ]
-        });
-
         window.domReady.add(function () {
-
-            $("#pills-dateRange-tab").html("");
-            $("div#redirectTable_extfilter").appendTo("#pills-dateRange-tab");
 
             let url = "/admin/rest/settings/redirect";
             var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.system.UrlRedirectBean')})];
@@ -33,11 +22,6 @@ block content
                 id: "redirectTable",
                 editorId: "urlRedirectId",
                 order: order,
-                onPreXhr: function(TABLE, e, settings, data) {
-                    if ($("#manualRedirectFilter").is(":checked")) {
-                        data.fixed_searchManualRedirect = true;
-                    }
-                },
                 onRowCallback: function(TABLE, row, data) {
                     //we must have now here, because on reload it will be not reinitialized
                     now = new Date().getTime();
@@ -55,41 +39,13 @@ block content
                     $(row).toggleClass('is-manual-redirect', data.manualRedirect == true);
                 }
             });
-
-            $("#manualRedirectFilter").on("change", function() {
-                redirectTable.ajax.reload();
-            });
         });
 
     style.
-        label[for=manualRedirectFilter]::after {
-            content: "\eb4d" !important;
-            font-size: 18px !important;
-        }
-
         #redirectTable tbody tr.is-manual-redirect,
         #redirectTable tbody tr.is-manual-redirect > td {
             background-color: #F3F3F6 !important;
         }
-
-    #redirectTable_extfilter
-        .row
-            div.col-auto.dt-extfilter-title-manualRedirect
-            div.col-auto
-                .btn.btn-sm.custom-control.form-switch(
-                    role="group"
-                    data-toggle="tooltip"
-                    data-th-title="#{components.redirect.manual_redirect}"
-                )
-                    input#manualRedirectFilter.form-check-input(
-                        type="checkbox"
-                        value="true"
-                        data-th-aria-label="#{components.redirect.manual_redirect}"
-                    )
-                    label.form-check-label(
-                        for="manualRedirectFilter"
-                        aria-hidden="true"
-                    )
 
     <table id="redirectTable" class="datatableInit table"></table>
 
