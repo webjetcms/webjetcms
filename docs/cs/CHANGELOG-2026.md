@@ -16,6 +16,10 @@
 
 ![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
 
+- V dialogu vkládání odkazu přidána karta [Manažer dokumentů](redactor/files/file-archive/README.md) pro snadné vkládání odkazů na soubory v manažerovi dokumentů, nahrávání nových souborů a jejich správu. Více se dozvíte v části [Odkazy na soubory a nahrávání souborů](redactor/webpages/working-in-editor/README.md#odkazy-na-soubory-a-nahrávání-souborů) (#58593).
+
+![](redactor/webpages/working-in-editor/link_dialog-file-archive.png)
+
 ### Headless režim
 
 Přidána [podpora headless režimu](frontend/headless/README.md), ve kterém WebJET CMS slouží čistě jako `backend` CMS. Obsah, navigace, vyhledávání a formuláře jsou dostupné přes REST API. Frontend aplikace (např. Astro, Next.js, Vue, React nebo jakýkoli HTTP klient) si data stáhne a zobrazuje je podle vlastních šablon (#258).
@@ -61,6 +65,14 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Rezervace - přidána nová aplikace [Moje rezervace](redactor/apps/reservation/my-reservations-app/README.md), která přihlášenému uživateli zobrazí přehled jeho rezervací, stavem rezervace a možností smazání povolených budoucích rezervací (#58565).
 
 ![](redactor/apps/reservation/my-reservations-app/app-page.png)
+
+- Manažer dokumentů - přidáno zobrazení stromové struktury složek (#58593).
+
+![](redactor/files/file-archive/datatable.png)
+
+- Manažer dokumentů - přidána možnost nahrát více souborů najednou přes `drag&drop` (#58593).
+
+![](redactor/files/file-archive/drag-drop-upload-dialog.png)
 
 ### Volitelná pole
 
@@ -391,6 +403,7 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 - Webové stránky - opravená uzavírací značka `</link>`, správně nahrazená za `/>`, protože `link` je prázdný element (#osk498).
 - Webové stránky - opravena chyba odstranění časové složky při nastavení data konání (#54273-89).
 - Webové stránky - přidána možnost [nastavit JavaScript funkci](frontend/setup/config.md) pro `target="_blank"` odkazy, ve výchozím nastavení na `return openTargetBlank(this, event)`. Hodnota se nastavuje v konfigurační proměnné `editorTargetBlankFunction`, pokud je nastaveno na prázdnou hodnotu `onclick` funkce se nenastaví (#225).
+- Hromadný email - opraveno vytváření kampaní a emailů při duplikování kampaně (#58649).
 
 Jakarta verze:
 

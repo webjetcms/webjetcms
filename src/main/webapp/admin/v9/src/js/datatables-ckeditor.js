@@ -1005,11 +1005,76 @@ export class DatatablesCkEditor {
 					dialogDefinition.minWidth = 800;
 					dialogDefinition.minHeight = 445;
 
+					// Add "File Archive" tab to the CKEditor link dialog if the user has file archive permission.
+					// The tab embeds an iframe pointing to the file archive admin page.
+					if (WJ.hasPermission("cmp_file_archiv")) {
+						var fileArchiveTitle = WJ.escapeHtml(WJ.translate("components.file_archiv.name"));
+						dialogDefinition.addContents(
+							{
+								id: 'wjLinkFileArchive',
+								label: fileArchiveTitle,
+								elements: [
+									{
+										type: 'html',
+										id: 'wjLinkFileArchiveIframe',
+										html: '<div><iframe id="wjLinkFileArchiveIframeElement" title="' + fileArchiveTitle + '" style="width: 800px; height: 455px; border: 0;" src="/apps/file-archive/admin/"></iframe></div>'
+									}
+								]
+							}
+						);
+					}
+
 					//console.log("dialogDefinition link=", dialogDefinition);
 
 					dialogDefinition.dialog.on( 'show', function()
 					{
 						var dialog = this;
+
+						/** Returns the current URL value from the link dialog's URL field. */
+						function getCurrentUrl() {
+							try {
+								return dialog.getContentElement("info", "url").getValue() || '';
+							} catch (ex) {
+								return '';
+							}
+						}
+
+						/** Checks if a URL is an absolute server path (starts with "/"). */
+						function isAbsolutePath(url) {
+							return url && url.indexOf('/') === 0;
+						}
+
+						/** Synchronizes the wj_link elFinder iframe with the given URL, optionally navigating to its folder. */
+						function syncWjLinkFrame(url, shouldNavigate) {
+							try {
+								var wjIframe = dialog.iframeElement;
+								if (wjIframe && wjIframe.$ && wjIframe.$.contentWindow) {
+									var wjWin = wjIframe.$.contentWindow;
+									if (wjWin.refreshValuesFromCk) wjWin.refreshValuesFromCk();
+									if (shouldNavigate && isAbsolutePath(url) && wjWin.openElfinderInFolder) {
+										wjWin.openElfinderInFolder(url);
+									}
+								}
+							} catch (ex) {}
+						}
+
+						/** Synchronizes the file archive iframe with the given URL, optionally navigating the archive tree. */
+						function syncFileArchiveFrame(url, shouldNavigate, dialogElement) {
+							try {
+								var container = dialogElement || dialog.getElement().$;
+								var faIframe = container.querySelector('#wjLinkFileArchiveIframeElement');
+								if (faIframe && faIframe.contentWindow) {
+									var faWin = faIframe.contentWindow;
+									if (faWin.refreshValuesFromCk) faWin.refreshValuesFromCk();
+									if (shouldNavigate && isAbsolutePath(url) && faWin.navigateArchiveTree) {
+										faWin.navigateArchiveTree(url);
+									}
+								}
+							} catch (ex) {}
+						}
+
+						//reset last synced URL so tab-click sync detects change correctly
+						dialog._wjLastSyncedUrl = '';
 
 						this.getContentElement("info", "url").getElement().hide();
 						this.getContentElement("info", "protocol").getElement().hide();
@@ -1081,7 +1146,47 @@ export class DatatablesCkEditor {
 								//toto moze nastat pri prvom nacitani, vtedy sa ale refresh zavola priamo v iframe kode
 								//console.log(e);
 							}
+
+							//auto-select file archive tab if URL starts with configured file archive root
+							try {
+								var currentUrl = getCurrentUrl();
+								// Try to read the archive root path from the file archive iframe (set by Thymeleaf in index.html).
+								// Falls back to the default /files/archiv/ if the iframe is not yet loaded.
+								var fileArchiveTreeDir = "/files/archiv/";
+								try {
+									var faIframe = dialog.getElement().$.querySelector('#wjLinkFileArchiveIframeElement');
+									if (faIframe && faIframe.contentWindow && faIframe.contentWindow.fileArchiveSelectedDir) {
+										fileArchiveTreeDir = faIframe.contentWindow.fileArchiveSelectedDir;
+									}
+								} catch (ex) {}
+								if (fileArchiveTreeDir.charAt(fileArchiveTreeDir.length-1) === '/') {
+									fileArchiveTreeDir = fileArchiveTreeDir.substring(0, fileArchiveTreeDir.length-1);
+								}
+								if (currentUrl && currentUrl.indexOf(fileArchiveTreeDir) === 0 && dialog.definition.getContents("wjLinkFileArchive")) {
+									dialog.selectPage("wjLinkFileArchive");
+								}
+							} catch (e) {}
+
+							//sync file archive iframe with current URL on dialog show
+							syncFileArchiveFrame(getCurrentUrl(), true);
 						}, 200);
+
+						//sync txtUrl between wj_link and file archive tabs on tab click
+						if (WJ.hasPermission("cmp_file_archiv") == true && !dialog._wjTabSyncBound) {
+							dialog._wjTabSyncBound = true;
+							dialog._wjLastSyncedUrl = '';
+							var $dialogEl = $(dialog.getElement().$);
+							$dialogEl.on('click', '.cke_dialog_tab', function() {
+								setTimeout(function() {
+									var currentUrl = getCurrentUrl();
+									var urlChanged = currentUrl !== dialog._wjLastSyncedUrl;
+									dialog._wjLastSyncedUrl = currentUrl;
+
+									syncWjLinkFrame(currentUrl, urlChanged);
+									syncFileArchiveFrame(currentUrl, urlChanged, $dialogEl[0]);
+								}, 100);
+							});
+						}
 
 					});
 
