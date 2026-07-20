@@ -37,14 +37,16 @@ block content
                     }
 
                     $(row).toggleClass('is-manual-redirect', data.manualRedirect == true);
+                    $(row).toggleClass('is-automatic-redirect', data.manualRedirect == false);
                 }
             });
         });
 
     style.
-        #redirectTable tbody tr.is-manual-redirect,
-        #redirectTable tbody tr.is-manual-redirect > td {
-            background-color: #F3F3F6 !important;
+        #redirectTable tbody tr.is-automatic-redirect,
+        #redirectTable tbody tr.is-automatic-redirect > td {
+            //background-color: #F3F3F6 !important;
+            color: var(--wj-dark-60) !important;
         }
 
     <table id="redirectTable" class="datatableInit table"></table>

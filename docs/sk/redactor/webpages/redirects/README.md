@@ -2,7 +2,7 @@
 
 ## Presmerovania ciest
 
-Zobrazuje zoznam existujúcich presmerovaní, ktoré sa vykonajú, ak zadaná URL adresa neexistuje. Presmerovania môžu vznikajú automaticky, viac v časti [Automatické a manuálne presmerovania](#automatické-a-manuálne-presmerovania).
+Zobrazuje zoznam existujúcich presmerovaní, ktoré sa vykonajú, ak zadaná URL adresa neexistuje. Presmerovania môžu vznikajú automaticky, viac v časti [Automatické a používateľom vytvorené presmerovania](#automatické-a-používateľom-vytvorené-presmerovania).
 
 ![](redirect-path.png)
 
@@ -24,7 +24,7 @@ Presmerovania vznikajú automaticky pri zmene URL adresy existujúcej stránky a
 - `false` - predvolená hodnota, WebJET CMS automaticky vytvorí presmerovanie zo starej URL adresy na novú.
 - `true` - automatické vytváranie presmerovaní je vypnuté.
 
-Nastavenie konfiguračnej premennej nemá vplyv na používateľom vytvárané presmerovania. Používateľom vytvorené presmerovania sú v tabuľke odlíšené farebným pozadím. Pomocou prepínača **Vytvorené používateľom** nad tabuľkou môžete zobraziť iba používateľom vytvorené presmerovania.
+Nastavenie konfiguračnej premennej nemá vplyv na používateľom vytvárané presmerovania. Automaticky vytvorené presmerovania sú v tabuľke odlíšené šedou farbou písma. Pomocou prepínača **Vytvorené používateľom** nad tabuľkou môžete zobraziť iba používateľom vytvorené presmerovania.
 
 ![](redirect-path-filtered.png)
 

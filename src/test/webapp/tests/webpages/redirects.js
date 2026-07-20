@@ -52,7 +52,7 @@ Scenario('Manual redirect filter and row class @screenshot', ({ I, DT, DTE, Docu
     I.dontSeeElement(locate("#redirectTable tbody tr.is-manual-redirect").withText(automaticRedirectOldUrl));
 
     I.say("Enable the manual-only filter and verify that the automatic redirect is excluded");
-    I.checkOption("#manualRedirectFilter");
+    DT.filterSelect("manualRedirect", "Áno");
     DT.waitForLoader(redirectTable);
     I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10, tableBody);
 
@@ -63,7 +63,7 @@ Scenario('Manual redirect filter and row class @screenshot', ({ I, DT, DTE, Docu
 
     Document.screenshot("/redactor/webpages/redirects/redirect-path-filtered.png");
 
-    I.uncheckOption("#manualRedirectFilter");
+    DT.filterSelect("manualRedirect", "Všetko");
     DT.waitForLoader(redirectTable);
 
     I.say("Change the redirect to automatic and verify that the value persists");
