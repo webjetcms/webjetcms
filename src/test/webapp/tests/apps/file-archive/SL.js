@@ -46,6 +46,19 @@ module.exports = {
 
     // == File archive functions ==
 
+    /**
+     * Opens the file archive page with the tree navigated to the parent folder of the given file path.
+     * Normalizes the path to ensure a leading slash, extracts the parent directory,
+     * and navigates to the archive page with the dir query parameter set.
+     * @param {string} filePath - full virtual path to a file (e.g. "/files/archiv/folder/file.pdf")
+     */
+    openFileArchive(filePath) {
+        const normalizedFilePath = filePath.startsWith('/') ? filePath : '/' + filePath;
+        const parentFolder = normalizedFilePath.substring(0, normalizedFilePath.lastIndexOf('/'));
+        I.amOnPage(this.fileArchive + '?dir=' + parentFolder);
+        DT.waitForLoader('fileArchiveDataTable');
+    },
+
     checkStatus(row, col, expectedIcons = [], unexpectedIcons = []){
         const iconNames = [
             'star',
@@ -66,11 +79,11 @@ module.exports = {
         });
     },
 
-    uploadFile(virtualFileName, fileName, validFrom, validTo, destFolder, dateUploadLater, emails){
+    uploadFile(virtualFileName, fileName, validFrom, validTo, destFolder, dateUploadLater, emails) {
         I.clickCss('#fileArchiveDataTable_wrapper .buttons-create');
         DTE.waitForEditor('fileArchiveDataTable');
         DTE.fillField('virtualFileName', virtualFileName);
-        I.attachFile('input.dz-hidden-input', 'tests/apps/file-archive/docs/' + fileName);
+        I.attachFile('input.dz-hidden-input.dz-hidden-input-DTE_Field_editorFields-file', 'tests/apps/file-archive/docs/' + fileName);
         I.waitForElement("//button[normalize-space(text())='Pridať' and @disabled]", 10);
         I.waitForElement("//button[normalize-space(text())='Pridať' and not(@disabled)]", 10);
 
@@ -84,7 +97,7 @@ module.exports = {
         if (emails) I.fillField("#DTE_Field_editorFields-emails", emails);
     },
 
-    editFile(virtualFileName, newFileName, validFrom, validTo, uploadType, fileName){
+    editFile(virtualFileName, newFileName, validFrom, validTo, uploadType, fileName) {
         I.clickCss('#fileArchiveDataTable_wrapper .buttons-edit');
         DTE.waitForEditor('fileArchiveDataTable');
         if(virtualFileName) DTE.fillField('virtualFileName', virtualFileName);
@@ -105,7 +118,7 @@ module.exports = {
         }
         if (uploadType) {
             I.selectOption('select#DTE_Field_editorFields-uploadType', uploadType);
-            I.attachFile('input.dz-hidden-input', 'tests/apps/file-archive/docs/' + fileName);
+            I.attachFile('input.dz-hidden-input.dz-hidden-input-DTE_Field_editorFields-file', 'tests/apps/file-archive/docs/' + fileName);
         }
     },
 
@@ -135,8 +148,12 @@ module.exports = {
         return fileName.replace(/(\.)/g, `_v_${version}$1`);
     },
 
-    deleteTestFiles(name = ""){
-        I.amOnPage(this.fileArchive);
+    deleteTestFiles(name = "", filePath = null){
+        if (filePath) {
+            this.openFileArchive(filePath);
+        } else {
+            I.amOnPage(this.fileArchive);
+        }
         DT.filterContains('virtualFileName', 'autotest-' + name);
         I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
         DT.deleteAll('fileArchiveDataTable');
@@ -163,8 +180,8 @@ module.exports = {
     },
 
     async checkTreeStructure() {
-        const anchors = await I.grabTextFromAll('.jstree-anchor');
-        let disabledAnchors = await I.grabTextFromAll('.jstree-anchor.jstree-disabled');
+        const anchors = await I.grabTextFromAll('#jsTree .jstree-anchor');
+        let disabledAnchors = await I.grabTextFromAll('#jsTree .jstree-anchor.jstree-disabled');
         const limitIndex = anchors.indexOf('archiv');
         I.assertNotEqual(limitIndex, -1, '"Archiv" not found in the anchor list');
         await anchors.slice(0, limitIndex).forEach(anchor => {

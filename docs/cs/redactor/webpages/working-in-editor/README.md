@@ -96,6 +96,15 @@ Chcete-li vytvořit odkaz na dokument/soubor označte si text, který má být o
 
 ![](link_dialog.png)
 
+- pokud máte právo na **Manažer dokumentů** (`cmp_file_archiv`), v dialogu **Odkaz** se zobrazí i karta **Manažer dokumentů**.
+  - V kartě je dostupná stromová struktura složek archivu a tabulka dokumentů z vybrané složky.
+  - Klepnutím na název dokumentu se jeho URL adresa automaticky zkopíruje do pole URL.
+  - Pokud potřebný dokument ještě není v archivu, můžete jej nahrát přímo v této kartě přesunutím souboru z počítače (`drag&drop`) do dialogu. Soubor se nahraje do aktuálně zvolené složky ve stromu.
+  - Při nahrávání více souborů nebo při duplicitě reálného jména souboru se zobrazí stejné možnosti jako v manažeru dokumentů: **Přeskočit**, **Nahradit** nebo **Nová verze**.
+  - Potvrdíte OK, čímž se vám na vyznačeném místě vytvoří odkaz na soubor z manažera dokumentů.
+
+![](link_dialog-file-archive.png)
+
 - v případě, že je dokument **určen pouze pro aktuální web stránku**, je třeba zvolit položku “Média této stránky” av ní položku “Soubory”.
   - Vyhledáte dokument, kliknete na něj a odkaz na dokument se automaticky zkopíruje do pole URL.
   - V případě, že se v seznamu požadovaný dokument nenachází, funkcí ```drag&drop``` je možné nahrát dokument z vašeho počítače

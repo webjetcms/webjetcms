@@ -29,7 +29,7 @@ Explanation of the pictograms used:
 - [ ] Unused files - make it possible to get a list of unused files - they are not used anywhere on the page, not even in media, etc. There was an API for this `FileTools.getDirFileUsage(currentDir, request)`. Add as a tab to folder properties in explorer (#58621).
 - [ ] Explorer - prevent working with the Document Manager folder so that files cannot be manipulated outside of the Document Manager.
 - [x] +Explorer - add permission to upload files with accented characters (removed for `/images` and `/files` folders) (#58589).
-- [ ] +Websites - better integrate document manager for inserting links into the page - new tab similar to Photobank for images (#58593).
+- [x] +Websites - better integrate document manager for inserting links into the page - new tab similar to Photobank for images (#58593).
 - [x] +Forms - add more detailed statistics on errors in completed forms (#58509).
 - [x] +Websites - improve the user interface for entering `/thumb` images in the editor (#58525).
 - [x] +Optional fields - add the ability to define which fields are required (#58413).
@@ -43,7 +43,7 @@ Explanation of the pictograms used:
 - [x] Optional fields – add the ability to set a text length limit for a field of type `textarea`, similar to what is currently possible for a field of type `text`.
 - [ ] Datatable – edit fields of type `Date` and `Datetime` so that validation `not null` works correctly.
 - [ ] Datatable – modify the `mergovania` method of the modified entity so that values ​​of type `number` can be reset.
-- [ ] +Redirects - distinguish automatically created redirects in the database (look for the variable `editorDisableAutomaticRedirect`) from manually created ones, possibility to filter accordingly in the UI (show only manually created redirects).
+- [x] +Redirects - distinguish automatically created redirects in the database (look for the variable `editorDisableAutomaticRedirect`) from manually created ones, possibility to filter accordingly in the UI (show only manually created redirects) (#58625).
 - [ ] +Redirects - add redirect cleaning function - deletes old redirects (it was originally `aaa-bbb` and then `aaa-ccc` was created so `aaa-bbb` has no meaning = it is deleted) and checks for cyclic redirects in which it deletes the last step. Also optimize redirects `aaa-bbb-ccc` to `aaa-ccc` (#58629).
 - +Gallery - add the option to set a different way to resize a large image, e.g. Crop to fit is applied to a small image (they want it to be square) and exact width is applied to a large image (preserves aspect ratio). By default, the value will be NULL=same as for a small image (#58633).
 - [ ] Optional fields - add the ability to select multiple items for connection to the dialer (#58637).
@@ -53,6 +53,8 @@ Explanation of the pictograms used:
 - [ ] + Dialer, Blog, News - adjust so that the dialer or news folder type selection is on the left, similar to the gallery/websites. Then the cards don't have to be displayed all at once.
 - [ ] +Translation keys - display a tree structure of translation keys for better orientation.
 - [ ] +Configuration - add the option to set a variable only for the current node (do not save it to the database - just set it to the Constants object), add a "Set temporarily" checkbox there with an info icon that the value is set only temporarily and upon restart the value as in the database will be restored.
+- [ ] Explorer - fix displaying files with special characters (for example `@`).
+- [ ] Automatically delete `temp` files that may accumulate.
 
 ## 2025
 
