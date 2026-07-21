@@ -2,6 +2,8 @@ Feature('apps.file-archive.add_file');
 
 const SL = require("./SL.js");
 
+let differentLocationFolderName;
+
 Before(({ login }) => {
     login('admin');
 });
@@ -30,7 +32,7 @@ Scenario('Add new file to archive and validate upload', async ({ I, DT, DTE }) =
     I.clickCss('#editorAppDTE_Field_editorFields-dir .btn-vue-jstree-item-edit');
     DTE.waitForModal('custom-modal-id');
     await SL.checkTreeStructure();
-    I.click('archiv');
+    I.click('archiv', "#jsTree");
     DTE.waitForModalClose('custom-modal-id');
 
     // 3. Overenie, že nevidim taby ktore tam nemaju byt
@@ -146,6 +148,7 @@ Scenario('Add new file in the future and validate', async ({ I, DT, DTE, TempMai
 
     // 2. Over že v tabuľke bude ako červený
     I.say("Phase2 - Verify that the table contains the entry as red");
+    SL.openFileArchive("/files/archiv/files/archiv_insert_later/files/archiv/" + scheduledDocFileName);
     DT.filterEquals('virtualFileName', scheduledDocVirtualFileName);
     I.wait(2);
     DT.checkTableRow("fileArchiveDataTable", 1, ["", "", scheduledDocVirtualFileName, "", "files/archiv/files/archiv_insert_later/files/archiv/", scheduledDocFileName]);
@@ -191,27 +194,29 @@ Scenario('Add new file in the future and validate', async ({ I, DT, DTE, TempMai
 Scenario('Add file in different location', ({ I, DTE, DT }) => {
     const validPdfFileName = 'archive_file_test_second.pdf';
     const validPdfVirtualFileName = SL.randomName("locationfile");
-    const folderName = SL.randomName("folder");
+    differentLocationFolderName = SL.randomName("folder");
     // 1. Pridanie nového súboru do archívu
     I.say("Phase 1 - Add new file to archive");
     I.amOnPage(SL.fileArchive);
     SL.uploadFile(validPdfVirtualFileName, validPdfFileName);
-    I.fillField("#editorAppDTE_Field_editorFields-dir .input-group input", "/files/archiv/" + folderName);
+    I.fillField("#editorAppDTE_Field_editorFields-dir .input-group input", "/files/archiv/" + differentLocationFolderName);
     DTE.save('fileArchiveDataTable');
 
     // 2. Overenie, že sa súbor nahrá a je na správnom mieste
     I.say("Phase 2 - Check that the file is uploaded and in the right place");
+    SL.openFileArchive("/files/archiv/" + differentLocationFolderName + "/" + validPdfFileName);
     DT.filterEquals('virtualFileName', validPdfVirtualFileName);
-    DT.checkTableRow("fileArchiveDataTable", 1, ["", "", validPdfVirtualFileName, "", "files/archiv/" + folderName, validPdfFileName]);
+    DT.checkTableRow("fileArchiveDataTable", 1, ["", "", validPdfVirtualFileName, "", "files/archiv/" + differentLocationFolderName, validPdfFileName]);
     SL.checkStatus(1, 4, ['star', 'map-pin']);
 
     I.amOnPage(SL.elfinder);
-    I.doubleClick(`.elfinder-cwd-filename[title^="${folderName}"]`);
+    I.doubleClick(`.elfinder-cwd-filename[title^="${differentLocationFolderName}"]`);
     SL.checkFileContent(validPdfFileName, null, false);
 });
 
 Scenario('Delete archiv entity 2 (and file using elfinder if neccesary)', async ({I}) => {
     SL.deleteTestFiles();
+    SL.deleteTestFiles("", "/files/archiv/" + differentLocationFolderName + "/archive_file_test_second.pdf");
 
     const folderSelector = ".elfinder-cwd-filename[title^='autotest--']";
     await SL.removeFileByElfinder(folderSelector, SL.elfinderLater);
@@ -226,4 +231,3 @@ Scenario('Delete archiv entity 2 (and file using elfinder if neccesary)', async 
 Scenario('Revert cronjob setting', async () => {
     await SL.setCronjob('0', '*/5');
 });
-

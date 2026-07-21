@@ -27,8 +27,29 @@ import $ from 'jquery';
 import Dropzone from 'dropzone/dist/dropzone.js';
 
 Dropzone.autoDiscover = false;
+/**
+ * Initializes an AdminUpload Dropzone instance on the given element.
+ * Handles chunked uploads, file conflict resolution (skip/overwrite/keepboth),
+ * progress tracking via toast notifications, and dispatches custom window events
+ * (WJ.AdminUpload.success, WJ.AdminUpload.error, WJ.AdminUpload.addedfile).
+ *
+ * UI elements (upload wrapper, toast container, template) are resolved relative
+ * to the dropzone element to support multiple independent upload zones on one page.
+ *
+ * @param {object} options - configuration options
+ * @param {string|HTMLElement} options.element - CSS selector or DOM element for the dropzone
+ * @param {number|null} [options.maxFiles] - max files allowed, null for unlimited
+ * @param {string} [options.acceptedFiles] - comma-separated accepted MIME types/extensions
+ * @param {string} [options.uploadType] - upload type identifier (e.g. "fileArchive")
+ * @param {string} [options.destinationFolder] - target upload folder path
+ * @param {boolean} [options.writeDirectlyToDestination] - if true, writes directly to destination
+ * @param {string} [options.overwriteMode] - default conflict mode ("skip", "overwrite", "keepboth")
+ * @returns {Dropzone} the initialized Dropzone instance
+ */
 function adminUploadInit(options) {
     var element = document.querySelector(options.element) || options.element;
+    var uploadElement = $(element);
+    var uploadUiRoot = uploadElement.parent();
     var maxFiles = options.maxFiles || null;
     var acceptedFiles = options.acceptedFiles || null;
     var uploadType = options.uploadType || '';
@@ -36,7 +57,26 @@ function adminUploadInit(options) {
     var writeDirectlyToDestination = options.writeDirectlyToDestination || false;
     var overwriteMode = options.overwriteMode || '';
 
-    var toastrMessageTemplate = $('#upload-toastr-template').html();
+    /**
+     * Finds an upload UI element by CSS selector, searching first among siblings
+     * of the dropzone element, then within its parent container.
+     * @param {string} selector - jQuery CSS selector
+     * @returns {jQuery} the matched element
+     */
+    function findUploadUiElement(selector) {
+        var uploadUiElement = uploadElement.siblings(selector).first();
+        if (uploadUiElement.length === 0) {
+            uploadUiElement = uploadUiRoot.find(selector).first();
+        }
+        return uploadUiElement;
+    }
+
+    var uploadWrapper = findUploadUiElement('#upload-wrapper, .upload-wrapper');
+    var toastContainer = uploadWrapper.find('#toast-container-upload, .toast-container-upload').first();
+    if (toastContainer.length === 0) {
+        toastContainer = findUploadUiElement('#toast-container-upload, .toast-container-upload');
+    }
+    var toastrMessageTemplate = findUploadUiElement('#upload-toastr-template, .upload-toastr-template').html();
     let fromImageEditor = false;
 
     //console.log("maxFiles=", maxFiles);
@@ -82,19 +122,18 @@ function adminUploadInit(options) {
         chunkSize: 2000000,
         forceChunking: true,
 
-        dictDefaultMessage: '<i class="ti ti-upload" aria-hidden="true"></i>',
+        dictDefaultMessage: '<i class="ti ti-upload" aria-hidden="true"></i><span><br/>' + WJ.translate("admin.dragDropFiles.dragFilesHereOrClick") + '</span>',
+        dictFileTooBig: WJ.translate("admin.dragDropFiles.dictFileTooBig"),
+        dictResponseError: WJ.translate("admin.dragDropFiles.dictResponseError"),
+        dictCancelUpload: WJ.translate("admin.dragDropFiles.dictCancelUpload"),
+        dictCancelUploadConfirmation: WJ.translate("admin.dragDropFiles.dictCancelUploadConfirmation"),
+        dictRemoveFile: WJ.translate("admin.dragDropFiles.dictRemoveFile"),
+        dictMaxFilesExceeded: WJ.translate("admin.dragDropFiles.dictMaxFilesExceeded"),
+        dictInvalidFileType: WJ.translate("admin.dragDropFiles.dictInvalidFileType"),
+
         headers: {
             'X-CSRF-TOKEN': window.csrfToken,
         },
-
-        /*dictDefaultMessage: "<iwcm:text key="admin.dragDropFiles.dragFilesHereOrClick"/>",
-        dictFileTooBig: "<iwcm:text key="admin.dragDropFiles.dictFileTooBig"/>",
-        dictResponseError: "<iwcm:text key="admin.dragDropFiles.dictResponseError"/>",
-        dictCancelUpload: "<iwcm:text key="admin.dragDropFiles.dictCancelUpload"/>",
-        dictCancelUploadConfirmation: "<iwcm:text key="admin.dragDropFiles.dictCancelUploadConfirmation"/>",
-        dictRemoveFile: "<iwcm:text key="admin.dragDropFiles.dictRemoveFile"/>",
-        dictMaxFilesExceeded: "<iwcm:text key="admin.dragDropFiles.dictMaxFilesExceeded"/>",
-        */
 
         init: function () {
             // Set aria-label on the generated dz-button
@@ -102,6 +141,36 @@ function adminUploadInit(options) {
             if (dzButton) {
                 var label = WJ.translate("datatables.upload.uploadFile.js");
                 dzButton.setAttribute('aria-label', label);
+            }
+
+            // Add a deterministic class to the generated hidden file input so that multiple
+            // input.dz-hidden-input elements on the same page can be distinguished.
+            // The class is derived from the dropzone element id (or upload type/destination folder
+            // as a fallback), never a random value. Dropzone recreates the hidden input after every
+            // file selection, so we hook the property setter to re-apply the class each time.
+            // NOTE: This overrides Dropzone's internal hiddenFileInput property with a getter/setter.
+            // If Dropzone changes how it manages this property, this may break.
+            var identifierSource = (this.element && this.element.id) ? this.element.id : (uploadType + '-' + destinationFolder);
+            var hiddenInputClass = String(identifierSource).replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
+            if (hiddenInputClass) {
+                hiddenInputClass = 'dz-hidden-input-' + hiddenInputClass;
+                var applyHiddenInputClass = function (input) {
+                    if (input && input.classList) {
+                        input.classList.add(hiddenInputClass);
+                    }
+                };
+                var currentHiddenFileInput = this.hiddenFileInput;
+                applyHiddenInputClass(currentHiddenFileInput);
+                Object.defineProperty(this, 'hiddenFileInput', {
+                    configurable: true,
+                    get: function () {
+                        return currentHiddenFileInput;
+                    },
+                    set: function (input) {
+                        currentHiddenFileInput = input;
+                        applyHiddenInputClass(input);
+                    }
+                });
             }
 
             $(document).on('initAddedFileFromImageOutside', (e, file) => {
@@ -119,7 +188,6 @@ function adminUploadInit(options) {
             });
 
             this.on('success', function (file) {
-                // console.log('success', file);
                 if (fromImageEditor) {
                     updateOverallProgress();
                     setStatus(file.toaster, 'success');
@@ -146,7 +214,7 @@ function adminUploadInit(options) {
                     var overwriteToast = file.toaster;
 
                     setStatus(file.toaster, 'exist');
-                    $('div.upload-wrapper-footer div.process-all').show();
+                    uploadWrapper.find('div.upload-wrapper-footer div.process-all').show();
 
                     function callback(ajaxResponse) {
                         if (ajaxResponse.error) {
@@ -160,12 +228,12 @@ function adminUploadInit(options) {
                         processApplyToAllNext();
                     }
 
-                    overwriteToast.delegate('.btn-toast-skip', 'click', function () {
+                    overwriteToast.on('click', '.btn-toast-skip', function () {
                         adminUpload.skipkey(response.key, callback);
                         setStatus(overwriteToast, 'processing');
                     });
 
-                    overwriteToast.delegate('.btn-toast-overwrite', 'click', function () {
+                    overwriteToast.on('click', '.btn-toast-overwrite', function () {
                         adminUpload.overwrite(
                             response.key,
                             response.destinationFolder,
@@ -176,7 +244,7 @@ function adminUploadInit(options) {
                         setStatus(overwriteToast, 'processing');
                     });
 
-                    overwriteToast.delegate('.btn-toast-keepboth', 'click', function () {
+                    overwriteToast.on('click', '.btn-toast-keepboth', function () {
                         adminUpload.keepboth(
                             response.key,
                             response.destinationFolder,
@@ -196,6 +264,14 @@ function adminUploadInit(options) {
             this.on('error', function (file, errorMessage) {
                 // console.log("ERROR: file=",file," message=",errorMessage);
                 setError(file.toaster, errorMessage);
+
+                window.dispatchEvent(new CustomEvent('WJ.AdminUpload.error', {
+                    detail: {
+                        uploader: adminUpload,
+                        file: file,
+                        errorMessage: errorMessage,
+                    },
+                }));
             });
             this.on('removedfile', function (file) {
                 //nebudeme riesit
@@ -203,7 +279,12 @@ function adminUploadInit(options) {
             });
             this.on('addedfile', function (file) {
                 //firni event ze zacina addedfile
-                var event = new CustomEvent('WJ.AdminUpload.addedfile', {});
+                var event = new CustomEvent('WJ.AdminUpload.addedfile', {
+                    detail: {
+                        uploader: adminUpload,
+                        file: file,
+                    },
+                });
 
                 window.dispatchEvent(event);
                 // console.log('addedFile', file);
@@ -260,9 +341,10 @@ function adminUploadInit(options) {
     });
 
     function createFileToaster(file) {
-        $('#upload-wrapper').show();
-        $('#dt-upload').css('visibility', 'hidden');
-        $('#dt-upload').css('opacity', 0);
+        uploadWrapper.show();
+        uploadElement.css('display', 'none');
+        uploadElement.css('visibility', 'hidden');
+        uploadElement.css('opacity', 0);
 
         if (typeof toastrMessageTemplate == 'undefined') return null;
 
@@ -274,11 +356,11 @@ function adminUploadInit(options) {
             tapToDismiss: false,
             extendedTimeOut: 0, //prevent hide after mouse over
             progressBar: false,
-            containerId: 'toast-container-upload',
+            containerId: toastContainer.attr('id'),
         });
 
         //scrollni kontajner
-        $('#toast-container-upload').scrollTop(0);
+        toastContainer.scrollTop(0);
 
         return toaster;
     }
@@ -287,7 +369,7 @@ function adminUploadInit(options) {
         //vypocitaj to podla ciastkovych progressbarov
         var progressSum = 0;
         var progressCount = 0;
-        $('#toast-container-upload .fa-progress-bar__progress').each(function (index, value) {
+        toastContainer.find('.fa-progress-bar__progress').each(function (index, value) {
             var bar = $(value);
             var percent = 100 - parseInt(bar.css('stroke-dashoffset'));
 
@@ -298,7 +380,7 @@ function adminUploadInit(options) {
         var progress = 0;
         if (total > 0) progress = (progressSum / total) * 100;
 
-        $('div.toast-container-progress .fa-progress-bar__progress').css(
+        uploadWrapper.find('div.toast-container-progress .fa-progress-bar__progress').css(
             'stroke-dashoffset',
             Math.round(100 - progress) + 'px'
         );
@@ -313,6 +395,7 @@ function adminUploadInit(options) {
                 response: response,
                 key: key,
                 file: file,
+                uploader: adminUpload,
             },
         });
 
@@ -347,17 +430,17 @@ function adminUploadInit(options) {
         overwriteMode = mode;
 
         //oznac vsetky exists na waitforprocess
-        $('div.toast[data-upload-status=exist]').each(function (index, value) {
+        toastContainer.find('div.toast[data-upload-status=exist]').each(function (index, value) {
             console.log(value);
             var toast = $(value);
             setStatus(toast, 'waitforprocess');
         });
 
         //oznac button v paticke
-        $('div.upload-wrapper-footer div.toast-links a').each(function (index, value) {
+        uploadWrapper.find('div.upload-wrapper-footer div.toast-links a').each(function (index, value) {
             $(value).removeClass('active');
         });
-        $('#btn-toast-' + mode + '-all').addClass('active');
+        uploadWrapper.find('#btn-toast-' + mode + '-all').addClass('active');
 
         //spusti nasledujuci v rade
         processApplyToAllNext();
@@ -365,7 +448,7 @@ function adminUploadInit(options) {
 
     function processApplyToAllNext() {
         if (overwriteMode.length > 1) {
-            var waitForProcess = $('div.toast[data-upload-status=waitforprocess]');
+            var waitForProcess = toastContainer.find('div.toast[data-upload-status=waitforprocess]');
             if (waitForProcess.length > 0) {
                 //procesujeme max 1 toast
                 var toast = $(waitForProcess[0]);
@@ -419,21 +502,21 @@ function adminUploadInit(options) {
         return destinationFolder;
     };
 
-    $('#btn-toast-skip-all').click(function () {
+    uploadWrapper.find('#btn-toast-skip-all').click(function () {
         processAplyToAll('skip');
     });
-    $('#btn-toast-overwrite-all').click(function () {
+    uploadWrapper.find('#btn-toast-overwrite-all').click(function () {
         processAplyToAll('overwrite');
     });
-    $('#btn-toast-keepboth-all').click(function () {
+    uploadWrapper.find('#btn-toast-keepboth-all').click(function () {
         processAplyToAll('keepboth');
     });
 
     function hideUploadWrapper() {
-        $('#upload-wrapper').hide();
+        uploadWrapper.hide();
     }
 
-    $('#upload-wrapper-close').click(function () {
+    uploadWrapper.find('#upload-wrapper-close').click(function () {
         hideUploadWrapper();
     });
 
@@ -462,10 +545,18 @@ window.addEventListener('dragenter', function (e) {
 
     if (blockDragEnter) return;
 
+    // Skip fullscreen drop overlay if the main dropzone element doesn't exist or is disabled
+    // (e.g. when the upload field is inside an iframe or another component controls the dropzone)
+    var fullscreenDropZone = document.getElementById('dt-upload');
+    if (fullscreenDropZone == null || (fullscreenDropZone.dropzone && fullscreenDropZone.dropzone.disabled === true)) {
+        return;
+    }
+
     lastTarget = e.target; // cache the last target here
     // unhide our dropzone overlay
-    $('#dt-upload').css('visibility', '');
-    $('#dt-upload').css('opacity', 1);
+    $(fullscreenDropZone).css('display', '');
+    $(fullscreenDropZone).css('visibility', '');
+    $(fullscreenDropZone).css('opacity', 1);
 });
 
 window.addEventListener('dragleave', function (e) {
@@ -481,6 +572,7 @@ window.addEventListener('dragleave', function (e) {
 
     if (e.target === lastTarget || e.target === document) {
         setTimeout(function () {
+            $('#dt-upload').css('display', 'none');
             $('#dt-upload').css('visibility', 'hidden');
             $('#dt-upload').css('opacity', 0);
         }, 5000);

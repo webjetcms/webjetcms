@@ -2,7 +2,7 @@
 
 ## Přesměrování cest
 
-Zobrazuje seznam existujících přesměrování, které se provedou, pokud zadaná URL adresa neexistuje. Přesměrování vznikají automaticky při změně URL adresy existující stránky nebo při změně adresářové struktury.
+Zobrazuje seznam existujících přesměrování, které se provedou, pokud zadaná URL adresa neexistuje. Přesměrování mohou vznikat automaticky, více v části [Automatické a uživatelem vytvořené přesměrování](#automatické-a-uživatelem-vytvořené-přesměrování).
 
 ![](redirect-path.png)
 
@@ -16,6 +16,19 @@ Hodnota pole [přesměrovací kód](https://developer.mozilla.org/en-US/docs/Web
 Můžete také nastavit platnost přesměrování pro určitá data, zadáním buď začátku, nebo konce, nebo obou dat. Přesměrování, která již nejsou časově platná, se zobrazí červeně v tabulce. Do pole poznámka můžete zadat informaci, k čemu přesměrování slouží.
 
 ![](path-editor.png)
+
+### Automatické a uživatelem vytvořené přesměrování
+
+Přesměrování vznikají automaticky při změně URL adresy existující stránky nebo při změně adresářové struktury. Automatické vytváření přesměrování řídí konfigurační proměnná `editorDisableAutomaticRedirect`:
+
+- `false` - ​​výchozí hodnota, WebJET CMS automaticky vytvoří přesměrování ze staré URL adresy na novou.
+- `true` - ​​automatické vytváření přesměrování je vypnuto.
+
+Nastavení konfigurační proměnné nemá vliv na uživatelem vytvářené přesměrování. Automaticky vytvořená přesměrování jsou v tabulce odlišena šedou barvou písma. Pomocí přepínače **Vytvořené uživatelem** nad tabulkou můžete zobrazit pouze uživatelem vytvořené přesměrování.
+
+![](redirect-path-filtered.png)
+
+!> **Upozornění:** Přesměrování existující před aktualizací databáze se považují za automaticky vytvořená. V editoru přesměrování můžete hodnotu pole **Vytvořené uživatelem** změnit a stávající přesměrování tak podle potřeby označit jako uživatelem vytvořené.
 
 ### Přesměrování přes regulární výrazy
 

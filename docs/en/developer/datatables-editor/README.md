@@ -64,6 +64,14 @@ window.addEventListener('WJ.DTE.tabclick', function (e) {
 
 If you need to have a **tab that fills the window**, you can set the CSS style ```.dte-tab-autoheight``` to the tab. If necessary, you can set the size offset via the data attribute ```data-dt-autoheight-offset``` (if the window already contains another element). If you need the window to be scrollable (it can contain a large object), don't forget to set ```style="overflow:scroll;"```.
 
+If you need to reduce the height calculated for the datatable itself, for example when there is a fixed bottom panel in a window or iframe, set the CSS variable `--dt-autoheight-offset` on the `body` element. The value is a numeric offset in pixels and is subtracted when calculating the automatic table height in `WJ.DataTable`.
+
+```css
+body {
+    --dt-autoheight-offset: 46;
+}
+```
+
 ```javascript
 var tabs = [
     { id: 'description', title: '[[\#{components.catalog.desc}]]', selected: true },

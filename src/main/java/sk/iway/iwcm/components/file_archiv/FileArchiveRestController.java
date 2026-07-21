@@ -5,11 +5,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +15,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -83,8 +82,14 @@ public class FileArchiveRestController extends DatatableRestControllerV2<FileArc
             return new DatatablePageImpl<>( repository.findAllMainFilesUploadedNotPattern(CloudToolsForCore.getDomainId(), pageable) );
         }
 
-        //Else classic table
-        DatatablePageImpl<FileArchivatorBean> page = new DatatablePageImpl<>( super.getAllItemsIncludeSpecSearch(new FileArchivatorBean(), pageable) );
+        //Else - unknown because table allways call with param dir so it falls into specSearch
+        return new DatatablePageImpl<>( new ArrayList<>() );
+    }
+
+    @Override
+    public Page<FileArchivatorBean> searchItem(Map<String, String> params, Pageable pageable, FileArchivatorBean search) {
+        //this can't be in getOptions method becase getAll is never called
+        DatatablePageImpl<FileArchivatorBean> page =  new DatatablePageImpl<>( super.searchItem(params, pageable, search) );
 
         //Add options - upload like
         page.addOptions("editorFields.uploadType", FileArchiveService.getUploadTypeOptions(getProp()), "label", "value", false);
@@ -344,6 +349,7 @@ public class FileArchiveRestController extends DatatableRestControllerV2<FileArc
         return entity;
     }
 
+    @SuppressWarnings("java:S3516")
     @Override
     public boolean processAction(FileArchivatorBean entity, String action) {
         //Check, that this is main version
@@ -458,4 +464,5 @@ public class FileArchiveRestController extends DatatableRestControllerV2<FileArc
 
     private String getRollBackText() { return getProp().getText("components.file_archiv.rollback_last"); }
     private String getDialogHeadingText() { return getProp().getText("components.file_archiv.dialog_heading"); }
+
 }
