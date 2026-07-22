@@ -560,16 +560,16 @@ $(document).ready(function(){
 				<div class="modal-body">
 					<div class="row">
 						<div class="col-sm-4">
-							<img class="img-responsive" src="" alt="" />
+							<img class="img-responsive" src="" alt="" style="width: 100%" />
 						</div>
 						<div class="col-sm-8">
 							<form class="form-horizontal" role="form">
                                 <div class="form-body">
 									<div class="row">
-										<div class="col-xs-2">
-											<label for="imageName" class="control-label"><iwcm:text key="fbrowse.file_name"/></label>
+										<div class="col-xs-3">
+											<label for="imageName" class="control-label" style="white-space: nowrap;"><iwcm:text key="fbrowse.file_name"/></label>
 										</div>
-										<div class="col-xs-10">
+										<div class="col-xs-9">
 											<div class="input-group">
 												<input type="text" class="form-control" id="imageName" aria-describedby="imageNameRequiredError imageNameDuplicateError" />
 												<span class="input-group-text imageExtension"></span>
@@ -579,10 +579,10 @@ $(document).ready(function(){
 										</div>
 									</div>
 									<div class="row">
-										<div class="col-xs-2">
+										<div class="col-xs-3">
                                         	<label for="imageWidth" class="control-label"><iwcm:text key="editor.table.width"/></label>
 										</div>
-                                        <div class="col-xs-10">
+                                        <div class="col-xs-9">
                                         	<div class="input-icon right">
 					                        	<i class="ti ti-exclamation-mark tooltips" data-original-title="Please write a valid width" data-container="body"></i>
 					                        	<input type="text" class="form-control" id="imageWidth" maxlength="4" />
@@ -590,10 +590,10 @@ $(document).ready(function(){
                                         </div>
                                     </div>
                                     <div class="row">
-										<div class="col-xs-2">
+										<div class="col-xs-3">
                                         	<label for="imageHeight" class="control-label"><iwcm:text key="editor.table.height"/></label>
 										</div>
-                                        <div class="col-xs-10">
+                                        <div class="col-xs-9">
                                         	<div class="input-icon right">
 					                        	<i class="ti ti-exclamation-mark tooltips" data-original-title="Please write a valid height" data-container="body"></i>
 					                        	<input type="text" class="form-control" id="imageHeight" maxlength="4" />
