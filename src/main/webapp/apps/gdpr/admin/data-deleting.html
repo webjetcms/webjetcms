@@ -6,7 +6,7 @@
             window.helpLink = "/redactor/apps/gdpr/data-deleting";
 
             let url = "/admin/rest/gdpr/data_deleting";
-            let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.components.gdpr.GdprDataDeletingEntity")})];
+            let columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.gdpr.GdprDataDeletingEntity')})];
 
             dataDeletingDataTable = WJ.DataTable({
                 url: url,
@@ -45,6 +45,31 @@
                     title: "[[#{components.data.deleting.button}]]"
                 }
             });
+
+            // TODO - MAYBE we will replace delete button witn this action button
+            // dataDeletingDataTable.button().add(4, {
+            //     text: '<i class="ti ti-player-play"></i>',
+            //     action: function (e, dt, node) {
+
+            //         let types = dt.rows({ selected: true }).data().pluck("type").toArray();
+            //         let typesList = "<ul> ";
+            //         typesList += types.map(function(type) {
+            //             return "<li>" + type + "</li>";
+            //         }).join("");
+            //         typesList += "</ul>";
+
+            //         dataDeletingDataTable.executeAction("play", false, "[[#{components.cron_task.run.areYouSure}]]", typesList);
+            //     },
+            //     className: 'btn btn-outline-secondary button-execute-task',
+            //     init: function ( dt, node, config ) {
+            //         $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            //     },
+            //     attr: {
+            //         'title': '[[#{admin.crontab.launch_task}]]',
+            //         'data-toggle': 'tooltip'
+            //     }
+            // });
+
         });
     </script>
 

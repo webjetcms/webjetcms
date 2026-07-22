@@ -4285,4 +4285,47 @@ public class GroupsDB extends DB
 		GroupDetails tempGroup = getGroup(Constants.getInt("tempGroupId"));
 		return tempGroup;
 	}
+
+	/**
+	 * Returns list of Trash groups across all domains (e.g. /System/Trash, /domain.com/System/Trash)
+	 * @return
+	 */
+	public List<GroupDetails> getTrashGroupsAllDomains() {
+		List<GroupDetails> trashGroups = new ArrayList<>();
+
+		Prop propSystem = Prop.getInstance(Constants.getString("defaultLanguage"));
+		String trashDirName = propSystem.getText("config.trash_dir");
+
+		String trashDirNameNormalized = DB.internationalToEnglish(trashDirName).toLowerCase();
+
+		for (GroupDetails group : groups) {
+			String path = getPath(group.getGroupId());
+			if (path != null && DB.internationalToEnglish(path).toLowerCase().endsWith(trashDirNameNormalized)) {
+				trashGroups.add(group);
+			}
+		}
+
+		return trashGroups;
+	}
+
+	/**
+	 * Returns all groups whose parent is one of the Trash groups (top-level items in trash across all domains)
+	 * @return
+	 */
+	public List<GroupDetails> getTopLevelGroupsInTrash() {
+		List<GroupDetails> trashGroups = getTrashGroupsAllDomains();
+		Set<Integer> trashGroupIds = new HashSet<>();
+		for (GroupDetails trashGroup : trashGroups) {
+			trashGroupIds.add(trashGroup.getGroupId());
+		}
+
+		List<GroupDetails> result = new ArrayList<>();
+		for (GroupDetails group : groups) {
+			if (trashGroupIds.contains(group.getParentGroupId())) {
+				result.add(group);
+			}
+		}
+
+		return result;
+	}
 }
