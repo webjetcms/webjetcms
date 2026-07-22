@@ -80,6 +80,10 @@ public class GdprDataDeletingRestController extends DatatableRestControllerV2<Gd
                     ConfDB.setName(type.getAfterConstant(), entity.getStatTime() + "");
                     newStatTimeString = entity.getStatTime() + " " + prop.getText("components.gdpr.rokov");
                     break;
+                case OLD_DOC_AND_GROUPS:
+                    ConfDB.setName(type.getAfterConstant(), entity.getStatTime() + "");
+                    newStatTimeString = entity.getStatTime() + " " + prop.getText(DAYS_KEY);
+                    break;
             }
         }
 
@@ -111,6 +115,9 @@ public class GdprDataDeletingRestController extends DatatableRestControllerV2<Gd
                         break;
                     case OLD_BASKET_ORDERS:
                         gdprdd.deleteOldBasketOrders();
+                        break;
+                    case OLD_DOC_AND_GROUPS:
+                        gdprdd.deleteOldDocAndGroups();
                         break;
                 }
             }
@@ -160,11 +167,11 @@ public class GdprDataDeletingRestController extends DatatableRestControllerV2<Gd
                 entity.setAction(prop.getText("components.gdpr.admin_gdpr_data_deleting.zmazat_objednavky_z_modulu_elektorincky_obchod_za_dane_obdobie"));
                 break;
             case OLD_DOC_AND_GROUPS:
-                entity.setType("");
-                entity.setStatTime(180);
-                entity.setStatTimeString("180");
+                entity.setType(prop.getText("components.gdpr.type.old_doc_and_groups"));
+                entity.setStatTime(type.getAfterConstantInt());
+                entity.setStatTimeString(type.getAfterConstantInt() + " " + prop.getText(DAYS_KEY));
                 entity.setRecordCnt(0);
-                entity.setAction("kokos");
+                entity.setAction(prop.getText("components.gdpr.admin_gdpr_data_deleting.old_doc_and_groups", type.getAfterConstantInt() + ""));
                 break;
         }
 
