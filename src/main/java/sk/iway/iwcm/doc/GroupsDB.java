@@ -2839,6 +2839,7 @@ public class GroupsDB extends DB
 
 					if (withHistory)
 					{
+						//premenna groups obsahuje iba ciselne ID adresarov (getGroupId), preto je bezpecne ju vlozit priamo do SQL
 						//vymaz historiu stranok - documents_history je viazana na documents cez doc_id (group_id sa mohol zmenit), preto mazeme podla doc_id
 						String sql = "DELETE FROM documents_history WHERE doc_id IN (SELECT doc_id FROM documents WHERE group_id IN ("+groups+"))";
 						ps = db_conn.prepareStatement(sql);

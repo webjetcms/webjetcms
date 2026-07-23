@@ -55,7 +55,7 @@ public class GdprDataDeleting {
             if(id == null) return null;
 
             for (GdprDataDeletingType type : values()) {
-                if (type.getId() == id) return type;
+                if (type.getId().equals(id)) return type;
             }
             return null;
         }

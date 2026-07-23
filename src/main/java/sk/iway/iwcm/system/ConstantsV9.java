@@ -319,7 +319,7 @@ public class ConstantsV9 {
 
 		Constants.setString("searchType", "db", Constants.MOD_CONFIG, "Typ vyhladavania: db (databazove), lucene (Lucene fulltext), semantic (sémanticke vyhladavanie cez pgvector), hybrid (kombinace vektoroveho a fulltext vyhledavania)");
 
-		Constants.setInt("gdprDeleteDocAndGroupsAfterDays", 186, Constants.MOD_CONFIG, null);
+		Constants.setInt("gdprDeleteDocAndGroupsAfterDays", 186, Constants.MOD_CONFIG, "Koľko dní staré priečinky a stránky, ktoré sú v koši, sa majú vymazať (POZOR, nie ako dlho sú v koši).");
 	}
 
 	/**

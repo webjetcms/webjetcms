@@ -66,7 +66,7 @@ public class DatabaseDeleteService {
         items.add(buildAuditBean(prop, 230)); //CRON
         items.add(buildAuditBean(prop, 99999)); //CLIENT_SPECIFIC
 
-        //
+        //old webpages and folders in trash (groupId 6)
         items.add(
             DatabaseDeleteBean.builder()
             .name(prop.getText("components.memory_cleanup.old_docs"))

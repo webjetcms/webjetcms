@@ -36,7 +36,7 @@
                     }).join("");
                     typesList += "</ul>";
 
-                    dataDeletingDataTable.executeAction("play", false, WJ.translate("components.gdpr.admin_gdpr_data_deleting.confirm.title.js"), baseMsg + typesList);
+                    dataDeletingDataTable.executeAction("customDataDelete", false, WJ.translate("components.gdpr.admin_gdpr_data_deleting.confirm.title.js"), baseMsg + typesList);
                 },
                 className: 'btn btn-outline-secondary button-execute-task',
                 init: function ( dt, node, config ) {
