@@ -1,6 +1,5 @@
 package sk.iway.iwcm.gallery;
 
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -23,6 +22,7 @@ import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.FileIndexerTools;
 import sk.iway.iwcm.common.UploadFileTools;
 import sk.iway.iwcm.components.gallery.GalleryService;
@@ -284,7 +284,11 @@ public class GalleryActionBean extends WebJETActionBean
 				errors.add("Img can not be empty");
 			}
 
-			String sanitizedFileName = sanitizeFileName(fileName);
+			if (FileBrowserTools.hasForbiddenSymbol(fileName)) {
+				errors.add(prop.getText("components.elfinder.commands.rename.error.banned_character"));
+			}
+
+			String sanitizedFileName = DocTools.removeChars(fileName, true);
 			if(Tools.isEmpty(sanitizedFileName)) {
 				errors.add(prop.getText("editor.upload_iframe.enterFileName"));
 			}
@@ -293,17 +297,20 @@ public class GalleryActionBean extends WebJETActionBean
 				errors.add("VirtualPath can not be empty");
 			}
 
-			if(width == 0) {
-				errors.add("Width can not be zero");
-			}
-
-			if(height == 0) {
-				errors.add("Height can not be zero");
-			}
-
 			String extension = getImageExtension(img);
-			if(Tools.isEmpty(extension) || FileTools.isImage("image." + extension) == false) {
+			boolean isVideo = FileTools.isVideoFile("video." + extension);
+			if(Tools.isEmpty(extension) || (FileTools.isImage("image." + extension) == false && isVideo == false)) {
 				errors.add(prop.getText("components.forum.new.upload_not_allowed_filetype"));
+			}
+
+			if(isVideo == false) {
+				if(width == 0) {
+					errors.add("Width can not be zero");
+				}
+
+				if(height == 0) {
+					errors.add("Height can not be zero");
+				}
 			}
 
 			if (errors.size() > 0) {
@@ -337,25 +344,31 @@ public class GalleryActionBean extends WebJETActionBean
 				sanitizeSvgFile(temporaryFile);
 				FileTools.copyFile(temporaryFile, new IwcmFile(realPathFileSmall));
 			}
+			else if (isVideo) {
+				FileTools.copyFile(temporaryFile, new IwcmFile(realPathFileSmall));
+			}
 			else {
 				GalleryDB.resizePicture(realPathFile, realPathFileSmall, width, height);
 			}
 
-			//ak je treba, aplikujem vodotlac na obrazky
 			IwcmFile newFileIwcm = new IwcmFile(realPathFileSmall);
 			if (newFileIwcm.exists() == false) {
 				errors.add(prop.getText("gallery.resizing.error_2"));
 				return getSaveImageErrorResponse(result, errors);
 			}
-			GalleryDB.applyWatermarkOnUpload(newFileIwcm);
 
-			if (GalleryDB.isGalleryFolder(virtualPath))
-			{
-				GalleryDB.resizePicture(newFileIwcm.getAbsolutePath(), virtualPath);
-			}
-			else if (Constants.getBoolean("imageAlwaysCreateGalleryBean"))
-			{
-				GalleryDB.setImage(virtualPath, targetFileName);
+			if (isVideo == false) {
+				//ak je treba, aplikujem vodotlac na obrazky
+				GalleryDB.applyWatermarkOnUpload(newFileIwcm);
+
+				if (GalleryDB.isGalleryFolder(virtualPath))
+				{
+					GalleryDB.resizePicture(newFileIwcm.getAbsolutePath(), virtualPath);
+				}
+				else if (Constants.getBoolean("imageAlwaysCreateGalleryBean"))
+				{
+					GalleryDB.setImage(virtualPath, targetFileName);
+				}
 			}
 
 			//ak existuje adresar files, treba indexovat
@@ -366,7 +379,7 @@ public class GalleryActionBean extends WebJETActionBean
 			}
 
 			result.put("result", true);
-			if (GalleryDB.isGalleryFolder(virtualPath)) result.put("virtualPath", GalleryDB.getImagePathSmall(smallFileUrl));
+			if (isVideo == false && GalleryDB.isGalleryFolder(virtualPath)) result.put("virtualPath", GalleryDB.getImagePathSmall(smallFileUrl));
 			else result.put("virtualPath", smallFileUrl);
 			result.put("cwd", virtualPath);
 		}
@@ -383,27 +396,12 @@ public class GalleryActionBean extends WebJETActionBean
 		return new StreamingResolution("application/json", result.toString());
 	}
 
-	private String sanitizeFileName(String value)
-	{
-		if (Tools.isEmpty(value)) return "";
-
-		String sanitized = Tools.replace(value, "\\", "-");
-		sanitized = Tools.replace(sanitized, "/", "-");
-		sanitized = Tools.replace(sanitized, ".", "-");
-		sanitized = DocTools.removeCharsDir(sanitized, true).toLowerCase();
-		sanitized = sanitized.replaceAll("[^a-z0-9_-]", "-");
-		sanitized = sanitized.replaceAll("(_-|-_)+", "-");
-		sanitized = sanitized.replaceAll("-+", "-");
-		sanitized = sanitized.replaceAll("_+", "_");
-		return sanitized.replaceAll("^[-_]+|[-_]+$", "");
-	}
-
 	private String getImageExtension(String imageUrl)
 	{
 		if (Tools.isEmpty(imageUrl)) return "";
 
 		try {
-			String extension = FileTools.getFileExtension(URI.create(imageUrl).getPath());
+			String extension = FileTools.getFileExtension(imageUrl);
 			if ("jpeg".equals(extension)) return "jpg";
 			return extension;
 		}

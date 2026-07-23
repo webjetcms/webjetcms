@@ -11,6 +11,10 @@ if (Tools.isEmpty(userLanguage)) {
 	userLanguage = "sk";
 }
 
+Prop prop = Prop.getInstance(request);
+String[] imageTypeOptions = Tools.getTokens(prop.getText("editor.pixabay.imageType"), ",", true);
+String[] categoryOptions = Tools.getTokens(prop.getText("editor.pixabay.category"), ",", true);
+
 request.setAttribute("apiKey", Constants.getString("pixabayApiKey"));
 request.setAttribute("defaultWidth", Constants.getString("pixabayDefaultWidth"));
 request.setAttribute("userLanguage", userLanguage);
@@ -38,12 +42,15 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 		var pluginName = "pixabay",
 			defaults = {
 				apiKey: 'no-api-key',
-				url: 'https://pixabay.com/api/',
+				imageUrl: 'https://pixabay.com/api/',
+				videoUrl: 'https://pixabay.com/api/videos/',
 				itemsPerPage: 8,
 				itemsPerRow: 4,
 				page: 1,
 				pagesCount: 0,
-				search: ''
+				search: '',
+				imageType: 'all',
+				category: 'all'
 			};
 
 		var cache = {};
@@ -54,7 +61,7 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 			big: '_960'
 		};
 		var allowedLanguages = ['cs', 'da', 'de', 'en', 'es', 'fr', 'id', 'it', 'hu', 'nl', 'no', 'pl', 'pt', 'ro', 'sk', 'fi', 'sv', 'tr', 'vi', 'th', 'bg', 'ru', 'el', 'ja', 'ko', 'zh'];
-		var userLanguage = '${lng}';
+		var userLanguage = '${userLanguage}';
 
 		var Metronic = window.parent.Metronic;
 
@@ -78,18 +85,19 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 				return;
 			}
 
-			this.settings.url += '?key=' + this.settings.apiKey;
-
 			this.init();
 		}
 
 		$.extend( Plugin.prototype, {
 			init: function() {
 				var self = this;
+				self.ensureFilterOptions();
 				self.elements.form.submit(function(e){
 					var q = $('#search').val();
+					var imageType = $('#imageType').val();
+					var category = $('#category').val();
 
-					self.getJSON(q);
+					self.getJSON(q, 1, imageType, category);
 					e.preventDefault();
 				});
 
@@ -98,7 +106,9 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 
 					if (page > 0) {
 						var q = $('#search').val();
-						self.getJSON(q, page);
+						var imageType = $('#imageType').val();
+						var category = $('#category').val();
+						self.getJSON(q, page, imageType, category);
 					}
 
 					e.preventDefault();
@@ -116,7 +126,9 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 
 					if (page > 0 && page <= self.settings.pagesCount) {
 						var q = $('#search').val();
-						self.getJSON(q, page);
+						var imageType = $('#imageType').val();
+						var category = $('#category').val();
+						self.getJSON(q, page, imageType, category);
 					}
 
 					e.preventDefault();
@@ -135,8 +147,10 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 					$('#imageModal').find('img').first().data('width', width);
 					$('#imageModal').find('img').first().data('height', height);
 					$('#imageModal #imageName').val(self.sanitizeFileName(self.settings.search));
+					$('#imageModal').data('file-extension', extension);
 					self.clearFileNameError();
 					self.setImageExtension(extension);
+					self.toggleDimensions(extension);
 
 					$('#imageModal').modal('show');
 					$('#imageModal #imageWidth').val('${defaultWidth}').keyup();
@@ -191,6 +205,17 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 					$(this).val(self.sanitizeFileName($(this).val()));
 					self.checkInputs();
 				});
+
+				$('#category').on('change', function(){
+					self.settings.category = $(this).val();
+					$('#imageType').prop('disabled', self.isVideoSearch(self.settings.category));
+				});
+
+				$('#imageType').on('change', function(){
+					self.settings.imageType = $(this).val();
+				});
+
+				$('#imageType').prop('disabled', self.isVideoSearch($('#category').val()));
 
 				$('#imageModal .saveImage').click(function(){
 
@@ -295,9 +320,20 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 				}).modal("hide");
 				*/
 			},
-			getJSON: function( search, page ) {
+			ensureFilterOptions: function() {
+				if ($('#imageType option').length === 0) {
+					$('#imageType').append('<option value="all">All</option><option value="photo">Photo</option><option value="illustration">Illustration</option><option value="vector">Vector</option>');
+				}
+
+				if ($('#category option').length === 0) {
+					$('#category').append('<option value="all">All categories</option><option value="backgrounds">Backgrounds</option><option value="fashion">Fashion</option><option value="nature">Nature</option><option value="science">Science</option><option value="education">Education</option><option value="feelings">Feelings</option><option value="health">Health</option><option value="people">People</option><option value="religion">Religion</option><option value="places">Places</option><option value="animals">Animals</option><option value="industry">Industry</option><option value="computer">Computer</option><option value="food">Food</option><option value="sports">Sports</option><option value="transportation">Transportation</option><option value="travel">Travel</option><option value="buildings">Buildings</option><option value="business">Business</option><option value="music">Music</option><option value="video:all">Video - all</option><option value="video:film">Video - film</option><option value="video:animation">Video - animation</option>');
+				}
+			},
+			getJSON: function( search, page, imageType, category ) {
 				var self = this;
 				self.settings.search = search;
+				self.settings.imageType = imageType || 'all';
+				self.settings.category = category || 'all';
 
 				//Metronic.blockUI({target: $('.results'), iconOnly: true});
 
@@ -319,7 +355,8 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 
 				self.settings.page = page;
 
-				var cacheKey = search + "-" + page + "-" + self.settings.itemsPerPage;
+				var isVideo = self.isVideoSearch(self.settings.category);
+				var cacheKey = [search, page, self.settings.itemsPerPage, self.settings.imageType, self.settings.category, isVideo ? 'video' : 'image'].join("-");
 
 				if (cache[cacheKey] != null) {
 					self.renderItems(cache[cacheKey]);
@@ -331,7 +368,7 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 				$.ajax({
 					dataType: "json",
 					method: "get",
-					url: self.settings.url + "&q=" + search + "&page=" + page + "&lang=" + self.lang + "&per_page=" + self.settings.itemsPerPage,
+					url: self.buildRequestUrl(search, page),
 					cache: true,
 					success: function(data){
 						self.renderItems(data);
@@ -340,8 +377,51 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 					}
 				});
 			},
+			buildRequestUrl: function(search, page) {
+				var isVideo = this.isVideoSearch(this.settings.category);
+				var url = isVideo ? this.settings.videoUrl : this.settings.imageUrl;
+				var params = [
+					'key=' + encodeURIComponent(this.settings.apiKey),
+					'q=' + search,
+					'page=' + page,
+					'lang=' + this.lang,
+					'per_page=' + this.settings.itemsPerPage
+				];
+
+				if (isVideo) {
+					params.push('video_type=' + encodeURIComponent(this.getVideoType(this.settings.category)));
+				}
+				else {
+					params.push('image_type=' + encodeURIComponent(this.settings.imageType || 'all'));
+					if (this.settings.category && this.settings.category !== 'all') {
+						params.push('category=' + encodeURIComponent(this.settings.category));
+					}
+				}
+
+				return url + '?' + params.join('&');
+			},
+			isVideoSearch: function(category) {
+				return typeof category == 'string' && category.indexOf('video:') === 0;
+			},
+			getVideoType: function(category) {
+				if (!this.isVideoSearch(category)) return 'all';
+				var parts = category.split(':');
+				return parts.length > 1 ? parts[1] : 'all';
+			},
+			getVideoData: function(item) {
+				if (!item.videos) return null;
+
+				var candidates = ['medium', 'small', 'tiny', 'large'];
+				for (var i = 0; i < candidates.length; i++) {
+					var variant = item.videos[candidates[i]];
+					if (variant && variant.url) return variant;
+				}
+
+				return null;
+			},
 			renderItems: function( items ) {
 				var self = this;
+				var isVideo = self.isVideoSearch(self.settings.category);
 				var totalHits = parseInt(items.totalHits);
 			    if (totalHits > 0) {
 			    	var html = '';
@@ -359,11 +439,28 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 
 			    			var item = items.hits[index];
 			    			var preview = item.previewURL;
-			    			var webFormatImage = item.largeImageURL;
-			    			var image = self.getImage(webFormatImage, imageDimenions.big)
+			    			var image = '';
+							var webformatWidth = 0;
+							var webformatHeight = 0;
 
-							var webformatWidth = item.webformatWidth
-							var webformatHeight = item.webformatHeight
+							if (isVideo) {
+								var videoData = self.getVideoData(item);
+								if (videoData == null) {
+									index++;
+									continue;
+								}
+
+								image = videoData.url;
+								preview = videoData.thumbnail || '';
+								webformatWidth = videoData.width || 0;
+								webformatHeight = videoData.height || 0;
+							}
+							else {
+								var webFormatImage = item.largeImageURL;
+								image = self.getImage(webFormatImage, imageDimenions.big);
+								webformatWidth = item.webformatWidth;
+								webformatHeight = item.webformatHeight;
+							}
 
 			    			html += '<div class="col-xs-3">';
 							html += '<a data-height="' + webformatHeight + '" data-width="' + webformatWidth + '" href="' + image + '" target="_blank"><img class="img-responsive" src="' + preview + '" alt="" /></a>';
@@ -463,29 +560,45 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 				fileName.addClass('is-invalid').attr('aria-invalid', 'true').data('error-type', errorType);
 				$('#imageName' + (errorType == 'duplicate' ? 'Duplicate' : 'Required') + 'Error').show();
 			},
+			toggleDimensions: function(extension) {
+				var dimensionsRows = $('#imageModal .imageDimensions');
+				if (extension == 'mp4') {
+					dimensionsRows.hide();
+				}
+				else {
+					dimensionsRows.show();
+				}
+			},
 			sanitizeFileName: function( fileName ) {
 				fileName = WJ.fixFileName(fileName).replace(/\./g, '-');
 				return fileName.replace(/^[-_]+|[-_]+$/g, '');
 			},
 			checkInputs: function() {
 				var result = true;
+				var extension = $('#imageModal').data('file-extension');
 
-				$('#imageModal #imageHeight, #imageModal #imageWidth').each(function(i,v){
-					var el = $(this);
-					var val = el.val();
-					var formGroup = el.closest('.row');
-					var tooltip = el.closest('.input-icon').find('.tooltips');
+				if (extension != 'mp4') {
+					$('#imageModal #imageHeight, #imageModal #imageWidth').each(function(i,v){
+						var el = $(this);
+						var val = el.val();
+						var formGroup = el.closest('.row');
+						var tooltip = el.closest('.input-icon').find('.tooltips');
 
-					if (val == "" || isNaN(parseInt(val))) {
-						result = false;
-						formGroup.addClass('has-error');
-						tooltip.show();
-					}
-					else {
-						formGroup.removeClass('has-error');
-						tooltip.hide();
-					}
-				});
+						if (val == "" || isNaN(parseInt(val))) {
+							result = false;
+							formGroup.addClass('has-error');
+							tooltip.show();
+						}
+						else {
+							formGroup.removeClass('has-error');
+							tooltip.hide();
+						}
+					});
+				}
+				else {
+					$('#imageModal #imageHeight, #imageModal #imageWidth').closest('.row').removeClass('has-error');
+					$('#imageModal #imageHeight, #imageModal #imageWidth').closest('.input-icon').find('.tooltips').hide();
+				}
 
 				var fileName = $('#imageModal #imageName');
 				if (fileName.val() == '') {
@@ -522,12 +635,33 @@ $(document).ready(function(){
 
 <div class="pixabayBox">
 	<form class="form-inline imageSearch">
-		<div class="form-group">
-			<label for="search" class="form-label"><iwcm:text key="editor.pixabay.searchImages" /></label>
-			<div class="input-group">
-				<input type="text" name="search" id="search" class="form-control" />
+		<div class="row g-2 align-items-end">
+			<div class="input-group mb-3">
+				<input type="text" name="search" id="search" class="form-control" style="width: 200px" aria-label="<iwcm:text key="editor.search.find_what" />" placeholder="<iwcm:text key="editor.search.find_what" />" />
+				<select id="imageType" class="form-select" aria-label="<iwcm:text key="editor.pixabay.imageTypeLabel" />">
+					<%
+						for (String item : imageTypeOptions) {
+							String[] pair = item.split(":", 2);
+							if (pair.length != 2) continue;
+					%>
+						<option value="<%=pair[1]%>"><%=pair[0]%></option>
+					<%
+						}
+					%>
+				</select>
+				<select id="category" class="form-select" aria-label="<iwcm:text key="editor.pixabay.categoryLabel" />">
+					<%
+						for (String item : categoryOptions) {
+							String[] pair = item.split(":", 2);
+							if (pair.length != 2) continue;
+					%>
+						<option value="<%=pair[1]%>"><%=pair[0]%></option>
+					<%
+						}
+					%>
+				</select>
 				<button type="submit" class="btn btn-outline-secondary"><iwcm:text key="searchall.search" /></button>
-            </div>
+			</div>
 		</div>
 	</form>
 
@@ -578,7 +712,7 @@ $(document).ready(function(){
 											<div id="imageNameDuplicateError" class="form-text text-danger small imageNameError" data-server-message="<iwcm:text key="multiple_files_upload.file_exist"/>" style="display: none;"><iwcm:text key="pixabay.modal.imageNameDuplicateError"/></div>
 										</div>
 									</div>
-									<div class="row">
+									<div class="row imageDimensions">
 										<div class="col-xs-3">
                                         	<label for="imageWidth" class="control-label"><iwcm:text key="editor.table.width"/></label>
 										</div>
@@ -589,7 +723,7 @@ $(document).ready(function(){
 					                        </div>
                                         </div>
                                     </div>
-                                    <div class="row">
+									<div class="row imageDimensions">
 										<div class="col-xs-3">
                                         	<label for="imageHeight" class="control-label"><iwcm:text key="editor.table.height"/></label>
 										</div>
