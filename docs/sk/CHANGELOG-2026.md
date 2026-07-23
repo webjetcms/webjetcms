@@ -24,7 +24,9 @@
 
 ![](redactor/webpages/working-in-editor/link_dialog-file-archive.png)
 
-- [Fotobanka](redactor/webpages/working-in-editor/README.md#karta-fotobanka) - pri sťahovaní obrázka z Pixabay je možné nastaviť názov súboru. Názov sa automaticky predvyplní a očistí, prípona sa určí podľa zdrojového obrázka a existujúci súbor sa neprepíše (#58645).
+- [Fotobanka](redactor/webpages/working-in-editor/README.md#karta-fotobanka) - pri sťahovaní obrázka z fotobanky je možné nastaviť názov súboru. Názov sa automaticky predvyplní a očistí, prípona sa určí podľa zdrojového obrázka a existujúci súbor sa neprepíše. Pridaná aj podpora výberu typu a kategórie obrázku a možnosť hľadať video súbory (#58645).
+
+![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
 
 ### Headless režim
 

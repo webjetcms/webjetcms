@@ -1,6 +1,5 @@
 package sk.iway.iwcm.gallery;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -8,10 +7,6 @@ import java.util.UUID;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.parser.Parser;
 
 import net.sourceforge.stripes.action.DefaultHandler;
 import net.sourceforge.stripes.action.ForwardResolution;
@@ -24,6 +19,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.FileIndexerTools;
+import sk.iway.iwcm.common.ImageTools;
 import sk.iway.iwcm.common.UploadFileTools;
 import sk.iway.iwcm.components.gallery.GalleryService;
 import sk.iway.iwcm.findexer.FileIndexer;
@@ -341,7 +337,7 @@ public class GalleryActionBean extends WebJETActionBean
 			}
 
 			if ("svg".equals(extension)) {
-				sanitizeSvgFile(temporaryFile);
+				ImageTools.sanitizeSvgFile(temporaryFile);
 				FileTools.copyFile(temporaryFile, new IwcmFile(realPathFileSmall));
 			}
 			else if (isVideo) {
@@ -407,42 +403,6 @@ public class GalleryActionBean extends WebJETActionBean
 		}
 		catch (Exception e) {
 			return "";
-		}
-	}
-
-	/**
-	 * Sanitize SVG file by removing script elements and on* event attributes
-	 * to prevent XSS attacks when the SVG is served to browsers.
-	 */
-	private void sanitizeSvgFile(IwcmFile svgFile)
-	{
-		try {
-			String content = FileTools.readFileContent(svgFile.getAbsolutePath());
-			Document doc = Jsoup.parse(content, "", Parser.xmlParser());
-
-			// Remove script elements
-			doc.select("script").remove();
-
-			// Remove on* event handler attributes from all elements
-			for (Element el : doc.select("*")) {
-				el.attributes().asList().stream()
-					.filter(attr -> attr.getKey().toLowerCase().startsWith("on"))
-					.forEach(attr -> el.removeAttr(attr.getKey()));
-			}
-
-			// Remove href attributes with javascript: protocol
-			for (Element el : doc.select("[href], [xlink:href]")) {
-				String href = el.hasAttr("href") ? el.attr("href") : el.attr("xlink:href");
-				if (href.replaceAll("\\s", "").toLowerCase().startsWith("javascript:")) {
-					el.removeAttr("href");
-					el.removeAttr("xlink:href");
-				}
-			}
-
-			FileTools.saveFileContent(svgFile.getAbsolutePath(), doc.html(), StandardCharsets.UTF_8.name());
-		}
-		catch (Exception e) {
-			sk.iway.iwcm.Logger.error(e);
 		}
 	}
 
