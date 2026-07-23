@@ -95,6 +95,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Iné menšie zmeny
 
+- Prieskumník - vo vlastnostiach priečinka pridaná karta **Nepoužívané súbory**. Každý administrátor môže spustiť vlastnú kontrolu na pozadí, voliteľne zahrnúť aj podpriečinky a zmazať označené súbory alebo celý výsledok kontroly. Súbežné kontroly sú povolené, pričom kontrola a mazanie v rovnakom rozsahu sa navzájom blokujú (#58621).
 - Prieskumník - pridané právo **Povoliť nahrávanie súborov s diakritikou**, ktoré umožňuje zachovať diakritiku pri nahrávaní, vytváraní a premenovaní súborov a priečinkov v priečinkoch `/files`, `/images` a `/shared`. Bez tohto práva sa názvy naďalej automaticky upravia bez diakritiky (#58589).
 - Prihlásenie - zrýchlené načítanie úvodnej stránky v administrácii - pridaná vyrovnávacia pamäť pre zoznam posledných stránok, zmenených stránok a auditných záznamov (#58589).
 
