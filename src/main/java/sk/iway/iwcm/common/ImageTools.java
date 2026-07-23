@@ -1044,7 +1044,7 @@ public class ImageTools
 		return null;
 	}
 
-		/**
+	/**
 	 * Sanitize SVG file by removing script elements and on* event attributes
 	 * to prevent XSS attacks when the SVG is served to browsers.
 	 */
