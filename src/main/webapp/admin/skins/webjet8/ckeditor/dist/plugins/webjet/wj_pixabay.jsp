@@ -30,6 +30,7 @@ div.pixabayBox { margin: 0px; }
 .pixabayBox #imageModal .imageExtension .ti { font-size: 24px; }
 .pixabayBox #imageModal #imageName.is-invalid + .imageExtension { border-color: var(--bs-form-invalid-border-color, #dc3545); }
 div.no_results { color: red; font-weight: bold; text-align: center; }
+.pixabayBox .results img { width: 100%; height: auto; }
 </style>
 
 <script type="text/javascript" src="js/fck_dialog_common.jsp"></script>
@@ -91,7 +92,6 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 		$.extend( Plugin.prototype, {
 			init: function() {
 				var self = this;
-				self.ensureFilterOptions();
 				self.elements.form.submit(function(e){
 					var q = $('#search').val();
 					var imageType = $('#imageType').val();
@@ -208,14 +208,11 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 
 				$('#category').on('change', function(){
 					self.settings.category = $(this).val();
-					$('#imageType').prop('disabled', self.isVideoSearch(self.settings.category));
 				});
 
 				$('#imageType').on('change', function(){
 					self.settings.imageType = $(this).val();
 				});
-
-				$('#imageType').prop('disabled', self.isVideoSearch($('#category').val()));
 
 				$('#imageModal .saveImage').click(function(){
 
@@ -320,15 +317,6 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 				}).modal("hide");
 				*/
 			},
-			ensureFilterOptions: function() {
-				if ($('#imageType option').length === 0) {
-					$('#imageType').append('<option value="all">All</option><option value="photo">Photo</option><option value="illustration">Illustration</option><option value="vector">Vector</option>');
-				}
-
-				if ($('#category option').length === 0) {
-					$('#category').append('<option value="all">All categories</option><option value="backgrounds">Backgrounds</option><option value="fashion">Fashion</option><option value="nature">Nature</option><option value="science">Science</option><option value="education">Education</option><option value="feelings">Feelings</option><option value="health">Health</option><option value="people">People</option><option value="religion">Religion</option><option value="places">Places</option><option value="animals">Animals</option><option value="industry">Industry</option><option value="computer">Computer</option><option value="food">Food</option><option value="sports">Sports</option><option value="transportation">Transportation</option><option value="travel">Travel</option><option value="buildings">Buildings</option><option value="business">Business</option><option value="music">Music</option><option value="video:all">Video - all</option><option value="video:film">Video - film</option><option value="video:animation">Video - animation</option>');
-				}
-			},
 			getJSON: function( search, page, imageType, category ) {
 				var self = this;
 				self.settings.search = search;
@@ -355,7 +343,7 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 
 				self.settings.page = page;
 
-				var isVideo = self.isVideoSearch(self.settings.category);
+				var isVideo = self.isVideoSearch(self.settings.imageType);
 				var cacheKey = [search, page, self.settings.itemsPerPage, self.settings.imageType, self.settings.category, isVideo ? 'video' : 'image'].join("-");
 
 				if (cache[cacheKey] != null) {
@@ -378,7 +366,7 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 				});
 			},
 			buildRequestUrl: function(search, page) {
-				var isVideo = this.isVideoSearch(this.settings.category);
+				var isVideo = this.isVideoSearch(this.settings.imageType);
 				var url = isVideo ? this.settings.videoUrl : this.settings.imageUrl;
 				var params = [
 					'key=' + encodeURIComponent(this.settings.apiKey),
@@ -389,7 +377,7 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 				];
 
 				if (isVideo) {
-					params.push('video_type=' + encodeURIComponent(this.getVideoType(this.settings.category)));
+					params.push('video_type=' + encodeURIComponent(this.getVideoType(this.settings.imageType)));
 				}
 				else {
 					params.push('image_type=' + encodeURIComponent(this.settings.imageType || 'all'));
@@ -411,17 +399,22 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 			getVideoData: function(item) {
 				if (!item.videos) return null;
 
-				var candidates = ['medium', 'small', 'tiny', 'large'];
+				var candidates = ['large', 'medium', 'small', 'tiny'];
+				var variant = null;
 				for (var i = 0; i < candidates.length; i++) {
-					var variant = item.videos[candidates[i]];
-					if (variant && variant.url) return variant;
+					var candidate = item.videos[candidates[i]];
+					if (candidate && candidate.url) {
+						if (variant == null) variant = candidate;
+						//use smallest thumbnail for preview
+						variant.thumbnail = candidate.thumbnail;
+					}
 				}
 
-				return null;
+				return variant;
 			},
 			renderItems: function( items ) {
 				var self = this;
-				var isVideo = self.isVideoSearch(self.settings.category);
+				var isVideo = self.isVideoSearch(self.settings.imageType);
 				var totalHits = parseInt(items.totalHits);
 			    if (totalHits > 0) {
 			    	var html = '';
@@ -542,6 +535,10 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 
 				var fileTypeIcons = ['jpg', 'png', 'svg', 'bmp'];
 				var icon = fileTypeIcons.indexOf(extension) == -1 ? 'ti-file' : 'ti-' + extension;
+				if ("mp4" == extension) {
+					icon = 'ti-video';
+				}
+
 				$('<i>', { 'class': 'ti ' + icon, 'aria-hidden': 'true' }).appendTo(element);
 				element.attr({
 					title: extension.toUpperCase(),
