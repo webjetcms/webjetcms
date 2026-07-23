@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -19,6 +20,12 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 import javax.imageio.stream.ImageOutputStream;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.parser.Parser;
+
 
 import com.luciad.imageio.webp.CompressionType;
 import com.luciad.imageio.webp.WebPWriteParam;
@@ -1036,4 +1043,41 @@ public class ImageTools
 		}
 		return null;
 	}
+
+	/**
+	 * Sanitize SVG file by removing script elements and on* event attributes
+	 * to prevent XSS attacks when the SVG is served to browsers.
+	 */
+	public static void sanitizeSvgFile(IwcmFile svgFile)
+	{
+		try {
+			String content = FileTools.readFileContent(svgFile.getAbsolutePath());
+			Document doc = Jsoup.parse(content, "", Parser.xmlParser());
+
+			// Remove script elements
+			doc.select("script").remove();
+
+			// Remove on* event handler attributes from all elements
+			for (Element el : doc.select("*")) {
+				el.attributes().asList().stream()
+					.filter(attr -> attr.getKey().toLowerCase().startsWith("on"))
+					.forEach(attr -> el.removeAttr(attr.getKey()));
+			}
+
+			// Remove href attributes with javascript: protocol
+			for (Element el : doc.select("[href], [xlink:href]")) {
+				String href = el.hasAttr("href") ? el.attr("href") : el.attr("xlink:href");
+				if (href.replaceAll("\\s", "").toLowerCase().startsWith("javascript:")) {
+					el.removeAttr("href");
+					el.removeAttr("xlink:href");
+				}
+			}
+
+			FileTools.saveFileContent(svgFile.getAbsolutePath(), doc.html(), StandardCharsets.UTF_8.name());
+		}
+		catch (Exception e) {
+			sk.iway.iwcm.Logger.error(e);
+		}
+	}
+
 }
