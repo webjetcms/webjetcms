@@ -172,9 +172,20 @@ Karta **Fotobanka** umožňuje získanie (stiahnutie) obrázkov z bezplatnej onl
 
 Po zadaní a vyhľadaní výrazu, Vám budú ponúknuté vyhovujúce obrázky. Ponuka obsahuje niekoľko strán, medzi ktorými viete prechádzať.
 
+Pri vyhľadávaní vo fotobanke máte k dispozícii aj filtre:
+
+- **Typ média** umožňuje vybrať režim vyhľadávania:
+  - obrázky: `all`, `photo`, `illustration`, `vector`
+  - videá: `all`, `film`, `animation`
+- **Kategória** filtruje výsledky podľa tematickej oblasti (napr. `nature`, `business`, `travel`, ...).
+
+Ak v poli **Typ média** vyberiete video, vyhľadávanie sa automaticky prepne na hľadanie video súborov.
+
 ![](image_dialog-pixabay.png)
 
 Po kliknutí na niektorý z ponúkaných obrázkov sa zobrazí dialóg s náhľadom, poľom **Názov súboru** a hodnotami **šírka** / **výška** daného obrázka.
+
+Pri vybranom videu sa zobrazí náhľad a názov súboru rovnako, ale rozmery (**šírka** / **výška**) sa v ukladacom dialógu nezadávajú.
 
 Pole **Názov súboru** sa automaticky predvyplní podľa posledného vyhľadaného výrazu, ale pred uložením ho môžete upraviť. WebJET názov automaticky prevedie na malé písmená, odstráni diakritiku a nepovolené znaky a medzery nahradí pomlčkami. Príponu súboru nezadávajte, WebJET ju zistí podľa zdrojového obrázka a jej typ zobrazí ikonou napravo od názvu.
 
