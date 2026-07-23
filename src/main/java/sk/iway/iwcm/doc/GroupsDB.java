@@ -2767,7 +2767,20 @@ public class GroupsDB extends DB
 	 * @param publishEvents - ak je true, su vyvolane udalosti (false potrebne ak napr. reagujeme na udalost a potrebujeme znova upravit adresar a nechceme aby doslo k zacykleniu)
 	 * @return
 	 */
-	public static boolean deleteGroup(int groupId, boolean includeParent, boolean permanentlyDelete, boolean publishEvents)
+	public static boolean deleteGroup(int groupId, boolean includeParent, boolean permanentlyDelete, boolean publishEvents) {
+		return deleteGroup(groupId, includeParent, permanentlyDelete, publishEvents, false);
+	}
+
+	/**
+	 * Vymazanie adresara
+	 * @param groupId - id adresara
+	 * @param includeParent - urci, ci ma pri vymazani brat aj rodicovsky adresar
+	 * @param permanentlyDelete - nevlozi do kosa, ale priamo vymaze
+	 * @param publishEvents - ak je true, su vyvolane udalosti (false potrebne ak napr. reagujeme na udalost a potrebujeme znova upravit adresar a nechceme aby doslo k zacykleniu)
+	 * @param withHistory - ak je true, pri trvalom vymazani sa vymaze aj historia stranok (documents_history) a naplanovane zmeny adresarov (groups_scheduler)
+	 * @return
+	 */
+	public static boolean deleteGroup(int groupId, boolean includeParent, boolean permanentlyDelete, boolean publishEvents, boolean withHistory)
 	{
 		Connection db_conn = null;
 		PreparedStatement ps = null;
@@ -2823,6 +2836,24 @@ public class GroupsDB extends DB
 
 				if(Tools.isNotEmpty(groups))	//ak nezaratam rodicovsky adresa, moze byt groups prazdne v pripade, ak rodicovsky adresar nemal ziadne podadresare
 				{
+
+					if (withHistory)
+					{
+						//vymaz historiu stranok - documents_history je viazana na documents cez doc_id (group_id sa mohol zmenit), preto mazeme podla doc_id
+						String sql = "DELETE FROM documents_history WHERE doc_id IN (SELECT doc_id FROM documents WHERE group_id IN ("+groups+"))";
+						ps = db_conn.prepareStatement(sql);
+						ps.executeUpdate();
+						ps.close();
+						ps = null;
+
+						//vymaz naplanovane zmeny adresarov (groups_scheduler)
+						sql = "DELETE FROM groups_scheduler WHERE group_id IN ("+groups+")";
+						ps = db_conn.prepareStatement(sql);
+						ps.executeUpdate();
+						ps.close();
+						ps = null;
+					}
+
 					//vymaz stranky
 					String sql = "DELETE FROM documents WHERE group_id IN ("+groups+")";
 					ps = db_conn.prepareStatement(sql);

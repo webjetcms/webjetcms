@@ -5,13 +5,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-
-import jakarta.persistence.Query;
-import jakarta.servlet.http.HttpServletRequest;
 
 import org.eclipse.persistence.jpa.JpaEntityManager;
 
+import jakarta.persistence.Query;
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
@@ -23,10 +21,7 @@ import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
-import sk.iway.iwcm.doc.GroupPublisher;
-import sk.iway.iwcm.doc.GroupSchedulerDetails;
 import sk.iway.iwcm.doc.GroupsDB;
-import sk.iway.iwcm.editor.rest.GroupSchedulerDtoRepository;
 import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
@@ -279,7 +274,9 @@ public class GdprDataDeleting {
                     // Re-check children after earlier deletions in this loop
                     List<GroupDetails> remainingChildren = GroupsDB.getInstance().getGroupsTree(group.getGroupId(), false, true);
                     if (remainingChildren.isEmpty()) {
-                        GroupsDB.deleteGroup(group.getGroupId(), false, true, true);
+                        // Remove group + sub-groups
+                        // the param withHistory TRUE allso secures removeing of binded groups_scheduler
+                        GroupsDB.deleteGroup(group.getGroupId(), false, true, true, true);
                     }
                 }
             }
@@ -299,7 +296,9 @@ public class GdprDataDeleting {
                 List<DocDetails> docs = DocDB.getInstance().getDocByGroup(group.getGroupId(), DocDB.ORDER_ID, true, -1, -1, true, false);
                 for (DocDetails doc : docs) {
                     if (doc.getDateCreated() > 0 && doc.getDateCreated() < before.getTime()) {
-                        DocDB.deleteDoc(doc.getDocId(), null, true);
+                        // Remove doc permanently
+                        // the param withHistory TRUE allso secures removeing of binded documents_history
+                        DocDB.deleteDoc(doc.getDocId(), null, true, true);
                     }
                 }
             }
@@ -319,7 +318,9 @@ public class GdprDataDeleting {
 
         // Remove groups that are old enought (it will allso remove all the subgroups and DOC's that are in this groups) - later
         for(int groupId : oldGroupsToRemove) {
-            GroupsDB.deleteGroup(groupId, false, true, true);
+            // Remove group + sub-groups and all docs inside
+            // the param withHistory TRUE allso secures removeing of binded documents_history and groups_scheduler
+            GroupsDB.deleteGroup(groupId, false, true, true, true);
         }
     }
 
