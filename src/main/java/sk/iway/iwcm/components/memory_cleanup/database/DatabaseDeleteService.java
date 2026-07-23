@@ -5,6 +5,8 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.LabelValueDetails;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.components.dataDeleting.DataDeletingManager;
+import sk.iway.iwcm.doc.OldDocGroupsRemovingService;
+import sk.iway.iwcm.doc.OldDocGroupsRemovingService.ActionType;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.utils.Pair;
 
@@ -64,6 +66,23 @@ public class DatabaseDeleteService {
         items.add(buildAuditBean(prop, 230)); //CRON
         items.add(buildAuditBean(prop, 99999)); //CLIENT_SPECIFIC
 
+        //
+        items.add(
+            DatabaseDeleteBean.builder()
+            .name(prop.getText("components.memory_cleanup.old_docs"))
+            .groupId(6)
+            .tableName("documents")
+            .build()
+        );
+
+        items.add(
+            DatabaseDeleteBean.builder()
+            .name(prop.getText("components.memory_cleanup.old_groups"))
+            .groupId(6)
+            .tableName("groups")
+            .build()
+        );
+
         //nastav idecka
         int counter = 1;
         for (DatabaseDeleteBean b : items) {
@@ -81,11 +100,13 @@ public class DatabaseDeleteService {
      */
     List<LabelValueDetails> getGroupNames(Prop prop) {
         return Arrays.asList(
-                new LabelValueDetails(prop.getText("components.data.deleting.stats"), "1"),
-                new LabelValueDetails(prop.getText("components.data.deleting.emails"), "2"),
-                new LabelValueDetails(prop.getText("components.data.deleting.documentHistory"), "3"),
-                new LabelValueDetails(prop.getText("components.data.deleting.monitoring"), "4"),
-                new LabelValueDetails(prop.getText("components.data.deleting.audit.menu"), "5"));
+            new LabelValueDetails(prop.getText("components.data.deleting.stats"), "1"),
+            new LabelValueDetails(prop.getText("components.data.deleting.emails"), "2"),
+            new LabelValueDetails(prop.getText("components.data.deleting.documentHistory"), "3"),
+            new LabelValueDetails(prop.getText("components.data.deleting.monitoring"), "4"),
+            new LabelValueDetails(prop.getText("components.data.deleting.audit.menu"), "5"),
+            new LabelValueDetails(prop.getText("components.data.deleting.webpagesTrash"), "6")
+        );
     }
 
     /**
@@ -105,6 +126,16 @@ public class DatabaseDeleteService {
                 entity.setTo(datePair.second);
                 if (entity.isTablePartitioning() && Constants.getBoolean("statEnableTablePartitioning")) {
                     entity.setNumberOfEntriesToDelete(DataDeletingManager.checkTablePartitioning(entity.getTableName(), datePair.first, datePair.second));
+                } else if(entity.getGroupId() == 6) {
+                    if("documents".equals(entity.getTableName())) {
+                        entity.setNumberOfEntriesToDelete(
+                            OldDocGroupsRemovingService.getCountOfDocAndGroups(from, to, ActionType.DOCS)
+                        );
+                    } else if("groups".equals(entity.getTableName())) {
+                        entity.setNumberOfEntriesToDelete(
+                            OldDocGroupsRemovingService.getCountOfDocAndGroups(from, to, ActionType.GROUPS)
+                        );
+                    }
                 } else if (entity.getTypeId()<1) {
                     if ("documents_history".equals(entity.getTableName())) {
                         entity.setNumberOfEntriesToDelete(DataDeletingManager.checkData(entity.getTableName(), datePair.first, datePair.second, true, -1));
@@ -131,6 +162,14 @@ public class DatabaseDeleteService {
             Pair<Date, Date> datePair = new Pair<>(entity.getFrom(), entity.getTo());
             if (entity.isTablePartitioning() && Constants.getBoolean("statEnableTablePartitioning")) {
                 DataDeletingManager.deleteTablePartitioning(entity.getTableName(), datePair.first, datePair.second, true);
+            }
+
+            else if(entity.getGroupId() == 6) {
+                if("documents".equals(entity.getTableName())) {
+                    OldDocGroupsRemovingService.deleteOldDocAndGroups(datePair.first, datePair.second, ActionType.DOCS);
+                } else if("groups".equals(entity.getTableName())) {
+                    OldDocGroupsRemovingService.deleteOldDocAndGroups(datePair.first, datePair.second, ActionType.GROUPS);
+                }
             } else if (entity.getTypeId()<1) {
                 if ("documents_history".equals(entity.getTableName())) {
                     DataDeletingManager.deleteData(entity.getTableName(), datePair.first, datePair.second, true, -1, true);

@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.components.gdpr.GdprDataDeleting;
 import sk.iway.iwcm.components.gdpr.GdprDataDeleting.GdprDataDeletingType;
 import sk.iway.iwcm.components.gdpr.GdprDataDeletingEntity;
+import sk.iway.iwcm.doc.OldDocGroupsRemovingService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.datatable.Datatable;
@@ -117,7 +118,7 @@ public class GdprDataDeletingRestController extends DatatableRestControllerV2<Gd
                         gdprdd.deleteOldBasketOrders();
                         break;
                     case OLD_DOC_AND_GROUPS:
-                        gdprdd.deleteOldDocAndGroups();
+                        OldDocGroupsRemovingService.deleteOldDocAndGroups();
                         break;
                 }
             }
@@ -170,7 +171,7 @@ public class GdprDataDeletingRestController extends DatatableRestControllerV2<Gd
                 entity.setType(prop.getText("components.gdpr.type.old_doc_and_groups"));
                 entity.setStatTime(type.getAfterConstantInt());
                 entity.setStatTimeString(type.getAfterConstantInt() + " " + prop.getText(DAYS_KEY));
-                entity.setRecordCnt(0);
+                entity.setRecordCnt( OldDocGroupsRemovingService.getCountOfDocAndGroups() );
                 entity.setAction(prop.getText("components.gdpr.admin_gdpr_data_deleting.old_doc_and_groups", type.getAfterConstantInt() + ""));
                 break;
         }

@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.gdpr.GdprDataDeleting.GdprDataDeletingType;
 import sk.iway.iwcm.doc.GroupsTreeService;
 import sk.iway.iwcm.stat.ChartType;
 import sk.iway.iwcm.stat.Column;
@@ -51,6 +52,9 @@ public class StatService {
         if(Tools.isNotEmpty(statType) && "months".equals(statType)) {
             //Stat type is set to months, set default range 6 month
             cal.add(Calendar.MONTH, -6); //From 6 month's ago
+        } else if(GdprDataDeletingType.OLD_DOC_AND_GROUPS == GdprDataDeletingType.getByValue(statType)) {
+            //
+            cal.add(Calendar.DAY_OF_YEAR, - GdprDataDeletingType.OLD_DOC_AND_GROUPS.getAfterConstantInt());
         } else {
             //Stat type is not set OR its days/weeks, set default range 1 month
             cal.add(Calendar.MONTH, -1); //From 1 month ago
