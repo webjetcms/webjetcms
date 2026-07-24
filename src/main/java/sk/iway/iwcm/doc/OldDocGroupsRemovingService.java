@@ -3,8 +3,10 @@ package sk.iway.iwcm.doc;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import sk.iway.iwcm.components.gdpr.GdprDataDeleting.GdprDataDeletingType;
@@ -13,13 +15,39 @@ import sk.iway.iwcm.database.Mapper;
 
 public class OldDocGroupsRemovingService {
 
+    private OldDocGroupsRemovingService() {
+        // utility class, only static methods
+    }
+
     public enum ActionType {
         DOCS,
         GROUPS,
         ALL
     }
 
-    /* =============== DELETE ACTION - PUBLIC =============== */
+    /**
+     * Deletion plan computed once from the current state of the page/group caches.
+     * The very same plan is used both for counting (how many records would be removed) and for the
+     * real deletion, so the reported count can never diverge from what is actually deleted.
+     */
+    private static class DeletionPlan {
+        // rule 1 - roots of old-enough trash sub-trees (the whole sub-tree, including the root, is removed)
+        final List<Integer> oldGroupRoots = new ArrayList<>();
+        // rule 1 - every group inside the old-enough sub-trees (root + all descendants)
+        final Set<Integer> subtreeGroupIds = new HashSet<>();
+        // rule 1 - every doc inside the old-enough sub-trees
+        final Set<Integer> subtreeDocIds = new HashSet<>();
+        // rule 2 - docs old enough in the remaining trash groups (never overlaps subtreeDocIds)
+        final Set<Integer> oldDocIds = new HashSet<>();
+        // rule 3 - trash groups that become empty after rules 1 and 2, ordered bottom-up (children before parents)
+        final List<Integer> emptyGroupIds = new ArrayList<>();
+
+        int getTotalCount() {
+            return subtreeGroupIds.size() + emptyGroupIds.size() + subtreeDocIds.size() + oldDocIds.size();
+        }
+    }
+
+    /* =============== PUBLIC API =============== */
 
     public static void deleteOldDocAndGroups() {
         Date[] createdRange = getDefaultCreatedRange();
@@ -32,25 +60,9 @@ public class OldDocGroupsRemovingService {
             return;
         }
 
-        ActionType resolvedActionType = resolveActionType(actionType);
-
-        if (shouldProcessOldGroups(resolvedActionType)) {
-            // Remove all old groups from trash
-            removeOldTrashGroups(createdFrom, createdTo);
-        }
-
-        if (shouldProcessOldDocs(resolvedActionType)) {
-            // Old groups are gone - now remove docs old enough in trash
-            removeOldTrashDocs(createdFrom, createdTo);
-        }
-
-        if (shouldProcessEmptyGroups(resolvedActionType)) {
-            // Remove empty folders
-            removeEmptyTrashGroups();
-        }
+        DeletionPlan plan = computePlan(createdFrom, createdTo, resolveActionType(actionType));
+        executePlan(plan);
     }
-
-    /* =============== COUNT ACTION - PUBLIC =============== */
 
     public static int getCountOfDocAndGroups() {
         Date[] createdRange = getDefaultCreatedRange();
@@ -63,170 +75,154 @@ public class OldDocGroupsRemovingService {
             return 0;
         }
 
-        ActionType resolvedActionType = resolveActionType(actionType);
-
-        // Simulate the deletion so groups/docs removed across phases are counted only once
-        Set<Integer> groupIdsToDelete = new HashSet<>();
-        Set<Integer> docIdsToDelete = new HashSet<>();
-
-        if (shouldProcessOldGroups(resolvedActionType)) {
-            // Phase 1: old top-level trash groups incl. all their sub-groups and docs
-            countOldTrashGroups(createdFrom, createdTo, groupIdsToDelete, docIdsToDelete);
-        }
-
-        if (shouldProcessOldDocs(resolvedActionType)) {
-            // Phase 2: docs old enough in the remaining trash groups
-            countOldTrashDocs(createdFrom, createdTo, groupIdsToDelete, docIdsToDelete);
-        }
-
-        if (shouldProcessEmptyGroups(resolvedActionType)) {
-            // Phase 3: trash groups that become empty after phases 1 and 2
-            countEmptyTrashGroups(groupIdsToDelete, docIdsToDelete);
-        }
-
-        return groupIdsToDelete.size() + docIdsToDelete.size();
+        return computePlan(createdFrom, createdTo, resolveActionType(actionType)).getTotalCount();
     }
 
-    /* =============== COUNT ACTION - PRIVATE =============== */
+    /* =============== PLAN COMPUTATION =============== */
 
-    private static void countOldTrashGroups(Date createdFrom, Date createdTo, Set<Integer> groupIdsToDelete, Set<Integer> docIdsToDelete) {
+    /**
+     * Builds the deletion plan by simulating the deletion across all phases, so groups and docs
+     * removed by more than one phase are accounted for only once.
+     */
+    private static DeletionPlan computePlan(Date createdFrom, Date createdTo, ActionType actionType) {
+        DeletionPlan plan = new DeletionPlan();
+        // per-computation cache of loaded docs, avoids querying the same group multiple times across phases
+        Map<Integer, List<DocDetails>> docsCache = new HashMap<>();
+
+        if (shouldProcessOldGroups(actionType)) {
+            // Phase 1: old top-level trash groups incl. all their sub-groups and docs
+            planOldTrashGroups(createdFrom, createdTo, plan, docsCache);
+        }
+
+        if (shouldProcessOldDocs(actionType)) {
+            // Phase 2: docs old enough in the remaining trash groups
+            planOldTrashDocs(createdFrom, createdTo, plan, docsCache);
+        }
+
+        if (shouldProcessEmptyGroups(actionType)) {
+            // Phase 3: trash groups that become empty after phases 1 and 2
+            planEmptyTrashGroups(plan, docsCache);
+        }
+
+        return plan;
+    }
+
+    private static void planOldTrashGroups(Date createdFrom, Date createdTo, DeletionPlan plan, Map<Integer, List<DocDetails>> docsCache) {
         List<GroupDetails> topLevelGroupsInTrash = GroupsDB.getInstance().getTopLevelGroupsInTrash();
         Set<Integer> oldEnough = new HashSet<>(getOldGroupIds(createdFrom, createdTo));
 
         for (GroupDetails groupInTrash : topLevelGroupsInTrash) {
             if (oldEnough.contains(groupInTrash.getGroupId())) {
-                // Count the group + all sub-groups and all docs inside (whole subtree is removed)
+                plan.oldGroupRoots.add(groupInTrash.getGroupId());
+                // The whole sub-tree (root + all descendants) and all docs inside are removed
                 List<GroupDetails> subtree = GroupsDB.getInstance().getGroupsTree(groupInTrash.getGroupId(), true, true);
                 for (GroupDetails group : subtree) {
-                    groupIdsToDelete.add(group.getGroupId());
-                    List<DocDetails> docs = DocDB.getInstance().getDocByGroup(group.getGroupId(), DocDB.ORDER_ID, true, -1, -1, true, false);
-                    for (DocDetails doc : docs) {
-                        docIdsToDelete.add(doc.getDocId());
+                    plan.subtreeGroupIds.add(group.getGroupId());
+                    for (DocDetails doc : loadDocs(group.getGroupId(), docsCache)) {
+                        plan.subtreeDocIds.add(doc.getDocId());
                     }
                 }
             }
         }
     }
 
-    private static void countOldTrashDocs(Date createdFrom, Date createdTo, Set<Integer> groupIdsToDelete, Set<Integer> docIdsToDelete) {
+    private static void planOldTrashDocs(Date createdFrom, Date createdTo, DeletionPlan plan, Map<Integer, List<DocDetails>> docsCache) {
         long createdFromTime = createdFrom.getTime();
         long createdToTime = createdTo.getTime();
 
-        List<GroupDetails> trashGroups = GroupsDB.getInstance().getTrashGroupsAllDomains();
-        for (GroupDetails trashGroup : trashGroups) {
-            List<GroupDetails> allGroupsInTrash = GroupsDB.getInstance().getGroupsTree(trashGroup.getGroupId(), true, true);
-            for (GroupDetails group : allGroupsInTrash) {
-                // Skip groups already removed in phase 1
-                if (groupIdsToDelete.contains(group.getGroupId())) continue;
-                List<DocDetails> docs = DocDB.getInstance().getDocByGroup(group.getGroupId(), DocDB.ORDER_ID, true, -1, -1, true, false);
-                for (DocDetails doc : docs) {
-                    if (isDocInCreatedRange(doc, createdFromTime, createdToTime)) {
-                        docIdsToDelete.add(doc.getDocId());
-                    }
+        for (GroupDetails group : getAllTrashGroups()) {
+            // Skip groups already removed as part of an old sub-tree in phase 1
+            if (plan.subtreeGroupIds.contains(group.getGroupId())) continue;
+            for (DocDetails doc : loadDocs(group.getGroupId(), docsCache)) {
+                if (plan.subtreeDocIds.contains(doc.getDocId())) continue;
+                if (isDocInCreatedRange(doc, createdFromTime, createdToTime)) {
+                    plan.oldDocIds.add(doc.getDocId());
                 }
             }
         }
     }
 
-    private static void countEmptyTrashGroups(Set<Integer> groupIdsToDelete, Set<Integer> docIdsToDelete) {
-        List<GroupDetails> trashGroups = GroupsDB.getInstance().getTrashGroupsAllDomains();
-        for (GroupDetails trashGroup : trashGroups) {
+    private static void planEmptyTrashGroups(DeletionPlan plan, Map<Integer, List<DocDetails>> docsCache) {
+        // Simulate the removals of phases 1 and 2 so a parent can also become empty once its children are gone
+        Set<Integer> removedGroups = new HashSet<>(plan.subtreeGroupIds);
+        Set<Integer> removedDocs = new HashSet<>(plan.subtreeDocIds);
+        removedDocs.addAll(plan.oldDocIds);
+
+        for (GroupDetails trashGroup : GroupsDB.getInstance().getTrashGroupsAllDomains()) {
             // Get all subfolders recursively (excluding the trash root itself)
             List<GroupDetails> allGroupsInTrash = GroupsDB.getInstance().getGroupsTree(trashGroup.getGroupId(), false, true);
-            // Process bottom-up (reverse) so leaves are counted before their parents
+            // Process bottom-up (reverse) so leaves are evaluated before their parents
             for (int i = allGroupsInTrash.size() - 1; i >= 0; i--) {
                 GroupDetails group = allGroupsInTrash.get(i);
-                if (groupIdsToDelete.contains(group.getGroupId())) continue;
-                List<DocDetails> docs = DocDB.getInstance().getDocByGroup(group.getGroupId(), DocDB.ORDER_ID, true, -1, -1, true, false);
-                // Group is empty if all its docs are already scheduled for deletion
-                boolean hasRemainingDocs = false;
-                for (DocDetails doc : docs) {
-                    if (!docIdsToDelete.contains(doc.getDocId())) {
-                        hasRemainingDocs = true;
-                        break;
-                    }
-                }
-                if (!hasRemainingDocs) {
-                    // Re-check children considering earlier deletions in this loop
-                    List<GroupDetails> children = GroupsDB.getInstance().getGroupsTree(group.getGroupId(), false, true);
-                    boolean hasRemainingChildren = false;
-                    for (GroupDetails child : children) {
-                        if (!groupIdsToDelete.contains(child.getGroupId())) {
-                            hasRemainingChildren = true;
-                            break;
-                        }
-                    }
-                    if (!hasRemainingChildren) {
-                        groupIdsToDelete.add(group.getGroupId());
-                    }
+                if (removedGroups.contains(group.getGroupId())) continue;
+
+                if (isGroupEmptyAfterRemoval(group.getGroupId(), removedGroups, removedDocs, docsCache)) {
+                    plan.emptyGroupIds.add(group.getGroupId());
+                    // Mark as removed so parent groups can also become empty
+                    removedGroups.add(group.getGroupId());
                 }
             }
         }
     }
 
-    /* =============== DELETE ACTION - PRIVATE =============== */
-
-    private static void removeEmptyTrashGroups() {
-        List<GroupDetails> trashGroups = GroupsDB.getInstance().getTrashGroupsAllDomains();
-        for (GroupDetails trashGroup : trashGroups) {
-            // Get all subfolders recursively (excluding the trash root itself)
-            List<GroupDetails> allGroupsInTrash = GroupsDB.getInstance().getGroupsTree(trashGroup.getGroupId(), false, true);
-            // Process bottom-up (reverse) so leaves are deleted before their parents
-            for (int i = allGroupsInTrash.size() - 1; i >= 0; i--) {
-                GroupDetails group = allGroupsInTrash.get(i);
-                List<DocDetails> docs = DocDB.getInstance().getDocByGroup(group.getGroupId(), DocDB.ORDER_ID, true, -1, -1, true, false);
-                if (docs.isEmpty()) {
-                    // Re-check children after earlier deletions in this loop
-                    List<GroupDetails> remainingChildren = GroupsDB.getInstance().getGroupsTree(group.getGroupId(), false, true);
-                    if (remainingChildren.isEmpty()) {
-                        // Remove group + sub-groups
-                        // the param withHistory TRUE also secures removing of bound groups_scheduler
-                        GroupsDB.deleteGroup(group.getGroupId(), false, true, true, true);
-                    }
-                }
-            }
+    /**
+     * A trash group is considered empty when all of its docs and all of its sub-groups are already
+     * scheduled for removal (by phase 1 or 2, or by an earlier iteration of phase 3).
+     */
+    private static boolean isGroupEmptyAfterRemoval(int groupId, Set<Integer> removedGroups, Set<Integer> removedDocs, Map<Integer, List<DocDetails>> docsCache) {
+        for (DocDetails doc : loadDocs(groupId, docsCache)) {
+            if (!removedDocs.contains(doc.getDocId())) return false;
         }
+        for (GroupDetails child : GroupsDB.getInstance().getGroupsTree(groupId, false, true)) {
+            if (!removedGroups.contains(child.getGroupId())) return false;
+        }
+        return true;
     }
 
-    private static void removeOldTrashDocs(Date createdFrom, Date createdTo) {
-        long createdFromTime = createdFrom.getTime();
-        long createdToTime = createdTo.getTime();
+    /* =============== PLAN EXECUTION =============== */
 
-        List<GroupDetails> trashGroups = GroupsDB.getInstance().getTrashGroupsAllDomains();
-        for (GroupDetails trashGroup : trashGroups) {
-            // Get the trash group itself + all subfolders recursively
-            List<GroupDetails> allGroupsInTrash = GroupsDB.getInstance().getGroupsTree(trashGroup.getGroupId(), true, true);
-            for (GroupDetails group : allGroupsInTrash) {
-                // Get all docs in this group (including unavailable), without data column
-                List<DocDetails> docs = DocDB.getInstance().getDocByGroup(group.getGroupId(), DocDB.ORDER_ID, true, -1, -1, true, false);
-                for (DocDetails doc : docs) {
-                    if (isDocInCreatedRange(doc, createdFromTime, createdToTime)) {
-                        // Remove doc permanently
-                        // the param withHistory TRUE also secures removing of bound documents_history
-                        DocDB.deleteDoc(doc.getDocId(), null, true, true);
-                    }
-                }
-            }
-        }
-    }
-
-    private static void removeOldTrashGroups(Date createdFrom, Date createdTo) {
-        List<GroupDetails> topLevelGroupsInTrash = GroupsDB.getInstance().getTopLevelGroupsInTrash();
-        Set<Integer> oldEnough = new HashSet<>(getOldGroupIds(createdFrom, createdTo));
-
-        List<Integer> oldGroupsToRemove = new ArrayList<>();
-        for (GroupDetails groupInTrash : topLevelGroupsInTrash) {
-            if (oldEnough.contains(groupInTrash.getGroupId())) {
-                oldGroupsToRemove.add(groupInTrash.getGroupId());
-            }
-        }
-
-        // Remove groups that are old enough (it will also remove all the subgroups and docs inside)
-        for(int groupId : oldGroupsToRemove) {
-            // Remove group + sub-groups and all docs inside
+    private static void executePlan(DeletionPlan plan) {
+        // Phase 1: remove whole old-enough sub-trees (group + sub-groups and all docs inside)
+        for (int rootGroupId : plan.oldGroupRoots) {
+            // includeParent=true  -> the root group itself is removed as well (not only its sub-groups)
             // the param withHistory TRUE also secures removing of bound documents_history and groups_scheduler
-            GroupsDB.deleteGroup(groupId, false, true, true, true);
+            GroupsDB.deleteGroup(rootGroupId, true, true, true, true);
         }
+
+        // Phase 2: remove docs old enough in the remaining trash groups
+        for (int docId : plan.oldDocIds) {
+            // the param withHistory TRUE also secures removing of bound documents_history
+            DocDB.deleteDoc(docId, null, true, true);
+        }
+
+        // Phase 3: remove trash groups that became empty (bottom-up order kept from the plan)
+        for (int groupId : plan.emptyGroupIds) {
+            // includeParent=true -> the empty group itself is removed
+            GroupsDB.deleteGroup(groupId, true, true, true, true);
+        }
+    }
+
+    /* =============== HELPERS =============== */
+
+    /**
+     * Returns the trash root groups plus all groups nested inside them, across all domains.
+     */
+    private static List<GroupDetails> getAllTrashGroups() {
+        List<GroupDetails> result = new ArrayList<>();
+        for (GroupDetails trashGroup : GroupsDB.getInstance().getTrashGroupsAllDomains()) {
+            // include the trash root itself and its whole sub-tree
+            result.addAll(GroupsDB.getInstance().getGroupsTree(trashGroup.getGroupId(), true, true));
+        }
+        return result;
+    }
+
+    /**
+     * Loads all docs of a group (including unavailable ones, without the data column) using a cache
+     * so the same group is queried from the database only once per computation.
+     */
+    private static List<DocDetails> loadDocs(int groupId, Map<Integer, List<DocDetails>> docsCache) {
+        return docsCache.computeIfAbsent(groupId,
+            id -> DocDB.getInstance().getDocByGroup(id, DocDB.ORDER_ID, true, -1, -1, true, false));
     }
 
     private static List<Integer> getOldGroupIds(Date createdFrom, Date createdTo) {
