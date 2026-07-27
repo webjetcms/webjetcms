@@ -37,7 +37,7 @@ block content
                     });
 
                     unusedFilesTable.button().add(buttonCounter++, {
-                        text: '<i class="ti ti-trash-x"></i>',
+                        text: '<i class="ti ti-recycle"></i>',
                         action: function (e, dt, node) {
                             deleteAllUnusedFiles();
                         },
@@ -110,12 +110,10 @@ block content
                         .off("click.unusedFilesMaximize")
                         .on("click.unusedFilesMaximize", function() {
                             $("div.DTE_Body_Content").removeClass('changed');
-                            updateUnusedFilesAutoHeight();
                             $(window.parent.document)
                                 .find("#modalIframe button.btn.maximize:visible")
                                 .first()
                                 .trigger("click");
-                            window.setTimeout(updateUnusedFilesAutoHeight, 100);
                         });
 
                     if(urlFileIndexerPerm == undefined || urlFileIndexerPerm == null) urlFileIndexerPerm = true;
@@ -154,7 +152,7 @@ block content
                 if (panelBody.find("#unused-files-menu").length > 0) return;
 
                 panelBody.prepend(
-                    "<div id='unused-files-menu' class='unused-files-menu'>" +
+                    "<div id='unused-files-menu' class='unused-files-menu form-group'>" +
                         "<p>[[\#{elfinder.folder_prop.unused_files.description}]]</p>" +
                         "<div id='unused-files-status' class='alert alert-info'>" +
                             "<div id='unused-files-status-message'>[[\#{elfinder.folder_prop.unused_files.not_started}]]</div>" +
@@ -166,16 +164,30 @@ block content
                     "</div>"
                 );
 
-                updateUnusedFilesAutoHeight();
-
                 setUnusedFilesResultActionsVisible(false);
+                loadLatestUnusedFilesTask();
             }
 
-            function updateUnusedFilesAutoHeight() {
-                //set the auto-height offset to the height of the info alert above the table (including margins)
-                var kks = Math.round($("#unused-files-menu").outerHeight(true));
-                console.log("unused-files-menu height: " + kks);
-                document.body.style.setProperty("--dt-autoheight-offset", kks + "px");
+            function loadLatestUnusedFilesTask() {
+                setUnusedFilesBusy(true);
+                $.ajax({
+                    url: "/admin/rest/elfinder/unused-files/latest",
+                    data: { dir: urlDirPath },
+                    success: function(data) {
+                        if (data == null || data.taskId == null) {
+                            setUnusedFilesBusy(false);
+                            return;
+                        }
+
+                        unusedFilesTaskId = data.taskId;
+                        $("#unused-files-include-subfolders").prop("checked", data.includeSubfolders === true);
+                        pollUnusedFilesStatus(true);
+                    },
+                    error: function(xhr) {
+                        setUnusedFilesBusy(false);
+                        handleUnusedFilesRequestError(xhr);
+                    }
+                });
             }
 
             function startUnusedFilesScan() {
@@ -284,7 +296,7 @@ block content
                 );
                 unusedFilesTable.setAjaxUrl(resultUrl);
                 unusedFilesTable.ajax.reload(function() {
-                    setUnusedFilesResultActionsVisible(unusedFilesTable.rows().any());
+                    updateUnusedFilesAfterDelete();
                 });
             }
 

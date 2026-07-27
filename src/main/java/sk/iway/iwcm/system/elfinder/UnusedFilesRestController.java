@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
@@ -121,6 +122,19 @@ public class UnusedFilesRestController extends DatatableRestControllerV2<UnusedF
     @GetMapping("/status")
     public UnusedFilesTaskDTO status(@RequestParam(required = true) String taskId) {
         return unusedFilesService.getStatus(taskId, getUser());
+    }
+
+    @GetMapping("/latest")
+    public ResponseEntity<UnusedFilesTaskDTO> latest(@RequestParam(required = true) String dir) {
+        UnusedFilesTaskDTO task = unusedFilesService.getLatestTask(
+            dir,
+            getUser(),
+            SetCharacterEncodingFilter.getCurrentRequestBean()
+        );
+        if (task == null) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(task);
     }
 
     private void prepareDeleteOperation(HttpServletRequest request, Collection<UnusedFileDTO> files, Identity user) {

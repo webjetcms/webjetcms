@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -42,8 +43,9 @@ import sk.iway.iwcm.users.UsersDB;
 public class UnusedFilesService implements DisposableBean {
 
     private static final int ACTIVE_TASK_CACHE_SECONDS = 24 * 60 * 60;
-    private static final int RESULT_CACHE_SECONDS = 60 * 60;
+    private static final int RESULT_CACHE_SECONDS = 30 * 60;
     private static final String CACHE_KEY_PREFIX = "unused-files-task-";
+    private static final String LATEST_CACHE_KEY_PREFIX = "unused-files-latest-";
 
     private final ConcurrentMap<String, FolderOperationState> folderOperations = new ConcurrentHashMap<>();
     private final Object folderOperationsLock = new Object();
@@ -60,6 +62,7 @@ public class UnusedFilesService implements DisposableBean {
         UnusedFilesTask task = new UnusedFilesTask();
         task.id = normalizedTaskId;
         task.directory = normalizedDirectory;
+        task.domain = getDomain(requestBean);
         task.includeSubfolders = includeSubfolders;
         task.userId = user.getUserId();
         task.requestBean = copyRequestBean(requestBean, user);
@@ -94,6 +97,31 @@ public class UnusedFilesService implements DisposableBean {
 
     public UnusedFilesTaskDTO getStatus(String taskId, Identity user) {
         UnusedFilesTask task = requireTask(taskId);
+        ensureTaskAccess(task, user);
+        return toDto(task);
+    }
+
+    public UnusedFilesTaskDTO getLatestTask(String directory, Identity user, RequestBean requestBean) {
+        String normalizedDirectory = resolveDirectory(directory, user);
+        String domain = getDomain(requestBean);
+        String latestCacheKey = getLatestCacheKey(user.getUserId(), domain, normalizedDirectory);
+        Cache cache = Cache.getInstance();
+        String latestTaskId = cache.getObject(latestCacheKey, String.class);
+
+        if (Tools.isEmpty(latestTaskId)) {
+            return null;
+        }
+
+        UnusedFilesTask task = cache.getObject(getCacheKey(latestTaskId), UnusedFilesTask.class);
+        if (task == null || normalizedDirectory.equals(task.directory) == false || domain.equals(task.domain) == false) {
+            synchronized (taskCacheLock) {
+                if (latestTaskId.equals(cache.getObject(latestCacheKey, String.class))) {
+                    cache.removeObject(latestCacheKey);
+                }
+            }
+            return null;
+        }
+
         ensureTaskAccess(task, user);
         return toDto(task);
     }
@@ -214,7 +242,7 @@ public class UnusedFilesService implements DisposableBean {
 
             long id = 1L;
             for (UnusedFile unusedFile : unusedFiles) {
-                result.add(new UnusedFileDTO(Long.valueOf(id++), unusedFile));
+                result.add(UnusedFileDTO.fromUnusedFile(Long.valueOf(id++), unusedFile));
             }
 
             task.requestBean = null;
@@ -342,6 +370,12 @@ public class UnusedFilesService implements DisposableBean {
                     Prop.getInstance().getText("elfinder.folder_prop.unused_files.start_failed"));
             }
             cache.setObjectSeconds(getCacheKey(task.id), task, ACTIVE_TASK_CACHE_SECONDS, false);
+            cache.setObjectSeconds(
+                getLatestCacheKey(task.userId, task.domain, task.directory),
+                task.id,
+                ACTIVE_TASK_CACHE_SECONDS,
+                false
+            );
         }
     }
 
@@ -349,10 +383,18 @@ public class UnusedFilesService implements DisposableBean {
         task.state = state;
         Cache cache = Cache.getInstance();
         String cacheKey = getCacheKey(task.id);
+        long expiryTime = Tools.getNow() + (RESULT_CACHE_SECONDS * 1000L);
         if (cache.getObject(cacheKey) == task) {
-            cache.setObjectExpiryTime(cacheKey, Tools.getNow() + (RESULT_CACHE_SECONDS * 1000L));
+            cache.setObjectExpiryTime(cacheKey, expiryTime);
         } else {
             cache.setObjectSeconds(cacheKey, task, RESULT_CACHE_SECONDS, false);
+        }
+
+        String latestCacheKey = getLatestCacheKey(task.userId, task.domain, task.directory);
+        synchronized (taskCacheLock) {
+            if (task.id.equals(cache.getObject(latestCacheKey, String.class))) {
+                cache.setObjectExpiryTime(latestCacheKey, expiryTime);
+            }
         }
     }
 
@@ -393,6 +435,17 @@ public class UnusedFilesService implements DisposableBean {
 
     private String getCacheKey(String taskId) {
         return CACHE_KEY_PREFIX + taskId;
+    }
+
+    private String getLatestCacheKey(int userId, String domain, String directory) {
+        return LATEST_CACHE_KEY_PREFIX + userId + ":" + domain + ":" + directory;
+    }
+
+    private String getDomain(RequestBean requestBean) {
+        if (requestBean == null || Tools.isEmpty(requestBean.getDomain())) {
+            return "";
+        }
+        return requestBean.getDomain().toLowerCase(Locale.ROOT);
     }
 
     private RequestBean copyRequestBean(RequestBean source, Identity user) {
@@ -502,6 +555,7 @@ public class UnusedFilesService implements DisposableBean {
     private static class UnusedFilesTask {
         private String id;
         private String directory;
+        private String domain;
         private boolean includeSubfolders;
         private int userId;
         private RequestBean requestBean;

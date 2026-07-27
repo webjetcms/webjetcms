@@ -16,13 +16,15 @@ public class UnusedFileDTO {
         // Default constructor for JSON deserialization.
     }
 
-    public UnusedFileDTO(Long id, UnusedFile unusedFile) {
-        this.id = id;
-        this.fileName = unusedFile.getName();
+    public static UnusedFileDTO fromUnusedFile(Long id, UnusedFile unusedFile) {
+        UnusedFileDTO dto = new UnusedFileDTO();
+        dto.id = id;
+        dto.fileName = unusedFile.getName();
         String separator = unusedFile.getVirtualParent().endsWith("/") ? "" : "/";
-        this.fullPath = unusedFile.getVirtualParent() + separator + unusedFile.getName();
-        this.lastModified = new Date(unusedFile.getLastModified());
-        this.size = unusedFile.getLength();
+        dto.fullPath = unusedFile.getVirtualParent() + separator + unusedFile.getName();
+        dto.lastModified = new Date(unusedFile.getLastModified());
+        dto.size = unusedFile.getLength();
+        return dto;
     }
 
     @DataTableColumn(inputType = DataTableColumnType.ID)
