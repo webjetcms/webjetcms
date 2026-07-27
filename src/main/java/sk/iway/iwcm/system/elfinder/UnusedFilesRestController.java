@@ -4,10 +4,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
@@ -61,7 +63,16 @@ public class UnusedFilesRestController extends DatatableRestControllerV2<UnusedF
     @Override
     public boolean processAction(UnusedFileDTO entity, String action) {
         if ("start_analyze".equals(action)) {
-            JSONObject customData = new JSONObject(getRequest().getParameter("customData"));
+            String customDataParam = getRequest().getParameter("customData");
+            if (Tools.isEmpty(customDataParam)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            }
+            JSONObject customData;
+            try {
+                customData = new JSONObject(customDataParam);
+            } catch (JSONException ex) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            }
             unusedFilesService.startScan(
                 customData.optString("taskId"),
                 customData.optString("dir"),

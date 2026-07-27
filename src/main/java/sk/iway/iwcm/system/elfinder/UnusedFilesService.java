@@ -48,6 +48,9 @@ public class UnusedFilesService implements DisposableBean {
     private final ConcurrentMap<String, FolderOperationState> folderOperations = new ConcurrentHashMap<>();
     private final Object folderOperationsLock = new Object();
     private final Object taskCacheLock = new Object();
+    // Fixed pool intentionally limits concurrent scans application-wide. Additional scans queue while
+    // already holding their folder registration (acquired synchronously in startScan), which blocks
+    // deletes on the same folder until the queued scan runs and finishes - acting as backpressure.
     private final ExecutorService executor = Executors.newFixedThreadPool(2);
 
     public void startScan(String taskId, String directory, boolean includeSubfolders, Identity user, RequestBean requestBean) {
@@ -244,6 +247,14 @@ public class UnusedFilesService implements DisposableBean {
     }
 
     private boolean scanIncludesFolder(String scanDirectory, boolean includeSubfolders, String folder) {
+        return scanCoversFolder(scanDirectory, includeSubfolders, folder);
+    }
+
+    /**
+     * Returns true when a scan of {@code scanDirectory} (optionally recursive) covers {@code folder}.
+     * Package-private and static so the conflict-detection logic can be unit tested in isolation.
+     */
+    static boolean scanCoversFolder(String scanDirectory, boolean includeSubfolders, String folder) {
         if (scanDirectory.equals(folder)) {
             return true;
         }
