@@ -48,8 +48,6 @@ block content
                         }
                     });
 
-                    //- unusedFilesTable.EDITOR.i18n.remove.title = "KKS";
-                    //- unusedFilesTable.EDITOR.i18n.remove.confirm = "KKS2";
                     $(unusedFilesTable.button(".buttons-remove").node())
                         .attr("title", "[[\#{elfinder.folder_prop.unused_files.delete_selected}]]")
                         .attr("data-toggle", "tooltip");
@@ -175,7 +173,9 @@ block content
 
             function updateUnusedFilesAutoHeight() {
                 //set the auto-height offset to the height of the info alert above the table (including margins)
-                document.body.style.setProperty("--dt-autoheight-offset", Math.round($("#unused-files-menu").outerHeight(true)));
+                var kks = Math.round($("#unused-files-menu").outerHeight(true));
+                console.log("unused-files-menu height: " + kks);
+                document.body.style.setProperty("--dt-autoheight-offset", kks + "px");
             }
 
             function startUnusedFilesScan() {
