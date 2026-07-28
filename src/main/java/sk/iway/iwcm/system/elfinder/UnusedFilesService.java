@@ -18,6 +18,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.beans.factory.DisposableBean;
@@ -42,8 +44,9 @@ import sk.iway.iwcm.users.UsersDB;
 @Service
 public class UnusedFilesService implements DisposableBean {
 
-    private static final int ACTIVE_TASK_CACHE_SECONDS = 24 * 60 * 60;
-    private static final int RESULT_CACHE_SECONDS = 30 * 60;
+    private static final int ACTIVE_TASK_CACHE_SECONDS = 60 * 60;           // 1 hour
+    private static final int RESULT_CACHE_SECONDS = 30 * 60;                // 30 minutes
+    private static final long MAX_SCAN_DURATION_MILLIS = 30 * 60 * 1000L;   // 30 minutes
     private static final String CACHE_KEY_PREFIX = "unused-files-task-";
     private static final String LATEST_CACHE_KEY_PREFIX = "unused-files-latest-";
 
@@ -54,6 +57,11 @@ public class UnusedFilesService implements DisposableBean {
     // already holding their folder registration (acquired synchronously in startScan), which blocks
     // deletes on the same folder until the queued scan runs and finishes - acting as backpressure.
     private final ExecutorService executor = Executors.newFixedThreadPool(2);
+    private final ScheduledExecutorService timeoutScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "unused-files-scan-timeout");
+        t.setDaemon(true);
+        return t;
+    });
 
     public void startScan(String taskId, String directory, boolean includeSubfolders, Identity user, RequestBean requestBean) {
         String normalizedTaskId = normalizeTaskId(taskId);
@@ -86,6 +94,7 @@ public class UnusedFilesService implements DisposableBean {
 
         try {
             executor.execute(() -> runScan(task));
+            timeoutScheduler.schedule(() -> timeoutScan(task), MAX_SCAN_DURATION_MILLIS, TimeUnit.MILLISECONDS);
         } catch (RejectedExecutionException ex) {
             try {
                 failTask(task, ex);
@@ -137,6 +146,15 @@ public class UnusedFilesService implements DisposableBean {
             throw new ResponseStatusException(HttpStatus.CONFLICT);
         }
 
+        return pruneDeletedFiles(task);
+    }
+
+    /**
+     * Returns the task's files that still exist on disk. Files deleted meanwhile (e.g. by a delete
+     * operation) are dropped and, when the set changed, the cached task is updated so subsequent
+     * status counts stay in sync. Returns a fresh mutable copy the caller may modify freely.
+     */
+    private List<UnusedFileDTO> pruneDeletedFiles(UnusedFilesTask task) {
         List<UnusedFileDTO> existingFiles = new ArrayList<>();
         for (UnusedFileDTO file : task.files) {
             try {
@@ -178,7 +196,7 @@ public class UnusedFilesService implements DisposableBean {
 
                 for (Map.Entry<String, FolderOperationState> entry : folderOperations.entrySet()) {
                     for (Boolean recursive : entry.getValue().scans.values()) {
-                        if (scanIncludesFolder(entry.getKey(), recursive.booleanValue(), folder)) {
+                        if (scanCoversFolder(entry.getKey(), recursive.booleanValue(), folder)) {
                             throw folderConflict("elfinder.folder_prop.unused_files.delete_conflict");
                         }
                     }
@@ -255,12 +273,19 @@ public class UnusedFilesService implements DisposableBean {
                 id++;
             }
 
+            // Volatile write ordering: files and finishedAt are written before state (the last
+            // volatile write in finishTask). Readers check state first, so by the Java Memory Model
+            // volatile guarantee, they see the preceding writes once state becomes READY.
             task.requestBean = null;
             task.files = Collections.unmodifiableList(result);
             task.finishedAt = Long.valueOf(Tools.getNow());
-            finishTask(task, TaskState.READY);
+            if (task.completed.compareAndSet(false, true)) {
+                finishTask(task, TaskState.READY);
+            }
         } catch (Exception ex) {
-            failTask(task, ex);
+            if (task.completed.compareAndSet(false, true)) {
+                failTask(task, ex);
+            }
         } finally {
             try {
                 SetCharacterEncodingFilter.setCurrentRequestBean(previousRequestBean);
@@ -270,10 +295,21 @@ public class UnusedFilesService implements DisposableBean {
         }
     }
 
+    private void timeoutScan(UnusedFilesTask task) {
+        if (task.completed.compareAndSet(false, true)) {
+            try {
+                failTask(task, new RuntimeException("Scan exceeded maximum duration of " +
+                    (MAX_SCAN_DURATION_MILLIS / 60000) + " minutes"));
+            } finally {
+                task.scanOperation.close();
+            }
+        }
+    }
+
     private ScanOperation acquireScanOperation(String directory, boolean includeSubfolders, String token) {
         synchronized (folderOperationsLock) {
             for (Map.Entry<String, FolderOperationState> entry : folderOperations.entrySet()) {
-                if (entry.getValue().deleteToken != null && scanIncludesFolder(directory, includeSubfolders, entry.getKey())) {
+                if (entry.getValue().deleteToken != null && scanCoversFolder(directory, includeSubfolders, entry.getKey())) {
                     throw folderConflict("elfinder.folder_prop.unused_files.scan_conflict");
                 }
             }
@@ -282,10 +318,6 @@ public class UnusedFilesService implements DisposableBean {
             state.scans.put(token, Boolean.valueOf(includeSubfolders));
         }
         return new ScanOperation(directory, token);
-    }
-
-    private boolean scanIncludesFolder(String scanDirectory, boolean includeSubfolders, String folder) {
-        return scanCoversFolder(scanDirectory, includeSubfolders, folder);
     }
 
     /**
@@ -326,7 +358,11 @@ public class UnusedFilesService implements DisposableBean {
         return normalizedFullPath;
     }
 
-    private String getParentFolder(String fullPath) {
+    /**
+     * Returns the parent directory of the given virtual path.
+     * Package-private and static so it can be unit tested in isolation.
+     */
+    static String getParentFolder(String fullPath) {
         int slash = fullPath.lastIndexOf('/');
         if (slash <= 0) {
             return "/";
@@ -352,7 +388,12 @@ public class UnusedFilesService implements DisposableBean {
         return normalizedDirectory;
     }
 
-    private String normalizeVirtualPath(String path) {
+    /**
+     * Normalizes a virtual CMS path: URL-decodes, replaces backslashes, resolves {@code ..}
+     * sequences via {@link Path#normalize()}, ensures a leading slash and strips a trailing slash.
+     * Package-private and static so it can be unit tested in isolation.
+     */
+    static String normalizeVirtualPath(String path) {
         try {
             String decodedPath = Tools.URLDecode(path).replace('\\', '/');
             if (decodedPath.startsWith("/") == false) {
@@ -394,6 +435,9 @@ public class UnusedFilesService implements DisposableBean {
         Cache cache = Cache.getInstance();
         String cacheKey = getCacheKey(task.id);
         long expiryTime = Tools.getNow() + (RESULT_CACHE_SECONDS * 1000L);
+        // Cache holds tasks by reference in-memory, so identity (==) reliably confirms this is still
+        // the active entry and we can just shorten its expiry. If a different object is present
+        // (task replaced or expired) we re-put this task instead.
         if (cache.getObject(cacheKey) == task) {
             cache.setObjectExpiryTime(cacheKey, expiryTime);
         } else {
@@ -493,6 +537,7 @@ public class UnusedFilesService implements DisposableBean {
 
     @Override
     public void destroy() {
+        timeoutScheduler.shutdownNow();
         executor.shutdownNow();
         synchronized (folderOperationsLock) {
             folderOperations.clear();
@@ -558,6 +603,7 @@ public class UnusedFilesService implements DisposableBean {
     }
 
     private static class FolderOperationState {
+        // Maps scan token -> recursive flag. Always accessed under folderOperationsLock.
         private final Map<String, Boolean> scans = new HashMap<>();
         private String deleteToken;
     }
@@ -570,6 +616,7 @@ public class UnusedFilesService implements DisposableBean {
         private int userId;
         private RequestBean requestBean;
         private ScanOperation scanOperation;
+        private final AtomicBoolean completed = new AtomicBoolean(false);
         private volatile TaskState state;
         private volatile long startedAt;
         private volatile Long finishedAt;

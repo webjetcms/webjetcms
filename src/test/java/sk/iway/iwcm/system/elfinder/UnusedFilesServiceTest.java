@@ -1,14 +1,15 @@
 package sk.iway.iwcm.system.elfinder;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests for the scan/delete conflict-detection logic used by {@link UnusedFilesService}.
- * These verify {@link UnusedFilesService#scanCoversFolder(String, boolean, String)} in isolation,
- * without requiring the cache, database or executor infrastructure.
+ * Unit tests for package-private static helpers in {@link UnusedFilesService}:
+ * {@code scanCoversFolder}, {@code normalizeVirtualPath} and {@code getParentFolder}.
+ * These run without the cache, database or executor infrastructure.
  */
 class UnusedFilesServiceTest {
 
@@ -47,5 +48,64 @@ class UnusedFilesServiceTest {
         assertTrue(UnusedFilesService.scanCoversFolder("/", true, "/files/marketing"));
         assertTrue(UnusedFilesService.scanCoversFolder("/", true, "/"));
         assertFalse(UnusedFilesService.scanCoversFolder("/", false, "/files/marketing"));
+    }
+
+    // --- normalizeVirtualPath tests ---
+
+    @Test
+    void normalizeShouldResolveParentReferences() {
+        assertEquals("/files", UnusedFilesService.normalizeVirtualPath("/files/sub/.."));
+    }
+
+    @Test
+    void normalizeShouldAddLeadingSlash() {
+        assertEquals("/files/test", UnusedFilesService.normalizeVirtualPath("files/test"));
+    }
+
+    @Test
+    void normalizeShouldRemoveTrailingSlash() {
+        assertEquals("/files/test", UnusedFilesService.normalizeVirtualPath("/files/test/"));
+    }
+
+    @Test
+    void normalizeShouldPreserveRootPath() {
+        assertEquals("/", UnusedFilesService.normalizeVirtualPath("/"));
+    }
+
+    @Test
+    void normalizeShouldDecodeUrlEncoding() {
+        assertEquals("/files/test file", UnusedFilesService.normalizeVirtualPath("/files/test%20file"));
+    }
+
+    @Test
+    void normalizeShouldReplaceBackslashes() {
+        assertEquals("/files/test", UnusedFilesService.normalizeVirtualPath("\\files\\test"));
+    }
+
+    @Test
+    void normalizeShouldCollapseDuplicateSlashes() {
+        assertEquals("/files/test", UnusedFilesService.normalizeVirtualPath("/files//test"));
+    }
+
+    // --- getParentFolder tests ---
+
+    @Test
+    void parentFolderShouldReturnParentDirectory() {
+        assertEquals("/files/marketing", UnusedFilesService.getParentFolder("/files/marketing/image.jpg"));
+    }
+
+    @Test
+    void parentFolderShouldReturnRootForTopLevelFile() {
+        assertEquals("/", UnusedFilesService.getParentFolder("/image.jpg"));
+    }
+
+    @Test
+    void parentFolderShouldReturnRootWhenNoSlash() {
+        assertEquals("/", UnusedFilesService.getParentFolder("/"));
+    }
+
+    @Test
+    void parentFolderShouldReturnDeepParent() {
+        assertEquals("/a/b/c", UnusedFilesService.getParentFolder("/a/b/c/file.txt"));
     }
 }
