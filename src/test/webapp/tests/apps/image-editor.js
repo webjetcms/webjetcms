@@ -7,15 +7,18 @@ Before(({ I, login }) => {
     login('admin');
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomTextShort();
-        autoName = 'autotest-' + randomNumber;
+        autoName = 'cervene-auto-autotest-' + randomNumber;
     }
     I.closeOtherTabs();
 });
 
-Scenario('Pixabay - test image source after adding', async ({ I, DTE }) => {
+Scenario('Pixabay - test custom filename and image source after adding', async ({ I, DTE }) => {
     I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=108022');
     I.closeOtherTabs();
     var testFileName = autoName + ".jpg";
+    var searchTerm = 'letters, alphabet, animals, nature, abcd';
+    var expectedSearchFileName = 'letters-alphabet-animals-nature-abcd';
+    var resultSelector = '.pixabayBox .col-xs-3 a:first-child';
 
     DTE.waitForEditor();
     I.waitForElement(".cke_wysiwyg_frame.cke_reset");
@@ -23,29 +26,61 @@ Scenario('Pixabay - test image source after adding', async ({ I, DTE }) => {
     I.click(locate("a.cke_dialog_tab").withText("Fotobanka"));
     I.switchTo('#wjImagePixabayIframeElement');
     I.waitForElement('#search', 10);
-    I.wait(1);
-    I.fillField('#search', 'letters, alphabet, animals, nature, abcd');
-    I.wait(1);
+    I.fillField('#search', searchTerm);
     I.click('button[type="submit"]');
-    I.waitForElement('.pixabayBox .col-xs-3 a:first-child', 40);
-    I.wait(1);
-    I.click('.pixabayBox .col-xs-3 a:first-child');
+    I.waitForElement(resultSelector, 40);
+
+    var imageSource = await I.grabAttributeFrom(resultSelector, 'href');
+    I.fillField('#search', 'this value was not searched');
+    I.click(resultSelector);
     DTE.waitForModal('imageModal');
-    I.seeInField("#imageWidth", "1280")
+    I.seeInField('#imageName', expectedSearchFileName);
+    I.seeInField("#imageWidth", "1280");
     I.seeInField("#imageHeight", "904");
+
+    var extension = await I.grabAttributeFrom('#imageModal .imageExtension', 'title');
+    var extensionIcon = await I.grabAttributeFrom('#imageModal .imageExtension i', 'class');
+    I.assertEqual(extension, 'JPG', 'The detected image extension is incorrect');
+    I.assertContain(extensionIcon, 'ti-jpg', 'The image extension icon is incorrect');
+
+    I.fillField('#imageName', '');
+    I.clickCss('button.btn.btn-primary.saveImage');
+    I.waitForVisible('#imageNameRequiredError', 10);
+    I.see('Zadajte názov súboru', '#imageNameRequiredError');
+    I.seeElement('#imageName.is-invalid');
+
+    I.fillField('#imageName', 'Červené auto! autotest-' + randomNumber);
+    I.pressKey('Tab');
+    I.seeInField('#imageName', autoName);
+    I.dontSeeElement('#imageNameRequiredError:visible');
+
     I.clickCss('button.btn.btn-primary.saveImage');
     DTE.waitForModalClose('imageModal');
     I.switchTo();
-    I.switchTo('#wjImageIframeElement')
-    I.waitForElement('.elfinder-cwd-filename', 20);
-    //There will allways be only one file when added
-    I.waitForElement('.elfinder-cwd-file');
+    I.switchTo('#wjImageIframeElement');
+    I.waitForElement(`.elfinder-cwd-filename[title="${testFileName}"]`, 20);
+
+    I.switchTo();
+    I.click(locate("a.cke_dialog_tab").withText("Fotobanka"));
+    I.switchTo('#wjImagePixabayIframeElement');
+    I.waitForElement(resultSelector, 10);
+    I.click(resultSelector);
+    DTE.waitForModal('imageModal');
+    I.fillField('#imageName', autoName);
+    I.clickCss('button.btn.btn-primary.saveImage');
+    I.waitForVisible('#imageNameDuplicateError', 10);
+    I.seeElement('#imageName.is-invalid');
+    I.seeElement('#imageModal.show');
+    I.dontSeeElement('#imageModal .errors:visible');
+    I.clickCss('#imageModal .modal-footer button[data-bs-dismiss="modal"]');
+    DTE.waitForModalClose('imageModal');
+
     I.switchTo();
 
     I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ltYWdlcy90ZXN0LXN0YXZvdi90ZXN0aW1wb3J0cGl4YWJheQ_E_E');
 
-    I.waitForElement('.elfinder-cwd-filename');
-    I.rightClick(locate('.elfinder-cwd-filename').last());
+    I.waitForElement(`.elfinder-cwd-filename[title="${testFileName}"]`, 20);
+    I.rightClick(`.elfinder-cwd-filename[title="${testFileName}"]`);
     I.waitForVisible('.elfinder-contextmenu', 10);
     I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-wjeditswitch');
 
@@ -54,23 +89,13 @@ Scenario('Pixabay - test image source after adding', async ({ I, DTE }) => {
     I.clickCss('#pills-dt-galleryTable-metadata-tab');
 
     let imageName = await I.grabValueFrom('#DTE_Field_imageName');
-    I.assertContain(imageName, "_1280_", "Picture has wrong dimensions");
-    let imageSource = "https://pixabay.com/get/" + imageName.substring(0, imageName.indexOf("_1280_")+5);
-
-    let imageSourceField = (await I.grabValueFrom("#DTE_Field_imageSource")).replace(/\.(jpg|png)$/, '');
+    I.assertEqual(imageName, testFileName, 'The custom filename was not preserved');
+    I.assertNotContain(imageName, '_1280_', 'The filename must not contain image dimensions');
+    let imageSourceField = await I.grabValueFrom("#DTE_Field_imageSource");
     I.assertEqual(imageSource, imageSourceField, "Image source does not match expected URL");
 
-    DTE.fillField('imageName', testFileName);
-    I.clickCss('.DTE_Form_Buttons > button.btn-primary');
-
-    //this window will be closed, so we need to switch back to the previous tab
-    I.switchToPreviousTab();
-    I.wait(4);
-
-    I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ltYWdlcy90ZXN0LXN0YXZvdi90ZXN0aW1wb3J0cGl4YWJheQ_E_E');
-    I.waitForElement('.elfinder-cwd-filename');
-    //We need to wait for new anme, because after change will be fired reload
-    I.waitForElement(`.elfinder-cwd-filename[title="${testFileName}"]`, 15);
+    I.closeCurrentTab();
+    I.switchTo();
 
     I.say("Use the picture for NEXT test");
 });

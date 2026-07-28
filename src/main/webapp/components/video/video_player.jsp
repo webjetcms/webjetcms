@@ -266,7 +266,7 @@ videoItemClass = Tools.replace(videoItemClass, " ", ".");
 			</video>
 		</div>
 	<% }%>
-	<% if (request.getAttribute("videojsIncluded")==null) { %>
+	<% if (request.getAttribute("videojsIncluded")==null && request.getAttribute("inPreviewMode")==null) { %>
 		<script src="/components/video/videojs/video.js"></script>
 		<% request.setAttribute("videojsIncluded", true); %>
 	<% } %>
