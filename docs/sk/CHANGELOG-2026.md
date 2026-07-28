@@ -101,6 +101,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 - Prieskumník - pridané právo **Povoliť nahrávanie súborov s diakritikou**, ktoré umožňuje zachovať diakritiku pri nahrávaní, vytváraní a premenovaní súborov a priečinkov v priečinkoch `/files`, `/images` a `/shared`. Bez tohto práva sa názvy naďalej automaticky upravia bez diakritiky (#58589).
 - Prihlásenie - zrýchlené načítanie úvodnej stránky v administrácii - pridaná vyrovnávacia pamäť pre zoznam posledných stránok, zmenených stránok a auditných záznamov (#58589).
+- Export/import súborov - upravený dizajn dialógového okna a responzívne zobrazenie formulárových polí podľa aktuálneho dizajnu administrácie (#58581).
 
 ### Bezpečnosť
 
