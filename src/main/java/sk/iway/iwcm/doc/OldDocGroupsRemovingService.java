@@ -27,8 +27,7 @@ public class OldDocGroupsRemovingService {
 
     /**
      * Deletion plan computed once from the current state of the page/group caches.
-     * The very same plan is used both for counting (how many records would be removed) and for the
-     * real deletion, so the reported count can never diverge from what is actually deleted.
+     * The plan is used both for counting an individual action and for the real deletion.
      */
     private static class DeletionPlan {
         // rule 1 - roots of old-enough trash sub-trees (the whole sub-tree, including the root, is removed)
@@ -75,7 +74,13 @@ public class OldDocGroupsRemovingService {
             return 0;
         }
 
-        return computePlan(createdFrom, createdTo, resolveActionType(actionType)).getTotalCount();
+        ActionType resolvedActionType = resolveActionType(actionType);
+        if (resolvedActionType == ActionType.ALL) {
+            return getCountOfDocAndGroups(createdFrom, createdTo, ActionType.DOCS)
+                + getCountOfDocAndGroups(createdFrom, createdTo, ActionType.GROUPS);
+        }
+
+        return computePlan(createdFrom, createdTo, resolvedActionType).getTotalCount();
     }
 
     /* =============== PLAN COMPUTATION =============== */
@@ -246,11 +251,7 @@ public class OldDocGroupsRemovingService {
         Calendar cal = Calendar.getInstance();
         // Threshold: items older than this date should be removed
         cal.add(Calendar.DAY_OF_YEAR, -GdprDataDeletingType.OLD_DOC_AND_GROUPS.getAfterConstantInt());
-        Date createdTo = cal.getTime();
-        // Lower bound: epoch as a safe minimum
-        Date createdFrom = new Date(0);
-
-        return new Date[] { createdFrom, createdTo };
+        return new Date[] { cal.getTime(), new Date() };
     }
 
     private static ActionType resolveActionType(ActionType actionType) {

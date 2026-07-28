@@ -2855,8 +2855,28 @@ public class GroupsDB extends DB
 						ps = null;
 					}
 
+					// TODO - Jeeff, toto je asi taka zmena, o ktorej by si mal povedat ci ostane (za mna by to bolo OK aby sme lepsie cistili DB)
+
+					//vymaz viazane zaznamy mazanych stranok, aby nezostali osirene v DB (rovnako ako to robi DocDB.deleteDoc)
+					//perex_group_doc a multigroup_mapping su viazane na doc_id, preto ich mazeme pred vymazanim samotnych stranok
+					String docsSubselect = "SELECT doc_id FROM documents WHERE group_id IN ("+groups+")";
+
+					//vymaz mapovanie na perex skupiny (perex_group_doc)
+					String sql = "DELETE FROM perex_group_doc WHERE doc_id IN ("+docsSubselect+")";
+					ps = db_conn.prepareStatement(sql);
+					ps.executeUpdate();
+					ps.close();
+					ps = null;
+
+					//vymaz multigroup mapovanie, ci uz je mazana stranka master alebo slave zaznamom
+					sql = "DELETE FROM multigroup_mapping WHERE doc_id IN ("+docsSubselect+") OR master_id IN ("+docsSubselect+")";
+					ps = db_conn.prepareStatement(sql);
+					ps.executeUpdate();
+					ps.close();
+					ps = null;
+
 					//vymaz stranky
-					String sql = "DELETE FROM documents WHERE group_id IN ("+groups+")";
+					sql = "DELETE FROM documents WHERE group_id IN ("+groups+")";
 					ps = db_conn.prepareStatement(sql);
 					ps.executeUpdate();
 					ps.close();
