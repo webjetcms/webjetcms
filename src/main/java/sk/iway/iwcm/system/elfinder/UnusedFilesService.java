@@ -242,7 +242,17 @@ public class UnusedFilesService implements DisposableBean {
 
             long id = 1L;
             for (UnusedFile unusedFile : unusedFiles) {
-                result.add(UnusedFileDTO.fromUnusedFile(Long.valueOf(id++), unusedFile));
+                if (unusedFile == null) {
+                    continue;
+                }
+
+                UnusedFileDTO unusedFileDTO = UnusedFileDTO.fromUnusedFile(Long.valueOf(id), unusedFile);
+                if (FileTools.isFile(unusedFileDTO.getFullPath()) == false) {
+                    continue;
+                }
+
+                result.add(unusedFileDTO);
+                id++;
             }
 
             task.requestBean = null;
