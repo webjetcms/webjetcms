@@ -5,6 +5,8 @@ import sk.iway.iwcm.Tools;
 public enum FieldType {
     TEXT,
     SELECT,
+    RADIO,
+    CHECKBOX,
     IMAGE,
     LINK,
     AUTOCOMPLETE,

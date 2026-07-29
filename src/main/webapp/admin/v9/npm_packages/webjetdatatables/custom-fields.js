@@ -151,6 +151,7 @@ export function update(EDITOR, action) {
     var textAreaTemplate = '<textarea id="DTE_Field_{customPrefix}{identifier}" {disabled} class="form-control wrap">{value}</textarea>';
     var autocompleteTemplate = '<div class="input-group"> <span class="input-group-text"><i class="ti ti-search"></i></span> <input type="text" class="form-control autocomplete" name="field{identifier}" value="{value}" id="DTE_Field_field{identifier}"/> </div>';
     var selectTemplate = '<select id="DTE_Field_field{identifier}" class="form-control form-select">{options}</select>';
+    var choiceTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" class="custom-field-choice-value" type="hidden"><div class="custom-field-choice-options">{options}</div>';
     var labelTemplate = '<div class="input-group"> <span class="input-group-text noborders field-type-label">{value}</span> <input value="{value}" id="DTE_Field_{customPrefix}{identifier}" class="form-control" type="hidden"></div>';
     var numberTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" type="number" value="{value}" {disabled} class="form-control">';
     var booleanTemplate = '<div><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">Áno</label></div></div>';
@@ -258,12 +259,69 @@ export function update(EDITOR, action) {
         } else if(v.type == 'date') {
             //console.log("DATE");
             template = dateTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier);
+        } else if(v.type == 'radio' || v.type == 'checkbox') {
+            const isCheckbox = v.type == 'checkbox';
+            const currentValue = action === "create" || valueUnescaped == null ? "" : String(valueUnescaped);
+            const selectedValues = isCheckbox && currentValue.length > 0 ? currentValue.split("|") : [];
+            const fieldId = "DTE_Field_" + customPrefix + identifier;
+            const inputName = fieldId + "_options";
+            var choiceOptions = '';
+
+            $.each(v.typeValues, function(it, val) {
+                const optionValue = val.value == null ? "" : String(val.value);
+                const optionLabel = val.label == null ? "" : String(val.label);
+
+                // Empty label/value is the optional-field sentinel, not a visible choice.
+                if(optionValue.length === 0 && optionLabel.length === 0) {
+                    return;
+                }
+
+                const selected = isCheckbox
+                    ? selectedValues.indexOf(optionValue) > -1
+                    : currentValue.length > 0 && optionValue == currentValue;
+                const optionId = fieldId + "_option_" + it;
+
+                choiceOptions += '<div class="form-check">' +
+                    '<input class="form-check-input custom-field-choice-option" type="' + v.type + '" name="' + inputName + '" id="' + optionId + '" value="' + WJ.escapeHtml(optionValue) + '" ' +
+                    (selected ? 'checked="checked" ' : '') + disableField(v.disabled) + '>' +
+                    '<label class="form-check-label" for="' + optionId + '">' + WJ.escapeHtml(optionLabel) + '</label>' +
+                    '</div>';
+            });
+
+            template = choiceTemplate
+                .replace(new RegExp('{customPrefix}', 'g'), customPrefix)
+                .replace(new RegExp('{identifier}', 'g'), identifier)
+                .replace('{options}', choiceOptions);
         } else if (v.type == 'select') {
             var options = '';
+            const currentValue = action === "create" || valueUnescaped == null ? "" : String(valueUnescaped);
+            const hasValue = currentValue.length > 0;
+            const selectedValues = v.multiple && hasValue ? currentValue.split("|") : [];
+            let hasSelectedOption = false;
+
             $.each(v.typeValues, function(it, val){
-                var selected = v.multiple ? value.split("|").indexOf(val.value) > -1 : val.value == value;
-                options += '<option ' + (selected ? ' selected="true"' : "") + ' value="' + val.value + '">' + val.label + '</option>';
+                const optionValue = val.value == null ? "" : String(val.value);
+                const optionLabel = val.label == null ? "" : String(val.label);
+                const isEmptyOption = optionValue.length === 0 && optionLabel.length === 0;
+                var selected = false;
+
+                if(v.multiple) {
+                    selected = hasValue && selectedValues.indexOf(optionValue) > -1;
+                } else if(hasValue) {
+                    selected = optionValue == currentValue;
+                } else {
+                    selected = isEmptyOption && hasSelectedOption === false;
+                }
+
+                if(selected) {
+                    hasSelectedOption = true;
+                }
+                options += '<option ' + (selected ? ' selected="true"' : "") + ' value="' + WJ.escapeHtml(optionValue) + '">' + WJ.escapeHtml(optionLabel) + '</option>';
             });
+
+            if(v.multiple === false && hasSelectedOption === false) {
+                options = '<option selected="true" value=""></option>' + options;
+            }
 
             template = selectTemplate.replace('{options}', options).replace(new RegExp('{identifier}', 'g'), identifier);
             if(v.multiple) {
@@ -380,6 +438,46 @@ export function update(EDITOR, action) {
 
             //Set booelan via jQuery because we cant set checkbox throu html template
             $('#DTE_Field_' + customPrefix + identifier).attr('checked', booleanValue);
+        } else if(v.type == 'radio' || v.type == 'checkbox') {
+            const valueInput = inputBox.find('input.custom-field-choice-value');
+            const choiceInputs = inputBox.find('input.custom-field-choice-option');
+
+            const syncChoiceValue = (triggerChange) => {
+                let selectedValue = "";
+                if(v.type == 'checkbox') {
+                    selectedValue = choiceInputs.filter(":checked").map(function() {
+                        return this.value;
+                    }).get().join("|");
+                } else {
+                    selectedValue = choiceInputs.filter(":checked").val() || "";
+                }
+
+                valueInput.val(selectedValue);
+                if(triggerChange) {
+                    valueInput.trigger("change");
+                }
+            };
+
+            const updateCheckboxRequired = () => {
+                if(v.type != 'checkbox') {
+                    return;
+                }
+
+                choiceInputs.prop("required", false);
+                if(v.required === true && choiceInputs.filter(":checked").length === 0) {
+                    choiceInputs.first().prop("required", true);
+                }
+            };
+
+            valueInput.removeAttr("required");
+            choiceInputs.on("change", function() {
+                syncChoiceValue(true);
+                updateCheckboxRequired();
+            });
+
+            syncChoiceValue(false);
+            updateCheckboxRequired();
+            EDITOR.field(customPrefix + identifier).s.opts._input = valueInput;
         } else if(v.type == 'date') {
             var opts = EDITOR.field(customPrefix + identifier).s.opts;
             opts._input = inputBox.find('input');
@@ -405,7 +503,12 @@ export function update(EDITOR, action) {
         }
 
         if (v.type == 'select') {
-            inputBox.find('select').selectpicker(EDITOR.DT_SELECTPICKER_OPTS_EDITOR);
+            const select = inputBox.find('select');
+            const hasSelectedOption = select.find("option:selected").length > 0;
+            select.selectpicker(EDITOR.DT_SELECTPICKER_OPTS_EDITOR);
+            if(v.multiple && hasSelectedOption === false) {
+                select.selectpicker("val", []);
+            }
         }
         else if (v.type == 'autocomplete') {
 
