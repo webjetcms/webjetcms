@@ -107,6 +107,7 @@ public class UnusedFilesService implements DisposableBean {
     public UnusedFilesTaskDTO getStatus(String taskId, Identity user) {
         UnusedFilesTask task = requireTask(taskId);
         ensureTaskAccess(task, user);
+        pruneUnavailableFiles(task);
         return toDto(task);
     }
 
@@ -132,6 +133,7 @@ public class UnusedFilesService implements DisposableBean {
         }
 
         ensureTaskAccess(task, user);
+        pruneUnavailableFiles(task);
         return toDto(task);
     }
 
@@ -142,34 +144,38 @@ public class UnusedFilesService implements DisposableBean {
 
         UnusedFilesTask task = requireTask(taskId);
         ensureTaskAccess(task, user);
+        pruneUnavailableFiles(task);
         if (task.state != TaskState.READY) {
             throw new ResponseStatusException(HttpStatus.CONFLICT);
         }
 
-        return pruneDeletedFiles(task);
+        return new ArrayList<>(task.files);
     }
 
     /**
-     * Returns the task's files that still exist on disk. Files deleted meanwhile (e.g. by a delete
-     * operation) are dropped and, when the set changed, the cached task is updated so subsequent
-     * status counts stay in sync. Returns a fresh mutable copy the caller may modify freely.
+     * Removes files that are no longer valid readable files from a completed cached scan.
      */
-    private List<UnusedFileDTO> pruneDeletedFiles(UnusedFilesTask task) {
-        List<UnusedFileDTO> existingFiles = new ArrayList<>();
-        for (UnusedFileDTO file : task.files) {
-            try {
-                if (new IwcmFile(Tools.getRealPath(file.getFullPath())).exists()) {
-                    existingFiles.add(file);
-                }
-            } catch (Exception ex) {
-                Logger.error(UnusedFilesService.class, ex);
-            }
+    private void pruneUnavailableFiles(UnusedFilesTask task) {
+        if (task.state != TaskState.READY) {
+            return;
         }
 
-        if (existingFiles.size() != task.files.size()) {
-            task.files = Collections.unmodifiableList(existingFiles);
+        synchronized (task) {
+            List<UnusedFileDTO> existingFiles = new ArrayList<>();
+            for (UnusedFileDTO file : task.files) {
+                try {
+                    if (FileTools.isFile(file.getFullPath())) {
+                        existingFiles.add(file);
+                    }
+                } catch (Exception ex) {
+                    Logger.error(UnusedFilesService.class, ex);
+                }
+            }
+
+            if (existingFiles.size() != task.files.size()) {
+                task.files = Collections.unmodifiableList(existingFiles);
+            }
         }
-        return new ArrayList<>(existingFiles);
     }
 
     public DeleteOperation acquireDeleteOperation(Collection<UnusedFileDTO> files, Identity user) {
@@ -223,16 +229,16 @@ public class UnusedFilesService implements DisposableBean {
             return false;
         }
 
-        boolean deleted;
         try {
-            deleted = file.delete();
+            file.delete();
         } catch (Exception ex) {
             Logger.error(UnusedFilesService.class, ex);
             return false;
         }
 
-        if (deleted == false) {
-            return file.exists() == false;
+        // Do not remove the fulltext entry unless the physical file was actually removed.
+        if (file.exists()) {
+            return false;
         }
 
         if (normalizedFullPath.startsWith("/files/")) {
