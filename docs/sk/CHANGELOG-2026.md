@@ -89,6 +89,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 ![](frontend/webpages/customfields/custom-fields-settings-editor.png)
 
 - Pridaná možnosť nastaviť voliteľné pole ako povinné (#58413).
+- Pridané nové typy voliteľných polí [`radio` a `checkbox`](frontend/webpages/customfields/custom-fields-settings.md#rozdiel-medzi-selectmultiselect-a-radiocheckbox) s podporou statických možností aj prepojenia na číselník. Typ `multiselect` teraz tiež podporuje [prepojenie na číselník](frontend/webpages/customfields/custom-fields-settings.md#zdroj-možností). Pôvodný typ `enumeration` bol nahradený prepínačom zdroja možností pri typoch `select`, `multiselect`, `radio` a `checkbox` (#58637).
 
 ### Multiweb
 
