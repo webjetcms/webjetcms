@@ -91,6 +91,7 @@ public class GalleryDB
 	public static final List<String> LANGUAGES = Arrays.asList("sk", "cz", "de", "en", "pl", "ru", "cho", "esp", "hu"); //NOSONAR
 	public static final String DATE_FROM_SESSION_FILTER = "date_from_filter";
 	public static final String DATE_TO_SESSION_FILTER = "date_to_filter";
+	static final String UPDATE_DIRECTORY_DIMENSION_SQL = "UPDATE gallery_dimension SET image_width=?, image_height=?, normal_width=?, normal_height=?, resize_mode=?, resize_mode_normal=? WHERE image_path=? AND domain_id=?";
 
 	private static final Random rand = new Random();
 
@@ -1233,10 +1234,11 @@ public class GalleryDB
 		if (galleryId > 0)
 			return galleryId;
 
-		Dimension[] dims = getDimension(dir);
+		GalleryResizeSettings settings = getGalleryResizeSettings(dir, true, true);
+		Dimension[] dims = settings.dimensions;
 
-		query.execute("INSERT INTO gallery_dimension (image_path, image_width, image_height, normal_width, normal_height, resize_mode, create_date, domain_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
-					dir,dims[0].width, dims[0].height, dims[1].width, dims[1].height, GalleryDB.getResizeMode(dir, true), new Timestamp(Tools.getNow()), CloudToolsForCore.getDomainId());
+		query.execute("INSERT INTO gallery_dimension (image_path, image_width, image_height, normal_width, normal_height, resize_mode, resize_mode_normal, create_date, domain_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)",
+					dir, dims[0].width, dims[0].height, dims[1].width, dims[1].height, settings.resizeMode, settings.resizeModeNormal, new Timestamp(Tools.getNow()), CloudToolsForCore.getDomainId());
 		try
 		{
 			return query.forInt("SELECT dimension_id FROM gallery_dimension WHERE image_path= ?"+CloudToolsForCore.getDomainIdSqlWhere(true), dir);
@@ -1884,12 +1886,14 @@ public class GalleryDB
 		Date createDate;
 
 		String resizeMode = "";
+		String resizeModeNormal = null;
 		String galleryName = "";
 		String galleryPerex = "";
 		String author = "";
 		if (request != null)
 		{
 			resizeMode = request.getParameter("resizeMode");
+			resizeModeNormal = normalizeResizeModeNormal(request.getParameter("resizeModeNormal"));
 			galleryName = request.getParameter("galleryName");
 			galleryPerex = request.getParameter("galleryPerex");
 			author = request.getParameter("author");
@@ -1909,31 +1913,32 @@ public class GalleryDB
 				ps.execute();
 				ps.close();
 				ps = db_conn
-					.prepareStatement("INSERT INTO gallery_dimension (image_width, image_height, image_path, normal_width, normal_height, resize_mode," +
-							"gallery_name, gallery_perex, create_date, author, watermark, watermark_saturation, watermark_placement, domain_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+					.prepareStatement("INSERT INTO gallery_dimension (image_width, image_height, image_path, normal_width, normal_height, resize_mode, resize_mode_normal," +
+							"gallery_name, gallery_perex, create_date, author, watermark, watermark_saturation, watermark_placement, domain_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 				ps.setInt(1, dim.width);
 				ps.setInt(2, dim.height);
 				ps.setString(3, normalizeDir(dir));
 				ps.setInt(4, dimNormal.width);
 				ps.setInt(5, dimNormal.height);
 				ps.setString(6, resizeMode);
-				ps.setString(7, galleryName);
-				ps.setString(8, galleryPerex);
-				ps.setTimestamp(9, new Timestamp(createDate.getTime()));
-				ps.setString(10, author);
+				ps.setString(7, resizeModeNormal);
+				ps.setString(8, galleryName);
+				ps.setString(9, galleryPerex);
+				ps.setTimestamp(10, new Timestamp(createDate.getTime()));
+				ps.setString(11, author);
 				if (request != null)
 				{
-					ps.setString(11, StringUtils.abbreviate(request.getParameter("watermark"), 255));
-					ps.setInt(12, Tools.getIntValue(request.getParameter("watermarkSaturation"), 0));
-					ps.setString(13, request.getParameter("watermarkPlacement"));
+					ps.setString(12, StringUtils.abbreviate(request.getParameter("watermark"), 255));
+					ps.setInt(13, Tools.getIntValue(request.getParameter("watermarkSaturation"), 0));
+					ps.setString(14, request.getParameter("watermarkPlacement"));
 				}
 				else
 				{
-					ps.setString(11, "");
-					ps.setInt(12, 0);
-					ps.setString(13, "");
+					ps.setString(12, "");
+					ps.setInt(13, 0);
+					ps.setString(14, "");
 				}
-				ps.setInt(14, CloudToolsForCore.getDomainId());
+				ps.setInt(15, CloudToolsForCore.getDomainId());
 				ps.execute();
 				ps.close();
 				db_conn.close();
@@ -1945,9 +1950,9 @@ public class GalleryDB
 			{
 				boolean recursive = true;
 				if (request != null) recursive = "true".equals(request.getParameter("recursive"));
-				if(recursive) updateDirectoryDim(dir, dim, dimNormal, resizeMode, recursive);
+				if(recursive) updateDirectoryDim(dir, dim, dimNormal, resizeMode, resizeModeNormal, recursive);
 
-				resizePicturesInDirectory(dir, out, prop, resizeMode, recursive);
+				resizePicturesInDirectory(dir, out, prop, new Dimension[] { dim, dimNormal }, resizeMode, resizeModeNormal, recursive, recursive);
 			}
 		}
 		catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}
@@ -1967,8 +1972,40 @@ public class GalleryDB
 	 * @param out - vystupny objekt pre vypis sprav, moze byt NULL
 	 */
 	public static void resizePicturesInDirectory(String dir, boolean recursive, Prop prop, PrintWriter out) {
-		String resizeMode = getResizeMode(dir, true);
-		resizePicturesInDirectory(dir, out, prop, resizeMode, recursive);
+		GalleryResizeSettings settings = getGalleryResizeSettings(dir, true, true);
+		resizePicturesInDirectory(dir, out, prop, settings.dimensions, settings.resizeMode, settings.resizeModeNormal, recursive, false);
+	}
+
+	/**
+	 * Resizes images using settings supplied by the caller for the root directory.
+	 *
+	 * @param dir virtual gallery directory
+	 * @param recursive resize images in subdirectories
+	 * @param prop translations used for status output
+	 * @param out optional status output
+	 * @param dims small and large image dimensions
+	 * @param resizeMode small image resize mode
+	 * @param resizeModeNormal large image resize mode, null to use the small image mode
+	 */
+	public static void resizePicturesInDirectory(String dir, boolean recursive, Prop prop, PrintWriter out, Dimension[] dims, String resizeMode, String resizeModeNormal) {
+		resizePicturesInDirectory(dir, out, prop, dims, resizeMode, resizeModeNormal, recursive, false);
+	}
+
+	/**
+	 * Resizes images using settings supplied by the caller for the root directory
+	 * and optionally for all subdirectories.
+	 *
+	 * @param dir virtual gallery directory
+	 * @param recursive resize images in subdirectories
+	 * @param prop translations used for status output
+	 * @param out optional status output
+	 * @param dims small and large image dimensions
+	 * @param resizeMode small image resize mode
+	 * @param resizeModeNormal large image resize mode, null to use the small image mode
+	 * @param useSettingsForSubdirectories use supplied dimensions and modes instead of resolving each subdirectory
+	 */
+	public static void resizePicturesInDirectory(String dir, boolean recursive, Prop prop, PrintWriter out, Dimension[] dims, String resizeMode, String resizeModeNormal, boolean useSettingsForSubdirectories) {
+		resizePicturesInDirectory(dir, out, prop, dims, resizeMode, resizeModeNormal, recursive, useSettingsForSubdirectories);
 	}
 
 	/**
@@ -1976,16 +2013,18 @@ public class GalleryDB
 	 * @param dir
 	 * @param out
 	 * @param prop
+	 * @param dims
 	 * @param resizeMode
+	 * @param resizeModeNormal
 	 * @param recursive
+	 * @param useSettingsForSubdirectories
 	 */
-	private static void resizePicturesInDirectory(String dir, PrintWriter out, Prop prop, String resizeMode, boolean recursive)
+	private static void resizePicturesInDirectory(String dir, PrintWriter out, Prop prop, Dimension[] dims, String resizeMode, String resizeModeNormal, boolean recursive, boolean useSettingsForSubdirectories)
 	{
 		if (null != out)
 		{
 			out.println(prop.getText("components.gallery.resizing_images_in", dir));
 		}
-		Dimension[] dims = getDimension(dir);
 		dir = Tools.replace(dir, "/", File.separator);
 		IwcmFile directory = IwcmFile.fromVirtualPath("/" + dir);
 		if (directory.exists() && directory.isDirectory())
@@ -1994,10 +2033,15 @@ public class GalleryDB
 			for (IwcmFile file : fileList)
 			{
 				if (recursive && file.isDirectory())
-					resizePicturesInDirectory(file.getVirtualPath(), out, prop, resizeMode, recursive);
+				{
+					String subdirectory = file.getVirtualPath();
+					GalleryResizeSettings parentSettings = new GalleryResizeSettings(true, dims, resizeMode, resizeModeNormal);
+					GalleryResizeSettings subdirectorySettings = useSettingsForSubdirectories ? parentSettings : getGalleryResizeSettings(subdirectory, parentSettings);
+					resizePicturesInDirectory(subdirectory, out, prop, subdirectorySettings.dimensions, subdirectorySettings.resizeMode, subdirectorySettings.resizeModeNormal, true, useSettingsForSubdirectories);
+				}
 				if (file.isFile() && !file.getName().startsWith("s_") && !file.getName().startsWith("o_"))
 				{
-					resizePictureImpl(dims, file.getAbsolutePath(), out, prop, resizeMode);
+					resizePictureImpl(dims, file.getAbsolutePath(), out, prop, resizeMode, resizeModeNormal);
 				}
 			}
 		}
@@ -2067,151 +2111,143 @@ public class GalleryDB
 	 */
 	public static Dimension[] getDimension(String dir, boolean recursive, boolean returnDefault)
 	{
-		java.sql.Connection db_conn = null;
-		java.sql.PreparedStatement ps = null;
-		ResultSet rs = null;
-		Dimension dim = null;
-		Dimension dimNormal = null;
-		dir = dir.replace('\\', '/');
-		try
+		GalleryResizeSettings settings = getGalleryResizeSettings(dir, recursive, returnDefault);
+		if (settings.dimensions != null) return settings.dimensions;
+		return new Dimension[] { null, null };
+	}
+
+	/**
+	 * Gallery dimensions and resize modes loaded with a single database query.
+	 */
+	private static final class GalleryResizeSettings {
+		private final boolean found;
+		private final Dimension[] dimensions;
+		private final String resizeMode;
+		private final String resizeModeNormal;
+
+		private GalleryResizeSettings(boolean found, Dimension[] dimensions, String resizeMode, String resizeModeNormal) {
+			this.found = found;
+			this.dimensions = dimensions;
+			this.resizeMode = resizeMode;
+			this.resizeModeNormal = resizeModeNormal;
+		}
+	}
+
+	/**
+	 * Reads gallery settings for exactly one directory.
+	 */
+	private static GalleryResizeSettings readGalleryResizeSettings(String dir)
+	{
+		if (Tools.isEmpty(dir)) return new GalleryResizeSettings(false, null, null, null);
+
+		String sql = "SELECT image_width, image_height, normal_width, normal_height, resize_mode, resize_mode_normal FROM gallery_dimension WHERE image_path=?"+
+			CloudToolsForCore.getDomainIdSqlWhere(true);
+		try (Connection dbConnection = DBPool.getConnection();
+			PreparedStatement ps = dbConnection.prepareStatement(sql))
 		{
-			if (!dir.equals(""))
+			ps.setString(1, normalizeDir(dir));
+			try (ResultSet rs = ps.executeQuery())
 			{
-				db_conn = DBPool.getConnection();
-				ps = db_conn.prepareStatement("SELECT * FROM gallery_dimension WHERE image_path=?"+CloudToolsForCore.getDomainIdSqlWhere(true));
-				ps.setString(1, normalizeDir(dir));
-				rs = ps.executeQuery();
 				if (rs.next())
 				{
-					dim = new Dimension(rs.getInt("image_width"), rs.getInt("image_height"));
-					dimNormal = new Dimension(rs.getInt("normal_width"), rs.getInt("normal_height"));
+					Dimension[] dimensions = {
+						new Dimension(rs.getInt("image_width"), rs.getInt("image_height")),
+						new Dimension(rs.getInt("normal_width"), rs.getInt("normal_height"))
+					};
+					return new GalleryResizeSettings(
+						true,
+						dimensions,
+						rs.getString("resize_mode"),
+						normalizeResizeModeNormal(rs.getString("resize_mode_normal"))
+					);
 				}
-				rs.close();
-				ps.close();
-				db_conn.close();
-				db_conn = null;
-				ps = null;
-				rs = null;
 			}
 		}
-		catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}
-		finally{
-			try{
-				if (rs != null) rs.close();
-				if (ps != null) ps.close();
-				if (db_conn != null) db_conn.close();
-			}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}
-		}
-		if (recursive && (dim == null || dimNormal == null))
+		catch (Exception ex)
 		{
-			int index = dir.lastIndexOf('/');
-			if (index > 1)
-			{
-				String parent = dir.substring(0, index);
-				Logger.debug(GalleryDB.class, "Testujem gallery size parent: " + parent);
-				return (getDimension(parent, recursive, returnDefault));
-			}
-			else if (returnDefault)
-			{
-				dim = new Dimension(160, 120);
-				dimNormal = new Dimension(750, 560);
-			}
+			sk.iway.iwcm.Logger.error(ex);
 		}
-		Dimension[] dims = new Dimension[2];
-		dims[0] = dim;
-		dims[1] = dimNormal;
-		return (dims);
+		return new GalleryResizeSettings(false, null, null, null);
+	}
+
+	/**
+	 * Resolves settings recursively from the closest configured parent.
+	 */
+	private static GalleryResizeSettings getGalleryResizeSettings(String dir, boolean recursive, boolean returnDefault)
+	{
+		dir = dir.replace('\\', '/');
+		GalleryResizeSettings settings = readGalleryResizeSettings(dir);
+		if (recursive == false) return settings;
+
+		if (settings.found && settings.dimensions != null && Tools.isNotEmpty(settings.resizeMode)) return settings;
+
+		int index = dir.lastIndexOf('/');
+		if (index > 1)
+		{
+			String parent = dir.substring(0, index);
+			GalleryResizeSettings parentSettings = getGalleryResizeSettings(parent, true, returnDefault);
+			return mergeGalleryResizeSettings(settings, parentSettings);
+		}
+
+		if (settings.found) return settings;
+		if (returnDefault)
+		{
+			return new GalleryResizeSettings(
+				false,
+				new Dimension[] { new Dimension(160, 120), new Dimension(750, 560) },
+				null,
+				null
+			);
+		}
+		return settings;
+	}
+
+	/**
+	 * Resolves a child directory using already resolved parent settings.
+	 */
+	private static GalleryResizeSettings getGalleryResizeSettings(String dir, GalleryResizeSettings parentSettings)
+	{
+		GalleryResizeSettings settings = readGalleryResizeSettings(dir.replace('\\', '/'));
+		return mergeGalleryResizeSettings(settings, parentSettings);
+	}
+
+	private static GalleryResizeSettings mergeGalleryResizeSettings(GalleryResizeSettings settings, GalleryResizeSettings parentSettings)
+	{
+		Dimension[] dimensions = settings.found && settings.dimensions != null ? settings.dimensions : parentSettings.dimensions;
+		String resizeMode = settings.found && Tools.isNotEmpty(settings.resizeMode) ? settings.resizeMode : parentSettings.resizeMode;
+		String resizeModeNormal = resolveInheritedResizeModeNormal(settings.found, settings.resizeModeNormal, parentSettings.resizeModeNormal);
+
+		// A row with NULL override intentionally falls back to its own effective small image mode.
+		return new GalleryResizeSettings(settings.found, dimensions, resizeMode, resizeModeNormal);
 	}
 
 	public static String getResizeMode(String dir, boolean recursive)
 	{
-		java.sql.Connection db_conn = null;
-		java.sql.PreparedStatement ps = null;
-		ResultSet rs = null;
-		dir = dir.replace('\\', '/');
-		String resizeMode = null;
-		try
-		{
-			if (!dir.equals(""))
-			{
-				db_conn = DBPool.getConnection();
-				ps = db_conn.prepareStatement("SELECT * FROM gallery_dimension WHERE image_path=?"+CloudToolsForCore.getDomainIdSqlWhere(true));
-				ps.setString(1, normalizeDir(dir));
-				rs = ps.executeQuery();
-				if (rs.next())
-				{
-					resizeMode = rs.getString("resize_mode");
-				}
-				rs.close();
-				ps.close();
-				db_conn.close();
-				db_conn = null;
-				ps = null;
-				rs = null;
-			}
-		}
-		catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}
-		finally{
-			try{
-				if (rs != null) rs.close();
-				if (ps != null) ps.close();
-				if (db_conn != null) db_conn.close();
-			}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}
-		}
-		if (recursive && (Tools.isEmpty(resizeMode)))
-		{
-			int index = dir.lastIndexOf('/');
-			if (index > 1)
-			{
-				String parent = dir.substring(0, index);
-				Logger.debug(GalleryDB.class, "Testujem gallery size parent: " + parent);
-				return (getResizeMode(parent, recursive));
-			}
-			else
-			{
-				resizeMode = null;
-			}
-		}
-		return (resizeMode);
+		return getGalleryResizeSettings(dir, recursive, false).resizeMode;
 	}
 
 	public static String getResizeMode(String dir)
 	{
-		java.sql.Connection db_conn = null;
-		java.sql.PreparedStatement ps = null;
-		ResultSet rs = null;
-		String ret = null;
-		dir = dir.replace('\\', '/');
-		try
-		{
-			if (!dir.equals(""))
-			{
-				db_conn = DBPool.getConnection();
-				ps = db_conn.prepareStatement("SELECT resize_mode FROM gallery_dimension WHERE image_path=?"+CloudToolsForCore.getDomainIdSqlWhere(true));
-				ps.setString(1, normalizeDir(dir));
-				rs = ps.executeQuery();
-				if (rs.next())
-				{
-					ret = rs.getString("resize_mode");
-				}
-				rs.close();
-				ps.close();
-				db_conn.close();
+		return getResizeMode(dir, false);
+	}
 
-				rs = null;
-				ps = null;
-				db_conn = null;
-			}
-		}
-		catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}
-		finally{
-			try{
-				if (rs != null) rs.close();
-				if (ps != null) ps.close();
-				if (db_conn != null) db_conn.close();
-			}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}
-		}
-		return ret;
+	/**
+	 * Returns the resize mode override for the large image.
+	 * A gallery row with a NULL value means that the small image mode must be used.
+	 * Only a directory without its own gallery row inherits the value from its parent.
+	 *
+	 * @param dir gallery directory
+	 * @param recursive inherit from the closest configured parent when the directory has no gallery row
+	 * @return large image resize mode override, or null to use the small image mode
+	 */
+	public static String getResizeModeNormal(String dir, boolean recursive)
+	{
+		return getGalleryResizeSettings(dir, recursive, false).resizeModeNormal;
+	}
+
+	public static String getResizeModeNormal(String dir)
+	{
+		return getResizeModeNormal(dir, false);
 	}
 
 	/**
@@ -2222,9 +2258,8 @@ public class GalleryDB
 	 */
 	public static void resizePicture(String realPath, String dir)
 	{
-		Dimension[] dims = getDimension(dir);
-		String resizeMode = getResizeMode(dir, true);
-		resizePictureImpl(dims, realPath, null, null, resizeMode);
+		GalleryResizeSettings settings = getGalleryResizeSettings(dir, true, true);
+		resizePictureImpl(settings.dimensions, realPath, null, null, settings.resizeMode, settings.resizeModeNormal);
 	}
 
 	/**
@@ -2237,7 +2272,9 @@ public class GalleryDB
 	public static boolean resizePictureImpl(Dimension[] dims, String realPath, PrintWriter out, Prop prop)
 	{
 		IwcmFile actualDir = new IwcmFile(realPath);
-		return resizePictureImpl(dims, realPath, out, prop, GalleryDB.getResizeMode(actualDir.getVirtualParent()));
+		String actualParent = actualDir.getVirtualParent();
+		GalleryResizeSettings settings = getGalleryResizeSettings(actualParent, true, false);
+		return resizePictureImpl(dims, realPath, out, prop, settings.resizeMode, settings.resizeModeNormal);
 	}
 
 	/**
@@ -2249,6 +2286,22 @@ public class GalleryDB
 	 * @param out
 	 */
 	public static boolean resizePictureImpl(Dimension[] dims, String realPath, PrintWriter out, Prop prop, String resizeMode)
+	{
+		return resizePictureImpl(dims, realPath, out, prop, resizeMode, null);
+	}
+
+	/**
+	 * Creates large and small gallery images using independent resize modes.
+	 *
+	 * @param dims small and large image dimensions
+	 * @param realPath source image path
+	 * @param out optional output
+	 * @param prop optional translations
+	 * @param resizeMode small image resize mode
+	 * @param resizeModeNormal large image resize mode, null to use the small image mode
+	 * @return true when both images were processed successfully
+	 */
+	public static boolean resizePictureImpl(Dimension[] dims, String realPath, PrintWriter out, Prop prop, String resizeMode, String resizeModeNormal)
 	{
 		boolean ret = true;
 		File img = new File(realPath);
@@ -2282,6 +2335,7 @@ public class GalleryDB
 		String resizeFrom = realPathOrig;
 		Dimension dim = dims[0];
 		Dimension dimNormal = dims[1];
+		String effectiveResizeModeNormal = resolveResizeModeNormal(resizeMode, resizeModeNormal);
 
 		IwcmFile normal = new IwcmFile(realPath);
 
@@ -2305,7 +2359,7 @@ public class GalleryDB
 				println(out, prop.getText("gallery.resizing.normal") + ": " + normal.getName());
 			}
 			// resizni
-			int status = resizePicture(realPathOrig, realPath, dimNormal.getWidth(), dimNormal.getHeight(), resizeMode);
+			int status = resizePicture(realPathOrig, realPath, dimNormal.getWidth(), dimNormal.getHeight(), effectiveResizeModeNormal);
 			if (status > 0)
 			{
 				ret = false;
@@ -2362,6 +2416,40 @@ public class GalleryDB
 		}
 
 		return (ret);
+	}
+
+	/**
+	 * Resolves the effective resize mode for the large image.
+	 */
+	static String resolveResizeModeNormal(String resizeMode, String resizeModeNormal)
+	{
+		if ("N".equals(resizeMode)) return resizeMode;
+		String normalizedResizeModeNormal = normalizeResizeModeNormal(resizeModeNormal);
+		return normalizedResizeModeNormal == null ? resizeMode : normalizedResizeModeNormal;
+	}
+
+	/**
+	 * Returns true when the large image resize mode can be stored.
+	 */
+	public static boolean isResizeModeNormalValid(String resizeModeNormal)
+	{
+		return Tools.isEmpty(resizeModeNormal) || normalizeResizeModeNormal(resizeModeNormal) != null;
+	}
+
+	/**
+	 * Normalizes the large image resize mode. Unsupported values use the small image mode.
+	 */
+	static String normalizeResizeModeNormal(String resizeModeNormal)
+	{
+		if (Tools.isEmpty(resizeModeNormal)) return null;
+		if ("S".equals(resizeModeNormal) || "C".equals(resizeModeNormal) || "A".equals(resizeModeNormal) ||
+			"W".equals(resizeModeNormal) || "H".equals(resizeModeNormal)) return resizeModeNormal;
+		return null;
+	}
+
+	static String resolveInheritedResizeModeNormal(boolean hasOwnSettings, String resizeModeNormal, String inheritedResizeModeNormal)
+	{
+		return hasOwnSettings ? normalizeResizeModeNormal(resizeModeNormal) : normalizeResizeModeNormal(inheritedResizeModeNormal);
 	}
 
 	/**
@@ -4008,7 +4096,7 @@ public class GalleryDB
 					String BASE_DIR = newUrl.substring(0, newUrl.lastIndexOf("/")+1);
 					Prop prop = Prop.getInstance();
 					Dimension[] dims = GalleryDB.getDimension(BASE_DIR);
-					GalleryDB.resizePictureImpl(dims, Tools.getRealPath(newUrl), null, prop, GalleryDB.getResizeMode(BASE_DIR));
+					GalleryDB.resizePictureImpl(dims, Tools.getRealPath(newUrl), null, prop);
 				}
 			}
 		}
@@ -4210,10 +4298,24 @@ public class GalleryDB
 	public static void updateDirectoryDimToSubfolders(String dir) {
 		Dimension[] dims = getDimension(dir, true);
 		String resizeMode = getResizeMode(dir, true);
-		updateDirectoryDim(dir, dims[0], dims[1], resizeMode, true);
+		String resizeModeNormal = getResizeModeNormal(dir, true);
+		updateDirectoryDimToSubfolders(dir, dims[0], dims[1], resizeMode, resizeModeNormal);
 	}
 
-	private static void updateDirectoryDim(String dir, Dimension dim, Dimension dimNormal, String resizeMode, boolean recursive)
+	/**
+	 * Applies caller-supplied dimensions and resize modes to all existing subdirectories.
+	 *
+	 * @param dir virtual gallery directory
+	 * @param dim small image dimensions
+	 * @param dimNormal large image dimensions
+	 * @param resizeMode small image resize mode
+	 * @param resizeModeNormal large image resize mode, null to use the small image mode
+	 */
+	public static void updateDirectoryDimToSubfolders(String dir, Dimension dim, Dimension dimNormal, String resizeMode, String resizeModeNormal) {
+		updateDirectoryDim(dir, dim, dimNormal, resizeMode, resizeModeNormal, true);
+	}
+
+	private static void updateDirectoryDim(String dir, Dimension dim, Dimension dimNormal, String resizeMode, String resizeModeNormal, boolean recursive)
 	{
 		IwcmFile directory = IwcmFile.fromVirtualPath("/" + dir);
 		if (directory.exists() && directory.isDirectory())
@@ -4232,13 +4334,15 @@ public class GalleryDB
 						{
 							db_conn = DBPool.getConnection();
 							ps = db_conn
-								.prepareStatement("UPDATE gallery_dimension SET image_width=?, image_height=?, normal_width=?, normal_height=?, resize_mode=? WHERE image_path=?");
+								.prepareStatement(UPDATE_DIRECTORY_DIMENSION_SQL);
 							ps.setInt(1, dim.width);
 							ps.setInt(2, dim.height);
 							ps.setInt(3, dimNormal.width);
 							ps.setInt(4, dimNormal.height);
 							ps.setString(5, resizeMode);
-							ps.setString(6, normalizeDir(file.getVirtualPath()));
+							ps.setString(6, resizeModeNormal);
+							ps.setString(7, normalizeDir(file.getVirtualPath()));
+							ps.setInt(8, CloudToolsForCore.getDomainId());
 							ps.execute();
 							ps.close();
 							db_conn.close();
@@ -4255,7 +4359,7 @@ public class GalleryDB
 					}
 
 					if(recursive)
-						updateDirectoryDim(normalizeDir(file.getVirtualPath()), dim, dimNormal, resizeMode, recursive);
+						updateDirectoryDim(normalizeDir(file.getVirtualPath()), dim, dimNormal, resizeMode, resizeModeNormal, recursive);
 				}
 			}
 		}

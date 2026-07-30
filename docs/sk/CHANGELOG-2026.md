@@ -82,6 +82,10 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ![](redactor/files/file-archive/drag-drop-upload-dialog.png)
 
+### Galéria
+
+- Pridaná možnosť nastaviť samostatný **spôsob zmeny veľkosti pre veľký obrázok** nezávisle od miniatúry. Ak sa hodnota nevyplní (`Rovnako ako malý obrázok`), veľký obrázok použije spôsob zmeny veľkosti malého obrázka. Nastavenie je možné voliteľne prekopírovať aj do podpriečinkov (#58633).
+
 ### Voliteľné polia
 
 - Kompletne implementovaná funkčnosť [nastavenia voliteľných polí](frontend/webpages/customfields/custom-fields-settings.md). Umožňuje centrálne nastaviť vlastnosti polí bez editácie prekladových kľúčov. Podporované sú všetky typy polí (text, textarea, select, multiselect, autocomplete, enumeration, obrázok, odkaz, JSON a ďalšie) s typovo špecifickými nastaveniami ako maximálna dĺžka textu, možnosti výberu, prepojenie na číselníky alebo závislosť na iných poliach. Používateľské rozhranie ponúka aj jednoduchý spôsob nastavenia možných hodnôt pre výberové/autocomplete polia (#58529).
