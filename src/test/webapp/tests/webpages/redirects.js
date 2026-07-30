@@ -450,7 +450,7 @@ function createDatedRedirect(I, DTE, oldUrl, newUrl, publishDate, validTo) {
 }
 
 const cleanupPrefix = "/autotest-redirect-clearing-";
-const redirectWrapper = "#redirectClearingTable_wrapper";
+const redirectClearingWrapper = "#redirectClearingTable_wrapper";
 const toast = "#toast-container-webjet";
 Scenario('Redirect cleaning preview and execution @singlethread @screenshot', async ({ I, DT, DTE, Document }) => {
 
@@ -483,10 +483,10 @@ Scenario('Redirect cleaning preview and execution @singlethread @screenshot', as
 
     Document.screenshot("/redactor/webpages/redirects/redirect-clearing.png");
 
-    I.clickCss(redirectWrapper + " button.buttons-analyze-redirects");
+    I.clickCss(redirectClearingWrapper + " button.buttons-analyze-redirects");
     I.waitForText("Analýza dokončená: 0 aktualizácií, 0 zmazaní", 40, toast);
-    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 40, redirectWrapper);
-    I.seeElement(redirectWrapper + " button.buttons-execute-clearing.disabled");
+    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 40, redirectClearingWrapper);
+    I.seeElement(redirectClearingWrapper + " button.buttons-execute-clearing.disabled");
     const initialSummary = await I.grabTextFrom(toast);
     const ignoredCountMatch = initialSummary.match(/(\d+) ignorovaných záznamov/);
     I.assertTrue(ignoredCountMatch !== null, "The analysis summary must contain the ignored redirect count");
@@ -511,41 +511,41 @@ Scenario('Redirect cleaning preview and execution @singlethread @screenshot', as
     I.say("Analyze and verify the read-only preview");
     I.amOnPage("/admin/v9/settings/redirect-clearing/");
     DT.waitForLoader("redirectClearingTable");
-    I.dontSeeElement(redirectWrapper + " button.buttons-create");
-    I.clickCss(redirectWrapper + " button.buttons-analyze-redirects");
-    I.waitForText(prefix + "-old-first", 40, redirectWrapper);
-    I.see("Zmazať starú verziu", redirectWrapper);
-    I.see("Zmazať duplikát", redirectWrapper);
-    I.see("Skrátiť reťazec", redirectWrapper);
-    I.see("Zmazať krok cyklu", redirectWrapper);
+    I.dontSeeElement(redirectClearingWrapper + " button.buttons-create");
+    I.clickCss(redirectClearingWrapper + " button.buttons-analyze-redirects");
+    I.waitForText(prefix + "-old-first", 40, redirectClearingWrapper);
+    I.see("Zmazať starú verziu", redirectClearingWrapper);
+    I.see("Zmazať duplikát", redirectClearingWrapper);
+    I.see("Skrátiť reťazec", redirectClearingWrapper);
+    I.see("Zmazať krok cyklu", redirectClearingWrapper);
 
     I.waitForElement(toast);
     I.moveCursorTo(toast);
     Document.screenshot("/redactor/webpages/redirects/redirect-clearing-analyzed.png");
 
     I.waitForText((initialIgnoredCount + 3) + " ignorovaných záznamov", 40, toast);
-    I.dontSee(regexOldUrl, redirectWrapper);
-    I.dontSee(publishDateOldUrl, redirectWrapper);
-    I.dontSee(validToOldUrl, redirectWrapper);
-    I.seeElement(redirectWrapper + " button.buttons-execute-clearing:not(.disabled)");
+    I.dontSee(regexOldUrl, redirectClearingWrapper);
+    I.dontSee(publishDateOldUrl, redirectClearingWrapper);
+    I.dontSee(validToOldUrl, redirectClearingWrapper);
+    I.seeElement(redirectClearingWrapper + " button.buttons-execute-clearing:not(.disabled)");
     I.dontSeeCheckboxIsChecked("#redirectClearingIncludeUnnamed");
     I.toastrClose();
 
     I.say("Reopen the page and verify the shared cached preview");
     I.amOnPage("/admin/v9/settings/redirect-clearing/");
     DT.waitForLoader("redirectClearingTable");
-    I.waitForText(prefix + "-old-first", 40, redirectWrapper);
+    I.waitForText(prefix + "-old-first", 40, redirectClearingWrapper);
     I.dontSeeCheckboxIsChecked("#redirectClearingIncludeUnnamed");
-    I.seeElement(redirectWrapper + " button.buttons-execute-clearing:not(.disabled)");
+    I.seeElement(redirectClearingWrapper + " button.buttons-execute-clearing:not(.disabled)");
 
     I.say("Execute the complete snapshot");
-    I.clickCss(redirectWrapper + " button.buttons-execute-clearing");
+    I.clickCss(redirectClearingWrapper + " button.buttons-execute-clearing");
     I.waitForText("Vykonať čistenie presmerovaní?", 10, toast);
     I.see("Zmení sa 1 a zmaže 3 záznamov", toast);
     Document.screenshot("/redactor/webpages/redirects/redirect-clearing-confirm.png");
     I.click("Potvrdiť", "div.toastr-buttons");
     I.waitForText("Čistenie dokončené", 40, toast);
-    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 40, redirectWrapper);
+    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 40, redirectClearingWrapper);
 
     I.say("Verify the resulting redirects in the main table and in a request");
     I.amOnPage("/admin/v9/settings/redirect/");

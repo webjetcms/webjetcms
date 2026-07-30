@@ -49,7 +49,7 @@ Karta **Čistenie** umožňuje skontrolovať presmerovania vybranej domény, ods
 1. **Analýza presmerovaní**
 2. **Vykonanie čistenia**
 
-!> **Upozornennie:** Pre jednu doménu môže súčasne prebiehať iba jedna analýza alebo jedno čistenie. Ak už operáciu spustil iný administrátor, systém ďalšie spustenie nepovolí, kým sa nedokončí prebiehajúca operácia. V takom prípade sa zobrazí upozornenie, že je potrebné počkať na dokončenie prebiehajúcej operácie.
+!> **Upozornenie:** Pre jednu doménu môže súčasne prebiehať iba jedna analýza alebo jedno čistenie. Ak už operáciu spustil iný administrátor, systém ďalšie spustenie nepovolí, kým sa nedokončí prebiehajúca operácia. V takom prípade sa zobrazí upozornenie, že je potrebné počkať na dokončenie prebiehajúcej operácie.
 
 ### Analýza presmerovaní
 
