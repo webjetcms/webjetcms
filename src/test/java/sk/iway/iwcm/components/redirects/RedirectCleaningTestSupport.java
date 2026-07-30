@@ -15,10 +15,10 @@ import java.util.List;
 import java.util.Map;
 
 import sk.iway.iwcm.Cache;
-import sk.iway.iwcm.components.redirects.RedirectClearingAction.ActionType;
+import sk.iway.iwcm.components.redirects.RedirectCleaningAction.ActionType;
 import sk.iway.iwcm.system.UrlRedirectBean;
 
-abstract class RedirectClearingTestSupport {
+abstract class RedirectCleaningTestSupport {
 
     static final String DOMAIN = "example.com";
 
@@ -48,14 +48,14 @@ abstract class RedirectClearingTestSupport {
         return redirect;
     }
 
-    static RedirectClearingAction action(long id, ActionType type, String proposedUrl) {
-        return new RedirectClearingAction(
+    static RedirectCleaningAction action(long id, ActionType type, String proposedUrl) {
+        return new RedirectCleaningAction(
             id, type, "/old", "/new", proposedUrl, DOMAIN, 302, null
         );
     }
 
-    static RedirectClearingPlan plan(int domainId, boolean includeUnnamed) {
-        return new RedirectClearingPlan(
+    static RedirectCleaningPlan plan(int domainId, boolean includeUnnamed) {
+        return new RedirectCleaningPlan(
             domainId,
             DOMAIN,
             includeUnnamed,
@@ -65,13 +65,13 @@ abstract class RedirectClearingTestSupport {
         );
     }
 
-    static RedirectClearingPlan plan(List<RedirectClearingAction> actions) {
-        return new RedirectClearingPlan(-1, DOMAIN, true, actions, actions.size(), 0);
+    static RedirectCleaningPlan plan(List<RedirectCleaningAction> actions) {
+        return new RedirectCleaningPlan(-1, DOMAIN, true, actions, actions.size(), 0);
     }
 
     static Cache cache(Map<String, Object> values) {
         Cache cache = mock(Cache.class);
-        when(cache.getObject(anyString(), eq(RedirectClearingPlan.class)))
+        when(cache.getObject(anyString(), eq(RedirectCleaningPlan.class)))
             .thenAnswer(invocation -> values.get(invocation.getArgument(0)));
         doAnswer(invocation -> {
             values.put(invocation.getArgument(0), invocation.getArgument(1));
@@ -84,8 +84,8 @@ abstract class RedirectClearingTestSupport {
         return cache;
     }
 
-    static void assertAction(RedirectClearingPlan plan, long id, ActionType type, String proposedUrl) {
-        RedirectClearingAction action = plan.getActions().stream()
+    static void assertAction(RedirectCleaningPlan plan, long id, ActionType type, String proposedUrl) {
+        RedirectCleaningAction action = plan.getActions().stream()
             .filter(candidate -> candidate.getId() == id)
             .findFirst()
             .orElseThrow(() -> new AssertionError("Missing action for redirect ID " + id));
@@ -93,7 +93,7 @@ abstract class RedirectClearingTestSupport {
         assertEquals(proposedUrl, action.getProposedNewUrl());
     }
 
-    static void assertNoAction(RedirectClearingPlan plan, long id) {
+    static void assertNoAction(RedirectCleaningPlan plan, long id) {
         assertFalse(plan.getActions().stream().anyMatch(action -> action.getId() == id));
     }
 

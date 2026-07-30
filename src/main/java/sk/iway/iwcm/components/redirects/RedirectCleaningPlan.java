@@ -8,12 +8,12 @@ import java.util.List;
 import lombok.Getter;
 
 /**
- * Immutable serializable snapshot of redirect clearing analysis for one domain.
+ * Immutable serializable snapshot of redirect cleaning analysis for one domain.
  * The snapshot is shared through the application cache and executed without
  * recalculating its actions.
  */
 @Getter
-class RedirectClearingPlan implements Serializable {
+class RedirectCleaningPlan implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -27,7 +27,7 @@ class RedirectClearingPlan implements Serializable {
     private final boolean includeUnnamed;
 
     /** Immutable list of operations to execute. */
-    private final List<RedirectClearingAction> actions;
+    private final List<RedirectCleaningAction> actions;
 
     /** Number of database records loaded for analysis. */
     private final int analyzedRecords;
@@ -39,7 +39,7 @@ class RedirectClearingPlan implements Serializable {
     private final int ignoredRecords;
 
     /**
-     * Creates an immutable clearing snapshot.
+     * Creates an immutable cleaning snapshot.
      *
      * @param analyzedDomainId selected domain ID
      * @param analyzedDomain normalized selected domain name
@@ -50,11 +50,11 @@ class RedirectClearingPlan implements Serializable {
      * @param ignoredRecords number of regular-expression, dated, or invalid
      *        empty-URL redirect records excluded from analysis
      */
-    RedirectClearingPlan(
+    RedirectCleaningPlan(
         int analyzedDomainId,
         String analyzedDomain,
         boolean includeUnnamed,
-        List<RedirectClearingAction> actions,
+        List<RedirectCleaningAction> actions,
         int analyzedRecords,
         int ignoredRecords
     ) {
@@ -77,7 +77,7 @@ class RedirectClearingPlan implements Serializable {
      * @return number of redirect deletions in this plan
      */
     public int getDeleteCount() {
-        return (int) actions.stream().filter(RedirectClearingAction::isDelete).count();
+        return (int) actions.stream().filter(RedirectCleaningAction::isDelete).count();
     }
 
     /**

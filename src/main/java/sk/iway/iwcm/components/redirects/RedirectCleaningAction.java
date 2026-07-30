@@ -10,16 +10,16 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 
 /**
  * Serializable read-only DataTable row describing one operation in a redirect
- * clearing preview. A database redirect can occur at most once in a plan.
+ * cleaning preview. A database redirect can occur at most once in a plan.
  */
 @Getter
 @Setter
-public class RedirectClearingAction implements Serializable {
+public class RedirectCleaningAction implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     /**
-     * Operations produced by redirect clearing analysis inside one domain
+     * Operations produced by redirect cleaning analysis inside one domain
      * scope. Regular-expression redirects and redirects with a publication or
      * validity end date are excluded from analysis and never receive an action.
      */
@@ -63,7 +63,7 @@ public class RedirectClearingAction implements Serializable {
 
     @DataTableColumn(
         inputType = DataTableColumnType.SELECT,
-        title = "components.redirect.clearing.action",
+        title = "components.redirect.cleaning.action",
         hiddenEditor = true,
         sortAfter = "id"
     )
@@ -79,7 +79,7 @@ public class RedirectClearingAction implements Serializable {
 
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT,
-        title = "components.redirect.clearing.currentNewUrl",
+        title = "components.redirect.cleaning.currentNewUrl",
         hiddenEditor = true,
         sortAfter = "oldUrl"
     )
@@ -87,7 +87,7 @@ public class RedirectClearingAction implements Serializable {
 
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT,
-        title = "components.redirect.clearing.proposedNewUrl",
+        title = "components.redirect.cleaning.proposedNewUrl",
         hiddenEditor = true,
         sortAfter = "currentNewUrl"
     )
@@ -119,12 +119,12 @@ public class RedirectClearingAction implements Serializable {
     /**
      * Creates an empty action required by DataTable and cached snapshot deserialization.
      */
-    public RedirectClearingAction() {
+    public RedirectCleaningAction() {
         // Required for deserialization.
     }
 
     /**
-     * Creates a complete redirect clearing action snapshot.
+     * Creates a complete redirect cleaning action snapshot.
      *
      * @param id database redirect identifier
      * @param action operation to execute
@@ -135,7 +135,7 @@ public class RedirectClearingAction implements Serializable {
      * @param redirectCode HTTP redirect status code
      * @param insertDate redirect creation timestamp
      */
-    public RedirectClearingAction(
+    public RedirectCleaningAction(
             Long id,
             ActionType action,
             String oldUrl,

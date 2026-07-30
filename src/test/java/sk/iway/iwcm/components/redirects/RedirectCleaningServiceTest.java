@@ -8,16 +8,16 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import sk.iway.iwcm.components.redirects.RedirectClearingAction.ActionType;
+import sk.iway.iwcm.components.redirects.RedirectCleaningAction.ActionType;
 import sk.iway.iwcm.system.UrlRedirectBean;
 
-class RedirectClearingServiceTest extends RedirectClearingTestSupport {
+class RedirectCleaningServiceTest extends RedirectCleaningTestSupport {
 
-    private final RedirectClearingService service = new RedirectClearingService(null);
+    private final RedirectCleaningService service = new RedirectCleaningService(null);
 
     @Test
     void deletesObsoleteTarget() {
-        RedirectClearingPlan plan = service.analyze(DOMAIN, List.of(
+        RedirectCleaningPlan plan = service.analyze(DOMAIN, List.of(
             redirect(1, "/old", "/first", 100L),
             redirect(2, "/old", "/latest", 200L)
         ));
@@ -28,7 +28,7 @@ class RedirectClearingServiceTest extends RedirectClearingTestSupport {
 
     @Test
     void deletesNewerDuplicate() {
-        RedirectClearingPlan plan = service.analyze(DOMAIN, List.of(
+        RedirectCleaningPlan plan = service.analyze(DOMAIN, List.of(
             redirect(1, "/old", "/new", 100L),
             redirect(2, "/old", "/new", 200L)
         ));
@@ -39,7 +39,7 @@ class RedirectClearingServiceTest extends RedirectClearingTestSupport {
 
     @Test
     void optimizesSimpleChain() {
-        RedirectClearingPlan plan = service.analyze(DOMAIN, List.of(
+        RedirectCleaningPlan plan = service.analyze(DOMAIN, List.of(
             redirect(1, "/a", "/b", 100L),
             redirect(2, "/b", "/c", 200L)
         ));
@@ -50,7 +50,7 @@ class RedirectClearingServiceTest extends RedirectClearingTestSupport {
 
     @Test
     void removesNewestCycleStep() {
-        RedirectClearingPlan plan = service.analyze(DOMAIN, List.of(
+        RedirectCleaningPlan plan = service.analyze(DOMAIN, List.of(
             redirect(1, "/a", "/b", 100L),
             redirect(2, "/b", "/a", 200L)
         ));
@@ -68,7 +68,7 @@ class RedirectClearingServiceTest extends RedirectClearingTestSupport {
             redirect(4, "", "/new", 100L)
         );
 
-        RedirectClearingPlan plan = service.analyze(DOMAIN, redirects);
+        RedirectCleaningPlan plan = service.analyze(DOMAIN, redirects);
 
         assertTrue(plan.isEmpty());
         assertEquals(4, plan.getIgnoredRecords());
@@ -83,8 +83,8 @@ class RedirectClearingServiceTest extends RedirectClearingTestSupport {
             redirect(4, "/unnamed", "/target", "", 200L)
         );
 
-        RedirectClearingPlan namedOnly = service.analyze(DOMAIN, false, redirects);
-        RedirectClearingPlan withUnnamed = service.analyze(DOMAIN, true, redirects);
+        RedirectCleaningPlan namedOnly = service.analyze(DOMAIN, false, redirects);
+        RedirectCleaningPlan withUnnamed = service.analyze(DOMAIN, true, redirects);
 
         assertEquals(2, namedOnly.getAnalyzedRecords());
         assertFalse(namedOnly.isIncludeUnnamed());

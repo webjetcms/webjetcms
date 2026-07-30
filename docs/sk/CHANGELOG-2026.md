@@ -40,7 +40,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 - Presmerovania - pridané [čistenie a optimalizácia presmerovaní](redactor/webpages/redirects/README.md#čistenie-presmerovaní) s náhľadom zmien pred vykonaním. Čistenie odstraňuje staré, duplicitné a cyklické presmerovania a skracuje reťazce presmerovaní (#58629).
 
-![](redactor/webpages/redirects/redirect-clearing-analyzed.png)
+![](redactor/webpages/redirects/redirect-cleaning-analyzed.png)
 
 ### Formuláre
 

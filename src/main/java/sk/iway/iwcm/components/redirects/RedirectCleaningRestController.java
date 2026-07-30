@@ -15,18 +15,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.components.redirects.RedirectClearingAction.ActionType;
-import sk.iway.iwcm.components.redirects.RedirectClearingPlanCoordinator.MissingPlanException;
-import sk.iway.iwcm.components.redirects.RedirectClearingPlanCoordinator.OperationInProgressException;
-import sk.iway.iwcm.components.redirects.RedirectClearingPlanCoordinator.OperationType;
-import sk.iway.iwcm.components.redirects.RedirectClearingService.ExecutionResult;
+import sk.iway.iwcm.components.redirects.RedirectCleaningAction.ActionType;
+import sk.iway.iwcm.components.redirects.RedirectCleaningPlanCoordinator.MissingPlanException;
+import sk.iway.iwcm.components.redirects.RedirectCleaningPlanCoordinator.OperationInProgressException;
+import sk.iway.iwcm.components.redirects.RedirectCleaningPlanCoordinator.OperationType;
+import sk.iway.iwcm.components.redirects.RedirectCleaningService.ExecutionResult;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
@@ -35,7 +34,7 @@ import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 /**
- * Read-only DataTable controller for redirect clearing previews.
+ * Read-only DataTable controller for redirect cleaning previews.
  * <p>
  * Analysis stores one immutable plan in the application cache for the current
  * domain ID. All authorized administrators in that domain share the preview,
@@ -45,65 +44,65 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
  */
 @RestController
 @Datatable
-@RequestMapping(value = "/admin/rest/settings/redirect-clearing")
+@RequestMapping(value = "/admin/rest/settings/redirect-cleaning")
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('cmp_redirects')")
-public class RedirectClearingRestController extends DatatableRestControllerV2<RedirectClearingAction, Long> {
+public class RedirectCleaningRestController extends DatatableRestControllerV2<RedirectCleaningAction, Long> {
 
-    private final RedirectClearingPlanCoordinator coordinator;
+    private final RedirectCleaningPlanCoordinator coordinator;
 
     @Autowired
-    public RedirectClearingRestController(RedirectClearingPlanCoordinator coordinator) {
+    public RedirectCleaningRestController(RedirectCleaningPlanCoordinator coordinator) {
         super(null);
         this.coordinator = coordinator;
     }
 
     @Override
-    public Page<RedirectClearingAction> getAllItems(Pageable pageable) {
-        RedirectClearingPlan plan = coordinator.getPlan( CloudToolsForCore.getDomainId() );
-        List<RedirectClearingAction> actions = plan == null ? List.of() : plan.getActions();
+    public Page<RedirectCleaningAction> getAllItems(Pageable pageable) {
+        RedirectCleaningPlan plan = coordinator.getPlan( CloudToolsForCore.getDomainId() );
+        List<RedirectCleaningAction> actions = plan == null ? List.of() : plan.getActions();
         return createPage(actions, pageable, Map.of(), plan);
     }
 
     @Override
-    public Page<RedirectClearingAction> searchItem(Map<String, String> params, Pageable pageable, RedirectClearingAction search) {
-        RedirectClearingPlan plan = coordinator.getPlan( CloudToolsForCore.getDomainId() );
-        List<RedirectClearingAction> actions = plan == null ? List.of() : plan.getActions();
+    public Page<RedirectCleaningAction> searchItem(Map<String, String> params, Pageable pageable, RedirectCleaningAction search) {
+        RedirectCleaningPlan plan = coordinator.getPlan( CloudToolsForCore.getDomainId() );
+        List<RedirectCleaningAction> actions = plan == null ? List.of() : plan.getActions();
         return createPage(actions, pageable, params, plan);
     }
 
     @Override
-    public void getOptions(DatatablePageImpl<RedirectClearingAction> page) {
+    public void getOptions(DatatablePageImpl<RedirectCleaningAction> page) {
         List<LabelValue> options = List.of(
-            new LabelValue(getProp().getText("components.redirect.clearing.action.deleteOld"), ActionType.DELETE_OLD.name()),
-            new LabelValue(getProp().getText("components.redirect.clearing.action.deleteCycle"), ActionType.DELETE_CYCLE.name()),
-            new LabelValue(getProp().getText("components.redirect.clearing.action.deleteDuplicate"), ActionType.DELETE_DUPLICATE.name()),
-            new LabelValue(getProp().getText("components.redirect.clearing.action.updateOptimize"), ActionType.UPDATE_OPTIMIZE.name())
+            new LabelValue(getProp().getText("components.redirect.cleaning.action.deleteOld"), ActionType.DELETE_OLD.name()),
+            new LabelValue(getProp().getText("components.redirect.cleaning.action.deleteCycle"), ActionType.DELETE_CYCLE.name()),
+            new LabelValue(getProp().getText("components.redirect.cleaning.action.deleteDuplicate"), ActionType.DELETE_DUPLICATE.name()),
+            new LabelValue(getProp().getText("components.redirect.cleaning.action.updateOptimize"), ActionType.UPDATE_OPTIMIZE.name())
         );
         page.addOptions("action", options, "label", "value", false);
     }
 
     @Override
-    public boolean processAction(RedirectClearingAction entity, String action) {
+    public boolean processAction(RedirectCleaningAction entity, String action) {
         if ("analyze".equals(action)) return analyze();
         if ("execute".equals(action)) return execute();
         return false;
     }
 
     @Override
-    public RedirectClearingAction insertItem(RedirectClearingAction entity) {
-        throwError("components.redirect.clearing.unsupported");
+    public RedirectCleaningAction insertItem(RedirectCleaningAction entity) {
+        throwError("components.redirect.cleaning.unsupported");
         return null;
     }
 
     @Override
-    public RedirectClearingAction editItem(RedirectClearingAction entity, long id) {
-        throwError("components.redirect.clearing.unsupported");
+    public RedirectCleaningAction editItem(RedirectCleaningAction entity, long id) {
+        throwError("components.redirect.cleaning.unsupported");
         return null;
     }
 
     @Override
-    public boolean deleteItem(RedirectClearingAction entity, long id) {
-        throwError("components.redirect.clearing.unsupported");
+    public boolean deleteItem(RedirectCleaningAction entity, long id) {
+        throwError("components.redirect.cleaning.unsupported");
         return false;
     }
 
@@ -116,11 +115,11 @@ public class RedirectClearingRestController extends DatatableRestControllerV2<Re
     private boolean analyze() {
         try {
             boolean includeUnnamed = Tools.getBooleanValue(getRequest().getParameter("customData"), false);
-            RedirectClearingPlan plan = coordinator.analyze(CloudToolsForCore.getDomainId(), includeUnnamed);
+            RedirectCleaningPlan plan = coordinator.analyze(CloudToolsForCore.getDomainId(), includeUnnamed);
             addNotify(new NotifyBean(
-                getProp().getText("components.redirect.clearing.title"),
+                getProp().getText("components.redirect.cleaning.title"),
                 getProp().getText(
-                    "components.redirect.clearing.analyzeSummary",
+                    "components.redirect.cleaning.analyzeSummary",
                     String.valueOf(plan.getUpdateCount()),
                     String.valueOf(plan.getDeleteCount()),
                     String.valueOf(plan.getIgnoredRecords())
@@ -134,8 +133,8 @@ public class RedirectClearingRestController extends DatatableRestControllerV2<Re
             throwBusyError(exception.getActiveOperation());
             return false;
         } catch (RuntimeException exception) {
-            Logger.error(RedirectClearingRestController.class, "Redirect clearing analysis failed", exception);
-            throwError("components.redirect.clearing.analyzeError");
+            Logger.error(RedirectCleaningRestController.class, "Redirect cleaning analysis failed", exception);
+            throwError("components.redirect.cleaning.analyzeError");
             return false;
         }
     }
@@ -154,18 +153,18 @@ public class RedirectClearingRestController extends DatatableRestControllerV2<Re
             throwBusyError(exception.getActiveOperation());
             return false;
         } catch (MissingPlanException exception) {
-            throwError("components.redirect.clearing.noPlan");
+            throwError("components.redirect.cleaning.noPlan");
             return false;
         } catch (RuntimeException exception) {
-            Logger.error(RedirectClearingRestController.class, "Redirect clearing execution failed", exception);
-            throwError("components.redirect.clearing.executeError");
+            Logger.error(RedirectCleaningRestController.class, "Redirect cleaning execution failed", exception);
+            throwError("components.redirect.cleaning.executeError");
             return false;
         }
 
         addNotify(new NotifyBean(
-            getProp().getText("components.redirect.clearing.title"),
+            getProp().getText("components.redirect.cleaning.title"),
             getProp().getText(
-                "components.redirect.clearing.executeSummary",
+                "components.redirect.cleaning.executeSummary",
                 String.valueOf(result.getUpdated()),
                 String.valueOf(result.getDeleted()),
                 String.valueOf(result.getSkipped())
@@ -184,8 +183,8 @@ public class RedirectClearingRestController extends DatatableRestControllerV2<Re
      */
     private void throwBusyError(OperationType activeOperation) {
         String key = activeOperation == OperationType.ANALYZE
-            ? "components.redirect.clearing.busyAnalyze"
-            : "components.redirect.clearing.busyExecute";
+            ? "components.redirect.cleaning.busyAnalyze"
+            : "components.redirect.cleaning.busyExecute";
         throwError(key);
     }
 
@@ -199,22 +198,22 @@ public class RedirectClearingRestController extends DatatableRestControllerV2<Re
      * @param plan source plan, or {@code null} for an empty response
      * @return requested DataTable page
      */
-    private Page<RedirectClearingAction> createPage(
-        List<RedirectClearingAction> source,
+    private Page<RedirectCleaningAction> createPage(
+        List<RedirectCleaningAction> source,
         Pageable pageable,
         Map<String, String> params,
-        RedirectClearingPlan plan
+        RedirectCleaningPlan plan
     ) {
-        List<RedirectClearingAction> filtered = source.stream()
+        List<RedirectCleaningAction> filtered = source.stream()
             .filter(action -> matchesAll(action, params))
             .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
 
-        Comparator<RedirectClearingAction> comparator = buildComparator(pageable.getSort());
+        Comparator<RedirectCleaningAction> comparator = buildComparator(pageable.getSort());
         if (comparator != null) filtered.sort(comparator);
 
         int from = Math.toIntExact(Math.min(pageable.getOffset(), filtered.size()));
         int to = Math.min(from + pageable.getPageSize(), filtered.size());
-        DatatablePageImpl<RedirectClearingAction> page = new DatatablePageImpl<>(
+        DatatablePageImpl<RedirectCleaningAction> page = new DatatablePageImpl<>(
             filtered.subList(from, to),
             pageable,
             filtered.size()
@@ -230,22 +229,22 @@ public class RedirectClearingRestController extends DatatableRestControllerV2<Re
     private enum FilterType { TEXT, NUMBER, DATE }
 
     /** Filterable and sortable column; the extractor serves both. */
-    private record Column(FilterType type, Function<RedirectClearingAction, ? extends Comparable<?>> extractor) {}
+    private record Column(FilterType type, Function<RedirectCleaningAction, ? extends Comparable<?>> extractor) {}
 
     /** Single source of truth for supported columns, keyed by DataTable property name. */
     private static final Map<String, Column> COLUMNS = Map.of(
-        "id", new Column(FilterType.NUMBER, RedirectClearingAction::getId),
-        "action", new Column(FilterType.TEXT, RedirectClearingAction::getAction),
-        "oldUrl", new Column(FilterType.TEXT, RedirectClearingAction::getOldUrl),
-        "currentNewUrl", new Column(FilterType.TEXT, RedirectClearingAction::getCurrentNewUrl),
-        "proposedNewUrl", new Column(FilterType.TEXT, RedirectClearingAction::getProposedNewUrl),
-        "domainName", new Column(FilterType.TEXT, RedirectClearingAction::getDomainName),
-        "redirectCode", new Column(FilterType.NUMBER, RedirectClearingAction::getRedirectCode),
-        "insertDate", new Column(FilterType.DATE, RedirectClearingAction::getInsertDate)
+        "id", new Column(FilterType.NUMBER, RedirectCleaningAction::getId),
+        "action", new Column(FilterType.TEXT, RedirectCleaningAction::getAction),
+        "oldUrl", new Column(FilterType.TEXT, RedirectCleaningAction::getOldUrl),
+        "currentNewUrl", new Column(FilterType.TEXT, RedirectCleaningAction::getCurrentNewUrl),
+        "proposedNewUrl", new Column(FilterType.TEXT, RedirectCleaningAction::getProposedNewUrl),
+        "domainName", new Column(FilterType.TEXT, RedirectCleaningAction::getDomainName),
+        "redirectCode", new Column(FilterType.NUMBER, RedirectCleaningAction::getRedirectCode),
+        "insertDate", new Column(FilterType.DATE, RedirectCleaningAction::getInsertDate)
     );
 
     /** Tests a row against all filters; unknown keys never exclude a row. */
-    private boolean matchesAll(RedirectClearingAction action, Map<String, String> params) {
+    private boolean matchesAll(RedirectCleaningAction action, Map<String, String> params) {
         for (Map.Entry<String, String> entry : params.entrySet()) {
             String key = getCleanKey(entry.getKey());
             String value = entry.getValue();
@@ -258,7 +257,7 @@ public class RedirectClearingRestController extends DatatableRestControllerV2<Re
     }
 
     /** Applies one column filter using the type-appropriate matcher. */
-    private static boolean matches(Column column, RedirectClearingAction action, String value) {
+    private static boolean matches(Column column, RedirectCleaningAction action, String value) {
         Comparable<?> field = column.extractor().apply(action);
         return switch (column.type()) {
             case TEXT -> matchesText(field == null ? null : String.valueOf(field), value);
@@ -337,12 +336,12 @@ public class RedirectClearingRestController extends DatatableRestControllerV2<Re
 
     /** Builds a stable comparator chain from the requested sort, nulls first. */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Comparator<RedirectClearingAction> buildComparator(Sort sort) {
-        Comparator<RedirectClearingAction> result = null;
+    private static Comparator<RedirectCleaningAction> buildComparator(Sort sort) {
+        Comparator<RedirectCleaningAction> result = null;
         for (Sort.Order order : sort) {
             Column column = COLUMNS.get(order.getProperty());
             if (column == null) continue;
-            Comparator<RedirectClearingAction> field = Comparator.comparing(column.extractor(), Comparator.nullsFirst((Comparator) Comparator.naturalOrder()));
+            Comparator<RedirectCleaningAction> field = Comparator.comparing(column.extractor(), Comparator.nullsFirst((Comparator) Comparator.naturalOrder()));
             if (order.isDescending()) field = field.reversed();
             result = result == null ? field : result.thenComparing(field);
         }

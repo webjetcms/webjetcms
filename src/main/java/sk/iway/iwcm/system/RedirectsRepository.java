@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Persistence operations for URL redirects, including domain-restricted bulk
- * operations used by redirect clearing.
+ * operations used by redirect cleaning.
  */
 @Repository
 public interface RedirectsRepository extends JpaRepository<UrlRedirectBean, Long>, JpaSpecificationExecutor<UrlRedirectBean> {
@@ -20,7 +20,7 @@ public interface RedirectsRepository extends JpaRepository<UrlRedirectBean, Long
     /**
      * Loads redirects belonging to the selected domain and optionally redirects
      * from the independent unnamed scope represented by a {@code null} or empty
-     * domain. The clearing service never combines these scopes during analysis.
+     * domain. The cleaning service never combines these scopes during analysis.
      *
      * @param domainName normalized selected domain
      * @param includeUnnamed whether redirects without a domain are included
@@ -30,13 +30,13 @@ public interface RedirectsRepository extends JpaRepository<UrlRedirectBean, Long
     @Query("SELECT redirect FROM UrlRedirectBean redirect WHERE " +
         "(redirect.domainName = :domainName OR " +
         "((:includeUnnamed = true OR :domainName = '') AND (redirect.domainName IS NULL OR redirect.domainName = '')))")
-    List<UrlRedirectBean> findAllForRedirectClearing(
+    List<UrlRedirectBean> findAllForRedirectCleaning(
         @Param("domainName") String domainName,
         @Param("includeUnnamed") boolean includeUnnamed
     );
 
     /**
-     * Bulk update of the target URL for redirect clearing, restricted to records accessible from the current domain.
+     * Bulk update of the target URL for redirect cleaning, restricted to records accessible from the current domain.
      * Records with an empty/NULL domain are accessible as the independent unnamed
      * scope; named records must match the selected domain.
      *
@@ -49,10 +49,10 @@ public interface RedirectsRepository extends JpaRepository<UrlRedirectBean, Long
     @Modifying
     @Query("UPDATE UrlRedirectBean redirect SET redirect.newUrl = :newUrl WHERE redirect.urlRedirectId IN :ids AND " +
         "(redirect.domainName IS NULL OR redirect.domainName = '' OR redirect.domainName = :domainName)")
-    int updateNewUrlForRedirectClearing(@Param("ids") List<Long> ids, @Param("newUrl") String newUrl, @Param("domainName") String domainName);
+    int updateNewUrlForRedirectCleaning(@Param("ids") List<Long> ids, @Param("newUrl") String newUrl, @Param("domainName") String domainName);
 
     /**
-     * Bulk delete for redirect clearing, restricted to records accessible from the current domain.
+     * Bulk delete for redirect cleaning, restricted to records accessible from the current domain.
      * Records with an empty/NULL domain are accessible as the independent unnamed
      * scope; named records must match the selected domain.
      *
@@ -64,5 +64,5 @@ public interface RedirectsRepository extends JpaRepository<UrlRedirectBean, Long
     @Modifying
     @Query("DELETE FROM UrlRedirectBean redirect WHERE redirect.urlRedirectId IN :ids AND " +
         "(redirect.domainName IS NULL OR redirect.domainName = '' OR redirect.domainName = :domainName)")
-    int deleteForRedirectClearing(@Param("ids") List<Long> ids, @Param("domainName") String domainName);
+    int deleteForRedirectCleaning(@Param("ids") List<Long> ids, @Param("domainName") String domainName);
 }

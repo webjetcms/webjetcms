@@ -42,7 +42,7 @@ Vykoná sa presmerovanie napr. `/thisiswhere/oldfiles/page.html` na `/thisiswher
 
 Karta **Čistenie** umožňuje skontrolovať presmerovania vybranej domény, odstrániť nepotrebné záznamy a skrátiť reťazce presmerovaní.
 
-![](redirect-clearing.png)
+![](redirect-cleaning.png)
 
 Čistenie sa vykonáva v dvoch krokoch, aby ste si všetky navrhované zmeny mohli najskôr prezrieť:
 
@@ -62,7 +62,7 @@ V náhľade analýzy presmerovaní sa pre každý záznam zobrazí práve jedna 
 - **Zmazať duplikát** - pri rovnakých presmerovaniach ponechá najstarší záznam a novšie duplikáty odstráni.
 - **Skrátiť reťazec** - upraví iba cieľovú URL adresu tak, aby napríklad reťazec `/a -> /b -> /c` skrátil na `/a -> /c`.
 
-![](redirect-clearing-analyzed.png)
+![](redirect-cleaning-analyzed.png)
 
 **Ignorované presmerovania:**
 
@@ -82,7 +82,7 @@ Vykonanie čistenia sa spustí kliknutím na tlačidlo <button class="btn btn-sm
 
 Pri vykonaní sa použije presne uložený plán bez novej analýzy. Záznamy, ktoré boli medzičasom odstránené alebo už nie sú dostupné, sa preskočia a ich počet sa zobrazí vo výslednej správe. Ak vykonanie zlyhá, zmeny sa neuložia a plán zostane dostupný na opakovanie.
 
-![](redirect-clearing-confirm.png)
+![](redirect-cleaning-confirm.png)
 
 ## Presmerovania domén
 

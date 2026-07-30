@@ -3,13 +3,13 @@ extends ../../partials/layout
 block content
 
     script.
-        var redirectClearingTable;
+        var redirectCleaningTable;
 
         window.domReady.add(function () {
             let actionRunning = false;
             let planSummary = { updates: 0, deletes: 0 };
-            let actionButtonSelector = "#redirectClearingTable_wrapper .buttons-analyze-redirects, #redirectClearingTable_wrapper .buttons-execute-clearing";
-            let columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.redirects.RedirectClearingAction')})];
+            let actionButtonSelector = "#redirectCleaningTable_wrapper .buttons-analyze-redirects, #redirectCleaningTable_wrapper .buttons-execute-cleaning";
+            let columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.redirects.RedirectCleaningAction')})];
             let order = [];
             order.push([1, 'asc']);
             order.push([0, 'asc']);
@@ -17,16 +17,16 @@ block content
             //set the auto-height offset to the height of the info alert above the table (including margins)
             document.body.style.setProperty("--dt-autoheight-offset", Math.round($("div.alert.alert-info.mb-3.mt-3").outerHeight(true)));
 
-            redirectClearingTable = WJ.DataTable({
-                id: "redirectClearingTable",
-                url: "/admin/rest/settings/redirect-clearing",
+            redirectCleaningTable = WJ.DataTable({
+                id: "redirectCleaningTable",
+                url: "/admin/rest/settings/redirect-cleaning",
                 columns: columns,
                 serverSide: true,
                 editorId: "id",
                 order: order
             });
 
-            redirectClearingTable.hideButtons(["create", "edit", "remove", "celledit", "duplicate", "import", "export"]);
+            redirectCleaningTable.hideButtons(["create", "edit", "remove", "celledit", "duplicate", "import", "export"]);
 
             function setRunning(running) {
                 actionRunning = running;
@@ -35,65 +35,65 @@ block content
 
             function updateExecuteButton() {
                 let hasPlan = planSummary.updates + planSummary.deletes > 0;
-                $("#redirectClearingTable_wrapper .buttons-execute-clearing").toggleClass("disabled", !hasPlan || actionRunning);
+                $("#redirectCleaningTable_wrapper .buttons-execute-cleaning").toggleClass("disabled", !hasPlan || actionRunning);
             }
 
-            redirectClearingTable.button().add(1, {
+            redirectCleaningTable.button().add(1, {
                 text: '<i class="ti ti-scan"></i>',
                 action: function () {
                     if (actionRunning) return;
                     setRunning(true);
-                    let includeUnnamed = String($("#redirectClearingIncludeUnnamed").is(":checked"));
-                    redirectClearingTable.executeAction("analyze", true, null, null, includeUnnamed);
+                    let includeUnnamed = String($("#redirectCleaningIncludeUnnamed").is(":checked"));
+                    redirectCleaningTable.executeAction("analyze", true, null, null, includeUnnamed);
                 },
                 className: 'btn btn-warning buttons-analyze-redirects',
                 attr: {
-                    'title': '[[\#{components.redirect.clearing.analyze}]]',
+                    'title': '[[\#{components.redirect.cleaning.analyze}]]',
                     'data-toggle': 'tooltip'
                 }
             });
 
-            redirectClearingTable.button().add(2, {
+            redirectCleaningTable.button().add(2, {
                 text: '<i class="ti ti-trash"></i>',
                 action: function () {
                     if (actionRunning || planSummary.updates + planSummary.deletes === 0) return;
-                    let note = '[[\#{components.redirect.clearing.confirmMessage}]]'
+                    let note = '[[\#{components.redirect.cleaning.confirmMessage}]]'
                         .replace("{1}", planSummary.updates)
                         .replace("{2}", planSummary.deletes);
                     WJ.confirm({
-                        title: '[[\#{components.redirect.clearing.confirmTitle}]]',
+                        title: '[[\#{components.redirect.cleaning.confirmTitle}]]',
                         message: note,
                         success: function () {
                             if (actionRunning) return;
                             setRunning(true);
-                            redirectClearingTable.executeAction("execute", true);
+                            redirectCleaningTable.executeAction("execute", true);
                         }
                     });
                 },
-                className: 'btn btn-danger buttons-execute-clearing disabled',
+                className: 'btn btn-danger buttons-execute-cleaning disabled',
                 attr: {
-                    'title': '[[\#{components.redirect.clearing.execute}]]',
+                    'title': '[[\#{components.redirect.cleaning.execute}]]',
                     'data-toggle': 'tooltip'
                 }
             });
 
-            redirectClearingTable.on('xhr.dt', function (event, settings, json) {
+            redirectCleaningTable.on('xhr.dt', function (event, settings, json) {
                 if (json && json.summary) {
                     planSummary.updates = Number(json.summary.updates || 0);
                     planSummary.deletes = Number(json.summary.deletes || 0);
                     if (Number(json.summary.planAvailable || 0) > 0) {
-                        $("#redirectClearingIncludeUnnamed").prop("checked", Number(json.summary.includeUnnamed || 0) > 0);
+                        $("#redirectCleaningIncludeUnnamed").prop("checked", Number(json.summary.includeUnnamed || 0) > 0);
                     }
                 }
             });
 
-            redirectClearingTable.on('draw.dt', function () {
+            redirectCleaningTable.on('draw.dt', function () {
                 setRunning(false);
                 updateExecuteButton();
             });
 
             window.addEventListener("WJ.DT.executeActionCancel", function (event) {
-                if (!event.detail || event.detail.tableId !== "redirectClearingTable") return;
+                if (!event.detail || event.detail.tableId !== "redirectCleaningTable") return;
                 setRunning(false);
                 updateExecuteButton();
             });
@@ -101,9 +101,9 @@ block content
 
     div.alert.alert-info.mb-3.mt-3(role="alert")
         i.ti.ti-info-circle.me-2
-        span(data-th-text="#{components.redirect.clearing.description}") Redirect cleaning preview
+        span(data-th-text="#{components.redirect.cleaning.description}") Redirect cleaning preview
         div.form-check.form-switch.mt-2
-            input.form-check-input#redirectClearingIncludeUnnamed(type="checkbox")
-            label.form-check-label(for="redirectClearingIncludeUnnamed" data-th-text="#{components.redirect.clearing.includeUnnamed}") Include redirects without domain
+            input.form-check-input#redirectCleaningIncludeUnnamed(type="checkbox")
+            label.form-check-label(for="redirectCleaningIncludeUnnamed" data-th-text="#{components.redirect.cleaning.includeUnnamed}") Include redirects without domain
 
-    <table id="redirectClearingTable" class="datatableInit table"></table>
+    <table id="redirectCleaningTable" class="datatableInit table"></table>

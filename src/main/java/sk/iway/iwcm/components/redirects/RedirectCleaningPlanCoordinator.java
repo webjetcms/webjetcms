@@ -8,22 +8,22 @@ import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Logger;
-import sk.iway.iwcm.components.redirects.RedirectClearingService.ExecutionResult;
+import sk.iway.iwcm.components.redirects.RedirectCleaningService.ExecutionResult;
 import sk.iway.iwcm.system.UrlRedirectDB;
 
 /**
- * Coordinates the domain-scoped redirect clearing workflow for all
+ * Coordinates the domain-scoped redirect cleaning workflow for all
  * administrators on one application node. Completed plans are shared through
  * the application cache, while an atomic in-memory operation marker prevents
  * concurrent analysis and execution for the same domain ID.
  */
 @Service
-class RedirectClearingPlanCoordinator {
+class RedirectCleaningPlanCoordinator {
 
     static final int PLAN_CACHE_SECONDS = 60 * 60;
-    private static final String PLAN_CACHE_KEY_PREFIX = RedirectClearingRestController.class.getName() + ".plan.";
+    private static final String PLAN_CACHE_KEY_PREFIX = RedirectCleaningRestController.class.getName() + ".plan.";
 
-    private final RedirectClearingService clearingService;
+    private final RedirectCleaningService clearingService;
     private final Cache cache;
     private final Runnable redirectCacheRefresh;
     private final ConcurrentMap<Integer, OperationType> activeOperations = new ConcurrentHashMap<>();
@@ -40,7 +40,7 @@ class RedirectClearingPlanCoordinator {
      * @param clearingService redirect analysis and execution service
      */
     @Autowired
-    RedirectClearingPlanCoordinator(RedirectClearingService clearingService) {
+    RedirectCleaningPlanCoordinator(RedirectCleaningService clearingService) {
         this(clearingService, Cache.getInstance());
     }
 
@@ -50,7 +50,7 @@ class RedirectClearingPlanCoordinator {
      * @param clearingService redirect analysis and execution service
      * @param cache shared plan cache
      */
-    RedirectClearingPlanCoordinator(RedirectClearingService clearingService, Cache cache) {
+    RedirectCleaningPlanCoordinator(RedirectCleaningService clearingService, Cache cache) {
         this(clearingService, cache, UrlRedirectDB::refreshCache);
     }
 
@@ -61,7 +61,7 @@ class RedirectClearingPlanCoordinator {
      * @param cache shared plan cache
      * @param redirectCacheRefresh callback invoked once after successful execution
      */
-    RedirectClearingPlanCoordinator(RedirectClearingService clearingService, Cache cache, Runnable redirectCacheRefresh) {
+    RedirectCleaningPlanCoordinator(RedirectCleaningService clearingService, Cache cache, Runnable redirectCacheRefresh) {
         this.clearingService = clearingService;
         this.cache = cache;
         this.redirectCacheRefresh = redirectCacheRefresh;
@@ -73,8 +73,8 @@ class RedirectClearingPlanCoordinator {
      * @param domainId current domain ID
      * @return cached plan, or {@code null} when absent or expired
      */
-    RedirectClearingPlan getPlan(int domainId) {
-        return cache.getObject(getPlanCacheKey(domainId), RedirectClearingPlan.class);
+    RedirectCleaningPlan getPlan(int domainId) {
+        return cache.getObject(getPlanCacheKey(domainId), RedirectCleaningPlan.class);
     }
 
     /**
@@ -85,12 +85,12 @@ class RedirectClearingPlanCoordinator {
      * @param domainId current domain ID
      * @param includeUnnamed whether the unnamed scope is included alongside the
      *        selected named domain
-     * @return newly cached clearing plan
+     * @return newly cached cleaning plan
      */
-    RedirectClearingPlan analyze(int domainId, boolean includeUnnamed) {
+    RedirectCleaningPlan analyze(int domainId, boolean includeUnnamed) {
         acquire(domainId, OperationType.ANALYZE);
         try {
-            RedirectClearingPlan plan = clearingService.analyze(domainId, includeUnnamed);
+            RedirectCleaningPlan plan = clearingService.analyze(domainId, includeUnnamed);
             cache.setObjectSeconds(getPlanCacheKey(domainId), plan, PLAN_CACHE_SECONDS, false);
             return plan;
         } finally {
@@ -110,7 +110,7 @@ class RedirectClearingPlanCoordinator {
     ExecutionResult execute(int domainId) {
         acquire(domainId, OperationType.EXECUTE);
         try {
-            RedirectClearingPlan plan = getPlan(domainId);
+            RedirectCleaningPlan plan = getPlan(domainId);
             if (plan == null || plan.isEmpty()) throw new MissingPlanException();
 
             ExecutionResult result = clearingService.execute(plan);
@@ -118,7 +118,7 @@ class RedirectClearingPlanCoordinator {
             try {
                 redirectCacheRefresh.run();
             } catch (RuntimeException exception) {
-                Logger.error(RedirectClearingPlanCoordinator.class, "Redirect cache refresh failed after clearing", exception);
+                Logger.error(RedirectCleaningPlanCoordinator.class, "Redirect cache refresh failed after clearing", exception);
             }
             return result;
         } finally {
@@ -148,13 +148,13 @@ class RedirectClearingPlanCoordinator {
         return PLAN_CACHE_KEY_PREFIX + domainId;
     }
 
-    /** Indicates that another redirect clearing operation owns the domain marker. */
+    /** Indicates that another redirect cleaning operation owns the domain marker. */
     static class OperationInProgressException extends RuntimeException {
         private static final long serialVersionUID = 1L;
         private final OperationType activeOperation;
 
         OperationInProgressException(OperationType activeOperation) {
-            super("Redirect clearing operation already in progress: " + activeOperation);
+            super("Redirect cleaning operation already in progress: " + activeOperation);
             this.activeOperation = activeOperation;
         }
 
@@ -168,7 +168,7 @@ class RedirectClearingPlanCoordinator {
         private static final long serialVersionUID = 1L;
 
         MissingPlanException() {
-            super("No non-empty redirect clearing plan is available");
+            super("No non-empty redirect cleaning plan is available");
         }
     }
 }

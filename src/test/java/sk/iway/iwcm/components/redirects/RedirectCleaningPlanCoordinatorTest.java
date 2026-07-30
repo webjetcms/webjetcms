@@ -15,35 +15,35 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
 import sk.iway.iwcm.Cache;
-import sk.iway.iwcm.components.redirects.RedirectClearingService.ExecutionResult;
+import sk.iway.iwcm.components.redirects.RedirectCleaningService.ExecutionResult;
 
-class RedirectClearingPlanCoordinatorTest extends RedirectClearingTestSupport {
+class RedirectCleaningPlanCoordinatorTest extends RedirectCleaningTestSupport {
 
     @Test
     void analyzesAndCachesDomainPlan() {
-        RedirectClearingService service = mock(RedirectClearingService.class);
+        RedirectCleaningService service = mock(RedirectCleaningService.class);
         Cache cache = mock(Cache.class);
-        RedirectClearingPlan plan = plan(23, false);
+        RedirectCleaningPlan plan = plan(23, false);
         when(service.analyze(23, false)).thenReturn(plan);
-        RedirectClearingPlanCoordinator coordinator = new RedirectClearingPlanCoordinator(service, cache);
+        RedirectCleaningPlanCoordinator coordinator = new RedirectCleaningPlanCoordinator(service, cache);
 
         assertSame(plan, coordinator.analyze(23, false));
 
         verify(cache).setObjectSeconds(
-            RedirectClearingPlanCoordinator.getPlanCacheKey(23),
+            RedirectCleaningPlanCoordinator.getPlanCacheKey(23),
             plan,
-            RedirectClearingPlanCoordinator.PLAN_CACHE_SECONDS,
+            RedirectCleaningPlanCoordinator.PLAN_CACHE_SECONDS,
             false
         );
     }
 
     @Test
     void executesAndRemovesCachedPlan() {
-        RedirectClearingService service = mock(RedirectClearingService.class);
+        RedirectCleaningService service = mock(RedirectCleaningService.class);
         Map<String, Object> values = new ConcurrentHashMap<>();
-        values.put(RedirectClearingPlanCoordinator.getPlanCacheKey(23), plan(23, false));
+        values.put(RedirectCleaningPlanCoordinator.getPlanCacheKey(23), plan(23, false));
         AtomicInteger refreshCount = new AtomicInteger();
-        RedirectClearingPlanCoordinator coordinator = new RedirectClearingPlanCoordinator(
+        RedirectCleaningPlanCoordinator coordinator = new RedirectCleaningPlanCoordinator(
             service, cache(values), refreshCount::incrementAndGet
         );
         when(service.execute(coordinator.getPlan(23))).thenReturn(new ExecutionResult(1, 0, 0));
@@ -57,11 +57,11 @@ class RedirectClearingPlanCoordinatorTest extends RedirectClearingTestSupport {
 
     @Test
     void failedAnalysisPreservesCachedPlan() {
-        RedirectClearingService service = mock(RedirectClearingService.class);
+        RedirectCleaningService service = mock(RedirectCleaningService.class);
         Map<String, Object> values = new ConcurrentHashMap<>();
-        RedirectClearingPlan previous = plan(23, false);
-        values.put(RedirectClearingPlanCoordinator.getPlanCacheKey(23), previous);
-        RedirectClearingPlanCoordinator coordinator = new RedirectClearingPlanCoordinator(service, cache(values));
+        RedirectCleaningPlan previous = plan(23, false);
+        values.put(RedirectCleaningPlanCoordinator.getPlanCacheKey(23), previous);
+        RedirectCleaningPlanCoordinator coordinator = new RedirectCleaningPlanCoordinator(service, cache(values));
         when(service.analyze(23, true)).thenThrow(new IllegalStateException("analysis failed"));
 
         assertThrows(IllegalStateException.class, () -> coordinator.analyze(23, true));

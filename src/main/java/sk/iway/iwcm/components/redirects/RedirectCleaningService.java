@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.Getter;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.components.redirects.RedirectClearingAction.ActionType;
+import sk.iway.iwcm.components.redirects.RedirectCleaningAction.ActionType;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.system.RedirectsRepository;
@@ -27,7 +27,7 @@ import sk.iway.iwcm.system.UrlRedirectBean;
 
 /**
  * Analyzes unconditional exact redirects and executes the resulting immutable
- * clearing plan.
+ * cleaning plan.
  *
  * Regular-expression redirects and redirects with either a
  * publication date or a validity end date are ignored.
@@ -38,7 +38,7 @@ import sk.iway.iwcm.system.UrlRedirectBean;
  * or empty domain form one additional independent domain scope.
  */
 @Service
-public class RedirectClearingService {
+public class RedirectCleaningService {
 
     private static final int EXECUTION_BATCH_SIZE = 500;
 
@@ -50,13 +50,13 @@ public class RedirectClearingService {
     private final IntFunction<String> domainNameResolver;
 
     /**
-     * Creates the redirect clearing service.
+     * Creates the redirect cleaning service.
      *
      * @param redirectsRepository repository used to load and modify redirects
      */
     @Autowired
-    public RedirectClearingService(RedirectsRepository redirectsRepository) {
-        this(redirectsRepository, RedirectClearingService::resolveDomainName);
+    public RedirectCleaningService(RedirectsRepository redirectsRepository) {
+        this(redirectsRepository, RedirectCleaningService::resolveDomainName);
     }
 
     /**
@@ -65,23 +65,23 @@ public class RedirectClearingService {
      * @param redirectsRepository repository used to load and modify redirects
      * @param domainNameResolver resolves a root group ID to its domain name
      */
-    RedirectClearingService(RedirectsRepository redirectsRepository, IntFunction<String> domainNameResolver) {
+    RedirectCleaningService(RedirectsRepository redirectsRepository, IntFunction<String> domainNameResolver) {
         this.redirectsRepository = redirectsRepository;
         this.domainNameResolver = domainNameResolver;
     }
 
     /**
      * Loads exact redirects accessible from the selected domain and prepares a
-     * clearing plan without modifying the database.
+     * cleaning plan without modifying the database.
      *
      * @param currentDomainId selected application domain ID
      * @param includeUnnamed whether the independent unnamed scope is included
      *        alongside the selected named domain
-     * @return immutable clearing plan
+     * @return immutable cleaning plan
      */
-    public RedirectClearingPlan analyze(int currentDomainId, boolean includeUnnamed) {
+    public RedirectCleaningPlan analyze(int currentDomainId, boolean includeUnnamed) {
         String normalizedDomain = normalizeDomain(domainNameResolver.apply(currentDomainId));
-        List<UrlRedirectBean> redirects = redirectsRepository.findAllForRedirectClearing(normalizedDomain, includeUnnamed);
+        List<UrlRedirectBean> redirects = redirectsRepository.findAllForRedirectCleaning(normalizedDomain, includeUnnamed);
         return analyze(currentDomainId, normalizedDomain, includeUnnamed, redirects);
     }
 
@@ -95,7 +95,7 @@ public class RedirectClearingService {
     private static String resolveDomainName(int domainId) {
         GroupDetails rootGroup = GroupsDB.getInstance().getGroup(domainId);
         if (rootGroup == null) {
-            throw new IllegalStateException("Unable to resolve redirect clearing domain ID: " + domainId);
+            throw new IllegalStateException("Unable to resolve redirect cleaning domain ID: " + domainId);
         }
         return rootGroup.getDomainName();
     }
@@ -107,9 +107,9 @@ public class RedirectClearingService {
      *
      * @param currentDomain selected domain
      * @param redirects redirects to analyze
-     * @return immutable clearing plan
+     * @return immutable cleaning plan
      */
-    RedirectClearingPlan analyze(String currentDomain, List<UrlRedirectBean> redirects) {
+    RedirectCleaningPlan analyze(String currentDomain, List<UrlRedirectBean> redirects) {
         return analyze(-1, currentDomain, true, redirects);
     }
 
@@ -121,14 +121,14 @@ public class RedirectClearingService {
      * @param includeUnnamed whether the independent unnamed scope is included
      *        alongside the selected named domain
      * @param redirects redirects available to the analysis
-     * @return immutable clearing plan
+     * @return immutable cleaning plan
      */
-    RedirectClearingPlan analyze(String currentDomain, boolean includeUnnamed, List<UrlRedirectBean> redirects) {
+    RedirectCleaningPlan analyze(String currentDomain, boolean includeUnnamed, List<UrlRedirectBean> redirects) {
         return analyze(-1, currentDomain, includeUnnamed, redirects);
     }
 
     /** Performs analysis for an application domain and its selected scopes. */
-    private RedirectClearingPlan analyze(
+    private RedirectCleaningPlan analyze(
         int currentDomainId,
         String currentDomain,
         boolean includeUnnamed,
@@ -183,7 +183,7 @@ public class RedirectClearingService {
 
         deduplicate(candidates);
 
-        List<RedirectClearingAction> actions = new ArrayList<>();
+        List<RedirectCleaningAction> actions = new ArrayList<>();
         for (Candidate candidate : candidates) {
             if (candidate.action == null && !Objects.equals(candidate.originalNewUrl, candidate.resultNewUrl)) {
                 candidate.action = ActionType.UPDATE_OPTIMIZE;
@@ -191,7 +191,7 @@ public class RedirectClearingService {
             if (candidate.action != null) actions.add(candidate.toAction());
         }
 
-        return new RedirectClearingPlan(
+        return new RedirectCleaningPlan(
             currentDomainId,
             normalizedCurrentDomain,
             includeUnnamed,
@@ -210,20 +210,20 @@ public class RedirectClearingService {
      * @return counts of updated, deleted, and skipped records
      */
     @Transactional(transactionManager = "webjet2022TransactionManager")
-    public ExecutionResult execute(RedirectClearingPlan plan) {
+    public ExecutionResult execute(RedirectCleaningPlan plan) {
         String analyzedDomain = plan.getAnalyzedDomain();
 
         int updated = 0;
         int deleted = 0;
         int skipped = 0;
-        List<RedirectClearingAction> actions = plan.getActions();
+        List<RedirectCleaningAction> actions = plan.getActions();
 
         for (int offset = 0; offset < actions.size(); offset += EXECUTION_BATCH_SIZE) {
-            List<RedirectClearingAction> batch = actions.subList(offset, Math.min(offset + EXECUTION_BATCH_SIZE, actions.size()));
+            List<RedirectCleaningAction> batch = actions.subList(offset, Math.min(offset + EXECUTION_BATCH_SIZE, actions.size()));
 
             List<Long> deleteIds = new ArrayList<>();
             Map<String, List<Long>> updatesByTarget = new LinkedHashMap<>();
-            for (RedirectClearingAction action : batch) {
+            for (RedirectCleaningAction action : batch) {
                 Long id = action.getId();
                 if (id == null) continue;
                 if (action.isDelete()) {
@@ -235,9 +235,9 @@ public class RedirectClearingService {
 
             int batchUpdated = 0;
             for (Map.Entry<String, List<Long>> entry : updatesByTarget.entrySet()) {
-                batchUpdated += redirectsRepository.updateNewUrlForRedirectClearing(entry.getValue(), entry.getKey(), analyzedDomain);
+                batchUpdated += redirectsRepository.updateNewUrlForRedirectCleaning(entry.getValue(), entry.getKey(), analyzedDomain);
             }
-            int batchDeleted = deleteIds.isEmpty() ? 0 : redirectsRepository.deleteForRedirectClearing(deleteIds, analyzedDomain);
+            int batchDeleted = deleteIds.isEmpty() ? 0 : redirectsRepository.deleteForRedirectCleaning(deleteIds, analyzedDomain);
 
             updated += batchUpdated;
             deleted += batchDeleted;
@@ -392,7 +392,7 @@ public class RedirectClearingService {
     }
 
     /**
-     * Result counters returned after executing a clearing plan.
+     * Result counters returned after executing a cleaning plan.
      */
     @Getter
     public static class ExecutionResult {
@@ -460,9 +460,9 @@ public class RedirectClearingService {
             return new DuplicateKey(domain, oldUrl, resultNewUrl);
         }
 
-        RedirectClearingAction toAction() {
+        RedirectCleaningAction toAction() {
             String proposedUrl = action == ActionType.UPDATE_OPTIMIZE ? resultNewUrl : null;
-            return new RedirectClearingAction(
+            return new RedirectCleaningAction(
                 id,
                 action,
                 oldUrl,
