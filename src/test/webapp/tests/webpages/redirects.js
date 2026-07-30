@@ -426,16 +426,16 @@ function updateEntityAndTest(I, DT, DTE, toRedirectUrl, publishDate, validToDate
 }
 
 function createRedirect(I, DTE, oldUrl, newUrl) {
-    I.clickCss("#datatableInit_wrapper button.buttons-create");
-    DTE.waitForEditor();
+    I.clickCss("#redirectTable_wrapper button.buttons-create");
+    DTE.waitForEditor("redirectTable");
     I.fillField("#DTE_Field_oldUrl", oldUrl);
     I.fillField("#DTE_Field_newUrl", newUrl);
-    DTE.save();
+    DTE.save("redirectTable");
 }
 
 function createDatedRedirect(I, DTE, oldUrl, newUrl, publishDate, validTo) {
-    I.clickCss("#datatableInit_wrapper button.buttons-create");
-    DTE.waitForEditor();
+    I.clickCss("#redirectTable_wrapper button.buttons-create");
+    DTE.waitForEditor("redirectTable");
     I.fillField("#DTE_Field_oldUrl", oldUrl);
     I.fillField("#DTE_Field_newUrl", newUrl);
     if (publishDate !== null) {
@@ -446,7 +446,7 @@ function createDatedRedirect(I, DTE, oldUrl, newUrl, publishDate, validTo) {
         I.fillField("#DTE_Field_validTo", I.formatDateTime(validTo));
         I.clickCss(".DTE_Field_Name_oldUrl");
     }
-    DTE.save();
+    DTE.save("redirectTable");
 }
 
 const cleanupPrefix = "/autotest-redirect-cleaning-";
@@ -455,7 +455,6 @@ const toast = "#toast-container-webjet";
 Scenario('Redirect cleaning preview and execution @singlethread @screenshot', async ({ I, DT, DTE, Document }) => {
 
     // Use an isolated named domain. The unnamed scope is intentionally excluded from this E2E cleanup.
-
     Document.switchDomain("test23.tau27.iway.sk");
 
     const prefix = cleanupPrefix + randomNumber;
@@ -472,7 +471,7 @@ Scenario('Redirect cleaning preview and execution @singlethread @screenshot', as
     I.amOnPage("/admin/v9/settings/redirect/");
     DT.filterContains("oldUrl", cleanupPrefix);
     if (await I.getTotalRows() > 0) {
-        DT.deleteAll();
+        DT.deleteAll("redirectTable");
     }
 
     I.say("Verify there are no unrelated redirect cleaning actions");
@@ -550,30 +549,30 @@ Scenario('Redirect cleaning preview and execution @singlethread @screenshot', as
     I.say("Verify the resulting redirects in the main table and in a request");
     I.amOnPage("/admin/v9/settings/redirect/");
     DT.filterEquals("oldUrl", prefix + "-chain-a");
-    I.waitForText(finalUrl.substring(1), 10, "#datatableInit_wrapper");
+    I.waitForText(finalUrl.substring(1), 10, "#redirectTable_wrapper");
     I.amOnPage(prefix + "-chain-a");
     I.seeInCurrentUrl(finalUrl);
 
     I.say("Verify ignored redirects remain unchanged");
     I.amOnPage("/admin/v9/settings/redirect/");
     DT.filterEquals("oldUrl", regexOldUrl);
-    I.waitForText(prefix.substring(1) + "-ignored-regex-target", 10, "#datatableInit_wrapper");
+    I.waitForText(prefix.substring(1) + "-ignored-regex-target", 10, "#redirectTable_wrapper");
     DT.filterEquals("oldUrl", publishDateOldUrl);
-    I.waitForText(publishDateNewUrl.substring(1), 10, "#datatableInit_wrapper");
+    I.waitForText(publishDateNewUrl.substring(1), 10, "#redirectTable_wrapper");
     DT.filterEquals("oldUrl", validToOldUrl);
-    I.waitForText(validToNewUrl.substring(1), 10, "#datatableInit_wrapper");
+    I.waitForText(validToNewUrl.substring(1), 10, "#redirectTable_wrapper");
 });
 
-Scenario('Redirect cleaning permissions', async ({ I, DT }) => {
+Scenario('Redirect cleaning permissions 1', async ({ I, DT }) => {
     I.say("Delete redirect cleaning test data");
     I.amOnPage("/admin/v9/settings/redirect/");
     DT.filterContains("oldUrl", cleanupPrefix);
     if (await I.getTotalRows() > 0) {
-        DT.deleteAll();
+        DT.deleteAll("redirectTable");
     }
 });
 
-Scenario('Redirect cleaning permissions', ({ I, DT }) => {
+Scenario('Redirect cleaning permissions 2', ({ I, DT }) => {
     DT.checkPerms("cmp_redirects", "/admin/v9/settings/redirect-cleaning/", "redirectCleaningTable");
 
     // logout to refresh domain to default one
