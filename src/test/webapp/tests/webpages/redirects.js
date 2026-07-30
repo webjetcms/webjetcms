@@ -277,7 +277,7 @@ Scenario('XLS import onlynew', async ({I, DT, DTE}) => {
     DT.deleteAll(redirectTable);
  });
 
- //TODO: testy funkcnosti presmerovani
+ //testy funkcnosti presmerovani
  Scenario('Test 404.jsp', ({ I }) => {
 
     //url redirects from to
@@ -367,16 +367,16 @@ function testPublishingAndValidity(I, DT, DTE, Document, toRedirectUrl, useCache
         I.see("AI BUTTONS TEST");
 
     I.say("Set valid publish in PAST - redirection must work");
-        updateEntityAndTest(I, DT, DTE, toRedirectUrl, (new Date()).getTime() - shift5m, null, true);
+        updateEntityAndTest(I, DT, DTE, toRedirectUrl, Date.now() - shift5m, null, true);
 
     I.say("Set valid publish in FUTURE - redirection must NOT work");
-        updateEntityAndTest(I, DT, DTE, toRedirectUrl, (new Date()).getTime() + shift5m, null, false);
+        updateEntityAndTest(I, DT, DTE, toRedirectUrl, Date.now() + shift5m, null, false);
 
     I.say("Set valid to in PAST - redirection must NOT work");
-        updateEntityAndTest(I, DT, DTE, toRedirectUrl, null, (new Date()).getTime() - shift5m, false);
+        updateEntityAndTest(I, DT, DTE, toRedirectUrl, null, Date.now() - shift5m, false);
 
     I.say("Set valid to in FUTURE - redirection must work");
-        updateEntityAndTest(I, DT, DTE, toRedirectUrl, null, (new Date()).getTime() + shift5m, true);
+        updateEntityAndTest(I, DT, DTE, toRedirectUrl, null, Date.now() + shift5m, true);
 
     I.say("Delete redirect and test it do not work");
         I.amOnPage("/admin/v9/settings/redirect/");
@@ -488,7 +488,7 @@ Scenario('Redirect cleaning preview and execution @singlethread @screenshot', as
     I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 40, redirectCleaningWrapper);
     I.seeElement(redirectCleaningWrapper + " button.buttons-execute-cleaning.disabled");
     const initialSummary = await I.grabTextFrom(toast);
-    const ignoredCountMatch = initialSummary.match(/(\d+) ignorovaných záznamov/);
+    const ignoredCountMatch = initialSummary.match(/(\d+) ignorovaných záznamov/); //NOSONAR
     I.assertTrue(ignoredCountMatch !== null, "The analysis summary must contain the ignored redirect count");
     const initialIgnoredCount = Number(ignoredCountMatch[1]);
     I.toastrClose();
