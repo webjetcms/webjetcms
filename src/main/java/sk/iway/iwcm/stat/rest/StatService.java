@@ -37,7 +37,7 @@ public class StatService {
      * @param dateRangeArr - [0] dateFrom, [1] dateTo
      * @param statType - type of stat, can be days, weeks, months
      */
-    private static void setDefaultRange(Date [] dateRangeArr, String statType) {
+    private static void setDefaultRange(Date[] dateRangeArr, String statType) {
         Calendar cal = Calendar.getInstance();
 
         //If date to is not set, set it

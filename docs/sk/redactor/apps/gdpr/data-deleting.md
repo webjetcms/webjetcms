@@ -29,7 +29,7 @@ Automatizovaná úloha `sk.iway.iwcm.components.gdpr.GdprDataDeleting` bez param
 Ak má úloha spracovať iba vybrané typy, je možné zadať čiarkou oddelený zoznam hodnôt:
 
 | Hodnota parametra | Typ záznamu |
-|---|---|
+| --- | --- |
 | `sendedEmails` | E-maily |
 | `oldFormData` | Formuláre |
 | `oldBasketOrders` | Objednávky z elektronického obchodu |
@@ -39,7 +39,7 @@ Ak má úloha spracovať iba vybrané typy, je možné zadať čiarkou oddelený
 ## Konfiguračné premenné
 
 | Premenná | Predvolená hodnota | Popis |
-|---|---|---|
+| --- | --- | --- |
 | `gdprDeleteUserAfterDays` | `730` | Počet dní neaktivity používateľa pred zmazaním účtu |
 | `gdprDeleteFormDataAfterDays` | `730` | Počet dní pre zmazanie starých formulárových dát |
 | `gdprDeleteUserBasketOrdersAfterYears` | `10` | Počet rokov pre zmazanie starých objednávok |

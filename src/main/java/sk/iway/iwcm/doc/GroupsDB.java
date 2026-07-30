@@ -2855,8 +2855,6 @@ public class GroupsDB extends DB
 						ps = null;
 					}
 
-					// TODO - Jeeff, toto je asi taka zmena, o ktorej by si mal povedat ci ostane (za mna by to bolo OK aby sme lepsie cistili DB)
-
 					//vymaz viazane zaznamy mazanych stranok, aby nezostali osirene v DB (rovnako ako to robi DocDB.deleteDoc)
 					//perex_group_doc a multigroup_mapping su viazane na doc_id, preto ich mazeme pred vymazanim samotnych stranok
 					String docsSubselect = "SELECT doc_id FROM documents WHERE group_id IN ("+groups+")";
