@@ -248,10 +248,16 @@ public class OldDocGroupsRemovingService {
     }
 
     private static Date[] getDefaultCreatedRange() {
+        return getDefaultCreatedRange(new Date(), GdprDataDeletingType.OLD_DOC_AND_GROUPS.getAfterConstantInt());
+    }
+
+    static Date[] getDefaultCreatedRange(Date now, int retentionDays) {
         Calendar cal = Calendar.getInstance();
-        // Threshold: items older than this date should be removed
-        cal.add(Calendar.DAY_OF_YEAR, -GdprDataDeletingType.OLD_DOC_AND_GROUPS.getAfterConstantInt());
-        return new Date[] { cal.getTime(), new Date() };
+        cal.setTime(now);
+        // Threshold: items older than this date should be removed.
+        cal.add(Calendar.DAY_OF_YEAR, -retentionDays);
+        // Keep values created from epoch up to the computed cutoff (inclusive).
+        return new Date[] { new Date(0), cal.getTime() };
     }
 
     private static ActionType resolveActionType(ActionType actionType) {
@@ -275,8 +281,11 @@ public class OldDocGroupsRemovingService {
     }
 
     private static boolean isDocInCreatedRange(DocDetails doc, long createdFromTime, long createdToTime) {
-        long dateCreated = doc.getDateCreated();
-        return dateCreated > 0 && dateCreated >= createdFromTime && dateCreated <= createdToTime;
+        return isTimestampInCreatedRange(doc.getDateCreated(), createdFromTime, createdToTime);
+    }
+
+    static boolean isTimestampInCreatedRange(long timestamp, long createdFromTime, long createdToTime) {
+        return timestamp > 0 && timestamp >= createdFromTime && timestamp <= createdToTime;
     }
 
 }
