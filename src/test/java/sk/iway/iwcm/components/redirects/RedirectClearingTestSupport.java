@@ -50,7 +50,7 @@ abstract class RedirectClearingTestSupport {
 
     static RedirectClearingAction action(long id, ActionType type, String proposedUrl) {
         return new RedirectClearingAction(
-            id, type, "/old", "/new", proposedUrl, DOMAIN, 302, null, null, null
+            id, type, "/old", "/new", proposedUrl, DOMAIN, 302, null
         );
     }
 

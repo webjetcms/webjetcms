@@ -113,7 +113,6 @@ public class RedirectClearingRestController extends DatatableRestControllerV2<Re
      *
      * @return {@code true} when analysis completes
      */
-    @Transactional(transactionManager = "webjet2022TransactionManager", readOnly = true)
     private boolean analyze() {
         try {
             boolean includeUnnamed = Tools.getBooleanValue(getRequest().getParameter("customData"), false);

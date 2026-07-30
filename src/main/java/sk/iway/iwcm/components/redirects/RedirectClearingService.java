@@ -470,8 +470,6 @@ public class RedirectClearingService {
                 proposedUrl,
                 originalDomain,
                 redirectCode,
-                publishDate,
-                validTo,
                 insertDate
             );
         }

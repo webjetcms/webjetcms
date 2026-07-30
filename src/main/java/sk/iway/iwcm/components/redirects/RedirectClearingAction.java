@@ -112,8 +112,7 @@ public class RedirectClearingAction implements Serializable {
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title = "components.redirect.admin_list.datum_vlozenia",
-        hiddenEditor = true,
-        sortAfter = "validTo"
+        hiddenEditor = true
     )
     private Date insertDate;
 
@@ -144,8 +143,6 @@ public class RedirectClearingAction implements Serializable {
             String proposedNewUrl,
             String domainName,
             Integer redirectCode,
-            Date publishDate,
-            Date validTo,
             Date insertDate) {
         this.id = id;
         this.action = action;
