@@ -9,6 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import java.util.TreeSet;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.gdpr.GdprDataDeleting.GdprDataDeletingType;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
@@ -61,6 +65,7 @@ public class OldDocGroupsRemovingService {
 
         DeletionPlan plan = computePlan(createdFrom, createdTo, resolveActionType(actionType));
         executePlan(plan);
+        auditDeletion(createdFrom, createdTo, plan);
     }
 
     public static int getCountOfDocAndGroups() {
@@ -274,6 +279,25 @@ public class OldDocGroupsRemovingService {
 
     private static boolean shouldProcessEmptyGroups(ActionType actionType) {
         return actionType == ActionType.ALL || actionType == ActionType.GROUPS;
+    }
+
+    private static void auditDeletion(Date createdFrom, Date createdTo, DeletionPlan plan) {
+        if (plan.getTotalCount() == 0) return;
+
+        Set<Integer> allGroupIds = new TreeSet<>();
+        allGroupIds.addAll(plan.subtreeGroupIds);
+        allGroupIds.addAll(plan.emptyGroupIds);
+
+        Set<Integer> allDocIds = new TreeSet<>();
+        allDocIds.addAll(plan.subtreeDocIds);
+        allDocIds.addAll(plan.oldDocIds);
+
+        String description = "Automatic trash deletion:"
+            + " period=" + Tools.formatDateTimeSeconds(createdFrom) + " - " + Tools.formatDateTimeSeconds(createdTo)
+            + ", groupIds=" + allGroupIds
+            + ", docIds=" + allDocIds;
+
+        Adminlog.add(Adminlog.TYPE_GDPR_DELETE, description, -1, -1);
     }
 
     private static boolean isInvalidDateRange(Date createdFrom, Date createdTo) {
