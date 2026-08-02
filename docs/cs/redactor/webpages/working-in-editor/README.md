@@ -172,17 +172,32 @@ Karta **Fotobanka** umožňuje získání (stažení) obrázků z bezplatné onl
 
 Po zadání a vyhledání výrazu, Vám budou nabídnuty vyhovující obrázky. Nabídka obsahuje několik stran, mezi kterými umíte procházet.
 
+Při vyhledávání ve fotobance máte k dispozici také filtry:
+
+- **Typ média** umožňuje vybrat režim vyhledávání:
+  - obrázky: `all`, `photo`, `illustration`, `vector`
+  - videa: `all`, `film`, `animation`
+- **Kategorie** filtruje výsledky podle tematické oblasti (např. `nature`, `business`, `travel`, ...).
+
+Pokud v poli **Typ média** vyberete video, vyhledávání se automaticky přepne na hledání video souborů.
+
 ![](image_dialog-pixabay.png)
 
-Po kliknutí na některý z nabízených obrázků se zobrazí dialog, s náhledem a hodnotami **šířka** / **výška** daného obrázku.
+Po kliknutí na některý z nabízených obrázků se zobrazí dialog s náhledem, polem **Název souboru** a hodnotami **šířka** / **výška** daného obrázku.
+
+U vybraného videu se zobrazí náhled a název souboru stejně, ale rozměry (**šířka** / **výška**) se v ukládacím dialogu nezadávají.
+
+Pole **Název souboru** se automaticky předvyplní podle posledního vyhledaného výrazu, ale před uložením jej můžete upravit. WebJET název automaticky převede na malá písmena, odstraní diakritiku a nepovolené znaky a mezery nahradí pomlčkami. Příponu souboru nezadávejte, WebJET ji zjistí podle zdrojového obrázku a její typ zobrazí ikonou napravo od názvu.
 
 ![](image_dialog-pixabay-add.png)
 
 Přejete-li si změnit rozměry obrázku, můžete upravit hodnotu **šířka** a jeho **výška** se automaticky vypočítá podle původního poměru obrázku.
 
+Rozměry obrázku se do názvu souboru nepřidávají. Pokud název nezadáte nebo soubor se stejným názvem již existuje ve zvolené složce, zobrazí se upozornění a obrázek se neuloží. Stávající soubor se nepřepíše.
+
 ![](image_dialog-pixabay-add2.png)
 
-Následně po kliknutí na tlačítko **Uložit do WebJET** se obrázek stáhne a uloží. Automaticky se přepne karta na **Obsah**, kde máte okamžitě tento obrázek dostupný.
+Následně po kliknutí na tlačítko **Uložit do WebJET** se obrázek stáhne a uloží pod zvoleným názvem. Automaticky se přepne karta na **Obsah**, kde máte okamžitě tento obrázek dostupný.
 
 ![](image_dialog-pixabay-save.png)
 
