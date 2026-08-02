@@ -6,7 +6,10 @@
 
 ### Webové stránky
 
-- Kôš - pridané [automatické mazanie starých stránok a priečinkov](redactor/apps/gdpr/data-deleting.md) z koša podľa nastaveného retenčného obdobia. Zjednotená logika výpočtu počtu a mazania, opravené trvalé odstránenie priečinka koša a prázdnych priečinkov. Pri mazaní sa odstránia aj viazané záznamy `perex_group_doc` a `multigroup_mapping` (#58617) (#271).
+- Kôš - pridané [automatické mazanie starých stránok a priečinkov](redactor/apps/gdpr/data-deleting.md) z koša podľa nastaveného retenčného obdobia. Zjednotená logika výpočtu počtu a mazania, opravené trvalé odstránenie priečinka koša a prázdnych priečinkov (#271).
+
+![](redactor/apps/gdpr/cookiemanager-datatable.png)
+
 - Presmerovania - presmerovania vytvorené používateľom sú odlíšené od automatických (označené sivým pozadím) a je možné ich samostatne [filtrovať v zozname presmerovaní](redactor/webpages/redirects/README.md#automatické-a-používateľom-vytvorené-presmerovania) (#58625).
 
 ![](redactor/webpages/redirects/redirect-path.png)

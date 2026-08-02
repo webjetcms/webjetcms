@@ -18,9 +18,9 @@ Mazanie dát z vybraných databázových tabuliek, mazanie je možné z nasledov
 - **História stránok**: Maže zaznamenané historické verzie webových stránok, tie sa ukladajú pri každom publikovaní web stránky. Sú zobrazené v karte História pri editácii web stránky. Zmazanie neovplyvní aktuálne zobrazené stránky, zmažú sa historické verzie.
 - **Monitorovanie servera**: Odstraňuje zaznamenané údaje z monitorovania servera, ako sú výkonnostné metriky a logy.
 - **Audit**: Maže záznamy auditu, ktoré monitorujú aktivity používateľov a systémové udalosti, zmazať je možné len vybrané typy záznamov.
-- **Koš webových stránok**: Umožňuje trvalo odstrániť staré webové stránky a staré priečinky webových stránok nachádzajúce sa v Koši. Mazanie je trvalé a odstránené položky už nebude možné z Koša obnoviť. Automatické mazanie je možné nastaviť aj v aplikácii [GDPR / Mazanie dát](../../redactor/apps/gdpr/data-deleting.md).
-  - Položka **Staré webové stránky** maže stránky v koši, ktoré boli vytvorené vo zvolenom období.
-  - Položka **Staré priečinky webových stránok** maže:
+- **Kôš webových stránok**: Umožňuje trvalo odstrániť Webové stránky v koši a Priečinky webových stránok v koši nachádzajúce sa v Koši. Mazanie je trvalé a odstránené položky už nebude možné z Koša obnoviť. Automatické mazanie je možné nastaviť aj v aplikácii [GDPR / Mazanie dát](../../redactor/apps/gdpr/data-deleting.md).
+  - Položka **Webové stránky v koši** maže stránky v koši, ktoré boli vytvorené vo zvolenom období.
+  - Položka **Priečinky webových stránok v koši** maže:
     - staré priečinky v koši, ktoré boli vytvorené v zvolenom období vrátane podpriečinkov a stránok v nich
     - priečinky v koši, ktoré sú prázdne, alebo tie, ktoré ostanú prázdne po zmazaní starých stránok a priečinkov v nich
 
