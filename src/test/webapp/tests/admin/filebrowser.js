@@ -175,7 +175,7 @@ Scenario('unused files - scan and delete @singlethread @screenshot', async ({ I,
     I.say("A non-recursive scan only returns files from the selected folder");
     startUnusedFilesScan(I);
     waitForUnusedFilesScanInUi(I, DT);
-    I.waitForText("Nájdených nepoužívaných súborov: 2", 20, "#unused-files-status-message");
+    I.waitForText("Počet nájdených nepoužívaných súborov: 2", 20, "#unused-files-status-message");
     I.see(unusedFilesTestData.selectedFileName, "#" + UNUSED_FILES_TABLE_ID + "_wrapper");
     I.see(unusedFilesTestData.deleteAllFileName, "#" + UNUSED_FILES_TABLE_ID + "_wrapper");
     I.dontSee(unusedFilesTestData.childFileName, "#" + UNUSED_FILES_TABLE_ID + "_wrapper");
@@ -184,7 +184,7 @@ Scenario('unused files - scan and delete @singlethread @screenshot', async ({ I,
     I.checkOption("#unused-files-include-subfolders");
     startUnusedFilesScan(I);
     waitForUnusedFilesScanInUi(I, DT);
-    I.waitForText("Nájdených nepoužívaných súborov: 3", 20, "#unused-files-status-message");
+    I.waitForText("Počet nájdených nepoužívaných súborov: 3", 20, "#unused-files-status-message");
     I.see(unusedFilesTestData.childFileName, "#" + UNUSED_FILES_TABLE_ID + "_wrapper");
     I.see(unusedFilesTestData.logicChildPath + "/" + unusedFilesTestData.childFileName,
         "#" + UNUSED_FILES_TABLE_ID + "_wrapper");
@@ -200,7 +200,7 @@ Scenario('unused files - scan and delete @singlethread @screenshot', async ({ I,
     );
     waitForUnusedFilesScanInUi(I, DT);
     I.seeCheckboxIsChecked("#unused-files-include-subfolders");
-    I.waitForText("Nájdených nepoužívaných súborov: 3", 20, "#unused-files-status-message");
+    I.waitForText("Počet nájdených nepoužívaných súborov: 3", 20, "#unused-files-status-message");
     I.see(unusedFilesTestData.selectedFileName, "#" + UNUSED_FILES_TABLE_ID + "_wrapper");
     I.see(unusedFilesTestData.deleteAllFileName, "#" + UNUSED_FILES_TABLE_ID + "_wrapper");
     I.see(unusedFilesTestData.childFileName, "#" + UNUSED_FILES_TABLE_ID + "_wrapper");
@@ -214,7 +214,7 @@ Scenario('unused files - scan and delete @singlethread @screenshot', async ({ I,
     I.waitForVisible("div.DTE_Action_Remove", 10);
     I.click("Zmazať", "div.DTE_Action_Remove:visible");
     I.waitForInvisible(selectedRow, 30);
-    I.waitForText("Nájdených nepoužívaných súborov: 2", 20, "#unused-files-status-message");
+    I.waitForText("Počet nájdených nepoužívaných súborov: 2", 20, "#unused-files-status-message");
 
     I.say("Delete all remaining scan results through the same DataTable remove action");
     I.clickCss("#" + UNUSED_FILES_TABLE_ID + "_wrapper button.buttons-unused-files-delete-all");
@@ -366,7 +366,7 @@ function scanBaseFolderForUnusedFiles(I, DT, user) {
     waitForUnusedFilesScanInUi(I, DT);
 
     // A non-recursive scan of the base folder only returns the file placed directly in it
-    I.waitForText("Nájdených nepoužívaných súborov: 1", 20, "#unused-files-status-message");
+    I.waitForText("Počet nájdených nepoužívaných súborov: 1", 20, "#unused-files-status-message");
     I.see(unusedFilesTestData.multiUserFileName, "#" + UNUSED_FILES_TABLE_ID + "_wrapper");
 }
 

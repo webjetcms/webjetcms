@@ -66,7 +66,7 @@ Stav | Význam
 :----|:------
 Kontrola zatiaľ nebola spustená. | Východiskový stav pred prvým spustením.
 Kontrolujú sa nepoužívané súbory… | Kontrola práve prebieha.
-Nájdených nepoužívaných súborov: N | Kontrola skončila a našla N súborov.
+Počet nájdených nepoužívaných súborov: N | Kontrola skončila a našla N súborov.
 Nenašli sa žiadne nepoužívané súbory. | Kontrola skončila, všetky súbory sa používajú.
 
 ### Výsledok a mazanie

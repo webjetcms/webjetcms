@@ -160,7 +160,7 @@ public class UnusedFilesService implements DisposableBean {
             return;
         }
 
-        synchronized (task) {
+        synchronized (taskCacheLock) {
             List<UnusedFileDTO> existingFiles = new ArrayList<>();
             for (UnusedFileDTO file : task.files) {
                 try {
@@ -403,12 +403,12 @@ public class UnusedFilesService implements DisposableBean {
         try {
             String decodedPath = Tools.URLDecode(path).replace('\\', '/');
             if (decodedPath.startsWith("/") == false) {
-                decodedPath = "/" + decodedPath;
+                decodedPath = "/" + decodedPath; //NOSONAR
             }
 
             String normalizedPath = Path.of(decodedPath).normalize().toString().replace(File.separatorChar, '/');
             if (normalizedPath.startsWith("/") == false) {
-                normalizedPath = "/" + normalizedPath;
+                normalizedPath = "/" + normalizedPath; //NOSONAR
             }
             if (normalizedPath.length() > 1 && normalizedPath.endsWith("/")) {
                 normalizedPath = normalizedPath.substring(0, normalizedPath.length() - 1);
@@ -626,7 +626,7 @@ public class UnusedFilesService implements DisposableBean {
         private volatile TaskState state;
         private volatile long startedAt;
         private volatile Long finishedAt;
-        private volatile List<UnusedFileDTO> files;
+        private volatile List<UnusedFileDTO> files; //NOSONAR - volatile reference is safe for immutable list
     }
 
     private enum TaskState {
