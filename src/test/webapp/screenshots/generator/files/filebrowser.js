@@ -150,9 +150,10 @@ Scenario('filebrowser - folder properties screens', ({ I, DTE, Document, i18n })
     I.switchTo();
     Document.screenshotElement("#modalIframe > div.modal-dialog", "/redactor/files/fbrowser/folder-settings/folder_settings_basic.png");
 
+    I.switchTo();
     I.switchTo("#modalIframeIframeElement");
     I.clickCss("#pills-dt-datatableInit-index-tab");
-    I.waitForVisible("button#start-index-button");
+    I.waitForVisible("button#start-index-button", 10);
     I.switchTo();
     Document.screenshotElement("#modalIframe > div.modal-dialog", "/redactor/files/fbrowser/folder-settings/folder_settings_index.png");
 
@@ -176,6 +177,7 @@ Scenario('filebrowser - folder properties screens', ({ I, DTE, Document, i18n })
     I.click( locate("div.elfinder-contextmenu.elfinder-contextmenu-ltr").find( locate("div.elfinder-contextmenu-item").withChild( locate("span").withText(i18n.get("Folder properties")) ) ) );
     I.waitForVisible("iframe#modalIframeIframeElement");
     I.switchTo("#modalIframeIframeElement");
+    I.waitForElement("#pills-dt-datatableInit-index-tab", 10);
     I.clickCss("#pills-dt-datatableInit-index-tab");
     I.waitForVisible("button#start-index-button");
     I.clickCss("button#start-index-button");
