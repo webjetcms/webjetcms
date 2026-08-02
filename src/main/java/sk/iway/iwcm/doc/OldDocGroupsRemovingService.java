@@ -299,10 +299,11 @@ public class OldDocGroupsRemovingService {
         allDocIds.addAll(plan.subtreeDocIds);
         allDocIds.addAll(plan.oldDocIds);
 
-        String description = "Automatic trash deletion:"
+        String description = "Webpages trash delete:"
             + " period=" + Tools.formatDateTimeSeconds(createdFrom) + " - " + Tools.formatDateTimeSeconds(createdTo)
             + ", groupIds=" + allGroupIds
-            + ", docIds=" + allDocIds;
+            + ", docIds=" + allDocIds
+            + ", totalCount=" + plan.getTotalCount();
 
         Adminlog.add(Adminlog.TYPE_GDPR_DELETE, description, -1, -1);
     }
