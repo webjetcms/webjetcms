@@ -172,17 +172,32 @@ The **Photo Bank** tab allows you to obtain (download) images from the free onli
 
 After entering and searching for a term, you will be offered matching images. The menu contains several pages that you can browse between.
 
+When searching in the photo bank, you also have filters available:
+
+- **Media Type** allows you to select the search mode:
+  - images: `all`, `photo`, `illustration`, `vector`
+  - videos: `all`, `film`, `animation`
+- **Category** filters results by topic area (e.g. `nature`, `business`, `travel`, ...).
+
+If you select video in the **Media type** field, the search will automatically switch to searching for video files.
+
 ![](image_dialog-pixabay.png)
 
-After clicking on one of the offered images, a dialog will appear with a preview and the **width** / **height** values ​​of the given image.
+After clicking on one of the offered images, a dialog will appear with a preview, a **File name** field, and the **width** / **height** values ​​of the given image.
+
+When a video is selected, the preview and file name are displayed the same, but the dimensions (**width** / **height**) are not entered in the save dialog.
+
+The **File name** field is automatically pre-filled with the last search term, but you can edit it before saving. WebJET automatically converts the name to lowercase, removes accents, and replaces disallowed characters and spaces with dashes. Do not enter a file extension; WebJET will detect it from the source image and display its type with an icon to the right of the name.
 
 ![](image_dialog-pixabay-add.png)
 
 If you wish to change the dimensions of the image, you can adjust the **width** value and its **height** will be automatically calculated based on the original aspect ratio of the image.
 
+The image dimensions are not added to the file name. If you do not enter a name or a file with the same name already exists in the selected folder, a warning is displayed and the image is not saved. The existing file is not overwritten.
+
 ![](image_dialog-pixabay-add2.png)
 
-Then, after clicking the **Save to WebJET** button, the image will be downloaded and saved. The tab will automatically switch to **Content**, where you will have the image immediately available.
+Then, after clicking the **Save to WebJET** button, the image will be downloaded and saved under the selected name. The tab will automatically switch to **Content**, where you will have the image immediately available.
 
 ![](image_dialog-pixabay-save.png)
 

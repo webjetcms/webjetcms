@@ -87,6 +87,15 @@ public class DatabaseDeleteController extends DatatableRestControllerV2<Database
      */
     @Override
     public boolean deleteItem(DatabaseDeleteBean entity, long id) {
+        if (entity.getFrom() == null) {
+            entity.setFrom(new Date(0));
+        }
+        if (entity.getTo() == null) {
+            Calendar cal = Calendar.getInstance();
+            cal.add(Calendar.DATE, 1);
+            cal.add(Calendar.SECOND, -1);
+            entity.setTo(cal.getTime());
+        }
         setForceReload(true);
         return cleanupService.delete(entity);
     }
