@@ -2768,7 +2768,7 @@ public class GroupsDB extends DB
 	 * @return
 	 */
 	public static boolean deleteGroup(int groupId, boolean includeParent, boolean permanentlyDelete, boolean publishEvents) {
-		return deleteGroup(groupId, includeParent, permanentlyDelete, publishEvents, false);
+		return deleteGroup(groupId, includeParent, permanentlyDelete, publishEvents, false, true);
 	}
 
 	/**
@@ -2778,9 +2778,10 @@ public class GroupsDB extends DB
 	 * @param permanentlyDelete - nevlozi do kosa, ale priamo vymaze
 	 * @param publishEvents - ak je true, su vyvolane udalosti (false potrebne ak napr. reagujeme na udalost a potrebujeme znova upravit adresar a nechceme aby doslo k zacykleniu)
 	 * @param withHistory - ak je true, pri trvalom vymazani sa vymaze aj historia stranok (documents_history) a naplanovane zmeny adresarov (groups_scheduler)
+	 * @param refreshDocGroupsDB - ak je true, po vymazani sa refreshne cache v DocDB/GroupsDB
 	 * @return
 	 */
-	public static boolean deleteGroup(int groupId, boolean includeParent, boolean permanentlyDelete, boolean publishEvents, boolean withHistory)
+	public static boolean deleteGroup(int groupId, boolean includeParent, boolean permanentlyDelete, boolean publishEvents, boolean withHistory, boolean refreshDocGroupsDB)
 	{
 		Connection db_conn = null;
 		PreparedStatement ps = null;
@@ -2940,11 +2941,14 @@ public class GroupsDB extends DB
 
 			db_conn.close();
 			db_conn = null;
-			//oznam ostatnym Node-om, ze sa nieco zmenilo
-			ClusterDB.addRefresh(GroupsDB.class);
-			ClusterDB.addRefresh(DocDB.class);
-			GroupsDB.getInstance(true);
-			DocDB.getInstance(true);
+
+			if (refreshDocGroupsDB) {
+				//oznam ostatnym Node-om, ze sa nieco zmenilo
+				ClusterDB.addRefresh(GroupsDB.class);
+				ClusterDB.addRefresh(DocDB.class);
+				GroupsDB.getInstance(true);
+				DocDB.getInstance(true);
+			}
 
 			if (group!=null && publishEvents) (new WebjetEvent<GroupDetails>(group, WebjetEventType.AFTER_DELETE)).publishEvent();
 

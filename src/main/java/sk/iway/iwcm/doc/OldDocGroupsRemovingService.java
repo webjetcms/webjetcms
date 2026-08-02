@@ -16,6 +16,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.gdpr.GdprDataDeleting.GdprDataDeletingType;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
+import sk.iway.iwcm.system.cluster.ClusterDB;
 
 public class OldDocGroupsRemovingService {
 
@@ -196,20 +197,26 @@ public class OldDocGroupsRemovingService {
         for (int rootGroupId : plan.oldGroupRoots) {
             // includeParent=true  -> the root group itself is removed as well (not only its sub-groups)
             // the param withHistory TRUE also secures removing of bound documents_history and groups_scheduler
-            GroupsDB.deleteGroup(rootGroupId, true, true, true, true);
+            GroupsDB.deleteGroup(rootGroupId, true, true, true, true, false);
         }
 
         // Phase 2: remove docs old enough in the remaining trash groups
         for (int docId : plan.oldDocIds) {
             // the param withHistory TRUE also secures removing of bound documents_history
-            DocDB.deleteDoc(docId, null, true, true);
+            DocDB.deleteDoc(docId, null, true, true, false);
         }
 
         // Phase 3: remove trash groups that became empty (bottom-up order kept from the plan)
         for (int groupId : plan.emptyGroupIds) {
             // includeParent=true -> the empty group itself is removed
-            GroupsDB.deleteGroup(groupId, true, true, true, true);
+            GroupsDB.deleteGroup(groupId, true, true, true, true, false);
         }
+
+        //oznam ostatnym Node-om, ze sa nieco zmenilo
+        ClusterDB.addRefresh(GroupsDB.class);
+        ClusterDB.addRefresh(DocDB.class);
+        GroupsDB.getInstance(true);
+        DocDB.getInstance(true);
     }
 
     /* =============== HELPERS =============== */
