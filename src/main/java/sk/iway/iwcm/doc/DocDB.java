@@ -3200,7 +3200,21 @@ public class DocDB extends DB
 	 * @param publishEvents - ak je true publikuju sa aj udalosti o zmene
 	 * @return
 	 */
-	public static boolean deleteDoc(int docId, HttpServletRequest request, boolean publishEvents)
+	public static boolean deleteDoc(int docId, HttpServletRequest request, boolean publishEvents) {
+		return deleteDoc(docId, request, publishEvents, false, true);
+	}
+
+	/**
+	 * Vymazanie stranky z databazy, nemaze to historiu (aby sa dalo dostat aspon k niecomu, ked sa to zmaze omylom)
+	 * PRE KOREKTNE PRESUNUTIE DO KOSA POUZITE DeleteServlet.deleteDoc
+	 * @param docId
+	 * @param request
+	 * @param publishEvents - ak je true publikuju sa aj udalosti o zmene
+	 * @param withHistory - ak je true, zmaze sa aj viazana historia stranky (documents_history)
+	 * @param refreshDocDB - ak je true, tak sa po zmazani stranky refreshne DocDB (aktualizuje sa cache)
+	 * @return
+	 */
+	public static boolean deleteDoc(int docId, HttpServletRequest request, boolean publishEvents, boolean withHistory, boolean refreshDocDB)
 	{
 		// ziskanie namapovanych stranok
 		List<Integer> slaves = MultigroupMappingDB.getSlaveDocIds(docId);
@@ -3231,6 +3245,21 @@ public class DocDB extends DB
 			ps.execute();
 			ps.close();
 
+			if (withHistory)
+			{
+				//zmaz aj viazane zaznamy z historie stranok (documents_history)
+				ps = db_conn.prepareStatement("DELETE FROM documents_history WHERE doc_id=?");
+				ps.setInt(1, docId);
+				ps.execute();
+
+				// zmazanie historie namapovanych stranok
+				for (Integer slave : slaves) {
+					ps.setInt(1, slave);
+					ps.execute();
+				}
+				ps.close();
+			}
+
 			if (Constants.DB_TYPE == Constants.DB_MSSQL && Constants.getBoolean("jtdsCommit"))
 			{
 				db_conn.commit();
@@ -3240,7 +3269,7 @@ public class DocDB extends DB
 			//zmaz zapisane hodnoty mapovania z tabulky 'multigroup_mapping'
 			MultigroupMappingDB.deleteSlaves(docId);
 
-			DocDB.getInstance().updateInternalCaches(docId);
+			if (refreshDocDB) DocDB.getInstance().updateInternalCaches(docId);
 
 			if (doc!=null && publishEvents) (new WebjetEvent<DocDetails>(doc, WebjetEventType.AFTER_DELETE)).publishEvent();
 

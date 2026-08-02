@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.gdpr.GdprDataDeleting.GdprDataDeletingType;
 import sk.iway.iwcm.doc.GroupsTreeService;
 import sk.iway.iwcm.stat.ChartType;
 import sk.iway.iwcm.stat.Column;
@@ -36,7 +37,7 @@ public class StatService {
      * @param dateRangeArr - [0] dateFrom, [1] dateTo
      * @param statType - type of stat, can be days, weeks, months
      */
-    private static void setDefaultRange(Date [] dateRangeArr, String statType) {
+    private static void setDefaultRange(Date[] dateRangeArr, String statType) {
         Calendar cal = Calendar.getInstance();
 
         //If date to is not set, set it
@@ -51,6 +52,9 @@ public class StatService {
         if(Tools.isNotEmpty(statType) && "months".equals(statType)) {
             //Stat type is set to months, set default range 6 month
             cal.add(Calendar.MONTH, -6); //From 6 month's ago
+        } else if(GdprDataDeletingType.OLD_DOC_AND_GROUPS == GdprDataDeletingType.getByValue(statType)) {
+            //Stat type is deletion of old docs/groups in trash, use its configured threshold in days
+            cal.add(Calendar.DAY_OF_YEAR, - GdprDataDeletingType.OLD_DOC_AND_GROUPS.getAfterConstantInt());
         } else {
             //Stat type is not set OR its days/weeks, set default range 1 month
             cal.add(Calendar.MONTH, -1); //From 1 month ago
