@@ -107,6 +107,10 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Jiné menší změny
 
+- Průzkumník - ve vlastnostech složky přidána karta [Nepoužívané soubory](redactor/files/fbrowser/folder-settings/README.md#nepoužívané-soubory) pro vyhledání a smazání nepoužívaných souborů (#58621).
+
+![](redactor/files/fbrowser/folder-settings/folder_settings_unused_files_result.png)
+
 - Průzkumník - přidáno právo **Povolit nahrávání souborů s diakritikou**, které umožňuje zachovat diakritiku při nahrávání, vytváření a přejmenování souborů a složek ve složkách `/files`, `/images` a `/shared`. Bez tohoto práva se názvy nadále automaticky upraví bez diakritiky (#58589).
 - Přihlášení - zrychlené načtení úvodní stránky v administraci - přidána vyrovnávací paměť pro seznam posledních stránek, změněných stránek a auditních záznamů (#58589).
 
