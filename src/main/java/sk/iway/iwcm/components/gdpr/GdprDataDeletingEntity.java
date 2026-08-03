@@ -7,6 +7,8 @@ import lombok.Setter;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
 @Getter
 @Setter
@@ -17,7 +19,13 @@ public class GdprDataDeletingEntity {
     @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
-    @DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, title="components.gdpr.type")
+    @DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, title="components.gdpr.type", className = "ai-off",
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
+            )
+        }
+    )
     private String type;
 
     //statTime include value
@@ -44,9 +52,13 @@ public class GdprDataDeletingEntity {
     private Integer recordCnt;
 
     @DataTableColumn(
-        inputType = DataTableColumnType.TEXT,
+        inputType = DataTableColumnType.TEXTAREA,
         title="editor.form.action",
-        hiddenEditor = true
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
+            )
+        }
     )
     private String action;
 }

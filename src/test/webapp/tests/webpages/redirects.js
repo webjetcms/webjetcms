@@ -277,7 +277,7 @@ Scenario('XLS import onlynew', async ({I, DT, DTE}) => {
     DT.deleteAll(redirectTable);
  });
 
- //TODO: testy funkcnosti presmerovani
+ //testy funkcnosti presmerovani
  Scenario('Test 404.jsp', ({ I }) => {
 
     //url redirects from to
@@ -367,16 +367,16 @@ function testPublishingAndValidity(I, DT, DTE, Document, toRedirectUrl, useCache
         I.see("AI BUTTONS TEST");
 
     I.say("Set valid publish in PAST - redirection must work");
-        updateEntityAndTest(I, DT, DTE, toRedirectUrl, (new Date()).getTime() - shift5m, null, true);
+        updateEntityAndTest(I, DT, DTE, toRedirectUrl, Date.now() - shift5m, null, true);
 
     I.say("Set valid publish in FUTURE - redirection must NOT work");
-        updateEntityAndTest(I, DT, DTE, toRedirectUrl, (new Date()).getTime() + shift5m, null, false);
+        updateEntityAndTest(I, DT, DTE, toRedirectUrl, Date.now() + shift5m, null, false);
 
     I.say("Set valid to in PAST - redirection must NOT work");
-        updateEntityAndTest(I, DT, DTE, toRedirectUrl, null, (new Date()).getTime() - shift5m, false);
+        updateEntityAndTest(I, DT, DTE, toRedirectUrl, null, Date.now() - shift5m, false);
 
     I.say("Set valid to in FUTURE - redirection must work");
-        updateEntityAndTest(I, DT, DTE, toRedirectUrl, null, (new Date()).getTime() + shift5m, true);
+        updateEntityAndTest(I, DT, DTE, toRedirectUrl, null, Date.now() + shift5m, true);
 
     I.say("Delete redirect and test it do not work");
         I.amOnPage("/admin/v9/settings/redirect/");
@@ -424,3 +424,157 @@ function updateEntityAndTest(I, DT, DTE, toRedirectUrl, publishDate, validToDate
         I.see("Chyba 404 - požadovaná stránka neexistuje");
     }
 }
+
+function createRedirect(I, DTE, oldUrl, newUrl) {
+    I.clickCss("#redirectTable_wrapper button.buttons-create");
+    DTE.waitForEditor("redirectTable");
+    I.fillField("#DTE_Field_oldUrl", oldUrl);
+    I.fillField("#DTE_Field_newUrl", newUrl);
+    DTE.save("redirectTable");
+}
+
+function createDatedRedirect(I, DTE, oldUrl, newUrl, publishDate, validTo) {
+    I.clickCss("#redirectTable_wrapper button.buttons-create");
+    DTE.waitForEditor("redirectTable");
+    I.fillField("#DTE_Field_oldUrl", oldUrl);
+    I.fillField("#DTE_Field_newUrl", newUrl);
+    if (publishDate !== null) {
+        I.fillField("#DTE_Field_publishDate", I.formatDateTime(publishDate));
+        I.clickCss(".DTE_Field_Name_oldUrl");
+    }
+    if (validTo !== null) {
+        I.fillField("#DTE_Field_validTo", I.formatDateTime(validTo));
+        I.clickCss(".DTE_Field_Name_oldUrl");
+    }
+    DTE.save("redirectTable");
+}
+
+const cleanupPrefix = "/autotest-redirect-cleaning-";
+const redirectCleaningWrapper = "#redirectCleaningTable_wrapper";
+const toast = "#toast-container-webjet";
+Scenario('Redirect cleaning preview and execution @singlethread @screenshot', async ({ I, DT, DTE, Document }) => {
+
+    // Use an isolated named domain. The unnamed scope is intentionally excluded from this E2E cleanup.
+    Document.switchDomain("test23.tau27.iway.sk");
+
+    const prefix = cleanupPrefix + randomNumber;
+    const finalUrl = "/tseer/ai-buttons-test.html";
+    const regexOldUrl = "regexp:^" + prefix + "-ignored-regex/(.+)";
+    const regexNewUrl = prefix + "-ignored-regex-target/$1";
+    const publishDateOldUrl = prefix + "-ignored-publish-date";
+    const publishDateNewUrl = prefix + "-ignored-publish-date-target";
+    const validToOldUrl = prefix + "-ignored-valid-to";
+    const validToNewUrl = prefix + "-ignored-valid-to-target";
+    const futureDate = Date.now() + (24 * 60 * 60 * 1000);
+
+    I.say("Remove leftover redirect cleaning test data");
+    I.amOnPage("/admin/v9/settings/redirect/");
+    DT.filterContains("oldUrl", cleanupPrefix);
+    if (await I.getTotalRows() > 0) {
+        DT.deleteAll("redirectTable");
+    }
+
+    I.say("Verify there are no unrelated redirect cleaning actions");
+    I.amOnPage("/admin/v9/settings/redirect-cleaning/");
+    DT.waitForLoader("redirectCleaningTable");
+    I.seeElement("#redirectCleaningIncludeUnnamed");
+    I.dontSeeCheckboxIsChecked("#redirectCleaningIncludeUnnamed");
+
+    Document.screenshot("/redactor/webpages/redirects/redirect-cleaning.png");
+
+    I.clickCss(redirectCleaningWrapper + " button.buttons-analyze-redirects");
+    I.waitForText("Analýza dokončená: 0 aktualizácií, 0 zmazaní", 40, toast);
+    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 40, redirectCleaningWrapper);
+    I.seeElement(redirectCleaningWrapper + " button.buttons-execute-cleaning.disabled");
+    const initialSummary = await I.grabTextFrom(toast);
+    const ignoredCountMatch = initialSummary.match(/(\d+) ignorovaných záznamov/); //NOSONAR
+    I.assertTrue(ignoredCountMatch !== null, "The analysis summary must contain the ignored redirect count");
+    const initialIgnoredCount = Number(ignoredCountMatch[1]);
+    I.toastrClose();
+
+    I.say("Create actionable and ignored redirects");
+    I.amOnPage("/admin/v9/settings/redirect/");
+    DT.waitForLoader();
+    createRedirect(I, DTE, prefix + "-old", prefix + "-old-first");
+    createRedirect(I, DTE, prefix + "-old", prefix + "-old-final");
+    createRedirect(I, DTE, prefix + "-duplicate", finalUrl);
+    createRedirect(I, DTE, prefix + "-duplicate", finalUrl);
+    createRedirect(I, DTE, prefix + "-chain-a", prefix + "-chain-b");
+    createRedirect(I, DTE, prefix + "-chain-b", finalUrl);
+    createRedirect(I, DTE, prefix + "-cycle-a", prefix + "-cycle-b");
+    createRedirect(I, DTE, prefix + "-cycle-b", prefix + "-cycle-a");
+    createRedirect(I, DTE, regexOldUrl, regexNewUrl);
+    createDatedRedirect(I, DTE, publishDateOldUrl, publishDateNewUrl, futureDate, null);
+    createDatedRedirect(I, DTE, validToOldUrl, validToNewUrl, null, futureDate);
+
+    I.say("Analyze and verify the read-only preview");
+    I.amOnPage("/admin/v9/settings/redirect-cleaning/");
+    DT.waitForLoader("redirectCleaningTable");
+    I.dontSeeElement(redirectCleaningWrapper + " button.buttons-create");
+    I.clickCss(redirectCleaningWrapper + " button.buttons-analyze-redirects");
+    I.waitForText(prefix + "-old-first", 40, redirectCleaningWrapper);
+    I.see("Zmazať starú verziu", redirectCleaningWrapper);
+    I.see("Zmazať duplikát", redirectCleaningWrapper);
+    I.see("Skrátiť reťazec", redirectCleaningWrapper);
+    I.see("Zmazať krok cyklu", redirectCleaningWrapper);
+
+    I.waitForElement(toast);
+    I.moveCursorTo(toast);
+    Document.screenshot("/redactor/webpages/redirects/redirect-cleaning-analyzed.png");
+
+    I.waitForText((initialIgnoredCount + 3) + " ignorovaných záznamov", 40, toast);
+    I.dontSee(regexOldUrl, redirectCleaningWrapper);
+    I.dontSee(publishDateOldUrl, redirectCleaningWrapper);
+    I.dontSee(validToOldUrl, redirectCleaningWrapper);
+    I.seeElement(redirectCleaningWrapper + " button.buttons-execute-cleaning:not(.disabled)");
+    I.dontSeeCheckboxIsChecked("#redirectCleaningIncludeUnnamed");
+    I.toastrClose();
+
+    I.say("Reopen the page and verify the shared cached preview");
+    I.amOnPage("/admin/v9/settings/redirect-cleaning/");
+    DT.waitForLoader("redirectCleaningTable");
+    I.waitForText(prefix + "-old-first", 40, redirectCleaningWrapper);
+    I.dontSeeCheckboxIsChecked("#redirectCleaningIncludeUnnamed");
+    I.seeElement(redirectCleaningWrapper + " button.buttons-execute-cleaning:not(.disabled)");
+
+    I.say("Execute the complete snapshot");
+    I.clickCss(redirectCleaningWrapper + " button.buttons-execute-cleaning");
+    I.waitForText("Vykonať čistenie presmerovaní?", 10, toast);
+    I.see("Zmení sa 1 a zmaže 3 záznamov", toast);
+    Document.screenshot("/redactor/webpages/redirects/redirect-cleaning-confirm.png");
+    I.click("Potvrdiť", "div.toastr-buttons");
+    I.waitForText("Čistenie dokončené", 40, toast);
+    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 40, redirectCleaningWrapper);
+
+    I.say("Verify the resulting redirects in the main table and in a request");
+    I.amOnPage("/admin/v9/settings/redirect/");
+    DT.filterEquals("oldUrl", prefix + "-chain-a");
+    I.waitForText(finalUrl.substring(1), 10, "#redirectTable_wrapper");
+    I.amOnPage(prefix + "-chain-a");
+    I.seeInCurrentUrl(finalUrl);
+
+    I.say("Verify ignored redirects remain unchanged");
+    I.amOnPage("/admin/v9/settings/redirect/");
+    DT.filterEquals("oldUrl", regexOldUrl);
+    I.waitForText(prefix.substring(1) + "-ignored-regex-target", 10, "#redirectTable_wrapper");
+    DT.filterEquals("oldUrl", publishDateOldUrl);
+    I.waitForText(publishDateNewUrl.substring(1), 10, "#redirectTable_wrapper");
+    DT.filterEquals("oldUrl", validToOldUrl);
+    I.waitForText(validToNewUrl.substring(1), 10, "#redirectTable_wrapper");
+});
+
+Scenario('Redirect cleaning permissions 1', async ({ I, DT }) => {
+    I.say("Delete redirect cleaning test data");
+    I.amOnPage("/admin/v9/settings/redirect/");
+    DT.filterContains("oldUrl", cleanupPrefix);
+    if (await I.getTotalRows() > 0) {
+        DT.deleteAll("redirectTable");
+    }
+});
+
+Scenario('Redirect cleaning permissions 2', ({ I, DT }) => {
+    DT.checkPerms("cmp_redirects", "/admin/v9/settings/redirect-cleaning/", "redirectCleaningTable");
+
+    // logout to refresh domain to default one
+    I.logout();
+});

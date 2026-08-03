@@ -6,6 +6,10 @@
 
 ### Websites
 
+- Website Trash - added [automatic deletion of old pages and folders](redactor/apps/gdpr/data-deleting.md) from the trash according to the set retention period. Added the ability to delete pages and folders in the trash and in the [Data deletion](sysadmin/data-deleting/README.md) section according to the selected date range. Unified logic for calculating the number and deleting, fixed permanent deletion of the trash folder and empty folders (#271).
+
+![](sysadmin/data-deleting/database-delete.png)
+
 - Redirects - user-created redirects are distinguished from automatic ones (marked with a gray background) and can be [filtered in the redirect list] separately (redactor/webpages/redirects/README.md#automatic-and-user-created-redirects) (#58625).
 
 ![](editor/webpages/redirects/redirect-path.png)
@@ -24,6 +28,10 @@
 
 ![](redactor/webpages/working-in-editor/link_dialog-file-archive.png)
 
+- [Photobank](redactor/webpages/working-in-editor/README.md#karta-fotobanka) - when downloading an image from the photobank, it is possible to set the file name. The name is automatically pre-filled and cleaned, the extension is determined by the source image and the existing file is not overwritten. Also added support for selecting the image type and category and the ability to search for video files (#58645).
+
+![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
+
 ### Headless mode
 
 Added [headless mode support](frontend/headless/README.md), in which WebJET CMS serves purely as a `backend` CMS. Content, navigation, search and forms are accessible via REST API. Frontend application (e.g. Astro, Next.js, Vue, React or any HTTP client) will download the data and display it according to its own templates (#258).
@@ -33,6 +41,10 @@ Added [headless mode support](frontend/headless/README.md), in which WebJET CMS 
 In one WebJET CMS you can have multiple (dozens) domains and subsequently have smaller websites created in different technologies that consume and display content from the CMS system. Inserting standard applications such as photo galleries, forms, GDPR cookies, and the like is also supported.
 
 ![](frontend/headless/gallery.png)
+
+- Redirects - added [redirect cleanup and optimization](redactor/webpages/redirects/README.md#redirect-cleanup) with preview of changes before committing. Cleanup removes old, duplicate and cyclical redirects and shortens redirect chains (#58629).
+
+![](redactor/webpages/redirects/redirect-cleaning-analyzed.png)
 
 ### Forms
 
@@ -94,6 +106,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Added option to view all files in the management domain.
 
 ### Other minor changes
+
+- Explorer - added [Unused files] tab in folder properties (redactor/files/fbrowser/folder-settings/README.md#unused-files) to find and delete unused files (#58621).
+
+![](redactor/files/fbrowser/folder-settings/folder_settings_unused_files_result.png)
 
 - Explorer - added right **Allow uploading files with accents**, which allows preserving accents when uploading, creating, and renaming files and folders in folders `/files`, `/images`, and `/shared`. Without this right, names will continue to be automatically edited without accents (#58589).
 - Login - faster loading of the home page in the administration - added cache for the list of recent pages, changed pages and audit logs (#58589).
