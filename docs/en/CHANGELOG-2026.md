@@ -107,6 +107,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Other minor changes
 
+- Explorer - added [Unused files] tab in folder properties (redactor/files/fbrowser/folder-settings/README.md#unused-files) to find and delete unused files (#58621).
+
+![](redactor/files/fbrowser/folder-settings/folder_settings_unused_files_result.png)
+
 - Explorer - added right **Allow uploading files with accents**, which allows preserving accents when uploading, creating, and renaming files and folders in folders `/files`, `/images`, and `/shared`. Without this right, names will continue to be automatically edited without accents (#58589).
 - Login - faster loading of the home page in the administration - added cache for the list of recent pages, changed pages and audit logs (#58589).
 
