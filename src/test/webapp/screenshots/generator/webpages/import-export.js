@@ -40,7 +40,7 @@ Scenario('Screens', ({ I, DT, Document }) => {
     I.attachFile(zipFileInput, zipFileLocation);
     I.clickCss("#btnOk");
     I.waitForElement("#syncForm");
-    Document.screenshot("/redactor/webpages/imported-zip-window.png");
+    Document.screenshot("/redactor/webpages/imported-zip-window.png", 1360, 800);
 
     Document.screenshotElement("#selectAllBtn", "/redactor/webpages/selectAllBtn.png");
     Document.screenshotElement("#deselectAllBtn", "/redactor/webpages/deselectAllBtn.png");
