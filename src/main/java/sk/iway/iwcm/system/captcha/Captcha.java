@@ -202,6 +202,14 @@ public class Captcha
 
 	private static boolean reCaptchaV3Validate(HttpServletRequest request) {
 		String token = Tools.getParameter(request, "g-recaptcha-response");
+		if(Tools.isEmpty(token)) {
+			// Try get token from session, where multistep-form would set it
+			Object sessionToken = request.getSession().getAttribute("g-recaptcha-response");
+			if(sessionToken != null) token = sessionToken.toString();
+			// Consume the token so it can not be reused by a concurrent/subsequent submit
+			request.getSession().removeAttribute("g-recaptcha-response");
+		}
+
 		if (Tools.isEmpty(token)) {
 			Logger.debug(Captcha.class, "reCaptchaV3Validate - Google token empty");
 			return false;

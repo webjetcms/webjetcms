@@ -1,3 +1,5 @@
+let autocompleteAssetsPromise;
+
 /**
  * Multistep Form application controller.
  *
@@ -14,6 +16,7 @@ export class MultistepForm {
      * @param {string} [options.formName] - Form identifier used by the backend.
      * @param {string|number} [options.stepId] - Initial step identifier to load.
      * @param {string} [options.csrf] - CSRF token added to POST requests.
+        * @param {string} [options.language] - Language code appended to backend requests.
      */
     constructor(options = {}) {
         // Preferred container selector; defaults to body > article > div.container
@@ -22,6 +25,7 @@ export class MultistepForm {
         this.formName = options.formName || '';
         this.stepId = options.stepId || '';
         this.csrf = options.csrf || '';
+        this.language = options.language || '';
 
         // Localized messages provided by the page (preferred), with safe fallbacks
         this.successMessage = options.successMessage || 'Operation completed successfully.';
@@ -98,7 +102,7 @@ export class MultistepForm {
             console.warn('Missing formName or stepId; skipping load.');
             return;
         }
-        const url = `/rest/multistep-form/get-step?form-name=${encodeURIComponent(formName)}&step-id=${encodeURIComponent(stepId)}`;
+        const url = `/rest/multistep-form/get-step?form-name=${encodeURIComponent(formName)}&step-id=${encodeURIComponent(stepId)}&language=${encodeURIComponent(this.language || '')}`;
         try {
             const r = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json', "X-CSRF-Token": this.csrf } });
             if (!r.ok) {
@@ -132,6 +136,9 @@ export class MultistepForm {
             const form = this.wrapper.querySelector('.multistepStepContent > form');
             if (form) form.addEventListener('submit', async (event) => { await this.doValidationAndSave(event); });
 
+            // Initialize remote autocomplete inputs rendered in this step
+            this._initAutocompleteFields();
+
             // Initialize conditional field visibility from server-provided map
             this._initConditionalVisibility(visibilityConditions);
 
@@ -154,6 +161,88 @@ export class MultistepForm {
     }
 
     /**
+     * Bind remote autocomplete inputs using the standard data-ac-* attributes.
+     * The jQuery UI JavaScript dependency is loaded only when the current step contains such a field.
+     */
+    async _initAutocompleteFields() {
+        const inputs = Array.from(this.wrapper.querySelectorAll('input.form-control[data-ac-url]'));
+        if (inputs.length === 0) return;
+
+        try {
+            await this._ensureAutocompleteAssets();
+        } catch (error) {
+            console.warn('Failed to initialize autocomplete:', error);
+            return;
+        }
+
+        inputs.forEach(input => {
+            if (input.dataset.acInitialized === 'true' || input.isConnected === false || this.wrapper.contains(input) === false) return;
+
+            const $input = $(input);
+            const minLength = Number.parseInt(input.dataset.acMinLength || '1', 10);
+            const maxRows = Number.parseInt(input.dataset.acMaxRows || '30', 10);
+            const openOnFocus = input.dataset.acSelect === 'true';
+            const sourceUrl = input.dataset.acUrl;
+
+            $input.autocomplete({
+                appendTo: this.wrapper,
+                source: (request, response) => {
+                    const url = new URL(sourceUrl, window.location.origin);
+                    url.searchParams.set('term', request.term === '*' ? '%' : request.term);
+
+                    fetch(url.toString(), {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-Token': this.csrf
+                        }
+                    })
+                    .then(result => result.ok ? result.json() : [])
+                    .then(options => response(Array.isArray(options) ? options.slice(0, maxRows) : []))
+                    .catch(() => response([]));
+                },
+                delay: 800,
+                minLength: Number.isNaN(minLength) ? 1 : minLength,
+                open: () => $input.autocomplete('widget').outerWidth($input.outerWidth()),
+                position: { my: 'left top+2', at: 'left bottom', collision: 'flipfit' }
+            });
+
+            const autocompleteInstance = $input.autocomplete('instance');
+            autocompleteInstance.liveRegion.appendTo(this.wrapper);
+
+            input.dataset.acInitialized = 'true';
+
+            if (openOnFocus) {
+                $input.on('focus.multistepAutocomplete', () => {
+                    window.setTimeout(() => $input.autocomplete('search', '*'), 50);
+                });
+            }
+        });
+    }
+
+    /**
+     * Load jQuery UI autocomplete once per page.
+     * @returns {Promise<void>} resolves when autocomplete is available
+     */
+    _ensureAutocompleteAssets() {
+        if (window.$ && typeof $.fn?.autocomplete === 'function') return Promise.resolve();
+        if (!window.$) return Promise.reject(new Error('jQuery is not available.'));
+
+        if (!autocompleteAssetsPromise) {
+            autocompleteAssetsPromise = new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = '/components/_common/javascript/jqui/jquery-ui-core.min.js';
+                script.dataset.multistepAutocomplete = 'true';
+                script.onload = () => typeof $.fn?.autocomplete === 'function' ? resolve() : reject(new Error('Autocomplete is not available.'));
+                script.onerror = () => reject(new Error('Could not load autocomplete assets.'));
+                document.head.appendChild(script);
+            });
+        }
+
+        return autocompleteAssetsPromise;
+    }
+
+    /**
      * Validate and submit the current step form via AJAX.
      * Collects all input/select/textarea values and posts JSON to the server.
      * @param {SubmitEvent} event - The submit event from the step form.
@@ -162,30 +251,47 @@ export class MultistepForm {
     async doValidationAndSave(event) {
         event.preventDefault();
         const form = event.currentTarget;
-        const url = form.action;
+
+        // Generate reCaptcha V3 token if the captcha widget is present
+        const recaptchaInput = form.querySelector('#g-recaptcha-response[data-type="V3"]');
+        if (recaptchaInput && window.grecaptcha && typeof window.wjFormSubmit === 'function') {
+            await new Promise((resolve) => {
+                wjFormSubmit(form, resolve);
+            });
+        }
+
+        const url = new URL(form.getAttribute('action'), window.location.origin);
+        url.searchParams.set('language', this.language || '');
 
         const result = {};
         form.querySelectorAll('input, textarea, select').forEach(el => {
-            if (!el.name) return;
+
+            // Checkbox/radio options of a group share one name but have unique ids
+            // (id="${id}-${value}"), so collect them by name to keep grouped values
+            // together. Other fields are matched by id after the NAME->ID change, with
+            // a name fallback for id-less elements (e.g. the multiupload dropzone inputs).
+            const isGrouped = el.type === 'checkbox' || el.type === 'radio';
+            const key = isGrouped ? (el.name || el.id) : (el.id || el.name);
+            if (!key) return;
             // Skip fields hidden by visibility conditions
             if (this._isFieldHidden(el.closest('.form-group') || el.parentElement)) return;
             if (el.type === 'checkbox' || el.type === 'radio') {
                 if (!el.checked) return;
             }
             const value = el.value;
-            if (Object.hasOwn(result, el.name)) {
-                if (Array.isArray(result[el.name])) {
-                    result[el.name].push(value);
+            if (Object.hasOwn(result, key)) {
+                if (Array.isArray(result[key])) {
+                    result[key].push(value);
                 } else {
-                    result[el.name] = [result[el.name], value];
+                    result[key] = [result[key], value];
                 }
             } else {
-                result[el.name] = value;
+                result[key] = value;
             }
         });
 
         try {
-            const resp = await fetch(url, {
+            const resp = await fetch(url.toString(), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -661,7 +767,7 @@ export class MultistepForm {
      */
     _getFieldValue(fieldId) {
         // Check radio buttons first
-        const radios = this.wrapper.querySelectorAll(`input[type="radio"][name="${fieldId}"]`);
+        const radios = this.wrapper.querySelectorAll(`input[type="radio"][id="${fieldId}"]`);
         if (radios.length > 0) {
             for (const radio of radios) {
                 if (radio.checked) return radio.value;
@@ -670,7 +776,7 @@ export class MultistepForm {
         }
 
         // Check checkboxes
-        const checkboxes = this.wrapper.querySelectorAll(`input[type="checkbox"][name="${fieldId}"]`);
+        const checkboxes = this.wrapper.querySelectorAll(`input[type="checkbox"][id="${fieldId}"]`);
         if (checkboxes.length > 0) {
             const checked = [];
             checkboxes.forEach(cb => { if (cb.checked) checked.push(cb.value); });
@@ -701,8 +807,6 @@ export class MultistepForm {
      */
     async postSaveAction(response) {
         this.hideErrors();
-
-        //debugger;
 
         const forwardUrl = response.forward;
         if (forwardUrl) {

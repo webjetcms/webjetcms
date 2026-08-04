@@ -74,11 +74,11 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         DatatablePageImpl<FormItemEntity> page = new DatatablePageImpl<>(super.getAllItemsIncludeSpecSearch(new FormItemEntity(), pageable));
 
         //
-        Integer lastStep = null;
+        Long lastStep = null;
         boolean even = false;
         for(FormItemEntity item : page.getContent()) {
             if(lastStep == null) lastStep = item.getStepId();
-            else if(lastStep.intValue() != item.getStepId().intValue()) {
+            else if(!lastStep.equals(item.getStepId())) {
                 lastStep = item.getStepId();
                 even = !even;
             }
@@ -171,7 +171,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
             entity.setShowOtherCount(true);
 
             int stepId = Tools.getIntValue(getRequest().getParameter("stepId"), -1);
-            if(stepId != -1) entity.setStepId(stepId);
+            if(stepId != -1) entity.setStepId( Long.valueOf(stepId) );
         } else {
             entity = formItemsRepository.getReferenceById(id);
         }
@@ -224,12 +224,12 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         }
 
         // sort_priority bugfix - when new item have same sort_priority as existing one, get max sort_priority for step and add 10
-        int samePriorityCount = formItemsRepository.countByFormNameAndStepIdAndSortPriorityAndIdNot(entity.getFormName(), entity.getStepId().longValue(), entity.getSortPriority(), entity.getId() != null ? entity.getId().intValue() : -1);
+        int samePriorityCount = formItemsRepository.countByFormNameAndStepIdAndSortPriorityAndIdNot(entity.getFormName(), entity.getStepId(), entity.getSortPriority(), entity.getId() != null ? entity.getId().intValue() : -1);
         if(samePriorityCount > 0) {
             int maxSortPriority = formItemsRepository.findAll((root, query, builder) ->
                     builder.and(
                         builder.equal(root.get("formName"), entity.getFormName()),
-                        builder.equal(root.get("stepId"), entity.getStepId().longValue())
+                        builder.equal(root.get("stepId"), entity.getStepId())
                     ),
                     PageRequest.of(0, 1, Sort.by(Sort.Order.desc("sortPriority")))
                 ).getContent().stream()

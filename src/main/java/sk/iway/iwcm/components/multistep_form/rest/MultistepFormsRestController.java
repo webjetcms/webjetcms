@@ -1,5 +1,7 @@
 package sk.iway.iwcm.components.multistep_form.rest;
 
+import java.util.List;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.json.JSONObject;
@@ -14,10 +16,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.multistep_form.support.SaveFormException;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 @RestController
 @RequestMapping("/rest/multistep-form")
@@ -30,8 +34,8 @@ public class MultistepFormsRestController {
        this.multistepFormsService = multistepFormsService;
     }
 
-    @PostMapping(value = "/save-form", params={"form-name", "step-id"}, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> saveForm(@RequestParam("form-name") String formName, @RequestParam("step-id") Long stepId, HttpServletRequest request) {
+    @PostMapping(value = "/save-form", params={"form-name", "step-id", "language"}, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> saveForm(@RequestParam("form-name") String formName, @RequestParam("step-id") Long stepId, @RequestParam("language") String language, HttpServletRequest request) { //NOSONAR language is consumed implicitly by PageLng.getUserLng(request)
         JSONObject response = new JSONObject();
 
         try {
@@ -55,7 +59,7 @@ public class MultistepFormsRestController {
 
         catch (Exception e) {
             Logger.error(MultistepFormsRestController.class, "saveForm() failed. " + e.getLocalizedMessage(), e);
-            response.put("err_msg", Prop.getInstance(request).getText("datatable.error.unknown"));
+            response.put("err_msg", Prop.getInstance( PageLng.getUserLng(request) ).getText("datatable.error.unknown"));
 
             Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Error while saving form (or form step):" + formName + ". Error: " + e.getLocalizedMessage(), multistepFormsService.getFormId(formName), FormStatService.AUDIT_SUBID_ERROR_STEP_SAVE);
 
@@ -63,8 +67,8 @@ public class MultistepFormsRestController {
         }
     }
 
-    @GetMapping(value="/get-step", params={"form-name", "step-id"})
-    public ResponseEntity<String> getFormStepHtml(@RequestParam("form-name") String formName, @RequestParam("step-id") Long stepId, HttpServletRequest request) {
+    @GetMapping(value="/get-step", params={"form-name", "step-id", "language"})
+    public ResponseEntity<String> getFormStepHtml(@RequestParam("form-name") String formName, @RequestParam("step-id") Long stepId, @RequestParam("language") String language, HttpServletRequest request) { //NOSONAR language is consumed implicitly by PageLng.getUserLng(request)
         String encoding = SetCharacterEncodingFilter.getEncoding();
         if (Tools.isEmpty(encoding)) encoding = "UTF-8"; // Fallback
         String contentTypeWithCharset = MediaType.APPLICATION_JSON_VALUE + "; charset=" + encoding;
@@ -88,7 +92,7 @@ public class MultistepFormsRestController {
         } catch (Exception e) {
             Logger.error(MultistepFormsRestController.class, "getFormStepHtml() failed. " + e.getLocalizedMessage(), e);
             JSONObject response = new JSONObject();
-            response.put("err_msg", Prop.getInstance(request).getText("datatable.error.unknown"));
+            response.put("err_msg", Prop.getInstance( PageLng.getUserLng(request) ).getText("datatable.error.unknown"));
 
             Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Error while getting next form step. formName:" + formName + ", stepId:" + stepId + ". Error: " + e.getLocalizedMessage() , multistepFormsService.getFormId(formName), FormStatService.AUDIT_SUBID_ERROR_STEP_GET);
 
@@ -96,5 +100,10 @@ public class MultistepFormsRestController {
                 .header("Content-Type", contentTypeWithCharset)
                 .body(response.toString());
         }
+    }
+
+    @GetMapping(value = "/autocomplete", params = {"step-id", "item-id", "term"})
+    public List<LabelValue> getAutocompleteOptions(@RequestParam("step-id") Long stepId, @RequestParam("item-id") Long itemId, @RequestParam String term, HttpServletRequest request) {
+        return multistepFormsService.getAutocompleteOptions(stepId, itemId, term, request);
     }
 }

@@ -735,13 +735,13 @@ Typ poľa umožňujúci [nahratie súboru](field-file-upload.md).
 
 ## OPTIONS
 
-Typ poľa pre dynamický zoznam hodnôt. V editore sa zobrazí ako zoznam vstupných riadkov, kde každý riadok obsahuje dve textové polia (napr. kľúč a hodnota). Riadky je možné pridávať, odoberať a meniť ich poradie pomocou `drag & drop`.
+Typ poľa pre dynamický zoznam hodnôt. V editore sa zobrazí ako zoznam vstupných riadkov, kde každý riadok obsahuje dve textové polia — meno (label) a hodnotu (value). Riadky je možné pridávať, odoberať a meniť ich poradie pomocou `drag & drop`.
 
 Výsledná hodnota sa ukladá ako reťazec, kde jednotlivé riadky sú oddelené znakom `|` a hodnoty v rámci riadku sú oddelené znakom `:`. Napríklad: `key1:value1|key2:value2|key3:value3`.
 
-Ak zadáte len jednu hodnotu (`key1` bez `:`), použije sa rovnaká hodnota pre `label` aj `value`.
-
 Pole nepodporuje AI tlačidlo (`btn-ai`).
+
+### Základné použitie
 
 ```java
     @DataTableColumn(
@@ -751,6 +751,60 @@ Pole nepodporuje AI tlačidlo (`btn-ai`).
     )
     private String options = "";
 ```
+
+### Formát uloženej hodnoty
+
+| Vstup v editore | Uložená hodnota | Poznámka |
+|---|---|---|
+| Meno: `Slovensko`, Hodnota: `sk` | `Slovensko:sk` | štandardná dvojica label:value |
+| Meno: `Slovensko`, Hodnota: (prázdne) | `Slovensko:Slovensko` | ak hodnota chýba, použije sa meno aj ako hodnota |
+| Meno: (prázdne), Hodnota: `sk` | `sk:sk` | ak meno chýba, použije sa hodnota aj ako meno |
+| Viac riadkov | `Slovensko:sk\|Česko:cz\|Rakúsko:at` | oddelené znakom `\|` |
+
+Pri načítaní hodnoty editor podporuje aj čiarku `,` ako oddeľovač riadkov (spätná kompatibilita), ale pri ukladaní sa vždy používa `|`.
+
+### Reálny príklad použitia
+
+```java
+public class FormItemEntity {
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPTIONS,
+        title = "multistep_form.value_as_options",
+        hidden = true,
+        tab = "advanced",
+        className = "allowEmptyOption"
+    )
+    private String valueAsOptions;
+
+}
+```
+
+### Prázdna možnosť (allowEmptyOption)
+
+Ak sa má pridať do zoznamu aj prázdna hodnota, nastavte poľu CSS triedu `allowEmptyOption`:
+
+```java
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPTIONS,
+        title = "components.myapp.options",
+        tab = "basic",
+        className = "allowEmptyOption"
+    )
+    private String options = "";
+```
+
+Editor v takom prípade zobrazí vedľa tlačidla <button class="btn btn-outline-secondary" type="button"> <i class="ti ti-plus"></i> Pridať</button> ďalšie tlačidlo <button class="btn buttons-colvisGroup btn-outline-secondary options-empty-option options-empty-option-btn" type="button"> <i class="ti ti-square"></i> Pridať prázdnu možnosť </button>. Aktivovaním sa na začiatok výslednej hodnoty pridá prázdna dvojica `:`, napríklad `:|key1:value1|key2:value2`. Pri opätovnom otvorení editora sa aktivovaný stav obnoví podľa prítomnosti tejto hodnoty. Trieda `allowEmptyOption` má účinok iba na pole typu `OPTIONS`, nie na `OPTIONS_SIMPLE`.
+
+### Implementácia
+
+Frontend implementácia je v súboroch:
+
+- [field-type-options.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options.js) — definícia typu poľa s dvomi vstupmi (meno a hodnota)
+- [field-type-options-base.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options-base.js) — spoločná logika pre OPTIONS aj OPTIONS_SIMPLE (drag & drop, pridávanie/odoberanie riadkov, allowEmptyOption)
+
+Na strane backendu sa typ `DataTableColumnType.OPTIONS` automaticky nastaví ako `editor.type = "options"` s formátom renderovania `dt-format-text`.
 
 ![](../../redactor/apps/multistep-form/form-item-editor-advanced.png)
 

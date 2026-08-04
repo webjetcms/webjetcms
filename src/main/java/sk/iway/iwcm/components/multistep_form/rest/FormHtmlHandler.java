@@ -16,8 +16,10 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.CryptoFactory;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.EditorToolsForCore;
 import sk.iway.iwcm.common.SearchTools;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
@@ -39,6 +41,7 @@ import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.tags.support.ResponseUtils;
+import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.utils.Pair;
 
 import org.jsoup.nodes.Document;
@@ -85,7 +88,9 @@ public class FormHtmlHandler {
     private Pair<String, String> cssDataPair;
     private String formHtmlBeforeCss;
 
-    public FormHtmlHandler(String formName, HttpServletRequest request) {
+    private int formCounter;
+
+    public FormHtmlHandler(String formName, int formCounter, HttpServletRequest request) {
         this.formStepsRepository = Tools.getSpringBean("formStepsRepository", FormStepsRepository.class);
         if(this.formStepsRepository == null) throw new IllegalStateException("FormHtmlHandler was not able to obtain FormStepsRepository");
 
@@ -95,9 +100,12 @@ public class FormHtmlHandler {
         this.formSettingsRepository = Tools.getSpringBean("formSettingsRepository", FormSettingsRepository.class);
         if(this.formSettingsRepository == null) throw new IllegalStateException("FormHtmlHandler was not able to obtain FormSettingsRepository");
 
+        this.formCounter = formCounter;
+        if(this.formCounter < 1) throw new IllegalStateException("Invalid formCounter for form rendering");
+
         this.formName = formName;
 
-        this.prop = Prop.getInstance(request);
+        this.prop = Prop.getInstance( PageLng.getUserLng(request) );
         this.requiredLabelAdd = prop.getText("components.formsimple.requiredLabelAdd");
         this.firstTimeHeadingSet = new HashSet<>();
 
@@ -115,6 +123,16 @@ public class FormHtmlHandler {
             this.formAddClasses = formSettings.getFormAddClasses();
             if(Tools.isEmpty(this.formAddClasses)) this.formAddClasses = "";
         }
+    }
+
+    public FormHtmlHandler(String formName, HttpServletRequest request) {
+        this(formName, getFormCounter(formName, request), request);
+    }
+
+    private static int getFormCounter(String formName, HttpServletRequest request) {
+        final MultistepFormsService multistepFormsService = Tools.getSpringBean("multistepFormsService", MultistepFormsService.class);
+        if(multistepFormsService == null) throw new IllegalStateException("FormHtmlHandler was not able to obtain MultistepFormsService");
+        return multistepFormsService.getFormCounter(formName, request);
     }
 
     /**
@@ -201,8 +219,16 @@ public class FormHtmlHandler {
         StringBuilder stepWrapperStart = new StringBuilder();
         stepWrapperStart.append(prop.getText("components.mustistep.step.start"));
 
-        if (Tools.isNotEmpty(formStep.getHeader()))
+        if (Tools.isNotEmpty(formStep.getHeader())) {
+            /// Swap header title
             stepWrapperStart.append(Tools.replace(prop.getText("components.mustistep.step.header"), "${step-header}", StringEscapeUtils.unescapeHtml4(formStep.getHeader()) ));
+
+            // Swap user info
+            stepWrapperStart = DocTools.updateUserCodes(UsersDB.getCurrentUser(request), stepWrapperStart);
+
+            // Swap form items values
+            stepWrapperStart = MultistepFormsService.updateFormValues(formName, request, stepWrapperStart);
+        }
 
         formStepHtml.append(stepWrapperStart);
 
@@ -238,6 +264,9 @@ public class FormHtmlHandler {
 
             // DO NOT ADD item from form step if its hidden by condition - for email render
             if(isEmailRender == true && Tools.isTrue(formConditionsHandler.isFieldHiddenByCondition(stepItem, jsonObject))) continue;
+
+            // When render for page not email, add form counter as prefix
+            if(isEmailRender == false) stepItem.setItemFormId("f" + this.formCounter + "-" + stepItem.getItemFormId());
 
             JSONObject item = new JSONObject(stepItem);
             String fieldType = item.getString("fieldType");

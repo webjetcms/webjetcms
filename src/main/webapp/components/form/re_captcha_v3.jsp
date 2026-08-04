@@ -26,7 +26,7 @@ PageParams pageParams = new PageParams(request);
 out.print(Tools.insertJQuery(request));
 %>
 
-<input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response">
+<input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" data-type="V3">
 <input type="hidden" name="action" value="validate_captcha">
 
 <script src="https://www.google.com/recaptcha/api.js?render=<%=Constants.getString("reCaptchaSiteKey")%>"></script>

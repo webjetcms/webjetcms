@@ -294,7 +294,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 
                 for(FormItemEntity fie : formItemsRepository.findAllByFormNameAndDomainId(fe.getFormName(), fe.getDomainId())) {
                     StringBuilder itemName = new StringBuilder(MultistepFormsService.getFieldName(fie, prop));
-                    if(stepNames != null && stepNames.size() > 1) itemName.append(" (").append(stepNames.get(fie.getStepId().longValue())).append(")");
+                    if(stepNames != null && stepNames.size() > 1) itemName.append(" (").append(stepNames.get(fie.getStepId())).append(")");
                     itemNames.put(fie.getItemFormId(), itemName.toString());
                 }
             }
@@ -580,9 +580,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
             int domainId = CloudToolsForCore.getDomainId();
             if (domainId != entityDb.getDomainId()) return false;
 
-            int count = formsRepository.countAllByFormNameAndDomainId(formName, domainId);
-
-            if (entityDb.getCreateDate()==null || count <= 2) {
+            if (entityDb.getCreateDate() == null) {
                 //zmaz vsetky podla mena formu, ak su uz len 2 zaznamy (cize riadiaci + jeden form) zmaz tiez vsetko
                 formsRepository.deleteByFormNameAndDomainId(formName, domainId);
                 // Ak ma, zmaz aj steps/items (multistep forms)
@@ -591,6 +589,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                 // DO NOT DELETE maybe form is still in webpage and we just deleted form records
                 // formSettingsRepository.deleteByFormNameAndDomainId(formName, domainId);
             } else {
+                // remove form filled record
                 formsRepository.deleteById(id);
             }
 
@@ -770,7 +769,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                             String code = iterableCode;
 
                             int separator = token.indexOf(":");
-                            if (code.contains("${value-label}") && separator > 0) {
+                            if (code.contains("${value-label}") && separator >= 0) {
                                 valueLabel = token.substring(0, separator);
                                 token = token.substring(separator + 1);
                             }
@@ -787,6 +786,8 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                 }
 
                 html = Tools.replace(html, "${id}", id);
+                html = Tools.replace(html, "${itemId}", item.optString("id", ""));
+                html = Tools.replace(html, "${stepId}", item.optString("stepId", ""));
                 html = Tools.replace(html, "${label}", isEmailRender && label.trim().endsWith(":") == false ? label + ":" : label);
                 html = Tools.replace(html, "${labelSanitized}", labelSanitized);
                 html = Tools.replace(html, "${value}", value);
@@ -817,7 +818,13 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
        return DocTools.updateUserCodes(UsersDB.getCurrentUser(request), new StringBuilder(html)).toString();
     }
 
-    private static String[] parseIterableValues(String value) {
+    /**
+     * Resolve configured options, including options backed by an enumeration.
+     *
+     * @param value serialized options
+     * @return resolved option tokens
+     */
+    public static String[] parseIterableValues(String value) {
         String normalized = Tools.getStringValue(value, "").trim();
         if (Tools.isEmpty(normalized)) return new String[0];
 

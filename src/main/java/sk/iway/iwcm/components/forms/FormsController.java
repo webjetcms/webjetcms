@@ -1,12 +1,12 @@
 package sk.iway.iwcm.components.forms;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -19,16 +19,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.CryptoFactory;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
+import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
@@ -57,6 +60,8 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
     private final FormStepsRepository formStepsRepository;
     private final FormItemsRepository formItemsRepository;
 
+    private final FormsRepository formsRepository;
+
     @Autowired
     public FormsController(FormsRepository formsRepository, FormsServiceImpl formsService, FormSettingsRepository formSettingsRepository, FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository) {
         super(formsRepository);
@@ -64,6 +69,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
         this.formSettingsRepository = formSettingsRepository;
         this.formStepsRepository = formStepsRepository;
         this.formItemsRepository = formItemsRepository;
+        this.formsRepository = formsRepository;
     }
 
     @Override
@@ -119,11 +125,29 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
         //default use lowercase form name, remove special chars
         entity.setFormName( DocTools.removeChars(entity.getFormName(), true) );
 
+        if(isDuplicate() == true) {
+            // Allways multistep when duplicate
+            entity.setFormType( FormsService.FORM_TYPE.MULTISTEP.value() );
+        }
+
         return super.insertItem(entity);
     }
 
     @Override
     public void afterSave(FormsEntity entity, FormsEntity saved) {
+        // During duplicate we copy settings
+        if(isDuplicate() == true && entity.getFormSettings() != null) {
+                // Settings are here - just EDIT them
+                entity.getFormSettings().setId(null);
+
+                //lowercase form name
+                entity.getFormSettings().setFormName( entity.getFormName() );
+
+                // Prepare and save form settings
+                FormSettingsService.prepareSettingsForSave(entity.getFormSettings(), entity.getFormType(), formSettingsRepository);
+                formSettingsRepository.save(entity.getFormSettings());
+        }
+
         if(entity.getFormSettings() != null && (entity.getFormSettings().getId() == null || entity.getFormSettings().getId() == -1L)) {
             // Its new saved form
 
@@ -276,8 +300,66 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
     @Override
     public FormsEntity processFromEntity(FormsEntity entity, ProcessItemAction action) {
         if(Tools.isEmpty(entity.getFormType()))
-             entity.setFormType( FormsService.FORM_TYPE.UNKNOWN.value() );
+            entity.setFormType( FormsService.FORM_TYPE.UNKNOWN.value() );
         return entity;
+    }
+
+    @Override
+    @Transactional
+    public void afterDuplicate(FormsEntity entity, Long originalId) {
+        String newFormName = entity.getFormName();
+
+        // We use form name as ID
+        FormsEntity originalForm = formsRepository.findFirstByIdAndDomainId(originalId, CloudToolsForCore.getDomainId()).orElse(null);
+        if(originalForm == null || Tools.isEmpty(originalForm.getFormName())) throw duplicationError("Original form or formName not present.");
+        String originalFormName = originalForm.getFormName();
+
+        // Need to copy and save form data
+        entity.setData(originalForm.getData());
+        formsRepository.save(entity);
+
+        // Get steps and duplicate them
+        List<FormStepEntity> formSteps = formStepsRepository.findAllByFormNameAndDomainId(originalFormName, CloudToolsForCore.getDomainId());
+        if(formSteps != null && formSteps.isEmpty() == false) {
+            for(FormStepEntity formStep : formSteps) {
+                // Set new form name
+                formStep.setFormName(newFormName);
+
+                // Set duplicate ID so we can bind it back
+                formStep.setIdForDuplication(formStep.getId());
+
+                //
+                formStep.setId(null);
+            }
+            List<FormStepEntity> savedSteps = formStepsRepository.saveAll(formSteps);
+
+            if(savedSteps == null || savedSteps.isEmpty() == true || savedSteps.size() != formSteps.size()) throw duplicationError("Duplicated steps do not have same size as original.");
+
+            Map<Long, Long> oldNewStepIdsMap = new HashMap<>();
+            for(FormStepEntity formStep : savedSteps) {
+                oldNewStepIdsMap.put(formStep.getIdForDuplication(), formStep.getId());
+            }
+
+            // Now duplicate items
+            List<FormItemEntity> formItems = formItemsRepository.findAllByFormNameAndDomainId(originalFormName, CloudToolsForCore.getDomainId());
+            if(formItems != null && formItems.isEmpty() == false) {
+                for(FormItemEntity formItem : formItems) {
+                    formItem.setFormName(newFormName);
+                    formItem.setId(null);
+                    if(oldNewStepIdsMap.containsKey(formItem.getStepId()) == false) throw duplicationError("While duplicate items, found uknown stepId: " + formItem.getStepId());
+                    formItem.setStepId( oldNewStepIdsMap.get(formItem.getStepId()) );
+                }
+
+                List<FormItemEntity> savedItems = formItemsRepository.saveAll(formItems);
+
+                if(savedItems == null || savedItems.isEmpty() == true || savedItems.size() != formItems.size()) throw duplicationError("Duplicated items do not have same size as original.");
+            }
+        }
+    }
+
+    private IllegalStateException duplicationError(String debugError) {
+        Logger.debug(this, debugError);
+        return new IllegalStateException("Form duplication failed: " + debugError);
     }
 
     /**
