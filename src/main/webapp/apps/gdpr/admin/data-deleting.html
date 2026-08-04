@@ -1,51 +1,56 @@
-    <script>
-        var dataDeletingDataTable;
+<script data-th-inline="javascript">
+    var columns = /*[(${layout.getDataTableColumns('sk.iway.iwcm.components.gdpr.GdprDataDeletingEntity')})]*/ '';
+</script>
+<script>
+    var dataDeletingDataTable;
 
-        window.domReady.add(function () {
+    window.domReady.add(function () {
 
-            window.helpLink = "/redactor/apps/gdpr/data-deleting";
+        window.helpLink = "/redactor/apps/gdpr/data-deleting";
 
-            let url = "/admin/rest/gdpr/data_deleting";
-            let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.components.gdpr.GdprDataDeletingEntity")})];
+        let url = "/admin/rest/gdpr/data_deleting";
 
-            dataDeletingDataTable = WJ.DataTable({
-                url: url,
-                serverSide: false, //false lebo sa nevyužíva repositár
-                columns: columns,
-                id: "dataDeletingDataTable",
-                fetchOnEdit: true,
-                fetchOnCreate: true
-            });
-
-            dataDeletingDataTable.hideButton("create");
-            dataDeletingDataTable.hideButton("remove");
-            dataDeletingDataTable.hideButton("duplicate");
-            dataDeletingDataTable.hideButton("export");
-            dataDeletingDataTable.hideButton("celledit");
-
-            dataDeletingDataTable.button().add(1, {
-                extends: 'remove',
-                editor: dataDeletingDataTable.EDITOR,
-                text: '<i class="ti ti-trash-x"></i>',
-                action: function (e, dt, node) {
-                    WJ.confirm({
-                        title: WJ.translate("components.gdpr.admin_gdpr_data_deleting.confirm.title.js"),
-                        message: WJ.translate("components.gdpr.admin_gdpr_data_deleting.confirm.message.js"),
-                        success: function() {
-                            dataDeletingDataTable.executeAction("customDataDelete", false, "");
-                        }
-                    });
-                },
-                init: function ( dt, node, config ) {
-                    $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
-                },
-                className: 'btn btn-danger',
-                attr: {
-                    "data-toggle": "tooltip",
-                    title: "[[#{components.data.deleting.button}]]"
-                }
-            });
+        dataDeletingDataTable = WJ.DataTable({
+            url: url,
+            serverSide: false, //false lebo sa nevyužíva repositár
+            columns: columns,
+            id: "dataDeletingDataTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true
         });
-    </script>
 
-    <table id="dataDeletingDataTable" class="datatableInit table"></table>
+        dataDeletingDataTable.hideButton("create");
+        dataDeletingDataTable.hideButton("remove");
+        dataDeletingDataTable.hideButton("duplicate");
+        dataDeletingDataTable.hideButton("export");
+        dataDeletingDataTable.hideButton("celledit");
+
+        dataDeletingDataTable.button().add(4, {
+            text: '<i class="ti ti-player-play"></i>',
+            action: function (e, dt, node) {
+
+                let baseMsg = WJ.translate("components.gdpr.admin_gdpr_data_deleting.confirm.message.js");
+
+                let types = dt.rows({ selected: true }).data().pluck("type").toArray();
+                let typesList = "<ul> ";
+                typesList += types.map(function(type) {
+                    return "<li>" + type + "</li>";
+                }).join("");
+                typesList += "</ul>";
+
+                dataDeletingDataTable.executeAction("customDataDelete", false, WJ.translate("components.gdpr.admin_gdpr_data_deleting.confirm.title.js"), baseMsg + typesList);
+            },
+            className: 'btn btn-outline-secondary button-execute-task',
+            init: function ( dt, node, config ) {
+                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            },
+            attr: {
+                'title': '[[#{admin.crontab.launch_task}]]',
+                'data-toggle': 'tooltip'
+            }
+        });
+
+    });
+</script>
+
+<table id="dataDeletingDataTable" class="datatableInit table"></table>
