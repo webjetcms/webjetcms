@@ -102,7 +102,7 @@ Hodnoty sa potom ukladajú do pola oddelené pomocou znaku `|`
 
 Typ poľa `radio` zobrazí zoznam možností ako prepínač, používateľ môže vybrať práve jednu hodnotu. Možnosti sa nastavujú v tabuľke [Voliteľné polia](custom-fields-settings.md) rovnako ako pri výberovom poli - ako statický zoznam hodnôt, alebo dynamicky prepojením na číselník.
 
-### Zaškrtávacie polia
+### Zaškrtávacie pole
 
 Typ poľa `checkbox` zobrazí zoznam možností ako zaškrtávacie polia, používateľ môže vybrať viac hodnôt. Možnosti sa nastavujú v tabuľke [Voliteľné polia](custom-fields-settings.md) rovnako ako pri výberovom poli - ako statický zoznam hodnôt, alebo dynamicky prepojením na číselník.
 
