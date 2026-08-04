@@ -3,6 +3,7 @@ Feature('apps.file-archive.import_export');
 const SL = require("./SL.js");
 
 let randomNumber;
+const futureUploadFilePath = '/files/archiv/files/archiv_insert_later/files/archiv/archive_file_test_fifth.pdf';
 
 Before(({ I, login }) => {
     login('admin');
@@ -59,7 +60,7 @@ Scenario('Upload a file, export that file, delete and try to import again', asyn
     // 3. Vymazanie súboru a nahradenie
     I.say("Phase3 - Deleting the file");
     SL.deleteTestFiles("exportimportfile");
-    SL.deleteTestFiles("future");
+    SL.deleteTestFiles("future", futureUploadFilePath);
 
     I.say("Phase3 - Replacing the file");
     I.amOnPage(SL.fileArchive);
@@ -84,6 +85,7 @@ Scenario('Upload a file, export that file, delete and try to import again', asyn
     DT.filterContains('virtualFileName', replacePdfVirtualFileName);
     DT.checkTableRow("fileArchiveDataTable", 1, ["", "", replacePdfVirtualFileName, "", "files/archiv/", replacePdfFileName]);
 
+    SL.openFileArchive(futureUploadFilePath);
     DT.filterContains('virtualFileName', futureUploadVirtualFileName);
     DT.checkTableRow("fileArchiveDataTable", 1, ["", "", futureUploadVirtualFileName, "", "files/archiv/files/archiv_insert_later/files/archiv/", futureUploadFileName]);
 
@@ -97,6 +99,7 @@ Scenario('Delete archiv entity (and file using elfinder if neccesary)', async ({
     await SL.removeFileByElfinder(importFileSelector);
 
     SL.deleteTestFiles();
+    SL.deleteTestFiles("future", futureUploadFilePath);
 
     const fileSelector = ".elfinder-cwd-filename[title^='archive_export_import']";
     let wasRemovedByElfinder = await SL.removeFileByElfinder(fileSelector);

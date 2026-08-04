@@ -11,6 +11,10 @@ if (Tools.isEmpty(userLanguage)) {
 	userLanguage = "sk";
 }
 
+Prop prop = Prop.getInstance(request);
+String[] imageTypeOptions = Tools.getTokens(prop.getText("editor.pixabay.imageType"), ",", true);
+String[] categoryOptions = Tools.getTokens(prop.getText("editor.pixabay.category"), ",", true);
+
 request.setAttribute("apiKey", Constants.getString("pixabayApiKey"));
 request.setAttribute("defaultWidth", Constants.getString("pixabayDefaultWidth"));
 request.setAttribute("userLanguage", userLanguage);
@@ -22,7 +26,11 @@ div.results { background-color: white; padding: 5px; padding-top: 10px; }
 div.pixabayBox { margin: 0px; }
 .pixabayBox .imageSearch { padding: 10px; padding-top: 10px; }
 .pixabayBox .paging { padding-top: 10px; }
+.pixabayBox #imageModal .imageExtension { background-color: transparent; border-right: var(--bs-border-width) solid var(--bs-border-color); justify-content: center; min-width: 48px; }
+.pixabayBox #imageModal .imageExtension .ti { font-size: 24px; }
+.pixabayBox #imageModal #imageName.is-invalid + .imageExtension { border-color: var(--bs-form-invalid-border-color, #dc3545); }
 div.no_results { color: red; font-weight: bold; text-align: center; }
+.pixabayBox .results img { width: 100%; height: auto; }
 </style>
 
 <script type="text/javascript" src="js/fck_dialog_common.jsp"></script>
@@ -35,11 +43,15 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 		var pluginName = "pixabay",
 			defaults = {
 				apiKey: 'no-api-key',
-				url: 'https://pixabay.com/api/',
+				imageUrl: 'https://pixabay.com/api/',
+				videoUrl: 'https://pixabay.com/api/videos/',
 				itemsPerPage: 8,
 				itemsPerRow: 4,
 				page: 1,
-				pagesCount: 0
+				pagesCount: 0,
+				search: '',
+				imageType: 'all',
+				category: 'all'
 			};
 
 		var cache = {};
@@ -50,7 +62,7 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 			big: '_960'
 		};
 		var allowedLanguages = ['cs', 'da', 'de', 'en', 'es', 'fr', 'id', 'it', 'hu', 'nl', 'no', 'pl', 'pt', 'ro', 'sk', 'fi', 'sv', 'tr', 'vi', 'th', 'bg', 'ru', 'el', 'ja', 'ko', 'zh'];
-		var userLanguage = '${lng}';
+		var userLanguage = '${userLanguage}';
 
 		var Metronic = window.parent.Metronic;
 
@@ -74,8 +86,6 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 				return;
 			}
 
-			this.settings.url += '?key=' + this.settings.apiKey;
-
 			this.init();
 		}
 
@@ -84,8 +94,10 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 				var self = this;
 				self.elements.form.submit(function(e){
 					var q = $('#search').val();
+					var imageType = $('#imageType').val();
+					var category = $('#category').val();
 
-					self.getJSON(q);
+					self.getJSON(q, 1, imageType, category);
 					e.preventDefault();
 				});
 
@@ -94,7 +106,9 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 
 					if (page > 0) {
 						var q = $('#search').val();
-						self.getJSON(q, page);
+						var imageType = $('#imageType').val();
+						var category = $('#category').val();
+						self.getJSON(q, page, imageType, category);
 					}
 
 					e.preventDefault();
@@ -112,7 +126,9 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 
 					if (page > 0 && page <= self.settings.pagesCount) {
 						var q = $('#search').val();
-						self.getJSON(q, page);
+						var imageType = $('#imageType').val();
+						var category = $('#category').val();
+						self.getJSON(q, page, imageType, category);
 					}
 
 					e.preventDefault();
@@ -121,6 +137,7 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 				self.elements.results.on('click', 'a', function(e){
 					var src = $(this).find('img').first().prop('src');
 					var img = $(this).prop('href');
+					var extension = self.getImageExtension(img);
 
 					var width = $(this).data('width');
 					var height = $(this).data('height');
@@ -129,6 +146,11 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 					$('#imageModal').find('img').first().data('img', img);
 					$('#imageModal').find('img').first().data('width', width);
 					$('#imageModal').find('img').first().data('height', height);
+					$('#imageModal #imageName').val(self.sanitizeFileName(self.settings.search));
+					$('#imageModal').data('file-extension', extension);
+					self.clearFileNameError();
+					self.setImageExtension(extension);
+					self.toggleDimensions(extension);
 
 					$('#imageModal').modal('show');
 					$('#imageModal #imageWidth').val('${defaultWidth}').keyup();
@@ -177,6 +199,21 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 					self.checkInputs();
 				});
 
+				$('#imageModal #imageName').on('input', function(){
+					self.clearFileNameError();
+				}).on('blur', function(){
+					$(this).val(self.sanitizeFileName($(this).val()));
+					self.checkInputs();
+				});
+
+				$('#category').on('change', function(){
+					self.settings.category = $(this).val();
+				});
+
+				$('#imageType').on('change', function(){
+					self.settings.imageType = $(this).val();
+				});
+
 				$('#imageModal .saveImage').click(function(){
 
 					var url = '/components/gallery/admin_save_image_ajax_utf-8.jsp';
@@ -187,6 +224,8 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 					data.img = $('#imageModal').find('img').first().data('img');
 					data.height = $('#imageModal #imageHeight').val();
 					data.width = $('#imageModal #imageWidth').val();
+					data.fileName = self.sanitizeFileName($('#imageModal #imageName').val());
+					$('#imageModal #imageName').val(data.fileName);
 
 					var errors = [];
 
@@ -220,7 +259,8 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 
 								$('#imageModal .errors').hide();
 								$('#imageModal').modal('hide');
-								$('#imageModal #imageHeight, #imageModal #imageWidth').val('');
+								$('#imageModal #imageHeight, #imageModal #imageWidth, #imageModal #imageName').val('');
+								self.setImageExtension('');
 
 								setTimeout(function()
 								{
@@ -249,6 +289,13 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 								}, 500);
 							}
 							else {
+								var duplicateError = $('#imageNameDuplicateError').data('server-message');
+								if ($.inArray(duplicateError, data.errors) != -1) {
+									$('#imageModal .errors').hide();
+									self.showFileNameError('duplicate');
+									return;
+								}
+
 								$('#imageModal .errors').empty();
 								var html = '<ul>';
 
@@ -270,8 +317,11 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 				}).modal("hide");
 				*/
 			},
-			getJSON: function( search, page ) {
+			getJSON: function( search, page, imageType, category ) {
 				var self = this;
+				self.settings.search = search;
+				self.settings.imageType = imageType || 'all';
+				self.settings.category = category || 'all';
 
 				//Metronic.blockUI({target: $('.results'), iconOnly: true});
 
@@ -293,7 +343,8 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 
 				self.settings.page = page;
 
-				var cacheKey = search + "-" + page + "-" + self.settings.itemsPerPage;
+				var isVideo = self.isVideoSearch(self.settings.imageType);
+				var cacheKey = [search, page, self.settings.itemsPerPage, self.settings.imageType, self.settings.category, isVideo ? 'video' : 'image'].join("-");
 
 				if (cache[cacheKey] != null) {
 					self.renderItems(cache[cacheKey]);
@@ -305,7 +356,7 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 				$.ajax({
 					dataType: "json",
 					method: "get",
-					url: self.settings.url + "&q=" + search + "&page=" + page + "&lang=" + self.lang + "&per_page=" + self.settings.itemsPerPage,
+					url: self.buildRequestUrl(search, page),
 					cache: true,
 					success: function(data){
 						self.renderItems(data);
@@ -314,8 +365,56 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 					}
 				});
 			},
+			buildRequestUrl: function(search, page) {
+				var isVideo = this.isVideoSearch(this.settings.imageType);
+				var url = isVideo ? this.settings.videoUrl : this.settings.imageUrl;
+				var params = [
+					'key=' + encodeURIComponent(this.settings.apiKey),
+					'q=' + search,
+					'page=' + page,
+					'lang=' + this.lang,
+					'per_page=' + this.settings.itemsPerPage
+				];
+
+				if (isVideo) {
+					params.push('video_type=' + encodeURIComponent(this.getVideoType(this.settings.imageType)));
+				}
+				else {
+					params.push('image_type=' + encodeURIComponent(this.settings.imageType || 'all'));
+					if (this.settings.category && this.settings.category !== 'all') {
+						params.push('category=' + encodeURIComponent(this.settings.category));
+					}
+				}
+
+				return url + '?' + params.join('&');
+			},
+			isVideoSearch: function(category) {
+				return typeof category == 'string' && category.indexOf('video:') === 0;
+			},
+			getVideoType: function(category) {
+				if (!this.isVideoSearch(category)) return 'all';
+				var parts = category.split(':');
+				return parts.length > 1 ? parts[1] : 'all';
+			},
+			getVideoData: function(item) {
+				if (!item.videos) return null;
+
+				var candidates = ['large', 'medium', 'small', 'tiny'];
+				var variant = null;
+				for (var i = 0; i < candidates.length; i++) {
+					var candidate = item.videos[candidates[i]];
+					if (candidate && candidate.url) {
+						if (variant == null) variant = candidate;
+						//use smallest thumbnail for preview
+						variant.thumbnail = candidate.thumbnail;
+					}
+				}
+
+				return variant;
+			},
 			renderItems: function( items ) {
 				var self = this;
+				var isVideo = self.isVideoSearch(self.settings.imageType);
 				var totalHits = parseInt(items.totalHits);
 			    if (totalHits > 0) {
 			    	var html = '';
@@ -333,11 +432,28 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 
 			    			var item = items.hits[index];
 			    			var preview = item.previewURL;
-			    			var webFormatImage = item.largeImageURL;
-			    			var image = self.getImage(webFormatImage, imageDimenions.big)
+			    			var image = '';
+							var webformatWidth = 0;
+							var webformatHeight = 0;
 
-							var webformatWidth = item.webformatWidth
-							var webformatHeight = item.webformatHeight
+							if (isVideo) {
+								var videoData = self.getVideoData(item);
+								if (videoData == null) {
+									index++;
+									continue;
+								}
+
+								image = videoData.url;
+								preview = videoData.thumbnail || '';
+								webformatWidth = videoData.width || 0;
+								webformatHeight = videoData.height || 0;
+							}
+							else {
+								var webFormatImage = item.largeImageURL;
+								image = self.getImage(webFormatImage, imageDimenions.big);
+								webformatWidth = item.webformatWidth;
+								webformatHeight = item.webformatHeight;
+							}
 
 			    			html += '<div class="col-xs-3">';
 							html += '<a data-height="' + webformatHeight + '" data-width="' + webformatWidth + '" href="' + image + '" target="_blank"><img class="img-responsive" src="' + preview + '" alt="" /></a>';
@@ -405,25 +521,93 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 				image = image.replace('_640', size);
 				return image;
 			},
+			getImageExtension: function( image ) {
+				var path = new URL(image, window.location.href).pathname;
+				var filename = path.substring(path.lastIndexOf('/') + 1);
+				var extension = filename.indexOf('.') == -1 ? '' : filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
+				return extension == 'jpeg' ? 'jpg' : extension;
+			},
+			setImageExtension: function( extension ) {
+				var element = $('#imageModal .imageExtension');
+				element.empty().removeAttr('title role aria-label');
+
+				if (extension == '') return;
+
+				var fileTypeIcons = ['jpg', 'png', 'svg', 'bmp'];
+				var icon = fileTypeIcons.indexOf(extension) == -1 ? 'ti-file' : 'ti-' + extension;
+				if ("mp4" == extension) {
+					icon = 'ti-video';
+				}
+
+				$('<i>', { 'class': 'ti ' + icon, 'aria-hidden': 'true' }).appendTo(element);
+				element.attr({
+					title: extension.toUpperCase(),
+					role: 'img',
+					'aria-label': extension.toUpperCase()
+				});
+			},
+			clearFileNameError: function() {
+				var fileName = $('#imageModal #imageName');
+				fileName.removeClass('is-invalid').removeAttr('aria-invalid').removeData('error-type');
+				$('#imageModal .imageNameError').hide();
+			},
+			showFileNameError: function( errorType ) {
+				var fileName = $('#imageModal #imageName');
+				this.clearFileNameError();
+				fileName.addClass('is-invalid').attr('aria-invalid', 'true').data('error-type', errorType);
+				$('#imageName' + (errorType == 'duplicate' ? 'Duplicate' : 'Required') + 'Error').show();
+			},
+			toggleDimensions: function(extension) {
+				var dimensionsRows = $('#imageModal .imageDimensions');
+				if (extension == 'mp4') {
+					dimensionsRows.hide();
+				}
+				else {
+					dimensionsRows.show();
+				}
+			},
+			sanitizeFileName: function( fileName ) {
+				fileName = WJ.fixFileName(fileName).replace(/\./g, '-');
+				return fileName.replace(/^[-_]+|[-_]+$/g, '');
+			},
 			checkInputs: function() {
 				var result = true;
+				var extension = $('#imageModal').data('file-extension');
 
-				$('#imageModal #imageHeight, #imageModal #imageWidth').each(function(i,v){
-					var el = $(this);
-					var val = el.val();
-					var formGroup = el.parents('.form-group').first();
-					var tooltip = el.prev('.tooltips');
+				if (extension != 'mp4') {
+					$('#imageModal #imageHeight, #imageModal #imageWidth').each(function(i,v){
+						var el = $(this);
+						var val = el.val();
+						var formGroup = el.closest('.row');
+						var tooltip = el.closest('.input-icon').find('.tooltips');
 
-					if (val == "" || isNaN(parseInt(val))) {
-						result = false;
-						formGroup.addClass('has-error');
-						tooltip.show();
-					}
-					else {
-						formGroup.removeClass('has-error');
-						tooltip.hide();
-					}
-				});
+						if (val == "" || isNaN(parseInt(val))) {
+							result = false;
+							formGroup.addClass('has-error');
+							tooltip.show();
+						}
+						else {
+							formGroup.removeClass('has-error');
+							tooltip.hide();
+						}
+					});
+				}
+				else {
+					$('#imageModal #imageHeight, #imageModal #imageWidth').closest('.row').removeClass('has-error');
+					$('#imageModal #imageHeight, #imageModal #imageWidth').closest('.input-icon').find('.tooltips').hide();
+				}
+
+				var fileName = $('#imageModal #imageName');
+				if (fileName.val() == '') {
+					result = false;
+					this.showFileNameError('required');
+				}
+				else if (fileName.data('error-type') == 'duplicate') {
+					result = false;
+				}
+				else {
+					this.clearFileNameError();
+				}
 
 				return result;
 			}
@@ -448,12 +632,33 @@ $(document).ready(function(){
 
 <div class="pixabayBox">
 	<form class="form-inline imageSearch">
-		<div class="form-group">
-			<label for="search" class="form-label"><iwcm:text key="editor.pixabay.searchImages" /></label>
-			<div class="input-group">
-				<input type="text" name="search" id="search" class="form-control" />
+		<div class="row g-2 align-items-end">
+			<div class="input-group mb-3">
+				<input type="text" name="search" id="search" class="form-control" style="width: 200px" aria-label="<iwcm:text key="editor.search.find_what" />" placeholder="<iwcm:text key="editor.search.find_what" />" />
+				<select id="imageType" class="form-select" aria-label="<iwcm:text key="editor.pixabay.imageTypeLabel" />">
+					<%
+						for (String item : imageTypeOptions) {
+							String[] pair = item.split(":", 2);
+							if (pair.length != 2) continue;
+					%>
+						<option value="<%=pair[1]%>"><%=pair[0]%></option>
+					<%
+						}
+					%>
+				</select>
+				<select id="category" class="form-select" aria-label="<iwcm:text key="editor.pixabay.categoryLabel" />">
+					<%
+						for (String item : categoryOptions) {
+							String[] pair = item.split(":", 2);
+							if (pair.length != 2) continue;
+					%>
+						<option value="<%=pair[1]%>"><%=pair[0]%></option>
+					<%
+						}
+					%>
+				</select>
 				<button type="submit" class="btn btn-outline-secondary"><iwcm:text key="searchall.search" /></button>
-            </div>
+			</div>
 		</div>
 	</form>
 
@@ -486,27 +691,40 @@ $(document).ready(function(){
 				<div class="modal-body">
 					<div class="row">
 						<div class="col-sm-4">
-							<img class="img-responsive" src="" alt="" />
+							<img class="img-responsive" src="" alt="" style="width: 100%" />
 						</div>
 						<div class="col-sm-8">
 							<form class="form-horizontal" role="form">
                                 <div class="form-body">
-                                	<div class="row">
-										<div class="col-xs-2">
+									<div class="row">
+										<div class="col-xs-3">
+											<label for="imageName" class="control-label" style="white-space: nowrap;"><iwcm:text key="fbrowse.file_name"/></label>
+										</div>
+										<div class="col-xs-9">
+											<div class="input-group">
+												<input type="text" class="form-control" id="imageName" aria-describedby="imageNameRequiredError imageNameDuplicateError" />
+												<span class="input-group-text imageExtension"></span>
+											</div>
+											<div id="imageNameRequiredError" class="form-text text-danger small imageNameError" style="display: none;"><iwcm:text key="editor.upload_iframe.enterFileName"/></div>
+											<div id="imageNameDuplicateError" class="form-text text-danger small imageNameError" data-server-message="<iwcm:text key="multiple_files_upload.file_exist"/>" style="display: none;"><iwcm:text key="pixabay.modal.imageNameDuplicateError"/></div>
+										</div>
+									</div>
+									<div class="row imageDimensions">
+										<div class="col-xs-3">
                                         	<label for="imageWidth" class="control-label"><iwcm:text key="editor.table.width"/></label>
 										</div>
-                                        <div class="col-xs-10">
+                                        <div class="col-xs-9">
                                         	<div class="input-icon right">
 					                        	<i class="ti ti-exclamation-mark tooltips" data-original-title="Please write a valid width" data-container="body"></i>
 					                        	<input type="text" class="form-control" id="imageWidth" maxlength="4" />
 					                        </div>
                                         </div>
                                     </div>
-                                    <div class="row">
-										<div class="col-xs-2">
+									<div class="row imageDimensions">
+										<div class="col-xs-3">
                                         	<label for="imageHeight" class="control-label"><iwcm:text key="editor.table.height"/></label>
 										</div>
-                                        <div class="col-xs-10">
+                                        <div class="col-xs-9">
                                         	<div class="input-icon right">
 					                        	<i class="ti ti-exclamation-mark tooltips" data-original-title="Please write a valid height" data-container="body"></i>
 					                        	<input type="text" class="form-control" id="imageHeight" maxlength="4" />

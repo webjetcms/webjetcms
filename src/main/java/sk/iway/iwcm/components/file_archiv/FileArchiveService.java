@@ -793,9 +793,25 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		return null;
 	}
 
+	/**
+	 * Finds the ID of an existing archive file by its folder path and file name.
+	 * Performs a dual lookup: first using the legacy (old) path format for backward
+	 * compatibility, then using the normalized path format.
+	 * @param filePath - the folder path where the file resides
+	 * @param fileName - the file name to look up
+	 * @param far - file archive repository
+	 * @return the file archive entity ID, or -1 if not found
+	 */
 	public static final Long getId(String filePath, String fileName, FileArchiveRepository far) {
 		if(Tools.isEmpty(filePath) || Tools.isEmpty(fileName)) return -1L;
-		filePath = FileArchivSupportMethodsService.normalizeToOldPath(filePath);
-		return far.findIdByFilePathAndFileName(filePath, fileName, CloudToolsForCore.getDomainId()).map(Long::longValue).orElse(-1L);
+		// Dual lookup: legacy records may store paths in the old format (without leading slash),
+		// while new records use the normalized format. Try the old format first for backward
+		// compatibility, then fall back to the current normalized format.
+		String oldFilePath = FileArchivSupportMethodsService.normalizeToOldPath(filePath);
+		Long id = far.findIdByFilePathAndFileName(oldFilePath, fileName, CloudToolsForCore.getDomainId()).map(val -> val != null ? val.longValue() : -1L).orElse(-1L);
+		if(id > 0) return id;
+
+		String normalizedFilePath = FileArchivSupportMethodsService.normalizePath(filePath);
+		return far.findIdByFilePathAndFileName(normalizedFilePath, fileName, CloudToolsForCore.getDomainId()).map(val -> val != null ? val.longValue() : -1L).orElse(-1L);
 	}
 }

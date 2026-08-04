@@ -62,6 +62,104 @@ label { display:block; padding:2px 0; }
 .button50.export,
 .button50.import  { font-size:20px; padding:15px 30px; margin-left:20px; margin-bottom:20px; }
 .form-horizontal div.radio {padding-top: 0px;}
+
+.sync-export-setup {
+	padding: 6px 4px 12px;
+}
+
+.sync-export-setup h2 {
+	margin: 0 0 12px;
+	font-size: 16px;
+	font-weight: 600;
+	line-height: 24px;
+}
+
+.sync-export-setup label.form-check {
+	display: flex;
+	align-items: center;
+	float: none;
+	margin-bottom: 2px;
+	padding-top: 0;
+	padding-bottom: 0;
+	line-height: 22px;
+}
+
+.sync-export-setup label.form-check > .form-check-input {
+	float: none;
+	margin: 0 8px 0 0;
+}
+
+.sync-export-setup .form-check-input {
+	padding: 0;
+	border: 1px solid #868EA5 !important;
+	background-color: #FFFFFF;
+}
+
+.sync-export-setup .form-check-input:checked {
+	border-color: #0063FB !important;
+	background-color: #0063FB;
+}
+
+.sync-export-setup .sync-conditional-field,
+.sync-export-setup .sync-nested-options {
+	margin: 8px 0 16px 24px;
+}
+
+.sync-export-setup .sync-conditional-field {
+	width: calc(100% - 24px);
+	max-width: 420px;
+}
+
+.sync-export-setup .sync-nested-options {
+	clear: both;
+	padding: 12px 16px;
+	border-radius: 6px;
+	background-color: #F3F3F6;
+}
+
+.sync-export-setup .sync-nested-options label {
+	width: 100%;
+	padding-left: 0;
+	overflow-wrap: anywhere;
+}
+
+.sync-export-setup .sync-date-field {
+	max-width: 420px;
+}
+
+.sync-export-setup .sync-date-field > .col-xs-6,
+.sync-export-setup .sync-date-field .input-group {
+	float: none;
+	width: 100%;
+	max-width: 100%;
+}
+
+.sync-export-setup .sync-date-field > .col-xs-6 {
+	padding: 0;
+}
+
+.sync-export-setup .sync-file-field {
+	padding: 6px 12px;
+}
+
+.sync-export-setup > .sync-file-field {
+	display: block;
+	width: 100%;
+	max-width: 420px;
+	box-sizing: border-box;
+}
+
+.sync-export-setup > .form-check-input {
+	margin-right: 8px;
+}
+
+.sync-log {
+	display: block;
+	width: 100%;
+	height: 500px;
+	border: 0;
+}
+
 </style>
 
 <script type="text/javascript" src="/components/form/check_form.js"></script>
@@ -86,7 +184,7 @@ label { display:block; padding:2px 0; }
 <div class="tab-pane toggle_content">
 
 	<div class="tab-page" id="tabMenu1" style="display:block;">
-		<form class="form-horizontal" action="/components/sync/export_result.jsp?__setf=1&__sfu=1" name="exportFilesForm" method="post" enctype="multipart/form-data" id="exportForm" target="log_iframe">
+		<form class="form-horizontal sync-export-setup" action="/components/sync/export_result.jsp?__setf=1&__sfu=1" name="exportFilesForm" method="post" enctype="multipart/form-data" id="exportForm" target="log_iframe">
 
 			<div class="col-sm-6">
 				<h2><iwcm:text key="components.sync.export-import.foldersToExport"/></h2>
@@ -94,34 +192,34 @@ label { display:block; padding:2px 0; }
 				<div class="form-group">
 					<div class="${contentFull}">
 
-						<label class="${contentFull} radio">
-							<input class="radio_Dirs" type="radio" name="path" id="path" value="standard" checked="checked">
+						<label class="${contentFull} radio form-check">
+							<input class="radio_Dirs form-check-input" type="radio" name="path" id="path" value="standard" checked="checked">
 							<iwcm:text key="components.sync.export-import.standardDefined"/>
 						</label>
 
-						<label class="${contentFull} radio">
-							<input class="radio_Dirs zvoleneAdresare" type="radio" name="path" value="selected">
+						<label class="${contentFull} radio form-check">
+							<input class="radio_Dirs zvoleneAdresare form-check-input" type="radio" name="path" value="selected">
 							<iwcm:text key="components.sync.export-import.selectedFolders"/>
 						</label>
 
 
-						<div class="checkboxes_zvoleneAdresare">
+						<div class="checkboxes_zvoleneAdresare sync-nested-options">
 							<%for(IwcmFile f : dirsToSelect) {%>
-								<label><input type="checkbox" name="selectedDir" value="<%=Tools.escapeHtml(f.getVirtualPath())%>"> <%=Tools.escapeHtml(f.getName())%></label>
+								<label class="form-check"><input class="form-check-input" type="checkbox" name="selectedDir" value="<%=Tools.escapeHtml(f.getVirtualPath())%>"> <%=Tools.escapeHtml(f.getName())%></label>
 							<%}%>
 					 	</div>
 
 
-						<label class="${contentFull} radio">
-							<input class="radio_Dirs" type="radio" name="path" value="all">
+						<label class="${contentFull} radio form-check">
+							<input class="radio_Dirs form-check-input" type="radio" name="path" value="all">
 							<iwcm:text key="components.sync.export-import.allFolders"/>
 						</label>
 
-						<label class="${contentFull} radio">
-							<input class="radio_Dirs" type="radio" name="path" value="manual">
+						<label class="${contentFull} radio form-check">
+							<input class="radio_Dirs form-check-input" type="radio" name="path" value="manual">
 							<iwcm:text key="components.sync.export-import.manualFolders"/>
 						</label>
-						<input class="form-control input_manualPath" type="text" name="manualPath" placeholder="/adresar,/druhy_adresar">
+						<input class="form-control input_manualPath sync-conditional-field" type="text" name="manualPath" placeholder="/adresar,/druhy_adresar">
 
 					</div>
 				</div>
@@ -132,17 +230,17 @@ label { display:block; padding:2px 0; }
 				<div class="form-group">
 					<div class="${contentFull}">
 
-						<label class="${contentFull} radio">
-							<input type="radio" name="filter" value="none" checked="checked">
+						<label class="${contentFull} radio form-check">
+							<input class="form-check-input" type="radio" name="filter" value="none" checked="checked">
 							<iwcm:text key="components.sync.export-import.noFilter"/>
 						</label>
 
-						<label class="${contentFull} radio">
-							<input type="radio" name="filter" value="fromDate">
+						<label class="${contentFull} radio form-check">
+							<input class="form-check-input" type="radio" name="filter" value="fromDate">
 							<iwcm:text key="components.sync.export-import.fromDate"/>
 						</label>
 
-						<div class="fromDateBox">
+						<div class="fromDateBox sync-conditional-field sync-date-field">
 							<div class="col-xs-6">
 								<div data-date-format="dd.mm.yyyy" class="input-group date date-picker">
 									<input class="input_fromDate form-control datepicker" type="text" name="fromDate">
@@ -153,12 +251,12 @@ label { display:block; padding:2px 0; }
 							</div>
 						</div>
 
-						<label class="${contentFull} radio">
-							<input type="radio" name="filter" value="snapshot">
+						<label class="${contentFull} radio form-check">
+							<input class="form-check-input" type="radio" name="filter" value="snapshot">
 							<iwcm:text key="components.sync.export-import.bySnaphost"/>
 						</label>
 
-						<input class="input_snapshot" type="file" name="snapshot">
+						<input class="input_snapshot form-control sync-conditional-field sync-file-field" type="file" name="snapshot">
 
 					</div>
 				</div>
@@ -173,18 +271,18 @@ label { display:block; padding:2px 0; }
 				<div class="form-group">
 					<div class="${contentFull}">
 
-						<label class="${contentFull} radio">
-							<input type="radio" name="format" value="zip" checked="checked">
+						<label class="${contentFull} radio form-check">
+							<input class="form-check-input" type="radio" name="format" value="zip" checked="checked">
 							.ZIP
 						</label>
 
-						<label class="${contentFull} radio">
-							<input type="radio" name="format" value="tgz">
+						<label class="${contentFull} radio form-check">
+							<input class="form-check-input" type="radio" name="format" value="tgz">
 							.TGZ
 						</label>
 
-						<label class="${contentFull} radio">
-							<input type="radio" name="format" value="snapshot">
+						<label class="${contentFull} radio form-check">
+							<input class="form-check-input" type="radio" name="format" value="snapshot">
 							<iwcm:text key="components.sync.export-import.exportTypeSnaphshot"/>
 						</label>
 					</div>
@@ -196,13 +294,13 @@ label { display:block; padding:2px 0; }
 				<div class="form-group">
 					<div class="${contentFull}">
 
-						<label class="${contentFull} radio">
-							<input type="radio" name="nodeType" value="admin" checked="checked">
+						<label class="${contentFull} radio form-check">
+							<input class="form-check-input" type="radio" name="nodeType" value="admin" checked="checked">
 							<iwcm:text key="components.sync.export-import.nodeType.admin"/>
 						</label>
 
-						<label class="${contentFull} radio">
-							<input type="radio" name="nodeType" value="public">
+						<label class="${contentFull} radio form-check">
+							<input class="form-check-input" type="radio" name="nodeType" value="public">
 							<iwcm:text key="components.sync.export-import.nodeType.public"/>
 						</label>
 					</div>
@@ -213,12 +311,12 @@ label { display:block; padding:2px 0; }
 
 			 	<div class="form-group">
 			 		<div class="${contentFull}">
-				 		<label class="${contentFull} radio">
-							<input class="checkbox_sendEmail" type="checkbox" name="sendEmail" value="yes">
+						<label class="${contentFull} radio form-check">
+							<input class="checkbox_sendEmail form-check-input" type="checkbox" name="sendEmail" value="yes">
 							<iwcm:text key="components.sync.export-import.sendCopyToEmail"/>
 						</label>
 						<div class="${contentFull}">
-							<input class="input_emailAddress form-control"  type="text" name="emailAddress" placeholder="email@domain.com"><br>
+							<input class="input_emailAddress form-control sync-conditional-field"  type="text" name="emailAddress" placeholder="email@domain.com"><br>
 						</div>
 					</div>
 				</div>
@@ -231,9 +329,9 @@ label { display:block; padding:2px 0; }
 	</div>
 
 	<div class="tab-page" id="tabMenu2">
-		<form action="/components/sync/import_result.jsp?__setf=1&__sfu=1" name="importFilesForm" method="post" enctype="multipart/form-data" target="log_iframe">
-			<input type="file" name="archive"><br>
-			<input type="checkbox" name="backup" value="y"><iwcm:text key="components.sync.export-import.createBackup"/><br>
+		<form class="sync-export-setup" action="/components/sync/import_result.jsp?__setf=1&__sfu=1" name="importFilesForm" method="post" enctype="multipart/form-data" target="log_iframe">
+			<input class="form-control sync-file-field" type="file" name="archive"><br>
+			<input class="form-check-input" type="checkbox" name="backup" value="y"><iwcm:text key="components.sync.export-import.createBackup"/><br>
 			<input name="importSubmit" style="display: none;" type="submit" class="button50 import" value="Import" />
 			<%sk.iway.iwcm.system.stripes.CSRF.writeCsrfTokenInputFiled(session, out);%>
 		</form>
@@ -275,12 +373,12 @@ label { display:block; padding:2px 0; }
 				}
 		  	});%>
 
-			<form action="/components/sync/rollback_result.jsp" name="rollbackFilesForm" target="log_iframe">
+			<form class="sync-export-setup" action="/components/sync/rollback_result.jsp" name="rollbackFilesForm" target="log_iframe">
 				<%for(int i=0; i<rollbackVersions.size(); i++)
 				{
 				//rollback-nut sa da iba najnovsi import (po rollbacku sa zaloha vymaze a bude sa dat zvolit predchadzajuci)
 				%>
-						<input type="radio" name="rollback" <%if(i!=rollbackVersions.size()-1) out.print("disabled=\"disabled\"");%> value="<%=Tools.escapeHtml(rollbackVersions.get(i).getVirtualPath())%>"><%=Tools.escapeHtml(rollbackVersions.get(i).getName())%><br>
+						<input class="form-check-input" type="radio" name="rollback" <%if(i!=rollbackVersions.size()-1) out.print("disabled=\"disabled\"");%> value="<%=Tools.escapeHtml(rollbackVersions.get(i).getVirtualPath())%>"><%=Tools.escapeHtml(rollbackVersions.get(i).getName())%><br>
 				<%}%>
 				<input name="rollbackSubmit" style="display: none;" type="submit" class="button50" value="Rollback" />
 			</form>
@@ -292,7 +390,7 @@ label { display:block; padding:2px 0; }
 	</div>
 
 	<div class="tab-page" id="tabMenu4">
-		<iframe id="logId" name="log_iframe" width="600px" height="500px"></iframe>
+		<iframe class="sync-log" id="logId" name="log_iframe" width="600px" height="500px"></iframe>
 	</div>
 </div>
 

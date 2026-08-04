@@ -25,11 +25,12 @@ Vysvetlenie použitých piktogramov:
 - [x] Skripty - pridať možnosť nastaviť, či sa má skript vkladať aj v editore stránok, alebo nie (#58349).
 - [x] Formuláre - pridať skupinu výberový a zaškrtávacích polí `radio/checkbox` napojenú na číselník, podobne ako máme pre `select` pole (#58517).
 - [ ] Zmazať pridružené súbory k web stránke keď ju zmažem - spýtať sa ale vopred používateľa, či súbory chce zmazať. Kontrolovať, či sa nepoužívajú niekde inde.
-- [ ] Mazanie dát - pridať možnosť mazať stránky a priečinky z koša. Vyriešiť aj možnosť mazanie dát spúšťať ako automatizovanú úlohu (#58617).
+- [x] Mazanie dát - pridať možnosť mazať stránky a priečinky z koša. Vyriešiť aj možnosť mazanie dát spúšťať ako automatizovanú úlohu (#58617) (#271).
+- [x] Nepoužívané súbory - spraviť možnosť získať zoznam nepoužívaných súborov - nikde v stránke sa nepoužívajú, ani v médiach atď. Bola na to API `FileTools.getDirFileUsage(currentDir, request)`. Pridať ako kartu do vlastností priečinka v prieskumníku (#58621).
 - [ ] Nepoužívané súbory - spraviť možnosť získať zoznam nepoužívaných súborov - nikde v stránke sa nepoužívajú, ani v médiach atď. Bola na to API `FileTools.getDirFileUsage(currentDir, request)`. Pridať ako kartu do vlastností priečinka v prieskumníku (#58621).
 - [ ] Prieskumník - zamedziť prácu s priečinku pre Manažér dokumentov, aby sa so súbormi nedalo manipulovať mimo Manažér dokumentov.
 - [x] +Prieskumník - pridať právo pre nahrávanie súborov s diakritikou (odstraňuje sa pre `/images` a `/files` priečinky) (#58589).
-- [ ] +Web stránky - lepšie integrovať manažér dokumentov pre vkladanie odkazu do stránky - nová karta podobne ako je Fotobanka pri obrázkoch (#58593).
+- [x] +Web stránky - lepšie integrovať manažér dokumentov pre vkladanie odkazu do stránky - nová karta podobne ako je Fotobanka pri obrázkoch (#58593).
 - [x] +Formuláre - pridať podrobnejšiu štatistiku chýb vyplnených formulárov (#58509).
 - [x] +Web stránky - zlepšiť používateľské rozhranie pre zadávanie `/thumb` obrázkov v editore (#58525).
 - [x] +Voliteľné polia - pridať možnosť definovať ktoré polia sú povinné (#58413).
@@ -43,16 +44,18 @@ Vysvetlenie použitých piktogramov:
 - [x] Voliteľné polia – pridať možnosť nastaviť obmedzenie dĺžky textu pre pole typu `textarea`, podobne ako je to aktuálne možné pri poli typu `text`.
 - [ ] Datatabuľka – upraviť polia typu `Date` a `Datetime` tak, aby správne fungovala validácia `not null`.
 - [ ] Datatabuľka – upraviť spôsob `mergovania` upravenej entity tak, aby bolo možné vynulovať hodnoty typu `number`.
-- [ ] +Presmerovania - rozlíšiť v databáze automaticky vytvorené presmerovanie (hľadaj premennú `editorDisableAutomaticRedirect`) od manuálne vytvoreného, možnosť podľa toho filtrovať v UI (zobraziť len manuálne vytvorené presmerovania).
+- [x] +Presmerovania - rozlíšiť v databáze automaticky vytvorené presmerovanie (hľadaj premennú `editorDisableAutomaticRedirect`) od manuálne vytvoreného, možnosť podľa toho filtrovať v UI (zobraziť len manuálne vytvorené presmerovania) (#58625).
 - [ ] +Presmerovania - doplniť funkciu čistenia presmerovaní - zmaže staré presmerovania (bolo pôvodne `aaa-bbb` a potom vzniklo `aaa-ccc` takže `aaa-bbb` nemá zmysel = zmaže sa) a skontroluje cyklické presmerovania v ktorom zmaže posledný krok. Tiež optimalizovať presmerovania `aaa-bbb-ccc` na `aaa-ccc` (#58629).
 - +Galéria - pridať možnosť nastaviť iný spôsob zmeny veľkosti na veľký obrázok, napr. na malý obrázok sa aplikuje Orezať na mieru (chcú mať štvorec) a na veľký presná šírka (zachová pomer strán). Predvolene bude hodnota NULL=rovnako ako pre malý obrázok (#58633).
 - [ ] Voliteľné polia - pridať možnosť výberu viac položiek pre napojenie na číselník (#58637).
 - [ ] +Číselníky - pridať možnosť definovať typ poľa pre reťazec ako máme vo voliteľných poliach (#58641).
-- [ ] +Fotobanka - pridať možnosť nastaviť názov súboru pred stiahnutím z fotobanky, automaticky nastaviť podľa hľadaného výrazu (#58645).
+- [x] +Fotobanka - pridať možnosť nastaviť názov súboru pred stiahnutím z fotobanky, automaticky nastaviť podľa hľadaného výrazu (#58645).
 - [ ] +Úlohy na pozadí - možnosť manuálne spustiť úlohu na `node`, ktorý má úloha nastavený, teraz sa spustí na `node` kde je používateľ prihlásený.
 - [ ] +Číselník, Blog, Novinky - upraviť tak, aby výber typu číselníka alebo priečinka pre novinky bol vľavo podobne ako v galérii/webových stránkach. Nemusia byť potom karty ale všetko naraz zobrazené.
 - [ ] +Prekladové kľúče - zobrazovať stromovú štruktúru prekladových kľúčov pre lepšiu orientáciu.
 - [ ] +Konfigurácia - doplniť možnosť nastaviť premennú len pre aktuálny uzol (neuložiť ju do databázy - len nastaviť do Constants objektu), pridať tam zaškrtávacie pole "Nastaviť dočasne" s info ikonou že hodnota sa nastaví len dočasne a pri reštarte sa obnoví hodnota ako je v databáze.
+- [ ] Prieskumník - opraviť zobrazovanie súborov so špeciálnymi znakmi (napríklad `@`).
+- [ ] Automatický premazávať `temp` súbory, ktoré sa môžu hromadiť.
 
 ## 2025
 

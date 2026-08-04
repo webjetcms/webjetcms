@@ -1094,8 +1094,8 @@ div.DTE_Bubble_Background {
 
 
 .modal.DTED .modal-dialog.modal-fullscreen,
-html.in-iframe-show-table .modal.DTED .modal-dialog,
-html.in-iframe .modal.DTED .modal-dialog {
+html.in-iframe-show-table .modal.DTED:not(.DTE_nested_modal) .modal-dialog,
+html.in-iframe .modal.DTED:not(.DTE_nested_modal) .modal-dialog {
     margin: 0px;
     width: 100%;
     max-width: 100%;

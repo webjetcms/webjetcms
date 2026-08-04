@@ -6,6 +6,14 @@
 
 ### Webové stránky
 
+- Koš webových stránek - přidáno [automatické mazání starých stránek a složek](redactor/apps/gdpr/data-deleting.md) z koše podle nastaveného retenčního období. Přidána možnost mazání stránek a složek v koši i v sekci [Mazání dat](sysadmin/data-deleting/README.md) podle zvoleného rozsahu dat. Sjednocená logika výpočtu počtu a mazání, opraveno trvalé odstranění složky koše a prázdných složek (#271).
+
+![](sysadmin/data-deleting/database-delete.png)
+
+- Přesměrování - přesměrování vytvořená uživatelem jsou odlišena od automatických (označeno šedým pozadím) a lze je samostatně [filtrovat v seznamu přesměrování](redactor/webpages/redirects/README.md#automatické-a-uživatelem-vytvořené-přesměrování) (#58625).
+
+![](redactor/webpages/redirects/redirect-path.png)
+
 - SEO - přidáno samostatné nastavení **Následujení odkazů vyhledávači** s možnostmi **Podle nastavení Procházet**, **Povolit následování odkazů** (`follow`) a **Zakázat následování odkazů** (`nofollow`). HTTP hlavička `X-Robots-Tag` a Ninja `${ninja.page.robots}` používají stejnou logiku: při indexování bez omezení vrátí `all`, jinak kombinaci direktiv `noindex` a `nofollow` podle nastavení stránky. Více v [dokumentaci Ninja](frontend/ninja-starter-kit/ninja-jv/page/README.md#nastavení-indexování-string) (#OSK563).
 - Ninja - doplněno [generování rozměrů](frontend/ninja-starter-kit/ninja-bp/README.md) SEO obrázku `og:image:width` a `og:image:height` (#OSK563).
 - Šablony - přidána možnost nastavit přesun `<style>` a `<link rel="stylesheet">` značek z těla stránky do `<head>` přes [volbu v šabloně](frontend/templates/templates.md) s podporou globální konfigurační proměnné `showDocMoveStyleToHead`. Bloky v IE podmínkách, `noscript` a `script` zůstávají na místě (#231).
@@ -16,6 +24,14 @@
 
 ![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
 
+- V dialogu vkládání odkazu přidána karta [Manažer dokumentů](redactor/files/file-archive/README.md) pro snadné vkládání odkazů na soubory v manažerovi dokumentů, nahrávání nových souborů a jejich správu. Více se dozvíte v části [Odkazy na soubory a nahrávání souborů](redactor/webpages/working-in-editor/README.md#odkazy-na-soubory-a-nahrávání-souborů) (#58593).
+
+![](redactor/webpages/working-in-editor/link_dialog-file-archive.png)
+
+- [Fotobanka](redactor/webpages/working-in-editor/README.md#karta-fotobanka) - při stahování obrázku z fotobanky lze nastavit název souboru. Název se automaticky předvyplní a očistí, přípona se určí podle zdrojového obrázku a stávající soubor se nepřepíše. Přidána také podpora výběru typu a kategorie obrázku a možnost hledat video soubory (#58645).
+
+![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
+
 ### Headless režim
 
 Přidána [podpora headless režimu](frontend/headless/README.md), ve kterém WebJET CMS slouží čistě jako `backend` CMS. Obsah, navigace, vyhledávání a formuláře jsou dostupné přes REST API. Frontend aplikace (např. Astro, Next.js, Vue, React nebo jakýkoli HTTP klient) si data stáhne a zobrazuje je podle vlastních šablon (#258).
@@ -25,6 +41,10 @@ Přidána [podpora headless režimu](frontend/headless/README.md), ve kterém We
 V jednom WebJET CMS můžete mít více (desítky) domén a následně mít menší web stránky vytvořené v různých technologiích, které konzumují a zobrazují obsah z CMS systému. Podporováno je také vkládání standardní aplikací jako foto galerie, formuláře, GDPR cookies a podobně.
 
 ![](frontend/headless/gallery.png)
+
+- Přesměrování - přidáno [čištění a optimalizace přesměrování](redactor/webpages/redirects/README.md#čištění-přesměrování) s náhledem změn před provedením. Čištění odstraňuje staré, duplicitní a cyklické přesměrování a zkracuje řetězce přesměrování (#58629).
+
+![](redactor/webpages/redirects/redirect-cleaning-analyzed.png)
 
 ### Formuláře
 
@@ -62,6 +82,14 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ![](redactor/apps/reservation/my-reservations-app/app-page.png)
 
+- Manažer dokumentů - přidáno zobrazení stromové struktury složek (#58593).
+
+![](redactor/files/file-archive/datatable.png)
+
+- Manažer dokumentů - přidána možnost nahrát více souborů najednou přes `drag&drop` (#58593).
+
+![](redactor/files/file-archive/drag-drop-upload-dialog.png)
+
 ### Volitelná pole
 
 - Kompletně implementovaná funkčnost [nastavení volitelných polí](frontend/webpages/customfields/custom-fields-settings.md). Umožňuje centrálně nastavit vlastnosti polí bez editace překladových klíčů. Podporovány jsou všechny typy polí (text, textarea, select, multiselect, autocomplete, enumeration, obrázek, odkaz, JSON a další) s typově specifickými nastaveními jako maximální délka textu, možnosti výběru, propojení na číselníky nebo závislost na jiných polích. Uživatelské rozhraní nabízí také jednoduchý způsob nastavení možných hodnot pro výběrová/autocomplete pole (#58529).
@@ -78,6 +106,10 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - V řídicí doméně přidána možnost zobrazit všechny soubory.
 
 ### Jiné menší změny
+
+- Průzkumník - ve vlastnostech složky přidána karta [Nepoužívané soubory](redactor/files/fbrowser/folder-settings/README.md#nepoužívané-soubory) pro vyhledání a smazání nepoužívaných souborů (#58621).
+
+![](redactor/files/fbrowser/folder-settings/folder_settings_unused_files_result.png)
 
 - Průzkumník - přidáno právo **Povolit nahrávání souborů s diakritikou**, které umožňuje zachovat diakritiku při nahrávání, vytváření a přejmenování souborů a složek ve složkách `/files`, `/images` a `/shared`. Bez tohoto práva se názvy nadále automaticky upraví bez diakritiky (#58589).
 - Přihlášení - zrychlené načtení úvodní stránky v administraci - přidána vyrovnávací paměť pro seznam posledních stránek, změněných stránek a auditních záznamů (#58589).
@@ -391,6 +423,7 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 - Webové stránky - opravená uzavírací značka `</link>`, správně nahrazená za `/>`, protože `link` je prázdný element (#osk498).
 - Webové stránky - opravena chyba odstranění časové složky při nastavení data konání (#54273-89).
 - Webové stránky - přidána možnost [nastavit JavaScript funkci](frontend/setup/config.md) pro `target="_blank"` odkazy, ve výchozím nastavení na `return openTargetBlank(this, event)`. Hodnota se nastavuje v konfigurační proměnné `editorTargetBlankFunction`, pokud je nastaveno na prázdnou hodnotu `onclick` funkce se nenastaví (#225).
+- Hromadný email - opraveno vytváření kampaní a emailů při duplikování kampaně (#58649).
 
 Jakarta verze:
 

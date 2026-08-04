@@ -64,6 +64,14 @@ window.addEventListener('WJ.DTE.tabclick', function (e) {
 
 Pokud potřebujete mít **kartu na plnou výšku okna** je možné kartě nastavit CSS styl ```.dte-tab-autoheight```. V případě potřeby lze přes data atribut ```data-dt-autoheight-offset``` nastavit posun velikosti (pokud okno obsahuje již jiný element). Pokud potřebujete, aby okno bylo posuvné (může obsahovat velký objekt) nezapomeňte nastavit ```style="overflow:scroll;"```.
 
+Pokud potřebujete snížit výšku vypočítanou pro samotnou datatabulku, například když je v okně nebo iframu fixní spodní panel, nastavte na elementu `body` CSS proměnnou `--dt-autoheight-offset`. Hodnota je číselný posun v pixelech a odečte se při výpočtu automatické výšky tabulky v `WJ.DataTable`.
+
+```css
+body {
+    --dt-autoheight-offset: 46;
+}
+```
+
 ```javascript
 var tabs = [
     { id: 'description', title: '[[\#{components.catalog.desc}]]', selected: true },
