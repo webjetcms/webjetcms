@@ -228,7 +228,10 @@ block content
                 },
                 ui: ['toolbar', 'tree', 'path', 'stat'],
                 uiOptions: {
-                    toolbar: toolbar
+                    toolbar: toolbar,
+                    navdock: {
+                        disabled: true
+                    }
                 }
             }).elfinder('instance');
 

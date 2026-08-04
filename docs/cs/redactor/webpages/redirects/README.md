@@ -38,6 +38,52 @@ Původní URL je tedy možné zadat ve formátu `regexp:^\/thisiswhere\/oldfiles
 
 Provede se přesměrování např. `/thisiswhere/oldfiles/page.html` na `/thisiswhere/myfilesmovedto/page.html`.
 
+## Čištění přesměrování
+
+Karta **Čištění** umožňuje zkontrolovat přesměrování vybrané domény, odstranit nepotřebné záznamy a zkrátit řetězce přesměrování.
+
+![](redirect-cleaning.png)
+
+Čištění se provádí ve dvou krocích, abyste si všechny navrhované změny mohli nejprve prohlédnout:
+
+1. **Analýza přesměrování**
+2. **Provedení čištění**
+
+!> **Upozornění:** Pro jednu doménu může současně probíhat pouze jedna analýza nebo jedno čištění. Pokud již operaci spustil jiný administrátor, systém další spuštění nepovolí, dokud se nedokončí probíhající operace. V takovém případě se zobrazí upozornění, že je třeba počkat na dokončení probíhající operace.
+
+### Analýza přesměrování
+
+Analýza přesměrování se spustí klepnutím na tlačítko <button class="btn btn-sm btn-warning" type="button"><span><i class="ti ti-scan"></i></span></button> v sekci **Čištění**. Během analýzy se vyhodnotí všechna stávající přesměrování a navrhnou se změny, které lze provést.
+
+V náhledu analýzy přesměrování se pro každý záznam zobrazí právě jedna z následujících akcí:
+
+- **Smazat starou verzi** - odstraní starý cíl URL adresy, který byl nahrazen novějším cílem.
+- **Smazat krok cyklu** - při cyklickém přesměrování, například `/a -> /b -> /a`, odstraní nově vytvořený krok, který cyklus uzavírá.
+- **Smazat duplikát** - při stejných přesměrováních ponechá nejstarší záznam a novější duplikáty odstraní.
+- **Zkrátit řetězec** - upraví pouze cílovou URL adresu tak, aby například řetězec `/a -> /b -> /c` zkrátil na `/a -> /c`.
+
+![](redirect-cleaning-analyzed.png)
+
+**Ignorované přesměrování:**
+
+- přesměrování zadané přes **regulární výraz** s prefixem `regexp:`
+- přesměrování s nastaveným **datem zveřejnění**
+- přesměrování s nastaveným **koncem platnosti**
+
+Souhrnná zpráva po analýze uvádí i počet takových ignorovaných záznamů.
+
+Přesměrování bez domény tvoří samostatnou skupinu a nikdy se nekombinují s přesměrováním pojmenované domény. Ve výchozím nastavení se analyzuje pouze aktuálně zvolená pojmenovaná doména. Chcete-li do analýzy přidat i samostatnou skupinu přesměrování bez domény, označte možnost **Zahrnout přesměrování bez domény**.
+
+Výsledek analýzy se na 60 minut uloží jako společný plán pro aktuální doménu. Stejný náhled proto vidí všichni administrátoři s právem na správu přesměrování a čištění může provést kterýkoli z nich.
+
+### Provedení čištění
+
+Provedení čištění se spustí klepnutím na tlačítko <button class="btn btn-sm btn-danger" type="button"><span><i class="ti ti-trash"></i></span></button> v sekci **Čištění**. Akce je dostupná pouze pokud **existuje analýza** pro aktuální doménu. Během provádění se změny uloží a přesměrování se upraví podle navrženého plánu.
+
+Při provedení se použije přesně uložený plán bez nové analýzy. Záznamy, které byly mezitím odstraněny nebo již nejsou dostupné, se přeskočí a jejich počet se zobrazí ve výsledné zprávě. Pokud provedení selže, změny se neuloží a plán zůstane dostupný pro opakování.
+
+![](redirect-cleaning-confirm.png)
+
 ## Přesměrování domén
 
 V sekci **Přesměrování domén** můžete definovat přesměrování požadavků celé domény (např. přesměrování `domena.sk` na `www.domena.sk`).

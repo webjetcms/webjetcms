@@ -363,7 +363,10 @@ block content
                     },
                     ui: ['toolbar', 'tree', 'path', 'stat'],
                     uiOptions: {
-                        toolbar: toolbar
+                        toolbar: toolbar,
+                        navdock: {
+                            disabled: true
+                        }
                     }
                 })[0].elfinder;
 
@@ -507,4 +510,3 @@ block content
                     option.bUsage(value='bUsage') [[\#{fbrowse.usage_button}]]
                     option.showHistory(value='showHistory') [[\#{groupslist.show_history}]]
                 button.btn.btn-primary.submit(type='button' name='submit') [[\#{elfinder.dirprops.save}]]
-
