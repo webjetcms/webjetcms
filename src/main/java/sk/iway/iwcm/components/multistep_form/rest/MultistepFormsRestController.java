@@ -1,5 +1,7 @@
 package sk.iway.iwcm.components.multistep_form.rest;
 
+import java.util.List;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.json.JSONObject;
@@ -19,6 +21,7 @@ import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.multistep_form.support.SaveFormException;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 @RestController
 @RequestMapping("/rest/multistep-form")
@@ -97,5 +100,10 @@ public class MultistepFormsRestController {
                 .header("Content-Type", contentTypeWithCharset)
                 .body(response.toString());
         }
+    }
+
+    @GetMapping(value = "/autocomplete", params = {"step-id", "item-id", "term"})
+    public List<LabelValue> getAutocompleteOptions(@RequestParam("step-id") Long stepId, @RequestParam("item-id") Long itemId, @RequestParam String term, HttpServletRequest request) {
+        return multistepFormsService.getAutocompleteOptions(stepId, itemId, term, request);
     }
 }

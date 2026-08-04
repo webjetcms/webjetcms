@@ -786,6 +786,8 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                 }
 
                 html = Tools.replace(html, "${id}", id);
+                html = Tools.replace(html, "${itemId}", item.optString("id", ""));
+                html = Tools.replace(html, "${stepId}", item.optString("stepId", ""));
                 html = Tools.replace(html, "${label}", isEmailRender && label.trim().endsWith(":") == false ? label + ":" : label);
                 html = Tools.replace(html, "${labelSanitized}", labelSanitized);
                 html = Tools.replace(html, "${value}", value);
@@ -816,7 +818,13 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
        return DocTools.updateUserCodes(UsersDB.getCurrentUser(request), new StringBuilder(html)).toString();
     }
 
-    private static String[] parseIterableValues(String value) {
+    /**
+     * Resolve configured options, including options backed by an enumeration.
+     *
+     * @param value serialized options
+     * @return resolved option tokens
+     */
+    public static String[] parseIterableValues(String value) {
         String normalized = Tools.getStringValue(value, "").trim();
         if (Tools.isEmpty(normalized)) return new String[0];
 

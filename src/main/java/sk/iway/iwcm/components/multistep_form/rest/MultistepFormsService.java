@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -33,6 +34,7 @@ import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
 import sk.iway.iwcm.components.forms.FormsEntity;
 import sk.iway.iwcm.components.forms.FormsRepository;
+import sk.iway.iwcm.components.forms.FormsService;
 import sk.iway.iwcm.components.forms.RegExpEntity;
 import sk.iway.iwcm.components.forms.RegExpRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
@@ -84,6 +86,9 @@ public class MultistepFormsService {
     private static final String ITEM_KEY_LABEL_PREFIX = "components.formsimple.label.";
     private static final String ITEM_KEY_HIDE_FIELDS_PREFIX = "components.formsimple.hide.";
     private static final String ITEM_KEY_INPUT_PREFIX = "components.formsimple.input.";
+    private static final String AUTOCOMPLETE_FIELD_TYPE = "autocomplete";
+    private static final int AUTOCOMPLETE_MIN_TERM_LENGTH = 2;
+    private static final int AUTOCOMPLETE_MAX_OPTIONS = 30;
 
     public static final String VISIBILITY_TAB = "visibilityConditions";
     public static final String REQUIREMENT_TAB = "requirementConditions";
@@ -193,8 +198,7 @@ public class MultistepFormsService {
             String value = entry.getKey().substring(ITEM_KEY_LABEL_PREFIX.length());
             visibleOptions.add(new LabelValue(entry.getValue(), value));
 
-            String inputType = "text";
-            if(htmlCode != null && htmlCode.contains("${iterable}")) inputType = "iterable";
+            String inputType = isFieldtypeIterable(value, prop) ? "iterable" : "text";
 
             technicalOptions.add(new LabelValue(inputType, value));
         }
@@ -207,8 +211,12 @@ public class MultistepFormsService {
 
     public static final boolean isFieldtypeIterable(String fieldType, HttpServletRequest request) {
         Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
+        return isFieldtypeIterable(fieldType, prop);
+    }
+
+    private static boolean isFieldtypeIterable(String fieldType, Prop prop) {
         String htmlCode = prop.getText(ITEM_KEY_INPUT_PREFIX + fieldType);
-        return (htmlCode != null && htmlCode.contains("${iterable}"));
+        return AUTOCOMPLETE_FIELD_TYPE.equals(fieldType) || (htmlCode != null && htmlCode.contains("${iterable}"));
     }
 
     /**
@@ -366,6 +374,52 @@ public class MultistepFormsService {
      */
     public final boolean validateFormInfo(String formName, Long currentStepId, HttpServletRequest request) {
         return getValidStepEntity(formName, currentStepId, request) != null;
+    }
+
+    /**
+     * Return matching configured options for an autocomplete form item.
+     *
+     * @param stepId current form step
+     * @param itemId autocomplete form item
+     * @param term text entered by the user; at least two characters are required
+     * @param request current form request
+     * @return matching label/value options
+     */
+    public final List<LabelValue> getAutocompleteOptions(Long stepId, Long itemId, String term, HttpServletRequest request) {
+        List<LabelValue> options = new ArrayList<>();
+        if(stepId == null || stepId < 1L || itemId == null || itemId < 1L) return options;
+
+        FormItemEntity item = formItemsRepository.findById(itemId).orElse(null);
+        int domainId = CloudToolsForCore.getDomainId();
+        if(item == null || AUTOCOMPLETE_FIELD_TYPE.equals(item.getFieldType()) == false ||
+            stepId.equals(item.getStepId()) == false || item.getDomainId() == null || item.getDomainId() != domainId ||
+            validateFormInfo(item.getFormName(), stepId, request) == false) {
+            return options;
+        }
+
+        String normalizedTerm = normalizeAutocompleteValue(term);
+        if(normalizedTerm.length() < AUTOCOMPLETE_MIN_TERM_LENGTH) return options;
+
+        for(String configuredOption : FormsService.parseIterableValues(item.getValue())) {
+            String label = configuredOption;
+            String value = configuredOption;
+            int separator = configuredOption.indexOf(":");
+            if(separator >= 0) {
+                label = configuredOption.substring(0, separator);
+                value = configuredOption.substring(separator + 1);
+            }
+
+            if(normalizeAutocompleteValue(label).contains(normalizedTerm) || normalizeAutocompleteValue(value).contains(normalizedTerm)) {
+                options.add(new LabelValue(label, value));
+                if(options.size() >= AUTOCOMPLETE_MAX_OPTIONS) break;
+            }
+        }
+
+        return options;
+    }
+
+    private static String normalizeAutocompleteValue(String value) {
+        return DB.internationalToEnglish(Tools.getStringValue(value, "")).trim().toLowerCase(Locale.ROOT);
     }
 
     /**

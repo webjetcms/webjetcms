@@ -1,3 +1,5 @@
+let autocompleteAssetsPromise;
+
 /**
  * Multistep Form application controller.
  *
@@ -134,6 +136,9 @@ export class MultistepForm {
             const form = this.wrapper.querySelector('.multistepStepContent > form');
             if (form) form.addEventListener('submit', async (event) => { await this.doValidationAndSave(event); });
 
+            // Initialize remote autocomplete inputs rendered in this step
+            this._initAutocompleteFields();
+
             // Initialize conditional field visibility from server-provided map
             this._initConditionalVisibility(visibilityConditions);
 
@@ -153,6 +158,88 @@ export class MultistepForm {
         } catch (err) {
             console.warn('Failed to load step:', err);
         }
+    }
+
+    /**
+     * Bind remote autocomplete inputs using the standard data-ac-* attributes.
+     * The jQuery UI JavaScript dependency is loaded only when the current step contains such a field.
+     */
+    async _initAutocompleteFields() {
+        const inputs = Array.from(this.wrapper.querySelectorAll('input.form-control[data-ac-url]'));
+        if (inputs.length === 0) return;
+
+        try {
+            await this._ensureAutocompleteAssets();
+        } catch (error) {
+            console.warn('Failed to initialize autocomplete:', error);
+            return;
+        }
+
+        inputs.forEach(input => {
+            if (input.dataset.acInitialized === 'true' || input.isConnected === false || this.wrapper.contains(input) === false) return;
+
+            const $input = $(input);
+            const minLength = Number.parseInt(input.dataset.acMinLength || '1', 10);
+            const maxRows = Number.parseInt(input.dataset.acMaxRows || '30', 10);
+            const openOnFocus = input.dataset.acSelect === 'true';
+            const sourceUrl = input.dataset.acUrl;
+
+            $input.autocomplete({
+                appendTo: this.wrapper,
+                source: (request, response) => {
+                    const url = new URL(sourceUrl, window.location.origin);
+                    url.searchParams.set('term', request.term === '*' ? '%' : request.term);
+
+                    fetch(url.toString(), {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-Token': this.csrf
+                        }
+                    })
+                    .then(result => result.ok ? result.json() : [])
+                    .then(options => response(Array.isArray(options) ? options.slice(0, maxRows) : []))
+                    .catch(() => response([]));
+                },
+                delay: 800,
+                minLength: Number.isNaN(minLength) ? 1 : minLength,
+                open: () => $input.autocomplete('widget').outerWidth($input.outerWidth()),
+                position: { my: 'left top+2', at: 'left bottom', collision: 'flipfit' }
+            });
+
+            const autocompleteInstance = $input.autocomplete('instance');
+            autocompleteInstance.liveRegion.appendTo(this.wrapper);
+
+            input.dataset.acInitialized = 'true';
+
+            if (openOnFocus) {
+                $input.on('focus.multistepAutocomplete', () => {
+                    window.setTimeout(() => $input.autocomplete('search', '*'), 50);
+                });
+            }
+        });
+    }
+
+    /**
+     * Load jQuery UI autocomplete once per page.
+     * @returns {Promise<void>} resolves when autocomplete is available
+     */
+    _ensureAutocompleteAssets() {
+        if (window.$ && typeof $.fn?.autocomplete === 'function') return Promise.resolve();
+        if (!window.$) return Promise.reject(new Error('jQuery is not available.'));
+
+        if (!autocompleteAssetsPromise) {
+            autocompleteAssetsPromise = new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = '/components/_common/javascript/jqui/jquery-ui-core.min.js';
+                script.dataset.multistepAutocomplete = 'true';
+                script.onload = () => typeof $.fn?.autocomplete === 'function' ? resolve() : reject(new Error('Autocomplete is not available.'));
+                script.onerror = () => reject(new Error('Could not load autocomplete assets.'));
+                document.head.appendChild(script);
+            });
+        }
+
+        return autocompleteAssetsPromise;
     }
 
     /**
