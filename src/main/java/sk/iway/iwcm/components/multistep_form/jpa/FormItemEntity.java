@@ -81,6 +81,10 @@ public class FormItemEntity extends BaseEditorFields {
     @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.formsimple.required", hidden = true, tab = "basic")
     private Boolean required;
 
+    @Column(name = "trim_value")
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.form_items.trim_value", tab = "basic", hidden = true)
+    private Boolean trimValue;
+
     @Transient
     @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, title = "components.form_items.regex_validation", hidden = true, tab = "basic")
     private transient Integer[] regexValidationArr;

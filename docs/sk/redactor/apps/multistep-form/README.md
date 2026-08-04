@@ -61,6 +61,7 @@ Editor pre pridávanie a úpravu položiek je špeciálny tým, že mení svoj o
 - **Typ poľa** - určuje aký druh vstupu bude položka predstavovať (napr. textové pole, výber z rozbaľovacieho zoznamu, zaškrtávacie políčko atď.). Jednotlivé polia [pripravuje dizajnér web sídla](../formsimple/README.md#informácia-pre-web-dizajnéra) a sú rovnaké ako pre aplikáciu formulár ľahko.
 - **Povinné pole** - či je položka povinná na vyplnenie.
 - **Povolená hodnota** - pre pokročilú validáciu vstupu používateľa viete zvoliť ľubovoľný počet regulárnych výrazov, ktoré musia byť splnené, aby bol vstup platný. Viac sa o nich dozviete v sekcii [Regulárne výrazy](../form/regexps.md).
+- **Orezať medzery** - ak je zvolené, hodnota poľa sa pred uložením automaticky orezáva o úvodné a koncové medzery (čo môže ovplyvniť validáciu a porovnanie hodnôt).
 - **Názov poľa** - názov, ktorý sa zobrazí používateľovi. Ak nie je zadaný použije sa názov zhodný s typom poľa.
 
 V karte **Pokročilé** môžete nastaviť ďalšie voliteľné parametre ako:

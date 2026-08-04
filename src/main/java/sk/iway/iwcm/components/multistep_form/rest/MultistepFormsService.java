@@ -918,6 +918,12 @@ public class MultistepFormsService {
                 }
             }
 
+            // Trim text field values when trimValue is enabled (iterable/wysiwyg fields are excluded)
+            if (Tools.isTrue(stepItem.getTrimValue()) && isFieldtypeIterable(stepItem.getFieldType(), prop) == false && !"wysiwyg".equalsIgnoreCase(stepItem.getFieldType())) {
+                String value = received.optString(itemFormId, "");
+                received.put(itemFormId, value.trim());
+            }
+
             // Check if field is required (static flag or dynamic requirement conditions) - IF requiredByFields is set (is not null) use it as higher priority indicator
             Boolean requiredByFields = formConditionsHandler.isFieldRequiredByCondition(stepItem, received);
             boolean isRequired = requiredByFields == null ? Tools.isTrue(stepItem.getRequired()) : Tools.isTrue(requiredByFields);
@@ -1185,7 +1191,7 @@ public class MultistepFormsService {
      * @return list of simplified form item entities for the step
      */
     private List<FormItemEntity> getStepItemsForValidation(Long stepId) {
-        String sql = "SELECT id, item_form_id, label, field_type, regex_validation, required, custom_error FROM form_items WHERE step_id = ? AND domain_id = ?";
+        String sql = "SELECT id, item_form_id, label, field_type, regex_validation, required, custom_error, trim_value FROM form_items WHERE step_id = ? AND domain_id = ?";
 
         List<FormItemEntity> values = new ArrayList<>();
         new ComplexQuery().setSql(sql).setParams(stepId, CloudToolsForCore.getDomainId()).list(new Mapper<FormItemEntity>() {
@@ -1206,7 +1212,7 @@ public class MultistepFormsService {
      * @return list of simplified {@code FormItemEntity} containing id, label, type, regex, required
      */
     public static List<FormItemEntity> getFormItemsForValidation(String formName) {
-        String sql = "SELECT f.id, item_form_id, label, field_type, regex_validation, required, custom_error FROM form_items f, form_steps s WHERE f.form_name = ? AND f.domain_id = ? AND f.step_id=s.id ORDER BY s.sort_priority ASC, f.sort_priority ASC";
+        String sql = "SELECT f.id, item_form_id, label, field_type, regex_validation, required, custom_error, trim_value FROM form_items f, form_steps s WHERE f.form_name = ? AND f.domain_id = ? AND f.step_id=s.id ORDER BY s.sort_priority ASC, f.sort_priority ASC";
 
         List<FormItemEntity> values = new ArrayList<>();
         new ComplexQuery().setSql(sql).setParams(formName, CloudToolsForCore.getDomainId()).list(new Mapper<FormItemEntity>() {
@@ -1243,6 +1249,7 @@ public class MultistepFormsService {
         fe.setRegexValidation( rs.getString("regex_validation") );
         fe.setRequired( rs.getBoolean("required") );
         fe.setCustomError( rs.getString("custom_error") );
+        fe.setTrimValue( rs.getBoolean("trim_value") );
         return fe;
     }
 
