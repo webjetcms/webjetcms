@@ -271,8 +271,8 @@ export function update(EDITOR, action) {
                 const optionValue = val.value == null ? "" : String(val.value);
                 const optionLabel = val.label == null ? "" : String(val.label);
 
-                // Empty label/value is the optional-field sentinel, not a visible choice.
-                if(optionValue.length === 0 && optionLabel.length === 0) {
+                // Empty label/value is the optional-field sentinel, for checkbox skip it (you can uncheck all checked values to have empty value)
+                if(v.type === 'checkbox' && optionValue.length === 0 && optionLabel.length === 0) {
                     return;
                 }
 
@@ -398,8 +398,19 @@ export function update(EDITOR, action) {
 
         //For every field, remove params s.opts._input AND s.opts.renderFormat -> they can be still set from previous field initialization
         //If previous field was quill, it will make problem with saving
-        EDITOR.field(customPrefix + identifier).s.opts._input = "";
-        EDITOR.field(customPrefix + identifier).s.opts.renderFormat = "";
+        let field = EDITOR.field(customPrefix + identifier);
+        field.s.opts._input = "";
+        field.s.opts.renderFormat = "";
+        if (typeof field.canReturnSubmitOriginal === "undefined") {
+            field.canReturnSubmitOriginal = field.canReturnSubmit;
+        } else {
+            field.canReturnSubmit = field.canReturnSubmitOriginal;
+        }
+        if ("textarea" == v.type) {
+            field.canReturnSubmit = function() {
+                return false;
+            }
+        }
 
         if(v.type == 'boolean' || v.type == 'boolean_text') {
             var origType = EDITOR.field(customPrefix + identifier).s.opts["type"];
