@@ -2767,7 +2767,21 @@ public class GroupsDB extends DB
 	 * @param publishEvents - ak je true, su vyvolane udalosti (false potrebne ak napr. reagujeme na udalost a potrebujeme znova upravit adresar a nechceme aby doslo k zacykleniu)
 	 * @return
 	 */
-	public static boolean deleteGroup(int groupId, boolean includeParent, boolean permanentlyDelete, boolean publishEvents)
+	public static boolean deleteGroup(int groupId, boolean includeParent, boolean permanentlyDelete, boolean publishEvents) {
+		return deleteGroup(groupId, includeParent, permanentlyDelete, publishEvents, false, true);
+	}
+
+	/**
+	 * Vymazanie adresara
+	 * @param groupId - id adresara
+	 * @param includeParent - urci, ci ma pri vymazani brat aj rodicovsky adresar
+	 * @param permanentlyDelete - nevlozi do kosa, ale priamo vymaze
+	 * @param publishEvents - ak je true, su vyvolane udalosti (false potrebne ak napr. reagujeme na udalost a potrebujeme znova upravit adresar a nechceme aby doslo k zacykleniu)
+	 * @param withHistory - ak je true, pri trvalom vymazani sa vymaze aj historia stranok (documents_history) a naplanovane zmeny adresarov (groups_scheduler)
+	 * @param refreshDocGroupsDB - ak je true, po vymazani sa refreshne cache v DocDB/GroupsDB
+	 * @return
+	 */
+	public static boolean deleteGroup(int groupId, boolean includeParent, boolean permanentlyDelete, boolean publishEvents, boolean withHistory, boolean refreshDocGroupsDB)
 	{
 		Connection db_conn = null;
 		PreparedStatement ps = null;
@@ -2823,8 +2837,45 @@ public class GroupsDB extends DB
 
 				if(Tools.isNotEmpty(groups))	//ak nezaratam rodicovsky adresa, moze byt groups prazdne v pripade, ak rodicovsky adresar nemal ziadne podadresare
 				{
+
+					if (withHistory)
+					{
+						//premenna groups obsahuje iba ciselne ID adresarov (getGroupId), preto je bezpecne ju vlozit priamo do SQL
+						//vymaz historiu stranok - documents_history je viazana na documents cez doc_id (group_id sa mohol zmenit), preto mazeme podla doc_id
+						String sql = "DELETE FROM documents_history WHERE doc_id IN (SELECT doc_id FROM documents WHERE group_id IN ("+groups+"))";
+						ps = db_conn.prepareStatement(sql);
+						ps.executeUpdate();
+						ps.close();
+						ps = null;
+
+						//vymaz naplanovane zmeny adresarov (groups_scheduler)
+						sql = "DELETE FROM groups_scheduler WHERE group_id IN ("+groups+")";
+						ps = db_conn.prepareStatement(sql);
+						ps.executeUpdate();
+						ps.close();
+						ps = null;
+					}
+
+					//vymaz viazane zaznamy mazanych stranok, aby nezostali osirene v DB (rovnako ako to robi DocDB.deleteDoc)
+					//perex_group_doc a multigroup_mapping su viazane na doc_id, preto ich mazeme pred vymazanim samotnych stranok
+					String docsSubselect = "SELECT doc_id FROM documents WHERE group_id IN ("+groups+")";
+
+					//vymaz mapovanie na perex skupiny (perex_group_doc)
+					String sql = "DELETE FROM perex_group_doc WHERE doc_id IN ("+docsSubselect+")";
+					ps = db_conn.prepareStatement(sql);
+					ps.executeUpdate();
+					ps.close();
+					ps = null;
+
+					//vymaz multigroup mapovanie, ci uz je mazana stranka master alebo slave zaznamom
+					sql = "DELETE FROM multigroup_mapping WHERE doc_id IN ("+docsSubselect+") OR master_id IN ("+docsSubselect+")";
+					ps = db_conn.prepareStatement(sql);
+					ps.executeUpdate();
+					ps.close();
+					ps = null;
+
 					//vymaz stranky
-					String sql = "DELETE FROM documents WHERE group_id IN ("+groups+")";
+					sql = "DELETE FROM documents WHERE group_id IN ("+groups+")";
 					ps = db_conn.prepareStatement(sql);
 					ps.executeUpdate();
 					ps.close();
@@ -2890,11 +2941,14 @@ public class GroupsDB extends DB
 
 			db_conn.close();
 			db_conn = null;
-			//oznam ostatnym Node-om, ze sa nieco zmenilo
-			ClusterDB.addRefresh(GroupsDB.class);
-			ClusterDB.addRefresh(DocDB.class);
-			GroupsDB.getInstance(true);
-			DocDB.getInstance(true);
+
+			if (refreshDocGroupsDB) {
+				//oznam ostatnym Node-om, ze sa nieco zmenilo
+				ClusterDB.addRefresh(GroupsDB.class);
+				ClusterDB.addRefresh(DocDB.class);
+				GroupsDB.getInstance(true);
+				DocDB.getInstance(true);
+			}
 
 			if (group!=null && publishEvents) (new WebjetEvent<GroupDetails>(group, WebjetEventType.AFTER_DELETE)).publishEvent();
 
@@ -4284,5 +4338,48 @@ public class GroupsDB extends DB
 
 		GroupDetails tempGroup = getGroup(Constants.getInt("tempGroupId"));
 		return tempGroup;
+	}
+
+	/**
+	 * Returns list of Trash groups across all domains (e.g. /System/Trash, /domain.com/System/Trash)
+	 * @return
+	 */
+	public List<GroupDetails> getTrashGroupsAllDomains() {
+		List<GroupDetails> trashGroups = new ArrayList<>();
+
+		Prop propSystem = Prop.getInstance(Constants.getString("defaultLanguage"));
+		String trashDirName = propSystem.getText("config.trash_dir");
+
+		String trashDirNameNormalized = DB.internationalToEnglish(trashDirName).toLowerCase();
+
+		for (GroupDetails group : groups) {
+			String path = getPath(group.getGroupId());
+			if (path != null && DB.internationalToEnglish(path).toLowerCase().endsWith(trashDirNameNormalized)) {
+				trashGroups.add(group);
+			}
+		}
+
+		return trashGroups;
+	}
+
+	/**
+	 * Returns all groups whose parent is one of the Trash groups (top-level items in trash across all domains)
+	 * @return
+	 */
+	public List<GroupDetails> getTopLevelGroupsInTrash() {
+		List<GroupDetails> trashGroups = getTrashGroupsAllDomains();
+		Set<Integer> trashGroupIds = new HashSet<>();
+		for (GroupDetails trashGroup : trashGroups) {
+			trashGroupIds.add(trashGroup.getGroupId());
+		}
+
+		List<GroupDetails> result = new ArrayList<>();
+		for (GroupDetails group : groups) {
+			if (trashGroupIds.contains(group.getParentGroupId())) {
+				result.add(group);
+			}
+		}
+
+		return result;
 	}
 }

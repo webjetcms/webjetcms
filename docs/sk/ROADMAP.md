@@ -25,7 +25,8 @@ Vysvetlenie použitých piktogramov:
 - [x] Skripty - pridať možnosť nastaviť, či sa má skript vkladať aj v editore stránok, alebo nie (#58349).
 - [x] Formuláre - pridať skupinu výberový a zaškrtávacích polí `radio/checkbox` napojenú na číselník, podobne ako máme pre `select` pole (#58517).
 - [ ] Zmazať pridružené súbory k web stránke keď ju zmažem - spýtať sa ale vopred používateľa, či súbory chce zmazať. Kontrolovať, či sa nepoužívajú niekde inde.
-- [ ] Mazanie dát - pridať možnosť mazať stránky a priečinky z koša. Vyriešiť aj možnosť mazanie dát spúšťať ako automatizovanú úlohu (#58617).
+- [x] Mazanie dát - pridať možnosť mazať stránky a priečinky z koša. Vyriešiť aj možnosť mazanie dát spúšťať ako automatizovanú úlohu (#58617) (#271).
+- [x] Nepoužívané súbory - spraviť možnosť získať zoznam nepoužívaných súborov - nikde v stránke sa nepoužívajú, ani v médiach atď. Bola na to API `FileTools.getDirFileUsage(currentDir, request)`. Pridať ako kartu do vlastností priečinka v prieskumníku (#58621).
 - [ ] Nepoužívané súbory - spraviť možnosť získať zoznam nepoužívaných súborov - nikde v stránke sa nepoužívajú, ani v médiach atď. Bola na to API `FileTools.getDirFileUsage(currentDir, request)`. Pridať ako kartu do vlastností priečinka v prieskumníku (#58621).
 - [ ] Prieskumník - zamedziť prácu s priečinku pre Manažér dokumentov, aby sa so súbormi nedalo manipulovať mimo Manažér dokumentov.
 - [x] +Prieskumník - pridať právo pre nahrávanie súborov s diakritikou (odstraňuje sa pre `/images` a `/files` priečinky) (#58589).
@@ -46,7 +47,7 @@ Vysvetlenie použitých piktogramov:
 - [x] +Presmerovania - rozlíšiť v databáze automaticky vytvorené presmerovanie (hľadaj premennú `editorDisableAutomaticRedirect`) od manuálne vytvoreného, možnosť podľa toho filtrovať v UI (zobraziť len manuálne vytvorené presmerovania) (#58625).
 - [ ] +Presmerovania - doplniť funkciu čistenia presmerovaní - zmaže staré presmerovania (bolo pôvodne `aaa-bbb` a potom vzniklo `aaa-ccc` takže `aaa-bbb` nemá zmysel = zmaže sa) a skontroluje cyklické presmerovania v ktorom zmaže posledný krok. Tiež optimalizovať presmerovania `aaa-bbb-ccc` na `aaa-ccc` (#58629).
 - [x] +Galéria - pridať možnosť nastaviť iný spôsob zmeny veľkosti na veľký obrázok, napr. na malý obrázok sa aplikuje Orezať na mieru (chcú mať štvorec) a na veľký presná šírka (zachová pomer strán). Predvolene bude hodnota NULL=rovnako ako pre malý obrázok (#58633).
-- [ ] Voliteľné polia - pridať možnosť výberu viac položiek pre napojenie na číselník (#58637).
+- [x] Voliteľné polia - pridať možnosť výberu viac položiek pre napojenie na číselník (#58637).
 - [ ] +Číselníky - pridať možnosť definovať typ poľa pre reťazec ako máme vo voliteľných poliach (#58641).
 - [x] +Fotobanka - pridať možnosť nastaviť názov súboru pred stiahnutím z fotobanky, automaticky nastaviť podľa hľadaného výrazu (#58645).
 - [ ] +Úlohy na pozadí - možnosť manuálne spustiť úlohu na `node`, ktorý má úloha nastavený, teraz sa spustí na `node` kde je používateľ prihlásený.

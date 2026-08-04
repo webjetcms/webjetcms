@@ -6,6 +6,10 @@
 
 ### Webové stránky
 
+- Kôš webových stránok - pridané [automatické mazanie starých stránok a priečinkov](redactor/apps/gdpr/data-deleting.md) z koša podľa nastaveného retenčného obdobia. Pridaná možnosť mazania stránok a priečinkov v koši aj v sekcii [Mazanie dát](sysadmin/data-deleting/README.md) podľa zvoleného rozsahu dátumov. Zjednotená logika výpočtu počtu a mazania, opravené trvalé odstránenie priečinka koša a prázdnych priečinkov (#271).
+
+![](sysadmin/data-deleting/database-delete.png)
+
 - Presmerovania - presmerovania vytvorené používateľom sú odlíšené od automatických (označené sivým pozadím) a je možné ich samostatne [filtrovať v zozname presmerovaní](redactor/webpages/redirects/README.md#automatické-a-používateľom-vytvorené-presmerovania) (#58625).
 
 ![](redactor/webpages/redirects/redirect-path.png)
@@ -97,6 +101,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 ![](frontend/webpages/customfields/custom-fields-settings-editor.png)
 
 - Pridaná možnosť nastaviť voliteľné pole ako povinné (#58413).
+- Pridané nové typy voliteľných polí [prepínač a zaškrtávacie pole](frontend/webpages/customfields/custom-fields-settings.md#rozdiel-medzi-selectmultiselect-a-radiocheckbox) s podporou statických možností aj prepojenia na číselník. Typ `multiselect` teraz tiež podporuje [prepojenie na číselník](frontend/webpages/customfields/custom-fields-settings.md#zdroj-možností). Pôvodný typ `enumeration` bol nahradený prepínačom zdroja možností pri typoch `select`, `multiselect`, `radio` a `checkbox` kde sa pre všetky tieto typy polí načítajú možnosti z prepojeného číselníka (#58637).
 
 ### Multiweb
 
@@ -107,8 +112,13 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Iné menšie zmeny
 
+- Prieskumník - vo vlastnostiach priečinka pridaná karta [Nepoužívané súbory](redactor/files/fbrowser/folder-settings/README.md#nepoužívané-súbory) na vyhľadanie a zmazanie nepoužívaných súborov (#58621).
+
+![](redactor/files/fbrowser/folder-settings/folder_settings_unused_files_result.png)
+
 - Prieskumník - pridané právo **Povoliť nahrávanie súborov s diakritikou**, ktoré umožňuje zachovať diakritiku pri nahrávaní, vytváraní a premenovaní súborov a priečinkov v priečinkoch `/files`, `/images` a `/shared`. Bez tohto práva sa názvy naďalej automaticky upravia bez diakritiky (#58589).
 - Prihlásenie - zrýchlené načítanie úvodnej stránky v administrácii - pridaná vyrovnávacia pamäť pre zoznam posledných stránok, zmenených stránok a auditných záznamov (#58589).
+- Export/import súborov - upravený dizajn dialógového okna a responzívne zobrazenie formulárových polí podľa aktuálneho dizajnu administrácie (#58581).
 
 ### Bezpečnosť
 
