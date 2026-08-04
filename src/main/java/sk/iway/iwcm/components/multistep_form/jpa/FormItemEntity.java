@@ -99,7 +99,7 @@ public class FormItemEntity extends BaseEditorFields {
     private Boolean useValueAsEnumeration;
 
     @Transient
-    @DataTableColumn(inputType = DataTableColumnType.OPTIONS, title = "multistep_form.value_as_options",  hidden = true, tab = "advanced")
+    @DataTableColumn(inputType = DataTableColumnType.OPTIONS, title = "multistep_form.value_as_options",  hidden = true, tab = "advanced", className = "allowEmptyOption")
     private String valueAsOptions;
 
     @Transient

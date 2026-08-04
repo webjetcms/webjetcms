@@ -769,7 +769,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                             String code = iterableCode;
 
                             int separator = token.indexOf(":");
-                            if (code.contains("${value-label}") && separator > 0) {
+                            if (code.contains("${value-label}") && separator >= 0) {
                                 valueLabel = token.substring(0, separator);
                                 token = token.substring(separator + 1);
                             }
