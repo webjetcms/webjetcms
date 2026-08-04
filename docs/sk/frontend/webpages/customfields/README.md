@@ -98,9 +98,9 @@ Hodnoty sa potom ukladajú do pola oddelené pomocou znaku `|`
 
 `Hodnota 1|Hodnota 3`
 
-### Výberové polia
+### Prepínač
 
-Typ poľa `radio` zobrazí zoznam možností ako rádio tlačidlá, používateľ môže vybrať práve jednu hodnotu. Možnosti sa nastavujú v tabuľke [Voliteľné polia](custom-fields-settings.md) rovnako ako pri výberovom poli - ako statický zoznam hodnôt, alebo dynamicky prepojením na číselník.
+Typ poľa `radio` zobrazí zoznam možností ako prepínač, používateľ môže vybrať práve jednu hodnotu. Možnosti sa nastavujú v tabuľke [Voliteľné polia](custom-fields-settings.md) rovnako ako pri výberovom poli - ako statický zoznam hodnôt, alebo dynamicky prepojením na číselník.
 
 ### Zaškrtávacie polia
 
