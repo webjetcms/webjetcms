@@ -92,7 +92,9 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Galéria
 
-- Pridaná možnosť nastaviť samostatný **spôsob zmeny veľkosti pre veľký obrázok** nezávisle od miniatúry. Ak sa hodnota nevyplní (`Rovnako ako malý obrázok`), veľký obrázok použije spôsob zmeny veľkosti malého obrázka. Nastavenie je možné voliteľne prekopírovať aj do podpriečinkov (#58633).
+- Pridaná možnosť nastaviť samostatný spôsob [zmeny veľkosti pre veľký obrázok](redactor/apps/gallery/structure.md#karta-rozmery) nezávisle od malého obrázka. Predvolene sa použije spôsob zmeny veľkosti rovnako ako je nastavené pre malý obrázok. Nastavenie je možné voliteľne prekopírovať aj do podpriečinkov (#58633).
+
+![](redactor/apps/gallery/dir-sizes-tab.png)
 
 ### Voliteľné polia
 

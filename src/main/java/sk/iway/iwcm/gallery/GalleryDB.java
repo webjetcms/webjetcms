@@ -91,7 +91,6 @@ public class GalleryDB
 	public static final List<String> LANGUAGES = Arrays.asList("sk", "cz", "de", "en", "pl", "ru", "cho", "esp", "hu"); //NOSONAR
 	public static final String DATE_FROM_SESSION_FILTER = "date_from_filter";
 	public static final String DATE_TO_SESSION_FILTER = "date_to_filter";
-	static final String UPDATE_DIRECTORY_DIMENSION_SQL = "UPDATE gallery_dimension SET image_width=?, image_height=?, normal_width=?, normal_height=?, resize_mode=?, resize_mode_normal=? WHERE image_path=? AND domain_id=?";
 
 	private static final Random rand = new Random();
 
@@ -4334,7 +4333,7 @@ public class GalleryDB
 						{
 							db_conn = DBPool.getConnection();
 							ps = db_conn
-								.prepareStatement(UPDATE_DIRECTORY_DIMENSION_SQL);
+								.prepareStatement("UPDATE gallery_dimension SET image_width=?, image_height=?, normal_width=?, normal_height=?, resize_mode=?, resize_mode_normal=? WHERE image_path=? AND domain_id=?");
 							ps.setInt(1, dim.width);
 							ps.setInt(2, dim.height);
 							ps.setInt(3, dimNormal.width);
