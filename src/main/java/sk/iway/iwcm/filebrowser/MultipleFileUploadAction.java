@@ -371,7 +371,7 @@ public class MultipleFileUploadAction extends HttpServlet
 												origFile.delete();
 											}
 											//resize
-											GalleryDB.resizePictureImpl(dims, realPath, out, prop, GalleryDB.getResizeMode(dir));
+											GalleryDB.resizePictureImpl(dims, realPath, out, prop);
 
 											if(Tools.isNotEmpty(request.getParameter("item")) && user != null)
 												GalleryDB.updateImageItem(-1, request.getParameter("item"), user.getFullName(), dir, fileName, PageLng.getUserLng(request));
