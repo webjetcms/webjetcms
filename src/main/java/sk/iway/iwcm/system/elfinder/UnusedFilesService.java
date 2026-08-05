@@ -462,6 +462,7 @@ public class UnusedFilesService implements DisposableBean {
         Logger.error(UnusedFilesService.class, ex);
         task.requestBean = null;
         task.finishedAt = Long.valueOf(Tools.getNow());
+        task.error = ex.getMessage();
         finishTask(task, TaskState.FAILED);
     }
 
@@ -529,6 +530,7 @@ public class UnusedFilesService implements DisposableBean {
         dto.setStartedAt(Long.valueOf(task.startedAt));
         dto.setFinishedAt(task.finishedAt);
         dto.setTotalFiles(Integer.valueOf(task.files.size()));
+        dto.setError(task.error);
         return dto;
     }
 
@@ -627,6 +629,7 @@ public class UnusedFilesService implements DisposableBean {
         private volatile long startedAt;
         private volatile Long finishedAt;
         private volatile List<UnusedFileDTO> files; //NOSONAR - volatile reference is safe for immutable list
+        private volatile String error;
     }
 
     private enum TaskState {
