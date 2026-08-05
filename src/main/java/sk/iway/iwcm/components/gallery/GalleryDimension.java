@@ -2,7 +2,6 @@ package sk.iway.iwcm.components.gallery;
 
 import java.util.Date;
 
-import com.drew.lang.annotations.NotNull;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
@@ -15,6 +14,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import jakarta.validation.constraints.NotNull;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
@@ -37,6 +37,7 @@ public class GalleryDimension {
         if (id != null && (id.intValue()==0 || id.intValue()==-1)) {
                 id = null;
         }
+        if (Tools.isEmpty(resizeModeNormal)) resizeModeNormal = null;
     }
 
     @Id
@@ -136,6 +137,31 @@ public class GalleryDimension {
     )
     private Integer imageHeight = 120;
 
+    @Column(name = "resize_mode_normal", length = 1)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title = "admin.gallery.resizeModeNormal",
+        tab = "sizes",
+        alwaysCopyProperties = { true },
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before"),
+                    @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "gallery.normal_size")
+                },
+                options = {
+                    @DataTableColumnEditorAttr(key = "admin.gallery.resizeModeNormalSameAsSmall", value = ""),
+                    @DataTableColumnEditorAttr(key = "admin.gallery.shrinkToFit", value = "S"),
+                    @DataTableColumnEditorAttr(key = "admin.gallery.cropToFit", value = "C"),
+                    @DataTableColumnEditorAttr(key = "admin.gallery.accurateWidthHeight", value = "A"),
+                    @DataTableColumnEditorAttr(key = "admin.gallery.accurateWidth", value = "W"),
+                    @DataTableColumnEditorAttr(key = "admin.gallery.accurateHeight", value = "H")
+                }
+            )
+        }
+    )
+    private String resizeModeNormal;
+
     @Column(name = "normal_width")
     @NotNull
     @DataTableColumn(
@@ -145,10 +171,6 @@ public class GalleryDimension {
         tab = "sizes",
         editor = {
             @DataTableColumnEditor(
-                attr = {
-                    @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before"),
-                    @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "gallery.normal_size")
-                },
                 message = "gallery.normal_size.set_0_to_keep_original"
             )
         }
@@ -352,6 +374,14 @@ public class GalleryDimension {
 
     public void setResizeMode(String resizeMode) {
         this.resizeMode = resizeMode;
+    }
+
+    public String getResizeModeNormal() {
+        return resizeModeNormal;
+    }
+
+    public void setResizeModeNormal(String resizeModeNormal) {
+        this.resizeModeNormal = Tools.isEmpty(resizeModeNormal) ? null : resizeModeNormal;
     }
 
     public Integer getImageWidth() {
