@@ -3,6 +3,7 @@ package sk.iway.iwcm.system.elfinder;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -535,7 +536,21 @@ public class IwcmFsVolume implements FsVolume
 				name = DocTools.removeCharsDir(name, true).toLowerCase();
 			}
 		}
+		name = normalizeUnicode(name);
 		return name;
+	}
+
+	/**
+	 * normalize NFD (macOS) to NFC so server-side names match
+	 * @param value
+	 * @return
+	 */
+	public static String normalizeUnicode(String value) {
+		if (value == null) {
+			return "";
+		}
+
+		return Normalizer.normalize(value, Normalizer.Form.NFC);
 	}
 
 	/**
