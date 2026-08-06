@@ -4,18 +4,11 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 public interface BasketInvoiceStatsProjection {
-
     Date getCreateDate();
-
     Integer getStatusId();
-
     String getDeliveryMethod();
-
     String getPaymentMethod();
-
     BigDecimal getPriceToPayVat();
-
     BigDecimal getPriceToPayNoVat();
-
     String getCurrency();
 }

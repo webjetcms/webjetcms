@@ -60,6 +60,7 @@ public interface BasketInvoiceItemsRepository extends DomainIdRepository<BasketI
           AND bie.domainId = :domainId
           AND bie.createDate >= :dateFrom
           AND bie.createDate <= :dateTo
+          AND (:filterByStatus = false OR bie.statusId IN :statusIds)
           AND biie.itemId IS NOT NULL
           AND biie.itemId > 0
           AND (bie.statusId IS NULL OR bie.statusId <> :cancelledStatus)
@@ -69,6 +70,34 @@ public interface BasketInvoiceItemsRepository extends DomainIdRepository<BasketI
         @Param("domainId") Integer domainId,
         @Param("dateFrom") Date dateFrom,
         @Param("dateTo") Date dateTo,
+        @Param("filterByStatus") boolean filterByStatus,
+        @Param("statusIds") List<Integer> statusIds,
+        @Param("cancelledStatus") Integer cancelledStatus
+    );
+
+    @Query("""
+        SELECT biie.itemNote AS itemNote,
+               biie.itemPrice AS itemPrice,
+               biie.itemQty AS itemQty,
+               biie.itemVat AS itemVat,
+               bie.currency AS currency,
+               bie.userLng AS userLng
+        FROM BasketInvoiceItemEntity biie
+        JOIN biie.itemsBasketInvoice bie
+        WHERE biie.domainId = :domainId
+          AND bie.domainId = :domainId
+          AND bie.createDate >= :dateFrom
+          AND bie.createDate <= :dateTo
+          AND (:filterByStatus = false OR bie.statusId IN :statusIds)
+          AND biie.itemId = 0
+          AND (bie.statusId IS NULL OR bie.statusId <> :cancelledStatus)
+        """)
+    List<BasketFeeStatsProjection> findFeesForStatistics(
+        @Param("domainId") Integer domainId,
+        @Param("dateFrom") Date dateFrom,
+        @Param("dateTo") Date dateTo,
+        @Param("filterByStatus") boolean filterByStatus,
+        @Param("statusIds") List<Integer> statusIds,
         @Param("cancelledStatus") Integer cancelledStatus
     );
 }

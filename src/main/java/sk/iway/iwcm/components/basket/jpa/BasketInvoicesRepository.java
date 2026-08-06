@@ -32,11 +32,14 @@ public interface BasketInvoicesRepository extends DomainIdRepository<BasketInvoi
         WHERE bie.domainId = :domainId
           AND bie.createDate >= :dateFrom
           AND bie.createDate <= :dateTo
+          AND (:filterByStatus = false OR bie.statusId IN :statusIds)
         ORDER BY bie.createDate ASC
         """)
     List<BasketInvoiceStatsProjection> findAllForStatistics(
         @Param("domainId") Integer domainId,
         @Param("dateFrom") Date dateFrom,
-        @Param("dateTo") Date dateTo
+        @Param("dateTo") Date dateTo,
+        @Param("filterByStatus") boolean filterByStatus,
+        @Param("statusIds") List<Integer> statusIds
     );
 }

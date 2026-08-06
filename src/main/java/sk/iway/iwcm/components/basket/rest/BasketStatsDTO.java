@@ -19,6 +19,10 @@ public class BasketStatsDTO {
     private long soldItemCount;
     private BigDecimal revenue = BigDecimal.ZERO;
     private BigDecimal averageInvoiceValue = BigDecimal.ZERO;
+    private BigDecimal averageItemsPerInvoice = BigDecimal.ZERO;
+    private BigDecimal deliveryFees = BigDecimal.ZERO;
+    private BigDecimal paymentFees = BigDecimal.ZERO;
+    private BigDecimal netRevenue = BigDecimal.ZERO;
     private String currency;
     private List<SalesTimelinePoint> salesTimeline = new ArrayList<>();
     private List<NameCount> topProducts = new ArrayList<>();

@@ -24,6 +24,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.BasketTools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.basket.delivery_methods.rest.DeliveryMethodsService;
+import sk.iway.iwcm.components.basket.jpa.BasketFeeStatsProjection;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceStatsProjection;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
@@ -46,6 +47,8 @@ public class BasketStatsService {
     private static final String CATEGORY_ROOT_KEY = "apps.eshop.stats.categories_root";
     private static final String CATEGORY_DIRECT_KEY = "apps.eshop.stats.category_direct";
     private static final String STATUS_KEY_PREFIX = "components.basket.invoice.status.";
+    private static final String DELIVERY_FEE_NOTE_KEY = "components.basket.invoice_email.delivery_method";
+    private static final String PAYMENT_FEE_NOTE_KEY = "components.basket.invoice_email.payment_method";
 
     private final BasketInvoicesRepository invoicesRepository;
     private final BasketInvoiceItemsRepository invoiceItemsRepository;
@@ -61,10 +64,22 @@ public class BasketStatsService {
         this.docDetailsRepository = docDetailsRepository;
     }
 
-    public BasketStatsDTO getStats(String dayDate, String currency, HttpServletRequest request) {
+    public BasketStatsDTO getStats(
+        String dayDate,
+        String currency,
+        List<Integer> statusIds,
+        HttpServletRequest request
+    ) {
         Date[] dateRange = getDateRange(dayDate);
         int domainId = CloudToolsForCore.getDomainId();
         Prop prop = Prop.getInstance(request);
+        List<Integer> selectedStatusIds = statusIds == null
+            ? Collections.emptyList()
+            : statusIds.stream().distinct().toList();
+        boolean filterByStatus = selectedStatusIds.isEmpty() == false;
+        List<Integer> queryStatusIds = filterByStatus
+            ? selectedStatusIds
+            : Collections.singletonList(Integer.MIN_VALUE);
         String targetCurrency = BasketTools.isCurrencySupported(currency)
             ? currency
             : BasketTools.getSystemCurrency();
@@ -72,20 +87,34 @@ public class BasketStatsService {
         List<BasketInvoiceStatsProjection> invoices = invoicesRepository.findAllForStatistics(
             domainId,
             dateRange[0],
-            dateRange[1]
+            dateRange[1],
+            filterByStatus,
+            queryStatusIds
         );
 
         List<BasketProductStatsProjection> products = invoiceItemsRepository.findProductsForStatistics(
             domainId,
             dateRange[0],
             dateRange[1],
+            filterByStatus,
+            queryStatusIds,
+            InvoiceStatus.INVOICE_STATUS_CANCELLED.getValue()
+        );
+
+        List<BasketFeeStatsProjection> fees = invoiceItemsRepository.findFeesForStatistics(
+            domainId,
+            dateRange[0],
+            dateRange[1],
+            filterByStatus,
+            queryStatusIds,
             InvoiceStatus.INVOICE_STATUS_CANCELLED.getValue()
         );
 
         if (invoices == null) invoices = Collections.emptyList();
         if (products == null) products = Collections.emptyList();
+        if (fees == null) fees = Collections.emptyList();
 
-        return createStats(invoices, products, targetCurrency, request, prop);
+        return createStats(invoices, products, fees, targetCurrency, request, prop);
     }
 
     private Date[] getDateRange(String dayDate) {
@@ -117,6 +146,7 @@ public class BasketStatsService {
     private BasketStatsDTO createStats(
         List<BasketInvoiceStatsProjection> invoices,
         List<BasketProductStatsProjection> products,
+        List<BasketFeeStatsProjection> fees,
         String currency,
         HttpServletRequest request,
         Prop prop
@@ -172,8 +202,59 @@ public class BasketStatsService {
         stats.setPaymentMethods(toTopList(paymentMethods, Integer.MAX_VALUE));
         stats.setInvoiceStatuses(toTopList(statuses, Integer.MAX_VALUE));
 
+        fillFeeStats(stats, fees, revenue, currency, prop);
+
         fillProductStats(stats, products, prop);
+        stats.setAverageItemsPerInvoice(
+            revenueInvoiceCount > 0
+                ? BigDecimal.valueOf(stats.getSoldItemCount())
+                    .divide(BigDecimal.valueOf(revenueInvoiceCount), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO.setScale(2)
+        );
         return stats;
+    }
+
+    private void fillFeeStats(
+        BasketStatsDTO stats,
+        List<BasketFeeStatsProjection> fees,
+        BigDecimal revenue,
+        String currency,
+        Prop defaultProp
+    ) {
+        BigDecimal deliveryFees = BigDecimal.ZERO;
+        BigDecimal paymentFees = BigDecimal.ZERO;
+
+        for (BasketFeeStatsProjection fee : fees) {
+            Prop invoiceProp = Tools.isEmpty(fee.getUserLng())
+                ? defaultProp
+                : Prop.getInstance(fee.getUserLng());
+            BigDecimal feePrice = getFeePriceWithVat(fee, currency);
+
+            if (isFeeType(fee.getItemNote(), invoiceProp, DELIVERY_FEE_NOTE_KEY)) {
+                deliveryFees = deliveryFees.add(feePrice);
+            } else if (isFeeType(fee.getItemNote(), invoiceProp, PAYMENT_FEE_NOTE_KEY)) {
+                paymentFees = paymentFees.add(feePrice);
+            }
+        }
+
+        stats.setDeliveryFees(scalePrice(deliveryFees));
+        stats.setPaymentFees(scalePrice(paymentFees));
+        stats.setNetRevenue(scalePrice(revenue.subtract(deliveryFees).subtract(paymentFees)));
+    }
+
+    private BigDecimal getFeePriceWithVat(BasketFeeStatsProjection fee, String currency) {
+        if (fee.getItemPrice() == null || fee.getItemQty() == null) return BigDecimal.ZERO;
+
+        int vat = fee.getItemVat() == null ? 0 : fee.getItemVat();
+        BigDecimal vatMultiplier = BigDecimal.ONE.add(BigDecimal.valueOf(vat).movePointLeft(2));
+        BigDecimal feePrice = fee.getItemPrice()
+            .multiply(BigDecimal.valueOf(fee.getItemQty()))
+            .multiply(vatMultiplier);
+        return convertPrice(feePrice, fee.getCurrency(), currency);
+    }
+
+    private boolean isFeeType(String itemNote, Prop prop, String noteKey) {
+        return Tools.isNotEmpty(itemNote) && itemNote.equalsIgnoreCase(prop.getText(noteKey));
     }
 
     private void fillProductStats(
