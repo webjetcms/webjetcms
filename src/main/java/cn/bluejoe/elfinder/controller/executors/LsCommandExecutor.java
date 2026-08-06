@@ -1,5 +1,6 @@
 package cn.bluejoe.elfinder.controller.executors;
 
+import cn.bluejoe.elfinder.controller.FsException;
 import cn.bluejoe.elfinder.controller.executor.AbstractJsonCommandExecutor;
 import cn.bluejoe.elfinder.controller.executor.FsItemEx;
 import cn.bluejoe.elfinder.service.FsService;
@@ -26,7 +27,7 @@ public class LsCommandExecutor extends AbstractJsonCommandExecutor
 		String target = request.getParameter("target");
 		Identity user = UsersDB.getCurrentUser(request);
 		if (user == null) {
-			throw new Exception("User not logged in");
+			throw new FsException("User not logged in");
 		}
 
 		Map<String, FsItemEx> files = new HashMap<String, FsItemEx>();
