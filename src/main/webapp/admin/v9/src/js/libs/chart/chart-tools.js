@@ -2173,10 +2173,13 @@ export async function setSelect(dataUrl, valueToSelect, elementId, removeDefault
         if(removeDefault === true) select.remove(0);
 
         //Add new options
+        let isArray = Array.isArray(valueToSelect);
         let isInList = false;
         for(let i = 0; i < mapOfDirs.length; i++) {
             select.add(new Option(mapOfDirs[i]['label'], mapOfDirs[i]['value']));
-            if(valueToSelect == mapOfDirs[i]['value']) isInList = true;
+            if (isArray) {
+                if (valueToSelect.length > 0 && valueToSelect.includes(mapOfDirs[i]['value'])) isInList = true;
+            } else if(valueToSelect == mapOfDirs[i]['value']) isInList = true;
             else if(valueToSelect === null && i == 0) {
                 // by default select first value
                 valueToSelect = mapOfDirs[i]['value'];
@@ -2184,7 +2187,7 @@ export async function setSelect(dataUrl, valueToSelect, elementId, removeDefault
             }
         }
 
-        //If valueToSelect is in list of valued, select it
+        //If valueToSelect is in list of values, select it
         if(isInList) $("#" + elementId).val(valueToSelect);
 
         //Refresh object
@@ -2382,6 +2385,7 @@ function createTreeChart(root, chartForm) {
 
     chartForm.chart = chart;
     chartForm.root = root;
+    root.addDisposer(new am5.Disposer(() => restoreTreeChart(chartForm, false)));
 
     const treeTools = chart.children.push(am5.ZoomTools.new(root, {
         target: chart
@@ -2524,6 +2528,7 @@ function maximizeTreeChart(chartForm) {
     chartForm.maximizeKeyHandler = event => {
         if (event.key === "Escape") restoreTreeChart(chartForm);
     };
+    chartForm.maximizePageHideHandler = () => restoreTreeChart(chartForm);
 
     document.body.appendChild(overlay);
     if (chartHeader != null) overlay.appendChild(chartHeader);
@@ -2543,6 +2548,7 @@ function maximizeTreeChart(chartForm) {
     document.body.style.overflow = "hidden";
     document.documentElement.style.overflow = "hidden";
     document.addEventListener("keydown", chartForm.maximizeKeyHandler);
+    window.addEventListener("pagehide", chartForm.maximizePageHideHandler);
 
     chartForm.isMaximized = true;
     maximizedTreeChartForm = chartForm;
@@ -2550,33 +2556,46 @@ function maximizeTreeChart(chartForm) {
     resizeTreeChart(chartForm);
 }
 
-function restoreTreeChart(chartForm) {
-    const chartElement = document.getElementById(chartForm.chartDivId);
-    if (chartElement == null || chartForm.isMaximized !== true) return;
+function restoreTreeChart(chartForm, updateChart = true) {
+    if (chartForm.isMaximized !== true) return;
 
+    const chartElement = document.getElementById(chartForm.chartDivId);
     const originalParent = chartForm.originalChartParent;
     const originalNextSibling = chartForm.originalChartNextSibling;
-    if (originalParent != null) {
+    if (chartElement != null && originalParent != null) {
+        const referenceNode = originalNextSibling?.parentNode === originalParent
+            ? originalNextSibling
+            : null;
         if (chartForm.chartHeader != null) {
-            originalParent.insertBefore(chartForm.chartHeader, originalNextSibling);
+            originalParent.insertBefore(chartForm.chartHeader, referenceNode);
         }
-        originalParent.insertBefore(chartElement, originalNextSibling);
+        originalParent.insertBefore(chartElement, referenceNode);
     }
 
-    if (chartForm.originalChartStyle == null) {
-        chartElement.removeAttribute("style");
-    } else {
-        chartElement.setAttribute("style", chartForm.originalChartStyle);
+    if (chartElement != null) {
+        if (chartForm.originalChartStyle == null) {
+            chartElement.removeAttribute("style");
+        } else {
+            chartElement.setAttribute("style", chartForm.originalChartStyle);
+        }
     }
     chartForm.maximizeOverlay?.remove();
     document.body.style.overflow = chartForm.originalBodyOverflow;
     document.documentElement.style.overflow = chartForm.originalDocumentOverflow;
     document.removeEventListener("keydown", chartForm.maximizeKeyHandler);
+    window.removeEventListener("pagehide", chartForm.maximizePageHideHandler);
 
     chartForm.isMaximized = false;
-    maximizedTreeChartForm = null;
-    setTreeChartMaximizeButtonState(chartForm, false);
-    resizeTreeChart(chartForm);
+    if (maximizedTreeChartForm === chartForm) maximizedTreeChartForm = null;
+
+    if (updateChart === true) {
+        setTreeChartMaximizeButtonState(chartForm, false);
+        resizeTreeChart(chartForm);
+    }
+
+    chartForm.maximizeOverlay = null;
+    chartForm.maximizeKeyHandler = null;
+    chartForm.maximizePageHideHandler = null;
 }
 
 function setTreeChartMaximizeButtonState(chartForm, maximized) {
@@ -2590,13 +2609,17 @@ function setTreeChartMaximizeButtonState(chartForm, maximized) {
 }
 
 function resizeTreeChart(chartForm) {
+    if (chartForm.root == null || chartForm.root.isDisposed()) return;
+
     window.requestAnimationFrame(() => {
+        if (chartForm.root.isDisposed()) return;
         chartForm.root.resize();
         setTreeChartInitialView(chartForm);
     });
 }
 
 function normalizeTreeChartData(chartData) {
+    if (chartData == null) return [];
     if (Array.isArray(chartData)) return chartData;
     return [chartData];
 }

@@ -19,6 +19,8 @@ public enum InvoiceStatus {
     INVOICE_STATUS_ISSUED(5),
     INVOICE_STATUS_DEPOSIT_PAID(8);
 
+    public static final String STATUS_KEY_PREFIX = "components.basket.invoice.status.";
+
     private final int value;
 
     InvoiceStatus(int value) {

@@ -54,7 +54,6 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
 
     private static final String ORDER_PLACEHOLDER = "{ORDER_DETAILS}";
     private static final String STATUS_PLACEHOLDER = "{STATUS}";
-    private static final String STATUS_KEY_PREFIX = "components.basket.invoice.status.";
 
     @Autowired
     public BasketInvoiceRestController(BasketInvoicesRepository bir, BasketInvoiceItemsRepository biir, BasketInvoicePaymentsRepository bipr, PaymentMethodsService pms, DeliveryMethodsService dms) {
@@ -153,7 +152,7 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
 
             // Replace al {STATUS}
             Integer actualStatus = bir.getStatusId(saved.getId(), CloudToolsForCore.getDomainId());
-            sb = Tools.replace(sb, STATUS_PLACEHOLDER, getProp().getText(STATUS_KEY_PREFIX + actualStatus));
+            sb = Tools.replace(sb, STATUS_PLACEHOLDER, getProp().getText(InvoiceStatus.STATUS_KEY_PREFIX + actualStatus));
 
             // Get invoice detail for email
             String compUrl = WriteTagToolsForCore.getCustomPage("/components/basket/invoice_email.jsp", getRequest());
@@ -232,12 +231,12 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         Prop prop = getProp();
         List<LabelValue> options = new ArrayList<>();
 
-        options.add(new LabelValue(prop.getText(STATUS_KEY_PREFIX + "1"), "1"));
-        options.add(new LabelValue(prop.getText(STATUS_KEY_PREFIX + "2"), "2"));
-        options.add(new LabelValue(prop.getText(STATUS_KEY_PREFIX + "3"), "3"));
-        options.add(new LabelValue(prop.getText(STATUS_KEY_PREFIX + "4"), "4"));
-        options.add(new LabelValue(prop.getText(STATUS_KEY_PREFIX + "5"), "5"));
-        options.add(new LabelValue(prop.getText(STATUS_KEY_PREFIX + "8"), "8"));
+        options.add(new LabelValue(prop.getText(InvoiceStatus.STATUS_KEY_PREFIX + "1"), "1"));
+        options.add(new LabelValue(prop.getText(InvoiceStatus.STATUS_KEY_PREFIX + "2"), "2"));
+        options.add(new LabelValue(prop.getText(InvoiceStatus.STATUS_KEY_PREFIX + "3"), "3"));
+        options.add(new LabelValue(prop.getText(InvoiceStatus.STATUS_KEY_PREFIX + "4"), "4"));
+        options.add(new LabelValue(prop.getText(InvoiceStatus.STATUS_KEY_PREFIX + "5"), "5"));
+        options.add(new LabelValue(prop.getText(InvoiceStatus.STATUS_KEY_PREFIX + "8"), "8"));
 
         Map<String, String> bonusStatuses = Constants.getHashtable("basketInvoiceBonusStatuses");
         for (Map.Entry<String, String> entry : bonusStatuses.entrySet()) {

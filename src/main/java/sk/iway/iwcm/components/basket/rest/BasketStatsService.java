@@ -46,7 +46,6 @@ public class BasketStatsService {
     private static final String UNKNOWN_KEY = "apps.eshop.stats.unknown";
     private static final String CATEGORY_ROOT_KEY = "apps.eshop.stats.categories_root";
     private static final String CATEGORY_DIRECT_KEY = "apps.eshop.stats.category_direct";
-    private static final String STATUS_KEY_PREFIX = "components.basket.invoice.status.";
     private static final String DELIVERY_FEE_NOTE_KEY = "components.basket.invoice_email.delivery_method";
     private static final String PAYMENT_FEE_NOTE_KEY = "components.basket.invoice_email.payment_method";
 
@@ -79,7 +78,7 @@ public class BasketStatsService {
         boolean filterByStatus = selectedStatusIds.isEmpty() == false;
         List<Integer> queryStatusIds = filterByStatus
             ? selectedStatusIds
-            : Collections.singletonList(Integer.MIN_VALUE);
+            : Collections.singletonList(-1);
         String targetCurrency = BasketTools.isCurrencySupported(currency)
             ? currency
             : BasketTools.getSystemCurrency();
@@ -368,7 +367,7 @@ public class BasketStatsService {
         String customStatusKey = customStatuses.get(String.valueOf(statusId));
         if (Tools.isNotEmpty(customStatusKey)) return prop.getText(customStatusKey);
 
-        return prop.getText(STATUS_KEY_PREFIX + statusId);
+        return prop.getText(InvoiceStatus.STATUS_KEY_PREFIX + statusId);
     }
 
     private boolean isCancelled(Integer statusId) {
