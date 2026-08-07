@@ -7,6 +7,7 @@ export const ChartType = {
     Pie_Donut: "pie_donut",
     Double_Pie: "double_pie",
     Word_Cloud: "word_cloud",
+    Tree: "tree",
     Table: "table",
     Not_Chart: "not_chart"
 }
@@ -218,6 +219,33 @@ export class WordCloudChartForm {
             xAxeName: config.xAxeName,
             yAxeName: config.yAxeName,
             mode: config.mode == null ? "word" : config.mode,
+        });
+    }
+}
+
+export class TreeChartForm {
+    constructor(config) {
+        this.initFromConfig(config);
+    }
+
+    initFromConfig(config) {
+        if (!config.chartDivId) throwConstructorError("TreeChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("TreeChartForm", "chartData");
+
+        Object.assign(this, {
+            chartDivId: config.chartDivId,
+            chartData: config.chartData,
+            chartTitle: config.chartTitle,
+            valueField: config.valueField == null ? "value" : config.valueField,
+            categoryField: config.categoryField == null ? "name" : config.categoryField,
+            childDataField: config.childDataField == null ? "children" : config.childDataField,
+            initialDepth: config.initialDepth == null ? 10 : config.initialDepth,
+            downDepth: config.downDepth == null ? 1 : config.downDepth,
+            topDepth: config.topDepth == null ? 0 : config.topDepth,
+            singleBranchOnly: config.singleBranchOnly == null ? false : config.singleBranchOnly,
+            labelText: config.labelText,
+            tooltipText: config.tooltipText == null ? "{category}: [bold]{sum}[/]" : config.tooltipText,
+            colorScheme: config.colorScheme
         });
     }
 }
@@ -743,6 +771,8 @@ export async function createAmchart(chartForm, update) {
         createDoublePieChart(root, chartForm);
     } else if(chartForm instanceof WordCloudChartForm) {
         crateWordCloudChart(root, chartForm);
+    } else if(chartForm instanceof TreeChartForm) {
+        createTreeChart(root, chartForm);
     }
 }
 
@@ -1619,6 +1649,15 @@ export async function updateChart(chartForm) {
                 wordCloudSeries.data.setAll(chartForm.chartData);
             }
         }
+    } else if(chartForm instanceof TreeChartForm) {
+        const treeData = normalizeTreeChartData(chartForm.chartData);
+        chartForm.series.data.setAll(treeData);
+        if (chartForm.series.dataItems.length > 0) {
+            chartForm.series.set("selectedDataItem", chartForm.series.dataItems[0]);
+        } else {
+            chartForm.series.set("selectedDataItem", undefined);
+        }
+        setTreeChartInitialView(chartForm);
     } else if(chartForm instanceof TableChartForm) {
         const tableDiv = document.getElementById(chartForm.chartDivId);
         if(tableDiv) tableDiv.innerHTML = "";
@@ -2134,10 +2173,13 @@ export async function setSelect(dataUrl, valueToSelect, elementId, removeDefault
         if(removeDefault === true) select.remove(0);
 
         //Add new options
+        let isArray = Array.isArray(valueToSelect);
         let isInList = false;
         for(let i = 0; i < mapOfDirs.length; i++) {
             select.add(new Option(mapOfDirs[i]['label'], mapOfDirs[i]['value']));
-            if(valueToSelect == mapOfDirs[i]['value']) isInList = true;
+            if (isArray) {
+                if (valueToSelect.length > 0 && valueToSelect.includes(mapOfDirs[i]['value'])) isInList = true;
+            } else if(valueToSelect == mapOfDirs[i]['value']) isInList = true;
             else if(valueToSelect === null && i == 0) {
                 // by default select first value
                 valueToSelect = mapOfDirs[i]['value'];
@@ -2145,7 +2187,7 @@ export async function setSelect(dataUrl, valueToSelect, elementId, removeDefault
             }
         }
 
-        //If valueToSelect is in list of valued, select it
+        //If valueToSelect is in list of values, select it
         if(isInList) $("#" + elementId).val(valueToSelect);
 
         //Refresh object
@@ -2329,4 +2371,255 @@ function crateWordCloudChart(root, chartForm) {
         paddingRight: 5,
         fontFamily: "Courier New"
     });
+}
+
+function createTreeChart(root, chartForm) {
+    const chart = root.container.children.push(
+        am5.ZoomableContainer.new(root, {
+            width: am5.p100,
+            height: am5.p100,
+            wheelable: true,
+            pinchZoom: true
+        })
+    );
+
+    chartForm.chart = chart;
+    chartForm.root = root;
+    root.addDisposer(new am5.Disposer(() => restoreTreeChart(chartForm, false)));
+
+    const treeTools = chart.children.push(am5.ZoomTools.new(root, {
+        target: chart
+    }));
+    addTreeChartMaximizeButton(root, treeTools, chartForm);
+
+    const series = chart.contents.children.push(
+        am5hierarchy.Tree.new(root, {
+            width: am5.percent(75),
+            height: am5.percent(75),
+            paddingTop: 40,
+            paddingRight: 40,
+            paddingBottom: 40,
+            paddingLeft: 40,
+            maskContent: false,
+            centerX: am5.p50,
+            centerY: am5.p50,
+            x: am5.p50,
+            y: am5.p50,
+            singleBranchOnly: chartForm.singleBranchOnly,
+            downDepth: chartForm.downDepth,
+            initialDepth: chartForm.initialDepth,
+            topDepth: chartForm.topDepth,
+            valueField: chartForm.valueField,
+            categoryField: chartForm.categoryField,
+            childDataField: chartForm.childDataField,
+            orientation: "horizontal",
+            clustered: false,
+            colors: am5.ColorSet.new(root, {
+                colors: getColorScheme(chartForm.colorScheme)
+            })
+        })
+    );
+
+    chartForm.series = series;
+
+    series.circles.template.set("radius", 34);
+    series.outerCircles.template.set("radius", 34);
+    series.labels.template.setAll({
+        fontSize: 13,
+        oversizedBehavior: "wrap",
+        breakWords: true,
+        paddingTop: 2,
+        paddingRight: 2,
+        paddingBottom: 2,
+        paddingLeft: 2,
+        textAlign: "center"
+    });
+    series.links.template.setAll({
+        strokeWidth: 1.25,
+        strokeOpacity: 0.75
+    });
+    if (chartForm.labelText != null) {
+        series.labels.template.set("text", chartForm.labelText);
+    }
+    series.nodes.template.setAll({
+        draggable: false,
+        tooltipText: chartForm.tooltipText
+    });
+
+    series.data.setAll(normalizeTreeChartData(chartForm.chartData));
+    if (series.dataItems.length > 0) {
+        series.set("selectedDataItem", series.dataItems[0]);
+    }
+
+    series.appear(1000, 100);
+    setTreeChartInitialView(chartForm);
+}
+
+function setTreeChartInitialView(chartForm) {
+    chartForm.chart.goHome();
+}
+
+const TREE_MAXIMIZE_ICON = "M -8 -2 L -8 -8 L -2 -8 M 2 -8 L 8 -8 L 8 -2 M 8 2 L 8 8 L 2 8 M -2 8 L -8 8 L -8 2";
+const TREE_MINIMIZE_ICON = "M -8 -3 L -3 -3 L -3 -8 M 3 -8 L 3 -3 L 8 -3 M 8 3 L 3 3 L 3 8 M -3 8 L -3 3 L -8 3";
+let maximizedTreeChartForm = null;
+
+function addTreeChartMaximizeButton(root, treeTools, chartForm) {
+    const maximizeIcon = am5.Graphics.new(root, {
+        x: am5.p50,
+        y: am5.p50,
+        svgPath: TREE_MAXIMIZE_ICON,
+        themeTags: ["maximize", "icon"]
+    });
+
+    const maximizeButton = treeTools.children.push(am5.Button.new(root, {
+        width: 35,
+        height: 35,
+        icon: maximizeIcon,
+        layout: undefined,
+        themeTags: ["maximize"]
+    }));
+
+    chartForm.maximizeButton = maximizeButton;
+    chartForm.maximizeIcon = maximizeIcon;
+    setTreeChartMaximizeButtonState(chartForm, false);
+
+    maximizeButton.events.on("click", () => {
+        if (chartForm.isMaximized === true) {
+            restoreTreeChart(chartForm);
+        } else {
+            maximizeTreeChart(chartForm);
+        }
+    });
+}
+
+function maximizeTreeChart(chartForm) {
+    const chartElement = document.getElementById(chartForm.chartDivId);
+    if (chartElement == null) return;
+
+    if (maximizedTreeChartForm != null && maximizedTreeChartForm !== chartForm) {
+        restoreTreeChart(maximizedTreeChartForm);
+    }
+
+    const chartHeader = chartElement.previousElementSibling?.classList.contains("amchart-header") === true
+        ? chartElement.previousElementSibling
+        : null;
+    const overlay = document.createElement("div");
+
+    Object.assign(overlay.style, {
+        position: "fixed",
+        inset: "0",
+        zIndex: "2147483640",
+        display: "flex",
+        flexDirection: "column",
+        boxSizing: "border-box",
+        width: "100vw",
+        height: "100vh",
+        padding: "8px",
+        backgroundColor: "#FFFFFF"
+    });
+
+    chartForm.originalChartParent = chartElement.parentNode;
+    chartForm.originalChartNextSibling = chartElement.nextSibling;
+    chartForm.chartHeader = chartHeader;
+    chartForm.maximizeOverlay = overlay;
+    chartForm.originalChartStyle = chartElement.getAttribute("style");
+    chartForm.originalBodyOverflow = document.body.style.overflow;
+    chartForm.originalDocumentOverflow = document.documentElement.style.overflow;
+    chartForm.maximizeKeyHandler = event => {
+        if (event.key === "Escape") restoreTreeChart(chartForm);
+    };
+    chartForm.maximizePageHideHandler = () => restoreTreeChart(chartForm);
+
+    document.body.appendChild(overlay);
+    if (chartHeader != null) overlay.appendChild(chartHeader);
+    overlay.appendChild(chartElement);
+
+    Object.assign(chartElement.style, {
+        flex: "1 1 0",
+        width: "100%",
+        height: "auto",
+        minHeight: "0",
+        maxWidth: "none",
+        maxHeight: "none",
+        margin: "0",
+        borderRadius: "0",
+        backgroundColor: "#FFFFFF"
+    });
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    document.addEventListener("keydown", chartForm.maximizeKeyHandler);
+    window.addEventListener("pagehide", chartForm.maximizePageHideHandler);
+
+    chartForm.isMaximized = true;
+    maximizedTreeChartForm = chartForm;
+    setTreeChartMaximizeButtonState(chartForm, true);
+    resizeTreeChart(chartForm);
+}
+
+function restoreTreeChart(chartForm, updateChart = true) {
+    if (chartForm.isMaximized !== true) return;
+
+    const chartElement = document.getElementById(chartForm.chartDivId);
+    const originalParent = chartForm.originalChartParent;
+    const originalNextSibling = chartForm.originalChartNextSibling;
+    if (chartElement != null && originalParent != null) {
+        const referenceNode = originalNextSibling?.parentNode === originalParent
+            ? originalNextSibling
+            : null;
+        if (chartForm.chartHeader != null) {
+            originalParent.insertBefore(chartForm.chartHeader, referenceNode);
+        }
+        originalParent.insertBefore(chartElement, referenceNode);
+    }
+
+    if (chartElement != null) {
+        if (chartForm.originalChartStyle == null) {
+            chartElement.removeAttribute("style");
+        } else {
+            chartElement.setAttribute("style", chartForm.originalChartStyle);
+        }
+    }
+    chartForm.maximizeOverlay?.remove();
+    document.body.style.overflow = chartForm.originalBodyOverflow;
+    document.documentElement.style.overflow = chartForm.originalDocumentOverflow;
+    document.removeEventListener("keydown", chartForm.maximizeKeyHandler);
+    window.removeEventListener("pagehide", chartForm.maximizePageHideHandler);
+
+    chartForm.isMaximized = false;
+    if (maximizedTreeChartForm === chartForm) maximizedTreeChartForm = null;
+
+    if (updateChart === true) {
+        setTreeChartMaximizeButtonState(chartForm, false);
+        resizeTreeChart(chartForm);
+    }
+
+    chartForm.maximizeOverlay = null;
+    chartForm.maximizeKeyHandler = null;
+    chartForm.maximizePageHideHandler = null;
+}
+
+function setTreeChartMaximizeButtonState(chartForm, maximized) {
+    const translationKey = maximized ? "datatables.modal.minimize.js" : "datatables.modal.maximize.js";
+    const label = WJ.translate(translationKey);
+    chartForm.maximizeIcon.set("svgPath", maximized ? TREE_MINIMIZE_ICON : TREE_MAXIMIZE_ICON);
+    chartForm.maximizeButton.setAll({
+        ariaLabel: label,
+        tooltipText: label
+    });
+}
+
+function resizeTreeChart(chartForm) {
+    if (chartForm.root == null || chartForm.root.isDisposed()) return;
+
+    window.requestAnimationFrame(() => {
+        if (chartForm.root.isDisposed()) return;
+        chartForm.root.resize();
+        setTreeChartInitialView(chartForm);
+    });
+}
+
+function normalizeTreeChartData(chartData) {
+    if (chartData == null) return [];
+    if (Array.isArray(chartData)) return chartData;
+    return [chartData];
 }

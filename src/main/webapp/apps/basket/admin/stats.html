@@ -1,0 +1,554 @@
+<script type="text/javascript" data-th-inline="javascript">
+
+    const basketStatsUrl = "/admin/rest/eshop/stats";
+    const revenueWithVatSeriesLabel = /*[[#{apps.eshop.stats.revenue}]]*/ "Revenue with VAT";
+    const revenueWithoutVatSeriesLabel = /*[[#{apps.eshop.stats.revenue_without_vat}]]*/ "Revenue without VAT";
+    const chartForms = {};
+    let chartsInitialized = false;
+
+    WJ.breadcrumb({
+        id: "stats",
+        tabs: [
+            {
+                url: '/apps/basket/admin/stats/',
+                title: /*[[#{apps.eshop.stats.title}]]*/ "E-shop statistics",
+                active: true
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.domReady.add(async function () {
+        $("#pills-dateRange-tab").html("");
+        $("#basketStatsFilter").appendTo("#pills-dateRange-tab");
+
+        initializeDatePickers();
+        await ChartTools.setSelect(
+            "/admin/rest/eshop/product-list/supported-currencies",
+            null,
+            "currencySelect",
+            false
+        );
+        await ChartTools.setSelect(
+            "/admin/rest/eshop/basket/supported-statuses",
+            [],
+            "invoiceStatusSelect",
+            true
+        );
+        bindFilter();
+        loadStats();
+    });
+
+    function initializeDatePickers() {
+        $('#basketStatsFilter .datepicker').each(function (key, dateInput) {
+            const $input = $(dateInput);
+            if ($input.hasClass("datepickerbinded")) return;
+            $input.addClass("datepickerbinded");
+
+            new $.fn.dataTable.Editor.DateTime($input, {
+                format: 'L',
+                momentLocale: window.userLng,
+                locale: window.userLng,
+                keyInput: false,
+                i18n: WJ.getDatetimeLocalization()
+            });
+        });
+    }
+
+    function bindFilter() {
+        $("#currencySelect").on("change", function () {
+            loadStats();
+        });
+        $("#invoiceStatusSelect").on("change", function () {
+            loadStats();
+        });
+
+        const filterButton = document.querySelector("#basketStatsFilter button.dt-filtrujem-dayDate");
+        if (filterButton == null) return;
+
+        filterButton.addEventListener("click", function (event) {
+            event.preventDefault();
+            loadStats();
+        });
+
+        document.querySelectorAll("#basketStatsFilter input.filter-input").forEach(input => {
+            input.addEventListener("keypress", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    loadStats();
+                }
+            });
+        });
+    }
+
+    function getStatsUrl() {
+        const params = new URLSearchParams();
+        params.set("dayDate", ChartTools.getDateRange(null));
+        params.set("currency", $("#currencySelect").val());
+        const statusIds = $("#invoiceStatusSelect").val() || [];
+        statusIds.forEach(statusId => params.append("status", statusId));
+        return basketStatsUrl + "?" + params.toString();
+    }
+
+    async function loadStats() {
+        WJ.showLoader();
+
+        try {
+            const response = await fetch(getStatsUrl(), {
+                headers: {
+                    "X-CSRF-Token": window.csrfToken
+                }
+            });
+            if (!response.ok) throw new Error("Statistics request failed with status " + response.status);
+
+            const data = await response.json();
+            updateSummary(data);
+
+            if (chartsInitialized === false) {
+                await createCharts(data);
+                chartsInitialized = true;
+            } else {
+                await updateCharts(data);
+            }
+        } catch (error) {
+            console.error("Error fetching e-shop statistics:", error);
+            WJ.notifyError(
+                /*[[#{apps.eshop.stats.load_error.title}]]*/ "Statistics could not be loaded",
+                /*[[#{apps.eshop.stats.load_error.text}]]*/ "Refresh the page or change the selected date range and try again."
+            );
+        } finally {
+            WJ.hideLoader();
+        }
+    }
+
+    function updateSummary(data) {
+        document.getElementById("invoiceCount").textContent = formatCount(data.invoiceCount);
+        document.getElementById("averageInvoiceValue").textContent = formatMoney(data.averageInvoiceValue, data.currency);
+        document.getElementById("soldItemCount").textContent = formatCount(data.soldItemCount);
+        document.getElementById("averageItemsPerInvoice").textContent = formatDecimal(data.averageItemsPerInvoice);
+        document.getElementById("invoiceTotal").textContent = formatMoney(data.revenue, data.currency);
+        document.getElementById("deliveryFees").textContent = formatMoney(data.deliveryFees, data.currency);
+        document.getElementById("paymentFees").textContent = formatMoney(data.paymentFees, data.currency);
+        document.getElementById("netRevenue").textContent = formatMoney(data.netRevenue, data.currency);
+    }
+
+    function formatCount(value) {
+        return Number(value || 0).toLocaleString();
+    }
+
+    function formatMoney(value, currency) {
+        const currencyLabel = currency == null ? "" : " " + currency.toUpperCase();
+        return WJ.formatPrice(value || 0) + currencyLabel;
+    }
+
+    function formatDecimal(value) {
+        return WJ.formatPrice(value || 0);
+    }
+
+    function getSalesChartData(data) {
+        const series = {};
+        const timeline = data.salesTimeline || [];
+        series[revenueWithVatSeriesLabel] = timeline.map(point => ({
+            dayDate: point.dayDate,
+            revenue: point.revenueWithVat
+        }));
+        series[revenueWithoutVatSeriesLabel] = timeline.map(point => ({
+            dayDate: point.dayDate,
+            revenue: point.revenueWithoutVat
+        }));
+        return ChartTools.convertDataForLineChart(series);
+    }
+
+    function getRevenueChartTitle(data) {
+        const currencyLabel = data.currency == null ? "" : " (" + data.currency.toUpperCase() + ")";
+        return /*[[#{apps.eshop.stats.revenue_chart}]]*/ "Revenue over time" + currencyLabel;
+    }
+
+    async function createCharts(data) {
+        await window.initAmcharts();
+
+        chartForms.sales = new ChartTools.LineChartForm({
+            yAxeNames: ChartTools.getLineChartYAxeNameObjs(["revenue"], [undefined]),
+            xAxeName: "dayDate",
+            chartTitle: getRevenueChartTitle(data),
+            chartDivId: "basketStats-sales",
+            chartData: getSalesChartData(data),
+            dateType: ChartTools.DateType.Auto
+        });
+
+        chartForms.products = new ChartTools.BarChartForm({
+            yAxeName: "name",
+            xAxeName: "count",
+            chartTitle: /*[[#{apps.eshop.stats.top_products}]]*/ "Top-selling products",
+            chartDivId: "basketStats-products",
+            chartData: data.topProducts || [],
+            horizontal: true
+        });
+
+        chartForms.categories = new ChartTools.TreeChartForm({
+            chartTitle: /*[[#{apps.eshop.stats.top_categories}]]*/ "Sales by category",
+            chartDivId: "basketStats-categories",
+            chartData: data.categoryTree,
+            topDepth: 1,
+            initialDepth: 10,
+            downDepth: 10,
+            labelText: "{category}\n[bold]{sum}[/]"
+        });
+
+        chartForms.delivery = createPieChart(
+            "basketStats-delivery",
+            /*[[#{apps.eshop.stats.delivery_methods}]]*/ "Delivery methods",
+            data.deliveryMethods
+        );
+        chartForms.payment = createPieChart(
+            "basketStats-payment",
+            /*[[#{apps.eshop.stats.payment_methods}]]*/ "Payment methods",
+            data.paymentMethods
+        );
+        chartForms.statuses = createPieChart(
+            "basketStats-statuses",
+            /*[[#{apps.eshop.stats.invoice_statuses}]]*/ "Invoice statuses",
+            data.invoiceStatuses
+        );
+
+        Object.values(chartForms).forEach(chart => ChartTools.createAmchart(chart));
+    }
+
+    function createPieChart(chartDivId, chartTitle, chartData) {
+        return new ChartTools.PieChartForm({
+            yAxeName: "count",
+            xAxeName: "name",
+            chartTitle: chartTitle,
+            chartDivId: chartDivId,
+            chartData: chartData || [],
+            innerRadius: 65,
+            legendValueText: "[bold]{count}[/]"
+        });
+    }
+
+    async function updateCharts(data) {
+        chartForms.sales.chartData = getSalesChartData(data);
+        chartForms.sales.chartTitle = getRevenueChartTitle(data);
+        chartForms.products.chartData = data.topProducts || [];
+        chartForms.categories.chartData = data.categoryTree;
+        chartForms.delivery.chartData = data.deliveryMethods || [];
+        chartForms.payment.chartData = data.paymentMethods || [];
+        chartForms.statuses.chartData = data.invoiceStatuses || [];
+
+        for (const chart of Object.values(chartForms)) {
+            await ChartTools.updateChart(chart);
+        }
+    }
+
+</script>
+
+<div class="row basket-stats-summary hide-while-loading g-3">
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="basket-stat-card h-100 basket-stat-card--green">
+            <div class="basket-stat-card__icon">
+                <i class="ti ti-file-invoice" aria-hidden="true"></i>
+            </div>
+            <div class="basket-stat-card__content">
+                <span class="basket-stat-card__title" data-th-text="#{apps.eshop.stats.invoice_count}">INVOICES</span>
+                <span id="invoiceCount" class="basket-stat-card__value">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="basket-stat-card h-100 basket-stat-card--orange">
+            <div class="basket-stat-card__icon">
+                <i class="ti ti-calculator" aria-hidden="true"></i>
+            </div>
+            <div class="basket-stat-card__content">
+                <span class="basket-stat-card__title" data-th-text="#{apps.eshop.stats.average_invoice_value}">AVERAGE INVOICE</span>
+                <span id="averageInvoiceValue" class="basket-stat-card__value">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="basket-stat-card h-100 basket-stat-card--red">
+            <div class="basket-stat-card__icon">
+                <i class="ti ti-shopping-cart" aria-hidden="true"></i>
+            </div>
+            <div class="basket-stat-card__content">
+                <span class="basket-stat-card__title" data-th-text="#{apps.eshop.stats.items_sold}">ITEMS SOLD</span>
+                <span id="soldItemCount" class="basket-stat-card__value">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="basket-stat-card h-100 basket-stat-card--blue">
+            <div class="basket-stat-card__icon">
+                <i class="ti ti-package" aria-hidden="true"></i>
+            </div>
+            <div class="basket-stat-card__content">
+                <span class="basket-stat-card__title" data-th-text="#{apps.eshop.stats.average_items_per_invoice}">AVERAGE PRODUCTS PER INVOICE</span>
+                <span id="averageItemsPerInvoice" class="basket-stat-card__value">0</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="row basket-stats-money-summary hide-while-loading g-3">
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="basket-stat-card h-100 basket-stat-card--blue">
+            <div class="basket-stat-card__icon">
+                <i class="ti ti-cash" aria-hidden="true"></i>
+            </div>
+            <div class="basket-stat-card__content">
+                <span class="basket-stat-card__title" data-th-text="#{apps.eshop.stats.invoice_total}">TOTAL INVOICE VALUE</span>
+                <span id="invoiceTotal" class="basket-stat-card__value">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="basket-stat-card h-100 basket-stat-card--orange">
+            <div class="basket-stat-card__icon">
+                <i class="ti ti-truck-delivery" aria-hidden="true"></i>
+            </div>
+            <div class="basket-stat-card__content">
+                <span class="basket-stat-card__title" data-th-text="#{apps.eshop.stats.delivery_fees}">DELIVERY FEES</span>
+                <span id="deliveryFees" class="basket-stat-card__value">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="basket-stat-card h-100 basket-stat-card--red">
+            <div class="basket-stat-card__icon">
+                <i class="ti ti-credit-card" aria-hidden="true"></i>
+            </div>
+            <div class="basket-stat-card__content">
+                <span class="basket-stat-card__title" data-th-text="#{apps.eshop.stats.payment_fees}">PAYMENT FEES</span>
+                <span id="paymentFees" class="basket-stat-card__value">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="basket-stat-card h-100 basket-stat-card--green">
+            <div class="basket-stat-card__icon">
+                <i class="ti ti-wallet" aria-hidden="true"></i>
+            </div>
+            <div class="basket-stat-card__content">
+                <span class="basket-stat-card__title" data-th-text="#{apps.eshop.stats.net_revenue}">REVENUE WITHOUT DELIVERY AND PAYMENT FEES</span>
+                <span id="netRevenue" class="basket-stat-card__value">0</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="basket-stats-charts hide-while-loading">
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="basket-chart-card">
+                <div id="basketStats-sales" class="amcharts"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12 col-xl-6">
+            <div class="basket-chart-card">
+                <div id="basketStats-products" class="amcharts"></div>
+            </div>
+        </div>
+        <div class="col-12 col-xl-6">
+            <div class="basket-chart-card">
+                <div id="basketStats-statuses" class="amcharts"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12 col-xl-6">
+            <div class="basket-chart-card">
+                <div id="basketStats-delivery" class="amcharts"></div>
+            </div>
+        </div>
+        <div class="col-12 col-xl-6">
+            <div class="basket-chart-card">
+                <div id="basketStats-payment" class="amcharts"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="basket-chart-card">
+                <div id="basketStats-categories" class="amcharts"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="basketStatsFilter" class="row datatableInit align-items-center flex-nowrap">
+    <div class="col-auto">
+        <div class="d-flex align-items-center" id="invoiceStatusSelect_wrapper">
+            <label class="mb-0 me-2 text-nowrap" for="invoiceStatusSelect" data-th-text="#{components.basket.invoice.state}">Status</label>
+            <select
+                id="invoiceStatusSelect"
+                class="form-select"
+                multiple
+                data-actions-box="true"
+                data-select-all-text="Select all"
+                data-deselect-all-text="Deselect all"
+                data-th-data-select-all-text="#{usersedit.select_all}"
+                data-th-data-deselect-all-text="#{usersedit.deselect_all}"
+                data-count-selected-text="Selected statuses: {0}"
+                data-th-data-count-selected-text="#{apps.eshop.stats.statuses_selected}"
+                data-live-search="false"
+                data-selected-text-format="count > 2"
+                data-th-title="#{components.basket.invoice.status.0}"
+                title="All"
+            ></select>
+        </div>
+    </div>
+    <div class="col-auto">
+        <div class="d-flex align-items-center" id="currencySelect_wrapper">
+            <label class="mb-0 me-2 text-nowrap" for="currencySelect" data-th-text="#{components.basket.invoice.currency}">Currency</label>
+            <select id="currencySelect" class="form-select"></select>
+        </div>
+    </div>
+    <div class="col-auto form-date-div d-flex align-items-center">
+        <label class="mb-0 me-2 text-nowrap" for="basketStatsDateFrom" data-th-text="#{stat.time}">Time period</label>
+        <div class="input-group" data-filter-type="date">
+            <input
+                id="basketStatsDateFrom"
+                class="datepicker min form-control filter-input form-control-sm dt-datetime dt-filter-from-dayDate"
+                type="text"
+                data-th-placeholder="#{components.basket.invoice.stats.time_from}"
+                data-th-aria-label="#{components.basket.invoice.stats.time_from}"
+                autocomplete="off"
+            >
+            <input
+                class="datepicker max form-control filter-input form-control-sm dt-datetime dt-filter-to-dayDate"
+                type="text"
+                data-th-placeholder="#{components.basket.invoice.stats.time_to}"
+                data-th-aria-label="#{components.basket.invoice.stats.time_to}"
+                autocomplete="off"
+            >
+            <button
+                class="filtrujem btn btn-sm btn-outline-secondary dt-filtrujem-dayDate"
+                type="submit"
+                data-th-aria-label="#{datatables.defaults.search.js}"
+                data-th-title="#{datatables.defaults.search.js}"
+            >
+                <i class="ti ti-search" aria-hidden="true"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .basket-stats-summary {
+        margin-top: 0;
+    }
+
+    .basket-stats-money-summary {
+        margin-top: 0;
+    }
+
+    #currencySelect_wrapper {
+        white-space: nowrap;
+    }
+
+    #invoiceStatusSelect_wrapper {
+        white-space: nowrap;
+    }
+
+    #invoiceStatusSelect_wrapper > .form-select,
+    #invoiceStatusSelect_wrapper .bootstrap-select {
+        display: inline-block !important;
+        flex: 0 0 300px;
+        width: 300px !important;
+    }
+
+    #currencySelect_wrapper > .form-select,
+    #currencySelect_wrapper .bootstrap-select {
+        display: inline-block !important;
+        flex: 0 0 100px;
+        width: 100px !important;
+    }
+
+    .basket-stat-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 20px;
+        border-radius: 6px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+
+    .basket-stat-card--green  { background: #A3EED9; color: #004235; }
+    .basket-stat-card--blue   { background: #D9DEFF; color: #003289; }
+    .basket-stat-card--orange { background: #FFDAA3; color: #4A3600; }
+    .basket-stat-card--red    { background: #FFD6D7; color: #790011; }
+
+    .basket-stat-card--green  .basket-stat-card__icon { color: #51DCBD; }
+    .basket-stat-card--blue   .basket-stat-card__icon { color: #B8C3FF; }
+    .basket-stat-card--orange .basket-stat-card__icon { color: #F6BE3F; }
+    .basket-stat-card--red    .basket-stat-card__icon { color: #FFB3B5; }
+
+    .basket-stat-card__icon {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .basket-stat-card__icon i {
+        font-size: 4rem;
+        line-height: 1;
+    }
+
+    .basket-stat-card__content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+    }
+
+    .basket-stat-card__title {
+        font-size: 0.875rem;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        opacity: 0.8;
+    }
+
+    .basket-stat-card__value {
+        font-size: 1.4rem;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+
+    .basket-stats-charts {
+        margin-top: 24px;
+    }
+
+    .basket-stats-charts > .row {
+        margin-bottom: 16px;
+    }
+
+    .basket-chart-card {
+        height: 100%;
+        padding: 8px;
+        border: 1px solid #DDDFE6;
+        border-radius: 6px;
+        background: #FFFFFF;
+    }
+
+</style>

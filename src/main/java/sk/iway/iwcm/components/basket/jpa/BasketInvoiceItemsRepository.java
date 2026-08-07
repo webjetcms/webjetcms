@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.basket.jpa;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -48,4 +49,55 @@ public interface BasketInvoiceItemsRepository extends DomainIdRepository<BasketI
     @Modifying
     @Query(value = "DELETE FROM BasketInvoiceItemEntity biie WHERE biie.invoiceId = :invoiceId AND biie.domainId = :domainId")
     void deleteByInvoiceId(@Param("invoiceId") Long invoiceId, @Param("domainId") Integer domainId);
+
+    @Query("""
+        SELECT biie.itemId AS itemId,
+               MAX(biie.itemTitle) AS itemTitle,
+               SUM(biie.itemQty) AS quantity
+        FROM BasketInvoiceItemEntity biie
+        JOIN biie.itemsBasketInvoice bie
+        WHERE biie.domainId = :domainId
+          AND bie.domainId = :domainId
+          AND bie.createDate >= :dateFrom
+          AND bie.createDate <= :dateTo
+          AND (:filterByStatus = false OR bie.statusId IN :statusIds)
+          AND biie.itemId IS NOT NULL
+          AND biie.itemId > 0
+          AND (bie.statusId IS NULL OR bie.statusId <> :cancelledStatus)
+        GROUP BY biie.itemId
+        """)
+    List<BasketProductStatsProjection> findProductsForStatistics(
+        @Param("domainId") Integer domainId,
+        @Param("dateFrom") Date dateFrom,
+        @Param("dateTo") Date dateTo,
+        @Param("filterByStatus") boolean filterByStatus,
+        @Param("statusIds") List<Integer> statusIds,
+        @Param("cancelledStatus") Integer cancelledStatus
+    );
+
+    @Query("""
+        SELECT biie.itemNote AS itemNote,
+               biie.itemPrice AS itemPrice,
+               biie.itemQty AS itemQty,
+               biie.itemVat AS itemVat,
+               bie.currency AS currency,
+               bie.userLng AS userLng
+        FROM BasketInvoiceItemEntity biie
+        JOIN biie.itemsBasketInvoice bie
+        WHERE biie.domainId = :domainId
+          AND bie.domainId = :domainId
+          AND bie.createDate >= :dateFrom
+          AND bie.createDate <= :dateTo
+          AND (:filterByStatus = false OR bie.statusId IN :statusIds)
+          AND biie.itemId = 0
+          AND (bie.statusId IS NULL OR bie.statusId <> :cancelledStatus)
+        """)
+    List<BasketFeeStatsProjection> findFeesForStatistics(
+        @Param("domainId") Integer domainId,
+        @Param("dateFrom") Date dateFrom,
+        @Param("dateTo") Date dateTo,
+        @Param("filterByStatus") boolean filterByStatus,
+        @Param("statusIds") List<Integer> statusIds,
+        @Param("cancelledStatus") Integer cancelledStatus
+    );
 }

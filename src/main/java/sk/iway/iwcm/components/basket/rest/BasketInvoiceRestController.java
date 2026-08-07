@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.basket.rest;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -53,7 +54,6 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
 
     private static final String ORDER_PLACEHOLDER = "{ORDER_DETAILS}";
     private static final String STATUS_PLACEHOLDER = "{STATUS}";
-    private static final String STATUS_KEY_PREFIX = "components.basket.invoice.status.";
 
     @Autowired
     public BasketInvoiceRestController(BasketInvoicesRepository bir, BasketInvoiceItemsRepository biir, BasketInvoicePaymentsRepository bipr, PaymentMethodsService pms, DeliveryMethodsService dms) {
@@ -152,7 +152,7 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
 
             // Replace al {STATUS}
             Integer actualStatus = bir.getStatusId(saved.getId(), CloudToolsForCore.getDomainId());
-            sb = Tools.replace(sb, STATUS_PLACEHOLDER, getProp().getText(STATUS_KEY_PREFIX + actualStatus));
+            sb = Tools.replace(sb, STATUS_PLACEHOLDER, getProp().getText(InvoiceStatus.STATUS_KEY_PREFIX + actualStatus));
 
             // Get invoice detail for email
             String compUrl = WriteTagToolsForCore.getCustomPage("/components/basket/invoice_email.jsp", getRequest());
@@ -222,24 +222,29 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
 
     private final void fillStatusSelect(DatatablePageImpl<BasketInvoiceEntity> page) {
         String label = "statusId";
+        for (LabelValue option : getInvoiceStatusOptions()) {
+            page.addDefaultOption(label, option.getLabel(), option.getValue());
+        }
+    }
+
+    private List<LabelValue> getInvoiceStatusOptions() {
         Prop prop = getProp();
+        List<LabelValue> options = new ArrayList<>();
 
-        //Add default statuses
-        String defaultKeyPrefix = "components.basket.invoice.status.";
-        page.addDefaultOption(label, prop.getText( defaultKeyPrefix + "1" ), "1");
-        page.addDefaultOption(label, prop.getText( defaultKeyPrefix + "2" ), "2");
-        page.addDefaultOption(label, prop.getText( defaultKeyPrefix + "3" ), "3");
-        page.addDefaultOption(label, prop.getText( defaultKeyPrefix + "4" ), "4");
-        page.addDefaultOption(label, prop.getText( defaultKeyPrefix + "5" ), "5");
-        page.addDefaultOption(label, prop.getText( defaultKeyPrefix + "8" ), "8");
+        options.add(new LabelValue(prop.getText(InvoiceStatus.STATUS_KEY_PREFIX + "1"), "1"));
+        options.add(new LabelValue(prop.getText(InvoiceStatus.STATUS_KEY_PREFIX + "2"), "2"));
+        options.add(new LabelValue(prop.getText(InvoiceStatus.STATUS_KEY_PREFIX + "3"), "3"));
+        options.add(new LabelValue(prop.getText(InvoiceStatus.STATUS_KEY_PREFIX + "4"), "4"));
+        options.add(new LabelValue(prop.getText(InvoiceStatus.STATUS_KEY_PREFIX + "5"), "5"));
+        options.add(new LabelValue(prop.getText(InvoiceStatus.STATUS_KEY_PREFIX + "8"), "8"));
 
-        //Add custom statuses
         Map<String, String> bonusStatuses = Constants.getHashtable("basketInvoiceBonusStatuses");
         for (Map.Entry<String, String> entry : bonusStatuses.entrySet()) {
-            //It must be number 10 or higher, lower numbers are reserved for default statuses
-            if(Integer.valueOf(entry.getKey()) >= 10)
-                page.addDefaultOption(label, prop.getText( entry.getValue() ), entry.getKey());
+            if (Tools.getIntValue(entry.getKey(), -1) >= 10) {
+                options.add(new LabelValue(prop.getText(entry.getValue()), entry.getKey()));
+            }
         }
+        return options;
     }
 
     private final void prepareCountriesSelect(DatatablePageImpl<BasketInvoiceEntity> page) {
@@ -255,6 +260,11 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
     @RequestMapping(value="/supported-currencies")
     public List<LabelValue> getListOfSupportedCurrencies() {
         return BasketTools.getSupportedCurrenciesOptions();
+    }
+
+    @GetMapping("/supported-statuses")
+    public List<LabelValue> getListOfSupportedStatuses() {
+        return getInvoiceStatusOptions();
     }
 
     @GetMapping("/getPriceInfo")
