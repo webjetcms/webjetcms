@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1.65 (2026-05-07)
+ * Version 2.1.65 (2026-08-06)
  * http://elfinder.org
  * 
  * Copyright 2009-2026, Studio 42
@@ -6234,10 +6234,20 @@ elFinder.prototype = {
 
 					var virtualPath = fm.cwd().virtualPath;
 					var useInternationalToEnglish = virtualPath.indexOf("/files") == 0 || virtualPath.indexOf("/images") == 0;
+					if (WJ.hasPermission("fbrowser_allow_diacritics")===true) useInternationalToEnglish = false;
 
 					names = $.map(files, function(file, i)
 					{
                         var name = file.name;
+
+                        // normalize NFD (macOS) to NFC so server-side names match
+                        try {
+                            if (name && name.normalize) {
+                                name = name.normalize('NFC');
+                            }
+                        } catch (e) {
+                            // ignore normalization errors
+                        }
 
                         if (useInternationalToEnglish) {
                             name = WJ.fixFileName(name);

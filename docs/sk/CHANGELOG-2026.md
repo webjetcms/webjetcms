@@ -125,6 +125,10 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Export/import súborov - upravený dizajn dialógového okna a responzívne zobrazenie formulárových polí podľa aktuálneho dizajnu administrácie (#58581).
 - Grafy - pridaný nový stromový graf [`TreeChartForm`](developer/frameworks/charts/frontend/statjs.md#graf-typu-tree) pre vizualizáciu hierarchických dát s približovaním, rozbaľovaním a maximalizovaním (#58065).
 
+### Oprava chýb
+
+- Prieskumník - upravené porovnávanie súborov s diakritikou pri kontrole existencie súboru pri jeho prepísaní - formát `utf-8 NFC vs NFD` (#58317-12).
+
 ### Bezpečnosť
 
 - Pridaná podpora generovania `nonce` pre [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
