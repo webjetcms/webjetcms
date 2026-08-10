@@ -766,8 +766,8 @@ export class MultistepForm {
      * @returns {string} The current value of the field.
      */
     _getFieldValue(fieldId) {
-        // Check radio buttons first
-        const radios = this.wrapper.querySelectorAll(`input[type="radio"][id="${fieldId}"]`);
+        // Check radio buttons first (radios share name, IDs are unique per option)
+        const radios = this.wrapper.querySelectorAll(`input[type="radio"][name="${fieldId}"]`);
         if (radios.length > 0) {
             for (const radio of radios) {
                 if (radio.checked) return radio.value;
@@ -775,8 +775,8 @@ export class MultistepForm {
             return '';
         }
 
-        // Check checkboxes
-        const checkboxes = this.wrapper.querySelectorAll(`input[type="checkbox"][id="${fieldId}"]`);
+        // Check checkboxes (checkboxes share name, IDs are unique per option)
+        const checkboxes = this.wrapper.querySelectorAll(`input[type="checkbox"][name="${fieldId}"]`);
         if (checkboxes.length > 0) {
             const checked = [];
             checkboxes.forEach(cb => { if (cb.checked) checked.push(cb.value); });

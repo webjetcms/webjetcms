@@ -8,9 +8,9 @@ Before(({ I, DT, login }) => {
     login('admin');
     if (typeof randomNumber=="undefined") {
         randomNumber = I.getRandomText();
-        newMultistepFormName = "multistepform_" + randomNumber;
+        newMultistepFormName = "multistepform_autotest_" + randomNumber;
         duplicatedMultistepFormName = "multistepform_duplicate_autotest_" + randomNumber;
-        specialFormName = "multistep_new_logic_" + randomNumber;
+        specialFormName = "multistep_new_logic_autotest_" + randomNumber;
     }
 
     DT.addContext("formSteps", "#formStepsDataTable_wrapper");
@@ -172,7 +172,7 @@ Scenario('Insert multistep into page and test it', async ({ I, DTE, Document, Ap
 
     // Try second same image - save should be blocked with error
     I.attachFile('input[accept=".gif,.png,.jpg,.jpeg,.svg"]', 'tests/apps/penguin.jpg');
-    I.wait(5);
+    I.waitForElement(locate("a.dz-remove").at(2), 10);
 
     I.selectOption("#f1-select-pole-1", "C");
 
@@ -355,7 +355,7 @@ Scenario('Change form_settings and test it No.1', async ({ I, DT, DTE, TempMail 
 
 Scenario('Change form_settings and test it No.2', async ({ I, DT, DTE, TempMail }) => {
     I.say("too fast - sometimes spam problem -> wait 35 sec");
-    //I.wait(35);
+    await I.waitForTime(Date.now() + 35000);
 
     I.amOnPage("/apps/form/admin/");
     DT.filterEquals("formName", newMultistepFormName);
@@ -490,19 +490,7 @@ Scenario('Remove original and duplicated form definitions', ({ I, DT }) => {
 
 Scenario('Insert and test multiple forms in one page - before clear page', ({ I, DTE, Apps }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appMultiInsertTestPageId);
-    DTE.waitForEditor();
-    DTE.waitForCkeditor();
-
-    Apps.switchEditor('html');
-
-    I.clickCss("div.CodeMirror-lines");
-
-    I.pressKey(['CommandOrControl', 'A']);
-    I.wait(0.3);
-
-    I.pressKey(['Backspace']);
-    I.wait(0.3);
-
+    Apps.clearPageContent();
     DTE.save();
 });
 
@@ -611,8 +599,8 @@ Scenario('Insert and test multiple forms in one page - test apps independent beh
 });
 
 Scenario('RowView version - test appearance', async ({ I, DT, Document }) => {
-    I.say("too fast - sometimes spam proble -> wait 35 sec");
-    I.wait(35);
+    I.say("too fast - sometimes spam problem -> wait 35 sec");
+    await I.waitForTime(Date.now() + 35000);
 
     I.say("Test generated preview");
     I.amOnPage("/apps/form/admin/form-steps/?formName=Multistepform_rowView");
@@ -620,7 +608,6 @@ Scenario('RowView version - test appearance', async ({ I, DT, Document }) => {
 
     I.waitForElement( locate("table#formStepsDataTable > tbody > tr.selected > td").withText("Krok 1") );
     I.waitForElement(".form-step input#f1-meno-1");
-    I.wait(3);
 
     await Document.compareScreenshotElement("div.stepPreviewWrapper > div.stepPreview", "multistep-form/multistep-form-rowView.png", null, null, 5);
 
@@ -751,13 +738,14 @@ function removeFormDefinition(I, DT, formName) {
     I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10, "#formsDataTable");
 }
 
-function createAndFillFormItem(I, DT,  DTE, fieldType, required, label, value, tooltip, placeholder) {
+function createAndFillFormItem(I, DT,  DTE, fieldType, required, label, value, tooltip, placeholder, options = {}) {
     I.click(DT.btn.formItems_add_button);
     DTE.waitForEditor("formItemsDataTable");
-    fillFormItem(I, DTE, fieldType, required, label, value, tooltip, placeholder);
+    if(options.checkGeneratedId === true) { I.dontSeeElement("div.DTE_Field_Name_itemFormId"); }
+    fillFormItem(I, DTE, fieldType, required, label, value, tooltip, placeholder, options);
 }
 
-function fillFormItem(I, DTE, fieldType, required, label, value, tooltip, placeholder) {
+function fillFormItem(I, DTE, fieldType, required, label, value, tooltip, placeholder, options = {}) {
     selectFieldType(I, fieldType);
 
     if(required !== null) {
@@ -766,6 +754,7 @@ function fillFormItem(I, DTE, fieldType, required, label, value, tooltip, placeh
     }
 
     if(label !== null) { DTE.fillQuill("label", label); }
+    if(options.trimValue === true) { I.checkOption("#DTE_Field_trimValue_0"); }
 
     I.clickCss("#pills-dt-formItemsDataTable-advanced-tab");
     if(value !== null) {
@@ -776,6 +765,12 @@ function fillFormItem(I, DTE, fieldType, required, label, value, tooltip, placeh
             // its basic text value input
             I.fillField("#DTE_Field_value", value);
         }
+    }
+
+    if(options.emptyOption === true) {
+        I.waitForElement("#DTE_Field_valueAsOptions button.options-empty-option-btn", 5);
+        I.clickCss("#DTE_Field_valueAsOptions button.options-empty-option-btn");
+        I.seeElement("#DTE_Field_valueAsOptions button.options-empty-option-btn[aria-pressed='true']");
     }
 
     if(tooltip !== null) { DTE.fillQuill("tooltip", tooltip); }
@@ -868,7 +863,7 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
     I.waitForVisible("#formStepsDataTable_wrapper");
     I.waitForElement( locate("table#formStepsDataTable > tbody > tr.selected > td").withText("Krok 1") );
 
-    createAndFillFormItem(I, DT, DTE, 'Meno', true, "Vase meno", "!LOGGED_USER_FIRSTNAME!", "Vase prve meno", null);
+    createAndFillFormItem(I, DT, DTE, 'Meno', true, "Vase meno", "!LOGGED_USER_FIRSTNAME!", "Vase prve meno", null, { trimValue: true, checkGeneratedId: true });
     createAndFillFormItem(I, DT, DTE, 'Skupina zaškrtávacích polí', false, null, "labelA:valueA|labelB:valueB|labelC:valueC|labelD:valueD", null, null);
 
     // Special enum must be add separate
@@ -884,6 +879,27 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
 
     DTE.save();
 
+    createAndFillFormItem(I, DT, DTE, 'Výberový zoznam - select', false, "Empty option autotest", "labelA:valueA|labelB:valueB", null, null, { emptyOption: true });
+    createAndFillFormItem(I, DT, DTE, 'Automatické dopĺňanie - autocomplete', false, "Country autocomplete autotest", "Slovensko:SK|Česko:CZ|Rakúsko:AT", null, null);
+
+    I.say("Check generated item ID and trim setting in edit mode");
+    I.click(locate("#formItemsDataTable tbody td").withText("Vase meno"));
+    I.click(DT.btn.formItems_edit_button);
+    DTE.waitForEditor("formItemsDataTable");
+    I.seeElement("div.DTE_Field_Name_itemFormId");
+    I.verifyDisabled("#DTE_Field_itemFormId");
+    I.seeInField("#DTE_Field_itemFormId", "vase-meno-1");
+    I.seeCheckboxIsChecked("#DTE_Field_trimValue_0");
+    DTE.cancel("formItemsDataTable");
+
+    I.say("Check that the empty option setting is persisted");
+    I.click(locate("#formItemsDataTable tbody td").withText("Empty option autotest"));
+    I.click(DT.btn.formItems_edit_button);
+    DTE.waitForEditor("formItemsDataTable");
+    I.clickCss("#pills-dt-formItemsDataTable-advanced-tab");
+    I.waitForElement("#DTE_Field_valueAsOptions button.options-empty-option-btn[aria-pressed='true']", 5);
+    DTE.cancel("formItemsDataTable");
+
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appInsertTestPageId);
 
     // Set new multistep form as form for the page
@@ -897,9 +913,25 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
     I.say("Test of step structure - showed must be labels not values");
     I.amOnPage("/apps/multistep-formular/app-insert-test.html");
 
+    I.fillField("#f1-vase-meno-1", "  Trim autotest  ");
+
     testRadioCheckgroup(I, "f1-checkboxgroup-1", "value", "label");
 
     testRadioCheckgroup(I, "f1-radiogroup-1", "valueEnum", "labelEnum");
+
+    I.say("Test select with an empty option");
+    I.seeInField("#f1-empty-option-autotest-1", "");
+    const selectOptionValues = await I.grabAttributeFromAll("#f1-empty-option-autotest-1 option", "value");
+    I.assertEqual(selectOptionValues.join("|"), "|valueA|valueB", "Select should start with an empty option");
+
+    I.say("Test remote autocomplete with accent-insensitive search");
+    const autocompleteSelector = "#f1-country-autocomplete-autotest-1";
+    I.waitForElement(autocompleteSelector + "[data-ac-initialized='true']", 10);
+    I.fillField(autocompleteSelector, "ces");
+    I.waitForText("Česko", 10, "ul.ui-autocomplete");
+    I.dontSee("Slovensko", "ul.ui-autocomplete");
+    I.click(locate("ul.ui-autocomplete li").withText("Česko"));
+    I.waitForValue(autocompleteSelector, "CZ", 5);
 
     I.clickCss("label[for='f1-checkboxgroup-1-1']");
     I.clickCss("label[for='f1-checkboxgroup-1-2']");
@@ -916,7 +948,7 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
 
     const expectedHtml = `
         <div class="form-step mt-3"><div class="form-group mb-3">
-        <label for="meno-1">Vase meno<span class="text-danger requirement-mark">&nbsp;*</span>:</label> <span class="form-control emailInput-text">Tester</span>
+        <label for="vase-meno-1">Vase meno<span class="text-danger requirement-mark">&nbsp;*</span>:</label> <span class="form-control emailInput-text">Trim autotest</span>
         </div><div class="form-group mb-3">
         <label for="checkboxgroup-1">Skupina zaškrtávacích polí:</label>
         <div class="form-check">
@@ -945,6 +977,10 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
         <div class="form-check">
         <span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-3" class="form-check-label">valueEnumD</label>
         </div>
+        </div><div class="form-group mb-3">
+        <label for="empty-option-autotest-1">Empty option autotest:</label><span class="form-control emailInput-select">&nbsp;</span>
+        </div><div class="form-group mb-3">
+        <label for="country-autocomplete-autotest-1">Country autocomplete autotest:</label><span class="form-control emailInput-text">CZ</span>
         </div></div>
     `;
 

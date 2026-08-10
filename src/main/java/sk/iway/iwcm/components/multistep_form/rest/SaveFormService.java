@@ -251,14 +251,16 @@ public class SaveFormService {
                 // fallback to normal rendering if doc not found
                 formHtmlHandler.setFormHtml(form, request, docId);
                 emailHtml = formHtmlHandler.getFormHtmlBeforeCss();
-                emailCss = formHtmlHandler.getCssDataPair() != null ? formHtmlHandler.getCssDataPair().getFirst() : "";
+                Pair<String, String> cssFallback = formHtmlHandler.getCssDataPair();
+                emailCss = cssFallback != null ? cssFallback.first : "";
                 pdfVersionHtml = formHtmlHandler.getFormPdfVersion();
             }
         } else {
             // set html using standard multistep form rendering
             formHtmlHandler.setFormHtml(form, request, docId);
             emailHtml = formHtmlHandler.getFormHtmlBeforeCss();
-            emailCss = formHtmlHandler.getCssDataPair() != null ? formHtmlHandler.getCssDataPair().getFirst() : "";
+            Pair<String, String> cssStandard = formHtmlHandler.getCssDataPair();
+            emailCss = cssStandard != null ? cssStandard.first : "";
             pdfVersionHtml = formHtmlHandler.getFormPdfVersion();
         }
 

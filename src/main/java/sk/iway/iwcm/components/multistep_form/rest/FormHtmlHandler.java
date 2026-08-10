@@ -220,7 +220,7 @@ public class FormHtmlHandler {
         stepWrapperStart.append(prop.getText("components.mustistep.step.start"));
 
         if (Tools.isNotEmpty(formStep.getHeader())) {
-            /// Swap header title
+            // Swap header title
             stepWrapperStart.append(Tools.replace(prop.getText("components.mustistep.step.header"), "${step-header}", StringEscapeUtils.unescapeHtml4(formStep.getHeader()) ));
 
             // Swap user info
