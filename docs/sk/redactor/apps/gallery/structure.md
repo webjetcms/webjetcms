@@ -35,7 +35,7 @@ Na tejto karte môžete upravovať základné informácie o priečinku a to:
 
 Karta ponúka možnosti, ktoré sa aplikujú na obrázky galérie:
 
-- **Spôsob zmeny veľkosti**
+- **Spôsob zmeny veľkosti** - nastavuje spôsob generovania malého obrázka. Ak nie je nastavený samostatný spôsob pre veľký obrázok, rovnaký spôsob sa použije aj pre veľký obrázok.
   - **Zobrazenie na mieru** - veľkosť obrázka je nastavená tak, aby rozmer neprekračoval nastavenú veľkosť
   - **Orezať na mieru** - obrázok je orezaný tak, aby vypĺňal zadané rozmery, pričom ak sa nezhoduje pomer strán je orezaný.
   - **Presný rozmer** - veľkosť obrázka je nastavená presne podľa priečinka, pričom ak je pomer strán rozdielny dôjde k deformácii obrázka.
@@ -43,8 +43,9 @@ Karta ponúka možnosti, ktoré sa aplikujú na obrázky galérie:
   - **Presná výška** - veľkosť obrázka použije zadanú výšku a šírku vypočíta podľa pomeru strán. Šírka ale môže byť väčšia ako zadaný rozmer.
   - **Negenerovať zmenšeniny** - galéria použije len originálny obrázok a nebude generovať náhľadové obrázky. Náhľadové obrázky je následne možné generovať podľa potreby s využitím `/thumb` prefixu.
 - **Pregenerovať obrázky** - ak je možnosť zvolená, nanovo vygeneruje veľkosti všetkých obrázkov v galérii podľa aktuálnych nastavení
-- **Aplikovať na všetky podpriečinky** - ak je možnosť zvolená, nastavenie sa použije aj na všetky podradené priečinky
+- **Aplikovať na všetky podpriečinky** - ak je možnosť zvolená, nastavenie sa použije aj na všetky podradené priečinky vrátane spôsobu zmeny veľkosti veľkého obrázka
 - **Veľkosť malého obrázku** - šírka a výška obrázku
+- **Spôsob zmeny veľkosti veľkého obrázka** - umožňuje nastaviť iný spôsob generovania veľkého obrázka ako pre malý obrázok. Predvolená hodnota **Rovnako ako malý obrázok** zachováva pôvodné správanie a pre veľký obrázok použije hodnotu poľa **Spôsob zmeny veľkosti**. Samostatne je možné zvoliť možnosti **Zobrazenie na mieru**, **Orezať na mieru**, **Presný rozmer**, **Presná šírka** alebo **Presná výška**. Možnosť **Negenerovať zmenšeniny** sa pre veľký obrázok samostatne nenastavuje; ak je zvolená v poli **Spôsob zmeny veľkosti**, galéria použije pôvodné správanie bez generovania zmenšenín.
 - **Maximálna veľkosť veľkého obrázku** - šírka a výška obrázku, ak zadáte do oboch polí hodnotu 0 zachová sa originálna veľkosť nahraného obrázka
 
 ![](dir-sizes-tab.png)

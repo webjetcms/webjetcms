@@ -36,6 +36,12 @@ block content
                         ? new Set(visibilityConfig.value.split(",").map(f => f.trim()).filter(f => f))
                         : new Set();
 
+                    if(["select", "multiselect", "radio", "checkbox"].includes(selectedType)) {
+                        const source = editor.field("optionsSource").val();
+                        const selectedSource = Array.isArray(source) ? source[0] : source;
+                        showFields.add(selectedSource === "enumeration" ? "enumeration" : "selectOptions");
+                    }
+
                     editor.fields().forEach(fieldName => {
                         const field = editor.field(fieldName);
                         const classNames = field.s.opts.className || "";
@@ -49,6 +55,12 @@ block content
                 typeSelect.onchange = function() {
                     updateFieldVisibility(this.value);
                 };
+
+                document.querySelectorAll(".DTE_Field_Name_optionsSource input[type='radio']").forEach(input => {
+                    input.onchange = function() {
+                        updateFieldVisibility(typeSelect.value);
+                    };
+                });
 
                 // Apply initial visibility for currently selected type
                 updateFieldVisibility(typeSelect.value);
