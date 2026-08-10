@@ -4,6 +4,8 @@
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+- Webové stránky - opravené ukladanie web stránky s medzerou na konci URL adresy (vykoná sa odstránenie prázdnych znakov) (#OSK650).
+
 ## 2026.0.28
 
 > Opravná verzia pôvodnej verzie 2026.0.
