@@ -34,6 +34,7 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
 import sk.iway.iwcm.components.ai.providers.ProviderCallException;
+import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.OptionDto;
@@ -49,15 +50,21 @@ public class AiService {
 
     private final List<AiInterface> aiInterfaces;
     private final AiTaskRegistry aiTaskRegistry;
+    private final WebjetAiConfigurationService configurationService;
 
     private static final String CACHE_OPTION_KEYS = "AiService.ProviderOptions.";
     private static final int CACHE_MODELS_TIME = 24 * 60;
     private static final String GROUPS_PREFIX = "components.ai_assistants.groups.";
 
     @Autowired
-    public AiService(List<AiInterface> aiInterfaces, AiTaskRegistry aiTaskRegistry) {
+    public AiService(
+        List<AiInterface> aiInterfaces,
+        AiTaskRegistry aiTaskRegistry,
+        WebjetAiConfigurationService configurationService
+    ) {
         this.aiInterfaces = aiInterfaces;
         this.aiTaskRegistry = aiTaskRegistry;
+        this.configurationService = configurationService;
     }
 
     /* PUBLIC METHODS */
@@ -73,12 +80,14 @@ public class AiService {
 
     public List<LabelValue> getModelOptions(String provider, Prop prop, HttpServletRequest request) {
         List<LabelValue> supportedValues = new ArrayList<>();
+        String cacheKey = CACHE_OPTION_KEYS + provider + "."
+            + configurationService.modelCacheDiscriminator(provider, request);
 
         //First check, if they are cached
         try {
             Cache c = Cache.getInstance();
             @SuppressWarnings("unchecked")
-            List<LabelValue> cachedModels = (List<LabelValue>)c.getObject(CACHE_OPTION_KEYS + provider);
+            List<LabelValue> cachedModels = (List<LabelValue>)c.getObject(cacheKey);
             if(cachedModels != null) return cachedModels;
         } catch (Exception e) {
             return supportedValues;
@@ -97,7 +106,7 @@ public class AiService {
         //Set to cache
         try {
             Cache c = Cache.getInstance();
-            c.setObject(CACHE_OPTION_KEYS + provider, supportedValues, CACHE_MODELS_TIME);
+            c.setObject(cacheKey, supportedValues, CACHE_MODELS_TIME);
         } catch (Exception e) {
             e.printStackTrace();
         }

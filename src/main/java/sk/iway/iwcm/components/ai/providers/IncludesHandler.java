@@ -37,6 +37,14 @@ public class IncludesHandler {
         return wholeResponse.toString();
     }
 
+    /** Flushes any trailing fragment retained while checking a split placeholder. */
+    public void finish(BufferedWriter writer) throws IOException {
+        if (buffer.length() > 0) {
+            setStatus(0, false, writer);
+        }
+        writer.flush();
+    }
+
     /**
      * USing logic with buffer, method is trying find placeholder __LOCK_X__, swap them with includes and without waiting for whole text etite/flush parts.
      * @param line

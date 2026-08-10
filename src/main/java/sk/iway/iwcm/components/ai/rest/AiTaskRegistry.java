@@ -6,11 +6,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Component;
 
 import sk.iway.iwcm.Identity;
@@ -22,10 +25,20 @@ import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 import sk.iway.iwcm.users.UsersDB;
 
 @Component
-public class AiTaskRegistry {
+public class AiTaskRegistry implements DisposableBean {
 
     private static final String PREFIX = "ai_task_";
+    private static final int MAX_CONCURRENT_TASKS = 32;
     private final ConcurrentMap<String, Future<AssistantResponseDTO>> futuresMap = new ConcurrentHashMap<>();
+    private final ExecutorService executor = new ThreadPoolExecutor(
+        0, MAX_CONCURRENT_TASKS, 60L, TimeUnit.SECONDS,
+        new LinkedBlockingQueue<>(),
+        task -> {
+            Thread thread = new Thread(task, "webjet-ai-task");
+            thread.setDaemon(true);
+            return thread;
+        }
+    );
 
     // store a future with ID
     public final void put(Long assistantId, Long timestamp, Future<AssistantResponseDTO> future, HttpServletRequest request) {
@@ -72,8 +85,6 @@ public class AiTaskRegistry {
             }
         };
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-
         // submit task
         Future<AssistantResponseDTO> future = executor.submit(contextTask);
 
@@ -87,9 +98,6 @@ public class AiTaskRegistry {
             // Task was cancelled - Its OK
             return null;
         } catch (ExecutionException e) {
-            //Remove it from map
-            remove(inputData.getAssistantId(), inputData.getTimestamp(), request);
-
             // unwrap cause
             Throwable cause = e.getCause();
             if (cause instanceof RuntimeException runtimeException) {
@@ -98,12 +106,18 @@ public class AiTaskRegistry {
                 throw new ProviderCallException(cause);
             }
         } catch (InterruptedException e) {
-            //Remove it from map
-            remove(inputData.getAssistantId(), inputData.getTimestamp(), request);
-
             Thread.currentThread().interrupt();
             throw new RuntimeException("Thread interrupted", e);
+        } finally {
+            remove(inputData.getAssistantId(), inputData.getTimestamp(), request);
         }
+    }
+
+    @Override
+    public void destroy() {
+        futuresMap.values().forEach(future -> future.cancel(true));
+        futuresMap.clear();
+        executor.shutdownNow();
     }
 
     private final String getTaskId(Long assistantId, Long timestamp, HttpServletRequest request) throws IllegalStateException {

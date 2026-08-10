@@ -50,6 +50,7 @@ ext {
     //jar to ant/aspectj and update version in ant/compile.xml file
     aspectJVersion = '1.9.25.1';
     eclipselinkVersion = '5.0.0-B13';
+    webjetAiVersion = '0.1.0';
 }
 
 lombok {
@@ -138,6 +139,8 @@ configurations {
  }
 
 dependencies {
+
+    implementation "com.webjetcms:webjet-ai:${webjetAiVersion}"
 
     //based on https://github.com/mapstruct/mapstruct-examples/blob/main/mapstruct-lombok/build.gradle
     implementation "org.mapstruct:mapstruct:${mapstructVersion}"

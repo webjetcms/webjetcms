@@ -131,6 +131,19 @@ class PromptInjectionDefenseTest {
     }
 
     @Test
+    void neutralizesEveryCmsPromptMacroToken() {
+        String result = PromptInjectionDefense.neutralizePromptMacroTokens(
+            "{inputText} {userPrompt} {language} {userLanguage}"
+        );
+
+        assertEquals(
+            "PROMPT_MACRO(inputText) PROMPT_MACRO(userPrompt) "
+                + "PROMPT_MACRO(language) PROMPT_MACRO(userLanguage)",
+            result
+        );
+    }
+
+    @Test
     void imagePathIsNotWrappedButUserPromptIs() {
         InputDataDTO inputData = new InputDataDTO();
         inputData.setInputValueType(InputDataDTO.InputValueType.IMAGE);
