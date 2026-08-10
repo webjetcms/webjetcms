@@ -141,7 +141,7 @@ public class AiService {
             throw new IllegalStateException( getNotSupportedAction(prop) );
         }
 
-        if(Tools.isFalse( assistant.getKeepHtml() )) {
+        if(shouldRemoveHtml(assistant, inputData)) {
             inputData.removeHtml();
         }
 
@@ -191,7 +191,7 @@ public class AiService {
             throw new IllegalStateException( getNotSupportedAction(prop) );
         }
 
-        if(Tools.isFalse( assistant.getKeepHtml() )) {
+        if(shouldRemoveHtml(assistant, inputData)) {
             inputData.removeHtml();
         }
 
@@ -205,6 +205,10 @@ public class AiService {
         }
 
         throw new IllegalStateException( getSomethingWrongErr(prop) );
+    }
+
+    static boolean shouldRemoveHtml(AssistantDefinitionEntity assistant, InputDataDTO inputData) {
+        return Tools.isFalse(assistant.getKeepHtml()) && inputData.isStructuredInput() == false;
     }
 
     public String getBonusHtml(Long assistantId, AssistantDefinitionRepository assistantRepo, HttpServletRequest request) {

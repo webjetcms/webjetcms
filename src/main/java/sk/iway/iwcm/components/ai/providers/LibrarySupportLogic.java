@@ -2,9 +2,9 @@ package sk.iway.iwcm.components.ai.providers;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.webjetcms.ai.AiClient;
 import com.webjetcms.ai.AiOperation;
+import com.webjetcms.ai.AiPromptTemplate;
 import com.webjetcms.ai.AiProviderConfig;
 import com.webjetcms.ai.AiProviderException;
 import com.webjetcms.ai.AiRequest;
@@ -25,6 +26,7 @@ import com.webjetcms.ai.GeneratedMedia;
 import com.webjetcms.ai.ImageOptions;
 import com.webjetcms.ai.ModelInfo;
 import com.webjetcms.ai.TokenUsage;
+import com.webjetcms.ai.security.PromptInjectionDefense.UntrustedSource;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.DB;
@@ -79,8 +81,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
         try {
             AiProviderConfig config = configurationService.resolve(getProviderId(), request);
             for (ModelInfo model : aiClient.listModels(getProviderId(), config)) {
-                String label = isBlank(model.displayName()) ? model.id() : model.displayName();
-                values.add(new LabelValue(label, model.id()));
+                values.add(new LabelValue(model.displayLabel(), model.id()));
             }
         } catch (AiProviderException exception) {
             StringBuilder audit = new StringBuilder(getProviderId()).append(" getSupportedModels -> FAILED");
@@ -105,18 +106,15 @@ public abstract class LibrarySupportLogic implements AiInterface {
         Pair<String, String> inputPair = new Pair<>(inputData.getInputValue(), inputData.getUserPrompt());
 
         try {
-            Map<Integer, String> replacedIncludes = IncludesHandler.replaceIncludesWithPlaceholders(inputData);
-            String instructions = prepareInstructions(assistant, inputData, replacedIncludes);
+            IncludesHandler includesHandler = IncludesHandler.protectIncludes(inputData);
             AiResponse response = aiClient.execute(
                 getProviderId(),
-                buildRequest(AiOperation.TEXT, assistant, inputData, instructions),
+                prepareRequest(AiOperation.TEXT, assistant, inputData, includesHandler),
                 configurationService.resolve(getProviderId(), request)
             );
 
-            String responseText = response.text();
-            responseDto.setResponse(replacedIncludes.isEmpty()
-                ? responseText
-                : IncludesHandler.returnIncludesToPlaceholders(responseText, replacedIncludes));
+            response = response.withText(includesHandler.restoreIncludes(response.text()));
+            responseDto.setResponse(response.text());
             successAdminLog(
                 responseDto,
                 inputPair,
@@ -124,7 +122,6 @@ public abstract class LibrarySupportLogic implements AiInterface {
                 METHOD_TEXT_RESPONSE,
                 responseDto.getResponse(),
                 response.usage(),
-                0,
                 statRepo,
                 request
             );
@@ -154,13 +151,11 @@ public abstract class LibrarySupportLogic implements AiInterface {
         Pair<String, String> inputPair = new Pair<>(inputData.getInputValue(), inputData.getUserPrompt());
 
         try {
-            Map<Integer, String> replacedIncludes = IncludesHandler.replaceIncludesWithPlaceholders(inputData);
-            String instructions = prepareInstructions(assistant, inputData, replacedIncludes);
-            IncludesHandler includeHandler = new IncludesHandler(replacedIncludes);
+            IncludesHandler includeHandler = IncludesHandler.protectIncludes(inputData);
 
             AiResponse response = aiClient.stream(
                 getProviderId(),
-                buildRequest(AiOperation.TEXT, assistant, inputData, instructions),
+                prepareRequest(AiOperation.TEXT, assistant, inputData, includeHandler),
                 configurationService.resolve(getProviderId(), request),
                 delta -> includeHandler.handleLine(delta, writer)
             );
@@ -174,7 +169,6 @@ public abstract class LibrarySupportLogic implements AiInterface {
                 METHOD_TEXT_STREAM_RESPONSE,
                 responseDto.getResponse(),
                 response.usage(),
-                0,
                 statRepo,
                 request
             );
@@ -204,21 +198,19 @@ public abstract class LibrarySupportLogic implements AiInterface {
 
         try {
             Path tempFileFolder = AiTempFileStorage.getFileFolder();
-            Pair<String, Integer> generatedFileName = getGeneratedImageName(assistant, inputData, prop, statRepo, request);
-            responseDto.setGeneratedFileName(generatedFileName.getFirst());
-
-            String instructions = prepareInstructions(assistant, inputData, null);
             AiOperation operation = imageOperation(inputData);
             AiResponse response = aiClient.execute(
                 getProviderId(),
-                buildRequest(operation, assistant, inputData, instructions),
+                prepareRequest(operation, assistant, inputData, null),
                 configurationService.resolve(getProviderId(), request)
             );
 
             long datePart = Tools.getNow();
             for (GeneratedMedia image : response.media()) {
                 try {
-                    String format = imageExtension(image.mediaType());
+                    String format = image.suggestedFileExtension()
+                        .map(extension -> "." + extension)
+                        .orElseThrow(() -> new IOException("Image format is not supported: " + image.mediaType()));
                     if (FileTools.isImage(format) == false) {
                         throw new IOException("Image format is not valid: " + format);
                     }
@@ -233,14 +225,16 @@ public abstract class LibrarySupportLogic implements AiInterface {
                 throw new IllegalStateException(prop.getText("components.ai_assistants.no_image.err"));
             }
 
+            GeneratedImageName generatedFileName = getGeneratedImageName(assistant, inputData, request);
+            responseDto.setGeneratedFileName(generatedFileName.fileName());
+
             successAdminLog(
                 responseDto,
                 inputPair,
                 assistant,
                 METHOD_IMAGE_RESPONSE,
                 IMAGE_AUDIT_RESPONSE,
-                response.usage(),
-                generatedFileName.getSecond(),
+                safeUsage(response.usage()).plus(generatedFileName.usage()),
                 statRepo,
                 request
             );
@@ -261,18 +255,38 @@ public abstract class LibrarySupportLogic implements AiInterface {
         return configurationService;
     }
 
-    private String prepareInstructions(
+    static AiRequest prepareRequest(
+        AiOperation operation,
         AssistantDefinitionEntity assistant,
         InputDataDTO inputData,
-        Map<Integer, String> replacedIncludes
-    ) {
-        String instructions = AiAssistantsService.executePromptMacro(
+        IncludesHandler includesHandler
+    ) throws IOException {
+        AiPromptTemplate.ExpansionResult expansion = AiAssistantsService.expandPromptMacros(
             assistant.getInstructions(),
-            inputData,
-            replacedIncludes
+            inputData
         );
-        PromptInjectionDefense.protectInputData(inputData);
-        return PromptInjectionDefense.hardenSystemInstructions(instructions);
+        String instructions = expansion.instructions();
+        if (includesHandler != null && includesHandler.hasIncludes()) {
+            instructions = instructions + "\n" + includesHandler.preservationInstructions();
+        }
+
+        String inputText = inputData.getInputValue();
+        String userPrompt = inputData.getUserPrompt();
+        if (inputData.isStructuredInput()) {
+            if (expansion.consumedSources().contains(UntrustedSource.INPUT_TEXT)) inputText = "";
+            if (expansion.consumedSources().contains(UntrustedSource.USER_PROMPT)) userPrompt = "";
+        } else if (expansion.consumedSources().isEmpty() == false) {
+            // Preserve legacy CMS behavior for editor/page-builder assistants.
+            inputText = "";
+            userPrompt = "";
+        }
+
+        AiRequest request = buildRequest(operation, assistant, inputData, instructions, inputText, userPrompt);
+        EnumSet<UntrustedSource> suspiciousSources = EnumSet.noneOf(UntrustedSource.class);
+        suspiciousSources.addAll(expansion.suspiciousSources());
+        suspiciousSources.addAll(request.suspiciousSources());
+        PromptInjectionDefense.auditDetections(suspiciousSources, assistant.getId());
+        return request;
     }
 
     static AiOperation imageOperation(InputDataDTO inputData) {
@@ -285,13 +299,15 @@ public abstract class LibrarySupportLogic implements AiInterface {
         AiOperation operation,
         AssistantDefinitionEntity assistant,
         InputDataDTO inputData,
-        String instructions
+        String instructions,
+        String inputText,
+        String userPrompt
     ) throws IOException {
         AiRequest.Builder builder = AiRequest.builder()
             .operation(operation)
             .model(assistant.getModel())
             .instructions(instructions)
-            .userPrompt(inputData.getUserPrompt())
+            .userPrompt(userPrompt)
             .store(Tools.isTrue(assistant.getUseTemporal()) == false)
             .imageOptions(new ImageOptions(
                 inputData.getImageCount(),
@@ -301,54 +317,45 @@ public abstract class LibrarySupportLogic implements AiInterface {
 
         if (InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType())) {
             if (inputData.getInputFile() == null) return builder.build();
-            builder.inputMedia(new BinaryContent(
-                Files.readAllBytes(inputData.getInputFile().toPath()),
-                inputData.getMimeType(),
-                inputData.getInputFile().getName()
-            ));
+            builder.inputMedia(BinaryContent.from(inputData.getInputFile().toPath(), inputData.getMimeType()));
         } else {
-            builder.inputText(inputData.getInputValue());
+            builder.inputText(inputText);
         }
         return builder.build();
     }
 
-    private Pair<String, Integer> getGeneratedImageName(
+    GeneratedImageName getGeneratedImageName(
         AssistantDefinitionEntity assistant,
         InputDataDTO inputData,
-        Prop prop,
-        AiStatRepository statRepo,
         HttpServletRequest request
     ) {
         String defaultFileName = "ai_generated_image_" + System.currentTimeMillis();
         if (SupportedActions.GENERATE_IMAGE.getAction().equals(assistant.getAction()) == false) {
-            return new Pair<>(defaultFileName, 0);
+            return new GeneratedImageName(defaultFileName, TokenUsage.EMPTY);
         }
 
         Pair<String, String> instructionValuePair = getImageNameInstructions(assistant, inputData);
-        if (instructionValuePair == null) return new Pair<>(defaultFileName, 0);
-
-        AssistantDefinitionEntity nameAssistant = new AssistantDefinitionEntity();
-        nameAssistant.setId(-1L);
-        nameAssistant.setName("Image name generator");
-        nameAssistant.setProvider(assistant.getProvider());
-        nameAssistant.setModel(configurationService.imageNameModel(getProviderId()));
-        nameAssistant.setUseStreaming(false);
-        nameAssistant.setInstructions(instructionValuePair.getFirst());
-        nameAssistant.setUseTemporal(true);
-
-        InputDataDTO nameInput = new InputDataDTO();
-        nameInput.setInputValueType(InputDataDTO.InputValueType.TEXT);
-        nameInput.setInputValue(instructionValuePair.getSecond());
+        if (instructionValuePair == null) return new GeneratedImageName(defaultFileName, TokenUsage.EMPTY);
 
         try {
-            AssistantResponseDTO response = getAiResponse(nameAssistant, nameInput, prop, statRepo, request);
-            if (Tools.isNotEmpty(response.getError()) || Tools.isEmpty(response.getResponse())) {
-                return new Pair<>(defaultFileName, 0);
-            }
-            return new Pair<>(response.getResponse(), response.getTotalTokens());
+            AiRequest rawRequest = AiRequest.builder()
+                .operation(AiOperation.TEXT)
+                .model(configurationService.imageNameModel(getProviderId()))
+                .instructions(instructionValuePair.getFirst())
+                .inputText(instructionValuePair.getSecond())
+                .store(false)
+                .build();
+            PromptInjectionDefense.auditDetections(rawRequest.suspiciousSources(), assistant.getId());
+            AiResponse response = aiClient.execute(
+                getProviderId(),
+                rawRequest,
+                configurationService.resolve(getProviderId(), request)
+            );
+            if (Tools.isEmpty(response.text())) return new GeneratedImageName(defaultFileName, TokenUsage.EMPTY);
+            return new GeneratedImageName(response.text(), safeUsage(response.usage()));
         } catch (Exception exception) {
             Logger.error(LibrarySupportLogic.class, "Error processing image name " + exception.getMessage());
-            return new Pair<>(defaultFileName, 0);
+            return new GeneratedImageName(defaultFileName, TokenUsage.EMPTY);
         }
     }
 
@@ -381,7 +388,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
             String value = instructions.has("inputText") ? inputData.getInputValue() : "";
             if (Tools.isEmpty(value)) {
                 value = joinAllValues(
-                    AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, null),
+                    AiAssistantsService.expandPromptMacros(assistant.getInstructions(), inputData).instructions(),
                     "."
                 );
             }
@@ -420,7 +427,6 @@ public abstract class LibrarySupportLogic implements AiInterface {
         String methodName,
         String textResponse,
         TokenUsage usage,
-        int additionalTokens,
         AiStatRepository statRepo,
         HttpServletRequest request
     ) {
@@ -430,7 +436,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
         appendAssistantInfo(assistant, audit);
 
         audit.append("\nAction cost:\n");
-        int totalTokens = appendUsageAndReturnTotal(audit, usage, additionalTokens);
+        int totalTokens = appendUsageAndReturnTotal(audit, usage);
 
         int auditMaxLength = configurationService.auditMaxLength();
         if (auditMaxLength > 0) {
@@ -452,16 +458,15 @@ public abstract class LibrarySupportLogic implements AiInterface {
         responseDto.setTotalTokens(totalTokens);
     }
 
-    private int appendUsageAndReturnTotal(StringBuilder audit, TokenUsage usage, int additionalTokens) {
-        TokenUsage safeUsage = usage == null ? TokenUsage.EMPTY : usage;
-        long total = safeUsage.totalTokens() + additionalTokens;
-        audit.append("\t input_tokens: ").append(safeUsage.inputTokens()).append('\n');
-        audit.append("\t output_tokens: ").append(safeUsage.outputTokens()).append('\n');
-        for (Map.Entry<String, Long> detail : safeUsage.details().entrySet()) {
+    private int appendUsageAndReturnTotal(StringBuilder audit, TokenUsage usage) {
+        TokenUsage normalizedUsage = safeUsage(usage);
+        audit.append("\t input_tokens: ").append(normalizedUsage.inputTokens()).append('\n');
+        audit.append("\t output_tokens: ").append(normalizedUsage.outputTokens()).append('\n');
+        for (Map.Entry<String, Long> detail : normalizedUsage.details().entrySet()) {
             audit.append("\t ").append(detail.getKey()).append(": ").append(detail.getValue()).append('\n');
         }
-        audit.append("\t total_tokens: ").append(total).append('\n');
-        return Tools.safeLongToInt(total);
+        audit.append("\t total_tokens: ").append(normalizedUsage.totalTokens()).append('\n');
+        return Tools.safeLongToInt(normalizedUsage.totalTokens());
     }
 
     private void errorAdminLog(
@@ -523,13 +528,8 @@ public abstract class LibrarySupportLogic implements AiInterface {
         return DB.prepareString(value, maxLength);
     }
 
-    private String imageExtension(String mediaType) {
-        String value = mediaType == null ? "png" : mediaType.trim().toLowerCase();
-        int separator = value.indexOf(';');
-        if (separator >= 0) value = value.substring(0, separator);
-        if (value.startsWith("image/")) value = value.substring("image/".length());
-        if ("jpeg".equals(value)) value = "jpg";
-        return value.startsWith(".") ? value : "." + value;
+    private static TokenUsage safeUsage(TokenUsage usage) {
+        return usage == null ? TokenUsage.EMPTY : usage;
     }
 
     private String safeMessage(Exception exception) {
@@ -538,7 +538,6 @@ public abstract class LibrarySupportLogic implements AiInterface {
             : exception.getLocalizedMessage();
     }
 
-    private boolean isBlank(String value) {
-        return value == null || value.isBlank();
+    record GeneratedImageName(String fileName, TokenUsage usage) {
     }
 }

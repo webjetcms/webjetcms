@@ -126,6 +126,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### For the programmer
 
+- AI assistants - provider-neutral client logic for OpenAI, Gemini, and OpenRouter, stream processing, request/response types, and prompt protection were extracted into the standalone `com.webjetcms:webjet-ai` artifact and the external [webjet-ai repository](https://github.com/webjetcms/webjet-ai). WebJET CMS supplies configuration through a typed adapter and continues to handle auditing, persistence, and user-interface integration. This is a breaking change: the previous CMS custom-provider SPI and its transport and streaming support classes were removed. Custom providers must migrate to the library's `AiProvider` interface and the CMS `LibrarySupportLogic` adapter (#58670).
+
 - Datatables - added a new field type `OPTIONS` for [dynamic list of values](developer/datatables-editor/standard-fields.md#options) in the editor. Each row contains two text fields (key and value), supports adding, removing and reordering using `drag & drop` (#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced.png)

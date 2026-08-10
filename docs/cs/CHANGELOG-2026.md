@@ -126,6 +126,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Pro programátora
 
+- AI asistenti - klientská logika nezávislá na poskytovateli pro OpenAI, Gemini a OpenRouter, zpracování streamů, typy požadavků a odpovědí a ochrana promptů byly vyčleněny do samostatného artefaktu `com.webjetcms:webjet-ai` a externího [repozitáře webjet-ai](https://github.com/webjetcms/webjet-ai). WebJET CMS předává konfiguraci přes typovaný adaptér a nadále zajišťuje auditování, perzistenci a integraci uživatelského rozhraní. Jde o nekompatibilní změnu: původní CMS SPI pro vlastní poskytovatele a jeho transportní a streamovací podpůrné třídy byly odstraněny. Vlastní poskytovatele je nutné migrovat na rozhraní `AiProvider` knihovny a CMS adaptér `LibrarySupportLogic` (#58670).
+
 - Datové tabulky - přidán nový typ pole `OPTIONS` pro [dynamický seznam hodnot](developer/datatables-editor/standard-fields.md#options) v editoru. Každý řádek obsahuje dvě textová pole (klíč a hodnota), podporuje přidávání, odebírání a změnu pořadí pomocí `drag & drop` (#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced.png)
