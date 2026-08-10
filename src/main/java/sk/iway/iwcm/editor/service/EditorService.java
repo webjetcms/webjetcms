@@ -856,6 +856,11 @@ public class EditorService {
 		int virtualPathConflictDocId = -1;
 		if (Constants.getInt("linkType") == Constants.LINK_TYPE_HTML && editedDoc.getVirtualPath().startsWith("javascript:") == false) {
 			boolean mustGenerateVirtualPath = false;
+
+			//trim URL address - it is also in setter, but setVirtualPath can be called from other places
+			editedDoc.setVirtualPath(editedDoc.getVirtualPath().trim());
+			if (editedDoc.getEditorVirtualPath() != null) editedDoc.setEditorVirtualPath(editedDoc.getEditorVirtualPath().trim());
+
 			if (Tools.isNotEmpty(editedDoc.getVirtualPath())) {
 				int actualDocId = DocDB.getDocIdFromURL(editedDoc.getVirtualPath(), domain);
 				if (actualDocId > 0 && actualDocId != editedDoc.getDocId()) {
