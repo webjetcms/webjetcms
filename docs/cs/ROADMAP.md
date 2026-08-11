@@ -16,8 +16,8 @@ Vysvětlení použitých piktogramů:
 
 - [x] Sémantické vyhledávání - využít AI ke zlepšení vyhledávání pomocí `RAG` (#211).
 - [ ] AI - možnost použít malé lokální modely běžící přímo na CPU, minimálně pro Sémantické vyhledávání (#58561).
-- [ ] `Headless` CMS - připravit REST rozhraní pro použití WebJET CMS v `headless` módu.
-- [ ] Migrace na `Spring Boot` projekt.
+- [x] `Headless` CMS - připravit REST rozhraní pro použití WebJET CMS v `headless` módu (#58597) (#258).
+- [ ] Migrace na `Spring Boot` projekt (#58569).
 - [x] Testování - přidat testování přístupnosti pomocí rozšíření [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) (#58389).
 - [ ] Práva - přidat možnost nastavit práva jen na čtení a případně nastavit pouze povolené ID pro editaci.
 - [x] Formuláře - přidat možnost nastavit celkovou velikost příloh pro formulář, nyní lze nastavit jedině per soubor (#58517).
@@ -25,11 +25,12 @@ Vysvětlení použitých piktogramů:
 - [x] Skripty - přidat možnost nastavit, zda se má skript vkládat iv editoru stránek, nebo ne (#58349).
 - [x] Formuláře - přidat skupinu výběrových a zaškrtávacích polí `radio/checkbox` napojenou na číselník, podobně jako máme pro `select` pole (#58517).
 - [ ] Smazat přidružené soubory k web stránce když ji smažu - zeptat se ale předem uživatele, zda soubory chce smazat. Kontrolovat, zda se nepoužívají někde jinde.
-- [ ] Mazání dat - přidat možnost mazat stránky a složky z koše. Vyřešit také možnost mazání dat spouštět jako automatizovaný úkol.
-- [ ] Nepoužívané soubory - udělat možnost získat seznam nepoužívaných souborů - nikde ve stránce se nepoužívají, ani v médiích atp. Byla k tomu API `FileTools.getDirFileUsage(currentDir, request)`. Přidat jako kartu do vlastností složky v průzkumníku.
+- [x] Mazání dat - přidat možnost mazat stránky a složky z koše. Vyřešit i možnost mazání dat spouštět jako automatizovanou úlohu (#58617) (#271).
+- [x] Nepoužívané soubory - udělat možnost získat seznam nepoužívaných souborů - nikde ve stránce se nepoužívají, ani v médiích atp. Byla k tomu API `FileTools.getDirFileUsage(currentDir, request)`. Přidat jako kartu do vlastností složky v průzkumníku (#58621).
+- [ ] Nepoužívané soubory - udělat možnost získat seznam nepoužívaných souborů - nikde ve stránce se nepoužívají, ani v médiích atp. Byla k tomu API `FileTools.getDirFileUsage(currentDir, request)`. Přidat jako kartu do vlastností složky v průzkumníku (#58621).
 - [ ] Průzkumník - zamezit práci se složkou pro Manažer dokumentů, aby se se soubory nedalo manipulovat mimo Manažer dokumentů.
-- [ ] +Průzkumník - přidat právo pro nahrávání souborů s diakritikou (odstraňuje se pro `/images` a `/files` složky) (#58589).
-- [ ] +Web stránky - lepší integrovat manažer dokumentů pro vkládání odkazu do stránky - nová karta podobně jako je fotobanka u obrázků (#58593).
+- [x] +Průzkumník - přidat právo pro nahrávání souborů s diakritikou (odstraňuje se pro `/images` a `/files` složky) (#58589).
+- [x] +Web stránky - lepší integrovat manažer dokumentů pro vkládání odkazu do stránky - nová karta podobně jako je fotobanka u obrázků (#58593).
 - [x] +Formuláře - přidat podrobnější statistiku chyb vyplněných formulářů (#58509).
 - [x] +Web stránky - zlepšit uživatelské rozhraní pro zadávání `/thumb` obrázků v editoru (#58525).
 - [x] +Volitelná pole - přidat možnost definovat která pole jsou povinná (#58413).
@@ -43,8 +44,18 @@ Vysvětlení použitých piktogramů:
 - [x] Volitelná pole – přidat možnost nastavit omezení délky textu pro pole typu `textarea`, podobně jako je to aktuálně možné u pole typu `text`.
 - [ ] Datatabulka – upravit pole typu `Date` a `Datetime` tak, aby správně fungovala validace `not null`.
 - [ ] Datatabulka – upravit způsob `mergovania` upravené entity tak, aby bylo možné vynulovat hodnoty typu `number`.
-- [ ] +Přesměrování - rozlišit v databázi automaticky vytvořené přesměrování (hledej proměnnou `editorDisableAutomaticRedirect`) od manuálně vytvořeného, ​​možnost podle toho filtrovat v UI (zobrazit jen manuálně vytvořená přesměrování).
-- [ ] +Přesměrování - doplnit funkci čištění přesměrování - smaže staré přesměrování (bylo původně `aaa-bbb` a pak vzniklo `aaa-ccc` takže `aaa-bbb` nemá smysl = smaže se) a zkontroluje cyklické přesměrování ve kterém smaže poslední krok. Také optimalizovat přesměrování `aaa-bbb-ccc` na `aaa-ccc`.
+- [x] +Přesměrování - rozlišit v databázi automaticky vytvořené přesměrování (hledej proměnnou `editorDisableAutomaticRedirect`) od manuálně vytvořeného, ​​možnost podle toho filtrovat v UI (zobrazit jen manuálně vytvořené přesměrování) (#58625).
+- [ ] +Přesměrování - doplnit funkci čištění přesměrování - smaže staré přesměrování (bylo původně `aaa-bbb` a pak vzniklo `aaa-ccc` takže `aaa-bbb` nemá smysl = smaže se) a zkontroluje cyklické přesměrování ve kterém smaže poslední krok. Také optimalizovat přesměrování `aaa-bbb-ccc` na `aaa-ccc` (#58629).
+- +Galerie - přidat možnost nastavit jiný způsob změny velikosti na velký obrázek. na malý obrázek se aplikuje Oříznout na míru (chtějí mít čtverec) a na velký přesná šířka (zachová poměr stran). Ve výchozím nastavení bude hodnota NULL=stejně jako pro malý obrázek (#58633).
+- [ ] Volitelná pole - přidat možnost výběru více položek pro napojení na číselník (#58637).
+- [ ] +Číselníky - přidat možnost definovat typ pole pro řetězec jak máme ve volitelných polích (#58641).
+- [x] +Fotobanka - přidat možnost nastavit název souboru před stažením z fotobanky, automaticky nastavit podle hledaného výrazu (#58645).
+- [ ] +Úkoly na pozadí - možnost manuálně spustit úlohu na `node`, který má úloha nastaven, nyní se spustí na `node` kde je uživatel přihlášen.
+- [ ] +Číselník, Blog, Novinky - upravit tak, aby výběr typu číselníku nebo složky pro novinky byl vlevo podobně jako v galerii/webových stránkách. Nemusí být pak karty ale vše najednou zobrazeno.
+- [ ] +Překladové klíče - zobrazovat stromovou strukturu překladových klíčů pro lepší orientaci.
+- [ ] +Konfigurace - doplnit možnost nastavit proměnnou jen pro aktuální uzel (neuložit ji do databáze - jen nastavit do Constants objektu), přidat tam zaškrtávací pole "Nastavit dočasně" s info ikonou že hodnota se nastaví pouze dočasně a při restartu se obnoví hodnota jako je v databázi.
+- [ ] Průzkumník - opravit zobrazování souborů se speciálními znaky (například `@`).
+- [ ] Automatický promazávat `temp` soubory, které se mohou hromadit.
 
 ## 2025
 
@@ -73,18 +84,13 @@ Vysvětlení použitých piktogramů:
 - [x] Galerie - při duplikování obrázku umožnit změnu "Složka", abychom uměli duplikovat obrázky do jiné než aktuální složky (#57885).
 - [x] Hromadný email - auditovat změny ve skupinách uživatelů (#58249).
 - [x] Archiv souborů - předělat do datových tabulek (#57317).
-- [ ] Volitelná pole - přidat možnost výběru více položek pro napojení na číselník.
 - [x] Elektronický obchod - integrace na platební bránu `GoPay` (#56609).
 - [ ] Autorizace přes ```SAML``` - ​​integrovat knihovnu [Spring SAML](https://spring.io/projects/spring-security-saml) pro možnost autentifikace vůči ```ADFS/SAML``` serveru.
 - [x] Rezervace - nová aplikace pro celo denní rezervaci (#57389).
 - [x] Aplikace - předělat dialog nastavení aplikací v editoru web stránek ze starého JSP na datovou tabulku (#57409).
 - [x] Hromadný email - optimalizace tvorby seznamu příjemců (#57537).
-- [ ] +Úkoly na pozadí - možnost manuálně spustit úlohu na `node`, který má úloha nastaven, nyní se spustí na `node` kde je uživatel přihlášen.
 - [ ] +Formuláře - zakázat `GET` volání na `FormMail/FormMailAjax`.
 - [ ] +Elektronický obchod - do emailu přidat `JSON-LD` data https://schema.seznam.cz/objednávky/dokumentace/.
-- [ ] +Číselník, Blog, Novinky - upravit tak, aby výběr typu číselníku nebo složky pro novinky byl vlevo podobně jako v galerii/webových stránkách. Nemusí být pak karty ale vše najednou zobrazeno.
-- [ ] +Překladové klíče - zobrazovat stromovou strukturu překladových klíčů pro lepší orientaci.
-- [ ] +Fotobanka - přidat možnost nastavit název souboru před stažením z fotobanky, automaticky nastavit podle hledaného výrazu.
 - [ ] +Galerie - pokud nastavuji perex obrázek na obrázek v galerii, stáhnu z fotobanky, a obrázek přejmenuji na existující v databázi (je-li soubor smazán z disku) tak vznikne v `gallery` tabulce duplicitní záznam. Navíc se nepřejmenují ostatní obrázky `o_,s_`. Třeba pamatovat na to, že teoreticky mohu přejmenovat libovolný, mělo by to detekovat, že jsem v galerii a přejmenovat všechny verze.
 - [x] +Konfigurace - doplnit možnost nastavení `Hikari` přes `poolman.xml/ENV` jako například `spring.datasource.hikari.idle-timeout=30000, spring.datasource.hikari.max-lifetime=1800000, spring.datasource.hikari.connection-timeout=30000` (#54273-61).
 - [ ] Datatable - opravit počítání označených řádků po jejich vymazání.
@@ -95,8 +101,6 @@ Vysvětlení použitých piktogramů:
 - [ ] +Datatabulky - přidat možnost uspořádání podle více sloupců kliknutím s klávesou `SHIFT`.
 - [ ] +Datatabulky - přidat možnost `hideOnDuplicate` pro karty v editoru, nezapomenout i na třídu `DataTableTab` aby to šlo nastavit iv anotaci.
 - [ ] +Průzkumník - do Média této stránky přidat možnost přesunout se do rodičovské složky.
-- [ ] +Konfigurace - v případě `cluster` instalace doplnit možnost nastavit proměnnou pouze pro aktuální uzel (neuložit ji do databáze). Původně to řešilo výběrové pole `applyToAllClusterNodes`.
-- [ ] +Číselníky - přidat možnost definovat typ pole pro řetězec jako máme ve volitelných polích.
 - [x] +Statistika - do sekce návštěvnost přidat sumární počet Vidění a Návštěv pro snadný přehled celkové návštěvnosti za zvolené období (součet čísel v tabulce). Mohlo by jít doplnit `footerCallback` - ​​https://datatables.net/examples/advanced_init/footer_callback.html (#57929).
 - [x] +Zrcadlení struktury - přidat možnost vymazat `sync_id` hodnoty pro zvolenou složku (rekurzivní). Aby bylo snadno možné zrušit/resetovat synchronizaci. Také existuje problém, že naklonuji `SK,DE,EN` poté vypnu `DE` a chci mít jen `EN` ale zrcadlení stále aplikuje změny i na `DE` složku (#57561).
 - [ ] +Do testů v GitHube přidat verifikaci `autoupdate` pro všechny podporované databázové servery - čili inicializovat prázdnou databázi a ověřit všechny `autoupdate` a ověřit, že přejdou bez chyby. Udělat jako samostatnou pipeline.

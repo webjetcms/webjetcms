@@ -2,7 +2,7 @@ Feature('apps.file-archive.patterns');
 
 const SL = require("./SL.js");
 
-let patternVirtualFileName, validPdfVirtualFileName;
+let patternVirtualFileName, validPdfVirtualFileName, patternFolderName;
 
 Before(({ login }) => {
     login('admin');
@@ -56,7 +56,7 @@ Scenario('Pattern basic tests', ({ I, DTE, DT}) => {
 });
 
 Scenario('Pattern path change test', ({ I, DTE, DT }) => {
-    const folderName = SL.randomName("folder");
+    patternFolderName = SL.randomName("folder");
     const newFileName = 'archive_file_test_third.pdf';
 
     // 1. Zmena cesty patternu
@@ -65,7 +65,7 @@ Scenario('Pattern path change test', ({ I, DTE, DT }) => {
     DT.filterEquals('virtualFileName', patternVirtualFileName);
     I.clickCss('button.buttons-select-all');
     SL.editFile(null, null, null, null, "Nahrať novú verziu", newFileName);
-    I.fillField("#editorAppDTE_Field_editorFields-dir .input-group input", "/files/archiv/" + folderName);
+    I.fillField("#editorAppDTE_Field_editorFields-dir .input-group input", "/files/archiv/" + patternFolderName);
     DTE.save('fileArchiveDataTable');
 
     // 2. Overenie ze sa to zmenilo
@@ -76,7 +76,7 @@ Scenario('Pattern path change test', ({ I, DTE, DT }) => {
     SL.editFile();
     I.clickCss("#pills-dt-fileArchiveDataTable-advanced-tab");
     I.clickCss("#pills-dt-fileArchiveDataTable-listOfPattern-tab");
-    DT.checkTableRow("datatableFieldDTE_Field_editorFields-patterns", 1, ["", patternVirtualFileName, "/files/archiv/" + folderName]);
+    DT.checkTableRow("datatableFieldDTE_Field_editorFields-patterns", 1, ["", patternVirtualFileName, "/files/archiv/" + patternFolderName]);
     DTE.save('fileArchiveDataTable');
 });
 
@@ -90,6 +90,7 @@ Scenario('Veritfy pattern is also deleted when main file is deleted', ({ I, DT }
 
     // 2. Overenie vymazania vzoru
     I.say("Phase 2 - Verify if pattern has been removed");
+    SL.openFileArchive("/files/archiv/" + patternFolderName + "/archive_file_test_third.pdf");
     DT.filterEquals('virtualFileName', patternVirtualFileName);
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });

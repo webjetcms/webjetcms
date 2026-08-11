@@ -1,74 +1,226 @@
-let dropZoneId = null;
-let adminUpload = null;
-let interval = null;
+/**
+ * Resolves the maximum number of files allowed for upload based on the editor field configuration.
+ * Checks className and data-attributes in order of precedence.
+ * @param {object} conf - DataTable Editor field configuration
+ * @returns {number|null} max file count, or null for unlimited
+ */
+function resolveUploadMaxFiles(conf) {
+    // UPLOAD column type is single-file by default.
+    let maxFiles = 1;
 
-function cleanUploader() {
-    $("#" + dropZoneId).show();
+    // Backward-compatible toggle via @DataTableColumn(className = "...").
+    // - wjupload-multiple => unlimited files (Dropzone maxFiles = null)
+    // - wjupload-single   => exactly one file
+    if (conf != null && typeof conf.className === "string") {
+        if (conf.className.indexOf("wjupload-multiple") !== -1) {
+            maxFiles = null;
+        } else if (conf.className.indexOf("wjupload-single") !== -1) {
+            maxFiles = 1;
+        }
+    }
 
-    //Remove all files + force stopn uploading actual files
-    if(adminUpload != null) adminUpload.removeAllFiles(true);
+    // Preferred fine-grained config via editor attrs.
+    // data-dt-field-upload-mode has precedence over className.
+    if (conf != null && conf.attr != null) {
+        const uploadMode = conf.attr["data-dt-field-upload-mode"];
+        if (uploadMode === "multiple") {
+            maxFiles = null;
+        } else if (uploadMode === "single") {
+            maxFiles = 1;
+        }
 
-    //Remove upload toaster
-    $("#toast-container-upload").html("");
+        // Optional explicit numeric cap (e.g. 3) has highest precedence.
+        const configuredMaxFiles = conf.attr["data-dt-field-upload-max-files"];
+        if (configuredMaxFiles != null && configuredMaxFiles !== "") {
+            const parsedMaxFiles = parseInt(configuredMaxFiles, 10);
+            if (!Number.isNaN(parsedMaxFiles) && parsedMaxFiles > 0) {
+                maxFiles = parsedMaxFiles;
+            }
+        }
+    }
 
-    //Hide whole upload wrapper
-    $("#upload-wrapper").hide();
+    // Returned value is passed directly to AdminUpload/Dropzone as maxFiles.
+    return maxFiles;
 }
 
+/**
+ * Binds extra file-count guards on the Dropzone instance to prevent more files
+ * than allowed (handles edge cases not caught by Dropzone's built-in maxFiles).
+ * @param {object} uploadInstance - the AdminUpload/Dropzone instance
+ * @param {number|null} maxFiles - maximum allowed files, or null for unlimited
+ */
+function bindUploadLimitGuard(uploadInstance, maxFiles) {
+    if (uploadInstance == null || maxFiles == null || maxFiles <= 0) {
+        return;
+    }
+
+    // Extra defensive guard: Dropzone maxFiles usually blocks this already,
+    // but drag-and-drop can still queue multiple files in some edge cases.
+    uploadInstance.on("addedfile", function(file) {
+        if (uploadInstance.files.length > maxFiles) {
+            uploadInstance.removeFile(file);
+        }
+    });
+
+    uploadInstance.on("maxfilesexceeded", function(file) {
+        uploadInstance.removeFile(file);
+    });
+}
+
+/**
+ * Resets the uploader UI state for the given field configuration.
+ * Restores dropzone visibility, clears the upload key, removes all queued files,
+ * detaches global event listeners from previous sessions, and hides the upload wrapper.
+ * @param {object} conf - DataTable Editor field configuration
+ */
+function cleanUploader(conf) {
+    // AdminUpload hides the dropzone during upload via visibility/opacity (not display),
+    // so restore both here, otherwise the dropzone stays invisible after cancel.
+    $("#" + conf._id).css({ visibility: "visible", opacity: 1 }).show();
+
+    // Always clear transient upload key to prevent stale value reuse across editor opens.
+    conf.uploadedFileKey = "";
+
+    //Remove all files + force stop uploading actual files
+    if(conf._adminUpload != null) conf._adminUpload.removeAllFiles(true);
+
+    //Remove event listeners from previous upload session
+    if (conf._eventListeners) {
+        for (const [event, handler] of conf._eventListeners) {
+            window.removeEventListener(event, handler);
+        }
+        conf._eventListeners = null;
+    }
+
+    //Remove upload toaster
+    conf._input.find(".toast-container-upload").html("");
+
+    //Hide whole upload wrapper
+    conf._input.filter(".upload-wrapper").hide();
+}
+
+/**
+ * Destroys a previously initialized Dropzone instance and removes its global event listeners.
+ * Must be called before creating a new Dropzone on the same element to avoid
+ * "Dropzone already attached" errors.
+ * @param {object} conf - DataTable Editor field configuration
+ * @param {HTMLElement} dropzoneElement - the DOM element with the attached Dropzone
+ */
+function destroyExistingUploader(conf, dropzoneElement) {
+    // Remove the previously registered global event listeners so they don't accumulate
+    // (and keep firing) across multiple editor opens.
+    if (conf._eventListeners) {
+        for (const [event, handler] of conf._eventListeners) {
+            window.removeEventListener(event, handler);
+        }
+        conf._eventListeners = null;
+    }
+
+    // Destroy any Dropzone instance still attached to this element. Dropzone stores the
+    // instance on the element via the ".dropzone" property; attaching a new one without
+    // destroying it first throws "Dropzone already attached."
+    if (dropzoneElement != null && dropzoneElement.dropzone != null) {
+        try {
+            dropzoneElement.dropzone.destroy();
+        } catch (e) {
+            // Ignore destroy errors, the element will be reinitialized anyway.
+        }
+    }
+    conf._adminUpload = null;
+}
+
+/**
+ * Initializes the AdminUpload/Dropzone instance for the editor field once the DOM element is ready.
+ * Called via setInterval until the dropzone element appears, then clears the interval.
+ * Configures upload events (success, error, addedfile) and binds them to the editor's save button.
+ * @param {object} conf - DataTable Editor field configuration
+ */
 function prepareUploader(conf) {
     let id = conf._id;
 
     let dropzone = $("#" + id);
     if(dropzone.length > 0) {
-        clearInterval(interval);
+        clearInterval(conf._interval);
+        conf._interval = null;
 
-        adminUpload = window.AdminUpload({
+        destroyExistingUploader(conf, dropzone[0]);
+
+        const maxFiles = resolveUploadMaxFiles(conf);
+
+        const uploadInstance = window.AdminUpload({
             element: "#" + id,
             destinationFolder: '/files/protected/upload/',
             writeDirectlyToDestination: false,
+            maxFiles: maxFiles,
         });
+        conf._adminUpload = uploadInstance;
+
+        bindUploadLimitGuard(uploadInstance, maxFiles);
 
         let dteSubmitButton = "div.DTE .DTE_Footer button.btn-primary";
 
-        window.addEventListener('WJ.AdminUpload.success', (e) => {
-            //console.log("WJ.AdminUpload.success", e.detail);
+        //Store listeners so they can be removed on cleanup
+        conf._eventListeners = [];
+
+        const onSuccess = (e) => {
+            if (!e.detail || !e.detail.uploader) return;
+            if (e.detail.uploader !== uploadInstance) return;
 
             //Save uploaded file key
             conf.uploadedFileKey = e.detail.key;
 
             //We have uploaded new file, enable save button
             $(dteSubmitButton).prop('disabled', false);
-        });
+        };
 
-        window.addEventListener('WJ.AdminUpload.error', (e) => {
-            //console.log("WJ.AdminUpload.error", e.detail);
+        const onError = (e) => {
+            if (!e.detail || !e.detail.uploader) return;
+            if (e.detail.uploader !== uploadInstance) return;
+
             $(dteSubmitButton).prop('disabled', false);
-        });
+        };
 
-        window.addEventListener('WJ.AdminUpload.addedfile', () => {
-            //console.log("WJ.AdminUpload.addedfile");
-            $("#" + dropZoneId).hide();
+        const onAddedfile = (e) => {
+            if (!e.detail || !e.detail.uploader) return;
+            if (e.detail.uploader !== uploadInstance) return;
+
+            $("#" + conf._id).hide();
 
             //We are uploading new file, disable save button until upload is finished
             $(dteSubmitButton).prop('disabled', true);
 
             //Find cancel button and add event listener
-            let cancelButton = $("#upload-wrapper > div.input-group > button");
-            cancelButton.on("click", function() {
+            let cancelButton = conf._input.find(".upload-wrapper > div.input-group > button");
+            cancelButton.off("click.wjupload").on("click.wjupload", function() {
                 //We have canceled upload, enable save button
                 $(dteSubmitButton).prop('disabled', false);
             });
-        });
+        };
+
+        window.addEventListener('WJ.AdminUpload.success', onSuccess);
+        window.addEventListener('WJ.AdminUpload.error', onError);
+        window.addEventListener('WJ.AdminUpload.addedfile', onAddedfile);
+
+        conf._eventListeners.push(['WJ.AdminUpload.success', onSuccess]);
+        conf._eventListeners.push(['WJ.AdminUpload.error', onError]);
+        conf._eventListeners.push(['WJ.AdminUpload.addedfile', onAddedfile]);
     }
 }
 
+/**
+ * DataTable Editor custom field type for file uploads using Dropzone.
+ * Provides create/get/set methods for the editor field lifecycle.
+ * Each instance renders its own dropzone, upload wrapper, and toast container
+ * with unique IDs to support multiple upload fields on the same page.
+ * @returns {object} DataTable Editor field type definition
+ */
 export function typeWjupload() {
     return {
         create: function ( conf ) {
             var id = $.fn.dataTable.Editor.safeId(conf.id);
             var htmlCode = $(
                 '<div id="' + id + '" class="drop-zone-box dropzone form-control" style="align-content: center;"></div>' +
-                '<div class="upload-wrapper" id="upload-wrapper" style="display: none">' +
+                '<div class="upload-wrapper" id="' + id + '-upload-wrapper" style="display: none">' +
                     '<div class="toast-container-progress">' +
                         '<span>' + WJ.translate("admin.welcome.feedback.dialog.uploaded_files.js") + '</span>' +
                         '<svg class="fa-progress-bar float-end" xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 34 34">' +
@@ -77,11 +229,11 @@ export function typeWjupload() {
                         '</svg>' +
                     '</div>' +
                     '<div class="input-group">' +
-                        '<div id="toast-container-upload" class="form-control"></div>' +
+                        '<div id="' + id + '-toast-container-upload" class="toast-container-upload form-control"></div>' +
                         '<button class="btn btn-outline-secondary" type="button"><i class="ti ti-x"></i></button>' +
                     '</div>' +
                 '</div>' +
-                '<div id="upload-toastr-template" style="display: none">' +
+                '<div id="' + id + '-upload-toastr-template" class="upload-toastr-template" style="display: none">' +
                     '<i class="ti ti-polaroid"></i>' +
                    ' <span>{FILE_NAME}</span>' +
                    ' <i class="ti ti-circle-check float-end"></i>' +
@@ -99,7 +251,15 @@ export function typeWjupload() {
             conf._input = htmlCode;
 
             conf._input.find(".btn-outline-secondary").on("click", function() {
-                cleanUploader();
+                cleanUploader(conf);
+
+                // Re-prepare the uploader so that event listeners are re-registered
+                // and the user can upload a new file after canceling.
+                if (conf._interval != null) {
+                    clearInterval(conf._interval);
+                    conf._interval = null;
+                }
+                conf._interval = setInterval(prepareUploader, 500, conf);
             });
 
             return htmlCode;
@@ -111,13 +271,14 @@ export function typeWjupload() {
 
         set: function ( conf, val ) {
             //Clean uploader
-            cleanUploader();
+            cleanUploader(conf);
 
-            if(dropZoneId == null) dropZoneId = conf._id;
-
-            if(interval == undefined || interval == null) {
-                interval = setInterval(prepareUploader, 500, conf);
+            //Clear any previous interval before starting a new one
+            if (conf._interval != null) {
+                clearInterval(conf._interval);
+                conf._interval = null;
             }
+            conf._interval = setInterval(prepareUploader, 500, conf);
         }
     }
 }

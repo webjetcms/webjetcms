@@ -778,6 +778,8 @@ public class CloudToolsForCore {
 	 */
 	public static boolean isGroupFromMyDomain(int groupId)
 	{
+        if (Constants.getBoolean("multiDomainEnabled")==false) return true;
+
 		GroupsDB groupsDB = GroupsDB.getInstance();
 		GroupDetails group = groupsDB.getGroup(groupId);
 		if (group != null && group.getDomainName().equals(CloudToolsForCore.getDomainName())) return true;

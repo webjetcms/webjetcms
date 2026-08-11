@@ -3,6 +3,7 @@ package sk.iway.iwcm.system.elfinder;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -517,8 +518,17 @@ public class IwcmFsVolume implements FsVolume
 		return removeSpecialChars(name, fsi.getPath(), fsi, user);
 	}
 
-	public static String removeSpecialChars(String name, String path, FsItemEx fsi, Identity user) throws IOException {
+	public static String removeSpecialChars(String name, String path, FsItemEx fsi, Identity user) {
 		user = filterUserByFsi(user, fsi);
+		return removeSpecialChars(name, path, user);
+	}
+
+	public static String removeSpecialChars(String name, String path, int serviceType, Identity user) {
+		user = filterUserByFsi(user, serviceType);
+		return removeSpecialChars(name, path, user);
+	}
+
+	private static String removeSpecialChars(String name, String path, Identity user) {
 		if (path.startsWith("/files") || path.startsWith("/images") || path.startsWith("/shared")) {
 			// If user has special permission, he can
 			if(user == null || user.isEnabledItem("fbrowser_allow_diacritics") == false) {
@@ -526,7 +536,21 @@ public class IwcmFsVolume implements FsVolume
 				name = DocTools.removeCharsDir(name, true).toLowerCase();
 			}
 		}
+		name = normalizeUnicode(name);
 		return name;
+	}
+
+	/**
+	 * normalize NFD (macOS) to NFC so server-side names match
+	 * @param value
+	 * @return
+	 */
+	public static String normalizeUnicode(String value) {
+		if (value == null) {
+			return "";
+		}
+
+		return Normalizer.normalize(value, Normalizer.Form.NFC);
 	}
 
 	/**
@@ -540,6 +564,10 @@ public class IwcmFsVolume implements FsVolume
 		if (fsi.getService() != null && fsi.getService() instanceof sk.iway.iwcm.system.elfinder.FsService fs) {
 			serviceType = fs.getSelectedType();
 		}
+		return filterUserByFsi(user, serviceType);
+	}
+
+	private static Identity filterUserByFsi(Identity user, int serviceType) {
 		//allow upload diacritics only in file FileBrowser (Prieskumnik) not in image/link dialog in webpages
 		if (serviceType == FsService.TYPE_ALL || serviceType == FsService.TYPE_FILES || serviceType == FsService.TYPE_PAGES) return user;
 		return null;

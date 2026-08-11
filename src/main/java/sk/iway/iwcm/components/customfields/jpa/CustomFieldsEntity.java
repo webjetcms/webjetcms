@@ -118,6 +118,19 @@ public class CustomFieldsEntity {
     private String warningText;
 
     @Transient
+    @DataTableColumn(inputType = DataTableColumnType.RADIO, title = "settings.custom-fields.optionsSource", tab = "basic", hidden = true, className = "ai-off specific-field",
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = "settings.custom-fields.optionsSource.static", value = "static"),
+                    @DataTableColumnEditorAttr(key = "settings.custom-fields.optionsSource.enumeration", value = "enumeration")
+                }
+            )
+        }
+    )
+    private String optionsSource = "static";
+
+    @Transient
     @DataTableColumn(inputType = DataTableColumnType.OPTIONS, title = "settings.custom-fields.selectOptions", tab = "basic", hidden = true, className = "specific-field")
     private String selectOptions;
 

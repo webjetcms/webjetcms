@@ -892,7 +892,7 @@ public class RegUserAction extends WebJETActionBean
 
 							//pridaj ho do galerie
 							Logger.debug(RegUserAction.class, "Resizing photo:"+realPath);
-							GalleryDB.resizePictureImpl(dims, realPath, null, prop, GalleryDB.getResizeMode(actualDir));
+							GalleryDB.resizePictureImpl(dims, realPath, null, prop);
 
 							usr.setPhoto(actualDir+ "/" +fileName);
 						}

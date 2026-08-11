@@ -1,13 +1,35 @@
+<script type="text/javascript" src="/admin/skins/webjet8/ckeditor/dist/plugins/webjet/js/fck_dialog_common.jsp"></script>
 <script type="text/javascript" data-th-inline="javascript">
 
     var fileArchiveDataTable;
+    var fileArchiveAdminUpload;
     var isLoadingHistoryFiles = false;
     var actualAction = "";
+
+    var wjCkMapping = [
+        { wj: "txtUrl", tab: "info", ck: "url" }
+    ];
 
     let versionsDataTable = null;
     let waitingFilesDataTable = null;
     let patternsDataTable = null;
     let columns = null;
+
+    var fileArchiveTreeDir = /*[[${layout.getConstant('fileArchivDefaultDirPath')}]]*/ '/files/archiv/';
+    var fileArchiveSelectedDir = fileArchiveTreeDir;
+    var fileArchiveAcceptedFiles = /*[[${fileArchiveAcceptedFiles}]]*/ [];
+
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    let dir = urlParams.get('dir');
+    if (dir != null) {
+        fileArchiveTreeDir = dir;
+        fileArchiveSelectedDir = dir;
+    }
+
+    /*[# th:if="${treeInitialJson != null}"]*/
+    window.treeInitialJson = /*[(${treeInitialJson})]*/ [];
+    /*[/]*/
 
     /**
      * Remove editor fields from datatable columns definition - used in Versions, Awaiting and Patterns
@@ -23,11 +45,282 @@
         return columnsFidex;
     }
 
+    function isCkEditorLinkDialog() {
+        try {
+            return window.parent !== window
+                && window.parent.CKEDITOR
+                && window.parent.CKEDITOR.dialog.getCurrent()
+                && window.parent.CKEDITOR.dialog.getCurrent().getName() === "link";
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function txtUrlOnChange(field) {
+        if (field.value.indexOf("http") === 0 || field.value.indexOf("www.") === 0 || field.value.indexOf("/files/") === 0) {
+            window.parent.CKEDITOR.dialog.getCurrent().getContentElement("target", "linkTargetType").setValue("_blank");
+        }
+    }
+
+    function selectArchiveLink(link) {
+        if (isCkEditorLinkDialog() === false) return;
+
+        let urlPath = link;
+        if (urlPath.indexOf("/") !== 0) urlPath = "/" + urlPath;
+
+        let txtUrl = document.getElementById("txtUrl");
+        let current = window.parent.CKEDITOR.dialog.getCurrent().getValueOf("info", "url");
+        let queryIndex = current.indexOf("?");
+        if (queryIndex !== -1 && urlPath.indexOf("?") === -1) {
+            urlPath += "?" + current.substring(queryIndex + 1);
+        }
+
+        txtUrl.value = urlPath;
+        updateValuesToCk();
+        txtUrlOnChange(txtUrl);
+    }
+
+    /**
+     * Navigate archive jstree to the parent folder of the given file path.
+     * Calls FileArchiveTreeRestController with parent path to load folder node.
+     * @param {string} filePath - full file path like /files/archiv/docs/file.pdf
+     */
+    window.navigateArchiveTree = function(filePath) {
+        var tree = $('#SomStromcek').jstree(true);
+        if (!tree) return;
+
+        //remove filename to get parent folder path
+        var folderPath = filePath.substring(0, filePath.lastIndexOf('/'));
+        if (!folderPath || folderPath.length < 2) return;
+
+        //check if already selected
+        var currentSelected = tree.get_selected();
+        if (currentSelected.length > 0 && currentSelected[0] === folderPath) return;
+
+        //if node already exists in tree, just select it
+        var node = tree.get_node(folderPath);
+        if (node !== false) {
+            tree.deselect_all(true);
+            tree.select_node(folderPath);
+            return;
+        }
+
+        //get parent of folder path and call FileArchiveTreeRestController to load its children
+        var parentPath = folderPath.substring(0, folderPath.lastIndexOf('/'));
+        var parentNode = tree.get_node(parentPath);
+        if (parentNode === false) return;
+
+        $.ajax({
+            url: '/admin/rest/components/archive/tree/tree',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({id: parentPath}),
+            success: function(response) {
+                if (!response.result || !response.items) return;
+
+                //add loaded items as children of parent node in jstree
+                response.items.forEach(function(item) {
+                    if (tree.get_node(item.id) === false) {
+                        tree.create_node(parentPath, item);
+                    }
+                });
+
+                //open parent and select target folder
+                setTimeout(function() {
+                    tree.open_node(parentPath);
+                    tree.deselect_all(true);
+                    tree.select_node(folderPath);
+                }, 100);
+            }
+        });
+    }
+
+    var somStromcek = null;
+
+    window.getJstreeUrl = function() {
+        if (somStromcek == null) somStromcek = $('#SomStromcek');
+        let url = somStromcek.data("rest-url");
+        if (dir != null) url = WJ.urlUpdateParam(url, "dir", dir);
+        return url;
+    }
+
+    // Jstree settings modal - inline implementation since JstreeSettings ES module
+    // is not available outside webpack bundle (gallery.js, web-pages-list.js).
+    var JSTREE_SETTINGS_KEY = "jstreeSettings_file-archive";
+
+    function getJstreeSettings() {
+        var storeItem = window.WJ.getAdminSetting(JSTREE_SETTINGS_KEY);
+        if (typeof storeItem != "undefined") return JSON.parse(storeItem);
+        return {};
+    }
+
+    function saveJstreeSettings(settings) {
+        window.WJ.setAdminSetting(JSTREE_SETTINGS_KEY, JSON.stringify(settings));
+    }
+
+    function toSearchPathRegex(path) {
+        return "^" + path.replace(/^\/+|\/+$/g, "") + "/$";
+    }
+
+    function applySelectedArchiveDirectory(selectedDir) {
+        if (!selectedDir) return;
+
+        fileArchiveSelectedDir = selectedDir;
+        if (fileArchiveAdminUpload) {
+            fileArchiveAdminUpload.setDestinationFolder(fileArchiveSelectedDir);
+        }
+        fileArchiveTreeDir = toSearchPathRegex(selectedDir);
+        if (fileArchiveDataTable) {
+            fileArchiveDataTable.ajax.reload();
+        }
+    }
+
+    function getCurrentArchiveTreePath() {
+        var tree = $('#SomStromcek').jstree(true);
+        if (!tree) return fileArchiveSelectedDir;
+
+        var selected = tree.get_selected();
+        if (!selected || selected.length === 0) return fileArchiveSelectedDir;
+
+        var selectedNode = tree.get_node(selected[0]);
+        if (!selectedNode) return fileArchiveSelectedDir;
+
+        var treePath = selectedNode.original && selectedNode.original.virtualPath
+            ? selectedNode.original.virtualPath
+            : selectedNode.id;
+
+        if (!treePath) return treePath;
+        return treePath.charAt(treePath.length - 1) === "/" ? treePath : treePath + "/";
+    }
+
     window.domReady.add(function () {
-        //window.helpLink = "/redactor/webpages/perexgroups";
+        var settingsModal = null;
+
+        // Apply saved tree width on page load
+        var savedWidth = getJstreeSettings().treeWidth;
+        if (typeof savedWidth != "undefined" && parseInt(savedWidth) != 4) {
+            var w = parseInt(savedWidth);
+            var dtW = 12 - w;
+            $(".tree-col").attr("class", "tree-col col-md-" + w);
+            $(".datatable-col").attr("class", "datatable-col col-md-" + dtW);
+        }
+
+        $("button.buttons-jstree-settings").on("click", function() {
+            if (settingsModal == null) {
+                settingsModal = new bootstrap.Modal(document.getElementById('jstreeSettingsModal'), {
+                    keyboard: false,
+                    backdrop: 'static'
+                });
+            }
+
+            var settings = getJstreeSettings();
+            $("#jstree-settings-treeWidth").selectpicker("val", "" + (settings.treeWidth || 4));
+            settingsModal.show();
+        });
+
+        $("#jstree-settings-submit").on("click", function() {
+            var settings = getJstreeSettings();
+            var treeWidth = parseInt($("#jstree-settings-treeWidth").val());
+            settings.treeWidth = treeWidth;
+
+            saveJstreeSettings(settings);
+            if (settingsModal) settingsModal.hide();
+
+            // Apply tree width
+            var dtW = 12 - treeWidth;
+            $(".tree-col").attr("class", "tree-col col-md-" + treeWidth);
+            $(".datatable-col").attr("class", "datatable-col col-md-" + dtW);
+
+            // Refresh tree
+            $('#SomStromcek').jstree(true).refresh();
+        });
+    }, 10);
+
+    window.domReady.add(function () {
+        // Create folder button handler
+        var createFolderModal = null;
+        $("button#btn-create-folder").on("click", function() {
+            if (createFolderModal == null) {
+                createFolderModal = new bootstrap.Modal(document.getElementById('createFolderModal'), {
+                    keyboard: false,
+                    backdrop: 'static'
+                });
+            }
+            $("#create-folder-name-input").val("");
+            createFolderModal.show();
+            setTimeout(function() {
+                $("#create-folder-name-input").focus();
+            }, 600);
+        });
+
+        $("#btn-create-folder-submit").on("click", function() {
+            var name = $("#create-folder-name-input").val().trim();
+            if (!name) {
+                $("#create-folder-name-input").addClass("is-invalid");
+                return;
+            }
+            $("#create-folder-name-input").removeClass("is-invalid");
+
+            var tree = $("#SomStromcek").jstree(true);
+            if (!tree) return;
+
+            var selected = tree.get_selected();
+            var parentId = selected && selected.length > 0 ? selected[0] : "#";
+
+            $("#btn-create-folder-submit").prop("disabled", true);
+            $("#createFolderModal .DTE_Form_Error").text("").hide();
+
+            $.ajax({
+                url: "/admin/rest/components/archive/tree/create",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ name: name, parentPath: parentId }),
+                success: function(response) {
+                    $("#btn-create-folder-submit").prop("disabled", false);
+                    if (response.result === true) {
+                        tree.refresh();
+                        createFolderModal.hide();
+                    } else {
+                        $("#createFolderModal .DTE_Form_Error").text(response.error || WJ.translate("datatables.error.system.js")).show();
+                    }
+                },
+                error: function(xhr) {
+                    $("#btn-create-folder-submit").prop("disabled", false);
+                    var errorMsg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : WJ.translate("datatables.error.system.js");
+                    $("#createFolderModal .DTE_Form_Error").text(errorMsg).show();
+                }
+            });
+        });
+
+        $("#createFolderModal").on("hidden.bs.modal", function() {
+            $("#create-folder-name-input").removeClass("is-invalid").val("");
+        });
+
+        $("#create-folder-name-input").on("keypress", function(e) {
+            if (e.which === 13) {
+                $("#btn-create-folder-submit").trigger("click");
+            }
+        });
+
+        window.helpLink = "/redactor/files/file-archive/README";
+
+        if (isCkEditorLinkDialog()) {
+            $("body").addClass("file-archive-link-dialog");
+            $("#file-archive-link").appendTo("body").show();
+            if (window.scrollbarMain) window.scrollbarMain.update();
+            refreshValuesFromCk();
+            setChangeHandlerToUpdateCk();
+        }
 
         let url = "/admin/rest/file-archive";
         columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.file_archiv.FileArchivatorBean")})]*/ [];
+
+        if ($("html").hasClass("in-iframe-show-table")) {
+            window.WJ.DataTable.mergeColumns(columns, {
+                name: "virtualFileName",
+                renderFormatPrefix: "<i class='ti ti-link'></i> "
+            });
+        }
 
         var tabs = [
             { id: 'basic', title: /*[[#{datatable.tab.basic}]]*/ '', selected: true },
@@ -53,12 +346,29 @@
             perms: {
                 edit: 'cmp_fileArchiv_edit_del_rollback',
                 remove: 'cmp_fileArchiv_edit_del_rollback'
+            },
+            onPreXhr: function(TABLE, e, settings, data) {
+                data.fixed_searchFilePath = fileArchiveTreeDir;
             }
         });
 
         fileArchiveDataTable.on("draw", function() {
             //Disable on click event for NON MAIN files
             $("tr.notMainFile td.dt-select-td").click(function() { return false; });
+        });
+
+        $("#fileArchiveDataTable").on("click", "tbody .dt-row-edit a", function(event) {
+            if (isCkEditorLinkDialog() === false) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            let selectedFile = fileArchiveDataTable.row($(this).closest("tr")).data();
+            if (selectedFile == null) return;
+
+            let virtualPath = selectedFile.virtualPath;
+            if (virtualPath == null) virtualPath = selectedFile.filePath + selectedFile.fileName;
+            selectArchiveLink(virtualPath);
         });
 
         window.onload = function () {
@@ -121,6 +431,67 @@
         fileArchiveDataTable.hideButton("duplicate");
         fileArchiveDataTable.hideButton("celledit");
 
+        function setArchiveSubmitDisabled(disabled) {
+            $("div.DTE .DTE_Footer button.btn-primary").prop("disabled", disabled);
+        }
+
+        function setArchiveUploadDisabled(disabled) {
+            if (!fileArchiveAdminUpload) return;
+
+            if (disabled === true) {
+                fileArchiveAdminUpload.disable();
+                $("#dt-upload").css('visibility', 'hidden');
+                $("#dt-upload").css('opacity', 0);
+            } else {
+                fileArchiveAdminUpload.enable();
+            }
+        }
+
+        fileArchiveAdminUpload = window.AdminUpload({
+            element: "#dt-upload",
+            uploadType: "fileArchive",
+            acceptedFiles: fileArchiveAcceptedFiles.join(","),
+            destinationFolder: fileArchiveTreeDir,
+            writeDirectlyToDestination: true
+        });
+        $("#upload-toastr-template.file-archive-upload-template").remove();
+
+        if (fileArchiveAdminUpload) {
+            fileArchiveAdminUpload.on("addedfile", function() {
+                setArchiveSubmitDisabled(true);
+            });
+
+            fileArchiveAdminUpload.on("error", function(file) {
+                setArchiveSubmitDisabled(false);
+                fileArchiveAdminUpload.removeFile(file);
+            });
+
+            fileArchiveAdminUpload.on("success", function(file) {
+                fileArchiveDataTable.ajax.reload();
+            });
+        }
+
+        //Initialize tree
+        var somStromcek = $('#SomStromcek');
+
+        somStromcek.on("changed.jstree", function(e, data) {
+            if ("deselect_all" == data.action || "model" == data.action) return;
+
+            var node = data.instance.get_node(data.selected);
+            if (node === false || node == null) return;
+
+            var virtualPath = node.original.virtualPath;
+            if (virtualPath) {
+                applySelectedArchiveDirectory(virtualPath);
+            }
+        });
+
+        window.addEventListener('WJ.treeInitialJson.done', (e) => {
+            if (dir != null) {
+                applySelectedArchiveDirectory(dir);
+            }
+        });
+
         function setCheckboxWarningMsg(fieldName, checkboxName, warning) {
             $("#DTE_Field_editorFields-" + checkboxName + "_0").on("change", function() {
                 let warningLabel = $(".DTE_Field_Name_editorFields\\." + fieldName).find("label.warningLabel");
@@ -168,6 +539,8 @@
         }
 
         fileArchiveDataTable.EDITOR.on('open', function (e, type, action) {
+            setArchiveUploadDisabled(true);
+
             if(action === "create") {
                 actualAction = 'create';
 
@@ -178,6 +551,7 @@
 
                 fileArchiveDataTable.EDITOR.field("editorFields.file").show();
                 fileArchiveDataTable.EDITOR.field("editorFields.dir").show();
+                fileArchiveDataTable.EDITOR.field("editorFields.dir").val(getCurrentArchiveTreePath());
                 fileArchiveDataTable.EDITOR.field("editorFields.saveLater").show();
                 fileArchiveDataTable.EDITOR.field("editorFields.saveAfterSelect").hide();
             } else if(action === 'edit') {
@@ -290,8 +664,19 @@
             setCheckboxWarningMsg("newFileName", "renameFile", /*[[#{components.file_archiv.rename_warning}]]*/);
         });
 
+        fileArchiveDataTable.EDITOR.on('close', function () {
+            setArchiveUploadDisabled(false);
+        });
+
         window.addEventListener('WJ.AdminUpload.success', (e) => {
-            //console.log("Upload success, e=", e);
+            if (!e.detail || !e.detail.uploader) return;
+
+            if (e.detail.uploader === fileArchiveAdminUpload) {
+                fileArchiveDataTable.ajax.reload();
+            }
+
+            if (e.detail.uploader.element.id !== "DTE_Field_editorFields-file") return;
+
             let virtualFileNameField = $("#DTE_Field_virtualFileName");
             if (virtualFileNameField.val() === "") {
                 let fileName = e.detail.file.name;
@@ -336,9 +721,109 @@
     })
 </script>
 
-<table id="fileArchiveDataTable" class="datatableInit table"></table>
+<div id="dt-upload" class="drop-zone-box dropzone" style="visibility: hidden; opacity: 0"></div>
+
+<div id="upload-wrapper" style="display: none;">
+    <div class="upload-wrapper-header">
+        <span data-th-text="#{datatables.upload.title}" data-th-remove="tag">Nahravanie suborov</span>
+        <span><i class="ti ti-x float-end" id="upload-wrapper-close"></i></span>
+    </div>
+    <div class="toast-container-progress">
+        <span data-th-text="#{datatables.upload.totalUploaded}">Celkovo nahrate</span>
+        <svg class="fa-progress-bar float-end" xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 34 34">
+            <circle cx="16" cy="16" r="15" class="fa-progress-bar__background" />
+            <circle cx="16" cy="16" r="15" class="fa-progress-bar__progress" style="stroke-dashoffset: 100px;" />
+        </svg>
+    </div>
+    <div id="toast-container-upload"></div>
+    <div class="upload-wrapper-footer">
+        <div class="process-all" style="display: none;">
+            <label class="toast-label" data-th-text="#{user.multioperations.applyto.entire.records}">Aplikovat na vsetky</label>
+            <div class="toast-links">
+                <a id="btn-toast-skip-all" data-th-title="#{wspellcheck.ignore}" data-th-text="#{wspellcheck.ignore}">Preskocit</a>
+                <a id="btn-toast-overwrite-all" data-th-title="#{datatables.upload.replace_file}" data-th-text="#{datatables.upload.replace_file}">Nahradit</a>
+                <a id="btn-toast-keepboth-all" data-th-title="#{datatables.upload.new_version}" data-th-text="#{datatables.upload.new_version}">Nova verzia</a>
+                <!-- In reality keepboth move actual version into history and make new fiel actual version -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="upload-toastr-template" class="file-archive-upload-template" style="display: none">
+    <i class="ti ti-file"></i>
+    <span>{FILE_NAME}</span>
+    <i class="ti ti-circle-check float-end"></i>
+    <i class="ti ti-alert-triangle float-end"></i>
+    <i class="ti ti-loader-2 ti-spin float-end"></i>
+    <i class="ti ti-alert-circle float-end"></i>
+    <span class="exist" data-th-text="#{datatables.upload.allreadyExists}">Uz existuje</span>
+    <div class="toast-links">
+        <a class="btn-toast-skip" data-th-title="#{wspellcheck.ignore}" data-th-text="#{wspellcheck.ignore}">Preskocit</a>
+        <a class="btn-toast-overwrite" data-th-title="#{datatables.upload.replace_file}" data-th-text="#{datatables.upload.replace_file}">Nahradit</a>
+        <a class="btn-toast-keepboth" data-th-title="#{datatables.upload.new_version}" data-th-text="#{datatables.upload.new_version}">Nova verzia</a>
+        <!-- In reality keepboth move actual version into history and make new fiel actual version -->
+    </div>
+    <svg class="fa-progress-bar float-end" xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 34 34">
+        <circle cx="16" cy="16" r="15" class="fa-progress-bar__background"></circle>
+        <circle cx="16" cy="16" r="15" class="fa-progress-bar__progress" style="stroke-dashoffset: 100px"></circle>
+    </svg>
+    <div class="toast-error-message"></div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 tree-col">
+        <div data-th-include="apps/file-archive/admin/folder-tree-archive.html" data-th-remove="tag"></div>
+    </div>
+
+    <div class="col-md-8 datatable-col">
+        <table id="fileArchiveDataTable" class="datatableInit table"></table>
+    </div>
+</div>
+
+<div id="file-archive-link" class="innerPadding" style="display: none;">
+    <table class="urlFormTable">
+        <tr>
+            <td class="cke_dialog_ui_vbox_child" style="width: 80px;" data-th-title="#{elfinder.image.urlTitle}">
+                <label class="cke_dialog_ui_labeled_label" for="txtUrl"><span data-th-text="#{components.groupEdit.url_info}">URL</span>:</label>
+            </td>
+            <td class="cke_dialog_ui_vbox_child">
+                <div class="cke_dialog_ui_input_text">
+                    <input id="txtUrl" class="form-control cke_dialog_ui_input_text" style="width: 100%;" type="text" onkeyup="txtUrlOnChange(this);">
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
 
 <style>
+
+    #file-archive-link {
+        border-top: 1px solid #DDDFE6 !important;
+     }
+
+    table.urlFormTable { width: 100%; }
+
+    html.in-iframe-show-table body.file-archive-link-dialog { --file-archive-link-height: 46px; --dt-autoheight-offset: 46; }
+    html.in-iframe-show-table body.file-archive-link-dialog .ly-content-wrapper {
+        height: calc(100vh - var(--file-archive-link-height));
+        min-height: auto;
+        overflow: hidden;
+    }
+    html.in-iframe-show-table body.file-archive-link-dialog .ly-content {
+        height: calc(100vh - var(--file-archive-link-height));
+    }
+    html.in-iframe-show-table body.file-archive-link-dialog #file-archive-link {
+        background-color: white;
+        bottom: 0;
+        box-sizing: border-box;
+        height: var(--file-archive-link-height);
+        left: 0;
+        padding: 9px 9px 0px 9px;
+        position: fixed;
+        right: 0;
+        z-index: 10;
+    }
     tr.notMainFile td { background-color: #F3F3F6 !important; }
     tr.notMainFile td:nth-child(1)::before { display: none !important; }
 

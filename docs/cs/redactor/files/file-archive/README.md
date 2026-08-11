@@ -6,7 +6,21 @@ Aplikace pro management dokumentů a jejich verzí na jednom místě. Umožňuje
 
 V zobrazeném seznamu vidíme všechny dokumenty, které byly vloženy do manažera v aktuálně zvolené doméně. Přednastaveno je filtrování, které zobrazuje pouze **hlavní dokumenty**, jinak řečeno aktuální verze dokumentů.
 
+Na levé straně se nachází **stromová struktura složek** (JSTREE), která umožňuje procházet složky archivu a filtrovat dokumenty podle zvolené složky. Strom zobrazuje složky z kořenového adresáře archivu nastaveného konfigurační proměnnou `fileArchivDefaultDirPath` (standardně `files/archiv/`). Složka pro naplánované nahrávání z konfigurační proměnné `fileArchivInsertLaterDirPath` se ve stromu nezobrazuje.
+
+Po kliknutí na složku ve stromu se v tabulce zobrazí pouze dokumenty patřící do dané složky. Zvolená složka se zároveň použije jako cílový adresář pro [hromadné nahrávání souborů](#hromadné-nahrávání-souborů) a automaticky se předvyplní při vytváření nového dokumentu přes editor.
+
+Nad stromem se nacházejí tlačítka:
+
+-<i class="ti ti-plus"></i> - **Přidat** - vytvoří novou podsložku v aktuálně označené složce. Tlačítko se zobrazuje uživatelům s právem `menuFileArchivManagerCategory` a vytvoření složky vyžaduje právo zápisu do zvolené složky.
+-<i class="ti ti-refresh"></i> - **Obnovit** - obnoví stromovou strukturu složek
+-<i class="ti ti-adjustments-horizontal"></i> - **Nastavení** - umožňuje nastavit šířku stromové struktury vůči tabulce
+
 ![](datatable.png)
+
+Při vytváření složky zadejte její název a potvrďte formulář. Název se při vytvoření upraví do bezpečného tvaru pro URL adresu a souborový systém.
+
+![](add_folder.png)
 
 ### Stav dokumentů
 
@@ -35,7 +49,7 @@ Karta obsahuje základní informace pro vložení dokumentu.
 - **Název** - zadejte jméno dokumentu, které se bude na stránce zobrazovat (jako odkaz na dokument). Pole je **povinné**. Může obsahovat diakritiku, mezery, speciální znaky.
 - **Platnost od** - nastavení data a času začátku platnosti dokumentu
 - **Platnost do** - nastavení data a času konce platnosti dokumentu
-- **Cílový adresář pro upload dokumentu** - vyberte adresář, do kterého chcete dokument nahrát (později Vám to poslouží při filtrování zobrazení dokumentů na stránce). Přednastavený cílový adresář nastavíte konfigurační proměnnou ```fileArchivDefaultDirPath```. Uživatel si bude moci zvolit i podsložku.
+- **Cílový adresář pro upload dokumentu** - vyberte adresář, do kterého chcete dokument nahrát. Později jej můžete využít při filtrování zobrazení dokumentů na stránce. Přednastavený cílový adresář určíte výběrem konkrétní složky ve stromové struktuře. Tato složka se následně automaticky předvyplní jako cílový adresář. Uživatel si zároveň bude moci zvolit i jeho podsložku.
 - **Soubor** - pole pro nahrání souboru, který reprezentuje dokument. Více o poli ```UPLAOD``` se dočtete [zde](../../../developer/datatables-editor/field-file-upload.md). Povolené přípony souboru nastavíte pomocí konfigurační proměnné ```fileArchivAllowExt```.
 - **Nahrát dokument později** - v případě potřeby nahrání dokumentu do manažera v přesný čas a datum, lze nastavit nahrání dokumentu automaticky v budoucnosti. Výběrem možnosti se Vám zobrazí ukrytá pole
   - **Nahrát po** - výběr data a času, po kterém se má dokumentu nahrát
@@ -69,7 +83,7 @@ V kartě Volitelná pole umíte dokumentu nastavovat volitelné atributy (hodnot
 
 ### Postup vložení nového dokumentu
 
-Nejprve je třeba vyplnit povinná pole **Název**. **Cílový adresář pro upload dokumentu** je také povinná hodnota, která se před-vyplní automaticky, ale umíte ji změnit. Následně musíte vložit soubor (reprezentující dokument) s povolenou příponou. Po úspěšném nahrání souboru můžete uložit nový záznam do manažera.
+Nejprve je třeba vyplnit povinná pole **Název**. **Cílový adresář pro upload dokumentu** je také povinná hodnota, která se před-vyplní automaticky podle aktuálně zvolené složky ve stromové struktuře, ale umíte ji změnit. Následně musíte vložit soubor (reprezentující dokument) s povolenou příponou. Po úspěšném nahrání souboru můžete uložit nový záznam do manažera.
 
 Pokud jste nahráli soubor se špatným formátem, validace záznam neuloží, a připomene, které přípony souboru jsou povoleny k nahrání.
 
@@ -233,6 +247,24 @@ Vymazáním hlavního dokumentu (který není vzor) se vymažou i všechny histo
 !>**Upozornění:** hlavní dokument nelze vymazat, pokud má čekající verzi na nahrání.
 
 Jako i při mazání vzorů, tyto naplánované verze lze vymazat **IBA** pomocí tabulky v kartě **Čekající**.
+
+## Hromadné nahrávání souborů
+
+Soubory můžete do aktuálně zvolené složky nahrát i přímo ze seznamu dokumentů. Přesuňte jeden nebo více souborů z počítače nad stránku manažera dokumentů. Nahrávání používá aktuálně označenou složku ve stromové struktuře a povolené přípony souborů z konfigurační proměnné `fileArchivAllowExt`.
+
+Během nahrávání se zobrazí panel s průběhem pro jednotlivé soubory i celkovým průběhem. Po úspěšném nahrání se pro každý soubor vytvoří samostatný hlavní dokument, jeho název se předvyplní ze jména souboru bez přípony a tabulka se automaticky obnoví.
+
+![](drag-drop-upload-dialog.png)
+
+Pokud již ve zvolené složce existuje soubor se stejným reálným jménem, ​​nahrávání se pozastaví au daného souboru se zobrazí možnosti:
+
+- **Přeskočit** - nahraný soubor se zahodí a stávající dokument zůstane beze změny.
+- **Nahradit** - stávající hlavní dokument se nahradí novým souborem bez vytvoření historické verze.
+- **Nová verze** - nový soubor se uloží jako aktuální verze dokumentu a původní soubor se přesune mezi historické verze.
+
+Ve spodní části panelu můžete stejnou volbu použít najednou pro všechny soubory čekající na rozhodnutí.
+
+![](drag-drop-upload-duplicity-dialog.png)
 
 ## Vyhledávání a indexování
 

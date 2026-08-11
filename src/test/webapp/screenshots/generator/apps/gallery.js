@@ -105,6 +105,8 @@ Scenario('gallery structure', ({ I, DTE, Document }) => {
     I.clickCss(".tree-col button.buttons-edit");
     DTE.waitForEditor("galleryDimensionDatatable");
 
+    I.resizeWindow(1280, 1110);
+
     Document.screenshotElement('.DTE.DTE_Action_Edit.modal-content', `/redactor/apps/gallery/dir-basic-tab.png`);
 
     I.clickCss("#pills-dt-galleryDimensionDatatable-sizes-tab");
@@ -116,7 +118,7 @@ Scenario('gallery structure', ({ I, DTE, Document }) => {
     DTE.cancel();
 
     I.click("button.buttons-jstree-settings");
-    I.waitForElement("#jstree-settings-showrealname", 10);
+    I.waitForVisible("#jstree-settings-showrealname", 10);
     I.checkOption("#jstree-settings-showrealname");
     I.clickCss("#jstree-settings-submit");
 

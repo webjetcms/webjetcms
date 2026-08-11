@@ -267,7 +267,7 @@ public class BasicNtlmLogon
 								//resizni
 								Prop prop = Prop.getInstance();
 								Dimension[] dims = GalleryDB.getDimension(BASE_DIR);
-								GalleryDB.resizePictureImpl(dims, photoFile.getAbsolutePath(), null, prop, GalleryDB.getResizeMode(BASE_DIR));
+								GalleryDB.resizePictureImpl(dims, photoFile.getAbsolutePath(), null, prop);
 							}
 							else
 							{

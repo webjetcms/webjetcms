@@ -23,7 +23,7 @@ public class SearchSnippet {
 
     private SearchDetails doc;
     private String textToFind;
-    private HttpServletRequest request;
+    private boolean fastSnippet;
     private String textToFindAscLC;
     private String dataAsc;
 
@@ -33,9 +33,13 @@ public class SearchSnippet {
     private String snippet;
 
     public SearchSnippet(SearchDetails doc, String textToFind, HttpServletRequest request) {
+        this(doc, textToFind, request != null && "true".equals(request.getParameter("fastSnippet")));
+    }
+
+    public SearchSnippet(SearchDetails doc, String textToFind, boolean fastSnippet) {
         this.doc = doc;
         this.textToFind = textToFind;
-        this.request = request;
+        this.fastSnippet = fastSnippet;
 
         this.prepend = Constants.getInt("searchSnippetPrepend");
         if (this.prepend == -1) {
@@ -62,7 +66,7 @@ public class SearchSnippet {
         //odstranme HTML kod a INCLUDE prikazy
         String dataOriginalNoHtml;
 
-        if (SearchAction.shouldDoQuickSnippet(doc, request))
+        if (SearchAction.shouldDoQuickSnippet(doc, fastSnippet))
         {
             //tu ponechavame cely HTML kod, bolo by to narozne na odstranenie (velky HTML kod)
             dataOriginalNoHtml = doc.getDataOriginal();

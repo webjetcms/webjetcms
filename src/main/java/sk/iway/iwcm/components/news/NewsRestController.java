@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -14,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -87,8 +87,13 @@ public class NewsRestController extends WebpagesDatatable {
         return docToReturn;
     }
 
-    @RequestMapping(value = "/convertIdsToNamePair")
-    public List<LabelValue> convertIdsToNamePair(@RequestParam String ids, @RequestParam(required = false) String include, HttpServletRequest request) {
+    @PostMapping(value = "/convertIdsToNamePair")
+    public List<LabelValue> convertIdsToNamePairEndpoint(@RequestParam String ids, @RequestParam(required = false) String include, HttpServletRequest request) {
+
+        return filterFoldersByPermissions(convertIdsToNamePair(ids, include, request), request);
+    }
+
+    public static List<LabelValue> convertIdsToNamePair(String ids, String include, HttpServletRequest request) {
 
         List<LabelValue> list = new ArrayList<>();
 
@@ -179,6 +184,10 @@ public class NewsRestController extends WebpagesDatatable {
             }
         }
 
+        return list;
+    }
+
+    private static List<LabelValue> filterFoldersByPermissions(List<LabelValue> list, HttpServletRequest request) {
         //Filter folder's by PERM'S
         Identity currentUser = UsersDB.getCurrentUser(request);
         GroupsDB groupsDB = GroupsDB.getInstance();
@@ -192,7 +201,7 @@ public class NewsRestController extends WebpagesDatatable {
             int[] expandedEditableGroups = groupsDB.expandGroupIdsToChilds(editableGroups, true);
             return list.stream()
                     .filter(group -> Tools.containsOneItem(expandedEditableGroups, Tools.getIntValue(group.getValue(), -1)))
-                    .collect(Collectors.toList());
+                    .toList();
         }
     }
 

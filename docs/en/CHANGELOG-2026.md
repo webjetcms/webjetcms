@@ -6,6 +6,14 @@
 
 ### Websites
 
+- Website Trash - added [automatic deletion of old pages and folders](redactor/apps/gdpr/data-deleting.md) from the trash according to the set retention period. Added the ability to delete pages and folders in the trash and in the [Data deletion](sysadmin/data-deleting/README.md) section according to the selected date range. Unified logic for calculating the number and deleting, fixed permanent deletion of the trash folder and empty folders (#271).
+
+![](sysadmin/data-deleting/database-delete.png)
+
+- Redirects - user-created redirects are distinguished from automatic ones (marked with a gray background) and can be [filtered in the redirect list] separately (redactor/webpages/redirects/README.md#automatic-and-user-created-redirects) (#58625).
+
+![](editor/webpages/redirects/redirect-path.png)
+
 - SEO - added a separate setting **Search engine tracking** with options **According to crawl settings**, **Enable tracking** (`follow`) and **Disable tracking** (`nofollow`). HTTP header `X-Robots-Tag` and Ninja `${ninja.page.robots}` use the same logic: when indexing without restrictions, they return `all`, otherwise a combination of directives `noindex` and `nofollow` according to the page settings. More in [Ninja documentation](frontend/ninja-starter-kit/ninja-jv/page/README.md#indexing-settings-string) (#OSK563).
 - Ninja - added [dimension generation](frontend/ninja-starter-kit/ninja-bp/README.md) SEO image `og:image:width` and `og:image:height` (#OSK563).
 - Templates - added option to set the movement of `<style>` and `<link rel="stylesheet">` tags from the page body to `<head>` via [template option](frontend/templates/templates.md) with support for global configuration variable `showDocMoveStyleToHead`. Blocks in IE conditions, `noscript` and `script` remain in place (#231).
@@ -15,6 +23,28 @@
 - Added **Thumbnail** tab in the image insertion dialog for setting parameters for [generating thumbnail images](redactor/webpages/working-in-editor/README.md#thumbnail-tab) `thumbnail` (#58317).
 
 ![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
+
+- Added [Document Manager](redactor/files/file-archive/README.md) tab in the insert link dialog for easy insertion of file links in the document manager, uploading new files, and managing them. Learn more in [File Links and File Uploading](redactor/webpages/working-in-editor/README.md#odkazy-na-syubory-a-nahravanie-syuborov) (#58593).
+
+![](redactor/webpages/working-in-editor/link_dialog-file-archive.png)
+
+- [Photobank](redactor/webpages/working-in-editor/README.md#karta-fotobanka) - when downloading an image from the photobank, it is possible to set the file name. The name is automatically pre-filled and cleaned, the extension is determined by the source image and the existing file is not overwritten. Also added support for selecting the image type and category and the ability to search for video files (#58645).
+
+![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
+
+### Headless mode
+
+Added [headless mode support](frontend/headless/README.md), in which WebJET CMS serves purely as a `backend` CMS. Content, navigation, search and forms are accessible via REST API. Frontend application (e.g. Astro, Next.js, Vue, React or any HTTP client) will download the data and display it according to its own templates (#258).
+
+![](frontend/headless/home.png)
+
+In one WebJET CMS you can have multiple (dozens) domains and subsequently have smaller websites created in different technologies that consume and display content from the CMS system. Inserting standard applications such as photo galleries, forms, GDPR cookies, and the like is also supported.
+
+![](frontend/headless/gallery.png)
+
+- Redirects - added [redirect cleanup and optimization](redactor/webpages/redirects/README.md#redirect-cleanup) with preview of changes before committing. Cleanup removes old, duplicate and cyclical redirects and shortens redirect chains (#58629).
+
+![](redactor/webpages/redirects/redirect-cleaning-analyzed.png)
 
 ### Forms
 
@@ -52,6 +82,14 @@
 
 ![](editor/apps/reservation/my-reservations-app/app-page.png)
 
+- Document Manager - added folder tree view (#58593).
+
+![](redactor/files/file-archive/datatable.png)
+
+- Document Manager - added ability to upload multiple files at once via `drag&drop` (#58593).
+
+![](redactor/files/file-archive/drag-drop-upload-dialog.png)
+
 ### Optional fields
 
 - Fully implemented [custom field settings] functionality (frontend/webpages/customfields/custom-fields-settings.md). Allows you to centrally set field properties without editing translation keys. All field types are supported (text, textarea, select, multiselect, autocomplete, enumeration, image, link, JSON and more) with type-specific settings such as maximum text length, selection options, linking to code lists or dependency on other fields. The user interface also offers an easy way to set possible values ​​for select/autocomplete fields (#58529).
@@ -68,6 +106,10 @@
 - Added option to view all files in the management domain.
 
 ### Other minor changes
+
+- Explorer - added [Unused files] tab in folder properties (redactor/files/fbrowser/folder-settings/README.md#unused-files) to find and delete unused files (#58621).
+
+![](redactor/files/fbrowser/folder-settings/folder_settings_unused_files_result.png)
 
 - Explorer - added right **Allow uploading files with accents**, which allows preserving accents when uploading, creating, and renaming files and folders in folders `/files`, `/images`, and `/shared`. Without this right, names will continue to be automatically edited without accents (#58589).
 - Login - faster loading of the home page in the administration - added cache for the list of recent pages, changed pages and audit logs (#58589).
@@ -381,6 +423,7 @@ Redesigned application properties settings in the editor from the old code in `J
 - Websites - fixed closing tag `</link>`, correctly replaced with `/>`, since `link` is an empty element (#osk498).
 - Websites - fixed bug with removing time component when setting event date (#54273-89).
 - Websites - added option [set JavaScript function](frontend/setup/config.md) for `target="_blank"` links, defaulted to `return openTargetBlank(this, event)`. The value is set in the configuration variable `editorTargetBlankFunction`, if set to empty value `onclick` the function is not set (#225).
+- Mass email - fixed creating campaigns and emails when duplicating a campaign (#58649).
 
 Jakarta version:
 

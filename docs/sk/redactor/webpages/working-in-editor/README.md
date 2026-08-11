@@ -96,6 +96,15 @@ Ak chcete vytvoriť odkaz na dokument/súbor označte si text, ktorý má byť o
 
 ![](link_dialog.png)
 
+- ak máte právo na **Manažér dokumentov** (`cmp_file_archiv`), v dialógu **Odkaz** sa zobrazí aj karta **Manažér dokumentov**.
+  - V karte je dostupná stromová štruktúra priečinkov archívu a tabuľka dokumentov z vybraného priečinka.
+  - Kliknutím na názov dokumentu sa jeho URL adresa automaticky skopíruje do poľa URL.
+  - Ak potrebný dokument ešte nie je v archíve, môžete ho nahrať priamo v tejto karte presunutím súboru z počítača (`drag&drop`) do dialógu. Súbor sa nahrá do aktuálne zvoleného priečinka v strome.
+  - Pri nahrávaní viacerých súborov alebo pri duplicite reálneho mena súboru sa zobrazia rovnaké možnosti ako v manažéri dokumentov: **Preskočiť**, **Nahradiť** alebo **Nová verzia**.
+  - Potvrdíte OK, čím sa vám na vyznačenom mieste vytvorí odkaz na súbor z manažéra dokumentov.
+
+![](link_dialog-file-archive.png)
+
 - v prípade ak je dokument **určený len pre aktuálnu web stránku**, je potrebné zvoliť položku “Média tejto stránky” a v nej položku “Súbory”.
   - Vyhľadáte dokument, kliknete naň a odkaz na dokument sa automaticky skopíruje do poľa URL.
   - V prípade ak sa v zozname požadovaný dokument nenachádza, funkciou ```drag&drop``` je možné nahrať dokument z vášho počítača
@@ -163,17 +172,32 @@ Karta **Fotobanka** umožňuje získanie (stiahnutie) obrázkov z bezplatnej onl
 
 Po zadaní a vyhľadaní výrazu, Vám budú ponúknuté vyhovujúce obrázky. Ponuka obsahuje niekoľko strán, medzi ktorými viete prechádzať.
 
+Pri vyhľadávaní vo fotobanke máte k dispozícii aj filtre:
+
+- **Typ média** umožňuje vybrať režim vyhľadávania:
+  - obrázky: `all`, `photo`, `illustration`, `vector`
+  - videá: `all`, `film`, `animation`
+- **Kategória** filtruje výsledky podľa tematickej oblasti (napr. `nature`, `business`, `travel`, ...).
+
+Ak v poli **Typ média** vyberiete video, vyhľadávanie sa automaticky prepne na hľadanie video súborov.
+
 ![](image_dialog-pixabay.png)
 
-Po kliknutí na niektorý z ponúkaných obrázkov sa zobrazí dialóg, s náhľadom a hodnotami **šírka** / **výška** daného obrázka.
+Po kliknutí na niektorý z ponúkaných obrázkov sa zobrazí dialóg s náhľadom, poľom **Názov súboru** a hodnotami **šírka** / **výška** daného obrázka.
+
+Pri vybranom videu sa zobrazí náhľad a názov súboru rovnako, ale rozmery (**šírka** / **výška**) sa v ukladacom dialógu nezadávajú.
+
+Pole **Názov súboru** sa automaticky predvyplní podľa posledného vyhľadaného výrazu, ale pred uložením ho môžete upraviť. WebJET názov automaticky prevedie na malé písmená, odstráni diakritiku a nepovolené znaky a medzery nahradí pomlčkami. Príponu súboru nezadávajte, WebJET ju zistí podľa zdrojového obrázka a jej typ zobrazí ikonou napravo od názvu.
 
 ![](image_dialog-pixabay-add.png)
 
 Ak si želáte zmeniť rozmery obrázka, môžete upraviť hodnotu **šírka** a jeho **výška** sa automaticky vypočíta podľa pôvodného pomeru obrázka.
 
+Rozmery obrázka sa do názvu súboru nepridávajú. Ak názov nezadáte alebo súbor s rovnakým názvom už existuje vo zvolenom priečinku, zobrazí sa upozornenie a obrázok sa neuloží. Existujúci súbor sa neprepíše.
+
 ![](image_dialog-pixabay-add2.png)
 
-Následne po kliknutí na tlačidlo **Uložiť do WebJET** sa obrázok stiahne a uloží. Automaticky sa prepne karta na **Obsah**, kde máte okamžite tento obrázok dostupný.
+Následne po kliknutí na tlačidlo **Uložiť do WebJET** sa obrázok stiahne a uloží pod zvoleným názvom. Automaticky sa prepne karta na **Obsah**, kde máte okamžite tento obrázok dostupný.
 
 ![](image_dialog-pixabay-save.png)
 

@@ -53,5 +53,7 @@
 - Image generation
   - [Thumb servlet](/frontend/thumb-servlet/README.md)
   - [Point of interest](/frontend/thumb-servlet/interest-point.md)
-
-
+- Headless CMS
+  - [Headless mode](/frontend/headless/README.md)
+  - [Headless services](/frontend/headless/services.md)
+  - [Example headless application](/frontend/headless/example.md)
