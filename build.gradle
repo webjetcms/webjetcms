@@ -32,6 +32,15 @@ repositories {
     maven {
         url "https://pd4ml.tech/maven2/"
     }
+    maven {
+        name = "github"
+        url = uri("https://maven.pkg.github.com/webjetcms/webjet-ai")
+        credentials {
+            //define in gradle.properties or as environment variables
+            username = project.findProperty("gpr.user") ?: System.getenv("GPR_USER")
+            password = project.findProperty("gpr.api-key") ?: System.getenv("GPR_API_KEY")
+        }
+    }
     flatDir {
        dirs 'libs'
    }
@@ -50,7 +59,7 @@ ext {
     //jar to ant/aspectj and update version in ant/compile.xml file
     aspectJVersion = '1.9.25.1';
     eclipselinkVersion = '5.0.0-B13';
-    webjetAiVersion = '0.1.0';
+    webjetAiVersion = '1.0.0-SNAPSHOT';
 }
 
 lombok {
