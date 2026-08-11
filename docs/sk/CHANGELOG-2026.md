@@ -5,6 +5,7 @@
 > Opravná verzia pôvodnej verzie 2026.0.
 
 - Webové stránky - opravené ukladanie web stránky s medzerou na konci URL adresy (vykoná sa odstránenie prázdnych znakov) (#OSK650).
+- Manažér dokumentov - pridané zmazanie cache pamäte po publikovaní novej verzie súboru (#TB2754).
 
 ## 2026.0.28
 
