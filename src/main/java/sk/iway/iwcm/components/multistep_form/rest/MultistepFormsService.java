@@ -80,6 +80,7 @@ public class MultistepFormsService {
 
     public static final String SESSION_PREFIX = "MultistepForm_";
     public static final String MULTIUPLOAD_PREFIX = "multiupload";
+    public static final String FILE_INPUT_FIELD_TYPE = "file_input";
 
     private static final String ALL_FILES_SIZE_SESSION_KEY_SUFFIX = "_allFilesSizeInKB";
 
@@ -212,6 +213,16 @@ public class MultistepFormsService {
     public static final boolean isFieldtypeIterable(String fieldType, HttpServletRequest request) {
         Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
         return isFieldtypeIterable(fieldType, prop);
+    }
+
+    /**
+     * Determine whether a form field stores an asynchronously uploaded attachment.
+     *
+     * @param fieldType configured form field type
+     * @return {@code true} for multi-upload variants and the single-file input
+     */
+    public static final boolean isFileUploadField(String fieldType) {
+        return fieldType != null && (fieldType.startsWith(MULTIUPLOAD_PREFIX) || FILE_INPUT_FIELD_TYPE.equals(fieldType));
     }
 
     private static boolean isFieldtypeIterable(String fieldType, Prop prop) {
@@ -629,7 +640,7 @@ public class MultistepFormsService {
             if(patternData.isEmpty()) patternData.append(stepItem.getItemFormId());
             else patternData.append("|~").append(stepItem.getItemFormId());
 
-            if(stepItem.getFieldType().startsWith(MULTIUPLOAD_PREFIX)) patternData.append("-fileNames");
+            if(isFileUploadField(stepItem.getFieldType())) patternData.append("-fileNames");
         }
 
         if (patternData.isEmpty() == false) patternEntity.setData(patternData.toString());
@@ -1021,6 +1032,9 @@ public class MultistepFormsService {
             // Skip if there is no value for this parameter
             if (Tools.isEmpty(received.optString(uploadedFilesParamName, ""))) continue;
 
+            FormItemEntity fileItem = formItemsRepository.findFirstByFormNameAndItemFormIdAndDomainIdOrderBySortPriorityAsc(formName, uploadedFilesParamName, CloudToolsForCore.getDomainId());
+            boolean singleFileInput = fileItem != null && FILE_INPUT_FIELD_TYPE.equals(fileItem.getFieldType());
+            int uploadedFileCount = 0;
             Map<String, Integer> sameImageCount = new HashMap<>();
             StringBuilder fileNames = new StringBuilder(); // collected names (currently unused, kept for compatibility)
 
@@ -1030,6 +1044,7 @@ public class MultistepFormsService {
 
                 for (String fileKey : Tools.getTokens(uploadedValue, ";")) {
                     if (Tools.isEmpty(fileKey)) continue;
+                    uploadedFileCount++;
 
                     // Validate restriction
                     if (restriction != null) {
@@ -1063,6 +1078,14 @@ public class MultistepFormsService {
                             sameImageCount.merge(originalFileName, 1, (oldValue, newValue) -> oldValue + newValue);
                     }
                 }
+            }
+
+            if (singleFileInput && uploadedFileCount > 1) {
+                errors.merge(
+                    uploadedFilesParamName,
+                    prop.getText("multistep_form.only_one_file"),
+                    (oldVal, newVal) -> oldVal + "\n" + newVal
+                );
             }
 
             // Check duplicates

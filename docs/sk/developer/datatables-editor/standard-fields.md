@@ -797,7 +797,7 @@ Ak sa má pridať do zoznamu aj prázdna hodnota, nastavte poľu CSS triedu `all
     private String options = "";
 ```
 
-Editor v takom prípade zobrazí vedľa tlačidla <button class="btn btn-outline-secondary" type="button"> <i class="ti ti-plus"></i> Pridať</button> ďalšie tlačidlo <button class="btn buttons-colvisGroup btn-outline-secondary options-empty-option options-empty-option-btn" type="button"> <i class="ti ti-square"></i> Pridať prázdnu možnosť </button>. Aktivovaním sa na začiatok výslednej hodnoty pridá prázdna dvojica `:`, napríklad `:|key1:value1|key2:value2`. Pri opätovnom otvorení editora sa aktivovaný stav obnoví podľa prítomnosti tejto hodnoty. Trieda `allowEmptyOption` má účinok iba na pole typu `OPTIONS`, nie na `OPTIONS_SIMPLE`.
+Editor v takom prípade zobrazí vedľa tlačidla <button class="btn btn-outline-secondary" type="button"> <i class="ti ti-plus"></i> Pridať</button> štandardné zaškrtávacie pole <span class="form-check"><input class="form-check-input options-empty-option-btn" type="checkbox"> <label class="form-check-label">Pridať prázdnu možnosť</label></span>. Zaškrtnutím sa na začiatok výslednej hodnoty pridá prázdna dvojica `:`, napríklad `:|key1:value1|key2:value2`. Pri opätovnom otvorení editora sa zaškrtnutý stav obnoví podľa prítomnosti tejto hodnoty. Trieda `allowEmptyOption` má účinok iba na pole typu `OPTIONS`, nie na `OPTIONS_SIMPLE`.
 
 ### Implementácia
 

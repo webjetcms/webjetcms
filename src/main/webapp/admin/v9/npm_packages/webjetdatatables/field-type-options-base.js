@@ -35,15 +35,11 @@ export function createOptionsFieldType(config) {
     }
 
     function isEmptyOptionSelected(conf) {
-        return conf._wrapper.find("." + cls.emptyOptionBtn).attr("aria-pressed") === "true";
+        return conf._wrapper.find("." + cls.emptyOptionBtn).prop("checked") === true;
     }
 
     function setEmptyOptionSelected(conf, selected) {
-        const button = conf._wrapper.find("." + cls.emptyOptionBtn);
-        button.attr("aria-pressed", selected ? "true" : "false");
-        button.find("i")
-            .toggleClass("ti-square", selected === false)
-            .toggleClass("ti-square-check", selected);
+        conf._wrapper.find("." + cls.emptyOptionBtn).prop("checked", selected);
     }
 
     function initDragReorder(conf) {
@@ -117,9 +113,10 @@ export function createOptionsFieldType(config) {
 
             const headerHtml = createHeader ? createHeader(conf) : "";
             const emptyOptionHtml = isEmptyOptionAllowed(conf) ? `
-                    <button class="btn buttons-colvisGroup btn-outline-secondary ${cls.emptyOption} ${cls.emptyOptionBtn}" type="button" aria-pressed="false">
-                        <i class="ti ti-square"></i> ${WJ.translate("datatables.options.addEmptyOption.js")}
-                    </button>` : "";
+                    <div class="form-check align-self-center ${cls.emptyOption}">
+                        <input class="form-check-input ${cls.emptyOptionBtn}" type="checkbox" id="${id}-empty-option">
+                        <label class="form-check-label" for="${id}-empty-option">${WJ.translate("datatables.options.addEmptyOption.js")}</label>
+                    </div>` : "";
 
             conf._wrapper = $(`
                 <div id="${id}" class="${cls.wrapper}">
@@ -136,9 +133,6 @@ export function createOptionsFieldType(config) {
 
             conf._wrapper.find("." + cls.addBtn).on("click", function () {
                 addInputRow(conf, ...emptyRowArgs());
-            });
-            conf._wrapper.find("." + cls.emptyOptionBtn).on("click", function () {
-                setEmptyOptionSelected(conf, isEmptyOptionSelected(conf) === false);
             });
 
             //enable drag and drop reordering

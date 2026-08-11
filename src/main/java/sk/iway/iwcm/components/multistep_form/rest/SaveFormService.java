@@ -338,7 +338,7 @@ public class SaveFormService {
             //disable pipe as it is used as separator
             sessionValue = Tools.replace(sessionValue, "|", "&#124;");
 
-            if(stepItem.getFieldType().startsWith(MultistepFormsService.MULTIUPLOAD_PREFIX)) {
+            if(MultistepFormsService.isFileUploadField(stepItem.getFieldType())) {
                 //Save files
                 List<String> savedFileNames = saveFiles(sessionValue, form.getId(), formFiles);
 

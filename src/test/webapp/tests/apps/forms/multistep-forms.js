@@ -768,9 +768,9 @@ function fillFormItem(I, DTE, fieldType, required, label, value, tooltip, placeh
     }
 
     if(options.emptyOption === true) {
-        I.waitForElement("#DTE_Field_valueAsOptions button.options-empty-option-btn", 5);
-        I.clickCss("#DTE_Field_valueAsOptions button.options-empty-option-btn");
-        I.seeElement("#DTE_Field_valueAsOptions button.options-empty-option-btn[aria-pressed='true']");
+        I.waitForElement("#DTE_Field_valueAsOptions input.options-empty-option-btn", 5);
+        I.checkOption("#DTE_Field_valueAsOptions input.options-empty-option-btn");
+        I.seeCheckboxIsChecked("#DTE_Field_valueAsOptions input.options-empty-option-btn");
     }
 
     if(tooltip !== null) { DTE.fillQuill("tooltip", tooltip); }
@@ -881,6 +881,7 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
 
     createAndFillFormItem(I, DT, DTE, 'Výberový zoznam - select', false, "Empty option autotest", "labelA:valueA|labelB:valueB", null, null, { emptyOption: true });
     createAndFillFormItem(I, DT, DTE, 'Automatické dopĺňanie - autocomplete', false, "Country autocomplete autotest", "Slovensko:SK|Česko:CZ|Rakúsko:AT", null, null);
+    createAndFillFormItem(I, DT, DTE, 'File input', false, "Upload CV autotest", null, null, "Please use a PDF file - autotest");
 
     I.say("Check generated item ID and trim setting in edit mode");
     I.click(locate("#formItemsDataTable tbody td").withText("Vase meno"));
@@ -897,7 +898,8 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
     I.click(DT.btn.formItems_edit_button);
     DTE.waitForEditor("formItemsDataTable");
     I.clickCss("#pills-dt-formItemsDataTable-advanced-tab");
-    I.waitForElement("#DTE_Field_valueAsOptions button.options-empty-option-btn[aria-pressed='true']", 5);
+    I.waitForElement("#DTE_Field_valueAsOptions input.options-empty-option-btn:checked", 5);
+    I.seeCheckboxIsChecked("#DTE_Field_valueAsOptions input.options-empty-option-btn");
     DTE.cancel("formItemsDataTable");
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appInsertTestPageId);
@@ -938,6 +940,31 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
 
     I.clickCss("label[for='f1-radiogroup-1-0']");
 
+    I.say("Test single file input");
+    const fileDropzoneSelector = "#f1-upload-cv-autotest-1-dropzone";
+    const fileButtonSelector = fileDropzoneSelector + " button.dz-message";
+    const uploadedFileName = "archive_file_test.pdf";
+
+    I.see("Please use a PDF file - autotest", "label[for='f1-upload-cv-autotest-1-dropzone'] + div.form-text");
+    I.seeElement(fileDropzoneSelector + "[data-dzmaxfiles='1']");
+    I.seeElement(fileButtonSelector + ".border.border-secondary.dz-clickable:not([disabled])");
+
+    I.attachFile("input.dz-hidden-input", "tests/apps/file-archive/docs/" + uploadedFileName);
+    I.waitForText(uploadedFileName, 10, fileDropzoneSelector + " [data-dz-name]");
+    I.waitForElement(fileButtonSelector + "[disabled]", 5);
+    I.dontSeeElement(fileButtonSelector + ".dz-clickable");
+
+    const uploadedFilesCount = await I.grabNumberOfVisibleElements(fileDropzoneSelector + " .dz-preview");
+    I.assertEqual(uploadedFilesCount, 1, "Single file input must contain exactly one uploaded file");
+
+    I.clickCss(fileDropzoneSelector + " button[data-dz-remove]");
+    I.waitForInvisible(fileDropzoneSelector + " .dz-preview", 5);
+    I.waitForElement(fileButtonSelector + ".dz-clickable:not([disabled])", 5);
+
+    I.attachFile("input.dz-hidden-input", "tests/apps/file-archive/docs/" + uploadedFileName);
+    I.waitForText(uploadedFileName, 10, fileDropzoneSelector + " [data-dz-name]");
+    I.waitForElement(fileButtonSelector + "[disabled]", 5);
+
     //submit
     I.clickCss("button[type='submit']");
     I.waitForText("Formulár bol úspešne odoslaný");
@@ -945,6 +972,7 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
     I.say('Check saved anwers');
     I.amOnPage("/apps/form/admin/detail/?formName=" + specialFormName);
     I.see("Záznamy 1 až 1 z 1");
+    I.see(uploadedFileName, "#formDetailDataTable");
 
     const expectedHtml = `
         <div class="form-step mt-3"><div class="form-group mb-3">
@@ -981,6 +1009,8 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
         <label for="empty-option-autotest-1">Empty option autotest:</label><span class="form-control emailInput-select">&nbsp;</span>
         </div><div class="form-group mb-3">
         <label for="country-autocomplete-autotest-1">Country autocomplete autotest:</label><span class="form-control emailInput-text">CZ</span>
+        </div><div class="form-group mb-3">
+        <label class="form-label" for="upload-cv-autotest-1-dropzone">Upload CV autotest:</label><div class="form-text mb-2"> Please use a PDF file - autotest </div> <span class="form-control emailInput-text">${uploadedFileName}</span>
         </div></div>
     `;
 
