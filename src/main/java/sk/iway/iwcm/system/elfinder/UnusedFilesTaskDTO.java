@@ -14,4 +14,5 @@ public class UnusedFilesTaskDTO {
     private Long startedAt;
     private Long finishedAt;
     private Integer totalFiles;
+    private String error;
 }
