@@ -1,5 +1,7 @@
 package sk.iway.iwcm.components.domain_redirects;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -91,16 +93,13 @@ public class DomainRedirectsController extends DatatableRestControllerV2<DomainR
     private boolean isDomainValid(DomainRedirectBean entity, Errors errors) {
         if (InitServlet.isTypeCloud()==false) return true;
 
-        boolean isValid = true;
-        if (entity.getRedirectTo().contains(CloudToolsForCore.getDomainName())==false)
-        {
-            isValid = false;
-        }
+        String cloudDomain = getHostName(CloudToolsForCore.getDomainName());
+        boolean isValid = entity != null && isSameHost(entity.getRedirectTo(), cloudDomain);
 
         //check existing row in database for domainName
-        if (entity.getRedirectId()!=null && entity.getRedirectId().intValue()>0) {
+        if (entity != null && entity.getRedirectId()!=null && entity.getRedirectId().intValue()>0) {
             String currentDomain = (new SimpleQuery()).forString("SELECT redirect_to FROM domain_redirects WHERE redirect_id=?", entity.getRedirectId());
-            if (currentDomain.equals(CloudToolsForCore.getDomainName())==false) {
+            if (isSameHost(currentDomain, cloudDomain)==false) {
                 isValid = false;
             }
         }
@@ -108,6 +107,28 @@ public class DomainRedirectsController extends DatatableRestControllerV2<DomainR
         if (isValid==false && errors != null) errors.rejectValue("errorField.redirectTo", "403", Prop.getInstance().getText("components.file_archiv.file_rename.nemate_pravo_na_tuto_editaciu"));
 
         return isValid;
+    }
+
+    private static boolean isSameHost(String url, String expectedHost) {
+        String host = getHostName(url);
+        return host != null && expectedHost != null && host.equalsIgnoreCase(expectedHost);
+    }
+
+    private static String getHostName(String url) {
+        if (url == null || url.isBlank()) return null;
+
+        String normalizedUrl = url.trim();
+        if (normalizedUrl.startsWith("//")) {
+            normalizedUrl = "https:" + normalizedUrl;
+        } else if (normalizedUrl.matches("^[a-zA-Z][a-zA-Z0-9+.-]*://.*") == false) {
+            normalizedUrl = "https://" + normalizedUrl;
+        }
+
+        try {
+            return new URI(normalizedUrl).getHost();
+        } catch (URISyntaxException ex) {
+            return null;
+        }
     }
 
     @Override
