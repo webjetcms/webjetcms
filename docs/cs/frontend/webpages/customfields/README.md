@@ -98,6 +98,16 @@ Hodnoty se pak ukládají do pole oddělené pomocí znaku `|`
 
 `Hodnota 1|Hodnota 3`
 
+### Přepínač
+
+Typ pole `radio` zobrazí seznam možností jako přepínač, uživatel může vybrat právě jednu hodnotu. Možnosti se nastavují v tabulce [Volitelná pole](custom-fields-settings.md) stejně jako u výběrového pole - jako statický seznam hodnot, nebo dynamicky propojením na číselník.
+
+### Zaškrtávací pole
+
+Typ pole `checkbox` zobrazí seznam možností jako zaškrtávací pole, uživatel může vybrat více hodnot. Možnosti se nastavují v tabulce [Volitelná pole](custom-fields-settings.md) stejně jako u výběrového pole - jako statický seznam hodnot, nebo dynamicky propojením na číselník.
+
+Vybrané hodnoty se ukládají do pole oddělené pomocí znaku `|`.
+
 ### Boolovská hodnota
 
 Pro možnost zadání Boolovské/binární hodnoty zadejte do `.type` možnost `boolean`.
