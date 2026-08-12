@@ -31,7 +31,10 @@ public class AiTaskRegistry implements DisposableBean {
     private static final int MAX_CONCURRENT_TASKS = 32;
     private final ConcurrentMap<String, Future<AssistantResponseDTO>> futuresMap = new ConcurrentHashMap<>();
     private final ExecutorService executor = new ThreadPoolExecutor(
-        0, MAX_CONCURRENT_TASKS, 60L, TimeUnit.SECONDS,
+        MAX_CONCURRENT_TASKS,
+        MAX_CONCURRENT_TASKS,
+        60L,
+        TimeUnit.SECONDS,
         new LinkedBlockingQueue<>(),
         task -> {
             Thread thread = new Thread(task, "webjet-ai-task");

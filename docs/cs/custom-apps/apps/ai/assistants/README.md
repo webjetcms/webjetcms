@@ -4,17 +4,17 @@ Komunikace s externí AI službou patří do samostatné knihovny [webjet-ai](ht
 
 Integrace serverového poskytovatele má tři části:
 
-- implementaci `AiProvider` ve `webjet-ai`, která zajišťuje komunikaci s poskytovatelem, zpracování odpovědí a streamování
+- implementaci `AiProvider` v `webjet-ai`, která zajišťuje komunikaci s poskytovatelem, zpracování odpovědí a streamování
 - tenkou službu WebJET CMS rozšiřující [LibrarySupportLogic](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/LibrarySupportLogic.java), která propojuje knihovnu s CMS
 - volitelnou implementaci [AiAssitantsInterface](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiAssitantsInterface.java) pro pole poskytovatele v editoru asistenta
 
-Poskytovatele zaregistrujte v [AiLibraryConfiguration](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiLibraryConfiguration.java) a konfiguraci CMS mapujte ve [WebjetAiConfigurationService](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/WebjetAiConfigurationService.java). Zpracování požadavku a domény, konfigurace, auditování, statistiky, perzistence, makra promptů a dočasné soubory zůstávají ve správě WebJET CMS.
+Poskytovatele zaregistrujte v [AiLibraryConfiguration](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiLibraryConfiguration.java) a konfiguraci CMS mapujte v [WebjetAiConfigurationService](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/WebjetAiConfigurationService.java). Zpracování požadavku a domény, konfigurace, auditování, statistiky, perzistence, makra promptů a dočasné soubory zůstávají ve správě WebJET CMS.
 
-Předchozí transportní SPI systému CMS bylo odstraněno. Existující vlastní serverové poskytovatele je nutné migrovat na rozhraní `AiProvider` z knihovny a CMS adaptér `LibrarySupportLogic`.
+Předchozí transportní SPI systému CMS bylo odstraněno. Stávající vlastní serverové poskytovatele je nutné migrovat na rozhraní `AiProvider` z knihovny a CMS adaptér `LibrarySupportLogic`.
 
-## Implementace `AiProvider`
+## Provádění `AiProvider`
 
-Implementujte `com.webjetcms.ai.AiProvider` v samostatné knihovně nebo v jiné knihovně nezávislé na frameworku, která na ní závisí. Stabilní hodnota vrácená metodou `id()` identifikuje poskytovatele v knihovně i v adaptérech CMS.
+Proveďte `com.webjetcms.ai.AiProvider` v samostatné knihovně nebo v jiné knihovně nezávislé na frameworku, která na ní závisí. Stabilní hodnota vrácená metodou `id()` identifikuje poskytovatele v knihovně i v adaptérech CMS.
 
 ```java
 public final class AcmeProvider implements AiProvider {
@@ -48,7 +48,7 @@ public final class AcmeProvider implements AiProvider {
 }
 ```
 
-API klíče, změny koncového bodu, časové limity a důvěryhodné hlavičky vstupují do poskytovatele pouze přes neměnný objekt `AiProviderConfig`. Knihovna nesmí přímo přistupovat k servletovým požadavkům, Spring službám, databázi ani ke konfiguraci CMS. Úplné implementace najdete mezi poskytovateli v [repozitáři webjet-ai](https://github.com/webjetcms/webjet-ai).
+API klíče, změny koncového bodu, časové limity a důvěryhodné hlavičky vstupují do poskytovatele pouze přes neměnný objekt `AiProviderConfig`. Knihovna nesmí přímo přistupovat k servletovým požadavkům, Spring službám, databázi ani ke konfiguraci CMS. Úplné implementace naleznete mezi poskytovateli v [repozitáři webjet-ai](https://github.com/webjetcms/webjet-ai).
 
 ## Registrace poskytovatele v CMS
 
@@ -104,7 +104,7 @@ Identifikátor poskytovatele se musí shodovat s hodnotou `AiProvider.id()`. Kl�
 
 ## Mapování konfigurace WebJET
 
-Konfigurační klíč poskytovatele přidejte do [WebjetAiConfigKeys](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/WebjetAiConfigKeys.java) a namapujte jej ve `WebjetAiConfigurationService`:
+Konfigurační klíč poskytovatele přidejte do [WebjetAiConfigKeys](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/WebjetAiConfigKeys.java) a namapujte jej v `WebjetAiConfigurationService`:
 
 ```java
 private String apiKey(String providerId) {
@@ -120,7 +120,7 @@ private String apiKey(String providerId) {
 
 `WebjetAiConfigurationService.resolve(providerId, request)` vytvoří objekt `AiProviderConfig` pro aktuální požadavek. Metodu rozšiřte, pokud poskytovatel potřebuje koncový bod spravovaný v CMS nebo důvěryhodnou hlavičku s metadaty. Hlavičky zadané uživatelem nikdy nepředávejte přímo a přihlašovací údaje nezapisujte do logu.
 
-## Implementace `AiAssitantsInterface`
+## Provádění `AiAssitantsInterface`
 
 Tento CMS adaptér vytvořte, pokud poskytovatel potřebuje výchozí hodnoty nebo vlastní pole v editoru asistenta. Stav konfigurace poskytovatele zjišťujte přes `WebjetAiConfigurationService`:
 
@@ -172,7 +172,7 @@ public class AcmeAssistantsService implements AiAssitantsInterface {
 
 ## Lokální vývoj
 
-Dokud nebude `com.webjetcms:webjet-ai:0.1.0` dostupná z Maven Central, spouštějte Gradle úlohy CMS z repozitáře CMS s explicitně připojenou sousední knihovnou:
+Dokud nebude `com.webjetcms:webjet-ai` dostupná z Maven Central, spouštějte Gradle úlohy CMS z repozitáře CMS s explicitně připojenou sousední knihovnou:
 
 ```shell
 ./gradlew --include-build ../webjet-ai compileJava test

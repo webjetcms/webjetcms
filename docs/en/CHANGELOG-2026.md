@@ -90,6 +90,12 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ![](redactor/files/file-archive/drag-drop-upload-dialog.png)
 
+### Gallery
+
+- Added the ability to set a separate [resizing method for a large image](redactor/apps/gallery/structure.md#tab-dimensions) independent of the small image. By default, the same resizing method is used as set for the small image. The setting can optionally be copied to subfolders (#58633).
+
+![](redactor/apps/gallery/dir-sizes-tab.png)
+
 ### Optional fields
 
 - Fully implemented [custom field settings] functionality (frontend/webpages/customfields/custom-fields-settings.md). Allows you to centrally set field properties without editing translation keys. All field types are supported (text, textarea, select, multiselect, autocomplete, enumeration, image, link, JSON and more) with type-specific settings such as maximum text length, selection options, linking to code lists or dependency on other fields. The user interface also offers an easy way to set possible values ​​for select/autocomplete fields (#58529).
@@ -97,6 +103,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 ![](frontend/webpages/customfields/custom-fields-settings-editor.png)
 
 - Added option to set optional field as required (#58413).
+- Added new optional field types [radio check box and radio check box](frontend/webpages/customfields/custom-fields-settings.md#difference-between-selectmultiselect-and-radiocheckbox) with support for both static options and codebook linking. The `multiselect` type now also supports [codebook linking](frontend/webpages/customfields/custom-fields-settings.md#option-source). The original `enumeration` type has been replaced by an option source switch for types `select`, `multiselect`, `radio` and `checkbox` where options are loaded from a linked codebook for all these field types (#58637).
 
 ### Multiweb
 
@@ -113,6 +120,15 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 - Explorer - added right **Allow uploading files with accents**, which allows preserving accents when uploading, creating, and renaming files and folders in folders `/files`, `/images`, and `/shared`. Without this right, names will continue to be automatically edited without accents (#58589).
 - Login - faster loading of the home page in the administration - added cache for the list of recent pages, changed pages and audit logs (#58589).
+- Export/import files - modified dialog design and responsive display of form fields according to the current administration design (#58581).
+- Web pages - added highlighting of the element above which the context menu is called. Important if you want to perform the Delete element action, so you can see exactly which element is marked (#OSK675).
+- Multiweb - added option to rename an existing domain + redirection after renaming (#58317-15).
+
+### Bug fixes
+
+- Explorer - modified comparison of files with diacritics when checking the existence of a file when overwriting it - format `utf-8 NFC vs NFD` (#58317-12).
+- Web pages - fixed adding empty `P` element to the end of the page (#58317-13).
+- Websites - fixed loading of `ckeditor_button_sizes` value for button type `A` (#OSK674).
 
 ### Safety
 
@@ -126,7 +142,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### For the programmer
 
-- AI assistants - provider-neutral client logic for OpenAI, Gemini, and OpenRouter, stream processing, request/response types, and prompt protection were extracted into the standalone `com.webjetcms:webjet-ai` artifact and the external [webjet-ai repository](https://github.com/webjetcms/webjet-ai). WebJET CMS supplies configuration through a typed adapter and continues to handle auditing, persistence, and user-interface integration. This is a breaking change: the previous CMS custom-provider SPI and its transport and streaming support classes were removed. Custom providers must migrate to the library's `AiProvider` interface and the CMS `LibrarySupportLogic` adapter (#58670).
+- AI Assistants - Provider-independent client logic for OpenAI, Gemini, and OpenRouter, stream processing, request/response types, and prompt protection have been separated into a separate artifact `com.webjetcms:webjet-ai` and an external [webjet-ai repository](https://github.com/webjetcms/webjet-ai). WebJET CMS passes configuration through a typed adapter and continues to provide auditing, persistence, and UI integration. This is an incompatible change: the original CMS SPI for custom providers and its transport and streaming support classes have been removed. Custom providers must be migrated to the `AiProvider` library interface and the CMS adapter `LibrarySupportLogic` (#58670).
 
 - Datatables - added a new field type `OPTIONS` for [dynamic list of values](developer/datatables-editor/standard-fields.md#options) in the editor. Each row contains two text fields (key and value), supports adding, removing and reordering using `drag & drop` (#58517).
 
@@ -334,6 +350,10 @@ Redesigned application properties settings in the editor from the old code in `J
 ## 2026.0.x
 
 > A patch version of the original version 2026.0.
+
+- Web pages - fixed saving a web page with a space at the end of the URL (whitespace removal will be performed) (#OSK650).
+- Document Manager - added clearing of cache after publishing a new version of a file (#TB2754).
+- Multiweb - fixed the ability to delete or edit a domain redirect that contains the `http/s` prefix (#58317-15).
 
 ## 2026.0.28
 

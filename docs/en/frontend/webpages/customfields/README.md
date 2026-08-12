@@ -98,6 +98,16 @@ The values ​​are then stored in an array separated by the `|` character.
 
 `Hodnota 1|Hodnota 3`
 
+### Switch
+
+The field type `radio` displays a list of options as a radio button, the user can select exactly one value. The options are set in the [Optional fields] table (custom-fields-settings.md) in the same way as for a selection field - as a static list of values, or dynamically by linking to a number list.
+
+### Checkbox
+
+The field type `checkbox` displays a list of options as checkboxes, the user can select multiple values. The options are set in the [Optional Fields] table (custom-fields-settings.md) in the same way as for a select field - as a static list of values, or dynamically by linking to a dial pad.
+
+The selected values ​​are stored in an array separated by the `|` character.
+
 ### Boolean value
 
 For the option to enter a Boolean/binary value, enter the option `boolean` in `.type`.

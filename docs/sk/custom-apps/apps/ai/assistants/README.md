@@ -172,7 +172,7 @@ public class AcmeAssistantsService implements AiAssitantsInterface {
 
 ## Lokálny vývoj
 
-Kým nebude `com.webjetcms:webjet-ai:0.1.0` dostupná z Maven Central, spúšťajte Gradle úlohy CMS z repozitára CMS s explicitne pripojenou susednou knižnicou:
+Kým nebude `com.webjetcms:webjet-ai` dostupná z Maven Central, spúšťajte Gradle úlohy CMS z repozitára CMS s explicitne pripojenou susednou knižnicou:
 
 ```shell
 ./gradlew --include-build ../webjet-ai compileJava test
