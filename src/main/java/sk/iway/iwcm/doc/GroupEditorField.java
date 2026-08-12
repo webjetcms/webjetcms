@@ -121,7 +121,7 @@ public class GroupEditorField extends BaseEditorFields {
                     @DataTableColumnEditorAttr(key = "editor.apply_for_all_sub_folders_and_sub_pages", value = "true") }) })
     private boolean forceUrlDirNameChange;
 
-    @DataTableColumn(renderFormat = "dt-format-checkbox", title = "[[#{}]]", visible = false, sortAfter = "domainName", editor = {
+    @DataTableColumn(renderFormat = "dt-format-checkbox", title = "[[#{}]]", visible = false, sortAfter = "domainName", className = "noperms-install-cloud", editor = {
             @DataTableColumnEditor(type = "checkbox", tab = "basic", options = {
                     @DataTableColumnEditorAttr(key = "groupedit.changeDomainRedirects", value = "true") }) })
     private boolean forceDomainNameChange;
