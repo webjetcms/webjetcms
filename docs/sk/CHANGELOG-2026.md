@@ -122,6 +122,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Prihlásenie - zrýchlené načítanie úvodnej stránky v administrácii - pridaná vyrovnávacia pamäť pre zoznam posledných stránok, zmenených stránok a auditných záznamov (#58589).
 - Export/import súborov - upravený dizajn dialógového okna a responzívne zobrazenie formulárových polí podľa aktuálneho dizajnu administrácie (#58581).
 - Webové stránky - doplnené zvýraznenie elementu nad ktorým je vyvolané kontextové menu. Dôležité ak chcete vykonať akciu Zmazať element, aby ste presne videli ktorý element je označený (#OSK675).
+- Multiweb - doplnená možnosť premenovať existujúcu doménu + presmerovanie po premenovaní (#58317-15).
 
 ### Oprava chýb
 
@@ -352,6 +353,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 - Webové stránky - opravené ukladanie web stránky s medzerou na konci URL adresy (vykoná sa odstránenie prázdnych znakov) (#OSK650).
 - Manažér dokumentov - pridané zmazanie cache pamäte po publikovaní novej verzie súboru (#TB2754).
+- Multiweb - opravená možnosť zmazať alebo upraviť doménové presmerovanie, ktoré obsahuje `http/s` prefix (#58317-15).
 
 ## 2026.0.28
 
