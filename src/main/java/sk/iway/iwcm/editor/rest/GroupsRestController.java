@@ -706,8 +706,16 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 			if (oldGroup == null || oldGroup.getDomainName().equals(CloudToolsForCore.getDomainName())==false)
 			{
 				errors.rejectValue("errorField.domainName", "403", Prop.getInstance().getText("user.rights.no_folder_rights"));
-                return;
+	            return;
 			}
+
+            if (Tools.isNotEmpty(entity.getDomainName()) && oldGroup.getDomainName().equalsIgnoreCase(entity.getDomainName())==false) {
+                int domainCount = new SimpleQuery().forInt("SELECT COUNT(*) FROM groups WHERE LOWER(domain_name)=LOWER(?)", entity.getDomainName());
+                if (domainCount > 0) {
+                    errors.rejectValue("errorField.domainName", "403", Prop.getInstance(request).getText("groupedit.domain_already_exists"));
+                    return;
+                }
+            }
 		}
 
         if ("remove".equals(target.getAction())) return;
