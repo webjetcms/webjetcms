@@ -219,8 +219,8 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 
     @Override
     public void beforeSave(GroupDetails entity) {
-        if (InitServlet.isTypeCloud() && CloudToolsForCore.isControllerDomain()==false) {
-            //force current domain
+        if (InitServlet.isTypeCloud() && "cloud".equals(Constants.getInstallName()) && CloudToolsForCore.isControllerDomain()==false) {
+            //force current domain for WebJET Cloud
             entity.setDomainName(CloudToolsForCore.getDomainName());
         }
         super.beforeSave(entity);
@@ -270,6 +270,14 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
                     //read systemGroupIds for later use
                     systemGroupIds = groupsDB.getSubgroupsIds(system.getGroupId());
                 }
+            }
+            if (oldGroupDetails != null && entity.getGroupName().equals(oldGroupDetails.getDomainName())) {
+                //if group name is same as domain name, we also update group name to reflect new domain name
+                entity.setGroupName(entity.getDomainName());
+            }
+            if (oldGroupDetails != null && entity.getNavbarName().equals(oldGroupDetails.getDomainName())) {
+                //if group name is same as domain name, we update group navbar too
+                entity.setNavbarName(entity.getDomainName());
             }
         }
 
@@ -478,6 +486,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         }
 
         int parGroupId = entity.getParentGroupId();
+        boolean domainRenamed = false;
         if ((parGroupId < 1 || Constants.getBoolean("multiDomainEnableNested")) && Tools.isNotEmpty(entity.getDomainName()) && entity.getEditorFields().isForceDomainNameChange())
         {
             if(parGroupId < 1) {
@@ -485,17 +494,24 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             }
 
             String groupIds = groupsDB.getSubgroupsIds(entity.getGroupId());
+            domainRenamed = true;
+            forceReloadNewDomainName = true;
 
             Adminlog.add(Adminlog.TYPE_GROUP, "Force domain to subgroups: " + groupIds, entity.getGroupId(), entity.getTempId());
 
-            //updatni groups
-            new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE group_id IN ("+groupIds+")",entity.getDomainName());
-
-            if (systemGroupIds!=null) {
-                Adminlog.add(Adminlog.TYPE_GROUP, "Force domain to system subgroups: " + systemGroupIds, -1, -1);
-
+            if (InitServlet.isTypeCloud() && oldGroupDetails != null && Tools.isNotEmpty(oldGroupDetails.getDomainName())) {
+                //in multiweb rename domain in all root groups
+                new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE domain_name=?", entity.getDomainName(), oldGroupDetails.getDomainName());
+            } else {
                 //updatni groups
-                new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE group_id IN ("+systemGroupIds+")", entity.getDomainName());
+                new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE group_id IN ("+groupIds+")",entity.getDomainName());
+
+                if (systemGroupIds!=null) {
+                    Adminlog.add(Adminlog.TYPE_GROUP, "Force domain to system subgroups: " + systemGroupIds, -1, -1);
+
+                    //updatni groups
+                    new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE group_id IN ("+systemGroupIds+")", entity.getDomainName());
+                }
             }
 
             //aktualizuj presmerovania
@@ -648,6 +664,15 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         }
 
         if (forceReloadNewDomainName) {
+            if (domainRenamed && InitServlet.isTypeCloud()) {
+                //force reload to new domain after change domain name
+                GroupDetails entityReload = new GroupDetails();
+                entityReload.setDomainName(entity.getDomainName());
+                entityReload.setGroupId(-2);
+                entityReload.setEditorFields(new GroupEditorField());
+                entity = entityReload;
+            }
+
             //novo vytvorena domena, potrebujeme vyvolat reload stranky
             //fejkneme to cez atribut forceDomainNameChange, na ktory uz pocuvame v pug subore
             entity.getEditorFields().setForceDomainNameChange(true);
