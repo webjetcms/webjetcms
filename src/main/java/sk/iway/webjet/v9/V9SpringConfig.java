@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.support.ConversionServiceFactoryBean;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
@@ -30,6 +31,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
  */
 @EnableSpringDataWebSupport
 @Configuration
+@Import(V9JpaDBConfig.class)
 @ComponentScan({
     "sk.iway.iwcm.admin",
     "sk.iway.iwcm.calendar",
@@ -126,7 +128,6 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.users.userdetail",
     "sk.iway.iwcm.components.users.usergroups",
     "sk.iway.iwcm.components.welcome",
-    "sk.iway.webjet.v9",
     "sk.iway.iwcm.components.forum",
     "sk.iway.iwcm.components.emoticon",
     "sk.iway.iwcm.components.appuser",

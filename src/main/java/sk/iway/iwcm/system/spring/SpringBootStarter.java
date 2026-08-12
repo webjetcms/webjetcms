@@ -112,7 +112,6 @@ public class SpringBootStarter extends SpringBootServletInitializer {
             .initializers(new WebjetBootstrapApplicationContextInitializer(forcedMode))
             .properties(
                 "spring.profiles.active:" + (System.getProperty("spring.profiles.active") != null ? System.getProperty("spring.profiles.active") : "default"),
-                "spring.main.allow-bean-definition-overriding:true",
                 "server.servlet.context-path:/",
                 "server.tomcat.basedir:."
             );

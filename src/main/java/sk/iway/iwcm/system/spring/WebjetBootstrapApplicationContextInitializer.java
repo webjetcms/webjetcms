@@ -51,19 +51,27 @@ class WebjetBootstrapApplicationContextInitializer
 
         ServletContext servletContext = getServletContext(applicationContext);
         WebjetBootstrapState state;
+        WebjetBootstrapSpringConfiguration springConfiguration;
         if (servletContext != null) {
             boolean initialized = initializationActions.initialize(servletContext);
             WebjetBootstrapMode mode = initialized ? WebjetBootstrapMode.PRODUCTION : WebjetBootstrapMode.SETUP;
             state = WebjetBootstrapState.initialized(mode, initialized);
+            springConfiguration = initialized
+                ? WebjetBootstrapSpringConfiguration.fromConstants()
+                : WebjetBootstrapSpringConfiguration.empty();
         } else {
-            WebjetBootstrapMode mode = forcedMode != null
-                ? forcedMode
+            WebjetBootstrapModeDetector.Detection detection = forcedMode != null
+                ? new WebjetBootstrapModeDetector.Detection(
+                    forcedMode, WebjetBootstrapSpringConfiguration.empty()
+                )
                 : modeDetector.detect(applicationContext.getEnvironment());
-            state = WebjetBootstrapState.pending(mode);
+            state = WebjetBootstrapState.pending(detection.mode());
+            springConfiguration = detection.springConfiguration();
         }
 
         applicationContext.getEnvironment().getPropertySources().addFirst(
-            new MapPropertySource(PROPERTY_SOURCE_NAME, getBootstrapProperties(applicationContext, state))
+            new MapPropertySource(PROPERTY_SOURCE_NAME,
+                getBootstrapProperties(applicationContext, state, springConfiguration))
         );
         applicationContext.getBeanFactory().registerSingleton(WebjetBootstrapState.BEAN_NAME, state);
 
@@ -85,9 +93,10 @@ class WebjetBootstrapApplicationContextInitializer
     }
 
     private Map<String, Object> getBootstrapProperties(ConfigurableApplicationContext applicationContext,
-            WebjetBootstrapState state) {
+            WebjetBootstrapState state, WebjetBootstrapSpringConfiguration springConfiguration) {
         Map<String, Object> properties = new HashMap<>();
         properties.put(WebjetBootstrapMode.PROPERTY_NAME, state.getMode().getPropertyValue());
+        springConfiguration.addProperties(properties);
 
         if (state.getMode() == WebjetBootstrapMode.SETUP) {
             Set<String> exclusions = new LinkedHashSet<>();

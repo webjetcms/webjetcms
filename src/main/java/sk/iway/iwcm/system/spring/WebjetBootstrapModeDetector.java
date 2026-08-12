@@ -12,7 +12,7 @@ import sk.iway.iwcm.Tools;
 
 class WebjetBootstrapModeDetector {
 
-    WebjetBootstrapMode detect(Environment environment) {
+    Detection detect(Environment environment) {
         String contextDbName = firstNotEmpty(
             environment.getProperty("server.servlet.context-parameters.webjetDbname"),
             environment.getProperty("webjetDbname"),
@@ -32,20 +32,23 @@ class WebjetBootstrapModeDetector {
         try (Connection connection = DBPool.getConnection(dbName)) {
             if (connection == null) {
                 Logger.info(WebjetBootstrapModeDetector.class, "WebJET setup mode selected: database is unavailable");
-                return WebjetBootstrapMode.SETUP;
+                return Detection.setup();
             }
 
             Map<String, String> databaseValues = InitServlet.getDatabaseValues(connection);
             if (databaseValues.isEmpty()) {
                 Logger.info(WebjetBootstrapModeDetector.class, "WebJET setup mode selected: configuration table is empty or unavailable");
-                return WebjetBootstrapMode.SETUP;
+                return Detection.setup();
             }
 
             Logger.info(WebjetBootstrapModeDetector.class, "WebJET production mode selected by database preflight");
-            return WebjetBootstrapMode.PRODUCTION;
+            return new Detection(
+                WebjetBootstrapMode.PRODUCTION,
+                WebjetBootstrapSpringConfiguration.fromDatabaseValues(databaseValues, environment)
+            );
         } catch (Exception ex) {
             Logger.error(WebjetBootstrapModeDetector.class, ex);
-            return WebjetBootstrapMode.SETUP;
+            return Detection.setup();
         }
     }
 
@@ -56,5 +59,16 @@ class WebjetBootstrapModeDetector {
             }
         }
         return null;
+    }
+
+    record Detection(WebjetBootstrapMode mode,
+            WebjetBootstrapSpringConfiguration springConfiguration) {
+
+        static Detection setup() {
+            return new Detection(
+                WebjetBootstrapMode.SETUP,
+                WebjetBootstrapSpringConfiguration.empty()
+            );
+        }
     }
 }

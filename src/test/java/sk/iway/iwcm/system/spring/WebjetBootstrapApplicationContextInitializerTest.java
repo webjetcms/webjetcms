@@ -68,12 +68,19 @@ class WebjetBootstrapApplicationContextInitializerTest {
     private void assertModeSelectedBeforeConfigurationParsing(WebjetBootstrapMode expectedMode) {
         WebjetBootstrapModeDetector modeDetector = mock(WebjetBootstrapModeDetector.class);
         WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
+        WebjetBootstrapSpringConfiguration springConfiguration = expectedMode == WebjetBootstrapMode.PRODUCTION
+            ? new WebjetBootstrapSpringConfiguration(
+                "dynamicinstall", "dynamiclog", "com.example.webjetadditional"
+            )
+            : WebjetBootstrapSpringConfiguration.empty();
 
         try (GenericApplicationContext applicationContext = new GenericApplicationContext()) {
             TestPropertyValues.of(
                 "spring.autoconfigure.exclude=" + CUSTOM_AUTO_CONFIGURATION_EXCLUSION
             ).applyTo(applicationContext);
-            when(modeDetector.detect(applicationContext.getEnvironment())).thenReturn(expectedMode);
+            when(modeDetector.detect(applicationContext.getEnvironment())).thenReturn(
+                new WebjetBootstrapModeDetector.Detection(expectedMode, springConfiguration)
+            );
 
             WebjetBootstrapApplicationContextInitializer initializer =
                 new WebjetBootstrapApplicationContextInitializer(null, modeDetector, initializationActions);
@@ -81,6 +88,12 @@ class WebjetBootstrapApplicationContextInitializerTest {
 
             assertEquals(expectedMode.getPropertyValue(),
                 applicationContext.getEnvironment().getProperty(WebjetBootstrapMode.PROPERTY_NAME));
+            assertEquals(springConfiguration.installName(), applicationContext.getEnvironment()
+                .getProperty(WebjetBootstrapSpringConfiguration.INSTALL_NAME_PROPERTY));
+            assertEquals(springConfiguration.logInstallName(), applicationContext.getEnvironment()
+                .getProperty(WebjetBootstrapSpringConfiguration.LOG_INSTALL_NAME_PROPERTY));
+            assertEquals(springConfiguration.springAddPackages(), applicationContext.getEnvironment()
+                .getProperty(WebjetBootstrapSpringConfiguration.ADD_PACKAGES_PROPERTY));
             assertSetupSecurityAutoConfigurationsAreExcluded(applicationContext, expectedMode);
 
             WebjetBootstrapState bootstrapState = (WebjetBootstrapState) applicationContext
