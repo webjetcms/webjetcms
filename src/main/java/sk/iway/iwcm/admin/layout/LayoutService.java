@@ -120,6 +120,9 @@ public class LayoutService
                     javascript.append("nopermsJavascript[\"ver-multiweb\"]=true;\n");
                 }
 
+                css.append(".noperms-install-"+Constants.getInstallName()+" { display: none !important; }\n");
+                javascript.append("nopermsJavascript[\"install-"+Constants.getInstallName()+"\"]=true;\n");
+
                 //ve need to verify this modules because they are used in FE components
                 //and if user has no perms for them, they should not be visible in admin
                 String[] modulesToCheck = {"cmp_ai_tools", "cmp_ai_stats", "cmp_ai_button"};

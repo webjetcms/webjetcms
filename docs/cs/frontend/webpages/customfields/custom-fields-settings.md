@@ -24,8 +24,29 @@ Tabulka obsahuje následující sloupce:
 
 V poli **Typ pole** jsou dostupné typy:
 
-- `text`, `textarea`, `select`, `multiselect`, `boolean`, `number`, `date`, `none`
-- `autocomplete`, `image`, `link`, `json_group`, `json_doc`, `dir`, `docsIn`, `enumeration`, `uuid`, `color`
+| Typ | Zobrazení | Výběr |
+| --- | --- | --- |
+| `text` | Textové pole | Jednohodnotové |
+| `textarea` | Textová oblast (více řádků) | Jednohodnotové |
+| `select` | Výběrové pole (dropdown) | Jednohodnotové |
+| `multiselect` | Výběrové pole s možností výběru více hodnot | Vícehodnotové (hodnoty oddělené `\|`) |
+| `radio` | Seznam rádio tlačítek | Jednohodnotové |
+| `checkbox` | Seznam zaškrtávacích polí | Vícehodnotové (hodnoty oddělené `\|`) |
+| `boolean` | Přepínač ano/ne | Jednohodnotové |
+| `number` | Číselné pole | Jednohodnotové |
+| `date` | Výběr data | Jednohodnotové |
+| `autocomplete` | Textové pole s návrhy | Jednohodnotové |
+| `image` | Výběr obrázku | Jednohodnotové |
+| `link` | Výběr odkazu | Jednohodnotové |
+| `json_group` | Výběr složky webových stránek | Jednohodnotové |
+| `json_doc` | Výběr webové stránky | Jednohodnotové |
+| `dir` | Výběr složky souborového systému | Jednohodnotové |
+| `docsIn` | Výběr stávající stránky z adresáře | Jednohodnotové |
+| `uuid` | Automaticky generovaný unikátní identifikátor | Jednohodnotové |
+| `color` | Výběr barvy včetně průsvitnosti | Jednohodnotové |
+| `none` | Pole se nezobrazí | — |
+
+!>**Upozornění:** Typ `enumeration` již není samostatně dostupný typ pole v tabulce. Propojení na číselník se nastavuje jako **zdroj možností** u typů `select`, `multiselect`, `radio` a `checkbox` (viz [Zdroj možností](#zdroj-možností)).
 
 ## Nastavení podle typu
 
@@ -34,14 +55,62 @@ Při změně typu pole se v editoru dynamicky zobrazí doplňková pole, která 
 | Typ pole | Doplňková nastavení |
 | --- | --- |
 | `text` | **Maximální délka textu**, **Délka textu pro zobrazení varování**, **Text varování** |
-| `select`, `multiselect` | **Možnosti pro výběrové pole** (editor typu `OPTIONS`, řádky `label:value`) |
+| `select`, `multiselect`, `radio`, `checkbox` | **Zdroj možností** (přepínač **Statické možnosti** / **Číselník**) |
 | `autocomplete` | seznam možností (editor typu `OPTIONS_SIMPLE`, řádky s jednou hodnotou) |
 | `docsIn` | **Výběr složky webových stránek** (určí zdroj stránek pro výběr) |
-| `enumeration` | **Propojení na číselník** (`ID číselníku`, `label` sloupec, `value` sloupec) |
 
-Pokud je u typů `select`, `multiselect`, `docsIn`, `enumeration`, `json_group`, `json_doc` vypnuto **Povinné pole**, editor automaticky nabídne i prázdnou hodnotu.
+### Chování povinného pole podle typu
 
-V kartě Závislé od lze nastavit pole:
+Pokud je u typů `select`, `docsIn`, `json_group`, `json_doc` vypnuto **Povinné pole**, editor automaticky nabídne i prázdnou hodnotu. U typů `radio` a `checkbox` vypnuté povinné pole znamená, že uživatel nemusí vybrat žádnou možnost.
+
+### Zdroj možností
+
+U typů `select`, `multiselect`, `radio` a `checkbox` si umíte změnit zdroj možností pomocí přepínače **Zdroj možností**:
+
+- **Statické možnosti** - zobrazí pole **Možnosti pro výběrové pole** (editor typu `OPTIONS`, řádky `label:value`). Používá se pro pevný seznam možností zadaný přímo v nastavení.
+- **Číselník** - zobrazí pole **Propojení na číselník** s nastavením `ID číselníka`, `label` sloupce a `value` sloupce. Možnosti se načtou dynamicky z vybraného číselníku.
+
+#### Statické možnosti
+
+Statické možnosti se zadávají v poli **Možnosti pro výběrové pole** ve formátu `label:value`, každá možnost na novém řádku. Pokud je `label` a `value` stejný, stačí zadat jednu hodnotu:
+
+```
+Slovensko:sk
+Česko:cz
+Rakúsko:at
+```
+
+#### Propojení na číselník
+
+Při výběru zdroje **Číselník** se zobrazí pole **Propojení na číselník**, kde se nastavuje:
+
+- **ID číselníku** - identifikátor typu číselníku, ze kterého se načtou možnosti
+- **Label sloupec** - vlastnost z číselníku použitá jako zobrazený text (výchozí `string1`)
+- **Value sloupec** - vlastnost z číselníku použitá jako uložená hodnota (výchozí `string1`)
+
+Můžete použít kteroukoli vlastnost z číselníku: `string1` až `string12`, `decimal1` až `decimal4`, `boolean1` až `boolean4`, `date1` až `date4`, `id`.
+
+### Rozdíl mezi select/multiselect a radio/checkbox
+
+Typy `select` a `radio` umožňují výběr právě jedné hodnoty, ale liší se zobrazením:
+
+- **`select`** - zobrazí se jako rozbalovací seznam (dropdown)
+- **`radio`** - zobrazí se jako seznam rádio tlačítek, všechny možnosti jsou viditelné najednou
+
+Typy `multiselect` a `checkbox` umožňují výběr více hodnot:
+
+- **`multiselect`** - zobrazí se jako rozbalovací seznam s možností výběru více položek
+- **`checkbox`** - zobrazí se jako seznam zaškrtávacích polí, všechny možnosti jsou viditelné najednou
+
+U vícehodnotových typů (`multiselect`, `checkbox`) se vybrané hodnoty ukládají do pole oddělené znakem `|`.
+
+### Zpětná kompatibilita s typem enumeration
+
+Starší záznamy s typem `enumeration` se při otevření v editoru automaticky zobrazí jako typ `select` se zdrojem možností `Číselník`. Po jejich nejbližším uložení se typ uloží jako `select`. Původní konfigurace číselníku zůstane zachována.
+
+## Karta Závislé na
+
+V kartě **Závislé na** lze nastavit pole:
 
 | Sloupec | Popis |
 | --- | --- |
@@ -70,3 +139,5 @@ Pokud je pro volitelné pole zapnut příznak `Povinné pole`, systém automatic
 
 - Označí pole jako povinné v editoru (zobrazí se vizuální označení povinného pole).
 - Při ukládání entity zkontroluje, zda je pole vyplněno. Pokud není, zobrazí chybovou hlášku a uložení se nepovolí.
+
+Pro typy `checkbox` se kontrola povinnosti vyhodnocuje tak, že musí být zaškrtnuta alespoň jedna možnost. Pro typy `radio` musí být vybrána právě jedna možnost.
