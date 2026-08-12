@@ -692,6 +692,11 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, GroupDetails> target, Identity user, Errors errors, Long id, GroupDetails entity) {
 
+        if (InitServlet.isTypeCloud() && "cloud".equals(Constants.getInstallName()) && CloudToolsForCore.isControllerDomain()==false) {
+            //force current domain for WebJET Cloud
+            entity.setDomainName(CloudToolsForCore.getDomainName());
+        }
+
         if (entity.getGroupId()>0 && GroupsDB.isGroupEditable(user, entity.getGroupId())==false) {
             errors.rejectValue("errorField.groupId", "403", Prop.getInstance().getText("user.rights.no_folder_rights"));
             return;
