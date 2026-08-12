@@ -59,7 +59,7 @@ ext {
     //jar to ant/aspectj and update version in ant/compile.xml file
     aspectJVersion = '1.9.25.1';
     eclipselinkVersion = '5.0.0-B13';
-    webjetAiVersion = '1.0.0-SNAPSHOT';
+    webjetAiVersion = '1.0.0';
 }
 
 lombok {
