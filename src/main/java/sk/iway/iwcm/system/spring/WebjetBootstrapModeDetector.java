@@ -1,0 +1,60 @@
+package sk.iway.iwcm.system.spring;
+
+import java.sql.Connection;
+import java.util.Map;
+
+import org.springframework.core.env.Environment;
+
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+
+class WebjetBootstrapModeDetector {
+
+    WebjetBootstrapMode detect(Environment environment) {
+        String contextDbName = firstNotEmpty(
+            environment.getProperty("server.servlet.context-parameters.webjetDbname"),
+            environment.getProperty("webjetDbname"),
+            environment.getProperty("webjet.dbname")
+        );
+        InitServlet.setContextDbName(contextDbName);
+
+        String dbName = firstNotEmpty(
+            environment.getProperty("server.servlet.context-parameters.webjet_dbName"),
+            environment.getProperty("webjet.dbName"),
+            environment.getProperty("webjet_dbName")
+        );
+        if (Tools.isEmpty(dbName)) {
+            dbName = "iwcm";
+        }
+
+        try (Connection connection = DBPool.getConnection(dbName)) {
+            if (connection == null) {
+                Logger.info(WebjetBootstrapModeDetector.class, "WebJET setup mode selected: database is unavailable");
+                return WebjetBootstrapMode.SETUP;
+            }
+
+            Map<String, String> databaseValues = InitServlet.getDatabaseValues(connection);
+            if (databaseValues.isEmpty()) {
+                Logger.info(WebjetBootstrapModeDetector.class, "WebJET setup mode selected: configuration table is empty or unavailable");
+                return WebjetBootstrapMode.SETUP;
+            }
+
+            Logger.info(WebjetBootstrapModeDetector.class, "WebJET production mode selected by database preflight");
+            return WebjetBootstrapMode.PRODUCTION;
+        } catch (Exception ex) {
+            Logger.error(WebjetBootstrapModeDetector.class, ex);
+            return WebjetBootstrapMode.SETUP;
+        }
+    }
+
+    private String firstNotEmpty(String... values) {
+        for (String value : values) {
+            if (Tools.isNotEmpty(value)) {
+                return value;
+            }
+        }
+        return null;
+    }
+}

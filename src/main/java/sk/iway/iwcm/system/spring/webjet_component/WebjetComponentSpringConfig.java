@@ -4,6 +4,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.AbstractApplicationContext;
 import jakarta.validation.Validator;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.servlet.ViewResolver;
@@ -73,7 +74,7 @@ public class WebjetComponentSpringConfig {
     }
 
     /* THYMELEAF KONFIGURACIA, namapovana na / s vyhladavanim .html suborov */
-    @Bean
+    @Bean(name = AbstractApplicationContext.MESSAGE_SOURCE_BEAN_NAME)
     public MessageSource webjetMessageSource() {
         Logger.debug(WebjetComponentParser.class, "Spring: messageSource");
         WebjetMessageSource source = new WebjetMessageSource();

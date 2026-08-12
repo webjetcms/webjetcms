@@ -48,6 +48,10 @@ ext {
     eclipselinkVersion = '5.0.0-B13';
 }
 
+springBoot {
+    mainClass = 'sk.iway.iwcm.system.spring.SpringBootStarter'
+}
+
 lombok {
     version = "${lombokVersion}"
     //zrusene kvoli zbytocnym problemom s ActiveRecord config['lombok.accessors.chain'] = 'true'

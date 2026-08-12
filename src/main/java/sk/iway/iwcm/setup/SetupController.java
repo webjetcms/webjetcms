@@ -3,16 +3,20 @@ package sk.iway.iwcm.setup;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import sk.iway.iwcm.system.spring.WebjetBootstrapMode;
+
 /*
  * 
  */
 @Controller
+@ConditionalOnProperty(name = WebjetBootstrapMode.PROPERTY_NAME, havingValue = WebjetBootstrapMode.SETUP_VALUE)
 public class SetupController {
     
     @GetMapping("/wjerrorpages/setup/setup") 

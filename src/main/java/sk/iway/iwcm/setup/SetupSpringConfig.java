@@ -4,9 +4,9 @@ import java.util.Locale;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
@@ -21,9 +21,10 @@ import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.spring.webjet_component.WebjetMessageSource;
+import sk.iway.iwcm.system.spring.WebjetBootstrapMode;
 
 @Configuration
-@Conditional(SetupModeCondition.class)
+@ConditionalOnProperty(name = WebjetBootstrapMode.PROPERTY_NAME, havingValue = WebjetBootstrapMode.SETUP_VALUE)
 public class SetupSpringConfig implements WebMvcConfigurer {
 
     @Bean

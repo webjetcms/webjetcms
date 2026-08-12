@@ -1,67 +1,111 @@
 package sk.iway.iwcm.system.spring;
 
-import sk.iway.iwcm.InitServlet;
-import sk.iway.iwcm.doc.DebugTimer;
-
 import jakarta.servlet.ServletContext;
-import jakarta.servlet.ServletException;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.web.servlet.ServletContextInitializer;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.ApplicationContext;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.doc.DebugTimer;
 
 /**
- * WebApplicationInitializer for WebJET CMS Spring Boot startup.
+ * Spring Boot lifecycle configuration for WebJET CMS startup.
  *
- * This class is the single initialization entry point for embedded Spring Boot mode.
- * It calls InitServlet.initializeWebJET() once during startup to set up the WebJET core.
+ * Completes WebJET initialization after the bootstrap mode was selected.
  *
- * Servlet and filter registration is handled entirely by @Bean methods in
- * {@link SpringBootStarter}, so this class focuses only on core initialization.
- *
- * For embedded server: ./gradlew bootRun
- * For external Tomcat 11 deployment: ./gradlew war
+ * Core initialization needs a started ServletContext and therefore runs from a
+ * ServletContextInitializer before the other servlet/filter registrations.
+ * Production post-initialization is deliberately deferred until
+ * ApplicationReadyEvent, after context refresh.
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class SpringAppInitializer
 {
-	private static DebugTimer dtGlobal = null;
-
-	@Autowired(required = false)
-	private ApplicationContext applicationContext;
+	private static volatile DebugTimer dtGlobal = null;
 
 	@Bean
-    public org.springframework.boot.web.servlet.ServletContextInitializer springAppInitializerOnStartup() {
-        return new org.springframework.boot.web.servlet.ServletContextInitializer() {
-            @Override
-            public void onStartup(ServletContext servletContext) throws ServletException {
-				dtGlobal = new DebugTimer("WebJET.init");
+	WebjetInitializationActions webjetInitializationActions() {
+		return new WebjetInitializationActions();
+	}
 
-				// Initialize WebJET core (called by InitServlet during startup as well)
-				InitServlet.initializeWebJET(dtGlobal, servletContext);
+	@Bean
+	@Order(Ordered.HIGHEST_PRECEDENCE)
+	ServletContextInitializer springAppInitializerOnStartup(WebjetBootstrapState bootstrapState,
+			WebjetInitializationActions initializationActions, ApplicationContext applicationContext) {
+		return servletContext -> initializeCore(
+			servletContext, bootstrapState, initializationActions, applicationContext
+		);
+	}
 
-				// Set the Spring ApplicationContext into ServletContext for legacy components
-				// that access it via Constants.getServletContext().getAttribute("springContext")
-				// This is used by SetCharacterEncodingFilter, RequestBean, WebjetEventPublisher, Tools and others
-				if (applicationContext != null) {
-					servletContext.setAttribute("springContext", applicationContext);
-					Logger.info(SpringAppInitializer.class, "Set Spring ApplicationContext into ServletContext");
-				}
+	@Bean
+	@ConditionalOnProperty(name = WebjetBootstrapMode.PROPERTY_NAME, havingValue = WebjetBootstrapMode.PRODUCTION_VALUE)
+	ApplicationListener<ApplicationReadyEvent> webjetApplicationReadyListener(
+			WebjetBootstrapState bootstrapState, WebjetInitializationActions initializationActions) {
+		return event -> initializeAfterRefresh(bootstrapState, initializationActions);
+	}
 
-				// Note: The following have been removed and are now handled by Spring Boot:
-				// - AnnotationConfigWebApplicationContext / ContextLoaderListener (caused "multiple ContextLoader" error)
-				// - DispatcherServlet (Spring Boot auto-configures this)
-				// - CharacterEncodingFilter (now registered via FilterRegistrationBean in SpringBootStarter)
-				// - springSecurityFilterChain (Spring Security auto-configures via @Bean in SpringSecurityConf)
-				// - RequestContextListener (now registered via ServletListenerRegistrationBean in SpringBootStarter)
-				// - MultipartConfigElement (now registered via @Bean in SpringBootStarter)
-				// - Manual package scanning (handled by @ComponentScan in SpringBootStarter)
-				InitServlet.setSpringInitialized();
-				InitServlet.initAfterSpring();
-			}
-		};
+	private void initializeCore(ServletContext servletContext, WebjetBootstrapState bootstrapState,
+			WebjetInitializationActions initializationActions, ApplicationContext applicationContext) {
+		initializeCoreIfNecessary(servletContext, bootstrapState, initializationActions);
+
+		servletContext.setAttribute("springContext", applicationContext);
+		Logger.info(SpringAppInitializer.class, "Set Spring ApplicationContext into ServletContext");
+	}
+
+	private void initializeCoreIfNecessary(ServletContext servletContext, WebjetBootstrapState bootstrapState,
+			WebjetInitializationActions initializationActions) {
+		if (bootstrapState.isCoreInitializationAttempted()) {
+			validateBootstrapMode(bootstrapState);
+			return;
+		}
+		bootstrapState.recordCoreInitialization(initializationActions.initialize(servletContext));
+		validateBootstrapMode(bootstrapState);
+	}
+
+	private void validateBootstrapMode(WebjetBootstrapState bootstrapState) {
+		boolean productionMode = bootstrapState.getMode() == WebjetBootstrapMode.PRODUCTION;
+		boolean coreInitialized = bootstrapState.isCoreInitialized();
+		if (productionMode != coreInitialized) {
+			throw new WebjetBootstrapModeMismatchException(
+				bootstrapState.getMode(), coreInitialized
+			);
+		}
+	}
+
+	private void initializeAfterRefresh(WebjetBootstrapState bootstrapState,
+			WebjetInitializationActions initializationActions) {
+		if (bootstrapState.getMode() != WebjetBootstrapMode.PRODUCTION) {
+			return;
+		}
+		if (bootstrapState.isCoreInitializationAttempted() == false || bootstrapState.isCoreInitialized() == false) {
+			throw new IllegalStateException("WebJET production context became ready without successful core initialization");
+		}
+		if (bootstrapState.isPostInitializationCompleted()) {
+			return;
+		}
+
+		if (initializationActions.initializeAfterSpring() == false) {
+			throw new IllegalStateException("WebJET post-initialization did not complete successfully");
+		}
+		bootstrapState.recordPostInitializationCompleted();
+	}
+
+	static void startDebugTimer() {
+		dtGlobal = new DebugTimer("WebJET.init");
+	}
+
+	static DebugTimer getDebugTimer() {
+		if (dtGlobal == null) {
+			startDebugTimer();
+		}
+		return dtGlobal;
 	}
 
 	/**

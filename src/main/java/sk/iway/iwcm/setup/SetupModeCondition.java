@@ -4,27 +4,25 @@ import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 
-import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.system.spring.WebjetBootstrapMode;
 
 /**
- * Spring Condition to detect if WebJET CMS is in Setup mode.
+ * Compatibility condition for setup-only configuration.
  *
- * SetupSpringConfig and Setup-related beans should only be loaded when
- * WebJET is NOT configured (Setup mode). Once configured (Production mode),
- * setup beans should not be available.
- *
- * Usage:
- *   @Conditional(SetupModeCondition.class)
- *   public class SetupSpringConfig { ... }
+ * @deprecated Prefer {@code @ConditionalOnProperty} with
+ * {@link WebjetBootstrapMode#PROPERTY_NAME}. The bootstrap property is available
+ * before Spring parses bean definitions.
  */
+@Deprecated(forRemoval = false)
 public class SetupModeCondition implements Condition {
 
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-        // WebJET is in Setup mode when it's NOT configured
-        boolean isSetupMode = !InitServlet.isWebjetConfigured();
-        Logger.debug(SetupModeCondition.class, "Setup mode detected: " + isSetupMode);
-        return isSetupMode;
+        boolean setupMode = WebjetBootstrapMode.SETUP_VALUE.equals(
+            context.getEnvironment().getProperty(WebjetBootstrapMode.PROPERTY_NAME)
+        );
+        Logger.debug(SetupModeCondition.class, "Setup mode detected: " + setupMode);
+        return setupMode;
     }
 }
