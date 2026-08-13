@@ -1,6 +1,7 @@
 package sk.iway.iwcm.system.spring;
 
 import org.apache.catalina.connector.Connector;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWarDeployment;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
@@ -27,15 +28,20 @@ public class SetupApplicationConfiguration {
         return registration;
     }
 
-    @Bean
-    public WebServerFactoryCustomizer<TomcatServletWebServerFactory> setupTomcatHttpConnectorCustomizer() {
-        return factory -> {
-            Connector httpConnector = new Connector("org.apache.coyote.http11.Http11NioProtocol");
-            httpConnector.setScheme("http");
-            httpConnector.setSecure(false);
-            httpConnector.setPort(80);
-            httpConnector.setRedirectPort(443);
-            factory.addAdditionalConnectors(httpConnector);
-        };
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnNotWarDeployment
+    static class EmbeddedServletContainerConfiguration {
+
+        @Bean
+        public WebServerFactoryCustomizer<TomcatServletWebServerFactory> setupTomcatHttpConnectorCustomizer() {
+            return factory -> {
+                Connector httpConnector = new Connector("org.apache.coyote.http11.Http11NioProtocol");
+                httpConnector.setScheme("http");
+                httpConnector.setSecure(false);
+                httpConnector.setPort(80);
+                httpConnector.setRedirectPort(443);
+                factory.addAdditionalConnectors(httpConnector);
+            };
+        }
     }
 }

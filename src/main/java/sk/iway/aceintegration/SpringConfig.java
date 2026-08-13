@@ -4,6 +4,7 @@ import java.io.File;
 
 import org.apache.catalina.session.FileStore;
 import org.apache.catalina.session.PersistentManager;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWarDeployment;
 import org.springframework.boot.tomcat.TomcatContextCustomizer;
 import org.springframework.boot.web.server.MimeMappings;
 import org.springframework.boot.web.server.servlet.ConfigurableServletWebServerFactory;
@@ -27,55 +28,60 @@ import org.springframework.context.annotation.Configuration;
 })
 public class SpringConfig {
 
-    /**
-     * Adds an HTTP connector on port 80 alongside the default HTTPS connector on 443.
-     */
-    @Bean
-    public WebServerFactoryCustomizer<TomcatServletWebServerFactory> tomcatHttpConnectorCustomizer() {
-        return factory -> {
-            // Create HTTP connector on port 80
-            Connector httpConnector = new Connector("org.apache.coyote.http11.Http11NioProtocol");
-            httpConnector.setScheme("http");
-            httpConnector.setSecure(false);
-            httpConnector.setPort(80);
-            httpConnector.setRedirectPort(443);
-            factory.addAdditionalConnectors(httpConnector);
-        };
-    }
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnNotWarDeployment
+    static class EmbeddedTomcatConfiguration {
 
-    /**
-     * Adds WebJET default MIME mappings and keeps room for customer overrides.
-     */
-    @Bean("webjetTomcatMimeMappingsCustomizer")
-    @Order(Ordered.LOWEST_PRECEDENCE - 100)
-    public WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> tomcatMimeMappingsCustomizer() {
-        return factory -> {
-            MimeMappings mimeMappings = new MimeMappings();
-            mimeMappings.add("properties", "text/plain");
-            factory.addMimeMappings(mimeMappings);
-        };
-    }
+        /**
+         * Adds an HTTP connector on port 80 alongside the default HTTPS connector on 443.
+         */
+        @Bean
+        public WebServerFactoryCustomizer<TomcatServletWebServerFactory> tomcatHttpConnectorCustomizer() {
+            return factory -> {
+                // Create HTTP connector on port 80
+                Connector httpConnector = new Connector("org.apache.coyote.http11.Http11NioProtocol");
+                httpConnector.setScheme("http");
+                httpConnector.setSecure(false);
+                httpConnector.setPort(80);
+                httpConnector.setRedirectPort(443);
+                factory.addAdditionalConnectors(httpConnector);
+            };
+        }
 
-    /**
-     * Configures file-based session persistence for embedded Tomcat.
-     * Replaces the old META-INF/context.xml PersistentManager configuration
-     * which is not used by Spring Boot 4.x embedded server.
-     *
-     * <p>Sessions are persisted to work/sessions/ on each
-     * request and restored on server restart, so users stay logged in after
-     * server restarts.</p>
-     */
-    @Bean
-    public TomcatContextCustomizer tomcatSessionPersistenceCustomizer() {
-        return context -> {
-            PersistentManager pm = new PersistentManager();
-            FileStore fs = new FileStore();
-            String sessionDir = System.getProperty("user.dir") + "/work/sessions";
-            new File(sessionDir).mkdirs();
-            fs.setDirectory(sessionDir);
-            pm.setStore(fs);
-            context.setManager(pm);
-        };
+        /**
+         * Adds WebJET default MIME mappings and keeps room for customer overrides.
+         */
+        @Bean("webjetTomcatMimeMappingsCustomizer")
+        @Order(Ordered.LOWEST_PRECEDENCE - 100)
+        public WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> tomcatMimeMappingsCustomizer() {
+            return factory -> {
+                MimeMappings mimeMappings = new MimeMappings();
+                mimeMappings.add("properties", "text/plain");
+                factory.addMimeMappings(mimeMappings);
+            };
+        }
+
+        /**
+         * Configures file-based session persistence for embedded Tomcat.
+         * Replaces the old META-INF/context.xml PersistentManager configuration
+         * which is not used by Spring Boot 4.x embedded server.
+         *
+         * <p>Sessions are persisted to work/sessions/ on each
+         * request and restored on server restart, so users stay logged in after
+         * server restarts.</p>
+         */
+        @Bean
+        public TomcatContextCustomizer tomcatSessionPersistenceCustomizer() {
+            return context -> {
+                PersistentManager pm = new PersistentManager();
+                FileStore fs = new FileStore();
+                String sessionDir = System.getProperty("user.dir") + "/work/sessions";
+                new File(sessionDir).mkdirs();
+                fs.setDirectory(sessionDir);
+                pm.setStore(fs);
+                context.setManager(pm);
+            };
+        }
     }
 
 }

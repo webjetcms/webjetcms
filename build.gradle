@@ -58,7 +58,7 @@ lombok {
     //config['lombok.addLombokGeneratedAnnotation'] = 'false'
 }
 
-war {
+tasks.withType(org.gradle.api.tasks.bundling.War).configureEach {
     zip64 = true
     exclude('**/node_modules/**')
     exclude('**/node_scripts/**')
@@ -99,6 +99,11 @@ war {
     exclude('templates/vesmir/**')
 
     rootSpec.exclude('**/poolman-*.xml')
+}
+
+tasks.named('processResources') {
+    // The development key is generated under build/ and must never become an application resource.
+    exclude('certificates/https-keystore.p12')
 }
 
 sourceSets {
@@ -159,8 +164,10 @@ dependencies {
 
     // Pin Hibernate Validator to 9.0.0.Final for WebjetResourceBundleMessageInterpolator compatibility
     implementation 'org.hibernate.validator:hibernate-validator:9.0.0.Final'
-    // JSP support for embedded Tomcat 11
-    implementation 'org.apache.tomcat.embed:tomcat-embed-jasper:11.0.22'
+    // Keep the embedded container available for executable WARs without
+    // exposing its implementation classes to an external Tomcat installation.
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat-runtime:4.1.0'
+    providedRuntime 'org.apache.tomcat.embed:tomcat-embed-jasper:11.0.22'
     runtimeOnly 'org.glassfish.web:jakarta.servlet.jsp.jstl:3.0.1'
 
     // WebAuthn/Passkeys
@@ -204,7 +211,12 @@ dependencies {
     // https://mvnrepository.com/artifact/com.github.hazendaz/displaytag
     implementation("com.github.hazendaz:displaytag:3.2.0")
 
-    implementation("org.eclipse.persistence:eclipselink:${eclipselinkVersion}")
+    implementation("org.eclipse.persistence:eclipselink:${eclipselinkVersion}") {
+        // Keep EclipseLink's XJC support, but use the equivalent JAXB runtime
+        // modules managed by Spring Boot to avoid duplicate WAR entry names.
+        exclude group: 'com.sun.xml.bind', module: 'jaxb-core'
+        exclude group: 'com.sun.xml.bind', module: 'jaxb-impl'
+    }
 
     implementation("org.freemarker:freemarker:2.3.34")
     implementation("com.google.code.gson:gson:2.13.2") //generate.jsp for pagebuilder, refactor to jackson
@@ -297,9 +309,8 @@ dependencies {
     // https://mvnrepository.com/artifact/com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer
     implementation group: 'com.googlecode.owasp-java-html-sanitizer', name: 'owasp-java-html-sanitizer', version: '20260102.1'
 
-    //Java 11/17 - JAXB-API - do not update to v3, packages changed from javax.xml.bind to jakarta.xml.bind
-    // https://mvnrepository.com/artifact/com.sun.xml.bind/jaxb-impl
-    implementation 'com.sun.xml.bind:jaxb-impl:4.0.5'
+    // JAXB runtime for Java 17; the API is already available transitively.
+    runtimeOnly 'org.glassfish.jaxb:jaxb-runtime'
 
     // https://mvnrepository.com/artifact/org.postgresql/postgresql
     runtimeOnly 'org.postgresql:postgresql:42.7.13'
@@ -469,7 +480,7 @@ bootRun {
         // WebJET configuration overrides (from old gretty config)
         '-Dwebjet.smtpServer=mxrelay.dev.iway.sk',
         "-DwebjetDbname=${webjetDbname}",
-        "-DWEBJET_KEYSTORE_PATH=" + file("${projectDir}/build/classes/java/main/certificates/https-keystore.p12").absolutePath,
+        "-DWEBJET_KEYSTORE_PATH=" + file("${projectDir}/build/certificates/https-keystore.p12").absolutePath,
         '-Dwebjet.serverMonitoringEnableJPA=true',
         '-Dwebjet.webEnableIPs=1,2,3,4,5,6,7,8,9,0',
         '-Dwebjet.adminEnableIPs=1,2,3,4,5,6,7,8,9,0',
@@ -480,11 +491,11 @@ bootRun {
 }
 
 // Generate self-signed certificate for HTTPS (migrated from gretty's auto-generated keystore)
-// Gretty auto-generated build/gretty/https-keystore.p12; now writes to build output directory via keytool
+// Gretty auto-generated build/gretty/https-keystore.p12; now writes to the build directory via keytool
 task generateCertificate(type: Exec) {
     group = 'build'
     description = 'Generates self-signed certificate for embedded Tomcat HTTPS'
-    def certFile = file("${projectDir}/build/classes/java/main/certificates/https-keystore.p12")
+    def certFile = file("${projectDir}/build/certificates/https-keystore.p12")
     def certDir = certFile.parentFile
     onlyIf { !certFile.exists() }
     doFirst {
@@ -510,6 +521,96 @@ task generateCertificate(type: Exec) {
 
 // Ensure certificate is generated before bootRun
 bootRun.dependsOn generateCertificate
+
+tasks.register('verifyBootWar') {
+    group = 'verification'
+    description = 'Verifies that the executable WAR is also safe for an external Tomcat deployment'
+
+    def bootWarTask = tasks.named('bootWar')
+    def bootWarArchive = bootWarTask.flatMap { it.archiveFile }
+    dependsOn bootWarTask
+    inputs.file(bootWarArchive)
+
+    doLast {
+        def archive = new java.util.zip.ZipFile(bootWarArchive.get().asFile)
+        try {
+            List<String> entries = archive.entries().collect { it.name }
+            Set<String> entryNames = entries as Set
+            if (entries.size() != entryNames.size()) {
+                Set<String> uniqueEntries = []
+                Set<String> duplicateEntries = entries.findAll { entry -> uniqueEntries.add(entry) == false }
+                throw new GradleException("The boot WAR contains duplicate entries: ${duplicateEntries.sort()}")
+            }
+
+            Set<String> requiredEntries = [
+                'META-INF/MANIFEST.MF',
+                'WEB-INF/web.xml',
+                'WEB-INF/web-v2023.xml',
+                'WEB-INF/classes/sk/iway/iwcm/system/spring/SpringBootStarter.class'
+            ]
+            Set<String> missingEntries = requiredEntries - entryNames
+            if (missingEntries.isEmpty() == false) {
+                throw new GradleException("The boot WAR is incomplete; missing entries: ${missingEntries.sort()}")
+            }
+            if (entryNames.contains('WEB-INF/classes/certificates/https-keystore.p12')) {
+                throw new GradleException("The boot WAR must not contain the generated development private key")
+            }
+
+            List<String> requiredProvidedJars = [
+                'ecj-',
+                'jakarta.annotation-api-',
+                'jakarta.el-api-',
+                'jakarta.servlet-api-',
+                'jakarta.servlet.jsp-api-',
+                'spring-boot-tomcat-',
+                'spring-boot-web-server-',
+                'tomcat-annotations-api-',
+                'tomcat-embed-core-',
+                'tomcat-embed-el-',
+                'tomcat-embed-jasper-',
+                'tomcat-embed-websocket-'
+            ]
+            requiredProvidedJars.each { jarPrefix ->
+                List<String> matches = entries.findAll { entry ->
+                    entry.startsWith("WEB-INF/lib-provided/${jarPrefix}") && entry.endsWith('.jar')
+                }
+                if (matches.size() != 1) {
+                    throw new GradleException(
+                        "The boot WAR must contain exactly one provided ${jarPrefix} jar: ${matches.sort()}"
+                    )
+                }
+            }
+
+            if (entryNames.any { entry ->
+                entry ==~ /^WEB-INF\/lib\/spring-boot-[0-9].+\.jar$/
+            } == false) {
+                throw new GradleException("The boot WAR is missing Spring Boot application libraries")
+            }
+
+            List<String> containerJarsInApplicationClasspath = entries.findAll { entry ->
+                entry ==~ /^WEB-INF\/lib\/(ecj|jakarta\.annotation-api|jakarta\.el-api|jakarta\.servlet-api|jakarta\.servlet\.jsp-api|spring-boot-tomcat|spring-boot-web-server|tomcat-annotations-api|tomcat-embed-.+)-.+\.jar$/
+            }
+            if (containerJarsInApplicationClasspath.isEmpty() == false) {
+                throw new GradleException(
+                    "Tomcat implementation jars must only be in WEB-INF/lib-provided: " +
+                    containerJarsInApplicationClasspath.sort()
+                )
+            }
+
+            [
+                'WEB-INF/web.xml': file('src/main/webapp/WEB-INF/web.xml'),
+                'WEB-INF/web-v2023.xml': file('src/main/webapp/WEB-INF/web-v2023.xml')
+            ].each { archivePath, sourceDescriptor ->
+                byte[] packagedDescriptor = archive.getInputStream(archive.getEntry(archivePath)).bytes
+                if (java.util.Arrays.equals(packagedDescriptor, sourceDescriptor.bytes) == false) {
+                    throw new GradleException("The boot WAR contains an unexpected ${archivePath} descriptor")
+                }
+            }
+        } finally {
+            archive.close()
+        }
+    }
+}
 
 //generovanie javadoc dokumentacie
 //generovat pocas buildu, aby sa dali generovat aj triedy, ktore tu nemame, napr. Constants

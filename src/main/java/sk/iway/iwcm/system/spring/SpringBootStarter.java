@@ -4,9 +4,13 @@ import java.util.EnumSet;
 
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.MultipartConfigElement;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRegistration;
 
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWarDeployment;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration;
@@ -34,7 +38,7 @@ import sk.iway.iwcm.system.context.ContextFilter;
  * and WAR deployment to external Tomcat 11.
  *
  * For embedded server: ./gradlew bootRun
- * For external Tomcat 11 deployment: ./gradlew war
+ * For external Tomcat 11 deployment: ./gradlew bootWar
  */
 @SpringBootConfiguration
 @EnableAutoConfiguration(exclude = {
@@ -51,6 +55,8 @@ import sk.iway.iwcm.system.context.ContextFilter;
 })
 public class SpringBootStarter extends SpringBootServletInitializer {
 
+    private static final org.apache.commons.logging.Log BOOTSTRAP_LOG =
+        org.apache.commons.logging.LogFactory.getLog(SpringBootStarter.class);
     private static final String[] DEFAULT_PROFILES = {"default"};
 
     public static void main(String[] args) {
@@ -70,11 +76,31 @@ public class SpringBootStarter extends SpringBootServletInitializer {
     /**
      * Support for deploying as WAR to external Tomcat.
      * Extends SpringBootServletInitializer to allow
-     * ./gradlew war to produce a deployable WAR.
+     * ./gradlew bootWar to produce a deployable WAR.
      */
     @Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
         return configureApplicationBuilder(application, null);
+    }
+
+    /**
+     * The updater temporarily deploys a minimal descriptor while replacing the
+     * application classes. Starting the full Boot application in that context
+     * would initialize WebJET against files that are being updated.
+     */
+    @Override
+    public void onStartup(ServletContext servletContext) throws ServletException {
+        if (isUpdaterDeployment(servletContext)) {
+            BOOTSTRAP_LOG.info("Skipping Spring Boot initialization for the WebJET updater deployment");
+            return;
+        }
+        super.onStartup(servletContext);
+    }
+
+    private boolean isUpdaterDeployment(ServletContext servletContext) {
+        ServletRegistration updaterRegistration = servletContext.getServletRegistration("updaterinit");
+        return updaterRegistration != null
+            && "sk.updater.InitServlet".equals(updaterRegistration.getClassName());
     }
 
     private static void runApplication(String[] args) {
@@ -118,11 +144,13 @@ public class SpringBootStarter extends SpringBootServletInitializer {
     }
 
     /**
-     * Servlet and filter registrations used only by a fully initialized WebJET.
-     * Keeping them behind the bootstrap property prevents legacy production
-     * infrastructure from being created in setup/recovery mode.
+     * Servlet and filter registrations used by embedded WebJET only. In a
+     * traditional WAR, container metadata (web.xml and servlet annotations)
+     * owns these legacy registrations instead of creating a second dynamic copy.
+     * The bootstrap property also keeps this infrastructure out of setup mode.
      */
     @Configuration
+    @ConditionalOnNotWarDeployment
     @ConditionalOnProperty(name = WebjetBootstrapMode.PROPERTY_NAME, havingValue = WebjetBootstrapMode.PRODUCTION_VALUE)
     static class ProductionServletConfiguration {
 
@@ -132,8 +160,7 @@ public class SpringBootStarter extends SpringBootServletInitializer {
          * Must be registered BEFORE other filters (order 0).
          */
         @Bean
-        public FilterRegistrationBean<CharacterEncodingFilter> characterEncodingFilterRegistration() {
-            FilterRegistrationBean<CharacterEncodingFilter> registration = new FilterRegistrationBean<>();
+        public CharacterEncodingFilter webjetCharacterEncodingFilter() {
             CharacterEncodingFilter filter = new CharacterEncodingFilter();
             String encoding = Constants.getString("defaultEncoding");
             if (Tools.isEmpty(encoding)) {
@@ -141,11 +168,17 @@ public class SpringBootStarter extends SpringBootServletInitializer {
             }
             filter.setEncoding(encoding);
             filter.setForceEncoding(true);
-            registration.setFilter(filter);
+            return filter;
+        }
+
+        @Bean
+        public FilterRegistrationBean<CharacterEncodingFilter> characterEncodingFilterRegistration() {
+            FilterRegistrationBean<CharacterEncodingFilter> registration = new FilterRegistrationBean<>();
+            registration.setFilter(webjetCharacterEncodingFilter());
             registration.addUrlPatterns("/*");
             registration.setOrder(0); // Must be first (before all other filters)
             registration.setName("SpringEncodingFilter");
-            Logger.info(SpringBootStarter.class, "Registered CharacterEncodingFilter with encoding: " + encoding);
+            Logger.info(SpringBootStarter.class, "Registered WebJET CharacterEncodingFilter");
             return registration;
         }
 
@@ -202,6 +235,29 @@ public class SpringBootStarter extends SpringBootServletInitializer {
         public ServletListenerRegistrationBean<RequestContextListener> requestContextListenerRegistration() {
             Logger.info(SpringBootStarter.class, "Registered RequestContextListener");
             return new ServletListenerRegistrationBean<>(new RequestContextListener());
+        }
+
+        /**
+         * Mirror the session cleanup listener declared in web.xml for embedded
+         * deployments, where the deployment descriptor is not processed.
+         */
+        @Bean
+        public ServletListenerRegistrationBean<sk.iway.iwcm.stat.SessionListener> sessionListenerRegistration() {
+            return new ServletListenerRegistrationBean<>(new sk.iway.iwcm.stat.SessionListener());
+        }
+
+        /**
+         * Keep the legacy servlet lifecycle callback in embedded deployments.
+         * It intentionally has no URL mapping; load-on-startup ensures that the
+         * container invokes destroy() during a graceful shutdown.
+         */
+        @Bean
+        public ServletRegistrationBean<sk.iway.iwcm.InitServlet> iwcmInitServletRegistration() {
+            ServletRegistrationBean<sk.iway.iwcm.InitServlet> registration =
+                new ServletRegistrationBean<>(new sk.iway.iwcm.InitServlet(), false);
+            registration.setName("iwcminit");
+            registration.setLoadOnStartup(1);
+            return registration;
         }
 
         /**

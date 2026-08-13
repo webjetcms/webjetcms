@@ -77,6 +77,88 @@ jobs:
       run: |
         webjetDbPassword=root_password webjetDbUrl=jdbc:mysql://127.0.0.1:33006/webjetcms_web webjetDbUserName=root ./gradlew cleanTest test
 
+    - name: Build and verify deployable WAR
+      run: ./gradlew generateCertificate verifyBootWar
+
+    - name: Smoke test WAR on external Tomcat 11
+      shell: bash
+      timeout-minutes: 15
+      run: |
+        set -euo pipefail
+
+        tomcat_container="webjetcms-external-tomcat"
+
+        show_tomcat_logs() {
+          docker logs --tail 500 "${tomcat_container}" 2>&1 || true
+        }
+
+        cleanup_tomcat() {
+          docker rm --force "${tomcat_container}" >/dev/null 2>&1 || true
+        }
+
+        trap cleanup_tomcat EXIT
+        cleanup_tomcat
+
+        docker run --detach \
+          --name "${tomcat_container}" \
+          --add-host host.docker.internal:host-gateway \
+          --publish 18080:8080 \
+          --env webjetDbUrl=jdbc:mariadb://host.docker.internal:33006/webjetcms_web \
+          --env webjetDbUserName=root \
+          --env webjetDbPassword=root_password \
+          --env WEBJET_KEYSTORE_PATH=file:/usr/local/tomcat/conf/webjet-https-keystore.p12 \
+          --env WEBJET_HTTPS_KEYSTORE_PASSWORD=changeit \
+          --mount type=bind,source="${GITHUB_WORKSPACE}/build/certificates/https-keystore.p12",target=/usr/local/tomcat/conf/webjet-https-keystore.p12,readonly \
+          --mount type=bind,source="${GITHUB_WORKSPACE}/build/libs/webjetcms.war",target=/usr/local/tomcat/webapps/ROOT.war,readonly \
+          tomcat:11.0.23-jdk17-temurin-noble
+
+        deployment_ready=false
+        for attempt in $(seq 1 90); do
+          tomcat_logs="$(docker logs "${tomcat_container}" 2>&1)"
+
+          if grep -Eq "Failed to register .*Possibly already registered|LifecycleException|Error starting child" <<<"${tomcat_logs}"; then
+            show_tomcat_logs
+            exit 1
+          fi
+
+          if grep -q "WebJET bootstrap mode: setup" <<<"${tomcat_logs}"; then
+            echo "External WAR started in setup mode; servlet registrations were not exercised."
+            show_tomcat_logs
+            exit 1
+          fi
+
+          http_status=""
+          captcha_response=""
+          if grep -q "WebJET bootstrap mode: production" <<<"${tomcat_logs}"; then
+            http_status="$(curl --silent --output /dev/null --write-out '%{http_code}' \
+              --connect-timeout 1 --max-time 3 http://127.0.0.1:18080/admin/ || true)"
+            captcha_response="$(curl --silent --output /dev/null --write-out '%{http_code}|%{content_type}' \
+              --connect-timeout 1 --max-time 3 http://127.0.0.1:18080/captcha.jpg || true)"
+          fi
+          if grep -q "WebJET bootstrap mode: production" <<<"${tomcat_logs}" \
+              && [[ "${http_status}" =~ ^(2[0-9][0-9]|3[0-9][0-9]|401|403)$ ]] \
+              && [[ "${captcha_response}" == "200|image/jpeg"* ]]; then
+            deployment_ready=true
+            break
+          fi
+
+          if [[ "$(docker inspect --format '{{.State.Running}}' "${tomcat_container}")" != "true" ]]; then
+            show_tomcat_logs
+            exit 1
+          fi
+
+          sleep 5
+        done
+
+        if [[ "${deployment_ready}" != "true" ]]; then
+          echo "External Tomcat did not start the production WAR within the smoke-test timeout."
+          show_tomcat_logs
+          exit 1
+        fi
+
+        echo "Production WAR started successfully on external Tomcat 11 " \
+          "(/admin/ HTTP ${http_status}, /captcha.jpg ${captcha_response})."
+
   dependency-submission:
     # Skip workflow for WIP pull requests (same logic as build job)
     if: |
