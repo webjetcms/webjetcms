@@ -677,6 +677,10 @@ public class FormHtmlHandler {
     private boolean isCheckboxOrRadioSelected(String inputValue, String itemFormId) {
         String values = this.formData.get(itemFormId);
         if(Tools.isEmpty(values)) return false;
+
+        //for radiogroup you can have long text with commas, so we need to check if the whole value is equal to the input value first
+        if (values.equals(inputValue)) return true;
+
         for(String value : Tools.getTokens(values, ",")) {
             if(value.equals(inputValue)) return true;
         }

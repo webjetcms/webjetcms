@@ -788,7 +788,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                 html = Tools.replace(html, "${id}", id);
                 html = Tools.replace(html, "${itemId}", item.optString("id", ""));
                 html = Tools.replace(html, "${stepId}", item.optString("stepId", ""));
-                html = Tools.replace(html, "${label}", isEmailRender && label.trim().endsWith(":") == false ? label + ":" : label);
+                html = Tools.replace(html, "${label}", label);
                 html = Tools.replace(html, "${labelSanitized}", labelSanitized);
                 html = Tools.replace(html, "${value}", value);
                 html = Tools.replace(html, "${valueSanitized}", DocTools.removeChars(value, true));
