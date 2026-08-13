@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -255,6 +256,7 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 
 	private String clearFileName(String fileName) {
 		if (fileName == null) return null;
+		fileName = Normalizer.normalize(fileName, Normalizer.Form.NFC);
 
 		// MBO oprava IE bugu, kedy IE posiela pri uploade celu
 		if (fileName.contains("\\"))
