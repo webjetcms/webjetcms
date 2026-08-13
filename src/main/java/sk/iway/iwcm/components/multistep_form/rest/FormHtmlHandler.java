@@ -157,6 +157,15 @@ public class FormHtmlHandler {
     }
 
     /**
+     * Return the prefix used to map logical form item IDs to DOM IDs.
+     *
+     * @return form-instance-specific DOM ID prefix
+     */
+    public final String getDomIdPrefix() {
+        return "f" + this.formCounter + "-";
+    }
+
+    /**
      * Builds HTML for a single form step including its items and wrappers.
      * Intended for on‑page rendering (not email).
      *
@@ -265,10 +274,10 @@ public class FormHtmlHandler {
             // DO NOT ADD item from form step if its hidden by condition - for email render
             if(isEmailRender == true && Tools.isTrue(formConditionsHandler.isFieldHiddenByCondition(stepItem, jsonObject))) continue;
 
-            // When render for page not email, add form counter as prefix
-            if(isEmailRender == false) stepItem.setItemFormId("f" + this.formCounter + "-" + stepItem.getItemFormId());
-
             JSONObject item = new JSONObject(stepItem);
+            // Keep the entity's logical ID unchanged and map only the rendered DOM ID.
+            if(isEmailRender == false) item.put("itemFormId", getDomIdPrefix() + stepItem.getItemFormId());
+
             String fieldType = item.getString("fieldType");
 
             item.put("labelOriginal", stepItem.getLabel());

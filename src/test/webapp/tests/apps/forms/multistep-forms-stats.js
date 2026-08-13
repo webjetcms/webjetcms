@@ -232,7 +232,7 @@ Scenario("Generate random data for nice charts", async ({ I }) => {
             if ("emailNotSend" === failStatus) {
                 I.waitForText("Formulár sa nepodarilo odoslať na email", 10);
             } else if ("probablySpamBot" === failStatus) {
-                I.waitForText("Detekovany spam - spambot", 10);
+                I.waitForText("Detekovaný spam - skúste to o chvíľu znovu", 10);
             } else {
                 I.waitForText("Formulár bol úspešne odoslaný", 10);
             }

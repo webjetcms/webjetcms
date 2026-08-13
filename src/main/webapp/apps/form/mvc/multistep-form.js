@@ -34,6 +34,9 @@ export class MultistepForm {
         // Store submitted field values from previous steps for cross-step visibility conditions
         this.submittedValues = {};
 
+        // Maps logical form item IDs used by metadata/data to instance-specific DOM IDs.
+        this.domIdPrefix = '';
+
         // Centralized map: element -> array of conditions (parsed once from data-visibility-condition attributes)
         this.visibilityConditions = new Map();
 
@@ -116,6 +119,7 @@ export class MultistepForm {
             }
             const json = await r.json();
             const html = json.html || '';
+            this.domIdPrefix = typeof json.domIdPrefix === 'string' ? json.domIdPrefix : '';
             const visibilityConditions = json.visibilityConditions || {};
             const requirementConditions = json.requirementConditions || {};
 
@@ -271,8 +275,9 @@ export class MultistepForm {
             // together. Other fields are matched by id after the NAME->ID change, with
             // a name fallback for id-less elements (e.g. the multiupload dropzone inputs).
             const isGrouped = el.type === 'checkbox' || el.type === 'radio';
-            const key = isGrouped ? (el.name || el.id) : (el.id || el.name);
-            if (!key) return;
+            const domKey = isGrouped ? (el.name || el.id) : (el.id || el.name);
+            if (!domKey) return;
+            const key = this._toLogicalFieldId(domKey);
             // Skip fields hidden by visibility conditions
             if (this._isFieldHidden(el.closest('.form-group') || el.parentElement)) return;
             if (el.type === 'checkbox' || el.type === 'radio') {
@@ -375,6 +380,36 @@ export class MultistepForm {
     }
 
     /**
+     * Map a logical form item ID to the ID/name rendered for this form instance.
+     * @param {string} logicalId - Unprefixed form item identifier.
+     * @returns {string} Instance-specific DOM identifier.
+     */
+    _toDomFieldId(logicalId) {
+        if (!logicalId || !this.domIdPrefix || logicalId.startsWith(this.domIdPrefix)) return logicalId;
+        return this.domIdPrefix + logicalId;
+    }
+
+    /**
+     * Map an instance-specific DOM ID/name back to its logical form item ID.
+     * @param {string} domId - Rendered form item identifier.
+     * @returns {string} Unprefixed logical identifier.
+     */
+    _toLogicalFieldId(domId) {
+        if (!domId || !this.domIdPrefix || !domId.startsWith(this.domIdPrefix)) return domId;
+        return domId.substring(this.domIdPrefix.length);
+    }
+
+    /**
+     * Find DOM elements belonging to a logical form item ID.
+     * @param {string} logicalId - Unprefixed form item identifier.
+     * @returns {NodeListOf<Element>} Matching form controls.
+     */
+    _getFieldElements(logicalId) {
+        const domId = this._toDomFieldId(logicalId);
+        return this.wrapper.querySelectorAll(`[name="${domId}"], [id="${domId}"]`);
+    }
+
+    /**
      * Resolve a field wrapper (.form-group) by itemFormId.
      * Supports standard inputs as well as label-only rows rendered without inputs.
      * @param {string} itemFormId - Form item identifier.
@@ -383,10 +418,11 @@ export class MultistepForm {
     _resolveFieldWrapper(itemFormId) {
         if (!itemFormId) return null;
 
-        const input = this.wrapper.querySelector(`[name="${itemFormId}"], [id="${itemFormId}"]`);
+        const domId = this._toDomFieldId(itemFormId);
+        const input = this.wrapper.querySelector(`[name="${domId}"], [id="${domId}"]`);
         if (input) return input.closest('.form-group') || input.parentElement;
 
-        const label = this.wrapper.querySelector(`label[for="${itemFormId}"]`);
+        const label = this.wrapper.querySelector(`label[for="${domId}"]`);
         if (label) return label.closest('.form-group') || label.parentElement;
 
         return null;
@@ -432,9 +468,7 @@ export class MultistepForm {
                 if (!fieldId) return;
 
                 // Find the referenced input/select/textarea on the current step
-                const referencedElements = this.wrapper.querySelectorAll(
-                    `[name="${fieldId}"], [id="${fieldId}"]`
-                );
+                const referencedElements = this._getFieldElements(fieldId);
 
                 referencedElements.forEach(el => {
                     const eventType = (el.type === 'checkbox' || el.type === 'radio') ? 'change' : 'input';
@@ -524,9 +558,7 @@ export class MultistepForm {
                 const fieldId = cond.fieldId;
                 if (!fieldId) return;
 
-                const referencedElements = this.wrapper.querySelectorAll(
-                    `[name="${fieldId}"], [id="${fieldId}"]`
-                );
+                const referencedElements = this._getFieldElements(fieldId);
 
                 referencedElements.forEach(el => {
                     const eventType = (el.type === 'checkbox' || el.type === 'radio') ? 'change' : 'input';
@@ -766,8 +798,10 @@ export class MultistepForm {
      * @returns {string} The current value of the field.
      */
     _getFieldValue(fieldId) {
+        const domId = this._toDomFieldId(fieldId);
+
         // Check radio buttons first (radios share name, IDs are unique per option)
-        const radios = this.wrapper.querySelectorAll(`input[type="radio"][name="${fieldId}"]`);
+        const radios = this.wrapper.querySelectorAll(`input[type="radio"][name="${domId}"]`);
         if (radios.length > 0) {
             for (const radio of radios) {
                 if (radio.checked) return radio.value;
@@ -776,7 +810,7 @@ export class MultistepForm {
         }
 
         // Check checkboxes (checkboxes share name, IDs are unique per option)
-        const checkboxes = this.wrapper.querySelectorAll(`input[type="checkbox"][name="${fieldId}"]`);
+        const checkboxes = this.wrapper.querySelectorAll(`input[type="checkbox"][name="${domId}"]`);
         if (checkboxes.length > 0) {
             const checked = [];
             checkboxes.forEach(cb => { if (cb.checked) checked.push(cb.value); });
@@ -784,7 +818,7 @@ export class MultistepForm {
         }
 
         // Standard input/select/textarea
-        const el = this.wrapper.querySelector(`[name="${fieldId}"], [id="${fieldId}"]`);
+        const el = this.wrapper.querySelector(`[name="${domId}"], [id="${domId}"]`);
         if (el) return el.value || '';
 
         // Fallback to stored values from previous steps
@@ -818,7 +852,7 @@ export class MultistepForm {
         if (fieldErrors && Object.keys(fieldErrors).length > 0) {
             for (const [fieldName, errorMsg] of Object.entries(fieldErrors)) {
                 if (window.$) {
-                    const errDiv = $(this.wrapper).find('div.cs-error-' + fieldName);
+                    const errDiv = $(this.wrapper).find('div.cs-error-' + this._toDomFieldId(fieldName));
                     const errorMsgArr = String(errorMsg).split('\n');
                     errDiv.html('');
                     let html = "<ul class='mf-error-list'>";

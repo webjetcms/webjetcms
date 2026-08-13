@@ -83,6 +83,7 @@ public class MultistepFormsRestController {
 
             JSONObject result = new JSONObject();
             result.put("html", formHtmlHandler.getFormStepHtml(stepId, request));
+            result.put("domIdPrefix", formHtmlHandler.getDomIdPrefix());
             result.put("visibilityConditions", formConditionsHandler.getVisibilityConditions(stepId));
             result.put("requirementConditions", formConditionsHandler.getRequirementConditions(stepId));
 

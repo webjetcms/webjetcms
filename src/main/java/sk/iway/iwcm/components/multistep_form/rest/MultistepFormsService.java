@@ -540,7 +540,7 @@ public class MultistepFormsService {
      * <p>
      * For {@code radio} fields, derives id from label/placeholder and required flag,
      * allowing multiple radio buttons to share the same logical id. For other fields,
-     * generates a unique suffix (numeric) to avoid collisions among the same field type.
+     * generates a unique suffix (numeric) to avoid collisions within the form and domain.
      *
      * @param entity form item to generate id for
      * @return unique itemFormId string safe for storage and queries
@@ -581,8 +581,8 @@ public class MultistepFormsService {
         itemFormId = DocTools.removeChars(itemFormId, true);
 
         // Generate unique itemFormId with numeric postfix.
-        // Collect existing itemFormIds for this form/field type.
-        List<String> existingIds = formItemsRepository.getItemFormIds(entity.getFormName(), entity.getFieldType(), CloudToolsForCore.getDomainId());
+        // Collect existing itemFormIds for this form across all field types.
+        List<String> existingIds = formItemsRepository.getItemFormIds(entity.getFormName(), CloudToolsForCore.getDomainId());
 
         String prefix = itemFormId + "-";
         int biggestPostfix = 0;
@@ -739,7 +739,7 @@ public class MultistepFormsService {
             }
 
             // Add error to response to show to user
-            response.put("fieldErrors", addFormCounter(errors, formCounter));
+            response.put("fieldErrors", errors);
 
             // increment field error count
             formItemsRepository.incrementErrorCountByItemFormIds(formName, CloudToolsForCore.getDomainId(), new ArrayList<>(errors.keySet()));
@@ -1449,20 +1449,6 @@ public class MultistepFormsService {
         return value;
     }
 
-    private Map<String, String> addFormCounter(Map<String, String> received, int formCounter) {
-        // loop received and add form counter + "-" as prefix to keys
-        String prefix = "f" + formCounter + "-";
-        Map<String, String> prefixed = new HashMap<>();
-        for (String key : received.keySet()) {
-            if (key.startsWith(prefix)) {
-                prefixed.put(key, received.get(key));
-            } else {
-                prefixed.put(prefix + key, received.get(key));
-            }
-        }
-        return prefixed;
-    }
-
     public static final StringBuilder updateFormValues(String formName, HttpServletRequest request, StringBuilder formHtml) {
         if (formHtml == null) return null;
         if (Tools.isEmpty(formName) || request == null) return formHtml;
@@ -1493,7 +1479,7 @@ public class MultistepFormsService {
             String replaceValue = formData.get(itemFormId);
             if (replaceValue == null) replaceValue = "";
 
-            Tools.replace(formHtml, "!" + itemFormId + "!", replaceValue);
+            Tools.replace(formHtml, "!" + itemFormId + "!", ResponseUtils.filter(replaceValue));
         }
 
         return formHtml;

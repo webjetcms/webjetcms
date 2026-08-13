@@ -21,8 +21,8 @@ public interface FormItemsRepository extends DomainIdRepository<FormItemEntity, 
     @Query("SELECT fie FROM FormItemEntity fie WHERE fie.stepId = :stepId AND fie.domainId = :domainId ORDER BY fie.sortPriority ASC")
     List<FormItemEntity> getAllStepItems(@Param("stepId") Long stepId, @Param("domainId") Integer domainId);
 
-    @Query("SELECT fie.itemFormId FROM FormItemEntity fie WHERE fie.formName = :formName AND fie.fieldType = :fieldType AND fie.domainId = :domainId")
-    List<String> getItemFormIds(@Param("formName") String formName, @Param("fieldType") String fieldType, @Param("domainId") Integer domainId);
+    @Query("SELECT fie.itemFormId FROM FormItemEntity fie WHERE fie.formName = :formName AND fie.domainId = :domainId")
+    List<String> getItemFormIds(@Param("formName") String formName, @Param("domainId") Integer domainId);
 
     @Query("SELECT count(fie.id) FROM FormItemEntity fie WHERE fie.formName = :formName AND fie.domainId = :domainId AND fie.fieldType IN :fieldTypes")
     int countItemsThatHasType(@Param("formName") String formName, @Param("domainId") Integer domainId, @Param("fieldTypes") List<String> fieldTypes);
