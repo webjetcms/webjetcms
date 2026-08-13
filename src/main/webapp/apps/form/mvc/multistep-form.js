@@ -257,10 +257,10 @@ export class MultistepForm {
         const form = event.currentTarget;
 
         // Generate reCaptcha V3 token if the captcha widget is present
-        const recaptchaInput = form.querySelector('#g-recaptcha-response[data-type="V3"]');
+        const recaptchaInput = form.querySelector('input[name="g-recaptcha-response"][data-type="V3"]');
         if (recaptchaInput && window.grecaptcha && typeof window.wjFormSubmit === 'function') {
             await new Promise((resolve) => {
-                wjFormSubmit(form, resolve);
+                window.wjFormSubmit(form, resolve, recaptchaInput);
             });
         }
 
