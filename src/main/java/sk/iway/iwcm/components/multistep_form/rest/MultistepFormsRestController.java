@@ -80,6 +80,7 @@ public class MultistepFormsRestController {
 
             FormHtmlHandler formHtmlHandler = new FormHtmlHandler(formName, request);
             FormConditionsHandler formConditionsHandler = new FormConditionsHandler(formName, request);
+            request.setAttribute("multistepFormPrefix", formHtmlHandler.getDomIdPrefix());
 
             JSONObject result = new JSONObject();
             result.put("html", formHtmlHandler.getFormStepHtml(stepId, request));
