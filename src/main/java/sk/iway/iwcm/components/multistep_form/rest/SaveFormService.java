@@ -35,6 +35,7 @@ import sk.iway.iwcm.components.upload.XhrFileUploadServlet;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.ShowDoc;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.form.FormMailAction;
@@ -225,6 +226,7 @@ public class SaveFormService {
             DocDetails mailDoc = DocDB.getInstance().getDoc(mailDocId, -1, false);
             if (mailDoc != null) {
                 String pageHtml = FormMailAction.getCroppedHTML(mailDoc.getData());
+                pageHtml = ShowDoc.updateCodes(null, pageHtml, mailDocId, request, Constants.getServletContext());
                 StringBuilder formHtml = MultistepFormsService.updateFormValues(formName, request, new StringBuilder(pageHtml));
 
                 Pair<String, String> cssPair = FormHtmlHandler.getCssDataLink(mailDocId, forceTextPlain);
