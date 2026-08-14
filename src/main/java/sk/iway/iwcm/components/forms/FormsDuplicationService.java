@@ -22,6 +22,12 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 
+/**
+ * Duplicates multistep forms together with their settings, steps, items, and item conditions.
+ *
+ * The service preserves relationships between copied records by mapping original step and item IDs
+ * to their newly generated IDs. Duplication is performed in a single transaction.
+ */
 @Service
 public class FormsDuplicationService {
 
@@ -46,6 +52,19 @@ public class FormsDuplicationService {
         this.formItemsConditionsRepository = formItemsConditionsRepository;
     }
 
+    /**
+     * Creates a copy of a multistep form and all records that define its structure and behavior.
+     *
+     * The supplied form provides the new form name and may provide replacement settings. Serialized
+     * form data is copied from the persisted original, while counters and database identifiers are reset.
+     *
+     * @param duplicate  form entity to populate and persist as the copy
+     * @param originalId  database identifier of the form to copy
+     * @param domainId  domain in which the original is resolved and the copy is created
+     * @return persisted form entity representing the copy
+     * @throws IllegalStateException if the input is incomplete, the original is not a multistep form,
+     *                               or copied relationships cannot be reconstructed
+     */
     @Transactional(transactionManager = "webjet2022TransactionManager")
     public FormsEntity duplicateMultistepForm(FormsEntity duplicate, Long originalId, int domainId) {
         if (duplicate == null || Tools.isEmpty(duplicate.getFormName())) {
@@ -78,6 +97,16 @@ public class FormsDuplicationService {
         return savedForm;
     }
 
+    /**
+     * Copies the form settings and resets usage counters for the new form.
+     *
+     * Settings supplied with the duplicate take precedence over settings loaded from the original form.
+     *
+     * @param duplicate  form entity that receives the persisted settings copy
+     * @param originalFormName  name used to load the original settings when no replacement is supplied
+     * @param duplicateFormName  name assigned to the copied settings
+     * @param domainId  domain assigned to the copied settings
+     */
     private void copySettings(FormsEntity duplicate, String originalFormName, String duplicateFormName, int domainId) {
         FormSettingsEntity source = duplicate.getFormSettings();
         if (source == null) {
@@ -97,6 +126,16 @@ public class FormsDuplicationService {
         duplicate.setFormSettings(formSettingsRepository.save(copy));
     }
 
+    /**
+     * Copies the ordered form steps and maps each original step ID to its generated copy ID.
+     *
+     * @param originalFormName  name of the form whose steps are copied
+     * @param duplicateFormName  name assigned to the copied steps
+     * @param domainId  domain used to load and persist the steps
+     * @return mapping from original step IDs to copied step IDs
+     * @throws IllegalStateException if a source or copied step has no ID, or persistence changes the
+     *                               step count
+     */
     private Map<Long, Long> copySteps(String originalFormName, String duplicateFormName, int domainId) {
         List<FormStepEntity> sourceSteps = formStepsRepository.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(originalFormName, domainId);
         Map<Long, Long> stepIds = new LinkedHashMap<>();
@@ -128,6 +167,17 @@ public class FormsDuplicationService {
         return stepIds;
     }
 
+    /**
+     * Copies form items and reconnects them to the corresponding copied steps.
+     *
+     * @param originalFormName  name of the form whose items are copied
+     * @param duplicateFormName  name assigned to the copied items
+     * @param domainId  domain used to load and persist the items
+     * @param stepIds  mapping from original step IDs to copied step IDs
+     * @return mapping from original item IDs to copied item IDs
+     * @throws IllegalStateException if an item ID or mapped step ID is unavailable, or persistence changes
+     *                               the item count
+     */
     private Map<Long, Long> copyItems(
         String originalFormName,
         String duplicateFormName,
@@ -181,6 +231,14 @@ public class FormsDuplicationService {
         return itemIds;
     }
 
+    /**
+     * Copies item conditions and reconnects them to the corresponding copied items.
+     *
+     * @param duplicateFormName  name assigned to the copied conditions
+     * @param domainId  domain used to load and persist the conditions
+     * @param itemIds  mapping from original item IDs to copied item IDs
+     * @throws IllegalStateException if a condition references an item without a copied ID
+     */
     private void copyConditions(String duplicateFormName, int domainId, Map<Long, Long> itemIds) {
         if (itemIds.isEmpty()) return;
 

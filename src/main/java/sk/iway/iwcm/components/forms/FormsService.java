@@ -60,8 +60,20 @@ import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.utils.Pair;
 
+/**
+ * Provides form administration, submission searching, access control, export, and rendering operations.
+ *
+ * The service supports repository implementations for both form definitions and submitted records while
+ * consistently restricting data to the current domain and the pages editable by the current user.
+ *
+ * @param <R> repository type used to access form entities
+ * @param <E> form entity type handled by the repository
+ */
 public class FormsService<R extends FormsRepositoryInterface<E>, E extends FormsEntityBasic> {
 
+    /**
+     * Identifies the supported form layouts and their persisted values.
+     */
     public enum FORM_TYPE {
         SIMPLE("simple"),
         MULTISTEP("multistep"),
@@ -96,6 +108,12 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     private final FormStepsRepository formStepsRepository;
     private final FormItemsRepository formItemsRepository;
 
+    /**
+     * Resolves the selected form name when the request displays form submission details.
+     *
+     * @param request  request containing the detail flag and form name
+     * @return selected form name, or {@code null} when detail mode is disabled
+     */
     public String getFormName(HttpServletRequest request) {
         if(Tools.getBooleanValue(request.getParameter("detail"), false))
             return Tools.getStringValue(request.getParameter("formName"), null);
@@ -111,6 +129,17 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         this.formItemsRepository = formItemsRepository;
     }
 
+    /**
+     * Returns either form definitions or submissions of the form selected by the request.
+     *
+     * Submission exports also update the last-export date of the returned records.
+     *
+     * @param page  page supplied by the DataTable request pipeline
+     * @param pageable  requested pagination and sorting
+     * @param request  request that selects detail and export modes
+     * @param user  user whose editable pages determine form access
+     * @return page of form definitions or submissions, or {@code null} when access is denied
+     */
     public Page<E> getAllItems(Page<E> page, Pageable pageable, HttpServletRequest request, Identity user) {
         String formName = getFormName(request);
 
@@ -126,6 +155,18 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         return page;
     }
 
+    /**
+     * Searches submissions of the form selected by the request using DataTable filter parameters.
+     *
+     * Request parameters are merged into the supplied parameter map before the repository query is built.
+     *
+     * @param params  mutable map that receives request parameters used for filtering
+     * @param pageable  requested pagination and sorting
+     * @param search  search entity supplied by the DataTable pipeline
+     * @param request  request that selects the form and export mode
+     * @param user  user whose editable pages determine form access
+     * @return matching submissions, or {@code null} when no form is selected or access is denied
+     */
     public Page<E> findByColumns(Map<String, String> params, Pageable pageable, E search, HttpServletRequest request, Identity user) {
         String formName = getFormName(request);
         if(formName != null) {
@@ -144,6 +185,12 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         return null;
     }
 
+    /**
+     * Enriches a form definition with its submission count and latest submission metadata.
+     *
+     * @param entity  form definition to enrich
+     * @param domainId  domain containing the form and its submissions
+     */
     public void prepareForm(E entity, int domainId) {
         entity.setCount(formsRepository.countAllByFormNameAndDomainId(entity.getFormName(), domainId) - 1);
         E lastOne = formsRepository.findTopByFormNameAndDomainIdAndCreateDateNotNullOrderByCreateDateDesc(entity.getFormName(), domainId);
@@ -154,9 +201,10 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Vrati zoznam vsetkych formularov, vyfiltruje len take, na ktore ma pouzivatel prava
-     * @param user
-     * @return
+     * Returns distinct form definitions that the user is allowed to manage.
+     *
+     * @param user  user whose editable pages and groups determine form access
+     * @return accessible form definitions in the current domain
      */
     public List<E> getFormsList(UserDetails user) {
         Integer domainId = CloudToolsForCore.getDomainId();
@@ -167,9 +215,12 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Zrusi zo zoznamu duplicitne nazvy, tie su tam len ked je zle formular v DB vyplneny (typicky programovo)
-     * @param allForms
-     * @return
+     * Removes duplicate form definitions that share the same name.
+     *
+     * Duplicate management records can exist when forms were populated incorrectly by application code.
+     *
+     * @param allForms  form definitions to filter
+     * @return form definitions containing only the first occurrence of each name
      */
     private List<E> filterDistinct(List<E> allForms) {
         List<E> ret = new ArrayList<>();
@@ -186,10 +237,11 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-	 * Vyfiltruje formulare na zaklade prav pouzivatela na pristup k adresarom a strankam a docId formularu
-	 * @param user
-	 * @param allForms
-	 * @return
+	 * Filters forms by the user's permission to edit their associated page or directory.
+	 *
+	 * @param user  user whose editable pages and groups are evaluated
+	 * @param allForms  forms to filter
+	 * @return forms accessible to the user
 	 */
 	private List<E> filterFormsByUser(UserDetails user, List<E> allForms) {
 		List<E> ret = new ArrayList<>(allForms.size());
@@ -208,13 +260,14 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 		}
 
 		return ret;
-	}
+    }
 
     /**
-     * Overi, ci pouzivatel ma pravo na dany formular
-     * @param formName
-     * @param user
-     * @return
+     * Checks whether the user can manage a form through its associated page or directory.
+     *
+     * @param formName  name of the form to check in the current domain
+     * @param user  user whose editable pages and groups are evaluated
+     * @return {@code true} when the form is accessible to the user
      */
     public boolean isFormAccessible(String formName, UserDetails user) {
         Integer domainId = CloudToolsForCore.getDomainId();
@@ -232,13 +285,13 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Overi, ci konkretny formular je dostupny pre pouzivatela
-     * @param form
-     * @param user
-     * @param userEditableGroups
-     * @param userEditablePages
-     * @param docDB
-     * @return
+     * Checks whether a form belongs to a page or directory in the user's editable scope.
+     *
+     * @param form  form whose associated document is checked
+     * @param userEditableGroups  identifiers of editable directories, including expanded child directories
+     * @param userEditablePages  identifiers of individually editable pages
+     * @param docDB  document cache used to resolve the form's page
+     * @return {@code true} when the form is in an editable page or directory
      */
     private boolean isFormAccessible(E form, int[] userEditableGroups, int[] userEditablePages, DocDB docDB) {
         if (userEditableGroups!=null && userEditableGroups.length>0)
@@ -269,9 +322,15 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Vrati zoznam stlpcov formulara
-     * @param formName
-     * @return
+     * Resolves submission columns and display labels for a form.
+     *
+     * Multistep form fields are labeled from their item definitions and associated steps. The result also
+     * includes the submission count, form type, and double opt-in state when available.
+     *
+     * @param formName  name of the form in the current domain
+     * @param user  user whose access to the form is verified
+     * @param prop  localization provider used to build field and step labels
+     * @return form column metadata, or {@code null} when access is denied
      */
     public FormColumns getColumnNames(String formName, UserDetails user, Prop prop) {
 
@@ -337,10 +396,12 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Vrati zaznamy v databaze pre dany formular (zaznamy formularu)
-     * @param formName
-     * @param pageable
-     * @return
+     * Returns submitted records for a form and parses their serialized data columns.
+     *
+     * @param formName  name of the form in the current domain
+     * @param user  user whose access to the form is verified
+     * @param pageable  requested pagination and sorting
+     * @return page of submitted records, or {@code null} when access is denied
      */
     Page<E> getFormsData(String formName, UserDetails user, Pageable pageable) {
 
@@ -352,12 +413,13 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Vyhlada (serverovo) v udajoch formularu (jednotlive zaznamy formularu)
-     * @param formName
-     * @param user
-     * @param params
-     * @param pageable
-     * @return
+     * Searches submitted form records using server-side DataTable filters.
+     *
+     * @param formName  name of the form in the current domain
+     * @param user  user whose access to the form is verified
+     * @param params  filter parameters from the DataTable request
+     * @param pageable  requested pagination and sorting
+     * @return matching submitted records, or {@code null} when access is denied
      */
     public Page<E> findInDataByColumns(String formName, UserDetails user, Map<String, String> params, Pageable pageable) {
 
@@ -377,6 +439,14 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         return filteredForms;
     }
 
+    /**
+     * Builds database predicates for form identity, domain, submission state, and supported column filters.
+     *
+     * @param formName  name of the form whose submissions are searched
+     * @param domainId  domain containing the form submissions
+     * @param params  DataTable search parameters to convert into predicates
+     * @return specification representing the supported search conditions
+     */
     protected Specification<E> getSearchConditions(String formName, Integer domainId, Map<String, String> params) {
 		return (Specification<E>) (root, query, builder) -> {
 			final List<Predicate> predicates = new ArrayList<>();
@@ -446,9 +516,10 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Skonvertuje retazec daterange:tsfrom-tsto na par Date objektov
-     * @param dateRange - par Date objektov, pre nezadany datum obsahuje null
-     * @return
+     * Parses a {@code daterange:from-to} value into optional lower and upper date bounds.
+     *
+     * @param dateRange  serialized date range; either bound may be omitted
+     * @return parsed date bounds with {@code null} for an omitted bound, or {@code null} for an empty value
      */
     protected Pair<Date, Date> parseDate(String dateRange) {
         Pair<Date, Date> dateRangePair = null;
@@ -470,6 +541,14 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         return dateRangePair;
     }
 
+    /**
+     * Parses serialized submission data into named, decrypted values for DataTable rendering.
+     *
+     * Values originating from WYSIWYG fields are selectively unescaped, and stored HTML is removed from
+     * each returned entity after it has been used to determine the field rendering mode.
+     *
+     * @param formsEntities  submitted form records to transform in place
+     */
     private void parseDataColumnInFormsEntities(Page<E> formsEntities) {
         for (E entity : formsEntities) {
             String[] columns = (entity.getData().split("\\|", -1));
@@ -521,18 +600,20 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Ziska zaznam z repozitara podla ID
-     * @param id
-     * @return
+     * Finds a form record by identifier in the current domain.
+     *
+     * @param id  database identifier of the form record
+     * @return matching form record, or {@code null} when no record exists in the current domain
      */
     public E getById(long id) {
         return formsRepository.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId()).orElse(null);
     }
 
     /**
-     * Aktualizuje poznamku formulara
-     * @param note
-     * @param id
+     * Updates the note of an existing form record.
+     *
+     * @param note  note to store
+     * @param id  database identifier of the form record
      */
     public void updateNote(String note, long id) {
         E form = getById(id);
@@ -543,8 +624,9 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Nastavi datum posledneho exportu pre zadane formulare
-     * @param forms
+     * Sets the last-export date of the supplied form records using batched repository updates.
+     *
+     * @param forms  form records marked as exported
      */
     public void setExportDate(List<E> forms) {
         int counter = 0;
@@ -566,11 +648,17 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Zmaze zaznam z databazy
-     * + ak maze riadiaci zaznam (createDate je null) tak zmaze vsetky zaznamy
-     * @param entity
-     * @param id
-     * @return
+     * Deletes one submission or all records and structure belonging to a form definition.
+     *
+     * Deleting a management record, identified by a missing creation date, removes all submissions,
+     * steps, and items with the same form name. Form settings are intentionally preserved.
+     *
+     * @param entity  entity carrying the form name to delete
+     * @param id  database identifier of the record initiating the deletion
+     * @param formStepsRepository  repository used to remove multistep form steps
+     * @param formItemsRepository  repository used to remove multistep form items
+     * @param formSettingsRepository  settings repository retained for deletion workflow compatibility
+     * @return {@code true} when deletion succeeds; {@code false} for another domain or on failure
      */
     public boolean deleteItem(E entity, long id, FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository, FormSettingsRepository formSettingsRepository) {
         try {
@@ -600,6 +688,18 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         return false;
     }
 
+    /**
+     * Authorizes and streams a stored form attachment to the HTTP response.
+     *
+     * Access requires an authenticated administrator with form permissions and, when the owning form can
+     * be resolved, edit access to that form. Invalid sessions or permissions return a login redirect.
+     *
+     * @param name  stored attachment name, optionally prefixed by its form record ID
+     * @param request  current HTTP request used for authentication and access checks
+     * @param response  response receiving attachment headers and file content
+     * @return login redirect for an unauthorized request, otherwise {@code null}
+     * @throws IOException if the response stream cannot be opened or written
+     */
     public String downloadAttachment(String name, HttpServletRequest request, HttpServletResponse response) throws IOException {
         //Something wrong
         if(request == null || response == null) return null;
@@ -679,6 +779,24 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         return null;
     }
 
+    /**
+     * Renders a form field template by replacing form, item, label, value, validation, and iterable placeholders.
+     *
+     * Selected item metadata is filtered before being inserted into HTML, optional first-use headings are applied,
+     * and user-specific expressions are resolved in the completed fragment.
+     *
+     * @param html  HTML template containing supported placeholders
+     * @param formName  form name inserted into form-related placeholders
+     * @param recipients  recipient value inserted into the template
+     * @param item  form item metadata, or {@code null} for a template without item placeholders
+     * @param requiredLabelAdd  marker appended to required labels and placeholders
+     * @param isEmailRender  whether the fragment is rendered for email rather than an interactive form
+     * @param rowView  whether non-closing fragments are wrapped in a row column
+     * @param firstTimeHeadingSet  mutable set used to prevent repeated first-use headings
+     * @param prop  localization provider for tooltip, iterable, and heading templates
+     * @param request  request used to resolve user-specific expressions
+     * @return rendered HTML fragment
+     */
     public static final String replaceFields(String html, String formName, String recipients, JSONObject item, String requiredLabelAdd, boolean isEmailRender, boolean rowView, Set<String> firstTimeHeadingSet, Prop prop, HttpServletRequest request)
     {
         html = Tools.replace(Tools.getStringValue(html, ""), "${formname}", Tools.getStringValue(formName, ""));
@@ -819,10 +937,10 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Resolve configured options, including options backed by an enumeration.
+     * Resolves configured options, including options backed by an enumeration.
      *
-     * @param value serialized options
-     * @return resolved option tokens
+     * @param value  serialized options
+     * @return resolved option tokens, or an empty array for an empty or invalid enumeration configuration
      */
     public static String[] parseIterableValues(String value) {
         String normalized = Tools.getStringValue(value, "").trim();
@@ -838,6 +956,13 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         return Tools.getTokens(normalized, delimiter, true);
     }
 
+    /**
+     * Resolves an {@code enumeration-options} configuration into label and value pairs.
+     *
+     * @param value  serialized iterable configuration
+     * @return resolved {@code label:value} entries, an empty array for an invalid enumeration configuration,
+     *         or {@code null} when the value is not an enumeration configuration
+     */
     private static String[] resolveEnumerationIterableValues(String value) {
         String normalized = value;
         if (normalized.startsWith("{") && normalized.endsWith("}")) {

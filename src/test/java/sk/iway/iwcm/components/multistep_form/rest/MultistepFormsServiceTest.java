@@ -21,8 +21,14 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.i18n.Prop;
 
+/**
+ * Tests identifier generation and condition-field loading in {@link MultistepFormsService}.
+ */
 class MultistepFormsServiceTest {
 
+    /**
+     * Verifies that item form IDs remain unique across fields with different types.
+     */
     @Test
     void generatesUniqueItemFormIdAcrossFieldTypes() {
         FormItemsRepository formItemsRepository = mock(FormItemsRepository.class);
@@ -38,6 +44,9 @@ class MultistepFormsServiceTest {
         verify(formItemsRepository).getItemFormIds("contact-form", 1);
     }
 
+    /**
+     * Verifies that condition-field loading preserves step IDs larger than the integer range.
+     */
     @Test
     void keepsLongStepIdsWhenLoadingConditionFields() {
         long stepId = (long) Integer.MAX_VALUE + 10L;

@@ -16,10 +16,18 @@ import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 
+/**
+ * Tests access control and source-form tracking during form duplication in
+ * {@link FormsController}.
+ */
 class FormsControllerTest {
 
     private static final String ORIGINAL_FORM_ID_ATTRIBUTE = FormsController.class.getName() + ".originalFormId";
 
+    /**
+     * Verifies that duplication is rejected and the source ID is not stored when the
+     * user cannot access the source form.
+     */
     @Test
     void rejectsDuplicationWhenUserCannotAccessSourceForm() {
         FormsServiceImpl formsService = mock(FormsServiceImpl.class);
@@ -39,6 +47,9 @@ class FormsControllerTest {
         verify(formsService).isFormAccessible("restricted-form", restrictedUser);
     }
 
+    /**
+     * Verifies that the source form ID is stored when the user can access the source form.
+     */
     @Test
     void storesSourceIdWhenUserCanAccessSourceForm() {
         FormsServiceImpl formsService = mock(FormsServiceImpl.class);

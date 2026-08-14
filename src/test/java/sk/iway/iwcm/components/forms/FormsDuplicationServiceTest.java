@@ -33,6 +33,10 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 
+/**
+ * Tests multistep form duplication, validation, and transaction configuration in
+ * {@link FormsDuplicationService}.
+ */
 class FormsDuplicationServiceTest {
 
     private FormsRepository formsRepository;
@@ -58,6 +62,10 @@ class FormsDuplicationServiceTest {
         );
     }
 
+    /**
+     * Verifies that duplication remaps step and item IDs for conditions while leaving
+     * source entities unchanged.
+     */
     @Test
     void duplicatesConditionsUsingNewStepAndItemIdsWithoutMutatingSourceEntities() {
         FormsEntity original = new FormsEntity();
@@ -168,6 +176,10 @@ class FormsDuplicationServiceTest {
         assertEquals("source-form", condition.getFormName());
     }
 
+    /**
+     * Verifies that a non-multistep form is rejected before any duplicated data is
+     * persisted.
+     */
     @Test
     void rejectsDuplicationOfNonMultistepFormBeforeWritingAnything() {
         FormsEntity original = new FormsEntity();
@@ -190,6 +202,9 @@ class FormsDuplicationServiceTest {
         verifyNoInteractions(formSettingsRepository, formStepsRepository, formItemsRepository, formItemsConditionsRepository);
     }
 
+    /**
+     * Verifies that multistep form duplication uses the WebJET transaction manager.
+     */
     @Test
     void usesWebjetTransactionManager() throws NoSuchMethodException {
         Transactional transactional = FormsDuplicationService.class

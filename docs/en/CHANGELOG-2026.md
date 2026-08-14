@@ -61,6 +61,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 ![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
 
 - Added the option to set the maximum combined file size in the form, previously only the size for a file could be set, if the form contains multiple files, it is possible to set the maximum size for all files together (#58517).
+- [Multistep Forms](redactor/apps/multistep-form/README.md) - added duplication of the entire form including settings, steps and items. The item editor displays their automatically generated identifier and supports custom error message, whitespace trimming, empty option in picklist and new field type autocomplete with diacritic-insensitive search (#osk573).
+- [Multistep forms](redactor/apps/multistep-form/README.md) - it is possible to insert item values ​​using tags in the introductory text of the step and [page with email version](redactor/apps/form/README.md#tab---settings). The recognition of name and email fields by the beginning of the identifier, language processing, reCAPTCHA v3, independent insertion of multiple form instances on one page and deleting all responses without deleting the form definition (#osk573) have been fixed.
+- [Multistep forms](redactor/apps/multistep-form/README.md) - added the ability to enter a custom error message and trim spaces at the beginning and end of the text entered by the visitor (#osk573).
 
 ### Semantic search
 
@@ -123,6 +126,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Export/import files - modified dialog design and responsive display of form fields according to the current administration design (#58581).
 - Web pages - added highlighting of the element above which the context menu is called. Important if you want to perform the Delete element action, so you can see exactly which element is marked (#OSK675).
 - Multiweb - added option to rename an existing domain + redirection after renaming (#58317-15).
+- Google reCaptcha - added support for inserting multiple multi-step forms into a page, `invisible/reCaptcha/reCaptchaV3` mode is supported, error message edited to more understandable text (#osk573).
+- Multi-step forms - added moving (`scroll`) to the beginning of the form after moving to the next step (#osk573).
 
 ### Bug fixes
 
@@ -148,6 +153,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced.png)
 
+- Data tables - extended functionality of field type [`OPTIONS`](developer/datatables-editor/standard-fields.md#options) by the ability to add an empty value using `allowEmptyOption` (#osk573).
+- Data tables - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) removes extra blank paragraphs when editing source code (#osk573).
 - Data tables - added a new field type `ENUMERATION` for [connection to enumeration tables](developer/datatables-editor/standard-fields.md#enumeration) in the editor. The field stores the configuration in `enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY` format and allows you to set the source of values ​​(#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
