@@ -412,6 +412,38 @@
             }
         },
         {
+            "label": "Docker Tomcat 11 Start",
+            "type": "shell",
+            "command": "${workspaceFolder}/.devcontainer/tomcat/start-tomcat.sh",
+            "args": ["--follow"],
+            "group": "build",
+            "problemMatcher": [],
+            "isBackground": false,
+            "presentation": {
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "clear": true,
+                "showReuseMessage": false,
+                "close": false
+            }
+        },
+        {
+            "label": "Docker Tomcat 11 Stop",
+            "type": "shell",
+            "command": "if ! docker info >/dev/null 2>&1; then echo 'Docker daemon is not available.' >&2; exit 1; elif [ \"$(docker inspect --format '{{.State.Running}}' webjetcms-tomcat11 2>/dev/null)\" = \"true\" ]; then docker stop --time 30 webjetcms-tomcat11; else echo 'Tomcat container is not running.'; fi",
+            "group": "build",
+            "problemMatcher": [],
+            "isBackground": false,
+            "presentation": {
+                "reveal": "silent",
+                "panel": "dedicated",
+                "clear": true,
+                "showReuseMessage": false,
+                "close": true
+            }
+        },
+        {
             "label": "Sass Compile JET",
             "type": "shell",
             "options": {
