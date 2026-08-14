@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -305,6 +306,12 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
 
     @Override
     public void beforeDuplicate(FormsEntity entity, Long originalId) {
+        FormsEntity original = originalId == null ? null : formsService.getById(originalId);
+        Identity user = getUser();
+        if (original == null || user == null || formsService.isFormAccessible(original.getFormName(), user) == false) {
+            throw new AccessDeniedException("User is not allowed to duplicate the source form.");
+        }
+
         getRequest().setAttribute(ORIGINAL_FORM_ID_ATTRIBUTE, originalId);
     }
 
