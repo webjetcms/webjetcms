@@ -908,13 +908,13 @@ public class MultistepFormsService {
                 if ("reCaptchaV3".equals(captchaType)) {
                     // When using reCaptchaV3 - we need set value into session (other versions do it automatically)
                     request.getSession().setAttribute("g-recaptcha-response", received.optString("g-recaptcha-response", ""));
-                } else if ("invisible".equals(captchaType)) {
+                } else if ("invisible".equals(captchaType) || "reCaptcha".equals(captchaType)) {
                     value = received.optString("g-recaptcha-response", "");
                 }
 
                 // Captcha can be empty, because for example reCaptcha do not have "value"
                 if (spamProtectionEnabled == true && checkCaptcha(request, value) == false) {
-                    errors.put(stepItem.getItemFormId(), fieldName + " - " + prop.getText("captcha.nie.je.spravna"));
+                    errors.put(stepItem.getItemFormId(), fieldName + " - " + prop.getText("captcha.textNotCorrect"));
                 }
 
                 continue;

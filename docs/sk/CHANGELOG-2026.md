@@ -127,7 +127,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Export/import súborov - upravený dizajn dialógového okna a responzívne zobrazenie formulárových polí podľa aktuálneho dizajnu administrácie (#58581).
 - Webové stránky - doplnené zvýraznenie elementu nad ktorým je vyvolané kontextové menu. Dôležité ak chcete vykonať akciu Zmazať element, aby ste presne videli ktorý element je označený (#OSK675).
 - Multiweb - doplnená možnosť premenovať existujúcu doménu + presmerovanie po premenovaní (#58317-15).
-- Google reCaptcha - doplnená podpora vkladania viacerých viac krokových formulárov do stránky, podporovaný je režim `invisible/reCaptcha/reCaptchaV3` (#osk573).
+- Google reCaptcha - doplnená podpora vkladania viacerých viac krokových formulárov do stránky, podporovaný je režim `invisible/reCaptcha/reCaptchaV3`, upravené chybové hlásenie na zrozumiteľnejší text (#osk573).
 - Viackrokové formuláre - doplnené presunutie (`scroll`) na začiatok formuláru po prechode na ďalší krok (#osk573).
 
 ### Oprava chýb

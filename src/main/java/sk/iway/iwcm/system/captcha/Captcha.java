@@ -110,7 +110,7 @@ public class Captcha
 			}
 			else if ("reCaptcha".equals(Constants.getString("captchaType")))
 			{
-				return reCaptchaValidate(httpServletRequest.getSession().getAttribute("sessionId"));
+				return reCaptchaValidate(getSubmittedReCaptchaResponse(httpServletRequest, response));
 			}
 			else if ("reCaptchaV3".equals(Constants.getString("captchaType")))
 			{
@@ -128,6 +128,12 @@ public class Captcha
 
 		}
 		return false;
+	}
+
+	static String getSubmittedReCaptchaResponse(HttpServletRequest request, String response)
+	{
+		if (Tools.isNotEmpty(response)) return response;
+		return request.getParameter("g-recaptcha-response");
 	}
 
 	/** Zisti, ci je reCaptcha spravna
@@ -293,7 +299,7 @@ public class Captcha
 		}
 		else if ("reCaptcha".equals(Constants.getString("captchaType")))
 		{
-			return reCaptchaValidate(httpServletRequest.getSession().getAttribute("sessionId"));
+			return reCaptchaValidate(getSubmittedReCaptchaResponse(httpServletRequest, response));
 		}
 		try
 		{

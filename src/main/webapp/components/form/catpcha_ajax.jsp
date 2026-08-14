@@ -2,11 +2,13 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.system.captcha.Captcha" %><%
 String value = Tools.getRequestParameter(request, "v");
+if ("reCaptcha".equals(Constants.getString("captchaType"))) {
+	value = Tools.getParameter(request, "capchaId");
+}
 boolean isCorrect = false;
 
 if (Tools.isNotEmpty(value))
 {
-	session.setAttribute("sessionId", Tools.getParameter(request, "capchaId"));
 	isCorrect = Captcha.isReponseCorrect(request, value);
 }
 
