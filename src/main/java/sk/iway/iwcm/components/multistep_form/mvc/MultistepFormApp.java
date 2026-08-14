@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
@@ -64,6 +65,8 @@ public class MultistepFormApp extends WebjetComponentAbstract {
     public static final String DOC_ID = "-docid";
     public static final String PERMITTED = "-permitted";
     public static final String START_TIME = "-starttime";
+    public static final String COUNTER = "-counter";
+    private static final String REQUEST_COUNTER_ATTR = "webjet_multistep_form_counter";
 
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "formslist.nazov_formularu", tab = "basic")
     private String formName;
@@ -104,14 +107,22 @@ public class MultistepFormApp extends WebjetComponentAbstract {
         String csrf = CSRF.getCsrfToken(request.getSession(), true);
         model.addAttribute("csrf", csrf);
 
+        // Count how many multistep forms are on this page (request-scoped)
+        int formCounter = Tools.getIntValue(String.valueOf(request.getAttribute(REQUEST_COUNTER_ATTR)), 0) + 1;
+        request.setAttribute(REQUEST_COUNTER_ATTR, formCounter);
+
         // Set docId of current page
         String sessionKey = MultistepFormsService.getNewSessionKey(formName, csrf);
         request.getSession().setAttribute(sessionKey + DOC_ID, Tools.getIntValue(request.getParameter("docid"), -1));
         request.getSession().setAttribute(sessionKey + PERMITTED, Boolean.TRUE);
         request.getSession().setAttribute(sessionKey + START_TIME, Tools.getNow());
+        request.getSession().setAttribute(sessionKey + COUNTER, formCounter);
 
         //Get and set first step id
         model.addAttribute("stepId", formStepsRepository.getFirstStepId(formName, CloudToolsForCore.getDomainId()).orElse(-1L));
+
+        // user lng
+        model.addAttribute("language", PageLng.getUserLng(request));
 
         // Increment form view count
         formSettingsRepository.incrementFormViewCount(formName, CloudToolsForCore.getDomainId());

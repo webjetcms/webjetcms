@@ -251,15 +251,19 @@ Scenario("Overenie zoznamu podla prihlaseneho pouzivatela", ({ I, DT }) => {
     I.amOnPage("/apps/form/admin/");
 
     //tester
+    DT.filterEquals("formName", "formular-lahko");
     I.see("formular-lahko");
+    DT.filterEquals("formName", "FAQ");
     I.see("FAQ");
 
     //prihlas sa ako tester2
     I.relogin("tester2");
 
     I.amOnPage("/apps/form/admin/");
-    I.see("formular-lahko");
+    DT.filterEquals("formName", "FAQ");
     I.dontSee("FAQ");
+    DT.filterEquals("formName", "formular-lahko");
+    I.see("formular-lahko");
 
     I.click("formular-lahko");
     DT.waitForLoader();

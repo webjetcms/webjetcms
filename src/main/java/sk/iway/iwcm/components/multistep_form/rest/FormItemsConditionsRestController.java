@@ -53,7 +53,7 @@ public class FormItemsConditionsRestController extends DatatableRestControllerV2
         DatatablePageImpl<FormItemsConditionEntity> page = new DatatablePageImpl<>( super.getAllItemsIncludeSpecSearch(new FormItemsConditionEntity(), pageable) );
 
         String formName = Tools.getStringValue(getRequest().getParameter("formName"), null);
-        int stepId = Tools.getIntValue(getRequest().getParameter("stepId"), -1);
+        long stepId = Tools.getLongValue(getRequest().getParameter("stepId"), -1L);
 
         page.addOptions("itemFormId", multistepFormsService.getAvailableConditionFields(formName, stepId, getProp()), "label", "value", true);
         page.addOptions("operator", OperatorType.getLabelValues(getProp()), "label", "value", true);

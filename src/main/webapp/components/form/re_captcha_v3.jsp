@@ -23,23 +23,44 @@ pageContext.setAttribute("lng", lng);
 
 PageParams pageParams = new PageParams(request);
 
+String idPrefix = "";
+String multistepFormPrefix = (String) request.getAttribute("multistepFormPrefix");
+if (Tools.isNotEmpty(multistepFormPrefix)) {
+    idPrefix = multistepFormPrefix;
+}
+
+int recaptchaV3Counter = Tools.getIntValue((String) request.getAttribute("recaptchaV3Counter"), 1);
+String recaptchaInputId = idPrefix + "g-recaptcha-response";
+if (Tools.isEmpty(idPrefix) && recaptchaV3Counter > 1) {
+    recaptchaInputId += "-" + recaptchaV3Counter;
+}
+request.setAttribute("recaptchaV3Counter", String.valueOf(recaptchaV3Counter + 1));
+
 out.print(Tools.insertJQuery(request));
 %>
 
-<input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response">
+<input type="hidden" id="<%=recaptchaInputId%>" name="g-recaptcha-response" data-type="V3">
 <input type="hidden" name="action" value="validate_captcha">
 
 <script src="https://www.google.com/recaptcha/api.js?render=<%=Constants.getString("reCaptchaSiteKey")%>"></script>
 <script>
-    function wjFormSubmit(form, callback) {
+    function wjFormSubmit(form, callback, recaptchaInput) {
+        if (!recaptchaInput) {
+            var formElement = form && form.jquery ? form[0] : form;
+            if (formElement) {
+                recaptchaInput = formElement.querySelector('input[name="g-recaptcha-response"][data-type="V3"]');
+            }
+        }
+
         grecaptcha.ready(function () {
             // do request for recaptcha token
             // response is promise with passed token
             grecaptcha.execute('<%=Constants.getString("reCaptchaSiteKey")%>', {action: 'validate_captcha'})
                 .then(function (token) {
-                    // add token value to form
-                    document.getElementById('g-recaptcha-response').value = token;
-                    //$('#g-recaptcha-response').closest('form').submit()
+                    // Add token to the reCAPTCHA input belonging to the submitted form.
+                    if (recaptchaInput) {
+                        recaptchaInput.value = token;
+                    }
                     if (typeof callback === 'function') {
                         callback();
                     }
@@ -51,7 +72,10 @@ out.print(Tools.insertJQuery(request));
     }
 
     $(function () {
-        $('input[type="submit"]').on('click', function () {
+        var recaptchaInput = document.getElementById('<%=recaptchaInputId%>');
+        if (!recaptchaInput) return;
+
+        $(recaptchaInput).closest('form').find('input[type="submit"]').on('click', function () {
             var el = $(this),
                 form = el.closest('form');
 
@@ -67,7 +91,7 @@ out.print(Tools.insertJQuery(request));
 
             var isValid = checkForm.checkImpl(form[0], true, null) !== false;
             if (isValid) {
-                wjFormSubmit(form);
+                wjFormSubmit(form, null, recaptchaInput);
             }
 
             return false

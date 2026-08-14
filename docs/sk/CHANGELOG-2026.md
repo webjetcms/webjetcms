@@ -61,6 +61,9 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 ![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
 
 - Pridaná možnosť vo formulári nastaviť maximálnu kombinovaná veľkosť súboru, pôvodne sa dala nastavovať len veľkosť pre súbor, ak formulár obsahuje viac súborov je možné nastaviť maximálnu veľkosť pre všetky súbory spoločne (#58517).
+- [Viackrokové formuláre](redactor/apps/multistep-form/README.md) - pridané duplikovanie celého formulára vrátane nastavení, krokov a položiek. Editor položiek zobrazuje ich automaticky vytvorený identifikátor a podporuje vlastnú chybovú správu, orezanie medzier, prázdnu možnosť vo výberovom zozname a nový typ poľa automatické dopĺňanie s vyhľadávaním bez rozlíšenia diakritiky (#osk573).
+- [Viackrokové formuláre](redactor/apps/multistep-form/README.md) - do úvodného textu kroku a [stránky s verziou pre email](redactor/apps/form/README.md#karta---nastavenia) je možné vložiť hodnoty položiek pomocou značiek. Opravené bolo rozpoznávanie polí mena a emailu podľa začiatku identifikátora, spracovanie jazyka, reCAPTCHA v3, nezávislé vloženie viacerých inštancií formulára na jednu stránku a vymazanie všetkých odpovedí bez odstránenia definície formulára (#osk573).
+- [Viackrokové formuláre](redactor/apps/multistep-form/README.md) - pridaná možnosť zadať vlastnú chybovú správu a orezať medzery na začiatku a konci textu zadaného návštevníkom (#osk573).
 
 ### Sémantické vyhľadávanie
 
@@ -123,6 +126,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Export/import súborov - upravený dizajn dialógového okna a responzívne zobrazenie formulárových polí podľa aktuálneho dizajnu administrácie (#58581).
 - Webové stránky - doplnené zvýraznenie elementu nad ktorým je vyvolané kontextové menu. Dôležité ak chcete vykonať akciu Zmazať element, aby ste presne videli ktorý element je označený (#OSK675).
 - Multiweb - doplnená možnosť premenovať existujúcu doménu + presmerovanie po premenovaní (#58317-15).
+- Google reCaptcha - doplnená podpora vkladania viacerých viac krokových formulárov do stránky, podporovaný je režim `invisible/reCaptcha/reCaptchaV3`, upravené chybové hlásenie na zrozumiteľnejší text (#osk573).
+- Viackrokové formuláre - doplnené presunutie (`scroll`) na začiatok formuláru po prechode na ďalší krok (#osk573).
 
 ### Oprava chýb
 
@@ -148,6 +153,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced.png)
 
+- Dátové tabuľky - rozšírená funkcionalita poľa typu [`OPTIONS`](developer/datatables-editor/standard-fields.md#options) o možnosť pridať prázdnu hodnotu pomocou `allowEmptyOption` (#osk573).
+- Dátové tabuľky - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) pri úprave zdrojového kódu odstraňuje nadbytočné prázdne odseky (#osk573).
 - Dátové tabuľky - pridaný nový typ poľa `ENUMERATION` pre [napojenie na číselníky](developer/datatables-editor/standard-fields.md#enumeration) v editore. Pole ukladá konfiguráciu vo formáte `enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY` a umožňuje nastaviť zdroj hodnôt (#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)

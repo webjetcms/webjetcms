@@ -8,6 +8,11 @@ function $setAttr(el, key, value) {
   return el.setAttribute(key, value);
 }
 
+function removeRedundantEmptyParagraphs(html) {
+  const htmlWithoutEmptyParagraphs = html.replace(/<p>\s*(?:<br\s*\/?>)?\s*<\/p>/gi, "");
+  return htmlWithoutEmptyParagraphs.trim() === "" ? html : htmlWithoutEmptyParagraphs;
+}
+
 let debug = false;
 const Logger = {
   prefixString() {
@@ -65,6 +70,7 @@ function launchPopupEditor(quill, options) {
   let htmlFromEditor = quill.container.querySelector(".ql-editor").innerHTML;
 
   htmlFromEditor = window.quillToHtmlFormat(htmlFromEditor);
+  htmlFromEditor = removeRedundantEmptyParagraphs(htmlFromEditor);
 
   const popupContainer = $create("div");
   const overlayContainer = $create("div");
@@ -111,7 +117,8 @@ function launchPopupEditor(quill, options) {
   buttonOk.onclick = function() {
     const output = textArea.value.split(/\r?\n/g).map(el => el.trim());
     const noNewlines = output.join("");
-    quill.container.querySelector(".ql-editor").innerHTML =  window.quillFromHtmlFormat(noNewlines);
+    const htmlCode = removeRedundantEmptyParagraphs(noNewlines);
+    quill.container.querySelector(".ql-editor").innerHTML =  window.quillFromHtmlFormat(htmlCode);
     document.body.removeChild(overlayContainer);
   };
 }
