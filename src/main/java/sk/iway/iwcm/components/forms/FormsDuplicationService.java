@@ -86,10 +86,12 @@ public class FormsDuplicationService {
         if (source == null) return;
 
         FormSettingsEntity copy = new FormSettingsEntity();
-        BeanUtils.copyProperties(source, copy, "id", "formName", "domainId");
+        BeanUtils.copyProperties(source, copy, "id", "formName", "domainId", "viewCount", "responseAttempts");
         copy.setId(null);
         copy.setFormName(duplicateFormName);
         copy.setDomainId(domainId);
+        copy.setViewCount(0);
+        copy.setResponseAttempts(0);
         FormSettingsService.prepareSettingsForSave(copy, FormsService.FORM_TYPE.MULTISTEP.value(), formSettingsRepository);
         copy.setId(null);
         duplicate.setFormSettings(formSettingsRepository.save(copy));
@@ -152,6 +154,7 @@ public class FormsDuplicationService {
                 "stepId",
                 "formName",
                 "domainId",
+                "errorCount",
                 "visibilityConditions",
                 "requirementConditions"
             );
@@ -159,6 +162,7 @@ public class FormsDuplicationService {
             copy.setStepId(duplicateStepId);
             copy.setFormName(duplicateFormName);
             copy.setDomainId(domainId);
+            copy.setErrorCount(0);
             copies.add(copy);
         }
 

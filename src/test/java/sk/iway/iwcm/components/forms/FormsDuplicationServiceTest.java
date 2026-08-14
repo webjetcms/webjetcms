@@ -72,12 +72,16 @@ class FormsDuplicationServiceTest {
         requestedSettings.setId(2L);
         requestedSettings.setFormName("source-form");
         requestedSettings.setRecipients("test@example.com");
+        requestedSettings.setViewCount(123);
+        requestedSettings.setResponseAttempts(45);
         duplicate.setFormSettings(requestedSettings);
 
         FormStepEntity firstStep = createStep(11L, 10);
         FormStepEntity secondStep = createStep(12L, 20);
         FormItemEntity controllingItem = createItem(21L, 11L, "contact-1");
         FormItemEntity conditionalItem = createItem(22L, 12L, "email-1");
+        controllingItem.setErrorCount(6);
+        conditionalItem.setErrorCount(7);
 
         FormItemsConditionEntity condition = new FormItemsConditionEntity();
         condition.setId(31L);
@@ -133,6 +137,8 @@ class FormsDuplicationServiceTest {
         verify(formSettingsRepository).save(settingsCaptor.capture());
         assertEquals("duplicate-form", settingsCaptor.getValue().getFormName());
         assertEquals("test@example.com", settingsCaptor.getValue().getRecipients());
+        assertEquals(0, settingsCaptor.getValue().getViewCount());
+        assertEquals(0, settingsCaptor.getValue().getResponseAttempts());
         assertNotSame(requestedSettings, settingsCaptor.getValue());
 
         verify(formStepsRepository).saveAllAndFlush(anyList());
@@ -142,6 +148,7 @@ class FormsDuplicationServiceTest {
         verify(formItemsRepository).saveAllAndFlush(anyList());
         assertEquals(List.of(201L, 202L), savedItemCopies.stream().map(FormItemEntity::getStepId).toList());
         assertEquals(List.of(301L, 302L), savedItemCopies.stream().map(FormItemEntity::getId).toList());
+        assertEquals(List.of(0, 0), savedItemCopies.stream().map(FormItemEntity::getErrorCount).toList());
 
         ArgumentCaptor<FormItemsConditionEntity> conditionCaptor = ArgumentCaptor.forClass(FormItemsConditionEntity.class);
         verify(formItemsConditionsRepository).save(conditionCaptor.capture());
