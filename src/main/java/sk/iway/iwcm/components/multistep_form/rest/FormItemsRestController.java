@@ -111,7 +111,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
 
         String stepId = params.get("stepId");
         if(Tools.isNotEmpty(stepId)) {
-            predicates.add(builder.equal(root.get("stepId"), Tools.getIntValue(stepId, -1)));
+            predicates.add(builder.equal(root.get("stepId"), Tools.getLongValue(stepId, -1L)));
         }
     }
 
@@ -170,8 +170,8 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
             entity.setShowStat(true);
             entity.setShowOtherCount(true);
 
-            int stepId = Tools.getIntValue(getRequest().getParameter("stepId"), -1);
-            if(stepId != -1) entity.setStepId( Long.valueOf(stepId) );
+            long stepId = Tools.getLongValue(getRequest().getParameter("stepId"), -1L);
+            if(stepId != -1L) entity.setStepId(stepId);
         } else {
             entity = formItemsRepository.getReferenceById(id);
         }

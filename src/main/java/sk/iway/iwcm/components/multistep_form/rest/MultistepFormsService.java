@@ -441,16 +441,16 @@ public class MultistepFormsService {
      * @param prop     localization provider
      * @return sorted condition field options grouped by step labels
      */
-    public final List<LabelValue> getAvailableConditionFields(String formName, Integer stepId, Prop prop) {
+    public final List<LabelValue> getAvailableConditionFields(String formName, Long stepId, Prop prop) {
         int currentPosition = new SimpleQuery().forInt("SELECT current_position FROM form_steps WHERE id = ? AND domain_id = ?", stepId, CloudToolsForCore.getDomainId());
 
         Map<Long, String> stepNames = new HashMap<>();
         Map<Long, Integer> stepPositions = new HashMap<>();
-        List<Integer> stepsIds = new ArrayList<>();
+        List<Long> stepsIds = new ArrayList<>();
         for(FormStepEntity fse : formStepsRepository.getStepsUpToPosition(formName, currentPosition, CloudToolsForCore.getDomainId())) {
             stepNames.put(fse.getId(), prop.getText("components.form_items.step_title") + " " + fse.getCurrentPosition());
             stepPositions.put(fse.getId(), fse.getCurrentPosition());
-            stepsIds.add(fse.getId().intValue());
+            stepsIds.add(fse.getId());
         }
 
         return sortFields(formItemsRepository.findAllByFormNameAndStepIdInAndDomainId(formName, stepsIds, CloudToolsForCore.getDomainId()), stepPositions, stepNames, prop);
