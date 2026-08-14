@@ -30,4 +30,14 @@ class CaptchaTest {
         verify(request).getParameter("g-recaptcha-response");
         verify(request, never()).getSession();
     }
+
+    @Test
+    void emptyExplicitResponseFallsBackToCurrentRequestWithoutAccessingSession() {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getParameter("g-recaptcha-response")).thenReturn("request-token");
+
+        assertEquals("request-token", Captcha.getSubmittedReCaptchaResponse(request, ""));
+        verify(request).getParameter("g-recaptcha-response");
+        verify(request, never()).getSession();
+    }
 }

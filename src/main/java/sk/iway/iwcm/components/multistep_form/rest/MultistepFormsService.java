@@ -905,10 +905,7 @@ public class MultistepFormsService {
                 if(Tools.isEmpty(value)) value = received.optString("wjcaptcha1", "");
 
                 String captchaType = Constants.getString("captchaType");
-                if ("reCaptchaV3".equals(captchaType)) {
-                    // When using reCaptchaV3 - we need set value into session (other versions do it automatically)
-                    request.getSession().setAttribute("g-recaptcha-response", received.optString("g-recaptcha-response", ""));
-                } else if ("invisible".equals(captchaType) || "reCaptcha".equals(captchaType)) {
+                if ("reCaptchaV3".equals(captchaType) || "invisible".equals(captchaType) || "reCaptcha".equals(captchaType)) {
                     value = received.optString("g-recaptcha-response", "");
                 }
 
