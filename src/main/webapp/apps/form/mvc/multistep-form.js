@@ -98,9 +98,10 @@ export class MultistepForm {
      * Load and render a step's HTML from the backend.
      * @param {string} formName - The form name to query.
      * @param {string|number} stepId - The step identifier to load.
+     * @param {boolean} [scrollToForm=false] - Whether to scroll to the newly rendered form.
      * @returns {Promise<void>} Resolves when the step content is injected.
      */
-    async loadStep(formName, stepId) {
+    async loadStep(formName, stepId, scrollToForm = false) {
         if (!formName || !stepId) {
             console.warn('Missing formName or stepId; skipping load.');
             return;
@@ -148,6 +149,10 @@ export class MultistepForm {
 
             // Initialize conditional field requirement from server-provided map
             this._initConditionalRequirement(requirementConditions);
+
+            if (scrollToForm && form) {
+                form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
 
             // init cleditor if needed
             window.setTimeout(() => {
@@ -275,7 +280,8 @@ export class MultistepForm {
             // together. Other fields are matched by id after the NAME->ID change, with
             // a name fallback for id-less elements (e.g. the multiupload dropzone inputs).
             const isGrouped = el.type === 'checkbox' || el.type === 'radio';
-            const domKey = isGrouped ? (el.name || el.id) : (el.id || el.name);
+            const isCaptchaResponse = el.name === 'g-recaptcha-response';
+            const domKey = isGrouped || isCaptchaResponse ? (el.name || el.id) : (el.id || el.name);
             if (!domKey) return;
             const key = this._toLogicalFieldId(domKey);
             // Skip fields hidden by visibility conditions
@@ -362,6 +368,7 @@ export class MultistepForm {
         if (p) p.textContent = this.errorMessage;
         const ul = danger.querySelector('ul');
         if (ul) ul.innerHTML = `<li><span>${errorMsg}</span></li>`;
+        danger.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     /**
@@ -874,7 +881,7 @@ export class MultistepForm {
             } else {
                 const danger = this.wrapper.querySelector('div.alert.alert-danger');
                 if (danger) danger.style.display = 'none';
-                await this.loadStep(formName, stepId);
+                await this.loadStep(formName, stepId, true);
             }
         }
     }

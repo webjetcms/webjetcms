@@ -96,7 +96,7 @@ public class SaveFormService {
         if (Tools.isNotEmpty(formSettings.getForwardFail())) forwardFail = formSettings.getForwardFail();
 
         if (SpamProtection.canPost("form", null, request) == false) {
-            throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"), "probablySpamBot", false, forwardFail);
+            throw new SaveFormException(prop.getText("checkform.fail_probablySpamBot"), "probablySpamBot", false, forwardFail);
         }
 
         String subject = null;

@@ -904,14 +904,17 @@ public class MultistepFormsService {
                 String value = received.optString("wjcaptcha", "");
                 if(Tools.isEmpty(value)) value = received.optString("wjcaptcha1", "");
 
-                if ("reCaptchaV3".equals(Constants.getString("captchaType"))) {
+                String captchaType = Constants.getString("captchaType");
+                if ("reCaptchaV3".equals(captchaType)) {
                     // When using reCaptchaV3 - we need set value into session (other versions do it automatically)
                     request.getSession().setAttribute("g-recaptcha-response", received.optString("g-recaptcha-response", ""));
+                } else if ("invisible".equals(captchaType)) {
+                    value = received.optString("g-recaptcha-response", "");
                 }
 
                 // Captcha can be empty, because for example reCaptcha do not have "value"
                 if (spamProtectionEnabled == true && checkCaptcha(request, value) == false) {
-                    errors.put(stepItem.getItemFormId(), fieldName + " - " + prop.getText("send_mail_error.captcha"));
+                    errors.put(stepItem.getItemFormId(), fieldName + " - " + prop.getText("captcha.nie.je.spravna"));
                 }
 
                 continue;
@@ -919,13 +922,13 @@ public class MultistepFormsService {
 
             // XSS check of name
             if (DocTools.testXss(fieldName) || fieldName.indexOf('"') != -1 || fieldName.indexOf('\'') != -1) {
-                throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"), "probablySpamBot", false, null);
+                throw new SaveFormException(prop.getText("checkform.fail_probablySpamBot"), "probablySpamBot", false, null);
             }
 
             // XSS check of values
             for(String value : asArray(stepItem.getItemFormId(), received)) {
                 if(DocTools.testXss(value)) {
-                    throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"), "probablySpamBot", false, null);
+                    throw new SaveFormException(prop.getText("checkform.fail_probablySpamBot"), "probablySpamBot", false, null);
                 }
             }
 
@@ -1288,12 +1291,12 @@ public class MultistepFormsService {
 
         //test na cookies (spameri zvycajne nemaju nastavene)
 		if (request.getCookies() == null || request.getCookies().length == 0) {
-            throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"), "probablySpamBot", false, null);
+            throw new SaveFormException(prop.getText("checkform.fail_probablySpamBot"), "probablySpamBot", false, null);
         }
 
         // Check CRSF
 		if (checkCsrf(request) == false) {
-            throw new SaveFormException(prop.getText("send_mail_error.probablySpamBotCsrf"), "probablySpamBotCsrf", false, null);
+            throw new SaveFormException(prop.getText("checkform.fail_probablySpamBotCsrf"), "probablySpamBotCsrf", false, null);
         }
     }
 
