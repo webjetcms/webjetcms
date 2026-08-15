@@ -607,8 +607,8 @@ function initClosure() {
             somStromcek.jstree(true).search("");
 
             // Clean url - fire refresh
-            let url = getJstreeUrl().replace(/&treeSearchValue=[^&]*/g, '');
-            url = url.replace(/&treeSearchType=[^&]*/g, '');
+            let url = WJ.urlRemoveParam(getJstreeUrl(), "treeSearchValue");
+            url = WJ.urlRemoveParam(url, "treeSearchType");
             somStromcek.data('rest-url', url);
             somStromcek.jstree(true).refresh();
         }

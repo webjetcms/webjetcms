@@ -39,6 +39,29 @@ Scenario('translation key tree', ({ I, DT }) => {
     DT.waitForLoader();
     I.see("components.map.width.short", "#datatableInit");
     I.dontSee("components.map.address", "#datatableInit");
+
+    I.jstreeFilter("grideditor");
+    I.seeElement("#SomStromcek li[id='grideditor'] > a.jstree-search");
+    I.dontSeeElement("#SomStromcek li[id='components']");
+    I.clickCss("#tree-folder-search-clear-button");
+    I.jstreeWaitForLoader();
+    I.dontSeeInField("#tree-folder-search-input", "grideditor");
+    I.waitForElement("#SomStromcek li[id='components']", 20);
+
+    I.jstreeFilter("grideditor");
+    I.seeElement("#SomStromcek li[id='grideditor'] > a.jstree-search");
+    I.clearField("#tree-folder-search-input");
+    I.pressKey("Enter");
+    I.jstreeWaitForLoader();
+    I.dontSeeInField("#tree-folder-search-input", "grideditor");
+    I.waitForElement("#SomStromcek li[id='components']", 20);
+
+    I.jstreeFilter("grideditor");
+    I.seeElement("#SomStromcek li[id='grideditor'] > a.jstree-search");
+    I.clickCss("#translation-key-root-node > a.jstree-anchor");
+    I.jstreeWaitForLoader();
+    I.dontSeeInField("#tree-folder-search-input", "grideditor");
+    I.waitForElement("#SomStromcek li[id='components']", 20);
 });
 
 Scenario('zakladne testy @baseTest', async ({ I, DataTables }) =>{

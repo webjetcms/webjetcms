@@ -65,6 +65,12 @@ block content
                         translationKeysTable.ajax.reload();
                     });
 
+                    $('#SomStromcek').on("click", "#translation-key-root-node > a.jstree-anchor", function() {
+                        if ($("#tree-folder-search-input").val()) {
+                            $("#tree-folder-search-clear-button").trigger("click");
+                        }
+                    });
+
                     $('#datatableImportModal').on('show.bs.modal', function () {
                         var select = document.getElementById("dt-settings-update-by-column");
                         if (select.options.length > 0) {
