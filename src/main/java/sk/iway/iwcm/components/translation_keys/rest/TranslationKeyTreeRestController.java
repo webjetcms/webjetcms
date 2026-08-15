@@ -1,6 +1,8 @@
 package sk.iway.iwcm.components.translation_keys.rest;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -27,6 +29,7 @@ import sk.iway.iwcm.admin.jstree.JsTreeRestController;
 public class TranslationKeyTreeRestController extends JsTreeRestController<JsTreeItem> {
 
     static final String ROOT_ID = "translation-key-root-node";
+    private static final String NODE_ID_PREFIX = "translation-key-node-";
 
     private final TranslationKeyService translationKeyService;
 
@@ -45,8 +48,8 @@ public class TranslationKeyTreeRestController extends JsTreeRestController<JsTre
         } else if (Tools.isEmpty(item.getId()) || "0".equals(item.getId())) {
             items = List.of(createRootItem(hasFolderItems(keys)));
         } else {
-            String prefix = ROOT_ID.equals(item.getId()) ? "" : item.getId();
-            items = getItems(keys, prefix);
+            String prefix = getPrefixFromNodeId(item.getId());
+            items = prefix == null ? List.of() : getItems(keys, prefix);
         }
 
         result.put("result", true);
@@ -74,7 +77,7 @@ public class TranslationKeyTreeRestController extends JsTreeRestController<JsTre
         List<JsTreeItem> items = new ArrayList<>();
         for (Map.Entry<String, Boolean> child : childSegments.entrySet()) {
             String childPrefix = Tools.isEmpty(prefix) ? child.getKey() : prefixWithSeparator + child.getKey();
-            items.add(createItem(childPrefix, child.getKey(), child.getValue(), null));
+            items.add(createPrefixItem(childPrefix, child.getKey(), child.getValue(), null));
         }
         return items;
     }
@@ -95,7 +98,7 @@ public class TranslationKeyTreeRestController extends JsTreeRestController<JsTre
 
         return allItems.values().stream()
             .filter(treeItem -> includedIds.contains(treeItem.getId()))
-            .sorted(Comparator.comparingInt(TranslationKeyTreeRestController::getDepth).thenComparing(JsTreeItem::getId))
+            .sorted(Comparator.comparingInt(TranslationKeyTreeRestController::getDepth).thenComparing(JsTreeItem::getVirtualPath))
             .toList();
     }
 
@@ -113,15 +116,16 @@ public class TranslationKeyTreeRestController extends JsTreeRestController<JsTre
                 if (Tools.isEmpty(segment)) continue;
 
                 prefix = Tools.isEmpty(prefix) ? segment : prefix + "." + segment;
+                String nodeId = getNodeId(prefix);
                 boolean hasChildFolders = i < segments.length - 2;
-                JsTreeItem treeItem = items.get(prefix);
+                JsTreeItem treeItem = items.get(nodeId);
                 if (treeItem == null) {
-                    treeItem = createItem(prefix, segment, hasChildFolders, parent);
-                    items.put(prefix, treeItem);
+                    treeItem = createPrefixItem(prefix, segment, hasChildFolders, parent);
+                    items.put(nodeId, treeItem);
                 } else if (hasChildFolders) {
                     treeItem.setChildren(true);
                 }
-                parent = prefix;
+                parent = nodeId;
             }
         }
 
@@ -144,27 +148,49 @@ public class TranslationKeyTreeRestController extends JsTreeRestController<JsTre
 
     private static int getDepth(JsTreeItem item) {
         if (ROOT_ID.equals(item.getId())) return 0;
-        return item.getId().split("\\.").length;
+        return item.getVirtualPath().split("\\.").length;
     }
 
     private JsTreeItem createRootItem(boolean hasChildren) {
-        JsTreeItem root = createItem(ROOT_ID, getProp().getText("components.translation_key.all_keys"), hasChildren, "#");
-        root.setVirtualPath("");
+        JsTreeItem root = createItem(ROOT_ID, "", getProp().getText("components.translation_key.all_keys"), hasChildren, "#");
         root.getState().setOpened(true);
         root.getState().setSelected(true);
-        root.setIcon("ti ti-home");
+        root.setIcon("ti ti-language");
         return root;
     }
 
-    private static JsTreeItem createItem(String id, String text, boolean hasChildren, String parent) {
+    private static JsTreeItem createPrefixItem(String prefix, String text, boolean hasChildren, String parent) {
+        JsTreeItem item = createItem(getNodeId(prefix), prefix, text, hasChildren, parent);
+        item.setLiAttr(Map.of("data-translation-key-prefix", prefix));
+        return item;
+    }
+
+    private static JsTreeItem createItem(String id, String virtualPath, String text, boolean hasChildren, String parent) {
         JsTreeItem item = new JsTreeItem();
         item.setId(id);
         item.setText(text);
-        item.setVirtualPath(id);
+        item.setVirtualPath(virtualPath);
         item.setParent(parent);
         item.setState(new JsTreeItemState());
         setNodeHasChildren(item, hasChildren);
         return item;
+    }
+
+    private static String getNodeId(String prefix) {
+        String encodedPrefix = Base64.getUrlEncoder().withoutPadding().encodeToString(prefix.getBytes(StandardCharsets.UTF_8));
+        return NODE_ID_PREFIX + encodedPrefix;
+    }
+
+    static String getPrefixFromNodeId(String nodeId) {
+        if (ROOT_ID.equals(nodeId)) return "";
+        if (nodeId.startsWith(NODE_ID_PREFIX) == false) return null;
+
+        try {
+            byte[] decodedPrefix = Base64.getUrlDecoder().decode(nodeId.substring(NODE_ID_PREFIX.length()));
+            return new String(decodedPrefix, StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
     }
 
     private static void setNodeHasChildren(JsTreeItem item, boolean hasChildren) {
