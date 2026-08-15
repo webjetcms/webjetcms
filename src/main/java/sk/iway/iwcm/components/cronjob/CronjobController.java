@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.cron.CronDB;
 import sk.iway.iwcm.system.cron.CronFacade;
@@ -69,16 +70,38 @@ public class CronjobController extends DatatableRestControllerV2<CronTask, Long>
     @Override
     public boolean processAction(CronTask entity, String action) {
         if ("play".equals(action)) {
-            try {
-                CronFacade.getInstance().runSimpleTaskOnce(entity);
-                Adminlog.add(Adminlog.TYPE_CRON, getProp().getText("admin.crontab.task_launched", entity.getTask()), -1, -1);
-                addNotify(new NotifyBean(getProp().getText("admin.crontab.view"), getProp().getText("admin.crontab.task_launched", entity.getTask()), NotifyType.SUCCESS, 15000));
-                return true;
-            } catch (ClassNotFoundException e) {
-                Logger.error(CronjobController.class, e);
+            return runTaskLocally(entity);
+        }
+        if ("playOnConfiguredNode".equals(action)) {
+            if (ClusterDB.isServerRunningInClusterMode() == false) {
+                return runTaskLocally(entity);
             }
+
+            CronTask storedTask = CronDB.getById(entity.getId());
+            if (storedTask == null) return false;
+
+            String configuredNode = storedTask.getClusterNode();
+            if (Tools.isEmpty(configuredNode)) configuredNode = "all";
+
+            ClusterDB.addCronTask(configuredNode, storedTask.getId());
+            String message = getProp().getText("admin.crontab.task_launch_requested_on_node", storedTask.getTask(), configuredNode);
+            Adminlog.add(Adminlog.TYPE_CRON, message, -1, -1);
+            addNotify(new NotifyBean(getProp().getText("admin.crontab.view"), message, NotifyType.SUCCESS, 15000));
+            return true;
         }
         return false;
+    }
+
+    private boolean runTaskLocally(CronTask entity) {
+        try {
+            CronFacade.getInstance().runSimpleTaskOnce(entity);
+            Adminlog.add(Adminlog.TYPE_CRON, getProp().getText("admin.crontab.task_launched", entity.getTask()), -1, -1);
+            addNotify(new NotifyBean(getProp().getText("admin.crontab.view"), getProp().getText("admin.crontab.task_launched", entity.getTask()), NotifyType.SUCCESS, 15000));
+            return true;
+        } catch (ClassNotFoundException e) {
+            Logger.error(CronjobController.class, e);
+            return false;
+        }
     }
 
     @Override

@@ -117,6 +117,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Other minor changes
 
+- Automated tasks - added an option to manually run a task on the node or node group configured in **Runs on node**. The original local execution on the current node remains available as a separate button.
+
 - Translation keys - added tree structure of translation key prefixes with filtering of the list by the selected prefix (#58714).
 
 ![](admin/settings/translation-keys/dataTable.png)

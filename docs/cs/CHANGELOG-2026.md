@@ -117,6 +117,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Jiné menší změny
 
+- Automatizované úlohy - přidána možnost ručně spustit úlohu na uzlu nebo skupině uzlů nastavené v poli **Běží na uzlu**. Původní lokální spuštění na aktuálním uzlu zůstává dostupné samostatným tlačítkem.
+
 - Překladové klíče - přidána stromová struktura prefixů překladových klíčů s filtrováním seznamu podle zvoleného prefixu (#58714).
 
 ![](admin/settings/translation-keys/dataTable.png)

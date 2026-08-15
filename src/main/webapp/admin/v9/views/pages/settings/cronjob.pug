@@ -31,6 +31,23 @@ block content
                     'data-toggle': 'tooltip'
                 }
             });
+
+            cronTable.button().add(5, {
+                extends: 'edit',
+                editor: cronTable.EDITOR,
+                text: '<i class="ti ti-server"></i>',
+                action: function (e, dt, node) {
+                    cronTable.executeAction("playOnConfiguredNode", false, "[[\#{components.cron_task.run_on_configured_node.areYouSure}]]");
+                },
+                className: 'btn btn-outline-secondary button-execute-task-on-node',
+                init: function ( dt, node, config ) {
+                    $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                },
+                attr: {
+                    'title': '[[\#{admin.crontab.launch_task_on_configured_node}]]',
+                    'data-toggle': 'tooltip'
+                }
+            });
         });
 
     <table class="datatableInit table"></table>
