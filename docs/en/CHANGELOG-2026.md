@@ -117,6 +117,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Other minor changes
 
+- Translation keys - added tree structure of translation key prefixes with filtering of the list by the selected prefix (#58714).
+
+![](admin/settings/translation-keys/dataTable.png)
+
 - Explorer - added [Unused files] tab in folder properties (redactor/files/fbrowser/folder-settings/README.md#unused-files) to find and delete unused files (#58621).
 
 ![](redactor/files/fbrowser/folder-settings/folder_settings_unused_files_result.png)

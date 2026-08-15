@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -84,6 +85,31 @@ public class TranslationKeyService {
         }
 
         return languageFieldCombination;
+    }
+
+    /**
+     * Returns all translation keys visible to the user in configured languages.
+     *
+     * @param user current user
+     * @return sorted set of visible translation keys
+     */
+    public Set<String> getVisibleTranslationKeys(Identity user) {
+        Set<String> visibleKeys = new TreeSet<>();
+
+        boolean enableAllKeys = false;
+        String propertiesEnabledKeys = Constants.getStringExecuteMacro("propertiesEnabledKeys");
+        if (Tools.isEmpty(propertiesEnabledKeys) || user.isEnabledItem("prop.show_all_texts")) enableAllKeys = true;
+        String[] enabledKeys = Tools.getTokens(propertiesEnabledKeys, ",");
+
+        for (String lng : getLanguageFieldCombination().keySet()) {
+            IwayProperties prop = Prop.getInstance(lng).getProperties();
+            for (Map.Entry<String, String> propEntry : prop.entrySet()) {
+                String key = propEntry.getKey();
+                if (enableAllKeys || PropDB.isKeyVisibleToUser(user, enabledKeys, key)) visibleKeys.add(key);
+            }
+        }
+
+        return visibleKeys;
     }
 
     /**
@@ -390,8 +416,12 @@ public class TranslationKeyService {
         List<TranslationKeyEntity> translationKeys = getAllData(UsersDB.getCurrentUser(request), searchText);
         List<TranslationKeyEntity> filteredTranslationKeys = new ArrayList<>();
 
+        String keyPrefix = searchMap.remove("keyPrefix");
+
         int searchMapSize = searchMap.size();
         for (TranslationKeyEntity entity : translationKeys) {
+            if (isKeyInPrefix(entity.getKey(), keyPrefix) == false) continue;
+
             BeanWrapper beanWrapper = new BeanWrapperImpl(entity);
             //we are using AND between conditions, so we must count
             int presentCount = 0;
@@ -429,6 +459,11 @@ public class TranslationKeyService {
         holder.setPageSize(pageable.getPageSize());
 
         return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(holder.getPageList(), pageable, filteredTranslationKeys.size());
+    }
+
+    static boolean isKeyInPrefix(String key, String prefix) {
+        if (Tools.isEmpty(prefix)) return true;
+        return key.equals(prefix) || key.startsWith(prefix + ".");
     }
 
     /**

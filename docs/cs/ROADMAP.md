@@ -52,7 +52,7 @@ Vysvětlení použitých piktogramů:
 - [x] +Fotobanka - přidat možnost nastavit název souboru před stažením z fotobanky, automaticky nastavit podle hledaného výrazu (#58645).
 - [ ] +Úkoly na pozadí - možnost manuálně spustit úlohu na `node`, který má úloha nastaven, nyní se spustí na `node` kde je uživatel přihlášen.
 - [ ] +Číselník, Blog, Novinky - upravit tak, aby výběr typu číselníku nebo složky pro novinky byl vlevo podobně jako v galerii/webových stránkách. Nemusí být pak karty ale vše najednou zobrazeno.
-- [ ] +Překladové klíče - zobrazovat stromovou strukturu překladových klíčů pro lepší orientaci.
+- [x] +Překladové klíče - zobrazovat stromovou strukturu překladových klíčů pro lepší orientaci (#58714).
 - [ ] +Konfigurace - doplnit možnost nastavit proměnnou jen pro aktuální uzel (neuložit ji do databáze - jen nastavit do Constants objektu), přidat tam zaškrtávací pole "Nastavit dočasně" s info ikonou že hodnota se nastaví pouze dočasně a při restartu se obnoví hodnota jako je v databázi.
 - [ ] Průzkumník - opravit zobrazování souborů se speciálními znaky (například `@`).
 - [ ] Automatický promazávat `temp` soubory, které se mohou hromadit.

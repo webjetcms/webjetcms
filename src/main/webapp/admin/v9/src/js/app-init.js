@@ -296,6 +296,7 @@ function initClosure() {
     var somStromcek = $('#SomStromcek');
     var jsTreeMoveUrl = somStromcek.data("rest-move-url");
     var jsTreeParamName = somStromcek.data("rest-param-name");
+    var jsTreeSearchLabel = somStromcek.data("search-label") || WJ.translate('editor.directory_name');
     var treeInitialJsonFired = false;
 
     function getJstreeUrl() {
@@ -514,7 +515,7 @@ function initClosure() {
         '<table class="table datatableInit dataTable no-footer" data-server-side="true" style="margin-left: 0px;" id="jstreeSearchTable">' +
             '<thead>' +
                 '<tr>' +
-                    `<th class="dt-format-selector dt-select-td cell-not-editable" tabindex="0" aria-controls="datatableInit" rowspan="1" colspan="1" data-column-index="0" style="padding: 8px 24px 4px 0px !important;">${WJ.translate('editor.directory_name')}</th>` +
+                    `<th class="dt-format-selector dt-select-td cell-not-editable" tabindex="0" aria-controls="datatableInit" rowspan="1" colspan="1" data-column-index="0" style="padding: 8px 24px 4px 0px !important;">${jsTreeSearchLabel}</th>` +
                 '</tr>' +
                 '<tr>' +
                     '<th class="dt-format-text" data-column-index="2" rowspan="1" colspan="1" style="padding: 0px 0px 4px 0px !important;">' +
@@ -606,8 +607,8 @@ function initClosure() {
             somStromcek.jstree(true).search("");
 
             // Clean url - fire refresh
-            let url = getJstreeUrl().replace(/&treeSearchValue=[^&]*/g, '');
-            url = url.replace(/&treeSearchType=[^&]*/g, '');
+            let url = WJ.urlRemoveParam(getJstreeUrl(), "treeSearchValue");
+            url = WJ.urlRemoveParam(url, "treeSearchType");
             somStromcek.data('rest-url', url);
             somStromcek.jstree(true).refresh();
         }
