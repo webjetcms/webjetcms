@@ -15,6 +15,32 @@ Before(({ I, login }) =>{
     }
 });
 
+Scenario('translation key tree', ({ I, DT }) => {
+    I.waitForVisible("#SomStromcek", 20);
+    I.waitForElement("#translation-key-root-node", 20);
+    I.see("Všetky prekladové kľúče", "#SomStromcek");
+    I.dontSeeElement("#SomStromcek .ti-file-text");
+
+    I.clickCss("#SomStromcek li[id='components'] > a.jstree-anchor");
+    I.jstreeWaitForLoader();
+    DT.waitForLoader();
+    I.waitForElement("#SomStromcek li[id='components.map'] > a.jstree-anchor", 20);
+
+    I.clickCss("#SomStromcek li[id='components.map'] > a.jstree-anchor");
+    I.jstreeWaitForLoader();
+    DT.waitForLoader();
+    I.waitForElement("#SomStromcek li[id='components.map.width'].jstree-leaf", 20);
+
+    I.jstreeFilter("width");
+    I.seeElement("#SomStromcek li[id='components.map.width'].jstree-leaf > a.jstree-search");
+    I.dontSeeElement("#SomStromcek .ti-file-text");
+
+    I.clickCss("#SomStromcek li[id='components.map.width'] > a.jstree-anchor");
+    DT.waitForLoader();
+    I.see("components.map.width.short", "#datatableInit");
+    I.dontSee("components.map.address", "#datatableInit");
+});
+
 Scenario('zakladne testy @baseTest', async ({ I, DataTables }) =>{
     I.see("Kľúč");
     let options = await DataTables.baseTest({
