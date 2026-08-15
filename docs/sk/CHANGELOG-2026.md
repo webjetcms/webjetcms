@@ -117,6 +117,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Iné menšie zmeny
 
+- Prekladové kľúče - pridaná stromová štruktúra prefixov prekladových kľúčov s filtrovaním zoznamu podľa zvoleného prefixu (#58714).
 - Prieskumník - vo vlastnostiach priečinka pridaná karta [Nepoužívané súbory](redactor/files/fbrowser/folder-settings/README.md#nepoužívané-súbory) na vyhľadanie a zmazanie nepoužívaných súborov (#58621).
 
 ![](redactor/files/fbrowser/folder-settings/folder_settings_unused_files_result.png)
