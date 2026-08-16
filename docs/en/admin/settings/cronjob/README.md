@@ -26,14 +26,14 @@ In the record editor window, you can set:
 
 ![](editor.png)
 
-## Manual execution
+## Manual start
 
-After selecting one or more tasks, you can run them manually using the toolbar buttons:
+After selecting one or more tasks, you can manually start them using the buttons in the toolbar:
 
-- the play button runs the task on the current node,
-- the server button runs the task according to the **Runs on node** value. The value `all` runs it on every node, `all-admin` on admin nodes, `all-public` on public nodes, and a specific name only on that node.
+- the play button starts the task on the current node,
+- the server button will run the task according to the **Running on node** value. The value `all` will run it on all nodes, `all-admin` on administrative nodes, `all-public` on public nodes, and a specific name will run it only on the specified node.
 
-The remote execution request is transferred through the cluster and is processed during the next check configured by the `clusterRefreshTimeout` configuration variable. Outside cluster mode, the task is run locally.
+The remote execution request is transmitted through the cluster and is executed at the latest at the next check set by the configuration variable `clusterRefreshTimeout`. Outside of cluster mode, the task is executed locally.
 
 Changes to task timing are applied immediately, but tasks that have already started will continue to run until they finish.
 

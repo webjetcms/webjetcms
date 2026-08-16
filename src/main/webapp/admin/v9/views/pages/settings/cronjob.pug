@@ -22,7 +22,7 @@ block content
                 action: function (e, dt, node) {
                     cronTable.executeAction("play", false, "[[\#{components.cron_task.run.areYouSure}]]");
                 },
-                className: 'btn btn-outline-secondary buttons-divider button-execute-task',
+                className: 'btn btn-outline-secondary button-execute-task',
                 init: function ( dt, node, config ) {
                     $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
                 },
@@ -35,11 +35,11 @@ block content
             cronTable.button().add(5, {
                 extends: 'edit',
                 editor: cronTable.EDITOR,
-                text: '<i class="ti ti-server"></i>',
+                text: '<i class="ti ti-server-cog"></i>',
                 action: function (e, dt, node) {
                     cronTable.executeAction("playOnConfiguredNode", false, "[[\#{components.cron_task.run_on_configured_node.areYouSure}]]");
                 },
-                className: 'btn btn-outline-secondary button-execute-task-on-node',
+                className: 'btn btn-outline-secondary button-execute-task-on-node buttons-divider',
                 init: function ( dt, node, config ) {
                     $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
                 },

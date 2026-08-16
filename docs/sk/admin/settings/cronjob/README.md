@@ -33,7 +33,7 @@ Po označení jednej alebo viacerých úloh ich môžete manuálne spustiť pomo
 - tlačidlo prehrávania spustí úlohu na aktuálnom uzle,
 - tlačidlo servera spustí úlohu podľa hodnoty **Beží na uzle**. Hodnota `all` ju spustí na všetkých uzloch, `all-admin` na administračných uzloch, `all-public` na verejných uzloch a konkrétny názov iba na zadanom uzle.
 
-Požiadavka na vzdialené spustenie sa prenáša cez cluster a vykoná sa najneskôr pri ďalšej kontrole nastavenej konfiguračnou premennou `clusterRefreshTimeout`. Mimo clusterového režimu sa úloha spustí lokálne.
+Požiadavka na vzdialené spustenie sa prenáša cez cluster a vykoná sa najneskôr pri ďalšej kontrole nastavenej konfiguračnou premennou `clusterRefreshTimeout`. Mimo cluster režimu sa úloha spustí lokálne.
 
 Zmeny pre časovanie úloh sa aplikujú okamžite, ale už odštartované úlohy ostanú bežať až pokým neskončia.
 
