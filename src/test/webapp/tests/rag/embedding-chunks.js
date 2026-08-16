@@ -1,5 +1,7 @@
 Feature('rag.embedding-chunks');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 Before(({ I, login }) =>{
     login('admin');
 });
@@ -268,17 +270,17 @@ Scenario('Disable rag semantic search', ({ I, DT, Document }) => {
 
 function selectTree(I, buttonSelector, nodesArr) {
     I.clickCss(buttonSelector);
-    I.waitForVisible("#jsTree", 10);
+    I.waitForVisible(WebjetDteJsTree.tree, 10);
 
     for(let i = 0; i < nodesArr.length; i++) {
         if(i == nodesArr.length - 1) {
-            I.click(locate("#jsTree a.jstree-anchor").withText(nodesArr[i]));
+            I.click(locate(WebjetDteJsTree.anchors).withText(nodesArr[i]));
         } else {
-            I.click(locate('#jsTree .jstree-node.jstree-closed').withText(nodesArr[i]).find('.jstree-icon.jstree-ocl'));
+            I.click(locate(WebjetDteJsTree.tree + ' .jstree-node.jstree-closed').withText(nodesArr[i]).find('.jstree-icon.jstree-ocl'));
         }
     }
 
-    I.waitForInvisible("#jsTree", 10);
+    I.waitForInvisible(WebjetDteJsTree.tree, 10);
 }
 
 function checkIndexingStatusValues(I, allGroups, allDoc, indexedDoc, queuedDoc) {

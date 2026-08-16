@@ -12,21 +12,26 @@ block content
         <a name="overview-dashboard-b" style="scroll-margin-top: 10em;"></a>
     </div>
 
+    script(data-th-inline="javascript").
+        window.webjetOverviewDashboardBootstrapData = {
+            backData: JSON.parse(/*[[${overviewBackData}]]*/ "{}"),
+            admins: JSON.parse(/*[[${overviewAdmins}]]*/ "[]"),
+            recentPages: JSON.parse(/*[[${overviewRecentPages}]]*/ "[]"),
+            changedPages: JSON.parse(/*[[${overviewChangedPages}]]*/ "[]"),
+            adminLog: JSON.parse(/*[[${overviewAdminlog}]]*/ "[]"),
+            todo: JSON.parse(/*[[${overviewTodo}]]*/ "[]"),
+            currentSessions: JSON.parse(/*[[${overviewCurrentSessions}]]*/ "{\"currentSessionId\":\"\",\"userSessions\":[]}")
+        };
+
     script.
         window.domReady.add(function () {
             window.statMode = "[(${layout.getConstant('statMode')})]";
 
             const dashboard = document.querySelector("webjet-overview-dashboard");
+            const dashboardData = window.webjetOverviewDashboardBootstrapData;
+            delete window.webjetOverviewDashboardBootstrapData;
             dashboard.configure({
-                data: {
-                    backData: [(${overviewBackData})],
-                    admins: [(${overviewAdmins})],
-                    recentPages: [(${overviewRecentPages})],
-                    changedPages: [(${overviewChangedPages})],
-                    adminLog: [(${overviewAdminlog})],
-                    todo: [(${overviewTodo})],
-                    currentSessions: [(${overviewCurrentSessions})]
-                },
+                data: dashboardData,
                 config: {
                     statMode: window.statMode,
                     overviewJsonUrl: "[(${layout.getConstant('overviewJsonUrl')})]"

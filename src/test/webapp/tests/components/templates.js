@@ -1,5 +1,7 @@
 Feature('components.templates');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 var randomNumber;
 var containerTree = "div.tree-col";
 var containerTable = "#datatableInit_wrapper";
@@ -13,7 +15,7 @@ let testOptions = {
         I.click("Pridať");
         I.waitForVisible("div.jsTree-wrapper");
         I.wait(1);
-        I.click("Newsletter", "#jsTree");
+        I.click("Newsletter", WebjetDteJsTree.tree);
         I.clickCss("#pills-dt-datatableInit-basic-tab");
     },
     editSearchSteps: function(I, options, DT, DTE) {

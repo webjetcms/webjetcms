@@ -1,5 +1,7 @@
 Feature('apps.gallery.gallery-move');
 
+const WebjetDteJsTree = require("../../../pages/WebjetDteJsTree");
+
 var randomNumber;
 var autoName;
 
@@ -27,10 +29,10 @@ Scenario('Gallery - Feature - select dir location during create', ({ I, DT, DTE 
     I.seeElement(".DTE_Field_Name_parent .webjet-component input.form-control[value='" + dirTo + "']");
 
     I.click("button.btn-webjet-jstree-item-edit");
-    I.waitForVisible("#jsTree");
+    I.waitForVisible(WebjetDteJsTree.tree);
     I.click(locate('.jsTree-wrapper .jstree-node.jstree-closed').withText('test').find('.jstree-icon.jstree-ocl'));
-    I.click(locate('.jsTree-wrapper #jsTree a.jstree-anchor').withText('move-from'));
-    I.waitForInvisible("#jsTree");
+    I.click(locate(WebjetDteJsTree.anchors).withText('move-from'));
+    I.waitForInvisible(WebjetDteJsTree.tree);
 
     I.say("Check value was change and we that we DONT see option updateInDoc");
     I.seeElement(".DTE_Field_Name_parent .webjet-component input.form-control[value='" + dirFrom + "']");
@@ -63,11 +65,11 @@ Scenario('Gallery - Feature - allow relocated folder in editor AND handle doc up
     I.clickCss("#pills-dt-galleryTable-metadata-tab");
 
     I.click(".DTE_Field_Name_editorFields\\.imagePath button.btn-webjet-jstree-item-edit");
-    I.waitForVisible("#jsTree");
+    I.waitForVisible(WebjetDteJsTree.tree);
     I.click(locate('.jsTree-wrapper .jstree-node.jstree-closed').withText('test').find('.jstree-icon.jstree-ocl'));
     I.click(locate('.jsTree-wrapper .jstree-node.jstree-closed').withText('move-from').find('.jstree-icon.jstree-ocl'));
-    I.click(locate('.jsTree-wrapper #jsTree a.jstree-anchor').withText('moving-dir'));
-    I.waitForInvisible("#jsTree");
+    I.click(locate(WebjetDteJsTree.anchors).withText('moving-dir'));
+    I.waitForInvisible(WebjetDteJsTree.tree);
     DTE.save();
 
     I.say("Prepare page for test");
@@ -91,10 +93,10 @@ Scenario('Gallery - Feature - allow relocated folder in editor AND handle doc up
     DTE.seeInField("path", "/images/gallery/test/move-from/moving-dir");
 
     I.click("button.btn-webjet-jstree-item-edit");
-    I.waitForVisible("#jsTree");
+    I.waitForVisible(WebjetDteJsTree.tree);
     I.click(locate('.jsTree-wrapper .jstree-node.jstree-closed').withText('test').find('.jstree-icon.jstree-ocl'));
-    I.click(locate('.jsTree-wrapper #jsTree a.jstree-anchor').withText('move-to'));
-    I.waitForInvisible("#jsTree");
+    I.click(locate(WebjetDteJsTree.anchors).withText('move-to'));
+    I.waitForInvisible(WebjetDteJsTree.tree);
 
     I.say('Check');
     DTE.seeInField("path", "/images/gallery/test/move-to/moving-dir");

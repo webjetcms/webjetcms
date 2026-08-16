@@ -1,5 +1,7 @@
 Feature('apps.stat');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 Before(({ I, login }) => {
     login('admin');
 });
@@ -222,11 +224,11 @@ Scenario("stat-groupTree-perms", async ({ I }) => {
     I.amOnPage("/apps/stat/admin/");
     I.see("Prihlásenia", "div.md-main-menu");
     I.see("Aktuálni návštevníci", "div.md-main-menu");
-    const caseA = await I.grabValueFrom("#editorApprootDir > section > div > div > div > div > input");
+    const caseA = await I.grabValueFrom("#editorApprootDir > webjet-dte-jstree > section > div > div > div > div > input");
     I.assertEqual("Všetky (zo všetkých domén)", caseA);
-    I.clickCss("#editorApprootDir > section > div > div > div > div > button.btn-webjet-jstree-item-edit");
+    I.clickCss("#editorApprootDir > webjet-dte-jstree > section > div > div > div > div > button.btn-webjet-jstree-item-edit");
     I.say("Over zobraznie ROOT priečinka pri výbere.");
-    I.seeElement( locate("div#jsTree > ul.jstree-container-ul li.jstree-node > a.jstree-anchor").withText("Všetky (zo všetkých domén)") );
+    I.seeElement( locate(WebjetDteJsTree.tree + " > ul.jstree-container-ul li.jstree-node > a.jstree-anchor").withText("Všetky (zo všetkých domén)") );
     I.seeElement( locate('//*[@id="0"]/a').withChild("i.jstree-icon.ti-world") );
 
     I.say("Overenie že sa nenaství ROOT priečinok keď uživateľ má obmedzené priečinky.");
@@ -234,14 +236,14 @@ Scenario("stat-groupTree-perms", async ({ I }) => {
     I.amOnPage("/apps/stat/admin?removePerm=cmp_stat_seeallgroups");
     I.dontSee("Prihlásenia", "div.md-main-menu");
     I.dontSee("Aktuálni návštevníci", "div.md-main-menu");
-    const caseB = await I.grabValueFrom("#editorApprootDir > section > div > div > div > div > input");
+    const caseB = await I.grabValueFrom("#editorApprootDir > webjet-dte-jstree > section > div > div > div > div > input");
     I.say(caseB);
     I.assertEqual("Test podadresar", caseB);
-    I.clickCss("#editorApprootDir > section > div > div > div > div > button.btn-webjet-jstree-item-edit");
+    I.clickCss("#editorApprootDir > webjet-dte-jstree > section > div > div > div > div > button.btn-webjet-jstree-item-edit");
     I.say("Over NEzobrazenie ROOT priečinka pri výbere.");
-    I.waitForElement( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk"), 10 );
-    I.dontSeeElement( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node > a.jstree-anchor").withText("test23.tau27.iway.sk") );
-    I.dontSeeElement( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node > a.jstree-anchor").withText("Koreňový priečinok") );
+    I.waitForElement( locate(WebjetDteJsTree.tree + " > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk"), 10 );
+    I.dontSeeElement( locate(WebjetDteJsTree.tree + " > ul.jstree-container-ul > li.jstree-node > a.jstree-anchor").withText("test23.tau27.iway.sk") );
+    I.dontSeeElement( locate(WebjetDteJsTree.tree + " > ul.jstree-container-ul > li.jstree-node > a.jstree-anchor").withText("Koreňový priečinok") );
 
     I.say("Check the icons");
     I.seeElement( locate('//*[@id="domain:demo.webjetcms.sk"]/a').withChild("i.jstree-icon.ti-home") );
@@ -252,21 +254,21 @@ Scenario("stat-groupTree-perms", async ({ I }) => {
 
     I.say("Check that folder without permision (the one with X icon) can't be selected");
     //Nothing should happen
-    I.click( locate("div#jsTree > ul.jstree-container-ul li.jstree-node > a.jstree-anchor").withText("Jet portal 4") );
-    I.seeElement("div#jsTree");
+    I.click( locate(WebjetDteJsTree.tree + " > ul.jstree-container-ul li.jstree-node > a.jstree-anchor").withText("Jet portal 4") );
+    I.seeElement(WebjetDteJsTree.tree);
 
     I.say("Overenie prednastaveneho ROOT priečinka keď uživateľ ma obmedzene priečinky ale MA pravo vidieť všetky v stat");
     I.relogin("tester2");
     I.amOnPage("/apps/stat/admin/");
     I.dontSee("Prihlásenia", "div.md-main-menu");
     I.dontSee("Aktuálni návštevníci", "div.md-main-menu");
-    const caseC = await I.grabValueFrom("#editorApprootDir > section > div > div > div > div > input");
+    const caseC = await I.grabValueFrom("#editorApprootDir > webjet-dte-jstree > section > div > div > div > div > input");
     I.assertEqual("Všetky (zo všetkých domén)", caseC);
-    I.clickCss("#editorApprootDir > section > div > div > div > div > button.btn-webjet-jstree-item-edit");
+    I.clickCss("#editorApprootDir > webjet-dte-jstree > section > div > div > div > div > button.btn-webjet-jstree-item-edit");
     I.say("Over zobraznie ROOT priečinka pri výbere.");
-    I.waitForElement( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk"), 10 );
-    I.waitForElement( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("test23.tau27.iway.sk"), 10 );
-    I.waitForElement( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("mirroring.tau27.iway.sk"), 10 );
+    I.waitForElement( locate(WebjetDteJsTree.tree + " > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk"), 10 );
+    I.waitForElement( locate(WebjetDteJsTree.tree + " > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("test23.tau27.iway.sk"), 10 );
+    I.waitForElement( locate(WebjetDteJsTree.tree + " > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("mirroring.tau27.iway.sk"), 10 );
 
     I.say("Check, that cmp_stat_seeallgroups permission wont work in another section than STAT. Check it using webpages tree");
     I.amOnPage("/admin/v9/webpages/web-pages-list/");

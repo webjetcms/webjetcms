@@ -2,6 +2,7 @@ Feature('apps.gallery.gallery-access');
 
 const DT = require("../../../pages/DT");
 const DTE = require("../../../pages/DTE");
+const WebjetDteJsTree = require("../../../pages/WebjetDteJsTree");
 
 var randomNumber,
      mainFolder,
@@ -95,8 +96,8 @@ function openJstree(I, folder) {
 // vyber priecinok, na ktory mi budu pridelene prava
 function limitFolderAccess(I, allowedFolder) {
      I.clickCss("#editorAppDTE_Field_editorFields-writableFolders button.btn-webjet-jstree-add"); // nahravanie suborov do adresarov
-     I.waitForElement("#custom-modal-id", 10);
-     I.waitForVisible('#jsTree', 10);
+     I.waitForElement(WebjetDteJsTree.modal, 10);
+     I.waitForVisible(WebjetDteJsTree.tree, 10);
      openJstree(I, "images");
      openJstree(I, "gallery");
      openJstree(I, mainFolder);

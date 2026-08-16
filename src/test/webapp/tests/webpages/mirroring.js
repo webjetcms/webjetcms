@@ -1,5 +1,7 @@
 Feature('webpages.mirroring');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 let randomNumber;
 const groupTable = "groupsMirroringTable";
 const docTable = "docsMirroringTable";
@@ -212,7 +214,7 @@ Scenario('Mirroring 6 - DOCS edit logic', ({I, DT, DTE, Document}) => {
 
     I.clickCss("button#add-sync-btn");
     I.click( locate(".DTE_Field_Name_selectorC button.btn-webjet-jstree-item-edit") );
-    I.waitForVisible("#jsTree");
+    I.waitForVisible(WebjetDteJsTree.tree);
     I.click(locate('.jstree-node.jstree-closed').withText(sk_mirroring_copy).find('.jstree-icon.jstree-ocl'));
     I.click(locate('.jstree-node.jstree-closed').withText(sk_mirroring_child_B).find('.jstree-icon.jstree-ocl'));
     I.click( locate('.jstree-anchor').withText(sk_mirroring_child_B).withChild(".ti-star-filled") );

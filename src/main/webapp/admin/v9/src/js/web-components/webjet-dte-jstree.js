@@ -73,6 +73,7 @@ export class WebjetDteJsTreeElement extends HTMLElement {
     }
 
     getValue() {
+        if (this._isNullableIdMode() && !this._hasValidNullableId()) return [];
         return this._value;
     }
 
@@ -147,6 +148,17 @@ export class WebjetDteJsTreeElement extends HTMLElement {
             mode.startsWith("dt-tree-dir-array") || mode.startsWith("dt-tree-universal-array");
     }
 
+    _isNullableIdMode() {
+        const mode = this._options.mode || "";
+        return mode === "dt-tree-groupid-null" || mode === "dt-tree-pageid-null";
+    }
+
+    _hasValidNullableId() {
+        const mode = this._options.mode || "";
+        const id = mode === "dt-tree-pageid-null" ? this._value[0]?.docId : this._value[0]?.groupId;
+        return Number(id) > 0;
+    }
+
     _removeItem(index) {
         const mode = this._options.mode || "";
         const item = this._value[index];
@@ -157,7 +169,7 @@ export class WebjetDteJsTreeElement extends HTMLElement {
         else if (mode === "dt-tree-page-null" || mode === "dt-tree-pageid-null") Object.assign(item, { id: -1, docId: -1, fullPath: "", virtualPath: "" });
         else this._value.splice(index, 1);
 
-        this._syncInput();
+        this._syncInput(undefined, false);
         this.dispatchEvent(new CustomEvent("webjet-jstree-remove", { bubbles: true, detail: { item, id: item?.docId ?? item?.groupId ?? item?.id } }));
         this.render();
     }
@@ -295,30 +307,44 @@ export class WebjetDteJsTreeElement extends HTMLElement {
         };
     }
 
-    _syncInput(item) {
+    _getTextInputSelector() {
+        const inputId = this._options.inputElement?.id;
+        const dataTableName = this._options.dataTableName;
+        return dataTableName != null ? `#${dataTableName}_modal #${inputId}` : ` #${inputId}`;
+    }
+
+    _syncInput(item, emitSelectionEvents = true) {
         const input = this._options.inputElement;
         if (!input) return;
         const mode = this._options.mode || "";
+        const textInputId = this._getTextInputSelector();
         if (mode.includes("dt-tree-dir-simple")) {
             input.value = this._value[0]?.virtualPath || "";
             $(input).trigger("change");
-            WJ.dispatchEvent("WJ.jstree-simple.change", { textInputId: `#${input.id}`, value: input.value });
+            if (emitSelectionEvents) WJ.dispatchEvent("WJ.jstree-simple.change", { textInputId, value: input.value });
         } else if (mode.includes("dt-tree-groupid") || mode.includes("dt-tree-pageid")) {
-            let id = mode.includes("dt-tree-pageid") ? this._value[0]?.docId : this._value[0]?.groupId;
-            let text = this._value[0]?.fullPath || "";
-            if (id < 1) {
-                id = -1;
-                text = input.dataset.textEmpty || text;
+            let id;
+            if (this._isNullableIdMode() && !this._hasValidNullableId()) {
+                input.dataset.text = "";
+                input.value = "";
+            } else {
+                id = mode.includes("dt-tree-pageid") ? this._value[0]?.docId : this._value[0]?.groupId;
+                let text = this._value[0]?.fullPath || "";
+                if (id < 1) {
+                    id = -1;
+                    text = input.dataset.textEmpty || text;
+                    if (this._value[0]) this._value[0].fullPath = text;
+                }
+                input.dataset.text = text;
+                input.value = id;
             }
-            input.dataset.text = text;
-            input.value = id;
             $(input).trigger("change");
-            WJ.dispatchEvent("WJ.jstree-groupid.change", { textInputId: id, item });
+            if (emitSelectionEvents) WJ.dispatchEvent("WJ.jstree-groupid.change", { textInputId: id, item });
         } else {
             input.value = JSON.stringify(this._value, undefined, 4);
             $(input).trigger("change");
         }
-        WJ.dispatchEvent("WJ.jstree.change", { textInputId: `#${input.id}`, item });
+        if (emitSelectionEvents) WJ.dispatchEvent("WJ.jstree.change", { textInputId, item });
     }
 }
 

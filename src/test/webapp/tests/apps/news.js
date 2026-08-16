@@ -1,5 +1,7 @@
 Feature('apps.news');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 Before(({ login }) => {
     login('admin');
 });
@@ -20,14 +22,14 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
 
     I.clickCss("#pills-dt-component-datatable-basic-tab");
         I.clickCss("button.btn-webjet-jstree-add");
-        I.waitForVisible("div#jsTree");
+        I.waitForVisible(WebjetDteJsTree.tree);
         I.click(locate('a.jstree-anchor').withText("Jet portal 4"));
-        I.waitForInvisible("div#jsTree");
+        I.waitForInvisible(WebjetDteJsTree.tree);
 
         I.clickCss("button.btn-webjet-jstree-add");
-        I.waitForVisible("div#jsTree");
+        I.waitForVisible(WebjetDteJsTree.tree);
         I.click(locate('a.jstree-anchor').withText("Newsletter"));
-        I.waitForInvisible("div#jsTree");
+        I.waitForInvisible(WebjetDteJsTree.tree);
 
         I.checkOption("#DTE_Field_alsoSubGroups_0");
         DTE.selectOption("publishType", "Nasledujúce (začiatok je v budúcnosti)");
@@ -248,10 +250,10 @@ Scenario('set groupIds parameter in webpage', ({ I, DT, DTE }) => {
 
     I.clickCss("#pills-dt-component-datatable-basic-tab");
     I.clickCss("button.btn-webjet-jstree-add");
-    I.waitForVisible("div#jsTree");
+    I.waitForVisible(WebjetDteJsTree.tree);
     I.click(locate('.jstree-node.jstree-closed').withDescendant('a.jstree-anchor').withText("Jet portal 4").find('.jstree-icon.jstree-ocl'));
     I.click(locate('a.jstree-anchor').withText("Produktová stránka"));
-    I.waitForInvisible("div#jsTree");
+    I.waitForInvisible(WebjetDteJsTree.tree);
 
     //
     I.say("check pages from group 24 and 25");

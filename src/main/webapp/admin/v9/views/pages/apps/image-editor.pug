@@ -17,6 +17,11 @@ block content
         var imagePath = urlParams.get('dir');
         var imageName = urlParams.get('name');
 
+        const getAreaOfInterestImageUrl = () => {
+            const originalImagePrefix = imagePath.includes("gallery") && !imageName.startsWith("o_") ? "o_" : "";
+            return `${imagePath}/${originalImagePrefix}${imageName}`;
+        };
+
         var adminUpload = null;
 
         url = url + "?dir=" + imagePath + "&name=" + imageName + "&isImageEditor=true";
@@ -315,7 +320,7 @@ block content
         const initializeAreaOfInterest = () => {
             areaSelector = document.querySelector("webjet-image-area-selector");
             areaSelector.configure({
-                getImageUrl: () => `${imagePath}/${imageName}`,
+                getImageUrl: getAreaOfInterestImageUrl,
                 getCoordinates: () => ({
                     width: +galleryTable.EDITOR.field("selectedWidth").val(),
                     height: +galleryTable.EDITOR.field("selectedHeight").val(),

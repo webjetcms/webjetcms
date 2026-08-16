@@ -1,5 +1,7 @@
 Feature('webpages.folders-mirroring-wj9');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 var auto_folder_sk, auto_folder_en, auto_folder_de, auto_subfolder1_sk, auto_subfolder2_sk, test_folder, elfinder_folder, randomNumber;
 var skID, enID, deID;
 
@@ -84,10 +86,10 @@ function wj9MoveMainFolder(I, DTE, DT, randomNumber) {
      I.click(DT.btn.tree_edit_button);
      DTE.waitForLoader();
      I.click(locate('#editorAppDTE_Field_editorFields-parentGroupDetails').find('button.btn.btn-outline-secondary.btn-webjet-jstree-item-edit'));
-     I.waitForVisible('#jsTree');
-     I.click(locate('#jsTree').withChild('ul.jstree-container-ul.jstree-children').find('.jstree-icon.jstree-ocl'));
-     I.waitForVisible(locate('#jsTree').withDescendant('a.jstree-anchor').withText(test_folder));
-     I.click(locate('#jsTree').find('.jstree-node.jstree-leaf.jstree-last').withText(test_folder).find('a.jstree-anchor'));
+     I.waitForVisible(WebjetDteJsTree.tree);
+     I.click(locate(WebjetDteJsTree.tree).withChild('ul.jstree-container-ul.jstree-children').find('.jstree-icon.jstree-ocl'));
+     I.waitForVisible(locate(WebjetDteJsTree.tree).withDescendant('a.jstree-anchor').withText(test_folder));
+     I.click(locate(WebjetDteJsTree.tree).find('.jstree-node.jstree-leaf.jstree-last').withText(test_folder).find('a.jstree-anchor'));
      DTE.save();
      // skontrolujem ci sa sk priecinok presunul do TEST priecinka
      I.say('Skontrolujem ci sa sk priecinok presunul do TEST priecinka');
@@ -196,12 +198,12 @@ Scenario('presun druheho podpriecinka do prveho podpriecinka', ({ I, DT, DTE }) 
      I.click(DT.btn.tree_edit_button);
      DT.waitForLoader();
      I.click(locate('#editorAppDTE_Field_editorFields-parentGroupDetails').find('button.btn.btn-outline-secondary.btn-webjet-jstree-item-edit'));
-     I.waitForVisible('#jsTree');
-     //I.click(locate('#jsTree').withChild('ul.jstree-container-ul.jstree-children').find('.jstree-icon.jstree-ocl'));
-     I.waitForVisible(locate('#jsTree').withDescendant('a.jstree-anchor').withText(auto_folder_sk));
+     I.waitForVisible(WebjetDteJsTree.tree);
+     //I.click(locate(WebjetDteJsTree.tree).withChild('ul.jstree-container-ul.jstree-children').find('.jstree-icon.jstree-ocl'));
+     I.waitForVisible(locate(WebjetDteJsTree.tree).withDescendant('a.jstree-anchor').withText(auto_folder_sk));
      I.click(locate('.jstree-node.jstree-closed').withDescendant('a.jstree-anchor').withText(auto_folder_sk).find('.jstree-icon.jstree-ocl'));
-     I.waitForVisible(locate('#jsTree').withDescendant('ul.jstree-children').withText(auto_subfolder2_sk));
-     I.click(locate('#jsTree').find('.jstree-node.jstree-leaf').withText(auto_subfolder1_sk).find('a.jstree-anchor'));
+     I.waitForVisible(locate(WebjetDteJsTree.tree).withDescendant('ul.jstree-children').withText(auto_subfolder2_sk));
+     I.click(locate(WebjetDteJsTree.tree).find('.jstree-node.jstree-leaf').withText(auto_subfolder1_sk).find('a.jstree-anchor'));
      DTE.save();
      // skontrolujem ci sa pricinok subfolder2 presunul do priecinka subfolder1 v ramci sk struktury
      I.say('Skontrolujem ci sa pricinok subfolder2 presunul do priecinka subfolder1 v ramci sk struktury');

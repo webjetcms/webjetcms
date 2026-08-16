@@ -1,5 +1,7 @@
 Feature('stat');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 let confLng = "sk";
 
 Before(({ I, login }) => {
@@ -130,11 +132,11 @@ Scenario("Obmedzene prava na adresare", async ({ I, Document }) => {
 
     Document.screenshotElement("#editorApprootDir", "/redactor/apps/stat/stats-groupSelect.png");
 
-    I.clickCss("#editorApprootDir > section > div > div > div > div > button.btn-webjet-jstree-item-edit");
+    I.clickCss("#editorApprootDir > webjet-dte-jstree > section > div > div > div > div > button.btn-webjet-jstree-item-edit");
 
     Document.screenshotElement(locate('//*[@id="1"]/a/i'), "/redactor/apps/stat/groupNonActiveIcon.png");
 
     I.clickCss('//*[@id="1"]/i');
 
-    Document.screenshotElement("div#jsTree > ul.jstree-container-ul", "/redactor/apps/stat/groupSelect_noAllRights.png");
+    Document.screenshotElement(WebjetDteJsTree.tree + " > ul.jstree-container-ul", "/redactor/apps/stat/groupSelect_noAllRights.png");
 });

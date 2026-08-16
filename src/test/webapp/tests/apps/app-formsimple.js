@@ -1,5 +1,7 @@
 Feature('apps.app-formsimple');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 const applicationName = "Formulár ľahko";
 const applicationSelector = "#components-formsimple-title";
 const formSimpleFolder = 22704;
@@ -59,7 +61,7 @@ Scenario("Form simple - test insert process", async ({ I, DT, DTE, Apps }) => {
         I.fillField(locate(".DTE_Field_Name_formSettings\\.forward").find("input.form-control"), "/images/gallery/chrysanthemum.jpg");
 
         I.click( locate("#editorAppDTE_Field_formSettings-useFormMailDoc").find("button.btn-webjet-jstree-item-edit") );
-        I.waitForVisible("#jsTree");
+        I.waitForVisible(WebjetDteJsTree.tree);
         I.click(locate('.jstree-node.jstree-closed').withText('Jet portal 4').find('.jstree-icon.jstree-ocl'));
         I.click( locate(".jstree-anchor").withText('Jet portal 4 - testovacia stranka') );
 

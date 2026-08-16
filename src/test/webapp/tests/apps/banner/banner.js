@@ -1,5 +1,7 @@
 Feature('apps.banner');
 
+const WebjetDteJsTree = require("../../../pages/WebjetDteJsTree");
+
 Before(({ I, login }) => {
     login('admin');
 });
@@ -42,7 +44,7 @@ Scenario('banner zakladne testy @baseTest', async ({I, DataTables, DT, DTE}) => 
 
             I.say("Selecting page");
             I.clickCss("div.DTE_Field_Name_docIds button.btn-webjet-jstree-add");
-            I.waitForVisible('#jsTree');
+            I.waitForVisible(WebjetDteJsTree.tree);
             I.click(locate('.jstree-node.jstree-closed').withDescendant('a.jstree-anchor').withText("Jet portal 4").find('.jstree-icon.jstree-ocl'));
             I.click(locate(".jstree-anchor").withText("Jet portal 4 - testovacia stranka"));
             I.seeInField("div.DTE_Field_Name_docIds input.form-control", "/Jet portal 4/Jet portal 4 - testovacia stranka");
@@ -50,7 +52,7 @@ Scenario('banner zakladne testy @baseTest', async ({I, DataTables, DT, DTE}) => 
             I.say("Selecting group");
 
             I.clickCss("div.DTE_Field_Name_groupIds button.btn-webjet-jstree-add");
-            I.waitForVisible('#jsTree');
+            I.waitForVisible(WebjetDteJsTree.tree);
             I.click(locate('.jstree-node.jstree-closed').withDescendant('a.jstree-anchor').withText("Aplikácie").find('.jstree-icon.jstree-ocl'));
             I.click(locate(".jstree-anchor").withText("Bannerový systém"));
             I.seeInField("div.DTE_Field_Name_groupIds input.form-control", "/Aplikácie/Bannerový systém");

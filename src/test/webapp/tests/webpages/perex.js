@@ -1,5 +1,7 @@
 Feature('webpages.perex');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 Before(({ login, DT }) => {
     login('admin');
 
@@ -57,9 +59,9 @@ Scenario('verify only current domain selection for available groups', ({I, DT, D
     I.click("PerexWithGroup_B");
     DTE.waitForEditor("perexDataTable");
     I.click("button.btn-webjet-jstree-add");
-    I.waitForElement("#jsTree");
-    I.waitForText("Jet portal 4", 5, "#jsTree a.jstree-anchor");
-    I.dontSee("mirroring.tau27.iway.sk", "#jsTree a.jstree-anchor");
+    I.waitForElement(WebjetDteJsTree.tree);
+    I.waitForText("Jet portal 4", 5, WebjetDteJsTree.anchors);
+    I.dontSee("mirroring.tau27.iway.sk", WebjetDteJsTree.anchors);
     I.click("button.close-custom-modal");
     DTE.cancel();
 });
@@ -476,8 +478,8 @@ Scenario("BUG: duplicate available groups in perex group on save", async ({ I, D
     I.click(perexGroupName);
     DTE.waitForEditor("perexDataTable");
     I.click("button.btn-webjet-jstree-add");
-    I.waitForElement("#jsTree");
-    I.waitForText("Jet portal 4", 5, "#jsTree a.jstree-anchor");
+    I.waitForElement(WebjetDteJsTree.tree);
+    I.waitForText("Jet portal 4", 5, WebjetDteJsTree.anchors);
     I.click("button.close-custom-modal");
     DTE.save();
 

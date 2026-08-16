@@ -1,5 +1,7 @@
 Feature('users.user-list');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 var randomText = null;
 var url = "/admin/v9/users/user-list/";
 var permEditAdminUser = "users.edit_admins";
@@ -547,10 +549,10 @@ Scenario("Check editableGroups rights", async ({I, DTE}) => {
 
      I.say("Check I cans ee all domain fodlers");
      I.clickCss("#editorAppDTE_Field_editorFields-editableGroups button.btn-webjet-jstree-add");
-     I.waitForVisible("#jsTree");
-     I.seeElement( locate("#jsTree a.jstree-anchor").withText("demo.webjetcms.sk") );
-     I.seeElement( locate("#jsTree a.jstree-anchor").withText("test23.tau27.iway.sk") );
-     I.seeElement( locate("#jsTree a.jstree-anchor").withText("mirroring.tau27.iway.sk") );
+     I.waitForVisible(WebjetDteJsTree.tree);
+     I.seeElement( locate(WebjetDteJsTree.anchors).withText("demo.webjetcms.sk") );
+     I.seeElement( locate(WebjetDteJsTree.anchors).withText("test23.tau27.iway.sk") );
+     I.seeElement( locate(WebjetDteJsTree.anchors).withText("mirroring.tau27.iway.sk") );
 
      I.say("Check I can see sub-folders in diff domain");
      I.click(locate('.jstree-node.jstree-closed').withText('test23.tau27.iway.sk').find('.jstree-icon.jstree-ocl'));

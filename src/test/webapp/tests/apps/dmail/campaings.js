@@ -1,5 +1,7 @@
 Feature('apps.dmail.campaings');
 
+const WebjetDteJsTree = require("../../../pages/WebjetDteJsTree");
+
 var randomNumber, entityNameOriginal;
 var recipientsWrapper = "#datatableFieldDTE_Field_recipientsTab_wrapper";
 var recipientsModal = "#datatableFieldDTE_Field_recipientsTab_modal";
@@ -799,7 +801,7 @@ function prepareCampaignForInsert(I, DTE, entityName) {
 
     //Needed fields
     I.clickCss("button.btn-webjet-jstree-item-edit");
-    I.waitForElement("#jsTree");
+    I.waitForElement(WebjetDteJsTree.tree);
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click( locate(".jstree-anchor").withText('Testovaci newsletter') );
 
@@ -849,7 +851,7 @@ Scenario('BUG recipients for new email', ({I, DT, DTE}) => {
     I.fillField("#DTE_Field_subject", campaign);
 
     I.clickCss("button.btn-webjet-jstree-item-edit");
-    I.waitForElement("div#jsTree");
+    I.waitForElement(WebjetDteJsTree.tree);
 
     I.click(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'));
     I.click(locate('.jstree-node.jstree-closed').withText('Hromadný e-mail').find('.jstree-icon.jstree-ocl'));

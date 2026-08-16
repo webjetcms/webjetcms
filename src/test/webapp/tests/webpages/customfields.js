@@ -1,5 +1,7 @@
 Feature('webpages.customfields');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 Before(({ I, login }) => {
     login('admin');
 });
@@ -275,14 +277,14 @@ function openFieldsTabForPage(I, DT, DTE, id) {
 
 function setJsTree(I, alphabet, toOpen, toSelect) {
     I.click( locate("#DTE_Field_field" + alphabet + " button.btn-webjet-jstree-item-edit") );
-    I.waitForVisible("#jsTree");
+    I.waitForVisible(WebjetDteJsTree.tree);
     if(toOpen != null && Array.isArray(toOpen) == true) {
         for(let i = 0; i < toOpen.length; i++) {
-            I.click(locate('#jsTree .jstree-node.jstree-closed').withText(toOpen[i]).find('.jstree-icon.jstree-ocl'));
+            I.click(locate(WebjetDteJsTree.tree + ' .jstree-node.jstree-closed').withText(toOpen[i]).find('.jstree-icon.jstree-ocl'));
         }
     }
-    I.click(locate("#jsTree .jstree-anchor").withText(toSelect));
-    I.waitForInvisible("#jsTree");
+    I.click(locate(WebjetDteJsTree.anchors).withText(toSelect));
+    I.waitForInvisible(WebjetDteJsTree.tree);
 }
 
 function checkLabelAndValue(I, alphabet, label, value) {

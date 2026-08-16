@@ -1,5 +1,7 @@
 Feature('apps.forms.multistep-forms');
 
+const WebjetDteJsTree = require("../../../pages/WebjetDteJsTree");
+
 var randomNumber;
 var newMultistepFormName;
 var duplicatedMultistepFormName;
@@ -366,11 +368,11 @@ Scenario('Change form_settings and test it No.2', async ({ I, DT, DTE, TempMail 
     I.clickCss("#pills-dt-formsDataTable-settings-basic-tab");
     I.uncheckOption("#DTE_Field_formSettings-messageAsAttach_0");
     I.click("#editorAppDTE_Field_formSettings-formmailSendUserInfoDoc button.btn-webjet-jstree-item-edit");
-    I.waitForVisible("#jsTree");
+    I.waitForVisible(WebjetDteJsTree.tree);
     I.click(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'));
     I.click(locate('.jstree-node.jstree-closed').withText('Multistep formulár').find('.jstree-icon.jstree-ocl'));
     I.click(locate('a.jstree-anchor').withText('UserNotifyAftertSave'));
-    I.waitForInvisible("#jsTree");
+    I.waitForInvisible(WebjetDteJsTree.tree);
 
     I.clickCss("#pills-dt-formsDataTable-settings-email-tab");
     I.uncheckOption("#DTE_Field_formSettings-forceTextPlain_0");

@@ -1,5 +1,7 @@
 Feature('webpages.multigroup');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 var masterDocId = 70837;
 var slaveDocId = 70838;
 var baseTitle = "Multi page";
@@ -138,10 +140,10 @@ Scenario('multigroup - preserve sort order', ({ I, DTE }) => {
 });
 
 function selectSlave(I) {
-    I.clickCss("#editorAppDTE_Field_editorFields-groupCopyDetails > section > div > div > button.btn-webjet-jstree-add");
+    I.clickCss("#editorAppDTE_Field_editorFields-groupCopyDetails > webjet-dte-jstree > section > div > div > button.btn-webjet-jstree-add");
     I.click(locate('.jstree-node.jstree-closed').withText('Test stavov').find('.jstree-icon.jstree-ocl'));
     I.click(locate('.jstree-node.jstree-closed').withText('Multigroup').find('.jstree-icon.jstree-ocl'));
-    I.click(locate('#jsTree').find('.jstree-node.jstree-leaf').withText('Slave').find('a.jstree-anchor'));
+    I.click(locate(WebjetDteJsTree.tree).find('.jstree-node.jstree-leaf').withText('Slave').find('a.jstree-anchor'));
 }
 
 function deletePage(I, DT, DTE) {

@@ -1,6 +1,7 @@
 Feature('apps.file-archive.add_file');
 
 const SL = require("./SL.js");
+const WebjetDteJsTree = require("../../../pages/WebjetDteJsTree");
 
 let differentLocationFolderName;
 
@@ -30,10 +31,10 @@ Scenario('Add new file to archive and validate upload', async ({ I, DT, DTE }) =
     // 2. Overenie, že sa daju zvoliť iba adresáre od ARCHIV dole
     I.say("Phase 2 - Check that only directories from ARCHIVE down can be selected");
     I.clickCss('#editorAppDTE_Field_editorFields-dir .btn-webjet-jstree-item-edit');
-    DTE.waitForModal('custom-modal-id');
+    I.waitForVisible(WebjetDteJsTree.modal, 10);
     await SL.checkTreeStructure();
-    I.click('archiv', "#jsTree");
-    DTE.waitForModalClose('custom-modal-id');
+    I.click('archiv', WebjetDteJsTree.tree);
+    I.waitForInvisible(WebjetDteJsTree.modal, 30);
 
     // 3. Overenie, že nevidim taby ktore tam nemaju byt
     I.say("Phase 3 - Check that I don't see tabs that shouldn't be there");

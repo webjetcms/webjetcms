@@ -1,5 +1,7 @@
 Feature('apps.blog');
 
+const WebjetDteJsTree = require("../../../pages/WebjetDteJsTree");
+
 var randomNumber;
 var sectionSelector = "#groupSelect_wrapper button.dropdown-toggle";
 
@@ -35,7 +37,7 @@ Scenario('Create blogger and test his logic', async ({ I, DT, DTE }) => {
     I.fillField("#DTE_Field_login", newBlogger);
 
     I.clickCss("button.btn-webjet-jstree-item-edit");
-    within("div#jsTree", () => {
+    within(WebjetDteJsTree.tree, () => {
         I.click(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'));
         I.click(locate('.jstree-node.jstree-closed').withText('Blog').find('.jstree-anchor'));
     });

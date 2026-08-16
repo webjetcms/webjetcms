@@ -1,5 +1,7 @@
 Feature('webpages.group-defaultdocid');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 var auto_name, auto_folder, auto_webPage, auto_todo;
 
 Before(({ I, login }) => {
@@ -97,7 +99,7 @@ Scenario('Hlavna stranka priecinka @singlethread', async ({ I, DT, DTE }) => {
      I.waitForText(auto_folder, 10);
      // vyber web stranku z priecinka folder-autotest
      I.click(locate('#editorAppDTE_Field_editorFields-defaultDocDetails').find('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit'));
-     I.waitForElement("#jsTree");
+     I.waitForElement(WebjetDteJsTree.tree);
      I.click(locate('.jstree-node.jstree-closed').withText(auto_folder).find('.jstree-icon.jstree-ocl'));
      I.wait(1);
      I.click(locate('.jstree-node.jstree-leaf.jstree-last').withText(auto_folder).find('a.jstree-anchor'));

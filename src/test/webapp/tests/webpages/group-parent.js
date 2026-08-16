@@ -1,5 +1,7 @@
 Feature('webpages.group-parent');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 var root1_name, subfolder_name, root2_name;
 
 Before(({ I, login }) => {
@@ -81,7 +83,7 @@ Scenario('5a. overenie, ze sa nezobrazi v stromovej strukture aj web stranka', (
      I.click(locate('.jstree-node.jstree-closed').withText(root1_name).find('.jstree-icon.jstree-ocl')); //rozklikne adresar
      I.wait(1);
      I.waitForText(subfolder_name, 5);
-     within({css: "#custom-modal-id li.jstree-node.jstree-open ul li.jstree-node.jstree-open ul.jstree-children"}, () => {
+     within({css: WebjetDteJsTree.modal + " li.jstree-node.jstree-open ul li.jstree-node.jstree-open ul.jstree-children"}, () => {
           //vidim subfolder
           I.see(subfolder_name);
           //nevidim web stranku s rovnakym menom ako aktualny adresar

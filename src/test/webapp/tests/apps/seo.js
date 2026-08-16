@@ -1,5 +1,7 @@
 Feature('apps.seo');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 var randomNumber;
 
 Before(({ I, login }) => {
@@ -167,7 +169,7 @@ Scenario("stat-keywords", async ({ I, DT, Browser, Document }) => {
     DT.checkTableRow("statKeywordsDataTable", 1, ["1", "archiv", "27", "24,11"]);
 
     I.click("button.btn-webjet-jstree-item-edit");
-    I.click( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk") );
+    I.click( locate(WebjetDteJsTree.tree + " > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk") );
     I.click(locate(".jstree-anchor").withText("Jet portal 4"));
 
     waitForTableLoader(I);
@@ -261,7 +263,7 @@ Scenario("number-keywords", ({ I, Browser, DT }) => {
     DT.checkTableRow("numberKeywordsDataTable", 1, [null, "rozpočet", "3", "3", "3"]);
 
     I.click("button.btn-webjet-jstree-item-edit");
-    I.click( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk") );
+    I.click( locate(WebjetDteJsTree.tree + " > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk") );
     I.click(locate(".jstree-anchor").withText("Jet portal 4"));
 
     waitForTableLoader(I);
@@ -315,7 +317,7 @@ Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT 
     I.see("seznam.cz");
 
     I.click("button.btn-webjet-jstree-item-edit");
-    I.click( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk") );
+    I.click( locate(WebjetDteJsTree.tree + " > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk") );
     I.click(locate(".jstree-anchor").withText("Jet portal 4"));
 
     I.click({ css: "button[data-id=webPageSelect]" });
@@ -397,7 +399,7 @@ Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT 
         DT.checkTableRow("searchEnginesDataTable", 3, ["3", "google.com", "81"]);
 
     I.click("button.btn-webjet-jstree-item-edit");
-    I.click( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk") );
+    I.click( locate(WebjetDteJsTree.tree + " > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk") );
     I.click(locate(".jstree-anchor").withText("English"));
 
         DT.checkTableRow("searchEnginesQueryDataTable", 1, ["1", "Hotels", "1", "25,00"]);

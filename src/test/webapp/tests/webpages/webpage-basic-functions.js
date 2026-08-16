@@ -1,5 +1,7 @@
 Feature('webpages.webpage-basic-functions');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 var folder_name, subfolder_one, subfolder_two, auto_webPage, randomNumber,
      note = 'AUTOTEST';
 
@@ -108,8 +110,8 @@ Scenario('Zakladne funkcie webstranky - zalozka Zakladne', ({ I, DT, DTE }) => {
      // Pridat kopiu web stranky
      I.say('Pridanie kopie web stranky');
      I.click(locate('.btn.btn-outline-secondary.btn-webjet-jstree-add').withText('Pridať kópiu web stránky'));
-     I.waitForVisible('#jsTree', 10);
-     I.click(locate('.jstree-anchor').withText(folder_name).inside('#jsTree'));
+     I.waitForVisible(WebjetDteJsTree.tree, 10);
+     I.click(locate('.jstree-anchor').withText(folder_name).inside(WebjetDteJsTree.tree));
      I.dtWaitForLoader();
      I.waitForValue('.dt-tree-container>.form-group>div>div.input-group>input.form-control', '/' + folder_name, 5);
 
