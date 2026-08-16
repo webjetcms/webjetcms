@@ -27,8 +27,6 @@ import sk.iway.iwcm.database.SimpleQuery;
  */
 public class ClusterDB
 {
-	static final String CRON_TASK_PREFIX = "crontab-";
-
 	protected ClusterDB() {
 		//utility class
 	}
@@ -100,89 +98,37 @@ public class ClusterDB
 	 * Adds a request to run a cron task on its configured cluster node or node group.
 	 * @param configuredNode configured node name, all, all-admin or all-public
 	 * @param taskId cron task ID
+	 * @return true when all cluster requests were stored successfully
 	 */
-	public static void addCronTask(String configuredNode, Long taskId)
+	public static boolean addCronTask(String configuredNode, Long taskId)
 	{
 		String clusterNames = Constants.getString("clusterNames");
 		String clusterMyNodeName = Constants.getString("clusterMyNodeName");
-		if (Tools.isEmpty(clusterNames) || Tools.isEmpty(clusterMyNodeName) || taskId == null || taskId.longValue() < 1) return;
+		if (Tools.isEmpty(clusterNames) || Tools.isEmpty(clusterMyNodeName) || taskId == null || taskId.longValue() < 1) return false;
 
 		try
 		{
-			String command = getCronTaskCommand(configuredNode, taskId);
-			Timestamp timestamp = new Timestamp(Tools.getNow());
-			SimpleQuery query = new SimpleQuery();
+			CronTaskClusterCommand command = CronTaskClusterCommand.create(configuredNode, taskId.longValue());
+			List<String> targetNodes = command.resolveTargetNodes(clusterNames);
+			if (targetNodes.isEmpty()) return false;
 
-			for (String nodeName : getCronTaskTargetNodes(configuredNode, clusterNames))
+			Timestamp timestamp = new Timestamp(Tools.getNow());
+			List<String> sqlCommands = new ArrayList<>();
+			List<Object[]> sqlParameters = new ArrayList<>();
+
+			for (String nodeName : targetNodes)
 			{
-				query.execute("INSERT INTO cluster_refresher (node_name, class_name, refresh_time) VALUES (?, ?, ?)",
-						nodeName, command, timestamp
-				);
+				sqlCommands.add("INSERT INTO cluster_refresher (node_name, class_name, refresh_time) VALUES (?, ?, ?)");
+				sqlParameters.add(new Object[] {nodeName, command.encode(), timestamp});
 			}
+
+			return new SimpleQuery().executeInTransaction(sqlCommands, sqlParameters);
 		}
 		catch (Exception ex)
 		{
 			Logger.error(ClusterDB.class, ex);
+			return false;
 		}
-	}
-
-	static String getCronTaskCommand(String configuredNode, Long taskId)
-	{
-		return CRON_TASK_PREFIX + normalizeCronTaskNode(configuredNode) + "-" + taskId;
-	}
-
-	static boolean isCronTaskCommand(String command)
-	{
-		return command != null && command.startsWith(CRON_TASK_PREFIX);
-	}
-
-	static String getCronTaskNode(String command)
-	{
-		if (isCronTaskCommand(command) == false) return null;
-
-		int separatorIndex = command.lastIndexOf('-');
-		if (separatorIndex <= CRON_TASK_PREFIX.length()) return null;
-
-		return command.substring(CRON_TASK_PREFIX.length(), separatorIndex);
-	}
-
-	static long getCronTaskId(String command)
-	{
-		if (isCronTaskCommand(command) == false) return -1;
-
-		int separatorIndex = command.lastIndexOf('-');
-		if (separatorIndex <= CRON_TASK_PREFIX.length()) return -1;
-
-		return Tools.getLongValue(command.substring(separatorIndex + 1), -1);
-	}
-
-	static List<String> getCronTaskTargetNodes(String configuredNode, String clusterNames)
-	{
-		String normalizedNode = normalizeCronTaskNode(configuredNode);
-		List<String> targetNodes = new ArrayList<>();
-
-		if (isCronTaskNodeGroup(normalizedNode))
-		{
-			if ("auto".equalsIgnoreCase(clusterNames)) targetNodes.add("auto");
-			else targetNodes.addAll(Arrays.asList(Tools.getTokens(clusterNames, ",")));
-		}
-		else
-		{
-			targetNodes.add(normalizedNode);
-		}
-
-		return targetNodes;
-	}
-
-	private static String normalizeCronTaskNode(String configuredNode)
-	{
-		if (Tools.isEmpty(configuredNode)) return "all";
-		return configuredNode;
-	}
-
-	private static boolean isCronTaskNodeGroup(String configuredNode)
-	{
-		return "all".equals(configuredNode) || "all-admin".equals(configuredNode) || "all-public".equals(configuredNode);
 	}
 
 	/**

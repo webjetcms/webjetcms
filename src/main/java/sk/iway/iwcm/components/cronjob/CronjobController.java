@@ -83,7 +83,12 @@ public class CronjobController extends DatatableRestControllerV2<CronTask, Long>
             String configuredNode = storedTask.getClusterNode();
             if (Tools.isEmpty(configuredNode)) configuredNode = "all";
 
-            ClusterDB.addCronTask(configuredNode, storedTask.getId());
+            if (ClusterDB.addCronTask(configuredNode, storedTask.getId()) == false) {
+                String errorMessage = getProp().getText("admin.crontab.task_launch_failed_on_node", storedTask.getTask(), configuredNode);
+                addNotify(new NotifyBean(getProp().getText("admin.crontab.view"), errorMessage, NotifyType.ERROR, 15000));
+                return false;
+            }
+
             String message = getProp().getText("admin.crontab.task_launch_requested_on_node", storedTask.getTask(), configuredNode);
             Adminlog.add(Adminlog.TYPE_CRON, message, -1, -1);
             addNotify(new NotifyBean(getProp().getText("admin.crontab.view"), message, NotifyType.SUCCESS, 15000));

@@ -66,7 +66,7 @@ public class ClusterRefresher extends TimerTask
 
 		timer = new Timer(true);
 		//in cluster auto mode add configurable random initial delay to spread out timer execution across nodes and reduce Galera deadlock risk
-		long initialDelay = 5000 + getAutoModeRandomDelay();
+		long initialDelay = 5000l + getAutoModeRandomDelay();
 		timer.schedule(this, initialDelay, Constants.getInt("clusterRefreshTimeout"));
 	}
 
@@ -215,7 +215,7 @@ public class ClusterRefresher extends TimerTask
 
 			long now = Tools.getNow();
 
-			if (ClusterDB.isCronTaskCommand(className))
+			if (CronTaskClusterCommand.isCommand(className))
 			{
 				runCronTask(className);
 			}
@@ -312,20 +312,21 @@ public class ClusterRefresher extends TimerTask
 
 	static boolean shouldSkipDuplicate(Set<String> alreadyExecuted, String className)
 	{
-		if (ClusterDB.isCronTaskCommand(className)) return false;
+		if (CronTaskClusterCommand.isCommand(className)) return false;
 		return alreadyExecuted.add(className) == false;
 	}
 
 	void runCronTask(String command)
 	{
-		String configuredNode = ClusterDB.getCronTaskNode(command);
-		long taskId = ClusterDB.getCronTaskId(command);
-		if (Tools.isEmpty(configuredNode) || taskId < 1)
+		CronTaskClusterCommand cronCommand = CronTaskClusterCommand.parse(command);
+		if (cronCommand == null)
 		{
 			Logger.error(ClusterRefresher.class, "Invalid cron task cluster command: " + command);
 			return;
 		}
 
+		String configuredNode = cronCommand.getConfiguredNode();
+		long taskId = cronCommand.getTaskId();
 		CronTask task = CronDB.getById(taskId);
 		if (task == null)
 		{
