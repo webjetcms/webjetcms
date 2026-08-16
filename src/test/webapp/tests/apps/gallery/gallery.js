@@ -67,6 +67,27 @@ Scenario('oblast zaujmu', async ({ I, DT, DTE }) => {
     });
     assert.equal(cropperSize.canvasWidth, cropperSize.imageWidth);
     assert.equal(cropperSize.canvasHeight, cropperSize.imageHeight);
+    const wheelResult = await I.executeScript(() => {
+        const selector = document.querySelector("webjet-image-area-selector");
+        const canvas = selector.querySelector("cropper-canvas");
+        const transformBefore = selector.cropperImage.$getTransform();
+        const wheelEvent = new WheelEvent("wheel", {
+            bubbles: true,
+            cancelable: true,
+            ctrlKey: true,
+            deltaY: -100
+        });
+        canvas.dispatchEvent(wheelEvent);
+        return {
+            defaultPrevented: wheelEvent.defaultPrevented,
+            scalable: selector.cropperImage.scalable,
+            transformBefore,
+            transformAfter: selector.cropperImage.$getTransform()
+        };
+    });
+    assert.equal(wheelResult.defaultPrevented, true);
+    assert.equal(wheelResult.scalable, false);
+    assert.deepEqual(wheelResult.transformAfter, wheelResult.transformBefore);
 
     I.see("Šírka:");
     within('.coordinates', () => {
