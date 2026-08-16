@@ -54,7 +54,7 @@ Scenario('4. vytvorenie noveho priecinka - ulozeneho do korenoveho adresara', ({
      I.waitForElement('.form-control', 5);
      I.fillField('#DTE_Field_groupName', root2_name);
      I.groupSetRootParent();
-     I.clickCss('.btn.btn-outline-secondary.btn-vue-jstree-item-edit'); // zmena na korenovy adresar
+     I.clickCss('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit'); // zmena na korenovy adresar
      I.waitForText('Koreňový priečinok', 5);
      I.clickCss('.jstree-icon.jstree-themeicon.ti.ti-home.jstree-themeicon-custom');
      I.waitForValue('#editorAppDTE_Field_editorFields-parentGroupDetails .input-group input', '/', 10);
@@ -73,7 +73,7 @@ Scenario('5a. overenie, ze sa nezobrazi v stromovej strukture aj web stranka', (
      I.waitForText(root1_name, '#DTE_Field_groupName');
 
      // ked rozkliknem adresar nemal by som v nom vidiet web stranku (cize rovnake meno ako ma adresar)
-     I.clickCss('.btn.btn-outline-secondary.btn-vue-jstree-item-edit');
+     I.clickCss('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit');
      I.waitForElement(".jsTree-wrapper", 5);
      //I.click(locate('.jsTree-wrapper').find('.jstree-icon.jstree-ocl')); // rozklikne adresarovy strom
      //I.wait(1);
@@ -100,7 +100,7 @@ Scenario('5b. test negativnych/chybnych ciest - na priecinku z 1. kroku', ({ I, 
      I.waitForText(root1_name, '#DTE_Field_groupName');
 
      I.say('ako Nadradeny priecinok nie je mozne vybrat sameho seba');
-     I.clickCss('.btn.btn-outline-secondary.btn-vue-jstree-item-edit');
+     I.clickCss('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit');
      I.waitForElement(".jsTree-wrapper", 5);
      //I.click(locate('.jsTree-wrapper').find('.jstree-icon.jstree-ocl')); // rozklikne adresarovy strom
      I.waitForText(root1_name, 5, '.jsTree-wrapper');
@@ -112,7 +112,7 @@ Scenario('5b. test negativnych/chybnych ciest - na priecinku z 1. kroku', ({ I, 
      I.waitForText('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).', 5);
 
      I.say('ako Nadradeny priecinok nie je mozne vybrat podpriecinok sameho seba');
-     I.clickCss('.btn.btn-outline-secondary.btn-vue-jstree-item-edit');
+     I.clickCss('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit');
      I.waitForElement(".jsTree-wrapper", 5);
      //I.click(locate('.jsTree-wrapper').find('.jstree-icon.jstree-ocl')); // rozklikne adresarovy strom
      I.waitForText(root1_name, 5, '.jsTree-wrapper');
@@ -127,7 +127,7 @@ Scenario('5b. test negativnych/chybnych ciest - na priecinku z 1. kroku', ({ I, 
      I.waitForText('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).', 5);
 
      I.say('upravenie nadradeneho priecinka na korenovy adresar');
-     I.clickCss('.btn.btn-outline-secondary.btn-vue-jstree-item-edit');
+     I.clickCss('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit');
      I.waitForText('Koreňový priečinok', 5);
      I.clickCss('.jstree-icon.jstree-themeicon.ti.ti-home.jstree-themeicon-custom');
      I.wait(1);

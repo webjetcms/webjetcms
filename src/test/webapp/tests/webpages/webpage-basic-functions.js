@@ -107,7 +107,7 @@ Scenario('Zakladne funkcie webstranky - zalozka Zakladne', ({ I, DT, DTE }) => {
 
      // Pridat kopiu web stranky
      I.say('Pridanie kopie web stranky');
-     I.click(locate('.btn.btn-outline-secondary.btn-vue-jstree-add').withText('Pridať kópiu web stránky'));
+     I.click(locate('.btn.btn-outline-secondary.btn-webjet-jstree-add').withText('Pridať kópiu web stránky'));
      I.waitForVisible('#jsTree', 10);
      I.click(locate('.jstree-anchor').withText(folder_name).inside('#jsTree'));
      I.dtWaitForLoader();

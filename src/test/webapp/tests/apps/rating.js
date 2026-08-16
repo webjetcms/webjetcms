@@ -125,9 +125,9 @@ Scenario('Testovanie app - Rating formulár', async ({ I, Apps, DTE, Document })
     };
 
     I.checkOption("#DTE_Field_checkLogon_0");
-    I.clickCss(".btn-vue-jstree-item-remove");
+    I.clickCss(".btn-webjet-jstree-item-remove");
     DTE.fillField("range", 5);
-    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
     I.click(locate('.jstree-node.jstree-closed').withText('Jet portal 4').find('.jstree-icon.jstree-ocl'));
     I.clickCss('#docId-141_anchor');
     I.waitForElement('input[value="/Jet portal 4/Jet portal 4 - testovacia stranka"]', 10);

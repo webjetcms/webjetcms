@@ -365,7 +365,7 @@ Scenario('Change form_settings and test it No.2', async ({ I, DT, DTE, TempMail 
 
     I.clickCss("#pills-dt-formsDataTable-settings-basic-tab");
     I.uncheckOption("#DTE_Field_formSettings-messageAsAttach_0");
-    I.click("#editorAppDTE_Field_formSettings-formmailSendUserInfoDoc button.btn-vue-jstree-item-edit");
+    I.click("#editorAppDTE_Field_formSettings-formmailSendUserInfoDoc button.btn-webjet-jstree-item-edit");
     I.waitForVisible("#jsTree");
     I.click(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'));
     I.click(locate('.jstree-node.jstree-closed').withText('Multistep formulár').find('.jstree-icon.jstree-ocl'));

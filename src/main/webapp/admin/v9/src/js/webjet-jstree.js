@@ -1,5 +1,3 @@
-import { default as EventBus } from '../vue/components/webjet-dte-jstree/event-bus';
-
 export class WebjetJsTree {
     constructor(id) {
         this.id = $(`#${id}`);
@@ -142,8 +140,19 @@ export class WebjetJsTree {
             const parent = instance.get_parent(data.node);
             data.parentNode = instance.get_node(parent);
 
-            EventBus.$emit('change-jstree', data);
+            this.id[0].dispatchEvent(new CustomEvent('webjet-jstree-select', {
+                bubbles: true,
+                detail: data
+            }));
         });
+    }
+
+    destroy() {
+        if (this.jstree) {
+            this.jstree.off();
+            this.jstree.jstree('destroy');
+            this.jstree = null;
+        }
     }
 
     /**

@@ -72,7 +72,7 @@ Scenario('media-zakladne testy @baseTest', async ({I, DTE, DataTables}) => {
             //DTE.fillField("mediaSortOrder", 50);
             I.forceClickCss('#DTE_Field_editorFields-groups_0');
 
-            I.clickCss("#editorAppDTE_Field_editorFields-docDetails button.btn-vue-jstree-item-edit");
+            I.clickCss("#editorAppDTE_Field_editorFields-docDetails button.btn-webjet-jstree-item-edit");
             I.click(locate('.jstree-node.jstree-closed').withText('test').find('.jstree-icon.jstree-ocl'));
             I.click('test_final');
         },
@@ -509,7 +509,7 @@ Scenario('media required docId tree selector', async ({I, DT, DTE}) => {
     DTE.save();
     I.see("Povinné pole. Vyberte stránku.");
 
-    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
     I.click(locate('.jstree-node.jstree-closed').withText('test').find('.jstree-icon.jstree-ocl'));
     I.click('test_final');
     DTE.save();
@@ -675,7 +675,7 @@ Scenario('testovanie app - media app', async ({ I, DTE, Apps, Document }) => {
 
     I.switchTo('.cke_dialog_ui_iframe');
     I.switchTo('#editorComponent');
-    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
     I.click(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'));
     I.click(locate('.jstree-node.jstree-closed').withText('Média').find('.jstree-icon.jstree-ocl'));
     I.clickCss('#docId-24008_anchor');

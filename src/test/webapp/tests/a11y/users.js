@@ -25,7 +25,7 @@ Scenario('writable folders modal', async ({ I, DTE, a11y }) => {
     DTE.waitForEditor();
     I.click("#pills-dt-datatableInit-rightsTab-tab");
 
-    I.click(".DTE_Field_Name_editorFields\\.writableFolders button.btn-vue-jstree-add");
+    I.click(".DTE_Field_Name_editorFields\\.writableFolders button.btn-webjet-jstree-add");
     I.waitForElement(".custom-modal.open-custom-modal .jsTree-wrapper", 10);
     I.clickCss('li[id="/images"] i');
 
@@ -37,7 +37,7 @@ Scenario('editable pages modal', async ({ I, DTE, a11y }) => {
     DTE.waitForEditor();
     I.click("#pills-dt-datatableInit-rightsTab-tab");
 
-    I.click(".DTE_Field_Name_editorFields\\.editablePages button.btn-vue-jstree-add");
+    I.click(".DTE_Field_Name_editorFields\\.editablePages button.btn-webjet-jstree-add");
     I.waitForElement(".custom-modal.open-custom-modal .jsTree-wrapper", 10);
     I.clickCss('li[id="domain:test23.tau27.iway.sk"] i');
     I.waitForElement('li[id="83"] i', 10);

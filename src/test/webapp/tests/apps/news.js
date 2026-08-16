@@ -19,12 +19,12 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
         I.seeElement("#pills-dt-component-datatable-commonSettings-tab");
 
     I.clickCss("#pills-dt-component-datatable-basic-tab");
-        I.clickCss("button.btn-vue-jstree-add");
+        I.clickCss("button.btn-webjet-jstree-add");
         I.waitForVisible("div#jsTree");
         I.click(locate('a.jstree-anchor').withText("Jet portal 4"));
         I.waitForInvisible("div#jsTree");
 
-        I.clickCss("button.btn-vue-jstree-add");
+        I.clickCss("button.btn-webjet-jstree-add");
         I.waitForVisible("div#jsTree");
         I.click(locate('a.jstree-anchor').withText("Newsletter"));
         I.waitForInvisible("div#jsTree");
@@ -90,7 +90,7 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
         I.seeElement( locate(".DTE_Field_Name_groupIds").find("input[value='/Newsletter']") );
 
         //Remove first folder
-        I.click( locate(".DTE_Field_Name_groupIds").find("button.btn-vue-jstree-item-remove") );
+        I.click( locate(".DTE_Field_Name_groupIds").find("button.btn-webjet-jstree-item-remove") );
 
     I.clickCss("#pills-dt-component-datatable-perex-tab");
         I.seeCheckboxIsChecked( locate(".DTE_Field_Name_perexGroup").find( locate("label").withText("ďalšia perex skupina") ));
@@ -247,7 +247,7 @@ Scenario('set groupIds parameter in webpage', ({ I, DT, DTE }) => {
     I.switchTo("#editorComponent");
 
     I.clickCss("#pills-dt-component-datatable-basic-tab");
-    I.clickCss("button.btn-vue-jstree-add");
+    I.clickCss("button.btn-webjet-jstree-add");
     I.waitForVisible("div#jsTree");
     I.click(locate('.jstree-node.jstree-closed').withDescendant('a.jstree-anchor').withText("Jet portal 4").find('.jstree-icon.jstree-ocl'));
     I.click(locate('a.jstree-anchor').withText("Produktová stránka"));

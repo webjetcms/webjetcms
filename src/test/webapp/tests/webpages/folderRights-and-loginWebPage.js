@@ -148,7 +148,7 @@ Scenario('Nastavenie prihlasovacej stranky', ({ I, DTE, DT }) => {
      I.click(DT.btn.tree_edit_button);
      DTE.waitForEditor("groups-datatable");
      I.clickCss('#pills-dt-groups-datatable-access-tab');
-     I.click(locate('#editorAppDTE_Field_editorFields-logonPage').find('.btn.btn-outline-secondary.btn-vue-jstree-item-edit'));
+     I.click(locate('#editorAppDTE_Field_editorFields-logonPage').find('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit'));
      // nesmie to byt adresar
      I.click(locate('.jstree-node.jstree-closed').withText(folder_name).find('a.jstree-anchor'));
      I.waitForText('Vyberte web stránku', 5);

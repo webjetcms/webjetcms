@@ -29,7 +29,7 @@ Scenario('Add new file to archive and validate upload', async ({ I, DT, DTE }) =
 
     // 2. Overenie, že sa daju zvoliť iba adresáre od ARCHIV dole
     I.say("Phase 2 - Check that only directories from ARCHIVE down can be selected");
-    I.clickCss('#editorAppDTE_Field_editorFields-dir .btn-vue-jstree-item-edit');
+    I.clickCss('#editorAppDTE_Field_editorFields-dir .btn-webjet-jstree-item-edit');
     DTE.waitForModal('custom-modal-id');
     await SL.checkTreeStructure();
     I.click('archiv', "#jsTree");

@@ -23,7 +23,7 @@ Scenario('testovanie app - Príbuzné stránky', async ({ I, DTE, Apps, Document
 
     I.switchTo('.cke_dialog_ui_iframe');
     I.switchTo('#editorComponent');
-    I.clickCss("button.btn-vue-jstree-add");
+    I.clickCss("button.btn-webjet-jstree-add");
     I.click(locate('.jstree-node.jstree-closed').withText('Jet portal 4').find('.jstree-icon.jstree-ocl'));
     I.click(locate('a').withText('Zo sveta financií').withAttr({ role: 'treeitem' }));
     I.waitForElement('input[value="/Jet portal 4/Zo sveta financií"]', 10);
@@ -60,7 +60,7 @@ Scenario('testovanie app - Príbuzné stránky', async ({ I, DTE, Apps, Document
         pagesInGroup: "5",
         groups: "3+1"
     };
-    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
     I.click(locate('a').withText('Jet portal 4').withAttr({ role: 'treeitem' }));
     I.waitForElement('input[value="/Jet portal 4"]', 10);
     DTE.clickSwitchLabel("Prehľadať aj podadresáre");

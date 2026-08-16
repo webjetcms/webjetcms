@@ -138,7 +138,7 @@ Scenario('multigroup - preserve sort order', ({ I, DTE }) => {
 });
 
 function selectSlave(I) {
-    I.clickCss("#editorAppDTE_Field_editorFields-groupCopyDetails > section > div > div > button.btn-vue-jstree-add");
+    I.clickCss("#editorAppDTE_Field_editorFields-groupCopyDetails > section > div > div > button.btn-webjet-jstree-add");
     I.click(locate('.jstree-node.jstree-closed').withText('Test stavov').find('.jstree-icon.jstree-ocl'));
     I.click(locate('.jstree-node.jstree-closed').withText('Multigroup').find('.jstree-icon.jstree-ocl'));
     I.click(locate('#jsTree').find('.jstree-node.jstree-leaf').withText('Slave').find('a.jstree-anchor'));

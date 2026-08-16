@@ -130,7 +130,7 @@ Scenario("Obmedzene prava na adresare", async ({ I, Document }) => {
 
     Document.screenshotElement("#editorApprootDir", "/redactor/apps/stat/stats-groupSelect.png");
 
-    I.clickCss("#editorApprootDir > section > div > div > div > div > button.btn-vue-jstree-item-edit");
+    I.clickCss("#editorApprootDir > section > div > div > div > div > button.btn-webjet-jstree-item-edit");
 
     Document.screenshotElement(locate('//*[@id="1"]/a/i'), "/redactor/apps/stat/groupNonActiveIcon.png");
 

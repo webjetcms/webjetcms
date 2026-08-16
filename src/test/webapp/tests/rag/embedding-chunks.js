@@ -43,7 +43,7 @@ Scenario('Chunks - base test', ({ I, DT }) => {
     I.see(valueA, "#datatableInit tbody td");
 
     I.say("Select folder and try it again");
-    selectTree(I, "#embeddingChunksDataTable_extfilter button.btn-vue-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent"]);
+    selectTree(I, "#embeddingChunksDataTable_extfilter button.btn-webjet-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent"]);
 
     I.say("Check loaded values");
     DT.waitForLoader();
@@ -122,7 +122,7 @@ Scenario('Chunks test + run deleting index action', ({ I, DT }) => {
     checkIndexingStatusValues(I, 2, 7, 7, 0);
 
     I.say("Switch to subfolder in the dialog");
-    selectTree(I, ".rootDirDiv button.btn-vue-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent", "semantic_child"]);
+    selectTree(I, ".rootDirDiv button.btn-webjet-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent", "semantic_child"]);
 
     I.say("Check changed path");
     I.seeElement("#editorApprootDir input[value='" + rootSubDirPath + "']");
@@ -174,7 +174,7 @@ Scenario('After removing action - checks', ({ I, DT }) => {
     checkIndexingStatusValues(I, 1, 5, 5, 0);
 
     I.say("Switch to sub-folder and check");
-    selectTree(I, ".rootDirDiv button.btn-vue-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent", "semantic_child"]);
+    selectTree(I, ".rootDirDiv button.btn-webjet-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent", "semantic_child"]);
 
     I.say("Check that pages are really not indexed and they are no more awaiting index removing");
     checkIndexingStatusValues(I, 1, 2, 0, 0);
@@ -202,7 +202,7 @@ Scenario('Run adding index action', ({ I, DT }) => {
     checkIndexingStatusValues(I, 2, 7, 5, 0);
 
     I.say('Switch to child folder - 2 out of 2 need indexing');
-    selectTree(I, ".rootDirDiv button.btn-vue-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent", "semantic_child"]);
+    selectTree(I, ".rootDirDiv button.btn-webjet-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent", "semantic_child"]);
     I.seeElement("#editorApprootDir input[value='" + rootSubDirPath + "']");
     checkIndexingStatusValues(I, 1, 2, 0, 0);
 

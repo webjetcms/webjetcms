@@ -54,7 +54,7 @@ Scenario('oblast zaujmu', async ({ I, DT, DTE }) => {
     I.seeAndClick("koala.jpg");
     I.clickCss("#pills-dt-galleryTable-areaOfInterest-tab");
 
-    I.waitForElement("div.vue-preview__wrapper");
+    I.waitForElement("webjet-image-area-selector[data-ready='true'] cropper-canvas");
 
     I.see("Šírka:");
     within('.coordinates', () => {
@@ -64,7 +64,7 @@ Scenario('oblast zaujmu', async ({ I, DT, DTE }) => {
     });
     DTE.save();
 
-    // vue-advanced-cropper padal ked bol inicializovany, okno sa zatvorilo a zmenila sa velkost
+    // Verify resizing after closing an initialized area selector.
     I.resizeWindow(1280, 850);
     I.seeAndClick("koala.jpg");
     DTE.waitForEditor("galleryTable");
@@ -207,7 +207,7 @@ Scenario('novy priecinok', async({ I, DT, DTE }) => {
     // During creation we dont see field DTE_Field_path
     I.dontSeeElement(".DTE_Field_Name_path");
     // Only parent folder
-    I.seeElement(".DTE_Field_Name_parent .vueComponent input.form-control[value='/images/gallery/test']");
+    I.seeElement(".DTE_Field_Name_parent .webjet-component input.form-control[value='/images/gallery/test']");
 
     let name = await I.grabValueFrom("#DTE_Field_name");
     I.assertEqual(name, "");

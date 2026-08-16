@@ -1,3 +1,5 @@
+import { createWebjetDteJsTree } from '../../../src/js/web-components/webjet-dte-jstree';
+
 /**
  * User Interface for AI interactions. It uses toastr to show popup with options and status.
  */
@@ -635,7 +637,7 @@ export class AiUserInterface {
             //console.log("html=", $element[0].outerHTML, "val=", $element.val(), "text=", $element.data("text"));
 
             var id = $element.attr("id");
-            var htmlCode = $('<div class="vueComponent" id="editorApp'+id+'"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr" @remove-item="onRemoveItem"></webjet-dte-jstree></div>');
+            var htmlCode = $('<div class="webjet-component" id="editorApp'+id+'"></div>');
             htmlCode.insertAfter($element);
 
             function fixNullData(data, click) {
@@ -663,48 +665,14 @@ export class AiUserInterface {
                 className: "dt-tree-dir-simple",
                 _id: id
             };
-            //console.log("conf=", conf);
-            const app = window.VueTools.createApp({
-                components: {},
-                data() {
-                    return {
-                        data: null,
-                        idKey: null,
-                        dataTable: null,
-                        dataTableName: null,
-                        click: null,
-                        attr: null
-                    }
-                },
-                created() {
-                    this.data = fixNullData(conf.jsonData, conf.className);
-                    //console.log("JS created, data=", this.data, " conf=", conf, " val=", conf._input.val());
-                    this.idKey = conf._id;
-                    //co sa ma stat po kliknuti prenasame z atributu className datatabulky (pre jednoduchost zapisu), je to hodnota obsahujuca dt-tree-
-                    //priklad: className: "dt-row-edit dt-style-json dt-tree-group", click=dt-tree-group
-                    const confClassNameArr = conf.className.split(" ");
-                    for (var i=0; i<confClassNameArr.length; i++) {
-                        let className = confClassNameArr[i];
-                        this.click = className;
-                    }
-                    //console.log("click=", this.click);
-                    if (typeof(conf.attr)!="undefined") this.attr = conf.attr;
-
-                    this.dataTable = {
-                        DATA: {}
-                    }
-                },
-                methods: {
-                    onRemoveItem(id){
-                    }
-                }
+            const component = createWebjetDteJsTree({
+                inputElement: $element[0],
+                dataTable: { DATA: {} },
+                mode: conf.className,
+                value: fixNullData(conf.jsonData, conf.className)
             });
-            VueTools.setDefaultObjects(app);
-            app.component('webjet-dte-jstree', window.VueTools.getComponent('webjet-dte-jstree'));
-            const vm = app.mount($element.parent().find("div.vueComponent")[0]);
-            //console.log("Setting vm, input=", element, "vm=", vm);
-            $element.data("vm", vm);
-            //console.log("set vm=", $element.data("vm"));
+            $element.parent().find("div.webjet-component")[0].appendChild(component);
+            $element.data("webjetComponent", component);
             $element.hide();
         });
 

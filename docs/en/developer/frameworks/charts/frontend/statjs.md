@@ -569,7 +569,7 @@ When set manually, the graph will only calculate the step, but will keep the sel
 
 ## Special (LIVE) charts
 
-The `Monitorovanie servera - Aktuálne hodnoty` section uses special charts of type **`LINE`**, which can update automatically. Their logic is prepared specifically for this page and is not intended for repeated use on other pages. The implementation is in the file [vue-amchart-monitoring-server.vue](../../../../../../src/main/webapp/admin/v9/src/vue/components/webjet-server-monitoring/components/vue-amchart-monitoring-server.vue).
+The `Monitorovanie servera - Aktuálne hodnoty` section uses special charts of type **`LINE`**, which can update automatically. Their logic is prepared specifically for this page and is not intended for repeated use on other pages. The implementation is in the file [webjet-server-monitoring.js](../../../../../../src/main/webapp/admin/v9/src/js/web-components/webjet-server-monitoring.js).
 
 To create charts, the logic from the [chart-tools.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js) file is used again, specifically the `createServerMonitoringChart()` function. Its input parameters are only the ID of the `div` element in which the chart will be displayed, and the text value of the chart type. Supported types are `memoryAmchart` and `cpuAmchart`.
 

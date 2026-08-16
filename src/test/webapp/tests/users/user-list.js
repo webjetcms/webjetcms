@@ -514,7 +514,7 @@ Scenario("Show also root folders for writable_folders", async ({I, DTE}) => {
      I.amOnPage("/admin/v9/users/user-list/?id=19");
      DTE.waitForEditor();
      I.click("#pills-dt-datatableInit-rightsTab-tab");
-     I.click(".DTE_Field_Name_editorFields\\.writableFolders button.btn-vue-jstree-add");
+     I.click(".DTE_Field_Name_editorFields\\.writableFolders button.btn-webjet-jstree-add");
      I.waitForElement("#custom-modal-id", 10);
      I.waitForText("Koreňový priečinok", 10, "#custom-modal-id a.jstree-anchor");
      I.waitForText("WEB-INF", 10, "#custom-modal-id a.jstree-anchor");
@@ -540,7 +540,7 @@ Scenario("Check editableGroups rights", async ({I, DTE}) => {
      I.waitForVisible("#editorAppDTE_Field_editorFields-editableGroups");
 
      I.say("Check I cans ee all domain fodlers");
-     I.clickCss("#editorAppDTE_Field_editorFields-editableGroups button.btn-vue-jstree-add");
+     I.clickCss("#editorAppDTE_Field_editorFields-editableGroups button.btn-webjet-jstree-add");
      I.waitForVisible("#jsTree");
      I.seeElement( locate("#jsTree a.jstree-anchor").withText("demo.webjetcms.sk") );
      I.seeElement( locate("#jsTree a.jstree-anchor").withText("test23.tau27.iway.sk") );

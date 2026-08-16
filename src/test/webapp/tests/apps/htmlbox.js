@@ -175,7 +175,7 @@ Scenario('Test app visual and logic 3', ({ I, DTE, Apps }) => {
     I.switchTo();
     I.switchTo('.cke_dialog_ui_iframe');
     I.switchTo('#editorComponent');
-    I.clickCss("button.btn-vue-jstree-item-remove");
+    I.clickCss("button.btn-webjet-jstree-item-remove");
     I.switchTo("#previewIframe");
     I.dontSeeElement("#WebJETEditor3Body");
     I.dontSee("Toto je nadpis stránky");

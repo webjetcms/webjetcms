@@ -41,7 +41,7 @@ Scenario('banner zakladne testy @baseTest', async ({I, DataTables, DT, DTE}) => 
             I.click({css: "#pills-dt-bannerDataTable-restrictions-tab"});
 
             I.say("Selecting page");
-            I.clickCss("div.DTE_Field_Name_docIds button.btn-vue-jstree-add");
+            I.clickCss("div.DTE_Field_Name_docIds button.btn-webjet-jstree-add");
             I.waitForVisible('#jsTree');
             I.click(locate('.jstree-node.jstree-closed').withDescendant('a.jstree-anchor').withText("Jet portal 4").find('.jstree-icon.jstree-ocl'));
             I.click(locate(".jstree-anchor").withText("Jet portal 4 - testovacia stranka"));
@@ -49,7 +49,7 @@ Scenario('banner zakladne testy @baseTest', async ({I, DataTables, DT, DTE}) => 
 
             I.say("Selecting group");
 
-            I.clickCss("div.DTE_Field_Name_groupIds button.btn-vue-jstree-add");
+            I.clickCss("div.DTE_Field_Name_groupIds button.btn-webjet-jstree-add");
             I.waitForVisible('#jsTree');
             I.click(locate('.jstree-node.jstree-closed').withDescendant('a.jstree-anchor').withText("Aplikácie").find('.jstree-icon.jstree-ocl'));
             I.click(locate(".jstree-anchor").withText("Bannerový systém"));
@@ -79,7 +79,7 @@ Scenario('banner zakladne testy @baseTest', async ({I, DataTables, DT, DTE}) => 
             I.click(locate("#bannerDataTable td.dt-row-edit div.datatable-column-width a").withText(options.testingData[0]));
             DTE.waitForEditor("bannerDataTable");
             I.click({css: "#pills-dt-bannerDataTable-restrictions-tab"});
-            I.clickCss("div.DTE_Field_Name_docIds button.btn-vue-jstree-item-remove");
+            I.clickCss("div.DTE_Field_Name_docIds button.btn-webjet-jstree-item-remove");
             I.dontSeeElement("div.DTE_Field_Name_docIds input.form-control");
             DTE.save();
 

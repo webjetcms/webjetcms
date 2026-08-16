@@ -230,9 +230,9 @@ Scenario('custom-fields advanced fields Groups / Docs', ({ I, DT, DTE }) => {
 
     I.say("Change values");
     setJsTree(I, "A", null, "English");
-    I.clickCss("#DTE_Field_fieldB button.btn-vue-jstree-item-remove");
+    I.clickCss("#DTE_Field_fieldB button.btn-webjet-jstree-item-remove");
     setJsTree(I, "C", ["Newsletter"], "Testovaci newsletter");
-    I.clickCss("#DTE_Field_fieldD button.btn-vue-jstree-item-remove");
+    I.clickCss("#DTE_Field_fieldD button.btn-webjet-jstree-item-remove");
     DTE.save();
 
     openFieldsTabForPage(I, DT, DTE, "134906");
@@ -274,7 +274,7 @@ function openFieldsTabForPage(I, DT, DTE, id) {
 }
 
 function setJsTree(I, alphabet, toOpen, toSelect) {
-    I.click( locate("#DTE_Field_field" + alphabet + " button.btn-vue-jstree-item-edit") );
+    I.click( locate("#DTE_Field_field" + alphabet + " button.btn-webjet-jstree-item-edit") );
     I.waitForVisible("#jsTree");
     if(toOpen != null && Array.isArray(toOpen) == true) {
         for(let i = 0; i < toOpen.length; i++) {

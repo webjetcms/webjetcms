@@ -34,7 +34,7 @@ Scenario('Create blogger and test his logic', async ({ I, DT, DTE }) => {
     I.see("zadané prihlasovacie meno je už použité, zvoľte iné");
     I.fillField("#DTE_Field_login", newBlogger);
 
-    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
     within("div#jsTree", () => {
         I.click(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'));
         I.click(locate('.jstree-node.jstree-closed').withText('Blog').find('.jstree-anchor'));

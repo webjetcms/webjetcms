@@ -187,7 +187,7 @@ insertScriptTable = WJ.DataTable({
 
 ## Custom configuration of the displayed tree structure
 
-If you need to implement your own tree view, you can take inspiration from the ```DirTreeRestController``` class and the ```DirTreeItem``` entity. It uses the basic view object ```jsTree - JsTreeItem```, which the VUE component can then work with. It is important to set the attributes in the ```JsTreeItem``` entity correctly.
+If you need to implement your own tree view, you can take inspiration from the ```DirTreeRestController``` class and the ```DirTreeItem``` entity. It uses the basic view object ```jsTree - JsTreeItem```, which the web component can then work with. It is important to set the attributes in the ```JsTreeItem``` entity correctly.
 
 Example of a REST service:
 
@@ -331,7 +331,7 @@ The Java bean used must contain the method ```getFullPath()``` or ```getVirtualP
 
 ```java
 /**
- * Vratenie cesty pre vue komponentu
+ * Vratenie cesty pre web komponent
  * @return
  */
 @JsonProperty(access = Access.READ_ONLY)
@@ -351,7 +351,7 @@ If you cannot implement the ```getFullPath()``` method, we recommend using the `
 
 ## Listening for a change in value
 
-If you need to listen for a field value change outside of the VUE component, you can listen for the change event on the nested ```textarea``` element that contains the current JSON object:
+If you need to listen for a field value change outside of the web component, you can listen for the change event on the nested ```textarea``` element that contains the current JSON object:
 
 ```javascript
 $("#DTE_Field_editorFields-parentGroupDetails").on("change", function(e) {
@@ -365,19 +365,10 @@ $("#DTE_Field_editorFields-parentGroupDetails").on("change", function(e) {
 ```
 
 ## Implementation details
+[field-type-json.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-json.js) defines the ```$.fn.dataTable.Editor.fieldTypes.json``` data type. It is implemented by the native [webjet-dte-jstree](../../../../src/main/webapp/admin/v9/src/js/web-components/webjet-dte-jstree.js) web component. It also contains a hidden ```textarea``` that mirrors the current JSON object. The `get` function always returns the current data from the web component.
 
-[field-type-json.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-json.js) a new data type ```$.fn.dataTable.Editor.fieldTypes.json``` is defined. It is implemented using the VUE component [webjet-dte-jstree](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree.vue). It also contains a hidden field of type ```textarea```, into which the current JSON object is copied. However, this field is only used to "inspect" the current data. The get function always returns the current data from the VUE component.
+[datatables-config.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-config.js) implements ```renderJson(td, type, rowData, row)``` for displaying the data in a table.
 
-[datatables-config.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-config.js) implements the ```renderJson(td, type, rowData, row)``` function to display data in a table. It iterates through the records using the ```fullPath``` attribute.
-
-[webjet-dte-jstree.vue](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree.vue) is the root component that passes the ```child``` record row component according to the data. For objects of type **array** it also displays a button to add a new record to the array.
-
-The component uses [EventBus](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/event-bus.js) in which it listens for the event ```change-jstree```. This event occurs when a directory or web page in the JS Tree is clicked.
-
-The ```processTreeItem(that, data)``` function processes a click on an object (DocDetails or GroupDetails) in the JS tree component. It performs validation and possible conversion of the JSON object.
-
-[webjet-dte-jstree-item.js](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree-item.vue) is a row of a list of existing objects. In each row it displays a button for editing and deleting the record. The click is processed by the root component via a call to ```this.$parent.processTreeItem(this, data);```.
-
-[vue-folder-tree.vue](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/folder-tree/vue-folder-tree.vue) encapsulates the JS Tree library into a VUE component.
+The web component renders existing items and, for **array** objects, an add button. jsTree publishes the selected item as a bubbling `webjet-jstree-select` event; the component then validates and converts the object and synchronizes the input value.
 
 If ```Doc/GroupDetails``` is an object ```null```, no field would be displayed. Therefore, in ```field-type-json.js``` there is a function ```fixNullData```, which artificially creates a basic object for this case. If it is a web page, it contains the attribute ```docId=-1```, for a directory ```groupId=-1``` and for other objects ```id=-1```. The attribute ```fullPath``` is set to an empty value.

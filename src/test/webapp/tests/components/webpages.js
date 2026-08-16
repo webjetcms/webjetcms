@@ -716,7 +716,7 @@ Scenario('Overenie zobrazenia pola pre zadanie domeny', ({ I, DT, DTE }) => {
     I.seeElement("div.DTE_Field_Name_editorFields\\.forceDomainNameChange");
 
     //zmen parent na /English
-    I.clickCss('.btn.btn-outline-secondary.btn-vue-jstree-item-edit'); // zmena na korenovy adresar
+    I.clickCss('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit'); // zmena na korenovy adresar
     I.waitForElement("div.jsTree-wrapper");
     I.wait(1);
     I.waitForText('English', 5);
@@ -1222,8 +1222,8 @@ function changeDocName(I, DTE, newDocName) {
 
 function changeGroupMainDoc(I, arr, id) {
     within("#groups-datatable_modal > div.modal-dialog", () => {
-        I.waitForElement( locate("#editorAppDTE_Field_editorFields-defaultDocDetails").find("button.btn-vue-jstree-item-edit") );
-        I.click( locate("#editorAppDTE_Field_editorFields-defaultDocDetails").find("button.btn-vue-jstree-item-edit") );
+        I.waitForElement( locate("#editorAppDTE_Field_editorFields-defaultDocDetails").find("button.btn-webjet-jstree-item-edit") );
+        I.click( locate("#editorAppDTE_Field_editorFields-defaultDocDetails").find("button.btn-webjet-jstree-item-edit") );
     });
 
     I.waitForElement("#jsTree");

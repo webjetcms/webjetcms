@@ -224,7 +224,7 @@ Scenario("stat-groupTree-perms", async ({ I }) => {
     I.see("Aktuálni návštevníci", "div.md-main-menu");
     const caseA = await I.grabValueFrom("#editorApprootDir > section > div > div > div > div > input");
     I.assertEqual("Všetky (zo všetkých domén)", caseA);
-    I.clickCss("#editorApprootDir > section > div > div > div > div > button.btn-vue-jstree-item-edit");
+    I.clickCss("#editorApprootDir > section > div > div > div > div > button.btn-webjet-jstree-item-edit");
     I.say("Over zobraznie ROOT priečinka pri výbere.");
     I.seeElement( locate("div#jsTree > ul.jstree-container-ul li.jstree-node > a.jstree-anchor").withText("Všetky (zo všetkých domén)") );
     I.seeElement( locate('//*[@id="0"]/a').withChild("i.jstree-icon.ti-world") );
@@ -237,7 +237,7 @@ Scenario("stat-groupTree-perms", async ({ I }) => {
     const caseB = await I.grabValueFrom("#editorApprootDir > section > div > div > div > div > input");
     I.say(caseB);
     I.assertEqual("Test podadresar", caseB);
-    I.clickCss("#editorApprootDir > section > div > div > div > div > button.btn-vue-jstree-item-edit");
+    I.clickCss("#editorApprootDir > section > div > div > div > div > button.btn-webjet-jstree-item-edit");
     I.say("Over NEzobrazenie ROOT priečinka pri výbere.");
     I.waitForElement( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk"), 10 );
     I.dontSeeElement( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node > a.jstree-anchor").withText("test23.tau27.iway.sk") );
@@ -262,7 +262,7 @@ Scenario("stat-groupTree-perms", async ({ I }) => {
     I.dontSee("Aktuálni návštevníci", "div.md-main-menu");
     const caseC = await I.grabValueFrom("#editorApprootDir > section > div > div > div > div > input");
     I.assertEqual("Všetky (zo všetkých domén)", caseC);
-    I.clickCss("#editorApprootDir > section > div > div > div > div > button.btn-vue-jstree-item-edit");
+    I.clickCss("#editorApprootDir > section > div > div > div > div > button.btn-webjet-jstree-item-edit");
     I.say("Over zobraznie ROOT priečinka pri výbere.");
     I.waitForElement( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk"), 10 );
     I.waitForElement( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("test23.tau27.iway.sk"), 10 );

@@ -83,7 +83,7 @@ function wj9MoveMainFolder(I, DTE, DT, randomNumber) {
      I.jstreeClick(auto_folder_sk);
      I.click(DT.btn.tree_edit_button);
      DTE.waitForLoader();
-     I.click(locate('#editorAppDTE_Field_editorFields-parentGroupDetails').find('button.btn.btn-outline-secondary.btn-vue-jstree-item-edit'));
+     I.click(locate('#editorAppDTE_Field_editorFields-parentGroupDetails').find('button.btn.btn-outline-secondary.btn-webjet-jstree-item-edit'));
      I.waitForVisible('#jsTree');
      I.click(locate('#jsTree').withChild('ul.jstree-container-ul.jstree-children').find('.jstree-icon.jstree-ocl'));
      I.waitForVisible(locate('#jsTree').withDescendant('a.jstree-anchor').withText(test_folder));
@@ -195,7 +195,7 @@ Scenario('presun druheho podpriecinka do prveho podpriecinka', ({ I, DT, DTE }) 
      I.jstreeClick(auto_subfolder2_sk);
      I.click(DT.btn.tree_edit_button);
      DT.waitForLoader();
-     I.click(locate('#editorAppDTE_Field_editorFields-parentGroupDetails').find('button.btn.btn-outline-secondary.btn-vue-jstree-item-edit'));
+     I.click(locate('#editorAppDTE_Field_editorFields-parentGroupDetails').find('button.btn.btn-outline-secondary.btn-webjet-jstree-item-edit'));
      I.waitForVisible('#jsTree');
      //I.click(locate('#jsTree').withChild('ul.jstree-container-ul.jstree-children').find('.jstree-icon.jstree-ocl'));
      I.waitForVisible(locate('#jsTree').withDescendant('a.jstree-anchor').withText(auto_folder_sk));

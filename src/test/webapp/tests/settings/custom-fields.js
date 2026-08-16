@@ -401,7 +401,7 @@ async function checkRenderedCustomFieldType(I, fieldDefinition) {
         I.seeElementInDOM(fieldSelector + " button i.ti-focus-2");
     } else if(fieldDefinition.type === "json_group" || fieldDefinition.type === "json_doc" || fieldDefinition.type === "dir") {
         I.seeElementInDOM(fieldSelector + " input#" + inputId + "[type='text']");
-        I.seeElementInDOM(fieldSelector + " div.vueComponent#" + inputId);
+        I.seeElementInDOM(fieldSelector + " div.webjet-component#" + inputId);
     } else if(fieldDefinition.type === "docsIn") {
         I.seeElementInDOM(fieldSelector + " select#" + inputId);
         await checkSelectHasOptions(I, fieldSelector, fieldDefinition.type);

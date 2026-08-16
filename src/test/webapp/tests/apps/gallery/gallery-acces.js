@@ -61,7 +61,7 @@ async function allowAllFolders(I) {
      let failsafe = 0;
      while (numVisible > 0 && failsafe++ < 10) {
           I.say("numVisible: " + numVisible);
-          I.click(locate('#editorAppDTE_Field_editorFields-writableFolders button.btn-vue-jstree-item-remove'));
+          I.click(locate('#editorAppDTE_Field_editorFields-writableFolders button.btn-webjet-jstree-item-remove'));
           I.wait(0.5);
           numVisible = await I.grabNumberOfVisibleElements("#editorAppDTE_Field_editorFields-writableFolders input.form-control");
      }
@@ -94,7 +94,7 @@ function openJstree(I, folder) {
 
 // vyber priecinok, na ktory mi budu pridelene prava
 function limitFolderAccess(I, allowedFolder) {
-     I.clickCss("#editorAppDTE_Field_editorFields-writableFolders button.btn-vue-jstree-add"); // nahravanie suborov do adresarov
+     I.clickCss("#editorAppDTE_Field_editorFields-writableFolders button.btn-webjet-jstree-add"); // nahravanie suborov do adresarov
      I.waitForElement("#custom-modal-id", 10);
      I.waitForVisible('#jsTree', 10);
      openJstree(I, "images");
