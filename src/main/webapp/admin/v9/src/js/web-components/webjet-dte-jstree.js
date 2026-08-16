@@ -232,9 +232,14 @@ export class WebjetDteJsTreeElement extends HTMLElement {
             this._value.splice(0, this._value.length, item);
         }
 
-        this._syncInput(item);
-        this._closeModal();
-        this.render();
+        // jsTree continues processing select_node/activate_node after the custom
+        // selection event returns. Destroying it here would null its element
+        // before that processing finishes.
+        setTimeout(() => {
+            this._syncInput(item);
+            this._closeModal();
+            if (this.isConnected) this.render();
+        }, 0);
     }
 
     _validateSelection(data) {

@@ -514,16 +514,22 @@ Scenario("Show also root folders for writable_folders", async ({I, DTE}) => {
      I.amOnPage("/admin/v9/users/user-list/?id=19");
      DTE.waitForEditor();
      I.click("#pills-dt-datatableInit-rightsTab-tab");
+     I.executeScript(() => {
+          window.jstreeSelectionErrors = [];
+          window.addEventListener("error", event => window.jstreeSelectionErrors.push(event.message));
+     });
      I.click(".DTE_Field_Name_editorFields\\.writableFolders button.btn-webjet-jstree-add");
-     I.waitForElement("#custom-modal-id", 10);
-     I.waitForText("Koreňový priečinok", 10, "#custom-modal-id a.jstree-anchor");
-     I.waitForText("WEB-INF", 10, "#custom-modal-id a.jstree-anchor");
-     I.waitForText("components", 10, "#custom-modal-id a.jstree-anchor");
+     I.waitForElement(".custom-modal.open-custom-modal", 10);
+     I.waitForText("Koreňový priečinok", 10, ".custom-modal.open-custom-modal a.jstree-anchor");
+     I.waitForText("WEB-INF", 10, ".custom-modal.open-custom-modal a.jstree-anchor");
+     I.waitForText("components", 10, ".custom-modal.open-custom-modal a.jstree-anchor");
 
-     I.click("Koreňový priečinok", "#custom-modal-id a.jstree-anchor");
-     I.waitForInvisible("#custom-modal-id", 10);
+     I.click("Koreňový priečinok", ".custom-modal.open-custom-modal a.jstree-anchor");
+     I.waitForInvisible(".custom-modal.open-custom-modal", 10);
      let value = await I.grabValueFrom(".DTE_Field_Name_editorFields\\.writableFolders input.form-control");
      I.assertEqual(value, "/");
+     const errors = await I.executeScript(() => window.jstreeSelectionErrors);
+     I.assertFalse(errors.some(message => message.includes("triggerHandler")), errors.join("\n"));
      DTE.cancel();
 });
 

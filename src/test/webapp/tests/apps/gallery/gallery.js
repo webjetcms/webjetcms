@@ -55,6 +55,18 @@ Scenario('oblast zaujmu', async ({ I, DT, DTE }) => {
     I.clickCss("#pills-dt-galleryTable-areaOfInterest-tab");
 
     I.waitForElement("webjet-image-area-selector[data-ready='true'] cropper-canvas");
+    const cropperSize = await I.executeScript(() => {
+        const selector = document.querySelector("webjet-image-area-selector");
+        const canvas = selector.querySelector("cropper-canvas");
+        return {
+            canvasWidth: canvas.offsetWidth,
+            canvasHeight: canvas.offsetHeight,
+            imageWidth: selector.imageSize.width,
+            imageHeight: selector.imageSize.height
+        };
+    });
+    assert.equal(cropperSize.canvasWidth, cropperSize.imageWidth);
+    assert.equal(cropperSize.canvasHeight, cropperSize.imageHeight);
 
     I.see("Šírka:");
     within('.coordinates', () => {
