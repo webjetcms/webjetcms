@@ -521,13 +521,13 @@ Scenario("Show also root folders for writable_folders", async ({I, DTE}) => {
           window.addEventListener("error", event => window.jstreeSelectionErrors.push(event.message));
      });
      I.click(".DTE_Field_Name_editorFields\\.writableFolders button.btn-webjet-jstree-add");
-     I.waitForElement(".custom-modal.open-custom-modal", 10);
-     I.waitForText("Koreňový priečinok", 10, ".custom-modal.open-custom-modal a.jstree-anchor");
-     I.waitForText("WEB-INF", 10, ".custom-modal.open-custom-modal a.jstree-anchor");
-     I.waitForText("components", 10, ".custom-modal.open-custom-modal a.jstree-anchor");
+     I.waitForElement(WebjetDteJsTree.modal, 10);
+     I.waitForText("Koreňový priečinok", 10, WebjetDteJsTree.anchors);
+     I.waitForText("WEB-INF", 10, WebjetDteJsTree.anchors);
+     I.waitForText("components", 10, WebjetDteJsTree.anchors);
 
-     I.click("Koreňový priečinok", ".custom-modal.open-custom-modal a.jstree-anchor");
-     I.waitForInvisible(".custom-modal.open-custom-modal", 10);
+     I.click("Koreňový priečinok", WebjetDteJsTree.anchors);
+     I.waitForInvisible(WebjetDteJsTree.modal, 10);
      let value = await I.grabValueFrom(".DTE_Field_Name_editorFields\\.writableFolders input.form-control");
      I.assertEqual(value, "/");
      const errors = await I.executeScript(() => window.jstreeSelectionErrors);

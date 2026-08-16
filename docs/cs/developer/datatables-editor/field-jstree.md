@@ -70,7 +70,7 @@ Pole je implementováno v souboru [field-type-jstree.js](../../../src/main/webap
 
 Generuje HTML kód obsahující vyhledávací pole s možností od/značení všech výběrových polí. Při aktivním vyhledávání se v nástrojové liště vedle vyhledávacího pole zobrazuje i ikona pro zrušení vyhledávání. Vyhledávání se aktivuje buď kliknutím na ikonu lupy, nebo stisknutím ```Enter``` klávesy.
 
-Zde jsme měli problém v tom, že stisk ```Enter``` zachytávala vue komponenta ```webjet-dte-jstree.vue```, vyřešili jsme to změnou anotace z ```<button @click="toggleModals"``` na ```<button @mouseup="toggleModals"```.
+Tlačítko pro přidání položky v komponentě `webjet-dte-jstree` reaguje na událost `mouseup`, takže stisk `Enter` ve vyhledávacím poli neotevře její modální okno.
 
 Jméno JSON objektu se stromovou strukturou se získá z data atributu ```data-dt-field-jstree-name``` a následně se získá samotný JSON objekt voláním ```let jstreeJsonData = window[objName];```.
 
