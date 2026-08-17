@@ -167,7 +167,7 @@ Scenario('Test app visual and logic 3', ({ I, DTE, Apps }) => {
     I.say("Reopen app and test that DOC type of block is set, and page is pre-set too");
     Apps.openAppEditor();
 
-    I.seeElement( locate("#editorAppDTE_Field_docDetails input.form-control[value='/System/Šablóny/Normálna stránka']") );
+    I.seeInField("#editorAppDTE_Field_docDetails input.form-control", '/System/Šablóny/Normálna stránka');
     I.switchTo("#previewIframe");
     I.seeElement("#WebJETEditor3Body");
     I.see("Toto je nadpis stránky");

@@ -679,7 +679,8 @@ Scenario('testovanie app - media app', async ({ I, DTE, Apps, Document }) => {
     I.click(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'));
     I.click(locate('.jstree-node.jstree-closed').withText('Média').find('.jstree-icon.jstree-ocl'));
     I.clickCss('#docId-24008_anchor');
-    I.waitForElement('input[value="/Aplikácie/Média/Média"]', 10);
+    I.waitForElement('#editorAppDTE_Field_docid input.form-control', 10);
+    I.seeInField('#editorAppDTE_Field_docid input.form-control', '/Aplikácie/Média/Média');
     I.switchTo();
     I.switchTo();
     I.clickCss('.cke_dialog_ui_button_ok');

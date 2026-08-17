@@ -88,8 +88,8 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
     Apps.openAppEditor();
 
     I.clickCss("#pills-dt-component-datatable-basic-tab");
-        I.seeElement( locate(".DTE_Field_Name_groupIds").find("input[value='/Jet portal 4']") );
-        I.seeElement( locate(".DTE_Field_Name_groupIds").find("input[value='/Newsletter']") );
+        I.seeInField(".DTE_Field_Name_groupIds .dt-tree-container .form-group:nth-child(1) input.form-control", '/Jet portal 4');
+        I.seeInField(".DTE_Field_Name_groupIds .dt-tree-container .form-group:nth-child(2) input.form-control", '/Newsletter');
 
         //Remove first folder
         I.click( locate(".DTE_Field_Name_groupIds").find("button.btn-webjet-jstree-item-remove") );

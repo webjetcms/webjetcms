@@ -13,7 +13,10 @@ Before(({ I, login }) => {
 });
 
 Scenario('Area of interest uses the original gallery image', async ({ I }) => {
-    I.amOnPage('/admin/v9/apps/image-editor/?id=-1&dir=/images/gallery/test&name=koala.jpg&showOnlyEditor=true');
+    I.amOnPage('/admin/v9/');
+    await I.executeScript(function() {
+        window.location.href="/admin/v9/apps/image-editor/?id=-1&dir=/images/gallery/test&name=koala.jpg&showOnlyEditor=true";
+    });
     I.waitForVisible("#galleryTable_modal", 20);
     I.clickCss("#pills-dt-galleryTable-areaOfInterest-tab");
     I.waitForElement("webjet-image-area-selector[data-ready='true'] cropper-canvas", 20);
