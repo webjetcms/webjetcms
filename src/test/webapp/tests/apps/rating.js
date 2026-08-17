@@ -130,7 +130,8 @@ Scenario('Testovanie app - Rating formulár', async ({ I, Apps, DTE, Document })
     I.clickCss("button.btn-webjet-jstree-item-edit");
     I.click(locate('.jstree-node.jstree-closed').withText('Jet portal 4').find('.jstree-icon.jstree-ocl'));
     I.clickCss('#docId-141_anchor');
-    I.waitForElement('input[value="/Jet portal 4/Jet portal 4 - testovacia stranka"]', 10);
+    I.wait(2);
+    I.seeInField('#editorAppDTE_Field_ratingDocId input.form-control', "/Jet portal 4/Jet portal 4 - testovacia stranka");
 
     I.switchTo();
     I.clickCss('.cke_dialog_ui_button_ok')

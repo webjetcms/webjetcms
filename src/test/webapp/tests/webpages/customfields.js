@@ -289,7 +289,7 @@ function setJsTree(I, alphabet, toOpen, toSelect) {
 
 function checkLabelAndValue(I, alphabet, label, value) {
     I.seeElement( locate(".DTE_Field_Name_field" + alphabet + " label").withText(label) );
-    I.seeElement("#DTE_Field_field" + alphabet + " > section > div > div > div > div > input[value='" + value + "']");
+    I.seeInField("#DTE_Field_field" + alphabet + " > webjet-dte-jstree > section > div > div > div > input.form-control", value);
 }
 
 function setEnumerationMapping(I, DT, DTE, mapping) {

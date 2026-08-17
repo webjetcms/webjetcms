@@ -224,9 +224,9 @@ Scenario("stat-groupTree-perms", async ({ I }) => {
     I.amOnPage("/apps/stat/admin/");
     I.see("Prihlásenia", "div.md-main-menu");
     I.see("Aktuálni návštevníci", "div.md-main-menu");
-    const caseA = await I.grabValueFrom("#editorApprootDir > webjet-dte-jstree > section > div > div > div > div > input");
+    const caseA = await I.grabValueFrom("#editorApprootDir > webjet-dte-jstree > section > div > div > div > input");
     I.assertEqual("Všetky (zo všetkých domén)", caseA);
-    I.clickCss("#editorApprootDir > webjet-dte-jstree > section > div > div > div > div > button.btn-webjet-jstree-item-edit");
+    I.clickCss("#editorApprootDir > webjet-dte-jstree > section > div > div > div > button.btn-webjet-jstree-item-edit");
     I.say("Over zobraznie ROOT priečinka pri výbere.");
     I.seeElement( locate(WebjetDteJsTree.tree + " > ul.jstree-container-ul li.jstree-node > a.jstree-anchor").withText("Všetky (zo všetkých domén)") );
     I.seeElement( locate('//*[@id="0"]/a').withChild("i.jstree-icon.ti-world") );
@@ -236,10 +236,10 @@ Scenario("stat-groupTree-perms", async ({ I }) => {
     I.amOnPage("/apps/stat/admin?removePerm=cmp_stat_seeallgroups");
     I.dontSee("Prihlásenia", "div.md-main-menu");
     I.dontSee("Aktuálni návštevníci", "div.md-main-menu");
-    const caseB = await I.grabValueFrom("#editorApprootDir > webjet-dte-jstree > section > div > div > div > div > input");
+    const caseB = await I.grabValueFrom("#editorApprootDir > webjet-dte-jstree > section > div > div > div > input");
     I.say(caseB);
     I.assertEqual("Test podadresar", caseB);
-    I.clickCss("#editorApprootDir > webjet-dte-jstree > section > div > div > div > div > button.btn-webjet-jstree-item-edit");
+    I.clickCss("#editorApprootDir > webjet-dte-jstree > section > div > div > div > button.btn-webjet-jstree-item-edit");
     I.say("Over NEzobrazenie ROOT priečinka pri výbere.");
     I.waitForElement( locate(WebjetDteJsTree.tree + " > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk"), 10 );
     I.dontSeeElement( locate(WebjetDteJsTree.tree + " > ul.jstree-container-ul > li.jstree-node > a.jstree-anchor").withText("test23.tau27.iway.sk") );
@@ -262,9 +262,9 @@ Scenario("stat-groupTree-perms", async ({ I }) => {
     I.amOnPage("/apps/stat/admin/");
     I.dontSee("Prihlásenia", "div.md-main-menu");
     I.dontSee("Aktuálni návštevníci", "div.md-main-menu");
-    const caseC = await I.grabValueFrom("#editorApprootDir > webjet-dte-jstree > section > div > div > div > div > input");
+    const caseC = await I.grabValueFrom("#editorApprootDir > webjet-dte-jstree > section > div > div > div > input");
     I.assertEqual("Všetky (zo všetkých domén)", caseC);
-    I.clickCss("#editorApprootDir > webjet-dte-jstree > section > div > div > div > div > button.btn-webjet-jstree-item-edit");
+    I.clickCss("#editorApprootDir > webjet-dte-jstree > section > div > div > div > button.btn-webjet-jstree-item-edit");
     I.say("Over zobraznie ROOT priečinka pri výbere.");
     I.waitForElement( locate(WebjetDteJsTree.tree + " > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk"), 10 );
     I.waitForElement( locate(WebjetDteJsTree.tree + " > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("test23.tau27.iway.sk"), 10 );
@@ -274,7 +274,6 @@ Scenario("stat-groupTree-perms", async ({ I }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
     I.dontSeeElement( locate("div#SomStromcek > ul.jstree-container-ul > li.jstree-node > a.jstree-anchor").withText("Koreňový priečinok") );
 });
-
 
 Scenario('testovanie app - Monitoring kliknutí', async ({ I, DTE, Apps }) => {
     Apps.insertApp('Monitoring kliknutí', '#components-stat-title');
@@ -298,7 +297,6 @@ Scenario('testovanie app - Monitoring kliknutí', async ({ I, DTE, Apps }) => {
 
     await Apps.assertParams(changedParams);
 });
-
 
 Scenario("logoff", ({ I }) => {
     I.logout();

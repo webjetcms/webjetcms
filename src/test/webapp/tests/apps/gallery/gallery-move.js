@@ -26,7 +26,7 @@ Scenario('Gallery - Feature - select dir location during create', ({ I, DT, DTE 
     I.fillField("#DTE_Field_name", testDirName);
 
     I.say("Check location and change it");
-    I.seeElement(".DTE_Field_Name_parent .webjet-component input.form-control[value='" + dirTo + "']");
+    I.seeInField(".DTE_Field_Name_parent .webjet-component input.form-control", dirTo);
 
     I.click("button.btn-webjet-jstree-item-edit");
     I.waitForVisible(WebjetDteJsTree.tree);
@@ -35,7 +35,7 @@ Scenario('Gallery - Feature - select dir location during create', ({ I, DT, DTE 
     I.waitForInvisible(WebjetDteJsTree.tree);
 
     I.say("Check value was change and we that we DONT see option updateInDoc");
-    I.seeElement(".DTE_Field_Name_parent .webjet-component input.form-control[value='" + dirFrom + "']");
+    I.seeInField(".DTE_Field_Name_parent .webjet-component input.form-control", dirFrom);
     I.dontSeeElement(".DTE_Field_Name_updateInDoc"); // dont see because its create not edit
     DTE.save();
 
@@ -44,7 +44,7 @@ Scenario('Gallery - Feature - select dir location during create', ({ I, DT, DTE 
     I.click(DT.btn.tree_edit_button);
     DTE.waitForEditor("galleryDimensionDatatable");
     I.seeInField("#DTE_Field_name", testDirName);
-    I.seeElement(".DTE_Field_Name_parent .webjet-component input.form-control[value='" + dirFrom + "']");
+    I.seeInField(".DTE_Field_Name_parent .webjet-component input.form-control", dirFrom);
 });
 
 const movedImageId = "46";
@@ -100,7 +100,7 @@ Scenario('Gallery - Feature - allow relocated folder in editor AND handle doc up
 
     I.say('Check');
     DTE.seeInField("path", "/images/gallery/test/move-to/moving-dir");
-    I.seeElement(".DTE_Field_Name_parent .webjet-component input.form-control[value='" + dirTo + "']");
+    I.seeInField(".DTE_Field_Name_parent .webjet-component input.form-control", dirTo);
     I.seeElement(".DTE_Field_Name_updateInDoc");
     I.seeCheckboxIsChecked("#DTE_Field_updateInDoc_0");
     DTE.save();

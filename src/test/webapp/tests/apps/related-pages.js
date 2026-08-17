@@ -26,7 +26,8 @@ Scenario('testovanie app - Príbuzné stránky', async ({ I, DTE, Apps, Document
     I.clickCss("button.btn-webjet-jstree-add");
     I.click(locate('.jstree-node.jstree-closed').withText('Jet portal 4').find('.jstree-icon.jstree-ocl'));
     I.click(locate('a').withText('Zo sveta financií').withAttr({ role: 'treeitem' }));
-    I.waitForElement('input[value="/Jet portal 4/Zo sveta financií"]', 10);
+    I.wait(2);
+    I.seeInField('#editorAppDTE_Field_rootGroups input.form-control', "/Jet portal 4/Zo sveta financií");
     DTE.clickSwitchLabel("ďalšia perex skupina");
     I.switchTo();
     I.switchTo();
@@ -62,7 +63,8 @@ Scenario('testovanie app - Príbuzné stránky', async ({ I, DTE, Apps, Document
     };
     I.clickCss("button.btn-webjet-jstree-item-edit");
     I.click(locate('a').withText('Jet portal 4').withAttr({ role: 'treeitem' }));
-    I.waitForElement('input[value="/Jet portal 4"]', 10);
+    I.wait(2);
+    I.seeInField('#editorAppDTE_Field_rootGroups input.form-control', "/Jet portal 4");
     DTE.clickSwitchLabel("Prehľadať aj podadresáre");
     I.clickCss("#DTE_Field_titleType_2");
     DTE.fillField("titleName", "Moje stránky");

@@ -418,7 +418,7 @@ function checkTablesVisibility(I, groups, docs, conf) {
 function checkShowedSelectors(I, alphabet, label, value) {
     I.seeElement("div#DTE_Field_selector" + alphabet + ".webjet-component");
     I.seeElement( locate(".DTE_Field_Name_selector" + alphabet + " label").withText(label) );
-    I.seeElement("input[value='" + value + "']");
+    I.seeInField("#DTE_Field_selector" + alphabet + " input.form-control", value);
     I.seeElement( locate(".DTE_Field_Name_selector" + alphabet + " button.btn-webjet-jstree-item-edit") );
     I.seeElement( locate(".DTE_Field_Name_selector" + alphabet + " button.btn-webjet-jstree-item-remove") );
 }

@@ -113,7 +113,7 @@ Scenario('Zakladne funkcie webstranky - zalozka Zakladne', ({ I, DT, DTE }) => {
      I.waitForVisible(WebjetDteJsTree.tree, 10);
      I.click(locate('.jstree-anchor').withText(folder_name).inside(WebjetDteJsTree.tree));
      I.dtWaitForLoader();
-     I.waitForValue('.dt-tree-container>.form-group>div>div.input-group>input.form-control', '/' + folder_name, 5);
+     I.waitForValue('.dt-tree-container>.form-group>div.input-group>input.form-control', '/' + folder_name, 5);
 
      // Deaktivovat - nepovolene zobrazenie web stranky a vyhladanie cez vyhladavace
      I.say('Aktivovanie zobrazenia web stranky a vyhladavanie cez vyhladavace');
@@ -136,7 +136,7 @@ Scenario('Zakladne funkcie webstranky - zalozka Zakladne', ({ I, DT, DTE }) => {
      checkEditedWebPage(I, randomNumber);
      I.waitForElement('.toast-message', note, 15);
      I.clickCss('#pills-dt-datatableInit-basic-tab');
-     I.waitForValue('.dt-tree-container>.form-group>div>div.input-group>input.form-control', '/' + folder_name, 5);
+     I.waitForValue('.dt-tree-container>.form-group>div.input-group>input.form-control', '/' + folder_name, 5);
      I.seeInField('#DTE_Field_virtualPath', '/' + folder_name, 5);
      I.seeInField('#DTE_Field_editorFields-redactorNote', note);
      I.dtEditorCancel();

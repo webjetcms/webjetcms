@@ -96,7 +96,7 @@ Scenario('Chunks test + run deleting index action', ({ I, DT }) => {
     I.clickCss("button.btnAddIndex");
     I.waitForVisible("#modalIframeIframeElement");
     I.switchTo("#modalIframeIframeElement");
-    I.seeElement("#editorApprootDir input[value='" + rootDirPath + "']");
+    I.seeInField("#editorApprootDir input.form-control", rootDirPath);
 
     I.say("Folder contains 5 pages, 5 are indexed - and no awaiting ADDING");
     checkIndexingStatusValues(I, 1, 5, 5, 0);
@@ -114,7 +114,7 @@ Scenario('Chunks test + run deleting index action', ({ I, DT }) => {
     I.clickCss("button.btnRemoveIndex");
     I.waitForVisible("#modalIframeIframeElement");
     I.switchTo("#modalIframeIframeElement");
-    I.seeElement("#editorApprootDir input[value='" + rootDirPath + "']");
+    I.seeInField("#editorApprootDir input.form-control", rootDirPath);
 
     I.say("Folder contains 5 pages, 5 are indexed - and no awaiting REMOVE");
     checkIndexingStatusValues(I, 1, 5, 5, 0);
@@ -127,7 +127,7 @@ Scenario('Chunks test + run deleting index action', ({ I, DT }) => {
     selectTree(I, ".rootDirDiv button.btn-webjet-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent", "semantic_child"]);
 
     I.say("Check changed path");
-    I.seeElement("#editorApprootDir input[value='" + rootSubDirPath + "']");
+    I.seeInField("#editorApprootDir input.form-control", rootSubDirPath);
 
     I.say("Check changed stats");
     checkIndexingStatusValues(I, 1, 2, 2, 0);
@@ -170,7 +170,8 @@ Scenario('After removing action - checks', ({ I, DT }) => {
     I.clickCss("button.btnRemoveIndex");
     I.waitForVisible("#modalIframeIframeElement");
     I.switchTo("#modalIframeIframeElement");
-    I.waitForElement("#editorApprootDir input[value='" + rootDirPath + "']", 10);
+    I.waitForElement("#editorApprootDir input.form-control", 10);
+    I.seeInField("#editorApprootDir input.form-control", rootDirPath);
 
     I.say("Parent folder should be unchanged");
     checkIndexingStatusValues(I, 1, 5, 5, 0);
@@ -196,7 +197,7 @@ Scenario('Run adding index action', ({ I, DT }) => {
     I.clickCss("button.btnAddIndex");
     I.waitForVisible("#modalIframeIframeElement");
     I.switchTo("#modalIframeIframeElement");
-    I.seeElement("#editorApprootDir input[value='" + rootDirPath + "']");
+    I.seeInField("#editorApprootDir input.form-control", rootDirPath);
     checkIndexingStatusValues(I, 1, 5, 5, 0);
 
     I.say("Include sub-folders, see 2 pages missing index");
@@ -205,7 +206,7 @@ Scenario('Run adding index action', ({ I, DT }) => {
 
     I.say('Switch to child folder - 2 out of 2 need indexing');
     selectTree(I, ".rootDirDiv button.btn-webjet-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent", "semantic_child"]);
-    I.seeElement("#editorApprootDir input[value='" + rootSubDirPath + "']");
+    I.seeInField("#editorApprootDir input.form-control", rootSubDirPath);
     checkIndexingStatusValues(I, 1, 2, 0, 0);
 
     I.say("Run indexing action");
@@ -250,7 +251,9 @@ Scenario('After adding action - checks', ({ I, DT }) => {
     I.clickCss("button.btnAddIndex");
     I.waitForVisible("#modalIframeIframeElement");
     I.switchTo("#modalIframeIframeElement");
-    I.waitForElement("#editorApprootDir input[value='" + rootDirPath + "']", 10);
+    I.waitForElement("#editorApprootDir input.form-control", 10);
+    I.seeInField("#editorApprootDir input.form-control", rootDirPath);
+
     checkIndexingStatusValues(I, 1, 5, 5, 0);
 
     I.say("Include sub-folders");
@@ -292,7 +295,7 @@ function checkIndexingStatusValues(I, allGroups, allDoc, indexedDoc, queuedDoc) 
 }
 
 function checkPathInRootDir(I, dirPath) {
-    I.seeElement( locate("#embeddingChunksDataTable_extfilter #editorApprootDir input[value='" + dirPath + "']")  );
+    I.seeInField("#embeddingChunksDataTable_extfilter #editorApprootDir input.form-control", dirPath);
 }
 
 function setRagCronJob(I, DT, DTE, turnOn, minuteValue) {

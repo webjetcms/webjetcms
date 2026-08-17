@@ -15,7 +15,7 @@ let testOptions = {
         I.click("Pridať");
         I.waitForVisible(WebjetDteJsTree.tree);
         I.waitForText("Newsletter", 10, WebjetDteJsTree.anchors);
-        I.click("Newsletter", WebjetDteJsTree.anchors);
+        I.click("Newsletter", WebjetDteJsTree.tree);
         I.clickCss("#pills-dt-datatableInit-basic-tab");
     },
     editSearchSteps: function(I, options, DT, DTE) {

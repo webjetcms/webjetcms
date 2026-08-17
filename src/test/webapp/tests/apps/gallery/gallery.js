@@ -240,7 +240,7 @@ Scenario('novy priecinok', async({ I, DT, DTE }) => {
     // During creation we dont see field DTE_Field_path
     I.dontSeeElement(".DTE_Field_Name_path");
     // Only parent folder
-    I.seeElement(".DTE_Field_Name_parent .webjet-component input.form-control[value='/images/gallery/test']");
+    I.seeInField(".DTE_Field_Name_parent .webjet-component input.form-control", "/images/gallery/test");
 
     let name = await I.grabValueFrom("#DTE_Field_name");
     I.assertEqual(name, "");
