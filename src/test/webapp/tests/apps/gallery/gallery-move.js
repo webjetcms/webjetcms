@@ -38,9 +38,12 @@ Scenario('Gallery - Feature - select dir location during create', ({ I, DT, DTE 
     I.seeInField(".DTE_Field_Name_parent .webjet-component input.form-control", dirFrom);
     I.dontSeeElement(".DTE_Field_Name_updateInDoc"); // dont see because its create not edit
     DTE.save();
+    DTE.waitForModalClose("galleryDimensionDatatable");
 
     I.say('Test created dir');
     I.amOnPage("/admin/v9/apps/gallery/?dir=" + dirFrom + "/" + testDirName);
+    I.jstreeWaitForLoader();
+    DT.waitForLoader();
     I.click(DT.btn.tree_edit_button);
     DTE.waitForEditor("galleryDimensionDatatable");
     I.seeInField("#DTE_Field_name", testDirName);

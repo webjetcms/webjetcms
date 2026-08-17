@@ -158,7 +158,8 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
 
             boolean isUpdateInDoc = Tools.isTrue(saved.getUpdateInDoc());
             if(isUpdateInDoc) { addNotify( galleryTreeService.updateInDocWarning(getProp()) ); }
-            galleryTreeService.findAndMoveGalleryFolder(movePathFrom, saved.getParentPath(), result, isUpdateInDoc);
+            //do not use saved.getParentPath() because it is read only and not updated yet, use original entity.getParentPath() instead
+            galleryTreeService.findAndMoveGalleryFolder(movePathFrom, entity.getParentPath(), result, isUpdateInDoc);
 
             if(result.containsKey("result") == false || Boolean.FALSE.equals(result.get("result"))) {
                 throwError((String) result.get("error"));

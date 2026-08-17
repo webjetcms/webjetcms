@@ -124,7 +124,7 @@ Scenario('Dynamicke urcenie poctu zaznamov', ({ I }) => {
 Scenario('Editacia bunky po presune stlpca', ({ I, DT, Browser }) => {
 
     I.amOnPage("/admin/v9/settings/redirect/");
-    DT.resetTable();
+    DT.resetTable("redirectTable");
     DT.filterContains("newUrl", "/test-stavov/virtualpath/podla-title.html");
 
     if (Browser.isFirefox()) {
@@ -135,7 +135,7 @@ Scenario('Editacia bunky po presune stlpca', ({ I, DT, Browser }) => {
 
     I.click({css: "div.buttons-select-cel"});
 
-    I.forceClickCss("#datatableInit tbody tr:nth-child(1) td:nth-child(3)");
+    I.forceClickCss("#redirectTable tbody tr:nth-child(1) td:nth-child(3)");
 
     I.seeInField("div.DTE.DTE_Bubble div.DTE_Bubble_Table div.DTE_Field_InputControl input", "301");
 
@@ -151,7 +151,7 @@ Scenario('Editacia bunky po presune stlpca', ({ I, DT, Browser }) => {
     //
     I.say("Over korektne filtrovanie po presune stlpca");
     I.dtFilter("newUrl", "/sk12345-");
-    I.see("/sk12345-imptest2b/", "#datatableInit");
+    I.see("/sk12345-imptest2b/", "#redirectTable");
     I.see("Záznamy 1 až 7 z 7");
 
     I.dtFilter("oldUrl", "imptest3");
@@ -165,7 +165,7 @@ Scenario('Editacia bunky po presune stlpca', ({ I, DT, Browser }) => {
 
 Scenario('Presun stlpca, editacia bunky-reset', ({ I, DT }) => {
     I.amOnPage("/admin/v9/settings/redirect/");
-    DT.resetTable();
+    DT.resetTable("redirectTable");
 });
 
 Scenario('Zobrazenie nazvu v hlavicke', ({ I, DT, DTE }) => {
@@ -236,13 +236,13 @@ Scenario('drag drop okna editora', async ({ I, DTE, Browser }) => {
 Scenario('pamatanie usporiadania', ({ I }) => {
     I.amOnPage("/admin/v9/settings/redirect/");
     I.click(locate("div.dt-scroll-headInner table thead tr:first-child th").withText("Dátum vytvorenia"));
-    I.see("/sk12345/", "#datatableInit tbody tr:first-child td");
-    I.see("26.06.2020 10:52:32", "#datatableInit tbody tr:first-child td");
+    I.see("/sk12345/", "#redirectTable tbody tr:first-child td");
+    I.see("26.06.2020 10:52:32", "#redirectTable tbody tr:first-child td");
 });
 
 Scenario('pamatanie usporiadania-reset', ({ I, DT }) => {
     I.amOnPage("/admin/v9/settings/redirect/");
-    DT.resetTable();
+    DT.resetTable("redirectTable");
 });
 
 Scenario('pamatanie velkost stranky', ({ I, DT }) => {
@@ -293,7 +293,7 @@ Scenario('pamatanie velkost stranky', ({ I, DT }) => {
 
 Scenario('pamatanie velkost stranky-reset', ({ I, DT }) => {
     I.amOnPage("/admin/v9/settings/redirect/");
-    DT.resetTable();
+    DT.resetTable("redirectTable");
     I.amOnPage("/admin/v9/settings/redirect/");
     I.see("Záznamy 1 až "+rowsTabs+" z", "div.dt-footer-row");
 
@@ -449,7 +449,7 @@ Scenario("extfilter - select BUG 57657-8", ({ I, DT }) => {
     I.see("Česká firma", ".datatableInit tbody tr td");
 });
 
-Scenario("BUF: filter table with startsWith and endsWith", ({ I, DT }) => {
+Scenario("BUG: filter table with startsWith and endsWith", ({ I, DT }) => {
     I.amOnPage("/apps/contact/admin/");
     DT.waitForLoader();
     var tdSelector = "#dataTable td.dt-row-edit a";

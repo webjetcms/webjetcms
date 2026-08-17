@@ -322,15 +322,59 @@ Scenario('Check admin email', async ({ I, DT, DTE, TempMail }) => {
     I.say("Check admin email with filled answers email CANNOT contain hidden fields by condition");
 
     const expectedHtml = `
-        <form action="/rest/multistep-form/save-form?form-name=multistep_condition_test&amp;step-id=-1" method="post" name="formMailForm-multistep_condition_test"><div><div><p>This is step one.</p></div><div><label for="radiogroup-1">Radiogroup:</label><div><span>[X]</span> <label for="radiogroup-1-0">valA</label></div>
-        <div><span>[&nbsp;]</span> <label for="radiogroup-1-1">valB</label></div><div><span>[&nbsp;]</span> <label for="radiogroup-1-2">valC</label></div>
-        </div><div><label for="priezvisko-1">Priezvisko:</label> <span>test</span></div><div><label for="checkboxgroup-1">Checkgroup:</label><div><span>[&nbsp;]</span> <label for="checkboxgroup-1-0">auto</label></div>
-        <div><span>[&nbsp;]</span> <label for="checkboxgroup-1-1">autobus</label></div><div><span>[X]</span> <label for="checkboxgroup-1-2">lietadlo</label></div>
-        </div><div><label for="email-1">Email:</label> <span>wjmultistep.conditions.user@fexpost.com</span></div>
-        <div><label>Pohlavie:</label></div><div><span>[&nbsp;]</span> <label for="pohlavie-false-muz">MUZ</label> </div><div><span>[&nbsp;]</span> <label for="pohlavie-false-zena">ZENA</label> </div><div><span>[X]</span> <label for="pohlavie-false-ine">ine</label> </div>
-        <div><label for="poznamka-1">Poznamka<span style="color: red;">&nbsp;*</span>:</label> <span style="height: auto;">Test poznamka</span></div></div><hr><div><div><p>This is step two.</p></div><div><label for="menopriezvisko-1">Meno a priezvisko:</label> <span>Tester_X</span></div><div><label for="radiogroup-2">Skupina výberových polí:</label><div><span>[&nbsp;]</span> <label for="radiogroup-2-0">one</label></div>
-        <div><span>[X]</span> <label for="radiogroup-2-1">two</label></div><div><span>[&nbsp;]</span> <label for="radiogroup-2-2">three</label></div>
-        </div><div><label for="telefon-1">Telefónne číslo:</label> <span>0123456789</span></div></div>  </form>
+        <form action="/rest/multistep-form/save-form?form-name=multistep_condition_test&amp;step-id=-1" method="post" name="formMailForm-multistep_condition_test"><div><div><p>This is step one.</p></div><div>
+        <label for="radiogroup-1">Radiogroup</label>
+        <div>
+        <span>[X]</span> <label for="radiogroup-1-0">valA</label>
+        </div>
+        <div>
+        <span>[&nbsp;]</span> <label for="radiogroup-1-1">valB</label>
+        </div>
+        <div>
+        <span>[&nbsp;]</span> <label for="radiogroup-1-2">valC</label>
+        </div>
+        </div><div>
+        <label for="priezvisko-1">Priezvisko</label> <span>test</span>
+        </div><div>
+        <label for="checkboxgroup-1">Checkgroup</label>
+        <div>
+        <span>[&nbsp;]</span> <label for="checkboxgroup-1-0">auto</label>
+        </div>
+        <div>
+        <span>[&nbsp;]</span> <label for="checkboxgroup-1-1">autobus</label>
+        </div>
+        <div>
+        <span>[X]</span> <label for="checkboxgroup-1-2">lietadlo</label>
+        </div>
+        </div><div>
+        <label for="email-1">Email</label> <span>wjmultistep.conditions.user@fexpost.com</span>
+        </div><div>
+        <label>Pohlavie</label>
+        </div>
+        <div>
+        <span>[&nbsp;]</span> <label for="pohlavie-false-muz">MUZ</label>
+        </div><div>
+        <span>[&nbsp;]</span> <label for="pohlavie-false-zena">ZENA</label>
+        </div><div>
+        <span>[X]</span> <label for="pohlavie-false-ine">ine</label>
+        </div><div>
+        <label for="poznamka-1">Poznamka<span>&nbsp;*</span></label> <span style="height: auto;">Test poznamka</span>
+        </div></div><hr><div><div><p>This is step two.</p></div><div>
+        <label for="menopriezvisko-1">Meno a priezvisko</label> <span>Tester_X</span>
+        </div><div>
+        <label for="radiogroup-2">Skupina výberových polí</label>
+        <div>
+        <span>[&nbsp;]</span> <label for="radiogroup-2-0">one</label>
+        </div>
+        <div>
+        <span>[X]</span> <label for="radiogroup-2-1">two</label>
+        </div>
+        <div>
+        <span>[&nbsp;]</span> <label for="radiogroup-2-2">three</label>
+        </div>
+        </div><div>
+        <label for="telefon-1">Telefónne číslo</label> <span>0123456789</span>
+        </div></div>  </form>
     `;
 
     checkEmailWithForm(I, expectedHtml);
@@ -357,6 +401,7 @@ function checkEmailWithForm(I, expectedHtml) {
         return form ? form.outerHTML : null;
     }).then(actualHtml => {
         I.say("Compare actual vs expected EMAIL form HTML");
+        //I.say("ACTUAL HTML:\n" + actualHtml);
         compareTwoHtml(I, actualHtml, expectedHtml);
     });
 }
@@ -371,8 +416,10 @@ function compareTwoHtml(I, actualHtml, expectedHtml) {
             .replace(/>\s+</g, '><')
             .trim();
 
-         // I.say(normalize(actualHtml));
-         // I.say(normalize(expectedHtml));
+        //I.say("ACTUAL HTML:\n" + actualHtml);
+        //I.say("EXPECTED HTML:\n" + expectedHtml);
+        //I.say("ACTUAL:\n" + normalize(actualHtml));
+        //I.say("EXPECTED:\n" + normalize(expectedHtml));
 
         I.assertEqual(
             normalize(actualHtml),

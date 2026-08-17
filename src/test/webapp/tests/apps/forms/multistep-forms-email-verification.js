@@ -12,9 +12,9 @@ Scenario('Check email verification', async ({ I, TempMail }) => {
 
     I.amOnPage("/apps/multistep-formular/email-verification.html");
 
-    I.fillField("#meno-1", "Jozko");
-    I.fillField("#priezvisko-1", "Mrkva");
-    I.fillField("#email-1", verifyEmail + TempMail.getTempMailDomain());
+    I.fillField("#f1-meno-1", "Jozko");
+    I.fillField("#f1-priezvisko-1", "Mrkva");
+    I.fillField("#f1-email-1", verifyEmail + TempMail.getTempMailDomain());
     I.clickCss("button[type='submit']");
 
     I.say("Get verify code from email - BUT beware, it must be in new tab");
@@ -40,12 +40,12 @@ Scenario('Check email verification', async ({ I, TempMail }) => {
     I.closeCurrentTab();
 
     I.say("Try set bad code and test it");
-    I.fillField("#verify_code-1", "11111");
+    I.fillField("#f1-verify_code-1", "11111");
     I.clickCss("button[type='submit']");
     I.waitForText('Zadaný overovací kód je neplatný.', 10);
 
     I.say("Now enter correct code");
-    I.fillField("#verify_code-1", verifyCode);
+    I.fillField("#f1-verify_code-1", verifyCode);
     I.clickCss("button[type='submit']");
     I.waitForText('Formulár bol úspešne odoslaný', 10);
 });
@@ -53,7 +53,7 @@ Scenario('Check email verification', async ({ I, TempMail }) => {
 Scenario('Check email verification - max attempts', async ({ I, TempMail }) => {
     I.amOnPage("/apps/multistep-formular/email-verification.html");
 
-    I.fillField("#email-1", verifyEmail + TempMail.getTempMailDomain());
+    I.fillField("#f1-email-1", verifyEmail + TempMail.getTempMailDomain());
     I.clickCss("button[type='submit']");
 
     I.say("Clear email inbox");
@@ -69,7 +69,7 @@ Scenario('Check email verification - max attempts', async ({ I, TempMail }) => {
 
     I.say("Try now max attempts");
     for(let i = 1; i <= maxAttempts; i++) {
-        I.fillField("#verify_code-1", "11111");
+        I.fillField("#f1-verify_code-1", "11111");
         I.clickCss("button[type='submit']");
 
         if(i < maxAttempts) {

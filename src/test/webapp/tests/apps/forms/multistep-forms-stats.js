@@ -142,55 +142,55 @@ Scenario("Generate random data for nice charts", async ({ I }) => {
         }
 
         I.amOnPage(baseUrl+qs);
-        I.waitForElement("#meno-1", 10);
+        I.waitForElement("#f1-meno-1", 10);
 
         const firstName = weightedRandom(firstNames);
         const lastName = weightedRandom(lastNames);
 
         //make error in 10% of cases to test error handling in stats
         if (Math.random() < 0.1) {
-            I.fillField("#meno-1", "");
+            I.fillField("#f1-meno-1", "");
             I.click("Prejsť na ďalší krok");
         }
         if (Math.random() < 0.2) {
-            I.fillField("#priezvisko-1", "");
+            I.fillField("#f1-priezvisko-1", "");
             I.click("Prejsť na ďalší krok");
         }
 
         // Fill step 1 fields
-        I.fillField("#meno-1", firstName);
-        I.fillField("#priezvisko-1", lastName);
+        I.fillField("#f1-meno-1", firstName);
+        I.fillField("#f1-priezvisko-1", lastName);
 
         //use firstname without diacritics for email to avoid potential encoding issues in stats processing
         const emailFirstName = firstName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        I.fillField("#email-1", emailFirstName.toLowerCase() + "@onetimeusemail.com");
+        I.fillField("#f1-email-1", emailFirstName.toLowerCase() + "@onetimeusemail.com");
 
         var failStatus = null;
         if (Math.random() < 0.1) {
-            I.fillField("#email-1", "relay.denied.email@onetimeusemail.com");
+            I.fillField("#f1-email-1", "relay.denied.email@onetimeusemail.com");
             failStatus = "emailNotSend";
         }
 
         // Checkboxes A, B, C with decreasing independent probability: A=65%, B=35%, C=15%
-        if (Math.random() < 0.65) I.checkOption("#checkboxgroup-1-0");
-        if (Math.random() < 0.35) I.checkOption("#checkboxgroup-1-1");
-        if (Math.random() < 0.15) I.checkOption("#checkboxgroup-1-2");
+        if (Math.random() < 0.65) I.checkOption("#f1-checkboxgroup-1-0");
+        if (Math.random() < 0.35) I.checkOption("#f1-checkboxgroup-1-1");
+        if (Math.random() < 0.15) I.checkOption("#f1-checkboxgroup-1-2");
 
         // Radio D/E/F with weighted selection: D most likely, F least likely
-        I.checkOption(weightedRandom(["#radiogroup-1-0", "#radiogroup-1-1", "#radiogroup-1-2"]));
+        I.checkOption(weightedRandom(["#f1-radiogroup-1-0", "#f1-radiogroup-1-1", "#f1-radiogroup-1-2"]));
 
         // Potvrdit - optional field, selected with 75% probability
-        if (Math.random() < 0.75) I.checkOption("#potvrdit-false-ano");
+        if (Math.random() < 0.75) I.checkOption("#f1-potvrdit-false-ano");
 
         // Gender with slight male bias (55% Muz, 45% Zena)
-        I.checkOption(Math.random() < 0.55 ? "#pohlavie-false-muz" : "#pohlavie-false-zena");
+        I.checkOption(Math.random() < 0.55 ? "#f1-pohlavie-false-muz" : "#f1-pohlavie-false-zena");
 
         // Submit step 1
         I.click("Prejsť na ďalší krok");
-        I.waitForElement("#select-1", 10);
+        I.waitForElement("#f1-select-1", 10);
 
         // Fill step 2 - select field with weighted probability: A most likely, D least likely
-        I.selectOption("#select-1", weightedRandom(["Mačka", "Pes", "Škrečok", "Had"]));
+        I.selectOption("#f1-select-1", weightedRandom(["Mačka", "Pes", "Škrečok", "Had"]));
 
         if (Math.random() < 0.1) {
             //empty wysiwyg
@@ -210,7 +210,7 @@ Scenario("Generate random data for nice charts", async ({ I }) => {
 
         await setClEditorValue(I, wysiwyg);
 
-        I.checkOption(weightedRandom(["#radiogroup-2-0", "#radiogroup-2-1", "#radiogroup-2-2", "#radiogroup-2-3"]));
+        I.checkOption(weightedRandom(["#f1-radiogroup-2-0", "#f1-radiogroup-2-1", "#f1-radiogroup-2-2", "#f1-radiogroup-2-3"]));
 
         //SPAM PROTECTION: wait for random time between 30 and 34 seconds to simulate real user behavior
         const waitTime = 30000 + Math.random() * 4000;

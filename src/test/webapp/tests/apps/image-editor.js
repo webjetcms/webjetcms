@@ -39,6 +39,8 @@ Scenario('Pixabay - test custom filename and image source after adding', async (
     I.click(locate("a.cke_dialog_tab").withText("Fotobanka"));
     I.switchTo('#wjImagePixabayIframeElement');
     I.waitForElement('#search', 10);
+    I.wait(1);
+    I.fillField('#search', "***");
     I.fillField('#search', searchTerm);
     I.click('button[type="submit"]');
     I.waitForElement(resultSelector, 40);
