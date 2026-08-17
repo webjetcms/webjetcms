@@ -229,16 +229,41 @@ Scenario('Test form detail and filled data', async ({ I, DT, DTE }) => {
     DTE.cancel();
 
     const expectedHtml = `
-        <div class="form-step mt-3"><div class="step-header"><p>1 - Primarny nadpis | 1 - Sekundarny nadpis</p></div><div class="form-group mb-3"><label for="vase-meno-1">Vase meno<span class="text-danger requirement-mark">&nbsp;*</span>:</label> <span class="form-control emailInput-text">Tester</span></div>
-        <div class="form-group mb-3"><label for="vase-priezvisko-1">Vase priezvisko:</label> <span class="form-control emailInput-text">Playwright</span></div><div class="form-group mb-3"><label for="emailova-adresa-1">Emailova adresa<span class="text-danger requirement-mark">&nbsp;*</span>:</label> <span class="form-control emailInput-text">sivan@noopmail.com</span></div>
-        <div class="form-group mb-3"><label for="checkboxgroup-1">Skupina zaškrtávacích polí:</label><div class="form-check"><span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-0" class="form-check-label">A</label></div>
-        <div class="form-check"><span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-1" class="form-check-label">B</label></div>
-        <div class="form-check"><span class="inputcheckbox emailinput-cb input-unchecked">[&nbsp;]</span> <label for="checkboxgroup-1-2" class="form-check-label">C</label></div>
-        </div><div class="form-group mb-3"><label for="radiogroup-1">Skupina výberových polí:</label><div class="form-check"><span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-0" class="form-check-label">D</label></div>
-        <div class="form-check"><span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-1" class="form-check-label">E</label></div>
-        <div class="form-check"><span class="inputradio emailinput-radio input-checked">[X]</span> <label for="radiogroup-1-2" class="form-check-label">F</label></div>
-        </div></div><hr><div class="form-step mt-3"><div class="step-header"><p>2 - Druhy krok | Email: sivan@noopmail.com | User: Tester</p></div><div class="form-group mb-3"><label for="pridajte-obrazky-1">Pridajte obrazky:</label> <span class="form-control emailInput-text">penguin.jpg</span> </div>
-        <div class="form-group mb-3"><label for="select-pole-1">Select pole:</label><span class="form-control emailInput-select">C</span></div><div class="form-group mb-3"><label for="wysiwyg-1">WYSIWYG<span class="text-danger requirement-mark">&nbsp;*</span>:</label> <span class="form-control emailInput-textarea" style="height: auto;">happy wysiwyg placeholder</span></div></div>
+        <div class="form-step mt-3"><div class="step-header"><p>1 - Primarny nadpis | 1 - Sekundarny nadpis</p></div><div class="form-group mb-3">
+            <label for="vase-meno-1">Vase meno<span class="text-danger requirement-mark">&nbsp;*</span></label> <span class="form-control emailInput-text">Tester</span>
+            </div><div class="form-group mb-3">
+            <label for="vase-priezvisko-1">Vase priezvisko</label> <span class="form-control emailInput-text">Playwright</span>
+            </div><div class="form-group mb-3">
+            <label for="emailova-adresa-1">Emailova adresa<span class="text-danger requirement-mark">&nbsp;*</span></label> <span class="form-control emailInput-text">sivan@noopmail.com</span>
+            </div><div class="form-group mb-3">
+            <label for="checkboxgroup-1">Skupina zaškrtávacích polí</label>
+            <div class="form-check">
+            <span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-0" class="form-check-label">A</label>
+            </div>
+            <div class="form-check">
+            <span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-1" class="form-check-label">B</label>
+            </div>
+            <div class="form-check">
+            <span class="inputcheckbox emailinput-cb input-unchecked">[&nbsp;]</span> <label for="checkboxgroup-1-2" class="form-check-label">C</label>
+            </div>
+            </div><div class="form-group mb-3">
+            <label for="radiogroup-1">Skupina výberových polí</label>
+            <div class="form-check">
+            <span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-0" class="form-check-label">D</label>
+            </div>
+            <div class="form-check">
+            <span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-1" class="form-check-label">E</label>
+            </div>
+            <div class="form-check">
+            <span class="inputradio emailinput-radio input-checked">[X]</span> <label for="radiogroup-1-2" class="form-check-label">F</label>
+            </div>
+            </div></div><hr><div class="form-step mt-3"><div class="step-header"><p>2 - Druhy krok | Email: sivan@noopmail.com | User: Tester</p></div><div class="form-group mb-3">
+            <label for="pridajte-obrazky-1">Pridajte obrazky</label> <span class="form-control emailInput-text">penguin.jpg</span>
+            </div><div class="form-group mb-3">
+            <label for="select-pole-1">Select pole</label><span class="form-control emailInput-select">C</span>
+            </div><div class="form-group mb-3">
+            <label for="wysiwyg-1">WYSIWYG<span class="text-danger requirement-mark">&nbsp;*</span></label> <span class="form-control emailInput-textarea" style="height: auto;">happy wysiwyg placeholder</span>
+        </div></div>
     `;
 
     const actualHtml = await getSubmitedFormPreview(I);
@@ -252,16 +277,41 @@ Scenario('Test send email', async ({ I, TempMail }) => {
     await TempMail.openLatestEmail();
 
     const expectedHtml = `
-        <form action="/rest/multistep-form/save-form?form-name=${newMultistepFormName}&amp;step-id=-1" method="post" name="formMailForm-${newMultistepFormName}"><div><div><p>1 - Primarny nadpis | 1 - Sekundarny nadpis</p></div>
-        <div><label for="vase-meno-1">Vase meno<span style="color: red;">&nbsp;*</span>:</label> <span>Tester</span></div><div><label for="vase-priezvisko-1">Vase priezvisko:</label> <span>Playwright</span></div><div><label for="emailova-adresa-1">Emailova adresa<span style="color: red;">&nbsp;*</span>:</label> <span>sivan@noopmail.com</span></div>
-        <div><label for="checkboxgroup-1">Skupina zaškrtávacích polí:</label><div><span>[X]</span> <label for="checkboxgroup-1-0">A</label></div>
-        <div><span>[X]</span> <label for="checkboxgroup-1-1">B</label></div>
-        <div><span>[&nbsp;]</span> <label for="checkboxgroup-1-2">C</label></div>
-        </div><div><label for="radiogroup-1">Skupina výberových polí:</label><div><span>[&nbsp;]</span> <label for="radiogroup-1-0">D</label></div>
-        <div><span>[&nbsp;]</span> <label for="radiogroup-1-1">E</label></div>
-        <div><span>[X]</span> <label for="radiogroup-1-2">F</label></div>
-        </div></div><hr><div><div><p>2 - Druhy krok | Email: sivan@noopmail.com | User: Tester</p></div><div><label for="pridajte-obrazky-1">Pridajte obrazky:</label> <span>penguin.jpg</span> </div><div><label for="select-pole-1">Select pole:</label><span>C</span></div>
-        <div><label for="wysiwyg-1">WYSIWYG<span style="color: red;">&nbsp;*</span>:</label> <span style="height: auto;">happy wysiwyg placeholder</span></div></div>  </form>
+        <form action="/rest/multistep-form/save-form?form-name=${newMultistepFormName}&amp;step-id=-1" method="post" name="formMailForm-${newMultistepFormName}"><div><div><p>1 - Primarny nadpis | 1 - Sekundarny nadpis</p></div><div>
+            <label for="vase-meno-1">Vase meno<span>&nbsp;*</span></label> <span>Tester</span>
+            </div><div>
+            <label for="vase-priezvisko-1">Vase priezvisko</label> <span>Playwright</span>
+            </div><div>
+            <label for="emailova-adresa-1">Emailova adresa<span>&nbsp;*</span></label> <span>sivan@noopmail.com</span>
+            </div><div>
+            <label for="checkboxgroup-1">Skupina zaškrtávacích polí</label>
+            <div>
+            <span>[X]</span> <label for="checkboxgroup-1-0">A</label>
+            </div>
+            <div>
+            <span>[X]</span> <label for="checkboxgroup-1-1">B</label>
+            </div>
+            <div>
+            <span>[&nbsp;]</span> <label for="checkboxgroup-1-2">C</label>
+            </div>
+            </div><div>
+            <label for="radiogroup-1">Skupina výberových polí</label>
+            <div>
+            <span>[&nbsp;]</span> <label for="radiogroup-1-0">D</label>
+            </div>
+            <div>
+            <span>[&nbsp;]</span> <label for="radiogroup-1-1">E</label>
+            </div>
+            <div>
+            <span>[X]</span> <label for="radiogroup-1-2">F</label>
+            </div>
+            </div></div><hr><div><div><p>2 - Druhy krok | Email: sivan@noopmail.com | User: Tester</p></div><div>
+            <label for="pridajte-obrazky-1">Pridajte obrazky</label> <span>penguin.jpg</span>
+            </div><div>
+            <label for="select-pole-1">Select pole</label><span>C</span>
+            </div><div>
+            <label for="wysiwyg-1">WYSIWYG<span>&nbsp;*</span></label> <span style="height: auto;">happy wysiwyg placeholder</span>
+            </div></div>  </form>
     `;
 
     checkEmailWithForm(I, expectedHtml);
@@ -316,18 +366,40 @@ Scenario('Change form_settings and test it No.1', async ({ I, DT, DTE, TempMail 
 
     const expectedHtml = `
         START form text
-        <br>1 - Primarny nadpis | 1 - Sekundarny nadpis<br><br>
-        <br>Vase meno * : Tester<br>
-        <br>Vase priezvisko: Playwright<br>
-        <br>Emailova adresa * : ${baseUserMail + TempMail.getTempMailDomain()}<br>
-        <br>Skupina zaškrtávacích polí: [X] A<br><br>[ ] B<br><br>[X] C<br><br>
-        <br>Skupina výberových polí: [ ] D<br><br>[ ] E<br><br>[X] F<br><br>
+        <br>1 - Primarny nadpis | 1 - Sekundarny nadpis
         <br>
         <br>
-        <br>2 - Druhy krok | Email: ${baseUserMail + TempMail.getTempMailDomain()} | User: Tester<br><br>
-        <br>Pridajte obrazky: penguin.jpg<br>
-        <br>Select pole: A<br>
-        <br>WYSIWYG * : happy wysiwyg placeholder<br>
+        <br>Vase meno * Tester
+        <br>
+        <br>Vase priezvisko Playwright
+        <br>
+        <br>Emailova adresa * ${baseUserMail + TempMail.getTempMailDomain()}
+        <br>
+        <br>Skupina zaškrtávacích polí [X] A
+        <br>
+        <br>[ ] B
+        <br>
+        <br>[X] C
+        <br>
+        <br>
+        <br>Skupina výberových polí [ ] D
+        <br>
+        <br>[ ] E
+        <br>
+        <br>[X] F
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>2 - Druhy krok | Email: ${baseUserMail + TempMail.getTempMailDomain()} | User: Tester
+        <br>
+        <br>
+        <br>Pridajte obrazky penguin.jpg
+        <br>
+        <br>Select pole A
+        <br>
+        <br>WYSIWYG * happy wysiwyg placeholder
+        <br>
         <br>
         <br>
         <br>END form text
@@ -434,6 +506,7 @@ Scenario('Duplicate multistep form', async ({ I, DT, DTE, TempMail }) => {
     DTE.fillField("formName", duplicatedMultistepFormName);
     DTE.save();
 
+    I.amOnPage("/apps/form/admin/");
     I.say("Check duplicated form settings");
     DT.filterEquals("formName", duplicatedMultistepFormName);
     I.waitForText(duplicatedMultistepFormName, 10, "#formsDataTable");
@@ -632,9 +705,23 @@ Scenario('RowView version - test appearance', async ({ I, DT, Document }) => {
     I.see("Záznamy 1 až 1 z 1");
 
     const expectedHtml = `
-        <div class="form-step mt-3"><div class="step-header"><p>Ukážka: viacero polí v jednom riadku</p></div><div class="row"><div class="col"><div class="form-group mb-3"><label for="meno-1">Meno:</label> <span class="form-control emailInput-text">Vlad</span></div></div>
-        <div class="col"><div class="form-group mb-3"><label for="priezvisko-1">Priezvisko:</label> <span class="form-control emailInput-text">Priezvisko-${randomNumber}</span></div></div></div><div class="row"><div class="col"><div class="form-group mb-3"><label for="email-1">Email:</label> <span class="form-control emailInput-text">test@balat.sk</span></div>
-        </div><div class="col">&nbsp;</div></div><div class="row"><div class="col"><div class="form-group mb-3"><label for="adresa-1">Adresa:</label> <span class="form-control emailInput-text">Askaban</span></div></div></div></div>
+        <div class="form-step mt-3"><div class="step-header"><p>Ukážka: viacero polí v jednom riadku</p></div><div class="row"><div class="col">
+        <div class="form-group mb-3">
+        <label for="meno-1">Meno</label> <span class="form-control emailInput-text">Vlad</span>
+        </div>
+        </div><div class="col">
+        <div class="form-group mb-3">
+        <label for="priezvisko-1">Priezvisko</label> <span class="form-control emailInput-text">Priezvisko-${randomNumber}</span>
+        </div>
+        </div></div><div class="row"><div class="col">
+        <div class="form-group mb-3">
+        <label for="email-1">Email</label> <span class="form-control emailInput-text">test@balat.sk</span>
+        </div>
+        </div><div class="col">&nbsp;</div></div><div class="row"><div class="col">
+        <div class="form-group mb-3">
+        <label for="adresa-1">Adresa</label> <span class="form-control emailInput-text">Askaban</span>
+        </div>
+        </div></div></div>
     `;
 
     const actualHtml = await getSubmitedFormPreview(I);
@@ -716,8 +803,10 @@ function compareTwoHtml(I, actualHtml, expectedHtml) {
             .replace(/>\s+</g, '><')
             .trim();
 
-         // I.say(normalize(actualHtml));
-         // I.say(normalize(expectedHtml));
+        //I.say("ACTUAL HTML:\n" + actualHtml);
+        //I.say("EXPECTED HTML:\n" + expectedHtml);
+        //I.say("ACTUAL:\n" + normalize(actualHtml));
+        //I.say("EXPECTED:\n" + normalize(expectedHtml));
 
         I.assertEqual(
             normalize(actualHtml),
@@ -881,7 +970,7 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
 
     createAndFillFormItem(I, DT, DTE, 'Výberový zoznam - select', false, "Empty option autotest", "labelA:valueA|labelB:valueB", null, null, { emptyOption: true });
     createAndFillFormItem(I, DT, DTE, 'Automatické dopĺňanie - autocomplete', false, "Country autocomplete autotest", "Slovensko:SK|Česko:CZ|Rakúsko:AT", null, null);
-    createAndFillFormItem(I, DT, DTE, 'File input', false, "Upload CV autotest", null, null, "Please use a PDF file - autotest");
+    createAndFillFormItem(I, DT, DTE, 'Nahrať jeden súbor', false, "Upload CV autotest", null, null, "Please use a PDF file - autotest");
 
     I.say("Check generated item ID and trim setting in edit mode");
     I.click(locate("#formItemsDataTable tbody td").withText("Vase meno"));
@@ -976,9 +1065,9 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
 
     const expectedHtml = `
         <div class="form-step mt-3"><div class="form-group mb-3">
-        <label for="vase-meno-1">Vase meno<span class="text-danger requirement-mark">&nbsp;*</span>:</label> <span class="form-control emailInput-text">Trim autotest</span>
+        <label for="vase-meno-1">Vase meno<span class="text-danger requirement-mark">&nbsp;*</span></label> <span class="form-control emailInput-text">Trim autotest</span>
         </div><div class="form-group mb-3">
-        <label for="checkboxgroup-1">Skupina zaškrtávacích polí:</label>
+        <label for="checkboxgroup-1">Skupina zaškrtávacích polí</label>
         <div class="form-check">
         <span class="inputcheckbox emailinput-cb input-unchecked">[&nbsp;]</span> <label for="checkboxgroup-1-0" class="form-check-label">valueA</label>
         </div>
@@ -992,7 +1081,7 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
         <span class="inputcheckbox emailinput-cb input-unchecked">[&nbsp;]</span> <label for="checkboxgroup-1-3" class="form-check-label">valueD</label>
         </div>
         </div><div class="form-group mb-3">
-        <label for="radiogroup-1">Skupina výberových polí:</label>
+        <label for="radiogroup-1">Skupina výberových polí</label>
         <div class="form-check">
         <span class="inputradio emailinput-radio input-checked">[X]</span> <label for="radiogroup-1-0" class="form-check-label">valueEnumA</label>
         </div>
@@ -1006,11 +1095,14 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
         <span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-3" class="form-check-label">valueEnumD</label>
         </div>
         </div><div class="form-group mb-3">
-        <label for="empty-option-autotest-1">Empty option autotest:</label><span class="form-control emailInput-select">&nbsp;</span>
+        <label for="empty-option-autotest-1">Empty option autotest</label><span class="form-control emailInput-select">&nbsp;</span>
         </div><div class="form-group mb-3">
-        <label for="country-autocomplete-autotest-1">Country autocomplete autotest:</label><span class="form-control emailInput-text">CZ</span>
+        <label for="country-autocomplete-autotest-1">Country autocomplete autotest</label><span class="form-control emailInput-text">CZ</span>
         </div><div class="form-group mb-3">
-        <label class="form-label" for="upload-cv-autotest-1-dropzone">Upload CV autotest:</label><div class="form-text mb-2"> Please use a PDF file - autotest </div> <span class="form-control emailInput-text">${uploadedFileName}</span>
+        <label class="form-label" for="upload-cv-autotest-1-dropzone">Upload CV autotest</label>
+        <div class="form-text mb-2">
+        Please use a PDF file - autotest
+        </div><span class="form-control emailInput-text">archive_file_test.pdf</span>
         </div></div>
     `;
 
