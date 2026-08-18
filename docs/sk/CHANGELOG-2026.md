@@ -371,9 +371,11 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 > Opravná verzia pôvodnej verzie 2026.0.
 
 - Webové stránky - opravené ukladanie web stránky s medzerou na konci URL adresy (vykoná sa odstránenie prázdnych znakov) (#OSK650).
+- Webové stránky - opravené zacyklenie nepublikovanej stránky ak URL nekončí na znak `/` - konfiguračná premenná `virtualPathLastSlash=false` (#OSK684).
 - Manažér dokumentov - pridané zmazanie cache pamäte po publikovaní novej verzie súboru (#TB2754).
 - Multiweb - opravená možnosť zmazať alebo upraviť doménové presmerovanie, ktoré obsahuje `http/s` prefix (#58317-15).
 - Galéria - v editore aplikácie sa medzi vizuálnymi štýlmi zobrazujú iba JSP súbory z priečinkov `/components/{INSTALL_NAME}/gallery` a `/components/gallery`, bez duplicitných položiek (#58317-16).
+- Vloženie HTML kódu - v náhľade aplikácie v editore webových stránok sa pre obsah tvorený iba elementmi `script` zobrazí zdrojový kód namiesto prázdneho obsahu (#OSK625).
 
 ## 2026.0.28
 
