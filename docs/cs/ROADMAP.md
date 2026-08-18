@@ -56,6 +56,8 @@ Vysvětlení použitých piktogramů:
 - [ ] +Konfigurace - doplnit možnost nastavit proměnnou jen pro aktuální uzel (neuložit ji do databáze - jen nastavit do Constants objektu), přidat tam zaškrtávací pole "Nastavit dočasně" s info ikonou že hodnota se nastaví pouze dočasně a při restartu se obnoví hodnota jako je v databázi.
 - [ ] Průzkumník - opravit zobrazování souborů se speciálními znaky (například `@`).
 - [ ] Automatický promazávat `temp` soubory, které se mohou hromadit.
+- [x] +Administrace - odstranit závislost na `Vue.js` a nahradit interní komponenty nativními webovými komponenty (#58722).
+- [ ] +Upravit načítání admin části tak, aby se vyměnilo přes volání REST služby pouze vnitřek stránky, nikoli kompletní reload HTML kódu.
 
 ## 2025
 

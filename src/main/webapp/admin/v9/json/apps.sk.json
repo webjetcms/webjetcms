@@ -127,31 +127,31 @@
         },
         {
             "name": "GDPR",
-            "category": "DT + REST + Vue výber adresára a stránky",
+            "category": "DT + REST + web komponent na výber adresára a stránky",
             "icon": "ti ti-shield-half",
             "link": "/apps/gdpr/admin/"
         },
         {
             "name": "Používatelia",
-            "category": "DT + REST + Vue výber adresára a stránky",
+            "category": "DT + REST + web komponent na výber adresára a stránky",
             "icon": "ti ti-users",
             "link": "/admin/v9/users/user-list"
         },
         {
             "name": "Značky (perex skupiny)",
-            "category": "DT + REST + Vue výber adresára",
+            "category": "DT + REST + web komponent na výber adresára",
             "icon": "ti ti-tags",
             "link": "/admin/v9/webpages/perex/"
         },
         {
             "name": "Média a média skupiny",
-            "category": "DT + REST + Vue výber adresára a stránky + elfinder",
+            "category": "DT + REST + web komponent na výber adresára a stránky + elfinder",
             "icon": "ti ti-photo",
             "link": "/admin/v9/webpages/media/"
         },
         {
             "name": "Skripty",
-            "category": "DT + REST + Vue výber adresára a stránky",
+            "category": "DT + REST + web komponent na výber adresára a stránky",
             "icon": "ti ti-code",
             "link": "/admin/v9/apps/insert-script"
         },
@@ -163,13 +163,13 @@
         },
         {
             "name": "Foto galéria",
-            "category": "REST backend + taby v DT + custom tlacitka + image editor + vue.oblast zaujmu",
+            "category": "REST backend + taby v DT + custom tlačidlá + image editor + web komponent oblasti záujmu",
             "icon": "ti ti-library-photo",
             "link": "/admin/v9/apps/gallery"
         },
         {
             "name": "Formuláre",
-            "category": "REST backend + DT + vue router",
+            "category": "REST backend + DT",
             "icon": "ti ti-forms",
             "link": "/apps/form/admin/"
         },
@@ -205,7 +205,7 @@
         },
         {
             "name": "Monitorovanie servera",
-            "category": "Zaznamenané hodnoty + CPU monitor + DT + REST + grafy + vue",
+            "category": "Zaznamenané hodnoty + CPU monitor + DT + REST + grafy + web komponent",
             "icon": "ti ti-device-heart-monitor",
             "link": "/admin/v9/settings/server-monitoring"
         },

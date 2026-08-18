@@ -29,7 +29,7 @@ function testDemoComponent(I, testAllFields=false) {
     }
 
     I.clickCss("#pills-dt-component-datatable-json-tab");
-    I.clickCss("#editorAppDTE_Field_groupDetails button.btn-vue-jstree-item-edit");
+    I.clickCss("#editorAppDTE_Field_groupDetails button.btn-webjet-jstree-item-edit");
     I.waitForElement("div.jsTree-wrapper");
     I.click("Test stavov");
 

@@ -1,5 +1,7 @@
 Feature('apps.calendar.news-calendar');
 
+const WebjetDteJsTree = require("../../../pages/WebjetDteJsTree");
+
 Before(({ I, login, DT }) => {
     login('admin');
     DT.addContext("calendar", "#calendarEventsDataTable_wrapper");
@@ -40,7 +42,7 @@ Scenario('testovanie app - Kalendar news', async ({ I, DT, DTE, Document, Apps }
     };
 
     I.clickCss("#editorAppDTE_Field_groupIds button");
-    I.waitForElement("#custom-modal-id", 10);
+    I.waitForElement(WebjetDteJsTree.modal, 10);
     I.click(locate('.jstree-node.jstree-closed').withDescendant('a.jstree-anchor').withText("Jet portal 4").find('.jstree-icon.jstree-ocl'));
     I.click(locate(".jstree-anchor").withText("Zo sveta financií"));
     DTE.clickSwitch("perexGroup_3");

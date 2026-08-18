@@ -86,7 +86,7 @@ var tabs = [
         id: 'areaOfInterest',
         title: '[[\#{components.gallery.areaOfInterest}]]',
         selected: false,
-        content: '<div class="dte-tab-autoheight" style="overflow:scroll;"><div id="cropper-app"><webjet-cropper-component ref="vueCropper"></webjet-cropper-component></div></div>'
+        content: '<div class="dte-tab-autoheight" style="overflow:scroll;"><webjet-image-area-selector></webjet-image-area-selector></div>'
     }
 ];
 ```

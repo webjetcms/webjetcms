@@ -530,7 +530,7 @@ module.exports = function () {
               break;
       }
 
-      this.clickCss('.btn.btn-outline-secondary.btn-vue-jstree-item-edit'); // zmena na korenovy adresar
+      this.clickCss('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit'); // zmena na korenovy adresar
       this.waitForElement("div.jsTree-wrapper");
       this.wait(1);
       this.waitForText(rootgroupName, 5);

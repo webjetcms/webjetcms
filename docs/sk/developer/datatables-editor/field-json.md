@@ -186,7 +186,7 @@ insertScriptTable = WJ.DataTable({
 
 ## Vlastná konfigurácia zobrazenej stromovej štruktúry
 
-Ak potrebujete implementovať vlastné zobrazenie stromovej štruktúry môžete sa inšpirovať v triede ```DirTreeRestController``` a entite ```DirTreeItem```. Používa základný objekt pre zobrazenie ```jsTree - JsTreeItem```, s ktorým vie následne pracovať VUE komponenta. Dôležité je korektné nastavenie atribútov v ```JsTreeItem``` entite.
+Ak potrebujete implementovať vlastné zobrazenie stromovej štruktúry môžete sa inšpirovať v triede ```DirTreeRestController``` a entite ```DirTreeItem```. Používa základný objekt pre zobrazenie ```jsTree - JsTreeItem```, s ktorým vie následne pracovať web komponent. Dôležité je korektné nastavenie atribútov v ```JsTreeItem``` entite.
 
 Príklad REST služby:
 
@@ -330,7 +330,7 @@ Použitý Java bean musí obsahovať metódu ```getFullPath()``` alebo ```getVir
 
 ```java
 /**
- * Vratenie cesty pre vue komponentu
+ * Vratenie cesty pre web komponent
  * @return
  */
 @JsonProperty(access = Access.READ_ONLY)
@@ -350,7 +350,7 @@ Ak metódu ```getFullPath()``` nemôžete implementovať odporúčame použiť a
 
 ## Počúvanie na zmenu hodnoty
 
-Ak potrebujete počúvať na zmenu hodnoty poľa mimo VUE komponenty je možné počúvať udalosť zmeny na vnorenom ```textarea``` elemente, ktoré obsahuje aktuálny JSON objekt:
+Ak potrebujete počúvať na zmenu hodnoty poľa mimo web komponentu je možné počúvať udalosť zmeny na vnorenom ```textarea``` elemente, ktoré obsahuje aktuálny JSON objekt:
 
 ```javascript
 $("#DTE_Field_editorFields-parentGroupDetails").on("change", function(e) {
@@ -365,18 +365,10 @@ $("#DTE_Field_editorFields-parentGroupDetails").on("change", function(e) {
 
 ## Implementačné detaily
 
-[field-type-json.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-json.js) je definovaný nový dátový typ ```$.fn.dataTable.Editor.fieldTypes.json```. Ten je implementovaný pomocou VUE komponenty [webjet-dte-jstree](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree.vue). Obsahuje aj skryté pole typu ```textarea```, do ktorého sa kopíruje aktuálny JSON objekt. Toto pole ale slúži len na "inšpekciu" aktuálnych dát. Vo funkcii get sa vždy vrátia aktuálne dáta z VUE komponenty.
+[field-type-json.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-json.js) definuje dátový typ ```$.fn.dataTable.Editor.fieldTypes.json```. Je implementovaný natívnym web komponentom [webjet-dte-jstree](../../../../src/main/webapp/admin/v9/src/js/web-components/webjet-dte-jstree.js). Obsahuje aj skryté pole typu ```textarea```, do ktorého sa kopíruje aktuálny JSON objekt. Funkcia `get` vždy vráti aktuálne dáta z web komponentu.
 
-[datatables-config.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-config.js) implementuje funkciu ```renderJson(td, type, rowData, row)``` pre zobrazenie dát v tabuľke. Tá prechádza záznamy z ktorých použije atribút ```fullPath```.
+[datatables-config.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-config.js) implementuje funkciu ```renderJson(td, type, rowData, row)``` pre zobrazenie dát v tabuľke.
 
-[webjet-dte-jstree.vue](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree.vue) je koreňová komponenta, ktorá podľa dát prechádza ```child``` komponentu riadku záznamu. Pre objekty typu **array** zobrazí aj tlačidlo pre pridanie nového záznamu do poľa.
-
-Komponenta používa [EventBus](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/event-bus.js) v ktorom počúva na udalosť ```change-jstree```. Táto udalosť nastane po kliknutí na adresár alebo web stránku v JS Tree.
-
-Funkcia ```processTreeItem(that, data)``` spracuje kliknutie na objekt (DocDetails alebo GroupDetails) v JS tree komponente. Vykoná validáciu a prípadnú konverziu JSON objektu.
-
-[webjet-dte-jstree-item.js](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree-item.vue) je riadok zoznamu existujúcich objektov. V každom riadku zobrazuje tlačidlo pre editáciu a zmazanie záznamu. Kliknutie je spracované koreňovou komponentou cez volanie ```this.$parent.processTreeItem(this, data);```.
-
-[vue-folder-tree.vue](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/folder-tree/vue-folder-tree.vue) zapúzdruje knižnicu JS Tree do VUE komponenty.
+Web komponent vykresľuje existujúce položky a pre objekty typu **array** aj tlačidlo na pridanie záznamu. Knižnica jsTree oznamuje výber bublajúcou udalosťou `webjet-jstree-select`; komponent následne vykoná validáciu, konverziu objektu a synchronizáciu hodnoty vstupného poľa.
 
 Ak je ```Doc/GroupDetails``` objekt ```null``` nezobrazilo by sa žiadne pole. Preto v ```field-type-json.js``` je funkcia ```fixNullData```, ktorá pre tento prípad umelo vytvorí základný objekt. Ak sa jedná o web stránku obsahuje atribút ```docId=-1```, pre adresár ```groupId=-1``` a pre ostatné objekty ```id=-1```. Atribút ```fullPath``` je nastavený na prázdnu hodnotu.

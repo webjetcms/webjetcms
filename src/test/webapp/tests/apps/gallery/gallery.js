@@ -54,7 +54,40 @@ Scenario('oblast zaujmu', async ({ I, DT, DTE }) => {
     I.seeAndClick("koala.jpg");
     I.clickCss("#pills-dt-galleryTable-areaOfInterest-tab");
 
-    I.waitForElement("div.vue-preview__wrapper");
+    I.waitForElement("webjet-image-area-selector[data-ready='true'] cropper-canvas");
+    const cropperSize = await I.executeScript(() => {
+        const selector = document.querySelector("webjet-image-area-selector");
+        const canvas = selector.querySelector("cropper-canvas");
+        return {
+            canvasWidth: canvas.offsetWidth,
+            canvasHeight: canvas.offsetHeight,
+            imageWidth: selector.imageSize.width,
+            imageHeight: selector.imageSize.height
+        };
+    });
+    assert.equal(cropperSize.canvasWidth, cropperSize.imageWidth);
+    assert.equal(cropperSize.canvasHeight, cropperSize.imageHeight);
+    const wheelResult = await I.executeScript(() => {
+        const selector = document.querySelector("webjet-image-area-selector");
+        const canvas = selector.querySelector("cropper-canvas");
+        const transformBefore = selector.cropperImage.$getTransform();
+        const wheelEvent = new WheelEvent("wheel", {
+            bubbles: true,
+            cancelable: true,
+            ctrlKey: true,
+            deltaY: -100
+        });
+        canvas.dispatchEvent(wheelEvent);
+        return {
+            defaultPrevented: wheelEvent.defaultPrevented,
+            scalable: selector.cropperImage.scalable,
+            transformBefore,
+            transformAfter: selector.cropperImage.$getTransform()
+        };
+    });
+    assert.equal(wheelResult.defaultPrevented, true);
+    assert.equal(wheelResult.scalable, false);
+    assert.deepEqual(wheelResult.transformAfter, wheelResult.transformBefore);
 
     I.see("Šírka:");
     within('.coordinates', () => {
@@ -64,7 +97,7 @@ Scenario('oblast zaujmu', async ({ I, DT, DTE }) => {
     });
     DTE.save();
 
-    // vue-advanced-cropper padal ked bol inicializovany, okno sa zatvorilo a zmenila sa velkost
+    // Verify resizing after closing an initialized area selector.
     I.resizeWindow(1280, 850);
     I.seeAndClick("koala.jpg");
     DTE.waitForEditor("galleryTable");
@@ -207,7 +240,7 @@ Scenario('novy priecinok', async({ I, DT, DTE }) => {
     // During creation we dont see field DTE_Field_path
     I.dontSeeElement(".DTE_Field_Name_path");
     // Only parent folder
-    I.seeElement(".DTE_Field_Name_parent .vueComponent input.form-control[value='/images/gallery/test']");
+    I.seeInField(".DTE_Field_Name_parent .webjet-component input.form-control", "/images/gallery/test");
 
     let name = await I.grabValueFrom("#DTE_Field_name");
     I.assertEqual(name, "");

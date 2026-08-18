@@ -146,10 +146,9 @@ window.WJ.DataTable = dataTableInit;
 import { CellVisibilityService } from './libs/data-tables-extends/';
 window.dataTableCellVisibilityService = new CellVisibilityService();
 
-/* VUE */
-import { VueTools } from './libs/tools/vuetools'
-VueTools.setup();
-window.VueTools = VueTools;
+/* WEB COMPONENTS */
+import './web-components/webjet-overview-dashboard';
+import './web-components/webjet-image-area-selector';
 
 /* DYNAMIC IMPORTS */
 const createImageEditor = () => {

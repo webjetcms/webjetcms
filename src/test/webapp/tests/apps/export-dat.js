@@ -12,7 +12,7 @@ Scenario('Export dat zakladne testy @baseTest', async ({I, DataTables}) => {
         perms: 'cmp_export',
         createSteps: function(I, options) {
             I.clickCss("#pills-dt-exportDatDataTable-filter-tab");
-            I.click(".btn-vue-jstree-add");
+            I.click(".btn-webjet-jstree-add");
             I.click("test");
             I.clickCss("#pills-dt-exportDatDataTable-basic-tab");
         },

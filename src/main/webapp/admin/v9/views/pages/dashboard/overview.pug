@@ -8,86 +8,57 @@ block content
 
     <div id="webjet-overview-dashboard">
         <a name="overview-dashboard-a" style="scroll-margin-top: 10em;"></a>
-        <webjet-overview-dashboard th:v-bind:overviewUser="${overviewUser}" th:v-bind:overviewbackdata="${overviewBackData}" th:v-bind:overviewadmins="${overviewAdmins}" th:v-bind:overviewrecentpages="${overviewRecentPages}" th:v-bind:overviewchangedpages="${overviewChangedPages}" th:v-bind:overviewadminlog="${overviewAdminlog}" th:v-bind:overviewtodo="${overviewTodo}" th:v-bind:overviewcurrentsessions="${overviewCurrentSessions}"></webjet-overview-dashboard>
+        <webjet-overview-dashboard></webjet-overview-dashboard>
         <a name="overview-dashboard-b" style="scroll-margin-top: 10em;"></a>
     </div>
+
+    script(data-th-inline="javascript").
+        window.webjetOverviewDashboardBootstrapData = {
+            backData: JSON.parse(/*[[${overviewBackData}]]*/ "{}"),
+            admins: JSON.parse(/*[[${overviewAdmins}]]*/ "[]"),
+            recentPages: JSON.parse(/*[[${overviewRecentPages}]]*/ "[]"),
+            changedPages: JSON.parse(/*[[${overviewChangedPages}]]*/ "[]"),
+            adminLog: JSON.parse(/*[[${overviewAdminlog}]]*/ "[]"),
+            todo: JSON.parse(/*[[${overviewTodo}]]*/ "[]"),
+            currentSessions: JSON.parse(/*[[${overviewCurrentSessions}]]*/ "{\"currentSessionId\":\"\",\"userSessions\":[]}")
+        };
 
     script.
         window.domReady.add(function () {
             window.statMode = "[(${layout.getConstant('statMode')})]";
 
-            let vueOverviewApp = window.VueTools.createApp({
-                components: {
-                    'webjet-overview-dashboard': window.VueTools.getComponent('webjet-overview-dashboard')
+            const dashboard = document.querySelector("webjet-overview-dashboard");
+            const dashboardData = window.webjetOverviewDashboardBootstrapData;
+            delete window.webjetOverviewDashboardBootstrapData;
+            dashboard.configure({
+                data: dashboardData,
+                config: {
+                    statMode: window.statMode,
+                    overviewJsonUrl: "[(${layout.getConstant('overviewJsonUrl')})]"
+                },
+                labels: {
+                    overviewViews: '[[\#{stat_time.sessions}]] / [[${layout.getConstantInt("welcomeDataBackTime") / 24 / 60}]] [[\#{welcome.statBackTime.days}]]',
+                    overviewForms: '[[\#{admin.welcome.newForms}]] / [[${layout.getConstantInt("welcomeDataBackTime") / 24 / 60}]] [[\#{welcome.statBackTime.days}]]',
+                    overviewForum: '[[\#{components.forum.title}]] / [[${layout.getConstantInt("welcomeDataBackTime") / 24 / 60}]] [[\#{welcome.statBackTime.days}]]',
+                    overviewErrors: '[[\#{stat_menu.invalidPages}]] / [[${layout.getConstantInt("welcomeDataBackTime") / 24 / 60}]] [[\#{welcome.statBackTime.days}]]',
+                    printToPdf: '[[\#{components.monitoring.print_to_pdf}]]',
+                    emptySpaceOnDisk: '[[\#{components.monitoring.empty_space_on_disc}]]',
+                    usedMemory: '[[\#{components.monitoring.used_memory.js}]]',
+                    freeMemory: '[[\#{components.monitoring.free_memory.js}]]',
+                    totalMemory: '[[\#{components.monitoring.total_memory.js}]]',
+                    occupancyMemory: '[[\#{components.monitoring.memory_occupancy}]]',
+                    cpuLoad: '[[\#{components.monitoring.cpu_load}]]',
+                    myLastPages: '[[\#{admin.fck.last_pages}]]',
+                    changedWebPages: '[[\#{components.adminlog.changedWebPages}]]',
+                    audit: '[[\#{admin.crontab.audit}]]',
+                    welcome: '[[\#{admin.overview.welcome}]]',
+                    changelog: WJ.parseMarkdown('[[\#{admin.overview.changelog}]]'),
+                    seeCompleteChangelog: '[[\#{admin.overview.seeCompleteChangelog}]]',
+                    loggedAdmins: '[[\#{welcome.logged_admins}]]',
+                    appsForNewWebJET: '[[\#{admin.overview.appsForNewWebJET}]]',
+                    newsInWebJET: '[[\#{admin.overview.newsInWebJET}]]'
                 }
             });
-
-            vueOverviewApp.config.globalProperties.$overviewViews = '[[\#{stat_time.sessions}]] / [[${layout.getConstantInt("welcomeDataBackTime") / 24 / 60}]] [[\#{welcome.statBackTime.days}]]'
-            vueOverviewApp.config.globalProperties.$overviewForms = '[[\#{admin.welcome.newForms}]] / [[${layout.getConstantInt("welcomeDataBackTime") / 24 / 60}]] [[\#{welcome.statBackTime.days}]]'
-            vueOverviewApp.config.globalProperties.$overviewForum = '[[\#{components.forum.title}]] / [[${layout.getConstantInt("welcomeDataBackTime") / 24 / 60}]] [[\#{welcome.statBackTime.days}]]'
-            vueOverviewApp.config.globalProperties.$overviewErrors = '[[\#{stat_menu.invalidPages}]] / [[${layout.getConstantInt("welcomeDataBackTime") / 24 / 60}]] [[\#{welcome.statBackTime.days}]]'
-
-            vueOverviewApp.config.globalProperties.$printToPdf = '[[\#{components.monitoring.print_to_pdf}]]';
-            vueOverviewApp.config.globalProperties.$emptySpaceOnDisk = '[[\#{components.monitoring.empty_space_on_disc}]]';
-            vueOverviewApp.config.globalProperties.$usedMemory = '[[\#{components.monitoring.used_memory.js}]]';
-            vueOverviewApp.config.globalProperties.$freeMemory = '[[\#{components.monitoring.free_memory.js}]]';
-            vueOverviewApp.config.globalProperties.$totalMemory = '[[\#{components.monitoring.total_memory.js}]]';
-            vueOverviewApp.config.globalProperties.$occupancyMemory = '[[\#{components.monitoring.memory_occupancy}]]';
-            vueOverviewApp.config.globalProperties.$cpuLoad = '[[\#{components.monitoring.cpu_load}]]';
-            vueOverviewApp.config.globalProperties.$serverCpus = '[[\#{components.monitoring.server_cpus}]]';
-            vueOverviewApp.config.globalProperties.$serverActualTime = '[[\#{components.monitoring.server_actual_time}]]';
-            vueOverviewApp.config.globalProperties.$serverRuntime = '[[\#{components.monitoring.server_run_time}]]';
-            vueOverviewApp.config.globalProperties.$serverStartTime = '[[\#{components.monitoring.server_start_time}]]';
-            vueOverviewApp.config.globalProperties.$remoteIP = '[[\#{components.monitoring.remote_ip}]]';
-            vueOverviewApp.config.globalProperties.$serverIP = '[[\#{components.monitoring.server_ip}]]';
-            vueOverviewApp.config.globalProperties.$serverContry = '[[\#{components.monitoring.server_contry}]]';
-            vueOverviewApp.config.globalProperties.$serverLanguage = '[[\#{components.monitoring.server_language}]]';
-            vueOverviewApp.config.globalProperties.$dbActive = '[[\#{components.monitoring.db_active}]]';
-            vueOverviewApp.config.globalProperties.$dbIdle = '[[\#{components.monitoring.db_idle}]]';
-            vueOverviewApp.config.globalProperties.$cacheItems = '[[\#{components.monitoring.cache_items}]]';
-            vueOverviewApp.config.globalProperties.$sessionsTotal = '[[\#{components.monitoring.sessions_total}]]';
-            vueOverviewApp.config.globalProperties.$swJavaVendor = '[[\#{components.monitoring.sw_java_vendor}]]';
-            vueOverviewApp.config.globalProperties.$swSpringVersion = 'Spring Core';
-            vueOverviewApp.config.globalProperties.$swSpringDataVersion = 'Spring Data';
-            vueOverviewApp.config.globalProperties.$swSpringSecurityVersion = 'Spring Security';
-            vueOverviewApp.config.globalProperties.$swRuntime = '[[\#{components.monitoring.sw_runtime}]]';
-            vueOverviewApp.config.globalProperties.$swVmName = '[[\#{components.monitoring.sw_vm_name}]]';
-            vueOverviewApp.config.globalProperties.$swJavaVersion = '[[\#{components.monitoring.sw_java_version}]]';
-            vueOverviewApp.config.globalProperties.$swVmVersion = '[[\#{components.monitoring.sw_vm_version}]]';
-            vueOverviewApp.config.globalProperties.$swServerName = '[[\#{components.monitoring.sw_server_name}]]';
-            vueOverviewApp.config.globalProperties.$swServerOs = '[[\#{components.monitoring.sw_server_os}]]';
-            vueOverviewApp.config.globalProperties.$swServerOsVersion = '[[\#{components.monitoring.sw_server_os_version}]]';
-            vueOverviewApp.config.globalProperties.$showHistoricalData = '[[\#{components.monitoring.show_historical_data}]]';
-            vueOverviewApp.config.globalProperties.$showLiveChart = '[[\#{components.monitoring.show_live_chart}]]';
-
-            vueOverviewApp.config.globalProperties.$vseobecneInformacie = '[[\#{components.monitoring.vseobecne_informacie}]]';
-            vueOverviewApp.config.globalProperties.$informacieOsoftveri = '[[\#{components.monitoring.informacie_o_softveri}]]';
-            vueOverviewApp.config.globalProperties.$updateInterval = '[[\#{components.monitoring.update_interval}]]';
-
-            vueOverviewApp.config.globalProperties.$uptime= '[[\#{components.monitor.monitoring.basic.server.uptime.date}]]';
-            vueOverviewApp.config.globalProperties.$uptimeSeconds= '[[\#{components.monitor.monitoring.basic.server.uptime.date.sec}]]';
-
-            vueOverviewApp.config.globalProperties.$licenseExpirationDate = '[[\#{components.monitoring.license_expiration_date}]]';
-            vueOverviewApp.config.globalProperties.$wjVersion = '[[\#{admin.top.webjet_version}]]';
-
-            vueOverviewApp.config.globalProperties.$myLastPages = '[[\#{admin.fck.last_pages}]]';
-            vueOverviewApp.config.globalProperties.$changedWebPages = '[[\#{components.adminlog.changedWebPages}]]';
-            vueOverviewApp.config.globalProperties.$audit = '[[\#{admin.crontab.audit}]]';
-
-            vueOverviewApp.config.globalProperties.$welcome = '[[\#{admin.overview.welcome}]]';
-            vueOverviewApp.config.globalProperties.$changelog = WJ.parseMarkdown('[[\#{admin.overview.changelog}]]');
-            vueOverviewApp.config.globalProperties.$seeCompleteChangelog = '[[\#{admin.overview.seeCompleteChangelog}]]';
-            vueOverviewApp.config.globalProperties.$loggedAdmins = '[[\#{welcome.logged_admins}]]';
-            vueOverviewApp.config.globalProperties.$appsForNewWebJET = '[[\#{admin.overview.appsForNewWebJET}]]';
-            vueOverviewApp.config.globalProperties.$newsInWebJET = '[[\#{admin.overview.newsInWebJET}]]';
-
-            vueOverviewApp.config.globalProperties.$overviewJsonUrl = "[(${layout.getConstant('overviewJsonUrl')})]";
-
-            window.vueOverviewApp = vueOverviewApp;
-            window.vueMonitoringApp = vueOverviewApp;
-            window.VueTools.setDefaultObjects(vueOverviewApp);
-
-            vueOverviewApp.mount("#webjet-overview-dashboard");
 
             let container = "toast-container-overview";
             if ([(${show2FARecommendation==true})]) {

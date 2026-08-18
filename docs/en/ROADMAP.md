@@ -56,6 +56,8 @@ Explanation of the pictograms used:
 - [ ] +Configuration - add the option to set a variable only for the current node (do not save it to the database - just set it to the Constants object), add a "Set temporarily" checkbox there with an info icon that the value is set only temporarily and upon restart the value as in the database will be restored.
 - [ ] Explorer - fix displaying files with special characters (for example `@`).
 - [ ] Automatically delete `temp` files that may accumulate.
+- [x] +Administration - remove dependency on `Vue.js` and replace internal components with native web components (#58722).
+- [ ] +Modify the loading of the admin section so that only the inside of the page is replaced via a REST service call, not a complete reload of the HTML code.
 
 ## 2025
 
