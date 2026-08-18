@@ -364,6 +364,7 @@ $("#DTE_Field_editorFields-parentGroupDetails").on("change", function(e) {
 ```
 
 ## Implementačné detaily
+
 [field-type-json.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-json.js) definuje dátový typ ```$.fn.dataTable.Editor.fieldTypes.json```. Je implementovaný natívnym web komponentom [webjet-dte-jstree](../../../../src/main/webapp/admin/v9/src/js/web-components/webjet-dte-jstree.js). Obsahuje aj skryté pole typu ```textarea```, do ktorého sa kopíruje aktuálny JSON objekt. Funkcia `get` vždy vráti aktuálne dáta z web komponentu.
 
 [datatables-config.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-config.js) implementuje funkciu ```renderJson(td, type, rowData, row)``` pre zobrazenie dát v tabuľke.

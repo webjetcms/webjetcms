@@ -1,3 +1,33 @@
+/**
+ * Configuration for the DataTables Editor tree picker.
+ *
+ * @typedef {Object} WebjetDteJsTreeOptions
+ * @property {HTMLInputElement|HTMLTextAreaElement} [inputElement] - Backing form control that receives the selected value and change events.
+ * @property {string|null} [dataTableName] - DataTable name used to scope the backing input selector.
+ * @property {Object} [dataTable] - DataTable integration object, including optional JSON-field mapping hooks.
+ * @property {Object} [dataTable.DATA] - DataTable runtime data.
+ * @property {Object|null} [dataTable.DATA.jsonField] - Custom value-mapping hooks.
+ * @property {function(WebjetDteJsTreeCompatibilityContext, Object): Object} [dataTable.DATA.jsonField.getItem] - Maps a tree selection to the stored item.
+ * @property {function(WebjetDteJsTreeCompatibilityContext, Object): (string|number)} [dataTable.DATA.jsonField.getKey] - Returns the identity used to detect duplicate selections.
+ * @property {string} [mode=""] - Tree selection mode encoded by the DataTable field class.
+ * @property {Object.<string, string>|null} [attributes] - DataTable field attributes that configure labels, endpoints, roots, and filtering.
+ * @property {Object|Object[]|null|string} [value] - Initial item or items; `null` and the empty string represent no selection.
+ */
+
+/**
+ * Context supplied to custom DataTable JSON-field mapping hooks.
+ *
+ * @typedef {Object} WebjetDteJsTreeCompatibilityContext
+ * @property {Object|undefined} dataTable - Configured DataTable integration object.
+ * @property {string|null|undefined} dataTableName - Configured DataTable name.
+ * @property {string|undefined} idKey - ID of the backing form control.
+ * @property {(Object|string)[]} data - Current selection array.
+ * @property {string} click - Current tree selection mode.
+ * @property {Object.<string, string>|null|undefined} attr - Configured DataTable field attributes.
+ * @property {number|null} index - Index being replaced, or `null` when adding an item.
+ * @property {Object|string|null|undefined} grp - Item being replaced, or `null` when adding an item.
+ */
+
 let treeCounter = 0;
 
 function createEmptyValue(mode) {
@@ -8,6 +38,15 @@ function createEmptyValue(mode) {
     return [item];
 }
 
+/**
+ * Normalizes a configured value to the component's array representation.
+ *
+ * Empty non-array modes receive a placeholder item. Existing arrays are retained rather than copied.
+ *
+ * @param {Object|Object[]|null|string|undefined} value - One item, an item array, or an empty-value sentinel.
+ * @param {string} mode - Tree selection mode.
+ * @returns {(Object|string)[]} The normalized selection array.
+ */
 function normalizeValue(value, mode) {
     const array = Array.isArray(value) ? value : (value == null || value === "" ? [] : [value]);
     if (!mode.includes("-array") && array.length === 0) return createEmptyValue(mode);
@@ -31,6 +70,10 @@ function button(className, icon, label) {
     return element;
 }
 
+/**
+ * Provides a tree-backed picker for page, group, and filesystem values used by
+ * DataTables Editor fields and standalone inputs.
+ */
 export class WebjetDteJsTreeElement extends HTMLElement {
     constructor() {
         super();
@@ -42,6 +85,10 @@ export class WebjetDteJsTreeElement extends HTMLElement {
         this._treeSelectHandler = event => this._processTreeItem(event.detail);
     }
 
+    /**
+     * Renders the connected element and emits a bubbling, non-cancelable
+     * `webjet-component-ready` event without detail.
+     */
     connectedCallback() {
         this.render();
         this.dataset.ready = "true";
@@ -52,6 +99,12 @@ export class WebjetDteJsTreeElement extends HTMLElement {
         this._destroyTree();
     }
 
+    /**
+     * Applies component options and renders immediately when the element is connected.
+     *
+     * @param {WebjetDteJsTreeOptions} options - Component options.
+     * @returns {WebjetDteJsTreeElement} The configured element.
+     */
     configure(options) {
         this._options = { ...options };
         this._value = normalizeValue(options.value, options.mode || "");
@@ -67,16 +120,29 @@ export class WebjetDteJsTreeElement extends HTMLElement {
         this.setValue(value);
     }
 
+    /**
+     * Replaces the selected value and renders immediately when the element is connected.
+     *
+     * @param {Object|Object[]|null|string} [value] - One item, an item array, or an empty-value sentinel.
+     */
     setValue(value) {
         this._value = normalizeValue(value, this._options.mode || "");
         if (this.isConnected) this.render();
     }
 
+    /**
+     * Returns the current selection, excluding invalid placeholders in nullable ID modes.
+     *
+     * @returns {(Object|string)[]} The internal selection array, or an empty array when a nullable ID is not valid.
+     */
     getValue() {
         if (this._isNullableIdMode() && !this._hasValidNullableId()) return [];
         return this._value;
     }
 
+    /**
+     * Rebuilds the picker rows and optional add control from the current selection.
+     */
     render() {
         this._destroyTree();
         this.replaceChildren();
@@ -159,6 +225,16 @@ export class WebjetDteJsTreeElement extends HTMLElement {
         return Number(id) > 0;
     }
 
+    /**
+     * Removes an array item or resets a nullable single-value item.
+     *
+     * Page modes first dispatch a non-bubbling, non-cancelable
+     * `WJ.jstree.item.remove` event on `window` with the affected item as its detail.
+     * All modes then emit a bubbling, non-cancelable `webjet-jstree-remove` event
+     * whose detail contains `item` and its document, group, or generic `id`.
+     *
+     * @param {number} index - Index of the item to remove or reset.
+     */
     _removeItem(index) {
         const mode = this._options.mode || "";
         const item = this._value[index];
@@ -174,6 +250,11 @@ export class WebjetDteJsTreeElement extends HTMLElement {
         this.render();
     }
 
+    /**
+     * Opens the tree selector to add or replace an item.
+     *
+     * @param {number|null} index - Existing item index to replace, or `null` to append a new item.
+     */
     _openModal(index) {
         this._destroyTree();
         this._activeIndex = index;
@@ -222,6 +303,12 @@ export class WebjetDteJsTreeElement extends HTMLElement {
         this._tree = null;
     }
 
+    /**
+     * Validates and maps a jsTree selection, then updates the component value and backing input.
+     * A configured JSON-field `getItem` hook maps the selection before storage.
+     *
+     * @param {Object} data - Selection detail from the `webjet-jstree-select` event.
+     */
     _processTreeItem(data) {
         const mode = this._options.mode || "";
         if (!this._validateSelection(data)) return;
@@ -294,6 +381,11 @@ export class WebjetDteJsTreeElement extends HTMLElement {
         return true;
     }
 
+    /**
+     * Builds the context passed to custom DataTable JSON-field mapping hooks.
+     *
+     * @returns {WebjetDteJsTreeCompatibilityContext} The current compatibility context.
+     */
     _getCompatibilityContext() {
         return {
             dataTable: this._options.dataTable,
@@ -313,6 +405,20 @@ export class WebjetDteJsTreeElement extends HTMLElement {
         return dataTableName != null ? `#${dataTableName}_modal #${inputId}` : ` #${inputId}`;
     }
 
+    /**
+     * Writes the current value to the backing control and publishes selection changes.
+     *
+     * When configured, the backing control receives a jQuery `change` event.
+     * Selection changes dispatch a non-bubbling, non-cancelable
+     * `WJ.jstree.change` event on `window`. Depending on the mode, it is preceded by
+     * `WJ.jstree-simple.change` with `{ textInputId, value }` or
+     * `WJ.jstree-groupid.change` with `{ textInputId, item }`. For compatibility,
+     * `textInputId` in `WJ.jstree-groupid.change` contains the selected ID; in the
+     * other events it contains the backing input selector.
+     *
+     * @param {Object} [item] - Selected item included in global event detail.
+     * @param {boolean} [emitSelectionEvents=true] - Whether to dispatch the global selection events.
+     */
     _syncInput(item, emitSelectionEvents = true) {
         const input = this._options.inputElement;
         if (!input) return;
@@ -350,6 +456,12 @@ export class WebjetDteJsTreeElement extends HTMLElement {
 
 if (!customElements.get("webjet-dte-jstree")) customElements.define("webjet-dte-jstree", WebjetDteJsTreeElement);
 
+/**
+ * Creates and configures a tree-picker custom element.
+ *
+ * @param {WebjetDteJsTreeOptions} options - Component options.
+ * @returns {WebjetDteJsTreeElement} The configured custom element.
+ */
 export function createWebjetDteJsTree(options) {
     const component = document.createElement("webjet-dte-jstree");
     component.configure(options);

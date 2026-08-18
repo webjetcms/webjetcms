@@ -1,7 +1,57 @@
 import Cropper from 'cropperjs';
 
+/**
+ * Coordinates accepted from configuration in original-image pixels.
+ *
+ * @typedef {Object} WebjetImageAreaCoordinateInput
+ * @property {number|string|null} [left] - Horizontal offset, preferred over `x` when present.
+ * @property {number|string|null} [top] - Vertical offset, preferred over `y` when present.
+ * @property {number|string|null} [x] - Horizontal-offset alias.
+ * @property {number|string|null} [y] - Vertical-offset alias.
+ * @property {number|string|null} [width] - Selection width.
+ * @property {number|string|null} [height] - Selection height.
+ */
+
+/**
+ * Normalized image-area coordinates in original-image pixels.
+ *
+ * @typedef {Object} WebjetImageAreaCoordinates
+ * @property {number} left - Horizontal offset.
+ * @property {number} top - Vertical offset.
+ * @property {number} width - Selection width.
+ * @property {number} height - Selection height.
+ */
+
+/**
+ * Geometry used to convert between the rendered image and original-image pixels.
+ *
+ * @typedef {Object} WebjetImageAreaGeometry
+ * @property {number} scaleX - Horizontal original-to-rendered scale.
+ * @property {number} scaleY - Vertical original-to-rendered scale.
+ * @property {number} offsetX - Rendered horizontal image offset within the cropper canvas.
+ * @property {number} offsetY - Rendered vertical image offset within the cropper canvas.
+ */
+
+/**
+ * Configuration for the image-area selector.
+ *
+ * @typedef {Object} WebjetImageAreaSelectorOptions
+ * @property {function(): (string|null|undefined)} [getImageUrl] - Returns the image URL to load when the selector is refreshed.
+ * @property {function(): (WebjetImageAreaCoordinateInput|undefined)} [getCoordinates] - Returns the current selection in original-image pixels.
+ * @property {function(WebjetImageAreaCoordinates): void} [onChange] - Receives normalized coordinates after the selection changes.
+ * @property {Object|null} [labels] - Labels displayed above the coordinate inputs.
+ * @property {string} [labels.x=""] - Horizontal-offset label.
+ * @property {string} [labels.y=""] - Vertical-offset label.
+ * @property {string} [labels.width=""] - Width label.
+ * @property {string} [labels.height=""] - Height label.
+ * @property {string} [labels.zoom=""] - Zoom label.
+ */
+
 const COORDINATE_KEYS = ["left", "top", "width", "height"];
 
+/**
+ * Displays and edits an image selection in original-image pixel coordinates.
+ */
 export class WebjetImageAreaSelectorElement extends HTMLElement {
     constructor() {
         super();
@@ -28,6 +78,12 @@ export class WebjetImageAreaSelectorElement extends HTMLElement {
         this._destroyCropper();
     }
 
+    /**
+     * Applies callbacks and labels, then renders immediately when connected.
+     *
+     * @param {WebjetImageAreaSelectorOptions} [options={}] - Component options.
+     * @returns {WebjetImageAreaSelectorElement} The configured element.
+     */
     configure(options = {}) {
         this.options = options;
         this._configured = true;
@@ -35,6 +91,9 @@ export class WebjetImageAreaSelectorElement extends HTMLElement {
         return this;
     }
 
+    /**
+     * Rebuilds the coordinate controls and cropper container.
+     */
     render() {
         const labels = this.options.labels || {};
         this.innerHTML = `
@@ -75,6 +134,9 @@ export class WebjetImageAreaSelectorElement extends HTMLElement {
         this.refresh();
     }
 
+    /**
+     * Returns the selector to its loading state and releases the active cropper.
+     */
     deactivate() {
         this.dataset.ready = "false";
         this.querySelector(".loading")?.removeAttribute("hidden");
@@ -82,6 +144,9 @@ export class WebjetImageAreaSelectorElement extends HTMLElement {
         this._destroyCropper();
     }
 
+    /**
+     * Loads the current image and selection when an image URL is available.
+     */
     refresh() {
         const imageUrl = this.options.getImageUrl?.();
         if (!imageUrl) return;
@@ -101,6 +166,14 @@ export class WebjetImageAreaSelectorElement extends HTMLElement {
         this.selection?.$render?.();
     }
 
+    /**
+     * Initializes the cropper for a loaded image and restores the configured selection.
+     *
+     * Emits a bubbling, non-cancelable `webjet-component-ready` event without detail
+     * after the cropper controls become available.
+     *
+     * @param {HTMLImageElement} image - Loaded source image.
+     */
     _initializeCropper(image) {
         const initialCoordinates = { ...this.coordinates };
         this.imageSize = { width: image.naturalWidth, height: image.naturalHeight };
@@ -130,6 +203,11 @@ export class WebjetImageAreaSelectorElement extends HTMLElement {
         this.selection = null;
     }
 
+    /**
+     * Converts original-image coordinates to rendered geometry and applies the selection.
+     *
+     * @param {WebjetImageAreaCoordinates} coordinates - Selection in original-image pixels.
+     */
     _setSelection(coordinates) {
         if (!this.selection) return;
         const { scaleX, scaleY, offsetX, offsetY } = this._getImageGeometry();
@@ -144,6 +222,11 @@ export class WebjetImageAreaSelectorElement extends HTMLElement {
         this._applyTimeout = setTimeout(() => { this._applyingCoordinates = false; }, 1000);
     }
 
+    /**
+     * Converts a cropper selection to original-image coordinates and publishes it.
+     *
+     * @param {{x: number, y: number, width: number, height: number}|null} detail - Current cropper selection.
+     */
     _selectionChanged(detail) {
         if (!detail) return;
         const { scaleX, scaleY, offsetX, offsetY } = this._getImageGeometry();
@@ -164,6 +247,11 @@ export class WebjetImageAreaSelectorElement extends HTMLElement {
         });
     }
 
+    /**
+     * Calculates the rendered image scale and offset relative to the cropper canvas.
+     *
+     * @returns {WebjetImageAreaGeometry} The current image geometry, or identity geometry before initialization.
+     */
     _getImageGeometry() {
         const canvas = this.cropper?.getCropperCanvas?.();
         if (!canvas || !this.cropperImage || !this.imageSize.width || !this.imageSize.height) {
@@ -181,11 +269,23 @@ export class WebjetImageAreaSelectorElement extends HTMLElement {
         };
     }
 
+    /**
+     * Publishes a copy of the normalized coordinates to configured consumers.
+     *
+     * Invokes the configured `onChange` callback and emits a bubbling, non-cancelable
+     * `webjet-area-change` event with `WebjetImageAreaCoordinates` as its detail.
+     */
     _publishCoordinates() {
         this.options.onChange?.({ ...this.coordinates });
         this.dispatchEvent(new CustomEvent("webjet-area-change", { detail: { ...this.coordinates }, bubbles: true }));
     }
 
+    /**
+     * Coerces and rounds coordinates, accepting `x` and `y` as offset aliases.
+     *
+     * @param {WebjetImageAreaCoordinateInput} [coordinates={}] - Coordinate values to normalize.
+     * @returns {WebjetImageAreaCoordinates} Normalized rounded coordinates.
+     */
     _normalizeCoordinates(coordinates = {}) {
         return {
             left: Math.round(Number(coordinates.left ?? coordinates.x) || 0),

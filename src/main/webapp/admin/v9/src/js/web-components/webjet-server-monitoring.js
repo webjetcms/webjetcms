@@ -1,3 +1,11 @@
+/**
+ * Configuration for the live server-monitoring component.
+ *
+ * @typedef {Object} WebjetServerMonitoringOptions
+ * @property {boolean|string} [complex=false] - Enables detailed monitoring when set to `true` or `"true"`.
+ * @property {Object.<string, string>} [labels={}] - Localized chart, table, disk, and interval labels.
+ */
+
 const TABLE_KEYS = [
     ["wjVersion", "licenseExpirationDate", "serverActualTime", "serverStartTime", "serverRuntime", "remoteIP", "serverIP", "serverContry", "serverLanguage", "serverCpus", "clusterNodeName"],
     ["swRuntime", "swVmVersion", "swVmName", "swJavaVersion", "swJavaVendor", "swSpringVersion", "swSpringDataVersion", "swSpringSecurityVersion", "swServerName", "swServerOs", "swServerOsVersion"],
@@ -7,6 +15,9 @@ const TABLE_KEYS = [
 
 const STRONG_KEYS = new Set(["serverActualTime", "remoteIP", "serverIP", "cacheItems", "serverCpus", "dbIdle", "sessionsTotal"]);
 
+/**
+ * Displays live server memory and CPU charts with optional detailed monitoring data.
+ */
 export class WebjetServerMonitoringElement extends HTMLElement {
     constructor() {
         super();
@@ -21,6 +32,12 @@ export class WebjetServerMonitoringElement extends HTMLElement {
         this._configured = false;
     }
 
+    /**
+     * Starts chart initialization and server polling after the configured element is connected.
+     *
+     * When monitoring permission is available, emits a bubbling, non-cancelable
+     * `webjet-component-ready` event without detail after initialization starts.
+     */
     connectedCallback() {
         if (!this._configured) return;
         if (this._initialized) return;
@@ -36,6 +53,9 @@ export class WebjetServerMonitoringElement extends HTMLElement {
         this.dispatchEvent(new CustomEvent("webjet-component-ready", { bubbles: true }));
     }
 
+    /**
+     * Stops polling, aborts the active request, and disposes chart resources.
+     */
     disconnectedCallback() {
         clearInterval(this.interval);
         this.request?.abort?.();
@@ -44,6 +64,12 @@ export class WebjetServerMonitoringElement extends HTMLElement {
         this._initialized = false;
     }
 
+    /**
+     * Applies the display mode and labels, restarting monitoring when already connected.
+     *
+     * @param {WebjetServerMonitoringOptions} [options={}] - Monitoring options.
+     * @returns {WebjetServerMonitoringElement} The configured element.
+     */
     configure({ complex = false, labels = {} } = {}) {
         this.complex = complex === true || complex === "true";
         this.labels = labels;
@@ -55,6 +81,9 @@ export class WebjetServerMonitoringElement extends HTMLElement {
         return this;
     }
 
+    /**
+     * Builds live chart containers and the optional detailed monitoring controls and tables.
+     */
     render() {
         const intervals = [5, 10, 20, 30, 40, 50, 60, 120];
         this.innerHTML = `
@@ -84,12 +113,18 @@ export class WebjetServerMonitoringElement extends HTMLElement {
         }
     }
 
+    /**
+     * Restarts polling with an immediate refresh followed by the configured interval.
+     */
     _startInterval() {
         clearInterval(this.interval);
         this._updateData();
         this.interval = setInterval(() => this._updateData(), this.refreshInterval);
     }
 
+    /**
+     * Fetches the current server snapshot unless another monitoring request is active.
+     */
     _updateData() {
         if (this.request) return;
         this.request = $.getJSON("/admin/rest/monitoring/actual")
@@ -122,6 +157,9 @@ export class WebjetServerMonitoringElement extends HTMLElement {
         }).catch(error => console.error("Unable to initialize server monitoring charts", error));
     }
 
+    /**
+     * Pushes the latest server snapshot to every initialized live chart.
+     */
     _updateCharts() {
         if (!this.chartData) return;
         for (const [type, chart] of Object.entries(this.charts)) {

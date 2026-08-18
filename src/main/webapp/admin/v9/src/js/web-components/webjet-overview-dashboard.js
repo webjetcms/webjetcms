@@ -1,5 +1,31 @@
 import './webjet-server-monitoring';
 
+/**
+ * Configuration for the administration overview dashboard.
+ *
+ * @typedef {Object} WebjetOverviewDashboardOptions
+ * @property {Object} [data={}] - Bootstrap data for statistics, pages, users, sessions, and audit entries.
+ * @property {Object} [data.backData={}] - Aggregate dashboard statistics.
+ * @property {Object[]} [data.admins=[]] - Logged-in administrators.
+ * @property {Object[]} [data.recentPages=[]] - Pages recently edited by the current user.
+ * @property {Object[]} [data.changedPages=[]] - Recently changed pages.
+ * @property {Object[]} [data.adminLog=[]] - Recent audit entries.
+ * @property {Object} [data.currentSessions={}] - Current-session ID and clustered user sessions.
+ * @property {Object.<string, string>} [labels={}] - Localized labels used by dashboard sections and server monitoring.
+ * @property {Object} [config={}] - Runtime dashboard configuration.
+ * @property {string} [config.statMode] - Statistics mode; `"none"` hides statistics cards.
+ * @property {string} [config.overviewJsonUrl=""] - Base URL used to load localized WebJET news.
+ */
+
+/**
+ * Bookmark persisted by the overview dashboard.
+ *
+ * @typedef {Object} WebjetOverviewBookmark
+ * @property {string} name - Display name.
+ * @property {string} path - Administration URL.
+ * @property {boolean} [baseline] - Whether the bookmark is protected from removal.
+ */
+
 function element(tag, className, text) {
     const node = document.createElement(tag);
     if (className) node.className = className;
@@ -7,6 +33,14 @@ function element(tag, className, text) {
     return node;
 }
 
+/**
+ * Creates a dashboard side card with an icon, title, and action container.
+ *
+ * @param {string} icon - Icon CSS class.
+ * @param {string} title - Card title.
+ * @param {string} extraClass - Card-specific CSS class.
+ * @returns {HTMLDivElement} The card wrapper.
+ */
 function createOverviewCard(icon, title, extraClass) {
     const wrapper = element("div", `overview-logged ${extraClass}`);
     const head = element("div", "overview-logged__head");
@@ -17,6 +51,9 @@ function createOverviewCard(icon, title, extraClass) {
     return wrapper;
 }
 
+/**
+ * Renders the administration overview from server-provided bootstrap data.
+ */
 export class WebjetOverviewDashboardElement extends HTMLElement {
     constructor() {
         super();
@@ -37,6 +74,12 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         this._feedbackListeners = [];
     }
 
+    /**
+     * Applies dashboard data, labels, and runtime configuration.
+     *
+     * @param {WebjetOverviewDashboardOptions} [options={}] - Dashboard options.
+     * @returns {WebjetOverviewDashboardElement} The configured element.
+     */
     configure({ data = {}, labels = {}, config = {} } = {}) {
         this.data = data;
         this.labels = labels;
@@ -46,6 +89,12 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         return this;
     }
 
+    /**
+     * Rebuilds all dashboard sections and embedded server monitoring.
+     *
+     * Emits a bubbling, non-cancelable `webjet-component-ready` event without detail
+     * after the dashboard is rendered.
+     */
     render() {
         this.disconnectedCallback();
         this.replaceChildren();
@@ -114,6 +163,13 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         return wrapper;
     }
 
+    /**
+     * Appends recent-page, changed-page, or audit entries to a dashboard list.
+     *
+     * @param {HTMLElement} container - Element that receives the generated list.
+     * @param {Object[]} items - Page or audit entries to render.
+     * @param {string} type - Entry type: `"recent"`, `"changed"`, or `"audit"`.
+     */
     _renderPageList(container, items, type) {
         const list = element("ul");
         items.forEach(item => {
@@ -200,6 +256,13 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         return wrapper;
     }
 
+    /**
+     * Invalidates an administrator session and removes its row after a successful response.
+     *
+     * @param {string} sessionId - Server session identifier.
+     * @param {HTMLElement} row - Session row to remove.
+     * @returns {Promise<void>} A promise that settles after the removal request completes.
+     */
     async _removeSession(sessionId, row) {
         const response = await fetch("/admin/rest/removeSession", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8", "X-CSRF-Token": window.csrfToken }, body: new URLSearchParams({ sessionId }) });
         if (response.ok) row.remove();
@@ -209,6 +272,11 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         return [["admin.welcome.active_sessions.userAgent.js", session.browserName], ["admin.welcome.active_sessions.remoteAddr.js", session.remoteAddr], ["admin.welcome.active_sessions.logonTime.js", session.logonTime ? WJ.formatDateTimeSeconds(new Date(session.logonTime).toUTCString()) : null], ["admin.welcome.active_sessions.domainName.js", session.domainName], ["admin.welcome.active_sessions.server.js", session.cluster]].filter(([, value]) => value).map(([key, value]) => `${WJ.translate(key)}:\n\t${value}`).join("\n");
     }
 
+    /**
+     * Loads persisted bookmarks, falling back to localized defaults unless storage contains a non-empty array.
+     *
+     * @returns {WebjetOverviewBookmark[]} The stored non-empty bookmark list or default bookmarks.
+     */
     _getBookmarks() {
         const defaults = [{ name: WJ.translate("admin.welcome.bookmarks.default.webPages.js"), path: "/admin/v9/webpages/web-pages-list/" }, { name: WJ.translate("admin.welcome.bookmarks.default.forms.js"), path: "/apps/form/admin/" }];
         try {
@@ -308,6 +376,9 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         return wrapper;
     }
 
+    /**
+     * Opens the feedback form, tracks uploaded files, and submits the completed feedback.
+     */
     _showFeedbackModal() {
         if (document.querySelector("#feedback_modal")) return;
         const modalElement = element("div", "modal fade DTED");
