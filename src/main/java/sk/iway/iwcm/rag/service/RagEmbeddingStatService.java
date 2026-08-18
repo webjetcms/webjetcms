@@ -14,7 +14,7 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
-import sk.iway.iwcm.rag.embedding.EmbeddingProvider;
+import sk.iway.iwcm.rag.embedding.EmbeddingService;
 
 /**
  * Records embedding token usage into AI statistics using dedicated system assistants.
@@ -83,7 +83,7 @@ public class RagEmbeddingStatService {
         assistant.setName(GROUP_INDEXING.equals(groupName) ? "RAG-EMB-INDEX" : "RAG-EMB-SEARCH");
         assistant.setDescription(GROUP_INDEXING.equals(groupName) ? "System assistant for embedding indexing statistics" : "System assistant for embedding search statistics");
         assistant.setAction("text_embedding");
-        assistant.setClassName(EmbeddingProvider.class.getName());
+        assistant.setClassName(EmbeddingService.class.getName());
         assistant.setFieldFrom("");
         assistant.setFieldTo("semanticSearchEmbedding");
         assistant.setProvider(providerId);

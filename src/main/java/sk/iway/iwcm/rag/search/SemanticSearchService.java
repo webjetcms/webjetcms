@@ -21,9 +21,7 @@ import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.rag.embedding.EmbeddingBatchResult;
-import sk.iway.iwcm.rag.embedding.EmbeddingContext;
-import sk.iway.iwcm.rag.embedding.EmbeddingProvider;
-import sk.iway.iwcm.rag.embedding.EmbeddingProviderRegistry;
+import sk.iway.iwcm.rag.embedding.EmbeddingService;
 import sk.iway.iwcm.rag.service.RagEmbeddingStatService;
 import sk.iway.iwcm.rag.service.RagEntityType;
 import sk.iway.iwcm.rag.service.RagSettingsService;
@@ -44,15 +42,15 @@ public class SemanticSearchService {
     private static final String HYBRID_MODE_SHORT_QUERY_ONLY = "short_query_only";
     private static final String HYBRID_MODE_FALLBACK_ON_LOW_VECTOR = "fallback_on_low_vector";
 
-    private final EmbeddingProviderRegistry embeddingProviderRegistry;
+    private final EmbeddingService embeddingService;
     private final VectorStore vectorStore;
     private final RagEmbeddingStatService ragEmbeddingStatService;
 
     private final RagService ragService;
 
     @Autowired
-    public SemanticSearchService(EmbeddingProviderRegistry embeddingProviderRegistry, VectorStore vectorStore, RagEmbeddingStatService ragEmbeddingStatService, RagService ragService) {
-        this.embeddingProviderRegistry = embeddingProviderRegistry;
+    public SemanticSearchService(EmbeddingService embeddingService, VectorStore vectorStore, RagEmbeddingStatService ragEmbeddingStatService, RagService ragService) {
+        this.embeddingService = embeddingService;
         this.vectorStore = vectorStore;
         this.ragEmbeddingStatService = ragEmbeddingStatService;
 
@@ -92,8 +90,11 @@ public class SemanticSearchService {
             }
 
             model = embeddingAssistant.getModel();
-            EmbeddingProvider embeddingProvider = embeddingProviderRegistry.getProvider(embeddingAssistant.getProvider());
-            embeddingResult = embeddingProvider.embedWithUsage(List.of(query), model, EmbeddingContext.forSearch(request));
+            embeddingResult = embeddingService.embedWithUsage(
+                List.of(query),
+                embeddingAssistant,
+                request
+            );
         } catch (ProviderCallException e) {
             Logger.error(SemanticSearchService.class, "Error generating query embedding: " + e.getMessage(), e);
             Adminlog.add(Adminlog.TYPE_SEARCH, "Error generating query embedding: " + e.getMessage(), null, null);

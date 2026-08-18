@@ -24,9 +24,7 @@ import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.rag.RagIndexAction;
 import sk.iway.iwcm.rag.embedding.EmbeddingBatchResult;
-import sk.iway.iwcm.rag.embedding.EmbeddingContext;
-import sk.iway.iwcm.rag.embedding.EmbeddingProvider;
-import sk.iway.iwcm.rag.embedding.EmbeddingProviderRegistry;
+import sk.iway.iwcm.rag.embedding.EmbeddingService;
 import sk.iway.iwcm.rag.indexing.DocDetailsContentExtractor;
 import sk.iway.iwcm.rag.indexing.SlidingWindowChunker;
 import sk.iway.iwcm.rag.jpa.IndexQueueEntity;
@@ -45,7 +43,7 @@ public class SemanticIndexService {
 
     private final DocDetailsContentExtractor contentExtractor;
     private final SlidingWindowChunker chunker;
-    private final EmbeddingProviderRegistry embeddingProviderRegistry;
+    private final EmbeddingService embeddingService;
     private final PgVectorStore vectorStore;
     private final RagEmbeddingStatService ragEmbeddingStatService;
     private final EmbeddingChunkRepository embeddingChunkRepository;
@@ -57,14 +55,14 @@ public class SemanticIndexService {
     @Autowired
     public SemanticIndexService(DocDetailsContentExtractor contentExtractor,
                                 SlidingWindowChunker chunker,
-                                EmbeddingProviderRegistry embeddingProviderRegistry,
+                                EmbeddingService embeddingService,
                                 PgVectorStore vectorStore,
                                 IndexQueueRepository queueRepository,
                                 RagEmbeddingStatService ragEmbeddingStatService,
                                 EmbeddingChunkRepository embeddingChunkRepository) {
         this.contentExtractor = contentExtractor;
         this.chunker = chunker;
-        this.embeddingProviderRegistry = embeddingProviderRegistry;
+        this.embeddingService = embeddingService;
         this.vectorStore = vectorStore;
 
         this.queueRepository = queueRepository;
@@ -210,8 +208,7 @@ public class SemanticIndexService {
             }
 
             model = embeddingAssistant.getModel();
-            EmbeddingProvider embeddingProvider = embeddingProviderRegistry.getProvider(embeddingAssistant.getProvider());
-            dimensions = embeddingProvider.getDimensions(model);
+            dimensions = embeddingService.getDimensions();
 
             // Step 2.5: Check existing chunks to reuse unchanged embeddings
             Map<String, float[]> existingEmbeddingsByHash = vectorStore.getExistingEmbeddingsByHash(entityType, entityId, model);
@@ -242,10 +239,10 @@ public class SemanticIndexService {
 
             // Step 3: Embed only changed chunks
             if (chunksToEmbedTexts.isEmpty() == false) {
-                EmbeddingBatchResult embeddingResult = embeddingProvider.embedWithUsage(
+                EmbeddingBatchResult embeddingResult = embeddingService.embedWithUsage(
                     chunksToEmbedTexts,
-                    model,
-                    EmbeddingContext.forIndexing(domainName)
+                    embeddingAssistant,
+                    domainName
                 );
 
                 List<float[]> newEmbeddings = embeddingResult.getEmbeddings();
