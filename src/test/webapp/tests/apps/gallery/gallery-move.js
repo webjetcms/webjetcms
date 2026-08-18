@@ -1,5 +1,7 @@
 Feature('apps.gallery.gallery-move');
 
+const WebjetDteJsTree = require("../../../pages/WebjetDteJsTree");
+
 var randomNumber;
 var autoName;
 
@@ -24,16 +26,16 @@ Scenario('Gallery - Feature - select dir location during create', ({ I, DT, DTE 
     I.fillField("#DTE_Field_name", testDirName);
 
     I.say("Check location and change it");
-    I.seeElement(".DTE_Field_Name_parent .vueComponent input.form-control[value='" + dirTo + "']");
+    I.seeInField(".DTE_Field_Name_parent .webjet-component input.form-control", dirTo);
 
-    I.click("button.btn-vue-jstree-item-edit");
-    I.waitForVisible("#jsTree");
+    I.click("button.btn-webjet-jstree-item-edit");
+    I.waitForVisible(WebjetDteJsTree.tree);
     I.click(locate('.jsTree-wrapper .jstree-node.jstree-closed').withText('test').find('.jstree-icon.jstree-ocl'));
-    I.click(locate('.jsTree-wrapper #jsTree a.jstree-anchor').withText('move-from'));
-    I.waitForInvisible("#jsTree");
+    I.click(locate(WebjetDteJsTree.anchors).withText('move-from'));
+    I.waitForInvisible(WebjetDteJsTree.tree);
 
     I.say("Check value was change and we that we DONT see option updateInDoc");
-    I.seeElement(".DTE_Field_Name_parent .vueComponent input.form-control[value='" + dirFrom + "']");
+    I.seeInField(".DTE_Field_Name_parent .webjet-component input.form-control", dirFrom);
     I.dontSeeElement(".DTE_Field_Name_updateInDoc"); // dont see because its create not edit
     DTE.save();
     DTE.waitForModalClose("galleryDimensionDatatable");
@@ -45,7 +47,7 @@ Scenario('Gallery - Feature - select dir location during create', ({ I, DT, DTE 
     I.click(DT.btn.tree_edit_button);
     DTE.waitForEditor("galleryDimensionDatatable");
     I.seeInField("#DTE_Field_name", testDirName);
-    I.seeElement(".DTE_Field_Name_parent .vueComponent input.form-control[value='" + dirFrom + "']");
+    I.seeInField(".DTE_Field_Name_parent .webjet-component input.form-control", dirFrom);
 });
 
 const movedImageId = "46";
@@ -65,12 +67,12 @@ Scenario('Gallery - Feature - allow relocated folder in editor AND handle doc up
 
     I.clickCss("#pills-dt-galleryTable-metadata-tab");
 
-    I.click(".DTE_Field_Name_editorFields\\.imagePath button.btn-vue-jstree-item-edit");
-    I.waitForVisible("#jsTree");
+    I.click(".DTE_Field_Name_editorFields\\.imagePath button.btn-webjet-jstree-item-edit");
+    I.waitForVisible(WebjetDteJsTree.tree);
     I.click(locate('.jsTree-wrapper .jstree-node.jstree-closed').withText('test').find('.jstree-icon.jstree-ocl'));
     I.click(locate('.jsTree-wrapper .jstree-node.jstree-closed').withText('move-from').find('.jstree-icon.jstree-ocl'));
-    I.click(locate('.jsTree-wrapper #jsTree a.jstree-anchor').withText('moving-dir'));
-    I.waitForInvisible("#jsTree");
+    I.click(locate(WebjetDteJsTree.anchors).withText('moving-dir'));
+    I.waitForInvisible(WebjetDteJsTree.tree);
     DTE.save();
 
     I.say("Prepare page for test");
@@ -93,15 +95,15 @@ Scenario('Gallery - Feature - allow relocated folder in editor AND handle doc up
     DTE.waitForEditor("galleryDimensionDatatable");
     DTE.seeInField("path", "/images/gallery/test/move-from/moving-dir");
 
-    I.click("button.btn-vue-jstree-item-edit");
-    I.waitForVisible("#jsTree");
+    I.click("button.btn-webjet-jstree-item-edit");
+    I.waitForVisible(WebjetDteJsTree.tree);
     I.click(locate('.jsTree-wrapper .jstree-node.jstree-closed').withText('test').find('.jstree-icon.jstree-ocl'));
-    I.click(locate('.jsTree-wrapper #jsTree a.jstree-anchor').withText('move-to'));
-    I.waitForInvisible("#jsTree");
+    I.click(locate(WebjetDteJsTree.anchors).withText('move-to'));
+    I.waitForInvisible(WebjetDteJsTree.tree);
 
     I.say('Check');
     DTE.seeInField("path", "/images/gallery/test/move-to/moving-dir");
-    I.seeElement(".DTE_Field_Name_parent .vueComponent input.form-control[value='" + dirTo + "']");
+    I.seeInField(".DTE_Field_Name_parent .webjet-component input.form-control", dirTo);
     I.seeElement(".DTE_Field_Name_updateInDoc");
     I.seeCheckboxIsChecked("#DTE_Field_updateInDoc_0");
     DTE.save();

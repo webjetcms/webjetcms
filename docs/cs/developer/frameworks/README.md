@@ -7,7 +7,7 @@ Použité technologie:
 - ```rspack+node``` pro kompilování html/PUG/JS souborů
 - datatables.net + [editor](https://editor.datatables.net) - základní práce a editace tabulkových dat, napojené na Spring přes DatatablesRestControllerV2 - příklad v [GalleryRestController.java](../../../../src/main/java/sk/iway/iwcm/components/gallery/GalleryRestController.java) a [gallery.pug](../../../../src/main/webapp/admin/v9/
 - [pugjs.org](pugjs.md) - ```preprocessor``` pro generování HTML kódu stránek
-- [Vue.js](vue.md) - dostupné jako ```window.Vue```, krátká ukázka ve [foto galerii](../../../../src/main/webapp/admin/v9/views/pages/apps/gallery.pug)
+- [Web komponenty](web-components.md) - standardní JavaScript komponenty používané v administraci
 
 Celý postup generování web stránky v ```/admin/v9/``` je následující:
 

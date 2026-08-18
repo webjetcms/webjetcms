@@ -203,7 +203,7 @@ export function typeDatatable() {
                 }
                 const url = getUrlWithParams(EDITOR, conf);
 
-                //vue kompoennta este nebola inicializovana, pri opakovanom otvoreni DTED sa toto uz nevola
+                // The component is initialized only once; subsequent editor openings reuse it.
                 //console.log("DATATABLE SET, conf=", conf);
 
                 if (!empty(conf.datatable)) {

@@ -569,7 +569,7 @@ Pri manuálnom nastavení graf vypočíta iba krok, ale zvolenú granularitu pon
 
 ## Špeciálne (LIVE) grafy
 
-V sekcii `Monitorovanie servera - Aktuálne hodnoty` sa používajú špeciálne grafy typu **`LINE`**, ktoré sa dokážu automaticky aktualizovať. Ich logika je pripravená špecificky pre túto stránku a nie je určená na opakované použitie na iných stránkach. Implementácia je v súbore [vue-amchart-monitoring-server.vue](../../../../../../src/main/webapp/admin/v9/src/vue/components/webjet-server-monitoring/components/vue-amchart-monitoring-server.vue).
+V sekcii `Monitorovanie servera - Aktuálne hodnoty` sa používajú špeciálne grafy typu **`LINE`**, ktoré sa dokážu automaticky aktualizovať. Ich logika je pripravená špecificky pre túto stránku a nie je určená na opakované použitie na iných stránkach. Implementácia je v súbore [webjet-server-monitoring.js](../../../../../../src/main/webapp/admin/v9/src/js/web-components/webjet-server-monitoring.js).
 
 Na vytvorenie grafov sa opäť využíva logika zo súboru [chart-tools.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js), konkrétne funkcia `createServerMonitoringChart()`. Jej vstupnými parametrami sú iba ID elementu `div`, v ktorom sa graf zobrazí, a textová hodnota typu grafu. Podporované typy sú `memoryAmchart` a `cpuAmchart`.
 

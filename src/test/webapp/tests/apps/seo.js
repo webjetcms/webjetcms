@@ -1,5 +1,7 @@
 Feature('apps.seo');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 var randomNumber;
 
 Before(({ I, login }) => {
@@ -14,7 +16,7 @@ let dayDateFrom = "01.07.2021";
 let dayDateTo = "30.07.2021";
 
 function cleanFilter(I, DT) {
-    I.click("button.btn-vue-jstree-item-edit");
+    I.click("button.btn-webjet-jstree-item-edit");
     I.click(locate(".jstree-anchor").withText("Všetky (zo všetkých domén)"));
     DT.waitForLoader();
 }
@@ -166,8 +168,8 @@ Scenario("stat-keywords", async ({ I, DT, Browser, Document }) => {
 
     DT.checkTableRow("statKeywordsDataTable", 1, ["1", "archiv", "27", "24,11"]);
 
-    I.click("button.btn-vue-jstree-item-edit");
-    I.click( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk") );
+    I.click("button.btn-webjet-jstree-item-edit");
+    I.click( locate(WebjetDteJsTree.tree + " > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk") );
     I.click(locate(".jstree-anchor").withText("Jet portal 4"));
 
     waitForTableLoader(I);
@@ -253,15 +255,15 @@ Scenario("number-keywords", ({ I, Browser, DT }) => {
 
     DT.waitForLoader();
 
-    I.click("button.btn-vue-jstree-item-edit");
+    I.click("button.btn-webjet-jstree-item-edit");
     I.click(locate(".jstree-anchor").withText("Všetky (zo všetkých domén)"));
 
     DT.filterContains("name", "rozpočet");
 
     DT.checkTableRow("numberKeywordsDataTable", 1, [null, "rozpočet", "3", "3", "3"]);
 
-    I.click("button.btn-vue-jstree-item-edit");
-    I.click( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk") );
+    I.click("button.btn-webjet-jstree-item-edit");
+    I.click( locate(WebjetDteJsTree.tree + " > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk") );
     I.click(locate(".jstree-anchor").withText("Jet portal 4"));
 
     waitForTableLoader(I);
@@ -314,8 +316,8 @@ Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT 
     I.see("google.com");
     I.see("seznam.cz");
 
-    I.click("button.btn-vue-jstree-item-edit");
-    I.click( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk") );
+    I.click("button.btn-webjet-jstree-item-edit");
+    I.click( locate(WebjetDteJsTree.tree + " > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk") );
     I.click(locate(".jstree-anchor").withText("Jet portal 4"));
 
     I.click({ css: "button[data-id=webPageSelect]" });
@@ -368,7 +370,7 @@ Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT 
         I.see("intranetové riešenie", "#statKeywordsDataTable");
         I.see("primátor", "#statKeywordsDataTable");
 
-    I.click("button.btn-vue-jstree-item-edit");
+    I.click("button.btn-webjet-jstree-item-edit");
     I.click(locate(".jstree-anchor").withText("Všetky (zo všetkých domén)"));
 
     I.click({ css: "button[data-id=searchEngineSelect]" });
@@ -396,8 +398,8 @@ Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT 
         DT.checkTableRow("searchEnginesDataTable", 2, ["2", "seznam.cz", "781"]);
         DT.checkTableRow("searchEnginesDataTable", 3, ["3", "google.com", "81"]);
 
-    I.click("button.btn-vue-jstree-item-edit");
-    I.click( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk") );
+    I.click("button.btn-webjet-jstree-item-edit");
+    I.click( locate(WebjetDteJsTree.tree + " > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk") );
     I.click(locate(".jstree-anchor").withText("English"));
 
         DT.checkTableRow("searchEnginesQueryDataTable", 1, ["1", "Hotels", "1", "25,00"]);

@@ -77,7 +77,7 @@ Scenario('uspesne prihlasenie @singlethread', ({ I }) => {
 
     I.fillField("password", secret(I.getDefaultPassword()));
     I.click("login-submit");
-    //konecne som prihlaseny, pockame na VUE load
+    // Wait until the administration UI finishes loading after login.
     I.wait(5);
     I.see("Vitajte, Tester Playwright");
     //menu polozky

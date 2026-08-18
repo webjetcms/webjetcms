@@ -74,14 +74,14 @@ Scenario('pridanie adresara a webstranky do edit zaznamu @baseTest', async ({ I,
                // pridanie adresara
                I.say('pridanie adresara');
                I.clickCss('#pills-dt-insertScriptTable-scriptPerms-tab');
-               I.click('.btn.btn-outline-secondary.btn-vue-jstree-add');
+               I.click('.btn.btn-outline-secondary.btn-webjet-jstree-add');
                // vyber test23
                I.click(locate('.jstree-node.jstree-closed').withText('Test stavov').find('.jstree-icon.jstree-ocl'));
                I.click(locate('.jstree-anchor').withText('Zobrazený v menu'));
 
                // pridanie web stranky
-               I.waitForElement('.btn.btn-outline-secondary.btn-vue-jstree-add');
-               I.click(locate('.btn.btn-outline-secondary.btn-vue-jstree-add').withText('Pridať web stránku'));
+               I.waitForElement('.btn.btn-outline-secondary.btn-webjet-jstree-add');
+               I.click(locate('.btn.btn-outline-secondary.btn-webjet-jstree-add').withText('Pridať web stránku'));
                // vyber test23
                I.click(locate('.jstree-node.jstree-closed').withText('Test stavov').find('.jstree-icon.jstree-ocl'));
                I.click("Presmerovaná extrená linka", 'section.custom-modal div.jstree');

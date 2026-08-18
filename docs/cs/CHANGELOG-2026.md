@@ -4,6 +4,10 @@
 
 > Vývojová verze aktualizovaná z main repozitáře.
 
+### Průlomové změny
+
+- Z administrace byla odstraněna závislost na knihovně [Vue.js](https://vuejs.org). Před aktualizací doporučujeme ověřit kompatibilitu vlastních aplikací. Velikost JavaScript souborů se zmenšila o cca 170kB, což má dopad také na rychlost inicializace administrace. Více v [sekci pro programátora](#pre-programátora).
+
 ### Webové stránky
 
 - Koš webových stránek - přidáno [automatické mazání starých stránek a složek](redactor/apps/gdpr/data-deleting.md) z koše podle nastaveného retenčního období. Přidána možnost mazání stránek a složek v koši i v sekci [Mazání dat](sysadmin/data-deleting/README.md) podle zvoleného rozsahu dat. Sjednocená logika výpočtu počtu a mazání, opraveno trvalé odstranění složky koše a prázdných složek (#271).
@@ -152,6 +156,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Vytvořená sekce [Řešení problémů](sysadmin/troubleshooting/README.md) v manuálu pro provoz.
 
 ### Pro programátora
+
+- Administrace - odstraněná závislost na [Vue.js](https://vuejs.org). Stromová pole, úvodní stránka, výběr oblasti obrázku a monitorování serveru používají nativní [web komponenty](developer/frameworks/web-components.md). Globální objekt `window.VueTools` ani balíky pro Vue již nejsou součástí administrace. Vlastní rozšíření je musí nahradit web komponenty nebo si Vue sestavit samostatně (#58722).
 
 - AI asistenti - klientská logika nezávislá na poskytovateli pro OpenAI, Gemini a OpenRouter, zpracování streamů, typy požadavků/odpovědí a ochrana promptů byly vyčleněny do samostatného artefaktu `com.webjetcms:webjet-ai` a externího [repozitáře webjet-ai](https://github.com/webjetcms/webjetcmi/webjetcmi). WebJET CMS předává konfiguraci přes typovaný adaptér a nadále zajišťuje auditování, perzistenci a integraci uživatelského rozhraní. Jedná se o nekompatibilní změnu: původní CMS SPI pro vlastní poskytovatele a jeho transportní a streamovací podpůrné třídy byly odstraněny. Vlastní poskytovatelé je nutné migrovat na rozhraní `AiProvider` knihovny a CMS adaptér `LibrarySupportLogic` (#58670).
 
