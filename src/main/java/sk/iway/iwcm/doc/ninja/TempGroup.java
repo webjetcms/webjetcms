@@ -1,6 +1,7 @@
 package sk.iway.iwcm.doc.ninja;
 
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.doc.TemplatesGroupBean;
 import sk.iway.iwcm.doc.TemplatesGroupDB;
@@ -34,10 +35,36 @@ public class TempGroup {
     }
 
     public TemplatesGroupBean getTemplatesGroupBean() {
-        if (templatesGroupBean == null && ninja.getPage().getDoc() != null) {
-            templatesGroupBean = TemplatesGroupDB.getInstance().getById(TemplatesDB.getInstance().getTemplate(ninja.getPage().getDoc().getTempId()).getTemplatesGroupId());
+        if (templatesGroupBean == null && ninja.getRequest() != null) {
+            Object requestTemplatesGroupBean = ninja.getRequest().getAttribute("templatesGroupDetails");
+            if (requestTemplatesGroupBean instanceof TemplatesGroupBean) {
+                templatesGroupBean = (TemplatesGroupBean) requestTemplatesGroupBean;
+            }
+        }
+
+        if (templatesGroupBean == null && ninja.getPage() != null && ninja.getPage().getDoc() != null) {
+            TemplateDetails template = TemplatesDB.getInstance().getTemplate(ninja.getPage().getDoc().getTempId());
+            if (template != null && template.getTemplatesGroupId() != null) {
+                templatesGroupBean = TemplatesGroupDB.getInstance().getById(template.getTemplatesGroupId());
+            }
         }
         return templatesGroupBean;
+    }
+
+    public String getDescription() {
+        if (ninja.getProp() == null) return "";
+        return Tools.html2text(controlEmptyTextKey(ninja.getProp().getText(getIwayPropertiesPrefix() + "project.description")));
+    }
+
+    public String getSeoImage() {
+        TemplatesGroupBean bean = getTemplatesGroupBean();
+        if (bean == null || Tools.isEmpty(bean.getSeoImage())) return "";
+        return bean.getSeoImage();
+    }
+
+    public String getSeoImageAlt() {
+        if (ninja.getProp() == null) return "";
+        return Tools.html2text(controlEmptyTextKey(ninja.getProp().getText(getIwayPropertiesPrefix() + "project.seoImageAlt")));
     }
 
     public String getAuthor(){

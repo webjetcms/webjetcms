@@ -28,6 +28,16 @@ Zoznam skupín šablón zobrazuje prehľad vytvorených skupín, predvolene exis
 - Umožňuje nastaviť metadáta používané v [hlavičke sablón](../thymeleaf/webjet-objects.md#ninja-šablóna).
 - Prefix textových kľúčov - zadaním prefixu je možné modifikovať prekladové kľúče aplikácií vložených v stránke. Príklad: ak aplikácia používa prekladový kľúč `components.inquiry.answers` a v skupine šablón nastavíte prefix `jetportal`, tak sa vyhľadá pri zobrazení aplikácie kľúč `jetportal.components.inquiry.answers` a ak existuje, použije sa. Ak preklad pre tento kľúč neexistuje, použije sa samozrejme pôvodná hodnota z kľúča `components.inquiry.answers`. Môžete tak ľahko zmeniť text zobrazený v aplikácii v určitej skupine šablón.
 
+## Karta SEO
+
+Karta umožňuje nastaviť predvolené SEO hodnoty pre stránky používajúce šablónu z danej skupiny:
+
+- Predvolený SEO popis - použije sa, ak stránka nemá zadaný SEO popis ani perex.
+- Predvolený SEO obrázok - použije sa, ak stránka nemá zadaný SEO obrázok ani perex obrázok. Ak nie je nastavený ani v skupine šablón, použije sa hodnota `defaultSeoImage` z konfiguračného súboru šablóny.
+- Predvolený alternatívny text SEO obrázka - použije sa, ak stránka nemá zadaný vlastný alternatívny text v poli P.
+
+SEO popis a alternatívny text sa ukladajú samostatne pre jazyk zvolený v hlavičke zoznamu. SEO obrázok je spoločný pre všetky jazyky skupiny. Presné poradie použitia hodnôt opisuje [API objektu Page](../ninja-starter-kit/ninja-jv/page/README.md).
+
 ## Karta voliteľné polia
 
 Skupine je možné definovať [voliteľné polia](../webpages/customfields/README.md), ktorých použitie záleží od dizajnéra šablóny.

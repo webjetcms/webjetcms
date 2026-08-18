@@ -3,8 +3,9 @@
 | Metóda | Typ | Popis |
 | --- | --- | --- |
 | ${ninja.page.seoTitle} | *String* | Názov stránky (hodnota sa berie z voliteľného poľa R alebo ak je prázdne, tak z titulku) |
-| ${ninja.page.seoDescription} | *String* | Popis stránky (hodnota sa berie z voliteľného poľa S alebo ak je prázdne, tak z perexu) |
-| ${ninja.page.seoImage} | *String* | Odkaz na obrázok (hodnota sa berie z voliteľného poľa T alebo ak je prázdne, tak z perex obrázku) |
+| ${ninja.page.seoDescription} | *String* | Popis stránky (hodnota sa berie z voliteľného poľa S, perexu alebo predvoleného popisu skupiny šablón) |
+| ${ninja.page.seoImage} | *String* | Odkaz na obrázok (hodnota sa berie z voliteľného poľa T, perex obrázku, skupiny šablón alebo konfigurácie šablóny) |
+| ${ninja.page.seoImageAlt} | *String* | Alternatívny text SEO obrázka (hodnota sa berie z voliteľného poľa P alebo skupiny šablón) |
 | ${ninja.page.seoImageWidth} | *int* | Šírka SEO obrázka v pixeloch |
 | ${ninja.page.seoImageHeight} | *int* | Výška SEO obrázka v pixeloch |
 | ${ninja.page.url} | *String* | Url adresa |
@@ -21,9 +22,11 @@
 
 !>**Poznámka**: náhradu medzery po spojke za ```&nbsp;``` entitu je možné nastaviť v konfiguračnej premennej ```ninjaNbspReplaceRegex```. Na prvom riadku je regex výraz, na druhom je text náhrady.
 
-Pre nastavenie voliteľných polí R, S, T a Q je potrebné v sekcii [prekladové kľúče](../../../../admin/settings/translation-keys/README.md) nastaviť hodnoty nasledovne:
+Pre nastavenie voliteľných polí P, Q, R, S a T je potrebné v sekcii [prekladové kľúče](../../../../admin/settings/translation-keys/README.md) nastaviť hodnoty nasledovne:
 
 ```properties
+editor.field_p=Alternatívny text SEO obrázka (og:image:alt)
+editor.field_p.tooltip=Ak je zadaný, použije sa pre SEO a sociálne siete ako opis obsahu SEO obrázka namiesto predvolenej hodnoty zo skupiny šablón.
 editor.field_q=Kanonická URL adresa
 editor.field_q.tooltip=Ak je zadaný, použije sa tento odkaz ako kanonická URL adresa stránky, ak je prázdny, použije sa URL adresa stránky.
 editor.field_q.type=link
@@ -35,6 +38,8 @@ editor.field_t=SEO obrázok (og:image)
 editor.field_t.type=image
 editor.field_t.tooltip=Ak je zadaný, použije sa pre SEO/Sociálne siete/Facebook zadaný obrázok namiesto štandardného obrázka (zadaného ako **perex obrázok**).\nMôžete tak optimalizovať zobrazený obrázok na sociálnych sietiach.
 ```
+
+!> Pole P je všeobecné voliteľné pole a existujúci projekt ho už môže používať na iný účel, napríklad na varianty produktov. Pred použitím `${ninja.page.seoImageAlt}` preto skontrolujte jeho význam v danom projekte.
 
 ## Názov *String*
 
@@ -54,7 +59,7 @@ Pri volaní `seoTitle` je odstránený prípadný HTML kód z titulku stránky, 
 
 ## Popis *String*
 
-Hľadá popis vo voliteľnom poli S :carousel_horse: `getFieldS()` (SEO popis), ak je pole prázdne, tak použije štandardný perex popis :carousel_horse: `getPerexPre()`.
+Hľadá popis vo voliteľnom poli S :carousel_horse: `getFieldS()` (SEO popis). Ak je pole prázdne, použije štandardný perex popis :carousel_horse: `getPerexPre()` a následne predvolený popis skupiny šablón pre jazyk zobrazenej stránky.
 
 ```java
 ${ninja.page.seoDescription}
@@ -69,7 +74,7 @@ Použité v :ghost:<code>head.jsp</code>
 
 ## Odkaz na obrázok *String*
 
-Hľadá obrázok vo voliteľnom poli T :carousel_horse: `getFieldT()` (SEO obrázok), ak je pole prázdne, tak použije štandardný perex obrázok :carousel_horse: `getPerexImage()`.
+Hľadá obrázok vo voliteľnom poli T :carousel_horse: `getFieldT()` (SEO obrázok). Ak pole neobsahuje platnú cestu k obrázku, použije štandardný perex obrázok :carousel_horse: `getPerexImage()`, predvolený SEO obrázok skupiny šablón a nakoniec pôvodnú hodnotu `defaultSeoImage` z konfiguračného súboru šablóny.
 
 ```java
 ${ninja.page.seoImage}
@@ -81,6 +86,21 @@ Použité v :ghost:<code>head.jsp</code>
 <meta property="og:image" content="${ninja.page.urlDomain}${ninja.page.seoImage}" />
 <meta property="og:image:width" content="${ninja.page.seoImageWidth}" />
 <meta property="og:image:height" content="${ninja.page.seoImageHeight}" />
+<meta property="og:image:alt" content="${ninja.page.seoImageAlt}" />
+```
+
+## Alternatívny text SEO obrázka *String*
+
+Hľadá alternatívny text SEO obrázka vo voliteľnom poli P :carousel_horse: `getFieldP()`. Ak je pole prázdne, použije predvolený alternatívny text skupiny šablón pre jazyk zobrazenej stránky. Výsledok je prevedený na čistý text bez HTML značiek a úvodzoviek.
+
+```java
+${ninja.page.seoImageAlt}
+```
+
+Použité v :ghost:<code>head.jsp</code>
+
+```html
+<meta property="og:image:alt" content="${ninja.page.seoImageAlt}" />
 ```
 
 ## Url adresa *String*
@@ -127,6 +147,7 @@ Použité v :ghost:<code>head.jsp</code>
 <meta property="og:image" content="${ninja.page.urlDomain}${ninja.page.seoImage}" />
 <meta property="og:image:width" content="${ninja.page.seoImageWidth}" />
 <meta property="og:image:height" content="${ninja.page.seoImageHeight}" />
+<meta property="og:image:alt" content="${ninja.page.seoImageAlt}" />
 ```
 
 Použité v :ghost:<code>debug-info.jsp</code>

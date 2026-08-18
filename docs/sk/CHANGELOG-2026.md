@@ -19,6 +19,7 @@
 ![](redactor/webpages/redirects/redirect-path.png)
 
 - SEO - pridané samostatné nastavenie **Nasledovanie odkazov vyhľadávačmi** s možnosťami **Podľa nastavenia Prehľadávať**, **Povoliť nasledovanie odkazov** (`follow`) a **Zakázať nasledovanie odkazov** (`nofollow`). HTTP hlavička `X-Robots-Tag` a Ninja `${ninja.page.robots}` používajú rovnakú logiku: pri indexovaní bez obmedzení vrátia `all`, inak kombináciu direktív `noindex` a `nofollow` podľa nastavenia stránky. Viac v [dokumentácii Ninja](frontend/ninja-starter-kit/ninja-jv/page/README.md#nastavenie-indexovania-string) (#OSK563).
+- SEO - v [skupinách šablón](frontend/templates/template-groups.md#karta-seo) je možné nastaviť predvolený SEO popis, obrázok a alternatívny text obrázka. Objekt Ninja `Page` ich použije, ak stránka nemá zadané vlastné hodnoty; pribudla aj hodnota `${ninja.page.seoImageAlt}` pre `og:image:alt` (#OSK593).
 - Ninja - doplnené [generovanie rozmerov](frontend/ninja-starter-kit/ninja-bp/README.md) SEO obrázka `og:image:width` a `og:image:height` (#OSK563).
 - Šablóny - pridaná možnosť nastaviť presun `<style>` a `<link rel="stylesheet">` značiek z tela stránky do `<head>` cez [voľbu v šablóne](frontend/templates/templates.md) s podporou globálnej konfiguračnej premennej `showDocMoveStyleToHead`. Bloky v IE podmienkach, `noscript` a `script` zostávajú na mieste (#231).
 

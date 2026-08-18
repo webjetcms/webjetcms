@@ -95,20 +95,53 @@ public class Page {
                 seoDesc = doc.getPerexPre();
             }
         }
-        return Tools.html2text(seoDesc).replace("\"","");
+
+        if (Tools.isEmpty(seoDesc)) {
+            TempGroup tempGroup = getTempGroup();
+            if (tempGroup != null) seoDesc = tempGroup.getDescription();
+        }
+
+        return sanitizeText(seoDesc);
     }
 
     public String getSeoImage(){
         String seoImage = "";
         if(doc!=null){
             seoImage = doc.getFieldT();
-            //skontroluj, ze obsahuje / a ., inak to nie je obrazok, ale nejaky text
-            if (seoImage.contains("/")==false || seoImage.contains(".")==false) seoImage = "";
+            // Check for both a path separator and file extension; otherwise this is not an image path.
+            if (isValidSeoImagePath(seoImage) == false) seoImage = "";
             if(Tools.isEmpty(seoImage)){
-                seoImage = getStringValue(doc.getPerexImage(), ninja.getTemp().getBasePathImg() + ninja.getConfig("defaultSeoImage"));
+                seoImage = doc.getPerexImage();
             }
         }
+
+        if (Tools.isEmpty(seoImage)) {
+            TempGroup tempGroup = getTempGroup();
+            if (tempGroup != null) seoImage = tempGroup.getSeoImage();
+            if (isValidSeoImagePath(seoImage) == false) seoImage = "";
+        }
+
+        if (Tools.isEmpty(seoImage)) {
+            String defaultSeoImage = ninja.getConfig("defaultSeoImage");
+            Temp temp = ninja.getTemp();
+            if (Tools.isNotEmpty(defaultSeoImage) && temp != null && Tools.isNotEmpty(temp.getBasePathImg())) {
+                seoImage = temp.getBasePathImg() + defaultSeoImage;
+            }
+        }
+
         return seoImage;
+    }
+
+    public String getSeoImageAlt() {
+        String seoImageAlt = "";
+        if (doc != null) seoImageAlt = doc.getFieldP();
+
+        if (Tools.isEmpty(seoImageAlt)) {
+            TempGroup tempGroup = getTempGroup();
+            if (tempGroup != null) seoImageAlt = tempGroup.getSeoImageAlt();
+        }
+
+        return sanitizeText(seoImageAlt);
     }
 
     /**
@@ -142,6 +175,19 @@ public class Page {
         String ret = defaultValue;
         if(Tools.isNotEmpty(value)) ret = value;
         return(ret);
+    }
+
+    private TempGroup getTempGroup() {
+        if (ninja == null || ninja.getTemp() == null) return null;
+        return ninja.getTemp().getGroup();
+    }
+
+    private String sanitizeText(String value) {
+        return Tools.html2text(Tools.getStringValue(value, "")).replace("\"", "");
+    }
+
+    private boolean isValidSeoImagePath(String value) {
+        return Tools.isNotEmpty(value) && value.contains("/") && value.contains(".");
     }
 
     public String getRobots(){
