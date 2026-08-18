@@ -1,9 +1,9 @@
 # Vue.js
 
-> Starting with version 2026.0, Vue.js is no longer part of the WebJET CMS administration.
+> Since version 2026.0, Vue.js is not part of the WebJET CMS administration.
 
-The global `window.VueTools` object and the Vue components previously supplied by the administration have been removed. See [Migrating from Vue.js](web-components.md#migrating-from-vuejs) for native-component replacements. If a custom module still requires Vue, it must provide the library and its build configuration itself.
+The global object `window.VueTools` and the Vue components originally shipped with the administration have been removed. The procedure for switching to native components is described in the [Migration from Vue.js](web-components.md#migration-from-vuejs) section. If your own module still needs Vue, you must provide the library and its compilation separately.
 
 ## Date and time formatting
 
-Use `WJ.formatDate`, `WJ.formatDateTime`, and `WJ.formatDateTimeSeconds` as described in the [WebJET JavaScript functions](webjetjs.md#date-and-time-formatting) documentation.
+For formatting, use the `WJ.formatDate`, `WJ.formatDateTime` and `WJ.formatDateTimeSeconds` functions described in the [WebJET JavaScript functions] documentation (webjetjs.md#date-and-time-formatting).

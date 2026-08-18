@@ -1,19 +1,35 @@
 # Web components
 
-WebJET CMS administration uses standard JavaScript [web components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components) for small interactive controls. A component is an `HTMLElement` subclass registered with `customElements.define`.
+WebJET CMS administration uses standard JavaScript [web components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components) for smaller interactive elements. A component is a class derived from `HTMLElement`, registered via `customElements.define`.
 
-Source files are located in `src/main/webapp/admin/v9/src/js/web-components`. Import a component from a JavaScript entry and use its custom element in HTML.
+The source files are in the `src/main/webapp/admin/v9/src/js/web-components` directory. The component is imported in JavaScript input and used in HTML as a custom element, for example:
 
-Pass configuration through a public component method and publish changes with a bubbling `CustomEvent`. Clear timers, network requests, and listeners in `disconnectedCallback`. Component styles belong to the administration SCSS; components intentionally use light DOM so they inherit Bootstrap and WebJET styles.
+```javascript
+class WebjetExampleElement extends HTMLElement {
+    connectedCallback() {
+        this.textContent = "WebJET";
+    }
+}
+
+if (!customElements.get("webjet-example")) {
+    customElements.define("webjet-example", WebjetExampleElement);
+}
+```
+
+```html
+<webjet-example></webjet-example>
+```
+
+Pass the configuration through a public method of the component and announce changes via bubbling `CustomEvent`. In `disconnectedCallback`, disable timers, network requests, and listeners. Styles belong to SCSS administration; components intentionally use a light DOM to inherit Bootstrap and WebJET styles.
 
 ## Migrating from Vue.js
 
-Starting with version 2026.0, the administration no longer bundles `Vue.js`, `vue-router`, `vue-loader`, or `vue-advanced-cropper`. The global `window.VueTools` object and its `createApp`, `setDefaultObjects`, `getComponent`, `getRouter`, and `getVue` methods are no longer available. A custom module must migrate to native web components or provide its own Vue dependency and build configuration.
+Since version 2026.0, the administration does not package `Vue.js`, `vue-router`, `vue-loader` or `vue-advanced-cropper`. The global object `window.VueTools` and its methods `createApp`, `setDefaultObjects`, `getComponent`, `getRouter` and `getVue` are also not available. The custom module must switch to native web components or provide Vue and its compilation separately.
 
-Replace the previous integrations as follows:
+Replace the original integrations as follows:
 
-- `window.VueTools.getComponent("webjet-dte-jstree")` - use the DataTable [JSON](../datatables-editor/field-json.md) field, which creates the `<webjet-dte-jstree>` component automatically.
-- `<webjet-cropper-component>` - use `<webjet-image-area-selector>` and pass `getImageUrl`, `getCoordinates`, `onChange`, and `labels` to its `configure` method.
-- `<vue-server-monitoring>` - use `<webjet-server-monitoring>` and pass `complex` and `labels` to its `configure` method.
+- `window.VueTools.getComponent("webjet-dte-jstree")` - ​​use a data table field of type [JSON](../datatables-editor/field-json.md), which the `<webjet-dte-jstree>` component will automatically create.
+- `<webjet-cropper-component>` - ​​use `<webjet-image-area-selector>` and pass the functions `getImageUrl`, `getCoordinates`, `onChange` and the object `labels` to the method `configure`.
+- `<vue-server-monitoring>` - ​​use `<webjet-server-monitoring>` and pass the settings `complex` and `labels` to the method `configure`.
 
-Components announce readiness with the bubbling `webjet-component-ready` event. Tree selection uses `webjet-jstree-select`, and an image-area change uses `webjet-area-change`.
+Components report readiness with a bubbling event `webjet-component-ready`. Selection in the tree reports an event `webjet-jstree-select` and image area changes an event `webjet-area-change`.

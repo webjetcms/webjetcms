@@ -10,7 +10,7 @@
     - [Bootstrap](/developer/frameworks/bootstrap.md)
     - [PugJS](/developer/frameworks/pugjs.md)
     - [Thymeleaf](/developer/frameworks/thymeleaf.md)
-    - [Web components](/developer/frameworks/web-components.md)
+    - [Web Components](/developer/frameworks/web-components.md)
     - [Spring DATA + REST](/developer/frameworks/spring.md)
     - [WebJET JavaScript functions](/developer/frameworks/webjetjs.md)
     - [Transition from Struts to Spring](/developer/frameworks/struts/README.md)

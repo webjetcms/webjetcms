@@ -70,7 +70,7 @@ The field is implemented in the file [field-type-jstree.js](../../../src/main/we
 
 Generates HTML code containing a search field with the option to uncheck/uncheck all selection fields. When a search is active, an icon for canceling the search is also displayed in the toolbar next to the search field. The search is activated either by clicking the magnifying glass icon or by pressing the ```Enter``` key.
 
-The add-item button in the `webjet-dte-jstree` component listens for `mouseup`, so pressing `Enter` in the search field does not open its modal window.
+The add item button in the `webjet-dte-jstree` component responds to the `mouseup` event, so pressing `Enter` in the search field will not trigger the opening of its modal window.
 
 The name of the JSON object with a tree structure is obtained from the data attribute ```data-dt-field-jstree-name``` and then the JSON object itself is obtained by calling ```let jstreeJsonData = window[objName];```.
 

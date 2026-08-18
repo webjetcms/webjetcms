@@ -187,7 +187,7 @@ insertScriptTable = WJ.DataTable({
 
 ## Custom configuration of the displayed tree structure
 
-If you need to implement your own tree view, you can take inspiration from the ```DirTreeRestController``` class and the ```DirTreeItem``` entity. It uses the basic view object ```jsTree - JsTreeItem```, which the web component can then work with. It is important to set the attributes in the ```JsTreeItem``` entity correctly.
+If you need to implement your own tree structure display, you can take inspiration from the ```DirTreeRestController``` class and the ```DirTreeItem``` entity. It uses the basic display object ```jsTree - JsTreeItem```, which the web component can then work with. It is important to set the attributes in the ```JsTreeItem``` entity correctly.
 
 Example of a REST service:
 
@@ -351,7 +351,7 @@ If you cannot implement the ```getFullPath()``` method, we recommend using the `
 
 ## Listening for a change in value
 
-If you need to listen for a field value change outside of the web component, you can listen for the change event on the nested ```textarea``` element that contains the current JSON object:
+If you need to listen for a change in the value of a field outside of a web component, you can listen for the change event on the nested ```textarea``` element that contains the current JSON object:
 
 ```javascript
 $("#DTE_Field_editorFields-parentGroupDetails").on("change", function(e) {
@@ -365,10 +365,11 @@ $("#DTE_Field_editorFields-parentGroupDetails").on("change", function(e) {
 ```
 
 ## Implementation details
-[field-type-json.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-json.js) defines the ```$.fn.dataTable.Editor.fieldTypes.json``` data type. It is implemented by the native [webjet-dte-jstree](../../../../src/main/webapp/admin/v9/src/js/web-components/webjet-dte-jstree.js) web component. It also contains a hidden ```textarea``` that mirrors the current JSON object. The `get` function always returns the current data from the web component.
 
-[datatables-config.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-config.js) implements ```renderJson(td, type, rowData, row)``` for displaying the data in a table.
+[field-type-json.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-json.js) defines the data type ```$.fn.dataTable.Editor.fieldTypes.json```. It is implemented by the native web component [webjet-dte-jstree](../../../../src/main/webapp/admin/v9/src/js/web-components/webjet-dte-jstree.js). It also contains a hidden field of type ```textarea```, into which the current JSON object is copied. The function `get` always returns the current data from the web component.
 
-The web component renders existing items and, for **array** objects, an add button. jsTree publishes the selected item as a bubbling `webjet-jstree-select` event; the component then validates and converts the object and synchronizes the input value.
+[datatables-config.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-config.js) implements the ```renderJson(td, type, rowData, row)``` function for displaying data in a table.
+
+The web component renders the existing items and, for **array** objects, an add record button. The jsTree library announces the selection with a `webjet-jstree-select` bubbling event; the component then performs validation, object conversion, and input field value synchronization.
 
 If ```Doc/GroupDetails``` is an object ```null```, no field would be displayed. Therefore, in ```field-type-json.js``` there is a function ```fixNullData```, which artificially creates a basic object for this case. If it is a web page, it contains the attribute ```docId=-1```, for a directory ```groupId=-1``` and for other objects ```id=-1```. The attribute ```fullPath``` is set to an empty value.

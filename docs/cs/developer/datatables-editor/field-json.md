@@ -187,7 +187,7 @@ insertScriptTable = WJ.DataTable({
 
 ## Vlastní konfigurace zobrazené stromové struktury
 
-Pokud potřebujete implementovat vlastní zobrazení stromové struktury, můžete se inspirovat ve třídě ```DirTreeRestController``` a entite ```DirTreeItem```. Používá základní objekt pro zobrazení ```jsTree - JsTreeItem```, se kterým umí následně pracovat web komponent. Důležité je korektní nastavení atributů v ```JsTreeItem``` entitě.
+Pokud potřebujete implementovat vlastní zobrazení stromové struktury, můžete se inspirovat ve třídě ```DirTreeRestController``` a entite ```DirTreeItem```. Používá základní objekt pro zobrazení ```jsTree - JsTreeItem```, se kterým umí následně pracovat web komponentu. Důležité je korektní nastavení atributů v ```JsTreeItem``` entitě.
 
 Příklad REST služby:
 
@@ -365,10 +365,11 @@ $("#DTE_Field_editorFields-parentGroupDetails").on("change", function(e) {
 ```
 
 ## Implementační detaily
-[field-type-json.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-json.js) definuje datový typ ```$.fn.dataTable.Editor.fieldTypes.json```. Je implementován nativní webovou komponentou [webjet-dte-jstree](../../../../src/main/webapp/admin/v9/src/js/web-components/webjet-dte-jstree.js). Obsahuje také skryté pole typu ```textarea```, do kterého se kopíruje aktuální JSON objekt. Funkce `get` vždy vrátí aktuální data z webové komponenty.
+
+[field-type-json.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-json.js) definuje datový typ ```$.fn.dataTable.Editor.fieldTypes.json```. Je implementován nativním web komponentou [webjet-dte-jstree](../../../../src/main/webapp/admin/v9/src/js/web-components/webjet-dte-jstree.js). Obsahuje také skryté pole typu ```textarea```, do kterého se kopíruje aktuální JSON objekt. Funkce `get` vždy vrátí aktuální data z webové komponenty.
 
 [datatables-config.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-config.js) implementuje funkci ```renderJson(td, type, rowData, row)``` pro zobrazení dat v tabulce.
 
-Webová komponenta vykresluje existující položky a pro objekty typu **array** také tlačítko pro přidání záznamu. Knihovna jsTree oznamuje výběr bublající událostí `webjet-jstree-select`; komponenta následně provede validaci, konverzi objektu a synchronizaci hodnoty vstupního pole.
+Web komponenta vykresluje stávající položky a pro objekty typu **array** i tlačítko pro přidání záznamu. Knihovna jsTree oznamuje výběr bublající událostí `webjet-jstree-select` ; komponenta následně provede validaci, konverzi objektu a synchronizaci hodnoty vstupního pole.
 
 Pokud je ```Doc/GroupDetails``` objekt ```null``` nezobrazilo by se žádné pole. Proto v ```field-type-json.js``` je funkce ```fixNullData```, která pro tento případ uměle vytvoří základní objekt. Pokud se jedná o web stránku obsahuje atribut ```docId=-1```, pro adresář ```groupId=-1``` a pro ostatní objekty ```id=-1```. Atribut ```fullPath``` je nastaven na prázdnou hodnotu.

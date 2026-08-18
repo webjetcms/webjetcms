@@ -4,6 +4,10 @@
 
 > Development version updated from the main repository.
 
+### Groundbreaking changes
+
+- The dependency on the [Vue.js](https://vuejs.org) library has been removed from the administration. We recommend checking the compatibility of your own applications before updating. The size of JavaScript files has been reduced by approximately 170kB, which also has an impact on the speed of administration initialization. More in the [programmer section](#programmer).
+
 ### Websites
 
 - Website Trash - added [automatic deletion of old pages and folders](redactor/apps/gdpr/data-deleting.md) from the trash according to the set retention period. Added the ability to delete pages and folders in the trash and in the [Data deletion](sysadmin/data-deleting/README.md) section according to the selected date range. Unified logic for calculating the number and deleting, fixed permanent deletion of the trash folder and empty folders (#271).
@@ -152,6 +156,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Created a [Troubleshooting] section (sysadmin/troubleshooting/README.md) in the operation manual.
 
 ### For the programmer
+
+- Administration - removed dependency on [Vue.js](https://vuejs.org). Tree fields, start page, image area selection and server monitoring use native [web components](developer/frameworks/web-components.md). The global object `window.VueTools` and packages for Vue are no longer part of the administration. Custom extensions must replace them with web components or compile Vue themselves (#58722).
 
 - AI Assistants - Provider-independent client logic for OpenAI, Gemini, and OpenRouter, stream processing, request/response types, and prompt protection have been separated into a separate artifact `com.webjetcms:webjet-ai` and an external [webjet-ai repository](https://github.com/webjetcms/webjet-ai). WebJET CMS passes configuration through a typed adapter and continues to provide auditing, persistence, and UI integration. This is an incompatible change: the original CMS SPI for custom providers and its transport and streaming support classes have been removed. Custom providers must be migrated to the `AiProvider` library interface and the CMS adapter `LibrarySupportLogic` (#58670).
 
