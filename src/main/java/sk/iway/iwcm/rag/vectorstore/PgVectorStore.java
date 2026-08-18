@@ -1,5 +1,8 @@
 package sk.iway.iwcm.rag.vectorstore;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -8,6 +11,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.ComplexQuery;
@@ -66,7 +70,12 @@ public class PgVectorStore implements VectorStore {
         "DROP INDEX IF EXISTS idx_rag_embedding_hnsw";
 
     private static final String UPDATE_EMBEDDING_SQL =
-        "UPDATE rag_embedding_chunks SET embedding = ?::vector WHERE id = ?";
+        "UPDATE rag_embedding_chunks SET embedding = ?::vector, status = '" +
+        EmbeddingChunkStatus.COMPLETED.name() + "', error_message = NULL WHERE id = ?";
+
+    private static final String MARK_EMBEDDING_ERROR_SQL =
+        "UPDATE rag_embedding_chunks SET status = '" + EmbeddingChunkStatus.ERROR.name() +
+        "', error_message = ? WHERE id = ?";
 
     /**
      * Builds SEARCH_SQL dynamically based on configured distance metric.
@@ -83,6 +92,7 @@ public class PgVectorStore implements VectorStore {
                "       " + similarityCalc +
                " FROM rag_embedding_chunks" +
                " WHERE status = '" + EmbeddingChunkStatus.COMPLETED.name() + "'" +
+               " AND embedding IS NOT NULL" +
                " AND embedding_model = ?";
     }
 
@@ -116,11 +126,26 @@ public class PgVectorStore implements VectorStore {
         String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null) return;
 
+        updateEmbeddingRow(dsName, id, embedding);
+    }
+
+    private boolean updateEmbeddingRow(String dsName, Long id, float[] embedding) {
         try {
-            new SimpleQuery(dsName).execute(UPDATE_EMBEDDING_SQL, vectorToString(embedding), id);
+            int updatedRows = executeUpdate(
+                dsName,
+                UPDATE_EMBEDDING_SQL,
+                vectorToString(embedding),
+                id
+            );
+            if (updatedRows != 1) {
+                throw new IllegalStateException("Expected to update one embedding row, updated " + updatedRows);
+            }
+            return true;
         } catch (Exception e) {
             Logger.error(PgVectorStore.class,
                 "Error updating embedding for chunk id " + id + ": " + e.getMessage());
+            markEmbeddingError(dsName, id, e.getMessage());
+            return false;
         }
     }
 
@@ -148,11 +173,25 @@ public class PgVectorStore implements VectorStore {
                 params.add(id);
             }
 
-            new SimpleQuery(dsName).execute(sql, params.toArray());
+            int updatedRows = executeUpdate(dsName, sql, params.toArray());
+            if (updatedRows != ids.size()) {
+                throw new IllegalStateException(
+                    "Expected to update " + ids.size() + " embedding rows, updated " + updatedRows
+                );
+            }
         } catch (Exception e) {
             Logger.error(PgVectorStore.class, "Error batch updating embeddings, falling back to row-by-row updates: " + e.getMessage());
+            int failedRows = 0;
             for (int i = 0; i < ids.size(); i++) {
-                updateEmbedding(ids.get(i), embeddings.get(i));
+                if (updateEmbeddingRow(dsName, ids.get(i), embeddings.get(i)) == false) {
+                    failedRows++;
+                }
+            }
+            if (failedRows > 0) {
+                throw new IllegalStateException(
+                    "Failed to update " + failedRows + " of " + ids.size() + " embedding rows",
+                    e
+                );
             }
         }
     }
@@ -164,7 +203,8 @@ public class PgVectorStore implements VectorStore {
             sql.append("WHEN ? THEN ?::vector ");
         }
 
-        sql.append("END WHERE id IN (");
+        sql.append("END, status = '").append(EmbeddingChunkStatus.COMPLETED.name());
+        sql.append("', error_message = NULL WHERE id IN (");
         for (int i = 0; i < rowCount; i++) {
             if (i > 0) sql.append(", ");
             sql.append("?");
@@ -172,6 +212,32 @@ public class PgVectorStore implements VectorStore {
         sql.append(")");
 
         return sql.toString();
+    }
+
+    private int executeUpdate(String dsName, String sql, Object... params) throws SQLException {
+        try (Connection connection = DBPool.getConnection(dsName);
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            SimpleQuery.bindParameters(statement, params);
+            return statement.executeUpdate();
+        }
+    }
+
+    private void markEmbeddingError(String dsName, Long id, String errorMessage) {
+        String message = Tools.isEmpty(errorMessage) ? "Embedding vector update failed" : errorMessage;
+        if (message.length() > 500) {
+            message = message.substring(0, 500);
+        }
+
+        try {
+            int updatedRows = executeUpdate(dsName, MARK_EMBEDDING_ERROR_SQL, message, id);
+            if (updatedRows != 1) {
+                Logger.error(PgVectorStore.class,
+                    "Failed to mark embedding chunk " + id + " as ERROR, updated rows: " + updatedRows);
+            }
+        } catch (Exception statusException) {
+            Logger.error(PgVectorStore.class,
+                "Failed to mark embedding chunk " + id + " as ERROR: " + statusException.getMessage());
+        }
     }
 
     @Override

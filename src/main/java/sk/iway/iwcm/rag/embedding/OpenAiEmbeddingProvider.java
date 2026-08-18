@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -19,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.webjetcms.ai.AiProviderConfig;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
@@ -41,6 +43,11 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
     }
 
     @Override
+    public String getProviderId() {
+        return "openai";
+    }
+
+    @Override
     public List<float[]> embed(List<String> texts, String model) throws ProviderCallException {
         return embedWithUsage(texts, model).getEmbeddings();
     }
@@ -49,9 +56,10 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
     public EmbeddingBatchResult embedWithUsage(List<String> texts, String model) throws ProviderCallException {
         if (texts == null || texts.isEmpty()) return EmbeddingBatchResult.empty();
 
-        String apiKey = configurationService.resolve("openai").apiKey();
+        AiProviderConfig configuration = configurationService.resolve(getProviderId());
+        String apiKey = configuration.apiKey();
         if (Tools.isEmpty(apiKey)) {
-            throw new ProviderCallException("OpenAI API key is not configured (ai_openAiAuthKey)");
+            throw new ProviderCallException(getProviderName() + " API key is not configured (" + getApiKeyConfigurationName() + ")");
         }
 
         if (Tools.isEmpty(model)) model = getDefaultModel();
@@ -60,11 +68,9 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
             ObjectNode requestBody = MAPPER.createObjectNode();
             requestBody.put("model", model);
 
-            if (supportsDimensionsParameter(model)) {
-                int dimensions = getDimensions(model);
-                if (dimensions > 0) {
-                    requestBody.put("dimensions", dimensions);
-                }
+            int dimensions = getDimensions(model);
+            if (dimensions > 0) {
+                requestBody.put("dimensions", dimensions);
             }
 
             ArrayNode inputArray = MAPPER.createArrayNode();
@@ -73,12 +79,15 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
             }
             requestBody.set("input", inputArray);
 
-            HttpPost post = new HttpPost(EMBEDDINGS_URL);
+            HttpPost post = new HttpPost(getEmbeddingsUrl());
             post.setHeader("Authorization", "Bearer " + apiKey);
             post.setHeader("Content-Type", "application/json; charset=utf-8");
+            for (Map.Entry<String, String> header : configuration.trustedHeaders().entrySet()) {
+                post.setHeader(header.getKey(), header.getValue());
+            }
             post.setEntity(new StringEntity(MAPPER.writeValueAsString(requestBody), StandardCharsets.UTF_8));
 
-            // Configure timeouts to prevent hanging on slow/unresponsive OpenAI API
+            // Configure timeouts to prevent hanging on a slow or unresponsive provider API
             RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectTimeout(10000)  // 10 seconds to connect
                 .setSocketTimeout(30000)   // 30 seconds to read response
@@ -96,16 +105,17 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
                 String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
 
                 if (statusCode < 200 || statusCode >= 300) {
-                    throw new ProviderCallException("OpenAI embeddings API error " + statusCode + ": " + responseBody);
+                    throw new ProviderCallException(getProviderName() + " embeddings API error " + statusCode + ": " + responseBody);
                 }
 
                 JsonNode root = MAPPER.readTree(responseBody);
                 List<float[]> embeddings = parseEmbeddings(root);
+                enforceDimensions(embeddings, dimensions);
                 int usedTokens = parseUsedTokens(root);
                 return new EmbeddingBatchResult(embeddings, usedTokens);
             }
         } catch (IOException e) {
-            throw new ProviderCallException("Error calling OpenAI embeddings API: " + e.getMessage());
+            throw new ProviderCallException("Error calling " + getProviderName() + " embeddings API: " + e.getMessage(), e);
         }
     }
 
@@ -119,14 +129,22 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
         return Constants.getString("ragEmbeddingModel");
     }
 
-    private boolean supportsDimensionsParameter(String model) {
-        return Tools.isNotEmpty(model) && model.startsWith("text-embedding-3-");
+    protected String getEmbeddingsUrl() {
+        return EMBEDDINGS_URL;
+    }
+
+    protected String getProviderName() {
+        return "OpenAI";
+    }
+
+    protected String getApiKeyConfigurationName() {
+        return "ai_openAiAuthKey";
     }
 
     /**
-     * Parse the OpenAI embeddings API JSON response into a list of float arrays.
+     * Parse an OpenAI-compatible embeddings API response into a list of float arrays.
      * Expects the standard response format with a "data" array containing "embedding" arrays.
-        * @param root parsed JSON response body
+     * @param root parsed JSON response body
      * @return list of embedding vectors
      */
     private List<float[]> parseEmbeddings(JsonNode root) {
@@ -147,6 +165,19 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
         }
 
         return embeddings;
+    }
+
+    private void enforceDimensions(List<float[]> embeddings, int dimensions) throws ProviderCallException {
+        if (dimensions < 1) return;
+
+        for (float[] embedding : embeddings) {
+            if (embedding.length != dimensions) {
+                throw new ProviderCallException(
+                    getProviderName() + " returned " + embedding.length +
+                    " embedding dimensions, expected " + dimensions
+                );
+            }
+        }
     }
 
     private int parseUsedTokens(JsonNode root) {

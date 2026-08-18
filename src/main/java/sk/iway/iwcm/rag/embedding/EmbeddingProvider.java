@@ -11,6 +11,13 @@ import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 public interface EmbeddingProvider {
 
     /**
+     * Returns the provider identifier used by AI configuration and statistics.
+     */
+    default String getProviderId() {
+        return "openai";
+    }
+
+    /**
      * Generate embeddings for a list of text chunks.
      * @param texts list of text strings to embed
      * @param model the embedding model name (e.g., "text-embedding-3-small")
@@ -24,6 +31,13 @@ public interface EmbeddingProvider {
      */
     default EmbeddingBatchResult embedWithUsage(List<String> texts, String model) throws ProviderCallException {
         return new EmbeddingBatchResult(embed(texts, model), 0);
+    }
+
+    /**
+     * Generate embeddings using request or domain context for provider-specific trusted headers.
+     */
+    default EmbeddingBatchResult embedWithUsage(List<String> texts, String model, EmbeddingContext context) throws ProviderCallException {
+        return embedWithUsage(texts, model);
     }
 
     /**
