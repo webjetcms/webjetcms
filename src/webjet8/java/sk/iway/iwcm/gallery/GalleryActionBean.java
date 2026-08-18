@@ -1,8 +1,10 @@
 package sk.iway.iwcm.gallery;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -17,6 +19,7 @@ import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.FileIndexerTools;
 import sk.iway.iwcm.common.UploadFileTools;
+import sk.iway.iwcm.components.gallery.GalleryApp;
 import sk.iway.iwcm.components.gallery.GalleryService;
 import sk.iway.iwcm.findexer.FileIndexer;
 import sk.iway.iwcm.findexer.ResultBean;
@@ -209,44 +212,28 @@ public class GalleryActionBean extends WebJETActionBean
 
 		result.add(new Pair<>("prettyPhoto", prop.getText("components.gallery.visual_style.prettyPhoto")));
 		result.add(new Pair<>("photoSwipe", prop.getText("components.gallery.visual_style.photoSwipe")));
+		Set<String> addedStyles = new HashSet<>();
+		addedStyles.add("prettyPhoto");
+		addedStyles.add("photoSwipe");
 
-		//preskumaj adresar ci tam nieco nie je
-		IwcmFile[] files = new IwcmFile(Tools.getRealPath("/components/" + Constants.getInstallName() + "/gallery/")).listFiles();
-		for (IwcmFile f : files)
-		{
-			if (f.getName().startsWith("gallery-")==false) continue;
-			if (f.getName().contains("-prettyPhoto.jsp") || f.getName().contains("-photoSwipe.jsp")) continue;
-
-			try
-			{
-				String name = f.getName().substring("gallery-".length(), f.getName().length()-4);
-				addPair(name, result, prop);
-			}
-			catch (Exception e)
-			{
-				sk.iway.iwcm.Logger.error(e);
-			}
+		//add all JSP files from the installation-specific and common gallery folders
+		for (String name : GalleryApp.getStyleNames()) {
+			addPair(name, result, prop, addedStyles);
 		}
 
-		//over ci je tam ten co je zadany
+		//check if the current style is in the list
 		if (Tools.isNotEmpty(getStyle()))
 		{
-			boolean found = false;
-			for (Pair<String, String> pair : result)
-			{
-				if (pair.first.equals(getStyle())) found = true;
-			}
-			if (found == false)
-			{
-				addPair(getStyle(), result, prop);
-			}
+			addPair(getStyle(), result, prop, addedStyles);
 		}
 
 		return result;
 	}
 
-	private void addPair(String name, List<Pair<String, String>> result, Prop prop)
+	private void addPair(String name, List<Pair<String, String>> result, Prop prop, Set<String> addedStyles)
 	{
+		if (addedStyles.add(name) == false) return;
+
 		String desc = prop.getText("components.gallery.visual_style."+name);
 		if (desc.startsWith("components.gallery")) desc = name;
 
