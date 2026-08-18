@@ -15,7 +15,9 @@ Before(({ I, login }) => {
 });
 
 function openPage(docId, I, DTE) {
+    I.wait(0.5);
     I.fillField("#tree-doc-id", "12");
+    I.wait(0.5);
     I.fillField("#tree-doc-id", ""+docId);
     I.pressKey("Enter");
 

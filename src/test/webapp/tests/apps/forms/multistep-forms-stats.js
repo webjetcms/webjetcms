@@ -74,7 +74,7 @@ function checkChart(I, chartId, chartTitle) {
 
 async function setClEditorValue(I, wysiwyg) {
     await I.executeScript((text) => {
-            const ta = document.querySelector('#wysiwyg-1');
+            const ta = document.querySelector('#f1-wysiwyg-1');
             if (ta) ta.value = '<p>' + text + '</p>';
             const iframe = document.querySelector('.cleditorMain iframe');
             if (iframe && iframe.contentDocument && iframe.contentDocument.body) {
@@ -82,7 +82,7 @@ async function setClEditorValue(I, wysiwyg) {
             }
             if (typeof $ !== 'undefined') {
                 try {
-                    const ed = $('#wysiwyg-1').cleditor();
+                    const ed = $('#f1-wysiwyg-1').cleditor();
                     if (ed && ed.length > 0) ed[0].updateTextArea();
                 } catch (e) { /* ignore if cleditor sync unavailable */ }
             }
@@ -150,11 +150,13 @@ Scenario("Generate random data for nice charts", async ({ I }) => {
         //make error in 10% of cases to test error handling in stats
         if (Math.random() < 0.1) {
             I.fillField("#f1-meno-1", "");
-            I.click("Prejsť na ďalší krok");
+            if (baseUrl.indexOf("/en/") >= 0) I.click("Go to next step");
+            else I.click("Prejsť na ďalší krok");
         }
         if (Math.random() < 0.2) {
             I.fillField("#f1-priezvisko-1", "");
-            I.click("Prejsť na ďalší krok");
+            if (baseUrl.indexOf("/en/") >= 0) I.click("Go to next step");
+            else I.click("Prejsť na ďalší krok");
         }
 
         // Fill step 1 fields
@@ -186,8 +188,14 @@ Scenario("Generate random data for nice charts", async ({ I }) => {
         I.checkOption(Math.random() < 0.55 ? "#f1-pohlavie-false-muz" : "#f1-pohlavie-false-zena");
 
         // Submit step 1
-        I.click("Prejsť na ďalší krok");
+        if (baseUrl.indexOf("/en/") >= 0) I.click("Go to next step");
+        else I.click("Prejsť na ďalší krok");
+
         I.waitForElement("#f1-select-1", 10);
+
+        //wait for cleditor to load
+        I.waitForElement(".cleditorToolbar .cleditorButton.cleditorDisabled")
+        I.wait(2);
 
         // Fill step 2 - select field with weighted probability: A most likely, D least likely
         I.selectOption("#f1-select-1", weightedRandom(["Mačka", "Pes", "Škrečok", "Had"]));
@@ -195,7 +203,10 @@ Scenario("Generate random data for nice charts", async ({ I }) => {
         if (Math.random() < 0.1) {
             //empty wysiwyg
             await setClEditorValue(I, "");
-            I.click("Odoslať formulár");
+
+            if (baseUrl.indexOf("/en/") >= 0) I.click("Submit form");
+            else I.click("Odoslať formulár");
+
             I.wait(10);
         }
 
@@ -217,14 +228,15 @@ Scenario("Generate random data for nice charts", async ({ I }) => {
         I.wait(waitTime / 1000);
 
         // Submit step 2
-        I.click("Odoslať formulár");
+        if (baseUrl.indexOf("/en/") >= 0) I.click("Submit form");
+        else I.click("Odoslať formulár");
 
         I.waitForElement(".alert.alert-success", 10);
         if (baseUrl.indexOf("/en/") >= 0) {
             if ("emailNotSend" === failStatus) {
                 I.waitForText("Sending of form to email failed!", 10);
             } else if ("probablySpamBot" === failStatus) {
-                I.waitForText("Form was detected as SPAM", 10);
+                I.waitForText("Form was marked as SPAM", 10);
             } else {
                 I.waitForText("The form was successfully submitted", 10);
             }

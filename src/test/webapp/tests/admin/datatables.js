@@ -135,7 +135,7 @@ Scenario('Editacia bunky po presune stlpca', ({ I, DT, Browser }) => {
 
     I.click({css: "div.buttons-select-cel"});
 
-    I.forceClickCss("#redirectTable tbody tr:nth-child(1) td:nth-child(3)");
+    I.forceClickCss("#redirectTable tbody tr:nth-child(1) td:nth-child(4)");
 
     I.seeInField("div.DTE.DTE_Bubble div.DTE_Bubble_Table div.DTE_Field_InputControl input", "301");
 
@@ -146,7 +146,7 @@ Scenario('Editacia bunky po presune stlpca', ({ I, DT, Browser }) => {
     I.say("over, ze poradie si to po reloade stranky pamata");
     I.amOnPage("/admin/v9/settings/redirect/");
 
-    I.see("Presmerovací kód", "div.dt-scroll-headInner table thead tr:first-child th:nth-child(3)")
+    I.see("Presmerovací kód", "div.dt-scroll-headInner table thead tr:first-child th:nth-child(4)")
 
     //
     I.say("Over korektne filtrovanie po presune stlpca");

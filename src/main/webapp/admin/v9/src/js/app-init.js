@@ -515,7 +515,7 @@ function initClosure() {
         '<table class="table datatableInit dataTable no-footer" data-server-side="true" style="margin-left: 0px;" id="jstreeSearchTable">' +
             '<thead>' +
                 '<tr>' +
-                    `<th class="dt-format-selector dt-select-td cell-not-editable" tabindex="0" aria-controls="datatableInit" rowspan="1" colspan="1" data-column-index="0" style="padding: 8px 24px 4px 0px !important;">${jsTreeSearchLabel}</th>` +
+                    `<th class="dt-format-selector dt-select-td cell-not-editable" tabindex="0" aria-controls="jstreeSearchTable" rowspan="1" colspan="1" data-column-index="0" style="padding: 8px 24px 4px 0px !important;">${jsTreeSearchLabel}</th>` +
                 '</tr>' +
                 '<tr>' +
                     '<th class="dt-format-text" data-column-index="2" rowspan="1" colspan="1" style="padding: 0px 0px 4px 0px !important;">' +

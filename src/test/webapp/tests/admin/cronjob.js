@@ -55,14 +55,14 @@ Scenario('Run cronjob on configured node', ({ I, DT, DTE }) => {
     addNewCronjob(I, DTE, DT, 'sk.iway.iwcm.system.cron.Echo', actionParam, '0', false, false, true, actionTaskName);
 
     DT.filterContains('taskName', actionTaskName);
-    I.dontSeeElement('button.button-execute-task-on-node');
+    I.seeElement('button.button-execute-task-on-node.disabled');
     I.clickCss('td.dt-select-td');
     I.seeElement('button.button-execute-task-on-node');
     I.clickCss('button.button-execute-task-on-node');
     I.waitForText('Naozaj chcete spustiť vybrané úlohy na ich nastavených uzloch?', 5, '#toast-container-webjet');
     I.clickCss('div.toastr-buttons button.btn.btn-primary');
     DT.waitForLoader();
-    I.see('Úloha sk.iway.iwcm.system.cron.Echo bola spustená');
+    I.see('Požiadavka na spustenie úlohy sk.iway.iwcm.system.cron.Echo na uzle all bola odoslaná');
 });
 
 Scenario('Delete new cronjob', ({ I, DT, DTE }) => {
