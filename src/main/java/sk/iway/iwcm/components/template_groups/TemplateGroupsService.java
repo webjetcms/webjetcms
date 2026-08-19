@@ -33,6 +33,8 @@ import java.util.Set;
 @Service
 public class TemplateGroupsService {
 
+    private static final String TEMP_GROUP_PREFIX = "temp-group-";
+
     TemplateDetailsService templateDetailsService;
 
     @Autowired
@@ -44,21 +46,21 @@ public class TemplateGroupsService {
         List<TemplatesGroupBean> temp = new ArrayList<>();
         String lng = getLng(request);
 
-        IwayProperties prop = Prop.getChangedProperties(lng, "temp-group-");
-        List<TemplatesGroupBean> templateGroupBeans = filterByUser(TemplatesGroupDB.getAllTemplatesGroups(), UsersDB.getCurrentUser(request));
+        IwayProperties prop = Prop.getChangedProperties(lng, TEMP_GROUP_PREFIX);
+        List<TemplatesGroupBean> templateGroupBeans = filterByUser(TemplatesGroupDB.getAllTemplatesGroupsWithCount(), UsersDB.getCurrentUser(request));
 
         for (TemplatesGroupBean item : templateGroupBeans) {
-            item.setProjectName(prop.getProperty("temp-group-" + item.getId() + ".project.name"));
-            item.setProjectAuthor(prop.getProperty("temp-group-" + item.getId() + ".project.author"));
-            item.setProjectCopyright(prop.getProperty("temp-group-" + item.getId() + ".project.copyright"));
-            item.setProjectDeveloper(prop.getProperty("temp-group-" + item.getId() + ".project.developer"));
-            item.setProjectGenerator(prop.getProperty("temp-group-" + item.getId() + ".project.generator"));
-            item.setProjectFieldA(prop.getProperty("temp-group-" + item.getId() + ".project.field.a"));
-            item.setProjectFieldB(prop.getProperty("temp-group-" + item.getId() + ".project.field.b"));
-            item.setProjectFieldC(prop.getProperty("temp-group-" + item.getId() + ".project.field.c"));
-            item.setProjectFieldD(prop.getProperty("temp-group-" + item.getId() + ".project.field.d"));
-            item.setDescription(prop.getProperty("temp-group-" + item.getId() + ".project.description"));
-            item.setSeoImageAlt(prop.getProperty("temp-group-" + item.getId() + ".project.seoImageAlt"));
+            item.setProjectName(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.name"));
+            item.setProjectAuthor(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.author"));
+            item.setProjectCopyright(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.copyright"));
+            item.setProjectDeveloper(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.developer"));
+            item.setProjectGenerator(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.generator"));
+            item.setProjectFieldA(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.field.a"));
+            item.setProjectFieldB(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.field.b"));
+            item.setProjectFieldC(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.field.c"));
+            item.setProjectFieldD(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.field.d"));
+            item.setDescription(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.description"));
+            item.setSeoImageAlt(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.seoImageAlt"));
 
             temp.add(item);
         }
@@ -136,7 +138,7 @@ public class TemplateGroupsService {
         }
 
         if (TemplatesGroupDB.getInstance().save(templateGroupBean)) {
-            String prefix = "temp-group-" + templateGroupBean.getId() + ".project";
+            String prefix = TEMP_GROUP_PREFIX + templateGroupBean.getId() + ".project";
             IwayProperties iwayProperties = mapIwayProperties(templateGroupBean);
             // defaultne vytvaram novu skupinu pre vychodzi jazyk
             PropDB.save(null, iwayProperties, getLng(request), prefix, null, true);
@@ -156,7 +158,7 @@ public class TemplateGroupsService {
         }
 
         if (templateGroupBean.save()) {
-            String prefix = "temp-group-" + templateGroupBean.getId() + ".project";
+            String prefix = TEMP_GROUP_PREFIX + templateGroupBean.getId() + ".project";
             IwayProperties iwayProperties = mapIwayProperties(templateGroupBean);
             PropDB.save(null, iwayProperties, lng, prefix, null, false);
 
@@ -167,7 +169,7 @@ public class TemplateGroupsService {
     }
 
     boolean deleteTemplateGroupBean(long id) {
-        String prefixForDelete = "temp-group-" + id + ".project";
+        String prefixForDelete = TEMP_GROUP_PREFIX + id + ".project";
         if (TemplatesGroupDB.delete(id)) {
             new SimpleQuery().execute("DELETE FROM " + ConfDB.PROPERTIES_TABLE_NAME + " WHERE prop_key IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     prefixForDelete + ".name",
