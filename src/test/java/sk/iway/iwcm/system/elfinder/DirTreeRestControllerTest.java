@@ -2,10 +2,12 @@ package sk.iway.iwcm.system.elfinder;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockHttpServletRequest;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeMoveItem;
+import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
 import java.io.IOException;
@@ -150,7 +152,72 @@ class DirTreeRestControllerTest extends BaseWebjetTest {
         assertEquals(1, items.size());
         assertEquals(rootVirtualPath, items.get(0).getVirtualPath());
         assertEquals("#", items.get(0).getParent());
+        assertFalse(items.get(0).getChildren(), "Preloaded parents must be converted to arrays by jsTree's flat parser.");
         assertTrue(items.get(0).getState().isDisabled());
+    }
+
+    @Test
+    void shouldKeepOnlyLazyLoadedChildrenAsTrue() throws IOException {
+        String rootVirtualPath = createTestRoot();
+        createDirectory(rootVirtualPath + "/en/subfolder");
+        DirTreeItem lazyChild = new DirTreeItem(new IwcmFile(Tools.getRealPath(rootVirtualPath + "/en")), true);
+        List<DirTreeItem> items = new ArrayList<>();
+        items.add(lazyChild);
+
+        new DirTreeRestController().prepareParents(rootVirtualPath, items, false);
+
+        for (DirTreeItem item : items) {
+            if (item == lazyChild) {
+                assertTrue(item.getChildren(), "A child loaded on demand must remain expandable.");
+            } else {
+                assertFalse(item.getChildren(), "Every preloaded parent must be array-compatible for flat parsing.");
+            }
+        }
+    }
+
+    @Test
+    void shouldApplyDomainAliasToGalleryRoot() {
+        JsTreeMoveItem item = new JsTreeMoveItem();
+        item.setId("/images/gallery");
+        item.setRootFolder("/images/gallery");
+
+        DirTreeRestController.applyDomainAliasToGalleryRoot(item, "/images/gallery", "example");
+
+        assertEquals("/images/example/gallery", item.getId());
+        assertEquals("/images/example/gallery", item.getRootFolder());
+    }
+
+    @Test
+    void shouldKeepGalleryRootWithoutDomainAlias() {
+        JsTreeMoveItem item = new JsTreeMoveItem();
+        item.setId("/images/gallery");
+        item.setRootFolder("/images/gallery");
+
+        DirTreeRestController.applyDomainAliasToGalleryRoot(item, "/images/gallery", "");
+
+        assertEquals("/images/gallery", item.getId());
+        assertEquals("/images/gallery", item.getRootFolder());
+    }
+
+    @Test
+    void shouldReturnEffectiveRootFolder() throws IOException {
+        String rootVirtualPath = createTestRoot();
+        JsTreeMoveItem item = new JsTreeMoveItem();
+        item.setId(rootVirtualPath);
+        item.setRootFolder(rootVirtualPath);
+
+        Identity user = new Identity();
+        user.setWritableFolders("*");
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.getSession().setAttribute(Constants.USER_KEY, user);
+
+        DirTreeRestController controller = new DirTreeRestController();
+        controller.setRequest(request);
+        Map<String, Object> result = new HashMap<>();
+        controller.tree(result, item);
+
+        assertEquals(Boolean.TRUE, result.get("result"));
+        assertEquals(rootVirtualPath, result.get("rootFolder"));
     }
 
     @Test

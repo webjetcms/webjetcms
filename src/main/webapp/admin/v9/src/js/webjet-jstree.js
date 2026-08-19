@@ -50,10 +50,13 @@ export class WebjetJsTree {
 
                             //If its dt-tree-dir-simple, open disabled parent folders in way, that it will not call open event
                             if(url.indexOf("click=dt-tree-dir-simple") > 0) {
-                                //Get root folder from url
-                                let paramString = url.split('?')[1];
-                                let queryString = new URLSearchParams(paramString);
-                                let rootFolder = queryString.get("rootFolder");
+                                //Prefer the effective root returned by the server after domain alias rewriting.
+                                let rootFolder = data.rootFolder;
+                                if (rootFolder == null) {
+                                    let paramString = url.split('?')[1];
+                                    let queryString = new URLSearchParams(paramString);
+                                    rootFolder = queryString.get("rootFolder");
+                                }
                                 let normalizedRootFolder = this.normalizeFolderPath(rootFolder);
 
                                 data.items.forEach((item) => {

@@ -46,10 +46,7 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
         //do not use domain alias for when using external dirs
         if (imagesGalleryRoot.equals(item.getRootFolder()) && Constants.getBoolean("multiDomainEnabled") && FilePathTools.isExternalDirs()==false) {
             String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(getRequest()));
-            if (Tools.isNotEmpty(domainAlias)) {
-                if (imagesGalleryRoot.equals(item.getId())) item.setId(Constants.getString("imagesRootDir") + "/" + domainAlias + "/" + Constants.getString("galleryDirName"));
-                item.setRootFolder(Constants.getString("imagesRootDir") + "/" + domainAlias + "/" + Constants.getString("galleryDirName"));
-            }
+            applyDomainAliasToGalleryRoot(item, imagesGalleryRoot, domainAlias);
         }
 
         String parentPath = item.getId();
@@ -125,6 +122,21 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
 
         result.put("result", true);
         result.put("items", items);
+        if (item.getRootFolder() != null) result.put("rootFolder", item.getRootFolder());
+    }
+
+    /**
+     * Rewrites the gallery root to its domain-specific path.
+     * @param item tree request containing the requested and configured root paths
+     * @param imagesGalleryRoot original gallery root
+     * @param domainAlias current domain alias
+     */
+    static void applyDomainAliasToGalleryRoot(JsTreeMoveItem item, String imagesGalleryRoot, String domainAlias) {
+        if (Tools.isEmpty(domainAlias)) return;
+
+        String effectiveRootFolder = Constants.getString("imagesRootDir") + "/" + domainAlias + "/" + Constants.getString("galleryDirName");
+        if (imagesGalleryRoot.equals(item.getId())) item.setId(effectiveRootFolder);
+        item.setRootFolder(effectiveRootFolder);
     }
 
     /**
@@ -145,7 +157,8 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
             }
 
             DirTreeItem newItem = new DirTreeItem(nextParent, true);
-            newItem.setChildren(true);
+            // jsTree converts a falsy value to [] before adding child IDs from the flat response.
+            newItem.setChildren(false);
             newItem.getState().setOpened(false);
             newItem.getState().setDisabled(true);
             newItem.setParent(nextParent.getVirtualParent());
