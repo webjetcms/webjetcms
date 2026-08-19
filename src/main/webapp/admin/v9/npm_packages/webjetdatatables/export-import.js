@@ -8,7 +8,6 @@ export function bindExportButton(TABLE, DATA) {
     async function getDataToExport(serverSide, TABLE, pageVal, searchVal, orderVal, fromLastExport, searchIds) {
         //console.log("getDataToExport, serverSide=", serverSide);
 
-        //const {name} = window.VueTools.getRouter().history.current.params;
         //const all = name ? '' : '/all';
         //const allData = exportAllData ? '?size=999999&page=0&export=true' : '';
         //const url = `${TABLE.getAjax.url()}${all}${allData}`;

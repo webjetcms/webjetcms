@@ -1,12 +1,12 @@
 ---
 name: wj-sales-features
-description: 'Generates sales-oriented feature descriptions from PR changes or attached files. Outputs a Slovak-language section describing the feature from a business/sales perspective with benefits, competitive advantages, and customer value. Use when: documenting a new feature for the sales team, generating sales descriptions from code changes, creating benefit lists for customer presentations.'
-argument-hint: 'Optionally specify the target year (default: current year) or a specific feature area to focus on (e.g. "page templates" or "user permissions").'
+description: 'Generates sales-oriented feature descriptions from a specified Pull Request, current branch changes, or attached files. Outputs a Slovak-language section describing the feature from a business/sales perspective with benefits, competitive advantages, and customer value. Use when: documenting a Pull Request by number, documenting a new feature for the sales team, generating sales descriptions from code changes, creating benefit lists for customer presentations.'
+argument-hint: 'Specify a Pull Request number (for example: #123 or 123), optionally with a target year (default: current year) or a specific feature area to focus on (e.g. "page templates" or "user permissions").'
 ---
 
 # wj-sales-features
 
-Analyzes code changes (from a Pull Request or attached files) and generates a sales-oriented feature description in Slovak. The output is inserted at the top of the yearly sales documentation file (`docs/sk/sales/{YEAR}/README.md`).
+Analyzes code changes from a specified Pull Request, the current branch, or attached files and generates a sales-oriented feature description in Slovak. The output is inserted at the top of the yearly sales documentation file (`docs/sk/sales/{YEAR}/README.md`).
 
 ## When to Use
 
@@ -21,7 +21,18 @@ Analyzes code changes (from a Pull Request or attached files) and generates a sa
 
 Check if the user has:
 
-**Option A — Pull Request (branch diff)**
+**Option A — Pull Request number**
+
+If the user provides a PR number in the form `#123` or `123`:
+
+1. Fetch the Pull Request metadata and changed files using the GitHub Pull Request tools for the current repository.
+2. Verify that the PR belongs to the current repository and use the PR's own base and head references. Do not infer the changes from the currently checked out branch.
+3. Analyze the PR title, description, commits, changed files, and patch. Use the PR description as context, but treat the actual code changes as the source of truth.
+4. If the PR cannot be fetched, is from another repository, or has no accessible diff, report the concrete problem and ask for a different PR number or the relevant files.
+
+Example request: `Doplň predajnú informáciu podľa PR #123.`
+
+**Option B — Pull Request (current branch diff)**
 
 ```bash
 git rev-parse --abbrev-ref HEAD
@@ -31,11 +42,13 @@ if [[ "$CURRENT_BRANCH" == hotfix/* ]]; then BASE_BRANCH=origin/hotfix/2026.0-ma
 git diff --name-status $(git merge-base HEAD $BASE_BRANCH)
 ```
 
-**Option B — Attached/specified files**
+Use this only when the user did not provide a PR number. The base branch is `origin/main`, except for `hotfix/*` branches where it is `origin/hotfix/2026.0-main`.
+
+**Option C — Attached/specified files**
 
 The user provides files directly (attached to the conversation or listed explicitly). Read and analyze those files.
 
-If neither is clear, ask:
+If the user provides both a PR number and files, use the PR as the primary source and use the files only as supplementary context. If no source is clear, ask:
 
 > "Mám analyzovať zmeny z aktuálneho Pull Requestu (vetvy), alebo máte konkrétne súbory, ktoré chcete opísať?"
 

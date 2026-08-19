@@ -32,6 +32,16 @@ Nastavení se konfigurují v administraci WebJET CMS → **Nastavení → Konfig
 | `accessControlAllowOriginValue` | Povoleno origin domény pro CORS. Může obsahovat více hodnot oddělených čárkou – backend automaticky vybere shodu podle `Referer` hlavičky požadavku. | `https://frontend.example.com` |
 | `restAllowedIpAddresses` | IP adresy ze kterých lze volat [veřejné REST služby](../../custom-apps/spring/public-services.md) | `127.0.0.1` |
 
+pokud nechcete povolit všechny REST služby můžete nastavit povolení na IP adresu pouze pro REST služby headless režimu:
+
+`txt
+restAllowedIpAddresses-HeadlessPageRestController
+restAllowedIpAddresses-HeadlessNewsRestController
+restAllowedIpAddresses-HeadlessActionsRestController
+`
+
+všechny nastavte na IP adresu, ze které budou volány, například `127.0.0.1`.
+
 ### Příklad nastavení CORS
 
 Aby frontend aplikace běžící na `https://frontend.example.com` mohla volat API, nastavte:

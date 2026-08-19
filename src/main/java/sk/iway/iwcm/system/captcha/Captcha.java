@@ -110,11 +110,11 @@ public class Captcha
 			}
 			else if ("reCaptcha".equals(Constants.getString("captchaType")))
 			{
-				return reCaptchaValidate(httpServletRequest.getSession().getAttribute("sessionId"));
+				return reCaptchaValidate(getSubmittedReCaptchaResponse(httpServletRequest, response));
 			}
 			else if ("reCaptchaV3".equals(Constants.getString("captchaType")))
 			{
-				return reCaptchaV3Validate(httpServletRequest);
+				return reCaptchaV3Validate(httpServletRequest, response);
 			}
 			//preber si priamo wjcaptcha parameter
             if (Tools.isEmpty(response)) response = httpServletRequest.getParameter("wjcaptcha");
@@ -128,6 +128,12 @@ public class Captcha
 
 		}
 		return false;
+	}
+
+	static String getSubmittedReCaptchaResponse(HttpServletRequest request, String response)
+	{
+		if (Tools.isNotEmpty(response)) return response;
+		return request.getParameter("g-recaptcha-response");
 	}
 
 	/** Zisti, ci je reCaptcha spravna
@@ -200,8 +206,9 @@ public class Captcha
 		return false;
 	}
 
-	private static boolean reCaptchaV3Validate(HttpServletRequest request) {
-		String token = Tools.getParameter(request, "g-recaptcha-response");
+	private static boolean reCaptchaV3Validate(HttpServletRequest request, String submittedResponse) {
+		String token = getSubmittedReCaptchaResponse(request, submittedResponse);
+
 		if (Tools.isEmpty(token)) {
 			Logger.debug(Captcha.class, "reCaptchaV3Validate - Google token empty");
 			return false;
@@ -285,7 +292,7 @@ public class Captcha
 		}
 		else if ("reCaptcha".equals(Constants.getString("captchaType")))
 		{
-			return reCaptchaValidate(httpServletRequest.getSession().getAttribute("sessionId"));
+			return reCaptchaValidate(getSubmittedReCaptchaResponse(httpServletRequest, response));
 		}
 		try
 		{

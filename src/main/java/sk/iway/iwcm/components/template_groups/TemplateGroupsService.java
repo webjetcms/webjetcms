@@ -55,6 +55,8 @@ public class TemplateGroupsService {
             item.setProjectFieldB(prop.getProperty("temp-group-" + item.getId() + ".project.field.b"));
             item.setProjectFieldC(prop.getProperty("temp-group-" + item.getId() + ".project.field.c"));
             item.setProjectFieldD(prop.getProperty("temp-group-" + item.getId() + ".project.field.d"));
+            item.setDescription(prop.getProperty("temp-group-" + item.getId() + ".project.description"));
+            item.setSeoImageAlt(prop.getProperty("temp-group-" + item.getId() + ".project.seoImageAlt"));
 
             if (InitServlet.isTypeCloud() && CloudToolsForCore.isControllerDomain()==false) {
                 String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(request));
@@ -158,7 +160,7 @@ public class TemplateGroupsService {
     boolean deleteTemplateGroupBean(long id) {
         String prefixForDelete = "temp-group-" + id + ".project";
         if (TemplatesGroupDB.delete(id)) {
-            new SimpleQuery().execute("DELETE FROM " + ConfDB.PROPERTIES_TABLE_NAME + " WHERE prop_key IN (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            new SimpleQuery().execute("DELETE FROM " + ConfDB.PROPERTIES_TABLE_NAME + " WHERE prop_key IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     prefixForDelete + ".name",
                     prefixForDelete + ".author",
                     prefixForDelete + ".copyright",
@@ -167,7 +169,11 @@ public class TemplateGroupsService {
                     prefixForDelete + ".field.a",
                     prefixForDelete + ".field.b",
                     prefixForDelete + ".field.c",
-                    prefixForDelete + ".field.d");
+                    prefixForDelete + ".field.d",
+                    prefixForDelete + ".description",
+                    prefixForDelete + ".seoImageAlt");
+
+            Prop.getInstance(true);
 
             return true;
         }
@@ -186,6 +192,8 @@ public class TemplateGroupsService {
         iwayProperties.setProperty("field.b", templatesGroupBean.getProjectFieldB());
         iwayProperties.setProperty("field.c", templatesGroupBean.getProjectFieldC());
         iwayProperties.setProperty("field.d", templatesGroupBean.getProjectFieldD());
+        iwayProperties.setProperty("description", templatesGroupBean.getDescription());
+        iwayProperties.setProperty("seoImageAlt", templatesGroupBean.getSeoImageAlt());
 
         return iwayProperties;
     }

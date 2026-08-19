@@ -69,9 +69,10 @@ Scenario('testovanie app - Mapa stránok', async ({ I, DTE, Apps, Document }) =>
         "maxDepth": "1",
         "colsNum": "2"
     }
-    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
     I.click(locate('a').withText('Aplikácie').withAttr({ role: 'treeitem' }));
-    I.waitForElement('input[value="/Aplikácie"]', 10);
+    I.wait(2);
+    I.seeInField('#editorAppDTE_Field_groupId input.form-control', '/Aplikácie', 10);
     DTE.fillField("maxDepth", "1");
     DTE.fillField("colsNum", "2");
 

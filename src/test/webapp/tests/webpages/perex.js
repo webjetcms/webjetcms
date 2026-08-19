@@ -1,5 +1,7 @@
 Feature('webpages.perex');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 Before(({ login, DT }) => {
     login('admin');
 
@@ -56,10 +58,10 @@ Scenario('verify only current domain selection for available groups', ({I, DT, D
     I.dontSee("/Test stavov/Zaheslovaný", "#perexDataTable td.dt-style-json");
     I.click("PerexWithGroup_B");
     DTE.waitForEditor("perexDataTable");
-    I.click("button.btn-vue-jstree-add");
-    I.waitForElement("#jsTree");
-    I.waitForText("Jet portal 4", 5, "#jsTree a.jstree-anchor");
-    I.dontSee("mirroring.tau27.iway.sk", "#jsTree a.jstree-anchor");
+    I.click("button.btn-webjet-jstree-add");
+    I.waitForElement(WebjetDteJsTree.tree);
+    I.waitForText("Jet portal 4", 5, WebjetDteJsTree.anchors);
+    I.dontSee("mirroring.tau27.iway.sk", WebjetDteJsTree.anchors);
     I.click("button.close-custom-modal");
     DTE.cancel();
 });
@@ -475,16 +477,16 @@ Scenario("BUG: duplicate available groups in perex group on save", async ({ I, D
     DT.filterContains("perexGroupName", perexGroupName);
     I.click(perexGroupName);
     DTE.waitForEditor("perexDataTable");
-    I.click("button.btn-vue-jstree-add");
-    I.waitForElement("#jsTree");
-    I.waitForText("Jet portal 4", 5, "#jsTree a.jstree-anchor");
+    I.click("button.btn-webjet-jstree-add");
+    I.waitForElement(WebjetDteJsTree.tree);
+    I.waitForText("Jet portal 4", 5, WebjetDteJsTree.anchors);
     I.click("button.close-custom-modal");
     DTE.save();
 
     //verify no duplicates
     I.click(perexGroupName);
     DTE.waitForEditor("perexDataTable");
-    var rows = await I.grabNumberOfVisibleElements("#editorAppDTE_Field_editorFields-availableGroups div.dt-tree-container div.form-group button.btn-vue-jstree-item-edit");
+    var rows = await I.grabNumberOfVisibleElements("#editorAppDTE_Field_editorFields-availableGroups div.dt-tree-container div.form-group button.btn-webjet-jstree-item-edit");
     I.assertEqual(rows, 1, "Expected 1 available group, but found " + rows);
 });
 

@@ -834,6 +834,17 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 	}
 
 	/**
+	 * Called before duplicating an entity, with the ID of the source entity.
+	 * The default implementation preserves compatibility with controllers that
+	 * override {@link #beforeDuplicate(Object)}.
+	 * @param entity entity prepared for insertion
+	 * @param originalId ID of the source entity
+	 */
+	public void beforeDuplicate(T entity, Long originalId) {
+		beforeDuplicate(entity);
+	}
+
+	/**
 	 * Metoda volana po duplikovanim danej entity,
 	 * da sa pouzit na dokopirovanie udajov, napr. media web stranky
 	 * @param entity - novo ulozena (zduplikovana) entita
@@ -1447,7 +1458,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 
 						isDuplicate = true;
 						setDuplicate(true);
-						beforeDuplicate(entity);
+						beforeDuplicate(entity, id);
 						if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_DUPLICATE).publishEvent();
 					}
 

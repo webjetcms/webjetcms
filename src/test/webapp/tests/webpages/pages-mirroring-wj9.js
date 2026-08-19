@@ -1,5 +1,7 @@
 Feature('webpages.pages-mirroring-wj9');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 var auto_folder_sk, auto_folder_en, auto_subfolder1_sk, auto_subfolder2_sk, randomNumber;
 
 Before(({ I, login }) => {
@@ -127,11 +129,11 @@ function wj9ChangeMainPage(I, DTE, DT, randomNumber) {
      I.jstreeClick(auto_folder_sk);
      I.click(DT.btn.tree_edit_button);
      DTE.waitForEditor("groups-datatable");
-     I.click(locate('#editorAppDTE_Field_editorFields-defaultDocDetails').find('.btn.btn-outline-secondary.btn-vue-jstree-item-edit'));
-     I.waitForVisible('#jsTree');
+     I.click(locate('#editorAppDTE_Field_editorFields-defaultDocDetails').find('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit'));
+     I.waitForVisible(WebjetDteJsTree.tree);
      I.click(locate('.jstree-node.jstree-closed').withDescendant('a.jstree-anchor').withText(auto_folder_sk).find('.jstree-icon.jstree-ocl'));
-     I.waitForVisible(locate('#jsTree').withDescendant('ul.jstree-children').withText(auto_webpage1_sk));
-     I.click(locate('#jsTree').find('.jstree-node.jstree-leaf').withText(auto_webpage1_sk).find('a.jstree-anchor'));
+     I.waitForVisible(locate(WebjetDteJsTree.tree).withDescendant('ul.jstree-children').withText(auto_webpage1_sk));
+     I.click(locate(WebjetDteJsTree.tree).find('.jstree-node.jstree-leaf').withText(auto_webpage1_sk).find('a.jstree-anchor'));
      DTE.save();
      // over ci sa v hlavnom sk adresari zmenila hlavna stranka na webpage1
      I.say('Over ci sa v hlavnom sk adresari zmenila hlavna stranka na webpage1');
@@ -162,11 +164,11 @@ function wj9MoveSubpage(I, DT, DTE, randomNumber) {
      I.waitForVisible('#datatableInit_modal');
      I.clickCss('#pills-dt-datatableInit-basic-tab');
      I.waitForElement(locate('.col-sm-4.col-form-label').withText('Nadradený priečinok'));
-     I.click(locate('#editorAppDTE_Field_editorFields-groupDetails').find('button.btn.btn-outline-secondary.btn-vue-jstree-item-edit'));
-     I.waitForVisible('#jsTree');
+     I.click(locate('#editorAppDTE_Field_editorFields-groupDetails').find('button.btn.btn-outline-secondary.btn-webjet-jstree-item-edit'));
+     I.waitForVisible(WebjetDteJsTree.tree);
      I.click(locate('.jstree-node.jstree-closed').withDescendant('a.jstree-anchor').withText(auto_folder_sk).find('.jstree-icon.jstree-ocl'));
-     I.waitForVisible(locate('#jsTree').withDescendant('ul.jstree-children').withText(auto_subfolder1_sk));
-     I.click(locate('#jsTree').find('.jstree-node.jstree-leaf').withText(auto_subfolder1_sk).find('a.jstree-anchor'));
+     I.waitForVisible(locate(WebjetDteJsTree.tree).withDescendant('ul.jstree-children').withText(auto_subfolder1_sk));
+     I.click(locate(WebjetDteJsTree.tree).find('.jstree-node.jstree-leaf').withText(auto_subfolder1_sk).find('a.jstree-anchor'));
      DTE.save();
      // overim ci sa stranka webpage1 presunula do priecinka sk-mir-subfolder1
      I.say('Overim ci sa stranka webpage1 presunula do priecinka sk-mir-subfolder1');
@@ -318,9 +320,9 @@ Scenario("mirroring with multigroup mapping", ({ I, DT, DTE }) => {
      I.waitForElement(locate('.col-sm-4.col-form-label').withText('Názov web stránky'));
      I.fillField('#DTE_Field_title', auto_webpage1_sk);
 
-     I.clickCss("#editorAppDTE_Field_editorFields-groupCopyDetails > section > div > div > button.btn-vue-jstree-add");
-     I.click(locate('#jsTree .jstree-node.jstree-closed').withText(auto_folder_sk).find('.jstree-icon.jstree-ocl'));
-     I.click(locate('#jsTree').find('.jstree-node.jstree-leaf').withText(auto_subfolder1_sk).find('a.jstree-anchor'));
+     I.clickCss("#editorAppDTE_Field_editorFields-groupCopyDetails > webjet-dte-jstree > section > div > div > button.btn-webjet-jstree-add");
+     I.click(locate(WebjetDteJsTree.tree + ' .jstree-node.jstree-closed').withText(auto_folder_sk).find('.jstree-icon.jstree-ocl'));
+     I.click(locate(WebjetDteJsTree.tree).find('.jstree-node.jstree-leaf').withText(auto_subfolder1_sk).find('a.jstree-anchor'));
 
      DTE.save();
 
@@ -337,9 +339,9 @@ Scenario("mirroring with multigroup mapping", ({ I, DT, DTE }) => {
 
      //
      I.say("Add auto_subfolder2_sk to multigroup mapping");
-     I.clickCss("#editorAppDTE_Field_editorFields-groupCopyDetails > section > div > div > button.btn-vue-jstree-add");
-     I.click(locate('#jsTree .jstree-node.jstree-closed').withText(auto_folder_en).find('.jstree-icon.jstree-ocl'));
-     I.click(locate('#jsTree').find('.jstree-node.jstree-leaf').withText(auto_subfolder2_sk).find('a.jstree-anchor'));
+     I.clickCss("#editorAppDTE_Field_editorFields-groupCopyDetails > webjet-dte-jstree > section > div > div > button.btn-webjet-jstree-add");
+     I.click(locate(WebjetDteJsTree.tree + ' .jstree-node.jstree-closed').withText(auto_folder_en).find('.jstree-icon.jstree-ocl'));
+     I.click(locate(WebjetDteJsTree.tree).find('.jstree-node.jstree-leaf').withText(auto_subfolder2_sk).find('a.jstree-anchor'));
      DTE.save();
 
      //
@@ -356,7 +358,7 @@ Scenario("mirroring with multigroup mapping", ({ I, DT, DTE }) => {
 
      //
      I.say("Remove auto_subfolder1_sk from multigroup mapping");
-     I.clickCss("#editorAppDTE_Field_editorFields-groupCopyDetails div.form-group:nth-child(1) button.btn-vue-jstree-item-remove");
+     I.clickCss("#editorAppDTE_Field_editorFields-groupCopyDetails div.form-group:nth-child(1) button.btn-webjet-jstree-item-remove");
      DTE.save();
 
      //

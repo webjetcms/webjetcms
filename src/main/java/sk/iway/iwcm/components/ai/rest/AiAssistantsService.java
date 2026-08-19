@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import jakarta.persistence.Entity;
 
@@ -15,6 +13,8 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Service;
+
+import com.webjetcms.ai.AiPromptTemplate;
 
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
@@ -27,9 +27,6 @@ import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.providers.AiAssitantsInterface;
-import sk.iway.iwcm.components.ai.providers.IncludesHandler;
-import sk.iway.iwcm.components.ai.security.PromptInjectionDefense;
-import sk.iway.iwcm.components.ai.security.PromptInjectionDefense.UntrustedSource;
 import sk.iway.iwcm.editor.appstore.AppManager;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
@@ -46,7 +43,6 @@ public class AiAssistantsService {
     private static final String CLASS_FIELD_MAP_KEY = "AiAssistantsService_classFieldsMap";
     public static final String EMPTY_VALUE = "EMPTY_VALUE";
     private static final String CACHE_KEY_PREFIX = "AiAssistantsService.assistants-";
-    private static final Pattern USER_INPUT_MACRO_PATTERN = Pattern.compile("\\{inputText\\}|\\{userPrompt\\}");
 
     private final List<AiAssitantsInterface> aiAssitantsInterfaces;
 
@@ -322,14 +318,19 @@ public class AiAssistantsService {
     }
 
     /**
-     * Execute prompt macro, replaces {inputText}, {userPrompt} and adds rule for INCLUDE protected tokens if includes are used
-     * @param instructions
-     * @param inputData
-     * @param replacedIncludes
-     * @return
+     * Resolves CMS-owned prompt variables and delegates untrusted prompt expansion to {@code webjet-ai}.
+     *
+     * @param instructions CMS instruction template
+     * @param inputData assistant input and trusted backend variables
+     * @return expanded instructions with consumed and suspicious source metadata
      */
-    public static String executePromptMacro(String instructions, InputDataDTO inputData, Map<Integer, String> replacedIncludes) {
-        if(inputData == null) return instructions;
+    public static AiPromptTemplate.ExpansionResult expandPromptMacros(
+        String instructions,
+        InputDataDTO inputData
+    ) {
+        if(inputData == null) {
+            return AiPromptTemplate.expand(instructions, null, null, AiAssistantsService::formatPromptValue);
+        }
         if(Tools.isEmpty(instructions)) {
             //to fill inputData if original input is empty
             instructions = "{\nuserPrompt:{userPrompt}\ninputText:{inputText}\n}";
@@ -356,50 +357,25 @@ public class AiAssistantsService {
             }
         }
 
-        if (instructions.contains("{inputText}") || instructions.contains("{userPrompt}")) {
-            //for append we must clear inputValue, because it will be duplicated into final result
-            if ("append".equals(inputData.getReplaceMode()) || "replace".equals(inputData.getReplaceMode())) inputData.setInputValue("");
-
-            instructions = replaceUserInputMacros(instructions, inputData);
-
-            //clear values, so it will be not appended into final prompt, clear both,
-            //because it instructions contains {userPrompt} we expect that it will contain also
-            //inputValue if it is required for the action
-            inputData.setInputValue("");
-            inputData.setUserPrompt("");
+        String inputText = inputData.getInputValue();
+        if (InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType())
+            || "append".equals(inputData.getReplaceMode())
+            || "replace".equals(inputData.getReplaceMode())) {
+            inputText = "";
         }
-        instructions = applyBonusParamsMacro(instructions, inputData.getBonusParams());
-
-        if (replacedIncludes != null && replacedIncludes.isEmpty()==false) instructions = IncludesHandler.addProtectedTokenInstructionRule(instructions);
-
-        return instructions;
+        AiPromptTemplate.ExpansionResult expansion = AiPromptTemplate.expand(
+            instructions,
+            inputText,
+            inputData.getUserPrompt(),
+            AiAssistantsService::formatPromptValue
+        );
+        return expansion.withInstructions(
+            applyBonusParamsMacro(expansion.instructions(), inputData.getBonusParams())
+        );
     }
 
-    private static String replaceUserInputMacros(String instructions, InputDataDTO inputData) {
-        Matcher matcher = USER_INPUT_MACRO_PATTERN.matcher(instructions);
-        StringBuffer sb = new StringBuffer();
-
-        while (matcher.find()) {
-            String replacement;
-            if ("{inputText}".equals(matcher.group())) {
-                replacement = getSafeUserMacroValue(inputData.getInputValue(), UntrustedSource.INPUT_TEXT, inputData.getAssistantId());
-            } else {
-                replacement = getSafeUserMacroValue(inputData.getUserPrompt(), UntrustedSource.USER_PROMPT, inputData.getAssistantId());
-            }
-            matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
-        }
-        matcher.appendTail(sb);
-
-        return sb.toString();
-    }
-
-    private static String getSafeUserMacroValue(String value, UntrustedSource source, Long assistantId) {
-        String safeValue = PromptInjectionDefense.neutralizePromptMacroTokens(value);
-        return nvl(PromptInjectionDefense.wrapUntrustedText(safeValue, source, assistantId), "");
-    }
-
-    private static String nvl(String value, String defaultValue) {
-        if(Tools.isEmpty(value)) return defaultValue;
+    private static String formatPromptValue(String value) {
+        if(Tools.isEmpty(value)) return "";
 
         //remove new lines and escape quotes, we are expecting JSON format for instructions for HTML code/replace in PB
         value = value.replace("\n", " ").replace("\r", " ").replace("\"", "\\\"").replace("'", "\\'");

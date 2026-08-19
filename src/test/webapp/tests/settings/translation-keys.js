@@ -15,6 +15,58 @@ Before(({ I, login }) =>{
     }
 });
 
+Scenario('translation key tree', ({ I, DT }) => {
+    I.waitForVisible("#SomStromcek", 20);
+    I.waitForElement("#translation-key-root-node", 20);
+    I.see("Všetky prekladové kľúče", "#SomStromcek");
+    I.dontSeeElement("#SomStromcek .ti-file-text");
+
+    I.clickCss("#SomStromcek li[data-translation-key-prefix='components'] > a.jstree-anchor");
+    I.jstreeWaitForLoader();
+    DT.waitForLoader();
+    I.waitForElement("#SomStromcek li[data-translation-key-prefix='components.map'] > a.jstree-anchor", 20);
+
+    I.clickCss("#SomStromcek li[data-translation-key-prefix='components.map'] > a.jstree-anchor");
+    I.jstreeWaitForLoader();
+    DT.waitForLoader();
+    I.waitForElement("#SomStromcek li[data-translation-key-prefix='components.map.width'].jstree-leaf", 20);
+
+    I.jstreeFilter("width");
+    I.seeElement("#SomStromcek li[data-translation-key-prefix='components.map.width'].jstree-leaf > a.jstree-search");
+    I.dontSeeElement("#SomStromcek .ti-file-text");
+
+    I.clickCss("#SomStromcek li[data-translation-key-prefix='components.map.width'] > a.jstree-anchor");
+    DT.waitForLoader();
+    I.see("components.map.width.short", "#datatableInit");
+    I.dontSee("components.map.address", "#datatableInit");
+
+    I.jstreeFilter("grideditor");
+    I.seeElement("#SomStromcek li[data-translation-key-prefix='grideditor'] > a.jstree-search");
+    I.dontSeeElement("#SomStromcek li[data-translation-key-prefix='components']");
+    I.clickCss("#tree-folder-search-clear-button");
+    I.jstreeWaitForLoader();
+    I.dontSeeInField("#tree-folder-search-input", "grideditor");
+    I.waitForElement("#SomStromcek li[data-translation-key-prefix='components']", 20);
+
+    I.jstreeFilter("grideditor");
+    I.seeElement("#SomStromcek li[data-translation-key-prefix='grideditor'] > a.jstree-search");
+    I.clearField("#tree-folder-search-input");
+    I.pressKey("Enter");
+    I.jstreeWaitForLoader();
+    I.dontSeeInField("#tree-folder-search-input", "grideditor");
+    I.waitForElement("#SomStromcek li[data-translation-key-prefix='components']", 20);
+
+    I.jstreeFilter("grideditor");
+    I.seeElement("#SomStromcek li[data-translation-key-prefix='grideditor'] > a.jstree-search");
+    I.clickCss("#translation-key-root-node > a.jstree-anchor");
+    I.jstreeWaitForLoader();
+    DT.waitForLoader();
+    I.dontSeeInField("#tree-folder-search-input", "grideditor");
+    I.waitForElement("#SomStromcek li[data-translation-key-prefix='components']", 20);
+    DT.filterContains("key", "components.map.address");
+    I.see("components.map.address", "#datatableInit");
+});
+
 Scenario('zakladne testy @baseTest', async ({ I, DataTables }) =>{
     I.see("Kľúč");
     let options = await DataTables.baseTest({

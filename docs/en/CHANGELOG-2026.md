@@ -4,6 +4,10 @@
 
 > Development version updated from the main repository.
 
+### Groundbreaking changes
+
+- The dependency on the [Vue.js](https://vuejs.org) library has been removed from the administration. We recommend checking the compatibility of your own applications before updating. The size of JavaScript files has been reduced by approximately 170kB, which also has an impact on the speed of administration initialization. More in the [programmer section](#programmer).
+
 ### Websites
 
 - Website Trash - added [automatic deletion of old pages and folders](redactor/apps/gdpr/data-deleting.md) from the trash according to the set retention period. Added the ability to delete pages and folders in the trash and in the [Data deletion](sysadmin/data-deleting/README.md) section according to the selected date range. Unified logic for calculating the number and deleting, fixed permanent deletion of the trash folder and empty folders (#271).
@@ -15,6 +19,10 @@
 ![](editor/webpages/redirects/redirect-path.png)
 
 - SEO - added a separate setting **Search engine tracking** with options **According to crawl settings**, **Enable tracking** (`follow`) and **Disable tracking** (`nofollow`). HTTP header `X-Robots-Tag` and Ninja `${ninja.page.robots}` use the same logic: when indexing without restrictions, they return `all`, otherwise a combination of directives `noindex` and `nofollow` according to the page settings. More in [Ninja documentation](frontend/ninja-starter-kit/ninja-jv/page/README.md#indexing-settings-string) (#OSK563).
+- SEO - in [template groups](frontend/templates/template-groups.md#karta-seo) it is possible to set a default SEO description, image and image alternative text. The Ninja object `Page` will use them if the page does not have its own values ​​specified; the value `${ninja.page.seoImageAlt}` for `og:image:alt` has also been added (#OSK593).
+
+![](frontend/templates/temps-groups-edit-seo.png)
+
 - Ninja - added [dimension generation](frontend/ninja-starter-kit/ninja-bp/README.md) SEO image `og:image:width` and `og:image:height` (#OSK563).
 - Templates - added option to set the movement of `<style>` and `<link rel="stylesheet">` tags from the page body to `<head>` via [template option](frontend/templates/templates.md) with support for global configuration variable `showDocMoveStyleToHead`. Blocks in IE conditions, `noscript` and `script` remain in place (#231).
 
@@ -61,6 +69,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 ![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
 
 - Added the option to set the maximum combined file size in the form, previously only the size for a file could be set, if the form contains multiple files, it is possible to set the maximum size for all files together (#58517).
+- [Multistep Forms](redactor/apps/multistep-form/README.md) - added duplication of the entire form including settings, steps and items. The item editor displays their automatically generated identifier and supports custom error message, whitespace trimming, empty option in picklist and new field type autocomplete with diacritic-insensitive search (#osk573).
+- [Multistep forms](redactor/apps/multistep-form/README.md) - it is possible to insert item values ​​using tags in the introductory text of the step and [page with email version](redactor/apps/form/README.md#tab---settings). The recognition of name and email fields by the beginning of the identifier, language processing, reCAPTCHA v3, independent insertion of multiple form instances on one page and deleting all responses without deleting the form definition (#osk573) have been fixed.
+- [Multistep forms](redactor/apps/multistep-form/README.md) - added the ability to enter a custom error message and trim spaces at the beginning and end of the text entered by the visitor (#osk573).
 
 ### Semantic search
 
@@ -90,6 +101,12 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ![](redactor/files/file-archive/drag-drop-upload-dialog.png)
 
+### Gallery
+
+- Added the ability to set a separate [resizing method for a large image](redactor/apps/gallery/structure.md#tab-dimensions) independent of the small image. By default, the same resizing method is used as set for the small image. The setting can optionally be copied to subfolders (#58633).
+
+![](redactor/apps/gallery/dir-sizes-tab.png)
+
 ### Optional fields
 
 - Fully implemented [custom field settings] functionality (frontend/webpages/customfields/custom-fields-settings.md). Allows you to centrally set field properties without editing translation keys. All field types are supported (text, textarea, select, multiselect, autocomplete, enumeration, image, link, JSON and more) with type-specific settings such as maximum text length, selection options, linking to code lists or dependency on other fields. The user interface also offers an easy way to set possible values ​​for select/autocomplete fields (#58529).
@@ -97,6 +114,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 ![](frontend/webpages/customfields/custom-fields-settings-editor.png)
 
 - Added option to set optional field as required (#58413).
+- Added new optional field types [radio check box and radio check box](frontend/webpages/customfields/custom-fields-settings.md#difference-between-selectmultiselect-and-radiocheckbox) with support for both static options and codebook linking. The `multiselect` type now also supports [codebook linking](frontend/webpages/customfields/custom-fields-settings.md#option-source). The original `enumeration` type has been replaced by an option source switch for types `select`, `multiselect`, `radio` and `checkbox` where options are loaded from a linked codebook for all these field types (#58637).
 
 ### Multiweb
 
@@ -107,12 +125,29 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Other minor changes
 
+- Automated tasks - added option to [manually run task](admin/settings/cronjob/README.md) on node or node group set in **Runs on node** field. Original local run on current node remains available with separate button (#58718).
+
+- Translation keys - added tree structure of translation key prefixes with filtering of the list by the selected prefix (#58714).
+
+![](admin/settings/translation-keys/dataTable.png)
+
 - Explorer - added [Unused files] tab in folder properties (redactor/files/fbrowser/folder-settings/README.md#unused-files) to find and delete unused files (#58621).
 
 ![](redactor/files/fbrowser/folder-settings/folder_settings_unused_files_result.png)
 
 - Explorer - added right **Allow uploading files with accents**, which allows preserving accents when uploading, creating, and renaming files and folders in folders `/files`, `/images`, and `/shared`. Without this right, names will continue to be automatically edited without accents (#58589).
 - Login - faster loading of the home page in the administration - added cache for the list of recent pages, changed pages and audit logs (#58589).
+- Export/import files - modified dialog design and responsive display of form fields according to the current administration design (#58581).
+- Web pages - added highlighting of the element above which the context menu is called. Important if you want to perform the Delete element action, so you can see exactly which element is marked (#OSK675).
+- Multiweb - added option to rename an existing domain + redirection after renaming (#58317-15).
+- Google reCaptcha - added support for inserting multiple multi-step forms into a page, `invisible/reCaptcha/reCaptchaV3` mode is supported, error message edited to more understandable text (#osk573).
+- Multi-step forms - added moving (`scroll`) to the beginning of the form after moving to the next step (#osk573).
+
+### Bug fixes
+
+- Explorer - modified comparison of files with diacritics when checking the existence of a file when overwriting it - format `utf-8 NFC vs NFD` (#58317-12).
+- Web pages - fixed adding empty `P` element to the end of the page (#58317-13).
+- Websites - fixed loading of `ckeditor_button_sizes` value for button type `A` (#OSK674).
 
 ### Safety
 
@@ -126,10 +161,16 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### For the programmer
 
+- Administration - removed dependency on [Vue.js](https://vuejs.org). Tree fields, start page, image area selection and server monitoring use native [web components](developer/frameworks/web-components.md). The global object `window.VueTools` and packages for Vue are no longer part of the administration. Custom extensions must replace them with web components or compile Vue themselves (#58722).
+
+- AI Assistants - Provider-independent client logic for OpenAI, Gemini, and OpenRouter, stream processing, request/response types, and prompt protection have been separated into a separate artifact `com.webjetcms:webjet-ai` and an external [webjet-ai repository](https://github.com/webjetcms/webjet-ai). WebJET CMS passes configuration through a typed adapter and continues to provide auditing, persistence, and UI integration. This is an incompatible change: the original CMS SPI for custom providers and its transport and streaming support classes have been removed. Custom providers must be migrated to the `AiProvider` library interface and the CMS adapter `LibrarySupportLogic` (#58670).
+
 - Datatables - added a new field type `OPTIONS` for [dynamic list of values](developer/datatables-editor/standard-fields.md#options) in the editor. Each row contains two text fields (key and value), supports adding, removing and reordering using `drag & drop` (#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced.png)
 
+- Data tables - extended functionality of field type [`OPTIONS`](developer/datatables-editor/standard-fields.md#options) by the ability to add an empty value using `allowEmptyOption` (#osk573).
+- Data tables - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) removes extra blank paragraphs when editing source code (#osk573).
 - Data tables - added a new field type `ENUMERATION` for [connection to enumeration tables](developer/datatables-editor/standard-fields.md#enumeration) in the editor. The field stores the configuration in `enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY` format and allows you to set the source of values ​​(#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
@@ -332,6 +373,13 @@ Redesigned application properties settings in the editor from the old code in `J
 ## 2026.0.x
 
 > A patch version of the original version 2026.0.
+
+- Web pages - fixed saving a web page with a space at the end of the URL (whitespace removal will be performed) (#OSK650).
+- Web pages - fixed looping of unpublished page if URL does not end with `/` - ​​configuration variable `virtualPathLastSlash=false` (#OSK684).
+- Document Manager - added clearing of cache after publishing a new version of a file (#TB2754).
+- Multiweb - fixed the ability to delete or edit a domain redirect that contains the `http/s` prefix (#58317-15).
+- Gallery - in the application editor, only JSP files from the `/components/{INSTALL_NAME}/gallery` and `/components/gallery` folders are displayed among the visual styles, without duplicate items (#58317-16).
+- Inserting HTML code - in the application preview in the website editor, for content consisting only of `script` elements, the source code is displayed instead of empty content (#OSK625).
 
 ## 2026.0.28
 

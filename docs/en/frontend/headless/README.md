@@ -32,6 +32,16 @@ Settings are configured in the WebJET CMS administration → **Settings → Conf
 | `accessControlAllowOriginValue` | Allowed origin domains for CORS. Can contain multiple values ​​separated by commas - the backend will automatically match based on the `Referer` request header. | `https://frontend.example.com` |
 | `restAllowedIpAddresses` | IP addresses from which [public REST services] can be called (../../custom-apps/spring/public-services.md) | `127.0.0.1` |
 
+If you don't want to allow all REST services, you can set the IP address permission only for headless mode REST services:
+
+`txt
+restAllowedIpAddresses - HeadlessPageRestController
+restAllowedIpAddresses - HeadlessNewsRestController
+restAllowedIpAddresses-HeadlessActionsRestController
+`
+
+set all to the IP address from which they will be called, for example `127.0.0.1`.
+
 ### CORS setup example
 
 To allow the frontend application running on `https://frontend.example.com` to call the API, set:

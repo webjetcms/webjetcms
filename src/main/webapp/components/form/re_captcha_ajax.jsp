@@ -11,11 +11,7 @@ taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
 taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%
-if("reCaptcha".equals(Constants.getString("captchaType")) )
-{
-	session.setAttribute("sessionId", Tools.getParameter(request, "capchaId"));
-}
-if( Captcha.validateResponse(request, "", null))
+if( Captcha.validateResponse(request, Tools.getParameter(request, "capchaId"), null))
 	out.print("OK");
 else
 	out.print("ERR");

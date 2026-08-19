@@ -4,6 +4,10 @@
 
 > Vývojová verzia aktualizovaná z main repozitára.
 
+### Prelomové zmeny
+
+- Z administrácie bola odstránená závislosť na knižnici [Vue.js](https://vuejs.org). Pred aktualizáciou odporúčame overiť kompatibilitu vlastných aplikácií. Veľkosť JavaScript súborov sa zmenšila o cca 170kB, čo má dopad aj na rýchlosť inicializácie administrácie. Viac v [sekcii pre programátora](#pre-programátora).
+
 ### Webové stránky
 
 - Kôš webových stránok - pridané [automatické mazanie starých stránok a priečinkov](redactor/apps/gdpr/data-deleting.md) z koša podľa nastaveného retenčného obdobia. Pridaná možnosť mazania stránok a priečinkov v koši aj v sekcii [Mazanie dát](sysadmin/data-deleting/README.md) podľa zvoleného rozsahu dátumov. Zjednotená logika výpočtu počtu a mazania, opravené trvalé odstránenie priečinka koša a prázdnych priečinkov (#271).
@@ -15,6 +19,10 @@
 ![](redactor/webpages/redirects/redirect-path.png)
 
 - SEO - pridané samostatné nastavenie **Nasledovanie odkazov vyhľadávačmi** s možnosťami **Podľa nastavenia Prehľadávať**, **Povoliť nasledovanie odkazov** (`follow`) a **Zakázať nasledovanie odkazov** (`nofollow`). HTTP hlavička `X-Robots-Tag` a Ninja `${ninja.page.robots}` používajú rovnakú logiku: pri indexovaní bez obmedzení vrátia `all`, inak kombináciu direktív `noindex` a `nofollow` podľa nastavenia stránky. Viac v [dokumentácii Ninja](frontend/ninja-starter-kit/ninja-jv/page/README.md#nastavenie-indexovania-string) (#OSK563).
+- SEO - v [skupinách šablón](frontend/templates/template-groups.md#karta-seo) je možné nastaviť predvolený SEO opis, obrázok a alternatívny text obrázka. Objekt Ninja `Page` ich použije, ak stránka nemá zadané vlastné hodnoty; pribudla aj hodnota `${ninja.page.seoImageAlt}` pre `og:image:alt` (#OSK593).
+
+![](frontend/templates/temps-groups-edit-seo.png)
+
 - Ninja - doplnené [generovanie rozmerov](frontend/ninja-starter-kit/ninja-bp/README.md) SEO obrázka `og:image:width` a `og:image:height` (#OSK563).
 - Šablóny - pridaná možnosť nastaviť presun `<style>` a `<link rel="stylesheet">` značiek z tela stránky do `<head>` cez [voľbu v šablóne](frontend/templates/templates.md) s podporou globálnej konfiguračnej premennej `showDocMoveStyleToHead`. Bloky v IE podmienkach, `noscript` a `script` zostávajú na mieste (#231).
 
@@ -61,6 +69,9 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 ![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
 
 - Pridaná možnosť vo formulári nastaviť maximálnu kombinovaná veľkosť súboru, pôvodne sa dala nastavovať len veľkosť pre súbor, ak formulár obsahuje viac súborov je možné nastaviť maximálnu veľkosť pre všetky súbory spoločne (#58517).
+- [Viackrokové formuláre](redactor/apps/multistep-form/README.md) - pridané duplikovanie celého formulára vrátane nastavení, krokov a položiek. Editor položiek zobrazuje ich automaticky vytvorený identifikátor a podporuje vlastnú chybovú správu, orezanie medzier, prázdnu možnosť vo výberovom zozname a nový typ poľa automatické dopĺňanie s vyhľadávaním bez rozlíšenia diakritiky (#osk573).
+- [Viackrokové formuláre](redactor/apps/multistep-form/README.md) - do úvodného textu kroku a [stránky s verziou pre email](redactor/apps/form/README.md#karta---nastavenia) je možné vložiť hodnoty položiek pomocou značiek. Opravené bolo rozpoznávanie polí mena a emailu podľa začiatku identifikátora, spracovanie jazyka, reCAPTCHA v3, nezávislé vloženie viacerých inštancií formulára na jednu stránku a vymazanie všetkých odpovedí bez odstránenia definície formulára (#osk573).
+- [Viackrokové formuláre](redactor/apps/multistep-form/README.md) - pridaná možnosť zadať vlastnú chybovú správu a orezať medzery na začiatku a konci textu zadaného návštevníkom (#osk573).
 
 ### Sémantické vyhľadávanie
 
@@ -114,6 +125,12 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Iné menšie zmeny
 
+- Automatizované úlohy - pridaná možnosť [manuálne spustiť úlohu](admin/settings/cronjob/README.md) na uzle alebo skupine uzlov nastavenej v poli **Beží na uzle**. Pôvodné lokálne spustenie na aktuálnom uzle zostáva dostupné samostatným tlačidlom (#58718).
+
+- Prekladové kľúče - pridaná stromová štruktúra prefixov prekladových kľúčov s filtrovaním zoznamu podľa zvoleného prefixu (#58714).
+
+![](admin/settings/translation-keys/dataTable.png)
+
 - Prieskumník - vo vlastnostiach priečinka pridaná karta [Nepoužívané súbory](redactor/files/fbrowser/folder-settings/README.md#nepoužívané-súbory) na vyhľadanie a zmazanie nepoužívaných súborov (#58621).
 
 ![](redactor/files/fbrowser/folder-settings/folder_settings_unused_files_result.png)
@@ -122,6 +139,9 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Prihlásenie - zrýchlené načítanie úvodnej stránky v administrácii - pridaná vyrovnávacia pamäť pre zoznam posledných stránok, zmenených stránok a auditných záznamov (#58589).
 - Export/import súborov - upravený dizajn dialógového okna a responzívne zobrazenie formulárových polí podľa aktuálneho dizajnu administrácie (#58581).
 - Webové stránky - doplnené zvýraznenie elementu nad ktorým je vyvolané kontextové menu. Dôležité ak chcete vykonať akciu Zmazať element, aby ste presne videli ktorý element je označený (#OSK675).
+- Multiweb - doplnená možnosť premenovať existujúcu doménu + presmerovanie po premenovaní (#58317-15).
+- Google reCaptcha - doplnená podpora vkladania viacerých viac krokových formulárov do stránky, podporovaný je režim `invisible/reCaptcha/reCaptchaV3`, upravené chybové hlásenie na zrozumiteľnejší text (#osk573).
+- Viackrokové formuláre - doplnené presunutie (`scroll`) na začiatok formuláru po prechode na ďalší krok (#osk573).
 
 ### Oprava chýb
 
@@ -141,10 +161,16 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Pre programátora
 
+- Administrácia - odstránená závislosť od [Vue.js](https://vuejs.org). Stromové polia, úvodná stránka, výber oblasti obrázka a monitorovanie servera používajú natívne [web komponenty](developer/frameworks/web-components.md). Globálny objekt `window.VueTools` ani balíky pre Vue už nie sú súčasťou administrácie. Vlastné rozšírenia ich musia nahradiť web komponentmi alebo si Vue zostaviť samostatne (#58722).
+
+- AI asistenti - klientska logika nezávislá od poskytovateľa pre OpenAI, Gemini a OpenRouter, spracovanie streamov, typy požiadaviek/odpovedí a ochrana promptov boli vyčlenené do samostatného artefaktu `com.webjetcms:webjet-ai` a externého [repozitára webjet-ai](https://github.com/webjetcms/webjet-ai). WebJET CMS odovzdáva konfiguráciu cez typovaný adaptér a naďalej zabezpečuje auditovanie, perzistenciu a integráciu používateľského rozhrania. Ide o nekompatibilnú zmenu: pôvodné CMS SPI pre vlastných poskytovateľov a jeho transportné a streamovacie podporné triedy boli odstránené. Vlastných poskytovateľov je nutné migrovať na rozhranie `AiProvider` knižnice a CMS adaptér `LibrarySupportLogic`  (#58670).
+
 - Dátové tabuľky - pridaný nový typ poľa `OPTIONS` pre [dynamický zoznam hodnôt](developer/datatables-editor/standard-fields.md#options) v editore. Každý riadok obsahuje dva textové polia (kľúč a hodnota), podporuje pridávanie, odoberanie a zmenu poradia pomocou `drag & drop` (#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced.png)
 
+- Dátové tabuľky - rozšírená funkcionalita poľa typu [`OPTIONS`](developer/datatables-editor/standard-fields.md#options) o možnosť pridať prázdnu hodnotu pomocou `allowEmptyOption` (#osk573).
+- Dátové tabuľky - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) pri úprave zdrojového kódu odstraňuje nadbytočné prázdne odseky (#osk573).
 - Dátové tabuľky - pridaný nový typ poľa `ENUMERATION` pre [napojenie na číselníky](developer/datatables-editor/standard-fields.md#enumeration) v editore. Pole ukladá konfiguráciu vo formáte `enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY` a umožňuje nastaviť zdroj hodnôt (#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
@@ -349,6 +375,11 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 > Opravná verzia pôvodnej verzie 2026.0.
 
 - Webové stránky - opravené ukladanie web stránky s medzerou na konci URL adresy (vykoná sa odstránenie prázdnych znakov) (#OSK650).
+- Webové stránky - opravené zacyklenie nepublikovanej stránky ak URL nekončí na znak `/` - konfiguračná premenná `virtualPathLastSlash=false` (#OSK684).
+- Manažér dokumentov - pridané zmazanie cache pamäte po publikovaní novej verzie súboru (#TB2754).
+- Multiweb - opravená možnosť zmazať alebo upraviť doménové presmerovanie, ktoré obsahuje `http/s` prefix (#58317-15).
+- Galéria - v editore aplikácie sa medzi vizuálnymi štýlmi zobrazujú iba JSP súbory z priečinkov `/components/{INSTALL_NAME}/gallery` a `/components/gallery`, bez duplicitných položiek (#58317-16).
+- Vloženie HTML kódu - v náhľade aplikácie v editore webových stránok sa pre obsah tvorený iba elementmi `script` zobrazí zdrojový kód namiesto prázdneho obsahu (#OSK625).
 
 ## 2026.0.28
 

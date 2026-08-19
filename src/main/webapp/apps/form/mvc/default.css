@@ -27,3 +27,43 @@
     margin: 0px;
     padding-left: 20px;
 }
+
+/* Autocomplete styles — dropdown is appended inside .multistep-form-app via appendTo. */
+.multistep-form-app .ui-helper-hidden-accessible {
+    border: 0;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+}
+
+.multistep-form-app ul.ui-autocomplete {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: white;
+    z-index: 10011 !important;
+    border: 1px solid #ccc;
+    list-style-type: none;
+    padding: 5px;
+    max-height: 300px;
+    max-width: none;
+    overflow: auto;
+}
+
+.multistep-form-app ul.ui-autocomplete li.ui-menu-item .ui-menu-item-wrapper {
+    color: #666;
+    display: block;
+    padding: 3px 1em 3px 0.4em;
+}
+
+.multistep-form-app ul.ui-autocomplete li.ui-menu-item .ui-menu-item-wrapper:hover,
+.multistep-form-app ul.ui-autocomplete li.ui-menu-item .ui-menu-item-wrapper.ui-state-active {
+    background-color: #e5e5e5;
+    text-decoration: none;
+    color: black;
+    cursor: pointer;
+}

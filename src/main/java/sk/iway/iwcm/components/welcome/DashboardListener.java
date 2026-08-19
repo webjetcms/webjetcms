@@ -90,7 +90,7 @@ public class DashboardListener {
                     }
                 }
             }
-            //data for webjet-overview-dashboard-mini-app-users.vue
+            // Data for the overview dashboard active users component.
             model.addAttribute("overviewAdmins", JsonTools.objectToJSON(admins));
             dt.diff("After admins");
             model.addAttribute("overviewCurrentSessions", SessionClusterService.getSessionInfo(request.getSession().getId(), user.getUserId()));
