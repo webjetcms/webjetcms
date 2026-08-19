@@ -6,6 +6,8 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.templates.TemplateDetailsService;
@@ -43,7 +45,7 @@ public class TemplateGroupsService {
         String lng = getLng(request);
 
         IwayProperties prop = Prop.getChangedProperties(lng, "temp-group-");
-        List<TemplatesGroupBean> templateGroupBeans = filterByUser(TemplatesGroupDB.getAllTemplatesGroupsWithCount(), UsersDB.getCurrentUser(request));
+        List<TemplatesGroupBean> templateGroupBeans = filterByUser(TemplatesGroupDB.getAllTemplatesGroups(), UsersDB.getCurrentUser(request));
 
         for (TemplatesGroupBean item : templateGroupBeans) {
             item.setProjectName(prop.getProperty("temp-group-" + item.getId() + ".project.name"));
@@ -58,17 +60,7 @@ public class TemplateGroupsService {
             item.setDescription(prop.getProperty("temp-group-" + item.getId() + ".project.description"));
             item.setSeoImageAlt(prop.getProperty("temp-group-" + item.getId() + ".project.seoImageAlt"));
 
-            if (InitServlet.isTypeCloud() && CloudToolsForCore.isControllerDomain()==false) {
-                String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(request));
-                //Pre MULTIWEB mozeme zobrazit len tie, ktore zacinaju/obsahuju nas domainalias
-                if ((item.getDirectory() != null && item.getDirectory().toLowerCase().contains(domainAlias))
-                    || (item.getKeyPrefix() != null && item.getKeyPrefix().toLowerCase().equals(domainAlias))
-                ) {
-                    temp.add(item);
-                }
-            } else {
-                temp.add(item);
-            }
+            temp.add(item);
         }
 
         return temp;
@@ -103,8 +95,25 @@ public class TemplateGroupsService {
             tempGroupIds.add(temp.getTemplatesGroupId());
         }
 
+        RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+        String domainAlias = null;
+        if (rb != null) {
+            domainAlias = MultiDomainFilter.getDomainAlias(rb.getDomain());
+        }
+
         for (TemplatesGroupBean group : all) {
             if (tempGroupIds.contains(group.getId())) {
+                filtered.add(group);
+            }
+            else if (InitServlet.isTypeCloud() && CloudToolsForCore.isControllerDomain()==false && Tools.isNotEmpty(domainAlias)) {
+                //Pre MULTIWEB mozeme zobrazit len tie, ktore zacinaju/obsahuju nas domainalias
+                if ((group.getDirectory() != null && group.getDirectory().toLowerCase().contains(domainAlias))
+                    || (group.getKeyPrefix() != null && group.getKeyPrefix().toLowerCase().equals(domainAlias))
+                    || (group.getName() != null && group.getName().toLowerCase().contains("[" + domainAlias + "]"))
+                ) {
+                    filtered.add(group);
+                }
+            } else if (InitServlet.isTypeCloud() && CloudToolsForCore.isControllerDomain()) {
                 filtered.add(group);
             }
         }
