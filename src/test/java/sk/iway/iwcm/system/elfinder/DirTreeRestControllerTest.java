@@ -3,6 +3,7 @@ package sk.iway.iwcm.system.elfinder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeMoveItem;
 import sk.iway.iwcm.test.BaseWebjetTest;
@@ -10,6 +11,7 @@ import sk.iway.iwcm.test.BaseWebjetTest;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -99,10 +101,66 @@ class DirTreeRestControllerTest extends BaseWebjetTest {
         assertTrue(visiblePaths.contains(rootVirtualPath + "/files/visible"));
     }
 
+    @Test
+    void shouldShowOnlyWritableFoldersAndTheirParents() {
+        Identity user = createRestrictedUser();
+        List<String> writableFolderRoots = DirTreeRestController.getFolderRoots(user.getWritableFolders());
+
+        assertTrue(DirTreeRestController.isFolderVisible(user, "/images", writableFolderRoots, List.of()));
+        assertTrue(DirTreeRestController.isFolderVisible(user, "/images/gallery", writableFolderRoots, List.of()));
+        assertTrue(DirTreeRestController.isFolderVisible(user, "/images/gallery/test-vela-foto", writableFolderRoots, List.of()));
+        assertTrue(DirTreeRestController.isFolderVisible(user, "/images/banner", writableFolderRoots, List.of()));
+        assertFalse(DirTreeRestController.isFolderVisible(user, "/images/other", writableFolderRoots, List.of()));
+        assertFalse(DirTreeRestController.isFolderVisible(user, "/files", writableFolderRoots, List.of()));
+    }
+
+    @Test
+    void shouldNotShowChildrenForNonRecursiveWritePermission() {
+        Identity user = new Identity();
+        user.setWritableFolders("/images/exact/");
+        List<String> writableFolderRoots = DirTreeRestController.getFolderRoots(user.getWritableFolders());
+
+        assertTrue(DirTreeRestController.isFolderVisible(user, "/images", writableFolderRoots, List.of()));
+        assertTrue(DirTreeRestController.isFolderVisible(user, "/images/exact", writableFolderRoots, List.of()));
+        assertFalse(DirTreeRestController.isFolderVisible(user, "/images/exact/child", writableFolderRoots, List.of()));
+    }
+
+    @Test
+    void shouldAllowSelectionAccordingToWritableOnlyAndVisibilityMode() {
+        Identity user = createRestrictedUser();
+        List<String> alwaysShownFolderRoots = List.of("/images/common");
+
+        assertFalse(DirTreeRestController.isFolderSelectable(user, "/images/gallery", true, false, alwaysShownFolderRoots));
+        assertTrue(DirTreeRestController.isFolderSelectable(user, "/images/other", false, false, alwaysShownFolderRoots));
+        assertFalse(DirTreeRestController.isFolderSelectable(user, "/images/other", false, true, alwaysShownFolderRoots));
+        assertTrue(DirTreeRestController.isFolderSelectable(user, "/images/gallery/test-vela-foto", true, true, alwaysShownFolderRoots));
+        assertTrue(DirTreeRestController.isFolderSelectable(user, "/images/common/shared", true, false, alwaysShownFolderRoots));
+        assertFalse(DirTreeRestController.isFolderSelectable(user, "/images/common/shared", true, true, alwaysShownFolderRoots));
+    }
+
+    @Test
+    void shouldPrepareRootFolderWhenFilteredChildrenAreEmpty() throws IOException {
+        String rootVirtualPath = createTestRoot();
+        List<DirTreeItem> items = new ArrayList<>();
+
+        new DirTreeRestController().prepareParents(rootVirtualPath, items, true);
+
+        assertEquals(1, items.size());
+        assertEquals(rootVirtualPath, items.get(0).getVirtualPath());
+        assertEquals("#", items.get(0).getParent());
+        assertTrue(items.get(0).getState().isDisabled());
+    }
+
     private JsTreeMoveItem createConfigItem() {
         JsTreeMoveItem item = new JsTreeMoveItem();
         item.setSkipFoldersConst(SKIP_FOLDERS_CONST);
         return item;
+    }
+
+    private Identity createRestrictedUser() {
+        Identity user = new Identity();
+        user.setWritableFolders("/images/banner/*\n/images/gallery/test-vela-foto/*");
+        return user;
     }
 
     private String createTestRoot() throws IOException {

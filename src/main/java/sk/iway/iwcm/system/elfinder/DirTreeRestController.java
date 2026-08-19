@@ -18,6 +18,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeMoveItem;
 import sk.iway.iwcm.admin.jstree.JsTreeRestController;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.FilePathTools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.io.IwcmFile;
@@ -52,6 +53,13 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
 
         boolean isRoot = "/".equals(parentPath);
         Identity user = getUser();
+        boolean showOnlyWritableFolders = Constants.getBoolean("fbrowserShowOnlyWritableFolders") && CloudToolsForCore.isControllerDomain() == false;
+
+        List<String> writableFolderRoots = getFolderRoots(user.getWritableFolders());
+        if (writableFolderRoots.isEmpty() && showOnlyWritableFolders) {
+            writableFolderRoots.addAll(getFolderRoots(Constants.getStringExecuteMacro("fbrowserDefaultWritableFolders")));
+        }
+        List<String> alwaysShownFolderRoots = getFolderRoots(Constants.getStringExecuteMacro("fbrowserAlwaysShowFolders"));
 
         List<DirTreeItem> items;
 
@@ -68,7 +76,7 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
             items.add(rootItem);
         } else {
             List<IwcmFile> files;
-            if (isRoot || user.isFolderWritable(parentPath)) {
+            if (showOnlyWritableFolders == false || isFolderVisible(user, parentPath, writableFolderRoots, alwaysShownFolderRoots)) {
                 IwcmFile directory = new IwcmFile(Tools.getRealPath(parentPath));
                 files = Arrays.asList(FileTools.sortFilesByName(directory.listFiles(file -> {
                     if (file.isFile()) return false;
@@ -76,7 +84,7 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
                     //System.out.println("path="+file.getVirtualPath()+" isRoot="+isRoot+" isJarPackaging="+file.isJarPackaging());
                     if (isRoot==false && file.isJarPackaging()) return false;
 
-                    if (user.isFolderWritable(file.getVirtualPath())==false) return false;
+                    if (showOnlyWritableFolders && isFolderVisible(user, file.getVirtualPath(), writableFolderRoots, alwaysShownFolderRoots) == false) return false;
 
                     return true;
                 })));
@@ -86,6 +94,9 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
 
             boolean loadParents = item.getRootFolder() != null && item.getId().equals( item.getRootFolder() );
             items = files.stream().map(f -> new DirTreeItem(f, loadParents)).collect(Collectors.toList());
+            for (DirTreeItem dirTreeItem : items) {
+                setFolderState(dirTreeItem, user, showOnlyWritableFolders, item.isWritableOnly(), alwaysShownFolderRoots);
+            }
 
             //
             items = getAllowedFolders(items, item);
@@ -93,6 +104,12 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
             //Prepare parents only if we want local root childs
             if(loadParents) {
                 prepareParents(parentPath, items, item.isHideRootParents());
+                for (DirTreeItem dirTreeItem : items) {
+                    if (parentPath.equals(dirTreeItem.getVirtualPath())) {
+                        setFolderState(dirTreeItem, user, showOnlyWritableFolders, item.isWritableOnly(), alwaysShownFolderRoots);
+                        break;
+                    }
+                }
             }
         }
 
@@ -106,10 +123,7 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
      * @param treeRootPath
      * @param items
      */
-    private void prepareParents(String treeRootPath, List<DirTreeItem> items, boolean hideRootParents) {
-        //Check if we even need to prepare parents
-        if(items == null || items.size() == 0) return;
-
+    void prepareParents(String treeRootPath, List<DirTreeItem> items, boolean hideRootParents) {
         //If we are in root, we do not need to prepare parents
         if("/".equals(treeRootPath)) return;
 
@@ -143,6 +157,66 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
                 nextParent = nextParent.getParentFile();
             }
         }
+    }
+
+    private static void setFolderState(DirTreeItem item, Identity user, boolean showOnlyWritableFolders, boolean writableOnly, List<String> alwaysShownFolderRoots) {
+        item.getState().setDisabled(isFolderSelectable(user, item.getVirtualPath(), showOnlyWritableFolders, writableOnly, alwaysShownFolderRoots) == false);
+    }
+
+    static boolean isFolderSelectable(Identity user, String path, boolean showOnlyWritableFolders, boolean writableOnly, List<String> alwaysShownFolderRoots) {
+        if (user.isFolderWritable(path)) return true;
+        if (writableOnly) return false;
+        if (showOnlyWritableFolders == false) return true;
+        return isPathInFolderRoots(path, alwaysShownFolderRoots);
+    }
+
+    static boolean isFolderVisible(Identity user, String path, List<String> writableFolderRoots, List<String> alwaysShownFolderRoots) {
+        if (user.isFolderWritable(path)) return true;
+
+        String normalizedPath = normalizeFolderPath(path);
+        for (String folderRoot : writableFolderRoots) {
+            if (isSameOrSubfolder(folderRoot, normalizedPath)) return true;
+        }
+        for (String folderRoot : alwaysShownFolderRoots) {
+            if (isSameOrSubfolder(normalizedPath, folderRoot) || isSameOrSubfolder(folderRoot, normalizedPath)) return true;
+        }
+        return false;
+    }
+
+    static List<String> getFolderRoots(String folders) {
+        List<String> folderRoots = new ArrayList<>();
+        for (String folder : Tools.getTokens(folders, ",\n", true)) {
+            String normalizedFolder = normalizeFolderPath(folder);
+            if (Tools.isNotEmpty(normalizedFolder)) folderRoots.add(normalizedFolder);
+        }
+        return folderRoots;
+    }
+
+    private static boolean isPathInFolderRoots(String path, List<String> folderRoots) {
+        String normalizedPath = normalizeFolderPath(path);
+        for (String folderRoot : folderRoots) {
+            if (isSameOrSubfolder(normalizedPath, folderRoot)) return true;
+        }
+        return false;
+    }
+
+    private static boolean isSameOrSubfolder(String path, String folderRoot) {
+        if (path.equals(folderRoot)) return true;
+        if ("/".equals(folderRoot)) return path.startsWith("/");
+        return path.startsWith(folderRoot + "/");
+    }
+
+    private static String normalizeFolderPath(String path) {
+        if (path == null) return "";
+
+        String normalizedPath = path.trim().replace('\\', '/');
+        while (normalizedPath.endsWith("*") || normalizedPath.endsWith("+")) {
+            normalizedPath = normalizedPath.substring(0, normalizedPath.length() - 1);
+        }
+        while (normalizedPath.length() > 1 && normalizedPath.endsWith("/")) {
+            normalizedPath = normalizedPath.substring(0, normalizedPath.length() - 1);
+        }
+        return Tools.replace(normalizedPath, "//", "/");
     }
 
     /**

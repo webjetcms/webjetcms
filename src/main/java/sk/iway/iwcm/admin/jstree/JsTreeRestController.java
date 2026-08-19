@@ -45,6 +45,7 @@ public abstract class JsTreeRestController<T> {
         item.setSkipFoldersConst( Tools.getStringValue(request.getParameter("skipFolders"), null) );
         item.setRootFolder( Tools.getStringValue(request.getParameter("rootFolder"), null) );
         item.setHideRootParents( Tools.getBooleanValue(request.getParameter("hideRootParents"), false) );
+        item.setWritableOnly( Tools.getBooleanValue(request.getParameter("writableOnly"), false) );
 
         tree(result, item);
 
