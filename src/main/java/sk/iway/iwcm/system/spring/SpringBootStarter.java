@@ -57,15 +57,9 @@ public class SpringBootStarter extends SpringBootServletInitializer {
 
     private static final org.apache.commons.logging.Log BOOTSTRAP_LOG =
         org.apache.commons.logging.LogFactory.getLog(SpringBootStarter.class);
-    private static final String[] DEFAULT_PROFILES = {"default"};
 
     public static void main(String[] args) {
         Logger.info(SpringBootStarter.class, "=== WebJET CMS starting with Spring Boot 4.x ===");
-
-        // Set default profiles
-        if (args == null || args.length == 0) {
-            args = DEFAULT_PROFILES;
-        }
 
         runApplication(args);
 
@@ -122,9 +116,11 @@ public class SpringBootStarter extends SpringBootServletInitializer {
         // The initializer selects setup or production before Spring parses any
         // component scans. A single retry switches a failed production
         // initialization to the recovery/setup bean graph.
-        createApplicationBuilder(forcedMode)
-            .profiles(args)
-            .run(args);
+        runApplication(createApplicationBuilder(forcedMode), args);
+    }
+
+    static void runApplication(SpringApplicationBuilder application, String[] args) {
+        application.run(args != null ? args : new String[0]);
     }
 
     private static SpringApplicationBuilder createApplicationBuilder(WebjetBootstrapMode forcedMode) {
@@ -137,7 +133,7 @@ public class SpringBootStarter extends SpringBootServletInitializer {
             .sources(SpringBootStarter.class)
             .initializers(new WebjetBootstrapApplicationContextInitializer(forcedMode))
             .properties(
-                "spring.profiles.active:" + (System.getProperty("spring.profiles.active") != null ? System.getProperty("spring.profiles.active") : "default"),
+                "spring.profiles.default:default",
                 "server.servlet.context-path:/",
                 "server.tomcat.basedir:."
             );
