@@ -13,7 +13,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -149,6 +151,34 @@ class DirTreeRestControllerTest extends BaseWebjetTest {
         assertEquals(rootVirtualPath, items.get(0).getVirtualPath());
         assertEquals("#", items.get(0).getParent());
         assertTrue(items.get(0).getState().isDisabled());
+    }
+
+    @Test
+    void shouldRejectForbiddenTreePathsBeforeDirectoryListing() {
+        assertTrue(DirTreeRestController.isPathAllowed("/"));
+        assertFalse(DirTreeRestController.isPathAllowed("/../../.."));
+        assertFalse(DirTreeRestController.isPathAllowed("/%2e%2e/%2e%2e"));
+
+        JsTreeMoveItem item = new JsTreeMoveItem();
+        item.setId("/../../..");
+        Map<String, Object> result = new HashMap<>();
+
+        DirTreeRestController controller = new DirTreeRestController();
+        controller.tree(result, item);
+
+        assertEquals(Boolean.FALSE, result.get("result"));
+        assertFalse(result.containsKey("items"));
+    }
+
+    @Test
+    void shouldRequireCanonicalPathContainment() throws IOException {
+        String rootVirtualPath = createTestRoot();
+        Path rootPath = Path.of(Tools.getRealPath(rootVirtualPath));
+        Path childPath = rootPath.resolve("child");
+        Files.createDirectories(childPath);
+
+        assertTrue(DirTreeRestController.isWithinCanonicalRoot(childPath.toString(), rootPath.toString()));
+        assertFalse(DirTreeRestController.isWithinCanonicalRoot(rootPath.resolve("../outside").toString(), rootPath.toString()));
     }
 
     private JsTreeMoveItem createConfigItem() {

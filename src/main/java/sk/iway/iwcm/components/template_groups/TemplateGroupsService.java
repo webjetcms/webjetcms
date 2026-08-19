@@ -131,7 +131,7 @@ public class TemplateGroupsService {
     TemplatesGroupBean saveTemplateGroup(TemplatesGroupBean templateGroupBean, HttpServletRequest request) {
         if (InitServlet.isTypeCloud() && CloudToolsForCore.isControllerDomain()==false) {
             String domainAlias = MultiDomainFilter.getDomainAlias(CloudToolsForCore.getDomainName()).toLowerCase();
-            if (isMultiwebGroup(templateGroupBean, domainAlias)) {
+            if (isMultiwebGroup(templateGroupBean, domainAlias)==false) {
                 templateGroupBean.setName(templateGroupBean.getName() + " [" + domainAlias + "]");
             }
 

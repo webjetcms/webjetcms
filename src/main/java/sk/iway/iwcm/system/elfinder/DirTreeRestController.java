@@ -1,5 +1,8 @@
 package sk.iway.iwcm.system.elfinder;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,6 +22,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeMoveItem;
 import sk.iway.iwcm.admin.jstree.JsTreeRestController;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.FilePathTools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.io.IwcmFile;
@@ -50,6 +54,12 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
 
         String parentPath = item.getId();
         if ("-1".equals(parentPath)) parentPath = "/";
+
+        if (isPathAllowed(parentPath) == false) {
+            result.put("result", false);
+            result.put("error", getProp().getText("components.jstree.access_denied__group"));
+            return;
+        }
 
         boolean isRoot = "/".equals(parentPath);
         Identity user = getUser();
@@ -190,6 +200,45 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
             if (Tools.isNotEmpty(normalizedFolder)) folderRoots.add(normalizedFolder);
         }
         return folderRoots;
+    }
+
+    /**
+     * Validates a requested virtual path before it is used for directory listing.
+     * The resolved canonical path must remain inside the web root or a configured
+     * external-files root for the current or shared domain.
+     * @param virtualPath requested virtual path
+     * @return true when the path can be safely listed
+     */
+    static boolean isPathAllowed(String virtualPath) {
+        if (Tools.isEmpty(virtualPath) || FileBrowserTools.hasForbiddenSymbol(virtualPath)) return false;
+
+        String realPath = Tools.getRealPath(virtualPath);
+        if (isWithinCanonicalRoot(realPath, Tools.getRealPath("/"))) return true;
+
+        if (FilePathTools.isExternalDirs()) {
+            if (isWithinCanonicalRoot(realPath, FilePathTools.getDomainBaseFolder())) return true;
+            if (isWithinCanonicalRoot(realPath, FilePathTools.getDomainBaseFolder("shared"))) return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks canonical containment to prevent traversal through path segments or symbolic links.
+     * @param path path to validate
+     * @param rootPath permitted root path
+     * @return true when path is the root or one of its descendants
+     */
+    static boolean isWithinCanonicalRoot(String path, String rootPath) {
+        if (Tools.isEmpty(path) || Tools.isEmpty(rootPath)) return false;
+
+        try {
+            Path canonicalPath = new File(path).getCanonicalFile().toPath();
+            Path canonicalRootPath = new File(rootPath).getCanonicalFile().toPath();
+            return canonicalPath.equals(canonicalRootPath) || canonicalPath.startsWith(canonicalRootPath);
+        } catch (IOException | SecurityException ex) {
+            return false;
+        }
     }
 
     private static boolean isPathInFolderRoots(String path, List<String> folderRoots) {
