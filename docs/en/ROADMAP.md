@@ -58,6 +58,7 @@ Explanation of the pictograms used:
 - [ ] Automatically delete `temp` files that may accumulate.
 - [x] +Administration - remove dependency on `Vue.js` and replace internal components with native web components (#58722).
 - [ ] +Modify the loading of the admin section so that only the inside of the page is replaced via a REST service call, not a complete reload of the HTML code.
+- [ ] +Improve the administration homepage - dynamic blocks, the ability to customize what is displayed, useful information and blocks.
 
 ## 2025
 

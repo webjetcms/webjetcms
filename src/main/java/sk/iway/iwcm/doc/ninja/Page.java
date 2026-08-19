@@ -101,7 +101,7 @@ public class Page {
             if (tempGroup != null) seoDesc = tempGroup.getDescription();
         }
 
-        return sanitizeText(seoDesc);
+        return ResponseUtils.filter(seoDesc);
     }
 
     public String getSeoImage(){
@@ -141,7 +141,7 @@ public class Page {
             if (tempGroup != null) seoImageAlt = tempGroup.getSeoImageAlt();
         }
 
-        return sanitizeText(seoImageAlt);
+        return ResponseUtils.filter(seoImageAlt);
     }
 
     /**
@@ -180,10 +180,6 @@ public class Page {
     private TempGroup getTempGroup() {
         if (ninja == null || ninja.getTemp() == null) return null;
         return ninja.getTemp().getGroup();
-    }
-
-    private String sanitizeText(String value) {
-        return Tools.html2text(Tools.getStringValue(value, "")).replace("\"", "");
     }
 
     private boolean isValidSeoImagePath(String value) {

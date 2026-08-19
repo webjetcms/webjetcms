@@ -19,6 +19,10 @@
 ![](redactor/webpages/redirects/redirect-path.png)
 
 - SEO - přidáno samostatné nastavení **Následujení odkazů vyhledávači** s možnostmi **Podle nastavení Procházet**, **Povolit následování odkazů** (`follow`) a **Zakázat následování odkazů** (`nofollow`). HTTP hlavička `X-Robots-Tag` a Ninja `${ninja.page.robots}` používají stejnou logiku: při indexování bez omezení vrátí `all`, jinak kombinaci direktiv `noindex` a `nofollow` podle nastavení stránky. Více v [dokumentaci Ninja](frontend/ninja-starter-kit/ninja-jv/page/README.md#nastavení-indexování-string) (#OSK563).
+- SEO - v [skupinách šablon](frontend/templates/template-groups.md#karta-seo) lze nastavit výchozí SEO popis, obrázek a alternativní text obrázku. Objekt Ninja `Page` je použije, pokud stránka nemá zadané vlastní hodnoty; přibyla také hodnota `${ninja.page.seoImageAlt}` pro `og:image:alt` (#OSK593).
+
+![](frontend/templates/temps-groups-edit-seo.png)
+
 - Ninja - doplněno [generování rozměrů](frontend/ninja-starter-kit/ninja-bp/README.md) SEO obrázku `og:image:width` a `og:image:height` (#OSK563).
 - Šablony - přidána možnost nastavit přesun `<style>` a `<link rel="stylesheet">` značek z těla stránky do `<head>` přes [volbu v šabloně](frontend/templates/templates.md) s podporou globální konfigurační proměnné `showDocMoveStyleToHead`. Bloky v IE podmínkách, `noscript` a `script` zůstávají na místě (#231).
 
@@ -371,8 +375,11 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 > Opravná verze původní verze 2026.0.
 
 - Webové stránky - opraveno ukládání web stránky s mezerou na konci URL adresy (provede se odstranění prázdných znaků) (#OSK650).
+- Webové stránky - opravené zacyklení nepublikované stránky pokud URL nekončí na znak `/` - ​​konfigurační proměnná `virtualPathLastSlash=false` (#OSK684).
 - Manažer dokumentů - přidáno smazání cache paměti po publikování nové verze souboru (#TB2754).
 - Multiweb - opravena možnost smazat nebo upravit doménové přesměrování, které obsahuje `http/s` prefix (#58317-15).
+- Galerie - v editoru aplikace se mezi vizuálními styly zobrazují pouze JSP soubory ze složek `/components/{INSTALL_NAME}/gallery` a `/components/gallery`, bez duplicitních položek (#58317-16).
+- Vložení HTML kódu - v náhledu aplikace v editoru webových stránek se pro obsah tvořený pouze elementy `script` zobrazí zdrojový kód namísto prázdného obsahu (#OSK625).
 
 ## 2026.0.28
 

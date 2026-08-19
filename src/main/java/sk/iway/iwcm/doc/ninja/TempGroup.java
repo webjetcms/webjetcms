@@ -37,8 +37,8 @@ public class TempGroup {
     public TemplatesGroupBean getTemplatesGroupBean() {
         if (templatesGroupBean == null && ninja.getRequest() != null) {
             Object requestTemplatesGroupBean = ninja.getRequest().getAttribute("templatesGroupDetails");
-            if (requestTemplatesGroupBean instanceof TemplatesGroupBean) {
-                templatesGroupBean = (TemplatesGroupBean) requestTemplatesGroupBean;
+            if (requestTemplatesGroupBean instanceof TemplatesGroupBean templatesgroupbean) {
+                templatesGroupBean = templatesgroupbean;
             }
         }
 

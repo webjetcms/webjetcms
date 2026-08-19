@@ -31,13 +31,19 @@ Scenario('templates', ({ I, DT, DTE, Document }) => {
     Document.screenshot("/frontend/templates/templates-edit-sites.png");
 });
 
-Scenario('temps-groups', ({ I, DT, DTE, Document }) => {
+Scenario('temps-groups @current', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/templates/temps-groups-list/");
     DT.waitForLoader();
     Document.screenshot("/frontend/templates/temps-groups.png");
     I.click("Demo JET");
     DTE.waitForEditor();
     Document.screenshot("/frontend/templates/temps-groups-edit.png");
+    I.click("#pills-dt-datatableInit-metadata-tab");
+    Document.screenshot("/frontend/templates/temps-groups-edit-metadata.png");
+    I.click("#pills-dt-datatableInit-seo-tab");
+    Document.screenshot("/frontend/templates/temps-groups-edit-seo.png");
+    I.click("#pills-dt-datatableInit-fields-tab");
+    Document.screenshot("/frontend/templates/temps-groups-edit-fields.png");
 });
 
 Scenario('news', ({ I, DT, DTE, Document }) => {

@@ -32,7 +32,7 @@ editor.field_q.tooltip=Ak je zadaný, použije sa tento odkaz ako kanonická URL
 editor.field_q.type=link
 editor.field_r=SEO titulok (og:title)
 editor.field_r.tooltip=Ak je zadaný, použije sa pre SEO/Sociálne siete/Facebook zadaný text namiesto **titulku stránky**.\nMôžete tak optimalizovať zobrazený názov stránky na sociálnych sietiach.
-editor.field_s=SEO popis (og:description)
+editor.field_s=SEO opis (og:description)
 editor.field_s.tooltip=Ak je zadaný, použije sa pre SEO/Sociálne siete/Facebook zadaný text namiesto **perex anotácie** stránky.\nMôžete tak optimalizovať zobrazený opis stránky na sociálnych sietiach.
 editor.field_t=SEO obrázok (og:image)
 editor.field_t.type=image
@@ -57,9 +57,9 @@ Použité v :ghost:<code>head.jsp</code>
 
 Pri volaní `seoTitle` je odstránený prípadný HTML kód z titulku stránky, ak potrebujete titulok vrátane HTML kódu môžete použiť `${ninja.page.seoTitleHtml}`.
 
-## Popis *String*
+## Opis *String*
 
-Hľadá popis vo voliteľnom poli S :carousel_horse: `getFieldS()` (SEO popis). Ak je pole prázdne, použije štandardný perex popis :carousel_horse: `getPerexPre()` a následne predvolený popis skupiny šablón pre jazyk zobrazenej stránky.
+Hľadá opis vo voliteľnom poli S :carousel_horse: `getFieldS()` (SEO opis). Ak je pole prázdne, použije štandardný perex opis :carousel_horse: `getPerexPre()` a následne predvolený opis skupiny šablón pre jazyk zobrazenej stránky.
 
 ```java
 ${ninja.page.seoDescription}

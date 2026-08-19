@@ -48,7 +48,7 @@ Scenario('lokalizacia a persistencia SEO predvolenych hodnot', ({ I, DT, DTE }) 
     DTE.fillField("name", seoGroupName);
 
     openSeoTab(I);
-    I.see("Predvolený SEO popis", "div.DTE_Field_Name_description");
+    I.see("Predvolený SEO opis", "div.DTE_Field_Name_description");
     I.see("Predvolený SEO obrázok", "div.DTE_Field_Name_seoImage");
     I.see("Predvolený alternatívny text SEO obrázka", "div.DTE_Field_Name_seoImageAlt");
     DTE.fillField("description", seoDescriptionSk);
