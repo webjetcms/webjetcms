@@ -19,6 +19,10 @@
 ![](editor/webpages/redirects/redirect-path.png)
 
 - SEO - added a separate setting **Search engine tracking** with options **According to crawl settings**, **Enable tracking** (`follow`) and **Disable tracking** (`nofollow`). HTTP header `X-Robots-Tag` and Ninja `${ninja.page.robots}` use the same logic: when indexing without restrictions, they return `all`, otherwise a combination of directives `noindex` and `nofollow` according to the page settings. More in [Ninja documentation](frontend/ninja-starter-kit/ninja-jv/page/README.md#indexing-settings-string) (#OSK563).
+- SEO - in [template groups](frontend/templates/template-groups.md#karta-seo) it is possible to set a default SEO description, image and image alternative text. The Ninja object `Page` will use them if the page does not have its own values ​​specified; the value `${ninja.page.seoImageAlt}` for `og:image:alt` has also been added (#OSK593).
+
+![](frontend/templates/temps-groups-edit-seo.png)
+
 - Ninja - added [dimension generation](frontend/ninja-starter-kit/ninja-bp/README.md) SEO image `og:image:width` and `og:image:height` (#OSK563).
 - Templates - added option to set the movement of `<style>` and `<link rel="stylesheet">` tags from the page body to `<head>` via [template option](frontend/templates/templates.md) with support for global configuration variable `showDocMoveStyleToHead`. Blocks in IE conditions, `noscript` and `script` remain in place (#231).
 
@@ -371,8 +375,11 @@ Redesigned application properties settings in the editor from the old code in `J
 > A patch version of the original version 2026.0.
 
 - Web pages - fixed saving a web page with a space at the end of the URL (whitespace removal will be performed) (#OSK650).
+- Web pages - fixed looping of unpublished page if URL does not end with `/` - ​​configuration variable `virtualPathLastSlash=false` (#OSK684).
 - Document Manager - added clearing of cache after publishing a new version of a file (#TB2754).
 - Multiweb - fixed the ability to delete or edit a domain redirect that contains the `http/s` prefix (#58317-15).
+- Gallery - in the application editor, only JSP files from the `/components/{INSTALL_NAME}/gallery` and `/components/gallery` folders are displayed among the visual styles, without duplicate items (#58317-16).
+- Inserting HTML code - in the application preview in the website editor, for content consisting only of `script` elements, the source code is displayed instead of empty content (#OSK625).
 
 ## 2026.0.28
 
