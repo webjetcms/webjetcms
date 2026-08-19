@@ -19,7 +19,7 @@ MultiWeb inštalácie obsahujú nasledovné obmedzenia:
   - Skupiny šablón - používateľovi s obmedzeným prístupom k priečinkom sa zobrazí skupina, ak je splnená aspoň jedna z nasledujúcich podmienok:
     - id skupiny šablón je použitý v niektorej šablóne dostupnej používateľovi,
     - alebo v MultiWeb inštalácii mimo riadiacej domény existuje neprázdny alias aktuálnej domény a zároveň platí aspoň jedna z podmienok:
-      - `directory` obsahuje alias v názve priečinka `/alias/`,
+      - `directory` obsahuje priečinok zhodný s aliasom,
       - `keyPrefix` sa presne zhoduje s aliasom,
       - `name` obsahuje alias v hranatých zátvorkách vo formáte `[alias]`,
       - `name` začína na `alias` + medzera.

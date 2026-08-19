@@ -105,11 +105,7 @@ public class TemplateGroupsService {
             }
             else if (InitServlet.isTypeCloud() && CloudToolsForCore.isControllerDomain()==false && Tools.isNotEmpty(domainAlias)) {
                 //Pre MULTIWEB mozeme zobrazit len tie, ktore zacinaju/obsahuju nas domainalias
-                if ((group.getDirectory() != null && group.getDirectory().toLowerCase().contains("/"+domainAlias+"/"))
-                    || (group.getKeyPrefix() != null && group.getKeyPrefix().toLowerCase().equals(domainAlias))
-                    || (group.getName() != null && group.getName().toLowerCase().contains("[" + domainAlias + "]"))
-                    || (group.getName() != null && group.getName().toLowerCase().startsWith(domainAlias + " "))
-                ) {
+                if (isMultiwebGroup(group, domainAlias)) {
                     filtered.add(group);
                 }
             }
@@ -118,13 +114,27 @@ public class TemplateGroupsService {
         return filtered;
     }
 
+    private static boolean isMultiwebGroup(TemplatesGroupBean group, String domainAlias) {
+        if (
+               (group.getDirectory() != null && group.getDirectory().toLowerCase().contains("/"+domainAlias+"/"))
+            || (group.getDirectory() != null && group.getDirectory().toLowerCase().endsWith("/"+domainAlias))
+            || (group.getDirectory() != null && group.getDirectory().toLowerCase().startsWith(domainAlias+"/"))
+            || (group.getDirectory() != null && group.getDirectory().toLowerCase().equals(domainAlias))
+            || (group.getKeyPrefix() != null && group.getKeyPrefix().toLowerCase().equals(domainAlias))
+            || (group.getName() != null && group.getName().toLowerCase().contains("[" + domainAlias + "]"))
+            || (group.getName() != null && group.getName().toLowerCase().startsWith(domainAlias + " "))
+        ) return true;
+
+        return false;
+    }
+
     TemplatesGroupBean saveTemplateGroup(TemplatesGroupBean templateGroupBean, HttpServletRequest request) {
-        if (InitServlet.isTypeCloud()) {
-            String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(request));
-            //Pre MULTIWEB mozeme zobrazit len tie, ktore zacinaju na domainalias
-            if (!templateGroupBean.getProjectName().toLowerCase().startsWith(domainAlias)) {
-                templateGroupBean.setProjectName(domainAlias + "-" + templateGroupBean.getProjectName());
+        if (InitServlet.isTypeCloud() && CloudToolsForCore.isControllerDomain()==false) {
+            String domainAlias = MultiDomainFilter.getDomainAlias(CloudToolsForCore.getDomainName()).toLowerCase();
+            if (isMultiwebGroup(templateGroupBean, domainAlias)) {
+                templateGroupBean.setName(templateGroupBean.getName() + " [" + domainAlias + "]");
             }
+
         }
 
         TemplatesGroupBean optionalTemplatesGroupBean = TemplatesGroupDB.getTemplatesGroupByName(templateGroupBean.getName());
