@@ -140,6 +140,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Export/import súborov - upravený dizajn dialógového okna a responzívne zobrazenie formulárových polí podľa aktuálneho dizajnu administrácie (#58581).
 - Webové stránky - doplnené zvýraznenie elementu nad ktorým je vyvolané kontextové menu. Dôležité ak chcete vykonať akciu Zmazať element, aby ste presne videli ktorý element je označený (#OSK675).
 - Multiweb - doplnená možnosť premenovať existujúcu doménu + presmerovanie po premenovaní (#58317-15).
+- Multiweb - upravené [zobrazenie skupín šablón](install/multiweb/README.md) podľa dostupných šablón a aliasu aktuálnej domény (#58317-17).
 - Google reCaptcha - doplnená podpora vkladania viacerých viac krokových formulárov do stránky, podporovaný je režim `invisible/reCaptcha/reCaptchaV3`, upravené chybové hlásenie na zrozumiteľnejší text (#osk573).
 - Viackrokové formuláre - doplnené presunutie (`scroll`) na začiatok formuláru po prechode na ďalší krok (#osk573).
 
@@ -172,6 +173,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Dátové tabuľky - rozšírená funkcionalita poľa typu [`OPTIONS`](developer/datatables-editor/standard-fields.md#options) o možnosť pridať prázdnu hodnotu pomocou `allowEmptyOption` (#osk573).
 - Dátové tabuľky - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) pri úprave zdrojového kódu odstraňuje nadbytočné prázdne odseky (#osk573).
 - Dátové tabuľky - pridaný nový typ poľa `ENUMERATION` pre [napojenie na číselníky](developer/datatables-editor/standard-fields.md#enumeration) v editore. Pole ukladá konfiguráciu vo formáte `enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY` a umožňuje nastaviť zdroj hodnôt (#58517).
+- Dátové tabuľky - [výber priečinka](developer/datatables-editor/field-json.md#možnosti-classname) cez pole `dt-tree-dir-simple` pri obmedzených právach správne zobrazuje nastavený koreňový priečinok aj neaktívnych rodičov povolených priečinkov a rešpektuje konfiguračnú premennú `fbrowserShowOnlyWritableFolders`. Pridaný atribút `data-dt-field-writableOnly` umožňuje obmedziť výber iba na priečinky s právom na zápis (#58317-17).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
 

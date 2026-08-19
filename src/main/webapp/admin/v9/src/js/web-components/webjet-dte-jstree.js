@@ -279,6 +279,7 @@ export class WebjetDteJsTreeElement extends HTMLElement {
         if (attrs["data-dt-field-skipFolders"]) params.set("skipFolders", attrs["data-dt-field-skipFolders"]);
         if (attrs["data-dt-field-hideRootParents"]) params.set("hideRootParents", attrs["data-dt-field-hideRootParents"]);
         if (attrs["data-dt-field-root"]) params.set("rootFolder", attrs["data-dt-field-root"]);
+        if (attrs["data-dt-field-writableOnly"]) params.set("writableOnly", attrs["data-dt-field-writableOnly"]);
         treeElement.dataset.restUrl = `${endpoint}?${params.toString()}`;
         treeElement.addEventListener("webjet-jstree-select", this._treeSelectHandler);
 

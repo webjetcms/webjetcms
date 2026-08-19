@@ -31,6 +31,8 @@ import java.util.Set;
 @Service
 public class TemplateGroupsService {
 
+    private static final String TEMP_GROUP_PREFIX = "temp-group-";
+
     TemplateDetailsService templateDetailsService;
 
     @Autowired
@@ -42,33 +44,23 @@ public class TemplateGroupsService {
         List<TemplatesGroupBean> temp = new ArrayList<>();
         String lng = getLng(request);
 
-        IwayProperties prop = Prop.getChangedProperties(lng, "temp-group-");
+        IwayProperties prop = Prop.getChangedProperties(lng, TEMP_GROUP_PREFIX);
         List<TemplatesGroupBean> templateGroupBeans = filterByUser(TemplatesGroupDB.getAllTemplatesGroupsWithCount(), UsersDB.getCurrentUser(request));
 
         for (TemplatesGroupBean item : templateGroupBeans) {
-            item.setProjectName(prop.getProperty("temp-group-" + item.getId() + ".project.name"));
-            item.setProjectAuthor(prop.getProperty("temp-group-" + item.getId() + ".project.author"));
-            item.setProjectCopyright(prop.getProperty("temp-group-" + item.getId() + ".project.copyright"));
-            item.setProjectDeveloper(prop.getProperty("temp-group-" + item.getId() + ".project.developer"));
-            item.setProjectGenerator(prop.getProperty("temp-group-" + item.getId() + ".project.generator"));
-            item.setProjectFieldA(prop.getProperty("temp-group-" + item.getId() + ".project.field.a"));
-            item.setProjectFieldB(prop.getProperty("temp-group-" + item.getId() + ".project.field.b"));
-            item.setProjectFieldC(prop.getProperty("temp-group-" + item.getId() + ".project.field.c"));
-            item.setProjectFieldD(prop.getProperty("temp-group-" + item.getId() + ".project.field.d"));
-            item.setDescription(prop.getProperty("temp-group-" + item.getId() + ".project.description"));
-            item.setSeoImageAlt(prop.getProperty("temp-group-" + item.getId() + ".project.seoImageAlt"));
+            item.setProjectName(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.name"));
+            item.setProjectAuthor(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.author"));
+            item.setProjectCopyright(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.copyright"));
+            item.setProjectDeveloper(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.developer"));
+            item.setProjectGenerator(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.generator"));
+            item.setProjectFieldA(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.field.a"));
+            item.setProjectFieldB(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.field.b"));
+            item.setProjectFieldC(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.field.c"));
+            item.setProjectFieldD(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.field.d"));
+            item.setDescription(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.description"));
+            item.setSeoImageAlt(prop.getProperty(TEMP_GROUP_PREFIX + item.getId() + ".project.seoImageAlt"));
 
-            if (InitServlet.isTypeCloud() && CloudToolsForCore.isControllerDomain()==false) {
-                String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(request));
-                //Pre MULTIWEB mozeme zobrazit len tie, ktore zacinaju/obsahuju nas domainalias
-                if ((item.getDirectory() != null && item.getDirectory().toLowerCase().contains(domainAlias))
-                    || (item.getKeyPrefix() != null && item.getKeyPrefix().toLowerCase().equals(domainAlias))
-                ) {
-                    temp.add(item);
-                }
-            } else {
-                temp.add(item);
-            }
+            temp.add(item);
         }
 
         return temp;
@@ -76,6 +68,7 @@ public class TemplateGroupsService {
 
     /**
      * If user has only perms for some folders/domains returns only template groups used in his available templates
+     * for MultiWeb returns template groups with matching domain alias
      * @param user
      * @return
      */
@@ -93,6 +86,7 @@ public class TemplateGroupsService {
     public List<TemplatesGroupBean> filterByUser(List<TemplatesGroupBean> all, UserDetails user) {
         if (Tools.isEmpty(user.getEditableGroups(true))) return all;
 
+        //in MultiWeb controller domain return all items
         if (CloudToolsForCore.isControllerDomain()) return all;
 
         List<TemplatesGroupBean> filtered = new ArrayList<>();
@@ -103,22 +97,44 @@ public class TemplateGroupsService {
             tempGroupIds.add(temp.getTemplatesGroupId());
         }
 
+        String domainAlias = MultiDomainFilter.getDomainAlias(CloudToolsForCore.getDomainName()).toLowerCase();
+
         for (TemplatesGroupBean group : all) {
             if (tempGroupIds.contains(group.getId())) {
                 filtered.add(group);
+            }
+            else if (InitServlet.isTypeCloud() && CloudToolsForCore.isControllerDomain()==false && Tools.isNotEmpty(domainAlias)) {
+                //Pre MULTIWEB mozeme zobrazit len tie, ktore zacinaju/obsahuju nas domainalias
+                if (isMultiwebGroup(group, domainAlias)) {
+                    filtered.add(group);
+                }
             }
         }
 
         return filtered;
     }
 
+    private static boolean isMultiwebGroup(TemplatesGroupBean group, String domainAlias) {
+        if (
+               (group.getDirectory() != null && group.getDirectory().toLowerCase().contains("/"+domainAlias+"/"))
+            || (group.getDirectory() != null && group.getDirectory().toLowerCase().endsWith("/"+domainAlias))
+            || (group.getDirectory() != null && group.getDirectory().toLowerCase().startsWith(domainAlias+"/"))
+            || (group.getDirectory() != null && group.getDirectory().toLowerCase().equals(domainAlias))
+            || (group.getKeyPrefix() != null && group.getKeyPrefix().toLowerCase().equals(domainAlias))
+            || (group.getName() != null && group.getName().toLowerCase().contains("[" + domainAlias + "]"))
+            || (group.getName() != null && group.getName().toLowerCase().startsWith(domainAlias + " "))
+        ) return true;
+
+        return false;
+    }
+
     TemplatesGroupBean saveTemplateGroup(TemplatesGroupBean templateGroupBean, HttpServletRequest request) {
-        if (InitServlet.isTypeCloud()) {
-            String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(request));
-            //Pre MULTIWEB mozeme zobrazit len tie, ktore zacinaju na domainalias
-            if (!templateGroupBean.getProjectName().toLowerCase().startsWith(domainAlias)) {
-                templateGroupBean.setProjectName(domainAlias + "-" + templateGroupBean.getProjectName());
+        if (InitServlet.isTypeCloud() && CloudToolsForCore.isControllerDomain()==false) {
+            String domainAlias = MultiDomainFilter.getDomainAlias(CloudToolsForCore.getDomainName()).toLowerCase();
+            if (isMultiwebGroup(templateGroupBean, domainAlias)==false) {
+                templateGroupBean.setName(templateGroupBean.getName() + " [" + domainAlias + "]");
             }
+
         }
 
         TemplatesGroupBean optionalTemplatesGroupBean = TemplatesGroupDB.getTemplatesGroupByName(templateGroupBean.getName());
@@ -127,7 +143,7 @@ public class TemplateGroupsService {
         }
 
         if (TemplatesGroupDB.getInstance().save(templateGroupBean)) {
-            String prefix = "temp-group-" + templateGroupBean.getId() + ".project";
+            String prefix = TEMP_GROUP_PREFIX + templateGroupBean.getId() + ".project";
             IwayProperties iwayProperties = mapIwayProperties(templateGroupBean);
             // defaultne vytvaram novu skupinu pre vychodzi jazyk
             PropDB.save(null, iwayProperties, getLng(request), prefix, null, true);
@@ -147,7 +163,7 @@ public class TemplateGroupsService {
         }
 
         if (templateGroupBean.save()) {
-            String prefix = "temp-group-" + templateGroupBean.getId() + ".project";
+            String prefix = TEMP_GROUP_PREFIX + templateGroupBean.getId() + ".project";
             IwayProperties iwayProperties = mapIwayProperties(templateGroupBean);
             PropDB.save(null, iwayProperties, lng, prefix, null, false);
 
@@ -158,7 +174,7 @@ public class TemplateGroupsService {
     }
 
     boolean deleteTemplateGroupBean(long id) {
-        String prefixForDelete = "temp-group-" + id + ".project";
+        String prefixForDelete = TEMP_GROUP_PREFIX + id + ".project";
         if (TemplatesGroupDB.delete(id)) {
             new SimpleQuery().execute("DELETE FROM " + ConfDB.PROPERTIES_TABLE_NAME + " WHERE prop_key IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     prefixForDelete + ".name",
