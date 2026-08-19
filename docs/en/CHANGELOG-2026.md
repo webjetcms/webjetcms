@@ -140,6 +140,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Export/import files - modified dialog design and responsive display of form fields according to the current administration design (#58581).
 - Web pages - added highlighting of the element above which the context menu is called. Important if you want to perform the Delete element action, so you can see exactly which element is marked (#OSK675).
 - Multiweb - added option to rename an existing domain + redirection after renaming (#58317-15).
+- Multiweb - modified [display of template groups](install/multiweb/README.md) according to available templates and alias of current domain (#58317-17).
 - Google reCaptcha - added support for inserting multiple multi-step forms into a page, `invisible/reCaptcha/reCaptchaV3` mode is supported, error message edited to more understandable text (#osk573).
 - Multi-step forms - added moving (`scroll`) to the beginning of the form after moving to the next step (#osk573).
 
@@ -172,6 +173,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Data tables - extended functionality of field type [`OPTIONS`](developer/datatables-editor/standard-fields.md#options) by the ability to add an empty value using `allowEmptyOption` (#osk573).
 - Data tables - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) removes extra blank paragraphs when editing source code (#osk573).
 - Data tables - added a new field type `ENUMERATION` for [connection to enumeration tables](developer/datatables-editor/standard-fields.md#enumeration) in the editor. The field stores the configuration in `enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY` format and allows you to set the source of values ​​(#58517).
+- Data tables - [folder selection](developer/datatables-editor/field-json.md#options-classname) via the `dt-tree-dir-simple` field with limited rights correctly displays the set root folder and inactive parents of allowed folders and respects the `fbrowserShowOnlyWritableFolders` configuration variable. The added `data-dt-field-writableOnly` attribute allows you to limit the selection only to folders with write rights (#58317-17).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
 

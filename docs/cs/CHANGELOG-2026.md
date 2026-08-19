@@ -140,6 +140,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Export/import souborů - upravený design dialogového okna a responzivní zobrazení formulářových polí podle aktuálního designu administrace (#58581).
 - Webové stránky - doplněné zvýraznění elementu nad kterým je vyvoláno kontextové menu. Důležité pokud chcete provést akci Smazat element, abyste přesně viděli který element je označen (#OSK675).
 - Multiweb - doplněna možnost přejmenovat existující doménu + přesměrování po přejmenování (#58317-15).
+- Multiweb - upraveno [zobrazení skupin šablon](install/multiweb/README.md) podle dostupných šablon a aliasu aktuální domény (#58317-17).
 - Google reCaptcha - doplněna podpora vkládání více více krokových formulářů do stránky, podporován je režim `invisible/reCaptcha/reCaptchaV3`, upravené chybové hlášení na srozumitelnější text (#osk573).
 - Vícekrokové formuláře - doplněné přesunutí (`scroll`) na začátek formuláře po přechodu na další krok (#osk573).
 
@@ -172,6 +173,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Datové tabulky - rozšířená funkcionalita pole typu [`OPTIONS`](developer/datatables-editor/standard-fields.md#options) o možnost přidat prázdnou hodnotu pomocí `allowEmptyOption` (#osk573).
 - Datové tabulky - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) při úpravě zdrojového kódu odstraňuje nadbytečné prázdné odstavce (#osk573).
 - Datové tabulky - přidán nový typ pole `ENUMERATION` pro [napojení na číselníky](developer/datatables-editor/standard-fields.md#enumeration) v editoru. Pole ukládá konfiguraci ve formátu `enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY` a umožňuje nastavit zdroj hodnot (#58517).
+- Datové tabulky - [výběr složky](developer/datatables-editor/field-json.md#možnosti-classname) přes pole `dt-tree-dir-simple` při omezených právech správně zobrazuje nastavenou kořenovou složku i neaktivní rodiče povolených složek a respektuje konfigurační proměnnou `fbrowserShowOnlyWritableFolders`. Přidaný atribut `data-dt-field-writableOnly` umožňuje omezit výběr pouze na složky s právem na zápis (#58317-17).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
 
