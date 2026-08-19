@@ -58,6 +58,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] Automatický premazávať `temp` súbory, ktoré sa môžu hromadiť.
 - [x] +Administrácia - odstrániť závislosť od `Vue.js` a nahradiť interné komponenty natívnymi web komponentmi (#58722).
 - [ ] +Upraviť načítanie admin časti tak, aby sa vymenilo cez volanie REST služby len vnútro stránky, nie kompletný reload HTML kódu.
+- [ ] +Vylepšiť úvodnú stránku administrácie - dynamické bloky, možnosť vlastného nastavenia čo sa zobrazí, užitočné informácie a bloky.
 
 ## 2025
 

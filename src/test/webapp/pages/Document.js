@@ -376,5 +376,10 @@ module.exports = {
       protocol = "https";
     }
     return protocol;
+  },
+
+  getBaseUrl() {
+    let url = process.env.CODECEPT_URL;
+    return url;
   }
 }
