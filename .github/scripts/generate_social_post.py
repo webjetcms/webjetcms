@@ -144,7 +144,7 @@ def call_gemini(pr_title: str, pr_body: str, pr_files: list[str], doc_patches: s
 
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"{_MODEL_GEMINI}:generateContent?key={api_key}"
+        f"{_MODEL_GEMINI}:generateContent"
     )
     req = urllib.request.Request(
         url,
@@ -152,6 +152,7 @@ def call_gemini(pr_title: str, pr_body: str, pr_files: list[str], doc_patches: s
         headers={
             "Content-Type": "application/json",
             "Referer": "https://github.com/webjetcms/webjetcms",
+            "x-goog-api-key": api_key,
         },
         method="POST",
     )
@@ -173,8 +174,15 @@ def call_gemini(pr_title: str, pr_body: str, pr_files: list[str], doc_patches: s
             }
             return post, _MODEL_GEMINI, token_info
     except urllib.error.HTTPError as exc:
-        body_text = exc.read().decode("utf-8", errors="replace")[:500]
-        print(f"Gemini API HTTP {exc.code}: {body_text}", file=sys.stderr)
+        response_body = exc.read()
+        body_text = response_body.decode("utf-8", errors="replace")
+        headers_text = str(exc.headers).rstrip() if exc.headers else "(none)"
+        print(
+            f"Gemini API HTTP {exc.code} {exc.reason}\n"
+            f"Response headers:\n{headers_text}\n"
+            f"Response body ({len(response_body)} bytes):\n{body_text}",
+            file=sys.stderr,
+        )
         return None
     except Exception as exc:  # noqa: BLE001
         print(f"Gemini API failed: {exc}", file=sys.stderr)
