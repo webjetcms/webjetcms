@@ -66,6 +66,7 @@ class GalleryAppTest {
         IwcmFile file = mock(IwcmFile.class);
         when(file.getName()).thenReturn(name);
         when(file.isFile()).thenReturn(true);
+        when(file.length()).thenReturn(100L);
         return file;
     }
 
