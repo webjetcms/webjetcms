@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ClassUtils;
@@ -23,6 +22,7 @@ import sk.iway.iwcm.components.WebjetComponentInterface;
 import sk.iway.iwcm.doc.showdoc.StyleToHeadHelper;
 import sk.iway.iwcm.editor.rest.ComponentsService;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.WJResponseWrapper;
 import sk.iway.iwcm.system.annotations.DefaultHandler;
 
 
@@ -51,26 +51,26 @@ public class WebjetComponentResolver {
             component.init(request, response);
 
             // mock response, aby bolo mozne vybrat content
-            MockHttpServletResponse mockResponse = new MockHttpServletResponse();
+            WJResponseWrapper captureResponse = WJResponseWrapper.forCapture(request);
 
             // vygeneruje html kod komponenty do responsu
-            handleRequest(request, component, mockResponse, pageParams);
+            handleRequest(request, component, captureResponse, pageParams);
 
             // ak response obsahuje redirect, tak ho odosleme a vratime prazdny retazec
-            if (Tools.isNotEmpty(mockResponse.getRedirectedUrl())) {
+            if (Tools.isNotEmpty(captureResponse.getRedirectURL())) {
                 Logger.debug(WebjetComponentResolver.class,
                         String.format(
                                 "Redirect from component %s to URL: %s",
                                 component.getClass().getSimpleName(),
-                                mockResponse.getRedirectedUrl()
+                                captureResponse.getRedirectURL()
                         )
                 );
-                response.sendRedirect(mockResponse.getRedirectedUrl());
+                response.sendRedirect(captureResponse.getRedirectURL());
                 return "";
             }
 
             // ziska content responsu
-            StringBuilder content = new StringBuilder(mockResponse.getContentAsString());
+            StringBuilder content = new StringBuilder(Tools.getStringValue(captureResponse.getOutputOfStreamAsString(), ""));
 
             // Extract style tags and collect them for head section insertion
             content = StyleToHeadHelper.extractAndCollectStyles(content, request);
