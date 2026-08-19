@@ -6,8 +6,6 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.LabelValueDetails;
-import sk.iway.iwcm.RequestBean;
-import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.templates.TemplateDetailsService;
@@ -70,6 +68,7 @@ public class TemplateGroupsService {
 
     /**
      * If user has only perms for some folders/domains returns only template groups used in his available templates
+     * for MultiWeb returns template groups with matching domain alias
      * @param user
      * @return
      */
@@ -87,6 +86,7 @@ public class TemplateGroupsService {
     public List<TemplatesGroupBean> filterByUser(List<TemplatesGroupBean> all, UserDetails user) {
         if (Tools.isEmpty(user.getEditableGroups(true))) return all;
 
+        //in MultiWeb controller domain return all items
         if (CloudToolsForCore.isControllerDomain()) return all;
 
         List<TemplatesGroupBean> filtered = new ArrayList<>();
@@ -97,11 +97,7 @@ public class TemplateGroupsService {
             tempGroupIds.add(temp.getTemplatesGroupId());
         }
 
-        RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
-        String domainAlias = null;
-        if (rb != null) {
-            domainAlias = MultiDomainFilter.getDomainAlias(rb.getDomain());
-        }
+        String domainAlias = MultiDomainFilter.getDomainAlias(CloudToolsForCore.getDomainName()).toLowerCase();
 
         for (TemplatesGroupBean group : all) {
             if (tempGroupIds.contains(group.getId())) {
@@ -109,14 +105,13 @@ public class TemplateGroupsService {
             }
             else if (InitServlet.isTypeCloud() && CloudToolsForCore.isControllerDomain()==false && Tools.isNotEmpty(domainAlias)) {
                 //Pre MULTIWEB mozeme zobrazit len tie, ktore zacinaju/obsahuju nas domainalias
-                if ((group.getDirectory() != null && group.getDirectory().toLowerCase().contains(domainAlias))
+                if ((group.getDirectory() != null && group.getDirectory().toLowerCase().contains("/"+domainAlias+"/"))
                     || (group.getKeyPrefix() != null && group.getKeyPrefix().toLowerCase().equals(domainAlias))
                     || (group.getName() != null && group.getName().toLowerCase().contains("[" + domainAlias + "]"))
+                    || (group.getName() != null && group.getName().toLowerCase().startsWith(domainAlias + " "))
                 ) {
                     filtered.add(group);
                 }
-            } else if (InitServlet.isTypeCloud() && CloudToolsForCore.isControllerDomain()) {
-                filtered.add(group);
             }
         }
 

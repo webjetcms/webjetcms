@@ -19,10 +19,11 @@ MultiWeb inštalácie obsahujú nasledovné obmedzenia:
   - Skupiny šablón - používateľovi s obmedzeným prístupom k priečinkom sa zobrazí skupina, ak je splnená aspoň jedna z nasledujúcich podmienok:
     - id skupiny šablón je použitý v niektorej šablóne dostupnej používateľovi,
     - alebo v MultiWeb inštalácii mimo riadiacej domény existuje neprázdny alias aktuálnej domény a zároveň platí aspoň jedna z podmienok:
-      - `directory` obsahuje alias kdekoľvek v hodnote,
+      - `directory` obsahuje alias v názve priečinka `/alias/`,
       - `keyPrefix` sa presne zhoduje s aliasom,
-      - `name` obsahuje alias v hranatých zátvorkách vo formáte `[alias]`.
-  - Textové atribúty skupiny sa pred porovnaním konvertujú na malé písmená, preto musí byť alias domény zadaný malými písmenami. Alias domény sa získa z konfiguračnej premennej `multiDomainAlias:DOMAIN-NAME`, kde `DOMAIN-NAME` je názov domény. Pri [vytvorení novej domény](config.md#zriadenie-novej-domény) cez MultiWeb sa premenná nastaví automaticky na poslednú časť názvu doménového adresára skrátenú po prvú bodku, napríklad pre `www.example.sk` na hodnotu `example`. Pre existujúcu doménu je možné alias nastaviť manuálne v konfigurácii.
+      - `name` obsahuje alias v hranatých zátvorkách vo formáte `[alias]`,
+      - `name` začína na `alias` + medzera.
+  - Alias domény sa získa z konfiguračnej premennej `multiDomainAlias:DOMAIN-NAME`, kde `DOMAIN-NAME` je názov domény. Pri [vytvorení novej domény](config.md#zriadenie-novej-domény) cez MultiWeb sa premenná nastaví automaticky na poslednú časť názvu doménového adresára skrátenú po prvú bodku, napríklad pre `www.example.sk` na hodnotu `example`. Pre existujúcu doménu je možné alias nastaviť manuálne v konfigurácii.
   - V riadiacej doméne sa zobrazujú všetky skupiny šablón; rovnako ich vidí používateľ bez obmedzenia prístupu k priečinkom.
 - Používatelia
   - Každá doména má vlastný zoznam používateľov.
