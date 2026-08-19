@@ -2,8 +2,9 @@ package sk.iway.iwcm.system.spring;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -11,18 +12,24 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Set;
 
 import jakarta.servlet.DispatcherType;
+import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRegistration;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.tomcat.autoconfigure.TomcatServerProperties;
+import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
+import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.boot.web.servlet.ServletListenerRegistrationBean;
+import org.springframework.web.filter.CharacterEncodingFilter;
 
 import net.sourceforge.stripes.controller.DispatcherServlet;
 import net.sourceforge.stripes.controller.StripesFilterIway;
@@ -37,7 +44,8 @@ class ServletRegistrationContractTest {
 
     @Test
     void embeddedFiltersKeepTheirRegistrationContract() {
-        assertFilterRegistration(productionConfiguration.characterEncodingFilterRegistration(),
+        assertFilterRegistration(productionConfiguration.characterEncodingFilterRegistration(
+                new CharacterEncodingFilter()),
             org.springframework.web.filter.CharacterEncodingFilter.class, "SpringEncodingFilter", 0,
             Set.of("/*"), Set.of(), EnumSet.allOf(DispatcherType.class));
         assertFilterRegistration(productionConfiguration.contextFilterRegistration(),
@@ -85,6 +93,10 @@ class ServletRegistrationContractTest {
 
     @Test
     void embeddedServletsKeepTheirNamesAndMappings() throws ServletException {
+        MultipartConfigElement multipartConfig = new MultipartConfigElement(
+            null, 37_000_000L, 37_000_000L, 65_536
+        );
+
         assertServletRegistration(productionConfiguration.getProtectedFileServletRegistration(),
             GetProtectedFileServlet.class, "GetProtectedFile", "/files/protected/*");
         ServletRegistrationBean<?> stripesDispatcher = productionConfiguration.stripesDispatcherRegistration();
@@ -108,9 +120,12 @@ class ServletRegistrationContractTest {
             sk.iway.iwcm.doc.DeleteServlet.class, "DelDoc", "/admin/docdel.do");
         assertServletRegistration(productionConfiguration.logoffServletRegistration(),
             sk.iway.iwcm.LogoffServlet.class, "LogOff", "/logoff.do", "/admin/logoff.do");
-        assertServletRegistration(productionConfiguration.multipleFileUploadServletRegistration(),
+        ServletRegistrationBean<?> multipleFileUpload =
+            productionConfiguration.multipleFileUploadServletRegistration(multipartConfig);
+        assertServletRegistration(multipleFileUpload,
             sk.iway.iwcm.filebrowser.MultipleFileUploadAction.class, "MultipleFileUploadAction",
             "/admin/multiplefileupload.do");
+        assertSame(multipartConfig, multipleFileUpload.getMultipartConfig());
         assertServletRegistration(productionConfiguration.thumbServletRegistration(),
             sk.iway.iwcm.editor.ThumbServlet.class, "thumbServlet",
             "/admin/thumb/*", "/thumb/*", "/tumbn/*");
@@ -122,18 +137,71 @@ class ServletRegistrationContractTest {
         assertServletRegistration(productionConfiguration.pdfServletRegistration(),
             sk.iway.iwcm.components.pdf.PdfServlet.class, "pdfServlet", "/to.pdf/*", "/topdf/*");
 
-        ServletRegistrationBean<?> xhrUpload = productionConfiguration.xhrFileUploadServletRegistration();
+        ServletRegistrationBean<?> xhrUpload =
+            productionConfiguration.xhrFileUploadServletRegistration(multipartConfig);
         assertServletRegistration(xhrUpload, sk.iway.iwcm.components.upload.XhrFileUploadServlet.class,
             "XhrFileUpload", "/XhrFileUpload");
-        assertNotNull(xhrUpload.getMultipartConfig());
+        assertSame(multipartConfig, xhrUpload.getMultipartConfig());
 
-        ServletRegistrationBean<?> adminUpload = productionConfiguration.adminUploadServletRegistration();
+        ServletRegistrationBean<?> adminUpload =
+            productionConfiguration.adminUploadServletRegistration(multipartConfig);
         assertServletRegistration(adminUpload, sk.iway.iwcm.admin.upload.AdminUploadServlet.class,
             "AdminUpload", "/admin/upload/chunk");
-        assertNotNull(adminUpload.getMultipartConfig());
+        assertSame(multipartConfig, adminUpload.getMultipartConfig());
 
         assertServletRegistration(productionConfiguration.exportSyncServletRegistration(),
             sk.iway.iwcm.sync.export.ExportSyncServlet.class, "exportSyncServlet", "/export.sync");
+    }
+
+    @Test
+    void externalWarMultipartInitializerConfiguresContainerOwnedUploadServlets()
+            throws ServletException {
+        MultipartConfigElement multipartConfig = new MultipartConfigElement(
+            null, 39_000_000L, 39_000_000L, 65_536
+        );
+        ServletRegistration.Dynamic xhrUpload = mock(ServletRegistration.Dynamic.class);
+        ServletRegistration.Dynamic adminUpload = mock(ServletRegistration.Dynamic.class);
+        ServletRegistration.Dynamic multipleFileUpload = mock(ServletRegistration.Dynamic.class);
+        ServletRegistration.Dynamic unrelatedServlet = mock(ServletRegistration.Dynamic.class);
+        when(xhrUpload.getClassName()).thenReturn(
+            sk.iway.iwcm.components.upload.XhrFileUploadServlet.class.getName());
+        when(adminUpload.getClassName()).thenReturn(
+            sk.iway.iwcm.admin.upload.AdminUploadServlet.class.getName());
+        when(multipleFileUpload.getClassName()).thenReturn(
+            sk.iway.iwcm.filebrowser.MultipleFileUploadAction.class.getName());
+        when(unrelatedServlet.getClassName()).thenReturn("com.example.UnrelatedServlet");
+
+        ServletContext servletContext = mock(ServletContext.class);
+        doReturn(Map.<String, ServletRegistration>of(
+            "xhr", xhrUpload,
+            "admin", adminUpload,
+            "multiple", multipleFileUpload,
+            "unrelated", unrelatedServlet
+        )).when(servletContext).getServletRegistrations();
+        ServletContextInitializer initializer =
+            new SpringBootStarter.ProductionServletInfrastructureConfiguration()
+                .externalWarMultipartServletInitializer(multipartConfig);
+
+        initializer.onStartup(servletContext);
+
+        verify(xhrUpload).setMultipartConfig(multipartConfig);
+        verify(adminUpload).setMultipartConfig(multipartConfig);
+        verify(multipleFileUpload).setMultipartConfig(multipartConfig);
+        verify(unrelatedServlet, never()).setMultipartConfig(any(MultipartConfigElement.class));
+    }
+
+    @Test
+    void setupAdditionalConnectorUsesConfiguredMultipartPartLimit() {
+        TomcatServerProperties tomcatServerProperties = new TomcatServerProperties();
+        tomcatServerProperties.setMaxPartCount(1_000);
+        TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory();
+
+        new SetupApplicationConfiguration.EmbeddedServletContainerConfiguration()
+            .setupTomcatHttpConnectorCustomizer(tomcatServerProperties)
+            .customize(factory);
+
+        assertEquals(1, factory.getAdditionalConnectors().size());
+        assertEquals(1_000, factory.getAdditionalConnectors().get(0).getMaxPartCount());
     }
 
     private void assertFilterRegistration(FilterRegistrationBean<?> registration,

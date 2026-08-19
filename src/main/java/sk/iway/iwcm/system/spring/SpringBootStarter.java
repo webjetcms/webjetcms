@@ -1,6 +1,7 @@
 package sk.iway.iwcm.system.spring;
 
 import java.util.EnumSet;
+import java.util.Set;
 
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.MultipartConfigElement;
@@ -8,28 +9,30 @@ import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRegistration;
 
+import net.sourceforge.stripes.controller.StripesFilterIway;
+
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWarDeployment;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWarDeployment;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
+import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.boot.web.servlet.ServletListenerRegistrationBean;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.web.context.request.RequestContextListener;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PathFilter;
-import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.Constants;
-import org.springframework.web.context.request.RequestContextListener;
-import net.sourceforge.stripes.controller.StripesFilterIway;
 import sk.iway.iwcm.system.context.ContextFilter;
 
 /**
@@ -51,6 +54,7 @@ import sk.iway.iwcm.system.context.ContextFilter;
     SpringAppInitializer.class,
     SetupApplicationConfiguration.class,
     ProductionApplicationConfiguration.class,
+    SpringBootStarter.ProductionServletInfrastructureConfiguration.class,
     SpringBootStarter.ProductionServletConfiguration.class
 })
 public class SpringBootStarter extends SpringBootServletInitializer {
@@ -140,6 +144,38 @@ public class SpringBootStarter extends SpringBootServletInitializer {
     }
 
     /**
+     * Servlet infrastructure shared by embedded and external WAR deployments.
+     * Values come from the immutable bootstrap snapshot, which is available
+     * before Spring creates servlet initializer beans.
+     */
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnProperty(name = WebjetBootstrapMode.PROPERTY_NAME, havingValue = WebjetBootstrapMode.PRODUCTION_VALUE)
+    static class ProductionServletInfrastructureConfiguration {
+
+        private static final Set<String> MULTIPART_SERVLET_CLASS_NAMES = Set.of(
+            sk.iway.iwcm.filebrowser.MultipleFileUploadAction.class.getName(),
+            sk.iway.iwcm.components.upload.XhrFileUploadServlet.class.getName(),
+            sk.iway.iwcm.admin.upload.AdminUploadServlet.class.getName()
+        );
+
+        /**
+         * Annotation-discovered servlets in an external WAR are owned by the
+         * container, so Boot cannot apply its MultipartConfigElement to them.
+         */
+        @Bean
+        @ConditionalOnWarDeployment
+        @ConditionalOnBooleanProperty(name = "spring.servlet.multipart.enabled", matchIfMissing = true)
+        public ServletContextInitializer externalWarMultipartServletInitializer(
+                MultipartConfigElement multipartConfigElement) {
+            return servletContext -> servletContext.getServletRegistrations().values().stream()
+                .filter(registration -> MULTIPART_SERVLET_CLASS_NAMES.contains(registration.getClassName()))
+                .filter(ServletRegistration.Dynamic.class::isInstance)
+                .map(ServletRegistration.Dynamic.class::cast)
+                .forEach(registration -> registration.setMultipartConfig(multipartConfigElement));
+        }
+    }
+
+    /**
      * Servlet and filter registrations used by embedded WebJET only. In a
      * traditional WAR, container metadata (web.xml and servlet annotations)
      * owns these legacy registrations instead of creating a second dynamic copy.
@@ -151,26 +187,16 @@ public class SpringBootStarter extends SpringBootServletInitializer {
     static class ProductionServletConfiguration {
 
         /**
-         * Register CharacterEncodingFilter for UTF-8 encoding support.
+         * Register CharacterEncodingFilter for configured encoding support.
          * This filter sets the character encoding for request/response based on configuration.
          * Must be registered BEFORE other filters (order 0).
          */
         @Bean
-        public CharacterEncodingFilter webjetCharacterEncodingFilter() {
-            CharacterEncodingFilter filter = new CharacterEncodingFilter();
-            String encoding = Constants.getString("defaultEncoding");
-            if (Tools.isEmpty(encoding)) {
-                encoding = "UTF-8";
-            }
-            filter.setEncoding(encoding);
-            filter.setForceEncoding(true);
-            return filter;
-        }
-
-        @Bean
-        public FilterRegistrationBean<CharacterEncodingFilter> characterEncodingFilterRegistration() {
+        @ConditionalOnBooleanProperty(name = "spring.servlet.encoding.enabled", matchIfMissing = true)
+        public FilterRegistrationBean<CharacterEncodingFilter> characterEncodingFilterRegistration(
+                CharacterEncodingFilter webjetCharacterEncodingFilter) {
             FilterRegistrationBean<CharacterEncodingFilter> registration = new FilterRegistrationBean<>();
-            registration.setFilter(webjetCharacterEncodingFilter());
+            registration.setFilter(webjetCharacterEncodingFilter);
             registration.addUrlPatterns("/*");
             registration.setOrder(0); // Must be first (before all other filters)
             registration.setName("SpringEncodingFilter");
@@ -257,34 +283,6 @@ public class SpringBootStarter extends SpringBootServletInitializer {
         }
 
         /**
-         * Configure multipart file upload settings based on Constants configuration.
-         * Migrated from legacy MultipartConfigElement in web.xml.
-         * Uses the "stripes.FileUpload.MaximumPostSize" configuration for max file size.
-         */
-        @Bean
-        public MultipartConfigElement multipartConfigElement() {
-            String stripesPostSize = Constants.getString("stripes.FileUpload.MaximumPostSize");
-            if (Tools.isEmpty(stripesPostSize)) {
-                stripesPostSize = "20m"; // default 20MB
-            }
-
-            // Convert human-readable format (10m, 1g) to bytes
-            stripesPostSize = Tools.replace(stripesPostSize, "m", "000000");
-            stripesPostSize = Tools.replace(stripesPostSize, "g", "000000000");
-            long maxPostSize = Tools.getLongValue(stripesPostSize, 20000000L); // default 20MB
-
-            Logger.info(SpringBootStarter.class, "Registered MultipartConfigElement with maxPostSize: " + maxPostSize + " bytes");
-
-            // location (null = default temp dir), maxFileSize, maxRequestSize, fileSizeThreshold
-            return new MultipartConfigElement(
-                null,           // location (null = default temp dir)
-                maxPostSize,    // maxFileSize
-                maxPostSize,    // maxRequestSize
-                65536           // fileSizeThreshold
-            );
-        }
-
-        /**
          * Register ShowDoc servlet for /showdoc.do paths.
          * Migrated from legacy servlet-mapping in web.xml to Spring Boot.
          */
@@ -355,11 +353,13 @@ public class SpringBootStarter extends SpringBootServletInitializer {
          * Register MultipleFileUploadAction servlet for /admin/multiplefileupload.do paths.
          */
         @Bean
-        public ServletRegistrationBean<sk.iway.iwcm.filebrowser.MultipleFileUploadAction> multipleFileUploadServletRegistration() {
+        @ConditionalOnBooleanProperty(name = "spring.servlet.multipart.enabled", matchIfMissing = true)
+        public ServletRegistrationBean<sk.iway.iwcm.filebrowser.MultipleFileUploadAction> multipleFileUploadServletRegistration(
+                MultipartConfigElement multipartConfigElement) {
             ServletRegistrationBean<sk.iway.iwcm.filebrowser.MultipleFileUploadAction> registration = new ServletRegistrationBean<>(
                 new sk.iway.iwcm.filebrowser.MultipleFileUploadAction(), "/admin/multiplefileupload.do");
             registration.setName("MultipleFileUploadAction");
-            registration.setMultipartConfig(multipartConfigElement());
+            registration.setMultipartConfig(multipartConfigElement);
             return registration;
         }
 
@@ -411,11 +411,13 @@ public class SpringBootStarter extends SpringBootServletInitializer {
          * Register XhrFileUpload servlet for /XhrFileUpload path.
          */
         @Bean
-        public ServletRegistrationBean<sk.iway.iwcm.components.upload.XhrFileUploadServlet> xhrFileUploadServletRegistration() {
+        @ConditionalOnBooleanProperty(name = "spring.servlet.multipart.enabled", matchIfMissing = true)
+        public ServletRegistrationBean<sk.iway.iwcm.components.upload.XhrFileUploadServlet> xhrFileUploadServletRegistration(
+                MultipartConfigElement multipartConfigElement) {
             ServletRegistrationBean<sk.iway.iwcm.components.upload.XhrFileUploadServlet> registration = new ServletRegistrationBean<>(
                 new sk.iway.iwcm.components.upload.XhrFileUploadServlet(), "/XhrFileUpload");
             registration.setName("XhrFileUpload");
-            registration.setMultipartConfig(multipartConfigElement());
+            registration.setMultipartConfig(multipartConfigElement);
             return registration;
         }
 
@@ -423,11 +425,13 @@ public class SpringBootStarter extends SpringBootServletInitializer {
          * Register AdminUpload servlet for /admin/upload/chunk path.
          */
         @Bean
-        public ServletRegistrationBean<sk.iway.iwcm.admin.upload.AdminUploadServlet> adminUploadServletRegistration() {
+        @ConditionalOnBooleanProperty(name = "spring.servlet.multipart.enabled", matchIfMissing = true)
+        public ServletRegistrationBean<sk.iway.iwcm.admin.upload.AdminUploadServlet> adminUploadServletRegistration(
+                MultipartConfigElement multipartConfigElement) {
             ServletRegistrationBean<sk.iway.iwcm.admin.upload.AdminUploadServlet> registration = new ServletRegistrationBean<>(
                 new sk.iway.iwcm.admin.upload.AdminUploadServlet(), "/admin/upload/chunk");
             registration.setName("AdminUpload");
-            registration.setMultipartConfig(multipartConfigElement());
+            registration.setMultipartConfig(multipartConfigElement);
             return registration;
         }
 

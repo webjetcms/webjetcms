@@ -38,7 +38,10 @@ class ApplicationConfigurationDefinitionTest {
             assertDefinitionCount(beanFactory, SpringAppInitializer.class, 1);
             assertBeanDefinitionCount(beanFactory, "webjetApplicationReadyListener", 0);
             assertDefinitionCount(beanFactory, ProductionApplicationConfiguration.class, 0);
+            assertDefinitionCount(beanFactory,
+                SpringBootStarter.ProductionServletInfrastructureConfiguration.class, 0);
             assertDefinitionCount(beanFactory, SpringBootStarter.ProductionServletConfiguration.class, 0);
+            assertBeanDefinitionCount(beanFactory, "externalWarMultipartServletInitializer", 0);
             assertBeanDefinitionCount(beanFactory, "characterEncodingFilterRegistration", 0);
             assertProductionServletDefinitions(beanFactory, 0);
             assertDefinitionCount(beanFactory, BaseSpringConfig.class, 0);
@@ -65,7 +68,10 @@ class ApplicationConfigurationDefinitionTest {
             assertDefinitionCount(beanFactory, SpringSecurityConf.class, 1);
             assertDefinitionCount(beanFactory, SpringAppInitializer.class, 1);
             assertBeanDefinitionCount(beanFactory, "webjetApplicationReadyListener", 1);
+            assertDefinitionCount(beanFactory,
+                SpringBootStarter.ProductionServletInfrastructureConfiguration.class, 1);
             assertDefinitionCount(beanFactory, SpringBootStarter.ProductionServletConfiguration.class, 1);
+            assertBeanDefinitionCount(beanFactory, "externalWarMultipartServletInitializer", 0);
             assertBeanDefinitionCount(beanFactory, "characterEncodingFilterRegistration", 1);
             assertProductionServletDefinitions(beanFactory, 1);
             assertBeanDefinitionCount(beanFactory, "messageSource", 1);
@@ -97,7 +103,10 @@ class ApplicationConfigurationDefinitionTest {
         try (applicationContext) {
             DefaultListableBeanFactory beanFactory = applicationContext.getDefaultListableBeanFactory();
 
+            assertDefinitionCount(beanFactory,
+                SpringBootStarter.ProductionServletInfrastructureConfiguration.class, 1);
             assertDefinitionCount(beanFactory, SpringBootStarter.ProductionServletConfiguration.class, 0);
+            assertBeanDefinitionCount(beanFactory, "externalWarMultipartServletInitializer", 1);
             assertProductionServletDefinitions(beanFactory, 0);
         }
     }
@@ -208,14 +217,12 @@ class ApplicationConfigurationDefinitionTest {
 
     private void assertProductionServletDefinitions(DefaultListableBeanFactory beanFactory,
             int expectedCount) {
-        assertBeanDefinitionCount(beanFactory, "webjetCharacterEncodingFilter", expectedCount);
         assertBeanDefinitionCount(beanFactory, "contextFilterRegistration", expectedCount);
         assertBeanDefinitionCount(beanFactory, "stripesFilterRegistration", expectedCount);
         assertBeanDefinitionCount(beanFactory, "virtualPathFilterRegistration", expectedCount);
         assertBeanDefinitionCount(beanFactory, "requestContextListenerRegistration", expectedCount);
         assertBeanDefinitionCount(beanFactory, "sessionListenerRegistration", expectedCount);
         assertBeanDefinitionCount(beanFactory, "iwcmInitServletRegistration", expectedCount);
-        assertBeanDefinitionCount(beanFactory, "multipartConfigElement", expectedCount);
         assertBeanDefinitionCount(beanFactory, "showDocServletRegistration", expectedCount);
         assertBeanDefinitionCount(beanFactory, "previewServletRegistration", expectedCount);
         assertBeanDefinitionCount(beanFactory, "formMailServletRegistration", expectedCount);

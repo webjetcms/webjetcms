@@ -2,15 +2,16 @@ package sk.iway.aceintegration;
 
 import java.io.File;
 
+import org.apache.catalina.connector.Connector;
 import org.apache.catalina.session.FileStore;
 import org.apache.catalina.session.PersistentManager;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWarDeployment;
 import org.springframework.boot.tomcat.TomcatContextCustomizer;
+import org.springframework.boot.tomcat.autoconfigure.TomcatServerProperties;
+import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.MimeMappings;
 import org.springframework.boot.web.server.servlet.ConfigurableServletWebServerFactory;
-import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
-import org.apache.catalina.connector.Connector;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.context.annotation.Bean;
@@ -36,7 +37,8 @@ public class SpringConfig {
          * Adds an HTTP connector on port 80 alongside the default HTTPS connector on 443.
          */
         @Bean
-        public WebServerFactoryCustomizer<TomcatServletWebServerFactory> tomcatHttpConnectorCustomizer() {
+        public WebServerFactoryCustomizer<TomcatServletWebServerFactory> tomcatHttpConnectorCustomizer(
+                TomcatServerProperties tomcatServerProperties) {
             return factory -> {
                 // Create HTTP connector on port 80
                 Connector httpConnector = new Connector("org.apache.coyote.http11.Http11NioProtocol");
@@ -44,6 +46,7 @@ public class SpringConfig {
                 httpConnector.setSecure(false);
                 httpConnector.setPort(80);
                 httpConnector.setRedirectPort(443);
+                httpConnector.setMaxPartCount(tomcatServerProperties.getMaxPartCount());
                 factory.addAdditionalConnectors(httpConnector);
             };
         }

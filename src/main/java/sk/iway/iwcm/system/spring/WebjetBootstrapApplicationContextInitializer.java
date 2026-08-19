@@ -14,6 +14,7 @@ import org.springframework.boot.security.autoconfigure.web.servlet.ServletWebSec
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.Ordered;
+import org.springframework.core.env.Environment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.web.context.ConfigurableWebApplicationContext;
 
@@ -49,6 +50,7 @@ class WebjetBootstrapApplicationContextInitializer
     public void initialize(ConfigurableApplicationContext applicationContext) {
         SpringAppInitializer.startDebugTimer();
 
+        Environment environment = applicationContext.getEnvironment();
         ServletContext servletContext = getServletContext(applicationContext);
         WebjetBootstrapState state;
         WebjetBootstrapSpringConfiguration springConfiguration;
@@ -57,14 +59,14 @@ class WebjetBootstrapApplicationContextInitializer
             WebjetBootstrapMode mode = initialized ? WebjetBootstrapMode.PRODUCTION : WebjetBootstrapMode.SETUP;
             state = WebjetBootstrapState.initialized(mode, initialized);
             springConfiguration = initialized
-                ? WebjetBootstrapSpringConfiguration.fromConstants()
-                : WebjetBootstrapSpringConfiguration.empty();
+                ? WebjetBootstrapSpringConfiguration.fromConstants(environment)
+                : WebjetBootstrapSpringConfiguration.empty(environment);
         } else {
             WebjetBootstrapModeDetector.Detection detection = forcedMode != null
                 ? new WebjetBootstrapModeDetector.Detection(
-                    forcedMode, WebjetBootstrapSpringConfiguration.empty()
+                    forcedMode, WebjetBootstrapSpringConfiguration.empty(environment)
                 )
-                : modeDetector.detect(applicationContext.getEnvironment());
+                : modeDetector.detect(environment);
             state = WebjetBootstrapState.pending(detection.mode());
             springConfiguration = detection.springConfiguration();
         }
@@ -74,6 +76,9 @@ class WebjetBootstrapApplicationContextInitializer
                 getBootstrapProperties(applicationContext, state, springConfiguration))
         );
         applicationContext.getBeanFactory().registerSingleton(WebjetBootstrapState.BEAN_NAME, state);
+        applicationContext.getBeanFactory().registerSingleton(
+            WebjetBootstrapSpringConfiguration.BEAN_NAME, springConfiguration
+        );
 
         Logger.info(WebjetBootstrapApplicationContextInitializer.class,
             "WebJET bootstrap mode: " + state.getMode().getPropertyValue());
