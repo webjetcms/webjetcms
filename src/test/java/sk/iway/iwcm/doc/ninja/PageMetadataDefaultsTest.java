@@ -46,7 +46,7 @@ class PageMetadataDefaultsTest {
         doc.setHtmlData("Perex description");
         when(tempGroup.getDescription()).thenReturn("Group description");
 
-        assertEquals("Page description", page.getSeoDescription());
+        assertEquals("&lt;strong&gt;Page &quot;description&quot;&lt;/strong&gt;", page.getSeoDescription());
     }
 
     @Test
@@ -54,14 +54,14 @@ class PageMetadataDefaultsTest {
         doc.setHtmlData("Perex \"description\"");
         when(tempGroup.getDescription()).thenReturn("Group description");
 
-        assertEquals("Perex description", page.getSeoDescription());
+        assertEquals("Perex &quot;description&quot;", page.getSeoDescription());
     }
 
     @Test
     void seoDescriptionFallsBackToLocalizedTemplateGroupValue() {
         when(tempGroup.getDescription()).thenReturn("<strong>Group \"description\"</strong>");
 
-        assertEquals("Group description", page.getSeoDescription());
+        assertEquals("&lt;strong&gt;Group &quot;description&quot;&lt;/strong&gt;", page.getSeoDescription());
     }
 
     @Test
@@ -118,14 +118,14 @@ class PageMetadataDefaultsTest {
         doc.setFieldP("<strong>Page \"image\"</strong>");
         when(tempGroup.getSeoImageAlt()).thenReturn("Group image");
 
-        assertEquals("Page image", page.getSeoImageAlt());
+        assertEquals("&lt;strong&gt;Page &quot;image&quot;&lt;/strong&gt;", page.getSeoImageAlt());
     }
 
     @Test
     void seoImageAltFallsBackToLocalizedTemplateGroupValue() {
         when(tempGroup.getSeoImageAlt()).thenReturn("<strong>Group \"image\"</strong>");
 
-        assertEquals("Group image", page.getSeoImageAlt());
+        assertEquals("&lt;strong&gt;Group &quot;image&quot;&lt;/strong&gt;", page.getSeoImageAlt());
     }
 
     @Test
