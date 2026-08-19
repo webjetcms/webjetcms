@@ -166,6 +166,7 @@ Scenario('overenie nacitania podla prihlaseneho jazyka', ({ I, DTE }) => {
     I.fillField("username", "tester");
     I.fillField("password", secret(I.getDefaultPassword()));
     I.forceClick("Přihlásit se");
+    I.wait(3);
 
     I.amOnPage("/admin/v9/templates/temps-groups-list/");
 

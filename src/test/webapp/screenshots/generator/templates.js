@@ -31,7 +31,7 @@ Scenario('templates', ({ I, DT, DTE, Document }) => {
     Document.screenshot("/frontend/templates/templates-edit-sites.png");
 });
 
-Scenario('temps-groups @current', ({ I, DT, DTE, Document }) => {
+Scenario('temps-groups', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/templates/temps-groups-list/");
     DT.waitForLoader();
     Document.screenshot("/frontend/templates/temps-groups.png");
