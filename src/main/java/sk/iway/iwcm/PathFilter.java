@@ -1087,10 +1087,18 @@ public class PathFilter implements Filter
 						if (path.endsWith("/")==false)
 						{
 							StringBuilder redirectPath = new StringBuilder(req.getContextPath()).append(path).append('/');
-							//for safety concerns commented out - you should use correct URL with / at the end if (Tools.isNotEmpty(qs)) redirectPath.append('?').append(qs);
+							if (Tools.isNotEmpty(qs)) redirectPath.append('?').append(qs);
 
 							res.setStatus(HttpServletResponse.SC_FOUND);
 							res.setHeader("Location", Tools.sanitizeHttpHeaderParam(redirectPath.toString()));
+							return;
+						}
+
+						if (!checkWebAccess(req, indexJspPath))
+						{
+							Logger.debug(PathFilter.class, "checkWebAccess=false, forbidden access, path="+indexJspPath+" ip="+Tools.getRemoteIP(req));
+							res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+							forwardSafely("/403.jsp", req, res);
 							return;
 						}
 
