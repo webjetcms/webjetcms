@@ -27,7 +27,7 @@ class SetupActionsServiceTest {
     @Test
     void createsMariaDbDatabaseWithFullUnicodeCharacterSet() {
         assertEquals(
-            "CREATE DATABASE `webjet_web` DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_unicode_ci",
+            "CREATE DATABASE `webjet_web` DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_general_ci",
             SetupActionsService.getCreateDatabaseSql("org.mariadb.jdbc.Driver", "webjet_web")
         );
     }
@@ -35,7 +35,7 @@ class SetupActionsServiceTest {
     @Test
     void createsMicrosoftSqlDatabaseWithSupplementaryCharacterCollation() {
         assertEquals(
-            "CREATE DATABASE [webjet_web] COLLATE Latin1_General_100_CI_AI_SC",
+            "CREATE DATABASE [webjet_web] COLLATE Latin1_General_CI_AI",
             SetupActionsService.getCreateDatabaseSql("net.sourceforge.jtds.jdbc.Driver", "webjet_web")
         );
     }
@@ -47,7 +47,7 @@ class SetupActionsServiceTest {
             SetupActionsService.getCreateDatabaseSql("org.postgresql.Driver", "name\"with_quote")
         );
         assertEquals(
-            "CREATE DATABASE [name]]with_bracket] COLLATE Latin1_General_100_CI_AI_SC",
+            "CREATE DATABASE [name]]with_bracket] COLLATE Latin1_General_CI_AI",
             SetupActionsService.getCreateDatabaseSql("net.sourceforge.jtds.jdbc.Driver", "name]with_bracket")
         );
     }

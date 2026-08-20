@@ -28,8 +28,7 @@ import org.w3c.dom.NodeList;
 class ExternalWarRegistrationContractTest {
 
     private static final List<Path> DEPLOYMENT_DESCRIPTORS = List.of(
-        Path.of("src/main/webapp/WEB-INF/web.xml"),
-        Path.of("src/main/webapp/WEB-INF/web-v2023.xml")
+        Path.of("src/main/webapp/WEB-INF/web.xml")
     );
     private static final Map<String, String> DESCRIPTOR_FILTERS = Map.of(
         "ContextFilter", "sk.iway.iwcm.system.context.ContextFilter",
