@@ -238,6 +238,7 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
                 userWrapper.appendChild(name);
                 const email = element("a", "float-end btn btn-sm");
                 email.href = `mailto:${user.email}`;
+                email.setAttribute("aria-label", WJ.translate("admin.welcome.logins.sendEmail.js"));
                 email.innerHTML = '<i class="ti ti-mail fs-6" aria-hidden="true"></i>';
                 li.append(userWrapper, email);
                 adminsList.appendChild(li);
@@ -306,6 +307,8 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
                 li.appendChild(link);
                 if (!bookmark.baseline) {
                     const remove = element("button", "float-end btn btn-sm buttons-selected buttons-remove buttons-divider");
+                    remove.type = "button";
+                    remove.setAttribute("aria-label", WJ.translate("button.delete"));
                     remove.innerHTML = '<span><i class="ti ti-trash fs-6" aria-hidden="true"></i></span>';
                     remove.addEventListener("click", () => {
                         const bookmarks = this._getBookmarks();
