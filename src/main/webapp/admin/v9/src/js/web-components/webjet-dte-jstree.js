@@ -202,9 +202,12 @@ export class WebjetDteJsTreeElement extends HTMLElement {
     }
 
     _findLabel() {
-        const id = this._options.inputElement?.id;
+        const inputElement = this._options.inputElement;
+        const id = inputElement?.id;
         const label = id ? document.querySelector(`label[for="${CSS.escape(id)}"]`) : null;
-        return label?.textContent?.trim() || this.parentElement?.getAttribute("aria-label") || this.parentElement?.getAttribute("title") || "";
+        const labelledAncestor = this.parentElement?.closest("[aria-label], [title]");
+        return label?.textContent?.trim() || inputElement?.getAttribute("aria-label") || inputElement?.getAttribute("title") ||
+            labelledAncestor?.getAttribute("aria-label") || labelledAncestor?.getAttribute("title") || "";
     }
 
     _isRemovable() {
