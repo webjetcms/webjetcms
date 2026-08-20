@@ -1,6 +1,7 @@
 package sk.iway.iwcm.system.spring.webjet_component;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.Ordered;
 import org.springframework.web.context.support.WebApplicationObjectSupport;
 import org.springframework.web.servlet.View;
@@ -18,7 +19,6 @@ import java.util.*;
 // vracia vhodny view z viewResolverov na zaklade cesty
 public class WebjetViewResolver extends WebApplicationObjectSupport implements ViewResolver, Ordered {
 
-    private String viewFolder;
     private List<ViewResolver> viewResolvers;
 
     /**
@@ -46,7 +46,12 @@ public class WebjetViewResolver extends WebApplicationObjectSupport implements V
         return path.replaceAll("/{2,}", "/");
     }
 
+    @Override
     public View resolveViewName(@NonNull String viewName, @NonNull Locale locale) throws Exception {
+        return resolveViewName(viewName, locale, null);
+    }
+
+    View resolveViewName(@NonNull String viewName, @NonNull Locale locale, @Nullable String viewFolder) throws Exception {
         if (viewResolvers == null) {
             return null;
         }
@@ -86,31 +91,35 @@ public class WebjetViewResolver extends WebApplicationObjectSupport implements V
                 suffix = wjViewResolver.getSuffix();
             }
 
-            // FIX: If the view name ends with .jsp, route it directly to the JSP resolver
-            // without applying the .html suffix (which was causing FileNotFoundException)
             if (viewNameLocal.endsWith(".jsp")) {
-                if (viewResolver instanceof WebjetInternalResourceViewResolver) {
+                if (!(viewResolver instanceof WebjetInternalResourceViewResolver)) {
+                    continue;
+                }
+                if (viewNameLocal.startsWith("forward:")) {
                     return viewResolver.resolveViewName(viewNameLocal, locale);
                 }
-                continue;
             }
 
             if (Tools.isNotEmpty(prefix)) {
                 viewNameLocal = prefix + viewNameLocal;
             }
 
-            if (Tools.isNotEmpty(suffix) && !viewNameLocal.contains(suffix)) {
+            if (Tools.isNotEmpty(suffix) && !viewNameLocal.endsWith(suffix)) {
                 viewNameLocal = viewNameLocal + suffix;
                 // kedze pridavam suffix do viewName, tak uz nie je potrebny vo viewResolveri, kedze ten je sprosty a vlozi suffix do viewName znova
                 //wjViewResolver.setSuffix("");
             }
 
             // cesta s installName
-            List<String> paths = getPaths(viewNameLocal);
+            List<String> paths = getPaths(viewNameLocal, viewFolder);
             for (String path : paths) {
                 String normalizedPath = normalizePath(path);
                 if (FileTools.isFile(normalizedPath)) {
-                    return viewResolver.resolveViewName(Tools.replace(normalizedPath, suffix, ""), locale);
+                    String resolverViewName = normalizedPath;
+                    if (Tools.isNotEmpty(suffix) && resolverViewName.endsWith(suffix)) {
+                        resolverViewName = resolverViewName.substring(0, resolverViewName.length() - suffix.length());
+                    }
+                    return viewResolver.resolveViewName(resolverViewName, locale);
                 }
             }
 
@@ -126,7 +135,7 @@ public class WebjetViewResolver extends WebApplicationObjectSupport implements V
                         if (Tools.isNotEmpty(prefix)) {
                             jspPath = prefix + viewName;
                         }
-                        List<String> jspPaths = getPaths(jspPath);
+                        List<String> jspPaths = getPaths(jspPath, viewFolder);
                         for (String jspPathCandidate : jspPaths) {
                             String jspFile = normalizePath(jspPathCandidate);
                             // Replace .html with .jsp if suffix was .html
@@ -158,7 +167,7 @@ public class WebjetViewResolver extends WebApplicationObjectSupport implements V
         this.viewResolvers.sort(Comparator.comparing(o -> ((Ordered) o).getOrder()));
     }
 
-    private List<String> getPaths(String viewName) {
+    private List<String> getPaths(String viewName, @Nullable String viewFolder) {
         String installName = Constants.getInstallName();
         List<String> result = new ArrayList<>();
 
@@ -178,13 +187,5 @@ public class WebjetViewResolver extends WebApplicationObjectSupport implements V
         result.add(normalizePath("/" + Tools.join(tokens1, "/")));
 
         return result;
-    }
-
-    public String getViewFolder() {
-        return viewFolder;
-    }
-
-    public void setViewFolder(String viewFolder) {
-        this.viewFolder = viewFolder;
     }
 }

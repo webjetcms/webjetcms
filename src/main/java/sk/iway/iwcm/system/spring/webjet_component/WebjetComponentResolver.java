@@ -107,16 +107,15 @@ public class WebjetComponentResolver {
             // ziska ModelAndView z akejkolvek navratovej hodnoty metody
             ModelAndView mv = handlerAdapter.handle(request, response, handlerMethod);
             WebjetDispatcherServlet dispatcherServlet = new WebjetDispatcherServlet();
-
-            if (Tools.isNotEmpty(component.getViewFolder())) {
-                viewResolver.setViewFolder(component.getViewFolder());
-            }
+            String viewFolder = component.getViewFolder();
 
             mv.addObject("request", request);
             mv.addObject("session", request.getSession());
 
             // nastavi html kod komponenty do responsu
-            dispatcherServlet.render(mv, viewResolver, request, response);
+            dispatcherServlet.render(mv,
+                    (viewName, locale) -> viewResolver.resolveViewName(viewName, locale, viewFolder),
+                    request, response);
         }
         catch (AccessDeniedException ex) {
             response.getWriter().println(ex.getMessage());
