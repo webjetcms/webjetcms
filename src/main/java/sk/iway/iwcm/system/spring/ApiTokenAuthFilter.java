@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import org.apache.commons.codec.binary.Base64;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.GenericFilterBean;
 
 import sk.iway.iwcm.Constants;
@@ -33,16 +34,31 @@ public class ApiTokenAuthFilter extends GenericFilterBean {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		HttpSession session = ((HttpServletRequest)request).getSession(false);
-        boolean logged = logUserViaApiKey((HttpServletRequest)request, (HttpServletResponse)response);
-        chain.doFilter(request, response);
-		if (logged && session != null) {
-			try {
-				session.invalidate();
-			} catch (IllegalStateException ex) {
-				// Session already invalidated
-			}
-		}
+        HttpServletRequest httpRequest = (HttpServletRequest) request;
+        boolean logged = logUserViaApiKey(httpRequest, (HttpServletResponse) response);
+        try {
+            chain.doFilter(request, response);
+        } finally {
+            if (logged) {
+                try {
+                    invalidateCurrentSession(httpRequest);
+                } finally {
+                    // Prevent an outer security repository from persisting the token authentication again.
+                    SecurityContextHolder.clearContext();
+                }
+            }
+        }
+    }
+
+    private static void invalidateCurrentSession(HttpServletRequest request) {
+        try {
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                session.invalidate();
+            }
+        } catch (IllegalStateException ex) {
+            // Session already invalidated
+        }
     }
 
     /**
@@ -53,6 +69,7 @@ public class ApiTokenAuthFilter extends GenericFilterBean {
 	 * @return
 	 */
 	private static boolean logUserViaApiKey(HttpServletRequest request, HttpServletResponse response) {
+		boolean logged = false;
 		try {
 			String springSecurityAllowedAuths = Constants.getString("springSecurityAllowedAuths");
 			if (springSecurityAllowedAuths == null || springSecurityAllowedAuths.contains("api-token")==false) return false;
@@ -88,6 +105,8 @@ public class ApiTokenAuthFilter extends GenericFilterBean {
 
 				if (errors.get("ERROR_KEY")==null)
 				{
+					// Arm cleanup before mutating authentication state so partial failures cannot leak it.
+					logged = true;
 					// Save our logged-in user in the session
 					user.setValid(true);
 					LogonTools.setUserToSession(request.getSession(), user);
@@ -96,12 +115,11 @@ public class ApiTokenAuthFilter extends GenericFilterBean {
 					//set domain by webpages group permissions
 					AdminLogonController.determineRootWebPageDirectory(request.getSession(), user);
 
-					return true;
 				}
 			}
 		} catch (Exception ex) {
 			Logger.error(ApiTokenAuthFilter.class, ex);
 		}
-		return false;
+		return logged;
 	}
  }
