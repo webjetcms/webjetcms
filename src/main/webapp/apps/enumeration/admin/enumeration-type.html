@@ -18,57 +18,6 @@
     window.domReady.add(function () {
 
         let url = "/admin/rest/enumeration/enumeration-type";
-        let enumerationStringFieldsDataTable = null;
-
-        function updateEnumerationStringFieldOptions(innerTable) {
-            if(!innerTable || !innerTable.DATA || !innerTable.DATA.jsonOptions) return;
-
-            const alphabetOptions = innerTable.DATA.jsonOptions.alphabet;
-            if(!Array.isArray(alphabetOptions)) return;
-
-            const separator = " – ";
-            const fieldLabels = new Map();
-            const optionsByAlphabet = new Map(alphabetOptions.map(function(option) {
-                return [String(option.value || ""), option];
-            }));
-            const options = [];
-            for(let fieldIndex = 1; fieldIndex <= 12; fieldIndex++) {
-                const alphabet = String.fromCharCode(64 + fieldIndex);
-                const fieldName = "string" + fieldIndex + "Name";
-                if(!enumerationTypeDataTable.EDITOR.fields().includes(fieldName)) continue;
-
-                const option = optionsByAlphabet.get(alphabet) || {value: alphabet};
-                const originalLabel = String(option.label || "");
-                const separatorIndex = originalLabel.indexOf(separator);
-                const editorField = enumerationTypeDataTable.EDITOR.field(fieldName);
-                const configuredLabel = String(editorField.s.opts.label || "").replace(/<[^>]+>/g, "").trim();
-                const baseLabel = separatorIndex > -1 ? originalLabel.substring(0, separatorIndex) : configuredLabel;
-                const currentName = String(enumerationTypeDataTable.EDITOR.field(fieldName).val() || "").trim();
-                fieldLabels.set(alphabet, currentName);
-                if(currentName.length === 0) continue;
-
-                options.push(Object.assign({}, option, {
-                    label: baseLabel + separator + currentName,
-                    value: alphabet
-                }));
-            }
-
-            const jsonOptions = Object.assign({}, innerTable.DATA.jsonOptions, {alphabet: options});
-            innerTable.DATA.jsonOptions = jsonOptions;
-            innerTable.updateOptionsFromJson({options: jsonOptions});
-            if(innerTable.DATA.json && innerTable.DATA.json.options) {
-                innerTable.DATA.json.options.alphabet = options;
-            }
-            innerTable.rows().every(function() {
-                const rowData = this.data();
-                const fieldLabel = fieldLabels.get(String(rowData.alphabet || ""));
-                if(fieldLabel !== undefined) {
-                    rowData.label = fieldLabel;
-                }
-            });
-            innerTable.rows().invalidate("data");
-            innerTable.columns.adjust();
-        }
 
         enumerationTypeDataTable = WJ.DataTable({
             url: url,
@@ -85,18 +34,10 @@
             if(event.detail.conf.id !== "DTE_Field_editorFields.stringFieldTypes") return;
 
             const innerTable = event.detail.conf.datatable;
-            enumerationStringFieldsDataTable = innerTable;
-            updateEnumerationStringFieldOptions(innerTable);
-            innerTable.on("xhr.dt", function() {
-                setTimeout(function() {
-                    updateEnumerationStringFieldOptions(innerTable);
-                }, 0);
-            });
 
             innerTable.EDITOR.on("open", function(e, mode, action) {
                 const editor = innerTable.EDITOR;
                 const openedAlphabet = action === "edit" ? String(editor.field("alphabet").val() || "") : "";
-                updateEnumerationStringFieldOptions(innerTable);
                 ["className", "entityId", "label", "bonusClassName", "bonusEntityId"].forEach(function(fieldName) {
                     if(editor.fields().includes(fieldName)) editor.field(fieldName).hide();
                 });
@@ -171,12 +112,6 @@
 
                 updateFieldVisibility(typeSelect.value);
             });
-        });
-
-        window.addEventListener("WJ.DTE.tabclick", function(event) {
-            if(event.detail.id === "enumerationTypeDataTable-stringFieldTypes") {
-                updateEnumerationStringFieldOptions(enumerationStringFieldsDataTable);
-            }
         });
 
         enumerationTypeDataTable.EDITOR.on('open', function (e, mode, action) {

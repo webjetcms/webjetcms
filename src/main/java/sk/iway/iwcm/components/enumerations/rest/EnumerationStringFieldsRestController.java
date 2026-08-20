@@ -8,8 +8,14 @@ import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,6 +37,7 @@ import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.datatable.RowReorderDto;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 @RestController
@@ -132,15 +139,24 @@ public class EnumerationStringFieldsRestController extends DatatableRestControll
         super.validateEditor(request, target, user, errors, id, entity);
         if (errors.hasErrors() || ("create".equals(target.getAction()) == false && "edit".equals(target.getAction()) == false)) return;
 
+        validateConfiguration(entity, target.getAction(), id, errors);
+    }
+
+    private void validateConfiguration(CustomFieldsEntity entity, String action, Long id, Errors errors) {
         EnumerationTypeBean enumerationType = getEnumerationType();
-        if (enumerationType == null) {
+        if (enumerationType == null || entity == null) {
             errors.rejectValue("errorField.alphabet", null, getProp().getText("enum_type.string_field_type.invalid_error")); //NOSONAR
             return;
         }
 
         applyContext(entity, enumerationType);
+        if (CustomFieldsService.isSupportedFieldType(entity.getType()) == false) {
+            errors.rejectValue("errorField.type", null, getProp().getText("enum_type.string_field_type.invalid_error")); //NOSONAR
+            return;
+        }
+
         String alphabet = entity.getAlphabet();
-        if (customFieldsService.validateSpecificClass(entity, target.getAction(), errors, id, getProp()) == false) return;
+        if (customFieldsService.validateSpecificClass(entity, action, errors, id, getProp()) == false) return;
 
         Long existingId = customFieldsRepository.getEntityId(
             ENUMERATION_DATA_CLASS_NAME,
@@ -151,10 +167,22 @@ public class EnumerationStringFieldsRestController extends DatatableRestControll
             CloudToolsForCore.getDomainId()
         ).orElse(-1L);
 
-        boolean duplicate = "create".equals(target.getAction()) && existingId > 0;
-        if ("edit".equals(target.getAction()) && existingId > 0 && existingId.equals(id) == false) duplicate = true;
+        boolean duplicate = "create".equals(action) && existingId > 0;
+        if ("edit".equals(action) && existingId > 0 && existingId.equals(id) == false) duplicate = true;
         if (duplicate) {
             errors.rejectValue("errorField.alphabet", null, getProp().getText("settings.custom-fields.duplicity-err")); //NOSONAR
+        }
+    }
+
+    private void validateConfigurationOrThrow(CustomFieldsEntity entity, String action, Long id) {
+        if (entity == null) throw new IllegalArgumentException(getProp().getText("enum_type.string_field_type.invalid_error"));
+
+        DatatableRequest<Long, CustomFieldsEntity> validationTarget = new DatatableRequest<>();
+        validationTarget.setErrorField(entity);
+        BeanPropertyBindingResult errors = new BeanPropertyBindingResult(validationTarget, "datatableRequest");
+        validateConfiguration(entity, action, id, errors);
+        if (errors.hasErrors()) {
+            throw new IllegalArgumentException(errors.getAllErrors().get(0).getDefaultMessage());
         }
     }
 
@@ -195,12 +223,14 @@ public class EnumerationStringFieldsRestController extends DatatableRestControll
     @Override
     public CustomFieldsEntity insertItem(CustomFieldsEntity entity) {
         entity.setId(null);
+        validateConfigurationOrThrow(entity, "create", -1L);
         return super.insertItem(entity);
     }
 
     @Override
     public CustomFieldsEntity editItem(CustomFieldsEntity entity, long id) {
         entity.setId(id);
+        validateConfigurationOrThrow(entity, "edit", id);
         return super.editItem(entity, id);
     }
 
@@ -222,6 +252,12 @@ public class EnumerationStringFieldsRestController extends DatatableRestControll
 
         customFieldsRepository.delete(stored);
         return true;
+    }
+
+    @Override
+    @PostMapping(value = "/row-reorder", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Boolean> rowReorder(HttpServletRequest request, @RequestBody RowReorderDto rowReorderDto) {
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(false);
     }
 
     private EnumerationTypeBean getEnumerationType() {

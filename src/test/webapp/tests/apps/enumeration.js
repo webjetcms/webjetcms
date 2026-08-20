@@ -335,11 +335,12 @@ Scenario('Enumeration string field name synchronization', async ({I, DTE, DT}) =
     DT.waitForLoader(stringFieldsTableId);
 
     DT.checkTableRow(stringFieldsTableId, 1, [
-        "Reťazec 1 – " + stringFieldRenamedName,
+        "Reťazec 1 – " + stringFieldOriginalName,
         "Výberové pole",
-        stringFieldRenamedName,
+        stringFieldOriginalName,
         stringFieldTooltip
     ]);
+    I.dontSee(stringFieldRenamedName, stringFieldsWrapper);
 
     const requiredColumnVisible = await I.executeScript((wrapperSelector) => {
         const header = document.querySelector(wrapperSelector + " th.dt-th-required");
@@ -350,9 +351,26 @@ Scenario('Enumeration string field name synchronization', async ({I, DTE, DT}) =
     I.clickCss("#" + stringFieldsTableId + " tbody tr:first-child td:first-child");
     I.clickCss(stringFieldsWrapper + " button.buttons-edit");
     DTE.waitForEditor(stringFieldsTableId);
-    I.waitForText("Upraviť: Reťazec 1 – " + stringFieldRenamedName, 10, stringFieldsModal + " div.DTE_Header");
+    I.waitForText("Upraviť: Reťazec 1 – " + stringFieldOriginalName, 10, stringFieldsModal + " div.DTE_Header");
     DTE.cancel(stringFieldsTableId, true);
     DTE.save("enumerationTypeDataTable");
+
+    openEnumType(I, DT, DTE, stringFieldTypeEnumName);
+    I.clickCss("#pills-dt-enumerationTypeDataTable-stringFieldTypes-tab");
+    I.waitForVisible(stringFieldsWrapper, 10);
+    DT.waitForLoader(stringFieldsTableId);
+    DT.checkTableRow(stringFieldsTableId, 1, [
+        "Reťazec 1 – " + stringFieldRenamedName,
+        "Výberové pole",
+        stringFieldRenamedName,
+        stringFieldTooltip
+    ]);
+    I.clickCss("#" + stringFieldsTableId + " tbody tr:first-child td:first-child");
+    I.clickCss(stringFieldsWrapper + " button.buttons-edit");
+    DTE.waitForEditor(stringFieldsTableId);
+    I.waitForText("Upraviť: Reťazec 1 – " + stringFieldRenamedName, 10, stringFieldsModal + " div.DTE_Header");
+    DTE.cancel(stringFieldsTableId, true);
+    DTE.cancel("enumerationTypeDataTable", true);
 
     I.amOnPage("/apps/enumeration/admin/");
     filterEnumDataByType(I, DTE, stringFieldTypeEnumName);
@@ -365,15 +383,24 @@ Scenario('Enumeration string field name synchronization', async ({I, DTE, DT}) =
     DTE.cancel("enumerationDataDataTable", true);
 });
 
-Scenario('Enumeration string field type cleanup', async ({I, DT}) => {
-    I.amOnPage("/admin/v9/settings/custom-fields/");
-    DT.waitForLoader("customFieldsDataTable");
-    DT.filterContains("tooltip", "Enumeration-tooltip-autotest-");
-    await deleteAllIfPresent(I, DT, "customFieldsDataTable");
-
+Scenario('Enumeration string field type cleanup', async ({I, DTE, DT}) => {
     I.amOnPage("/apps/enumeration/admin/enumeration-type/");
     DT.waitForLoader("enumerationTypeDataTable");
-    DT.filterContains("typeName", "EnumerationStringField-autotest-");
+    openEnumType(I, DT, DTE, stringFieldTypeEnumName);
+    I.clickCss("#pills-dt-enumerationTypeDataTable-stringFieldTypes-tab");
+    I.waitForVisible(stringFieldsWrapper, 10);
+    DT.waitForLoader(stringFieldsTableId);
+    I.clickCss("#" + stringFieldsTableId + " tbody tr:first-child td:first-child");
+    I.clickCss(stringFieldsWrapper + " button.buttons-remove");
+    I.waitForVisible(stringFieldsModal + " div.DTE_Action_Remove", 10);
+    I.click("Zmazať", stringFieldsModal + " div.DTE_Action_Remove");
+    I.waitForInvisible("div.DTE_Processing_Indicator", 200);
+    I.waitForInvisible(stringFieldsModal, 30);
+    DT.waitForLoader(stringFieldsTableId);
+    I.see("Nenašli sa žiadne vyhovujúce záznamy", stringFieldsWrapper);
+    DTE.cancel("enumerationTypeDataTable", true);
+
+    DT.filterEquals("typeName", stringFieldTypeEnumName);
     await deleteAllIfPresent(I, DT, "enumerationTypeDataTable");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });

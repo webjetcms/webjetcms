@@ -172,6 +172,7 @@ public class EnumerationDataEditorFields extends BaseEditorFields {
         CustomFieldsSearchDto searchDto = new CustomFieldsSearchDto(EnumerationDataBean.class.getName(), typeEntity.getId());
         Map<Character, CustomFieldsEntity> customFields = CustomFieldsService.getCustomFieldsMap(searchDto);
         List<Field> stringFields = getFields(dataEntity, "enumeration", LAST_STRING_FIELD, searchDto);
+        setFieldsDefinitionAutocompleteUrl("/admin/rest/enumeration/enumeration-data/autocomplete-field");
 
         for (int i = 0; i < stringFields.size(); i++) {
             Field field = stringFields.get(i);
@@ -182,6 +183,7 @@ public class EnumerationDataEditorFields extends BaseEditorFields {
             if (Tools.isEmpty(label)) {
                 field.setLabel(null);
                 field.setType(FieldType.NONE.name().toLowerCase());
+                field.setRequired(false);
             } else {
                 field.setLabel(label);
                 if (customFields.get(alphabet) == null) {

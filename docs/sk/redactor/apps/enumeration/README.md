@@ -28,7 +28,7 @@ Po prvom uložení typu číselníka sa zobrazí karta **Typy reťazcových pol�
 
 ![](editor_stringFieldTypes.png)
 
-V tabuľke sa zobrazujú iba reťazcové polia, pre ktoré je vytvorená konfigurácia. Pri jej pridaní sú v poli **Voliteľné pole** dostupné iba pomenované reťazcové polia vo formáte **Reťazec N – názov**. Názov a popis poľa sa preberá z karty **Reťazce** a pri jeho zmene sa automaticky aktualizuje aj v tejto karte.
+V tabuľke sa zobrazujú iba reťazcové polia, pre ktoré je vytvorená konfigurácia. Pri jej pridaní sú v poli **Voliteľné pole** dostupné iba pomenované reťazcové polia vo formáte **Reťazec N – názov**. Ponuka polí, ich názvy a popisy vychádzajú z poslednej uloženej verzie typu číselníka. Po pomenovaní alebo premenovaní reťazcového poľa preto najskôr uložte typ číselníka; konfigurácia sa následne automaticky aktualizuje. Ak názov poľa odstránite, pole sa skryje a jeho nastavenie povinnosti sa zruší.
 
 Pre každé pole je možné nastaviť:
 
@@ -40,7 +40,7 @@ Pre každé pole je možné nastaviť:
 
 Bez špecifickej konfigurácie sa pomenované reťazcové pole zobrazí ako bežné textové pole s maximálnou dĺžkou 1024 znakov. Nepomenované reťazcové polia sa v dátach číselníka ani v možnostiach konfigurácie nezobrazia.
 
-!> **Upozornenie na import:** dátové atribúty reťazcových polí sa zmenili z `string1` až `string12` na `fieldA` až `fieldL`. Ak používate vlastnú alebo staršiu Excel šablónu na import dát číselníka, musíte jej kódové názvy v hlavičke ručne upraviť, napríklad `Mesto|string1` na `Mesto|fieldA`. Databázové stĺpce `string1` až `string12` zostávajú nezmenené.
+!> **Upozornenie na spätnú kompatibilitu:** dátové atribúty reťazcových polí sa zmenili z `string1` až `string12` na `fieldA` až `fieldL`. Vo vlastných alebo starších Excel šablónach na import dát číselníka musíte kódové názvy v hlavičke ručne upraviť, napríklad `Mesto|string1` na `Mesto|fieldA`. Rovnaké názvy `fieldA` až `fieldL` používajte aj v integráciách REST API, ktoré spracúvajú dáta číselníkov. Databázové stĺpce `string1` až `string12` zostávajú nezmenené.
 
 ### Karta Základné
 

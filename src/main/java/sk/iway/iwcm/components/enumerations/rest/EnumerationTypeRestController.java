@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsRepository;
@@ -140,8 +141,16 @@ public class EnumerationTypeRestController extends DatatableRestControllerV2<Enu
             if (customField.getBonusEntityId() != null && customField.getBonusEntityId() != 0) continue;
 
             String label = EnumerationService.getStringFieldName(saved, alphabet.charAt(0));
+            boolean changed = false;
             if (Objects.equals(label, customField.getLabel()) == false) {
                 customField.setLabel(label);
+                changed = true;
+            }
+            if (Tools.isEmpty(label) && Tools.isTrue(customField.getRequired())) {
+                customField.setRequired(Boolean.FALSE);
+                changed = true;
+            }
+            if (changed) {
                 changedFields.add(customField);
             }
         }

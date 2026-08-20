@@ -46,6 +46,10 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
 public class CustomFieldsService {
 
     private static final String FIELD_TYPE_KEY_PREFIX = "settings.custom-fields.type.";
+    private static final List<String> FIELD_TYPES = List.of(
+        "text", "textarea", "select", "multiselect", "radio", "checkbox", "boolean", "number", "date", "none",
+        "autocomplete", "image", "link", "json_group", "json_doc", "dir", "docsIn", "uuid", "color"
+    );
 
     private static final String CLASS_FIELD_MAP_KEY = "CustomFieldsService_classFieldsMap";
     public static final Map<String, String> BONUS_PARAMS = Map.of(
@@ -175,6 +179,7 @@ public class CustomFieldsService {
         if(entity == null || Tools.isEmpty(entity.getType())) throw new IllegalStateException("CustomFieldsEntity or its type must not be null/empty");
 
         String type = entity.getType();
+        if ("none".equalsIgnoreCase(type)) entity.setRequired(Boolean.FALSE);
         if("enumeration".equals(type)) {
             type = "select";
             entity.setType(type);
@@ -309,27 +314,20 @@ public class CustomFieldsService {
      * @see #getFieldTypeLabel(Prop, String)
      */
     public static List<LabelValue> getFieldsTypes(Prop prop) {
-        return List.of(
-            new LabelValue( getFieldTypeLabel(prop, "text"), "text"),
-            new LabelValue( getFieldTypeLabel(prop, "textarea"), "textarea"),
-            new LabelValue( getFieldTypeLabel(prop, "select"), "select"),
-            new LabelValue( getFieldTypeLabel(prop, "multiselect"), "multiselect"),
-            new LabelValue( getFieldTypeLabel(prop, "radio"), "radio"),
-            new LabelValue( getFieldTypeLabel(prop, "checkbox"), "checkbox"),
-            new LabelValue( getFieldTypeLabel(prop, "boolean"), "boolean"),
-            new LabelValue( getFieldTypeLabel(prop, "number"), "number"),
-            new LabelValue( getFieldTypeLabel(prop, "date"), "date"),
-            new LabelValue( getFieldTypeLabel(prop, "none"), "none"),
-            new LabelValue( getFieldTypeLabel(prop, "autocomplete"), "autocomplete"),
-            new LabelValue( getFieldTypeLabel(prop, "image"), "image"),
-            new LabelValue( getFieldTypeLabel(prop, "link"), "link"),
-            new LabelValue( getFieldTypeLabel(prop, "json_group"), "json_group"),
-            new LabelValue( getFieldTypeLabel(prop, "json_doc"), "json_doc"),
-            new LabelValue( getFieldTypeLabel(prop, "dir"), "dir"),
-            new LabelValue( getFieldTypeLabel(prop, "docsIn"), "docsIn"),
-            new LabelValue( getFieldTypeLabel(prop, "uuid"), "uuid"),
-            new LabelValue( getFieldTypeLabel(prop, "color"), "color")
-        );
+        List<LabelValue> fieldTypes = new ArrayList<>();
+        for (String fieldType : FIELD_TYPES) {
+            fieldTypes.add(new LabelValue(getFieldTypeLabel(prop, fieldType), fieldType));
+        }
+        return fieldTypes;
+    }
+
+    /**
+     * Checks whether a custom field type can be persisted by this service.
+     * @param type custom field type
+     * @return true for a supported field type
+     */
+    public static boolean isSupportedFieldType(String type) {
+        return FIELD_TYPES.contains(type) || "enumeration".equals(type);
     }
 
     /**
@@ -399,9 +397,11 @@ public class CustomFieldsService {
         // return only required fields
         Set<Character> requiredAlphabets = new LinkedHashSet<>();
         for(CustomFieldsEntity customField : getCustomFields(main, bonus)) {
-            if(customField != null && Tools.isTrue(customField.getRequired()) && Tools.isEmpty(customField.getAlphabet()) == false) {
-                requiredAlphabets.add(customField.getAlphabet().charAt(0));
-            }
+            if (customField == null || Tools.isTrue(customField.getRequired()) == false || Tools.isEmpty(customField.getAlphabet())) continue;
+            if ("none".equalsIgnoreCase(customField.getType())) continue;
+            if (EnumerationDataBean.class.getName().equals(customField.getClassName()) && Tools.isEmpty(customField.getLabel())) continue;
+
+            requiredAlphabets.add(customField.getAlphabet().charAt(0));
         }
         return new ArrayList<>(requiredAlphabets);
     }

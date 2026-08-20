@@ -523,9 +523,14 @@ export function update(EDITOR, action) {
         }
         else if (v.type == 'autocomplete') {
 
-            new AutoCompleter("#" + datatable.DATA.id + "_modal .DTE_Field_Name_field" + identifier + " input.autocomplete")
-                    .setUrl('/admin/FCKeditor/_editor_autocomplete.jsp?keyPrefix=' + json.editorFields?.fieldsDefinitionKeyPrefix + '&className=' + encodeURIComponent(json.editorFields?.fieldsDefinitionClassName || '') + '&objectId=' + (json.editorFields?.fieldsDefinitionEntityId ?? json.id) + '&template=' + json.tempId + '&field=' + identifier)
-                    .transform();
+            const configuredAutocompleteUrl = json.editorFields?.fieldsDefinitionAutocompleteUrl;
+            const autocompleteUrl = configuredAutocompleteUrl || '/admin/FCKeditor/_editor_autocomplete.jsp';
+            const querySeparator = autocompleteUrl.includes('?') ? '&' : '?';
+            const autocomplete = new AutoCompleter("#" + datatable.DATA.id + "_modal .DTE_Field_Name_field" + identifier + " input.autocomplete");
+            if(configuredAutocompleteUrl) autocomplete.setName("term");
+            autocomplete
+                .setUrl(autocompleteUrl + querySeparator + 'keyPrefix=' + json.editorFields?.fieldsDefinitionKeyPrefix + '&className=' + encodeURIComponent(json.editorFields?.fieldsDefinitionClassName || '') + '&objectId=' + (json.editorFields?.fieldsDefinitionEntityId ?? json.id) + '&template=' + json.tempId + '&field=' + identifier)
+                .transform();
 
         } else if (v.type == "dir") {
             let conf = {};

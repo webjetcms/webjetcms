@@ -50,6 +50,8 @@ public class BaseEditorFields {
     private String fieldsDefinitionClassName;
     //entity ID used for custom fields lookup, can differ from the edited bean ID
     private Long fieldsDefinitionEntityId;
+    //optional autocomplete endpoint for generated custom fields
+    private String fieldsDefinitionAutocompleteUrl;
 
     //poslanie notifikacie, je potrebne pri getOne alebo pri ulozeni
     private List<NotifyBean> notify;

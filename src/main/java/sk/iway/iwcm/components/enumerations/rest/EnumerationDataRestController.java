@@ -4,6 +4,7 @@ import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -24,10 +25,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
+import sk.iway.iwcm.components.customfields.rest.CustomFieldsService;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataEditorFields;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataRepository;
@@ -37,6 +41,7 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.tags.AutoCompleteHelper;
 
 @RestController
 @RequestMapping("/admin/rest/enumeration/enumeration-data")
@@ -244,6 +249,35 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
     @GetMapping("/autocomplete-child")
     public List<String> getAutocomplete(@RequestParam String term) {
         return EnumerationService.getEnumTypeAutocomplete(term, getProp());
+    }
+
+    @GetMapping("/autocomplete-field")
+    public List<String> getFieldAutocomplete(@RequestParam String term, @RequestParam("objectId") Long enumerationTypeId, @RequestParam String field) {
+        if (Tools.isEmpty(term) || Tools.isEmpty(field) || field.length() != 1 || enumerationTypeId == null || enumerationTypeId < 1 || enumerationTypeId > Integer.MAX_VALUE) {
+            return List.of();
+        }
+        if (enumerationTypeRepository.getNonHiddenByEnumId(enumerationTypeId.intValue(), false) == null) return List.of();
+
+        char alphabet = Character.toUpperCase(field.charAt(0));
+        if (alphabet < 'A' || alphabet > 'L') return List.of();
+
+        CustomFieldsSearchDto searchDto = new CustomFieldsSearchDto(EnumerationDataBean.class.getName(), enumerationTypeId);
+        CustomFieldsEntity customField = CustomFieldsService.getCustomFieldsMap(searchDto).get(alphabet);
+        if (customField == null || "autocomplete".equals(customField.getType()) == false || Tools.isEmpty(customField.getValue())) return List.of();
+
+        String value = customField.getValue();
+        if (value.startsWith("autocomplete:") == false) return List.of();
+
+        String normalizedTerm = DB.internationalToEnglish(term).trim().toLowerCase(Locale.ROOT);
+        List<String> values = new ArrayList<>();
+        for (String option : Tools.getTokens(value.substring("autocomplete:".length()), "|")) {
+            String normalizedOption = DB.internationalToEnglish(option).toLowerCase(Locale.ROOT);
+            if (("%".equals(normalizedTerm) || normalizedOption.contains(normalizedTerm)) && values.contains(option) == false) {
+                values.add(option);
+            }
+        }
+        AutoCompleteHelper.sortByLeadingFirst(values, normalizedTerm);
+        return values;
     }
 
     @Override
