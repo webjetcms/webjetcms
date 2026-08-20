@@ -40,6 +40,8 @@ Pre každé pole je možné nastaviť:
 
 Bez špecifickej konfigurácie sa pomenované reťazcové pole zobrazí ako bežné textové pole s maximálnou dĺžkou 1024 znakov. Nepomenované reťazcové polia sa v dátach číselníka ani v možnostiach konfigurácie nezobrazia.
 
+!> **Upozornenie na import:** dátové atribúty reťazcových polí sa zmenili z `string1` až `string12` na `fieldA` až `fieldL`. Ak používate vlastnú alebo staršiu Excel šablónu na import dát číselníka, musíte jej kódové názvy v hlavičke ručne upraviť, napríklad `Mesto|string1` na `Mesto|fieldA`. Databázové stĺpce `string1` až `string12` zostávajú nezmenené.
+
 ### Karta Základné
 
 V karte "Základné" sa nastavujú vlastnosti:

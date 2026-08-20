@@ -246,7 +246,7 @@ Scenario('Enum type and data tests', ({I, DTE, DT}) => {
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });
 
-Scenario('Enumeration string field type setup', ({I, DTE, DT}) => {
+Scenario('Enumeration string field type setup', async ({I, DTE, DT}) => {
     I.amOnPage("/apps/enumeration/admin/enumeration-type/");
 
     I.clickCss("button.buttons-create");
@@ -265,8 +265,24 @@ Scenario('Enumeration string field type setup', ({I, DTE, DT}) => {
 
     I.clickCss(stringFieldsWrapper + " button.buttons-create");
     DTE.waitForEditor(stringFieldsTableId);
+    const alphabetOptions = await I.executeScript((selector) => {
+        return Array.from(document.querySelectorAll(selector)).map(option => option.value);
+    }, stringFieldsModal + " #DTE_Field_alphabet option");
+    I.assertTrue(alphabetOptions.includes("A"), "Named string field must be available for configuration");
+    I.assertFalse(alphabetOptions.includes("B"), "Unnamed string field must not be available for configuration");
     DTE.selectOption("alphabet", "Reťazec 1 – " + stringFieldOriginalName);
     DTE.selectOption("type", "Výberové pole");
+    I.waitForVisible(stringFieldsModal + " div.DTE_Field_Name_optionsSource", 10);
+    I.waitForVisible(stringFieldsModal + " div.DTE_Field_Name_selectOptions", 10);
+    I.dontSeeElement(stringFieldsModal + " div.DTE_Field_Name_enumeration");
+
+    I.checkOption(stringFieldsModal + " .DTE_Field_Name_optionsSource input[value='enumeration']");
+    I.waitForVisible(stringFieldsModal + " div.DTE_Field_Name_enumeration", 10);
+    I.waitForInvisible(stringFieldsModal + " div.DTE_Field_Name_selectOptions", 10);
+
+    I.checkOption(stringFieldsModal + " .DTE_Field_Name_optionsSource input[value='static']");
+    I.waitForVisible(stringFieldsModal + " div.DTE_Field_Name_selectOptions", 10);
+    I.waitForInvisible(stringFieldsModal + " div.DTE_Field_Name_enumeration", 10);
     I.checkOption(stringFieldsModal + " #DTE_Field_required_0");
     I.fillField(stringFieldsModal + " #DTE_Field_tooltip", stringFieldTooltip);
     fillEnumerationStringFieldOptions(I, [
@@ -301,6 +317,8 @@ Scenario('Enumeration configured string field behavior', ({I, DTE, DT}) => {
     I.seeElement(locate("label[for='DTE_Field_fieldA']").withText(stringFieldOriginalName));
     I.seeElementInDOM("select#DTE_Field_fieldA");
 
+    DTE.save("enumerationDataDataTable");
+    I.see("Voliteľné pole je nastavené ako povinné.", "div.DTE_Field_Name_fieldA");
     DTE.selectOption("fieldA", stringFieldOptionLabel2);
     DTE.save("enumerationDataDataTable");
     I.waitForText(stringFieldOptionLabel2, 10, "#enumerationDataDataTable tbody");

@@ -28,25 +28,33 @@
 
             const separator = " – ";
             const fieldLabels = new Map();
-            const options = alphabetOptions.map(function(option) {
-                const alphabet = String(option.value || "");
-                const fieldIndex = alphabet.length === 1 ? alphabet.charCodeAt(0) - 64 : -1;
-                if(fieldIndex < 1 || fieldIndex > 12) return option;
-
+            const optionsByAlphabet = new Map(alphabetOptions.map(function(option) {
+                return [String(option.value || ""), option];
+            }));
+            const options = [];
+            for(let fieldIndex = 1; fieldIndex <= 12; fieldIndex++) {
+                const alphabet = String.fromCharCode(64 + fieldIndex);
                 const fieldName = "string" + fieldIndex + "Name";
-                if(!enumerationTypeDataTable.EDITOR.fields().includes(fieldName)) return option;
+                if(!enumerationTypeDataTable.EDITOR.fields().includes(fieldName)) continue;
 
+                const option = optionsByAlphabet.get(alphabet) || {value: alphabet};
                 const originalLabel = String(option.label || "");
                 const separatorIndex = originalLabel.indexOf(separator);
-                const baseLabel = separatorIndex > -1 ? originalLabel.substring(0, separatorIndex) : originalLabel;
+                const editorField = enumerationTypeDataTable.EDITOR.field(fieldName);
+                const configuredLabel = String(editorField.s.opts.label || "").replace(/<[^>]+>/g, "").trim();
+                const baseLabel = separatorIndex > -1 ? originalLabel.substring(0, separatorIndex) : configuredLabel;
                 const currentName = String(enumerationTypeDataTable.EDITOR.field(fieldName).val() || "").trim();
-                const label = currentName.length > 0 ? baseLabel + separator + currentName : baseLabel;
                 fieldLabels.set(alphabet, currentName);
+                if(currentName.length === 0) continue;
 
-                return Object.assign({}, option, {label: label});
-            });
+                options.push(Object.assign({}, option, {
+                    label: baseLabel + separator + currentName,
+                    value: alphabet
+                }));
+            }
 
             const jsonOptions = Object.assign({}, innerTable.DATA.jsonOptions, {alphabet: options});
+            innerTable.DATA.jsonOptions = jsonOptions;
             innerTable.updateOptionsFromJson({options: jsonOptions});
             if(innerTable.DATA.json && innerTable.DATA.json.options) {
                 innerTable.DATA.json.options.alphabet = options;
@@ -87,18 +95,32 @@
 
             innerTable.EDITOR.on("open", function(e, mode, action) {
                 const editor = innerTable.EDITOR;
+                const openedAlphabet = action === "edit" ? String(editor.field("alphabet").val() || "") : "";
+                updateEnumerationStringFieldOptions(innerTable);
                 ["className", "entityId", "label", "bonusClassName", "bonusEntityId"].forEach(function(fieldName) {
                     if(editor.fields().includes(fieldName)) editor.field(fieldName).hide();
                 });
 
                 if(action === "edit") {
-                    const alphabet = String(editor.field("alphabet").val() || "");
+                    const alphabet = openedAlphabet;
                     const alphabetOptions = innerTable.DATA.jsonOptions.alphabet;
-                    const selectedOption = Array.isArray(alphabetOptions)
+                    let selectedOption = Array.isArray(alphabetOptions)
                         ? alphabetOptions.find(function(option) {
                             return String(option.value) === alphabet;
                         })
                         : null;
+
+                    if(!selectedOption && alphabet.length === 1) {
+                        const fieldIndex = alphabet.charCodeAt(0) - 64;
+                        const fieldName = "string" + fieldIndex + "Name";
+                        if(fieldIndex >= 1 && fieldIndex <= 12 && enumerationTypeDataTable.EDITOR.fields().includes(fieldName)) {
+                            const outerField = enumerationTypeDataTable.EDITOR.field(fieldName);
+                            const baseLabel = String(outerField.s.opts.label || "").replace(/<[^>]+>/g, "").trim();
+                            selectedOption = {label: baseLabel, value: alphabet};
+                            editor.field("alphabet").update([selectedOption].concat(alphabetOptions || []));
+                            editor.field("alphabet").val(alphabet);
+                        }
+                    }
 
                     if(selectedOption) {
                         setTimeout(function() {
@@ -122,6 +144,12 @@
                         ? new Set(visibilityConfig.value.split(",").map(function(field) { return field.trim(); }).filter(Boolean))
                         : new Set();
 
+                    if(["select", "multiselect", "radio", "checkbox"].includes(selectedType)) {
+                        const source = editor.field("optionsSource").val();
+                        const selectedSource = Array.isArray(source) ? source[0] : source;
+                        showFields.add(selectedSource === "enumeration" ? "enumeration" : "selectOptions");
+                    }
+
                     editor.fields().forEach(function(fieldName) {
                         const field = editor.field(fieldName);
                         const classNames = field.s.opts.className || "";
@@ -134,6 +162,13 @@
                 typeSelect.onchange = function() {
                     updateFieldVisibility(this.value);
                 };
+
+                document.querySelectorAll("#datatableFieldDTE_Field_editorFields-stringFieldTypes_modal .DTE_Field_Name_optionsSource input[type='radio']").forEach(function(input) {
+                    input.onchange = function() {
+                        updateFieldVisibility(typeSelect.value);
+                    };
+                });
+
                 updateFieldVisibility(typeSelect.value);
             });
         });

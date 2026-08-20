@@ -7,6 +7,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -515,6 +516,18 @@ public class CustomFieldsService {
     }
 
     /**
+     * Checks whether the alphabet value identifies a configurable enumeration string field.
+     * @param alphabet custom field alphabet value
+     * @return true for values A through L
+     */
+    public static boolean isEnumerationStringAlphabet(String alphabet) {
+        return Tools.isNotEmpty(alphabet)
+            && alphabet.length() == 1
+            && alphabet.charAt(0) >= 'A'
+            && alphabet.charAt(0) <= 'L';
+    }
+
+    /**
      * Returns class name suggestions that contain the given search term.
      *
      * @param term search text
@@ -545,7 +558,7 @@ public class CustomFieldsService {
 
     private boolean validateEnumerationStringField(CustomFieldsEntity entity, String action, Errors errors, Long id, Prop prop) {
         String alphabet = entity.getAlphabet();
-        if (Tools.isEmpty(alphabet) || alphabet.length() != 1 || alphabet.charAt(0) < 'A' || alphabet.charAt(0) > 'L') {
+        if (isEnumerationStringAlphabet(alphabet) == false) {
             errors.rejectValue("errorField.alphabet", null, prop.getText("enum_type.string_field_type.invalid_error")); //NOSONAR
             return false;
         }
@@ -564,8 +577,11 @@ public class CustomFieldsService {
         boolean editingExistingField = "edit".equals(action)
             && stored != null
             && EnumerationDataBean.class.getName().equals(stored.getClassName())
-            && entity.getEntityId().equals(stored.getEntityId())
-            && alphabet.equals(stored.getAlphabet());
+            && Objects.equals(entity.getEntityId(), stored.getEntityId())
+            && Objects.equals(CloudToolsForCore.getDomainId(), stored.getDomainId())
+            && Tools.isEmpty(stored.getBonusClassName())
+            && (stored.getBonusEntityId() == null || stored.getBonusEntityId() == 0)
+            && Objects.equals(alphabet, stored.getAlphabet());
         if (editingExistingField) return true;
 
         errors.rejectValue("errorField.alphabet", null, prop.getText("enum_type.string_field_type.unnamed_error")); //NOSONAR

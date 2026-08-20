@@ -45,12 +45,15 @@ public class EnumerationStringFieldsRestController extends DatatableRestControll
 
     private final CustomFieldsRepository customFieldsRepository;
     private final EnumerationTypeRepository enumerationTypeRepository;
+    private final CustomFieldsService customFieldsService;
 
     @Autowired
-    public EnumerationStringFieldsRestController(CustomFieldsRepository customFieldsRepository, EnumerationTypeRepository enumerationTypeRepository) {
+    public EnumerationStringFieldsRestController(CustomFieldsRepository customFieldsRepository, EnumerationTypeRepository enumerationTypeRepository,
+            CustomFieldsService customFieldsService) {
         super(customFieldsRepository, CustomFieldsEntity.class);
         this.customFieldsRepository = customFieldsRepository;
         this.enumerationTypeRepository = enumerationTypeRepository;
+        this.customFieldsService = customFieldsService;
     }
 
     @Override
@@ -111,6 +114,7 @@ public class EnumerationStringFieldsRestController extends DatatableRestControll
         List<LabelValue> alphabetOptions = new ArrayList<>();
         if (enumerationType != null) {
             for (String alphabet : ALPHABETS) {
+                if (Tools.isEmpty(EnumerationService.getStringFieldName(enumerationType, alphabet.charAt(0)))) continue;
                 alphabetOptions.add(new LabelValue(
                     EnumerationService.getStringFieldLabel(enumerationType, alphabet.charAt(0), getProp()),
                     alphabet
@@ -136,16 +140,7 @@ public class EnumerationStringFieldsRestController extends DatatableRestControll
 
         applyContext(entity, enumerationType);
         String alphabet = entity.getAlphabet();
-        if (ALPHABETS.contains(alphabet) == false) {
-            errors.rejectValue("errorField.alphabet", null, getProp().getText("enum_type.string_field_type.invalid_error")); //NOSONAR
-            return;
-        }
-
-        String fieldName = EnumerationService.getStringFieldName(enumerationType, alphabet.charAt(0));
-        if (Tools.isEmpty(fieldName) && isExistingUnnamedField(target, id, alphabet, enumerationType) == false) {
-            errors.rejectValue("errorField.alphabet", null, getProp().getText("enum_type.string_field_type.unnamed_error")); //NOSONAR
-            return;
-        }
+        if (customFieldsService.validateSpecificClass(entity, target.getAction(), errors, id, getProp()) == false) return;
 
         Long existingId = customFieldsRepository.getEntityId(
             ENUMERATION_DATA_CLASS_NAME,
@@ -166,14 +161,10 @@ public class EnumerationStringFieldsRestController extends DatatableRestControll
     @Override
     public void beforeSave(CustomFieldsEntity entity) {
         EnumerationTypeBean enumerationType = getEnumerationType();
-        if (enumerationType == null || entity == null || ALPHABETS.contains(entity.getAlphabet()) == false) {
+        if (enumerationType == null || entity == null || CustomFieldsService.isEnumerationStringAlphabet(entity.getAlphabet()) == false) {
             throw new IllegalArgumentException(getProp().getText("enum_type.string_field_type.invalid_error"));
         }
         applyContext(entity, enumerationType);
-        if ((entity.getId() == null || entity.getId() < 1)
-                && Tools.isEmpty(EnumerationService.getStringFieldName(enumerationType, entity.getAlphabet().charAt(0)))) {
-            throw new IllegalArgumentException(getProp().getText("enum_type.string_field_type.unnamed_error"));
-        }
     }
 
     @Override
@@ -193,7 +184,7 @@ public class EnumerationStringFieldsRestController extends DatatableRestControll
     @Override
     public CustomFieldsEntity processToEntity(CustomFieldsEntity entity, ProcessItemAction action) {
         EnumerationTypeBean enumerationType = getEnumerationType();
-        if (enumerationType == null || entity == null || ALPHABETS.contains(entity.getAlphabet()) == false) {
+        if (enumerationType == null || entity == null || CustomFieldsService.isEnumerationStringAlphabet(entity.getAlphabet()) == false) {
             throw new IllegalArgumentException(getProp().getText("enum_type.string_field_type.invalid_error"));
         }
 
@@ -246,7 +237,7 @@ public class EnumerationStringFieldsRestController extends DatatableRestControll
         entity.setBonusClassName("");
         entity.setBonusEntityId(0L);
 
-        if (Tools.isNotEmpty(entity.getAlphabet()) && ALPHABETS.contains(entity.getAlphabet())) {
+        if (CustomFieldsService.isEnumerationStringAlphabet(entity.getAlphabet())) {
             entity.setLabel(EnumerationService.getStringFieldName(enumerationType, entity.getAlphabet().charAt(0)));
         }
     }
@@ -261,9 +252,4 @@ public class EnumerationStringFieldsRestController extends DatatableRestControll
             && ALPHABETS.contains(entity.getAlphabet());
     }
 
-    private boolean isExistingUnnamedField(DatatableRequest<Long, CustomFieldsEntity> target, Long id, String alphabet, EnumerationTypeBean enumerationType) {
-        if ("edit".equals(target.getAction()) == false || id == null || id < 1) return false;
-        CustomFieldsEntity stored = customFieldsRepository.findById(id).orElse(null);
-        return belongsToContext(stored, enumerationType) && alphabet.equals(stored.getAlphabet());
-    }
 }
