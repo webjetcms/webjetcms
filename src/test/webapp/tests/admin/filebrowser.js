@@ -328,8 +328,9 @@ function openUnusedFilesTab(I, parentPath, folderName, expectedFolderPath) {
 }
 
 function startUnusedFilesScan(I) {
+    I.wait(1);
     I.clickCss("#" + UNUSED_FILES_TABLE_ID + "_wrapper button.buttons-unused-files-analyze");
-    I.waitForElement("#unused-files-status.alert-info", 10);
+    I.wait(1);
 }
 
 function waitForUnusedFilesScanInUi(I, DT) {

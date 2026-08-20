@@ -1,5 +1,7 @@
 Feature('webpages.customfields');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 Before(({ I, login }) => {
     login('admin');
 });
@@ -230,9 +232,9 @@ Scenario('custom-fields advanced fields Groups / Docs', ({ I, DT, DTE }) => {
 
     I.say("Change values");
     setJsTree(I, "A", null, "English");
-    I.clickCss("#DTE_Field_fieldB button.btn-vue-jstree-item-remove");
+    I.clickCss("#DTE_Field_fieldB button.btn-webjet-jstree-item-remove");
     setJsTree(I, "C", ["Newsletter"], "Testovaci newsletter");
-    I.clickCss("#DTE_Field_fieldD button.btn-vue-jstree-item-remove");
+    I.clickCss("#DTE_Field_fieldD button.btn-webjet-jstree-item-remove");
     DTE.save();
 
     openFieldsTabForPage(I, DT, DTE, "134906");
@@ -274,20 +276,20 @@ function openFieldsTabForPage(I, DT, DTE, id) {
 }
 
 function setJsTree(I, alphabet, toOpen, toSelect) {
-    I.click( locate("#DTE_Field_field" + alphabet + " button.btn-vue-jstree-item-edit") );
-    I.waitForVisible("#jsTree");
+    I.click( locate("#DTE_Field_field" + alphabet + " button.btn-webjet-jstree-item-edit") );
+    I.waitForVisible(WebjetDteJsTree.tree);
     if(toOpen != null && Array.isArray(toOpen) == true) {
         for(let i = 0; i < toOpen.length; i++) {
-            I.click(locate('#jsTree .jstree-node.jstree-closed').withText(toOpen[i]).find('.jstree-icon.jstree-ocl'));
+            I.click(locate(WebjetDteJsTree.tree + ' .jstree-node.jstree-closed').withText(toOpen[i]).find('.jstree-icon.jstree-ocl'));
         }
     }
-    I.click(locate("#jsTree .jstree-anchor").withText(toSelect));
-    I.waitForInvisible("#jsTree");
+    I.click(locate(WebjetDteJsTree.anchors).withText(toSelect));
+    I.waitForInvisible(WebjetDteJsTree.tree);
 }
 
 function checkLabelAndValue(I, alphabet, label, value) {
     I.seeElement( locate(".DTE_Field_Name_field" + alphabet + " label").withText(label) );
-    I.seeElement("#DTE_Field_field" + alphabet + " > section > div > div > div > div > input[value='" + value + "']");
+    I.seeInField("#DTE_Field_field" + alphabet + " > webjet-dte-jstree > section > div > div > div > input.form-control", value);
 }
 
 function setEnumerationMapping(I, DT, DTE, mapping) {

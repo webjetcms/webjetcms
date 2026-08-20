@@ -95,6 +95,43 @@ public class ClusterDB
 	}
 
 	/**
+	 * Adds a request to run a cron task on its configured cluster node or node group.
+	 * @param configuredNode configured node name, all, all-admin or all-public
+	 * @param taskId cron task ID
+	 * @return true when all cluster requests were stored successfully
+	 */
+	public static boolean addCronTask(String configuredNode, Long taskId)
+	{
+		String clusterNames = Constants.getString("clusterNames");
+		String clusterMyNodeName = Constants.getString("clusterMyNodeName");
+		if (Tools.isEmpty(clusterNames) || Tools.isEmpty(clusterMyNodeName) || taskId == null || taskId.longValue() < 1) return false;
+
+		try
+		{
+			CronTaskClusterCommand command = CronTaskClusterCommand.create(configuredNode, taskId.longValue());
+			List<String> targetNodes = command.resolveTargetNodes(clusterNames);
+			if (targetNodes.isEmpty()) return false;
+
+			Timestamp timestamp = new Timestamp(Tools.getNow());
+			List<String> sqlCommands = new ArrayList<>();
+			List<Object[]> sqlParameters = new ArrayList<>();
+
+			for (String nodeName : targetNodes)
+			{
+				sqlCommands.add("INSERT INTO cluster_refresher (node_name, class_name, refresh_time) VALUES (?, ?, ?)");
+				sqlParameters.add(new Object[] {nodeName, command.encode(), timestamp});
+			}
+
+			return new SimpleQuery().executeInTransaction(sqlCommands, sqlParameters);
+		}
+		catch (Exception ex)
+		{
+			Logger.error(ClusterDB.class, ex);
+			return false;
+		}
+	}
+
+	/**
 	 * Delete data from cluster_refresher table where class_name starts with given string
 	 * It is usseful when we want to remove old refresh requests for the same object
 	 * @param className

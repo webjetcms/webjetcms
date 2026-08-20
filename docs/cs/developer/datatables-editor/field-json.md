@@ -89,7 +89,9 @@ všimněte si použití atributu ```data-dt-json-addbutton``` pro nastavení tex
 
 ```dt-tree-dir``` - vrátený JSON objekt typu ```DirTreeItem``` pre **výber adresára v súborovom systéme**
 
-```dt-tree-dir-simple``` - vrátený **reťazec** s hodnotou pre **výber adresára v súborovom systéme**, možné zadať koreňový priečinok ako ```@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")```. Do ```data-dt-field-skipFolders``` je možné zadať meno konfiguračnej premennej s čiarkou oddeleným zoznamom priečinkov, ktoré sa nezobrazia v stromovej štruktúre (skryté priečinky). Taktiež je možné skryť rodičov zvoleného koreňového priečinka pomocou ```@DataTableColumnEditorAttr(key = "data-dt-field-hideRootParents", value = "true")```, prednastavené sa rodičia koreňového priečinka zobrazujú, aj keď sa nedajú zvoliť (pre lepší prehľad štruktúry).
+```dt-tree-dir-simple``` - vrátený **reťazec** s hodnotou pre **výber adresára v súborovom systéme**, možné zadať koreňový priečinok ako ```@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")```. Do ```data-dt-field-skipFolders``` je možné zadať meno konfiguračnej premennej s čiarkou oddeleným zoznamom priečinkov, ktoré sa nezobrazia v stromovej štruktúre (skryté priečinky). Taktiež je možné skryť rodičov zvoleného koreňového priečinka pomocou ```@DataTableColumnEditorAttr(key = "data-dt-field-hideRootParents", value = "true")```, prednastavené sa rodičia koreňového priečinka zobrazujú, aj keď sa nedajú zvoliť (pre lepší prehľad štruktúry). Zadaný koreňový priečinok sa zobrazí aj používateľovi s obmedzenými právami; ak ho nemôže zvoliť, zostane neaktívny.
+
+Nastavením `@DataTableColumnEditorAttr(key = "data-dt-field-writableOnly", value = "true")` sa priečinky, do ktorých používateľ nemôže zapisovať, zobrazia neaktívne a nebude ich možné zvoliť. Ich viditeľnosť zároveň ovplyvňuje konfiguračná premenná `fbrowserShowOnlyWritableFolders`. Pri hodnote `false` sa z pohľadu práv zobrazia všetky priečinky. Pri hodnote `true` sa zobrazia len vetvy vedúce k zapisovateľným priečinkom, zadaný koreňový priečinok a výnimky z konfiguračnej premennej `fbrowserAlwaysShowFolders`. Nezapisovateľní rodičia zostanú neaktívni.
 
 ![](../../frontend/webpages/customfields/webpages-dir.png)
 
@@ -187,7 +189,7 @@ insertScriptTable = WJ.DataTable({
 
 ## Vlastní konfigurace zobrazené stromové struktury
 
-Pokud potřebujete implementovat vlastní zobrazení stromové struktury, můžete se inspirovat ve třídě ```DirTreeRestController``` a entite ```DirTreeItem```. Používá základní objekt pro zobrazení ```jsTree - JsTreeItem```, se kterým umí následně pracovat VUE komponenta. Důležité je korektní nastavení atributů v ```JsTreeItem``` entitě.
+Pokud potřebujete implementovat vlastní zobrazení stromové struktury, můžete se inspirovat ve třídě ```DirTreeRestController``` a entite ```DirTreeItem```. Používá základní objekt pro zobrazení ```jsTree - JsTreeItem```, se kterým umí následně pracovat web komponentu. Důležité je korektní nastavení atributů v ```JsTreeItem``` entitě.
 
 Příklad REST služby:
 
@@ -331,7 +333,7 @@ Použitý Java bean musí obsahovat metodu ```getFullPath()``` nebo ```getVirtua
 
 ```java
 /**
- * Vratenie cesty pre vue komponentu
+ * Vratenie cesty pre web komponent
  * @return
  */
 @JsonProperty(access = Access.READ_ONLY)
@@ -351,7 +353,7 @@ Pokud metodu ```getFullPath()``` nemůžete implementovat doporučujeme použít
 
 ## Poslech na změnu hodnoty
 
-Pokud potřebujete poslouchat na změnu hodnoty pole mimo VUE komponenty je možné poslouchat událost změny na vnořeném ```textarea``` elementu, které obsahuje aktuální JSON objekt:
+Pokud potřebujete poslouchat na změnu hodnoty pole mimo web komponentu je možné poslouchat událost změny na vnořeném ```textarea``` elementu, které obsahuje aktuální JSON objekt:
 
 ```javascript
 $("#DTE_Field_editorFields-parentGroupDetails").on("change", function(e) {
@@ -366,18 +368,10 @@ $("#DTE_Field_editorFields-parentGroupDetails").on("change", function(e) {
 
 ## Implementační detaily
 
-[field-type-json.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-json.js) je definován nový datový typ ```$.fn.dataTable.Editor.fieldTypes.json```. Ten je implementován pomocí VUE komponenty [webjet-dte-jstree](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree.vue). Obsahuje také skryté pole typu ```textarea```, do kterého se kopíruje aktuální JSON objekt. Toto pole ale slouží pouze k "inspekci" aktuálních dat. Ve funkci get se vždy vrátí aktuální data z VUE komponenty.
+[field-type-json.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-json.js) definuje datový typ ```$.fn.dataTable.Editor.fieldTypes.json```. Je implementován nativním web komponentou [webjet-dte-jstree](../../../../src/main/webapp/admin/v9/src/js/web-components/webjet-dte-jstree.js). Obsahuje také skryté pole typu ```textarea```, do kterého se kopíruje aktuální JSON objekt. Funkce `get` vždy vrátí aktuální data z webové komponenty.
 
-[datatables-config.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-config.js) implementuje funkci ```renderJson(td, type, rowData, row)``` pro zobrazení dat v tabulce. Ta prochází záznamy ze kterých použije atribut ```fullPath```.
+[datatables-config.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-config.js) implementuje funkci ```renderJson(td, type, rowData, row)``` pro zobrazení dat v tabulce.
 
-[webjet-dte-jstree.vue](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree.vue) je kořenová komponenta, která podle dat prochází ```child``` komponenty Pro objekty typu **array** zobrazí i tlačítko pro přidání nového záznamu do pole.
-
-Komponenta používá [EventBus](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/event-bus.js) ve kterém poslouchá na událost ```change-jstree```. Tato událost nastane po kliknutí na adresář nebo web stránku v JS Tree.
-
-Funkce ```processTreeItem(that, data)``` zpracuje kliknutí na objekt (DocDetails nebo GroupDetails) v JS tree komponentě. Provede validaci a případnou konverzi JSON objektu.
-
-[webjet-dte-jstree-item.js](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree-item.vue) je řádek seznamu existujících objektů. V každém řádku zobrazuje tlačítko pro editaci a smazání záznamu. Klepnutí je zpracováno kořenovou komponentou přes volání ```this.$parent.processTreeItem(this, data);```.
-
-[vue-folder-tree.vue](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/folder-tree/vue-folder-tree.vue) zapouzdřuje knihovnu JS Tree do VUE komponenty
+Web komponenta vykresluje stávající položky a pro objekty typu **array** i tlačítko pro přidání záznamu. Knihovna jsTree oznamuje výběr bublající událostí `webjet-jstree-select` ; komponenta následně provede validaci, konverzi objektu a synchronizaci hodnoty vstupního pole.
 
 Pokud je ```Doc/GroupDetails``` objekt ```null``` nezobrazilo by se žádné pole. Proto v ```field-type-json.js``` je funkce ```fixNullData```, která pro tento případ uměle vytvoří základní objekt. Pokud se jedná o web stránku obsahuje atribut ```docId=-1```, pro adresář ```groupId=-1``` a pro ostatní objekty ```id=-1```. Atribut ```fullPath``` je nastaven na prázdnou hodnotu.

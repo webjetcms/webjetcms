@@ -2,6 +2,7 @@ const { I } = inject();
 const DT = require("../../../pages/DT.js");
 const DTE = require("../../../pages/DTE.js");
 const Document = require("../../../pages/Document.js")
+const WebjetDteJsTree = require("../../../pages/WebjetDteJsTree");
 
 module.exports = {
 
@@ -180,8 +181,8 @@ module.exports = {
     },
 
     async checkTreeStructure() {
-        const anchors = await I.grabTextFromAll('#jsTree .jstree-anchor');
-        let disabledAnchors = await I.grabTextFromAll('#jsTree .jstree-anchor.jstree-disabled');
+        const anchors = await I.grabTextFromAll(WebjetDteJsTree.anchors);
+        let disabledAnchors = await I.grabTextFromAll(WebjetDteJsTree.anchors + '.jstree-disabled');
         const limitIndex = anchors.indexOf('archiv');
         I.assertNotEqual(limitIndex, -1, '"Archiv" not found in the anchor list');
         await anchors.slice(0, limitIndex).forEach(anchor => {

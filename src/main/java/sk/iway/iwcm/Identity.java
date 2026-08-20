@@ -45,7 +45,7 @@ public class Identity extends UserDetails
 		{
 			PropertyUtils.copyProperties(this, user);
 			//permissions treba precistit, aby sa korektne znova nasetovali
-			if (disabledItemsTable != null) disabledItemsTable.clear();
+			if (disabledItemsTable != null) disabledItemsTable = new Hashtable<>(); //do not use disabledItemsTable.clear as it also clear table in user object (its copied by reference)
 			UsersDB.setDisabledItems(this);
 		}
 		catch (Exception ex)

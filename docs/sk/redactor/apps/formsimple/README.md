@@ -126,6 +126,7 @@ components.formsimple.input.wysiwyg=<div class="form-group"><label for="${id}">$
 components.formsimple.hide.wysiwyg=placeholder
 ```
 
+!>**Upozornenie pre viackrokové formuláre:** vlastná definícia `components.formsimple.input.NAZOV`, ktorá obsahuje natívny element `<input type="file">`, nebude fungovať. Nahrávanie súborov je podporované iba pomocou komponentu `Dropzone`.
 V kóde je možné použiť nasledovné značky, ktoré sa pri zobrazení formuláru nahradia:
 
 - ```${formname}``` - meno formuláru bez medzier, diakritiky, malými písmenami, používa sa pre form element do atribútu name (to by malo ešte začínať výrazom formMail pre použitie v štandardnom validačnom mechanizme)

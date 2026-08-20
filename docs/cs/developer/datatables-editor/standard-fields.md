@@ -465,6 +465,8 @@ Zobrazí textové pole, jehož hodnotu nelze měnit. V příkladu si všimněte,
 
 Zobrazí jednoduchý HTML editor, který umožňuje základní formátování textu jako tučné písmo/kurzíva/podtrženo, nadpisy, seznamy a odkaz.
 
+Při otevření nebo potvrzení režimu úpravy HTML kódu editor odstraní nadbytečné prázdné odstavce, například `<p><br></p>`. Pokud by odstraněním zůstal obsah zcela prázdný, původní HTML kód zachová.
+
 Všimněte si použití konvertoru ```@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)```, který povolí odeslat pouze [bezpečný HTML kód](../backend/security.md) (bez vložených JavaScript elementů a podobně).
 
 ```java
@@ -735,13 +737,13 @@ Typ pole umožňující [nahrání souboru](field-file-upload.md).
 
 ## OPTIONS
 
-Typ pole pro dynamický seznam hodnot. V editoru se zobrazí jako seznam vstupních řádků, kde každý řádek obsahuje dvě textová pole (např. klíč a hodnota). Řádky lze přidávat, odebírat a měnit jejich pořadí pomocí `drag & drop`.
+Typ pole pro dynamický seznam hodnot. V editoru se zobrazí jako seznam vstupních řádků, kde každý řádek obsahuje dvě textová pole – jméno (label) a hodnotu (value). Řádky lze přidávat, odebírat a měnit jejich pořadí pomocí `drag & drop`.
 
 Výsledná hodnota se ukládá jako řetězec, kde jednotlivé řádky jsou odděleny znakem `|` a hodnoty v rámci řádku jsou odděleny znakem `:`. Například: `key1:value1|key2:value2|key3:value3`.
 
-Pokud zadáte pouze jednu hodnotu (`key1` bez `:`), použije se stejná hodnota pro `label` i `value`.
-
 Pole nepodporuje AI tlačítko (`btn-ai`).
+
+### Základní použití
 
 ```java
     @DataTableColumn(
@@ -751,6 +753,60 @@ Pole nepodporuje AI tlačítko (`btn-ai`).
     )
     private String options = "";
 ```
+
+### Formát uložené hodnoty
+
+| Vstup v editoru | Uložená hodnota | Poznámka |
+|---|---|---|
+| Jméno: `Slovensko`, Hodnota: `cz` | `Slovensko:cz` | standardní dvojice label:value |
+| Jméno: `Slovensko`, Hodnota: (prázdné) | `Slovensko:Slovensko` | chybí-li hodnota, použije se jméno i jako hodnota |
+| Jméno: (prázdné), Hodnota: `sk` | `cs:cz` | chybí-li jméno, použije se hodnota i jako jméno |
+| Více řádků | `Slovensko:cz\|Česko:cz\|Rakousko:at` | oddělené znakem `\|` |
+
+Při načítání hodnoty editor podporuje také čárku `,` jako oddělovač řádků (zpětná kompatibilita), ale při ukládání se vždy používá `|`.
+
+### Reálný příklad použití
+
+```java
+public class FormItemEntity {
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPTIONS,
+        title = "multistep_form.value_as_options",
+        hidden = true,
+        tab = "advanced",
+        className = "allowEmptyOption"
+    )
+    private String valueAsOptions;
+
+}
+```
+
+### Prázdná možnost (allowEmptyOption)
+
+Pokud se má přidat do seznamu i prázdná hodnota, nastavte poli CSS třídu `allowEmptyOption`:
+
+```java
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPTIONS,
+        title = "components.myapp.options",
+        tab = "basic",
+        className = "allowEmptyOption"
+    )
+    private String options = "";
+```
+
+Editor v takovém případě zobrazí vedle tlačítka <button class="btn btn-outline-secondary" type="button"><i class="ti ti-plus"></i>Přidat</button> standardní zaškrtávací pole <span class="form-check"><input class="form-check-input options-empty-option-btn" type="checkbox"><label class="form-check-label">Přidat prázdnou možnost</label></span> . Zaškrtnutím se na začátek výsledné hodnoty přidá prázdná dvojice `:`, například `:|key1:value1|key2:value2`. Při opětovném otevření editoru se zaškrtnutý stav obnoví podle přítomnosti této hodnoty. Třída `allowEmptyOption` má účinek pouze na pole typu `OPTIONS`, ne na `OPTIONS_SIMPLE`.
+
+### Implementace
+
+Frontend implementace je v souborech:
+
+- [field-type-options.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options.js) — Definice typu pole se dvěma vstupy (jméno a hodnota)
+- [field-type-options-base.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options-base.js) — společná logika pro OPTIONS i OPTIONS_SIMPLE (drag & drop, přidává
+
+Na straně backendu se typ `DataTableColumnType.OPTIONS` automaticky nastaví jako `editor.type = "options"` s formátem renderování `dt-format-text`.
 
 ![](../../redactor/apps/multistep-form/form-item-editor-advanced.png)
 

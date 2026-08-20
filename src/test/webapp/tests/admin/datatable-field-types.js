@@ -30,6 +30,14 @@ Scenario('type-quill-htmlview', async ({ I, DT, DTE }) => {
     I.amOnPage("/apps/banner/admin/?id=7053");
     DTE.waitForEditor("bannerDataTable");
     I.clickCss("#pills-dt-bannerDataTable-advanced-tab");
+
+    //Simulate the redundant empty paragraph added by Quill inside existing content.
+    I.executeScript(() => {
+        const codeButton = document.querySelector("div.ql-toolbar.ql-snow button .ti-code").closest("button");
+        const quillEditor = codeButton.closest(".ql-toolbar").nextElementSibling.querySelector(".ql-editor");
+        quillEditor.children[0].insertAdjacentHTML("afterend", "<p><br></p>");
+    });
+
     I.click(locate("button").withChild(".ti-code"));
 
     I.waitForElement(".ql-html-textContainer", 5);

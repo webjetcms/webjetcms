@@ -376,5 +376,14 @@ module.exports = {
       protocol = "https";
     }
     return protocol;
+  },
+
+  /**
+   * Returns base URL of the web application set in CODECEPT_URL environment variable
+   * @returns
+   */
+  getBaseUrl() {
+    let url = process.env.CODECEPT_URL;
+    return url;
   }
 }

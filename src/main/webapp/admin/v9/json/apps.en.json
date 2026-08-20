@@ -127,31 +127,31 @@
         },
         {
             "name": "GDPR",
-            "category": "DT + REST + Vue directory and site selection",
+            "category": "DT + REST + web component for folder and page selection",
             "icon": "ti ti-shield-half",
             "link": "/apps/gdpr/admin/"
         },
         {
             "name": "Users",
-            "category": "DT + REST + Vue directory and site selection",
+            "category": "DT + REST + web component for folder and page selection",
             "icon": "ti ti-users",
             "link": "/admin/v9/users/user-list"
         },
         {
             "name": "Tags (group perex)",
-            "category": "DT + REST + Vue directory selection",
+            "category": "DT + REST + web component for folder selection",
             "icon": "ti ti-tags",
             "link": "/admin/v9/webpages/perex/"
         },
         {
             "name": "Media and group media",
-            "category": "DT + REST + Vue directory and site selection + elfinder",
+            "category": "DT + REST + web component for folder and page selection + elfinder",
             "icon": "ti ti-photo",
             "link": "/admin/v9/webpages/media/"
         },
         {
             "name": "Scripts",
-            "category": "DT + REST + Vue directory and site selection",
+            "category": "DT + REST + web component for folder and page selection",
             "icon": "ti ti-code",
             "link": "/admin/v9/apps/insert-script"
         },
@@ -163,13 +163,13 @@
         },
         {
             "name": "Photo Gallery",
-            "category": "REST backend + tabs in DT + custom button + image editor + vue. area of ​​interest",
+            "category": "REST backend + tabs in DT + custom buttons + image editor + area-of-interest web component",
             "icon": "ti ti-library-photo",
             "link": "/admin/v9/apps/gallery"
         },
         {
             "name": "Forms",
-            "category": "REST backend + DT + vue router",
+            "category": "REST backend + DT",
             "icon": "ti ti-forms",
             "link": "/apps/form/admin/"
         },
@@ -205,7 +205,7 @@
         },
         {
             "name": "Server Monitoring",
-            "category": "Logged values + CPU monitor + DT + REST + graphs + vue",
+            "category": "Logged values + CPU monitor + DT + REST + graphs + web component",
             "icon": "ti ti-device-heart-monitor",
             "link": "/admin/v9/settings/server-monitoring"
         },

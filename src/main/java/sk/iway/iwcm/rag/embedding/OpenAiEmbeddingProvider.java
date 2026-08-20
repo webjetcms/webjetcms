@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.providers.ProviderCallException;
-import sk.iway.iwcm.components.ai.providers.openai.OpenAiSupportService;
+import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
 
 /**
  * OpenAI embedding provider using the /v1/embeddings API.
@@ -34,6 +34,11 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
 
     private static final String EMBEDDINGS_URL = "https://api.openai.com/v1/embeddings";
     private static final ObjectMapper MAPPER = new ObjectMapper();
+    private final WebjetAiConfigurationService configurationService;
+
+    public OpenAiEmbeddingProvider(WebjetAiConfigurationService configurationService) {
+        this.configurationService = configurationService;
+    }
 
     @Override
     public List<float[]> embed(List<String> texts, String model) throws ProviderCallException {
@@ -44,7 +49,7 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
     public EmbeddingBatchResult embedWithUsage(List<String> texts, String model) throws ProviderCallException {
         if (texts == null || texts.isEmpty()) return EmbeddingBatchResult.empty();
 
-        String apiKey = OpenAiSupportService.getApiKey();
+        String apiKey = configurationService.resolve("openai").apiKey();
         if (Tools.isEmpty(apiKey)) {
             throw new ProviderCallException("OpenAI API key is not configured (ai_openAiAuthKey)");
         }

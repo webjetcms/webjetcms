@@ -4,6 +4,96 @@ This section contains descriptions of the features and **functionalities of WebJ
 
 ---
 
+## Easily detect and remove unused files
+
+WebJET CMS helps organizations **reveal files that are probably no longer needed** directly in the folder properties in Explorer. The administrator runs a scan of the selected folder and the system compares its contents with those used in published websites, media, banners, galleries and other standard parts of the CMS. This provides a basis for freeing up storage and removing obsolete digital content without the need for lengthy manual searches.
+
+The scan runs **in the background without blocking work** and its scope can be customized by selecting a specific folder or including all subfolders. The result is displayed in a clear table with the name, location, modification date and file size; the file can be opened in preview before making a decision. The administrator can then remove only the marked items or the entire scanned list at once, allowing for a combination of fast bulk cleaning with individual scanning of sensitive files.
+
+![Unused files check result](../../redactor/files/fbrowser/folder-settings/folder_settings_unused_files_result.png)
+
+The feature respects **access rights, domain separation, and folder write permissions**. The results of individual administrators are not shared, and the system coordinates concurrent checking and deletion to reduce collisions in team management. Since a file used from custom code, an external system, or other non-standard source may not be recognized, the result is intentionally intended for a controlled administrator decision; marked files must be verified before permanent deletion.
+
+**Main benefits:**
+
+- **Lower storage costs**: Uncovering forgotten images, documents, and other files helps free up disk space without manual inventory.
+- **Faster content maintenance**: Automatic checking of standard CMS parts replaces the tedious search for links and links to each file.
+- **Flexible scope of inspection**: The administrator selects a specific folder and includes its subfolders as needed, so the cleaning can be tailored to the size and structure of the project.
+- **The decision remains in control**: Preview and details about each file allow you to review the result and delete only selected items or the entire list.
+- **Smooth work of administrators**: The analysis runs in the background and the system continuously displays its status, so there is no need to wait in a blocked window.
+- **Securer team management**: Respecting permissions, domains, and coordinating concurrent operations reduces the risk of unwanted interference with third-party content.
+
+Detailed documentation: [Unused files](../../redactor/files/fbrowser/folder-settings/README.md#unused-files)
+
+## Safe cleaning and redirect optimization
+
+WebJET CMS provides **transparent control and cleaning of URL redirects**, which naturally accumulate during the operation of the website when moving or renaming content. The system will detect outdated and duplicate rules, cyclic redirects leading the visitor into a loop, and unnecessarily long chains of multiple redirects. This way, the organization can keep the navigation on the website reliable without time-consuming manual checking of each record.
+
+The cleaning is designed as a **controlled two-step process**. The administrator first runs the analysis and sees each proposed change in a clear table; only then does he confirm its implementation. In the case of duplicates, the system preserves the original record, in the case of a cycle, the step that closes the loop is removed, and the string of the type `/a → /b → /c` is shortened to the more direct `/a → /c`. This reduces the risk of unintentional interventions and at the same time, visitors and search engines get to the target content in a shorter and more reliable way.
+
+The analysis respects **domain separation** and can optionally include rules without an assigned domain. It leaves special pattern-based redirects and time-based rules unchanged. If the same domain is managed by multiple administrators, the system will not allow concurrent cleaning, which helps prevent collisions. The solution is therefore also suitable for large websites with a large number of redirects and multiple administrators.
+
+**Main benefits:**
+
+- **Lower risk of broken links**: Revealing outdated rules and cycles helps reliably lead visitors to the right content.
+- **Faster and easier maintenance**: Automatic analysis replaces the tedious manual review of a large number of redirects.
+- **Check before making changes**: The administrator sees the exact proposed changes and starts the cleaning only after it is verified and confirmed.
+- **Shorter path to content**: Shortening strings reduces unnecessary intermediate steps for both visitors and search engines.
+- **Secure multi-site management**: Redirects are evaluated separately for the selected domain and the system protects against concurrent administrator interventions.
+- **Preserve special rules**: Time-controlled and advanced redirects remain untouched, so automation respects individual project settings.
+
+![Preview of proposed redirect cleaning](../../redactor/webpages/redirects/redirect-cleaning-analyzed.png)
+
+Detailed documentation: [Cleaning redirects](../../redactor/webpages/redirects/README.md#cleaning-redirects)
+
+## Faster document management and uploading
+
+WebJET CMS connects the **Document Manager directly to the website editor**. When creating a link, the editor can browse the archive folders, select a document and paste its address without copying between multiple windows. If the document does not yet exist, it can be uploaded directly in the same dialog. Publishing attachments, forms, price lists or annual reports is thus faster and less prone to errors.
+
+![Document Manager in Link Insertion Dialog](../../redactor/webpages/working-in-editor/link_dialog-file-archive.png)
+
+The Document Manager itself has a **clear folder tree structure** with the ability to create new folders and filter documents by selected location. Multiple files can be uploaded at once by simply dragging them from your computer (`drag&drop`), while the system displays the progress of each item and the entire upload. This allows teams to process large document updates much more efficiently without tediously repeating the same steps.
+
+![List of documents with tree structure](../../redactor/files/file-archive/datatable.png)
+
+When a file with the same name is found, the system pauses the upload and offers a **safe decision for each file or for the entire batch**: skip it, replace the current document, or save it as a new version while preserving the previous version in history. The update is performed over the existing record, so its metadata and links are preserved. Allowed file types, target folders, and write permissions respect the project settings, making the solution **controlled, safe, and customizable** to the needs of the organization.
+
+![Check for duplicates when uploading in bulk](../../redactor/files/file-archive/drag-drop-upload-duplicity-dialog.png)
+
+**Main benefits:**
+
+- **Fewer steps when publishing**: The editor finds, uploads, and inserts the document directly from the link dialog without switching between applications and manually copying the URL.
+- **Fast bulk updates**: Multiple documents can be uploaded at once and a common decision applied to the entire batch, saving time when regularly changing price lists, forms, or product materials.
+- **Duplicate Control**: The system prompts for a decision before overwriting a file, reducing the risk of unwanted loss or creating messy copies.
+- **Document History and Continuity**: Selecting a new version will preserve the original document in history while preserving existing metadata and links.
+- **Clearer content organization**: The folder tree and filtering shorten the time it takes to search for documents and manage large archives.
+- **Secure operation according to organization rules**: Uploading respects allowed file types, destination folder, and user access rights.
+
+Detailed documentation: [Document Manager](../../redactor/files/file-archive/README.md) | [Inserting file links](../../redactor/webpages/working-in-editor/README.md#file-links-and-uploading-files)
+
+## Headless CMS for modern and flexible websites
+
+WebJET CMS can be used in **headless mode**, where it remains a central place for content management, but the appearance and user interface of the website can be created in any modern technology. Content, navigation, news and search are provided via **API (Application Programming Interface)**, thanks to which the customer is not tied to a single presentation layer or a single way of creating a website.
+
+A single WebJET CMS installation can **centrally manage content for multiple websites and domains**, even if each of them uses a different design or technology, such as `Astro, Next.js, Vue` or `React`. An organization can launch new portals, microsites or digital services faster without building a separate editorial administration for each project. At the same time, it can continue to use existing WebJET CMS applications, such as the gallery, forms or cookie consent management.
+
+![](../../frontend/headless/home.png)
+
+The solution also provides a **ready-made demo application**, which reduces the time and risk of first deployment. It transfers SEO data, supports preview of unpublished content and preservation of user sessions. Access can be limited to allowed domains and IP addresses, and requests to change data are protected against forgery. The customer thus obtains an **scalable architecture with controlled security**, suitable for the gradual modernization of large websites.
+
+![](../../frontend/headless/gallery.png)
+
+**Main benefits:**
+
+- **Freedom in choosing technology**: The frontend can be created in the technology most suitable for a specific project without losing comfortable content management in WebJET CMS.
+- **One administration for multiple websites**: Central content management for multiple domains reduces duplication, operating costs, and editor training requirements.
+- **Faster time to market for digital services**: Ready-made interfaces and a sample application accelerate the development and validation of a new solution.
+- **Reuse of existing features**: The new website can use content, search, news, forms, gallery, and cookie management from the existing CMS.
+- **Secure and controlled linking**: Allowed domains, IP restrictions, and request protection help protect the content and traffic of linked sites.
+- **Room for gradual modernization**: An organization can modernize individual websites at its own pace without having to replace the entire content management system at once.
+
+Detailed documentation: [Headless mode](../../frontend/headless/README.md) | [Sample application](../../frontend/headless/example.md) | [Available services](../../frontend/headless/services.md)
+
 ## AI answer directly in web search
 
 WebJET CMS extends search with the ability to display **brief AI answers above the results**. Visitors no longer have to click through multiple pages to find basic information. The system first finds relevant parts of the content and then creates a clear answer from them, which helps to understand the topic faster and continue to the right content.

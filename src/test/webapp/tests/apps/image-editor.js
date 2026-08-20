@@ -12,6 +12,19 @@ Before(({ I, login }) => {
     I.closeOtherTabs();
 });
 
+Scenario('Area of interest uses the original gallery image', async ({ I }) => {
+    I.amOnPage('/admin/v9/');
+    await I.executeScript(function() {
+        window.location.href="/admin/v9/apps/image-editor/?id=-1&dir=/images/gallery/test&name=koala.jpg&showOnlyEditor=true";
+    });
+    I.waitForVisible("#galleryTable_modal", 20);
+    I.clickCss("#pills-dt-galleryTable-areaOfInterest-tab");
+    I.waitForElement("webjet-image-area-selector[data-ready='true'] cropper-canvas", 20);
+
+    const imageSource = await I.grabAttributeFrom("webjet-image-area-selector img", "src");
+    I.assertContain(imageSource, "/images/gallery/test/o_koala.jpg");
+});
+
 Scenario('Pixabay - test custom filename and image source after adding', async ({ I, DTE }) => {
     I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=108022');
     I.closeOtherTabs();
@@ -26,6 +39,8 @@ Scenario('Pixabay - test custom filename and image source after adding', async (
     I.click(locate("a.cke_dialog_tab").withText("Fotobanka"));
     I.switchTo('#wjImagePixabayIframeElement');
     I.waitForElement('#search', 10);
+    I.wait(1);
+    I.fillField('#search', "***");
     I.fillField('#search', searchTerm);
     I.click('button[type="submit"]');
     I.waitForElement(resultSelector, 40);

@@ -127,7 +127,7 @@ Scenario('SearchAll - webpages tab tests', async ({ I, DT }) => {
     I.see("/apps/hromadny-mail/", '#webPagesDataTable_wrapper table tr td');
 
     //set folder to newsletter
-    I.click("button.btn-vue-jstree-item-edit");
+    I.click("button.btn-webjet-jstree-item-edit");
     I.waitForElement(locate(".jstree-anchor").withText("Newsletter"), 10);
     I.click(locate(".jstree-anchor").withText("Newsletter"));
     DT.waitForLoader();

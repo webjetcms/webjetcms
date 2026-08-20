@@ -1,6 +1,7 @@
 package sk.iway.iwcm.system.cron;
 
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.ComplexQuery;
@@ -140,6 +141,18 @@ public class CronDB
 			clusterNodeType = "all-public";
 		}
 		return clusterNodeType;
+	}
+
+	/**
+	 * Returns true when a cron task configured for the given node can run on the current node.
+	 * @param clusterNode configured node name or node group
+	 * @return true when the current node matches the configuration
+	 */
+	public static boolean isCronTaskForCurrentNode(String clusterNode) {
+		if (ClusterDB.isServerRunningInClusterMode() == false) return true;
+		if (Tools.isEmpty(clusterNode) || "all".equals(clusterNode)) return true;
+		if (clusterNode.equals(Constants.getString("clusterMyNodeName"))) return true;
+		return clusterNode.equals(getCronNodeType());
 	}
 
 }

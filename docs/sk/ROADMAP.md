@@ -50,12 +50,15 @@ Vysvetlenie použitých piktogramov:
 - [x] Voliteľné polia - pridať možnosť výberu viac položiek pre napojenie na číselník (#58637).
 - [ ] +Číselníky - pridať možnosť definovať typ poľa pre reťazec ako máme vo voliteľných poliach (#58641).
 - [x] +Fotobanka - pridať možnosť nastaviť názov súboru pred stiahnutím z fotobanky, automaticky nastaviť podľa hľadaného výrazu (#58645).
-- [ ] +Úlohy na pozadí - možnosť manuálne spustiť úlohu na `node`, ktorý má úloha nastavený, teraz sa spustí na `node` kde je používateľ prihlásený.
+- [x] +Úlohy na pozadí - možnosť manuálne spustiť úlohu na `node`, ktorý má úloha nastavený, teraz sa spustí na `node` kde je používateľ prihlásený (#58718).
 - [ ] +Číselník, Blog, Novinky - upraviť tak, aby výber typu číselníka alebo priečinka pre novinky bol vľavo podobne ako v galérii/webových stránkach. Nemusia byť potom karty ale všetko naraz zobrazené.
-- [ ] +Prekladové kľúče - zobrazovať stromovú štruktúru prekladových kľúčov pre lepšiu orientáciu.
+- [x] +Prekladové kľúče - zobrazovať stromovú štruktúru prekladových kľúčov pre lepšiu orientáciu (#58714).
 - [ ] +Konfigurácia - doplniť možnosť nastaviť premennú len pre aktuálny uzol (neuložiť ju do databázy - len nastaviť do Constants objektu), pridať tam zaškrtávacie pole "Nastaviť dočasne" s info ikonou že hodnota sa nastaví len dočasne a pri reštarte sa obnoví hodnota ako je v databáze.
 - [ ] Prieskumník - opraviť zobrazovanie súborov so špeciálnymi znakmi (napríklad `@`).
 - [ ] Automatický premazávať `temp` súbory, ktoré sa môžu hromadiť.
+- [x] +Administrácia - odstrániť závislosť od `Vue.js` a nahradiť interné komponenty natívnymi web komponentmi (#58722).
+- [ ] +Upraviť načítanie admin časti tak, aby sa vymenilo cez volanie REST služby len vnútro stránky, nie kompletný reload HTML kódu.
+- [ ] +Vylepšiť úvodnú stránku administrácie - dynamické bloky, možnosť vlastného nastavenia čo sa zobrazí, užitočné informácie a bloky.
 
 ## 2025
 

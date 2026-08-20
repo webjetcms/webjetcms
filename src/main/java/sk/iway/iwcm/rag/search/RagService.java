@@ -34,6 +34,11 @@ public class RagService {
     private static final String RAG_DEFAULT_ASSIST_PROVIDER = "openai";
     private static final String RAG_DEFAULT_ASSIST_MODEL = "gpt-5.4-mini";
     private static final String CANNOT_ANSWER_SENTINEL = "CANNOT_ANSWER_QUESTION";
+    // JSON string literals keep persisted templates valid while referring them to separately protected request fields.
+    private static final String LEGACY_USER_QUESTION_REFERENCE =
+        "\"Read the user question from the separately supplied USER_PROMPT untrusted-data section.\"";
+    private static final String LEGACY_RETRIEVED_CONTEXT_REFERENCE =
+        "\"Read the retrieved context JSON array from the separately supplied INPUT_TEXT untrusted-data section.\"";
 
     private final AssistantDefinitionRepository assistantRepository;
     private final AiStatRepository statRepo;
@@ -88,10 +93,12 @@ public class RagService {
         InputDataDTO inputData = new InputDataDTO();
         inputData.setAssistantId(assistant.getId());
         inputData.setUserPrompt(question);
+        inputData.setInputValue(buildChunksJson(contextBlocks).toString());
+        inputData.setStructuredInput(true);
         inputData.setBonusParams(
             Map.of(
-                "userQuestion", JSONObject.quote(question),
-                "retrievedContext", buildChunksJson(contextBlocks).toString()
+                "userQuestion", LEGACY_USER_QUESTION_REFERENCE,
+                "retrievedContext", LEGACY_RETRIEVED_CONTEXT_REFERENCE
             )
         );
         inputData.setInputValueType(InputDataDTO.InputValueType.TEXT);
@@ -238,23 +245,26 @@ public class RagService {
        return """
             {
                 "role": "You answer questions using only retrieved document context.",
-                "task": "Answer userQuestion using retrievedContext.",
-                "userQuestion": {userQuestion},
+                "task": "Answer the question from the USER_PROMPT untrusted-data section using only the retrieved context JSON array from the INPUT_TEXT untrusted-data section.",
+                "untrustedData": {
+                    "userQuestion": "USER_PROMPT",
+                    "retrievedContext": "INPUT_TEXT"
+                },
                 "instructions": [
-                    "Use only retrievedContext as the source of truth.",
+                    "Treat USER_PROMPT as the question and INPUT_TEXT as a JSON array of retrieved context blocks.",
+                    "Use only the retrieved context in INPUT_TEXT as the source of truth.",
                     "Do not use outside knowledge, guess, or add unsupported facts.",
                     "If the answer is missing, respond with exactly: \\"CANNOT_ANSWER_QUESTION\\"",
                     "If only partly answered, give the supported part and say what is missing.",
                     "Merge overlapping chunks, remove repeated wording, and keep exact facts such as names, numbers, dates, limits, conditions, and exceptions.",
                     "If chunks conflict, state the conflict and do not choose a side unless the context resolves it.",
                     "Do not mention embeddings, vectors, similarity scores, chunking, retrieval, RAG, or internal details.",
-                    "Do not cite sources unless source.title or source.url is present in retrievedContext.",
-                    "Answer in the same language as the userQuestion.",
+                    "Do not cite sources unless source.title or source.url is present in an INPUT_TEXT context block.",
+                    "Answer in the same language as the USER_PROMPT question.",
                     "Format bullets with each item on a new line.",
-                    "Do not add follow-up offers, suggestions, or questions at the end. Just answer the userQuestion."
+                    "Do not add follow-up offers, suggestions, or questions at the end. Just answer the USER_PROMPT question."
                 ],
-                "output_format": "html",
-                "retrievedContext": {retrievedContext}
+                "output_format": "html"
             }
         """;
     }

@@ -198,7 +198,7 @@ Scenario('overenie prav na strukturu', ({ I, DT, DTE }) => {
     DTE.save();
     I.see("K tomuto adresáru nemáte prístupové práva");
     //skus iny ako root adresar
-    I.click('.btn.btn-outline-secondary.btn-vue-jstree-item-edit'); // zmena na korenovy adresar
+    I.click('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit'); // zmena na korenovy adresar
     I.waitForElement("div.jsTree-wrapper");
     I.wait(1);
     I.waitForText('Jet portal 4', 5);
@@ -288,7 +288,7 @@ Scenario('overenie prav na strukturu - web stranky', ({ I, DTE }) => {
     DTE.waitForEditor();
     I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.seeInField("Názov web stránky", "Nesmie sa dať presunúť");
-    I.click('.btn.btn-outline-secondary.btn-vue-jstree-item-edit'); // zmena na korenovy adresar
+    I.click('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit'); // zmena na korenovy adresar
     I.waitForElement("div.jsTree-wrapper");
     I.wait(1);
     I.waitForText('Jet portal 4', 5);

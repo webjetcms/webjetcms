@@ -95,7 +95,10 @@ public class FormMailService {
 			//
 			comboArr[0] = comboArr[0].replaceFirst("-\\d+$", "");
 
-            if(fieldsNames.contains(comboArr[0].toLowerCase()))
+            // Match a field name that starts with one of the configured names
+            // (e.g. configured "email" matches field "emailova-adresa")
+            String fieldName = comboArr[0].toLowerCase();
+            if(fieldsNames.stream().anyMatch(name -> fieldName.startsWith(name)))
                 foundValues.add(comboArr[1]);
         }
 
@@ -122,8 +125,7 @@ public class FormMailService {
 	 * @param request    current HTTP request used for context and headers
 	 */
     public void sendMail(FormsEntity form, String recipients, String subject, FormFiles formFiles, boolean attachFiles, String cssData, StringBuilder htmlData, HttpServletRequest request) throws SaveFormException{
-		String lng = PageLng.getUserLng(request);
-		Prop prop = Prop.getInstance(lng);
+		Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
 		FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(form.getFormName(), CloudToolsForCore.getDomainId());
 
         String meno = null;

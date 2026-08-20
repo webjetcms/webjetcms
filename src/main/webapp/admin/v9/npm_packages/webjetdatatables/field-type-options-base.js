@@ -11,10 +11,11 @@ import WJ from "../../src/js/webjet";
  * @param {function} config.parseValue - (part: string) => array of args to pass to createRowHtml
  * @param {function} [config.createHeader] - (conf) => HTML string for header markup (optional)
  * @param {function} config.emptyRowArgs - () => array of args for an empty row
+ * @param {boolean} [config.allowEmptyOption] - enable the allowEmptyOption class name behavior
  * @returns field type definition
  */
 export function createOptionsFieldType(config) {
-    const { prefix, createRowHtml, clearRow, getRowValue, parseValue, createHeader, emptyRowArgs } = config;
+    const { prefix, createRowHtml, clearRow, getRowValue, parseValue, createHeader, emptyRowArgs, allowEmptyOption } = config;
 
     const cls = {
         wrapper: `${prefix}-field-wrapper`,
@@ -23,8 +24,23 @@ export function createOptionsFieldType(config) {
         dragging: `${prefix}-dragging`,
         dragHandle: `${prefix}-drag-handle`,
         removeBtn: `${prefix}-remove-btn`,
-        addBtn: `${prefix}-add-btn`
+        addBtn: `${prefix}-add-btn`,
+        emptyOption: `${prefix}-empty-option`,
+        emptyOptionBtn: `${prefix}-empty-option-btn`
     };
+
+    function isEmptyOptionAllowed(conf) {
+        if (allowEmptyOption !== true || typeof conf.className !== "string") return false;
+        return conf.className.split(/\s+/).includes("allowEmptyOption");
+    }
+
+    function isEmptyOptionSelected(conf) {
+        return conf._wrapper.find("." + cls.emptyOptionBtn).prop("checked") === true;
+    }
+
+    function setEmptyOptionSelected(conf, selected) {
+        conf._wrapper.find("." + cls.emptyOptionBtn).prop("checked", selected);
+    }
 
     function initDragReorder(conf) {
         const container = conf._wrapper.find("." + cls.inputs)[0];
@@ -96,14 +112,22 @@ export function createOptionsFieldType(config) {
             conf._id = id;
 
             const headerHtml = createHeader ? createHeader(conf) : "";
+            const emptyOptionHtml = isEmptyOptionAllowed(conf) ? `
+                    <div class="form-check align-self-center ${cls.emptyOption}">
+                        <input class="form-check-input ${cls.emptyOptionBtn}" type="checkbox" id="${id}-empty-option">
+                        <label class="form-check-label" for="${id}-empty-option">${WJ.translate("datatables.options.addEmptyOption.js")}</label>
+                    </div>` : "";
 
             conf._wrapper = $(`
                 <div id="${id}" class="${cls.wrapper}">
                     ${headerHtml}
                     <div class="${cls.inputs}"></div>
-                    <button class="btn btn-outline-secondary mt-2 ${cls.addBtn}" type="button">
-                        <i class="ti ti-plus"></i> ${WJ.translate("button.add")}
-                    </button>
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        <button class="btn btn-outline-secondary ${cls.addBtn}" type="button">
+                            <i class="ti ti-plus"></i> ${WJ.translate("button.add")}
+                        </button>
+                        ${emptyOptionHtml}
+                    </div>
                 </div>
             `);
 
@@ -122,6 +146,9 @@ export function createOptionsFieldType(config) {
 
         get: function (conf) {
             const values = [];
+            if (isEmptyOptionAllowed(conf) && isEmptyOptionSelected(conf)) {
+                values.push(":");
+            }
             conf._wrapper.find("." + cls.row).each(function () {
                 const val = getRowValue($(this));
                 if (val !== null) {
@@ -133,6 +160,8 @@ export function createOptionsFieldType(config) {
 
         set: function (conf, val) {
             conf._wrapper.find("." + cls.inputs).empty();
+            setEmptyOptionSelected(conf, false);
+            let rowAdded = false;
             if (val && val.length > 0) {
                 let parts;
 
@@ -140,9 +169,15 @@ export function createOptionsFieldType(config) {
                 else parts = val.split("|");
 
                 for (let i = 0; i < parts.length; i++) {
+                    if (isEmptyOptionAllowed(conf) && parts[i].trim() === ":") {
+                        setEmptyOptionSelected(conf, true);
+                        continue;
+                    }
                     addInputRow(conf, ...parseValue(parts[i]));
+                    rowAdded = true;
                 }
-            } else {
+            }
+            if (rowAdded === false) {
                 addInputRow(conf, ...emptyRowArgs());
             }
         },
