@@ -1,5 +1,8 @@
 package sk.iway.iwcm.system.elfinder;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -18,6 +21,8 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeMoveItem;
 import sk.iway.iwcm.admin.jstree.JsTreeRestController;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.FilePathTools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.io.IwcmFile;
@@ -41,17 +46,27 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
         //do not use domain alias for when using external dirs
         if (imagesGalleryRoot.equals(item.getRootFolder()) && Constants.getBoolean("multiDomainEnabled") && FilePathTools.isExternalDirs()==false) {
             String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(getRequest()));
-            if (Tools.isNotEmpty(domainAlias)) {
-                if (imagesGalleryRoot.equals(item.getId())) item.setId(Constants.getString("imagesRootDir") + "/" + domainAlias + "/" + Constants.getString("galleryDirName"));
-                item.setRootFolder(Constants.getString("imagesRootDir") + "/" + domainAlias + "/" + Constants.getString("galleryDirName"));
-            }
+            applyDomainAliasToGalleryRoot(item, imagesGalleryRoot, domainAlias);
         }
 
         String parentPath = item.getId();
         if ("-1".equals(parentPath)) parentPath = "/";
 
+        if (isPathAllowed(parentPath) == false) {
+            result.put("result", false);
+            result.put("error", getProp().getText("components.jstree.access_denied__group"));
+            return;
+        }
+
         boolean isRoot = "/".equals(parentPath);
         Identity user = getUser();
+        boolean showOnlyWritableFolders = Constants.getBoolean("fbrowserShowOnlyWritableFolders") && CloudToolsForCore.isControllerDomain() == false;
+
+        List<String> writableFolderRoots = getFolderRoots(user.getWritableFolders());
+        if (writableFolderRoots.isEmpty() && showOnlyWritableFolders) {
+            writableFolderRoots.addAll(getFolderRoots(Constants.getStringExecuteMacro("fbrowserDefaultWritableFolders")));
+        }
+        List<String> alwaysShownFolderRoots = getFolderRoots(Constants.getStringExecuteMacro("fbrowserAlwaysShowFolders"));
 
         List<DirTreeItem> items;
 
@@ -68,7 +83,7 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
             items.add(rootItem);
         } else {
             List<IwcmFile> files;
-            if (isRoot || user.isFolderWritable(parentPath)) {
+            if (showOnlyWritableFolders == false || isFolderVisible(user, parentPath, writableFolderRoots, alwaysShownFolderRoots)) {
                 IwcmFile directory = new IwcmFile(Tools.getRealPath(parentPath));
                 files = Arrays.asList(FileTools.sortFilesByName(directory.listFiles(file -> {
                     if (file.isFile()) return false;
@@ -76,7 +91,7 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
                     //System.out.println("path="+file.getVirtualPath()+" isRoot="+isRoot+" isJarPackaging="+file.isJarPackaging());
                     if (isRoot==false && file.isJarPackaging()) return false;
 
-                    if (user.isFolderWritable(file.getVirtualPath())==false) return false;
+                    if (showOnlyWritableFolders && isFolderVisible(user, file.getVirtualPath(), writableFolderRoots, alwaysShownFolderRoots) == false) return false;
 
                     return true;
                 })));
@@ -86,6 +101,9 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
 
             boolean loadParents = item.getRootFolder() != null && item.getId().equals( item.getRootFolder() );
             items = files.stream().map(f -> new DirTreeItem(f, loadParents)).collect(Collectors.toList());
+            for (DirTreeItem dirTreeItem : items) {
+                setFolderState(dirTreeItem, user, showOnlyWritableFolders, item.isWritableOnly(), alwaysShownFolderRoots);
+            }
 
             //
             items = getAllowedFolders(items, item);
@@ -93,11 +111,32 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
             //Prepare parents only if we want local root childs
             if(loadParents) {
                 prepareParents(parentPath, items, item.isHideRootParents());
+                for (DirTreeItem dirTreeItem : items) {
+                    if (parentPath.equals(dirTreeItem.getVirtualPath())) {
+                        setFolderState(dirTreeItem, user, showOnlyWritableFolders, item.isWritableOnly(), alwaysShownFolderRoots);
+                        break;
+                    }
+                }
             }
         }
 
         result.put("result", true);
         result.put("items", items);
+        if (item.getRootFolder() != null) result.put("rootFolder", item.getRootFolder());
+    }
+
+    /**
+     * Rewrites the gallery root to its domain-specific path.
+     * @param item tree request containing the requested and configured root paths
+     * @param imagesGalleryRoot original gallery root
+     * @param domainAlias current domain alias
+     */
+    static void applyDomainAliasToGalleryRoot(JsTreeMoveItem item, String imagesGalleryRoot, String domainAlias) {
+        if (Tools.isEmpty(domainAlias)) return;
+
+        String effectiveRootFolder = Constants.getString("imagesRootDir") + "/" + domainAlias + "/" + Constants.getString("galleryDirName");
+        if (imagesGalleryRoot.equals(item.getId())) item.setId(effectiveRootFolder);
+        item.setRootFolder(effectiveRootFolder);
     }
 
     /**
@@ -106,10 +145,7 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
      * @param treeRootPath
      * @param items
      */
-    private void prepareParents(String treeRootPath, List<DirTreeItem> items, boolean hideRootParents) {
-        //Check if we even need to prepare parents
-        if(items == null || items.size() == 0) return;
-
+    void prepareParents(String treeRootPath, List<DirTreeItem> items, boolean hideRootParents) {
         //If we are in root, we do not need to prepare parents
         if("/".equals(treeRootPath)) return;
 
@@ -121,7 +157,8 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
             }
 
             DirTreeItem newItem = new DirTreeItem(nextParent, true);
-            newItem.setChildren(true);
+            // jsTree converts a falsy value to [] before adding child IDs from the flat response.
+            newItem.setChildren(false);
             newItem.getState().setOpened(false);
             newItem.getState().setDisabled(true);
             newItem.setParent(nextParent.getVirtualParent());
@@ -145,6 +182,105 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
         }
     }
 
+    private static void setFolderState(DirTreeItem item, Identity user, boolean showOnlyWritableFolders, boolean writableOnly, List<String> alwaysShownFolderRoots) {
+        item.getState().setDisabled(isFolderSelectable(user, item.getVirtualPath(), showOnlyWritableFolders, writableOnly, alwaysShownFolderRoots) == false);
+    }
+
+    static boolean isFolderSelectable(Identity user, String path, boolean showOnlyWritableFolders, boolean writableOnly, List<String> alwaysShownFolderRoots) {
+        if (user.isFolderWritable(path)) return true;
+        if (writableOnly) return false;
+        if (showOnlyWritableFolders == false) return true;
+        return isPathInFolderRoots(path, alwaysShownFolderRoots);
+    }
+
+    static boolean isFolderVisible(Identity user, String path, List<String> writableFolderRoots, List<String> alwaysShownFolderRoots) {
+        if (user.isFolderWritable(path)) return true;
+
+        String normalizedPath = normalizeFolderPath(path);
+        for (String folderRoot : writableFolderRoots) {
+            if (isSameOrSubfolder(folderRoot, normalizedPath)) return true;
+        }
+        for (String folderRoot : alwaysShownFolderRoots) {
+            if (isSameOrSubfolder(normalizedPath, folderRoot) || isSameOrSubfolder(folderRoot, normalizedPath)) return true;
+        }
+        return false;
+    }
+
+    static List<String> getFolderRoots(String folders) {
+        List<String> folderRoots = new ArrayList<>();
+        for (String folder : Tools.getTokens(folders, ",\n", true)) {
+            String normalizedFolder = normalizeFolderPath(folder);
+            if (Tools.isNotEmpty(normalizedFolder)) folderRoots.add(normalizedFolder);
+        }
+        return folderRoots;
+    }
+
+    /**
+     * Validates a requested virtual path before it is used for directory listing.
+     * The resolved canonical path must remain inside the web root or a configured
+     * external-files root for the current or shared domain.
+     * @param virtualPath requested virtual path
+     * @return true when the path can be safely listed
+     */
+    static boolean isPathAllowed(String virtualPath) {
+        if (Tools.isEmpty(virtualPath) || FileBrowserTools.hasForbiddenSymbol(virtualPath)) return false;
+
+        String realPath = Tools.getRealPath(virtualPath);
+        if (isWithinCanonicalRoot(realPath, Tools.getRealPath("/"))) return true;
+
+        if (FilePathTools.isExternalDirs()) {
+            if (isWithinCanonicalRoot(realPath, FilePathTools.getDomainBaseFolder())) return true;
+            if (isWithinCanonicalRoot(realPath, FilePathTools.getDomainBaseFolder("shared"))) return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks canonical containment to prevent traversal through path segments or symbolic links.
+     * @param path path to validate
+     * @param rootPath permitted root path
+     * @return true when path is the root or one of its descendants
+     */
+    static boolean isWithinCanonicalRoot(String path, String rootPath) {
+        if (Tools.isEmpty(path) || Tools.isEmpty(rootPath)) return false;
+
+        try {
+            Path canonicalPath = new File(path).getCanonicalFile().toPath();
+            Path canonicalRootPath = new File(rootPath).getCanonicalFile().toPath();
+            return canonicalPath.equals(canonicalRootPath) || canonicalPath.startsWith(canonicalRootPath);
+        } catch (IOException | SecurityException ex) {
+            return false;
+        }
+    }
+
+    private static boolean isPathInFolderRoots(String path, List<String> folderRoots) {
+        String normalizedPath = normalizeFolderPath(path);
+        for (String folderRoot : folderRoots) {
+            if (isSameOrSubfolder(normalizedPath, folderRoot)) return true;
+        }
+        return false;
+    }
+
+    private static boolean isSameOrSubfolder(String path, String folderRoot) {
+        if (path.equals(folderRoot)) return true;
+        if ("/".equals(folderRoot)) return path.startsWith("/");
+        return path.startsWith(folderRoot + "/");
+    }
+
+    private static String normalizeFolderPath(String path) {
+        if (path == null) return "";
+
+        String normalizedPath = path.trim().replace('\\', '/');
+        while (normalizedPath.endsWith("*") || normalizedPath.endsWith("+")) {
+            normalizedPath = normalizedPath.substring(0, normalizedPath.length() - 1);
+        }
+        while (normalizedPath.length() > 1 && normalizedPath.endsWith("/")) {
+            normalizedPath = normalizedPath.substring(0, normalizedPath.length() - 1);
+        }
+        return Tools.replace(normalizedPath, "//", "/");
+    }
+
     /**
      * Return only allowed folders. Skip folders whose virtualPath contains any of the skipFolders paths.
      * SkipFolders paths are defined in the skipFoldersConst key.
@@ -152,26 +288,16 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
      * @param origItem
      * @return
      */
-    private List<DirTreeItem> getAllowedFolders( List<DirTreeItem> itemsToCheck, JsTreeMoveItem origItem) {
+    public static List<DirTreeItem> getAllowedFolders( List<DirTreeItem> itemsToCheck, JsTreeMoveItem origItem) {
         if(Tools.isNotEmpty(origItem.getSkipFoldersConst())) {
             String skipFoldersString = Constants.getString(origItem.getSkipFoldersConst());
             String[] skipFolders = Tools.getTokens(skipFoldersString, ",\n", true);
 
             List<DirTreeItem> allowedFolders = new ArrayList<>();
             for(DirTreeItem entity : itemsToCheck) {
-                boolean skip = false;
-                String virtualPath = entity.getVirtualPath();
-                if(virtualPath.endsWith("/") == false)
-                    virtualPath += "/";
+                boolean skip = isSkippedFolder(entity.getVirtualPath(), skipFolders);
 
-                for(int i = 0; i < skipFolders.length; i++) {
-                    if(virtualPath.contains(skipFolders[i])) {
-                        skip = true;
-                        break;
-                    }
-                }
-
-                if(skip == false) {
+                if(skip == false && hasOnlySkippedContent(entity, skipFolders) == false) {
                     allowedFolders.add(entity);
                 }
             }
@@ -193,27 +319,58 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
      * @param skipFolders - array of folders paths to skip
      * @return
      */
-    private boolean hasAllowedChildren(DirTreeItem item, String[] skipFolders) {
+    private static boolean hasAllowedChildren(DirTreeItem item, String[] skipFolders) {
         IwcmFile directory = new IwcmFile(Tools.getRealPath(item.getVirtualPath()));
 
         IwcmFile[] subfiles = directory.listFiles();
         for (IwcmFile f : subfiles) {
             if (f.isFile()) continue;
 
-            boolean valid = true;
-            String virtualPath = f.getVirtualPath();
-            if(virtualPath.endsWith("/") == false)
-                virtualPath += "/";
-
-            for(int i = 0; i < skipFolders.length; i++) {
-                if(virtualPath.contains(skipFolders[i])) {
-                    valid = false;
-                    break;
-                }
-            }
-
-            if(valid) {
+            if(isSkippedFolder(f.getVirtualPath(), skipFolders) == false && hasOnlySkippedContent(f, skipFolders) == false) {
                 //At least one is allowed - return true
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Return TRUE when folder content has no visible value after applying skipFolders.
+     * Files or at least one allowed subfolder keep the parent folder visible.
+     * @param item - parent folder
+     * @param skipFolders - array of folders paths to skip
+     * @return
+     */
+    private static boolean hasOnlySkippedContent(DirTreeItem item, String[] skipFolders) {
+        IwcmFile directory = new IwcmFile(Tools.getRealPath(item.getVirtualPath()));
+
+        return hasOnlySkippedContent(directory, skipFolders);
+    }
+
+    private static boolean hasOnlySkippedContent(IwcmFile directory, String[] skipFolders) {
+
+        IwcmFile[] subfiles = directory.listFiles();
+        boolean hasSkippedFolder = false;
+        for (IwcmFile f : subfiles) {
+            if (f.isFile()) return false;
+
+            if(isSkippedFolder(f.getVirtualPath(), skipFolders) || hasOnlySkippedContent(f, skipFolders)) {
+                hasSkippedFolder = true;
+            } else {
+                return false;
+            }
+        }
+
+        return hasSkippedFolder;
+    }
+
+    private static boolean isSkippedFolder(String virtualPath, String[] skipFolders) {
+        if(virtualPath.endsWith("/") == false)
+            virtualPath += "/";
+
+        for(int i = 0; i < skipFolders.length; i++) {
+            if(virtualPath.contains(skipFolders[i])) {
                 return true;
             }
         }
@@ -225,21 +382,17 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
     protected void move(Map<String, Object> result, JsTreeMoveItem item) {
         result.put("result", false);
         result.put("error", getProp().getText("components.jstree.access_denied__group"));
-        return;
     }
 
     @Override
     protected void save(Map<String, Object> result, DirTreeItem item) {
         result.put("result", false);
         result.put("error", getProp().getText("components.jstree.access_denied__group"));
-        return;
     }
 
     @Override
     protected void delete(Map<String, Object> result, DirTreeItem item) {
-        result.put("result", false);
-        result.put("error", getProp().getText("components.jstree.access_denied__group"));
-        return;
+        save(result, item);
     }
 
     @Override

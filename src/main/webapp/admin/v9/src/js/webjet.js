@@ -435,7 +435,7 @@ const WJ = (() => {
                     }
                 });
             } catch (e) {}
-            if (found === true) return;
+            if (found === true) return true;
         }
 
         const options = {
@@ -628,6 +628,22 @@ const WJ = (() => {
     }
 
     /**
+     * Remove URL parameter from URL
+     * @param {*} url
+     * @param {*} paramName
+     * @returns
+     */
+    function urlRemoveParam(url, paramName) {
+        const urlParts = url.split('?');
+        if (urlParts.length >= 2) {
+            const prefix = encodeURIComponent(paramName) + '=';
+            const params = urlParts[1].split('&').filter(param => !param.startsWith(prefix));
+            return urlParts[0] + (params.length > 0 ? '?' + params.join('&') : '');
+        }
+        return url;
+    }
+
+    /**
      * returns URL parameter value
      * @param {*} name - parameter name
      * @param {*} queryString - URL query string OR null to ger from current window.location.search
@@ -635,6 +651,11 @@ const WJ = (() => {
      */
     function urlGetParam(name, queryString=null) {
         if (queryString == null) queryString = window.location.search;
+        //remove everything before ?, because in some cases (e.g. datatables ajax) it can be full URL instead of just query string
+        const questionMarkIndex = queryString.indexOf('?');
+        if (questionMarkIndex != -1) {
+            queryString = queryString.substring(questionMarkIndex);
+        }
         const urlParams = new URLSearchParams(queryString);
         return urlParams.get(name);
     }
@@ -824,9 +845,8 @@ const WJ = (() => {
                     text = text.replace(regexB, "/");
                 }
             });
-
-            return text;
         }
+        return text;
     }
 
     function _formatTime(timestamp, format) {
@@ -1488,6 +1508,45 @@ const WJ = (() => {
     }
 
     /**
+     * Returns localized labels for date/time picker controls.
+     * @returns {{previous: string, next: string, months: string[], weekdays: string[], hours: string, minutes: string, seconds: string, today: string}}
+     */
+    function getDatetimeLocalization() {
+        //this is same code as in Datatable index.js datetime object
+        return {
+            previous: WJ.translate('datatables.button.prev.js'),
+            next: WJ.translate('datatables.button.next.js'),
+            months: [
+                WJ.translate('component.calendar.month.1'),
+                WJ.translate('component.calendar.month.2'),
+                WJ.translate('component.calendar.month.3'),
+                WJ.translate('component.calendar.month.4'),
+                WJ.translate('component.calendar.month.5'),
+                WJ.translate('component.calendar.month.6'),
+                WJ.translate('component.calendar.month.7'),
+                WJ.translate('component.calendar.month.8'),
+                WJ.translate('component.calendar.month.9'),
+                WJ.translate('component.calendar.month.10'),
+                WJ.translate('component.calendar.month.11'),
+                WJ.translate('component.calendar.month.12'),
+            ],
+            weekdays: [
+                WJ.translate('datatables.calendar.weekday.short.1.js'),
+                WJ.translate('datatables.calendar.weekday.short.2.js'),
+                WJ.translate('datatables.calendar.weekday.short.3.js'),
+                WJ.translate('datatables.calendar.weekday.short.4.js'),
+                WJ.translate('datatables.calendar.weekday.short.5.js'),
+                WJ.translate('datatables.calendar.weekday.short.6.js'),
+                WJ.translate('datatables.calendar.weekday.short.7.js'),
+            ],
+            hours: WJ.translate('datatables.calendar.hours.js'),
+            minutes: WJ.translate('datatables.calendar.minutes.js'),
+            seconds: WJ.translate('datatables.calendar.seconds.js'),
+            today: WJ.translate('datatables.calendar.today.js')
+        }
+    }
+
+    /**
      * Log debug message with timestamp and diff in ms from last log.
      * To enable/disable debug timer use debugTimer(true) as first call.
      * @param {*} message
@@ -1560,6 +1619,9 @@ const WJ = (() => {
         },
         urlUpdateParam: (url, paramName, paramValue) => {
             return urlUpdateParam(url, paramName, paramValue);
+        },
+        urlRemoveParam: (url, paramName) => {
+            return urlRemoveParam(url, paramName);
         },
         urlGetParam: (url, queryString) => {
             return urlGetParam(url, queryString);
@@ -1739,6 +1801,9 @@ const WJ = (() => {
         },
         base64decode: (encodedText) => {
             return base64decode(encodedText);
+        },
+        getDatetimeLocalization: () => {
+            return getDatetimeLocalization();
         }
     };
 

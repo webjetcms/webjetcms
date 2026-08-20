@@ -1,0 +1,233 @@
+.time-book-app {
+    --time-book-text: #0f172a;
+    --time-book-muted: #64748b;
+    --time-book-disabled: #cbd5e1;
+    --time-book-surface: #fff;
+    --time-book-hover: #f1f5f9;
+    --time-book-border: #e2e8f0;
+    --time-book-cyan: #0369a1;
+    --time-book-cyan-soft: #ecfeff;
+    --time-book-amber: #f59e0b;
+    --time-book-amber-soft: #fffbeb;
+    --time-book-rose-soft: #fff1f2;
+    --time-book-slate-soft: #e2e8f0;
+    color: var(--time-book-text);
+}
+
+.timeBookGridWrapper {
+    padding: 0 0 10px;
+}
+
+.timeBookErrorList {
+    margin: 0;
+}
+
+.timeBookGrid {
+    border-collapse: separate;
+    border-spacing: 5px 6px;
+    color: var(--time-book-text);
+    min-width: 100%;
+    table-layout: auto;
+    width: max-content;
+}
+
+.timeBookGrid th {
+    background: transparent;
+    border: 0;
+    color: var(--time-book-text);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+    padding: 8px 7px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.timeBookGrid th:first-child {
+    background: var(--time-book-surface);
+    left: 0;
+    position: sticky;
+    text-align: left;
+    z-index: 2;
+    width: 220px;
+}
+
+.timeBookObjectName {
+    background: var(--time-book-surface);
+    border: 0;
+    color: var(--time-book-text);
+    font-weight: 500;
+    left: 0;
+    min-width: 180px;
+    padding: 12px 8px;
+    position: sticky;
+    z-index: 1;
+}
+
+.tableCell {
+    background-color: var(--time-book-surface);
+    border: 0;
+    border-radius: 8px;
+    box-shadow: inset 0 0 0 1px var(--time-book-border);
+    color: var(--time-book-text);
+    cursor: pointer;
+    font-weight: 600;
+    height: 60px;
+    min-width: 88px;
+    padding: 8px 10px;
+    text-align: center;
+    transition: background-color 0.15s, box-shadow 0.15s, color 0.15s, transform 0.15s;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.timeBookCellStatus,
+.timeBookCellPrice {
+    display: block;
+}
+
+.timeBookCellStatus {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 20px;
+}
+
+.timeBookCellPrice {
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 16px;
+    margin-top: 2px;
+}
+
+.tableCell.unsupported {
+    background:
+        repeating-linear-gradient(
+            -45deg,
+            #d8dee8 0,
+            #d8dee8 7px,
+            #cbd5e1 7px,
+            #cbd5e1 14px
+        );
+    box-shadow: none;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.tableCell.free {
+    background-color: var(--time-book-cyan-soft) !important;
+    box-shadow: inset 0 0 0 1px rgba(6, 182, 212, 0.28);
+    color: #075985;
+}
+
+.tableCell.availableEmpty {
+    background-color: var(--time-book-cyan-soft) !important;
+    box-shadow: inset 0 0 0 1px rgba(6, 182, 212, 0.38);
+    color: #075985;
+}
+
+.tableCell.availablePartial {
+    background-color: var(--time-book-amber-soft) !important;
+    box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.45);
+    color: #92400e;
+}
+
+.tableCell.availablePartial:hover {
+    background-color: #fef3c7 !important;
+    color: #78350f;
+    transform: translateY(-1px);
+}
+
+.tableCell.availableEmpty:hover,
+.tableCell.free:not(.availablePartial):hover {
+    background-color: #cffafe !important;
+    color: #075985;
+    transform: translateY(-1px);
+}
+
+.tableCell.full {
+    background-color: var(--time-book-rose-soft);
+    box-shadow: inset 0 0 0 1px rgba(244, 63, 94, 0.28);
+    color: #be123c;
+    cursor: not-allowed;
+}
+
+.tableCell.unsupported:empty::after {
+    content: "\00a0";
+}
+
+.tableCell.full:empty::after {
+    content: "\00a0";
+}
+
+.tableCell.selectedTableCell {
+    background-color: var(--time-book-cyan) !important;
+    border-radius: 0;
+    box-shadow: none;
+    color: #fff;
+    transform: none;
+}
+
+.tableCell.selectedTableCellStart,
+.tableCell.selectedTableCellSingle {
+    border-bottom-left-radius: 8px;
+    border-top-left-radius: 8px;
+}
+
+.tableCell.selectedTableCellEnd,
+.tableCell.selectedTableCellSingle {
+    border-bottom-right-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.tableCell.selectedTableCell:hover {
+    background-color: var(--time-book-cyan) !important;
+    color: #fff;
+    transform: none;
+}
+
+.tableCell.free.selectedTableCell:hover,
+.tableCell.availableEmpty.selectedTableCell:hover,
+.tableCell.availablePartial.selectedTableCell:hover {
+    background-color: var(--time-book-cyan) !important;
+    color: #fff;
+    transform: none;
+}
+
+.dateHeader {
+    align-items: center;
+    display: flex;
+    gap: 6px;
+    margin: 0 0 14px;
+}
+
+.dateHeader label {
+    color: var(--time-book-muted);
+    font-size: 16px;
+    margin: 0;
+    padding-right: 6px;
+}
+
+.dateHeader button {
+    flex: 0 0 24px;
+}
+
+.dateHeader input#reservationDate {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.timeBookDateInput {
+    background-color: var(--time-book-surface);
+    border: 1px solid var(--time-book-border);
+    border-radius: 6px;
+    color: var(--time-book-text);
+    font-weight: 600;
+    height: 34px;
+    padding: 4px 9px;
+}
+
+.readonly-input {
+    background-color: var(--bs-secondary-bg);
+    cursor: default;
+    opacity: 1;
+}

@@ -388,33 +388,34 @@ public class Logger
 	}
 
 	private static void setMDC() {
-		int userId = getUserId();
-		String installName = getInstallName();
 
-		MDC.put("userId", "" + userId);
-		MDC.put("installName", installName);
+		MDC.put("installName", getInstallName());
 		MDC.put("node", Constants.getString("clusterMyNodeName"));
 		MDC.put("nodeType", Constants.getString("clusterMyNodeType"));
+
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
 		if (rb != null) {
 			String uri = rb.getUrl();
 			if (Tools.isNotEmpty(rb.getQueryString()) && rb.getUrl().equals("/admin/logon.do")==false) uri += "?"+rb.getQueryString();
+
+			MDC.put("userId", "" + rb.getUserId());
+			MDC.put("userLogin", rb.getUserLogin());
+			MDC.put("sessionId", "" + rb.getSessionId());
 			MDC.put("URI", uri);
 			MDC.put("Domain", rb.getDomain());
 			MDC.put("User-Agent", rb.getUserAgent());
 			MDC.put("IP", rb.getRemoteIP());
 			MDC.put("Host", rb.getRemoteHost());
+		} else {
+			MDC.put("userId", "0");
+			MDC.put("userLogin", "");
+			MDC.put("sessionId", "");
+			MDC.put("URI", "");
+			MDC.put("Domain", "");
+			MDC.put("User-Agent", "");
+			MDC.put("IP", "");
+			MDC.put("Host", "");
 		}
-	}
-
-	private static int getUserId() {
-		int userId = 0;
-		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
-		if (rb != null && rb.getUserId() > 0) {
-			userId = rb.getUserId();
-		}
-
-		return userId;
 	}
 
 	public static void setInstallName(String installName) {
@@ -685,7 +686,7 @@ public class Logger
 		}
 
 		if (message != null) {
-			if (message.contains("SELECT") || message.contains("INSERT") || message.contains("UPDATE") || message.contains("DELETE")) {
+			if (message.contains("SELECT") || message.contains("INSERT") || message.contains("UPDATE") || message.contains("DELETE") || message.contains("list: Query")) {
 				//use different color for SQL queries, to make them more visible in logs
 				level = "GREEN";
 			} else if (message.startsWith("GET ") || message.startsWith("POST ") || message.startsWith("PUT ") || message.startsWith("DELETE ")) {

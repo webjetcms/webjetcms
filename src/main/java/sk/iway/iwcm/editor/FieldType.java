@@ -5,6 +5,8 @@ import sk.iway.iwcm.Tools;
 public enum FieldType {
     TEXT,
     SELECT,
+    RADIO,
+    CHECKBOX,
     IMAGE,
     LINK,
     AUTOCOMPLETE,
@@ -34,8 +36,8 @@ public enum FieldType {
             return null;
         }
 
-        if (str.contains(":")) {
-            str = str.substring(0, str.indexOf(":"));
+        if (str.startsWith("autocomplete:")) {
+            return FieldType.AUTOCOMPLETE;
         }
 
         if (str.startsWith("docsIn") || str.contains("|") || str.startsWith("enumeration") || str.startsWith("multiple")) {
@@ -47,6 +49,11 @@ public enum FieldType {
             return FieldType.HIDDEN;
         }
         //JICH - add end
+
+        // Keeping it here just in case
+        if (str.contains(":")) {
+            str = str.substring(0, str.indexOf(":"));
+        }
 
         for (FieldType me : FieldType.values()) {
             if (me.name().equalsIgnoreCase(str))

@@ -5,7 +5,9 @@
 - Settings
   - [Templates](/frontend/setup/README.md)
   - [General Settings](/frontend/setup/config.md)
-  - [Optional fields](/frontend/webpages/customfields/README.md)
+  - Optional fields
+    - [Optional fields](/frontend/webpages/customfields/README.md)
+    - [Settings](/frontend/webpages/customfields/custom-fields-settings.md)
   - [FontAwesome](/frontend/webpages/fontawesome/README.md)
   - [CKEditor](/frontend/setup/ckeditor.md)
 - Templates
@@ -51,5 +53,7 @@
 - Image generation
   - [Thumb servlet](/frontend/thumb-servlet/README.md)
   - [Point of interest](/frontend/thumb-servlet/interest-point.md)
-
-
+- Headless CMS
+  - [Headless mode](/frontend/headless/README.md)
+  - [Headless services](/frontend/headless/services.md)
+  - [Example headless application](/frontend/headless/example.md)

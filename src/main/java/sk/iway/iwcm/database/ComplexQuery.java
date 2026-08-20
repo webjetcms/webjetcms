@@ -107,10 +107,10 @@ public class ComplexQuery
 				ps = db_conn.prepareStatement(sql);
 			}
 
-			SimpleQuery.bindParameters(ps, params);
+			String paramsLog = SimpleQuery.bindParameters(ps, params);
 
 			rs = ps.executeQuery();
-			Logger.debug(ComplexQuery.class, "list: Executed query: "+sql);
+			Logger.debug(ComplexQuery.class, "list: Executed query: " + sql + paramsLog);
 			while (rs.next())
 			{
 				T resultObject = mapper.map(rs);
@@ -161,6 +161,7 @@ public class ComplexQuery
 				sk.iway.iwcm.Logger.error(ex2);
 			}
 		}
+		Logger.debug(ComplexQuery.class, "list: Query returned " + result.size() + " results.");
 		return result;
 	}
 	/**

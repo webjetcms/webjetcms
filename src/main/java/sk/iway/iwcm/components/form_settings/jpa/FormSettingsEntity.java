@@ -219,6 +219,10 @@ public class FormSettingsEntity {
     )
     private Integer maxSizeInKilobytes;
 
+    @Column(name = "max_combined_size_in_kilobytes")
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title= "components.forms.file_restrictions.combined_file_size_in_kilobytes", className = "not-formsimple")
+    private Long maxCombinedSizeInKilobytes;
+
     @Column(name = "allowed_extensions")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "components.forms.file_restrictions.allowed_extensions", className = "not-formsimple")
     @Size(max = 255)
@@ -240,6 +244,13 @@ public class FormSettingsEntity {
 
     @Column(name = "use_form_mail_doc_id")
     private Integer useFormMailDocId;
+
+    // !! this is not real setting, we use it just to store for form stat
+    @Column(name = "view_count")
+    private Integer viewCount;
+
+    @Column(name = "response_attempts")
+    private Integer responseAttempts;
 
     @Transient
     @DataTableColumn(inputType = DataTableColumnType.JSON, title="editor.form.use_form_mail_doc_id", className="dt-tree-page-null")

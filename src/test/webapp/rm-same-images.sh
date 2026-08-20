@@ -1,6 +1,10 @@
 #!/bin/bash
 # .git/hooks/pre-commit
 
+# Prahová hodnota pre rozdiel (výchozia: 1, možno zadať ako parameter CLI)
+THRESHOLD=${1:-1}
+export THRESHOLD
+
 # Získaj zoznam zmenených JPG súborov
 CHANGED_FILES=$(git diff --name-only --diff-filter=M | grep -E "\.jpg$|\.jpeg$|\.png$|\.gif$")
 

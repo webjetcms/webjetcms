@@ -110,6 +110,9 @@ lang="${ninja.temp.lngIso}" data-browser-name="${ninja.userAgent.browserName}" d
 <meta property="og:description" content="${ninja.page.seoDescription}" />
 <meta property="og:url" content="${ninja.page.url}" />
 <meta property="og:image" content="${ninja.page.urlDomain}${ninja.page.seoImage}" />
+<meta property="og:image:width" content="${ninja.page.seoImageWidth}" />
+<meta property="og:image:height" content="${ninja.page.seoImageHeight}" />
+<meta property="og:image:alt" content="${ninja.page.seoImageAlt}" />
 <meta property="og:site_name" content="${ninja.temp.group.siteName}" />
 <meta property="og:type" content="website" />
 <meta property="og:locale" content="${ninja.temp.lngIsoUnderscore}" />
@@ -255,6 +258,16 @@ ${ninja.webjet.insertJqueryFake}
 ```
 
 <!-- tabs:end -->
+
+## Výchozí SEO hodnoty
+
+Ve skupině šablon lze na kartě ** SEO** nastavit výchozí popis, obrázek a alternativní text obrázku. Objekt `ninja.page` vyhodnocuje dostupné hodnoty v tomto pořadí:
+
+- `${ninja.page.seoDescription}`: volitelné pole S, perex, výchozí popis skupiny šablon,
+- `${ninja.page.seoImage}`: platná cesta ve volitelném poli T, perex obrázek, výchozí obrázek skupiny šablon, hodnota `defaultSeoImage` z konfiguračního souboru šablony,
+- `${ninja.page.seoImageAlt}`: volitelné pole P, výchozí alternativní text skupiny šablon.
+
+Výchozí popis a alternativní text se ukládají podle jazyka, výchozí obrázek je společný pro celou skupinu šablon. Podrobnosti jsou v [API objektu Page](../ninja-jv/page/README.md).
 
 ## Konfigurační soubor
 

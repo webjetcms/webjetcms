@@ -16,6 +16,7 @@
   - [Log soubory](/sysadmin/audit/audit-log-files.md)
   - [Poslední logy](/sysadmin/audit/memory-logging.md)
 - Provoz
+  - [Řešení problémů](/sysadmin/troubleshooting/README.md)
   - [Výkon serveru](/sysadmin/performance/README.md)
   - [Monitorování serveru](/sysadmin/monitoring/README.md)
   - [Restartovat](/sysadmin/restart.md)

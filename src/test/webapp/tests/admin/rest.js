@@ -17,7 +17,7 @@ Scenario("Test retrieving document details by docId ", ({ I }) => {
     I.seeResponseContainsKeys([
         'groupId', 'title', 'navbar', 'virtualPath', 'editorVirtualPath',
         'generateUrlFromTitle', 'urlInheritGroup', 'sortPriority', 'externalLink',
-        'available', 'searchable', 'cacheable', 'tempId', 'headerDocId', 'footerDocId',
+        'available', 'searchable', 'followLinks', 'cacheable', 'tempId', 'headerDocId', 'footerDocId',
         'menuDocId', 'rightMenuDocId', 'perexGroups', 'dateCreated', 'passwordProtected',
         'disableAfterEnd', 'publishAfterStart', 'lazyLoaded', 'requireSsl', 'fieldA', 'fieldB',
         'fieldC', 'fieldD', 'fieldE', 'fieldF', 'fieldG', 'fieldH', 'fieldI', 'fieldJ',

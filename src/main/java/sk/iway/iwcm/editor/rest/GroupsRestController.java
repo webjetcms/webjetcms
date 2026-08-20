@@ -3,7 +3,9 @@ package sk.iway.iwcm.editor.rest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -50,7 +52,9 @@ import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.multiweb.MultiWebService;
 import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
+import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
@@ -214,13 +218,22 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
     }
 
     @Override
+    public void beforeSave(GroupDetails entity) {
+        if (InitServlet.isTypeCloud() && "cloud".equals(Constants.getInstallName()) && CloudToolsForCore.isControllerDomain()==false) {
+            //force current domain for WebJET Cloud
+            entity.setDomainName(CloudToolsForCore.getDomainName());
+        }
+        super.beforeSave(entity);
+    }
+
+    @Override
     public void beforeDuplicate(GroupDetails entity) {
         entity.setDefaultDocId(-1);
         entity.getEditorFields().getDefaultDocDetails().setDocId(0);
     }
 
     @Override
-    public GroupDetails editItem(GroupDetails entity, long id) {
+    public GroupDetails editItem(GroupDetails entity, long id) { //NOSONAR
         entity.getEditorFields().toGroupDetails(entity);
         GroupsDB groupsDB = GroupsDB.getInstance();
         Identity user = getUser();
@@ -258,14 +271,33 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
                     systemGroupIds = groupsDB.getSubgroupsIds(system.getGroupId());
                 }
             }
+            if (oldGroupDetails != null && entity.getGroupName().equals(oldGroupDetails.getDomainName())) {
+                //if group name is same as domain name, we also update group name to reflect new domain name
+                entity.setGroupName(entity.getDomainName());
+            }
+            if (oldGroupDetails != null && entity.getNavbarName().equals(oldGroupDetails.getDomainName())) {
+                //if group name is same as domain name, we update group navbar too
+                entity.setNavbarName(entity.getDomainName());
+            }
         }
 
         boolean forceReload = false;
         boolean forceReloadNewDomainName = false;
+
+        //data for multiweb
+        boolean isControllerDomain = CloudToolsForCore.isControllerDomain();
+        UserDetails controllerUser = null;
+        String oldDomain = null;
+        if (isControllerDomain) {
+            //we use this user later as new user for new domain
+            controllerUser = UsersDB.getUser(user.getUserId());
+        }
+
         RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
         if (Tools.isNotEmpty(entity.getDomainName()) && Constants.getBoolean("multiDomainEnabled")==true) {
             //nastav do RequestBeanu domenu nastavenu v entite
             if (rb.getDomain().equalsIgnoreCase(entity.getDomainName())==false) {
+                oldDomain = rb.getDomain();
                 rb.setDomain(entity.getDomainName());
                 forceReloadNewDomainName = true;
             }
@@ -454,6 +486,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         }
 
         int parGroupId = entity.getParentGroupId();
+        boolean domainRenamed = false;
         if ((parGroupId < 1 || Constants.getBoolean("multiDomainEnableNested")) && Tools.isNotEmpty(entity.getDomainName()) && entity.getEditorFields().isForceDomainNameChange())
         {
             if(parGroupId < 1) {
@@ -461,17 +494,24 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             }
 
             String groupIds = groupsDB.getSubgroupsIds(entity.getGroupId());
+            domainRenamed = true;
+            forceReloadNewDomainName = true;
 
             Adminlog.add(Adminlog.TYPE_GROUP, "Force domain to subgroups: " + groupIds, entity.getGroupId(), entity.getTempId());
 
-            //updatni groups
-            new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE group_id IN ("+groupIds+")",entity.getDomainName());
-
-            if (systemGroupIds!=null) {
-                Adminlog.add(Adminlog.TYPE_GROUP, "Force domain to system subgroups: " + systemGroupIds, -1, -1);
-
+            if (InitServlet.isTypeCloud() && oldGroupDetails != null && Tools.isNotEmpty(oldGroupDetails.getDomainName())) {
+                //in multiweb rename domain in all root groups
+                new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE domain_name=?", entity.getDomainName(), oldGroupDetails.getDomainName());
+            } else {
                 //updatni groups
-                new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE group_id IN ("+systemGroupIds+")", entity.getDomainName());
+                new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE group_id IN ("+groupIds+")",entity.getDomainName());
+
+                if (systemGroupIds!=null) {
+                    Adminlog.add(Adminlog.TYPE_GROUP, "Force domain to system subgroups: " + systemGroupIds, -1, -1);
+
+                    //updatni groups
+                    new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE group_id IN ("+systemGroupIds+")", entity.getDomainName());
+                }
             }
 
             //aktualizuj presmerovania
@@ -563,15 +603,17 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
                 groupsDB.save(localSystem);
                 groupsDB = GroupsDB.getInstance(true);
 
-                DocDetails ef = null;
+                DocDetails localSystemDoc = null;
                 if (Constants.getBoolean("groupCreateBlankWebpageAfterCreate"))
                 {
-                    ef = editorFacade.createEmptyWebPage(localSystem, null);
+                    localSystemDoc = editorFacade.createEmptyWebPage(localSystem, null);
                 }
 
                 //vytvor podadresare Hlavicky, Paticky, Menu
                 Prop prop = getProp();
                 String[] keys = {"groupslist.system.header", "groupslist.system.footer", "groupslist.system.menu"};
+                Map<String, Integer> systemDocIds = new HashMap<>();
+                if (localSystemDoc != null) systemDocIds.put("localSystemDoc", localSystemDoc.getDocId());
                 int sortPriority = 0;
                 for (String key : keys) {
                     String name = prop.getText(key);
@@ -590,14 +632,29 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
                     subgroup.setMenuType(GroupDetails.MENU_TYPE_HIDDEN);
                     subgroup.setLoggedMenuType(-1);
                     //ako hlavnu nastav System priecinok, pretoze hlavicky/paticky stranky maju zvycajne ine meno
-                    if (ef != null) subgroup.setDefaultDocId(ef.getDocId());
+                    if (localSystemDoc != null) subgroup.setDefaultDocId(localSystemDoc.getDocId());
                     groupsDB.save(subgroup);
 
-                    if (ef != null) {
-                        editorFacade.createEmptyWebPage(subgroup, prop.getText(key+".pagetitle"));
+                    if (localSystemDoc != null) {
+                        DocDetails webpage = editorFacade.createEmptyWebPage(subgroup, prop.getText(key+".pagetitle"));
+                        systemDocIds.put(key, webpage.getDocId());
                     }
                 }
                 groupsDB = GroupsDB.getInstance(true);
+
+                //for multiweb create also new user
+                if (isControllerDomain && controllerUser != null) {
+                    MultiWebService multiWebService = new MultiWebService(entity, localSystem, controllerUser, systemDocIds, getProp());
+                    multiWebService.createNewDomain();
+
+                    if (multiWebService.getUserNotify() != null) addNotify(multiWebService.getUserNotify());
+
+                    //reset domain back to controller domain because otherwise page will be reloaded
+                    if (rb != null) rb.setDomain(oldDomain);
+                    getRequest().getSession().setAttribute("preview.editorDomainName", oldDomain);
+                    forceReload = false;
+                    forceReloadNewDomainName = false;
+                }
             }
         }
 
@@ -607,6 +664,15 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         }
 
         if (forceReloadNewDomainName) {
+            if (domainRenamed && InitServlet.isTypeCloud()) {
+                //force reload to new domain after change domain name
+                GroupDetails entityReload = new GroupDetails();
+                entityReload.setDomainName(entity.getDomainName());
+                entityReload.setGroupId(-2);
+                entityReload.setEditorFields(new GroupEditorField());
+                entity = entityReload;
+            }
+
             //novo vytvorena domena, potrebujeme vyvolat reload stranky
             //fejkneme to cez atribut forceDomainNameChange, na ktory uz pocuvame v pug subore
             entity.getEditorFields().setForceDomainNameChange(true);
@@ -626,6 +692,11 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, GroupDetails> target, Identity user, Errors errors, Long id, GroupDetails entity) {
 
+        if (InitServlet.isTypeCloud() && "cloud".equals(Constants.getInstallName()) && CloudToolsForCore.isControllerDomain()==false) {
+            //force current domain for WebJET Cloud
+            entity.setDomainName(CloudToolsForCore.getDomainName());
+        }
+
         if (entity.getGroupId()>0 && GroupsDB.isGroupEditable(user, entity.getGroupId())==false) {
             errors.rejectValue("errorField.groupId", "403", Prop.getInstance().getText("user.rights.no_folder_rights"));
             return;
@@ -640,8 +711,16 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 			if (oldGroup == null || oldGroup.getDomainName().equals(CloudToolsForCore.getDomainName())==false)
 			{
 				errors.rejectValue("errorField.domainName", "403", Prop.getInstance().getText("user.rights.no_folder_rights"));
-                return;
+	            return;
 			}
+
+            if (Tools.isNotEmpty(entity.getDomainName()) && oldGroup.getDomainName().equalsIgnoreCase(entity.getDomainName())==false) {
+                int domainCount = new SimpleQuery().forInt("SELECT COUNT(*) FROM groups WHERE LOWER(domain_name)=LOWER(?)", entity.getDomainName());
+                if (domainCount > 0) {
+                    errors.rejectValue("errorField.domainName", "403", Prop.getInstance(request).getText("groupedit.domain_already_exists"));
+                    return;
+                }
+            }
 		}
 
         if ("remove".equals(target.getAction())) return;

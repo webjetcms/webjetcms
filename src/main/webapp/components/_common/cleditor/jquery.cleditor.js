@@ -840,7 +840,7 @@
             editor.$frame.remove();
 
         // Create a new iframe
-        var $frame = editor.$frame = $('<iframe frameborder="0" src="javascript:true;" />')
+        var $frame = editor.$frame = $('<iframe frameborder="0"/>')
             .hide()
             .appendTo($main);
 

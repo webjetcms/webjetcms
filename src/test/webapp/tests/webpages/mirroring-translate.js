@@ -8,7 +8,7 @@ var docDataSKupdate = '<p> nový starý najstarší </p>';
 var docDataSKupdate2 = '<p> pes mačka kokos </p>';
 
 // Translated EN vesrion
-var docDataEN = ["Page", "various words", "oday", "omorrow", "he day after tomorrow"];
+var docDataEN = ["Page", "words", "oday", "omorrow", "he day after tomorrow"];
 var docDataENupdate = ["new", "old", "oldest"];
 var docDataENupdate2 = ["dog", "cat", "coconut"];
 
@@ -49,7 +49,7 @@ async function testTranslation(I, DT, DTE, Document, useAutotranslator) {
         await setConfValues(I, DT, DTE, "autotranslator");
 
         docTitleSK = "Dobré ráno - A - " + randomText;
-        docTitleEN = "Good morning - A - " + randomText;
+        docTitleEN = "Good Morning - A - " + randomText;
 
         I.amOnPage("/admin/v9/webpages/web-pages-list/");
         DT.waitForLoader();
@@ -60,7 +60,7 @@ async function testTranslation(I, DT, DTE, Document, useAutotranslator) {
         await setConfValues(I, DT, DTE, "");
 
         docTitleSK = "Dobré ráno - B - " + randomText;
-        docTitleEN = "Good morning - B - " + randomText;
+        docTitleEN = "Good Morning - B - " + randomText;
 
         I.amOnPage("/admin/v9/webpages/web-pages-list/");
         DT.waitForLoader();

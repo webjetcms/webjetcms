@@ -366,6 +366,9 @@ function calculateAutoHeight(DATA) {
     const inModalDialog = $('#' + DATA.id + '_wrapper').parents(".modal-body-content").length > 0;
 
     var vh = document.documentElement.clientHeight;
+    //subtract custom offset set via CSS custom property --dt-autoheight-offset (e.g. for fixed bottom elements)
+    var customOffset = parseInt(getComputedStyle(document.body).getPropertyValue('--dt-autoheight-offset')) || 0;
+    vh -= customOffset;
     var lyHeader = 0;
     var breadcrumb = 0;
 

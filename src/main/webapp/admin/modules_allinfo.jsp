@@ -214,17 +214,17 @@ String key = null;
 		if (value.startsWith("webjet_cmp_"))
 		{
 			key = "components."+value.substring(11)+".title";
-			String test = prop.getText(key);
+			String test = prop.getText(key, false);
 			if (test.startsWith("components.")==false) value = test;
 			else
 			{
 				key = "menu."+value.substring(11);
-				test = prop.getText(key);
+				test = prop.getText(key, false);
 				if (test.startsWith("menu.")==false) value = test;
 				else
 				{
 					key = "components."+value.substring(11)+".menu";
-					test = prop.getText(key);
+					test = prop.getText(key, false);
 					if (test.startsWith("components.")==false) value = test;
 				}
 			}

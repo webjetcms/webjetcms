@@ -1,4 +1,4 @@
-import { VueTools } from '../../src/js/libs/tools/vuetools';
+import { createWebjetDteJsTree } from '../../src/js/web-components/webjet-dte-jstree';
 import WJ from '../../src/js/webjet';
 
 import * as fieldTypeQuill from './field-type-quill';
@@ -43,6 +43,30 @@ function getFieldValue(value, action, fieldType) {
 function disableField(isDisabled) {
     if(isDisabled === undefined || isDisabled === null || isDisabled === false) return '';
     return 'disabled="disabled"';
+}
+
+function updateTooltip(container, tooltip) {
+    const oldTooltip = container.find(".form-group-tooltip button.btn-tooltip");
+    if(oldTooltip.length > 0) {
+        try {
+            oldTooltip.tooltip("dispose");
+        } catch (e) {
+            // Tooltip may not be initialized yet.
+        }
+    }
+    container.find(".form-group-tooltip").remove();
+
+    if(tooltip === undefined || tooltip === null || tooltip.length < 1) return;
+
+    const tooltipText = WJ.escapeHtml(WJ.parseMarkdown(tooltip));
+    const tooltipHtml = '<div class="col-sm-1 form-group-tooltip"><button type="button" tabindex="-1" class="btn btn-link btn-tooltip" data-toggle="tooltip" title="' + tooltipText + '" data-html="true"><i class="ti ti-info-circle"></i></button></div>';
+    container.find('[data-dte-e="input"]').first().after(tooltipHtml);
+    container.find(".form-group-tooltip button.btn-tooltip").tooltip({
+        placement: 'top',
+        trigger: 'hover',
+        html: true,
+        delay: { "show": 300, "hide": 0 }
+    });
 }
 
 function isDateEmpty(dateValue) {
@@ -127,6 +151,7 @@ export function update(EDITOR, action) {
     var textAreaTemplate = '<textarea id="DTE_Field_{customPrefix}{identifier}" {disabled} class="form-control wrap">{value}</textarea>';
     var autocompleteTemplate = '<div class="input-group"> <span class="input-group-text"><i class="ti ti-search"></i></span> <input type="text" class="form-control autocomplete" name="field{identifier}" value="{value}" id="DTE_Field_field{identifier}"/> </div>';
     var selectTemplate = '<select id="DTE_Field_field{identifier}" class="form-control form-select">{options}</select>';
+    var choiceTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" class="custom-field-choice-value" type="hidden"><div class="custom-field-choice-options">{options}</div>';
     var labelTemplate = '<div class="input-group"> <span class="input-group-text noborders field-type-label">{value}</span> <input value="{value}" id="DTE_Field_{customPrefix}{identifier}" class="form-control" type="hidden"></div>';
     var numberTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" type="number" value="{value}" {disabled} class="form-control">';
     var booleanTemplate = '<div><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">Áno</label></div></div>';
@@ -234,12 +259,69 @@ export function update(EDITOR, action) {
         } else if(v.type == 'date') {
             //console.log("DATE");
             template = dateTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier);
+        } else if(v.type == 'radio' || v.type == 'checkbox') {
+            const isCheckbox = v.type == 'checkbox';
+            const currentValue = action === "create" || valueUnescaped == null ? "" : String(valueUnescaped);
+            const selectedValues = isCheckbox && currentValue.length > 0 ? currentValue.split("|") : [];
+            const fieldId = "DTE_Field_" + customPrefix + identifier;
+            const inputName = fieldId + "_options";
+            var choiceOptions = '';
+
+            $.each(v.typeValues, function(it, val) {
+                const optionValue = val.value == null ? "" : String(val.value);
+                const optionLabel = val.label == null ? "" : String(val.label);
+
+                // Empty label/value is the optional-field sentinel, for checkbox skip it (you can uncheck all checked values to have empty value)
+                if(v.type === 'checkbox' && optionValue.length === 0 && optionLabel.length === 0) {
+                    return;
+                }
+
+                const selected = isCheckbox
+                    ? selectedValues.indexOf(optionValue) > -1
+                    : currentValue.length > 0 && optionValue == currentValue;
+                const optionId = fieldId + "_option_" + it;
+
+                choiceOptions += '<div class="form-check">' +
+                    '<input class="form-check-input custom-field-choice-option" type="' + v.type + '" name="' + inputName + '" id="' + optionId + '" value="' + WJ.escapeHtml(optionValue) + '" ' +
+                    (selected ? 'checked="checked" ' : '') + disableField(v.disabled) + '>' +
+                    '<label class="form-check-label" for="' + optionId + '">' + WJ.escapeHtml(optionLabel) + '</label>' +
+                    '</div>';
+            });
+
+            template = choiceTemplate
+                .replace(new RegExp('{customPrefix}', 'g'), customPrefix)
+                .replace(new RegExp('{identifier}', 'g'), identifier)
+                .replace('{options}', choiceOptions);
         } else if (v.type == 'select') {
             var options = '';
+            const currentValue = action === "create" || valueUnescaped == null ? "" : String(valueUnescaped);
+            const hasValue = currentValue.length > 0;
+            const selectedValues = v.multiple && hasValue ? currentValue.split("|") : [];
+            let hasSelectedOption = false;
+
             $.each(v.typeValues, function(it, val){
-                var selected = v.multiple ? value.split("|").indexOf(val.value) > -1 : val.value == value;
-                options += '<option ' + (selected ? ' selected="true"' : "") + ' value="' + val.value + '">' + val.label + '</option>';
+                const optionValue = val.value == null ? "" : String(val.value);
+                const optionLabel = val.label == null ? "" : String(val.label);
+                const isEmptyOption = optionValue.length === 0 && optionLabel.length === 0;
+                var selected = false;
+
+                if(v.multiple) {
+                    selected = hasValue && selectedValues.indexOf(optionValue) > -1;
+                } else if(hasValue) {
+                    selected = optionValue == currentValue;
+                } else {
+                    selected = isEmptyOption && hasSelectedOption === false;
+                }
+
+                if(selected) {
+                    hasSelectedOption = true;
+                }
+                options += '<option ' + (selected ? ' selected="true"' : "") + ' value="' + WJ.escapeHtml(optionValue) + '">' + WJ.escapeHtml(optionLabel) + '</option>';
             });
+
+            if(v.multiple === false && hasSelectedOption === false) {
+                options = '<option selected="true" value=""></option>' + options;
+            }
 
             template = selectTemplate.replace('{options}', options).replace(new RegExp('{identifier}', 'g'), identifier);
             if(v.multiple) {
@@ -260,9 +342,9 @@ export function update(EDITOR, action) {
         } else if (v.type == 'link') {
             template = '<div class="input-group"> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="ti ti-focus-2"></i></button> </div>';
         } else if (v.type == 'dir') {
-            template = '<div> ' + template + ' <div class="vueComponent" id="DTE_Field_' + customPrefix + identifier + '"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr"></webjet-dte-jstree></div> </div>';
+            template = '<div> ' + template + ' <div class="webjet-component" id="DTE_Field_' + customPrefix + identifier + '"></div> </div>';
         } else if (v.type == 'json_group' || v.type == 'json_doc') {
-            template = '<div> ' + template + ' <div class="vueComponent" id="DTE_Field_' + customPrefix + identifier + '"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr"></webjet-dte-jstree></div> </div>';
+            template = '<div> ' + template + ' <div class="webjet-component" id="DTE_Field_' + customPrefix + identifier + '"></div> </div>';
         } else if (v.type == 'none') {
             // LPA
             container.hide();
@@ -304,10 +386,31 @@ export function update(EDITOR, action) {
 
         inputBox.html(template);
 
+        if (v.required === true) {
+            inputBox.find('input, select, textarea').attr('required', 'required');
+            container.addClass('required');
+        } else {
+            inputBox.find('input, select, textarea').removeAttr('required');
+            container.removeClass('required');
+        }
+
+        updateTooltip(container, v.tooltip);
+
         //For every field, remove params s.opts._input AND s.opts.renderFormat -> they can be still set from previous field initialization
         //If previous field was quill, it will make problem with saving
-        EDITOR.field(customPrefix + identifier).s.opts._input = "";
-        EDITOR.field(customPrefix + identifier).s.opts.renderFormat = "";
+        let field = EDITOR.field(customPrefix + identifier);
+        field.s.opts._input = "";
+        field.s.opts.renderFormat = "";
+        if (typeof field.canReturnSubmitOriginal === "undefined") {
+            field.canReturnSubmitOriginal = field.canReturnSubmit;
+        } else {
+            field.canReturnSubmit = field.canReturnSubmitOriginal;
+        }
+        if ("textarea" == v.type) {
+            field.canReturnSubmit = function() {
+                return false;
+            }
+        }
 
         if(v.type == 'boolean' || v.type == 'boolean_text') {
             var origType = EDITOR.field(customPrefix + identifier).s.opts["type"];
@@ -346,6 +449,46 @@ export function update(EDITOR, action) {
 
             //Set booelan via jQuery because we cant set checkbox throu html template
             $('#DTE_Field_' + customPrefix + identifier).attr('checked', booleanValue);
+        } else if(v.type == 'radio' || v.type == 'checkbox') {
+            const valueInput = inputBox.find('input.custom-field-choice-value');
+            const choiceInputs = inputBox.find('input.custom-field-choice-option');
+
+            const syncChoiceValue = (triggerChange) => {
+                let selectedValue = "";
+                if(v.type == 'checkbox') {
+                    selectedValue = choiceInputs.filter(":checked").map(function() {
+                        return this.value;
+                    }).get().join("|");
+                } else {
+                    selectedValue = choiceInputs.filter(":checked").val() || "";
+                }
+
+                valueInput.val(selectedValue);
+                if(triggerChange) {
+                    valueInput.trigger("change");
+                }
+            };
+
+            const updateCheckboxRequired = () => {
+                if(v.type != 'checkbox') {
+                    return;
+                }
+
+                choiceInputs.prop("required", false);
+                if(v.required === true && choiceInputs.filter(":checked").length === 0) {
+                    choiceInputs.first().prop("required", true);
+                }
+            };
+
+            valueInput.removeAttr("required");
+            choiceInputs.on("change", function() {
+                syncChoiceValue(true);
+                updateCheckboxRequired();
+            });
+
+            syncChoiceValue(false);
+            updateCheckboxRequired();
+            EDITOR.field(customPrefix + identifier).s.opts._input = valueInput;
         } else if(v.type == 'date') {
             var opts = EDITOR.field(customPrefix + identifier).s.opts;
             opts._input = inputBox.find('input');
@@ -371,23 +514,30 @@ export function update(EDITOR, action) {
         }
 
         if (v.type == 'select') {
-            inputBox.find('select').selectpicker(EDITOR.DT_SELECTPICKER_OPTS_EDITOR);
+            const select = inputBox.find('select');
+            const hasSelectedOption = select.find("option:selected").length > 0;
+            select.selectpicker(EDITOR.DT_SELECTPICKER_OPTS_EDITOR);
+            if(v.multiple && hasSelectedOption === false) {
+                select.selectpicker("val", []);
+            }
         }
         else if (v.type == 'autocomplete') {
 
-            new AutoCompleter("#"+datatable.DATA.id+"_modal .DTE_Field_Name_field" + identifier + " input.autocomplete").setUrl('/admin/FCKeditor/_editor_autocomplete.jsp?keyPrefix=' + json.editorFields?.fieldsDefinitionKeyPrefix + '&template=' + json.tempId + '&field=' + identifier).transform();
+            new AutoCompleter("#" + datatable.DATA.id + "_modal .DTE_Field_Name_field" + identifier + " input.autocomplete")
+                    .setUrl('/admin/FCKeditor/_editor_autocomplete.jsp?keyPrefix=' + json.editorFields?.fieldsDefinitionKeyPrefix + '&className=' + encodeURIComponent(json.editorFields?.fieldsDefinitionClassName || '') + '&objectId=' + json.id + '&template=' + json.tempId + '&field=' + identifier)
+                    .transform();
 
         } else if (v.type == "dir") {
             let conf = {};
             let id = 'DTE_Field_' + customPrefix + identifier;
 
             //There must by allso prefix of datatable.DATA.id, because table can be nested in another table with same columns
-            //And first-child because it's text input to hide and second child will be VUE component
+            //The first child is the hidden text input and the second child is the Web Component.
             var textFieldInput  = $("#" + datatable.DATA.id + "_modal #" + id + ":first-child");
             textFieldInput.hide();
 
             conf._id = id;
-            conf._el = inputBox.find('div.vueComponent')[0];
+            conf._el = inputBox.find('div.webjet-component')[0];
             conf.className = "dt-tree-dir-simple";
             let dataTableName = datatable.DATA.id;
             conf.jsonData = [{
@@ -395,52 +545,14 @@ export function update(EDITOR, action) {
                 type: "DIR",
                 id: value
             }];
-            const vm = window.VueTools.createApp({
-                components: {},
-                data() {
-                    return {
-                        data: null,
-                        idKey: null,
-                        dataTable: null,
-                        dataTableName: null,
-                        click: null,
-                        attr: null
-                    }
-                },
-                created() {
-                    this.data = fixNullData(conf.jsonData, conf.className);
-                    //console.log("JS created, data=", this.data, " conf=", conf, " val=", conf._input.val());
-                    this.idKey = conf._id;
-                    this.dataTableName = dataTableName;
-                    //co sa ma stat po kliknuti prenasame z atributu className datatabulky (pre jednoduchost zapisu), je to hodnota obsahujuca dt-tree-
-                    //priklad: className: "dt-row-edit dt-style-json dt-tree-group", click=dt-tree-group
-                    const confClassNameArr = conf.className.split(" ");
-                    for (var i=0; i<confClassNameArr.length; i++) {
-                        let className = confClassNameArr[i];
-                        if (className.indexOf("dt-tree-")!=-1) this.click = className;
-                    }
-                    //console.log("click=", this.click);
-                    this.dataTable = EDITOR.TABLE;
-                    if (typeof(conf.attr)!="undefined") this.attr = conf.attr;
-                },
-                methods: {
-                    remove(id) {
-                        //console.log("REMOVE impl, id=", id, "click=", this.click);
-                        let that = this;
-                        this.data = this.data.filter(function( obj ) {
-                            //console.log("Testing ", obj.groupId+" doc=", obj.docId);
-                            if (that.click.indexOf("dt-tree-page")!=-1) return obj.docId !== id;
-                            else if (that.click.indexOf("dt-tree-group")!=-1) return obj.groupId !== id;
-                            else return obj.id !== id;
-                        });
-                        window.$(textFieldInput).val(JSON.stringify(this.data, undefined, 4));
-                    }
-                }
-            });
-            VueTools.setDefaultObjects(vm);
-
-            vm.component('webjet-dte-jstree', window.VueTools.getComponent('webjet-dte-jstree'));
-            vm.mount(conf._el);
+            conf._el.appendChild(createWebjetDteJsTree({
+                inputElement: textFieldInput[0],
+                dataTableName,
+                dataTable: datatable,
+                mode: conf.className,
+                attributes: conf.attr,
+                value: fixNullData(conf.jsonData, conf.className)
+            }));
         } else if ("uuid"==v.type) {
             //console.log("inputBox=", inputBox);
             var inputField = inputBox.find("input.field-type-uuid");
@@ -492,12 +604,12 @@ export function update(EDITOR, action) {
             let id = 'DTE_Field_' + customPrefix + identifier;
 
             //There must by allso prefix of datatable.DATA.id, because table can be nested in another table with same columns
-            //And first-child because it's text input to hide and second child will be VUE component
+            //The first child is the hidden text input and the second child is the Web Component.
             var textFieldInput  = $("#" + datatable.DATA.id + "_modal #" + id + ":first-child");
             textFieldInput.hide();
 
             conf._id = id;
-            conf._el = inputBox.find('div.vueComponent')[0];
+            conf._el = inputBox.find('div.webjet-component')[0];
 
             //Prepare className
             if(v.className == undefined || v.className == null || v.className.length < 1) {
@@ -562,52 +674,15 @@ export function update(EDITOR, action) {
             }
 
             let dataTableName = datatable.DATA.id;
-            const vm = window.VueTools.createApp({
-                components: {},
-                data() {
-                    return {
-                        data: null,
-                        idKey: null,
-                        dataTable: null,
-                        dataTableName: null,
-                        click: null,
-                        attr: null
-                    }
-                },
-                created() {
-                    this.data = fixNullData(conf.jsonData, conf.className);
-                    //console.log("JS created, data=", this.data, " conf=", conf, " val=", conf._input.val());
-                    this.idKey = conf._id;
-                    this.dataTableName = dataTableName;
-                    //co sa ma stat po kliknuti prenasame z atributu className datatabulky (pre jednoduchost zapisu), je to hodnota obsahujuca dt-tree-
-                    //priklad: className: "dt-row-edit dt-style-json dt-tree-group", click=dt-tree-group
-                    const confClassNameArr = conf.className.split(" ");
-                    for (var i=0; i<confClassNameArr.length; i++) {
-                        let className = confClassNameArr[i];
-                        if (className.indexOf("dt-tree-")!=-1) this.click = className;
-                    }
-                    //console.log("click=", this.click);
-                    this.dataTable = EDITOR.TABLE;
-                    if (typeof(conf.attr)!="undefined") this.attr = conf.attr;
-                },
-                methods: {
-                    remove(id) {
-                        //console.log("REMOVE impl, id=", id, "click=", this.click);
-                        let that = this;
-                        this.data = this.data.filter(function( obj ) {
-                            //console.log("Testing ", obj.groupId+" doc=", obj.docId);
-                            if (that.click.indexOf("dt-tree-page")!=-1) return obj.docId !== id;
-                            else if (that.click.indexOf("dt-tree-group")!=-1) return obj.groupId !== id;
-                            else return obj.id !== id;
-                        });
-                        window.$(textFieldInput).val(JSON.stringify(this.data, undefined, 4));
-                    }
-                }
+            const component = createWebjetDteJsTree({
+                inputElement: textFieldInput[0],
+                dataTableName,
+                dataTable: datatable,
+                mode: conf.className,
+                attributes: conf.attr,
+                value: fixNullData(conf.jsonData, conf.className)
             });
-            VueTools.setDefaultObjects(vm);
-
-            vm.component('webjet-dte-jstree', window.VueTools.getComponent('webjet-dte-jstree'));
-            vm.mount(conf._el);
+            inputBox.find('div.webjet-component')[0].appendChild(component);
 
             //return original docId value to field instead of JSON string
             if (typeof v.originalValue != "undefined" && v.originalValue != null) textFieldInput.val(v.originalValue);

@@ -1,396 +1,208 @@
 # Adding a provider
 
-To add support for a new provider (`provider`), you must meet the following conditions:
+Communication with the external AI service belongs to a separate library [webjet-ai](https://github.com/webjetcms/webjet-ai). The library is framework-independent and may not import classes from `sk.iway.iwcm` or read WebJET `Constants`.
 
-- create 2 classes with the annotation `@Service`, ideally in the package `sk.iway.iwcm.components.ai.providers.PROVIDER_NAME`, where implementations for `openai`, `gemini`, `openrouter` and `browser` already exist
-- one class must implement the interface [AiInterface](../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiInterface.java) and implement all mandatory methods
-- the second class must implement the interface [AiAssitantsInterface](../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiAssitantsInterface.java) and implement all mandatory methods
+Server provider integration has three parts:
 
-The rest will be taken care of by the classes [AiService](../../../../../src/main/java/sk/iway/iwcm/components/ai/rest/AiService.java) and [AiAssistantsService](../../../../../../src/main/java/sk/iway/iwcm/components/ai/rest/AiAssistantsService.java), which will dynamically process the request based on the provider identifier.
+- implementation of `AiProvider` in `webjet-ai`, which ensures communication with the provider, response processing and streaming
+- a thin WebJET CMS service extending [LibrarySupportLogic](../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/LibrarySupportLogic.java), which connects the library with the CMS
+- optional implementation of [AiAssitantsInterface](../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiAssitantsInterface.java) for provider fields in the assistant editor
 
-## Implementations `AiAssitantsInterface`
+Register the provider in [AiLibraryConfiguration](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiLibraryConfiguration.java) and map the CMS configuration in [WebjetAiConfigurationService](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/WebjetAiConfigurationService.java). Request and domain processing, configuration, auditing, statistics, persistence, prompt macros, and temporary files remain managed by WebJET CMS.
 
-This implementation is simple - it's just a few methods for extensibility.
+The previous CMS transport SPI has been removed. Existing custom server providers need to be migrated to the `AiProvider` library interface and the `LibrarySupportLogic` CMS adapter.
 
-Implementation example:
+## Implementation `AiProvider`
+
+Implement `com.webjetcms.ai.AiProvider` in a standalone library or in another framework-independent library that depends on it. The stable value returned by the `id()` method identifies the provider in both the library and CMS adapters.
 
 ```java
-/**
- * Service for OpenAI assistants - handles provider specific options
- */
-@Service
-public class OpenAiAssistantsService implements AiAssitantsInterface {
+public final class AcmeProvider implements AiProvider {
 
-    public String getProviderId() {
-        return "openai";
+    @Override
+    public String id() {
+        return "acme";
     }
 
-    public boolean isInit() {
-        return Tools.isNotEmpty(OpenAiSupportService.getApiKey());
+    @Override
+    public List<ModelInfo> listModels(AiProviderConfig config) throws AiProviderException {
+        // Load and map the provider model catalogue.
+        throw new UnsupportedOperationException("Implement provider call");
     }
 
-    public void prepareBeforeSave(AssistantDefinitionEntity assistantEnity) {
-        if(Tools.isEmpty(assistantEnity.getModel())) assistantEnity.setModel("gpt-3.5-turbo");
+    @Override
+    public AiResponse execute(AiRequest request, AiProviderConfig config) throws AiProviderException {
+        // Execute a provider-neutral text or image request.
+        throw new UnsupportedOperationException("Implement provider call");
     }
 
-    public void setProviderSpecificOptions(DatatablePageImpl<AssistantDefinitionEntity> page, Prop prop) {
-        //open AI specific options
-        page.addOptions("imagesQuality", getQualityOptions(), "label", "value", false);
-        page.addOptions("imagesSize", getSizeOptions(), "label", "value", false);
-    }
-
-    public List<String> getFieldsToShow(String action) {
-        if("create".equals(action)) return List.of("model", "useStreaming", "useTemporal");
-        else if("edit".equals(action)) return List.of("model", "useStreaming", "useTemporal");
-        else return new ArrayList<>();
-    }
-
-    private List<LabelValue> getQualityOptions() {
-        List<LabelValue> qualityOptions = new ArrayList<>();
-        qualityOptions.add(new LabelValue("low", "low"));
-        qualityOptions.add(new LabelValue("medium", "medium"));
-        qualityOptions.add(new LabelValue("high", "high"));
-        return qualityOptions;
-    }
-
-    private List<LabelValue> getSizeOptions() {
-        List<LabelValue> sizeOptions = new ArrayList<>();
-        sizeOptions.add(new LabelValue("auto", "auto"));
-        sizeOptions.add(new LabelValue("1024x1024", "1024x1024"));
-        sizeOptions.add(new LabelValue("1024x1536", "1024x1536"));
-        sizeOptions.add(new LabelValue("1536x1024", "1536x1024"));
-        return sizeOptions;
+    @Override
+    public AiResponse stream(
+        AiRequest request,
+        AiProviderConfig config,
+        AiStreamListener listener
+    ) throws AiProviderException {
+        // Decode the provider stream and send text fragments to the listener.
+        throw new UnsupportedOperationException("Implement provider call");
     }
 }
 ```
 
-## Implementations `AiInterface`
+API keys, endpoint changes, timeouts, and trusted headers are only passed to the provider through the immutable `AiProviderConfig` object. The library must not directly access servlet requests, Spring services, the database, or CMS configuration. Full implementations can be found among the providers in the [webjet-ai repository](https://github.com/webjetcms/webjet-ai).
 
-This implementation is more complex because it handles all communication with the provider. You have 2 options.
+## Provider registration in CMS
 
-### Option one
-
-Your class implements the interface `AiInterface` and also extends the abstract class [SupportLogic](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/SupportLogic.java). This class already contains implementations of the required methods `AiInterface` and most of the necessary logic. Since `SupportLogic` implements [SupportLogicInterface](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/SupportLogicInterface.java), you only implement the methods from this interface.
-
-Advantage: you avoid a lot of redundant logic common to all providers. Many implementation issues and bugs are already fixed. This is how providers `openai`, `gemini` and `openrouter` work. If any part is different, you can overload the necessary method.
-
-In the following example, you don't see the extension of `SupportLogic` directly because the class `OpenAiSupportService` already extends it.
-
-Implementation example:
+Add a provider instance to the `AiClient` object managed by the CMS:
 
 ```java
-/**
- * Service for OpenAI assistants - handles calls to OpenAI API
- * We do not use any official SDK, but rather direct REST calls, so its easy to maintain and we can see what is going on.
- * docs: https://platform.openai.com/docs/api-reference
- */
+@Configuration
+public class AiLibraryConfiguration {
+
+    @Bean(destroyMethod = "close")
+    public AiClient webjetAiClient() {
+        return AiClient.of(
+            new OpenAiProvider(),
+            new GeminiProvider(),
+            new OpenRouterProvider(),
+            new AcmeProvider()
+        );
+    }
+}
+```
+
+Create a thin adapter extending `LibrarySupportLogic`. The base class maps CMS requests to library requests and leaves auditing, statistics, prompt handling, and temporary files to the CMS:
+
+```java
 @Service
-public class OpenAiService extends OpenAiSupportService implements AiInterface {
+public class AcmeService extends LibrarySupportLogic {
 
-    private static final String PROVIDER_ID = "openai";
-    private static final String TITLE_KEY = "components.ai_assistants.provider.openai.title";
+    public AcmeService(
+        AiClient aiClient,
+        WebjetAiConfigurationService configurationService
+    ) {
+        super(aiClient, configurationService);
+    }
 
-    private static final ObjectMapper mapper = new ObjectMapper();
-
+    @Override
     public String getProviderId() {
-        return PROVIDER_ID;
+        return "acme";
     }
 
-    public String getServiceName() {
-        return "OpenAiService";
-    }
-
+    @Override
     public String getTitleKey() {
-        return TITLE_KEY;
+        return "components.ai_assistants.provider.acme.title";
     }
 
-    public boolean isInit() {
-        return Tools.isNotEmpty(getApiKey());
-    }
-
-    public int addUsageAndReturnTotal(StringBuilder sb, int addTokens, JsonNode root) {
-        int totalTokens = addTokens;
-        if(root.has("usage")) {
-            JsonNode usage = root.path("usage");
-            int inputTokens = usage.path("input_tokens").asInt(0);
-            int outputTokens = usage.path("output_tokens").asInt(0);
-            totalTokens = usage.path("total_tokens").asInt(0) + addTokens;
-
-            sb.append("\t input_tokens: ").append(inputTokens).append("\n");
-            sb.append("\t output_tokens: ").append(outputTokens).append("\n");
-            sb.append("\t total_tokens: ").append(totalTokens).append("\n");
-        }
-        return totalTokens;
-    }
-
-    public HttpRequestBase getModelsRequest (HttpServletRequest request) {
-        HttpGet get = new HttpGet(MODELS_URL);
-        addHeaders(get, true);
-        return get;
-    }
-
-    public List<LabelValue> extractModels(JsonNode root) {
-        List<LabelValue> supportedValues = new ArrayList<>();
-        for (JsonNode model : root.get("data")) {
-            String modelId = model.get("id").asText();
-            String created = model.get("created").asText();
-            supportedValues.add(new LabelValue(modelId, created));
-        }
-        supportedValues.sort(Comparator.comparingLong((LabelValue o) -> Long.parseLong(o.getValue())).reversed());
-        for (LabelValue modelValue : supportedValues) modelValue.setValue(modelValue.getLabel());
-        return supportedValues;
-    }
-
-    public HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
-        ObjectNode mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
-        mainObject.put(MODEL.value(), assistant.getModel());
-        mainObject.put(STORE.value(), !assistant.getUseTemporal());
-
-        HttpPost post = new HttpPost(RESPONSES_URL);
-        post.setEntity(getRequestBody(mainObject.toString()));
-        addHeaders(post, true);
-
-        return post;
-    }
-
-    public String extractResponseText(JsonNode jsonNodeRes) {
-        ArrayNode data = (ArrayNode) jsonNodeRes.path(OUTPUT);
-        JsonNode firstMessage = data.get(0);
-        ArrayNode contentArray = (ArrayNode) firstMessage.path("content");
-        return  contentArray.get(0).path("text").asText();
-    }
-
-    public HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
-        ObjectNode mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
-        mainObject.put(MODEL.value(), assistant.getModel());
-        mainObject.put(STORE.value(), !assistant.getUseTemporal());
-        mainObject.put(STREAM.value(), assistant.getUseStreaming());
-
-        HttpPost post = new HttpPost(RESPONSES_URL);
-        post.setEntity(getRequestBody(mainObject.toString()));
-        addHeaders(post, true);
-        post.setHeader("Accept", "text/event-stream");
-
-        return post;
-    }
-
-    public JsonNode handleBufferedReader(BufferedReader reader,  BufferedWriter writer, Map<Integer, String> replacedIncludes) throws IOException {
-        OpenAiStreamHandler streamHandler = new OpenAiStreamHandler(replacedIncludes);
-        streamHandler.handleBufferedReader(reader, writer);
-        return streamHandler.getUsageChunk();
-    }
-
-
-    public HttpRequestBase getImageResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request, Prop prop) throws IOException {
-        if(inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE)) {
-            //ITS IMAGE EDIT - I GOT IMAGE to edit AND I WILL RETURN IMAGE
-            return getEditImagePost(inputData, assistant.getModel(), instructions, prop);
-        } else {
-            //ITS IMAGE GENERATION - INPUT IS TEXT RETUN IMAGE
-            return getCreateImagePost(inputData, assistant.getModel(), instructions);
-        }
-    }
-
-    public String getFinishError(JsonNode jsonNodeRes) {
-        // OpenAI in new reponse API use STATUS instead of finish_reason
-
-        // Need to be in try catch because IMAGES for example do not return status :)
-        String status = null;
-        try { status= jsonNodeRes.path(OUTPUT).get(0).path("status").asText("");
-        } catch(Exception e) { return null; }
-
-        if("completed".equalsIgnoreCase(status)) {
-            //All good
-            return null;
-        } else if("incomplete".equalsIgnoreCase(status)) {
-            // Problem, try extract reason
-            return jsonNodeRes.path(OUTPUT).get(0).path("incomplete_details").path("reason").asText(status);
-        } else {
-            // UNKNOWN
-            return status;
-        }
-    }
-
-    public ArrayNode getImages(JsonNode jsonNodeRes) {
-        JsonNode imagesArr = jsonNodeRes.path("data");
-        return imagesArr.isArray() ? (ArrayNode) imagesArr : mapper.createArrayNode();
-    }
-
-    public String getImageFormat(JsonNode jsonNodeRes, JsonNode jsonImage) {
-        //OpeAI returns global fomat, not local
-        return "." + jsonNodeRes.path("output_format").asText( "png");
-    }
-
-    public String getImageBase64(JsonNode jsonNodeRes, JsonNode jsonImage) {
-        return jsonImage.path("b64_json").asText(null);
-    }
-
-    public String getModelForImageNameGeneration() {
-        return Constants.getString("ai_openAi_generateFileNameModel");
-    }
-
+    @Override
     public String getBonusHtml(AssistantDefinitionEntity assistant, Prop prop) {
-        if("edit_image".equals(assistant.getAction()) || "generate_image".equals(assistant.getAction())) {
-            String model = assistant.getModel();
-
-            return """
-                <div class='bonus-content row mt-3'>
-                    <div class='col-sm-4'>
-                        <label for='bonusContent-imageCount'>%s</label>
-                        <input id='bonusContent-imageCount' type='number' class='form-control' value=1>
-                    </div>
-                    %s
-                    %s
-                </div>
-            """.formatted(
-                prop.getText("components.ai_assistants.imageCount"),
-                getImageSizeSelect(model, prop),
-                getImageQualitySelect(model, prop)
-            );
-        }
-
         return "";
     }
-
-    private HttpPost getEditImagePost(InputDataDTO inputData, String model, String instructions, Prop prop) throws IOException {
-        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-        builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-
-        builder.addTextBody(MODEL.value(), model);
-        builder.addTextBody("prompt", instructions);
-        builder.addTextBody("n", inputData.getImageCount() == null ? "1" : inputData.getImageCount().toString());
-
-        if(inputData.getImageQuality() != null) {
-            builder.addTextBody("quality", inputData.getImageQuality());
-        }
-
-        //1024x1024 is valid for gpt-image dalle-3 and dalle-2 ... soo best default value
-        builder.addTextBody("size", inputData.getImageSize() == null ? "1024x1024" : inputData.getImageSize());
-
-        BufferedImage image = ImageIO.read( inputData.getInputFile() );
-        if (image == null) throw new IllegalStateException("Image not founded or not a Image.");
-
-        //Set image
-        if("dall-e-2".equals(model)) {
-           throw new IllegalStateException( prop.getText("components.ai_assistants.not_supproted_action_err") );
-        } else {
-            builder.addBinaryBody("image", inputData.getInputFile(), inputData.getContentType(), inputData.getInputFile().getName());
-        }
-
-        //Set entity and headers
-        HttpPost post = new HttpPost(IMAGES_EDITS_URL);
-        post.setEntity(builder.build());
-        addHeaders(post, false);
-
-        return post;
-    }
-
-    private HttpPost getCreateImagePost(InputDataDTO inputData, String model, String instructions) {
-        ObjectNode json = mapper.createObjectNode();
-        json.put(MODEL.value(), model);
-        json.put("prompt", instructions);
-        json.put("n", inputData.getImageCount() == null ? 1 : inputData.getImageCount());
-
-        if(inputData.getImageQuality() != null) {
-            json.put("quality", inputData.getImageQuality());
-        }
-
-        //1024x1024 is valid for gpt-image dalle-3 and dalle-2 ... soo best default value
-        json.put("size", inputData.getImageSize() == null ? "1024x1024" : inputData.getImageSize());
-
-        if("dall-e-2".equals(model) || "dall-e-3".equals(model)) {
-            json.put("response_format", "b64_json");
-        }
-
-        HttpPost post = new HttpPost(IMAGES_GENERATION_URL);
-        post.setEntity(getRequestBody(json.toString()));
-        addHeaders(post, true);
-
-        return post;
-    }
 }
 ```
 
-### Option mate
+The provider identifier must match the value `AiProvider.id()`. Add the subtitle key to the CMS translation files.
 
-Your class implements the `AiInterface` interface and all its required methods. This is more time-consuming - only use this path if your implementation is significantly different from other providers.
+## WebJET configuration mapping
 
-Implementation example:
+Add the provider configuration key to [WebjetAiConfigKeys](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/WebjetAiConfigKeys.java) and map it in `WebjetAiConfigurationService`:
 
 ```java
-/**
- * Service for Chrome Built-in AI:
- * https://developer.chrome.com/docs/ai/built-in
- */
+private String apiKey(String providerId) {
+    return switch (providerId) {
+        case "openai" -> Constants.getString(WebjetAiConfigKeys.OPENAI_API_KEY);
+        case "gemini" -> Constants.getString(WebjetAiConfigKeys.GEMINI_API_KEY);
+        case "openrouter" -> Constants.getString(WebjetAiConfigKeys.OPENROUTER_API_KEY);
+        case "acme" -> Constants.getString(WebjetAiConfigKeys.ACME_API_KEY);
+        default -> "";
+    };
+}
+```
+
+`WebjetAiConfigurationService.resolve(providerId, request)` creates an object `AiProviderConfig` for the current request. Extend the method if the provider needs a CMS-managed endpoint or a trusted metadata header. Never pass user-supplied headers directly and do not log login credentials.
+
+## Implementation `AiAssitantsInterface`
+
+Create this CMS adapter if the provider needs default values ​​or custom fields in the assistant editor. Check the provider configuration status via `WebjetAiConfigurationService`:
+
+```java
 @Service
-public class BrowserService implements AiInterface {
+public class AcmeAssistantsService implements AiAssitantsInterface {
 
-    protected static final String PROVIDER_ID = "browser";
-    private static final String TITLE_KEY = "components.ai_assistants.provider.browser.title";
+    private final WebjetAiConfigurationService configurationService;
 
+    public AcmeAssistantsService(WebjetAiConfigurationService configurationService) {
+        this.configurationService = configurationService;
+    }
+
+    @Override
     public String getProviderId() {
-        return PROVIDER_ID;
+        return "acme";
     }
 
+    @Override
     public boolean isInit() {
-        return Constants.getBoolean("ai_browserAiEnabled");
+        return configurationService.isConfigured(getProviderId());
     }
 
-    public Pair<String, String> getProviderInfo(Prop prop) {
-        return new Pair<>(PROVIDER_ID, prop.getText(TITLE_KEY));
+    @Override
+    public void prepareBeforeSave(AssistantDefinitionEntity assistant) {
+        if (Tools.isEmpty(assistant.getModel())) {
+            assistant.setModel("acme-default-model");
+        }
     }
 
-    public AssistantResponseDTO getAiAssistantResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws Exception {
-        return null;
+    @Override
+    public void setProviderSpecificOptions(
+        DatatablePageImpl<AssistantDefinitionEntity> page,
+        Prop prop
+    ) {
+        // Add provider-specific editor options when needed.
     }
 
-    public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) {
-        return null;
-    }
-
-    public AssistantResponseDTO getAiImageResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws Exception {
-        return null;
-    }
-
-    public List<LabelValue> getSupportedModels(Prop prop, HttpServletRequest request) {
-        ArrayList<LabelValue> models = new ArrayList<>();
-        models.add(new LabelValue("Gemini Nano", "v3Nano"));
-        return models;
-    }
-
-    public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, PrintWriter writer, HttpServletRequest request) throws Exception {
-        return null;
-    }
-
-    public String getBonusHtml(AssistantDefinitionEntity assistant, Prop prop) {
-        return null;
+    @Override
+    public List<String> getFieldsToShow(String action) {
+        return List.of("model", "useStreaming", "useTemporal");
     }
 }
 ```
+
+## Exception `AiInterface` browser only
+
+[BrowserService](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/browser/BrowserService.java) implements [AiInterface](../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiInterface.java) directly because Chrome Built-in AI runs in the browser and does not use server-side communication with the provider. This is the only way to implement it directly. New server-side providers must use `AiProvider` and `LibrarySupportLogic`.
+
+## Local development
+
+Until `com.webjetcms:webjet-ai` is available from Maven Central, run CMS Gradle tasks from the CMS repository with the neighboring library explicitly linked:
+
+```shell
+./gradlew --include-build ../webjet-ai compileJava test
+```
+
+Use the same `--include-build ../webjet-ai` option for every local build and CMS verification task. Do not add a permanent entry `includeBuild` to `settings.gradle`, do not use `mavenLocal()`, and do not copy JAR libraries to CMS. Regular CMS builds will fail as expected until `0.1.0` is released.
 
 ## `AiAssistantsService`
 
-`AiAssistantsService` handles requests related to the data table [Assistants](../../../../redactor/ai/settings/README.md). Provides support methods for select fields and uses automatic `dependency injection` to get all implementations of the `AiAssitantsInterface` interface. When requesting a provider, iterates over the list and performs an action on the correct implementation based on the identifier.
+`AiAssistantsService` handles requests related to the [Assistants](../../../../redactor/ai/settings/README.md) data table. Using dependency injection, it retrieves all `AiAssitantsInterface` implementations and selects them by provider identifier.
 
 Important methods:
 
 - `getAssistantAndFieldFrom` – returns assistants who meet the display conditions in the selected field
-- `getClassOptions` – returns a list of classes to which the assistant can be bound (filtering by string in the full name)
-- `getFieldOptions` – returns a list of fields of the selected class (filtering the name by the search string)
-- `prepareBeforeSave` – finds the assistant provider and calls the method of the same name on it for editing before saving
-- `getProviderSpecificOptions` – will add provider-specific options to `DatatablePageImpl`
-- `getProviderFields` – returns additional fields to display in the table editor
-- `getAssistantStatus` – returns the provider status (whether it is configured)
+- `getClassOptions` – returns classes to which the assistant can be bound
+- `getFieldOptions` – returns fields of the selected class
+- `prepareBeforeSave` – invokes provider-specific changes before saving
+- `getProviderSpecificOptions` – adds provider-specific options to `DatatablePageImpl`
+- `getProviderFields` – returns additional fields displayed in the table editor
+- `getAssistantStatus` – reports whether the provider is configured
 
 ## `AiService`
 
-`AiService` handles AI requests from assistants. Provides methods to get responses from providers selected by the assistant. Uses `dependency injection` to get all implementations of `AiInterface`.
+`AiService` processes assistant requests and uses dependency injection to obtain all CMS adapters `AiInterface`.
 
 Important methods:
 
-- `getProviders` – returns a list of configured providers
-- `getModelOptions` – returns a list of models for a given provider; there is a version with string filtering
-- `getAiResponse` – returns the text response as a whole
+- `getProviders` – returns configured providers
+- `getModelOptions` – returns provider models, optionally filtered by string
+- `getAiResponse` – returns a full text response
 - `getAiImageResponse` – returns an image response
-- `getAiStreamResponse` – returns a text response streamed via `PrintWriter`
-- `getBonusHtml` – returns HTML additional content of the assistant window according to the provider identifier
+- `getAiStreamResponse` – streams text response via `BufferedWriter`
+- `getBonusHtml` – returns additional HTML assistant windows for the provider

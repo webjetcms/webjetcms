@@ -6,7 +6,21 @@ An application for managing documents and their versions in one place. It also a
 
 In the displayed list, we see all documents that have been uploaded to the manager in the currently selected domain. The default filtering is to display only **main documents**, in other words, current versions of documents.
 
+On the left side is a **folder tree** (JSTREE) that allows you to browse the archive folders and filter documents by the selected folder. The tree displays folders from the archive root directory set by the configuration variable `fileArchivDefaultDirPath` (default `files/archiv/`). The folder for scheduled uploads from the configuration variable `fileArchivInsertLaterDirPath` is not displayed in the tree.
+
+When you click on a folder in the tree, only documents belonging to that folder will be displayed in the table. The selected folder will also be used as the target directory for [bulk file uploads](#bulk-file-uploads) and will be automatically pre-filled when creating a new document via the editor.
+
+Above the tree there are buttons:
+
+-<i class="ti ti-plus"></i> - **Add** - creates a new subfolder in the currently selected folder. The button is visible to users with `menuFileArchivManagerCategory` rights and creating a folder requires write rights to the selected folder.
+-<i class="ti ti-refresh"></i> - **Restore** - restores the folder tree structure
+-<i class="ti ti-adjustments-horizontal"></i> - **Settings** - allows you to set the width of the tree structure relative to the table
+
 ![](datatable.png)
+
+When creating a folder, enter its name and confirm the form. The name will be converted to a URL- and file system-safe format when created.
+
+![](add_folder.png)
 
 ### Document status
 
@@ -35,7 +49,7 @@ The card contains basic information for inserting a document.
 - **Name** - enter the name of the document that will be displayed on the page (as a link to the document). The field is **required**. It may contain accents, spaces, special characters.
 - **Valid from** - set the date and time when the document starts to be valid
 - **Valid until** - set the date and time of the end of the document's validity
-- **Destination directory for document upload** - select the directory where you want to upload the document (this will be useful later when filtering the display of documents on the page). The default destination directory is set with the configuration variable ```fileArchivDefaultDirPath```. The user will also be able to select a subfolder.
+- **Destination directory for document upload** - select the directory to which you want to upload the document. You can later use it to filter the display of documents on the page. You specify the default destination directory by selecting a specific folder in the tree structure. This folder will then be automatically pre-filled as the destination directory. The user will also be able to select its subfolder.
 - **File** - a field for uploading a file that represents a document. You can read more about the ```UPLAOD``` field [here](../../../developer/datatables-editor/field-file-upload.md). You can set the allowed file extensions using the ```fileArchivAllowExt``` configuration variable.
 - **Upload document later** - if you need to upload a document to the manager at a specific time and date, you can set the document to be uploaded automatically in the future. Selecting this option will display hidden fields
   - **Upload after** - select the date and time after which the document should be uploaded
@@ -69,7 +83,7 @@ In the Optional Fields tab, you can set optional attributes (values, texts) for 
 
 ### Procedure for inserting a new document
 
-First, you need to fill in the mandatory fields **Name**. **Destination directory for document upload** is also a mandatory value that is pre-filled automatically, but you can change it. Then you need to upload a file (representing the document) with an allowed extension. After successfully uploading the file, you can save the new record to the manager.
+First, you need to fill in the mandatory fields **Name**. **Destination directory for document upload** is also a mandatory value, which is pre-filled automatically according to the currently selected folder in the tree structure, but you can change it. Then you need to insert a file (representing the document) with an allowed extension. After successfully uploading the file, you can save the new record to the manager.
 
 If you uploaded a file with the wrong format, validation will not save the record, and will remind you which file extensions are allowed for upload.
 
@@ -233,6 +247,24 @@ Deleting a master document (which is not a template) will also delete all histor
 !>**Warning:** A master document cannot be deleted if it has a pending upload version.
 
 As with deleting patterns, these scheduled versions can be deleted **ONLY** using the table in the **Pending** tab.
+
+## Bulk file upload
+
+You can also upload files to the currently selected folder directly from the document list. Drag one or more files from your computer onto the document manager page. The upload uses the currently selected folder in the tree structure and the allowed file extensions from the configuration variable `fileArchivAllowExt`.
+
+During the upload, a progress bar will be displayed for each file and the overall progress. After a successful upload, a separate master document will be created for each file, its name will be pre-filled from the file name without the extension, and the table will be automatically refreshed.
+
+![](drag-drop-upload-dialog.png)
+
+If a file with the same real name already exists in the selected folder, recording will be paused and the following options will be displayed for that file:
+
+- **Skip** - the uploaded file will be discarded and the existing document will remain unchanged.
+- **Replace** - the existing master document will be replaced with a new file without creating a historical version.
+- **New version** - the new file will be saved as the current version of the document and the original file will be moved to historical versions.
+
+At the bottom of the panel, you can use the same option for all files awaiting a decision at once.
+
+![](drag-drop-upload-duplicity-dialog.png)
 
 ## Search and indexing
 

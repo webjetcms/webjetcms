@@ -9,9 +9,9 @@ name: Java CI with Gradle
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "hotfix/2026.0-main" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "hotfix/2026.0-main" ]
 
 jobs:
   build:
@@ -74,6 +74,8 @@ jobs:
         CODECEPT_DEFAULT_AUTH_TOKEN: ${{ secrets.CODECEPT_DEFAULT_AUTH_TOKEN }}
         CODECEPT_DEFAULT_DOMAIN_NAME: ${{ vars.CODECEPT_DEFAULT_DOMAIN_NAME }}
         DEEPL_AUTH_KEY: ${{ secrets.DEEPL_AUTH_KEY }}
+        GPR_USER: ${{ secrets.GPR_USER }}
+        GPR_API_KEY: ${{ secrets.GPR_API_KEY }}
       run: |
         webjetDbPassword=root_password webjetDbUrl=jdbc:mysql://127.0.0.1:33006/webjetcms_web webjetDbUserName=root ./gradlew cleanTest test
 
@@ -102,4 +104,7 @@ jobs:
     # Generates and submits a dependency graph, enabling Dependabot Alerts for all project dependencies.
     # See: https://github.com/gradle/actions/blob/main/dependency-submission/README.md
     - name: Generate and submit dependency graph
+      env:
+        GPR_USER: ${{ secrets.GPR_USER }}
+        GPR_API_KEY: ${{ secrets.GPR_API_KEY }}
       uses: gradle/actions/dependency-submission@v5

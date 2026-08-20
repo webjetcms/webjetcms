@@ -1,0 +1,59 @@
+<script>
+
+    function appAfterInit(response, datatable) {
+        window.addEventListener("WJ.DTE.opened", function(e) {
+            const options = response.options;
+            const allowedOptions = options.allowedOptions || [];
+
+            allowedOptions.forEach(option => {
+                const label = option.label;
+                const value = option.value;
+
+                if("semanticSearch" === label && "false" === value.toString()) {
+                    disableSemantic();
+                } else if("hybridSearch" === label && "false" === value.toString()) {
+                    disableHybrid();
+                } else if("ragAnswer" === label && "false" === value.toString()) {
+                    disableRagAnswer();
+                }
+            });
+        });
+    }
+
+    function disableSemantic() {
+        const parent = document.querySelector("div.DTE_Field_Name_searchType input[value='semantic']")?.parentElement;
+        if (parent) {
+            parent.style.color = "#E00028";
+        }
+
+        const tab = document.getElementById("pills-dt-component-datatable-semanticSearch-tab");
+        if(tab) {
+            tab.style.color = "#E00028";
+        }
+    }
+
+    function disableHybrid() {
+        const parent = document.querySelector("div.DTE_Field_Name_searchType input[value='hybrid']")?.parentElement;
+        if (parent) {
+            parent.style.color = "#E00028";
+        }
+
+        const tab = document.getElementById("pills-dt-component-datatable-hybridSearch-tab");
+        if(tab) {
+            tab.style.color = "#E00028";
+        }
+    }
+
+    function disableRagAnswer() {
+        const parent = document.querySelector(".DTE_Field_Name_answerAllowed input[value='trueValue']")?.parentElement;
+        if (parent) {
+            parent.style.color = "#E00028";
+        }
+
+        const tab = document.getElementById("pills-dt-component-datatable-ragAnswer-tab");
+        if(tab) {
+            tab.style.color = "#E00028";
+        }
+    }
+
+</script>

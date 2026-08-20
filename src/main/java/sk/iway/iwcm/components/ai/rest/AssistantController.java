@@ -6,9 +6,6 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.UploadFileTools;
@@ -56,7 +55,11 @@ public class AssistantController {
     public AssistantResponseDTO getAiReponse(@RequestBody InputDataDTO inputData, HttpServletRequest request) {
         AssistantResponseDTO responseDto = null;
         String exceptionMessage = null;
+
         try {
+            // Safety measure - InputDataDTO.bonusParams can be set ONLY in BE
+            inputData.setBonusParams(null);
+
             responseDto = aiService.getAiResponse(inputData, statRepo, assistantRepo, request);
         } catch (ProviderCallException e) {
             e.printStackTrace();
@@ -81,6 +84,9 @@ public class AssistantController {
         String exceptionMessage = null;
 
         try {
+            // Safety measure - InputDataDTO.bonusParams can be set ONLY in BE
+            inputData.setBonusParams(null);
+
             responseDto = aiService.getAiImageResponse(inputData, statRepo, assistantRepo, request);
         } catch (ProviderCallException e) {
             e.printStackTrace();
@@ -118,6 +124,9 @@ public class AssistantController {
         String exceptionMessage = null;
 
         try {
+            // Safety measure - InputDataDTO.bonusParams can be set ONLY in BE
+            inputData.setBonusParams(null);
+
             responseDto = aiService.getAiStreamResponse(inputData, statRepo, assistantRepo, writer, request);
         } catch (ProviderCallException e) {
             e.printStackTrace();

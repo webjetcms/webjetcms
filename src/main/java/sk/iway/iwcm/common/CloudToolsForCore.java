@@ -77,7 +77,9 @@ public class CloudToolsForCore {
         "conf.show_all_variables",
         "prop.show_all_texts",
         "cmp_mirroring",
-        "menuTemplatesGroup"
+        "menuTemplatesGroup",
+
+        "embeddingChunks"
     ));
 
     //disabled items for multiweb/InitServlet.isTypeCloud()
@@ -106,7 +108,8 @@ public class CloudToolsForCore {
 
         "conf.show_all_variables",
         "prop.show_all_texts",
-        "menuTemplatesGroup"
+
+        "embeddingChunks"
     ));
     private static final Set<String> DISABLED_ITEMS_MULTIWEB_ALL = new HashSet<>(Arrays.asList(
         "make_zip_archive",
@@ -368,20 +371,22 @@ public class CloudToolsForCore {
             user.setEditableGroups(filterGroupIds(user.getEditableGroups()));
         }
 
-        String defaultFolders = "/images/*\n/files/*";
+        if (isControllerDomain()==false) {
+            String defaultFolders = "/images/*\n/files/*";
 
-        user.setWritableFolders(filterWritableFolders(user.getWritableFolders()));
-        if (Tools.isEmpty(user.getWritableFolders()))
-        {
-
-            String domainAlias = MultiDomainFilter.getDomainAlias(CloudToolsForCore.getDomainName());
-            if ("cloud".equals(Constants.getInstallName())==false && Tools.isNotEmpty(domainAlias))
+            user.setWritableFolders(filterWritableFolders(user.getWritableFolders()));
+            if (Tools.isEmpty(user.getWritableFolders()))
             {
-                //pre multiweb pridame tieto adresare ak ma domena domainAlias
-                defaultFolders += "\n/components/"+domainAlias+"/*\n/templates/"+domainAlias+"/*";
-            }
 
-            user.setWritableFolders(defaultFolders);
+                String domainAlias = MultiDomainFilter.getDomainAlias(CloudToolsForCore.getDomainName());
+                if ("cloud".equals(Constants.getInstallName())==false && Tools.isNotEmpty(domainAlias))
+                {
+                    //pre multiweb pridame tieto adresare ak ma domena domainAlias
+                    defaultFolders += "\n/components/"+domainAlias+"/*\n/templates/"+domainAlias+"/*";
+                }
+
+                user.setWritableFolders(defaultFolders);
+            }
         }
 
         //vytvor adresare (ak neexistuju)
@@ -723,7 +728,7 @@ public class CloudToolsForCore {
 		{
 			String key = getTextKey(text);
 			//Logger.debug(CloudToolsForCore.class, "Text="+text+" key="+key);
-			if ((prop==null || prop.getText(key).equals(key)) && textyToAdd.containsKey(key)==false)
+			if ((prop==null || prop.getText(key, false).equals(key)) && textyToAdd.containsKey(key)==false)
 			{
 				//Logger.debug(CloudToolsForCore.class, "++++adding: "+key+"="+text);
 				textyToAdd.put(key, text);
@@ -773,6 +778,8 @@ public class CloudToolsForCore {
 	 */
 	public static boolean isGroupFromMyDomain(int groupId)
 	{
+        if (Constants.getBoolean("multiDomainEnabled")==false) return true;
+
 		GroupsDB groupsDB = GroupsDB.getInstance();
 		GroupDetails group = groupsDB.getGroup(groupId);
 		if (group != null && group.getDomainName().equals(CloudToolsForCore.getDomainName())) return true;

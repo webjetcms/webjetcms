@@ -108,9 +108,8 @@ $ai-color-hover: #E3DBFF;
 
 @import "~bootstrap/scss/bootstrap";
 
-@import "~@tabler/icons-webfont/dist/tabler-icons-filled";
+@import "~@tabler/icons-webfont/dist/tabler-icons-filled-fixed";
 @import "~@tabler/icons-webfont/dist/tabler-icons";
-
 
 @import "~datatables.net-bs5";
 @import "~datatables.net-editor-bs5/css/editor.bootstrap5.min.css";
@@ -198,6 +197,7 @@ $ai-color-hover: #E3DBFF;
 
 @import "5-modules/md-elfinder";
 @import "5-modules/md-ai";
+@import "5-modules/md-web-components";
 
 @import "5-modules/md-stats-by-charts";
 
@@ -222,4 +222,3 @@ $ai-color-hover: #E3DBFF;
 
 // HOTFIX
 @import "hotfix";
-

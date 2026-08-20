@@ -137,7 +137,7 @@
     - [Zoznam rezervačných objektov](/redactor/apps/reservation/reservation-objects/README.md)
     - [Aplikácia Rezervácie](/redactor/apps/reservation/reservation-app/README.md)
     - [Aplikácia Rezervácia času](/redactor/apps/reservation/time-book-app/README.md)
-    - [Aplikácia Rezervácia dní](/redactor/apps/reservation/day-book-app/README.md)
+    - [Aplikácia Moje rezervácie](/redactor/apps/reservation/my-reservations-app/README.md)
   - [Skripty](/redactor/apps/insert-script/README.md)
   - [Slider](/redactor/apps/slider/README.md)
   - [Slit slider](/redactor/apps/app-slit_slider/README.md)
@@ -146,7 +146,10 @@
   - [Vloženie dokumentu](/redactor/apps/app-docsembed/README.md)
   - [Vloženie HTML kódu](/redactor/apps/app-htmlembed/README.md)
   - [Vyhľadávače (SEO)](/redactor/apps/seo/README.md)
-  - [Vyhľadávanie](/redactor/apps/search/README.md)
+  - Vyhľadávanie
+    - [Vyhľadávanie](/redactor/apps/search/README.md)
+    - [Sémantické vyhľadávanie (RAG)](/redactor/apps/semantic-search/README.md)
+    - [Sémantický index](/redactor/apps/semantic-search/embedding-chunks.md)
   - [Zobrazenie súborov](/redactor/apps/site-browser/README.md)
   - [Zrkadlenie štruktúry](/redactor/apps/docmirroring/README.md)
 - Súbory

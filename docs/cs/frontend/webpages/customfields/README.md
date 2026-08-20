@@ -24,6 +24,8 @@ Názvy Pole A - Pole X lze změnit v konfiguraci v části editace textů. Stač
 
 Technické informace jsou uvedeny v [dokumentaci pro programátora](../../../developer/datatables-editor/customfields.md).
 
+!>Nastavení lze provádět i přes tabulku [Volitelná pole](custom-fields-settings.md). Pokud pro stejné pole existuje záznam v tabulce, má přednost před konfigurací z překladových klíčů.
+
 ## Typy polí
 
 Pole se standardně zobrazují jako textová, pomocí změny definice přes překladové klíče lze typy polí změnit.
@@ -72,6 +74,10 @@ Pro možnost výběru z předem definovaných hodnot lze do `.type` zadat možn�
 
 `editor.field_x.type=Hodnota 1|Hodnota 2|Hodnota 3`
 
+Možné je použít i formát `label:value`, například:
+
+`editor.field_x.type=Slovensko:sk|Česko:cz|Rakúsko:at`
+
 Chcete-li mít možnost **nastavit prázdnou hodnotu** začněte seznam možností hodnotou `|`:
 
 `editor.field_x.type=|Hodnota 1|Hodnota 2|Hodnota 3`
@@ -84,9 +90,23 @@ V případě potřeby použití výběru více možností se před hodnotu dopln
 
 `editor.field_x.type=multiple:Hodnota 1|Hodnota 2|Hodnota 3`
 
+Rovněž je podporován formát `label:value`:
+
+`editor.field_x.type=multiple:Slovensko:sk|Česko:cz|Rakúsko:at`
+
 Hodnoty se pak ukládají do pole oddělené pomocí znaku `|`
 
 `Hodnota 1|Hodnota 3`
+
+### Přepínač
+
+Typ pole `radio` zobrazí seznam možností jako přepínač, uživatel může vybrat právě jednu hodnotu. Možnosti se nastavují v tabulce [Volitelná pole](custom-fields-settings.md) stejně jako u výběrového pole - jako statický seznam hodnot, nebo dynamicky propojením na číselník.
+
+### Zaškrtávací pole
+
+Typ pole `checkbox` zobrazí seznam možností jako zaškrtávací pole, uživatel může vybrat více hodnot. Možnosti se nastavují v tabulce [Volitelná pole](custom-fields-settings.md) stejně jako u výběrového pole - jako statický seznam hodnot, nebo dynamicky propojením na číselník.
+
+Vybrané hodnoty se ukládají do pole oddělené pomocí znaku `|`.
 
 ### Boolovská hodnota
 
@@ -113,6 +133,8 @@ Pokud potřebujete nepoužívaná pole skrýt, můžete použít pole typu `none
 Pole typu `autocomplete` funguje podobně jako výběrové pole, ale umožňuje zadat i jinou hodnotu než jsou výchozí možnosti. Funkce se zapne prefixem `autocomplete:` v možných hodnotách oddělených znakem `|`. Zároveň výchozí možnosti se zobrazují postupně po zadání alespoň 3 znaků:
 
 `temp-3.editor.field_d.type=autocomplete:Autocomplete Možnosť 1|Autocomplete Iná možnosť|Autocomplete Pokus 3`
+
+Stejný seznam lze nastavovat i v tabulce Volitelná pole přes typ pole `autocomplete`.
 
 ### Výběr obrázku
 

@@ -3,10 +3,12 @@ package sk.iway.iwcm.components.ai.providers.openrouter;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiAssitantsInterface;
+import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 
@@ -16,12 +18,19 @@ import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 @Service
 public class OpenRouterAssistantsService implements AiAssitantsInterface {
 
+    private final WebjetAiConfigurationService configurationService;
+
+    @Autowired
+    public OpenRouterAssistantsService(WebjetAiConfigurationService configurationService) {
+        this.configurationService = configurationService;
+    }
+
     public String getProviderId() {
         return "openrouter";
     }
 
     public boolean isInit() {
-       return true;
+       return configurationService.isConfigured(getProviderId());
     }
 
     public List<String> getFieldsToShow(String action) {

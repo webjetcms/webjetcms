@@ -1,0 +1,280 @@
+# Prehľad nových vlastností - rok 2026
+
+Táto sekcia obsahuje opisy vlastností a **funkcionalít WebJET CMS zrozumiteľným jazykom**, bez zbytočne technických formulácií v roku 2026. Nové záznamy sa pridávajú na vrch (pod tento úvod), takže najnovšie vlastnosti sú vždy hore.
+
+---
+
+## Jednoduché odhalenie a odstránenie nepoužívaných súborov
+
+WebJET CMS pomáha organizáciám **odhaliť súbory, ktoré už pravdepodobne nie sú potrebné**, priamo vo vlastnostiach priečinka v Prieskumníkovi. Administrátor spustí kontrolu zvoleného priečinka a systém porovná jeho obsah s použitím v publikovaných webových stránkach, médiách, banneroch, galériách a ďalších štandardných častiach CMS. Bez zdĺhavého ručného prehľadávania tak získa podklad na uvoľnenie úložiska a odstránenie zastaraného digitálneho obsahu.
+
+Kontrola prebieha **na pozadí bez zablokovania práce** a jej rozsah možno prispôsobiť voľbou konkrétneho priečinka alebo zahrnutím všetkých podpriečinkov. Výsledok sa zobrazí v prehľadnej tabuľke s názvom, umiestnením, dátumom zmeny a veľkosťou súboru; súbor možno pred rozhodnutím otvoriť v náhľade. Administrátor potom odstráni iba označené položky alebo celý skontrolovaný zoznam naraz, čo umožňuje spojiť rýchle hromadné čistenie s individuálnou kontrolou citlivých súborov.
+
+![Výsledok kontroly nepoužívaných súborov](../../redactor/files/fbrowser/folder-settings/folder_settings_unused_files_result.png)
+
+Funkcia rešpektuje **prístupové práva, oddelenie domén a oprávnenie na zápis do priečinka**. Výsledky jednotlivých administrátorov sa nezdieľajú a systém koordinuje súbežnú kontrolu a mazanie, aby obmedzil kolízie pri tímovej správe. Keďže súbor používaný z vlastného kódu, externého systému alebo iného neštandardného zdroja nemusí byť rozpoznaný, výsledok je zámerne určený na kontrolované rozhodnutie administrátora; pred nevratným zmazaním je potrebné označené súbory overiť.
+
+**Hlavné benefity:**
+
+- **Nižšie náklady na úložisko**: Odhalenie zabudnutých obrázkov, dokumentov a ďalších súborov pomáha uvoľniť diskový priestor bez ručnej inventúry.
+- **Rýchlejšia údržba obsahu**: Automatická kontrola štandardných častí CMS nahrádza zdĺhavé vyhľadávanie odkazov a väzieb ku každému súboru.
+- **Flexibilný rozsah kontroly**: Administrátor si zvolí konkrétny priečinok a podľa potreby zahrnie aj jeho podpriečinky, takže čistenie možno prispôsobiť veľkosti a štruktúre projektu.
+- **Rozhodnutie zostáva pod kontrolou**: Náhľad a podrobnosti o každom súbore umožňujú výsledok preveriť a odstrániť iba vybrané položky alebo celý zoznam.
+- **Plynulá práca administrátorov**: Analýza prebieha na pozadí a systém priebežne zobrazuje jej stav, takže nie je potrebné čakať v zablokovanom okne.
+- **Bezpečnejšia tímová správa**: Rešpektovanie oprávnení, domén a koordinácia súbežných operácií znižujú riziko nechceného zásahu do cudzieho obsahu.
+
+Podrobná dokumentácia: [Nepoužívané súbory](../../redactor/files/fbrowser/folder-settings/README.md#nepoužívané-súbory)
+
+## Bezpečné čistenie a optimalizácia presmerovaní
+
+WebJET CMS prináša **prehľadnú kontrolu a čistenie presmerovaní webových adries**, ktoré sa počas prevádzky webu prirodzene hromadia pri presúvaní alebo premenovávaní obsahu. Systém odhalí zastarané a duplicitné pravidlá, cyklické presmerovania vedúce návštevníka do slučky aj zbytočne dlhé reťazce viacerých presmerovaní. Organizácia tak dokáže udržať navigáciu na webe spoľahlivú bez časovo náročnej ručnej kontroly každého záznamu.
+
+Čistenie je navrhnuté ako **kontrolovaný dvojkrokový proces**. Administrátor najprv spustí analýzu a v prehľadnej tabuľke uvidí každú navrhovanú zmenu; až potom potvrdí jej vykonanie. Systém pri duplicitách zachová pôvodný záznam, pri cykle odstráni krok, ktorý slučku uzatvára, a reťazec typu `/a → /b → /c` skráti na priamejšie `/a → /c`. Tým sa znižuje riziko neúmyselných zásahov a zároveň sa návštevníci aj vyhľadávače dostanú k cieľovému obsahu kratšou a spoľahlivejšou cestou.
+
+Analýza rešpektuje **oddelenie jednotlivých domén** a na želanie môže zahrnúť aj pravidlá bez priradenej domény. Špeciálne presmerovania založené na vzoroch a pravidlá s časovou platnosťou ponechá bez zmeny. Ak tú istú doménu spravuje viac administrátorov, systém nedovolí súbežné čistenie, čím pomáha predchádzať kolíziám. Riešenie je tak vhodné aj pre rozsiahle weby s veľkým počtom presmerovaní a viacerými správcami.
+
+**Hlavné benefity:**
+
+- **Nižšie riziko nefunkčných odkazov**: Odhalenie zastaraných pravidiel a cyklov pomáha návštevníkov spoľahlivo priviesť na správny obsah.
+- **Rýchlejšia a jednoduchšia údržba**: Automatická analýza nahrádza zdĺhavú ručnú kontrolu veľkého množstva presmerovaní.
+- **Kontrola pred vykonaním zmien**: Administrátor vidí presný návrh úprav a čistenie spustí až po jeho overení a potvrdení.
+- **Kratšia cesta k obsahu**: Skrátenie reťazcov obmedzuje zbytočné medzikroky pre návštevníkov aj internetové vyhľadávače.
+- **Bezpečná správa viacerých webov**: Presmerovania sa vyhodnocujú samostatne pre zvolenú doménu a systém chráni pred súbežnými zásahmi administrátorov.
+- **Zachovanie špeciálnych pravidiel**: Časovo riadené a pokročilé presmerovania zostávajú nedotknuté, takže automatizácia rešpektuje individuálne nastavenia projektu.
+
+![Náhľad navrhovaného čistenia presmerovaní](../../redactor/webpages/redirects/redirect-cleaning-analyzed.png)
+
+Podrobná dokumentácia: [Čistenie presmerovaní](../../redactor/webpages/redirects/README.md#čistenie-presmerovaní)
+
+## Rýchlejšia správa a vkladanie dokumentov
+
+WebJET CMS prepája **Manažér dokumentov priamo s editorom webových stránok**. Redaktor môže pri vytváraní odkazu prechádzať priečinky archívu, vybrať dokument a vložiť jeho adresu bez kopírovania medzi viacerými oknami. Ak dokument ešte neexistuje, môže ho nahrať priamo v rovnakom dialógu. Publikovanie príloh, formulárov, cenníkov či výročných správ je tak rýchlejšie a menej náchylné na chyby.
+
+![Manažér dokumentov v dialógu na vloženie odkazu](../../redactor/webpages/working-in-editor/link_dialog-file-archive.png)
+
+Samotný Manažér dokumentov získal **prehľadnú stromovú štruktúru priečinkov** s možnosťou vytvárať nové priečinky a filtrovať dokumenty podľa zvoleného umiestnenia. Viac súborov možno nahrať naraz jednoduchým presunutím z počítača (`drag&drop`), pričom systém zobrazuje priebeh každej položky aj celého nahrávania. Tímy tak dokážu výrazne efektívnejšie spracovať rozsiahle aktualizácie dokumentov bez zdĺhavého opakovania rovnakých krokov.
+
+![Zoznam dokumentov so stromovou štruktúrou](../../redactor/files/file-archive/datatable.png)
+
+Pri súbore s rovnakým názvom systém nahrávanie pozastaví a ponúkne **bezpečné rozhodnutie pre každý súbor alebo pre celú dávku**: preskočiť ho, nahradiť aktuálny dokument alebo ho uložiť ako novú verziu so zachovaním predchádzajúcej verzie v histórii. Aktualizácia prebieha nad existujúcim záznamom, takže zostávajú zachované jeho metadáta a väzby. Povolené typy súborov, cieľové priečinky aj oprávnenia na zápis rešpektujú nastavenia projektu, vďaka čomu je riešenie **kontrolované, bezpečné a prispôsobiteľné** potrebám organizácie.
+
+![Kontrola duplicít pri hromadnom nahrávaní](../../redactor/files/file-archive/drag-drop-upload-duplicity-dialog.png)
+
+**Hlavné benefity:**
+
+- **Menej krokov pri publikovaní**: Redaktor nájde, nahrá a vloží dokument priamo z dialógu odkazu bez prepínania medzi aplikáciami a ručného kopírovania URL adresy.
+- **Rýchle hromadné aktualizácie**: Viac dokumentov možno nahrať naraz a spoločné rozhodnutie použiť na celú dávku, čo šetrí čas pri pravidelných výmenách cenníkov, tlačív alebo produktových materiálov.
+- **Kontrola nad duplicitami**: Systém pred prepísaním súboru vyžiada rozhodnutie, čím znižuje riziko nechcenej straty alebo vytvorenia neprehľadných kópií.
+- **História a kontinuita dokumentov**: Voľba novej verzie uchová pôvodný dokument v histórii a zároveň zachová existujúce metadáta a väzby.
+- **Prehľadnejšia organizácia obsahu**: Strom priečinkov a filtrovanie skracujú hľadanie dokumentov aj správu rozsiahlych archívov.
+- **Bezpečná prevádzka podľa pravidiel organizácie**: Nahrávanie rešpektuje povolené typy súborov, cieľový priečinok a prístupové práva používateľa.
+
+Podrobná dokumentácia: [Manažér dokumentov](../../redactor/files/file-archive/README.md) | [Vkladanie odkazov na súbory](../../redactor/webpages/working-in-editor/README.md#odkazy-na-súbory-a-nahrávanie-súborov)
+
+## Headless CMS pre moderné a flexibilné weby
+
+WebJET CMS je možné použiť v **headless režime**, v ktorom zostáva centrálnym miestom na správu obsahu, ale vzhľad a používateľské rozhranie webu môže byť vytvorené v ľubovoľnej modernej technológii. Obsah, navigácia, novinky a vyhľadávanie sa poskytujú cez **API (rozhranie na prepojenie systémov)**, vďaka čomu zákazník nie je viazaný na jednu prezentačnú vrstvu ani na jeden spôsob tvorby webu.
+
+Jedna inštalácia WebJET CMS tak môže **centrálne spravovať obsah pre viacero webov a domén**, hoci každý z nich používa iný dizajn alebo technológiu, napríklad `Astro, Next.js, Vue` či `React`. Organizácia môže rýchlejšie spúšťať nové portály, mikrostránky alebo digitálne služby bez budovania samostatnej redakčnej administrácie pre každý projekt. Zároveň môže naďalej využívať existujúce aplikácie WebJET CMS, napríklad galériu, formuláre alebo správu súhlasov s cookies.
+
+![](../../frontend/headless/home.png)
+
+Riešenie prináša aj **pripravenú ukážkovú aplikáciu**, ktorá skracuje čas a znižuje riziko prvého nasadenia. Prenáša SEO údaje, podporuje náhľad neuverejneného obsahu a zachovanie používateľskej relácie. Prístup možno obmedziť na povolené domény a IP adresy a požiadavky na zmenu dát sú chránené proti podvrhnutiu. Zákazník tak získava **rozšíriteľnú architektúru s kontrolovanou bezpečnosťou**, vhodnú aj pre postupnú modernizáciu rozsiahlych webov.
+
+![](../../frontend/headless/gallery.png)
+
+**Hlavné benefity:**
+
+- **Sloboda pri výbere technológie**: Frontend možno vytvoriť v technológii najvhodnejšej pre konkrétny projekt bez straty komfortnej správy obsahu vo WebJET CMS.
+- **Jedna administrácia pre viac webov**: Centrálna správa obsahu pre viaceré domény znižuje duplicitu, prevádzkové náklady a nároky na zaškolenie redaktorov.
+- **Rýchlejšie uvedenie digitálnych služieb na trh**: Hotové rozhrania a ukážková aplikácia urýchľujú vývoj aj overenie nového riešenia.
+- **Opätovné využitie existujúcich funkcií**: Nový web môže využiť obsah, vyhľadávanie, novinky, formuláre, galériu aj správu cookies z existujúceho CMS.
+- **Bezpečné a kontrolované prepojenie**: Povolené domény, IP obmedzenia a ochrana požiadaviek pomáhajú chrániť obsah aj prevádzku prepojených webov.
+- **Priestor na postupnú modernizáciu**: Organizácia môže modernizovať jednotlivé weby vlastným tempom bez potreby naraz nahradiť celý redakčný systém.
+
+Podrobná dokumentácia: [Headless režim](../../frontend/headless/README.md) | [Ukážková aplikácia](../../frontend/headless/example.md) | [Dostupné služby](../../frontend/headless/services.md)
+
+## AI odpoveď priamo vo vyhľadávaní webu
+
+WebJET CMS rozširuje vyhľadávanie o možnosť zobraziť **stručnú AI odpoveď nad výsledkami**. Návštevník už nemusí preklikávať viac stránok, aby sa dopátral k základnej informácii. Systém najprv nájde relevantné časti obsahu a následne z nich vytvorí prehľadnú odpoveď, ktorá pomáha rýchlejšie pochopiť tému a pokračovať na správny obsah.
+
+Z pohľadu zákazníka to prináša **rýchlejšie doručenie informácie**, lepší používateľský zážitok a vyššiu pravdepodobnosť, že návštevník na webe zostane. Funkcia je užitočná najmä pre rozsiahle portály, produktové weby a zákaznícke zóny, kde ľudia často kladú otázky prirodzeným jazykom. Nové nastavenia zároveň umožňujú zvoliť, či sa použije klasické, sémantické alebo **hybridné vyhľadávanie** (kombinácia významu otázky a fulltextu), takže výsledky sa dajú prispôsobiť konkrétnemu typu obsahu.
+
+Dôležitou výhodou je **kontrola a bezpečnejšia prevádzka**. Odpoveď sa tvorí iba z indexovaného obsahu webu, pričom je možné nastaviť limity kontextu, podobnosti a výber AI asistenta. Organizácia tak získava modernú funkcionalitu, ale s jasnými pravidlami nad kvalitou výstupu, nákladmi a prevádzkovým rizikom. Riešenie je zároveň **rozšíriteľné** cez konfiguráciu a API (rozhranie pre prepojenie s inými systémami), čo je dôležité pri firemných a enterprise nasadeniach.
+
+![](../../redactor/apps/semantic-search/rag-result.png)
+
+**Hlavné benefity:**
+
+- **Rýchlejšia cesta k odpovedi**: Návštevník dostane podstatu informácie hneď nad výsledkami vyhľadávania.
+- **Vyššia spokojnosť a nižší odchod z webu**: Menej hľadania a preklikávania znamená plynulejší používateľský zážitok.
+- **Lepšia relevantnosť výsledkov**: Hybridný režim spája výhody sémantiky a fulltextu podľa typu dopytu.
+- **Kontrola nad kvalitou a nákladmi**: Nastaviteľné limity kontextu, podobnosti a voľba asistenta pomáhajú držať odpovede presné a efektívne.
+- **Rozšíriteľnosť pre enterprise projekty**: Funkciu možno prispôsobiť konfiguráciou aj prepojeniami na existujúce procesy zákazníka.
+
+Podrobná dokumentácia: [Sémantické vyhľadávanie (RAG)](../../redactor/apps/semantic-search/README.md)
+
+## Inteligentné vyhľadávanie podľa významu otázky
+
+WebJET CMS prináša **sémantické vyhľadávanie**, ktoré nepracuje len so zhodou kľúčových slov, ale rozumie aj **významu používateľského dopytu**. Návštevník tak nájde relevantný obsah aj vtedy, keď nepoužije presnú formuláciu z webu. Výsledkom je prirodzenejšie vyhľadávanie, ktoré sa správa bližšie tomu, ako ľudia reálne kladú otázky.
+
+Pre zákazníka to znamená **vyššiu úspešnosť nájdenia odpovede na prvý pokus**, menej odchodov zo stránky a lepší používateľský zážitok najmä na obsahovo rozsiahlych weboch. Funkcia je vhodná pre verejný sektor, korporátne portály, produktové weby aj zákaznícke centrá, kde bežné fulltextové hľadanie často vracia priveľa nerelevantných výsledkov.
+
+Riešenie je zároveň **flexibilné a rozšíriteľné**. Dá sa kombinovať klasické fulltextové a sémantické vyhľadávanie (hybridný režim), nastavovať citlivosť výsledkov a prispôsobiť ho infraštruktúre zákazníka vrátane oddelenej vektorovej databázy. V praxi to prináša nižšie prevádzkové riziko, lepšiu škálovateľnosť a možnosť postupného nasadenia bez potreby meniť celý web naraz.
+
+**Hlavné benefity:**
+
+- **Relevantnejšie výsledky pre návštevníkov**: Systém vyhľadáva podľa významu, nie len podľa presných slov, čo zvyšuje šancu, že používateľ rýchlo nájde to, čo potrebuje.
+- **Vyššia konverzia a spokojnosť používateľov**: Menej slepých výsledkov a kratšia cesta k informácii pomáhajú znižovať odchody z webu.
+- **Konkurenčná výhoda moderného AI vyhľadávania**: Organizácia získava funkciu, ktorú bežné CMS riešenia často nemajú v produkčnej kvalite.
+- **Bezpečné a škálovateľné nasadenie**: Podpora samostatnej vektorovej databázy umožňuje nasadenie aj v prostrediach, kde hlavná databáza nie je PostgreSQL.
+- **Možnosť presného doladenia**: Konfigurovateľné parametre umožňujú vyvážiť presnosť, výkon a náklady podľa typu projektu.
+
+![Sémantické vyhľadávanie - nastavenie indexu](../../redactor/apps/semantic-search/index-dialog.png)
+
+Podrobná dokumentácia: [Sémantické vyhľadávanie](../../custom-apps/apps/rag/semantic-search/README.md) | [Správa indexovaných údajov](../../redactor/apps/semantic-search/README.md)
+
+## Inteligentné formuláre, ktoré sa prispôsobujú odpovediam používateľa
+
+WebJET CMS prináša do viackrokových formulárov **podmienené zobrazenie a podmienenú povinnosť polí**, vďaka čomu sa formulár vie **dynamicky meniť počas vypĺňania**. Používateľ vidí iba tie otázky, ktoré sú pre jeho situáciu relevantné, a systém automaticky určí, ktoré polia musia byť vyplnené. V praxi to znamená kratší, zrozumiteľnejší formulár bez zbytočných krokov.
+
+Pre zákazníka to prináša merateľný obchodný efekt: **vyššiu mieru dokončenia formulárov**, menej chýb pri odoslaní a kvalitnejšie dáta na ďalšie spracovanie v obchode, marketingu či zákazníckej podpore. Keď sa formulár prispôsobí používateľovi, znižuje sa frustrácia, skracuje sa čas vypĺňania a rastie šanca, že návštevník formulár naozaj odošle.
+
+Riešenie je zároveň pripravené na dlhodobý rast projektu. Administrátor vie **pravidlá nastavovať priamo v editore** bez zásahu do kódu a funkcionalita je **rozšíriteľná** aj pre špecifické procesy zákazníka (napríklad rozdielne logiky pre rôzne typy dopytov, segmenty klientov alebo interné workflow). Súčasťou je aj ochrana pred neplatnými konfiguráciami, takže sa znižuje prevádzkové riziko pri úpravách formulára.
+
+**Hlavné benefity:**
+
+- **Presnejší zber dát**: Podmienená povinnosť polí zabezpečí, že systém vyžiada iba údaje, ktoré sú v konkrétnej situácii naozaj potrebné.
+- **Lepší používateľský zážitok**: Dynamické zobrazenie skracuje formulár a robí ho prehľadnejším aj pri zložitejších procesoch.
+- **Rýchle úpravy bez vývoja**: Obchodné alebo marketingové tímy môžu meniť logiku formulára priamo v administrácii.
+- **Nižšie prevádzkové riziko**: Kontroly závislostí medzi poľami pomáhajú predchádzať neplatným nastaveniam a regresiám.
+
+![Podmienené zobrazenie polí vo formulári](../../redactor/apps/multistep-form/tab-visibilityConditions.png)
+
+Podrobná dokumentácia: [Podmienené zobrazenie/validovanie položky](../../redactor/apps/multistep-form/README.md#podmienené-zobrazenievalidovanie-položky)
+
+## Automatizované testovanie prístupnosti webových stránok
+
+WebJET CMS zavádza **automatizované testovanie prístupnosti (accessibility)**, ktoré overuje, či sú webové stránky a administračné rozhranie prístupné pre **všetkých používateľov** — vrátane tých so zrakovým, sluchovým, motorickým alebo kognitívnym obmedzením. Systém automaticky kontroluje súlad s medzinárodným štandardom **WCAG 2.2** (Web Content Accessibility Guidelines) na úrovniach A a AA, čo je požiadavka legislatívy EÚ aj Slovenska pre weby verejného sektora a čoraz viac aj pre komerčné subjekty.
+
+Pre zákazníka to v praxi znamená, že **každá zmena na webe môže byť automaticky skontrolovaná** z hľadiska prístupnosti ešte pred nasadením do prevádzky. Vývojár tak nemusí manuálne kontrolovať desiatky pravidiel, pretože systém to môže robiť za neho automaticky a opakovane pri každej zmene.
+
+Testovanie prístupnosti môže byť **zabudované priamo do vývojového procesu**, nie je to externý audit vykonaný raz ročne. To znamená, že problémy sa zachytávajú priebežne a opravujú sa v momente vzniku, čo je **výrazne lacnejšie a rýchlejšie** než dodatočná oprava po externom audite. Systém generuje **prehľadné HTML reporty** s detailným popisom každého porušenia, čo uľahčuje komunikáciu medzi vývojovým tímom a zodpovednými osobami za prístupnosť.
+
+**Hlavné benefity:**
+
+- **Súlad s legislatívou**: Automatická kontrola zabezpečuje, že web spĺňa požiadavky európskej smernice o prístupnosti webových sídiel (EAA) a slovenskej legislatívy, čím zákazník predchádza právnym rizikám a pokutám.
+- **Inkluzívny web pre všetkých**: Web je prístupný aj pre ľudí so zdravotnými obmedzeniami, čo rozširuje potenciálnu cieľovú skupinu a zlepšuje reputáciu organizácie.
+- **Priebežná kontrola namiesto jednorazového auditu**: Každá zmena je automaticky overená, čím sa problémy zachytávajú okamžite — oprava v momente vzniku je rádovo lacnejšia než dodatočný audit.
+- **Nižšie náklady na opravu**: Včasná detekcia porušení znižuje náklady na opravu prístupnosti až o 80 % v porovnaní s opravami po nasadení do produkcie.
+- **Prehľadné reporty**: Automaticky generované HTML reporty s popisom porušení a ich závažnosťou zjednodušujú prioritu opráv a komunikáciu v tíme.
+- **Podpora štandardu WCAG 2.2**: Kontrola pokrýva najnovšiu verziu štandardu vrátane úrovní A a AA, čo zabezpečuje aktuálnosť aj voči budúcim legislatívnym požiadavkám.
+
+Podrobná dokumentácia: [Testovanie prístupnosti](../../developer/testing/a11y.md)
+
+## AI Skills — inteligentné zručnosti pre rýchlejší vývoj a správu CMS
+
+WebJET CMS integruje sadu **AI Skills** — špecializovaných zručností pre umelú inteligenciu, ktoré výrazne **zrýchľujú vývoj, údržbu a rozširovanie** webových projektov. AI Skills fungujú priamo vo vývojovom prostredí (VS Code s GitHub Copilot) a dokážu na základe jednoduchej požiadavky **automaticky generovať hotový kód, testy, dokumentáciu aj celé nové moduly** v súlade s konvenciami a štruktúrou WebJET CMS. Vývojár tak nemusí ručne vytvárať desiatky súborov a pamätať si všetky technické detaily — stačí opísať, čo potrebuje, a AI Skills dodajú funkčný výsledok.
+
+Pre zákazníka to znamená predovšetkým **výrazne rýchlejšiu dodávku nových funkcií a úprav**. Zmeny, ktoré predtým trvali hodiny alebo dni, je možné dodať v priebehu minút. Rovnako dôležitá je možnosť **rýchleho prototypovania** — zákazník si môže nechať pripraviť prototyp nového modulu, formulára alebo administračnej stránky takmer okamžite a rozhodnúť sa, či je smer správny, ešte pred investíciou do plného vývoja. Ak zákazník disponuje vlastným vývojovým tímom a upravuje si projekt samostatne, môže AI Skills **využívať priamo** — systém ho prevedie celým procesom a zabezpečí, že výsledok je kompatibilný s architektúrou WebJET CMS.
+
+Nasadenie AI Skills zároveň zvyšuje **kvalitu a konzistenciu** dodávaného kódu. Každá zručnosť vynucuje osvedčené postupy, automaticky pridáva testy a dodržiava projektové konvencie, čím sa znižuje riziko chýb a zjednodušuje budúca údržba.
+
+**Hlavné benefity:**
+
+- **Rýchlejšia dodávka**: Nové funkcie a úpravy sú k dispozícii v zlomku pôvodného času, čo skracuje čas uvedenia na trh.
+- **Rýchle prototypovanie**: Zákazník získa funkčný prototyp nového modulu takmer okamžite a môže ho vyhodnotiť pred schválením plného vývoja.
+- **Nižšie náklady na vývoj**: Automatizácia rutinných úloh znižuje počet potrebných vývojárskych hodín.
+- **Vyššia kvalita kódu**: AI Skills dodržiavajú osvedčené postupy, generujú testy a kontrolujú konzistenciu, čím sa znižuje počet chýb.
+- **Nezávislosť zákazníka**: Zákazníci s vlastným vývojovým tímom môžu AI Skills využívať sami na rozšírenie a prispôsobenie svojho projektu.
+- **Jednoduchosť použitia**: Stačí opísať požiadavku bežným jazykom — AI Skills prevedú zámer na hotový, funkčný kód.
+
+### Dostupné AI Skills
+
+| Zručnosť | Popis |
+| ----------- | ------- |
+| **Vytvorenie aplikácie (AppStore)** | Vygeneruje kompletnú aplikáciu pre editor stránok — Java triedu, šablónu, konfiguráciu a registráciu do zoznamu aplikácií. |
+| **Vytvorenie administračnej stránky (DataTable)** | Pripraví celý CRUD modul pre administráciu — databázovú entitu, REST rozhranie, HTML stránku a automatizované testy. |
+| **Automatizované E2E testy (CodeceptJS)** | Napíše end-to-end testy pre prehliadač, ktoré overia funkčnosť stránok, formulárov a oprávnení. |
+| **Revízia kódu (Code Review)** | Skontroluje zmeny v kóde z hľadiska správnosti, bezpečnosti, spätnej kompatibility a dodržiavania konvencií projektu. |
+| **Audit prístupnosti (Accessibility)** | Vykoná audit webovej prístupnosti podľa štandardu WCAG 2.2 a navrhne opravy pre klávesovú navigáciu, kontrast a čítačky obrazovky. |
+| **Aktualizácia dokumentácie** | Automaticky doplní technickú dokumentáciu na základe zmien v kóde, čím udržiava dokumentáciu vždy aktuálnu. |
+| **Preklad komentárov** | Preloží komentáre v zdrojovom kóde zo slovenčiny do angličtiny bez zmeny funkčnosti, čím zlepšuje čitateľnosť pre medzinárodné tímy. |
+| **Marketingový obsah** | Na základe dodaných zmien vygeneruje podklady pre blog, sociálne siete alebo changelog — ušetrí čas marketingovému tímu. |
+| **Opis vlastností pre predaj** | Analyzuje technické zmeny a vytvorí zrozumiteľný opis z pohľadu zákazníka a obchodných výhod. |
+
+## Prihlasovanie cez OAuth2/Keycloak
+
+WebJET CMS teraz podporuje **prihlasovanie používateľov prostredníctvom externých poskytovateľov identity** ako sú Google, Facebook, GitHub, Okta alebo podnikový Keycloak server. Technicky ide o štandard **OAuth2/OpenID Connect** — v praxi to znamená, že používatelia sa môžu prihlásiť **jedným kliknutím cez účet, ktorý už majú** (napríklad firemný Google účet alebo **podnikový SSO** systém), bez nutnosti pamätať si ďalšie heslo. Administrátor webu si jednoducho nakonfiguruje, ktorých poskytovateľov chce povoliť, a systém automaticky zobrazí príslušné prihlasovacie tlačidlá.
+
+Kľúčovou výhodou je **automatická synchronizácia skupín a práv**. Ak organizácia používa podnikový identity server (napr. Keycloak), WebJET CMS dokáže pri každom prihlásení automaticky prevziať skupiny a role, v ktorých je používateľ zaradený, a **priradiť mu zodpovedajúce práva** v CMS. To eliminuje potrebu manuálnej správy oprávnení — keď sa zmení rola zamestnanca v podnikovom systéme, **zmena sa automaticky prenesie aj do WebJET CMS**. Administrátori sú nastavovaní automaticky na základe členstva v definovanej skupine, čo zjednodušuje správu prístupov aj vo veľkých organizáciách.
+
+Riešenie je **flexibilné a rozšíriteľné** — zákazník môže nakonfigurovať ľubovoľného OAuth2 poskytovateľa, nielen preddefinovaných (Google, Facebook, GitHub, Okta). Podporované je aj **súčasné použitie viacerých poskytovateľov** (napr. Keycloak pre administrátorov a Google pre zákaznícku zónu) a konfigurácia sa dá úplne prispôsobiť potrebám organizácie vrátane vlastných atribútov pre prihlasovacie meno. Pre zákaznícku zónu aj pre administráciu je možné nastaviť rôznych poskytovateľov s rôznymi úrovňami synchronizácie práv.
+
+**Hlavné benefity:**
+
+- **Jednotné prihlásenie (SSO)**: Používatelia sa prihlasujú účtom, ktorý už poznajú — žiadne ďalšie heslá na zapamätanie, čo zvyšuje bezpečnosť aj pohodlie.
+- **Automatická synchronizácia práv**: Skupiny a role sa preberajú z podnikového identity servera pri každom prihlásení — odpadá manuálna správa oprávnení v CMS.
+- **Podpora ľubovoľného OAuth2 poskytovateľa**: Okrem preddefinovaných (Google, Facebook, GitHub, Okta) je možné nakonfigurovať akýkoľvek vlastný OAuth2/OpenID Connect server.
+- **Bezpečnosť na podnikovej úrovni**: Autentifikácia prebieha na strane overeného poskytovateľa — WebJET CMS nikdy neukladá heslá externých služieb, čo znižuje bezpečnostné riziká.
+- **Oddelená konfigurácia pre admin a zákaznícku zónu**: Rôzni poskytovatelia pre rôzne časti systému umožňujú presné riadenie prístupov podľa typu používateľa.
+- **Nižšie prevádzkové náklady**: Centrálna správa používateľov v jednom systéme (napr. Keycloak) znižuje administratívnu záťaž a eliminuje duplicitnú správu účtov.
+- **Jednoduchá inštalácia**: Pre populárnych poskytovateľov (Google, Facebook) stačí nastaviť dva konfiguračné parametre; pre podnikový Keycloak je k dispozícii pripravená Docker konfigurácia.
+
+<div class="video-container">
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/q8xs3qDq-G4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+Podrobná dokumentácia: [OAuth2 Autentifikácia](../../install/oauth2/oauth2.md) | [Keycloak - Inštalácia a konfigurácia](../../install/oauth2/keycloak.md)
+
+## Viackrokové formuláre
+
+WebJET CMS prináša viackrokové formuláre, ktoré **rozdeľujú dlhé formuláre na menšie a pre používateľa zrozumiteľnejšie časti**. Namiesto jedného preplneného formulára dostane návštevník **jasne vedený proces po jednotlivých krokoch**, čo znižuje pocit zahltenia a pomáha zvýšiť počet úspešne dokončených odoslaní. Táto funkcionalita je vhodná napríklad pre registrácie, dopytové formuláre, náborové formuláre, prihlášky či interné zberové procesy.
+
+Pre zákazníka je dôležité aj to, že formulár nemusí zostať iba v základnom nastavení. Jednotlivé kroky je možné pomenovať, doplniť o úvodné texty a prispôsobiť texty tlačidiel podľa konkrétnej kampane alebo procesu. Riešenie tak spája **lepší používateľský zážitok** s vysokou mierou prispôsobenia bez potreby pripravovať každý formulár nanovo od začiatku.
+
+**Hlavné benefity:**
+
+- **Vyššia úspešnosť odoslania**: Rozdelenie formulára do krokov znižuje bariéru pri vypĺňaní a pomáha návštevníkov doviesť až k odoslaniu.
+- **Lepší používateľský zážitok**: Formulár pôsobí prehľadne, menej stresujúco a lepšie sa používa aj pri väčšom množstve údajov.
+- **Vhodné pre rôzne scenáre**: Riešenie sa dá využiť pre obchod, marketing, HR aj zákaznícke služby bez zmeny základného princípu.
+- **Jednoduché prispôsobenie komunikácie**: Texty krokov a tlačidiel možno upraviť podľa konkrétneho cieľa kampane alebo firemného štýlu.
+
+![Viackrokový formulár](../../redactor/apps/multistep-form/real-form.png)
+
+Podrobná dokumentácia: [Viackrokové formuláre](../../redactor/apps/multistep-form/README.md)
+
+### Flexibilný editor formulárov bez závislosti od programátora
+
+Súčasťou riešenia je editor, v ktorom môže administrátor **formulár priebežne upravovať podľa aktuálnych potrieb**. Kroky aj jednotlivé položky sa dajú pridávať, duplikovať, presúvať, meniť ich poradie a priebežne kontrolovať v náhľade. To výrazne skracuje čas potrebný na prípravu nových formulárov a umožňuje rýchlo reagovať na nové obchodné alebo prevádzkové požiadavky.
+
+Veľkou výhodou je aj vysoká miera variability. Pri jednotlivých poliach je možné nastaviť **povinnosť vyplnenia, validačné pravidlá, predvyplnené hodnoty**, pomocné texty či informačné bubliny. Formuláre je navyše možné **personalizovať údajmi** o prihlásenom **používateľovi** a prispôsobiť aj špecifickým scenárom zobrazenia. Pre zákazníka to znamená nižšiu závislosť od dodávateľa a väčšiu schopnosť upravovať procesy vlastnými silami.
+
+**Hlavné benefity:**
+
+- **Rýchle nasadenie zmien**: Marketing alebo administrátor vie upraviť formulár bez zdĺhavého vývoja a čakania na technický zásah.
+- **Presnejší zber dát**: Povinné polia, pravidlá validácie a pomocné texty znižujú chybovosť a zvyšujú kvalitu získaných údajov.
+- **Personalizácia pre vyšší komfort**: Predvyplnenie údajov o prihlásenom používateľovi zrýchľuje vyplnenie a znižuje počet opustených formulárov.
+- **Rozšíriteľnosť do budúcna**: Typy polí a dostupné nastavenia sa dajú prispôsobiť podľa potrieb konkrétneho projektu alebo segmentu.
+
+<div class="video-container">
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/XRnwipQ-mH4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+Podrobná dokumentácia: [Editor viackrokových formulárov](../../redactor/apps/multistep-form/README.md)
+
+### Štatistiky formulárov pre rýchle rozhodovanie
+
+WebJET CMS dopĺňa viackrokové formuláre o **prehľadnú štatistickú sekciu**, ktorá ukazuje nielen počet odoslaných odpovedí, ale aj **priemerný čas vypĺňania**, počet dní od vytvorenia formulára a čas poslednej odpovede. Zákazník tak získa **okamžitý obraz o tom, či formulár funguje**, či je pre používateľov zrozumiteľný a či sa na ňom oplatí ďalej pracovať.
+
+Ešte väčšiu hodnotu prinášajú **grafy odpovedí pri jednotlivých otázkach**. Organizácia si môže sama určiť, ktoré polia chce sledovať, aký typ grafu sa použije, koľko odpovedí sa zobrazí a či sa majú spojiť menej časté alebo nevyplnené odpovede. V praxi to znamená, že marketing, obchod alebo HR tím dostanú **vizuálne a rýchlo čitateľné podklady** bez potreby exportovať dáta do externých nástrojov. Riešenie zároveň ostáva flexibilné, pretože nastavenie štatistík je možné meniť priamo pri položkách formulára.
+
+**Hlavné benefity:**
+
+- **Okamžitý prehľad o výkonnosti formulára**: Základné metriky pomáhajú rýchlo vyhodnotiť, či formulár plní svoj cieľ.
+- **Lepšie rozhodovanie bez ďalších nástrojov**: Grafy odpovedí umožňujú robiť operatívne rozhodnutia priamo v administrácii systému.
+- **Vyššia kvalita interpretácie dát**: Možnosť zoskupovať odpovede, zobraziť nezodpovedané položky alebo filtrovať top hodnoty spresňuje pohľad na správanie používateľov.
+- **Prispôsobenie podľa potrieb**: Typ grafu, farebnú schému aj spôsob zobrazovania možno nastaviť podľa toho, čo potrebuje konkrétny tím sledovať.
+![Štatistiky formulára](../../redactor/apps/multistep-form/stat-section.png)
+
+Podrobná dokumentácia: [Štatistiky viackrokových formulárov](../../redactor/apps/multistep-form/stat.md)

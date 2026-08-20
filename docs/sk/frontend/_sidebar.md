@@ -5,7 +5,9 @@
 - Nastavenia
   - [Šablóny](/frontend/setup/README.md)
   - [Všeobecné nastavenia](/frontend/setup/config.md)
-  - [Voliteľné polia](/frontend/webpages/customfields/README.md)
+  - Voliteľné polia
+    - [Voliteľné polia](/frontend/webpages/customfields/README.md)
+    - [Nastavenie](/frontend/webpages/customfields/custom-fields-settings.md)
   - [FontAwesome](/frontend/webpages/fontawesome/README.md)
   - [CKEditor](/frontend/setup/ckeditor.md)
 - Šablóny
@@ -51,5 +53,7 @@
 - Generovanie obrázkov
   - [Thumb servlet](/frontend/thumb-servlet/README.md)
   - [Bod záujmu](/frontend/thumb-servlet/interest-point.md)
-
-
+- Headless CMS
+  - [Headless režim](/frontend/headless/README.md)
+  - [Headless služby](/frontend/headless/services.md)
+  - [Ukážka headless aplikácie](/frontend/headless/example.md)

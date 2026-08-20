@@ -27,6 +27,7 @@ import sk.iway.Password;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
+import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.LabelValueDetails;
 import sk.iway.iwcm.Logger;
@@ -878,6 +879,11 @@ public class DocForumService {
 		}
 
 		if (!canUpload) {
+			setPermissionDenied(request, "fileType");
+			return SAVE_FORUM_SUCCESS;
+		}
+
+		if (FileTools.isFileAllowedForUpload(user, fileName)==false) {
 			setPermissionDenied(request, "fileType");
 			return SAVE_FORUM_SUCCESS;
 		}

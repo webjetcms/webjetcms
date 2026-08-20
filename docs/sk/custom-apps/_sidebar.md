@@ -30,3 +30,5 @@
 - Testovanie
   - [Možnosti testovania](/custom-apps/testing/README.md)
   - [Pokrytie kódom](/custom-apps/testing/codecoverage.md)
+- RAG
+  - [Sémantické vyhľadávanie](/custom-apps/apps/rag/semantic-search/README.md)

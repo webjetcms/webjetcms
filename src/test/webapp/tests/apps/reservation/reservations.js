@@ -369,7 +369,7 @@ Scenario('Delete all Sauna reservations ', async ({ I, DT, DTE }) => {
 
 Scenario('Verify reservation data in the table after applying filters', async ({ I }) => {
     const filterDateFrom = '1. 1. 2045';
-    const filterDateTo = '3. 1. 2045';
+    const filterDateTo = '1. 3. 2045';
     I.amOnPage('/apps/rezervacie');
     I.selectOption('#filterObjectId1', 'Tenisovy kurt B');
     I.fillField('#filterDateFromId', filterDateFrom);

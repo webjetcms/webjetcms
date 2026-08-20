@@ -66,6 +66,23 @@ public class FileTools
 		//utility class
 	}
 
+	private static final String[] NOT_ALLOWED_FILE_TYPES = new String[] {
+		//JSP / Jasper engine (Tomcat maps *.jsp and *.jspx by default, others are common custom/legacy mappings or get compiled by Jasper)
+		"jsp", "jspx", "jspf", "jsw", "jsv", "jspa", "jhtml", "tag", "tagx", "tagf",
+		//Java sources / classes / deployable archives
+		"class", "java", "war", "ear",
+		//JSF / Facelets
+		"xhtml",
+		//Server Side Includes (SSI servlet)
+		"shtml", "shtm", "stm",
+		//PHP and its variants
+		"php", "php3", "php4", "php5", "php7", "pht", "phtml", "phar", "phps",
+		//ASP and its variants
+		"asp", "aspx", "ascx", "ashx", "asmx", "asax", "cer", "swf",
+		//Shell / OS scripts and executables
+		"sh", "exe", "bat", "cmd", "com", "vbs", "wsf", "wsh", "ps1", "ps2", "psm1"
+	};
+
 	/**
 	 * Skopiruje subor src do dest
 	 * @param src
@@ -446,35 +463,36 @@ public class FileTools
 
 	/**
 	 * Vrati naformatovanu velkost suboru v B, kB, MB
-	 * @param lengthLong
+	 * @param bytes
 	 * @param exactFormat - ak je nastavene na false, tak iba MB vracia s desatinnymi miestami
 	 * @return
 	 */
-	public static String getFormatFileSize(long lengthLong, boolean exactFormat)
+	public static String getFormatFileSize(long bytes, boolean exactFormat)
 	{
 		String length = "";
-		if (lengthLong > (1024 * 1024))
-		{
-			if (exactFormat)
-			{
-				length = decimalFormat.format(lengthLong / (1024d * 1024d)) + " MB";
-				Logger.debug(FileTools.class, "DecimalFormat: "+decimalFormatJednoMiesto.format(lengthLong / (1024d * 1024d)));
-			}
-			else
-			{
-				length = decimalFormatJednoMiesto.format(lengthLong / (1024d * 1024d)) + " MB";
-			}
+
+		if (bytes < 0) { return "0 B"; }
+        if (bytes < 1024) { return bytes + " B"; }
+
+        final String[] units = {"kB", "MB", "GB", "TB", "PB"};
+        double size = bytes;
+        int unitIndex = -1;
+
+        do {
+            size /= 1024;
+            unitIndex++;
+        } while (size >= 1024 && unitIndex < units.length - 1);
+
+        if (exactFormat) {
+			length = decimalFormat.format(size) + " " + units[unitIndex];
+			Logger.debug(FileTools.class, "DecimalFormat: "+decimalFormatJednoMiesto.format(size / (1024d * 1024d)));
+		} else if (unitIndex >= 1) {
+			// pre MB a vetsi pouzivame jedno desatinne miesto
+			length = decimalFormatJednoMiesto.format(size) + " " + units[unitIndex];
+		} else {
+			length = decimalFormatBezMiest.format(size) + " " + units[unitIndex];
 		}
-		else if (lengthLong > 1024)
-		{
-			if (exactFormat) length = decimalFormat.format(lengthLong / 1024d) + " kB";
-			else length = decimalFormatBezMiest.format(lengthLong / 1024d) + " kB";
-		}
-		else
-		{
-			if (exactFormat) length = decimalFormat.format(lengthLong) + " B";
-			else length = decimalFormatBezMiest.format(lengthLong) + " B";
-		}
+
 		return(length);
 	}
 
@@ -753,6 +771,17 @@ public class FileTools
 	{
 		return VideoConvert.isVideoFile(name);
 	}
+	public static boolean isAudioFile(String name)
+	{
+		if (name == null)
+			return false;
+		//.jpg is not equal to .JPG
+		name = name.toLowerCase();
+
+		return name.endsWith(".mp3") || name.endsWith(".wav") || name.endsWith(".ogg");
+	}
+
+
 	/**
 	 * Usortuje subory podla mena
 	 * @param arrayfile
@@ -904,14 +933,18 @@ public class FileTools
 		//zmenene z false na true pretoze potom sa zle plnili polia so subormi a padalo to dalej na NPE
 		if (fileName == null || Tools.isEmpty(fileName)) return true;
 
-		if (user!=null && user.isAdmin()) return true;
+		if ((user!=null && user.isAdmin()) || (user == null && RequestBean.isAdminLogged())) {
+			//allow all file types for admin users
+			return true;
+		}
 
-		String ext = FileTools.getFileExtension(fileName);
-		if (ext==null) return false;
+		String fileExt = getFileExtension(fileName).toLowerCase();
+		for (String ext : NOT_ALLOWED_FILE_TYPES) {
+			if (ext.equals(fileExt)) {
+				return false;
+			}
+		}
 
-		ext = ext.toLowerCase();
-
-		if (ext.equals("jsp") || ext.equals("class") || ext.equals("java")) return false;
 		if (FileBrowserTools.hasForbiddenSymbol(fileName)) return false;
 
 		return true;
@@ -1069,12 +1102,25 @@ public class FileTools
 	 */
 	public static List<UnusedFile> getDirFileUsage(String rootUrl, HttpServletRequest request)
 	{
+		return getDirFileUsage(rootUrl, request, true);
+	}
+
+	/**
+	 * Returns unused files from the selected directory.
+	 *
+	 * @param rootUrl root directory URL
+	 * @param request request used to determine domains
+	 * @param includeSubfolders when true, files in subfolders are included
+	 * @return unused files
+	 */
+	public static List<UnusedFile> getDirFileUsage(String rootUrl, HttpServletRequest request, boolean includeSubfolders)
+	{
 		DebugTimer dt = new DebugTimer("getDirFileUsage");
 
 		dt.diff("reading files");
 
 		List<UnusedFile> unusedFiles = new ArrayList<>();
-		List<Column> allFiles = directoryScan(rootUrl, "*");
+		List<Column> allFiles = directoryScan(rootUrl, includeSubfolders, "*");
 		SortedSet<String> unusedFileNames = new TreeSet<>();
 		Set<String> toRemove = new HashSet<>();
 		for(Column c : allFiles)
@@ -1324,6 +1370,19 @@ public class FileTools
 	 */
 	public static List<Column> directoryScan(String rootUrl, String... patterns)
 	{
+		return directoryScan(rootUrl, true, patterns);
+	}
+
+	/**
+	 * Finds files matching the supplied patterns.
+	 *
+	 * @param rootUrl root directory URL
+	 * @param recursive when true, subdirectories are scanned recursively
+	 * @param patterns wildcard patterns
+	 * @return matching files
+	 */
+	public static List<Column> directoryScan(String rootUrl, boolean recursive, String... patterns)
+	{
 		Logger.debug(FileTools.class, "directoryScan, rootUrl="+rootUrl);
 
 		List<Column> foundFiles = new ArrayList<>();
@@ -1341,7 +1400,10 @@ public class FileTools
 			myFile = files[i];
 			if (myFile.isDirectory())
 			{
-				foundFiles.addAll(directoryScan(rootUrl + myFile.getName() + "/", patterns));
+				if (recursive)
+				{
+					foundFiles.addAll(directoryScan(rootUrl + myFile.getName() + "/", true, patterns));
+				}
 			}
 			else
 			{
@@ -1416,5 +1478,23 @@ public class FileTools
 		}
 
 		return ret;
+	}
+
+	/**
+	 * Format file size in human readable format from kilobytes, e.g. 1.5 MB, 200 kB, 500 B, etc.
+	 * @param kilobytes
+	 * @return
+	 */
+	public static String formatFileSizeFromKb(long kilobytes) {
+        return getFormatFileSize(kilobytes * 1024, true);
+    }
+
+	/**
+	 * Format file size in human readable format from bytes, e.g. 1.5 MB, 200 kB, 500 B, etc.
+	 * @param fileSize
+	 * @return
+	 */
+	public static String formatFileSize(long fileSize) {
+		return getFormatFileSize(fileSize, true);
 	}
 }

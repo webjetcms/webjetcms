@@ -38,7 +38,7 @@ První sloupec zobrazuje seznam kroků formuláře. V tomto seznamu můžeme př
 
 ![](form-step-editor.png)
 
-Můžete vyplnit Úvodní text, který se zobrazí na začátku kroku. V kartě Pokročilé můžete změnit text tlačítka pro přechod na další krok (nebo odeslání formuláře, pokud jde o poslední krok). V kartě Kód skriptu můžete vložit vlastní HTML/JavaScript kód, který se vloží a provede při zobrazení kroku.
+Můžete vyplnit **Úvodní text**, který se zobrazí na začátku kroku. V textu můžete použít [značky přihlášeného uživatele](#značky-přihlášeného-uživatele) a [značky hodnot položek](#značky-hodnot-položek) z již vyplněných kroků. V kartě **Pokročilé** můžete změnit text tlačítka pro přechod na další krok (nebo odeslání formuláře, pokud jde o poslední krok). V kartě **Kód skriptu** můžete vložit vlastní HTML/JavaScript kód, který se vloží a provede při zobrazení kroku.
 
 ### Duplikování
 
@@ -61,19 +61,39 @@ Editor pro přidávání a úpravu položek je speciální tím, že mění svů
 - **Typ pole** - určuje jaký druh vstupu bude položka představovat (např. textové pole, výběr z rozbalovacího seznamu, zaškrtávací políčko atd.). Jednotlivá pole [připravuje designér web sídla](../formsimple/README.md#informace-pro-web-designera) a jsou stejné jako pro aplikaci formulář snadno.
 - **Povinné pole** - zda je položka povinná k vyplnění.
 - **Povolená hodnota** - pro pokročilou validaci vstupu uživatele umíte zvolit libovolný počet regulárních výrazů, které musí být splněny, aby byl vstup platný. Více se o nich dozvíte v sekci [Regulární výrazy](../form/regexps.md).
+- **Oříznout mezery** - pokud je zvoleno, úvodní a koncové mezery se z hodnoty odstraní ještě před validací a uložením. Nastavení je dostupné pro podporovaná textová pole; nepoužívá se pro výběrová pole a formátované textové pole.
 - **Název pole** - název, který se zobrazí uživateli. Pokud není zadán použije se název shodný s typem pole.
+- **Identifikátor položky ve formuláři** - technický identifikátor se automaticky vytvoří z názvu položky a doplní se rozlišující příponou tak, aby byl ve formuláři jedinečný. Zobrazuje se až při úpravě uložené položky a nelze jej měnit. Používá se v podmínkách, uložených datech a v [značkách hodnot položek](#značky-hodnot-položek).
 
-V kartě Pokročilé můžete nastavit další volitelné parametry jako:
+V kartě **Pokročilé** můžete nastavit další volitelné parametry jako:
 
 - **Krok formuláře** - krok, ke kterému položka patří, můžete tak snadno položku přesunout do jiného kroku.
 - **Pořadí** - určuje pořadí položky v rámci kroku.
-- **Předvyplněná hodnota** - hodnota, která se zobrazí vyplněná v poli, uživatel tak nemusí nastavit hodnotu, pokud je všeobecně známá. Pro pole typu výběrové pole sem zadejte čárkovou oddělovaný seznam hodnot, například `začiatočník,pokročilý,expert`.
+- **Předvyplněná hodnota** - hodnota, která se zobrazí vyplněná v poli, uživatel tak nemusí nastavit hodnotu, pokud je všeobecně známá. Toto pole se zobrazuje pouze pokud se nejedná o položku typu výběrové pole.
+- **Povolené možnosti** - u položky typu výběrové pole (select, checkbox skupina, radio skupina, automatické doplňování apod.) můžete manuálně definovat seznam možností. Každá možnost se skládá z textu zobrazeného uživateli a hodnoty odeslané při odeslání formuláře. Možnosti lze přidávat, odebírat a měnit jejich pořadí pomocí `drag & drop`. Pro výběrový seznam můžete tlačítkem **Přidat prázdnou možnost** vložit na začátek i volbu bez hodnoty. Pole se zobrazuje pouze pokud není povolena možnost **Použít propojení na číselník**.
+
+![](form-item-editor-advanced.png)
+
+- **Použít odkaz na číselník** - přepínač, který určuje, zda se možnosti výběrového pole zadávají manuálně přes **Povolené možnosti**, nebo se načítají dynamicky z aplikace [Číselníky](../../apps/enumeration/README.md).
+- **Propojení na číselník** - zobrazí se u položky typu výběrové pole, pokud je povolena možnost **Použít propojení na číselník**. Nastavíte číslo (ID) číselníku, sloupec číselníku pro text zobrazený uživateli a sloupec pro odesílanou hodnotu. Možnosti se tak generují dynamicky z dat číselníku a při změně údajů v číselníku se automaticky aktualizují i ​​ve formuláři.
+
+![](form-item-editor-advanced-enum.png)
+
 - **Zástupní text** - text, který se zobrazí v poli jako nápověda pro uživatele pokud není pole vyplněno (je prázdné).
 - **Tooltip** - pokud zadáte hodnotu tooltipu, zobrazí se při názvu pole informační bublina.
+- **Vlastní chybová zpráva** - text nebo překladový klíč, který nahradí standardní zprávu při chybě validace dané položky.
 
 Chcete-li definovat vlastní položky formulářů, nebo chcete změnit existující, či změnit jaká nastavení jsou dostupná pro jednotlivé typy položek, podívejte se do dokumentace v sekci [Položky formulářů](../formsimple/README.md#informace-pro-web-designera).
 
+!>**Upozornění:** ve vícekrokovém formuláři nefungují vlastní typy položek, které přímo vykreslí nativní element `<input type="file">`. Soubor lze nahrát pouze pomocí komponenty `Dropzone`.
+
 !>**Upozornění:** při úpravě položky formuláře nedoporučujeme měnit typ položky, ale raději nahradit původní položku novou.
+
+### Automatické doplňování
+
+Typ pole **Automatické doplňování - autocomplete** nabízí návštěvníkovi možnosti dle zadávaného textu. Seznam vytvoříte v poli **Povolené možnosti** nebo jej propojíte s aplikací [Číselníky](../../apps/enumeration/README.md). Každá možnost může mít odlišný zobrazovaný text a odesílanou hodnotu.
+
+Vyhledávání se spustí po zadání nejméně dvou znaků, nerozlišuje velikost písmen ani diakritiku a prohledává text i hodnotu možnosti. Zobrazí se nejvýše 30 výsledků. Po výběru se do formuláře uloží hodnota zvolené možnosti.
 
 ### Řádkové zobrazení
 
@@ -83,9 +103,9 @@ Můžete se setkat se situací, kdy Vám editor nedovolí přidat zvolenou polo�
 
 Formulář přepnete do režimu řádkového zobrazení v [nastaveních formuláře](../form/README.md#vytvoření-formuláře).
 
-### Značky
+### Značky přihlášeného uživatele
 
-Pokud chcete v položce formuláře použít informace o aktuálním přihlášeném uživateli (např. jeho jméno, email, atd.), můžete použít speciální značky. Tyto značky se automaticky nahradí příslušnými hodnotami při zobrazení formuláře uživateli. Pro nepřihlášené uživatele budou tyto značky nahrazeny prázdnou hodnotou. Hodnotu zadejte do pole **Předvyplněná hodnota** položky formuláře.
+Pokud chcete v položce nebo v úvodním textu kroku použít informace o aktuálním přihlášeném uživateli (např. jeho jméno nebo email), můžete použít speciální značky. Tyto značky se automaticky nahradí příslušnými hodnotami při zobrazení formuláře. Pro nepřihlášené uživatele budou nahrazeny prázdnou hodnotou. V položce je zadejte do pole **Předvyplněná hodnota**, pokud je pro daný typ položky dostupné.
 
 Dostupné značky jsou:
 
@@ -109,6 +129,82 @@ Dostupné značky jsou:
 - ```!LOGGED_USER_FIELDD!``` - ​​volné pole D
 - ```!LOGGED_USER_FIELDE!``` - ​​volné pole E
 - `!LOGGED_USER_GROUPS!` - ​​seznam skupin uživatelů
+
+### Značky hodnot položek
+
+Hodnotu již vyplněné položky můžete vložit do **Úvodního textu** následujícího kroku nebo do [stránky s verzí pro email](../form/README.md#karta---nastavení) značkou `!identifikator-polozky!`. Identifikátor se zobrazuje při úpravě uložené položky.
+
+Pokud má například položka identifikátor `emailova-adresa-1`, použijte značku `!emailova-adresa-1!`. Při zobrazení dalšího kroku nebo při vytvoření emailu se značka nahradí odeslanou hodnotou. Pokud položka ještě nebyla vyplněna, nahradí se prázdnou hodnotou.
+
+### Podmíněné zobrazení/validování položky
+
+Pro každou položku formuláře můžete nastavit pravidla, která dynamicky mění její chování podle hodnot jiných položek.
+
+K dispozici jsou dvě samostatné karty:
+
+- **Zobrazení** - určují, zda se položka zobrazí nebo skryje (podmínky zobrazení).
+- **Povinnost** - určují, zda bude položka povinná nebo nepovinná (podmínky povinnosti).
+
+Obě karty používají stejný typ pravidel a stejný způsob vyhodnocování. Liší se pouze výsledným efektem. Nastavení z jedné karty neovlivňují nastavení druhé karty.
+
+![](tab-visibilityConditions.png)
+
+!>**Upozornění:** Systém nekontroluje, zda jsou zadané podmínky reálně splnitelné, proto je nastavujte tak, aby mohly nastat. Vyhněte se i situacím, kdy má položka podmíněné zobrazení a zároveň se její hodnota používá v další podmínce, protože může vzniknout mrtvá situace. Rovněž nedoporučujeme měnit pořadí kroků, pokud již máte nastavené podmínky, protože může nastat situace, kdy pole z kroku 1 čeká na hodnotu pole z kroku 3, což nebude fungovat správně.
+
+#### Kdy jsou podmínky dostupné
+
+- Karty s podmínkami se zobrazí pouze při editaci stávající položky (ne při vytváření nové).
+- Dostupnost karet závisí na typu pole:
+  - Pokud položka nepodporuje nastavení **Povinné pole**, nebude dostupná ani karta **Podmínky povinnosti**.
+  - U grafických položek (např. mezera, nový řádek, prázdná buňka) podmínky nejsou dostupné, protože se nejedná o interaktivní vstupní pole.
+- Jsou-li nastaveny **Podmínky povinnosti**, hodnota přepínače **Povinné pole** se ignoruje.
+- V podmínkách můžete použít pouze položky ze stejného nebo z předchozích kroků formuláře.
+
+#### Jak vytvořit podmínku
+
+Výsledné pravidlo vytvoříte kombinací jednotlivých řádků v tabulce podmínek. Každý řádek představuje jednu podmínku s více parametry. Na jednu položku můžete přidat více podmínek.
+
+Jedná se o plochou strukturu (bez závorek), takže není podpořeno vnořování podmínek.
+
+Každá podmínka obsahuje tyto parametry:
+
+- **Pole formuláře** - položka, jejíž hodnota se použije při vyhodnocení podmínky. Možnosti jsou seřazeny stejně jako ve formuláři.
+- **Podmínka porovnání** - způsob porovnání hodnoty pole:
+  - **rovná se**
+  - **nerovná se**
+  - **obsahuje**
+  - **neobsahuje**
+  - **začíná na**
+  - **končí na**
+  - **je prázdné**
+  - **není prázdné**
+- **Srovnávaná hodnota** - hodnota, vůči které se porovná obsah vybraného pole.
+- **Ignorovat velikost písmen** - porovnání nebude citlivé na velká/malá písmena.
+- **Logický operátor** - spojení s následující podmínkou:
+  - `AND` - ​​musí platit obě podmínky,
+  - `OR` - ​​stačí, pokud platí alespoň jedna podmínka.
+
+![](tab-visibilityConditions-create.png)
+
+!>**Upozornění:** U operátorů **je prázdné** a **není prázdné** se pole **Srovnávaná hodnota** a **Ignorovat velikost písmen** automaticky skryjí, protože se testuje pouze existence obsahu pole, nikoli jeho konkrétní hodnota.
+
+#### Vyhodnocování pravidel
+
+- Podmínky se vyhodnocují průběžně během vyplňování kroku.
+- Jsou-li splněny **Podmínky zobrazení**, pole se zobrazí, jinak se skryje.
+- Jsou-li splněny **Podmínky povinnosti**, pole je povinné, jinak je nepovinné.
+- Skryté pole se neodesílá a nevaliduje.
+- Pokud je pole skryto, nikdy nemůže být zároveň povinné.
+
+#### Důležitá omezení
+
+- Podmínka nemůže odkazovat sama na sebe. Jedná se o nepovolený stav a podmínka nebude možné uložit.
+- Položku, která je použita v podmínkách jiných položek, nelze odstranit.
+- Při úpravě takové položky editor zobrazí upozornění na závislé položky. Uložení můžete povolit v kartě **Pokročilé** volbou **Uložit iu existujících závislých položek**.
+
+Při pokusu o úpravu nebo odstranění položky, která je použita v podmínce jiné položky, se zobrazí chyba i notifikace se seznamem závislých položek.
+
+![](save-condition-error.png)
 
 ### Statistika
 
@@ -136,7 +232,7 @@ Na konci každého kroku se automaticky vygeneruje tlačítko, jehož text se m�
 
 ![](real-form.png)
 
-!>**Upozornění:** Náhled formuláře se ve výsledku může graficky lišit od skutečného zobrazení ve webové aplikaci, protože záleží na použité šabloně a stylech stránky ve které bude formulář vložen. Náhled slouží hlavně k představě o rozložení a obsahu formuláře.
+!>**Upozornění:** Náhled formuláře je orientační a může se kompozičně i graficky lišit od skutečného zobrazení na stránce. V editoru se zobrazují všechny položky bez ohledu na nastavené podmínky, abyste uměli formulář lépe navrhnout a zkontrolovat. Na reálné stránce se však formulář mění dynamicky podle podmínek zobrazení (některá pole se mohou skrýt nebo zobrazit podle hodnot jiných polí) a zároveň podle použité šablony a stylů stránky, do které je formulář vložen.
 
 ## Vložení formuláře do stránky
 
@@ -144,11 +240,13 @@ Vytvořený formulář můžete vložit do web stránky pomocí aplikace Formul�
 
 ![](app-editor.png)
 
+Na jednu stránku můžete vložit i více instancí stejného vícekrokového formuláře. Každá instance pracuje nezávisle a vygenerované HTML identifikátory polí obdrží vlastní prefix, například `f1-` a `f2-`, aby se navzájem neovlivňovaly.
+
 ## Konfigurační proměnné
 
 Dostupné konfigurační proměnné pro vícekrokové formuláře:
 
-- `multistepform_nameFields` - ​​seznam názvů polí, která budou považována za pole pro jméno. Mezi těmito poli se bude hledat jméno, které by se použilo jako oslovení v emailech. Použije se pouze **první** nalezené neprázdné jméno.
-- `multistepform_emailFields` - ​​seznam názvů polí, která budou považována za pole pro emailovou adresu. Mezi těmito poli se bude hledat emailová adresa, na kterou se odešle potvrzení o přijetí formuláře. Použije se **všechny** nalezeny a validní emailové adresy.
+- `multistepform_nameFields` - ​​seznam začátků identifikátorů polí, která budou považována za pole pro jméno. Například hodnota `meno` odpovídá také položce `meno-priezvisko-1`. Do emailu se použije první nalezené neprázdné jméno.
+- `multistepform_emailFields` - ​​seznam začátků identifikátorů polí, která budou považována za pole pro emailovou adresu. Například hodnota `email` odpovídá také položce `emailova-adresa-1`. Na potvrzení přijetí formuláře se použijí všechny nalezené platné emailové adresy.
 - `multistepform_attachmentDefaultName` - ​​přednastavený název přílohy v emailech, který se použije pokud se nepodaří získat skutečný název souboru přílohy.
 - `multistepform_subjectDefaultValue` - ​​přednastavený překladový klíč pro předmět emailu, který se použije pokud není zadaný předmět v nastaveních/atributech formuláře.

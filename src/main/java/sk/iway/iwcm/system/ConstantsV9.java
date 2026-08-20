@@ -21,7 +21,7 @@ public class ConstantsV9 {
 		Constants.setString("mariaDbDefaultEngine", "InnoDB");
 		Constants.setString("chunksQuantity", "25");
 		Constants.setString("propertiesAdminKeys",
-			  "button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*,text.warning,text.info,editor.directory_name,editor.confirmExitMessage,menu.forms,datatables.quill.toolbar.*");
+			  "button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*,text.warning,text.info,editor.directory_name,editor.confirmExitMessage,menu.forms,datatables.quill.toolbar.*,editor.form.sl.name,editor.form.sl.value,components.file_archiv.name,admin.dragDropFiles.*");
 		Constants.setInt("webpagesTreeAutoOpenLimit", 2);
 		Constants.setString("deepl_auth_key", "", "translations", "Preklady - authentifikacny kluc k sluzbe deepl.com pre preklad textov");
 		Constants.setString("deepl_api_url", "https://api-free.deepl.com/v2/translate", "translations", "URL adresa pre API volanie DeepL prekladu, ak mate PRO ucet pouzite https://api.deepl.com/v2/translate");
@@ -53,7 +53,7 @@ public class ConstantsV9 {
 				Constants.MOD_SECURITY,
 				"Zoznam stlpcov v databaze, ktore mozu obsahovat HTML kod (nebudu pri citani escapovane specialne znaky). Pre zakaznicke projekty nastavte premennu xssHtmlAllowedFields");
 
-		Constants.setString("xsrfParamNameExceptionSystem", Constants.getString("xsrfParamNameExceptionSystem")+",tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,c,noip,rnd,login,auth,reservationDate,iID,name,act,datum,basketAct,invoicePaymentId,email,save,scheduleId");
+		Constants.setString("xsrfParamNameExceptionSystem", Constants.getString("xsrfParamNameExceptionSystem")+",tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,c,noip,rnd,login,auth,reservationDate,iID,name,act,datum,basketAct,invoicePaymentId,email,save,scheduleId,rootDir");
 
 		Constants.setString("jpaToLowerFields", "description,questionText,notifyIntrotext,question,data,dataAsc,htmlHead,htmlData,attachments,message,files,html,note,descriptionLong*,answer,afterBodyData,value,mediaInfo*,userNote,messageText,htmlCode,purpose,content,propValue,defaultValue,dataResult,descriptionText,scriptBody,relatedPages,name", Constants.MOD_CONFIG, "Zoznam nazvov CLOB stlpcov pre ktore sa v pripade Oracle pouzije LOWER funkcia pri vyhladavani");
 
@@ -203,6 +203,8 @@ public class ConstantsV9 {
 		Constants.setString("ai_gemini_generateFileNameModel", "gemini-pro-latest", Constants.MOD_AI_ASSISTANTS, "Model that will be used to generate AI image file name");
 		Constants.setString("ai_openRouter_generateFileNameModel", "openai/gpt-5-mini", Constants.MOD_AI_ASSISTANTS, "Model that will be used to generate AI image file name");
 		Constants.setInt("ai_auditMaxLength", 1000, Constants.MOD_AI_ASSISTANTS, "Maximal length of AI request/response stored in audit");
+		Constants.setInt("ai_providerConnectTimeoutSeconds", 0, Constants.MOD_AI_ASSISTANTS, "AI provider connection timeout in seconds, 0 disables the timeout");
+		Constants.setInt("ai_providerResponseTimeoutSeconds", 0, Constants.MOD_AI_ASSISTANTS, "AI provider response timeout in seconds, 0 disables the timeout");
 
 		Constants.setString("basketAdminGroupIds", "", Constants.MOD_BASKET, "Zoznam ID adresárov, ktore obsahju produkty pre elektronicky obchod. Možné zadať v tvare 17,23*,72, kde * znamená vrátane podpriečinkov. Ak je prázdne, tak sa automaticky vyhľadá podľa vloženej aplikácie zoznam produktov.");
 		Constants.setString("xhrFileUploadAllowedExtensions", "doc docx xls xlsx ppt pptx pdf xml txt json jpeg jpg bmp tiff psd png zip rar mp4 webp", Constants.mods("forms", Constants.MOD_SECURITY), "Povolené prípony súborov pre XHR upload (viac prípon oddelených medzerou).");
@@ -242,6 +244,9 @@ public class ConstantsV9 {
 		Constants.setString("ckeditor_button_deniedClasses", "", Constants.MOD_EDITOR, "Zoznam zakázaných CSS tried oddelených čiarkou pre otvorenie dialógu nastavenia tlačidla. Prázdna hodnota nezakáže žiadne CSS triedy.");
 		Constants.setString("ckeditor_button_attrs", "data-bs-toggle,data-bs-target,aria-controls,aria-expanded,aria-label", Constants.MOD_EDITOR, "Zoznam nastaviteľných atribútov tlačidla oddelených čiarkou.");
 
+		Constants.setString("thumbServletAllowedSizes", "96x96", Constants.MOD_SECURITY, "Zoznam povolenych suffixov suborov pre generovanie thumb obrazka");
+		Constants.setString("thumbServletAllowedSizeMode", "learn", Constants.MOD_SECURITY, "Nastavuje rezim povolenych rozmerov pre generovanie thumb obrazka. Mozne hodnoty: learn - prida hodnotu ak nie je v zozname, deny - zakaze akekolvek generovanie, allow - povoli vsetky hodnoty, strict - povoli len zadane hodnoty, check - povoli len zadane hodnoty ale ak je prihlaseny administrator automaticky prida novy rozmer do zoznamu.");
+
 		Constants.setString("xForwardedForHeader", "x-forwarded-for", Constants.MOD_SECURITY, "Názov HTTP hlavičky, ktorá obsahuje pôvodnú IP adresu klienta pri použití reverzného proxy servera. Použije sa prvá IP adresa v zozname, ak končí na ::last použije sa posledná.");
 		Constants.setString("moduleDisableList", "", Constants.MOD_CONFIG, "Čiarkov oddelený zoznam modulov, ktoré sa majú zakázať. Napríklad cmp_blog,cmp_forum,make_zip_archive,modRestart,editor_unlimited_upload");
 
@@ -264,15 +269,59 @@ public class ConstantsV9 {
 		Constants.setString("imageMagickCustomParams_resize", "", "images", "Custom parameters for ImageMagick resize operation. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
 		Constants.setString("imageMagickCustomParams_crop", "", "images", "Custom parameters for ImageMagick crop operation. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
 		Constants.setString("imageMagickCustomParams_rotate", "", "images", "Custom parameters for ImageMagick rotate operation. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
-		Constants.setString("imageMagickCustomParams_jpg", "\n-define jpeg:optimize-coding=true", "images", "Custom parameters for ImageMagick JPG format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
-		Constants.setString("imageMagickCustomParams_png", "\n-define png:compression-level=9 -define png:compression-strategy=1", "images", "Custom parameters for ImageMagick PNG format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
-		Constants.setString("imageMagickCustomParams_webp", "\n-quality 80 -define webp:method=6 -define webp:auto-filter=true -define webp:sns-strength=50", "images", "Custom parameters for ImageMagick WebP format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_jpg", "---\n-define jpeg:optimize-coding=true", "images", "Custom parameters for ImageMagick JPG format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_png", "---\n-define png:compression-level=9 -define png:compression-strategy=1", "images", "Custom parameters for ImageMagick PNG format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_webp", "---\n-quality 80 -define webp:method=6 -define webp:auto-filter=true -define webp:sns-strength=50", "images", "Custom parameters for ImageMagick WebP format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
 
 		Constants.setString("appWrapperClasses", "apps.wrapper.container:container,apps.wrapper.container-fluid:container-fluid,apps.wrapper.mt-1:mt-1,apps.wrapper.mt-2:mt-2,apps.wrapper.mt-3:mt-3,apps.wrapper.mt-4:mt-4,apps.wrapper.mb-1:mb-1,apps.wrapper.mb-2:mb-2,apps.wrapper.mb-3:mb-3,apps.wrapper.mb-4:mb-4,apps.wrapper.w-100:w-100,apps.wrapper.w-75:w-75,apps.wrapper.w-50:w-50,apps.wrapper.mx-auto:mx-auto", Constants.MOD_EDITOR, "Čiarkou oddelený zoznam CSS tried pre obalenie výstupu aplikácie do wrapper kontajnera. Formát: prekladový_kľúč:css_trieda alebo len css_trieda. Ak je uvedený prekladový kľúč, zobrazí sa preložený názov.");
 
 		Constants.setString("videoClasses", "components.video_player.ratio-16x9:embed-responsive-16by9 ratio ratio-16x9,components.video_player.ratio-4x3:embed-responsive-4by3 ratio ratio-4x3,components.video_player.ratio-1x1:embed-responsive-1by1 ratio ratio-1x1,components.video_player.ratio-21x9:embed-responsive-21by9 ratio ratio-21x9,components.video_player.ratio-9x16:ratio ratio-9x16", Constants.MOD_EDITOR, "Čiarkou oddelený zoznam CSS tried pre obalenie videa (pomer strán). Formát: prekladový_kľúč:css_trieda alebo len css_trieda. Prvá položka je predvolená hodnota.");
 		Constants.setString("videoWrapperClass", "embed-responsive", Constants.MOD_EDITOR, "CSS trieda pre obaľovací element videa (embed-responsive pre Bootstrap).");
 		Constants.setString("videoItemClass", "embed-responsive-item", Constants.MOD_EDITOR, "CSS trieda pre vnútorný iframe element videa (embed-responsive-item pre Bootstrap).");
+
+		/* ***** ***** ***** RAG SECTION ***** ***** ***** */
+
+		Constants.setBoolean("ragSemanticSearchEnabled", false, Constants.MOD_RAG, "Povolí sémantické vyhľadávanie nad vektorovou databázou pgvector.");
+
+		/* RAG - PGVECTOR STORE */
+		Constants.setInt("ragSearchEfSearch", 40, Constants.MOD_RAG, "HNSW index parameter ef_search — čím vyššia hodnota, tým lepší recall ale pomalšie vyhľadávanie. Default je 40, pre väčšie datasety zvážte zvýšenie na 100 alebo viac.");
+		Constants.setString("ragSearchDistanceMetric", "cosine", Constants.MOD_RAG, "Metrika vzdialenosti pre pgvector vyhľadávanie. Možné hodnoty: 'cosine' (cosínusová vzdialenosť), 'inner_product' (vnútorný súčin, rýchlejší pre normalizované vektory), 'l2' (euklidovská vzdialenosť). Zmena vyžaduje reindex HNSW indexu.");
+
+		/* RAG - EMBEDDING */
+		Constants.setInt("ragEmbeddingDimensions", 1536, Constants.MOD_RAG, "Počet dimenzií embedding vektora generovaného pre RAG. Hodnota musí zodpovedať použitému modelu a definícii stĺpca vo vektorovej databáze.");
+		Constants.setString("ragEmbeddingModel", "text-embedding-3-small", Constants.MOD_RAG, "Názov embedding modelu použitého na generovanie vektorov pre RAG indexovanie a sémantické vyhľadávanie.");
+		Constants.setInt("ragEmbeddingChunkSize", 1000, Constants.MOD_RAG, "Maximálna veľkosť jedného textového chunku v znakoch pri rozdeľovaní dokumentov pre RAG indexovanie.");
+		Constants.setInt("ragEmbeddingChunkOverlap", 200, Constants.MOD_RAG, "Počet znakov, ktoré sa majú prekrývať medzi susednými chunkmi pri rozdeľovaní textu pre RAG indexovanie.");
+
+		/* RAG - SEMANTIC SEARCH */
+		Constants.setString("ragSemanticSearchMinSimilarity", "0.2", Constants.MOD_RAG, "Minimálna hodnota similarity pre výsledky sémantického vyhľadávania. Ak je hodnota mimo intervalu 0-1, použije sa najbližšia hranica.");
+		Constants.setInt("ragSemanticSearchMinResults", 3, Constants.MOD_RAG, "Minimálny počet výsledkov sémantického vyhľadávania. Ak ich je po filtrovaní menej, doplnia sa podľa najvyššej similarity.");
+
+		/* RAG - HYBRID */
+		Constants.setBoolean("ragHybridSearchEnabled", true, Constants.MOD_RAG, "Zapne hybridné vyhľadávanie nad rag_embedding_chunks kombinujúce vektorové a fulltext výsledky.");
+		Constants.setString("ragHybridSearchMode", "short_query_only", Constants.MOD_RAG, "Režim hybridného vyhľadávania: off, always, short_query_only, fallback_on_low_vector.");
+		Constants.setInt("ragHybridShortQueryMaxChars", 12, Constants.MOD_RAG, "Maximálna dĺžka dotazu v znakoch pre režim short_query_only.");
+		Constants.setInt("ragHybridShortQueryMaxTerms", 2, Constants.MOD_RAG, "Maximálny počet slov dotazu pre režim short_query_only.");
+		Constants.setString("ragHybridFallbackTopSimilarity", "0.35", Constants.MOD_RAG, "Prahová hodnota top similarity pre režim fallback_on_low_vector.");
+		Constants.setString("ragHybridVectorWeight", "0.7", Constants.MOD_RAG, "Váha vektorového poradia pri RRF merge hybridného vyhľadávania.");
+		Constants.setString("ragHybridFtsWeight", "0.3", Constants.MOD_RAG, "Váha fulltext poradia pri RRF merge hybridného vyhľadávania.");
+		Constants.setInt("ragHybridRrfK", 60, Constants.MOD_RAG, "Hodnota k parametra pre RRF merge hybridného vyhľadávania.");
+		Constants.setInt("ragHybridChunkFetchMultiplier", 3, Constants.MOD_RAG, "Násobič počtu chunkov načítaných pre hybridné vyhľadávanie voči požadovanému počtu výsledkov.");
+		Constants.setBoolean("ragHybridFtsUseIlikeFallback", true, Constants.MOD_RAG, "Pri prázdnych FTS výsledkoch vykoná fallback cez ILIKE nad chunk_text.");
+
+		/* RAG - ANSWER */
+		Constants.setBoolean("ragAnswerAllowed", false, Constants.MOD_RAG, "Povolí RAG odpoved.");
+		Constants.setString("ragAnswerModel", "gpt-5.4-mini", Constants.MOD_RAG, "Predvolený OpenAI model použitý na generovanie RAG odpovede.");
+		Constants.setString("ragAnswerMinSimilarity", "0.3", Constants.MOD_RAG, "Minimalna hodnota similarity chunku pouzita pri post-processingu kontextu pre RAG odpoved. Chunky pod touto hranicou sa pri tvorbe odpovede odfiltruju.");
+		Constants.setInt("ragAnswerTopK", 12, Constants.MOD_RAG, "Maximalny pocet najrelevantnejsich chunkov vstupujucich do post-processingu pred vytvorenim RAG odpovede.");
+		Constants.setInt("ragAnswerMaxChunkGap", 1, Constants.MOD_RAG, "Maximalna povolena medzera medzi susednymi chunkmi pri ich zlucovani do jedneho kontextoveho bloku pre RAG odpoved.");
+		Constants.setInt("ragAnswerMaxBlocks", 4, Constants.MOD_RAG, "Maximalny pocet zlucenych kontextovych blokov, ktore sa odoslu modelu pri generovani RAG odpovede.");
+		Constants.setInt("ragAnswerMaxCharacters", 6000, Constants.MOD_RAG, "Maximalny celkovy pocet znakov post-processovaneho kontextu, ktory sa pouzije pri generovani RAG odpovede.");
+		Constants.setInt("ragAnswerMaxMergedBlockCharacters", 2200, Constants.MOD_RAG, "Maximalny pocet znakov jedneho zluceneho kontextoveho bloku po spojeni susednych chunkov pre RAG odpoved.");
+
+		Constants.setString("searchType", "db", Constants.MOD_CONFIG, "Typ vyhladavania: db (databazove), lucene (Lucene fulltext), semantic (sémanticke vyhladavanie cez pgvector), hybrid (kombinace vektoroveho a fulltext vyhledavania)");
+
+		Constants.setInt("gdprDeleteDocAndGroupsAfterDays", 186, Constants.MOD_CONFIG, "Koľko dní staré priečinky a stránky, ktoré sú v koši, sa majú vymazať (POZOR, nie ako dlho sú v koši).");
 	}
 
 	/**

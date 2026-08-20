@@ -1,5 +1,8 @@
 package sk.iway.iwcm.components.multistep_form.support;
 
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.Tools;
+
 /**
  * Exception indicating a failure while saving a multistep form.
  *
@@ -16,6 +19,15 @@ public class SaveFormException extends Exception {
         super(message);
         this.endUserTry = endUserTry;
         this.errorRedirect = errorRedirect;
+    }
+
+    public SaveFormException(String message, String failStatus, boolean endUserTry, String errorRedirect) {
+        super(message);
+        this.endUserTry = endUserTry;
+        this.errorRedirect = errorRedirect;
+        if (Tools.isNotEmpty(failStatus)) {
+            RequestBean.addAuditValue("formfail", failStatus);
+        }
     }
 
     public SaveFormException(String message, Throwable cause, boolean endUserTry, String errorRedirect) {

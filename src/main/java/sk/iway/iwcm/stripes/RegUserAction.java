@@ -582,7 +582,7 @@ public class RegUserAction extends WebJETActionBean
 			errors.add("spamError", new SimpleError(prop.getText("checkform.fail_probablySpamBot")));
 
 		if	(!Captcha.validateResponse(getRequest(), getRequest().getParameter("g-recaptcha-response"), "userform"))
-			errors.add("captchaError", new SimpleError(prop.getText("captcha.nie.je.spravna")));
+			errors.add("captchaError", new SimpleError(prop.getText("captcha.textNotCorrect")));
 
 
 		String validateMethod = pageParams.getValue("validateMethod", null);
@@ -892,7 +892,7 @@ public class RegUserAction extends WebJETActionBean
 
 							//pridaj ho do galerie
 							Logger.debug(RegUserAction.class, "Resizing photo:"+realPath);
-							GalleryDB.resizePictureImpl(dims, realPath, null, prop, GalleryDB.getResizeMode(actualDir));
+							GalleryDB.resizePictureImpl(dims, realPath, null, prop);
 
 							usr.setPhoto(actualDir+ "/" +fileName);
 						}

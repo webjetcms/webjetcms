@@ -128,6 +128,7 @@
   - [Poslat stránku emailem](/redactor/apps/send_link/README.md)
   - [Působivá prezentace](/redactor/apps/app-impress_slideshow/README.md)
   - [Uživatelé](/redactor/apps/user/README.md)
+  - [Přesměrování podle jazyka](/redactor/apps/language-redirect/README.md)
   - [Proxy](/redactor/apps/proxy/README.md)
   - [Příbuzné stránky](/redactor/apps/related-pages/README.md)
   - Rezervace
@@ -136,7 +137,7 @@
     - [Seznam rezervačních objektů](/redactor/apps/reservation/reservation-objects/README.md)
     - [Aplikace Rezervace](/redactor/apps/reservation/reservation-app/README.md)
     - [Aplikace Rezervace času](/redactor/apps/reservation/time-book-app/README.md)
-    - [Aplikace Rezervace dnů](/redactor/apps/reservation/day-book-app/README.md)
+    - [Aplikace Moje rezervace](/redactor/apps/reservation/my-reservations-app/README.md)
   - [Skripty](/redactor/apps/insert-script/README.md)
   - [Slider](/redactor/apps/slider/README.md)
   - [Slit slider](/redactor/apps/app-slit_slider/README.md)
@@ -145,7 +146,10 @@
   - [Vložení dokumentu](/redactor/apps/app-docsembed/README.md)
   - [Vložení HTML kódu](/redactor/apps/app-htmlembed/README.md)
   - [Vyhledávače (SEO)](/redactor/apps/seo/README.md)
-  - [Vyhledávání](/redactor/apps/search/README.md)
+  - Vyhledávání
+    - [Vyhledávání](/redactor/apps/search/README.md)
+    - [Sémantické vyhledávání (RAG)](/redactor/apps/semantic-search/README.md)
+    - [Sémantický index](/redactor/apps/semantic-search/embedding-chunks.md)
   - [Zobrazení souborů](/redactor/apps/site-browser/README.md)
   - [Zrcadlení struktury](/redactor/apps/docmirroring/README.md)
 - Soubory

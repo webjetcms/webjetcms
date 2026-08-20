@@ -4,12 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.CryptoFactory;
 import sk.iway.iwcm.Identity;
@@ -52,15 +52,26 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('cmp_form')")
 public class FormsController extends DatatableRestControllerV2<FormsEntity, Long> {
 
+    private static final String ORIGINAL_FORM_ID_ATTRIBUTE = FormsController.class.getName() + ".originalFormId";
+
     private final FormsServiceImpl formsService;
+    private final FormsDuplicationService formsDuplicationService;
     private final FormSettingsRepository formSettingsRepository;
     private final FormStepsRepository formStepsRepository;
     private final FormItemsRepository formItemsRepository;
 
     @Autowired
-    public FormsController(FormsRepository formsRepository, FormsServiceImpl formsService, FormSettingsRepository formSettingsRepository, FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository) {
+    public FormsController(
+        FormsRepository formsRepository,
+        FormsServiceImpl formsService,
+        FormsDuplicationService formsDuplicationService,
+        FormSettingsRepository formSettingsRepository,
+        FormStepsRepository formStepsRepository,
+        FormItemsRepository formItemsRepository
+    ) {
         super(formsRepository);
         this.formsService = formsService;
+        this.formsDuplicationService = formsDuplicationService;
         this.formSettingsRepository = formSettingsRepository;
         this.formStepsRepository = formStepsRepository;
         this.formItemsRepository = formItemsRepository;
@@ -119,11 +130,24 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
         //default use lowercase form name, remove special chars
         entity.setFormName( DocTools.removeChars(entity.getFormName(), true) );
 
+        if (isDuplicate()) {
+            Object originalId = getRequest().getAttribute(ORIGINAL_FORM_ID_ATTRIBUTE);
+            if (originalId instanceof Long == false) {
+                throw new IllegalStateException("Form duplication failed: Original form ID is not present.");
+            }
+            return formsDuplicationService.duplicateMultistepForm(entity, (Long) originalId, CloudToolsForCore.getDomainId());
+        }
+
         return super.insertItem(entity);
     }
 
     @Override
     public void afterSave(FormsEntity entity, FormsEntity saved) {
+        if (isDuplicate()) {
+            setRedirect("/apps/form/admin/form-steps/?formName=" + Tools.URLEncode(saved.getFormName()));
+            return;
+        }
+
         if(entity.getFormSettings() != null && (entity.getFormSettings().getId() == null || entity.getFormSettings().getId() == -1L)) {
             // Its new saved form
 
@@ -206,7 +230,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
 
     @Override
     public boolean deleteItem(FormsEntity entity, long id) {
-        return formsService.deleteItem(entity, id, formStepsRepository, formItemsRepository);
+        return formsService.deleteItem(entity, id, formStepsRepository, formItemsRepository, formSettingsRepository);
     }
 
     @Override
@@ -276,8 +300,19 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
     @Override
     public FormsEntity processFromEntity(FormsEntity entity, ProcessItemAction action) {
         if(Tools.isEmpty(entity.getFormType()))
-             entity.setFormType( FormsService.FORM_TYPE.UNKNOWN.value() );
+            entity.setFormType( FormsService.FORM_TYPE.UNKNOWN.value() );
         return entity;
+    }
+
+    @Override
+    public void beforeDuplicate(FormsEntity entity, Long originalId) {
+        FormsEntity original = originalId == null ? null : formsService.getById(originalId);
+        Identity user = getUser();
+        if (original == null || user == null || formsService.isFormAccessible(original.getFormName(), user) == false) {
+            throw new AccessDeniedException("User is not allowed to duplicate the source form.");
+        }
+
+        getRequest().setAttribute(ORIGINAL_FORM_ID_ATTRIBUTE, originalId);
     }
 
     /**

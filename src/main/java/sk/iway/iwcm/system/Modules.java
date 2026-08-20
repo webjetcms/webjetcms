@@ -737,6 +737,17 @@ public class Modules
 		setAvailable(sub);
 		files.addSubmenu(sub);
 
+		sub = new ModuleInfo();
+		sub.setNameKey("menu.fbrowser.allowFileDiacritics");
+		sub.setPath("javascript:void()");
+		sub.setWjVersions("BPECDIMO");
+		sub.setUserItem(true);
+		sub.setItemKey("fbrowser_allow_diacritics");
+		sub.setDefaultDisabled(true);
+		sub.setMenuIcon("text-spellcheck");
+		setAvailable(sub);
+		files.addSubmenu(sub);
+
 		loadModule(files);
 
 
@@ -778,6 +789,20 @@ public class Modules
 		sub.setShowInLeftMenu(true);
 		sub.setGroup("config");
 		sub.setMenuIcon("refresh");
+		loadModule(sub);
+
+		// Embedding-chunks
+		sub = new ModuleInfo().setMenuOrder(7024);
+		sub.setLeftMenuNameKey("settings.embedding-chunks.title");
+		sub.setNameKey("settings.embedding-chunks.title");
+		sub.setPath("/admin/v9/settings/embedding-chunks/");
+		sub.setWjVersions("BPECDIM");
+		sub.setUserItem(true);
+		sub.setItemKey("embeddingChunks");
+		sub.setDefaultDisabled(true);
+		sub.setShowInLeftMenu(true);
+		sub.setGroup("config");
+		sub.setMenuIcon("database-search");
 		loadModule(sub);
 
 		// Editacia textov
@@ -822,6 +847,20 @@ public class Modules
 		sub.setGroup("config");
 		sub.setShowInLeftMenu(true);
 		sub.setMenuIcon("disc");
+		loadModule(sub);
+
+		// Custom fields
+		sub = new ModuleInfo().setMenuOrder(7120);
+		sub.setLeftMenuNameKey("settings.custom-fields.title");
+		sub.setNameKey("settings.custom-fields.title");
+		sub.setPath("/admin/v9/settings/custom-fields/");
+		sub.setWjVersions("BPECDIM");
+		sub.setUserItem(true);
+		sub.setItemKey("customFields");
+		sub.setDefaultDisabled(true);
+		sub.setShowInLeftMenu(true);
+		sub.setGroup("config");
+		sub.setMenuIcon("table-options");
 		loadModule(sub);
 
 		// Restartovat

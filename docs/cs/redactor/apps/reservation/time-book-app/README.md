@@ -56,15 +56,16 @@ Jednotlivé buňky v tabulce mají znamenají specifický status.
 
 **Plná** buňka znamená, že bylo dosaženo maximálního počtu rezervací pro tento rezervační objekt a hodinu ve dni. Jak vidíme, buňka může obsahovat text jako "2/2", což znamená, že již existují 2 rezervace ze 2.
 
-!>**Upozornění:** může nastat situace, že tato buňka bude mít status nap. "1/2" nebo "0/2". Taková situace nastává když konkrétní hodina nebo celý den je již v minulosti. Takže i když nebylo dosaženo maximálního počtu rezervací, nelze přidat novou.
-
 ![](app-cell-full.png)
+
+!>**Upozornění:** může nastat situace, že tato buňka bude mít status nap. "1/2" nebo "0/2". Taková situace nastává když konkrétní hodina nebo celý den je již v minulosti. Takže i když nebylo dosaženo maximálního počtu rezervací, nelze přidat novou.
 
 **Volná** buňka v podstatě znamená, že je možné požádat o rezervaci objektu v tuto hodinu (a tento den).
 
 ![](app-cell-free.png)
 
 Tato buňka znamená, že je vybrána. výběr buňky se provede kliknutím na ni (pokud na ni opět kliknete tak se výběr zruší).
+
 !>**Upozornění:** vybrat je možné pouze dostupné buňky ergo ty, které jsou **volné**.
 
 ### Formulář rezervace
@@ -72,6 +73,7 @@ Tato buňka znamená, že je vybrána. výběr buňky se provede kliknutím na n
 Jedná se o jednoduchý formulář se základními informacemi k rezervaci objektu.
 
 Tato povinná pole se automaticky před-vyplní pokud jste přihlášen uživatel, ale samozřejmě dají se změnit. Pokud přistupujete jako nepřihlášený uživatel, musíte je povinně zadat:
+
 - Jméno
 - Příjmení
 - E-mail
@@ -87,6 +89,7 @@ Pole **Doba rezervace od-do** a **Cena rezervace** nelze změnit a slouží pouz
 ## Přidání rezervace
 
 Pro přidání rezervace musíte nejprve zvolit nějaký časový rozsah v tabulce. Přidávání rezervace má však následující pravidla:
+
 - **Rezervovat si můžete najednou pouze 1 rezervační objekt**. Takže pokud v řádku pro objektA zvolíte rozsah od 13:00 do 15:00 a tak se pokusíte zvolit rozsah pro rezervační objektB, výběr původního zvoleného rozsah se automaticky celý zruší.
 - **Zvolit můžete pouze 1 souvislý rozsah**. Nemůžete najednou zvolit rozsah 13:00-15:00 a současně 16:00-17:00 i kdyby šlo o tentýž objekt. Pokusíte-li se o to první zvolený rozsah, se automaticky zruší.
 - **Zvolený rozsah nemůže být přerušen nedostupným časem**. Pokusíte-li se zvolit rozsah 13:00-17:00 ale rozsah 15:00-16:00 daného objektu je již plně rezervován, zvolený rozsah se automatický zruší.

@@ -123,3 +123,17 @@ Scenario("Video - test zobrazovania v bannery", ({ I }) => {
         I.dontSeeElement("div.ytp-error-content-wrap-subreason");
     });
 });
+
+Scenario("Video - local", ({ I, DTE, Apps }) => {
+    Apps.openAppEditor(162123)
+
+    //click on app and verify link is correct
+    I.seeInField(".DTE_Field_Name_videoFile input", "/images/video/bloky.mp4");
+});
+
+Scenario("Audio - local", ({ I, DTE, Apps }) => {
+    Apps.openAppEditor(162124)
+
+    //click on app and verify link is correct
+    I.seeInField(".DTE_Field_Name_videoFile input", "/images/video/audio.mp3");
+});

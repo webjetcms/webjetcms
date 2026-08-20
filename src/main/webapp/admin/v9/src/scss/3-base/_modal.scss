@@ -380,6 +380,21 @@ body.modal-open {
                 }
             }
         }
+
+        .DTE_Field_Type_options, .DTE_Field_Type_enumeration {
+            .options-input-row-header {
+                font-size: 14px;
+                padding-top: 8px;
+                .options-id {
+                    margin-left: 12px;
+                    width: 80px;
+                }
+                .options-label {
+                    margin-left: 54px;
+                    width: 214px;
+                }
+            }
+        }
     }
 
     &-header {
@@ -1079,8 +1094,8 @@ div.DTE_Bubble_Background {
 
 
 .modal.DTED .modal-dialog.modal-fullscreen,
-html.in-iframe-show-table .modal.DTED .modal-dialog,
-html.in-iframe .modal.DTED .modal-dialog {
+html.in-iframe-show-table .modal.DTED:not(.DTE_nested_modal) .modal-dialog,
+html.in-iframe .modal.DTED:not(.DTE_nested_modal) .modal-dialog {
     margin: 0px;
     width: 100%;
     max-width: 100%;

@@ -216,7 +216,7 @@ public class DataTableColumnsFactory {
 
 
                 if (startIndex == -1) {
-                    result = escapeSpecialChars(prop.getText(result));
+                    result = escapeSpecialChars(prop.getText(result, false));
                 } else {
                     while (startIndex!=-1 && failsafe++<20) {
                         hasDot = result.contains(".");
@@ -225,7 +225,7 @@ public class DataTableColumnsFactory {
                         int endIndex = result.indexOf("}]]", startIndex);
                         if (endIndex>startIndex) {
                             String key = result.substring(startIndex+4, endIndex);
-                            String translated = escapeSpecialChars(prop.getText(key));
+                            String translated = escapeSpecialChars(prop.getText(key, false));
                             result = Tools.replace(result, result.substring(startIndex, endIndex+3), translated);
                         }
                         startIndex = result.indexOf("[[#{");

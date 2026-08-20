@@ -1,29 +1,28 @@
-<div class="time-book-app">
+<link rel="stylesheet" type="text/css" href="/components/_common/vannila-calendar-pro/styles/index.css">
+<link rel="stylesheet" type="text/css" href="/apps/reservation/mvc/time-book.css">
+
+<div class="time-book-app" data-vc-theme="light">
     <div class="dateHeader">
         <label data-th-text="#{components.reservation.reservation_date}" for="reservationDate">Reservation Date:</label>
-        <button onclick="addDays(-1)">
-            <svg style="width: 20px; height: 20px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
-                <path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"/>
-            </svg>
-        </button>
-        <input type="date" name="reservationDate" id="reservationDate" class="datepicker" data-th-value="${reservationDate}" onchange="changeReservationDate()"/>
-        <button onclick="addDays(1)">
-            <svg style="width: 20px; height: 20px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
-                <path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/>
-            </svg>
-        </button>
+        <button type="button" class="vc-arrow" data-vc-arrow="prev" onclick="addDays(-1)"></button>
+        <input type="date" name="reservationDate" id="reservationDate" class="datepicker timeBookDateInput" data-th-value="${reservationDate}" onchange="changeReservationDate()"/>
+        <button type="button" class="vc-arrow" data-vc-arrow="next" onclick="addDays(1)"></button>
     </div>
 
-    <div class="table-responsive">
-        <table class="table tabulkaStandard">
+    <div class="table-responsive timeBookGridWrapper">
+        <table class="timeBookGrid">
+            <thead>
             <tr>
                 <th data-th-text="#{components.contact.property.name}">reservationObjectNames</th>
                 <th data-th-each="hour : ${hours}" data-th-text="${hour}"></th>
             </tr>
+            </thead>
+            <tbody>
             <tr data-th-each="tableLine : ${tableLines}">
-                <td data-th-text="${tableLine.key}">keyvalue</td>
-                <td data-th-each="tableCell : ${tableLine.value}" th:id="${tableCell.id}" data-th-text="${tableCell.value}" th:classappend="${tableCell.cssClass}" class="tableCell" th:attr="onclick=|selectCell('${tableCell.id}')|"></td>
+                <td class="timeBookObjectName" data-th-text="${tableLine.key}">keyvalue</td>
+                <td data-th-each="tableCell : ${tableLine.value}" th:id="${tableCell.id}" data-th-text="${tableCell.value}" th:classappend="${tableCell.cssClass}" class="tableCell" th:attr="onclick=|selectCell('${tableCell.id}')|,data-price=${tableCell.price}"></td>
             </tr>
+            </tbody>
         </table>
     </div>
 
@@ -31,7 +30,7 @@
         <form id="reservationForm" data-th-action="${request.getAttribute('ninja').page.urlPathQString}" data-th-object="${reservationEntity}" method="post">
             <div data-th-if="${errors!=null}" class="alert alert-danger">
                 <p data-th-text="#{chat.form_fill_error}"></p>
-                <ul style="margin: 0px;">
+                <ul class="timeBookErrorList">
                     <li data-th-each="err : ${errors}">
                         <span data-th-text="#{components.reservation.reservation_list.__${err.field}__}">zložený prekladový kľúč zo statického prefixu a dynamického mena poľa</span> - <span data-th-text="${err.defaultMessage}">chybová správa</span>
                     </li>
@@ -89,66 +88,14 @@
         </form>
     </div>
 
-    <style>
-        .tableCell {
-            border: 1px solid #fff;
-            transition: background-color 0.2s, color 0.2s;
-            cursor: pointer;
-        }
-        .tableCell.unsupported {
-            background-color: #63697A;
-            cursor: not-allowed;
-        }
-        .tableCell.free {
-            background-color: #00BE9F !important;
-        }
-        .tableCell.free:hover {
-            background-color: #0063FB !important;
-        }
-        .tableCell.full {
-            background-color: #b3b8c7;
-            cursor: not-allowed;
-        }
-        .tableCell.selectedTableCell {
-            background-color: #0063FB !important;
-            color: #fff;
-            box-shadow: 0 0 0 2px #0051c3 inset;
-        }
-
-        .dateHeader {
-            margin: 5px;
-            display: flex;
-            align-items: center;
-            padding-bottom: 10px;
-        }
-
-        .dateHeader label {
-            padding-right: 10px;
-            margin: 0px;
-        }
-
-        .dateHeader button {
-            display: contents;
-        }
-
-        .dateHeader input#reservationDate {
-            margin-left: 5px;
-            margin-right: 5px;
-        }
-
-        .readonly-input {
-            background-color: var(--bs-secondary-bg);
-            opacity: 1;
-            cursor: default;
-        }
-    </style>
-
     <script th:inline="javascript">
     /*<![CDATA[*/
         let selectedCells = "";
         let reservationDate = $("#reservationDate");
         $("#reservationDateHidden").val( reservationDate.val() );
         let reservationObjectId = $("#reservationObjectId");
+        let currency = /*[[${currency}]]*/ "";
+        $(document).ready(setAvailabilityClasses);
 
         function addDays(days) {
             var chooseDate=new Date(reservationDate.val());
@@ -286,6 +233,8 @@
         function postChangeActions(objectId) {
             //Set value into hidden input
             reservationObjectId.val(objectId);
+            //Refresh range edge classes
+            refreshSelectedCellEdges();
             //Button visibility
             setReservationButtonState();
             //Set time range
@@ -313,6 +262,54 @@
             } else {
                 button.hide();
             }
+        }
+
+        function refreshSelectedCellEdges() {
+            $(".tableCell").removeClass("selectedTableCellStart selectedTableCellEnd selectedTableCellSingle");
+
+            if(selectedCells == null || selectedCells.length < 1) return;
+
+            let selectedCellsArr = selectedCells.split("+").filter(Boolean);
+            if(selectedCellsArr.length == 1) {
+                $("#" + selectedCellsArr[0]).addClass("selectedTableCellSingle");
+            } else if(selectedCellsArr.length > 1) {
+                $("#" + selectedCellsArr[0]).addClass("selectedTableCellStart");
+                $("#" + selectedCellsArr[selectedCellsArr.length - 1]).addClass("selectedTableCellEnd");
+            }
+        }
+
+        function setAvailabilityClasses() {
+            $(".tableCell").removeClass("availableEmpty availablePartial");
+            $(".tableCell").each(function() {
+                let cell = $(this);
+                let availabilityText = cell.find(".timeBookCellStatus").text().trim();
+                if(availabilityText.length < 1) availabilityText = cell.text().trim();
+
+                let availability = availabilityText.match(/^(\d+)\s*\/\s*(\d+)$/);
+                if(availability == null) return;
+
+                let reservedCount = Number(availability[1]);
+                if(cell.hasClass("free")) {
+                    if(reservedCount > 0) {
+                        cell.addClass("availablePartial");
+                    } else {
+                        cell.addClass("availableEmpty");
+                    }
+                }
+
+                let priceText = cell.attr("data-price");
+                cell.empty().append(
+                    $("<span></span>").addClass("timeBookCellStatus").text(availabilityText)
+                );
+
+                if(priceText != null && priceText.length > 0) {
+                    let priceLabel = priceText;
+                    if(currency != null && currency.length > 0) priceLabel += " " + currency;
+                    cell.append(
+                        $("<span></span>").addClass("timeBookCellPrice").text(priceLabel)
+                    );
+                }
+            });
         }
 
         function urlUpdateParam(url, paramName, paramValue) {

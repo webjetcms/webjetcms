@@ -94,6 +94,8 @@ You can further filter the graph and table by URL term in the main upper filter 
 
 ![](error-page.png)
 
+!>**Warning:** Error pages are accumulated in the database weekly. It is not possible to display error pages for a specific day only, pages for the entire week in the selected period are always displayed.
+
 ## Logins
 
 > How long and how many times did visitors or administrators log in to the website?

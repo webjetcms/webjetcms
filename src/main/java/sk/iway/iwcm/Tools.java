@@ -795,20 +795,7 @@ public class Tools
 	 */
 	public static String formatFileSize(long lengthLong)
 	{
-		String length = "";
-		if (lengthLong > (1024 * 1024))
-		{
-			length = decimalFormat.format((lengthLong / (1024D * 1024D))) + " MB";
-		}
-		else if (lengthLong > 1024)
-		{
-			length = decimalFormat.format((lengthLong / 1024D)) + " kB";
-		}
-		else
-		{
-			length = decimalFormat.format(lengthLong) + " B";
-		}
-		return(length);
+		return FileTools.formatFileSize(lengthLong);
 	}
 
 	/**

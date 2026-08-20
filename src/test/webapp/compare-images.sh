@@ -56,8 +56,8 @@ if [ -z "${TABLE_HEADER_PRINTED+x}" ]; then
   export TABLE_HEADER_PRINTED=1
 fi
 
-# Porovnaj s prahom (1 %)
-THRESHOLD=1
+# Porovnaj s prahom (výchozia: 1, nastaví sa cez CLI parameter v rm-same-images.sh)
+THRESHOLD=${THRESHOLD:-1}
 if (( $(echo "$PERCENT_DIFF < $THRESHOLD" | bc -l) )); then
   printf "%-${PERCENT_WIDTH}s \033[31m%-${ACTION_WIDTH}s %-${FILE_WIDTH}s %-${FILE_WIDTH}s\033[0m\n" "$PERCENT_DIFF" "REVERTING" "$NEW_IMAGE" "$DIFF_IMAGE"
   git checkout -- "$NEW_IMAGE"

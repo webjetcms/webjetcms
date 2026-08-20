@@ -1,8 +1,11 @@
 package sk.iway.iwcm.gallery;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -15,8 +18,12 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.FileIndexerTools;
+import sk.iway.iwcm.common.ImageTools;
 import sk.iway.iwcm.common.UploadFileTools;
+import sk.iway.iwcm.components.gallery.GalleryApp;
 import sk.iway.iwcm.components.gallery.GalleryService;
 import sk.iway.iwcm.findexer.FileIndexer;
 import sk.iway.iwcm.findexer.ResultBean;
@@ -57,6 +64,7 @@ public class GalleryActionBean extends WebJETActionBean
 	int itemsCount;
 
 	private String img;
+	private String fileName;
 	private int width;
 	private int height;
 	private String virtualPath;
@@ -209,44 +217,28 @@ public class GalleryActionBean extends WebJETActionBean
 
 		result.add(new Pair<>("prettyPhoto", prop.getText("components.gallery.visual_style.prettyPhoto")));
 		result.add(new Pair<>("photoSwipe", prop.getText("components.gallery.visual_style.photoSwipe")));
+		Set<String> addedStyles = new HashSet<>();
+		addedStyles.add("prettyPhoto");
+		addedStyles.add("photoSwipe");
 
-		//preskumaj adresar ci tam nieco nie je
-		IwcmFile[] files = new IwcmFile(Tools.getRealPath("/components/" + Constants.getInstallName() + "/gallery/")).listFiles();
-		for (IwcmFile f : files)
-		{
-			if (f.getName().startsWith("gallery-")==false) continue;
-			if (f.getName().contains("-prettyPhoto.jsp") || f.getName().contains("-photoSwipe.jsp")) continue;
-
-			try
-			{
-				String name = f.getName().substring("gallery-".length(), f.getName().length()-4);
-				addPair(name, result, prop);
-			}
-			catch (Exception e)
-			{
-				sk.iway.iwcm.Logger.error(e);
-			}
+		//add all JSP files from the installation-specific and common gallery folders
+		for (String name : GalleryApp.getStyleNames()) {
+			addPair(name, result, prop, addedStyles);
 		}
 
-		//over ci je tam ten co je zadany
+		//check if the current style is in the list
 		if (Tools.isNotEmpty(getStyle()))
 		{
-			boolean found = false;
-			for (Pair<String, String> pair : result)
-			{
-				if (pair.first.equals(getStyle())) found = true;
-			}
-			if (found == false)
-			{
-				addPair(getStyle(), result, prop);
-			}
+			addPair(getStyle(), result, prop, addedStyles);
 		}
 
 		return result;
 	}
 
-	private void addPair(String name, List<Pair<String, String>> result, Prop prop)
+	private void addPair(String name, List<Pair<String, String>> result, Prop prop, Set<String> addedStyles)
 	{
+		if (addedStyles.add(name) == false) return;
+
 		String desc = prop.getText("components.gallery.visual_style."+name);
 		if (desc.startsWith("components.gallery")) desc = name;
 
@@ -265,65 +257,101 @@ public class GalleryActionBean extends WebJETActionBean
 	public Resolution saveImage()
 	{
 		JSONObject result = new JSONObject();
+		IwcmFile temporaryFile = null;
 
 		try {
 			List<String> errors = new ArrayList<>();
+			Prop prop = Prop.getInstance(getRequest());
 
 			if(Tools.isEmpty(img)) {
 				errors.add("Img can not be empty");
+			}
+
+			if (FileBrowserTools.hasForbiddenSymbol(fileName)) {
+				errors.add(prop.getText("components.elfinder.commands.rename.error.banned_character"));
+			}
+
+			String sanitizedFileName = DocTools.removeChars(fileName, true);
+			if(Tools.isEmpty(sanitizedFileName)) {
+				errors.add(prop.getText("editor.upload_iframe.enterFileName"));
 			}
 
 			if(Tools.isEmpty(virtualPath)) {
 				errors.add("VirtualPath can not be empty");
 			}
 
-			if(width == 0) {
-				errors.add("Width can not be zero");
+			String extension = getImageExtension(img);
+			boolean isVideo = FileTools.isVideoFile("video." + extension);
+			if(Tools.isEmpty(extension) || (FileTools.isImage("image." + extension) == false && isVideo == false)) {
+				errors.add(prop.getText("components.forum.new.upload_not_allowed_filetype"));
 			}
 
-			if(height == 0) {
-				errors.add("Height can not be zero");
+			if(isVideo == false) {
+				if(width == 0) {
+					errors.add("Width can not be zero");
+				}
+
+				if(height == 0) {
+					errors.add("Height can not be zero");
+				}
 			}
 
 			if (errors.size() > 0) {
-				result.put("errors", new JSONArray(errors));
-				result.put("result", false);
-
-				return new StreamingResolution("application/json", result.toString());
+				return getSaveImageErrorResponse(result, errors);
 			}
 
-
-			String filename = img.substring(img.lastIndexOf('/') + 1);
-			String extension = filename.substring(filename.lastIndexOf('.') + 1);
-
-			String file = virtualPath + "/" + filename;
-			String realPathFile = Tools.getRealPath(file);
-
-			String smallFileUrl = file.substring(0, file.lastIndexOf('_')) + "_" + width + "_" + height + "." + extension;
+			String targetFileName = sanitizedFileName + "." + extension;
+			String smallFileUrl = virtualPath + "/" + targetFileName;
 			String realPathFileSmall = Tools.getRealPath(smallFileUrl);
 
-			FileTools.downloadFile(img, file);
+			if (FileTools.exists(smallFileUrl)) {
+				errors.add(prop.getText("multiple_files_upload.file_exist"));
+				return getSaveImageErrorResponse(result, errors);
+			}
+
+			String file = virtualPath + "/.pixabay-" + UUID.randomUUID() + "." + extension;
+			String realPathFile = Tools.getRealPath(file);
+			temporaryFile = new IwcmFile(realPathFile);
+
+			if (FileTools.downloadFile(img, file, null, 0, 120) == false) {
+				errors.add(prop.getText("gallery.resizing.error_2"));
+				return getSaveImageErrorResponse(result, errors);
+			}
 
 			//save pixabay image URL for later use
 			if(this.img.contains(PIXABAY)) {
 				GalleryService.savePixabayImageUrl(realPathFileSmall.substring(realPathFileSmall.lastIndexOf('/') + 1), this.img);
 			}
 
-			GalleryDB.resizePicture(realPathFile, realPathFileSmall, width, height);
-
-			new IwcmFile(realPathFile).delete();
-
-			//ak je treba, aplikujem vodotlac na obrazky
-			IwcmFile newFileIwcm = new IwcmFile(realPathFileSmall);
-			GalleryDB.applyWatermarkOnUpload(newFileIwcm);
-
-			if (GalleryDB.isGalleryFolder(virtualPath))
-			{
-				GalleryDB.resizePicture(newFileIwcm.getAbsolutePath(), virtualPath);
+			if ("svg".equals(extension)) {
+				ImageTools.sanitizeSvgFile(temporaryFile);
+				FileTools.copyFile(temporaryFile, new IwcmFile(realPathFileSmall));
 			}
-			else if (Constants.getBoolean("imageAlwaysCreateGalleryBean"))
-			{
-				GalleryDB.setImage(virtualPath, filename);
+			else if (isVideo) {
+				FileTools.copyFile(temporaryFile, new IwcmFile(realPathFileSmall));
+			}
+			else {
+				GalleryDB.resizePicture(realPathFile, realPathFileSmall, width, height);
+			}
+
+			IwcmFile newFileIwcm = new IwcmFile(realPathFileSmall);
+			if (newFileIwcm.exists() == false) {
+				errors.add(prop.getText("gallery.resizing.error_2"));
+				return getSaveImageErrorResponse(result, errors);
+			}
+
+			if (isVideo == false) {
+				//ak je treba, aplikujem vodotlac na obrazky
+				GalleryDB.applyWatermarkOnUpload(newFileIwcm);
+
+				if (GalleryDB.isGalleryFolder(virtualPath))
+				{
+					GalleryDB.resizePicture(newFileIwcm.getAbsolutePath(), virtualPath);
+				}
+				else if (Constants.getBoolean("imageAlwaysCreateGalleryBean"))
+				{
+					GalleryDB.setImage(virtualPath, targetFileName);
+				}
 			}
 
 			//ak existuje adresar files, treba indexovat
@@ -334,15 +362,41 @@ public class GalleryActionBean extends WebJETActionBean
 			}
 
 			result.put("result", true);
-			if (GalleryDB.isGalleryFolder(virtualPath)) result.put("virtualPath", GalleryDB.getImagePathSmall(smallFileUrl));
+			if (isVideo == false && GalleryDB.isGalleryFolder(virtualPath)) result.put("virtualPath", GalleryDB.getImagePathSmall(smallFileUrl));
 			else result.put("virtualPath", smallFileUrl);
 			result.put("cwd", virtualPath);
 		}
 		catch (Exception e)
 		{
 			sk.iway.iwcm.Logger.error(e);
+			result.put("result", false);
+		}
+		finally
+		{
+			if (temporaryFile != null) temporaryFile.delete();
 		}
 
+		return new StreamingResolution("application/json", result.toString());
+	}
+
+	private String getImageExtension(String imageUrl)
+	{
+		if (Tools.isEmpty(imageUrl)) return "";
+
+		try {
+			String extension = FileTools.getFileExtension(imageUrl);
+			if ("jpeg".equals(extension)) return "jpg";
+			return extension;
+		}
+		catch (Exception e) {
+			return "";
+		}
+	}
+
+	private Resolution getSaveImageErrorResponse(JSONObject result, List<String> errors)
+	{
+		result.put("errors", new JSONArray(errors));
+		result.put("result", false);
 		return new StreamingResolution("application/json", result.toString());
 	}
 
@@ -354,6 +408,16 @@ public class GalleryActionBean extends WebJETActionBean
 	public void setImg(String img)
 	{
 		this.img = img;
+	}
+
+	public String getFileName()
+	{
+		return fileName;
+	}
+
+	public void setFileName(String fileName)
+	{
+		this.fileName = fileName;
 	}
 
 	public int getWidth()

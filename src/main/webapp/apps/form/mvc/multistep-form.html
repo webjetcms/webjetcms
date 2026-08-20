@@ -3,6 +3,8 @@
 <script type="text/javascript" src="/components/_common/cleditor/jquery.cleditor.js"></script>
 <script type="text/javascript" src="/components/_common/cleditor/jquery.cleditor.icon.js"></script>
 
+<link rel="stylesheet" type="text/css" href="/apps/form/mvc/default.css" />
+
 <!-- Wrapper will be appended inside div.container by the JS module -->
 
 <div data-th-id="${'multistep-form-wrapper-'+csrf}"></div>
@@ -29,6 +31,7 @@
             formName: /*[[${formName}]]*/ "",
             stepId: /*[[${stepId}]]*/ "",
             csrf: /*[[${csrf}]]*/ "",
+            language: /*[[${language}]]*/ "",
             // Localized messages passed from server
             successMessage: /*[[#{multistep_form.form_save_succ}]]*/ "",
             errorMessage: /*[[#{multistep_form.step_saving_err}]]*/ ""

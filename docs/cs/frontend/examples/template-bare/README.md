@@ -279,7 +279,7 @@ uživatel si může zvolit libovolnou kombinaci těchto stylů na element `p`. P
 Chcete-li aby se ve výběrovém menu zobrazovaly názvy ve vašem stylu, můžete v režimu Page Builder přidat do hlavičky stránky definici CSS souborů stylů pro editor:
 
 ```html
-<script>
+<script data-th-if="${T(sk.iway.iwcm.editor.InlineEditor).isInlineEditingEnabled(request)}">
     webjetContentsCss = [
        '/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/samples/contents.css',
        '/templates/jet/assets/css/editor.css'

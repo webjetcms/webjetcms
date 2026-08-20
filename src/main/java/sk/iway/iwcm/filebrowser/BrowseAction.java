@@ -14,6 +14,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.FilePathTools;
 import sk.iway.iwcm.io.IwcmFile;
@@ -124,6 +125,7 @@ public class BrowseAction
 			}
 
 			boolean fbrowserShowOnlyWritableFolders = Constants.getBoolean("fbrowserShowOnlyWritableFolders");
+			if (CloudToolsForCore.isControllerDomain()) fbrowserShowOnlyWritableFolders = false;
 
 			for (int i = 0; i < arrayfile.length; i++)
 			{

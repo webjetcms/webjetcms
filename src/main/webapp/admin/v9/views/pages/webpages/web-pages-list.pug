@@ -501,6 +501,8 @@ block content
                     });
 
                     function showHideDomainName(parentGroupId) {
+                        //always hide in cloud
+                        if (WJ.hasPermission("ver-multiweb") == false && WJ.hasPermission("install-cloud") == false) parentGroupId = 1;
                         window.setTimeout(function() {
                             try {
                                 if (parentGroupId > 0) {
@@ -536,6 +538,9 @@ block content
                                 //console.log("Binding groups DTED events");
                                 groupsDatatableEventsBinded = true;
                                 //navbar nastaveny podla title
+                                $("#DTE_Field_domainName").on("keyup", function() {
+                                    $("#DTE_Field_editorFields-forceDomainNameChange_0").prop("checked", true);
+                                });
                                 $("#DTE_Field_groupName").on("blur", function() {
                                     if ($("#DTE_Field_navbarName").val()=="") {
                                         $("#DTE_Field_navbarName").val($("#DTE_Field_groupName").val());
@@ -579,7 +584,23 @@ block content
                             //toto sa vyvola, ked sa zmeni domena na adresari
                             //console.log("e.detail.data=", e.detail.data);
                             if (e.detail.data.editorFields.forceDomainNameChange === true) {
-                                window.location="/admin/v9/webpages/web-pages-list/?groupid="+e.detail.data.groupId;
+                                let returnedGroupId = e.detail.data.groupId;
+                                if (returnedGroupId > 0) {
+                                    //console.log("FORCE RELOAD, reloading page with groupId=", returnedGroupId);
+                                    window.location="/admin/v9/webpages/web-pages-list/?groupid="+returnedGroupId;
+                                } else if (returnedGroupId == -2) {
+                                    //get domain name from current group and redirect to that domain
+                                    let currentGroup = e.detail.data;
+                                    if (currentGroup != null && currentGroup.domainName != null && currentGroup.domainName != "") {
+                                        let currentUrl = window.location.href;
+                                        let newUrl = currentUrl.replace(window.location.hostname, currentGroup.domainName);
+                                        window.location = newUrl;
+                                    } else {
+                                        window.location="/admin/v9/";
+                                    }
+                                } else {
+                                    window.location="/admin/v9/";
+                                }
                             }
                             //window.location=window.location.pathname;
                             setTimeout(()=>{

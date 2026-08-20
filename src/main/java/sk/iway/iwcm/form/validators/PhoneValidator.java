@@ -149,7 +149,7 @@ public class PhoneValidator {
     }
 
     protected String getText(String key, String defaultKey) {
-        return !prop.getText(key).equals(key) ? prop.getText(key) : !prop.getText(defaultKey).equals(defaultKey) ? prop.getText(defaultKey) : null;
+        return !prop.getText(key, false).equals(key) ? prop.getText(key, false) : !prop.getText(defaultKey, false).equals(defaultKey) ? prop.getText(defaultKey, false) : null;
     }
 
     private String normalize(String phoneNumber) {

@@ -465,6 +465,8 @@ Displays a text field whose value cannot be changed. Note in the example that fi
 
 Displays a simple HTML editor that allows basic text formatting such as bold/italic/underline, headings, lists, and links.
 
+When you open or confirm HTML editing mode, the editor removes extra blank paragraphs, such as `<p><br></p>`. If the deletion would leave the content completely blank, the original HTML code is preserved.
+
 Note the use of the ```@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)``` converter, which will allow only [secure HTML code](../backend/security.md) to be sent (without embedded JavaScript elements and the like).
 
 ```java
@@ -732,3 +734,127 @@ Field type allowing [file upload](field-file-upload.md).
     )
     private String file = "";
 ```
+
+## OPTIONS
+
+A field type for a dynamic list of values. It appears in the editor as a list of input lines, where each line contains two text fields — a label and a value. Lines can be added, removed, and reordered using `drag & drop`.
+
+The resulting value is stored as a string, where individual lines are separated by the `|` character and values ​​within a line are separated by the `:` character. For example: `key1:value1|key2:value2|key3:value3`.
+
+The field does not support the AI ​​button (`btn-ai`).
+
+### Basic use
+
+```java
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPTIONS,
+        title = "components.myapp.options",
+        tab = "basic"
+    )
+    private String options = "";
+```
+
+### Stored value format
+
+| Input in the editor | Stored value | Note |
+|---|---|---|
+| Name: `Slovakia`, Value: `sk` | `Slovakia:sk` | standard label:value pair |
+| Name: `Slovakia`, Value: (empty) | `Slovakia:Slovakia` | if the value is missing, the name is also used as the value |
+| Name: (empty), Value: `sk` | `sk:sk` | if name is missing, value is used as name |
+| More lines | `Slovakia:sk\|Czech Republic:cz\|Austria:at` | separated by `\|` |
+
+When loading a value, the editor also supports the comma `,` as a line separator (backwards compatibility), but when saving, `|` is always used.
+
+### Real-world example of use
+
+```java
+public class FormItemEntity {
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPTIONS,
+        title = "multistep_form.value_as_options",
+        hidden = true,
+        tab = "advanced",
+        className = "allowEmptyOption"
+    )
+    private String valueAsOptions;
+
+}
+```
+
+### Empty option (allowEmptyOption)
+
+If you want to add an empty value to the list, set the field CSS class `allowEmptyOption`:
+
+```java
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPTIONS,
+        title = "components.myapp.options",
+        tab = "basic",
+        className = "allowEmptyOption"
+    )
+    private String options = "";
+```
+
+In this case, the editor will display next to the button <button class="btn btn-outline-secondary" type="button"><i class="ti ti-plus"></i>Add</button> a standard checkbox <span class="form-check"><input class="form-check-input options-empty-option-btn" type="checkbox"><label class="form-check-label">Add empty option</label></span> . Checking this will add an empty pair `:` to the beginning of the resulting value, for example `:|key1:value1|key2:value2`. When the editor is reopened, the checked state will be restored based on the presence of this value. The `allowEmptyOption` class only affects fields of type `OPTIONS`, not `OPTIONS_SIMPLE`.
+
+### Implementation
+
+The frontend implementation is in the files:
+
+- [field-type-options.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options.js) — field type definition with two inputs (name and value)
+- [field-type-options-base.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options-base.js) — common logic for both OPTIONS and OPTIONS_SIMPLE (drag & drop, adding/removing rows, allowEmptyOption)
+
+On the backend side, the type `DataTableColumnType.OPTIONS` is automatically set to `editor.type = "options"` with the rendering format `dt-format-text`.
+
+![](../../redactor/apps/multistep-form/form-item-editor-advanced.png)
+
+## OPTIONS_SIMPLE
+
+Field type for a dynamic list of simple values ​​(one entry per line). The editor displays a list of text fields, where each line represents one value.
+
+The resulting value is stored as a string separated by the `|` character, e.g.: `hodnota1|hodnota2|hodnota3`.
+
+The type is suitable for cases where you don't need `label:value` pairs, but only a list of basic options (e.g. for `autocomplete` configurations).
+
+```java
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPTIONS_SIMPLE,
+        title = "components.myapp.autocompleteOptions",
+        tab = "advanced"
+    )
+    private String autocompleteOptions = "";
+```
+
+## ENUMERATION
+
+Field type intended for connection to the codebook application. The editor displays one line with three inputs:
+
+- number (ID or name of the codebook type),
+- column for the text (`label`) of the item,
+- column for the value (`value`) of the item.
+
+Technically, the value is stored in the format:
+
+`enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY`
+
+Example of the resulting value: `enumeration-options|4|string1|string2`
+
+Supported column names are `string1` to `string12`, `decimal1` to `decimal4`, `boolean1` to `boolean4`, `date1` to `date4`.
+
+Example of use in an entity:
+
+```java
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.ENUMERATION,
+        title = "multistep_form.value_as_enumeration",
+        tab = "advanced"
+    )
+    private String valueAsEnumeration;
+```
+
+This type is used mainly in forms where it is necessary to dynamically generate `<option>` values ​​from the selected code list.
+
+![](../../redactor/apps/multistep-form/form-item-editor-advanced-enum.png)

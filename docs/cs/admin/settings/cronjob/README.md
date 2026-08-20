@@ -22,9 +22,18 @@ V okně editoru záznamu lze nastavit:
 - **Spouštění po startu** - Určuje, zda se má úloha spustit automaticky po startu WebJET (např. pro aktualizaci údajů).
 - **Povoleno** - Určuje, zda je úloha aktuálně povolena nebo zakázána. Je-li povolena, bude se provádět podle zadaného časového harmonogramu. Pokud je zakázána, nebude se spouštět vůbec.
 - **Auditováno** - Určuje, zda jsou záznamy o provedení úlohy zaznamenávány v auditu. Tato možnost je užitečná pro sledování a kontrolu provádění úkolů.
-- **Běží na uzlu** - Určuje, na kterém uzlu nebo serveru se má úloha provádět, pokud pracujete v prostředí s více uzly clusteru.
+- **Běží na uzlu** - Určuje, na kterém uzlu nebo serveru se má úloha provádět, pokud pracujete v prostředí s více uzly clusteru. Hodnota `all` spustí úlohu na všech uzlech, `all-admin` pouze na uzlech v plné konfiguraci a `all-public` pouze na uzlech typu veřejný uzel (bez administrace).
 
 ![](editor.png)
+
+## Manuální spuštění
+
+Po označení jedné nebo více úloh je můžete ručně spustit pomocí tlačítek v nástrojové liště:
+
+- tlačítko přehrávání spustí úlohu na aktuálním uzlu,
+- tlačítko serveru spustí úlohu podle hodnoty **Běží na uzlu**. Hodnota `all` ji spustí na všech uzlech, `all-admin` na administračních uzlech, `all-public` na veřejných uzlech a konkrétní název pouze na zadaném uzlu.
+
+Požadavek na vzdálené spuštění se přenáší přes cluster a provede se nejpozději při další kontrole nastavené konfigurační proměnnou `clusterRefreshTimeout`. Mimo cluster režimu se úloha spustí lokálně.
 
 Změny pro časování úloh se aplikují okamžitě, ale již odstartované úlohy zůstanou běžet dokud neskončí.
 

@@ -155,6 +155,27 @@ Odporúčame bloky generovať pomocou [PugJS](https://pugjs.org).
 
 Ak má obrázok nastavenú CSS triedu ```fixedSize-w-h-ip``` je automaticky po zmene adresy obrázka nastavený zadaný rozmer ```w``` a ```h```, ak je zadaný aj posledný údaj ```ip``` nastaví sa aj [bod záujmu](../../frontend/thumb-servlet/README.md). Napr. CSS trieda ```fixedSize-160-160-5``` automaticky generuje obrázok rozmeru 160 x 160 bodov s nastaveným bodom záujmu 5. Triedu odporúčame nastaviť na všetky ilustračné obrázky, pri ktorých je dôležitý ich rozmer.
 
+### Rozšírený formát fixedSize
+
+Formát CSS triedy je ```fixedSize-w-h-ip[-color][-true]``` kde:
+
+| Parameter | Povinný | Popis |
+| ----------- | --------- | ------- |
+| `w` | Áno | Šírka obrázka v pixeloch |
+| `h` | Áno | Výška obrázka v pixeloch |
+| `ip` | Áno | Režim bodu záujmu (1-5) |
+| `color` | Nie | Hex hodnota farby pozadia bez `#` a bez `c` prefixu (napr. `ff0000`) |
+| `true` | Nie | Parameter pre vypnutie bodu záujmu |
+
+#### Príklady formátov
+
+| Formát | Význam |
+| -------- | -------- |
+| ```fixedSize-700-400-1``` | Základný formát so šírkou 700, výškou 400 a IP režimom 1 |
+| ```fixedSize-700-400-3-ff0000``` | S farbou pozadia (červená) |
+| ```fixedSize-700-400-1-true``` | S vypnutým bodom záujmu |
+| ```fixedSize-700-400-3-ff0000-true``` | S farbou pozadia aj vypnutým bodom záujmu |
+
 Pri kliknutí na obrázok s CSS triedou ```fixedSize/w-100/autoimg``` sa ihneď otvorí okno vlastností obrázku pre jeho jednoduchú výmenu. Redaktor tak nemusí kliknúť na obrázok a následne v nástrojovej lište na ikonu zmeny obrázka.
 
 Ak obrázok obsahuje v URL adrese výraz `placeholder` alebo `stock` neotvorí sa dialógové okno výberu obrázka do priečinka s týmto obrázkom, ale do priečinka Média tejto stránky. Používateľ tak môže ľahko nahrať nový obrázok.

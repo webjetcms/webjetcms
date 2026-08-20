@@ -4,6 +4,184 @@
 
 > Vývojová verze aktualizovaná z main repozitáře.
 
+### Průlomové změny
+
+- Z administrace byla odstraněna závislost na knihovně [Vue.js](https://vuejs.org). Před aktualizací doporučujeme ověřit kompatibilitu vlastních aplikací. Velikost JavaScript souborů se zmenšila o cca 170kB, což má dopad také na rychlost inicializace administrace. Více v [sekci pro programátora](#pre-programátora).
+
+### Webové stránky
+
+- Koš webových stránek - přidáno [automatické mazání starých stránek a složek](redactor/apps/gdpr/data-deleting.md) z koše podle nastaveného retenčního období. Přidána možnost mazání stránek a složek v koši i v sekci [Mazání dat](sysadmin/data-deleting/README.md) podle zvoleného rozsahu dat. Sjednocená logika výpočtu počtu a mazání, opraveno trvalé odstranění složky koše a prázdných složek (#271).
+
+![](sysadmin/data-deleting/database-delete.png)
+
+- Přesměrování - přesměrování vytvořená uživatelem jsou odlišena od automatických (označeno šedým pozadím) a lze je samostatně [filtrovat v seznamu přesměrování](redactor/webpages/redirects/README.md#automatické-a-uživatelem-vytvořené-přesměrování) (#58625).
+
+![](redactor/webpages/redirects/redirect-path.png)
+
+- SEO - přidáno samostatné nastavení **Následujení odkazů vyhledávači** s možnostmi **Podle nastavení Procházet**, **Povolit následování odkazů** (`follow`) a **Zakázat následování odkazů** (`nofollow`). HTTP hlavička `X-Robots-Tag` a Ninja `${ninja.page.robots}` používají stejnou logiku: při indexování bez omezení vrátí `all`, jinak kombinaci direktiv `noindex` a `nofollow` podle nastavení stránky. Více v [dokumentaci Ninja](frontend/ninja-starter-kit/ninja-jv/page/README.md#nastavení-indexování-string) (#OSK563).
+- SEO - v [skupinách šablon](frontend/templates/template-groups.md#karta-seo) lze nastavit výchozí SEO popis, obrázek a alternativní text obrázku. Objekt Ninja `Page` je použije, pokud stránka nemá zadané vlastní hodnoty; přibyla také hodnota `${ninja.page.seoImageAlt}` pro `og:image:alt` (#OSK593).
+
+![](frontend/templates/temps-groups-edit-seo.png)
+
+- Ninja - doplněno [generování rozměrů](frontend/ninja-starter-kit/ninja-bp/README.md) SEO obrázku `og:image:width` a `og:image:height` (#OSK563).
+- Šablony - přidána možnost nastavit přesun `<style>` a `<link rel="stylesheet">` značek z těla stránky do `<head>` přes [volbu v šabloně](frontend/templates/templates.md) s podporou globální konfigurační proměnné `showDocMoveStyleToHead`. Bloky v IE podmínkách, `noscript` a `script` zůstávají na místě (#231).
+
+![](frontend/templates/templates-edit-advanced.png)
+
+- V dialogu vkládání obrázků přidána karta **Miniatura** pro nastavení parametrů [generování zmenšených obrázků](redactor/webpages/working-in-editor/README.md#karta-miniatura) `thumbnail` (#58317).
+
+![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
+
+- V dialogu vkládání odkazu přidána karta [Manažer dokumentů](redactor/files/file-archive/README.md) pro snadné vkládání odkazů na soubory v manažerovi dokumentů, nahrávání nových souborů a jejich správu. Více se dozvíte v části [Odkazy na soubory a nahrávání souborů](redactor/webpages/working-in-editor/README.md#odkazy-na-soubory-a-nahrávání-souborů) (#58593).
+
+![](redactor/webpages/working-in-editor/link_dialog-file-archive.png)
+
+- [Fotobanka](redactor/webpages/working-in-editor/README.md#karta-fotobanka) - při stahování obrázku z fotobanky lze nastavit název souboru. Název se automaticky předvyplní a očistí, přípona se určí podle zdrojového obrázku a stávající soubor se nepřepíše. Přidána také podpora výběru typu a kategorie obrázku a možnost hledat video soubory (#58645).
+
+![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
+
+### Headless režim
+
+Přidána [podpora headless režimu](frontend/headless/README.md), ve kterém WebJET CMS slouží čistě jako `backend` CMS. Obsah, navigace, vyhledávání a formuláře jsou dostupné přes REST API. Frontend aplikace (např. Astro, Next.js, Vue, React nebo jakýkoli HTTP klient) si data stáhne a zobrazuje je podle vlastních šablon (#258).
+
+![](frontend/headless/home.png)
+
+V jednom WebJET CMS můžete mít více (desítky) domén a následně mít menší web stránky vytvořené v různých technologiích, které konzumují a zobrazují obsah z CMS systému. Podporováno je také vkládání standardní aplikací jako foto galerie, formuláře, GDPR cookies a podobně.
+
+![](frontend/headless/gallery.png)
+
+- Přesměrování - přidáno [čištění a optimalizace přesměrování](redactor/webpages/redirects/README.md#čištění-přesměrování) s náhledem změn před provedením. Čištění odstraňuje staré, duplicitní a cyklické přesměrování a zkracuje řetězce přesměrování (#58629).
+
+![](redactor/webpages/redirects/redirect-cleaning-analyzed.png)
+
+### Formuláře
+
+- [Statistiky vícekrokových formulářů](redactor/apps/multistep-form/stat.md) byly rozšířeny o datový filtr a pokročilé metriky zobrazení/pokusů/jazyků etc. (#58509).
+
+![](redactor/apps/multistep-form/stat-section-advanced.png)
+
+- Do vícekrokových formulářů přidána možnost jednoduše nastavovat výběrová pole a skupiny zaškrtávacích / výběrových polí (#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced.png)
+
+- Do vícekrokových formulářů přidána možnost propojení výběrového pole a skupiny zaškrtávacích / výběrových polí na číselník (#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
+
+- Přidána možnost ve formuláři nastavit maximální kombinovaná velikost souboru, původně se dala nastavovat jen velikost pro soubor, pokud formulář obsahuje více souborů lze nastavit maximální velikost pro všechny soubory společně (#58517).
+- [Vícekrokové formuláře](redactor/apps/multistep-form/README.md) - přidáno duplikování celého formuláře včetně nastavení, kroků a položek. Editor položek zobrazuje jejich automaticky vytvořený identifikátor a podporuje vlastní chybovou zprávu, oříznutí mezer, prázdnou možnost ve výběrovém seznamu a nový typ pole automatické doplňování s vyhledáváním bez rozlišení diakritiky (#osk573).
+- [Vícekrokové formuláře](redactor/apps/multistep-form/README.md) - do úvodního textu kroku a [stránky s verzí pro email](redactor/apps/form/README.md#karta---nastavení) lze vložit hodnoty položek pomocí značek. Opraveno bylo rozpoznávání polí jména a emailu podle začátku identifikátoru, zpracování jazyka, reCAPTCHA v3, nezávislé vložení více instancí formuláře na jednu stránku a vymazání všech odpovědí bez odstranění definice formuláře (#osk573).
+- [Vícekrokové formuláře](redactor/apps/multistep-form/README.md) - přidána možnost zadat vlastní chybovou zprávu a oříznout mezery na začátku a konci textu zadaného návštěvníkem (#osk573).
+
+### Sémantické vyhledávání
+
+- Přidána podpora [sémantického vyhledávání](redactor/apps/semantic-search/README.md) postaveného na technologii vektorové databáze `pgvector` a `OpenAI embeddings`. Umožňuje návštěvníkům najít relevantní stránky na základě **významu otázky**, nejen shody klíčových slov (#211).
+
+- Doplněný hybridní režim sémantického vyhledávání a volitelná RAG odpověď z indexovaného obsahu. Aplikace **Vyhledávání** má nová nastavení pro typ vyhledávání, hybridní chování, výběr AI asistenta a limity kontextu odpovědi (#58521).
+
+![](redactor/apps/semantic-search/rag-result.png)
+
+### Aplikace
+
+- Přidána nová aplikace [Přesměrování podle jazyka](redactor/apps/language-redirect/README.md) pro automatické přesměrování návštěvníků na jazykovou verzi stránky podle detekce jazyka z HTTP hlavičky `Accept-Language`. Podporuje až 8 přiřazení jazyků na URL adresy, respektování jazykového cookie a možnost přesměrování pouze na kořenové URL (#58497).
+
+![](redactor/apps/language-redirect/editor-basic.png)
+
+- Rezervace - aplikace **Rezervace času** a **Rezervace dní** mají sjednocený vizuální styl podle kalendáře `Vanilla Calendar`, upravené kontrastní barvy buněk podle `WCAG`, oddělené vizuální CSS styly do samostatných souborů a **Rezervace času** zobrazuje v hodinových buňkách skutečnou cenu dle ceníku.
+
+- Rezervace - přidána nová aplikace [Moje rezervace](redactor/apps/reservation/my-reservations-app/README.md), která přihlášenému uživateli zobrazí přehled jeho rezervací, stavem rezervace a možností smazání povolených budoucích rezervací (#58565).
+
+![](redactor/apps/reservation/my-reservations-app/app-page.png)
+
+- Manažer dokumentů - přidáno zobrazení stromové struktury složek (#58593).
+
+![](redactor/files/file-archive/datatable.png)
+
+- Manažer dokumentů - přidána možnost nahrát více souborů najednou přes `drag&drop` (#58593).
+
+![](redactor/files/file-archive/drag-drop-upload-dialog.png)
+
+### Galerie
+
+- Přidána možnost nastavit samostatný způsob [změny velikosti pro velký obrázek](redactor/apps/gallery/structure.md#karta-rozměry) nezávisle na malém obrázku. Ve výchozím nastavení se použije způsob změny velikosti stejně jako je nastaveno pro malý obrázek. Nastavení lze volitelně překopírovat i do podsložek (#58633).
+
+![](redactor/apps/gallery/dir-sizes-tab.png)
+
+### Volitelná pole
+
+- Kompletně implementovaná funkčnost [nastavení volitelných polí](frontend/webpages/customfields/custom-fields-settings.md). Umožňuje centrálně nastavit vlastnosti polí bez editace překladových klíčů. Podporovány jsou všechny typy polí (text, textarea, select, multiselect, autocomplete, enumeration, obrázek, odkaz, JSON a další) s typově specifickými nastaveními jako maximální délka textu, možnosti výběru, propojení na číselníky nebo závislost na jiných polích. Uživatelské rozhraní nabízí také jednoduchý způsob nastavení možných hodnot pro výběrová/autocomplete pole (#58529).
+
+![](frontend/webpages/customfields/custom-fields-settings-editor.png)
+
+- Přidána možnost nastavit volitelné pole jako povinné (#58413).
+- Přidány nové typy volitelných polí [přepínač a zaškrtávací pole](frontend/webpages/customfields/custom-fields-settings.md#rozdíl-mezi-selectmultiselect-a-radiocheckbox) s podporou statických možností i propojení na číselník. Typ `multiselect` nyní také podporuje [propojení na číselník](frontend/webpages/customfields/custom-fields-settings.md#zdroj-možností). Původní typ `enumeration` byl nahrazen přepínačem zdroje možností u typů `select`, `multiselect`, `radio` a `checkbox` kde se pro všechny tyto typy polí načtou možnosti z propojeného číselníku (#58637).
+
+### Multiweb
+
+- Přidána možnost [vytvořit novou doménu](install/multiweb/config.md) z řídicí domény, vytvoří také uživatele, skupinu šablon, šablonu a systémové stránky (#58525).
+- Přidáno zobrazení seznamu skupin šablon (#58525).
+- V řídící doméně je možné upravovat všechna přesměrování domén.
+- V řídicí doméně přidána možnost zobrazit všechny soubory.
+
+### Jiné menší změny
+
+- Automatizované úlohy - přidána možnost [manuálně spustit úlohu](admin/settings/cronjob/README.md) na uzlu nebo skupině uzlů nastavené v poli **Běží na uzlu**. Původní lokální spuštění na aktuálním uzlu zůstává dostupné samostatným tlačítkem (#58718).
+
+- Překladové klíče - přidána stromová struktura prefixů překladových klíčů s filtrováním seznamu podle zvoleného prefixu (#58714).
+
+![](admin/settings/translation-keys/dataTable.png)
+
+- Průzkumník - ve vlastnostech složky přidána karta [Nepoužívané soubory](redactor/files/fbrowser/folder-settings/README.md#nepoužívané-soubory) pro vyhledání a smazání nepoužívaných souborů (#58621).
+
+![](redactor/files/fbrowser/folder-settings/folder_settings_unused_files_result.png)
+
+- Průzkumník - přidáno právo **Povolit nahrávání souborů s diakritikou**, které umožňuje zachovat diakritiku při nahrávání, vytváření a přejmenování souborů a složek ve složkách `/files`, `/images` a `/shared`. Bez tohoto práva se názvy nadále automaticky upraví bez diakritiky (#58589).
+- Přihlášení - zrychlené načtení úvodní stránky v administraci - přidána vyrovnávací paměť pro seznam posledních stránek, změněných stránek a auditních záznamů (#58589).
+- Export/import souborů - upravený design dialogového okna a responzivní zobrazení formulářových polí podle aktuálního designu administrace (#58581).
+- Webové stránky - doplněné zvýraznění elementu nad kterým je vyvoláno kontextové menu. Důležité pokud chcete provést akci Smazat element, abyste přesně viděli který element je označen (#OSK675).
+- Multiweb - doplněna možnost přejmenovat existující doménu + přesměrování po přejmenování (#58317-15).
+- Multiweb - upraveno [zobrazení skupin šablon](install/multiweb/README.md) podle dostupných šablon a aliasu aktuální domény (#58317-17).
+- Google reCaptcha - doplněna podpora vkládání více více krokových formulářů do stránky, podporován je režim `invisible/reCaptcha/reCaptchaV3`, upravené chybové hlášení na srozumitelnější text (#osk573).
+- Vícekrokové formuláře - doplněné přesunutí (`scroll`) na začátek formuláře po přechodu na další krok (#osk573).
+
+### Oprava chyb
+
+- Průzkumník - upravené porovnávání souborů s diakritikou při kontrole existence souboru při jeho přepsání - formát `utf-8 NFC vs NFD` (#58317-12).
+- Webové stránky - opraveno přidávání prázdného `P` elementu na konec stránky (#58317-13).
+- Webové stránky - opraveno načtení hodnoty `ckeditor_button_sizes` pro tlačítko typu `A` (#OSK674).
+
+### Bezpečnost
+
+- Přidána podpora generování `nonce` pro [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
+- AI asistenti - přidána ochrana před `prompt injection` útoky s oddělením systémových instrukcí od uživatelského obsahu a detekcí kódovaných vstupů (#58549).
+
+### Dokumentace
+
+- Vytvořena nová sekce [Přehled nových vlastností](sales/README.md) která obsahuje popisy nových vlastností a **funkcionalit WebJET CMS srozumitelným jazykem**, bez zbytečně technických formulací (#58505).
+- Vytvořená sekce [Řešení problémů](sysadmin/troubleshooting/README.md) v manuálu pro provoz.
+
+### Pro programátora
+
+- Administrace - odstraněná závislost na [Vue.js](https://vuejs.org). Stromová pole, úvodní stránka, výběr oblasti obrázku a monitorování serveru používají nativní [web komponenty](developer/frameworks/web-components.md). Globální objekt `window.VueTools` ani balíky pro Vue již nejsou součástí administrace. Vlastní rozšíření je musí nahradit web komponenty nebo si Vue sestavit samostatně (#58722).
+
+- AI asistenti - klientská logika nezávislá na poskytovateli pro OpenAI, Gemini a OpenRouter, zpracování streamů, typy požadavků/odpovědí a ochrana promptů byly vyčleněny do samostatného artefaktu `com.webjetcms:webjet-ai` a externího [repozitáře webjet-ai](https://github.com/webjetcms/webjetcmi/webjetcmi). WebJET CMS předává konfiguraci přes typovaný adaptér a nadále zajišťuje auditování, perzistenci a integraci uživatelského rozhraní. Jedná se o nekompatibilní změnu: původní CMS SPI pro vlastní poskytovatele a jeho transportní a streamovací podpůrné třídy byly odstraněny. Vlastní poskytovatelé je nutné migrovat na rozhraní `AiProvider` knihovny a CMS adaptér `LibrarySupportLogic` (#58670).
+
+- Datové tabulky - přidán nový typ pole `OPTIONS` pro [dynamický seznam hodnot](developer/datatables-editor/standard-fields.md#options) v editoru. Každý řádek obsahuje dvě textová pole (klíč a hodnota), podporuje přidávání, odebírání a změnu pořadí pomocí `drag & drop` (#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced.png)
+
+- Datové tabulky - rozšířená funkcionalita pole typu [`OPTIONS`](developer/datatables-editor/standard-fields.md#options) o možnost přidat prázdnou hodnotu pomocí `allowEmptyOption` (#osk573).
+- Datové tabulky - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) při úpravě zdrojového kódu odstraňuje nadbytečné prázdné odstavce (#osk573).
+- Datové tabulky - přidán nový typ pole `ENUMERATION` pro [napojení na číselníky](developer/datatables-editor/standard-fields.md#enumeration) v editoru. Pole ukládá konfiguraci ve formátu `enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY` a umožňuje nastavit zdroj hodnot (#58517).
+- Datové tabulky - [výběr složky](developer/datatables-editor/field-json.md#možnosti-classname) přes pole `dt-tree-dir-simple` při omezených právech správně zobrazuje nastavenou kořenovou složku i neaktivní rodiče povolených složek a respektuje konfigurační proměnnou `fbrowserShowOnlyWritableFolders`. Přidaný atribut `data-dt-field-writableOnly` umožňuje omezit výběr pouze na složky s právem na zápis (#58317-17).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
+
+- Logování - do [Logback MDC](https://logback.qos.ch/manual/mdc.html) doplněn atribut `sessionId` a přihlašovacího jména uživatele `userLogin` (#OSK526).
+- Aktualizovaná knihovna [Tabler Icons](https://tabler.io/icons) na verzi 3.44.0, vyřešen problém se současným používáním `Outline` a `Filled` sad (#58509).
+- Web stránky - pokud potřebujete mít prázdný první řádek v konfigurační proměnné `imageMagickCustomParams*` pro [nastavení vlastních parametrů](redactor/apps/gallery/README.md#vlastní-parametry-imagemagick) `ImageMagick` zadejte hodnotu `---`.
+- Překladové klíče - upravené auditování chybějících překladových klíčů - vyloučené auditování pokud se později testuje, zda klíč skutečně existuje (#261).
+
 ## 2026.18
 
 > WebJET CMS 2026.18 přináší **schvalování změn složek** s podporou víceúrovňového schvalování a **testování přístupnosti** integrované přímo do automatizovaných testů.
@@ -74,6 +252,7 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 ![](redactor/apps/multistep-form/stat-section.png)
 
 - Pro vícekrokové formuláře přidán sloupec **Trvání vyplnění**, který zobrazuje jak dlouho trvalo vyplnění formuláře uživatelem (čas od jeho zobrazení po odeslání) (#58333).
+- Vícekrokové formuláře - přidána podpora pro podmíněné zobrazení/validování položky formuláře na základě vytvořených podmínek. Více v části [Podmíněné zobrazení/validování položky](redactor/apps/multistep-form/README.md#podmíněné-zobrazenívalidování-položky) (#58477).
 
 ### Galerie
 
@@ -197,7 +376,63 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 
 > Opravná verze původní verze 2026.0.
 
+- Webové stránky - opraveno ukládání web stránky s mezerou na konci URL adresy (provede se odstranění prázdných znaků) (#OSK650).
+- Webové stránky - opravené zacyklení nepublikované stránky pokud URL nekončí na znak `/` - ​​konfigurační proměnná `virtualPathLastSlash=false` (#OSK684).
+- Manažer dokumentů - přidáno smazání cache paměti po publikování nové verze souboru (#TB2754).
+- Multiweb - opravena možnost smazat nebo upravit doménové přesměrování, které obsahuje `http/s` prefix (#58317-15).
+- Galerie - v editoru aplikace se mezi vizuálními styly zobrazují pouze JSP soubory ze složek `/components/{INSTALL_NAME}/gallery` a `/components/gallery`, bez duplicitních položek (#58317-16).
+- Vložení HTML kódu - v náhledu aplikace v editoru webových stránek se pro obsah tvořený pouze elementy `script` zobrazí zdrojový kód namísto prázdného obsahu (#OSK625).
+
+## 2026.0.28
+
+> Opravná verze původní verze 2026.0.
+
+!> Upozornění: po aktualizaci zkontrolujte funkčnost generování `/thumb` obrázků a [nastavení povolených rozměrů](frontend/thumb-servlet/README.md#omezení).
+
+- Web stránky - zrušeny [plánované verze](redactor/webpages/history.md) jsou v historii zobrazeny přeškrtnutým písmem a nelze je smazat (#58573).
+- Archiv souborů - upravená úloha na pozadí pro publikování souborů - z důvodu práv se neprovádí na veřejném uzlu (#246).
+- Úlohy na pozadí - přidána možnost spustit [úlohu na pozadí](admin/settings/cronjob/README.md) pouze na uzlech v plné konfiguraci nebo na veřejných uzlech (#246).
+- Generátor primárních klíčů - doplněna automatická oprava jmen tabulek a názvů sloupce s primární hodnotou (#246).
+- Bezpečnost - opravené chyby Local File Inclusion, kontrola nahrávaných souborů a RCE. Děkujeme Josef Korbel (Citadelo) za nahlášení těchto zranitelností (#252).
+- Bezpečnost - přidána [kontrola povolených rozměrů](frontend/thumb-servlet/README.md#omezení) generování `/thumb` obrázků, první měsíc v režimu učení a následně po restartu WebJETu v režimu kontroly (#259).
+- Bezpečnost - aktualizované knihovny `jackson-annotations` (2.22), `jackson-databind` (2.22.0), `logback-core/classic` (1.5.37) a `tink` (1.22.0). Z důvodu zpětné kompatibility v opravné verzi nebyla realizována migrace `Apache HttpClient` z 4.x na 5.x, ale WebJET se typicky připojuje na bezpečné/vnitřní API/domény (#264).
+- Aktualizované přemosťovací knihovny `slf4j-api`, `jcl-over-slf4j` a `log4j-over-slf4j` na verzi `2.0.18`. Zároveň jsou v `dependency-check` potlačeny falešně hlášené zranitelnosti `CVE-2020-9493` a `CVE-2022-23307`, které se týkají původního `Apache log4j 1.2.x`, ne přemostění `log4j-over-slf4j` (#264).
+- Aktualizovaná knihovna `swagger-ui` na verzi 5.32.8 (#264).
+- JPA - opraveno vícenásobné ukončení databázové transakce při importu přesměrování (#256).
+- `/thumb` - ​​opraveno generování obrázku u `ip=1/2` a nulové velikosti `w/h` parametru (#58317-10).
+- Hromadné úpravy - upravené hledání/nahrazení více řádkového HTML kódu v `replaceall` skriptu (#262).
+- Cluster - upravené nastavení CSRF tokenů v `session` tak, aby se změna distribuovala i v `redis` (#265).
+
+## 2026.0.25
+
+> Opravná verze původní verze 2026.0.
+
+!> Upozornění: po aktualizaci zkontrolujte funkčnost všech formulářů. Pokud některý nelze odeslat, uložte znovu jeho nastavení.
+
+- AI asistent - upravené získání odpovědi při použití `reasoning` v OpenAI (#244).
+- AI asistent - doplněná propagace smazání cache do uzlů clusteru při úpravě asistenta.
+- Apache Tomcat - ve verzi `9.0.118/11.0.22` bylo změněno chování získání seznamu Java tříd což má za následek nefunkčnost `Stripes Framework`. Upravená verze filtruje nesprávné verze souborů aby start proběhl korektně. Do staršího projektu můžete přenést přímo třídu [VFS.java](https://github.com/webjetcms/webjetcms/blob/main/src/main/java/net/sourceforge/stripes/vfs/VFS.java), zkompilovat ji ve vašem projektu a použít bez potřeby aktualizace.
 - Bezpečnost - opravena možnost nastavit [jméno HTTP hlavičky pro získání IP adresy](sysadmin/pentests/README.md#konfigurace) přes proměnnou `xForwardedForHeader`.
+- Bezpečnost - opravené chyby Local File Inclusion, kontrola nahrávaných souborů a RCE. Děkujeme Josef Korbel (Citadelo) za nahlášení těchto zranitelností (#252). Možné dočasné řešení bez aktualizace celého WebJET CMS je:
+  - smazat nebo [aktualizovat](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/components/grideditor/phantom/phantom_sablona_ajax.jsp) soubor `/components/grideditor/phantom/phantom_sablona_ajax.jsp`
+  - pokud máte WebJET CMS novější než `2025.52` do konfigurační proměnné `pathFilterBlockedPaths` přidat hodnotu `,/components/grideditor/phantom/`
+  - pokud máte WebJET CMS novější než `2025.52` můžete [globálně pro celý server](install/external-configuration.md) do `JAVA_OPTS` přidat systémovou proměnnou:
+
+```txt
+-Dwebjet.pathFilterBlockedPaths=.DS_Store,debug.,config.properties,Thumbs.db,.git,.svn,/WEB-INF/,./,/components/grideditor/phantom/
+```
+
+- Bezpečnost - přidán CSRF token pro formulář při vypnuté SPAM ochraně (#245).
+- Bezpečnost - každé odeslání formuláře kontroluje nastavení formuláře v databázi, pokud se nenajde formulář nelze odeslat. Původní verze toto kontrolovala pouze na veřejných uzlech clusteru, nyní se to kontroluje bez ohledu na cluster. V případě potřeby vypnete funkčnost nastavením konfigurační proměnné `formAllowOnlyExistingFormsOnPublicNode` na hodnotu `false` (#245).
+- Bezpečnost - opravena možnost získání administrátorského účtu při generování offline verze (#245).
+- Formulář snadno - upravená pole pro zadání názvu pole a tooltipu na jednořádkový WYSIWYG editor, aby výsledek neobsahoval `P` element (#244).
+- Galerie - opraveno vytvoření záznamu v databázi při kopírování souborů v průzkumníku. Záznam se nevytvoří pro `o_` a `s_` obrázky (#58317-9).
+- Manažer dokumentů - doplněné filtrování souborů podle dat platnosti (není-li platný rozsah dat, nezobrazí se) a souborů které nemají nastavený atribut zobrazovat (#233).
+- Video - aktualizovaná knihovna `videojs` pro přehrávání lokálních audio/video souborů z verze 6.2.0 na verzi 8.23.6 (#233).
+- Video - opraveno nastavení odkazu na lokální audio/video soubor při editaci již vložené aplikace (#233).
+- Výkon - přidán index v tabulce `emails` podle `click_hash` pro lepší výkon v Oracle databázi (#244).
+- Web stránky - doplněné zobrazení `mp3` souborů ve výběru Média všech stránek/Videa (#233).
+- Web stránky - povoleno vkládání souborů typu `svg,webp,mp3` pokud uživatel nemá povoleno právo Kompletní menu v editoru, hodnota nastavená v konfigurační proměnné `FCKConfig.UploadFileTypes[Basic][image]` (#233).
 
 ## 2026.0.18
 
@@ -238,6 +473,7 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 - Webové stránky - opravená uzavírací značka `</link>`, správně nahrazená za `/>`, protože `link` je prázdný element (#osk498).
 - Webové stránky - opravena chyba odstranění časové složky při nastavení data konání (#54273-89).
 - Webové stránky - přidána možnost [nastavit JavaScript funkci](frontend/setup/config.md) pro `target="_blank"` odkazy, ve výchozím nastavení na `return openTargetBlank(this, event)`. Hodnota se nastavuje v konfigurační proměnné `editorTargetBlankFunction`, pokud je nastaveno na prázdnou hodnotu `onclick` funkce se nenastaví (#225).
+- Hromadný email - opraveno vytváření kampaní a emailů při duplikování kampaně (#58649).
 
 Jakarta verze:
 

@@ -29,5 +29,5 @@ nav.menu-wrapper(data-scrollbar data-th-aria-label="\#{templates.temps-list.main
 
 .js-domain-toggler(data-th-if="${layout.isTypeCloud()==true}")
     div(data-th-title="\#{overview.domain-toggler-select.tooltip}" data-bs-toggle="tooltip")
-        select(disabled data-th-aria-label="${layout.header.currentDomain}" data-live-search="false" class="domain-toggler-select")
+        select(disabled data-th-aria-label="${layout.header.currentDomain}" data-live-search="false" class="domain-toggler-select" id="header.currentDomain")
             option(data-th-text="${layout.header.currentDomain}" data-th-value="${layout.header.currentDomain}" data-icon="ti-device-desktop")

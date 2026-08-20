@@ -22,9 +22,18 @@ In the record editor window, you can set:
 - **Run after startup** - Determines whether the task should be run automatically after WebJET starts (e.g. for data updates).
 - **Enabled** - Specifies whether the task is currently enabled or disabled. If enabled, it will run according to the specified schedule. If disabled, it will not run at all.
 - **Audited** - Specifies whether task execution records are recorded in an audit. This option is useful for tracking and auditing task execution.
-- **Runs on node** - Specifies which node or server the task should run on if you are working in a multi-node cluster environment.
+- **Runs on node** - Specifies which node or server the task should run on if you are working in a multi-node cluster environment. A value of `all` will run the task on all nodes, `all-admin` will run the task only on nodes in full configuration, and `all-public` will run the task only on public node (non-admin) nodes.
 
 ![](editor.png)
+
+## Manual start
+
+After selecting one or more tasks, you can manually start them using the buttons in the toolbar:
+
+- the play button starts the task on the current node,
+- the server button will run the task according to the **Running on node** value. The value `all` will run it on all nodes, `all-admin` on administrative nodes, `all-public` on public nodes, and a specific name will run it only on the specified node.
+
+The remote execution request is transmitted through the cluster and is executed at the latest at the next check set by the configuration variable `clusterRefreshTimeout`. Outside of cluster mode, the task is executed locally.
 
 Changes to task timing are applied immediately, but tasks that have already started will continue to run until they finish.
 

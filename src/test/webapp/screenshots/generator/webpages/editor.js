@@ -33,6 +33,8 @@ Scenario('editor', ({I, DTE, Document}) => {
 });
 
 Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
+    Document.setConfigValue("ckeditor_svgIcon_path", "");
+    Document.setConfigValue('editorFontAwesomeCssPath', "");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=100605");
     DTE.waitForEditor();
 
@@ -40,7 +42,7 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
 
     Document.screenshotElement('.DTE.DTE_Action_Edit.modal-content','/redactor/webpages/working-in-editor/editor_preview.png')
     I.clickCss('#cke_11');
-    Document.screenshotElement('#cke_119','/redactor/webpages/working-in-editor/roletka.png');
+    Document.screenshotElement('#cke_118','/redactor/webpages/working-in-editor/roletka.png');
     I.clickCss('#cke_11');
 
     const selectorsAndPaths = [
@@ -88,15 +90,20 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
         I.switchTo();
         Document.screenshotElement( locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/link_dialog.png');
 
+        I.click(locate(".cke_dialog_tabs a.cke_dialog_tab:nth-child(5)"));
+        Document.screenshot('/redactor/webpages/working-in-editor/link_dialog-file-archive.png');
+        I.click(locate(".cke_dialog_tabs a.cke_dialog_tab:nth-child(1)"));
+
         //link to page doalog
         I.switchTo( locate(".cke_dialog.cke_browser_webkit.cke_ltr").find("iframe#wjLinkIframe") );
         I.clickCss("#nav-iwcm_doc_group_volume_");
         I.waitForElement("#nav-iwcm_doc_group_volume_L2dyb3VwOjE_E", 5); //Jet portal 4
         I.clickCss("#nav-iwcm_doc_group_volume_L2dyb3VwOjE_E");
         I.waitForElement("#nav-iwcm_doc_group_volume_L2dyb3VwOjI0", 5); //zo sveta financii
-        I.clickCss("#nav-iwcm_doc_group_volume_L2dyb3VwOjI0");
-        I.waitForElement("#iwcm_doc_group_volume_L2RvYzoxNg_E_E", 5); //konzolidacia napriec trhmi
-        I.clickCss("#iwcm_doc_group_volume_L2RvYzoxNg_E_E");
+        I.wait(1);
+        I.click(locate("#nav-iwcm_doc_group_volume_L2dyb3VwOjI0"), null, { position: { x: 20, y: 5 } });
+        I.waitForElement("#iwcm_doc_group_volume_L2RvYzoxNg_E_E", 5); //konsolidacia napriec trhmi
+        I.click("#iwcm_doc_group_volume_L2RvYzoxNg_E_E");
         I.switchTo();
         Document.screenshotElement( locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/link_dialog-webpage.png');
 
@@ -117,9 +124,14 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
             I.switchTo("#wjImagePixabayIframeElement");
             I.fillField("#search", "car");
             I.clickCss('button[type="submit"]');
+
+            I.waitForElement('img[src*="https://cdn.pixabay.com/photo/"]', 10); //wait for images to load
+            I.wait(2);
+
             I.switchTo();
             Document.screenshotElement( locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/image_dialog-pixabay.png');
             I.switchTo("#wjImagePixabayIframeElement");
+
             I.clickCss('img[src*="https://cdn.pixabay.com/photo/"]');
             I.waitForVisible("#imageModal > div.modal-dialog");
             I.switchTo();
@@ -171,7 +183,7 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
         Document.screenshotElement(locate('.cke.cke_reset_all.cke_1.cke_panel.cke_panel.cke_ltr').last(),'/redactor/webpages/working-in-editor/table_preview.png');
         I.switchTo(locate('.cke.cke_reset_all.cke_1.cke_panel.cke_panel.cke_ltr').last());
         I.switchTo();
-        I.switchTo("#cke_590_frame");
+        I.switchTo("#cke_645_frame");
         I.waitForElement('.cke_colormore', 10);
         I.clickCss('.cke_colormore');
         I.switchTo();
@@ -216,9 +228,9 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
     Document.screenshotElement( locate('.cke_dialog.cke_browser_webkit.cke_ltr.cke_single_page').last(),'/redactor/webpages/working-in-editor/specialchar_dialog.png');
     I.clickCss(".cke_dialog_ui_button_cancel");
 
-    I.clickCss('#cke_47');
-    Document.screenshot('/redactor/apps/htmlbox/htmlbox_dialog.png');
-    I.clickCss(".cke_dialog_ui_button_cancel");
+    //I.clickCss('#cke_47');
+    //Document.screenshot('/redactor/apps/htmlbox/htmlbox_dialog.png');
+    //I.clickCss(".cke_dialog_ui_button_cancel");
 });
 
 Scenario('editor - magicline', async ({ I, DTE, Document, Apps, Browser }) => {
@@ -375,4 +387,22 @@ Scenario('editor-btn-dialog', ({ I, DTE, Document }) => {
 Scenario('webjet-toolbar', ({ I, Document }) => {
     I.amOnPage("/investicie/?language=" + I.getConfLng() + "&NO_WJTOOLBAR=false");
     Document.screenshot('/redactor/webpages/webjet-toolbar.png');
+});
+
+Scenario('thumb-servlet', ({ I, Document, DTE, i18n }) => {
+    var elementText = "Etiam orci";
+
+    Document.resetPageBuilderMode();
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
+    DTE.waitForEditor();
+
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.waitForElement(locate("div").withChild(locate("h3").withText(elementText)).find(locate(".fixedSize-160-160-5")), 10);
+    I.click(locate("div").withChild(locate("h3").withText(elementText)).find(locate(".fixedSize-160-160-5")));
+
+    I.waitForElement(locate("a.cke_dialog_tab").withText(i18n.get("Thumbnail")), 10);
+    I.click(locate("a.cke_dialog_tab").withText(i18n.get("Thumbnail")));
+
+    Document.screenshotElement( locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/image_dialog-thumb.png');
 });

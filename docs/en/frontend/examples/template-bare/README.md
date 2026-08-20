@@ -279,7 +279,7 @@ The user can select any combination of these styles on the `p` element. If a sty
 If you want the drop-down menu to display names in your style, you can add a CSS definition of the editor style files to the page header in Page Builder mode:
 
 ```html
-<script>
+<script data-th-if="${T(sk.iway.iwcm.editor.InlineEditor).isInlineEditingEnabled(request)}">
     webjetContentsCss = [
        '/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/samples/contents.css',
        '/templates/jet/assets/css/editor.css'

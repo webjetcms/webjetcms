@@ -21,6 +21,9 @@ import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.stat.SessionHolder;
 import sk.iway.iwcm.system.ConfDB;
+import sk.iway.iwcm.system.cron.CronDB;
+import sk.iway.iwcm.system.cron.CronFacade;
+import sk.iway.iwcm.system.cron.CronTask;
 import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.tags.CombineTag;
 
@@ -63,7 +66,7 @@ public class ClusterRefresher extends TimerTask
 
 		timer = new Timer(true);
 		//in cluster auto mode add configurable random initial delay to spread out timer execution across nodes and reduce Galera deadlock risk
-		long initialDelay = 5000 + getAutoModeRandomDelay();
+		long initialDelay = 5000l + getAutoModeRandomDelay();
 		timer.schedule(this, initialDelay, Constants.getInt("clusterRefreshTimeout"));
 	}
 
@@ -146,10 +149,9 @@ public class ClusterRefresher extends TimerTask
 			Set<String> allreadyExecuted = new HashSet<>();
 			for (String className : updateClassNames)
 			{
-				if (allreadyExecuted.contains(className)) continue;
+				if (shouldSkipDuplicate(allreadyExecuted, className)) continue;
 
 				refreshObject(clusterMyNodeName, className);
-				allreadyExecuted.add(className);
 			}
 		}
 		catch (IllegalStateException ex)
@@ -183,10 +185,9 @@ public class ClusterRefresher extends TimerTask
 				Set<String> allreadyExecuted = new HashSet<>();
 				for (String className : updateClassNames)
 				{
-					if (allreadyExecuted.contains(className)) continue;
+					if (shouldSkipDuplicate(allreadyExecuted, className)) continue;
 
 					refreshObject(clusterMyNodeName, className);
-					allreadyExecuted.add(className);
 				}
 
 				Logger.debug(ClusterRefresher.class, "readFromAutoMode, actualMax="+actualMax+" lastExecutedAutoId="+getLastExecutedAutoId());
@@ -214,7 +215,11 @@ public class ClusterRefresher extends TimerTask
 
 			long now = Tools.getNow();
 
-			if (className.startsWith("sk.iway.iwcm.doc.DocDB-"))
+			if (CronTaskClusterCommand.isCommand(className))
+			{
+				runCronTask(className);
+			}
+			else if (className.startsWith("sk.iway.iwcm.doc.DocDB-"))
 			{
 				//je to ciastkovy update DocDB, musime zavolat
 				int docId = Tools.getIntValue(className.substring(className.indexOf('-')+1), -1);
@@ -302,6 +307,46 @@ public class ClusterRefresher extends TimerTask
 		{
 			Adminlog.add(Adminlog.TYPE_CRON, "Error invoking "+className+" error: " + ex.getMessage()  +"\n\n"+Logger.getStackTrace(ex), -1, -1);
 			Logger.error(ClusterRefresher.class, ex);
+		}
+	}
+
+	static boolean shouldSkipDuplicate(Set<String> alreadyExecuted, String className)
+	{
+		if (CronTaskClusterCommand.isCommand(className)) return false;
+		return alreadyExecuted.add(className) == false;
+	}
+
+	void runCronTask(String command)
+	{
+		CronTaskClusterCommand cronCommand = CronTaskClusterCommand.parse(command);
+		if (cronCommand == null)
+		{
+			Logger.error(ClusterRefresher.class, "Invalid cron task cluster command: " + command);
+			return;
+		}
+
+		String configuredNode = cronCommand.getConfiguredNode();
+		long taskId = cronCommand.getTaskId();
+		CronTask task = CronDB.getById(taskId);
+		if (task == null)
+		{
+			Logger.error(ClusterRefresher.class, "Cron task not found for cluster command: " + command);
+			return;
+		}
+
+		if (CronDB.isCronTaskForCurrentNode(configuredNode) == false)
+		{
+			Logger.debug(ClusterRefresher.class, "Skipping cron task " + taskId + " on node " + Constants.getString("clusterMyNodeName") + ", configuredNode=" + configuredNode);
+			return;
+		}
+
+		try
+		{
+			CronFacade.getInstance().runSimpleTaskOnce(task);
+		}
+		catch (ClassNotFoundException ex)
+		{
+			Logger.error(ClusterRefresher.class, "Unable to run cron task for cluster command: " + command, ex);
 		}
 	}
 

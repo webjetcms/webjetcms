@@ -101,7 +101,7 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 		return FileTools.isFileAllowedForUpload(user, file.getName());
 	}
 
-	private void buildImpl(HttpServletRequest request, File tempDir, long maxPostSize, String queryString) throws IOException, FileUploadLimitExceededException
+	private void buildImpl(HttpServletRequest request, File tempDir, long maxPostSize, String queryString) throws IOException
 	{
 		//list nazvov suborov ktore sa neuploadli kvoli pravam usera (napr. prekrocena max velkost suboru), ziska sa nasledne v Elfinderi pre vypis error hlasky
 		List<String> notUploaded = new ArrayList<>();
@@ -169,7 +169,7 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
                         String directory = getDirectory(fileName); //NOSONAR
                         FileItem fi = new PartToFileItemAdapter(item, fileName);
 
-                        boolean isAllowedForUpload = isFileAllowedForUpload(user, fi);
+						boolean isAllowedForUpload = isFileAllowedForUpload(user, fi);
                         Logger.debug(MultipartWrapper.class, "Storing file: " + fi.getFieldName() + ", File name: " + fi.getName() + ", File type: " + fi.getContentType()
                                 + ", File size: " + fi.getSize() + ", allowed=" + isAllowedForUpload);
                         if (isAllowedForUpload) {

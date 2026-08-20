@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.multistep_form.jpa;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -20,8 +21,8 @@ public interface FormItemsRepository extends DomainIdRepository<FormItemEntity, 
     @Query("SELECT fie FROM FormItemEntity fie WHERE fie.stepId = :stepId AND fie.domainId = :domainId ORDER BY fie.sortPriority ASC")
     List<FormItemEntity> getAllStepItems(@Param("stepId") Long stepId, @Param("domainId") Integer domainId);
 
-    @Query("SELECT fie.itemFormId FROM FormItemEntity fie WHERE fie.formName = :formName AND fie.fieldType = :fieldType AND fie.domainId = :domainId")
-    List<String> getItemFormIds(@Param("formName") String formName, @Param("fieldType") String fieldType, @Param("domainId") Integer domainId);
+    @Query("SELECT fie.itemFormId FROM FormItemEntity fie WHERE fie.formName = :formName AND fie.domainId = :domainId")
+    List<String> getItemFormIds(@Param("formName") String formName, @Param("domainId") Integer domainId);
 
     @Query("SELECT count(fie.id) FROM FormItemEntity fie WHERE fie.formName = :formName AND fie.domainId = :domainId AND fie.fieldType IN :fieldTypes")
     int countItemsThatHasType(@Param("formName") String formName, @Param("domainId") Integer domainId, @Param("fieldTypes") List<String> fieldTypes);
@@ -40,7 +41,19 @@ public interface FormItemsRepository extends DomainIdRepository<FormItemEntity, 
     List<FormItemEntity> findAllByFormNameAndDomainId(String formName, Integer domainId);
 
     // Basically, we need find first only because joined radio buttons that have same itemFormId but are separate items
-    FormItemEntity findFirstByFormNameAndItemFormIdOrderBySortPriorityAsc(String formName, String itemFormId);
+    FormItemEntity findFirstByFormNameAndItemFormIdAndDomainIdOrderBySortPriorityAsc(String formName, String itemFormId, Integer domainId);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE FormItemEntity fie SET fie.errorCount = COALESCE(fie.errorCount, 0) + 1 WHERE fie.formName = :formName AND fie.domainId = :domainId AND fie.itemFormId IN :itemFormIds")
+    int incrementErrorCountByItemFormIds(@Param("formName") String formName, @Param("domainId") Integer domainId, @Param("itemFormIds") List<String> itemFormIds);
 
     Integer countByFormNameAndStepIdAndSortPriorityAndIdNot(String formName, Long stepId, Integer sortPriority, Integer id);
+
+    List<FormItemEntity> findAllByFormNameAndStepIdInAndDomainId(String formName, List<Long> stepIds, Integer domainId);
+
+    @Query("SELECT COUNT(fie.id) FROM FormItemEntity fie WHERE fie.formName = :formName AND fie.id = :id AND fie.itemFormId = :itemFormId AND fie.domainId = :domainId")
+    Optional<Integer> countItemsByIdAndItemFormId(@Param("formName") String formName, @Param("id") Long id, @Param("itemFormId") String itemFormId, @Param("domainId") Integer domainId);
+
+    List<FormItemEntity> findAllByFormNameAndIdInAndDomainId(String formName, List<Long> ids, Integer domainId);
 }

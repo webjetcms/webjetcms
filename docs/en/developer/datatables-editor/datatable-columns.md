@@ -20,6 +20,7 @@ Editor properties are set using the `DataTableColumnEditorAttr` annotation. The 
             attr = {
                 @DataTableColumnEditorAttr(key = "data-dt-field-root", value = "constant:fileArchivDefaultDirPath"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-skipFolders", value = "fileArchivInsertLaterDirPath"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-writableOnly", value = "true")
             }
         )
     })
@@ -201,6 +202,9 @@ Sets the field type, more in the list of [standard form fields](standard-fields.
 - ```TEXTAREA``` - ​​standard field for entering multiple lines of text
 - ```SELECT``` - ​​selection field, we recommend sending options via [REST service](../datatables/restcontroller.md#dials-for-select-boxes)
 - ```MULTISELECT``` - ​​multiple choice selection field
+- ```OPTIONS``` - ​​dynamic list of options separated by ```|```, with individual items in the format ```label:value``` (e.g. ```Nízka:low|Stredná:medium|Vysoká:high```)
+- ```OPTIONS_SIMPLE``` - ​​dynamic list of options separated by ```|``` without a ```label:value``` pair, i.e. one value serves as both text and option value
+- ```ENUMERATION``` - ​​selection field linked to data from the Code Numbers application (```EnumerationDataBean```), in the editor it uses the type ```enumeration``` and in the table it is rendered as text by default
 - ```BOOLEAN``` - ​​checkbox with options ```true/false```
 - ```CHECKBOX``` - ​​checkbox with special value, option for selected and unselected value can be set with editor attribute ```@DataTableColumnEditorAttr(key = "unselectedValue", value = "")```
 - ```DISABLED``` - ​​the displayed field will not be editable

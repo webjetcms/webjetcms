@@ -16,6 +16,8 @@ In the form editor, you can change the note field (in which you can record the p
 
 ![](detail-editnote.png)
 
+Deleting all submitted records in a form's details does not delete its definition, settings, or items. You can only delete the form itself by deleting its controlling record in the form list.
+
 ## Create a form
 
 The easiest way to create a form is to click the Add icon and set its basic parameters in the Basic tab. This will create a new form of type [Multistep form](../multistep-form/README.md). You can then add individual form items (text fields, checkboxes, selection fields, etc.) to the form by clicking on the name of the created form in the table and going to the [Form items](../multistep-form/README.md) tab.
@@ -23,6 +25,10 @@ The easiest way to create a form is to click the Add icon and set its basic para
 <div class="video-container">
     <iframe width="560" height="315" src="https://www.youtube.com/embed/XRnwipQ-mH4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
+
+### Duplicating a form
+
+You can duplicate a selected multi-step form in the forms list. When duplicating, enter a new, unique name for the form. Its settings, all steps, and form items are copied to the new form; the original submitted records are not copied.
 
 ### Basic tab
 
@@ -50,7 +56,7 @@ It is possible to set additional optional parameters for the form that will affe
 - **Encryption key** - if you want to encrypt the form values, you can enter [encryption key](../../admin/README.md#header).
 - **Doc id of the page where the form is located** - doc ID of the page where the form is located. By default, the system tries to determine this page based on ```refereru```, or the last viewed page in `session`. For precise determination, this value can be entered. If it is not entered, WebJET will automatically fill it in when the form is displayed.
 - **Doc id notification for user** - if set to the value of a web page, then after successfully saving the form, an email with the text of the given web page is sent to the visitor's email (from the email / e-mail field). This can be, for example, a thank you for filling out the form, or further instructions on the procedure.
-- **Doc id of the page with the email version** - doc ID of the page with the email version. The system needs the page to be able to generate the email form. If the value `none` is entered, the web page designation for the email will not be used. If the value is not entered at all, the value entered by the ```useFormDocId``` parameter will be used. The value is useful if you have one contact form on all pages, inserted e.g. in the footer. When generating the email, the code of the page itself is used as the code, but the form is not located there. This way, it is possible to tell it to use a different page for the email.
+- **Doc id of the page with the email version** - doc ID of the page whose content will be used to create the email version of the form. If the value `none` is specified, the page for email will not be used. If the value is not specified at all, the value of the parameter ```useFormDocId``` will be used. For a multi-step form, you can use a tag in the form `!identifikator-polozky!` in the content of the selected page; when submitted, it will be replaced with the value of the corresponding [form item](../multistep-form/README.md#tags-of-item-values). The content and CSS styles of the page will also be used for the saved HTML form and PDF version of the form. If the selected page does not exist, the standard form view will be used.
 
 ### Card - Email
 
@@ -85,7 +91,8 @@ It is possible to set additional optional parameters for the form that will affe
   - The value ```addParams``` will redirect to the target page with the addition of individual parameters to the URL. In this case, the browser will perform the redirect and the address of the target page will remain in the address bar. However, since the parameters are added to the URL, their number is limited by the length of the URL, which is 2048 characters by default.
 - **Interceptor before sending email** - the value is the name of the class that **must implement the interface `AfterSendInterceptor`**. After sending the email, the code from this class will be executed. It is used for older versions of forms sent to the URL address `/formMailAction.do`.
 - **Form Processor** - the value is the name of the class that must implement the interface [FormProcessorInterface](../../../../../src/main/java/sk/iway/iwcm/components/multistep_form/support/FormProcessorInterface.java). The class will ensure the processing of the form steps according to its own logic. An example is the class [FormEmailVerificationProcessor](../../../../../src/main/java/sk/iway/iwcm/components/multistep_form/support/FormEmailVerificationProcessor.java), which ensures sending the verification code to the email and its verification in the second step of the form. It is used for multi-step forms.
-- **Maximum file size** - maximum size of the uploaded file in bytes.
+- **Maximum file size** - maximum size of a single uploaded file in bytes.
+- **Maximum combined file size** - the maximum size of all uploaded files in bytes.
 - **Allowed extensions** - comma-separated list of allowed extensions for uploaded files, e.g. `jpg,png,pdf,docx`.
 - **Maximum height (for images)** - maximum height of the uploaded image in pixels.
 - **Maximum width (for images)** - maximum width of the uploaded image in pixels.

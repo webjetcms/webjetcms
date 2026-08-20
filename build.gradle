@@ -17,7 +17,7 @@ plugins {
     //https://plugins.gradle.org/plugin/io.freefair.lombok
     id "io.freefair.lombok" version "8.11"
     //http://jeremylong.github.io/DependencyCheck/dependency-check-gradle/index.html
-    id "org.owasp.dependencycheck" version "12.2.0"
+    id "org.owasp.dependencycheck" version "12.2.2"
     id 'maven-publish'
     //https://docs.gradle.org/current/userguide/jacoco_plugin.html
     id 'jacoco'
@@ -32,6 +32,15 @@ repositories {
     maven {
         url "https://pd4ml.tech/maven2/"
     }
+    maven {
+        name = "github"
+        url = uri("https://maven.pkg.github.com/webjetcms/webjet-ai")
+        credentials {
+            //define in gradle.properties or as environment variables
+            username = project.findProperty("gpr.user") ?: System.getenv("GPR_USER")
+            password = project.findProperty("gpr.api-key") ?: System.getenv("GPR_API_KEY")
+        }
+    }
     flatDir {
        dirs 'libs'
    }
@@ -44,12 +53,13 @@ ext {
     mapstructVersion = "1.6.1";
     springVersion = "7.0.+";
     springDataVersion = "4.0.+";
-    springSecurityVersion = "7.0.+";
+    springSecurityVersion = "7.1.+";
     allureVersion = "2.32.0";
     //do not forget to download https://mvnrepository.com/artifact/org.aspectj/aspectjtools
     //jar to ant/aspectj and update version in ant/compile.xml file
     aspectJVersion = '1.9.25.1';
     eclipselinkVersion = '5.0.0-B13';
+    webjetAiVersion = '1.0.0';
 }
 
 lombok {
@@ -139,6 +149,8 @@ configurations {
 
 dependencies {
 
+    implementation "com.webjetcms:webjet-ai:${webjetAiVersion}"
+
     //based on https://github.com/mapstruct/mapstruct-examples/blob/main/mapstruct-lombok/build.gradle
     implementation "org.mapstruct:mapstruct:${mapstructVersion}"
     //implementation "org.projectlombok:lombok:${lombokVersion}"
@@ -182,11 +194,11 @@ dependencies {
     implementation("org.hibernate.validator:hibernate-validator:9.0.0.Final")
     implementation("jakarta.validation:jakarta.validation-api:3.0.2")
 
-    implementation("org.apache.httpcomponents:httpclient:4.5.13")
-    implementation("org.apache.httpcomponents:fluent-hc:4.5.13")
-    implementation("org.apache.httpcomponents:httpmime:4.5.13")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.21")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.21.2")
+    implementation("org.apache.httpcomponents:httpclient:4.5.14")
+    implementation("org.apache.httpcomponents:fluent-hc:4.5.14")
+    implementation("org.apache.httpcomponents:httpmime:4.5.14")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.22")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
     implementation("sk.iway:wjjcaptcha:1.0-SNAPSHOT")
     //implementation("net.htmlparser.jericho:jericho-html:3.1")
     //implementation("joda-time:joda-time:2.10.13")
@@ -223,6 +235,8 @@ dependencies {
     implementation("org.springframework.security:spring-security-oauth2-jose:${springSecurityVersion}")
     //WebAuthn/PassKey support - separated module in Spring Security 7
     implementation("org.springframework.security:spring-security-webauthn:${springSecurityVersion}")
+        //update webauthn version
+        implementation("tools.jackson.core:jackson-databind:3.2.0")
     implementation("org.springframework:spring-webmvc:${springVersion}")
     implementation("org.springframework:spring-context-support:${springVersion}")
     implementation("org.springframework:spring-test:${springVersion}")
@@ -246,14 +260,15 @@ dependencies {
     // https://mvnrepository.com/artifact/org.eclipse.angus/angus-mail = jakarta.mail/javax.mail api and implementation
     implementation("org.eclipse.angus:angus-mail:2.0.5")
 
-    implementation("com.google.crypto.tink:tink:1.19.0")
+    implementation("com.google.crypto.tink:tink:1.22.0")
     //implementation("com.google.protobuf:protobuf-java:3.21.7")
-    implementation("ch.qos.logback:logback-core:1.5.29")
-    implementation("ch.qos.logback:logback-classic:1.5.29")
-    implementation("org.slf4j:slf4j-api:2.0.16")
-    implementation("org.slf4j:jcl-over-slf4j:2.0.16")
-    implementation("org.slf4j:log4j-over-slf4j:2.0.16")
-    implementation("org.apache.logging.log4j:log4j-to-slf4j:2.25.4")
+    implementation("ch.qos.logback:logback-core:1.5.37")
+    implementation("ch.qos.logback:logback-classic:1.5.37")
+    //verzia je zjednotena s slf4j-api, ktore je aj tak resolvnute na 2.0.17 cez logback
+    implementation("org.slf4j:slf4j-api:2.0.18")
+    implementation("org.slf4j:jcl-over-slf4j:2.0.18")
+    implementation("org.slf4j:log4j-over-slf4j:2.0.18")
+    implementation("org.apache.logging.log4j:log4j-to-slf4j:2.26.1")
     //implementation("com.google.code.findbugs:jsr305:3.0.2")
     implementation("org.aspectj:aspectjrt:${aspectJVersion}")
     implementation("org.aspectj:aspectjweaver:${aspectJVersion}")
@@ -285,13 +300,13 @@ dependencies {
     implementation 'com.sun.xml.bind:jaxb-impl:4.0.5'
 
     // https://mvnrepository.com/artifact/org.postgresql/postgresql
-    runtimeOnly 'org.postgresql:postgresql:42.7.11'
+    runtimeOnly 'org.postgresql:postgresql:42.7.13'
 
     //UserAgent parser - https://github.com/ua-parser/uap-java
     implementation 'com.github.ua-parser:uap-java:1.6.1'
 
     // Source: https://mvnrepository.com/artifact/com.github.usefulness/webp-imageio - supports both read AND write via JNI native libwebp v1.5.0
-    implementation("com.github.usefulness:webp-imageio:0.10.2")
+    implementation("com.github.usefulness:webp-imageio:0.11.0")
 
     testImplementation group: 'org.springframework', name: 'spring-test', version: "${springVersion}"
     testImplementation group: 'org.springframework', name: 'spring-web', version: "${springVersion}"
@@ -609,7 +624,17 @@ task writePom() {
         }
 
         //println "sorted versions: $sorted"
-        sorted[-1]
+        def result = sorted[-1]
+
+        // If versions are the same after comparison, prefer the specific version without the '+' over the placeholder
+        if (sorted.size() >= 2 && result.contains("+")) {
+            def alternative = sorted[-2]
+            if (!alternative.contains("+")) {
+                result = alternative
+            }
+        }
+
+        result
     }
 
     doLast {

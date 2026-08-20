@@ -273,14 +273,14 @@ module.exports = {
   /**
    * Delete all cache objects to prevent spam protection and other issues
    */
-  deleteAllCacheObjects() {
-    I.relogin("admin");
+  deleteAllCacheObjects(doLogin=true) {
+    if (doLogin===true) I.relogin("admin");
     I.amOnPage("/admin/v9/settings/cache-objects/");
     I.clickCss("button.btn-delete-all");
     I.waitForElement("div.toast-message");
     I.clickCss("div.toast-message button.btn-primary");
     I.closeOtherTabs();
-    I.logout();
+    if (doLogin===true) I.logout();
   },
 
   /**
@@ -376,5 +376,14 @@ module.exports = {
       protocol = "https";
     }
     return protocol;
+  },
+
+  /**
+   * Returns base URL of the web application set in CODECEPT_URL environment variable
+   * @returns
+   */
+  getBaseUrl() {
+    let url = process.env.CODECEPT_URL;
+    return url;
   }
 }

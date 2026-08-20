@@ -35,7 +35,7 @@ public class RenameCommandExecutor extends AbstractJsonCommandExecutor
 		if (user!=null && UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getParent().getPath()))
 		{
 			// remove diacritics
-			name = IwcmFsVolume.removeSpecialChars(name, fsi);
+			name = IwcmFsVolume.removeSpecialChars(name, fsi, user);
 
 			FsItemEx dst = new FsItemEx(fsi.getParent(), name);
 

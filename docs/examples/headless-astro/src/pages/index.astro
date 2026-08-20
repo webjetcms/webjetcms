@@ -1,0 +1,51 @@
+---
+import { getNavigation } from '../lib/api';
+import Layout from '../layouts/Layout.astro';
+
+const navResult = await getNavigation(Astro.request, '/', undefined, 3);
+const nav = navResult.data;
+
+// Forward Set-Cookie headers to the browser
+const setCookie = navResult.headers.get('set-cookie');
+if (setCookie) {
+  Astro.response.headers.append('Set-Cookie', setCookie);
+}
+
+const topItems = nav.slice(0, 8);
+---
+
+<Layout title="WebJET CMS — Headless Demo" navItems={nav} currentPath="/">
+  <div class="welcome-hero">
+    <span class="badge">Headless CMS</span>
+    <h1>WebJET CMS<br />Headless Integration</h1>
+    <p>
+      This is a proof-of-concept demonstrating WebJET CMS as a <strong>headless backend</strong>.
+      Content is <strong>served via REST API</strong> and rendered by this <strong>Astro application</strong>.
+      Use the navigation on the left, search, or the demos below.
+    </p>
+    <p>
+      There is two example of News app - News SSE with Server Side Rendering and News CSR with Client Side Rendering. You can switch between them using the navigation on the top.
+    </p>
+  </div>
+
+  <h5>Examples</h5>
+
+  <div class="welcome-links">
+    <a href="/apps/galeria/" class="welcome-link-card">
+      <div class="card-title">Gallery</div>
+      <div class="card-path">/apps/galeria/</div>
+    </a>
+    <a href="/apps/multistep-formular/for-screenshots.html" class="welcome-link-card">
+      <div class="card-title">Multistep Form</div>
+      <div class="card-path">/apps/multistep-formular/for-screenshots.html</div>
+    </a>
+    <a href="/news/" class="welcome-link-card">
+      <div class="card-title">News</div>
+      <div class="card-path">/news/</div>
+    </a>
+    <a href="/apps/gdpr-cookies/" class="welcome-link-card">
+      <div class="card-title">Cookies Consent</div>
+      <div class="card-path">/apps/gdpr-cookies/</div>
+    </a>
+  </div>
+</Layout>

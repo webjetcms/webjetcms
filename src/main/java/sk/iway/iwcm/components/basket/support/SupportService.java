@@ -73,9 +73,9 @@ public class SupportService {
         StringBuilder name = new StringBuilder();
 
         if (Tools.isNotEmpty(dme.getTitle())) {
-            name.append(prop.getText(dme.getTitle()));
+            name.append(prop.getText(dme.getTitle(), false));
         } else {
-            name.append(prop.getText(annotation.nameKey()));
+            name.append(prop.getText(annotation.nameKey(), false));
         }
         name.append(": ");
 

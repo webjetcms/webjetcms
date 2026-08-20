@@ -94,6 +94,8 @@ Graf a tabulku můžete dále v hlavním horním filtru filtrovat podle URL výr
 
 ![](error-page.png)
 
+!>**Upozornění:** chybné stránky se v databázi kumulují týdně. Nelze zobrazit vadné stránky jen za určitý den, vždy se zobrazí stránky za celý týden ve zvoleném období.
+
 ## Přihlášení
 
 > Jak dlouho a kolikrát se přihlásili návštěvníci nebo administrátoři web sídla?

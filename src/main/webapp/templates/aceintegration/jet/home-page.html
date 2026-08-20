@@ -17,5 +17,13 @@
             <div data-th-replace="/templates/aceintegration/jet/includes/footer.html"></div>
 		</footer>
 
+        <script data-th-if="${T(sk.iway.iwcm.editor.InlineEditor).isInlineEditingEnabled(request)}">
+            webjetContentsCss = [
+                '/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/samples/contents.css',
+                '/templates/jet/assets/css/editor.css'
+            ];
+            console.log("PageBuilder CSS loaded");
+        </script>
+
     </body>
 </html>

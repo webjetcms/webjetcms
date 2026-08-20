@@ -110,6 +110,9 @@ lang="${ninja.temp.lngIso}" data-browser-name="${ninja.userAgent.browserName}" d
 <meta property="og:description" content="${ninja.page.seoDescription}" />
 <meta property="og:url" content="${ninja.page.url}" />
 <meta property="og:image" content="${ninja.page.urlDomain}${ninja.page.seoImage}" />
+<meta property="og:image:width" content="${ninja.page.seoImageWidth}" />
+<meta property="og:image:height" content="${ninja.page.seoImageHeight}" />
+<meta property="og:image:alt" content="${ninja.page.seoImageAlt}" />
 <meta property="og:site_name" content="${ninja.temp.group.siteName}" />
 <meta property="og:type" content="website" />
 <meta property="og:locale" content="${ninja.temp.lngIsoUnderscore}" />
@@ -255,6 +258,16 @@ ${ninja.webjet.insertJqueryFake}
 ```
 
 <!-- tabs:end -->
+
+## Default SEO values
+
+In the template group, on the ** SEO** tab, you can set the default description, image, and image alt text. The `ninja.page` object evaluates the available values ​​in this order:
+
+- `${ninja.page.seoDescription}`: optional field S, perex, default template group description,
+- `${ninja.page.seoImage}`: valid path in optional field T, perex image, default image of template group, value `defaultSeoImage` from template configuration file,
+- `${ninja.page.seoImageAlt}`: optional field P, default alternative text of the template group.
+
+The default description and alternative text are stored per language, the default image is common to the entire template group. Details are in the [Page Object API](../ninja-jv/page/README.md).
 
 ## Configuration file
 

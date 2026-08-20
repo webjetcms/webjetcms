@@ -77,7 +77,7 @@ public class MkdirCommandExecutor extends AbstractJsonCommandExecutor
 		if (user!=null && UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getPath()))
 		{
 			// remove diacritics
-			name = IwcmFsVolume.removeSpecialChars(name, fsi);
+			name = IwcmFsVolume.removeSpecialChars(name, fsi, user);
 
 			FsItemEx dir = new FsItemEx(fsi, name);
 			dir.createFolder();

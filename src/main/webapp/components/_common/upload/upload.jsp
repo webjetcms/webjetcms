@@ -22,6 +22,7 @@ PageParams pp = new PageParams(request);
             min-height: auto;
             border: 0px;
         }
+
     </style>
     <script type="text/javascript">
 
@@ -43,6 +44,8 @@ PageParams pp = new PageParams(request);
                 var dzmaxfiles = element.data("dzmaxfiles") || 25;
                 //console.log("dzmaxfiles="+dzmaxfiles);
 
+                var singleFile = element.hasClass("wjdropzone-single-file");
+
                 var acceptedFiles = element.data("dzacceptedfiles") || null;
                 //console.log("acceptedFiles="+acceptedFiles);
 
@@ -51,7 +54,8 @@ PageParams pp = new PageParams(request);
 
                 element.dropzone({
                     url: "/XhrFileUpload",
-                    createImageThumbnails: true,
+                    createImageThumbnails: !singleFile,
+                    clickable: singleFile ? element.find(".dz-message")[0] : true,
                     parallelUploads: 1,
                     uploadMultiple: false,
                     maxFilesize: <%=Tools.replace(Constants.getString("stripes.FileUpload.MaximumPostSize"), "m", "")%>,
@@ -59,12 +63,13 @@ PageParams pp = new PageParams(request);
                     maxFiles: dzmaxfiles,
                     acceptedFiles: acceptedFiles,
 
-                    addRemoveLinks: true,
+                    addRemoveLinks: !singleFile,
 
                     chunking: true,
                     chunkSize: 2000000,
                     forceChunking: true,
 
+                    previewTemplate: singleFile ? '<div class="dz-preview d-flex align-items-center flex-wrap gap-2"><span class="small text-muted" data-dz-name></span><span class="dz-error-message text-danger small"><span data-dz-errormessage></span></span><button type="button" class="btn btn-outline-danger btn-sm" data-dz-remove><iwcm:text key="admin.dragDropFiles.dictRemoveFile"/></button></div>' : Dropzone.prototype.defaultOptions.previewTemplate,
                     dictDefaultMessage: "<iwcm:text key="admin.dragDropFiles.dragFilesHereOrClick"/>",
                     dictFileTooBig: "<iwcm:text key="admin.dragDropFiles.dictFileTooBig"/>",
                     dictResponseError: "<iwcm:text key="admin.dragDropFiles.dictResponseError"/>",
@@ -77,6 +82,15 @@ PageParams pp = new PageParams(request);
                     {
                         var myDropzone = this;
                         var uploadedFiles = {};
+                        var singleFileLocked = false;
+                        var setSingleFileLocked = function(locked) {
+                            if (singleFile == false || singleFileLocked == locked) return;
+
+                            singleFileLocked = locked;
+                            element.find(".dz-message").prop("disabled", locked);
+                            if (locked) myDropzone.disable();
+                            else myDropzone.enable();
+                        };
                         //console.log("uploadedObjectsInfo1=" + element.find('input.uploadedObjectsInfo')[0].value);
                         setTimeout(function() {
                             //console.log("uploadedObjectsInfo2=" + element.find('input.uploadedObjectsInfo')[0].value);
@@ -94,6 +108,7 @@ PageParams pp = new PageParams(request);
                                     myDropzone.emit("addedfile", files[i]);
                                     myDropzone.files.push(files[i]);
                                 }
+                                if (myDropzone.files.length > 0) setSingleFileLocked(true);
                             }
                         }, 700);
 
@@ -130,6 +145,11 @@ PageParams pp = new PageParams(request);
                                     uploadedObjectsInfo[0].value = JSON.stringify(uploadedFiles);
                                 }
                             }
+
+                            if (response.success === true) setSingleFileLocked(true);
+                        });
+                        this.on("maxfilesexceeded", function(file) {
+                            if (singleFile) this.removeFile(file);
                         });
                         this.on("removedfile", function(file)
                         {
@@ -169,6 +189,7 @@ PageParams pp = new PageParams(request);
                                     console.log(uploadedFiles);
                                     */
                                 }
+                                setSingleFileLocked(false);
                                 return;
                             };
 
@@ -202,6 +223,7 @@ PageParams pp = new PageParams(request);
                                 //console.log(uploadedFiles);
                                 element.trigger("removedFileAfter", file);
                             }
+                            setSingleFileLocked(false);
                         });
 
                         this.on('addedfile', function(file) {
@@ -229,6 +251,3 @@ PageParams pp = new PageParams(request);
     </script>
     <% request.setAttribute("dropzone", Boolean.TRUE);%>
 </c:if>
-
-
-

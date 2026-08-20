@@ -465,6 +465,8 @@ Zobrazí textové pole, ktorého hodnotu nie je možné meniť. V príklade si v
 
 Zobrazí jednoduchý HTML editor, ktorý umožňuje základné formátovanie textu ako tučné písmo/kurzíva/podčiarknuté, nadpisy, zoznamy a odkaz.
 
+Pri otvorení alebo potvrdení režimu úpravy HTML kódu editor odstráni nadbytočné prázdne odseky, napríklad `<p><br></p>`. Ak by odstránením zostal obsah úplne prázdny, pôvodný HTML kód zachová.
+
 Všimnite si použitie konvertora ```@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)```, ktorý povolí odoslať len [bezpečný HTML kód](../backend/security.md) (bez vložených JavaScript elementov a podobne).
 
 ```java
@@ -732,3 +734,127 @@ Typ poľa umožňujúci [nahratie súboru](field-file-upload.md).
     )
     private String file = "";
 ```
+
+## OPTIONS
+
+Typ poľa pre dynamický zoznam hodnôt. V editore sa zobrazí ako zoznam vstupných riadkov, kde každý riadok obsahuje dve textové polia — meno (label) a hodnotu (value). Riadky je možné pridávať, odoberať a meniť ich poradie pomocou `drag & drop`.
+
+Výsledná hodnota sa ukladá ako reťazec, kde jednotlivé riadky sú oddelené znakom `|` a hodnoty v rámci riadku sú oddelené znakom `:`. Napríklad: `key1:value1|key2:value2|key3:value3`.
+
+Pole nepodporuje AI tlačidlo (`btn-ai`).
+
+### Základné použitie
+
+```java
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPTIONS,
+        title = "components.myapp.options",
+        tab = "basic"
+    )
+    private String options = "";
+```
+
+### Formát uloženej hodnoty
+
+| Vstup v editore | Uložená hodnota | Poznámka |
+|---|---|---|
+| Meno: `Slovensko`, Hodnota: `sk` | `Slovensko:sk` | štandardná dvojica label:value |
+| Meno: `Slovensko`, Hodnota: (prázdne) | `Slovensko:Slovensko` | ak hodnota chýba, použije sa meno aj ako hodnota |
+| Meno: (prázdne), Hodnota: `sk` | `sk:sk` | ak meno chýba, použije sa hodnota aj ako meno |
+| Viac riadkov | `Slovensko:sk\|Česko:cz\|Rakúsko:at` | oddelené znakom `\|` |
+
+Pri načítaní hodnoty editor podporuje aj čiarku `,` ako oddeľovač riadkov (spätná kompatibilita), ale pri ukladaní sa vždy používa `|`.
+
+### Reálny príklad použitia
+
+```java
+public class FormItemEntity {
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPTIONS,
+        title = "multistep_form.value_as_options",
+        hidden = true,
+        tab = "advanced",
+        className = "allowEmptyOption"
+    )
+    private String valueAsOptions;
+
+}
+```
+
+### Prázdna možnosť (allowEmptyOption)
+
+Ak sa má pridať do zoznamu aj prázdna hodnota, nastavte poľu CSS triedu `allowEmptyOption`:
+
+```java
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPTIONS,
+        title = "components.myapp.options",
+        tab = "basic",
+        className = "allowEmptyOption"
+    )
+    private String options = "";
+```
+
+Editor v takom prípade zobrazí vedľa tlačidla <button class="btn btn-outline-secondary" type="button"> <i class="ti ti-plus"></i> Pridať</button> štandardné zaškrtávacie pole <span class="form-check"><input class="form-check-input options-empty-option-btn" type="checkbox"> <label class="form-check-label">Pridať prázdnu možnosť</label></span>. Zaškrtnutím sa na začiatok výslednej hodnoty pridá prázdna dvojica `:`, napríklad `:|key1:value1|key2:value2`. Pri opätovnom otvorení editora sa zaškrtnutý stav obnoví podľa prítomnosti tejto hodnoty. Trieda `allowEmptyOption` má účinok iba na pole typu `OPTIONS`, nie na `OPTIONS_SIMPLE`.
+
+### Implementácia
+
+Frontend implementácia je v súboroch:
+
+- [field-type-options.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options.js) — definícia typu poľa s dvomi vstupmi (meno a hodnota)
+- [field-type-options-base.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options-base.js) — spoločná logika pre OPTIONS aj OPTIONS_SIMPLE (drag & drop, pridávanie/odoberanie riadkov, allowEmptyOption)
+
+Na strane backendu sa typ `DataTableColumnType.OPTIONS` automaticky nastaví ako `editor.type = "options"` s formátom renderovania `dt-format-text`.
+
+![](../../redactor/apps/multistep-form/form-item-editor-advanced.png)
+
+## OPTIONS_SIMPLE
+
+Typ poľa pre dynamický zoznam jednoduchých hodnôt (jeden vstup v riadku). V editore sa zobrazí zoznam textových polí, kde každý riadok reprezentuje jednu hodnotu.
+
+Výsledná hodnota sa ukladá ako reťazec oddelený znakom `|`, napr.: `hodnota1|hodnota2|hodnota3`.
+
+Typ je vhodný pre prípady, kde nepotrebujete dvojice `label:value`, ale iba zoznam základných možností (napr. pre `autocomplete` konfigurácie).
+
+```java
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPTIONS_SIMPLE,
+        title = "components.myapp.autocompleteOptions",
+        tab = "advanced"
+    )
+    private String autocompleteOptions = "";
+```
+
+## ENUMERATION
+
+Typ poľa určený pre napojenie na aplikáciu číselníky. V editore sa zobrazí jeden riadok s tromi vstupmi:
+
+- číslo (ID alebo názov typu číselníka),
+- stĺpec pre text (`label`) položky,
+- stĺpec pre hodnotu (`value`) položky.
+
+Technicky sa hodnota uloží vo formáte:
+
+`enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY`
+
+Príklad výslednej hodnoty: `enumeration-options|4|string1|string2`
+
+Podporované názvy stĺpcov sú `string1` až `string12`, `decimal1` až `decimal4`, `boolean1` až `boolean4`, `date1` až `date4`.
+
+Príklad použitia v entite:
+
+```java
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.ENUMERATION,
+        title = "multistep_form.value_as_enumeration",
+        tab = "advanced"
+    )
+    private String valueAsEnumeration;
+```
+
+Tento typ sa používa najmä pri formulároch, kde je potrebné dynamicky generovať `<option>` hodnoty zo zvoleného číselníka.
+
+![](../../redactor/apps/multistep-form/form-item-editor-advanced-enum.png)

@@ -54,9 +54,22 @@ div.amcharts:has(table.table) {
     }
 }
 .amcharts {
+    .amchart-table-wrapper {
+        max-width: 100%;
+        overflow: visible;
+    }
+
     table.table {
         margin-top: 0px;
         margin-bottom: 0px;
+        max-width: 100%;
+
+        &.amchart-table {
+            th {
+                white-space: nowrap;
+            }
+        }
+
         tbody tr:hover {
             background-color: $nice-primary;
             td {
@@ -66,6 +79,13 @@ div.amcharts:has(table.table) {
         td, th {
             background: none;
             color: black;
+        }
+        &.amchart-table td,
+        &.amchart-table th {
+            overflow: visible;
+            overflow-wrap: anywhere;
+            white-space: normal;
+            word-break: break-word;
         }
         td {
             p:last-child {

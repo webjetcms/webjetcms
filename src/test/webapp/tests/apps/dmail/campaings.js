@@ -1,5 +1,7 @@
 Feature('apps.dmail.campaings');
 
+const WebjetDteJsTree = require("../../../pages/WebjetDteJsTree");
+
 var randomNumber, entityNameOriginal;
 var recipientsWrapper = "#datatableFieldDTE_Field_recipientsTab_wrapper";
 var recipientsModal = "#datatableFieldDTE_Field_recipientsTab_modal";
@@ -33,7 +35,7 @@ Scenario('campaings-zakladne testy @baseTest', ({I, DT, DTE}) => {
     I.dontSeeElement('Otvorenia');
     I.dontSeeElement('Kliknutia');
 
-    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Produktová stránka - B verzia');
 
@@ -73,7 +75,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     I.clickCss("div.dt-buttons button.buttons-create");
     DTE.waitForEditor("campaingsDataTable");
 
-    I.clickCss("button.btn-vue-jstree-item-edit")
+    I.clickCss("button.btn-webjet-jstree-item-edit")
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Produktová stránka - B verzia');
 
@@ -121,7 +123,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     /* PREPARE ENTITY */
     I.clickCss("div.dt-buttons button.buttons-create");
     DTE.waitForEditor("campaingsDataTable");
-    I.clickCss("button.btn-vue-jstree-item-edit")
+    I.clickCss("button.btn-webjet-jstree-item-edit")
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Produktová stránka - B verzia');
 
@@ -238,7 +240,7 @@ Scenario('testy skupiny pouzivatelov @baseTest', ({I, DT, DTE}) => {
     I.click(DT.btn.campaings_add_button);
     DTE.waitForEditor("campaingsDataTable");
 
-    I.clickCss("button.btn-vue-jstree-item-edit")
+    I.clickCss("button.btn-webjet-jstree-item-edit")
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Produktová stránka - B verzia');
 
@@ -312,7 +314,7 @@ Scenario('BUG pocty prijemcov', ({I, DT, DTE}) => {
     I.clickCss("div.dt-buttons button.buttons-create");
     I.dtWaitForEditor("campaingsDataTable");
 
-    I.clickCss("button.btn-vue-jstree-item-edit")
+    I.clickCss("button.btn-webjet-jstree-item-edit")
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click( locate(".jstree-anchor").withText('Testovaci newsletter') );
 
@@ -383,7 +385,7 @@ Scenario('zobrazenie nahladu emailu', ({I, DT}) => {
     //
     I.say("Zmenim stranku a mal by sa zmenit aj text");
     I.clickCss("#pills-dt-campaingsDataTable-main-tab");
-    I.clickCss("button.btn-vue-jstree-item-edit")
+    I.clickCss("button.btn-webjet-jstree-item-edit")
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click( locate(".jstree-anchor").withText('Testovaci newsletter') );
 
@@ -798,8 +800,8 @@ function prepareCampaignForInsert(I, DTE, entityName) {
     DTE.waitForEditor("campaingsDataTable");
 
     //Needed fields
-    I.clickCss("button.btn-vue-jstree-item-edit");
-    I.waitForElement("#jsTree");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
+    I.waitForElement(WebjetDteJsTree.tree);
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click( locate(".jstree-anchor").withText('Testovaci newsletter') );
 
@@ -848,8 +850,8 @@ Scenario('BUG recipients for new email', ({I, DT, DTE}) => {
     let campaign = "BUG-reciepients-autotest-" + randomNumber;
     I.fillField("#DTE_Field_subject", campaign);
 
-    I.clickCss("button.btn-vue-jstree-item-edit");
-    I.waitForElement("div#jsTree");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
+    I.waitForElement(WebjetDteJsTree.tree);
 
     I.click(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'));
     I.click(locate('.jstree-node.jstree-closed').withText('Hromadný e-mail').find('.jstree-icon.jstree-ocl'));
@@ -924,6 +926,10 @@ Scenario('BUG recipients missing in duplicated entity', ({I, DT, DTE}) => {
 
     I.say("Check recipients in duplicated entity");
     DT.filterContains("subject", duplicatedName);
+
+    I.say("Check campaign status");
+    DT.checkTableRow("campaingsDataTable", 1, ["", duplicatedName, "Tester Playwright", "tester@balat.sk", "", "", "", "0 / 2", "Neaktívny"]);
+
     I.click(duplicatedName);
     DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
@@ -959,13 +965,13 @@ Scenario('Feature setting of subject', ({I, DTE}) => {
     I.seeInField("#DTE_Field_subject", "");
 
     I.say("Select webpage and check that subject is set");
-    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Produktová stránka - B verzia');
     I.seeInField("#DTE_Field_subject", "Produktová stránka - B verzia");
 
     I.say("Change webpage and wait for dialog");
-    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Registracia do newsletra');
     I.waitForVisible("#toast-container-webjet");
@@ -975,7 +981,7 @@ Scenario('Feature setting of subject', ({I, DTE}) => {
     I.seeInField("#DTE_Field_subject", "Produktová stránka - B verzia");
 
     I.say("Change webpage and wait for dialog");
-    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Registracia do newsletra');
     I.waitForVisible("#toast-container-webjet");
@@ -1034,7 +1040,7 @@ Scenario('BUG multiple users same email', ({I, DT, DTE}) => {
 
     DTE.waitForEditor("campaingsDataTable");
 
-    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Testovaci newsletter');
     I.wait(0.5);

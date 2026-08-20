@@ -6,10 +6,13 @@ import java.util.Optional;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.GalleryDBTools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 
 public class Page {
@@ -92,20 +95,79 @@ public class Page {
                 seoDesc = doc.getPerexPre();
             }
         }
-        return Tools.html2text(seoDesc).replace("\"","");
+
+        if (Tools.isEmpty(seoDesc)) {
+            TempGroup tempGroup = getTempGroup();
+            if (tempGroup != null) seoDesc = tempGroup.getDescription();
+        }
+
+        return ResponseUtils.filter(seoDesc);
     }
 
     public String getSeoImage(){
         String seoImage = "";
         if(doc!=null){
             seoImage = doc.getFieldT();
-            //skontroluj, ze obsahuje / a ., inak to nie je obrazok, ale nejaky text
-            if (seoImage.contains("/")==false || seoImage.contains(".")==false) seoImage = "";
+            // Check for both a path separator and file extension; otherwise this is not an image path.
+            if (isValidSeoImagePath(seoImage) == false) seoImage = "";
             if(Tools.isEmpty(seoImage)){
-                seoImage = getStringValue(doc.getPerexImage(), ninja.getTemp().getBasePathImg() + ninja.getConfig("defaultSeoImage"));
+                seoImage = doc.getPerexImage();
             }
         }
+
+        if (Tools.isEmpty(seoImage)) {
+            TempGroup tempGroup = getTempGroup();
+            if (tempGroup != null) seoImage = tempGroup.getSeoImage();
+            if (isValidSeoImagePath(seoImage) == false) seoImage = "";
+        }
+
+        if (Tools.isEmpty(seoImage)) {
+            String defaultSeoImage = ninja.getConfig("defaultSeoImage");
+            Temp temp = ninja.getTemp();
+            if (Tools.isNotEmpty(defaultSeoImage) && temp != null && Tools.isNotEmpty(temp.getBasePathImg())) {
+                seoImage = temp.getBasePathImg() + defaultSeoImage;
+            }
+        }
+
         return seoImage;
+    }
+
+    public String getSeoImageAlt() {
+        String seoImageAlt = "";
+        if (doc != null) seoImageAlt = doc.getFieldP();
+
+        if (Tools.isEmpty(seoImageAlt)) {
+            TempGroup tempGroup = getTempGroup();
+            if (tempGroup != null) seoImageAlt = tempGroup.getSeoImageAlt();
+        }
+
+        return ResponseUtils.filter(seoImageAlt);
+    }
+
+    /**
+     * Returns the width of the SEO image in pixels.
+     *
+     * @return image width, or 0 if the image is missing or cannot be read
+     */
+    public int getSeoImageWidth() {
+        String seoImage = getSeoImage();
+        if (Tools.isEmpty(seoImage) || !FileTools.isFile(seoImage)) return 0;
+
+        int[] dimensions = GalleryDBTools.getImageSize(new IwcmFile(Tools.getRealPath(seoImage)));
+        return dimensions != null && dimensions.length > 0 ? dimensions[0] : 0;
+    }
+
+    /**
+     * Returns the height of the SEO image in pixels.
+     *
+     * @return image height, or 0 if the image is missing or cannot be read
+     */
+    public int getSeoImageHeight() {
+        String seoImage = getSeoImage();
+        if (Tools.isEmpty(seoImage) || !FileTools.isFile(seoImage)) return 0;
+
+        int[] dimensions = GalleryDBTools.getImageSize(new IwcmFile(Tools.getRealPath(seoImage)));
+        return dimensions != null && dimensions.length > 1 ? dimensions[1] : 0;
     }
 
     public String getStringValue(String value, String defaultValue)
@@ -115,12 +177,17 @@ public class Page {
         return(ret);
     }
 
+    private TempGroup getTempGroup() {
+        if (ninja == null || ninja.getTemp() == null) return null;
+        return ninja.getTemp().getGroup();
+    }
+
+    private boolean isValidSeoImagePath(String value) {
+        return Tools.isNotEmpty(value) && value.contains("/") && value.contains(".");
+    }
+
     public String getRobots(){
-        String robots = "";
-        if(doc!=null){
-            robots = doc.isSearchable() ? "index, follow" :  "noindex, follow";
-        }
-        return robots;
+        return PathFilter.getXRobotsTagValue(doc);
     }
 
     public String getUrl(){

@@ -39,7 +39,7 @@ public class IwayResourceBundle extends ResourceBundle
 	@Override
 	protected Object handleGetObject(String key)
 	{
-		String value = prop.getText(key);
+		String value = prop.getText(key, false);
 		if (value.equals(key)) value=null;
 		//Logger.debug(IwayResourceBundle.class, "handleGetObject("+key+")="+value);
 		return value;

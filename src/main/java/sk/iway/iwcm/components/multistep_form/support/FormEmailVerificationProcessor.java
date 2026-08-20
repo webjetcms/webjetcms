@@ -157,7 +157,7 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
 
             SendMail.send(senderName, senderEmail, email, null, null, null, prop.getText("form_email_verification_processor.verify_code.subject", formName), body, null, null);
         } catch (Exception e) {
-            throw new SaveFormException(Prop.getInstance(request).getText("form_email_verification_processor.sending_code_failed"), false, null);
+            throw new SaveFormException(Prop.getInstance(request).getText("form_email_verification_processor.sending_code_failed"), "emailNotSend", false, null);
         }
     }
 

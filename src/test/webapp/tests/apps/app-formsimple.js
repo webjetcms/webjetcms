@@ -1,5 +1,7 @@
 Feature('apps.app-formsimple');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 const applicationName = "Formulár ľahko";
 const applicationSelector = "#components-formsimple-title";
 const formSimpleFolder = 22704;
@@ -58,8 +60,8 @@ Scenario("Form simple - test insert process", async ({ I, DT, DTE, Apps }) => {
         I.fillField("#DTE_Field_formSettings-ccEmails", "tester@balat.sk");
         I.fillField(locate(".DTE_Field_Name_formSettings\\.forward").find("input.form-control"), "/images/gallery/chrysanthemum.jpg");
 
-        I.click( locate("#editorAppDTE_Field_formSettings-useFormMailDoc").find("button.btn-vue-jstree-item-edit") );
-        I.waitForVisible("#jsTree");
+        I.click( locate("#editorAppDTE_Field_formSettings-useFormMailDoc").find("button.btn-webjet-jstree-item-edit") );
+        I.waitForVisible(WebjetDteJsTree.tree);
         I.click(locate('.jstree-node.jstree-closed').withText('Jet portal 4').find('.jstree-icon.jstree-ocl'));
         I.click( locate(".jstree-anchor").withText('Jet portal 4 - testovacia stranka') );
 
@@ -104,7 +106,7 @@ Scenario("Form simple - test update process", async ({ I, DT, DTE, Apps }) => {
         I.seeInField("#DTE_Field_formSettings-subject", newPageName);
         I.seeInField(locate(".DTE_Field_Name_formSettings\\.forward").find("input.form-control"), "/images/gallery/chrysanthemum.jpg");
         I.seeInField(locate("#editorAppDTE_Field_formSettings-useFormMailDoc").find("input.form-control"), "/Jet portal 4/Jet portal 4 - testovacia stranka");
-        I.click(locate("#editorAppDTE_Field_formSettings-useFormMailDoc").find("button.btn-vue-jstree-item-remove"));
+        I.click(locate("#editorAppDTE_Field_formSettings-useFormMailDoc").find("button.btn-webjet-jstree-item-remove"));
 
     I.say("Check and edit values - items tab");
     I.say("Check its empty - leave it empty");
@@ -185,7 +187,7 @@ Scenario("Form simple - test items inner table", async ({ I, DT, DTE, Apps }) =>
 
     savingApp(I);
 
-    await checkPageParams(Apps, newPageName + "_changed", "JTVCJTdCJTIyZmllbGRUeXBlJTIyOiUyMmFkcmVzYSUyMiwlMjJyZXF1aXJlZCUyMjolNUJ0cnVlJTVELCUyMmxhYmVsJTIyOiUyMiUzQ3AlM0VMYWJlbCUyMGZpZWxkJTNDL3AlM0UlMjIsJTIydmFsdWUlMjI6JTIyVmFsdWUlMjBmaWVsZCUyMiwlMjJwbGFjZWhvbGRlciUyMjolMjJQbGFjZWhvbGRlciUyMGZpZWxkJTIyLCUyMnRvb2x0aXAlMjI6JTIyJTNDcCUzRVRoaXMlMjBpcyUyMHRvb2x0aXAlM0MvcCUzRSUyMiU3RCwlN0IlMjJmaWVsZFR5cGUlMjI6JTIybWVkemVyYSUyMiwlMjJyZXF1aXJlZCUyMjolNUJmYWxzZSU1RCwlMjJsYWJlbCUyMjolMjIlMjIsJTIydmFsdWUlMjI6JTIyJTIyLCUyMnBsYWNlaG9sZGVyJTIyOiUyMiUyMiwlMjJ0b29sdGlwJTIyOiUyMiUyMiU3RCwlN0IlMjJmaWVsZFR5cGUlMjI6JTIyY2FwdGNoYSUyMiwlMjJyZXF1aXJlZCUyMjolNUJmYWxzZSU1RCwlMjJsYWJlbCUyMjolMjIlMjIsJTIydmFsdWUlMjI6JTIyJTIyLCUyMnBsYWNlaG9sZGVyJTIyOiUyMiUyMiwlMjJ0b29sdGlwJTIyOiUyMiUyMiU3RCU1RA==");
+    await checkPageParams(Apps, newPageName + "_changed", "JTVCJTdCJTIyZmllbGRUeXBlJTIyOiUyMmFkcmVzYSUyMiwlMjJyZXF1aXJlZCUyMjolNUJ0cnVlJTVELCUyMmxhYmVsJTIyOiUyMkxhYmVsJTIwZmllbGQlMjIsJTIydmFsdWUlMjI6JTIyVmFsdWUlMjBmaWVsZCUyMiwlMjJwbGFjZWhvbGRlciUyMjolMjJQbGFjZWhvbGRlciUyMGZpZWxkJTIyLCUyMnRvb2x0aXAlMjI6JTIyVGhpcyUyMGlzJTIwdG9vbHRpcCUyMiU3RCwlN0IlMjJmaWVsZFR5cGUlMjI6JTIybWVkemVyYSUyMiwlMjJyZXF1aXJlZCUyMjolNUJmYWxzZSU1RCwlMjJsYWJlbCUyMjolMjIlMjIsJTIydmFsdWUlMjI6JTIyJTIyLCUyMnBsYWNlaG9sZGVyJTIyOiUyMiUyMiwlMjJ0b29sdGlwJTIyOiUyMiUyMiU3RCwlN0IlMjJmaWVsZFR5cGUlMjI6JTIyY2FwdGNoYSUyMiwlMjJyZXF1aXJlZCUyMjolNUJmYWxzZSU1RCwlMjJsYWJlbCUyMjolMjIlMjIsJTIydmFsdWUlMjI6JTIyJTIyLCUyMnBsYWNlaG9sZGVyJTIyOiUyMiUyMiwlMjJ0b29sdGlwJTIyOiUyMiUyMiU3RCU1RA==");
 
     I.say('Save page');
         DTE.save();

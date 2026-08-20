@@ -28,7 +28,7 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 @Getter
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
-@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_FORMMAIL)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_MULTISTEP_FORM)
 public class FormStepEntity {
 
     @Id

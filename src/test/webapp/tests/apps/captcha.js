@@ -7,6 +7,7 @@ Before(({ I, login }) => {
 function setTempSpamProtection(I, DTE, disabled) {
     I.amOnPage("/admin/v9/templates/temps-list/?tempId=4");
     DTE.waitForEditor();
+    I.clickCss("#pills-dt-datatableInit-advanced-tab");
     if (disabled==false) {
         //enable spam protection
         I.uncheckOption({css: "#DTE_Field_disableSpamProtection_0"});

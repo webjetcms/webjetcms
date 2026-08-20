@@ -15,4 +15,19 @@
         <minimumSize>0</minimumSize>
         <maximumSize>60</maximumSize>
     </datasource>
+
+    <datasource>
+        <dbname>rag_jpa</dbname>
+        <jndiName>jndi-rag-jpa</jndiName>
+        <driver>org.postgresql.Driver</driver>
+
+        <url>jdbc:postgresql://host.docker.internal:15432/webjetcms_autotest_web?currentSchema=public</url>
+
+        <username>webjetcms_autotest_web</username>
+        <password>${WEBJET_DB_PASS}</password>
+
+        <initialConnections>0</initialConnections>
+        <minimumSize>0</minimumSize>
+        <maximumSize>10</maximumSize>
+    </datasource>
 </poolman>

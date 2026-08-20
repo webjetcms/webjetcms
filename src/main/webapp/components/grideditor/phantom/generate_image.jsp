@@ -214,9 +214,10 @@
                                                                 out.print("Generujem cislo nahladu: "+cisloNahladu++ +"<br>");
                                                                 out.flush();
 
-                                                                //ScreenShotPropBean sb = new ScreenShotPropBean(Tools.getBaseHref(request)+ "/components/grideditor/phantom/phantom_sablona_ajax.jsp");
-
+                                                                String hash = sk.iway.iwcm.users.PasswordSecurity.generatePassword(16);
+                                                                Constants.setString("grideditorPhantomjsHash", hash);
                                                                 String ajaxUrl = "/components/grideditor/phantom/phantom_sablona_ajax.jsp";
+                                                                ajaxUrl = Tools.addParameterToUrlNoAmp(ajaxUrl, "hash", hash);
                                                                 String forward = request.getParameter("forward");
                                                                 if (Tools.isNotEmpty(forward)) ajaxUrl = Tools.addParameterToUrlNoAmp(ajaxUrl, "forward", forward);
                                                                 String docid = request.getParameter("docid");

@@ -2,7 +2,7 @@
 
 ## Presmerovania ciest
 
-Zobrazuje zoznam existujúcich presmerovaní, ktoré sa vykonajú, ak zadaná URL adresa neexistuje. Presmerovania vznikajú automaticky pri zmene URL adresy existujúcej stránky alebo pri zmene adresárovej štruktúry.
+Zobrazuje zoznam existujúcich presmerovaní, ktoré sa vykonajú, ak zadaná URL adresa neexistuje. Presmerovania môžu vznikajú automaticky, viac v časti [Automatické a používateľom vytvorené presmerovania](#automatické-a-používateľom-vytvorené-presmerovania).
 
 ![](redirect-path.png)
 
@@ -17,6 +17,19 @@ Môžete nastaviť aj platnosť presmerovania pre určité dátumy, zadaním bu�
 
 ![](path-editor.png)
 
+### Automatické a používateľom vytvorené presmerovania
+
+Presmerovania vznikajú automaticky pri zmene URL adresy existujúcej stránky alebo pri zmene adresárovej štruktúry. Automatické vytváranie presmerovaní riadi konfiguračná premenná `editorDisableAutomaticRedirect`:
+
+- `false` - predvolená hodnota, WebJET CMS automaticky vytvorí presmerovanie zo starej URL adresy na novú.
+- `true` - automatické vytváranie presmerovaní je vypnuté.
+
+Nastavenie konfiguračnej premennej nemá vplyv na používateľom vytvárané presmerovania. Automaticky vytvorené presmerovania sú v tabuľke odlíšené šedou farbou písma. Pomocou prepínača **Vytvorené používateľom** nad tabuľkou môžete zobraziť iba používateľom vytvorené presmerovania.
+
+![](redirect-path-filtered.png)
+
+!> **Upozornenie:** Presmerovania existujúce pred aktualizáciou databázy sa považujú za automaticky vytvorené. V editore presmerovania môžete hodnotu poľa **Vytvorené používateľom** zmeniť a existujúce presmerovania tak podľa potreby označiť ako používateľom vytvorené.
+
 ### Presmerovania cez regulárne výrazy
 
 Pomocou regulárnych výrazov je možné nastaviť zložitejšie presmerovania celých vetiev URL adries (napr. po migrácii starého webu). Presmerovania cez regulárny výraz sa zadávajú s prefixom `regexp:`.
@@ -24,6 +37,52 @@ Pomocou regulárnych výrazov je možné nastaviť zložitejšie presmerovania c
 Pôvodné URL je teda možné zadať vo formáte `regexp:^\/thisiswhere\/oldfiles\/(.+)` ktoré sa bude korektne prekladať na novú URL aj s vykonaním/prenesením skupín na nové URL v tvare `/thisiswhere/myfilesmovedto/$1`
 
 Vykoná sa presmerovanie napr. `/thisiswhere/oldfiles/page.html` na `/thisiswhere/myfilesmovedto/page.html`.
+
+## Čistenie presmerovaní
+
+Karta **Čistenie** umožňuje skontrolovať presmerovania vybranej domény, odstrániť nepotrebné záznamy a skrátiť reťazce presmerovaní.
+
+![](redirect-cleaning.png)
+
+Čistenie sa vykonáva v dvoch krokoch, aby ste si všetky navrhované zmeny mohli najskôr prezrieť:
+
+1. **Analýza presmerovaní**
+2. **Vykonanie čistenia**
+
+!> **Upozornenie:** Pre jednu doménu môže súčasne prebiehať iba jedna analýza alebo jedno čistenie. Ak už operáciu spustil iný administrátor, systém ďalšie spustenie nepovolí, kým sa nedokončí prebiehajúca operácia. V takom prípade sa zobrazí upozornenie, že je potrebné počkať na dokončenie prebiehajúcej operácie.
+
+### Analýza presmerovaní
+
+Analýza presmerovaní sa spustí kliknutím na tlačidlo <button class="btn btn-sm btn-warning" type="button"><span><i class="ti ti-scan"></i></span></button> v sekcii **Čistenie**. Počas analýzy sa vyhodnotia všetky existujúce presmerovania a navrhnú sa zmeny, ktoré je možné vykonať.
+
+V náhľade analýzy presmerovaní sa pre každý záznam zobrazí práve jedna z nasledujúcich akcií:
+
+- **Zmazať starú verziu** - odstráni starý cieľ URL adresy, ktorý bol nahradený novším cieľom.
+- **Zmazať krok cyklu** - pri cyklickom presmerovaní, napríklad `/a -> /b -> /a`, odstráni najnovšie vytvorený krok, ktorý cyklus uzatvára.
+- **Zmazať duplikát** - pri rovnakých presmerovaniach ponechá najstarší záznam a novšie duplikáty odstráni.
+- **Skrátiť reťazec** - upraví iba cieľovú URL adresu tak, aby napríklad reťazec `/a -> /b -> /c` skrátil na `/a -> /c`.
+
+![](redirect-cleaning-analyzed.png)
+
+**Ignorované presmerovania:**
+
+- presmerovania zadané cez **regulárny výraz** s prefixom `regexp:`
+- presmerovania s nastaveným **dátumom zverejnenia**
+- presmerovania s nastaveným **koncom platnosti**
+
+Súhrnná správa po analýze uvádza aj počet takýchto ignorovaných záznamov.
+
+Presmerovania bez domény tvoria samostatnú skupinu a nikdy sa nekombinujú s presmerovaniami pomenovanej domény. Predvolene sa analyzuje iba aktuálne zvolená pomenovaná doména. Ak chcete do analýzy pridať aj samostatnú skupinu presmerovaní bez domény, označte možnosť **Zahrnúť presmerovania bez domény**.
+
+Výsledok analýzy sa na 60 minút uloží ako spoločný plán pre aktuálnu doménu. Rovnaký náhľad preto vidia všetci administrátori s právom na správu presmerovaní a čistenie môže vykonať ktorýkoľvek z nich.
+
+### Vykonanie čistenia
+
+Vykonanie čistenia sa spustí kliknutím na tlačidlo <button class="btn btn-sm btn-danger" type="button"><span><i class="ti ti-trash"></i></span></button> v sekcii **Čistenie**. Akcia je dostupná iba ak **existuje analýza** pre aktuálnu doménu. Počas vykonávania sa zmeny uložia a presmerovania sa upravia podľa navrhnutého plánu.
+
+Pri vykonaní sa použije presne uložený plán bez novej analýzy. Záznamy, ktoré boli medzičasom odstránené alebo už nie sú dostupné, sa preskočia a ich počet sa zobrazí vo výslednej správe. Ak vykonanie zlyhá, zmeny sa neuložia a plán zostane dostupný na opakovanie.
+
+![](redirect-cleaning-confirm.png)
 
 ## Presmerovania domén
 

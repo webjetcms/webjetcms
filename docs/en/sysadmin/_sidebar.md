@@ -16,6 +16,7 @@
   - [Log files](/sysadmin/audit/audit-log-files.md)
   - [Latest logs](/sysadmin/audit/memory-logging.md)
 - Operation
+  - [Troubleshooting](/sysadmin/troubleshooting/README.md)
   - [Server Performance](/sysadmin/performance/README.md)
   - [Server Monitoring](/sysadmin/monitoring/README.md)
   - [Restart](/sysadmin/restart.md)

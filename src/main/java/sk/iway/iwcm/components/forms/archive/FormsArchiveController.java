@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.forms.FormColumns;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
@@ -36,13 +37,15 @@ public class FormsArchiveController extends DatatableRestControllerV2<FormsArchi
     private final FormsArchiveServiceImpl formsService;
     private final FormStepsRepository formStepsRepository;
     private final FormItemsRepository formItemsRepository;
+    private final FormSettingsRepository formSettingsRepository;
 
     @Autowired
-    public FormsArchiveController(FormsArchiveRepository formsRepository, FormsArchiveServiceImpl formsService, FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository) {
+    public FormsArchiveController(FormsArchiveRepository formsRepository, FormsArchiveServiceImpl formsService, FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository, FormSettingsRepository formSettingsRepository) {
         super(formsRepository);
         this.formsService = formsService;
         this.formStepsRepository = formStepsRepository;
         this.formItemsRepository = formItemsRepository;
+        this.formSettingsRepository = formSettingsRepository;
     }
 
     @Override
@@ -91,7 +94,7 @@ public class FormsArchiveController extends DatatableRestControllerV2<FormsArchi
 
     @Override
     public boolean deleteItem(FormsArchiveEntity entity, long id) {
-        return formsService.deleteItem(entity, id, formStepsRepository, formItemsRepository);
+        return formsService.deleteItem(entity, id, formStepsRepository, formItemsRepository, formSettingsRepository);
     }
 
     @Override

@@ -93,7 +93,8 @@
         "npm install": true,
         "npm audit": true,
         "npx codeceptjs": true,
-        "npm run pause": true
+        "npm run pause": true,
+        "printf": true
     },
     "chat.agent.maxRequests": 150,
     "cSpell.language": "en,sk",

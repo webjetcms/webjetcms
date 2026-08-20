@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -19,6 +20,12 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 import javax.imageio.stream.ImageOutputStream;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.parser.Parser;
+
 
 import com.luciad.imageio.webp.CompressionType;
 import com.luciad.imageio.webp.WebPWriteParam;
@@ -591,6 +598,11 @@ public class ImageTools
 		//check custom params by Constants key imageMagickCustomParams_[mode]_[ext], for example imageMagickCustomParams_resize_jpg, then imageMagickCustomParams_resize, then imageMagickCustomParams_jpg then imageMagickCustomParams
 		String customParamsKey = "imageMagickCustomParams_" + operation + "_" + ext;
 		String customParams = Constants.getString(customParamsKey);
+
+		//remove first line NON WHITESPACE character (because Constants are trimed when reading from DB)
+		if (Tools.isNotEmpty(customParamsKey) && customParamsKey.startsWith("---")) customParamsKey = customParamsKey.substring(3);
+		if (Tools.isNotEmpty(customParams) && customParams.startsWith("---")) customParams = customParams.substring(3);
+
 		if (Tools.isEmpty(customParams)) {
 			customParamsKey = "imageMagickCustomParams_" + operation;
 			customParams = Constants.getString(customParamsKey);
@@ -617,6 +629,12 @@ public class ImageTools
 				outputParams = customParams.substring(newlineIndex + 1).trim();
 			} else {
 				inputParams = customParams.trim();
+				outputParams = "";
+			}
+			if ("---".equals(inputParams)) {
+				inputParams = "";
+			}
+			if ("---".equals(outputParams)) {
 				outputParams = "";
 			}
 
@@ -692,6 +710,9 @@ public class ImageTools
 	}
 
 	private static String combineLine(String a, String b) {
+		if (a.startsWith("---")) a = a.substring(3);
+		if (b.startsWith("---")) b = b.substring(3);
+
 		if (Tools.isEmpty(a)) return Tools.isNotEmpty(b) ? b : "";
 		if (Tools.isEmpty(b)) return a;
 		return a + " " + b;
@@ -1022,4 +1043,41 @@ public class ImageTools
 		}
 		return null;
 	}
+
+	/**
+	 * Sanitize SVG file by removing script elements and on* event attributes
+	 * to prevent XSS attacks when the SVG is served to browsers.
+	 */
+	public static void sanitizeSvgFile(IwcmFile svgFile)
+	{
+		try {
+			String content = FileTools.readFileContent(svgFile.getAbsolutePath());
+			Document doc = Jsoup.parse(content, "", Parser.xmlParser());
+
+			// Remove script elements
+			doc.select("script").remove();
+
+			// Remove on* event handler attributes from all elements
+			for (Element el : doc.select("*")) {
+				el.attributes().asList().stream()
+					.filter(attr -> attr.getKey().toLowerCase().startsWith("on"))
+					.forEach(attr -> el.removeAttr(attr.getKey()));
+			}
+
+			// Remove href attributes with javascript: protocol
+			for (Element el : doc.select("[href], [xlink:href]")) {
+				String href = el.hasAttr("href") ? el.attr("href") : el.attr("xlink:href");
+				if (href.replaceAll("\\s", "").toLowerCase().startsWith("javascript:")) {
+					el.removeAttr("href");
+					el.removeAttr("xlink:href");
+				}
+			}
+
+			FileTools.saveFileContent(svgFile.getAbsolutePath(), doc.html(), StandardCharsets.UTF_8.name());
+		}
+		catch (Exception e) {
+			sk.iway.iwcm.Logger.error(e);
+		}
+	}
+
 }

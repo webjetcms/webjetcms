@@ -1,11 +1,13 @@
 package sk.iway.iwcm.system.cron;
 
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.system.cluster.ClusterDB;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -126,6 +128,31 @@ public class CronDB
 		Adminlog.add(Adminlog.TYPE_CRON, Adminlog.getChangelog(saved.getId(), saved, old), saved.getId().intValue(), -1);
 
 		return saved;
+	}
+
+	/**
+	 * Get cluster node type for current node.
+	 * If current node is public, return "all-public", otherwise return "all-admin"
+	 * @return
+	 */
+	public static String getCronNodeType() {
+		String clusterNodeType = "all-admin";
+		if (ClusterDB.isPublicNode()) {
+			clusterNodeType = "all-public";
+		}
+		return clusterNodeType;
+	}
+
+	/**
+	 * Returns true when a cron task configured for the given node can run on the current node.
+	 * @param clusterNode configured node name or node group
+	 * @return true when the current node matches the configuration
+	 */
+	public static boolean isCronTaskForCurrentNode(String clusterNode) {
+		if (ClusterDB.isServerRunningInClusterMode() == false) return true;
+		if (Tools.isEmpty(clusterNode) || "all".equals(clusterNode)) return true;
+		if (clusterNode.equals(Constants.getString("clusterMyNodeName"))) return true;
+		return clusterNode.equals(getCronNodeType());
 	}
 
 }

@@ -308,11 +308,17 @@ public class EditorService {
 		if (!disableHistory) {
 			// zisti, ci v historii na ten isty datum a cas nema byt nieco vypublikovane
 			if (editedDoc.getPublishStartDate() != null && (editedDoc.getPublishStartDate().getTime()+60000)>Tools.getNow()) {
-				List<DocHistory> waitingForPublish = historyRepo.findByDocIdAndPublishStartDate(editedDoc.getDocId(), editedDoc.getPublishStartDate());
+				Date publishStartDate = editedDoc.getPublishStartDate();
+				// check if there is any other DocHistory with same publishStartDate (+-5 seconds)
+				Date publishStartDateFrom = new Date(publishStartDate.getTime() - 5000L);
+				Date publishStartDateTo = new Date(publishStartDate.getTime() + 5000L);
+				List<DocHistory> waitingForPublish = historyRepo.findByDocIdAndPublishStartDateBetween(editedDoc.getDocId(), publishStartDateFrom, publishStartDateTo);
 				if (waitingForPublish != null) {
 					for (DocHistory waiting : waitingForPublish) {
 						waiting.setPublicable(false);
-						waiting.setSyncStatus(1);
+						//by sync_status=2 we know that this record was waiting for publish, but now it is not publicable
+						//checked in web-pages-datatable.js to mark this record with strikethrough date
+						waiting.setSyncStatus(2);
 						historyRepo.save(waiting);
 					}
 				}
@@ -678,7 +684,9 @@ public class EditorService {
 	 * @param editedDoc
 	 */
 	private void setRootGroupL(int groupId, DocDetails editedDoc) {
-		List<GroupDetails> parentGroups = groupsDB.getParentGroups(groupId);
+		//use fresh instance
+		GroupsDB groupsDBFresh = GroupsDB.getInstance();
+		List<GroupDetails> parentGroups = groupsDBFresh.getParentGroups(groupId);
 		int[] rootGroupL = new int[3];
 		Arrays.fill(rootGroupL, 0);
 		int ind = 0;
@@ -848,6 +856,11 @@ public class EditorService {
 		int virtualPathConflictDocId = -1;
 		if (Constants.getInt("linkType") == Constants.LINK_TYPE_HTML && editedDoc.getVirtualPath().startsWith("javascript:") == false) {
 			boolean mustGenerateVirtualPath = false;
+
+			//trim URL address - it is also in setter, but setVirtualPath can be called from other places
+			editedDoc.setVirtualPath(editedDoc.getVirtualPath().trim());
+			if (editedDoc.getEditorVirtualPath() != null) editedDoc.setEditorVirtualPath(editedDoc.getEditorVirtualPath().trim());
+
 			if (Tools.isNotEmpty(editedDoc.getVirtualPath())) {
 				int actualDocId = DocDB.getDocIdFromURL(editedDoc.getVirtualPath(), domain);
 				if (actualDocId > 0 && actualDocId != editedDoc.getDocId()) {

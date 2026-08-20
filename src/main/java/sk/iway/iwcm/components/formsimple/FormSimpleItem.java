@@ -34,7 +34,7 @@ public class FormSimpleItem {
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.formsimple.required", tab="basic", hidden = false)
     private Boolean required;
 
-    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.label-field", tab="basic", hidden = false)
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, className="quill-oneline", title = "components.formsimple.label-field", tab="basic", hidden = false)
     private String label;
 
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.formsimple.value", tab="advanced", hidden = false)
@@ -43,6 +43,6 @@ public class FormSimpleItem {
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.formsimple.placeholder", tab="advanced", hidden = false)
     private String placeholder;
 
-    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.tooltip", tab="advanced", hidden = false)
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, className="quill-oneline", title = "components.formsimple.tooltip", tab="advanced", hidden = false)
     private String tooltip;
 }

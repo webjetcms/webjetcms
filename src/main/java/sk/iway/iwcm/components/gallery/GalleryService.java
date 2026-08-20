@@ -49,7 +49,7 @@ public class GalleryService {
             String galleryPath = Constants.getString("imagesRootDir") + "/" + Constants.getString("galleryDirName") + "/";
 
             //Gallery entity not exist, create new ONLY IF destination is gallery
-            if(destPath.startsWith(galleryPath)) {
+            if(destPath.startsWith(galleryPath) && destFileName.startsWith("o_")==false && destFileName.startsWith("s_")==false) {
                 GalleryDB.setImage(destDir, destFileName);
             }
         }

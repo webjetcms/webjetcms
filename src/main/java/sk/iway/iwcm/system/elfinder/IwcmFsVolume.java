@@ -3,6 +3,7 @@ package sk.iway.iwcm.system.elfinder;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +20,7 @@ import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.AdminTools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.FileIndexerTools;
@@ -85,7 +87,7 @@ public class IwcmFsVolume implements FsVolume
 	}
 
 	@Override
-	public void createFolder(FsItem fsi) throws IOException
+	public void createFolder(FsItem fsi, FsItemEx fsie) throws IOException
 	{
 		IwcmFsItem fsii = (IwcmFsItem) fsi;
 		IwcmFile f = asFile(fsi);
@@ -93,12 +95,9 @@ public class IwcmFsVolume implements FsVolume
 		if (canWrite(f))
 		{
 			//odstran diakritiku
-			if (f.getVirtualPath().startsWith("/files") || f.getVirtualPath().startsWith("/images"))
-			{
-				String newDir = DB.internationalToEnglish(DocTools.removeCharsDir(f.getName(), true).toLowerCase());
-				IwcmFile f2 = new IwcmFile(f.getParentFile(), newDir);
-				fsii.setFile(f2);
-			}
+			String newDir = removeSpecialChars(f.getName(), f.getVirtualPath(), fsie, sk.iway.iwcm.system.elfinder.FsService.getCurrentUser());
+			IwcmFile f2 = new IwcmFile(f.getParentFile(), newDir);
+			fsii.setFile(f2);
 
 			fsii.getFile().mkdirs();
 
@@ -378,6 +377,7 @@ public class IwcmFsVolume implements FsVolume
 		}
 
 		boolean fbrowserShowOnlyWritableFolders = Constants.getBoolean("fbrowserShowOnlyWritableFolders");
+		if (CloudToolsForCore.isControllerDomain()) fbrowserShowOnlyWritableFolders = false;
 
 		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();
 		Logger.debug(IwcmFsVolume.class, "listChildren, user="+user+" cs.length="+cs.length+" fbrowserShowOnlyWritableFolders="+fbrowserShowOnlyWritableFolders);
@@ -514,12 +514,62 @@ public class IwcmFsVolume implements FsVolume
 	 * @return
 	 * @throws IOException
 	 */
-	public static String removeSpecialChars(String name, FsItemEx fsi) throws IOException {
-		if (fsi.getPath().startsWith("/files") || fsi.getPath().startsWith("/images"))
-		{
-			name = DB.internationalToEnglish(name);
-			name = DocTools.removeCharsDir(name, true).toLowerCase();
+	public static String removeSpecialChars(String name, FsItemEx fsi, Identity user) throws IOException {
+		return removeSpecialChars(name, fsi.getPath(), fsi, user);
+	}
+
+	public static String removeSpecialChars(String name, String path, FsItemEx fsi, Identity user) {
+		user = filterUserByFsi(user, fsi);
+		return removeSpecialChars(name, path, user);
+	}
+
+	public static String removeSpecialChars(String name, String path, int serviceType, Identity user) {
+		user = filterUserByFsi(user, serviceType);
+		return removeSpecialChars(name, path, user);
+	}
+
+	private static String removeSpecialChars(String name, String path, Identity user) {
+		if (path.startsWith("/files") || path.startsWith("/images") || path.startsWith("/shared")) {
+			// If user has special permission, he can
+			if(user == null || user.isEnabledItem("fbrowser_allow_diacritics") == false) {
+				name = DB.internationalToEnglish(name);
+				name = DocTools.removeCharsDir(name, true).toLowerCase();
+			}
 		}
+		name = normalizeUnicode(name);
 		return name;
+	}
+
+	/**
+	 * normalize NFD (macOS) to NFC so server-side names match
+	 * @param value
+	 * @return
+	 */
+	public static String normalizeUnicode(String value) {
+		if (value == null) {
+			return "";
+		}
+
+		return Normalizer.normalize(value, Normalizer.Form.NFC);
+	}
+
+	/**
+	 * fbrowser_allow_diacritics is allowed only in FileBrowser, not image/file dialog in webpages
+	 * @param user
+	 * @param fsi
+	 * @return
+	 */
+	private static Identity filterUserByFsi(Identity user, FsItemEx fsi) {
+		int serviceType = -1;
+		if (fsi.getService() != null && fsi.getService() instanceof sk.iway.iwcm.system.elfinder.FsService fs) {
+			serviceType = fs.getSelectedType();
+		}
+		return filterUserByFsi(user, serviceType);
+	}
+
+	private static Identity filterUserByFsi(Identity user, int serviceType) {
+		//allow upload diacritics only in file FileBrowser (Prieskumnik) not in image/link dialog in webpages
+		if (serviceType == FsService.TYPE_ALL || serviceType == FsService.TYPE_FILES || serviceType == FsService.TYPE_PAGES) return user;
+		return null;
 	}
 }

@@ -14,6 +14,8 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Service;
 
+import com.webjetcms.ai.AiPromptTemplate;
+
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
@@ -25,7 +27,6 @@ import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.providers.AiAssitantsInterface;
-import sk.iway.iwcm.components.ai.providers.IncludesHandler;
 import sk.iway.iwcm.editor.appstore.AppManager;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
@@ -297,7 +298,7 @@ public class AiAssistantsService {
         String cacheKey = CACHE_KEY_PREFIX + CloudToolsForCore.getDomainId();
 
         @SuppressWarnings("unchecked")
-        List<AssistantDefinitionEntity> cachedAssistants = (List<AssistantDefinitionEntity>) c.getObject(cacheKey, List.class);
+        List<AssistantDefinitionEntity> cachedAssistants = c.getObject(cacheKey, List.class);
         if(cachedAssistants != null) {
             return cachedAssistants;
         }
@@ -313,36 +314,26 @@ public class AiAssistantsService {
 
     public static void clearCache() {
         Cache c = Cache.getInstance();
-        c.removeObject(CACHE_KEY_PREFIX + CloudToolsForCore.getDomainId());
+        c.removeObject(CACHE_KEY_PREFIX + CloudToolsForCore.getDomainId(), true);
     }
 
     /**
-     * Execute prompt macro, replaces {inputText}, {userPrompt} and adds rule for INCLUDE protected tokens if includes are used
-     * @param instructions
-     * @param inputData
-     * @param replacedIncludes
-     * @return
+     * Resolves CMS-owned prompt variables and delegates untrusted prompt expansion to {@code webjet-ai}.
+     *
+     * @param instructions CMS instruction template
+     * @param inputData assistant input and trusted backend variables
+     * @return expanded instructions with consumed and suspicious source metadata
      */
-    public static String executePromptMacro(String instructions, InputDataDTO inputData, Map<Integer, String> replacedIncludes) {
-        if(inputData == null) return instructions;
+    public static AiPromptTemplate.ExpansionResult expandPromptMacros(
+        String instructions,
+        InputDataDTO inputData
+    ) {
+        if(inputData == null) {
+            return AiPromptTemplate.expand(instructions, null, null, AiAssistantsService::formatPromptValue);
+        }
         if(Tools.isEmpty(instructions)) {
             //to fill inputData if original input is empty
             instructions = "{\nuserPrompt:{userPrompt}\ninputText:{inputText}\n}";
-        }
-
-        if (instructions.contains("{inputText}") || instructions.contains("{userPrompt}")) {
-
-            //for append we must clear inputValue, because it will be duplicated into final result
-            if ("append".equals(inputData.getReplaceMode()) || "replace".equals(inputData.getReplaceMode())) inputData.setInputValue("");
-
-            instructions = Tools.replace(instructions, "{inputText}", nvl(inputData.getInputValue(), ""));
-            instructions = Tools.replace(instructions, "{userPrompt}", nvl(inputData.getUserPrompt(), ""));
-
-            //clear values, so it will be not appended into final prompt, clear both,
-            //because it instructions contains {userPrompt} we expect that it will contain also
-            //inputValue if it is required for the action
-            inputData.setInputValue("");
-            inputData.setUserPrompt("");
         }
 
         //replace user language
@@ -366,18 +357,47 @@ public class AiAssistantsService {
             }
         }
 
-        if (replacedIncludes != null && replacedIncludes.isEmpty()==false) instructions = IncludesHandler.addProtectedTokenInstructionRule(instructions);
-
-        return instructions;
+        String inputText = inputData.getInputValue();
+        if (InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType())
+            || "append".equals(inputData.getReplaceMode())
+            || "replace".equals(inputData.getReplaceMode())) {
+            inputText = "";
+        }
+        AiPromptTemplate.ExpansionResult expansion = AiPromptTemplate.expand(
+            instructions,
+            inputText,
+            inputData.getUserPrompt(),
+            AiAssistantsService::formatPromptValue
+        );
+        return expansion.withInstructions(
+            applyBonusParamsMacro(expansion.instructions(), inputData.getBonusParams())
+        );
     }
 
-    private static String nvl(String value, String defaultValue) {
-        if(Tools.isEmpty(value)) return defaultValue;
+    private static String formatPromptValue(String value) {
+        if(Tools.isEmpty(value)) return "";
 
         //remove new lines and escape quotes, we are expecting JSON format for instructions for HTML code/replace in PB
         value = value.replace("\n", " ").replace("\r", " ").replace("\"", "\\\"").replace("'", "\\'");
 
         return value;
+    }
+
+    private static String applyBonusParamsMacro(String instructions, Map<String, String> bonusParams) {
+
+        if(bonusParams == null || bonusParams.isEmpty() || Tools.isEmpty(instructions)) return instructions;
+
+        for (Map.Entry<String, String> entry : bonusParams.entrySet()) {
+            String value = entry.getValue();
+            if(Tools.isEmpty(value)) continue;
+
+            String macro = "{"+entry.getKey()+"}";
+            if (instructions.contains(macro)) {
+                instructions = Tools.replace(instructions, macro, value);
+            }
+        }
+
+        return instructions;
     }
 
     private String getNoPermittedString(Prop prop) {

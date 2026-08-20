@@ -9,6 +9,7 @@ import sk.iway.iwcm.dmail.Sender;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocBasic.FollowLinksMode;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.ShowDoc;
 import sk.iway.iwcm.doc.ninja.Ninja;
@@ -242,7 +243,7 @@ public class PathFilter implements Filter
 
 			setNginxProxyMode(req, res);
 			setXFrameOptions(res);
-			setAccessControlAllowOrigin(path, res);
+			setAccessControlAllowOrigin(path, req, res);
 			setXXssProtection(res);
 			setFeaturePolicy(res);
 			setXRobotsTagValue(path, res);
@@ -380,9 +381,10 @@ public class PathFilter implements Filter
 
 			req.setAttribute("path_filter_orig_docid", req.getParameter("docid"));
 
-			if ("true".equals(req.getHeader("userInServletContext")))
+			String userInServletContext = req.getHeader("userInServletContext");
+			if (Tools.isNotEmpty(userInServletContext))
 			{
-				Identity user2 = (Identity)Constants.getServletContext().getAttribute(Constants.USER_KEY);
+				Identity user2 = (Identity)Constants.getServletContext().getAttribute(Constants.USER_KEY+"_"+userInServletContext);
 				if (user2 != null)
 				{
 					LogonTools.setUserToSession(req.getSession(), user2);
@@ -1114,7 +1116,7 @@ public class PathFilter implements Filter
 										String CONF_KEY = jspFileName.substring(0, jspFileName.lastIndexOf('.')).replace('/', '.').substring(1);
 										Prop prop = Prop.getInstance(req);
 										//ak kluc neexistuje pouzijeme
-										if (prop.getText(CONF_KEY+".conf.propSearchKey").equals(CONF_KEY+".conf.propSearchKey") && prop.getText(CONF_KEY+".conf").equals(CONF_KEY+".conf"))
+										if (prop.getText(CONF_KEY+".conf.propSearchKey", false).equals(CONF_KEY+".conf.propSearchKey") && prop.getText(CONF_KEY+".conf", false).equals(CONF_KEY+".conf"))
 										{
 											Logger.debug(PathFilter.class, "forwarding to:"+pathBezDruhejCasti);
 											req.getRequestDispatcher(WriteTagToolsForCore.getCustomPage(pathBezDruhejCasti, req)).forward(req, res);
@@ -2280,11 +2282,36 @@ public class PathFilter implements Filter
 	}
 
 	/**
-	 * Nastavenie hlavicky X-Robots-Tag, viz https://developers.google.com/webmasters/control-crawl-index/docs/robots_meta_tag
-	 * @param url
-	 * @param response
+	 * Sets the X-Robots-Tag response header for a URL using the configured
+	 * URL match rules and the default {@code xRobotsTagValue} constant.
+	 *
+	 * <p>This overload is intended for URL-based handling when no document-specific
+	 * metadata is available.</p>
+	 *
+	 * @param url requested URL to evaluate against {@code xRobotsTagUrls}
+	 * @param response HTTP response to update
 	 */
 	public static void setXRobotsTagValue(String url, HttpServletResponse response)
+	{
+		setXRobotsTagValue(url, response, null);
+	}
+
+	/**
+	 * Sets the X-Robots-Tag response header when the URL matches one of the
+	 * configured {@code xRobotsTagUrls} patterns.
+	 *
+	 * <p>When {@code docDetails} is provided together with the special
+	 * {@code NOT_SEARCHABLE_PAGE} marker, the header value is derived from the
+	 * document state using {@link #getXRobotsTagValue(DocDetails)}. In all other
+	 * cases the value is loaded from the {@code xRobotsTagValue} configuration
+	 * constant.</p>
+	 *
+	 * @param url requested URL or the {@code NOT_SEARCHABLE_PAGE} marker
+	 * @param response HTTP response to update
+	 * @param docDetails document settings used for document-specific directives,
+	 *        or {@code null} for pure URL-based configuration
+	 */
+	public static void setXRobotsTagValue(String url, HttpServletResponse response, DocDetails docDetails)
 	{
 		String xRobotsTagUrls = Constants.getString("xRobotsTagUrls");
 		if (Tools.isEmpty(xRobotsTagUrls)) return;
@@ -2296,7 +2323,12 @@ public class PathFilter implements Filter
 		{
 			if (ResponseHeaderService.isPathCorrect(path, url))
 			{
-				String xRobotsTagValue = Constants.getStringExecuteMacro("xRobotsTagValue");
+				String xRobotsTagValue;
+				if (docDetails != null && "NOT_SEARCHABLE_PAGE".equals(url)) {
+					xRobotsTagValue = getXRobotsTagValue(docDetails);
+				} else {
+					xRobotsTagValue = Constants.getStringExecuteMacro("xRobotsTagValue");
+				}
 				if (Tools.isNotEmpty(xRobotsTagValue))
 				{
 					response.setHeader("X-Robots-Tag", xRobotsTagValue);
@@ -2304,6 +2336,39 @@ public class PathFilter implements Filter
 				}
 			}
 		}
+	}
+
+	/**
+	 * Builds the X-Robots-Tag value for a document from its searchability and
+	 * link-follow settings.
+	 *
+	 * <p>The result contains only restrictive directives because crawler defaults
+	 * already imply {@code index, follow}. The method returns {@code noindex},
+	 * {@code nofollow}, or both when required. If no restriction applies, it
+	 * returns {@code all}.</p>
+	 *
+	 * @param docDetails document settings used to determine robots directives
+	 * @return computed X-Robots-Tag value, or {@code all} when no restriction applies
+	 */
+	public static String getXRobotsTagValue(DocDetails docDetails)
+	{
+		if (docDetails == null) return "all";
+
+		StringBuilder value = new StringBuilder();
+		if (docDetails.isSearchable() == false) value.append("noindex");
+
+		FollowLinksMode followLinksMode = docDetails.getFollowLinksMode();
+		boolean nofollow = FollowLinksMode.NOFOLLOW == followLinksMode
+			|| (FollowLinksMode.SEARCHABLE == followLinksMode && docDetails.isSearchable() == false);
+
+		if (nofollow) {
+			if (value.length() > 0) value.append(", ");
+			value.append("nofollow");
+		}
+
+		if (value.length() == 0) return "all";
+
+		return value.toString();
 	}
 
 	public static void setUaCompatibleAdmin(String path, HttpServletResponse response)
@@ -2354,13 +2419,34 @@ public class PathFilter implements Filter
 	 * @param url
 	 * @param response
 	 */
-	public static void setAccessControlAllowOrigin(String url, HttpServletResponse response)
+	public static void setAccessControlAllowOrigin(String url, HttpServletRequest request, HttpServletResponse response)
 	{
 		String accessControlAllowOriginUrls = Constants.getString("accessControlAllowOriginUrls");
 		if (Tools.isEmpty(accessControlAllowOriginUrls)) return;
 
 		String[] paths = Tools.getTokens(accessControlAllowOriginUrls, ",", true);
 		String accessControlAllowOriginValue = Constants.getStringExecuteMacro("accessControlAllowOriginValue");
+
+		String referer = request.getHeader("Referer");
+		//remove path, keep just protocol, domain and port
+		if (Tools.isNotEmpty(referer)) {
+			int index = referer.indexOf("/", 8); //skip http:// or https://
+			if (index != -1) {
+				referer = referer.substring(0, index);
+			}
+		}
+
+		//accessControlAllowOriginValue can have multiple lines, check it through referer header and match it
+		String[] accessControlAllowOriginValues = Tools.getTokens(accessControlAllowOriginValue, ",\n", true);
+		accessControlAllowOriginValue = null; //will use first row as default
+		for (String domain : accessControlAllowOriginValues) {
+			if (accessControlAllowOriginValue == null && Tools.isNotEmpty(domain)) accessControlAllowOriginValue = domain;
+			if (Tools.isNotEmpty(domain) && Tools.isNotEmpty(referer) && domain.contains(referer)) {
+				accessControlAllowOriginValue = domain;
+				break;
+			}
+		}
+
 		for (String path : paths)
 		{
 			if (ResponseHeaderService.isPathCorrect(path, url))
@@ -2418,6 +2504,16 @@ public class PathFilter implements Filter
 		//replace cr/lf to allow user split Content-Security-Policy values into multiple lines, as header does not allow cr/lf
 		value = Tools.replace(value, "\r", " ");
 		value = Tools.replace(value, "\n", " ");
+
+		if (value.contains("{nonce}")) {
+			// Replace {nonce} placeholder with CSP nonce source expression ('nonce-<value>')
+			RequestBean currentRequestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
+			String nonceValue = "";
+			if (currentRequestBean != null && Tools.isNotEmpty(currentRequestBean.getCspNonce())) {
+				nonceValue = currentRequestBean.getCspNonce();
+			}
+			value = Tools.replace(value, "{nonce}", "'nonce-" + nonceValue + "'");
+		}
 
 		response.setHeader(headerName, value);
 	}
@@ -2696,7 +2792,7 @@ public class PathFilter implements Filter
 	}
 
 	private static boolean isPathSafe(String path) {
-		if (path == null || path.length() < 1) return true;
+		if (path == null || path.isEmpty()) return true;
 
 		if (path.indexOf('\'')!=-1 || path.indexOf('"')!=-1 || path.indexOf('\r')!=-1 || path.indexOf('\n')!=-1 ||
 			path.contains("%0D") || path.contains("%0A") || path.contains("%0d") || path.contains("%0a") || //crlf utok

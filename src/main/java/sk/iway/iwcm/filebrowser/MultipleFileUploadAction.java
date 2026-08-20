@@ -171,7 +171,7 @@ public class MultipleFileUploadAction extends HttpServlet
 
 		//nastavim userId do RequestBean-u
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
-		if (user != null) rb.setUserId(user.getUserId());
+		rb.setUser(user);
 
 		//sprav upload
 		UploadedFile formFile;
@@ -371,7 +371,7 @@ public class MultipleFileUploadAction extends HttpServlet
 												origFile.delete();
 											}
 											//resize
-											GalleryDB.resizePictureImpl(dims, realPath, out, prop, GalleryDB.getResizeMode(dir));
+											GalleryDB.resizePictureImpl(dims, realPath, out, prop);
 
 											if(Tools.isNotEmpty(request.getParameter("item")) && user != null)
 												GalleryDB.updateImageItem(-1, request.getParameter("item"), user.getFullName(), dir, fileName, PageLng.getUserLng(request));

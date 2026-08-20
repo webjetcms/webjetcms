@@ -4,17 +4,21 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.Map;
 
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
+import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
+import sk.iway.iwcm.components.customfields.rest.CustomFieldsService;
 import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.doc.DocDB;
@@ -42,6 +46,8 @@ public class BaseEditorFields {
     private List<Field> fieldsDefinition;
     //properties key prefix for fields definition, needs to be set for autocomplete field
     private String fieldsDefinitionKeyPrefix;
+    //class name of the bean, needs to be set for autocomplete field to lookup CustomFieldsEntity
+    private String fieldsDefinitionClassName;
 
     //poslanie notifikacie, je potrebne pri getOne alebo pri ulozeni
     private List<NotifyBean> notify;
@@ -78,34 +84,94 @@ public class BaseEditorFields {
 		Prop propType = Prop.getInstance(Constants.getString("defaultLanguage"));
         List<Field> fields = new ArrayList<>();
         fieldsDefinitionKeyPrefix = keyPrefix;
+        fieldsDefinitionClassName = bean.getClass().getName();
         Method method;
+
+        Map<Character, CustomFieldsEntity> customFields = CustomFieldsService.getCustomFieldsMap(new CustomFieldsSearchDto(bean));
+
         for (char alphabet = 'A'; alphabet <= lastAlphabet; alphabet++) {
 
             try {
+
+                CustomFieldsEntity cfe = customFields.get(alphabet);
+
                 Field field = new Field();
                 method = bean.getClass().getMethod("getField" + alphabet);
 
-                String labelKey = keyPrefix+".field_" + Character.toLowerCase(alphabet);
-                String label = prop.getText(labelKey);
+                String type = "";
+                String typeKey = "";
+                String label = "";
+                String tooltip = null;
+                if(cfe == null) {
+                    String labelKey = keyPrefix+".field_" + Character.toLowerCase(alphabet);
 
-                String typeKey = labelKey + ".type";
-                String type = propType.getText(typeKey);
+                    label = prop.getText(labelKey);
+                    typeKey = labelKey + ".type";
+                    type = propType.getText(typeKey);
+                    String tooltipKey = labelKey + ".tooltip";
+                    String translatedTooltip = prop.getText(tooltipKey);
+                    if (tooltipKey.equals(translatedTooltip) == false) tooltip = translatedTooltip;
+
+                    field.setRequired(false);
+                } else {
+                    label = prop.getText( cfe.getLabel() );
+                    type = cfe.getValue();
+                    if (Tools.isNotEmpty(cfe.getTooltip())) tooltip = prop.getText(cfe.getTooltip());
+                    // typeKey = dont know
+                    field.setRequired( Tools.isTrue(cfe.getRequired()) );
+                }
 
                 FieldType fieldType = FieldType.asFieldType(type);
+                boolean isCustomOptionsField = false;
+                if(cfe != null) {
+                    if("radio".equals(cfe.getType())) {
+                        fieldType = FieldType.RADIO;
+                        isCustomOptionsField = true;
+                    } else if("checkbox".equals(cfe.getType())) {
+                        fieldType = FieldType.CHECKBOX;
+                        field.setMultiple(true);
+                        isCustomOptionsField = true;
+                    } else if("select".equals(cfe.getType()) || "multiselect".equals(cfe.getType())) {
+                        fieldType = FieldType.SELECT;
+                        isCustomOptionsField = true;
+                    }
+                }
                 List<FieldValue> fieldValues = new ArrayList<>();
 
                 if (!type.equals(typeKey)) {
-                    if (type.contains("|")) {
-                        // multiple select
-                        if(type.startsWith("multiple:")) {
-                            type = type.replace("multiple:", "");
-                            field.setMultiple(true);
+                    // multiple select
+                    if(type.startsWith("multiple:")) {
+                        type = type.substring("multiple:".length());
+                        field.setMultiple(true);
+                    }
+
+                    if (type.contains("|") || (isCustomOptionsField && type.startsWith("enumeration") == false)) {
+
+                        // autocomplete
+                        if(type.startsWith("autocomplete:")) {
+                            type = type.replace("autocomplete:", "");
                         }
-                        String values = type.substring(type.indexOf(":") + 1);
+
+                        String values = type;
+
                         //ak zacina na znak | chceme mat moznost prvu hodnotu mat prazdnu
                         if (values.startsWith("|")) fieldValues.add(new FieldValue("", ""));
                         for (String value : Tools.getTokens(values, "|")) {
-                            fieldValues.add(new FieldValue(value, value));
+                            // Split only for strict label:value format (exactly one colon, both sides non-empty).
+                            int firstColon = value.indexOf(':');
+                            int lastColon = value.lastIndexOf(':');
+                            if (firstColon > -1 && lastColon > -1 && firstColon == lastColon) {
+                                String labelValue = value.substring(0, firstColon);
+                                String optionValue = value.substring(firstColon + 1);
+
+                                if(Tools.isEmpty(labelValue) || Tools.isEmpty(optionValue)) {
+                                    fieldValues.add(new FieldValue(value, value));
+                                } else {
+                                    fieldValues.add(new FieldValue(labelValue, optionValue));
+                                }
+                            } else {
+                                fieldValues.add(new FieldValue(value, value));
+                            }
                         }
                     }
 
@@ -149,7 +215,7 @@ public class BaseEditorFields {
                         int enumerationId = 0;
                         String labelProperty = "string1";
                         String valueProperty = "string1";
-                        
+
                         if (parts.length >= 2) {
                             enumerationId = Tools.getIntValue(parts[1], 0);
                         }
@@ -170,10 +236,10 @@ public class BaseEditorFields {
                                         BeanWrapper beanWrapper = new BeanWrapperImpl(enumData);
                                         Object labelValue = beanWrapper.getPropertyValue(labelProperty);
                                         Object valueValue = beanWrapper.getPropertyValue(valueProperty);
-                                        
+
                                         String enumLabel = labelValue != null ? labelValue.toString() : "";
                                         String enumValue = valueValue != null ? valueValue.toString() : "";
-                                        
+
                                         fieldValues.add(new FieldValue(enumLabel, enumValue));
                                     } catch (Exception e) {
                                         Logger.error(BaseEditorFields.class, "Error reading enumeration properties: " + labelProperty + ", " + valueProperty, e);
@@ -258,6 +324,7 @@ public class BaseEditorFields {
 
                 field.setKey(Character.toLowerCase(alphabet) + "");
                 field.setLabel(label);
+                field.setTooltip(tooltip);
 
                 if("json_group".equals(type)) {
                     int groupId = Tools.getIntValue(value, -1);
@@ -285,7 +352,10 @@ public class BaseEditorFields {
                 field.setMaxlength(maxlength);
                 field.setWarninglength(warninglength);
                 if (warninglength>0) {
-                    field.setWarningMessage( prop.getText(keyPrefix+".field_" + Character.toUpperCase(alphabet)+".warningText", String.valueOf(warninglength)));
+                    if(cfe == null)
+                        field.setWarningMessage( prop.getText(keyPrefix+".field_" + Character.toUpperCase(alphabet)+".warningText", String.valueOf(warninglength)));
+                    else
+                        field.setWarningMessage( prop.getText(Tools.isEmpty(cfe.getWarningText()) ? "" : cfe.getWarningText(), String.valueOf(warninglength)));
                 }
                 if (fieldType != FieldType.TEXT) {
                     field.setTypeValues(fieldValues);

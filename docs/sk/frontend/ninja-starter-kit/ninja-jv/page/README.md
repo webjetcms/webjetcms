@@ -3,13 +3,16 @@
 | Metóda | Typ | Popis |
 | --- | --- | --- |
 | ${ninja.page.seoTitle} | *String* | Názov stránky (hodnota sa berie z voliteľného poľa R alebo ak je prázdne, tak z titulku) |
-| ${ninja.page.seoDescription} | *String* | Popis stránky (hodnota sa berie z voliteľného poľa S alebo ak je prázdne, tak z perexu) |
-| ${ninja.page.seoImage} | *String* | Odkaz na obrázok (hodnota sa berie z voliteľného poľa T alebo ak je prázdne, tak z perex obrázku) |
+| ${ninja.page.seoDescription} | *String* | Popis stránky (hodnota sa berie z voliteľného poľa S, perexu alebo predvoleného popisu skupiny šablón) |
+| ${ninja.page.seoImage} | *String* | Odkaz na obrázok (hodnota sa berie z voliteľného poľa T, perex obrázku, skupiny šablón alebo konfigurácie šablóny) |
+| ${ninja.page.seoImageAlt} | *String* | Alternatívny text SEO obrázka (hodnota sa berie z voliteľného poľa P alebo skupiny šablón) |
+| ${ninja.page.seoImageWidth} | *int* | Šírka SEO obrázka v pixeloch |
+| ${ninja.page.seoImageHeight} | *int* | Výška SEO obrázka v pixeloch |
 | ${ninja.page.url} | *String* | Url adresa |
 | ${ninja.page.urlDomain} | *String* | Doména |
 | ${ninja.page.urlPath} | *String* | Virtuálna adresa |
 | ${ninja.page.urlParameters} | *Map* | Parametre z URL adresy |
-| ${ninja.page.robots} | *String* | Nastavenie indexovania |
+| ${ninja.page.robots} | *String* | Nastavenie indexovania a sledovania odkazov vyhľadávačmi |
 | ${ninja.page.doc} | *DocDetails* | Všetky vlastnosti |
 | ${ninja.page.title} | *String* | Titulok stránky s nahradenou medzerou za ```&nbsp;``` entitu po spojke (```Peter a Miro aj Fero -> Peter a&nbsp;Miro aj&nbsp;Fero```) |
 | ${ninja.page.perex} | *String* | Perex stránky s nahradenou medzerou za ```&nbsp;``` entitu po spojke |
@@ -19,20 +22,24 @@
 
 !>**Poznámka**: náhradu medzery po spojke za ```&nbsp;``` entitu je možné nastaviť v konfiguračnej premennej ```ninjaNbspReplaceRegex```. Na prvom riadku je regex výraz, na druhom je text náhrady.
 
-Pre nastavenie voliteľných polí R, S, T a Q je potrebné v sekcii [prekladové kľúče](../../../../admin/settings/translation-keys/README.md) nastaviť hodnoty nasledovne:
+Pre nastavenie voliteľných polí P, Q, R, S a T je potrebné v sekcii [prekladové kľúče](../../../../admin/settings/translation-keys/README.md) nastaviť hodnoty nasledovne:
 
 ```properties
+editor.field_p=Alternatívny text SEO obrázka (og:image:alt)
+editor.field_p.tooltip=Ak je zadaný, použije sa pre SEO a sociálne siete ako opis obsahu SEO obrázka namiesto predvolenej hodnoty zo skupiny šablón.
 editor.field_q=Kanonická URL adresa
 editor.field_q.tooltip=Ak je zadaný, použije sa tento odkaz ako kanonická URL adresa stránky, ak je prázdny, použije sa URL adresa stránky.
 editor.field_q.type=link
 editor.field_r=SEO titulok (og:title)
 editor.field_r.tooltip=Ak je zadaný, použije sa pre SEO/Sociálne siete/Facebook zadaný text namiesto **titulku stránky**.\nMôžete tak optimalizovať zobrazený názov stránky na sociálnych sietiach.
-editor.field_s=SEO popis (og:description)
+editor.field_s=SEO opis (og:description)
 editor.field_s.tooltip=Ak je zadaný, použije sa pre SEO/Sociálne siete/Facebook zadaný text namiesto **perex anotácie** stránky.\nMôžete tak optimalizovať zobrazený opis stránky na sociálnych sietiach.
 editor.field_t=SEO obrázok (og:image)
 editor.field_t.type=image
 editor.field_t.tooltip=Ak je zadaný, použije sa pre SEO/Sociálne siete/Facebook zadaný obrázok namiesto štandardného obrázka (zadaného ako **perex obrázok**).\nMôžete tak optimalizovať zobrazený obrázok na sociálnych sietiach.
 ```
+
+!> Pole P je všeobecné voliteľné pole a existujúci projekt ho už môže používať na iný účel, napríklad na varianty produktov. Pred použitím `${ninja.page.seoImageAlt}` preto skontrolujte jeho význam v danom projekte.
 
 ## Názov *String*
 
@@ -50,9 +57,9 @@ Použité v :ghost:<code>head.jsp</code>
 
 Pri volaní `seoTitle` je odstránený prípadný HTML kód z titulku stránky, ak potrebujete titulok vrátane HTML kódu môžete použiť `${ninja.page.seoTitleHtml}`.
 
-## Popis *String*
+## Opis *String*
 
-Hľadá popis vo voliteľnom poli S :carousel_horse: `getFieldS()` (SEO popis), ak je pole prázdne, tak použije štandardný perex popis :carousel_horse: `getPerexPre()`.
+Hľadá opis vo voliteľnom poli S :carousel_horse: `getFieldS()` (SEO opis). Ak je pole prázdne, použije štandardný perex opis :carousel_horse: `getPerexPre()` a následne predvolený opis skupiny šablón pre jazyk zobrazenej stránky.
 
 ```java
 ${ninja.page.seoDescription}
@@ -67,7 +74,7 @@ Použité v :ghost:<code>head.jsp</code>
 
 ## Odkaz na obrázok *String*
 
-Hľadá obrázok vo voliteľnom poli T :carousel_horse: `getFieldT()` (SEO obrázok), ak je pole prázdne, tak použije štandardný perex obrázok :carousel_horse: `getPerexImage()`.
+Hľadá obrázok vo voliteľnom poli T :carousel_horse: `getFieldT()` (SEO obrázok). Ak pole neobsahuje platnú cestu k obrázku, použije štandardný perex obrázok :carousel_horse: `getPerexImage()`, predvolený SEO obrázok skupiny šablón a nakoniec pôvodnú hodnotu `defaultSeoImage` z konfiguračného súboru šablóny.
 
 ```java
 ${ninja.page.seoImage}
@@ -77,6 +84,23 @@ Použité v :ghost:<code>head.jsp</code>
 
 ```html
 <meta property="og:image" content="${ninja.page.urlDomain}${ninja.page.seoImage}" />
+<meta property="og:image:width" content="${ninja.page.seoImageWidth}" />
+<meta property="og:image:height" content="${ninja.page.seoImageHeight}" />
+<meta property="og:image:alt" content="${ninja.page.seoImageAlt}" />
+```
+
+## Alternatívny text SEO obrázka *String*
+
+Hľadá alternatívny text SEO obrázka vo voliteľnom poli P :carousel_horse: `getFieldP()`. Ak je pole prázdne, použije predvolený alternatívny text skupiny šablón pre jazyk zobrazenej stránky. Výsledok je prevedený na čistý text bez HTML značiek a úvodzoviek.
+
+```java
+${ninja.page.seoImageAlt}
+```
+
+Použité v :ghost:<code>head.jsp</code>
+
+```html
+<meta property="og:image:alt" content="${ninja.page.seoImageAlt}" />
 ```
 
 ## Url adresa *String*
@@ -121,6 +145,9 @@ Použité v :ghost:<code>head.jsp</code>
 
 ```html
 <meta property="og:image" content="${ninja.page.urlDomain}${ninja.page.seoImage}" />
+<meta property="og:image:width" content="${ninja.page.seoImageWidth}" />
+<meta property="og:image:height" content="${ninja.page.seoImageHeight}" />
+<meta property="og:image:alt" content="${ninja.page.seoImageAlt}" />
 ```
 
 Použité v :ghost:<code>debug-info.jsp</code>
@@ -161,7 +188,26 @@ Použité v :ghost:<code>debug-info.jsp</code>
 
 ## Nastavenie indexovania *String*
 
-Ak má webová stránka zaškrtnuté `Prehľadávateľné` v záložke Rozšírené údaje, tak vráti hodnotu `index, follow`, ak nie tak `nofollow`. Hodnotu zaškrtnutia vracia metóda :carousel_horse: `isSearchable()`.
+Vráti hodnotu pre SEO direktívy podľa polí **Prehľadávať** a **Nasledovanie odkazov vyhľadávačmi** v editore webovej stránky. Rovnaká hodnota sa použije aj v HTTP hlavičke `X-Robots-Tag`, ak je jej generovanie pre webové stránky povolené konfiguráciou.
+
+Pole **Nasledovanie odkazov vyhľadávačmi** podporuje možnosti:
+
+- **Podľa nastavenia Prehľadávať** - pri povolenom prehľadávaní povolí nasledovanie odkazov, pri zakázanom prehľadávaní ho zakáže.
+- **Povoliť nasledovanie odkazov** - nastaví `follow` nezávisle od poľa **Prehľadávať**.
+- **Zakázať nasledovanie odkazov** - nastaví `nofollow` nezávisle od poľa **Prehľadávať**.
+
+Predvolená hodnota je **Podľa nastavenia Prehľadávať**, ktorá zachováva spoločné riadenie indexovania a sledovania odkazov pre existujúce stránky.
+
+Výsledná hodnota obsahuje `all`, ak indexovanie ani nasledovanie odkazov nie je obmedzené. V ostatných prípadoch obsahuje iba obmedzujúce direktívy `noindex` a/alebo `nofollow`:
+
+| Prehľadávať | Nasledovanie odkazov vyhľadávačmi | `${ninja.page.robots}` / `X-Robots-Tag` |
+| --- | --- | --- |
+| Áno | Podľa nastavenia Prehľadávať | `all` |
+| Áno | Povoliť nasledovanie odkazov | `all` |
+| Áno | Zakázať nasledovanie odkazov | `nofollow` |
+| Nie | Podľa nastavenia Prehľadávať | `noindex, nofollow` |
+| Nie | Povoliť nasledovanie odkazov | `noindex` |
+| Nie | Zakázať nasledovanie odkazov | `noindex, nofollow` |
 
 ```java
 ${ninja.page.robots}

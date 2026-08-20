@@ -3,11 +3,6 @@ package sk.iway.iwcm.components.multistep_form.rest;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +16,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
@@ -115,7 +114,7 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
         List<FormItemEntity> stepItemsToDuplicate = formItemsRepository.getAllStepItems(entity.getIdForDuplication(), CloudToolsForCore.getDomainId());
         for(FormItemEntity stepItem : stepItemsToDuplicate) {
             stepItem.setId(null);
-            stepItem.setStepId(-getUser().getUserId());
+            stepItem.setStepId( Long.valueOf(-getUser().getUserId()) );
             stepItem.setItemFormId(""); //remove itemFormId so in afterDuplicate its generated new one
         }
         formItemsRepository.saveAll(stepItemsToDuplicate);
@@ -127,7 +126,7 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
 
         // Find all items taht are awaiting step duplicate to have id, and set id
         for(FormItemEntity stepItem : formItemsRepository.findItemsToDuplicate(entity.getFormName(), Long.valueOf(tmpId), CloudToolsForCore.getDomainId())) {
-            stepItem.setStepId(entity.getId().intValue());
+            stepItem.setStepId(entity.getId());
             stepItem.setItemFormId( multistepFormsService.getValidItemFormId(stepItem) );
             formItemsRepository.save(stepItem);
         }
@@ -139,14 +138,15 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
         multistepFormsService.updateStepsPositions(entity.getFormName());
     }
 
-    @GetMapping(value="/get-step", params={"form-name", "step-id"}, produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<String> getFormStepHtml(@RequestParam("form-name") String formName, @RequestParam("step-id") Long stepId, HttpServletRequest request) {
+    @GetMapping(value="/get-step", params={"form-name", "step-id", "language"}, produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<String> getFormStepHtml(@RequestParam("form-name") String formName, @RequestParam("step-id") Long stepId, @RequestParam("language") String language, HttpServletRequest request) {
         String encoding = SetCharacterEncodingFilter.getEncoding();
         if (Tools.isEmpty(encoding)) encoding = "UTF-8"; // Fallback
         String contentTypeWithCharset = MediaType.TEXT_HTML_VALUE + "; charset=" + encoding;
 
         try {
-            FormHtmlHandler formHtmlHandler = new FormHtmlHandler(formName, request);
+            // This is called only from ADMIN section so there is no CSRF and formCount, sooo formCount must be set
+            FormHtmlHandler formHtmlHandler = new FormHtmlHandler(formName, 1, request);
             return ResponseEntity.ok()
                 .header("Content-Type", contentTypeWithCharset)
                 .body( formHtmlHandler.getFormStepHtml(stepId, request) );

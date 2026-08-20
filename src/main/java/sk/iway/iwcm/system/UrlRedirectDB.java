@@ -104,6 +104,7 @@ public class UrlRedirectDB
 		urlRedirect.setDomainName(domainName);
 		urlRedirect.setRedirectCode(redirectCode);
 		urlRedirect.setInsertDate(new Date());
+		urlRedirect.setManualRedirect(Boolean.FALSE);
 		save(urlRedirect);
 	}
 
@@ -160,7 +161,8 @@ public class UrlRedirectDB
 		if (oldUrl.indexOf('^')==-1) redirectBean = getRedirectImpl(oldUrl + "/", "");
 		if (redirectBean != null) return redirectBean;
 
-		if (oldUrl.endsWith("/")==false && oldUrl.endsWith(".html")==false)
+		if (Constants.getBoolean("virtualPathLastSlash") &&
+			oldUrl.endsWith("/")==false && oldUrl.endsWith(".html")==false)
 		{
 			//skus najst stranku s / na konci (/produkty vs /produkty/)
 			DocDB docDB = DocDB.getInstance();
@@ -368,6 +370,15 @@ public class UrlRedirectDB
 	}
 
 	/**
+	 * Rebuilds the redirects cache after a bulk operation so subsequent requests
+	 * use the latest database state. This method does nothing when redirect caching
+	 * is disabled.
+	 */
+	public static void refreshCache() {
+		if (Constants.getBoolean("cacheUrlRedirects")) reloadCache();
+	}
+
+	/**
 	 * Zisti ci ma zmysel vykonat reload odkazov.
 	 * @return
 	 */
@@ -526,14 +537,19 @@ public class UrlRedirectDB
 	public static void save(UrlRedirectBean urlRedirect)
 	{
 		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();
+		boolean saved = false;
 		if(urlRedirect.getUrlRedirectId()==null || urlRedirect.getUrlRedirectId()<1)
 		{
 			urlRedirect.setInsertDate(new Date());
+			if (urlRedirect.getManualRedirect() == null) urlRedirect.setManualRedirect(Boolean.FALSE);
 		}
 		else
 		{
 			em.detach(urlRedirect);
 			UrlRedirectBean oldRedirect = getById(urlRedirect.getUrlRedirectId());
+			if (urlRedirect.getManualRedirect() == null) {
+				urlRedirect.setManualRedirect(Boolean.valueOf(Boolean.TRUE.equals(oldRedirect.getManualRedirect())));
+			}
 			removeRedirectFromCache(oldRedirect);
 		}
 
@@ -545,11 +561,16 @@ public class UrlRedirectDB
 				urlRedirect.setUrlRedirectId(0L);
 			em.persist(urlRedirect);
 			em.getTransaction().commit();
+			saved = true;
 		}catch (Exception e) {
-			em.getTransaction().rollback();
+			if (em.getTransaction().isActive()) em.getTransaction().rollback();
+			Logger.error(UrlRedirectDB.class, "save failed", e);
 		} finally{
 			em.close();
 		}
+
+		if (!saved) return;
+
 		addToCache(urlRedirect);
 
 		if(Tools.isNotEmpty(urlRedirect.getOldUrl()) && urlRedirect.getOldUrl().startsWith(regExpPrefix))

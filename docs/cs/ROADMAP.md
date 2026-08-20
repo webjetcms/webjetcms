@@ -14,18 +14,51 @@ Vysvětlení použitých piktogramů:
 
 ## 2026
 
-- [ ] Sémantické vyhledávání - využít AI ke zlepšení vyhledávání pomocí `RAG`.
-- [ ] `Headless` CMS - připravit REST rozhraní pro použití WebJET CMS v `headless` módu.
-- [ ] Migrace na `Spring Boot` projekt.
+- [x] Sémantické vyhledávání - využít AI ke zlepšení vyhledávání pomocí `RAG` (#211).
+- [ ] AI - možnost použít malé lokální modely běžící přímo na CPU, minimálně pro Sémantické vyhledávání (#58561).
+- [x] `Headless` CMS - připravit REST rozhraní pro použití WebJET CMS v `headless` módu (#58597) (#258).
+- [ ] Migrace na `Spring Boot` projekt (#58569).
 - [x] Testování - přidat testování přístupnosti pomocí rozšíření [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) (#58389).
 - [ ] Práva - přidat možnost nastavit práva jen na čtení a případně nastavit pouze povolené ID pro editaci.
-- [ ] Formuláře - přidat možnost nastavit celkovou velikost příloh pro formulář, nyní lze nastavit jedině per soubor.
+- [x] Formuláře - přidat možnost nastavit celkovou velikost příloh pro formulář, nyní lze nastavit jedině per soubor (#58517).
 - [ ] Statistika - upravit zápis do `seo_bots` přes `StatWriteBuffer` pro méně konfliktů při vysokém zatížení a cluster databázi.
 - [x] Skripty - přidat možnost nastavit, zda se má skript vkládat iv editoru stránek, nebo ne (#58349).
-- [ ] Formuláře - přidat skupinu výběrových a zaškrtávacích polí `radio/checkbox` napojenou na číselník, podobně jako máme pro `select` pole.
+- [x] Formuláře - přidat skupinu výběrových a zaškrtávacích polí `radio/checkbox` napojenou na číselník, podobně jako máme pro `select` pole (#58517).
 - [ ] Smazat přidružené soubory k web stránce když ji smažu - zeptat se ale předem uživatele, zda soubory chce smazat. Kontrolovat, zda se nepoužívají někde jinde.
-- [ ] Mazání dat - přidat možnost mazat stránky a složky z koše. Vyřešit také možnost mazání dat spouštět jako automatizovaný úkol.
-- [ ] Nepoužívané soubory - udělat možnost získat seznam nepoužívaných souborů - nikde ve stránce se nepoužívají, ani v médiích atp. Byla k tomu API `FileTools.getDirFileUsage(currentDir, request)`. Přidat jako kartu do vlastností složky v průzkumníku.
+- [x] Mazání dat - přidat možnost mazat stránky a složky z koše. Vyřešit i možnost mazání dat spouštět jako automatizovanou úlohu (#58617) (#271).
+- [x] Nepoužívané soubory - udělat možnost získat seznam nepoužívaných souborů - nikde ve stránce se nepoužívají, ani v médiích atp. Byla k tomu API `FileTools.getDirFileUsage(currentDir, request)`. Přidat jako kartu do vlastností složky v průzkumníku (#58621).
+- [ ] Nepoužívané soubory - udělat možnost získat seznam nepoužívaných souborů - nikde ve stránce se nepoužívají, ani v médiích atp. Byla k tomu API `FileTools.getDirFileUsage(currentDir, request)`. Přidat jako kartu do vlastností složky v průzkumníku (#58621).
+- [ ] Průzkumník - zamezit práci se složkou pro Manažer dokumentů, aby se se soubory nedalo manipulovat mimo Manažer dokumentů.
+- [x] +Průzkumník - přidat právo pro nahrávání souborů s diakritikou (odstraňuje se pro `/images` a `/files` složky) (#58589).
+- [x] +Web stránky - lepší integrovat manažer dokumentů pro vkládání odkazu do stránky - nová karta podobně jako je fotobanka u obrázků (#58593).
+- [x] +Formuláře - přidat podrobnější statistiku chyb vyplněných formulářů (#58509).
+- [x] +Web stránky - zlepšit uživatelské rozhraní pro zadávání `/thumb` obrázků v editoru (#58525).
+- [x] +Volitelná pole - přidat možnost definovat která pole jsou povinná (#58413).
+- [x] +Doplnit aplikaci pro přesměrování hlavní stránky na `/sk/` nebo `/en/` podle jazyka prohlížeče. (#58497)
+- [x] +Z důvodu validace přesunout všechny odkazy na styly do hlavičky stránky (#231).
+- [x] +Formuláře - možnost definovat podmíněná povinná pole a zobrazení polí (#58477).
+- [x] +Aplikace - možnost definovat CSS třídu pro vloženou aplikaci, například. video pro lepší odsazení od textu stránky (#200).
+- [x] +Web stránky - přidat možnost schvalování změn ve složkách web stránky podobně jako se schvalují změny ve web stránkách, včetně zobrazení historie a změn (#193).
+- [x] Přidat možnost autorizace přes `OAuth2`, možnost použít `mock` server https://github.com/navikt/mock-oauth2-server nebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
+- [x] +Přidat podporu přihlašování se do administrace přes [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/) (#58369).
+- [x] Volitelná pole – přidat možnost nastavit omezení délky textu pro pole typu `textarea`, podobně jako je to aktuálně možné u pole typu `text`.
+- [ ] Datatabulka – upravit pole typu `Date` a `Datetime` tak, aby správně fungovala validace `not null`.
+- [ ] Datatabulka – upravit způsob `mergovania` upravené entity tak, aby bylo možné vynulovat hodnoty typu `number`.
+- [x] +Přesměrování - rozlišit v databázi automaticky vytvořené přesměrování (hledej proměnnou `editorDisableAutomaticRedirect`) od manuálně vytvořeného, ​​možnost podle toho filtrovat v UI (zobrazit jen manuálně vytvořené přesměrování) (#58625).
+- [ ] +Přesměrování - doplnit funkci čištění přesměrování - smaže staré přesměrování (bylo původně `aaa-bbb` a pak vzniklo `aaa-ccc` takže `aaa-bbb` nemá smysl = smaže se) a zkontroluje cyklické přesměrování ve kterém smaže poslední krok. Také optimalizovat přesměrování `aaa-bbb-ccc` na `aaa-ccc` (#58629).
+- [x] +Galerie - přidat možnost nastavit jiný způsob změny velikosti na velký obrázek. na malý obrázek se aplikuje Oříznout na míru (chtějí mít čtverec) a na velký přesná šířka (zachová poměr stran). Ve výchozím nastavení bude hodnota NULL=stejně jako pro malý obrázek (#58633).
+- [x] Volitelná pole - přidat možnost výběru více položek pro napojení na číselník (#58637).
+- [ ] +Číselníky - přidat možnost definovat typ pole pro řetězec jak máme ve volitelných polích (#58641).
+- [x] +Fotobanka - přidat možnost nastavit název souboru před stažením z fotobanky, automaticky nastavit podle hledaného výrazu (#58645).
+- [x] +Úkoly na pozadí - možnost manuálně spustit úlohu na `node`, který má úloha nastaven, nyní se spustí na `node` kde je uživatel přihlášen (#58718).
+- [ ] +Číselník, Blog, Novinky - upravit tak, aby výběr typu číselníku nebo složky pro novinky byl vlevo podobně jako v galerii/webových stránkách. Nemusí být pak karty ale vše najednou zobrazeno.
+- [x] +Překladové klíče - zobrazovat stromovou strukturu překladových klíčů pro lepší orientaci (#58714).
+- [ ] +Konfigurace - doplnit možnost nastavit proměnnou jen pro aktuální uzel (neuložit ji do databáze - jen nastavit do Constants objektu), přidat tam zaškrtávací pole "Nastavit dočasně" s info ikonou že hodnota se nastaví pouze dočasně a při restartu se obnoví hodnota jako je v databázi.
+- [ ] Průzkumník - opravit zobrazování souborů se speciálními znaky (například `@`).
+- [ ] Automatický promazávat `temp` soubory, které se mohou hromadit.
+- [x] +Administrace - odstranit závislost na `Vue.js` a nahradit interní komponenty nativními webovými komponenty (#58722).
+- [ ] +Upravit načítání admin části tak, aby se vyměnilo přes volání REST služby pouze vnitřek stránky, nikoli kompletní reload HTML kódu.
+- [ ] +Vylepšit úvodní stránku administrace - dynamické bloky, možnost vlastního nastavení co se zobrazí, užitečné informace a bloky.
 
 ## 2025
 
@@ -45,30 +78,22 @@ Vysvětlení použitých piktogramů:
 - [ ] `quill` - ​​přidat možnost nastavit položky menu včetně barev.
 - [ ] Aplikace - možnost nákupu aplikace pro OpenSource verzi (#55825).
 - [ ] Možnost provést Thymeleaf kód v hlavičce/patičce a možná i v těle web stránky.
-- [ ] Bezpečnost - přidat podporu generování `nonce` pro `Content-Security-Policy` hlavičku, viz. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.
+- [x] Bezpečnost - přidat podporu generování `nonce` pro `Content-Security-Policy` hlavičku, viz. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee. (#58533)
 - [x] Formuláře - přidat možnost volat Java třídu pro validaci formuláře (#58161).
 - [x] Značky - filtrovat podle aktuální domény aby to bylo stejné jako v jiných částech (#57837).
 - [x] Import uživatelů - pokud není zadané heslo, tak vygenerovat (pro nové uživatele), pokud není posílaný stav `authorized` nastavit na `true` (#58253).
 - [ ] V testech nějak automatizovaně kontrolovat výskyt `I\.waitForText\('.*?', '.*?'\);` a `I\.waitForText\(".*?", ".*?"\);` což jsou nesprávná čekání bez definovaného času, způsobí zaseknutí automatizovaných testů.
-- [ ] Doplnit aplikaci pro přesměrování hlavní stránky na `/sk/` nebo `/en/` podle jazyka prohlížeče.
 - [x] Upravit vymazání konfigurace tak, že při vymazání se jí nastaví původní hodnota definovaná v `Constants` (#57849).
 - [x] Galerie - při duplikování obrázku umožnit změnu "Složka", abychom uměli duplikovat obrázky do jiné než aktuální složky (#57885).
 - [x] Hromadný email - auditovat změny ve skupinách uživatelů (#58249).
 - [x] Archiv souborů - předělat do datových tabulek (#57317).
-- [ ] Volitelná pole - přidat možnost výběru více položek pro napojení na číselník.
 - [x] Elektronický obchod - integrace na platební bránu `GoPay` (#56609).
-- [x] Přidat možnost autorizace přes `OAuth2`, možnost použít `mock` server https://github.com/navikt/mock-oauth2-server nebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [ ] Autorizace přes ```SAML``` - ​​integrovat knihovnu [Spring SAML](https://spring.io/projects/spring-security-saml) pro možnost autentifikace vůči ```ADFS/SAML``` serveru.
 - [x] Rezervace - nová aplikace pro celo denní rezervaci (#57389).
 - [x] Aplikace - předělat dialog nastavení aplikací v editoru web stránek ze starého JSP na datovou tabulku (#57409).
 - [x] Hromadný email - optimalizace tvorby seznamu příjemců (#57537).
-- [ ] +Úkoly na pozadí - možnost manuálně spustit úlohu na `node`, který má úloha nastaven, nyní se spustí na `node` kde je uživatel přihlášen.
 - [ ] +Formuláře - zakázat `GET` volání na `FormMail/FormMailAjax`.
 - [ ] +Elektronický obchod - do emailu přidat `JSON-LD` data https://schema.seznam.cz/objednávky/dokumentace/.
-- [ ] +Číselník, Blog, Novinky - upravit tak, aby výběr typu číselníku nebo složky pro novinky byl vlevo podobně jako v galerii/webových stránkách. Nemusí být pak karty ale vše najednou zobrazeno.
-- [ ] +Překladové klíče - zobrazovat stromovou strukturu překladových klíčů pro lepší orientaci.
-- [x] +Přidat podporu přihlašování se do administrace přes [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/) (#58369).
-- [ ] +Fotobanka - přidat možnost nastavit název souboru před stažením z fotobanky, automaticky nastavit podle hledaného výrazu.
 - [ ] +Galerie - pokud nastavuji perex obrázek na obrázek v galerii, stáhnu z fotobanky, a obrázek přejmenuji na existující v databázi (je-li soubor smazán z disku) tak vznikne v `gallery` tabulce duplicitní záznam. Navíc se nepřejmenují ostatní obrázky `o_,s_`. Třeba pamatovat na to, že teoreticky mohu přejmenovat libovolný, mělo by to detekovat, že jsem v galerii a přejmenovat všechny verze.
 - [x] +Konfigurace - doplnit možnost nastavení `Hikari` přes `poolman.xml/ENV` jako například `spring.datasource.hikari.idle-timeout=30000, spring.datasource.hikari.max-lifetime=1800000, spring.datasource.hikari.connection-timeout=30000` (#54273-61).
 - [ ] Datatable - opravit počítání označených řádků po jejich vymazání.
@@ -79,8 +104,6 @@ Vysvětlení použitých piktogramů:
 - [ ] +Datatabulky - přidat možnost uspořádání podle více sloupců kliknutím s klávesou `SHIFT`.
 - [ ] +Datatabulky - přidat možnost `hideOnDuplicate` pro karty v editoru, nezapomenout i na třídu `DataTableTab` aby to šlo nastavit iv anotaci.
 - [ ] +Průzkumník - do Média této stránky přidat možnost přesunout se do rodičovské složky.
-- [ ] +Konfigurace - v případě `cluster` instalace doplnit možnost nastavit proměnnou pouze pro aktuální uzel (neuložit ji do databáze). Původně to řešilo výběrové pole `applyToAllClusterNodes`.
-- [ ] +Číselníky - přidat možnost definovat typ pole pro řetězec jako máme ve volitelných polích.
 - [x] +Statistika - do sekce návštěvnost přidat sumární počet Vidění a Návštěv pro snadný přehled celkové návštěvnosti za zvolené období (součet čísel v tabulce). Mohlo by jít doplnit `footerCallback` - ​​https://datatables.net/examples/advanced_init/footer_callback.html (#57929).
 - [x] +Zrcadlení struktury - přidat možnost vymazat `sync_id` hodnoty pro zvolenou složku (rekurzivní). Aby bylo snadno možné zrušit/resetovat synchronizaci. Také existuje problém, že naklonuji `SK,DE,EN` poté vypnu `DE` a chci mít jen `EN` ale zrcadlení stále aplikuje změny i na `DE` složku (#57561).
 - [ ] +Do testů v GitHube přidat verifikaci `autoupdate` pro všechny podporované databázové servery - čili inicializovat prázdnou databázi a ověřit všechny `autoupdate` a ověřit, že přejdou bez chyby. Udělat jako samostatnou pipeline.

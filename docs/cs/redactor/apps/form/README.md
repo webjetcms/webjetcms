@@ -16,6 +16,8 @@ V editaci formuláře můžete měnit pole poznámka (ve kterém si můžete evi
 
 ![](detail-editnote.png)
 
+Vymazáním všech odeslaných záznamů v detailu formuláře se nevymaže jeho definice, nastavení ani položky. Samotný formulář odstraníte až vymazáním jeho řídícího záznamu v seznamu formulářů.
+
 ## Vytvoření formuláře
 
 Formulář nejjednodušeji vytvoříte kliknutím na ikonu Přidat a nastavením jeho základních parametrů v kartě Základní. Vytvoříte tak nový formulář typu [Vícekrokový formulář](../multistep-form/README.md). Následně můžete k formuláři přidat jednotlivé položky formuláře (textová pole, zaškrtávací pole, výběrová pole a podobně) kliknutím na název vytvořeného formuláře v tabulce a přechodem do karty [Položky formuláře](../multistep-form/README.md).
@@ -23,6 +25,10 @@ Formulář nejjednodušeji vytvoříte kliknutím na ikonu Přidat a nastavením
 <div class="video-container">
     <iframe width="560" height="315" src="https://www.youtube.com/embed/XRnwipQ-mH4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
+
+### Duplikování formuláře
+
+Označený vícekrokový formulář můžete v seznamu formulářů duplikovat. Při duplikování zadejte nový unikátní název formuláře. Do nového formuláře se zkopírují jeho nastavení, všechny kroky a položky formuláře; původní odeslané záznamy se nekopírují.
 
 ### Karta Základní
 
@@ -50,7 +56,7 @@ Formuláři lze nastavit další nepovinné parametry, které ovlivní jeho zpra
 - **Šifrovací klíč** - pokud chcete hodnoty formuláře zašifrovat, můžete zadat [šifrovací klíč](../../admin/README.md#hlavička).
 - **Doc id stránky, na které se formulář nachází** - doc ID stránky na které se formulář nachází. Standardně se systém tuto stránku snaží určit na základě ```refereru```, nebo posledně zobrazené stránky v `session`. Pro přesné určení lze zadat tuto hodnotu. Pokud není zadaná WebJET ji automaticky doplní při zobrazení formuláře.
 - **Doc id notifikace pro uživatele** - pokud je nastaveno na hodnotu některé web stránky, tak po úspěšném uložení formuláře je na email návštěvníka (z pole email/e-mail) zaslán email s textem dané web stránky. Může se jednat například o poděkování za vyplnění formuláře, nebo další instrukce postupu.
-- **Doc id stránky s verzí pro email** - doc ID stránky s verzí pro email. Stránku systém potřebuje k tomu, aby uměl vygenerovat emailovou podobu. Pokud je zadaná hodnota `none` nepoužije se určení web stránky pro email. Pokud hodnota není zadaná vůbec použije se hodnota zadaná parametrem ```useFormDocId```. Hodnota je užitečná v tom případě, pokud na všech stránkách máte jeden kontaktní formulář vkládaný např. v patičce. Při generování emailu se jako kód použije kód samotné stránky, ve které se ale formulář nenachází. Takto lze říci, aby pro email použil jinou stránku.
+- **Doc id stránky s verzí pro email** - doc ID stránky, jejíž obsah se použije k vytvoření emailové podoby formuláře. Pokud je zadaná hodnota `none`, určení stránky pro email se nepoužije. Pokud hodnota není zadaná vůbec, použije se hodnota parametru ```useFormDocId```. U vícekrokového formuláře můžete v obsahu zvolené stránky použít značku ve tvaru `!identifikator-polozky!` ; při odeslání se nahradí hodnotou příslušné [položky formuláře](../multistep-form/README.md#značky-hodnot-položek). Obsah a CSS styly stránky se použijí také pro uloženou HTML podobu a PDF verzi formuláře. Pokud zvolená stránka neexistuje, použije se standardní zobrazení formuláře.
 
 ### Karta - Email
 
@@ -85,7 +91,8 @@ Formuláři lze nastavit další nepovinné parametry, které ovlivní jeho zpra
   - Hodnota ```addParams``` provede přesměrování na cílovou stránku s přidáním jednotlivých parametrů do URL. V takovém případě přesměrování provede prohlížeč a v adresním řádku zůstane adresa cílové stránky. Jelikož ale parametry jsou přidány do URL adresy je limitován jejich počet délkou URL což je standardně 2048 znaků.
 - **Interceptor před odesláním emailu** - hodnota je název třídy, která **musí implementovat interface `AfterSendInterceptor`**. Po odeslání emailu se provede kód z této třídy. Používá se u starší verze formulářů odesílaných na URL adresu `/formMailAction.do`.
 - **Zpracovatel formulářů** - hodnota je název třídy, která musí implementovat interface [FormProcessorInterface](../../../../../src/main/java/sk/iway/iwcm/components/multistep_form/support/FormProcessorInterface.java). Třída zajistí zpracování kroků formuláře dle vlastní logiky. Příkladem je třída [FormEmailVerificationProcessor](../../../../../src/main/java/sk/iway/iwcm/components/multistep_form/support/FormEmailVerificationProcessor.java), která zajistí odeslání ověřovacího kódu na email a jeho verifikaci. Používá se u vícekrokových formulářů.
-- **Maximální velikost souboru** - maximální velikost nahrávaného souboru v bajtech.
+- **Maximální velikost souboru** - maximální velikost jednoho nahrávaného souboru v bajtech.
+- **Maximální kombinovaná velikost souboru** - maximální velikost všech nahraných souborů v bajtech.
 - **Povolené přípony** - čárkou oddělený seznam povolených přípon nahrávaných souborů. `jpg,png,pdf,docx`.
 - **Maximální výška (pro obrázky)** - maximální výška nahrávaného obrázku v pixelech.
 - **Maximální šířka (pro obrázky)** - maximální šířka nahrávaného obrázku v pixelech.

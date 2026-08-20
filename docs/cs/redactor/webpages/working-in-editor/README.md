@@ -96,6 +96,15 @@ Chcete-li vytvořit odkaz na dokument/soubor označte si text, který má být o
 
 ![](link_dialog.png)
 
+- pokud máte právo na **Manažer dokumentů** (`cmp_file_archiv`), v dialogu **Odkaz** se zobrazí i karta **Manažer dokumentů**.
+  - V kartě je dostupná stromová struktura složek archivu a tabulka dokumentů z vybrané složky.
+  - Klepnutím na název dokumentu se jeho URL adresa automaticky zkopíruje do pole URL.
+  - Pokud potřebný dokument ještě není v archivu, můžete jej nahrát přímo v této kartě přesunutím souboru z počítače (`drag&drop`) do dialogu. Soubor se nahraje do aktuálně zvolené složky ve stromu.
+  - Při nahrávání více souborů nebo při duplicitě reálného jména souboru se zobrazí stejné možnosti jako v manažeru dokumentů: **Přeskočit**, **Nahradit** nebo **Nová verze**.
+  - Potvrdíte OK, čímž se vám na vyznačeném místě vytvoří odkaz na soubor z manažera dokumentů.
+
+![](link_dialog-file-archive.png)
+
 - v případě, že je dokument **určen pouze pro aktuální web stránku**, je třeba zvolit položku “Média této stránky” av ní položku “Soubory”.
   - Vyhledáte dokument, kliknete na něj a odkaz na dokument se automaticky zkopíruje do pole URL.
   - V případě, že se v seznamu požadovaný dokument nenachází, funkcí ```drag&drop``` je možné nahrát dokument z vašeho počítače
@@ -163,17 +172,32 @@ Karta **Fotobanka** umožňuje získání (stažení) obrázků z bezplatné onl
 
 Po zadání a vyhledání výrazu, Vám budou nabídnuty vyhovující obrázky. Nabídka obsahuje několik stran, mezi kterými umíte procházet.
 
+Při vyhledávání ve fotobance máte k dispozici také filtry:
+
+- **Typ média** umožňuje vybrat režim vyhledávání:
+  - obrázky: `all`, `photo`, `illustration`, `vector`
+  - videa: `all`, `film`, `animation`
+- **Kategorie** filtruje výsledky podle tematické oblasti (např. `nature`, `business`, `travel`, ...).
+
+Pokud v poli **Typ média** vyberete video, vyhledávání se automaticky přepne na hledání video souborů.
+
 ![](image_dialog-pixabay.png)
 
-Po kliknutí na některý z nabízených obrázků se zobrazí dialog, s náhledem a hodnotami **šířka** / **výška** daného obrázku.
+Po kliknutí na některý z nabízených obrázků se zobrazí dialog s náhledem, polem **Název souboru** a hodnotami **šířka** / **výška** daného obrázku.
+
+U vybraného videu se zobrazí náhled a název souboru stejně, ale rozměry (**šířka** / **výška**) se v ukládacím dialogu nezadávají.
+
+Pole **Název souboru** se automaticky předvyplní podle posledního vyhledaného výrazu, ale před uložením jej můžete upravit. WebJET název automaticky převede na malá písmena, odstraní diakritiku a nepovolené znaky a mezery nahradí pomlčkami. Příponu souboru nezadávejte, WebJET ji zjistí podle zdrojového obrázku a její typ zobrazí ikonou napravo od názvu.
 
 ![](image_dialog-pixabay-add.png)
 
 Přejete-li si změnit rozměry obrázku, můžete upravit hodnotu **šířka** a jeho **výška** se automaticky vypočítá podle původního poměru obrázku.
 
+Rozměry obrázku se do názvu souboru nepřidávají. Pokud název nezadáte nebo soubor se stejným názvem již existuje ve zvolené složce, zobrazí se upozornění a obrázek se neuloží. Stávající soubor se nepřepíše.
+
 ![](image_dialog-pixabay-add2.png)
 
-Následně po kliknutí na tlačítko **Uložit do WebJET** se obrázek stáhne a uloží. Automaticky se přepne karta na **Obsah**, kde máte okamžitě tento obrázek dostupný.
+Následně po kliknutí na tlačítko **Uložit do WebJET** se obrázek stáhne a uloží pod zvoleným názvem. Automaticky se přepne karta na **Obsah**, kde máte okamžitě tento obrázek dostupný.
 
 ![](image_dialog-pixabay-save.png)
 
@@ -182,6 +206,33 @@ Následně po kliknutí na tlačítko **Uložit do WebJET** se obrázek stáhne 
 Uložené obrázky z **Fotobanky** mají automaticky vyplněnou hodnotu **URL adresa zdroje obrázku**. Tuto hodnotu si umíte prohlédnout/upravit v části [Průzkumník](../../files/fbrowser/README.md) při akci [Úprava souborů](../../files/fbrowser/file-edit/README.md).
 
 ![](image_dialog-pixabay-edit.png)
+
+### Karta Miniatura
+
+Karta **Miniatura** umožňuje nastavit parametry automatického generování zmenšených obrázků `thumbnail` přímo z dialogového okna vkládání obrázků.
+
+![](image_dialog-thumb.png)
+
+**Režim bodu zájmu (IP)**
+
+Výběrem [režimu bodu zájmu](../../../frontend/thumb-servlet/interest-point.md) určíte, která část obrázku bude při ořezávání zachována:
+
+| Režim | Popis |
+| ------- | ------- |
+| `1` | Zachovává pouze šířku (výška se přizpůsobí automaticky) |
+| `2` | Zachovává pouze výšku (šířka se přizpůsobí automaticky) |
+| `3` | Zachovává šířku i výšku + doplnění pozadí barvou |
+| `4` | Zachovává šířku i výšku + doplnění pozadí barvou |
+| `5` | Zachovává šířku i výšku bez doplnění pozadí |
+
+**Dynamické zobrazení polí**
+
+Pole na kartě Miniatura se dynamicky zobrazují/skrývají podle vybraného režimu bodu zájmu:
+
+- Režimy `1` a `2`: Zobrazí se pouze jedno rozměrné pole (šířka nebo výška).
+- Režimy `3` a `4`: Zobrazí se obě rozměrná pole + pole pro barvu pozadí. Barvu zadejte ve formátu `#rrggbb`
+- Režim `5`: Zobrazí se obě rozměrná pole bez pole pro barvu.
+- Pole **Vypnout bod zájmu** se zobrazí pro všechny režimy kromě prázdné hodnoty. To nastavuje, zda se při generování aplikuje i nastavený bod zájmu, nebo se použije celý obrázek.
 
 ### Video soubory
 

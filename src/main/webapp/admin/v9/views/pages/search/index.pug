@@ -300,6 +300,7 @@ block content
                         i.ti.ti-search(aria-hidden='true')
 
             .rootDirDiv.col-auto(data-th-title='#{components.stat.filter.showOnlyFromGroup}' data-bs-toggle='tooltip')
+                label.visually-hidden(for='rootDir' data-th-text='\#{components.stat.filter.showOnlyFromGroup}')
                 input#rootDir.webjet-dte-jstree(type='text' value='-1' data-th-data-text='#{components.stat.stats.root_dirs.all}' data-th-data-text-empty='#{components.stat.stats.root_dirs.all}')
 
     table#webPagesDataTable.datatableInit.table

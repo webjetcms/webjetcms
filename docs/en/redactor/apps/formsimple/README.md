@@ -126,6 +126,7 @@ components.formsimple.input.wysiwyg=<div class="form-group"><label for="${id}">$
 components.formsimple.hide.wysiwyg=placeholder
 ```
 
+!>**Warning for multi-step forms:** a custom definition `components.formsimple.input.NAZOV` that contains a native element `<input type="file">` will not work. File uploads are only supported using the `Dropzone` component.
 The following tags can be used in the code, which will be replaced when the form is displayed:
 
 - ```${formname}``` - ​​form name without spaces, diacritics, in lowercase, used for form element in name attribute (it should still start with formMail for use in standard validation mechanism)

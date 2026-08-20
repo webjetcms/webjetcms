@@ -1,3 +1,5 @@
+import { createWebjetDteJsTree } from '../../web-components/webjet-dte-jstree';
+
 //Use to identified in URL what type of data we want
 export const ChartType = {
     Line: "line",
@@ -725,6 +727,7 @@ export async function createAmchart(chartForm, update) {
     }
 
     //Add title to chart div
+    chartForm.chartTitle = removeQuotes(chartForm.chartTitle);
     var htmlCode = '<h6 class="amchart-header">' + chartForm.chartTitle;
     $('#' + chartForm.chartDivId).before(htmlCode);
 
@@ -745,8 +748,23 @@ export async function createAmchart(chartForm, update) {
     }
 }
 
+function removeQuotes(str) {
+    if(str == undefined || str == null) return "";
+
+    if (str.startsWith('"')) {
+        str = str.slice(1);
+    }
+
+    if (str.endsWith('"')) {
+        str = str.slice(0, -1);
+    }
+
+  return str;
+}
+
 async function _createCustomChart(chartForm, update) {
     //Add title to chart div
+    chartForm.chartTitle = removeQuotes(chartForm.chartTitle);
     var htmlCode = '<h6 class="amchart-header">' + chartForm.chartTitle;
     $('#' + chartForm.chartDivId).before(htmlCode);
 
@@ -1603,6 +1621,10 @@ export async function updateChart(chartForm) {
                 wordCloudSeries.data.setAll(chartForm.chartData);
             }
         }
+    } else if(chartForm instanceof TableChartForm) {
+        const tableDiv = document.getElementById(chartForm.chartDivId);
+        if(tableDiv) tableDiv.innerHTML = "";
+        createTableChart(chartForm);
     }
 }
 
@@ -1771,7 +1793,7 @@ async function setSeries(seriesName, chart, root, data, xAxis, yAxis, yField, ty
 }
 
 /**
- * Fn to create specific live charts for vue component server-monitoring.
+ * Creates live charts for the server monitoring web component.
  *
  * Support 2 tzpes of chart's.
  *
@@ -1888,7 +1910,7 @@ export async function initGroupIdSelect() {
         var $element = $(this);
         //console.log("html=", $element[0].outerHTML, "val=", $element.val(), "text=", $element.data("text"));
         var id = $element.attr("id");
-        var htmlCode = $('<div class="vueComponent" id="editorApp'+id+'"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr" @remove-item="onRemoveItem"></webjet-dte-jstree></div>');
+        var htmlCode = $('<div class="webjet-component" id="editorApp'+id+'"></div>');
         htmlCode.insertAfter($element);
 
         let groupId = $element.val();
@@ -1917,50 +1939,14 @@ export async function initGroupIdSelect() {
             className: $element.hasClass("webjet-dte-jstree-alldomains") ? "dt-tree-groupid-alldomains-all" : "dt-tree-groupid-root",
             _id: id
         };
-        //console.log("conf=", conf);
-        const app = window.VueTools.createApp({
-            components: {},
-            data() {
-                return {
-                    data: null,
-                    idKey: null,
-                    dataTable: null,
-                    dataTableName: null,
-                    click: null,
-                    attr: null
-                }
-            },
-            created() {
-                this.data = fixNullData(conf.jsonData, conf.className);
-                //console.log("JS created, data=", this.data, " conf=", conf, " val=", conf._input.val());
-                this.idKey = conf._id;
-                //co sa ma stat po kliknuti prenasame z atributu className datatabulky (pre jednoduchost zapisu), je to hodnota obsahujuca dt-tree-
-                //priklad: className: "dt-row-edit dt-style-json dt-tree-group", click=dt-tree-group
-                const confClassNameArr = conf.className.split(" ");
-                for (var i=0; i<confClassNameArr.length; i++) {
-                    let className = confClassNameArr[i];
-                    if (className.indexOf("dt-tree-")!=-1) this.click = className;
-                }
-                //console.log("click=", this.click);
-                if (typeof(conf.attr)!="undefined") this.attr = conf.attr;
-
-                this.dataTable = {
-                    DATA: {
-
-                    }
-                }
-            },
-            methods: {
-                onRemoveItem(id){
-                }
-            }
+        const component = createWebjetDteJsTree({
+            inputElement: $element[0],
+            dataTable: { DATA: {} },
+            mode: conf.className,
+            value: fixNullData(conf.jsonData, conf.className)
         });
-        VueTools.setDefaultObjects(app);
-        app.component('webjet-dte-jstree', window.VueTools.getComponent('webjet-dte-jstree'));
-        const vm = app.mount($element.parent().find("div.vueComponent")[0]);
-        //console.log("Setting vm, input=", element, "vm=", vm);
-        $element.data("vm", vm);
-        //console.log("set vm=", $element.data("vm"));
+        $element.parent().find("div.webjet-component")[0].appendChild(component);
+        $element.data("webjetComponent", component);
         $element.hide();
     });
 }
@@ -2178,6 +2164,7 @@ async function createTableChart(chartForm) {
 
     const table = document.createElement("table");
     table.classList.add("table");
+    table.classList.add("amchart-table");
 
     if (typeof chartForm.headerNames != "undefined" && chartForm.headerNames != null) {
         //create thead section with title and count
@@ -2205,10 +2192,10 @@ async function createTableChart(chartForm) {
     table.appendChild(tbody);
 
     const wrapper2 = document.createElement("div");
+    wrapper2.classList.add("amchart-table-wrapper");
     wrapper2.appendChild(table);
     wrapper2.style.position = "relative";
     wrapper2.style.width = "100%";
-    wrapper2.style.height = "100%";
 
     const chartContainer = document.getElementById(chartForm.chartDivId);
     if(chartContainer) {

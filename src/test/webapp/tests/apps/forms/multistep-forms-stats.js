@@ -72,7 +72,26 @@ function checkChart(I, chartId, chartTitle) {
     I.seeElement("div#chartContainer > #form-stats > #form-stats_" + chartId + "_container > div#form-stats_" + chartId + ".amcharts");
 }
 
+async function setClEditorValue(I, wysiwyg) {
+    await I.executeScript((text) => {
+            const ta = document.querySelector('#f1-wysiwyg-1');
+            if (ta) ta.value = '<p>' + text + '</p>';
+            const iframe = document.querySelector('.cleditorMain iframe');
+            if (iframe && iframe.contentDocument && iframe.contentDocument.body) {
+                iframe.contentDocument.body.innerHTML = '<p>' + text + '</p>';
+            }
+            if (typeof $ !== 'undefined') {
+                try {
+                    const ed = $('#f1-wysiwyg-1').cleditor();
+                    if (ed && ed.length > 0) ed[0].updateTextArea();
+                } catch (e) { /* ignore if cleditor sync unavailable */ }
+            }
+        }, wysiwyg);
+}
+
 Scenario("Generate random data for nice charts", async ({ I }) => {
+    I.logout();
+
     const firstNames = [
         "Jana", "Katarína", "Peter", "Zuzana", "Ján", "Mária", "Martin", "Tomáš", "Michal", "Lukáš", "Marek", "Rastislav",
         "Anna", "Eva", "Lucia", "Andrea"
@@ -92,6 +111,9 @@ Scenario("Generate random data for nice charts", async ({ I }) => {
         "Celkovo <strong>pozitívna</strong> skúsenosť.",
         "Rád odporúčam priateľom."
     ];
+    const affiliate = [
+        "google.com", "facebook.com", "interway.sk", "webjetcms.sk"
+    ];
 
     // Weighted random selection: items at lower indices have higher probability.
     // Probability decreases linearly: P(i) ∝ (n - i), so first item is most likely.
@@ -109,69 +131,123 @@ Scenario("Generate random data for nice charts", async ({ I }) => {
     const iterations = 1;
 
     for (let iter = 0; iter < iterations; iter++) {
-        I.amOnPage("/apps/multistep-formular/for-screenshots.html");
-        I.waitForElement("#meno-1", 10);
+        var qs = "";
+        if (Math.random() < 0.5) {
+            qs = "?utm_source="+weightedRandom(affiliate);
+        }
+
+        var baseUrl = "/apps/multistep-formular/for-screenshots.html";
+        if (Math.random() < 0.2) {
+            baseUrl = "/apps/multistep-formular/en/for-screenshots.html";
+        }
+
+        I.amOnPage(baseUrl+qs);
+        I.waitForElement("#f1-meno-1", 10);
 
         const firstName = weightedRandom(firstNames);
         const lastName = weightedRandom(lastNames);
 
+        //make error in 10% of cases to test error handling in stats
+        if (Math.random() < 0.1) {
+            I.fillField("#f1-meno-1", "");
+            if (baseUrl.indexOf("/en/") >= 0) I.click("Go to next step");
+            else I.click("Prejsť na ďalší krok");
+        }
+        if (Math.random() < 0.2) {
+            I.fillField("#f1-priezvisko-1", "");
+            if (baseUrl.indexOf("/en/") >= 0) I.click("Go to next step");
+            else I.click("Prejsť na ďalší krok");
+        }
+
         // Fill step 1 fields
-        I.fillField("#meno-1", firstName);
-        I.fillField("#priezvisko-1", lastName);
+        I.fillField("#f1-meno-1", firstName);
+        I.fillField("#f1-priezvisko-1", lastName);
 
         //use firstname without diacritics for email to avoid potential encoding issues in stats processing
         const emailFirstName = firstName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        I.fillField("#email-1", emailFirstName.toLowerCase() + "@onetimeusemail.com");
+        I.fillField("#f1-email-1", emailFirstName.toLowerCase() + "@onetimeusemail.com");
+
+        var failStatus = null;
+        if (Math.random() < 0.1) {
+            I.fillField("#f1-email-1", "relay.denied.email@onetimeusemail.com");
+            failStatus = "emailNotSend";
+        }
 
         // Checkboxes A, B, C with decreasing independent probability: A=65%, B=35%, C=15%
-        if (Math.random() < 0.65) I.checkOption("#checkboxgroup-1-0");
-        if (Math.random() < 0.35) I.checkOption("#checkboxgroup-1-1");
-        if (Math.random() < 0.15) I.checkOption("#checkboxgroup-1-2");
+        if (Math.random() < 0.65) I.checkOption("#f1-checkboxgroup-1-0");
+        if (Math.random() < 0.35) I.checkOption("#f1-checkboxgroup-1-1");
+        if (Math.random() < 0.15) I.checkOption("#f1-checkboxgroup-1-2");
 
         // Radio D/E/F with weighted selection: D most likely, F least likely
-        I.checkOption(weightedRandom(["#radiogroup-1-0", "#radiogroup-1-1", "#radiogroup-1-2"]));
+        I.checkOption(weightedRandom(["#f1-radiogroup-1-0", "#f1-radiogroup-1-1", "#f1-radiogroup-1-2"]));
 
         // Potvrdit - optional field, selected with 75% probability
-        if (Math.random() < 0.75) I.checkOption("#potvrdit-false-ano");
+        if (Math.random() < 0.75) I.checkOption("#f1-potvrdit-false-ano");
 
         // Gender with slight male bias (55% Muz, 45% Zena)
-        I.checkOption(Math.random() < 0.55 ? "#pohlavie-false-muz" : "#pohlavie-false-zena");
+        I.checkOption(Math.random() < 0.55 ? "#f1-pohlavie-false-muz" : "#f1-pohlavie-false-zena");
 
         // Submit step 1
-        I.click("Prejsť na ďalší krok");
-        I.waitForElement("#select-1", 10);
+        if (baseUrl.indexOf("/en/") >= 0) I.click("Go to next step");
+        else I.click("Prejsť na ďalší krok");
+
+        I.waitForElement("#f1-select-1", 10);
+
+        //wait for cleditor to load
+        I.waitForElement(".cleditorToolbar .cleditorButton.cleditorDisabled")
+        I.wait(2);
 
         // Fill step 2 - select field with weighted probability: A most likely, D least likely
-        I.selectOption("#select-1", weightedRandom(["Mačka", "Pes", "Škrečok", "Had"]));
+        I.selectOption("#f1-select-1", weightedRandom(["Mačka", "Pes", "Škrečok", "Had"]));
+
+        if (Math.random() < 0.1) {
+            //empty wysiwyg
+            await setClEditorValue(I, "");
+
+            if (baseUrl.indexOf("/en/") >= 0) I.click("Submit form");
+            else I.click("Odoslať formulár");
+
+            I.wait(10);
+        }
 
         // Fill step 2 - WYSIWYG is a required field rendered as cleditor (hidden textarea + iframe).
         // Inject the value via JS: set both the textarea and the iframe body, then trigger cleditor sync.
-        const wysiwyg = weightedRandom(wysiwygs);
-        await I.executeScript((text) => {
-            const ta = document.querySelector('#wysiwyg-1');
-            if (ta) ta.value = '<p>' + text + '</p>';
-            const iframe = document.querySelector('.cleditorMain iframe');
-            if (iframe && iframe.contentDocument && iframe.contentDocument.body) {
-                iframe.contentDocument.body.innerHTML = '<p>' + text + '</p>';
-            }
-            if (typeof $ !== 'undefined') {
-                try {
-                    const ed = $('#wysiwyg-1').cleditor();
-                    if (ed && ed.length > 0) ed[0].updateTextArea();
-                } catch (e) { /* ignore if cleditor sync unavailable */ }
-            }
-        }, wysiwyg);
+        let wysiwyg = weightedRandom(wysiwygs);
 
-        I.checkOption(weightedRandom(["#radiogroup-2-0", "#radiogroup-2-1", "#radiogroup-2-2", "#radiogroup-2-3"]));
+        if (Math.random() < 0.1) {
+            wysiwyg += " <script>alert('XSS');</script>";
+            failStatus = "probablySpamBot";
+        }
+
+        await setClEditorValue(I, wysiwyg);
+
+        I.checkOption(weightedRandom(["#f1-radiogroup-2-0", "#f1-radiogroup-2-1", "#f1-radiogroup-2-2", "#f1-radiogroup-2-3"]));
 
         //SPAM PROTECTION: wait for random time between 30 and 34 seconds to simulate real user behavior
         const waitTime = 30000 + Math.random() * 4000;
         I.wait(waitTime / 1000);
 
         // Submit step 2
-        I.click("Odoslať formulár");
+        if (baseUrl.indexOf("/en/") >= 0) I.click("Submit form");
+        else I.click("Odoslať formulár");
 
         I.waitForElement(".alert.alert-success", 10);
-        I.waitForText("Formulár bol úspešne odoslaný", 10);
+        if (baseUrl.indexOf("/en/") >= 0) {
+            if ("emailNotSend" === failStatus) {
+                I.waitForText("Sending of form to email failed!", 10);
+            } else if ("probablySpamBot" === failStatus) {
+                I.waitForText("Form was marked as SPAM", 10);
+            } else {
+                I.waitForText("The form was successfully submitted", 10);
+            }
+        } else {
+            if ("emailNotSend" === failStatus) {
+                I.waitForText("Formulár sa nepodarilo odoslať na email", 10);
+            } else if ("probablySpamBot" === failStatus) {
+                I.waitForText("Formulár bol detekovaný ako SPAM", 10);
+            } else {
+                I.waitForText("Formulár bol úspešne odoslaný", 10);
+            }
+        }
     }
 });

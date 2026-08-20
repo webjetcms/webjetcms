@@ -157,4 +157,21 @@ public enum DataTableColumnType {
      * Tabler icons renderer
      */
     ICON,
+
+    /**
+     * Dynamic list of string options joined by | separator (with key:value pair, e.g. "key1:Value 1|key2:Value 2")
+     * Fields with the {@code allowEmptyOption} class name also let the user prepend an empty option.
+     */
+    OPTIONS,
+
+    /**
+     * Dynamic list of string options joined by | separator (single value, e.g. "Value 1|Value 2|Value 3"). Renders as text ({@code dt-format-text}) and uses the basic editor type.
+     */
+    OPTIONS_SIMPLE,
+
+    /**
+     * Select field populated from {@link sk.iway.iwcm.components.enumerations.model.EnumerationDataBean} values.
+     * Renders as text ({@code dt-format-text}) and uses the enumeration editor type.
+     */
+    ENUMERATION
 }

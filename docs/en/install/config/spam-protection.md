@@ -29,6 +29,7 @@ Limits can be adjusted specifically for some modules/applications by adding `-ap
 - `search` - ​​[search](../../redactor/apps/search/README.md), limits the number of searches.
 - `ThumbServlet` - ​​[thumbnails](../../frontend/thumb-servlet/README.md), limits the number of times a new thumbnail image is generated, the images are saved to disk and used for subsequent requests.
 - `userform` - ​​[new user registration](../../redactor/password-protected-zone/README.md), limits the number of new registrations and user profile edits in the password-protected zone.
+- `404` - ​​[number of calls to the 404 page](../../sysadmin/troubleshooting/README.md), limits how many times the 404 page can be called, after the limit is exceeded, `session` is canceled and the user is logged out.
 
 The following values ​​are already adjusted by default:
 

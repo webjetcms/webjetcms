@@ -161,6 +161,12 @@ if (count404.intValue()>count404Limit && "iwcm.interway.sk".equals(request.getSe
 		}
 	}
 
+	Identity user = sk.iway.iwcm.users.UsersDB.getCurrentUser(request);
+	if (user != null && user.isAdmin()) {
+		//disable count for admins
+		count404 = Integer.valueOf(0);
+	}
+
 	if (count404.intValue()>count404Limit) {
 		System.out.println("404 attack, KEY="+KEY+" count="+count404);
 

@@ -1,0 +1,70 @@
+extends ../../partials/layout
+
+block content
+
+    script.
+        var customFieldsDataTable;
+
+        window.domReady.add(function () {
+
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity')})];
+            var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity')})];
+            var url = "/admin/rest/custom-fields/";
+
+            customFieldsDataTable = WJ.DataTable({
+                url: url,
+                columns: columns,
+                tabs: tabs,
+                serverSide: true,
+                id: "customFieldsDataTable",
+                fetchOnCreate: true,
+                fetchOnEdit: true
+            });
+
+            customFieldsDataTable.EDITOR.on("open", function () {
+                const specificFieldsVisibility = customFieldsDataTable.DATA.jsonOptions.specificFieldsVisibility;
+                const typeSelect = document.getElementById("DTE_Field_type");
+
+                if(!typeSelect || !specificFieldsVisibility) { return; }
+
+                const editor = customFieldsDataTable.EDITOR;
+
+                // Update field visibility based on selected type
+                const updateFieldVisibility = (selectedType) => {
+                    const visibilityConfig = specificFieldsVisibility.find(v => v.label === selectedType);
+                    const showFields = visibilityConfig?.value
+                        ? new Set(visibilityConfig.value.split(",").map(f => f.trim()).filter(f => f))
+                        : new Set();
+
+                    if(["select", "multiselect", "radio", "checkbox"].includes(selectedType)) {
+                        const source = editor.field("optionsSource").val();
+                        const selectedSource = Array.isArray(source) ? source[0] : source;
+                        showFields.add(selectedSource === "enumeration" ? "enumeration" : "selectOptions");
+                    }
+
+                    editor.fields().forEach(fieldName => {
+                        const field = editor.field(fieldName);
+                        const classNames = field.s.opts.className || "";
+
+                        if(classNames.includes("specific-field")) {
+                            showFields.has(fieldName) ? field.show() : field.hide();
+                        }
+                    });
+                };
+
+                typeSelect.onchange = function() {
+                    updateFieldVisibility(this.value);
+                };
+
+                document.querySelectorAll(".DTE_Field_Name_optionsSource input[type='radio']").forEach(input => {
+                    input.onchange = function() {
+                        updateFieldVisibility(typeSelect.value);
+                    };
+                });
+
+                // Apply initial visibility for currently selected type
+                updateFieldVisibility(typeSelect.value);
+            });
+        });
+
+    <table id="customFieldsDataTable" class="datatableInit table"></table>

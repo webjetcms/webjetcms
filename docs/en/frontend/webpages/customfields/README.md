@@ -24,6 +24,8 @@ The names Field A - Field X can be changed in the configuration in the text edit
 
 Technical information can be found in the [programmer documentation](../../../developer/datatables-editor/customfields.md).
 
+!>Settings can also be made via the [Optional Fields] table (custom-fields-settings.md). If an entry for the same field exists in the table, it takes precedence over the configuration from the translation keys.
+
 ## Field types
 
 Fields are displayed as text by default, but field types can be changed by changing the definition via translation keys.
@@ -72,6 +74,10 @@ To be able to choose from predefined values, you can enter possible values ​�
 
 `editor.field_x.type=Hodnota 1|Hodnota 2|Hodnota 3`
 
+It is also possible to use the format `label:value`, for example:
+
+`editor.field_x.type=Slovensko:sk|Česko:cz|Rakúsko:at`
+
 To have the option to **set an empty value**, start the list of options with the value `|`:
 
 `editor.field_x.type=|Hodnota 1|Hodnota 2|Hodnota 3`
@@ -84,9 +90,23 @@ If multiple selection is required, `multiple` is added before the value:
 
 `editor.field_x.type=multiple:Hodnota 1|Hodnota 2|Hodnota 3`
 
+The `label:value` format is also supported:
+
+`editor.field_x.type=multiple:Slovensko:sk|Česko:cz|Rakúsko:at`
+
 The values ​​are then stored in an array separated by the `|` character.
 
 `Hodnota 1|Hodnota 3`
+
+### Switch
+
+The field type `radio` displays a list of options as a radio button, the user can select exactly one value. The options are set in the [Optional fields] table (custom-fields-settings.md) in the same way as for a selection field - as a static list of values, or dynamically by linking to a number list.
+
+### Checkbox
+
+The field type `checkbox` displays a list of options as checkboxes, the user can select multiple values. The options are set in the [Optional Fields] table (custom-fields-settings.md) in the same way as for a select field - as a static list of values, or dynamically by linking to a dial pad.
+
+The selected values ​​are stored in an array separated by the `|` character.
 
 ### Boolean value
 
@@ -113,6 +133,8 @@ If you need to hide unused fields, you can use a field of type `none`.
 A field of type `autocomplete` works similarly to a selection field, but allows you to enter a value other than the default options. The function is enabled by prefixing `autocomplete:` with possible values ​​separated by the `|` character. At the same time, the default options are displayed sequentially after entering at least 3 characters:
 
 `temp-3.editor.field_d.type=autocomplete:Autocomplete Možnosť 1|Autocomplete Iná možnosť|Autocomplete Pokus 3`
+
+The same list can also be set in the Optional Fields table via the field type `autocomplete`.
 
 ### Image selection
 

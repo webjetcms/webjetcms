@@ -122,6 +122,8 @@ Scenario('reservation screens - PAGE section', ({ I, Document, i18n }) => {
     I.say("Set date in future");
     I.fillField("#reservationDate", "02-01-2045");
 
+    I.resizeWindow(1400, 850);
+
     I.fillField("#email", "");
     Document.screenshot("/redactor/apps/reservation/time-book-app/app-page.png");
     Document.screenshot("../../../src/main/webapp/apps/reservation/mvc/app-page"+i18n.getImgSuffix()+".png");
@@ -145,6 +147,8 @@ Scenario('reservation screens - PAGE section', ({ I, Document, i18n }) => {
     Document.screenshot("/redactor/apps/reservation/time-book-app/app-ready-reservation.png");
 
     I.fillField("#reservationDate", "03-01-2045");
+    I.waitForVisible("td[id='2560_13'].free", 5);
+    I.wait(1);
     I.clickCss("td[id='2560_13'].free");
 
     I.waitForVisible("button.btn.btn-primary", 1);
@@ -153,6 +157,8 @@ Scenario('reservation screens - PAGE section', ({ I, Document, i18n }) => {
 
     Document.screenshotElement("div.alert.alert-success", "/redactor/apps/reservation/time-book-app/app-reservation-saved-approved.png");
 
+    I.waitForVisible("td[id='2561_13'].free");
+    I.wait(1);
     I.clickCss("td[id='2561_13'].free");
     I.waitForVisible("button.btn.btn-primary", 1);
     I.clickCss("button.btn.btn-primary");
