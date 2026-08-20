@@ -28,14 +28,21 @@ public class WebjetAiConfigurationService {
     private final AtomicLong revisionSequence = new AtomicLong();
 
     public AiProviderConfig resolve(String providerId) {
-        return resolve(providerId, null);
+        return resolve(providerId, (HttpServletRequest) null);
     }
 
     public AiProviderConfig resolve(String providerId, HttpServletRequest request) {
+        return buildConfiguration(providerId, trustedReferer(request, null));
+    }
+
+    public AiProviderConfig resolveForDomain(String providerId, String domainName) {
+        return buildConfiguration(providerId, trustedReferer(null, domainName));
+    }
+
+    private AiProviderConfig buildConfiguration(String providerId, String referer) {
         AiProviderConfig.Builder builder = AiProviderConfig.builder(apiKey(providerId))
             .connectTimeout(timeout(WebjetAiConfigKeys.PROVIDER_CONNECT_TIMEOUT_SECONDS))
             .responseTimeout(timeout(WebjetAiConfigKeys.PROVIDER_RESPONSE_TIMEOUT_SECONDS));
-        String referer = trustedReferer(request);
 
         if ("gemini".equals(providerId)) {
             builder.trustedHeader("Referer", referer);
@@ -88,9 +95,15 @@ public class WebjetAiConfigurationService {
     }
 
     private String trustedReferer(HttpServletRequest request) {
+        return trustedReferer(request, null);
+    }
+
+    private String trustedReferer(HttpServletRequest request, String explicitDomain) {
         String currentDomain = CloudToolsForCore.getDomainName();
         String requestDomain = request == null ? null : Tools.getServerName(request, false);
-        String trustedDomain = validDomain(currentDomain) ? currentDomain : requestDomain;
+        String trustedDomain = validDomain(explicitDomain)
+            ? explicitDomain
+            : (validDomain(currentDomain) ? currentDomain : requestDomain);
 
         if (request != null) {
             String incomingReferer = Tools.sanitizeHttpHeaderParam(request.getHeader("Referer"));

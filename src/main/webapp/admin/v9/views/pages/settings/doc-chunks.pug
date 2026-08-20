@@ -183,6 +183,8 @@ block content
         const rootDirInput = document.getElementById("rootDir");
         const rootDirParam = urlParams.get("rootDir");
         const rootDirTextParam = urlParams.get("rootDirText");
+        const includeSubfoldersInput = document.getElementById("include_subfolders");
+        const includeSubfoldersParam = urlParams.get("includeSubfolders");
 
         if(rootDirInput != null) {
             if(rootDirParam != null && rootDirParam.length > 0) {
@@ -191,6 +193,10 @@ block content
             if(rootDirTextParam != null && rootDirTextParam.length > 0) {
                 rootDirInput.setAttribute("data-text", rootDirTextParam);
             }
+        }
+
+        if(includeSubfoldersInput != null && includeSubfoldersParam != null) {
+            includeSubfoldersInput.checked = includeSubfoldersParam === "true";
         }
 
         ChartTools.initGroupIdSelect();

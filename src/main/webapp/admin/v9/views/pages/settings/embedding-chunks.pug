@@ -57,11 +57,23 @@ block content
             font-size: 18px !important;
         }
 
-        table.datatableInit tbody tr.is-pending td {
+        #embeddingChunksDataTable_extfilter .custom-modal .custom-modal-wrapper {
+            margin: 32px auto;
+        }
+
+        #embeddingChunksDataTable_extfilter .custom-modal .jstree {
+            height: min(600px, calc(100vh - 240px));
+            max-height: calc(100vh - 240px);
+            overflow-y: auto;
+        }
+
+        table.datatableInit tbody tr.is-pending td,
+        table.datatableInit tbody tr.is-pending td a {
             color: #FABD00;
         }
 
-        table.datatableInit tbody tr.is-error td {
+        table.datatableInit tbody tr.is-error td,
+        table.datatableInit tbody tr.is-error td a {
             color: #FF4B58;
         }
 
