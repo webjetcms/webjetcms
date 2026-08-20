@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.Vector;
@@ -38,6 +39,11 @@ public class SetupActionsService {
 
 	private static final String FORWARD = "/admin/setup/setup";
 	private static final String SAVED = "/admin/setup/setup_saved";
+	private static final String MARIADB_DRIVER = "org.mariadb.jdbc.Driver";
+	private static final String MSSQL_DRIVER = "net.sourceforge.jtds.jdbc.Driver";
+	private static final String ORACLE_DRIVER = "oracle.jdbc.driver.OracleDriver";
+	private static final String ORACLE_DRIVER_NEW = "oracle.jdbc.OracleDriver";
+	private static final String POSTGRESQL_DRIVER = "org.postgresql.Driver";
 
 	private SetupActionsService() {
 		// Private constructor to hide the implicit public one.
@@ -269,6 +275,7 @@ public class SetupActionsService {
 			if (Tools.isEmpty(password)) password = null;
 
 			con = DriverManager.getConnection(getDBURLString(setupForm), userName, password);
+			validateDatabaseCharacterSet(con, setupForm.getDbDriver());
 			con.close();
 			dbConnectOK = true;
 		}
@@ -279,14 +286,14 @@ public class SetupActionsService {
 
 			String msg = ex.getMessage();
 
-			if (msg.contains("Unknown database ") || msg.contains("Cannot open database")) {
+			if (isDatabaseMissing(ex, setupForm.getDbDriver())) {
 				//DB nie je vytvorena, pokus sa vytvorit (ak mas prava)
 
 				String origDBName = setupForm.getDbName();
 				setupForm.setDbName("mysql");
-				if ("net.sourceforge.jtds.jdbc.Driver".equals(setupForm.getDbDriver()))
+				if (MSSQL_DRIVER.equals(setupForm.getDbDriver()))
 					setupForm.setDbName("master");
-				else if ("org.postgresql.Driver".equals(setupForm.getDbDriver()))
+				else if (POSTGRESQL_DRIVER.equals(setupForm.getDbDriver()))
 					setupForm.setDbName("postgres");
 
 				try {
@@ -297,53 +304,29 @@ public class SetupActionsService {
 						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), getEnvPassword(setupForm.getDbPassword()));
 					}
 
-					PreparedStatement ps = con.prepareStatement("CREATE DATABASE " + origDBName);
-					ps.execute();
-					ps.close();
+					String createDatabaseSql = getCreateDatabaseSql(setupForm.getDbDriver(), origDBName);
 
-					con.close();
-
-					setupForm.setDbName(origDBName);
-
-					con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), getEnvPassword(setupForm.getDbPassword()));
-					con.close();
-
-					dbConnectOK = true;
-				} catch (Exception e) {
-					connErrMsg += msg;
-					sk.iway.iwcm.Logger.error(e);
-				}
-				setupForm.setDbName(origDBName);
-			} else if (msg.indexOf("Cannot open database requested") != -1) {
-				//DB nie je vytvorena, pokus sa vytvorit (ak mas prava)
-
-				String origDBName = setupForm.getDbName();
-				setupForm.setDbName("master");
-
-				try {
-					if (setupForm.isDbUseSuperuser()) {
-						if (con != null) con.close();
-						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbSuperuserUsername(), getEnvPassword(setupForm.getDbSuperuserPassword()));
-					} else {
-						if (con != null) con.close();
-						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), getEnvPassword(setupForm.getDbPassword()));
+					try (PreparedStatement ps = con.prepareStatement(createDatabaseSql)) {
+						ps.execute();
 					}
 
-					PreparedStatement ps = con.prepareStatement("CREATE DATABASE " + origDBName);
-					ps.execute();
-					ps.close();
-
 					con.close();
 
 					setupForm.setDbName(origDBName);
 
 					con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), getEnvPassword(setupForm.getDbPassword()));
+					validateDatabaseCharacterSet(con, setupForm.getDbDriver());
 					con.close();
 
 					dbConnectOK = true;
 				} catch (Exception e) {
-					connErrMsg += msg;
+					connErrMsg += Tools.isNotEmpty(e.getMessage()) ? e.getMessage() : msg;
 					sk.iway.iwcm.Logger.error(e);
+					try {
+						if (con != null) con.close();
+					} catch (Exception closeException) {
+						sk.iway.iwcm.Logger.error(closeException);
+					}
 				}
 				setupForm.setDbName(origDBName);
 			} else {
@@ -438,6 +421,75 @@ public class SetupActionsService {
 			setModelWithErr(model, setupForm, true, connErrMsg, null);
 			return FORWARD;
 		}
+	}
+
+	private static boolean isDatabaseMissing(Exception exception, String dbDriver) {
+		if (isOracleDriver(dbDriver)) return false;
+		if (exception instanceof SQLException sqlException && "3D000".equals(sqlException.getSQLState())) return true;
+
+		String message = exception.getMessage();
+		if (Tools.isEmpty(message)) return false;
+		if (MARIADB_DRIVER.equals(dbDriver)) return message.contains("Unknown database");
+		if (MSSQL_DRIVER.equals(dbDriver)) return message.contains("Cannot open database");
+		return POSTGRESQL_DRIVER.equals(dbDriver) && message.contains("does not exist");
+	}
+
+	static String getCreateDatabaseSql(String dbDriver, String dbName) {
+		String quotedDbName = quoteDatabaseName(dbDriver, dbName);
+		if (POSTGRESQL_DRIVER.equals(dbDriver)) {
+			return "CREATE DATABASE " + quotedDbName + " WITH TEMPLATE template0 ENCODING 'UTF8'";
+		}
+		if (MARIADB_DRIVER.equals(dbDriver)) {
+			return "CREATE DATABASE " + quotedDbName
+				+ " DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_general_ci";
+		}
+		if (MSSQL_DRIVER.equals(dbDriver)) {
+			// WebJET uses NVARCHAR/NTEXT on MS SQL. The _SC collation adds correct
+			// supplementary-character handling and remains compatible with SQL Server 2012+.
+			return "CREATE DATABASE " + quotedDbName + " COLLATE Latin1_General_CI_AI";
+		}
+		throw new IllegalArgumentException("Automatic database creation is not supported for driver: " + dbDriver);
+	}
+
+	private static String quoteDatabaseName(String dbDriver, String dbName) {
+		if (Tools.isEmpty(dbName) || dbName.indexOf('\0') >= 0) {
+			throw new IllegalArgumentException("Invalid database name");
+		}
+		if (MARIADB_DRIVER.equals(dbDriver)) {
+			return "`" + dbName.replace("`", "``") + "`";
+		}
+		if (MSSQL_DRIVER.equals(dbDriver)) {
+			return "[" + dbName.replace("]", "]]") + "]";
+		}
+		return "\"" + dbName.replace("\"", "\"\"") + "\"";
+	}
+
+	static void validateDatabaseCharacterSet(Connection connection, String dbDriver) throws SQLException {
+		if (isOracleDriver(dbDriver) == false) return;
+
+		String characterSet = null;
+		String nationalCharacterSet = null;
+		String sql = "SELECT parameter, value FROM nls_database_parameters "
+			+ "WHERE parameter IN ('NLS_CHARACTERSET', 'NLS_NCHAR_CHARACTERSET')";
+		try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+			while (rs.next()) {
+				String parameter = rs.getString("parameter");
+				if ("NLS_CHARACTERSET".equals(parameter)) characterSet = rs.getString("value");
+				else if ("NLS_NCHAR_CHARACTERSET".equals(parameter)) nationalCharacterSet = rs.getString("value");
+			}
+		}
+
+		if ("AL32UTF8".equalsIgnoreCase(characterSet) == false) {
+			throw new SQLException("Oracle database must use NLS_CHARACTERSET=AL32UTF8, current value is " + characterSet);
+		}
+		if ("AL16UTF16".equalsIgnoreCase(nationalCharacterSet) == false) {
+			throw new SQLException("Oracle database must use NLS_NCHAR_CHARACTERSET=AL16UTF16, current value is "
+				+ nationalCharacterSet);
+		}
+	}
+
+	private static boolean isOracleDriver(String dbDriver) {
+		return ORACLE_DRIVER.equals(dbDriver) || ORACLE_DRIVER_NEW.equals(dbDriver);
 	}
 
 	/**

@@ -89,6 +89,7 @@ import sk.iway.iwcm.system.datatable.events.DatatableEvent;
 import sk.iway.iwcm.system.datatable.events.DatatableEventType;
 import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 import sk.iway.iwcm.system.jpa.JpaTools;
+import sk.iway.iwcm.system.spring.DatatableExceptionHandlerV2;
 import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
 import sk.iway.iwcm.system.stripes.MultipartWrapper;
 import sk.iway.iwcm.users.UsersDB;
@@ -104,7 +105,7 @@ import sk.iway.iwcm.users.UsersDB;
  *
  */
 @SuppressWarnings({"java:S6813", "java:S119", "java:S3776"})
-public abstract class DatatableRestControllerV2<T, ID extends Serializable>
+public abstract class DatatableRestControllerV2<T, ID extends Serializable> extends DatatableExceptionHandlerV2
 {
 	private final JpaRepository<T, Long> repo;
 	private final Class<T> entityClass;

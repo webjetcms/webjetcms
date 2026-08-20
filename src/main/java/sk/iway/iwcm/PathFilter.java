@@ -202,6 +202,14 @@ public class PathFilter implements Filter
 		HttpServletRequest req = (HttpServletRequest) servletRequest;
 		HttpServletResponse res = (HttpServletResponse) servletResponse;
 
+		// For ERROR dispatches (e.g. Tomcat error page forwarding to /404.jsp), skip all routing
+		// logic and pass directly to the servlet chain so the JspServlet can serve the error page.
+		if (DispatcherType.ERROR == req.getDispatcherType()) {
+			//not required? - call /formmail.do? to get 404.jsp
+			//chain.doFilter(servletRequest, servletResponse);
+			//return;
+		}
+
 		try
 		{
 			if (passwordProtected==null) reloadProtectedDirs();
@@ -1071,6 +1079,39 @@ public class PathFilter implements Filter
 			}
 			else
 			{
+				if (("GET".equalsIgnoreCase(req.getMethod()) || "HEAD".equalsIgnoreCase(req.getMethod())) && isIndexJspDirectoryPath(path))
+				{
+					String indexJspPath = path.endsWith("/") ? path + "index.jsp" : path + "/index.jsp";
+					if (FileTools.isFile(indexJspPath))
+					{
+						if (path.endsWith("/")==false)
+						{
+							StringBuilder redirectPath = new StringBuilder(req.getContextPath()).append(path).append('/');
+							if (Tools.isNotEmpty(qs)) redirectPath.append('?').append(qs);
+
+							res.setStatus(HttpServletResponse.SC_FOUND);
+							res.setHeader("Location", Tools.sanitizeHttpHeaderParam(redirectPath.toString()));
+							return;
+						}
+
+						if (!checkWebAccess(req, indexJspPath))
+						{
+							Logger.debug(PathFilter.class, "checkWebAccess=false, forbidden access, path="+indexJspPath+" ip="+Tools.getRemoteIP(req));
+							res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+							forwardSafely("/403.jsp", req, res);
+							return;
+						}
+
+						res.setHeader("Pragma", "No-Cache");
+						res.setDateHeader("Expires", 0);
+						res.setHeader("Cache-Control", "no-Cache");
+
+						Logger.debug(PathFilter.class, "Forwarding directory to index.jsp: " + indexJspPath);
+						forwardSafely(indexJspPath, req, res);
+						return;
+					}
+				}
+
 				if ("/sitemap.xml".equals(path))
 				{
 					//nie je definovana stranka s URL /sitemap.xml, priamo forwardnem
@@ -1353,6 +1394,11 @@ public class PathFilter implements Filter
 			}
 		}
 		return false;
+	}
+
+	private boolean isIndexJspDirectoryPath(String path)
+	{
+		return path.equals("/admin") || path.startsWith("/admin/") || path.equals("/components") || path.startsWith("/components/");
 	}
 
 

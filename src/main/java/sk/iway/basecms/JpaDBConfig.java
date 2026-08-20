@@ -20,29 +20,18 @@ import sk.iway.iwcm.system.jpa.WebJETJavaSECMPInitializer;
 import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
 
 /**
- * Ukazkova konfiguracia Spring DATA/JPA
- * http://docs.webjetcms.sk/v2022/#/custom-apps/spring-config/
- */
-
-/**
- *     Dolezite:
- *     1.) nastavit anotaciu @EnableJpaRepositories na package ktore obsahuju @Repository
- *     2.) nastavit setPackagesToScan() na entity ktore pouzivame v repozitaroch
- *     3.) pokial sa trieda vola JpaDBConfig, zmenit name pri anotacii @Configuration, musi byt jedinecny
- *     4.) zmenit hodnoty entityManagerFactoryRef a transactionManagerRef, musia byt jedinecne
- *     5.) zmenit name pri @Bean podla hodnot entityManagerFactoryRef a transactionManagerRef
- *     6.) over ci neimplementujes triedu TransactionManagementConfigurer - to dat prec spolu aj s @Override metody annotationDrivenTransactionManager
+ * Persistence configuration owned by the optional Base CMS example module.
  */
 @Configuration("basecms:JpaDBConfig")
 @EnableTransactionManagement
 @EnableJpaRepositories(
     entityManagerFactoryRef = "basecmsEntityManager",
     transactionManagerRef = "basecmsTransactionManager",
-    basePackages = {
-        "sk.iway.basecms.contact"
-    }
+    basePackages = "sk.iway.basecms.contact"
 )
 public class JpaDBConfig {
+
+    private static final String PERSISTENCE_UNIT_NAME = "basecms";
 
     @Bean("basecmsTransactionManager")
     public PlatformTransactionManager transactionManager() {
@@ -59,29 +48,24 @@ public class JpaDBConfig {
         emf.setPersistenceProvider(new WebJETPersistenceProvider());
         emf.setDataSource(DBPool.getInstance().getDataSource("iwcm"));
         emf.setJpaVendorAdapter(new EclipseLinkJpaVendorAdapter());
-
-        // Zoznam packages ktore sa maju skenovat pre databazove entity/DAO !!
-        emf.setPackagesToScan(
-                "sk.iway.basecms.contact"
-        );
+        emf.setPersistenceUnitName(PERSISTENCE_UNIT_NAME);
+        emf.setPackagesToScan("sk.iway.basecms.contact");
 
         Properties properties = new Properties();
-        // https://stackoverflow.com/questions/10769051/eclipselinkjpavendoradapter-instead-of-hibernatejpavendoradapter-issue
         properties.setProperty("eclipselink.weaving", "false");
 
-        if (Constants.DB_TYPE == Constants.DB_ORACLE)
+        if (Constants.DB_TYPE == Constants.DB_ORACLE) {
             properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.Oracle);
-        else if (Constants.DB_TYPE == Constants.DB_MSSQL)
+        } else if (Constants.DB_TYPE == Constants.DB_MSSQL) {
             properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.SQLServer);
-        else if (Constants.DB_TYPE == Constants.DB_PGSQL)
+        } else if (Constants.DB_TYPE == Constants.DB_PGSQL) {
             properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.PostgreSQL);
-        else
+        } else {
             properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.MySQL);
+        }
 
         WebJETJavaSECMPInitializer.setDefaultProperties(properties);
         emf.setJpaProperties(properties);
-
         return emf;
     }
-
 }

@@ -3,12 +3,15 @@ package sk.iway.iwcm.security;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
 import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -158,5 +161,38 @@ class PathFilterSecurityTest extends BaseWebjetTest {
         // The reset simply clears the cached array - verify it doesn't throw
         assertDoesNotThrow(PathFilter::resetBlockedPaths,
             "resetBlockedPaths should not throw");
+    }
+
+    @Test
+    void blocksAnonymousDirectoryIndexForwardForProtectedComponent() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest(Constants.getServletContext());
+        request.setMethod("GET");
+        request.setRequestURI("/components/");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        AtomicBoolean chainCalled = new AtomicBoolean(false);
+
+        new PathFilter().doFilter(request, response, (servletRequest, servletResponse) -> chainCalled.set(true));
+
+        assertEquals(403, response.getStatus());
+        assertEquals("/403.jsp", response.getForwardedUrl());
+        assertFalse(chainCalled.get());
+    }
+
+    @Test
+    void preservesQueryStringWhenRedirectingDirectoryToTrailingSlash() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest(Constants.getServletContext());
+        request.setMethod("GET");
+        request.setContextPath("/cms");
+        request.setRequestURI("/cms/components");
+        request.setQueryString("view=grid&lang=sk");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        AtomicBoolean chainCalled = new AtomicBoolean(false);
+
+        new PathFilter().doFilter(request, response, (servletRequest, servletResponse) -> chainCalled.set(true));
+
+        assertEquals(302, response.getStatus());
+        assertEquals("/cms/components/?view=grid&lang=sk", response.getHeader("Location"));
+        assertNull(response.getForwardedUrl());
+        assertFalse(chainCalled.get());
     }
 }

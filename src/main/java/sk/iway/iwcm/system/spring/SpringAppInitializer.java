@@ -1,177 +1,121 @@
 package sk.iway.iwcm.system.spring;
 
-import org.springframework.web.WebApplicationInitializer;
-import org.springframework.web.context.ContextLoaderListener;
-import org.springframework.web.context.request.RequestContextListener;
-import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
-import org.springframework.web.filter.CharacterEncodingFilter;
-import org.springframework.web.filter.DelegatingFilterProxy;
-import org.springframework.web.servlet.DispatcherServlet;
+import jakarta.servlet.ServletContext;
 
-import sk.iway.iwcm.*;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.web.servlet.ServletContextInitializer;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.doc.DebugTimer;
 
-import jakarta.servlet.FilterRegistration;
-import jakarta.servlet.MultipartConfigElement;
-import jakarta.servlet.ServletContext;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRegistration.Dynamic;
-import java.util.ArrayList;
-import java.util.List;
-
-public class SpringAppInitializer implements WebApplicationInitializer
+/**
+ * Spring Boot lifecycle configuration for WebJET CMS startup.
+ *
+ * Completes WebJET initialization after the bootstrap mode was selected.
+ *
+ * Core initialization needs a started ServletContext and therefore runs from a
+ * ServletContextInitializer before the other servlet/filter registrations.
+ * Production post-initialization is deliberately deferred until
+ * ApplicationReadyEvent, after context refresh.
+ */
+@Configuration(proxyBeanMethods = false)
+public class SpringAppInitializer
 {
-	private static DebugTimer dtGlobal = null;
+	private static volatile DebugTimer dtGlobal = null;
 
-	@Override
-	public void onStartup(ServletContext servletContext) throws ServletException
-	{
-		List<String> springConfigClasses = new ArrayList<>();
-		dtGlobal = new DebugTimer("WebJET.init");
-		boolean initialized = InitServlet.initializeWebJET(dtGlobal, servletContext);
-		String installName = Constants.getInstallName();
+	@Bean
+	WebjetInitializationActions webjetInitializationActions() {
+		return new WebjetInitializationActions();
+	}
 
-		Logger.println(this,"SPRING: onStartup");
-		AnnotationConfigWebApplicationContext ctx = new AnnotationConfigWebApplicationContext();
-		springConfigClasses.add("sk.iway.iwcm.system.spring.BaseSpringConfig");
-
-		//WebJET 9/2021
-		springConfigClasses.add("sk.iway.webjet.v9.V9SpringConfig");
-
-		// RAG module
-		springConfigClasses.add("sk.iway.iwcm.rag.pgvector.PgvectorSpringConfig");
-
-		if (initialized) {
-			String contextDbName = servletContext.getInitParameter("webjetDbname");
-			Logger.debug(getClass(),"SPRING: contextDbName="+contextDbName);
-			InitServlet.setContextDbName(contextDbName);
-
-			if (Tools.isNotEmpty(installName)) {
-				springConfigClasses.add("sk.iway." + installName + ".SpringConfig");
-				Constants.setInstallName(installName);
-			}
-
-			String logInstallName = Constants.getLogInstallName();
-			if (Tools.isNotEmpty(logInstallName)) {
-				String logClassName = "sk.iway." + logInstallName + ".LogSpringConfig";
-				//over ci existuje trieda LogSpringConfig kvoli spatnej kompatibilite boli stare ako SpringConfig
-				try {
-					Class.forName(logClassName);
-					springConfigClasses.add(logClassName);
-				} catch (ClassNotFoundException e) {
-					//nenasiel sa LogSpringConfig, skusime teda pridat po starom
-					springConfigClasses.add("sk.iway." + logInstallName + ".SpringConfig");
-				}
-
-			}
-		}
-
-		ctx.setServletContext(servletContext);
-
-		Dynamic dynamic = servletContext.addServlet("springDispatcher", new DispatcherServlet(ctx));
-		dynamic.addMapping("/");
-		dynamic.setLoadOnStartup(1);
-
-		String stripesPostSize = Constants.getString("stripes.FileUpload.MaximumPostSize");
-		stripesPostSize = Tools.replace(stripesPostSize, "m", "000000");
-		stripesPostSize = Tools.replace(stripesPostSize, "g", "000000000");
-		long maxPostSize = Tools.getLongValue(stripesPostSize, 0L);
-
-		// Set servlet 3.0 multipart config
-		MultipartConfigElement multipartConfig = new MultipartConfigElement(
-			null,// location (null = default temp dir)
-			maxPostSize,  // maxFileSize
-			maxPostSize,  // maxRequestSize
-			65536    // fileSizeThreshold
+	@Bean
+	@Order(Ordered.HIGHEST_PRECEDENCE)
+	ServletContextInitializer springAppInitializerOnStartup(WebjetBootstrapState bootstrapState,
+			WebjetInitializationActions initializationActions, ApplicationContext applicationContext) {
+		return servletContext -> initializeCore(
+			servletContext, bootstrapState, initializationActions, applicationContext
 		);
-		dynamic.setMultipartConfig(multipartConfig);
-
-		CharacterEncodingFilter filter = new CharacterEncodingFilter();
-		filter.setEncoding(Constants.getString("defaultEncoding"));
-		servletContext.addFilter("SpringEncodingFilter", filter).addMappingForUrlPatterns(null, false, "/*");
-
-		if (initialized == false) {
-			//WebJET is not initialized - there is no DB connection, allow only setup
-			springConfigClasses.clear();
-			//we need this to handle localeResolver correctly during setup
-			springConfigClasses.add("sk.iway.iwcm.setup.SetupSpringConfig");
-			addScanPackagesInit(ctx);
-		} else {
-			loadSpringConfigs(springConfigClasses, ctx);
-			servletContext.addListener(RequestContextListener.class);
-			addScanPackages(ctx);
-			servletContext.addListener(new ContextLoaderListener(ctx));
-		}
-
-		servletContext.setAttribute("springContext", ctx);
-
-		if (initialized) {
-			// spring security filter
-			final DelegatingFilterProxy springSecurityFilterChain = new DelegatingFilterProxy("springSecurityFilterChain");
-			final FilterRegistration.Dynamic addedFilter = servletContext.addFilter("springSecurityFilterChain", springSecurityFilterChain);
-			addedFilter.addMappingForUrlPatterns(null, false, "/*");
-		} else {
-			//it is normally initialized in V9SpringConfig, but we need to add it here for setup/bad db connection
-			servletContext.addFilter("failedSetCharacterEncodingFilter", new SetCharacterEncodingFilter()).addMappingForUrlPatterns(null, false, "/*");
-		}
-
-		dtGlobal.diff("Spring onStartup done");
-
-		if (initialized) InitServlet.setSpringInitialized();
 	}
 
-	private void loadSpringConfigs(List<String> customConfigs, AnnotationConfigWebApplicationContext ctx) {
-
-		List<Class<?>> classList = new ArrayList<>();
-
-		// naplnenie pola tried
-		for (String customConfig : customConfigs) {
-			try {
-				Class<?> aClass = Class.forName(customConfig);
-				if (aClass != null) {
-					classList.add(aClass);
-					Logger.println(this, "SPRING: found custom config " + customConfig);
-				}
-				else {
-					Logger.println(this, "SPRING: NOT found custom config 1 " + customConfig);
-				}
-			} catch (Exception e) {
-				// config class asi neexistuje.
-				Logger.println(this, "SPRING: NOT found custom config 2 " + customConfig);
-			}
-
-		}
-
-		ctx.register(classList.toArray(new Class[classList.size()]));
+	@Bean
+	@ConditionalOnProperty(name = WebjetBootstrapMode.PROPERTY_NAME, havingValue = WebjetBootstrapMode.PRODUCTION_VALUE)
+	ApplicationListener<ApplicationReadyEvent> webjetApplicationReadyListener(
+			WebjetBootstrapState bootstrapState, WebjetInitializationActions initializationActions) {
+		return event -> initializeAfterRefresh(bootstrapState, initializationActions);
 	}
 
-	private void addScanPackages(AnnotationConfigWebApplicationContext ctx) {
-		List<String> packages = new ArrayList<>();
-		packages.add("sk.iway.iwcm.system.spring");
+	private void initializeCore(ServletContext servletContext, WebjetBootstrapState bootstrapState,
+			WebjetInitializationActions initializationActions, ApplicationContext applicationContext) {
+		initializeCoreIfNecessary(servletContext, bootstrapState, initializationActions);
 
-		String addPackages = Constants.getString("springAddPackages");
-		if (Tools.isNotEmpty(addPackages)) {
-			packages.addAll(Tools.getStringListValue(Tools.getTokens(addPackages, ",")));
+		servletContext.setAttribute("springContext", applicationContext);
+		Logger.info(SpringAppInitializer.class, "Set Spring ApplicationContext into ServletContext");
+	}
+
+	private void initializeCoreIfNecessary(ServletContext servletContext, WebjetBootstrapState bootstrapState,
+			WebjetInitializationActions initializationActions) {
+		if (bootstrapState.isCoreInitializationAttempted()) {
+			validateBootstrapMode(bootstrapState);
+			return;
+		}
+		bootstrapState.recordCoreInitialization(initializationActions.initialize(servletContext));
+		validateBootstrapMode(bootstrapState);
+	}
+
+	private void validateBootstrapMode(WebjetBootstrapState bootstrapState) {
+		boolean productionMode = bootstrapState.getMode() == WebjetBootstrapMode.PRODUCTION;
+		boolean coreInitialized = bootstrapState.isCoreInitialized();
+		if (productionMode != coreInitialized) {
+			throw new WebjetBootstrapModeMismatchException(
+				bootstrapState.getMode(), coreInitialized
+			);
+		}
+	}
+
+	private void initializeAfterRefresh(WebjetBootstrapState bootstrapState,
+			WebjetInitializationActions initializationActions) {
+		if (bootstrapState.getMode() != WebjetBootstrapMode.PRODUCTION) {
+			return;
+		}
+		if (bootstrapState.isCoreInitializationAttempted() == false || bootstrapState.isCoreInitialized() == false) {
+			throw new IllegalStateException("WebJET production context became ready without successful core initialization");
+		}
+		if (bootstrapState.isPostInitializationCompleted()) {
+			return;
 		}
 
-		if (packages.isEmpty()==false) {
-			Logger.println(getClass(), String.format("Spring scan packages: %s", Tools.join(packages, ", ")));
-			ctx.scan(packages.toArray(new String[packages.size()]));
+		if (initializationActions.initializeAfterSpring() == false) {
+			throw new IllegalStateException("WebJET post-initialization did not complete successfully");
 		}
+		bootstrapState.recordPostInitializationCompleted();
+	}
+
+	static void startDebugTimer() {
+		dtGlobal = new DebugTimer("WebJET.init");
+	}
+
+	static DebugTimer getDebugTimer() {
+		if (dtGlobal == null) {
+			startDebugTimer();
+		}
+		return dtGlobal;
 	}
 
 	/**
-	 * Packages for setup
-	 * @param ctx
+	 * Debug timing method - logs timing information for monitoring startup progress.
+	 * Called from various places throughout the application for debug timing.
+	 * @param message timing message to log
 	 */
-	private void addScanPackagesInit(AnnotationConfigWebApplicationContext ctx) {
-		List<String> packages = new ArrayList<>();
-		packages.add("sk.iway.iwcm.setup");
-		Logger.println(getClass(), String.format("Spring scan packages: %s", Tools.join(packages, ", ")));
-		ctx.scan(packages.toArray(new String[packages.size()]));
-	}
-
 	public static void dtDiff(String message) {
-		if (dtGlobal!=null) dtGlobal.diffInfo(message);
+		if (dtGlobal != null) {
+			dtGlobal.diffInfo(message);
+		}
 	}
 }
