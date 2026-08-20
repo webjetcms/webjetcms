@@ -3712,7 +3712,7 @@
                             required SMALLINT DEFAULT 0,
                             bonus_class_name NVARCHAR2(255) DEFAULT '',
                             bonus_entity_id INTEGER DEFAULT 0,
-                            domain_id INTEGER NOT NULL DEFAULT 1
+                            domain_id INTEGER NOT NULL DEFAULT 1,
                             CONSTRAINT uk_custom_fields_class_alpha_entity UNIQUE (class_name, alphabet, entity_id, bonus_class_name, bonus_entity_id)
                         );
                         CREATE INDEX idx_custom_fields_class_entity ON custom_fields (class_name, entity_id);
@@ -3916,6 +3916,30 @@
                 <void property="mssql"><string>ALTER TABLE templates_group ADD seo_image NVARCHAR(255) NULL</string></void>
                 <void property="oracle"><string>ALTER TABLE templates_group ADD (seo_image NVARCHAR2(255) NULL)</string></void>
                 <void property="pgsql"><string>ALTER TABLE templates_group ADD COLUMN seo_image VARCHAR(255)</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>20.08.2026</string></void>
+                <void property="desc"><string>custom_fields - include domain_id in unique constraint</string></void>
+                <void property="mysql"><string>
+                    ALTER TABLE custom_fields DROP INDEX uk_custom_fields_class_alpha_entity;
+                    ALTER TABLE custom_fields ADD CONSTRAINT uk_custom_fields_class_alpha_entity UNIQUE (class_name, alphabet, entity_id, bonus_class_name, bonus_entity_id, domain_id);
+                </string></void>
+                <void property="mssql"><string>
+                    ALTER TABLE custom_fields DROP CONSTRAINT {CONSTRAIN:uk_custom_fields_class_alpha_entity};
+                    ALTER TABLE custom_fields ADD CONSTRAINT uk_custom_fields_class_alpha_entity UNIQUE (class_name, alphabet, entity_id, bonus_class_name, bonus_entity_id, domain_id);
+                </string></void>
+                <void property="oracle"><string>
+                    ALTER TABLE custom_fields DROP CONSTRAINT {CONSTRAIN:uk_custom_fields_class_alpha_entity};
+                    ALTER TABLE custom_fields ADD CONSTRAINT uk_custom_fields_class_alpha_entity UNIQUE (class_name, alphabet, entity_id, bonus_class_name, bonus_entity_id, domain_id);
+                </string></void>
+                <void property="pgsql"><string>
+                    DROP INDEX uk_custom_fields_class_alpha_entity;
+                    CREATE UNIQUE INDEX uk_custom_fields_class_alpha_entity ON custom_fields (class_name, alphabet, entity_id, bonus_class_name, bonus_entity_id, domain_id);
+                </string></void>
             </object>
         </void>
 
