@@ -22,6 +22,26 @@ tak sa v dátach daného číselníka zobrazia 2 stĺpce/polia typu reťazec a 1
 
 To znamená, že si môžete zadefinovať formát dát číselníkov pre každý číselník zvlášť. Ako už napovedajú názvy kariet, môžete kombinovať textové, číselné, Boolovské alebo dátumové polia. Ich počet je obmedzený pre každý typ počtom polí v jednotlivých kartách.
 
+### Karta Typy reťazcových polí
+
+Po prvom uložení typu číselníka sa zobrazí karta **Typy reťazcových polí**. Umožňuje rozšíriť pomenované polia z karty **Reťazce** o nastavenia známe z [voliteľných polí](../../../frontend/webpages/customfields/custom-fields-settings.md), napríklad o výberové pole, výber viacerých možností, automatické dopĺňanie, prepojenie na iný číselník, výber obrázka, odkazu, priečinka alebo webovej stránky.
+
+![](editor_stringFieldTypes.png)
+
+V tabuľke sa zobrazujú iba reťazcové polia, pre ktoré je vytvorená konfigurácia. Pri jej pridaní sú v poli **Voliteľné pole** dostupné iba pomenované reťazcové polia vo formáte **Reťazec N – názov**. Ponuka polí, ich názvy a popisy vychádzajú z poslednej uloženej verzie typu číselníka. Po pomenovaní alebo premenovaní reťazcového poľa preto najskôr uložte typ číselníka; konfigurácia sa následne automaticky aktualizuje. Ak názov poľa odstránite, pole sa skryje a jeho nastavenie povinnosti sa zruší.
+
+Pre každé pole je možné nastaviť:
+
+- typ poľa a jeho typovo špecifické vlastnosti, napríklad možnosti výberového poľa,
+- povinnosť vyplnenia,
+- pomocný text zobrazený ako `tooltip`
+
+![](editor_stringFieldType.png)
+
+Bez špecifickej konfigurácie sa pomenované reťazcové pole zobrazí ako bežné textové pole s maximálnou dĺžkou 1024 znakov. Nepomenované reťazcové polia sa v dátach číselníka ani v možnostiach konfigurácie nezobrazia.
+
+!> **Upozornenie na spätnú kompatibilitu:** dátové atribúty reťazcových polí sa zmenili z `string1` až `string12` na `fieldA` až `fieldL`. Vo vlastných alebo starších Excel šablónach na import dát číselníka musíte kódové názvy v hlavičke ručne upraviť, napríklad `Mesto|string1` na `Mesto|fieldA`. Rovnaké názvy `fieldA` až `fieldL` používajte aj v integráciách REST API, ktoré spracúvajú dáta číselníkov. Databázové stĺpce `string1` až `string12` zostávajú nezmenené.
+
 ### Karta Základné
 
 V karte "Základné" sa nastavujú vlastnosti:

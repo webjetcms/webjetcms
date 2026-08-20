@@ -1,12 +1,16 @@
 package sk.iway.iwcm.components.enumerations.model;
 
 import java.io.Serializable;
+import java.util.List;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
 @Getter
 @Setter
@@ -20,6 +24,27 @@ public class EnumerationTypeEditorFields implements Serializable {
         tab="basic"
     )
     private Integer childEnumTypeId;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATATABLE,
+        title = "&nbsp;",
+        tab = "stringFieldTypes",
+        hidden = true,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/enumeration/string-fields?enumerationTypeId={id}"),
+                    @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity"),
+                    @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "true"),
+                    @DataTableColumnEditorAttr(key = "data-dt-field-dt-forceVisibleColumns", value = "alphabet,type,label,tooltip"),
+                    @DataTableColumnEditorAttr(key = "data-dt-field-dt-toggleSelector", value = "td"),
+                    @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "import,duplicate,celledit"),
+                    @DataTableColumnEditorAttr(key = "data-dt-field-dt-tabs", value = "[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true }]")
+                }
+            )
+        }
+    )
+    private List<CustomFieldsEntity> stringFieldTypes;
 
     public void fromEnumerationType(EnumerationTypeBean enumerationTypeOriginal) {
         EnumerationTypeBean bean = enumerationTypeOriginal.getChildEnumerationTypeBean();

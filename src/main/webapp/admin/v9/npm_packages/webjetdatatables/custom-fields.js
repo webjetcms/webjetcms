@@ -157,9 +157,9 @@ export function update(EDITOR, action) {
     var booleanTemplate = '<div><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">Áno</label></div></div>';
     var booleanTextTemplate = '<div><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">{label_value}</label></div></div>';
     var dateTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" type="text" autocomplete="off" class="form-control">';
-    var uuidTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="255" value="{value}" class="form-control field-type-uuid" type="text">';
+    var uuidTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="255" value="{value}" class="form-control field-type-uuid custom-field-ai-disabled" type="text">';
     var colorTemplate = `
-        <div class="input-group">
+        <div class="input-group custom-field-ai-disabled">
             <span class="input-group-text color-preview" style="background-color: {value}"></span>
             <input id="DTE_Field_{customPrefix}{identifier}" value="{value}" {disabled} class="form-control" type="text"/>
             <button class="btn btn-outline-secondary btn-clear" type="button"><i class="ti ti-circle-x"></i></button>
@@ -338,13 +338,13 @@ export function update(EDITOR, action) {
                 backgroundImage = "url("+value+")";
                 prependClassName = " has-image";
             }
-            template = '<div class="input-group"> <span class="input-group-text'+prependClassName+'" style="background-image: '+backgroundImage+';"><i class="ti ti-photo"></i></span> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="ti ti-focus-2"></i></button> </div>';
+            template = '<div class="input-group custom-field-image custom-field-ai-disabled"> <span class="input-group-text'+prependClassName+'" style="background-image: '+backgroundImage+';"><i class="ti ti-photo"></i></span> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="ti ti-focus-2"></i></button> </div>';
         } else if (v.type == 'link') {
-            template = '<div class="input-group"> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="ti ti-focus-2"></i></button> </div>';
+            template = '<div class="input-group custom-field-link custom-field-ai-disabled"> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="ti ti-focus-2"></i></button> </div>';
         } else if (v.type == 'dir') {
-            template = '<div> ' + template + ' <div class="webjet-component" id="DTE_Field_' + customPrefix + identifier + '"></div> </div>';
+            template = '<div class="custom-field-ai-disabled"> ' + template + ' <div class="webjet-component" id="DTE_Field_' + customPrefix + identifier + '"></div> </div>';
         } else if (v.type == 'json_group' || v.type == 'json_doc') {
-            template = '<div> ' + template + ' <div class="webjet-component" id="DTE_Field_' + customPrefix + identifier + '"></div> </div>';
+            template = '<div class="custom-field-ai-disabled"> ' + template + ' <div class="webjet-component" id="DTE_Field_' + customPrefix + identifier + '"></div> </div>';
         } else if (v.type == 'none') {
             // LPA
             container.hide();
@@ -523,9 +523,14 @@ export function update(EDITOR, action) {
         }
         else if (v.type == 'autocomplete') {
 
-            new AutoCompleter("#" + datatable.DATA.id + "_modal .DTE_Field_Name_field" + identifier + " input.autocomplete")
-                    .setUrl('/admin/FCKeditor/_editor_autocomplete.jsp?keyPrefix=' + json.editorFields?.fieldsDefinitionKeyPrefix + '&className=' + encodeURIComponent(json.editorFields?.fieldsDefinitionClassName || '') + '&objectId=' + json.id + '&template=' + json.tempId + '&field=' + identifier)
-                    .transform();
+            const configuredAutocompleteUrl = json.editorFields?.fieldsDefinitionAutocompleteUrl;
+            const autocompleteUrl = configuredAutocompleteUrl || '/admin/FCKeditor/_editor_autocomplete.jsp';
+            const querySeparator = autocompleteUrl.includes('?') ? '&' : '?';
+            const autocomplete = new AutoCompleter("#" + datatable.DATA.id + "_modal .DTE_Field_Name_field" + identifier + " input.autocomplete");
+            if(configuredAutocompleteUrl) autocomplete.setName("term");
+            autocomplete
+                .setUrl(autocompleteUrl + querySeparator + 'keyPrefix=' + json.editorFields?.fieldsDefinitionKeyPrefix + '&className=' + encodeURIComponent(json.editorFields?.fieldsDefinitionClassName || '') + '&objectId=' + (json.editorFields?.fieldsDefinitionEntityId ?? json.id) + '&template=' + json.tempId + '&field=' + identifier)
+                .transform();
 
         } else if (v.type == "dir") {
             let conf = {};

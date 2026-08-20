@@ -7,13 +7,16 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.Errors;
 
 import jakarta.persistence.Entity;
 import sk.iway.iwcm.Cache;
@@ -23,6 +26,10 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsRepository;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
+import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
+import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
+import sk.iway.iwcm.components.enumerations.model.EnumerationTypeRepository;
+import sk.iway.iwcm.components.enumerations.rest.EnumerationService;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.TemplateDetails;
@@ -39,11 +46,24 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
 public class CustomFieldsService {
 
     private static final String FIELD_TYPE_KEY_PREFIX = "settings.custom-fields.type.";
+    private static final List<String> FIELD_TYPES = List.of(
+        "text", "textarea", "select", "multiselect", "radio", "checkbox", "boolean", "number", "date", "none",
+        "autocomplete", "image", "link", "json_group", "json_doc", "dir", "docsIn", "uuid", "color"
+    );
 
     private static final String CLASS_FIELD_MAP_KEY = "CustomFieldsService_classFieldsMap";
     public static final Map<String, String> BONUS_PARAMS = Map.of(
         "sk.iway.iwcm.doc.DocDetails", "tempId"
     );
+
+    private final CustomFieldsRepository customFieldsRepository;
+    private final EnumerationTypeRepository enumerationTypeRepository;
+
+    @Autowired
+    public CustomFieldsService(CustomFieldsRepository customFieldsRepository, EnumerationTypeRepository enumerationTypeRepository) {
+        this.customFieldsRepository = customFieldsRepository;
+        this.enumerationTypeRepository = enumerationTypeRepository;
+    }
 
     /* PUBLIC STATIC METHODS */
 
@@ -159,6 +179,7 @@ public class CustomFieldsService {
         if(entity == null || Tools.isEmpty(entity.getType())) throw new IllegalStateException("CustomFieldsEntity or its type must not be null/empty");
 
         String type = entity.getType();
+        if ("none".equalsIgnoreCase(type)) entity.setRequired(Boolean.FALSE);
         if("enumeration".equals(type)) {
             type = "select";
             entity.setType(type);
@@ -293,27 +314,20 @@ public class CustomFieldsService {
      * @see #getFieldTypeLabel(Prop, String)
      */
     public static List<LabelValue> getFieldsTypes(Prop prop) {
-        return List.of(
-            new LabelValue( getFieldTypeLabel(prop, "text"), "text"),
-            new LabelValue( getFieldTypeLabel(prop, "textarea"), "textarea"),
-            new LabelValue( getFieldTypeLabel(prop, "select"), "select"),
-            new LabelValue( getFieldTypeLabel(prop, "multiselect"), "multiselect"),
-            new LabelValue( getFieldTypeLabel(prop, "radio"), "radio"),
-            new LabelValue( getFieldTypeLabel(prop, "checkbox"), "checkbox"),
-            new LabelValue( getFieldTypeLabel(prop, "boolean"), "boolean"),
-            new LabelValue( getFieldTypeLabel(prop, "number"), "number"),
-            new LabelValue( getFieldTypeLabel(prop, "date"), "date"),
-            new LabelValue( getFieldTypeLabel(prop, "none"), "none"),
-            new LabelValue( getFieldTypeLabel(prop, "autocomplete"), "autocomplete"),
-            new LabelValue( getFieldTypeLabel(prop, "image"), "image"),
-            new LabelValue( getFieldTypeLabel(prop, "link"), "link"),
-            new LabelValue( getFieldTypeLabel(prop, "json_group"), "json_group"),
-            new LabelValue( getFieldTypeLabel(prop, "json_doc"), "json_doc"),
-            new LabelValue( getFieldTypeLabel(prop, "dir"), "dir"),
-            new LabelValue( getFieldTypeLabel(prop, "docsIn"), "docsIn"),
-            new LabelValue( getFieldTypeLabel(prop, "uuid"), "uuid"),
-            new LabelValue( getFieldTypeLabel(prop, "color"), "color")
-        );
+        List<LabelValue> fieldTypes = new ArrayList<>();
+        for (String fieldType : FIELD_TYPES) {
+            fieldTypes.add(new LabelValue(getFieldTypeLabel(prop, fieldType), fieldType));
+        }
+        return fieldTypes;
+    }
+
+    /**
+     * Checks whether a custom field type can be persisted by this service.
+     * @param type custom field type
+     * @return true for a supported field type
+     */
+    public static boolean isSupportedFieldType(String type) {
+        return FIELD_TYPES.contains(type) || "enumeration".equals(type);
     }
 
     /**
@@ -383,9 +397,11 @@ public class CustomFieldsService {
         // return only required fields
         Set<Character> requiredAlphabets = new LinkedHashSet<>();
         for(CustomFieldsEntity customField : getCustomFields(main, bonus)) {
-            if(customField != null && Tools.isTrue(customField.getRequired()) && Tools.isEmpty(customField.getAlphabet()) == false) {
-                requiredAlphabets.add(customField.getAlphabet().charAt(0));
-            }
+            if (customField == null || Tools.isTrue(customField.getRequired()) == false || Tools.isEmpty(customField.getAlphabet())) continue;
+            if ("none".equalsIgnoreCase(customField.getType())) continue;
+            if (EnumerationDataBean.class.getName().equals(customField.getClassName()) && Tools.isEmpty(customField.getLabel())) continue;
+
+            requiredAlphabets.add(customField.getAlphabet().charAt(0));
         }
         return new ArrayList<>(requiredAlphabets);
     }
@@ -469,6 +485,49 @@ public class CustomFieldsService {
     /* PUBLIC METHODS  */
 
     /**
+     * Runs additional validation selected by the configured entity class name.
+     * @param entity custom field configuration
+     * @param action datatable editor action
+     * @param errors validation errors
+     * @param id custom field configuration ID
+     * @param prop current translations
+     * @return true when the class-specific validation passed or is not defined
+     */
+    public boolean validateSpecificClass(CustomFieldsEntity entity, String action, Errors errors, Long id, Prop prop) {
+        if (entity == null) return true;
+
+        if (EnumerationDataBean.class.getName().equals(entity.getClassName())) {
+            return validateEnumerationStringField(entity, action, errors, id, prop);
+        }
+
+        return true;
+    }
+
+    /**
+     * Applies class-specific derived values to a custom field configuration.
+     * @param entity custom field configuration
+     */
+    public void synchronizeSpecificClassFields(CustomFieldsEntity entity) {
+        if (entity == null) return;
+
+        if (EnumerationDataBean.class.getName().equals(entity.getClassName())) {
+            synchronizeEnumerationFieldLabel(entity);
+        }
+    }
+
+    /**
+     * Checks whether the alphabet value identifies a configurable enumeration string field.
+     * @param alphabet custom field alphabet value
+     * @return true for values A through L
+     */
+    public static boolean isEnumerationStringAlphabet(String alphabet) {
+        return Tools.isNotEmpty(alphabet)
+            && alphabet.length() == 1
+            && alphabet.charAt(0) >= 'A'
+            && alphabet.charAt(0) <= 'L';
+    }
+
+    /**
      * Returns class name suggestions that contain the given search term.
      *
      * @param term search text
@@ -496,6 +555,50 @@ public class CustomFieldsService {
     }
 
     /* PRIVATE METHODS */
+
+    private boolean validateEnumerationStringField(CustomFieldsEntity entity, String action, Errors errors, Long id, Prop prop) {
+        String alphabet = entity.getAlphabet();
+        if (isEnumerationStringAlphabet(alphabet) == false) {
+            errors.rejectValue("errorField.alphabet", null, prop.getText("enum_type.string_field_type.invalid_error")); //NOSONAR
+            return false;
+        }
+
+        if (entity.getEntityId() == null || entity.getEntityId() < 1) return true;
+        EnumerationTypeBean enumerationType = enumerationTypeRepository.findById(entity.getEntityId()).orElse(null);
+        if (enumerationType == null) {
+            errors.rejectValue("errorField.entityId", null, prop.getText("enum_type.string_field_type.invalid_error")); //NOSONAR
+            return false;
+        }
+
+        String fieldName = EnumerationService.getStringFieldName(enumerationType, alphabet.charAt(0));
+        if (Tools.isNotEmpty(fieldName)) return true;
+
+        CustomFieldsEntity stored = id != null && id > 0 ? customFieldsRepository.findById(id).orElse(null) : null;
+        boolean editingExistingField = "edit".equals(action)
+            && stored != null
+            && EnumerationDataBean.class.getName().equals(stored.getClassName())
+            && Objects.equals(entity.getEntityId(), stored.getEntityId())
+            && Objects.equals(CloudToolsForCore.getDomainId(), stored.getDomainId())
+            && Tools.isEmpty(stored.getBonusClassName())
+            && (stored.getBonusEntityId() == null || stored.getBonusEntityId() == 0)
+            && Objects.equals(alphabet, stored.getAlphabet());
+        if (editingExistingField) return true;
+
+        errors.rejectValue("errorField.alphabet", null, prop.getText("enum_type.string_field_type.unnamed_error")); //NOSONAR
+        return false;
+    }
+
+    private void synchronizeEnumerationFieldLabel(CustomFieldsEntity entity) {
+        if (entity.getEntityId() == null || entity.getEntityId() < 1 || Tools.isEmpty(entity.getAlphabet())) return;
+
+        char alphabet = entity.getAlphabet().charAt(0);
+        if (alphabet < 'A' || alphabet > 'L') return;
+
+        EnumerationTypeBean enumerationType = enumerationTypeRepository.findById(entity.getEntityId()).orElse(null);
+        if (enumerationType != null) {
+            entity.setLabel(EnumerationService.getStringFieldName(enumerationType, alphabet));
+        }
+    }
 
     /**
      * Returns a cached set of eligible class names, scanning the classpath when cache is empty.
