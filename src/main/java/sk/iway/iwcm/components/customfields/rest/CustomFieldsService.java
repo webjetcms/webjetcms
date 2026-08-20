@@ -10,10 +10,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.Errors;
 
 import jakarta.persistence.Entity;
 import sk.iway.iwcm.Cache;
@@ -23,6 +25,10 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsRepository;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
+import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
+import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
+import sk.iway.iwcm.components.enumerations.model.EnumerationTypeRepository;
+import sk.iway.iwcm.components.enumerations.rest.EnumerationService;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.TemplateDetails;
@@ -44,6 +50,15 @@ public class CustomFieldsService {
     public static final Map<String, String> BONUS_PARAMS = Map.of(
         "sk.iway.iwcm.doc.DocDetails", "tempId"
     );
+
+    private final CustomFieldsRepository customFieldsRepository;
+    private final EnumerationTypeRepository enumerationTypeRepository;
+
+    @Autowired
+    public CustomFieldsService(CustomFieldsRepository customFieldsRepository, EnumerationTypeRepository enumerationTypeRepository) {
+        this.customFieldsRepository = customFieldsRepository;
+        this.enumerationTypeRepository = enumerationTypeRepository;
+    }
 
     /* PUBLIC STATIC METHODS */
 
@@ -427,6 +442,37 @@ public class CustomFieldsService {
     /* PUBLIC METHODS  */
 
     /**
+     * Runs additional validation selected by the configured entity class name.
+     * @param entity custom field configuration
+     * @param action datatable editor action
+     * @param errors validation errors
+     * @param id custom field configuration ID
+     * @param prop current translations
+     * @return true when the class-specific validation passed or is not defined
+     */
+    public boolean validateSpecificClass(CustomFieldsEntity entity, String action, Errors errors, Long id, Prop prop) {
+        if (entity == null) return true;
+
+        if (EnumerationDataBean.class.getName().equals(entity.getClassName())) {
+            return validateEnumerationStringField(entity, action, errors, id, prop);
+        }
+
+        return true;
+    }
+
+    /**
+     * Applies class-specific derived values to a custom field configuration.
+     * @param entity custom field configuration
+     */
+    public void synchronizeSpecificClassFields(CustomFieldsEntity entity) {
+        if (entity == null) return;
+
+        if (EnumerationDataBean.class.getName().equals(entity.getClassName())) {
+            synchronizeEnumerationFieldLabel(entity);
+        }
+    }
+
+    /**
      * Returns class name suggestions that contain the given search term.
      *
      * @param term search text
@@ -454,6 +500,47 @@ public class CustomFieldsService {
     }
 
     /* PRIVATE METHODS */
+
+    private boolean validateEnumerationStringField(CustomFieldsEntity entity, String action, Errors errors, Long id, Prop prop) {
+        String alphabet = entity.getAlphabet();
+        if (Tools.isEmpty(alphabet) || alphabet.length() != 1 || alphabet.charAt(0) < 'A' || alphabet.charAt(0) > 'L') {
+            errors.rejectValue("errorField.alphabet", null, prop.getText("enum_type.string_field_type.invalid_error")); //NOSONAR
+            return false;
+        }
+
+        if (entity.getEntityId() == null || entity.getEntityId() < 1) return true;
+        EnumerationTypeBean enumerationType = enumerationTypeRepository.findById(entity.getEntityId()).orElse(null);
+        if (enumerationType == null) {
+            errors.rejectValue("errorField.entityId", null, prop.getText("enum_type.string_field_type.invalid_error")); //NOSONAR
+            return false;
+        }
+
+        String fieldName = EnumerationService.getStringFieldName(enumerationType, alphabet.charAt(0));
+        if (Tools.isNotEmpty(fieldName)) return true;
+
+        CustomFieldsEntity stored = id != null && id > 0 ? customFieldsRepository.findById(id).orElse(null) : null;
+        boolean editingExistingField = "edit".equals(action)
+            && stored != null
+            && EnumerationDataBean.class.getName().equals(stored.getClassName())
+            && entity.getEntityId().equals(stored.getEntityId())
+            && alphabet.equals(stored.getAlphabet());
+        if (editingExistingField) return true;
+
+        errors.rejectValue("errorField.alphabet", null, prop.getText("enum_type.string_field_type.unnamed_error")); //NOSONAR
+        return false;
+    }
+
+    private void synchronizeEnumerationFieldLabel(CustomFieldsEntity entity) {
+        if (entity.getEntityId() == null || entity.getEntityId() < 1 || Tools.isEmpty(entity.getAlphabet())) return;
+
+        char alphabet = entity.getAlphabet().charAt(0);
+        if (alphabet < 'A' || alphabet > 'L') return;
+
+        EnumerationTypeBean enumerationType = enumerationTypeRepository.findById(entity.getEntityId()).orElse(null);
+        if (enumerationType != null) {
+            entity.setLabel(EnumerationService.getStringFieldName(enumerationType, alphabet));
+        }
+    }
 
     /**
      * Returns a cached set of eligible class names, scanning the classpath when cache is empty.

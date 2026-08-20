@@ -48,6 +48,8 @@ public class BaseEditorFields {
     private String fieldsDefinitionKeyPrefix;
     //class name of the bean, needs to be set for autocomplete field to lookup CustomFieldsEntity
     private String fieldsDefinitionClassName;
+    //entity ID used for custom fields lookup, can differ from the edited bean ID
+    private Long fieldsDefinitionEntityId;
 
     //poslanie notifikacie, je potrebne pri getOne alebo pri ulozeni
     private List<NotifyBean> notify;
@@ -79,15 +81,30 @@ public class BaseEditorFields {
      * @return
      */
     public List<Field> getFields(Object bean, String keyPrefix, char lastAlphabet) {
+		List<Field> fields = getFields(bean, keyPrefix, lastAlphabet, new CustomFieldsSearchDto(bean));
+        fieldsDefinitionEntityId = null;
+        return fields;
+    }
+
+    /**
+     * Generates custom fields using an explicit lookup context.
+     * @param bean java bean containing getFieldX methods
+     * @param keyPrefix translation key prefix
+     * @param lastAlphabet last custom field letter
+     * @param searchDto custom fields lookup context
+     * @return generated field definitions
+     */
+    public List<Field> getFields(Object bean, String keyPrefix, char lastAlphabet, CustomFieldsSearchDto searchDto) {
 		//tu musi byt getInstance aby sa prebral jazyk podla prihlaseneho usera
         Prop prop = Prop.getInstance();
 		Prop propType = Prop.getInstance(Constants.getString("defaultLanguage"));
         List<Field> fields = new ArrayList<>();
         fieldsDefinitionKeyPrefix = keyPrefix;
-        fieldsDefinitionClassName = bean.getClass().getName();
+        fieldsDefinitionClassName = searchDto != null && Tools.isNotEmpty(searchDto.getClassName()) ? searchDto.getClassName() : bean.getClass().getName();
+        fieldsDefinitionEntityId = searchDto != null ? searchDto.getEntityId() : null;
         Method method;
 
-        Map<Character, CustomFieldsEntity> customFields = CustomFieldsService.getCustomFieldsMap(new CustomFieldsSearchDto(bean));
+        Map<Character, CustomFieldsEntity> customFields = CustomFieldsService.getCustomFieldsMap(searchDto);
 
         for (char alphabet = 'A'; alphabet <= lastAlphabet; alphabet++) {
 

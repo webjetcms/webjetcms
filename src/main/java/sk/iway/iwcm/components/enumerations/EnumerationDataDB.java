@@ -111,7 +111,7 @@ public class EnumerationDataDB extends JpaDB<EnumerationDataBean> {
     }
 
     public static List<EnumerationDataBean> getEnumerationDataBy(String string1, int typeId ) {
-        return JpaTools.findByProperties(EnumerationDataBean.class, new Pair<>("type.id", typeId), new Pair<>("hidden", false), new Pair<>("string1",string1));
+        return JpaTools.findByProperties(EnumerationDataBean.class, new Pair<>("type.id", typeId), new Pair<>("hidden", false), new Pair<>("fieldA",string1));
     }
 
     public static List<EnumerationDataBean> getEnumerationDataBy(BigDecimal value, String decimalColumn, int typeId) {
@@ -121,7 +121,7 @@ public class EnumerationDataDB extends JpaDB<EnumerationDataBean> {
     }
 
     public static List<EnumerationDataBean> getEnumerationDataBy(String string1, BigDecimal decimal1, int typeId ) {
-        return JpaTools.findByProperties(EnumerationDataBean.class, new Pair<>("type.id", typeId), new Pair<>("hidden", false), new Pair<>("string1",string1), new Pair<>("decimal1", decimal1));
+        return JpaTools.findByProperties(EnumerationDataBean.class, new Pair<>("type.id", typeId), new Pair<>("hidden", false), new Pair<>("fieldA",string1), new Pair<>("decimal1", decimal1));
     }
 
     public static List<EnumerationDataBean> getEnumerationDataBy(BigDecimal decimal1, int typeId ) {
@@ -129,7 +129,7 @@ public class EnumerationDataDB extends JpaDB<EnumerationDataBean> {
     }
 
     public static List<EnumerationDataBean> getEnumerationDataBy(String string1, BigDecimal decimal1, BigDecimal decimal2, int typeId ) {
-        return JpaTools.findByProperties(EnumerationDataBean.class, new Pair<>("type.id", typeId), new Pair<>("hidden", false), new Pair<>("decimal1", decimal1), new Pair<>("decimal2", decimal2), new Pair<>("string1",string1));
+        return JpaTools.findByProperties(EnumerationDataBean.class, new Pair<>("type.id", typeId), new Pair<>("hidden", false), new Pair<>("decimal1", decimal1), new Pair<>("decimal2", decimal2), new Pair<>("fieldA",string1));
     }
 
     public static List<EnumerationDataBean> getSortedEnumerationDataFromString(String enumerationIdString) {
@@ -150,7 +150,7 @@ public class EnumerationDataDB extends JpaDB<EnumerationDataBean> {
 
             Expression expr = builder.get("type").equal(typeBean).and(builder.get("hidden").equal(false));
             dbQuery.setSelectionCriteria(expr);
-            dbQuery.addAscendingOrdering("string1");
+            dbQuery.addAscendingOrdering("fieldA");
             Query query = em.createQuery(dbQuery);
             List<EnumerationDataBean> enumerationDataBeanList = JpaDB.getResultList(query);
             return enumerationDataBeanList;
@@ -169,11 +169,11 @@ public class EnumerationDataDB extends JpaDB<EnumerationDataBean> {
             ReadAllQuery dbQuery = new ReadAllQuery(EnumerationDataBean.class, builder);
 
 
-            Expression likeExpr = builder.get("string1").likeIgnoreCase("%" + string1 + "%").or(builder.get("string9").likeIgnoreCase("%" + string9 + "%")).or(builder.get("string10").likeIgnoreCase("%" + string10 + "%"));
+            Expression likeExpr = builder.get("fieldA").likeIgnoreCase("%" + string1 + "%").or(builder.get("fieldI").likeIgnoreCase("%" + string9 + "%")).or(builder.get("fieldJ").likeIgnoreCase("%" + string10 + "%"));
             Expression expr = builder.get("typeId").equal(typeId).and(builder.get("hidden").equal(false)).and(likeExpr);
 
             dbQuery.setSelectionCriteria(expr);
-            dbQuery.addAscendingOrdering("string1");
+            dbQuery.addAscendingOrdering("fieldA");
             Query query = em.createQuery(dbQuery);
             List<EnumerationDataBean> enumerationDataBeanList = JpaDB.getResultList(query);
             return enumerationDataBeanList;

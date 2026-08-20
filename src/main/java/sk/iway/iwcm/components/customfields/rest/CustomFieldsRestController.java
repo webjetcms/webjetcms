@@ -45,6 +45,8 @@ public class CustomFieldsRestController extends DatatableRestControllerV2<Custom
         if(errors.hasErrors()) return;
 
         if("create".equals(target.getAction()) || "edit".equals(target.getAction())) {
+            if (customFieldsService.validateSpecificClass(entity, target.getAction(), errors, id, getProp()) == false) return;
+
             Long existingId = null;
 
             String bonusClassName = entity.getBonusClassName() != null ? entity.getBonusClassName() : "";
@@ -88,6 +90,7 @@ public class CustomFieldsRestController extends DatatableRestControllerV2<Custom
     @Override
     public CustomFieldsEntity processFromEntity(CustomFieldsEntity entity, ProcessItemAction action) {
         if (entity == null) return null;
+        customFieldsService.synchronizeSpecificClassFields(entity);
 
         if (entity.getEntityId() != null && entity.getEntityId() < 1) {
             entity.setEntityId(null);
@@ -105,6 +108,7 @@ public class CustomFieldsRestController extends DatatableRestControllerV2<Custom
 
     @Override
     public CustomFieldsEntity processToEntity(CustomFieldsEntity entity, ProcessItemAction action) {
+        customFieldsService.synchronizeSpecificClassFields(entity);
         entity = CustomFieldsService.toEntity(entity);
         return entity;
     }

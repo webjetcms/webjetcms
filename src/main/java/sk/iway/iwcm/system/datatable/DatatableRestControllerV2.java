@@ -789,7 +789,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 * @param entity entity instance to validate
 	 */
 	public void validateEditorForCustomFields(HttpServletRequest request, DatatableRequest<Long, T> target, Identity user, Errors errors, Long id, T entity) {
-		for(Character alphabet : CustomFieldsService.getRequiredFieldsAlphabets(new CustomFieldsSearchDto(entity))) {
+		for(Character alphabet : CustomFieldsService.getRequiredFieldsAlphabets(getCustomFieldsSearchDto(entity))) {
 			try {
 				BeanWrapperImpl bw = new BeanWrapperImpl(entity);
 				Object value = bw.getPropertyValue("field" + alphabet);
@@ -801,6 +801,16 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				// Failsafe: if property fieldX does not exist, simply skip validation for it
 			}
 		}
+	}
+
+	/**
+	 * Returns the lookup context used to validate required custom fields.
+	 * Subclasses may override this when custom fields belong to a parent context.
+	 * @param entity edited entity
+	 * @return custom fields lookup context
+	 */
+	protected CustomFieldsSearchDto getCustomFieldsSearchDto(T entity) {
+		return new CustomFieldsSearchDto(entity);
 	}
 
 	/**

@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
@@ -58,51 +61,63 @@ public class EnumerationDataBean extends ActiveRecordRepository implements Seria
 
     @Column(name = "string1")
     @DataTableColumn(inputType = DataTableColumnType.TEXT)
-    private String string1;
+    @JsonAlias("string1")
+    private String fieldA;
 
     @Column(name = "string2")
     @DataTableColumn(inputType = DataTableColumnType.TEXT)
-    private String string2;
+    @JsonAlias("string2")
+    private String fieldB;
 
     @Column(name = "string3")
     @DataTableColumn(inputType = DataTableColumnType.TEXT)
-    private String string3;
+    @JsonAlias("string3")
+    private String fieldC;
 
     @Column(name = "string4")
     @DataTableColumn(inputType = DataTableColumnType.TEXT)
-    private String string4;
+    @JsonAlias("string4")
+    private String fieldD;
 
     @Column(name = "string5")
     @DataTableColumn(inputType = DataTableColumnType.TEXT)
-    private String string5;
+    @JsonAlias("string5")
+    private String fieldE;
 
     @Column(name = "string6")
     @DataTableColumn(inputType = DataTableColumnType.TEXT)
-    private String string6;
+    @JsonAlias("string6")
+    private String fieldF;
 
     @Column(name = "string7")
     @DataTableColumn(inputType = DataTableColumnType.TEXT)
-    private String string7;
+    @JsonAlias("string7")
+    private String fieldG;
 
     @Column(name = "string8")
     @DataTableColumn(inputType = DataTableColumnType.TEXT)
-    private String string8;
+    @JsonAlias("string8")
+    private String fieldH;
 
     @Column(name = "string9")
     @DataTableColumn(inputType = DataTableColumnType.TEXT)
-    private String string9;
+    @JsonAlias("string9")
+    private String fieldI;
 
     @Column(name = "string10")
     @DataTableColumn(inputType = DataTableColumnType.TEXT)
-    private String string10;
+    @JsonAlias("string10")
+    private String fieldJ;
 
     @Column(name = "string11")
     @DataTableColumn(inputType = DataTableColumnType.TEXT)
-    private String string11;
+    @JsonAlias("string11")
+    private String fieldK;
 
     @Column(name = "string12")
     @DataTableColumn(inputType = DataTableColumnType.TEXT)
-    private String string12;
+    @JsonAlias("string12")
+    private String fieldL;
 
     @Column(name = "decimal1")
     @DataTableColumn(inputType = DataTableColumnType.NUMBER)
@@ -200,6 +215,114 @@ public class EnumerationDataBean extends ActiveRecordRepository implements Seria
     public void setEnumerationDataId(int enumerationDataId) {
         if (enumerationDataId==0) this.id = null;
         else this.id = Long.valueOf(enumerationDataId);
+    }
+
+    @JsonIgnore
+    public String getString1() {
+        return fieldA;
+    }
+
+    public void setString1(String string1) {
+        this.fieldA = string1;
+    }
+
+    @JsonIgnore
+    public String getString2() {
+        return fieldB;
+    }
+
+    public void setString2(String string2) {
+        this.fieldB = string2;
+    }
+
+    @JsonIgnore
+    public String getString3() {
+        return fieldC;
+    }
+
+    public void setString3(String string3) {
+        this.fieldC = string3;
+    }
+
+    @JsonIgnore
+    public String getString4() {
+        return fieldD;
+    }
+
+    public void setString4(String string4) {
+        this.fieldD = string4;
+    }
+
+    @JsonIgnore
+    public String getString5() {
+        return fieldE;
+    }
+
+    public void setString5(String string5) {
+        this.fieldE = string5;
+    }
+
+    @JsonIgnore
+    public String getString6() {
+        return fieldF;
+    }
+
+    public void setString6(String string6) {
+        this.fieldF = string6;
+    }
+
+    @JsonIgnore
+    public String getString7() {
+        return fieldG;
+    }
+
+    public void setString7(String string7) {
+        this.fieldG = string7;
+    }
+
+    @JsonIgnore
+    public String getString8() {
+        return fieldH;
+    }
+
+    public void setString8(String string8) {
+        this.fieldH = string8;
+    }
+
+    @JsonIgnore
+    public String getString9() {
+        return fieldI;
+    }
+
+    public void setString9(String string9) {
+        this.fieldI = string9;
+    }
+
+    @JsonIgnore
+    public String getString10() {
+        return fieldJ;
+    }
+
+    public void setString10(String string10) {
+        this.fieldJ = string10;
+    }
+
+    @JsonIgnore
+    public String getString11() {
+        return fieldK;
+    }
+
+    public void setString11(String string11) {
+        this.fieldK = string11;
+    }
+
+    @JsonIgnore
+    public String getString12() {
+        return fieldL;
+    }
+
+    public void setString12(String string12) {
+        this.fieldL = string12;
     }
 
     public String getDate1Str() {

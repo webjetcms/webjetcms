@@ -27,6 +27,7 @@ import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataEditorFields;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataRepository;
@@ -111,7 +112,7 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
     }
 
     /**
-     * Trims all string fields (string1 through string12) in the entity.
+     * Trims all configurable string fields in the entity.
      * This prevents issues with trailing spaces from copy-pasted text.
      */
     private void trimStringFields(EnumerationDataBean entity) {
@@ -122,7 +123,7 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
             PropertyDescriptor[] descriptors = wrapper.getPropertyDescriptors();
 
             for (PropertyDescriptor descriptor : descriptors) {
-                if (descriptor.getPropertyType() == String.class && descriptor.getName().matches("string\\d+")) {
+                if (descriptor.getPropertyType() == String.class && descriptor.getName().matches("field[A-L]")) {
                     String value = (String) wrapper.getPropertyValue(descriptor.getName());
                     if (value != null) {
                         wrapper.setPropertyValue(descriptor.getName(), value.trim());
@@ -184,6 +185,19 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
         return entity;
     }
 
+    @Override
+    protected CustomFieldsSearchDto getCustomFieldsSearchDto(EnumerationDataBean entity) {
+        Integer enumerationTypeId = Tools.getIntValue(getRequest().getParameter(ENUMERATION_TYPE_ID), -1);
+        if (enumerationTypeId < 1 && entity != null && entity.getTypeId() != null) {
+            enumerationTypeId = entity.getTypeId();
+        }
+        if (enumerationTypeId < 1) {
+            EnumerationTypeBean enumerationType = getActualSelectedType();
+            if (enumerationType != null) enumerationTypeId = enumerationType.getEnumerationTypeId();
+        }
+        return new CustomFieldsSearchDto(EnumerationDataBean.class.getName(), enumerationTypeId);
+    }
+
     //Inset and Edit must be here !!
     //There is no bonus logic but it fix bug with wrong PK type (dont ask me why)
     @Override
@@ -223,7 +237,7 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
     }
 
     @GetMapping("/autocomplete-parent")
-    public List<String> getAutocomplete(@RequestParam String term, @RequestParam("DTE_Field_typeId") Integer typeId, @RequestParam("DTE_Field_string1") String name) {
+    public List<String> getAutocomplete(@RequestParam String term, @RequestParam("DTE_Field_typeId") Integer typeId, @RequestParam("DTE_Field_fieldA") String name) {
         return EnumerationService.getEnumDataAutocomplete(term, typeId, name, getProp());
     }
 

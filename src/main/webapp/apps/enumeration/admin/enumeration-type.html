@@ -12,11 +12,55 @@
             { id: 'numbers', title: '[[#{enum_type.numbers}]]'},
             { id: 'booleans', title: '[[#{enum_type.booleans}]]'},
             { id: 'dates', title: '[[#{enum_type.dates}]]'},
+            { id: 'stringFieldTypes', title: '[[#{enum_type.string_field_types}]]', hideOnCreate: true},
         ];
 
     window.domReady.add(function () {
 
         let url = "/admin/rest/enumeration/enumeration-type";
+        let enumerationStringFieldsDataTable = null;
+
+        function updateEnumerationStringFieldOptions(innerTable) {
+            if(!innerTable || !innerTable.DATA || !innerTable.DATA.jsonOptions) return;
+
+            const alphabetOptions = innerTable.DATA.jsonOptions.alphabet;
+            if(!Array.isArray(alphabetOptions)) return;
+
+            const separator = " – ";
+            const fieldLabels = new Map();
+            const options = alphabetOptions.map(function(option) {
+                const alphabet = String(option.value || "");
+                const fieldIndex = alphabet.length === 1 ? alphabet.charCodeAt(0) - 64 : -1;
+                if(fieldIndex < 1 || fieldIndex > 12) return option;
+
+                const fieldName = "string" + fieldIndex + "Name";
+                if(!enumerationTypeDataTable.EDITOR.fields().includes(fieldName)) return option;
+
+                const originalLabel = String(option.label || "");
+                const separatorIndex = originalLabel.indexOf(separator);
+                const baseLabel = separatorIndex > -1 ? originalLabel.substring(0, separatorIndex) : originalLabel;
+                const currentName = String(enumerationTypeDataTable.EDITOR.field(fieldName).val() || "").trim();
+                const label = currentName.length > 0 ? baseLabel + separator + currentName : baseLabel;
+                fieldLabels.set(alphabet, currentName);
+
+                return Object.assign({}, option, {label: label});
+            });
+
+            const jsonOptions = Object.assign({}, innerTable.DATA.jsonOptions, {alphabet: options});
+            innerTable.updateOptionsFromJson({options: jsonOptions});
+            if(innerTable.DATA.json && innerTable.DATA.json.options) {
+                innerTable.DATA.json.options.alphabet = options;
+            }
+            innerTable.rows().every(function() {
+                const rowData = this.data();
+                const fieldLabel = fieldLabels.get(String(rowData.alphabet || ""));
+                if(fieldLabel !== undefined) {
+                    rowData.label = fieldLabel;
+                }
+            });
+            innerTable.rows().invalidate("data");
+            innerTable.columns.adjust();
+        }
 
         enumerationTypeDataTable = WJ.DataTable({
             url: url,
@@ -27,6 +71,77 @@
             customFieldsUpdateColumns: true,
             fetchOnCreate: true,
             fetchOnEdit: true
+        });
+
+        window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
+            if(event.detail.conf.id !== "DTE_Field_editorFields.stringFieldTypes") return;
+
+            const innerTable = event.detail.conf.datatable;
+            enumerationStringFieldsDataTable = innerTable;
+            updateEnumerationStringFieldOptions(innerTable);
+            innerTable.on("xhr.dt", function() {
+                setTimeout(function() {
+                    updateEnumerationStringFieldOptions(innerTable);
+                }, 0);
+            });
+
+            innerTable.EDITOR.on("open", function(e, mode, action) {
+                const editor = innerTable.EDITOR;
+                ["className", "entityId", "label", "bonusClassName", "bonusEntityId"].forEach(function(fieldName) {
+                    if(editor.fields().includes(fieldName)) editor.field(fieldName).hide();
+                });
+
+                if(action === "edit") {
+                    const alphabet = String(editor.field("alphabet").val() || "");
+                    const alphabetOptions = innerTable.DATA.jsonOptions.alphabet;
+                    const selectedOption = Array.isArray(alphabetOptions)
+                        ? alphabetOptions.find(function(option) {
+                            return String(option.value) === alphabet;
+                        })
+                        : null;
+
+                    if(selectedOption) {
+                        setTimeout(function() {
+                            const titleElement = document.querySelector("#datatableFieldDTE_Field_editorFields-stringFieldTypes_modal > div > div > div.DTE_Header.modal-header > div > span > div.row > div:nth-child(1) > h5");
+                            if(titleElement) {
+                                titleElement.textContent = WJ.translate("button.edit") + ": " + selectedOption.label;
+                            }
+                        }, 120);
+                    }
+                }
+
+                const specificFieldsVisibility = innerTable.DATA.jsonOptions.specificFieldsVisibility;
+                const typeSelect = document.getElementById("DTE_Field_type");
+                if(!typeSelect || !specificFieldsVisibility) return;
+
+                const updateFieldVisibility = function(selectedType) {
+                    const visibilityConfig = specificFieldsVisibility.find(function(item) {
+                        return item.label === selectedType;
+                    });
+                    const showFields = visibilityConfig && visibilityConfig.value
+                        ? new Set(visibilityConfig.value.split(",").map(function(field) { return field.trim(); }).filter(Boolean))
+                        : new Set();
+
+                    editor.fields().forEach(function(fieldName) {
+                        const field = editor.field(fieldName);
+                        const classNames = field.s.opts.className || "";
+                        if(classNames.includes("specific-field")) {
+                            showFields.has(fieldName) ? field.show() : field.hide();
+                        }
+                    });
+                };
+
+                typeSelect.onchange = function() {
+                    updateFieldVisibility(this.value);
+                };
+                updateFieldVisibility(typeSelect.value);
+            });
+        });
+
+        window.addEventListener("WJ.DTE.tabclick", function(event) {
+            if(event.detail.id === "enumerationTypeDataTable-stringFieldTypes") {
+                updateEnumerationStringFieldOptions(enumerationStringFieldsDataTable);
+            }
         });
 
         enumerationTypeDataTable.EDITOR.on('open', function (e, mode, action) {

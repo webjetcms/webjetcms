@@ -1,7 +1,9 @@
 package sk.iway.iwcm.components.enumerations.rest;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
@@ -16,6 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
+import sk.iway.iwcm.components.customfields.jpa.CustomFieldsRepository;
+import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataRepository;
 import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationTypeEditorFields;
@@ -33,12 +39,14 @@ public class EnumerationTypeRestController extends DatatableRestControllerV2<Enu
 
     private final EnumerationTypeRepository enumerationTypeRepository;
     private final EnumerationDataRepository enumerationDataRepository;
+    private final CustomFieldsRepository customFieldsRepository;
 
     @Autowired
-    public EnumerationTypeRestController(EnumerationTypeRepository enumerationTypeRepository, EnumerationDataRepository enumerationDataRepository) {
+    public EnumerationTypeRestController(EnumerationTypeRepository enumerationTypeRepository, EnumerationDataRepository enumerationDataRepository, CustomFieldsRepository customFieldsRepository) {
         super(enumerationTypeRepository);
         this.enumerationTypeRepository = enumerationTypeRepository;
         this.enumerationDataRepository = enumerationDataRepository;
+        this.customFieldsRepository = customFieldsRepository;
     }
 
     @Override
@@ -114,6 +122,30 @@ public class EnumerationTypeRestController extends DatatableRestControllerV2<Enu
             etef.toEnumerationType(entity, enumerationTypeRepository, getProp());
         }
         return entity;
+    }
+
+    @Override
+    public void afterSave(EnumerationTypeBean entity, EnumerationTypeBean saved) {
+        if (saved == null || saved.getId() == null) return;
+
+        List<CustomFieldsEntity> customFields = customFieldsRepository.findAllByClassNameAndEntityId(
+            EnumerationDataBean.class.getName(),
+            saved.getId(),
+            CloudToolsForCore.getDomainId()
+        );
+        List<CustomFieldsEntity> changedFields = new ArrayList<>();
+        for (CustomFieldsEntity customField : customFields) {
+            String alphabet = customField.getAlphabet();
+            if (alphabet == null || alphabet.length() != 1 || alphabet.charAt(0) < 'A' || alphabet.charAt(0) > 'L') continue;
+            if (customField.getBonusEntityId() != null && customField.getBonusEntityId() != 0) continue;
+
+            String label = EnumerationService.getStringFieldName(saved, alphabet.charAt(0));
+            if (Objects.equals(label, customField.getLabel()) == false) {
+                customField.setLabel(label);
+                changedFields.add(customField);
+            }
+        }
+        if (changedFields.isEmpty() == false) customFieldsRepository.saveAll(changedFields);
     }
 
     @Override
