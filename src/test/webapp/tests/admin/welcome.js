@@ -55,7 +55,7 @@ Scenario("feedback", ({ I }) => {
     var container = "#webjet-overview-dashboard .feedback";
 
     I.see("Spätná väzba", container);
-    I.forceClick(container + " div.overview-logged__head__more i.ti");
+    I.forceClick(container + " div.overview-logged__content button.btn-primary");
 
     I.waitForElement("#feedback_modal");
     I.wait(2);
@@ -80,7 +80,7 @@ Scenario("feedback", ({ I }) => {
 
     //
     I.say("skus spam protection");
-    I.forceClick(container + " div.overview-logged__head__more i.ti");
+    I.forceClick(container + " div.overview-logged__content button.btn-primary");
 
     I.waitForElement("#feedback_modal");
     I.wait(2);

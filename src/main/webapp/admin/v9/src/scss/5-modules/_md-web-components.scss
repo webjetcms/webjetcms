@@ -94,6 +94,15 @@ webjet-image-area-selector {
     .modal-body {
         padding: 0;
     }
+
+    .modal-footer {
+        .DTE_Form_Buttons {
+            margin-top: 8px;
+            button.btn-close-editor {
+                margin-left: auto;
+            }
+        }
+    }
 }
 
 #feedback-upload.dz-started .dz-message {
