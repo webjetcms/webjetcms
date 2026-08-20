@@ -20,6 +20,7 @@ Vlastnosti pro editor se nastavují pomocí anotace `DataTableColumnEditorAttr`.
             attr = {
                 @DataTableColumnEditorAttr(key = "data-dt-field-root", value = "constant:fileArchivDefaultDirPath"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-skipFolders", value = "fileArchivInsertLaterDirPath"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-writableOnly", value = "true")
             }
         )
     })

@@ -54,7 +54,40 @@ Scenario('oblast zaujmu', async ({ I, DT, DTE }) => {
     I.seeAndClick("koala.jpg");
     I.clickCss("#pills-dt-galleryTable-areaOfInterest-tab");
 
-    I.waitForElement("div.vue-preview__wrapper");
+    I.waitForElement("webjet-image-area-selector[data-ready='true'] cropper-canvas");
+    const cropperSize = await I.executeScript(() => {
+        const selector = document.querySelector("webjet-image-area-selector");
+        const canvas = selector.querySelector("cropper-canvas");
+        return {
+            canvasWidth: canvas.offsetWidth,
+            canvasHeight: canvas.offsetHeight,
+            imageWidth: selector.imageSize.width,
+            imageHeight: selector.imageSize.height
+        };
+    });
+    assert.equal(cropperSize.canvasWidth, cropperSize.imageWidth);
+    assert.equal(cropperSize.canvasHeight, cropperSize.imageHeight);
+    const wheelResult = await I.executeScript(() => {
+        const selector = document.querySelector("webjet-image-area-selector");
+        const canvas = selector.querySelector("cropper-canvas");
+        const transformBefore = selector.cropperImage.$getTransform();
+        const wheelEvent = new WheelEvent("wheel", {
+            bubbles: true,
+            cancelable: true,
+            ctrlKey: true,
+            deltaY: -100
+        });
+        canvas.dispatchEvent(wheelEvent);
+        return {
+            defaultPrevented: wheelEvent.defaultPrevented,
+            scalable: selector.cropperImage.scalable,
+            transformBefore,
+            transformAfter: selector.cropperImage.$getTransform()
+        };
+    });
+    assert.equal(wheelResult.defaultPrevented, true);
+    assert.equal(wheelResult.scalable, false);
+    assert.deepEqual(wheelResult.transformAfter, wheelResult.transformBefore);
 
     I.see("Šírka:");
     within('.coordinates', () => {
@@ -64,7 +97,7 @@ Scenario('oblast zaujmu', async ({ I, DT, DTE }) => {
     });
     DTE.save();
 
-    // vue-advanced-cropper padal ked bol inicializovany, okno sa zatvorilo a zmenila sa velkost
+    // Verify resizing after closing an initialized area selector.
     I.resizeWindow(1280, 850);
     I.seeAndClick("koala.jpg");
     DTE.waitForEditor("galleryTable");
@@ -207,7 +240,7 @@ Scenario('novy priecinok', async({ I, DT, DTE }) => {
     // During creation we dont see field DTE_Field_path
     I.dontSeeElement(".DTE_Field_Name_path");
     // Only parent folder
-    I.seeElement(".DTE_Field_Name_parent .vueComponent input.form-control[value='/images/gallery/test']");
+    I.seeInField(".DTE_Field_Name_parent .webjet-component input.form-control", "/images/gallery/test");
 
     let name = await I.grabValueFrom("#DTE_Field_name");
     I.assertEqual(name, "");
@@ -332,25 +365,45 @@ Scenario('Gallery - image editor test', async ({ I, DT, DTE, Document }) => {
     await Document.compareScreenshotElement('body > img', "autotest-image_rotated.png", null, null, 20);
 });
 
-Scenario('Gallery - upload image test', ({I,DT, DTE}) => {
-    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=17321');
-    DTE.waitForEditor();
-
+Scenario('Gallery - upload image test', async ({I,DT, DTE}) => {
     I.say('Creating new folder');
-    I.waitForElement('.cke_button__image', 10);
-    I.clickCss('.cke_button__image');
-    I.switchTo("#wjImageIframeElement");
-    I.waitForElement('#nav-iwcm_fs_ap_volume_ > span.elfinder-perms', 10);
-    I.clickCss('#nav-iwcm_fs_ap_volume_ > span.elfinder-perms', null, { position: { x: 3, y: 3 } });
-    I.wait(2)
-    I.forceClick('#nav-iwcm_fs_ap_volume_L2ltYWdlcy9nYWxsZXJ5L2FwcHM_E');
-    I.waitForVisible('.elfinder-button-icon.elfinder-button-icon-mkdir', 10);
-    I.wait(5)
+    openGalleryAppsFileBrowser(I, DTE);
     I.click('.elfinder-button-icon.elfinder-button-icon-mkdir');
     I.type(autoName);
     I.clickCss('#nav-iwcm_fs_ap_volume_L2ltYWdlcy9nYWxsZXJ5L2FwcHM_E');
-    I.wait(2);
-    I.doubleClick(autoName);
+    const galleryFolder = locate('.elfinder-cwd-file.directory').withText(autoName);
+    I.waitForVisible(galleryFolder, 10);
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_cancel');
+
+    const galleryPath = '/images/gallery/apps/' + autoName;
+    I.say('Configure separate resize modes before the first image upload');
+    openGalleryDimensionSizes(I, DT, DTE, galleryPath);
+
+    const initialDimensionId = await I.executeScript(() => {
+        return window.galleryDimensionDatatable.row(0).data().id;
+    });
+    I.assertEqual(Number(initialDimensionId), -1, 'A folder without saved gallery settings must use the virtual ID -1.');
+
+    const largeModeOptions = await I.executeScript(() => {
+        return Array.from(document.querySelectorAll('#DTE_Field_resizeModeNormal option')).map(option => option.value);
+    });
+    assert.deepStrictEqual(largeModeOptions, ['', 'S', 'C', 'A', 'W', 'H']);
+
+    I.selectOption('#DTE_Field_resizeMode', 'Orezať na mieru');
+    I.selectOption('#DTE_Field_resizeModeNormal', 'Presná šírka');
+    I.seeInField('#DTE_Field_resizeMode', 'C');
+    I.seeInField('#DTE_Field_resizeModeNormal', 'W');
+    DTE.fillField('imageWidth', 200);
+    DTE.fillField('imageHeight', 200);
+    DTE.fillField('normalWidth', 400);
+    DTE.fillField('normalHeight', 300);
+    DTE.save('galleryDimensionDatatable');
+
+    I.say('Upload an image after the separate resize modes have been saved');
+    openGalleryAppsFileBrowser(I, DTE);
+    I.waitForVisible(galleryFolder, 10);
+    I.doubleClick(galleryFolder);
     I.clickCss('.elfinder-button-icon.elfinder-button-icon-upload');
     I.say('Uploading new file');
     I.attachFile('input[type=file]', 'tests/apps/gallery/gallery.png');
@@ -358,12 +411,15 @@ Scenario('Gallery - upload image test', ({I,DT, DTE}) => {
     I.switchTo();
     I.clickCss('.cke_dialog_ui_button_cancel');
 
-    I.amOnPage(`/admin/v9/apps/gallery/?dir=/images/gallery/apps/${autoName}`);
+    I.amOnPage(`/admin/v9/apps/gallery/?dir=${galleryPath}`);
     DT.waitForLoader();
     I.jstreeWaitForLoader();
-    I.say('Checking if folder icon is empty');
-    I.dontSeeElement(`//a[contains(., "${autoName}")]/i[contains(@class, "ti-folder-filled")]`);
-    I.seeElement(`//a[contains(., "${autoName}")]/i[contains(@class, "ti-folder")]`);
+    I.say('Checking if folder icon is filled');
+    I.seeElement(
+        locate('.jstree-anchor')
+            .withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder-filled.jstree-themeicon-custom')
+            .withText(autoName)
+    );
     I.click(DT.btn.tree_edit_button);
     DTE.waitForEditor('galleryDimensionDatatable');
 
@@ -372,13 +428,15 @@ Scenario('Gallery - upload image test', ({I,DT, DTE}) => {
     I.seeInField('#DTE_Field_imageWidth', 200);
     I.seeInField('#DTE_Field_imageHeight', 200);
     I.seeInField('#DTE_Field_normalWidth', 400);
-    I.seeInField('#DTE_Field_normalHeight', 400);
+    I.seeInField('#DTE_Field_normalHeight', 300);
+    I.seeInField('#DTE_Field_resizeMode', 'C');
+    I.seeInField('#DTE_Field_resizeModeNormal', 'W');
     DTE.cancel();
 });
 
 Scenario('Gallery - uploaded image size test', async ({ I }) => {
     const imageUrls = [
-        { url: '/images/gallery/apps/' + autoName + '/gallery.png', expected: { height: 400, width: 400 } },
+        { url: '/images/gallery/apps/' + autoName + '/gallery.png', expected: { height: 284, width: 400 } },
         { url: '/images/gallery/apps/' + autoName + '/s_gallery.png', expected: { height: 200, width: 200 } },
         { url: '/images/gallery/apps/' + autoName + '/o_gallery.png', expected: { height: 455, width: 640 } }
     ];
@@ -392,6 +450,91 @@ Scenario('Gallery - uploaded image size test', async ({ I }) => {
         I.assertEqual(rect.width, imageUrl.expected.width, `Image ${imageUrl.url} does not have correct width.`);
     }
 });
+
+Scenario('Gallery - separate resize mode for large image', async ({ I, DT, DTE }) => {
+    const galleryPath = '/images/gallery/apps/' + autoName;
+    const imagePath = galleryPath + '/gallery.png';
+    const smallImagePath = galleryPath + '/s_gallery.png';
+
+    I.say('Verify the resize modes saved before upload');
+    openGalleryDimensionSizes(I, DT, DTE, galleryPath);
+    I.seeInField('#DTE_Field_resizeMode', 'C');
+    I.seeInField('#DTE_Field_resizeModeNormal', 'W');
+    I.seeInField('#DTE_Field_imageWidth', '200');
+    I.seeInField('#DTE_Field_imageHeight', '200');
+    I.seeInField('#DTE_Field_normalWidth', '400');
+    I.seeInField('#DTE_Field_normalHeight', '300');
+    DTE.cancel('galleryDimensionDatatable');
+
+    await assertGalleryImageDimensions(I, smallImagePath, 200, 200);
+    await assertGalleryImageDimensions(I, imagePath, 400, 284);
+
+    I.say('Reset the large image mode to inherit the small image mode');
+    openGalleryDimensionSizes(I, DT, DTE, galleryPath);
+    I.selectOption('#DTE_Field_resizeModeNormal', 'Rovnako ako malý obrázok');
+    enableGalleryImageRegeneration(I);
+    DTE.save('galleryDimensionDatatable');
+
+    I.say('Verify that the inherited mode is returned as an empty editor value');
+    openGalleryDimensionSizes(I, DT, DTE, galleryPath);
+    const storedResizeModeNormal = await I.executeScript(() => {
+        return window.galleryDimensionDatatable.row(0).data().resizeModeNormal;
+    });
+    I.assertEqual(storedResizeModeNormal, null);
+    I.seeInField('#DTE_Field_resizeModeNormal', '');
+    DTE.cancel('galleryDimensionDatatable');
+
+    await assertGalleryImageDimensions(I, smallImagePath, 200, 200);
+    await assertGalleryImageDimensions(I, imagePath, 400, 300);
+});
+
+function openGalleryDimensionSizes(I, DT, DTE, galleryPath) {
+    I.amOnPage('/admin/v9/apps/gallery/?dir=' + galleryPath);
+    DT.waitForLoader();
+    I.jstreeWaitForLoader();
+    I.click(DT.btn.tree_edit_button);
+    DTE.waitForEditor('galleryDimensionDatatable');
+    I.clickCss('#pills-dt-galleryDimensionDatatable-sizes-tab');
+    I.waitForVisible('#panel-body-dt-galleryDimensionDatatable-sizes', 10);
+}
+
+function enableGalleryImageRegeneration(I) {
+    const regenerateSwitch = locate('.custom-control.form-switch')
+        .withChild('#DTE_Field_editorFields-regenerateImages_0')
+        .find('.form-check-label');
+
+    I.click(regenerateSwitch);
+    I.seeCheckboxIsChecked('#DTE_Field_editorFields-regenerateImages_0');
+}
+
+async function assertGalleryImageDimensions(I, imagePath, expectedWidth, expectedHeight) {
+    I.amOnPage(imagePath + '?v=' + Date.now());
+    I.waitForElement('body > img', 10);
+
+    const dimensions = await I.executeScript(() => {
+        const image = document.querySelector('body > img');
+        return {
+            width: image.naturalWidth,
+            height: image.naturalHeight
+        };
+    });
+
+    I.assertEqual(dimensions.width, expectedWidth, `Image ${imagePath} does not have correct width.`);
+    I.assertEqual(dimensions.height, expectedHeight, `Image ${imagePath} does not have correct height.`);
+}
+
+function openGalleryAppsFileBrowser(I, DTE) {
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=17321');
+    DTE.waitForEditor();
+    I.waitForElement('.cke_button__image', 10);
+    I.clickCss('.cke_button__image');
+    I.switchTo('#wjImageIframeElement');
+    I.waitForElement('#nav-iwcm_fs_ap_volume_ > span.elfinder-perms', 10);
+    I.clickCss('#nav-iwcm_fs_ap_volume_ > span.elfinder-perms', null, { position: { x: 3, y: 3 } });
+    I.waitForVisible('#nav-iwcm_fs_ap_volume_L2ltYWdlcy9nYWxsZXJ5L2FwcHM_E', 10);
+    I.forceClick('#nav-iwcm_fs_ap_volume_L2ltYWdlcy9nYWxsZXJ5L2FwcHM_E');
+    I.waitForVisible('.elfinder-button-icon.elfinder-button-icon-mkdir', 10);
+}
 
 Scenario('Gallery - uploaded image delete', async ({I, DTE, DT}) => {
     I.say('Deleting copy');

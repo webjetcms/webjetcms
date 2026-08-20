@@ -99,13 +99,13 @@
                 const isChecked = $(this).prop("checked");
                 if(isChecked) {
                     $("#editorAppDTE_Field_dir  input").prop("disabled", true);
-                    $("button.btn-vue-jstree-item-edit").prop("disabled", true);
+                    $("button.btn-webjet-jstree-item-edit").prop("disabled", true);
                     //tab with table
                     $("#pills-dt-component-datatable-filesToShow-tab").show();
                     setFieldsDisability(["dir", "subDirsInclude", "productCode", "product", "category"], ["globalIds"]);
                 } else {
                     $("#editorAppDTE_Field_dir  input").prop("disabled", false);
-                    $("button.btn-vue-jstree-item-edit").prop("disabled", false);
+                    $("button.btn-webjet-jstree-item-edit").prop("disabled", false);
                     //tab with table
                     $("#pills-dt-component-datatable-filesToShow-tab").hide();
                     setFieldsDisability(["globalIds"], ["dir", "subDirsInclude", "productCode", "product", "category"]);

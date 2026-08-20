@@ -25,7 +25,8 @@ Vysvetlenie použitých piktogramov:
 - [x] Skripty - pridať možnosť nastaviť, či sa má skript vkladať aj v editore stránok, alebo nie (#58349).
 - [x] Formuláre - pridať skupinu výberový a zaškrtávacích polí `radio/checkbox` napojenú na číselník, podobne ako máme pre `select` pole (#58517).
 - [ ] Zmazať pridružené súbory k web stránke keď ju zmažem - spýtať sa ale vopred používateľa, či súbory chce zmazať. Kontrolovať, či sa nepoužívajú niekde inde.
-- [ ] Mazanie dát - pridať možnosť mazať stránky a priečinky z koša. Vyriešiť aj možnosť mazanie dát spúšťať ako automatizovanú úlohu (#58617).
+- [x] Mazanie dát - pridať možnosť mazať stránky a priečinky z koša. Vyriešiť aj možnosť mazanie dát spúšťať ako automatizovanú úlohu (#58617) (#271).
+- [x] Nepoužívané súbory - spraviť možnosť získať zoznam nepoužívaných súborov - nikde v stránke sa nepoužívajú, ani v médiach atď. Bola na to API `FileTools.getDirFileUsage(currentDir, request)`. Pridať ako kartu do vlastností priečinka v prieskumníku (#58621).
 - [ ] Nepoužívané súbory - spraviť možnosť získať zoznam nepoužívaných súborov - nikde v stránke sa nepoužívajú, ani v médiach atď. Bola na to API `FileTools.getDirFileUsage(currentDir, request)`. Pridať ako kartu do vlastností priečinka v prieskumníku (#58621).
 - [ ] Prieskumník - zamedziť prácu s priečinku pre Manažér dokumentov, aby sa so súbormi nedalo manipulovať mimo Manažér dokumentov.
 - [x] +Prieskumník - pridať právo pre nahrávanie súborov s diakritikou (odstraňuje sa pre `/images` a `/files` priečinky) (#58589).
@@ -45,16 +46,19 @@ Vysvetlenie použitých piktogramov:
 - [ ] Datatabuľka – upraviť spôsob `mergovania` upravenej entity tak, aby bolo možné vynulovať hodnoty typu `number`.
 - [x] +Presmerovania - rozlíšiť v databáze automaticky vytvorené presmerovanie (hľadaj premennú `editorDisableAutomaticRedirect`) od manuálne vytvoreného, možnosť podľa toho filtrovať v UI (zobraziť len manuálne vytvorené presmerovania) (#58625).
 - [ ] +Presmerovania - doplniť funkciu čistenia presmerovaní - zmaže staré presmerovania (bolo pôvodne `aaa-bbb` a potom vzniklo `aaa-ccc` takže `aaa-bbb` nemá zmysel = zmaže sa) a skontroluje cyklické presmerovania v ktorom zmaže posledný krok. Tiež optimalizovať presmerovania `aaa-bbb-ccc` na `aaa-ccc` (#58629).
-- +Galéria - pridať možnosť nastaviť iný spôsob zmeny veľkosti na veľký obrázok, napr. na malý obrázok sa aplikuje Orezať na mieru (chcú mať štvorec) a na veľký presná šírka (zachová pomer strán). Predvolene bude hodnota NULL=rovnako ako pre malý obrázok (#58633).
-- [ ] Voliteľné polia - pridať možnosť výberu viac položiek pre napojenie na číselník (#58637).
+- [x] +Galéria - pridať možnosť nastaviť iný spôsob zmeny veľkosti na veľký obrázok, napr. na malý obrázok sa aplikuje Orezať na mieru (chcú mať štvorec) a na veľký presná šírka (zachová pomer strán). Predvolene bude hodnota NULL=rovnako ako pre malý obrázok (#58633).
+- [x] Voliteľné polia - pridať možnosť výberu viac položiek pre napojenie na číselník (#58637).
 - [x] +Číselníky - pridať možnosť definovať typ poľa pre reťazec ako máme vo voliteľných poliach (#58641).
 - [x] +Fotobanka - pridať možnosť nastaviť názov súboru pred stiahnutím z fotobanky, automaticky nastaviť podľa hľadaného výrazu (#58645).
-- [ ] +Úlohy na pozadí - možnosť manuálne spustiť úlohu na `node`, ktorý má úloha nastavený, teraz sa spustí na `node` kde je používateľ prihlásený.
+- [x] +Úlohy na pozadí - možnosť manuálne spustiť úlohu na `node`, ktorý má úloha nastavený, teraz sa spustí na `node` kde je používateľ prihlásený (#58718).
 - [ ] +Číselník, Blog, Novinky - upraviť tak, aby výber typu číselníka alebo priečinka pre novinky bol vľavo podobne ako v galérii/webových stránkach. Nemusia byť potom karty ale všetko naraz zobrazené.
-- [ ] +Prekladové kľúče - zobrazovať stromovú štruktúru prekladových kľúčov pre lepšiu orientáciu.
+- [x] +Prekladové kľúče - zobrazovať stromovú štruktúru prekladových kľúčov pre lepšiu orientáciu (#58714).
 - [ ] +Konfigurácia - doplniť možnosť nastaviť premennú len pre aktuálny uzol (neuložiť ju do databázy - len nastaviť do Constants objektu), pridať tam zaškrtávacie pole "Nastaviť dočasne" s info ikonou že hodnota sa nastaví len dočasne a pri reštarte sa obnoví hodnota ako je v databáze.
 - [ ] Prieskumník - opraviť zobrazovanie súborov so špeciálnymi znakmi (napríklad `@`).
 - [ ] Automatický premazávať `temp` súbory, ktoré sa môžu hromadiť.
+- [x] +Administrácia - odstrániť závislosť od `Vue.js` a nahradiť interné komponenty natívnymi web komponentmi (#58722).
+- [ ] +Upraviť načítanie admin časti tak, aby sa vymenilo cez volanie REST služby len vnútro stránky, nie kompletný reload HTML kódu.
+- [ ] +Vylepšiť úvodnú stránku administrácie - dynamické bloky, možnosť vlastného nastavenia čo sa zobrazí, užitočné informácie a bloky.
 
 ## 2025
 

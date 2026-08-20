@@ -1,19 +1,22 @@
 package cn.bluejoe.elfinder.controller.executors;
 
+import cn.bluejoe.elfinder.controller.FsException;
 import cn.bluejoe.elfinder.controller.executor.AbstractJsonCommandExecutor;
 import cn.bluejoe.elfinder.controller.executor.FsItemEx;
 import cn.bluejoe.elfinder.service.FsService;
 import org.json.JSONObject;
-import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.DocTools;
-
+import sk.iway.iwcm.system.elfinder.IwcmFsVolume;
+import sk.iway.iwcm.users.UsersDB;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class LsCommandExecutor extends AbstractJsonCommandExecutor
 {
@@ -22,6 +25,10 @@ public class LsCommandExecutor extends AbstractJsonCommandExecutor
 			throws Exception
 	{
 		String target = request.getParameter("target");
+		Identity user = UsersDB.getCurrentUser(request);
+		if (user == null) {
+			throw new FsException("User not logged in");
+		}
 
 		Map<String, FsItemEx> files = new HashMap<String, FsItemEx>();
 		FsItemEx fsi = super.findItem(fsService, target);
@@ -40,17 +47,16 @@ public class LsCommandExecutor extends AbstractJsonCommandExecutor
 			if (useFileNameFix) {
 				Map<String, String> intersectMap = new HashMap<>();
 				for (String s : intersect) {
-					String directory = DB.internationalToEnglish(s);
-					directory = DocTools.removeCharsDir(directory, true).toLowerCase();
+					String name = IwcmFsVolume.normalizeUnicode(IwcmFsVolume.removeSpecialChars(s, fsi, user));
 
-					if (!intersectMap.containsKey(directory)) {
-						intersectMap.put(directory, s);
+					if (!intersectMap.containsKey(name)) {
+						intersectMap.put(name, s);
 					}
 				}
 
 				List<String> hits = new ArrayList<>();
 				for (Map.Entry<String, FsItemEx> entry : files.entrySet()) {
-					String name = entry.getValue().getName();
+					String name = IwcmFsVolume.normalizeUnicode(entry.getValue().getName());
 					if(intersectMap.containsKey(name)) {
 						hits.add(intersectMap.get(name));
 					}
@@ -60,7 +66,8 @@ public class LsCommandExecutor extends AbstractJsonCommandExecutor
 			}
 			// najdenia suboru, ak exisuje
 			else {
-				json.put("list", files.entrySet().stream().map(e -> e.getValue().getName()).filter(intersect::contains).toArray());
+				Set<String> normalizedIntersect = intersect.stream().map(IwcmFsVolume::normalizeUnicode).collect(Collectors.toSet());
+				json.put("list", files.entrySet().stream().map(e -> e.getValue().getName()).filter(name -> (normalizedIntersect.contains(IwcmFsVolume.normalizeUnicode(name)) || intersect.contains(name))).toArray());
 			}
 
 			return;

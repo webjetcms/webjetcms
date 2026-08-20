@@ -1,7 +1,7 @@
 <%
 	sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8"
-	import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*,org.apache.commons.codec.binary.Base64"%><%@
+	import="sk.iway.iwcm.*,sk.iway.iwcm.components.apphtmlembed.HtmlEmbedApp,sk.iway.iwcm.i18n.*,org.apache.commons.codec.binary.Base64"%><%@
 taglib prefix="iwcm"
 	uri="/WEB-INF/iwcm.tld"%><%@
 taglib prefix="iway"
@@ -30,6 +30,15 @@ taglib
 	//System.out.println("encoded: " + encoded);
 	//System.out.println("decoded: " + htmlCode);
 
-
-
-%><iwcm:write><%=htmlCode %></iwcm:write>
+	//show HTML/JS Code in editor preview instead of blank page
+	boolean showScriptSource = request.getAttribute("inPreviewMode") != null && HtmlEmbedApp.isScriptOnly(htmlCode);
+	if (showScriptSource)
+	{
+		String previewHtmlCode = HtmlEmbedApp.getPreviewHtmlCode(htmlCode, showScriptSource);
+		out.print(previewHtmlCode);
+	}
+	else
+	{
+%><iwcm:write><%=htmlCode %></iwcm:write><%
+	}
+%>

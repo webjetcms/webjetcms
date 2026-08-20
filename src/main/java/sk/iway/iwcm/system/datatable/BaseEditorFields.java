@@ -139,16 +139,30 @@ public class BaseEditorFields {
                 }
 
                 FieldType fieldType = FieldType.asFieldType(type);
+                boolean isCustomOptionsField = false;
+                if(cfe != null) {
+                    if("radio".equals(cfe.getType())) {
+                        fieldType = FieldType.RADIO;
+                        isCustomOptionsField = true;
+                    } else if("checkbox".equals(cfe.getType())) {
+                        fieldType = FieldType.CHECKBOX;
+                        field.setMultiple(true);
+                        isCustomOptionsField = true;
+                    } else if("select".equals(cfe.getType()) || "multiselect".equals(cfe.getType())) {
+                        fieldType = FieldType.SELECT;
+                        isCustomOptionsField = true;
+                    }
+                }
                 List<FieldValue> fieldValues = new ArrayList<>();
 
                 if (!type.equals(typeKey)) {
-                    if (type.contains("|")) {
+                    // multiple select
+                    if(type.startsWith("multiple:")) {
+                        type = type.substring("multiple:".length());
+                        field.setMultiple(true);
+                    }
 
-                        // multiple select
-                        if(type.startsWith("multiple:")) {
-                            type = type.replace("multiple:", "");
-                            field.setMultiple(true);
-                        }
+                    if (type.contains("|") || (isCustomOptionsField && type.startsWith("enumeration") == false)) {
 
                         // autocomplete
                         if(type.startsWith("autocomplete:")) {

@@ -161,7 +161,8 @@ public class UrlRedirectDB
 		if (oldUrl.indexOf('^')==-1) redirectBean = getRedirectImpl(oldUrl + "/", "");
 		if (redirectBean != null) return redirectBean;
 
-		if (oldUrl.endsWith("/")==false && oldUrl.endsWith(".html")==false)
+		if (Constants.getBoolean("virtualPathLastSlash") &&
+			oldUrl.endsWith("/")==false && oldUrl.endsWith(".html")==false)
 		{
 			//skus najst stranku s / na konci (/produkty vs /produkty/)
 			DocDB docDB = DocDB.getInstance();
@@ -366,6 +367,15 @@ public class UrlRedirectDB
 		context.setAttribute(CACHED_REDIRECTS, redirects);
 
 		return redirects;
+	}
+
+	/**
+	 * Rebuilds the redirects cache after a bulk operation so subsequent requests
+	 * use the latest database state. This method does nothing when redirect caching
+	 * is disabled.
+	 */
+	public static void refreshCache() {
+		if (Constants.getBoolean("cacheUrlRedirects")) reloadCache();
 	}
 
 	/**

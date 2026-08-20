@@ -54,6 +54,20 @@ public class FolderPropertiesEditorFields {
     })
     private List<DocDetails> docDetailsList;
 
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = "&nbsp;",
+        tab = "unusedFiles",
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/elfinder/unused-files?taskId="),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.system.elfinder.UnusedFileDTO"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "create,edit,duplicate,import,export,celledit"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "false"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-order", value = "1,asc")
+            }
+        )
+    })
+    private List<UnusedFileDTO> unusedFiles;
+
     public void prepareFolderProperties(FolderPropertiesEntity originalEntity, HttpServletRequest request) {
         String dir = request.getParameter("dir");
 

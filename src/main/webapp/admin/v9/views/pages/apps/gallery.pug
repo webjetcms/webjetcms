@@ -91,7 +91,7 @@ block content
                         actualAction = action;
                     });
 
-                    //listen to change of parent folder (its vue compoment so listener on input will not work)
+                    // Listen to a folder change published by the web component.
                     window.addEventListener("WJ.jstree-simple.change", function(e) {
                         // Make sense only when editing
                         if(actualAction !== "edit") return;
@@ -131,7 +131,7 @@ block content
                             id: 'areaOfInterest',
                             title: '[[\#{components.gallery.areaOfInterest}]]',
                             selected: false,
-                            content: '<div class="dte-tab-autoheight" style="overflow:scroll;"><div id="cropper-app"><webjet-cropper-component ref="vueCropper"></webjet-cropper-component></div></div>'
+                            content: '<div class="dte-tab-autoheight" style="overflow:scroll;"><webjet-image-area-selector></webjet-image-area-selector></div>'
                         }
                     ];
 
@@ -699,38 +699,35 @@ block content
                     });
                 };
 
-                /* counter - kontrolujem ci bola vytvorena vue instance */
-                let counter = 0;
-                let cropperVm = null;
-                const createVueInstance = () => {
-                    return window.VueTools.createApp({
-                        components: {
-                            'webjet-cropper-component': window.VueTools.getComponent('webjet-cropper-component')
-                        },
-                        methods: {
-                            refresh() {
-                                this.$refs.vueCropper.refresh();
-                            },
-                            resize() {
-                                this.$refs.vueCropper.resetVisibleArea();
-                            }
-                        }
-                    }).mount('#cropper-app');
-                }
-
+                let areaSelector = null;
                 const initializeAreaOfInterest = () => {
-                    counter += 1;
-                    if (counter <= 1) {
-                        cropperVm = createVueInstance();
-                        //window.crop = cropperVm;
-                    } else {
-                        /* pokial je uz vytvorena len refreshujem, nevytvaram nove vue */
-                        cropperVm.refresh();
-                    }
-                    window.addEventListener('WJ.DTE.closeclick', () => {
-                        cropperVm.$refs.vueCropper.imageIsReady = false;
-                    }, false);
-                }
+                    areaSelector = document.querySelector("webjet-image-area-selector");
+                    areaSelector.configure({
+                        getImageUrl: () => `${galleryTable.EDITOR.field("imagePath").val()}/${galleryTable.EDITOR.field("imagePath").val().includes("gallery") ? "o_" : ""}${$("#DTE_Field_imageName").val()}`,
+                        getCoordinates: () => ({
+                            width: +galleryTable.EDITOR.field("selectedWidth").val(),
+                            height: +galleryTable.EDITOR.field("selectedHeight").val(),
+                            left: +galleryTable.EDITOR.field("selectedX").val(),
+                            top: +galleryTable.EDITOR.field("selectedY").val()
+                        }),
+                        labels: {
+                            x: galleryTable.EDITOR.field("selectedX").label(),
+                            y: galleryTable.EDITOR.field("selectedY").label(),
+                            width: galleryTable.EDITOR.field("selectedWidth").label(),
+                            height: galleryTable.EDITOR.field("selectedHeight").label(),
+                            zoom: window.WJ.translate("image_editor.zoom.js") + " (%):"
+                        },
+                        onChange: coordinates => {
+                            galleryTable.EDITOR.field("selectedHeight").set(coordinates.height);
+                            galleryTable.EDITOR.field("selectedWidth").set(coordinates.width);
+                            galleryTable.EDITOR.field("selectedX").set(coordinates.left);
+                            galleryTable.EDITOR.field("selectedY").set(coordinates.top);
+                        }
+                    });
+                    areaSelector.activate();
+                };
+
+                window.addEventListener('WJ.DTE.closeclick', () => areaSelector?.deactivate(), false);
 
                 window.addEventListener('WJ.DTE.tabclick', function (e) {
                     //console.log("tabclick, id=", e.detail.id, " e=", e);
@@ -751,9 +748,7 @@ block content
                 }, false);
 
                 window.addEventListener('WJ.DTE.resize', function (e) {
-                    if (cropperVm != null) {
-                        cropperVm.resize();
-                    }
+                    areaSelector?.resetVisibleArea();
                     if (imageEditorInstance != null) {
                         imageEditorInstance.resizeCanvasDimension({
                             width: $("#galleryTable_modal div.DTE").width(),

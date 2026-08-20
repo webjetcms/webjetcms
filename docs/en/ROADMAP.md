@@ -25,7 +25,8 @@ Explanation of the pictograms used:
 - [x] Scripts - add option to set whether the script should also be inserted in the page editor or not (#58349).
 - [x] Forms - add a group of selection and checkbox fields `radio/checkbox` connected to the number list, similar to what we have for the `select` field (#58517).
 - [ ] Delete files associated with a web page when I delete it - but ask the user in advance if they want to delete the files. Check if they are not being used somewhere else.
-- [ ] Data deletion - add the option to delete pages and folders from the trash. Also fix the option to run data deletion as an automated task (#58617).
+- [x] Data deletion - add the option to delete pages and folders from the trash. Also fix the option to run data deletion as an automated task (#58617) (#271).
+- [x] Unused files - make it possible to get a list of unused files - they are not used anywhere on the page, not even in media, etc. There was an API for this `FileTools.getDirFileUsage(currentDir, request)`. Add as a tab to folder properties in explorer (#58621).
 - [ ] Unused files - make it possible to get a list of unused files - they are not used anywhere on the page, not even in media, etc. There was an API for this `FileTools.getDirFileUsage(currentDir, request)`. Add as a tab to folder properties in explorer (#58621).
 - [ ] Explorer - prevent working with the Document Manager folder so that files cannot be manipulated outside of the Document Manager.
 - [x] +Explorer - add permission to upload files with accented characters (removed for `/images` and `/files` folders) (#58589).
@@ -45,16 +46,19 @@ Explanation of the pictograms used:
 - [ ] Datatable – modify the `mergovania` method of the modified entity so that values ​​of type `number` can be reset.
 - [x] +Redirects - distinguish automatically created redirects in the database (look for the variable `editorDisableAutomaticRedirect`) from manually created ones, possibility to filter accordingly in the UI (show only manually created redirects) (#58625).
 - [ ] +Redirects - add redirect cleaning function - deletes old redirects (it was originally `aaa-bbb` and then `aaa-ccc` was created so `aaa-bbb` has no meaning = it is deleted) and checks for cyclic redirects in which it deletes the last step. Also optimize redirects `aaa-bbb-ccc` to `aaa-ccc` (#58629).
-- +Gallery - add the option to set a different way to resize a large image, e.g. Crop to fit is applied to a small image (they want it to be square) and exact width is applied to a large image (preserves aspect ratio). By default, the value will be NULL=same as for a small image (#58633).
-- [ ] Optional fields - add the ability to select multiple items for connection to the dialer (#58637).
+- [x] +Gallery - add the option to set a different way to resize a large image, e.g. Crop to fit is applied to a small image (they want it to be square) and exact width is applied to a large image (preserves aspect ratio). By default, the value will be NULL=same as for a small image (#58633).
+- [x] Optional fields - add the ability to select multiple items for connection to the dialer (#58637).
 - [ ] +Numbers - add the ability to define the field type for a string like we have in optional fields (#58641).
-- [ ] +Photo bank - add the option to set the file name before downloading from the photo bank, automatically set according to the search term (#58645).
-- [ ] +Background tasks - the option to manually run the task on `node`, which the task is set to, will now run on `node` where the user is logged in.
+- [x] +Photo bank - add the option to set the file name before downloading from the photo bank, automatically set according to the search term (#58645).
+- [x] +Background tasks - option to manually run a task on `node`, which the task is set to, will now run on `node` where the user is logged in (#58718).
 - [ ] + Dialer, Blog, News - adjust so that the dialer or news folder type selection is on the left, similar to the gallery/websites. Then the cards don't have to be displayed all at once.
-- [ ] +Translation keys - display a tree structure of translation keys for better orientation.
+- [x] +Translation keys - display a tree structure of translation keys for better orientation (#58714).
 - [ ] +Configuration - add the option to set a variable only for the current node (do not save it to the database - just set it to the Constants object), add a "Set temporarily" checkbox there with an info icon that the value is set only temporarily and upon restart the value as in the database will be restored.
 - [ ] Explorer - fix displaying files with special characters (for example `@`).
 - [ ] Automatically delete `temp` files that may accumulate.
+- [x] +Administration - remove dependency on `Vue.js` and replace internal components with native web components (#58722).
+- [ ] +Modify the loading of the admin section so that only the inside of the page is replaced via a REST service call, not a complete reload of the HTML code.
+- [ ] +Improve the administration homepage - dynamic blocks, the ability to customize what is displayed, useful information and blocks.
 
 ## 2025
 

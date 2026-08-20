@@ -1,5 +1,3 @@
-import { default as EventBus } from '../vue/components/webjet-dte-jstree/event-bus';
-
 export class WebjetJsTree {
     constructor(id) {
         this.id = $(`#${id}`);
@@ -52,21 +50,27 @@ export class WebjetJsTree {
 
                             //If its dt-tree-dir-simple, open disabled parent folders in way, that it will not call open event
                             if(url.indexOf("click=dt-tree-dir-simple") > 0) {
-                                //Get root folder from url
-                                let paramString = url.split('?')[1];
-                                let queryString = new URLSearchParams(paramString);
-                                let rootFolder = queryString.get("rootFolder");
+                                //Prefer the effective root returned by the server after domain alias rewriting.
+                                let rootFolder = data.rootFolder;
+                                if (rootFolder == null) {
+                                    let paramString = url.split('?')[1];
+                                    let queryString = new URLSearchParams(paramString);
+                                    rootFolder = queryString.get("rootFolder");
+                                }
+                                let normalizedRootFolder = this.normalizeFolderPath(rootFolder);
 
                                 data.items.forEach((item) => {
-                                    if(item.state['disabled'] == true || item.icon == "ti ti-folder-x") {
+                                    let normalizedItemPath = this.normalizeFolderPath(item.id);
+                                    let isRootFolder = rootFolder != null && normalizedRootFolder == normalizedItemPath;
+                                    let isRootParent = rootFolder != null && (normalizedItemPath == "/" ? normalizedRootFolder != "/" : normalizedRootFolder.startsWith(`${normalizedItemPath}/`));
+
+                                    if(isRootFolder) {
+                                        // The flat response contains direct children that jsTree appends to this array.
+                                        item.children = [];
+                                        item.state['opened'] = true;
+                                    } else if(isRootParent && (item.state['disabled'] == true || item.icon == "ti ti-folder-x")) {
                                         item.children = [];
                                         item.state['opened']  = true;
-                                    }
-
-                                    //We must ENABLE rootFolder, can be disabled
-                                    if(rootFolder == item.id) {
-                                        item.icon = 'ti ti-folder';
-                                        item.state['disabled'] = false;
                                     }
                                 });
                             }
@@ -142,8 +146,25 @@ export class WebjetJsTree {
             const parent = instance.get_parent(data.node);
             data.parentNode = instance.get_node(parent);
 
-            EventBus.$emit('change-jstree', data);
+            this.id[0].dispatchEvent(new CustomEvent('webjet-jstree-select', {
+                bubbles: true,
+                detail: data
+            }));
         });
+    }
+
+    destroy() {
+        if (this.jstree) {
+            this.jstree.off();
+            this.jstree.jstree('destroy');
+            this.jstree = null;
+        }
+    }
+
+    normalizeFolderPath(path) {
+        if (!path) return "";
+        if (path === "/") return path;
+        return path.replace(/\/+$/, "");
     }
 
     /**

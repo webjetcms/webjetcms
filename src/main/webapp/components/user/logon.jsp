@@ -118,7 +118,7 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 		</iwcm:present>
 
 		<iwcm:present name="captchaNotValid">
-			<p class='alert alert-danger'><iwcm:text key="captcha.nie.je.spravna"/></p>
+			<p class='alert alert-danger'><iwcm:text key="captcha.textNotCorrect"/></p>
 		</iwcm:present>
 
 		<iwcm:present name='<%=Constants.USER_KEY+"_changepassword"%>'>

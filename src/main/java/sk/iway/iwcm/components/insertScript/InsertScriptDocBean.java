@@ -94,8 +94,9 @@ public class InsertScriptDocBean extends ActiveRecordRepository implements Seria
 	}
 
 	/**
-     * Vratenie cesty pre vue komponentu
-     * @return
+     * Returns the full path of the selected web page.
+     *
+     * @return the full path, or an empty string if the web page does not exist
      */
 	@JsonProperty(access = Access.READ_ONLY)
     public String getFullPath() {

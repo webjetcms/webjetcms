@@ -3862,12 +3862,60 @@
         <void method="add">
             <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="author"><string>sivan</string></void>
+                <void property="date"><string>08.07.2026</string></void>
+                <void property="desc"><string>form_items - add custom_error column</string></void>
+                <void property="mysql"><string>ALTER TABLE form_items ADD COLUMN custom_error VARCHAR(255) NULL;</string></void>
+                <void property="mssql"><string>ALTER TABLE form_items ADD custom_error NVARCHAR(255) NULL;</string></void>
+                <void property="oracle"><string>ALTER TABLE form_items ADD (custom_error VARCHAR2(255) NULL);</string></void>
+                <void property="pgsql"><string>ALTER TABLE form_items ADD COLUMN custom_error VARCHAR(255) NULL;</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
                 <void property="date"><string>15.07.2026</string></void>
                 <void property="desc"><string>url_redirect - add manual_redirect column</string></void>
                 <void property="mysql"><string>ALTER TABLE url_redirect ADD COLUMN manual_redirect TINYINT(1) NOT NULL DEFAULT 0</string></void>
                 <void property="mssql"><string>ALTER TABLE url_redirect ADD manual_redirect BIT NOT NULL DEFAULT 0</string></void>
                 <void property="oracle"><string>ALTER TABLE url_redirect ADD (manual_redirect NUMBER(1) DEFAULT 0 NOT NULL)</string></void>
                 <void property="pgsql"><string>ALTER TABLE url_redirect ADD COLUMN manual_redirect BOOLEAN NOT NULL DEFAULT FALSE</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>29.07.2026</string></void>
+                <void property="desc"><string>gallery_dimension - add resize_mode_normal column</string></void>
+                <void property="mysql"><string>ALTER TABLE gallery_dimension ADD COLUMN resize_mode_normal VARCHAR(1) NULL</string></void>
+                <void property="mssql"><string>ALTER TABLE gallery_dimension ADD resize_mode_normal NVARCHAR(1) NULL</string></void>
+                <void property="oracle"><string>ALTER TABLE gallery_dimension ADD (resize_mode_normal NVARCHAR2(1) NULL)</string></void>
+                <void property="pgsql"><string>ALTER TABLE gallery_dimension ADD COLUMN resize_mode_normal VARCHAR(1)</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>04.08.2026</string></void>
+                <void property="desc"><string>form_items - add trim_value column</string></void>
+                <void property="mysql"><string>ALTER TABLE form_items ADD COLUMN trim_value TINYINT(1) NOT NULL DEFAULT 0</string></void>
+                <void property="mssql"><string>ALTER TABLE form_items ADD trim_value BIT NOT NULL DEFAULT 0</string></void>
+                <void property="oracle"><string>ALTER TABLE form_items ADD (trim_value NUMBER(1) DEFAULT 0 NOT NULL)</string></void>
+                <void property="pgsql"><string>ALTER TABLE form_items ADD COLUMN trim_value BOOLEAN NOT NULL DEFAULT FALSE</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>18.08.2026</string></void>
+                <void property="desc"><string>templates_group - add seo_image column</string></void>
+                <void property="mysql"><string>ALTER TABLE templates_group ADD COLUMN seo_image VARCHAR(255) NULL</string></void>
+                <void property="mssql"><string>ALTER TABLE templates_group ADD seo_image NVARCHAR(255) NULL</string></void>
+                <void property="oracle"><string>ALTER TABLE templates_group ADD (seo_image NVARCHAR2(255) NULL)</string></void>
+                <void property="pgsql"><string>ALTER TABLE templates_group ADD COLUMN seo_image VARCHAR(255)</string></void>
             </object>
         </void>
 

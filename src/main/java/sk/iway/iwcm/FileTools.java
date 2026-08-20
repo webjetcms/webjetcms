@@ -1102,12 +1102,25 @@ public class FileTools
 	 */
 	public static List<UnusedFile> getDirFileUsage(String rootUrl, HttpServletRequest request)
 	{
+		return getDirFileUsage(rootUrl, request, true);
+	}
+
+	/**
+	 * Returns unused files from the selected directory.
+	 *
+	 * @param rootUrl root directory URL
+	 * @param request request used to determine domains
+	 * @param includeSubfolders when true, files in subfolders are included
+	 * @return unused files
+	 */
+	public static List<UnusedFile> getDirFileUsage(String rootUrl, HttpServletRequest request, boolean includeSubfolders)
+	{
 		DebugTimer dt = new DebugTimer("getDirFileUsage");
 
 		dt.diff("reading files");
 
 		List<UnusedFile> unusedFiles = new ArrayList<>();
-		List<Column> allFiles = directoryScan(rootUrl, "*");
+		List<Column> allFiles = directoryScan(rootUrl, includeSubfolders, "*");
 		SortedSet<String> unusedFileNames = new TreeSet<>();
 		Set<String> toRemove = new HashSet<>();
 		for(Column c : allFiles)
@@ -1357,6 +1370,19 @@ public class FileTools
 	 */
 	public static List<Column> directoryScan(String rootUrl, String... patterns)
 	{
+		return directoryScan(rootUrl, true, patterns);
+	}
+
+	/**
+	 * Finds files matching the supplied patterns.
+	 *
+	 * @param rootUrl root directory URL
+	 * @param recursive when true, subdirectories are scanned recursively
+	 * @param patterns wildcard patterns
+	 * @return matching files
+	 */
+	public static List<Column> directoryScan(String rootUrl, boolean recursive, String... patterns)
+	{
 		Logger.debug(FileTools.class, "directoryScan, rootUrl="+rootUrl);
 
 		List<Column> foundFiles = new ArrayList<>();
@@ -1374,7 +1400,10 @@ public class FileTools
 			myFile = files[i];
 			if (myFile.isDirectory())
 			{
-				foundFiles.addAll(directoryScan(rootUrl + myFile.getName() + "/", patterns));
+				if (recursive)
+				{
+					foundFiles.addAll(directoryScan(rootUrl + myFile.getName() + "/", true, patterns));
+				}
 			}
 			else
 			{

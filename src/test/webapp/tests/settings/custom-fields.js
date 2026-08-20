@@ -26,6 +26,10 @@ const allTypesMultiOptions = [
     { label: "autotest-multiselect-label-one", value: "autotest-multiselect-value-one" },
     { label: "autotest-multiselect-label-two", value: "autotest-multiselect-value-two" }
 ];
+const allTypesRadioOptions = [
+    { label: "autotest-radio-label-one", value: "autotest-radio-value-one" },
+    { label: "autotest-radio-label-two", value: "autotest-radio-value-two" }
+];
 const allTypesGroup = { groupId: 67, fullPath: "/Test stavov" };
 const allTypesEnumeration = "enumeration-options|2|string1|string1";
 const allTypesDefinitions = [
@@ -37,6 +41,7 @@ const allTypesDefinitions = [
     { alphabet: "F", type: "number", label: "autotest-custom-type-number" },
     { alphabet: "G", type: "date", label: "autotest-custom-type-date" },
     { alphabet: "H", type: "none", label: "autotest-custom-type-none" },
+    { alphabet: "I", type: "radio", label: "autotest-custom-type-radio", settings: { selectOptions: allTypesRadioOptions } },
     { alphabet: "J", type: "autocomplete", label: "autotest-custom-type-autocomplete" },
     { alphabet: "K", type: "image", label: "autotest-custom-type-image" },
     { alphabet: "L", type: "link", label: "autotest-custom-type-link" },
@@ -44,9 +49,10 @@ const allTypesDefinitions = [
     { alphabet: "N", type: "json_doc", label: "autotest-custom-type-json-doc" },
     { alphabet: "O", type: "dir", label: "autotest-custom-type-dir" },
     { alphabet: "P", type: "docsIn", label: "autotest-custom-type-docsin", settings: { docInGroup: allTypesGroup } },
-    { alphabet: "Q", type: "enumeration", label: "autotest-custom-type-enumeration", settings: { enumeration: allTypesEnumeration } },
+    { alphabet: "Q", type: "select", label: "autotest-custom-type-enumeration", settings: { optionsSource: "enumeration", enumeration: allTypesEnumeration } },
     { alphabet: "R", type: "uuid", label: "autotest-custom-type-uuid" },
-    { alphabet: "S", type: "color", label: "autotest-custom-type-color" }
+    { alphabet: "S", type: "color", label: "autotest-custom-type-color" },
+    { alphabet: "T", type: "checkbox", label: "autotest-custom-type-checkbox", settings: { optionsSource: "enumeration", enumeration: allTypesEnumeration } }
 ];
 
 Scenario('Custom fields required logic test @screenshot', async ({ I, DT, DTE, Document }) =>{
@@ -113,7 +119,7 @@ Scenario('Custom fields required logic test @screenshot', async ({ I, DT, DTE, D
     DTE.waitForEditor("customFieldsDataTable");
     DTE.fillField("className", "sk.iway.iwcm.doc.DocDetails");
     DTE.selectOption("alphabet", "C");
-    DTE.selectOption("type", "Výberové pole");
+    setCustomFieldType(I, "select");
     I.checkOption("#DTE_Field_required_0");
     I.fillField("input.options-value-1", "Mac OS");
     I.fillField("input.options-value-2", "macos");
@@ -149,6 +155,36 @@ Scenario('Custom fields entity override applies type label and options', async (
 
     I.say("Another entity should keep global custom field settings");
     await checkDocCustomFieldText(I, DT, DTE, docId_2, overrideAlphabet, overrideGlobalLabel, 12, overrideSpecificLabel);
+});
+
+Scenario('Custom fields switch between static and enumeration options', ({ I, DTE }) => {
+    I.amOnPage("/admin/v9/settings/custom-fields/");
+    I.clickCss("button.buttons-create");
+    DTE.waitForEditor("customFieldsDataTable");
+
+    ["select", "multiselect", "radio", "checkbox"].forEach(type => {
+        I.say("Check option source switching for type " + type);
+        setCustomFieldType(I, type);
+        I.waitForVisible("div.DTE_Field_Name_optionsSource", 10);
+
+        setCustomFieldOptionsSource(I, "static");
+        I.seeCheckboxIsChecked("div.DTE_Field_Name_optionsSource input[value='static']");
+        I.waitForVisible("div.DTE_Field_Name_selectOptions", 10);
+        I.waitForInvisible("div.DTE_Field_Name_enumeration", 10);
+
+        setCustomFieldOptionsSource(I, "enumeration");
+        I.seeCheckboxIsChecked("div.DTE_Field_Name_optionsSource input[value='enumeration']");
+        I.waitForVisible("div.DTE_Field_Name_enumeration", 10);
+        I.waitForInvisible("div.DTE_Field_Name_selectOptions", 10);
+    });
+
+    I.say("Option source fields must be hidden for types without configurable options");
+    setCustomFieldType(I, "text");
+    I.waitForInvisible("div.DTE_Field_Name_optionsSource", 10);
+    I.waitForInvisible("div.DTE_Field_Name_selectOptions", 10);
+    I.waitForInvisible("div.DTE_Field_Name_enumeration", 10);
+
+    DTE.cancel("customFieldsDataTable");
 });
 
 Scenario('Custom fields render all supported field types', async ({ I, DT, DTE }) => {
@@ -330,10 +366,23 @@ async function checkRenderedCustomFieldType(I, fieldDefinition) {
         I.seeElementInDOM(fieldSelector + " textarea#" + inputId);
     } else if(fieldDefinition.type === "select") {
         I.seeElementInDOM(fieldSelector + " select#" + inputId);
-        await checkSelectOptions(I, fieldSelector, allTypesSelectOptions);
+        if(fieldDefinition.settings?.optionsSource === "enumeration") {
+            await checkSelectHasOptions(I, fieldSelector, "enumeration-backed select");
+        } else {
+            await checkSelectOptions(I, fieldSelector, allTypesSelectOptions);
+        }
     } else if(fieldDefinition.type === "multiselect") {
         I.seeElementInDOM(fieldSelector + " select#" + inputId + "[multiple]");
         await checkSelectOptions(I, fieldSelector, allTypesMultiOptions);
+    } else if(fieldDefinition.type === "radio" || fieldDefinition.type === "checkbox") {
+        I.seeElementInDOM(fieldSelector + " input#" + inputId + ".custom-field-choice-value[type='hidden']");
+        I.waitForElement(fieldSelector + " input.custom-field-choice-option[type='" + fieldDefinition.type + "']", 10);
+
+        if(fieldDefinition.settings?.optionsSource === "enumeration") {
+            await checkChoiceHasOptions(I, fieldSelector, fieldDefinition.type);
+        } else {
+            await checkChoiceOptions(I, fieldSelector, fieldDefinition.type, fieldDefinition.settings.selectOptions);
+        }
     } else if(fieldDefinition.type === "boolean") {
         I.seeElementInDOM(fieldSelector + " input#" + inputId + "[type='checkbox']");
     } else if(fieldDefinition.type === "number") {
@@ -352,8 +401,8 @@ async function checkRenderedCustomFieldType(I, fieldDefinition) {
         I.seeElementInDOM(fieldSelector + " button i.ti-focus-2");
     } else if(fieldDefinition.type === "json_group" || fieldDefinition.type === "json_doc" || fieldDefinition.type === "dir") {
         I.seeElementInDOM(fieldSelector + " input#" + inputId + "[type='text']");
-        I.seeElementInDOM(fieldSelector + " div.vueComponent#" + inputId);
-    } else if(fieldDefinition.type === "docsIn" || fieldDefinition.type === "enumeration") {
+        I.seeElementInDOM(fieldSelector + " div.webjet-component#" + inputId);
+    } else if(fieldDefinition.type === "docsIn") {
         I.seeElementInDOM(fieldSelector + " select#" + inputId);
         await checkSelectHasOptions(I, fieldSelector, fieldDefinition.type);
     } else if(fieldDefinition.type === "uuid") {
@@ -392,6 +441,29 @@ async function checkSelectHasOptions(I, fieldSelector, type) {
     I.assertAbove(optionCount, 0, "Custom field type " + type + " must render available options");
 }
 
+async function checkChoiceOptions(I, fieldSelector, type, expectedOptions) {
+    const optionsPresent = await I.executeScript(({ fieldSelector, type, expectedOptions }) => {
+        const options = Array.from(document.querySelectorAll(fieldSelector + " input.custom-field-choice-option[type='" + type + "']")).map(input => ({
+            label: input.closest(".form-check")?.querySelector("label")?.textContent.trim() || "",
+            value: input.value
+        }));
+
+        return expectedOptions.every(expectedOption => options.some(option =>
+            option.label === expectedOption.label && option.value === expectedOption.value
+        ));
+    }, { fieldSelector, type, expectedOptions });
+
+    I.assertTrue(optionsPresent, "Custom field " + type + " options must match configured values");
+}
+
+async function checkChoiceHasOptions(I, fieldSelector, type) {
+    const optionCount = await I.executeScript(({ fieldSelector, type }) => {
+        return document.querySelectorAll(fieldSelector + " input.custom-field-choice-option[type='" + type + "']").length;
+    }, { fieldSelector, type });
+
+    I.assertAbove(optionCount, 0, "Enumeration-backed custom field type " + type + " must render available options");
+}
+
 function addCustomFieldSetting(I, DTE, className, alphabet, entityId, isRequired, seeError = null, bonusClassName = null, bonusEntityId = null, Document = null, fieldSettings = {}) {
     I.clickCss("button.buttons-create");
     DTE.waitForEditor("customFieldsDataTable");
@@ -404,6 +476,11 @@ function addCustomFieldSetting(I, DTE, className, alphabet, entityId, isRequired
 
     if(fieldSettings.label != null) {
         I.fillField("#DTE_Field_label", fieldSettings.label);
+    }
+
+    if(fieldSettings.optionsSource != null) {
+        I.waitForVisible("div.DTE_Field_Name_optionsSource", 10);
+        setCustomFieldOptionsSource(I, fieldSettings.optionsSource);
     }
 
     if(fieldSettings.textMaxLength != null) {
@@ -471,6 +548,10 @@ function setCustomFieldType(I, type) {
             window.$(typeSelect).selectpicker("refresh");
         }
     }, type);
+}
+
+function setCustomFieldOptionsSource(I, source) {
+    I.checkOption("div.DTE_Field_Name_optionsSource input[value='" + source + "']");
 }
 
 function setCustomFieldsEditorValue(I, fieldName, value) {

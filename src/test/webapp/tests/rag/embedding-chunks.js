@@ -1,5 +1,7 @@
 Feature('rag.embedding-chunks');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 Before(({ I, login }) =>{
     login('admin');
 });
@@ -43,7 +45,7 @@ Scenario('Chunks - base test', ({ I, DT }) => {
     I.see(valueA, "#datatableInit tbody td");
 
     I.say("Select folder and try it again");
-    selectTree(I, "#embeddingChunksDataTable_extfilter button.btn-vue-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent"]);
+    selectTree(I, "#embeddingChunksDataTable_extfilter button.btn-webjet-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent"]);
 
     I.say("Check loaded values");
     DT.waitForLoader();
@@ -94,7 +96,7 @@ Scenario('Chunks test + run deleting index action', ({ I, DT }) => {
     I.clickCss("button.btnAddIndex");
     I.waitForVisible("#modalIframeIframeElement");
     I.switchTo("#modalIframeIframeElement");
-    I.seeElement("#editorApprootDir input[value='" + rootDirPath + "']");
+    I.seeInField("#editorApprootDir input.form-control", rootDirPath);
 
     I.say("Folder contains 5 pages, 5 are indexed - and no awaiting ADDING");
     checkIndexingStatusValues(I, 1, 5, 5, 0);
@@ -112,7 +114,7 @@ Scenario('Chunks test + run deleting index action', ({ I, DT }) => {
     I.clickCss("button.btnRemoveIndex");
     I.waitForVisible("#modalIframeIframeElement");
     I.switchTo("#modalIframeIframeElement");
-    I.seeElement("#editorApprootDir input[value='" + rootDirPath + "']");
+    I.seeInField("#editorApprootDir input.form-control", rootDirPath);
 
     I.say("Folder contains 5 pages, 5 are indexed - and no awaiting REMOVE");
     checkIndexingStatusValues(I, 1, 5, 5, 0);
@@ -122,10 +124,10 @@ Scenario('Chunks test + run deleting index action', ({ I, DT }) => {
     checkIndexingStatusValues(I, 2, 7, 7, 0);
 
     I.say("Switch to subfolder in the dialog");
-    selectTree(I, ".rootDirDiv button.btn-vue-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent", "semantic_child"]);
+    selectTree(I, ".rootDirDiv button.btn-webjet-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent", "semantic_child"]);
 
     I.say("Check changed path");
-    I.seeElement("#editorApprootDir input[value='" + rootSubDirPath + "']");
+    I.seeInField("#editorApprootDir input.form-control", rootSubDirPath);
 
     I.say("Check changed stats");
     checkIndexingStatusValues(I, 1, 2, 2, 0);
@@ -168,13 +170,14 @@ Scenario('After removing action - checks', ({ I, DT }) => {
     I.clickCss("button.btnRemoveIndex");
     I.waitForVisible("#modalIframeIframeElement");
     I.switchTo("#modalIframeIframeElement");
-    I.waitForElement("#editorApprootDir input[value='" + rootDirPath + "']", 10);
+    I.waitForElement("#editorApprootDir input.form-control", 10);
+    I.seeInField("#editorApprootDir input.form-control", rootDirPath);
 
     I.say("Parent folder should be unchanged");
     checkIndexingStatusValues(I, 1, 5, 5, 0);
 
     I.say("Switch to sub-folder and check");
-    selectTree(I, ".rootDirDiv button.btn-vue-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent", "semantic_child"]);
+    selectTree(I, ".rootDirDiv button.btn-webjet-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent", "semantic_child"]);
 
     I.say("Check that pages are really not indexed and they are no more awaiting index removing");
     checkIndexingStatusValues(I, 1, 2, 0, 0);
@@ -194,7 +197,7 @@ Scenario('Run adding index action', ({ I, DT }) => {
     I.clickCss("button.btnAddIndex");
     I.waitForVisible("#modalIframeIframeElement");
     I.switchTo("#modalIframeIframeElement");
-    I.seeElement("#editorApprootDir input[value='" + rootDirPath + "']");
+    I.seeInField("#editorApprootDir input.form-control", rootDirPath);
     checkIndexingStatusValues(I, 1, 5, 5, 0);
 
     I.say("Include sub-folders, see 2 pages missing index");
@@ -202,8 +205,8 @@ Scenario('Run adding index action', ({ I, DT }) => {
     checkIndexingStatusValues(I, 2, 7, 5, 0);
 
     I.say('Switch to child folder - 2 out of 2 need indexing');
-    selectTree(I, ".rootDirDiv button.btn-vue-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent", "semantic_child"]);
-    I.seeElement("#editorApprootDir input[value='" + rootSubDirPath + "']");
+    selectTree(I, ".rootDirDiv button.btn-webjet-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent", "semantic_child"]);
+    I.seeInField("#editorApprootDir input.form-control", rootSubDirPath);
     checkIndexingStatusValues(I, 1, 2, 0, 0);
 
     I.say("Run indexing action");
@@ -248,7 +251,9 @@ Scenario('After adding action - checks', ({ I, DT }) => {
     I.clickCss("button.btnAddIndex");
     I.waitForVisible("#modalIframeIframeElement");
     I.switchTo("#modalIframeIframeElement");
-    I.waitForElement("#editorApprootDir input[value='" + rootDirPath + "']", 10);
+    I.waitForElement("#editorApprootDir input.form-control", 10);
+    I.seeInField("#editorApprootDir input.form-control", rootDirPath);
+
     checkIndexingStatusValues(I, 1, 5, 5, 0);
 
     I.say("Include sub-folders");
@@ -268,17 +273,17 @@ Scenario('Disable rag semantic search', ({ I, DT, Document }) => {
 
 function selectTree(I, buttonSelector, nodesArr) {
     I.clickCss(buttonSelector);
-    I.waitForVisible("#jsTree", 10);
+    I.waitForVisible(WebjetDteJsTree.tree, 10);
 
     for(let i = 0; i < nodesArr.length; i++) {
         if(i == nodesArr.length - 1) {
-            I.click(locate("#jsTree a.jstree-anchor").withText(nodesArr[i]));
+            I.click(locate(WebjetDteJsTree.anchors).withText(nodesArr[i]));
         } else {
-            I.click(locate('#jsTree .jstree-node.jstree-closed').withText(nodesArr[i]).find('.jstree-icon.jstree-ocl'));
+            I.click(locate(WebjetDteJsTree.tree + ' .jstree-node.jstree-closed').withText(nodesArr[i]).find('.jstree-icon.jstree-ocl'));
         }
     }
 
-    I.waitForInvisible("#jsTree", 10);
+    I.waitForInvisible(WebjetDteJsTree.tree, 10);
 }
 
 function checkIndexingStatusValues(I, allGroups, allDoc, indexedDoc, queuedDoc) {
@@ -290,7 +295,7 @@ function checkIndexingStatusValues(I, allGroups, allDoc, indexedDoc, queuedDoc) 
 }
 
 function checkPathInRootDir(I, dirPath) {
-    I.seeElement( locate("#embeddingChunksDataTable_extfilter #editorApprootDir input[value='" + dirPath + "']")  );
+    I.seeInField("#embeddingChunksDataTable_extfilter #editorApprootDir input.form-control", dirPath);
 }
 
 function setRagCronJob(I, DT, DTE, turnOn, minuteValue) {

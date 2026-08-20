@@ -1,5 +1,7 @@
 Feature('webpages.group-defaultdocid');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 var auto_name, auto_folder, auto_webPage, auto_todo;
 
 Before(({ I, login }) => {
@@ -73,7 +75,7 @@ Scenario('Hlavna stranka priecinka @singlethread', async ({ I, DT, DTE }) => {
      I.say('5. Zmena hlavnej stranky priecinka name-autotest z tohoto priecinka');
      I.click('.btn.btn-sm.buttons-selected.buttons-edit.btn-warning');
      I.waitForText(auto_name, 10);
-     I.click(locate('#editorAppDTE_Field_editorFields-defaultDocDetails').find('.btn.btn-outline-secondary.btn-vue-jstree-item-edit'));
+     I.click(locate('#editorAppDTE_Field_editorFields-defaultDocDetails').find('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit'));
      // nejde vybrat priecinok, len webstranku
      I.click(locate('.jstree-node.jstree-closed').withText(auto_name).find('a.jstree-anchor'));
      I.waitForText('Vyberte web stránku', 10);
@@ -96,8 +98,8 @@ Scenario('Hlavna stranka priecinka @singlethread', async ({ I, DT, DTE }) => {
      I.click('.btn.btn-sm.buttons-selected.buttons-edit.btn-warning');
      I.waitForText(auto_folder, 10);
      // vyber web stranku z priecinka folder-autotest
-     I.click(locate('#editorAppDTE_Field_editorFields-defaultDocDetails').find('.btn.btn-outline-secondary.btn-vue-jstree-item-edit'));
-     I.waitForElement("#jsTree");
+     I.click(locate('#editorAppDTE_Field_editorFields-defaultDocDetails').find('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit'));
+     I.waitForElement(WebjetDteJsTree.tree);
      I.click(locate('.jstree-node.jstree-closed').withText(auto_folder).find('.jstree-icon.jstree-ocl'));
      I.wait(1);
      I.click(locate('.jstree-node.jstree-leaf.jstree-last').withText(auto_folder).find('a.jstree-anchor'));

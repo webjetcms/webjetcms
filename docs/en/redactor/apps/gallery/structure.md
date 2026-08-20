@@ -35,7 +35,7 @@ On this tab, you can edit basic folder information, including:
 
 The tab offers options that apply to gallery images:
 
-- **How ​​to resize**
+- **Resize method** - sets the method for generating the small image. If a separate method is not set for the large image, the same method will be used for the large image.
   - **Custom display** - the image size is set so that the dimension does not exceed the set size
   - **Crop to size** - the image is cropped to fit the specified dimensions, and if the aspect ratio does not match, it is cropped.
   - **Exact size** - the image size is set exactly according to the folder, and if the aspect ratio is different, the image will be distorted.
@@ -43,8 +43,9 @@ The tab offers options that apply to gallery images:
   - **Exact height** - the image size will use the specified height and calculate the width based on the aspect ratio. However, the width can be larger than the specified dimension.
   - **Do not generate thumbnails** - the gallery will only use the original image and will not generate thumbnails. Thumbnails can then be generated as needed using the `/thumb` prefix.
 - **Regenerate images** - if selected, will regenerate the sizes of all images in the gallery according to the current settings
-- **Apply to all subfolders** - if the option is selected, the setting will also be applied to all subfolders
+- **Apply to all subfolders** - if selected, the setting will also be applied to all subfolders, including the way the large image is resized
 - **Small image size** - width and height of the image
+- **Large image resizing method** - allows you to set a different method for generating a large image than for a small image. The default value **Same as small image** preserves the original behavior and uses the value of the **Resizing method** field for the large image. You can separately select the options **Fit to size**, **Crop to size**, **Exact size**, **Exact width** or **Exact height**. The **Do not generate thumbnails** option is not set separately for a large image; if it is selected in the **Resizing method** field, the gallery will use the original behavior without generating thumbnails.
 - **Maximum size of large image** - width and height of the image, if you enter 0 in both fields, the original size of the uploaded image will be preserved
 
 ![](dir-sizes-tab.png)

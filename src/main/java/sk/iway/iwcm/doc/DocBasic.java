@@ -1902,7 +1902,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 
 	public void setVirtualPath(String virtualPath) {
 		if (virtualPath == null) return;
-		this.virtualPath = virtualPath;
+		this.virtualPath = virtualPath.trim();
 	}
 
 	public String getExternalLink() {
@@ -2404,6 +2404,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	}
 
 	public void setEditorVirtualPath(String editorVirtualPath) {
+		if (editorVirtualPath != null) editorVirtualPath = editorVirtualPath.trim();
 		this.editorVirtualPath = editorVirtualPath;
 	}
 

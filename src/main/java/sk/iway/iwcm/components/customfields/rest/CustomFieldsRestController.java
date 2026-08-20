@@ -33,7 +33,7 @@ public class CustomFieldsRestController extends DatatableRestControllerV2<Custom
 
     @Autowired
     public CustomFieldsRestController(CustomFieldsRepository customFieldsRepository, CustomFieldsService customFieldsService) {
-        super(customFieldsRepository);
+        super(customFieldsRepository, CustomFieldsEntity.class);
         this.customFieldsRepository = customFieldsRepository;
         this.customFieldsService = customFieldsService;
     }
@@ -91,6 +91,12 @@ public class CustomFieldsRestController extends DatatableRestControllerV2<Custom
     public CustomFieldsEntity processFromEntity(CustomFieldsEntity entity, ProcessItemAction action) {
         if (entity == null) return null;
         customFieldsService.synchronizeSpecificClassFields(entity);
+
+        // For GETONE keep type="enumeration" so that fromEntity can detect the source and set optionsSource accordingly.
+        // For all other actions (save, list) normalize to "select" before persisting.
+        if("enumeration".equals(entity.getType()) && ProcessItemAction.GETONE.equals(action) == false) {
+            entity.setType("select");
+        }
 
         if (entity.getEntityId() != null && entity.getEntityId() < 1) {
             entity.setEntityId(null);

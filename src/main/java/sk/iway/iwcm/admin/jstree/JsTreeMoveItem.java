@@ -63,6 +63,11 @@ public class JsTreeMoveItem {
      */
     private String rootFolder;
 
+    /**
+     * Allow to show only folders with write permission.
+     */
+    private boolean writableOnly = false;
+
     public int getIdInt() {
         return Tools.getIntValue(id, 0);
     }

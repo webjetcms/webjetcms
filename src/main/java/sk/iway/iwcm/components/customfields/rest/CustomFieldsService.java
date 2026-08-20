@@ -174,34 +174,37 @@ public class CustomFieldsService {
         if(entity == null || Tools.isEmpty(entity.getType())) throw new IllegalStateException("CustomFieldsEntity or its type must not be null/empty");
 
         String type = entity.getType();
+        if("enumeration".equals(type)) {
+            type = "select";
+            entity.setType(type);
+            entity.setOptionsSource("enumeration");
+        }
 
         StringBuilder value = new StringBuilder("");
         if("text".equals(type)) {
             value.append("text");
             if(entity.getTextMaxLength() != null) value.append("-").append(entity.getTextMaxLength());
             if(entity.getTextWarningLength() != null) value.append(", warningLength-").append(entity.getTextWarningLength());
-        } else if("select".equals(type)) {
-            if(Tools.isFalse(entity.getRequired())) value.append("|"); //user can select umpty value
-            value.append(Tools.isNotEmpty(entity.getSelectOptions()) ? entity.getSelectOptions() : "");
-        } else if("multiselect".equals(type)) {
-            value.append("multiple:");
-            value.append(Tools.isNotEmpty(entity.getSelectOptions()) ? entity.getSelectOptions() : "");
+        } else if("select".equals(type) || "radio".equals(type)) {
+            if("enumeration".equals(entity.getOptionsSource())) {
+                value.append(getEnumerationValue(entity));
+            } else {
+                if("select".equals(type) && Tools.isFalse(entity.getRequired())) value.append("|"); //user can select empty value
+                value.append(Tools.isNotEmpty(entity.getSelectOptions()) ? entity.getSelectOptions() : "");
+            }
+        } else if("multiselect".equals(type) || "checkbox".equals(type)) {
+            if("multiselect".equals(type)) value.append("multiple:");
+            if("enumeration".equals(entity.getOptionsSource())) {
+                value.append(getEnumerationValue(entity));
+            } else {
+                value.append(Tools.isNotEmpty(entity.getSelectOptions()) ? entity.getSelectOptions() : "");
+            }
         } else if("json_group".equals(type) || "json_doc".equals(type)) {
             value.append(type);
             if(Tools.isFalse(entity.getRequired())) value.append("_null");
         } else if("docsIn".equals(type)) {
             value.append("docsIn_");
             if(entity.getDocInGroup() != null) value.append(entity.getDocInGroup().getGroupId());
-            if(Tools.isFalse(entity.getRequired())) value.append("_null");
-        } else if("enumeration".equals(type)) {
-            String enumValue = entity.getEnumeration();
-            if(Tools.isNotEmpty(enumValue)) {
-                if(enumValue.startsWith("enumeration-options")) enumValue = enumValue.substring("enumeration-options".length());
-                enumValue = Tools.replace(enumValue, "|", "_");
-            } else {
-                enumValue = "";
-            }
-            value.append("enumeration").append(enumValue);
             if(Tools.isFalse(entity.getRequired())) value.append("_null");
         } else if("autocomplete".equals(type)) {
             value.append("autocomplete:");
@@ -234,10 +237,16 @@ public class CustomFieldsService {
      * @see #toEntity(CustomFieldsEntity)
      */
     public static CustomFieldsEntity fromEntity(CustomFieldsEntity entity) {
-        if (entity == null || Tools.isEmpty(entity.getType()) || Tools.isEmpty(entity.getValue())) return entity;
+        if (entity == null || Tools.isEmpty(entity.getType())) return entity;
 
         String type = entity.getType();
+        if("enumeration".equals(type)) {
+            type = "select";
+            entity.setType(type);
+        }
+
         String value = entity.getValue();
+        if(Tools.isEmpty(value)) return entity;
 
         if ("text".equals(type)) {
             // value format: "text" or "text-{maxLength}" or "text-{maxLength}, warningLength-{warningLength}" or "text, warningLength-{warningLength}"
@@ -251,11 +260,23 @@ public class CustomFieldsService {
             } else if (Tools.isNotEmpty(remainder)) {
                 entity.setTextMaxLength(Tools.getIntValue(remainder, 0) > 0 ? Tools.getIntValue(remainder, 0) : null);
             }
-        } else if ("select".equals(type)) {
-            entity.setSelectOptions(value.startsWith("|") ? value.substring(1) : value);
-        } else if ("multiselect".equals(type)) {
+        } else if ("select".equals(type) || "radio".equals(type)) {
+            if(isEnumerationValue(value)) {
+                entity.setOptionsSource("enumeration");
+                setEnumerationValue(entity, value);
+            } else {
+                entity.setOptionsSource("static");
+                entity.setSelectOptions(value.startsWith("|") ? value.substring(1) : value);
+            }
+        } else if ("multiselect".equals(type) || "checkbox".equals(type)) {
             String remainder = value.startsWith("multiple:") ? value.substring(9) : value;
-            entity.setSelectOptions(remainder.startsWith("|") ? remainder.substring(1) : remainder);
+            if(isEnumerationValue(remainder)) {
+                entity.setOptionsSource("enumeration");
+                setEnumerationValue(entity, remainder);
+            } else {
+                entity.setOptionsSource("static");
+                entity.setSelectOptions(remainder.startsWith("|") ? remainder.substring(1) : remainder);
+            }
         } else if ("docsIn".equals(type)) {
             // value format: "docsIn_{groupId}" or "docsIn_{groupId}_null"
             String remainder = value.startsWith("docsIn_") ? value.substring(7) : value;
@@ -267,14 +288,6 @@ public class CustomFieldsService {
                 GroupDetails group = GroupsDB.getInstance().getGroup((int) groupId);
                 if(group != null) entity.setDocInGroup(group);
             }
-        } else if ("enumeration".equals(type)) {
-            // value format: "enumeration{_option1_option2}" or "enumeration{_option1_option2}_null"
-            String remainder = value.startsWith("enumeration") ? value.substring("enumeration".length()) : value;
-            if (remainder.endsWith("_null")) {
-                remainder = remainder.substring(0, remainder.length() - 5);
-            }
-
-            entity.setEnumeration("enumeration-options" + Tools.replace(remainder, "_", "|"));
         } else if("autocomplete".equals(type)) {
             String remainder = value.startsWith("autocomplete:") ? value.substring(13) : value;
             entity.setAutocompleteOptions(remainder);
@@ -300,6 +313,8 @@ public class CustomFieldsService {
             new LabelValue( getFieldTypeLabel(prop, "textarea"), "textarea"),
             new LabelValue( getFieldTypeLabel(prop, "select"), "select"),
             new LabelValue( getFieldTypeLabel(prop, "multiselect"), "multiselect"),
+            new LabelValue( getFieldTypeLabel(prop, "radio"), "radio"),
+            new LabelValue( getFieldTypeLabel(prop, "checkbox"), "checkbox"),
             new LabelValue( getFieldTypeLabel(prop, "boolean"), "boolean"),
             new LabelValue( getFieldTypeLabel(prop, "number"), "number"),
             new LabelValue( getFieldTypeLabel(prop, "date"), "date"),
@@ -311,7 +326,6 @@ public class CustomFieldsService {
             new LabelValue( getFieldTypeLabel(prop, "json_doc"), "json_doc"),
             new LabelValue( getFieldTypeLabel(prop, "dir"), "dir"),
             new LabelValue( getFieldTypeLabel(prop, "docsIn"), "docsIn"),
-            new LabelValue( getFieldTypeLabel(prop, "enumeration"), "enumeration"),
             new LabelValue( getFieldTypeLabel(prop, "uuid"), "uuid"),
             new LabelValue( getFieldTypeLabel(prop, "color"), "color")
         );
@@ -340,11 +354,12 @@ public class CustomFieldsService {
     public static List<LabelValue> getSpecificFieldVisibility() {
         return List.of(
             new LabelValue("text", "textMaxLength,textWarningLength,warningText"),
-            new LabelValue("select", "selectOptions"),
-            new LabelValue("multiselect", "selectOptions"),
+            new LabelValue("select", "optionsSource"),
+            new LabelValue("multiselect", "optionsSource"),
+            new LabelValue("radio", "optionsSource"),
+            new LabelValue("checkbox", "optionsSource"),
             new LabelValue("autocomplete", "autocompleteOptions"),
-            new LabelValue("docsIn", "docInGroup"),
-            new LabelValue("enumeration", "enumeration")
+            new LabelValue("docsIn", "docInGroup")
         );
     }
 
@@ -391,6 +406,33 @@ public class CustomFieldsService {
     }
 
     /* PRIVATE STATIC METHODS */
+
+    private static String getEnumerationValue(CustomFieldsEntity entity) {
+        String enumValue = entity.getEnumeration();
+        if(Tools.isNotEmpty(enumValue)) {
+            if(enumValue.startsWith("enumeration-options")) enumValue = enumValue.substring("enumeration-options".length());
+            enumValue = Tools.replace(enumValue, "|", "_");
+        } else {
+            enumValue = "";
+        }
+
+        StringBuilder value = new StringBuilder("enumeration").append(enumValue);
+        if(Tools.isFalse(entity.getRequired())) value.append("_null");
+        return value.toString();
+    }
+
+    private static void setEnumerationValue(CustomFieldsEntity entity, String value) {
+        String remainder = value.startsWith("enumeration") ? value.substring("enumeration".length()) : value;
+        if(remainder.endsWith("_null")) {
+            remainder = remainder.substring(0, remainder.length() - 5);
+        }
+
+        entity.setEnumeration("enumeration-options" + Tools.replace(remainder, "_", "|"));
+    }
+
+    private static boolean isEnumerationValue(String value) {
+        return "enumeration".equals(value) || value.startsWith("enumeration_");
+    }
 
     /**
      * Tries to derive a bonus lookup context from the main DTO.

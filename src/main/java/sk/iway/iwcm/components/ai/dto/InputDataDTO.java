@@ -75,6 +75,13 @@ public class InputDataDTO {
     @JsonIgnore
     Map<String, String> bonusParams = new LinkedHashMap<>();
 
+    /**
+     * Marks backend-produced structured input that must bypass CMS HTML removal
+     * and INCLUDE-command preservation. This property is never accepted from JSON.
+     */
+    @JsonIgnore
+    boolean structuredInput = false;
+
     public void removeHtml() {
         if(Tools.isEmpty(inputValue)) return;
         //remove include

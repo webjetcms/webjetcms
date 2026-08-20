@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.gallery;
 
+import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -107,8 +108,7 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
             entity.setDate(date);
         }
 
-        repository.save(entity);
-        return entity;
+        return repository.save(entity);
     }
 
     @Override
@@ -117,6 +117,14 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
             throwError("user.rights.no_folder_rights");
         }
 
+        GalleryDimensionEditorFields requestedEditorFields = entity.getEditorFields();
+        boolean regenerateImages = requestedEditorFields != null && requestedEditorFields.isRegenerateImages();
+        boolean forceResizeModeToSubgroups = requestedEditorFields != null && requestedEditorFields.isForceResizeModeToSubgroups();
+        boolean regenerateWatermark = requestedEditorFields != null && requestedEditorFields.isRegenerateWatermark();
+        boolean forceWatermarkToSubgroups = requestedEditorFields != null && requestedEditorFields.isForceWatermarkToSubgroups();
+
+        GalleryDimension saved = null;
+
         //we are editing not saved entity in jstree (it is just folder on disk, not in DB yet)
         if (id == -1 && Tools.isNotEmpty(entity.getPath())) {
             //split path to parent and name
@@ -124,25 +132,33 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
             if (lomka > 1 && lomka < entity.getPath().length()) {
                 entity.setName(entity.getPath().substring(lomka+1));
                 entity.setPath(entity.getPath().substring(0, lomka));
-                return insertItem(entity);
+                saved = insertItem(entity);
             }
         }
 
         // Allow change path of folder
         String movePathFrom = null;
-        GalleryDimension original = repository.findById(id).orElse(null);
-        if(original != null && original.getPath() != null && original.getPath().equals(entity.getPath()) == false) {
-            movePathFrom = original.getPath();
+        if (saved == null) {
+            GalleryDimension original = repository.findById(id).orElse(null);
+            if(original != null && original.getPath() != null && original.getPath().equals(entity.getPath()) == false) {
+                movePathFrom = original.getPath();
+            }
+
+            saved = super.editItem(entity, id);
         }
 
-        GalleryDimension saved = super.editItem(entity, id);
+        Dimension smallDimension = new Dimension(saved.getImageWidth(), saved.getImageHeight());
+        Dimension largeDimension = new Dimension(saved.getNormalWidth(), saved.getNormalHeight());
+        Dimension[] dimensions = new Dimension[] { smallDimension, largeDimension };
+        String resizeModeNormal = saved.getResizeModeNormal();
 
         if (movePathFrom != null) {
             // Folder was moved
             Map<String, Object> result = new HashMap<>();
 
-            boolean isUpdateInDoc = Tools.isTrue(entity.getUpdateInDoc());
+            boolean isUpdateInDoc = Tools.isTrue(saved.getUpdateInDoc());
             if(isUpdateInDoc) { addNotify( galleryTreeService.updateInDocWarning(getProp()) ); }
+            //do not use saved.getParentPath() because it is read only and not updated yet, use original entity.getParentPath() instead
             galleryTreeService.findAndMoveGalleryFolder(movePathFrom, entity.getParentPath(), result, isUpdateInDoc);
 
             if(result.containsKey("result") == false || Boolean.FALSE.equals(result.get("result"))) {
@@ -151,23 +167,23 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
             }
         }
 
-        if (entity.getEditorFields().isForceResizeModeToSubgroups()) {
-            GalleryDB.updateDirectoryDimToSubfolders(entity.getPath());
+        if (forceResizeModeToSubgroups) {
+            GalleryDB.updateDirectoryDimToSubfolders(saved.getPath(), smallDimension, largeDimension, saved.getResizeMode(), resizeModeNormal);
         }
 
-        if (entity.getEditorFields().isForceWatermarkToSubgroups()) {
-            List<GalleryDimension> subfolders = repository.findByPathLikeAndDomainId(entity.getPath()+"/%", CloudToolsForCore.getDomainId());
+        if (forceWatermarkToSubgroups) {
+            List<GalleryDimension> subfolders = repository.findByPathLikeAndDomainId(saved.getPath()+"/%", CloudToolsForCore.getDomainId());
             for (GalleryDimension subfolder : subfolders) {
-                subfolder.setWatermark(entity.getWatermark());
-                subfolder.setWatermarkPlacement(entity.getWatermarkPlacement());
-                subfolder.setWatermarkSaturation(entity.getWatermarkSaturation());
+                subfolder.setWatermark(saved.getWatermark());
+                subfolder.setWatermarkPlacement(saved.getWatermarkPlacement());
+                subfolder.setWatermarkSaturation(saved.getWatermarkSaturation());
                 repository.save(subfolder);
             }
         }
 
-        if (entity.getEditorFields().isRegenerateImages() || entity.getEditorFields().isRegenerateWatermark()) {
-            boolean recursive = entity.getEditorFields().isForceResizeModeToSubgroups() || entity.getEditorFields().isForceWatermarkToSubgroups();
-            GalleryDB.resizePicturesInDirectory(entity.getPath(), recursive, getProp(), null);
+        if (regenerateImages || regenerateWatermark) {
+            boolean recursive = forceResizeModeToSubgroups || forceWatermarkToSubgroups;
+            GalleryDB.resizePicturesInDirectory(saved.getPath(), recursive, getProp(), null, dimensions, saved.getResizeMode(), resizeModeNormal, forceResizeModeToSubgroups);
         }
 
         return saved;
@@ -212,6 +228,7 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
                 entity = getNewEntity(parentGallery.getPath());
                 entity.setName("");
                 entity.setResizeMode(parentGallery.getResizeMode());
+                entity.setResizeModeNormal(parentGallery.getResizeModeNormal());
                 entity.setImageWidth(parentGallery.getImageWidth());
                 entity.setImageHeight(parentGallery.getImageHeight());
                 entity.setNormalWidth(parentGallery.getNormalWidth());
@@ -300,6 +317,23 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
 
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, GalleryDimension> target, Identity user, Errors errors, Long id, GalleryDimension entity) {
+        String requiredFieldMessage = getProp().getText("datatables.field.required.error.js");
+
+        if (entity.getImageWidth() == null) {
+            errors.rejectValue("errorField.imageWidth", "403", requiredFieldMessage);
+        }
+        if (entity.getImageHeight() == null) {
+            errors.rejectValue("errorField.imageHeight", "403", requiredFieldMessage);
+        }
+        if (entity.getNormalWidth() == null) {
+            errors.rejectValue("errorField.normalWidth", "403", requiredFieldMessage);
+        }
+        if (entity.getNormalHeight() == null) {
+            errors.rejectValue("errorField.normalHeight", "403", requiredFieldMessage);
+        }
+        if (GalleryDB.isResizeModeNormalValid(entity.getResizeModeNormal()) == false) {
+            errors.rejectValue("errorField.resizeModeNormal", "403", getProp().getText("datatable.error.fieldErrorMessage"));
+        }
 
         String path = entity.getPath();
 

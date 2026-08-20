@@ -112,6 +112,7 @@ lang="${ninja.temp.lngIso}" data-browser-name="${ninja.userAgent.browserName}" d
 <meta property="og:image" content="${ninja.page.urlDomain}${ninja.page.seoImage}" />
 <meta property="og:image:width" content="${ninja.page.seoImageWidth}" />
 <meta property="og:image:height" content="${ninja.page.seoImageHeight}" />
+<meta property="og:image:alt" content="${ninja.page.seoImageAlt}" />
 <meta property="og:site_name" content="${ninja.temp.group.siteName}" />
 <meta property="og:type" content="website" />
 <meta property="og:locale" content="${ninja.temp.lngIsoUnderscore}" />
@@ -257,6 +258,16 @@ ${ninja.webjet.insertJqueryFake}
 ```
 
 <!-- tabs:end -->
+
+## Predvolené SEO hodnoty
+
+V skupine šablón je na karte **SEO** možné nastaviť predvolený popis, obrázok a alternatívny text obrázka. Objekt `ninja.page` vyhodnocuje dostupné hodnoty v tomto poradí:
+
+- `${ninja.page.seoDescription}`: voliteľné pole S, perex, predvolený popis skupiny šablón,
+- `${ninja.page.seoImage}`: platná cesta vo voliteľnom poli T, perex obrázok, predvolený obrázok skupiny šablón, hodnota `defaultSeoImage` z konfiguračného súboru šablóny,
+- `${ninja.page.seoImageAlt}`: voliteľné pole P, predvolený alternatívny text skupiny šablón.
+
+Predvolený popis a alternatívny text sa ukladajú podľa jazyka, predvolený obrázok je spoločný pre celú skupinu šablón. Podrobnosti sú v [API objektu Page](../ninja-jv/page/README.md).
 
 ## Konfiguračný súbor
 

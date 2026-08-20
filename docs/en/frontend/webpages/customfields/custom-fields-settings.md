@@ -24,8 +24,29 @@ The table contains the following columns:
 
 In the **Field type** field, the available types are:
 
-- `text`, `textarea`, `select`, `multiselect`, `boolean`, `number`, `date`, `none`
-- `autocomplete`, `image`, `link`, `json_group`, `json_doc`, `dir`, `docsIn`, `enumeration`, `uuid`, `color`
+| Type | Display | Selection |
+| --- | --- | --- |
+| `text` | Text field | Single-valued |
+| `textarea` | Text area (multiple lines) | Single-valued |
+| `select` | Dropdown | Single-valued |
+| `multiselect` | Multiple-value selection field | Multivalued (values ​​separated by `\|`) |
+| `radio` | List of radio buttons | Single-valued |
+| `checkbox` | Checkbox list | Multivalued (values ​​separated by `\|`) |
+| `boolean` | Yes/No switch | Single-valued |
+| `number` | Numeric field | Single-valued |
+| `date` | Date selection | Single-valued |
+| `autocomplete` | Text box with suggestions | Single-valued |
+| `image` | Image selection | Single-valued |
+| `link` | Link selection | Single-valued |
+| `json_group` | Selecting a website folder | Single-valued |
+| `json_doc` | Website selection | Single-valued |
+| `dir` | Selecting a file system folder | Single-valued |
+| `docsIn` | Selecting an existing page from the directory | Single-valued |
+| `uuid` | Automatically generated unique identifier | Single-valued |
+| `color` | Color selection including translucency | Single-valued |
+| `none` | The field is not displayed. | — |
+
+!>**Warning:** The type `enumeration` is no longer a separately available field type in the table. The link to the code list is set as the **option source** for the types `select`, `multiselect`, `radio` and `checkbox` (see [Option source](#option-source)).
 
 ## Settings by type
 
@@ -34,14 +55,62 @@ When changing a field type, additional fields that belong only to that type are 
 | Field type | Additional settings |
 | --- | --- |
 | `text` | **Maximum text length**, **Text length for warning display**, **Warning text** |
-| `select`, `multiselect` | **Options for the selection field** (editor type `OPTIONS`, lines `label:value`) |
+| `select`, `multiselect`, `radio`, `checkbox` | **Options Source** (**Static Options** / **Dial** toggle) |
 | `autocomplete` | list of options (editor of type `OPTIONS_SIMPLE`, single-valued rows) |
 | `docsIn` | **Website Folder Selection** (specifies the source of the pages for selection) |
-| `enumeration` | **Link to codebook** (`codebook ID`, `label` column, `value` column) |
 
-If **Required field** is disabled for types `select`, `multiselect`, `docsIn`, `enumeration`, `json_group`, `json_doc`, the editor will automatically offer an empty value.
+### Required field behavior by type
 
-In the Dependent on tab, the following fields can be set:
+If **Required field** is disabled for types `select`, `docsIn`, `json_group`, `json_doc`, the editor will automatically offer an empty value. For types `radio` and `checkbox`, disabled required field means that the user does not have to select any option.
+
+### Source of options
+
+For types `select`, `multiselect`, `radio` and `checkbox` you can change the source of options using the **Source of options** switch:
+
+- **Static Options** - displays the **Options for Select Field** field (editor type `OPTIONS`, rows `label:value`). Used for a fixed list of options specified directly in the settings.
+- **Codebook** - displays the **Link to Codebook** field with the `ID číselníka`, `label` column, and `value` column settings. The options are loaded dynamically from the selected codebook.
+
+#### Static options
+
+Static options are entered in the **Select Field Options** field in the format `label:value`, each option on a new line. If `label` and `value` are the same, you only need to enter one value:
+
+```
+Slovensko:sk
+Česko:cz
+Rakúsko:at
+```
+
+#### Link to dialer
+
+When selecting the **Dialbook** source, the **Link to Dialbook** field appears, where you can set:
+
+- **Codebook ID** - identifier of the codebook type from which the options are loaded
+- **Label column** - property from the code list used as the displayed text (by default `string1`)
+- **Value column** - property from the code list used as the stored value (by default `string1`)
+
+You can use any property from the code list: `string1` to `string12`, `decimal1` to `decimal4`, `boolean1` to `boolean4`, `date1` to `date4`, `id`.
+
+### Difference between select/multiselect and radio/checkbox
+
+The types `select` and `radio` allow the selection of exactly one value, but differ in their display:
+
+- **`select`** - will be displayed as a dropdown list
+- **`radio`** - displayed as a list of radio buttons, all options are visible at once
+
+The types `multiselect` and `checkbox` allow the selection of multiple values:
+
+- **`multiselect`** - will appear as a drop-down list with multiple selections
+- **`checkbox`** - displayed as a list of checkboxes, all options are visible at once
+
+For multi-valued types (`multiselect`, `checkbox`), the selected values ​​are stored in an array separated by the `|` character.
+
+### Backward compatibility with enumeration type
+
+Older records with type `enumeration` will automatically be displayed as type `select` with option source `Číselník` when opened in the editor. The next time they are saved, the type will be saved as `select`. The original codebook configuration will be preserved.
+
+## Dependent on tab
+
+In the **Dependent on** tab, the following fields can be set:
 
 | Column | Description |
 | --- | --- |
@@ -70,3 +139,5 @@ If the `Povinné pole` flag is enabled for an optional field, the system automat
 
 - Marks a field as mandatory in the editor (a visual indication of a mandatory field is displayed).
 - When saving an entity, it checks if the field is filled in. If it is not, it displays an error message and the save is not allowed.
+
+For types `checkbox`, the obligation check is evaluated so that at least one option must be checked. For types `radio`, exactly one option must be selected.
