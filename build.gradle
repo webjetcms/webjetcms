@@ -53,6 +53,7 @@ ext {
     //Spring Boot 4.x manages Spring 7.x, Spring Data 4.x, Spring Security 7.x versions
     //Keep synchronized with the org.springframework.boot plugin version above.
     springBootVersion = "4.1.0";
+    tomcatVersion = "11.0.24";
     //do not forget to download https://mvnrepository.com/artifact/org.aspectj/aspectjtools
     //jar to ant/aspectj and update version in ant/compile.xml file
     aspectJVersion = '1.9.25.1';
@@ -154,6 +155,19 @@ configurations {
     }
  }
 
+// Gradle's native Spring Boot BOM import cannot override the Tomcat version property.
+// Pin every Tomcat 11 module in every resolvable configuration to the same security-fixed release.
+configurations.configureEach {
+    resolutionStrategy.eachDependency { details ->
+        if ((details.requested.group == 'org.apache.tomcat' ||
+             details.requested.group == 'org.apache.tomcat.embed') &&
+            details.requested.version?.startsWith('11.0.')) {
+            details.useVersion tomcatVersion
+            details.because 'Align all Tomcat 11 modules on the security-fixed release'
+        }
+    }
+}
+
 dependencies {
 
     // === Spring Boot 4.x starters (manages Spring 7.x versions) ===
@@ -178,7 +192,12 @@ dependencies {
     // Keep the embedded container available for executable WARs without
     // exposing its implementation classes to an external Tomcat installation.
     providedRuntime "org.springframework.boot:spring-boot-starter-tomcat-runtime:${springBootVersion}"
-    providedRuntime 'org.apache.tomcat.embed:tomcat-embed-jasper:11.0.22'
+    // Keep these pins explicit so the aligned versions are also present in the published Maven POM.
+    providedRuntime "org.apache.tomcat:tomcat-annotations-api:${tomcatVersion}"
+    providedRuntime "org.apache.tomcat.embed:tomcat-embed-core:${tomcatVersion}"
+    providedRuntime "org.apache.tomcat.embed:tomcat-embed-el:${tomcatVersion}"
+    providedRuntime "org.apache.tomcat.embed:tomcat-embed-jasper:${tomcatVersion}"
+    providedRuntime "org.apache.tomcat.embed:tomcat-embed-websocket:${tomcatVersion}"
     runtimeOnly 'org.glassfish.web:jakarta.servlet.jsp.jstl:3.0.1'
 
     // OpenAPI/Swagger
@@ -572,6 +591,17 @@ tasks.register('verifyBootWar') {
                         "The boot WAR must contain exactly one provided ${jarPrefix} jar: ${matches.sort()}"
                     )
                 }
+            }
+
+            List<String> unexpectedTomcatVersions = entries.findAll { entry ->
+                entry ==~ /^WEB-INF\/lib-provided\/tomcat-(annotations-api|embed-(core|el|jasper|websocket))-.+\.jar$/ &&
+                    entry.endsWith("-${tomcatVersion}.jar") == false
+            }
+            if (unexpectedTomcatVersions.isEmpty() == false) {
+                throw new GradleException(
+                    "The boot WAR contains Tomcat modules outside version ${tomcatVersion}: " +
+                    unexpectedTomcatVersions.sort()
+                )
             }
 
             if (entryNames.any { entry ->

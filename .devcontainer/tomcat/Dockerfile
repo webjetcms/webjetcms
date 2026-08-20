@@ -1,4 +1,4 @@
-FROM tomcat:11.0.23-jdk17-temurin-noble
+FROM tomcat:11.0.24-jdk17-temurin-noble
 
 ENV TZ=Europe/Bratislava
 

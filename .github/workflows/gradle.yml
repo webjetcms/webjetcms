@@ -112,7 +112,7 @@ jobs:
           --env WEBJET_HTTPS_KEYSTORE_PASSWORD=changeit \
           --mount type=bind,source="${GITHUB_WORKSPACE}/build/certificates/https-keystore.p12",target=/usr/local/tomcat/conf/webjet-https-keystore.p12,readonly \
           --mount type=bind,source="${GITHUB_WORKSPACE}/build/libs/webjetcms.war",target=/usr/local/tomcat/webapps/ROOT.war,readonly \
-          tomcat:11.0.23-jdk17-temurin-noble
+          tomcat:11.0.24-jdk17-temurin-noble
 
         deployment_ready=false
         for attempt in $(seq 1 90); do
