@@ -16,6 +16,9 @@ import java.util.regex.Pattern;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+/**
+ * Provides shared helpers for basket currencies and localized country names.
+ */
 public class BasketTools {
 
 	public static final String COUNTRY_KEY_PREFIX = "stat.countries.tld";
@@ -26,6 +29,12 @@ public class BasketTools {
 
 	private BasketTools() {}
 
+	/**
+	 * Resolves the basket system currency from the configured currency fallbacks.
+	 *
+	 * @return the normalized three-letter currency code
+	 * @throws IllegalStateException if no valid basket currency is configured
+	 */
 	public static String getSystemCurrency() {
 		String systemCurrency = normalizeCurrencyCode(Constants.getString(BASKET_PRODUCT_CURRENCY));
 		if(systemCurrency != null) return systemCurrency;
@@ -44,11 +53,16 @@ public class BasketTools {
 	}
 
 	/**
-	 * Convert amount from one currency to another using defined constants kurs_FROM_TO, e.g. kurz_eur_usd=1.123
-	 * @param amount
-	 * @param fromCurrency
-	 * @param toCurrency
-	 * @return
+	 * Converts an amount using a configured {@code kurz_FROM_TO} exchange rate.
+	 *
+	 * A reverse rate is used when no direct rate exists. If neither rate is configured,
+	 * the original amount is returned.
+	 *
+	 * @param amount  amount to convert
+	 * @param fromCurrency  source currency code
+	 * @param toCurrency  target currency code
+	 * @return the converted amount, or the original amount when no exchange rate is configured
+	 * @throws IllegalStateException if either currency is invalid or a configured rate is malformed
 	 */
     public static BigDecimal convertCurrency(BigDecimal amount, String fromCurrency, String toCurrency) {
 		if(BigDecimal.ZERO.equals(amount)) return amount;
@@ -94,6 +108,11 @@ public class BasketTools {
 		return prop.getText(COUNTRY_KEY_PREFIX + countryCode.toLowerCase());
 	}
 
+	/**
+	 * Returns the distinct, normalized currency codes enabled for the basket.
+	 *
+	 * @return configured valid currency codes in their original order
+	 */
 	public static String[] getSupportedCurrencies() {
 		return Arrays.stream(Constants.getString(SUPPORTED_CURRENCIES).split(","))
 			.map(BasketTools::normalizeCurrencyCode)
@@ -113,6 +132,12 @@ public class BasketTools {
 		return getNormalizedSupportedCurrency(currency) != null;
 	}
 
+	/**
+	 * Normalizes a currency code and verifies that it is enabled for the basket.
+	 *
+	 * @param currency  currency code to validate
+	 * @return the normalized supported code, or {@code null} when the value is invalid or unsupported
+	 */
 	public static String getNormalizedSupportedCurrency(String currency) {
 		String normalizedCurrency = normalizeCurrencyCode(currency);
 		if(normalizedCurrency == null) return null;
@@ -121,6 +146,12 @@ public class BasketTools {
 		return supportedCurrencies.contains(normalizedCurrency) ? normalizedCurrency : null;
 	}
 
+	/**
+	 * Converts a configured currency value to a lowercase ISO-style code.
+	 *
+	 * @param currency  currency value to normalize
+	 * @return the normalized three-letter code, or {@code null} for an invalid value
+	 */
 	private static String normalizeCurrencyCode(String currency) {
 		if(currency == null) return null;
 

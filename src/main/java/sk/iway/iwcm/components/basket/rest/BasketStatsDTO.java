@@ -10,6 +10,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Carries aggregate invoice, revenue, product, category, and fee statistics for the basket dashboard.
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -31,6 +34,9 @@ public class BasketStatsDTO {
     private List<NameCount> paymentMethods = new ArrayList<>();
     private List<NameCount> invoiceStatuses = new ArrayList<>();
 
+    /**
+     * Represents revenue totals for one calendar day in the sales timeline.
+     */
     @Getter
     @Setter
     @NoArgsConstructor
@@ -42,6 +48,9 @@ public class BasketStatsDTO {
         private BigDecimal revenueWithoutVat;
     }
 
+    /**
+     * Associates a display name with an aggregated occurrence or item count.
+     */
     @Getter
     @Setter
     @NoArgsConstructor
@@ -52,6 +61,9 @@ public class BasketStatsDTO {
         private long count;
     }
 
+    /**
+     * Represents one node in the hierarchical product-category statistics.
+     */
     @Getter
     @Setter
     @NoArgsConstructor

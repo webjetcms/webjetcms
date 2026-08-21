@@ -31,6 +31,9 @@ import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
 
+/**
+ * Tests legacy fee resolution and fee and product aggregation in {@link BasketStatsService}.
+ */
 class BasketStatsServiceTest {
 
     private BasketInvoiceItemsRepository invoiceItemsRepository;
@@ -48,6 +51,9 @@ class BasketStatsServiceTest {
         );
     }
 
+    /**
+     * Verifies that configured legacy fee groups resolve to their document identifiers.
+     */
     @Test
     void resolvesLegacyFeeDocumentsFromConfiguredGroupPaths() {
         GroupsDB groupsDB = mock(GroupsDB.class);
@@ -67,6 +73,9 @@ class BasketStatsServiceTest {
         verify(docDetailsRepository).findAllByGroupId(20);
     }
 
+    /**
+     * Verifies that missing legacy groups produce empty results and safe query parameters.
+     */
     @Test
     void handlesMissingLegacyGroupsAndEmptyQueryLists() {
         GroupsDB groupsDB = mock(GroupsDB.class);
@@ -79,6 +88,9 @@ class BasketStatsServiceTest {
         verify(docDetailsRepository, never()).findAllByGroupId(any());
     }
 
+    /**
+     * Verifies modern and legacy fee classification and exclusion of fee documents from product totals.
+     */
     @Test
     void classifiesLegacyAndModernFeesAndExcludesLegacyItemsFromProducts() {
         Prop prop = mock(Prop.class);

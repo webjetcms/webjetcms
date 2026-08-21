@@ -1,13 +1,7 @@
 package sk.iway.iwcm.components.basket.jpa;
 
 /**
- * Enum representing the status of an invoice.
- * <p>
- * This enum is used to represent various states of an invoice in the system.
- * Each status is associated with a specific integer value.
- * </p>
- * @param value the integer value associated with the invoice status
- * @return the integer value of the invoice status
+ * Represents the persisted states of a basket invoice and their numeric identifiers.
  */
 public enum InvoiceStatus {
 
@@ -31,6 +25,13 @@ public enum InvoiceStatus {
         return value;
     }
 
+    /**
+     * Resolves an invoice status from its persisted numeric value.
+     *
+     * @param value  persisted status value; {@code null} represents an unknown status
+     * @return the matching status, or {@link #INVOICE_STATUS_UNKNOWN} for {@code null}
+     * @throws IllegalArgumentException if the value has no matching status
+     */
     public static InvoiceStatus fromValue(Integer value) {
         if (value == null) {
             return INVOICE_STATUS_UNKNOWN;

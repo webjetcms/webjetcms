@@ -15,6 +15,9 @@ import java.util.Optional;
 
 import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 
+/**
+ * Provides domain-scoped persistence and statistical queries for basket invoice items.
+ */
 @Repository
 public interface BasketInvoiceItemsRepository extends DomainIdRepository<BasketInvoiceItemEntity, Long> {
     Page<BasketInvoiceItemEntity> findAllByInvoiceIdAndDomainId(Long invoiceId, Integer domainId, Pageable pageable);
@@ -50,6 +53,17 @@ public interface BasketInvoiceItemsRepository extends DomainIdRepository<BasketI
     @Query(value = "DELETE FROM BasketInvoiceItemEntity biie WHERE biie.invoiceId = :invoiceId AND biie.domainId = :domainId")
     void deleteByInvoiceId(@Param("invoiceId") Long invoiceId, @Param("domainId") Integer domainId);
 
+    /**
+     * Aggregates sold product quantities for invoices matching a date and status filter.
+     *
+     * @param domainId  domain whose invoice items are included
+     * @param dateFrom  inclusive start of the reporting interval
+     * @param dateTo  inclusive end of the reporting interval
+     * @param filterByStatus  whether to restrict invoices to {@code statusIds}
+     * @param statusIds  invoice statuses included when filtering is enabled
+     * @param cancelledStatus  status excluded from product statistics
+     * @return aggregated product statistics grouped by product identifier
+     */
     @Query("""
         SELECT biie.itemId AS itemId,
                MAX(biie.itemTitle) AS itemTitle,
@@ -75,6 +89,18 @@ public interface BasketInvoiceItemsRepository extends DomainIdRepository<BasketI
         @Param("cancelledStatus") Integer cancelledStatus
     );
 
+    /**
+     * Finds modern and legacy fee items for invoices matching a date and status filter.
+     *
+     * @param domainId  domain whose invoice items are included
+     * @param dateFrom  inclusive start of the reporting interval
+     * @param dateTo  inclusive end of the reporting interval
+     * @param filterByStatus  whether to restrict invoices to {@code statusIds}
+     * @param statusIds  invoice statuses included when filtering is enabled
+     * @param cancelledStatus  status excluded from fee statistics
+     * @param legacyFeeItemIds  document identifiers representing legacy fee items
+     * @return fee items used to calculate delivery and payment totals
+     */
     @Query("""
         SELECT biie.itemId AS itemId,
                biie.itemNote AS itemNote,

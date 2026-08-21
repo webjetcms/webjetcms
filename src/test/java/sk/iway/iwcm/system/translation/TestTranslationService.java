@@ -11,6 +11,9 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
+/**
+ * Tests DeepL translation while preserving embedded WebJET include expressions.
+ */
 class TestTranslationService extends BaseWebjetTest {
 
     @BeforeAll
@@ -21,6 +24,9 @@ class TestTranslationService extends BaseWebjetTest {
         DBPool.jpaInitialize();
     }
 
+    /**
+     * Verifies that Slovak text is translated to an accepted English variant without altering includes.
+     */
     @Test
     public void checkDeeplTranslation() {
         String inputTextSk = "Toto je test: !INCLUDE(pes.jsp, ja, som, najlepší)!, tento test je povinný. Aj tento by mal fungovať: !INCLUDE(neviem.jsp, skúsim, to, znovu)!, koniec testu.";

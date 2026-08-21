@@ -15,6 +15,9 @@ import org.junit.jupiter.api.Test;
 
 import sk.iway.iwcm.Constants;
 
+/**
+ * Tests currency normalization, validation, fallback selection, and conversion in {@link BasketTools}.
+ */
 class BasketToolsTest {
 
     private String originalSystemCurrency;
@@ -35,6 +38,9 @@ class BasketToolsTest {
         Constants.setString(BasketTools.SUPPORTED_CURRENCIES, originalSupportedCurrencies);
     }
 
+    /**
+     * Verifies that configured currencies are normalized, deduplicated, and filtered to valid codes.
+     */
     @Test
     void filtersAndNormalizesConfiguredCurrencyCodes() {
         Constants.setString(
@@ -50,6 +56,9 @@ class BasketToolsTest {
         assertNull(BasketTools.getNormalizedSupportedCurrency("123"));
     }
 
+    /**
+     * Verifies that invalid primary currencies fall back safely or fail when no valid option exists.
+     */
     @Test
     void usesSafeFallbackForInvalidSystemCurrency() {
         Constants.setString(BasketTools.BASKET_PRODUCT_CURRENCY, "<img src=x onerror=alert(1)>");
@@ -65,6 +74,9 @@ class BasketToolsTest {
         assertThrows(IllegalStateException.class, BasketTools::getSystemCurrency);
     }
 
+    /**
+     * Verifies that currency conversion accepts normalized aliases and rejects unsafe codes.
+     */
     @Test
     void rejectsInvalidCurrencyCodesDuringConversion() {
         assertEquals(

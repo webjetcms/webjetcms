@@ -39,6 +39,9 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.rest.StatService;
 import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
 
+/**
+ * Builds domain-scoped basket dashboard statistics from invoices, products, and fee items.
+ */
 @Service
 public class BasketStatsService {
 
@@ -65,6 +68,18 @@ public class BasketStatsService {
         this.docDetailsRepository = docDetailsRepository;
     }
 
+    /**
+     * Loads and aggregates basket statistics for a reporting interval.
+     *
+     * Invalid or unsupported currency values fall back to the configured basket currency.
+     * An empty status selection includes every invoice status.
+     *
+     * @param dayDate  encoded date range accepted by the statistics module
+     * @param currency  requested reporting currency
+     * @param statusIds  optional invoice statuses to include
+     * @param request  current request used to resolve localized labels
+     * @return aggregated basket statistics for the current domain
+     */
     public BasketStatsDTO getStats(
         String dayDate,
         String currency,
@@ -140,6 +155,13 @@ public class BasketStatsService {
         );
     }
 
+    /**
+     * Resolves document identifiers used by a legacy delivery or payment group.
+     *
+     * @param groupsDB  group cache used to resolve the configured path
+     * @param groupPath  full path of the legacy fee group
+     * @return document identifiers in the group, or an empty set when the group is unavailable
+     */
     Set<Integer> getLegacyFeeDocumentIds(GroupsDB groupsDB, String groupPath) {
         if (Tools.isEmpty(groupPath)) return Collections.emptySet();
 
@@ -152,11 +174,23 @@ public class BasketStatsService {
             .collect(Collectors.toCollection(HashSet::new));
     }
 
+    /**
+     * Converts item identifiers into a deterministic, non-empty query parameter.
+     *
+     * @param itemIds  item identifiers to include
+     * @return sorted identifiers, or a non-matching sentinel when the set is empty
+     */
     static List<Integer> toQueryItemIds(Set<Integer> itemIds) {
         if (itemIds.isEmpty()) return Collections.singletonList(-1);
         return itemIds.stream().sorted().toList();
     }
 
+    /**
+     * Parses the requested reporting interval and falls back to the default range when invalid.
+     *
+     * @param dayDate  encoded reporting interval
+     * @return inclusive start and end dates
+     */
     private Date[] getDateRange(String dayDate) {
         boolean defaultRange = Tools.isEmpty(dayDate);
         String rangeValue = defaultRange ? getDefaultDateRangeString() : dayDate;
@@ -183,6 +217,19 @@ public class BasketStatsService {
         return "daterange:" + calendar.getTimeInMillis() + "-" + dateTo;
     }
 
+    /**
+     * Aggregates loaded invoice, product, and fee records into dashboard statistics.
+     *
+     * @param invoices  invoice values in the reporting interval
+     * @param products  aggregated sold-product quantities
+     * @param fees  modern and legacy fee items
+     * @param currency  target currency for monetary totals
+     * @param request  current request used to resolve payment labels
+     * @param prop  localization provider for the current request
+     * @param legacyDeliveryItemIds  legacy delivery-fee document identifiers
+     * @param legacyPaymentItemIds  legacy payment-fee document identifiers
+     * @return fully aggregated basket statistics
+     */
     BasketStatsDTO createStats(
         List<BasketInvoiceStatsProjection> invoices,
         List<BasketProductStatsProjection> products,
@@ -266,6 +313,17 @@ public class BasketStatsService {
         return stats;
     }
 
+    /**
+     * Calculates delivery, payment, and net-revenue totals from fee items.
+     *
+     * @param stats  statistics object to update
+     * @param fees  fee items to classify and aggregate
+     * @param revenue  gross revenue before fee subtraction
+     * @param currency  target currency for fee totals
+     * @param defaultProp  fallback localization provider
+     * @param legacyDeliveryItemIds  legacy delivery-fee document identifiers
+     * @param legacyPaymentItemIds  legacy payment-fee document identifiers
+     */
     private void fillFeeStats(
         BasketStatsDTO stats,
         List<BasketFeeStatsProjection> fees,
@@ -319,6 +377,14 @@ public class BasketStatsService {
         return Tools.isNotEmpty(itemNote) && itemNote.equalsIgnoreCase(prop.getText(noteKey));
     }
 
+    /**
+     * Aggregates sold products and builds product and category rankings.
+     *
+     * @param stats  statistics object to update
+     * @param products  aggregated product quantities
+     * @param prop  localization provider for fallback labels
+     * @param legacyFeeItemIds  fee document identifiers excluded from product totals
+     */
     private void fillProductStats(
         BasketStatsDTO stats,
         List<BasketProductStatsProjection> products,
@@ -368,6 +434,13 @@ public class BasketStatsService {
         stats.setCategoryTree(createCategoryTree(categoryCounts, prop));
     }
 
+    /**
+     * Builds relative category paths for all configured product groups.
+     *
+     * @param productGroups  groups configured to contain products
+     * @param groupsDB  group cache used to traverse parent groups
+     * @return category paths keyed by product group identifier
+     */
     private Map<Integer, String> getProductCategoryPaths(
         List<LabelValueInteger> productGroups,
         GroupsDB groupsDB
@@ -460,6 +533,12 @@ public class BasketStatsService {
         return calendar.getTime();
     }
 
+    /**
+     * Converts accumulated daily revenue into ordered timeline points.
+     *
+     * @param timeline  revenue totals keyed by calendar day
+     * @return ordered daily timeline points with scaled monetary values
+     */
     private List<BasketStatsDTO.SalesTimelinePoint> toTimeline(Map<Date, TimelineAccumulator> timeline) {
         List<BasketStatsDTO.SalesTimelinePoint> result = new ArrayList<>();
         timeline.forEach((day, value) -> result.add(
@@ -476,6 +555,13 @@ public class BasketStatsService {
         values.merge(name, 1L, Long::sum);
     }
 
+    /**
+     * Sorts named counts by descending value and then by name.
+     *
+     * @param values  aggregated counts keyed by display name
+     * @param limit  maximum number of entries to return
+     * @return sorted count entries
+     */
     private List<BasketStatsDTO.NameCount> toTopList(Map<String, Long> values, int limit) {
         return values.entrySet().stream()
             .sorted(
@@ -487,12 +573,26 @@ public class BasketStatsService {
             .collect(Collectors.toCollection(ArrayList::new));
     }
 
+    /**
+     * Creates the hierarchical category statistics from slash-delimited category paths.
+     *
+     * @param categoryCounts  sold quantities keyed by category path
+     * @param prop  localization provider for synthetic node names
+     * @return root of the category statistics tree
+     */
     private BasketStatsDTO.CategoryNode createCategoryTree(Map<String, Long> categoryCounts, Prop prop) {
         CategoryAccumulator root = new CategoryAccumulator(prop.getText(CATEGORY_ROOT_KEY));
         categoryCounts.forEach((categoryPath, count) -> addCategoryPath(root, categoryPath, count));
         return toCategoryNode(root, prop.getText(CATEGORY_DIRECT_KEY));
     }
 
+    /**
+     * Adds a category path and its direct item count to an accumulator tree.
+     *
+     * @param root  root accumulator to update
+     * @param categoryPath  slash-delimited category path
+     * @param count  items assigned directly to the category
+     */
     private void addCategoryPath(CategoryAccumulator root, String categoryPath, long count) {
         String[] pathSegments = Tools.getTokens(categoryPath, "/");
         if (pathSegments.length == 0) return;
@@ -504,6 +604,13 @@ public class BasketStatsService {
         node.directCount += count;
     }
 
+    /**
+     * Converts an accumulator subtree into the category DTO representation.
+     *
+     * @param category  accumulator subtree to convert
+     * @param directCategoryName  label for products assigned directly to a parent category
+     * @return converted category node
+     */
     private BasketStatsDTO.CategoryNode toCategoryNode(CategoryAccumulator category, String directCategoryName) {
         List<BasketStatsDTO.CategoryNode> children = category.children.values().stream()
             .map(child -> toCategoryNode(child, directCategoryName))
@@ -525,17 +632,29 @@ public class BasketStatsService {
         return new BasketStatsDTO.CategoryNode(category.name, value, children);
     }
 
+    /**
+     * Calculates the total item count represented by a category subtree.
+     *
+     * @param category  category subtree to total
+     * @return sum of the node value or all descendant values
+     */
     private long getCategoryNodeTotal(BasketStatsDTO.CategoryNode category) {
         if (category.getValue() != null) return category.getValue();
         return category.getChildren().stream().mapToLong(this::getCategoryNodeTotal).sum();
     }
 
+    /**
+     * Accumulates VAT-inclusive and VAT-exclusive revenue for one timeline day.
+     */
     private static class TimelineAccumulator {
 
         private BigDecimal revenueWithVat = BigDecimal.ZERO;
         private BigDecimal revenueWithoutVat = BigDecimal.ZERO;
     }
 
+    /**
+     * Accumulates direct item counts and child categories while building the category tree.
+     */
     private static class CategoryAccumulator {
 
         private final String name;

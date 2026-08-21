@@ -11,6 +11,9 @@ import org.springframework.stereotype.Repository;
 
 import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 
+/**
+ * Provides domain-scoped persistence and statistical queries for basket invoices.
+ */
 @Repository
 public interface BasketInvoicesRepository extends DomainIdRepository<BasketInvoiceEntity, Long> {
     Page<BasketInvoiceEntity> findAllByLoggedUserIdAndDomainId(Integer loggedUserId, Integer domainId, Pageable pageable);
@@ -20,6 +23,16 @@ public interface BasketInvoicesRepository extends DomainIdRepository<BasketInvoi
     @Query("SELECT bie.statusId FROM BasketInvoiceEntity bie WHERE bie.id = :id AND bie.domainId = :domainId")
     Integer getStatusId(@Param("id") Long id, @Param("domainId") Integer domainId);
 
+    /**
+     * Finds invoice values for the selected reporting interval and optional statuses.
+     *
+     * @param domainId  domain whose invoices are included
+     * @param dateFrom  inclusive start of the reporting interval
+     * @param dateTo  inclusive end of the reporting interval
+     * @param filterByStatus  whether to restrict invoices to {@code statusIds}
+     * @param statusIds  invoice statuses included when filtering is enabled
+     * @return matching invoices ordered by creation date
+     */
     @Query("""
         SELECT bie.createDate AS createDate,
                bie.statusId AS statusId,

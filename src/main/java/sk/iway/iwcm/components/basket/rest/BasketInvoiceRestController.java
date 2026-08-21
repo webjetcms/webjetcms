@@ -39,6 +39,9 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
+/**
+ * Manages basket invoices in the administration DataTable and exposes invoice lookup options.
+ */
 @RestController
 @RequestMapping("/admin/rest/eshop/basket")
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_basket')")
@@ -65,6 +68,12 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         this.dms = dms;
     }
 
+    /**
+     * Loads invoices and adds localized payment, delivery, status, and country options.
+     *
+     * @param pageable  requested page and sorting information
+     * @return invoice page enriched with editor options
+     */
     @Override
     public Page<BasketInvoiceEntity> getAllItems(Pageable pageable) {
         DatatablePageImpl<BasketInvoiceEntity> page = new DatatablePageImpl<>(super.getAllItemsIncludeSpecSearch(new BasketInvoiceEntity(), pageable));
@@ -77,6 +86,14 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         return page;
     }
 
+    /**
+     * Adds domain isolation and combined contact-or-delivery name predicates to table search.
+     *
+     * @param params  submitted search parameters
+     * @param predicates  predicates to extend
+     * @param root  invoice query root
+     * @param builder  criteria builder used to create predicates
+     */
     @Override
     public void addSpecSearch(Map<String, String> params, List<Predicate> predicates, Root<BasketInvoiceEntity> root, CriteriaBuilder builder) {
 
@@ -138,6 +155,12 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         return super.addSpecSort(params, modifiedPageable);
     }*/
 
+    /**
+     * Recalculates invoice totals and optionally sends the configured status notification.
+     *
+     * @param entity  submitted invoice values, including transient editor fields
+     * @param saved  persisted invoice
+     */
     @Override
     public void afterSave(BasketInvoiceEntity entity, BasketInvoiceEntity saved) {
         //Update invoice stats
@@ -166,6 +189,13 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         }
     }
 
+    /**
+     * Prepares editor fields and converts displayed invoice totals to the requested currency.
+     *
+     * @param entity  invoice being prepared for the response
+     * @param action  DataTable action that triggered the conversion
+     * @return prepared invoice entity
+     */
     @Override
     public BasketInvoiceEntity processFromEntity(BasketInvoiceEntity entity, ProcessItemAction action) {
         if(entity.getEditorFields() == null) {
@@ -187,6 +217,13 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         return entity;
     }
 
+    /**
+     * Deletes an invoice only when it has the cancelled status.
+     *
+     * @param entity  invoice requested for deletion
+     * @param id  invoice identifier
+     * @return result of deleting the cancelled invoice
+     */
     @Override
     public boolean deleteItem(BasketInvoiceEntity entity, long id) {
         //DELETE action is allowed only if basketInvoiced is set as CANCELLED
@@ -199,6 +236,12 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         }
     }
 
+    /**
+     * Removes invoice items and payments after the invoice itself is deleted.
+     *
+     * @param entity  deleted invoice
+     * @param id  deleted invoice identifier
+     */
     @Override
     public void afterDelete(BasketInvoiceEntity entity, long id) {
         try {
@@ -210,12 +253,23 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         }
     }
 
+    /**
+     * Rejects invoice creation through the administration DataTable.
+     *
+     * @param entity  submitted invoice
+     * @return always {@code null} after registering a permission error
+     */
     @Override
     public BasketInvoiceEntity insertItem(BasketInvoiceEntity entity) {
         throwError(getProp().getText("config.not_permitted_action_err"));
         return null;
     }
 
+    /**
+     * Rejects invoice duplication through the administration DataTable.
+     *
+     * @param entity  invoice requested for duplication
+     */
     @Override
     public void beforeDuplicate(BasketInvoiceEntity entity) {
         throwError(getProp().getText("config.not_permitted_action_err"));
@@ -228,6 +282,11 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         }
     }
 
+    /**
+     * Builds localized default and configured custom invoice status options.
+     *
+     * @return selectable invoice statuses
+     */
     private List<LabelValue> getInvoiceStatusOptions() {
         Prop prop = getProp();
         List<LabelValue> options = new ArrayList<>();
@@ -273,6 +332,12 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         return ProductListService.getPriceInfo(invoiceId, biir, bipr);
     }
 
+    /**
+     * Converts start and end anchors from a search value into SQL wildcard placement.
+     *
+     * @param value  submitted search expression
+     * @return normalized value suitable for a {@code LIKE} predicate
+     */
     private String normalizeValueForSearch(String value) {
         if (value.startsWith("^") && value.endsWith("$")) {
             value = value.substring(1);
