@@ -11,6 +11,8 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.regex.Pattern;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -18,12 +20,23 @@ public class BasketTools {
 
 	public static final String COUNTRY_KEY_PREFIX = "stat.countries.tld";
 	public static final String BASKET_PRODUCT_CURRENCY = "basketProductCurrency";
+	public static final String BASKET_DISPLAY_CURRENCY = "basketDisplayCurrency";
 	public static final String SUPPORTED_CURRENCIES = "supportedCurrencies";
+	private static final Pattern CURRENCY_CODE_PATTERN = Pattern.compile("^[a-zA-Z]{3}$");
 
 	private BasketTools() {}
 
 	public static String getSystemCurrency() {
-		return Constants.getString(BASKET_PRODUCT_CURRENCY);
+		String systemCurrency = normalizeCurrencyCode(Constants.getString(BASKET_PRODUCT_CURRENCY));
+		if(systemCurrency != null) return systemCurrency;
+
+		String displayCurrency = normalizeCurrencyCode(Constants.getString(BASKET_DISPLAY_CURRENCY));
+		if(displayCurrency != null) return displayCurrency;
+
+		String[] supportedCurrencies = getSupportedCurrencies();
+		if(supportedCurrencies.length > 0) return supportedCurrencies[0];
+
+		throw new IllegalStateException("No valid basket currency is configured.");
 	}
 
 	public static BigDecimal convertToBasketDisplayCurrency(BigDecimal amount, HttpServletRequest request) {
@@ -40,10 +53,9 @@ public class BasketTools {
     public static BigDecimal convertCurrency(BigDecimal amount, String fromCurrency, String toCurrency) {
 		if(BigDecimal.ZERO.equals(amount)) return amount;
 
-		if(Tools.isEmpty(fromCurrency) || Tools.isEmpty(toCurrency)) throw new IllegalStateException("Currencies not valid.");
-
-		fromCurrency = fromCurrency.toLowerCase();
-		toCurrency = toCurrency.toLowerCase();
+		fromCurrency = normalizeCurrencyCode(fromCurrency);
+		toCurrency = normalizeCurrencyCode(toCurrency);
+		if(fromCurrency == null || toCurrency == null) throw new IllegalStateException("Currencies not valid.");
 
 		if(fromCurrency.equals(toCurrency)) return amount;
 
@@ -83,7 +95,11 @@ public class BasketTools {
 	}
 
 	public static String[] getSupportedCurrencies() {
-		return Constants.getString(SUPPORTED_CURRENCIES).split(",");
+		return Arrays.stream(Constants.getString(SUPPORTED_CURRENCIES).split(","))
+			.map(BasketTools::normalizeCurrencyCode)
+			.filter(currency -> currency != null)
+			.distinct()
+			.toArray(String[]::new);
 	}
 
   	public static List<LabelValue> getSupportedCurrenciesOptions() {
@@ -94,8 +110,24 @@ public class BasketTools {
     }
 
 	public static boolean isCurrencySupported(String currency) {
-        if(Tools.isEmpty(currency) == true) return false;
-        List<String> supportedCurrencies = Arrays.asList( getSupportedCurrencies() );
-        return supportedCurrencies.contains(currency);
-    }
+		return getNormalizedSupportedCurrency(currency) != null;
+	}
+
+	public static String getNormalizedSupportedCurrency(String currency) {
+		String normalizedCurrency = normalizeCurrencyCode(currency);
+		if(normalizedCurrency == null) return null;
+
+		List<String> supportedCurrencies = Arrays.asList(getSupportedCurrencies());
+		return supportedCurrencies.contains(normalizedCurrency) ? normalizedCurrency : null;
+	}
+
+	private static String normalizeCurrencyCode(String currency) {
+		if(currency == null) return null;
+
+		String trimmedCurrency = currency.trim();
+		if("Kč".equalsIgnoreCase(trimmedCurrency)) return "czk";
+
+		String normalizedCurrency = trimmedCurrency.toLowerCase(Locale.ROOT);
+		return CURRENCY_CODE_PATTERN.matcher(normalizedCurrency).matches() ? normalizedCurrency : null;
+	}
 }

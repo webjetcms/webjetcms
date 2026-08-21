@@ -177,7 +177,8 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         }
 
         if(ProcessItemAction.GETALL.equals(action) || ProcessItemAction.FIND.equals(action)) {
-            String wantedCurrency = BasketTools.isCurrencySupported(getRequest().getParameter("showCurrency")) == false ? BasketTools.getSystemCurrency() : getRequest().getParameter("showCurrency");
+            String supportedCurrency = BasketTools.getNormalizedSupportedCurrency(getRequest().getParameter("showCurrency"));
+            String wantedCurrency = supportedCurrency == null ? BasketTools.getSystemCurrency() : supportedCurrency;
             entity.setPriceToPayNoVat( BasketTools.convertCurrency(entity.getPriceToPayNoVat(), entity.getCurrency(), wantedCurrency) );
             entity.setPriceToPayVat( BasketTools.convertCurrency(entity.getPriceToPayVat(), entity.getCurrency(), wantedCurrency) );
             entity.setBalanceToPay( BasketTools.convertCurrency(entity.getBalanceToPay(), entity.getCurrency(), wantedCurrency) );

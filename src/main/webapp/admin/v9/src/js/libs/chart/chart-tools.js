@@ -754,10 +754,7 @@ export async function createAmchart(chartForm, update) {
         if(previousHeader != undefined && previousHeader != null && previousHeader.length > 0) previousHeader.remove();
     }
 
-    //Add title to chart div
-    chartForm.chartTitle = removeQuotes(chartForm.chartTitle);
-    var htmlCode = '<h6 class="amchart-header">' + chartForm.chartTitle;
-    $('#' + chartForm.chartDivId).before(htmlCode);
+    addChartTitle(chartForm);
 
     //By the type of input ChartForm create chart of that type
     if(chartForm instanceof BarChartForm) {
@@ -792,11 +789,20 @@ function removeQuotes(str) {
   return str;
 }
 
-async function _createCustomChart(chartForm, update) {
-    //Add title to chart div
+function addChartTitle(chartForm) {
     chartForm.chartTitle = removeQuotes(chartForm.chartTitle);
-    var htmlCode = '<h6 class="amchart-header">' + chartForm.chartTitle;
-    $('#' + chartForm.chartDivId).before(htmlCode);
+
+    const chartElement = document.getElementById(chartForm.chartDivId);
+    if(chartElement == null) return;
+
+    const chartHeader = document.createElement("h6");
+    chartHeader.className = "amchart-header";
+    chartHeader.textContent = chartForm.chartTitle;
+    chartElement.before(chartHeader);
+}
+
+async function _createCustomChart(chartForm, update) {
+    addChartTitle(chartForm);
 
     if(chartForm instanceof TableChartForm) {
         createTableChart(chartForm);

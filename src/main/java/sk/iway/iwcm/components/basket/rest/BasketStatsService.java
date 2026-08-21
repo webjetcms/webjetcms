@@ -81,9 +81,10 @@ public class BasketStatsService {
         List<Integer> queryStatusIds = filterByStatus
             ? selectedStatusIds
             : Collections.singletonList(-1);
-        String targetCurrency = BasketTools.isCurrencySupported(currency)
-            ? currency
-            : BasketTools.getSystemCurrency();
+        String supportedCurrency = BasketTools.getNormalizedSupportedCurrency(currency);
+        String targetCurrency = supportedCurrency == null
+            ? BasketTools.getSystemCurrency()
+            : supportedCurrency;
         GroupsDB groupsDB = GroupsDB.getInstance();
         Set<Integer> legacyDeliveryItemIds = getLegacyFeeDocumentIds(
             groupsDB,

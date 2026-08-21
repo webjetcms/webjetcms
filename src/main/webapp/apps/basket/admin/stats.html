@@ -141,8 +141,14 @@
     }
 
     function formatMoney(value, currency) {
-        const currencyLabel = currency == null ? "" : " " + currency.toUpperCase();
+        const currencyCode = getCurrencyCode(currency);
+        const currencyLabel = currencyCode.length === 0 ? "" : " " + currencyCode;
         return WJ.formatPrice(value || 0) + currencyLabel;
+    }
+
+    function getCurrencyCode(currency) {
+        if(typeof currency !== "string" || /^[a-z]{3}$/i.test(currency) === false) return "";
+        return currency.toUpperCase();
     }
 
     function formatDecimal(value) {
@@ -164,7 +170,8 @@
     }
 
     function getRevenueChartTitle(data) {
-        const currencyLabel = data.currency == null ? "" : " (" + data.currency.toUpperCase() + ")";
+        const currencyCode = getCurrencyCode(data.currency);
+        const currencyLabel = currencyCode.length === 0 ? "" : " (" + currencyCode + ")";
         return /*[[#{apps.eshop.stats.revenue_chart}]]*/ "Revenue over time" + currencyLabel;
     }
 

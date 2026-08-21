@@ -87,7 +87,8 @@ public class ProductListService {
         Specification<DocDetails> spec = hasGroupIdIn(groupIds).and(fieldStartsWithDigit(priceField));
         Page<DocDetails> page = options.getDocDetailsRepository().findAll(spec, options.getPageable());
 
-        String wantedCurrency = BasketTools.isCurrencySupported(options.getRequest().getParameter("currency")) == false ? BasketTools.getSystemCurrency() : options.getRequest().getParameter("currency");
+        String supportedCurrency = BasketTools.getNormalizedSupportedCurrency(options.getRequest().getParameter("currency"));
+        String wantedCurrency = supportedCurrency == null ? BasketTools.getSystemCurrency() : supportedCurrency;
         DatatablePageImpl<DocDetails> pageImpl = WebpagesService.preparePage(page, options);
         pageImpl.get().forEach(doc -> {
             doc.setFieldH( doc.getLocalPriceVat(options.getRequest(), wantedCurrency).toString() );
