@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -30,6 +31,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.elfinder.IwcmFsVolume;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.upload.DiskMultiPartRequestHandler;
 
@@ -158,7 +160,7 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 				if (values != null) {
 					for (String value : values) {
 						if (Tools.isNotEmpty(value)) {
-							uploadPaths.add(value);
+							uploadPaths.add(IwcmFsVolume.normalizeUnicode(value));
 						}
 					}
 				}
@@ -255,6 +257,7 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 
 	private String clearFileName(String fileName) {
 		if (fileName == null) return null;
+		fileName = IwcmFsVolume.normalizeUnicode(fileName);
 
 		// MBO oprava IE bugu, kedy IE posiela pri uploade celu
 		if (fileName.contains("\\"))
