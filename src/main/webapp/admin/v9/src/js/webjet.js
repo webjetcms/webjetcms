@@ -506,6 +506,9 @@ const WJ = (() => {
         const title = options.title ? options.title : '';
         const message = options.message ? `<div class="toastr-message">${options.message}</div>` : '';
         const btnId = (new Date()).getTime();
+        const titleId = `toastrTitle${btnId}`;
+        const messageId = `toastrMessage${btnId}`;
+        const previouslyFocusedElement = document.activeElement;
         //TODO: preklady
         const btnCancelText = options.btnCancelText ? options.btnCancelText : WJ.translate('button.cancel');
         const btnOkText = options.btnOkText ? options.btnOkText : WJ.translate('button.submit');
@@ -540,6 +543,63 @@ const WJ = (() => {
                 allowHtml: true,
                 onShown: () => {
                     //console.log("onshow, toastrInstance=", toastrInstance);
+                    const $title = toastrInstance.find('.toast-title');
+                    const $message = toastrInstance.find('.toastr-message');
+                    const $cancelButton = $('#confirmationNo' + btnId);
+                    const $promptInput = $('#toastrPromptInput' + btnId);
+
+                    toastrInstance.attr({
+                        'role': 'dialog',
+                        'aria-modal': 'true'
+                    }).removeAttr('aria-live');
+
+                    if ($title.length > 0) {
+                        $title.attr({
+                            'id': titleId,
+                            'role': 'heading',
+                            'aria-level': '2'
+                        });
+                        toastrInstance.attr('aria-labelledby', titleId);
+                    } else {
+                        toastrInstance.attr('aria-label', btnOkText);
+                    }
+
+                    if ($message.length > 0) {
+                        $message.attr('id', messageId);
+                        toastrInstance.attr('aria-describedby', messageId);
+                    }
+
+                    toastrInstance.on('keydown.wjConfirmA11y', event => {
+                        if (event.key === 'Escape') {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            toastrInstance.find('button.toast-close-button').click();
+                            return;
+                        }
+
+                        if (event.key !== 'Tab') return;
+
+                        const focusableElements = toastrInstance.find(
+                            'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+                        ).filter(':visible').toArray();
+
+                        if (focusableElements.length === 0) {
+                            event.preventDefault();
+                            return;
+                        }
+
+                        const firstFocusableElement = focusableElements[0];
+                        const lastFocusableElement = focusableElements[focusableElements.length - 1];
+
+                        if (event.shiftKey && document.activeElement === firstFocusableElement) {
+                            event.preventDefault();
+                            lastFocusableElement.focus();
+                        } else if (!event.shiftKey && document.activeElement === lastFocusableElement) {
+                            event.preventDefault();
+                            firstFocusableElement.focus();
+                        }
+                    });
+
                     $('#confirmationYes' + btnId).on('click', () => {
                         //console.log('Yes'+btnId+' clicked');
                         if (typeof options.success === 'function') {
@@ -559,9 +619,22 @@ const WJ = (() => {
                         }
                         toastrInstance.find('button.toast-close-button').click();
                     });
+
+                    if (typePrompt === true) {
+                        $promptInput.trigger('focus');
+                    } else {
+                        $cancelButton.trigger('focus');
+                    }
+                },
+                onHidden: () => {
+                    toastrInstance.off('.wjConfirmA11y');
+                    if (previouslyFocusedElement && document.contains(previouslyFocusedElement)) {
+                        previouslyFocusedElement.focus();
+                    }
                 },
                 positionClass: 'toast-container toast-top-right',
-                containerId: 'toast-container-webjet'
+                containerId: 'toast-container-webjet',
+                closeHtml: '<button class="btn btn-close toast-close-button" aria-label="'+WJ.translate('button.close')+'"><i class="ti ti-x" aria-hidden="true"></i></button>'
             }
         );
     }
