@@ -212,9 +212,10 @@
             chartDivId: "basketStats-categories",
             chartData: data.categoryTree,
             topDepth: 1,
-            initialDepth: 10,
-            downDepth: 10,
-            labelText: "{category}\n[bold]{sum}[/]"
+            initialDepth: 1,
+            downDepth: 1,
+            singleBranchOnly: true,
+            labelText: "[bold]{sum}[/] {category}"
         });
 
         chartForms.delivery = createPieChart(

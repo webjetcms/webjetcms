@@ -785,7 +785,7 @@ export async function createAmchart(chartForm, update) {
 
     if(update === true) {
         //We need to remove previous header in order too push new ONE -> if we want update chart title
-        let previousHeader = $('#' + chartForm.chartDivId).prev();
+        let previousHeader = $('#' + chartForm.chartDivId).prev(".amchart-header");
         if(previousHeader != undefined && previousHeader != null && previousHeader.length > 0) previousHeader.remove();
     }
 
@@ -1693,14 +1693,12 @@ export async function updateChart(chartForm) {
             }
         }
     } else if(chartForm instanceof TreeChartForm) {
-        const treeData = normalizeTreeChartData(chartForm.chartData);
-        chartForm.series.data.setAll(treeData);
-        if (chartForm.series.dataItems.length > 0) {
-            chartForm.series.set("selectedDataItem", chartForm.series.dataItems[0]);
-        } else {
-            chartForm.series.set("selectedDataItem", undefined);
-        }
-        setTreeChartInitialView(chartForm);
+        let chartRoot;
+        am5.array.each(am5.registry.rootElements, function(root) {
+            if (root.dom.id == chartForm.chartDivId) chartRoot = root;
+        });
+        if (chartRoot != null) chartRoot.dispose();
+        await createAmchart(chartForm, true);
     } else if(chartForm instanceof TableChartForm) {
         const tableDiv = document.getElementById(chartForm.chartDivId);
         if(tableDiv) tableDiv.innerHTML = "";
@@ -2380,19 +2378,52 @@ function crateWordCloudChart(root, chartForm) {
     });
 }
 
+const TREE_COMPACT_LAYOUT_THRESHOLD = 8;
+const TREE_COMPACT_ROW_HEIGHT = 20;
+const TREE_COMPACT_VERTICAL_MARGIN = 80;
+const TREE_COMPACT_MAX_HEIGHT = 800;
+const TREE_PINCH_ZOOM_DELTA = 100;
+
 function createTreeChart(root, chartForm) {
+    const treeData = normalizeTreeChartData(chartForm.chartData);
+    const layoutSlotCount = getTreeLayoutSlotCount(treeData, chartForm.childDataField);
+    const compactLayout = layoutSlotCount > TREE_COMPACT_LAYOUT_THRESHOLD;
+    const seriesSize = compactLayout ? am5.percent(90) : am5.percent(75);
+    const seriesPadding = compactLayout ? 20 : 40;
+    const chartElement = document.getElementById(chartForm.chartDivId);
+    const originalChartHeight = chartElement?.style.height ?? "";
+    let appliedChartHeight = null;
+
+    if (compactLayout) {
+        const compactChartHeight = Math.min(
+            layoutSlotCount * TREE_COMPACT_ROW_HEIGHT + TREE_COMPACT_VERTICAL_MARGIN,
+            TREE_COMPACT_MAX_HEIGHT
+        );
+        if (chartElement != null && chartElement.clientHeight < compactChartHeight) {
+            appliedChartHeight = compactChartHeight + "px";
+            chartElement.style.height = appliedChartHeight;
+            root.resize();
+        }
+    }
+
     const chart = root.container.children.push(
         am5.ZoomableContainer.new(root, {
             width: am5.p100,
             height: am5.p100,
-            wheelable: true,
+            wheelable: false,
             pinchZoom: true
         })
     );
+    addTreeChartTrackpadPinchZoom(chart);
 
     chartForm.chart = chart;
     chartForm.root = root;
-    root.addDisposer(new am5.Disposer(() => restoreTreeChart(chartForm, false)));
+    root.addDisposer(new am5.Disposer(() => {
+        restoreTreeChart(chartForm, false);
+        if (chartElement == null || appliedChartHeight == null || chartElement.style.height !== appliedChartHeight) return;
+        chartElement.style.height = originalChartHeight;
+        if (chartElement.style.length === 0) chartElement.removeAttribute("style");
+    }));
 
     const treeTools = chart.children.push(am5.ZoomTools.new(root, {
         target: chart
@@ -2401,12 +2432,12 @@ function createTreeChart(root, chartForm) {
 
     const series = chart.contents.children.push(
         am5hierarchy.Tree.new(root, {
-            width: am5.percent(75),
-            height: am5.percent(75),
-            paddingTop: 40,
-            paddingRight: 40,
-            paddingBottom: 40,
-            paddingLeft: 40,
+            width: seriesSize,
+            height: seriesSize,
+            paddingTop: seriesPadding,
+            paddingRight: seriesPadding,
+            paddingBottom: seriesPadding,
+            paddingLeft: seriesPadding,
             maskContent: false,
             centerX: am5.p50,
             centerY: am5.p50,
@@ -2428,22 +2459,41 @@ function createTreeChart(root, chartForm) {
     );
 
     chartForm.series = series;
+    chartForm.compactLayout = compactLayout;
 
-    series.circles.template.set("radius", 34);
-    series.outerCircles.template.set("radius", 34);
-    series.labels.template.setAll({
-        fontSize: 13,
-        oversizedBehavior: "wrap",
-        breakWords: true,
-        paddingTop: 2,
-        paddingRight: 2,
-        paddingBottom: 2,
-        paddingLeft: 2,
-        textAlign: "center"
-    });
+    const nodeRadius = compactLayout ? 8 : 34;
+    series.circles.template.set("radius", nodeRadius);
+    series.outerCircles.template.set("radius", nodeRadius);
+    if (compactLayout) {
+        series.labels.template.setAll({
+            fontSize: 12,
+            oversizedBehavior: "truncate",
+            breakWords: false,
+            paddingTop: 0,
+            paddingRight: 0,
+            paddingBottom: 0,
+            paddingLeft: 0,
+            centerX: am5.p0,
+            centerY: am5.p50,
+            x: 12,
+            textAlign: "left",
+            fill: am5.color(lightTheme_labelColor)
+        });
+    } else {
+        series.labels.template.setAll({
+            fontSize: 13,
+            oversizedBehavior: "wrap",
+            breakWords: true,
+            paddingTop: 2,
+            paddingRight: 2,
+            paddingBottom: 2,
+            paddingLeft: 2,
+            textAlign: "center"
+        });
+    }
     series.links.template.setAll({
         strokeWidth: 1.25,
-        strokeOpacity: 0.75
+        strokeOpacity: compactLayout ? 0.35 : 0.75
     });
     if (chartForm.labelText != null) {
         series.labels.template.set("text", chartForm.labelText);
@@ -2453,7 +2503,11 @@ function createTreeChart(root, chartForm) {
         tooltipText: chartForm.tooltipText
     });
 
-    series.data.setAll(normalizeTreeChartData(chartForm.chartData));
+    series.data.setAll(treeData);
+    if (compactLayout) {
+        updateCompactTreeScale(chartForm);
+        chart.contents.on("scale", () => updateCompactTreeScale(chartForm));
+    }
     if (series.dataItems.length > 0) {
         series.set("selectedDataItem", series.dataItems[0]);
     }
@@ -2463,7 +2517,20 @@ function createTreeChart(root, chartForm) {
 }
 
 function setTreeChartInitialView(chartForm) {
-    chartForm.chart.goHome();
+    chartForm.root.events.once("frameended", () => {
+        if (chartForm.root.isDisposed()) return;
+        chartForm.chart.contents.setAll({
+            x: 0,
+            y: 0,
+            scale: 1
+        });
+        if (chartForm.compactLayout) {
+            chartForm.chart.zoomToPoint({
+                x: chartForm.root.dom.clientWidth / 2,
+                y: chartForm.root.dom.clientHeight / 2
+            }, 2);
+        }
+    });
 }
 
 const TREE_MAXIMIZE_ICON = "M -8 -2 L -8 -8 L -2 -8 M 2 -8 L 8 -8 L 8 -2 M 8 2 L 8 8 L 2 8 M -2 8 L -8 8 L -8 2";
@@ -2629,4 +2696,77 @@ function normalizeTreeChartData(chartData) {
     if (chartData == null) return [];
     if (Array.isArray(chartData)) return chartData;
     return [chartData];
+}
+
+function getTreeLayoutSlotCount(nodes, childDataField) {
+    if (Array.isArray(nodes) === false) return 0;
+
+    let leafCount = 0;
+    const pendingNodes = [...nodes];
+    while (pendingNodes.length > 0) {
+        const node = pendingNodes.pop();
+        const children = node?.[childDataField];
+        if (Array.isArray(children) && children.length > 0) {
+            children.forEach(child => pendingNodes.push(child));
+        } else {
+            leafCount++;
+        }
+    }
+    return leafCount;
+}
+
+function addTreeChartTrackpadPinchZoom(chart) {
+    let targetZoomLevel = null;
+
+    chart.events.on("wheel", event => {
+        const wheelEvent = event.originalEvent;
+        if ((wheelEvent.ctrlKey !== true && wheelEvent.metaKey !== true) || wheelEvent.deltaY === 0) return;
+
+        wheelEvent.preventDefault();
+        const currentZoomLevel = chart.contents.get("scale", 1);
+        const baseZoomLevel = targetZoomLevel ?? currentZoomLevel;
+        const normalizedDelta = Math.max(-TREE_PINCH_ZOOM_DELTA, Math.min(TREE_PINCH_ZOOM_DELTA, wheelEvent.deltaY));
+        const zoomFactor = Math.pow(2, -normalizedDelta / TREE_PINCH_ZOOM_DELTA);
+        targetZoomLevel = Math.max(
+            chart.get("minZoomLevel", 1),
+            Math.min(chart.get("maxZoomLevel", 32), baseZoomLevel * zoomFactor)
+        );
+
+        const expectedZoomLevel = targetZoomLevel;
+        const animation = chart.zoomToPoint(chart.toLocal(event.point), targetZoomLevel);
+        if (animation == null || animation.stopped) {
+            if (targetZoomLevel === expectedZoomLevel) targetZoomLevel = null;
+        } else {
+            animation.events.once("stopped", () => {
+                if (targetZoomLevel === expectedZoomLevel) targetZoomLevel = null;
+            });
+        }
+    });
+}
+
+function updateCompactTreeScale(chartForm) {
+    const scale = chartForm.chart.contents.get("scale", 1);
+    const inverseScale = 1 / scale;
+
+    chartForm.series.circles.each(circle => circle.set("radius", 8 * inverseScale));
+    chartForm.series.outerCircles.each(circle => circle.set("radius", 8 * inverseScale));
+    chartForm.series.labels.each(label => {
+        let y = 0;
+        const dataItem = label.dataItem;
+        if (dataItem?.get("depth") === chartForm.topDepth) {
+            const siblings = dataItem.get("parent")?.get("children") || [];
+            if (siblings.length > 1) {
+                y = (siblings.indexOf(dataItem) % 2 === 0 ? -8 : 8) * inverseScale;
+            }
+        }
+
+        label.setAll({
+            fontSize: 12 * inverseScale,
+            x: 12 * inverseScale,
+            y: y,
+            maxWidth: 150 * inverseScale,
+            maxHeight: 18 * inverseScale
+        });
+    });
+    chartForm.series.links.each(link => link.set("strokeWidth", 1.25 * inverseScale));
 }

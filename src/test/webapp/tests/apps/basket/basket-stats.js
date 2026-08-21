@@ -159,6 +159,7 @@ Scenario('E-shop statistics charts and filters @screenshot', async ({ I, Documen
     );
 
     await checkCharts(I);
+    await checkTreeChartWheelGestures(I);
 });
 
 Scenario('Cleanup and logout after domain change @screenshot', async ({ I }) => {
@@ -181,6 +182,42 @@ async function checkCharts(I) {
         I.seeElement("#" + id);
         I.assertContain(renderedChartIds, id, "Chart was not rendered: " + id);
     });
+}
+
+async function checkTreeChartWheelGestures(I) {
+    const result = await I.executeScript(() => {
+        const root = window.am5.registry.rootElements.find(item => item.dom.id === "basketStats-categories");
+        const chart = root.container.children.getIndex(0);
+        const rect = root.dom.getBoundingClientRect();
+        const eventOptions = {
+            bubbles: true,
+            cancelable: true,
+            clientX: rect.left + rect.width / 2,
+            clientY: rect.top + rect.height / 2,
+            deltaY: -40
+        };
+        const target = root.dom.querySelector("canvas");
+        const initialZoomLevel = chart.contents.get("scale", 1);
+        const normalPrevented = target.dispatchEvent(new WheelEvent("wheel", eventOptions)) === false;
+        const controlPinchPrevented = target.dispatchEvent(new WheelEvent("wheel", {...eventOptions, ctrlKey: true})) === false;
+        const controlTargetZoomLevel = chart._za?.to;
+        const commandPinchPrevented = target.dispatchEvent(new WheelEvent("wheel", {...eventOptions, metaKey: true})) === false;
+
+        return {
+            initialZoomLevel,
+            normalPrevented,
+            controlPinchPrevented,
+            controlTargetZoomLevel,
+            commandPinchPrevented,
+            commandTargetZoomLevel: chart._za?.to
+        };
+    });
+
+    I.assertFalse(result.normalPrevented, "Regular wheel scrolling must remain available for the page");
+    I.assertTrue(result.controlPinchPrevented, "Control + trackpad pinch must be handled by the tree chart");
+    I.assertAbove(result.controlTargetZoomLevel, result.initialZoomLevel, "Control + trackpad pinch must increase the tree zoom level");
+    I.assertTrue(result.commandPinchPrevented, "Command + trackpad pinch must be handled by the tree chart");
+    I.assertAbove(result.commandTargetZoomLevel, result.controlTargetZoomLevel, "Command + trackpad pinch must increase the tree zoom level");
 }
 
 async function clearStoredDateRange(I) {

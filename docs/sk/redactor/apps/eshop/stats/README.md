@@ -49,6 +49,8 @@ Strom kategórií začína koreňovým uzlom **Produkty** a zobrazuje iba kateg�
 
 Hodnota uzla predstavuje počet predaných kusov v kategórii vrátane jej podkategórií. Kategórie bez predaja v zvolenom období zostávajú v strome zobrazené s hodnotou `0`. Ak sa produkty nachádzajú priamo v nadradenej kategórii, zobrazia sa v samostatnom uzle **Priamo v kategórii**.
 
-Kliknutím na uzol môžete rozbaliť alebo zbaliť jeho podkategórie. Ovládacie prvky grafu umožňujú návrat na základné zobrazenie, priblíženie, oddialenie a maximalizovanie grafu na celú obrazovku.
+Kliknutím na uzol môžete rozbaliť alebo zbaliť jeho podkategórie. Ovládacie prvky grafu umožňujú návrat na základné zobrazenie, priblíženie, oddialenie a maximalizovanie grafu na celú obrazovku. Dvojprstové posúvanie na touchpade posúva stránku; graf sa približuje iba tlačidlami alebo gestom pinch-to-zoom.
+
+Pri veľkom počte kategórií sa zobrazí kompaktný strom s jednou rozbalenou úrovňou. Priblížením sa zväčšia rozostupy medzi uzlami, pričom text zostane čitateľný; ďalšie časti stromu zobrazíte posunutím grafu alebo kliknutím na konkrétnu kategóriu.
 
 ![](category-tree.png)
