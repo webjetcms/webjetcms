@@ -39,7 +39,7 @@ function getHttpsOptions() {
 }
 
 const httpsOptions = getHttpsOptions();
-const proxyPrefixes = (env.HEADLESS_PROXY_PREFIXES || '/images/,/files/,/thumb/,/shared/,/components,/FormMailAjax.action,/rest/,/apps/form/mvc/')
+const proxyPrefixes = (env.HEADLESS_PROXY_PREFIXES || '/images/,/files/,/thumb/,/shared/,/components,/FormMailAjax.action,/rest/,/apps/form/mvc/,/captcha.jpg')
   .split(',')
   .map((value) => value.trim())
   .filter(Boolean)

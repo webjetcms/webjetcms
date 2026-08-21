@@ -77,15 +77,17 @@ Scenario('testovanie app - Pouzivatelia', async ({ I, Apps, Document, DTE, TempM
     //advanced tab
     I.clickCss("#pills-dt-component-datatable-advanced-tab");
     multiselectOption(I, "groupIdsEditable", ["Bankári"]);
-    I.clickCss("#editorAppDTE_Field_successDocId > section > div > div > div > div > button");
+    I.clickCss("#editorAppDTE_Field_successDocId > webjet-dte-jstree > section > div > div > div > button");
     I.click(locate('.jstree-node.jstree-closed').withText('Jet portal 4').find('.jstree-icon.jstree-ocl'));
     I.clickCss('#docId-141_anchor');
-    I.waitForElement('input[value="/Jet portal 4/Jet portal 4 - testovacia stranka"]', 10);
+    I.wait(2);
+    I.seeInField('#editorAppDTE_Field_successDocId input.form-control', "/Jet portal 4/Jet portal 4 - testovacia stranka");
 
-    I.clickCss("#editorAppDTE_Field_notAuthorizedEmailDocId > section > div > div > div > div > button");
+    I.clickCss("#editorAppDTE_Field_notAuthorizedEmailDocId > webjet-dte-jstree > section > div > div > div > button");
     I.click(locate('.jstree-node.jstree-closed').withText('Jet portal 4').find('.jstree-icon.jstree-ocl'));
     I.clickCss('#docId-141_anchor');
-    I.waitForElement('input[value="/Jet portal 4/Jet portal 4 - testovacia stranka"]', 10);
+    I.wait(2);
+    I.seeInField('#editorAppDTE_Field_successDocId input.form-control', "/Jet portal 4/Jet portal 4 - testovacia stranka");
 
     I.checkOption("#DTE_Field_loginNewUser_0");
     I.checkOption("#DTE_Field_useAjax_0");

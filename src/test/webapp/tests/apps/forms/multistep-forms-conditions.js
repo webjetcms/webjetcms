@@ -172,56 +172,56 @@ Scenario('TETS CONDITIONS in form', async ({ I, DT, DTE, TempMail }) => {
 
     // OR joining of conditions (one condition is EQUAL and another CONTAINS)
     I.say("Dont see Step1 - Meno until -> Step1 - Radiogroup is valB OR valC");
-        I.dontSeeElement("#meno-1");
+        I.dontSeeElement("#f1-meno-1");
 
-        I.clickCss("input#radiogroup-1-0[value='valA']");
-        waitForInvisible(I, "#meno-1", 5);
+        I.clickCss("input#f1-radiogroup-1-0[value='valA']");
+        waitForInvisible(I, "#f1-meno-1", 5);
 
-        I.clickCss("input#radiogroup-1-1[value='valB']");
-        waitForVisible(I, "#meno-1", 5);
+        I.clickCss("input#f1-radiogroup-1-1[value='valB']");
+        waitForVisible(I, "#f1-meno-1", 5);
 
-        I.clickCss("input#radiogroup-1-2[value='valC']");
-        waitForVisible(I, "#meno-1", 5);
+        I.clickCss("input#f1-radiogroup-1-2[value='valC']");
+        waitForVisible(I, "#f1-meno-1", 5);
 
-        I.clickCss("input#radiogroup-1-0[value='valA']");
-        waitForInvisible(I, "#meno-1");
+        I.clickCss("input#f1-radiogroup-1-0[value='valA']");
+        waitForInvisible(I, "#f1-meno-1");
 
     I.say("Dont see Step1 - Email until -> Step1 - Priezvisko is not_empty AND Step1 - Checkgroup is not_empty AND Step1 - Radiogroup not_contains 'auto'");
-        I.dontSeeElement("#email-1");
+        I.dontSeeElement("#f1-email-1");
 
-        I.fillField("input#priezvisko-1", "test");
-        I.dontSeeElement("#email-1");
+        I.fillField("input#f1-priezvisko-1", "test");
+        I.dontSeeElement("#f1-email-1");
 
-        I.clickCss("input#checkboxgroup-1-0[value='auto']");
-        I.dontSeeElement("#email-1");
+        I.clickCss("input#f1-checkboxgroup-1-0[value='auto']");
+        I.dontSeeElement("#f1-email-1");
 
-        I.clickCss("input#checkboxgroup-1-1[value='autobus']");
-        I.dontSeeElement("#email-1");
+        I.clickCss("input#f1-checkboxgroup-1-1[value='autobus']");
+        I.dontSeeElement("#f1-email-1");
 
-        I.clickCss("input#checkboxgroup-1-2[value='lietadlo']");
-        I.dontSeeElement("#email-1");
+        I.clickCss("input#f1-checkboxgroup-1-2[value='lietadlo']");
+        I.dontSeeElement("#f1-email-1");
 
-        I.clickCss("input#checkboxgroup-1-0[value='auto']");
-        I.dontSeeElement("#email-1");
+        I.clickCss("input#f1-checkboxgroup-1-0[value='auto']");
+        I.dontSeeElement("#f1-email-1");
 
-        I.clickCss("input#checkboxgroup-1-1[value='autobus']");
-        waitForVisible(I, "#email-1", 5);
+        I.clickCss("input#f1-checkboxgroup-1-1[value='autobus']");
+        waitForVisible(I, "#f1-email-1", 5);
 
     I.say(" Dont see Step1 - popiska-1 until - > Step1 - Pohlavie MUZ ... in codition is error where text do not match case BUT we allowed case insensitivity");
-        I.dontSeeElement("label[for='popiska-1']");
+        I.dontSeeElement("label[for='f1-popiska-1']");
 
-        I.clickCss("#pohlavie-false-muz");
-        waitForVisible(I, "label[for='popiska-1']", 5);
+        I.clickCss("#f1-pohlavie-false-muz");
+        waitForVisible(I, "label[for='f1-popiska-1']", 5);
 
     I.say("Step1 - popiska-1 requires - > Step1 - Pohlavie MUZ ... BUT we amde case error and DONT allowed case insensitivity - sooo field will not be visible");
-        waitForInvisible(I, "label[for='popiska-2']", 5);
+        waitForInvisible(I, "label[for='f1-popiska-2']", 5);
 
-        I.clickCss("#pohlavie-false-zena");
-        waitForInvisible(I, "label[for='popiska-2']", 5);
+        I.clickCss("#f1-pohlavie-false-zena");
+        waitForInvisible(I, "label[for='f1-popiska-2']", 5);
 
     I.say("Check that Meno is required and email is not required");
-        I.clickCss("input#radiogroup-1-2[value='valC']"); // show field
-        waitForVisible(I, "#meno-1", 5);
+        I.clickCss("input#f1-radiogroup-1-2[value='valC']"); // show field
+        waitForVisible(I, "#f1-meno-1", 5);
 
     I.clickCss("button[type='submit']");
         I.see("Meno - povinné pole");
@@ -229,14 +229,14 @@ Scenario('TETS CONDITIONS in form', async ({ I, DT, DTE, TempMail }) => {
         I.dontSee("Email - povinné pole");
 
     I.say("Hide Meno");
-        I.clickCss("input#radiogroup-1-0[value='valA']");
-        waitForInvisible(I, "#meno-1", 5);
+        I.clickCss("input#f1-radiogroup-1-0[value='valA']");
+        waitForInvisible(I, "#f1-meno-1", 5);
 
     I.say("Change Step1 - POhlavie to make field Step1 - Email required .... check that required span was added");
-        waitForInvisible(I, "label[for='email-1'] span.requirement-mark", 5);
+        waitForInvisible(I, "label[for='f1-email-1'] span.requirement-mark", 5);
 
-        I.clickCss("#pohlavie-false-ine");
-        waitForVisible(I, "label[for='email-1'] span.requirement-mark", 5);
+        I.clickCss("#f1-pohlavie-false-ine");
+        waitForVisible(I, "label[for='f1-email-1'] span.requirement-mark", 5);
 
     I.clickCss("button[type='submit']");
         I.dontSee("Meno - povinné pole"); // this is hidden so no more required
@@ -244,8 +244,8 @@ Scenario('TETS CONDITIONS in form', async ({ I, DT, DTE, TempMail }) => {
         I.see("Email - povinné pole");    // this is required through condition and now condition is met so it is required
 
     I.say("Fill required and go to next step");
-        I.fillField("input#email-1", baseUserMail + TempMail.getTempMailDomain());
-        I.fillField("textarea#poznamka-1", "Test poznamka");
+        I.fillField("input#f1-email-1", baseUserMail + TempMail.getTempMailDomain());
+        I.fillField("textarea#f1-poznamka-1", "Test poznamka");
         I.clickCss("button[type='submit']");
 
     I.say("Check we see second step");
@@ -254,62 +254,62 @@ Scenario('TETS CONDITIONS in form', async ({ I, DT, DTE, TempMail }) => {
     I.say("Check conditions on step 2 - it contains combination with values from step 1");
 
     I.say("I see Step2 - menopriezvisko-1 because -> Step1 - radiogroup-1 is valA and Step1 - checkgroup EQ lietadlo");
-        I.seeElement("input#menopriezvisko-1");
+        I.seeElement("input#f1-menopriezvisko-1");
 
     I.say("I see Step2 - adresa-1 because IF menopriezvisko-1 is Tester_1 OR Tester_2");
-        I.dontSeeElement("input#adresa-1");
+        I.dontSeeElement("input#f1-adresa-1");
 
-        I.fillField("input#menopriezvisko-1", "Tester_1");
-        waitForVisible(I, "input#adresa-1", 5);
+        I.fillField("input#f1-menopriezvisko-1", "Tester_1");
+        waitForVisible(I, "input#f1-adresa-1", 5);
 
-        I.fillField("input#menopriezvisko-1", "Tester_2");
-        waitForVisible(I, "input#adresa-1", 5);
+        I.fillField("input#f1-menopriezvisko-1", "Tester_2");
+        waitForVisible(I, "input#f1-adresa-1", 5);
 
-        I.fillField("input#menopriezvisko-1", "Tester_3");
-        waitForInvisible(I, "input#adresa-1", 5);
+        I.fillField("input#f1-menopriezvisko-1", "Tester_3");
+        waitForInvisible(I, "input#f1-adresa-1", 5);
 
         //case sensitive
-        I.fillField("input#menopriezvisko-1", "tester_1");
-        waitForInvisible(I, "input#adresa-1", 5);
+        I.fillField("input#f1-menopriezvisko-1", "tester_1");
+        waitForInvisible(I, "input#f1-adresa-1", 5);
 
     I.say("I see Step2 - telefon-1 when -> Step1 - email-1 starts with " + baseUserMail + " (ignore case) AND Step2 - radiogroup-2-1 is selected");
-        waitForInvisible(I, "input#telefon-1", 5);
+        waitForInvisible(I, "input#f1-telefon-1", 5);
 
-        I.clickCss("input#radiogroup-2-0[value='one']");
-        waitForInvisible(I, "input#telefon-1", 5);
+        I.clickCss("input#f1-radiogroup-2-0[value='one']");
+        waitForInvisible(I, "input#f1-telefon-1", 5);
 
-        I.clickCss("input#radiogroup-2-1[value='two']");
-        waitForVisible(I, "input#telefon-1", 5);
+        I.clickCss("input#f1-radiogroup-2-1[value='two']");
+        waitForVisible(I, "input#f1-telefon-1", 5);
 
-        I.clickCss("input#radiogroup-2-2[value='three']");
-        waitForInvisible(I, "input#telefon-1", 5);
+        I.clickCss("input#f1-radiogroup-2-2[value='three']");
+        waitForInvisible(I, "input#f1-telefon-1", 5);
 
     I.say("Test validations");
-        I.clickCss("input#radiogroup-2-1[value='two']");
-        waitForVisible(I, "input#telefon-1", 5);
+        I.clickCss("input#f1-radiogroup-2-1[value='two']");
+        waitForVisible(I, "input#f1-telefon-1", 5);
         I.clickCss("button[type='submit']");
         I.waitForText("Hodnota () pre pole Telefónne číslo je neplatná", 5);
         I.dontSee("Adresa - povinné pole");
 
-        I.fillField("input#menopriezvisko-1", "Tester_1");
-        waitForVisible(I, "input#adresa-1", 5);
+        I.fillField("input#f1-menopriezvisko-1", "Tester_1");
+        waitForVisible(I, "input#f1-adresa-1", 5);
         I.clickCss("button[type='submit']");
         I.waitForText("Hodnota () pre pole Telefónne číslo je neplatná", 5);
         I.dontSee("Adresa - povinné pole");
 
-        I.fillField("input#menopriezvisko-1", "Tester_2");
-        waitForVisible(I, "input#adresa-1", 5);
+        I.fillField("input#f1-menopriezvisko-1", "Tester_2");
+        waitForVisible(I, "input#f1-adresa-1", 5);
         I.clickCss("button[type='submit']");
         I.waitForText("Hodnota () pre pole Telefónne číslo je neplatná", 5);
         I.waitForText("Adresa - povinné pole", 5);
 
-        I.fillField("input#telefon-1", "0123456789");
+        I.fillField("input#f1-telefon-1", "0123456789");
         I.clickCss("button[type='submit']");
         I.waitForText("Adresa - povinné pole", 5);
         I.dontSee("Hodnota () pre pole Telefónne číslo je neplatná");
 
-        I.fillField("input#menopriezvisko-1", "Tester_X");
-        waitForInvisible(I, "input#adresa-1", 5);
+        I.fillField("input#f1-menopriezvisko-1", "Tester_X");
+        waitForInvisible(I, "input#f1-adresa-1", 5);
 
         I.clickCss("button[type='submit']");
         I.waitForText("Formulár bol úspešne odoslaný", 10);
@@ -322,15 +322,59 @@ Scenario('Check admin email', async ({ I, DT, DTE, TempMail }) => {
     I.say("Check admin email with filled answers email CANNOT contain hidden fields by condition");
 
     const expectedHtml = `
-        <form action="/rest/multistep-form/save-form?form-name=multistep_condition_test&amp;step-id=-1" method="post" name="formMailForm-multistep_condition_test"><div><div><p>This is step one.</p></div><div><label for="radiogroup-1">Radiogroup:</label><div><span>[X]</span> <label for="radiogroup-1-0">valA</label></div>
-        <div><span>[&nbsp;]</span> <label for="radiogroup-1-1">valB</label></div><div><span>[&nbsp;]</span> <label for="radiogroup-1-2">valC</label></div>
-        </div><div><label for="priezvisko-1">Priezvisko:</label> <span>test</span></div><div><label for="checkboxgroup-1">Checkgroup:</label><div><span>[&nbsp;]</span> <label for="checkboxgroup-1-0">auto</label></div>
-        <div><span>[&nbsp;]</span> <label for="checkboxgroup-1-1">autobus</label></div><div><span>[X]</span> <label for="checkboxgroup-1-2">lietadlo</label></div>
-        </div><div><label for="email-1">Email:</label> <span>wjmultistep.conditions.user@fexpost.com</span></div>
-        <div><label>Pohlavie:</label></div><div><span>[&nbsp;]</span> <label for="pohlavie-false-muz">MUZ</label> </div><div><span>[&nbsp;]</span> <label for="pohlavie-false-zena">ZENA</label> </div><div><span>[X]</span> <label for="pohlavie-false-ine">ine</label> </div>
-        <div><label for="poznamka-1">Poznamka<span style="color: red;">&nbsp;*</span>:</label> <span style="height: auto;">Test poznamka</span></div></div><hr><div><div><p>This is step two.</p></div><div><label for="menopriezvisko-1">Meno a priezvisko:</label> <span>Tester_X</span></div><div><label for="radiogroup-2">Skupina výberových polí:</label><div><span>[&nbsp;]</span> <label for="radiogroup-2-0">one</label></div>
-        <div><span>[X]</span> <label for="radiogroup-2-1">two</label></div><div><span>[&nbsp;]</span> <label for="radiogroup-2-2">three</label></div>
-        </div><div><label for="telefon-1">Telefónne číslo:</label> <span>0123456789</span></div></div>  </form>
+        <form action="/rest/multistep-form/save-form?form-name=multistep_condition_test&amp;step-id=-1" method="post" name="formMailForm-multistep_condition_test"><div><div><p>This is step one.</p></div><div>
+        <label for="radiogroup-1">Radiogroup</label>
+        <div>
+        <span>[X]</span> <label for="radiogroup-1-0">valA</label>
+        </div>
+        <div>
+        <span>[&nbsp;]</span> <label for="radiogroup-1-1">valB</label>
+        </div>
+        <div>
+        <span>[&nbsp;]</span> <label for="radiogroup-1-2">valC</label>
+        </div>
+        </div><div>
+        <label for="priezvisko-1">Priezvisko</label> <span>test</span>
+        </div><div>
+        <label for="checkboxgroup-1">Checkgroup</label>
+        <div>
+        <span>[&nbsp;]</span> <label for="checkboxgroup-1-0">auto</label>
+        </div>
+        <div>
+        <span>[&nbsp;]</span> <label for="checkboxgroup-1-1">autobus</label>
+        </div>
+        <div>
+        <span>[X]</span> <label for="checkboxgroup-1-2">lietadlo</label>
+        </div>
+        </div><div>
+        <label for="email-1">Email</label> <span>wjmultistep.conditions.user@fexpost.com</span>
+        </div><div>
+        <label>Pohlavie</label>
+        </div>
+        <div>
+        <span>[&nbsp;]</span> <label for="pohlavie-false-muz">MUZ</label>
+        </div><div>
+        <span>[&nbsp;]</span> <label for="pohlavie-false-zena">ZENA</label>
+        </div><div>
+        <span>[X]</span> <label for="pohlavie-false-ine">ine</label>
+        </div><div>
+        <label for="poznamka-1">Poznamka<span>&nbsp;*</span></label> <span style="height: auto;">Test poznamka</span>
+        </div></div><hr><div><div><p>This is step two.</p></div><div>
+        <label for="menopriezvisko-1">Meno a priezvisko</label> <span>Tester_X</span>
+        </div><div>
+        <label for="radiogroup-2">Skupina výberových polí</label>
+        <div>
+        <span>[&nbsp;]</span> <label for="radiogroup-2-0">one</label>
+        </div>
+        <div>
+        <span>[X]</span> <label for="radiogroup-2-1">two</label>
+        </div>
+        <div>
+        <span>[&nbsp;]</span> <label for="radiogroup-2-2">three</label>
+        </div>
+        </div><div>
+        <label for="telefon-1">Telefónne číslo</label> <span>0123456789</span>
+        </div></div>  </form>
     `;
 
     checkEmailWithForm(I, expectedHtml);
@@ -357,6 +401,7 @@ function checkEmailWithForm(I, expectedHtml) {
         return form ? form.outerHTML : null;
     }).then(actualHtml => {
         I.say("Compare actual vs expected EMAIL form HTML");
+        //I.say("ACTUAL HTML:\n" + actualHtml);
         compareTwoHtml(I, actualHtml, expectedHtml);
     });
 }
@@ -371,8 +416,10 @@ function compareTwoHtml(I, actualHtml, expectedHtml) {
             .replace(/>\s+</g, '><')
             .trim();
 
-         // I.say(normalize(actualHtml));
-         // I.say(normalize(expectedHtml));
+        //I.say("ACTUAL HTML:\n" + actualHtml);
+        //I.say("EXPECTED HTML:\n" + expectedHtml);
+        //I.say("ACTUAL:\n" + normalize(actualHtml));
+        //I.say("EXPECTED:\n" + normalize(expectedHtml));
 
         I.assertEqual(
             normalize(actualHtml),

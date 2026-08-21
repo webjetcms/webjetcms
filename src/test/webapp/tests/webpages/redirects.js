@@ -381,6 +381,7 @@ function testPublishingAndValidity(I, DT, DTE, Document, toRedirectUrl, useCache
     I.say("Delete redirect and test it do not work");
         I.amOnPage("/admin/v9/settings/redirect/");
         DT.filterEquals("oldUrl", toRedirectUrl);
+        DT.waitForLoader();
 
         I.clickCss("td.dt-select-td.sorting_1");
         I.clickCss("button.buttons-remove");

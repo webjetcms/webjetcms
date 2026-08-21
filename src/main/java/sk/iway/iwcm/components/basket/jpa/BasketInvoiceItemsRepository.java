@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.basket.jpa;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -14,6 +15,9 @@ import java.util.Optional;
 
 import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 
+/**
+ * Provides domain-scoped persistence and statistical queries for basket invoice items.
+ */
 @Repository
 public interface BasketInvoiceItemsRepository extends DomainIdRepository<BasketInvoiceItemEntity, Long> {
     Page<BasketInvoiceItemEntity> findAllByInvoiceIdAndDomainId(Long invoiceId, Integer domainId, Pageable pageable);
@@ -48,4 +52,83 @@ public interface BasketInvoiceItemsRepository extends DomainIdRepository<BasketI
     @Modifying
     @Query(value = "DELETE FROM BasketInvoiceItemEntity biie WHERE biie.invoiceId = :invoiceId AND biie.domainId = :domainId")
     void deleteByInvoiceId(@Param("invoiceId") Long invoiceId, @Param("domainId") Integer domainId);
+
+    /**
+     * Aggregates sold product quantities for invoices matching a date and status filter.
+     *
+     * @param domainId  domain whose invoice items are included
+     * @param dateFrom  inclusive start of the reporting interval
+     * @param dateTo  inclusive end of the reporting interval
+     * @param filterByStatus  whether to restrict invoices to {@code statusIds}
+     * @param statusIds  invoice statuses included when filtering is enabled
+     * @param cancelledStatus  status excluded from product statistics
+     * @return aggregated product statistics grouped by product identifier
+     */
+    @Query("""
+        SELECT biie.itemId AS itemId,
+               MAX(biie.itemTitle) AS itemTitle,
+               SUM(biie.itemQty) AS quantity
+        FROM BasketInvoiceItemEntity biie
+        JOIN biie.itemsBasketInvoice bie
+        WHERE biie.domainId = :domainId
+          AND bie.domainId = :domainId
+          AND bie.createDate >= :dateFrom
+          AND bie.createDate <= :dateTo
+          AND (:filterByStatus = false OR bie.statusId IN :statusIds)
+          AND biie.itemId IS NOT NULL
+          AND biie.itemId > 0
+          AND (bie.statusId IS NULL OR bie.statusId <> :cancelledStatus)
+        GROUP BY biie.itemId
+        """)
+    List<BasketProductStatsProjection> findProductsForStatistics(
+        @Param("domainId") Integer domainId,
+        @Param("dateFrom") Date dateFrom,
+        @Param("dateTo") Date dateTo,
+        @Param("filterByStatus") boolean filterByStatus,
+        @Param("statusIds") List<Integer> statusIds,
+        @Param("cancelledStatus") Integer cancelledStatus
+    );
+
+    /**
+     * Finds modern and legacy fee items for invoices matching a date and status filter.
+     *
+     * @param domainId  domain whose invoice items are included
+     * @param dateFrom  inclusive start of the reporting interval
+     * @param dateTo  inclusive end of the reporting interval
+     * @param filterByStatus  whether to restrict invoices to {@code statusIds}
+     * @param statusIds  invoice statuses included when filtering is enabled
+     * @param cancelledStatus  status excluded from fee statistics
+     * @param legacyFeeItemIds  document identifiers representing legacy fee items
+     * @return fee items used to calculate delivery and payment totals
+     */
+    @Query("""
+        SELECT biie.itemId AS itemId,
+               biie.itemNote AS itemNote,
+               biie.itemPrice AS itemPrice,
+               biie.itemQty AS itemQty,
+               biie.itemVat AS itemVat,
+               bie.currency AS currency,
+               bie.userLng AS userLng
+        FROM BasketInvoiceItemEntity biie
+        JOIN biie.itemsBasketInvoice bie
+        WHERE biie.domainId = :domainId
+          AND bie.domainId = :domainId
+          AND bie.createDate >= :dateFrom
+          AND bie.createDate <= :dateTo
+          AND (:filterByStatus = false OR bie.statusId IN :statusIds)
+          AND (
+              biie.itemId = 0
+              OR biie.itemId IN :legacyFeeItemIds
+          )
+          AND (bie.statusId IS NULL OR bie.statusId <> :cancelledStatus)
+        """)
+    List<BasketFeeStatsProjection> findFeesForStatistics(
+        @Param("domainId") Integer domainId,
+        @Param("dateFrom") Date dateFrom,
+        @Param("dateTo") Date dateTo,
+        @Param("filterByStatus") boolean filterByStatus,
+        @Param("statusIds") List<Integer> statusIds,
+        @Param("cancelledStatus") Integer cancelledStatus,
+        @Param("legacyFeeItemIds") List<Integer> legacyFeeItemIds
+    );
 }

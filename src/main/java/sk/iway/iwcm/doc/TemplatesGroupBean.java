@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import sk.iway.iwcm.database.ActiveRecordRepository;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
@@ -18,6 +19,7 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
 /**
  * TemplatesGroupBean.java
@@ -73,6 +75,34 @@ public class TemplatesGroupBean extends ActiveRecordRepository implements Serial
         tab = "basic"
     )
     private String inlineEditingMode;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title = "admin.temp_group_list.description",
+        tab = "seo"
+    )
+    private String description;
+
+    @Column(name = "seo_image")
+    @Size(max = 255)
+    @DataTableColumn(
+        inputType = DataTableColumnType.ELFINDER,
+        title = "admin.temp_group_list.seo_image",
+        tab = "seo",
+        className = "image",
+        renderFormat = "dt-format-image"
+    )
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    private String seoImage;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = "admin.temp_group_list.seo_image_alt",
+        tab = "seo"
+    )
+    private String seoImageAlt;
 
     @Transient
     @DataTableColumn(
@@ -293,4 +323,28 @@ public class TemplatesGroupBean extends ActiveRecordRepository implements Serial
     public String getInlineEditingMode() { return inlineEditingMode; }
 
     public void setInlineEditingMode(String inlineEditingMode) { this.inlineEditingMode = inlineEditingMode; }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getSeoImage() {
+        return seoImage;
+    }
+
+    public void setSeoImage(String seoImage) {
+        this.seoImage = seoImage;
+    }
+
+    public String getSeoImageAlt() {
+        return seoImageAlt;
+    }
+
+    public void setSeoImageAlt(String seoImageAlt) {
+        this.seoImageAlt = seoImageAlt;
+    }
 }

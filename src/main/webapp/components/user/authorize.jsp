@@ -17,6 +17,7 @@ if (userId > 0 && Tools.isNotEmpty(hash))
 		AuthorizeAction.sendInfoEmail(userId, null, request);
 		request.setAttribute("authorizeOK", "true");
 	}
+	request.getSession().removeAttribute("afterLogonRedirect");
 }
 else if (userId == -1 && Tools.isNotEmpty(hash))
 {

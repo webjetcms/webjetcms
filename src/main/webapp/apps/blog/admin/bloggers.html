@@ -21,7 +21,7 @@
         bloggerDataTable.hideButton("duplicate");
 
         bloggerDataTable.EDITOR.on('open', function (e, mode, action) {
-            $("#editorAppDTE_Field_editableGroups > section > div.form-group").css("display", "block");
+            $("#editorAppDTE_Field_editableGroups > webjet-dte-jstree > section > div.form-group").css("display", "block");
 
             //Disable login on edit
             if("edit" === action) {
@@ -56,8 +56,8 @@
 
     <style>
         .DTE_Action_Edit {
-           .btn-vue-jstree-item-edit { display: none; }
-           .btn-vue-jstree-item-remove { display: none; }
+           .btn-webjet-jstree-item-edit { display: none; }
+           .btn-webjet-jstree-item-remove { display: none; }
            section > div.form-group { display: none; }
         }
     </style>

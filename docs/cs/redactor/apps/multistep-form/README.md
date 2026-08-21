@@ -38,7 +38,7 @@ První sloupec zobrazuje seznam kroků formuláře. V tomto seznamu můžeme př
 
 ![](form-step-editor.png)
 
-Můžete vyplnit Úvodní text, který se zobrazí na začátku kroku. V kartě Pokročilé můžete změnit text tlačítka pro přechod na další krok (nebo odeslání formuláře, pokud jde o poslední krok). V kartě Kód skriptu můžete vložit vlastní HTML/JavaScript kód, který se vloží a provede při zobrazení kroku.
+Můžete vyplnit **Úvodní text**, který se zobrazí na začátku kroku. V textu můžete použít [značky přihlášeného uživatele](#značky-přihlášeného-uživatele) a [značky hodnot položek](#značky-hodnot-položek) z již vyplněných kroků. V kartě **Pokročilé** můžete změnit text tlačítka pro přechod na další krok (nebo odeslání formuláře, pokud jde o poslední krok). V kartě **Kód skriptu** můžete vložit vlastní HTML/JavaScript kód, který se vloží a provede při zobrazení kroku.
 
 ### Duplikování
 
@@ -61,14 +61,16 @@ Editor pro přidávání a úpravu položek je speciální tím, že mění svů
 - **Typ pole** - určuje jaký druh vstupu bude položka představovat (např. textové pole, výběr z rozbalovacího seznamu, zaškrtávací políčko atd.). Jednotlivá pole [připravuje designér web sídla](../formsimple/README.md#informace-pro-web-designera) a jsou stejné jako pro aplikaci formulář snadno.
 - **Povinné pole** - zda je položka povinná k vyplnění.
 - **Povolená hodnota** - pro pokročilou validaci vstupu uživatele umíte zvolit libovolný počet regulárních výrazů, které musí být splněny, aby byl vstup platný. Více se o nich dozvíte v sekci [Regulární výrazy](../form/regexps.md).
+- **Oříznout mezery** - pokud je zvoleno, úvodní a koncové mezery se z hodnoty odstraní ještě před validací a uložením. Nastavení je dostupné pro podporovaná textová pole; nepoužívá se pro výběrová pole a formátované textové pole.
 - **Název pole** - název, který se zobrazí uživateli. Pokud není zadán použije se název shodný s typem pole.
+- **Identifikátor položky ve formuláři** - technický identifikátor se automaticky vytvoří z názvu položky a doplní se rozlišující příponou tak, aby byl ve formuláři jedinečný. Zobrazuje se až při úpravě uložené položky a nelze jej měnit. Používá se v podmínkách, uložených datech a v [značkách hodnot položek](#značky-hodnot-položek).
 
 V kartě **Pokročilé** můžete nastavit další volitelné parametry jako:
 
 - **Krok formuláře** - krok, ke kterému položka patří, můžete tak snadno položku přesunout do jiného kroku.
 - **Pořadí** - určuje pořadí položky v rámci kroku.
 - **Předvyplněná hodnota** - hodnota, která se zobrazí vyplněná v poli, uživatel tak nemusí nastavit hodnotu, pokud je všeobecně známá. Toto pole se zobrazuje pouze pokud se nejedná o položku typu výběrové pole.
-- **Povolené možnosti** - u položky typu výběrové pole (select, checkbox skupina, radio skupina apod.) můžete manuálně definovat seznam možností. Každá možnost se skládá ze dvou hodnot - textu, který se zobrazí uživateli, a hodnoty, která se odešle při odeslání formuláře. Možnosti lze přidávat, odebírat a měnit jejich pořadí pomocí `drag & drop`. Toto pole se zobrazuje pouze pokud není povolena možnost **Použít odkaz na číselník**.
+- **Povolené možnosti** - u položky typu výběrové pole (select, checkbox skupina, radio skupina, automatické doplňování apod.) můžete manuálně definovat seznam možností. Každá možnost se skládá z textu zobrazeného uživateli a hodnoty odeslané při odeslání formuláře. Možnosti lze přidávat, odebírat a měnit jejich pořadí pomocí `drag & drop`. Pro výběrový seznam můžete tlačítkem **Přidat prázdnou možnost** vložit na začátek i volbu bez hodnoty. Pole se zobrazuje pouze pokud není povolena možnost **Použít propojení na číselník**.
 
 ![](form-item-editor-advanced.png)
 
@@ -79,10 +81,19 @@ V kartě **Pokročilé** můžete nastavit další volitelné parametry jako:
 
 - **Zástupní text** - text, který se zobrazí v poli jako nápověda pro uživatele pokud není pole vyplněno (je prázdné).
 - **Tooltip** - pokud zadáte hodnotu tooltipu, zobrazí se při názvu pole informační bublina.
+- **Vlastní chybová zpráva** - text nebo překladový klíč, který nahradí standardní zprávu při chybě validace dané položky.
 
 Chcete-li definovat vlastní položky formulářů, nebo chcete změnit existující, či změnit jaká nastavení jsou dostupná pro jednotlivé typy položek, podívejte se do dokumentace v sekci [Položky formulářů](../formsimple/README.md#informace-pro-web-designera).
 
+!>**Upozornění:** ve vícekrokovém formuláři nefungují vlastní typy položek, které přímo vykreslí nativní element `<input type="file">`. Soubor lze nahrát pouze pomocí komponenty `Dropzone`.
+
 !>**Upozornění:** při úpravě položky formuláře nedoporučujeme měnit typ položky, ale raději nahradit původní položku novou.
+
+### Automatické doplňování
+
+Typ pole **Automatické doplňování - autocomplete** nabízí návštěvníkovi možnosti dle zadávaného textu. Seznam vytvoříte v poli **Povolené možnosti** nebo jej propojíte s aplikací [Číselníky](../../apps/enumeration/README.md). Každá možnost může mít odlišný zobrazovaný text a odesílanou hodnotu.
+
+Vyhledávání se spustí po zadání nejméně dvou znaků, nerozlišuje velikost písmen ani diakritiku a prohledává text i hodnotu možnosti. Zobrazí se nejvýše 30 výsledků. Po výběru se do formuláře uloží hodnota zvolené možnosti.
 
 ### Řádkové zobrazení
 
@@ -92,9 +103,9 @@ Můžete se setkat se situací, kdy Vám editor nedovolí přidat zvolenou polo�
 
 Formulář přepnete do režimu řádkového zobrazení v [nastaveních formuláře](../form/README.md#vytvoření-formuláře).
 
-### Značky
+### Značky přihlášeného uživatele
 
-Pokud chcete v položce formuláře použít informace o aktuálním přihlášeném uživateli (např. jeho jméno, email, atd.), můžete použít speciální značky. Tyto značky se automaticky nahradí příslušnými hodnotami při zobrazení formuláře uživateli. Pro nepřihlášené uživatele budou tyto značky nahrazeny prázdnou hodnotou. Hodnotu zadejte do pole **Předvyplněná hodnota** (pokud je pro daný typ položky dostupné).
+Pokud chcete v položce nebo v úvodním textu kroku použít informace o aktuálním přihlášeném uživateli (např. jeho jméno nebo email), můžete použít speciální značky. Tyto značky se automaticky nahradí příslušnými hodnotami při zobrazení formuláře. Pro nepřihlášené uživatele budou nahrazeny prázdnou hodnotou. V položce je zadejte do pole **Předvyplněná hodnota**, pokud je pro daný typ položky dostupné.
 
 Dostupné značky jsou:
 
@@ -118,6 +129,12 @@ Dostupné značky jsou:
 - ```!LOGGED_USER_FIELDD!``` - ​​volné pole D
 - ```!LOGGED_USER_FIELDE!``` - ​​volné pole E
 - `!LOGGED_USER_GROUPS!` - ​​seznam skupin uživatelů
+
+### Značky hodnot položek
+
+Hodnotu již vyplněné položky můžete vložit do **Úvodního textu** následujícího kroku nebo do [stránky s verzí pro email](../form/README.md#karta---nastavení) značkou `!identifikator-polozky!`. Identifikátor se zobrazuje při úpravě uložené položky.
+
+Pokud má například položka identifikátor `emailova-adresa-1`, použijte značku `!emailova-adresa-1!`. Při zobrazení dalšího kroku nebo při vytvoření emailu se značka nahradí odeslanou hodnotou. Pokud položka ještě nebyla vyplněna, nahradí se prázdnou hodnotou.
 
 ### Podmíněné zobrazení/validování položky
 
@@ -223,11 +240,13 @@ Vytvořený formulář můžete vložit do web stránky pomocí aplikace Formul�
 
 ![](app-editor.png)
 
+Na jednu stránku můžete vložit i více instancí stejného vícekrokového formuláře. Každá instance pracuje nezávisle a vygenerované HTML identifikátory polí obdrží vlastní prefix, například `f1-` a `f2-`, aby se navzájem neovlivňovaly.
+
 ## Konfigurační proměnné
 
 Dostupné konfigurační proměnné pro vícekrokové formuláře:
 
-- `multistepform_nameFields` - ​​seznam názvů polí, která budou považována za pole pro jméno. Mezi těmito poli se bude hledat jméno, které by se použilo jako oslovení v emailech. Použije se pouze **první** nalezené neprázdné jméno.
-- `multistepform_emailFields` - ​​seznam názvů polí, která budou považována za pole pro emailovou adresu. Mezi těmito poli se bude hledat emailová adresa, na kterou se odešle potvrzení o přijetí formuláře. Použije se **všechny** nalezeny a validní emailové adresy.
+- `multistepform_nameFields` - ​​seznam začátků identifikátorů polí, která budou považována za pole pro jméno. Například hodnota `meno` odpovídá také položce `meno-priezvisko-1`. Do emailu se použije první nalezené neprázdné jméno.
+- `multistepform_emailFields` - ​​seznam začátků identifikátorů polí, která budou považována za pole pro emailovou adresu. Například hodnota `email` odpovídá také položce `emailova-adresa-1`. Na potvrzení přijetí formuláře se použijí všechny nalezené platné emailové adresy.
 - `multistepform_attachmentDefaultName` - ​​přednastavený název přílohy v emailech, který se použije pokud se nepodaří získat skutečný název souboru přílohy.
 - `multistepform_subjectDefaultValue` - ​​přednastavený překladový klíč pro předmět emailu, který se použije pokud není zadaný předmět v nastaveních/atributech formuláře.

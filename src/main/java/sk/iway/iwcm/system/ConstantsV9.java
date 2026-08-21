@@ -6,14 +6,18 @@ import java.util.List;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 
+/**
+ * Defines default configuration values introduced for WebJET 9 and later versions.
+ */
 public class ConstantsV9 {
 
 	private ConstantsV9() {
 	}
 
 	/**
-	 * Nastavi predvolene hodnoty pre verziu 9
-	 * Tato trieda je vo W9 reimplementovana, tu nic nemente
+	 * Initializes the default configuration values for WebJET 9.
+	 *
+	 * This method is reimplemented in the WebJET 9 distribution and must remain compatible with it.
 	 */
 	public static void clearValuesWebJet9() {
 		Constants.setString("defaultSkin", "webjet9");
@@ -182,6 +186,8 @@ public class ConstantsV9 {
 		Constants.setBoolean("loggerUseAnsiColors", false, "adminlog", "If true, logger will use ANSI colors for console output");
 		Constants.setBoolean("fileArchivAllowPatternVersion", true, Constants.MOD_FILE_ARCHIV, "Ak je povolene (true), manažér dokumentov povolí vytváranie verzií pre súbory typu VZOR.");
 		Constants.setString("basketInvoiceSupportedCountries", ".sk,.cz,.pl", Constants.MOD_BASKET, "Which countries are supported for delivery. Format is TLD: .sk,.cz,.pl");
+		Constants.setString("basketStatsLegacyDeliveryGroupPath", "/System/ModeOfTransport", Constants.MOD_BASKET, "Path to the legacy delivery method documents used in basket statistics.");
+		Constants.setString("basketStatsLegacyPaymentGroupPath", "/System/ModeOfExpedition", Constants.MOD_BASKET, "Path to the legacy payment method fee documents used in basket statistics.");
 
 		Constants.setString("basketNewCategoryHtmlCode", "!INCLUDE(/components/basket/bootstrap_products.jsp, style=01 ,groupIds=, orderType=priority, asc=yes, publishType=all, paging=yes, pageSize=15,pagingPosition=both, thumbWidth=190, thumbHeight=190, showCategory=yes, showSort=yes, testRun=no, katalogProduktov=no, overeneZakaznikmi=)!", Constants.MOD_BASKET, "HTML kód pre novú kategóriu v košíku.");
 
@@ -325,10 +331,11 @@ public class ConstantsV9 {
 	}
 
 	/**
-	 * Returns coma separated value as Array
-	 * @param name
-	 * @return
-	 * @deprecated use Constants.getArray(name)
+	 * Returns a comma-separated configuration value as an array.
+	 *
+	 * @param name  configuration key
+	 * @return configured values
+	 * @deprecated use {@link Constants#getArray(String)}
 	 */
 	@Deprecated(forRemoval = true)
 	public static String[] getArray(String name) {
@@ -336,10 +343,11 @@ public class ConstantsV9 {
 	}
 
 	/**
-	 * Returns coma separated value as Array and cache it for faster access
-	 * @param name
-	 * @param cacheMinutes
-	 * @return
+	 * Returns a comma-separated configuration value as a cached array.
+	 *
+	 * @param name  configuration key
+	 * @param cacheMinutes  cache lifetime in minutes
+	 * @return configured values
 	 */
 	public static String[] getArrayCached(String name, int cacheMinutes) {
 		String CACHE_KEY = name+".arrayCache-"+cacheMinutes;
@@ -353,9 +361,10 @@ public class ConstantsV9 {
 	}
 
 	/**
-	 * Returns config list with name starts with prefix
-	 * @param prefix
-	 * @return
+	 * Returns configuration entries whose names start with the supplied prefix.
+	 *
+	 * @param prefix  configuration key prefix
+	 * @return matching configuration entries
 	 */
 	public static List<ConfDetails> getValuesStartsWith(String prefix) {
 		List<ConfDetails> filtered = new ArrayList<>();

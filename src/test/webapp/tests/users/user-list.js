@@ -1,5 +1,7 @@
 Feature('users.user-list');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 var randomText = null;
 var url = "/admin/v9/users/user-list/";
 var permEditAdminUser = "users.edit_admins";
@@ -514,16 +516,22 @@ Scenario("Show also root folders for writable_folders", async ({I, DTE}) => {
      I.amOnPage("/admin/v9/users/user-list/?id=19");
      DTE.waitForEditor();
      I.click("#pills-dt-datatableInit-rightsTab-tab");
-     I.click(".DTE_Field_Name_editorFields\\.writableFolders button.btn-vue-jstree-add");
-     I.waitForElement("#custom-modal-id", 10);
-     I.waitForText("Koreňový priečinok", 10, "#custom-modal-id a.jstree-anchor");
-     I.waitForText("WEB-INF", 10, "#custom-modal-id a.jstree-anchor");
-     I.waitForText("components", 10, "#custom-modal-id a.jstree-anchor");
+     I.executeScript(() => {
+          window.jstreeSelectionErrors = [];
+          window.addEventListener("error", event => window.jstreeSelectionErrors.push(event.message));
+     });
+     I.click(".DTE_Field_Name_editorFields\\.writableFolders button.btn-webjet-jstree-add");
+     I.waitForElement(WebjetDteJsTree.modal, 10);
+     I.waitForText("Koreňový priečinok", 10, WebjetDteJsTree.anchors);
+     I.waitForText("WEB-INF", 10, WebjetDteJsTree.anchors);
+     I.waitForText("components", 10, WebjetDteJsTree.anchors);
 
-     I.click("Koreňový priečinok", "#custom-modal-id a.jstree-anchor");
-     I.waitForInvisible("#custom-modal-id", 10);
+     I.click("Koreňový priečinok", WebjetDteJsTree.anchors);
+     I.waitForInvisible(WebjetDteJsTree.modal, 10);
      let value = await I.grabValueFrom(".DTE_Field_Name_editorFields\\.writableFolders input.form-control");
      I.assertEqual(value, "/");
+     const errors = await I.executeScript(() => window.jstreeSelectionErrors);
+     I.assertFalse(errors.some(message => message.includes("triggerHandler")), errors.join("\n"));
      DTE.cancel();
 });
 
@@ -540,11 +548,11 @@ Scenario("Check editableGroups rights", async ({I, DTE}) => {
      I.waitForVisible("#editorAppDTE_Field_editorFields-editableGroups");
 
      I.say("Check I cans ee all domain fodlers");
-     I.clickCss("#editorAppDTE_Field_editorFields-editableGroups button.btn-vue-jstree-add");
-     I.waitForVisible("#jsTree");
-     I.seeElement( locate("#jsTree a.jstree-anchor").withText("demo.webjetcms.sk") );
-     I.seeElement( locate("#jsTree a.jstree-anchor").withText("test23.tau27.iway.sk") );
-     I.seeElement( locate("#jsTree a.jstree-anchor").withText("mirroring.tau27.iway.sk") );
+     I.clickCss("#editorAppDTE_Field_editorFields-editableGroups button.btn-webjet-jstree-add");
+     I.waitForVisible(WebjetDteJsTree.tree);
+     I.seeElement( locate(WebjetDteJsTree.anchors).withText("demo.webjetcms.sk") );
+     I.seeElement( locate(WebjetDteJsTree.anchors).withText("test23.tau27.iway.sk") );
+     I.seeElement( locate(WebjetDteJsTree.anchors).withText("mirroring.tau27.iway.sk") );
 
      I.say("Check I can see sub-folders in diff domain");
      I.click(locate('.jstree-node.jstree-closed').withText('test23.tau27.iway.sk').find('.jstree-icon.jstree-ocl'));

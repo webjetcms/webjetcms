@@ -156,15 +156,15 @@ async function removeUserEditablePages(I, DT, DTE) {
 
     I.waitForElement("#editorAppDTE_Field_editorFields-editableGroups div.dt-tree-container", 10);
     I.wait(1);
-    await I.clickIfVisible(locate("button.btn-vue-jstree-item-remove"));
+    await I.clickIfVisible(locate("button.btn-webjet-jstree-item-remove"));
     I.wait(1);
-    await I.clickIfVisible(locate("button.btn-vue-jstree-item-remove"));
+    await I.clickIfVisible(locate("button.btn-webjet-jstree-item-remove"));
     I.wait(1);
-    await I.clickIfVisible(locate("button.btn-vue-jstree-item-remove"));
+    await I.clickIfVisible(locate("button.btn-webjet-jstree-item-remove"));
     I.wait(1);
-    await I.clickIfVisible(locate("button.btn-vue-jstree-item-remove"));
+    await I.clickIfVisible(locate("button.btn-webjet-jstree-item-remove"));
     I.wait(1);
-    await I.clickIfVisible(locate("button.btn-vue-jstree-item-remove"));
+    await I.clickIfVisible(locate("button.btn-webjet-jstree-item-remove"));
 
     DTE.save();
 }
@@ -197,7 +197,7 @@ function addPagePermision(I, DT, DTE, elelentId) {
     I.clickCss("#pills-dt-datatableInit-rightsTab-tab");
     I.wait(1);
 
-    I.click(locate('.btn.btn-outline-secondary.btn-vue-jstree-add').withText('Pridať web stránku'));
+    I.click(locate('.btn.btn-outline-secondary.btn-webjet-jstree-add').withText('Pridať web stránku'));
     I.click(locate('.jstree-node.jstree-closed').withText(I.getDefaultDomainName()).find('.jstree-icon.jstree-ocl'));
     I.waitForElement(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'), 10);
     I.click(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'));

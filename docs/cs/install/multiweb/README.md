@@ -16,7 +16,15 @@ MultiWeb instalace obsahují následující omezení:
   - Doménová přesměrování - spravovat lze pouze doménová přesměrování směřující na aktuální doménu.
 - Šablony
   - V seznamu se zobrazují šablony, které mají nastaven přístup ke složkám aktuálně zobrazené domény, při vytvoření nové šablony, která by neměla nastaven žádný přístup se automatický nastaví přístup na kořenové složky aktuální domény.
-  - Skupiny šablon - zobrazují se skupiny šablon použité v šablonách.
+  - Skupiny šablon - uživateli s omezeným přístupem ke složkám se zobrazí skupina, pokud je splněna alespoň jedna z následujících podmínek:
+    - id skupiny šablon je použit v některé šabloně dostupné uživateli,
+    - nebo v MultiWeb instalaci mimo řídicí doménu existuje neprázdný alias aktuální domény a zároveň platí alespoň jedna z podmínek:
+      - `directory` obsahuje složku shodnou s aliasem,
+      - `keyPrefix` se přesně shoduje s aliasem,
+      - `name` obsahuje alias v hranatých závorkách ve formátu `[alias]`,
+      - `name` začíná na `alias` + mezera.
+  - Alias ​​domény se získá z konfigurační proměnné `multiDomainAlias:DOMAIN-NAME`, kde `DOMAIN-NAME` je název domény. Při [vytvoření nové domény](config.md#zřízení-nové-domény) přes MultiWeb se proměnná nastaví automaticky na poslední část názvu doménového adresáře zkrácenou po první tečku, například pro `www.example.sk` na hodnotu `example`. Pro existující doménu lze alias nastavit manuálně v konfiguraci.
+  - V řídící doméně se zobrazují všechny skupiny šablon; stejně je vidí uživatel bez omezení přístupu ke složkám.
 - Uživatelé
   - Každá doména má vlastní seznam uživatelů.
   - Uživateli, který nemá nastavena žádná omezení na stromovou strukturu složek web stránek, se interně při kontrole práv nastaví seznam kořenových složek domény.
