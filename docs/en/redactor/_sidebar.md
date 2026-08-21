@@ -68,7 +68,7 @@
     - [Payments](/redactor/apps/eshop/invoice/payments.md)
     - [Items](/redactor/apps/eshop/invoice/items.md)
     - [Product List](/redactor/apps/eshop/product-list/README.md)
-    - [E-shop statistics](/redactor/apps/eshop/stats/README.md)
+    - [Statistics](/redactor/apps/eshop/stats/README.md)
     - [Application Settings](/redactor/apps/basket/README.md)
     - [Payment methods](/redactor/apps/eshop/payment-methods/README.md)
     - [Delivery Methods](/redactor/apps/eshop/delivery-methods/README.md)

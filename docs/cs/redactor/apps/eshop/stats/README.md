@@ -1,6 +1,6 @@
-# Statistiky e-shopu
+# Statistiky
 
-Aplikace **Statistiky e-shopu** poskytuje přehled o objednávkách, tržbách a prodeji produktů v elektronickém obchodě. Statistiky se počítají samostatně pro aktuálně zvolenou doménu.
+Karta **Statistiky** poskytuje přehled o objednávkách, tržbách a prodeji produktů v elektronickém obchodu. Statistiky se počítají samostatně pro aktuálně zvolenou doménu.
 
 ![](stats.png)
 

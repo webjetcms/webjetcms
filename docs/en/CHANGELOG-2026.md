@@ -83,7 +83,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Applications
 
-- E-commerce - added application [E-shop statistics](redactor/apps/eshop/stats/README.md) with summary indicators, filtering by status, currency and period, and graphs of sales, products, categories, delivery methods and payment methods (#58065).
+- E-commerce - added [Statistics] application (redactor/apps/eshop/stats/README.md) with summary indicators, filtering by status, currency and period, and graphs of sales, products, categories, delivery methods and payment methods (#58065).
 
 ![](redactor/apps/eshop/stats/stats.png)
 

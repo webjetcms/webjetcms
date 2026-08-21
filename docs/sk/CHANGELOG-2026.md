@@ -83,7 +83,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Aplikácie
 
-- Elektronický obchod - pridaná aplikácia [Štatistiky e-shopu](redactor/apps/eshop/stats/README.md) so súhrnnými ukazovateľmi, filtrovaním podľa stavu, meny a obdobia a grafmi tržieb, produktov, kategórií, spôsobov doručenia a platobných metód (#58065).
+- Elektronický obchod - pridaná aplikácia [Štatistiky](redactor/apps/eshop/stats/README.md) so súhrnnými ukazovateľmi, filtrovaním podľa stavu, meny a obdobia a grafmi tržieb, produktov, kategórií, spôsobov doručenia a platobných metód (#58065).
 
 ![](redactor/apps/eshop/stats/stats.png)
 

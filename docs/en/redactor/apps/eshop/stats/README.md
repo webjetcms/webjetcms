@@ -1,6 +1,6 @@
-# E-shop statistics
+# Statistics
 
-The **E-shop Statistics** application provides an overview of orders, sales, and product sales in the e-shop. Statistics are calculated separately for the currently selected domain.
+The **Statistics** tab provides an overview of orders, sales, and product sales in the e-commerce store. Statistics are calculated separately for the currently selected domain.
 
 ![](stats.png)
 
