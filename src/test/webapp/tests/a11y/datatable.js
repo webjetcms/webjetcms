@@ -618,3 +618,103 @@ Scenario("p49: datatable interactive rows", async ({ I, DT, a11y }) => {
     I.waitForElement(`${firstRow}.selected[aria-selected="true"]:focus`, 5);
     await a11y.check(wrapper);
 });
+
+Scenario("p50: date picker", async ({ I, DT, DTE, a11y }) => {
+    I.amOnPage("/admin/v9/settings/redirect/");
+    DT.waitForLoader();
+    I.clickCss("#redirectTable_wrapper button[data-dtbtn='create']");
+    DTE.waitForEditor("redirectTable");
+
+    const modal = "#redirectTable_modal";
+    const input = "#DTE_Field_publishDate";
+    I.executeScript(selector => document.querySelector(selector).focus(), input);
+    I.waitForVisible("div.dt-datetime[role='dialog']", 5);
+    I.waitForElement("div.dt-datetime .dt-datetime-calendar button[tabindex='0']:focus", 5);
+
+    const state = await I.executeScript(inputSelector => {
+        const dateInput = document.querySelector(inputSelector);
+        const dialog = document.getElementById(dateInput.getAttribute("aria-controls"));
+        const describedBy = dateInput.getAttribute("aria-describedby").split(/\s+/);
+        const instructions = describedBy.map(id => document.getElementById(id)).find(element => element?.classList.contains("wj-datetime-instructions"));
+        const days = [...dialog.querySelectorAll(".dt-datetime-calendar button[data-year]")];
+        const timeButtons = [...dialog.querySelectorAll(".dt-datetime-time button[data-unit]")];
+
+        return {
+            dialogDescription: dialog.getAttribute("aria-describedby"),
+            dialogLabel: dialog.getAttribute("aria-label"),
+            dialogRole: dialog.getAttribute("role"),
+            dayLabels: days.map(button => button.getAttribute("aria-label")),
+            dayTabStops: days.filter(button => button.tabIndex === 0).length,
+            expanded: dateInput.getAttribute("aria-expanded"),
+            focusedDay: days.includes(document.activeElement),
+            focusedDaySelectedOrCurrent: document.activeElement.closest("td")?.classList.contains("selected") ||
+                document.activeElement.closest("td")?.classList.contains("now"),
+            hasPopup: dateInput.getAttribute("aria-haspopup"),
+            instructions: instructions?.textContent,
+            monthLabel: dialog.querySelector(".dt-datetime-month")?.getAttribute("aria-label"),
+            nextLabel: dialog.querySelector(".dt-datetime-iconRight button")?.getAttribute("aria-label"),
+            previousLabel: dialog.querySelector(".dt-datetime-iconLeft button")?.getAttribute("aria-label"),
+            selectedDays: dialog.querySelectorAll(".dt-datetime-calendar td[aria-selected='true']").length,
+            timeLabels: timeButtons.map(button => button.getAttribute("aria-label")),
+            timePressed: timeButtons.every(button => ["true", "false"].includes(button.getAttribute("aria-pressed"))),
+            yearLabel: dialog.querySelector(".dt-datetime-year")?.getAttribute("aria-label")
+        };
+    }, input);
+
+    I.assertEqual(state.hasPopup, "dialog", "The date input must announce that it opens a dialog");
+    I.assertEqual(state.expanded, "true", "The date input must announce the open picker");
+    I.assertTrue(state.focusedDay, "Opening the date picker must focus a calendar day");
+    I.assertTrue(state.focusedDaySelectedOrCurrent, "Opening the date picker must focus the selected or current day");
+    I.assertEqual(state.dialogRole, "dialog", "The date picker must expose the dialog role");
+    I.assertTrue(state.dialogLabel.length > 0, "The date picker dialog must have an accessible name");
+    I.assertTrue(state.dialogDescription.length > 0, "The date picker dialog must reference its instructions");
+    I.assertTrue(state.instructions.includes("DD.MM.YYYY"), "The input instructions must explain the expected date format");
+    I.assertTrue(state.instructions.toLowerCase().includes("šípk"), "The input instructions must explain keyboard navigation");
+    I.assertTrue(state.previousLabel.length > 0 && state.nextLabel.length > 0,
+        "Previous and next month buttons must have accessible names");
+    I.assertTrue(state.monthLabel.length > 0 && state.yearLabel.length > 0,
+        "Month and year controls must have accessible names");
+    I.assertTrue(state.dayLabels.length > 27 && state.dayLabels.every(label => label.length > 0),
+        "Every day button must announce its full date");
+    I.assertEqual(state.dayTabStops, 1, "The calendar grid must use a single keyboard tab stop");
+    I.assertTrue(state.selectedDays <= 1, "At most one calendar day may be marked as selected");
+    I.assertTrue(state.timeLabels.length > 0 && state.timeLabels.every(label => label.length > 0) && state.timePressed,
+        "Every time option must expose its name and selected state");
+
+    I.pressKey("Tab");
+    I.waitForElement("div.dt-datetime :focus", 5);
+    I.seeElement("div.dt-datetime:has(:focus)");
+    I.pressKey(["Shift", "Tab"]);
+    I.waitForElement("div.dt-datetime .dt-datetime-calendar button:focus", 5);
+
+    const firstDateLabel = await I.grabAttributeFrom("div.dt-datetime .dt-datetime-calendar button:focus", "aria-label");
+    I.pressKey("ArrowRight");
+    I.waitForElement("div.dt-datetime .dt-datetime-calendar button:focus", 5);
+    const nextDateLabel = await I.grabAttributeFrom("div.dt-datetime .dt-datetime-calendar button:focus", "aria-label");
+    I.assertNotEqual(nextDateLabel, firstDateLabel, "Arrow keys must move focus to another calendar day");
+
+    I.pressKey("Enter");
+    I.waitForElement("div.dt-datetime .dt-datetime-calendar td[aria-selected='true'] button:focus", 5);
+    const value = await I.grabValueFrom(input);
+    I.assertTrue(value.length > 0, "Enter must select the focused date and update the input");
+
+    I.pressKey("ArrowRight");
+    I.pressKey("Space");
+    I.waitForElement("div.dt-datetime .dt-datetime-calendar td[aria-selected='true'] button:focus", 5);
+    const nextValue = await I.grabValueFrom(input);
+    I.assertNotEqual(nextValue, value, "Space must select the focused date and update the input");
+
+    I.pressKey("Tab");
+    I.waitForElement("div.dt-datetime :focus", 5);
+    I.seeElement("div.dt-datetime:has(:focus)");
+
+    await a11y.check(modal);
+
+    I.executeScript(() => document.activeElement.dispatchEvent(new KeyboardEvent("keydown", {
+        bubbles: true,
+        cancelable: true,
+        key: "Escape"
+    })));
+    I.waitForInvisible("div.dt-datetime[role='dialog']", 5);
+    I.waitForElement(`${input}:focus[aria-expanded="false"]`, 5);
+});

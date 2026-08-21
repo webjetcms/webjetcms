@@ -1393,6 +1393,11 @@ div.DTE_Bubble {
 div.dt-datetime {
     border-radius: $border-radius;
     padding: 8px;
+    button:focus-visible {
+        outline: 2px solid $secondary;
+        outline-offset: 1px;
+        box-shadow: 0 0 0 2px $white;
+    }
     div.dt-datetime-label {
         padding: 0 4px;
         line-height: 23px;
@@ -1400,6 +1405,12 @@ div.dt-datetime {
         border: 1px solid #aaa;
         border-radius: $border-radius;
         margin: 0 4px;
+
+        &:has(select:focus-visible) {
+            outline: 2px solid $secondary;
+            outline-offset: 1px;
+            box-shadow: 0 0 0 2px $white;
+        }
     }
     div.dt-datetime-title {
         padding: 0 0 8px 0;
@@ -1422,6 +1433,11 @@ div.dt-datetime {
             button:hover {
                 border-radius: $border-radius;
                 background-color: $secondary;
+            }
+            button:focus-visible {
+                border-radius: $border-radius;
+                background-color: $secondary;
+                color: $white;
             }
             &.disabled {
                 color: #bbb;

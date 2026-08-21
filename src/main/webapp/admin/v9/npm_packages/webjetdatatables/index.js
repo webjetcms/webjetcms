@@ -58,6 +58,7 @@ import * as CustomFields from './custom-fields';
 import * as ExportImport from './export-import';
 import * as RowReorder from './row-reorder';
 import * as FooterSum from './footer-sum';
+import {initDateTimeAccessibility} from './datetime-accessibility';
 import {DatatableOpener} from "../../src/js/libs/data-tables-extends/";
 import {EditorAi} from './editor-ai'
 
@@ -89,6 +90,7 @@ require('datatables.net-rowreorder-bs5');
 //require('datatables.net-scroller-bs5');
 require('datatables.net-select-bs5');
 require('datatables.net-datetime');
+initDateTimeAccessibility();
 
 export const dataTableInit = options => {
 
