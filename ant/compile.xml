@@ -62,12 +62,6 @@
       </fileset>
     </copy>
 
-    <copy todir="${root}/src-delombok/" overwrite="true">
-      <fileset dir="${root}/../../src/main/aspectj">
-          <include name="**/*"/>
-      </fileset>
-    </copy>
-
   </target>
 
   <target name="compileMapstruct" depends="delombok">
