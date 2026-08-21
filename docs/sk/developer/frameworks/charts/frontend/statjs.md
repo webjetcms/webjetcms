@@ -13,6 +13,7 @@ Táto časť popisuje spoločné funkcie na prácu s grafmi, ktoré poskytuje s�
 | `PieChartForm` | `ChartTools.PieChartForm` | Koláčový graf (klasický alebo donut) |
 | `DoublePieChartForm` | `ChartTools.DoublePieChartForm` | Dvojvrstvový koláčový graf |
 | `WordCloudChartForm` | `ChartTools.WordCloudChartForm` | Oblak slov |
+| `TreeChartForm` | `ChartTools.TreeChartForm` | Stromový graf pre hierarchické dáta |
 | `TableChartForm` | `ChartTools.TableChartForm` | Jednoduchá tabuľka v dizajne grafov |
 
 ## Enumerácia `ChartType`
@@ -28,6 +29,7 @@ Konštantný objekt `ChartType` sa používa na identifikáciu typu dát pri AJA
 | `ChartType.Pie_Donut` | `"pie_donut"` | Donut koláčový graf |
 | `ChartType.Double_Pie` | `"double_pie"` | Dvojvrstvový koláčový graf |
 | `ChartType.Word_Cloud` | `"word_cloud"` | Oblak slov |
+| `ChartType.Tree` | `"tree"` | Stromový graf |
 | `ChartType.Table` | `"table"` | Tabuľkový komponent |
 | `ChartType.Not_Chart` | `"not_chart"` | Špeciálny prípad bez grafu |
 
@@ -391,6 +393,103 @@ Výsledný vygenerovaný graf s nadpisom:
 
 ![](wordcloud-chart.png)
 
+## Graf typu `TREE`
+
+Graf typu **`TREE`** sa vytvára pomocou inštancie triedy `TreeChartForm`, ktorá je dostupná ako `ChartTools.TreeChartForm`. Slúži na vizualizáciu hierarchických dát, napríklad kategórií produktov a ich podkategórií.
+
+```javascript
+export class TreeChartForm {
+    constructor(config) {
+        this.initFromConfig(config);
+    }
+
+    initFromConfig(config) {
+        if (!config.chartDivId) throwConstructorError("TreeChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("TreeChartForm", "chartData");
+
+        Object.assign(this, {
+            chartDivId: config.chartDivId,
+            chartData: config.chartData,
+            chartTitle: config.chartTitle,
+            valueField: config.valueField == null ? "value" : config.valueField,
+            categoryField: config.categoryField == null ? "name" : config.categoryField,
+            childDataField: config.childDataField == null ? "children" : config.childDataField,
+            initialDepth: config.initialDepth == null ? 10 : config.initialDepth,
+            downDepth: config.downDepth == null ? 1 : config.downDepth,
+            topDepth: config.topDepth == null ? 0 : config.topDepth,
+            singleBranchOnly: config.singleBranchOnly == null ? false : config.singleBranchOnly,
+            labelText: config.labelText,
+            tooltipText: config.tooltipText == null ? "{category}: [bold]{sum}[/]" : config.tooltipText,
+            colorScheme: config.colorScheme
+        });
+    }
+}
+```
+
+Jednotlivé parametre triedy slúžia na:
+
+- `chartDivId` je textová hodnota reprezentujúca ID elementu `div`, v ktorom sa graf vykreslí.
+- `chartData` je koreňový objekt alebo pole obsahujúce jeden koreňový objekt s hierarchicky vnorenými dátami.
+- `chartTitle` je textová hodnota reprezentujúca nadpis, ktorý sa zobrazí vo forme hlavičky nad grafom.
+- `valueField` je názov poľa s číselnou hodnotou uzla. Predvolená hodnota je `value`.
+- `categoryField` je názov poľa s textovým názvom uzla. Predvolená hodnota je `name`.
+- `childDataField` je názov poľa s poľom dcérskych uzlov. Predvolená hodnota je `children`.
+- `initialDepth` určuje počet úrovní zobrazených po vytvorení grafu. Predvolená hodnota je `10`.
+- `downDepth` určuje počet úrovní potomkov zobrazených po výbere uzla. Predvolená hodnota je `1`.
+- `topDepth` určuje hĺbku uzla, od ktorej sa strom začne zobrazovať. Predvolená hodnota je `0`, teda vrátane koreňového uzla.
+- `singleBranchOnly` určuje, či môže byť naraz rozbalená iba jedna vetva. Predvolená hodnota je `false`.
+- `labelText` je voliteľná amCharts šablóna textu zobrazeného v uzle. Ak nie je zadaná, použije sa predvolený text série.
+- `tooltipText` je voliteľná amCharts šablóna textu v pomocnom popise. Predvolená hodnota je `{category}: [bold]{sum}[/]`.
+- `colorScheme` je textová hodnota určujúca farebnú schému grafu (povolené hodnoty sú popísané v sekcii [Farebné schémy](#farebné-schémy)).
+
+!>**Upozornenie:** Povinné parametre sú `chartDivId` a `chartData`. Vizuálne vlastnosti, ako veľkosť uzlov, zalamovanie textu, rozostupy, orientácia a vzhľad spojníc, sú nastavené priamo v `chart-tools.js` a nie sú súčasťou verejnej konfigurácie.
+
+Popis sa vždy zobrazuje vedľa kruhového uzla, aby hodnota a názov zostali čitateľné aj pri menšom počte položiek.
+
+Ak strom obsahuje viac ako osem koncových vetiev, graf automaticky použije kompaktné body s jednoriadkovými popismi, zmenší horizontálne rozostupy, podľa potreby zväčší výšku plochy (najviac na 800 pixelov) a otvorí sa v dvojnásobnom priblížení. Pri ďalšom približovaní zostáva veľkosť bodov a textu rovnaká, zväčšujú sa iba ich rozostupy. Vďaka tomu je možné hustú úroveň čítať a posúvať bez vzájomného prekrývania uzlov. Dvojprstové posúvanie na touchpade posúva stránku; graf sa približuje iba tlačidlami alebo gestom pinch-to-zoom.
+
+### Formát dát
+
+Každý uzol obsahuje názov, číselnú hodnotu a voliteľné pole potomkov. Ak nadradený uzol nemá vlastnú číselnú hodnotu, amCharts ju vypočíta ako súčet hodnôt potomkov. Názvy polí je možné zmeniť pomocou parametrov `categoryField`, `valueField` a `childDataField`.
+
+```javascript
+const categoryTree = {
+    name: "Produkty",
+    value: 84,
+    children: [
+        {
+            name: "Mobily",
+            value: 84,
+            children: [
+                { name: "Android", value: 63 },
+                { name: "iPhone", value: 21 }
+            ]
+        }
+    ]
+};
+```
+
+### Príklad použitia
+
+Príklad použitia **`TREE`** grafu zo súboru [stats.html](../../../../../../src/main/webapp/apps/basket/admin/stats.html):
+
+```javascript
+const categoryChart = new ChartTools.TreeChartForm({
+    chartTitle: "Predaj podľa kategórií",
+    chartDivId: "basketStats-categories",
+    chartData: categoryTree,
+    topDepth: 1,
+    initialDepth: 1,
+    downDepth: 1,
+    singleBranchOnly: true,
+    labelText: "[bold]{sum}[/] {category}"
+});
+
+ChartTools.createAmchart(categoryChart);
+```
+
+Graf automaticky podporuje približovanie, posúvanie a rozbaľovanie uzlov. V ovládacích prvkoch obsahuje aj tlačidlo na maximalizovanie grafu na celú obrazovku. Maximalizované zobrazenie je možné ukončiť rovnakým tlačidlom alebo klávesom `Escape`.
+
 ## Graf typu `LINE`
 
 Graf typu **`LINE`** sa vytvára pomocou inštancie triedy `LineChartForm`, ktorá je dostupná ako `ChartTools.LineChartForm`. V porovnaní s grafmi **`BAR`** alebo **`PIE`** je špecifický tým, že dokáže zobrazovať viacero hodnôt pre viacero datasetov. Preto vyžaduje aj špecifické vstupné a konfiguračné parametre, ktoré sú popísané v nasledujúcich podkapitolách.
@@ -684,7 +783,7 @@ barChartQueries.chartData = newData;
 ChartTools.updateChart(barChartQueries);
 ```
 
-Funkcia funguje pre všetky typy grafov (`BarChartForm`, `PieChartForm`, `LineChartForm`, `DoublePieChartForm`, `WordCloudChartForm`). Dáta musia byť pred volaním `updateChart()` priradené do príslušného `chartForm` objektu.
+Funkcia funguje pre všetky typy grafov (`BarChartForm`, `PieChartForm`, `LineChartForm`, `DoublePieChartForm`, `WordCloudChartForm`, `TreeChartForm`). Dáta musia byť pred volaním `updateChart()` priradené do príslušného `chartForm` objektu.
 
 !>**Upozornenie:** Pri grafe typu **`LINE`** nie je možné aktualizovať iba dáta - celý graf sa zničí a vytvorí znova. Ostatné typy grafov aktualizujú iba dátovú sériu.
 
@@ -782,11 +881,16 @@ await ChartTools.setSelect("/admin/rest/stat/pages", selectedPageId, "webPageSel
 
 ### `saveSearchCriteria(DATA)` / `getSearchCriteria()`
 
-Slúžia na ukladanie a načítanie kritérií vyhľadávania do/z `sessionStorage` pod kľúčom `webjet.apps.stat.filter`. Vďaka tomu si všetky stránky štatistík pamätajú naposledy použitý filter aj po prechode medzi stránkami.
+Slúžia na ukladanie a načítanie spoločných kritérií vyhľadávania pre stránky štatistík. Dátumový rozsah sa trvalo ukladá do `localStorage` pod kľúčom `webjet.apps.stat.filter.dateRange`, pričom môže byť zadaný iba dátum od alebo iba dátum do. Ostatné kritériá zostávajú v `sessionStorage` pod kľúčom `webjet.apps.stat.filter`. Funkcia `getSearchCriteria()` zlúči obe úložiská a uprednostní trvalo uložený dátumový rozsah.
+
+Funkcia `saveSearchCriteria()` prijíma konfiguračný objekt DataTable alebo CSS selektor vlastného kontajnera filtrov.
 
 ```javascript
 // Uložíme kritériá po ich zmene
 ChartTools.saveSearchCriteria(DATA);
+
+// Custom filter without DataTable
+ChartTools.saveSearchCriteria("#basketStatsFilter");
 
 // Načítame kritériá pri inicializácii stránky
 let defaultSearch = ChartTools.getSearchCriteria();

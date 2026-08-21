@@ -68,6 +68,7 @@
     - [Platby](/redactor/apps/eshop/invoice/payments.md)
     - [Položky](/redactor/apps/eshop/invoice/items.md)
     - [Seznam produktů](/redactor/apps/eshop/product-list/README.md)
+    - [Statistiky](/redactor/apps/eshop/stats/README.md)
     - [Nastavení aplikace](/redactor/apps/basket/README.md)
     - [Způsoby platby](/redactor/apps/eshop/payment-methods/README.md)
     - [Způsoby doručení](/redactor/apps/eshop/delivery-methods/README.md)

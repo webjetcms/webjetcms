@@ -46,12 +46,18 @@ import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
 import sk.iway.tags.CurrencyTag;
 
+/**
+ * Provides product-category administration and invoice calculation helpers for the basket module.
+ */
 public class ProductListService {
 
     private static final String BASKET_ADMIN_GROUP_IDS = "basketAdminGroupIds";
 
     private ProductListService() { /*private constructor to hide the implicit public one*/ }
 
+    /**
+     * Represents the outcome of creating a product category.
+     */
     public enum AddingStatus {
         SUCCESS, ALREADY_EXIST, ERROR
     }
@@ -77,6 +83,12 @@ public class ProductListService {
         };
     }
 
+    /**
+     * Loads products from the selected category tree and prepares prices in the requested currency.
+     *
+     * @param options  repositories, request data, paging, and selected group information
+     * @return prepared product page for the administration DataTable
+     */
     public static DatatablePageImpl<DocDetails> getAllItems(GetAllItemsDocOptions options) {
         List<Integer> groupIds = getGroupTreeIds( options.getGroupId(), options.getDocDetailsRepository() );
         //So no error will be returned about wrong sql query
@@ -87,7 +99,8 @@ public class ProductListService {
         Specification<DocDetails> spec = hasGroupIdIn(groupIds).and(fieldStartsWithDigit(priceField));
         Page<DocDetails> page = options.getDocDetailsRepository().findAll(spec, options.getPageable());
 
-        String wantedCurrency = BasketTools.isCurrencySupported(options.getRequest().getParameter("currency")) == false ? BasketTools.getSystemCurrency() : options.getRequest().getParameter("currency");
+        String supportedCurrency = BasketTools.getNormalizedSupportedCurrency(options.getRequest().getParameter("currency"));
+        String wantedCurrency = supportedCurrency == null ? BasketTools.getSystemCurrency() : supportedCurrency;
         DatatablePageImpl<DocDetails> pageImpl = WebpagesService.preparePage(page, options);
         pageImpl.get().forEach(doc -> {
             doc.setFieldH( doc.getLocalPriceVat(options.getRequest(), wantedCurrency).toString() );
@@ -98,6 +111,13 @@ public class ProductListService {
         return pageImpl;
     }
 
+    /**
+     * Resolves product group identifiers for a selected subtree or all configured product groups.
+     *
+     * @param rootGroupId  root group identifier, or a value below one to use all product groups
+     * @param repo  document repository used to detect configured product groups
+     * @return identifiers of groups included in the product listing
+     */
     public static List<Integer> getGroupTreeIds(int rootGroupId, DocDetailsRepository repo) {
         if(rootGroupId < 1) {
             //Get default option
@@ -115,6 +135,14 @@ public class ProductListService {
         return groupIds;
     }
 
+    /**
+     * Creates a product category and its default category page for an authorized user.
+     *
+     * @param currentUser  user requesting category creation
+     * @param customData  JSON containing the parent group identifier and new group name
+     * @param editorFacade  editor facade used to create the category page
+     * @return status describing whether the category was created, already existed, or failed validation
+     */
     public static AddingStatus addProductGroup(Identity currentUser, String customData, EditorFacade editorFacade) {
         if(!currentUser.isEnabledItem("cmp_basket")) return AddingStatus.ERROR;
 
@@ -148,6 +176,14 @@ public class ProductListService {
         return AddingStatus.ERROR;
     }
 
+    /**
+     * Creates a product group inheriting its template and domain from the parent group.
+     *
+     * @param groupName  name of the new group
+     * @param userLogin  current user login used by the group lookup
+     * @param parentGroup  parent group for the new category
+     * @return created group, or {@code null} when the group already exists
+     */
     private static GroupDetails createGroup(String groupName, String userLogin, GroupDetails parentGroup) {
         //Check if group already exist
         GroupDetails newGroup = GroupsDB.getInstance().getGroup(userLogin, parentGroup.getGroupId());
@@ -163,6 +199,14 @@ public class ProductListService {
         return newGroup;
     }
 
+    /**
+     * Creates the default product-list page for a newly added category.
+     *
+     * @param editorFacade  editor facade used to persist the page
+     * @param rootGroupId  identifier of the new category group
+     * @param docTitle  title and navigation label of the page
+     * @param authorId  identifier of the page author
+     */
     private static void createGroupNewsDoc(EditorFacade editorFacade, int rootGroupId, String docTitle, int authorId) {
         DocDetails groupDoc = editorFacade.getDocForEditor(-1, -1, rootGroupId);
 
@@ -181,6 +225,12 @@ public class ProductListService {
         editorFacade.save(groupDoc);
     }
 
+    /**
+     * Returns product groups from explicit configuration or automatic include detection.
+     *
+     * @param docDetailsRepository  repository used to detect pages containing product-list applications
+     * @return configured product groups sorted as a tree
+     */
     public static List<LabelValueInteger> getListOfProductsGroups(DocDetailsRepository docDetailsRepository) {
         String constantIds = Constants.getString(BASKET_ADMIN_GROUP_IDS);
         if(Tools.isEmpty(constantIds)) {
@@ -191,12 +241,12 @@ public class ProductListService {
     }
 
     /**
-     * Find all groups, taht have doc containing certain INCLUDE or jsp file, that holds eshop products.
-     * Expand ids for whole tree.
-     * Sort it properly.
+     * Finds product groups from pages containing a basket product-list application.
      *
-     * @param docDetailsRepository
-     * @return
+     * Detected groups are expanded to their complete subtrees and sorted for selection.
+     *
+     * @param docDetailsRepository  repository used to search page content
+     * @return detected product groups sorted as a tree
      */
     public static List<LabelValueInteger> getListOfProductGroupsViaInclude(DocDetailsRepository docDetailsRepository) {
         GroupsDB groupsDB = GroupsDB.getInstance();
@@ -231,12 +281,12 @@ public class ProductListService {
     }
 
     /**
-     * Parse given string to group ids. Check that ids of groups are valid.
-     * If group id have "*" at end, load whole tree for this group.
-     * Sort it properly.
+     * Parses configured product group identifiers and validates them against the group cache.
      *
-     * @param idsString
-     * @return
+     * An identifier followed by {@code *} includes the complete subtree of that group.
+     *
+     * @param idsString  comma- or plus-separated group identifiers
+     * @return valid configured product groups sorted as a tree
      */
     public static List<LabelValueInteger> getListOfProductGroupsViaIds(String idsString) {
         GroupsDB groupsDB = GroupsDB.getInstance();
@@ -294,6 +344,12 @@ public class ProductListService {
         return groupsList;
     }
 
+    /**
+     * Removes missing, deleted, and foreign-domain groups from product category candidates.
+     *
+     * @param groups  candidate product groups
+     * @return groups available in the current domain and outside the trash
+     */
     private static List<GroupDetails> filterProductGroups(List<GroupDetails> groups) {
         List<GroupDetails> correctGroups = new ArrayList<>();
 
@@ -324,9 +380,11 @@ public class ProductListService {
     }
 
     /**
-     * Update invoice stats (items count, total price, total price with VAT). After that invoice status will be updated !!
-     * @param invoiceId - find invoiceItems by invoiceId - required
-     * @param browserId - find invoiceItems by browserId (if browser id is ) - can be null
+     * Recalculates invoice item count, totals, balance, and optionally payment status.
+     *
+     * @param invoiceId  invoice whose totals are updated
+     * @param browserId  browser identifier used to select items, or {@code null} to use the invoice identifier
+     * @param updateStatus  whether to derive the invoice status from invoice and payment totals
      */
     public static void updateInvoiceStats(Long invoiceId, Long browserId, boolean updateStatus) {
         if(invoiceId < 1) return;
@@ -372,6 +430,13 @@ public class ProductListService {
         bir.save(invoice);
     }
 
+    /**
+     * Calculates the VAT-inclusive total price of all items in an invoice.
+     *
+     * @param invoiceId  invoice identifier
+     * @param biir  invoice item repository
+     * @return total price, zero for an empty invoice, or {@code -1} for an invalid identifier
+     */
     public static BigDecimal getPriceToPay(Long invoiceId, BasketInvoiceItemsRepository biir) {
         if(invoiceId == null || invoiceId < 0) return new BigDecimal(-1);
 
@@ -384,6 +449,13 @@ public class ProductListService {
                            .setScale(2, RoundingMode.HALF_UP);
     }
 
+    /**
+     * Calculates the total amount of confirmed payments for an invoice.
+     *
+     * @param invoiceId  invoice identifier
+     * @param bipr  invoice payment repository
+     * @return confirmed payment total, zero when no payments exist, or {@code -1} for a null identifier
+     */
     public static BigDecimal getPayedPrice(Long invoiceId, BasketInvoicePaymentsRepository bipr) {
         if(invoiceId == null) return new BigDecimal(-1);
 
@@ -396,6 +468,14 @@ public class ProductListService {
                               .setScale(2, RoundingMode.HALF_UP);
     }
 
+    /**
+     * Returns invoice totals and the status derived from its confirmed payments.
+     *
+     * @param invoiceId  invoice identifier
+     * @param biir  invoice item repository
+     * @param bipr  invoice payment repository
+     * @return string values for price to pay, paid price, and derived status
+     */
     public static Map<String, String> getPriceInfo(Long invoiceId, BasketInvoiceItemsRepository biir, BasketInvoicePaymentsRepository bipr) {
         BigDecimal priceToPay = getPriceToPay(invoiceId, biir);
         BigDecimal payedPrice = getPayedPrice(invoiceId, bipr);
@@ -407,6 +487,13 @@ public class ProductListService {
         );
         }
 
+    /**
+     * Derives an invoice status by comparing its total price with received payments.
+     *
+     * @param priceToPayVat  VAT-inclusive invoice total
+     * @param totalPayedPrice  total confirmed payments
+     * @return paid, partially paid, or new invoice status identifier
+     */
     public static final Integer getInvoiceStatusByValues(BigDecimal priceToPayVat, BigDecimal totalPayedPrice) {
         if(CurrencyTag.formatNumber(priceToPayVat).equals(CurrencyTag.formatNumber(totalPayedPrice)))
             return InvoiceStatus.INVOICE_STATUS_PAID.getValue();
@@ -416,6 +503,15 @@ public class ProductListService {
             return InvoiceStatus.INVOICE_STATUS_NEW.getValue();
     }
 
+    /**
+     * Adds or increments selected products in an existing invoice.
+     *
+     * @param invoiceId  target invoice identifier
+     * @param itemIdsToAdd  product document identifiers to add
+     * @param biir  invoice item repository
+     * @param userId  identifier of the user modifying the invoice
+     * @param request  current request used to resolve product prices
+     */
     public static void addItemToInvoice(Long invoiceId, List<Integer> itemIdsToAdd, BasketInvoiceItemsRepository biir, int userId, HttpServletRequest request) {
 		DocDB docDB = DocDB.getInstance();
 		int domainId = CloudToolsForCore.getDomainId();
