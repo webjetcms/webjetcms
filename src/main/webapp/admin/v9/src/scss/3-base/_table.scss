@@ -71,6 +71,11 @@ table.table {
     }
     tbody {
         tr {
+            &[tabindex="0"]:focus-visible {
+                outline: 2px solid $secondary;
+                outline-offset: -2px;
+            }
+
             td {
                 font-size: 13px;
                 line-height: 24px;
@@ -679,9 +684,12 @@ table.datatableInit {
             background-color: white;
             border-color: $nice-gray-200;
             border-width: 1px;
-            &:hover {
+            &:hover, &:active, &:focus, &:focus-visible {
                 border-color: $secondary;
                 background-color: $secondary;
+            }
+            &:active, &:focus, &:focus-visible {
+                color: $white;
             }
         }
 
@@ -851,7 +859,8 @@ div.dt-header-row ul[role=menu] {
         top: 5% !important;
         left: 50% !important;
     }
-    ul[role=menu] {
+    ul[role=menu],
+    ul.page-length-menu {
 
         margin: 0;
         padding: 0;
@@ -1007,7 +1016,7 @@ div.dt-header-row ul[role=menu] {
                 }
             }
             span.tab-title {
-                color: $nice-gray-300;
+                color: $gray-text;
                 width: 120px;
                 margin-right: 5px;
                 display: inline-flex;
@@ -1021,7 +1030,7 @@ div.dt-header-row ul[role=menu] {
                 text-overflow: ellipsis;
             }
             span.tab-headline {
-                color: $nice-gray-300;
+                color: $gray-text;
                 display: inline-block;
             }
             span.btn-tooltip {
@@ -1054,6 +1063,10 @@ div.dt-header-row ul[role=menu] {
             }
         }
 
+        div.page-length-options {
+            display: flow-root;
+        }
+
         button.button-page-length {
             a {
                 display: inline;
@@ -1075,7 +1088,8 @@ div.dt-header-row ul[role=menu] {
     }
 
     .btn-group:nth-child(2) {
-        ul[role=menu] {
+        ul[role=menu],
+        ul.page-length-menu {
             button.btn {
                 margin-left: 16px;
             }
@@ -1379,6 +1393,11 @@ div.DTE_Bubble {
 div.dt-datetime {
     border-radius: $border-radius;
     padding: 8px;
+    button:focus-visible {
+        outline: 2px solid $secondary;
+        outline-offset: 1px;
+        box-shadow: 0 0 0 2px $white;
+    }
     div.dt-datetime-label {
         padding: 0 4px;
         line-height: 23px;
@@ -1386,6 +1405,12 @@ div.dt-datetime {
         border: 1px solid #aaa;
         border-radius: $border-radius;
         margin: 0 4px;
+
+        &:has(select:focus-visible) {
+            outline: 2px solid $secondary;
+            outline-offset: 1px;
+            box-shadow: 0 0 0 2px $white;
+        }
     }
     div.dt-datetime-title {
         padding: 0 0 8px 0;
@@ -1408,6 +1433,11 @@ div.dt-datetime {
             button:hover {
                 border-radius: $border-radius;
                 background-color: $secondary;
+            }
+            button:focus-visible {
+                border-radius: $border-radius;
+                background-color: $secondary;
+                color: $white;
             }
             &.disabled {
                 color: #bbb;
