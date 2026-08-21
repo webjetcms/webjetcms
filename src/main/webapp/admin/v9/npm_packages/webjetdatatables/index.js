@@ -2531,11 +2531,7 @@ export const dataTableInit = options => {
                     //console.log("initComplete, TABLE=", TABLE.DATA.id);
                     dtWJ.fixDatatableHeaderInputs(TABLE);
 
-                    $('#' + DATA.id + '_wrapper [data-toggle*="tooltip"]').tooltip({
-                        placement: 'top',
-                        trigger: 'hover',
-                        delay: { "show": 300, "hide": 0 }
-                    });
+                    WJ.initTooltip($('#' + DATA.id + '_wrapper [data-toggle*="tooltip"]'));
 
                     $.each($('#' + DATA.id + '_wrapper [data-toggle*="modal"]'), function (key, item) {
                         $(item).on("click", function () {

@@ -181,10 +181,7 @@ Scenario("p43: p44: button contrast @current", async ({ I, DT, a11y }) => {
         const focusableSelector = 'button, input, select, textarea, a[href], [tabindex]';
 
         const transitionOverride = document.createElement('style');
-        transitionOverride.textContent = `
-            div.dt-buttons button { transition: none !important; }
-            .tooltip { pointer-events: none !important; }
-        `;
+        transitionOverride.textContent = 'div.dt-buttons button { transition: none !important; }';
         document.head.appendChild(transitionOverride);
 
         window.__wjA11yGetButtonState = selector => {
@@ -259,7 +256,8 @@ Scenario("p43: p44: button contrast @current", async ({ I, DT, a11y }) => {
                         name: button.getAttribute('aria-label') || button.getAttribute('title') || button.innerText.trim(),
                         disabled: isDisabled(button),
                         nativeDisabled: button.matches(':disabled'),
-                        tabIndex: button.tabIndex
+                        tabIndex: button.tabIndex,
+                        tooltip: button.matches('[data-toggle*="tooltip"], [data-bs-toggle*="tooltip"]')
                     };
                 });
 
@@ -269,7 +267,8 @@ Scenario("p43: p44: button contrast @current", async ({ I, DT, a11y }) => {
                         element.dataset.a11yFocusIndex = `${toolbarIndex}-${focusIndex}`;
                         return {
                             selector: `[data-a11y-focus-index="${toolbarIndex}-${focusIndex}"]`,
-                            button: element.tagName === 'BUTTON'
+                            button: element.tagName === 'BUTTON',
+                            tooltip: element.matches('[data-toggle*="tooltip"], [data-bs-toggle*="tooltip"]')
                         };
                     });
 
@@ -301,6 +300,7 @@ Scenario("p43: p44: button contrast @current", async ({ I, DT, a11y }) => {
             }
 
             I.assertEqual(button.tabIndex, 0, `${button.name} must be reachable in the natural TAB order`);
+            I.assertTrue(button.tooltip, `${button.name} must provide a keyboard-accessible tooltip`);
             const normalState = await I.executeScript(selector => window.__wjA11yGetButtonState(selector), button.selector);
             assertButtonContrast(normalState, `${button.name} normal state`);
         }
@@ -322,10 +322,30 @@ Scenario("p43: p44: button contrast @current", async ({ I, DT, a11y }) => {
                 I.assertEqual(focusState.outlineStyle, 'solid', `${focusState.name} must have a solid focus indicator`);
                 I.assertAbove(focusState.outlineWidth, 1.99, `${focusState.name} focus indicator must be at least 2px wide`);
                 I.assertAbove(focusState.outlineContrast, 2.99, `${focusState.name} focus indicator contrast must be at least 3:1`);
+
+                if (focusable.tooltip) {
+                    I.waitForElement(`${focusable.selector}[aria-describedby]`, 5);
+                    const tooltipId = await I.grabAttributeFrom(focusable.selector, 'aria-describedby');
+                    I.assertTrue(tooltipId.length > 0, `${focusState.name} must reference its tooltip`);
+                    I.waitForVisible(`#${tooltipId}`, 5);
+                    I.seeElement(`#${tooltipId}[role="tooltip"]`);
+                    const tooltipText = await I.grabTextFrom(`#${tooltipId}`);
+                    I.assertTrue(tooltipText.trim().length > 0, `${focusState.name} tooltip must contain text`);
+
+                    I.pressKey('Escape');
+                    I.waitForInvisible(`#${tooltipId}`, 5);
+                    I.waitForElement(`${focusable.selector}:focus`, 5);
+                }
             }
         }
 
         await I.executeScript(() => document.querySelector('.a11y-toolbar-sentinel')?.remove());
+
+        await I.executeScript(selector => {
+            $(selector).find('[data-toggle*="tooltip"], [data-bs-toggle*="tooltip"]').each(function() {
+                $(this).tooltip('hide').tooltip('disable');
+            });
+        }, toolbar.selector);
 
         for (const button of toolbar.buttons.filter(button => !button.disabled)) {
             I.moveCursorTo(button.selector);
