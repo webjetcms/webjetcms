@@ -1379,10 +1379,10 @@ const WJ = (() => {
 
             var conf = {
                 placement: 'top',
-                trigger: 'hover',
-                delay: { "show": 300, "hide": 0 }
+                trigger: 'hover focus',
+                customClass: customClass == null ? 'wj-tooltip-hoverable' : customClass + ' wj-tooltip-hoverable',
+                delay: { "show": 300, "hide": 150 }
             };
-            if (customClass != null) conf.customClass = customClass;
 
             if (typeof tooltipText != "undefined" && tooltipText.length > 0) {
                 //console.log("Tooltiptext=", tooltipText);
@@ -1394,6 +1394,26 @@ const WJ = (() => {
             } else {
                 $el.tooltip(conf);
             }
+
+            $el.off('.wjTooltipA11y')
+                .on('keydown.wjTooltipA11y', function(event) {
+                    if (event.key === 'Escape') {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        $el.tooltip('hide');
+                    }
+                })
+                .on('inserted.bs.tooltip.wjTooltipA11y shown.bs.tooltip.wjTooltipA11y', function() {
+                    var tooltipId = $el.attr('aria-describedby');
+                    var $tooltip = tooltipId ? $('#' + tooltipId) : $();
+                    $tooltip.off('.wjTooltipA11y')
+                        .on('mouseenter.wjTooltipA11y', function() {
+                            $el.trigger('mouseenter');
+                        })
+                        .on('mouseleave.wjTooltipA11y', function() {
+                            $el.trigger('mouseleave');
+                        });
+                });
         });
     }
 

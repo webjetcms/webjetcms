@@ -121,7 +121,7 @@ Scenario("p40: is-not-public contrast", async ({ I, DTE, Apps, a11y }) => {
     await a11y.check();
 });
 
-Scenario("p41: column visibility settings @current", async ({ I, DTE, Apps, a11y }) => {
+Scenario("p41: column visibility settings", async ({ I, DTE, Apps, a11y }) => {
     I.amOnPage("/admin/v9/templates/temps-list/");
 
     var tableId = "datatableInit";
@@ -131,4 +131,32 @@ Scenario("p41: column visibility settings @current", async ({ I, DTE, Apps, a11y
     I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
 
     await a11y.check("ul.dropdown-menu.show div.dt-button-collection ul.dropdown-menu.show");
+});
+
+Scenario('p42: Overenie zobrazenia tooltipov', async ({ I, DTE, a11y }) => {
+    I.amOnPage("/admin/v9/templates/temps-list/?tempId=1");
+    DTE.waitForEditor();
+    I.clickCss("#pills-dt-datatableInit-advanced-tab");
+
+    const titleTooltipButton = "div.DTE_Field_Name_moveStyleToHead button.btn-tooltip";
+    const tooltipLabel = await I.grabAttributeFrom(titleTooltipButton, "aria-label");
+    I.assertTrue(tooltipLabel.length > 0, "Tooltip button must have an accessible name");
+
+    I.executeScript((selector) => document.querySelector(selector).focus(), titleTooltipButton);
+    I.waitForVisible("div.tooltip.show", 5);
+    const tooltipId = await I.grabAttributeFrom(titleTooltipButton, "aria-describedby");
+    I.assertTrue(tooltipId.length > 0, "Tooltip button must reference the visible tooltip");
+
+    await a11y.check("#datatableInit_modal");
+
+    I.pressKey("Escape");
+    I.waitForInvisible("div.tooltip.show", 5);
+    I.seeElement("#datatableInit_modal");
+});
+
+Scenario("p43: contrast", async ({ I, DT, a11y }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=269");
+    DT.waitForLoader();
+    I.jstreeWaitForLoader();
+    await a11y.check("#SomStromcek");
 });

@@ -679,9 +679,12 @@ table.datatableInit {
             background-color: white;
             border-color: $nice-gray-200;
             border-width: 1px;
-            &:hover {
+            &:hover, &:active, &:focus, &:focus-visible {
                 border-color: $secondary;
                 background-color: $secondary;
+            }
+            &:active, &:focus, &:focus-visible {
+                color: $white;
             }
         }
 

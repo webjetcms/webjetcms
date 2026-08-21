@@ -1719,10 +1719,11 @@ export const dataTableInit = options => {
 
                         if (tooltipText.length > 0 && !tooltipText.match("^data:")) {
                             //console.log("Tooltiptext=", tooltipText);
-                            tooltipText = WJ.parseMarkdown(tooltipText);
-                            tooltipText = WJ.escapeHtml(tooltipText);
-                            //console.log("Tooltiptext parsed=", tooltipText);
-                            $(el).parents('[data-dte-e="input"]').after('<div class="col-sm-1 form-group-tooltip"><button type="button" tabindex="-1" class="btn btn-link btn-tooltip" data-toggle="tooltip" title="' + tooltipText + '" data-html="true"><i class="ti ti-info-circle"></i></button></div>');
+                            var tooltipButton = $('<button type="button" class="btn btn-link btn-tooltip" data-toggle="tooltip" data-html="true"></button>');
+                            tooltipButton.attr('title', tooltipText);
+                            tooltipButton.attr('aria-label', WJ.translate('button.help'));
+                            tooltipButton.append('<i class="ti ti-info-circle" aria-hidden="true"></i>');
+                            $(el).parents('[data-dte-e="input"]').after($('<div class="col-sm-1 form-group-tooltip"></div>').append(tooltipButton));
                         }
 
                         $(el).hide();
@@ -1799,12 +1800,7 @@ export const dataTableInit = options => {
                         }
                     });
 
-                    $('#' + DATA.id + '_modal .DTE_Body [data-toggle*="tooltip"]').tooltip({
-                        placement: 'top',
-                        trigger: 'hover',
-                        html: true,
-                        delay: { "show": 300, "hide": 0 }
-                    });
+                    WJ.initTooltip($('#' + DATA.id + '_modal .DTE_Body [data-toggle*="tooltip"]'));
 
                     $('#' + DATA.id + '_modal div.DTE_Field_InputControl select').each(function () {
                         const $select = $(this);
@@ -3822,13 +3818,14 @@ export const dataTableInit = options => {
         //console.log( 'Button ', buttonApi, 'config=', config );
         if (typeof config.className !="undefined" && config.className.indexOf("buttons-colvis")!=-1 && $('#' + DATA.id + '_wrapper button.buttons-columnVisibility').parents("div.colvisbtn_wrapper").length<1) {
 
-            // Keep valid semantics: avoid nested interactive <a> inside <button>.
-            $('#' + DATA.id + '_wrapper button.buttons-columnVisibility').each(function() {
+            // Keep valid menu semantics and avoid nested interactive <a> inside <button>.
+            $('#' + DATA.id + '_wrapper button.buttons-columnVisibility, #' + DATA.id + '_wrapper button.colvis-prefix, #' + DATA.id + '_wrapper button.colvis-postfix').each(function() {
                 var button = $(this);
                 var nestedLink = button.children('a.dropdown-item');
                 if (nestedLink.length > 0) {
                     button.html(nestedLink.html());
                 }
+                button.attr('role', 'menuitem');
             });
 
             $('#' + DATA.id + '_wrapper button.buttons-columnVisibility span[data-toggle*="tooltip"]').tooltip({
