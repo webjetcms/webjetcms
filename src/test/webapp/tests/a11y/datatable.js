@@ -442,3 +442,144 @@ Scenario("p47: modal window rowcount", async ({ I, DT, a11y }) => {
 
     await a11y.check(dialog);
 });
+
+Scenario("p48: DT dialog focus", async ({ I, DT, a11y }) => {
+    I.amOnPage("/admin/v9/templates/temps-list/");
+    DT.waitForLoader();
+
+    const wrapper = "#datatableInit_wrapper";
+    const modal = "#datatableInit_modal";
+    I.forceClick(`${wrapper} .dt-scroll-body tbody tr:first-child td.dt-select-td`);
+    I.waitForElement(`${wrapper} button[data-dtbtn="edit"]:not(.disabled)`, 5);
+
+    const actions = [
+        { name: "create", selector: `${wrapper} button[data-dtbtn="create"]`, expectsFieldFocus: true },
+        { name: "edit", selector: `${wrapper} button[data-dtbtn="edit"]`, expectsFieldFocus: true },
+        { name: "duplicate", selector: `${wrapper} button[data-dtbtn="duplicate"]`, expectsFieldFocus: true },
+        { name: "remove", selector: `${wrapper} button[data-dtbtn="remove"]`, expectsFieldFocus: false }
+    ];
+
+    const assertFocusedHeaderButton = async (selector, label) => {
+        I.waitForElement(`${selector}:focus`, 5);
+        I.waitForElement(`${selector}[aria-describedby]`, 5);
+
+        const tooltipId = await I.grabAttributeFrom(selector, "aria-describedby");
+        I.assertTrue(tooltipId.length > 0, `${label} must reference its tooltip when focused`);
+        I.waitForVisible(`#${tooltipId}`, 5);
+        I.seeElement(`#${tooltipId}[role="tooltip"]`);
+        const tooltipText = await I.grabTextFrom(`#${tooltipId}`);
+        I.assertTrue(tooltipText.trim().length > 0, `${label} tooltip must contain text`);
+
+        const iconContrast = await I.executeScript(buttonSelector => {
+            const button = document.querySelector(buttonSelector);
+            const icon = button.querySelector(".ti");
+            const parseColor = value => {
+                const channels = value.match(/[\d.]+/g).map(Number);
+                return channels.slice(0, 3);
+            };
+            const luminance = color => {
+                const channels = color.map(channel => {
+                    const value = channel / 255;
+                    return value <= 0.04045 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+                });
+                return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+            };
+            const backgroundLuminance = luminance(parseColor(getComputedStyle(button).backgroundColor));
+            const iconLuminance = luminance(parseColor(getComputedStyle(icon).color));
+            return (Math.max(backgroundLuminance, iconLuminance) + 0.05) /
+                (Math.min(backgroundLuminance, iconLuminance) + 0.05);
+        }, selector);
+        I.assertAbove(iconContrast, 2.99, `${label} focused icon contrast must be at least 3:1`);
+
+        I.pressKey("Escape");
+        I.waitForInvisible(`#${tooltipId}`, 5);
+        I.waitForElement(`${selector}:focus`, 5);
+    };
+
+    for (const action of actions) {
+        I.executeScript(selector => document.querySelector(selector).focus(), action.selector);
+        I.pressKey("Enter");
+        I.waitForVisible(`${modal}.show`, 5);
+        I.waitForElement(`${modal} :focus`, 5);
+
+        const state = await I.executeScript(selector => {
+            const dialog = document.querySelector(selector);
+            const activeElement = document.activeElement;
+            const requiredFields = [...dialog.querySelectorAll('.DTE_Field.required')].map(field => {
+                const controls = [...field.querySelectorAll('input:not([type="hidden"]), select, textarea, [contenteditable="true"]')]
+                    .filter(control => !control.closest('.bs-searchbox, .dt-search, .dataTables_filter'));
+                const selectpicker = field.querySelector('.bootstrap-select > button[role="combobox"]');
+                return {
+                    hasControl: controls.length > 0,
+                    controlsRequired: controls.every(control => control.getAttribute('aria-required') === 'true'),
+                    selectpickerRequired: selectpicker == null || selectpicker.getAttribute('aria-required') === 'true'
+                };
+            });
+
+            return {
+                activeInDialog: dialog.contains(activeElement),
+                activeInBody: activeElement.closest('.DTE_Body') != null,
+                dialogRole: dialog.getAttribute('role'),
+                modal: dialog.getAttribute('aria-modal'),
+                labelledBy: dialog.getAttribute('aria-labelledby'),
+                help: {
+                    label: dialog.querySelector('.DTE_Header button.show-help')?.getAttribute('aria-label'),
+                    tabIndex: dialog.querySelector('.DTE_Header button.show-help')?.tabIndex,
+                    type: dialog.querySelector('.DTE_Header button.show-help')?.type
+                },
+                maximize: {
+                    label: dialog.querySelector('.DTE_Header button.maximize')?.getAttribute('aria-label'),
+                    tabIndex: dialog.querySelector('.DTE_Header button.maximize')?.tabIndex,
+                    type: dialog.querySelector('.DTE_Header button.maximize')?.type
+                },
+                requiredFields,
+                searchLabels: [...dialog.querySelectorAll('.bs-searchbox input')].map(input => input.getAttribute('aria-label'))
+            };
+        }, modal);
+
+        I.assertTrue(state.activeInDialog, `${action.name} dialog must receive focus when it opens`);
+        if (action.expectsFieldFocus) {
+            I.assertTrue(state.activeInBody, `${action.name} dialog must focus its first form control`);
+        }
+        I.assertEqual(state.dialogRole, "dialog", `${action.name} editor must expose the dialog role`);
+        I.assertEqual(state.modal, "true", `${action.name} editor must be announced as modal`);
+        I.assertTrue(state.labelledBy != null && state.labelledBy.length > 0,
+            `${action.name} editor must be labelled by its heading`);
+
+        if (action.name !== "remove") {
+            I.assertEqual(state.help.label, "Pomocník", "The Help button must have a Slovak accessible name");
+            I.assertEqual(state.help.tabIndex, 0, "The Help button must be keyboard focusable");
+            I.assertEqual(state.help.type, "button", "The Help button must not submit the form");
+            I.assertTrue(/^Maximal+izovať okno$/.test(state.maximize.label),
+                "The Maximize button must have a Slovak accessible name");
+            I.assertEqual(state.maximize.tabIndex, 0, "The Maximize button must be keyboard focusable");
+            I.assertEqual(state.maximize.type, "button", "The Maximize button must not submit the form");
+            I.assertTrue(state.requiredFields.length > 0, "The test editor must contain required fields");
+            I.assertTrue(state.requiredFields.every(field => field.hasControl && field.controlsRequired && field.selectpickerRequired),
+                "Every required field must expose aria-required=true");
+            I.assertTrue(state.searchLabels.length > 0, "The editor must contain searchable select fields");
+            I.assertTrue(state.searchLabels.every(label => label === "Hľadať"),
+                "Search instructions must use the current interface language");
+        }
+
+        if (action.name === "create") {
+            I.pressKey(['Shift', 'Tab']);
+            I.waitForElement(`${modal} .DTE_Header button.btn-close-editor:focus`, 5);
+            I.pressKey(['Shift', 'Tab']);
+            await assertFocusedHeaderButton(`${modal} .DTE_Header button.maximize`, "Maximize button");
+            I.pressKey("Enter");
+            I.waitForVisible(`${modal} .DTE_Header button.minimize`, 5);
+            await assertFocusedHeaderButton(`${modal} .DTE_Header button.minimize`, "Minimize button");
+            I.pressKey("Enter");
+            I.waitForElement(`${modal} .DTE_Header button.maximize:focus`, 5);
+            I.pressKey(['Shift', 'Tab']);
+            await assertFocusedHeaderButton(`${modal} .DTE_Header button.show-help`, "Help button");
+            await a11y.check(modal);
+        }
+
+        I.executeScript(selector => document.querySelector(selector).focus(), `${modal} .DTE_Footer button.btn-close-editor`);
+        I.pressKey("Enter");
+        I.waitForInvisible(modal, 5);
+        I.waitForElement(`${action.selector}:focus`, 5);
+    }
+});

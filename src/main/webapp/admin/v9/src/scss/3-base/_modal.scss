@@ -438,7 +438,7 @@ body.modal-open {
                 color: $secondary;
             }
 
-            &:hover {
+            &:hover, &:active, &:focus, &:focus-visible {
                 color: $white;
                 background-color: $secondary;
                 .ti {
@@ -865,7 +865,7 @@ div.DTE_Bubble_Background {
                         color: $secondary;
                     }
 
-                    &:hover {
+                    &:hover, &:active, &:focus, &:focus-visible {
                         color: $white;
                         background-color: $secondary;
                         .ti {

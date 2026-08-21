@@ -227,6 +227,7 @@ export const dataTableInit = options => {
         style: "btn btn-sm btn-outline-secondary",
         width: "100%",
         liveSearch: true,
+        liveSearchPlaceholder: WJ.translate('datatables.defaults.search.js'),
         noneSelectedText: '\xa0', //nbsp
         multipleSeparator: " + "
     };
@@ -243,12 +244,78 @@ export const dataTableInit = options => {
         container: "body",
         style: "btn btn-outline-secondary",
         liveSearch: true,
+        liveSearchPlaceholder: WJ.translate('datatables.defaults.search.js'),
         showSubtext: true,
         noneSelectedText: '\xa0', //nbsp
         multipleSeparator: " + "
     };
 
-    const DIALOG_BUTTONS = '<div class="dialog-buttons"><button class="btn btn-outline-secondary show-help" onclick="WJ.showHelpWindow()" title="' + WJ.translate('button.help') + '" data-toggle="tooltip"><i class="ti ti-help" aria-hidden="true"></i></button><button class="btn btn-outline-secondary maximize" title="'+WJ.translate("datatables.modal.maximize.js")+'" data-toggle="tooltip"><i class="ti ti-arrows-maximize" aria-hidden="true"></i></button><button class="btn btn-outline-secondary minimize" title="'+WJ.translate("datatables.modal.minimize.js")+'" data-toggle="tooltip" ><i class="ti ti-arrows-minimize" aria-hidden="true"></i></button></div>';
+    const DIALOG_BUTTONS = '<div class="dialog-buttons"><button type="button" tabindex="0" class="btn btn-outline-secondary show-help" onclick="WJ.showHelpWindow()" aria-label="' + WJ.translate('button.help') + '" title="' + WJ.translate('button.help') + '" data-toggle="tooltip"><i class="ti ti-help" aria-hidden="true"></i></button><button type="button" tabindex="0" class="btn btn-outline-secondary maximize" aria-label="'+WJ.translate("datatables.modal.maximize.js")+'" title="'+WJ.translate("datatables.modal.maximize.js")+'" data-toggle="tooltip"><i class="ti ti-arrows-maximize" aria-hidden="true"></i></button><button type="button" tabindex="0" class="btn btn-outline-secondary minimize" aria-label="'+WJ.translate("datatables.modal.minimize.js")+'" title="'+WJ.translate("datatables.modal.minimize.js")+'" data-toggle="tooltip" ><i class="ti ti-arrows-minimize" aria-hidden="true"></i></button></div>';
+
+    function getEditorFocusableElements(modal) {
+        return $(modal).find('button, [href], input:not([type="hidden"]), select, textarea, [contenteditable="true"], [tabindex]')
+            .filter(function() {
+                return $(this).is(':visible') && !this.disabled && $(this).attr('tabindex') !== '-1';
+            });
+    }
+
+    function configureEditorAccessibility(dte, action) {
+        const modal = document.getElementById(dte.TABLE.DATA.id + '_modal');
+        if (modal == null) return;
+
+        const $modal = $(modal);
+        const title = $modal.find('.DTE_Header h5.modal-title').first();
+        const titleId = dte.TABLE.DATA.id + '_modal-title';
+
+        title.attr('id', titleId);
+        $modal.attr({
+            'aria-labelledby': titleId,
+            'aria-modal': 'true',
+            'role': 'dialog'
+        });
+
+        $modal.find('.DTE_Header button.show-help, .DTE_Header button.maximize, .DTE_Header button.minimize, .DTE_Header button.btn-close-editor')
+            .attr('type', 'button')
+            .attr('tabindex', '0');
+
+        $modal.find('.DTE_Field.required').each(function() {
+            const $field = $(this);
+            $field.find('input:not([type="hidden"]), select, textarea, [contenteditable="true"]')
+                .not('.bs-searchbox input, .dt-search input, .dataTables_filter input')
+                .attr('aria-required', 'true');
+            $field.find('.bootstrap-select > button[role="combobox"]').attr('aria-required', 'true');
+        });
+
+        $modal.off('keydown.wjDteFocusTrap').on('keydown.wjDteFocusTrap', function(event) {
+            if (event.key !== 'Tab' || $(event.target).closest('.DTED')[0] !== modal) return;
+
+            const focusableElements = getEditorFocusableElements(modal);
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+
+            if (event.shiftKey && document.activeElement === firstElement) {
+                event.preventDefault();
+                lastElement.focus();
+            } else if (!event.shiftKey && document.activeElement === lastElement) {
+                event.preventDefault();
+                firstElement.focus();
+            }
+        });
+
+        setTimeout(function() {
+            let focusTarget = $modal.find('.DTE_Body input:not([type="hidden"]), .DTE_Body select, .DTE_Body textarea, .DTE_Body [contenteditable="true"]')
+                .filter(function() {
+                    return $(this).is(':visible') && !this.disabled && $(this).attr('tabindex') !== '-1';
+                })
+                .first()[0];
+
+            if (action === 'remove' || focusTarget == null) {
+                focusTarget = getEditorFocusableElements(modal).first()[0];
+            }
+
+            if (focusTarget != null) focusTarget.focus({preventScroll: true});
+        }, 0);
+    }
 
     function filterColumnsByPerms(columns) {
         var filtered = [];
@@ -919,19 +986,21 @@ export const dataTableInit = options => {
 
             if (typeof dte._bootstrapDisplay != "undefined") {
                 //okno uz bolo raz otvorene, len ho teraz znova showni
-                $("#" + dte._bootstrapDisplay.id).modal("show");
-                //firni event
-                WJ.dispatchEvent('WJ.DTE.open', {
-                    dte: dte,
-                    id: dte.TABLE.DATA.id,
-                });
-                setTimeout(()=> {
+                const modalElement = document.getElementById(dte._bootstrapDisplay.id);
+                modalElement.addEventListener('shown.bs.modal', function() {
+                    configureEditorAccessibility(dte, dte.mode());
                     WJ.dispatchEvent('WJ.DTE.opened', {
                         dte: dte,
                         id: dte.TABLE.DATA.id,
                         action: dte.mode()
                     });
-                }, 100);
+                }, {once: true});
+                $(modalElement).modal("show");
+                //firni event
+                WJ.dispatchEvent('WJ.DTE.open', {
+                    dte: dte,
+                    id: dte.TABLE.DATA.id,
+                });
                 return;
             }
 
@@ -952,7 +1021,7 @@ export const dataTableInit = options => {
                     '<div class="modal-dialog modal-dialog-scrollable" />' +
                 '</div>'
                 ),
-                close: $('<button class="close btn-close-editor" data-toggle="tooltip" title="' + WJ.translate("datatables.modal.close.js") + '"><i class="ti ti-x"></i>')
+                close: $('<button type="button" tabindex="0" class="close btn-close-editor" aria-label="' + WJ.translate("datatables.modal.close.js") + '" data-toggle="tooltip" title="' + WJ.translate("datatables.modal.close.js") + '"><i class="ti ti-x" aria-hidden="true"></i></button>')
             }
             dom.close.off('click.dte-bs5');
             dom.close.on('click', function () {
@@ -1393,6 +1462,7 @@ export const dataTableInit = options => {
         });
 
         EDITOR.on('opened', function (e, type, action) {
+            configureEditorAccessibility(EDITOR, action);
             setTimeout(()=> {
                 WJ.dispatchEvent('WJ.DTE.opened', {
                     dte: EDITOR,
@@ -1413,6 +1483,18 @@ export const dataTableInit = options => {
         });
         EDITOR.on('close', function (e) {
             //console.log("Editor.on close, editor=", EDITOR, "url=", EDITOR.TABLE.DATA.url, "close=", EDITOR.close, "e=", e);
+
+            const focusReturnElement = EDITOR._wjFocusReturnElement;
+            const focusReturnButton = EDITOR._wjFocusReturnButton;
+            const modalElement = document.getElementById(DATA.id + '_modal');
+            const restoreFocus = function() {
+                let target = focusReturnElement;
+                if (target == null || !document.contains(target) || target.disabled) {
+                    target = $('#' + DATA.id + '_wrapper button[data-dtbtn="' + focusReturnButton + '"]:visible:not(:disabled)')[0];
+                }
+                if (target != null) target.focus({preventScroll: true});
+            };
+            if (modalElement != null) modalElement.addEventListener('hidden.bs.modal', restoreFocus, {once: true});
 
             //pre istotu zatvor, niekedy pri nested dialogu zostava otvoreny kvoli nejakemu bugu
             if (typeof EDITOR._bootstrapDisplay != "undefined" && $("#" + EDITOR._bootstrapDisplay.id).hasClass("show")) {
@@ -1693,7 +1775,10 @@ export const dataTableInit = options => {
 
                 //prepinanie maximalizacie okna, je to vzdy, kedze HTML kod headeru sa replacne pri kazdom otvoreni
                 $('#' + DATA.id + '_modal div.DTE_Header div.dialog-buttons .maximize, #' + DATA.id + '_modal div.DTE_Header div.dialog-buttons .minimize').on("click", function() {
-                    $('#' + DATA.id + '_modal div.modal-dialog').toggleClass("modal-fullscreen");
+                    const $modalDialog = $('#' + DATA.id + '_modal div.modal-dialog');
+                    $modalDialog.toggleClass("modal-fullscreen");
+                    const focusSelector = $modalDialog.hasClass("modal-fullscreen") ? 'button.minimize' : 'button.maximize';
+                    $('#' + DATA.id + '_modal div.DTE_Header div.dialog-buttons ' + focusSelector).focus();
                     dtWJ.resizeTabContent(EDITOR);
                     WJ.dispatchEvent('WJ.DTE.resize', {
                         dte: EDITOR
@@ -1820,12 +1905,7 @@ export const dataTableInit = options => {
                 }
 
                 //console.log("Setting tooltips header");
-                $('#' + DATA.id + '_modal .DTE_Header [data-toggle*="tooltip"]').tooltip({
-                    placement: 'top',
-                    trigger: 'hover',
-                    html: true,
-                    delay: { "show": 300, "hide": 0 }
-                });
+                WJ.initTooltip($('#' + DATA.id + '_modal .DTE_Header [data-toggle*="tooltip"]'));
 
                 if (editorWasOpened === false) {
 
@@ -3819,6 +3899,12 @@ export const dataTableInit = options => {
 
     TABLE.on( 'buttons-action', function ( e, buttonApi, dataTable, node, config ) {
         //console.log( 'Button ', buttonApi, 'config=', config );
+        const focusReturnButton = $(node).attr('data-dtbtn');
+        if (["create", "edit", "duplicate", "remove"].includes(focusReturnButton)) {
+            EDITOR._wjFocusReturnElement = $(node)[0];
+            EDITOR._wjFocusReturnButton = focusReturnButton;
+        }
+
         if (typeof config.className != "undefined" && config.className.indexOf("buttons-page-length")!=-1) {
             var pageLengthCollection = $(node).parent().children("div.dt-button-collection");
             var pageLengthButtons = pageLengthCollection.find("button.button-page-length");
