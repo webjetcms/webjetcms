@@ -71,6 +71,11 @@ table.table {
     }
     tbody {
         tr {
+            &[tabindex="0"]:focus-visible {
+                outline: 2px solid $secondary;
+                outline-offset: -2px;
+            }
+
             td {
                 font-size: 13px;
                 line-height: 24px;

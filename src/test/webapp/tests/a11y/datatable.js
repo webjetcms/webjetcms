@@ -583,3 +583,38 @@ Scenario("p48: DT dialog focus", async ({ I, DT, a11y }) => {
         I.waitForElement(`${action.selector}:focus`, 5);
     }
 });
+
+Scenario("p49: datatable interactive rows", async ({ I, DT, a11y }) => {
+    I.amOnPage("/admin/v9/templates/temps-list/");
+    DT.waitForLoader();
+
+    const table = "#datatableInit";
+    const wrapper = `${table}_wrapper`;
+    const firstRow = `${table} tbody tr:first-child`;
+    const editButton = `${wrapper} button[data-dtbtn="edit"]`;
+
+    const rows = await I.executeScript(tableSelector => [...document.querySelectorAll(`${tableSelector} tbody tr`)]
+        .filter(row => row.querySelector("td.dt-select-td"))
+        .map(row => ({
+            selected: row.getAttribute("aria-selected"),
+            tabIndex: row.tabIndex
+        })), table);
+
+    I.assertAbove(rows.length, 1, "The test table must contain multiple interactive rows");
+    I.assertTrue(rows.every(row => row.tabIndex === 0), "Every selectable row must be keyboard focusable");
+    I.assertTrue(rows.every(row => row.selected === "false"), "Every unselected row must expose aria-selected=false");
+
+    I.executeScript(selector => document.querySelector(selector).focus(), firstRow);
+    I.waitForElement(`${firstRow}:focus`, 5);
+    I.pressKey("Space");
+    I.waitForElement(`${firstRow}.selected[aria-selected="true"]:focus`, 5);
+    I.waitForElement(`${editButton}:not(:disabled)`, 5);
+
+    I.pressKey("Space");
+    I.waitForElement(`${firstRow}:not(.selected)[aria-selected="false"]:focus`, 5);
+    I.waitForElement(`${editButton}:disabled`, 5);
+
+    I.pressKey("Enter");
+    I.waitForElement(`${firstRow}.selected[aria-selected="true"]:focus`, 5);
+    await a11y.check(wrapper);
+});

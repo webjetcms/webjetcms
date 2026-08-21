@@ -3968,7 +3968,35 @@ export const dataTableInit = options => {
         }
     } );
 
+    const updateRowSelectionAccessibility = function() {
+        $('#' + DATA.id + ' tbody tr').each(function() {
+            const $row = $(this);
+            const hasSelectionTarget = $row.is(DATA.toggleSelector) || $row.find(DATA.toggleSelector).length > 0;
+
+            if (hasSelectionTarget === false) {
+                $row.removeAttr('tabindex aria-selected');
+                return;
+            }
+
+            $row.attr({
+                'aria-selected': $row.hasClass('selected') ? 'true' : 'false',
+                'tabindex': '0'
+            });
+        });
+    };
+
+    $(dataTableSelector).off('keydown.wjRowSelection').on('keydown.wjRowSelection', 'tbody tr[tabindex="0"]', function(event) {
+        if (event.target !== this || (event.key !== 'Enter' && event.key !== ' ')) return;
+
+        event.preventDefault();
+        const row = TABLE.row(this);
+        if ($(this).hasClass('selected')) row.deselect();
+        else row.select();
+    });
+
     TABLE.on('select.dt.DT deselect.dt.DT draw.dt.DT', function () {
+        updateRowSelectionAccessibility();
+
         var anySelected = TABLE.rows({selected: true}).any();
         //change select-all icon depending on selected rows
         var icon = $("#"+DATA.id+"_wrapper div.dt-scroll-head table thead th.dt-format-selector button.buttons-select-all i.ti");
@@ -3980,6 +4008,7 @@ export const dataTableInit = options => {
             icon.addClass("ti-square-check")
         }
     });
+    updateRowSelectionAccessibility();
 
     window.addEventListener("WJ.DTE.opened", function() {
         dtWJ.resizeTabContent(EDITOR);
