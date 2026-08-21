@@ -854,7 +854,8 @@ div.dt-header-row ul[role=menu] {
         top: 5% !important;
         left: 50% !important;
     }
-    ul[role=menu] {
+    ul[role=menu],
+    ul.page-length-menu {
 
         margin: 0;
         padding: 0;
@@ -1057,6 +1058,10 @@ div.dt-header-row ul[role=menu] {
             }
         }
 
+        div.page-length-options {
+            display: flow-root;
+        }
+
         button.button-page-length {
             a {
                 display: inline;
@@ -1078,7 +1083,8 @@ div.dt-header-row ul[role=menu] {
     }
 
     .btn-group:nth-child(2) {
-        ul[role=menu] {
+        ul[role=menu],
+        ul.page-length-menu {
             button.btn {
                 margin-left: 16px;
             }

@@ -2263,7 +2263,11 @@ export const dataTableInit = options => {
                     postfixButtons: [
                         {
                             className: 'dropdown-divider',
-                            tag: 'div'
+                            tag: 'div',
+                            attr: {
+                                "aria-hidden": "true",
+                                "tabindex": "-1"
+                            }
                         },
                         {
                             text: '<i class="ti ti-check"></i> ' + WJ.translate('button.save'),
@@ -2512,7 +2516,10 @@ export const dataTableInit = options => {
                         className: 'dropdown-menu dt-dropdown-menu',
                         button: {
                             tag: 'button',
-                            className: 'btn'
+                            className: 'btn',
+                            liner: {
+                                tag: null
+                            }
                         },
                     }
                 },
@@ -3812,6 +3819,33 @@ export const dataTableInit = options => {
 
     TABLE.on( 'buttons-action', function ( e, buttonApi, dataTable, node, config ) {
         //console.log( 'Button ', buttonApi, 'config=', config );
+        if (typeof config.className != "undefined" && config.className.indexOf("buttons-page-length")!=-1) {
+            var pageLengthCollection = $(node).parent().children("div.dt-button-collection");
+            var pageLengthButtons = pageLengthCollection.find("button.button-page-length");
+            var pageLengthLabel = WJ.translate('datatables.button.pagelength.js');
+
+            pageLengthCollection.attr("aria-label", pageLengthLabel);
+            pageLengthCollection.children("ul[role=menu]")
+                .addClass("page-length-menu")
+                .attr("role", "presentation");
+
+            if (pageLengthButtons.parent("div.page-length-options").length == 0) {
+                pageLengthButtons.wrapAll("<div class='page-length-options' role='listbox'></div>");
+            }
+
+            pageLengthButtons.attr("role", "option");
+            pageLengthButtons.parent("div.page-length-options").attr("aria-label", pageLengthLabel);
+
+            var updatePageLengthSelectedState = function() {
+                pageLengthButtons.attr("aria-selected", function() {
+                    return $(this).hasClass("dt-button-active-a") ? "true" : "false";
+                });
+            };
+            updatePageLengthSelectedState();
+            TABLE.off("length.dt.wjPageLengthA11y").on("length.dt.wjPageLengthA11y", updatePageLengthSelectedState);
+            pageLengthButtons.first().trigger("focus");
+        }
+
         if (typeof config.className !="undefined" && config.className.indexOf("buttons-colvis")!=-1 && $('#' + DATA.id + '_wrapper button.buttons-columnVisibility').parents("div.colvisbtn_wrapper").length<1) {
 
             // Keep valid menu semantics and avoid nested interactive <a> inside <button>.

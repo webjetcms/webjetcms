@@ -161,7 +161,7 @@ Scenario("p43: contrast", async ({ I, DT, a11y }) => {
     await a11y.check("#SomStromcek");
 });
 
-Scenario("p43: p44: button contrast @current", async ({ I, DT, a11y }) => {
+Scenario("p43: p44: button contrast", async ({ I, DT, a11y }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
     DT.waitForLoader();
     I.jstreeWaitForLoader();
@@ -354,4 +354,91 @@ Scenario("p43: p44: button contrast @current", async ({ I, DT, a11y }) => {
             assertButtonContrast(hoverState, `${button.name} hover state`);
         }
     }
+});
+
+Scenario("p47: modal window rowcount", async ({ I, DT, a11y }) => {
+    I.amOnPage("/admin/v9/templates/temps-list/");
+    DT.waitForLoader();
+
+    const wrapper = "#datatableInit_wrapper";
+    const pageLengthTrigger = `${wrapper} button.buttons-page-length`;
+    I.clickCss(`${wrapper} button.buttons-settings`);
+    I.waitForVisible(pageLengthTrigger, 5);
+    I.executeScript(selector => document.querySelector(selector).focus(), pageLengthTrigger);
+    I.pressKey("Enter");
+
+    const dialog = `${wrapper} button.buttons-page-length[aria-expanded="true"] ~ div.dt-button-collection`;
+    I.waitForVisible(dialog, 5);
+    I.waitForElement(`${dialog} button.button-page-length:focus`, 5);
+    I.seeElement(`${dialog}[role="dialog"][aria-modal="true"][aria-label]`);
+    I.dontSeeElement(`${dialog} button > a, ${dialog} button > button`);
+    I.seeElement(`${dialog} [role="listbox"][aria-label]`);
+
+    const state = await I.executeScript(selector => {
+        const dialogElement = document.querySelector(selector);
+        const isVisible = element => element.getClientRects().length > 0 && getComputedStyle(element).visibility !== 'hidden';
+        const getRect = element => {
+            const rect = element.getBoundingClientRect();
+            return {
+                top: Math.round(rect.top),
+                bottom: Math.round(rect.bottom),
+                width: Math.round(rect.width)
+            };
+        };
+        const options = [...dialogElement.querySelectorAll('button.button-page-length')].map(button => ({
+            active: button.classList.contains('dt-button-active-a'),
+            role: button.getAttribute('role'),
+            selected: button.getAttribute('aria-selected'),
+            rect: getRect(button),
+            marker: getComputedStyle(button, '::before').content
+        }));
+        const buttons = [...dialogElement.querySelectorAll('button')].filter(isVisible).map((button, index) => {
+            button.dataset.a11yRowcountIndex = index;
+            return {
+                name: button.innerText.trim(),
+                selector: `[data-a11y-rowcount-index="${index}"]`
+            };
+        });
+        const saveButton = dialogElement.querySelector('button.dt-close-modal.btn-primary');
+        const cancelButton = dialogElement.querySelector('button.dt-close-modal.btn-outline-secondary');
+
+        return {
+            dialogWidth: Math.round(dialogElement.getBoundingClientRect().width),
+            options,
+            buttons,
+            saveRect: getRect(saveButton),
+            cancelRect: getRect(cancelButton)
+        };
+    }, dialog);
+
+    I.assertAbove(state.options.length, 1, "The row count dialog must provide multiple options");
+    I.assertAbove(state.dialogWidth, 750, "The row count dialog must preserve its wide modal layout");
+    I.assertEqual(new Set(state.options.map(option => option.rect.top)).size, 3,
+        "The row count options must be arranged in three rows");
+    I.assertTrue(state.options.every(option => option.rect.width >= 175),
+        "Every row count option must preserve its grid width");
+    I.assertTrue(state.options.every(option => option.marker !== 'none' && option.marker !== 'normal'),
+        "Every row count option must display its selection marker");
+    const optionsBottom = Math.max(...state.options.map(option => option.rect.bottom));
+    I.assertAbove(state.saveRect.top, optionsBottom, "The Save button must be placed below the row count options");
+    I.assertEqual(state.saveRect.top, state.cancelRect.top, "The modal action buttons must be aligned in one row");
+    I.assertEqual(state.options.filter(option => option.selected === 'true').length, 1,
+        "Exactly one row count option must be selected");
+    for (const option of state.options) {
+        I.assertEqual(option.role, 'option', "Every row count choice must expose the option role");
+        I.assertEqual(option.selected, option.active ? 'true' : 'false',
+            "aria-selected must match the visually active row count option");
+    }
+
+    I.assertTrue(state.buttons.some(button => button.name.includes("Uložiť")), "The dialog must contain a Save button");
+    I.assertTrue(state.buttons.some(button => button.name.includes("Zrušiť")), "The dialog must contain a Cancel button");
+    I.waitForElement(`${state.buttons[0].selector}:focus`, 5);
+    for (const button of state.buttons.slice(1)) {
+        I.pressKey("Tab");
+        I.waitForElement(`${button.selector}:focus`, 5);
+    }
+    I.pressKey("Tab");
+    I.waitForElement(`${state.buttons[0].selector}:focus`, 5);
+
+    await a11y.check(dialog);
 });
