@@ -102,8 +102,6 @@ Scenario('E-shop statistics charts and filters @screenshot', async ({ I, Documen
 
     if (Document.isScreenshotsEnabled()) {
 
-        Document.screenshot("/redactor/apps/eshop/stats/stats.png", 1920, 2500);
-
         await Document.switchDomain("shop.tau27.iway.sk");
         waitForStatistics(I);
 
@@ -111,6 +109,8 @@ Scenario('E-shop statistics charts and filters @screenshot', async ({ I, Documen
         I.fillField("#basketStatsDateTo", "10.10.2025");
         I.clickCss("#basketStatsFilter button.dt-filtrujem-dayDate");
         I.waitForInvisible(".webjetAnimatedLoader", 20);
+
+        Document.screenshot("/redactor/apps/eshop/stats/stats.png", 1920, 2500);
 
         Document.scrollTo("#basketStats-categories");
         Document.screenshotElement(
@@ -159,6 +159,7 @@ Scenario('E-shop statistics charts and filters @screenshot', async ({ I, Documen
     );
 
     await checkCharts(I);
+    await checkTreeChartLabels(I);
     await checkTreeChartWheelGestures(I);
 });
 
@@ -218,6 +219,36 @@ async function checkTreeChartWheelGestures(I) {
     I.assertAbove(result.controlTargetZoomLevel, result.initialZoomLevel, "Control + trackpad pinch must increase the tree zoom level");
     I.assertTrue(result.commandPinchPrevented, "Command + trackpad pinch must be handled by the tree chart");
     I.assertAbove(result.commandTargetZoomLevel, result.controlTargetZoomLevel, "Command + trackpad pinch must increase the tree zoom level");
+}
+
+async function checkTreeChartLabels(I) {
+    const result = await I.executeScript(() => {
+        const root = window.am5.registry.rootElements.find(item => item.dom.id === "basketStats-categories");
+        const chart = root.container.children.getIndex(0);
+        const series = chart.contents.children.getIndex(0);
+
+        return {
+            nodeRadius: series.circles.template.get("radius"),
+            labels: series.labels.values.map(label => ({
+                maxWidth: label.get("maxWidth"),
+                maxHeight: label.get("maxHeight"),
+                oversizedBehavior: label.get("oversizedBehavior")
+            }))
+        };
+    });
+
+    I.assertAbove(result.labels.length, 0, "Tree chart labels must be rendered");
+    if (result.nodeRadius > 8) {
+        result.labels.forEach(label => {
+            I.assertEqual(label.maxWidth, 200, "Sparse tree labels must use the external label width");
+            I.assertEqual(label.maxHeight, 20, "Sparse tree labels must remain on one line");
+            I.assertEqual(label.oversizedBehavior, "none", "Sparse tree labels must not be truncated");
+        });
+    } else {
+        result.labels.forEach(label => {
+            I.assertEqual(label.oversizedBehavior, "truncate", "Compact tree labels must remain bounded");
+        });
+    }
 }
 
 async function clearStoredDateRange(I) {

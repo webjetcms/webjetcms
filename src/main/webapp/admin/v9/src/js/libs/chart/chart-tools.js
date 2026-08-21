@@ -2379,6 +2379,7 @@ function crateWordCloudChart(root, chartForm) {
 }
 
 const TREE_COMPACT_LAYOUT_THRESHOLD = 8;
+const TREE_COMPACT_WIDTH_PERCENT = 45;
 const TREE_COMPACT_ROW_HEIGHT = 20;
 const TREE_COMPACT_VERTICAL_MARGIN = 80;
 const TREE_COMPACT_MAX_HEIGHT = 800;
@@ -2388,7 +2389,8 @@ function createTreeChart(root, chartForm) {
     const treeData = normalizeTreeChartData(chartForm.chartData);
     const layoutSlotCount = getTreeLayoutSlotCount(treeData, chartForm.childDataField);
     const compactLayout = layoutSlotCount > TREE_COMPACT_LAYOUT_THRESHOLD;
-    const seriesSize = compactLayout ? am5.percent(90) : am5.percent(75);
+    const seriesWidth = compactLayout ? am5.percent(TREE_COMPACT_WIDTH_PERCENT) : am5.percent(75);
+    const seriesHeight = compactLayout ? am5.percent(90) : am5.percent(75);
     const seriesPadding = compactLayout ? 20 : 40;
     const chartElement = document.getElementById(chartForm.chartDivId);
     const originalChartHeight = chartElement?.style.height ?? "";
@@ -2432,8 +2434,8 @@ function createTreeChart(root, chartForm) {
 
     const series = chart.contents.children.push(
         am5hierarchy.Tree.new(root, {
-            width: seriesSize,
-            height: seriesSize,
+            width: seriesWidth,
+            height: seriesHeight,
             paddingTop: seriesPadding,
             paddingRight: seriesPadding,
             paddingBottom: seriesPadding,
@@ -2464,33 +2466,22 @@ function createTreeChart(root, chartForm) {
     const nodeRadius = compactLayout ? 8 : 34;
     series.circles.template.set("radius", nodeRadius);
     series.outerCircles.template.set("radius", nodeRadius);
-    if (compactLayout) {
-        series.labels.template.setAll({
-            fontSize: 12,
-            oversizedBehavior: "truncate",
-            breakWords: false,
-            paddingTop: 0,
-            paddingRight: 0,
-            paddingBottom: 0,
-            paddingLeft: 0,
-            centerX: am5.p0,
-            centerY: am5.p50,
-            x: 12,
-            textAlign: "left",
-            fill: am5.color(lightTheme_labelColor)
-        });
-    } else {
-        series.labels.template.setAll({
-            fontSize: 13,
-            oversizedBehavior: "wrap",
-            breakWords: true,
-            paddingTop: 2,
-            paddingRight: 2,
-            paddingBottom: 2,
-            paddingLeft: 2,
-            textAlign: "center"
-        });
-    }
+    series.labels.template.setAll({
+        fontSize: compactLayout ? 12 : 13,
+        oversizedBehavior: compactLayout ? "truncate" : "none",
+        breakWords: false,
+        paddingTop: 0,
+        paddingRight: 0,
+        paddingBottom: 0,
+        paddingLeft: 0,
+        centerX: am5.p0,
+        centerY: am5.p50,
+        x: nodeRadius + 4,
+        maxWidth: compactLayout ? 150 : 200,
+        maxHeight: compactLayout ? 18 : 20,
+        textAlign: "left",
+        fill: am5.color(lightTheme_labelColor)
+    });
     series.links.template.setAll({
         strokeWidth: 1.25,
         strokeOpacity: compactLayout ? 0.35 : 0.75
@@ -2505,11 +2496,13 @@ function createTreeChart(root, chartForm) {
 
     series.data.setAll(treeData);
     if (compactLayout) {
-        updateCompactTreeScale(chartForm);
         chart.contents.on("scale", () => updateCompactTreeScale(chartForm));
     }
     if (series.dataItems.length > 0) {
         series.set("selectedDataItem", series.dataItems[0]);
+    }
+    if (compactLayout) {
+        updateCompactTreeScale(chartForm);
     }
 
     series.appear(1000, 100);
@@ -2519,6 +2512,13 @@ function createTreeChart(root, chartForm) {
 function setTreeChartInitialView(chartForm) {
     chartForm.root.events.once("frameended", () => {
         if (chartForm.root.isDisposed()) return;
+        if (!chartForm.compactLayout) {
+            chartForm.series.labels.each(label => label.setAll({
+                maxWidth: 200,
+                maxHeight: 20,
+                oversizedBehavior: "none"
+            }));
+        }
         chartForm.chart.contents.setAll({
             x: 0,
             y: 0,

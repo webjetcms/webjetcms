@@ -85,6 +85,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 - Elektronický obchod - pridaná aplikácia [Štatistiky e-shopu](redactor/apps/eshop/stats/README.md) so súhrnnými ukazovateľmi, filtrovaním podľa stavu, meny a obdobia a grafmi tržieb, produktov, kategórií, spôsobov doručenia a platobných metód (#58065).
 
+![](redactor/apps/eshop/stats/stats.png)
+
 - Pridaná nová aplikácia [Presmerovanie podľa jazyka](redactor/apps/language-redirect/README.md) na automatické presmerovanie návštevníkov na jazykovú verziu stránky podľa detekcie jazyka z HTTP hlavičky `Accept-Language`. Podporuje až 8 priradení jazykov na URL adresy, rešpektovanie jazykového cookie a možnosť presmerovania len na koreňovej URL (#58497).
 
 ![](redactor/apps/language-redirect/editor-basic.png)

@@ -28,7 +28,8 @@ class TestTranslationService extends BaseWebjetTest {
             "This is a test: !INCLUDE(pes.jsp, ja, som, najlepší)!, this test is mandatory. This one should also work: !INCLUDE(neviem.jsp, skúsim, to, znovu)!, end of test.",
             "This is a test: !INCLUDE(pes.jsp, ja, som, najlepší)!, this test is mandatory. This one should work too: !INCLUDE(neviem.jsp, skúsim, to, znovu)!, end of test.",
             "This is a test: !INCLUDE(pes.jsp, ja, som, najlepší)!; this test is required. This one should work too: !INCLUDE(neviem.jsp, skúsim, to, znovu)!; end of test.",
-            "This is a test: !INCLUDE(pes.jsp, ja, som, najlepší)!; this test is required. This one should work as well: !INCLUDE(neviem.jsp, skúsim, to, znovu)!;"
+            "This is a test: !INCLUDE(pes.jsp, ja, som, najlepší)!; this test is required. This one should work as well: !INCLUDE(neviem.jsp, skúsim, to, znovu)!; end of test.",
+            "This is a test: !INCLUDE(pes.jsp, ja, som, najlepší)!; this test is required. This one should work, too: !INCLUDE(neviem.jsp, skúsim, to, znovu)!; end of test."
         };
 
         // Init Translate from SK to EN

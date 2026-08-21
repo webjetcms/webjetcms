@@ -444,7 +444,9 @@ Jednotlivé parametre triedy slúžia na:
 
 !>**Upozornenie:** Povinné parametre sú `chartDivId` a `chartData`. Vizuálne vlastnosti, ako veľkosť uzlov, zalamovanie textu, rozostupy, orientácia a vzhľad spojníc, sú nastavené priamo v `chart-tools.js` a nie sú súčasťou verejnej konfigurácie.
 
-Ak strom obsahuje viac ako osem koncových vetiev, graf automaticky použije kompaktné body s jednoriadkovými popismi, podľa potreby zväčší výšku plochy (najviac na 800 pixelov) a otvorí sa v dvojnásobnom priblížení. Pri ďalšom približovaní zostáva veľkosť bodov a textu rovnaká, zväčšujú sa iba ich rozostupy. Vďaka tomu je možné hustú úroveň čítať a posúvať bez vzájomného prekrývania uzlov. Dvojprstové posúvanie na touchpade posúva stránku; graf sa približuje iba tlačidlami alebo gestom pinch-to-zoom.
+Popis sa vždy zobrazuje vedľa kruhového uzla, aby hodnota a názov zostali čitateľné aj pri menšom počte položiek.
+
+Ak strom obsahuje viac ako osem koncových vetiev, graf automaticky použije kompaktné body s jednoriadkovými popismi, zmenší horizontálne rozostupy, podľa potreby zväčší výšku plochy (najviac na 800 pixelov) a otvorí sa v dvojnásobnom priblížení. Pri ďalšom približovaní zostáva veľkosť bodov a textu rovnaká, zväčšujú sa iba ich rozostupy. Vďaka tomu je možné hustú úroveň čítať a posúvať bez vzájomného prekrývania uzlov. Dvojprstové posúvanie na touchpade posúva stránku; graf sa približuje iba tlačidlami alebo gestom pinch-to-zoom.
 
 ### Formát dát
 
