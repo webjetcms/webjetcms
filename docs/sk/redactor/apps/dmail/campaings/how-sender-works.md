@@ -58,8 +58,10 @@ Nasledovné konfiguračné premenné ovplyvňujú rýchlosť odosielania:
 Ak potrebujete urýchliť odosielanie môžete postupovať nasledovne:
 
 - Zvýšte doménové limity, odporúčame nastaviť vyššie limity na domény ```gmail.com``` a vašu firemnú doménu.
-- Upravte ```dmailWaitTimeout``` na hodnotu ```500```, čo zvýši rýchlosť volania odoslania emailu, z dôvodu blokovania (viď vyššie). To ale neznamená, že sa email odošle každých 500ms.
+- Upravte ```dmailWaitTimeout``` na hodnotu ```50```, čo zvýši rýchlosť volania odoslania emailu, z dôvodu blokovania (viď vyššie). To ale neznamená, že sa email odošle každých 50ms.
 - Ak databáza obsahuje veľa neplatných emailov znížte ```dmailSleepTimeAfterException```. **Upozornenie:**, ak skutočne nastane výpadok vášho SMTP servera, tak sa emaily veľmi rýchlo označia ako odoslané, pretože pretečie počet ```dmailMaxRetryCount```.
 - Nastavte ```natUrlTranslate``` pre priame sťahovanie textu emailu z lokálneho aplikačného servera. Ak máte viac doménovú inštaláciu môže nastať problém s výberom správnej domény. Odporúčame v ```hosts``` súbore na serveri nastaviť všetky domény na IP adresu 127.0.0.1, v takom prípade nastavíte len presmerovanie portu z 80 na 8080 (alebo na akom porte máte spustený lokálny aplikačný server).
 - Minimalizujte obrázky a prílohy. Tie zvyšujú záťaž na server a objem emailu. Prípadne nastavte konf. premennú ```dmailDisableInlineImages``` na ```false``` pre vypnutie prikladania obrázkov priamo do tela emailu.
 - Ak máte cluster môžete povoliť odosielanie z viacerých nodov paralelne, zvyšuje sa ale riziko viac duplicitného odoslania emailu príjemcovi. Zoznam nodov, z ktorých sa email odosiela sa nastavuje v konf. premennej ```senderRunOnNode```.
+- Vypnite štatistiku návštevnosti (ak ju nepotrebujete) nastavením `statMode=none`.
+- Stránke s textom emailu zapnite možnosť Cachovať, aby sa obsah nemusel zakaždým čítať z databázy.
