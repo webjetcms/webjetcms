@@ -48,6 +48,8 @@ public class BasketStatsService {
     private static final String CATEGORY_DIRECT_KEY = "apps.eshop.stats.category_direct";
     private static final String DELIVERY_FEE_NOTE_KEY = "components.basket.invoice_email.delivery_method";
     private static final String PAYMENT_FEE_NOTE_KEY = "components.basket.invoice_email.payment_method";
+    private static final String LEGACY_DELIVERY_GROUP_PATH_KEY = "basketStatsLegacyDeliveryGroupPath";
+    private static final String LEGACY_PAYMENT_GROUP_PATH_KEY = "basketStatsLegacyPaymentGroupPath";
 
     private final BasketInvoicesRepository invoicesRepository;
     private final BasketInvoiceItemsRepository invoiceItemsRepository;
@@ -82,6 +84,17 @@ public class BasketStatsService {
         String targetCurrency = BasketTools.isCurrencySupported(currency)
             ? currency
             : BasketTools.getSystemCurrency();
+        GroupsDB groupsDB = GroupsDB.getInstance();
+        Set<Integer> legacyDeliveryItemIds = getLegacyFeeDocumentIds(
+            groupsDB,
+            Constants.getString(LEGACY_DELIVERY_GROUP_PATH_KEY)
+        );
+        Set<Integer> legacyPaymentItemIds = getLegacyFeeDocumentIds(
+            groupsDB,
+            Constants.getString(LEGACY_PAYMENT_GROUP_PATH_KEY)
+        );
+        Set<Integer> legacyFeeItemIds = new HashSet<>(legacyDeliveryItemIds);
+        legacyFeeItemIds.addAll(legacyPaymentItemIds);
 
         List<BasketInvoiceStatsProjection> invoices = invoicesRepository.findAllForStatistics(
             domainId,
@@ -106,14 +119,41 @@ public class BasketStatsService {
             dateRange[1],
             filterByStatus,
             queryStatusIds,
-            InvoiceStatus.INVOICE_STATUS_CANCELLED.getValue()
+            InvoiceStatus.INVOICE_STATUS_CANCELLED.getValue(),
+            toQueryItemIds(legacyFeeItemIds)
         );
 
         if (invoices == null) invoices = Collections.emptyList();
         if (products == null) products = Collections.emptyList();
         if (fees == null) fees = Collections.emptyList();
 
-        return createStats(invoices, products, fees, targetCurrency, request, prop);
+        return createStats(
+            invoices,
+            products,
+            fees,
+            targetCurrency,
+            request,
+            prop,
+            legacyDeliveryItemIds,
+            legacyPaymentItemIds
+        );
+    }
+
+    Set<Integer> getLegacyFeeDocumentIds(GroupsDB groupsDB, String groupPath) {
+        if (Tools.isEmpty(groupPath)) return Collections.emptySet();
+
+        GroupDetails group = groupsDB.getGroupByPath(groupPath);
+        if (group == null) return Collections.emptySet();
+
+        return docDetailsRepository.findAllByGroupId(group.getGroupId()).stream()
+            .map(DocDetails::getDocId)
+            .filter(docId -> docId > 0)
+            .collect(Collectors.toCollection(HashSet::new));
+    }
+
+    static List<Integer> toQueryItemIds(Set<Integer> itemIds) {
+        if (itemIds.isEmpty()) return Collections.singletonList(-1);
+        return itemIds.stream().sorted().toList();
     }
 
     private Date[] getDateRange(String dayDate) {
@@ -142,13 +182,15 @@ public class BasketStatsService {
         return "daterange:" + calendar.getTimeInMillis() + "-" + dateTo;
     }
 
-    private BasketStatsDTO createStats(
+    BasketStatsDTO createStats(
         List<BasketInvoiceStatsProjection> invoices,
         List<BasketProductStatsProjection> products,
         List<BasketFeeStatsProjection> fees,
         String currency,
         HttpServletRequest request,
-        Prop prop
+        Prop prop,
+        Set<Integer> legacyDeliveryItemIds,
+        Set<Integer> legacyPaymentItemIds
     ) {
         BasketStatsDTO stats = new BasketStatsDTO();
         stats.setCurrency(currency);
@@ -201,9 +243,19 @@ public class BasketStatsService {
         stats.setPaymentMethods(toTopList(paymentMethods, Integer.MAX_VALUE));
         stats.setInvoiceStatuses(toTopList(statuses, Integer.MAX_VALUE));
 
-        fillFeeStats(stats, fees, revenue, currency, prop);
+        fillFeeStats(
+            stats,
+            fees,
+            revenue,
+            currency,
+            prop,
+            legacyDeliveryItemIds,
+            legacyPaymentItemIds
+        );
 
-        fillProductStats(stats, products, prop);
+        Set<Integer> legacyFeeItemIds = new HashSet<>(legacyDeliveryItemIds);
+        legacyFeeItemIds.addAll(legacyPaymentItemIds);
+        fillProductStats(stats, products, prop, legacyFeeItemIds);
         stats.setAverageItemsPerInvoice(
             revenueInvoiceCount > 0
                 ? BigDecimal.valueOf(stats.getSoldItemCount())
@@ -218,21 +270,31 @@ public class BasketStatsService {
         List<BasketFeeStatsProjection> fees,
         BigDecimal revenue,
         String currency,
-        Prop defaultProp
+        Prop defaultProp,
+        Set<Integer> legacyDeliveryItemIds,
+        Set<Integer> legacyPaymentItemIds
     ) {
         BigDecimal deliveryFees = BigDecimal.ZERO;
         BigDecimal paymentFees = BigDecimal.ZERO;
 
         for (BasketFeeStatsProjection fee : fees) {
-            Prop invoiceProp = Tools.isEmpty(fee.getUserLng())
-                ? defaultProp
-                : Prop.getInstance(fee.getUserLng());
             BigDecimal feePrice = getFeePriceWithVat(fee, currency);
+            Integer itemId = fee.getItemId();
 
-            if (isFeeType(fee.getItemNote(), invoiceProp, DELIVERY_FEE_NOTE_KEY)) {
+            if (legacyDeliveryItemIds.contains(itemId)) {
                 deliveryFees = deliveryFees.add(feePrice);
-            } else if (isFeeType(fee.getItemNote(), invoiceProp, PAYMENT_FEE_NOTE_KEY)) {
+            } else if (legacyPaymentItemIds.contains(itemId)) {
                 paymentFees = paymentFees.add(feePrice);
+            } else if (itemId != null && itemId == 0) {
+                Prop invoiceProp = Tools.isEmpty(fee.getUserLng())
+                    ? defaultProp
+                    : Prop.getInstance(fee.getUserLng());
+
+                if (isFeeType(fee.getItemNote(), invoiceProp, DELIVERY_FEE_NOTE_KEY)) {
+                    deliveryFees = deliveryFees.add(feePrice);
+                } else if (isFeeType(fee.getItemNote(), invoiceProp, PAYMENT_FEE_NOTE_KEY)) {
+                    paymentFees = paymentFees.add(feePrice);
+                }
             }
         }
 
@@ -259,11 +321,12 @@ public class BasketStatsService {
     private void fillProductStats(
         BasketStatsDTO stats,
         List<BasketProductStatsProjection> products,
-        Prop prop
+        Prop prop,
+        Set<Integer> legacyFeeItemIds
     ) {
         List<Long> docIds = products.stream()
             .map(BasketProductStatsProjection::getItemId)
-            .filter(itemId -> itemId != null && itemId > 0)
+            .filter(itemId -> itemId != null && itemId > 0 && legacyFeeItemIds.contains(itemId) == false)
             .map(Long::valueOf)
             .distinct()
             .toList();
@@ -277,22 +340,13 @@ public class BasketStatsService {
         GroupsDB groupsDB = GroupsDB.getInstance();
         List<LabelValueInteger> productGroups = ProductListService.getListOfProductsGroups(docDetailsRepository);
         Map<Integer, String> productCategoryPaths = getProductCategoryPaths(productGroups, groupsDB);
-        String transportGroupName = Constants.getString("basketTransportGroupName");
-        if (Tools.isEmpty(transportGroupName)) transportGroupName = "ModeOfTransport";
-
-        GroupDetails systemGroup = groupsDB.getLocalSystemGroup();
-        if (systemGroup == null) systemGroup = groupsDB.getGroupByPath("/System");
-        GroupDetails transportGroup = systemGroup == null
-            ? null
-            : groupsDB.getGroup(transportGroupName, systemGroup.getGroupId());
-        int transportGroupId = transportGroup == null ? -1 : transportGroup.getGroupId();
 
         for (BasketProductStatsProjection product : products) {
             long quantity = product.getQuantity() == null ? 0 : product.getQuantity();
             if (quantity < 1) continue;
+            if (legacyFeeItemIds.contains(product.getItemId())) continue;
 
             DocDetails doc = product.getItemId() == null ? null : docsById.get(product.getItemId().longValue());
-            if (doc != null && doc.getGroupId() == transportGroupId) continue;
 
             soldItemCount += quantity;
 

@@ -182,6 +182,8 @@ public class ConstantsV9 {
 		Constants.setBoolean("loggerUseAnsiColors", false, "adminlog", "If true, logger will use ANSI colors for console output");
 		Constants.setBoolean("fileArchivAllowPatternVersion", true, Constants.MOD_FILE_ARCHIV, "Ak je povolene (true), manažér dokumentov povolí vytváranie verzií pre súbory typu VZOR.");
 		Constants.setString("basketInvoiceSupportedCountries", ".sk,.cz,.pl", Constants.MOD_BASKET, "Which countries are supported for delivery. Format is TLD: .sk,.cz,.pl");
+		Constants.setString("basketStatsLegacyDeliveryGroupPath", "/System/ModeOfTransport", Constants.MOD_BASKET, "Path to the legacy delivery method documents used in basket statistics.");
+		Constants.setString("basketStatsLegacyPaymentGroupPath", "/System/ModeOfExpedition", Constants.MOD_BASKET, "Path to the legacy payment method fee documents used in basket statistics.");
 
 		Constants.setString("basketNewCategoryHtmlCode", "!INCLUDE(/components/basket/bootstrap_products.jsp, style=01 ,groupIds=, orderType=priority, asc=yes, publishType=all, paging=yes, pageSize=15,pagingPosition=both, thumbWidth=190, thumbHeight=190, showCategory=yes, showSort=yes, testRun=no, katalogProduktov=no, overeneZakaznikmi=)!", Constants.MOD_BASKET, "HTML kód pre novú kategóriu v košíku.");
 
