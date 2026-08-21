@@ -83,6 +83,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Applications
 
+- E-commerce - added application [E-shop statistics](redactor/apps/eshop/stats/README.md) with summary indicators, filtering by status, currency and period, and graphs of sales, products, categories, delivery methods and payment methods (#58065).
+
+![](redactor/apps/eshop/stats/stats.png)
+
 - Added new application [Language Redirect](redactor/apps/language-redirect/README.md) to automatically redirect visitors to the language version of the page based on language detection from the HTTP header `Accept-Language`. It supports up to 8 language assignments per URL, respecting the language cookie, and the option to redirect only to the root URL (#58497).
 
 ![](redactor/apps/language-redirect/editor-basic.png)
@@ -138,10 +142,12 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Explorer - added right **Allow uploading files with accents**, which allows preserving accents when uploading, creating, and renaming files and folders in folders `/files`, `/images`, and `/shared`. Without this right, names will continue to be automatically edited without accents (#58589).
 - Login - faster loading of the home page in the administration - added cache for the list of recent pages, changed pages and audit logs (#58589).
 - Export/import files - modified dialog design and responsive display of form fields according to the current administration design (#58581).
+- Charts - added a new tree chart [`TreeChartForm`](developer/frameworks/charts/frontend/statjs.md#tree-type-chart) for visualizing hierarchical data with zooming, expanding, and maximizing (#58065).
+- Google reCaptcha - added support for inserting multiple multi-step forms into a page, `invisible/reCaptcha/reCaptchaV3` mode is supported, error message edited to more understandable text (#osk573).
 - Web pages - added highlighting of the element above which the context menu is called. Important if you want to perform the Delete element action, so you can see exactly which element is marked (#OSK675).
 - Multiweb - added option to rename an existing domain + redirection after renaming (#58317-15).
 - Multiweb - modified [display of template groups](install/multiweb/README.md) according to available templates and alias of current domain (#58317-17).
-- Google reCaptcha - added support for inserting multiple multi-step forms into a page, `invisible/reCaptcha/reCaptchaV3` mode is supported, error message edited to more understandable text (#osk573).
+- Statistics - the set date/from-to range is saved in the browser and is remembered even after logging out/restarting the browser (#58065).
 - Multi-step forms - added moving (`scroll`) to the beginning of the form after moving to the next step (#osk573).
 
 ### Bug fixes

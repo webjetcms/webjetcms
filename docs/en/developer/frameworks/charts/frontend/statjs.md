@@ -13,6 +13,7 @@ This section describes common charting functions provided by the [chart-tools.js
 | `PieChartForm` | `ChartTools.PieChartForm` | Pie chart (classic or donut) |
 | `DoublePieChartForm` | `ChartTools.DoublePieChartForm` | Two-layer pie chart |
 | `WordCloudChartForm` | `ChartTools.WordCloudChartForm` | Word cloud |
+| `TreeChartForm` | `ChartTools.TreeChartForm` | Tree graph for hierarchical data |
 | `TableChartForm` | `ChartTools.TableChartForm` | Simple table in chart design |
 
 ## Enumeration `ChartType`
@@ -28,6 +29,7 @@ The constant object `ChartType` is used to identify the data type in AJAX calls 
 | `ChartType.Pie_Donut` | `"pie_donut"` | Donut pie chart |
 | `ChartType.Double_Pie` | `"double_pie"` | Two-layer pie chart |
 | `ChartType.Word_Cloud` | `"word_cloud"` | Word cloud |
+| `ChartType.Tree` | `"tree"` | Tree chart |
 | `ChartType.Table` | `"table"` | Table component |
 | `ChartType.Not_Chart` | `"not_chart"` | Special case without graph |
 
@@ -391,6 +393,103 @@ The resulting generated graph with the title:
 
 ![](wordcloud-chart.png)
 
+## Graph type `TREE`
+
+A chart of type **`TREE`** is created using an instance of the class `TreeChartForm`, which is available as `ChartTools.TreeChartForm`. It is used to visualize hierarchical data, such as product categories and their subcategories.
+
+```javascript
+export class TreeChartForm {
+    constructor(config) {
+        this.initFromConfig(config);
+    }
+
+    initFromConfig(config) {
+        if (!config.chartDivId) throwConstructorError("TreeChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("TreeChartForm", "chartData");
+
+        Object.assign(this, {
+            chartDivId: config.chartDivId,
+            chartData: config.chartData,
+            chartTitle: config.chartTitle,
+            valueField: config.valueField == null ? "value" : config.valueField,
+            categoryField: config.categoryField == null ? "name" : config.categoryField,
+            childDataField: config.childDataField == null ? "children" : config.childDataField,
+            initialDepth: config.initialDepth == null ? 10 : config.initialDepth,
+            downDepth: config.downDepth == null ? 1 : config.downDepth,
+            topDepth: config.topDepth == null ? 0 : config.topDepth,
+            singleBranchOnly: config.singleBranchOnly == null ? false : config.singleBranchOnly,
+            labelText: config.labelText,
+            tooltipText: config.tooltipText == null ? "{category}: [bold]{sum}[/]" : config.tooltipText,
+            colorScheme: config.colorScheme
+        });
+    }
+}
+```
+
+The individual class parameters serve to:
+
+- `chartDivId` is a text value representing the ID of the element `div` in which the chart will be drawn.
+- `chartData` is a root object or an array containing a single root object with hierarchically nested data.
+- `chartTitle` is a text value representing the title that will be displayed as a header above the chart.
+- `valueField` is the name of the field with the numeric value of the node. The default value is `value`.
+- `categoryField` is the name of the field with the text name of the node. The default value is `name`.
+- `childDataField` is the name of the array with the child nodes array. The default value is `children`.
+- `initialDepth` determines the number of levels displayed after the chart is created. The default value is `10`.
+- `downDepth` determines the number of child levels displayed after selecting a node. The default value is `1`.
+- `topDepth` specifies the node depth from which the tree starts to be displayed. The default value is `0`, including the root node.
+- `singleBranchOnly` determines whether only one branch can be expanded at a time. The default value is `false`.
+- `labelText` is an optional amCharts template for the text displayed in the node. If not specified, the default series text is used.
+- `tooltipText` is an optional amCharts tooltip text template. The default value is `{category}: [bold]{sum}[/]`.
+- `colorScheme` is a text value specifying the color scheme of the chart (allowed values ​​are described in the [Color schemes](#color-schemes) section).
+
+!>**Note:** Required parameters are `chartDivId` and `chartData`. Visual properties such as node size, text wrapping, spacing, orientation, and connector appearance are set directly in `chart-tools.js` and are not part of the public configuration.
+
+The description is always displayed next to the circular node so that the value and name remain readable even with fewer items.
+
+If the tree contains more than eight terminal branches, the chart automatically uses compact points with single-line descriptions, reduces horizontal spacing, increases the height of the area as needed (up to 800 pixels), and opens at 2x zoom. When zooming in further, the size of the points and text remains the same, only their spacing increases. This makes it possible to read and scroll through the dense level without overlapping nodes. Two-finger scrolling on the touchpad scrolls the page; the chart is zoomed in only with the buttons or pinch-to-zoom.
+
+### Data format
+
+Each node contains a name, a numeric value, and an optional child field. If the parent node does not have its own numeric value, amCharts calculates it as the sum of the child values. The field names can be changed using the `categoryField`, `valueField`, and `childDataField` parameters.
+
+```javascript
+const categoryTree = {
+    name: "Produkty",
+    value: 84,
+    children: [
+        {
+            name: "Mobily",
+            value: 84,
+            children: [
+                { name: "Android", value: 63 },
+                { name: "iPhone", value: 21 }
+            ]
+        }
+    ]
+};
+```
+
+### Example of use
+
+Example of using **`TREE`** graph from file [stats.html](../../../../../../src/main/webapp/apps/basket/admin/stats.html):
+
+```javascript
+const categoryChart = new ChartTools.TreeChartForm({
+    chartTitle: "Predaj podľa kategórií",
+    chartDivId: "basketStats-categories",
+    chartData: categoryTree,
+    topDepth: 1,
+    initialDepth: 1,
+    downDepth: 1,
+    singleBranchOnly: true,
+    labelText: "[bold]{sum}[/] {category}"
+});
+
+ChartTools.createAmchart(categoryChart);
+```
+
+The chart automatically supports zooming, panning, and expanding nodes. It also includes a button in the controls to maximize the chart to full screen. The maximized view can be exited with the same button or the `Escape` key.
+
 ## Graph type `LINE`
 
 A chart of type **`LINE`** is created using an instance of the class `LineChartForm`, which is available as `ChartTools.LineChartForm`. Compared to charts **`BAR`** or **`PIE`**, it is specific in that it can display multiple values ​​for multiple datasets. Therefore, it also requires specific input and configuration parameters, which are described in the following subsections.
@@ -684,7 +783,7 @@ barChartQueries.chartData = newData;
 ChartTools.updateChart(barChartQueries);
 ```
 
-The function works for all chart types (`BarChartForm`, `PieChartForm`, `LineChartForm`, `DoublePieChartForm`, `WordCloudChartForm`). The data must be assigned to the corresponding `chartForm` object before calling `updateChart()`.
+The function works for all chart types (`BarChartForm`, `PieChartForm`, `LineChartForm`, `DoublePieChartForm`, `WordCloudChartForm`, `TreeChartForm`). The data must be assigned to the corresponding `chartForm` object before calling `updateChart()`.
 
 !>**Warning:** With a chart type **`LINE`** it is not possible to update only the data - the entire chart will be destroyed and recreated. Other chart types update only the data series.
 
@@ -782,9 +881,9 @@ await ChartTools.setSelect("/admin/rest/stat/pages", selectedPageId, "webPageSel
 
 ### `saveSearchCriteria(DATA)` / `getSearchCriteria()`
 
-They store and load shared search criteria for statistics pages. The date range is stored persistently in `localStorage` under the key `webjet.apps.stat.filter.dateRange`; either the start or end date may be omitted. Other criteria remain in `sessionStorage` under `webjet.apps.stat.filter`. `getSearchCriteria()` merges both stores and gives precedence to the persistent date range.
+They are used to store and retrieve common search criteria for statistics pages. The date range is permanently stored in `localStorage` under the key `webjet.apps.stat.filter.dateRange`, and only the date from or only the date to can be specified. The other criteria remain in `sessionStorage` under the key `webjet.apps.stat.filter`. The function `getSearchCriteria()` merges both repositories and gives priority to the permanently stored date range.
 
-`saveSearchCriteria()` accepts either a DataTable configuration object or a CSS selector for a custom filter container.
+The `saveSearchCriteria()` function accepts a DataTable configuration object or a CSS selector for a custom filter container.
 
 ```javascript
 // Uložíme kritériá po ich zmene
