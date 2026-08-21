@@ -23,6 +23,7 @@ import sk.iway.iwcm.IwcmRequest;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.system.elfinder.IwcmFsVolume;
 import sk.iway.iwcm.users.UsersDB;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -159,7 +160,7 @@ public class DiskMultiPartRequestHandler
 		@Override
 		public String getFileName(FileItemHeaders headers) {
 			String fileName = super.getFileName(headers);
-			return fileName == null ? null : Normalizer.normalize(fileName, Normalizer.Form.NFC);
+			return fileName == null ? null : IwcmFsVolume.normalizeUnicode(fileName);
 		}
 	}
 
