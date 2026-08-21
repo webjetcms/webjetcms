@@ -412,24 +412,30 @@ export function getDateRangeWithName(name, defaultRangeDaysValue) {
     return daterange;
 }
 
+const STAT_FILTER_STORAGE_KEY = "webjet.apps.stat.filter";
+const STAT_DATE_RANGE_STORAGE_KEY = "webjet.apps.stat.filter.dateRange";
+const STAT_DATE_RANGE_INPUTS = [".dt-filter-from-dayDate", ".dt-filter-to-dayDate"];
+
 /**
- * Save last search criteria to session storage, so all stats page will have same criteria when loaded
- * @param {*} DATA
+ * Save the last search criteria so all statistics pages can reuse them.
+ * Date range values are persisted in local storage, while other filters remain in session storage.
+ * @param {Object|string} DATA DataTable configuration object or filter container selector.
  */
 export function saveSearchCriteria(DATA) {
-    var inputs = [".dt-filter-from-dayDate", ".dt-filter-to-dayDate", "#rootDir", "#botFilterOut", "#searchUrl", ".dt-filter-lastLogon", "#searchEngineSelect", "#webPageSelect"];
+    var inputs = [...STAT_DATE_RANGE_INPUTS, "#rootDir", "#botFilterOut", "#searchUrl", ".dt-filter-lastLogon", "#searchEngineSelect", "#webPageSelect"];
     var specialInputs = ["#searchEngineSelect", "#webPageSelect"]; //Resetting the value of this field is handed specialy
     var defaultSearch = {};
     var isWebPageValueValid = true;
     var isSearchEngineValueValid = true;
+    var filterContainerSelector = typeof DATA === "string" ? DATA : "#" + DATA.id + "_extfilter";
 
     //!! it's impotatnt step, without merge we will lose set params from another page
-    let oldDefaultSearch = JSON.parse( window.sessionStorage.getItem("webjet.apps.stat.filter") );
+    let oldDefaultSearch = JSON.parse( window.sessionStorage.getItem(STAT_FILTER_STORAGE_KEY) );
     if(oldDefaultSearch == null) oldDefaultSearch = {};
 
     var inputNotIncludedinCurrentPage = [];
     for (const name of inputs) {
-        var $input = $("#"+DATA.id+"_extfilter "+name);
+        var $input = $(filterContainerSelector + " " + name);
 
         //! very importatnt we need to know, what input's are not included in this page
         //If input is not included in this page, we dont want to work with it
@@ -443,7 +449,7 @@ export function saveSearchCriteria(DATA) {
         //console.log("saveSearchCriteria: name=", name, "value=", value, "input=", $input);
         if ("true"===value) {
             //it's checkbox
-            value = $("#"+DATA.id+"_extfilter "+name).is(":checked");
+            value = $input.is(":checked");
             //console.log("CHECKBOX value=", value, "name=", name);
         }
         if ("#rootDir"===name) {
@@ -526,18 +532,49 @@ export function saveSearchCriteria(DATA) {
             delete mergeDefaultSearch["#searchEngineSelect-text"];
     }
 
+    if(STAT_DATE_RANGE_INPUTS.some(name => !inputNotIncludedinCurrentPage.includes(name))) {
+        var dateRangeSearch = {};
+        for (const name of STAT_DATE_RANGE_INPUTS) {
+            if(defaultSearch.hasOwnProperty(name)) {
+                const date = moment(defaultSearch[name], "L");
+                if(date.isValid()) dateRangeSearch[name] = date.format("YYYY-MM-DD");
+            }
+            delete mergeDefaultSearch[name];
+        }
+
+        var dateRangeJson = JSON.stringify(dateRangeSearch);
+        if(dateRangeJson != "{}") window.localStorage.setItem(STAT_DATE_RANGE_STORAGE_KEY, dateRangeJson);
+        else window.localStorage.removeItem(STAT_DATE_RANGE_STORAGE_KEY);
+    }
+
     //Set new object
     var json = JSON.stringify(mergeDefaultSearch);
-    if (json != "{}") window.sessionStorage.setItem("webjet.apps.stat.filter", json);
-    else window.sessionStorage.removeItem("webjet.apps.stat.filter");
+    if (json != "{}") window.sessionStorage.setItem(STAT_FILTER_STORAGE_KEY, json);
+    else window.sessionStorage.removeItem(STAT_FILTER_STORAGE_KEY);
 }
 
 /**
- * Gets saved search criteria from session storage
+ * Gets saved search criteria from session storage and the persistent date range from local storage.
  * @returns
  */
 export function getSearchCriteria() {
-    var defaultSearch = window.sessionStorage.getItem("webjet.apps.stat.filter");
+    var defaultSearch = window.sessionStorage.getItem(STAT_FILTER_STORAGE_KEY);
+    if ("{}"==defaultSearch) defaultSearch = null;
+    if (defaultSearch != null) defaultSearch = JSON.parse(defaultSearch);
+
+    var dateRangeSearch = window.localStorage.getItem(STAT_DATE_RANGE_STORAGE_KEY);
+    if (dateRangeSearch != null && "{}"!=dateRangeSearch) {
+        if (defaultSearch == null) defaultSearch = {};
+        for (const name of STAT_DATE_RANGE_INPUTS) delete defaultSearch[name];
+
+        dateRangeSearch = JSON.parse(dateRangeSearch);
+        for (const name of STAT_DATE_RANGE_INPUTS) {
+            if(dateRangeSearch.hasOwnProperty(name)) {
+                const date = moment(dateRangeSearch[name], "YYYY-MM-DD", true);
+                if(date.isValid()) defaultSearch[name] = date.format("L");
+            }
+        }
+    }
 
     let webPageId = null;
     let webPageText = null;
@@ -545,9 +582,7 @@ export function getSearchCriteria() {
     let searchEngineId = null;
     let searchEngineText = null;
 
-    if ("{}"==defaultSearch) defaultSearch = null;
     if (defaultSearch != null) {
-        defaultSearch = JSON.parse(defaultSearch);
         for (const property in defaultSearch) {
             var value = defaultSearch[property];
             if (property == "#rootDir") {

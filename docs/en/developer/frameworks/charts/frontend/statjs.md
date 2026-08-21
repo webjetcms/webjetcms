@@ -782,11 +782,16 @@ await ChartTools.setSelect("/admin/rest/stat/pages", selectedPageId, "webPageSel
 
 ### `saveSearchCriteria(DATA)` / `getSearchCriteria()`
 
-They are used to store and load search criteria to/from `sessionStorage` under the key `webjet.apps.stat.filter`. This allows all statistics pages to remember the last used filter even after switching between pages.
+They store and load shared search criteria for statistics pages. The date range is stored persistently in `localStorage` under the key `webjet.apps.stat.filter.dateRange`; either the start or end date may be omitted. Other criteria remain in `sessionStorage` under `webjet.apps.stat.filter`. `getSearchCriteria()` merges both stores and gives precedence to the persistent date range.
+
+`saveSearchCriteria()` accepts either a DataTable configuration object or a CSS selector for a custom filter container.
 
 ```javascript
 // Uložíme kritériá po ich zmene
 ChartTools.saveSearchCriteria(DATA);
+
+// Custom filter without DataTable
+ChartTools.saveSearchCriteria("#basketStatsFilter");
 
 // Načítame kritériá pri inicializácii stránky
 let defaultSearch = ChartTools.getSearchCriteria();

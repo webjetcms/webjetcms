@@ -26,6 +26,7 @@
         $("#pills-dateRange-tab").html("");
         $("#basketStatsFilter").appendTo("#pills-dateRange-tab");
 
+        restoreDateRange();
         initializeDatePickers();
         await ChartTools.setSelect(
             "/admin/rest/eshop/product-list/supported-currencies",
@@ -42,6 +43,14 @@
         bindFilter();
         loadStats();
     });
+
+    function restoreDateRange() {
+        const searchCriteria = ChartTools.getSearchCriteria();
+        if (searchCriteria == null) return;
+
+        $("#basketStatsDateFrom").val(searchCriteria[".dt-filter-from-dayDate"] || "");
+        $("#basketStatsDateTo").val(searchCriteria[".dt-filter-to-dayDate"] || "");
+    }
 
     function initializeDatePickers() {
         $('#basketStatsFilter .datepicker').each(function (key, dateInput) {
@@ -86,6 +95,8 @@
     }
 
     function getStatsUrl() {
+        ChartTools.saveSearchCriteria("#basketStatsFilter");
+
         const params = new URLSearchParams();
         params.set("dayDate", ChartTools.getDateRange(null));
         params.set("currency", $("#currencySelect").val());
@@ -441,6 +452,7 @@
                 autocomplete="off"
             >
             <input
+                id="basketStatsDateTo"
                 class="datepicker max form-control filter-input form-control-sm dt-datetime dt-filter-to-dayDate"
                 type="text"
                 data-th-placeholder="#{components.basket.invoice.stats.time_to}"

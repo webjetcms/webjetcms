@@ -10,7 +10,7 @@ V hlavičke stránky môžete použiť tieto filtre:
 
 - **Stav** - výber jedného alebo viacerých stavov objednávky. Ak nie je zvolený žiadny stav, spracujú sa všetky objednávky.
 - **Mena** - mena, v ktorej sa zobrazia finančné hodnoty. Objednávky vedené v iných menách sa prepočítajú do zvolenej meny.
-- **Obdobie** - dátumový rozsah vytvorenia objednávok. Ak obdobie nie je zadané, použije sa posledných 30 dní.
+- **Obdobie** - dátumový rozsah vytvorenia objednávok. Môžete zadať iba dátum od alebo iba dátum do. Naposledy použitý rozsah sa uloží v prehliadači a zdieľa so štatistikou návštevnosti. Ak obdobie nie je zadané, použije sa posledných 30 dní.
 
 Po zmene filtra sa automaticky prepočítajú všetky súhrnné ukazovatele a grafy.
 

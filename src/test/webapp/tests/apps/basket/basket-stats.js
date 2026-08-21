@@ -1,6 +1,8 @@
 Feature('apps.basket.basket-stats');
 
 const STATS_ADMIN = "/apps/basket/admin/stats/";
+const STAT_FILTER_STORAGE_KEY = "webjet.apps.stat.filter";
+const STAT_DATE_RANGE_STORAGE_KEY = "webjet.apps.stat.filter.dateRange";
 const CHART_IDS = [
     "basketStats-sales",
     "basketStats-products",
@@ -24,7 +26,65 @@ Before(({ login }) => {
     login('admin');
 });
 
+Scenario('Date range persists and is shared with visit statistics', async ({ I, DT }) => {
+    I.amOnPage("/admin/v9/");
+    await clearStoredDateRange(I);
+    I.amOnPage(STATS_ADMIN);
+    waitForStatistics(I);
+
+    I.say("Save a date range with only the start date");
+    I.fillField("#basketStatsDateFrom", "01.01.2026");
+    I.clickCss("#basketStatsFilter button.dt-filtrujem-dayDate");
+    I.waitForInvisible(".webjetAnimatedLoader", 20);
+
+    I.assertDeepEqual(
+        await I.executeScript(storageKey => JSON.parse(window.localStorage.getItem(storageKey)), STAT_DATE_RANGE_STORAGE_KEY),
+        {".dt-filter-from-dayDate": "2026-01-01"}
+    );
+
+    await I.executeScript(storageKey => {
+        const searchCriteria = JSON.parse(window.sessionStorage.getItem(storageKey)) || {};
+        searchCriteria[".dt-filter-from-dayDate"] = "03.03.2025";
+        searchCriteria[".dt-filter-to-dayDate"] = "10.10.2025";
+        window.sessionStorage.setItem(storageKey, JSON.stringify(searchCriteria));
+    }, STAT_FILTER_STORAGE_KEY);
+
+    I.say("Restore the date range after a page reload");
+    I.refreshPage();
+    waitForStatistics(I);
+    I.seeInField("#basketStatsDateFrom", "01.01.2026");
+    I.seeInField("#basketStatsDateTo", "");
+
+    I.say("Reuse the date range in visit statistics");
+    I.amOnPage("/apps/stat/admin/");
+    I.waitForInvisible("#loader", 20);
+    DT.waitForLoader();
+    DT.checkExtfilterDates("01.01.2026", "");
+
+    I.say("Share an updated date range back to e-shop statistics");
+    DT.setDates("02.01.2026", "", "#statsDataTable_extfilter");
+    DT.waitForLoader();
+    I.amOnPage(STATS_ADMIN);
+    waitForStatistics(I);
+    I.seeInField("#basketStatsDateFrom", "02.01.2026");
+    I.seeInField("#basketStatsDateTo", "");
+
+    I.say("Remove the stored date range after clearing both dates");
+    I.click("#basketStatsDateFrom");
+    I.pressKey(["CommandOrControl", "A"]);
+    I.pressKey("Backspace");
+    I.seeInField("#basketStatsDateFrom", "");
+    I.clickCss("#basketStatsFilter button.dt-filtrujem-dayDate");
+    I.waitForInvisible(".webjetAnimatedLoader", 20);
+    I.assertEqual(
+        await I.executeScript(storageKey => window.localStorage.getItem(storageKey), STAT_DATE_RANGE_STORAGE_KEY),
+        null
+    );
+});
+
 Scenario('E-shop statistics charts and filters @screenshot', async ({ I, Document }) => {
+    I.amOnPage("/admin/v9/");
+    await clearStoredDateRange(I);
     I.amOnPage(STATS_ADMIN);
     waitForStatistics(I);
 
@@ -34,20 +94,21 @@ Scenario('E-shop statistics charts and filters @screenshot', async ({ I, Documen
 
     I.say("Filter statistics by date range");
     I.fillField("#basketStatsDateFrom", "03.03.2025");
-    I.fillField("#basketStatsFilter input.datepicker.max", "10.10.2025");
+    I.fillField("#basketStatsDateTo", "10.10.2025");
     I.clickCss("#basketStatsFilter button.dt-filtrujem-dayDate");
     I.waitForInvisible(".webjetAnimatedLoader", 20);
     I.seeInField("#basketStatsDateFrom", "03.03.2025");
-    I.seeInField("#basketStatsFilter input.datepicker.max", "10.10.2025");
+    I.seeInField("#basketStatsDateTo", "10.10.2025");
 
     if (Document.isScreenshotsEnabled()) {
 
         Document.screenshot("/redactor/apps/eshop/stats/stats.png", 1920, 2500);
 
         await Document.switchDomain("shop.tau27.iway.sk");
+        waitForStatistics(I);
 
         I.fillField("#basketStatsDateFrom", "03.03.2025");
-        I.fillField("#basketStatsFilter input.datepicker.max", "10.10.2025");
+        I.fillField("#basketStatsDateTo", "10.10.2025");
         I.clickCss("#basketStatsFilter button.dt-filtrujem-dayDate");
         I.waitForInvisible(".webjetAnimatedLoader", 20);
 
@@ -100,7 +161,8 @@ Scenario('E-shop statistics charts and filters @screenshot', async ({ I, Documen
     await checkCharts(I);
 });
 
-Scenario('Logout after domain change', ({ I }) => {
+Scenario('Cleanup and logout after domain change @screenshot', async ({ I }) => {
+    await clearStoredDateRange(I);
     I.logout();
 });
 
@@ -118,5 +180,22 @@ async function checkCharts(I) {
     CHART_IDS.forEach(id => {
         I.seeElement("#" + id);
         I.assertContain(renderedChartIds, id, "Chart was not rendered: " + id);
+    });
+}
+
+async function clearStoredDateRange(I) {
+    await I.executeScript(({filterStorageKey, dateRangeStorageKey}) => {
+        window.localStorage.removeItem(dateRangeStorageKey);
+
+        const searchCriteria = JSON.parse(window.sessionStorage.getItem(filterStorageKey));
+        if (searchCriteria == null) return;
+
+        delete searchCriteria[".dt-filter-from-dayDate"];
+        delete searchCriteria[".dt-filter-to-dayDate"];
+        if (Object.keys(searchCriteria).length === 0) window.sessionStorage.removeItem(filterStorageKey);
+        else window.sessionStorage.setItem(filterStorageKey, JSON.stringify(searchCriteria));
+    }, {
+        filterStorageKey: STAT_FILTER_STORAGE_KEY,
+        dateRangeStorageKey: STAT_DATE_RANGE_STORAGE_KEY
     });
 }
