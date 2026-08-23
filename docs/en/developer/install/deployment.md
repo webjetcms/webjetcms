@@ -43,40 +43,9 @@ ant deploy
 
 *Note*: an unpacked structure will be created in the ```build/updatezip``` directory, which can be zipped and used as an update package for WebJET in the old structure (not using `jar` archives).
 
-## Complete source code compilation
+## Java and AspectJ compilation
 
-In WebJET 2021, an existing class from version 8 is often modified, which can lead to class incompatibility. For this reason, there is a special ANT task ```compile``` in the file ```ant/compile.xml```. It uses the original source codes for version 8, unpacks them into a temporary directory, supplements them with the source codes from version 2021, and then compiles everything, including using the ```AspectJ``` compiler.
-
-Everything happens in the ```/build/updatezip``` directory, before starting the compilation, the following commands need to be called:
-
-```sh
-ant updatezip
-ant download
-```
-
-The procedure is as follows:
-
-- task ```prepareSrc```
-  - merges the current and version 8 source codes from ```/src/main/java``` and ```/src/main/aspectj``` into ```src-utf8```
-- task ```delombok```
-  - ```delombok``` will be performed - extrapolation of lombok annotations, since ```AspectJ``` has a problem with lombok annotations
-  - the result is in the directory ```/src-delombok/```
-- task ```compileMapstruct```
-  - all classes from the ```/src-delombok/``` directory are compiled via the standard ```javac```, because ```AspectJ``` cannot correctly compile the ```mapstruct``` classes (create their ```Impl``` version)
-  - additional jar libraries are taken from the ```/ant/libs``` directory, these are classes that are in the old WebJET code and are needed for compilation, but are no longer needed to run WebJET CMS
-  - the compilation result is in ```/WebContent/WEB-INF/classes/```
-  - the source code is copied to the ```/src-aspectj/``` directory, but all mapstruct classes (those that contain ```mapper/mappers``` in the name) are deleted.
-  - all compiled classes except ```/WebContent/WEB-INF/classes/``` classes are deleted from the ```mapper``` directory
-  - from the remaining classes, a JAR file ```/WebContent/WEB-INF/generated-sources/mapper-impl.jar``` is created
-- task ```compile```
-  - performs ```AspectJ``` compilation from directory ```/src-aspectj/``` to directory ```/WebContent/WEB-INF/classes```
-  - will use the JAR file ```/WebContent/WEB-INF/generated-sources/``` with compiled ```mapper``` classes
-  - unpacks the contents of ```mapper-impl.jar``` into the resulting directory ```/WebContent/WEB-INF/classes``` with the compiled ```MapperImpl.class``` classes so that the ```classes``` directory contains all classes
-  - copies files of type ```*.properties``` and ```*.xml``` from ```/src-delombok/``` to the ```classes``` directory
-
-The result is that everything in the ```/WebContent/WEB-INF/classes``` directory is compiled against the complete source code of WebJET version 8 and the current version.
-
-The call to this separate ant ```tasku``` is incorporated directly into the main build, where there is a task ```compile``` calling this separate task. So when the deployment process starts, no additional compilation call is needed, everything happens automatically.
+Java sources are compiled by Gradle during the ```setup``` task. The ```io.freefair.aspectj.post-compile-weaving``` plugin first lets ```javac``` and annotation processors such as Lombok and MapStruct generate the classes, then weaves those classes with AspectJ before the WAR archive is created. A separate Ant/AJC compilation is no longer required.
 
 ## Use in client projects
 

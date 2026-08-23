@@ -43,40 +43,9 @@ ant deploy
 
 *Poznámka*: v adresári ```build/updatezip``` vznikne rozbalená štruktúra, tú je možné zozipovať a použiť ako aktualizačný balík pre WebJET v starej štruktúre (nepoužívajúcej `jar` archívy).
 
-## Kompletné skompilovanie zdrojových kódov
+## Kompilácia Java a AspectJ
 
-Vo WebJET 2021 sa často upravuje existujúca trieda z verzie 8, čo môže viesť k nekompatibilite triedy. Z toho dôvodu existuje špeciálny ANT task ```compile``` v súbore ```ant/compile.xml```. Ten použije originálne zdrojové kódy k verzii 8, rozbalí ich do dočasného adresára, doplní zdrojovými kódmi z verzie 2021 a následne všetko skompiluje vrátane použitia ```AspectJ``` kompilátora.
-
-Všetko sa deje v adresári ```/build/updatezip```, pred spustením kompilácie je potrebné zavolať nasledovné príkazy:
-
-```sh
-ant updatezip
-ant download
-```
-
-Postup je nasledovný:
-
-- task ```prepareSrc```
-  - spojí zdrojové kódy aktuálnej a verzie 8 z ```/src/main/java``` a ```/src/main/aspectj``` do ```src-utf8```
-- task ```delombok```
-  - vykoná sa ```delombok``` - extrapolovanie lombok anotácií, keďže ```AspectJ``` má s lombok anotáciami problém
-  - výsledok je v adresári ```/src-delombok/```
-- task ```compileMapstruct```
-  - skompilujú sa cez štandardné ```javac``` všetky triedy z adresára ```/src-delombok/```, pretože ```AspectJ``` nevie korektne skompilovať ```mapstruct``` triedy (vytvoriť ich ```Impl``` verziu)
-  - dodatočné jar knižnice berie z adresára ```/ant/libs```, jedná sa o triedy, ktoré sú v starom kóde WebJETu a sú potrebné na kompiláciu, ale už nie sú potrebné na beh WebJET CMS
-  - výsledok kompilácie je v ```/WebContent/WEB-INF/classes/```
-  - do adresára ```/src-aspectj/``` sa skopíruje zdrojový kód, ale vymažú sa všetky mapstruct triedy (tie, ktoré obsahujú v názve ```mapper/mappers```)
-  - z adresára ```/WebContent/WEB-INF/classes/``` sa zmažú všetky skompilované triedy okrem ```mapper``` tried
-  - z tried čo zostanú sa vytvorí JAR súbor ```/WebContent/WEB-INF/generated-sources/mapper-impl.jar```
-- task ```compile```
-  - vykoná ```AspectJ``` kompiláciu z adresára ```/src-aspectj/``` do adresára ```/WebContent/WEB-INF/classes```
-  - použije JAR súbor ```/WebContent/WEB-INF/generated-sources/``` so skompilovanými ```mapper``` triedami
-  - do výsledného adresára ```/WebContent/WEB-INF/classes``` rozbalí obsah ```mapper-impl.jar``` so skompilovanými ```MapperImpl.class``` triedami, aby ```classes``` adresár obsahoval všetky triedy
-  - do ```classes``` adresára skopíruje z ```/src-delombok/``` súbory typu ```*.properties``` a ```*.xml```
-
-Výsledkom je, že v adresári ```/WebContent/WEB-INF/classes``` je všetko skompilované voči kompletnému zdrojovému kódu WebJET verzie 8 aj aktuálnej verzie.
-
-Volanie tohto samostatného ant ```tasku``` je začlenené priamo do hlavného buildu, kde existuje task ```compile``` volajúci tento samostatný task. Takže pri spustení deployment procesu nie je potrebné žiadne dodatočné volanie kompilácie, všetko prebehne automaticky.
+Zdrojové kódy Java sa počas úlohy ```setup``` kompilujú cez Gradle. Plugin ```io.freefair.aspectj.post-compile-weaving``` najskôr nechá ```javac``` a anotačné procesory ako Lombok a MapStruct vygenerovať triedy a následne ich pred vytvorením WAR archívu spracuje pomocou `AspectJ weaving`. Samostatná kompilácia cez Ant/AJC už nie je potrebná.
 
 ## Použitie v klientských projektoch
 

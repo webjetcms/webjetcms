@@ -49,7 +49,6 @@ repositories {
 }
 
 ext {
-    //pri zmene verzie je potrebne to zmenit aj v build.xml a compile.xml
     lombokVersion = "1.18.34";
     lombokMapstructBindingVersion = "0.2.0";
     mapstructVersion = "1.6.1";

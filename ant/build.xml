@@ -350,10 +350,6 @@
 
     </target>
 
-    <target name="compile" depends="expandwar" description="compile all classes">
-        <ant antfile="compile.xml" inheritAll="false" target="compile" dir="ant" useNativeBasedir="true"/>
-    </target>
-
     <target name="makepom" depends="define-artifact-properties,makejars" description="create POM file for deployment">
 
         <exec executable="./gradlew">
