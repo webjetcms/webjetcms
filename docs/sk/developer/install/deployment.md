@@ -19,64 +19,47 @@ odtiaľ sa prenesie aj do `build.properties` pre zobrazenie verzie v administrá
 
 ## ANT task
 
-[Build súbor](../../../../ant/build.xml) obsahuje viacero ```task``` elementov, finálny je ```deploy```, ktorý má korektne nastavené závislosti, takže stačí spustiť ten. Zoznam ```taskov```:
+[Build súbor](../../../../ant/build.xml) obsahuje viacero cieľov. Ich aktuálny zoznam a popis zobrazíte príkazom ```ant -f ant/build.xml -p```. Samostatný cieľ ```deploy``` neexistuje; podľa typu výstupu alebo cieľového repozitára použite jeden z nasledujúcich cieľov:
 
-- ```setup``` - obnoví závislosti a vygeneruje ```WAR``` archív
-- ```updatezip``` - pripraví dočasnú štruktúru v ```build/updatezip``` adresári. Štruktúra obsahuje rozbalený ```WAR``` archív, rozbalené ```webjet-XXXX.jar``` súbory (čiže kompletnú štruktúru adresárov /admin, /components a /WEB-INF/classes)
-- ```preparesrc``` - stiahne ```SRC``` jar súbor a pripraví štruktúru pre jar archív so zdrojovými súbormi (spojené z jar archívu a zdrojového kódu WebJET 2021)
-- ```define-artifact-properties``` - zadefinuje vlastnosti pre generovanie artifaktov, tu sa v ```artifact.version``` nastavuje verzia vygenerovaného artifaktu
-- ```makejars``` - pripraví jar archívy tried, /admin a /components adresárov a zdrojových súborov
-- ```download``` - pomocná úloha na stiahnutie jar archívov, ktoré sa nemodifikujú (```struts, daisydiff, jtidy, swagger```)
-- ```makepom``` - vygenerovanie ```POM``` súboru, ten sa generuje gradle úlohou ```writePom``` na základe definovaných závislostí v ```build.gradle```. Úloha zabezpečuje získanie správnej verzie aj z definícií verzie typu ```5.3.+``` a odstránenie závislostí na WebJETe samotnom (ktorý pochádza zo závislostí na v8).
-- ```finalwar``` - vytvorí v priečinku ```build/updatezip/finalwar``` novú štruktúru so skompilovanými triedami vrátane ```AspectJ```. Vytvorí JAR archívy ```WEB-INF/lib/webjet-VERZIA.jar``` s Java triedami, JSP súbormi admin časti a aplikáciami vo forme ```JarPackaging```.
-- ```prepareAllJars``` - pripraví všetky JAR súbory na publikovanie do repozitárov.
-- ```deployGithub``` - deploy SNAPSHOT verzie na [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/2426502/versions).
-- ```deployMavenCentral``` - deploy verzie na https://repo1.maven.org/maven2/com/webjetcms/webjetcms/, pred spustením je potrebné volať úlohu ```prepareAllJars```, vykonať v projekte z ```github```.
+- ```setup``` - obnoví závislosti, skompiluje projekt a vygeneruje ```WAR``` archív, JavaDoc a zdrojové súbory spracované cez Delombok
+- ```expandwar``` - spustí ```setup``` a rozbalí vygenerovaný ```WAR``` archív do adresára ```build/updatezip/WebContent```
+- ```define-artifact-properties``` - definuje vlastnosti pre generovanie artifaktov; verzia vygenerovaného artifaktu sa nastavuje vo vlastnosti ```artifact.version```
+- ```makejars``` - pripraví JAR archívy s triedami, zdrojovými súbormi, JavaDoc dokumentáciou a obsahom adresárov ```/admin``` a ```/components```
+- ```makepom``` - vygeneruje ```POM``` súbor Gradle úlohou ```writePom``` na základe závislostí definovaných v ```build.gradle```
+- ```finalwar``` - vytvorí štruktúru ```build/updatezip/finalwar``` a archív ```build/updatezip/webjetcms.war``` s aplikáciami zabalenými ako JAR súbory
+- ```createUpdateZip``` - vytvorí ```build/updatezip/artifacts/archive.zip``` pre aktualizáciu starej rozbalenej inštalácie bez JAR balenia
+- ```createUpdateZipJar``` - vytvorí ```build/updatezip/artifacts/archive-jar.zip``` pre inštaláciu používajúcu JAR balenie; spúšťa sa po príprave artifaktov
+- ```prepareAllJars``` - pripraví všetky JAR súbory a ```POM``` súbor na publikovanie do repozitárov
+- ```deployGithub``` - pripraví artifakty a publikuje SNAPSHOT verziu do [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/2426502/versions)
+- ```deployMavenCentral``` - po potvrdení verzie pripraví artifakty a podpisy, vytvorí publikačný ZIP súbor a odošle ho do [Maven Central](https://repo1.maven.org/maven2/com/webjetcms/webjetcms/)
 
 Postup vygenerovania novej verzie:
 
 ```shell
-#nezabudni vypnut beziaci npm watch a Tomcat !!!
+# nezabudnite vypnúť bežiaci npm watch a Tomcat
 cd ant
-ant deploy
+
+# iba lokálna príprava JAR a POM súborov
+ant prepareAllJars
+
+# publikovanie SNAPSHOT verzie do GitHub Packages
+ant deployGithub
+
+# publikovanie verzie do Maven Central
+ant deployMavenCentral
 ```
 
-*Poznámka*: v adresári ```build/updatezip``` vznikne rozbalená štruktúra, tú je možné zozipovať a použiť ako aktualizačný balík pre WebJET v starej štruktúre (nepoužívajúcej `jar` archívy).
+Publikačné ciele ```deployGithub``` a ```deployMavenCentral``` automaticky spustia ```prepareAllJars```. Aktualizačné ZIP archívy je možné vytvoriť samostatne:
 
-## Kompletné skompilovanie zdrojových kódov
-
-Vo WebJET 2021 sa často upravuje existujúca trieda z verzie 8, čo môže viesť k nekompatibilite triedy. Z toho dôvodu existuje špeciálny ANT task ```compile``` v súbore ```ant/compile.xml```. Ten použije originálne zdrojové kódy k verzii 8, rozbalí ich do dočasného adresára, doplní zdrojovými kódmi z verzie 2021 a následne všetko skompiluje vrátane použitia ```AspectJ``` kompilátora.
-
-Všetko sa deje v adresári ```/build/updatezip```, pred spustením kompilácie je potrebné zavolať nasledovné príkazy:
-
-```sh
-ant updatezip
-ant download
+```shell
+cd ant
+ant createUpdateZip
+ant prepareAllJars createUpdateZipJar
 ```
 
-Postup je nasledovný:
+## Kompilácia Java a AspectJ
 
-- task ```prepareSrc```
-  - spojí zdrojové kódy aktuálnej a verzie 8 z ```/src/main/java``` a ```/src/main/aspectj``` do ```src-utf8```
-- task ```delombok```
-  - vykoná sa ```delombok``` - extrapolovanie lombok anotácií, keďže ```AspectJ``` má s lombok anotáciami problém
-  - výsledok je v adresári ```/src-delombok/```
-- task ```compileMapstruct```
-  - skompilujú sa cez štandardné ```javac``` všetky triedy z adresára ```/src-delombok/```, pretože ```AspectJ``` nevie korektne skompilovať ```mapstruct``` triedy (vytvoriť ich ```Impl``` verziu)
-  - dodatočné jar knižnice berie z adresára ```/ant/libs```, jedná sa o triedy, ktoré sú v starom kóde WebJETu a sú potrebné na kompiláciu, ale už nie sú potrebné na beh WebJET CMS
-  - výsledok kompilácie je v ```/WebContent/WEB-INF/classes/```
-  - do adresára ```/src-aspectj/``` sa skopíruje zdrojový kód, ale vymažú sa všetky mapstruct triedy (tie, ktoré obsahujú v názve ```mapper/mappers```)
-  - z adresára ```/WebContent/WEB-INF/classes/``` sa zmažú všetky skompilované triedy okrem ```mapper``` tried
-  - z tried čo zostanú sa vytvorí JAR súbor ```/WebContent/WEB-INF/generated-sources/mapper-impl.jar```
-- task ```compile```
-  - vykoná ```AspectJ``` kompiláciu z adresára ```/src-aspectj/``` do adresára ```/WebContent/WEB-INF/classes```
-  - použije JAR súbor ```/WebContent/WEB-INF/generated-sources/``` so skompilovanými ```mapper``` triedami
-  - do výsledného adresára ```/WebContent/WEB-INF/classes``` rozbalí obsah ```mapper-impl.jar``` so skompilovanými ```MapperImpl.class``` triedami, aby ```classes``` adresár obsahoval všetky triedy
-  - do ```classes``` adresára skopíruje z ```/src-delombok/``` súbory typu ```*.properties``` a ```*.xml```
-
-Výsledkom je, že v adresári ```/WebContent/WEB-INF/classes``` je všetko skompilované voči kompletnému zdrojovému kódu WebJET verzie 8 aj aktuálnej verzie.
-
-Volanie tohto samostatného ant ```tasku``` je začlenené priamo do hlavného buildu, kde existuje task ```compile``` volajúci tento samostatný task. Takže pri spustení deployment procesu nie je potrebné žiadne dodatočné volanie kompilácie, všetko prebehne automaticky.
+Zdrojové kódy Java sa počas úlohy ```setup``` kompilujú cez Gradle. Plugin ```io.freefair.aspectj.post-compile-weaving``` najskôr nechá ```javac``` a anotačné procesory ako Lombok a MapStruct vygenerovať triedy a následne ich pred vytvorením WAR archívu spracuje pomocou `AspectJ weaving`. Samostatná kompilácia cez Ant/AJC už nie je potrebná.
 
 ## Použitie v klientských projektoch
 
