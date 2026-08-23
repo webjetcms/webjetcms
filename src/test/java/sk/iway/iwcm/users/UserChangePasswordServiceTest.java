@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.sql.Timestamp;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 
+import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.AdminlogBean;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.database.ComplexQuery;
@@ -39,11 +41,7 @@ class UserChangePasswordServiceTest {
 
     @Test
     void verifyLoginValueShouldRejectDifferentSelectedLoginForSingleLoginReset() {
-        AdminlogBean resetRecord = createResetRecord(0);
-
-        try (MockedStatic<Constants> constants = mockPasswordResetValidity();
-                MockedStatic<UsersDB> users = mockUser(RESET_LOGIN);
-                MockedConstruction<ComplexQuery> ignored = mockAdminlogQuery(List.of(resetRecord))) {
+        try (MockedStatic<Constants> constants = mockPasswordResetValidity()) {
             assertFalse(UserChangePasswordService.verifyLoginValue(RESET_LOGIN, "admin", AUTH, null),
                     "A reset record must not authorize changing a different login");
         }
@@ -98,6 +96,51 @@ class UserChangePasswordServiceTest {
         }
     }
 
+    @Test
+    void verifyLoginValueShouldRequireTokenForSelectedLoginInMultiLoginFlow() {
+        String selectedLogin = "admin";
+
+        try (MockedStatic<Constants> constants = mockPasswordResetValidity();
+                MockedStatic<UsersDB> users = mockUser(selectedLogin, 2);
+                MockedConstruction<ComplexQuery> queries = mockAdminlogQuery(List.of())) {
+            assertFalse(UserChangePasswordService.verifyLoginValue(
+                    RESET_LOGIN + UserChangePasswordService.LOGINS_SEPARATOR + selectedLogin,
+                    selectedLogin,
+                    AUTH,
+                    null),
+                    "A token issued only for the first login must not authorize an injected login");
+
+            assertResetQueryTargetsUser(queries, 2);
+        }
+    }
+
+    @Test
+    void verifyLoginValueShouldAcceptIssuedTokenForSecondLogin() {
+        String selectedLogin = "second-login";
+        AdminlogBean resetRecord = createResetRecord(0);
+
+        try (MockedStatic<Constants> constants = mockPasswordResetValidity();
+                MockedStatic<UsersDB> users = mockUser(selectedLogin, 2);
+                MockedConstruction<ComplexQuery> queries = mockAdminlogQuery(List.of(resetRecord))) {
+            assertTrue(UserChangePasswordService.verifyLoginValue(
+                    RESET_LOGIN + UserChangePasswordService.LOGINS_SEPARATOR + selectedLogin,
+                    selectedLogin,
+                    AUTH,
+                    null),
+                    "A reset record issued for the selected login must remain valid in a multi-login flow");
+
+            assertResetQueryTargetsUser(queries, 2);
+        }
+    }
+
+    @Test
+    void verifyLoginValueShouldRejectSelectedLoginMissingFromIssuedList() {
+        try (MockedStatic<Constants> constants = mockPasswordResetValidity()) {
+            assertFalse(UserChangePasswordService.verifyLoginValue(RESET_LOGIN, "admin", AUTH, null),
+                    "The selected login must be present in the login list issued with the reset link");
+        }
+    }
+
     private static AdminlogBean createResetRecord(int ageInMinutes) {
         AdminlogBean record = new AdminlogBean();
         record.setSubId2(UsersDB.APPROVE_APPROVE);
@@ -112,12 +155,26 @@ class UserChangePasswordServiceTest {
     }
 
     private static MockedStatic<UsersDB> mockUser(String login) {
+        return mockUser(login, 1);
+    }
+
+    private static MockedStatic<UsersDB> mockUser(String login, int userId) {
         UserDetails user = mock(UserDetails.class);
-        when(user.getUserId()).thenReturn(1);
+        when(user.getUserId()).thenReturn(userId);
 
         MockedStatic<UsersDB> users = mockStatic(UsersDB.class);
         users.when(() -> UsersDB.getUser(login)).thenReturn(user);
         return users;
+    }
+
+    private static void assertResetQueryTargetsUser(MockedConstruction<ComplexQuery> queries, int userId) {
+        ComplexQuery query = queries.constructed().get(0);
+        verify(query).setSql(anyString());
+        verify(query).setParams(
+                Adminlog.TYPE_USER_CHANGE_PASSWORD,
+                userId,
+                Integer.valueOf(AUTH),
+                UsersDB.APPROVE_APPROVE);
     }
 
     @SuppressWarnings({ "unchecked" })
