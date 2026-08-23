@@ -7,6 +7,7 @@
 ### Průlomové změny
 
 - Z administrace byla odstraněna závislost na knihovně [Vue.js](https://vuejs.org). Před aktualizací doporučujeme ověřit kompatibilitu vlastních aplikací. Velikost JavaScript souborů se zmenšila o cca 170kB, což má dopad také na rychlost inicializace administrace. Více v [sekci pro programátora](#pre-programátora).
+- AspectJ - z distribuce byla odstraněna podpora `load-time weavingu` (`aspectjweaver` a `META-INF/aop-ajc.xml`); vestavěné aspekty se zpracují již při kompilaci, více v [sekci pro programátora](#pre-programátora).
 
 ### Webové stránky
 
@@ -155,6 +156,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Průzkumník - upravené porovnávání souborů s diakritikou při kontrole existence souboru při jeho přepsání - formát `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Webové stránky - opraveno přidávání prázdného `P` elementu na konec stránky (#58317-13).
 - Webové stránky - opraveno načtení hodnoty `ckeditor_button_sizes` pro tlačítko typu `A` (#OSK674).
+- Monitorování SQL - opravena správa životního cyklu měření `PreparedStatement`. Záznam se odstraní i při zavření před spuštěním měření a jednotlivé objekty `PreparedStatement` se rozlišují podle identity bez volání JDBC `hashCode()` a `equals()`. Souběžný přístup používá `ConcurrentHashMap` a atomický stav bez globálního `synchronized` bloku, takže vlákna nečekají na společný zámek a měření se nespojí ani při kolizi identitních hashů.
 
 ### Bezpečnost
 
@@ -183,6 +185,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
 
+- AspectJ - historické aspekty `CloudFilter`, `SqlPerformance` a `AspectException` ve formátu `.aj` byly migrovány na Java třídy s anotací `@Aspect`. Gradle nejprve zkompiluje zdrojové kódy přes `javac`, který spustí anotační procesory Lombok/MapStruct, a plugin `io.freefair.aspectj.post-compile-weaving` následně zpracuje bajtový kód pomocí `AspectJ weaving`. Odstraněna byla duplicitní Ant/AJC kompilace i lokální kopie build knihoven; Ant balení používá výstup z Gradle a úlohy `Delombok`. `CloudFilter` používá `execution pointcut` a příslušný `advice` se při kompilaci vloží do `GroupsDB` a `DocDB`, takže se filtrování aplikuje i při volání z JSP zkompilovaných bez LTW. Byly doplněny regresní testy a aktualizována [dokumentace nasazení](developer/install/deployment.md#kompilace-java-a-aspectj).
 - Logování - do [Logback MDC](https://logback.qos.ch/manual/mdc.html) doplněn atribut `sessionId` a přihlašovacího jména uživatele `userLogin` (#OSK526).
 - Aktualizovaná knihovna [Tabler Icons](https://tabler.io/icons) na verzi 3.44.0, vyřešen problém se současným používáním `Outline` a `Filled` sad (#58509).
 - Web stránky - pokud potřebujete mít prázdný první řádek v konfigurační proměnné `imageMagickCustomParams*` pro [nastavení vlastních parametrů](redactor/apps/gallery/README.md#vlastní-parametry-imagemagick) `ImageMagick` zadejte hodnotu `---`.
