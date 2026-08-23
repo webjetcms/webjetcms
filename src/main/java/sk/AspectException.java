@@ -14,13 +14,15 @@ import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 
 /**
- * Logs caught SQL exceptions to the admin log.
+ * Logs caught SQL exceptions to the application and admin logs.
  */
 @Aspect
+@SuppressWarnings("java:S2166")
 public class AspectException
 {
 	@Pointcut("within(sk.iway..*) && !within(sk.iway.iwcm.Constants)")
@@ -64,21 +66,15 @@ public class AspectException
 
 			if (stackTrace.toString().contains("at sk.iway.iwcm.Adminlog.add(")) return;
 
-			System.out.println("--------------------- ASPECT start ---------- ");
-			System.out.println("(a) " + source + " - " + exception + " t=" + exception);
-			System.out.println("signature="+signature);
-			System.out.println("source="+source);
+			String message = "SQL ERROR:\nexception: "+exception+"\nsource: "+source;
+			String logMessage = message;
 			RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
 			if (requestBean != null)
 			{
-				System.out.println("domain="+requestBean.getDomain()+" ip="+requestBean.getRemoteIP()+" userId="+requestBean.getUserId()+" url="+requestBean.getUrl()+" qs="+requestBean.getQueryString());
+				logMessage += "\ndomain="+requestBean.getDomain()+" ip="+requestBean.getRemoteIP()+" userId="+requestBean.getUserId()+" url="+requestBean.getUrl()+" qs="+requestBean.getQueryString();
 			}
-			System.out.println("exception="+exception);
-			System.out.println("stackTrace="+stackTrace);
-
-			Adminlog.add(Adminlog.TYPE_SQLERROR, "SQL ERROR:\nexception: "+exception+"\nsource: "+source+"\nstackTrace:\n"+stackTrace, -1, -1);
-
-			System.out.println("--------------------- ASPECT end ---------- ");
+			Logger.error(signature.getDeclaringType(), logMessage, exception);
+			Adminlog.add(Adminlog.TYPE_SQLERROR, message+"\nstackTrace:\n"+stackTrace, -1, -1);
 
 			int auditExceptionTimeout = Constants.getInt("auditExceptionTimeout");
 			if (auditExceptionTimeout>0)

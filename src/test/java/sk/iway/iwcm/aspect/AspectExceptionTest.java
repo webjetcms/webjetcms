@@ -2,6 +2,7 @@ package sk.iway.iwcm.aspect;
 
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
@@ -16,6 +17,7 @@ import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.database.SimpleQuery;
 
 class AspectExceptionTest
@@ -29,11 +31,13 @@ class AspectExceptionTest
 	{
 		Cache cache = mock(Cache.class);
 		Connection connection = mock(Connection.class);
-		when(connection.prepareStatement(SQL)).thenThrow(new SQLException(EXCEPTION_MESSAGE));
+		SQLException exception = new SQLException(EXCEPTION_MESSAGE);
+		when(connection.prepareStatement(SQL)).thenThrow(exception);
 
 		try (MockedStatic<InitServlet> initServlet = mockStatic(InitServlet.class);
 			MockedStatic<Cache> cacheStatic = mockStatic(Cache.class);
 			MockedStatic<DBPool> dbPool = mockStatic(DBPool.class);
+			MockedStatic<Logger> logger = mockStatic(Logger.class);
 			MockedStatic<Adminlog> adminlog = mockStatic(Adminlog.class))
 		{
 			initServlet.when(InitServlet::isWebjetInitialized).thenReturn(true);
@@ -41,6 +45,12 @@ class AspectExceptionTest
 			dbPool.when(() -> DBPool.getConnection("iwcm")).thenReturn(connection);
 
 			new SimpleQuery().execute(SQL);
+
+			logger.verify(() -> Logger.error(
+				eq(SimpleQuery.class),
+				argThat(message -> message.contains(EXCEPTION_MESSAGE) &&
+					message.contains("source: " + SimpleQuery.class.getName() + ":")),
+				same(exception)));
 
 			adminlog.verify(() -> Adminlog.add(
 				eq(Adminlog.TYPE_SQLERROR),
