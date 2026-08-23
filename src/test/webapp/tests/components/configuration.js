@@ -21,6 +21,24 @@ Scenario('zoznam konfiguracnych premennych', ({ I }) => {
     I.see("Predvolená hodnota (default value)");
 });
 
+Scenario('temporary setting hides encryption and scheduled change', ({ I, DTE }) => {
+    I.click("button.buttons-create");
+    DTE.waitForEditor(datatableName);
+
+    I.waitForVisible("div.DTE_Field_Name_encrypt", 10);
+    I.waitForVisible("div.DTE_Field_Name_datePrepared", 10);
+
+    DTE.clickSwitch("temporary_0");
+    I.waitForInvisible("div.DTE_Field_Name_encrypt", 10);
+    I.waitForInvisible("div.DTE_Field_Name_datePrepared", 10);
+
+    DTE.clickSwitch("temporary_0");
+    I.waitForVisible("div.DTE_Field_Name_encrypt", 10);
+    I.waitForVisible("div.DTE_Field_Name_datePrepared", 10);
+
+    DTE.cancel();
+});
+
 Scenario('pridanie konfiguracnej premennej @baseTest', ({ I, DT, DTE }) => {
 
     I.click("button.buttons-create");

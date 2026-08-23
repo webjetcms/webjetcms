@@ -21,6 +21,16 @@ block content
             });
         }
 
+        function updateTemporaryFieldsVisibility() {
+            if (configurationDatatable.EDITOR.field("temporary").val()[0] == true) {
+                configurationDatatable.EDITOR.field("encrypt").hide();
+                configurationDatatable.EDITOR.field("datePrepared").hide();
+            } else {
+                configurationDatatable.EDITOR.field("encrypt").show();
+                configurationDatatable.EDITOR.field("datePrepared").show();
+            }
+        }
+
         function exportDialogCustomCallback(type, TABLE) {
             window.open("/admin/conf_export.jsp");
             return true;
@@ -53,6 +63,13 @@ block content
                 id: "configurationDatatable",
                 order: order,
                 idAutoOpener: false
+            });
+
+            configurationDatatable.EDITOR.on("open", function () {
+                $("#DTE_Field_temporary_0")
+                    .off("change.temporary")
+                    .on("change.temporary", updateTemporaryFieldsVisibility);
+                updateTemporaryFieldsVisibility();
             });
 
             WJ.notifyInfo("[[\#{text.warning}]]", "[[\#{admin.conf_editor.warningText}]]", 5000);
