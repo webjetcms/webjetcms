@@ -34,6 +34,14 @@ The change usually takes effect immediately after the add/edit action. However, 
   - if the changed name is the name of an **existing** configuration variable, then the **edit** is performed
   - if the changed name is for the name of a **non-existent** configuration variable, then a new variable will be **added**
 
+## Temporary value setting
+
+If you need to change the value of a configuration variable only to verify its behavior, enable the **Set temporarily** option in the editor. The value is set only in memory on the current node, and is not stored in the database or propagated to other nodes in the cluster. After the application server is restarted, the value stored in the database is used again.
+
+When set temporarily, the value cannot be encrypted or scheduled to change, so the **Encrypt** and **Change from** fields in the editor are hidden.
+
+If the current value on the node differs from the value in the database, the **Value** column displays both values ​​in the format "current value / database value". The database value is displayed in a dimmed color and is marked as currently inactive when the cursor is placed. When the editor is reopened, the **Value** field is loaded with the value stored in the database, not the temporary value.
+
 ## Deleting configuration items
 
 When deleting a configuration variable, 2 situations can occur:

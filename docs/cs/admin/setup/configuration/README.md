@@ -34,6 +34,14 @@ Mohou nastat 3 situace:
   - pokud změněný název, za název **existující** konfigurační proměnné, tak se **provede úprava**
   - pokud změněný název, za název **neexistující** konfigurační proměnné, pak se **provede přidání** nové proměnné
 
+## Dočasné nastavení hodnoty
+
+Pokud potřebujete změnit hodnotu konfigurační proměnné pouze pro ověření jejího chování, v editoru zapněte možnost **Nastavit dočasně**. Hodnota se nastaví pouze v paměti aktuálního uzlu, neuloží se do databáze ani se nepřenese na ostatní uzly clusteru. Po restartu aplikačního serveru se opět použije hodnota uložená v databázi.
+
+Při dočasném nastavení nelze hodnotu zašifrovat ani naplánovat její změnu, proto se pole **Šifrovat** a **Změnit od** v editoru skryjí.
+
+Pokud se aktuální hodnota na uzlu liší od hodnoty v databázi, ve sloupci **Hodnota** se zobrazí obě hodnoty ve formátu "aktuální hodnota / databázová hodnota". Databázová hodnota je zobrazena tlumenou barvou a po umístění kurzoru se označí jako momentálně neaktivní. Při opětovném otevření editoru se do pole **Hodnota** načte hodnota uložená v databázi, nikoli dočasná hodnota.
+
 ## Vymazání konfiguračních položek
 
 Při vymazání konfigurační proměnné mohou nastat 2 situace:
