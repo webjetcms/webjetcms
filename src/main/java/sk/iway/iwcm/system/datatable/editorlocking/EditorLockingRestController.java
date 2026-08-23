@@ -47,7 +47,7 @@ public class EditorLockingRestController {
 	 */
     @GetMapping({ "/open/{entityId}/{tableUniqueId}" })
     public List<UserDto> addEdit(
-        @PathVariable("entityId") int entityId,
+        @PathVariable("entityId") long entityId,
         @PathVariable("tableUniqueId") String tableUniqueId,
         HttpServletRequest request) {
 
@@ -92,15 +92,15 @@ public class EditorLockingRestController {
 	 */
     @GetMapping({ "/close/{entityId}/{tableUniqueId}" })
     public void removeEdit(
-        @PathVariable("entityId") int entityId,
+        @PathVariable("entityId") long entityId,
         @PathVariable("tableUniqueId") String tableUniqueId,
         HttpServletRequest request) {
-
-        List<EditorLockingBean> editorLockingBeanList = getCacheList(tableUniqueId);
 
         Identity user = UsersDB.getCurrentUser(request);
         if (user == null) return;
         int userId = user.getUserId();
+
+        List<EditorLockingBean> editorLockingBeanList = getCacheList(tableUniqueId);
 
         Iterator<EditorLockingBean> i = editorLockingBeanList.iterator();
         while (i.hasNext()) {
@@ -120,7 +120,7 @@ public class EditorLockingRestController {
      * @param request
 	 * @return vytvoreny a nastaveny objekt (EditorLockingBean)
 	 */
-    private EditorLockingBean getNewEditRecord(int entityId, int userId) {
+    private EditorLockingBean getNewEditRecord(long entityId, int userId) {
         EditorLockingBean newEdit = new EditorLockingBean();
         newEdit.setEntityId(entityId);
         newEdit.setLastChange(new Date());
@@ -163,7 +163,7 @@ public class EditorLockingRestController {
      * @param userId
 	 * @return list (List<UserDto>) s ostatnymi pouzivatelmi ktory tento zaznam prave upravuju
 	 */
-    private List<UserDto> getListOfOtherUsers(List<EditorLockingBean> editorLockingBeanList, int entityId, int userId) {
+    private List<UserDto> getListOfOtherUsers(List<EditorLockingBean> editorLockingBeanList, long entityId, int userId) {
 
         List<UserDto> otherUsers = new ArrayList<>();
 

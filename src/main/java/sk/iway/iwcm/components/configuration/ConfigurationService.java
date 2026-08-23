@@ -8,6 +8,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.SelectionFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.configuration.model.ConfDetailsDto;
+import sk.iway.iwcm.helpers.DataSanitizer;
 import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.ConfDetails;
 import sk.iway.iwcm.system.cluster.ClusterDB;
@@ -18,9 +19,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class ConfigurationService {
+
+    private static final String ENCRYPTED_VALUE_PREFIX = "encrypted:";
 
     private final ConfDetailsMapper confDetailsMapper;
 
@@ -30,6 +34,16 @@ public class ConfigurationService {
     }
 
     public List<ConfDetailsDto> getAll(Identity user) {
+        List<ConfDetailsDto> configurationDataDtos = getConfigurationData(user);
+
+        for (ConfDetailsDto configurationDto : configurationDataDtos) {
+            setDisplayValue(configurationDto);
+        }
+
+        return configurationDataDtos;
+    }
+
+    private List<ConfDetailsDto> getConfigurationData(Identity user) {
         List<ConfDetails> configurationData = ConfDB.filterConfDetailsByPerms(user, ConfDB.getConfig());
         configurationData = filterStatSessionsCluster(configurationData);
         List<ConfDetailsDto> configurationDataDtos = confDetailsMapper.entityListToDtoList(configurationData);
@@ -48,6 +62,37 @@ public class ConfigurationService {
             constantsDto.setDescription(constantsMapWIthDescription.get(constantsDto.getName()));
         }
         return configurationDataDtos;
+    }
+
+    public ConfDetailsDto getOne(Identity user, long id) {
+        if (id < 1) {
+            return new ConfDetailsDto();
+        }
+
+        for (ConfDetailsDto configurationDto : getConfigurationData(user)) {
+            if (configurationDto.getId() != null && configurationDto.getId().longValue() == id) {
+                setDisplayValue(configurationDto);
+                return configurationDto;
+            }
+        }
+
+        return null;
+    }
+
+    private void setDisplayValue(ConfDetailsDto configurationDto) {
+        String databaseValue = Objects.toString(configurationDto.getValue(), "");
+        String currentValue = Constants.getString(configurationDto.getName());
+        String comparableDatabaseValue = Objects.toString(ConfDB.tryDecrypt(databaseValue), "");
+
+        if (Objects.equals(currentValue, comparableDatabaseValue)) {
+            configurationDto.setDisplayValue(databaseValue);
+        } else {
+            String displayedCurrentValue = DataSanitizer.sanitizeIfNameIsSensitive(configurationDto.getName(), currentValue);
+            if (databaseValue.startsWith(ENCRYPTED_VALUE_PREFIX)) {
+                displayedCurrentValue = "********";
+            }
+            configurationDto.setDisplayValue(displayedCurrentValue + " / " + databaseValue);
+        }
     }
 
     /**
@@ -78,7 +123,7 @@ public class ConfigurationService {
 
         if (confDetailsDto.isEncrypt()) {
             Password password = new Password();
-            confDetailsDto.setValue("encrypted:" + password.encrypt(confDetailsDto.getValue()));
+            confDetailsDto.setValue(ENCRYPTED_VALUE_PREFIX + password.encrypt(confDetailsDto.getValue()));
         }
 
         if (null == confDetailsDto.getDatePrepared()) {
@@ -113,7 +158,7 @@ public class ConfigurationService {
      */
     public ConfDetailsDto getAutocompleteDetail(Identity user, String name) {
 
-        List<ConfDetailsDto> all = getAll(user);
+        List<ConfDetailsDto> all = getConfigurationData(user);
         for (ConfDetailsDto c : all) {
             if (c.getName().equals(name)) {
                 return c;
@@ -174,7 +219,7 @@ public class ConfigurationService {
 
     public List<ConfDetailsDto> findConfDetailsBy(String propertyName, ConfDetailsDto original, Identity user) {
 
-        List<ConfDetailsDto> all = getAll(user);
+        List<ConfDetailsDto> all = getConfigurationData(user);
         List<ConfDetailsDto> result = new ArrayList<>();
 
         //iterate all and filted by propertyName

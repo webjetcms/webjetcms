@@ -16,7 +16,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Getter
 public class ConfDetailsDto extends ConfDetails {
 
-	@DataTableColumn(
+    @DataTableColumn(
         inputType = DataTableColumnType.ID,
         tab = "basic",
         filter = false,
@@ -29,6 +29,9 @@ public class ConfDetailsDto extends ConfDetails {
         }
     )
     private Long id;
+
+    /** Value rendered in the table while the inherited value remains suitable for editing. */
+    private String displayValue;
 
 	@DataTableColumn(
         inputType = DataTableColumnType.TEXT,

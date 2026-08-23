@@ -19,6 +19,9 @@ Before(({ I, login, DT }) => {
 Scenario('zoznam konfiguracnych premennych', ({ I }) => {
 
     I.see("Predvolená hodnota (default value)");
+    I.seeElement("#configurationDatatable.dt-hide-id");
+    I.seeElement("#configurationDatatable tbody td.dt-select-td");
+    I.dontSeeElement("#configurationDatatable.dt-hide-id tbody td.dt-select-td > .datatable-column-width");
 });
 
 Scenario('temporary setting hides encryption and scheduled change', ({ I, DTE }) => {
@@ -63,6 +66,29 @@ Scenario('pridanie konfiguracnej premennej @baseTest', ({ I, DT, DTE }) => {
     DTE.waitForEditor(datatableName);
     DTE.save();
     I.dontSee("JSON parse error");
+});
+
+Scenario('docasna hodnota sa zobrazi, ale do editora sa nacita databazova @baseTest', ({ I, DT, DTE }) => {
+    const temporaryValue = "temporary-value-autotest-" + randomNumber;
+
+    DT.filterEquals("name", name);
+    I.click(name);
+    DTE.waitForEditor(datatableName);
+
+    I.fillField("#DTE_Field_value", temporaryValue);
+    DTE.clickSwitch("temporary_0");
+    DTE.save();
+
+    I.waitForText(temporaryValue, 10, "#configurationDatatable");
+    I.see(value, "#configurationDatatable");
+
+    I.click(name);
+    DTE.waitForEditor(datatableName);
+    I.seeInField("#DTE_Field_value", value);
+    DTE.cancel();
+
+    I.see(temporaryValue, "#configurationDatatable");
+    I.see(value, "#configurationDatatable");
 });
 
 Scenario('vyhladanie konfiguracnej premennej @baseTest', ({ I, DT }) => {

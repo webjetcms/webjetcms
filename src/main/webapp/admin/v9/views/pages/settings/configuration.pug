@@ -55,6 +55,29 @@ block content
             let url = "/admin/rest/settings/configuration";
             let columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.configuration.model.ConfDetailsDto')})];
 
+            WJ.DataTable.mergeColumns(columns, {
+                name: "value",
+                render: function(data, type, row) {
+                    let displayValue = row.displayValue;
+                    if (displayValue == null) displayValue = data;
+                    if (displayValue == null) displayValue = "";
+
+                    if (type === "display") {
+                        return '<div class="datatable-column-width">' + WJ.escapeHtml(displayValue) + '</div>';
+                    }
+                    if (type === "filter") {
+                        let filterValue = displayValue
+                            .replaceAll("&", "&amp;")
+                            .replaceAll("<", "&lt;")
+                            .replaceAll(">", "&gt;")
+                            .replaceAll('"', "&quot;");
+                        return $.fn.DataTable.util.diacritics(filterValue);
+                    }
+                    if (type === "sort") return displayValue;
+                    return data;
+                }
+            });
+
             configurationDatatable = WJ.DataTable({
                 url: url,
                 serverSide: false,
@@ -62,7 +85,9 @@ block content
                 tabs: tabs,
                 id: "configurationDatatable",
                 order: order,
-                idAutoOpener: false
+                idAutoOpener: false,
+                fetchOnCreate: true,
+                fetchOnEdit: true
             });
 
             configurationDatatable.EDITOR.on("open", function () {
@@ -75,7 +100,7 @@ block content
             WJ.notifyInfo("[[\#{text.warning}]]", "[[\#{admin.conf_editor.warningText}]]", 5000);
         });
 
-    <table id="configurationDatatable" class="datatableInit table"></table>
+    <table id="configurationDatatable" class="datatableInit table dt-hide-id"></table>
 
     div#datatableExportModalCustomOptions.hidden
         div.form-check
