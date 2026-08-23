@@ -3,6 +3,25 @@ Feature('components.configuration');
 var randomNumber, name, value;
 var datatableName = "configurationDatatable";
 
+async function getConfigurationIdColumnLayout(I) {
+    return await I.executeScript(() => {
+        const table = configurationDatatable;
+        table.columns.adjust();
+
+        const rowIndexes = table.rows({ search: "applied" }).indexes().toArray();
+        if (rowIndexes.length !== 1) throw new Error(`Expected one filtered configuration row, got ${rowIndexes.length}`);
+
+        const row = table.row(rowIndexes[0]);
+        const idCell = row.node().querySelector("td.dt-select-td");
+        const idContent = idCell.querySelector(":scope > .datatable-column-width");
+        return {
+            id: Number(row.data().id),
+            width: idCell.getBoundingClientRect().width,
+            idContentDisplay: getComputedStyle(idContent).display
+        };
+    });
+}
+
 Before(({ I, login, DT }) => {
 
     login('admin');
@@ -68,10 +87,12 @@ Scenario('pridanie konfiguracnej premennej @baseTest', ({ I, DT, DTE }) => {
     I.dontSee("JSON parse error");
 });
 
-Scenario('docasna hodnota sa zobrazi, ale do editora sa nacita databazova @baseTest', ({ I, DT, DTE }) => {
+Scenario('docasna hodnota sa zobrazi, ale do editora sa nacita databazova @baseTest', async ({ I, DT, DTE, a11y }) => {
     const temporaryValue = "temporary-value-autotest-" + randomNumber;
+    const databaseValueSelector = "#configurationDatatable tbody [data-conf-value='database-inactive']";
 
     DT.filterEquals("name", name);
+    const initialIdLayout = await getConfigurationIdColumnLayout(I);
     I.click(name);
     DTE.waitForEditor(datatableName);
 
@@ -80,7 +101,60 @@ Scenario('docasna hodnota sa zobrazi, ale do editora sa nacita databazova @baseT
     DTE.save();
 
     I.waitForText(temporaryValue, 10, "#configurationDatatable");
+    I.waitForVisible(databaseValueSelector, 10);
     I.see(value, "#configurationDatatable");
+    I.dontSee("DB (neaktívna):", "#configurationDatatable");
+    I.dontSeeElement("#configurationDatatable .configuration-value__database-label");
+    I.dontSeeElement("#configurationDatatable .configuration-value .visually-hidden");
+    I.see(temporaryValue, "#configurationDatatable [data-conf-value='current']");
+    I.see(value, databaseValueSelector);
+    I.seeElement(databaseValueSelector + "[data-bs-toggle='tooltip'][tabindex='0']");
+
+    I.moveCursorTo(databaseValueSelector);
+    I.waitForElement(databaseValueSelector + "[aria-describedby]", 5);
+    let tooltipId = await I.grabAttributeFrom(databaseValueSelector, "aria-describedby");
+    I.assertTrue(Boolean(tooltipId), "Database value tooltip must describe its trigger");
+    I.waitForVisible("#" + tooltipId + ".tooltip.show[role='tooltip']", 5);
+    I.see("Hodnota uložená v databáze, momentálne neaktívna", "#" + tooltipId + ".tooltip.show[role='tooltip']");
+
+    I.moveCursorTo("#" + tooltipId);
+    // Verify that the tooltip stays open beyond its 300 ms hide grace period.
+    I.wait(0.5);
+    I.seeElement("#" + tooltipId + ".tooltip.show[role='tooltip']");
+    I.pressKey("Escape");
+    I.waitToHide("#" + tooltipId, 5);
+    I.waitForInvisible(databaseValueSelector + "[aria-describedby]", 5);
+
+    I.moveCursorTo("#configurationDatatable tbody td.dt-select-td");
+    I.moveCursorTo(databaseValueSelector);
+    I.waitForElement(databaseValueSelector + "[aria-describedby]", 5);
+    tooltipId = await I.grabAttributeFrom(databaseValueSelector, "aria-describedby");
+    I.waitForVisible("#" + tooltipId + ".tooltip.show[role='tooltip']", 5);
+    await I.executeScript(() => configurationDatatable.draw(false));
+    I.waitToHide("#" + tooltipId, 5);
+    I.waitForInvisible(databaseValueSelector + "[aria-describedby]", 5);
+
+    I.focus(databaseValueSelector);
+    I.waitForElement(databaseValueSelector + "[aria-describedby]", 5);
+    tooltipId = await I.grabAttributeFrom(databaseValueSelector, "aria-describedby");
+    I.assertTrue(Boolean(tooltipId), "Focused database value must expose its tooltip through aria-describedby");
+    I.waitForVisible("#" + tooltipId + ".tooltip.show[role='tooltip']", 5);
+    I.see("Hodnota uložená v databáze, momentálne neaktívna", "#" + tooltipId + ".tooltip.show[role='tooltip']");
+    I.pressKey("Escape");
+    I.waitToHide("#" + tooltipId, 5);
+    I.waitForInvisible(databaseValueSelector + "[aria-describedby]", 5);
+    I.blur(databaseValueSelector);
+
+    const adjustedIdLayout = await getConfigurationIdColumnLayout(I);
+    I.assertTrue(Number.isSafeInteger(adjustedIdLayout.id), "Configuration ID must be a safe JavaScript integer");
+    I.assertEqual(adjustedIdLayout.id, initialIdLayout.id);
+    I.assertEqual(adjustedIdLayout.idContentDisplay, "none");
+    I.assertTrue(adjustedIdLayout.width <= initialIdLayout.width + 1, "ID column must stay compact after recalculating column widths");
+
+    await a11y.check(databaseValueSelector);
+    I.click("#configurationDatatable tbody td.dt-select-td");
+    I.waitForVisible("#configurationDatatable tbody tr.selected", 5);
+    await a11y.check(databaseValueSelector);
 
     I.click(name);
     DTE.waitForEditor(datatableName);

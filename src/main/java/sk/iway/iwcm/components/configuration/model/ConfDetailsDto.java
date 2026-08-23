@@ -30,8 +30,11 @@ public class ConfDetailsDto extends ConfDetails {
     )
     private Long id;
 
-    /** Value rendered in the table while the inherited value remains suitable for editing. */
+    /** Current value rendered in the table while the inherited value remains suitable for editing. */
     private String displayValue;
+
+    /** Indicates that the current node value differs from the value stored in the database. */
+    private boolean runtimeValueDifferent;
 
 	@DataTableColumn(
         inputType = DataTableColumnType.TEXT,

@@ -81,17 +81,20 @@ public class ConfigurationService {
 
     private void setDisplayValue(ConfDetailsDto configurationDto) {
         String databaseValue = Objects.toString(configurationDto.getValue(), "");
-        String currentValue = Constants.getString(configurationDto.getName());
+        String currentValue = Objects.toString(Constants.getString(configurationDto.getName()), "");
         String comparableDatabaseValue = Objects.toString(ConfDB.tryDecrypt(databaseValue), "");
 
-        if (Objects.equals(currentValue, comparableDatabaseValue)) {
+        boolean runtimeValueDifferent = Objects.equals(currentValue, comparableDatabaseValue) == false;
+        configurationDto.setRuntimeValueDifferent(runtimeValueDifferent);
+
+        if (runtimeValueDifferent == false) {
             configurationDto.setDisplayValue(databaseValue);
         } else {
             String displayedCurrentValue = DataSanitizer.sanitizeIfNameIsSensitive(configurationDto.getName(), currentValue);
             if (databaseValue.startsWith(ENCRYPTED_VALUE_PREFIX)) {
                 displayedCurrentValue = "********";
             }
-            configurationDto.setDisplayValue(displayedCurrentValue + " / " + databaseValue);
+            configurationDto.setDisplayValue(displayedCurrentValue);
         }
     }
 

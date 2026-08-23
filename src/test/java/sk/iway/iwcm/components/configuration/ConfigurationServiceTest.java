@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.configuration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -60,16 +61,21 @@ class ConfigurationServiceTest {
             List<ConfDetailsDto> displayed = service.getAll(user);
 
             assertEquals(databaseValue, displayed.get(0).getValue());
-            assertEquals(currentValue + " / " + databaseValue, displayed.get(0).getDisplayValue());
+            assertEquals(currentValue, displayed.get(0).getDisplayValue());
+            assertTrue(displayed.get(0).isRuntimeValueDifferent());
             assertEquals("default-value", displayed.get(0).getOldValue());
             assertEquals("description", displayed.get(0).getDescription());
             assertEquals(sameValue, displayed.get(1).getDisplayValue());
+            assertFalse(displayed.get(1).isRuntimeValueDifferent());
             assertEquals(encryptedValue, displayed.get(2).getDisplayValue());
+            assertFalse(displayed.get(2).isRuntimeValueDifferent());
             long changedId = displayed.get(0).getId();
             assertTrue(changedId > 0 && changedId <= 9_007_199_254_740_991L);
 
             constants.when(() -> Constants.getString(encryptedName)).thenReturn("changed-secret");
-            assertEquals("******** / " + encryptedValue, service.getAll(user).get(2).getDisplayValue());
+            ConfDetailsDto changedEncrypted = service.getAll(user).get(2);
+            assertEquals("********", changedEncrypted.getDisplayValue());
+            assertTrue(changedEncrypted.isRuntimeValueDifferent());
 
             ConfDetails inserted = new ConfDetails("configurationServiceAInsertedTest", "inserted-value");
             List<ConfDetails> shiftedDatabaseData = List.of(inserted, changed, same, encrypted);
@@ -80,7 +86,8 @@ class ConfigurationServiceTest {
             assertEquals(changedId, detail.getId());
             assertEquals(changedName, detail.getName());
             assertEquals(databaseValue, detail.getValue());
-            assertEquals(currentValue + " / " + databaseValue, detail.getDisplayValue());
+            assertEquals(currentValue, detail.getDisplayValue());
+            assertTrue(detail.isRuntimeValueDifferent());
             assertEquals(databaseValue, service.getAutocompleteDetail(user, changedName).getValue());
 
             ConfDetailsDto created = service.getOne(user, -1);
