@@ -152,7 +152,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
-- Průzkumník - upravené porovnávání souborů s diakritikou při kontrole existence souboru při jeho přepsání - formát `utf-8 NFC vs NFD` (#58317-12).
+- Průzkumník - upravené porovnávání souborů s diakritikou při kontrole existence souboru při jeho přepsání - formát `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Webové stránky - opraveno přidávání prázdného `P` elementu na konec stránky (#58317-13).
 - Webové stránky - opraveno načtení hodnoty `ckeditor_button_sizes` pro tlačítko typu `A` (#OSK674).
 

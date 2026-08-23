@@ -2,8 +2,9 @@ package sk;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -20,8 +21,10 @@ import sk.iway.iwcm.system.monitoring.ExecutionTimeMonitor;
 @Aspect
 public class SqlPerformance
 {
-	private final Map<Integer, Long> sqlExecutionStarts = new ConcurrentHashMap<>();
-	private final Map<Integer, String> sqlsByPreparedStatementHashCodes = new ConcurrentHashMap<>();
+	private static final long NOT_STARTED = Long.MIN_VALUE;
+	private static final long CLOSED = Long.MIN_VALUE + 1;
+
+	private final ConcurrentMap<StatementKey, SqlMeasurement> measurements = new ConcurrentHashMap<>();
 
 	@Pointcut(value = "within(sk.iway..*) && target(connection) && " +
 		"(call(* prepareStatement(java.lang.String)) || call(* prepareStatement(java.lang.String, int, int)))", argNames = "connection")
@@ -45,7 +48,7 @@ public class SqlPerformance
 	{
 		String sql = joinPoint.getArgs()[0].toString();
 		PreparedStatement statement = (PreparedStatement) joinPoint.proceed();
-		sqlsByPreparedStatementHashCodes.put(statement.hashCode(), sql);
+		measurements.put(new StatementKey(statement), new SqlMeasurement(sql));
 		return statement;
 	}
 
@@ -53,29 +56,80 @@ public class SqlPerformance
 	public void measureStart(PreparedStatement statement)
 	{
 		if (InitServlet.isWebjetInitialized()==false) return;
-		sqlExecutionStarts.put(statement.hashCode(), System.currentTimeMillis());
+
+		SqlMeasurement measurement = measurements.get(new StatementKey(statement));
+		if (measurement != null)
+		{
+			measurement.start(System.currentTimeMillis());
+		}
 	}
 
 	@Before(value = "sqlEnd(statement)", argNames = "statement")
 	public void measureEnd(PreparedStatement statement)
 	{
-		if (InitServlet.isWebjetInitialized()==false) return;
-		try
-		{
-			Long start = sqlExecutionStarts.get(statement.hashCode());
-			if (start == null) return;
+		SqlMeasurement measurement = measurements.remove(new StatementKey(statement));
+		if (measurement == null) return;
 
-			String sql = sqlsByPreparedStatementHashCodes.get(statement.hashCode());
-			if (sql != null)
-			{
-				long timeTaken = System.currentTimeMillis() - start;
-				ExecutionTimeMonitor.recordSqlExecution(sql, timeTaken);
-			}
-		}
-		finally
+		long start = measurement.close();
+		if (InitServlet.isWebjetInitialized() && start != NOT_STARTED && start != CLOSED)
 		{
-			sqlExecutionStarts.remove(statement.hashCode());
-			sqlsByPreparedStatementHashCodes.remove(statement.hashCode());
+			long timeTaken = System.currentTimeMillis() - start;
+			ExecutionTimeMonitor.recordSqlExecution(measurement.sql, timeTaken);
+		}
+	}
+
+	private static final class StatementKey
+	{
+		private final PreparedStatement statement;
+		private final int hashCode;
+
+		private StatementKey(PreparedStatement statement)
+		{
+			this.statement = statement;
+			hashCode = System.identityHashCode(statement);
+		}
+
+		@Override
+		public boolean equals(Object object)
+		{
+			if (this == object) return true;
+			if (object instanceof StatementKey == false) return false;
+
+			StatementKey other = (StatementKey) object;
+			return statement == other.statement;
+		}
+
+		@Override
+		public int hashCode()
+		{
+			return hashCode;
+		}
+	}
+
+	private static final class SqlMeasurement
+	{
+		private final String sql;
+		private final AtomicLong startedAt = new AtomicLong(NOT_STARTED);
+
+		private SqlMeasurement(String sql)
+		{
+			this.sql = sql;
+		}
+
+		private void start(long startTime)
+		{
+			long currentStart;
+			do
+			{
+				currentStart = startedAt.get();
+				if (currentStart == CLOSED) return;
+			}
+			while (startedAt.compareAndSet(currentStart, startTime)==false);
+		}
+
+		private long close()
+		{
+			return startedAt.getAndSet(CLOSED);
 		}
 	}
 }
