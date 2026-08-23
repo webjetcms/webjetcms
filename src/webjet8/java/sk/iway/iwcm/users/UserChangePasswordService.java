@@ -201,7 +201,9 @@ public class UserChangePasswordService {
 			int randomNumber = new SecureRandom().nextInt();
 			String loginHash = new Password().encrypt( allLogins );
 			String auth = new Password().encrypt(Integer.toString(randomNumber));
-			Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, newestUser.getId().intValue(), "Vyžiadanie zmeny hesla", randomNumber, UsersDB.APPROVE_APPROVE);
+			for (UserDetailsEntity user : users) {
+				Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getId().intValue(), "Vyžiadanie zmeny hesla", randomNumber, UsersDB.APPROVE_APPROVE);
+			}
 			//String text = prop.getText("logon.password.change_at")+"\n";
 
             // pageUrl is set depending if its request from admin section or not
@@ -239,17 +241,38 @@ public class UserChangePasswordService {
 	}
 
     public static AdminlogBean getChangePasswordAdminlogBean(String login, String auth) {
-        UserDetails user = UsersDB.getUser(login);
+		if (Tools.isEmpty(login) || Tools.isEmpty(auth)) return null;
 
-		return new ComplexQuery().
-			setSql("SELECT * FROM "+ConfDB.ADMINLOG_TABLE_NAME+" WHERE log_type=? AND user_id = ? AND sub_id1 = ?").
-			setParams(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getUserId(), Integer.valueOf(auth)).
-		 	singleResult(new Mapper<AdminlogBean>(){;
-				public AdminlogBean map(ResultSet rs) throws SQLException{
+		int authValue;
+		try {
+			authValue = Integer.parseInt(auth);
+		} catch (NumberFormatException ex) {
+			return null;
+		}
+
+        UserDetails user = UsersDB.getUser(login);
+		if (user == null) return null;
+
+		List<AdminlogBean> logs = new ComplexQuery().
+			setSql("SELECT * FROM "+ConfDB.ADMINLOG_TABLE_NAME+" WHERE log_type=? AND user_id = ? AND sub_id1 = ? AND sub_id2 = ?").
+			setParams(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getUserId(), authValue, UsersDB.APPROVE_APPROVE).
+			list(new Mapper<AdminlogBean>() {
+				public AdminlogBean map(ResultSet rs) throws SQLException {
 					return new AdminlogBean(rs);
 				}
-		});
+			});
+
+		if (logs.size() != 1) return null;
+		return logs.get(0);
     }
+
+	private static boolean isChangePasswordAdminlogBeanValid(AdminlogBean log) {
+		if (log == null || log.getSubId2() != UsersDB.APPROVE_APPROVE || log.getCreateDate() == null) return false;
+
+		long validity = Constants.getInt("passwordResetValidityInMinutes") * 60L * 1000L;
+		long age = System.currentTimeMillis() - log.getCreateDate().getTime();
+		return validity > 0 && age >= 0 && age <= validity;
+	}
 
     /**
      * Verify if received logins are valid. If YES, return true, otherwise false.
@@ -261,37 +284,20 @@ public class UserChangePasswordService {
      * @return
      */
     public static boolean verifyLoginValue(String receivedLogins, String selectedLogin, String auth, HttpServletRequest request) {
-        //Check if custom login is implemented , if YES dont do a check
-        String method = Constants.getString("sendPasswordMethod");
-        if(Tools.isEmpty(method) == false) return true;
-
         if(Tools.isEmpty(receivedLogins) || Tools.isEmpty(selectedLogin) || Tools.isEmpty(auth)) return false;
 
         //There can be multiple logins separated by LOGINS_SEPARATOR
-        String[] logins = receivedLogins.split(LOGINS_SEPARATOR);
+		String[] logins = receivedLogins.split(LOGINS_SEPARATOR, -1);
         if(logins.length == 0) return false;
-        else if(logins.length == 1) {
-            //We have only one option -> that one option MUST be in adminlog
-            AdminlogBean log = getChangePasswordAdminlogBean(logins[0], auth);
-            //If AdminlogBean was returned -> it means login is valid, and we can change password
-            if(log != null) return true;
-        } else {
-            //We have multiple options
-            //Use FIRST login to get AdminlogBean
-            AdminlogBean log = getChangePasswordAdminlogBean(logins[0], auth);
-            if(log != null) {
-                //AdminlogBean was found -> FIRST login is valid, FOUND all logins by email
-                UserDetails user = UsersDB.getUser(logins[0]);
-                List<UserDetailsEntity> users = getAllSuitableLogins(user.getEmail(), isAdminSection(request));
-                //Check if selected login is in list of valid logins
-                return users.stream().anyMatch(u -> u.getLogin().equals(selectedLogin));
-            } else {
-                //AdminlogBean was not found -> probably wrong received logins
-                return false;
-            }
-        }
+		boolean selectedLoginWasIssued = false;
+		for (String login : logins) {
+			if (Tools.isEmpty(login)) return false;
+			if (login.equals(selectedLogin)) selectedLoginWasIssued = true;
+		}
+		if (selectedLoginWasIssued == false) return false;
 
-        return true;
+		AdminlogBean log = getChangePasswordAdminlogBean(selectedLogin, auth);
+		return isChangePasswordAdminlogBeanValid(log);
     }
 
     /**
@@ -301,13 +307,7 @@ public class UserChangePasswordService {
      */
     public static void deleteChangePasswordAdminlogBean(String loginsStr, String auth) {
         if(Tools.isEmpty(loginsStr) || Tools.isEmpty(auth)) return;
-
-        //There can be multiple logins separated by LOGINS_SEPARATOR
-        String[] logins = loginsStr.split(LOGINS_SEPARATOR);
-        if(logins.length == 0) return;
-
-        UserDetails user = UsersDB.getUser(logins[0]);
-        deleteChangePasswordAdminlogBean(user, auth);
+		deleteChangePasswordAdminlogBeans(auth);
     }
 
     /**
@@ -317,8 +317,20 @@ public class UserChangePasswordService {
      * @param auth
      */
     public static void deleteChangePasswordAdminlogBean(UserDetails user, String auth) {
+		if (user == null || Tools.isEmpty(auth)) return;
+		deleteChangePasswordAdminlogBeans(auth);
+	}
+
+	private static void deleteChangePasswordAdminlogBeans(String auth) {
+		int authValue;
+		try {
+			authValue = Integer.parseInt(auth);
+		} catch (NumberFormatException ex) {
+			return;
+		}
+
         //zmaz zaznam z audit tabulky (aby druhy krat linka nefungovala)
-        new SimpleQuery().execute("DELETE FROM " + ConfDB.ADMINLOG_TABLE_NAME + " WHERE log_type=? AND user_id=? AND sub_id1=?", Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getUserId(), Tools.getIntValue(auth, -1));
+		new SimpleQuery().execute("DELETE FROM " + ConfDB.ADMINLOG_TABLE_NAME + " WHERE log_type=? AND sub_id1=? AND sub_id2=?", Adminlog.TYPE_USER_CHANGE_PASSWORD, authValue, UsersDB.APPROVE_APPROVE);
     }
 
     /**
@@ -376,11 +388,7 @@ public class UserChangePasswordService {
                 return userForm;
             }
 
-            long timeAskedFor = log.getCreateDate().getTime();
-			long timeNow = System.currentTimeMillis();
-			long validity = Constants.getInt("passwordResetValidityInMinutes")*60L*1000L;
-
-			if (timeNow - timeAskedFor > validity) {
+			if (isChangePasswordAdminlogBeanValid(log) == false) {
                 // Show err msg
                 if(model != null) model.addAttribute("changePasswordActionFailed", true);
 
