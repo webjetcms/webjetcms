@@ -71,6 +71,11 @@ public class ConfigurationService {
             return null;
         }
 
+        if (confDetailsDto.isTemporary()) {
+            Constants.setString(confDetailsDto.getName(), confDetailsDto.getValue());
+            return confDetailsDto;
+        }
+
         if (confDetailsDto.isEncrypt()) {
             Password password = new Password();
             confDetailsDto.setValue("encrypted:" + password.encrypt(confDetailsDto.getValue()));

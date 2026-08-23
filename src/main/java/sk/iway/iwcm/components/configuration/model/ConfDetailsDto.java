@@ -70,10 +70,27 @@ public class ConfDetailsDto extends ConfDetails {
 
     @DataTableColumn(
         hidden = true,
+        inputType = DataTableColumnType.BOOLEAN,
+        title = "admin.conf_editor.set_temporary",
+        tab = "basic",
+        sortAfter = "encrypt",
+        className = "not-export",
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = "data-dt-import-hidden", value = "true")
+                }
+            )
+        }
+    )
+    private boolean temporary;
+
+    @DataTableColumn(
+        hidden = true,
         inputType = DataTableColumnType.DATETIME,
         title = "admin.conf_editor.change_from",
         tab = "basic",
-        sortAfter = "encrypt",
+        sortAfter = "temporary",
         className = "not-export",
         editor = {
             @DataTableColumnEditor(
