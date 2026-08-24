@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -77,6 +78,7 @@ public class SemanticSearchService {
         }
 
         AssistantDefinitionEntity embeddingAssistant;
+        String provider;
         String model;
         EmbeddingBatchResult embeddingResult;
 
@@ -85,10 +87,14 @@ public class SemanticSearchService {
             if (embeddingAssistant == null) {
                 throw new ProviderCallException("RAG search embedding assistant is not available");
             }
+            if (Tools.isEmpty(embeddingAssistant.getProvider())) {
+                throw new ProviderCallException("RAG search embedding assistant has no provider configured");
+            }
             if (Tools.isEmpty(embeddingAssistant.getModel())) {
                 throw new ProviderCallException("RAG search embedding assistant has no model configured");
             }
 
+            provider = embeddingAssistant.getProvider().trim().toLowerCase(Locale.ROOT);
             model = embeddingAssistant.getModel();
             embeddingResult = embeddingService.embedWithUsage(
                 List.of(query),
@@ -158,7 +164,7 @@ public class SemanticSearchService {
             bonusParams.put("rootGroups", restGroups);
         }
 
-        List<VectorSearchResult> vectorChunkResults = vectorStore.search(queryEmbedding, model, entityType, domainId, language, chunkLimit, bonusParams);
+        List<VectorSearchResult> vectorChunkResults = vectorStore.search(queryEmbedding, provider, model, entityType, domainId, language, chunkLimit, bonusParams);
 
         boolean useHybridSearch = shouldUseHybridSearch(query, vectorChunkResults, minimumResultsForCall, pageParams);
         List<VectorSearchResult> chunkResults = vectorChunkResults;
@@ -166,7 +172,7 @@ public class SemanticSearchService {
             if(bonusParams == null) bonusParams = new HashMap<>();
             bonusParams.put("hybridFtsUseIlikeFallback", RagSettingsService.getHybridFtsUseIlikeFallback(pageParams));
 
-            List<VectorSearchResult> fulltextChunkResults = vectorStore.searchFulltext(query, model, entityType, domainId, language, chunkLimit, bonusParams);
+            List<VectorSearchResult> fulltextChunkResults = vectorStore.searchFulltext(query, provider, model, entityType, domainId, language, chunkLimit, bonusParams);
             if (fulltextChunkResults.isEmpty() == false) {
                 List<VectorSearchResult> mergedChunkResults = mergeChunkResultsWithRrf(vectorChunkResults, fulltextChunkResults, pageParams);
                 if (mergedChunkResults.isEmpty() == false) {

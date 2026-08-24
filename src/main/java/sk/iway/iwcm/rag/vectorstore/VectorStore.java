@@ -32,6 +32,7 @@ public interface VectorStore {
     /**
      * Find the most similar chunks to the query embedding.
      * @param queryEmbedding the query vector
+     * @param embeddingProvider provider used to generate/query embeddings
      * @param embeddingModel model used to generate/query embeddings
      * @param entityType entity type to filter by (null for all)
      * @param domainId domain ID to filter by (null for all)
@@ -40,11 +41,12 @@ public interface VectorStore {
      * @param bonusParams optional store-specific filters, such as document root groups
      * @return list of search results ordered by similarity (descending)
      */
-    List<VectorSearchResult> search(float[] queryEmbedding, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams);
+    List<VectorSearchResult> search(float[] queryEmbedding, String embeddingProvider, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams);
 
     /**
      * Find relevant chunks by fulltext search in chunk text.
      * @param query textual query
+     * @param embeddingProvider provider used to filter rows
      * @param embeddingModel model used to filter rows
      * @param entityType entity type to filter by (null for all)
      * @param domainId domain ID to filter by (null for all)
@@ -53,7 +55,7 @@ public interface VectorStore {
      * @param bonusParams optional store-specific filters, such as document root groups and fallback flags
      * @return list of search results ordered by fulltext rank (descending)
      */
-    List<VectorSearchResult> searchFulltext(String query, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams);
+    List<VectorSearchResult> searchFulltext(String query, String embeddingProvider, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams);
 
     /**
      * Check if the vector store can be used in the current runtime configuration.
@@ -82,5 +84,5 @@ public interface VectorStore {
      * Get existing embeddings for an entity, keyed by content hash.
      * Used to skip re-embedding unchanged chunks.
      */
-    Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingModel);
+    Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingProvider, String embeddingModel);
 }

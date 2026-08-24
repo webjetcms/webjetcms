@@ -5,6 +5,7 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -179,6 +180,7 @@ public class SemanticIndexService {
         String entityType = DocDetailsContentExtractor.ENTITY_TYPE.name();
         long entityId = doc.getDocId();
         String domainName = DocDB.getInstance().getDomain(docId);
+        String provider = normalizeProviderId(Constants.getString("ragEmbeddingProvider"));
         String model = Constants.getString("ragEmbeddingModel");
         int dimensions = Constants.getInt("ragEmbeddingDimensions");
         boolean chunkRowsSaved = false;
@@ -203,15 +205,19 @@ public class SemanticIndexService {
             if (embeddingAssistant == null) {
                 throw new IllegalStateException("RAG indexing embedding assistant is not available");
             }
+            if (Tools.isEmpty(embeddingAssistant.getProvider())) {
+                throw new IllegalStateException("RAG indexing embedding assistant has no provider configured");
+            }
             if (Tools.isEmpty(embeddingAssistant.getModel())) {
                 throw new IllegalStateException("RAG indexing embedding assistant has no model configured");
             }
 
+            provider = normalizeProviderId(embeddingAssistant.getProvider());
             model = embeddingAssistant.getModel();
             dimensions = embeddingService.getDimensions();
 
             // Step 2.5: Check existing chunks to reuse unchanged embeddings
-            Map<String, float[]> existingEmbeddingsByHash = vectorStore.getExistingEmbeddingsByHash(entityType, entityId, model);
+            Map<String, float[]> existingEmbeddingsByHash = vectorStore.getExistingEmbeddingsByHash(entityType, entityId, provider, model);
 
             // Compute hashes for all new chunks and separate into reusable vs needs-embedding
             List<String> chunkHashes = new ArrayList<>();
@@ -257,8 +263,14 @@ public class SemanticIndexService {
                 }
             }
 
-            // Step 4: Delete old chunks via repository and save new entities
-            embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainId(DocDetailsContentExtractor.ENTITY_TYPE, entityId, CloudToolsForCore.getDomainId());
+            // Step 4: Replace only chunks created by the current provider and model.
+            embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndEmbeddingProviderAndEmbeddingModelAndDomainId(
+                DocDetailsContentExtractor.ENTITY_TYPE,
+                entityId,
+                provider,
+                model,
+                CloudToolsForCore.getDomainId()
+            );
 
             String language = GroupMirroringServiceV9.getLanguage(doc.getGroup());
             int domainId = GroupsDB.getDomainId(domainName);
@@ -273,6 +285,7 @@ public class SemanticIndexService {
                 chunk.setChunkIndex(i);
                 chunk.setChunkText(chunks.get(i));
                 chunk.setContentHash(chunkHashes.get(i));
+                chunk.setEmbeddingProvider(provider);
                 chunk.setEmbeddingModel(model);
                 chunk.setDimensions(dimensions);
                 chunk.setLanguage(language);
@@ -316,7 +329,7 @@ public class SemanticIndexService {
 
             if (chunkRowsSaved == false) {
                 // No chunk rows exist yet, so store one document-level error marker.
-                embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndEmbeddingModelAndDomainId(DocDetailsContentExtractor.ENTITY_TYPE, entityId, model, domainId);
+                embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndEmbeddingProviderAndEmbeddingModelAndDomainId(DocDetailsContentExtractor.ENTITY_TYPE, entityId, provider, model, domainId);
 
                 String truncatedMessage = e.getMessage() != null && e.getMessage().length() > 500
                     ? e.getMessage().substring(0, 500) : e.getMessage();
@@ -327,6 +340,7 @@ public class SemanticIndexService {
                 errorChunk.setChunkIndex(0);
                 errorChunk.setChunkText("ERROR");
                 errorChunk.setContentHash("ERROR");
+                errorChunk.setEmbeddingProvider(provider);
                 errorChunk.setEmbeddingModel(model);
                 errorChunk.setDimensions(dimensions);
                 errorChunk.setDomainId(domainId);
@@ -336,6 +350,10 @@ public class SemanticIndexService {
                 embeddingChunkRepository.save(errorChunk);
             }
         }
+    }
+
+    private static String normalizeProviderId(String provider) {
+        return Tools.isEmpty(provider) ? "openai" : provider.trim().toLowerCase(Locale.ROOT);
     }
 
     /**
