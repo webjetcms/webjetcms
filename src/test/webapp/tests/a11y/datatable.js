@@ -776,16 +776,23 @@ Scenario("p51: grid edit accessibility", async ({ I, DT, a11y }) => {
     const bubbleState = await I.executeScript(() => {
         const bubble = document.querySelector("div.DTE_Bubble.wj-cell-edit-dialog");
         const buttons = [...bubble.querySelectorAll("div.DTE_Form_Buttons button")];
+        const input = bubble.querySelector("input:not([type='hidden']), textarea, select");
+        const triangle = bubble.querySelector("div.DTE_Bubble_Triangle");
         return {
             dialogLabel: bubble.getAttribute("aria-label"),
             buttonLabels: buttons.map(button => button.getAttribute("aria-label")),
-            buttonTypes: buttons.map(button => button.getAttribute("type"))
+            buttonTypes: buttons.map(button => button.getAttribute("type")),
+            buttonTops: buttons.map(button => button.getBoundingClientRect().top),
+            inputTop: input.getBoundingClientRect().top,
+            triangleDisplay: getComputedStyle(triangle).display
         };
     });
     I.assertTrue(bubbleState.dialogLabel.length > 0, "The cell editor dialog must have an accessible name");
     I.assertEqual(bubbleState.buttonLabels.length, 2, "The cell editor must expose confirm and cancel buttons");
     I.assertTrue(bubbleState.buttonLabels.every(label => label?.length > 0), "Every cell editor button must have an accessible name");
     I.assertTrue(bubbleState.buttonTypes.every(type => type === "button"), "Cell editor actions must use button semantics");
+    I.assertTrue(bubbleState.buttonTops.every(top => Math.abs(top - bubbleState.inputTop) < 1), "Cell editor actions must align with the input");
+    I.assertEqual(bubbleState.triangleDisplay, "none", "The obsolete cell editor pointer must be hidden");
     await a11y.check(bubble);
 
     I.clickCss(`${bubble} div.DTE_Form_Buttons button.btn-outline-secondary`);

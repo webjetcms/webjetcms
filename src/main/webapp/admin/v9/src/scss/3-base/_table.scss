@@ -1388,6 +1388,16 @@ div.DTE_Bubble {
             }
         }
     }
+
+    &.wj-cell-edit-dialog {
+        div.DTE_Bubble_Liner div.DTE_Bubble_Table div.DTE_Form_Buttons {
+            top: 24px;
+        }
+
+        div.DTE_Bubble_Triangle {
+            display: none;
+        }
+    }
 }
 
 div.dt-datetime {

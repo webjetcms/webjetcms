@@ -1,11 +1,13 @@
 # AGENTS: Repository Knowledge Index
 
 <!-- Navigation (edit in AGENTS-NAV.md) -->
-<div align="right">[System](AGENTS-system.md) | [DataTable](AGENTS-datatable.md) | [Editor](AGENTS-editor.md) | [Doc](AGENTS-doc.md) | [Users](AGENTS-users.md) | [Components](AGENTS-components.md) | [Common](AGENTS-common.md) | [Utils](AGENTS-utils.md)</div>
+<div align="right">[System](AGENTS-system.md) | [DataTable](AGENTS-datatable.md) | [Editor](AGENTS-editor.md) | [Doc](AGENTS-doc.md) | [Users](AGENTS-users.md) | [Components](AGENTS-components.md) | [Common](AGENTS-common.md) | [Utils](AGENTS-utils.md) | [Design](AGENTS-design.md)</div>
 
 Concise architecture & conventions index. Each section links to a deeper per-package AGENTS-* file (<=250 lines each). Keep this file short (target <=200 lines) and update when adding/removing packages or cross-cutting patterns.
 
 Based on [agents.md](https://agents.md) and [Prompting Your Prompt's Prompt](https://brennanmceachran.com/blog/meta-prompt-for-agents-md)
+
+For frontend and interface work, read and follow the project [Design Context](AGENTS-design.md).
 
 ## Agent Working Principles
 
