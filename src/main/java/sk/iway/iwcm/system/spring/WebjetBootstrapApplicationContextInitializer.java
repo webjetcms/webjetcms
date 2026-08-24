@@ -26,15 +26,26 @@ class WebjetBootstrapApplicationContextInitializer
     private static final String PROPERTY_SOURCE_NAME = "webjetBootstrap";
     private static final String AUTO_CONFIGURATION_EXCLUDE_PROPERTY = "spring.autoconfigure.exclude";
 
+    private final WebjetBootstrapMode forcedMode;
     private final WebjetBootstrapModeDetector modeDetector;
     private final WebjetInitializationActions initializationActions;
 
     WebjetBootstrapApplicationContextInitializer() {
-        this(new WebjetBootstrapModeDetector(), new WebjetInitializationActions());
+        this(null, new WebjetBootstrapModeDetector(), new WebjetInitializationActions());
     }
 
     WebjetBootstrapApplicationContextInitializer(WebjetBootstrapModeDetector modeDetector,
             WebjetInitializationActions initializationActions) {
+        this(null, modeDetector, initializationActions);
+    }
+
+    WebjetBootstrapApplicationContextInitializer(WebjetBootstrapMode forcedMode) {
+        this(forcedMode, new WebjetBootstrapModeDetector(), new WebjetInitializationActions());
+    }
+
+    WebjetBootstrapApplicationContextInitializer(WebjetBootstrapMode forcedMode,
+            WebjetBootstrapModeDetector modeDetector, WebjetInitializationActions initializationActions) {
+        this.forcedMode = forcedMode;
         this.modeDetector = modeDetector;
         this.initializationActions = initializationActions;
     }
@@ -53,19 +64,24 @@ class WebjetBootstrapApplicationContextInitializer
         WebjetBootstrapState state;
         WebjetBootstrapSpringConfiguration springConfiguration;
         if (servletContext != null) {
-            WebjetBootstrapMode mode = setupEnabled
-                ? WebjetBootstrapMode.SETUP
-                : WebjetBootstrapMode.PRODUCTION;
             boolean initialized = initializationActions.initialize(servletContext);
+            WebjetBootstrapMode mode = resolveMode(setupEnabled, initialized);
             validateMode(mode, initialized);
             state = WebjetBootstrapState.initialized(mode, initialized);
             springConfiguration = initialized
                 ? WebjetBootstrapSpringConfiguration.fromConstants(environment)
                 : WebjetBootstrapSpringConfiguration.empty(environment);
         } else {
-            WebjetBootstrapModeDetector.Detection detection = setupEnabled
-                ? WebjetBootstrapModeDetector.Detection.setup(environment)
-                : modeDetector.detect(environment);
+            WebjetBootstrapModeDetector.Detection detection;
+            if (forcedMode != null) {
+                detection = new WebjetBootstrapModeDetector.Detection(
+                    forcedMode, WebjetBootstrapSpringConfiguration.empty(environment)
+                );
+            } else {
+                detection = setupEnabled
+                    ? WebjetBootstrapModeDetector.Detection.setup(environment)
+                    : modeDetector.detect(environment);
+            }
             state = WebjetBootstrapState.pending(detection.mode());
             springConfiguration = detection.springConfiguration();
         }
@@ -96,6 +112,19 @@ class WebjetBootstrapApplicationContextInitializer
         return null;
     }
 
+    private WebjetBootstrapMode resolveMode(boolean setupEnabled, boolean initialized) {
+        if (setupEnabled) {
+            return WebjetBootstrapMode.SETUP;
+        }
+        if (initialized) {
+            return WebjetBootstrapMode.PRODUCTION;
+        }
+        if (initializationActions.isLicenseRecoveryRequired()) {
+            return WebjetBootstrapMode.LICENSE_RECOVERY;
+        }
+        return WebjetBootstrapMode.PRODUCTION;
+    }
+
     private void validateMode(WebjetBootstrapMode mode, boolean initialized) {
         boolean productionMode = mode == WebjetBootstrapMode.PRODUCTION;
         if (productionMode != initialized) {
@@ -112,7 +141,7 @@ class WebjetBootstrapApplicationContextInitializer
         Map<String, Object> properties = new HashMap<>();
         properties.put(WebjetBootstrapMode.PROPERTY_NAME, state.getMode().getPropertyValue());
         springConfiguration.addProperties(properties);
-        if (state.getMode() == WebjetBootstrapMode.SETUP) {
+        if (state.getMode() != WebjetBootstrapMode.PRODUCTION) {
             Set<String> exclusions = new LinkedHashSet<>();
             List<String> configuredExclusions = Binder.get(environment)
                 .bind(AUTO_CONFIGURATION_EXCLUDE_PROPERTY, Bindable.listOf(String.class))

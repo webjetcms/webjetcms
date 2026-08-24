@@ -1,6 +1,7 @@
 package sk.iway.iwcm.system.spring;
 
 import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
@@ -9,7 +10,6 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.doc.DebugTimer;
@@ -34,6 +34,11 @@ public class SpringAppInitializer
 		  Username: setup
 		  Password: configured setup token (webjet.setup.token / WEBJET_SETUP_TOKEN; value is not printed)
 		  After setup, set webjet.setup.enabled=false, remove webjet.setup.token, and fully restart the application server.""";
+	static final String LICENSE_RECOVERY_STARTUP_INSTRUCTIONS = """
+		WebJET license recovery is running:
+		  URL path: /wjerrorpages/setup/license
+		  Enter a valid WebJET administrator username, password, and the new license number.
+		  After updating the license, fully restart the application server.""";
 
 	private static volatile DebugTimer dtGlobal = null;
 
@@ -43,11 +48,12 @@ public class SpringAppInitializer
 	}
 
 	@Bean
-	@Order(Ordered.HIGHEST_PRECEDENCE)
 	ServletContextInitializer springAppInitializerOnStartup(WebjetBootstrapState bootstrapState,
 			WebjetInitializationActions initializationActions, ApplicationContext applicationContext) {
-		return servletContext -> initializeCore(
-			servletContext, bootstrapState, initializationActions, applicationContext
+		return new OrderedServletContextInitializer(
+			servletContext -> initializeCore(
+				servletContext, bootstrapState, initializationActions, applicationContext
+			)
 		);
 	}
 
@@ -80,13 +86,23 @@ public class SpringAppInitializer
 
 	private void validateBootstrapMode(WebjetBootstrapState bootstrapState,
 			WebjetInitializationActions initializationActions) {
-		boolean productionMode = bootstrapState.getMode() == WebjetBootstrapMode.PRODUCTION;
 		boolean coreInitialized = bootstrapState.isCoreInitialized();
-		if (productionMode != coreInitialized) {
-			initializationActions.cleanupAfterRejectedCoreInitialization(coreInitialized);
-			if (productionMode) {
-				throw new WebjetBootstrapUnavailableException("core initialization did not complete");
+		if (bootstrapState.getMode() == WebjetBootstrapMode.PRODUCTION && coreInitialized == false) {
+			boolean licenseRecoveryRequired = initializationActions.isLicenseRecoveryRequired();
+			if (licenseRecoveryRequired) {
+				throw new WebjetLicenseRecoveryRequiredException();
 			}
+			initializationActions.cleanupAfterRejectedCoreInitialization(false);
+			throw new WebjetBootstrapUnavailableException("core initialization did not complete");
+		}
+		if (bootstrapState.getMode() == WebjetBootstrapMode.LICENSE_RECOVERY
+				&& coreInitialized == false
+				&& initializationActions.isLicenseRecoveryRequired() == false) {
+			initializationActions.cleanupAfterRejectedCoreInitialization(false);
+			throw new WebjetBootstrapUnavailableException("license recovery initialization is unavailable");
+		}
+		if (bootstrapState.getMode() != WebjetBootstrapMode.PRODUCTION && coreInitialized) {
+			initializationActions.cleanupAfterRejectedCoreInitialization(true);
 			throw new WebjetBootstrapModeMismatchException(
 				bootstrapState.getMode(), coreInitialized
 			);
@@ -116,6 +132,8 @@ public class SpringAppInitializer
 		Logger.info(SpringBootStarter.class, WEBJET_STARTED_MESSAGE);
 		if (bootstrapState.getMode() == WebjetBootstrapMode.SETUP) {
 			Logger.info(SpringBootStarter.class, SETUP_STARTUP_INSTRUCTIONS);
+		} else if (bootstrapState.getMode() == WebjetBootstrapMode.LICENSE_RECOVERY) {
+			Logger.info(SpringBootStarter.class, LICENSE_RECOVERY_STARTUP_INSTRUCTIONS);
 		}
 	}
 
@@ -128,6 +146,25 @@ public class SpringAppInitializer
 			startDebugTimer();
 		}
 		return dtGlobal;
+	}
+
+	private static final class OrderedServletContextInitializer implements ServletContextInitializer, Ordered {
+
+		private final ServletContextInitializer delegate;
+
+		private OrderedServletContextInitializer(ServletContextInitializer delegate) {
+			this.delegate = delegate;
+		}
+
+		@Override
+		public void onStartup(ServletContext servletContext) throws ServletException {
+			delegate.onStartup(servletContext);
+		}
+
+		@Override
+		public int getOrder() {
+			return Ordered.HIGHEST_PRECEDENCE;
+		}
 	}
 
 	/**

@@ -4,7 +4,7 @@ Licenčné číslo pre WebJET sa zadáva v sekcii Nastavenia/Konfigurácia do ko
 
 ## Nesprávne licenčné číslo
 
-Ak WebJET obsahuje licenčné číslo s exspirovaným dátumom platnosti, nesprávnym doménovým menom, alebo licenčné číslo je nesprávne zadané, zobrazí sa po prihlásení do administrácie možnosť aktualizovať licenčné číslo, v logoch servera sa pri štarte zobrazí:
+Ak WebJET obsahuje licenčné číslo s exspirovaným dátumom platnosti alebo je licenčné číslo nesprávne zadané, v logoch servera sa pri štarte zobrazí:
 
 ```log
 [webjet][s.i.i.InitServlet][INFO][0] 2023-10-02 09:27:30 - -----------------------------------------------
@@ -20,9 +20,9 @@ Ak WebJET obsahuje licenčné číslo s exspirovaným dátumom platnosti, nespr�
   for new license.
 ```
 
-Pre bezpečnú zmenu licencie cez recovery rozhranie najskôr explicitne aktivujte setup režim podľa návodu pre [aktiváciu setup režimu](../setup/README.md#aktivácia-setup-režimu). Aplikačný server spustite s premennými `WEBJET_SETUP_ENABLED=true` a `WEBJET_SETUP_TOKEN`, vzdialený prístup sprístupnite iba cez HTTPS a otvorte adresu `/wjerrorpages/setup/license`.
+Pri neplatnej licencii sa WebJET automaticky spustí v obmedzenom režime obnovy licencie. Aplikačný server zostane spustený, bežným návštevníkom sa zobrazí chybová stránka a na adrese `/wjerrorpages/setup/license` bude dostupný formulár na zadanie novej licencie. Plný setup režim sa nesprístupní a nie je potrebné nastavovať `WEBJET_SETUP_ENABLED` ani `WEBJET_SETUP_TOKEN`.
 
-WebJET vás najskôr presmeruje na prihlasovaciu stránku setup režimu. Použite meno `setup` a ako heslo zadajte setup token.
+Pri vzdialenom použití pristupujte k formuláru výhradne cez HTTPS a podľa možností obmedzte prístup pomocou reverzného proxy alebo firewallu.
 
 ![](license.png)
 
@@ -30,7 +30,7 @@ Zadajte prihlasovacie údaje pre overenie oprávnení do administrácie a nový 
 
 ![](license-saved.png)
 
-Po úspešnom uložení zastavte aplikačný server, odstráňte `WEBJET_SETUP_ENABLED` a `WEBJET_SETUP_TOKEN` a vykonajte úplný manuálny reštart. Pri novom štarte sa použije zadané licenčné číslo a WebJET sa spustí v produkčnom režime.
+Po úspešnom uložení vykonajte úplný manuálny reštart aplikačného servera. Pri novom štarte sa použije zadané licenčné číslo a WebJET sa spustí v produkčnom režime.
 
 ## Zadanie licenčného čísla priamo do databázy
 

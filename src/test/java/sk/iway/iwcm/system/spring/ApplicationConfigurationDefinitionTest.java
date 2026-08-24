@@ -31,7 +31,7 @@ class ApplicationConfigurationDefinitionTest {
             assertDefinitionCount(beanFactory, SetupApplicationConfiguration.class, 1);
             assertDefinitionCount(beanFactory, SetupSpringConfig.class, 1);
             assertDefinitionCount(beanFactory, SetupController.class, 1);
-            assertDefinitionCount(beanFactory, LicenseController.class, 1);
+            assertDefinitionCount(beanFactory, LicenseController.class, 0);
             assertBeanDefinitionCount(beanFactory, "setupCharacterEncodingFilterRegistration", 1);
             assertDefinitionCount(beanFactory,
                 SetupApplicationConfiguration.SetupSecurityConfiguration.class, 1);
@@ -44,6 +44,9 @@ class ApplicationConfigurationDefinitionTest {
             assertDefinitionCount(beanFactory, SpringAppInitializer.class, 1);
             assertBeanDefinitionCount(beanFactory, "webjetApplicationReadyListener", 1);
             assertDefinitionCount(beanFactory, ProductionApplicationConfiguration.class, 0);
+            assertDefinitionCount(beanFactory, LicenseRecoveryApplicationConfiguration.class, 0);
+            assertBeanDefinitionCount(beanFactory,
+                "licenseRecoveryCharacterEncodingFilterRegistration", 0);
             assertDefinitionCount(beanFactory,
                 SpringBootStarter.ProductionServletInfrastructureConfiguration.class, 0);
             assertBeanDefinitionCount(beanFactory,
@@ -61,6 +64,46 @@ class ApplicationConfigurationDefinitionTest {
             assertDefinitionCount(beanFactory, com.example.webjetadditional.AdditionalController.class, 0);
             assertBeanDefinitionCount(beanFactory, "dynamicInstallBean", 0);
             assertBeanDefinitionCount(beanFactory, "additionalPackageBean", 0);
+        }
+    }
+
+    @Test
+    void licenseRecoveryModeRegistersOnlyLicenseRecoveryDefinitions() {
+        try (GenericApplicationContext applicationContext = parseDefinitions(
+                WebjetBootstrapMode.LICENSE_RECOVERY)) {
+            DefaultListableBeanFactory beanFactory = applicationContext.getDefaultListableBeanFactory();
+
+            assertDefinitionCount(beanFactory, LicenseRecoveryApplicationConfiguration.class, 1);
+            assertDefinitionCount(beanFactory, SetupSpringConfig.class, 1);
+            assertDefinitionCount(beanFactory, LicenseController.class, 1);
+            assertBeanDefinitionCount(beanFactory,
+                "licenseRecoveryCharacterEncodingFilterRegistration", 1);
+            assertBeanDefinitionCount(beanFactory, "messageSource", 1);
+            assertDefinitionCount(beanFactory, SpringAppInitializer.class, 1);
+            assertBeanDefinitionCount(beanFactory, "webjetApplicationReadyListener", 1);
+
+            assertDefinitionCount(beanFactory, SetupApplicationConfiguration.class, 0);
+            assertDefinitionCount(beanFactory, SetupController.class, 0);
+            assertBeanDefinitionCount(beanFactory, "setupCharacterEncodingFilterRegistration", 0);
+            assertDefinitionCount(beanFactory,
+                SetupApplicationConfiguration.SetupSecurityConfiguration.class, 0);
+            assertBeanDefinitionCount(beanFactory, "setupSecurityFilterChain", 0);
+            assertBeanDefinitionCount(beanFactory, "setupSecurityFilterChainRegistration", 0);
+
+            assertDefinitionCount(beanFactory, ProductionApplicationConfiguration.class, 0);
+            assertDefinitionCount(beanFactory,
+                SpringBootStarter.ProductionServletInfrastructureConfiguration.class, 0);
+            assertDefinitionCount(beanFactory, SpringBootStarter.ProductionServletConfiguration.class, 0);
+            assertBeanDefinitionCount(beanFactory,
+                "persistedSetupAuthenticationCleanupFilterRegistration", 0);
+            assertProductionServletDefinitions(beanFactory, 0);
+            assertDefinitionCount(beanFactory, BaseSpringConfig.class, 0);
+            assertDefinitionCount(beanFactory, V9SpringConfig.class, 0);
+            assertDefinitionCount(beanFactory, V9JpaDBConfig.class, 0);
+            assertDefinitionCount(beanFactory, SpringSecurityConf.class, 0);
+            assertDefinitionCount(beanFactory, SpringConfig.class, 0);
+            assertDefinitionCount(beanFactory, DynamicInstallController.class, 0);
+            assertDefinitionCount(beanFactory, com.example.webjetadditional.AdditionalController.class, 0);
         }
     }
 
@@ -97,10 +140,13 @@ class ApplicationConfigurationDefinitionTest {
             assertBeanDefinitionCount(beanFactory, "tomcatSessionPersistenceCustomizer", 0);
 
             assertDefinitionCount(beanFactory, SetupApplicationConfiguration.class, 0);
+            assertDefinitionCount(beanFactory, LicenseRecoveryApplicationConfiguration.class, 0);
             assertDefinitionCount(beanFactory, SetupSpringConfig.class, 0);
             assertDefinitionCount(beanFactory, SetupController.class, 0);
             assertDefinitionCount(beanFactory, LicenseController.class, 0);
             assertBeanDefinitionCount(beanFactory, "setupCharacterEncodingFilterRegistration", 0);
+            assertBeanDefinitionCount(beanFactory,
+                "licenseRecoveryCharacterEncodingFilterRegistration", 0);
             assertDefinitionCount(beanFactory,
                 SetupApplicationConfiguration.SetupSecurityConfiguration.class, 0);
             assertBeanDefinitionCount(beanFactory, "setupSecurityFilterChain", 0);

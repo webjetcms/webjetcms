@@ -2,6 +2,7 @@ package sk.iway.iwcm.system.spring;
 
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.function.Function;
 
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.MultipartConfigElement;
@@ -56,6 +57,7 @@ import sk.iway.iwcm.system.context.ContextFilter;
 @Import({
     SpringAppInitializer.class,
     SetupApplicationConfiguration.class,
+    LicenseRecoveryApplicationConfiguration.class,
     ProductionApplicationConfiguration.class,
     SpringBootStarter.ProductionServletInfrastructureConfiguration.class,
     SpringBootStarter.ProductionServletConfiguration.class
@@ -78,7 +80,7 @@ public class SpringBootStarter extends SpringBootServletInitializer {
      */
     @Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-        return configureApplicationBuilder(application);
+        return configureApplicationBuilder(application, null);
     }
 
     /**
@@ -102,21 +104,39 @@ public class SpringBootStarter extends SpringBootServletInitializer {
     }
 
     private static void runApplication(String[] args) {
-        runApplication(createApplicationBuilder(), args);
+        runApplication(args, SpringBootStarter::createApplicationBuilder);
+    }
+
+    static void runApplication(String[] args,
+            Function<WebjetBootstrapMode, SpringApplicationBuilder> applicationFactory) {
+        try {
+            runApplication(applicationFactory.apply(null), args);
+        } catch (RuntimeException ex) {
+            if (WebjetLicenseRecoveryRequiredException.isCausedBy(ex) == false) {
+                throw ex;
+            }
+
+            Logger.warn(SpringBootStarter.class,
+                "WebJET production initialization detected an invalid license; rebuilding the context in license recovery mode");
+            runApplication(applicationFactory.apply(WebjetBootstrapMode.LICENSE_RECOVERY), args);
+        }
     }
 
     static void runApplication(SpringApplicationBuilder application, String[] args) {
         application.run(args != null ? args : new String[0]);
     }
 
-    private static SpringApplicationBuilder createApplicationBuilder() {
-        return configureApplicationBuilder(new SpringApplicationBuilder());
+    private static SpringApplicationBuilder createApplicationBuilder(WebjetBootstrapMode forcedMode) {
+        return configureApplicationBuilder(new SpringApplicationBuilder(), forcedMode);
     }
 
-    private static SpringApplicationBuilder configureApplicationBuilder(SpringApplicationBuilder application) {
+    private static SpringApplicationBuilder configureApplicationBuilder(SpringApplicationBuilder application,
+            WebjetBootstrapMode forcedMode) {
         return application
             .sources(SpringBootStarter.class)
-            .initializers(new WebjetBootstrapApplicationContextInitializer())
+            .initializers(forcedMode == null
+                ? new WebjetBootstrapApplicationContextInitializer()
+                : new WebjetBootstrapApplicationContextInitializer(forcedMode))
             .properties(
                 "spring.profiles.default:default",
                 "server.servlet.context-path:/",

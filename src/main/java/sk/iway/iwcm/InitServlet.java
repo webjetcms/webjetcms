@@ -73,6 +73,7 @@ public class InitServlet extends HttpServlet
 	private static String[] domain = null;
 
 	private static volatile boolean valid = false;
+	private static volatile boolean licenseInvalid = false;
 
 	private static int licenseId = -1;
 
@@ -145,6 +146,7 @@ public class InitServlet extends HttpServlet
 		webjetConfigured = false;
 		springInitialized = false;
 		valid = false;
+		licenseInvalid = false;
 
 		//toto musime setnut - inak nebude fungovat Tools.getRealPath pri inite Spring komponent
 		Constants.setServletContext(servletContext);
@@ -364,6 +366,8 @@ public class InitServlet extends HttpServlet
 				if (diff < 0)
 				{
 					Logger.println(InitServlet.class,"ERROR: License is out of date, please contact\n  InterWay (www.interway.sk)\n  for new license.");
+					Logger.println(InitServlet.class,"Update the license at /wjerrorpages/setup/license and restart the application server.");
+					licenseInvalid = true;
 					return false;
 				}
 
@@ -537,15 +541,9 @@ public class InitServlet extends HttpServlet
 					return false;
 				} else {
 					sk.iway.iwcm.Logger.error(ex);
-					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
-					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
-					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
-					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
-					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
-					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
-					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
-					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
-					Logger.println(InitServlet.class,"To update the license, restart in explicit setup mode and open /wjerrorpages/setup/license.");
+					Logger.println(InitServlet.class,"ERROR: License is not valid.");
+					Logger.println(InitServlet.class,"Update the license at /wjerrorpages/setup/license and restart the application server.");
+					licenseInvalid = true;
 					return false;
 				}
 			}
@@ -1560,6 +1558,11 @@ public class InitServlet extends HttpServlet
 	public static boolean isWebjetConfigured()
 	{
 		return webjetConfigured;
+	}
+
+	public static boolean isLicenseInvalid()
+	{
+		return licenseInvalid;
 	}
 
 	public static void setContextDbName(String name)

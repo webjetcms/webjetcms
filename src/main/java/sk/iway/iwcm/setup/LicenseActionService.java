@@ -58,7 +58,12 @@ public class LicenseActionService {
 		}
 
 		String license = licenseForm.getLicense();
-		if (user != null && license != null && user.getUserId() > 0 && user.isAdmin()) {
+		if (license == null) {
+			//empty license is allowed - switch to free version
+			setModel(model, licenseForm, true, Prop.getInstance().getText("setup.license.invalid_license"), true, false);
+			return ERROR;
+		}
+		if (user != null && user.getUserId() > 0 && user.isAdmin()) {
 			//Update existing license
 			int result = (new SimpleQuery()).executeWithUpdateCount("UPDATE " + ConfDB.CONF_TABLE_NAME + " SET value=? WHERE name='license'", license.toLowerCase());
 

@@ -14,7 +14,10 @@ import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.system.spring.WebjetBootstrapMode;
 
 @Controller
-@ConditionalOnProperty(name = WebjetBootstrapMode.PROPERTY_NAME, havingValue = WebjetBootstrapMode.SETUP_VALUE)
+@ConditionalOnProperty(
+    name = WebjetBootstrapMode.PROPERTY_NAME,
+    havingValue = WebjetBootstrapMode.LICENSE_RECOVERY_VALUE
+)
 public class LicenseController {
 
     @GetMapping("/wjerrorpages/setup/license")

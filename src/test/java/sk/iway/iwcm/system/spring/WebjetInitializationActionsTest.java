@@ -1,6 +1,8 @@
 package sk.iway.iwcm.system.spring;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
@@ -18,6 +20,17 @@ import sk.iway.iwcm.InitServlet;
 class WebjetInitializationActionsTest {
 
     private final WebjetInitializationActions initializationActions = new WebjetInitializationActions();
+
+    @Test
+    void licenseRecoveryIsRequiredOnlyForAnExplicitLicenseFailure() {
+        try (MockedStatic<InitServlet> initServlet = mockStatic(InitServlet.class)) {
+            initServlet.when(InitServlet::isLicenseInvalid).thenReturn(true);
+            assertTrue(initializationActions.isLicenseRecoveryRequired());
+
+            initServlet.when(InitServlet::isLicenseInvalid).thenReturn(false);
+            assertFalse(initializationActions.isLicenseRecoveryRequired());
+        }
+    }
 
     @Test
     void rejectedInitializedCoreStopsBackgroundServicesBeforeDestroyingDatabaseResources() {

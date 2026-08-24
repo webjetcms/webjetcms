@@ -8,8 +8,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.DelegatingFilterProxyRegistrationBean;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -24,10 +24,12 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.context.AbstractSecurityWebApplicationInitializer;
 
 import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.setup.SetupController;
+import sk.iway.iwcm.setup.SetupSpringConfig;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(name = WebjetBootstrapMode.PROPERTY_NAME, havingValue = WebjetBootstrapMode.SETUP_VALUE)
-@ComponentScan("sk.iway.iwcm.setup")
+@Import({SetupSpringConfig.class, SetupController.class})
 public class SetupApplicationConfiguration {
 
     @Bean

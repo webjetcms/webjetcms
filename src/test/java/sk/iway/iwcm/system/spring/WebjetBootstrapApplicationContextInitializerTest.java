@@ -58,6 +58,34 @@ class WebjetBootstrapApplicationContextInitializerTest {
     }
 
     @Test
+    void forcedLicenseRecoveryModeIsSelectedBeforeConfigurationParsing() {
+        WebjetBootstrapModeDetector modeDetector = mock(WebjetBootstrapModeDetector.class);
+        WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
+
+        try (GenericApplicationContext applicationContext = new GenericApplicationContext()) {
+            TestPropertyValues.of(
+                "spring.autoconfigure.exclude=" + CUSTOM_AUTO_CONFIGURATION_EXCLUSION
+            ).applyTo(applicationContext);
+
+            new WebjetBootstrapApplicationContextInitializer(
+                WebjetBootstrapMode.LICENSE_RECOVERY, modeDetector, initializationActions
+            ).initialize(applicationContext);
+
+            assertEquals(WebjetBootstrapMode.LICENSE_RECOVERY_VALUE,
+                applicationContext.getEnvironment().getProperty(WebjetBootstrapMode.PROPERTY_NAME));
+            assertEquals(setupAutoConfigurationExclusions(),
+                applicationContext.getEnvironment().getProperty("spring.autoconfigure.exclude"));
+            WebjetBootstrapState bootstrapState = (WebjetBootstrapState) applicationContext.getBeanFactory()
+                .getSingleton(WebjetBootstrapState.BEAN_NAME);
+            assertEquals(WebjetBootstrapMode.LICENSE_RECOVERY, bootstrapState.getMode());
+            assertFalse(bootstrapState.isCoreInitializationAttempted());
+        }
+
+        verifyNoInteractions(modeDetector);
+        verifyNoInteractions(initializationActions);
+    }
+
+    @Test
     void setupModePreservesConfiguredAutoConfigurationExclusions() {
         WebjetBootstrapModeDetector modeDetector = mock(WebjetBootstrapModeDetector.class);
         WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
@@ -291,6 +319,31 @@ class WebjetBootstrapApplicationContextInitializerTest {
         verifyNoInteractions(modeDetector);
         verify(initializationActions).initialize(any(ServletContext.class));
         verify(initializationActions).cleanupAfterRejectedCoreInitialization(false);
+    }
+
+    @Test
+    void externalWarInvalidLicenseSelectsRecoveryWithoutDestroyingDatabaseResources() {
+        WebjetBootstrapModeDetector modeDetector = mock(WebjetBootstrapModeDetector.class);
+        WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
+        when(initializationActions.initialize(any(ServletContext.class))).thenReturn(false);
+        when(initializationActions.isLicenseRecoveryRequired()).thenReturn(true);
+
+        try (GenericWebApplicationContext applicationContext = externalWarContext()) {
+            new WebjetBootstrapApplicationContextInitializer(modeDetector, initializationActions)
+                .initialize(applicationContext);
+
+            WebjetBootstrapState bootstrapState = (WebjetBootstrapState) applicationContext.getBeanFactory()
+                .getSingleton(WebjetBootstrapState.BEAN_NAME);
+            assertEquals(WebjetBootstrapMode.LICENSE_RECOVERY, bootstrapState.getMode());
+            assertTrue(bootstrapState.isCoreInitializationAttempted());
+            assertFalse(bootstrapState.isCoreInitialized());
+            assertEquals(WebjetBootstrapMode.LICENSE_RECOVERY_VALUE,
+                applicationContext.getEnvironment().getProperty(WebjetBootstrapMode.PROPERTY_NAME));
+        }
+
+        verifyNoInteractions(modeDetector);
+        verify(initializationActions).initialize(any(ServletContext.class));
+        verify(initializationActions, never()).cleanupAfterRejectedCoreInitialization(anyBoolean());
     }
 
     @Test

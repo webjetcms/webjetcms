@@ -184,8 +184,6 @@ Scenario('Pridanie/zmena licencie', ({I, Document}) => {
 
     I.say("POZOR ! POZOR ! POZOR ! POZOR ! POZOR ! POZOR ! POZOR ! POZOR !");
     I.say("Reštartni aplikačný server aby sa použila neplatná licencia");
-    I.say("Server musí mať WEBJET_SETUP_ENABLED=true a WEBJET_SETUP_TOKEN");
-    I.say("CODECEPT_SETUP_TOKEN musí mať rovnakú tajnú hodnotu");
     I.say("Prihlasujes sa ako ADMIN ale s heslom testera");
     I.say("-----------------------------------------------------------------");
 
@@ -204,13 +202,13 @@ Scenario('Pridanie/zmena licencie', ({I, Document}) => {
         default:
             throw new Error(`Unsupported language code: ${confLng}`);
     }
-    loginToSetup(I, "/wjerrorpages/setup/save-license");
     Document.screenshot("/install/license/license.png");
 
     I.fillField("#username", "admin");
 
-    I.say("Zadaj heslo a licencne cislo");
+    I.say("Zadaj platne licencne cislo a pokracuj v teste");
     I.fillField("#password", secret(I.getDefaultPassword()));
+    pause();
 
     I.clickCss("#btnOk");
 
@@ -231,7 +229,7 @@ Scenario('Pridanie/zmena licencie', ({I, Document}) => {
 
     Document.screenshot("/install/license/license-saved.png");
 
-    I.say("Pred ďalším štartom odstráňte WEBJET_SETUP_ENABLED a WEBJET_SETUP_TOKEN");
+    I.say("Reštartni aplikačný server, aby sa použila nová licencia");
 });
 
 Scenario('reset DB', async({ I, DT, DTE, Document }) => {

@@ -51,6 +51,55 @@ class SpringAppInitializerTest {
     }
 
     @Test
+    void invalidLicenseRequestsRecoveryWithoutDestroyingDatabaseResources() {
+        WebjetBootstrapState bootstrapState = WebjetBootstrapState.pending(WebjetBootstrapMode.PRODUCTION);
+        WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
+        ApplicationContext applicationContext = mock(ApplicationContext.class);
+        ServletContext servletContext = mock(ServletContext.class);
+        when(initializationActions.initialize(servletContext)).thenReturn(false);
+        when(initializationActions.isLicenseRecoveryRequired()).thenReturn(true);
+
+        ServletContextInitializer coreInitializer = springAppInitializer.springAppInitializerOnStartup(
+            bootstrapState, initializationActions, applicationContext
+        );
+
+        assertThrows(WebjetLicenseRecoveryRequiredException.class,
+            () -> coreInitializer.onStartup(servletContext));
+
+        assertTrue(bootstrapState.isCoreInitializationAttempted());
+        assertFalse(bootstrapState.isCoreInitialized());
+        verify(initializationActions).initialize(servletContext);
+        verify(initializationActions, never()).cleanupAfterRejectedCoreInitialization(anyBoolean());
+        verify(initializationActions, never()).initializeAfterSpring();
+    }
+
+    @Test
+    void licenseRecoveryModeKeepsCoreUninitializedAndSkipsProductionPostInitialization() throws Exception {
+        WebjetBootstrapState bootstrapState = WebjetBootstrapState.pending(WebjetBootstrapMode.LICENSE_RECOVERY);
+        WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
+        ApplicationContext applicationContext = mock(ApplicationContext.class);
+        ServletContext servletContext = mock(ServletContext.class);
+        when(initializationActions.initialize(servletContext)).thenReturn(false);
+        when(initializationActions.isLicenseRecoveryRequired()).thenReturn(true);
+
+        ServletContextInitializer coreInitializer = springAppInitializer.springAppInitializerOnStartup(
+            bootstrapState, initializationActions, applicationContext
+        );
+        ApplicationListener<ApplicationReadyEvent> readyListener =
+            springAppInitializer.webjetApplicationReadyListener(bootstrapState, initializationActions);
+
+        coreInitializer.onStartup(servletContext);
+        readyListener.onApplicationEvent(mock(ApplicationReadyEvent.class));
+
+        assertTrue(bootstrapState.isCoreInitializationAttempted());
+        assertFalse(bootstrapState.isCoreInitialized());
+        assertFalse(bootstrapState.isPostInitializationCompleted());
+        verify(initializationActions).initialize(servletContext);
+        verify(initializationActions, never()).cleanupAfterRejectedCoreInitialization(anyBoolean());
+        verify(initializationActions, never()).initializeAfterSpring();
+    }
+
+    @Test
     void successfulProductionInitializationRunsPostInitializationOnlyWhenApplicationIsReady() throws Exception {
         WebjetBootstrapState bootstrapState = WebjetBootstrapState.pending(WebjetBootstrapMode.PRODUCTION);
         WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
@@ -125,6 +174,29 @@ class SpringAppInitializerTest {
             logger.verify(() -> Logger.info(
                 SpringBootStarter.class, SpringAppInitializer.SETUP_STARTUP_INSTRUCTIONS
             ));
+        }
+
+        verify(initializationActions, never()).initializeAfterSpring();
+    }
+
+    @Test
+    void licenseRecoveryModeLogsRecoveryInstructionsWhenApplicationIsReady() {
+        WebjetBootstrapState bootstrapState = WebjetBootstrapState.initialized(
+            WebjetBootstrapMode.LICENSE_RECOVERY, false
+        );
+        WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
+        ApplicationListener<ApplicationReadyEvent> readyListener =
+            springAppInitializer.webjetApplicationReadyListener(bootstrapState, initializationActions);
+
+        try (MockedStatic<Logger> logger = mockStatic(Logger.class)) {
+            readyListener.onApplicationEvent(mock(ApplicationReadyEvent.class));
+
+            logger.verify(() -> Logger.info(
+                SpringBootStarter.class, SpringAppInitializer.LICENSE_RECOVERY_STARTUP_INSTRUCTIONS
+            ));
+            logger.verify(() -> Logger.info(
+                SpringBootStarter.class, SpringAppInitializer.SETUP_STARTUP_INSTRUCTIONS
+            ), never());
         }
 
         verify(initializationActions, never()).initializeAfterSpring();

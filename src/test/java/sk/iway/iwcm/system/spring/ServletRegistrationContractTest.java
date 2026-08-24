@@ -24,11 +24,14 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRegistration;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
+import org.springframework.boot.web.servlet.ServletContextInitializerBeans;
 import org.springframework.boot.web.servlet.ServletListenerRegistrationBean;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.Ordered;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.web.filter.CharacterEncodingFilter;
@@ -118,6 +121,26 @@ class ServletRegistrationContractTest {
 
         verify(dynamicRegistration).setLoadOnStartup(1);
         verify(dynamicRegistration, never()).addMapping(any(String[].class));
+    }
+
+    @Test
+    void coreInitializationRunsBeforeEmbeddedServletRegistration() {
+        ServletContextInitializer coreInitializer = new SpringAppInitializer().springAppInitializerOnStartup(
+            WebjetBootstrapState.pending(WebjetBootstrapMode.PRODUCTION),
+            mock(WebjetInitializationActions.class),
+            mock(ApplicationContext.class)
+        );
+        ServletRegistrationBean<?> iwcmInit = productionConfiguration.iwcmInitServletRegistration();
+        DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+        beanFactory.registerSingleton("iwcmInitServletRegistration", iwcmInit);
+        beanFactory.registerSingleton("springAppInitializerOnStartup", coreInitializer);
+
+        ServletContextInitializer firstInitializer =
+            new ServletContextInitializerBeans(beanFactory).iterator().next();
+
+        assertSame(coreInitializer, firstInitializer);
+        Ordered orderedInitializer = assertInstanceOf(Ordered.class, coreInitializer);
+        assertEquals(Ordered.HIGHEST_PRECEDENCE, orderedInitializer.getOrder());
     }
 
     @Test

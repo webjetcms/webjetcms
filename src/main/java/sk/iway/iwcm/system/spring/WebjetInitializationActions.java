@@ -11,6 +11,10 @@ class WebjetInitializationActions {
         return InitServlet.initializeWebJET(SpringAppInitializer.getDebugTimer(), servletContext);
     }
 
+    boolean isLicenseRecoveryRequired() {
+        return InitServlet.isLicenseInvalid();
+    }
+
     boolean initializeAfterSpring() {
         InitServlet.setSpringInitialized();
         try {
