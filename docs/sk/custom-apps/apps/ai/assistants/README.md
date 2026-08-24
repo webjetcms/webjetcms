@@ -1,14 +1,16 @@
 # Pridanie poskytovateľa
 
-Komunikácia s externou AI službou patrí do samostatnej knižnice [webjet-ai](https://github.com/webjetcms/webjet-ai). Knižnica je nezávislá od frameworku a nesmie importovať triedy z `sk.iway.iwcm` ani čítať WebJET `Constants`.
+Komunikácia s externou AI službou vrátane jadra embedding logiky patrí do samostatnej knižnice [webjet-ai](https://github.com/webjetcms/webjet-ai). Knižnica je nezávislá od frameworku a nesmie importovať triedy z `sk.iway.iwcm` ani čítať WebJET `Constants`.
 
 Integrácia serverového poskytovateľa má tri časti:
 
-- implementáciu `AiProvider` v `webjet-ai`, ktorá zabezpečuje komunikáciu s poskytovateľom, spracovanie odpovedí a streamovanie
+- implementáciu `AiProvider` v `webjet-ai`, ktorá zabezpečuje komunikáciu s poskytovateľom, generovanie embeddingov, spracovanie odpovedí a streamovanie
 - tenkú službu WebJET CMS rozširujúcu [LibrarySupportLogic](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/LibrarySupportLogic.java), ktorá prepája knižnicu s CMS
 - voliteľnú implementáciu [AiAssitantsInterface](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiAssitantsInterface.java) pre polia poskytovateľa v editore asistenta
 
 Poskytovateľa zaregistrujte v [AiLibraryConfiguration](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiLibraryConfiguration.java) a konfiguráciu CMS mapujte v [WebjetAiConfigurationService](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/WebjetAiConfigurationService.java). Spracovanie požiadavky a domény, konfigurácia, auditovanie, štatistiky, perzistencia, makrá promptov a dočasné súbory zostávajú v správe WebJET CMS.
+
+Knižnica definuje poskytovateľsky nezávislé typy `EmbeddingRequest`, `EmbeddingOptions`, `EmbeddingResponse` a `EmbeddingVector`; embedding požiadavka sa vykoná cez `AiClient.embed`, respektíve `AiProvider.embed`. RAG modul CMS používa iba tenký adaptér [EmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java) a neobsahuje vlastného HTTP klienta pre embedding API konkrétneho poskytovateľa.
 
 Predchádzajúce transportné SPI systému CMS bolo odstránené. Existujúcich vlastných serverových poskytovateľov je potrebné migrovať na rozhranie `AiProvider` z knižnice a CMS adaptér `LibrarySupportLogic`.
 

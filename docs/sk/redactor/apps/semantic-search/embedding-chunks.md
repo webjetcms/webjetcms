@@ -1,6 +1,6 @@
 # Sémantický index
 
-Sémantický index prevádza obsah stránok na vektorové reprezentácie (`embedding`) pomocou OpenAI API a ukladá ich do vektorovej databázy. Používa sa pre sémantické vyhľadávanie, hybridné vyhľadávanie aj pre generovanie RAG odpovede vo vyhľadávaní.
+Sémantický index prevádza obsah stránok na vektorové reprezentácie (`embedding`) pomocou nastaveného AI poskytovateľa a ukladá ich do vektorovej databázy. Používa sa pre sémantické vyhľadávanie, hybridné vyhľadávanie aj pre generovanie RAG odpovede vo vyhľadávaní.
 
 Pre presnejšie výsledky sa obsah rozdeľuje na menšie časti - **chunky**. Každý chunk je indexovaný samostatne, čo systému umožňuje porovnávať dotazy s konkrétnymi časťami textu a nie s celou stránkou naraz.
 
@@ -21,7 +21,8 @@ Každý chunk obsahuje tieto stĺpce:
 - **ID entity** - ID webovej stránky.
 - **Index časti** - poradie chunku v rámci stránky (0, 1, 2, ...).
 - **Text časti** - text, pre ktorý bol vygenerovaný embedding. Samotný embedding sa v tabuľke nezobrazuje.
-- **Model** - použitý OpenAI model, napr. `text-embedding-3-small`.
+- **Poskytovateľ embeddingu** - poskytovateľ použitý pri vytvorení vektora, napr. `openai` alebo `gemini`.
+- **Model embeddingu** - použitý embedding model, napr. `text-embedding-3-small` alebo `gemini-embedding-001`.
 - **Dimenzie** - počet dimenzií vektora, napr. `1536`.
 - **Jazyk** - jazyková verzia stránky.
 - **Stav** - stav spracovania:
@@ -34,6 +35,12 @@ Každý chunk obsahuje tieto stĺpce:
 V databáze sa navyše ukladá `group_id` a stĺpce `root_group_l1`, `root_group_l2`, `root_group_l3`. Tieto hodnoty sa používajú na rýchle obmedzenie sémantického a hybridného vyhľadávania podľa priečinkov zvolených v aplikácii **Vyhľadávanie**.
 
 ![](datatable.png)
+
+Po načítaní stránky sa zobrazí informačné oznámenie s aktuálnym poskytovateľom a modelom používaným na indexovanie. Nastavenie sa načíta zo systémového AI asistenta `RAG-EMB-INDEX`, ktorého môžete upraviť v sekcii **Nastavenia → AI asistenti**.
+
+Ak systémový asistent ešte neexistuje, vytvorí sa automaticky podľa konfiguračných premenných `ragEmbeddingProvider` a `ragEmbeddingModel`. Po jeho vytvorení majú hodnoty nastavené v asistentovi prednosť pred konfiguračnými premennými.
+
+!>**Upozornenie:** Po zmene poskytovateľa alebo modelu spustite indexovanie znova. Indexy vytvorené rôznymi kombináciami poskytovateľa a modelu sa ukladajú oddelene a môžu existovať súčasne aj pre rovnakú stránku.
 
 ## Rozdelenie textu na chunky
 
@@ -79,7 +86,9 @@ Systém automaticky zaradí stránku do fronty pri:
 
 Kliknite na tlačidlo <button class="btn btn-sm btn-success" type="button"><span><i class="ti ti-database-plus"></i></span></button> pre otvorenie dialógu indexovania.
 
-Dialóg zobrazí prehľad stránok zvoleného priečinka - celkový počet, počet už indexovaných a počet vo fronte. Priečinok sa nastaví podľa aktívneho filtra. Po potvrdení sa do fronty zaradia všetky vyhľadateľné stránky zo zvoleného priečinka. Ak sa text chunku nezmenil, systém sa pokúsi použiť existujúci embedding podľa jeho hash hodnoty.
+Dialóg zobrazí prehľad stránok zvoleného priečinka - celkový počet, počet už indexovaných a počet vo fronte. Za indexované sa považujú iba stránky, ktoré majú index pre aktuálneho poskytovateľa a model asistenta `RAG-EMB-INDEX`. Index vytvorený iným poskytovateľom alebo modelom sa preto v tomto počte nezohľadní.
+
+Priečinok sa nastaví podľa aktívneho filtra. Po potvrdení sa do fronty zaradia všetky vyhľadateľné stránky zo zvoleného priečinka. Ak sa text chunku nezmenil, systém sa pokúsi použiť existujúci embedding s rovnakým poskytovateľom a modelom podľa jeho hash hodnoty. Opätovné indexovanie nahradí iba index aktuálnej kombinácie poskytovateľa a modelu; ostatné indexy rovnakej stránky zostanú zachované.
 
 Akciu spustíte tlačidlom <button class="btn btn-primary"><i class="ti ti-check"></i> <span>Spustiť akciu</span></button>.
 
@@ -89,7 +98,7 @@ Akciu spustíte tlačidlom <button class="btn btn-primary"><i class="ti ti-check
 
 Kliknite na tlačidlo <button class="btn btn-sm btn-danger" type="button"><span><i class="ti ti-database-minus"></i></span></button> pre otvorenie dialógu odstránenia indexov.
 
-Dialóg zobrazí rovnaký prehľad ako pri indexovaní. Po potvrdení sa stránky zaradia do fronty na odstránenie všetkých chunkov pre stránky zvoleného priečinka.
+Dialóg zobrazí rovnaký prehľad ako pri indexovaní, ale počet indexovaných stránok zahŕňa všetkých poskytovateľov a modely. Po potvrdení sa stránky zaradia do fronty na odstránenie všetkých chunkov pre stránky zvoleného priečinka bez ohľadu na poskytovateľa a model.
 
 Akciu spustíte tlačidlom <button class="btn btn-primary"><i class="ti ti-check"></i> <span>Spustiť akciu</span></button>.
 

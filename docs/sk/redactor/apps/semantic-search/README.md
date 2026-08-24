@@ -1,6 +1,6 @@
 # Sémantické vyhľadávanie (RAG)
 
-Sémantické vyhľadávanie umožňuje návštevníkom nájsť relevantné stránky na základe **významu otázky**, nielen zhody kľúčových slov. Využíva vektorovú databázu [pgvector](https://github.com/pgvector/pgvector) a vektory generované prostredníctvom OpenAI API.
+Sémantické vyhľadávanie umožňuje návštevníkom nájsť relevantné stránky na základe **významu otázky**, nielen zhody kľúčových slov. Využíva vektorovú databázu [pgvector](https://github.com/pgvector/pgvector) a vektory generované prostredníctvom nastaveného AI poskytovateľa.
 
 Voliteľne môže nad rovnakým indexom zobraziť aj **RAG odpoveď** - krátku odpoveď vygenerovanú AI iba z nájdeného obsahu webu. Odpoveď sa zobrazí nad klasickým zoznamom výsledkov vyhľadávania.
 
@@ -21,7 +21,7 @@ Na spustenie sémantického vyhľadávania je potrebné:
 - Nastaviť typ vyhľadávania na hodnotu `semantic` alebo `hybrid`. Môžete to urobiť globálne cez konfiguračnú premennú `searchType`, alebo priamo v aplikácii **Vyhľadávanie**.
 - Pri hybridnom režime overiť, že konfiguračná premenná `ragHybridSearchEnabled` je nastavená na hodnotu `true`.
 - Overiť, že konfiguračná premenná `luceneAsDefaultSearch` je nastavená na hodnotu `false`. Ak je nastavená na `true`, bude sa namiesto sémantického vyhľadávania používať Lucene, pretože má vyššiu prioritu.
-- Nastaviť OpenAI API kľúč používaný aj pre AI asistentov v premennej `ai_openAiAuthKey`.
+- Nastaviť API kľúč zvoleného poskytovateľa rovnakým spôsobom ako pre AI asistentov.
 - Spustiť indexovanie cez administrátorské rozhranie na vytvorenie vektorov a naplnenie vektorovej databázy.
 - Nastaviť automatizovanú úlohu `sk.iway.iwcm.rag.service.RagIndexCronTask`, ktorá spracúva frontu indexovania.
 
@@ -79,7 +79,7 @@ RAG odpoveď používa iba obsah získaný zo sémantického indexu. Ak sa v kon
 
 ## Sémantický index
 
-Na využitie sémantického vyhľadávania je potrebné mať indexovaný obsah pomocou sémantického indexovania, ktoré je dostupné v administrátorskom rozhraní. Viac informácií nájdete v časti [Sémantický index](./embedding-chunks.md).
+Na využitie sémantického vyhľadávania je potrebné mať indexovaný obsah pomocou sémantického indexovania, ktoré je dostupné v administrátorskom rozhraní. Poskytovateľ a model sa nastavujú v systémových AI asistentoch; po otvorení stránky **Sémantický index** sa aktuálna indexovacia konfigurácia zobrazí v informačnom oznámení. Indexy rôznych poskytovateľov a modelov môžu existovať súčasne. Viac informácií nájdete v časti [Sémantický index](./embedding-chunks.md).
 
 ## Detaily implementácie a nastavenia
 
