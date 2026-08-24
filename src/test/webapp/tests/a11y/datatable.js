@@ -803,3 +803,93 @@ Scenario("p51: grid edit accessibility", async ({ I, DT, a11y }) => {
     I.dontSeeElement("body.datatable-cell-editing");
     I.dontSeeElement(`${editableCell}[tabindex="0"]`);
 });
+
+Scenario("p52: color picker keyboard and focus", async ({ I, DTE, a11y }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=27030");
+    DTE.waitForEditor();
+    DTE.waitForCkeditor();
+
+    I.switchTo(".cke_wysiwyg_frame.cke_reset");
+    I.waitForElement("iframe.wj_component", 10);
+    I.switchTo(locate("iframe.wj_component").first());
+    I.waitForElement(".inlineComponentEdit", 30);
+    I.click(locate(".inlineComponentEdit").first());
+    I.switchTo();
+
+    I.waitForInvisible("Čakajte prosím", 20);
+    I.switchTo(".cke_dialog_ui_iframe");
+    I.waitForElement("#editorComponent", 10);
+    I.switchTo("#editorComponent");
+    DTE.waitForModal("component-datatable_modal");
+    I.click("Types");
+
+    const preview = ".DTE_Field_Name_colorEmpty button.color-preview";
+    const clear = ".DTE_Field_Name_colorEmpty button.btn-clear";
+    const waitForPickerState = async (expectedOpen, expectedFocus) => I.executeScript(async (root, expected) => {
+        const timeoutAt = Date.now() + 5000;
+        while (Date.now() < timeoutAt) {
+            const previewButton = document.querySelector(expected.preview);
+            const pickerElement = previewButton.closest(".input-group").nextElementSibling;
+            const dialog = pickerElement.shadowRoot.querySelector("dialog");
+            const hasExpectedFocus = expected.focus === "preview"
+                ? document.activeElement === previewButton
+                : pickerElement.shadowRoot.activeElement?.matches('[part="hex-input"]');
+            if (dialog.open === expected.open
+                && previewButton.getAttribute("aria-expanded") === String(expected.open)
+                && hasExpectedFocus) {
+                return true;
+            }
+            await new Promise(resolve => setTimeout(resolve, 25));
+        }
+        throw new Error(`Color picker did not reach the expected ${expected.open ? "open" : "closed"} state`);
+    }, {open: expectedOpen, focus: expectedFocus, preview});
+
+    I.waitForElement(preview, 5);
+    const initialState = await I.executeScript((root, {preview, clear}) => {
+        const previewButton = document.querySelector(preview);
+        const inputGroup = previewButton.closest(".input-group");
+        const inputField = inputGroup.querySelector("input");
+        const clearButton = document.querySelector(clear);
+        const pickerElement = inputGroup.nextElementSibling;
+        const dialog = pickerElement.shadowRoot.querySelector("dialog");
+        const heading = dialog.querySelector("h3");
+        return {
+            clearLabel: clearButton.getAttribute("aria-label"),
+            dialogLabelledBy: dialog.getAttribute("aria-labelledby"),
+            expanded: previewButton.getAttribute("aria-expanded"),
+            headingId: heading.id,
+            inputHasPopup: inputField.getAttribute("aria-haspopup"),
+            previewHasPopup: previewButton.getAttribute("aria-haspopup"),
+            previewLabel: previewButton.getAttribute("aria-label"),
+            previewTag: previewButton.tagName,
+            previewType: previewButton.getAttribute("type"),
+            tabIndex: previewButton.tabIndex
+        };
+    }, {preview, clear});
+
+    I.assertEqual(initialState.previewTag, "BUTTON", "The color preview must use native button semantics");
+    I.assertEqual(initialState.previewType, "button", "The color preview must not submit its parent form");
+    I.assertEqual(initialState.tabIndex, 0, "The color preview must be keyboard focusable");
+    I.assertEqual(initialState.previewHasPopup, "dialog", "The color preview must announce that it opens a dialog");
+    I.assertEqual(initialState.inputHasPopup, "dialog", "The color input must announce that it opens a dialog");
+    I.assertEqual(initialState.expanded, "false", "The closed color picker must expose its collapsed state");
+    I.assertTrue(initialState.previewLabel.length > 0, "The color preview must have an accessible name");
+    I.assertTrue(initialState.clearLabel.length > 0, "The color reset button must have an accessible name");
+    I.assertEqual(initialState.dialogLabelledBy, initialState.headingId, "The color picker dialog must reference its heading");
+
+    I.click(clear);
+    I.pressKey(["Shift", "Tab"]);
+    I.pressKey(["Shift", "Tab"]);
+    I.waitForElement(`${preview}:focus`, 5);
+    I.pressKey("Enter");
+    await waitForPickerState(true, "hex");
+    await a11y.check("iframe.cke_dialog_ui_iframe #editorComponent #DTE_Field_colorEmpty_picker");
+
+    I.pressKey("Escape");
+    await waitForPickerState(false, "preview");
+
+    I.pressKey("Space");
+    await waitForPickerState(true, "hex");
+    I.pressKey("Escape");
+    await waitForPickerState(false, "preview");
+});
