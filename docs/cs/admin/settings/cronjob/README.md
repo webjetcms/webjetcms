@@ -26,6 +26,15 @@ V okně editoru záznamu lze nastavit:
 
 ![](editor.png)
 
+## Manuální spuštění
+
+Po označení jedné nebo více úloh je můžete ručně spustit pomocí tlačítek v nástrojové liště:
+
+- tlačítko přehrávání spustí úlohu na aktuálním uzlu,
+- tlačítko serveru spustí úlohu podle hodnoty **Běží na uzlu**. Hodnota `all` ji spustí na všech uzlech, `all-admin` na administračních uzlech, `all-public` na veřejných uzlech a konkrétní název pouze na zadaném uzlu.
+
+Požadavek na vzdálené spuštění se přenáší přes cluster a provede se nejpozději při další kontrole nastavené konfigurační proměnnou `clusterRefreshTimeout`. Mimo cluster režimu se úloha spustí lokálně.
+
 Změny pro časování úloh se aplikují okamžitě, ale již odstartované úlohy zůstanou běžet dokud neskončí.
 
 ## Standardní úkoly

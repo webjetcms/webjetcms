@@ -55,10 +55,16 @@ Scenario("feedback", ({ I }) => {
     var container = "#webjet-overview-dashboard .feedback";
 
     I.see("Spätná väzba", container);
-    I.forceClick(container + " div.overview-logged__head__more i.ti");
+    I.forceClick(container + " div.overview-logged__content button.btn-primary");
 
     I.waitForElement("#feedback_modal");
     I.wait(2);
+
+    I.seeElementInDOM("#feedback_modal #feedback-upload.dz-clickable");
+    I.seeElementInDOM("#feedback_modal #upload-wrapper.upload-wrapper");
+    I.seeElementInDOM("#feedback_modal #toast-container-upload.toast-container-upload");
+    I.seeElementInDOM("#feedback_modal #upload-toastr-template.upload-toastr-template .fa-progress-bar__progress");
+    I.seeElementInDOM("#feedback_modal #upload-toastr-template .toast-error-message");
 
     I.forceClick("#feedback_modal button.btn-primary");
     I.see("Povinné pole. Zadajte aspoň jeden znak.", "#feedback_modal");
@@ -74,7 +80,7 @@ Scenario("feedback", ({ I }) => {
 
     //
     I.say("skus spam protection");
-    I.forceClick(container + " div.overview-logged__head__more i.ti");
+    I.forceClick(container + " div.overview-logged__content button.btn-primary");
 
     I.waitForElement("#feedback_modal");
     I.wait(2);

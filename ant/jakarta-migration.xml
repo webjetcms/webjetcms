@@ -32,9 +32,6 @@
             <fileset dir="${root}/src/main/java">
                 <include name="**/*"/>
             </fileset>
-            <fileset dir="${root}/src/main/aspectj">
-                <include name="**/*"/>
-            </fileset>
         </copy>
 
         <copy todir="${tempDir}/src-utf8/test/java/" overwrite="true">
@@ -184,11 +181,6 @@
             </fileset>
         </sync>
 
-        <sync todir="${jakartaDir}/src/main/aspectj/" overwrite="true">
-            <fileset dir="${root}/src/main/aspectj/">
-                <include name="**/*"/>
-            </fileset>
-        </sync>
         <sync todir="${jakartaDir}/src/main/resources/" overwrite="true">
             <fileset dir="${root}/src/main/resources/">
                 <include name="**/*"/>

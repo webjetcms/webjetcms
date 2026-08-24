@@ -48,6 +48,23 @@ Scenario('Verification of manifestation of changes in the cronjob', ({ I, DT, DT
     I.see(`Cron task executed: sk.iway.iwcm.system.cron.Echo [${jobName}]`);
 });
 
+Scenario('Run cronjob on configured node', ({ I, DT, DTE }) => {
+    const actionTaskName = `autotest-cluster-${randomNumber}`;
+    const actionParam = `cluster-action-${randomNumber}`;
+
+    addNewCronjob(I, DTE, DT, 'sk.iway.iwcm.system.cron.Echo', actionParam, '0', false, false, true, actionTaskName);
+
+    DT.filterContains('taskName', actionTaskName);
+    I.seeElement('button.button-execute-task-on-node.disabled');
+    I.clickCss('td.dt-select-td');
+    I.seeElement('button.button-execute-task-on-node');
+    I.clickCss('button.button-execute-task-on-node');
+    I.waitForText('Naozaj chcete spustiť vybrané úlohy na ich nastavených uzloch?', 5, '#toast-container-webjet');
+    I.clickCss('div.toastr-buttons button.btn.btn-primary');
+    DT.waitForLoader();
+    I.see('Požiadavka na spustenie úlohy sk.iway.iwcm.system.cron.Echo na uzle all bola odoslaná');
+});
+
 Scenario('Delete new cronjob', ({ I, DT, DTE }) => {
     DT.filterContains('taskName', 'autotest');
     I.click('button.buttons-select-all');
@@ -87,12 +104,12 @@ Scenario('Delete all echo cronjobs', async ({ I, DT, DTE }) => {
 });
 
 
-function addNewCronjob(I, DTE, DT, task, params, seconds, runAtStartup, enableTask, audit) {
+function addNewCronjob(I, DTE, DT, task, params, seconds, runAtStartup, enableTask, audit, taskName = `autotest-${randomNumber}`) {
     let [years, daysOfMonth, daysOfWeek, months, hours, minutes] = new Array(6).fill('*');
     I.click(DT.btn.add_button);
     DTE.waitForEditor();
 
-    DTE.fillField('taskName', `autotest-${randomNumber}`);
+    DTE.fillField('taskName', taskName);
     DTE.fillField('task', task);
     DTE.fillField('params', params);
     DTE.fillField('years', years);

@@ -4,6 +4,8 @@ The Translation Keys section allows you to create/edit/duplicate translation key
 
 Each entry in the table contains all the language combinations for a given translation key, as well as their original values ​​before the change. Their original value is given by the file, and you can update or leave this value as it is.
 
+On the left is a tree structure of translation key prefixes separated by a period. By clicking on a prefix, the list in the table is automatically filtered to keys with that prefix. You can search for prefixes in the tree, while the **All translation keys** option will cancel the filter and display the entire list. The tree only displays key prefixes for which the logged in user has permission.
+
 ![](dataTable.png)
 
 ## Types of translation keys

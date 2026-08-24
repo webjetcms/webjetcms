@@ -1,4 +1,4 @@
-import { VueTools } from '../../src/js/libs/tools/vuetools';
+import { createWebjetDteJsTree } from '../../src/js/web-components/webjet-dte-jstree';
 import WJ from '../../src/js/webjet';
 
 import * as fieldTypeQuill from './field-type-quill';
@@ -342,9 +342,9 @@ export function update(EDITOR, action) {
         } else if (v.type == 'link') {
             template = '<div class="input-group"> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="ti ti-focus-2"></i></button> </div>';
         } else if (v.type == 'dir') {
-            template = '<div> ' + template + ' <div class="vueComponent" id="DTE_Field_' + customPrefix + identifier + '"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr"></webjet-dte-jstree></div> </div>';
+            template = '<div> ' + template + ' <div class="webjet-component" id="DTE_Field_' + customPrefix + identifier + '"></div> </div>';
         } else if (v.type == 'json_group' || v.type == 'json_doc') {
-            template = '<div> ' + template + ' <div class="vueComponent" id="DTE_Field_' + customPrefix + identifier + '"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr"></webjet-dte-jstree></div> </div>';
+            template = '<div> ' + template + ' <div class="webjet-component" id="DTE_Field_' + customPrefix + identifier + '"></div> </div>';
         } else if (v.type == 'none') {
             // LPA
             container.hide();
@@ -532,12 +532,12 @@ export function update(EDITOR, action) {
             let id = 'DTE_Field_' + customPrefix + identifier;
 
             //There must by allso prefix of datatable.DATA.id, because table can be nested in another table with same columns
-            //And first-child because it's text input to hide and second child will be VUE component
+            //The first child is the hidden text input and the second child is the Web Component.
             var textFieldInput  = $("#" + datatable.DATA.id + "_modal #" + id + ":first-child");
             textFieldInput.hide();
 
             conf._id = id;
-            conf._el = inputBox.find('div.vueComponent')[0];
+            conf._el = inputBox.find('div.webjet-component')[0];
             conf.className = "dt-tree-dir-simple";
             let dataTableName = datatable.DATA.id;
             conf.jsonData = [{
@@ -545,52 +545,14 @@ export function update(EDITOR, action) {
                 type: "DIR",
                 id: value
             }];
-            const vm = window.VueTools.createApp({
-                components: {},
-                data() {
-                    return {
-                        data: null,
-                        idKey: null,
-                        dataTable: null,
-                        dataTableName: null,
-                        click: null,
-                        attr: null
-                    }
-                },
-                created() {
-                    this.data = fixNullData(conf.jsonData, conf.className);
-                    //console.log("JS created, data=", this.data, " conf=", conf, " val=", conf._input.val());
-                    this.idKey = conf._id;
-                    this.dataTableName = dataTableName;
-                    //co sa ma stat po kliknuti prenasame z atributu className datatabulky (pre jednoduchost zapisu), je to hodnota obsahujuca dt-tree-
-                    //priklad: className: "dt-row-edit dt-style-json dt-tree-group", click=dt-tree-group
-                    const confClassNameArr = conf.className.split(" ");
-                    for (var i=0; i<confClassNameArr.length; i++) {
-                        let className = confClassNameArr[i];
-                        if (className.indexOf("dt-tree-")!=-1) this.click = className;
-                    }
-                    //console.log("click=", this.click);
-                    this.dataTable = EDITOR.TABLE;
-                    if (typeof(conf.attr)!="undefined") this.attr = conf.attr;
-                },
-                methods: {
-                    remove(id) {
-                        //console.log("REMOVE impl, id=", id, "click=", this.click);
-                        let that = this;
-                        this.data = this.data.filter(function( obj ) {
-                            //console.log("Testing ", obj.groupId+" doc=", obj.docId);
-                            if (that.click.indexOf("dt-tree-page")!=-1) return obj.docId !== id;
-                            else if (that.click.indexOf("dt-tree-group")!=-1) return obj.groupId !== id;
-                            else return obj.id !== id;
-                        });
-                        window.$(textFieldInput).val(JSON.stringify(this.data, undefined, 4));
-                    }
-                }
-            });
-            VueTools.setDefaultObjects(vm);
-
-            vm.component('webjet-dte-jstree', window.VueTools.getComponent('webjet-dte-jstree'));
-            vm.mount(conf._el);
+            conf._el.appendChild(createWebjetDteJsTree({
+                inputElement: textFieldInput[0],
+                dataTableName,
+                dataTable: datatable,
+                mode: conf.className,
+                attributes: conf.attr,
+                value: fixNullData(conf.jsonData, conf.className)
+            }));
         } else if ("uuid"==v.type) {
             //console.log("inputBox=", inputBox);
             var inputField = inputBox.find("input.field-type-uuid");
@@ -642,12 +604,12 @@ export function update(EDITOR, action) {
             let id = 'DTE_Field_' + customPrefix + identifier;
 
             //There must by allso prefix of datatable.DATA.id, because table can be nested in another table with same columns
-            //And first-child because it's text input to hide and second child will be VUE component
+            //The first child is the hidden text input and the second child is the Web Component.
             var textFieldInput  = $("#" + datatable.DATA.id + "_modal #" + id + ":first-child");
             textFieldInput.hide();
 
             conf._id = id;
-            conf._el = inputBox.find('div.vueComponent')[0];
+            conf._el = inputBox.find('div.webjet-component')[0];
 
             //Prepare className
             if(v.className == undefined || v.className == null || v.className.length < 1) {
@@ -712,52 +674,15 @@ export function update(EDITOR, action) {
             }
 
             let dataTableName = datatable.DATA.id;
-            const vm = window.VueTools.createApp({
-                components: {},
-                data() {
-                    return {
-                        data: null,
-                        idKey: null,
-                        dataTable: null,
-                        dataTableName: null,
-                        click: null,
-                        attr: null
-                    }
-                },
-                created() {
-                    this.data = fixNullData(conf.jsonData, conf.className);
-                    //console.log("JS created, data=", this.data, " conf=", conf, " val=", conf._input.val());
-                    this.idKey = conf._id;
-                    this.dataTableName = dataTableName;
-                    //co sa ma stat po kliknuti prenasame z atributu className datatabulky (pre jednoduchost zapisu), je to hodnota obsahujuca dt-tree-
-                    //priklad: className: "dt-row-edit dt-style-json dt-tree-group", click=dt-tree-group
-                    const confClassNameArr = conf.className.split(" ");
-                    for (var i=0; i<confClassNameArr.length; i++) {
-                        let className = confClassNameArr[i];
-                        if (className.indexOf("dt-tree-")!=-1) this.click = className;
-                    }
-                    //console.log("click=", this.click);
-                    this.dataTable = EDITOR.TABLE;
-                    if (typeof(conf.attr)!="undefined") this.attr = conf.attr;
-                },
-                methods: {
-                    remove(id) {
-                        //console.log("REMOVE impl, id=", id, "click=", this.click);
-                        let that = this;
-                        this.data = this.data.filter(function( obj ) {
-                            //console.log("Testing ", obj.groupId+" doc=", obj.docId);
-                            if (that.click.indexOf("dt-tree-page")!=-1) return obj.docId !== id;
-                            else if (that.click.indexOf("dt-tree-group")!=-1) return obj.groupId !== id;
-                            else return obj.id !== id;
-                        });
-                        window.$(textFieldInput).val(JSON.stringify(this.data, undefined, 4));
-                    }
-                }
+            const component = createWebjetDteJsTree({
+                inputElement: textFieldInput[0],
+                dataTableName,
+                dataTable: datatable,
+                mode: conf.className,
+                attributes: conf.attr,
+                value: fixNullData(conf.jsonData, conf.className)
             });
-            VueTools.setDefaultObjects(vm);
-
-            vm.component('webjet-dte-jstree', window.VueTools.getComponent('webjet-dte-jstree'));
-            vm.mount(conf._el);
+            inputBox.find('div.webjet-component')[0].appendChild(component);
 
             //return original docId value to field instead of JSON string
             if (typeof v.originalValue != "undefined" && v.originalValue != null) textFieldInput.val(v.originalValue);

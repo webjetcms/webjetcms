@@ -58,8 +58,10 @@ Other config variables that can be set:
 If you need to speed up sending, you can do the following:
 
 - Increase domain limits, we recommend setting higher limits on ```gmail.com``` domains and your company domain.
-- Change ```dmailWaitTimeout``` to ```500```, which will increase the speed of the email send call, due to blocking (see above). However, this does not mean that the email will be sent every 500ms.
+- Change ```dmailWaitTimeout``` to ```50```, which will increase the speed of the email send call, due to blocking (see above). However, this does not mean that the email will be sent every 50ms.
 - If the database contains many invalid emails, reduce ```dmailSleepTimeAfterException```. **Warning:**, if your SMTP server actually goes down, emails will be marked as sent very quickly because the ```dmailMaxRetryCount``` count will be exceeded.
 - Set ```natUrlTranslate``` to directly download the email text from the local application server. If you have a multi-domain installation, there may be a problem with selecting the correct domain. We recommend setting all domains to the IP address 127.0.0.1 in the ```hosts``` file on the server, in which case you only set up port forwarding from 80 to 8080 (or whatever port your local application server is running on).
 - Minimize images and attachments. They increase the load on the server and the volume of the email. Alternatively, set the config variable ```dmailDisableInlineImages``` to ```false``` to disable attaching images directly to the email body.
 - If you have a cluster, you can enable sending from multiple nodes in parallel, but this increases the risk of sending multiple duplicate emails to the recipient. The list of nodes from which the email is sent is set in the config variable ```senderRunOnNode```.
+- Disable traffic statistics (if you don't need them) by setting `statMode=none`.
+- Enable the Cache option on the email body page so that the content does not have to be read from the database each time.

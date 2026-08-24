@@ -55,7 +55,7 @@ Scenario('testovanie app - Menu', async ({ I, DTE, Apps }) => {
         menuIncludePerexLevel: '1'
     };
     
-    I.clickCss('.btn-vue-jstree-item-edit');
+    I.clickCss('.btn-webjet-jstree-item-edit');
     I.click('Jet portal 4','.jstree-anchor');
     DTE.fillField('startOffset', changedParams.startOffset);
     DTE.fillField('maxLevel', changedParams.maxLevel);

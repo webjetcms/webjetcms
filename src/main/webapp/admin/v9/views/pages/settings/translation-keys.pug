@@ -2,51 +2,88 @@ extends ../../partials/layout
 
 block content
 
-    script.
-        var translationKeysTable;
-        var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyEntity')})];
+    div.row
+        div.col-md-4.tree-col
+            <div class="dt-header-row clearfix">
+                <div class="row">
+                    <div class="col-auto">
+                        <div class="dt-buttons">
+                            <button class="btn btn-sm btn-outline-secondary buttons-refresh" data-toggle="tooltip" data-th-title="\#{datatables.button.reload.js}">
+                                <span><i class="ti ti-refresh"></i></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        window.domReady.add(function () {
+            <div id="SomStromcek" class="hide-while-loading" data-rest-url="/admin/rest/settings/translation-keys/tree" data-rest-param-name="id" data-th-data-search-label="\#{components.translation_key.key}"></div>
 
-            translationKeysTable = WJ.DataTable({
-                url: "/admin/v9/settings/translation-keys",
-                columns: columns,
-                serverSide: true,
-                idAutoOpener: false,
-                customFieldsUpdateColumns: true,
-                customFieldsUpdateColumnsPreserveVisibility: true
-            });
+        div.col-md-8.datatable-col
+            script.
+                var translationKeysTable;
+                var translationKeyPrefix = "";
+                var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyEntity')})];
 
-            translationKeysTable.button().add(4, {
-                extends: 'remove',
-                editor: translationKeysTable.EDITOR,
-                text: '<i class="ti ti-recycle"></i>',
-                init: function ( dt, node, config ) {
-                    $.fn.dataTable.Buttons.showIfRowUnselected(this, dt);
-                },
-                action: function (e, dt, node) {
-                    translationKeysTable.executeAction("reload", true);
-                },
-                className: 'btn btn-outline-secondary buttons-divider',
-                attr: {
-                    'title': '[[\#{components.translation_key.action.reload}]]',
-                    'data-toggle': 'tooltip'
-                }
-            });
+                window.domReady.add(function () {
 
-            $('#datatableImportModal').on('show.bs.modal', function () {
-                var select = document.getElementById("dt-settings-update-by-column");
-                if (select.options.length > 0) {
-                    select.options.length = 0;
-                    var option = new Option("[[\#{components.translation_key.key}]] - key", "key");
-                    select.options[select.options.length] = option;
+                    translationKeysTable = WJ.DataTable({
+                        url: "/admin/v9/settings/translation-keys",
+                        columns: columns,
+                        serverSide: true,
+                        idAutoOpener: false,
+                        customFieldsUpdateColumns: true,
+                        customFieldsUpdateColumnsPreserveVisibility: true,
+                        onPreXhr: function(TABLE, e, settings, data) {
+                            if (translationKeyPrefix !== "") data.fixed_keyPrefix = translationKeyPrefix;
+                        }
+                    });
 
-                    $(select).selectpicker('refresh');
-                }
-                $("#dt-settings-import3").parent().hide();
-                $("label[for='dt-settings-import1']").text("[[\#{components.translation_key.import.addAndUpdate.js}]]");
-            });
+                    translationKeysTable.button().add(4, {
+                        extends: 'remove',
+                        editor: translationKeysTable.EDITOR,
+                        text: '<i class="ti ti-recycle"></i>',
+                        init: function ( dt, node, config ) {
+                            $.fn.dataTable.Buttons.showIfRowUnselected(this, dt);
+                        },
+                        action: function (e, dt, node) {
+                            translationKeysTable.executeAction("reload", true);
+                        },
+                        className: 'btn btn-outline-secondary buttons-divider',
+                        attr: {
+                            'title': '[[\#{components.translation_key.action.reload}]]',
+                            'data-toggle': 'tooltip'
+                        }
+                    });
 
-        });
+                    $('#SomStromcek').on("changed.jstree", function(e, data) {
+                        if ("deselect_all" === data.action || "model" === data.action) return;
 
-    <table class="datatableInit table"></table>
+                        var node = data.instance.get_node(data.selected);
+                        if (node === false || node.original == null) return;
+
+                        translationKeyPrefix = node.original.virtualPath || "";
+                        translationKeysTable.ajax.reload();
+                    });
+
+                    $('#SomStromcek').on("click", "#translation-key-root-node > a.jstree-anchor", function() {
+                        if ($("#tree-folder-search-input").val()) {
+                            $("#tree-folder-search-clear-button").trigger("click");
+                        }
+                    });
+
+                    $('#datatableImportModal').on('show.bs.modal', function () {
+                        var select = document.getElementById("dt-settings-update-by-column");
+                        if (select.options.length > 0) {
+                            select.options.length = 0;
+                            var option = new Option("[[\#{components.translation_key.key}]] - key", "key");
+                            select.options[select.options.length] = option;
+
+                            $(select).selectpicker('refresh');
+                        }
+                        $("#dt-settings-import3").parent().hide();
+                        $("label[for='dt-settings-import1']").text("[[\#{components.translation_key.import.addAndUpdate.js}]]");
+                    });
+
+                });
+
+            <table class="datatableInit table"></table>

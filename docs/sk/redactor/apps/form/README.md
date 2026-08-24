@@ -16,6 +16,8 @@ V editácii formuláru môžete meniť pole poznámka (v ktorom si môžete evid
 
 ![](detail-editnote.png)
 
+Vymazaním všetkých odoslaných záznamov v detaile formulára sa nevymaže jeho definícia, nastavenia ani položky. Samotný formulár odstránite až vymazaním jeho riadiaceho záznamu v zozname formulárov.
+
 ## Vytvorenie formuláru
 
 Formulár najjednoduchšie vytvoríte kliknutím na ikonu Pridať a nastavením jeho základných parametrov v karte Základné. Vytvoríte tak nový formulár typu [Viackrokový formulár](../multistep-form/README.md). Následne môžete k formuláru pridať jednotlivé položky formuláru (textové polia, zaškrtávacie polia, výberové polia a podobne) kliknutím na názov vytvoreného formuláru v tabuľke a prechodom do karty [Položky formuláru](../multistep-form/README.md).
@@ -23,6 +25,10 @@ Formulár najjednoduchšie vytvoríte kliknutím na ikonu Pridať a nastavením 
 <div class="video-container">
     <iframe width="560" height="315" src="https://www.youtube.com/embed/XRnwipQ-mH4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
+
+### Duplikovanie formulára
+
+Označený viackrokový formulár môžete v zozname formulárov duplikovať. Pri duplikovaní zadajte nový unikátny názov formulára. Do nového formulára sa skopírujú jeho nastavenia, všetky kroky a položky formulára; pôvodné odoslané záznamy sa nekopírujú.
 
 ### Karta Základné
 
@@ -50,7 +56,7 @@ Formuláru je možné nastaviť ďalšie nepovinné parametre, ktoré ovplyvnia 
 - **Šifrovací kľúč** - ak chcete hodnoty formuláru zašifrovať, môžete zadať [šifrovací kľúč](../../admin/README.md#hlavička).
 - **Doc id stránky, na ktorej sa formulár nachádza** - doc ID stránky na ktorej sa formulár nachádza. Štandardne sa systém túto stránku snaží určiť na základe ```refereru```, alebo posledne zobrazenej stránky v `session`. Pre presné určenie je možné zadať túto hodnotu. Ak nie je zadaná WebJET ju automaticky doplní pri zobrazení formuláru.
 - **Doc id notifikácie pre používateľa** - ak je nastavené na hodnotu niektorej web stránky, tak po úspešnom uložení formuláru je na email návštevníka (z poľa email / e-mail) zaslaný email s textom danej web stránky. Môže sa jednať napríklad o poďakovanie za vyplnenie formuláru, alebo ďalšie inštrukcie postupu.
-- **Doc id stránky s verziou pre email** - doc ID stránky s verziou pre email. Stránku systém potrebuje na to, aby vedel vygenerovať emailovú podobu. Ak je zadaná hodnota `none` nepoužije sa určenie web stránky pre email. Ak hodnota nie je zadaná vôbec použije sa hodnota zadaná parametrom ```useFormDocId```. Hodnota je užitočná v tom prípade, ak na všetkých stránkach máte jeden kontaktný formulár vkladaný napr. v pätičke. Pri generovaní emailu sa ako kód použije kód samotnej stránky, v ktorej sa ale formulár nenachádza. Takto je možné povedať aby pre email použil inú stránku.
+- **Doc id stránky s verziou pre email** - doc ID stránky, ktorej obsah sa použije na vytvorenie emailovej podoby formulára. Ak je zadaná hodnota `none`, určenie stránky pre email sa nepoužije. Ak hodnota nie je zadaná vôbec, použije sa hodnota parametra ```useFormDocId```. Pri viackrokovom formulári môžete v obsahu zvolenej stránky použiť značku v tvare `!identifikator-polozky!`; pri odoslaní sa nahradí hodnotou príslušnej [položky formulára](../multistep-form/README.md#značky-hodnôt-položiek). Obsah a CSS štýly stránky sa použijú aj pre uloženú HTML podobu a PDF verziu formulára. Ak zvolená stránka neexistuje, použije sa štandardné zobrazenie formulára.
 
 ### Karta - Email
 

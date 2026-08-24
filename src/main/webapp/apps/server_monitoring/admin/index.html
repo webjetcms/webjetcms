@@ -30,74 +30,65 @@
 </style>
 
 <div id="server-monitoring-app">
-    <webjet-server-monitoring :iscomplex="true"></webjet-server-monitoring>
+    <webjet-server-monitoring></webjet-server-monitoring>
 </div>
 
 <script>
     window.domReady.add(function () {
 
-        let vueMonitoringApp = window.VueTools.createApp({});
-
-        vueMonitoringApp.config.globalProperties.$printToPdf = '[[#{components.monitoring.print_to_pdf}]]';
-        vueMonitoringApp.config.globalProperties.$emptySpaceOnDisk = '[[#{components.monitoring.empty_space_on_disc}]]';
-        vueMonitoringApp.config.globalProperties.$usedMemory = '[[#{components.monitoring.used_memory.js}]]';
-        vueMonitoringApp.config.globalProperties.$freeMemory = '[[#{components.monitoring.free_memory.js}]]';
-        vueMonitoringApp.config.globalProperties.$totalMemory = '[[#{components.monitoring.total_memory.js}]]';
-        vueMonitoringApp.config.globalProperties.$occupancyMemory = '[[#{components.monitoring.memory_occupancy}]]';
-        vueMonitoringApp.config.globalProperties.$cpuLoad = '[[#{components.monitoring.cpu_load}]]';
-        vueMonitoringApp.config.globalProperties.$serverCpus = '[[#{components.monitoring.server_cpus}]]';
-        vueMonitoringApp.config.globalProperties.$serverActualTime = '[[#{components.monitoring.server_actual_time}]]';
-        vueMonitoringApp.config.globalProperties.$serverRuntime = '[[#{components.monitoring.server_run_time}]]';
-        vueMonitoringApp.config.globalProperties.$serverStartTime = '[[#{components.monitoring.server_start_time}]]';
-        vueMonitoringApp.config.globalProperties.$remoteIP = '[[#{components.monitoring.remote_ip}]]';
-        vueMonitoringApp.config.globalProperties.$serverIP = '[[#{components.monitoring.server_ip}]]';
-        vueMonitoringApp.config.globalProperties.$serverContry = '[[#{components.monitoring.server_contry}]]';
-        vueMonitoringApp.config.globalProperties.$serverLanguage = '[[#{components.monitoring.server_language}]]';
-        vueMonitoringApp.config.globalProperties.$dbTotal = '[[#{components.monitoring.db_total}]]';
-        vueMonitoringApp.config.globalProperties.$dbActive = '[[#{components.monitoring.db_active}]]';
-        vueMonitoringApp.config.globalProperties.$dbIdle = '[[#{components.monitoring.db_idle}]]';
-        vueMonitoringApp.config.globalProperties.$dbWaiting = '[[#{components.monitoring.db_waiting}]]';
-        vueMonitoringApp.config.globalProperties.$dbServerName = '[[#{components.monitoring.db_server_name}]]';
-        vueMonitoringApp.config.globalProperties.$cacheItems = '[[#{components.monitoring.cache_items}]]';
-        vueMonitoringApp.config.globalProperties.$sessionsTotal = '[[#{components.monitoring.sessions_total}]]';
-        vueMonitoringApp.config.globalProperties.$swJavaVendor = '[[#{components.monitoring.sw_java_vendor}]]';
-        vueMonitoringApp.config.globalProperties.$swSpringVersion = 'Spring Core';
-        vueMonitoringApp.config.globalProperties.$swSpringDataVersion = 'Spring Data';
-        vueMonitoringApp.config.globalProperties.$swSpringSecurityVersion = 'Spring Security';
-        vueMonitoringApp.config.globalProperties.$swRuntime = '[[#{components.monitoring.sw_runtime}]]';
-        vueMonitoringApp.config.globalProperties.$swVmName = '[[#{components.monitoring.sw_vm_name}]]';
-        vueMonitoringApp.config.globalProperties.$swJavaVersion = '[[#{components.monitoring.sw_java_version}]]';
-        vueMonitoringApp.config.globalProperties.$swVmVersion = '[[#{components.monitoring.sw_vm_version}]]';
-        vueMonitoringApp.config.globalProperties.$swServerName = '[[#{components.monitoring.sw_server_name}]]';
-        vueMonitoringApp.config.globalProperties.$swServerOs = '[[#{components.monitoring.sw_server_os}]]';
-        vueMonitoringApp.config.globalProperties.$swServerOsVersion = '[[#{components.monitoring.sw_server_os_version}]]';
-        vueMonitoringApp.config.globalProperties.$showHistoricalData = '[[#{components.monitoring.show_historical_data}]]';
-        vueMonitoringApp.config.globalProperties.$showLiveChart = '[[#{components.monitoring.show_live_chart}]]';
-
-        vueMonitoringApp.config.globalProperties.$vseobecneInformacie = '[[#{components.monitoring.vseobecne_informacie}]]';
-        vueMonitoringApp.config.globalProperties.$informacieOsoftveri = '[[#{components.monitoring.informacie_o_softveri}]]';
-        vueMonitoringApp.config.globalProperties.$updateInterval = '[[#{components.monitoring.update_interval}]]';
-
-        vueMonitoringApp.config.globalProperties.$uptime= '[[#{components.monitor.monitoring.basic.server.uptime.date}]]';
-        vueMonitoringApp.config.globalProperties.$uptimeSeconds= '[[#{components.monitor.monitoring.basic.server.uptime.date.sec}]]';
-
-        vueMonitoringApp.config.globalProperties.$licenseExpirationDate = '[[#{components.monitoring.license_expiration_date}]]';
-        vueMonitoringApp.config.globalProperties.$wjVersion = '[[#{admin.top.webjet_version}]]';
-
-        vueMonitoringApp.config.globalProperties.$clusterNodeName = '[[#{components.monitoring.node_name}]]';
-        vueMonitoringApp.config.globalProperties.$memTotal = '[[#{components.monitoring.mem_total}]]';
-        vueMonitoringApp.config.globalProperties.$memFree = '[[#{components.monitoring.mem_free}]]';
-        vueMonitoringApp.config.globalProperties.$memUsed = '[[#{components.monitoring.memUsed}]]';
-        vueMonitoringApp.config.globalProperties.$memMax = '[[#{components.monitoring.memMax}]]';
-
-        vueMonitoringApp.config.globalProperties.$dbPool = '[[#{components.monitoring.dbPool}]]';
-        vueMonitoringApp.config.globalProperties.$memInfo = '[[#{components.monitoring.memInfo}]]';
-
-        window.VueTools.setDefaultObjects(vueMonitoringApp);
-        window.vueMonitoringApp = vueMonitoringApp;
-
-        vueMonitoringApp.component('webjet-server-monitoring', window.VueTools.getComponent('vue-server-monitoring'));
-
-        vueMonitoringApp.mount('#server-monitoring-app');
+        document.querySelector("webjet-server-monitoring").configure({
+            complex: true,
+            labels: {
+                printToPdf: '[[#{components.monitoring.print_to_pdf}]]',
+                emptySpaceOnDisk: '[[#{components.monitoring.empty_space_on_disc}]]',
+                usedMemory: '[[#{components.monitoring.used_memory.js}]]',
+                freeMemory: '[[#{components.monitoring.free_memory.js}]]',
+                totalMemory: '[[#{components.monitoring.total_memory.js}]]',
+                occupancyMemory: '[[#{components.monitoring.memory_occupancy}]]',
+                cpuLoad: '[[#{components.monitoring.cpu_load}]]',
+                serverCpus: '[[#{components.monitoring.server_cpus}]]',
+                serverActualTime: '[[#{components.monitoring.server_actual_time}]]',
+                serverRuntime: '[[#{components.monitoring.server_run_time}]]',
+                serverStartTime: '[[#{components.monitoring.server_start_time}]]',
+                remoteIP: '[[#{components.monitoring.remote_ip}]]',
+                serverIP: '[[#{components.monitoring.server_ip}]]',
+                serverContry: '[[#{components.monitoring.server_contry}]]',
+                serverLanguage: '[[#{components.monitoring.server_language}]]',
+                dbTotal: '[[#{components.monitoring.db_total}]]',
+                dbActive: '[[#{components.monitoring.db_active}]]',
+                dbIdle: '[[#{components.monitoring.db_idle}]]',
+                dbWaiting: '[[#{components.monitoring.db_waiting}]]',
+                dbServerName: '[[#{components.monitoring.db_server_name}]]',
+                cacheItems: '[[#{components.monitoring.cache_items}]]',
+                sessionsTotal: '[[#{components.monitoring.sessions_total}]]',
+                swJavaVendor: '[[#{components.monitoring.sw_java_vendor}]]',
+                swSpringVersion: 'Spring Core',
+                swSpringDataVersion: 'Spring Data',
+                swSpringSecurityVersion: 'Spring Security',
+                swRuntime: '[[#{components.monitoring.sw_runtime}]]',
+                swVmName: '[[#{components.monitoring.sw_vm_name}]]',
+                swJavaVersion: '[[#{components.monitoring.sw_java_version}]]',
+                swVmVersion: '[[#{components.monitoring.sw_vm_version}]]',
+                swServerName: '[[#{components.monitoring.sw_server_name}]]',
+                swServerOs: '[[#{components.monitoring.sw_server_os}]]',
+                swServerOsVersion: '[[#{components.monitoring.sw_server_os_version}]]',
+                showHistoricalData: '[[#{components.monitoring.show_historical_data}]]',
+                showLiveChart: '[[#{components.monitoring.show_live_chart}]]',
+                generalInformation: '[[#{components.monitoring.vseobecne_informacie}]]',
+                softwareInformation: '[[#{components.monitoring.informacie_o_softveri}]]',
+                updateInterval: '[[#{components.monitoring.update_interval}]]',
+                uptime: '[[#{components.monitor.monitoring.basic.server.uptime.date}]]',
+                uptimeSeconds: '[[#{components.monitor.monitoring.basic.server.uptime.date.sec}]]',
+                licenseExpirationDate: '[[#{components.monitoring.license_expiration_date}]]',
+                wjVersion: '[[#{admin.top.webjet_version}]]',
+                clusterNodeName: '[[#{components.monitoring.node_name}]]',
+                memTotal: '[[#{components.monitoring.mem_total}]]',
+                memFree: '[[#{components.monitoring.mem_free}]]',
+                memUsed: '[[#{components.monitoring.memUsed}]]',
+                memMax: '[[#{components.monitoring.memMax}]]',
+                dbPool: '[[#{components.monitoring.dbPool}]]',
+                memInfo: '[[#{components.monitoring.memInfo}]]'
+            }
+        });
     });
 </script>

@@ -15,7 +15,9 @@ plugins {
     //https://github.com/gretty-gradle-plugin/gretty
     id 'org.gretty' version "5.0.1"
     //https://plugins.gradle.org/plugin/io.freefair.lombok
-    id "io.freefair.lombok" version "8.11"
+    id "io.freefair.lombok" version "8.14"
+    // Compile Java and annotation processors with javac first, then weave the bytecode with ajc.
+    id "io.freefair.aspectj.post-compile-weaving" version "8.14"
     //http://jeremylong.github.io/DependencyCheck/dependency-check-gradle/index.html
     id "org.owasp.dependencycheck" version "12.2.2"
     id 'maven-publish'
@@ -47,7 +49,6 @@ repositories {
 }
 
 ext {
-    //pri zmene verzie je potrebne to zmenit aj v build.xml a compile.xml
     lombokVersion = "1.18.34";
     lombokMapstructBindingVersion = "0.2.0";
     mapstructVersion = "1.6.1";
@@ -55,8 +56,6 @@ ext {
     springDataVersion = "4.0.+";
     springSecurityVersion = "7.1.+";
     allureVersion = "2.32.0";
-    //do not forget to download https://mvnrepository.com/artifact/org.aspectj/aspectjtools
-    //jar to ant/aspectj and update version in ant/compile.xml file
     aspectJVersion = '1.9.25.1';
     eclipselinkVersion = '5.0.0-B13';
     webjetAiVersion = '1.0.0';
@@ -117,7 +116,7 @@ sourceSets {
             srcDirs 'src/main/java'
         }
     }
- }
+}
 
 
 configurations {
@@ -141,10 +140,6 @@ configurations {
 
     }
 
-    agent {
-        canBeResolved = true
-        canBeConsumed = true
-    }
  }
 
 dependencies {
@@ -271,7 +266,6 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-to-slf4j:2.26.1")
     //implementation("com.google.code.findbugs:jsr305:3.0.2")
     implementation("org.aspectj:aspectjrt:${aspectJVersion}")
-    implementation("org.aspectj:aspectjweaver:${aspectJVersion}")
 
     // https://mvnrepository.com/artifact/jakarta.servlet.jsp.jstl/jakarta.servlet.jsp.jstl-api
     implementation 'jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api:3.0.2'
@@ -338,7 +332,6 @@ dependencies {
     // Source: https://mvnrepository.com/artifact/tools.jackson.core/jackson-core
     implementation("tools.jackson.core:jackson-core:3.1.2")
 
-    agent "org.aspectj:aspectjweaver:$aspectJVersion"
 }
 
 test {
@@ -349,7 +342,6 @@ test {
     systemProperty 'user.language', 'sk'
     systemProperty 'user.country', 'SK'
     systemProperty 'webjetDbname', System.getProperty('webjetDbname') ?: '/poolman-local.xml'
-    jvmArgs = [ "-javaagent:${configurations.agent.singleFile}" ]
     testLogging {
         events "passed", "skipped", "failed", "standard_out", "standard_error"
         showStandardStreams = true

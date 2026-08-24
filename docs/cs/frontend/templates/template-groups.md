@@ -10,9 +10,9 @@ Seznam skupin šablon zobrazuje přehled vytvořených skupin, ve výchozím nas
 
 ## Editor skupiny šablon
 
-![](temps-groups-edit.png)
-
 ## Karta Základní
+
+![](temps-groups-edit.png)
 
 - Název skupiny šablon - jednoznačný název skupiny šablon.
 - Složka - hlavní složka, ve které se nacházejí soubory šablony (JSP/HTML soubor s designem, CSS styly, JavaScript soubory).
@@ -25,9 +25,25 @@ Seznam skupin šablon zobrazuje přehled vytvořených skupin, ve výchozím nas
 
 ## Karta Metadata
 
+![](temps-groups-edit-metadata.png)
+
 - Umožňuje nastavit metadata používaná v [hlavičce sablon](../thymeleaf/webjet-objects.md#ninja-šablona).
 - Prefix textových klíčů - zadáním prefixu lze modifikovat překladové klíče aplikací vložených ve stránce. Příklad: pokud aplikace používá překladový klíč `components.inquiry.answers` a ve skupině šablon nastavíte prefix `jetportal`, tak se vyhledá při zobrazení aplikace klíč `jetportal.components.inquiry.answers` a pokud existuje, použije se. Pokud překlad pro tento klíč neexistuje, použije se samozřejmě původní hodnota z klíče `components.inquiry.answers`. Můžete tak snadno změnit text zobrazený v aplikaci v určité skupině šablon.
 
+## Karta SEO
+
+![](temps-groups-edit-seo.png)
+
+Karta umožňuje nastavit výchozí SEO hodnoty pro stránky používající šablonu z dané skupiny:
+
+- Výchozí SEO popis - použije se, pokud stránka nemá zadaný SEO popis ani perex.
+- Výchozí SEO obrázek - použije se, pokud stránka nemá zadaný SEO obrázek ani perex obrázek. Pokud není nastaven ani ve skupině šablon, použije se hodnota `defaultSeoImage` z konfiguračního souboru šablony.
+- Výchozí alternativní text SEO obrázku - použije se, pokud stránka nemá zadaný vlastní alternativní text v poli P.
+
+SEO popis a alternativní text se ukládají samostatně pro jazyk zvolený v hlavičce seznamu. SEO obrázek je společný pro všechny jazyky skupiny. Přesné pořadí použití hodnot popisuje [API objektu Page](../ninja-starter-kit/ninja-jv/page/README.md).
+
 ## Karta volitelná pole
+
+![](temps-groups-edit-fields.png)
 
 Skupině lze definovat [volitelná pole](../webpages/customfields/README.md), jejichž použití záleží na designéru šablony.

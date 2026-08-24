@@ -1,5 +1,6 @@
 Feature('components.webpages');
 const assert = require('assert');
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
 var randomNumber;
 var container = "div.tree-col";
 var containerPage = "#datatableInit_wrapper";
@@ -716,7 +717,7 @@ Scenario('Overenie zobrazenia pola pre zadanie domeny', ({ I, DT, DTE }) => {
     I.seeElement("div.DTE_Field_Name_editorFields\\.forceDomainNameChange");
 
     //zmen parent na /English
-    I.clickCss('.btn.btn-outline-secondary.btn-vue-jstree-item-edit'); // zmena na korenovy adresar
+    I.clickCss('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit'); // zmena na korenovy adresar
     I.waitForElement("div.jsTree-wrapper");
     I.wait(1);
     I.waitForText('English', 5);
@@ -1222,15 +1223,15 @@ function changeDocName(I, DTE, newDocName) {
 
 function changeGroupMainDoc(I, arr, id) {
     within("#groups-datatable_modal > div.modal-dialog", () => {
-        I.waitForElement( locate("#editorAppDTE_Field_editorFields-defaultDocDetails").find("button.btn-vue-jstree-item-edit") );
-        I.click( locate("#editorAppDTE_Field_editorFields-defaultDocDetails").find("button.btn-vue-jstree-item-edit") );
+        I.waitForElement( locate("#editorAppDTE_Field_editorFields-defaultDocDetails").find("button.btn-webjet-jstree-item-edit") );
+        I.click( locate("#editorAppDTE_Field_editorFields-defaultDocDetails").find("button.btn-webjet-jstree-item-edit") );
     });
 
-    I.waitForElement("#jsTree");
+    I.waitForElement(WebjetDteJsTree.tree);
     for(let i = 0; i < arr.length; i++) {
-        I.click(locate('#jsTree .jstree-node.jstree-closed').withText(arr[i]).find('.jstree-icon.jstree-ocl'));
+        I.click(locate(WebjetDteJsTree.tree + ' .jstree-node.jstree-closed').withText(arr[i]).find('.jstree-icon.jstree-ocl'));
         I.wait(1);
-        I.waitForInvisible("#jsTree li.jstree-loading");
+        I.waitForInvisible(WebjetDteJsTree.loading);
     }
     I.clickCss("#docId-" + id + "_anchor");
 }
@@ -1511,4 +1512,3 @@ function assertIfSortedByCreationDate(items, ascending = true) {
 
     assert.deepStrictEqual(filteredItems, sortedItems, 'Items are not sorted by creation date');
 }
-
