@@ -59,12 +59,11 @@ Scenario("p44: confirm notification focus", async ({ I, a11y }) => {
 
     const dialogSelector = '#toast-container-webjet .toast';
 
-    await a11y.check(dialogSelector);
-
     I.waitForElement(dialogSelector, 10);
     I.waitForFunction(() => document.activeElement?.id.startsWith('confirmationNo'));
     I.seeElement(`${dialogSelector}[aria-modal="true"][aria-labelledby][aria-describedby]`);
 
+    I.wait(2); //wait for toast to be fully visible before checking a11y
     await a11y.check(dialogSelector);
 
     I.pressKey('Tab');
