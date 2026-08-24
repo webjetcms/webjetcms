@@ -201,9 +201,7 @@ public class UserChangePasswordService {
 			int randomNumber = new SecureRandom().nextInt();
 			String loginHash = new Password().encrypt( allLogins );
 			String auth = new Password().encrypt(Integer.toString(randomNumber));
-			for (UserDetailsEntity user : users) {
-				Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getId().intValue(), "Vyžiadanie zmeny hesla", randomNumber, 0);
-			}
+			createChangePasswordAdminlogBeans(users, randomNumber);
 			//String text = prop.getText("logon.password.change_at")+"\n";
 
             // pageUrl is set depending if its request from admin section or not
@@ -238,6 +236,12 @@ public class UserChangePasswordService {
 				send();
 		}
 		if (request!=null) request.setAttribute("passResultEmail", newestUser.getEmail());
+	}
+
+	static void createChangePasswordAdminlogBeans(List<UserDetailsEntity> users, int authValue) {
+		for (UserDetailsEntity user : users) {
+			Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getId().intValue(), "Vyžiadanie zmeny hesla", authValue, 0);
+		}
 	}
 
     public static AdminlogBean getChangePasswordAdminlogBean(String login, String auth) {
