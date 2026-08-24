@@ -202,7 +202,7 @@ public class UserChangePasswordService {
 			String loginHash = new Password().encrypt( allLogins );
 			String auth = new Password().encrypt(Integer.toString(randomNumber));
 			for (UserDetailsEntity user : users) {
-				Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getId().intValue(), "Vyžiadanie zmeny hesla", randomNumber, UsersDB.APPROVE_APPROVE);
+				Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getId().intValue(), "Vyžiadanie zmeny hesla", randomNumber, 0);
 			}
 			//String text = prop.getText("logon.password.change_at")+"\n";
 
@@ -255,7 +255,7 @@ public class UserChangePasswordService {
 
 		List<AdminlogBean> logs = new ComplexQuery().
 			setSql("SELECT * FROM "+ConfDB.ADMINLOG_TABLE_NAME+" WHERE log_type=? AND user_id = ? AND sub_id1 = ? AND sub_id2 = ?").
-			setParams(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getUserId(), authValue, UsersDB.APPROVE_APPROVE).
+			setParams(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getUserId(), authValue, 0).
 			list(new Mapper<AdminlogBean>() {
 				public AdminlogBean map(ResultSet rs) throws SQLException {
 					return new AdminlogBean(rs);
@@ -267,7 +267,7 @@ public class UserChangePasswordService {
     }
 
 	private static boolean isChangePasswordAdminlogBeanValid(AdminlogBean log) {
-		if (log == null || log.getSubId2() != UsersDB.APPROVE_APPROVE || log.getCreateDate() == null) return false;
+		if (log == null || log.getSubId2() != 0 || log.getCreateDate() == null) return false;
 
 		long validity = Constants.getInt("passwordResetValidityInMinutes") * 60L * 1000L;
 		long age = System.currentTimeMillis() - log.getCreateDate().getTime();
@@ -330,7 +330,7 @@ public class UserChangePasswordService {
 		}
 
         //zmaz zaznam z audit tabulky (aby druhy krat linka nefungovala)
-		new SimpleQuery().execute("DELETE FROM " + ConfDB.ADMINLOG_TABLE_NAME + " WHERE log_type=? AND sub_id1=? AND sub_id2=?", Adminlog.TYPE_USER_CHANGE_PASSWORD, authValue, UsersDB.APPROVE_APPROVE);
+		new SimpleQuery().execute("DELETE FROM " + ConfDB.ADMINLOG_TABLE_NAME + " WHERE log_type=? AND sub_id1=? AND sub_id2=?", Adminlog.TYPE_USER_CHANGE_PASSWORD, authValue, 0);
     }
 
     /**
