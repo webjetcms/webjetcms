@@ -190,7 +190,7 @@ public class InitServlet extends HttpServlet
 			{
 				Logger.println(InitServlet.class,"   Database connection: [FAILED]");
 				Logger.println(InitServlet.class,"ERROR: Server halted (Database connection failed).");
-				Logger.println(InitServlet.class,"Open http://localhost/wjerrorpages/setup/setup to setup WebJET");
+				Logger.println(InitServlet.class,"For a new installation, restart with webjet.setup.enabled=true and a configured webjet.setup.token.");
 				return false;
 			}
 
@@ -533,7 +533,7 @@ public class InitServlet extends HttpServlet
 					Logger.println(InitServlet.class,"ERROR: Server not configured.");
 					Logger.println(InitServlet.class,"ERROR: Server not configured.");
 					Logger.println(InitServlet.class,"ERROR: Server not configured.");
-					Logger.println(InitServlet.class,"Open http://localhost/wjerrorpages/setup/setup to setup WebJET");
+					Logger.println(InitServlet.class,"For a new installation, restart with webjet.setup.enabled=true and a configured webjet.setup.token.");
 					return false;
 				} else {
 					sk.iway.iwcm.Logger.error(ex);
@@ -545,7 +545,7 @@ public class InitServlet extends HttpServlet
 					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
 					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
 					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
-					Logger.println(InitServlet.class,"Update license on http://localhost/wjerrorpages/setup/license");
+					Logger.println(InitServlet.class,"To update the license, restart in explicit setup mode and open /wjerrorpages/setup/license.");
 					return false;
 				}
 			}

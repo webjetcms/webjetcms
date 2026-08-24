@@ -3,6 +3,7 @@ package sk.iway.iwcm.system.spring;
 import jakarta.servlet.ServletContext;
 
 import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
 
 class WebjetInitializationActions {
 
@@ -22,6 +23,21 @@ class WebjetInitializationActions {
         } catch (RuntimeException | Error ex) {
             InitServlet.cleanupAfterFailedSpringInitialization();
             throw ex;
+        }
+    }
+
+    void cleanupAfterRejectedCoreInitialization(boolean coreInitialized) {
+        if (coreInitialized) {
+            try {
+                InitServlet.cleanupAfterFailedSpringInitialization();
+            } catch (RuntimeException ex) {
+                Logger.error(WebjetInitializationActions.class, ex);
+            }
+        }
+        try {
+            new InitServlet().destroy();
+        } catch (RuntimeException ex) {
+            Logger.error(WebjetInitializationActions.class, ex);
         }
     }
 }

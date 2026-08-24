@@ -151,6 +151,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Bezpečnosť
 
+- Inštalácia - [setup režim](install/setup/README.md#aktivácia-setup-režimu) sa aktivuje iba explicitne a je chránený samostatným tokenom. Výpadok databázy už aplikáciu neprepne do setup režimu; po dokončení je potrebné setup vypnúť a reštartovať aplikačný server (#58569).
 - Pridaná podpora generovania `nonce` pre [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
 - AI asistenti - pridaná ochrana pred `prompt injection` útokmi s oddelením systémových inštrukcií od používateľského obsahu a detekciou kódovaných vstupov (#58549).
 

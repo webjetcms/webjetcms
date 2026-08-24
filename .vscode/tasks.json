@@ -60,7 +60,54 @@
             },
             "isBackground": true,
             "presentation": {
-                "clear": true
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "clear": true,
+                "showReuseMessage": false,
+                "close": false
+            }
+        },
+        {
+            "label": "appStartSetup",
+            "type": "shell",
+            "command": "./gradlew bootRun; exit_code=$?; if [[ $exit_code -eq 143 || $exit_code -eq 130 ]]; then exit 0; fi; exit $exit_code",
+            "windows": {
+                "command": ".\\gradlew.bat bootRun || IF %ERRORLEVEL%==143 EXIT /B 0 || IF %ERRORLEVEL%==130 EXIT /B 0 || EXIT /B %ERRORLEVEL%"
+            },
+            "options": {
+                "env": {
+                    "webjetDbname": "/poolman-local.xml",
+                    "WEBJET_SETUP_ENABLED": "true",
+                    "WEBJET_SETUP_TOKEN": "${input:webjetSetupToken}"
+                }
+            },
+            "group": "build",
+            "problemMatcher": {
+                "owner": "shell",
+                "fileLocation": "relative",
+                "pattern": {
+                "regexp": "^([^\\s].*)\\((\\d+|\\,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                "file": 1,
+                "location": 2,
+                "severity": 3,
+                "code": 4,
+                "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Listening for transport dt_socket at address: 5005",
+                    "endsPattern": "Listening for transport dt_socket at address: 5005",
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "clear": true,
+                "showReuseMessage": false,
+                "close": false
             }
         },
         {
@@ -429,6 +476,28 @@
             }
         },
         {
+            "label": "Docker Tomcat 11 SETUP Start",
+            "type": "shell",
+            "command": "${workspaceFolder}/.devcontainer/tomcat/start-tomcat.sh",
+            "args": ["--setup", "--follow"],
+            "options": {
+                "env": {
+                    "WEBJET_SETUP_TOKEN": "${input:webjetSetupToken}"
+                }
+            },
+            "group": "build",
+            "problemMatcher": [],
+            "isBackground": false,
+            "presentation": {
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "clear": true,
+                "showReuseMessage": false,
+                "close": false
+            }
+        },
+        {
             "label": "Docker Tomcat 11 Stop",
             "type": "shell",
             "command": "if ! docker info >/dev/null 2>&1; then echo 'Docker daemon is not available.' >&2; exit 1; elif [ \"$(docker inspect --format '{{.State.Running}}' webjetcms-tomcat11 2>/dev/null)\" = \"true\" ]; then docker stop --time 30 webjetcms-tomcat11; else echo 'Tomcat container is not running.'; fi",
@@ -641,6 +710,14 @@
                 "clear": true,
                 "showReuseMessage": false
             }
+        }
+    ],
+    "inputs": [
+        {
+            "id": "webjetSetupToken",
+            "type": "promptString",
+            "description": "WebJET setup token (at least 16 characters; use it as the setup login password)",
+            "password": true
         }
     ]
 }

@@ -33,13 +33,21 @@ class ApplicationConfigurationDefinitionTest {
             assertDefinitionCount(beanFactory, SetupController.class, 1);
             assertDefinitionCount(beanFactory, LicenseController.class, 1);
             assertBeanDefinitionCount(beanFactory, "setupCharacterEncodingFilterRegistration", 1);
-            assertBeanDefinitionCount(beanFactory, "setupTomcatHttpConnectorCustomizer", 1);
+            assertDefinitionCount(beanFactory,
+                SetupApplicationConfiguration.SetupSecurityConfiguration.class, 1);
+            assertBeanDefinitionCount(beanFactory, "setupPasswordEncoder", 1);
+            assertBeanDefinitionCount(beanFactory, "setupUserDetailsService", 1);
+            assertBeanDefinitionCount(beanFactory, "setupSecurityFilterChain", 1);
+            assertBeanDefinitionCount(beanFactory, "setupSecurityFilterChainRegistration", 1);
+            assertBeanDefinitionCount(beanFactory, "setupTomcatHttpConnectorCustomizer", 0);
             assertBeanDefinitionCount(beanFactory, "messageSource", 1);
             assertDefinitionCount(beanFactory, SpringAppInitializer.class, 1);
-            assertBeanDefinitionCount(beanFactory, "webjetApplicationReadyListener", 0);
+            assertBeanDefinitionCount(beanFactory, "webjetApplicationReadyListener", 1);
             assertDefinitionCount(beanFactory, ProductionApplicationConfiguration.class, 0);
             assertDefinitionCount(beanFactory,
                 SpringBootStarter.ProductionServletInfrastructureConfiguration.class, 0);
+            assertBeanDefinitionCount(beanFactory,
+                "persistedSetupAuthenticationCleanupFilterRegistration", 0);
             assertDefinitionCount(beanFactory, SpringBootStarter.ProductionServletConfiguration.class, 0);
             assertBeanDefinitionCount(beanFactory, "externalWarMultipartServletInitializer", 0);
             assertBeanDefinitionCount(beanFactory, "characterEncodingFilterRegistration", 0);
@@ -70,6 +78,8 @@ class ApplicationConfigurationDefinitionTest {
             assertBeanDefinitionCount(beanFactory, "webjetApplicationReadyListener", 1);
             assertDefinitionCount(beanFactory,
                 SpringBootStarter.ProductionServletInfrastructureConfiguration.class, 1);
+            assertBeanDefinitionCount(beanFactory,
+                "persistedSetupAuthenticationCleanupFilterRegistration", 1);
             assertDefinitionCount(beanFactory, SpringBootStarter.ProductionServletConfiguration.class, 1);
             assertBeanDefinitionCount(beanFactory, "externalWarMultipartServletInitializer", 0);
             assertBeanDefinitionCount(beanFactory, "characterEncodingFilterRegistration", 1);
@@ -91,6 +101,10 @@ class ApplicationConfigurationDefinitionTest {
             assertDefinitionCount(beanFactory, SetupController.class, 0);
             assertDefinitionCount(beanFactory, LicenseController.class, 0);
             assertBeanDefinitionCount(beanFactory, "setupCharacterEncodingFilterRegistration", 0);
+            assertDefinitionCount(beanFactory,
+                SetupApplicationConfiguration.SetupSecurityConfiguration.class, 0);
+            assertBeanDefinitionCount(beanFactory, "setupSecurityFilterChain", 0);
+            assertBeanDefinitionCount(beanFactory, "setupSecurityFilterChainRegistration", 0);
             assertBeanDefinitionCount(beanFactory, "setupTomcatHttpConnectorCustomizer", 0);
         }
     }
@@ -105,6 +119,8 @@ class ApplicationConfigurationDefinitionTest {
 
             assertDefinitionCount(beanFactory,
                 SpringBootStarter.ProductionServletInfrastructureConfiguration.class, 1);
+            assertBeanDefinitionCount(beanFactory,
+                "persistedSetupAuthenticationCleanupFilterRegistration", 1);
             assertDefinitionCount(beanFactory, SpringBootStarter.ProductionServletConfiguration.class, 0);
             assertBeanDefinitionCount(beanFactory, "externalWarMultipartServletInitializer", 1);
             assertProductionServletDefinitions(beanFactory, 0);
@@ -112,7 +128,7 @@ class ApplicationConfigurationDefinitionTest {
     }
 
     @Test
-    void externalWarSetupSkipsEmbeddedTomcatCustomization() {
+    void externalWarSetupUsesTheSameProtectedSetupDefinitions() {
         GenericWebApplicationContext applicationContext = new GenericWebApplicationContext();
         applicationContext.setServletContext(new MockServletContext());
         parseDefinitions(applicationContext, WebjetBootstrapMode.SETUP, "dynamicinstall");
@@ -122,8 +138,12 @@ class ApplicationConfigurationDefinitionTest {
             assertDefinitionCount(beanFactory, SetupApplicationConfiguration.class, 1);
             assertBeanDefinitionCount(beanFactory, "setupCharacterEncodingFilterRegistration", 1);
             assertDefinitionCount(beanFactory,
-                SetupApplicationConfiguration.EmbeddedServletContainerConfiguration.class, 0);
+                SetupApplicationConfiguration.SetupSecurityConfiguration.class, 1);
+            assertBeanDefinitionCount(beanFactory, "setupSecurityFilterChain", 1);
+            assertBeanDefinitionCount(beanFactory, "setupSecurityFilterChainRegistration", 1);
             assertBeanDefinitionCount(beanFactory, "setupTomcatHttpConnectorCustomizer", 0);
+            assertBeanDefinitionCount(beanFactory,
+                "persistedSetupAuthenticationCleanupFilterRegistration", 0);
         }
     }
 

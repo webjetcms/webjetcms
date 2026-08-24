@@ -20,6 +20,7 @@ public class LicenseController {
     @GetMapping("/wjerrorpages/setup/license")
     public String setup(Model model, HttpServletRequest request, HttpServletResponse response) {
         try {
+            if (SetupCompletionState.rejectIfCompleted(request, response)) return null;
             //Set initial params into model (!!)
             if (InitServlet.isValid()==false) {
                 LicenseActionService.setModel(model, request, response);
@@ -34,12 +35,20 @@ public class LicenseController {
 
     @PostMapping("/wjerrorpages/setup/save-license")
     public String save(@ModelAttribute LicenseFormBean licenseForm, Model model, HttpServletRequest request, HttpServletResponse response) {
+        boolean started = false;
+        boolean completed = false;
         try {
+            started = SetupCompletionState.tryStart(request, response);
+            if (started == false) return null;
             if (InitServlet.isValid()==false) {
-                return LicenseActionService.updateLicense(licenseForm, model, request, response);
+                String view = LicenseActionService.updateLicense(licenseForm, model, request, response);
+                completed = SetupCompletionState.isCompleted(request);
+                return view;
             }
         } catch(Exception e) {
            sk.iway.iwcm.Logger.error(e);
+        } finally {
+            if (started && completed == false) SetupCompletionState.resetAfterFailure(request);
         }
 
         return null;

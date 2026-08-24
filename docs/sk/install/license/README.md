@@ -20,7 +20,9 @@ Ak WebJET obsahuje licenčné číslo s exspirovaným dátumom platnosti, nespr�
   for new license.
 ```
 
-Ak sa možnosť zadať licenčné číslo nezobrazí automaticky po otvorení administračnej časti otvorte adresu `/wjerrorpages/setup/license`.
+Pre bezpečnú zmenu licencie cez recovery rozhranie najskôr explicitne aktivujte setup režim podľa návodu pre [aktiváciu setup režimu](../setup/README.md#aktivácia-setup-režimu). Aplikačný server spustite s premennými `WEBJET_SETUP_ENABLED=true` a `WEBJET_SETUP_TOKEN`, vzdialený prístup sprístupnite iba cez HTTPS a otvorte adresu `/wjerrorpages/setup/license`.
+
+WebJET vás najskôr presmeruje na prihlasovaciu stránku setup režimu. Použite meno `setup` a ako heslo zadajte setup token.
 
 ![](license.png)
 
@@ -28,7 +30,7 @@ Zadajte prihlasovacie údaje pre overenie oprávnení do administrácie a nový 
 
 ![](license-saved.png)
 
-Ak sa aplikačný server nereštartuje automaticky, vykonajte reštart aplikačného servera. Pri novom štarte sa použije zadané licenčné číslo.
+Po úspešnom uložení zastavte aplikačný server, odstráňte `WEBJET_SETUP_ENABLED` a `WEBJET_SETUP_TOKEN` a vykonajte úplný manuálny reštart. Pri novom štarte sa použije zadané licenčné číslo a WebJET sa spustí v produkčnom režime.
 
 ## Zadanie licenčného čísla priamo do databázy
 

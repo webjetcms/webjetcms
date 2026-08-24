@@ -14,7 +14,6 @@ import org.springframework.ui.Model;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
-import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
@@ -70,9 +69,11 @@ public class LicenseActionService {
 
 			//Set refresh
 			if (Tools.getIntValue(result, 0) > 0) {
-				HttpSession session = request.getSession();
-				session.setAttribute("pageRefresh", "");
-				InitServlet.restart();
+				SetupCompletionState.markCompleted(request);
+				HttpSession session = request.getSession(false);
+				if (session != null) {
+					session.invalidate();
+				}
 			}
 		}
 

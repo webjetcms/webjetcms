@@ -1,16 +1,16 @@
 package sk.iway.iwcm.system.spring;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import jakarta.servlet.ServletContext;
 
-import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
+import org.springframework.boot.context.properties.bind.Bindable;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterAutoConfiguration;
-import org.springframework.boot.security.autoconfigure.web.servlet.ServletWebSecurityAutoConfiguration;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.Ordered;
@@ -25,23 +25,16 @@ class WebjetBootstrapApplicationContextInitializer
 
     private static final String PROPERTY_SOURCE_NAME = "webjetBootstrap";
     private static final String AUTO_CONFIGURATION_EXCLUDE_PROPERTY = "spring.autoconfigure.exclude";
-    private static final String[] SETUP_SECURITY_AUTO_CONFIGURATION_EXCLUSIONS = {
-        ServletWebSecurityAutoConfiguration.class.getName(),
-        SecurityFilterAutoConfiguration.class.getName(),
-        UserDetailsServiceAutoConfiguration.class.getName()
-    };
 
-    private final WebjetBootstrapMode forcedMode;
     private final WebjetBootstrapModeDetector modeDetector;
     private final WebjetInitializationActions initializationActions;
 
-    WebjetBootstrapApplicationContextInitializer(WebjetBootstrapMode forcedMode) {
-        this(forcedMode, new WebjetBootstrapModeDetector(), new WebjetInitializationActions());
+    WebjetBootstrapApplicationContextInitializer() {
+        this(new WebjetBootstrapModeDetector(), new WebjetInitializationActions());
     }
 
-    WebjetBootstrapApplicationContextInitializer(WebjetBootstrapMode forcedMode,
-            WebjetBootstrapModeDetector modeDetector, WebjetInitializationActions initializationActions) {
-        this.forcedMode = forcedMode;
+    WebjetBootstrapApplicationContextInitializer(WebjetBootstrapModeDetector modeDetector,
+            WebjetInitializationActions initializationActions) {
         this.modeDetector = modeDetector;
         this.initializationActions = initializationActions;
     }
@@ -52,20 +45,26 @@ class WebjetBootstrapApplicationContextInitializer
 
         Environment environment = applicationContext.getEnvironment();
         ServletContext servletContext = getServletContext(applicationContext);
+        boolean setupEnabled = WebjetSetupProperties.isEnabled(environment);
+        if (setupEnabled) {
+            WebjetSetupProperties.requireToken(environment);
+        }
+
         WebjetBootstrapState state;
         WebjetBootstrapSpringConfiguration springConfiguration;
         if (servletContext != null) {
+            WebjetBootstrapMode mode = setupEnabled
+                ? WebjetBootstrapMode.SETUP
+                : WebjetBootstrapMode.PRODUCTION;
             boolean initialized = initializationActions.initialize(servletContext);
-            WebjetBootstrapMode mode = initialized ? WebjetBootstrapMode.PRODUCTION : WebjetBootstrapMode.SETUP;
+            validateMode(mode, initialized);
             state = WebjetBootstrapState.initialized(mode, initialized);
             springConfiguration = initialized
                 ? WebjetBootstrapSpringConfiguration.fromConstants(environment)
                 : WebjetBootstrapSpringConfiguration.empty(environment);
         } else {
-            WebjetBootstrapModeDetector.Detection detection = forcedMode != null
-                ? new WebjetBootstrapModeDetector.Detection(
-                    forcedMode, WebjetBootstrapSpringConfiguration.empty(environment)
-                )
+            WebjetBootstrapModeDetector.Detection detection = setupEnabled
+                ? WebjetBootstrapModeDetector.Detection.setup(environment)
                 : modeDetector.detect(environment);
             state = WebjetBootstrapState.pending(detection.mode());
             springConfiguration = detection.springConfiguration();
@@ -73,7 +72,7 @@ class WebjetBootstrapApplicationContextInitializer
 
         applicationContext.getEnvironment().getPropertySources().addFirst(
             new MapPropertySource(PROPERTY_SOURCE_NAME,
-                getBootstrapProperties(applicationContext, state, springConfiguration))
+                getBootstrapProperties(environment, state, springConfiguration))
         );
         applicationContext.getBeanFactory().registerSingleton(WebjetBootstrapState.BEAN_NAME, state);
         applicationContext.getBeanFactory().registerSingleton(
@@ -97,20 +96,29 @@ class WebjetBootstrapApplicationContextInitializer
         return null;
     }
 
-    private Map<String, Object> getBootstrapProperties(ConfigurableApplicationContext applicationContext,
-            WebjetBootstrapState state, WebjetBootstrapSpringConfiguration springConfiguration) {
+    private void validateMode(WebjetBootstrapMode mode, boolean initialized) {
+        boolean productionMode = mode == WebjetBootstrapMode.PRODUCTION;
+        if (productionMode != initialized) {
+            initializationActions.cleanupAfterRejectedCoreInitialization(initialized);
+            if (productionMode) {
+                throw new WebjetBootstrapUnavailableException("core initialization did not complete");
+            }
+            throw new WebjetBootstrapModeMismatchException(mode, initialized);
+        }
+    }
+
+    private Map<String, Object> getBootstrapProperties(Environment environment, WebjetBootstrapState state,
+            WebjetBootstrapSpringConfiguration springConfiguration) {
         Map<String, Object> properties = new HashMap<>();
         properties.put(WebjetBootstrapMode.PROPERTY_NAME, state.getMode().getPropertyValue());
         springConfiguration.addProperties(properties);
-
         if (state.getMode() == WebjetBootstrapMode.SETUP) {
             Set<String> exclusions = new LinkedHashSet<>();
-            String[] configuredExclusions = applicationContext.getEnvironment()
-                .getProperty(AUTO_CONFIGURATION_EXCLUDE_PROPERTY, String[].class);
-            if (configuredExclusions != null) {
-                Collections.addAll(exclusions, configuredExclusions);
-            }
-            Collections.addAll(exclusions, SETUP_SECURITY_AUTO_CONFIGURATION_EXCLUSIONS);
+            List<String> configuredExclusions = Binder.get(environment)
+                .bind(AUTO_CONFIGURATION_EXCLUDE_PROPERTY, Bindable.listOf(String.class))
+                .orElseGet(List::of);
+            exclusions.addAll(configuredExclusions);
+            exclusions.add(SecurityFilterAutoConfiguration.class.getName());
             properties.put(AUTO_CONFIGURATION_EXCLUDE_PROPERTY, String.join(",", exclusions));
         }
         return properties;

@@ -31,14 +31,12 @@ class WebjetBootstrapModeDetector {
 
         try (Connection connection = DBPool.getConnection(dbName)) {
             if (connection == null) {
-                Logger.info(WebjetBootstrapModeDetector.class, "WebJET setup mode selected: database is unavailable");
-                return Detection.setup(environment);
+                throw new WebjetBootstrapUnavailableException("database connection is unavailable");
             }
 
             Map<String, String> databaseValues = InitServlet.getDatabaseValues(connection);
             if (databaseValues.isEmpty()) {
-                Logger.info(WebjetBootstrapModeDetector.class, "WebJET setup mode selected: configuration table is empty or unavailable");
-                return Detection.setup(environment);
+                throw new WebjetBootstrapUnavailableException("configuration table is empty or unavailable");
             }
 
             Logger.info(WebjetBootstrapModeDetector.class, "WebJET production mode selected by database preflight");
@@ -46,9 +44,11 @@ class WebjetBootstrapModeDetector {
                 WebjetBootstrapMode.PRODUCTION,
                 WebjetBootstrapSpringConfiguration.fromDatabaseValues(databaseValues, environment)
             );
+        } catch (WebjetBootstrapUnavailableException ex) {
+            throw ex;
         } catch (Exception ex) {
             Logger.error(WebjetBootstrapModeDetector.class, ex);
-            return Detection.setup(environment);
+            throw new WebjetBootstrapUnavailableException("database preflight failed", ex);
         }
     }
 

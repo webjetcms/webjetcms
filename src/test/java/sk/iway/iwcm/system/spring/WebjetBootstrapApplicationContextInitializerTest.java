@@ -3,10 +3,13 @@ package sk.iway.iwcm.system.spring;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -19,12 +22,8 @@ import jakarta.servlet.ServletContext;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
-import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
 import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterAutoConfiguration;
-import org.springframework.boot.security.autoconfigure.web.servlet.ServletWebSecurityAutoConfiguration;
 import org.springframework.boot.servlet.autoconfigure.HttpEncodingAutoConfiguration;
 import org.springframework.boot.servlet.autoconfigure.MultipartAutoConfiguration;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
@@ -37,8 +36,6 @@ import org.springframework.context.annotation.AnnotatedBeanDefinitionReader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.support.GenericApplicationContext;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.filter.CharacterEncodingFilter;
 import org.springframework.web.context.support.GenericWebApplicationContext;
 
@@ -48,6 +45,7 @@ import sk.iway.iwcm.setup.SetupModeCondition;
 class WebjetBootstrapApplicationContextInitializerTest {
 
     private static final String CUSTOM_AUTO_CONFIGURATION_EXCLUSION = "com.example.CustomAutoConfiguration";
+    private static final String SETUP_TOKEN = "01234567890123456789012345678901";
 
     @Test
     void selectsSetupModeBeforeConfigurationParsing() {
@@ -60,25 +58,95 @@ class WebjetBootstrapApplicationContextInitializerTest {
     }
 
     @Test
-    void setupModeDoesNotEnableDefaultBootSecurity() {
+    void setupModePreservesConfiguredAutoConfigurationExclusions() {
         WebjetBootstrapModeDetector modeDetector = mock(WebjetBootstrapModeDetector.class);
         WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
-        when(initializationActions.initialize(any(ServletContext.class)))
-            .thenReturn(false);
 
-        new WebApplicationContextRunner()
-            .withInitializer(new WebjetBootstrapApplicationContextInitializer(
-                null, modeDetector, initializationActions
-            ))
-            .withUserConfiguration(SecurityAutoConfigurationProbe.class)
-            .run(applicationContext -> {
-                assertTrue(applicationContext.getBeansOfType(SecurityFilterChain.class).isEmpty());
-                assertTrue(applicationContext.getBeansOfType(UserDetailsService.class).isEmpty());
-                assertFalse(applicationContext.containsBean("securityFilterChainRegistration"));
-            });
+        try (GenericApplicationContext applicationContext = new GenericApplicationContext()) {
+            TestPropertyValues.of(
+                WebjetSetupProperties.ENABLED_PROPERTY + "=true",
+                WebjetSetupProperties.TOKEN_PROPERTY + "=" + SETUP_TOKEN,
+                "spring.autoconfigure.exclude=" + CUSTOM_AUTO_CONFIGURATION_EXCLUSION
+            ).applyTo(applicationContext);
+
+            new WebjetBootstrapApplicationContextInitializer(modeDetector, initializationActions)
+                .initialize(applicationContext);
+
+            assertEquals(setupAutoConfigurationExclusions(),
+                applicationContext.getEnvironment().getProperty("spring.autoconfigure.exclude"));
+        }
 
         verifyNoInteractions(modeDetector);
-        verify(initializationActions).initialize(any(ServletContext.class));
+        verifyNoInteractions(initializationActions);
+    }
+
+    @Test
+    void setupModePreservesIndexedAutoConfigurationExclusions() {
+        WebjetBootstrapModeDetector modeDetector = mock(WebjetBootstrapModeDetector.class);
+        WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
+
+        try (GenericApplicationContext applicationContext = new GenericApplicationContext()) {
+            TestPropertyValues.of(
+                WebjetSetupProperties.ENABLED_PROPERTY + "=true",
+                WebjetSetupProperties.TOKEN_PROPERTY + "=" + SETUP_TOKEN,
+                "spring.autoconfigure.exclude[0]=" + CUSTOM_AUTO_CONFIGURATION_EXCLUSION,
+                "spring.autoconfigure.exclude[1]=" + MultipartAutoConfiguration.class.getName()
+            ).applyTo(applicationContext);
+
+            new WebjetBootstrapApplicationContextInitializer(modeDetector, initializationActions)
+                .initialize(applicationContext);
+
+            assertEquals(
+                CUSTOM_AUTO_CONFIGURATION_EXCLUSION + "," + MultipartAutoConfiguration.class.getName() + ","
+                    + SecurityFilterAutoConfiguration.class.getName(),
+                applicationContext.getEnvironment().getProperty("spring.autoconfigure.exclude")
+            );
+        }
+
+        verifyNoInteractions(modeDetector);
+        verifyNoInteractions(initializationActions);
+    }
+
+    @Test
+    void setupModeDoesNotDuplicateItsSecurityAutoConfigurationExclusion() {
+        WebjetBootstrapModeDetector modeDetector = mock(WebjetBootstrapModeDetector.class);
+        WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
+
+        try (GenericApplicationContext applicationContext = new GenericApplicationContext()) {
+            TestPropertyValues.of(
+                WebjetSetupProperties.ENABLED_PROPERTY + "=true",
+                WebjetSetupProperties.TOKEN_PROPERTY + "=" + SETUP_TOKEN,
+                "spring.autoconfigure.exclude=" + CUSTOM_AUTO_CONFIGURATION_EXCLUSION + ","
+                    + SecurityFilterAutoConfiguration.class.getName()
+            ).applyTo(applicationContext);
+
+            new WebjetBootstrapApplicationContextInitializer(modeDetector, initializationActions)
+                .initialize(applicationContext);
+
+            assertEquals(setupAutoConfigurationExclusions(),
+                applicationContext.getEnvironment().getProperty("spring.autoconfigure.exclude"));
+        }
+
+        verifyNoInteractions(modeDetector);
+        verifyNoInteractions(initializationActions);
+    }
+
+    @Test
+    void setupModeRequiresAConfiguredToken() {
+        WebjetBootstrapModeDetector modeDetector = mock(WebjetBootstrapModeDetector.class);
+        WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
+
+        try (GenericApplicationContext applicationContext = new GenericApplicationContext()) {
+            TestPropertyValues.of(WebjetSetupProperties.ENABLED_PROPERTY + "=true")
+                .applyTo(applicationContext);
+
+            assertThrows(IllegalStateException.class,
+                () -> new WebjetBootstrapApplicationContextInitializer(modeDetector, initializationActions)
+                    .initialize(applicationContext));
+        }
+
+        verifyNoInteractions(modeDetector);
+        verifyNoInteractions(initializationActions);
     }
 
     @Test
@@ -102,9 +170,8 @@ class WebjetBootstrapApplicationContextInitializerTest {
                 )
             );
 
-            new WebjetBootstrapApplicationContextInitializer(
-                null, modeDetector, initializationActions
-            ).initialize(applicationContext);
+            new WebjetBootstrapApplicationContextInitializer(modeDetector, initializationActions)
+                .initialize(applicationContext);
             new AnnotatedBeanDefinitionReader(applicationContext).register(
                 HttpEncodingAutoConfiguration.class,
                 MultipartAutoConfiguration.class,
@@ -183,7 +250,7 @@ class WebjetBootstrapApplicationContextInitializerTest {
 
             new WebApplicationContextRunner()
                 .withInitializer(new WebjetBootstrapApplicationContextInitializer(
-                    null, modeDetector, initializationActions
+                    modeDetector, initializationActions
                 ))
                 .withConfiguration(AutoConfigurations.of(
                     HttpEncodingAutoConfiguration.class,
@@ -209,6 +276,62 @@ class WebjetBootstrapApplicationContextInitializerTest {
         verify(initializationActions).initialize(any(ServletContext.class));
     }
 
+    @Test
+    void externalWarProductionFailureDoesNotSelectSetup() {
+        WebjetBootstrapModeDetector modeDetector = mock(WebjetBootstrapModeDetector.class);
+        WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
+        when(initializationActions.initialize(any(ServletContext.class))).thenReturn(false);
+
+        try (GenericWebApplicationContext applicationContext = externalWarContext()) {
+            assertThrows(WebjetBootstrapUnavailableException.class,
+                () -> new WebjetBootstrapApplicationContextInitializer(modeDetector, initializationActions)
+                    .initialize(applicationContext));
+        }
+
+        verifyNoInteractions(modeDetector);
+        verify(initializationActions).initialize(any(ServletContext.class));
+        verify(initializationActions).cleanupAfterRejectedCoreInitialization(false);
+    }
+
+    @Test
+    void externalWarUsesExplicitSetupModeOnlyWhenCoreIsNotInitialized() {
+        WebjetBootstrapModeDetector modeDetector = mock(WebjetBootstrapModeDetector.class);
+        WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
+        when(initializationActions.initialize(any(ServletContext.class))).thenReturn(false);
+
+        try (GenericWebApplicationContext applicationContext = externalWarSetupContext()) {
+            new WebjetBootstrapApplicationContextInitializer(modeDetector, initializationActions)
+                .initialize(applicationContext);
+
+            WebjetBootstrapState bootstrapState = (WebjetBootstrapState) applicationContext.getBeanFactory()
+                .getSingleton(WebjetBootstrapState.BEAN_NAME);
+            assertEquals(WebjetBootstrapMode.SETUP, bootstrapState.getMode());
+            assertTrue(bootstrapState.isCoreInitializationAttempted());
+            assertFalse(bootstrapState.isCoreInitialized());
+        }
+
+        verifyNoInteractions(modeDetector);
+        verify(initializationActions).initialize(any(ServletContext.class));
+        verify(initializationActions, never()).cleanupAfterRejectedCoreInitialization(anyBoolean());
+    }
+
+    @Test
+    void externalWarRejectsSetupModeForAnInitializedInstallation() {
+        WebjetBootstrapModeDetector modeDetector = mock(WebjetBootstrapModeDetector.class);
+        WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
+        when(initializationActions.initialize(any(ServletContext.class))).thenReturn(true);
+
+        try (GenericWebApplicationContext applicationContext = externalWarSetupContext()) {
+            assertThrows(WebjetBootstrapModeMismatchException.class,
+                () -> new WebjetBootstrapApplicationContextInitializer(modeDetector, initializationActions)
+                    .initialize(applicationContext));
+        }
+
+        verifyNoInteractions(modeDetector);
+        verify(initializationActions).initialize(any(ServletContext.class));
+        verify(initializationActions).cleanupAfterRejectedCoreInitialization(true);
+    }
+
     private void assertModeSelectedBeforeConfigurationParsing(WebjetBootstrapMode expectedMode) {
         WebjetBootstrapModeDetector modeDetector = mock(WebjetBootstrapModeDetector.class);
         WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
@@ -219,15 +342,23 @@ class WebjetBootstrapApplicationContextInitializerTest {
             : WebjetBootstrapSpringConfiguration.empty();
 
         try (GenericApplicationContext applicationContext = new GenericApplicationContext()) {
-            TestPropertyValues.of(
-                "spring.autoconfigure.exclude=" + CUSTOM_AUTO_CONFIGURATION_EXCLUSION
-            ).applyTo(applicationContext);
-            when(modeDetector.detect(applicationContext.getEnvironment())).thenReturn(
-                new WebjetBootstrapModeDetector.Detection(expectedMode, springConfiguration)
-            );
+            if (expectedMode == WebjetBootstrapMode.SETUP) {
+                TestPropertyValues.of(
+                    WebjetSetupProperties.ENABLED_PROPERTY + "=true",
+                    WebjetSetupProperties.TOKEN_PROPERTY + "=" + SETUP_TOKEN,
+                    "spring.autoconfigure.exclude=" + CUSTOM_AUTO_CONFIGURATION_EXCLUSION
+                ).applyTo(applicationContext);
+            } else {
+                TestPropertyValues.of(
+                    "spring.autoconfigure.exclude=" + CUSTOM_AUTO_CONFIGURATION_EXCLUSION
+                ).applyTo(applicationContext);
+                when(modeDetector.detect(applicationContext.getEnvironment())).thenReturn(
+                    new WebjetBootstrapModeDetector.Detection(expectedMode, springConfiguration)
+                );
+            }
 
             WebjetBootstrapApplicationContextInitializer initializer =
-                new WebjetBootstrapApplicationContextInitializer(null, modeDetector, initializationActions);
+                new WebjetBootstrapApplicationContextInitializer(modeDetector, initializationActions);
             initializer.initialize(applicationContext);
 
             assertEquals(expectedMode.getPropertyValue(),
@@ -250,9 +381,12 @@ class WebjetBootstrapApplicationContextInitializerTest {
                 .getProperty("spring.servlet.multipart.max-file-size"));
             assertEquals(springConfiguration.maximumRequestSizeBytes() + "B", applicationContext.getEnvironment()
                 .getProperty("spring.servlet.multipart.max-request-size"));
-            assertSame(springConfiguration, applicationContext.getBeanFactory()
+            assertEquals(springConfiguration, applicationContext.getBeanFactory()
                 .getSingleton(WebjetBootstrapSpringConfiguration.BEAN_NAME));
-            assertSetupSecurityAutoConfigurationsAreExcluded(applicationContext, expectedMode);
+            assertEquals(expectedMode == WebjetBootstrapMode.SETUP
+                    ? setupAutoConfigurationExclusions()
+                    : CUSTOM_AUTO_CONFIGURATION_EXCLUSION,
+                applicationContext.getEnvironment().getProperty("spring.autoconfigure.exclude"));
 
             WebjetBootstrapState bootstrapState = (WebjetBootstrapState) applicationContext
                 .getBeanFactory()
@@ -274,9 +408,32 @@ class WebjetBootstrapApplicationContextInitializerTest {
             assertEquals(expectedMode == WebjetBootstrapMode.SETUP,
                 applicationContext.containsBean("legacySetupModeProbe"));
 
-            verify(modeDetector).detect(applicationContext.getEnvironment());
+            if (expectedMode == WebjetBootstrapMode.SETUP) {
+                verifyNoInteractions(modeDetector);
+            } else {
+                verify(modeDetector).detect(applicationContext.getEnvironment());
+            }
             verifyNoInteractions(initializationActions);
         }
+    }
+
+    private String setupAutoConfigurationExclusions() {
+        return CUSTOM_AUTO_CONFIGURATION_EXCLUSION + "," + SecurityFilterAutoConfiguration.class.getName();
+    }
+
+    private GenericWebApplicationContext externalWarContext() {
+        GenericWebApplicationContext applicationContext = new GenericWebApplicationContext();
+        applicationContext.setServletContext(new org.springframework.mock.web.MockServletContext());
+        return applicationContext;
+    }
+
+    private GenericWebApplicationContext externalWarSetupContext() {
+        GenericWebApplicationContext applicationContext = externalWarContext();
+        TestPropertyValues.of(
+            WebjetSetupProperties.ENABLED_PROPERTY + "=true",
+            WebjetSetupProperties.TOKEN_PROPERTY + "=" + SETUP_TOKEN
+        ).applyTo(applicationContext);
+        return applicationContext;
     }
 
     private void assertServletInfrastructure(org.springframework.context.ApplicationContext applicationContext,
@@ -291,19 +448,6 @@ class WebjetBootstrapApplicationContextInitializerTest {
         assertEquals(expectedMaximumPostSize, multipartConfig.getMaxFileSize());
         assertEquals(expectedMaximumPostSize, multipartConfig.getMaxRequestSize());
         assertEquals(65_536, multipartConfig.getFileSizeThreshold());
-    }
-
-    private void assertSetupSecurityAutoConfigurationsAreExcluded(GenericApplicationContext applicationContext,
-            WebjetBootstrapMode expectedMode) {
-        String exclusions = applicationContext.getEnvironment().getProperty("spring.autoconfigure.exclude", "");
-        assertTrue(exclusions.contains(CUSTOM_AUTO_CONFIGURATION_EXCLUSION));
-        if (expectedMode == WebjetBootstrapMode.SETUP) {
-            assertTrue(exclusions.contains(ServletWebSecurityAutoConfiguration.class.getName()));
-            assertTrue(exclusions.contains(SecurityFilterAutoConfiguration.class.getName()));
-            assertTrue(exclusions.contains(UserDetailsServiceAutoConfiguration.class.getName()));
-        } else {
-            assertEquals(CUSTOM_AUTO_CONFIGURATION_EXCLUSION, exclusions);
-        }
     }
 
     @ConditionalOnProperty(
@@ -340,7 +484,4 @@ class WebjetBootstrapApplicationContextInitializerTest {
         }
     }
 
-    @EnableAutoConfiguration(exclude = SecurityAutoConfiguration.class)
-    static class SecurityAutoConfigurationProbe {
-    }
 }

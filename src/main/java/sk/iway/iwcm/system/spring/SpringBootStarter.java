@@ -20,6 +20,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWarDeployme
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
@@ -28,6 +29,8 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.Ordered;
+import org.springframework.core.env.Environment;
 import org.springframework.web.context.request.RequestContextListener;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
@@ -66,9 +69,6 @@ public class SpringBootStarter extends SpringBootServletInitializer {
         Logger.info(SpringBootStarter.class, "=== WebJET CMS starting with Spring Boot 4.x ===");
 
         runApplication(args);
-
-        Logger.info(SpringBootStarter.class, "Spring Boot context started successfully");
-        Logger.info(SpringBootStarter.class, "=== WebJET CMS started ===");
     }
 
     /**
@@ -78,7 +78,7 @@ public class SpringBootStarter extends SpringBootServletInitializer {
      */
     @Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-        return configureApplicationBuilder(application, null);
+        return configureApplicationBuilder(application);
     }
 
     /**
@@ -102,40 +102,21 @@ public class SpringBootStarter extends SpringBootServletInitializer {
     }
 
     private static void runApplication(String[] args) {
-        try {
-            runApplication(args, null);
-        } catch (RuntimeException ex) {
-            WebjetBootstrapMode requiredMode = WebjetBootstrapModeMismatchException.findRequiredMode(ex);
-            if (requiredMode != WebjetBootstrapMode.SETUP) {
-                throw ex;
-            }
-
-            Logger.warn(SpringBootStarter.class,
-                "WebJET production initialization failed; rebuilding the context in setup mode");
-            runApplication(args, requiredMode);
-        }
-    }
-
-    private static void runApplication(String[] args, WebjetBootstrapMode forcedMode) {
-        // The initializer selects setup or production before Spring parses any
-        // component scans. A single retry switches a failed production
-        // initialization to the recovery/setup bean graph.
-        runApplication(createApplicationBuilder(forcedMode), args);
+        runApplication(createApplicationBuilder(), args);
     }
 
     static void runApplication(SpringApplicationBuilder application, String[] args) {
         application.run(args != null ? args : new String[0]);
     }
 
-    private static SpringApplicationBuilder createApplicationBuilder(WebjetBootstrapMode forcedMode) {
-        return configureApplicationBuilder(new SpringApplicationBuilder(), forcedMode);
+    private static SpringApplicationBuilder createApplicationBuilder() {
+        return configureApplicationBuilder(new SpringApplicationBuilder());
     }
 
-    private static SpringApplicationBuilder configureApplicationBuilder(SpringApplicationBuilder application,
-            WebjetBootstrapMode forcedMode) {
+    private static SpringApplicationBuilder configureApplicationBuilder(SpringApplicationBuilder application) {
         return application
             .sources(SpringBootStarter.class)
-            .initializers(new WebjetBootstrapApplicationContextInitializer(forcedMode))
+            .initializers(new WebjetBootstrapApplicationContextInitializer())
             .properties(
                 "spring.profiles.default:default",
                 "server.servlet.context-path:/",
@@ -157,6 +138,34 @@ public class SpringBootStarter extends SpringBootServletInitializer {
             sk.iway.iwcm.components.upload.XhrFileUploadServlet.class.getName(),
             sk.iway.iwcm.admin.upload.AdminUploadServlet.class.getName()
         );
+
+        /**
+         * Reject setup-only Spring Security sessions before the production
+         * security filter can restore a context persisted by Tomcat.
+         */
+        @Bean
+        public FilterRegistrationBean<PersistedSetupAuthenticationCleanupFilter>
+                persistedSetupAuthenticationCleanupFilterRegistration(
+                    Environment environment) {
+            int securityFilterOrder = environment.getProperty(
+                "spring.security.filter.order",
+                Integer.class,
+                SecurityFilterProperties.DEFAULT_FILTER_ORDER
+            );
+            if (securityFilterOrder == Ordered.HIGHEST_PRECEDENCE) {
+                throw new IllegalStateException(
+                    "spring.security.filter.order must leave room for the WebJET setup-session cleanup filter"
+                );
+            }
+
+            FilterRegistrationBean<PersistedSetupAuthenticationCleanupFilter> registration =
+                new FilterRegistrationBean<>();
+            registration.setFilter(new PersistedSetupAuthenticationCleanupFilter());
+            registration.addUrlPatterns("/*");
+            registration.setOrder(securityFilterOrder - 1);
+            registration.setName("persistedSetupAuthenticationCleanupFilter");
+            return registration;
+        }
 
         /**
          * Annotation-discovered servlets in an external WAR are owned by the

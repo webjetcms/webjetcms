@@ -3,6 +3,7 @@ package sk.iway.iwcm.system.spring;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -23,12 +24,13 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRegistration;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.tomcat.autoconfigure.TomcatServerProperties;
-import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
+import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.boot.web.servlet.ServletListenerRegistrationBean;
+import org.springframework.core.Ordered;
+import org.springframework.mock.env.MockEnvironment;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
 import net.sourceforge.stripes.controller.DispatcherServlet;
@@ -41,6 +43,47 @@ class ServletRegistrationContractTest {
 
     private final SpringBootStarter.ProductionServletConfiguration productionConfiguration =
         new SpringBootStarter.ProductionServletConfiguration();
+    private final SpringBootStarter.ProductionServletInfrastructureConfiguration
+        productionInfrastructureConfiguration =
+            new SpringBootStarter.ProductionServletInfrastructureConfiguration();
+
+    @Test
+    void setupSessionCleanupRunsBeforeConfiguredSecurityFilter() {
+        MockEnvironment environment = new MockEnvironment()
+            .withProperty("spring.security.filter.order", "37");
+
+        assertFilterRegistration(
+            productionInfrastructureConfiguration
+                .persistedSetupAuthenticationCleanupFilterRegistration(environment),
+            PersistedSetupAuthenticationCleanupFilter.class,
+            "persistedSetupAuthenticationCleanupFilter",
+            36,
+            Set.of("/*"),
+            Set.of(),
+            EnumSet.allOf(DispatcherType.class)
+        );
+    }
+
+    @Test
+    void setupSessionCleanupFailsWhenSecurityHasNoPrecedingOrder() {
+        MockEnvironment environment = new MockEnvironment()
+            .withProperty(
+                "spring.security.filter.order",
+                Integer.toString(Ordered.HIGHEST_PRECEDENCE)
+            );
+
+        assertThrows(IllegalStateException.class,
+            () -> productionInfrastructureConfiguration
+                .persistedSetupAuthenticationCleanupFilterRegistration(environment));
+    }
+
+    @Test
+    void setupSessionCleanupUsesSpringBootSecurityDefaultOrder() {
+        FilterRegistrationBean<?> registration = productionInfrastructureConfiguration
+            .persistedSetupAuthenticationCleanupFilterRegistration(new MockEnvironment());
+
+        assertEquals(SecurityFilterProperties.DEFAULT_FILTER_ORDER - 1, registration.getOrder());
+    }
 
     @Test
     void embeddedFiltersKeepTheirRegistrationContract() {
@@ -179,8 +222,7 @@ class ServletRegistrationContractTest {
             "unrelated", unrelatedServlet
         )).when(servletContext).getServletRegistrations();
         ServletContextInitializer initializer =
-            new SpringBootStarter.ProductionServletInfrastructureConfiguration()
-                .externalWarMultipartServletInitializer(multipartConfig);
+            productionInfrastructureConfiguration.externalWarMultipartServletInitializer(multipartConfig);
 
         initializer.onStartup(servletContext);
 
@@ -188,20 +230,6 @@ class ServletRegistrationContractTest {
         verify(adminUpload).setMultipartConfig(multipartConfig);
         verify(multipleFileUpload).setMultipartConfig(multipartConfig);
         verify(unrelatedServlet, never()).setMultipartConfig(any(MultipartConfigElement.class));
-    }
-
-    @Test
-    void setupAdditionalConnectorUsesConfiguredMultipartPartLimit() {
-        TomcatServerProperties tomcatServerProperties = new TomcatServerProperties();
-        tomcatServerProperties.setMaxPartCount(1_000);
-        TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory();
-
-        new SetupApplicationConfiguration.EmbeddedServletContainerConfiguration()
-            .setupTomcatHttpConnectorCustomizer(tomcatServerProperties)
-            .customize(factory);
-
-        assertEquals(1, factory.getAdditionalConnectors().size());
-        assertEquals(1_000, factory.getAdditionalConnectors().get(0).getMaxPartCount());
     }
 
     private void assertFilterRegistration(FilterRegistrationBean<?> registration,

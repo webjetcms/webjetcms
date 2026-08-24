@@ -3,6 +3,7 @@ package sk.iway.iwcm.system.spring;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -20,13 +21,14 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 
 import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
 
 class SpringAppInitializerTest {
 
     private final SpringAppInitializer springAppInitializer = new SpringAppInitializer();
 
     @Test
-    void failedProductionInitializationThrowsModeMismatchAndNeverRunsPostInitialization() {
+    void failedProductionInitializationFailsClosedAndCleansUp() {
         WebjetBootstrapState bootstrapState = WebjetBootstrapState.pending(WebjetBootstrapMode.PRODUCTION);
         WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
         ApplicationContext applicationContext = mock(ApplicationContext.class);
@@ -37,13 +39,14 @@ class SpringAppInitializerTest {
             bootstrapState, initializationActions, applicationContext
         );
 
-        assertThrows(WebjetBootstrapModeMismatchException.class,
+        assertThrows(WebjetBootstrapUnavailableException.class,
             () -> coreInitializer.onStartup(servletContext));
 
         assertTrue(bootstrapState.isCoreInitializationAttempted());
         assertFalse(bootstrapState.isCoreInitialized());
         assertFalse(bootstrapState.isPostInitializationCompleted());
         verify(initializationActions).initialize(servletContext);
+        verify(initializationActions).cleanupAfterRejectedCoreInitialization(false);
         verify(initializationActions, never()).initializeAfterSpring();
     }
 
@@ -104,6 +107,52 @@ class SpringAppInitializerTest {
     }
 
     @Test
+    void setupModeLogsInstructionsWhenApplicationIsReady() {
+        WebjetBootstrapState bootstrapState = WebjetBootstrapState.initialized(WebjetBootstrapMode.SETUP, false);
+        WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
+        ApplicationListener<ApplicationReadyEvent> readyListener =
+            springAppInitializer.webjetApplicationReadyListener(bootstrapState, initializationActions);
+
+        try (MockedStatic<Logger> logger = mockStatic(Logger.class)) {
+            readyListener.onApplicationEvent(mock(ApplicationReadyEvent.class));
+
+            logger.verify(() -> Logger.info(
+                SpringBootStarter.class, "Spring Boot context started successfully"
+            ));
+            logger.verify(() -> Logger.info(
+                SpringBootStarter.class, SpringAppInitializer.WEBJET_STARTED_MESSAGE
+            ));
+            logger.verify(() -> Logger.info(
+                SpringBootStarter.class, SpringAppInitializer.SETUP_STARTUP_INSTRUCTIONS
+            ));
+        }
+
+        verify(initializationActions, never()).initializeAfterSpring();
+    }
+
+    @Test
+    void productionModeDoesNotLogSetupInstructions() {
+        WebjetBootstrapState bootstrapState = WebjetBootstrapState.initialized(WebjetBootstrapMode.PRODUCTION, true);
+        WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
+        when(initializationActions.initializeAfterSpring()).thenReturn(true);
+        ApplicationListener<ApplicationReadyEvent> readyListener =
+            springAppInitializer.webjetApplicationReadyListener(bootstrapState, initializationActions);
+
+        try (MockedStatic<Logger> logger = mockStatic(Logger.class)) {
+            readyListener.onApplicationEvent(mock(ApplicationReadyEvent.class));
+
+            logger.verify(() -> Logger.info(
+                SpringBootStarter.class, SpringAppInitializer.WEBJET_STARTED_MESSAGE
+            ));
+            logger.verify(() -> Logger.info(
+                SpringBootStarter.class, SpringAppInitializer.SETUP_STARTUP_INSTRUCTIONS
+            ), never());
+        }
+
+        verify(initializationActions).initializeAfterSpring();
+    }
+
+    @Test
     void pendingSetupModeInitializesCoreFromStartedServletContext() throws Exception {
         WebjetBootstrapState bootstrapState = WebjetBootstrapState.pending(WebjetBootstrapMode.SETUP);
         WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
@@ -120,6 +169,27 @@ class SpringAppInitializerTest {
         assertTrue(bootstrapState.isCoreInitializationAttempted());
         assertFalse(bootstrapState.isCoreInitialized());
         verify(initializationActions).initialize(servletContext);
+        verify(initializationActions, never()).cleanupAfterRejectedCoreInitialization(anyBoolean());
+        verify(initializationActions, never()).initializeAfterSpring();
+    }
+
+    @Test
+    void setupModeRejectsAndCleansUpAnAlreadyInitializedInstallation() {
+        WebjetBootstrapState bootstrapState = WebjetBootstrapState.pending(WebjetBootstrapMode.SETUP);
+        WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
+        ApplicationContext applicationContext = mock(ApplicationContext.class);
+        ServletContext servletContext = mock(ServletContext.class);
+        when(initializationActions.initialize(servletContext)).thenReturn(true);
+
+        ServletContextInitializer coreInitializer = springAppInitializer.springAppInitializerOnStartup(
+            bootstrapState, initializationActions, applicationContext
+        );
+
+        assertThrows(WebjetBootstrapModeMismatchException.class,
+            () -> coreInitializer.onStartup(servletContext));
+
+        verify(initializationActions).initialize(servletContext);
+        verify(initializationActions).cleanupAfterRejectedCoreInitialization(true);
         verify(initializationActions, never()).initializeAfterSpring();
     }
 
