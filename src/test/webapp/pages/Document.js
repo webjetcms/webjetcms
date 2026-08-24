@@ -154,7 +154,7 @@ module.exports = {
       I.waitForElement(".toastr-buttons button.btn-primary", 10);
       I.waitForText(i18n.get("You need to reload the page to change the domain."), 10, ".toastr-message");
       I.wait(0.5);
-      var btn = locate("#toast-container-webjet .toastr-buttons button.btn-primary").withText(i18n.get("Confirm"));
+      var btn = locate("#toast-container-webjet .toastr-buttons button.btn-primary").withText(i18n.get("Submit"));
       I.waitForElement(btn);
       I.click(btn);
       I.say("Domain switched to: "+domain+" DO NOT FORGET TO LOGOUT AFTER THIS SCENARIO otherwise you will be logged in with wrong domain");
