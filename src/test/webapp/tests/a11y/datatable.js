@@ -718,3 +718,81 @@ Scenario("p50: date picker", async ({ I, DT, DTE, a11y }) => {
     I.waitForInvisible("div.dt-datetime[role='dialog']", 5);
     I.waitForElement(`${input}:focus[aria-expanded="false"]`, 5);
 });
+
+Scenario("p51: grid edit accessibility", async ({ I, DT, a11y }) => {
+    I.amOnPage("/admin/v9/settings/redirect/");
+    DT.waitForLoader();
+
+    const wrapper = "#redirectTable_wrapper";
+    const toggle = `${wrapper} [data-dtbtn="celledit"]`;
+    const editableCell = "#redirectTable tbody tr:first-child td.dt-row-edit:not(.cell-not-editable)";
+
+    const initialState = await I.executeScript(toggleSelector => {
+        const control = document.querySelector(toggleSelector);
+        const decoration = control.querySelector('.form-check-input');
+        return {
+            controls: control.getAttribute("aria-controls"),
+            decorationHidden: decoration.getAttribute("aria-hidden"),
+            label: control.getAttribute("aria-label"),
+            nestedControls: control.querySelectorAll('input, button, select, textarea, a[href]').length,
+            pressed: control.getAttribute("aria-pressed"),
+            role: control.getAttribute("role"),
+            tabIndex: control.tabIndex
+        };
+    }, toggle);
+
+    I.assertEqual(initialState.role, "button", "The grid edit toggle must expose the button role");
+    I.assertEqual(initialState.pressed, "false", "The grid edit toggle must announce its inactive state");
+    I.assertEqual(initialState.controls, "redirectTable", "The grid edit toggle must reference its table");
+    I.assertTrue(initialState.label.length > 0, "The grid edit toggle must have an accessible name");
+    I.assertEqual(initialState.tabIndex, 0, "The grid edit toggle must be keyboard focusable");
+    I.assertEqual(initialState.nestedControls, 0, "The grid edit toggle must not contain nested interactive controls");
+    I.assertEqual(initialState.decorationHidden, "true", "The visual switch must be hidden from assistive technology");
+
+    I.executeScript(toggleSelector => document.querySelector(toggleSelector).focus(), toggle);
+    I.pressKey("Space");
+    I.waitForElement(`${toggle}[aria-pressed="true"]:focus`, 5);
+    I.seeElement("body.datatable-cell-editing");
+    I.waitForElement(`${editableCell}[tabindex="0"]`, 5);
+
+    const enabledState = await I.executeScript(toggleSelector => {
+        const control = document.querySelector(toggleSelector);
+        return {
+            enabled: control.classList.contains("enabled"),
+            pressed: control.getAttribute("aria-pressed")
+        };
+    }, toggle);
+    I.assertEqual(enabledState.pressed, "true", "The grid edit toggle must announce its active state");
+    I.assertTrue(enabledState.enabled, "The visual switch must match the active state");
+
+    I.executeScript(cellSelector => document.querySelector(cellSelector).focus(), editableCell);
+    I.waitForElement(`${editableCell}:focus`, 5);
+    I.pressKey("Enter");
+    const bubble = "div.DTE_Bubble.wj-cell-edit-dialog[role='dialog']";
+    I.waitForVisible(`${bubble} .DTE_Bubble_Liner`, 5);
+    I.waitForElement(`${bubble} .btn-ai`, 5);
+    I.waitForElement(`${bubble} input:focus`, 5);
+
+    const bubbleState = await I.executeScript(() => {
+        const bubble = document.querySelector("div.DTE_Bubble.wj-cell-edit-dialog");
+        const buttons = [...bubble.querySelectorAll("div.DTE_Form_Buttons button")];
+        return {
+            dialogLabel: bubble.getAttribute("aria-label"),
+            buttonLabels: buttons.map(button => button.getAttribute("aria-label")),
+            buttonTypes: buttons.map(button => button.getAttribute("type"))
+        };
+    });
+    I.assertTrue(bubbleState.dialogLabel.length > 0, "The cell editor dialog must have an accessible name");
+    I.assertEqual(bubbleState.buttonLabels.length, 2, "The cell editor must expose confirm and cancel buttons");
+    I.assertTrue(bubbleState.buttonLabels.every(label => label?.length > 0), "Every cell editor button must have an accessible name");
+    I.assertTrue(bubbleState.buttonTypes.every(type => type === "button"), "Cell editor actions must use button semantics");
+    await a11y.check(bubble);
+
+    I.clickCss(`${bubble} div.DTE_Form_Buttons button.btn-outline-secondary`);
+    I.waitForInvisible(`${bubble} .DTE_Bubble_Liner`, 5);
+    I.executeScript(toggleSelector => document.querySelector(toggleSelector).focus(), toggle);
+    I.pressKey("Enter");
+    I.waitForElement(`${toggle}[aria-pressed="false"]:focus`, 5);
+    I.dontSeeElement("body.datatable-cell-editing");
+    I.dontSeeElement(`${editableCell}[tabindex="0"]`);
+});

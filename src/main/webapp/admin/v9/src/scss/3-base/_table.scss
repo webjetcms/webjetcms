@@ -1462,11 +1462,13 @@ div.dt-datetime {
 }
 
 body.datatable-cell-editing {
-    table.dataTable td:not(.cell-not-editable):hover {
+    table.dataTable td:not(.cell-not-editable):hover,
+    table.dataTable td:not(.cell-not-editable):focus-visible {
         position: relative;
         background-color: $primary;
         color: white;
-        // border: 1px solid red;
+        outline: 2px solid $secondary;
+        outline-offset: -2px;
         cursor: pointer;
         a {
             color: white !important;

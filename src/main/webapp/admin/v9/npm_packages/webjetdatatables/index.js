@@ -2082,6 +2082,17 @@ export const dataTableInit = options => {
         if (DATA.fetchOnEdit) editButtonExtends = "editRefresh";
 
 
+        const setCellEditMode = function(enabled) {
+            const control = $('#' + DATA.id + '_wrapper [data-dtbtn="celledit"]');
+            const editableCells = $(dataTableInit).find('tbody td:not(.cell-not-editable)');
+
+            $('body').toggleClass('datatable-cell-editing', enabled);
+            control.toggleClass('enabled', enabled);
+            control.attr('aria-pressed', enabled ? 'true' : 'false');
+            if (enabled) editableCells.attr('tabindex', '0');
+            else editableCells.removeAttr('tabindex');
+        };
+
         var buttonsList = [];
 
         if (hasPermission("create")) {
@@ -2176,26 +2187,22 @@ export const dataTableInit = options => {
         if (hasPermission("edit")) {
             buttonsList.push({
                 tag: "div",
-                text: ` <input type="checkbox" class="form-check-input" id="dtAllowCellEdit" value="true" aria-label="${WJ.translate('datatables.button.celledit.js')}" />
-                        <label class="form-check-label is-icon-arrows-v" for="dtAllowCellEdit"></label>`,
+                text: ` <span class="form-check-input" aria-hidden="true"></span>
+                        <span class="form-check-label is-icon-arrows-v" aria-hidden="true"></span>`,
                 className: 'custom-control form-switch buttons-select-cel',
+                clickBlurs: false,
                 attr: {
-                    title: "", //set to empty because arua is on input checkbox
+                    title: "",
                     "data-bs-title": WJ.translate('datatables.button.celledit.js'),
                     "data-toggle": "tooltip",
                     "data-dtbtn": "celledit",
-                    "aria-label": "",
-                    "aria-controls": ""
+                    "aria-controls": DATA.id,
+                    "aria-label": WJ.translate('datatables.button.celledit.js'),
+                    "aria-pressed": "false",
+                    "role": "button"
                 },
                 action: function (e, node, el) {
-                    //console.log("action, el=", el, "disbled=", $(el).hasClass("is-disabled"));
-                    if ($(el).hasClass("enabled")) {
-                        $('body').removeClass("datatable-cell-editing");
-                        $(el).removeClass("enabled");
-                    } else {
-                        $('body').addClass("datatable-cell-editing");
-                        $(el).addClass("enabled");
-                    }
+                    setCellEditMode($(el).hasClass("enabled") === false);
                 }
             });
         }
@@ -3396,6 +3403,29 @@ export const dataTableInit = options => {
                 }, 50);
             });
 
+            $('#' + DATA.id + '_wrapper').on('keydown.wjCellEditToggle', '[data-dtbtn="celledit"]', function(event) {
+                if (event.key !== ' ') return;
+                event.preventDefault();
+                $(this).trigger('click');
+            });
+
+            $(dataTableInit).on('keydown.wjCellEdit', 'tbody td:not(.cell-not-editable)', function(event) {
+                if ($('body').hasClass('datatable-cell-editing') === false || event.target !== this || (event.key !== 'Enter' && event.key !== ' ')) return;
+                event.preventDefault();
+                event.stopPropagation();
+            });
+
+            $(dataTableInit).on('keyup.wjCellEdit', 'tbody td:not(.cell-not-editable)', function(event) {
+                if ($('body').hasClass('datatable-cell-editing') === false || event.target !== this || (event.key !== 'Enter' && event.key !== ' ')) return;
+                event.preventDefault();
+                event.stopPropagation();
+                $(this).trigger('click');
+            });
+
+            TABLE.on('draw.dt.wjCellEditAccessibility', function() {
+                if ($('body').hasClass('datatable-cell-editing')) setCellEditMode(true);
+            });
+
             // aktivuj rezim uprava bunky / bubble
             $(dataTableInit).on('click', 'tbody td', function (e) {
 
@@ -3427,18 +3457,28 @@ export const dataTableInit = options => {
                         //console.log("colIndex=", colIndex, "datatableColumn=", datatableColumn, "columnName=", columnName, "cell=", TABLE.cell(that));
 
                         EDITOR.bubble($(that), {
-                            focus: null,
+                            focus: columnName,
                             buttons: [
                                 {
-                                    text: "<i class='ti ti-check'></i>",
+                                    text: "<i class='ti ti-check' aria-hidden='true'></i>",
                                     className: 'btn btn-primary',
+                                    attr: {
+                                        'aria-label': WJ.translate('button.submit'),
+                                        'title': WJ.translate('button.submit'),
+                                        'type': 'button'
+                                    },
                                     action: function () {
                                         this.submit();
                                     }
                                 },
                                 {
-                                    text: "<i class='ti ti-x'></i>",
+                                    text: "<i class='ti ti-x' aria-hidden='true'></i>",
                                     className: 'btn btn-outline-secondary',
+                                    attr: {
+                                        'aria-label': WJ.translate('button.cancel'),
+                                        'title': WJ.translate('button.cancel'),
+                                        'type': 'button'
+                                    },
                                     action: function () {
                                         this.close();
                                     }
@@ -3452,21 +3492,18 @@ export const dataTableInit = options => {
                         let selector = "div.DTE_Field_Name_"+columnName.replace(/\./gi, "\\.");
                         selector = selector.replace("_editorFields-", "_editorFields\\.");
                         //console.log("selector=", selector, "columnName=", columnName);
-                        $(selector).addClass("show");
-                        setTimeout(function() {
-                            //presun kurzor do inputu
-                            let selector = "div.DTE_Field_Name_"+columnName.replace(/\./gi, "\\.")+".show input";
-                            let element = $(selector);
-                            //console.log("Done, selector=", selector, " element=", element);
-                            if (element.length>0 && (element[0].type === "text" || element[0].type === "textarea")) {
-                                try {
-                                    element[0].focus();
-                                    element[0].setSelectionRange(0,0);
-                                } catch (e) {}
-                            }
-                        }, 700);
+                        const visibleField = $(selector).addClass("show");
+                        const fieldLabel = visibleField.find('label').first().text().trim();
+                        if (fieldLabel.length > 0) {
+                            visibleField.find('input:not([type="hidden"]), textarea, select, [contenteditable="true"]').attr('aria-label', fieldLabel);
+                        }
+                        const bubble = $('div.DTE_Bubble').last();
+                        bubble
+                            .addClass('wj-cell-edit-dialog')
+                            .attr('role', 'dialog')
+                            .attr('aria-label', WJ.translate('datatables.button.celledit.js'));
                         //reposition the bubble according to element size
-                        var liner = $("div.DTE_Bubble_Liner");
+                        var liner = bubble.find("div.DTE_Bubble_Liner");
                         if (liner.find("div.DTE_Field_Type_quill").length>0) liner.addClass("type_quill");
                         else liner.removeClass("type_quill");
 
@@ -3711,8 +3748,7 @@ export const dataTableInit = options => {
     //vypne rezim editacie bunky (ak je nahodou zapnuty)
     TABLE.cellEditOff = function() {
         //console.log("cellEditOff");
-        $('body').removeClass("datatable-cell-editing");
-        $('#' + DATA.id + '_wrapper [data-dtbtn=celledit]').removeClass("enabled");
+        setCellEditMode(false);
     }
 
     TABLE.wjCreate = function () {

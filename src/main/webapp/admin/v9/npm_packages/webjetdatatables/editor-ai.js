@@ -95,6 +95,7 @@ export class EditorAi {
                         //skip OPTIONS, ENUMERATION, OPTIONS_SIMPLE field type - AI button is not supported
                     } else {
                         let inputField = $(field.dom.inputControl[0]).find(".form-control");
+                        const focusedInput = inputField.filter(':focus')[0];
 
                         //console.log("inputField:", inputField, "parents=", inputField.parents(".bootstrap-select").length);
 
@@ -111,6 +112,10 @@ export class EditorAi {
                             if (inputField.parents(".input-group").find(".ti-sparkles").length === 0) {
                                 const button = this._getEditorButton(column, null);
                                 inputField.parents(".input-group").append(button);
+                            }
+
+                            if (focusedInput != null && document.activeElement !== focusedInput) {
+                                focusedInput.focus({preventScroll: true});
                             }
                         }
                     }
