@@ -7,7 +7,7 @@
 ### Groundbreaking changes
 
 - The dependency on the [Vue.js](https://vuejs.org) library has been removed from the administration. We recommend checking the compatibility of your own applications before updating. The size of JavaScript files has been reduced by approximately 170kB, which also has an impact on the speed of administration initialization. More in the [programmer section](#programmer).
-- AspectJ - support for `load-time weavingu` (`aspectjweaver` and `META-INF/aop-ajc.xml`) has been removed from the distribution; built-in aspects are processed at compile time, more in the [programmer section](#programmer section). When using in a MultiWeb installation, you can remove the `-javaagent:/www/tomcat/.../aspectjweaver.jar` setting from `JAVA_OPTS` in the application server.
+- AspectJ - support for `load-time weavingu` (`aspectjweaver` and `META-INF/aop-ajc.xml`) has been removed from the distribution; built-in aspects are processed at compile time, more in [programmer section](#programmer section). When using in a MultiWeb installation, you can remove the `-javaagent:/www/tomcat/.../aspectjweaver.jar` setting from `JAVA_OPTS` in the application server (#290).
 
 ### Websites
 
@@ -130,6 +130,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Other minor changes
 
+- Configuration - added **Set Temporarily** option, which sets the value of the configuration variable only on the current node without saving it to the database. After a restart, the value saved in the database will be restored (#291).
+
+![](admin/setup/configuration/page.png)
+
 - Automated tasks - added option to [manually run task](admin/settings/cronjob/README.md) on node or node group set in **Runs on node** field. Original local run on current node remains available with separate button (#58718).
 
 - Translation keys - added tree structure of translation key prefixes with filtering of the list by the selected prefix (#58714).
@@ -185,7 +189,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
 
-- AspectJ - historical aspects `CloudFilter`, `SqlPerformance` and `AspectException` in `.aj` format have been migrated to Java classes with `@Aspect` annotation. Gradle first compiles the source codes via `javac`, which runs the Lombok/MapStruct annotation processors, and the `io.freefair.aspectj.post-compile-weaving` plugin then processes the bytecode using `AspectJ weaving`. Duplicate Ant/AJC compilation and local copies of build libraries have been removed; Ant packaging uses Gradle output and `Delombok` tasks. `CloudFilter` uses `execution pointcut` and the corresponding `advice` is inserted into `GroupsDB` and `DocDB` during compilation, so that filtering is also applied when calling from JSPs compiled without LTW. Regression tests have been added and [deployment documentation](developer/install/deployment.md#java-a-aspectj-compilation) has been updated.
+- AspectJ - historical aspects `CloudFilter`, `SqlPerformance` and `AspectException` in `.aj` format have been migrated to Java classes with `@Aspect` annotation. Gradle first compiles the source codes via `javac`, which runs the Lombok/MapStruct annotation processors, and the `io.freefair.aspectj.post-compile-weaving` plugin then processes the bytecode using `AspectJ weaving`. Duplicate Ant/AJC compilation and local copies of build libraries have been removed; Ant packaging uses Gradle output and `Delombok` tasks. `CloudFilter` uses `execution pointcut` and the corresponding `advice` is inserted into `GroupsDB` and `DocDB` during compilation, so that filtering is also applied when calling from JSPs compiled without LTW. Regression tests have been added and [deployment documentation](developer/install/deployment.md#java-a-aspectj-compilation) updated (#290).
 - Logging - added attribute `sessionId` and user login name `userLogin` (#OSK526) to [Logback MDC](https://logback.qos.ch/manual/mdc.html).
 - Updated [Tabler Icons](https://tabler.io/icons) library to version 3.44.0, fixed issue with simultaneous use of `Outline` and `Filled` sets (#58509).
 - Web pages - if you need to have an empty first line in the configuration variable `imageMagickCustomParams*` for [custom parameter settings](redactor/apps/gallery/README.md#custom-parameters-imagemagick) `ImageMagick` enter the value `---`.

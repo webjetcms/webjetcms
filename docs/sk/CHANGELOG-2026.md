@@ -7,7 +7,7 @@
 ### Prelomové zmeny
 
 - Z administrácie bola odstránená závislosť na knižnici [Vue.js](https://vuejs.org). Pred aktualizáciou odporúčame overiť kompatibilitu vlastných aplikácií. Veľkosť JavaScript súborov sa zmenšila o cca 170kB, čo má dopad aj na rýchlosť inicializácie administrácie. Viac v [sekcii pre programátora](#pre-programátora).
-- AspectJ - z distribúcie bola odstránená podpora `load-time weavingu` (`aspectjweaver` a `META-INF/aop-ajc.xml`); vstavané aspekty sa spracujú už pri kompilácii, viac v [sekcii pre programátora](#pre-programátora). Pri použití v MultiWeb inštalácii môžete odstrániť `-javaagent:/www/tomcat/.../aspectjweaver.jar` nastavenie z `JAVA_OPTS` v aplikačnom serveri.
+- AspectJ - z distribúcie bola odstránená podpora `load-time weavingu` (`aspectjweaver` a `META-INF/aop-ajc.xml`); vstavané aspekty sa spracujú už pri kompilácii, viac v [sekcii pre programátora](#pre-programátora). Pri použití v MultiWeb inštalácii môžete odstrániť `-javaagent:/www/tomcat/.../aspectjweaver.jar` nastavenie z `JAVA_OPTS` v aplikačnom serveri (#290).
 
 ### Webové stránky
 
@@ -130,6 +130,10 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Iné menšie zmeny
 
+- Konfigurácia - pridaná možnosť **Nastaviť dočasne**, ktorá nastaví hodnotu konfiguračnej premennej len na aktuálnom uzle bez uloženia do databázy. Po reštarte sa obnoví hodnota uložená v databáze (#291).
+
+![](admin/setup/configuration/page.png)
+
 - Automatizované úlohy - pridaná možnosť [manuálne spustiť úlohu](admin/settings/cronjob/README.md) na uzle alebo skupine uzlov nastavenej v poli **Beží na uzle**. Pôvodné lokálne spustenie na aktuálnom uzle zostáva dostupné samostatným tlačidlom (#58718).
 
 - Prekladové kľúče - pridaná stromová štruktúra prefixov prekladových kľúčov s filtrovaním zoznamu podľa zvoleného prefixu (#58714).
@@ -185,7 +189,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
 
-- AspectJ - historické aspekty `CloudFilter`, `SqlPerformance` a `AspectException` vo formáte `.aj` boli migrované na Java triedy s anotáciou `@Aspect`. Gradle najskôr skompiluje zdrojové kódy cez `javac`, ktorý spustí anotačné procesory Lombok/MapStruct, a plugin `io.freefair.aspectj.post-compile-weaving` následne spracuje bajtový kód pomocou `AspectJ weaving`. Odstránená bola duplicitná Ant/AJC kompilácia aj lokálne kópie build knižníc; Ant balenie používa výstup z Gradle a úlohy `Delombok`. `CloudFilter` používa `execution pointcut` a príslušný `advice` sa pri kompilácii vloží do `GroupsDB` a `DocDB`, takže sa filtrovanie aplikuje aj pri volaní z JSP skompilovaných bez LTW. Doplnené boli regresné testy a aktualizovaná [dokumentácia nasadenia](developer/install/deployment.md#kompilácia-java-a-aspectj).
+- AspectJ - historické aspekty `CloudFilter`, `SqlPerformance` a `AspectException` vo formáte `.aj` boli migrované na Java triedy s anotáciou `@Aspect`. Gradle najskôr skompiluje zdrojové kódy cez `javac`, ktorý spustí anotačné procesory Lombok/MapStruct, a plugin `io.freefair.aspectj.post-compile-weaving` následne spracuje bajtový kód pomocou `AspectJ weaving`. Odstránená bola duplicitná Ant/AJC kompilácia aj lokálne kópie build knižníc; Ant balenie používa výstup z Gradle a úlohy `Delombok`. `CloudFilter` používa `execution pointcut` a príslušný `advice` sa pri kompilácii vloží do `GroupsDB` a `DocDB`, takže sa filtrovanie aplikuje aj pri volaní z JSP skompilovaných bez LTW. Doplnené boli regresné testy a aktualizovaná [dokumentácia nasadenia](developer/install/deployment.md#kompilácia-java-a-aspectj) (#290).
 - Logovanie - do [Logback MDC](https://logback.qos.ch/manual/mdc.html) doplnený atribút `sessionId` a prihlasovacieho mena používateľa `userLogin` (#OSK526).
 - Aktualizovaná knižnica [Tabler Icons](https://tabler.io/icons) na verziu 3.44.0, vyriešený problém so súčasným používaním `Outline` a `Filled` sád (#58509).
 - Web stránky - ak potrebujete mať prázdny prvý riadok v konfiguračnej premennej `imageMagickCustomParams*` pre [nastavenie vlastných parametrov](redactor/apps/gallery/README.md#vlastné-parametre-imagemagick) `ImageMagick` zadajte hodnotu `---`.

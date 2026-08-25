@@ -52,6 +52,15 @@ public class ConfigurationController extends DatatableRestControllerV2<ConfDetai
     }
 
     @Override
+    public ConfDetailsDto getOneItem(long id) {
+        Identity user = getUser();
+        if (null == user) {
+            return null;
+        }
+        return configurationService.getOne(user, id);
+    }
+
+    @Override
     public ConfDetailsDto insertItem(ConfDetailsDto confDetailsDto) {
         try {
             //musime setnut nejake ID

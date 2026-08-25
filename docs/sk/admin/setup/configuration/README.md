@@ -34,6 +34,14 @@ Môžu nastať 3 situácie:
   - ak zmenený názov, za názov **existujúcej** konfiguračnej premennej, tak sa **vykoná úprava**
   - ak zmenený názov, za názov **neexistujúcej** konfiguračnej premennej, tak sa **vykoná pridanie** novej premennej
 
+## Dočasné nastavenie hodnoty
+
+Ak potrebujete zmeniť hodnotu konfiguračnej premennej iba na overenie jej správania, v editore zapnite možnosť **Nastaviť dočasne**. Hodnota sa nastaví iba v pamäti aktuálneho uzla, neuloží sa do databázy ani sa neprenesie na ostatné uzly klastra. Po reštarte aplikačného servera sa opäť použije hodnota uložená v databáze.
+
+Pri dočasnom nastavení nie je možné hodnotu zašifrovať ani naplánovať jej zmenu, preto sa polia **Šifrovať** a **Zmeniť od** v editore skryjú.
+
+Ak sa aktuálna hodnota na uzle líši od hodnoty v databáze, v stĺpci **Hodnota** sa zobrazia obe hodnoty vo formáte "aktuálna hodnota / databázová hodnota". Databázová hodnota je zobrazená tlmenou farbou a po umiestnení kurzora sa označí ako momentálne neaktívna. Pri opätovnom otvorení editora sa do poľa **Hodnota** načíta hodnota uložená v databáze, nie dočasná hodnota.
+
 ## Vymazanie konfiguračných položiek
 
 Pri vymazaní konfiguračnej premennej môžu nastať 2 situácie:

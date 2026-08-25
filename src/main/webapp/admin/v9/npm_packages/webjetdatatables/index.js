@@ -150,6 +150,8 @@ export const dataTableInit = options => {
     DATA.keyboardSave = (typeof options.keyboardSave !== "undefined") ? options.keyboardSave : true;
     DATA.stateSave = (typeof options.stateSave !== "undefined") ? options.stateSave : true;
     DATA.autoHeight = (typeof options.autoHeight !== "undefined") ? options.autoHeight : true;
+    //https://datatables.net/ref/core/option/autoWidth
+    DATA.autoWidth = (typeof options.autoWidth !== "undefined") ? options.autoWidth : true;
     DATA.customFieldsUpdateColumns = (typeof options.customFieldsUpdateColumns !== "undefined") ? options.customFieldsUpdateColumns : false;
     DATA.customFieldsUpdateColumnsPreserveVisibility = (typeof options.customFieldsUpdateColumnsPreserveVisibility !== "undefined") ? options.customFieldsUpdateColumnsPreserveVisibility : false;
     //If we have editor that we dont close after save, but we want to update editor data after save
@@ -3135,6 +3137,7 @@ export const dataTableInit = options => {
                         columns: DATA.columns,
                         serverSide: DATA.serverSide,
                         processing: true, //Feature control the processing indicator.
+                        autoWidth: DATA.autoWidth,
                         rowId: DATA.editorId,
                         order: DATA.order,
                         paging: DATA.paging,
@@ -3238,6 +3241,7 @@ export const dataTableInit = options => {
                 TABLE = $datatableInit.DataTable({
                     data: DATA.src.data,
                     serverSide: false,
+                    autoWidth: DATA.autoWidth,
                     rowId: DATA.editorId,
                     columns: DATA.columns,
                     order: DATA.order,

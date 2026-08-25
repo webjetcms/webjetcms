@@ -342,21 +342,45 @@ public class ConfDB
 		return ret;
 	}
 
+	/**
+	 * Applies a configuration value to the current node without persisting it or refreshing other cluster nodes.
+	 *
+	 * @param name configuration variable name
+	 * @param value runtime value
+	 */
+	public static void setRuntimeValue(String name, String value)
+	{
+		setConstantValueImpl(name, value);
+	}
+
+	/**
+	 * Converts a stored configuration value to the representation used on the current node.
+	 *
+	 * @param name configuration variable name
+	 * @param value stored configuration value
+	 * @return normalized runtime value
+	 */
+	public static String normalizeRuntimeValue(String name, String value)
+	{
+		if (value == null) return null;
+
+		String normalizedValue = tryDecrypt(value);
+		if ("linkType".equals(name))
+		{
+			return String.valueOf("html".equalsIgnoreCase(normalizedValue) ? Constants.LINK_TYPE_HTML : Constants.LINK_TYPE_DOCID);
+		}
+
+		return normalizedValue;
+	}
+
 	private static void setConstantValueImpl(String name, String valueParam)
 	{
 		if (valueParam == null) return;
-		String value = tryDecrypt(valueParam);
+		String value = normalizeRuntimeValue(name, valueParam);
 
 		if ("linkType".equals(name))
 		{
-			if ("html".equalsIgnoreCase(value))
-			{
-				Constants.setInt(name, Constants.LINK_TYPE_HTML);
-			}
-			else
-			{
-				Constants.setInt(name, Constants.LINK_TYPE_DOCID);
-			}
+			Constants.setInt(name, Integer.parseInt(value));
 		}
 		else
 		{
