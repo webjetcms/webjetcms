@@ -111,7 +111,12 @@ block content
                         '</div>';
                     }
                     if (type === "filter") {
-                        return $.fn.DataTable.util.diacritics(renderedValue);
+                        let filterValue = renderedValue
+                            .replaceAll("&", "&amp;")
+                            .replaceAll("<", "&lt;")
+                            .replaceAll(">", "&gt;")
+                            .replaceAll('"', "&quot;");
+                        return $.fn.DataTable.util.diacritics(filterValue);
                     }
                     if (type === "sort") return renderedValue;
                     return data;
