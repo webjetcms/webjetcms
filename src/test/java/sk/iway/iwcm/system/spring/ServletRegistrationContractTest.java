@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -35,6 +36,8 @@ import org.springframework.boot.web.servlet.ServletListenerRegistrationBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.Ordered;
 import org.springframework.mock.env.MockEnvironment;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
 import net.sourceforge.stripes.controller.DispatcherServlet;
@@ -93,7 +96,8 @@ class ServletRegistrationContractTest {
     void embeddedFiltersKeepTheirRegistrationContract() {
         assertFilterRegistration(productionConfiguration.characterEncodingFilterRegistration(
                 new CharacterEncodingFilter()),
-            org.springframework.web.filter.CharacterEncodingFilter.class, "SpringEncodingFilter", 0,
+            org.springframework.web.filter.CharacterEncodingFilter.class, "SpringEncodingFilter",
+            Ordered.HIGHEST_PRECEDENCE,
             Set.of("/*"), Set.of(), EnumSet.allOf(DispatcherType.class));
         assertFilterRegistration(productionConfiguration.contextFilterRegistration(),
             ContextFilter.class, "ContextFilter", 1, Set.of("/*"), Set.of(),
@@ -104,6 +108,28 @@ class ServletRegistrationContractTest {
         assertFilterRegistration(productionConfiguration.virtualPathFilterRegistration(),
             PathFilter.class, "Virtual Path Filter", 4, Set.of("/*"), Set.of(),
             EnumSet.of(DispatcherType.REQUEST));
+    }
+
+    @Test
+    void characterEncodingRunsBeforeSecurityReadsNonAsciiFormParameters() throws Exception {
+        String nonAsciiUsername = "ľščťžýáíé";
+        CharacterEncodingFilter filter = new CharacterEncodingFilter();
+        filter.setEncoding("UTF-8");
+        filter.setForceRequestEncoding(true);
+        FilterRegistrationBean<CharacterEncodingFilter> registration =
+            productionConfiguration.characterEncodingFilterRegistration(filter);
+
+        assertTrue(registration.getOrder() < SecurityFilterProperties.DEFAULT_FILTER_ORDER);
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setMethod("POST");
+        request.setContentType("application/x-www-form-urlencoded");
+        request.addParameter("username", nonAsciiUsername);
+
+        filter.doFilter(request, new MockHttpServletResponse(), (filteredRequest, response) -> {
+            assertEquals("UTF-8", filteredRequest.getCharacterEncoding());
+            assertEquals(nonAsciiUsername, filteredRequest.getParameter("username"));
+        });
     }
 
     @Test

@@ -217,7 +217,8 @@ public class SpringBootStarter extends SpringBootServletInitializer {
         /**
          * Register CharacterEncodingFilter for configured encoding support.
          * This filter sets the character encoding for request/response based on configuration.
-         * Must be registered BEFORE other filters (order 0).
+         * Must be registered before Spring Security and every other filter that may read
+         * request parameters.
          */
         @Bean
         @ConditionalOnBooleanProperty(name = "spring.servlet.encoding.enabled", matchIfMissing = true)
@@ -226,7 +227,7 @@ public class SpringBootStarter extends SpringBootServletInitializer {
             FilterRegistrationBean<CharacterEncodingFilter> registration = new FilterRegistrationBean<>();
             registration.setFilter(webjetCharacterEncodingFilter);
             registration.addUrlPatterns("/*");
-            registration.setOrder(0); // Must be first (before all other filters)
+            registration.setOrder(Ordered.HIGHEST_PRECEDENCE); // Must be first (before all other filters)
             registration.setName("SpringEncodingFilter");
             Logger.info(SpringBootStarter.class, "Registered WebJET CharacterEncodingFilter");
             return registration;
