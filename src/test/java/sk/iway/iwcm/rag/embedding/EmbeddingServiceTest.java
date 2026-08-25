@@ -23,6 +23,7 @@ import com.webjetcms.ai.TokenUsage;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.providers.AiInterface;
 import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
@@ -53,8 +54,10 @@ class EmbeddingServiceTest extends BaseWebjetTest {
         Constants.setString("ragEmbeddingModel", "text-embedding-3-small");
         AiClient aiClient = mock(AiClient.class);
         WebjetAiConfigurationService configurationService = mock(WebjetAiConfigurationService.class);
+        AiInterface provider = mock(AiInterface.class);
+        when(provider.getProviderId()).thenReturn("gemini");
         AiProviderConfig providerConfig = AiProviderConfig.builder("secret-key").build();
-        when(configurationService.resolveForDomain("gemini", "customer.example"))
+        when(configurationService.resolveForDomain(provider, "customer.example"))
             .thenReturn(providerConfig);
         when(aiClient.embed(eq("gemini"), any(EmbeddingRequest.class), eq(providerConfig)))
             .thenReturn(new EmbeddingResponse(
@@ -65,7 +68,7 @@ class EmbeddingServiceTest extends BaseWebjetTest {
         AssistantDefinitionEntity assistant = new AssistantDefinitionEntity();
         assistant.setProvider("gemini");
         assistant.setModel("gemini-embedding-001");
-        EmbeddingService service = new EmbeddingService(aiClient, configurationService);
+        EmbeddingService service = new EmbeddingService(aiClient, configurationService, List.of(provider));
 
         EmbeddingBatchResult result = service.embedWithUsage(
             List.of("Text to embed"),

@@ -75,10 +75,10 @@ public interface VectorStore {
     boolean initializeSchema();
 
     /**
-     * Delete all stored embeddings for a specific model.
-     * @param embeddingModel model used to generate the embeddings to delete
+     * Delete all stored embeddings and resize the vector column.
+     * @param dimensions new vector dimensions
      */
-    boolean deleteModelData(String embeddingModel);
+    boolean resetDimensions(int dimensions);
 
     /**
      * Get existing embeddings for an entity, keyed by content hash.

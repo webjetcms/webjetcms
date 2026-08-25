@@ -18,6 +18,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.providers.AiInterface;
 import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
 
@@ -27,13 +28,16 @@ public class EmbeddingService {
 
     private final AiClient aiClient;
     private final WebjetAiConfigurationService configurationService;
+    private final List<AiInterface> providers;
 
     public EmbeddingService(
         AiClient aiClient,
-        WebjetAiConfigurationService configurationService
+        WebjetAiConfigurationService configurationService,
+        List<AiInterface> providers
     ) {
         this.aiClient = aiClient;
         this.configurationService = configurationService;
+        this.providers = providers;
     }
 
     /**
@@ -127,13 +131,21 @@ public class EmbeddingService {
         String providerId,
         HttpServletRequest request,
         String domainName
-    ) {
+    ) throws ProviderCallException {
+        AiInterface provider = findProvider(providerId);
         if (request != null) {
-            return configurationService.resolve(providerId, request);
+            return configurationService.resolve(provider, request);
         }
         if (Tools.isNotEmpty(domainName)) {
-            return configurationService.resolveForDomain(providerId, domainName);
+            return configurationService.resolveForDomain(provider, domainName);
         }
-        return configurationService.resolve(providerId);
+        return configurationService.resolve(provider);
+    }
+
+    private AiInterface findProvider(String providerId) throws ProviderCallException {
+        for (AiInterface provider : providers) {
+            if (provider.getProviderId().equals(providerId)) return provider;
+        }
+        throw new ProviderCallException("RAG embedding provider is not available: " + providerId);
     }
 }

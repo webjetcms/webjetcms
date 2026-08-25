@@ -51,7 +51,7 @@ class RagEmbeddingStatServiceTest extends BaseWebjetTest {
         AssistantDefinitionEntity existing = new AssistantDefinitionEntity();
         existing.setProvider("gemini");
         existing.setModel("gemini-embedding-001");
-        when(repository.findFirstByGroupNameAndDomainId(eq(RagEmbeddingStatService.GROUP_INDEXING), anyInt()))
+        when(repository.findFirstByNameAndDomainIdOrderByIdAsc(eq(RagEmbeddingStatService.NAME_INDEXING), anyInt()))
             .thenReturn(Optional.of(existing));
 
         RagEmbeddingStatService service = new RagEmbeddingStatService(repository, mock(AiStatRepository.class));
@@ -69,7 +69,7 @@ class RagEmbeddingStatServiceTest extends BaseWebjetTest {
         Constants.setString("ragEmbeddingProvider", "GEMINI");
         Constants.setString("ragEmbeddingModel", "gemini-embedding-001");
         AssistantDefinitionRepository repository = mock(AssistantDefinitionRepository.class);
-        when(repository.findFirstByGroupNameAndDomainId(eq(RagEmbeddingStatService.GROUP_SEARCH), anyInt()))
+        when(repository.findFirstByNameAndDomainIdOrderByIdAsc(eq(RagEmbeddingStatService.NAME_SEARCH), anyInt()))
             .thenReturn(Optional.empty());
         when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -83,6 +83,8 @@ class RagEmbeddingStatServiceTest extends BaseWebjetTest {
         ArgumentCaptor<AssistantDefinitionEntity> captor = ArgumentCaptor.forClass(AssistantDefinitionEntity.class);
         verify(repository).save(captor.capture());
         assertSame(captor.getValue(), result);
+        assertEquals(RagEmbeddingStatService.NAME_SEARCH, result.getName());
+        assertEquals(RagEmbeddingStatService.GROUP_SEARCH, result.getGroupName());
         assertEquals("gemini", result.getProvider());
         assertEquals("gemini-embedding-001", result.getModel());
     }

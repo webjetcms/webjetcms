@@ -72,14 +72,14 @@ public abstract class LibrarySupportLogic implements AiInterface {
 
     @Override
     public boolean isInit() {
-        return configurationService.isConfigured(getProviderId());
+        return configurationService.isConfigured(this);
     }
 
     @Override
     public List<LabelValue> getSupportedModels(Prop prop, HttpServletRequest request) {
         List<LabelValue> values = new ArrayList<>();
         try {
-            AiProviderConfig config = configurationService.resolve(getProviderId(), request);
+            AiProviderConfig config = configurationService.resolve(this, request);
             for (ModelInfo model : aiClient.listModels(getProviderId(), config)) {
                 values.add(new LabelValue(model.displayLabel(), model.id()));
             }
@@ -110,7 +110,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
             AiResponse response = aiClient.execute(
                 getProviderId(),
                 prepareRequest(AiOperation.TEXT, assistant, inputData, includesHandler),
-                configurationService.resolve(getProviderId(), request)
+                configurationService.resolve(this, request)
             );
 
             response = response.withText(includesHandler.restoreIncludes(response.text()));
@@ -156,7 +156,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
             AiResponse response = aiClient.stream(
                 getProviderId(),
                 prepareRequest(AiOperation.TEXT, assistant, inputData, includeHandler),
-                configurationService.resolve(getProviderId(), request),
+                configurationService.resolve(this, request),
                 delta -> includeHandler.handleLine(delta, writer)
             );
             includeHandler.finish(writer);
@@ -202,7 +202,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
             AiResponse response = aiClient.execute(
                 getProviderId(),
                 prepareRequest(operation, assistant, inputData, null),
-                configurationService.resolve(getProviderId(), request)
+                configurationService.resolve(this, request)
             );
 
             long datePart = Tools.getNow();
@@ -340,7 +340,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
         try {
             AiRequest rawRequest = AiRequest.builder()
                 .operation(AiOperation.TEXT)
-                .model(configurationService.imageNameModel(getProviderId()))
+                .model(getImageNameModel())
                 .instructions(instructionValuePair.getFirst())
                 .inputText(instructionValuePair.getSecond())
                 .store(false)
@@ -349,7 +349,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
             AiResponse response = aiClient.execute(
                 getProviderId(),
                 rawRequest,
-                configurationService.resolve(getProviderId(), request)
+                configurationService.resolve(this, request)
             );
             if (Tools.isEmpty(response.text())) return new GeneratedImageName(defaultFileName, TokenUsage.EMPTY);
             return new GeneratedImageName(response.text(), safeUsage(response.usage()));

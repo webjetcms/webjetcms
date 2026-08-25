@@ -4,12 +4,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.structuremirroring.SaveListener;
 import sk.iway.iwcm.rag.vectorstore.PgVectorStore;
 import sk.iway.iwcm.system.ConfDetails;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
+import sk.iway.iwcm.system.spring.events.WebjetEventType;
 
 
 @Component
@@ -27,16 +28,16 @@ public class DimensionChangeListener {
         try {
             //Logger.debug(SaveListener.class, "================================================= handleConfSave type=" + event.getEventType() + ", source=" + event.getSource().getClass()+" thread="+Thread.currentThread().getName());
             ConfDetails conf = event.getSource();
-            if (conf == null) return;
+            if (conf == null || event.getEventType() != WebjetEventType.AFTER_SAVE) return;
 
             if ("ragEmbeddingDimensions".equals(conf.getName())) {
                 Logger.debug(DimensionChangeListener.class, "conf name=" + conf.getName() + " value=" + conf.getValue());
 
-                // Drop the vector schema to apply new dimensions
-                if (vectorStore.deleteModelData(Constants.getString("ragEmbeddingModel"))) {
-                    Logger.info(DimensionChangeListener.class, "Vector schema dropped successfully.");
+                int dimensions = Tools.getIntValue(conf.getValue(), -1);
+                if (vectorStore.resetDimensions(dimensions)) {
+                    Logger.info(DimensionChangeListener.class, "All embedding data was deleted and vector dimensions were updated successfully.");
                 } else {
-                    Logger.error(DimensionChangeListener.class, "Failed to drop vector schema.");
+                    Logger.error(DimensionChangeListener.class, "Failed to reset embedding data after vector dimensions changed.");
                 }
             } else if ("ragSearchDistanceMetric".equals(conf.getName())) {
                 Logger.debug(DimensionChangeListener.class, "conf name=" + conf.getName() + " value=" + conf.getValue());

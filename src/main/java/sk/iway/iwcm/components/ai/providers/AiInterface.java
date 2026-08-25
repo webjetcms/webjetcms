@@ -3,6 +3,8 @@ package sk.iway.iwcm.components.ai.providers;
 import java.io.BufferedWriter;
 import java.util.List;
 
+import com.webjetcms.ai.AiProviderConfig;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
@@ -28,4 +30,17 @@ public interface AiInterface {
     public String getProviderId();
     public String getTitleKey();
     public boolean isInit();
+
+    default String getApiKey() {
+        return "";
+    }
+
+    default String getImageNameModel() {
+        return "";
+    }
+
+    /** Adds provider-specific settings using a referer validated by WebJET CMS. */
+    default void configure(AiProviderConfig.Builder builder, String trustedReferer) {
+        // Most providers only need an API key and the shared timeout settings.
+    }
 }

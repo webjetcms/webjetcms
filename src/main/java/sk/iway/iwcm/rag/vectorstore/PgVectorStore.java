@@ -102,8 +102,8 @@ public class PgVectorStore implements VectorStore {
         "SELECT content_hash, embedding::text AS embedding_text FROM rag_embedding_chunks " +
         "WHERE entity_type = ? AND entity_id = ? AND embedding_provider = ? AND embedding_model = ? AND status = '" + EmbeddingChunkStatus.COMPLETED.name() + "'";
 
-    private static final String DELETE_MODEL_DATA_SQL =
-        "DELETE FROM rag_embedding_chunks WHERE embedding_model = ?";
+    private static final String DELETE_ALL_DATA_SQL =
+        "DELETE FROM rag_embedding_chunks";
 
     private static final String FTS_SEARCH_SQL_PREFIX =
         "SELECT id, entity_type, entity_id, chunk_index, chunk_text, " +
@@ -600,20 +600,29 @@ public class PgVectorStore implements VectorStore {
     }
 
     @Override
-    public boolean deleteModelData(String embeddingModel) {
+    public boolean resetDimensions(int dimensions) {
+        if (dimensions < 1) {
+            Logger.error(PgVectorStore.class, "Invalid RAG embedding dimensions: " + dimensions);
+            return false;
+        }
+
         String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null) {
-            Logger.println(PgVectorStore.class, "RAG datasource not available, skipping schema drop");
+            Logger.println(PgVectorStore.class, "RAG datasource not available, skipping dimension reset");
             return false;
         }
 
         try {
             SimpleQuery sq = new SimpleQuery(dsName);
-            sq.execute(DELETE_MODEL_DATA_SQL, embeddingModel);
-            Logger.println(PgVectorStore.class, "RAG pgvector table dropped successfully");
+            sq.execute(DROP_HNSW_INDEX_SQL);
+            sq.execute(DELETE_ALL_DATA_SQL);
+            sq.execute("ALTER TABLE rag_embedding_chunks ALTER COLUMN embedding TYPE vector(" + dimensions + ") USING embedding::vector(" + dimensions + ")");
+            if (recreateHnswIndex() == false) return false;
+
+            Logger.println(PgVectorStore.class, "RAG embedding data deleted and vector dimensions updated to " + dimensions);
             return true;
         } catch (Exception e) {
-            Logger.error(PgVectorStore.class, "Error dropping RAG pgvector table: " + e.getMessage());
+            Logger.error(PgVectorStore.class, "Error resetting RAG vector dimensions: " + e.getMessage());
             return false;
         }
     }

@@ -24,6 +24,8 @@ public class RagEmbeddingStatService {
 
     public static final String GROUP_INDEXING = "90-embedding-indexing";
     public static final String GROUP_SEARCH = "91-embedding-search";
+    public static final String NAME_INDEXING = "RAG-EMB-INDEX";
+    public static final String NAME_SEARCH = "RAG-EMB-SEARCH";
 
     private final AssistantDefinitionRepository assistantRepository;
     private final AiStatRepository aiStatRepository;
@@ -36,11 +38,11 @@ public class RagEmbeddingStatService {
     }
 
     public AssistantDefinitionEntity getIndexingAssistant() {
-        return getOrCreateAssistant(GROUP_INDEXING, CloudToolsForCore.getDomainId());
+        return getOrCreateAssistant(NAME_INDEXING, GROUP_INDEXING, CloudToolsForCore.getDomainId());
     }
 
     public AssistantDefinitionEntity getSearchAssistant() {
-        return getOrCreateAssistant(GROUP_SEARCH, CloudToolsForCore.getDomainId());
+        return getOrCreateAssistant(NAME_SEARCH, GROUP_SEARCH, CloudToolsForCore.getDomainId());
     }
 
     public void recordIndexingTokens(AssistantDefinitionEntity assistant, int usedTokens) {
@@ -56,19 +58,19 @@ public class RagEmbeddingStatService {
         AiStatService.addRecord(assistant.getId(), usedTokens, aiStatRepository, null);
     }
 
-    private AssistantDefinitionEntity getOrCreateAssistant(String groupName, Integer domainId) {
-        Optional<AssistantDefinitionEntity> existing = assistantRepository.findFirstByGroupNameAndDomainId(groupName, domainId);
+    private synchronized AssistantDefinitionEntity getOrCreateAssistant(String name, String groupName, Integer domainId) {
+        Optional<AssistantDefinitionEntity> existing = assistantRepository.findFirstByNameAndDomainIdOrderByIdAsc(name, domainId);
         if (existing.isPresent()) return existing.get();
 
         String providerId = getDefaultProviderId();
         try {
-            AssistantDefinitionEntity created = buildAssistant(groupName, providerId, domainId);
+            AssistantDefinitionEntity created = buildAssistant(name, groupName, providerId, domainId);
             created = assistantRepository.save(created);
             AiAssistantsService.clearCache();
             return created;
         } catch (RuntimeException ex) {
-            Logger.error(RagEmbeddingStatService.class, "Failed to create RAG embedding stats assistant for groupName=" + groupName + ", provider=" + providerId + ", domainId=" + domainId + ", error=" + ex.getMessage());
-            Optional<AssistantDefinitionEntity> fallback = assistantRepository.findFirstByGroupNameAndDomainId(groupName, domainId);
+            Logger.error(RagEmbeddingStatService.class, "Failed to create RAG embedding stats assistant for name=" + name + ", provider=" + providerId + ", domainId=" + domainId + ", error=" + ex.getMessage());
+            Optional<AssistantDefinitionEntity> fallback = assistantRepository.findFirstByNameAndDomainIdOrderByIdAsc(name, domainId);
             return fallback.orElse(null);
         }
     }
@@ -78,9 +80,9 @@ public class RagEmbeddingStatService {
         return Tools.isEmpty(providerId) ? "openai" : providerId.trim().toLowerCase(java.util.Locale.ROOT);
     }
 
-    private AssistantDefinitionEntity buildAssistant(String groupName, String providerId, Integer domainId) {
+    private AssistantDefinitionEntity buildAssistant(String name, String groupName, String providerId, Integer domainId) {
         AssistantDefinitionEntity assistant = new AssistantDefinitionEntity();
-        assistant.setName(GROUP_INDEXING.equals(groupName) ? "RAG-EMB-INDEX" : "RAG-EMB-SEARCH");
+        assistant.setName(name);
         assistant.setDescription(GROUP_INDEXING.equals(groupName) ? "System assistant for embedding indexing statistics" : "System assistant for embedding search statistics");
         assistant.setAction("text_embedding");
         assistant.setClassName(EmbeddingService.class.getName());

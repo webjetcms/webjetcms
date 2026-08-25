@@ -13,77 +13,89 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
+import com.webjetcms.ai.AiClient;
 import com.webjetcms.ai.AiProviderConfig;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.components.ai.providers.gemini.GeminiService;
+import sk.iway.iwcm.components.ai.providers.openai.OpenAiService;
+import sk.iway.iwcm.components.ai.providers.openrouter.OpenRouterService;
 
 class WebjetAiConfigurationServiceTest {
 
     private static final String[] MODIFIED_KEYS = {
-        WebjetAiConfigKeys.OPENAI_API_KEY,
-        WebjetAiConfigKeys.GEMINI_API_KEY,
-        WebjetAiConfigKeys.OPENROUTER_API_KEY
+        OpenAiService.API_KEY,
+        GeminiService.API_KEY,
+        OpenRouterService.API_KEY
     };
 
-    private final WebjetAiConfigurationService service = new WebjetAiConfigurationService();
     private final Map<String, String> originalValues = new HashMap<>();
     private final Map<String, Integer> originalIntValues = new HashMap<>();
+    private WebjetAiConfigurationService service;
+    private OpenAiService openAi;
+    private GeminiService gemini;
+    private OpenRouterService openRouter;
 
     @BeforeEach
     void rememberConstants() {
+        service = new WebjetAiConfigurationService();
+        AiClient aiClient = org.mockito.Mockito.mock(AiClient.class);
+        openAi = new OpenAiService(aiClient, service);
+        gemini = new GeminiService(aiClient, service);
+        openRouter = new OpenRouterService(aiClient, service);
         for (String key : MODIFIED_KEYS) {
             originalValues.put(key, Constants.getString(key));
         }
         originalIntValues.put(
-            WebjetAiConfigKeys.PROVIDER_CONNECT_TIMEOUT_SECONDS,
-            Constants.getInt(WebjetAiConfigKeys.PROVIDER_CONNECT_TIMEOUT_SECONDS)
+            WebjetAiConfigurationService.PROVIDER_CONNECT_TIMEOUT_SECONDS,
+            Constants.getInt(WebjetAiConfigurationService.PROVIDER_CONNECT_TIMEOUT_SECONDS)
         );
         originalIntValues.put(
-            WebjetAiConfigKeys.PROVIDER_RESPONSE_TIMEOUT_SECONDS,
-            Constants.getInt(WebjetAiConfigKeys.PROVIDER_RESPONSE_TIMEOUT_SECONDS)
+            WebjetAiConfigurationService.PROVIDER_RESPONSE_TIMEOUT_SECONDS,
+            Constants.getInt(WebjetAiConfigurationService.PROVIDER_RESPONSE_TIMEOUT_SECONDS)
         );
     }
 
     @AfterEach
-    void restoreConstants() {
+    void restoreConstants() throws Exception {
         originalValues.forEach(Constants::setString);
         originalIntValues.forEach(Constants::setInt);
     }
 
     @Test
     void mapsExistingConstantsToTypedProviderConfiguration() {
-        Constants.setString(WebjetAiConfigKeys.OPENAI_API_KEY, "openai-secret");
-        Constants.setString(WebjetAiConfigKeys.GEMINI_API_KEY, "gemini-secret");
-        Constants.setString(WebjetAiConfigKeys.OPENROUTER_API_KEY, "router-secret");
-        Constants.setInt(WebjetAiConfigKeys.PROVIDER_CONNECT_TIMEOUT_SECONDS, 7);
-        Constants.setInt(WebjetAiConfigKeys.PROVIDER_RESPONSE_TIMEOUT_SECONDS, 0);
+        Constants.setString(OpenAiService.API_KEY, "openai-secret");
+        Constants.setString(GeminiService.API_KEY, "gemini-secret");
+        Constants.setString(OpenRouterService.API_KEY, "router-secret");
+        Constants.setInt(WebjetAiConfigurationService.PROVIDER_CONNECT_TIMEOUT_SECONDS, 7);
+        Constants.setInt(WebjetAiConfigurationService.PROVIDER_RESPONSE_TIMEOUT_SECONDS, 0);
 
-        AiProviderConfig openAi = service.resolve("openai");
-        AiProviderConfig gemini = service.resolve("gemini");
-        AiProviderConfig openRouter = service.resolve("openrouter");
+        AiProviderConfig openAiConfig = service.resolve(openAi);
+        AiProviderConfig geminiConfig = service.resolve(gemini);
+        AiProviderConfig openRouterConfig = service.resolve(openRouter);
 
-        assertEquals("openai-secret", openAi.apiKey());
-        assertEquals("gemini-secret", gemini.apiKey());
-        assertEquals("router-secret", openRouter.apiKey());
-        assertEquals("https://www.webjetcms.com/", gemini.trustedHeaders().get("Referer"));
-        assertEquals("WebJET CMS", openRouter.trustedHeaders().get("X-Title"));
-        assertEquals(7000, openAi.connectTimeoutMillis());
-        assertEquals(0, openAi.responseTimeoutMillis());
-        assertFalse(openAi.toString().contains("openai-secret"));
+        assertEquals("openai-secret", openAiConfig.apiKey());
+        assertEquals("gemini-secret", geminiConfig.apiKey());
+        assertEquals("router-secret", openRouterConfig.apiKey());
+        assertEquals("https://www.webjetcms.com/", geminiConfig.trustedHeaders().get("Referer"));
+        assertEquals("WebJET CMS", openRouterConfig.trustedHeaders().get("X-Title"));
+        assertEquals(7000, openAiConfig.connectTimeoutMillis());
+        assertEquals(0, openAiConfig.responseTimeoutMillis());
+        assertFalse(openAiConfig.toString().contains("openai-secret"));
     }
 
     @Test
     void availabilityAndCacheRevisionFollowRuntimeKeyChanges() {
-        Constants.setString(WebjetAiConfigKeys.OPENAI_API_KEY, "");
-        assertFalse(service.isConfigured("openai"));
+        Constants.setString(OpenAiService.API_KEY, "");
+        assertFalse(service.isConfigured(openAi));
 
-        Constants.setString(WebjetAiConfigKeys.OPENAI_API_KEY, "first-secret");
-        assertTrue(service.isConfigured("openai"));
-        String firstRevision = service.modelCacheDiscriminator("openai");
-        assertEquals(firstRevision, service.modelCacheDiscriminator("openai"));
+        Constants.setString(OpenAiService.API_KEY, "first-secret");
+        assertTrue(service.isConfigured(openAi));
+        String firstRevision = service.modelCacheDiscriminator(openAi);
+        assertEquals(firstRevision, service.modelCacheDiscriminator(openAi));
 
-        Constants.setString(WebjetAiConfigKeys.OPENAI_API_KEY, "second-secret");
-        String secondRevision = service.modelCacheDiscriminator("openai");
+        Constants.setString(OpenAiService.API_KEY, "second-secret");
+        String secondRevision = service.modelCacheDiscriminator(openAi);
         assertNotEquals(firstRevision, secondRevision);
         assertFalse(secondRevision.contains("second-secret"));
     }
@@ -95,16 +107,16 @@ class WebjetAiConfigurationServiceTest {
         sameDomainRequest.setSecure(true);
         sameDomainRequest.addHeader("Referer", "https://customer.example/admin/v9/");
 
-        AiProviderConfig gemini = service.resolve("gemini", sameDomainRequest);
-        AiProviderConfig openRouter = service.resolve("openrouter", sameDomainRequest);
+        AiProviderConfig geminiConfig = service.resolve(gemini, sameDomainRequest);
+        AiProviderConfig openRouterConfig = service.resolve(openRouter, sameDomainRequest);
 
         assertEquals(
             "https://customer.example/",
-            gemini.trustedHeaders().get("Referer")
+            geminiConfig.trustedHeaders().get("Referer")
         );
         assertEquals(
             "https://customer.example/",
-            openRouter.trustedHeaders().get("HTTP-Referer")
+            openRouterConfig.trustedHeaders().get("HTTP-Referer")
         );
 
         MockHttpServletRequest foreignRequest = new MockHttpServletRequest();
@@ -112,7 +124,7 @@ class WebjetAiConfigurationServiceTest {
         foreignRequest.setSecure(true);
         foreignRequest.addHeader("Referer", "https://attacker.example/collect");
 
-        AiProviderConfig safeFallback = service.resolve("openrouter", foreignRequest);
+        AiProviderConfig safeFallback = service.resolve(openRouter, foreignRequest);
         assertEquals(
             "https://customer.example/",
             safeFallback.trustedHeaders().get("HTTP-Referer")
@@ -121,7 +133,7 @@ class WebjetAiConfigurationServiceTest {
 
     @Test
     void keepsModelCacheRevisionStableWhenRequestsAlternateDomains() {
-        Constants.setString(WebjetAiConfigKeys.OPENAI_API_KEY, "shared-secret");
+        Constants.setString(OpenAiService.API_KEY, "shared-secret");
         MockHttpServletRequest firstDomain = new MockHttpServletRequest();
         firstDomain.setServerName("first.example");
         firstDomain.setSecure(true);
@@ -129,11 +141,11 @@ class WebjetAiConfigurationServiceTest {
         secondDomain.setServerName("second.example");
         secondDomain.setSecure(true);
 
-        String firstRevision = service.modelCacheDiscriminator("openai", firstDomain);
-        String secondRevision = service.modelCacheDiscriminator("openai", secondDomain);
+        String firstRevision = service.modelCacheDiscriminator(openAi, firstDomain);
+        String secondRevision = service.modelCacheDiscriminator(openAi, secondDomain);
 
         assertNotEquals(firstRevision, secondRevision);
-        assertEquals(firstRevision, service.modelCacheDiscriminator("openai", firstDomain));
-        assertEquals(secondRevision, service.modelCacheDiscriminator("openai", secondDomain));
+        assertEquals(firstRevision, service.modelCacheDiscriminator(openAi, firstDomain));
+        assertEquals(secondRevision, service.modelCacheDiscriminator(openAi, secondDomain));
     }
 }
