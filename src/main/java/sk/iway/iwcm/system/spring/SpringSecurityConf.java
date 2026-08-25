@@ -211,6 +211,9 @@ public class SpringSecurityConf {
 			configureSecurity(http, "sk.iway." + Constants.getLogInstallName() + ".SpringConfig");
 		}
 
+		// Keep the public fallback after all project-specific authorization rules.
+		http.authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll());
+
 		SecurityFilterChain chain = http.build();
 		SpringAppInitializer.dtDiff("configureSecurity END");
 		return chain;
@@ -240,9 +243,12 @@ public class SpringSecurityConf {
 				ConfigurableSecurity cs = (ConfigurableSecurity) configClass.getDeclaredConstructor().newInstance();
 				cs.configureSecurity(http);
 			}
+		} catch (ClassNotFoundException e)
+		{
+			Logger.debug(SpringSecurityConf.class, "Optional security configuration class not found: " + className);
 		} catch (Exception e)
 		{
-			// config class asi neexistuje.
+			throw new IllegalStateException("Unable to configure security from " + className, e);
 		}
 
 		Logger.info(SpringSecurityConf.class, "configure - SpringSecurityConf - end - " + className);
