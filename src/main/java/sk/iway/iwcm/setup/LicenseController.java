@@ -1,5 +1,7 @@
 package sk.iway.iwcm.setup;
 
+import java.io.IOException;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -10,8 +12,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.InitServlet;
-import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.system.spring.WebjetBootstrapMode;
 
 @Controller
@@ -60,8 +63,11 @@ public class LicenseController {
         return null;
     }
 
-    private boolean isAdminAccessDenied(HttpServletRequest request, HttpServletResponse response) throws java.io.IOException {
-        if (PathFilter.checkAdmin(request)) return false;
+    private boolean isAdminAccessDenied(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        if ("public".equals(Constants.getString("clusterMyNodeType")) == false
+                && Tools.checkIpAccess(request, "adminEnableIPs")) {
+            return false;
+        }
 
         response.sendError(HttpServletResponse.SC_NOT_FOUND);
         return true;

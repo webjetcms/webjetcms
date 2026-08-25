@@ -57,12 +57,13 @@ public class LicenseActionService {
 		UserDetails user = validateUserLogin(licenseForm, errors);
 
 		if (errors.get("ERROR_KEY") != null) {
-			LogonTools.setLoginBlocked(request);
 			clearPassword(licenseForm);
+			LogonTools.setLoginBlocked(request);
 			Logger.error(LicenseActionService.class,"su nejake chyby v logovacom formulari");
 			setModel(model, licenseForm, true, errors.get("ERROR_KEY"), true, false);
 			return ERROR;
 		}
+		clearPassword(licenseForm);
 
 		String license = licenseForm.getLicense();
 		if (license == null) {
@@ -177,7 +178,7 @@ public class LicenseActionService {
                 return null;
 			} else {
 				//Update user last logon value
-				(new SimpleQuery()).execute("UPDATE  users SET last_logon=? WHERE user_id=?", new Date());
+				(new SimpleQuery()).execute("UPDATE  users SET last_logon=? WHERE user_id=?", new Date(), user.getUserId());
 			}
 		}
 
