@@ -132,6 +132,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 - Konfigurace - přidána možnost **Nastavit dočasně**, která nastaví hodnotu konfigurační proměnné pouze na aktuálním uzlu bez uložení do databáze. Po restartu se obnoví hodnota uložená v databázi (#291).
 
+![](admin/setup/configuration/page.png)
+
 - Automatizované úlohy - přidána možnost [manuálně spustit úlohu](admin/settings/cronjob/README.md) na uzlu nebo skupině uzlů nastavené v poli **Běží na uzlu**. Původní lokální spuštění na aktuálním uzlu zůstává dostupné samostatným tlačítkem (#58718).
 
 - Překladové klíče - přidána stromová struktura prefixů překladových klíčů s filtrováním seznamu podle zvoleného prefixu (#58714).

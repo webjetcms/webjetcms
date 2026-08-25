@@ -150,6 +150,7 @@ export const dataTableInit = options => {
     DATA.keyboardSave = (typeof options.keyboardSave !== "undefined") ? options.keyboardSave : true;
     DATA.stateSave = (typeof options.stateSave !== "undefined") ? options.stateSave : true;
     DATA.autoHeight = (typeof options.autoHeight !== "undefined") ? options.autoHeight : true;
+    //https://datatables.net/ref/core/option/autoWidth
     DATA.autoWidth = (typeof options.autoWidth !== "undefined") ? options.autoWidth : true;
     DATA.customFieldsUpdateColumns = (typeof options.customFieldsUpdateColumns !== "undefined") ? options.customFieldsUpdateColumns : false;
     DATA.customFieldsUpdateColumnsPreserveVisibility = (typeof options.customFieldsUpdateColumnsPreserveVisibility !== "undefined") ? options.customFieldsUpdateColumnsPreserveVisibility : false;

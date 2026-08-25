@@ -1284,47 +1284,6 @@ div.dt-button-collection div.btn-group button:last-child {
             display: none;
             width: 0 !important;
         }
-
-        // Keep computed and painted selection colors identical for reliable text contrast.
-        tbody > tr.selected > td,
-        tbody > tr > td.selected {
-            background-color: $primary;
-            box-shadow: none;
-            transition: none;
-        }
-
-        tbody > tr.dte-highlight > td {
-            background-color: $nice-primary;
-            box-shadow: none;
-            transition: none;
-        }
-    }
-
-    .configuration-value__database {
-        color: $dark-60;
-
-        &[tabindex] {
-            cursor: help;
-            text-decoration-line: underline;
-            text-decoration-style: dotted;
-            text-underline-offset: 2px;
-        }
-
-        &[tabindex]:focus-visible {
-            border-radius: 2px;
-            outline: 2px solid currentColor;
-            outline-offset: 2px;
-        }
-    }
-
-    tbody > tr.selected .configuration-value__database,
-    tbody > tr > td.selected .configuration-value__database {
-        color: $white;
-    }
-
-    tbody > tr.dte-highlight .configuration-value,
-    tbody > tr.dte-highlight .configuration-value__database {
-        color: $secondary;
     }
 
     td.dt-style-text-wrap .datatable-column-width, td.dt-style-json .datatable-column-width {

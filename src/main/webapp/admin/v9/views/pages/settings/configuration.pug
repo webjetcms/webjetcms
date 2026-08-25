@@ -2,6 +2,34 @@ extends ../../partials/layout
 
 block content
 
+    style.
+        .configuration-value__database {
+            color: var(--wj-dark-60);
+        }
+
+        .configuration-value__database[tabindex] {
+            cursor: help;
+            text-decoration-line: underline;
+            text-decoration-style: dotted;
+            text-underline-offset: 2px;
+        }
+
+        .configuration-value__database[tabindex]:focus-visible {
+            border-radius: 2px;
+            outline: 2px solid currentColor;
+            outline-offset: 2px;
+        }
+
+        tbody > tr.selected .configuration-value__database,
+        tbody > tr > td.selected .configuration-value__database {
+            color: white;
+        }
+
+        tbody > tr.dte-highlight .configuration-value,
+        tbody > tr.dte-highlight .configuration-value__database {
+            color: var(--wj-secondary);
+        }
+
     script.
         window.helpLink = "/admin/setup/configuration/README";
 

@@ -132,6 +132,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 - Configuration - added **Set Temporarily** option, which sets the value of the configuration variable only on the current node without saving it to the database. After a restart, the value saved in the database will be restored (#291).
 
+![](admin/setup/configuration/page.png)
+
 - Automated tasks - added option to [manually run task](admin/settings/cronjob/README.md) on node or node group set in **Runs on node** field. Original local run on current node remains available with separate button (#58718).
 
 - Translation keys - added tree structure of translation key prefixes with filtering of the list by the selected prefix (#58714).
