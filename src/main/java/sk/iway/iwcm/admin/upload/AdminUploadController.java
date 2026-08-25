@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.users.UsersDB;
 
 @Controller
 @RequestMapping("/admin/upload/")
@@ -36,14 +38,14 @@ public class AdminUploadController {
     @ResponseBody
     public String overwrite(@RequestParam String fileKey, @RequestParam String destinationFolder, @RequestParam String fileName, @RequestParam String uploadType, HttpServletRequest request)
     {
-        return processOverwrite(fileKey, destinationFolder, fileName, false, request);
+        return processOverwrite(fileKey, destinationFolder, fileName, uploadType, false, request);
     }
 
     @PostMapping(path="/keepboth", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public String keepboth(@RequestParam String fileKey, @RequestParam String destinationFolder, @RequestParam String fileName, @RequestParam String uploadType, HttpServletRequest request)
     {
-        return processOverwrite(fileKey, destinationFolder, fileName, true, request);
+        return processOverwrite(fileKey, destinationFolder, fileName, uploadType, true, request);
     }
 
     /**
@@ -51,23 +53,31 @@ public class AdminUploadController {
      * @param fileKey
      * @param destinationFolder
      * @param fileName
+     * @param uploadType
      * @param keepBoth - ak je nastavene na true ponecha oba subory, novemu da suffix -xxx
      * @param request
      * @return
      */
-    private static String processOverwrite(String fileKey, String destinationFolder, String fileName, boolean keepBoth, HttpServletRequest request) {
+    private static String processOverwrite(String fileKey, String destinationFolder, String fileName, String uploadType, boolean keepBoth, HttpServletRequest request) {
         JSONObject output = new JSONObject();
 
         boolean success = false;
-        String errorKey = null;
+        destinationFolder = AdminUploadValidator.normalizeDestinationFolder(destinationFolder);
+        fileName = AdminUploadValidator.normalizeFileName(fileName);
+
+        Identity user = UsersDB.getCurrentUser(request);
+        // File content and size were already checked by the chunk endpoint.
+        String errorKey = AdminUploadValidator.validateConflict(
+            destinationFolder, fileName, uploadType, 0, user, request
+        );
 
         String destinationFileName = fileName;
 
-        if (keepBoth) {
+        if (errorKey == null && keepBoth) {
             destinationFileName = UploadService.getKeppBothFileName(destinationFolder, fileName);
         }
 
-        if (destinationFileName!=null) {
+        if (errorKey == null && destinationFileName!=null) {
 
             try {
                 UploadService uploadService = new UploadService(fileKey, destinationFolder, destinationFileName, request);
@@ -83,7 +93,7 @@ public class AdminUploadController {
                 errorKey = "multiple_files_upload.upload_error";
             }
         }
-        else {
+        else if (errorKey == null) {
             errorKey = "multiple_files_upload.upload_error";
         }
 
