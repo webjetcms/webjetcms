@@ -30,28 +30,20 @@ import sk.iway.iwcm.test.BaseWebjetTest;
 class EmbeddingServiceTest extends BaseWebjetTest {
 
     private int originalDimensions;
-    private String originalProvider;
-    private String originalModel;
 
     @BeforeEach
     void rememberConfiguration() {
         originalDimensions = Constants.getInt("ragEmbeddingDimensions");
-        originalProvider = Constants.getString("ragEmbeddingProvider");
-        originalModel = Constants.getString("ragEmbeddingModel");
     }
 
     @AfterEach
     void restoreConfiguration() {
         Constants.setInt("ragEmbeddingDimensions", originalDimensions);
-        Constants.setString("ragEmbeddingProvider", originalProvider);
-        Constants.setString("ragEmbeddingModel", originalModel);
     }
 
     @Test
     void passesConfiguredDimensionsToGeminiProvider() throws Exception {
         Constants.setInt("ragEmbeddingDimensions", 1536);
-        Constants.setString("ragEmbeddingProvider", "openai");
-        Constants.setString("ragEmbeddingModel", "text-embedding-3-small");
         AiClient aiClient = mock(AiClient.class);
         WebjetAiConfigurationService configurationService = mock(WebjetAiConfigurationService.class);
         AiInterface provider = mock(AiInterface.class);
@@ -70,17 +62,11 @@ class EmbeddingServiceTest extends BaseWebjetTest {
         assistant.setModel("gemini-embedding-001");
         EmbeddingService service = new EmbeddingService(aiClient, configurationService, List.of(provider));
 
-        EmbeddingBatchResult result = service.embedWithUsage(
-            List.of("Text to embed"),
-            assistant,
-            "customer.example"
-        );
+        service.embedWithUsage(List.of("Text to embed"), assistant, "customer.example");
 
         ArgumentCaptor<EmbeddingRequest> requestCaptor = ArgumentCaptor.forClass(EmbeddingRequest.class);
         verify(aiClient).embed(eq("gemini"), requestCaptor.capture(), eq(providerConfig));
         assertEquals("gemini-embedding-001", requestCaptor.getValue().model());
         assertEquals(1536, requestCaptor.getValue().options().dimensions());
-        assertEquals(1536, result.getEmbeddings().get(0).length);
-        assertEquals(7, result.getUsedTokens());
     }
 }

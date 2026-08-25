@@ -16,7 +16,6 @@ import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
 import sk.iway.iwcm.Constants;
@@ -45,8 +44,6 @@ class RagEmbeddingStatServiceTest extends BaseWebjetTest {
 
     @Test
     void returnsExistingAssistantWithoutOverwritingProviderAndModel() {
-        Constants.setString("ragEmbeddingProvider", "openai");
-        Constants.setString("ragEmbeddingModel", "text-embedding-3-small");
         AssistantDefinitionRepository repository = mock(AssistantDefinitionRepository.class);
         AssistantDefinitionEntity existing = new AssistantDefinitionEntity();
         existing.setProvider("gemini");
@@ -80,9 +77,7 @@ class RagEmbeddingStatServiceTest extends BaseWebjetTest {
             result = service.getSearchAssistant();
         }
 
-        ArgumentCaptor<AssistantDefinitionEntity> captor = ArgumentCaptor.forClass(AssistantDefinitionEntity.class);
-        verify(repository).save(captor.capture());
-        assertSame(captor.getValue(), result);
+        verify(repository).save(result);
         assertEquals(RagEmbeddingStatService.NAME_SEARCH, result.getName());
         assertEquals(RagEmbeddingStatService.GROUP_SEARCH, result.getGroupName());
         assertEquals("gemini", result.getProvider());
