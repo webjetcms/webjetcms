@@ -629,7 +629,7 @@ Scenario("p50: date picker", async ({ I, DT, DTE, a11y }) => {
     const input = "#DTE_Field_publishDate";
     I.executeScript(selector => document.querySelector(selector).focus(), input);
     I.waitForVisible("div.dt-datetime[role='dialog']", 5);
-    I.waitForElement("div.dt-datetime .dt-datetime-calendar button[tabindex='0']:focus", 5);
+    I.waitForElement(`${input}:focus`, 5);
 
     const state = await I.executeScript(inputSelector => {
         const dateInput = document.querySelector(inputSelector);
@@ -646,10 +646,8 @@ Scenario("p50: date picker", async ({ I, DT, DTE, a11y }) => {
             dayLabels: days.map(button => button.getAttribute("aria-label")),
             dayTabStops: days.filter(button => button.tabIndex === 0).length,
             expanded: dateInput.getAttribute("aria-expanded"),
-            focusedDay: days.includes(document.activeElement),
-            focusedDaySelectedOrCurrent: document.activeElement.closest("td")?.classList.contains("selected") ||
-                document.activeElement.closest("td")?.classList.contains("now"),
             hasPopup: dateInput.getAttribute("aria-haspopup"),
+            inputFocused: document.activeElement === dateInput,
             instructions: instructions?.textContent,
             monthLabel: dialog.querySelector(".dt-datetime-month")?.getAttribute("aria-label"),
             nextLabel: dialog.querySelector(".dt-datetime-iconRight button")?.getAttribute("aria-label"),
@@ -663,8 +661,7 @@ Scenario("p50: date picker", async ({ I, DT, DTE, a11y }) => {
 
     I.assertEqual(state.hasPopup, "dialog", "The date input must announce that it opens a dialog");
     I.assertEqual(state.expanded, "true", "The date input must announce the open picker");
-    I.assertTrue(state.focusedDay, "Opening the date picker must focus a calendar day");
-    I.assertTrue(state.focusedDaySelectedOrCurrent, "Opening the date picker must focus the selected or current day");
+    I.assertTrue(state.inputFocused, "Opening the date picker must keep focus on the editable input");
     I.assertEqual(state.dialogRole, "dialog", "The date picker must expose the dialog role");
     I.assertTrue(state.dialogLabel.length > 0, "The date picker dialog must have an accessible name");
     I.assertTrue(state.dialogDescription.length > 0, "The date picker dialog must reference its instructions");
@@ -680,6 +677,14 @@ Scenario("p50: date picker", async ({ I, DT, DTE, a11y }) => {
     I.assertTrue(state.selectedDays <= 1, "At most one calendar day may be marked as selected");
     I.assertTrue(state.timeLabels.length > 0 && state.timeLabels.every(label => label.length > 0) && state.timePressed,
         "Every time option must expose its name and selected state");
+
+    I.pressKey("ArrowDown");
+    I.waitForElement("div.dt-datetime .dt-datetime-calendar button[tabindex='0']:focus", 5);
+    const focusedDaySelectedOrCurrent = await I.executeScript(() =>
+        document.activeElement.closest("td")?.classList.contains("selected") ||
+        document.activeElement.closest("td")?.classList.contains("now")
+    );
+    I.assertTrue(focusedDaySelectedOrCurrent, "Arrow Down must focus the selected or current calendar day");
 
     I.pressKey("Tab");
     I.waitForElement("div.dt-datetime :focus", 5);

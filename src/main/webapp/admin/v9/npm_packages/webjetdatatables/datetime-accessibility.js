@@ -184,20 +184,6 @@ function focusDay(instance, date) {
     target.focus();
 }
 
-function focusActiveDay(instance) {
-    const container = instance.dom.container[0];
-    const input = instance.dom.input[0];
-    if (instance.c.alwaysVisible || input.type === 'hidden') return;
-
-    setTimeout(() => {
-        if (instance.dom.container.is(':visible') === false) return;
-        if (document.activeElement !== input && container.contains(document.activeElement) === false) return;
-
-        const target = container.querySelector('.dt-datetime-calendar button[tabindex="0"]') || getFocusableElements(container)[0];
-        target?.focus({preventScroll: true});
-    }, 0);
-}
-
 function closeAndRestoreFocus(instance) {
     const input = instance.dom.input[0];
     if (input.isConnected && input.disabled === false) input.focus({preventScroll: true});
@@ -338,7 +324,6 @@ export function initDateTimeAccessibility() {
     wrapPrototypeMethod(prototype, '_show', instance => {
         updateDateTimeContent(instance);
         instance.dom.input.attr('aria-expanded', 'true');
-        focusActiveDay(instance);
     });
     wrapPrototypeMethod(prototype, '_hide', instance => {
         instance.dom.input.attr('aria-expanded', 'false');
