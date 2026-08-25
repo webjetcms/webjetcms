@@ -121,6 +121,10 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Pridaná možnosť nastaviť voliteľné pole ako povinné (#58413).
 - Pridané nové typy voliteľných polí [prepínač a zaškrtávacie pole](frontend/webpages/customfields/custom-fields-settings.md#rozdiel-medzi-selectmultiselect-a-radiocheckbox) s podporou statických možností aj prepojenia na číselník. Typ `multiselect` teraz tiež podporuje [prepojenie na číselník](frontend/webpages/customfields/custom-fields-settings.md#zdroj-možností). Pôvodný typ `enumeration` bol nahradený prepínačom zdroja možností pri typoch `select`, `multiselect`, `radio` a `checkbox` kde sa pre všetky tieto typy polí načítajú možnosti z prepojeného číselníka (#58637).
 
+### Prístupnosť
+
+- Administrácia - rozšírené ovládanie klávesnicou a podpora čítačiek obrazovky pre dátové tabuľky, modálne okná a notifikácie, bublinová nápoveda, výber dátumu a farby a HTML editor. Upravené bolo presúvanie a vracanie zamerania, výber riadkov a buniek, prístupné názvy a ARIA stavy, označenie povinných polí, kontrasty ovládacích prvkov a odkaz na preskočenie na hlavný obsah. Doplnené boli automatizované regresné `a11y` testy pre tieto scenáre (#235).
+
 ### Multiweb
 
 - Pridaná možnosť [vytvoriť novú doménu](install/multiweb/config.md) z riadiacej domény, vytvorí aj používateľa, skupinu šablón, šablónu a systémové stránky (#58525).

@@ -395,6 +395,17 @@ body.modal-open {
                 }
             }
         }
+
+        .DTE_Field {
+            div.form-group-tooltip {
+                .btn-tooltip {
+                    &:hover, &:active, &:focus, &:focus-visible {
+                        background-color: $secondary;
+                        color: $white;
+                    }
+                }
+            }
+        }
     }
 
     &-header {
@@ -427,7 +438,7 @@ body.modal-open {
                 color: $secondary;
             }
 
-            &:hover {
+            &:hover, &:active, &:focus, &:focus-visible {
                 color: $white;
                 background-color: $secondary;
                 .ti {
@@ -854,7 +865,7 @@ div.DTE_Bubble_Background {
                         color: $secondary;
                     }
 
-                    &:hover {
+                    &:hover, &:active, &:focus, &:focus-visible {
                         color: $white;
                         background-color: $secondary;
                         .ti {
@@ -1362,6 +1373,10 @@ div.DTED.show[data-action=remove] {
 }
 
 //tootip MD format
+div.tooltip.wj-tooltip-hoverable {
+    pointer-events: auto;
+}
+
 div.tooltip.show {
     opacity: unset;
     div.tooltip-inner {
