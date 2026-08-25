@@ -135,6 +135,8 @@ class ExternalWarRegistrationContractTest {
             .getAnnotation(MultipartConfig.class));
         assertNotNull(sk.iway.iwcm.admin.upload.AdminUploadServlet.class
             .getAnnotation(MultipartConfig.class));
+        assertNull(sk.iway.iwcm.filebrowser.MultipleFileUploadAction.class
+            .getAnnotation(MultipartConfig.class));
     }
 
     private Document parseDescriptor(Path descriptorPath) throws Exception {

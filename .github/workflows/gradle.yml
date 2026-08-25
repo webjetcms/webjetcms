@@ -89,6 +89,8 @@ jobs:
         set -euo pipefail
 
         tomcat_container="webjetcms-external-tomcat"
+        multipart_source=""
+        multipart_response_file=""
 
         show_tomcat_logs() {
           docker logs --tail 500 "${tomcat_container}" 2>&1 || true
@@ -96,10 +98,33 @@ jobs:
 
         cleanup_tomcat() {
           docker rm --force "${tomcat_container}" >/dev/null 2>&1 || true
+          if [[ -n "${multipart_source}" ]]; then
+            rm -f -- "${multipart_source}"
+          fi
+          if [[ -n "${multipart_response_file}" ]]; then
+            rm -f -- "${multipart_response_file}"
+          fi
         }
 
         trap cleanup_tomcat EXIT
         cleanup_tomcat
+
+        # Use an ephemeral, public test token so this regression check also runs on fork pull requests.
+        # The fixed SHA-512 fixture uses the explicitly configured 100 password-hash iterations.
+        mariadb -h 127.0.0.1 -P 33006 -u root -proot_password webjetcms_web --execute "
+          INSERT INTO _conf_ (name, value, date_changed)
+          VALUES ('passwordUseHashIterations', '100', NULL)
+          ON DUPLICATE KEY UPDATE value = '100', date_changed = NULL;
+          INSERT INTO _conf_ (name, value, date_changed)
+          VALUES ('springSecurityAllowedAuths', 'basic,api-token', NULL)
+          ON DUPLICATE KEY UPDATE value = 'basic,api-token', date_changed = NULL;
+          INSERT INTO _conf_ (name, value, date_changed)
+          VALUES ('logonTokenHeaderName', 'x-auth-token', NULL)
+          ON DUPLICATE KEY UPDATE value = 'x-auth-token', date_changed = NULL;
+          UPDATE users
+          SET api_key = '0123456789abcdef|4ca4a865e602f4a1ed95348c27cf90c7f2e21b8efa0bc8c3d3a9558fada27bad744ba2757e2f877ce6e7e6de9b95c7f3a5ffc98a0386d6ff0b25fcd89d85d2c3'
+          WHERE login = 'admin';
+        "
 
         docker run --detach \
           --name "${tomcat_container}" \
@@ -160,6 +185,50 @@ jobs:
 
         echo "Production WAR started successfully on external Tomcat 11 " \
           "(/admin/ HTTP ${http_status}, /captcha.jpg ${captcha_response})."
+
+        multipart_file_name="external-tomcat-multipart-regression.txt"
+        multipart_file_content="external-tomcat-multipart-body"
+        multipart_source="$(mktemp)"
+        multipart_response_file="$(mktemp)"
+        printf '%s' "${multipart_file_content}" > "${multipart_source}"
+        multipart_auth_header="$(printf '%s' 'admin:webjet-external-war-multipart-token' | base64 --wrap=0)"
+
+        multipart_http_status="$(curl --silent --show-error \
+          --output "${multipart_response_file}" --write-out '%{http_code}' \
+          --connect-timeout 3 --max-time 30 \
+          --header "x-auth-token: ${multipart_auth_header}" \
+          --header 'Referer: http://127.0.0.1:18080/admin/' \
+          --form 'returnJson=true' \
+          --form 'type=fbrowser' \
+          --form 'dir=/files' \
+          --form "file=@${multipart_source};filename=${multipart_file_name};type=text/plain" \
+          http://127.0.0.1:18080/admin/multiplefileupload.do)"
+        multipart_response="$(<"${multipart_response_file}")"
+
+        if [[ "${multipart_http_status}" != "200" ]] \
+            || ! grep -Eq '"result"[[:space:]]*:[[:space:]]*true' <<<"${multipart_response}" \
+            || ! grep -Fq '"dir":"/files"' <<<"${multipart_response}" \
+            || ! grep -Fq "\"fileName\":\"${multipart_file_name}\"" <<<"${multipart_response}"; then
+          echo "Legacy multipart upload failed (HTTP ${multipart_http_status}): ${multipart_response}"
+          show_tomcat_logs
+          exit 1
+        fi
+
+        uploaded_file="/usr/local/tomcat/webapps/ROOT/files/${multipart_file_name}"
+        if ! docker exec "${tomcat_container}" test -f "${uploaded_file}"; then
+          echo "Legacy multipart endpoint reported success, but ${uploaded_file} was not created."
+          show_tomcat_logs
+          exit 1
+        fi
+
+        uploaded_content="$(docker exec "${tomcat_container}" cat "${uploaded_file}")"
+        if [[ "${uploaded_content}" != "${multipart_file_content}" ]]; then
+          echo "Legacy multipart endpoint wrote unexpected file content."
+          show_tomcat_logs
+          exit 1
+        fi
+
+        echo "Legacy Commons FileUpload multipart POST succeeded on external Tomcat 11."
 
   dependency-submission:
     # Skip workflow for WIP pull requests (same logic as build job)

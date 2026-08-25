@@ -154,7 +154,6 @@ public class SpringBootStarter extends SpringBootServletInitializer {
     static class ProductionServletInfrastructureConfiguration {
 
         private static final Set<String> MULTIPART_SERVLET_CLASS_NAMES = Set.of(
-            sk.iway.iwcm.filebrowser.MultipleFileUploadAction.class.getName(),
             sk.iway.iwcm.components.upload.XhrFileUploadServlet.class.getName(),
             sk.iway.iwcm.admin.upload.AdminUploadServlet.class.getName()
         );
@@ -380,15 +379,16 @@ public class SpringBootStarter extends SpringBootServletInitializer {
 
         /**
          * Register MultipleFileUploadAction servlet for /admin/multiplefileupload.do paths.
+         *
+         * This legacy servlet parses the raw request body with Commons FileUpload.
+         * It must not receive a Servlet multipart configuration, otherwise the
+         * container may consume the body before the servlet's parser sees it.
          */
         @Bean
-        @ConditionalOnBooleanProperty(name = "spring.servlet.multipart.enabled", matchIfMissing = true)
-        public ServletRegistrationBean<sk.iway.iwcm.filebrowser.MultipleFileUploadAction> multipleFileUploadServletRegistration(
-                MultipartConfigElement multipartConfigElement) {
+        public ServletRegistrationBean<sk.iway.iwcm.filebrowser.MultipleFileUploadAction> multipleFileUploadServletRegistration() {
             ServletRegistrationBean<sk.iway.iwcm.filebrowser.MultipleFileUploadAction> registration = new ServletRegistrationBean<>(
                 new sk.iway.iwcm.filebrowser.MultipleFileUploadAction(), "/admin/multiplefileupload.do");
             registration.setName("MultipleFileUploadAction");
-            registration.setMultipartConfig(multipartConfigElement);
             return registration;
         }
 

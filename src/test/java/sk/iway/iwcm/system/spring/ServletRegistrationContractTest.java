@@ -2,6 +2,7 @@ package sk.iway.iwcm.system.spring;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -187,11 +188,11 @@ class ServletRegistrationContractTest {
         assertServletRegistration(productionConfiguration.logoffServletRegistration(),
             sk.iway.iwcm.LogoffServlet.class, "LogOff", "/logoff.do", "/admin/logoff.do");
         ServletRegistrationBean<?> multipleFileUpload =
-            productionConfiguration.multipleFileUploadServletRegistration(multipartConfig);
+            productionConfiguration.multipleFileUploadServletRegistration();
         assertServletRegistration(multipleFileUpload,
             sk.iway.iwcm.filebrowser.MultipleFileUploadAction.class, "MultipleFileUploadAction",
             "/admin/multiplefileupload.do");
-        assertSame(multipartConfig, multipleFileUpload.getMultipartConfig());
+        assertNull(multipleFileUpload.getMultipartConfig());
         assertServletRegistration(productionConfiguration.thumbServletRegistration(),
             sk.iway.iwcm.editor.ThumbServlet.class, "thumbServlet",
             "/admin/thumb/*", "/thumb/*", "/tumbn/*");
@@ -220,7 +221,7 @@ class ServletRegistrationContractTest {
     }
 
     @Test
-    void externalWarMultipartInitializerConfiguresContainerOwnedUploadServlets()
+    void externalWarMultipartInitializerConfiguresOnlyPartApiServlets()
             throws ServletException {
         MultipartConfigElement multipartConfig = new MultipartConfigElement(
             null, 39_000_000L, 39_000_000L, 65_536
@@ -251,7 +252,7 @@ class ServletRegistrationContractTest {
 
         verify(xhrUpload).setMultipartConfig(multipartConfig);
         verify(adminUpload).setMultipartConfig(multipartConfig);
-        verify(multipleFileUpload).setMultipartConfig(multipartConfig);
+        verify(multipleFileUpload, never()).setMultipartConfig(any(MultipartConfigElement.class));
         verify(unrelatedServlet, never()).setMultipartConfig(any(MultipartConfigElement.class));
     }
 

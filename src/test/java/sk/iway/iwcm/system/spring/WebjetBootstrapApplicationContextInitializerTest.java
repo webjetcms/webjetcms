@@ -2,6 +2,7 @@ package sk.iway.iwcm.system.spring;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -213,7 +214,7 @@ class WebjetBootstrapApplicationContextInitializerTest {
                 "characterEncodingFilterRegistration", FilterRegistrationBean.class
             ).getFilter());
             MultipartConfigElement multipartConfig = applicationContext.getBean(MultipartConfigElement.class);
-            assertSame(multipartConfig, applicationContext.getBean(
+            assertNull(applicationContext.getBean(
                 "multipleFileUploadServletRegistration", ServletRegistrationBean.class
             ).getMultipartConfig());
             assertSame(multipartConfig, applicationContext.getBean(
@@ -256,7 +257,10 @@ class WebjetBootstrapApplicationContextInitializerTest {
             assertTrue(applicationContext.getBeansOfType(CharacterEncodingFilter.class).isEmpty());
             assertTrue(applicationContext.getBeansOfType(MultipartConfigElement.class).isEmpty());
             assertFalse(applicationContext.containsBean("characterEncodingFilterRegistration"));
-            assertFalse(applicationContext.containsBean("multipleFileUploadServletRegistration"));
+            assertTrue(applicationContext.containsBean("multipleFileUploadServletRegistration"));
+            assertNull(applicationContext.getBean(
+                "multipleFileUploadServletRegistration", ServletRegistrationBean.class
+            ).getMultipartConfig());
             assertFalse(applicationContext.containsBean("xhrFileUploadServletRegistration"));
             assertFalse(applicationContext.containsBean("adminUploadServletRegistration"));
         }
