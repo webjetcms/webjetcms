@@ -62,6 +62,7 @@ public class InputDataDTO {
     Integer imageCount;
     String imageSize;
     String imageQuality;
+    String imageRatio;
 
     //append or replace - relevant only for PageBuilder editor
     String replaceMode;

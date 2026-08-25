@@ -57,11 +57,6 @@ public class OpenRouterService extends LibrarySupportLogic implements AiAssitant
     }
 
     @Override
-    public String getBonusHtml(AssistantDefinitionEntity assistant, Prop prop) {
-        return null;
-    }
-
-    @Override
     public List<String> getFieldsToShow(String action) {
         if ("create".equals(action) || "edit".equals(action)) return List.of("model", "useStreaming");
         return new ArrayList<>();

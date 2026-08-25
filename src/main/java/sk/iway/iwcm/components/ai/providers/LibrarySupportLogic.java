@@ -23,6 +23,7 @@ import com.webjetcms.ai.AiRequest;
 import com.webjetcms.ai.AiResponse;
 import com.webjetcms.ai.BinaryContent;
 import com.webjetcms.ai.GeneratedMedia;
+import com.webjetcms.ai.ImageOptionDefinition;
 import com.webjetcms.ai.ImageOptions;
 import com.webjetcms.ai.ModelInfo;
 import com.webjetcms.ai.TokenUsage;
@@ -59,6 +60,9 @@ public abstract class LibrarySupportLogic implements AiInterface {
     private static final String METHOD_IMAGE_RESPONSE = "getAiImageResponse";
     private static final String IMAGE_AUDIT_RESPONSE =
         "Provider response for image contains binary data, so image payloads are not audited.";
+    private static final String IMAGE_RESOLUTION_OPTION = "resolution";
+    private static final String IMAGE_RATIO_OPTION = "aspectRatio";
+    private static final String IMAGE_RATIO_SNAKE_OPTION = "aspect_ratio";
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -109,7 +113,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
             IncludesHandler includesHandler = IncludesHandler.protectIncludes(inputData);
             AiResponse response = aiClient.execute(
                 getProviderId(),
-                prepareRequest(AiOperation.TEXT, assistant, inputData, includesHandler),
+                prepareProviderRequest(AiOperation.TEXT, assistant, inputData, includesHandler),
                 configurationService.resolve(this, request)
             );
 
@@ -155,7 +159,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
 
             AiResponse response = aiClient.stream(
                 getProviderId(),
-                prepareRequest(AiOperation.TEXT, assistant, inputData, includeHandler),
+                prepareProviderRequest(AiOperation.TEXT, assistant, inputData, includeHandler),
                 configurationService.resolve(this, request),
                 delta -> includeHandler.handleLine(delta, writer)
             );
@@ -201,7 +205,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
             AiOperation operation = imageOperation(inputData);
             AiResponse response = aiClient.execute(
                 getProviderId(),
-                prepareRequest(operation, assistant, inputData, null),
+                prepareProviderRequest(operation, assistant, inputData, null),
                 configurationService.resolve(this, request)
             );
 
@@ -255,11 +259,186 @@ public abstract class LibrarySupportLogic implements AiInterface {
         return configurationService;
     }
 
+    @Override
+    public String getBonusHtml(AssistantDefinitionEntity assistant, Prop prop) {
+        AiOperation operation = assistantImageOperation(assistant);
+        if (operation == null || Tools.isEmpty(assistant.getModel())) return "";
+
+        Map<String, ImageOptionDefinition> definitions = aiClient.imageOptions(
+            getProviderId(),
+            assistant.getModel(),
+            operation
+        );
+        List<String> controls = new ArrayList<>();
+
+        ImageOptionDefinition count = definitions.get(ImageOptions.COUNT);
+        if (count != null) controls.add(imageCountControl(count, prop));
+
+        String sizeKey = sizeOptionKey(definitions);
+        if (sizeKey != null) addChoiceControl(
+            controls,
+            "imageSize",
+            "components.ai_assistants.imageSize",
+            definitions.get(sizeKey),
+            prop
+        );
+        addChoiceControl(
+            controls,
+            "imageQuality",
+            "components.ai_assistants.imageQuality",
+            definitions.get(ImageOptions.QUALITY),
+            prop
+        );
+
+        String ratioKey = ratioOptionKey(definitions);
+        if (ratioKey != null) addChoiceControl(
+            controls,
+            "imageRatio",
+            "components.ai_assistants.imageRatio",
+            definitions.get(ratioKey),
+            prop
+        );
+        if (controls.isEmpty()) return "";
+
+        String columnClass = switch (controls.size()) {
+            case 1 -> "col-sm-12";
+            case 2 -> "col-sm-6";
+            case 3 -> "col-sm-4";
+            default -> "col-sm-3";
+        };
+        StringBuilder html = new StringBuilder("<div class='bonus-content row mt-3'>");
+        for (String control : controls) {
+            html.append("<div class='").append(columnClass).append("'>").append(control).append("</div>");
+        }
+        return html.append("</div>").toString();
+    }
+
+    private AiRequest prepareProviderRequest(
+        AiOperation operation,
+        AssistantDefinitionEntity assistant,
+        InputDataDTO inputData,
+        IncludesHandler includesHandler
+    ) throws IOException {
+        return prepareRequest(
+            operation,
+            assistant,
+            inputData,
+            includesHandler,
+            supportedImageOptions(operation, assistant, inputData)
+        );
+    }
+
+    private ImageOptions supportedImageOptions(
+        AiOperation operation,
+        AssistantDefinitionEntity assistant,
+        InputDataDTO inputData
+    ) {
+        if (operation != AiOperation.GENERATE_IMAGE && operation != AiOperation.EDIT_IMAGE) {
+            return basicImageOptions(inputData);
+        }
+
+        Map<String, ImageOptionDefinition> definitions = aiClient.imageOptions(
+            getProviderId(),
+            assistant.getModel(),
+            operation
+        );
+        ImageOptions.Builder options = ImageOptions.builder();
+        if (definitions.containsKey(ImageOptions.COUNT) && inputData.getImageCount() != null) {
+            options.count(inputData.getImageCount());
+        }
+        if (definitions.containsKey(ImageOptions.QUALITY) && Tools.isNotEmpty(inputData.getImageQuality())) {
+            options.quality(inputData.getImageQuality());
+        }
+
+        String sizeKey = sizeOptionKey(definitions);
+        if (sizeKey != null && Tools.isNotEmpty(inputData.getImageSize())) {
+            if (ImageOptions.SIZE.equals(sizeKey)) options.size(inputData.getImageSize());
+            else options.providerOption(sizeKey, inputData.getImageSize());
+        }
+
+        String ratioKey = ratioOptionKey(definitions);
+        if (ratioKey != null && Tools.isNotEmpty(inputData.getImageRatio())) {
+            options.providerOption(ratioKey, inputData.getImageRatio());
+        }
+        return options.build();
+    }
+
+    private static AiOperation assistantImageOperation(AssistantDefinitionEntity assistant) {
+        if (SupportedActions.GENERATE_IMAGE.getAction().equals(assistant.getAction())) {
+            return AiOperation.GENERATE_IMAGE;
+        }
+        if (SupportedActions.EDIT_IMAGE.getAction().equals(assistant.getAction())) {
+            return AiOperation.EDIT_IMAGE;
+        }
+        return null;
+    }
+
+    private static String sizeOptionKey(Map<String, ImageOptionDefinition> definitions) {
+        if (definitions.containsKey(ImageOptions.SIZE)) return ImageOptions.SIZE;
+        if (definitions.containsKey(IMAGE_RESOLUTION_OPTION)) return IMAGE_RESOLUTION_OPTION;
+        return null;
+    }
+
+    private static String ratioOptionKey(Map<String, ImageOptionDefinition> definitions) {
+        if (definitions.containsKey(IMAGE_RATIO_OPTION)) return IMAGE_RATIO_OPTION;
+        if (definitions.containsKey(IMAGE_RATIO_SNAKE_OPTION)) return IMAGE_RATIO_SNAKE_OPTION;
+        return null;
+    }
+
+    private static String imageCountControl(ImageOptionDefinition definition, Prop prop) {
+        long minimum = definition.minimum() == null ? 1 : definition.minimum();
+        String maximum = definition.maximum() == null ? "" : " max='" + definition.maximum() + "'";
+        return """
+            <label for='bonusContent-imageCount'>%s</label>
+            <input id='bonusContent-imageCount' type='number' class='form-control' min='%d'%s value='%d'>
+            """.formatted(
+                Tools.escapeHtml(prop.getText("components.ai_assistants.imageCount")),
+                minimum,
+                maximum,
+                minimum
+            );
+    }
+
+    private static void addChoiceControl(
+        List<String> controls,
+        String fieldName,
+        String labelKey,
+        ImageOptionDefinition definition,
+        Prop prop
+    ) {
+        if (definition == null || definition.allowedValues().isEmpty()) return;
+        StringBuilder options = new StringBuilder();
+        for (String value : definition.allowedValues()) {
+            String escapedValue = Tools.escapeHtml(value);
+            options.append("<option value='").append(escapedValue).append("'>")
+                .append(escapedValue).append("</option>");
+        }
+        controls.add("""
+            <label for='bonusContent-%s'>%s</label>
+            <select id='bonusContent-%s' class='form-control'>%s</select>
+            """.formatted(
+                fieldName,
+                Tools.escapeHtml(prop.getText(labelKey)),
+                fieldName,
+                options
+            ));
+    }
+
     static AiRequest prepareRequest(
         AiOperation operation,
         AssistantDefinitionEntity assistant,
         InputDataDTO inputData,
         IncludesHandler includesHandler
+    ) throws IOException {
+        return prepareRequest(operation, assistant, inputData, includesHandler, basicImageOptions(inputData));
+    }
+
+    private static AiRequest prepareRequest(
+        AiOperation operation,
+        AssistantDefinitionEntity assistant,
+        InputDataDTO inputData,
+        IncludesHandler includesHandler,
+        ImageOptions imageOptions
     ) throws IOException {
         AiPromptTemplate.ExpansionResult expansion = AiAssistantsService.expandPromptMacros(
             assistant.getInstructions(),
@@ -281,7 +460,15 @@ public abstract class LibrarySupportLogic implements AiInterface {
             userPrompt = "";
         }
 
-        AiRequest request = buildRequest(operation, assistant, inputData, instructions, inputText, userPrompt);
+        AiRequest request = buildRequest(
+            operation,
+            assistant,
+            inputData,
+            instructions,
+            inputText,
+            userPrompt,
+            imageOptions
+        );
         EnumSet<UntrustedSource> suspiciousSources = EnumSet.noneOf(UntrustedSource.class);
         suspiciousSources.addAll(expansion.suspiciousSources());
         suspiciousSources.addAll(request.suspiciousSources());
@@ -303,17 +490,33 @@ public abstract class LibrarySupportLogic implements AiInterface {
         String inputText,
         String userPrompt
     ) throws IOException {
+        return buildRequest(
+            operation,
+            assistant,
+            inputData,
+            instructions,
+            inputText,
+            userPrompt,
+            basicImageOptions(inputData)
+        );
+    }
+
+    private static AiRequest buildRequest(
+        AiOperation operation,
+        AssistantDefinitionEntity assistant,
+        InputDataDTO inputData,
+        String instructions,
+        String inputText,
+        String userPrompt,
+        ImageOptions imageOptions
+    ) throws IOException {
         AiRequest.Builder builder = AiRequest.builder()
             .operation(operation)
             .model(assistant.getModel())
             .instructions(instructions)
             .userPrompt(userPrompt)
             .store(Tools.isTrue(assistant.getUseTemporal()) == false)
-            .imageOptions(new ImageOptions(
-                inputData.getImageCount(),
-                inputData.getImageSize(),
-                inputData.getImageQuality()
-            ));
+            .imageOptions(imageOptions);
 
         if (InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType())) {
             if (inputData.getInputFile() == null) return builder.build();
@@ -322,6 +525,14 @@ public abstract class LibrarySupportLogic implements AiInterface {
             builder.inputText(inputText);
         }
         return builder.build();
+    }
+
+    private static ImageOptions basicImageOptions(InputDataDTO inputData) {
+        return new ImageOptions(
+            inputData.getImageCount(),
+            inputData.getImageSize(),
+            inputData.getImageQuality()
+        );
     }
 
     GeneratedImageName getGeneratedImageName(

@@ -130,14 +130,17 @@ Scenario('ai buttons usage', async ({I, DTE}) => {
     });
 
     I.say("Test image values for generation");
-    I.click( locate(btnAiAction).withText("Vytvoriť nový obrázok") );
-    within(containerAiContent, () => {
-        I.seeElement("textarea#ai-user-prompt");
-
-        I.say("Test that openai bonus content is here");
-        I.seeElement( locate("div.bonus-content").find("input#bonusContent-imageCount") );
-        I.seeElement( locate("div.bonus-content").find("select#bonusContent-imageSize") );
-        I.seeElement( locate("div.bonus-content").find("select#bonusContent-imageQuality") );
+    I.click(
+        locate(btnAiAction)
+            .withText("Vytvoriť nový obrázok")
+            .withChild(locate("span.provider").withText(openAiId))
+    );
+    I.seeElement(locate(containerAiContent).find("textarea#ai-user-prompt"));
+    await checkImageOptions(I, {
+        count: true,
+        size: true,
+        quality: true,
+        ratio: false
     });
 });
 
@@ -272,13 +275,12 @@ Scenario('test OpenAI AI image answers - WITH user input', async ({I, DTE}) => {
 
     I.say("CHECK user input");
     I.seeElement( locate(containerAiContent).find("textarea#ai-user-prompt") );
-
-    I.seeElement( locate(containerAiContent).find( locate(".bonus-content > div:nth-child(1) > label").withText("Počet obrázkov") ) );
-    I.seeElement( locate(containerAiContent).find(".bonus-content > div:nth-child(1) > input#bonusContent-imageCount") );
-    I.seeElement( locate(containerAiContent).find( locate(".bonus-content > div:nth-child(2) > label").withText("Rozmer") ) );
-    I.seeElement( locate(containerAiContent).find(".bonus-content > div:nth-child(2) > select#bonusContent-imageSize") );
-    I.seeElement( locate(containerAiContent).find( locate(".bonus-content > div:nth-child(3) > label").withText("Kvalita") ) );
-    I.seeElement( locate(containerAiContent).find(".bonus-content > div:nth-child(3) > select#bonusContent-imageQuality") );
+    await checkImageOptions(I, {
+        count: true,
+        size: ["auto", "1024x1024", "1024x1536", "1536x1024"],
+        quality: ["auto", "low", "medium", "high"],
+        ratio: false
+    });
 
     I.say("Request 2 images of a car");
     I.fillField(locate(containerAiContent).find("textarea#ai-user-prompt"), "car black and white");
@@ -298,8 +300,12 @@ Scenario('test Gemini AI image answers - WITH user input', async ({I, DTE}) => {
 
     I.say("CHECK user input");
     I.seeElement( locate(containerAiContent).find("textarea#ai-user-prompt") );
-
-    // GEMINI do not have image settings like OpenAI .. aka count, quality and size
+    await checkImageOptions(I, {
+        count: false,
+        size: false,
+        quality: false,
+        ratio: true
+    });
 
     I.say("Request image of a car");
     I.fillField(locate(containerAiContent).find("textarea#ai-user-prompt"), "car black and white");
@@ -318,8 +324,12 @@ Scenario('test OpenRouter AI image answers - WITH user input', async ({I, DTE}) 
 
     I.say("CHECK user input");
     I.seeElement( locate(containerAiContent).find("textarea#ai-user-prompt") );
-
-    // OpenRouter have image settings like OpenAI ... BUT we do not implement them
+    await checkImageOptions(I, {
+        count: true,
+        size: false,
+        quality: false,
+        ratio: true
+    });
 
     I.say("Request image of a car");
     I.fillField(locate(containerAiContent).find("textarea#ai-user-prompt"), "car black and white");
@@ -573,4 +583,50 @@ function checkImageInfo(I) {
 
     I.seeElement( locate(containerAiContent + " > .image-info > div:nth-child(2) > label").withText("Umiestnenie") );
     I.seeInField( locate(containerAiContent + " > .image-info > div:nth-child(2)").find("input.form-control"), originalImageLocation);
+}
+
+async function checkImageOptions(I, expected) {
+    I.say("checkImageOptions");
+
+    const controls = {
+        count: {
+            field: "imageCount",
+            selector: "input#bonusContent-imageCount",
+            label: "Počet obrázkov"
+        },
+        size: {
+            field: "imageSize",
+            selector: "select#bonusContent-imageSize",
+            label: "Rozmer"
+        },
+        quality: {
+            field: "imageQuality",
+            selector: "select#bonusContent-imageQuality",
+            label: "Kvalita"
+        },
+        ratio: {
+            field: "imageRatio",
+            selector: "select#bonusContent-imageRatio",
+            label: "Pomer strán"
+        }
+    };
+
+    for (const [name, control] of Object.entries(controls)) {
+        const selector = `${containerAiContent} ${control.selector}`;
+        const expectation = expected[name];
+        if (expectation === false) {
+            I.dontSeeElement(selector);
+            continue;
+        }
+
+        I.seeElement(selector);
+        I.seeElement(
+            locate(`${containerAiContent} label[for='bonusContent-${control.field}']`)
+                .withText(control.label)
+        );
+        if (Array.isArray(expectation)) {
+            const values = await I.grabAttributeFromAll(`${selector} option`, "value");
+            I.assertDeepEqual(values, expectation, `Unexpected ${name} image options`);
+        }
+    }
 }
