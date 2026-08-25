@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -58,6 +59,7 @@ import sk.iway.iwcm.users.UsersDB;
  */
 public class SearchAction
 {
+	private static final Pattern SQL_ORDER_TYPE_PATTERN = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)?");
 
 	/**
 	 * Identifikator 'score' pri pouziti oracletext hodnota 10 je cisto nahodna, ide o to aby v dotaze bolo pouzite to iste cislo :)
@@ -652,7 +654,7 @@ public class SearchAction
 
 			String order_var = "ASC";
 			String order = getParamAttribute("order", request, "asc");
-			String orderType = getParamAttribute("orderType", request, "sort_priority");
+			String orderType = getValidatedOrderType("orderType", request, "sort_priority");
 			if ("desc".equalsIgnoreCase(order))
 			{
 				order_var = "DESC";
@@ -691,7 +693,7 @@ public class SearchAction
 			//dalsie order by
 			for (i=2; i<=5; i++)
 			{
-				orderType = getParamAttribute("orderType"+i, request, null);
+				orderType = getValidatedOrderType("orderType"+i, request, null);
 				if (Tools.isNotEmpty(orderType))
 				{
 					order_var = "ASC";
@@ -1196,6 +1198,32 @@ public class SearchAction
 			ret = ret.replace(';', ' ');
 		}
 		return (ret);
+	}
+
+	/**
+	 * Returns a valid unquoted SQL identifier used in an ORDER BY clause. A qualified
+	 * identifier such as {@code d.title} is allowed, while SQL expressions and syntax
+	 * characters are rejected.
+	 *
+	 * @param name request parameter or attribute name
+	 * @param request current request
+	 * @param defaultValue value returned when the supplied identifier is missing or invalid
+	 * @return validated SQL identifier or {@code defaultValue}
+	 */
+	static String getValidatedOrderType(String name, HttpServletRequest request, String defaultValue)
+	{
+		String orderType = request.getParameter(name);
+		if (orderType == null)
+		{
+			orderType = (String) request.getAttribute(name);
+		}
+
+		if (orderType == null || SQL_ORDER_TYPE_PATTERN.matcher(orderType).matches() == false)
+		{
+			return defaultValue;
+		}
+
+		return orderType;
 	}
 
 	/**
