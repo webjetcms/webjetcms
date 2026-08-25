@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.system.spring.WebjetBootstrapMode;
 
 @Controller
@@ -23,6 +24,7 @@ public class LicenseController {
     @GetMapping("/wjerrorpages/setup/license")
     public String setup(Model model, HttpServletRequest request, HttpServletResponse response) {
         try {
+            if (isAdminAccessDenied(request, response)) return null;
             if (SetupCompletionState.rejectIfCompleted(request, response)) return null;
             //Set initial params into model (!!)
             if (InitServlet.isValid()==false) {
@@ -41,6 +43,7 @@ public class LicenseController {
         boolean started = false;
         boolean completed = false;
         try {
+            if (isAdminAccessDenied(request, response)) return null;
             started = SetupCompletionState.tryStart(request, response);
             if (started == false) return null;
             if (InitServlet.isValid()==false) {
@@ -55,5 +58,12 @@ public class LicenseController {
         }
 
         return null;
+    }
+
+    private boolean isAdminAccessDenied(HttpServletRequest request, HttpServletResponse response) throws java.io.IOException {
+        if (PathFilter.checkAdmin(request)) return false;
+
+        response.sendError(HttpServletResponse.SC_NOT_FOUND);
+        return true;
     }
 }
