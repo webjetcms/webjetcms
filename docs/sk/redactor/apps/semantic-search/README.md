@@ -79,7 +79,7 @@ RAG odpoveď používa iba obsah získaný zo sémantického indexu. Ak sa v kon
 
 ## Sémantický index
 
-Na využitie sémantického vyhľadávania je potrebné mať indexovaný obsah pomocou sémantického indexovania, ktoré je dostupné v administrátorskom rozhraní. Poskytovateľ a model sa nastavujú v systémových AI asistentoch; po otvorení stránky **Sémantický index** sa aktuálna indexovacia konfigurácia zobrazí v informačnom oznámení. Indexy rôznych poskytovateľov a modelov môžu existovať súčasne. Viac informácií nájdete v časti [Sémantický index](./embedding-chunks.md).
+Na využitie sémantického vyhľadávania je potrebné mať indexovaný obsah pomocou sémantického indexovania, ktoré je dostupné v administrátorskom rozhraní. Poskytovateľ a model sa nastavujú v systémových AI asistentoch `RAG-EMB-INDEX` a `RAG-EMB-SEARCH`; aby sa index použil, obe hodnoty vyhľadávacieho asistenta sa musia presne zhodovať s vytvoreným indexom. Po otvorení stránky **Sémantický index** sa aktuálna indexovacia konfigurácia zobrazí v informačnom oznámení. Indexy rôznych poskytovateľov a modelov môžu existovať súčasne. Viac informácií nájdete v časti [Sémantický index](./embedding-chunks.md).
 
 ## Detaily implementácie a nastavenia
 

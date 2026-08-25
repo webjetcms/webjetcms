@@ -55,7 +55,7 @@ Pri pridaní nového serverového poskytovateľa sa preto embedding komunikácia
 
 Ak WebJET CMS beží priamo na PostgreSQL, vektorová databáza sa použije automaticky bez ďalšej konfigurácie.
 
-Musí byť nastavený datasource ako v prípade [poolman-docker-pgsql.xml](../../../../../../src/main/resources/poolman-docker-pgsql.xml).
+Musí byť nastavený datasource ako v prípade [poolman-docker-pgsql.xml](../../../../../../src/main/resources/poolman-docker-pgsql.xml). Ak používate viac schém, parameter JDBC `currentSchema` musí obsahovať schému s RAG tabuľkami aj schému s funkciami WebJET CMS, napríklad `currentSchema=public,webjet_cms`.
 
 ### Samostatná vektorová databáza
 
@@ -91,7 +91,7 @@ Aktivácia a nastavenie sa robí v [Konfigurácii](../../../../admin/setup/confi
 
 | Premenná | Predvolená hodnota | Popis |
 | --- | --- | --- |
-| `ragEmbeddingProvider` | `openai` | Poskytovateľ použitý iba pri automatickom vytvorení chýbajúceho embedding asistenta. Podporované hodnoty sú `openai`, `gemini`, `openrouter`. |
+| `ragEmbeddingProvider` | `openai` | Poskytovateľ použitý iba pri automatickom vytvorení chýbajúceho embedding asistenta. Vstavané hodnoty sú `openai`, `gemini`, `openrouter`; použiť možno aj identifikátor správne zaregistrovaného vlastného poskytovateľa. |
 | `ragEmbeddingModel` | `text-embedding-3-small` | Model použitý iba pri automatickom vytvorení chýbajúceho embedding asistenta. |
 | `ragEmbeddingDimensions` | `1536` | Počet dimenzií vektora. Musí zodpovedať použitému modelu a databázovej tabuľke. |
 | `ragEmbeddingChunkSize` | `1000` | Maximálna veľkosť jednej časti textu v znakoch. |
@@ -106,11 +106,13 @@ Ak asistent už existuje, jeho `provider` a `model` majú prednosť pred konfigu
 
 Indexy sú oddelené kombináciou poskytovateľa a modelu. Opätovné indexovanie nahradí iba dáta aktuálnej kombinácie, takže napríklad OpenAI a Gemini index tej istej stránky môžu existovať súčasne. Náhľad indexovania počíta iba indexy aktuálneho asistenta; náhľad odstránenia a odstránenie stránky pracujú so všetkými kombináciami.
 
-!>**Upozornenie:** Indexovací a vyhľadávací asistent musia používať kompatibilnú kombináciu poskytovateľa a modelu. Vyhľadávanie načíta iba indexy zodpovedajúce asistentovi `RAG-EMB-SEARCH`.
+Fronta `rag_index_queue` ukladá iba typ entity, ID a akciu. Poskytovateľ a model sa načítajú z asistenta `RAG-EMB-INDEX` až pri spracovaní položky. Ak potrebujete dokončiť indexovanie pôvodnou kombináciou, nechajte pred zmenou asistenta frontu úplne spracovať.
+
+!>**Upozornenie:** Indexovací a vyhľadávací asistent musia používať rovnaký identifikátor poskytovateľa a modelu. Vyhľadávanie načíta iba indexy, ktorých obe hodnoty sa presne zhodujú s asistentom `RAG-EMB-SEARCH`.
 
 !>**Upozornenie:** Staršie názvy `ragChunkSize` a `ragChunkOverlap` sa už nepoužívajú.
 
-!>**Upozornenie:** Pri zmene `ragEmbeddingDimensions` sa vymažú dáta pre aktuálny embedding model, pretože vektory nebudú kompatibilné. Po zmene modelu alebo dimenzie spustite úplné indexovanie obsahu.
+!>**Upozornenie:** Pri zmene `ragEmbeddingDimensions` sa vymažú všetky dáta z `rag_embedding_chunks` pre všetkých poskytovateľov a modely, upraví sa typ stĺpca `embedding` na nové `vector(N)` a znovu sa vytvorí HNSW index. Následne spustite úplné indexovanie obsahu. Samotná zmena modelu ostatné kombinácie nevymaže, ale novú kombináciu musíte zaindexovať.
 
 ### Vektorové vyhľadávanie
 
@@ -289,7 +291,7 @@ Dôležité stĺpce:
 
 !>**Upozornenie:** Stĺpec `embedding` nie je mapovaný cez JPA. Všetky operácie s vektormi prebiehajú cez natívne SQL dotazy v triede [PgVectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/PgVectorStore.java).
 
-Pri inicializácii schémy sa doplnia chýbajúce stĺpce `group_id`, `root_group_l1..3` a `embedding_provider`. Existujúcim embeddingom sa do `embedding_provider` nastaví aktuálna hodnota `ragEmbeddingProvider`. Dáta však nemajú hodnoty priečinkov spätne vyplnené, preto po aktualizácii spustite opätovné indexovanie.
+Pri migrácii schémy sa doplnia chýbajúce stĺpce `group_id`, `root_group_l1..3` a `embedding_provider`. Hodnoty priečinkov sa spätne doplnia pre existujúce záznamy platných webových stránok. Prázdny `embedding_provider` sa nastaví na aktuálnu hodnotu `ragEmbeddingProvider` a unikátnosť chunku sa rozšíri o kombináciu poskytovateľa a modelu. Keďže starší záznam neobsahoval poskytovateľa, doplnená hodnota nemusí zodpovedať poskytovateľovi, ktorý vektor skutočne vytvoril. Po aktualizácii preto spustite úplné indexovanie; obnovia sa tým aj záznamy, ktoré nebolo možné spätne priradiť k stránke.
 
 ## Odporúčania pre slovenský a český obsah
 
@@ -306,13 +308,13 @@ Pri ladení sa riaďte týmito odporúčaniami:
 
 Predvolený model `text-embedding-3-small` je viacjazyčný a slovenčinu/češtinu zvláda v dostatočnej kvalite pre väčšinu webových projektov. Ak požadujete vyššiu presnosť, k dispozícii sú tieto alternatívy:
 
-| Model | `ragEmbeddingModel` | `ragEmbeddingDimensions` | Kvalita pre SK/CZ | Poznámka |
+| Model | Model asistenta | `ragEmbeddingDimensions` | Kvalita pre SK/CZ | Poznámka |
 | --- | --- | --- | --- | --- |
 | OpenAI `text-embedding-3-small` | `text-embedding-3-small` | `1536` | Dobrá | Predvolený model - lacný a rýchly. |
 | OpenAI `text-embedding-3-large` | `text-embedding-3-large` | `3072` | Vysoká | Najpresnejší OpenAI viacjazyčný model, drahší než `small`. |
 | OpenAI `text-embedding-3-large` skrátený | `text-embedding-3-large` | `1024` alebo `1536` | Vysoká | Vďaka MRL je možné vektor skrátiť bez výraznej straty kvality. |
 
-!>**Upozornenie:** Všetky vektory v tabuľke `rag_embedding_chunks` musia mať dimenziu zodpovedajúcu definícii stĺpca `embedding`. Rôzni poskytovatelia a modely môžu existovať súčasne, ale musia generovať nakonfigurovaný počet dimenzií. Po zmene dimenzie musíte spustiť úplnú indexáciu obsahu.
+!>**Upozornenie:** Všetky vektory v tabuľke `rag_embedding_chunks` musia mať dimenziu zodpovedajúcu definícii stĺpca `embedding`. Rôzni poskytovatelia a modely môžu existovať súčasne, ale musia generovať nakonfigurovaný počet dimenzií. Zmena dimenzie odstráni všetky existujúce vektory a vyžaduje úplnú indexáciu obsahu.
 
 ### Čo je Matryoshka (MRL)
 
