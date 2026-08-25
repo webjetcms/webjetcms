@@ -82,7 +82,7 @@ public class ConfigurationService {
     private void setDisplayValue(ConfDetailsDto configurationDto) {
         String databaseValue = Objects.toString(configurationDto.getValue(), "");
         String currentValue = Objects.toString(Constants.getString(configurationDto.getName()), "");
-        String comparableDatabaseValue = Objects.toString(ConfDB.tryDecrypt(databaseValue), "");
+        String comparableDatabaseValue = Objects.toString(ConfDB.normalizeRuntimeValue(configurationDto.getName(), databaseValue), "");
 
         boolean runtimeValueDifferent = Objects.equals(currentValue, comparableDatabaseValue) == false;
         configurationDto.setRuntimeValueDifferent(runtimeValueDifferent);
@@ -120,7 +120,7 @@ public class ConfigurationService {
         }
 
         if (confDetailsDto.isTemporary()) {
-            Constants.setString(confDetailsDto.getName(), confDetailsDto.getValue());
+            ConfDB.setRuntimeValue(confDetailsDto.getName(), confDetailsDto.getValue());
             return confDetailsDto;
         }
 

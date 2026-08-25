@@ -30,7 +30,7 @@ Before(({ I, login, DT }) => {
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomText();
         name = "name-autotest-" + randomNumber;
-        value = "value-autotest-" + randomNumber+"<script>alert('TEST');</script> &#39; poKUS frame-ancestors 'self'";
+        value = "value-autotest-" + randomNumber+"<script>alert('TEST');</script> &#39; poKUS frame-ancestors 'self' \"quoted\"";
     }
     DT.addContext('config','#configurationDatatable_wrapper');
 });
@@ -178,6 +178,13 @@ Scenario('vyhladanie konfiguracnej premennej @baseTest', ({ I, DT }) => {
     I.pressKey('Enter', "input.dt-filter-value");
     DT.waitForLoader();
     I.see(value);
+
+    for (const specialValue of ["<script>", "</script>", '"quoted"']) {
+        I.fillField("input.dt-filter-value", specialValue);
+        I.pressKey('Enter', "input.dt-filter-value");
+        DT.waitForLoader();
+        I.see(name);
+    }
 });
 
 Scenario("upravenie konfiguracnej premennej @baseTest", ({ I, DTE }) => {

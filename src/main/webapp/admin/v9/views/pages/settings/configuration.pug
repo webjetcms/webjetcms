@@ -83,12 +83,7 @@ block content
                         '</div>';
                     }
                     if (type === "filter") {
-                        let filterValue = renderedValue
-                            .replaceAll("&", "&amp;")
-                            .replaceAll("<", "&lt;")
-                            .replaceAll(">", "&gt;")
-                            .replaceAll('"', "&quot;");
-                        return $.fn.DataTable.util.diacritics(filterValue);
+                        return $.fn.DataTable.util.diacritics(renderedValue);
                     }
                     if (type === "sort") return renderedValue;
                     return data;

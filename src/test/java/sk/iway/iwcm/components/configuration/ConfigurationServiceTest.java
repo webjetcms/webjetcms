@@ -29,6 +29,7 @@ class ConfigurationServiceTest {
         String changedName = "configurationServiceChangedValueTest";
         String sameName = "configurationServiceSameValueTest";
         String encryptedName = "configurationServiceEncryptedValueTest";
+        String linkTypeName = "linkType";
         String databaseValue = "database-value";
         String currentValue = "current-value";
         String sameValue = "same-value";
@@ -39,7 +40,8 @@ class ConfigurationServiceTest {
         ConfDetails changed = new ConfDetails(changedName, databaseValue);
         ConfDetails same = new ConfDetails(sameName, sameValue);
         ConfDetails encrypted = new ConfDetails(encryptedName, encryptedValue);
-        List<ConfDetails> databaseData = List.of(changed, same, encrypted);
+        ConfDetails linkType = new ConfDetails(linkTypeName, "html");
+        List<ConfDetails> databaseData = List.of(changed, same, encrypted, linkType);
 
         ConfDetails defaults = new ConfDetails(changedName, "default-value");
         defaults.setDescription("description");
@@ -50,13 +52,15 @@ class ConfigurationServiceTest {
                 MockedStatic<ConfDB> confDb = mockStatic(ConfDB.class)) {
             confDb.when(ConfDB::getConfig).thenReturn(databaseData);
             confDb.when(() -> ConfDB.filterConfDetailsByPerms(user, databaseData)).thenReturn(databaseData);
-            confDb.when(() -> ConfDB.tryDecrypt(databaseValue)).thenReturn(databaseValue);
-            confDb.when(() -> ConfDB.tryDecrypt(sameValue)).thenReturn(sameValue);
-            confDb.when(() -> ConfDB.tryDecrypt(encryptedValue)).thenReturn(decryptedValue);
+            confDb.when(() -> ConfDB.normalizeRuntimeValue(changedName, databaseValue)).thenReturn(databaseValue);
+            confDb.when(() -> ConfDB.normalizeRuntimeValue(sameName, sameValue)).thenReturn(sameValue);
+            confDb.when(() -> ConfDB.normalizeRuntimeValue(encryptedName, encryptedValue)).thenReturn(decryptedValue);
+            confDb.when(() -> ConfDB.normalizeRuntimeValue(linkTypeName, "html")).thenReturn("2");
             constants.when(Constants::getAllValues).thenReturn(List.of(defaults));
             constants.when(() -> Constants.getString(changedName)).thenReturn(currentValue);
             constants.when(() -> Constants.getString(sameName)).thenReturn(sameValue);
             constants.when(() -> Constants.getString(encryptedName)).thenReturn(decryptedValue);
+            constants.when(() -> Constants.getString(linkTypeName)).thenReturn("2");
 
             List<ConfDetailsDto> displayed = service.getAll(user);
 
@@ -69,6 +73,8 @@ class ConfigurationServiceTest {
             assertFalse(displayed.get(1).isRuntimeValueDifferent());
             assertEquals(encryptedValue, displayed.get(2).getDisplayValue());
             assertFalse(displayed.get(2).isRuntimeValueDifferent());
+            assertEquals("html", displayed.get(3).getDisplayValue());
+            assertFalse(displayed.get(3).isRuntimeValueDifferent());
             long changedId = displayed.get(0).getId();
             assertTrue(changedId > 0 && changedId <= 9_007_199_254_740_991L);
 
@@ -78,7 +84,7 @@ class ConfigurationServiceTest {
             assertTrue(changedEncrypted.isRuntimeValueDifferent());
 
             ConfDetails inserted = new ConfDetails("configurationServiceAInsertedTest", "inserted-value");
-            List<ConfDetails> shiftedDatabaseData = List.of(inserted, changed, same, encrypted);
+            List<ConfDetails> shiftedDatabaseData = List.of(inserted, changed, same, encrypted, linkType);
             confDb.when(ConfDB::getConfig).thenReturn(shiftedDatabaseData);
             confDb.when(() -> ConfDB.filterConfDetailsByPerms(user, shiftedDatabaseData)).thenReturn(shiftedDatabaseData);
 
@@ -111,15 +117,13 @@ class ConfigurationServiceTest {
         dto.setDatePrepared(new Date(123456789L));
         dto.setTemporary(true);
 
-        try (MockedStatic<Constants> constants = mockStatic(Constants.class);
-                MockedStatic<ConfDB> confDb = mockStatic(ConfDB.class);
+        try (MockedStatic<ConfDB> confDb = mockStatic(ConfDB.class);
                 MockedStatic<ClusterDB> clusterDb = mockStatic(ClusterDB.class)) {
             ConfDetailsDto saved = service.save(mock(Identity.class), dto);
 
             assertSame(dto, saved);
             assertEquals(value, saved.getValue());
-            constants.verify(() -> Constants.setString(name, value));
-            confDb.verifyNoInteractions();
+            confDb.verify(() -> ConfDB.setRuntimeValue(name, value));
             clusterDb.verifyNoInteractions();
             verifyNoInteractions(mapper);
         }
