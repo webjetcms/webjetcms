@@ -4,6 +4,7 @@ import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
@@ -21,8 +22,8 @@ import sk.iway.iwcm.doc.DebugTimer;
  *
  * Core initialization needs a started ServletContext and therefore runs from a
  * ServletContextInitializer before the other servlet/filter registrations.
- * Production post-initialization is deliberately deferred until
- * ApplicationReadyEvent, after context refresh.
+ * Production post-initialization runs after context refresh and before
+ * ApplicationRunner and CommandLineRunner beans.
  */
 @Configuration(proxyBeanMethods = false)
 public class SpringAppInitializer
@@ -58,11 +59,21 @@ public class SpringAppInitializer
 	}
 
 	@Bean
+	ApplicationListener<ApplicationStartedEvent> webjetApplicationStartedListener(
+			WebjetBootstrapState bootstrapState, WebjetInitializationActions initializationActions,
+			ApplicationContext applicationContext) {
+		return new WebjetApplicationStartedListener(
+			bootstrapState, initializationActions, applicationContext
+		);
+	}
+
+	@Bean
 	ApplicationListener<ApplicationReadyEvent> webjetApplicationReadyListener(
-			WebjetBootstrapState bootstrapState, WebjetInitializationActions initializationActions) {
+			WebjetBootstrapState bootstrapState, ApplicationContext applicationContext) {
 		return event -> {
-			initializeAfterRefresh(bootstrapState, initializationActions);
-			logApplicationReady(bootstrapState);
+			if (event.getApplicationContext() == applicationContext) {
+				logApplicationReady(bootstrapState);
+			}
 		};
 	}
 
@@ -109,13 +120,13 @@ public class SpringAppInitializer
 		}
 	}
 
-	private void initializeAfterRefresh(WebjetBootstrapState bootstrapState,
+	private static void initializeAfterRefresh(WebjetBootstrapState bootstrapState,
 			WebjetInitializationActions initializationActions) {
 		if (bootstrapState.getMode() != WebjetBootstrapMode.PRODUCTION) {
 			return;
 		}
 		if (bootstrapState.isCoreInitializationAttempted() == false || bootstrapState.isCoreInitialized() == false) {
-			throw new IllegalStateException("WebJET production context became ready without successful core initialization");
+			throw new IllegalStateException("WebJET production context started without successful core initialization");
 		}
 		if (bootstrapState.isPostInitializationCompleted()) {
 			return;
@@ -146,6 +157,38 @@ public class SpringAppInitializer
 			startDebugTimer();
 		}
 		return dtGlobal;
+	}
+
+	private static final class WebjetApplicationStartedListener
+			implements ApplicationListener<ApplicationStartedEvent>, Ordered {
+
+		private final WebjetBootstrapState bootstrapState;
+		private final WebjetInitializationActions initializationActions;
+		private final ApplicationContext applicationContext;
+
+		private WebjetApplicationStartedListener(WebjetBootstrapState bootstrapState,
+				WebjetInitializationActions initializationActions, ApplicationContext applicationContext) {
+			this.bootstrapState = bootstrapState;
+			this.initializationActions = initializationActions;
+			this.applicationContext = applicationContext;
+		}
+
+		@Override
+		public void onApplicationEvent(ApplicationStartedEvent event) {
+			if (event.getApplicationContext() == applicationContext) {
+				initializeAfterRefresh(bootstrapState, initializationActions);
+			}
+		}
+
+		@Override
+		public int getOrder() {
+			return Ordered.HIGHEST_PRECEDENCE;
+		}
+
+		@Override
+		public boolean supportsAsyncExecution() {
+			return false;
+		}
 	}
 
 	private static final class OrderedServletContextInitializer implements ServletContextInitializer, Ordered {

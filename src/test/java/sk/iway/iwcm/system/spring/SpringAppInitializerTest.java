@@ -1,6 +1,8 @@
 package sk.iway.iwcm.system.spring;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -16,9 +18,12 @@ import jakarta.servlet.ServletContext;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.Ordered;
 
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
@@ -77,7 +82,7 @@ class SpringAppInitializerTest {
     void licenseRecoveryModeKeepsCoreUninitializedAndSkipsProductionPostInitialization() throws Exception {
         WebjetBootstrapState bootstrapState = WebjetBootstrapState.pending(WebjetBootstrapMode.LICENSE_RECOVERY);
         WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
-        ApplicationContext applicationContext = mock(ApplicationContext.class);
+        ConfigurableApplicationContext applicationContext = mock(ConfigurableApplicationContext.class);
         ServletContext servletContext = mock(ServletContext.class);
         when(initializationActions.initialize(servletContext)).thenReturn(false);
         when(initializationActions.isLicenseRecoveryRequired()).thenReturn(true);
@@ -85,11 +90,13 @@ class SpringAppInitializerTest {
         ServletContextInitializer coreInitializer = springAppInitializer.springAppInitializerOnStartup(
             bootstrapState, initializationActions, applicationContext
         );
-        ApplicationListener<ApplicationReadyEvent> readyListener =
-            springAppInitializer.webjetApplicationReadyListener(bootstrapState, initializationActions);
+        ApplicationListener<ApplicationStartedEvent> startedListener =
+            springAppInitializer.webjetApplicationStartedListener(
+                bootstrapState, initializationActions, applicationContext
+            );
 
         coreInitializer.onStartup(servletContext);
-        readyListener.onApplicationEvent(mock(ApplicationReadyEvent.class));
+        startedListener.onApplicationEvent(applicationStartedEvent(applicationContext));
 
         assertTrue(bootstrapState.isCoreInitializationAttempted());
         assertFalse(bootstrapState.isCoreInitialized());
@@ -100,10 +107,10 @@ class SpringAppInitializerTest {
     }
 
     @Test
-    void successfulProductionInitializationRunsPostInitializationOnlyWhenApplicationIsReady() throws Exception {
+    void successfulProductionInitializationRunsPostInitializationWhenApplicationHasStarted() throws Exception {
         WebjetBootstrapState bootstrapState = WebjetBootstrapState.pending(WebjetBootstrapMode.PRODUCTION);
         WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
-        ApplicationContext applicationContext = mock(ApplicationContext.class);
+        ConfigurableApplicationContext applicationContext = mock(ConfigurableApplicationContext.class);
         ServletContext servletContext = mock(ServletContext.class);
         when(initializationActions.initialize(servletContext)).thenReturn(true);
         when(initializationActions.initializeAfterSpring()).thenReturn(true);
@@ -111,8 +118,10 @@ class SpringAppInitializerTest {
         ServletContextInitializer coreInitializer = springAppInitializer.springAppInitializerOnStartup(
             bootstrapState, initializationActions, applicationContext
         );
-        ApplicationListener<ApplicationReadyEvent> readyListener =
-            springAppInitializer.webjetApplicationReadyListener(bootstrapState, initializationActions);
+        ApplicationListener<ApplicationStartedEvent> startedListener =
+            springAppInitializer.webjetApplicationStartedListener(
+                bootstrapState, initializationActions, applicationContext
+            );
 
         coreInitializer.onStartup(servletContext);
 
@@ -123,12 +132,12 @@ class SpringAppInitializerTest {
 
         verify(initializationActions, times(1)).initialize(servletContext);
 
-        readyListener.onApplicationEvent(mock(ApplicationReadyEvent.class));
+        startedListener.onApplicationEvent(applicationStartedEvent(applicationContext));
 
         assertTrue(bootstrapState.isPostInitializationCompleted());
         verify(initializationActions).initializeAfterSpring();
 
-        readyListener.onApplicationEvent(mock(ApplicationReadyEvent.class));
+        startedListener.onApplicationEvent(applicationStartedEvent(applicationContext));
         verify(initializationActions, times(1)).initializeAfterSpring();
     }
 
@@ -136,17 +145,19 @@ class SpringAppInitializerTest {
     void setupModeNeverRunsProductionPostInitialization() throws Exception {
         WebjetBootstrapState bootstrapState = WebjetBootstrapState.initialized(WebjetBootstrapMode.SETUP, false);
         WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
-        ApplicationContext applicationContext = mock(ApplicationContext.class);
+        ConfigurableApplicationContext applicationContext = mock(ConfigurableApplicationContext.class);
         ServletContext servletContext = mock(ServletContext.class);
 
         ServletContextInitializer coreInitializer = springAppInitializer.springAppInitializerOnStartup(
             bootstrapState, initializationActions, applicationContext
         );
-        ApplicationListener<ApplicationReadyEvent> readyListener =
-            springAppInitializer.webjetApplicationReadyListener(bootstrapState, initializationActions);
+        ApplicationListener<ApplicationStartedEvent> startedListener =
+            springAppInitializer.webjetApplicationStartedListener(
+                bootstrapState, initializationActions, applicationContext
+            );
 
         coreInitializer.onStartup(servletContext);
-        readyListener.onApplicationEvent(mock(ApplicationReadyEvent.class));
+        startedListener.onApplicationEvent(applicationStartedEvent(applicationContext));
 
         assertTrue(bootstrapState.isCoreInitializationAttempted());
         assertFalse(bootstrapState.isCoreInitialized());
@@ -158,12 +169,12 @@ class SpringAppInitializerTest {
     @Test
     void setupModeLogsInstructionsWhenApplicationIsReady() {
         WebjetBootstrapState bootstrapState = WebjetBootstrapState.initialized(WebjetBootstrapMode.SETUP, false);
-        WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
+        ConfigurableApplicationContext applicationContext = mock(ConfigurableApplicationContext.class);
         ApplicationListener<ApplicationReadyEvent> readyListener =
-            springAppInitializer.webjetApplicationReadyListener(bootstrapState, initializationActions);
+            springAppInitializer.webjetApplicationReadyListener(bootstrapState, applicationContext);
 
         try (MockedStatic<Logger> logger = mockStatic(Logger.class)) {
-            readyListener.onApplicationEvent(mock(ApplicationReadyEvent.class));
+            readyListener.onApplicationEvent(applicationReadyEvent(applicationContext));
 
             logger.verify(() -> Logger.info(
                 SpringBootStarter.class, "Spring Boot context started successfully"
@@ -175,8 +186,6 @@ class SpringAppInitializerTest {
                 SpringBootStarter.class, SpringAppInitializer.SETUP_STARTUP_INSTRUCTIONS
             ));
         }
-
-        verify(initializationActions, never()).initializeAfterSpring();
     }
 
     @Test
@@ -184,12 +193,12 @@ class SpringAppInitializerTest {
         WebjetBootstrapState bootstrapState = WebjetBootstrapState.initialized(
             WebjetBootstrapMode.LICENSE_RECOVERY, false
         );
-        WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
+        ConfigurableApplicationContext applicationContext = mock(ConfigurableApplicationContext.class);
         ApplicationListener<ApplicationReadyEvent> readyListener =
-            springAppInitializer.webjetApplicationReadyListener(bootstrapState, initializationActions);
+            springAppInitializer.webjetApplicationReadyListener(bootstrapState, applicationContext);
 
         try (MockedStatic<Logger> logger = mockStatic(Logger.class)) {
-            readyListener.onApplicationEvent(mock(ApplicationReadyEvent.class));
+            readyListener.onApplicationEvent(applicationReadyEvent(applicationContext));
 
             logger.verify(() -> Logger.info(
                 SpringBootStarter.class, SpringAppInitializer.LICENSE_RECOVERY_STARTUP_INSTRUCTIONS
@@ -198,20 +207,17 @@ class SpringAppInitializerTest {
                 SpringBootStarter.class, SpringAppInitializer.SETUP_STARTUP_INSTRUCTIONS
             ), never());
         }
-
-        verify(initializationActions, never()).initializeAfterSpring();
     }
 
     @Test
     void productionModeDoesNotLogSetupInstructions() {
         WebjetBootstrapState bootstrapState = WebjetBootstrapState.initialized(WebjetBootstrapMode.PRODUCTION, true);
-        WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
-        when(initializationActions.initializeAfterSpring()).thenReturn(true);
+        ConfigurableApplicationContext applicationContext = mock(ConfigurableApplicationContext.class);
         ApplicationListener<ApplicationReadyEvent> readyListener =
-            springAppInitializer.webjetApplicationReadyListener(bootstrapState, initializationActions);
+            springAppInitializer.webjetApplicationReadyListener(bootstrapState, applicationContext);
 
         try (MockedStatic<Logger> logger = mockStatic(Logger.class)) {
-            readyListener.onApplicationEvent(mock(ApplicationReadyEvent.class));
+            readyListener.onApplicationEvent(applicationReadyEvent(applicationContext));
 
             logger.verify(() -> Logger.info(
                 SpringBootStarter.class, SpringAppInitializer.WEBJET_STARTED_MESSAGE
@@ -220,8 +226,51 @@ class SpringAppInitializerTest {
                 SpringBootStarter.class, SpringAppInitializer.SETUP_STARTUP_INSTRUCTIONS
             ), never());
         }
+    }
 
-        verify(initializationActions).initializeAfterSpring();
+    @Test
+    void postInitializationListenerIsSynchronousAndHasHighestPrecedence() {
+        WebjetBootstrapState bootstrapState = WebjetBootstrapState.initialized(
+            WebjetBootstrapMode.PRODUCTION, true
+        );
+        WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
+        ConfigurableApplicationContext applicationContext = mock(ConfigurableApplicationContext.class);
+
+        ApplicationListener<ApplicationStartedEvent> startedListener =
+            springAppInitializer.webjetApplicationStartedListener(
+                bootstrapState, initializationActions, applicationContext
+            );
+
+        Ordered orderedListener = assertInstanceOf(Ordered.class, startedListener);
+        assertEquals(Ordered.HIGHEST_PRECEDENCE, orderedListener.getOrder());
+        assertFalse(startedListener.supportsAsyncExecution());
+    }
+
+    @Test
+    void lifecycleListenersIgnoreEventsFromAnotherApplicationContext() {
+        WebjetBootstrapState bootstrapState = WebjetBootstrapState.initialized(
+            WebjetBootstrapMode.PRODUCTION, true
+        );
+        WebjetInitializationActions initializationActions = mock(WebjetInitializationActions.class);
+        ConfigurableApplicationContext applicationContext = mock(ConfigurableApplicationContext.class);
+        ConfigurableApplicationContext otherApplicationContext = mock(ConfigurableApplicationContext.class);
+        ApplicationListener<ApplicationStartedEvent> startedListener =
+            springAppInitializer.webjetApplicationStartedListener(
+                bootstrapState, initializationActions, applicationContext
+            );
+        ApplicationListener<ApplicationReadyEvent> readyListener =
+            springAppInitializer.webjetApplicationReadyListener(bootstrapState, applicationContext);
+
+        startedListener.onApplicationEvent(applicationStartedEvent(otherApplicationContext));
+        try (MockedStatic<Logger> logger = mockStatic(Logger.class)) {
+            readyListener.onApplicationEvent(applicationReadyEvent(otherApplicationContext));
+
+            logger.verify(() -> Logger.info(
+                SpringBootStarter.class, SpringAppInitializer.WEBJET_STARTED_MESSAGE
+            ), never());
+        }
+
+        verify(initializationActions, never()).initializeAfterSpring();
     }
 
     @Test
@@ -292,5 +341,19 @@ class SpringAppInitializerTest {
 
             initServlet.verify(InitServlet::cleanupAfterFailedSpringInitialization);
         }
+    }
+
+    private ApplicationStartedEvent applicationStartedEvent(
+            ConfigurableApplicationContext applicationContext) {
+        ApplicationStartedEvent event = mock(ApplicationStartedEvent.class);
+        when(event.getApplicationContext()).thenReturn(applicationContext);
+        return event;
+    }
+
+    private ApplicationReadyEvent applicationReadyEvent(
+            ConfigurableApplicationContext applicationContext) {
+        ApplicationReadyEvent event = mock(ApplicationReadyEvent.class);
+        when(event.getApplicationContext()).thenReturn(applicationContext);
+        return event;
     }
 }

@@ -42,6 +42,7 @@ class ApplicationConfigurationDefinitionTest {
             assertBeanDefinitionCount(beanFactory, "setupTomcatHttpConnectorCustomizer", 0);
             assertBeanDefinitionCount(beanFactory, "messageSource", 1);
             assertDefinitionCount(beanFactory, SpringAppInitializer.class, 1);
+            assertBeanDefinitionCount(beanFactory, "webjetApplicationStartedListener", 1);
             assertBeanDefinitionCount(beanFactory, "webjetApplicationReadyListener", 1);
             assertDefinitionCount(beanFactory, ProductionApplicationConfiguration.class, 0);
             assertDefinitionCount(beanFactory, LicenseRecoveryApplicationConfiguration.class, 0);
@@ -80,6 +81,7 @@ class ApplicationConfigurationDefinitionTest {
                 "licenseRecoveryCharacterEncodingFilterRegistration", 1);
             assertBeanDefinitionCount(beanFactory, "messageSource", 1);
             assertDefinitionCount(beanFactory, SpringAppInitializer.class, 1);
+            assertBeanDefinitionCount(beanFactory, "webjetApplicationStartedListener", 1);
             assertBeanDefinitionCount(beanFactory, "webjetApplicationReadyListener", 1);
 
             assertDefinitionCount(beanFactory, SetupApplicationConfiguration.class, 0);
@@ -118,6 +120,7 @@ class ApplicationConfigurationDefinitionTest {
             assertDefinitionCount(beanFactory, V9JpaDBConfig.class, 1);
             assertDefinitionCount(beanFactory, SpringSecurityConf.class, 1);
             assertDefinitionCount(beanFactory, SpringAppInitializer.class, 1);
+            assertBeanDefinitionCount(beanFactory, "webjetApplicationStartedListener", 1);
             assertBeanDefinitionCount(beanFactory, "webjetApplicationReadyListener", 1);
             assertDefinitionCount(beanFactory,
                 SpringBootStarter.ProductionServletInfrastructureConfiguration.class, 1);
