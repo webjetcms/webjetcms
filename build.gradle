@@ -306,13 +306,15 @@ dependencies {
 }
 
 test {
+    def failedTestClasses = new TreeSet<String>()
+
     useJUnitPlatform()
     systemProperty 'sun.net.client.defaultConnectTimeout', '10000'
     systemProperty 'sun.net.client.defaultReadTimeout', '10000'
     systemProperty 'file.encoding', 'UTF-8'
     systemProperty 'user.language', 'sk'
     systemProperty 'user.country', 'SK'
-    systemProperty 'webjetDbname', '/poolman-local.xml'
+    systemProperty 'webjetDbname', System.getProperty('webjetDbname') ?: '/poolman-local.xml'
     jvmArgs = [ "-javaagent:${configurations.agent.singleFile}" ]
     testLogging {
         events "passed", "skipped", "failed", "standard_out", "standard_error"
@@ -322,6 +324,11 @@ test {
         showExceptions = true
         showStackTraces = true
     }
+    afterTest { desc, result ->
+        if (result.resultType == TestResult.ResultType.FAILURE && desc.className) {
+            failedTestClasses.add(desc.className)
+        }
+    }
     // For even more verbose output during development
     afterSuite { desc, result ->
         if (!desc.parent) {
@@ -330,6 +337,12 @@ test {
                     "${result.successfulTestCount} succeeded, " +
                     "${result.failedTestCount} failed, " +
                     "${result.skippedTestCount} skipped"
+            if (!failedTestClasses.isEmpty()) {
+                println "Failed test classes:"
+                failedTestClasses.each { className ->
+                    println " - ${className}"
+                }
+            }
         }
     }
 }
