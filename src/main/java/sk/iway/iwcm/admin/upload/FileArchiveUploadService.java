@@ -38,7 +38,8 @@ public class FileArchiveUploadService {
         String archiveFolder = FileArchivSupportMethodsService.normalizePath(destinationFolder);
         String archiveRootFolder = FileArchivSupportMethodsService.normalizePath(FileArchivatorKit.getArchivPath());
 
-        if (Tools.isEmpty(referer) || referer.endsWith("/apps/file-archive/admin/") == false
+        if (Tools.isEmpty(archiveFolder) || Tools.isEmpty(archiveRootFolder)
+            || Tools.isEmpty(referer) || referer.endsWith("/apps/file-archive/admin/") == false
             || user == null || user.isAdmin() == false || user.isEnabledItem("cmp_file_archiv") == false
             || archiveFolder.startsWith(archiveRootFolder) == false
             || FileBrowserTools.hasForbiddenSymbol(archiveFolder)

@@ -36,7 +36,6 @@ import org.json.JSONObject;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FileBrowserTools;
-import sk.iway.iwcm.common.UploadFileTools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
@@ -55,8 +54,7 @@ public class AdminUploadServlet extends HttpServlet
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
         String name = request.getParameter("name");
-        String destinationFolder = request.getParameter("destinationFolder");
-        if (Tools.isNotEmpty(destinationFolder) && destinationFolder.endsWith("/")==false) destinationFolder = destinationFolder + "/";
+        String destinationFolder = AdminUploadValidator.normalizeDestinationFolder(request.getParameter("destinationFolder"));
         boolean writeDirectlyToDestination = "true".equals(request.getParameter("writeDirectlyToDestination"));
         String overwriteMode = request.getParameter("overwriteMode");
         boolean isBase64 = "base64".equals(request.getParameter("encoding"));
@@ -73,8 +71,7 @@ public class AdminUploadServlet extends HttpServlet
         String originalName = name;
 
         if (destinationFolder!=null && (saveIntoArchive || destinationFolder.startsWith("/files") || destinationFolder.startsWith("/images") || destinationFolder.startsWith("/shared"))) {
-            name = DB.internationalToEnglish(name);
-            name = DocTools.removeCharsDir(name, true).toLowerCase();
+            name = AdminUploadValidator.normalizeFileName(name);
         }
 
 		Logger.debug(AdminUploadServlet.class, "doPost, name="+name);
@@ -86,31 +83,23 @@ public class AdminUploadServlet extends HttpServlet
 
         String extension = FileTools.getFileExtension(name);
 
-        String errorKey = null;
-        if (user == null || user.isAdmin()==false) {
-            errorKey = "admin.logon.timeoutTitle";
-        }
-        else if (saveIntoArchive == false && Tools.isNotEmpty(destinationFolder) && "/files/protected/upload/".equals(destinationFolder)==false && "/files/protected/feedback-form/".equals(destinationFolder)==false && user.isFolderWritable(destinationFolder)==false) {
-            // /files/protected/upload/ is allowed because of field-type-wjupload.js default folder
-            // /files/protected/feedback-form/ je natvrdo povolene, aby bolo mozne nahrat subory k feedback-form
-            errorKey = "admin.upload_iframe.wrong_upload_dir";
-        }
-        else if (UploadFileTools.isFileAllowed(uploadType, name, fileSize, user, request)==false) {
-            errorKey = "components.forum.new.upload_not_allowed_filetype";
-        }
-
-        if (destinationFolder == null) {
-            errorKey = "admin.upload_iframe.wrong_upload_dir";
-        } else if (saveIntoArchive) {
-            String referer = request.getHeader("referer");
-            errorKey = FileArchiveUploadService.validateArchiveUploadPermission(user, destinationFolder, referer);
+        String errorKey;
+        if (saveIntoArchive) {
+            errorKey = AdminUploadValidator.validateUserAndFile(
+                name, uploadType, fileSize, user, request
+            );
             if (errorKey == null) {
-                destinationFolder = FileArchiveUploadService.normalizeArchiveFolder(destinationFolder);
+                String referer = request.getHeader("referer");
+                errorKey = FileArchiveUploadService.validateArchiveUploadPermission(user, destinationFolder, referer);
+                if (errorKey == null) {
+                    destinationFolder = FileArchiveUploadService.normalizeArchiveFolder(destinationFolder);
+                }
             }
-        } else if (destinationFolder.startsWith("/images") || destinationFolder.startsWith("/files") || destinationFolder.startsWith("/shared")) {
-            //pre bezpecnost povolujeme len tieto priecinky na upload, kedze ten sa definuje cez parameter destinationFolder
         } else {
-            errorKey = "admin.upload_iframe.wrong_upload_dir";
+            errorKey = AdminUploadValidator.validateChunk(
+                destinationFolder, name, uploadType, fileSize,
+                writeDirectlyToDestination, user, request
+            );
         }
 
 		if (errorKey != null) {
