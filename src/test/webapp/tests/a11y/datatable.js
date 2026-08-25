@@ -648,6 +648,7 @@ Scenario("p50: date picker", async ({ I, DT, DTE, a11y }) => {
             expanded: dateInput.getAttribute("aria-expanded"),
             hasPopup: dateInput.getAttribute("aria-haspopup"),
             inputFocused: document.activeElement === dateInput,
+            instructionCount: document.querySelectorAll(`#${instructions.id}`).length,
             instructions: instructions?.textContent,
             monthLabel: dialog.querySelector(".dt-datetime-month")?.getAttribute("aria-label"),
             nextLabel: dialog.querySelector(".dt-datetime-iconRight button")?.getAttribute("aria-label"),
@@ -665,6 +666,7 @@ Scenario("p50: date picker", async ({ I, DT, DTE, a11y }) => {
     I.assertEqual(state.dialogRole, "dialog", "The date picker must expose the dialog role");
     I.assertTrue(state.dialogLabel.length > 0, "The date picker dialog must have an accessible name");
     I.assertTrue(state.dialogDescription.length > 0, "The date picker dialog must reference its instructions");
+    I.assertEqual(state.instructionCount, 1, "The date input instructions must not be duplicated");
     I.assertTrue(state.instructions.includes("DD.MM.YYYY"), "The input instructions must explain the expected date format");
     I.assertTrue(state.instructions.toLowerCase().includes("šípk"), "The input instructions must explain keyboard navigation");
     I.assertTrue(state.previousLabel.length > 0 && state.nextLabel.length > 0,

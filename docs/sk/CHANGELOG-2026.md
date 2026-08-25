@@ -123,7 +123,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Prístupnosť
 
-- Administrácia - rozšírené ovládanie klávesnicou a podpora čítačiek obrazovky pre dátové tabuľky, modálne okná a notifikácie, bublinová nápoveda, výber dátumu a farby a HTML editor. Upravené bolo presúvanie a vracanie zamerania, výber riadkov a buniek, prístupné názvy a ARIA stavy, označenie povinných polí, kontrasty ovládacích prvkov a odkaz na preskočenie na hlavný obsah. Doplnené boli automatizované regresné `a11y` testy pre tieto scenáre (#58389-6).
+- Administrácia - rozšírené ovládanie klávesnicou a podpora čítačiek obrazovky pre dátové tabuľky, modálne okná a notifikácie, bublinová nápoveda, výber dátumu a farby a HTML editor. Upravené bolo presúvanie a vracanie zamerania, výber riadkov a buniek, prístupné názvy a ARIA stavy, označenie povinných polí, kontrasty ovládacích prvkov a odkaz na preskočenie na hlavný obsah. Doplnené boli automatizované regresné `a11y` testy pre tieto scenáre (#235).
 
 ### Multiweb
 

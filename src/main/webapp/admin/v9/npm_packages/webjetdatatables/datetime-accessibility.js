@@ -1,42 +1,6 @@
 import WJ from '../../src/js/webjet';
 import $ from 'jquery';
 
-const FALLBACK_TRANSLATIONS = {
-    cs: {
-        calendar: 'Kalendář',
-        dialog: 'Výběr data a času',
-        instructions: 'Formát data a času: {1}. Šipkou dolů přejdete do kalendáře, mezi dny se pohybujete šipkami, výběr potvrdíte klávesou Enter nebo mezerníkem a kalendář zavřete klávesou Escape.',
-        month: 'Měsíc',
-        year: 'Rok'
-    },
-    en: {
-        calendar: 'Calendar',
-        dialog: 'Date and time picker',
-        instructions: 'Date and time format: {1}. Press Arrow Down to enter the calendar, use arrow keys to move between days, confirm with Enter or Space, and close the calendar with Escape.',
-        month: 'Month',
-        year: 'Year'
-    },
-    sk: {
-        calendar: 'Kalendár',
-        dialog: 'Výber dátumu a času',
-        instructions: 'Formát dátumu a času: {1}. Šípkou nadol prejdete do kalendára, medzi dňami sa pohybujete šípkami, výber potvrdíte klávesom Enter alebo medzerníkom a kalendár zatvoríte klávesom Escape.',
-        month: 'Mesiac',
-        year: 'Rok'
-    }
-};
-
-function translate(key, fallbackKey, ...params) {
-    const translated = WJ.translate(key, params);
-    if (typeof translated === 'string' && translated.trim().length > 0 && translated !== key) return translated;
-
-    const language = (window.userLng || document.documentElement.lang || 'sk').substring(0, 2);
-    let fallback = (FALLBACK_TRANSLATIONS[language] || FALLBACK_TRANSLATIONS.sk)[fallbackKey];
-    params.forEach((parameter, index) => {
-        fallback = fallback.replaceAll(`{${index + 1}}`, parameter);
-    });
-    return fallback;
-}
-
 function appendAttributeId($element, attribute, id) {
     const ids = ($element.attr(attribute) || '').split(/\s+/).filter(Boolean);
     if (ids.includes(id) === false) ids.push(id);
@@ -88,7 +52,7 @@ function updateDateTimeContent(instance) {
     const containerId = namespace + '-dialog';
     const instructionsId = namespace + '-instructions';
     const liveId = namespace + '-live';
-    let instructions = document.getElementById(instructionsId);
+    let instructions = input.parentElement?.querySelector(`[id="${instructionsId}"]`) || document.getElementById(instructionsId);
     let liveRegion = container.querySelector('#' + liveId);
 
     if (instructions == null) {
@@ -97,7 +61,7 @@ function updateDateTimeContent(instance) {
         instructions.className = 'visually-hidden wj-datetime-instructions';
         input.insertAdjacentElement('afterend', instructions);
     }
-    instructions.textContent = translate('datatables.datetime.instructions.js', 'instructions', getInputFormat(instance));
+    instructions.textContent = WJ.translate('datatables.datetime.instructions.js', getInputFormat(instance));
 
     if (liveRegion == null) {
         liveRegion = document.createElement('p');
@@ -110,7 +74,7 @@ function updateDateTimeContent(instance) {
 
     container.id = containerId;
     container.setAttribute('role', 'dialog');
-    container.setAttribute('aria-label', translate('datatables.datetime.dialog.js', 'dialog'));
+    container.setAttribute('aria-label', WJ.translate('datatables.datetime.dialog.js'));
     container.setAttribute('aria-describedby', instructionsId);
 
     const isVisible = instance.dom.container.is(':visible');
@@ -125,13 +89,13 @@ function updateDateTimeContent(instance) {
 
     instance.dom.previous.children('button').attr('aria-label', instance.c.i18n.previous);
     instance.dom.next.children('button').attr('aria-label', instance.c.i18n.next);
-    container.querySelector('.dt-datetime-month')?.setAttribute('aria-label', translate('datatables.datetime.month.js', 'month'));
-    container.querySelector('.dt-datetime-year')?.setAttribute('aria-label', translate('datatables.datetime.year.js', 'year'));
+    container.querySelector('.dt-datetime-month')?.setAttribute('aria-label', WJ.translate('datatables.datetime.month.js'));
+    container.querySelector('.dt-datetime-year')?.setAttribute('aria-label', WJ.translate('datatables.datetime.year.js'));
 
     const calendar = container.querySelector('.dt-datetime-calendar table');
     if (calendar != null) {
         calendar.setAttribute('role', 'grid');
-        calendar.setAttribute('aria-label', translate('datatables.datetime.calendar.js', 'calendar'));
+        calendar.setAttribute('aria-label', WJ.translate('datatables.datetime.calendar.js'));
     }
 
     const dayButtons = [...container.querySelectorAll('.dt-datetime-calendar button[data-year]')];
