@@ -1090,10 +1090,10 @@ const WJ = (() => {
     function breadcrumb(config) {
 
         //console.log("navbar, config=", config);
-        let breadcrumb = $("div.ly-content div.ly-container.container div.md-breadcrumb");
+        let breadcrumb = $("div.ly-content main.ly-container.container div.md-breadcrumb");
         if (breadcrumb.length === 0) {
             breadcrumb = $("<div class='md-breadcrumb'></div>");
-            $("div.ly-content div.ly-container.container").prepend(breadcrumb);
+            $("div.ly-content main.ly-container.container").prepend(breadcrumb);
         }
 
         //default is hidden, show it

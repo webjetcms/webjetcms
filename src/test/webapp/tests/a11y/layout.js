@@ -12,8 +12,17 @@ Scenario('p35: headings', async ({ I, a11y }) => {
 });
 
 Scenario('p37: ly-content-wrapper section should be in main tag', async ({ I, a11y }) => {
-    I.amOnPage('/admin/v9/');
-    //TODO: main section should be in main tag
+    I.amOnPage('/apps/stat/admin/');
+
+    const mainContent = "div.ly-content main#main-content.ly-container.container";
+    const breadcrumb = `${mainContent} > div.md-breadcrumb`;
+
+    I.waitForElement(mainContent, 5);
+    I.waitForElement(breadcrumb, 5);
+    I.assertEqual(await I.grabNumberOfVisibleElements("main#main-content"), 1,
+        "The page must contain exactly one visible main landmark");
+    I.assertAbove(await I.grabNumberOfVisibleElements(`${breadcrumb} .nav-item`), 0,
+        "WJ.breadcrumb must render navigation inside the main landmark");
     await a11y.check();
 });
 
@@ -27,7 +36,8 @@ Scenario("p53: missing skip to content", async ({ I, a11y }) => {
     I.amOnPage("/admin/v9/templates/temps-list/");
 
     const skipLink = "a.skip-link";
-    const mainContent = "#main-content";
+    const mainContent = "main#main-content.ly-container.container";
+    const mainContentHash = "#main-content";
 
     I.waitForElement(skipLink, 5);
     const initialState = await I.executeScript(({skipLink, mainContent}) => {
@@ -45,7 +55,7 @@ Scenario("p53: missing skip to content", async ({ I, a11y }) => {
     }, {skipLink, mainContent});
 
     I.assertEqual(initialState.activeTag, "BODY", "Focus must start before the first interactive element");
-    I.assertEqual(initialState.href, mainContent, "The skip link must reference the main content");
+    I.assertEqual(initialState.href, mainContentHash, "The skip link must reference the main content");
     I.assertTrue(initialState.linkText.length > 0, "The skip link must have an accessible name");
     I.assertTrue(initialState.linkBottom <= 0, "The skip link must be hidden above the viewport by default");
     I.assertEqual(initialState.targetTag, "MAIN", "The skip link target must be the main landmark");
@@ -75,5 +85,5 @@ Scenario("p53: missing skip to content", async ({ I, a11y }) => {
 
     I.pressKey("Enter");
     I.waitForElement(`${mainContent}:focus`, 5);
-    I.seeInCurrentUrl(mainContent);
+    I.seeInCurrentUrl(mainContentHash);
 });

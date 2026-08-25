@@ -1312,7 +1312,7 @@ export const dataTableInit = options => {
 
         //pocet poloziek v strankovani (v paticke)
         //sirku ratame podla kontajnera, lebo tabulka este nema _wrapper a ked ma vela stlpcov je siroka
-        let tableWidth = $("#"+DATA.id).parents("div.ly-container.container,div.col-md-8").width();
+        let tableWidth = $("#"+DATA.id).parents("main.ly-container.container,div.col-md-8").width();
         //console.log("tableWidth=", tableWidth, "id=", DATA.id);
         $.fn.DataTable.ext.pager.numbers_length = 10;
         if (false === DATA.nestedModal && tableWidth>800) {
