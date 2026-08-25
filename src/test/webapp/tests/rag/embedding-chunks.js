@@ -86,7 +86,8 @@ Scenario('Prepare OpenAI indexes for all test pages', ({ I, DT }) => {
     I.clickCss("button.btnAddIndex");
     I.waitForVisible("#modalIframeIframeElement");
     I.switchTo("#modalIframeIframeElement");
-    I.waitForElement("#editorApprootDir input[value='" + rootDirPath + "']", 10);
+    I.waitForElement("#editorApprootDir input.form-control", 10);
+    I.seeInField("#editorApprootDir input.form-control", rootDirPath);
     I.checkOption("#include_subfolders");
 
     I.switchTo();
@@ -111,6 +112,17 @@ Scenario('Wait for the complete OpenAI baseline', ({ I, DT }) => {
     startEmbeddingTableAutoRefresh(I);
     I.waitForText(valueC, 100, "#datatableInit tbody");
     stopEmbeddingTableAutoRefresh(I);
+
+    I.say("Wait until the complete OpenAI baseline is indexed");
+    I.clickCss("button.btnAddIndex");
+    I.waitForVisible("#modalIframeIframeElement");
+    I.switchTo("#modalIframeIframeElement");
+    I.waitForElement("#editorApprootDir input.form-control", 10);
+    I.seeInField("#editorApprootDir input.form-control", rootDirPath);
+    startIndexingStatusAutoRefresh(I);
+    checkIndexingStatusValues(I, 2, 7, 7, 0, 100);
+    stopIndexingStatusAutoRefresh(I);
+    I.switchTo();
 });
 
 Scenario('Stop indexing CronJob before removing action', ({ I, DT, DTE }) => {
@@ -346,11 +358,12 @@ Scenario('Queue the same pages for indexing with Gemini', ({ I, DT }) => {
     I.clickCss("button.btnAddIndex");
     I.waitForVisible("#modalIframeIframeElement");
     I.switchTo("#modalIframeIframeElement");
-    I.waitForElement("#editorApprootDir input[value='" + rootDirPath + "']", 10);
+    I.waitForElement("#editorApprootDir input.form-control", 10);
+    I.seeInField("#editorApprootDir input.form-control", rootDirPath);
 
     I.say("Switch to the child folder that currently has only OpenAI indexes");
-    selectTree(I, ".rootDirDiv button.btn-vue-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent", "semantic_child"]);
-    I.seeElement("#editorApprootDir input[value='" + rootSubDirPath + "']");
+    selectTree(I, ".rootDirDiv button.btn-webjet-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent", "semantic_child"]);
+    I.seeInField("#editorApprootDir input.form-control", rootSubDirPath);
 
     I.say("OpenAI indexes must not count as current Gemini indexes");
     checkIndexingStatusValues(I, 1, 2, 0, 0);
@@ -397,8 +410,10 @@ Scenario('Gemini reindex preserves OpenAI indexes for the same page', ({ I, DT }
     I.clickCss("button.btnAddIndex");
     I.waitForVisible("#modalIframeIframeElement");
     I.switchTo("#modalIframeIframeElement");
-    selectTree(I, ".rootDirDiv button.btn-vue-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent", "semantic_child"]);
-    checkIndexingStatusValues(I, 1, 2, 2, 0);
+    selectTree(I, ".rootDirDiv button.btn-webjet-jstree-item-edit", ["Aplikácie", "Vyhľadávanie", "semantic_parent", "semantic_child"]);
+    startIndexingStatusAutoRefresh(I);
+    checkIndexingStatusValues(I, 1, 2, 2, 0, 100);
+    stopIndexingStatusAutoRefresh(I);
 });
 
 Scenario('Restore OpenAI embedding provider', ({ I, DT, DTE }) => {
@@ -434,12 +449,11 @@ function selectTree(I, buttonSelector, nodesArr) {
     I.waitForInvisible(WebjetDteJsTree.tree, 10);
 }
 
-function checkIndexingStatusValues(I, allGroups, allDoc, indexedDoc, queuedDoc) {
-    I.waitForElement("#allGroups", 10);
-    I.waitForElement(locate("#allGroups").withText(allGroups + ""), 10);
-    I.seeElement(locate("#allDoc").withText(allDoc + ""));
-    I.seeElement(locate("#indexedDoc").withText(indexedDoc + ""));
-    I.seeElement(locate("#queuedDoc").withText(queuedDoc + ""));
+function checkIndexingStatusValues(I, allGroups, allDoc, indexedDoc, queuedDoc, timeout = 10) {
+    I.waitForElement(locate("#allGroups").withText(allGroups + ""), timeout);
+    I.waitForElement(locate("#allDoc").withText(allDoc + ""), timeout);
+    I.waitForElement(locate("#indexedDoc").withText(indexedDoc + ""), timeout);
+    I.waitForElement(locate("#queuedDoc").withText(queuedDoc + ""), timeout);
 }
 
 function checkPathInRootDir(I, dirPath) {
@@ -488,6 +502,23 @@ function stopEmbeddingTableAutoRefresh(I) {
     I.executeScript(() => {
         window.clearInterval(window.embeddingIndexRefreshInterval);
         window.embeddingIndexRefreshInterval = null;
+    });
+}
+
+function startIndexingStatusAutoRefresh(I) {
+    I.executeScript(() => {
+        window.indexingStatusRefreshInterval = window.setInterval(() => {
+            if(typeof window.getStats === "function") {
+                window.getStats();
+            }
+        }, 5000);
+    });
+}
+
+function stopIndexingStatusAutoRefresh(I) {
+    I.executeScript(() => {
+        window.clearInterval(window.indexingStatusRefreshInterval);
+        window.indexingStatusRefreshInterval = null;
     });
 }
 
