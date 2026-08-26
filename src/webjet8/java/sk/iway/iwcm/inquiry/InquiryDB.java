@@ -67,9 +67,8 @@ public class InquiryDB
 
 	static String resolveOrderBy(String orderBy)
 	{
-		if (DB.isValidSqlIdentifier(orderBy, true) == false) return ORDER_BY_ANSWER_ID;
-		if (orderBy.indexOf('.') == -1) orderBy = "ia." + orderBy;
-		return orderBy;
+		orderBy = DB.fixUntrustedColumnName(orderBy, "ia", "i");
+		return orderBy == null ? ORDER_BY_ANSWER_ID : orderBy;
 	}
 
 	public static InquiryBean getLastInquiry(int imagesLength, String percentageFormat, HttpServletRequest request)

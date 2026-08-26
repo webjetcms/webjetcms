@@ -10,7 +10,7 @@ class FileArchivatorDBTest
 {
 	@ParameterizedTest
 	@NullSource
-	@ValueSource(strings = {"", "virtual_file_name DESC", "name,uploaded", "COUNT(*)", "fa.virtual_file_name"})
+	@ValueSource(strings = {"", "virtual_file_name DESC", "name,uploaded", "COUNT(*)", "fa.virtual_file_name", "DBMS_RANDOM.VALUE"})
 	void getDistinctListByPropertyRejectsInvalidSqlIdentifiers(String column)
 	{
 		assertTrue(FileArchivatorDB.getDistinctListByProperty(column).isEmpty());

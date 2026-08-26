@@ -24,6 +24,6 @@ class PricelistExcelImportTest
 		String formattedFieldName = PricelistExcelImport.formatFieldName("fieldK DESC");
 
 		assertEquals("fieldK DESC", formattedFieldName);
-		assertFalse(DB.isValidSqlIdentifier(formattedFieldName, false));
+		assertFalse(DB.isValidColumnName(formattedFieldName, false));
 	}
 }

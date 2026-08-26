@@ -660,31 +660,6 @@ public class SearchAction
 			{
 				order_var = "ASC";
 			}
-			if ("lastUpdate".equalsIgnoreCase(orderType))
-			{
-				orderType = "date_created";
-			}
-			else if ("sortPriority".equalsIgnoreCase(orderType))
-			{
-				orderType = "sort_priority";
-				if (Constants.DB_TYPE == Constants.DB_ORACLE && Constants.getBoolean("searchUseOracleText"))
-				{
-					//sortni to podla score
-					orderType = "SCORE("+ORACLE_TEXT_CONTAINS_IDENTIFIER+")";
-				}
-			}
-			else if ("title".equalsIgnoreCase(orderType))
-			{
-				orderType = "title";
-			}
-			else if ("publishStart".equalsIgnoreCase(orderType))
-			{
-				orderType = "publish_start";
-			}
-			else if ("saveDate".equalsIgnoreCase(orderType))
-			{
-				orderType = "date_created";
-			}
 			sql.append(" ORDER BY ").append(orderType).append(' ').append(order_var);
 
 			//dalsie order by
@@ -698,28 +673,6 @@ public class SearchAction
 					if ("desc".equalsIgnoreCase(order))
 					{
 						order_var = "DESC";
-					}
-
-					if ("lastUpdate".equalsIgnoreCase(orderType))
-					{
-						orderType = "date_created";
-					}
-					else if ("sortPriority".equalsIgnoreCase(orderType))
-					{
-						orderType = "sort_priority";
-						if (Constants.DB_TYPE == Constants.DB_ORACLE && Constants.getBoolean("searchUseOracleText"))
-						{
-							//sortni to podla score
-							orderType = "SCORE("+ORACLE_TEXT_CONTAINS_IDENTIFIER+")";
-						}
-					}
-					else if ("title".equalsIgnoreCase(orderType))
-					{
-						orderType = "title";
-					}
-					else if ("publishStart".equalsIgnoreCase(orderType))
-					{
-						orderType = "publish_start";
 					}
 
 					sql.append(", ").append(orderType).append(' ').append(order_var);
@@ -1198,14 +1151,14 @@ public class SearchAction
 	}
 
 	/**
-	 * Returns a valid unquoted SQL identifier used in an ORDER BY clause. A qualified
-	 * identifier such as {@code d.title} is allowed, while SQL expressions and syntax
-	 * characters are rejected.
+	 * Returns a column reference bound to the trusted {@code documents d} query alias.
+	 * Legacy logical order names are mapped before the reference is resolved. The
+	 * Oracle Text score is returned only from its trusted internal mapping.
 	 *
 	 * @param name request parameter or attribute name
 	 * @param request current request
-	 * @param defaultValue value returned when the supplied identifier is missing or invalid
-	 * @return validated SQL identifier or {@code defaultValue}
+	 * @param defaultValue fallback column name to resolve when the supplied value is missing or invalid
+	 * @return canonical column reference, trusted score expression, or the resolved default
 	 */
 	static String getValidatedOrderType(String name, HttpServletRequest request, String defaultValue)
 	{
@@ -1215,12 +1168,38 @@ public class SearchAction
 			orderType = (String) request.getAttribute(name);
 		}
 
-		if (DB.isValidSqlIdentifier(orderType, true) == false)
+		boolean primaryOrder = "orderType".equals(name);
+		boolean useOracleTextScore = Constants.DB_TYPE == Constants.DB_ORACLE && Constants.getBoolean("searchUseOracleText");
+		String resolvedOrderType = resolveOrderType(orderType, primaryOrder, useOracleTextScore);
+		if (resolvedOrderType == null)
+			resolvedOrderType = resolveOrderType(defaultValue, primaryOrder, useOracleTextScore);
+		return resolvedOrderType;
+	}
+
+	static String resolveOrderType(String orderType, boolean primaryOrder, boolean useOracleTextScore)
+	{
+		if (Tools.isEmpty(orderType)) return null;
+
+		if ("lastUpdate".equalsIgnoreCase(orderType))
 		{
-			return defaultValue;
+			orderType = "date_created";
+		}
+		else if ("sortPriority".equalsIgnoreCase(orderType))
+		{
+			if (useOracleTextScore)
+				return "SCORE("+ORACLE_TEXT_CONTAINS_IDENTIFIER+")";
+			orderType = "sort_priority";
+		}
+		else if ("publishStart".equalsIgnoreCase(orderType))
+		{
+			orderType = "publish_start";
+		}
+		else if (primaryOrder && "saveDate".equalsIgnoreCase(orderType))
+		{
+			orderType = "date_created";
 		}
 
-		return orderType;
+		return DB.fixUntrustedColumnName(orderType, "d");
 	}
 
 	/**

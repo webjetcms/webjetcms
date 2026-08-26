@@ -53,16 +53,82 @@ public class DB
 	 * Checks whether the supplied value is an unquoted SQL identifier. A single
 	 * table or alias qualifier can be enabled explicitly. This method validates
 	 * only identifier syntax; it does not verify that the table or column exists.
+	 * A qualified value must not be appended directly to an SQL expression because
+	 * the same syntax can also represent a package function. Use
+	 * {@link #fixUntrustedColumnName(String, String, String...)} when the value is
+	 * used as a column reference in an SQL expression.
 	 *
 	 * @param value identifier to validate (column name or table.column)
 	 * @param allowDot {@code true} to allow one qualifier such as {@code d.title}
 	 * @return {@code true} for {@code field_a} and, when enabled, {@code d.title}
 	 */
-	public static boolean isValidSqlIdentifier(String value, boolean allowDot)
+	public static boolean isValidColumnName(String value, boolean allowDot)
 	{
 		if (Tools.isEmpty(value)) return false;
 		if (allowDot) return SQL_QUALIFIED_IDENTIFIER_PATTERN.matcher(value).matches() || SQL_IDENTIFIER_PATTERN.matcher(value).matches();
 		return SQL_IDENTIFIER_PATTERN.matcher(value).matches();
+	}
+
+	/**
+	 * Resolves an untrusted column name against table qualifiers that are known to
+	 * exist in the current query. A qualifier can be a table name or its SQL alias.
+	 * An unqualified value is bound to {@code defaultQualifier}; a qualified value is
+	 * accepted only when its qualifier matches one of the trusted qualifiers. The
+	 * returned reference is always reconstructed from the trusted qualifier and the
+	 * validated column token.
+	 *
+	 * <p>This method validates syntax and query context, but it does not verify that
+	 * the column exists in the database.</p>
+	 *
+	 * <pre>{@code
+	 * column = DB.fixUntrustedColumnName(column, "documents");
+	 * if (column == null) return Collections.emptyList();
+	 * }</pre>
+	 *
+	 * @param columnName unqualified or qualified column name
+	 * @param tableNameAlias trusted table name or alias used for unqualified values
+	 * @param additionalTableNameAliases other trusted qualifiers present in the query
+	 * @return canonical {@code qualifier.column} reference, or {@code null} when invalid
+	 */
+	public static String fixUntrustedColumnName(String columnName, String tableNameAlias, String... additionalTableNameAliases)
+	{
+		if (isValidColumnName(tableNameAlias, false) == false || Tools.isEmpty(columnName)) return null;
+
+		String trustedTableNameAlias = tableNameAlias;
+		String column = columnName;
+		int dot = columnName.indexOf('.');
+		if (dot >= 0)
+		{
+			if (columnName.indexOf('.', dot + 1) >= 0) return null;
+
+			String suppliedTableNameAlias = columnName.substring(0, dot);
+			column = columnName.substring(dot + 1);
+			trustedTableNameAlias = resolveTrustedTableNameAlias(suppliedTableNameAlias, tableNameAlias, additionalTableNameAliases);
+			if (trustedTableNameAlias == null) return null;
+		}
+
+		if (isValidColumnName(column, false) == false) return null;
+		return trustedTableNameAlias + "." + column;
+	}
+
+	/**
+	 * Resolves a supplied qualifier (table name or alias) against a default and additional trusted qualifiers. The
+	 * @param suppliedQualifier - the qualifier to validate
+	 * @param defaultQualifier - the default qualifier to use when the supplied qualifier is unqualified
+	 * @param additionalAllowedQualifiers - additional trusted qualifiers to check against
+	 * @return the trusted qualifier if valid, or {@code null} if invalid
+	 */
+	private static String resolveTrustedTableNameAlias(String suppliedQualifier, String defaultQualifier, String... additionalAllowedQualifiers)
+	{
+		if (defaultQualifier.equalsIgnoreCase(suppliedQualifier)) return defaultQualifier;
+		if (additionalAllowedQualifiers == null) return null;
+
+		for (String allowedQualifier : additionalAllowedQualifiers)
+		{
+			if (isValidColumnName(allowedQualifier, false) && allowedQualifier.equalsIgnoreCase(suppliedQualifier))
+				return allowedQualifier;
+		}
+		return null;
 	}
 
 	/**

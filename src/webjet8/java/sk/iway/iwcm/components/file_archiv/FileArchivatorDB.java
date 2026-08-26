@@ -785,7 +785,8 @@ public class FileArchivatorDB extends JpaDB<FileArchivatorBean>
 	@SuppressWarnings("unchecked")
 	public static List<String> getDistinctListByProperty(String column)
 	{
-		if (DB.isValidSqlIdentifier(column, false) == false) return Collections.emptyList();
+		column = DB.fixUntrustedColumnName(column, "file_archiv");
+		if (column == null) return Collections.emptyList();
 
 		String methodName = "getDistinctListByProperty-";
 		String cacheKey = cachePrefix+methodName+"-property-"+column+"-domain_id-"+CloudToolsForCore.getDomainId();

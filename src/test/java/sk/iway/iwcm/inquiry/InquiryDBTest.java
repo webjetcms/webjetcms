@@ -11,7 +11,7 @@ class InquiryDBTest
 {
 	@ParameterizedTest
 	@NullAndEmptySource
-	@ValueSource(strings = {"answer_id DESC", "(SELECT password FROM users)", "ia.answer_id--"})
+	@ValueSource(strings = {"answer_id DESC", "(SELECT password FROM users)", "ia.answer_id--", "DBMS_RANDOM.VALUE", "unknown.answer_id"})
 	void resolveOrderByUsesDefaultForInvalidValues(String orderBy)
 	{
 		assertEquals("ia.answer_id", InquiryDB.resolveOrderBy(orderBy));
@@ -27,5 +27,11 @@ class InquiryDBTest
 	void resolveOrderByPreservesQualifiedColumn()
 	{
 		assertEquals("i.question_id", InquiryDB.resolveOrderBy("i.question_id"));
+	}
+
+	@Test
+	void resolveOrderByBindsArbitraryColumnToDefaultAlias()
+	{
+		assertEquals("ia.WJINJECTMARKER99", InquiryDB.resolveOrderBy("WJINJECTMARKER99"));
 	}
 }

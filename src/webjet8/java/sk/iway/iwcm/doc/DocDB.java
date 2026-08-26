@@ -1837,7 +1837,7 @@ public class DocDB extends DB
 			}
 			else if (orderType == ORDER_PRICE)
 			{
-				String priceField = getBasketPriceColumnName();
+				String priceField = DB.fixUntrustedColumnName(getBasketPriceColumnName(), "d");
 
 				if (Constants.DB_TYPE == Constants.DB_ORACLE) {
 					order = new StringBuilder("CAST("+priceField+" AS NUMBER(10, 2))");
@@ -3825,7 +3825,8 @@ public class DocDB extends DB
 	public static List<String> getFieldDistinctValues(String field)
 	{
 		List<String> ret = new ArrayList<>();
-		if (DB.isValidSqlIdentifier(field, false) == false)
+		field = DB.fixUntrustedColumnName(field, "documents");
+		if (field == null)
 		{
 			Logger.error(DocDB.class, "Invalid SQL identifier passed to getFieldDistinctValues");
 			return ret;
@@ -5767,8 +5768,8 @@ public class DocDB extends DB
 
 	public DocDetails getDocByField(String fieldName, String fieldValue, boolean noData)
 	{
-		String fieldColumnName = resolveCustomFieldColumnName(fieldName);
-		if (fieldColumnName == null)
+		String fieldColumnReference = resolveCustomFieldColumnName(fieldName);
+		if (fieldColumnReference == null)
 		{
 			Logger.error(DocDB.class, "Invalid field name passed to getDocByField");
 			return null;
@@ -5785,9 +5786,9 @@ public class DocDB extends DB
 
 			String select = DocDB.getDocumentFields(noData==false);
 			if (Constants.getBoolean("docAuthorLazyLoad")) {
-				sql = "SELECT " + select + " FROM documents d WHERE " + fieldColumnName + "= ?";
+				sql = "SELECT " + select + " FROM documents d WHERE " + fieldColumnReference + "= ?";
 			} else {
-				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, " + select + " FROM documents d LEFT JOIN users u ON d.author_id=u.user_id WHERE d." + fieldColumnName + "= ?";
+				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, " + select + " FROM documents d LEFT JOIN users u ON d.author_id=u.user_id WHERE " + fieldColumnReference + "= ?";
 			}
 
 			try {
@@ -5832,13 +5833,10 @@ public class DocDB extends DB
 		return (null);
 	}
 
-	static String resolveCustomFieldColumnName(String fieldName)
+	protected static String resolveCustomFieldColumnName(String fieldName)
 	{
-		if (Tools.isEmpty(fieldName) || fieldName.indexOf('.') >= 0)
-			return null;
-
-		String fieldColumnName = "field_" + fieldName;
-		return DB.isValidSqlIdentifier(fieldColumnName, false) ? fieldColumnName : null;
+		if (Tools.isEmpty(fieldName)) return null;
+		return DB.fixUntrustedColumnName("field_" + fieldName, "d");
 	}
 
 	/**
@@ -5894,7 +5892,7 @@ public class DocDB extends DB
 		try
 		{
 			db_conn = DBPool.getConnection();
-			String priceColumnName = getBasketPriceFilterColumnName();
+			String priceColumnName = DB.fixUntrustedColumnName(getBasketPriceFilterColumnName(), "documents");
 			StringBuilder sql = new StringBuilder("SELECT doc_id FROM documents WHERE");
 			if (Constants.DB_TYPE == Constants.DB_MSSQL) sql.append(" LEN(");
 			else sql.append(" LENGTH(");
@@ -5994,7 +5992,7 @@ public class DocDB extends DB
 
 	private static boolean isValidSimpleSqlIdentifier(String value)
 	{
-		return DB.isValidSqlIdentifier(value, false);
+		return DB.isValidColumnName(value, false);
 	}
 
 	private static String getDefaultBasketPriceColumnName(boolean logInvalidValue)

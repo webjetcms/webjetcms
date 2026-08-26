@@ -43,7 +43,7 @@ class DocDBSqlIdentifierTest
 	@Test
 	void customFieldResolverAcceptsOnlySimpleFieldSuffix()
 	{
-		assertEquals("field_a", DocDB.resolveCustomFieldColumnName("a"));
+		assertEquals("d.field_a", DocDB.resolveCustomFieldColumnName("a"));
 		assertNull(DocDB.resolveCustomFieldColumnName("a OR 1=1"));
 		assertNull(DocDB.resolveCustomFieldColumnName("d.a"));
 		assertNull(DocDB.resolveCustomFieldColumnName(null));

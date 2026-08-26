@@ -1,8 +1,11 @@
 package sk.iway.iwcm;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EmptySource;
 import org.junit.jupiter.params.provider.NullSource;
@@ -20,16 +23,16 @@ class DBTest
 	})
 	void isValidSqlIdentifierAllowsSimpleIdentifiers(String identifier)
 	{
-		assertTrue(DB.isValidSqlIdentifier(identifier, false));
-		assertTrue(DB.isValidSqlIdentifier(identifier, true));
+		assertTrue(DB.isValidColumnName(identifier, false));
+		assertTrue(DB.isValidColumnName(identifier, true));
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = {"d.title", "table_alias.field_1"})
+	@ValueSource(strings = {"d.title", "table_alias.field_1", "DBMS_RANDOM.VALUE"})
 	void isValidSqlIdentifierAllowsQualifiedIdentifiersOnlyWhenEnabled(String identifier)
 	{
-		assertFalse(DB.isValidSqlIdentifier(identifier, false));
-		assertTrue(DB.isValidSqlIdentifier(identifier, true));
+		assertFalse(DB.isValidColumnName(identifier, false));
+		assertTrue(DB.isValidColumnName(identifier, true));
 	}
 
 	@ParameterizedTest
@@ -70,7 +73,38 @@ class DBTest
 	})
 	void isValidSqlIdentifierRejectsSqlSyntaxAndMalformedIdentifiers(String identifier)
 	{
-		assertFalse(DB.isValidSqlIdentifier(identifier, false));
-		assertFalse(DB.isValidSqlIdentifier(identifier, true));
+		assertFalse(DB.isValidColumnName(identifier, false));
+		assertFalse(DB.isValidColumnName(identifier, true));
+	}
+
+	@Test
+	void resolveSqlColumnReferenceBindsColumnsToTrustedQualifiers()
+	{
+		assertEquals("d.title", DB.fixUntrustedColumnName("title", "d"));
+		assertEquals("d.title", DB.fixUntrustedColumnName("d.title", "d"));
+		assertEquals("d.title", DB.fixUntrustedColumnName("D.title", "d"));
+		assertEquals("d.WJINJECTMARKER99", DB.fixUntrustedColumnName("WJINJECTMARKER99", "d"));
+		assertEquals("d.SYSDATE", DB.fixUntrustedColumnName("SYSDATE", "d"));
+		assertEquals("i.question_id", DB.fixUntrustedColumnName("i.question_id", "ia", "i"));
+	}
+
+	@Test
+	void resolveSqlColumnReferenceRejectsQualifierNotPresentInQuery()
+	{
+		assertNull(DB.fixUntrustedColumnName("fa.virtual_file_name", "file_archiv"));
+	}
+
+	@ParameterizedTest
+	@NullSource
+	@EmptySource
+	@ValueSource(strings = {
+		"DBMS_RANDOM.VALUE",
+		"unknown.title",
+		"d.title.extra",
+		"title DESC"
+	})
+	void resolveSqlColumnReferenceRejectsUnknownQualifiersAndSqlExpressions(String identifier)
+	{
+		assertNull(DB.fixUntrustedColumnName(identifier, "d"));
 	}
 }

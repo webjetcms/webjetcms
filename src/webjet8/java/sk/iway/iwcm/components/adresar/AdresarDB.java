@@ -54,7 +54,8 @@ public class AdresarDB
 					if ("desc".equalsIgnoreCase(orderVarTmp))
 						orderVar = "DESC";
 				}
-				if (DB.isValidSqlIdentifier(orderType, true) == false) continue;
+				orderType = DB.fixUntrustedColumnName(orderType, "users");
+				if (orderType == null) continue;
 
 				if (orderSql.isEmpty()) {
 					orderSql.append(" ORDER BY ").append(orderType).append(' ').append(orderVar);
@@ -63,7 +64,7 @@ public class AdresarDB
 				}
 			}
 		}
-		if (orderSql.isEmpty()) return " ORDER BY last_name,first_name";
+		if (orderSql.isEmpty()) return " ORDER BY users.last_name,users.first_name";
 		return orderSql.toString();
 	}
 
