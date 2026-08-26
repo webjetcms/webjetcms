@@ -1836,14 +1836,12 @@ public class DocDB extends DB
 			}
 			else if (orderType == ORDER_PRICE)
 			{
-				String priceField = Constants.getString("basketPriceField");
-				//need to convert price field from Java format fieldK to SQL format field_k
-				priceField = priceField.replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase();
+				String priceField = DB.fixUntrustedColumnName(getBasketPriceColumnName(), "d");
 
 				if (Constants.DB_TYPE == Constants.DB_ORACLE) {
-					order = new StringBuilder("CAST("+ DB.removeSlashes(priceField) +" AS NUMBER(10, 2))");
+					order = new StringBuilder("CAST("+priceField+" AS NUMBER(10, 2))");
 				} else {
-					order = new StringBuilder("CAST("+ DB.removeSlashes(priceField) +" AS DECIMAL(10, 2))");
+					order = new StringBuilder("CAST("+priceField+" AS DECIMAL(10, 2))");
 				}
 			}
 
@@ -3826,6 +3824,13 @@ public class DocDB extends DB
 	public static List<String> getFieldDistinctValues(String field)
 	{
 		List<String> ret = new ArrayList<>();
+		field = DB.fixUntrustedColumnName(field, "documents");
+		if (field == null)
+		{
+			Logger.error(DocDB.class, "Invalid SQL identifier passed to getFieldDistinctValues");
+			return ret;
+		}
+
 		Connection db_conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -5762,6 +5767,13 @@ public class DocDB extends DB
 
 	public DocDetails getDocByField(String fieldName, String fieldValue, boolean noData)
 	{
+		String fieldColumnReference = resolveCustomFieldColumnName(fieldName);
+		if (fieldColumnReference == null)
+		{
+			Logger.error(DocDB.class, "Invalid field name passed to getDocByField");
+			return null;
+		}
+
 		String sql = "";
 
 		Connection connection = null;
@@ -5773,9 +5785,9 @@ public class DocDB extends DB
 
 			String select = DocDB.getDocumentFields(noData==false);
 			if (Constants.getBoolean("docAuthorLazyLoad")) {
-				sql = "SELECT " + select + " FROM documents d WHERE field_" + fieldName + "= ?";
+				sql = "SELECT " + select + " FROM documents d WHERE " + fieldColumnReference + "= ?";
 			} else {
-				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, " + select + " FROM documents d LEFT JOIN users u ON d.author_id=u.user_id WHERE d.field_" + fieldName + "= ?";
+				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, " + select + " FROM documents d LEFT JOIN users u ON d.author_id=u.user_id WHERE " + fieldColumnReference + "= ?";
 			}
 
 			try {
@@ -5818,6 +5830,12 @@ public class DocDB extends DB
 		}
 
 		return (null);
+	}
+
+	protected static String resolveCustomFieldColumnName(String fieldName)
+	{
+		if (Tools.isEmpty(fieldName)) return null;
+		return DB.fixUntrustedColumnName("field_" + fieldName, "d");
 	}
 
 	/**
@@ -5873,21 +5891,12 @@ public class DocDB extends DB
 		try
 		{
 			db_conn = DBPool.getConnection();
-			String priceColumnName = Constants.getString("basketPriceField");
-			if (priceColumnName == null)
-				ps = db_conn.prepareStatement("SELECT doc_id FROM documents");
-			else
-			{
-				//premena z fieldJ na field_j, ak je nutna
-				priceColumnName = priceColumnName.toLowerCase().startsWith("field") ?
-							"field_"+priceColumnName.toLowerCase().substring(priceColumnName.length() - 1) : priceColumnName;
-
-				StringBuilder sql = new StringBuilder("SELECT doc_id FROM documents WHERE");
-				if (Constants.DB_TYPE == Constants.DB_MSSQL) sql.append(" LEN(");
-				else sql.append(" LENGTH(");
-				sql.append(priceColumnName).append(") > 0");
-				ps = db_conn.prepareStatement(sql.toString());
-			}
+			String priceColumnName = DB.fixUntrustedColumnName(fixUntrustedColumnName(Constants.getString("basketPriceField"), false), "documents");
+			StringBuilder sql = new StringBuilder("SELECT doc_id FROM documents WHERE");
+			if (Constants.DB_TYPE == Constants.DB_MSSQL) sql.append(" LEN(");
+			else sql.append(" LENGTH(");
+			sql.append(priceColumnName).append(") > 0");
+			ps = db_conn.prepareStatement(sql.toString());
 			rs = ps.executeQuery();
 			while (rs.next())
 			{
@@ -5929,6 +5938,43 @@ public class DocDB extends DB
 		}
 
 		return products;
+	}
+
+	private static String getBasketPriceColumnName()
+	{
+		String priceColumnName = Constants.getString("basketPriceField");
+		if (!DB.isValidColumnName(priceColumnName, false))
+			return getDefaultBasketPriceColumnName(true);
+
+		// Convert the Java property format fieldK to the SQL column format field_k.
+		priceColumnName = priceColumnName.replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase(Locale.ROOT);
+		if (!DB.isValidColumnName(priceColumnName, false))
+			return getDefaultBasketPriceColumnName(true);
+		return priceColumnName;
+	}
+
+	protected static String fixUntrustedColumnName(String priceColumnName, boolean logInvalidValue)
+	{
+		if (!DB.isValidColumnName(priceColumnName, false))
+			return getDefaultBasketPriceColumnName(logInvalidValue);
+
+		// Preserve the legacy mapping used by getItemsWithPrice.
+		if (priceColumnName.toLowerCase(Locale.ROOT).startsWith("field"))
+		{
+			String lowerCaseName = priceColumnName.toLowerCase(Locale.ROOT);
+			priceColumnName = "field_" + lowerCaseName.substring(lowerCaseName.length() - 1);
+		}
+
+		if (!DB.isValidColumnName(priceColumnName, false))
+			return getDefaultBasketPriceColumnName(logInvalidValue);
+		return priceColumnName;
+	}
+
+	private static String getDefaultBasketPriceColumnName(boolean logInvalidValue)
+	{
+		if (logInvalidValue)
+			Logger.error(DocDB.class, "Invalid basketPriceField SQL identifier, using field_k");
+		return "field_k";
 	}
 
 

@@ -9,18 +9,14 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
-import java.util.StringTokenizer;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.lang3.StringUtils;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
@@ -56,13 +52,38 @@ import sk.iway.iwcm.users.UsersDB;
  */
 public class InquiryDB
 {
+	/** Sort inquiry answers by their text. */
 	public static final String ORDER_BY_ANSWER_TEXT = "ia.answer_text";
+	/** Sort inquiry answers by their click count. */
 	public static final String ORDER_BY_ANSWER_CLICKS = "ia.answer_clicks";
+	/** Sort inquiry answers by their identifier. */
 	public static final String ORDER_BY_ANSWER_ID = "ia.answer_id";
 	private static Random random = new Random();
 
 	protected InquiryDB() {
 		//utility class
+	}
+
+	static String resolveOrderBy(String orderBy)
+	{
+		orderBy = DB.fixUntrustedColumnName(orderBy, "ia", "i");
+		return orderBy == null ? ORDER_BY_ANSWER_ID : orderBy;
+	}
+
+	private static String buildSqlPlaceholders(int count)
+	{
+		StringBuilder placeholders = new StringBuilder();
+		for (int i = 0; i < count; i++)
+		{
+			if (i > 0) placeholders.append(", ");
+			placeholders.append('?');
+		}
+		return placeholders.toString();
+	}
+
+	private static String[] parseGroupNames(String groupNames)
+	{
+		return Tools.getTokens(groupNames, ",+", false);
 	}
 
 	public static InquiryBean getLastInquiry(int imagesLength, String percentageFormat, HttpServletRequest request)
@@ -85,17 +106,13 @@ public class InquiryDB
 	 */
 	public static List<Integer> getInquiryIds(String groupNames, HttpServletRequest request, boolean all)
 	{
-		List<String> groups = Arrays.asList(DB.removeSlashes(groupNames).split(",\\|\\+"));
-		List<String> groupsSQL = new ArrayList<>();
-		for (String group : groups)
-		{
-			groupsSQL.add("'" + group + "'");
-		}
+		List<Integer> ids = new ArrayList<>();
+		String[] groups = parseGroupNames(groupNames);
+		if (groups.length == 0) return ids;
 
 		String sql = "SELECT " + (all ? "question_id" : "max(question_id)") + " AS id FROM inquiry " +
-			"WHERE question_group IN (" + StringUtils.join(groupsSQL.toArray(), ", ") + ") " +
+			"WHERE question_group IN (" + buildSqlPlaceholders(groups.length) + ") " +
 			"AND (date_from < ? OR date_from IS NULL) AND (date_to > ? OR date_to IS NULL) AND question_active = "+DB.getBooleanSql(true)+" "+CloudToolsForCore.getDomainIdSqlWhere(true);
-		List<Integer> ids = new ArrayList<>();
 
 		Connection db_conn = DBPool.getConnection(DBPool.getDBName(request));
 		if (null == db_conn) return ids;
@@ -106,8 +123,10 @@ public class InquiryDB
 				PreparedStatement ps = db_conn.prepareStatement(sql);
 				try
 				{
-					ps.setTimestamp(1, new Timestamp(Tools.getNow()));
-					ps.setTimestamp(2, new Timestamp(Tools.getNow()));
+					int parameterIndex = 1;
+					for (String group : groups) ps.setString(parameterIndex++, group);
+					ps.setTimestamp(parameterIndex++, new Timestamp(Tools.getNow()));
+					ps.setTimestamp(parameterIndex, new Timestamp(Tools.getNow()));
 					ResultSet rs = ps.executeQuery();
 					try
 					{
@@ -135,10 +154,12 @@ public class InquiryDB
 	 *           pocet generovanych obrazkov v stlpiku
 	 * @param percentageFormat -
 	 *           format vypisu percent
-	 * @param orderBy -
-	 *           SQL sposob usporiadania odpovedi
-	 * @param ascending -
-	 *           true ak je vzostupne usporiadanie
+	 * @param orderBy column identifier used for sorting; an unqualified identifier is bound to the
+	 *           {@code ia} query alias, while {@code ia} and {@code i} qualifiers are accepted. Prefer
+	 *           {@link #ORDER_BY_ANSWER_TEXT},
+	 *           {@link #ORDER_BY_ANSWER_CLICKS}, or {@link #ORDER_BY_ANSWER_ID}. Raw SQL expressions
+	 *           are not supported; an invalid value falls back to {@link #ORDER_BY_ANSWER_ID}
+	 * @param ascending whether to sort in ascending order
 	 * @param request
 	 * @param random - boolean hodnota, ci sa ma vybrat nahodna anketa alebo najnovsia
 	 * @return
@@ -161,10 +182,12 @@ public class InquiryDB
 	 *           pocet generovanych obrazkov v stlpiku
 	 * @param percentageFormat -
 	 *           format vypisu percent
-	 * @param orderBy -
-	 *           SQL sposob usporiadania odpovedi
-	 * @param ascending -
-	 *           true ak je vzostupne usporiadanie
+	 * @param orderBy column identifier used for sorting; an unqualified identifier is bound to the
+	 *           {@code ia} query alias, while {@code ia} and {@code i} qualifiers are accepted. Prefer
+	 *           {@link #ORDER_BY_ANSWER_TEXT},
+	 *           {@link #ORDER_BY_ANSWER_CLICKS}, or {@link #ORDER_BY_ANSWER_ID}. Raw SQL expressions
+	 *           are not supported; an invalid value falls back to {@link #ORDER_BY_ANSWER_ID}
+	 * @param ascending whether to sort in ascending order
 	 * @param request
 	 * @return
 	 */
@@ -198,12 +221,7 @@ public class InquiryDB
 		{
 			String orderType = "DESC";
 			if (ascending)	orderType = "ASC";
-			//keby nieco...
-			orderBy = orderBy.replace('\'', ' ');
-			if (orderBy.indexOf('.') == -1)
-			{
-				orderBy = "ia." + orderBy;
-			}
+			orderBy = resolveOrderBy(orderBy);
 			db_conn = DBPool.getConnection(DBPool.getDBName(request));
 			if (questionId == -1)
 			{
@@ -1285,13 +1303,21 @@ public class InquiryDB
 
 	/**
 	 * Vrati zoznam starych ankiet usporiadanych podla datumu platnosti
-	 * @param groupNames - nazvy skupin oddelene ciarkou
+	 * @param groupNames - nazvy skupin oddelene ciarkou alebo znakom +
 	 * @param orderAscending - ak je true je usporiadanie od najstarsich po najnovsie
 	 * @return
 	 */
 	public static List<AnswerForm> getOldInquiry(String groupNames, boolean orderAscending)
 	{
 		List<AnswerForm> inquirys = new ArrayList<>();
+		boolean filterByGroupNames = Tools.isNotEmpty(groupNames);
+		String[] groups = new String[0];
+		if (filterByGroupNames)
+		{
+			groups = parseGroupNames(groupNames);
+			if (groups.length == 0) return inquirys;
+		}
+
 		Connection db_conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -1304,17 +1330,9 @@ public class InquiryDB
 
 			StringBuilder sql = new StringBuilder("SELECT * FROM inquiry");
 
-			if (Tools.isNotEmpty(groupNames))
+			if (filterByGroupNames)
 			{
-				groupNames = DB.removeSlashes(groupNames);
-				StringTokenizer st = new StringTokenizer(groupNames, ",+");
-				sql.append(" WHERE question_group IN ( '").append(DB.removeSlashes(st.nextToken())).append('\'');
-
-				while (st.hasMoreTokens())
-				{
-					sql.append(", '").append(st.nextToken()).append('\'');
-				}
-				sql.append(") ");
+				sql.append(" WHERE question_group IN (").append(buildSqlPlaceholders(groups.length)).append(") ");
 
 				sql.append(CloudToolsForCore.getDomainIdSqlWhere(true));
 			}
@@ -1326,6 +1344,8 @@ public class InquiryDB
 			sql.append(" ORDER BY date_from ").append(sOrder).append(", question_id ").append(sOrder);
 
 			ps = db_conn.prepareStatement(sql.toString());
+			int parameterIndex = 1;
+			for (String group : groups) ps.setString(parameterIndex++, group);
 			rs = ps.executeQuery();
 			AnswerForm icForm;
 			while (rs.next())

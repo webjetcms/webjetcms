@@ -12,6 +12,8 @@ import javax.servlet.http.HttpServletRequest;
 import jxl.Cell;
 import jxl.Sheet;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.xls.ExcelImportJXL;
@@ -51,6 +53,14 @@ public final class PricelistExcelImport extends ExcelImportJXL
 	private String partNumberFieldName;
 
 	private boolean isImportedByDocId;
+	private boolean databaseFieldNamesChecked;
+	private boolean databaseFieldNamesValid;
+	private boolean databaseFieldNamesErrorReported;
+	private String priceDatabaseFieldName;
+	private String vatDatabaseFieldName;
+	private String currencyDatabaseFieldName;
+	private String quantityDatabaseFieldName;
+	private String partNumberDatabaseFieldName;
 
 	public PricelistExcelImport(InputStream in, HttpServletRequest request, PrintWriter out)
 	{
@@ -78,6 +88,15 @@ public final class PricelistExcelImport extends ExcelImportJXL
 
 		if (!isRowValid(row, prop))
 			return;
+		if (!checkDatabaseFieldNames())
+		{
+			if (!databaseFieldNamesErrorReported)
+			{
+				printlnError(prop.getText("components.basket.price_import.invalid_database_field_configuration"), rowCounter);
+				databaseFieldNamesErrorReported = true;
+			}
+			return;
+		}
 
 		String vat = getValue(row, vatFieldName).trim();
 		vat = vat.endsWith("%") ? vat.substring(0, vat.length() -1).trim() : vat;
@@ -86,14 +105,13 @@ public final class PricelistExcelImport extends ExcelImportJXL
 			println("Importujem "+getValue(row, titleFieldName), rowCounter);
 
 			//------------------------ZAPIS V DATABAZU--------------------------
-			//TODO mozna SQL injection, treba zistit, ci sa to inak neda
 			String sql = "UPDATE documents SET "+
-				formatFieldName(Constants.getString("basketPriceField"))+"=?, "+
-				formatFieldName(Constants.getString("basketVatField"))+"=?, "+
-				formatFieldName(Constants.getString("basketCurrencyField"))+"=?, "+
-				formatFieldName(Constants.getString("basketQuantityField"))+"=? ";
+				priceDatabaseFieldName+"=?, "+
+				vatDatabaseFieldName+"=?, "+
+				currencyDatabaseFieldName+"=?, "+
+				quantityDatabaseFieldName+"=? ";
 			//dva mozne pripady - update podla docId alebo podla partNo
-			sql += isImportedByDocId ? "WHERE doc_id = ?" : "WHERE "+formatFieldName(Constants.getString("basketPartNoField"))+" = ?";
+			sql += isImportedByDocId ? "WHERE documents.doc_id = ?" : "WHERE "+partNumberDatabaseFieldName+" = ?";
 			ps = db_conn.prepareStatement(sql);
 
 			double price = getDouble(row, priceFieldName, 0);
@@ -217,14 +235,52 @@ public final class PricelistExcelImport extends ExcelImportJXL
 	 * @param fieldName
 	 * @return
 	 */
-	private String formatFieldName (String fieldName)
+	static String formatFieldName (String fieldName)
 	{
-		String fieldNameCopy = fieldName.toLowerCase().split("\\s")[0];
+		if (DB.isValidColumnName(fieldName, false) == false) return fieldName;
 
-		if (!fieldNameCopy.toLowerCase().startsWith("field"))
+		String fieldNameCopy = fieldName.toLowerCase(java.util.Locale.ROOT);
+		if (!fieldNameCopy.startsWith("field"))
 			return fieldName;
 
 		return "field_"+fieldNameCopy.charAt( fieldNameCopy.length() - 1 );
+	}
+
+	private boolean checkDatabaseFieldNames()
+	{
+		if (databaseFieldNamesChecked)
+			return databaseFieldNamesValid;
+
+		databaseFieldNamesChecked = true;
+		priceDatabaseFieldName = formatFieldName(Constants.getString("basketPriceField"));
+		vatDatabaseFieldName = formatFieldName(Constants.getString("basketVatField"));
+		currencyDatabaseFieldName = formatFieldName(Constants.getString("basketCurrencyField"));
+		quantityDatabaseFieldName = formatFieldName(Constants.getString("basketQuantityField"));
+		databaseFieldNamesValid = true;
+		databaseFieldNamesValid &= isConfiguredFieldNameValid("basketPriceField", priceDatabaseFieldName);
+		databaseFieldNamesValid &= isConfiguredFieldNameValid("basketVatField", vatDatabaseFieldName);
+		databaseFieldNamesValid &= isConfiguredFieldNameValid("basketCurrencyField", currencyDatabaseFieldName);
+		databaseFieldNamesValid &= isConfiguredFieldNameValid("basketQuantityField", quantityDatabaseFieldName);
+		if (!isImportedByDocId)
+		{
+			partNumberDatabaseFieldName = DB.fixUntrustedColumnName(formatFieldName(Constants.getString("basketPartNoField")), "documents");
+			if (partNumberDatabaseFieldName == null)
+			{
+				Logger.error(PricelistExcelImport.class, "Invalid SQL identifier configured in constant basketPartNoField");
+				databaseFieldNamesValid = false;
+			}
+		}
+
+		return databaseFieldNamesValid;
+	}
+
+	private boolean isConfiguredFieldNameValid(String constantName, String fieldName)
+	{
+		if (DB.isValidColumnName(fieldName, false))
+			return true;
+
+		Logger.error(PricelistExcelImport.class, "Invalid SQL identifier configured in constant {}", constantName);
+		return false;
 	}
 
 	/**
