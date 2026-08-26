@@ -219,8 +219,7 @@ class LibrarySupportLogicTest {
         when(provider.execute(any(AiRequest.class), eq(providerConfig)))
             .thenReturn(new AiResponse("descriptive-name", List.of(), usage, "stop"));
         when(configuration.imageNamePrompt()).thenReturn("Create a short filename.");
-        when(configuration.imageNameModel("test-provider")).thenReturn("name-model");
-        when(configuration.resolve("test-provider", servletRequest)).thenReturn(providerConfig);
+        when(configuration.resolve(any(AiInterface.class), eq(servletRequest))).thenReturn(providerConfig);
 
         TestLibrarySupportLogic logic = new TestLibrarySupportLogic(AiClient.of(provider), configuration);
         AssistantDefinitionEntity assistant = assistant();
@@ -275,6 +274,11 @@ class LibrarySupportLogicTest {
         @Override
         public String getTitleKey() {
             return "test-provider";
+        }
+
+        @Override
+        public String getImageNameModel() {
+            return "name-model";
         }
     }
 }

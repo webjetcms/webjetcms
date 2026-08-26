@@ -162,6 +162,7 @@ public class UpdateDatabase
 		parseFormsByType();
 
 		ragUpdateDatabase();
+		ragEmbeddingProviderUpdateDatabase();
 
 		if(InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
 			DomainIdUpdateService.updateExportDatDomainId();
@@ -2855,5 +2856,46 @@ public class UpdateDatabase
 
 		//do not mark as done on failure, so the backfill is retried on the next startup
 		if (fillSuccess) saveSuccessUpdate(note);
+	}
+
+	public static void ragEmbeddingProviderUpdateDatabase() {
+		String note = "24.08.2026 [sivan] add embedding_provider column to rag_embedding_chunks.";
+		if (isAllreadyUpdated(note)) return;
+
+		String databaseName = PgvectorJpaConfig.getRagDataSourceName();
+		if (Tools.isEmpty(databaseName)) return;
+
+		String tableName = "rag_embedding_chunks";
+		String defaultProvider = Constants.getString("ragEmbeddingProvider");
+		if (Tools.isEmpty(defaultProvider)) defaultProvider = "openai";
+		defaultProvider = defaultProvider.trim().toLowerCase(java.util.Locale.ROOT);
+
+		try (Connection connection = DBPool.getConnection(databaseName)) {
+			DatabaseMetaData metadata = connection.getMetaData();
+			try (ResultSet tables = metadata.getTables(connection.getCatalog(), null, tableName, new String[] {"TABLE"})) {
+				if (tables.next() == false) return;
+			}
+
+			try (Statement statement = connection.createStatement()) {
+				statement.execute("ALTER TABLE " + tableName + " ADD COLUMN IF NOT EXISTS embedding_provider VARCHAR(100)");
+			}
+
+			try (PreparedStatement statement = connection.prepareStatement(
+				"UPDATE " + tableName + " SET embedding_provider = ? WHERE embedding_provider IS NULL OR embedding_provider = ''")) {
+				statement.setString(1, defaultProvider);
+				statement.executeUpdate();
+			}
+
+			try (Statement statement = connection.createStatement()) {
+				statement.execute("ALTER TABLE " + tableName + " ALTER COLUMN embedding_provider SET NOT NULL");
+				statement.execute("ALTER TABLE " + tableName + " DROP CONSTRAINT IF EXISTS uq_rag_chunk");
+				statement.execute("ALTER TABLE " + tableName + " ADD CONSTRAINT uq_rag_chunk UNIQUE (entity_type, entity_id, chunk_index, embedding_provider, embedding_model)");
+			}
+		} catch (Exception e) {
+			Logger.error(UpdateDatabase.class, "Error adding RAG embedding provider column: " + e.getMessage());
+			return;
+		}
+
+		saveSuccessUpdate(note);
 	}
 }

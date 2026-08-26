@@ -32,6 +32,7 @@ public interface VectorStore {
     /**
      * Find the most similar chunks to the query embedding.
      * @param queryEmbedding the query vector
+     * @param embeddingProvider provider used to generate/query embeddings
      * @param embeddingModel model used to generate/query embeddings
      * @param entityType entity type to filter by (null for all)
      * @param domainId domain ID to filter by (null for all)
@@ -40,11 +41,12 @@ public interface VectorStore {
      * @param bonusParams optional store-specific filters, such as document root groups
      * @return list of search results ordered by similarity (descending)
      */
-    List<VectorSearchResult> search(float[] queryEmbedding, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams);
+    List<VectorSearchResult> search(float[] queryEmbedding, String embeddingProvider, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams);
 
     /**
      * Find relevant chunks by fulltext search in chunk text.
      * @param query textual query
+     * @param embeddingProvider provider used to filter rows
      * @param embeddingModel model used to filter rows
      * @param entityType entity type to filter by (null for all)
      * @param domainId domain ID to filter by (null for all)
@@ -53,7 +55,7 @@ public interface VectorStore {
      * @param bonusParams optional store-specific filters, such as document root groups and fallback flags
      * @return list of search results ordered by fulltext rank (descending)
      */
-    List<VectorSearchResult> searchFulltext(String query, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams);
+    List<VectorSearchResult> searchFulltext(String query, String embeddingProvider, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams);
 
     /**
      * Check if the vector store can be used in the current runtime configuration.
@@ -73,14 +75,36 @@ public interface VectorStore {
     boolean initializeSchema();
 
     /**
-     * Delete all stored embeddings for a specific model.
-     * @param embeddingModel model used to generate the embeddings to delete
+     * Delete all stored embeddings and resize the vector column.
+     * @param dimensions new vector dimensions
      */
-    boolean deleteModelData(String embeddingModel);
+    boolean resetDimensions(int dimensions);
 
     /**
      * Get existing embeddings for an entity, keyed by content hash.
-     * Used to skip re-embedding unchanged chunks.
+     *
+     * @deprecated use the domain-explicit overload for background processing
+     * @param entityType entity type of the indexed object
+     * @param entityId ID of the indexed object
+     * @param embeddingProvider provider that generated the embeddings
+     * @param embeddingModel model that generated the embeddings
+     * @return existing embeddings keyed by content hash
      */
-    Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingModel);
+    @Deprecated(forRemoval = false)
+    Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingProvider, String embeddingModel);
+
+    /**
+     * Get existing embeddings for an entity and domain, keyed by content hash.
+     * Used to skip re-embedding unchanged chunks.
+     *
+     * @param entityType entity type of the indexed object
+     * @param entityId ID of the indexed object
+     * @param embeddingProvider provider that generated the embeddings
+     * @param embeddingModel model that generated the embeddings
+     * @param domainId domain that owns the indexed object
+     * @return existing embeddings keyed by content hash
+     */
+    default Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingProvider, String embeddingModel, int domainId) {
+        return getExistingEmbeddingsByHash(entityType, entityId, embeddingProvider, embeddingModel);
+    }
 }

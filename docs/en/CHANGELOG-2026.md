@@ -82,6 +82,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ![](redactor/apps/semantic-search/rag-result.png)
 
+- Embedding indexing and search uses the provider and model set in the system AI assistant. Indexes of different providers and models can coexist; the **Semantic Index** page displays the current setting and preserves other combinations when re-indexing. The core of embedding requests, responses, and provider communication has been separated into the `webjet-ai` library; WebJET CMS continues to handle assistant selection, indexing, and vector storage (#58694).
+
 ### Applications
 
 - E-commerce - added [Statistics] application (redactor/apps/eshop/stats/README.md) with summary indicators, filtering by status, currency and period, and graphs of sales, products, categories, delivery methods and payment methods (#58065).
@@ -120,6 +122,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 - Added option to set optional field as required (#58413).
 - Added new optional field types [radio check box and radio check box](frontend/webpages/customfields/custom-fields-settings.md#difference-between-selectmultiselect-and-radiocheckbox) with support for both static options and codebook linking. The `multiselect` type now also supports [codebook linking](frontend/webpages/customfields/custom-fields-settings.md#option-source). The original `enumeration` type has been replaced by an option source switch for types `select`, `multiselect`, `radio` and `checkbox` where options are loaded from a linked codebook for all these field types (#58637).
+
+### Accessibility
+
+- Administration - extended keyboard control and screen reader support for data tables, modals and notifications, tooltips, date and color pickers, and HTML editor. Improved focus shifting and returning, row and cell selection, accessible names and ARIA states, required field marking, control contrasts, and a skip to main content link. Automated regression `a11y` tests for these scenarios (#235) have been added.
 
 ### Multiweb
 
@@ -177,6 +183,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Administration - removed dependency on [Vue.js](https://vuejs.org). Tree fields, start page, image area selection and server monitoring use native [web components](developer/frameworks/web-components.md). The global object `window.VueTools` and packages for Vue are no longer part of the administration. Custom extensions must replace them with web components or compile Vue themselves (#58722).
 
 - AI Assistants - Provider-independent client logic for OpenAI, Gemini, and OpenRouter, stream processing, request/response types, and prompt protection have been separated into a separate artifact `com.webjetcms:webjet-ai` and an external [webjet-ai repository](https://github.com/webjetcms/webjet-ai). WebJET CMS passes configuration through a typed adapter and continues to provide auditing, persistence, and UI integration. This is an incompatible change: the original CMS SPI for custom providers and its transport and streaming support classes have been removed. Custom providers must be migrated to the `AiProvider` library interface and the CMS adapter `LibrarySupportLogic` (#58670).
+
+- AI providers - your own implementation can be [added to the project](custom-apps/apps/ai/assistants/README.md) as a Spring bean `AiProvider` ; the CMS will automatically connect it to the built-in providers. The configuration and editor fields are concentrated in a single adapter `LibrarySupportLogic` /`AiAssitantsInterface`. Image generation options are loaded by provider, model and operation from the library `webjet-ai`, so only the supported number, size, quality and aspect ratio are dynamically displayed (#58694).
 
 - Datatables - added a new field type `OPTIONS` for [dynamic list of values](developer/datatables-editor/standard-fields.md#options) in the editor. Each row contains two text fields (key and value), supports adding, removing and reordering using `drag & drop` (#58517).
 
@@ -395,6 +403,9 @@ Redesigned application properties settings in the editor from the old code in `J
 - Multiweb - fixed the ability to delete or edit a domain redirect that contains the `http/s` prefix (#58317-15).
 - Gallery - in the application editor, only JSP files from the `/components/{INSTALL_NAME}/gallery` and `/components/gallery` folders are displayed among the visual styles, without duplicate items (#58317-16).
 - Inserting HTML code - in the application preview in the website editor, for content consisting only of `script` elements, the source code is displayed instead of empty content (#OSK625).
+- Security - tightened verification of the link to recover a forgotten password. The verification record is checked for the selected user account even with the custom sending method, respects the time validity and after use is invalidated for all accounts included in the request (#292).
+- Security - tightened control of folder rights when uploading a file to the administration and overwriting it if the file exists.
+- Security - tightened validation of database column names when performing dynamic sorting and filtering. **Warning:** Public APIs no longer support custom SQL expressions in sort parameters, only safe column names or available named constants are used (#294).
 
 ## 2026.0.28
 

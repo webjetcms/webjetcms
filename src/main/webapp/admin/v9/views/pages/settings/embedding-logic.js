@@ -225,12 +225,14 @@ function getHeaderTabs() {
 
 function _addParamsBtnUrl(baseUrl) {
     const rootDir = document.getElementById("rootDir");
+    const includeSubfolders = document.getElementById("includeSubfolders");
     const rootDirValue = rootDir ? String(rootDir.value || "") : "";
     const rootDirText = rootDir ? String(rootDir.getAttribute("data-text") || "") : "";
 
     const url = new URL(baseUrl, window.location.origin);
     if (rootDirValue.length > 0) { url.searchParams.set("rootDir", rootDirValue); }
     if (rootDirText.length > 0) { url.searchParams.set("rootDirText", rootDirText); }
+    if (includeSubfolders) { url.searchParams.set("includeSubfolders", String(includeSubfolders.checked)); }
 
     return url;
 }

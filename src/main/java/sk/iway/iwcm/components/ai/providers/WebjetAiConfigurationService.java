@@ -19,65 +19,67 @@ import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.system.multidomain.DomainRequestBeanScope;
 
 /** Resolves a request-scoped WebJET configuration snapshot for the standalone library. */
 @Service
 public class WebjetAiConfigurationService {
 
+    static final String FILE_NAME_PROMPT = "ai_generateFileNamePrompt";
+    static final String AUDIT_MAX_LENGTH = "ai_auditMaxLength";
+    static final String PROVIDER_CONNECT_TIMEOUT_SECONDS = "ai_providerConnectTimeoutSeconds";
+    static final String PROVIDER_RESPONSE_TIMEOUT_SECONDS = "ai_providerResponseTimeoutSeconds";
+
     private final ConcurrentMap<String, VersionedConfiguration> versions = new ConcurrentHashMap<>();
     private final AtomicLong revisionSequence = new AtomicLong();
 
-    public AiProviderConfig resolve(String providerId) {
-        return resolve(providerId, null);
+    public AiProviderConfig resolve(AiInterface provider) {
+        return resolve(provider, (HttpServletRequest) null);
     }
 
-    public AiProviderConfig resolve(String providerId, HttpServletRequest request) {
-        AiProviderConfig.Builder builder = AiProviderConfig.builder(apiKey(providerId))
-            .connectTimeout(timeout(WebjetAiConfigKeys.PROVIDER_CONNECT_TIMEOUT_SECONDS))
-            .responseTimeout(timeout(WebjetAiConfigKeys.PROVIDER_RESPONSE_TIMEOUT_SECONDS));
-        String referer = trustedReferer(request);
+    public AiProviderConfig resolve(AiInterface provider, HttpServletRequest request) {
+        return buildConfiguration(provider, trustedReferer(request, null));
+    }
 
-        if ("gemini".equals(providerId)) {
-            builder.trustedHeader("Referer", referer);
-        } else if ("openrouter".equals(providerId)) {
-            builder.trustedHeader("HTTP-Referer", referer);
-            builder.trustedHeader("X-Title", "WebJET CMS");
+    public AiProviderConfig resolveForDomain(AiInterface provider, String domainName) {
+        try (DomainRequestBeanScope ignored = DomainRequestBeanScope.open(domainName)) {
+            return buildConfiguration(provider, trustedReferer(null, domainName));
         }
+    }
+
+    private AiProviderConfig buildConfiguration(AiInterface provider, String referer) {
+        AiProviderConfig.Builder builder = AiProviderConfig.builder(provider.getApiKey())
+            .connectTimeout(timeout(PROVIDER_CONNECT_TIMEOUT_SECONDS))
+            .responseTimeout(timeout(PROVIDER_RESPONSE_TIMEOUT_SECONDS));
+
+        provider.configure(builder, referer);
 
         return builder.build();
     }
 
-    public boolean isConfigured(String providerId) {
-        return resolve(providerId).isConfigured();
-    }
-
-    public String imageNameModel(String providerId) {
-        return switch (providerId) {
-            case "openai" -> Constants.getString(WebjetAiConfigKeys.OPENAI_FILE_NAME_MODEL);
-            case "gemini" -> Constants.getString(WebjetAiConfigKeys.GEMINI_FILE_NAME_MODEL);
-            case "openrouter" -> Constants.getString(WebjetAiConfigKeys.OPENROUTER_FILE_NAME_MODEL);
-            default -> "";
-        };
+    public boolean isConfigured(AiInterface provider) {
+        return resolve(provider).isConfigured();
     }
 
     public String imageNamePrompt() {
-        return Constants.getString(WebjetAiConfigKeys.FILE_NAME_PROMPT);
+        return Constants.getString(FILE_NAME_PROMPT);
     }
 
     public int auditMaxLength() {
-        return Constants.getInt(WebjetAiConfigKeys.AUDIT_MAX_LENGTH);
+        return Constants.getInt(AUDIT_MAX_LENGTH);
     }
 
     /**
      * Returns a non-secret cache scope that changes when the effective provider
      * configuration changes for the current WebJET domain.
      */
-    public String modelCacheDiscriminator(String providerId) {
-        return modelCacheDiscriminator(providerId, null);
+    public String modelCacheDiscriminator(AiInterface provider) {
+        return modelCacheDiscriminator(provider, null);
     }
 
-    public String modelCacheDiscriminator(String providerId, HttpServletRequest request) {
-        AiProviderConfig config = resolve(providerId, request);
+    public String modelCacheDiscriminator(AiInterface provider, HttpServletRequest request) {
+        String providerId = provider.getProviderId();
+        AiProviderConfig config = resolve(provider, request);
         String scope = CloudToolsForCore.getDomainId() + ":" + trustedReferer(request) + ":" + providerId;
         String fingerprint = fingerprint(config);
         VersionedConfiguration version = versions.compute(scope, (key, current) -> {
@@ -88,9 +90,15 @@ public class WebjetAiConfigurationService {
     }
 
     private String trustedReferer(HttpServletRequest request) {
+        return trustedReferer(request, null);
+    }
+
+    private String trustedReferer(HttpServletRequest request, String explicitDomain) {
         String currentDomain = CloudToolsForCore.getDomainName();
         String requestDomain = request == null ? null : Tools.getServerName(request, false);
-        String trustedDomain = validDomain(currentDomain) ? currentDomain : requestDomain;
+        String trustedDomain = validDomain(explicitDomain)
+            ? explicitDomain
+            : (validDomain(currentDomain) ? currentDomain : requestDomain);
 
         if (request != null) {
             String incomingReferer = Tools.sanitizeHttpHeaderParam(request.getHeader("Referer"));
@@ -147,15 +155,6 @@ public class WebjetAiConfigurationService {
         } catch (URISyntaxException exception) {
             return false;
         }
-    }
-
-    private String apiKey(String providerId) {
-        return switch (providerId) {
-            case "openai" -> Constants.getString(WebjetAiConfigKeys.OPENAI_API_KEY);
-            case "gemini" -> Constants.getString(WebjetAiConfigKeys.GEMINI_API_KEY);
-            case "openrouter" -> Constants.getString(WebjetAiConfigKeys.OPENROUTER_API_KEY);
-            default -> "";
-        };
     }
 
     private Duration timeout(String constantName) {
