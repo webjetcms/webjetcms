@@ -7,91 +7,89 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import sk.iway.iwcm.test.TestRequest;
-
 class SearchActionTest
 {
 	@Test
 	void validRequestParameterIsReturned()
 	{
-		TestRequest request = new TestRequest();
-		request.setParameter("orderType", "d.title");
+		SearchActionInput input = new SearchActionInput();
+		input.setParameter("orderType", "d.title");
 
-		assertEquals("d.title", SearchAction.getValidatedOrderType("orderType", request, "sort_priority", false));
+		assertEquals("d.title", SearchAction.getValidatedOrderType("orderType", input, "sort_priority", false));
 	}
 
 	@Test
 	void invalidRequestParameterUsesSafeDefault()
 	{
-		TestRequest request = new TestRequest();
-		request.setParameter("orderType", "title DESC");
+		SearchActionInput input = new SearchActionInput();
+		input.setParameter("orderType", "title DESC");
 
-		assertEquals("d.sort_priority", SearchAction.getValidatedOrderType("orderType", request, "sort_priority", false));
+		assertEquals("d.sort_priority", SearchAction.getValidatedOrderType("orderType", input, "sort_priority", false));
 	}
 
 	@ParameterizedTest
 	@ValueSource(strings = {"title", "d.title"})
 	void getValidatedOrderTypeAcceptsConfiguredAttribute(String orderType)
 	{
-		TestRequest request = new TestRequest();
-		request.setAttribute("orderType", orderType);
+		SearchActionInput input = new SearchActionInput();
+		input.setAttribute("orderType", orderType);
 
-		assertEquals("d.title", SearchAction.getValidatedOrderType("orderType", request, "sort_priority", false));
+		assertEquals("d.title", SearchAction.getValidatedOrderType("orderType", input, "sort_priority", false));
 	}
 
 	@Test
 	void invalidRequestParameterUsesSafeDefaultInsteadOfConfiguredAttribute()
 	{
-		TestRequest request = new TestRequest();
-		request.setAttribute("orderType", "title");
-		request.setParameter("orderType", "(SELECT WJMARK2 FROM dual)");
+		SearchActionInput input = new SearchActionInput();
+		input.setAttribute("orderType", "title");
+		input.setParameter("orderType", "(SELECT WJMARK2 FROM dual)");
 
-		assertEquals("d.sort_priority", SearchAction.getValidatedOrderType("orderType", request, "sort_priority", false));
+		assertEquals("d.sort_priority", SearchAction.getValidatedOrderType("orderType", input, "sort_priority", false));
 	}
 
 	@Test
 	void timeBasedInjectionInSecondaryOrderTypeIsSkipped()
 	{
-		TestRequest request = new TestRequest();
+		SearchActionInput input = new SearchActionInput();
 		String payload = "(SELECT CASE WHEN (SELECT SUBSTRING(password FROM 1 FOR 1) FROM users " +
 			"WHERE login LIKE 0x61646d696e) LIKE 0x41 THEN SLEEP(3) ELSE 0 END)";
-		request.setParameter("orderType2", payload);
+		input.setParameter("orderType2", payload);
 
-		assertNull(SearchAction.getValidatedOrderType("orderType2", request, null, false));
+		assertNull(SearchAction.getValidatedOrderType("orderType2", input, null, false));
 	}
 
 	@Test
 	void missingAndEmptyOrderTypesUseSafeDefaults()
 	{
-		TestRequest missingRequest = new TestRequest();
-		assertEquals("d.sort_priority", SearchAction.getValidatedOrderType("orderType", missingRequest, "sort_priority", false));
-		assertNull(SearchAction.getValidatedOrderType("orderType2", missingRequest, null, false));
+		SearchActionInput missingInput = new SearchActionInput();
+		assertEquals("d.sort_priority", SearchAction.getValidatedOrderType("orderType", missingInput, "sort_priority", false));
+		assertNull(SearchAction.getValidatedOrderType("orderType2", missingInput, null, false));
 
-		TestRequest emptyRequest = new TestRequest();
-		emptyRequest.setParameter("orderType", "");
-		emptyRequest.setParameter("orderType2", "");
-		assertEquals("d.sort_priority", SearchAction.getValidatedOrderType("orderType", emptyRequest, "sort_priority", false));
-		assertNull(SearchAction.getValidatedOrderType("orderType2", emptyRequest, null, false));
+		SearchActionInput emptyInput = new SearchActionInput();
+		emptyInput.setParameter("orderType", "");
+		emptyInput.setParameter("orderType2", "");
+		assertEquals("d.sort_priority", SearchAction.getValidatedOrderType("orderType", emptyInput, "sort_priority", false));
+		assertNull(SearchAction.getValidatedOrderType("orderType2", emptyInput, null, false));
 	}
 
 	@Test
 	void arbitraryColumnIsBoundToDocumentsAlias()
 	{
-		TestRequest request = new TestRequest();
-		request.setParameter("orderType", "WJINJECTMARKER99");
+		SearchActionInput input = new SearchActionInput();
+		input.setParameter("orderType", "WJINJECTMARKER99");
 
-		assertEquals("d.WJINJECTMARKER99", SearchAction.getValidatedOrderType("orderType", request, "sort_priority", false));
+		assertEquals("d.WJINJECTMARKER99", SearchAction.getValidatedOrderType("orderType", input, "sort_priority", false));
 	}
 
 	@Test
 	void oraclePackageFunctionIsRejected()
 	{
-		TestRequest request = new TestRequest();
-		request.setParameter("orderType", "DBMS_RANDOM.VALUE");
-		request.setParameter("orderType2", "DBMS_RANDOM.VALUE");
+		SearchActionInput input = new SearchActionInput();
+		input.setParameter("orderType", "DBMS_RANDOM.VALUE");
+		input.setParameter("orderType2", "DBMS_RANDOM.VALUE");
 
-		assertEquals("d.sort_priority", SearchAction.getValidatedOrderType("orderType", request, "sort_priority", false));
-		assertNull(SearchAction.getValidatedOrderType("orderType2", request, null, false));
+		assertEquals("d.sort_priority", SearchAction.getValidatedOrderType("orderType", input, "sort_priority", false));
+		assertNull(SearchAction.getValidatedOrderType("orderType2", input, null, false));
 	}
 
 	@Test
@@ -106,24 +104,24 @@ class SearchActionTest
 	@Test
 	void secondarySaveDateUsesDatabaseColumnName()
 	{
-		TestRequest request = new TestRequest();
-		request.setParameter("orderType2", "saveDate");
+		SearchActionInput input = new SearchActionInput();
+		input.setParameter("orderType2", "saveDate");
 
 		assertEquals("d.date_created",
-			SearchAction.getValidatedOrderType("orderType2", request, null, false));
+			SearchAction.getValidatedOrderType("orderType2", input, null, false));
 	}
 
 	@ParameterizedTest
 	@ValueSource(strings = {"orderType", "orderType2"})
 	void oracleTextScoreRequiresMatchingContainsInCurrentQuery(String orderTypeName)
 	{
-		TestRequest request = new TestRequest();
-		request.setParameter(orderTypeName, "sortPriority");
+		SearchActionInput input = new SearchActionInput();
+		input.setParameter(orderTypeName, "sortPriority");
 
 		assertEquals("d.sort_priority",
-			SearchAction.getValidatedOrderType(orderTypeName, request, null, false));
+			SearchAction.getValidatedOrderType(orderTypeName, input, null, false));
 		assertEquals("SCORE(10)",
-			SearchAction.getValidatedOrderType(orderTypeName, request, null, true));
+			SearchAction.getValidatedOrderType(orderTypeName, input, null, true));
 	}
 
 	@Test
