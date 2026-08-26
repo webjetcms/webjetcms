@@ -11,6 +11,7 @@ import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWarDeployment;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.thread.Threading;
 import org.springframework.boot.tomcat.autoconfigure.TomcatServerProperties;
 import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
@@ -45,9 +46,7 @@ public class WebjetEmbeddedTomcatConfiguration {
             HTTP_REDIRECT_PORT_PROPERTY, Integer.class, DEFAULT_HTTP_PORT
         );
         requireTcpPort(HTTP_REDIRECT_PORT_PROPERTY, httpPort);
-        boolean virtualThreads = environment.getProperty(
-            "spring.threads.virtual.enabled", Boolean.class, false
-        );
+        boolean virtualThreads = Threading.VIRTUAL.isActive(environment);
 
         return new HttpRedirectCustomizer(
             httpPort, serverProperties, tomcatServerProperties, virtualThreads
@@ -79,6 +78,8 @@ public class WebjetEmbeddedTomcatConfiguration {
 
             Connector httpConnector = new Connector(Http11NioProtocol.class.getName());
             Http11NioProtocol protocol = (Http11NioProtocol) httpConnector.getProtocolHandler();
+            // Boot deliberately skips its connector customizers for additional connectors.
+            // Mirror only the non-TLS server settings that are safe for this HTTP listener.
             configureProtocol(factory, protocol);
             configureConnector(factory, httpConnector);
 
@@ -87,6 +88,7 @@ public class WebjetEmbeddedTomcatConfiguration {
             httpConnector.setPort(this.httpPort);
             httpConnector.setRedirectPort(httpsPort);
             httpConnector.setThrowOnFailure(true);
+            protocol.setSSLEnabled(false);
 
             factory.addAdditionalConnectors(httpConnector);
             factory.addContextCustomizers(WebjetEmbeddedTomcatConfiguration::requireSecureTransport);

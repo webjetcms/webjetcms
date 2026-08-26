@@ -24,7 +24,6 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.StandardContext;
-import org.apache.coyote.AbstractProtocol;
 import org.apache.coyote.http11.Http11NioProtocol;
 import org.apache.tomcat.util.descriptor.web.SecurityCollection;
 import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
@@ -34,7 +33,9 @@ import org.springframework.boot.tomcat.autoconfigure.TomcatServerProperties;
 import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServer;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
+import org.springframework.boot.web.server.autoconfigure.ServerProperties;
 import org.springframework.mock.env.MockEnvironment;
+import org.springframework.util.unit.DataSize;
 
 class WebjetEmbeddedTomcatConfigurationTest {
 
@@ -45,21 +46,18 @@ class WebjetEmbeddedTomcatConfigurationTest {
     void httpConnectorRedirectsAllRequestsToTheConfiguredHttpsPort() {
         TomcatServerProperties tomcatProperties = new TomcatServerProperties();
         tomcatProperties.setMaxPartCount(1_000);
+        tomcatProperties.setMaxConnections(321);
+        tomcatProperties.setConnectionTimeout(Duration.ofMillis(4_321));
+        ServerProperties serverProperties = new ServerProperties();
+        serverProperties.setMaxHttpRequestHeaderSize(DataSize.ofKilobytes(16));
         MockEnvironment environment = new MockEnvironment()
             .withProperty(WebjetEmbeddedTomcatConfiguration.HTTP_REDIRECT_PORT_PROPERTY, "8080");
         TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory(8443);
         factory.setUriEncoding(StandardCharsets.ISO_8859_1);
         factory.setAddress(InetAddress.getLoopbackAddress());
         factory.setServerHeader("WebJET redirect test");
-        factory.addProtocolHandlerCustomizers(
-            (Http11NioProtocol protocol) -> protocol.setConnectionTimeout(4_321)
-        );
-        factory.addConnectorCustomizers(customizedConnector -> {
-            ((AbstractProtocol<?>) customizedConnector.getProtocolHandler()).setMaxConnections(321);
-            customizedConnector.setSecure(true);
-        });
 
-        redirectCustomizer(tomcatProperties, environment).customize(factory);
+        redirectCustomizer(serverProperties, tomcatProperties, environment).customize(factory);
 
         assertEquals(1, factory.getAdditionalConnectors().size());
         Connector connector = factory.getAdditionalConnectors().get(0);
@@ -74,6 +72,8 @@ class WebjetEmbeddedTomcatConfigurationTest {
         assertEquals(InetAddress.getLoopbackAddress(), protocol.getAddress());
         assertEquals(4_321, protocol.getConnectionTimeout());
         assertEquals(321, protocol.getMaxConnections());
+        assertEquals(16 * 1_024, protocol.getMaxHttpRequestHeaderSize());
+        assertFalse(protocol.isSSLEnabled());
 
         StandardContext context = new StandardContext();
         factory.getContextCustomizers().forEach(customizer -> customizer.customize(context));
@@ -150,7 +150,13 @@ class WebjetEmbeddedTomcatConfigurationTest {
 
     private WebServerFactoryCustomizer<TomcatServletWebServerFactory> redirectCustomizer(
             TomcatServerProperties tomcatProperties, MockEnvironment environment) {
+        return redirectCustomizer(new ServerProperties(), tomcatProperties, environment);
+    }
+
+    private WebServerFactoryCustomizer<TomcatServletWebServerFactory> redirectCustomizer(
+            ServerProperties serverProperties, TomcatServerProperties tomcatProperties,
+            MockEnvironment environment) {
         return new WebjetEmbeddedTomcatConfiguration()
-            .webjetTomcatHttpRedirectCustomizer(tomcatProperties, environment);
+            .webjetTomcatHttpRedirectCustomizer(serverProperties, tomcatProperties, environment);
     }
 }
