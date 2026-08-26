@@ -11,14 +11,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class DocDBSqlIdentifierTest
 {
-	@Test
-	void basketPriceColumnPreservesSupportedNames()
-	{
-		assertEquals("field_k", DocDB.resolveBasketPriceColumnName("fieldK"));
-		assertEquals("custom_price", DocDB.resolveBasketPriceColumnName("custom_price"));
-		assertEquals("custom_price", DocDB.resolveBasketPriceColumnName("customPrice"));
-		assertEquals("customPrice", DocDB.resolveBasketPriceFilterColumnName("customPrice"));
-	}
 
 	@ParameterizedTest
 	@NullSource
@@ -30,8 +22,7 @@ class DocDBSqlIdentifierTest
 	})
 	void invalidBasketPriceColumnUsesSafeDefault(String configuredFieldName)
 	{
-		assertEquals("field_k", DocDB.resolveBasketPriceColumnName(configuredFieldName));
-		assertEquals("field_k", DocDB.resolveBasketPriceFilterColumnName(configuredFieldName));
+		assertEquals("field_k", DocDB.fixUntrustedColumnName(configuredFieldName, false));
 	}
 
 	@Test

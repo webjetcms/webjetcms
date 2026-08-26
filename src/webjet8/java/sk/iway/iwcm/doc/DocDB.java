@@ -84,7 +84,6 @@ public class DocDB extends DB
 	public static final int ORDER_RATING = 8;
 
 	public static final int ORDER_PRICE = 9;
-	private static final String DEFAULT_BASKET_PRICE_COLUMN_NAME = "field_k";
 
 
 	/**
@@ -5892,7 +5891,7 @@ public class DocDB extends DB
 		try
 		{
 			db_conn = DBPool.getConnection();
-			String priceColumnName = DB.fixUntrustedColumnName(getBasketPriceFilterColumnName(), "documents");
+			String priceColumnName = DB.fixUntrustedColumnName(fixUntrustedColumnName(Constants.getString("basketPriceField"), false), "documents");
 			StringBuilder sql = new StringBuilder("SELECT doc_id FROM documents WHERE");
 			if (Constants.DB_TYPE == Constants.DB_MSSQL) sql.append(" LEN(");
 			else sql.append(" LENGTH(");
@@ -5943,39 +5942,20 @@ public class DocDB extends DB
 
 	private static String getBasketPriceColumnName()
 	{
-		return resolveBasketPriceColumnName(Constants.getString("basketPriceField"), true);
-	}
-
-	static String resolveBasketPriceColumnName(String priceColumnName)
-	{
-		return resolveBasketPriceColumnName(priceColumnName, false);
-	}
-
-	private static String resolveBasketPriceColumnName(String priceColumnName, boolean logInvalidValue)
-	{
-		if (!isValidSimpleSqlIdentifier(priceColumnName))
-			return getDefaultBasketPriceColumnName(logInvalidValue);
+		String priceColumnName = Constants.getString("basketPriceField");
+		if (!DB.isValidColumnName(priceColumnName, false))
+			return getDefaultBasketPriceColumnName(true);
 
 		// Convert the Java property format fieldK to the SQL column format field_k.
 		priceColumnName = priceColumnName.replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase(Locale.ROOT);
-		if (!isValidSimpleSqlIdentifier(priceColumnName))
-			return getDefaultBasketPriceColumnName(logInvalidValue);
+		if (!DB.isValidColumnName(priceColumnName, false))
+			return getDefaultBasketPriceColumnName(true);
 		return priceColumnName;
 	}
 
-	private static String getBasketPriceFilterColumnName()
+	protected static String fixUntrustedColumnName(String priceColumnName, boolean logInvalidValue)
 	{
-		return resolveBasketPriceFilterColumnName(Constants.getString("basketPriceField"), true);
-	}
-
-	static String resolveBasketPriceFilterColumnName(String priceColumnName)
-	{
-		return resolveBasketPriceFilterColumnName(priceColumnName, false);
-	}
-
-	private static String resolveBasketPriceFilterColumnName(String priceColumnName, boolean logInvalidValue)
-	{
-		if (!isValidSimpleSqlIdentifier(priceColumnName))
+		if (!DB.isValidColumnName(priceColumnName, false))
 			return getDefaultBasketPriceColumnName(logInvalidValue);
 
 		// Preserve the legacy mapping used by getItemsWithPrice.
@@ -5985,21 +5965,16 @@ public class DocDB extends DB
 			priceColumnName = "field_" + lowerCaseName.substring(lowerCaseName.length() - 1);
 		}
 
-		if (!isValidSimpleSqlIdentifier(priceColumnName))
+		if (!DB.isValidColumnName(priceColumnName, false))
 			return getDefaultBasketPriceColumnName(logInvalidValue);
 		return priceColumnName;
-	}
-
-	private static boolean isValidSimpleSqlIdentifier(String value)
-	{
-		return DB.isValidColumnName(value, false);
 	}
 
 	private static String getDefaultBasketPriceColumnName(boolean logInvalidValue)
 	{
 		if (logInvalidValue)
 			Logger.error(DocDB.class, "Invalid basketPriceField SQL identifier, using field_k");
-		return DEFAULT_BASKET_PRICE_COLUMN_NAME;
+		return "field_k";
 	}
 
 
