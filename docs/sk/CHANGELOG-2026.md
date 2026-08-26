@@ -401,6 +401,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Vloženie HTML kódu - v náhľade aplikácie v editore webových stránok sa pre obsah tvorený iba elementmi `script` zobrazí zdrojový kód namiesto prázdneho obsahu (#OSK625).
 - Bezpečnosť - sprísnené overovanie odkazu na obnovu zabudnutého hesla. Overovací záznam sa kontroluje pre vybraný používateľský účet aj pri vlastnom spôsobe odosielania, rešpektuje časovú platnosť a po použití sa zneplatní pre všetky účty zahrnuté v žiadosti (#292).
 - Bezpečnosť - sprísnená kontrola práv na priečinok pri nahrávaní súboru do administrácie a jeho prepísaní ak súbor existuje.
+- Bezpečnosť - sprísnená validácia názvov databázových stĺpcov pri dynamickom usporiadaní a filtrovaní. **Upozornenie:** verejné API už v parametroch usporiadania nepodporujú vlastné SQL výrazy, používajú sa iba bezpečné názvy stĺpcov alebo dostupné pomenované konštanty (#294).
 
 ## 2026.0.28
 
