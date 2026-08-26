@@ -103,7 +103,16 @@ class SearchActionTest
 		assertEquals("d.publish_start", SearchAction.resolveOrderType("publishStart", true, false));
 		assertEquals("d.publish_start", SearchAction.resolveOrderType("publishStart", false, false));
 		assertEquals("d.date_created", SearchAction.resolveOrderType("saveDate", true, false));
-		assertEquals("d.saveDate", SearchAction.resolveOrderType("saveDate", false, false));
+		assertEquals("d.date_created", SearchAction.resolveOrderType("saveDate", false, false));
+	}
+
+	@Test
+	void secondarySaveDateUsesDatabaseColumnName()
+	{
+		TestRequest request = new TestRequest();
+		request.setParameter("orderType2", "saveDate");
+
+		assertEquals("d.date_created", SearchAction.getValidatedOrderType("orderType2", request, null));
 	}
 
 	@Test

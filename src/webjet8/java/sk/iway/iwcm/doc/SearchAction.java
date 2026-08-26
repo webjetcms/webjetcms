@@ -1194,7 +1194,7 @@ public class SearchAction
 		{
 			orderType = "publish_start";
 		}
-		else if (primaryOrder && "saveDate".equalsIgnoreCase(orderType))
+		else if ("saveDate".equalsIgnoreCase(orderType))
 		{
 			orderType = "date_created";
 		}
