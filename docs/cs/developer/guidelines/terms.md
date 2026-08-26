@@ -10,6 +10,7 @@ Při psaní textu je třeba dodržet stejnou terminologii. Používejte pouze pr
 - vícenásobné výběrové pole `multi selection field` - ​​Google Translate
 - rozbalovací nabídka = `dropdown` - ​​Google Translate
 - koncový bod = `endpoint` - ​​Google Translate
+- bublinová nápověda = `tooltip` - ​​Google Translate
 
 ## Názvosloví pro kód
 

@@ -78,17 +78,20 @@ When you select **Overwrite file** or **Rename file**, the image in the field is
 
 ### User input
 
-If the assistant requires additional instructions, a form will be displayed. The additional fields are specific to a particular **provider** and may vary. For example, for provider `OpenAI`, these are:
+If the assistant requires additional instructions, a form will appear. Additional fields are determined by the capabilities of the specific **provider, model, and operation**, so they may vary. For example, you may see:
 
-- Number of images
-- Dimension
-- Quality
+- **Number of images**,
+- **Dimension**,
+- **Quality**,
+- **Aspect ratio**.
+
+The CMS will only display the fields and values ​​that the selected model supports. If the model does not publish any additional options for a given operation, the form will only contain a user instruction.
 
 Assistants that require user input have an icon next to their name.<i class="ti ti-blockquote has-user-prompt"></i> .
 
 ![](image-prompt.png)
 
-After confirmation, processing proceeds as usual with one exception for `OpenAI`: it allows multiple images to be generated at once (according to **Number of images**). In the example below, the number 3 was set.
+If the selected model supports the **Number of images** field, it can generate multiple results in a single request. In the example below, the number was set to 3.
 
 You can only select and save one result - you select it by clicking on it. All previews can be opened via<a target="_blank" class="zoom-in"><i class="ti ti-zoom-in"></i></a> .
 

@@ -1,6 +1,6 @@
 # Semantic index
 
-The semantic index converts page content into vector representations (`embedding`) using the OpenAI API and stores them in a vector database. It is used for semantic search, hybrid search, and for generating RAG answers in search.
+The semantic index converts the content of the pages into vector representations (`embedding`) using the configured AI provider and stores them in a vector database. It is used for semantic search, hybrid search, and for generating RAG answers in search.
 
 For more accurate results, the content is divided into smaller parts - **chunks**. Each chunk is indexed separately, which allows the system to match queries to specific parts of the text rather than the entire page at once.
 
@@ -21,7 +21,8 @@ Each chunk contains the following columns:
 - **Entity ID** - Website ID.
 - **Chapter index** - the order of the chunk within the page (0, 1, 2, ...).
 - **Part text** - the text for which the embedding was generated. The embedding itself is not displayed in the table.
-- **Model** - OpenAI model used, e.g. `text-embedding-3-small`.
+- **Embedding provider** - the provider used to create the vector, e.g. `openai` or `gemini`.
+- **Embedding model** - the embedding model used, e.g. `text-embedding-3-small` or `gemini-embedding-001`.
 - **Dimensions** - number of dimensions of the vector, e.g. `1536`.
 - **Language** - language version of the page.
 - **Status** - processing status:
@@ -34,6 +35,14 @@ Each chunk contains the following columns:
 Additionally, the database stores `group_id` and the columns `root_group_l1`, `root_group_l2`, `root_group_l3`. These values ​​are used to quickly limit semantic and hybrid searches to folders selected in the **Search** application.
 
 ![](datatable.png)
+
+After loading the page, an informational notification will appear with the current provider and model used for indexing. The settings are loaded from the system AI assistant `RAG-EMB-INDEX`, which you can edit in the **Settings → AI assistants** section.
+
+If the system assistant does not yet exist, it will be created automatically based on the configuration variables `ragEmbeddingProvider` and `ragEmbeddingModel`. Once it is created, the values ​​set in the assistant take precedence over the configuration variables.
+
+!>**Warning:** After changing the provider or model, run the index again. Indexes created by different provider and model combinations are stored separately and can coexist for the same page. The `RAG-EMB-SEARCH` search assistant must use the same provider and model identifier as the index it is to search.
+
+The queue item does not contain a provider or model; these values ​​are read from the `RAG-EMB-INDEX` assistant only during processing. If the queue in progress is to complete the original index, let it fully process before changing the assistant.
 
 ## Splitting text into chunks
 
@@ -60,6 +69,7 @@ The following filters are available in the table header:
 
 - **Select folder** - displays chunks only for pages from a given folder within the current domain.
 - **Show also from subfolders** - includes pages from subfolders in the results.
+- **Embedding Provider** and **Embedding Model** - restrict the table to a specific combination of the stored index.
 
 !>**Warning:** If you select **Root Folder** without enabling **Show also from subfolders**, you will not get any results. The root folder is virtual and does not contain pages directly.
 
@@ -79,7 +89,9 @@ The system automatically queues a page when:
 
 Click the button <button class="btn btn-sm btn-success" type="button"><span><i class="ti ti-database-plus"></i></span></button> to open the indexing dialog.
 
-The dialog will display an overview of the pages in the selected folder - total number, number already indexed, and number in queue. The folder will be set according to the active filter. After confirmation, all searchable pages from the selected folder will be queued. If the chunk text has not changed, the system will try to use the existing embedding based on its hash value.
+The dialog will display an overview of the pages in the selected folder - total number, number already indexed, and number in queue. Only pages that have an index for the current provider and assistant model `RAG-EMB-INDEX` are considered indexed. An index created by another provider or model is therefore not taken into account in this count.
+
+The folder and the **Show also from subfolders** option are taken from the active filter. After confirmation, all searchable pages from the selected range are queued. If the chunk text has not changed, the system will try to use an existing embedding with the same provider and model according to its hash value. Reindexing will only replace the index for the current provider and model combination; other indexes for the same page will be preserved.
 
 You start the action with the button <button class="btn btn-primary"><i class="ti ti-check"></i><span>Start the action</span></button> .
 
@@ -89,7 +101,7 @@ You start the action with the button <button class="btn btn-primary"><i class="t
 
 Click the button <button class="btn btn-sm btn-danger" type="button"><span><i class="ti ti-database-minus"></i></span></button> to open the delete indexes dialog.
 
-The dialog will display the same overview as for indexing. After confirmation, the pages will be queued for removal of all chunks for the pages of the selected folder.
+The dialog will take the folder and the **Show also from subfolders** option and display the same overview as for indexing, but the number of indexed pages includes all providers and models. After confirmation, the pages will be queued for removal of all chunks for pages of the selected range, regardless of provider and model.
 
 You start the action with the button <button class="btn btn-primary"><i class="ti ti-check"></i><span>Start the action</span></button> .
 
@@ -97,7 +109,9 @@ You start the action with the button <button class="btn btn-primary"><i class="t
 
 ## Indexing errors
 
-If an error occurs while indexing a page, the system saves a record with the status **ERROR** and a shortened error message. The error is also written to the administrator log in the category **RAG**. If processing of an item fails at the queue level, the item remains in the queue and the system attempts to process it the next time the cron job runs.
+If an error occurs while indexing a page, the system saves a record with the status **ERROR** and a short error message. The error is also written to the administrator log in the **Search** category (`SEARCH`). If processing of an item fails at the queue level, the item remains in the queue and the system attempts to process it the next time the cron job runs.
+
+!>**Warning:** Changing the configuration variable `ragEmbeddingDimensions` will delete the entire semantic index for all providers and models because the database column `vector(N)` has a common dimension. After the change, all content must be re-indexed.
 
 ## Implementation details
 

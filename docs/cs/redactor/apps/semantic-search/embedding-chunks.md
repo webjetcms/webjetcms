@@ -1,6 +1,6 @@
 # Sémantický index
 
-Sémantický index převádí obsah stránek na vektorové reprezentace (`embedding`) pomocí OpenAI API a ukládá je do vektorové databáze. Používá se pro sémantické vyhledávání, hybridní vyhledávání i pro generování RAG odpovědi ve vyhledávání.
+Sémantický index převádí obsah stránek na vektorové reprezentace (`embedding`) pomocí nastaveného AI poskytovatele a ukládá je do vektorové databáze. Používá se pro sémantické vyhledávání, hybridní vyhledávání i pro generování RAG odpovědi ve vyhledávání.
 
 Pro přesnější výsledky se obsah rozděluje na menší části - **chunky**. Každý chunk je indexován samostatně, což systému umožňuje porovnávat dotazy s konkrétními částmi textu a ne s celou stránkou najednou.
 
@@ -21,7 +21,8 @@ Každý chunk obsahuje tyto sloupce:
 - **ID entity** - ID webové stránky.
 - **Index části** - pořadí chunku v rámci stránky (0, 1, 2, ...).
 - **Text části** - text, pro který byl vygenerován embedding. Samotný embedding se v tabulce nezobrazuje.
-- **Model** - použitý OpenAI model, například. `text-embedding-3-small`.
+- **Poskytovatel embeddingu** - poskytovatel použitý při vytvoření vektoru. `openai` nebo `gemini`.
+- **Model embeddingu** - použitý embedding model, například. `text-embedding-3-small` nebo `gemini-embedding-001`.
 - **Dimenze** - počet dimenzí vektoru. `1536`.
 - **Jazyk** - jazyková verze stránky.
 - **Stav** - stav zpracování:
@@ -34,6 +35,14 @@ Každý chunk obsahuje tyto sloupce:
 V databázi se navíc ukládá `group_id` a sloupce `root_group_l1`, `root_group_l2`, `root_group_l3`. Tyto hodnoty se používají k rychlému omezení sémantického a hybridního vyhledávání podle složek zvolených v aplikaci **Vyhledávání**.
 
 ![](datatable.png)
+
+Po načtení stránky se zobrazí informační oznámení s aktuálním poskytovatelem a modelem používaným k indexování. Nastavení se načte ze systémového AI asistenta `RAG-EMB-INDEX`, kterého můžete upravit v sekci **Nastavení → AI asistenti**.
+
+Pokud systémový asistent ještě neexistuje, vytvoří se automaticky podle konfiguračních proměnných `ragEmbeddingProvider` a `ragEmbeddingModel`. Po jeho vytvoření mají hodnoty nastavené v asistentovi přednost před konfiguračními proměnnými.
+
+!>**Upozornění:** Po změně poskytovatele nebo modelu spusťte indexování znovu. Indexy vytvořené různými kombinacemi poskytovatele a modelu se ukládají odděleně a mohou existovat současně i pro stejnou stránku. Vyhledávací asistent `RAG-EMB-SEARCH` musí používat stejný identifikátor poskytovatele a modelu jako index, ve kterém má vyhledávat.
+
+Položka ve frontě neobsahuje poskytovatele ani model; tyto hodnoty se načtou z asistenta `RAG-EMB-INDEX` až při zpracování. Pokud má rozpracovaná fronta dokončit původní index, nechte ji před změnou asistenta zcela zpracovat.
 
 ## Rozdělení textu na chunky
 
@@ -60,6 +69,7 @@ V hlavičce tabulky jsou dostupné tyto filtry:
 
 - **Výběr složky** - zobrazí chunky pouze pro stránky z dané složky v rámci aktuální domény.
 - **Zobrazit iz podsložek** - zahrne do výsledků i stránky z podsložek.
+- **Poskytovatel embeddingu** a **Model embeddingu** - omezí tabulku na konkrétní kombinaci uloženého indexu.
 
 !>**Upozornění:** Pokud vyberete **Kořenovou složku** bez zapnutí možnosti **Zobrazit iz podsložek**, nezískáte žádné výsledky. Kořenová složka je virtuální a neobsahuje stránky přímo.
 
@@ -79,7 +89,9 @@ Systém automaticky zařadí stránku do fronty při:
 
 Klepněte na tlačítko <button class="btn btn-sm btn-success" type="button"><span><i class="ti ti-database-plus"></i></span></button> pro otevření dialogu indexování.
 
-Dialog zobrazí přehled stránek zvolené složky - celkový počet, počet již indexovaných a počet ve frontě. Složka se nastaví podle aktivního filtru. Po potvrzení se do fronty zařadí všechny vyhledatelné stránky ze zvolené složky. Pokud se text chunku nezměnil, systém se pokusí použít existující embedding podle jeho hash hodnoty.
+Dialog zobrazí přehled stránek zvolené složky - celkový počet, počet již indexovaných a počet ve frontě. Za indexované se považují pouze stránky, které mají index pro aktuálního poskytovatele a model asistenta `RAG-EMB-INDEX`. Index vytvořený jiným poskytovatelem nebo modelem se proto v tomto počtu nezohlední.
+
+Složka i volba **Zobrazit iz podsložek** se převezmou z aktivního filtru. Po potvrzení se do fronty zařadí všechny vyhledatelné stránky ze zvoleného rozsahu. Pokud se text chunku nezměnil, systém se pokusí použít existující embedding se stejným poskytovatelem a modelem podle jeho hash hodnoty. Opětovné indexování nahradí pouze index aktuální kombinace poskytovatele a modelu; ostatní indexy stejné stránky zůstanou zachovány.
 
 Akci spustíte tlačítkem <button class="btn btn-primary"><i class="ti ti-check"></i><span>Spustit akci</span></button> .
 
@@ -89,7 +101,7 @@ Akci spustíte tlačítkem <button class="btn btn-primary"><i class="ti ti-check
 
 Klepněte na tlačítko <button class="btn btn-sm btn-danger" type="button"><span><i class="ti ti-database-minus"></i></span></button> pro otevření dialogu odstranění indexů.
 
-Dialog zobrazí stejný přehled jako při indexování. Po potvrzení se stránky zařadí do fronty pro odstranění všech chunků pro stránky zvolené složky.
+Dialog převezme složku i volbu **Zobrazit iz podsložek** a zobrazí stejný přehled jako při indexování, ale počet indexovaných stránek zahrnuje všechny poskytovatele a modely. Po potvrzení se stránky zařadí do fronty pro odstranění všech chunků pro stránky zvoleného rozsahu bez ohledu na poskytovatele a model.
 
 Akci spustíte tlačítkem <button class="btn btn-primary"><i class="ti ti-check"></i><span>Spustit akci</span></button> .
 
@@ -97,7 +109,9 @@ Akci spustíte tlačítkem <button class="btn btn-primary"><i class="ti ti-check
 
 ## Chyby při indexování
 
-Pokud při indexování stránky nastane chyba, systém uloží záznam se stavem **ERROR** a zkrácenou chybovou zprávou. Chyba se zapisuje i do administrátorského logu v kategorii **RAG**. Pokud selže zpracování položky ještě na úrovni fronty, položka zůstane ve frontě a systém se ji pokusí zpracovat při dalším běhu cron úlohy.
+Pokud při indexování stránky nastane chyba, systém uloží záznam se stavem **ERROR** a zkrácenou chybovou zprávou. Chyba se zapisuje i do administrátorského logu v kategorii **Vyhledávání** (`SEARCH`). Pokud selže zpracování položky ještě na úrovni fronty, položka zůstane ve frontě a systém se ji pokusí zpracovat při dalším běhu cron úlohy.
+
+!>**Upozornění:** Změna konfigurační proměnné `ragEmbeddingDimensions` vymaže celý sémantický index pro všechny poskytovatele a modely, protože databázový sloupec `vector(N)` má společnou dimenzi. Po změně je třeba znovu zaindexovat celý obsah.
 
 ## Detaily implementace
 
