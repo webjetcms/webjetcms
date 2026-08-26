@@ -3,6 +3,7 @@ package sk.iway.iwcm.system.spring;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
@@ -180,6 +181,13 @@ public class DatatableExceptionHandlerV2
 		response.setError(message);
 		Logger.error(DatatableExceptionHandlerV2.class, "EditorException: " + ex.getMessage());
 		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@ExceptionHandler(AccessDeniedException.class)
+	public ResponseEntity<DatatableResponse<Object>> handleAccessDeniedException(AccessDeniedException ex) {
+		DatatableResponse<Object> response = new DatatableResponse<>();
+		response.setError(prepareMessage(null, ex));
+		return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
 	}
 
 	@ExceptionHandler(Exception.class)

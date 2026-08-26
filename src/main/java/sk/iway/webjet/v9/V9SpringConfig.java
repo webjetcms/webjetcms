@@ -14,6 +14,7 @@ import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
+import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 
@@ -169,7 +170,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 
-    @Bean
+    @Bean(name = DispatcherServlet.LOCALE_RESOLVER_BEAN_NAME)
     public AcceptHeaderLocaleResolver localeResolver() {
         AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver() {
             @Override
@@ -185,7 +186,7 @@ public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
         return localeResolver;
     }
 
-    @Bean(name = "multipartResolver")
+    @Bean(name = DispatcherServlet.MULTIPART_RESOLVER_BEAN_NAME)
     public StandardServletMultipartResolver multipartResolver() {
         StandardServletMultipartResolver multipartResolver = new StandardServletMultipartResolver();
         return multipartResolver;

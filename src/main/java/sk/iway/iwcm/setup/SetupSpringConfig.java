@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 import org.thymeleaf.spring6.SpringTemplateEngine;
@@ -24,8 +25,8 @@ import sk.iway.iwcm.system.spring.webjet_component.WebjetMessageSource;
 @Configuration
 public class SetupSpringConfig implements WebMvcConfigurer {
 
-    @Bean
-    public AcceptHeaderLocaleResolver webjetLocaleResolver() {
+    @Bean(name = DispatcherServlet.LOCALE_RESOLVER_BEAN_NAME)
+    public AcceptHeaderLocaleResolver localeResolver() {
         AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver() {
             @Override
             public Locale resolveLocale(HttpServletRequest request) {
