@@ -434,6 +434,10 @@ public class RequestBean
 		return SpringContext.getApplicationContext();
 	}
 
+	protected ApplicationContext getAssignedSpringContext() {
+		return springContext;
+	}
+
 	public void setSpringContext(ApplicationContext springContext) {
 		this.springContext = springContext;
 	}

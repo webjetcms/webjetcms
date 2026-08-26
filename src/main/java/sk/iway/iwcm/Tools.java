@@ -39,6 +39,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509ExtendedTrustManager;
+import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -3241,27 +3242,23 @@ public class Tools
 	 * @return
 	 */
 	public static ApplicationContext getSpringContext() {
-		ApplicationContext context = SpringContext.getApplicationContext();
-		if (context != null) {
-			return context;
-		}
-
 		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
 		if (requestBean != null) {
-			context = requestBean.getSpringContext();
+			ApplicationContext context = requestBean.getAssignedSpringContext();
 			if (context != null) {
 				return context;
 			}
 		}
 
-		if (Constants.getServletContext() != null) {
-			context = (ApplicationContext) Constants.getServletContext().getAttribute("springContext");
+		ServletContext servletContext = Constants.getServletContext();
+		if (servletContext != null) {
+			ApplicationContext context = (ApplicationContext) servletContext.getAttribute("springContext");
 			if (context != null) {
 				return context;
 			}
 		}
 
-		return context;
+		return SpringContext.getApplicationContext();
 	}
 
 	/**
