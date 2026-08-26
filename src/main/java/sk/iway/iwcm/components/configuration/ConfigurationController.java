@@ -48,7 +48,9 @@ public class ConfigurationController extends DatatableRestControllerV2<ConfDetai
         if (null == user) {
             return null;
         }
-        return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(configurationService.getAll(user));
+        String view = getRequest().getParameter("view");
+        String module = getRequest().getParameter("module");
+        return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(configurationService.getAll(user, view, module));
     }
 
     @Override
@@ -88,7 +90,11 @@ public class ConfigurationController extends DatatableRestControllerV2<ConfDetai
 
     @Override
     public boolean deleteItem(ConfDetailsDto confDetailsDto, long id) {
-        configurationService.deleteConfDetails(confDetailsDto.getName());
+        if (configurationService.deleteConfDetails(getUser(), confDetailsDto.getName()) == false) {
+            throwError("admin.conf_editor.default_value_cannot_reset");
+            return false;
+        }
+        setForceReload(true);
         return true;
     }
 

@@ -12,6 +12,8 @@ Scenario('Components configuration', ({ I, DT, DTE, Document }) => {
     Document.setConfigValue('ragSemanticSearchEnabled', 'false');
 
     I.amOnPage("/admin/v9/settings/configuration/");
+    I.waitForElement("#SomStromcek .jstree-anchor", 10);
+    I.waitForText("Zmenené", 10, "#SomStromcek");
 
     //
     I.say("Creating temporary value");

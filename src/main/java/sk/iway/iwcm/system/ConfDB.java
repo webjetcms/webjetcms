@@ -563,7 +563,15 @@ public class ConfDB
 			if (i != -1) url = url.substring(i+1);
 
 			i = url.lastIndexOf('.');
-			if (i != -1) url = url.substring(0, i);
+			if (i != -1)
+			{
+				String extension = url.substring(i + 1);
+				if ("jsp".equalsIgnoreCase(extension) || "jspx".equalsIgnoreCase(extension) || "do".equalsIgnoreCase(extension)
+					|| "html".equalsIgnoreCase(extension) || "htm".equalsIgnoreCase(extension))
+				{
+					url = url.substring(0, i);
+				}
+			}
 
 			if ("banner_system".equals(url)) url = "banner";
 			else if ("forms".equals(url)) url = "form";
@@ -575,7 +583,7 @@ public class ConfDB
 
 			for (ConfDetails conf : Constants.getAllValues())
 			{
-				if (conf.getModules()!=null && (conf.getModules().indexOf(url)==0 || conf.getModules().indexOf(";"+url)!=-1)) list.add(conf);
+				if (ConfigurationModulePath.matchesLegacyModule(conf.getModules(), url)) list.add(conf);
 			}
 		}
 		catch (Exception e)
@@ -623,6 +631,11 @@ public class ConfDB
 			if (count > 0) {
 				//ak je v DB ale hodnota je null tak ju nastavime na prazdny retazec
 				value = "";
+			}
+			else
+			{
+				// The configuration override was deleted on another cluster node, restore the default value.
+				value = getOldValue(name);
 			}
 		 }
 		 setConstantValueImpl(name, value);

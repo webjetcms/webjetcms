@@ -134,6 +134,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Iné menšie zmeny
 
+- Konfigurácia - pridaný hierarchický strom konfiguračných premenných s pohľadmi **Zmenené**, **Zákaznícke**, **Všetky** a modulovými vetvami. Pohľad **Zákaznícke** zobrazuje premenné uložené iba v databáze bez definície v `Constants`/`ConstantsV9` a premenné, ktorých názov sa začína hodnotou `Constants.getInstallName()`. Úplný zoznam spája predvolené hodnoty s databázovými zmenami, podporuje viacnásobné zaradenie premennej do modulov a umožňuje reset databázovej hodnoty späť na predvolenú.
 - Konfigurácia - pridaná možnosť **Nastaviť dočasne**, ktorá nastaví hodnotu konfiguračnej premennej len na aktuálnom uzle bez uloženia do databázy. Po reštarte sa obnoví hodnota uložená v databáze (#291).
 
 ![](admin/setup/configuration/page.png)

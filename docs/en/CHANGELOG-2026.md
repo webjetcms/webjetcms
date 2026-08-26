@@ -130,6 +130,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Other minor changes
 
+- Configuration - added a hierarchical configuration-variable tree with **Changed**, **Custom**, **All**, and module views. The **Custom** view displays variables stored only in the database without a definition in `Constants`/`ConstantsV9`, plus variables whose name starts with `Constants.getInstallName()`. The complete list combines defaults with database overrides, supports assigning a variable to multiple modules, and lets an override be reset to its default value.
 - Configuration - added **Set Temporarily** option, which sets the value of the configuration variable only on the current node without saving it to the database. After a restart, the value saved in the database will be restored (#291).
 
 ![](admin/setup/configuration/page.png)

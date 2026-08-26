@@ -43,6 +43,120 @@ Scenario('zoznam konfiguracnych premennych', ({ I }) => {
     I.dontSeeElement("#configurationDatatable.dt-hide-id tbody td.dt-select-td > .datatable-column-width");
 });
 
+Scenario('hierarchical configuration tree', async ({ I, DT, a11y }) => {
+    const treeSelector = "#SomStromcek";
+    const tableWrapper = "#configurationDatatable_wrapper";
+    const changedNode = `${treeSelector} li[data-configuration-view='changed']`;
+    const customNode = `${treeSelector} li[data-configuration-view='custom']`;
+    const allNode = `${treeSelector} li[data-configuration-view='all']`;
+    const appsNode = `${treeSelector} li[data-configuration-module='apps']`;
+    const formsNode = `${treeSelector} li[data-configuration-module='apps.form']`;
+    const securityNode = `${treeSelector} li[data-configuration-module='security']`;
+    const oauth2Node = `${treeSelector} li[data-configuration-module='security.oauth2']`;
+
+    I.waitForElement(`${treeSelector}[role='tree'][aria-label='Strom konfiguračných premenných'][aria-describedby='configuration-tree-description']`, 20);
+    I.waitForElement(`${changedNode} > a.jstree-clicked[aria-selected='true']`, 20);
+    I.see("Zmenené", changedNode);
+    I.see("Zákaznícke", customNode);
+    I.see("Všetky", allNode);
+    I.dontSeeElement(`${treeSelector}[aria-multiselectable='true']`);
+    I.assertEqual(await I.executeScript(() => new URL(configurationDatatable.getAjaxUrl(), location.origin).searchParams.get("view")), "changed");
+    const viewOrder = await I.executeScript(() => {
+        return Array.from(document.querySelectorAll("#SomStromcek > ul.jstree-container-ul > li[data-configuration-view]"))
+            .map((node) => node.dataset.configurationView)
+            .join(",");
+    });
+    I.assertEqual(viewOrder, "changed,custom,all");
+    await a11y.check(treeSelector);
+
+    I.clickCss(`${customNode} > a.jstree-anchor`);
+    I.waitForElement(`${customNode} > a.jstree-clicked[aria-selected='true']`, 20);
+    I.waitForFunction(() => new URL(configurationDatatable.getAjaxUrl(), location.origin).searchParams.get("view") === "custom", 20);
+    DT.waitForLoader();
+    I.waitForVisible(`${tableWrapper} [data-dtbtn='create']`, 10);
+    I.waitForVisible(`${tableWrapper} [data-dtbtn='import']`, 10);
+
+    I.clickCss(`${securityNode} > a.jstree-anchor`);
+    I.waitForElement(`${oauth2Node} > a.jstree-anchor`, 20);
+    DT.waitForLoader();
+    I.waitForText("xhrFileUploadAllowedExtensions", 20, "#configurationDatatable");
+    I.pressKey("o");
+    I.waitForFunction(() => document.activeElement?.closest("li")?.dataset.configurationModule === "security.oauth2", 20);
+
+    const focusState = await I.executeScript(() => {
+        const style = getComputedStyle(document.activeElement);
+        return {
+            outlineStyle: style.outlineStyle,
+            outlineWidth: parseFloat(style.outlineWidth),
+            boxShadow: style.boxShadow
+        };
+    });
+    I.assertEqual(focusState.outlineStyle, "solid");
+    I.assertTrue(focusState.outlineWidth >= 2, "Tree item must have a visible keyboard focus indicator");
+    I.assertNotEqual(focusState.boxShadow, "none");
+
+    I.pressKey("Enter");
+    I.waitForFunction(() => {
+        const url = new URL(configurationDatatable.getAjaxUrl(), location.origin);
+        return url.searchParams.get("view") === "module" && url.searchParams.get("module") === "security.oauth2";
+    }, 20);
+    DT.waitForLoader();
+    I.waitForText("oauth2_githubClientId", 20, "#configurationDatatable");
+    I.dontSee("xhrFileUploadAllowedExtensions", "#configurationDatatable");
+    I.waitForInvisible(`${tableWrapper} [data-dtbtn='create']`, 10);
+    I.waitForInvisible(`${tableWrapper} [data-dtbtn='import']`, 10);
+    I.assertEqual(await I.executeScript(() => $("#SomStromcek").jstree(true).get_selected().length), 1);
+
+    I.clickCss(`${appsNode} > a.jstree-anchor`);
+    I.waitForElement(`${formsNode} > a.jstree-anchor`, 20);
+    I.clickCss(`${formsNode} > a.jstree-anchor`);
+    I.waitForFunction(() => new URL(configurationDatatable.getAjaxUrl(), location.origin).searchParams.get("module") === "apps.form", 20);
+    DT.waitForLoader();
+    I.waitForText("xhrFileUploadAllowedExtensions", 20, "#configurationDatatable");
+
+    I.fillField("#tree-folder-search-input", "oauth2");
+    I.clickCss("#tree-folder-search-button");
+    I.waitForElement(`${oauth2Node} > a.jstree-search`, 20);
+    I.seeElement(securityNode);
+
+    I.clickCss("#tree-folder-search-clear-button");
+    I.waitForElement(`${changedNode} > a.jstree-clicked[aria-selected='true']`, 20);
+    I.waitForFunction(() => new URL(configurationDatatable.getAjaxUrl(), location.origin).searchParams.get("view") === "changed", 20);
+    DT.waitForLoader();
+
+    I.clickCss(`${allNode} > a.jstree-anchor`);
+    I.waitForFunction(() => new URL(configurationDatatable.getAjaxUrl(), location.origin).searchParams.get("view") === "all", 20);
+    DT.waitForLoader();
+    I.waitForVisible(`${tableWrapper} [data-dtbtn='create']`, 10);
+    I.waitForVisible(`${tableWrapper} [data-dtbtn='import']`, 10);
+
+    const defaultOnlyName = await I.executeScript(() => {
+        configurationDatatable.rows().deselect();
+        const rowIndex = configurationDatatable.rows().indexes().toArray().find((index) => {
+            return configurationDatatable.row(index).data().databaseValuePresent === false;
+        });
+        if (rowIndex == null) return null;
+        const row = configurationDatatable.row(rowIndex);
+        row.select();
+        return row.data().name;
+    });
+    I.assertTrue(Boolean(defaultOnlyName), "All view must contain a default-only configuration variable");
+    I.waitForElement(`${tableWrapper} button.buttons-remove.disabled`, 10);
+
+    I.clickCss(`${changedNode} > a.jstree-anchor`);
+    I.waitForFunction(() => new URL(configurationDatatable.getAjaxUrl(), location.origin).searchParams.get("view") === "changed", 20);
+    DT.waitForLoader();
+    const selectedDatabaseValue = await I.executeScript(() => {
+        configurationDatatable.rows().deselect();
+        const row = configurationDatatable.row(0);
+        if (row.data()?.databaseValuePresent !== true) return false;
+        row.select();
+        return true;
+    });
+    I.assertTrue(selectedDatabaseValue, "Changed view must contain database-backed values");
+    I.waitForFunction(() => !document.querySelector("#configurationDatatable_wrapper button.buttons-remove").classList.contains("disabled"), 20);
+});
+
 Scenario('temporary setting hides encryption and scheduled change', ({ I, DTE }) => {
     I.click("button.buttons-create");
     DTE.waitForEditor(datatableName);
@@ -85,6 +199,22 @@ Scenario('pridanie konfiguracnej premennej @baseTest', ({ I, DT, DTE }) => {
     DTE.waitForEditor(datatableName);
     DTE.save();
     I.dontSee("JSON parse error");
+});
+
+Scenario('custom configuration variables view @baseTest', async ({ I, DT }) => {
+    const customNode = "#SomStromcek li[data-configuration-view='custom'] > a.jstree-anchor";
+
+    I.waitForElement(customNode, 20);
+    I.clickCss(customNode);
+    I.waitForFunction(() => new URL(configurationDatatable.getAjaxUrl(), location.origin).searchParams.get("view") === "custom", 20);
+    DT.waitForLoader();
+
+    DT.filterEquals("name", name);
+    I.waitForText(name, 10, "#configurationDatatable");
+    const customRows = await I.executeScript(() => configurationDatatable.rows({ search: "applied" }).data().toArray());
+    I.assertEqual(customRows.length, 1);
+    I.assertEqual(customRows[0].name, name);
+    I.assertTrue(customRows[0].databaseValuePresent, "A database-only variable must be present in the Custom view");
 });
 
 Scenario('docasna hodnota sa zobrazi, ale do editora sa nacita databazova @baseTest', async ({ I, DT, DTE, a11y }) => {
@@ -321,48 +451,77 @@ const testConfiguration = "smsSendMaxlength";
 Scenario("check setting oldValue after delete", async ({ I, DT, DTE }) => {
     const oldValue = 140;
     const newValue = 299792;
+    const tableWrapper = "#configurationDatatable_wrapper";
+    const allNode = "#SomStromcek li[data-configuration-view='all'] > a.jstree-anchor";
+    const integrationsNode = "#SomStromcek li[data-configuration-module='integrations'] > a.jstree-anchor";
+    const smsNode = "#SomStromcek li[data-configuration-module='integrations.sms'] > a.jstree-anchor";
 
     I.amOnPage("/admin/v9/settings/configuration/");
+    I.waitForElement(allNode, 20);
+    I.clickCss(allNode);
+    I.waitForFunction(() => new URL(configurationDatatable.getAjaxUrl(), location.origin).searchParams.get("view") === "all", 20);
+    DT.waitForLoader();
+    DT.filterEquals("name", testConfiguration);
+
+    const hasExistingOverride = await I.executeScript(() => {
+        const index = configurationDatatable.rows({ search: "applied" }).indexes().toArray()[0];
+        return configurationDatatable.row(index).data()?.databaseValuePresent === true;
+    });
+    if (hasExistingOverride) {
+        I.clickCss("#configurationDatatable tbody td.dt-select-td");
+        I.waitForFunction(() => !document.querySelector("#configurationDatatable_wrapper button.buttons-remove").classList.contains("disabled"), 20);
+        I.clickCss(`${tableWrapper} button.buttons-remove`);
+        I.click("Zmazať", "div.DTE_Action_Remove");
+        DT.waitForLoader();
+    }
 
     I.say("Check actual and default value");
-        I.click(DT.btn.config_add_button);
+        I.click(testConfiguration);
         DTE.waitForEditor("configurationDatatable");
-
-        DTE.fillField("name", testConfiguration);
-        I.waitForVisible( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
-        I.click( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
-
         I.seeInField("#DTE_Field_value", oldValue);
         I.seeInField("#DTE_Field_oldValue", oldValue);
 
     I.say("Change value and check that value stay changed. But original value of not changed.");
         DTE.fillField("value", newValue);
         DTE.save();
-
-        DT.filterEquals("name", testConfiguration);
+        DT.waitForLoader();
         I.click(testConfiguration);
         DTE.waitForEditor("configurationDatatable");
-
         I.seeInField("#DTE_Field_value", newValue);
         I.seeInField("#DTE_Field_oldValue", oldValue);
         DTE.cancel();
 
-    I.say("Delete value from DB.");
-        I.clickCss("td.dt-select-td");
-        I.clickCss("button.buttons-remove");
+    I.say("Reset the database override directly in the integrations.sms module.");
+        I.clickCss(integrationsNode);
+        I.waitForElement(smsNode, 20);
+        I.clickCss(smsNode);
+        I.waitForFunction(() => {
+            const url = new URL(configurationDatatable.getAjaxUrl(), location.origin);
+            return url.searchParams.get("view") === "module" && url.searchParams.get("module") === "integrations.sms";
+        }, 20);
+        DT.waitForLoader();
+        I.see(testConfiguration, "#configurationDatatable");
+        I.clickCss("#configurationDatatable tbody td.dt-select-td");
+        I.waitForFunction(() => !document.querySelector("#configurationDatatable_wrapper button.buttons-remove").classList.contains("disabled"), 20);
+        I.clickCss(`${tableWrapper} button.buttons-remove`);
         I.click("Zmazať", "div.DTE_Action_Remove");
-        I.dontSee(testConfiguration);
+        DT.waitForLoader();
 
-    I.say("Check, that after delete values are back.");
-        I.clickCss("button.buttons-create");
+    I.say("Check that the default row remains in the module after reset.");
+        I.see(testConfiguration, "#configurationDatatable");
+        const resetRow = await I.executeScript(() => {
+            const index = configurationDatatable.rows({ search: "applied" }).indexes().toArray()[0];
+            return configurationDatatable.row(index).data();
+        });
+        I.assertEqual(resetRow.value, String(oldValue));
+        I.assertFalse(resetRow.databaseValuePresent);
+        I.clickCss("#configurationDatatable tbody td.dt-select-td");
+        I.waitForElement(`${tableWrapper} button.buttons-remove.disabled`, 10);
+        I.click(testConfiguration);
         DTE.waitForEditor("configurationDatatable");
-
-        DTE.fillField("name", testConfiguration);
-        I.waitForVisible( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
-        I.click( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
-
         I.seeInField("#DTE_Field_value", oldValue);
         I.seeInField("#DTE_Field_oldValue", oldValue);
+        DTE.cancel();
 });
 
 Scenario("Post delete", async ({ I, DT }) => {
@@ -380,4 +539,8 @@ Scenario("Post delete", async ({ I, DT }) => {
 
 Scenario("odhlasenie", ({ I }) => {
     I.logout();
+});
+
+Scenario("configuration permissions", ({ DT }) => {
+    DT.checkPerms("menuConfig", "/admin/v9/settings/configuration/", "configurationDatatable");
 });

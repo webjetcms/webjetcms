@@ -1,6 +1,13 @@
 # Configuration
 
-The configuration section is used to display and manage individual configuration variables that differ from the default values.
+The configuration section displays and manages configuration variables. The tree on the left divides them into the following views:
+
+- **Changed** - variables whose value is stored in the database. This view is selected when the page opens.
+- **Custom** - variables stored only in the database without a definition in `Constants`/`ConstantsV9`, or variables whose name starts with the current `Constants.getInstallName()` value (for example, `aceintegration_test`).
+- **All** - all registered variables, including their default values and custom variables stored only in the database.
+- **Modules** - hierarchical groups such as `apps.gallery` or `security.oauth2`. Selecting a parent node also displays variables from all its descendants. A variable can belong to multiple branches.
+
+The tree can be searched. Module names are technical names and are not translated. An existing variable can be edited in a selected module, but creating a new variable and importing are disabled because a custom database variable does not contain module metadata.
 
 ![](page.png)
 
@@ -40,13 +47,13 @@ If you need to change the value of a configuration variable only to verify its b
 
 When set temporarily, the value cannot be encrypted or scheduled to change, so the **Encrypt** and **Change from** fields in the editor are hidden.
 
-If the current value on the node differs from the value in the database, the **Value** column displays both values ​​in the format "current value / database value". The database value is displayed in a dimmed color and is marked as currently inactive when the cursor is placed. When the editor is reopened, the **Value** field is loaded with the value stored in the database, not the temporary value.
+If the current value on the node differs from the stored value, the **Value** column displays both values in the format "current value / stored value". The second value is dimmed and marked as currently inactive on hover. It can be either a value stored in the database or the default value of a variable without a database record. When the editor is reopened, the **Value** field loads the stored value, not the temporary value.
 
 ## Deleting configuration items
 
-When deleting a configuration variable, 2 situations can occur:
+Deleting resets the database value. Two situations can occur:
 
-- we delete the value from the table and **there is a default value** for this configuration variable, which will be used (the variable still exists)
-- we delete the value from the table and **there is no default value** for this configuration variable (the variable will no longer exist)
+- if **a default value exists**, it starts being used and the variable remains visible in **All** and its module views; it disappears from **Changed**,
+- if **no default value exists**, the custom database variable ceases to exist after the reset.
 
-!>**Warning:** Unlike creation/editing, deleting sets an empty value. If a configuration variable has a preset value, it will take effect **only after restarting** the application server.
+A variable without a database value cannot be deleted.

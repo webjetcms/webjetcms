@@ -1,6 +1,13 @@
 # Konfigurace
 
-Sekce konfigurace slouží k zobrazení a správě jednotlivých konfiguračních proměnných, které se odlišují od přednastavených hodnot.
+Sekce konfigurace slouží k zobrazení a správě konfiguračních proměnných. Strom v levé části je rozděluje do následujících pohledů:
+
+- **Změněné** - proměnné, jejichž hodnota je uložena v databázi. Tento pohled je zvolen po otevření stránky.
+- **Zákaznické** - proměnné uložené pouze v databázi bez definice v `Constants`/`ConstantsV9` nebo proměnné, jejichž název začíná aktuální hodnotou `Constants.getInstallName()` (například `aceintegration_test`).
+- **Všechny** - všechny evidované proměnné včetně jejich výchozích hodnot a vlastních proměnných uložených pouze v databázi.
+- **Moduly** - hierarchické skupiny, například `apps.gallery` nebo `security.oauth2`. Výběr rodičovského uzlu zobrazí i proměnné ze všech jeho poduzlů. Jedna proměnná může být zařazena ve více větvích.
+
+Ve stromu lze vyhledávat. Názvy modulů jsou technické názvy a nepřekládají se. Ve vybraném modulu lze existující proměnnou upravit, ale nelze vytvořit novou ani spustit import, protože vlastní databázová proměnná nemá informaci o zařazení do modulu.
 
 ![](page.png)
 
@@ -40,13 +47,13 @@ Pokud potřebujete změnit hodnotu konfigurační proměnné pouze pro ověřen�
 
 Při dočasném nastavení nelze hodnotu zašifrovat ani naplánovat její změnu, proto se pole **Šifrovat** a **Změnit od** v editoru skryjí.
 
-Pokud se aktuální hodnota na uzlu liší od hodnoty v databázi, ve sloupci **Hodnota** se zobrazí obě hodnoty ve formátu "aktuální hodnota / databázová hodnota". Databázová hodnota je zobrazena tlumenou barvou a po umístění kurzoru se označí jako momentálně neaktivní. Při opětovném otevření editoru se do pole **Hodnota** načte hodnota uložená v databázi, nikoli dočasná hodnota.
+Pokud se aktuální hodnota na uzlu liší od uložené hodnoty, ve sloupci **Hodnota** se zobrazí obě hodnoty ve formátu "aktuální hodnota / uložená hodnota". Druhá hodnota je zobrazena tlumenou barvou a po umístění kurzoru se označí jako momentálně neaktivní. Může jít o hodnotu uloženou v databázi nebo o výchozí hodnotu proměnné bez databázového záznamu. Při opětovném otevření editoru se do pole **Hodnota** načte uložená, nikoli dočasná hodnota.
 
 ## Vymazání konfiguračních položek
 
-Při vymazání konfigurační proměnné mohou nastat 2 situace:
+Vymazání znamená reset databázové hodnoty. Mohou nastat 2 situace:
 
-- vymažeme hodnotu z tabulky a **existuje přednastavená hodnota** k této konfigurační proměnné, která se začne využívat (proměnná stále existuje)
-- vymažeme hodnotu z tabulky a **neexistuje přednastavená hodnota** k této konfigurační proměnné (proměnná již nebude existovat)
+- pokud **existuje výchozí hodnota**, začne se používat a proměnná zůstane zobrazena v pohledu **Všechny** a v příslušných modulech; z pohledu **Změněné** zmizí,
+- pokud **neexistuje výchozí hodnota**, vlastní databázová proměnná po resetu přestane existovat.
 
-!>**Upozornění:** oproti vytváření/editaci, při vymazání se nastaví prázdná hodnota. Pokud má konfigurační proměnná přednastavenou hodnotu, ta se projeví **až po restartování** aplikačního serveru.
+Proměnnou, která nemá databázovou hodnotu, nelze vymazat.

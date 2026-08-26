@@ -128,6 +128,12 @@ div#vakata-dnd #jstree-dnd.jstree-default {
 .jstree-anchor:focus {
   outline: 0;
 }
+.jstree-anchor:focus-visible {
+  border-radius: 2px;
+  box-shadow: 0 0 0 2px $white;
+  outline: 2px solid $secondary;
+  outline-offset: 2px;
+}
 .jstree-anchor,
 .jstree-anchor:link,
 .jstree-anchor:visited,
@@ -175,6 +181,20 @@ div#vakata-dnd #jstree-dnd.jstree-default {
 .jstree-hidden,
 .jstree-node.jstree-hidden {
   display: none;
+}
+
+@media (max-width: ($bp-mobile - 1)) {
+  .configuration-tree-layout {
+    .tree-col {
+      border-right: 0;
+      border-bottom: 1px solid $nice-gray-100;
+      margin-bottom: 16px;
+    }
+
+    #SomStromcek.jstree {
+      height: clamp(200px, 42vh, 360px);
+    }
+  }
 }
 .jstree-rtl .jstree-anchor {
   padding: 0 1px 0 4px;

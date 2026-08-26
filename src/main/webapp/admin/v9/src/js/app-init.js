@@ -297,6 +297,7 @@ function initClosure() {
     var jsTreeMoveUrl = somStromcek.data("rest-move-url");
     var jsTreeParamName = somStromcek.data("rest-param-name");
     var jsTreeSearchLabel = somStromcek.data("search-label") || WJ.translate('editor.directory_name');
+    var jsTreeSingleSelect = somStromcek.data("single-select") === true;
     var treeInitialJsonFired = false;
 
     function getJstreeUrl() {
@@ -307,6 +308,7 @@ function initClosure() {
     $.jstree.defaults.core.dblclick_toggle = false;
     window.jstree = somStromcek.jstree({
         'core': {
+            'multiple': !jsTreeSingleSelect,
             'check_callback': function (operation, node, parent, position, more) {
                 if (operation === 'copy_node') {
                     return false;

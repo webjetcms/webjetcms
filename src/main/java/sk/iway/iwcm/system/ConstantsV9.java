@@ -27,18 +27,18 @@ public class ConstantsV9 {
 		Constants.setString("propertiesAdminKeys",
 			  "button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*,text.warning,text.info,editor.directory_name,editor.confirmExitMessage,menu.forms,datatables.quill.toolbar.*,editor.form.sl.name,editor.form.sl.value,components.file_archiv.name,admin.dragDropFiles.*");
 		Constants.setInt("webpagesTreeAutoOpenLimit", 2);
-		Constants.setString("deepl_auth_key", "", "translations", "Preklady - authentifikacny kluc k sluzbe deepl.com pre preklad textov");
-		Constants.setString("deepl_api_url", "https://api-free.deepl.com/v2/translate", "translations", "URL adresa pre API volanie DeepL prekladu, ak mate PRO ucet pouzite https://api.deepl.com/v2/translate");
-		Constants.setString("deepl_api_usage_url", "/v2/usage", "translations", "URL adresa pre API volanie DeepL statistiky pouzitia");
+		Constants.setString("deepl_auth_key", "", "integrations.translations", "Preklady - authentifikacny kluc k sluzbe deepl.com pre preklad textov");
+		Constants.setString("deepl_api_url", "https://api-free.deepl.com/v2/translate", "integrations.translations", "URL adresa pre API volanie DeepL prekladu, ak mate PRO ucet pouzite https://api.deepl.com/v2/translate");
+		Constants.setString("deepl_api_usage_url", "/v2/usage", "integrations.translations", "URL adresa pre API volanie DeepL statistiky pouzitia");
 
-		Constants.setInt("formsDatatableServerSizeLimit", 5000, Constants.mods(Constants.MOD_PERFORMANCE, "forms"),
+		Constants.setInt("formsDatatableServerSizeLimit", 5000, Constants.mods(Constants.MOD_PERFORMANCE, "apps.form"),
 				"Minimalny pocet zaznamov formularu pre ktore sa uz pouzije serverove strankovanie.");
 
 		Constants.setString("sk.iway.iwcm.qa.AddAction.sendAdminMail.url", "/apps/qa/admin/");
 
-		Constants.setBoolean("loggingInMemoryEnabled", false, "adminlog",
+		Constants.setBoolean("loggingInMemoryEnabled", false, "system.adminlog",
 				"Aktivovanie ukladania posledných log záznamov do pamäte pre jednoduchšiu kontrolu logov.");
-		Constants.setInt("loggingInMemoryQueueSize", 200, "adminlog",
+		Constants.setInt("loggingInMemoryQueueSize", 200, "system.adminlog",
 				"Maximalny počet log záznamov držaných v pamäti.");
 		Constants.setString("passwordHashAlgorithm", "bcrypt", Constants.MOD_SECURITY, "Meno algoritmu pre hashovanie, možné hodnoty bcrypt alebo sha-512");
 		Constants.setInt("bcryptSaltRounds", 12, Constants.MOD_SECURITY, "log2 počtu opakovaní saltovania pri bcrypt algoritme hashovania hesiel");
@@ -73,8 +73,8 @@ public class ConstantsV9 {
 
 		Constants.setBoolean("multigroupRedirectSlavesToMaster", false, Constants.MOD_EDITOR, "Pri ulozeni stranky vo viacerych priecinkoch nastavuje sposob zobrazenia slave stranok. Pri hodnote true su presmerovane na master, pri hodnote slave su zobrazene ako samostatne stranky.");
 
-		Constants.setBoolean("clusterHostnameTrimFromEnd", false, "cluster", "Rezim ziskania hostname pre cluster. Ak je hodnota true, tak sa hostname ziskava ako 16 znakov od konca, inak 16 znakov od zaciatku.");
-		Constants.setInt("clusterAutoRandomDelay", 10000, "cluster;performance", "Maximalny nahodny delay v milisekundach pridany v auto cluster rezime pri starte CRON uloh a ClusterRefresher. Hodnota 0 vypne nahodny delay.");
+		Constants.setBoolean("clusterHostnameTrimFromEnd", false, "system.cluster", "Rezim ziskania hostname pre cluster. Ak je hodnota true, tak sa hostname ziskava ako 16 znakov od konca, inak 16 znakov od zaciatku.");
+		Constants.setInt("clusterAutoRandomDelay", 10000, "system.cluster;system.performance", "Maximalny nahodny delay v milisekundach pridany v auto cluster rezime pri starte CRON uloh a ClusterRefresher. Hodnota 0 vypne nahodny delay.");
 
 		Constants.setBoolean("attrAlwaysCleanOnSave", false, Constants.MOD_EDITOR, "Po nastaveni na true sa vzdy pri ulozeni stranky premaze zoznam atributov");
 
@@ -82,27 +82,27 @@ public class ConstantsV9 {
 
 		Constants.setString("FileBrowserTools.forbiddenSymbols", "@,#,+,(,),{,},=", Constants.MOD_SECURITY, "Zoznam zakazanych znakov v nazve suboru/adresara. Okrem defaultne zakazanych znakov sa pomocou konfiguracnej premennej definuju dalsie zakazane znaky. Oddelujeme ich ciarkou. Pouziva sa v metode FileBrowserTools.hasForbiddenSymbol(). Hodnota premennej sa reloadne iba pri starte.");
 
-		Constants.setBoolean("structureMirroringDisabledOnCreate", true, "structuremirroring", "Pri hodnote true budu novo vytvorene zrkadlene stranky mat vypnute zobrazenie aby sa nezacali ihned zobrazovat");
+		Constants.setBoolean("structureMirroringDisabledOnCreate", true, "apps.structuremirroring", "Pri hodnote true budu novo vytvorene zrkadlene stranky mat vypnute zobrazenie aby sa nezacali ihned zobrazovat");
 
-		Constants.setInt("restaurantMenu.alergensCount", 14, "restaurant_menu", "Maximalny pocet alergenov, tie sa ziskavaju z prekladovych klucov s prefixom components.restaurant_menu.alergen");
+		Constants.setInt("restaurantMenu.alergensCount", 14, "apps.restaurant_menu", "Maximalny pocet alergenov, tie sa ziskavaju z prekladovych klucov s prefixom components.restaurant_menu.alergen");
 
-		Constants.setString("ntlmLogonAction.charsetEncoding", "windows-1250", "ntlm", "Nazov kodovania, ktore sa pouzije pre prekodovanie znakov ziskanych z LDAP servera. Ak je hodnota prazdna, tak sa nevykona ziadne prekodovanie.");
+		Constants.setString("ntlmLogonAction.charsetEncoding", "windows-1250", "security.ntlm", "Nazov kodovania, ktore sa pouzije pre prekodovanie znakov ziskanych z LDAP servera. Ak je hodnota prazdna, tak sa nevykona ziadne prekodovanie.");
 
 		Constants.setString("webpagesFunctionsPerms", "menuWebpages|cmp_blog|cmp_blog_admin|cmp_news|cmp_abtesting|cmp_basket", Constants.MOD_SECURITY, "Zoznam prav pre funkcie web stranok, ktore sa pouzivaju aj v inych moduloch ako blog, novinky atd.");
-		Constants.setString("bloggerAppPermissions", "menuGallery,menuInquiry,cmp_quiz,cmp_form", "blog", "Prava k apllikáciam, ktoré sa majú pridať vytvorenému používateľovi typu BLOGGER");
+		Constants.setString("bloggerAppPermissions", "menuGallery,menuInquiry,cmp_quiz,cmp_form", "apps.blog", "Prava k apllikáciam, ktoré sa majú pridať vytvorenému používateľovi typu BLOGGER");
 
-		Constants.setString("dmailListUnsubscribeBaseHref", "", "dmail", "Zakladna URL adresa pre odhlasovanie sa z mailing listu. Ak je prazdna, tak sa pouzije URL adresa podla domeny odosielaneho emailu.");
+		Constants.setString("dmailListUnsubscribeBaseHref", "", "apps.dmail", "Zakladna URL adresa pre odhlasovanie sa z mailing listu. Ak je prazdna, tak sa pouzije URL adresa podla domeny odosielaneho emailu.");
 
-		Constants.setString("uaParserYamlPath", "", "stat", "Cesta k YAML suboru s konfiguraciou pre UA parser. Ak je prazdna, tak sa pouzije defaultna konfiguracia.");
+		Constants.setString("uaParserYamlPath", "", "apps.stat", "Cesta k YAML suboru s konfiguraciou pre UA parser. Ak je prazdna, tak sa pouzije defaultna konfiguracia.");
 		Constants.setBoolean("usersSplitByDomain", false, Constants.MOD_USER, "Pri nastaveni na true su oddeleny pouzivatelia podla domen podobne ako v MultiWeb instalacii");
 
 		Constants.setString("amchartLicense", "", Constants.MOD_STAT, "Licencny kluc pre amchart kniznicu");
 
 		Constants.setString("basketInvoiceBonusStatuses", "", Constants.MOD_CONFIG, "Bonusove statusy pre objednávku v sekcií Elektonický obchod. Formát: ID_STATUSU|PREKALDOVÝ_KĽÚČ\nID_STATUSU|PREKALDOVÝ_KĽÚČ. ID_STATUSU musí byť číslo väčšie rovné 10.");
 
-		Constants.setBoolean("ABTestingAllowVariantUrl", false, "abtest", "Nastavenim na true povoli priame zobrazenie variantnej URL adresy aj ne-administratorom, napr. volanie /investicie/abtestvariantb.html");
+		Constants.setBoolean("ABTestingAllowVariantUrl", false, "apps.abtest", "Nastavenim na true povoli priame zobrazenie variantnej URL adresy aj ne-administratorom, napr. volanie /investicie/abtestvariantb.html");
 
-		Constants.setBoolean("showDocMoveStyleToHead", false, Constants.mods(Constants.MOD_PERFORMANCE, Constants.MOD_EDITOR, "webpages"), "Pri nastaveni na true sa <style> tagy z komponent presunu do <head> sekcie pre validny HTML kod. Riesenie problemu s HTML validaciou kde style tagy nemozu byt v body.");
+		Constants.setBoolean("showDocMoveStyleToHead", false, Constants.mods(Constants.MOD_PERFORMANCE, Constants.MOD_EDITOR, "content.webpages"), "Pri nastaveni na true sa <style> tagy z komponent presunu do <head> sekcie pre validny HTML kod. Riesenie problemu s HTML validaciou kde style tagy nemozu byt v body.");
 
 		Constants.setBoolean("forumAlwaysNotifyPageAuthor", false, Constants.MOD_CONFIG, "Pri nastaveni na true sa budú odosielať notifikácie autorovi stránky s Diskusiou, vždy keď bude pridaná nová téma alebo odpoveď.");
 
@@ -110,7 +110,7 @@ public class ConstantsV9 {
 
 		Constants.setString("propertiesRestControllerAllowedKeysPrefixes", "", Constants.MOD_CONFIG, "Povolene prefixi prekladových kľúčov");
 
-		Constants.setBoolean("monitoringEnableCountUsersOnAllNodes", true, "server_monitoring;performance", "Ak verejne nody nedokazu zapisovat do tabuly _conf_ nastavte na false pre vypnutie zapisu celkove poctu sessions");
+		Constants.setBoolean("monitoringEnableCountUsersOnAllNodes", true, "system.server_monitoring;system.performance", "Ak verejne nody nedokazu zapisovat do tabuly _conf_ nastavte na false pre vypnutie zapisu celkove poctu sessions");
 
 		Constants.setBoolean("webpagesNotifyAutorOnPublish", true, Constants.MOD_CONFIG, "Nastavenie odosielania notifikacie autorovi pri publikovani stranky.");
 
@@ -118,9 +118,9 @@ public class ConstantsV9 {
 
 		Constants.setString("changePasswordPageUrlAdmin", "/admin/logon/changePassword", Constants.MOD_USER, "cesta k suboru (alebo stranke) na zmenu hesla z admin sekcie");
 
-		Constants.setInt("dashboardRecentSize", 8, "dashboard", "Pocet zaznamov v zozname poslednych stranok/auditu na uvodnej obrazovke");
+		Constants.setInt("dashboardRecentSize", 8, "apps.dashboard", "Pocet zaznamov v zozname poslednych stranok/auditu na uvodnej obrazovke");
 
-		Constants.setInt("contentBlockTypeCount", 5, "contentBlock", "Pocet dostupnych typov blokov pre obsah");
+		Constants.setInt("contentBlockTypeCount", 5, "apps.content_block", "Pocet dostupnych typov blokov pre obsah");
 
 		Constants.setBoolean("elfinderMoveConfirm", true, "files", "Zobrazi potvrdzovaci dialog pri presune priecinkov a suborov");
 
@@ -134,46 +134,46 @@ public class ConstantsV9 {
 		Constants.setString("csrfRequiredUrls", "", Constants.MOD_SECURITY, "Comma separated list of URLs that require CSRF token");
 
 		// OAuth2 konfiguračné premenné
-		Constants.setString("oauth2_clients", "", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam OAuth2 poskytovateľov (napr. google,facebook,keycloak)");
-		Constants.setString("oauth2_clientsWithPermissions", "keycloak", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam OAuth2 poskytovateľov, ktorí poskytujú práva na synchronizáciu skupín a admin práv (napr. keycloak,okta)");
-		Constants.setString("oauth2_adminLogonAutoRedirect", "", Constants.MOD_SECURITY, "Ak je nastavené na názov poskytovateľa, automaticky presmeruje na OAuth2 prihlásenie namiesto zobrazenia prihlasovacieho formulára");
-		Constants.setString("oauth2_clientsIncludeAdmin", "*", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam OAuth2 poskytovateľov, ktorí sa majú zahrnúť do prihlasovacej stránky administrácie (napr. keycloak,okta). Alebo znak * pre zahrnutie všetkých nakonfigurovaných poskytovateľov.");
-		Constants.setString("oauth2_clientsIncludeUser", "*", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam OAuth2 poskytovateľov, ktorí sa majú zahrnúť do prihlasovacej stránky pre používateľov (napr. google,facebook). Alebo znak * pre zahrnutie všetkých nakonfigurovaných poskytovateľov.");
+		Constants.setString("oauth2_clients", "", "security.oauth2", "Čiarkou oddelený zoznam OAuth2 poskytovateľov (napr. google,facebook,keycloak)");
+		Constants.setString("oauth2_clientsWithPermissions", "keycloak", "security.oauth2", "Čiarkou oddelený zoznam OAuth2 poskytovateľov, ktorí poskytujú práva na synchronizáciu skupín a admin práv (napr. keycloak,okta)");
+		Constants.setString("oauth2_adminLogonAutoRedirect", "", "security.oauth2", "Ak je nastavené na názov poskytovateľa, automaticky presmeruje na OAuth2 prihlásenie namiesto zobrazenia prihlasovacieho formulára");
+		Constants.setString("oauth2_clientsIncludeAdmin", "*", "security.oauth2", "Čiarkou oddelený zoznam OAuth2 poskytovateľov, ktorí sa majú zahrnúť do prihlasovacej stránky administrácie (napr. keycloak,okta). Alebo znak * pre zahrnutie všetkých nakonfigurovaných poskytovateľov.");
+		Constants.setString("oauth2_clientsIncludeUser", "*", "security.oauth2", "Čiarkou oddelený zoznam OAuth2 poskytovateľov, ktorí sa majú zahrnúť do prihlasovacej stránky pre používateľov (napr. google,facebook). Alebo znak * pre zahrnutie všetkých nakonfigurovaných poskytovateľov.");
 
 		// Google OAuth2
-		Constants.setString("oauth2_googleClientId", "", Constants.MOD_SECURITY, "Google OAuth2 Client ID");
-		Constants.setString("oauth2_googleClientSecret", "", Constants.MOD_SECURITY, "Google OAuth2 Client Secret");
-		Constants.setString("oauth2_googleDefaultGroups", "", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam ID skupin, ktoré sa pridelia novovytvorenému používateľovi.");
+		Constants.setString("oauth2_googleClientId", "", "security.oauth2", "Google OAuth2 Client ID");
+		Constants.setString("oauth2_googleClientSecret", "", "security.oauth2", "Google OAuth2 Client Secret");
+		Constants.setString("oauth2_googleDefaultGroups", "", "security.oauth2", "Čiarkou oddelený zoznam ID skupin, ktoré sa pridelia novovytvorenému používateľovi.");
 
 		// Facebook OAuth2
-		Constants.setString("oauth2_facebookClientId", "", Constants.MOD_SECURITY, "Facebook OAuth2 Client ID");
-		Constants.setString("oauth2_facebookClientSecret", "", Constants.MOD_SECURITY, "Facebook OAuth2 Client Secret");
-		Constants.setString("oauth2_facebookDefaultGroups", "", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam ID skupin, ktoré sa pridelia novovytvorenému používateľovi.");
+		Constants.setString("oauth2_facebookClientId", "", "security.oauth2", "Facebook OAuth2 Client ID");
+		Constants.setString("oauth2_facebookClientSecret", "", "security.oauth2", "Facebook OAuth2 Client Secret");
+		Constants.setString("oauth2_facebookDefaultGroups", "", "security.oauth2", "Čiarkou oddelený zoznam ID skupin, ktoré sa pridelia novovytvorenému používateľovi.");
 
 		// GitHub OAuth2
-		Constants.setString("oauth2_githubClientId", "", Constants.MOD_SECURITY, "GitHub OAuth2 Client ID");
-		Constants.setString("oauth2_githubClientSecret", "", Constants.MOD_SECURITY, "GitHub OAuth2 Client Secret");
-		Constants.setString("oauth2_githubDefaultGroups", "", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam ID skupin, ktoré sa pridelia novovytvorenému používateľovi.");
+		Constants.setString("oauth2_githubClientId", "", "security.oauth2", "GitHub OAuth2 Client ID");
+		Constants.setString("oauth2_githubClientSecret", "", "security.oauth2", "GitHub OAuth2 Client Secret");
+		Constants.setString("oauth2_githubDefaultGroups", "", "security.oauth2", "Čiarkou oddelený zoznam ID skupin, ktoré sa pridelia novovytvorenému používateľovi.");
 
 		// Okta OAuth2
-		Constants.setString("oauth2_oktaClientId", "", Constants.MOD_SECURITY, "Okta OAuth2 Client ID");
-		Constants.setString("oauth2_oktaClientSecret", "", Constants.MOD_SECURITY, "Okta OAuth2 Client Secret");
-		Constants.setString("oauth2_oktaDefaultGroups", "", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam ID skupin, ktoré sa pridelia novovytvorenému používateľovi.");
+		Constants.setString("oauth2_oktaClientId", "", "security.oauth2", "Okta OAuth2 Client ID");
+		Constants.setString("oauth2_oktaClientSecret", "", "security.oauth2", "Okta OAuth2 Client Secret");
+		Constants.setString("oauth2_oktaDefaultGroups", "", "security.oauth2", "Čiarkou oddelený zoznam ID skupin, ktoré sa pridelia novovytvorenému používateľovi.");
 
 		// Keycloak OAuth2 (custom provider)
-		Constants.setString("oauth2_keycloakClientId", "", Constants.MOD_SECURITY, "Keycloak OAuth2 Client ID");
-		Constants.setString("oauth2_keycloakClientSecret", "", Constants.MOD_SECURITY, "Keycloak OAuth2 Client Secret");
-		Constants.setString("oauth2_keycloakAuthorizationUri", "http://keycloak.local:18080/realms/webjetcms/protocol/openid-connect/auth", Constants.MOD_SECURITY, "Keycloak Authorization URI");
-		Constants.setString("oauth2_keycloakTokenUri", "http://keycloak.local:18080/realms/webjetcms/protocol/openid-connect/token", Constants.MOD_SECURITY, "Keycloak Token URI");
-		Constants.setString("oauth2_keycloakUserInfoUri", "http://keycloak.local:18080/realms/webjetcms/protocol/openid-connect/userinfo", Constants.MOD_SECURITY, "Keycloak User Info URI");
-		Constants.setString("oauth2_keycloakJwkSetUri", "http://keycloak.local:18080/realms/webjetcms/protocol/openid-connect/certs", Constants.MOD_SECURITY, "Keycloak JWK Set URI");
-		Constants.setString("oauth2_keycloakIssuerUri", "http://keycloak.local:18080/realms/webjetcms", Constants.MOD_SECURITY, "Keycloak Issuer URI");
-		Constants.setString("oauth2_keycloakUserNameAttributeName", "email", Constants.MOD_SECURITY, "Keycloak User Name Attribute Name");
-		Constants.setString("oauth2_keycloakScopes", "openid,profile,email", Constants.MOD_SECURITY, "Keycloak OAuth2 Scopes");
-		Constants.setString("oauth2_keycloakClientName", "Keycloak", Constants.MOD_SECURITY, "Keycloak Client Display Name");
+		Constants.setString("oauth2_keycloakClientId", "", "security.oauth2", "Keycloak OAuth2 Client ID");
+		Constants.setString("oauth2_keycloakClientSecret", "", "security.oauth2", "Keycloak OAuth2 Client Secret");
+		Constants.setString("oauth2_keycloakAuthorizationUri", "http://keycloak.local:18080/realms/webjetcms/protocol/openid-connect/auth", "security.oauth2", "Keycloak Authorization URI");
+		Constants.setString("oauth2_keycloakTokenUri", "http://keycloak.local:18080/realms/webjetcms/protocol/openid-connect/token", "security.oauth2", "Keycloak Token URI");
+		Constants.setString("oauth2_keycloakUserInfoUri", "http://keycloak.local:18080/realms/webjetcms/protocol/openid-connect/userinfo", "security.oauth2", "Keycloak User Info URI");
+		Constants.setString("oauth2_keycloakJwkSetUri", "http://keycloak.local:18080/realms/webjetcms/protocol/openid-connect/certs", "security.oauth2", "Keycloak JWK Set URI");
+		Constants.setString("oauth2_keycloakIssuerUri", "http://keycloak.local:18080/realms/webjetcms", "security.oauth2", "Keycloak Issuer URI");
+		Constants.setString("oauth2_keycloakUserNameAttributeName", "email", "security.oauth2", "Keycloak User Name Attribute Name");
+		Constants.setString("oauth2_keycloakScopes", "openid,profile,email", "security.oauth2", "Keycloak OAuth2 Scopes");
+		Constants.setString("oauth2_keycloakClientName", "Keycloak", "security.oauth2", "Keycloak Client Display Name");
 
-		Constants.setString("reservationAllDayStartTime", "14:00", "reservations", "Hodina, od ktorej sa začína celodenná rezervácia");
-		Constants.setString("reservationAllDayEndTime", "10:30", "reservations", "Hodina, do ktorej sa končí celodenná rezervácia");
+		Constants.setString("reservationAllDayStartTime", "14:00", "apps.reservation", "Hodina, od ktorej sa začína celodenná rezervácia");
+		Constants.setString("reservationAllDayEndTime", "10:30", "apps.reservation", "Hodina, do ktorej sa končí celodenná rezervácia");
 
 		Constants.setBoolean("virtualPathLastSlash", true, Constants.MOD_CONFIG, "If true, virtual path will have last slash for main pages in folder");
 
@@ -183,7 +183,7 @@ public class ConstantsV9 {
 		Constants.setInt("sortPriorityIncrementGroup", 10, Constants.MOD_EDITOR, "Increment for sort priority for groups");
 		Constants.setInt("sortPriorityIncrementDoc", 10, Constants.MOD_EDITOR, "Increment for sort priority for pages");
 
-		Constants.setBoolean("loggerUseAnsiColors", false, "adminlog", "If true, logger will use ANSI colors for console output");
+		Constants.setBoolean("loggerUseAnsiColors", false, "system.adminlog", "If true, logger will use ANSI colors for console output");
 		Constants.setBoolean("fileArchivAllowPatternVersion", true, Constants.MOD_FILE_ARCHIV, "Ak je povolene (true), manažér dokumentov povolí vytváranie verzií pre súbory typu VZOR.");
 		Constants.setString("basketInvoiceSupportedCountries", ".sk,.cz,.pl", Constants.MOD_BASKET, "Which countries are supported for delivery. Format is TLD: .sk,.cz,.pl");
 		Constants.setString("basketStatsLegacyDeliveryGroupPath", "/System/ModeOfTransport", Constants.MOD_BASKET, "Path to the legacy delivery method documents used in basket statistics.");
@@ -191,14 +191,14 @@ public class ConstantsV9 {
 
 		Constants.setString("basketNewCategoryHtmlCode", "!INCLUDE(/components/basket/bootstrap_products.jsp, style=01 ,groupIds=, orderType=priority, asc=yes, publishType=all, paging=yes, pageSize=15,pagingPosition=both, thumbWidth=190, thumbHeight=190, showCategory=yes, showSort=yes, testRun=no, katalogProduktov=no, overeneZakaznikmi=)!", Constants.MOD_BASKET, "HTML kód pre novú kategóriu v košíku.");
 
-		Constants.setString("translationEngineClasses", "sk.iway.iwcm.system.translation.DeepL", "translations", "Čiarkou oddelený zoznam tried, ktoré implemetujú prekaldový modul (napr. DeepL alebo Google)");
-		Constants.setString("deepl_model_type", "prefer_quality_optimized", "translations", "Špecifikuje, ktorý DeepL model by sa mal použiť na preklad.");
+		Constants.setString("translationEngineClasses", "sk.iway.iwcm.system.translation.DeepL", "integrations.translations", "Čiarkou oddelený zoznam tried, ktoré implemetujú prekaldový modul (napr. DeepL alebo Google)");
+		Constants.setString("deepl_model_type", "prefer_quality_optimized", "integrations.translations", "Špecifikuje, ktorý DeepL model by sa mal použiť na preklad.");
 
-		Constants.setString("mirroringMode", "mirror", "structuremirroring", "Used to signalize that mirroring is running in basic mode mirroring or clonning");
+		Constants.setString("mirroringMode", "mirror", "apps.structuremirroring", "Used to signalize that mirroring is running in basic mode mirroring or clonning");
 		Constants.setInt("cloneActionSrcId", -1, Constants.MOD_CONFIG,"Used to set SRC group id when performing clonning.");
 		Constants.setInt("cloneActionDestId", -1, Constants.MOD_CONFIG, "Used to set DEST group id when performing clonning.");
 
-		Constants.setBoolean("ABTestingForLoggedUser", false, "abtest", "Ak je nastavené na true, tak sa pre neprihláseného používateľa vždy použije variant A, pre prihláseného vždy variant B.");
+		Constants.setBoolean("ABTestingForLoggedUser", false, "apps.abtest", "Ak je nastavené na true, tak sa pre neprihláseného používateľa vždy použije variant A, pre prihláseného vždy variant B.");
 
 		Constants.setString("ai_openAiAuthKey", "", Constants.MOD_AI_ASSISTANTS, "Authentication key to platform.openai.com");
 		Constants.setBoolean("ai_browserAiEnabled", true, Constants.MOD_AI_ASSISTANTS, "Enable AI assistants in browser - Chrome Built-in AI");
@@ -213,14 +213,14 @@ public class ConstantsV9 {
 		Constants.setInt("ai_providerResponseTimeoutSeconds", 0, Constants.MOD_AI_ASSISTANTS, "AI provider response timeout in seconds, 0 disables the timeout");
 
 		Constants.setString("basketAdminGroupIds", "", Constants.MOD_BASKET, "Zoznam ID adresárov, ktore obsahju produkty pre elektronicky obchod. Možné zadať v tvare 17,23*,72, kde * znamená vrátane podpriečinkov. Ak je prázdne, tak sa automaticky vyhľadá podľa vloženej aplikácie zoznam produktov.");
-		Constants.setString("xhrFileUploadAllowedExtensions", "doc docx xls xlsx ppt pptx pdf xml txt json jpeg jpg bmp tiff psd png zip rar mp4 webp", Constants.mods("forms", Constants.MOD_SECURITY), "Povolené prípony súborov pre XHR upload (viac prípon oddelených medzerou).");
+		Constants.setString("xhrFileUploadAllowedExtensions", "doc docx xls xlsx ppt pptx pdf xml txt json jpeg jpg bmp tiff psd png zip rar mp4 webp", Constants.mods("apps.form", Constants.MOD_SECURITY), "Povolené prípony súborov pre XHR upload (viac prípon oddelených medzerou).");
 
 		Constants.setString("clientAbortMessages", "response already,connection reset by peer,broken pipe,socket write error", Constants.MOD_PERFORMANCE, "Zoznam textu výnimiek spôsobujúcich prerušenie HTTP spojenia klientom (oddelené čiarkou, malými písmenami). Takéto chyby sa nezaznamenávajú do logov.");
 
 		Constants.setBoolean("sessionSingleLogon", false, Constants.MOD_SECURITY, "Ak je nastavené na true, používateľ bude odhlásený z ostatných sessions pri novom prihlásení.");
 		Constants.setString("ckeditor_pictureDialogBreakpoints", "", Constants.MOD_EDITOR, "Zoznam breakpointov pre dialóg vloženia obrázku v CKEditor. Formát JSON poľa objektov [{name:'Mobile',width:320},{name:'Desktop',width:640,fallback:true}]");
 
-        Constants.setString("smtpAuthMechanism", "", "config;dmail;security", "SMTP autentifikacny mechanizmus. Ak je prazdne, pouzije sa defaultny mechanizmus kniznice JavaMail.");
+        Constants.setString("smtpAuthMechanism", "", "system.config;apps.dmail;security", "SMTP autentifikacny mechanizmus. Ak je prazdne, pouzije sa defaultny mechanizmus kniznice JavaMail.");
 
 		Constants.setString("ckeditor_svgIcon_path", "", Constants.MOD_EDITOR, "Cesta k SVG sprite suboru s ikonami pre CKEditor");
 		Constants.setString("ckeditor_svgIcon_icons", "{}", Constants.MOD_EDITOR, "JSON objekt definujúci ikony pre CKEditor vo formáte {nazov: [skupiny], nazov2: [skupiny]}, napr. {\"4g\": [\"other\"], \"5g\": [\"other\"], \"accessibility-mobility\": [\"people\"]}. Ak je prázdne získa sa zo SVG súboru podľa hodnoty ID elementov, skupiny v takom prípade nie sú dostupné.");
@@ -271,13 +271,13 @@ public class ConstantsV9 {
 		Constants.setString("password_passKeyAllowedOrigins", "", Constants.MOD_SECURITY, "Comma-separated list of allowed origins for PassKey/WebAuthN requests. If empty, all origins are allowed. This is used to restrict which domains can make authentication requests to your server when using PassKey/WebAuthN.");
 
 		//image magick custom params - value can have 2 lines: line 1 = params BEFORE operation (after input file), line 2 = params AFTER operation (before output file)
-		Constants.setString("imageMagickCustomParams", "-filter Lanczos\n-interlace Plane -sampling-factor 4:2:0 -unsharp 2x0.5+0.5+0", "images", "Custom parameters for ImageMagick operations. Value can have 2 lines: line 1 = params before operation (e.g. -filter), line 2 = params after operation (e.g. -define). Single line = all params before operation.");
-		Constants.setString("imageMagickCustomParams_resize", "", "images", "Custom parameters for ImageMagick resize operation. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
-		Constants.setString("imageMagickCustomParams_crop", "", "images", "Custom parameters for ImageMagick crop operation. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
-		Constants.setString("imageMagickCustomParams_rotate", "", "images", "Custom parameters for ImageMagick rotate operation. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
-		Constants.setString("imageMagickCustomParams_jpg", "---\n-define jpeg:optimize-coding=true", "images", "Custom parameters for ImageMagick JPG format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
-		Constants.setString("imageMagickCustomParams_png", "---\n-define png:compression-level=9 -define png:compression-strategy=1", "images", "Custom parameters for ImageMagick PNG format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
-		Constants.setString("imageMagickCustomParams_webp", "---\n-quality 80 -define webp:method=6 -define webp:auto-filter=true -define webp:sns-strength=50", "images", "Custom parameters for ImageMagick WebP format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams", "-filter Lanczos\n-interlace Plane -sampling-factor 4:2:0 -unsharp 2x0.5+0.5+0", "files.images", "Custom parameters for ImageMagick operations. Value can have 2 lines: line 1 = params before operation (e.g. -filter), line 2 = params after operation (e.g. -define). Single line = all params before operation.");
+		Constants.setString("imageMagickCustomParams_resize", "", "files.images", "Custom parameters for ImageMagick resize operation. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_crop", "", "files.images", "Custom parameters for ImageMagick crop operation. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_rotate", "", "files.images", "Custom parameters for ImageMagick rotate operation. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_jpg", "---\n-define jpeg:optimize-coding=true", "files.images", "Custom parameters for ImageMagick JPG format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_png", "---\n-define png:compression-level=9 -define png:compression-strategy=1", "files.images", "Custom parameters for ImageMagick PNG format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_webp", "---\n-quality 80 -define webp:method=6 -define webp:auto-filter=true -define webp:sns-strength=50", "files.images", "Custom parameters for ImageMagick WebP format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
 
 		Constants.setString("appWrapperClasses", "apps.wrapper.container:container,apps.wrapper.container-fluid:container-fluid,apps.wrapper.mt-1:mt-1,apps.wrapper.mt-2:mt-2,apps.wrapper.mt-3:mt-3,apps.wrapper.mt-4:mt-4,apps.wrapper.mb-1:mb-1,apps.wrapper.mb-2:mb-2,apps.wrapper.mb-3:mb-3,apps.wrapper.mb-4:mb-4,apps.wrapper.w-100:w-100,apps.wrapper.w-75:w-75,apps.wrapper.w-50:w-50,apps.wrapper.mx-auto:mx-auto", Constants.MOD_EDITOR, "Čiarkou oddelený zoznam CSS tried pre obalenie výstupu aplikácie do wrapper kontajnera. Formát: prekladový_kľúč:css_trieda alebo len css_trieda. Ak je uvedený prekladový kľúč, zobrazí sa preložený názov.");
 
