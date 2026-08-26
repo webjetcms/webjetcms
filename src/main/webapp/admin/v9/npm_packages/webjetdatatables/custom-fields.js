@@ -2,6 +2,7 @@ import { createWebjetDteJsTree } from '../../src/js/web-components/webjet-dte-js
 import WJ from '../../src/js/webjet';
 
 import * as fieldTypeQuill from './field-type-quill';
+import {initColorPickerAccessibility} from './color-picker-accessibility';
 
 function getEmptyStringFieldValue() {
     return "";
@@ -160,9 +161,9 @@ export function update(EDITOR, action) {
     var uuidTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="255" value="{value}" class="form-control field-type-uuid custom-field-ai-disabled" type="text">';
     var colorTemplate = `
         <div class="input-group custom-field-ai-disabled">
-            <span class="input-group-text color-preview" style="background-color: {value}"></span>
+            <button class="btn input-group-text color-preview" type="button" style="background-color: {value}" {disabled} aria-label="${WJ.translate("datatables.field.color.title.js")}" aria-haspopup="dialog" aria-expanded="false"></button>
             <input id="DTE_Field_{customPrefix}{identifier}" value="{value}" {disabled} class="form-control" type="text"/>
-            <button class="btn btn-outline-secondary btn-clear" type="button"><i class="ti ti-circle-x"></i></button>
+            <button class="btn btn-outline-secondary btn-clear" type="button" {disabled} aria-label="${WJ.translate("button.reset")}" title="${WJ.translate("button.reset")}"><i class="ti ti-circle-x" aria-hidden="true"></i></button>
         </div>
         <color-picker id="DTE_Field_{customPrefix}{identifier}_picker" label-title="${WJ.translate("datatables.field.color.title.js")}" label-hue="${WJ.translate("datatables.field.color.hue.js")}" label-saturation="${WJ.translate("datatables.field.color.saturation.js")}" label-lightness="${WJ.translate("datatables.field.color.lightness.js")}" label-opacity="${WJ.translate("datatables.field.color.alpha.js")}" label-ok="${WJ.translate("datatables.field.color.ok.js")}"></color-picker>
     `
@@ -582,28 +583,19 @@ export function update(EDITOR, action) {
                 conf._preview.css("background-color", val);
             }
 
-            setTimeout(function() {
-                conf._input.on("click", function() {
-                    conf._picker.setAttribute('open', true);
-                    conf._picker.setAttribute('hex', conf._input.val());
-                });
-                conf._input.parent().find(".color-preview").on("click", function() {
-                    conf._picker.setAttribute('open', true);
-                    conf._picker.setAttribute('hex', conf._input.val());
-                });
-                conf._input.on("change", function() {
-                    const val = conf._input.val();
-                    conf._preview.css("background-color", val);
-                });
+            initColorPickerAccessibility(conf);
+            conf._input.on("change", function() {
+                const val = conf._input.val();
+                conf._preview.css("background-color", val);
+            });
 
-                conf._clear.on("click", function() {
-                    setColor(conf, "");
-                });
+            conf._clear.on("click", function() {
+                setColor(conf, "");
+            });
 
-                conf._picker.addEventListener('update-color', function(e) {
-                    setColor(conf, e.detail.hex);
-                });
-            }, 500);
+            conf._picker.addEventListener('update-color', function(e) {
+                setColor(conf, e.detail.hex);
+            });
         } else if (v.type == "json_group" || v.type == "json_doc") {
             let conf = {};
             let id = 'DTE_Field_' + customPrefix + identifier;

@@ -7,6 +7,7 @@
 ### Groundbreaking changes
 
 - The dependency on the [Vue.js](https://vuejs.org) library has been removed from the administration. We recommend checking the compatibility of your own applications before updating. The size of JavaScript files has been reduced by approximately 170kB, which also has an impact on the speed of administration initialization. More in the [programmer section](#programmer).
+- AspectJ - support for `load-time weavingu` (`aspectjweaver` and `META-INF/aop-ajc.xml`) has been removed from the distribution; built-in aspects are processed at compile time, more in [programmer section](#programmer section). When using in a MultiWeb installation, you can remove the `-javaagent:/www/tomcat/.../aspectjweaver.jar` setting from `JAVA_OPTS` in the application server (#290).
 
 ### Websites
 
@@ -81,7 +82,13 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ![](redactor/apps/semantic-search/rag-result.png)
 
+- Embedding indexing and search uses the provider and model set in the system AI assistant. Indexes of different providers and models can coexist; the **Semantic Index** page displays the current setting and preserves other combinations when re-indexing. The core of embedding requests, responses, and provider communication has been separated into the `webjet-ai` library; WebJET CMS continues to handle assistant selection, indexing, and vector storage (#58694).
+
 ### Applications
+
+- E-commerce - added [Statistics] application (redactor/apps/eshop/stats/README.md) with summary indicators, filtering by status, currency and period, and graphs of sales, products, categories, delivery methods and payment methods (#58065).
+
+![](redactor/apps/eshop/stats/stats.png)
 
 - Added new application [Language Redirect](redactor/apps/language-redirect/README.md) to automatically redirect visitors to the language version of the page based on language detection from the HTTP header `Accept-Language`. It supports up to 8 language assignments per URL, respecting the language cookie, and the option to redirect only to the root URL (#58497).
 
@@ -116,6 +123,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Added option to set optional field as required (#58413).
 - Added new optional field types [radio check box and radio check box](frontend/webpages/customfields/custom-fields-settings.md#difference-between-selectmultiselect-and-radiocheckbox) with support for both static options and codebook linking. The `multiselect` type now also supports [codebook linking](frontend/webpages/customfields/custom-fields-settings.md#option-source). The original `enumeration` type has been replaced by an option source switch for types `select`, `multiselect`, `radio` and `checkbox` where options are loaded from a linked codebook for all these field types (#58637).
 
+### Accessibility
+
+- Administration - extended keyboard control and screen reader support for data tables, modals and notifications, tooltips, date and color pickers, and HTML editor. Improved focus shifting and returning, row and cell selection, accessible names and ARIA states, required field marking, control contrasts, and a skip to main content link. Automated regression `a11y` tests for these scenarios (#235) have been added.
+
 ### Multiweb
 
 - Added option [create new domain](install/multiweb/config.md) from the control domain, it will also create user, template group, template and system pages (#58525).
@@ -124,6 +135,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Added option to view all files in the management domain.
 
 ### Other minor changes
+
+- Configuration - added **Set Temporarily** option, which sets the value of the configuration variable only on the current node without saving it to the database. After a restart, the value saved in the database will be restored (#291).
+
+![](admin/setup/configuration/page.png)
 
 - Automated tasks - added option to [manually run task](admin/settings/cronjob/README.md) on node or node group set in **Runs on node** field. Original local run on current node remains available with separate button (#58718).
 
@@ -138,17 +153,20 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Explorer - added right **Allow uploading files with accents**, which allows preserving accents when uploading, creating, and renaming files and folders in folders `/files`, `/images`, and `/shared`. Without this right, names will continue to be automatically edited without accents (#58589).
 - Login - faster loading of the home page in the administration - added cache for the list of recent pages, changed pages and audit logs (#58589).
 - Export/import files - modified dialog design and responsive display of form fields according to the current administration design (#58581).
+- Charts - added a new tree chart [`TreeChartForm`](developer/frameworks/charts/frontend/statjs.md#tree-type-chart) for visualizing hierarchical data with zooming, expanding, and maximizing (#58065).
+- Google reCaptcha - added support for inserting multiple multi-step forms into a page, `invisible/reCaptcha/reCaptchaV3` mode is supported, error message edited to more understandable text (#osk573).
 - Web pages - added highlighting of the element above which the context menu is called. Important if you want to perform the Delete element action, so you can see exactly which element is marked (#OSK675).
 - Multiweb - added option to rename an existing domain + redirection after renaming (#58317-15).
 - Multiweb - modified [display of template groups](install/multiweb/README.md) according to available templates and alias of current domain (#58317-17).
-- Google reCaptcha - added support for inserting multiple multi-step forms into a page, `invisible/reCaptcha/reCaptchaV3` mode is supported, error message edited to more understandable text (#osk573).
+- Statistics - the set date/from-to range is saved in the browser and is remembered even after logging out/restarting the browser (#58065).
 - Multi-step forms - added moving (`scroll`) to the beginning of the form after moving to the next step (#osk573).
 
 ### Bug fixes
 
-- Explorer - modified comparison of files with diacritics when checking the existence of a file when overwriting it - format `utf-8 NFC vs NFD` (#58317-12).
+- Explorer - modified comparison of files with diacritics when checking the existence of a file when overwriting it - format `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Web pages - fixed adding empty `P` element to the end of the page (#58317-13).
 - Websites - fixed loading of `ckeditor_button_sizes` value for button type `A` (#OSK674).
+- SQL Monitoring - fixed lifecycle management of `PreparedStatement` measurements. The record is also deleted when closed before starting the measurement and individual `PreparedStatement` objects are distinguished by identity without JDBC calls `hashCode()` and `equals()`. Concurrent access uses `ConcurrentHashMap` and atomic state without a global `synchronized` block, so threads do not wait for a shared lock and measurements do not merge even when identity hashes collide.
 
 ### Safety
 
@@ -166,6 +184,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 - AI Assistants - Provider-independent client logic for OpenAI, Gemini, and OpenRouter, stream processing, request/response types, and prompt protection have been separated into a separate artifact `com.webjetcms:webjet-ai` and an external [webjet-ai repository](https://github.com/webjetcms/webjet-ai). WebJET CMS passes configuration through a typed adapter and continues to provide auditing, persistence, and UI integration. This is an incompatible change: the original CMS SPI for custom providers and its transport and streaming support classes have been removed. Custom providers must be migrated to the `AiProvider` library interface and the CMS adapter `LibrarySupportLogic` (#58670).
 
+- AI providers - your own implementation can be [added to the project](custom-apps/apps/ai/assistants/README.md) as a Spring bean `AiProvider` ; the CMS will automatically connect it to the built-in providers. The configuration and editor fields are concentrated in a single adapter `LibrarySupportLogic` /`AiAssitantsInterface`. Image generation options are loaded by provider, model and operation from the library `webjet-ai`, so only the supported number, size, quality and aspect ratio are dynamically displayed (#58694).
+
 - Datatables - added a new field type `OPTIONS` for [dynamic list of values](developer/datatables-editor/standard-fields.md#options) in the editor. Each row contains two text fields (key and value), supports adding, removing and reordering using `drag & drop` (#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced.png)
@@ -177,6 +197,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
 
+- AspectJ - historical aspects `CloudFilter`, `SqlPerformance` and `AspectException` in `.aj` format have been migrated to Java classes with `@Aspect` annotation. Gradle first compiles the source codes via `javac`, which runs the Lombok/MapStruct annotation processors, and the `io.freefair.aspectj.post-compile-weaving` plugin then processes the bytecode using `AspectJ weaving`. Duplicate Ant/AJC compilation and local copies of build libraries have been removed; Ant packaging uses Gradle output and `Delombok` tasks. `CloudFilter` uses `execution pointcut` and the corresponding `advice` is inserted into `GroupsDB` and `DocDB` during compilation, so that filtering is also applied when calling from JSPs compiled without LTW. Regression tests have been added and [deployment documentation](developer/install/deployment.md#java-a-aspectj-compilation) updated (#290).
 - Logging - added attribute `sessionId` and user login name `userLogin` (#OSK526) to [Logback MDC](https://logback.qos.ch/manual/mdc.html).
 - Updated [Tabler Icons](https://tabler.io/icons) library to version 3.44.0, fixed issue with simultaneous use of `Outline` and `Filled` sets (#58509).
 - Web pages - if you need to have an empty first line in the configuration variable `imageMagickCustomParams*` for [custom parameter settings](redactor/apps/gallery/README.md#custom-parameters-imagemagick) `ImageMagick` enter the value `---`.
@@ -382,6 +403,9 @@ Redesigned application properties settings in the editor from the old code in `J
 - Multiweb - fixed the ability to delete or edit a domain redirect that contains the `http/s` prefix (#58317-15).
 - Gallery - in the application editor, only JSP files from the `/components/{INSTALL_NAME}/gallery` and `/components/gallery` folders are displayed among the visual styles, without duplicate items (#58317-16).
 - Inserting HTML code - in the application preview in the website editor, for content consisting only of `script` elements, the source code is displayed instead of empty content (#OSK625).
+- Security - tightened verification of the link to recover a forgotten password. The verification record is checked for the selected user account even with the custom sending method, respects the time validity and after use is invalidated for all accounts included in the request (#292).
+- Security - tightened control of folder rights when uploading a file to the administration and overwriting it if the file exists.
+- Security - tightened validation of database column names when performing dynamic sorting and filtering. **Warning:** Public APIs no longer support custom SQL expressions in sort parameters, only safe column names or available named constants are used (#294).
 
 ## 2026.0.28
 

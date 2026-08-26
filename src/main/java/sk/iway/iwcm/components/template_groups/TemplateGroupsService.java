@@ -10,7 +10,6 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.templates.TemplateDetailsService;
 import sk.iway.iwcm.database.SimpleQuery;
-import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesGroupBean;
 import sk.iway.iwcm.doc.TemplatesGroupDB;

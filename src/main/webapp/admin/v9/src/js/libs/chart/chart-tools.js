@@ -9,6 +9,7 @@ export const ChartType = {
     Pie_Donut: "pie_donut",
     Double_Pie: "double_pie",
     Word_Cloud: "word_cloud",
+    Tree: "tree",
     Table: "table",
     Not_Chart: "not_chart"
 }
@@ -224,6 +225,33 @@ export class WordCloudChartForm {
     }
 }
 
+export class TreeChartForm {
+    constructor(config) {
+        this.initFromConfig(config);
+    }
+
+    initFromConfig(config) {
+        if (!config.chartDivId) throwConstructorError("TreeChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("TreeChartForm", "chartData");
+
+        Object.assign(this, {
+            chartDivId: config.chartDivId,
+            chartData: config.chartData,
+            chartTitle: config.chartTitle,
+            valueField: config.valueField == null ? "value" : config.valueField,
+            categoryField: config.categoryField == null ? "name" : config.categoryField,
+            childDataField: config.childDataField == null ? "children" : config.childDataField,
+            initialDepth: config.initialDepth == null ? 10 : config.initialDepth,
+            downDepth: config.downDepth == null ? 1 : config.downDepth,
+            topDepth: config.topDepth == null ? 0 : config.topDepth,
+            singleBranchOnly: config.singleBranchOnly == null ? false : config.singleBranchOnly,
+            labelText: config.labelText,
+            tooltipText: config.tooltipText == null ? "{category}: [bold]{sum}[/]" : config.tooltipText,
+            colorScheme: config.colorScheme
+        });
+    }
+}
+
 export class TableChartForm {
     constructor(config) {
         this.initFromConfig(config);
@@ -384,24 +412,30 @@ export function getDateRangeWithName(name, defaultRangeDaysValue) {
     return daterange;
 }
 
+const STAT_FILTER_STORAGE_KEY = "webjet.apps.stat.filter";
+const STAT_DATE_RANGE_STORAGE_KEY = "webjet.apps.stat.filter.dateRange";
+const STAT_DATE_RANGE_INPUTS = [".dt-filter-from-dayDate", ".dt-filter-to-dayDate"];
+
 /**
- * Save last search criteria to session storage, so all stats page will have same criteria when loaded
- * @param {*} DATA
+ * Save the last search criteria so all statistics pages can reuse them.
+ * Date range values are persisted in local storage, while other filters remain in session storage.
+ * @param {Object|string} DATA DataTable configuration object or filter container selector.
  */
 export function saveSearchCriteria(DATA) {
-    var inputs = [".dt-filter-from-dayDate", ".dt-filter-to-dayDate", "#rootDir", "#botFilterOut", "#searchUrl", ".dt-filter-lastLogon", "#searchEngineSelect", "#webPageSelect"];
+    var inputs = [...STAT_DATE_RANGE_INPUTS, "#rootDir", "#botFilterOut", "#searchUrl", ".dt-filter-lastLogon", "#searchEngineSelect", "#webPageSelect"];
     var specialInputs = ["#searchEngineSelect", "#webPageSelect"]; //Resetting the value of this field is handed specialy
     var defaultSearch = {};
     var isWebPageValueValid = true;
     var isSearchEngineValueValid = true;
+    var filterContainerSelector = typeof DATA === "string" ? DATA : "#" + DATA.id + "_extfilter";
 
     //!! it's impotatnt step, without merge we will lose set params from another page
-    let oldDefaultSearch = JSON.parse( window.sessionStorage.getItem("webjet.apps.stat.filter") );
+    let oldDefaultSearch = JSON.parse( window.sessionStorage.getItem(STAT_FILTER_STORAGE_KEY) );
     if(oldDefaultSearch == null) oldDefaultSearch = {};
 
     var inputNotIncludedinCurrentPage = [];
     for (const name of inputs) {
-        var $input = $("#"+DATA.id+"_extfilter "+name);
+        var $input = $(filterContainerSelector + " " + name);
 
         //! very importatnt we need to know, what input's are not included in this page
         //If input is not included in this page, we dont want to work with it
@@ -415,7 +449,7 @@ export function saveSearchCriteria(DATA) {
         //console.log("saveSearchCriteria: name=", name, "value=", value, "input=", $input);
         if ("true"===value) {
             //it's checkbox
-            value = $("#"+DATA.id+"_extfilter "+name).is(":checked");
+            value = $input.is(":checked");
             //console.log("CHECKBOX value=", value, "name=", name);
         }
         if ("#rootDir"===name) {
@@ -498,18 +532,49 @@ export function saveSearchCriteria(DATA) {
             delete mergeDefaultSearch["#searchEngineSelect-text"];
     }
 
+    if(STAT_DATE_RANGE_INPUTS.some(name => !inputNotIncludedinCurrentPage.includes(name))) {
+        var dateRangeSearch = {};
+        for (const name of STAT_DATE_RANGE_INPUTS) {
+            if(defaultSearch.hasOwnProperty(name)) {
+                const date = moment(defaultSearch[name], "L");
+                if(date.isValid()) dateRangeSearch[name] = date.format("YYYY-MM-DD");
+            }
+            delete mergeDefaultSearch[name];
+        }
+
+        var dateRangeJson = JSON.stringify(dateRangeSearch);
+        if(dateRangeJson != "{}") window.localStorage.setItem(STAT_DATE_RANGE_STORAGE_KEY, dateRangeJson);
+        else window.localStorage.removeItem(STAT_DATE_RANGE_STORAGE_KEY);
+    }
+
     //Set new object
     var json = JSON.stringify(mergeDefaultSearch);
-    if (json != "{}") window.sessionStorage.setItem("webjet.apps.stat.filter", json);
-    else window.sessionStorage.removeItem("webjet.apps.stat.filter");
+    if (json != "{}") window.sessionStorage.setItem(STAT_FILTER_STORAGE_KEY, json);
+    else window.sessionStorage.removeItem(STAT_FILTER_STORAGE_KEY);
 }
 
 /**
- * Gets saved search criteria from session storage
+ * Gets saved search criteria from session storage and the persistent date range from local storage.
  * @returns
  */
 export function getSearchCriteria() {
-    var defaultSearch = window.sessionStorage.getItem("webjet.apps.stat.filter");
+    var defaultSearch = window.sessionStorage.getItem(STAT_FILTER_STORAGE_KEY);
+    if ("{}"==defaultSearch) defaultSearch = null;
+    if (defaultSearch != null) defaultSearch = JSON.parse(defaultSearch);
+
+    var dateRangeSearch = window.localStorage.getItem(STAT_DATE_RANGE_STORAGE_KEY);
+    if (dateRangeSearch != null && "{}"!=dateRangeSearch) {
+        if (defaultSearch == null) defaultSearch = {};
+        for (const name of STAT_DATE_RANGE_INPUTS) delete defaultSearch[name];
+
+        dateRangeSearch = JSON.parse(dateRangeSearch);
+        for (const name of STAT_DATE_RANGE_INPUTS) {
+            if(dateRangeSearch.hasOwnProperty(name)) {
+                const date = moment(dateRangeSearch[name], "YYYY-MM-DD", true);
+                if(date.isValid()) defaultSearch[name] = date.format("L");
+            }
+        }
+    }
 
     let webPageId = null;
     let webPageText = null;
@@ -517,9 +582,7 @@ export function getSearchCriteria() {
     let searchEngineId = null;
     let searchEngineText = null;
 
-    if ("{}"==defaultSearch) defaultSearch = null;
     if (defaultSearch != null) {
-        defaultSearch = JSON.parse(defaultSearch);
         for (const property in defaultSearch) {
             var value = defaultSearch[property];
             if (property == "#rootDir") {
@@ -722,14 +785,11 @@ export async function createAmchart(chartForm, update) {
 
     if(update === true) {
         //We need to remove previous header in order too push new ONE -> if we want update chart title
-        let previousHeader = $('#' + chartForm.chartDivId).prev();
+        let previousHeader = $('#' + chartForm.chartDivId).prev(".amchart-header");
         if(previousHeader != undefined && previousHeader != null && previousHeader.length > 0) previousHeader.remove();
     }
 
-    //Add title to chart div
-    chartForm.chartTitle = removeQuotes(chartForm.chartTitle);
-    var htmlCode = '<h6 class="amchart-header">' + chartForm.chartTitle;
-    $('#' + chartForm.chartDivId).before(htmlCode);
+    addChartTitle(chartForm);
 
     //By the type of input ChartForm create chart of that type
     if(chartForm instanceof BarChartForm) {
@@ -745,6 +805,8 @@ export async function createAmchart(chartForm, update) {
         createDoublePieChart(root, chartForm);
     } else if(chartForm instanceof WordCloudChartForm) {
         crateWordCloudChart(root, chartForm);
+    } else if(chartForm instanceof TreeChartForm) {
+        createTreeChart(root, chartForm);
     }
 }
 
@@ -762,11 +824,20 @@ function removeQuotes(str) {
   return str;
 }
 
-async function _createCustomChart(chartForm, update) {
-    //Add title to chart div
+function addChartTitle(chartForm) {
     chartForm.chartTitle = removeQuotes(chartForm.chartTitle);
-    var htmlCode = '<h6 class="amchart-header">' + chartForm.chartTitle;
-    $('#' + chartForm.chartDivId).before(htmlCode);
+
+    const chartElement = document.getElementById(chartForm.chartDivId);
+    if(chartElement == null) return;
+
+    const chartHeader = document.createElement("h6");
+    chartHeader.className = "amchart-header";
+    chartHeader.textContent = chartForm.chartTitle;
+    chartElement.before(chartHeader);
+}
+
+async function _createCustomChart(chartForm, update) {
+    addChartTitle(chartForm);
 
     if(chartForm instanceof TableChartForm) {
         createTableChart(chartForm);
@@ -1621,6 +1692,13 @@ export async function updateChart(chartForm) {
                 wordCloudSeries.data.setAll(chartForm.chartData);
             }
         }
+    } else if(chartForm instanceof TreeChartForm) {
+        let chartRoot;
+        am5.array.each(am5.registry.rootElements, function(root) {
+            if (root.dom.id == chartForm.chartDivId) chartRoot = root;
+        });
+        if (chartRoot != null) chartRoot.dispose();
+        await createAmchart(chartForm, true);
     } else if(chartForm instanceof TableChartForm) {
         const tableDiv = document.getElementById(chartForm.chartDivId);
         if(tableDiv) tableDiv.innerHTML = "";
@@ -2100,10 +2178,13 @@ export async function setSelect(dataUrl, valueToSelect, elementId, removeDefault
         if(removeDefault === true) select.remove(0);
 
         //Add new options
+        let isArray = Array.isArray(valueToSelect);
         let isInList = false;
         for(let i = 0; i < mapOfDirs.length; i++) {
             select.add(new Option(mapOfDirs[i]['label'], mapOfDirs[i]['value']));
-            if(valueToSelect == mapOfDirs[i]['value']) isInList = true;
+            if (isArray) {
+                if (valueToSelect.length > 0 && valueToSelect.includes(mapOfDirs[i]['value'])) isInList = true;
+            } else if(valueToSelect == mapOfDirs[i]['value']) isInList = true;
             else if(valueToSelect === null && i == 0) {
                 // by default select first value
                 valueToSelect = mapOfDirs[i]['value'];
@@ -2111,7 +2192,7 @@ export async function setSelect(dataUrl, valueToSelect, elementId, removeDefault
             }
         }
 
-        //If valueToSelect is in list of valued, select it
+        //If valueToSelect is in list of values, select it
         if(isInList) $("#" + elementId).val(valueToSelect);
 
         //Refresh object
@@ -2295,4 +2376,397 @@ function crateWordCloudChart(root, chartForm) {
         paddingRight: 5,
         fontFamily: "Courier New"
     });
+}
+
+const TREE_COMPACT_LAYOUT_THRESHOLD = 8;
+const TREE_COMPACT_WIDTH_PERCENT = 45;
+const TREE_COMPACT_ROW_HEIGHT = 20;
+const TREE_COMPACT_VERTICAL_MARGIN = 80;
+const TREE_COMPACT_MAX_HEIGHT = 800;
+const TREE_PINCH_ZOOM_DELTA = 100;
+
+function createTreeChart(root, chartForm) {
+    const treeData = normalizeTreeChartData(chartForm.chartData);
+    const layoutSlotCount = getTreeLayoutSlotCount(treeData, chartForm.childDataField);
+    const compactLayout = layoutSlotCount > TREE_COMPACT_LAYOUT_THRESHOLD;
+    const seriesWidth = compactLayout ? am5.percent(TREE_COMPACT_WIDTH_PERCENT) : am5.percent(75);
+    const seriesHeight = compactLayout ? am5.percent(90) : am5.percent(75);
+    const seriesPadding = compactLayout ? 20 : 40;
+    const chartElement = document.getElementById(chartForm.chartDivId);
+    const originalChartHeight = chartElement?.style.height ?? "";
+    let appliedChartHeight = null;
+
+    if (compactLayout) {
+        const compactChartHeight = Math.min(
+            layoutSlotCount * TREE_COMPACT_ROW_HEIGHT + TREE_COMPACT_VERTICAL_MARGIN,
+            TREE_COMPACT_MAX_HEIGHT
+        );
+        if (chartElement != null && chartElement.clientHeight < compactChartHeight) {
+            appliedChartHeight = compactChartHeight + "px";
+            chartElement.style.height = appliedChartHeight;
+            root.resize();
+        }
+    }
+
+    const chart = root.container.children.push(
+        am5.ZoomableContainer.new(root, {
+            width: am5.p100,
+            height: am5.p100,
+            wheelable: false,
+            pinchZoom: true
+        })
+    );
+    addTreeChartTrackpadPinchZoom(chart);
+
+    chartForm.chart = chart;
+    chartForm.root = root;
+    root.addDisposer(new am5.Disposer(() => {
+        restoreTreeChart(chartForm, false);
+        if (chartElement == null || appliedChartHeight == null || chartElement.style.height !== appliedChartHeight) return;
+        chartElement.style.height = originalChartHeight;
+        if (chartElement.style.length === 0) chartElement.removeAttribute("style");
+    }));
+
+    const treeTools = chart.children.push(am5.ZoomTools.new(root, {
+        target: chart
+    }));
+    addTreeChartMaximizeButton(root, treeTools, chartForm);
+
+    const series = chart.contents.children.push(
+        am5hierarchy.Tree.new(root, {
+            width: seriesWidth,
+            height: seriesHeight,
+            paddingTop: seriesPadding,
+            paddingRight: seriesPadding,
+            paddingBottom: seriesPadding,
+            paddingLeft: seriesPadding,
+            maskContent: false,
+            centerX: am5.p50,
+            centerY: am5.p50,
+            x: am5.p50,
+            y: am5.p50,
+            singleBranchOnly: chartForm.singleBranchOnly,
+            downDepth: chartForm.downDepth,
+            initialDepth: chartForm.initialDepth,
+            topDepth: chartForm.topDepth,
+            valueField: chartForm.valueField,
+            categoryField: chartForm.categoryField,
+            childDataField: chartForm.childDataField,
+            orientation: "horizontal",
+            clustered: false,
+            colors: am5.ColorSet.new(root, {
+                colors: getColorScheme(chartForm.colorScheme)
+            })
+        })
+    );
+
+    chartForm.series = series;
+    chartForm.compactLayout = compactLayout;
+
+    const nodeRadius = compactLayout ? 8 : 34;
+    series.circles.template.set("radius", nodeRadius);
+    series.outerCircles.template.set("radius", nodeRadius);
+    series.labels.template.setAll({
+        fontSize: compactLayout ? 12 : 13,
+        oversizedBehavior: compactLayout ? "truncate" : "none",
+        breakWords: false,
+        paddingTop: 0,
+        paddingRight: 0,
+        paddingBottom: 0,
+        paddingLeft: 0,
+        centerX: am5.p0,
+        centerY: am5.p50,
+        x: nodeRadius + 4,
+        maxWidth: compactLayout ? 150 : 200,
+        maxHeight: compactLayout ? 18 : 20,
+        textAlign: "left",
+        fill: am5.color(lightTheme_labelColor)
+    });
+    series.links.template.setAll({
+        strokeWidth: 1.25,
+        strokeOpacity: compactLayout ? 0.35 : 0.75
+    });
+    if (chartForm.labelText != null) {
+        series.labels.template.set("text", chartForm.labelText);
+    }
+    series.nodes.template.setAll({
+        draggable: false,
+        tooltipText: chartForm.tooltipText
+    });
+
+    series.data.setAll(treeData);
+    if (compactLayout) {
+        chart.contents.on("scale", () => updateCompactTreeScale(chartForm));
+    }
+    if (series.dataItems.length > 0) {
+        series.set("selectedDataItem", series.dataItems[0]);
+    }
+    if (compactLayout) {
+        updateCompactTreeScale(chartForm);
+    }
+
+    series.appear(1000, 100);
+    setTreeChartInitialView(chartForm);
+}
+
+function setTreeChartInitialView(chartForm) {
+    chartForm.root.events.once("frameended", () => {
+        if (chartForm.root.isDisposed()) return;
+        if (!chartForm.compactLayout) {
+            chartForm.series.labels.each(label => label.setAll({
+                maxWidth: 200,
+                maxHeight: 20,
+                oversizedBehavior: "none"
+            }));
+        }
+        chartForm.chart.contents.setAll({
+            x: 0,
+            y: 0,
+            scale: 1
+        });
+        if (chartForm.compactLayout) {
+            chartForm.chart.zoomToPoint({
+                x: chartForm.root.dom.clientWidth / 2,
+                y: chartForm.root.dom.clientHeight / 2
+            }, 2);
+        }
+    });
+}
+
+const TREE_MAXIMIZE_ICON = "M -8 -2 L -8 -8 L -2 -8 M 2 -8 L 8 -8 L 8 -2 M 8 2 L 8 8 L 2 8 M -2 8 L -8 8 L -8 2";
+const TREE_MINIMIZE_ICON = "M -8 -3 L -3 -3 L -3 -8 M 3 -8 L 3 -3 L 8 -3 M 8 3 L 3 3 L 3 8 M -3 8 L -3 3 L -8 3";
+let maximizedTreeChartForm = null;
+
+function addTreeChartMaximizeButton(root, treeTools, chartForm) {
+    const maximizeIcon = am5.Graphics.new(root, {
+        x: am5.p50,
+        y: am5.p50,
+        svgPath: TREE_MAXIMIZE_ICON,
+        themeTags: ["maximize", "icon"]
+    });
+
+    const maximizeButton = treeTools.children.push(am5.Button.new(root, {
+        width: 35,
+        height: 35,
+        icon: maximizeIcon,
+        layout: undefined,
+        themeTags: ["maximize"]
+    }));
+
+    chartForm.maximizeButton = maximizeButton;
+    chartForm.maximizeIcon = maximizeIcon;
+    setTreeChartMaximizeButtonState(chartForm, false);
+
+    maximizeButton.events.on("click", () => {
+        if (chartForm.isMaximized === true) {
+            restoreTreeChart(chartForm);
+        } else {
+            maximizeTreeChart(chartForm);
+        }
+    });
+}
+
+function maximizeTreeChart(chartForm) {
+    const chartElement = document.getElementById(chartForm.chartDivId);
+    if (chartElement == null) return;
+
+    if (maximizedTreeChartForm != null && maximizedTreeChartForm !== chartForm) {
+        restoreTreeChart(maximizedTreeChartForm);
+    }
+
+    const chartHeader = chartElement.previousElementSibling?.classList.contains("amchart-header") === true
+        ? chartElement.previousElementSibling
+        : null;
+    const overlay = document.createElement("div");
+
+    Object.assign(overlay.style, {
+        position: "fixed",
+        inset: "0",
+        zIndex: "2147483640",
+        display: "flex",
+        flexDirection: "column",
+        boxSizing: "border-box",
+        width: "100vw",
+        height: "100vh",
+        padding: "8px",
+        backgroundColor: "#FFFFFF"
+    });
+
+    chartForm.originalChartParent = chartElement.parentNode;
+    chartForm.originalChartNextSibling = chartElement.nextSibling;
+    chartForm.chartHeader = chartHeader;
+    chartForm.maximizeOverlay = overlay;
+    chartForm.originalChartStyle = chartElement.getAttribute("style");
+    chartForm.originalBodyOverflow = document.body.style.overflow;
+    chartForm.originalDocumentOverflow = document.documentElement.style.overflow;
+    chartForm.maximizeKeyHandler = event => {
+        if (event.key === "Escape") restoreTreeChart(chartForm);
+    };
+    chartForm.maximizePageHideHandler = () => restoreTreeChart(chartForm);
+
+    document.body.appendChild(overlay);
+    if (chartHeader != null) overlay.appendChild(chartHeader);
+    overlay.appendChild(chartElement);
+
+    Object.assign(chartElement.style, {
+        flex: "1 1 0",
+        width: "100%",
+        height: "auto",
+        minHeight: "0",
+        maxWidth: "none",
+        maxHeight: "none",
+        margin: "0",
+        borderRadius: "0",
+        backgroundColor: "#FFFFFF"
+    });
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    document.addEventListener("keydown", chartForm.maximizeKeyHandler);
+    window.addEventListener("pagehide", chartForm.maximizePageHideHandler);
+
+    chartForm.isMaximized = true;
+    maximizedTreeChartForm = chartForm;
+    setTreeChartMaximizeButtonState(chartForm, true);
+    resizeTreeChart(chartForm);
+}
+
+function restoreTreeChart(chartForm, updateChart = true) {
+    if (chartForm.isMaximized !== true) return;
+
+    const chartElement = document.getElementById(chartForm.chartDivId);
+    const originalParent = chartForm.originalChartParent;
+    const originalNextSibling = chartForm.originalChartNextSibling;
+    if (chartElement != null && originalParent != null) {
+        const referenceNode = originalNextSibling?.parentNode === originalParent
+            ? originalNextSibling
+            : null;
+        if (chartForm.chartHeader != null) {
+            originalParent.insertBefore(chartForm.chartHeader, referenceNode);
+        }
+        originalParent.insertBefore(chartElement, referenceNode);
+    }
+
+    if (chartElement != null) {
+        if (chartForm.originalChartStyle == null) {
+            chartElement.removeAttribute("style");
+        } else {
+            chartElement.setAttribute("style", chartForm.originalChartStyle);
+        }
+    }
+    chartForm.maximizeOverlay?.remove();
+    document.body.style.overflow = chartForm.originalBodyOverflow;
+    document.documentElement.style.overflow = chartForm.originalDocumentOverflow;
+    document.removeEventListener("keydown", chartForm.maximizeKeyHandler);
+    window.removeEventListener("pagehide", chartForm.maximizePageHideHandler);
+
+    chartForm.isMaximized = false;
+    if (maximizedTreeChartForm === chartForm) maximizedTreeChartForm = null;
+
+    if (updateChart === true) {
+        setTreeChartMaximizeButtonState(chartForm, false);
+        resizeTreeChart(chartForm);
+    }
+
+    chartForm.maximizeOverlay = null;
+    chartForm.maximizeKeyHandler = null;
+    chartForm.maximizePageHideHandler = null;
+}
+
+function setTreeChartMaximizeButtonState(chartForm, maximized) {
+    const translationKey = maximized ? "datatables.modal.minimize.js" : "datatables.modal.maximize.js";
+    const label = WJ.translate(translationKey);
+    chartForm.maximizeIcon.set("svgPath", maximized ? TREE_MINIMIZE_ICON : TREE_MAXIMIZE_ICON);
+    chartForm.maximizeButton.setAll({
+        ariaLabel: label,
+        tooltipText: label
+    });
+}
+
+function resizeTreeChart(chartForm) {
+    if (chartForm.root == null || chartForm.root.isDisposed()) return;
+
+    window.requestAnimationFrame(() => {
+        if (chartForm.root.isDisposed()) return;
+        chartForm.root.resize();
+        setTreeChartInitialView(chartForm);
+    });
+}
+
+function normalizeTreeChartData(chartData) {
+    if (chartData == null) return [];
+    if (Array.isArray(chartData)) return chartData;
+    return [chartData];
+}
+
+function getTreeLayoutSlotCount(nodes, childDataField) {
+    if (Array.isArray(nodes) === false) return 0;
+
+    let leafCount = 0;
+    const pendingNodes = [...nodes];
+    while (pendingNodes.length > 0) {
+        const node = pendingNodes.pop();
+        const children = node?.[childDataField];
+        if (Array.isArray(children) && children.length > 0) {
+            children.forEach(child => pendingNodes.push(child));
+        } else {
+            leafCount++;
+        }
+    }
+    return leafCount;
+}
+
+function addTreeChartTrackpadPinchZoom(chart) {
+    let targetZoomLevel = null;
+
+    chart.events.on("wheel", event => {
+        const wheelEvent = event.originalEvent;
+        if ((wheelEvent.ctrlKey !== true && wheelEvent.metaKey !== true) || wheelEvent.deltaY === 0) return;
+
+        wheelEvent.preventDefault();
+        const currentZoomLevel = chart.contents.get("scale", 1);
+        const baseZoomLevel = targetZoomLevel ?? currentZoomLevel;
+        const normalizedDelta = Math.max(-TREE_PINCH_ZOOM_DELTA, Math.min(TREE_PINCH_ZOOM_DELTA, wheelEvent.deltaY));
+        const zoomFactor = Math.pow(2, -normalizedDelta / TREE_PINCH_ZOOM_DELTA);
+        targetZoomLevel = Math.max(
+            chart.get("minZoomLevel", 1),
+            Math.min(chart.get("maxZoomLevel", 32), baseZoomLevel * zoomFactor)
+        );
+
+        const expectedZoomLevel = targetZoomLevel;
+        const animation = chart.zoomToPoint(chart.toLocal(event.point), targetZoomLevel);
+        if (animation == null || animation.stopped) {
+            if (targetZoomLevel === expectedZoomLevel) targetZoomLevel = null;
+        } else {
+            animation.events.once("stopped", () => {
+                if (targetZoomLevel === expectedZoomLevel) targetZoomLevel = null;
+            });
+        }
+    });
+}
+
+function updateCompactTreeScale(chartForm) {
+    const scale = chartForm.chart.contents.get("scale", 1);
+    const inverseScale = 1 / scale;
+
+    chartForm.series.circles.each(circle => circle.set("radius", 8 * inverseScale));
+    chartForm.series.outerCircles.each(circle => circle.set("radius", 8 * inverseScale));
+    chartForm.series.labels.each(label => {
+        let y = 0;
+        const dataItem = label.dataItem;
+        if (dataItem?.get("depth") === chartForm.topDepth) {
+            const siblings = dataItem.get("parent")?.get("children") || [];
+            if (siblings.length > 1) {
+                y = (siblings.indexOf(dataItem) % 2 === 0 ? -8 : 8) * inverseScale;
+            }
+        }
+
+        label.setAll({
+            fontSize: 12 * inverseScale,
+            x: 12 * inverseScale,
+            y: y,
+            maxWidth: 150 * inverseScale,
+            maxHeight: 18 * inverseScale
+        });
+    });
+    chartForm.series.links.each(link => link.set("strokeWidth", 1.25 * inverseScale));
 }

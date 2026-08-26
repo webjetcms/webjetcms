@@ -1,5 +1,8 @@
 package sk.iway.iwcm.rag.vectorstore;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -8,8 +11,10 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.rag.pgvector.EmbeddingChunkStatus;
@@ -38,6 +43,7 @@ public class PgVectorStore implements VectorStore {
             chunk_text      TEXT NOT NULL,
             content_hash    VARCHAR(64) NOT NULL,
             embedding       vector(%s),
+            embedding_provider VARCHAR(100) NOT NULL,
             embedding_model VARCHAR(100) NOT NULL,
             dimensions      INT NOT NULL,
             language        VARCHAR(10),
@@ -49,7 +55,7 @@ public class PgVectorStore implements VectorStore {
             status          VARCHAR(20) NOT NULL DEFAULT '%s',
             error_message   VARCHAR(500),
             create_date     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            CONSTRAINT uq_rag_chunk UNIQUE (entity_type, entity_id, chunk_index, embedding_model)
+            CONSTRAINT uq_rag_chunk UNIQUE (entity_type, entity_id, chunk_index, embedding_provider, embedding_model)
         )
         """.formatted(DIMENSION_PLACEHOLDER, EmbeddingChunkStatus.COMPLETED.name());
 
@@ -66,7 +72,12 @@ public class PgVectorStore implements VectorStore {
         "DROP INDEX IF EXISTS idx_rag_embedding_hnsw";
 
     private static final String UPDATE_EMBEDDING_SQL =
-        "UPDATE rag_embedding_chunks SET embedding = ?::vector WHERE id = ?";
+        "UPDATE rag_embedding_chunks SET embedding = ?::vector, status = '" +
+        EmbeddingChunkStatus.COMPLETED.name() + "', error_message = NULL WHERE id = ?";
+
+    private static final String MARK_EMBEDDING_ERROR_SQL =
+        "UPDATE rag_embedding_chunks SET status = '" + EmbeddingChunkStatus.ERROR.name() +
+        "', error_message = ? WHERE id = ?";
 
     /**
      * Builds SEARCH_SQL dynamically based on configured distance metric.
@@ -83,21 +94,24 @@ public class PgVectorStore implements VectorStore {
                "       " + similarityCalc +
                " FROM rag_embedding_chunks" +
                " WHERE status = '" + EmbeddingChunkStatus.COMPLETED.name() + "'" +
+               " AND embedding IS NOT NULL" +
+               " AND embedding_provider = ?" +
                " AND embedding_model = ?";
     }
 
     private static final String GET_EXISTING_HASH_EMBEDDING =
         "SELECT content_hash, embedding::text AS embedding_text FROM rag_embedding_chunks " +
-        "WHERE entity_type = ? AND entity_id = ? AND embedding_model = ? AND status = '" + EmbeddingChunkStatus.COMPLETED.name() + "'";
+        "WHERE entity_type = ? AND entity_id = ? AND embedding_provider = ? AND embedding_model = ? AND domain_id = ? AND status = '" + EmbeddingChunkStatus.COMPLETED.name() + "'";
 
-    private static final String DELETE_MODEL_DATA_SQL =
-        "DELETE FROM rag_embedding_chunks WHERE embedding_model = ?";
+    private static final String DELETE_ALL_DATA_SQL =
+        "DELETE FROM rag_embedding_chunks";
 
     private static final String FTS_SEARCH_SQL_PREFIX =
         "SELECT id, entity_type, entity_id, chunk_index, chunk_text, " +
         "ts_rank_cd(to_tsvector('simple', chunk_text), websearch_to_tsquery('simple', ?)) AS similarity " +
         "FROM rag_embedding_chunks " +
         "WHERE status = '" + EmbeddingChunkStatus.COMPLETED.name() + "' " +
+        "AND embedding_provider = ? " +
         "AND embedding_model = ? " +
         "AND to_tsvector('simple', chunk_text) @@ websearch_to_tsquery('simple', ?)";
 
@@ -106,6 +120,7 @@ public class PgVectorStore implements VectorStore {
         "CASE WHEN position(lower(?) in lower(chunk_text)) > 0 THEN 1.0 ELSE 0.0 END AS similarity " +
         "FROM rag_embedding_chunks " +
         "WHERE status = '" + EmbeddingChunkStatus.COMPLETED.name() + "' " +
+        "AND embedding_provider = ? " +
         "AND embedding_model = ? " +
         "AND chunk_text ILIKE ?";
 
@@ -116,11 +131,26 @@ public class PgVectorStore implements VectorStore {
         String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null) return;
 
+        updateEmbeddingRow(dsName, id, embedding);
+    }
+
+    private boolean updateEmbeddingRow(String dsName, Long id, float[] embedding) {
         try {
-            new SimpleQuery(dsName).execute(UPDATE_EMBEDDING_SQL, vectorToString(embedding), id);
+            int updatedRows = executeUpdate(
+                dsName,
+                UPDATE_EMBEDDING_SQL,
+                vectorToString(embedding),
+                id
+            );
+            if (updatedRows != 1) {
+                throw new IllegalStateException("Expected to update one embedding row, updated " + updatedRows);
+            }
+            return true;
         } catch (Exception e) {
             Logger.error(PgVectorStore.class,
                 "Error updating embedding for chunk id " + id + ": " + e.getMessage());
+            markEmbeddingError(dsName, id, e.getMessage());
+            return false;
         }
     }
 
@@ -148,11 +178,25 @@ public class PgVectorStore implements VectorStore {
                 params.add(id);
             }
 
-            new SimpleQuery(dsName).execute(sql, params.toArray());
+            int updatedRows = executeUpdate(dsName, sql, params.toArray());
+            if (updatedRows != ids.size()) {
+                throw new IllegalStateException(
+                    "Expected to update " + ids.size() + " embedding rows, updated " + updatedRows
+                );
+            }
         } catch (Exception e) {
             Logger.error(PgVectorStore.class, "Error batch updating embeddings, falling back to row-by-row updates: " + e.getMessage());
+            int failedRows = 0;
             for (int i = 0; i < ids.size(); i++) {
-                updateEmbedding(ids.get(i), embeddings.get(i));
+                if (updateEmbeddingRow(dsName, ids.get(i), embeddings.get(i)) == false) {
+                    failedRows++;
+                }
+            }
+            if (failedRows > 0) {
+                throw new IllegalStateException(
+                    "Failed to update " + failedRows + " of " + ids.size() + " embedding rows",
+                    e
+                );
             }
         }
     }
@@ -164,7 +208,8 @@ public class PgVectorStore implements VectorStore {
             sql.append("WHEN ? THEN ?::vector ");
         }
 
-        sql.append("END WHERE id IN (");
+        sql.append("END, status = '").append(EmbeddingChunkStatus.COMPLETED.name());
+        sql.append("', error_message = NULL WHERE id IN (");
         for (int i = 0; i < rowCount; i++) {
             if (i > 0) sql.append(", ");
             sql.append("?");
@@ -174,8 +219,34 @@ public class PgVectorStore implements VectorStore {
         return sql.toString();
     }
 
+    private int executeUpdate(String dsName, String sql, Object... params) throws SQLException {
+        try (Connection connection = DBPool.getConnection(dsName);
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            SimpleQuery.bindParameters(statement, params);
+            return statement.executeUpdate();
+        }
+    }
+
+    private void markEmbeddingError(String dsName, Long id, String errorMessage) {
+        String message = Tools.isEmpty(errorMessage) ? "Embedding vector update failed" : errorMessage;
+        if (message.length() > 500) {
+            message = message.substring(0, 500);
+        }
+
+        try {
+            int updatedRows = executeUpdate(dsName, MARK_EMBEDDING_ERROR_SQL, message, id);
+            if (updatedRows != 1) {
+                Logger.error(PgVectorStore.class,
+                    "Failed to mark embedding chunk " + id + " as ERROR, updated rows: " + updatedRows);
+            }
+        } catch (Exception statusException) {
+            Logger.error(PgVectorStore.class,
+                "Failed to mark embedding chunk " + id + " as ERROR: " + statusException.getMessage());
+        }
+    }
+
     @Override
-    public List<VectorSearchResult> search(float[] queryEmbedding, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams) {
+    public List<VectorSearchResult> search(float[] queryEmbedding, String embeddingProvider, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams) {
         String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null) return new ArrayList<>();
 
@@ -199,6 +270,7 @@ public class PgVectorStore implements VectorStore {
         StringBuilder sql = new StringBuilder(buildSearchSql());
         List<Object> params = new ArrayList<>();
         params.add(vectorToString(queryEmbedding));
+        params.add(embeddingProvider);
         params.add(embeddingModel);
 
         addScopeFilters(sql, params, entityType, domainId, language);
@@ -224,11 +296,11 @@ public class PgVectorStore implements VectorStore {
     }
 
     @Override
-    public List<VectorSearchResult> searchFulltext(String query, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams) {
+    public List<VectorSearchResult> searchFulltext(String query, String embeddingProvider, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams) {
         String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null || Tools.isEmpty(query) || limit <= 0) return new ArrayList<>();
 
-        List<VectorSearchResult> ftsResults = executeFulltextSearch(dsName, query, embeddingModel, entityType, domainId, language, limit, bonusParams);
+        List<VectorSearchResult> ftsResults = executeFulltextSearch(dsName, query, embeddingProvider, embeddingModel, entityType, domainId, language, limit, bonusParams);
 
         boolean hybridFtsUseIlikeFallback = Constants.getBoolean("ragHybridFtsUseIlikeFallback");
         if(bonusParams != null) {
@@ -239,16 +311,17 @@ public class PgVectorStore implements VectorStore {
         }
 
         if (ftsResults.isEmpty() && hybridFtsUseIlikeFallback) {
-            return executeIlikeSearch(dsName, query, embeddingModel, entityType, domainId, language, limit, bonusParams);
+            return executeIlikeSearch(dsName, query, embeddingProvider, embeddingModel, entityType, domainId, language, limit, bonusParams);
         }
 
         return ftsResults;
     }
 
-    private List<VectorSearchResult> executeFulltextSearch(String dsName, String query, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams) {
+    private List<VectorSearchResult> executeFulltextSearch(String dsName, String query, String embeddingProvider, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams) {
         StringBuilder sql = new StringBuilder(FTS_SEARCH_SQL_PREFIX);
         List<Object> params = new ArrayList<>();
         params.add(query);
+        params.add(embeddingProvider);
         params.add(embeddingModel);
         params.add(query);
 
@@ -262,10 +335,11 @@ public class PgVectorStore implements VectorStore {
         return executeSearchQuery(dsName, sql.toString(), params);
     }
 
-    private List<VectorSearchResult> executeIlikeSearch(String dsName, String query, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams) {
+    private List<VectorSearchResult> executeIlikeSearch(String dsName, String query, String embeddingProvider, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams) {
         StringBuilder sql = new StringBuilder(FTS_ILIKE_SQL_PREFIX);
         List<Object> params = new ArrayList<>();
         params.add(query);
+        params.add(embeddingProvider);
         params.add(embeddingModel);
         params.add("%" + query + "%");
 
@@ -377,7 +451,7 @@ public class PgVectorStore implements VectorStore {
         if (isAvailable() == false) return false;
 
         try {
-            new SimpleQuery(PgvectorJpaConfig.getRagDataSourceName()).forInt("SELECT 1 FROM rag_embedding_chunks LIMIT 1");
+            new SimpleQuery(PgvectorJpaConfig.getRagDataSourceName()).forInt("SELECT 1 FROM rag_embedding_chunks WHERE embedding_provider IS NOT NULL LIMIT 1");
             return true;
         } catch (Exception e) {
             return false;
@@ -397,6 +471,8 @@ public class PgVectorStore implements VectorStore {
             sq.execute(CREATE_EXTENSION_SQL);
             // Important note: the table creation must be done with the correct dimension count, otherwise the embedding insertions will fail with "vector has wrong number of dimensions" error
             sq.execute( Tools.replace(CREATE_TABLE_SQL, DIMENSION_PLACEHOLDER, Constants.getInt("ragEmbeddingDimensions") + "") );
+
+            migrateEmbeddingProviderColumn(sq);
 
             if (recreateHnswIndex() == false) {
                 return false;
@@ -418,6 +494,17 @@ public class PgVectorStore implements VectorStore {
             Logger.error(PgVectorStore.class, "Error initializing RAG pgvector schema: " + e.getMessage());
             return false;
         }
+    }
+
+    private void migrateEmbeddingProviderColumn(SimpleQuery sq) {
+        String defaultProvider = Constants.getString("ragEmbeddingProvider");
+        if (Tools.isEmpty(defaultProvider)) defaultProvider = "openai";
+
+        sq.execute("ALTER TABLE rag_embedding_chunks ADD COLUMN IF NOT EXISTS embedding_provider VARCHAR(100)");
+        sq.execute("UPDATE rag_embedding_chunks SET embedding_provider = ? WHERE embedding_provider IS NULL OR embedding_provider = ''", defaultProvider.trim().toLowerCase(java.util.Locale.ROOT));
+        sq.execute("ALTER TABLE rag_embedding_chunks ALTER COLUMN embedding_provider SET NOT NULL");
+        sq.execute("ALTER TABLE rag_embedding_chunks DROP CONSTRAINT IF EXISTS uq_rag_chunk");
+        sq.execute("ALTER TABLE rag_embedding_chunks ADD CONSTRAINT uq_rag_chunk UNIQUE (entity_type, entity_id, chunk_index, embedding_provider, embedding_model)");
     }
 
     /**
@@ -481,20 +568,32 @@ public class PgVectorStore implements VectorStore {
         return result;
     }
 
-    /**
-     * {@inheritDoc}
-     * Fetches existing content hashes and their embedding vectors for an entity,
-     * allowing the indexer to skip re-embedding unchanged chunks.
-     * */
+    /** {@inheritDoc} */
     @Override
-    public Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingModel) {
+    @Deprecated(forRemoval = false)
+    public Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingProvider, String embeddingModel) {
+        return getExistingEmbeddingsByHash(
+            entityType,
+            entityId,
+            embeddingProvider,
+            embeddingModel,
+            CloudToolsForCore.getDomainId()
+        );
+    }
+
+    /**
+     * Fetches existing content hashes and embedding vectors for an entity and domain,
+     * allowing the indexer to skip re-embedding unchanged chunks.
+     */
+    @Override
+    public Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingProvider, String embeddingModel, int domainId) {
         String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null) return new java.util.HashMap<>();
 
         try {
             List<Map.Entry<String, float[]>> entries = new ComplexQuery()
                 .setSql(GET_EXISTING_HASH_EMBEDDING)
-                .setParams(entityType, entityId, embeddingModel)
+                .setParams(entityType, entityId, embeddingProvider, embeddingModel, domainId)
                 .setDatabase(dsName)
                 .list(rs -> {
                     String hash = rs.getString("content_hash");
@@ -514,20 +613,29 @@ public class PgVectorStore implements VectorStore {
     }
 
     @Override
-    public boolean deleteModelData(String embeddingModel) {
+    public boolean resetDimensions(int dimensions) {
+        if (dimensions < 1) {
+            Logger.error(PgVectorStore.class, "Invalid RAG embedding dimensions: " + dimensions);
+            return false;
+        }
+
         String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null) {
-            Logger.println(PgVectorStore.class, "RAG datasource not available, skipping schema drop");
+            Logger.println(PgVectorStore.class, "RAG datasource not available, skipping dimension reset");
             return false;
         }
 
         try {
             SimpleQuery sq = new SimpleQuery(dsName);
-            sq.execute(DELETE_MODEL_DATA_SQL, embeddingModel);
-            Logger.println(PgVectorStore.class, "RAG pgvector table dropped successfully");
+            sq.execute(DROP_HNSW_INDEX_SQL);
+            sq.execute(DELETE_ALL_DATA_SQL);
+            sq.execute("ALTER TABLE rag_embedding_chunks ALTER COLUMN embedding TYPE vector(" + dimensions + ") USING embedding::vector(" + dimensions + ")");
+            if (recreateHnswIndex() == false) return false;
+
+            Logger.println(PgVectorStore.class, "RAG embedding data deleted and vector dimensions updated to " + dimensions);
             return true;
         } catch (Exception e) {
-            Logger.error(PgVectorStore.class, "Error dropping RAG pgvector table: " + e.getMessage());
+            Logger.error(PgVectorStore.class, "Error resetting RAG vector dimensions: " + e.getMessage());
             return false;
         }
     }

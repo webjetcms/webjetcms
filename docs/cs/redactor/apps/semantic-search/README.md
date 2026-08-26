@@ -1,6 +1,6 @@
 # Sémantické vyhledávání (RAG)
 
-Sémantické vyhledávání umožňuje návštěvníkům nalézt relevantní stránky na základě **významu otázky**, nejen shody klíčových slov. Využívá vektorovou databázi [pgvector](https://github.com/pgvector/pgvector) a vektory generované prostřednictvím OpenAI API.
+Sémantické vyhledávání umožňuje návštěvníkům nalézt relevantní stránky na základě **významu otázky**, nejen shody klíčových slov. Využívá vektorovou databázi [pgvector](https://github.com/pgvector/pgvector) a vektory generované prostřednictvím nastaveného AI poskytovatele.
 
 Volitelně může nad stejným indexem zobrazit také **RAG odpověď** - krátkou odpověď vygenerovanou AI pouze z nalezeného obsahu webu. Odpověď se zobrazí nad klasickým seznamem výsledků vyhledávání.
 
@@ -21,7 +21,7 @@ Ke spuštění sémantického vyhledávání je potřeba:
 - Nastavit typ vyhledávání na hodnotu `semantic` nebo `hybrid`. Můžete to provést globálně přes konfigurační proměnnou `searchType`, nebo přímo v aplikaci **Vyhledávání**.
 - Při hybridním režimu ověřit, že konfigurační proměnná `ragHybridSearchEnabled` je nastavena na hodnotu `true`.
 - Ověřit, že konfigurační proměnná `luceneAsDefaultSearch` je nastavena na hodnotu `false`. Pokud je nastavena na `true`, bude se místo sémantického vyhledávání používat Lucene, protože má vyšší prioritu.
-- Nastavit OpenAI API klíč používaný i pro AI asistenty v proměnné `ai_openAiAuthKey`.
+- Nastavit API klíč zvoleného poskytovatele stejným způsobem jako pro AI asistenty.
 - Spustit indexování přes administrátorské rozhraní pro vytvoření vektorů a naplnění vektorové databáze.
 - Nastavit automatizovanou úlohu `sk.iway.iwcm.rag.service.RagIndexCronTask`, která zpracovává frontu indexování.
 
@@ -79,7 +79,7 @@ RAG odpověď používá pouze obsah získaný ze sémantického indexu. Pokud s
 
 ## Sémantický index
 
-Pro využití sémantického vyhledávání je třeba mít indexovaný obsah pomocí sémantického indexování, které je dostupné v administrátorském rozhraní. Více informací naleznete v části [Sémantický index](./embedding-chunks.md).
+Pro využití sémantického vyhledávání je třeba mít indexovaný obsah pomocí sémantického indexování, které je dostupné v administrátorském rozhraní. Poskytovatel a model se nastavují v systémových AI asistentech `RAG-EMB-INDEX` a `RAG-EMB-SEARCH` ; aby se index použil, obě hodnoty vyhledávacího asistenta se musí přesně shodovat s vytvořeným indexem. Po otevření stránky **Sémantický index** se aktuální indexovací konfigurace zobrazí v informačním oznámení. Indexy různých poskytovatelů a modelů mohou existovat současně. Více informací naleznete v části [Sémantický index](./embedding-chunks.md).
 
 ## Detaily implementace a nastavení
 

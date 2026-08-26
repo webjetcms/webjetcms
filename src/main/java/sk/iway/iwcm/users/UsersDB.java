@@ -2391,7 +2391,8 @@ public class UsersDB
 				if (dir.endsWith("/+") || dir.endsWith("/*")) dir = dir.substring(0, dir.length()-2);
 				else dir = dir.substring(0, dir.length()-1);
 
-				if (folder.startsWith(dir))
+				String recursiveDir = dir.endsWith("/") ? dir : dir + "/";
+				if (folder.startsWith(recursiveDir))
 				{
 					return(true);
 				}

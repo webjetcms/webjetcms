@@ -268,6 +268,13 @@ export function typeQuill() {
                 }
             }, conf.opts));
 
+            const editorLabel = $("<div>").html(conf.label || "").text().trim();
+            conf._quill.root.setAttribute('role', 'textbox');
+            conf._quill.root.setAttribute('aria-multiline', String(isOneLine(conf) !== true));
+            if (editorLabel.length > 0) {
+                conf._quill.root.setAttribute('aria-label', editorLabel);
+            }
+
             // Add the matcher to the clipboard module
             conf._quill.clipboard.addMatcher(Node.ELEMENT_NODE, removeStylesAndClasses);
 

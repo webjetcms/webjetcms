@@ -78,17 +78,20 @@ Při volbě **Přepsat soubor** nebo **Přejmenovat soubor** se obrázek v poli 
 
 ### Vstup od uživatele
 
-Pokud asistent vyžaduje dodatečné pokyny, zobrazí se formulář. Doplňující pole jsou specifická pro konkrétního **poskytovatele**, proto se mohou měnit. U poskytovatele `OpenAI` jde například o:
+Pokud asistent vyžaduje dodatečné pokyny, zobrazí se formulář. Doplňující pole se určují podle možností konkrétního **poskytovatele, modelu a operace**, proto se mohou měnit. Zobrazit se mohou například:
 
-- Počet obrázků
-- Rozměr
-- Kvalita
+- **Počet obrázků**,
+- **Rozměr**,
+- **Kvalita**,
+- **Poměr stran**.
+
+CMS zobrazí pouze pole a hodnoty, které vybraný model podporuje. Pokud model pro danou operaci nepublikuje žádné doplňkové možnosti, formulář bude obsahovat pouze uživatelský pokyn.
 
 Asistenti, kteří potřebují vstup uživatele, mají při názvu ikonu<i class="ti ti-blockquote has-user-prompt"></i> .
 
 ![](image-prompt.png)
 
-Po potvrzení probíhá zpracování standardně s jednou výjimkou pro `OpenAI`: umožňuje najednou vygenerovat více obrázků (podle **Počet obrázků**). Na příkladu níže bylo nastaveno číslo 3.
+Pokud vybraný model podporuje pole **Počet obrázků**, může v jednom požadavku vygenerovat více výsledků. Na příkladu níže bylo nastaveno číslo 3.
 
 Vybrat a uložit můžete jen jeden výsledek – zvolíte jej kliknutím. Všechny náhledy lze otevřít přes<a target="_blank" class="zoom-in"><i class="ti ti-zoom-in"></i></a> .
 

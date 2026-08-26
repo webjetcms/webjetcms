@@ -1,6 +1,6 @@
 # Sémantické vyhľadávanie (RAG)
 
-Sémantické vyhľadávanie umožňuje návštevníkom nájsť relevantné stránky podľa **významu otázky**, nielen podľa zhody kľúčových slov. Využíva vektorovú databázu [pgvector](https://github.com/pgvector/pgvector) a embedding vektory generované cez OpenAI API.
+Sémantické vyhľadávanie umožňuje návštevníkom nájsť relevantné stránky podľa **významu otázky**, nielen podľa zhody kľúčových slov. Využíva vektorovú databázu [pgvector](https://github.com/pgvector/pgvector) a embedding vektory generované cez poskytovateľov podporovaných knižnicou `webjet-ai`.
 
 Nad rovnakým indexom je možné použiť aj:
 
@@ -19,8 +19,8 @@ Proces indexovania:
 
 1. **Extrakcia obsahu** - z `DocDetails` sa získa čistý text bez HTML značiek cez [DocDetailsContentExtractor](../../../../../../src/main/java/sk/iway/iwcm/rag/indexing/DocDetailsContentExtractor.java).
 2. **Rozdelenie na časti** - text sa rozdelí pomocou [SlidingWindowChunker](../../../../../../src/main/java/sk/iway/iwcm/rag/indexing/SlidingWindowChunker.java). Používajú sa konfiguračné premenné `ragEmbeddingChunkSize` a `ragEmbeddingChunkOverlap`.
-3. **Opätovné použitie embeddingov** - pre každý chunk sa vypočíta hash. Ak sa text chunku nezmenil a embedding má správnu dimenziu, použije sa existujúci vektor.
-4. **Generovanie embeddingov** - nové alebo zmenené chunky sa odošlú do OpenAI API (`/v1/embeddings`) cez [OpenAiEmbeddingProvider](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/OpenAiEmbeddingProvider.java).
+3. **Opätovné použitie embeddingov** - pre každý chunk sa vypočíta hash. Ak sa text chunku nezmenil a existuje embedding s rovnakým poskytovateľom, modelom a správnou dimenziou, použije sa existujúci vektor.
+4. **Generovanie embeddingov** - nové alebo zmenené chunky spracuje [EmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java) podľa poskytovateľa a modelu nastaveného v indexovacom asistentovi `RAG-EMB-INDEX`.
 5. **Uloženie do databázy** - metadáta chunkov sa ukladajú cez JPA repozitár [EmbeddingChunkRepository](../../../../../../src/main/java/sk/iway/iwcm/rag/pgvector/EmbeddingChunkRepository.java), samotný `vector(N)` stĺpec sa aktualizuje natívnym SQL cez [PgVectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/PgVectorStore.java).
 
 Chunking preferuje prirodzené hranice textu: odsek, riadok, vetu, medzeru a až potom tvrdé rozdelenie podľa limitu. Pri desatinných číslach sa bodka nepovažuje za koniec vety.
@@ -31,23 +31,31 @@ Keď návštevník zadá vyhľadávací dotaz:
 
 1. [SearchAction](../../../../../../src/main/java/sk/iway/iwcm/doc/SearchAction.java) určí typ vyhľadávania z parametra aplikácie `searchType`. Pri hodnote `auto` alebo prázdnej hodnote použije globálnu konfiguračnú premennú `searchType`.
 2. Pri hodnote `semantic` alebo `hybrid` sa použije [SemanticSearchAction](../../../../../../src/main/java/sk/iway/iwcm/doc/SemanticSearchAction.java).
-3. [SemanticSearchService](../../../../../../src/main/java/sk/iway/iwcm/rag/search/SemanticSearchService.java) vygeneruje embedding dotazu a vyhľadá najbližšie chunky v pgvector databáze.
+3. [SemanticSearchService](../../../../../../src/main/java/sk/iway/iwcm/rag/search/SemanticSearchService.java) vygeneruje embedding dotazu podľa asistenta `RAG-EMB-SEARCH` a vyhľadá najbližšie chunky s rovnakým poskytovateľom a modelom v pgvector databáze.
 4. Výsledky sa obmedzia podľa domény, jazyka, typu entity a podľa priečinkov zvolených v aplikácii **Vyhľadávanie**.
 5. Ak je povolený hybridný režim, spustí sa aj fulltext nad `rag_embedding_chunks.chunk_text` a výsledky sa spoja cez `RRF` (Reciprocal Rank Fusion).
 6. Výsledné chunky sa agregujú na dokumenty a dokumenty sa zobrazia rovnakým spôsobom ako pri štandardnom vyhľadávaní.
 7. Ak je povolená RAG odpoveď, z nájdených chunkov sa ešte pripraví kontext pre AI odpoveď.
 
+### Rozdelenie zodpovedností medzi WebJET CMS a `webjet-ai`
+
+Jadro embedding logiky bolo vyčlenené z WebJET CMS do samostatnej, od frameworku nezávislej knižnice [webjet-ai](https://github.com/webjetcms/webjet-ai). Knižnica obsahuje poskytovateľsky nezávislé typy `EmbeddingRequest`, `EmbeddingOptions`, `EmbeddingResponse` a `EmbeddingVector`, volanie `AiClient.embed` a implementácie komunikácie s jednotlivými poskytovateľmi. Pôvodné CMS rozhranie `EmbeddingProvider` a implementácia `OpenAiEmbeddingProvider` boli odstránené.
+
+V CMS zostal tenký adaptér [EmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java), ktorý prevedie nastavenie systémového AI asistenta a domény na požiadavku knižnice, odovzdá konfiguráciu poskytovateľa a skontroluje počet a dimenziu vrátených vektorov. Extrakcia obsahu, chunking, opätovné použitie vektorov podľa hash hodnoty, evidencia tokenov, spracovanie fronty a ukladanie do `pgvector` zostávajú v správe WebJET CMS.
+
+Pri pridaní nového serverového poskytovateľa sa preto embedding komunikácia neimplementuje v RAG module CMS. Poskytovateľ musí podporovať metódu `AiProvider.embed` v knižnici `webjet-ai` a byť zaregistrovaný v CMS podľa postupu v časti [Pridanie poskytovateľa](../../ai/assistants/README.md).
+
 ## Požiadavky
 
 - **PostgreSQL** s rozšírením **pgvector** (obraz: `pgvector/pgvector:pg18-trixie` alebo novší).
-- **OpenAI API kľúč** - používa sa rovnaký kľúč ako pre AI asistentov (`ai_openAiAuthKey`).
+- **API kľúč zvoleného poskytovateľa** - používa sa rovnaké nastavenie ako pre AI asistentov, napr. `ai_openAiAuthKey` pre OpenAI alebo príslušný kľúč pre Gemini.
 - Sémantické vyhľadávanie funguje len nad PostgreSQL/pgvector úložiskom. Ak primárna databáza WebJET CMS nie je PostgreSQL, nastavte samostatnú PostgreSQL databázu cez datasource `rag_jpa`.
 
 ### PostgreSQL ako primárna databáza
 
 Ak WebJET CMS beží priamo na PostgreSQL, vektorová databáza sa použije automaticky bez ďalšej konfigurácie.
 
-Musí byť nastavený datasource ako v prípade [poolman-docker-pgsql.xml](../../../../../../src/main/resources/poolman-docker-pgsql.xml).
+Musí byť nastavený datasource ako v prípade [poolman-docker-pgsql.xml](../../../../../../src/main/resources/poolman-docker-pgsql.xml). Ak používate viac schém, parameter JDBC `currentSchema` musí obsahovať schému s RAG tabuľkami aj schému s funkciami WebJET CMS, napríklad `currentSchema=public,webjet_cms`.
 
 ### Samostatná vektorová databáza
 
@@ -83,14 +91,28 @@ Aktivácia a nastavenie sa robí v [Konfigurácii](../../../../admin/setup/confi
 
 | Premenná | Predvolená hodnota | Popis |
 | --- | --- | --- |
-| `ragEmbeddingModel` | `text-embedding-3-small` | Názov OpenAI embedding modelu. |
+| `ragEmbeddingProvider` | `openai` | Poskytovateľ použitý iba pri automatickom vytvorení chýbajúceho embedding asistenta. Vstavané hodnoty sú `openai`, `gemini`, `openrouter`; použiť možno aj identifikátor správne zaregistrovaného vlastného poskytovateľa. |
+| `ragEmbeddingModel` | `text-embedding-3-small` | Model použitý iba pri automatickom vytvorení chýbajúceho embedding asistenta. |
 | `ragEmbeddingDimensions` | `1536` | Počet dimenzií vektora. Musí zodpovedať použitému modelu a databázovej tabuľke. |
 | `ragEmbeddingChunkSize` | `1000` | Maximálna veľkosť jednej časti textu v znakoch. |
 | `ragEmbeddingChunkOverlap` | `200` | Počet znakov, o ktoré sa susedné chunky prekrývajú. |
 
+Systém podľa potreby automaticky vytvorí dvoch systémových AI asistentov:
+
+- `RAG-EMB-INDEX` v skupine `90-embedding-indexing` - generovanie embeddingov pri indexovaní,
+- `RAG-EMB-SEARCH` v skupine `91-embedding-search` - generovanie embeddingu vyhľadávacieho dotazu.
+
+Ak asistent už existuje, jeho `provider` a `model` majú prednosť pred konfiguračnými premennými `ragEmbeddingProvider` a `ragEmbeddingModel`. Asistentov je možné upraviť v administrácii v sekcii **Nastavenia → AI asistenti**. Poskytovateľ a model indexovacieho asistenta sa po otvorení stránky **Sémantický index** zobrazia v informačnom oznámení.
+
+Indexy sú oddelené kombináciou poskytovateľa a modelu. Opätovné indexovanie nahradí iba dáta aktuálnej kombinácie, takže napríklad OpenAI a Gemini index tej istej stránky môžu existovať súčasne. Náhľad indexovania počíta iba indexy aktuálneho asistenta; náhľad odstránenia a odstránenie stránky pracujú so všetkými kombináciami.
+
+Fronta `rag_index_queue` ukladá iba typ entity, ID a akciu. Poskytovateľ a model sa načítajú z asistenta `RAG-EMB-INDEX` až pri spracovaní položky. Ak potrebujete dokončiť indexovanie pôvodnou kombináciou, nechajte pred zmenou asistenta frontu úplne spracovať.
+
+!>**Upozornenie:** Indexovací a vyhľadávací asistent musia používať rovnaký identifikátor poskytovateľa a modelu. Vyhľadávanie načíta iba indexy, ktorých obe hodnoty sa presne zhodujú s asistentom `RAG-EMB-SEARCH`.
+
 !>**Upozornenie:** Staršie názvy `ragChunkSize` a `ragChunkOverlap` sa už nepoužívajú.
 
-!>**Upozornenie:** Pri zmene `ragEmbeddingDimensions` sa vymažú dáta pre aktuálny embedding model, pretože vektory nebudú kompatibilné. Po zmene modelu alebo dimenzie spustite úplné indexovanie obsahu.
+!>**Upozornenie:** Pri zmene `ragEmbeddingDimensions` sa vymažú všetky dáta z `rag_embedding_chunks` pre všetkých poskytovateľov a modely, upraví sa typ stĺpca `embedding` na nové `vector(N)` a znovu sa vytvorí HNSW index. Následne spustite úplné indexovanie obsahu. Samotná zmena modelu ostatné kombinácie nevymaže, ale novú kombináciu musíte zaindexovať.
 
 ### Vektorové vyhľadávanie
 
@@ -262,14 +284,14 @@ Dôležité stĺpce:
 - `chunk_text` - text použitý na embedding a fulltext.
 - `content_hash` - hash textu chunku pre opätovné použitie embeddingu.
 - `embedding` - natívny pgvector typ `vector(N)`.
-- `embedding_model`, `dimensions` - model a dimenzia embeddingu.
+- `embedding_provider`, `embedding_model`, `dimensions` - poskytovateľ, model a dimenzia embeddingu.
 - `language`, `domain_id` - jazyk a doména.
 - `group_id`, `root_group_l1`, `root_group_l2`, `root_group_l3` - optimalizované filtrovanie dokumentov podľa priečinkov.
 - `status`, `error_message` - stav spracovania.
 
 !>**Upozornenie:** Stĺpec `embedding` nie je mapovaný cez JPA. Všetky operácie s vektormi prebiehajú cez natívne SQL dotazy v triede [PgVectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/PgVectorStore.java).
 
-Pri inicializácii schémy sa doplnia chýbajúce stĺpce `group_id` a `root_group_l1..3`. Existujúce dáta však nemajú tieto hodnoty spätne vyplnené, preto po aktualizácii spustite opätovné indexovanie.
+Pri migrácii schémy sa doplnia chýbajúce stĺpce `group_id`, `root_group_l1..3` a `embedding_provider`. Hodnoty priečinkov sa spätne doplnia pre existujúce záznamy platných webových stránok. Prázdny `embedding_provider` sa nastaví na aktuálnu hodnotu `ragEmbeddingProvider` a unikátnosť chunku sa rozšíri o kombináciu poskytovateľa a modelu. Keďže starší záznam neobsahoval poskytovateľa, doplnená hodnota nemusí zodpovedať poskytovateľovi, ktorý vektor skutočne vytvoril. Po aktualizácii preto spustite úplné indexovanie; obnovia sa tým aj záznamy, ktoré nebolo možné spätne priradiť k stránke.
 
 ## Odporúčania pre slovenský a český obsah
 
@@ -286,13 +308,13 @@ Pri ladení sa riaďte týmito odporúčaniami:
 
 Predvolený model `text-embedding-3-small` je viacjazyčný a slovenčinu/češtinu zvláda v dostatočnej kvalite pre väčšinu webových projektov. Ak požadujete vyššiu presnosť, k dispozícii sú tieto alternatívy:
 
-| Model | `ragEmbeddingModel` | `ragEmbeddingDimensions` | Kvalita pre SK/CZ | Poznámka |
+| Model | Model asistenta | `ragEmbeddingDimensions` | Kvalita pre SK/CZ | Poznámka |
 | --- | --- | --- | --- | --- |
 | OpenAI `text-embedding-3-small` | `text-embedding-3-small` | `1536` | Dobrá | Predvolený model - lacný a rýchly. |
 | OpenAI `text-embedding-3-large` | `text-embedding-3-large` | `3072` | Vysoká | Najpresnejší OpenAI viacjazyčný model, drahší než `small`. |
 | OpenAI `text-embedding-3-large` skrátený | `text-embedding-3-large` | `1024` alebo `1536` | Vysoká | Vďaka MRL je možné vektor skrátiť bez výraznej straty kvality. |
 
-!>**Upozornenie:** Všetky vektory v tabuľke `rag_embedding_chunks` musia pochádzať z rovnakého modelu a mať rovnakú dimenziu. Pri zmene modelu alebo dimenzie musíte spustiť úplnú indexáciu obsahu.
+!>**Upozornenie:** Všetky vektory v tabuľke `rag_embedding_chunks` musia mať dimenziu zodpovedajúcu definícii stĺpca `embedding`. Rôzni poskytovatelia a modely môžu existovať súčasne, ale musia generovať nakonfigurovaný počet dimenzií. Zmena dimenzie odstráni všetky existujúce vektory a vyžaduje úplnú indexáciu obsahu.
 
 ### Čo je Matryoshka (MRL)
 

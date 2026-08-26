@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.basket.rest;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +39,9 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
+/**
+ * Manages basket invoices in the administration DataTable and exposes invoice lookup options.
+ */
 @RestController
 @RequestMapping("/admin/rest/eshop/basket")
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_basket')")
@@ -53,7 +57,6 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
 
     private static final String ORDER_PLACEHOLDER = "{ORDER_DETAILS}";
     private static final String STATUS_PLACEHOLDER = "{STATUS}";
-    private static final String STATUS_KEY_PREFIX = "components.basket.invoice.status.";
 
     @Autowired
     public BasketInvoiceRestController(BasketInvoicesRepository bir, BasketInvoiceItemsRepository biir, BasketInvoicePaymentsRepository bipr, PaymentMethodsService pms, DeliveryMethodsService dms) {
@@ -65,6 +68,12 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         this.dms = dms;
     }
 
+    /**
+     * Loads invoices and adds localized payment, delivery, status, and country options.
+     *
+     * @param pageable  requested page and sorting information
+     * @return invoice page enriched with editor options
+     */
     @Override
     public Page<BasketInvoiceEntity> getAllItems(Pageable pageable) {
         DatatablePageImpl<BasketInvoiceEntity> page = new DatatablePageImpl<>(super.getAllItemsIncludeSpecSearch(new BasketInvoiceEntity(), pageable));
@@ -77,6 +86,14 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         return page;
     }
 
+    /**
+     * Adds domain isolation and combined contact-or-delivery name predicates to table search.
+     *
+     * @param params  submitted search parameters
+     * @param predicates  predicates to extend
+     * @param root  invoice query root
+     * @param builder  criteria builder used to create predicates
+     */
     @Override
     public void addSpecSearch(Map<String, String> params, List<Predicate> predicates, Root<BasketInvoiceEntity> root, CriteriaBuilder builder) {
 
@@ -138,6 +155,12 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         return super.addSpecSort(params, modifiedPageable);
     }*/
 
+    /**
+     * Recalculates invoice totals and optionally sends the configured status notification.
+     *
+     * @param entity  submitted invoice values, including transient editor fields
+     * @param saved  persisted invoice
+     */
     @Override
     public void afterSave(BasketInvoiceEntity entity, BasketInvoiceEntity saved) {
         //Update invoice stats
@@ -152,7 +175,7 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
 
             // Replace al {STATUS}
             Integer actualStatus = bir.getStatusId(saved.getId(), CloudToolsForCore.getDomainId());
-            sb = Tools.replace(sb, STATUS_PLACEHOLDER, getProp().getText(STATUS_KEY_PREFIX + actualStatus));
+            sb = Tools.replace(sb, STATUS_PLACEHOLDER, getProp().getText(InvoiceStatus.STATUS_KEY_PREFIX + actualStatus));
 
             // Get invoice detail for email
             String compUrl = WriteTagToolsForCore.getCustomPage("/components/basket/invoice_email.jsp", getRequest());
@@ -166,6 +189,13 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         }
     }
 
+    /**
+     * Prepares editor fields and converts displayed invoice totals to the requested currency.
+     *
+     * @param entity  invoice being prepared for the response
+     * @param action  DataTable action that triggered the conversion
+     * @return prepared invoice entity
+     */
     @Override
     public BasketInvoiceEntity processFromEntity(BasketInvoiceEntity entity, ProcessItemAction action) {
         if(entity.getEditorFields() == null) {
@@ -177,7 +207,8 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         }
 
         if(ProcessItemAction.GETALL.equals(action) || ProcessItemAction.FIND.equals(action)) {
-            String wantedCurrency = BasketTools.isCurrencySupported(getRequest().getParameter("showCurrency")) == false ? BasketTools.getSystemCurrency() : getRequest().getParameter("showCurrency");
+            String supportedCurrency = BasketTools.getNormalizedSupportedCurrency(getRequest().getParameter("showCurrency"));
+            String wantedCurrency = supportedCurrency == null ? BasketTools.getSystemCurrency() : supportedCurrency;
             entity.setPriceToPayNoVat( BasketTools.convertCurrency(entity.getPriceToPayNoVat(), entity.getCurrency(), wantedCurrency) );
             entity.setPriceToPayVat( BasketTools.convertCurrency(entity.getPriceToPayVat(), entity.getCurrency(), wantedCurrency) );
             entity.setBalanceToPay( BasketTools.convertCurrency(entity.getBalanceToPay(), entity.getCurrency(), wantedCurrency) );
@@ -186,6 +217,13 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         return entity;
     }
 
+    /**
+     * Deletes an invoice only when it has the cancelled status.
+     *
+     * @param entity  invoice requested for deletion
+     * @param id  invoice identifier
+     * @return result of deleting the cancelled invoice
+     */
     @Override
     public boolean deleteItem(BasketInvoiceEntity entity, long id) {
         //DELETE action is allowed only if basketInvoiced is set as CANCELLED
@@ -198,6 +236,12 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         }
     }
 
+    /**
+     * Removes invoice items and payments after the invoice itself is deleted.
+     *
+     * @param entity  deleted invoice
+     * @param id  deleted invoice identifier
+     */
     @Override
     public void afterDelete(BasketInvoiceEntity entity, long id) {
         try {
@@ -209,12 +253,23 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         }
     }
 
+    /**
+     * Rejects invoice creation through the administration DataTable.
+     *
+     * @param entity  submitted invoice
+     * @return always {@code null} after registering a permission error
+     */
     @Override
     public BasketInvoiceEntity insertItem(BasketInvoiceEntity entity) {
         throwError(getProp().getText("config.not_permitted_action_err"));
         return null;
     }
 
+    /**
+     * Rejects invoice duplication through the administration DataTable.
+     *
+     * @param entity  invoice requested for duplication
+     */
     @Override
     public void beforeDuplicate(BasketInvoiceEntity entity) {
         throwError(getProp().getText("config.not_permitted_action_err"));
@@ -222,24 +277,34 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
 
     private final void fillStatusSelect(DatatablePageImpl<BasketInvoiceEntity> page) {
         String label = "statusId";
+        for (LabelValue option : getInvoiceStatusOptions()) {
+            page.addDefaultOption(label, option.getLabel(), option.getValue());
+        }
+    }
+
+    /**
+     * Builds localized default and configured custom invoice status options.
+     *
+     * @return selectable invoice statuses
+     */
+    private List<LabelValue> getInvoiceStatusOptions() {
         Prop prop = getProp();
+        List<LabelValue> options = new ArrayList<>();
 
-        //Add default statuses
-        String defaultKeyPrefix = "components.basket.invoice.status.";
-        page.addDefaultOption(label, prop.getText( defaultKeyPrefix + "1" ), "1");
-        page.addDefaultOption(label, prop.getText( defaultKeyPrefix + "2" ), "2");
-        page.addDefaultOption(label, prop.getText( defaultKeyPrefix + "3" ), "3");
-        page.addDefaultOption(label, prop.getText( defaultKeyPrefix + "4" ), "4");
-        page.addDefaultOption(label, prop.getText( defaultKeyPrefix + "5" ), "5");
-        page.addDefaultOption(label, prop.getText( defaultKeyPrefix + "8" ), "8");
+        options.add(new LabelValue(prop.getText(InvoiceStatus.STATUS_KEY_PREFIX + "1"), "1"));
+        options.add(new LabelValue(prop.getText(InvoiceStatus.STATUS_KEY_PREFIX + "2"), "2"));
+        options.add(new LabelValue(prop.getText(InvoiceStatus.STATUS_KEY_PREFIX + "3"), "3"));
+        options.add(new LabelValue(prop.getText(InvoiceStatus.STATUS_KEY_PREFIX + "4"), "4"));
+        options.add(new LabelValue(prop.getText(InvoiceStatus.STATUS_KEY_PREFIX + "5"), "5"));
+        options.add(new LabelValue(prop.getText(InvoiceStatus.STATUS_KEY_PREFIX + "8"), "8"));
 
-        //Add custom statuses
         Map<String, String> bonusStatuses = Constants.getHashtable("basketInvoiceBonusStatuses");
         for (Map.Entry<String, String> entry : bonusStatuses.entrySet()) {
-            //It must be number 10 or higher, lower numbers are reserved for default statuses
-            if(Integer.valueOf(entry.getKey()) >= 10)
-                page.addDefaultOption(label, prop.getText( entry.getValue() ), entry.getKey());
+            if (Tools.getIntValue(entry.getKey(), -1) >= 10) {
+                options.add(new LabelValue(prop.getText(entry.getValue()), entry.getKey()));
+            }
         }
+        return options;
     }
 
     private final void prepareCountriesSelect(DatatablePageImpl<BasketInvoiceEntity> page) {
@@ -257,11 +322,22 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         return BasketTools.getSupportedCurrenciesOptions();
     }
 
+    @GetMapping("/supported-statuses")
+    public List<LabelValue> getListOfSupportedStatuses() {
+        return getInvoiceStatusOptions();
+    }
+
     @GetMapping("/getPriceInfo")
     public Map<String, String> getPriceInfo(@RequestParam("invoiceId") Long invoiceId) {
         return ProductListService.getPriceInfo(invoiceId, biir, bipr);
     }
 
+    /**
+     * Converts start and end anchors from a search value into SQL wildcard placement.
+     *
+     * @param value  submitted search expression
+     * @return normalized value suitable for a {@code LIKE} predicate
+     */
     private String normalizeValueForSearch(String value) {
         if (value.startsWith("^") && value.endsWith("$")) {
             value = value.substring(1);

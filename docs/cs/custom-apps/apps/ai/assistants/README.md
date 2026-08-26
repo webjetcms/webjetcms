@@ -1,39 +1,55 @@
 # Přidání poskytovatele
 
-Komunikace s externí AI službou patří do samostatné knihovny [webjet-ai](https://github.com/webjetcms/webjet-ai). Knihovna je nezávislá na frameworku a nesmí importovat třídy z `sk.iway.iwcm` ani číst WebJET `Constants`.
+Komunikace s externí AI službou včetně embeddingů patří do samostatné knihovny [webjet-ai](https://github.com/webjetcms/webjet-ai). Knihovna je nezávislá na frameworku a nesmí importovat třídy z `sk.iway.iwcm`, používat Spring ani číst WebJET `Constants`.
 
-Integrace serverového poskytovatele má tři části:
+Integrace nového serverového poskytovatele do projektu má tři části:
 
-- implementaci `AiProvider` v `webjet-ai`, která zajišťuje komunikaci s poskytovatelem, zpracování odpovědí a streamování
-- tenkou službu WebJET CMS rozšiřující [LibrarySupportLogic](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/LibrarySupportLogic.java), která propojuje knihovnu s CMS
-- volitelnou implementaci [AiAssitantsInterface](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiAssitantsInterface.java) pro pole poskytovatele v editoru asistenta
+- implementaci `AiProvider`, která zajišťuje komunikaci s API poskytovatele,
+- Spring bean typu `AiProvider`, přes který se implementace přidá k vestavěným poskytovatelům,
+- jednu CMS službu, která rozšiřuje [LibrarySupportLogic](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/LibrarySupportLogic.java) a implementuje [AiAssitantsInterface](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiAssitantsInterface.java).
 
-Poskytovatele zaregistrujte v [AiLibraryConfiguration](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiLibraryConfiguration.java) a konfiguraci CMS mapujte v [WebjetAiConfigurationService](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/WebjetAiConfigurationService.java). Zpracování požadavku a domény, konfigurace, auditování, statistiky, perzistence, makra promptů a dočasné soubory zůstávají ve správě WebJET CMS.
+[AiLibraryConfiguration](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiLibraryConfiguration.java) automaticky spojí vestavěné poskytovatele knihovny se všemi projektovými Spring beany typu `AiProvider`. Tuto třídu při přidávání poskytovatele neupravujte. Zpracování domény, konfigurace, auditování, statistiky, perzistence, makra promptů a dočasné soubory zůstávají ve zprávě WebJET CMS.
 
-Předchozí transportní SPI systému CMS bylo odstraněno. Stávající vlastní serverové poskytovatele je nutné migrovat na rozhraní `AiProvider` z knihovny a CMS adaptér `LibrarySupportLogic`.
+Identifikátor poskytovatele je veřejná konfigurační hodnota. Musí být stabilní, neprázdný, jedinečný a ve všech třech částech naprosto shodný. Doporučujeme použít malá písmena, například `acme`. Duplicitní identifikátor včetně kolize s vestavěným poskytovatelem způsobí chybu při startu aplikace.
 
-## Provádění `AiProvider`
+## 1. Provádění `AiProvider`
 
-Proveďte `com.webjetcms.ai.AiProvider` v samostatné knihovně nebo v jiné knihovně nezávislé na frameworku, která na ní závisí. Stabilní hodnota vrácená metodou `id()` identifikuje poskytovatele v knihovně i v adaptérech CMS.
+Implementaci umístěte do samostatné knihovny nezávislé na WebJET CMS. Následující minimální příklad je úplný a kompilovatelný; pevnou odpověď nahraďte voláním API dodavatele:
 
 ```java
+package com.example.webjet.ai;
+
+import java.util.List;
+
+import com.webjetcms.ai.AiOperation;
+import com.webjetcms.ai.AiProvider;
+import com.webjetcms.ai.AiProviderConfig;
+import com.webjetcms.ai.AiProviderException;
+import com.webjetcms.ai.AiRequest;
+import com.webjetcms.ai.AiResponse;
+import com.webjetcms.ai.AiStreamListener;
+import com.webjetcms.ai.ModelInfo;
+
 public final class AcmeProvider implements AiProvider {
+
+    public static final String PROVIDER_ID = "acme";
 
     @Override
     public String id() {
-        return "acme";
+        return PROVIDER_ID;
     }
 
     @Override
     public List<ModelInfo> listModels(AiProviderConfig config) throws AiProviderException {
-        // Load and map the provider model catalogue.
-        throw new UnsupportedOperationException("Implement provider call");
+        requireConfigured(config);
+        return List.of(new ModelInfo("acme-text-1", "Acme Text 1"));
     }
 
     @Override
     public AiResponse execute(AiRequest request, AiProviderConfig config) throws AiProviderException {
-        // Execute a provider-neutral text or image request.
-        throw new UnsupportedOperationException("Implement provider call");
+        requireConfigured(config);
+        validateTextRequest(request);
+        return AiResponse.text("Response from " + request.model());
     }
 
     @Override
@@ -42,39 +58,98 @@ public final class AcmeProvider implements AiProvider {
         AiProviderConfig config,
         AiStreamListener listener
     ) throws AiProviderException {
-        // Decode the provider stream and send text fragments to the listener.
-        throw new UnsupportedOperationException("Implement provider call");
+        if (listener == null) {
+            throw new AiProviderException(PROVIDER_ID, "Stream listener is required");
+        }
+
+        AiResponse response = execute(request, config);
+        try {
+            listener.onTextDelta(response.text());
+        } catch (Exception exception) {
+            throw new AiProviderException(PROVIDER_ID, "Stream listener failed", exception);
+        }
+        return response;
+    }
+
+    private static void requireConfigured(AiProviderConfig config) throws AiProviderException {
+        if (config == null || config.isConfigured() == false) {
+            throw new AiProviderException(PROVIDER_ID, "Acme API key is not configured");
+        }
+    }
+
+    private static void validateTextRequest(AiRequest request) throws AiProviderException {
+        if (request == null || request.operation() != AiOperation.TEXT) {
+            throw new AiProviderException(PROVIDER_ID, "Only text requests are supported");
+        }
+        if (request.model() == null || request.model().isBlank()) {
+            throw new AiProviderException(PROVIDER_ID, "Model is required");
+        }
     }
 }
 ```
 
-API klíče, změny koncového bodu, časové limity a důvěryhodné hlavičky vstupují do poskytovatele pouze přes neměnný objekt `AiProviderConfig`. Knihovna nesmí přímo přistupovat k servletovým požadavkům, Spring službám, databázi ani ke konfiguraci CMS. Úplné implementace naleznete mezi poskytovateli v [repozitáři webjet-ai](https://github.com/webjetcms/webjet-ai).
+API klíč, koncový bod, časové limity a důvěryhodné hlavičky vstupují do poskytovatele pouze přes neměnný objekt `AiProviderConfig`. Poskytovatel nesmí přímo přistupovat k servletovému požadavku, Spring službám, databázi ani ke konfiguraci CMS. Instance se používá souběžně a během celého životního cyklu `AiClient`, proto musí být vláknově bezpečná a má opakovaně používat transportní zdroje. Vlastní zdroje uvolněte v metodě `close()`.
 
-## Registrace poskytovatele v CMS
+Metoda `embed` má výchozí implementaci, která oznámí, že poskytovatel embeddingy nepodporuje. Pokud má poskytovatel fungovat se sémantickým vyhledáváním, implementujte `AiProvider.embed(EmbeddingRequest, AiProviderConfig)`. Odpověď musí obsahovat právě jeden `EmbeddingVector` pro každý vstup, ve stejném pořadí as počtem dimenzí z `EmbeddingOptions`. [EmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java) počet i dimenzi vektorů kontroluje.
 
-Přidejte instanci poskytovatele do objektu `AiClient`, který spravuje CMS:
+Úplný popis transportu, embeddingů, zpracování chyb a životního cyklu naleznete v dokumentaci [Implementing and using a custom AI provider](https://github.com/webjetcms/webjet-ai/blob/main/docs/custom-providers.md).
+
+## 2. Registrace Spring beanu
+
+V projektu vytvořte konfigurační třídu, kterou najde Spring component scan, a zpřístupněte implementaci jako bean typu `AiProvider`:
 
 ```java
+package com.example.webjet.cms.ai;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import com.webjetcms.ai.AiProvider;
+import com.example.webjet.ai.AcmeProvider;
+
 @Configuration
-public class AiLibraryConfiguration {
+public class AcmeAiConfiguration {
 
-    @Bean(destroyMethod = "close")
-    public AiClient webjetAiClient() {
-        return AiClient.of(
-            new OpenAiProvider(),
-            new GeminiProvider(),
-            new OpenRouterProvider(),
-            new AcmeProvider()
-        );
+    @Bean(destroyMethod = "")
+    public AiProvider acmeAiProvider() {
+        return new AcmeProvider();
     }
 }
 ```
 
-Vytvořte tenký adaptér rozšiřující `LibrarySupportLogic`. Základní třída mapuje požadavky CMS na požadavky knihovny a ponechává auditování, statistiky, zpracování promptů a dočasných souborů v CMS:
+CMS předá všechny takové beany do `AiClient.discover(...)`, který je přidá k vestavěným poskytovatelům `openai`, `gemini` a `openrouter`. Hodnota `destroyMethod = ""` je důležitá: životní cyklus poskytovatele po úspěšném vytvoření klienta vlastní `AiClient`, proto Spring nemá volat `close()` podruhé.
+
+Samotné vložení JAR souboru na classpath poskytovatele nezaregistruje. Projekt musí jeho instanci vždy explicitně vytvořit jako Spring bean. Neupravujte jaderný bean `webjetAiClient` a nevytvářejte další `AiClient`.
+
+## 3. CMS adaptér a konfigurace
+
+Vytvořte jednu Spring službu, která současně rozšiřuje `LibrarySupportLogic` a implementuje `AiAssitantsInterface`. Základní třída zajistí volání `AiClient`, auditování, statistiky, makra promptů, dočasné soubory i modelově specifická pole pro obrázky:
 
 ```java
+package com.example.webjet.cms.ai;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.webjetcms.ai.AiClient;
+import com.webjetcms.ai.AiProviderConfig;
+import com.example.webjet.ai.AcmeProvider;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.providers.AiAssitantsInterface;
+import sk.iway.iwcm.components.ai.providers.LibrarySupportLogic;
+import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+
 @Service
-public class AcmeService extends LibrarySupportLogic {
+public class AcmeService extends LibrarySupportLogic implements AiAssitantsInterface {
+
+    private static final String API_KEY = "ai_acmeAuthKey";
+    private static final String IMAGE_NAME_MODEL = "ai_acme_generateFileNameModel";
 
     public AcmeService(
         AiClient aiClient,
@@ -85,7 +160,7 @@ public class AcmeService extends LibrarySupportLogic {
 
     @Override
     public String getProviderId() {
-        return "acme";
+        return AcmeProvider.PROVIDER_ID;
     }
 
     @Override
@@ -94,60 +169,32 @@ public class AcmeService extends LibrarySupportLogic {
     }
 
     @Override
-    public String getBonusHtml(AssistantDefinitionEntity assistant, Prop prop) {
-        return "";
-    }
-}
-```
-
-Identifikátor poskytovatele se musí shodovat s hodnotou `AiProvider.id()`. Klíč titulku přidejte do překladových souborů CMS.
-
-## Mapování konfigurace WebJET
-
-Konfigurační klíč poskytovatele přidejte do [WebjetAiConfigKeys](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/WebjetAiConfigKeys.java) a namapujte jej v `WebjetAiConfigurationService`:
-
-```java
-private String apiKey(String providerId) {
-    return switch (providerId) {
-        case "openai" -> Constants.getString(WebjetAiConfigKeys.OPENAI_API_KEY);
-        case "gemini" -> Constants.getString(WebjetAiConfigKeys.GEMINI_API_KEY);
-        case "openrouter" -> Constants.getString(WebjetAiConfigKeys.OPENROUTER_API_KEY);
-        case "acme" -> Constants.getString(WebjetAiConfigKeys.ACME_API_KEY);
-        default -> "";
-    };
-}
-```
-
-`WebjetAiConfigurationService.resolve(providerId, request)` vytvoří objekt `AiProviderConfig` pro aktuální požadavek. Metodu rozšiřte, pokud poskytovatel potřebuje koncový bod spravovaný v CMS nebo důvěryhodnou hlavičku s metadaty. Hlavičky zadané uživatelem nikdy nepředávejte přímo a přihlašovací údaje nezapisujte do logu.
-
-## Provádění `AiAssitantsInterface`
-
-Tento CMS adaptér vytvořte, pokud poskytovatel potřebuje výchozí hodnoty nebo vlastní pole v editoru asistenta. Stav konfigurace poskytovatele zjišťujte přes `WebjetAiConfigurationService`:
-
-```java
-@Service
-public class AcmeAssistantsService implements AiAssitantsInterface {
-
-    private final WebjetAiConfigurationService configurationService;
-
-    public AcmeAssistantsService(WebjetAiConfigurationService configurationService) {
-        this.configurationService = configurationService;
+    public String getApiKey() {
+        return Constants.getString(API_KEY);
     }
 
     @Override
-    public String getProviderId() {
-        return "acme";
+    public String getImageNameModel() {
+        return Constants.getString(IMAGE_NAME_MODEL);
     }
 
     @Override
-    public boolean isInit() {
-        return configurationService.isConfigured(getProviderId());
+    public void configure(AiProviderConfig.Builder builder, String trustedReferer) {
+        builder.trustedHeader("Referer", trustedReferer);
+    }
+
+    @Override
+    public List<String> getFieldsToShow(String action) {
+        if ("create".equals(action) || "edit".equals(action)) {
+            return List.of("model", "useStreaming", "useTemporal");
+        }
+        return List.of();
     }
 
     @Override
     public void prepareBeforeSave(AssistantDefinitionEntity assistant) {
         if (Tools.isEmpty(assistant.getModel())) {
-            assistant.setModel("acme-default-model");
+            assistant.setModel("acme-text-1");
         }
     }
 
@@ -158,13 +205,54 @@ public class AcmeAssistantsService implements AiAssitantsInterface {
     ) {
         // Add provider-specific editor options when needed.
     }
-
-    @Override
-    public List<String> getFieldsToShow(String action) {
-        return List.of("model", "useStreaming", "useTemporal");
-    }
 }
 ```
+
+Metoda `getApiKey()` je zdroj přihlašovacích údajů i podmínka dostupnosti poskytovatele. Pro poskytovatele bez API klíče přiměřeně přepište `isInit()`. `getImageNameModel()` je nutná pouze tehdy, když CMS generuje název uloženého obrázku přes daného poskytovatele. Metoda `configure(...)` je volitelná; používejte ji pouze pro bezpečné nastavení vlastního koncového bodu nebo hlaviček. Hodnota `trustedReferer` je ověřena v CMS. Hlavičky zadané uživatelem nikdy nepředávejte přímo a tajné hodnoty nezapisujte do logu.
+
+Konfigurační proměnné `ai_acmeAuthKey` a `ai_acme_generateFileNameModel` vytvořte v sekci **Nastavení → Konfigurace** ; API klíč uložte zašifrovaný. Název přidejte do všech překladových souborů projektu, například:
+
+```properties
+components.ai_assistants.provider.acme.title=Acme
+```
+
+[WebjetAiConfigurationService](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/WebjetAiConfigurationService.java) přidá společné časové limity, vytvoří neměnný `AiProviderConfig` a zavolá @@CODE. Nový poskytovatel se proto nepřidává do žádného `switch` bloku ani do centrálního seznamu konfiguračních klíčů.
+
+## 4. Embeddingy a sémantické vyhledávání
+
+Knihovna definuje poskytovatelsky nezávislé typy `EmbeddingRequest`, `EmbeddingOptions`, `EmbeddingResponse` a `EmbeddingVector`. RAG modul CMS volá `AiClient.embed` přes [EmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java) a neobsahuje HTTP klienta konkrétního poskytovatele.
+
+Pro použití nového poskytovatele pro RAG musí platit všechny podmínky:
+
+- `AcmeProvider` implementuje `embed(...)`,
+- `AcmeProvider` je zaregistrován jako Spring bean,
+- `AcmeService.getProviderId()` vrací stejný identifikátor,
+- systémoví asistenti `RAG-EMB-INDEX` a `RAG-EMB-SEARCH` používají poskytovatele `acme`, přesně stejný model a správnou hodnotu `ragEmbeddingDimensions`.
+
+Předchozí embedding SPI systému CMS bylo odstraněno. Vlastní `EmbeddingProvider` nevytvářejte.
+
+## 5. Možnosti generování obrázků
+
+Možnosti obrázků se nedefinují v CMS adaptéru. Poskytovatel je publikuje bez síťového volání přes `AiProvider.imageOptions(model, operation)`. Například:
+
+```java
+@Override
+public Map<String, ImageOptionDefinition> imageOptions(
+    String model,
+    AiOperation operation
+) {
+    if ("acme-image-1".equals(model) && operation == AiOperation.GENERATE_IMAGE) {
+        return Map.of(
+            ImageOptions.COUNT, ImageOptionDefinition.integerRange(1, 4),
+            ImageOptions.QUALITY, ImageOptionDefinition.choices("standard", "high"),
+            "aspectRatio", ImageOptionDefinition.choices("1:1", "16:9", "9:16")
+        );
+    }
+    return Map.of();
+}
+```
+
+`LibrarySupportLogic` z metadat automaticky zobrazí pouze podporovaná pole **Počet obrázků**, **Rozměr**, **Kvalita** a **Poměr stran** a do požadavku odešle pouze jejich podporované hodnoty. Pro přenosný rozměr použijte klíč `size`, podporován je i poskytovatelský klíč `resolution`. Pro poměr stran jsou rozpoznány klíče `aspectRatio` a `aspect_ratio`. Prázdná mapa znamená, že CMS pro daný model a operaci doplňková pole nezobrazí. Metadata nesmí vyžadovat API klíč ani síťové volání.
 
 ## Výjimka `AiInterface` pouze pro prohlížeč
 
@@ -172,13 +260,13 @@ public class AcmeAssistantsService implements AiAssitantsInterface {
 
 ## Lokální vývoj
 
-Dokud nebude `com.webjetcms:webjet-ai` dostupná z Maven Central, spouštějte Gradle úlohy CMS z repozitáře CMS s explicitně připojenou sousední knihovnou:
+Při souběžném lokálním vývoji CMS a sousedního repozitáře `webjet-ai` použijte Gradle composite build:
 
 ```shell
 ./gradlew --include-build ../webjet-ai compileJava test
 ```
 
-Stejnou volbu `--include-build ../webjet-ai` použijte při každém lokálním sestavení a ověřovací úloze CMS. Do `settings.gradle` nepřidávejte trvalý záznam `includeBuild`, nepoužívejte `mavenLocal()` a nekopírujte JAR knihovny do CMS. Běžné sestavení CMS bude až do zveřejnění verze `0.1.0` podle očekávání neúspěšné.
+Stejnou volbu `--include-build ../webjet-ai` použijte při každé lokální sestavovací a testovací úloze, která má používat nezveřejněné změny knihovny. Jinak se použije verze `com.webjetcms:webjet-ai` určená proměnnou `webjetAiVersion` v `build.gradle`.
 
 ## `AiAssistantsService`
 
@@ -200,9 +288,9 @@ Důležité metody:
 
 Důležité metody:
 
-- `getProviders` – vrátí nakonfigurované poskytovatele
+- `getProviders` – vrátí všechny dostupné poskytovatele a označí nenakonfigurované
 - `getModelOptions` – vrátí modely poskytovatele, volitelně filtrované podle řetězce
 - `getAiResponse` – vrátí úplnou textovou odpověď
 - `getAiImageResponse` – vrátí obrázkovou odpověď
 - `getAiStreamResponse` – streamuje textovou odpověď přes `BufferedWriter`
-- `getBonusHtml` – vrátí doplňkové HTML okna asistenta pro poskytovatele
+- `getBonusHtml` – vrátí doplňková pole podporovaná vybraným obrázkovým modelem
