@@ -84,6 +84,7 @@ public class DocDB extends DB
 	public static final int ORDER_RATING = 8;
 
 	public static final int ORDER_PRICE = 9;
+	private static final String DEFAULT_BASKET_PRICE_COLUMN_NAME = "field_k";
 
 
 	/**
@@ -1836,14 +1837,12 @@ public class DocDB extends DB
 			}
 			else if (orderType == ORDER_PRICE)
 			{
-				String priceField = Constants.getString("basketPriceField");
-				//need to convert price field from Java format fieldK to SQL format field_k
-				priceField = priceField.replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase();
+				String priceField = getBasketPriceColumnName();
 
 				if (Constants.DB_TYPE == Constants.DB_ORACLE) {
-					order = new StringBuilder("CAST("+ DB.removeSlashes(priceField) +" AS NUMBER(10, 2))");
+					order = new StringBuilder("CAST("+priceField+" AS NUMBER(10, 2))");
 				} else {
-					order = new StringBuilder("CAST("+ DB.removeSlashes(priceField) +" AS DECIMAL(10, 2))");
+					order = new StringBuilder("CAST("+priceField+" AS DECIMAL(10, 2))");
 				}
 			}
 
@@ -3826,6 +3825,12 @@ public class DocDB extends DB
 	public static List<String> getFieldDistinctValues(String field)
 	{
 		List<String> ret = new ArrayList<>();
+		if (!DB.isValidSqlIdentifier(field) || field.indexOf('.') >= 0)
+		{
+			Logger.error(DocDB.class, "Invalid SQL identifier passed to getFieldDistinctValues");
+			return ret;
+		}
+
 		Connection db_conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -5762,6 +5767,13 @@ public class DocDB extends DB
 
 	public DocDetails getDocByField(String fieldName, String fieldValue, boolean noData)
 	{
+		String fieldColumnName = resolveCustomFieldColumnName(fieldName);
+		if (fieldColumnName == null)
+		{
+			Logger.error(DocDB.class, "Invalid field name passed to getDocByField");
+			return null;
+		}
+
 		String sql = "";
 
 		Connection connection = null;
@@ -5773,9 +5785,9 @@ public class DocDB extends DB
 
 			String select = DocDB.getDocumentFields(noData==false);
 			if (Constants.getBoolean("docAuthorLazyLoad")) {
-				sql = "SELECT " + select + " FROM documents d WHERE field_" + fieldName + "= ?";
+				sql = "SELECT " + select + " FROM documents d WHERE " + fieldColumnName + "= ?";
 			} else {
-				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, " + select + " FROM documents d LEFT JOIN users u ON d.author_id=u.user_id WHERE d.field_" + fieldName + "= ?";
+				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, " + select + " FROM documents d LEFT JOIN users u ON d.author_id=u.user_id WHERE d." + fieldColumnName + "= ?";
 			}
 
 			try {
@@ -5818,6 +5830,15 @@ public class DocDB extends DB
 		}
 
 		return (null);
+	}
+
+	static String resolveCustomFieldColumnName(String fieldName)
+	{
+		if (Tools.isEmpty(fieldName) || fieldName.indexOf('.') >= 0)
+			return null;
+
+		String fieldColumnName = "field_" + fieldName;
+		return DB.isValidSqlIdentifier(fieldColumnName) ? fieldColumnName : null;
 	}
 
 	/**
@@ -5873,21 +5894,12 @@ public class DocDB extends DB
 		try
 		{
 			db_conn = DBPool.getConnection();
-			String priceColumnName = Constants.getString("basketPriceField");
-			if (priceColumnName == null)
-				ps = db_conn.prepareStatement("SELECT doc_id FROM documents");
-			else
-			{
-				//premena z fieldJ na field_j, ak je nutna
-				priceColumnName = priceColumnName.toLowerCase().startsWith("field") ?
-							"field_"+priceColumnName.toLowerCase().substring(priceColumnName.length() - 1) : priceColumnName;
-
-				StringBuilder sql = new StringBuilder("SELECT doc_id FROM documents WHERE");
-				if (Constants.DB_TYPE == Constants.DB_MSSQL) sql.append(" LEN(");
-				else sql.append(" LENGTH(");
-				sql.append(priceColumnName).append(") > 0");
-				ps = db_conn.prepareStatement(sql.toString());
-			}
+			String priceColumnName = getBasketPriceFilterColumnName();
+			StringBuilder sql = new StringBuilder("SELECT doc_id FROM documents WHERE");
+			if (Constants.DB_TYPE == Constants.DB_MSSQL) sql.append(" LEN(");
+			else sql.append(" LENGTH(");
+			sql.append(priceColumnName).append(") > 0");
+			ps = db_conn.prepareStatement(sql.toString());
 			rs = ps.executeQuery();
 			while (rs.next())
 			{
@@ -5929,6 +5941,67 @@ public class DocDB extends DB
 		}
 
 		return products;
+	}
+
+	private static String getBasketPriceColumnName()
+	{
+		return resolveBasketPriceColumnName(Constants.getString("basketPriceField"), true);
+	}
+
+	static String resolveBasketPriceColumnName(String priceColumnName)
+	{
+		return resolveBasketPriceColumnName(priceColumnName, false);
+	}
+
+	private static String resolveBasketPriceColumnName(String priceColumnName, boolean logInvalidValue)
+	{
+		if (!isValidSimpleSqlIdentifier(priceColumnName))
+			return getDefaultBasketPriceColumnName(logInvalidValue);
+
+		// Convert the Java property format fieldK to the SQL column format field_k.
+		priceColumnName = priceColumnName.replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase(Locale.ROOT);
+		if (!isValidSimpleSqlIdentifier(priceColumnName))
+			return getDefaultBasketPriceColumnName(logInvalidValue);
+		return priceColumnName;
+	}
+
+	private static String getBasketPriceFilterColumnName()
+	{
+		return resolveBasketPriceFilterColumnName(Constants.getString("basketPriceField"), true);
+	}
+
+	static String resolveBasketPriceFilterColumnName(String priceColumnName)
+	{
+		return resolveBasketPriceFilterColumnName(priceColumnName, false);
+	}
+
+	private static String resolveBasketPriceFilterColumnName(String priceColumnName, boolean logInvalidValue)
+	{
+		if (!isValidSimpleSqlIdentifier(priceColumnName))
+			return getDefaultBasketPriceColumnName(logInvalidValue);
+
+		// Preserve the legacy mapping used by getItemsWithPrice.
+		if (priceColumnName.toLowerCase(Locale.ROOT).startsWith("field"))
+		{
+			String lowerCaseName = priceColumnName.toLowerCase(Locale.ROOT);
+			priceColumnName = "field_" + lowerCaseName.substring(lowerCaseName.length() - 1);
+		}
+
+		if (!isValidSimpleSqlIdentifier(priceColumnName))
+			return getDefaultBasketPriceColumnName(logInvalidValue);
+		return priceColumnName;
+	}
+
+	private static boolean isValidSimpleSqlIdentifier(String value)
+	{
+		return DB.isValidSqlIdentifier(value) && value.indexOf('.') < 0;
+	}
+
+	private static String getDefaultBasketPriceColumnName(boolean logInvalidValue)
+	{
+		if (logInvalidValue)
+			Logger.error(DocDB.class, "Invalid basketPriceField SQL identifier, using field_k");
+		return DEFAULT_BASKET_PRICE_COLUMN_NAME;
 	}
 
 

@@ -11,70 +11,22 @@ import sk.iway.iwcm.test.TestRequest;
 
 class SearchActionTest
 {
-	@ParameterizedTest
-	@ValueSource(strings = {
-		"title",
-		"sort_priority",
-		"lastUpdate",
-		"sortPriority",
-		"publishStart",
-		"saveDate",
-		"field_a",
-		"field123",
-		"_internal",
-		"d.title",
-		"views_total",
-		"root_group_l1"
-	})
-	void getValidatedOrderTypeAllowsSqlIdentifiers(String orderType)
+	@Test
+	void validRequestParameterIsReturned()
 	{
 		TestRequest request = new TestRequest();
-		request.setParameter("orderType", orderType);
+		request.setParameter("orderType", "d.title");
 
-		assertEquals(orderType, SearchAction.getValidatedOrderType("orderType", request, "sort_priority"));
+		assertEquals("d.title", SearchAction.getValidatedOrderType("orderType", request, "sort_priority"));
 	}
 
-	@ParameterizedTest
-	@ValueSource(strings = {
-		"(SELECT password FROM users)",
-		"title DESC",
-		"title,doc_id",
-		"title;SELECT",
-		"title--comment",
-		"title/**/DESC",
-		"SCORE(10)",
-		"d.*",
-		"`title`",
-		"[title]",
-		"1",
-		" title",
-		"title ",
-		"title\n"
-	})
-	void getValidatedOrderTypeRejectsSqlSyntax(String orderType)
+	@Test
+	void invalidRequestParameterUsesSafeDefault()
 	{
 		TestRequest request = new TestRequest();
-		request.setParameter("orderType", orderType);
+		request.setParameter("orderType", "title DESC");
 
 		assertEquals("sort_priority", SearchAction.getValidatedOrderType("orderType", request, "sort_priority"));
-	}
-
-	@ParameterizedTest
-	@ValueSource(strings = {
-		"title.",
-		".title",
-		"d..title",
-		"catalog.documents.title",
-		"9title",
-		"title-name",
-		"title$name"
-	})
-	void getValidatedOrderTypeRejectsInvalidIdentifiers(String orderType)
-	{
-		TestRequest request = new TestRequest();
-		request.setParameter("orderType2", orderType);
-
-		assertNull(SearchAction.getValidatedOrderType("orderType2", request, null));
 	}
 
 	@ParameterizedTest

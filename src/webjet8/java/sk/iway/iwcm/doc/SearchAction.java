@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.StringTokenizer;
-import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -59,8 +58,6 @@ import sk.iway.iwcm.users.UsersDB;
  */
 public class SearchAction
 {
-	private static final Pattern SQL_ORDER_TYPE_PATTERN = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)?");
-
 	/**
 	 * Identifikator 'score' pri pouziti oracletext hodnota 10 je cisto nahodna, ide o to aby v dotaze bolo pouzite to iste cislo :)
 	 */
@@ -1218,7 +1215,7 @@ public class SearchAction
 			orderType = (String) request.getAttribute(name);
 		}
 
-		if (orderType == null || SQL_ORDER_TYPE_PATTERN.matcher(orderType).matches() == false)
+		if (DB.isValidSqlIdentifier(orderType) == false)
 		{
 			return defaultValue;
 		}

@@ -65,6 +65,13 @@ public class InquiryDB
 		//utility class
 	}
 
+	static String resolveOrderBy(String orderBy)
+	{
+		if (!DB.isValidSqlIdentifier(orderBy)) return ORDER_BY_ANSWER_ID;
+		if (orderBy.indexOf('.') == -1) orderBy = "ia." + orderBy;
+		return orderBy;
+	}
+
 	public static InquiryBean getLastInquiry(int imagesLength, String percentageFormat, HttpServletRequest request)
 	{
 		return (getInquiry(-1, imagesLength, percentageFormat, ORDER_BY_ANSWER_TEXT, true, request));
@@ -198,12 +205,7 @@ public class InquiryDB
 		{
 			String orderType = "DESC";
 			if (ascending)	orderType = "ASC";
-			//keby nieco...
-			orderBy = orderBy.replace('\'', ' ');
-			if (orderBy.indexOf('.') == -1)
-			{
-				orderBy = "ia." + orderBy;
-			}
+			orderBy = resolveOrderBy(orderBy);
 			db_conn = DBPool.getConnection(DBPool.getDBName(request));
 			if (questionId == -1)
 			{

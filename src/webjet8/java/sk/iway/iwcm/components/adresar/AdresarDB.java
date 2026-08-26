@@ -39,6 +39,34 @@ public class AdresarDB
 
 	}
 
+	static String buildOrderSql(String orderBy)
+	{
+		StringBuilder orderSql = new StringBuilder();
+		if (Tools.isNotEmpty(orderBy)) {
+			String[] orderByList = Tools.getTokens(orderBy, "+");
+			for (String orderByTmp : orderByList) {
+				String orderType = orderByTmp;
+				String orderVar = "ASC";
+				int ind = orderByTmp.lastIndexOf('-');
+				if (ind != -1) {
+					orderType = orderByTmp.substring(0, ind).trim();
+					String orderVarTmp = orderByTmp.substring(ind+1, orderByTmp.length()).trim();
+					if ("desc".equalsIgnoreCase(orderVarTmp))
+						orderVar = "DESC";
+				}
+				if (!DB.isValidSqlIdentifier(orderType)) continue;
+
+				if (orderSql.isEmpty()) {
+					orderSql.append(" ORDER BY ").append(orderType).append(' ').append(orderVar);
+				} else {
+					orderSql.append(", ").append(orderType).append(' ').append(orderVar);
+				}
+			}
+		}
+		if (orderSql.isEmpty()) return " ORDER BY last_name,first_name";
+		return orderSql.toString();
+	}
+
 	/**
 	 * @param filterParam nepouziva sa vyhladava sa nad stlpcami ktore su definovane v searchcolums
 	 * @param searchString vyraz pre hladanie
@@ -123,30 +151,8 @@ public class AdresarDB
             }
 
 			//sortovanie
-			StringBuilder orderSql = new StringBuilder();
 			String orderBy = pageParams.getValue("orderBy","");
-			if(Tools.isNotEmpty(orderBy)) {
-				String[] orderByList = Tools.getTokens(orderBy, "+");
-				for(String orderByTmp : orderByList) {
-					String orderType = orderByTmp;
-					String orderVar = "ASC";
-					int ind = orderByTmp.lastIndexOf('-');
-					if(ind != -1) {
-						orderType = orderByTmp.substring(0, ind).trim();
-						String orderVarTmp = orderByTmp.substring(ind+1, orderByTmp.length()).trim();
-						if("desc".equalsIgnoreCase(orderVarTmp))
-							orderVar = "DESC";
-					}
-					if(Tools.isEmpty(orderSql.toString())) {
-						orderSql.append(" ORDER BY ").append(orderType).append(' ').append(orderVar);
-					} else {
-						orderSql.append(", ").append(orderType).append(' ').append(orderVar);
-					}
-				}
-			} else {
-				orderSql = new StringBuilder(" ORDER BY last_name,first_name");
-			}
-			sql.append(orderSql);
+			sql.append(buildOrderSql(orderBy));
 
 			Logger.println(AdresarDB.class, "ADRESAR SQL = "+sql);
 			ps = db_conn.prepareStatement(sql.toString());

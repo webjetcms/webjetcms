@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.beanutils.RowSetDynaClass;
@@ -42,8 +43,24 @@ import sk.iway.iwcm.tags.support.ResponseUtils;
 @SuppressWarnings({"deprecation", "java:S1118"})
 public class DB
 {
+	private static final Pattern SQL_IDENTIFIER_PATTERN = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)?"); //NOSONAR
+
 	//zoznam stlpcov ktore mozu obsahovat HTML kod
 	private static Set<String> htmlAllowedFields = null;
+
+	/**
+	 * Checks whether the supplied value is a simple unquoted SQL identifier or an
+	 * identifier qualified by one table name or alias. This method validates only
+	 * identifier syntax; it does not verify that the table or column exists.
+	 *
+	 * @param value identifier to validate (column name or table.column)
+	 * @return {@code true} for values such as {@code field_a} or {@code d.title}
+	 */
+	public static boolean isValidSqlIdentifier(String value)
+	{
+		if (Tools.isEmpty(value)) return false;
+		return SQL_IDENTIFIER_PATTERN.matcher(value).matches();
+	}
 
 	/**
 	 * Overi, ci je mozne v danom DB stlpci pouzit HTML kod, ak nie, tak sa pri citani rovno escapnu specialne znaky
