@@ -56,6 +56,7 @@ import sk.iway.iwcm.system.context.ContextFilter;
 })
 @Import({
     SpringAppInitializer.class,
+    WebjetEmbeddedTomcatConfiguration.class,
     SetupApplicationConfiguration.class,
     LicenseRecoveryApplicationConfiguration.class,
     ProductionApplicationConfiguration.class,

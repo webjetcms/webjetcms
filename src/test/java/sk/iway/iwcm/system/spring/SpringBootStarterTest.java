@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -12,6 +13,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.nio.file.Path;
 import java.util.Properties;
 import java.util.function.Function;
 
@@ -20,6 +22,9 @@ import org.springframework.boot.autoconfigure.web.WebProperties;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.context.properties.source.MapConfigurationPropertySource;
+import org.springframework.boot.web.server.autoconfigure.ServerProperties;
+import org.springframework.core.env.PropertiesPropertySource;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 
@@ -91,6 +96,40 @@ class SpringBootStarterTest {
         assertEquals("1000", PropertiesLoaderUtils.loadProperties(
             new ClassPathResource("application.properties")
         ).getProperty("server.tomcat.max-part-count"));
+    }
+
+    @Test
+    void embeddedServerDefaultsUseSpringBoot4ServerProperties() throws Exception {
+        Properties applicationProperties = PropertiesLoaderUtils.loadProperties(
+            new ClassPathResource("application.properties")
+        );
+        Properties relevantServerProperties = new Properties();
+        relevantServerProperties.setProperty("server.mime-mappings.properties",
+            applicationProperties.getProperty("server.mime-mappings.properties"));
+        relevantServerProperties.setProperty("server.servlet.session.persistent",
+            applicationProperties.getProperty("server.servlet.session.persistent"));
+        relevantServerProperties.setProperty("server.servlet.session.store-dir",
+            applicationProperties.getProperty("server.servlet.session.store-dir"));
+        StandardEnvironment environment = new StandardEnvironment();
+        environment.getPropertySources().addFirst(
+            new PropertiesPropertySource("webjetServerDefaults", relevantServerProperties)
+        );
+
+        ServerProperties serverProperties = Binder.get(environment)
+            .bind("server", ServerProperties.class)
+            .get();
+
+        assertEquals("text/plain", serverProperties.getMimeMappings().get("properties"));
+        assertTrue(serverProperties.getServlet().getSession().isPersistent());
+        assertEquals(
+            Path.of(System.getProperty("user.dir"), "work", "sessions").toFile(),
+            serverProperties.getServlet().getSession().getStoreDir()
+        );
+        assertEquals("true", applicationProperties.getProperty(
+            WebjetEmbeddedTomcatConfiguration.HTTP_REDIRECT_ENABLED_PROPERTY));
+        assertEquals("80", applicationProperties.getProperty(
+            WebjetEmbeddedTomcatConfiguration.HTTP_REDIRECT_PORT_PROPERTY));
+        assertNull(applicationProperties.getProperty("server.tomcat.redirect-port"));
     }
 
     @Test

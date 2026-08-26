@@ -39,7 +39,8 @@ class ApplicationConfigurationDefinitionTest {
             assertBeanDefinitionCount(beanFactory, "setupUserDetailsService", 1);
             assertBeanDefinitionCount(beanFactory, "setupSecurityFilterChain", 1);
             assertBeanDefinitionCount(beanFactory, "setupSecurityFilterChainRegistration", 1);
-            assertBeanDefinitionCount(beanFactory, "setupTomcatHttpConnectorCustomizer", 0);
+            assertDefinitionCount(beanFactory, WebjetEmbeddedTomcatConfiguration.class, 1);
+            assertBeanDefinitionCount(beanFactory, "webjetTomcatHttpRedirectCustomizer", 1);
             assertBeanDefinitionCount(beanFactory, "messageSource", 1);
             assertDefinitionCount(beanFactory, SpringAppInitializer.class, 1);
             assertBeanDefinitionCount(beanFactory, "webjetApplicationStartedListener", 1);
@@ -83,6 +84,8 @@ class ApplicationConfigurationDefinitionTest {
             assertDefinitionCount(beanFactory, SpringAppInitializer.class, 1);
             assertBeanDefinitionCount(beanFactory, "webjetApplicationStartedListener", 1);
             assertBeanDefinitionCount(beanFactory, "webjetApplicationReadyListener", 1);
+            assertDefinitionCount(beanFactory, WebjetEmbeddedTomcatConfiguration.class, 1);
+            assertBeanDefinitionCount(beanFactory, "webjetTomcatHttpRedirectCustomizer", 1);
 
             assertDefinitionCount(beanFactory, SetupApplicationConfiguration.class, 0);
             assertDefinitionCount(beanFactory, SetupController.class, 0);
@@ -122,6 +125,8 @@ class ApplicationConfigurationDefinitionTest {
             assertDefinitionCount(beanFactory, SpringAppInitializer.class, 1);
             assertBeanDefinitionCount(beanFactory, "webjetApplicationStartedListener", 1);
             assertBeanDefinitionCount(beanFactory, "webjetApplicationReadyListener", 1);
+            assertDefinitionCount(beanFactory, WebjetEmbeddedTomcatConfiguration.class, 1);
+            assertBeanDefinitionCount(beanFactory, "webjetTomcatHttpRedirectCustomizer", 1);
             assertDefinitionCount(beanFactory,
                 SpringBootStarter.ProductionServletInfrastructureConfiguration.class, 1);
             assertBeanDefinitionCount(beanFactory,
@@ -140,7 +145,6 @@ class ApplicationConfigurationDefinitionTest {
 
             assertDefinitionCount(beanFactory, sk.iway.aceintegration.SpringConfig.class, 0);
             assertDefinitionCount(beanFactory, sk.iway.basecms.SpringConfig.class, 0);
-            assertBeanDefinitionCount(beanFactory, "tomcatSessionPersistenceCustomizer", 0);
 
             assertDefinitionCount(beanFactory, SetupApplicationConfiguration.class, 0);
             assertDefinitionCount(beanFactory, LicenseRecoveryApplicationConfiguration.class, 0);
@@ -154,7 +158,6 @@ class ApplicationConfigurationDefinitionTest {
                 SetupApplicationConfiguration.SetupSecurityConfiguration.class, 0);
             assertBeanDefinitionCount(beanFactory, "setupSecurityFilterChain", 0);
             assertBeanDefinitionCount(beanFactory, "setupSecurityFilterChainRegistration", 0);
-            assertBeanDefinitionCount(beanFactory, "setupTomcatHttpConnectorCustomizer", 0);
         }
     }
 
@@ -173,6 +176,8 @@ class ApplicationConfigurationDefinitionTest {
             assertDefinitionCount(beanFactory, SpringBootStarter.ProductionServletConfiguration.class, 0);
             assertBeanDefinitionCount(beanFactory, "externalWarMultipartServletInitializer", 1);
             assertProductionServletDefinitions(beanFactory, 0);
+            assertDefinitionCount(beanFactory, WebjetEmbeddedTomcatConfiguration.class, 0);
+            assertBeanDefinitionCount(beanFactory, "webjetTomcatHttpRedirectCustomizer", 0);
         }
     }
 
@@ -190,9 +195,10 @@ class ApplicationConfigurationDefinitionTest {
                 SetupApplicationConfiguration.SetupSecurityConfiguration.class, 1);
             assertBeanDefinitionCount(beanFactory, "setupSecurityFilterChain", 1);
             assertBeanDefinitionCount(beanFactory, "setupSecurityFilterChainRegistration", 1);
-            assertBeanDefinitionCount(beanFactory, "setupTomcatHttpConnectorCustomizer", 0);
             assertBeanDefinitionCount(beanFactory,
                 "persistedSetupAuthenticationCleanupFilterRegistration", 0);
+            assertDefinitionCount(beanFactory, WebjetEmbeddedTomcatConfiguration.class, 0);
+            assertBeanDefinitionCount(beanFactory, "webjetTomcatHttpRedirectCustomizer", 0);
         }
     }
 
@@ -205,27 +211,25 @@ class ApplicationConfigurationDefinitionTest {
             DefaultListableBeanFactory beanFactory = applicationContext.getDefaultListableBeanFactory();
 
             assertDefinitionCount(beanFactory, sk.iway.aceintegration.SpringConfig.class, 1);
-            assertBeanDefinitionCount(beanFactory, "tomcatHttpConnectorCustomizer", 0);
-            assertBeanDefinitionCount(beanFactory, "webjetTomcatMimeMappingsCustomizer", 0);
-            assertBeanDefinitionCount(beanFactory, "tomcatSessionPersistenceCustomizer", 0);
+            assertDefinitionCount(beanFactory, WebjetEmbeddedTomcatConfiguration.class, 0);
+            assertBeanDefinitionCount(beanFactory, "webjetTomcatHttpRedirectCustomizer", 0);
         }
     }
 
     @Test
-    void embeddedCustomerConfigurationRegistersItsTomcatCustomizers() {
+    void embeddedTomcatConfigurationIsIndependentOfTheSelectedCustomer() {
         try (GenericApplicationContext applicationContext = parseDefinitions(
                 WebjetBootstrapMode.PRODUCTION, "aceintegration")) {
             DefaultListableBeanFactory beanFactory = applicationContext.getDefaultListableBeanFactory();
 
             assertDefinitionCount(beanFactory, sk.iway.aceintegration.SpringConfig.class, 1);
-            assertBeanDefinitionCount(beanFactory, "tomcatHttpConnectorCustomizer", 1);
-            assertBeanDefinitionCount(beanFactory, "webjetTomcatMimeMappingsCustomizer", 1);
-            assertBeanDefinitionCount(beanFactory, "tomcatSessionPersistenceCustomizer", 1);
+            assertDefinitionCount(beanFactory, WebjetEmbeddedTomcatConfiguration.class, 1);
+            assertBeanDefinitionCount(beanFactory, "webjetTomcatHttpRedirectCustomizer", 1);
         }
     }
 
     @Test
-    void selectedCustomerOwnsItsPersistenceConfiguration() {
+    void selectedCustomerOwnsItsJpaConfigurationButNotEmbeddedTomcatDefaults() {
         try (GenericApplicationContext applicationContext = parseDefinitions(
                 WebjetBootstrapMode.PRODUCTION, "basecms")) {
             DefaultListableBeanFactory beanFactory = applicationContext.getDefaultListableBeanFactory();
@@ -238,7 +242,8 @@ class ApplicationConfigurationDefinitionTest {
 
             assertDefinitionCount(beanFactory, SpringConfig.class, 0);
             assertDefinitionCount(beanFactory, sk.iway.aceintegration.SpringConfig.class, 0);
-            assertBeanDefinitionCount(beanFactory, "tomcatSessionPersistenceCustomizer", 0);
+            assertDefinitionCount(beanFactory, WebjetEmbeddedTomcatConfiguration.class, 1);
+            assertBeanDefinitionCount(beanFactory, "webjetTomcatHttpRedirectCustomizer", 1);
         }
     }
 
@@ -258,7 +263,11 @@ class ApplicationConfigurationDefinitionTest {
         TestPropertyValues.of(
             WebjetBootstrapMode.PROPERTY_NAME + "=" + mode.getPropertyValue(),
             WebjetBootstrapSpringConfiguration.INSTALL_NAME_PROPERTY + "=" + installName,
-            WebjetBootstrapSpringConfiguration.ADD_PACKAGES_PROPERTY + "=com.example.webjetadditional"
+            WebjetBootstrapSpringConfiguration.ADD_PACKAGES_PROPERTY + "=com.example.webjetadditional",
+            "server.port=8443",
+            "server.ssl.enabled=true",
+            WebjetEmbeddedTomcatConfiguration.HTTP_REDIRECT_ENABLED_PROPERTY + "=true",
+            WebjetEmbeddedTomcatConfiguration.HTTP_REDIRECT_PORT_PROPERTY + "=8080"
         )
             .applyTo(applicationContext);
 
