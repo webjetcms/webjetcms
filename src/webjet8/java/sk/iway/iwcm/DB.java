@@ -44,28 +44,29 @@ import sk.iway.iwcm.tags.support.ResponseUtils;
 public class DB
 {
 	private static final Pattern SQL_IDENTIFIER_PATTERN = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*"); //NOSONAR
-	private static final Pattern SQL_QUALIFIED_IDENTIFIER_PATTERN = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*\\.[A-Za-z_][A-Za-z0-9_]*"); //NOSONAR
+	private static final Pattern SQL_IDENTIFIER_PATH_PATTERN = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)+"); //NOSONAR
 
 	//zoznam stlpcov ktore mozu obsahovat HTML kod
 	private static Set<String> htmlAllowedFields = null;
 
 	/**
-	 * Checks whether the supplied value is an unquoted SQL identifier. A single
-	 * table or alias qualifier can be enabled explicitly. This method validates
-	 * only identifier syntax; it does not verify that the table or column exists.
+	 * Checks whether the supplied value is an unquoted SQL identifier. One or more
+	 * dot-separated qualifiers or property-path segments can be enabled explicitly.
+	 * This method validates only identifier syntax; it does not verify that the path,
+	 * table, or column exists.
 	 * A qualified value must not be appended directly to an SQL expression because
 	 * the same syntax can also represent a package function. Use
 	 * {@link #fixUntrustedColumnName(String, String, String...)} when the value is
 	 * used as a column reference in an SQL expression.
 	 *
-	 * @param value identifier to validate (column name or table.column)
-	 * @param allowDot {@code true} to allow one qualifier such as {@code d.title}
-	 * @return {@code true} for {@code field_a} and, when enabled, {@code d.title}
+	 * @param value identifier to validate (column name or a qualified/property path)
+	 * @param allowDot {@code true} to allow a path such as {@code customer.address.city}
+	 * @return {@code true} for {@code field_a} and, when enabled, qualified paths
 	 */
 	public static boolean isValidColumnName(String value, boolean allowDot)
 	{
 		if (Tools.isEmpty(value)) return false;
-		if (allowDot) return SQL_QUALIFIED_IDENTIFIER_PATTERN.matcher(value).matches() || SQL_IDENTIFIER_PATTERN.matcher(value).matches();
+		if (allowDot) return SQL_IDENTIFIER_PATH_PATTERN.matcher(value).matches() || SQL_IDENTIFIER_PATTERN.matcher(value).matches();
 		return SQL_IDENTIFIER_PATTERN.matcher(value).matches();
 	}
 
@@ -76,6 +77,8 @@ public class DB
 	 * accepted only when its qualifier matches one of the trusted qualifiers. The
 	 * returned reference is always reconstructed from the trusted qualifier and the
 	 * validated column token.
+	 * Multi-segment paths are intentionally rejected because this resolver is meant
+	 * for SQL column references, not JPQL property paths.
 	 *
 	 * <p>This method validates syntax and query context, but it does not verify that
 	 * the column exists in the database.</p>

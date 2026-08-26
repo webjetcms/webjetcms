@@ -28,8 +28,14 @@ class DBTest
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = {"d.title", "table_alias.field_1", "DBMS_RANDOM.VALUE"})
-	void isValidSqlIdentifierAllowsQualifiedIdentifiersOnlyWhenEnabled(String identifier)
+	@ValueSource(strings = {
+		"d.title",
+		"table_alias.field_1",
+		"DBMS_RANDOM.VALUE",
+		"customer.address.city",
+		"catalog.schema.table.column"
+	})
+	void isValidSqlIdentifierAllowsQualifiedPathsOnlyWhenEnabled(String identifier)
 	{
 		assertFalse(DB.isValidColumnName(identifier, false));
 		assertTrue(DB.isValidColumnName(identifier, true));
@@ -67,7 +73,6 @@ class DBTest
 		".title",
 		"title.",
 		"d..title",
-		"catalog.documents.title",
 		"1title",
 		"9.title"
 	})
