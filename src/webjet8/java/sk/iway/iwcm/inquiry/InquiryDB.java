@@ -56,8 +56,11 @@ import sk.iway.iwcm.users.UsersDB;
  */
 public class InquiryDB
 {
+	/** Sort inquiry answers by their text. */
 	public static final String ORDER_BY_ANSWER_TEXT = "ia.answer_text";
+	/** Sort inquiry answers by their click count. */
 	public static final String ORDER_BY_ANSWER_CLICKS = "ia.answer_clicks";
+	/** Sort inquiry answers by their identifier. */
 	public static final String ORDER_BY_ANSWER_ID = "ia.answer_id";
 	private static Random random = new Random();
 
@@ -141,10 +144,12 @@ public class InquiryDB
 	 *           pocet generovanych obrazkov v stlpiku
 	 * @param percentageFormat -
 	 *           format vypisu percent
-	 * @param orderBy -
-	 *           SQL sposob usporiadania odpovedi
-	 * @param ascending -
-	 *           true ak je vzostupne usporiadanie
+	 * @param orderBy column identifier used for sorting; an unqualified identifier is bound to the
+	 *           {@code ia} query alias, while {@code ia} and {@code i} qualifiers are accepted. Prefer
+	 *           {@link #ORDER_BY_ANSWER_TEXT},
+	 *           {@link #ORDER_BY_ANSWER_CLICKS}, or {@link #ORDER_BY_ANSWER_ID}. Raw SQL expressions
+	 *           are not supported; an invalid value falls back to {@link #ORDER_BY_ANSWER_ID}
+	 * @param ascending whether to sort in ascending order
 	 * @param request
 	 * @param random - boolean hodnota, ci sa ma vybrat nahodna anketa alebo najnovsia
 	 * @return
@@ -167,10 +172,12 @@ public class InquiryDB
 	 *           pocet generovanych obrazkov v stlpiku
 	 * @param percentageFormat -
 	 *           format vypisu percent
-	 * @param orderBy -
-	 *           SQL sposob usporiadania odpovedi
-	 * @param ascending -
-	 *           true ak je vzostupne usporiadanie
+	 * @param orderBy column identifier used for sorting; an unqualified identifier is bound to the
+	 *           {@code ia} query alias, while {@code ia} and {@code i} qualifiers are accepted. Prefer
+	 *           {@link #ORDER_BY_ANSWER_TEXT},
+	 *           {@link #ORDER_BY_ANSWER_CLICKS}, or {@link #ORDER_BY_ANSWER_ID}. Raw SQL expressions
+	 *           are not supported; an invalid value falls back to {@link #ORDER_BY_ANSWER_ID}
+	 * @param ascending whether to sort in ascending order
 	 * @param request
 	 * @return
 	 */
