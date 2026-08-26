@@ -194,9 +194,9 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
 
     /**
      * Register JSP error pages for common HTTP error codes.
-     * In Spring Boot 4.x, BasicErrorController and ErrorController are removed.
-     * We register error pages directly with the embedded server (Tomcat)
-     * so that error responses dispatch to the JSP files.
+     * Spring Boot's BasicErrorController remains available as a fallback for
+     * status codes that are not registered here.
+     * Error responses for the registered status codes dispatch directly to the JSP files.
      * Mirrors the web.xml &lt;error-page&gt; entries used in the external Tomcat deployment.
      */
     @Bean
