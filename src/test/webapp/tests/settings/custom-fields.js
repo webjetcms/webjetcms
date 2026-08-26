@@ -32,8 +32,10 @@ const allTypesRadioOptions = [
 ];
 const allTypesGroup = { groupId: 67, fullPath: "/Test stavov" };
 const allTypesEnumeration = "enumeration-options|2|string1|string1";
+const warningXssMarkerId = "autotest-warning-xss-payload";
+const warningXssPayload = 'autotest-warning-xss"><img id="' + warningXssMarkerId + '" src="x-invalid" onerror="document.body.dataset.customFieldsWarningXss=1">';
 const allTypesDefinitions = [
-    { alphabet: "A", type: "text", label: "autotest-custom-type-text", settings: { textMaxLength: 14, textWarningLength: 8 } },
+    { alphabet: "A", type: "text", label: "autotest-custom-type-text", settings: { textMaxLength: 14, textWarningLength: 8, warningText: warningXssPayload } },
     { alphabet: "B", type: "textarea", label: "autotest-custom-type-textarea" },
     { alphabet: "C", type: "select", label: "autotest-custom-type-select", settings: { selectOptions: allTypesSelectOptions } },
     { alphabet: "D", type: "multiselect", label: "autotest-custom-type-multiselect", settings: { selectOptions: allTypesMultiOptions } },
@@ -362,6 +364,7 @@ async function checkRenderedCustomFieldType(I, fieldDefinition) {
 
     if(fieldDefinition.type === "text") {
         I.seeElementInDOM(fieldSelector + " input#" + inputId + "[type='text'][maxlength='14'][data-warningLength='8']");
+        await checkWarningMessageIsSafe(I, fieldSelector, fieldDefinition.settings.warningText);
     } else if(fieldDefinition.type === "textarea") {
         I.seeElementInDOM(fieldSelector + " textarea#" + inputId);
     } else if(fieldDefinition.type === "select") {
@@ -414,6 +417,33 @@ async function checkRenderedCustomFieldType(I, fieldDefinition) {
     } else {
         I.assertTrue(false, "Unsupported custom field type in test: " + fieldDefinition.type);
     }
+}
+
+async function checkWarningMessageIsSafe(I, fieldSelector, expectedWarningMessage) {
+    const getSecurityState = () => I.executeScript(({ fieldSelector, warningXssMarkerId }) => {
+        const input = document.querySelector(fieldSelector + " input[data-warningmessage]");
+        const warningToast = document.querySelector(".toast-warning .toast-title");
+
+        return {
+            warningMessage: input?.getAttribute("data-warningmessage"),
+            injectedElementPresent: document.getElementById(warningXssMarkerId) != null,
+            payloadExecuted: document.body.dataset.customFieldsWarningXss === "1",
+            warningToastText: warningToast?.textContent
+        };
+    }, { fieldSelector, warningXssMarkerId });
+
+    const editorSecurityState = await getSecurityState();
+    I.assertEqual(expectedWarningMessage, editorSecurityState.warningMessage, "Warning message must remain an input data attribute");
+    I.assertFalse(editorSecurityState.injectedElementPresent, "Warning message must not inject an HTML element into the editor");
+    I.assertFalse(editorSecurityState.payloadExecuted, "Warning message event handler must not execute in the editor");
+
+    I.fillField(fieldSelector + " input[data-warningmessage]", "autotest-warning-trigger");
+    I.waitForElement(".toast-warning .toast-title", 10);
+
+    const toastSecurityState = await getSecurityState();
+    I.assertEqual(expectedWarningMessage, toastSecurityState.warningToastText, "Warning toast must display the configured warning as text");
+    I.assertFalse(toastSecurityState.injectedElementPresent, "Warning message must not inject an HTML element into the toast");
+    I.assertFalse(toastSecurityState.payloadExecuted, "Warning message event handler must not execute in the toast");
 }
 
 async function checkSelectOptions(I, fieldSelector, expectedOptions) {
@@ -491,6 +521,11 @@ function addCustomFieldSetting(I, DTE, className, alphabet, entityId, isRequired
     if(fieldSettings.textWarningLength != null) {
         I.waitForVisible("div.DTE_Field_Name_textWarningLength", 10);
         I.fillField("#DTE_Field_textWarningLength", String(fieldSettings.textWarningLength));
+    }
+
+    if(fieldSettings.warningText != null) {
+        I.waitForVisible("div.DTE_Field_Name_warningText", 10);
+        I.fillField("#DTE_Field_warningText", fieldSettings.warningText);
     }
 
     if(fieldSettings.selectOptions != null) {

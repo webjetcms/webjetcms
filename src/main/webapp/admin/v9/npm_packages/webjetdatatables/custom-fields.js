@@ -148,7 +148,7 @@ export function update(EDITOR, action) {
     //WJ.log("CustomFields.update, json=", json);
 
     //pomen mena poli
-    var textTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="{maxlength}" data-warningLength="{warninglength}" data-warningMessage="{warningMessage}" value="{value}" {disabled} class="form-control" type="text">';
+    var textTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="{maxlength}" data-warningLength="{warninglength}" {disabled} class="form-control" type="text">';
     var textAreaTemplate = '<textarea id="DTE_Field_{customPrefix}{identifier}" {disabled} class="form-control wrap">{value}</textarea>';
     var autocompleteTemplate = '<div class="input-group"> <span class="input-group-text"><i class="ti ti-search"></i></span> <input type="text" class="form-control autocomplete" name="field{identifier}" value="{value}" id="DTE_Field_field{identifier}"/> </div>';
     var selectTemplate = '<select id="DTE_Field_field{identifier}" class="form-control form-select">{options}</select>';
@@ -243,7 +243,7 @@ export function update(EDITOR, action) {
         }
 
         //DEFAULT template, "textTemplate"
-        var template = textTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), getFieldValue(value, action, v.type)).replace(new RegExp('{maxlength}', 'g'), maxlength).replace(new RegExp('{warninglength}', 'g'), warninglength).replace(new RegExp('{warningMessage}', 'g'), warningMessage).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
+        var template = textTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{maxlength}', 'g'), maxlength).replace(new RegExp('{warninglength}', 'g'), warninglength).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
 
         if (v.type == 'textarea') {
             template = textAreaTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), getFieldValue(value, action, v.type)).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
@@ -386,6 +386,12 @@ export function update(EDITOR, action) {
         }
 
         inputBox.html(template);
+
+        const textInput = inputBox.find("input[data-warninglength]").first();
+        if(textInput.length > 0) {
+            textInput.attr("data-warningmessage", warningMessage);
+            textInput.val(getFieldValue(value, action, v.type));
+        }
 
         if (v.required === true) {
             inputBox.find('input, select, textarea').attr('required', 'required');
@@ -766,7 +772,7 @@ export function update(EDITOR, action) {
             input.on('input', function(){
                 if (dataWarningLength <= input.val().length) {
                     toastr.remove();
-                    WJ.notifyWarning(dataWarningMessage, null, 5000, null);
+                    WJ.notifyWarning(WJ.escapeHtml(dataWarningMessage || ""), null, 5000, null);
                 } else {
                     toastr.remove();
                 }
