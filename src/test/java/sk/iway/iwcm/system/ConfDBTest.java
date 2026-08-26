@@ -30,6 +30,8 @@ class ConfDBTest {
     void setRuntimeValueAppliesSpecialLinkTypeRepresentation() {
         assertEquals(String.valueOf(Constants.LINK_TYPE_HTML), ConfDB.normalizeRuntimeValue("linkType", "html"));
         assertEquals(String.valueOf(Constants.LINK_TYPE_DOCID), ConfDB.normalizeRuntimeValue("linkType", "docid"));
+        assertEquals(String.valueOf(Constants.LINK_TYPE_HTML), ConfDB.normalizeRuntimeValue("linkType", String.valueOf(Constants.LINK_TYPE_HTML)));
+        assertEquals(String.valueOf(Constants.LINK_TYPE_DOCID), ConfDB.normalizeRuntimeValue("linkType", String.valueOf(Constants.LINK_TYPE_DOCID)));
 
         try (MockedStatic<Constants> constants = mockStatic(Constants.class)) {
             ConfDB.setRuntimeValue("linkType", "html");
@@ -91,6 +93,30 @@ class ConfDBTest {
             verify(queries.constructed().get(0)).forString(valueSql, name);
             verify(queries.constructed().get(1)).forInt(countSql, name);
             constants.verify(() -> Constants.setString(name, defaultValue));
+        }
+    }
+
+    @Test
+    void refreshVariableRestoresLinkTypeDefaultAfterRemoteClusterReset() {
+        String name = "linkType";
+        String defaultValue = String.valueOf(Constants.LINK_TYPE_HTML);
+        String valueSql = "SELECT value FROM " + ConfDB.CONF_TABLE_NAME + " WHERE name=?";
+        String countSql = "SELECT COUNT(*) FROM " + ConfDB.CONF_TABLE_NAME + " WHERE name=?";
+        ConfDetails defaultConf = new ConfDetails(name, defaultValue);
+
+        try (MockedStatic<Constants> constants = mockStatic(Constants.class);
+                MockedConstruction<SimpleQuery> queries = mockConstruction(SimpleQuery.class, (query, context) -> {
+                    when(query.forString(valueSql, name)).thenReturn(null);
+                    when(query.forInt(countSql, name)).thenReturn(0);
+                })) {
+            constants.when(Constants::getAllValues).thenReturn(List.of(defaultConf));
+
+            ConfDB.refreshVariable(name);
+
+            assertEquals(2, queries.constructed().size());
+            verify(queries.constructed().get(0)).forString(valueSql, name);
+            verify(queries.constructed().get(1)).forInt(countSql, name);
+            constants.verify(() -> Constants.setInt(name, Constants.LINK_TYPE_HTML));
         }
     }
 

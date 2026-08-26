@@ -367,7 +367,8 @@ public class ConfDB
 		String normalizedValue = tryDecrypt(value);
 		if ("linkType".equals(name))
 		{
-			return String.valueOf("html".equalsIgnoreCase(normalizedValue) ? Constants.LINK_TYPE_HTML : Constants.LINK_TYPE_DOCID);
+			boolean isHtml = "html".equalsIgnoreCase(normalizedValue) || String.valueOf(Constants.LINK_TYPE_HTML).equals(normalizedValue);
+			return String.valueOf(isHtml ? Constants.LINK_TYPE_HTML : Constants.LINK_TYPE_DOCID);
 		}
 
 		return normalizedValue;
