@@ -59,9 +59,9 @@ import sk.iway.iwcm.users.UsersDB;
 public class SearchAction
 {
 	/**
-	 * Identifikator 'score' pri pouziti oracletext hodnota 10 je cisto nahodna, ide o to aby v dotaze bolo pouzite to iste cislo :)
+	 * Label shared by the matching Oracle Text {@code CONTAINS} and {@code SCORE} expressions.
 	 */
-	private static int ORACLE_TEXT_CONTAINS_IDENTIFIER = 10; //NOSONAR
+	private static final int ORACLE_TEXT_CONTAINS_IDENTIFIER = 10;
 
 	public static String search(HttpServletRequest request, HttpServletResponse response)
 	{
@@ -410,6 +410,7 @@ public class SearchAction
 		int pocetVynechanychSuborov = 0;
 		try
 		{
+			boolean oracleTextScoreAvailable = false;
 			boolean perexGroupUseJoin = Constants.getBoolean("perexGroupUseJoin") && Arrays.toString(SearchTools.checkInputParams).contains("keyword");
 
 			if (Constants.DB_TYPE == Constants.DB_MSSQL)
@@ -461,6 +462,7 @@ public class SearchAction
 						sql.append("SELECT ").append(D_DOCUMENT_FIELDS).append(" FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE CONTAINS(data_asc, '").append(oracleKeywords.toString()).append("', "+ORACLE_TEXT_CONTAINS_IDENTIFIER+")>"+oracleTextMinScore+" ");
 
 						sqlTotalResults = "SELECT count(d.doc_id) as totalr FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE CONTAINS(data_asc, '"+oracleKeywords.toString()+"', "+ORACLE_TEXT_CONTAINS_IDENTIFIER+")>"+oracleTextMinScore+" ";
+						oracleTextScoreAvailable = true;
 					}
 					else
 					{
@@ -651,7 +653,8 @@ public class SearchAction
 
 			String order_var = "ASC";
 			String order = getParamAttribute("order", request, "asc");
-			String orderType = getValidatedOrderType("orderType", request, "sort_priority");
+			String orderType = getValidatedOrderType(
+				"orderType", request, "sort_priority", oracleTextScoreAvailable);
 			if ("desc".equalsIgnoreCase(order))
 			{
 				order_var = "DESC";
@@ -665,7 +668,8 @@ public class SearchAction
 			//dalsie order by
 			for (i=2; i<=5; i++)
 			{
-				orderType = getValidatedOrderType("orderType"+i, request, null);
+				orderType = getValidatedOrderType(
+					"orderType"+i, request, null, oracleTextScoreAvailable);
 				if (Tools.isNotEmpty(orderType))
 				{
 					order_var = "ASC";
@@ -1153,14 +1157,18 @@ public class SearchAction
 	/**
 	 * Returns a column reference bound to the trusted {@code documents d} query alias.
 	 * Legacy logical order names are mapped before the reference is resolved. The
-	 * Oracle Text score is returned only from its trusted internal mapping.
+	 * Oracle Text score is returned only from its trusted internal mapping and when
+	 * the current query contains the matching labeled {@code CONTAINS} predicate.
 	 *
 	 * @param name request parameter or attribute name
 	 * @param request current request
 	 * @param defaultValue fallback column name to resolve when the supplied value is missing or invalid
+	 * @param oracleTextScoreAvailable whether the current query contains the labeled Oracle Text
+	 *           predicate
 	 * @return canonical column reference, trusted score expression, or the resolved default
 	 */
-	static String getValidatedOrderType(String name, HttpServletRequest request, String defaultValue)
+	static String getValidatedOrderType(String name, HttpServletRequest request, String defaultValue,
+			boolean oracleTextScoreAvailable)
 	{
 		String orderType = request.getParameter(name);
 		if (orderType == null)
@@ -1168,15 +1176,13 @@ public class SearchAction
 			orderType = (String) request.getAttribute(name);
 		}
 
-		boolean primaryOrder = "orderType".equals(name);
-		boolean useOracleTextScore = Constants.DB_TYPE == Constants.DB_ORACLE && Constants.getBoolean("searchUseOracleText");
-		String resolvedOrderType = resolveOrderType(orderType, primaryOrder, useOracleTextScore);
+		String resolvedOrderType = resolveOrderType(orderType, oracleTextScoreAvailable);
 		if (resolvedOrderType == null)
-			resolvedOrderType = resolveOrderType(defaultValue, primaryOrder, useOracleTextScore);
+			resolvedOrderType = resolveOrderType(defaultValue, oracleTextScoreAvailable);
 		return resolvedOrderType;
 	}
 
-	static String resolveOrderType(String orderType, boolean primaryOrder, boolean useOracleTextScore)
+	static String resolveOrderType(String orderType, boolean oracleTextScoreAvailable)
 	{
 		if (Tools.isEmpty(orderType)) return null;
 
@@ -1186,7 +1192,7 @@ public class SearchAction
 		}
 		else if ("sortPriority".equalsIgnoreCase(orderType))
 		{
-			if (useOracleTextScore)
+			if (oracleTextScoreAvailable)
 				return "SCORE("+ORACLE_TEXT_CONTAINS_IDENTIFIER+")";
 			orderType = "sort_priority";
 		}

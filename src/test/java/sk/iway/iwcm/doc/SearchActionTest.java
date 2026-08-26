@@ -17,7 +17,7 @@ class SearchActionTest
 		TestRequest request = new TestRequest();
 		request.setParameter("orderType", "d.title");
 
-		assertEquals("d.title", SearchAction.getValidatedOrderType("orderType", request, "sort_priority"));
+		assertEquals("d.title", SearchAction.getValidatedOrderType("orderType", request, "sort_priority", false));
 	}
 
 	@Test
@@ -26,7 +26,7 @@ class SearchActionTest
 		TestRequest request = new TestRequest();
 		request.setParameter("orderType", "title DESC");
 
-		assertEquals("d.sort_priority", SearchAction.getValidatedOrderType("orderType", request, "sort_priority"));
+		assertEquals("d.sort_priority", SearchAction.getValidatedOrderType("orderType", request, "sort_priority", false));
 	}
 
 	@ParameterizedTest
@@ -36,7 +36,7 @@ class SearchActionTest
 		TestRequest request = new TestRequest();
 		request.setAttribute("orderType", orderType);
 
-		assertEquals("d.title", SearchAction.getValidatedOrderType("orderType", request, "sort_priority"));
+		assertEquals("d.title", SearchAction.getValidatedOrderType("orderType", request, "sort_priority", false));
 	}
 
 	@Test
@@ -46,7 +46,7 @@ class SearchActionTest
 		request.setAttribute("orderType", "title");
 		request.setParameter("orderType", "(SELECT WJMARK2 FROM dual)");
 
-		assertEquals("d.sort_priority", SearchAction.getValidatedOrderType("orderType", request, "sort_priority"));
+		assertEquals("d.sort_priority", SearchAction.getValidatedOrderType("orderType", request, "sort_priority", false));
 	}
 
 	@Test
@@ -57,21 +57,21 @@ class SearchActionTest
 			"WHERE login LIKE 0x61646d696e) LIKE 0x41 THEN SLEEP(3) ELSE 0 END)";
 		request.setParameter("orderType2", payload);
 
-		assertNull(SearchAction.getValidatedOrderType("orderType2", request, null));
+		assertNull(SearchAction.getValidatedOrderType("orderType2", request, null, false));
 	}
 
 	@Test
 	void missingAndEmptyOrderTypesUseSafeDefaults()
 	{
 		TestRequest missingRequest = new TestRequest();
-		assertEquals("d.sort_priority", SearchAction.getValidatedOrderType("orderType", missingRequest, "sort_priority"));
-		assertNull(SearchAction.getValidatedOrderType("orderType2", missingRequest, null));
+		assertEquals("d.sort_priority", SearchAction.getValidatedOrderType("orderType", missingRequest, "sort_priority", false));
+		assertNull(SearchAction.getValidatedOrderType("orderType2", missingRequest, null, false));
 
 		TestRequest emptyRequest = new TestRequest();
 		emptyRequest.setParameter("orderType", "");
 		emptyRequest.setParameter("orderType2", "");
-		assertEquals("d.sort_priority", SearchAction.getValidatedOrderType("orderType", emptyRequest, "sort_priority"));
-		assertNull(SearchAction.getValidatedOrderType("orderType2", emptyRequest, null));
+		assertEquals("d.sort_priority", SearchAction.getValidatedOrderType("orderType", emptyRequest, "sort_priority", false));
+		assertNull(SearchAction.getValidatedOrderType("orderType2", emptyRequest, null, false));
 	}
 
 	@Test
@@ -80,7 +80,7 @@ class SearchActionTest
 		TestRequest request = new TestRequest();
 		request.setParameter("orderType", "WJINJECTMARKER99");
 
-		assertEquals("d.WJINJECTMARKER99", SearchAction.getValidatedOrderType("orderType", request, "sort_priority"));
+		assertEquals("d.WJINJECTMARKER99", SearchAction.getValidatedOrderType("orderType", request, "sort_priority", false));
 	}
 
 	@Test
@@ -90,20 +90,17 @@ class SearchActionTest
 		request.setParameter("orderType", "DBMS_RANDOM.VALUE");
 		request.setParameter("orderType2", "DBMS_RANDOM.VALUE");
 
-		assertEquals("d.sort_priority", SearchAction.getValidatedOrderType("orderType", request, "sort_priority"));
-		assertNull(SearchAction.getValidatedOrderType("orderType2", request, null));
+		assertEquals("d.sort_priority", SearchAction.getValidatedOrderType("orderType", request, "sort_priority", false));
+		assertNull(SearchAction.getValidatedOrderType("orderType2", request, null, false));
 	}
 
 	@Test
 	void legacyOrderNamesAreMappedBeforeAliasBinding()
 	{
-		assertEquals("d.date_created", SearchAction.resolveOrderType("lastUpdate", true, false));
-		assertEquals("d.date_created", SearchAction.resolveOrderType("lastUpdate", false, false));
-		assertEquals("d.sort_priority", SearchAction.resolveOrderType("sortPriority", true, false));
-		assertEquals("d.publish_start", SearchAction.resolveOrderType("publishStart", true, false));
-		assertEquals("d.publish_start", SearchAction.resolveOrderType("publishStart", false, false));
-		assertEquals("d.date_created", SearchAction.resolveOrderType("saveDate", true, false));
-		assertEquals("d.date_created", SearchAction.resolveOrderType("saveDate", false, false));
+		assertEquals("d.date_created", SearchAction.resolveOrderType("lastUpdate", false));
+		assertEquals("d.sort_priority", SearchAction.resolveOrderType("sortPriority", false));
+		assertEquals("d.publish_start", SearchAction.resolveOrderType("publishStart", false));
+		assertEquals("d.date_created", SearchAction.resolveOrderType("saveDate", false));
 	}
 
 	@Test
@@ -112,21 +109,33 @@ class SearchActionTest
 		TestRequest request = new TestRequest();
 		request.setParameter("orderType2", "saveDate");
 
-		assertEquals("d.date_created", SearchAction.getValidatedOrderType("orderType2", request, null));
+		assertEquals("d.date_created",
+			SearchAction.getValidatedOrderType("orderType2", request, null, false));
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"orderType", "orderType2"})
+	void oracleTextScoreRequiresMatchingContainsInCurrentQuery(String orderTypeName)
+	{
+		TestRequest request = new TestRequest();
+		request.setParameter(orderTypeName, "sortPriority");
+
+		assertEquals("d.sort_priority",
+			SearchAction.getValidatedOrderType(orderTypeName, request, null, false));
+		assertEquals("SCORE(10)",
+			SearchAction.getValidatedOrderType(orderTypeName, request, null, true));
 	}
 
 	@Test
-	void oracleTextScoreCanOnlyComeFromTrustedLegacyMapping()
+	void oracleTextScoreExpressionCannotBeSuppliedDirectly()
 	{
-		assertEquals("SCORE(10)", SearchAction.resolveOrderType("sortPriority", true, true));
-		assertEquals("SCORE(10)", SearchAction.resolveOrderType("sortPriority", false, true));
-		assertNull(SearchAction.resolveOrderType("SCORE(10)", true, true));
+		assertNull(SearchAction.resolveOrderType("SCORE(10)", true));
 	}
 
 	@Test
 	void onlyDocumentsAliasIsAllowed()
 	{
-		assertNull(SearchAction.resolveOrderType("p.perex_group_id", true, false));
-		assertNull(SearchAction.resolveOrderType("unknown.title", true, false));
+		assertNull(SearchAction.resolveOrderType("p.perex_group_id", false));
+		assertNull(SearchAction.resolveOrderType("unknown.title", false));
 	}
 }
