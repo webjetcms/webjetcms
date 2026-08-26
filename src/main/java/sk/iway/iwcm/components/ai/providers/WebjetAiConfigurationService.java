@@ -19,6 +19,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.system.multidomain.DomainRequestBeanScope;
 
 /** Resolves a request-scoped WebJET configuration snapshot for the standalone library. */
 @Service
@@ -41,7 +42,9 @@ public class WebjetAiConfigurationService {
     }
 
     public AiProviderConfig resolveForDomain(AiInterface provider, String domainName) {
-        return buildConfiguration(provider, trustedReferer(null, domainName));
+        try (DomainRequestBeanScope ignored = DomainRequestBeanScope.open(domainName)) {
+            return buildConfiguration(provider, trustedReferer(null, domainName));
+        }
     }
 
     private AiProviderConfig buildConfiguration(AiInterface provider, String referer) {

@@ -38,27 +38,49 @@ public class RagEmbeddingStatService {
     }
 
     public AssistantDefinitionEntity getIndexingAssistant() {
-        return getOrCreateAssistant(NAME_INDEXING, GROUP_INDEXING, CloudToolsForCore.getDomainId());
+        return getIndexingAssistant(CloudToolsForCore.getDomainId());
+    }
+
+    public AssistantDefinitionEntity getIndexingAssistant(int domainId) {
+        return getOrCreateAssistant(NAME_INDEXING, GROUP_INDEXING, domainId);
     }
 
     public AssistantDefinitionEntity getSearchAssistant() {
-        return getOrCreateAssistant(NAME_SEARCH, GROUP_SEARCH, CloudToolsForCore.getDomainId());
+        return getSearchAssistant(CloudToolsForCore.getDomainId());
+    }
+
+    public AssistantDefinitionEntity getSearchAssistant(int domainId) {
+        return getOrCreateAssistant(NAME_SEARCH, GROUP_SEARCH, domainId);
     }
 
     public void recordIndexingTokens(AssistantDefinitionEntity assistant, int usedTokens) {
-        recordTokens(assistant, usedTokens);
+        recordIndexingTokens(assistant, usedTokens, CloudToolsForCore.getDomainId());
+    }
+
+    public void recordIndexingTokens(AssistantDefinitionEntity assistant, int usedTokens, int domainId) {
+        recordTokens(assistant, usedTokens, domainId);
     }
 
     public void recordSearchTokens(AssistantDefinitionEntity assistant, int usedTokens) {
-        recordTokens(assistant, usedTokens);
+        recordSearchTokens(assistant, usedTokens, CloudToolsForCore.getDomainId());
     }
 
-    private void recordTokens(AssistantDefinitionEntity assistant, int usedTokens) {
+    public void recordSearchTokens(AssistantDefinitionEntity assistant, int usedTokens, int domainId) {
+        recordTokens(assistant, usedTokens, domainId);
+    }
+
+    private void recordTokens(AssistantDefinitionEntity assistant, int usedTokens, int domainId) {
         if (usedTokens <= 0 || assistant == null || assistant.getId() == null) return;
-        AiStatService.addRecord(assistant.getId(), usedTokens, aiStatRepository, null);
+        if (assistant.getDomainId() == null || assistant.getDomainId().intValue() != domainId) {
+            throw new IllegalStateException("RAG embedding assistant domain does not match statistics domain");
+        }
+        AiStatService.addRecord(assistant.getId(), usedTokens, aiStatRepository, null, domainId);
     }
 
     private synchronized AssistantDefinitionEntity getOrCreateAssistant(String name, String groupName, Integer domainId) {
+        if (domainId == null || domainId < 1) {
+            throw new IllegalArgumentException("Domain is not specified");
+        }
         Optional<AssistantDefinitionEntity> existing = assistantRepository.findFirstByNameAndDomainIdOrderByIdAsc(name, domainId);
         if (existing.isPresent()) return existing.get();
 

@@ -14,6 +14,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.rag.pgvector.EmbeddingChunkStatus;
@@ -100,7 +101,7 @@ public class PgVectorStore implements VectorStore {
 
     private static final String GET_EXISTING_HASH_EMBEDDING =
         "SELECT content_hash, embedding::text AS embedding_text FROM rag_embedding_chunks " +
-        "WHERE entity_type = ? AND entity_id = ? AND embedding_provider = ? AND embedding_model = ? AND status = '" + EmbeddingChunkStatus.COMPLETED.name() + "'";
+        "WHERE entity_type = ? AND entity_id = ? AND embedding_provider = ? AND embedding_model = ? AND domain_id = ? AND status = '" + EmbeddingChunkStatus.COMPLETED.name() + "'";
 
     private static final String DELETE_ALL_DATA_SQL =
         "DELETE FROM rag_embedding_chunks";
@@ -567,20 +568,32 @@ public class PgVectorStore implements VectorStore {
         return result;
     }
 
-    /**
-     * {@inheritDoc}
-     * Fetches existing content hashes and their embedding vectors for an entity,
-     * allowing the indexer to skip re-embedding unchanged chunks.
-     * */
+    /** {@inheritDoc} */
     @Override
+    @Deprecated(forRemoval = false)
     public Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingProvider, String embeddingModel) {
+        return getExistingEmbeddingsByHash(
+            entityType,
+            entityId,
+            embeddingProvider,
+            embeddingModel,
+            CloudToolsForCore.getDomainId()
+        );
+    }
+
+    /**
+     * Fetches existing content hashes and embedding vectors for an entity and domain,
+     * allowing the indexer to skip re-embedding unchanged chunks.
+     */
+    @Override
+    public Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingProvider, String embeddingModel, int domainId) {
         String dsName = PgvectorJpaConfig.getRagDataSourceName();
         if (dsName == null) return new java.util.HashMap<>();
 
         try {
             List<Map.Entry<String, float[]>> entries = new ComplexQuery()
                 .setSql(GET_EXISTING_HASH_EMBEDDING)
-                .setParams(entityType, entityId, embeddingProvider, embeddingModel)
+                .setParams(entityType, entityId, embeddingProvider, embeddingModel, domainId)
                 .setDatabase(dsName)
                 .list(rs -> {
                     String hash = rs.getString("content_hash");
