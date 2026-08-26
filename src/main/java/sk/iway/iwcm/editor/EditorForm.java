@@ -42,6 +42,7 @@ import sk.iway.iwcm.tags.support.ResponseUtils;
  *@created      $Date: 2004/02/16 16:44:26 $
  *@modified     $Date: 2004/02/16 16:44:26 $
  */
+@SuppressWarnings("unused")
 public class EditorForm implements Serializable
 {
 	private static final long serialVersionUID = -7904465994457304390L;
