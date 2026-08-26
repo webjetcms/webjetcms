@@ -60,7 +60,7 @@ module.exports = {
       * Saves the editor changes and waits for the result
       * @param {String} [name] - Optional modal name for the editor
       */
-     save(name) {
+     save(name, waitForClose=false) {
           var prefixSelector = "div";
           if (typeof name != "undefined") prefixSelector = "#" + name + "_modal";
 
@@ -70,6 +70,11 @@ module.exports = {
           //cakaj na reload datatabulky, nevieme aka to je DT, takze radsej takto natvrdo
           //I.wait(3);
           DT.waitForLoader();
+
+          if (waitForClose) {
+               if (typeof name != "undefined") this.waitForModalClose(name+"_modal");
+               else this.waitForModalClose();
+          }
      },
 
      /**

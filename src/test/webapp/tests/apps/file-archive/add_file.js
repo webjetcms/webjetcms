@@ -201,7 +201,7 @@ Scenario('Add file in different location', ({ I, DTE, DT }) => {
     I.amOnPage(SL.fileArchive);
     SL.uploadFile(validPdfVirtualFileName, validPdfFileName);
     I.fillField("#editorAppDTE_Field_editorFields-dir .input-group input", "/files/archiv/" + differentLocationFolderName);
-    DTE.save('fileArchiveDataTable');
+    DTE.save('fileArchiveDataTable', true);
 
     // 2. Overenie, že sa súbor nahrá a je na správnom mieste
     I.say("Phase 2 - Check that the file is uploaded and in the right place");
@@ -218,14 +218,25 @@ Scenario('Add file in different location', ({ I, DTE, DT }) => {
 Scenario('Delete archiv entity 2 (and file using elfinder if neccesary)', async ({I}) => {
     SL.deleteTestFiles();
     SL.deleteTestFiles("", "/files/archiv/" + differentLocationFolderName + "/archive_file_test_second.pdf");
+});
 
+Scenario('Delete archiv jstree entity', async ({I}) => {
     const folderSelector = ".elfinder-cwd-filename[title^='autotest--']";
     await SL.removeFileByElfinder(folderSelector, SL.elfinderLater);
 
-    const fileSelector = ".elfinder-cwd-filename[title^='archive_file_test']";
+    let fileSelector = ".elfinder-cwd-filename[title^='archive_file_test']";
     let wasRemovedByElfinder = await SL.removeFileByElfinder(fileSelector, SL.elfinderLater);
     if (wasRemovedByElfinder){
         I.assertTrue(false, "The file was not removed by archive and had to be removed by elfinder!");
+    }
+});
+Scenario('Delete archiv jstree folders', async ({I}) => {
+    //delete all folders starting with autotest-folder in /files/archiv/
+    I.amOnPage("/admin/v9/");
+    let fileSelector = ".elfinder-cwd-filename[title^='autotest-folder']";
+    let wasRemovedByElfinder = await SL.removeFileByElfinder(fileSelector, "/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVzL2FyY2hpdg_E_E");
+    if (wasRemovedByElfinder == false){
+        I.assertTrue(false, "The folder was not removed by archive and had to be removed by elfinder!");
     }
 });
 
