@@ -16,13 +16,20 @@ class DBTest
 		"sort_priority",
 		"_internal",
 		"field123",
-		"lastUpdate",
-		"d.title",
-		"table_alias.field_1"
+		"lastUpdate"
 	})
-	void isValidSqlIdentifierAllowsSimpleAndQualifiedIdentifiers(String identifier)
+	void isValidSqlIdentifierAllowsSimpleIdentifiers(String identifier)
 	{
-		assertTrue(DB.isValidSqlIdentifier(identifier));
+		assertTrue(DB.isValidSqlIdentifier(identifier, false));
+		assertTrue(DB.isValidSqlIdentifier(identifier, true));
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"d.title", "table_alias.field_1"})
+	void isValidSqlIdentifierAllowsQualifiedIdentifiersOnlyWhenEnabled(String identifier)
+	{
+		assertFalse(DB.isValidSqlIdentifier(identifier, false));
+		assertTrue(DB.isValidSqlIdentifier(identifier, true));
 	}
 
 	@ParameterizedTest
@@ -63,6 +70,7 @@ class DBTest
 	})
 	void isValidSqlIdentifierRejectsSqlSyntaxAndMalformedIdentifiers(String identifier)
 	{
-		assertFalse(DB.isValidSqlIdentifier(identifier));
+		assertFalse(DB.isValidSqlIdentifier(identifier, false));
+		assertFalse(DB.isValidSqlIdentifier(identifier, true));
 	}
 }

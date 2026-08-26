@@ -54,7 +54,7 @@ public class AdresarDB
 					if ("desc".equalsIgnoreCase(orderVarTmp))
 						orderVar = "DESC";
 				}
-				if (!DB.isValidSqlIdentifier(orderType)) continue;
+				if (DB.isValidSqlIdentifier(orderType, true) == false) continue;
 
 				if (orderSql.isEmpty()) {
 					orderSql.append(" ORDER BY ").append(orderType).append(' ').append(orderVar);

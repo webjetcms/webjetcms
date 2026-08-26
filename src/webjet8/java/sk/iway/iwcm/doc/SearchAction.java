@@ -1215,7 +1215,7 @@ public class SearchAction
 			orderType = (String) request.getAttribute(name);
 		}
 
-		if (DB.isValidSqlIdentifier(orderType) == false)
+		if (DB.isValidSqlIdentifier(orderType, true) == false)
 		{
 			return defaultValue;
 		}

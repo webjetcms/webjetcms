@@ -67,7 +67,7 @@ public class InquiryDB
 
 	static String resolveOrderBy(String orderBy)
 	{
-		if (!DB.isValidSqlIdentifier(orderBy)) return ORDER_BY_ANSWER_ID;
+		if (DB.isValidSqlIdentifier(orderBy, true) == false) return ORDER_BY_ANSWER_ID;
 		if (orderBy.indexOf('.') == -1) orderBy = "ia." + orderBy;
 		return orderBy;
 	}

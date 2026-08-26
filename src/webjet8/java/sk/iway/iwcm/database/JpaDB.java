@@ -125,7 +125,7 @@ public class JpaDB<T extends ActiveRecordBase>
 	@SuppressWarnings("rawtypes")
 	public List getValues(String property)
 	{
-		if (DB.isValidSqlIdentifier(property)==false)
+		if (DB.isValidSqlIdentifier(property, true) == false)
 			throw new IllegalArgumentException("Invalid JPA property identifier");
 
 		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(dbName);

@@ -3825,7 +3825,7 @@ public class DocDB extends DB
 	public static List<String> getFieldDistinctValues(String field)
 	{
 		List<String> ret = new ArrayList<>();
-		if (!DB.isValidSqlIdentifier(field) || field.indexOf('.') >= 0)
+		if (DB.isValidSqlIdentifier(field, false) == false)
 		{
 			Logger.error(DocDB.class, "Invalid SQL identifier passed to getFieldDistinctValues");
 			return ret;
@@ -5838,7 +5838,7 @@ public class DocDB extends DB
 			return null;
 
 		String fieldColumnName = "field_" + fieldName;
-		return DB.isValidSqlIdentifier(fieldColumnName) ? fieldColumnName : null;
+		return DB.isValidSqlIdentifier(fieldColumnName, false) ? fieldColumnName : null;
 	}
 
 	/**
@@ -5994,7 +5994,7 @@ public class DocDB extends DB
 
 	private static boolean isValidSimpleSqlIdentifier(String value)
 	{
-		return DB.isValidSqlIdentifier(value) && value.indexOf('.') < 0;
+		return DB.isValidSqlIdentifier(value, false);
 	}
 
 	private static String getDefaultBasketPriceColumnName(boolean logInvalidValue)

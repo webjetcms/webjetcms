@@ -43,22 +43,25 @@ import sk.iway.iwcm.tags.support.ResponseUtils;
 @SuppressWarnings({"deprecation", "java:S1118"})
 public class DB
 {
-	private static final Pattern SQL_IDENTIFIER_PATTERN = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)?"); //NOSONAR
+	private static final Pattern SQL_IDENTIFIER_PATTERN = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*"); //NOSONAR
+	private static final Pattern SQL_QUALIFIED_IDENTIFIER_PATTERN = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*\\.[A-Za-z_][A-Za-z0-9_]*"); //NOSONAR
 
 	//zoznam stlpcov ktore mozu obsahovat HTML kod
 	private static Set<String> htmlAllowedFields = null;
 
 	/**
-	 * Checks whether the supplied value is a simple unquoted SQL identifier or an
-	 * identifier qualified by one table name or alias. This method validates only
-	 * identifier syntax; it does not verify that the table or column exists.
+	 * Checks whether the supplied value is an unquoted SQL identifier. A single
+	 * table or alias qualifier can be enabled explicitly. This method validates
+	 * only identifier syntax; it does not verify that the table or column exists.
 	 *
 	 * @param value identifier to validate (column name or table.column)
-	 * @return {@code true} for values such as {@code field_a} or {@code d.title}
+	 * @param allowDot {@code true} to allow one qualifier such as {@code d.title}
+	 * @return {@code true} for {@code field_a} and, when enabled, {@code d.title}
 	 */
-	public static boolean isValidSqlIdentifier(String value)
+	public static boolean isValidSqlIdentifier(String value, boolean allowDot)
 	{
 		if (Tools.isEmpty(value)) return false;
+		if (allowDot) return SQL_QUALIFIED_IDENTIFIER_PATTERN.matcher(value).matches() || SQL_IDENTIFIER_PATTERN.matcher(value).matches();
 		return SQL_IDENTIFIER_PATTERN.matcher(value).matches();
 	}
 

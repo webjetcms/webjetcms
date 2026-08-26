@@ -237,7 +237,7 @@ public final class PricelistExcelImport extends ExcelImportJXL
 	 */
 	static String formatFieldName (String fieldName)
 	{
-		if (!DB.isValidSqlIdentifier(fieldName) || fieldName.indexOf('.') >= 0) return fieldName;
+		if (DB.isValidSqlIdentifier(fieldName, false) == false) return fieldName;
 
 		String fieldNameCopy = fieldName.toLowerCase(java.util.Locale.ROOT);
 		if (!fieldNameCopy.startsWith("field"))
@@ -271,7 +271,7 @@ public final class PricelistExcelImport extends ExcelImportJXL
 
 	private boolean isConfiguredFieldNameValid(String constantName, String fieldName)
 	{
-		if (DB.isValidSqlIdentifier(fieldName) && fieldName.indexOf('.') < 0)
+		if (DB.isValidSqlIdentifier(fieldName, false))
 			return true;
 
 		Logger.error(PricelistExcelImport.class, "Invalid SQL identifier configured in constant {}", constantName);
