@@ -526,17 +526,37 @@ public class Adminlog
 	 */
 	public static long getLastDate(int logType, int userId)
 	{
+		return getLastDate(logType, userId, null, null);
+	}
+
+	/**
+	 * Returns the date of the last log entry of the given type and sub IDs for a user.
+	 * @param logType log entry type
+	 * @param userId user ID
+	 * @param subId1 exact sub_id1 value, or null to ignore it
+	 * @param subId2 exact sub_id2 value, or null to ignore it
+	 * @return timestamp in milliseconds, or 0 when no matching entry exists
+	 */
+	public static long getLastDate(int logType, int userId, Integer subId1, Integer subId2)
+	{
 		long lastDate = 0;
 		try
 		{
 			Connection db_conn = DBPool.getConnection();
 			try
 			{
-				PreparedStatement ps = db_conn.prepareStatement("SELECT max(create_date) as create_date FROM "+ConfDB.ADMINLOG_TABLE_NAME+" WHERE user_id=? AND log_type=?");
+				String sql = "SELECT max(create_date) as create_date FROM "+ConfDB.ADMINLOG_TABLE_NAME+" WHERE user_id=? AND log_type=?";
+				if (subId1 != null) sql += " AND sub_id1=?";
+				if (subId2 != null) sql += " AND sub_id2=?";
+
+				PreparedStatement ps = db_conn.prepareStatement(sql);
 				try
 				{
-					ps.setInt(1, userId);
-					ps.setInt(2, logType);
+					int parameterIndex = 1;
+					ps.setInt(parameterIndex++, userId);
+					ps.setInt(parameterIndex++, logType);
+					if (subId1 != null) ps.setInt(parameterIndex++, subId1.intValue());
+					if (subId2 != null) ps.setInt(parameterIndex, subId2.intValue());
 					ResultSet rs = ps.executeQuery();
 					try
 					{

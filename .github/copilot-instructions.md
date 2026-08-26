@@ -9,6 +9,7 @@
 - ALWAYS write comments in English.
 - AGENTS.md file is located in .github/agents/AGENTS.md file.
 - ALWAYS follow the instructions in AGENTS.md.
+- For frontend and interface work, follow the design context in .github/agents/AGENTS-design.md.
 
 ## CHANGELOG
 

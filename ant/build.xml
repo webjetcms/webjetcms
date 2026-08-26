@@ -327,7 +327,7 @@
             </fileset>
         </copy>
         <copy todir="${finalwar}/WEB-INF/classes/sk/iway/" overwrite="true">
-            <fileset dir="${root}/WebContent/WEB-INF/classes/sk/iway">
+            <fileset dir="${root}/../../build/classes/java/main/sk/iway">
                 <include name="aceintegration/**"/>
                 <include name="basecms/**"/>
                 <include name="demo8/**"/>

@@ -3,6 +3,25 @@ Feature('components.configuration');
 var randomNumber, name, value;
 var datatableName = "configurationDatatable";
 
+async function getConfigurationIdColumnLayout(I) {
+    return await I.executeScript(() => {
+        const table = configurationDatatable;
+        table.columns.adjust();
+
+        const rowIndexes = table.rows({ search: "applied" }).indexes().toArray();
+        if (rowIndexes.length !== 1) throw new Error(`Expected one filtered configuration row, got ${rowIndexes.length}`);
+
+        const row = table.row(rowIndexes[0]);
+        const idCell = row.node().querySelector("td.dt-select-td");
+        const idContent = idCell.querySelector(":scope > .datatable-column-width");
+        return {
+            id: Number(row.data().id),
+            width: idCell.getBoundingClientRect().width,
+            idContentDisplay: getComputedStyle(idContent).display
+        };
+    });
+}
+
 Before(({ I, login, DT }) => {
 
     login('admin');
@@ -11,7 +30,7 @@ Before(({ I, login, DT }) => {
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomText();
         name = "name-autotest-" + randomNumber;
-        value = "value-autotest-" + randomNumber+"<script>alert('TEST');</script> &#39; poKUS frame-ancestors 'self'";
+        value = "value-autotest-" + randomNumber+"<script>alert('TEST');</script> &#39; poKUS frame-ancestors 'self' \"quoted\"";
     }
     DT.addContext('config','#configurationDatatable_wrapper');
 });
@@ -19,6 +38,27 @@ Before(({ I, login, DT }) => {
 Scenario('zoznam konfiguracnych premennych', ({ I }) => {
 
     I.see("Predvolená hodnota (default value)");
+    I.seeElement("#configurationDatatable.dt-hide-id");
+    I.seeElement("#configurationDatatable tbody td.dt-select-td");
+    I.dontSeeElement("#configurationDatatable.dt-hide-id tbody td.dt-select-td > .datatable-column-width");
+});
+
+Scenario('temporary setting hides encryption and scheduled change', ({ I, DTE }) => {
+    I.click("button.buttons-create");
+    DTE.waitForEditor(datatableName);
+
+    I.waitForVisible("div.DTE_Field_Name_encrypt", 10);
+    I.waitForVisible("div.DTE_Field_Name_datePrepared", 10);
+
+    DTE.clickSwitch("temporary_0");
+    I.waitForInvisible("div.DTE_Field_Name_encrypt", 10);
+    I.waitForInvisible("div.DTE_Field_Name_datePrepared", 10);
+
+    DTE.clickSwitch("temporary_0");
+    I.waitForVisible("div.DTE_Field_Name_encrypt", 10);
+    I.waitForVisible("div.DTE_Field_Name_datePrepared", 10);
+
+    DTE.cancel();
 });
 
 Scenario('pridanie konfiguracnej premennej @baseTest', ({ I, DT, DTE }) => {
@@ -47,6 +87,84 @@ Scenario('pridanie konfiguracnej premennej @baseTest', ({ I, DT, DTE }) => {
     I.dontSee("JSON parse error");
 });
 
+Scenario('docasna hodnota sa zobrazi, ale do editora sa nacita databazova @baseTest', async ({ I, DT, DTE, a11y }) => {
+    const temporaryValue = "temporary-value-autotest-" + randomNumber;
+    const databaseValueSelector = "#configurationDatatable tbody [data-conf-value='database-inactive']";
+
+    DT.filterEquals("name", name);
+    const initialIdLayout = await getConfigurationIdColumnLayout(I);
+    I.click(name);
+    DTE.waitForEditor(datatableName);
+
+    I.fillField("#DTE_Field_value", temporaryValue);
+    DTE.clickSwitch("temporary_0");
+    DTE.save();
+
+    I.waitForText(temporaryValue, 10, "#configurationDatatable");
+    I.waitForVisible(databaseValueSelector, 10);
+    I.see(value, "#configurationDatatable");
+    I.dontSee("DB (neaktívna):", "#configurationDatatable");
+    I.dontSeeElement("#configurationDatatable .configuration-value__database-label");
+    I.dontSeeElement("#configurationDatatable .configuration-value .visually-hidden");
+    I.see(temporaryValue, "#configurationDatatable [data-conf-value='current']");
+    I.see(value, databaseValueSelector);
+    I.seeElement(databaseValueSelector + "[data-bs-toggle='tooltip'][tabindex='0']");
+
+    I.moveCursorTo(databaseValueSelector);
+    I.waitForElement(databaseValueSelector + "[aria-describedby]", 5);
+    let tooltipId = await I.grabAttributeFrom(databaseValueSelector, "aria-describedby");
+    I.assertTrue(Boolean(tooltipId), "Database value tooltip must describe its trigger");
+    I.waitForVisible("#" + tooltipId + ".tooltip.show[role='tooltip']", 5);
+    I.see("Hodnota uložená v databáze, momentálne neaktívna", "#" + tooltipId + ".tooltip.show[role='tooltip']");
+
+    I.moveCursorTo("#" + tooltipId);
+    // Verify that the tooltip stays open beyond its 300 ms hide grace period.
+    I.wait(0.5);
+    I.seeElement("#" + tooltipId + ".tooltip.show[role='tooltip']");
+    I.pressKey("Escape");
+    I.waitToHide("#" + tooltipId, 5);
+    I.waitForInvisible(databaseValueSelector + "[aria-describedby]", 5);
+
+    I.moveCursorTo("#configurationDatatable tbody td.dt-select-td");
+    I.moveCursorTo(databaseValueSelector);
+    I.waitForElement(databaseValueSelector + "[aria-describedby]", 5);
+    tooltipId = await I.grabAttributeFrom(databaseValueSelector, "aria-describedby");
+    I.waitForVisible("#" + tooltipId + ".tooltip.show[role='tooltip']", 5);
+    await I.executeScript(() => configurationDatatable.draw(false));
+    I.waitToHide("#" + tooltipId, 5);
+    I.waitForInvisible(databaseValueSelector + "[aria-describedby]", 5);
+
+    I.focus(databaseValueSelector);
+    I.waitForElement(databaseValueSelector + "[aria-describedby]", 5);
+    tooltipId = await I.grabAttributeFrom(databaseValueSelector, "aria-describedby");
+    I.assertTrue(Boolean(tooltipId), "Focused database value must expose its tooltip through aria-describedby");
+    I.waitForVisible("#" + tooltipId + ".tooltip.show[role='tooltip']", 5);
+    I.see("Hodnota uložená v databáze, momentálne neaktívna", "#" + tooltipId + ".tooltip.show[role='tooltip']");
+    I.pressKey("Escape");
+    I.waitToHide("#" + tooltipId, 5);
+    I.waitForInvisible(databaseValueSelector + "[aria-describedby]", 5);
+    I.blur(databaseValueSelector);
+
+    const adjustedIdLayout = await getConfigurationIdColumnLayout(I);
+    I.assertTrue(Number.isSafeInteger(adjustedIdLayout.id), "Configuration ID must be a safe JavaScript integer");
+    I.assertEqual(adjustedIdLayout.id, initialIdLayout.id);
+    I.assertEqual(adjustedIdLayout.idContentDisplay, "none");
+    I.assertTrue(adjustedIdLayout.width <= initialIdLayout.width + 1, "ID column must stay compact after recalculating column widths");
+
+    await a11y.check(databaseValueSelector);
+    I.click("#configurationDatatable tbody td.dt-select-td");
+    I.waitForVisible("#configurationDatatable tbody tr.selected", 5);
+    await a11y.check(databaseValueSelector);
+
+    I.click(name);
+    DTE.waitForEditor(datatableName);
+    I.seeInField("#DTE_Field_value", value);
+    DTE.cancel();
+
+    I.see(temporaryValue, "#configurationDatatable");
+    I.see(value, "#configurationDatatable");
+});
+
 Scenario('vyhladanie konfiguracnej premennej @baseTest', ({ I, DT }) => {
 
     //hladanie podla mena
@@ -60,6 +178,13 @@ Scenario('vyhladanie konfiguracnej premennej @baseTest', ({ I, DT }) => {
     I.pressKey('Enter', "input.dt-filter-value");
     DT.waitForLoader();
     I.see(value);
+
+    for (const specialValue of ["<script>", "</script>", '"quoted"']) {
+        I.fillField("input.dt-filter-value", specialValue);
+        I.pressKey('Enter', "input.dt-filter-value");
+        DT.waitForLoader();
+        I.see(name);
+    }
 });
 
 Scenario("upravenie konfiguracnej premennej @baseTest", ({ I, DTE }) => {

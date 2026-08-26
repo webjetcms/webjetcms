@@ -6,11 +6,35 @@ Before(({ login }) => {
     login('admin');
 });
 
-Scenario('Components configuration', ({ I, DTE, Document }) => {
+Scenario('Components configuration', ({ I, DT, DTE, Document }) => {
+    Document.setConfigValue('editorAutoFillPublishStart', 'true');
+    Document.setConfigValue('usersSplitByDomain', 'false');
+    Document.setConfigValue('ragSemanticSearchEnabled', 'false');
+
     I.amOnPage("/admin/v9/settings/configuration/");
 
-    I.moveCursorTo('#toast-container-webjet');
+    //
+    I.say("Creating temporary value");
+    DT.filterContains("name", "editorAutoFillPublishStart");
+    I.click("editorAutoFillPublishStart", ".dt-row-edit div a");
+    DTE.waitForEditor("configurationDatatable");
+    DTE.fillField("value", "false");
+    I.checkOption("#DTE_Field_temporary_0");
+    DTE.save();
+    I.amOnPage("/admin/v9/settings/configuration/");
+    DT.waitForLoader();
+
+    const databaseValueSelector = ".configuration-value__database";
+    I.waitForVisible(databaseValueSelector, 10);
+    I.executeScript((selector) => {
+        const element = document.querySelector(selector);
+        if (element == null) throw new Error(`Element not found: ${selector}`);
+        element.focus();
+    }, databaseValueSelector);
+    I.waitForVisible(".configuration-value-tooltip.show", 5);
     Document.screenshot("/admin/setup/configuration/page.png");
+    I.pressKey("Escape");
+    I.waitToHide(".configuration-value-tooltip.show", 5);
     I.toastrClose();
 
     I.clickCss("button.buttons-create");

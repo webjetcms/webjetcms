@@ -47,6 +47,14 @@ textarea {}
     border-color: $input-border-color;
 }
 
+.btn:focus-visible,
+.btn-check:focus-visible + .btn,
+.btn-close:focus-visible {
+    outline: 2px solid $secondary !important;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px $white !important;
+}
+
 .input-group-text {
     background-color: transparent;
     border-right: 0;
