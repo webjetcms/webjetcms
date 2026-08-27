@@ -517,13 +517,13 @@ function initClosure() {
         '<table class="table datatableInit dataTable no-footer" data-server-side="true" style="margin-left: 0px;" id="jstreeSearchTable">' +
             '<thead>' +
                 '<tr>' +
-                    `<th class="dt-format-selector dt-select-td cell-not-editable" tabindex="0" aria-controls="jstreeSearchTable" rowspan="1" colspan="1" data-column-index="0" style="padding: 8px 24px 4px 0px !important;">${jsTreeSearchLabel}</th>` +
+                    `<th id="tree-folder-search-label" class="dt-format-selector dt-select-td cell-not-editable" tabindex="0" aria-controls="jstreeSearchTable" rowspan="1" colspan="1" data-column-index="0" style="padding: 8px 24px 4px 0px !important;">${jsTreeSearchLabel}</th>` +
                 '</tr>' +
                 '<tr>' +
                     '<th class="dt-format-text" data-column-index="2" rowspan="1" colspan="1" style="padding: 0px 0px 4px 0px !important;">' +
                         '<div class="input-group">' +
                             select +
-                            '<input id="tree-folder-search-input" class="form-control form-control-sm filter-input" aria-label="'+WJ.translate("datatables.defaults.search.js")+'" />' +
+                            '<input id="tree-folder-search-input" class="form-control form-control-sm filter-input" aria-labelledby="tree-folder-search-label" />' +
                             '<button id="tree-folder-search-button" class="btn btn-sm btn-outline-secondary btn-search" aria-label="'+WJ.translate("datatables.defaults.search.js")+'"><i class="ti ti-search"></i></button>' +
                             '<button id="tree-folder-search-clear-button" class="btn btn-sm btn-outline-secondary btn-clear" style="padding-top: 4px;" aria-label="'+WJ.translate("button.reset")+'"><i class="ti ti-circle-x"></i></button>' +
                         '</div>' +

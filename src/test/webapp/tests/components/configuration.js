@@ -86,6 +86,8 @@ Scenario('hierarchical configuration tree', async ({ I, DT, a11y }) => {
     I.see("Zmenené", changedNode);
     I.see("Zákaznícke", customNode);
     I.see("Všetky", allNode);
+    I.waitForElement("#tree-folder-search-input[aria-labelledby='tree-folder-search-label']", 20);
+    I.see("Hľadať modul", "#tree-folder-search-label");
     I.dontSeeElement(`${treeSelector}[aria-multiselectable='true']`);
     I.assertEqual(await I.executeScript(() => new URL(configurationDatatable.getAjaxUrl(), location.origin).searchParams.get("view")), "changed");
     const viewOrder = await I.executeScript(() => {
@@ -94,7 +96,7 @@ Scenario('hierarchical configuration tree', async ({ I, DT, a11y }) => {
             .join(",");
     });
     I.assertEqual(viewOrder, "changed,custom,all");
-    await a11y.check(treeSelector);
+    await a11y.check(".tree-col");
 
     I.clickCss(`${customNode} > a.jstree-anchor`);
     I.waitForElement(`${customNode} > a.jstree-clicked[aria-selected='true']`, 20);
