@@ -3,16 +3,19 @@ package sk.iway.iwcm.components.customfields.jpa;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 
 public interface CustomFieldsRepository extends DomainIdRepository<CustomFieldsEntity, Long> {
 
-    @Query("SELECT cfe FROM CustomFieldsEntity cfe WHERE cfe.className = :className AND cfe.entityId = 0 AND cfe.bonusClassName = '' AND cfe.domainId = :domainId")
+    @Query("SELECT cfe FROM CustomFieldsEntity cfe WHERE cfe.className = :className AND cfe.entityId = 0 AND (cfe.bonusClassName IS NULL OR cfe.bonusClassName = '') AND cfe.domainId = :domainId")
     List<CustomFieldsEntity> findAllGlobalCustomFields(String className, Integer domainId);
 
-    @Query("SELECT cfe FROM CustomFieldsEntity cfe WHERE cfe.className = :className AND cfe.entityId = :entityId AND cfe.bonusClassName = '' AND cfe.domainId = :domainId")
+    @Query("SELECT cfe FROM CustomFieldsEntity cfe WHERE cfe.className = :className AND cfe.entityId = :entityId AND (cfe.bonusClassName IS NULL OR cfe.bonusClassName = '') AND cfe.domainId = :domainId")
     List<CustomFieldsEntity> findAllByClassNameAndEntityId(String className, Long entityId, Integer domainId);
 
     @Query("SELECT cfe FROM CustomFieldsEntity cfe WHERE cfe.className = :className AND cfe.bonusClassName = :bonusClassName AND cfe.bonusEntityId = :bonusEntityId AND cfe.domainId = :domainId")
@@ -20,5 +23,11 @@ public interface CustomFieldsRepository extends DomainIdRepository<CustomFieldsE
 
     @Query("SELECT cfe.id FROM CustomFieldsEntity cfe WHERE cfe.className = :className AND cfe.alphabet = :alphabet AND cfe.entityId = :entityId AND cfe.bonusClassName = :bonusClassName AND cfe.bonusEntityId = :bonusEntityId AND cfe.domainId = :domainId")
     Optional<Long> getEntityId(String className, String alphabet, Long entityId, String bonusClassName, Long bonusEntityId, Integer domainId);
+
+    @Query("SELECT cfe.id FROM CustomFieldsEntity cfe WHERE cfe.className = :className AND cfe.alphabet = :alphabet AND cfe.entityId = :entityId AND (cfe.bonusClassName IS NULL OR cfe.bonusClassName = '') AND cfe.bonusEntityId = :bonusEntityId AND cfe.domainId = :domainId")
+    Optional<Long> getEntityIdWithoutBonusClassName(String className, String alphabet, Long entityId, Long bonusEntityId, Integer domainId);
+
+    @Query("SELECT cfe FROM CustomFieldsEntity cfe WHERE cfe.className = :className AND cfe.entityId = :entityId AND (cfe.bonusClassName IS NULL OR cfe.bonusClassName = '') AND cfe.bonusEntityId = 0 AND cfe.domainId = :domainId AND cfe.alphabet IN :alphabets")
+    Page<CustomFieldsEntity> findAllEnumerationStringFields(@Param("className") String className, @Param("entityId") Long entityId, @Param("domainId") Integer domainId, @Param("alphabets") List<String> alphabets, Pageable pageable);
 
 }

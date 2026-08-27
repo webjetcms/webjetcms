@@ -99,7 +99,9 @@ export class EditorAi {
 
                         //console.log("inputField:", inputField, "parents=", inputField.parents(".bootstrap-select").length);
 
-                        if (inputField.parents(".bootstrap-select").length > 0) {
+                        if (inputField.closest(".custom-field-ai-disabled").length > 0) {
+                            // This custom field type does not support AI actions.
+                        } else if (inputField.parents(".bootstrap-select").length > 0) {
                             //it is probably custom field set as selectpicker, skip it
                             //we should probably better handle custom fields in future
                         } else {

@@ -218,9 +218,9 @@ public abstract class BasePaymentMethod {
     }
 
     /**
-     * Check if payment method is configured. Need to in DB and have all required fields set.
-     * @param paymentMethodeed
-     * @return
+     * Checks whether the payment method exists in the database and has all required fields set.
+     * @param paymentMethod payment method configuration to check
+     * @return {@code true} if all required configuration fields are set
      */
     protected final boolean isPaymentMethodConfigured(PaymentMethodEntity paymentMethod) {
         FieldsConfig annotation = this.getClass().getAnnotation(FieldsConfig.class);

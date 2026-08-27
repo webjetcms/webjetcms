@@ -941,10 +941,11 @@ public class WebpagesService {
 	}
 
 	/**
-	 * Add options to DatatablePage object
-	 * @param pageImpl - current response Page object
-	 * @param options - options object
-	 * @param forceGroupId - if true, force options.groupId to WebpagesService even if it's < 1
+	 * Adds editor lookup options to the supplied datatable page.
+	 *
+	 * @param pageImpl datatable page to enrich with lookup options
+	 * @param options source of the request, user, repositories, and filtering settings
+	 * @param forceGroupId whether to use {@code options.getGroupId()} even when it is {@code < 1}
 	 */
 	public static void addOptions(DatatablePageImpl<DocDetails> pageImpl, GetAllItemsDocOptions options, boolean forceGroupId) {
 		Prop prop = Prop.getInstance(options.getRequest());

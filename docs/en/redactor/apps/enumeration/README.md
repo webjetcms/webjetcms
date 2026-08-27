@@ -22,6 +22,28 @@ This will display 2 columns/fields of type string and 1 column/field of type boo
 
 This means that you can define the data format of the dialpads for each dialpad separately. As the names of the cards suggest, you can combine text, numeric, Boolean or date fields. Their number is limited for each type by the number of fields in each card.
 
+### String Field Types tab
+
+After saving a codebook type for the first time, the **String Field Types** tab appears. It allows you to extend named fields from the **Strings** tab with settings known from [custom fields](../../../frontend/webpages/customfields/custom-fields-settings.md), such as a selection box, multiple selection, autocomplete, link to another codebook, image, link, folder, or web page selection.
+
+![](editor_stringFieldTypes.png)
+
+Only string fields for which a configuration is created are displayed in the table. When you add a field, only named string fields in the format **String N – name** are available in the **Optional field** field. The field menu, their names, and descriptions are based on the last saved version of the codebook type. Therefore, after naming or renaming a string field, save the codebook type first; the configuration will then be automatically updated. If you delete the field name, the field will be hidden and its mandatory setting will be canceled.
+
+For each field you can set:
+
+- field type and its type-specific properties, such as selection field options,
+- obligation to fulfill,
+- help text displayed as `tooltip`
+
+![](editor_stringFieldType.png)
+
+Without specific configuration, a named string field will appear as a regular text field with a maximum length of 1024 characters. Unnamed string fields will not appear in the codebook data or configuration options.
+
+!> **Warning** The code lists are not (yet) divided by the selected domain, so the settings of optional fields (string field types) are permanently saved in the main domain. If you go to the [Optional fields] section (../../../frontend/webpages/customfields/custom-fields-settings.md) you will see the set values ​​only in the main domain. However, we recommend not changing or setting anything in the Optional fields section and always using the String field types tab to set them.
+
+!> **Backward compatibility note:** String field data attributes have changed from `string1` to `string12` to `fieldA` to `fieldL`. In custom or legacy Excel templates for importing codebook data, you must manually edit the code names in the header, for example `Mesto|string1` to `Mesto|fieldA`. Use the same names `fieldA` to `fieldL` in REST API integrations that process codebook data. Database columns `string1` to `string12` remain unchanged.
+
 ### Basic tab
 
 The following properties are set in the "Basic" tab:

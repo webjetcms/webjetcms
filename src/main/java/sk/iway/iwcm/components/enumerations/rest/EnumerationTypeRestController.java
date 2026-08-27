@@ -1,12 +1,15 @@
 package sk.iway.iwcm.components.enumerations.rest;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
+import sk.iway.iwcm.components.customfields.jpa.CustomFieldsRepository;
+import sk.iway.iwcm.components.customfields.rest.CustomFieldsService;
+import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataRepository;
 import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationTypeEditorFields;
@@ -24,6 +32,7 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.multidomain.DomainIdScopeResolver;
 
 @RestController
 @RequestMapping("/admin/rest/enumeration/enumeration-type")
@@ -33,12 +42,14 @@ public class EnumerationTypeRestController extends DatatableRestControllerV2<Enu
 
     private final EnumerationTypeRepository enumerationTypeRepository;
     private final EnumerationDataRepository enumerationDataRepository;
+    private final CustomFieldsRepository customFieldsRepository;
 
     @Autowired
-    public EnumerationTypeRestController(EnumerationTypeRepository enumerationTypeRepository, EnumerationDataRepository enumerationDataRepository) {
+    public EnumerationTypeRestController(EnumerationTypeRepository enumerationTypeRepository, EnumerationDataRepository enumerationDataRepository, CustomFieldsRepository customFieldsRepository) {
         super(enumerationTypeRepository);
         this.enumerationTypeRepository = enumerationTypeRepository;
         this.enumerationDataRepository = enumerationDataRepository;
+        this.customFieldsRepository = customFieldsRepository;
     }
 
     @Override
@@ -114,6 +125,67 @@ public class EnumerationTypeRestController extends DatatableRestControllerV2<Enu
             etef.toEnumerationType(entity, enumerationTypeRepository, getProp());
         }
         return entity;
+    }
+
+    @Override
+    public void afterSave(EnumerationTypeBean entity, EnumerationTypeBean saved) {
+        if (saved == null || saved.getId() == null) return;
+
+        List<CustomFieldsEntity> customFields = customFieldsRepository.findAllByClassNameAndEntityId(
+            EnumerationDataBean.class.getName(),
+            saved.getId(),
+            DomainIdScopeResolver.resolve(EnumerationDataBean.class)
+        );
+        List<CustomFieldsEntity> changedFields = new ArrayList<>();
+        for (CustomFieldsEntity customField : customFields) {
+            String alphabet = customField.getAlphabet();
+            if (alphabet == null || alphabet.length() != 1 || alphabet.charAt(0) < 'A' || alphabet.charAt(0) > 'L') continue;
+            if (customField.getBonusEntityId() != null && customField.getBonusEntityId() != 0) continue;
+
+            String label = EnumerationService.getStringFieldName(saved, alphabet.charAt(0));
+            boolean changed = false;
+            if (Objects.equals(label, customField.getLabel()) == false) {
+                customField.setLabel(label);
+                changed = true;
+            }
+            if (Tools.isEmpty(label) && Tools.isTrue(customField.getRequired())) {
+                customField.setRequired(Boolean.FALSE);
+                changed = true;
+            }
+            if (changed) {
+                changedFields.add(customField);
+            }
+        }
+        if (changedFields.isEmpty() == false) customFieldsRepository.saveAll(changedFields);
+    }
+
+    @Override
+    public void afterDuplicate(EnumerationTypeBean entity, Long originalId) {
+        if (originalId == null || originalId < 1) {
+            throw new IllegalArgumentException("Original enumeration type ID is required for duplication.");
+        }
+        if (entity == null || entity.getId() == null || entity.getId() < 1) {
+            throw new IllegalStateException("Duplicated enumeration type must be saved before copying its field settings.");
+        }
+
+        int domainId = DomainIdScopeResolver.resolve(EnumerationDataBean.class);
+        List<CustomFieldsEntity> sourceFields = customFieldsRepository.findAllByClassNameAndEntityId(
+            EnumerationDataBean.class.getName(),
+            originalId,
+            domainId
+        );
+        List<CustomFieldsEntity> duplicatedFields = new ArrayList<>();
+        for (CustomFieldsEntity sourceField : sourceFields) {
+            if (CustomFieldsService.isEnumerationStringAlphabet(sourceField.getAlphabet()) == false) continue;
+            if (sourceField.getBonusEntityId() != null && sourceField.getBonusEntityId() != 0) continue;
+
+            CustomFieldsEntity duplicatedField = new CustomFieldsEntity();
+            BeanUtils.copyProperties(sourceField, duplicatedField, "id");
+            duplicatedField.setEntityId(entity.getId());
+            duplicatedFields.add(duplicatedField);
+        }
+
+        if (duplicatedFields.isEmpty() == false) customFieldsRepository.saveAll(duplicatedFields);
     }
 
     @Override

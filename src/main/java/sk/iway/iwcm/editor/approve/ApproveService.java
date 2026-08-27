@@ -387,10 +387,12 @@ public class ApproveService {
 	}
 
 	/**
-	 * Vytvori diff medzi originalom a editovanym dokumentom, tento diff sa pouzije v emaily schvalovatelom, aby videli co sa zmenilo
-	 * @param editedDoc
-	 * @param docDetailsRepository
-	 * @return
+	 * Builds the document changes shown to approvers in notification emails.
+	 *
+	 * @param editedDoc edited document whose changes are described
+	 * @param historyDoc original document to compare with, or {@code null} for a new document
+	 * @param prop localized message provider used for change labels
+	 * @return HTML-formatted description of the changed fields
 	 */
 	public static StringBuilder getDiff(DocBasic editedDoc, DocBasic historyDoc, Prop prop) {
 		StringBuilder message = new StringBuilder();
@@ -1042,7 +1044,7 @@ public class ApproveService {
 	/**
 	 * Sends an approval request email to the configured approvers for a folder change.
 	 * @param dto the pending GroupSchedulerDto record
-	 * @param scheduleId the schedule ID (for URL construction)
+	 * @param originalGroup original folder state, or {@code null} for a new folder
 	 * @param comment optional comment to include
 	 */
 	public void sendGroupApproveRequestEmail(GroupSchedulerDto dto, GroupDetails originalGroup, String comment) {
