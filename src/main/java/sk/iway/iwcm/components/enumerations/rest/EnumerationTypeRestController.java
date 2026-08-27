@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsRepository;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
@@ -31,6 +30,7 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.multidomain.DomainIdScopeResolver;
 
 @RestController
 @RequestMapping("/admin/rest/enumeration/enumeration-type")
@@ -132,7 +132,7 @@ public class EnumerationTypeRestController extends DatatableRestControllerV2<Enu
         List<CustomFieldsEntity> customFields = customFieldsRepository.findAllByClassNameAndEntityId(
             EnumerationDataBean.class.getName(),
             saved.getId(),
-            CloudToolsForCore.getDomainId()
+            DomainIdScopeResolver.resolve(EnumerationDataBean.class)
         );
         List<CustomFieldsEntity> changedFields = new ArrayList<>();
         for (CustomFieldsEntity customField : customFields) {

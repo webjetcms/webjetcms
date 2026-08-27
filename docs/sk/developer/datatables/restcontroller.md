@@ -145,6 +145,43 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
 }
 ```
 
+## Filtrovanie podľa domény
+
+Ak Spring DATA repozitár implementuje rozhranie `DomainIdRepository`, trieda `DatatableRestControllerV2` pracuje s hodnotou `domainId`. Pri čítaní sa automatické filtrovanie aktivuje pre MultiWeb/Cloud inštaláciu alebo pri zapnutej konfiguračnej premennej `enableStaticFilesExternalDir`. Pri zápise sa pre takýto repozitár vždy doplní chýbajúce `domainId` a overí sa, že zaslaná hodnota zodpovedá očakávanej doméne.
+
+Očakávanú doménu vracia chránená metóda `getDomainId()`. Jej predvolená implementácia používa aktuálnu doménu z `CloudToolsForCore.getDomainId()`. Hodnota sa používa pri štandardnom získaní jedného alebo všetkých záznamov, mazaní, vyhľadaní záznamu cez `findItemBy`, výpočte súm a pri doplnení alebo kontrole `domainId` počas uloženia.
+
+Ak má controller pracovať s inou než aktuálnou doménou, prepíšte metódu `getDomainId()`. Rovnakú metódu použite aj vo vlastných repozitárových dotazoch controllera:
+
+```java
+@Override
+protected int getDomainId() {
+    return DomainIdScopeResolver.resolve(EnumerationDataBean.class);
+}
+```
+
+V príklade controller spravuje pomocné záznamy `CustomFieldsEntity`, ale ich doménový rozsah určuje `EnumerationDataBean`. Resolveru sa preto odovzdáva anotovaná kontextová trieda, nie nevyhnutne typ entity použitej v repozitári.
+
+Anotácia [`@DomainIdCommon`](../../../../src/main/java/sk/iway/iwcm/system/multidomain/DomainIdCommon.java) označuje entitu, ktorej dáta sú spoločné pre všetky domény. Je dostupná počas behu aplikácie a vzťahuje sa aj na podtriedy. Vyhodnocuje ju trieda [`DomainIdScopeResolver`](../../../../src/main/java/sk/iway/iwcm/system/multidomain/DomainIdScopeResolver.java):
+
+- pre anotovanú triedu vráti hodnotu konfiguračnej premennej `domainIdCommon`; ak nie je nastavená na kladné číslo, použije doménu `1`,
+- pre neanotovanú alebo neznámu triedu vráti aktuálnu doménu,
+- triedu je možné zadať ako `Class<?>` alebo jej úplné meno (`FQDN`).
+
+Entitu označíte nasledovne:
+
+```java
+@Entity
+@DomainIdCommon
+public class EnumerationDataBean {
+    // ...
+}
+```
+
+Samotná anotácia nemení databázové dotazy automaticky. Controller musí použiť `DomainIdScopeResolver` v prepísanej metóde `getDomainId()` a služby s vlastnými dotazmi musia použiť výsledok resolvera explicitne. Označenie preto používajte iba pre dáta, ktoré majú byť skutočne zdieľané a upravované zo všetkých domén.
+
+!>**Upozornenie:** automatický doménový predikát v režime vyhľadávania `Specification`, ktorý používa aj `getAllItemsIncludeSpecSearch`, zatiaľ získava aktuálnu doménu priamo. Prepísanie `getDomainId()` sa preto na tento predikát nevzťahuje. Pred použitím spoločnej domény s týmto režimom je potrebné zabezpečiť, aby aj vyhľadávací predikát používal `getDomainId()`.
+
 ## Metódy pre manipuláciu s dátami
 
 Triedu môžete konštruovať aj s ```NULL``` repozitárom, v takom prípade je potrebné implementovať metódy na prácu s dátami:

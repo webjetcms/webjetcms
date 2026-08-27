@@ -40,6 +40,8 @@ Pre každé pole je možné nastaviť:
 
 Bez špecifickej konfigurácie sa pomenované reťazcové pole zobrazí ako bežné textové pole s maximálnou dĺžkou 1024 znakov. Nepomenované reťazcové polia sa v dátach číselníka ani v možnostiach konfigurácie nezobrazia.
 
+!> **Upozornenie** číselníky (zatiaľ) nie su delené podľa zvolenej domény, nastavenia voliteľných polí (typy reťazcových polí) sa teda fixne ukladajú do hlavnej domény. Ak prejdete do sekcie [Voliteľné polia](../../../frontend/webpages/customfields/custom-fields-settings.md) budete nastavené hodnoty vidieť len v hlavnej doméne. Odporúčame ale v sekcii Voliteľné polia nemeniť a nenastavovať a vždy použiť kartu Typy reťazcových polí na ich nastavenie.
+
 !> **Upozornenie na spätnú kompatibilitu:** dátové atribúty reťazcových polí sa zmenili z `string1` až `string12` na `fieldA` až `fieldL`. Vo vlastných alebo starších Excel šablónach na import dát číselníka musíte kódové názvy v hlavičke ručne upraviť, napríklad `Mesto|string1` na `Mesto|fieldA`. Rovnaké názvy `fieldA` až `fieldL` používajte aj v integráciách REST API, ktoré spracúvajú dáta číselníkov. Databázové stĺpce `string1` až `string12` zostávajú nezmenené.
 
 ### Karta Základné

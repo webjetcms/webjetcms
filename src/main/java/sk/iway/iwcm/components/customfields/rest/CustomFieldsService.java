@@ -22,7 +22,6 @@ import jakarta.persistence.Entity;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsRepository;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
@@ -39,8 +38,8 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
-
 import sk.iway.iwcm.system.datatable.json.LabelValue;
+import sk.iway.iwcm.system.multidomain.DomainIdScopeResolver;
 
 @Service
 public class CustomFieldsService {
@@ -131,23 +130,25 @@ public class CustomFieldsService {
         }
 
         CustomFieldsRepository customFieldsRepository = Tools.getSpringBean("customFieldsRepository", CustomFieldsRepository.class);
-		if(customFieldsRepository == null) {
+        if(customFieldsRepository == null) {
             Logger.error(CustomFieldsService.class, "Could not get customFieldsRepository bean from spring context, skipping custom fields retrieval and returning empty list");
             return List.of();
         }
 
+        int domainId = DomainIdScopeResolver.resolve(main.getClassName());
+
         // First get all fields that have no entityId set - these are for all entities of specified class name (global fields)
-        List<CustomFieldsEntity> globalCustomFields = customFieldsRepository.findAllGlobalCustomFields(main.getClassName(), CloudToolsForCore.getDomainId());
+        List<CustomFieldsEntity> globalCustomFields = customFieldsRepository.findAllGlobalCustomFields(main.getClassName(), domainId);
 
         // Now get all fields for the specific entityId (specific fields) for the same class name - these will override global fields if there are any
-        List<CustomFieldsEntity> classCustomFields = customFieldsRepository.findAllByClassNameAndEntityId(main.getClassName(), main.getEntityId(), CloudToolsForCore.getDomainId());
+        List<CustomFieldsEntity> classCustomFields = customFieldsRepository.findAllByClassNameAndEntityId(main.getClassName(), main.getEntityId(), domainId);
 
         // Specific fields have higher priority than global ones, so we will override global fields with specific ones if there are any
         mergeLists(globalCustomFields, classCustomFields);
 
         // if bonusClassName is provided do merge BUT bonus class fields has HIGHEST priority
         if(bonus != null && bonus.isValid() == true) {
-            List<CustomFieldsEntity> bonusClassCustomFields = customFieldsRepository.findAllByClassNameAndBonusContext(main.getClassName(), bonus.getClassName(), bonus.getEntityId(), CloudToolsForCore.getDomainId());
+            List<CustomFieldsEntity> bonusClassCustomFields = customFieldsRepository.findAllByClassNameAndBonusContext(main.getClassName(), bonus.getClassName(), bonus.getEntityId(), domainId);
             mergeLists(classCustomFields, bonusClassCustomFields);
             classCustomFields = bonusClassCustomFields;
         }
@@ -578,7 +579,7 @@ public class CustomFieldsService {
             && stored != null
             && EnumerationDataBean.class.getName().equals(stored.getClassName())
             && Objects.equals(entity.getEntityId(), stored.getEntityId())
-            && Objects.equals(CloudToolsForCore.getDomainId(), stored.getDomainId())
+            && Objects.equals(DomainIdScopeResolver.resolve(entity.getClassName()), stored.getDomainId())
             && Tools.isEmpty(stored.getBonusClassName())
             && (stored.getBonusEntityId() == null || stored.getBonusEntityId() == 0)
             && Objects.equals(alphabet, stored.getAlphabet());

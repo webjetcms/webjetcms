@@ -26,7 +26,6 @@ import jakarta.persistence.criteria.Root;
 import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsRepository;
 import sk.iway.iwcm.components.customfields.rest.CustomFieldsService;
@@ -40,6 +39,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.RowReorderDto;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
+import sk.iway.iwcm.system.multidomain.DomainIdScopeResolver;
 
 @RestController
 @RequestMapping("/admin/rest/enumeration/string-fields")
@@ -65,6 +65,11 @@ public class EnumerationStringFieldsRestController extends DatatableRestControll
     }
 
     @Override
+    protected int getDomainId() {
+        return DomainIdScopeResolver.resolve(EnumerationDataBean.class);
+    }
+
+    @Override
     public Page<CustomFieldsEntity> getAllItems(Pageable pageable) {
         EnumerationTypeBean enumerationType = getEnumerationType();
         if (enumerationType == null) return new DatatablePageImpl<>(new ArrayList<>());
@@ -72,7 +77,7 @@ public class EnumerationStringFieldsRestController extends DatatableRestControll
         Page<CustomFieldsEntity> page = customFieldsRepository.findAllEnumerationStringFields(
             ENUMERATION_DATA_CLASS_NAME,
             enumerationType.getId(),
-            CloudToolsForCore.getDomainId(),
+            getDomainId(),
             ALPHABETS,
             pageable
         );
@@ -115,7 +120,7 @@ public class EnumerationStringFieldsRestController extends DatatableRestControll
             builder.equal(bonusClassName, "")
         ));
         predicates.add(builder.equal(root.get("bonusEntityId"), 0L));
-        predicates.add(builder.equal(root.get("domainId"), CloudToolsForCore.getDomainId()));
+        predicates.add(builder.equal(root.get("domainId"), getDomainId()));
         predicates.add(root.get("alphabet").in(ALPHABETS));
         super.addSpecSearch(params, predicates, root, builder);
     }
@@ -168,7 +173,7 @@ public class EnumerationStringFieldsRestController extends DatatableRestControll
             alphabet,
             enumerationType.getId(),
             0L,
-            CloudToolsForCore.getDomainId()
+            getDomainId()
         ).orElse(-1L);
 
         boolean duplicate = "create".equals(action) && existingId > 0;
@@ -273,7 +278,7 @@ public class EnumerationStringFieldsRestController extends DatatableRestControll
     private void applyContext(CustomFieldsEntity entity, EnumerationTypeBean enumerationType) {
         entity.setClassName(ENUMERATION_DATA_CLASS_NAME);
         entity.setEntityId(enumerationType.getId());
-        entity.setDomainId(CloudToolsForCore.getDomainId());
+        entity.setDomainId(getDomainId());
         entity.setBonusClassName("");
         entity.setBonusEntityId(0L);
 
@@ -288,7 +293,7 @@ public class EnumerationStringFieldsRestController extends DatatableRestControll
             && Objects.equals(enumerationType.getId(), entity.getEntityId())
             && Tools.isEmpty(entity.getBonusClassName())
             && (entity.getBonusEntityId() == null || entity.getBonusEntityId() == 0)
-            && Objects.equals(CloudToolsForCore.getDomainId(), entity.getDomainId())
+            && Objects.equals(getDomainId(), entity.getDomainId())
             && ALPHABETS.contains(entity.getAlphabet());
     }
 

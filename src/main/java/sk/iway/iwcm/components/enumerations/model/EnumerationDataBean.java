@@ -30,9 +30,11 @@ import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.multidomain.DomainIdCommon;
 
 @Entity
 @Table(name = "enumeration_data")
+@DomainIdCommon
 //@JsonIdentityInfo(generator = ObjectIdGenerators.IntSequenceGenerator.class)
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorValue( "default" )
