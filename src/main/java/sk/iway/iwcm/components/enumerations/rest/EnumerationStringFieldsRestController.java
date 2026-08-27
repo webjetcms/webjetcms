@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.servlet.http.HttpServletRequest;
@@ -108,7 +109,11 @@ public class EnumerationStringFieldsRestController extends DatatableRestControll
 
         predicates.add(builder.equal(root.get("className"), ENUMERATION_DATA_CLASS_NAME));
         predicates.add(builder.equal(root.get("entityId"), enumerationType.getId()));
-        predicates.add(builder.equal(root.get("bonusClassName"), ""));
+        Path<String> bonusClassName = root.get("bonusClassName");
+        predicates.add(builder.or(
+            builder.isNull(bonusClassName),
+            builder.equal(bonusClassName, "")
+        ));
         predicates.add(builder.equal(root.get("bonusEntityId"), 0L));
         predicates.add(builder.equal(root.get("domainId"), CloudToolsForCore.getDomainId()));
         predicates.add(root.get("alphabet").in(ALPHABETS));
@@ -158,11 +163,10 @@ public class EnumerationStringFieldsRestController extends DatatableRestControll
         String alphabet = entity.getAlphabet();
         if (customFieldsService.validateSpecificClass(entity, action, errors, id, getProp()) == false) return;
 
-        Long existingId = customFieldsRepository.getEntityId(
+        Long existingId = customFieldsRepository.getEntityIdWithoutBonusClassName(
             ENUMERATION_DATA_CLASS_NAME,
             alphabet,
             enumerationType.getId(),
-            "",
             0L,
             CloudToolsForCore.getDomainId()
         ).orElse(-1L);

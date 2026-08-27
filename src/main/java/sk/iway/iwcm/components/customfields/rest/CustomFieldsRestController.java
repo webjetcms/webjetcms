@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsRepository;
@@ -47,12 +48,14 @@ public class CustomFieldsRestController extends DatatableRestControllerV2<Custom
         if("create".equals(target.getAction()) || "edit".equals(target.getAction())) {
             if (customFieldsService.validateSpecificClass(entity, target.getAction(), errors, id, getProp()) == false) return;
 
-            Long existingId = null;
-
-            String bonusClassName = entity.getBonusClassName() != null ? entity.getBonusClassName() : "";
             Long bonusEntityId = entity.getBonusEntityId() != null ? entity.getBonusEntityId() : 0L;
             Long entityId = entity.getEntityId() != null ? entity.getEntityId() : 0L;
-            existingId = customFieldsRepository.getEntityId(entity.getClassName(), entity.getAlphabet(), entityId, bonusClassName, bonusEntityId, CloudToolsForCore.getDomainId()).orElse(-1L);
+            Long existingId;
+            if (Tools.isEmpty(entity.getBonusClassName())) {
+                existingId = customFieldsRepository.getEntityIdWithoutBonusClassName(entity.getClassName(), entity.getAlphabet(), entityId, bonusEntityId, CloudToolsForCore.getDomainId()).orElse(-1L);
+            } else {
+                existingId = customFieldsRepository.getEntityId(entity.getClassName(), entity.getAlphabet(), entityId, entity.getBonusClassName(), bonusEntityId, CloudToolsForCore.getDomainId()).orElse(-1L);
+            }
 
             boolean isDuplicate = false;
             if("create".equals(target.getAction()) && existingId > 0) isDuplicate = true;
