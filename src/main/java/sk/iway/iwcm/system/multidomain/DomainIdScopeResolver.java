@@ -56,7 +56,9 @@ public final class DomainIdScopeResolver {
 
         try {
             return isCommon(ClassUtils.forName(entityClassName, ClassUtils.getDefaultClassLoader()));
-        } catch (ClassNotFoundException | LinkageError ex) {
+        } catch (ClassNotFoundException ex) {
+            return false;
+        } catch (LinkageError ex) {
             return false;
         }
     }

@@ -22,6 +22,7 @@ import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsRepository;
+import sk.iway.iwcm.components.customfields.rest.CustomFieldsService;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataRepository;
 import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
@@ -175,6 +176,9 @@ public class EnumerationTypeRestController extends DatatableRestControllerV2<Enu
         );
         List<CustomFieldsEntity> duplicatedFields = new ArrayList<>();
         for (CustomFieldsEntity sourceField : sourceFields) {
+            if (CustomFieldsService.isEnumerationStringAlphabet(sourceField.getAlphabet()) == false) continue;
+            if (sourceField.getBonusEntityId() != null && sourceField.getBonusEntityId() != 0) continue;
+
             CustomFieldsEntity duplicatedField = new CustomFieldsEntity();
             BeanUtils.copyProperties(sourceField, duplicatedField, "id");
             duplicatedField.setEntityId(entity.getId());
