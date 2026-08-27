@@ -243,9 +243,8 @@ public class FileArchiveTreeRestController extends JsTreeRestController<DirTreeI
      * Validates the folder name (forbidden symbols check), normalizes it
      * (diacritics → English, special chars removed, lowercase), and creates
      * the folder under the specified parent path.
-     * @param result - map to populate with "result", "item" or "error"
-     * @param name - the requested folder name
-     * @param parentPath - the parent directory path (virtual path)
+     * @param request request body containing the folder name and parent virtual path
+     * @return response containing the result or a localized error
      */
     @PostMapping("create")
     @PreAuthorize("@WebjetSecurityService.hasPermission('menuFileArchivManagerCategory')")

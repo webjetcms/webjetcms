@@ -749,7 +749,7 @@ public class EditorService {
 	 * <p>This method is primarily intended for brand-new pages (with {@code docId == -1}
 	 * and an empty virtual path), but it can also be used when changing the title or
 	 * group of an existing page. It replicates the same uniqueness loop used by
-	 * {@link #setVirtualPath(DocDetails, GroupsDB, DocDB)} and stores the resulting
+	 * {@link #setVirtualPath(DocDetails)} and stores the resulting
 	 * value into {@link DocDetails#setVirtualPath(String)} on the supplied
 	 * {@code editedDoc} instance.</p>
 	 *

@@ -213,8 +213,7 @@ public class BeanWriteTag extends TagSupport {
      *
      * When a format string is retrieved from the message resources,
      * <code>applyLocalizedPattern</code> is used. For more about localized
-     * patterns, see
-     * <http://www.dei.unipd.it/corsi/fi2ae-docs/source/jdk1.1.7/src/java/text/resources/>.
+     * patterns, see {@link DecimalFormat#applyLocalizedPattern(String)}.
      * (To obtain the correct value for some characters, you may need to view
      * the file in a hex editor and then use the Unicode escape form in the
      * property resources file.)
