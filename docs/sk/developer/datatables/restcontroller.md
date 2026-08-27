@@ -180,8 +180,6 @@ public class EnumerationDataBean {
 
 Samotná anotácia nemení databázové dotazy automaticky. Controller musí použiť `DomainIdScopeResolver` v prepísanej metóde `getDomainId()` a služby s vlastnými dotazmi musia použiť výsledok resolvera explicitne. Označenie preto používajte iba pre dáta, ktoré majú byť skutočne zdieľané a upravované zo všetkých domén.
 
-!>**Upozornenie:** automatický doménový predikát v režime vyhľadávania `Specification`, ktorý používa aj `getAllItemsIncludeSpecSearch`, zatiaľ získava aktuálnu doménu priamo. Prepísanie `getDomainId()` sa preto na tento predikát nevzťahuje. Pred použitím spoločnej domény s týmto režimom je potrebné zabezpečiť, aby aj vyhľadávací predikát používal `getDomainId()`.
-
 ## Metódy pre manipuláciu s dátami
 
 Triedu môžete konštruovať aj s ```NULL``` repozitárom, v takom prípade je potrebné implementovať metódy na prácu s dátami:
