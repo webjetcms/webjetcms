@@ -43,6 +43,33 @@ Scenario('zoznam konfiguracnych premennych', ({ I }) => {
     I.dontSeeElement("#configurationDatatable.dt-hide-id tbody td.dt-select-td > .datatable-column-width");
 });
 
+Scenario('module view hides all creation actions', ({ I, DT }) => {
+    const treeSelector = "#SomStromcek";
+    const tableWrapper = "#configurationDatatable_wrapper";
+    const customNode = `${treeSelector} li[data-configuration-view='custom']`;
+    const securityNode = `${treeSelector} li[data-configuration-module='security']`;
+    const creationActions = ["create", "import", "duplicate"];
+
+    I.waitForElement(`${customNode} > a.jstree-anchor`, 20);
+    I.clickCss(`${customNode} > a.jstree-anchor`);
+    I.waitForFunction(() => new URL(configurationDatatable.getAjaxUrl(), location.origin).searchParams.get("view") === "custom", 20);
+    DT.waitForLoader();
+    creationActions.forEach((action) => I.waitForVisible(`${tableWrapper} [data-dtbtn='${action}']`, 10));
+
+    I.clickCss(`${securityNode} > a.jstree-anchor`);
+    I.waitForFunction(() => {
+        const url = new URL(configurationDatatable.getAjaxUrl(), location.origin);
+        return url.searchParams.get("view") === "module" && url.searchParams.get("module") === "security";
+    }, 20);
+    DT.waitForLoader();
+    creationActions.forEach((action) => I.waitForInvisible(`${tableWrapper} [data-dtbtn='${action}']`, 10));
+
+    I.clickCss(`${customNode} > a.jstree-anchor`);
+    I.waitForFunction(() => new URL(configurationDatatable.getAjaxUrl(), location.origin).searchParams.get("view") === "custom", 20);
+    DT.waitForLoader();
+    creationActions.forEach((action) => I.waitForVisible(`${tableWrapper} [data-dtbtn='${action}']`, 10));
+});
+
 Scenario('hierarchical configuration tree', async ({ I, DT, a11y }) => {
     const treeSelector = "#SomStromcek";
     const tableWrapper = "#configurationDatatable_wrapper";

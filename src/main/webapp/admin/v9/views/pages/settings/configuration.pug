@@ -289,9 +289,11 @@ block content
                 if (view === "module") {
                     configurationDatatable.hideButton("create");
                     configurationDatatable.hideButton("import");
+                    configurationDatatable.hideButton("duplicate");
                 } else {
                     configurationDatatable.showButton("create");
                     configurationDatatable.showButton("import");
+                    configurationDatatable.showButton("duplicate");
                 }
 
                 if (configurationDatatable.getAjaxUrl() === requestedUrl) return;
