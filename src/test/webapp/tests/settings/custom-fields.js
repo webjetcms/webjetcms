@@ -420,6 +420,12 @@ async function checkRenderedCustomFieldType(I, fieldDefinition) {
 }
 
 async function checkWarningMessageIsSafe(I, fieldSelector, expectedWarningMessage) {
+    const expectedEscapedWarningMessage = expectedWarningMessage
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
     const getSecurityState = () => I.executeScript(({ fieldSelector, warningXssMarkerId }) => {
         const input = document.querySelector(fieldSelector + " input[data-warningmessage]");
         const warningToast = document.querySelector(".toast-warning .toast-title");
@@ -433,7 +439,7 @@ async function checkWarningMessageIsSafe(I, fieldSelector, expectedWarningMessag
     }, { fieldSelector, warningXssMarkerId });
 
     const editorSecurityState = await getSecurityState();
-    I.assertEqual(expectedWarningMessage, editorSecurityState.warningMessage, "Warning message must remain an input data attribute");
+    I.assertEqual(expectedEscapedWarningMessage, editorSecurityState.warningMessage, "Warning message must remain an input data attribute");
     I.assertFalse(editorSecurityState.injectedElementPresent, "Warning message must not inject an HTML element into the editor");
     I.assertFalse(editorSecurityState.payloadExecuted, "Warning message event handler must not execute in the editor");
 
