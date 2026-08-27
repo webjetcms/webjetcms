@@ -79,7 +79,11 @@ Scenario('hierarchical configuration tree', async ({ I, DT, a11y }) => {
     I.clickCss(`${securityNode} > a.jstree-anchor`);
     I.waitForElement(`${oauth2Node} > a.jstree-anchor`, 20);
     DT.waitForLoader();
-    I.waitForText("xhrFileUploadAllowedExtensions", 20, "#configurationDatatable");
+    I.waitForFunction(() => {
+        const url = new URL(configurationDatatable.getAjaxUrl(), location.origin);
+        const names = configurationDatatable.rows().data().toArray().map((row) => row.name);
+        return url.searchParams.get("module") === "security" && names.includes("captchaType");
+    }, 20);
     I.pressKey("o");
     I.waitForFunction(() => document.activeElement?.closest("li")?.dataset.configurationModule === "security.oauth2", 20);
 
@@ -101,8 +105,10 @@ Scenario('hierarchical configuration tree', async ({ I, DT, a11y }) => {
         return url.searchParams.get("view") === "module" && url.searchParams.get("module") === "security.oauth2";
     }, 20);
     DT.waitForLoader();
-    I.waitForText("oauth2_githubClientId", 20, "#configurationDatatable");
-    I.dontSee("xhrFileUploadAllowedExtensions", "#configurationDatatable");
+    I.waitForFunction(() => {
+        const names = configurationDatatable.rows().data().toArray().map((row) => row.name);
+        return names.includes("oauth2_githubClientId") && !names.includes("captchaType");
+    }, 20);
     I.waitForInvisible(`${tableWrapper} [data-dtbtn='create']`, 10);
     I.waitForInvisible(`${tableWrapper} [data-dtbtn='import']`, 10);
     I.assertEqual(await I.executeScript(() => $("#SomStromcek").jstree(true).get_selected().length), 1);
@@ -112,7 +118,10 @@ Scenario('hierarchical configuration tree', async ({ I, DT, a11y }) => {
     I.clickCss(`${formsNode} > a.jstree-anchor`);
     I.waitForFunction(() => new URL(configurationDatatable.getAjaxUrl(), location.origin).searchParams.get("module") === "apps.form", 20);
     DT.waitForLoader();
-    I.waitForText("xhrFileUploadAllowedExtensions", 20, "#configurationDatatable");
+    I.waitForFunction(() => {
+        const names = configurationDatatable.rows().data().toArray().map((row) => row.name);
+        return names.includes("xhrFileUploadAllowedExtensions") && !names.includes("galleryEnableWatermarking");
+    }, 20);
 
     I.fillField("#tree-folder-search-input", "oauth2");
     I.clickCss("#tree-folder-search-button");
@@ -155,6 +164,112 @@ Scenario('hierarchical configuration tree', async ({ I, DT, a11y }) => {
     });
     I.assertTrue(selectedDatabaseValue, "Changed view must contain database-backed values");
     I.waitForFunction(() => !document.querySelector("#configurationDatatable_wrapper button.buttons-remove").classList.contains("disabled"), 20);
+});
+
+Scenario('latest configuration module response wins', ({ I }) => {
+    const appsNode = "#SomStromcek li[data-configuration-module='apps'] > a.jstree-anchor";
+    const formsNode = "#SomStromcek li[data-configuration-module='apps.form'] > a.jstree-anchor";
+
+    I.waitForElement(appsNode, 20);
+    I.usePlaywrightTo("delay the parent configuration module response", async ({ page }) => {
+        await page.waitForFunction(() => {
+            return typeof configurationDatatable !== "undefined" && configurationDatatable.rows().count() > 0;
+        }, null, { timeout: 20000 });
+
+        await page.evaluate(() => {
+            const sourceRow = configurationDatatable.row(0).data();
+            const originalAjax = $.ajax;
+
+            window.configurationAjaxRaceTest = {
+                originalAjax,
+                delayedRequest: null,
+                parentResponse: {
+                    content: [{ ...sourceRow, name: "galleryEnableWatermarking" }],
+                    totalElements: 1,
+                    options: {}
+                }
+            };
+
+            $.ajax = function (options) {
+                const requestUrl = typeof options === "string" ? options : options?.url;
+                if (requestUrl == null) return originalAjax.apply(this, arguments);
+
+                const url = new URL(requestUrl, location.origin);
+                const isParentRequest = url.searchParams.get("view") === "module" && url.searchParams.get("module") === "apps";
+
+                if (!isParentRequest) return originalAjax.apply(this, arguments);
+
+                const deferred = $.Deferred();
+                const jqXHR = deferred.promise({
+                    readyState: 1,
+                    status: 0,
+                    statusText: "",
+                    abort(statusText = "abort") {
+                        this.readyState = 0;
+                        this.statusText = statusText;
+                        deferred.rejectWith(options.context || options, [this, statusText, statusText]);
+                        return this;
+                    }
+                });
+
+                window.configurationAjaxRaceTest.delayedRequest = { options, jqXHR };
+                return jqXHR;
+            };
+        });
+
+        try {
+            await page.locator(appsNode).click();
+            await page.waitForFunction(() => window.configurationAjaxRaceTest?.delayedRequest != null, null, { timeout: 20000 });
+
+            const parentTracked = await page.evaluate(() => {
+                return configurationDatatable.context[0].jqXHR === window.configurationAjaxRaceTest.delayedRequest.jqXHR;
+            });
+
+            await page.locator(formsNode).waitFor({ state: "visible", timeout: 20000 });
+            await page.locator(formsNode).click();
+            await page.waitForFunction(() => {
+                const url = new URL(configurationDatatable.getAjaxUrl(), location.origin);
+                const names = configurationDatatable.rows().data().toArray().map((row) => row.name);
+                return url.searchParams.get("module") === "apps.form" && names.includes("xhrFileUploadAllowedExtensions");
+            }, null, { timeout: 20000 });
+
+            const parentAbortState = await page.evaluate(() => {
+                const test = window.configurationAjaxRaceTest;
+                const delayedRequest = test.delayedRequest;
+                const aborted = delayedRequest.jqXHR.readyState === 0 && delayedRequest.jqXHR.statusText === "abort";
+
+                if (!aborted) {
+                    delayedRequest.jqXHR.readyState = 4;
+                    delayedRequest.jqXHR.status = 200;
+                    delayedRequest.jqXHR.statusText = "success";
+                    delayedRequest.options.success(test.parentResponse, "success", delayedRequest.jqXHR);
+                }
+
+                return {
+                    aborted,
+                    readyState: delayedRequest.jqXHR.readyState,
+                    statusText: delayedRequest.jqXHR.statusText
+                };
+            });
+
+            const state = await page.evaluate(() => ({
+                module: new URL(configurationDatatable.getAjaxUrl(), location.origin).searchParams.get("module"),
+                names: configurationDatatable.rows().data().toArray().map((row) => row.name)
+            }));
+
+            if (!parentTracked) throw new Error("DataTables did not retain the parent jqXHR");
+            if (!parentAbortState.aborted) throw new Error(`Expected the parent jqXHR to be aborted, got ${JSON.stringify(parentAbortState)}`);
+            if (state.module !== "apps.form") throw new Error(`Expected apps.form to remain selected, got '${state.module}'`);
+            if (!state.names.includes("xhrFileUploadAllowedExtensions")) throw new Error("The child module data was replaced");
+            if (state.names.includes("galleryEnableWatermarking")) throw new Error("A stale parent module response replaced the child module data");
+        } finally {
+            await page.evaluate(() => {
+                const test = window.configurationAjaxRaceTest;
+                if (test != null) $.ajax = test.originalAjax;
+                delete window.configurationAjaxRaceTest;
+            });
+        }
+    });
 });
 
 Scenario('temporary setting hides encryption and scheduled change', ({ I, DTE }) => {
