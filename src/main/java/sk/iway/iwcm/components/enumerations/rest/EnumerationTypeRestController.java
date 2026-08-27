@@ -9,6 +9,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -155,6 +156,32 @@ public class EnumerationTypeRestController extends DatatableRestControllerV2<Enu
             }
         }
         if (changedFields.isEmpty() == false) customFieldsRepository.saveAll(changedFields);
+    }
+
+    @Override
+    public void afterDuplicate(EnumerationTypeBean entity, Long originalId) {
+        if (originalId == null || originalId < 1) {
+            throw new IllegalArgumentException("Original enumeration type ID is required for duplication.");
+        }
+        if (entity == null || entity.getId() == null || entity.getId() < 1) {
+            throw new IllegalStateException("Duplicated enumeration type must be saved before copying its field settings.");
+        }
+
+        int domainId = DomainIdScopeResolver.resolve(EnumerationDataBean.class);
+        List<CustomFieldsEntity> sourceFields = customFieldsRepository.findAllByClassNameAndEntityId(
+            EnumerationDataBean.class.getName(),
+            originalId,
+            domainId
+        );
+        List<CustomFieldsEntity> duplicatedFields = new ArrayList<>();
+        for (CustomFieldsEntity sourceField : sourceFields) {
+            CustomFieldsEntity duplicatedField = new CustomFieldsEntity();
+            BeanUtils.copyProperties(sourceField, duplicatedField, "id");
+            duplicatedField.setEntityId(entity.getId());
+            duplicatedFields.add(duplicatedField);
+        }
+
+        if (duplicatedFields.isEmpty() == false) customFieldsRepository.saveAll(duplicatedFields);
     }
 
     @Override
