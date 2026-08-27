@@ -5,12 +5,24 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.springframework.mock.web.MockHttpServletRequest;
 
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.admin.jstree.JsTreeItem;
+import sk.iway.iwcm.admin.jstree.JsTreeMoveItem;
+import sk.iway.iwcm.i18n.Prop;
 
 class ConfigurationTreeRestControllerTest {
 
@@ -37,6 +49,35 @@ class ConfigurationTreeRestControllerTest {
         assertTrue(items.get(3).getChildren());
         assertTrue(items.get(4).getChildren());
         assertTrue(items.get(5).getChildren());
+    }
+
+    @Test
+    void resolvesTreeTranslationsForEveryUserSession() {
+        ConfigurationService configurationService = mock(ConfigurationService.class);
+        when(configurationService.getVisibleModulePaths(any(Identity.class))).thenReturn(List.of());
+        ConfigurationTreeRestController controller = new ConfigurationTreeRestController(configurationService);
+
+        MockHttpServletRequest slovakRequest = createRequest("sk");
+        MockHttpServletRequest englishRequest = createRequest("en");
+        Prop slovakProp = mock(Prop.class);
+        Prop englishProp = mock(Prop.class);
+        when(slovakProp.getText("admin.conf_editor.tree.changed")).thenReturn("Slovak changed");
+        when(slovakProp.getText("admin.conf_editor.tree.custom")).thenReturn("Slovak custom");
+        when(slovakProp.getText("admin.conf_editor.tree.all")).thenReturn("Slovak all");
+        when(englishProp.getText("admin.conf_editor.tree.changed")).thenReturn("English changed");
+        when(englishProp.getText("admin.conf_editor.tree.custom")).thenReturn("English custom");
+        when(englishProp.getText("admin.conf_editor.tree.all")).thenReturn("English all");
+
+        try (MockedStatic<Prop> prop = mockStatic(Prop.class)) {
+            prop.when(() -> Prop.getInstance(slovakRequest)).thenReturn(slovakProp);
+            prop.when(() -> Prop.getInstance(englishRequest)).thenReturn(englishProp);
+
+            controller.setRequest(slovakRequest);
+            assertEquals(List.of("Slovak changed", "Slovak custom", "Slovak all"), getRootTexts(controller));
+
+            controller.setRequest(englishRequest);
+            assertEquals(List.of("English changed", "English custom", "English all"), getRootTexts(controller));
+        }
     }
 
     @Test
@@ -111,5 +152,21 @@ class ConfigurationTreeRestControllerTest {
         assertTrue(ConfigurationTreeRestController.matchesSearch("OAuth2", "oauth2", "equals"));
         assertTrue(ConfigurationTreeRestController.matchesSearch("apps.gallery", "GALL", "contains"));
         assertFalse(ConfigurationTreeRestController.matchesSearch("apps.gallery", "security", "contains"));
+    }
+
+    private static MockHttpServletRequest createRequest(String language) {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.getSession().setAttribute(Constants.USER_KEY, new Identity());
+        request.getSession().setAttribute(Prop.SESSION_I18N_PROP_LNG, language);
+        return request;
+    }
+
+    private static List<String> getRootTexts(ConfigurationTreeRestController controller) {
+        Map<String, Object> result = new HashMap<>();
+        controller.tree(result, new JsTreeMoveItem());
+        return ((List<?>) result.get("items")).stream()
+            .map(JsTreeItem.class::cast)
+            .map(JsTreeItem::getText)
+            .toList();
     }
 }
