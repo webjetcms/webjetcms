@@ -15,6 +15,8 @@
     <property name="root" value="build/updatezip" />
     <property name="outdir" value="${root}/WebContent/"/>
     <property name="wardir" value="build/libs/"/>
+    <!-- Spring Boot reserves webjetcms.war for bootWar and classifies the standard war as plain. -->
+    <property name="plainwar" value="${wardir}${projectname}-plain.war"/>
     <property name="finalwar" value="${root}/finalwar"/>
     <property environment="env"/>
 
@@ -76,25 +78,25 @@
     <defaultexcludes add="web.xml"/>
 
     <target name="setup" description="pripravi projekt pre distribuciu">
-        <exec executable="./gradlew">
+        <exec executable="./gradlew" failonerror="true">
             <arg value="clean"/>
         </exec>
         <delete dir="src/main/webapp/admin/v9/dist"/>
-        <exec executable="./gradlew">
+        <exec executable="./gradlew" failonerror="true">
             <arg value="npminstall"/>
         </exec>
-        <exec executable="./gradlew">
+        <exec executable="./gradlew" failonerror="true">
             <arg value="npmbuild"/>
         </exec>
-        <exec executable="./gradlew">
+        <exec executable="./gradlew" failonerror="true">
             <arg value="compileJava"/>
             <arg value="--refresh-dependencies"/>
             <arg value="--info"/>
         </exec>
-        <exec executable="./gradlew">
-            <arg value="war"/>
+        <exec executable="./gradlew" failonerror="true">
+            <arg value="prepareAntWar"/>
         </exec>
-        <exec executable="./gradlew">
+        <exec executable="./gradlew" failonerror="true">
             <arg value="javadoc"/>
         </exec>
     </target>
@@ -102,7 +104,7 @@
     <target name="expandwar" depends="setup,copyNodeModules" description="Expands war archive">
         <delete dir="${root}"/>
 
-        <unzip src="${wardir}${projectname}.war" dest="${outdir}">
+        <unzip src="${plainwar}" dest="${outdir}">
             <patternset>
                 <exclude name="files/**"/>
                 <exclude name="images/**"/>
@@ -280,7 +282,7 @@
 
     <target name="finalwar" depends="define-artifact-properties,makejars" description="Prepare expanded war version for update directly from WebJET CMS">
         <delete dir="${finalwar}"/>
-        <unzip src="${wardir}${projectname}.war" dest="${finalwar}"/>
+        <unzip src="${plainwar}" dest="${finalwar}"/>
 
         <delete includeemptydirs="true">
             <fileset dir="${finalwar}/WEB-INF/classes">
@@ -353,8 +355,8 @@
 
     <target name="makepom" depends="define-artifact-properties,makejars" description="create POM file for deployment">
 
-        <exec executable="./gradlew">
-            <arg value="writePom"/>
+        <exec executable="./gradlew" failonerror="true">
+            <arg value="verifyGeneratedPom"/>
             <arg value="-Dwjgroup=${artifact.group}"/>
             <arg value="-Dwjname=${artifact.name}"/>
             <arg value="-Dwjversion=${artifact.version}"/>

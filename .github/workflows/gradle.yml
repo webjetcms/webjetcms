@@ -77,7 +77,7 @@ jobs:
         GPR_USER: ${{ secrets.GPR_USER }}
         GPR_API_KEY: ${{ secrets.GPR_API_KEY }}
       run: |
-        webjetDbPassword=root_password webjetDbUrl=jdbc:mysql://127.0.0.1:33006/webjetcms_web webjetDbUserName=root ./gradlew cleanTest test
+        webjetDbPassword=root_password webjetDbUrl=jdbc:mysql://127.0.0.1:33006/webjetcms_web webjetDbUserName=root ./gradlew cleanTest test verifyGeneratedPom -Dwjgroup=com.webjetcms -Dwjname=webjetcms -Dwjversion=CI-SNAPSHOT
 
     - name: Build and verify deployable WAR
       run: ./gradlew generateCertificate verifyBootWar

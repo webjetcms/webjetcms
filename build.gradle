@@ -12,7 +12,7 @@ import com.github.jk1.license.filter.LicenseBundleNormalizer
 plugins {
     id 'java'
     id 'war'
-    id 'org.springframework.boot' version '4.1.0'
+    id 'org.springframework.boot' version '4.1.1'
     //https://plugins.gradle.org/plugin/io.freefair.lombok
     id "io.freefair.lombok" version "8.11"
     //http://jeremylong.github.io/DependencyCheck/dependency-check-gradle/index.html
@@ -50,16 +50,23 @@ ext {
     lombokVersion = "1.18.34";
     lombokMapstructBindingVersion = "0.2.0";
     mapstructVersion = "1.6.1";
-    //Spring Boot 4.x manages Spring 7.x, Spring Data 4.x, Spring Security 7.x versions
-    //Keep synchronized with the org.springframework.boot plugin version above.
-    springBootVersion = "4.1.0";
-    tomcatVersion = "11.0.24";
+    // Spring Boot 4.x manages Spring 7.x, Spring Data 4.x and Spring Security 7.x versions.
+    // Tomcat temporarily needs a higher security floor than the version managed by Boot 4.1.1.
+    tomcatMinimumVersion = "11.0.25";
+    log4jToSlf4jMinimumVersion = "2.26.1";
     //do not forget to download https://mvnrepository.com/artifact/org.aspectj/aspectjtools
     //jar to ant/aspectj and update version in ant/compile.xml file
     aspectJVersion = '1.9.25.1';
     eclipselinkVersion = '5.0.0-B13';
     webjetAiVersion = '1.0.0';
 }
+
+def embeddedTomcatModules = [
+    'org.apache.tomcat.embed:tomcat-embed-core',
+    'org.apache.tomcat.embed:tomcat-embed-el',
+    'org.apache.tomcat.embed:tomcat-embed-jasper',
+    'org.apache.tomcat.embed:tomcat-embed-websocket'
+]
 
 springBoot {
     mainClass = 'sk.iway.iwcm.system.spring.SpringBootStarter'
@@ -155,51 +162,67 @@ configurations {
     }
  }
 
-// Gradle's native Spring Boot BOM import cannot override the Tomcat version property.
-// Pin every Tomcat 11 module in every resolvable configuration to the same security-fixed release.
-configurations.configureEach {
-    resolutionStrategy.eachDependency { details ->
-        if ((details.requested.group == 'org.apache.tomcat' ||
-             details.requested.group == 'org.apache.tomcat.embed') &&
-            details.requested.version?.startsWith('11.0.')) {
-            details.useVersion tomcatVersion
-            details.because 'Align all Tomcat 11 modules on the security-fixed release'
-        }
-    }
-}
-
 dependencies {
 
     // === Spring Boot 4.x starters (manages Spring 7.x versions) ===
 
-    // Spring Boot BOM manages all Spring Boot 4.x dependency versions
-    implementation platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
-    // Springdoc's Swagger stack requests a newer Jackson 2 BOM; keep Boot's tested Jackson 2 line
-    implementation enforcedPlatform('com.fasterxml.jackson:jackson-bom:2.21.4')
-    implementation "org.springframework.boot:spring-boot-starter-webmvc:${springBootVersion}"
-    implementation "org.springframework.boot:spring-boot-starter-security:${springBootVersion}"
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}") { exclude group: 'org.springframework.boot', module: 'spring-boot-jdbc' }
-    implementation "org.springframework.boot:spring-boot-starter-security-oauth2-client:${springBootVersion}"
+    // Use the BOM that belongs to the applied Spring Boot plugin. The platform must be
+    // present in the legacy resolvable provided configurations as they do not inherit implementation.
+    implementation platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
+    providedCompile platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
+    providedRuntime platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
+
+    constraints {
+        ['implementation', 'providedRuntime'].each { configurationName ->
+            embeddedTomcatModules.each { moduleName ->
+                add(configurationName, moduleName) {
+                    version {
+                        require("[${tomcatMinimumVersion},12.0.0)")
+                        prefer(tomcatMinimumVersion)
+                    }
+                    because 'Use a security-fixed Tomcat without blocking a newer Boot-managed 11.x release'
+                }
+            }
+        }
+        implementation('org.apache.logging.log4j:log4j-to-slf4j') {
+            version {
+                require("[${log4jToSlf4jMinimumVersion},3.0.0)")
+                prefer(log4jToSlf4jMinimumVersion)
+            }
+            because 'Use a security-fixed Log4j bridge without blocking a newer Boot-managed 2.x release'
+        }
+    }
+
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation('org.springframework.boot:spring-boot-starter-data-jpa') { exclude group: 'org.springframework.boot', module: 'spring-boot-jdbc' }
+    implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
 
     // Spring Boot 4.x modular auto-configuration (replaces autoconfigure module)
-    //     implementation "org.springframework.boot:spring-boot-jdbc:${springBootVersion}"
-    implementation "org.springframework.boot:spring-boot-freemarker:${springBootVersion}"
-    implementation "org.springframework.boot:spring-boot-security:${springBootVersion}"
+    //     implementation 'org.springframework.boot:spring-boot-jdbc'
+    implementation 'org.springframework.boot:spring-boot-freemarker'
+    implementation 'org.springframework.boot:spring-boot-security'
 
     // WebAuthn/Passkeys
-    implementation "org.springframework.security:spring-security-webauthn:${springBootVersion}"
+    implementation 'org.springframework.security:spring-security-webauthn'
 
     // Keep the embedded container available for executable WARs without
     // exposing its implementation classes to an external Tomcat installation.
-    providedRuntime "org.springframework.boot:spring-boot-starter-tomcat-runtime:${springBootVersion}"
-    // Keep these pins explicit so the aligned versions are also present in the published Maven POM.
-    providedRuntime "org.apache.tomcat:tomcat-annotations-api:${tomcatVersion}"
-    providedRuntime "org.apache.tomcat.embed:tomcat-embed-core:${tomcatVersion}"
-    providedRuntime "org.apache.tomcat.embed:tomcat-embed-el:${tomcatVersion}"
-    providedRuntime "org.apache.tomcat.embed:tomcat-embed-jasper:${tomcatVersion}"
-    providedRuntime "org.apache.tomcat.embed:tomcat-embed-websocket:${tomcatVersion}"
-    runtimeOnly 'org.glassfish.web:jakarta.servlet.jsp.jstl:3.0.1'
-
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat-runtime'
+    // Keep the modules direct so Maven consumers receive the resolved security floor.
+    // Tomcat's annotation API duplicates jakarta.annotation-api supplied by Spring Boot.
+    providedRuntime('org.apache.tomcat.embed:tomcat-embed-core') {
+        exclude group: 'org.apache.tomcat', module: 'tomcat-annotations-api'
+    }
+    providedRuntime('org.apache.tomcat.embed:tomcat-embed-el') {
+        exclude group: 'org.apache.tomcat', module: 'tomcat-annotations-api'
+    }
+    providedRuntime('org.apache.tomcat.embed:tomcat-embed-jasper') {
+        exclude group: 'org.apache.tomcat', module: 'tomcat-annotations-api'
+    }
+    providedRuntime('org.apache.tomcat.embed:tomcat-embed-websocket') {
+        exclude group: 'org.apache.tomcat', module: 'tomcat-annotations-api'
+    }
     // OpenAPI/Swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.0'
 
@@ -223,14 +246,14 @@ dependencies {
     implementation("org.apache.commons:commons-compress:1.26.1")
 
     // https://mvnrepository.com/artifact/com.zaxxer/HikariCP
-    implementation 'com.zaxxer:HikariCP:6.3.0'
+    implementation 'com.zaxxer:HikariCP'
 
     //implementation("org.apache.commons:commons-fileupload2-jakarta:2.0.0-M1")
     // https://mvnrepository.com/artifact/org.apache.commons/commons-fileupload2-jakarta-servlet6
     implementation("org.apache.commons:commons-fileupload2-jakarta-servlet6:2.0.0-M4")
 
     implementation("commons-io:commons-io:2.18.0")
-    implementation("org.apache.commons:commons-lang3:3.19.0")
+    implementation 'org.apache.commons:commons-lang3'
     // https://mvnrepository.com/artifact/org.apache.commons/commons-text
     implementation("org.apache.commons:commons-text:1.14.0")
 
@@ -248,10 +271,10 @@ dependencies {
         exclude group: 'com.sun.xml.bind', module: 'jaxb-impl'
     }
 
-    implementation("org.freemarker:freemarker:2.3.34")
-    implementation("com.google.code.gson:gson:2.13.2") //generate.jsp for pagebuilder, refactor to jackson
+    implementation 'org.freemarker:freemarker'
+    implementation 'com.google.code.gson:gson' //generate.jsp for pagebuilder, refactor to jackson
 
-    implementation("jakarta.validation:jakarta.validation-api:3.0.2")
+    implementation 'jakarta.validation:jakarta.validation-api'
 
     implementation("org.apache.httpcomponents:httpclient:4.5.14")
     implementation("org.apache.httpcomponents:fluent-hc:4.5.14")
@@ -261,16 +284,16 @@ dependencies {
     //implementation("joda-time:joda-time:2.10.13")
     //implementation("io.bit3:jsass:5.1.1")
     implementation("org.jsoup:jsoup:1.17.2")
-    implementation("net.sourceforge.jtds:jtds:1.3.1")
+    implementation 'net.sourceforge.jtds:jtds'
     implementation("net.sourceforge.jexcelapi:jxl:2.6.10")
     implementation("org.apache.lucene:lucene-core:3.6.2")
     implementation("org.apache.lucene:lucene-spellchecker:3.6.2")
     implementation("org.apache.lucene:lucene-highlighter:3.6.2")
     implementation("org.apache.lucene:lucene-memory:3.6.2")
     implementation("org.apache.lucene:lucene-analyzers:3.6.2")
-    implementation("org.mariadb.jdbc:mariadb-java-client:3.5.6")
+    implementation 'org.mariadb.jdbc:mariadb-java-client'
     implementation("com.drewnoakes:metadata-extractor:2.19.0")
-    implementation("com.oracle.database.jdbc:ojdbc8:19.8.0.0")
+    implementation 'com.oracle.database.jdbc:ojdbc8'
     //implementation("org.mcavallo:opencloud:0.3")
     implementation("com.pd4ml:pd4ml:4.0.21")
     implementation("org.apache.pdfbox:pdfbox:3.0.7")
@@ -291,45 +314,45 @@ dependencies {
     //implementation("cryptix:cryptix:3.2.0") //HERE
 
     // https://mvnrepository.com/artifact/org.eclipse.angus/angus-mail = jakarta.mail/javax.mail api and implementation
-    implementation("org.eclipse.angus:angus-mail:2.0.5")
+    implementation 'org.eclipse.angus:angus-mail'
 
     implementation("com.google.crypto.tink:tink:1.22.0")
     //implementation("com.google.protobuf:protobuf-java:3.21.7")
-    implementation("ch.qos.logback:logback-core:1.5.37")
-    implementation("ch.qos.logback:logback-classic:1.5.37")
-    //verzia je zjednotena s slf4j-api, ktore je aj tak resolvnute na 2.0.17 cez logback
-    implementation("org.slf4j:slf4j-api:2.0.18")
-    implementation("org.slf4j:jcl-over-slf4j:2.0.18")
-    implementation("org.slf4j:log4j-over-slf4j:2.0.18")
-    implementation("org.apache.logging.log4j:log4j-to-slf4j:2.26.1")
+    implementation 'ch.qos.logback:logback-core'
+    implementation 'ch.qos.logback:logback-classic'
+    implementation 'org.slf4j:slf4j-api'
+    implementation 'org.slf4j:jcl-over-slf4j'
+    implementation 'org.slf4j:log4j-over-slf4j'
+    implementation 'org.apache.logging.log4j:log4j-to-slf4j'
+    // AspectJ is one shared pin for the runtime, Java agent and Ant compiler tooling.
     //implementation("com.google.code.findbugs:jsr305:3.0.2")
     implementation("org.aspectj:aspectjrt:${aspectJVersion}")
     implementation("org.aspectj:aspectjweaver:${aspectJVersion}")
 
     // https://mvnrepository.com/artifact/jakarta.servlet.jsp.jstl/jakarta.servlet.jsp.jstl-api
-    implementation 'jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api:3.0.2'
+    implementation 'jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api'
     // https://mvnrepository.com/artifact/org.glassfish.web/jakarta.servlet.jsp.jstl
-    runtimeOnly 'org.glassfish.web:jakarta.servlet.jsp.jstl:3.0.1'
+    runtimeOnly 'org.glassfish.web:jakarta.servlet.jsp.jstl'
 
     implementation("sk.iway:wjdaisydiff:1.1-SNAPSHOT-shaded")
         // https://mvnrepository.com/artifact/org.htmlunit/neko-htmlunit
         implementation 'org.htmlunit:neko-htmlunit:4.5.0'
 
-    providedCompile 'jakarta.servlet:jakarta.servlet-api:6.1.0'
+    providedCompile 'jakarta.servlet:jakarta.servlet-api'
     providedCompile 'jakarta.servlet.jsp:jakarta.servlet.jsp-api:4.0.0'
     providedCompile 'jakarta.el:jakarta.el-api:6.0.0'
 
     // https://mvnrepository.com/artifact/jakarta.annotation/jakarta.annotation-api
-    implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
+    implementation 'jakarta.annotation:jakarta.annotation-api'
 
     // https://mvnrepository.com/artifact/org.thymeleaf/thymeleaf-spring6
-    implementation group: 'org.thymeleaf', name: 'thymeleaf-spring6', version: '3.1.5.RELEASE'
+    implementation 'org.thymeleaf:thymeleaf-spring6'
 
     // https://mvnrepository.com/artifact/com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer
     implementation group: 'com.googlecode.owasp-java-html-sanitizer', name: 'owasp-java-html-sanitizer', version: '20260102.1'
 
     // https://mvnrepository.com/artifact/org.postgresql/postgresql
-    runtimeOnly 'org.postgresql:postgresql:42.7.13'
+    runtimeOnly 'org.postgresql:postgresql'
 
     //UserAgent parser - https://github.com/ua-parser/uap-java
     implementation 'com.github.ua-parser:uap-java:1.6.1'
@@ -338,17 +361,16 @@ dependencies {
     implementation("com.github.usefulness:webp-imageio:0.11.0")
 
     // Spring Boot 4.x test dependencies
-    testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation "org.springframework.security:spring-security-test"
-    // Spring Framework 7.0 requires JUnit 6 baseline
-    testImplementation platform('org.junit:junit-bom:6.0.0')
+    // Spring Boot 4.1 manages the JUnit 6 baseline and the rest of the test stack.
     testImplementation 'org.junit.jupiter:junit-jupiter-api'
     testImplementation 'org.junit.jupiter:junit-jupiter-params'
     testRuntimeOnly    'org.junit.jupiter:junit-jupiter-engine'
     testRuntimeOnly    'org.junit.platform:junit-platform-launcher'
-    testImplementation 'org.hamcrest:hamcrest:2.2'
+    testImplementation 'org.hamcrest:hamcrest'
     // https://mvnrepository.com/artifact/org.mockito/mockito-core
-    testImplementation 'org.mockito:mockito-core:5.18.0'
+    testImplementation 'org.mockito:mockito-core'
     testRuntimeOnly 'org.glassfish:jakarta.el:5.0.0-M1'
     // Allure - temporarily disabled until allure-junit6 is available
     //testImplementation platform("io.qameta.allure:allure-bom:$allureVersion")
@@ -424,6 +446,15 @@ compileJava {
 }
 
 //TASKY
+tasks.register('prepareAntWar', Sync) {
+    group = 'build'
+    description = 'Builds the plain WAR and prepares provided dependencies for the legacy Ant compiler'
+    dependsOn tasks.named('war')
+    duplicatesStrategy = DuplicatesStrategy.FAIL
+    from configurations.providedRuntime
+    into layout.buildDirectory.dir('ant-provided-runtime')
+}
+
 task npmwatch(type:Exec) {
     workingDir 'src/main/webapp/admin/v9/'
     project.ext."npmExe" = Os.isFamily(Os.FAMILY_WINDOWS) ? "npm.cmd" : "npm"
@@ -589,7 +620,6 @@ tasks.register('verifyBootWar') {
                 'jakarta.servlet.jsp-api-',
                 'spring-boot-tomcat-',
                 'spring-boot-web-server-',
-                'tomcat-annotations-api-',
                 'tomcat-embed-core-',
                 'tomcat-embed-el-',
                 'tomcat-embed-jasper-',
@@ -606,14 +636,51 @@ tasks.register('verifyBootWar') {
                 }
             }
 
-            List<String> unexpectedTomcatVersions = entries.findAll { entry ->
-                entry ==~ /^WEB-INF\/lib-provided\/tomcat-(annotations-api|embed-(core|el|jasper|websocket))-.+\.jar$/ &&
-                    entry.endsWith("-${tomcatVersion}.jar") == false
-            }
-            if (unexpectedTomcatVersions.isEmpty() == false) {
+            Set<String> packagedTomcatVersions = embeddedTomcatModules.collect { moduleName ->
+                String artifactName = moduleName.tokenize(':').last()
+                String prefix = "WEB-INF/lib-provided/${artifactName}-"
+                String entry = entries.find { candidate ->
+                    candidate.startsWith(prefix) && candidate.endsWith('.jar')
+                }
+                entry.substring(prefix.length(), entry.length() - '.jar'.length())
+            } as Set
+            if (packagedTomcatVersions.size() != 1) {
                 throw new GradleException(
-                    "The boot WAR contains Tomcat modules outside version ${tomcatVersion}: " +
-                    unexpectedTomcatVersions.sort()
+                    "The boot WAR contains misaligned Tomcat versions: ${packagedTomcatVersions.sort()}"
+                )
+            }
+
+            def parseNumericVersion = { String version ->
+                List<String> parts = version.tokenize('.')
+                if (parts.size() != 3 || parts.any { part -> (part ==~ /\d+/) == false }) {
+                    throw new GradleException("Cannot compare non-numeric Tomcat version: ${version}")
+                }
+                parts.collect { part -> part.toInteger() }
+            }
+            def compareVersions = { String left, String right ->
+                List<Integer> leftParts = parseNumericVersion(left)
+                List<Integer> rightParts = parseNumericVersion(right)
+                int comparison = 0
+                for (int index = 0; index < leftParts.size(); index++) {
+                    comparison = leftParts[index] <=> rightParts[index]
+                    if (comparison != 0) break
+                }
+                comparison
+            }
+            String packagedTomcatVersion = packagedTomcatVersions.first()
+            if (compareVersions(packagedTomcatVersion, tomcatMinimumVersion) < 0) {
+                throw new GradleException(
+                    "The boot WAR contains Tomcat ${packagedTomcatVersion}, below security floor ${tomcatMinimumVersion}"
+                )
+            }
+
+            List<String> duplicateAnnotationApis = entries.findAll { entry ->
+                entry ==~ /^WEB-INF\/lib-provided\/tomcat-annotations-api-.+\.jar$/
+            }
+            if (duplicateAnnotationApis.isEmpty() == false) {
+                throw new GradleException(
+                    "The boot WAR must use jakarta.annotation-api instead of Tomcat's duplicate API: " +
+                    duplicateAnnotationApis.sort()
                 )
             }
 
@@ -675,6 +742,10 @@ publishing {
             version = System.getProperty("wjversion")
 
             pom {
+                // Ant publishes the primary WebJET artifact as a JAR. Without this explicit
+                // value Gradle's WAR project emits packaging=pom and Maven deploy-file stores
+                // the binary under a .pom extension.
+                packaging = 'jar'
                 name = 'webjet'
                 description = 'WebJET CMS - Web Content Management in Java/Spring'
                 url = 'https://www.webjetcms.com'
@@ -700,6 +771,14 @@ publishing {
             }
 
             from components.java
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
         }
     }
 }
@@ -708,46 +787,6 @@ publishing {
 task writePom() {
 
     dependsOn tasks.withType(GenerateMavenPom)
-
-    //vrati zo zadanych 2 cisel verzii najnovsiu verziu (napr. 1.11.1034,1.12.276=>1.12.276)
-    ext.mostRecentVersion = { List versions ->
-        def sorted = versions.sort(false) { a, b ->
-
-            List verA = a.tokenize('.')
-            List verB = b.tokenize('.')
-
-            def commonIndices = Math.min(verA.size(), verB.size())
-
-            for (int i = 0; i < commonIndices; ++i) {
-                if (verA[i].equals("+")) verA[i] = "0"
-                if (verB[i].equals("+")) verB[i] = "0"
-                def numA = 0;
-                try { numA = verA[i].replace("-SNAPSHOT", "").replace("-RC", "").toInteger(); } catch (Exception ex) {}
-                def numB = 0;
-                try { numB = verB[i].replace("-SNAPSHOT", "").replace("-RC", "").toInteger(); } catch (Exception ex) {}
-
-                if (numA != numB) {
-                    return numA <=> numB
-                }
-            }
-
-            // If we got this far then all the common indices are identical, so whichever version is longer must be more recent
-            verA.size() <=> verB.size()
-        }
-
-        //println "sorted versions: $sorted"
-        def result = sorted[-1]
-
-        // If versions are the same after comparison, prefer the specific version without the '+' over the placeholder
-        if (sorted.size() >= 2 && result.contains("+")) {
-            def alternative = sorted[-2]
-            if (!alternative.contains("+")) {
-                result = alternative
-            }
-        }
-
-        result
-    }
 
     doLast {
         //generate pom file
@@ -763,86 +802,363 @@ task writePom() {
             }
         }.writeTo("build/pom.xml")*/
 
-        // Get existing pom file
+        // Gradle versionMapping has already written the resolved runtime versions.
         Node xml = new XmlParser().parse("build/publications/maven/pom-default.xml")
-        //verziu je mozne zadat v gradle ako 5.3.+, do POM to potrebujeme resolvnut na konkretnu verziu 5.3.22
-        Map resolvedVersionMap = new HashMap()
-        Set<ResolvedArtifact> resolvedArtifacts = configurations.runtimeClasspath.getResolvedConfiguration().getResolvedArtifacts()
-        //resolvedArtifacts.addAll(configurations.testImplementation.getResolvedConfiguration().getResolvedArtifacts())
-        resolvedArtifacts.each {
-            def group = it.getModuleVersion().getId().getGroup();
-            def version = it.getModuleVersion().getId().getVersion();
-            def currentVersion = resolvedVersionMap.get(it.getName());
-            def mostRecent = version;
-            if (currentVersion != null) mostRecent = mostRecentVersion([currentVersion, version]);
 
-            println("resolvedVersion: group="+group+" name="+it.getName()+" versionFull="+it.getModuleVersion()+" version="+version+" currentVersion="+currentVersion+" mostRecent="+mostRecent)
-            resolvedVersionMap.put(group + ":" + it.getName(), mostRecent);
-        }
-
-        // Update dependencies with resolved versions
+        // Apply only the legacy WebJET scope and filtering rules. Dependency versions and
+        // exclusions must stay identical to the Gradle-resolved publication model.
         Node dependencies = xml.dependencies.first();
         Iterator<Node> i = dependencies.iterator();
         while (i.hasNext()) {
-            it = i.next()
-            Node artifactId = it.get("artifactId").first()
-            def groupId = it.get("groupId").first().value().first()
+            Node dependency = i.next()
+            Node artifactId = dependency.get("artifactId").first()
+            def groupId = dependency.get("groupId").first().value().first()
             def artifactName = artifactId.value().first()
-            println "Checking: groupId: "+groupId+" artifactId:"+artifactName+" version="+it.get("version")+" scope="+it.get("scope")
-            def version = it.get("version").first().value().first()
-            println "Checking: groupId: "+groupId+" artifactId:"+artifactName+" version="+version+" scope="+it.get("scope")
-
-            def artifactVersion = resolvedVersionMap.get(groupId + ":" + artifactName)
-            Node versionNode = it.get("version").first()
-            if (artifactVersion!=null) {
-                def mostRecent = mostRecentVersion([artifactVersion, version]);
-                //println "artifact version=" + artifactVersion + " mostRecent=" + mostRecent
-                if (mostRecent.equals(version)==false) {
-                    println "---> changing version: " + groupId + ":" + artifactName + " " + version + "->" + artifactVersion + " mostRecent=" + mostRecent
-                    versionNode.value = mostRecent
-                }
+            NodeList versionNodes = dependency.get("version")
+            if (versionNodes.isEmpty()) {
+                throw new GradleException("Generated POM dependency ${groupId}:${artifactName} has no resolved version")
             }
-
-            //zmaz exclusions, to tam fakt nepotrebujeme
-            it.remove(it.get("exclusions"))
+            def version = versionNodes.first().value().first()
 
             //zmen scope z runtime na compile
-            Node scope = it.get("scope").first()
+            Node scope = dependency.get("scope").first()
             def scopeValue = scope.value().first()
             //println "groupId: "+groupId+" artifactId:"+artifactName+" version="+version+" scope="+scopeValue
             if ("runtime".equals(scopeValue)) scope.value = "compile";
 
             if (artifactName.endsWith("servlet-api") || artifactName.endsWith(".jsp-api") || artifactName.endsWith(".el-api") || "jsr250-api".equals(artifactName)) scope.value = "provided";
 
-            if ("test".equals(scopeValue) || "8.9-SNAPSHOT-wj9".equals(version)) {
+            // Remove dependencies already bundled in the legacy WebJET artifacts. Evaluate
+            // the rules first so a dependency matching more than one rule is removed once.
+            boolean removeLegacyDependency = "test".equals(scopeValue) ||
+                "8.9-SNAPSHOT-wj9".equals(version) ||
+                (groupId.startsWith("sk.iway") && "pd4ml".equals(artifactName) == false) ||
+                "stripes".equals(artifactName)
+            if (removeLegacyDependency) {
                 println "----> removing: "+artifactName
-                i.remove();
-            }
-
-            //remove sk.iway artifacts, they are packages to webjet-VERSION-libs.jar
-            if (groupId.startsWith("sk.iway") && "pd4ml".equals(artifactName)==false) {
-                println "----> removing: "+artifactName
-                i.remove();
-            }
-
-            //remove stripes, it is integrated with our changes in libs jar
-            if ("stripes".equals(artifactName)) {
-                println "----> removing: "+artifactName
-                i.remove();
+                i.remove()
             }
         }
 
         // zapis pom subor
-        def printWriter = new PrintWriter(new FileWriter("build/updatezip/artifacts/webjetcms-"+wjversion+".pom"));
-        printWriter.println('<?xml version="1.0" encoding="UTF-8"?>');
-        XmlNodePrinter xmlNodePrinter = new XmlNodePrinter(printWriter)
-        xmlNodePrinter.with {
-            preserveWhitespace = true
-            expandEmptyElements = true
+        File outputPom = file("build/updatezip/artifacts/webjetcms-"+wjversion+".pom")
+        outputPom.parentFile.mkdirs()
+        outputPom.withPrintWriter('UTF-8') { printWriter ->
+            printWriter.println('<?xml version="1.0" encoding="UTF-8"?>');
+            XmlNodePrinter xmlNodePrinter = new XmlNodePrinter(printWriter)
+            xmlNodePrinter.with {
+                preserveWhitespace = true
+                expandEmptyElements = true
+            }
+            xmlNodePrinter.print(xml)
         }
-        xmlNodePrinter.print(xml)
 
         delete files("build/pom.xml")
+    }
+}
+
+tasks.register('verifyGeneratedPom') {
+    group = 'verification'
+    description = 'Verifies that standard and legacy Maven POMs contain the Gradle-resolved dependency versions'
+    dependsOn writePom
+
+    doLast {
+        String wjversion = System.getProperty('wjversion') ?: 'unknown'
+        List<File> pomFiles = [
+            file('build/publications/maven/pom-default.xml'),
+            file("build/updatezip/artifacts/webjetcms-${wjversion}.pom")
+        ]
+        Set<String> expectedLegacyRemovals = [
+            'sk.iway:wjcron4j',
+            'sk.iway:wjjcaptcha',
+            'sk.iway:wjdaisydiff',
+            'net.sourceforge.stripes:stripes'
+        ] as Set
+
+        List<String> versionedSpringManagedDependencies = []
+        ['implementation', 'providedCompile', 'providedRuntime', 'testImplementation'].each { configurationName ->
+            configurations.getByName(configurationName).dependencies.each { dependency ->
+                boolean springManaged = dependency.group == 'org.springframework.boot' ||
+                    dependency.group == 'org.springframework.security'
+                if (springManaged && dependency.name != 'spring-boot-dependencies' && dependency.version != null) {
+                    versionedSpringManagedDependencies.add(
+                        "${configurationName}:${dependency.group}:${dependency.name}:${dependency.version}".toString()
+                    )
+                }
+            }
+        }
+        if (versionedSpringManagedDependencies.isEmpty() == false) {
+            throw new GradleException(
+                'Spring Boot and Spring Security dependencies managed by the Boot BOM must not declare versions: ' +
+                versionedSpringManagedDependencies.sort()
+            )
+        }
+
+        ['providedCompile', 'providedRuntime'].each { configurationName ->
+            List<String> unresolvedDependencies = configurations.getByName(configurationName)
+                .incoming.resolutionResult.allDependencies.findAll { dependency ->
+                    dependency instanceof org.gradle.api.artifacts.result.UnresolvedDependencyResult
+                }.collect { dependency ->
+                    dependency.requested.displayName
+                }.sort()
+            if (unresolvedDependencies.isEmpty() == false) {
+                throw new GradleException(
+                    "${configurationName} contains unresolved dependencies: ${unresolvedDependencies}"
+                )
+            }
+        }
+
+        Map<String, String> resolvedVersions = [:]
+        configurations.runtimeClasspath.incoming.resolutionResult.allComponents.each { component ->
+            def identifier = component.id
+            if (identifier instanceof org.gradle.api.artifacts.component.ModuleComponentIdentifier) {
+                resolvedVersions["${identifier.group}:${identifier.module}"] = identifier.version
+            }
+        }
+        if (resolvedVersions.containsKey('org.apache.tomcat:tomcat-annotations-api')) {
+            throw new GradleException('runtimeClasspath contains duplicate org.apache.tomcat:tomcat-annotations-api')
+        }
+
+        ['org.aspectj:aspectjrt', 'org.aspectj:aspectjweaver'].each { coordinate ->
+            String resolvedVersion = resolvedVersions[coordinate]
+            if (resolvedVersion != aspectJVersion) {
+                throw new GradleException(
+                    "${coordinate} resolved to ${resolvedVersion}, but the shared AspectJ version is ${aspectJVersion}"
+                )
+            }
+        }
+        Set<String> agentAspectJVersions = configurations.agent.incoming.resolutionResult.allComponents.findAll { component ->
+            def identifier = component.id
+            identifier instanceof org.gradle.api.artifacts.component.ModuleComponentIdentifier &&
+                identifier.group == 'org.aspectj' && identifier.module == 'aspectjweaver'
+        }.collect { component ->
+            component.id.version
+        } as Set<String>
+        if (agentAspectJVersions != ([aspectJVersion] as Set<String>)) {
+            throw new GradleException(
+                "The AspectJ Java agent must resolve to ${aspectJVersion}, found ${agentAspectJVersions.sort()}"
+            )
+        }
+        File aspectJToolsJar = file("ant/aspectj/aspectjtools-${aspectJVersion}.jar")
+        if (aspectJToolsJar.isFile() == false ||
+            file('ant/compile.xml').getText('UTF-8').contains("aspectjtools-${aspectJVersion}.jar") == false) {
+            throw new GradleException(
+                "Ant AspectJ compiler must use ant/aspectj/aspectjtools-${aspectJVersion}.jar"
+            )
+        }
+
+        def childText = { Node node, String childName ->
+            NodeList children = node.get(childName)
+            children.isEmpty() ? '' : children.first().text().trim()
+        }
+        def dependencyCoordinate = { Node dependency ->
+            "${childText(dependency, 'groupId')}:${childText(dependency, 'artifactId')}".toString()
+        }
+        def dependencyExclusions = { Node dependency ->
+            NodeList exclusionContainers = dependency.get('exclusions')
+            if (exclusionContainers.isEmpty()) return []
+            exclusionContainers.first().get('exclusion').collect { exclusion ->
+                dependencyCoordinate(exclusion)
+            }.sort()
+        }
+        def parseNumericVersion = { String version ->
+            List<String> parts = version.tokenize('.')
+            if (parts.size() != 3 || parts.any { part -> (part ==~ /\d+/) == false }) {
+                throw new GradleException("Cannot compare non-numeric Tomcat version: ${version}")
+            }
+            parts.collect { part -> part.toInteger() }
+        }
+        def compareVersions = { String left, String right ->
+            List<Integer> leftParts = parseNumericVersion(left)
+            List<Integer> rightParts = parseNumericVersion(right)
+            int comparison = 0
+            for (int index = 0; index < leftParts.size(); index++) {
+                comparison = leftParts[index] <=> rightParts[index]
+                if (comparison != 0) break
+            }
+            comparison
+        }
+        String expectedBootBomVersion = org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
+            .tokenize(':').last()
+        Map<File, Map<String, Map<String, Object>>> dependencyModels = [:]
+
+        pomFiles.each { pomFile ->
+            if (pomFile.isFile() == false) {
+                throw new GradleException("Generated POM does not exist: ${pomFile}")
+            }
+
+            Node pom = new XmlParser().parse(pomFile)
+            String pomPackaging = childText(pom, 'packaging')
+            // Maven's default for an omitted packaging element is jar. Gradle omits the
+            // element when MavenPom.packaging is explicitly set to that default.
+            if (pomPackaging.isBlank() == false && pomPackaging != 'jar') {
+                throw new GradleException("Generated POM must declare jar packaging: ${pomFile}")
+            }
+            NodeList dependencyContainers = pom.get('dependencies')
+            if (dependencyContainers.isEmpty()) {
+                throw new GradleException("Generated POM has no dependencies: ${pomFile}")
+            }
+            List<Node> directDependencies = dependencyContainers.first().get('dependency') as List<Node>
+            Map<String, List<Node>> directDependenciesByCoordinateList = directDependencies.groupBy { dependency ->
+                dependencyCoordinate(dependency)
+            }
+            List<String> duplicateCoordinates = directDependenciesByCoordinateList.findAll { coordinate, dependencies ->
+                dependencies.size() != 1
+            }.keySet().sort()
+            if (duplicateCoordinates.isEmpty() == false) {
+                throw new GradleException("Generated POM contains duplicate dependencies ${duplicateCoordinates}: ${pomFile}")
+            }
+            Map<String, Node> directDependenciesByCoordinate = directDependencies.collectEntries { dependency ->
+                [(dependencyCoordinate(dependency)): dependency]
+            }
+
+            directDependenciesByCoordinate.each { coordinate, dependency ->
+                String version = childText(dependency, 'version')
+                if (version.isBlank() || version.contains('+') || version.contains('${') ||
+                    version.startsWith('[') || version.startsWith('(')) {
+                    throw new GradleException(
+                        "Generated POM contains an unresolved version for ${coordinate}: '${version}' in ${pomFile}"
+                    )
+                }
+                String resolvedVersion = resolvedVersions[coordinate]
+                if (resolvedVersion == null) {
+                    throw new GradleException(
+                        "Generated POM dependency ${coordinate}:${version} is absent from runtimeClasspath"
+                    )
+                }
+                if (version != resolvedVersion) {
+                    throw new GradleException(
+                        "Generated POM dependency ${coordinate}:${version} differs from resolved ${resolvedVersion}"
+                    )
+                }
+            }
+            dependencyModels[pomFile] = directDependenciesByCoordinate.collectEntries { coordinate, dependency ->
+                [(coordinate): [
+                    version: childText(dependency, 'version'),
+                    scope: childText(dependency, 'scope'),
+                    exclusions: dependencyExclusions(dependency)
+                ]]
+            }
+
+            NodeList managementContainers = pom.get('dependencyManagement')
+            if (managementContainers.isEmpty()) {
+                throw new GradleException("Generated POM has no dependencyManagement: ${pomFile}")
+            }
+            List<Node> managedDependencies = managementContainers.first()
+                .get('dependencies').first().get('dependency') as List<Node>
+            List<Node> bootBomImports = managedDependencies.findAll { dependency ->
+                childText(dependency, 'groupId') == 'org.springframework.boot' &&
+                    childText(dependency, 'artifactId') == 'spring-boot-dependencies' &&
+                    childText(dependency, 'type') == 'pom' &&
+                    childText(dependency, 'scope') == 'import'
+            }
+            if (bootBomImports.size() != 1 || childText(bootBomImports.first(), 'version') != expectedBootBomVersion) {
+                throw new GradleException(
+                    "Generated POM must import Spring Boot BOM ${expectedBootBomVersion} exactly once: ${pomFile}"
+                )
+            }
+            if (managedDependencies.any { dependency ->
+                childText(dependency, 'groupId') in ['com.fasterxml.jackson', 'tools.jackson'] &&
+                    childText(dependency, 'artifactId') == 'jackson-bom' &&
+                    childText(dependency, 'scope') == 'import'
+            }) {
+                throw new GradleException("Generated POM must not import a separate Jackson BOM: ${pomFile}")
+            }
+
+            String log4jBridgeCoordinate = 'org.apache.logging.log4j:log4j-to-slf4j'
+            Node log4jBridgeDependency = directDependenciesByCoordinate[log4jBridgeCoordinate]
+            String resolvedLog4jBridgeVersion = resolvedVersions[log4jBridgeCoordinate]
+            if (log4jBridgeDependency == null ||
+                compareVersions(resolvedLog4jBridgeVersion, log4jToSlf4jMinimumVersion) < 0) {
+                throw new GradleException(
+                    "Generated POM must publish ${log4jBridgeCoordinate} at security floor " +
+                    "${log4jToSlf4jMinimumVersion} or newer: ${pomFile}"
+                )
+            }
+            List<Node> managedLog4jBridgeDependencies = managedDependencies.findAll { dependency ->
+                dependencyCoordinate(dependency) == log4jBridgeCoordinate
+            }
+            if (managedLog4jBridgeDependencies.size() != 1 ||
+                childText(managedLog4jBridgeDependencies.first(), 'version') != resolvedLog4jBridgeVersion) {
+                throw new GradleException(
+                    "Generated POM dependencyManagement must preserve resolved ${log4jBridgeCoordinate}:" +
+                    "${resolvedLog4jBridgeVersion}: ${pomFile}"
+                )
+            }
+
+            String webauthnCoordinate = 'org.springframework.security:spring-security-webauthn'
+            if (directDependenciesByCoordinate.containsKey(webauthnCoordinate) == false) {
+                throw new GradleException("Generated POM is missing ${webauthnCoordinate}: ${pomFile}")
+            }
+
+            embeddedTomcatModules.each { coordinate ->
+                Node dependency = directDependenciesByCoordinate[coordinate]
+                if (dependency == null) {
+                    throw new GradleException("Generated POM is missing direct Tomcat dependency ${coordinate}: ${pomFile}")
+                }
+                List<String> exclusions = dependencyExclusions(dependency)
+                if (exclusions.contains('org.apache.tomcat:tomcat-annotations-api') == false) {
+                    throw new GradleException(
+                        "Generated POM Tomcat dependency ${coordinate} lost the annotations API exclusion: ${pomFile}"
+                    )
+                }
+            }
+            Set<String> directTomcatVersions = embeddedTomcatModules.collect { coordinate ->
+                childText(directDependenciesByCoordinate[coordinate], 'version')
+            } as Set<String>
+            if (directTomcatVersions.size() != 1) {
+                throw new GradleException(
+                    "Generated POM contains misaligned direct Tomcat versions ${directTomcatVersions.sort()}: ${pomFile}"
+                )
+            }
+            String directTomcatVersion = directTomcatVersions.first()
+            if (compareVersions(directTomcatVersion, tomcatMinimumVersion) < 0) {
+                throw new GradleException(
+                    "Generated POM contains Tomcat ${directTomcatVersion}, below security floor ${tomcatMinimumVersion}: ${pomFile}"
+                )
+            }
+            if (directDependenciesByCoordinate.containsKey('org.apache.tomcat:tomcat-annotations-api')) {
+                throw new GradleException("Generated POM contains duplicate Tomcat annotations API: ${pomFile}")
+            }
+        }
+
+        Map<String, Map<String, Object>> standardDependencies = dependencyModels[pomFiles.first()]
+        Map<String, Map<String, Object>> legacyDependencies = dependencyModels[pomFiles.last()]
+        Set<String> removedFromLegacy = (standardDependencies.keySet() - legacyDependencies.keySet()) as Set
+        Set<String> addedToLegacy = (legacyDependencies.keySet() - standardDependencies.keySet()) as Set
+        if (removedFromLegacy != expectedLegacyRemovals || addedToLegacy.isEmpty() == false) {
+            throw new GradleException(
+                "Legacy POM dependency filtering changed; removed=${removedFromLegacy.sort()}, " +
+                "added=${addedToLegacy.sort()}, expected removals=${expectedLegacyRemovals.sort()}"
+            )
+        }
+
+        legacyDependencies.each { coordinate, legacyDependency ->
+            Map<String, Object> standardDependency = standardDependencies[coordinate]
+            if (legacyDependency.version != standardDependency.version) {
+                throw new GradleException(
+                    "Legacy POM changed ${coordinate} version ${standardDependency.version} to ${legacyDependency.version}"
+                )
+            }
+            if (legacyDependency.exclusions != standardDependency.exclusions) {
+                throw new GradleException(
+                    "Legacy POM changed ${coordinate} exclusions ${standardDependency.exclusions} to ${legacyDependency.exclusions}"
+                )
+            }
+
+            String artifactName = coordinate.tokenize(':').last()
+            String expectedLegacyScope = standardDependency.scope == 'runtime' ? 'compile' : standardDependency.scope
+            if (artifactName.endsWith('servlet-api') || artifactName.endsWith('.jsp-api') ||
+                artifactName.endsWith('.el-api') || artifactName == 'jsr250-api') {
+                expectedLegacyScope = 'provided'
+            }
+            if (legacyDependency.scope != expectedLegacyScope) {
+                throw new GradleException(
+                    "Legacy POM changed ${coordinate} scope ${standardDependency.scope} to ${legacyDependency.scope}; " +
+                    "expected ${expectedLegacyScope}"
+                )
+            }
+        }
     }
 }
 

@@ -19,6 +19,8 @@
 
   <property environment="env"/>
   <property name="root" location="../build/updatezip"/>
+  <!-- prepareAntWar exports Gradle-resolved provided dependencies outside the plain WAR. -->
+  <property name="antProvidedRuntime" location="${root}/../ant-provided-runtime"/>
 
   <taskdef
       resource="org/aspectj/tools/ant/taskdefs/aspectjTaskdefs.properties">
@@ -52,7 +54,7 @@
 
   <target name="delombok" depends="prepareSrc">
 
-    <exec executable="./gradlew" dir="../">
+    <exec executable="./gradlew" dir="../" failonerror="true">
         <arg value="delombok"/>
     </exec>
 
@@ -105,7 +107,7 @@
         <fileset dir="${root}/WebContent/WEB-INF/lib/" >
           <include name="*.jar" />
         </fileset>
-        <fileset dir="./servlet-api" >
+        <fileset dir="${antProvidedRuntime}" >
           <include name="*.jar" />
         </fileset>
         <fileset dir="./mapstruct" >
@@ -211,8 +213,8 @@
         <fileset dir="${root}/WebContent/WEB-INF/lib/" >
           <include name="*.jar" />
         </fileset>
-        <fileset dir="./servlet-api" >
-              <include name="*.jar" />
+        <fileset dir="${antProvidedRuntime}" >
+          <include name="*.jar" />
         </fileset>
         <fileset dir="./libs" >
           <include name="*.jar" />
