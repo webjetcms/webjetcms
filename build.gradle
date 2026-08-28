@@ -42,7 +42,18 @@ repositories {
     }
     flatDir {
        dirs 'libs'
-   }
+    }
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = 'generatedPomVerification'
+                url = layout.buildDirectory.dir('tmp/generated-pom-consumer/repository')
+            }
+        }
+        filter {
+            includeGroup 'com.webjetcms.pomverification'
+        }
+    }
 }
 
 ext {
@@ -67,6 +78,44 @@ def embeddedTomcatModules = [
     'org.apache.tomcat.embed:tomcat-embed-jasper',
     'org.apache.tomcat.embed:tomcat-embed-websocket'
 ]
+
+// Gradle's War component publishes providedCompile/providedRuntime dependencies with
+// Maven runtime scope. These dependencies are supplied by an external Tomcat and must
+// therefore be rewritten to Maven's non-transitive provided scope in the published POM.
+def externalTomcatProvidedDependencies = [
+    'org.springframework.boot:spring-boot-starter-tomcat-runtime',
+    'org.apache.tomcat.embed:tomcat-embed-jasper',
+    'jakarta.servlet:jakarta.servlet-api',
+    'jakarta.servlet.jsp:jakarta.servlet.jsp-api',
+    'jakarta.el:jakarta.el-api',
+    'jakarta.annotation:jakarta.annotation-api'
+] as Set<String>
+def springBootWebMvcCoordinate = 'org.springframework.boot:spring-boot-starter-webmvc'
+def springBootTomcatStarterCoordinate = 'org.springframework.boot:spring-boot-starter-tomcat'
+def externalTomcatDependencyExclusions = [
+    (springBootWebMvcCoordinate): [springBootTomcatStarterCoordinate],
+    'org.springdoc:springdoc-openapi-starter-webmvc-ui': [
+        'org.apache.tomcat.embed:tomcat-embed-el'
+    ]
+]
+
+def pomDependencyCoordinate = { Node dependency ->
+    "${dependency.get('groupId').first().text().trim()}:" +
+        dependency.get('artifactId').first().text().trim()
+}
+def ensurePomDependencyExclusion = { Node dependency, String excludedCoordinate ->
+    List<String> excludedParts = excludedCoordinate.tokenize(':')
+    NodeList exclusionContainers = dependency.get('exclusions')
+    Node exclusions = exclusionContainers.isEmpty() ? dependency.appendNode('exclusions') : exclusionContainers.first()
+    boolean alreadyExcluded = exclusions.get('exclusion').any { Node exclusion ->
+        pomDependencyCoordinate(exclusion) == excludedCoordinate
+    }
+    if (alreadyExcluded == false) {
+        Node exclusion = exclusions.appendNode('exclusion')
+        exclusion.appendNode('groupId', excludedParts.first())
+        exclusion.appendNode('artifactId', excludedParts.last())
+    }
+}
 
 springBoot {
     mainClass = 'sk.iway.iwcm.system.spring.SpringBootStarter'
@@ -206,21 +255,12 @@ dependencies {
     // WebAuthn/Passkeys
     implementation 'org.springframework.security:spring-security-webauthn'
 
-    // Keep the embedded container available for executable WARs without
-    // exposing its implementation classes to an external Tomcat installation.
+    // Keep the embedded container available for executable WARs. Spring Boot packages
+    // providedRuntime in WEB-INF/lib-provided, where an external Tomcat does not load it.
     providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat-runtime'
-    // Keep the modules direct so Maven consumers receive the resolved security floor.
+    // The runtime starter does not include Jasper, which WebJET needs for JSP compilation.
     // Tomcat's annotation API duplicates jakarta.annotation-api supplied by Spring Boot.
-    providedRuntime('org.apache.tomcat.embed:tomcat-embed-core') {
-        exclude group: 'org.apache.tomcat', module: 'tomcat-annotations-api'
-    }
-    providedRuntime('org.apache.tomcat.embed:tomcat-embed-el') {
-        exclude group: 'org.apache.tomcat', module: 'tomcat-annotations-api'
-    }
     providedRuntime('org.apache.tomcat.embed:tomcat-embed-jasper') {
-        exclude group: 'org.apache.tomcat', module: 'tomcat-annotations-api'
-    }
-    providedRuntime('org.apache.tomcat.embed:tomcat-embed-websocket') {
         exclude group: 'org.apache.tomcat', module: 'tomcat-annotations-api'
     }
     // OpenAPI/Swagger
@@ -446,6 +486,14 @@ compileJava {
 }
 
 //TASKY
+tasks.named('war') {
+    // This starter is an empty dependency marker. Its runtime is provided separately
+    // for bootWar, so the external-container plain WAR does not need the marker jar.
+    classpath = classpath.filter { dependency ->
+        dependency.name.startsWith('spring-boot-starter-tomcat-') == false
+    }
+}
+
 tasks.register('prepareAntWar', Sync) {
     group = 'build'
     description = 'Builds the plain WAR and prepares provided dependencies for the legacy Ant compiler'
@@ -580,12 +628,15 @@ bootRun.dependsOn generateCertificate
 
 tasks.register('verifyBootWar') {
     group = 'verification'
-    description = 'Verifies that the executable WAR is also safe for an external Tomcat deployment'
+    description = 'Verifies the embedded and external-Tomcat WAR packaging contracts'
 
     def bootWarTask = tasks.named('bootWar')
     def bootWarArchive = bootWarTask.flatMap { it.archiveFile }
-    dependsOn bootWarTask
+    def plainWarTask = tasks.named('war')
+    def plainWarArchive = plainWarTask.flatMap { it.archiveFile }
+    dependsOn bootWarTask, plainWarTask
     inputs.file(bootWarArchive)
+    inputs.file(plainWarArchive)
 
     doLast {
         def archive = new java.util.zip.ZipFile(bootWarArchive.get().asFile)
@@ -712,6 +763,31 @@ tasks.register('verifyBootWar') {
         } finally {
             archive.close()
         }
+
+        def plainArchive = new java.util.zip.ZipFile(plainWarArchive.get().asFile)
+        try {
+            List<String> plainEntries = plainArchive.entries().collect { it.name }
+            Set<String> requiredPlainEntries = [
+                'WEB-INF/web.xml',
+                'WEB-INF/classes/sk/iway/iwcm/system/spring/SpringBootStarter.class'
+            ]
+            Set<String> missingPlainEntries = requiredPlainEntries - (plainEntries as Set)
+            if (missingPlainEntries.isEmpty() == false) {
+                throw new GradleException("The plain WAR is incomplete; missing entries: ${missingPlainEntries.sort()}")
+            }
+
+            List<String> externalContainerJars = plainEntries.findAll { entry ->
+                entry ==~ /^WEB-INF\/lib\/(ecj|jakarta\.annotation-api|jakarta\.el-api|jakarta\.servlet-api|jakarta\.servlet\.jsp-api|spring-boot-starter-tomcat|spring-boot-tomcat|tomcat-annotations-api|tomcat-embed-.+)-.+\.jar$/
+            }
+            if (externalContainerJars.isEmpty() == false) {
+                throw new GradleException(
+                    "The plain WAR must obtain container implementation and APIs from external Tomcat: " +
+                    externalContainerJars.sort()
+                )
+            }
+        } finally {
+            plainArchive.close()
+        }
     }
 }
 
@@ -768,6 +844,28 @@ publishing {
                     developerConnection = 'scm:git:ssh://github.com:/webjetcms/webjetcms.git'
                     url = 'https://github.com/webjetcms/webjetcms/tree/master'
                 }
+
+                // The Gradle War component maps provided dependencies to Maven runtime.
+                // Publish the external-container contract explicitly: container APIs and
+                // the embedded runtime are provided, while WebMVC must not reintroduce
+                // spring-boot-starter-tomcat through its transitive dependency graph.
+                withXml {
+                    Node pomNode = asNode()
+                    NodeList dependencyContainers = pomNode.get('dependencies')
+                    if (dependencyContainers.isEmpty() == false) {
+                        dependencyContainers.first().get('dependency').each { Node dependency ->
+                            String coordinate = pomDependencyCoordinate(dependency)
+                            if (externalTomcatProvidedDependencies.contains(coordinate)) {
+                                NodeList scopeNodes = dependency.get('scope')
+                                Node scope = scopeNodes.isEmpty() ? dependency.appendNode('scope') : scopeNodes.first()
+                                scope.value = 'provided'
+                            }
+                            externalTomcatDependencyExclusions[coordinate]?.each { excludedCoordinate ->
+                                ensurePomDependencyExclusion(dependency, excludedCoordinate)
+                            }
+                        }
+                    }
+                }
             }
 
             from components.java
@@ -781,6 +879,13 @@ publishing {
             }
         }
     }
+}
+
+// The Java component metadata describes the internal executable-WAR graph, while the
+// released artifact intentionally exposes the external-Tomcat POM contract above. Do not
+// publish a divergent .module file that Gradle consumers would prefer over the Maven POM.
+tasks.withType(org.gradle.api.publish.tasks.GenerateModuleMetadata).configureEach {
+    enabled = false
 }
 
 //vygeneruje POM subor pre maven deployment
@@ -819,12 +924,24 @@ task writePom() {
                 throw new GradleException("Generated POM dependency ${groupId}:${artifactName} has no resolved version")
             }
             def version = versionNodes.first().value().first()
+            String coordinate = "${groupId}:${artifactName}".toString()
+
+            // Temporarily omit exclusions from the legacy POM to simplify migration comparisons.
+            /*dependency.get('exclusions').toList().each { Node exclusionContainer ->
+                dependency.remove(exclusionContainer)
+            }*/
+            // These exclusions are part of the external-Tomcat publication contract and
+            // must also be present while the temporary comparison mode above is enabled.
+            externalTomcatDependencyExclusions[coordinate]?.each { excludedCoordinate ->
+                ensurePomDependencyExclusion(dependency, excludedCoordinate)
+            }
 
             //zmen scope z runtime na compile
             Node scope = dependency.get("scope").first()
             def scopeValue = scope.value().first()
             //println "groupId: "+groupId+" artifactId:"+artifactName+" version="+version+" scope="+scopeValue
-            if ("runtime".equals(scopeValue)) scope.value = "compile";
+            if (externalTomcatProvidedDependencies.contains(coordinate)) scope.value = "provided";
+            else if ("runtime".equals(scopeValue)) scope.value = "compile";
 
             if (artifactName.endsWith("servlet-api") || artifactName.endsWith(".jsp-api") || artifactName.endsWith(".el-api") || "jsr250-api".equals(artifactName)) scope.value = "provided";
 
@@ -859,7 +976,7 @@ task writePom() {
 
 tasks.register('verifyGeneratedPom') {
     group = 'verification'
-    description = 'Verifies that standard and legacy Maven POMs contain the Gradle-resolved dependency versions'
+    description = 'Verifies resolved POM versions and the external-Tomcat consumer contract'
     dependsOn writePom
 
     doLast {
@@ -1091,31 +1208,77 @@ tasks.register('verifyGeneratedPom') {
                 throw new GradleException("Generated POM is missing ${webauthnCoordinate}: ${pomFile}")
             }
 
-            embeddedTomcatModules.each { coordinate ->
+            externalTomcatDependencyExclusions.each { coordinate, expectedExclusions ->
                 Node dependency = directDependenciesByCoordinate[coordinate]
-                if (dependency == null) {
-                    throw new GradleException("Generated POM is missing direct Tomcat dependency ${coordinate}: ${pomFile}")
-                }
-                List<String> exclusions = dependencyExclusions(dependency)
-                if (exclusions.contains('org.apache.tomcat:tomcat-annotations-api') == false) {
+                List<String> actualExclusions = dependency == null ? [] : dependencyExclusions(dependency)
+                if (dependency == null || actualExclusions.containsAll(expectedExclusions) == false) {
                     throw new GradleException(
-                        "Generated POM Tomcat dependency ${coordinate} lost the annotations API exclusion: ${pomFile}"
+                        "Generated POM must preserve external-Tomcat exclusions ${expectedExclusions} on " +
+                        "${coordinate}: ${pomFile}"
                     )
                 }
             }
-            Set<String> directTomcatVersions = embeddedTomcatModules.collect { coordinate ->
-                childText(directDependenciesByCoordinate[coordinate], 'version')
+
+            externalTomcatProvidedDependencies.each { coordinate ->
+                Node dependency = directDependenciesByCoordinate[coordinate]
+                if (dependency == null || childText(dependency, 'scope') != 'provided') {
+                    throw new GradleException(
+                        "Generated POM must publish external-container dependency ${coordinate} as provided: ${pomFile}"
+                    )
+                }
+            }
+
+            Set<String> directEmbeddedTomcatDependencies = directDependenciesByCoordinate.keySet().findAll { coordinate ->
+                coordinate.startsWith('org.apache.tomcat.embed:')
             } as Set<String>
-            if (directTomcatVersions.size() != 1) {
+            Set<String> expectedDirectEmbeddedTomcatDependencies = [
+                'org.apache.tomcat.embed:tomcat-embed-jasper'
+            ] as Set<String>
+            if (directEmbeddedTomcatDependencies != expectedDirectEmbeddedTomcatDependencies) {
                 throw new GradleException(
-                    "Generated POM contains misaligned direct Tomcat versions ${directTomcatVersions.sort()}: ${pomFile}"
+                    "Generated POM contains unexpected direct embedded Tomcat dependencies " +
+                    "${directEmbeddedTomcatDependencies.sort()}; expected only Jasper: ${pomFile}"
                 )
             }
-            String directTomcatVersion = directTomcatVersions.first()
-            if (compareVersions(directTomcatVersion, tomcatMinimumVersion) < 0) {
+
+            Node jasperDependency = directDependenciesByCoordinate['org.apache.tomcat.embed:tomcat-embed-jasper']
+            if (pomFile == pomFiles.first() &&
+                dependencyExclusions(jasperDependency).contains('org.apache.tomcat:tomcat-annotations-api') == false) {
                 throw new GradleException(
-                    "Generated POM contains Tomcat ${directTomcatVersion}, below security floor ${tomcatMinimumVersion}: ${pomFile}"
+                    "Standard POM Jasper dependency lost the duplicate annotations API exclusion: ${pomFile}"
                 )
+            }
+
+            Map<String, String> resolvedTomcatVersions = embeddedTomcatModules.collectEntries { coordinate ->
+                [(coordinate): resolvedVersions[coordinate]]
+            }
+            if (resolvedTomcatVersions.values().any { version -> version == null }) {
+                throw new GradleException("runtimeClasspath is missing a Tomcat module: ${resolvedTomcatVersions}")
+            }
+            Set<String> selectedTomcatVersions = resolvedTomcatVersions.values() as Set<String>
+            if (selectedTomcatVersions.size() != 1) {
+                throw new GradleException(
+                    "runtimeClasspath contains misaligned Tomcat versions ${resolvedTomcatVersions}: ${pomFile}"
+                )
+            }
+            String selectedTomcatVersion = selectedTomcatVersions.first()
+            if (compareVersions(selectedTomcatVersion, tomcatMinimumVersion) < 0) {
+                throw new GradleException(
+                    "runtimeClasspath contains Tomcat ${selectedTomcatVersion}, below security floor " +
+                    "${tomcatMinimumVersion}: ${pomFile}"
+                )
+            }
+            embeddedTomcatModules.each { coordinate ->
+                List<Node> managedTomcatDependencies = managedDependencies.findAll { dependency ->
+                    dependencyCoordinate(dependency) == coordinate
+                }
+                if (managedTomcatDependencies.size() != 1 ||
+                    childText(managedTomcatDependencies.first(), 'version') != resolvedTomcatVersions[coordinate]) {
+                    throw new GradleException(
+                        "Generated POM dependencyManagement must align ${coordinate} to " +
+                        "${resolvedTomcatVersions[coordinate]}: ${pomFile}"
+                    )
+                }
             }
             if (directDependenciesByCoordinate.containsKey('org.apache.tomcat:tomcat-annotations-api')) {
                 throw new GradleException("Generated POM contains duplicate Tomcat annotations API: ${pomFile}")
@@ -1158,6 +1321,68 @@ tasks.register('verifyGeneratedPom') {
                     "expected ${expectedLegacyScope}"
                 )
             }
+        }
+
+        // Resolve the final POM as a dependency of a separate Gradle consumer. This tests
+        // Maven-POM scope and exclusion semantics, rather than the project's internal graph
+        // where embedded Tomcat is intentionally present for bootRun and bootWar.
+        String fixtureGroup = 'com.webjetcms.pomverification'
+        String fixtureArtifact = 'webjetcms-external-tomcat'
+        String fixtureVersion = '1.0.0'
+        File fixtureRepository = layout.buildDirectory.dir('tmp/generated-pom-consumer/repository').get().asFile
+        File fixtureModuleDirectory = new File(
+            fixtureRepository,
+            "${fixtureGroup.replace('.', '/')}/${fixtureArtifact}/${fixtureVersion}"
+        )
+        delete fixtureModuleDirectory
+        fixtureModuleDirectory.mkdirs()
+
+        Node fixturePom = new XmlParser().parse(pomFiles.last())
+        fixturePom.get('groupId').first().value = fixtureGroup
+        fixturePom.get('artifactId').first().value = fixtureArtifact
+        fixturePom.get('version').first().value = fixtureVersion
+        File fixturePomFile = new File(fixtureModuleDirectory, "${fixtureArtifact}-${fixtureVersion}.pom")
+        fixturePomFile.withPrintWriter('UTF-8') { printWriter ->
+            printWriter.println('<?xml version="1.0" encoding="UTF-8"?>')
+            XmlNodePrinter printer = new XmlNodePrinter(printWriter)
+            printer.preserveWhitespace = true
+            printer.expandEmptyElements = true
+            printer.print(fixturePom)
+        }
+        File fixtureJar = new File(fixtureModuleDirectory, "${fixtureArtifact}-${fixtureVersion}.jar")
+        new java.util.jar.JarOutputStream(new FileOutputStream(fixtureJar)).close()
+
+        def fixtureDependency = dependencies.create("${fixtureGroup}:${fixtureArtifact}:${fixtureVersion}")
+        fixtureDependency.changing = true
+        Configuration consumerRuntime = configurations.detachedConfiguration(fixtureDependency)
+        consumerRuntime.transitive = true
+        consumerRuntime.resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+        List<String> unresolvedConsumerDependencies = consumerRuntime.incoming.resolutionResult.allDependencies
+            .findAll { dependency ->
+                dependency instanceof org.gradle.api.artifacts.result.UnresolvedDependencyResult
+            }.collect { dependency ->
+                dependency.requested.displayName
+            }.sort()
+        if (unresolvedConsumerDependencies.isEmpty() == false) {
+            throw new GradleException(
+                "Generated POM consumer contains unresolved dependencies: ${unresolvedConsumerDependencies}"
+            )
+        }
+        Set<String> consumerModules = consumerRuntime.incoming.resolutionResult.allComponents.collect { component ->
+            def identifier = component.id
+            identifier instanceof org.gradle.api.artifacts.component.ModuleComponentIdentifier ?
+                "${identifier.group}:${identifier.module}".toString() : null
+        }.findAll { coordinate -> coordinate != null } as Set<String>
+        Set<String> forbiddenConsumerTomcatModules = consumerModules.findAll { coordinate ->
+            coordinate.startsWith('org.apache.tomcat.embed:') ||
+                coordinate == 'org.apache.tomcat:tomcat-annotations-api' ||
+                coordinate == 'org.springframework.boot:spring-boot-tomcat' ||
+                coordinate.startsWith('org.springframework.boot:spring-boot-starter-tomcat')
+        } as Set<String>
+        if (forbiddenConsumerTomcatModules.isEmpty() == false) {
+            throw new GradleException(
+                "Generated POM exposes embedded Tomcat to consumers: ${forbiddenConsumerTomcatModules.sort()}"
+            )
         }
     }
 }

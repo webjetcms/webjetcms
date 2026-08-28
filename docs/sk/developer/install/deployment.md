@@ -27,13 +27,15 @@ odtiaľ sa prenesie aj do `build.properties` pre zobrazenie verzie v administrá
 - ```define-artifact-properties``` - zadefinuje vlastnosti pre generovanie artifaktov, tu sa v ```artifact.version``` nastavuje verzia vygenerovaného artifaktu
 - ```makejars``` - pripraví jar archívy tried, /admin a /components adresárov a zdrojových súborov
 - ```download``` - pomocná úloha na stiahnutie jar archívov, ktoré sa nemodifikujú (```struts, daisydiff, jtidy, swagger```)
-- ```makepom``` - vygeneruje a overí ```POM``` súbor Gradle úlohou ```verifyGeneratedPom```. Konkrétne verzie priamych závislostí zapisuje Gradle cez ```versionMapping```; WebJET následne upraví legacy rozsah a odstráni historické interné závislosti.
+- ```makepom``` - vygeneruje a overí ```POM``` súbor Gradle úlohou ```verifyGeneratedPom```. Konkrétne verzie priamych závislostí zapisuje Gradle cez ```versionMapping```; WebJET následne nastaví kontrakt pre externý Tomcat, upraví legacy rozsah a odstráni historické interné závislosti.
 - ```finalwar``` - vytvorí v priečinku ```build/updatezip/finalwar``` novú štruktúru so skompilovanými triedami vrátane ```AspectJ```. Vytvorí JAR archívy ```WEB-INF/lib/webjet-VERZIA.jar``` s Java triedami, JSP súbormi admin časti a aplikáciami vo forme ```JarPackaging```.
 - ```prepareAllJars``` - pripraví všetky JAR súbory na publikovanie do repozitárov.
 - ```deployGithub``` - deploy SNAPSHOT verzie na [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/2426502/versions).
 - ```deployMavenCentral``` - deploy verzie na https://repo1.maven.org/maven2/com/webjetcms/webjetcms/, pred spustením je potrebné volať úlohu ```prepareAllJars```, vykonať v projekte z ```github```.
 
-Spring Boot Gradle plugin vytvára [executable a plain archív](https://docs.spring.io/spring-boot/gradle-plugin/packaging.html#packaging-executable-and-plain-archives). Úloha `bootWar` vytvorí `build/libs/webjetcms.war`, ktorý je spustiteľný cez `java -jar` a zároveň nasaditeľný do externého Tomcatu. Štandardná Gradle úloha `war` dostane od Spring Boot pluginu classifier `plain` a vytvorí `build/libs/webjetcms-plain.war`. Legacy Ant úlohy `expandwar` a `finalwar` zámerne rozbaľujú `webjetcms-plain.war`, pretože zodpovedá pôvodnému štandardnému WAR bez Spring Boot loadera a adresára `WEB-INF/lib-provided`. Ant úloha `setup` preto volá Gradle úlohu `prepareAntWar`, ktorá vytvorí plain WAR a osobitne pripraví BOM-resolvené `providedRuntime` knižnice iba pre legacy `javac` a AspectJ classpath. Tieto knižnice sa nepridávajú do výsledného legacy archívu. Executable variant `webjetcms.war` sa používa pre Spring Boot distribúciu a samostatný smoke test nasadenia do externého Tomcatu.
+Spring Boot Gradle plugin vytvára [executable a plain archív](https://docs.spring.io/spring-boot/gradle-plugin/packaging.html#packaging-executable-and-plain-archives). Úloha `bootWar` vytvorí `build/libs/webjetcms.war`, ktorý je spustiteľný cez `java -jar` a zároveň nasaditeľný do externého Tomcatu. Embedded runtime je v ňom uložený v `WEB-INF/lib-provided`, takže ho externý kontajner nenačíta. Štandardná Gradle úloha `war` dostane od Spring Boot pluginu classifier `plain` a vytvorí `build/libs/webjetcms-plain.war`. Legacy Ant úlohy `expandwar` a `finalwar` zámerne rozbaľujú `webjetcms-plain.war`, pretože zodpovedá pôvodnému štandardnému WAR bez Spring Boot loadera a adresára `WEB-INF/lib-provided`.
+
+Maven/JAR publikácia a plain WAR sú určené pre zákaznícke projekty nasadené do externého Tomcatu. Embedded Tomcat slúži iba pre lokálny `bootRun` a executable WAR. Ant úloha `setup` preto volá Gradle úlohu `prepareAntWar`, ktorá vytvorí plain WAR a osobitne pripraví BOM-resolvené `providedRuntime` knižnice iba pre legacy `javac` a AspectJ classpath. Tieto knižnice sa nepridávajú do výsledného legacy archívu ani do runtime závislostí Maven konzumenta.
 
 Pri priamom spustení Ant úlohy je potrebné najskôr aktivovať verziu Node.js definovanú v koreňovom súbore `.nvmrc` príkazmi `nvm install` a `nvm use`. Skript `ant/deploy.sh` tieto príkazy vykoná automaticky.
 
@@ -57,10 +59,12 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springframework.security:spring-security-webauthn'
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat-runtime'
+    providedRuntime 'org.apache.tomcat.embed:tomcat-embed-jasper'
 }
 ```
 
-`SpringBootPlugin.BOM_COORDINATES` použije rovnakú verziu BOM ako aplikovaný Spring Boot Gradle plugin. Nevznikne tak druhá verzia, ktorú by bolo potrebné manuálne synchronizovať. Platforma ovplyvňuje iba konfiguráciu, v ktorej je deklarovaná, a konfigurácie, ktoré z nej dedia. WebJET ju preto deklaruje v `implementation` aj v samostatne resolvovateľných legacy konfiguráciách `providedCompile` a `providedRuntime`.
+`SpringBootPlugin.BOM_COORDINATES` použije rovnakú verziu BOM ako aplikovaný Spring Boot Gradle plugin. Nevznikne tak druhá verzia, ktorú by bolo potrebné manuálne synchronizovať. Platforma ovplyvňuje iba konfiguráciu, v ktorej je deklarovaná, a konfigurácie, ktoré z nej dedia. WebJET ju preto deklaruje v `implementation` aj v samostatne resolvovateľných legacy konfiguráciách `providedCompile` a `providedRuntime`. Spring Boot 4 oddeľuje runtime kontajnera do `spring-boot-starter-tomcat-runtime`; Jasper je deklarovaný osobitne, pretože runtime starter ho neobsahuje.
 
 Pri pridávaní alebo aktualizovaní závislostí platia tieto pravidlá:
 
@@ -92,18 +96,21 @@ Aktuálne vybrané verzie je možné skontrolovať napríklad príkazmi:
 
 ### Generovanie Maven POM
 
-Závislosti bez verzie sú platné v `build.gradle`, pretože ich verzie dodáva BOM. WebJET cez `versionMapping` zámerne publikuje konkrétne vyhodnotené verzie priamych závislostí, aby POM zodpovedal priamym závislostiam, s ktorými bol zostavený a testovaný. Nejde o uzamknutie celého tranzitívneho grafu.
+Závislosti bez verzie sú platné v `build.gradle`, pretože ich verzie dodáva BOM. Publikácia používa Gradle [`versionMapping`](https://docs.gradle.org/current/userguide/publishing_maven.html#publishing_maven:resolved_dependencies), ktoré do POM pre priame závislosti zapíše konkrétne verzie vybrané z `runtimeClasspath`. POM tak zodpovedá verziám, s ktorými bol WebJET zostavený a testovaný; nejde o uzamknutie celého tranzitívneho grafu. Import Spring Boot BOM sa zároveň publikuje v časti `dependencyManagement`.
 
-Publikácia preto používa Gradle [`versionMapping`](https://docs.gradle.org/current/userguide/publishing_maven.html#publishing_maven:resolved_dependencies). Do POM sa pre priame závislosti zapisujú verzie vybrané z `runtimeClasspath`, teda verzie, s ktorými bol WebJET zostavený a testovaný. Import Spring Boot BOM sa zároveň publikuje v časti `dependencyManagement`.
+Interný Gradle graf zámerne obsahuje embedded Tomcat pre `bootRun` a executable WAR. Publikačný POM má iný runtime kontrakt: `spring-boot-starter-tomcat-runtime`, `tomcat-embed-jasper` a API dodávané aplikačným serverom publikuje so scope `provided`. Zo `spring-boot-starter-webmvc` vylučuje `spring-boot-starter-tomcat`; zo Springdoc vetvy vylučuje `tomcat-embed-el`. Bez týchto vylúčení by sa Tomcat vrátil inou tranzitívnou cestou aj napriek scope `provided`. Maven scope `provided` nie je tranzitívny, preto zákaznícky WAR tieto knižnice nepreberie.
+
+Generovanie Gradle module metadata (`.module`) je pre túto publikáciu vypnuté. Metadata komponentu by opisovala interný executable-WAR graf a Gradle konzument by ju uprednostnil pred POM-om, čím by obišiel externý Tomcat kontrakt. Maven POM je preto jediný publikovaný model závislostí.
+
+Časť `dependencyManagement` môže naďalej obsahovať verzie `tomcat-embed-*`, ktoré vznikli z Gradle constraints. Samotný blok žiadnu knižnicu nepridáva. Udržiava zarovnanie interného executable WAR-u a využije sa iba v projekte, ktorý si embedded Tomcat vedome pridá ako vlastnú závislosť.
 
 Maven `dependencyManagement` sa automaticky nededí iba tým, že projekt pridá WebJET ako závislosť. Maven konzument preto musí vo vlastnom builde importovať rovnaký Spring Boot BOM. Inak môže závislosť dostupná iba cez knižnicu tretej strany ponechať inú Spring Boot patch verziu, hoci priame WebJET závislosti už majú vyhodnotené verzie.
 
-Ak publikovaný WebJET POM používa vyššiu vyhodnotenú verziu bezpečnostne aktualizovanej knižnice ako importovaný Boot BOM, Maven konzument ju musí zopakovať vo vlastnom `dependencyManagement`. Správa závislostí konzumenta má prednosť aj pred priamou verziou vo WebJET POM. Aktuálne sa to týka Tomcatu a Log4j-to-SLF4J bridge; konfigurácia vyzerá nasledovne:
+Ak publikovaný WebJET POM používa vyššiu vyhodnotenú verziu bezpečnostne aktualizovanej knižnice ako importovaný Boot BOM, Maven konzument ju musí zopakovať vo vlastnom `dependencyManagement`. Správa závislostí konzumenta má prednosť aj pred priamou verziou vo WebJET POM. Aktuálne sa to týka Log4j-to-SLF4J bridge; konfigurácia vyzerá nasledovne:
 
 ```xml
 <properties>
     <spring-boot.version>4.1.1</spring-boot.version>
-    <webjet-tomcat.version>11.0.25</webjet-tomcat.version>
     <webjet-log4j-to-slf4j.version>2.26.1</webjet-log4j-to-slf4j.version>
 </properties>
 
@@ -117,26 +124,6 @@ Ak publikovaný WebJET POM používa vyššiu vyhodnotenú verziu bezpečnostne 
             <scope>import</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-core</artifactId>
-            <version>${webjet-tomcat.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-el</artifactId>
-            <version>${webjet-tomcat.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-jasper</artifactId>
-            <version>${webjet-tomcat.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-websocket</artifactId>
-            <version>${webjet-tomcat.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-to-slf4j</artifactId>
             <version>${webjet-log4j-to-slf4j.version}</version>
@@ -145,9 +132,11 @@ Ak publikovaný WebJET POM používa vyššiu vyhodnotenú verziu bezpečnostne 
 </dependencyManagement>
 ```
 
-Verzia Spring Boot sa musí zhodovať s verziou pluginu v príslušnom WebJET release. Hodnoty Tomcatu a Log4j bridge sa musia zhodovať s konkrétnymi vyhodnotenými verziami v publikovanom WebJET POM; `tomcatMinimumVersion` a `log4jToSlf4jMinimumVersion` sú iba spodné hranice a po budúcej aktualizácii BOM môžu byť nižšie než skutočne vybrané verzie. Keď už Boot BOM spravuje rovnakú alebo novšiu kompatibilnú verziu, príslušné samostatné položky sa odstránia.
+Verzia Spring Boot sa musí zhodovať s verziou pluginu v príslušnom WebJET release. Hodnota Log4j bridge sa musí zhodovať s konkrétnou vyhodnotenou verziou v publikovanom WebJET POM; `log4jToSlf4jMinimumVersion` je iba spodná hranica a po budúcej aktualizácii BOM môže byť nižšia než skutočne vybraná verzia. Keď už Boot BOM spravuje rovnakú alebo novšiu kompatibilnú verziu, samostatná položka sa odstráni.
 
-Úloha `writePom` už verzie sama nevypočítava. Nad POM vygenerovaným Gradlom vykoná iba WebJET špecifické úpravy rozsahu a odstránenie historických interných závislostí. Deklarované vylúčenia zachováva, aby sa k Maven konzumentovi nepreniesli vylúčené tranzitívne artefakty. Verziu preto nikdy nepridávajte do `dependencies` iba kvôli generovaniu POM.
+Verzia externého Tomcatu je prevádzková požiadavka na aplikačný server, nie závislosť zákazníckeho WAR-u. Musí spĺňať verziu podporovanú daným WebJET release a bezpečnostné aktualizácie sa vykonávajú aktualizáciou servera. `tomcatMinimumVersion` v `build.gradle` chráni iba embedded runtime vývojového/executable variantu; zákaznícky projekt nemá pridávať `tomcat-embed-*` do svojho `dependencyManagement`, pokiaľ vedome nevytvára vlastnú embedded distribúciu.
+
+Úloha `writePom` už verzie sama nevypočítava. Nad POM vygenerovaným Gradlom vykoná WebJET špecifické úpravy rozsahu a odstránenie historických interných závislostí. Exclusions tvoria súčasť publikačného kontraktu; najmä vylúčenia embedded Tomcatu sa nesmú pri úprave alebo porovnávaní POM odstrániť. Verziu preto nikdy nepridávajte do `dependencies` iba kvôli generovaniu POM.
 
 Oba POM varianty je možné vygenerovať a ich priame závislosti automaticky porovnať s vyhodnoteným `runtimeClasspath` príkazom:
 
@@ -158,7 +147,9 @@ Oba POM varianty je možné vygenerovať a ich priame závislosti automaticky po
     -Dwjversion=TEST-SNAPSHOT
 ```
 
-Kontrola overí štandardný POM v `build/publications/maven/pom-default.xml` aj legacy POM v `build/updatezip/artifacts/webjetcms-TEST-SNAPSHOT.pom`. Maven musí oba vyhodnotiť ako `jar` (Gradle pre túto predvolenú hodnotu element `packaging` v XML vynechá), každá bežná priama závislosť musí mať konkrétnu vyhodnotenú verziu, Spring Boot BOM musí byť importovaný práve raz a samostatný import Jackson 2 ani Jackson 3 BOM mimo Spring Boot BOM nesmie byť prítomný. Kontrola navyše chráni Tomcat a Log4j bezpečnostné spodné hranice; Tomcat moduly musia zostať priame, zarovnané a so zachovaným vylúčením duplicitného `tomcat-annotations-api`.
+Kontrola overí štandardný POM v `build/publications/maven/pom-default.xml` aj legacy POM v `build/updatezip/artifacts/webjetcms-TEST-SNAPSHOT.pom`. Maven musí oba vyhodnotiť ako `jar` (Gradle pre túto predvolenú hodnotu element `packaging` v XML vynechá), každá bežná priama závislosť musí mať konkrétnu vyhodnotenú verziu, Spring Boot BOM musí byť importovaný práve raz a samostatný import Jackson 2 ani Jackson 3 BOM mimo Spring Boot BOM nesmie byť prítomný.
+
+Kontrola navyše chráni dve odlišné strany kontraktu. Interný `runtimeClasspath` a executable WAR musia mať všetky štyri Tomcat moduly zarovnané nad bezpečnostnou spodnou hranicou. Publikovaný POM musí mať runtime kontajnera a serverové API ako `provided`, zachovať vylúčenia tranzitívnych Tomcat vetiev a nesmie syntetickému zákazníckemu projektu sprístupniť `spring-boot-starter-tomcat*`, `spring-boot-tomcat`, `tomcat-annotations-api` ani `tomcat-embed-*`. Resolverový smoke test tak zachytí aj novú nepriamu cestu cez inú knižnicu.
 
 Rovnakú kontrolu spúšťa CI aj Ant úloha `makepom`. Zlyhanie validácie tak zastaví release ešte pred podpisovaním a nahrávaním artefaktov.
 
@@ -216,6 +207,18 @@ V klientských projektoch stačí nastaviť príslušnú verziu v build.gradle:
 ext {
     webjetVersion = "2023.0-SNAPSHOT";
 }
+
+dependencies {
+    implementation("com.webjetcms:webjetcms:${webjetVersion}")
+
+    // API poskytuje externý Tomcat; do WEB-INF/lib sa nesmú zabaliť.
+    providedCompile 'jakarta.servlet:jakarta.servlet-api'
+    providedCompile 'jakarta.servlet.jsp:jakarta.servlet.jsp-api'
+    providedCompile 'jakarta.el:jakarta.el-api'
+    providedCompile 'jakarta.annotation:jakarta.annotation-api'
+}
 ```
+
+Klientsky build musí mať pre uvedené závislosti dostupné verzie, ideálne importom rovnakého Spring Boot BOM. Pri Maven projekte sa rovnaké API deklarujú so scope `provided`. Priame `provided` deklarácie v klientskom projekte zároveň zabezpečia, že API privedené tranzitívne inou knižnicou neskončia vo výslednom `WEB-INF/lib`.
 
 pokusne sme overili základnú funkčnosť na projektoch s MariaDB, Microsoft SQL aj Oracle DB.
