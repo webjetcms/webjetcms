@@ -1,9 +1,11 @@
 package sk.iway.iwcm.system.datatable;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +21,9 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.upload.UploadSpringConfig;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 import sk.iway.iwcm.test.BaseWebjetTest;
 import sk.iway.iwcm.test.TestRequest;
 import sk.iway.spring.SpringApplication;
@@ -28,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -40,8 +45,6 @@ import java.util.Map;
 import javax.persistence.Id;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
-
-import org.junit.jupiter.api.BeforeAll;
 
 /**
  * Test REST controller methods
@@ -341,6 +344,49 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
 
         assertEquals(Boolean.FALSE, unrestrictedController.rowReorder(controller.getRequest(), request).getBody());
         assertEquals(10, entity.getPosition());
+        verify(repository, never()).saveAll(any());
+    }
+
+    @Test
+    void testRowReorderRejectsRequestContainingEntityFromAnotherDomain() {
+        int currentDomainId = 1;
+        int foreignDomainId = 2;
+        List<Long> requestedIds = List.of(1L, 2L);
+
+        @SuppressWarnings("unchecked")
+        DomainIdRepository<RowReorderTestEntity, Long> repository = mock(DomainIdRepository.class);
+        RowReorderTestEntity currentDomainEntity = new RowReorderTestEntity(1L, 10);
+        currentDomainEntity.setDomainId(currentDomainId);
+        RowReorderTestEntity foreignDomainEntity = new RowReorderTestEntity(2L, 20);
+        foreignDomainEntity.setDomainId(foreignDomainId);
+
+        when(repository.findAllByIdInAndDomainId(requestedIds, currentDomainId))
+            .thenReturn(List.of(currentDomainEntity));
+        // This is what the unscoped implementation would load and subsequently modify.
+        when(repository.findAllById(requestedIds)).thenReturn(List.of(currentDomainEntity, foreignDomainEntity));
+
+        DatatableRestControllerV2<RowReorderTestEntity, Long> domainController =
+                new DatatableRestControllerV2<>(repository) {};
+        domainController.checkDomainId = true;
+        domainController.setRequest(controller.getRequest());
+
+        RowReorderDto request = new RowReorderDto();
+        request.setDataSrc("position");
+        request.setValues(List.of(
+            new RowReorderDto.RowReorderValue(1L, 10, 20),
+            new RowReorderDto.RowReorderValue(2L, 20, 10)
+        ));
+
+        try (MockedStatic<CloudToolsForCore> cloudTools = mockStatic(CloudToolsForCore.class)) {
+            cloudTools.when(CloudToolsForCore::getDomainId).thenReturn(currentDomainId);
+
+            assertEquals(Boolean.FALSE, domainController.rowReorder(controller.getRequest(), request).getBody());
+        }
+
+        assertEquals(10, currentDomainEntity.getPosition());
+        assertEquals(20, foreignDomainEntity.getPosition());
+        verify(repository).findAllByIdInAndDomainId(requestedIds, currentDomainId);
+        verify(repository, never()).findAllById(any());
         verify(repository, never()).saveAll(any());
     }
 

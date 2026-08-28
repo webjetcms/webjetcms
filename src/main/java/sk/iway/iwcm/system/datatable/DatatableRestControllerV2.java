@@ -1684,14 +1684,20 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				return ResponseEntity.ok(false);
 			}
 
-			// Load only the rows explicitly named in the request.
-			entities = this.repo.findAllById(requestedIds);
+			// Load only the rows explicitly named in the request and, when enabled, only from the current domain.
+			if (checkDomainId) {
+				DomainIdRepository<T, ID> domainRepo = getDomainRepo();
+				if (domainRepo == null) return ResponseEntity.ok(false);
+				entities = domainRepo.findAllByIdInAndDomainId(requestedIds, CloudToolsForCore.getDomainId());
+			} else {
+				entities = this.repo.findAllById(requestedIds);
+			}
 		} catch (Exception e) {
 			Logger.error(DatatableRestControllerV2.class, "Error fetching entities for row reorder", e);
 			return ResponseEntity.ok(false);
 		}
 
-		// findAllById silently omits unknown IDs. The operation must be all-or-nothing.
+		// Repository bulk lookups silently omit unknown or out-of-domain IDs. The operation must be all-or-nothing.
 		if (entities.size() != requestedIds.size()) {
 			Logger.debug(DatatableRestControllerV2.class, "Not all requested entities were found for row reorder");
 			return ResponseEntity.ok(false);
