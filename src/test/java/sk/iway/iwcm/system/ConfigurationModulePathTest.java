@@ -80,15 +80,24 @@ class ConfigurationModulePathTest {
 	void representativeVariablesUseExpectedPaths() {
 		assertEquals("security.oauth2", modulesOf("oauth2_githubClientId"));
 		assertEquals("apps.gallery", modulesOf("galleryImageQuality"));
-		assertEquals("apps.dmail;apps.reservation;apps.formmail", modulesOf("defaultSenderName"));
+		assertEquals("system.email;apps.dmail;apps.reservation;apps.form", modulesOf("defaultSenderName"));
 		assertEquals("apps.reservation", modulesOf("reservationAllDayStartTime"));
-		assertEquals("integrations.google_docs", modulesOf("googleDocsEnabled"));
+		assertTrue(ConfigurationModulePath.parse(modulesOf("usrLogonRequireSMS")).contains("integrations.sms"));
 		assertEquals("files.metadata;files.gfs", modulesOf("metadataWaitTime"));
-		assertTrue(ConfigurationModulePath.parse(modulesOf("imageEditorDefaultTool")).contains("files.imageeditor"));
+		assertEquals("files.imageeditor", modulesOf("imageEditorDefaultTool"));
 		assertEquals("apps.structuremirroring", modulesOf("structureMirroringConfig"));
-		assertEquals("apps.dashboard", modulesOf("dashboardRecentSize"));
+		assertEquals("system.admin", modulesOf("dashboardRecentSize"));
 		assertTrue(ConfigurationModulePath.parse(modulesOf("xRobotsTagValue")).contains("content.seo"));
-		assertEquals("content.properties", modulesOf("propertiesEnabledKeys"));
+		assertEquals("content.properties;security", modulesOf("propertiesEnabledKeys"));
+		assertEquals("security.password", modulesOf("password_passKeyEnabled"));
+		assertEquals("security.xss", modulesOf("xssProtection"));
+		assertEquals("security.cors", modulesOf("accessControlAllowedOrigins"));
+		assertEquals("files.indexing", modulesOf("fileIndexerMaxFileSize"));
+		assertEquals("files.thumb", modulesOf("imageMagickCustomParams"));
+		assertEquals("system.database", modulesOf("mariaDbDefaultEngine"));
+		assertEquals("system.sync", modulesOf("exportArchivePath"));
+		assertEquals("system.audit", modulesOf("loggingInMemoryEnabled"));
+		assertEquals("apps.gdpr", modulesOf("gdprDeleteDocAndGroupsAfterDays"));
 	}
 
 	private String modulesOf(String name) {

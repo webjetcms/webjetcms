@@ -115,10 +115,12 @@ class ConfDBTest {
 
     @Test
     void getConfForJspDoesNotMatchPartialModuleNames() {
+        String partialMatchVariable = "partialModuleNameTest";
+        Constants.setString(partialMatchVariable, "", "apps.formmail", "Test variable for a partial module-name match");
         List<ConfDetails> formConfiguration = ConfDB.getConfForJsp("form");
 
         assertTrue(containsConfiguration(formConfiguration, "formmailAllowedRecipients"));
-        assertFalse(containsConfiguration(formConfiguration, "formMailFixedSenderEmail"));
+        assertFalse(containsConfiguration(formConfiguration, partialMatchVariable));
     }
 
     @Test
