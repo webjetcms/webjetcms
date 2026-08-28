@@ -49,6 +49,7 @@ public class Constants {
 	public static final String SERVER_NAME_MACRO = "SERVER_NAME";
 	public static final String MOD_CAPTCHA = "security.captcha";
 	public static final String MOD_PASSWORD = "security.password";
+	public static final String MOD_THUMB = "files.thumb";
 	public static final String MOD_FILE_ARCHIV = "files.file_archiv";
 	public static final String MOD_DMAIL = "apps.dmail";
 	public static final String MOD_RESERVATION = "apps.reservation";
@@ -281,7 +282,7 @@ public class Constants {
 		setBoolean("disableWebJETToolbar", false, "content.editor;content.webpages",
 				"ak je redaktor prihlásený v admin časti a zobrazí si stránku tak v pravej hornej časti sa zobrazí informácia o stránke a možnosť editácie stránky. Ak túto hodnotu nastavíte na true, tak sa to zobrazovať nebude.");
 
-		setString("imageMagickDir", "/usr/bin", "content.editor;system.performance;apps.gallery",
+		setString("imageMagickDir", "/usr/bin", MOD_THUMB,
 				"Ak je nastavene pouzije sa na resize obrazkov prikaz convert z balika ImageMagick");
 
 		setBoolean("disableDMailSender", false, "apps.dmail",
@@ -1094,7 +1095,7 @@ public class Constants {
 		setString("galleryVideoMode", "big", MOD_GALLERY,
 				"Nastavenie rezimu konverzie videa pre foto galeriu, mozne hodnoty: all=vygeneruje sa male aj velke video, big=vygeneruje sa len velke video, small=vygeneruje sa len male video");
 
-		setString("thumbServletCacheDir", "/WEB-INF/imgcache/", mods(MOD_GALLERY, MOD_PERFORMANCE),
+		setString("thumbServletCacheDir", "/WEB-INF/imgcache/", MOD_THUMB,
 				"Cesta k adresaru pre cache /thumb obrazkov, pre server s vysokym mnozstvom obrazkov odporucame presunut na ine miesto ako /WEB-INF/ kvoli rychlosti startu Tomcatu");
 
 		setString("xRobotsTagValue", "noindex, nofollow", "content.editor;content.seo",
@@ -1384,9 +1385,9 @@ public class Constants {
 		setBoolean("imageAlwaysCreateGalleryBean", false, MOD_GALLERY,
 				"Ak je zapnute na true bude sa zaznam v gallery DB tabulke vytvarat aj pre obrazky mimo foto galerie");
 
-		setString("thumbWriteServer", "", "files.thumb",
+		setString("thumbWriteServer", "", MOD_THUMB,
 				"Pre cluster na ktorom je mozny zapis len na jednom node urcuje http adresu tohto nodu na ktory sa da pripojit z public nodov a obrazok vygenerovat");
-		setString("thumbWriteNodeName", "", "files.thumb",
+		setString("thumbWriteNodeName", "", MOD_THUMB,
 				"Pre cluster na ktorom je mozny zapis len na jednom node urcuje meno tohto nodu na ktory sa da pripojit z public nodov a obrazok vygenerovat");
 
 		setBoolean("editorGroupReplaceNumberWithDashInUrl", false, MOD_EDITOR,
@@ -1922,7 +1923,7 @@ public class Constants {
 		setString("basketQuantityField", "fieldM", MOD_BASKET,
 				"Názov poľa v ktorom je v stránke uvedený počet kusov produktu. Štandardne nastavené na hodnotu fieldM");
 
-		setString("thumbServletMissingImg", "", "files.thumb;apps.gallery",
+		setString("thumbServletMissingImg", "", MOD_THUMB,
 				"Obrazok, ktory sa zobrazi pri volani /thumb ak zadane URL neexistuje. Na kazdom riadku je vo formate /images/nejaka/cesta|/images/cesta/obrazok.jpg. Hlada sa najlepsia zhoda (najdlhsi vyraz).");
 
 		setString("propAllowedTags", "p,div,a,sub,sup,br,strong", MOD_SECURITY,
