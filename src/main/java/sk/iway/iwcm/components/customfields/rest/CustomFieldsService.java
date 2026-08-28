@@ -36,6 +36,7 @@ import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.editor.appstore.AppManager;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
+import sk.iway.iwcm.system.annotations.IsEntity;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
@@ -636,6 +637,7 @@ public class CustomFieldsService {
 
         ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);
         provider.addIncludeFilter(new AnnotationTypeFilter(Entity.class));
+        provider.addIncludeFilter(new AnnotationTypeFilter(IsEntity.class));
 
         for (String packageName : AppManager.getPackageNames()) {
 			for (BeanDefinition beanDef : provider.findCandidateComponents(packageName)) {
