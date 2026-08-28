@@ -2,13 +2,17 @@ package sk.iway.iwcm.components.blog.rest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -22,9 +26,13 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.blog.jpa.BloggerBean;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsEntity;
@@ -32,6 +40,10 @@ import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.editor.facade.EditorFacade;
+import sk.iway.iwcm.system.Modules;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
 
 @Execution(ExecutionMode.SAME_THREAD)
 class BloggerServiceTest {
@@ -40,7 +52,156 @@ class BloggerServiceTest {
     private static final long BLOGGER_ID = 321L;
     private static final long NON_BLOGGER_ID = 654L;
     private static final long SUPERADMIN_ID = 1L;
+    private static final long NEW_BLOGGER_ID = 987L;
+    private static final String NEW_LOGIN = "new-blogger";
     private static final String NEW_PASSWORD = "Changed-password-123";
+
+    @ParameterizedTest
+    @MethodSource("invalidNewBloggers")
+    void shouldRejectInvalidNewBloggerBeforeAnyLookupOrWrite(BloggerBean submitted, String description) {
+        UserDetailsRepository repository = mock(UserDetailsRepository.class);
+        EditorFacade editorFacade = mock(EditorFacade.class);
+
+        try (MockedStatic<UsersDB> users = mockStatic(UsersDB.class);
+                MockedStatic<DocDB> docDB = mockStatic(DocDB.class);
+                MockedStatic<UserDetailsService> passwordService = mockStatic(UserDetailsService.class)) {
+            assertFalse(BloggerService.saveBlogger(submitted, repository, editorFacade, mock(HttpServletRequest.class)));
+
+            verifyNoInteractions(repository, editorFacade);
+            users.verifyNoInteractions();
+            docDB.verifyNoInteractions();
+            passwordService.verifyNoInteractions();
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "ADMIN", "admín" })
+    void shouldRejectNormalizedLoginCollisionBeforeSavingBlogger(String login) {
+        BloggerBean submitted = bloggerForCreate(login);
+        UserDetailsRepository repository = mock(UserDetailsRepository.class);
+        EditorFacade editorFacade = mock(EditorFacade.class);
+
+        try (MockedStatic<UsersDB> users = mockStatic(UsersDB.class);
+                MockedStatic<UserDetailsService> passwordService = mockStatic(UserDetailsService.class)) {
+            users.when(() -> UsersDB.getUser(login)).thenReturn(mock(UserDetails.class));
+
+            assertFalse(BloggerService.saveBlogger(submitted, repository, editorFacade, mock(HttpServletRequest.class)));
+
+            verifyNoInteractions(repository, editorFacade);
+            passwordService.verifyNoInteractions();
+            users.verify(() -> UsersDB.getUser(login));
+            users.verify(() -> UsersDB.getUserIdByLogin(login), never());
+            users.verifyNoMoreInteractions();
+        }
+    }
+
+    @Test
+    void shouldRejectNullEntityReturnedBySaveAndFlush() {
+        BloggerBean submitted = bloggerForCreate(NEW_LOGIN);
+        UserDetailsRepository repository = mock(UserDetailsRepository.class);
+        when(repository.saveAndFlush(any(UserDetailsEntity.class))).thenReturn(null);
+
+        try (MockedStatic<UsersDB> users = mockStatic(UsersDB.class);
+                MockedStatic<DocDB> docDB = mockStatic(DocDB.class);
+                MockedStatic<UserDetailsService> passwordService = mockStatic(UserDetailsService.class)) {
+            users.when(() -> UsersDB.getUser(NEW_LOGIN)).thenReturn(null);
+            docDB.when(DocDB::getBlogGroupId).thenReturn(BLOG_GROUP_ID);
+
+            assertFalse(BloggerService.saveBlogger(
+                submitted,
+                repository,
+                mock(EditorFacade.class),
+                mock(HttpServletRequest.class)
+            ));
+
+            assertNull(submitted.getId());
+            verify(repository).saveAndFlush(any(UserDetailsEntity.class));
+            verifyNoMoreInteractions(repository);
+            passwordService.verifyNoInteractions();
+            users.verify(() -> UsersDB.getUserIdByLogin(NEW_LOGIN), never());
+        }
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(longs = { -1L, 0L, 2147483648L })
+    void shouldRejectInvalidIdReturnedBySaveAndFlush(Long savedId) {
+        BloggerBean submitted = bloggerForCreate(NEW_LOGIN);
+        UserDetailsEntity savedUser = new UserDetailsEntity();
+        savedUser.setId(savedId);
+
+        UserDetailsRepository repository = mock(UserDetailsRepository.class);
+        when(repository.saveAndFlush(any(UserDetailsEntity.class))).thenReturn(savedUser);
+
+        try (MockedStatic<UsersDB> users = mockStatic(UsersDB.class);
+                MockedStatic<DocDB> docDB = mockStatic(DocDB.class);
+                MockedStatic<UserDetailsService> passwordService = mockStatic(UserDetailsService.class)) {
+            users.when(() -> UsersDB.getUser(NEW_LOGIN)).thenReturn(null);
+            docDB.when(DocDB::getBlogGroupId).thenReturn(BLOG_GROUP_ID);
+
+            assertFalse(BloggerService.saveBlogger(
+                submitted,
+                repository,
+                mock(EditorFacade.class),
+                mock(HttpServletRequest.class)
+            ));
+
+            assertNull(submitted.getId());
+            verify(repository).saveAndFlush(any(UserDetailsEntity.class));
+            verifyNoMoreInteractions(repository);
+            passwordService.verifyNoInteractions();
+            users.verify(() -> UsersDB.getUserIdByLogin(NEW_LOGIN), never());
+        }
+    }
+
+    @Test
+    void shouldUseOnlyIdReturnedBySaveAndFlush() {
+        BloggerBean submitted = bloggerForCreate(NEW_LOGIN);
+        submitted.setId(SUPERADMIN_ID);
+        UserDetailsEntity savedUser = new UserDetailsEntity();
+        savedUser.setId(NEW_BLOGGER_ID);
+
+        UserDetailsRepository repository = mock(UserDetailsRepository.class);
+        when(repository.saveAndFlush(any(UserDetailsEntity.class))).thenReturn(savedUser);
+
+        Modules modulesInstance = mock(Modules.class);
+        when(modulesInstance.getModules()).thenReturn(List.of());
+
+        try (MockedStatic<UsersDB> users = mockStatic(UsersDB.class);
+                MockedStatic<DocDB> docDB = mockStatic(DocDB.class);
+                MockedStatic<Constants> constants = mockStatic(Constants.class);
+                MockedStatic<Modules> modules = mockStatic(Modules.class);
+                MockedConstruction<SimpleQuery> queries = mockConstruction(SimpleQuery.class);
+                MockedStatic<UserDetailsService> passwordService = mockStatic(UserDetailsService.class)) {
+            users.when(() -> UsersDB.getUser(NEW_LOGIN)).thenReturn(null);
+            docDB.when(DocDB::getBlogGroupId).thenReturn(BLOG_GROUP_ID);
+            constants.when(() -> Constants.getString("bloggerAppPermissions")).thenReturn("");
+            modules.when(Modules::getInstance).thenReturn(modulesInstance);
+            passwordService.when(() -> UserDetailsService.savePassword(NEW_PASSWORD, (int) NEW_BLOGGER_ID))
+                .thenReturn(false);
+
+            assertFalse(BloggerService.saveBlogger(
+                submitted,
+                repository,
+                mock(EditorFacade.class),
+                mock(HttpServletRequest.class)
+            ));
+
+            ArgumentCaptor<UserDetailsEntity> newUserCaptor = ArgumentCaptor.forClass(UserDetailsEntity.class);
+            verify(repository).saveAndFlush(newUserCaptor.capture());
+            verify(repository, never()).save(any(UserDetailsEntity.class));
+            assertNull(newUserCaptor.getValue().getId());
+            assertEquals(Long.valueOf(NEW_BLOGGER_ID), submitted.getId());
+            assertEquals(NEW_PASSWORD, savedUser.getPassword());
+            passwordService.verify(() -> UserDetailsService.savePassword(NEW_PASSWORD, (int) NEW_BLOGGER_ID));
+            passwordService.verifyNoMoreInteractions();
+            users.verify(() -> UsersDB.getUserIdByLogin(NEW_LOGIN), never());
+            verify(queries.constructed().get(0)).execute(
+                "DELETE FROM user_disabled_items WHERE user_id=?",
+                (int) NEW_BLOGGER_ID
+            );
+        }
+    }
 
     @ParameterizedTest(name = "{1}")
     @MethodSource("rejectedBloggers")
@@ -109,6 +270,15 @@ class BloggerServiceTest {
         );
     }
 
+    private static Stream<Arguments> invalidNewBloggers() {
+        return Stream.of(
+            Arguments.of(null, "null entity"),
+            Arguments.of(bloggerForCreate(null), "null login"),
+            Arguments.of(bloggerForCreate(""), "empty login"),
+            Arguments.of(bloggerForCreate("   "), "blank login")
+        );
+    }
+
     private static MockedConstruction<SimpleQuery> mockBloggerIds(List<Long> bloggerIds) {
         List<Integer> scopedIds = bloggerIds.stream().map(Long::intValue).toList();
         return mockConstruction(SimpleQuery.class,
@@ -124,6 +294,15 @@ class BloggerServiceTest {
         BloggerBean blogger = new BloggerBean();
         blogger.setId(id);
         blogger.setPassword(NEW_PASSWORD);
+        return blogger;
+    }
+
+    private static BloggerBean bloggerForCreate(String login) {
+        BloggerBean blogger = blogger(null);
+        blogger.setLogin(login);
+        blogger.setFirstName("New");
+        blogger.setLastName("Blogger");
+        blogger.setEmail("new-blogger@example.test");
         return blogger;
     }
 }

@@ -174,15 +174,20 @@ public class BloggerService {
      * @return
      */
     public static boolean saveBlogger(BloggerBean bloggerToSave, UserDetailsRepository userDetailsRepository, EditorFacade editorFacade, HttpServletRequest request) {
+        if (bloggerToSave == null || Tools.isEmpty(bloggerToSave.getLogin())) return false;
+
+        String login = bloggerToSave.getLogin();
+        // Use the same case/accent-insensitive lookup as authentication and reject collisions before any write.
+        if (UsersDB.getUser(login) != null) return false;
+
         UserDetailsEntity newUser = new UserDetailsEntity();
-        newUser.setId((long)-1);
+        newUser.setId(null);
         newUser.setFirstName( bloggerToSave.getFirstName() );
         newUser.setLastName( bloggerToSave.getLastName() );
         newUser.setEmail( bloggerToSave.getEmail() );
         newUser.setRegDate(new Date());
 
         //Set loggin and Writable folders
-        String login = bloggerToSave.getLogin();
         newUser.setLogin( login );
 
         //Blog groupID (without this group id, user not gonna be showed in blogger's list)
@@ -198,19 +203,20 @@ public class BloggerService {
         //First save password as null for save
         newUser.setPassword(null);
 
-        //Save new blogger user
-        userDetailsRepository.save(newUser);
+        //Save and flush before applying rights or password. The returned entity is the only trusted source of the new ID.
+        UserDetailsEntity savedUser = userDetailsRepository.saveAndFlush(newUser);
+        if (savedUser == null || savedUser.getId() == null) return false;
 
-        //Get new saved user
-        Integer newUserId = UsersDB.getUserIdByLogin(login);
-        if(newUserId == null) return false;
-        newUser.setId( newUserId.longValue() );
-        bloggerToSave.setId( newUserId.longValue() );
+        long savedUserId = savedUser.getId().longValue();
+        if (savedUserId < 1L || savedUserId > Integer.MAX_VALUE) return false;
+
+        int newUserId = (int) savedUserId;
+        bloggerToSave.setId(savedUserId);
 
         //After save, set password back
         String password = bloggerToSave.getPassword();
         if (Tools.isEmpty(password) || "*".equals(password)) password = Password.generatePassword(8);
-        newUser.setPassword( password );
+        savedUser.setPassword( password );
 
         //Set user rights
         setUserRights(newUserId);
@@ -220,10 +226,10 @@ public class BloggerService {
         if(!savedPassword) return false;
 
         //MAKE - blogger structure
-        prepareBloggerStructure(newUser, bloggerToSave.getEditableGroup(), userDetailsRepository, editorFacade, request);
+        prepareBloggerStructure(savedUser, bloggerToSave.getEditableGroup(), userDetailsRepository, editorFacade, request);
 
         //Send welcome email
-        AuthorizeUserService.sendInfoEmail(newUser, password, UsersDB.getCurrentUser(request), request);
+        AuthorizeUserService.sendInfoEmail(savedUser, password, UsersDB.getCurrentUser(request), request);
 
         return true;
     }
