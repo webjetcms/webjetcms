@@ -32,9 +32,6 @@ plugins {
 repositories {
     mavenCentral()
     maven {
-        url "https://pd4ml.tech/maven2/"
-    }
-    maven {
         name = "github"
         url = uri("https://maven.pkg.github.com/webjetcms/webjet-ai")
         credentials {
@@ -42,6 +39,9 @@ repositories {
             username = project.findProperty("gpr.user") ?: System.getenv("GPR_USER")
             password = project.findProperty("gpr.api-key") ?: System.getenv("GPR_API_KEY")
         }
+    }
+    maven {
+        url "https://pd4ml.tech/maven2/"
     }
     flatDir {
        dirs 'libs'
