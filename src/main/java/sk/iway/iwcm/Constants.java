@@ -446,8 +446,6 @@ public class Constants {
 		setString("basketDisplayCurrency", "eur", MOD_BASKET,
 				"štandartne eur, určuje, v akej mene sa tovar zobrazí v košíku, a pri objednávke. Toto zobrazovanie sa môže zmeniť lokálne podľa používateľa, ak to bude potrebné");
 
-		setString("mapGoogleLicense", "", "apps.map", "predvoleny licencny kluc pre google mapy");
-
 		setString("supportedCurrencies", "eur,czk,usd,gbp", MOD_BASKET, "ake meny rozpoznava a dokaze prepocitat");
 		setString("kurz_gbp_czk", "28.002", MOD_BASKET,"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
 		setString("kurz_gbp_eur", "1.153", MOD_BASKET,"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
@@ -1454,7 +1452,7 @@ public class Constants {
 				"/admin/FCKeditor/editor_set_user.jsp|/admin/refresher.jsp|/components/media/get_media.jsp", MOD_EDITOR,
 				"Zoznam URL pre ktore sa nebude zobrazovat loader pri ajax dotazoch");
 
-		setString("googleMapsApiKey", "", MOD_CONFIG, "Možnosť globálneho nastavenia API kľúču pre Google mapy");
+		setString("googleMapsApiKey", "", "apps.map", "Možnosť globálneho nastavenia API kľúču pre Google mapy");
 		setString("canBeShownForUserAgent", "", MOD_CONFIG,
 				"Výnimka pre konštantu showOnlyActualPublishedDoc na hlavičku User-Agent obsahujúcu reťazce v tejto premennej oddelenej , alebo |, napr. facebookexternalhit,Facebot");
 
@@ -1796,7 +1794,7 @@ public class Constants {
 
 		setBoolean("springEnableShowdoc", true, MOD_PERFORMANCE,
 				"Nastavuje, ci sa ma pouzivat Spring pre komponenty, pre vysoko zatazene servre pri nepouzivani Spring komponent je mozne vypnut nastavenim na false");
-		setString("mapProvider", "OpenStreetMap", MOD_CONFIG,
+		setString("mapProvider", "OpenStreetMap", "apps.map",
 				"Nastavenie typu mapy pre komponentu map.jsp, moznosti su GoogleMap alebo OpenStreetMap");
 
 		setString("fileIndexerNoDataFileExtension", "", MOD_SEARCH,
