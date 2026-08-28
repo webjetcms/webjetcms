@@ -103,6 +103,31 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
     }
 
     @Override
+    public boolean checkItemPerms(UserDetailsEntity entity, Long id) {
+        Identity user = getUser();
+        if (user == null) return false;
+
+        boolean canEditAdmins = user.isEnabledItem(PERM_EDIT_ADMINS);
+        boolean canEditPublicUsers = user.isEnabledItem(PERM_EDIT_PUBLIC_USERS);
+
+        if (id != null && id.longValue() > 0) {
+            // The request entity is attacker-controlled, always authorize against the stored user type.
+            UserDetailsEntity stored = userDetailsRepository.findById(id).orElse(null);
+            if (stored == null) return false;
+
+            if (UserDetailsService.isUsersSplitByDomain()) {
+                if (stored.getDomainId() == null || stored.getDomainId().intValue() != CloudToolsForCore.getDomainId()) return false;
+            }
+
+            if (Boolean.TRUE.equals(stored.getAdmin())) return canEditAdmins;
+            return canEditPublicUsers;
+        }
+
+        if (entity != null && Boolean.TRUE.equals(entity.getAdmin())) return canEditAdmins;
+        return canEditAdmins || canEditPublicUsers;
+    }
+
+    @Override
 	public void beforeSave(UserDetailsEntity entity) {
 
         Identity user = UsersDB.getCurrentUser(getRequest());

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.lang.NonNull;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.context.ContextConfiguration;
@@ -23,11 +24,20 @@ import sk.iway.iwcm.test.TestRequest;
 import sk.iway.spring.SpringApplication;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import javax.persistence.Id;
+import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -207,6 +217,56 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
         assertEquals(1, controller.getAfterSaveCounter(), "afterSave should be called twice");
         assertEquals(0, controller.getBeforeDeleteCounter(), "beforeDelete should be called once");
         assertEquals(0, controller.getAfterDeleteCounter(), "afterDelete should be called once");
+    }
+
+    @Test
+    void testRowReorderChecksItemPermissionsBeforeModification() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<RowReorderTestEntity, Long> repository = mock(JpaRepository.class);
+        RowReorderTestEntity entity = new RowReorderTestEntity(1L, 10);
+        when(repository.findAllById(List.of(1L))).thenReturn(List.of(entity));
+
+        DatatableRestControllerV2<RowReorderTestEntity, Long> restrictedController =
+                new DatatableRestControllerV2<>(repository) {
+                    @Override
+                    public boolean checkItemPerms(RowReorderTestEntity checkedEntity, Long id) {
+                        return false;
+                    }
+                };
+        restrictedController.setRequest(controller.getRequest());
+
+        RowReorderDto request = new RowReorderDto();
+        request.setDataSrc("position");
+        request.setValues(List.of(new RowReorderDto.RowReorderValue(1L, 10, 20)));
+
+        assertThrows(ConstraintViolationException.class,
+                () -> restrictedController.rowReorder(controller.getRequest(), request));
+        assertEquals(10, entity.getPosition());
+        verify(repository, never()).saveAll(any());
+    }
+
+    private static class RowReorderTestEntity {
+
+        @Id
+        private Long id;
+        private Integer position;
+
+        RowReorderTestEntity(Long id, Integer position) {
+            this.id = id;
+            this.position = position;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        public Integer getPosition() {
+            return position;
+        }
+
+        public void setPosition(Integer position) {
+            this.position = position;
+        }
     }
 
 }

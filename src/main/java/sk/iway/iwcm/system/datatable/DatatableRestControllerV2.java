@@ -1682,6 +1682,20 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			return ResponseEntity.ok(false);
 		}
 
+		// Verify permissions for the whole request before modifying any entity.
+		for (T entity : entities) {
+			Long entityId;
+			try {
+				BeanWrapperImpl beanWrapper = new BeanWrapperImpl(entity);
+				String idColumnName = getIdColumnName(entity);
+				entityId = (Long) beanWrapper.getPropertyValue(idColumnName);
+			} catch (Exception e) {
+				Logger.error(DatatableRestControllerV2.class, "Error checking permissions for row reorder entity: " + entity, e);
+				return ResponseEntity.ok(false);
+			}
+			checkItemPermsThrows(entity, entityId);
+		}
+
 		// Loop through entities and set new value to the column specified by dataSrc
 		for (T entity : entities) {
 			try {
