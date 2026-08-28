@@ -127,6 +127,8 @@ public class BloggerService {
      * @return
      */
     public static boolean editBlogger(BloggerBean bloggerToEdit, UserDetailsRepository userDetailsRepository, HttpServletRequest request) {
+        if (bloggerToEdit == null || !isBloggerInCurrentScope(bloggerToEdit.getId())) return false;
+
         UserDetailsEntity userBlogger = userDetailsRepository.getById(bloggerToEdit.getId());
 
         //Field's login AND editableGroups CANT BE CHANGE
@@ -445,6 +447,18 @@ public class BloggerService {
         StringBuilder query = new StringBuilder(QUERY_PREFIX_ID);
         addQueryConditions(query);
         return (new SimpleQuery()).forListInteger(query.toString());
+    }
+
+    /**
+     * Check if the user ID belongs to a blogger in the current management scope.
+     * @param bloggerId user ID to check
+     * @return true if the user is a blogger in the current scope
+     */
+    static boolean isBloggerInCurrentScope(Long bloggerId) {
+        if (bloggerId == null || bloggerId.longValue() < 1L || bloggerId.longValue() > Integer.MAX_VALUE) return false;
+
+        List<Integer> bloggerIds = getAllBloggersIds();
+        return bloggerIds != null && bloggerIds.contains(bloggerId.intValue());
     }
 
     /**
