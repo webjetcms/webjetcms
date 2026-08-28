@@ -298,6 +298,7 @@ function initClosure() {
     var jsTreeParamName = somStromcek.data("rest-param-name");
     var jsTreeSearchLabel = somStromcek.data("search-label") || WJ.translate('editor.directory_name');
     var jsTreeSingleSelect = somStromcek.data("single-select") === true;
+    var jsTreeStateBeforeSearch = null;
     var treeInitialJsonFired = false;
 
     function getJstreeUrl() {
@@ -561,12 +562,18 @@ function initClosure() {
                 //EMPTY SEARCH
                 cancelSearch();
             } else {
+                let tree = somStromcek.jstree(true);
+                let currentState = tree.get_state();
+                if (WJ.urlGetParam("treeSearchValue", getJstreeUrl()) === null || currentState.core.selected.length > 0) {
+                    jsTreeStateBeforeSearch = currentState;
+                }
+
                 // Update url with search string - fire refresh
                 let url = WJ.urlUpdateParam( getJstreeUrl() , "treeSearchValue", searchString);
                 url = WJ.urlUpdateParam( url , "treeSearchType", $('#tree-folder-search-type').val());
 
                 somStromcek.data('rest-url', url);
-                somStromcek.jstree(true).refresh();
+                tree.refresh();
             }
         }
     });
@@ -587,6 +594,7 @@ function initClosure() {
         } else {
             //NEEDS to be there - clear search after change of tabs
             somStromcek.jstree(true).search("");
+            jsTreeStateBeforeSearch = null;
         }
         // Hide loader
         WJ.hideLoader();
@@ -608,11 +616,20 @@ function initClosure() {
             // Cancel search
             somStromcek.jstree(true).search("");
 
+            let tree = somStromcek.jstree(true);
+            let stateToRestore = null;
+            if (WJ.urlGetParam("treeSearchValue", getJstreeUrl()) !== null) {
+                let currentState = tree.get_state();
+                stateToRestore = currentState.core.selected.length > 0 ? currentState : jsTreeStateBeforeSearch;
+            }
+            jsTreeStateBeforeSearch = null;
+
             // Clean url - fire refresh
             let url = WJ.urlRemoveParam(getJstreeUrl(), "treeSearchValue");
             url = WJ.urlRemoveParam(url, "treeSearchType");
             somStromcek.data('rest-url', url);
-            somStromcek.jstree(true).refresh();
+            if (stateToRestore === null) tree.refresh();
+            else tree.refresh(false, function () { return stateToRestore; });
         }
     }
 

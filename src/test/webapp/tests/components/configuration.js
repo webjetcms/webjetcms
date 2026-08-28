@@ -158,8 +158,31 @@ Scenario('hierarchical configuration tree', async ({ I, DT, a11y }) => {
     I.seeElement(securityNode);
 
     I.clickCss("#tree-folder-search-clear-button");
-    I.waitForElement(`${changedNode} > a.jstree-clicked[aria-selected='true']`, 20);
-    I.waitForFunction(() => new URL(configurationDatatable.getAjaxUrl(), location.origin).searchParams.get("view") === "changed", 20);
+    I.waitForElement(`${formsNode} > a.jstree-clicked[aria-selected='true']`, 20);
+    I.assertEqual(await I.executeScript(() => $("#SomStromcek").jstree(true).get_selected().length), 1);
+    I.waitForFunction(() => {
+        const url = new URL(configurationDatatable.getAjaxUrl(), location.origin);
+        return url.searchParams.get("view") === "module" && url.searchParams.get("module") === "apps.form";
+    }, 20);
+    DT.waitForLoader();
+
+    I.fillField("#tree-folder-search-input", "oauth2");
+    I.clickCss("#tree-folder-search-button");
+    I.waitForElement(`${oauth2Node} > a.jstree-search`, 20);
+    I.clickCss(`${oauth2Node} > a.jstree-anchor`);
+    I.waitForFunction(() => {
+        const url = new URL(configurationDatatable.getAjaxUrl(), location.origin);
+        return url.searchParams.get("view") === "module" && url.searchParams.get("module") === "security.oauth2";
+    }, 20);
+    DT.waitForLoader();
+
+    I.clickCss("#tree-folder-search-clear-button");
+    I.waitForElement(`${oauth2Node} > a.jstree-clicked[aria-selected='true']`, 20);
+    I.assertEqual(await I.executeScript(() => $("#SomStromcek").jstree(true).get_selected().length), 1);
+    I.waitForFunction(() => {
+        const url = new URL(configurationDatatable.getAjaxUrl(), location.origin);
+        return url.searchParams.get("view") === "module" && url.searchParams.get("module") === "security.oauth2";
+    }, 20);
     DT.waitForLoader();
 
     I.clickCss(`${allNode} > a.jstree-anchor`);
@@ -536,7 +559,6 @@ Scenario("oznacovanie vyfiltrovanych riadkov", async ({ I }) => {
 
 Scenario("planovanie a historia", async ({ I, DTE }) => {
     const historyName = "aaatest";
-    I.click("button.toast-close-button")
     I.fillField("input.dt-filter-value", historyName);
     I.pressKey('Enter', "input.dt-filter-name");
 
