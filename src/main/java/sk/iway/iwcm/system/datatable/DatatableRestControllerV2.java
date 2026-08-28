@@ -21,6 +21,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
+import javax.persistence.EmbeddedId;
 import javax.persistence.Id;
 import javax.persistence.Query;
 import javax.persistence.Table;
@@ -54,6 +55,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.ClassUtils;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
@@ -81,6 +83,7 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.ConstantsV9;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.events.DatatableEvent;
@@ -1672,59 +1675,119 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
 	@PostMapping(value = "/row-reorder", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Boolean> rowReorder(HttpServletRequest request, @RequestBody RowReorderDto rowReorderDto) {
-		boolean allGood = true;
-
-		List<T> entities = new ArrayList<>();
+		List<Long> requestedIds;
+		List<T> entities;
 		try {
-			entities = this.repo.findAllById( rowReorderDto.getIds() );
+			// Reject an empty request, null IDs and duplicate IDs before accessing the database.
+			requestedIds = rowReorderDto.getIds();
+			if (requestedIds.isEmpty() || requestedIds.contains(null) || new HashSet<>(requestedIds).size() != requestedIds.size()) {
+				return ResponseEntity.ok(false);
+			}
+
+			// Load only the rows explicitly named in the request.
+			entities = this.repo.findAllById(requestedIds);
 		} catch (Exception e) {
 			Logger.error(DatatableRestControllerV2.class, "Error fetching entities for row reorder", e);
 			return ResponseEntity.ok(false);
 		}
 
-		// Verify permissions for the whole request before modifying any entity.
-		for (T entity : entities) {
-			Long entityId;
-			try {
-				BeanWrapperImpl beanWrapper = new BeanWrapperImpl(entity);
-				String idColumnName = getIdColumnName(entity);
-				entityId = (Long) beanWrapper.getPropertyValue(idColumnName);
-			} catch (Exception e) {
-				Logger.error(DatatableRestControllerV2.class, "Error checking permissions for row reorder entity: " + entity, e);
-				return ResponseEntity.ok(false);
-			}
-			checkItemPermsThrows(entity, entityId);
+		// findAllById silently omits unknown IDs. The operation must be all-or-nothing.
+		if (entities.size() != requestedIds.size()) {
+			Logger.debug(DatatableRestControllerV2.class, "Not all requested entities were found for row reorder");
+			return ResponseEntity.ok(false);
 		}
 
-		// Loop through entities and set new value to the column specified by dataSrc
+		// dataSrc is controlled by the client, so it must never be used before it passes the annotation allowlist below.
+		String dataSrc = rowReorderDto.getDataSrc();
+		Set<Long> foundIds = new HashSet<>();
+		// Values are collected in repository order and applied only after every row passes all validation checks.
+		List<Integer> newValues = new ArrayList<>();
+
+		// Validate the whole request and verify permissions before modifying any entity.
 		for (T entity : entities) {
 			try {
 				BeanWrapperImpl beanWrapper = new BeanWrapperImpl(entity);
+
+				// Resolve the stored row ID and find its requested new ordering value.
 				String idColumnName = getIdColumnName(entity);
-
-				// Get entity ID using id column name
 				Long entityId = (Long) beanWrapper.getPropertyValue(idColumnName);
-
-				// Get new value for this entity
 				Integer newValue = rowReorderDto.getNewValueById(entityId);
 
-				if(newValue == null) {
-					allGood = false;
-					Logger.error(DatatableRestControllerV2.class, "Error updating row order, entity missing new value for entity ID: " + entityId);
-					break;
+				// Every loaded row must correspond to one unique request item.
+				if (entityId == null || requestedIds.contains(entityId) == false || foundIds.add(entityId) == false) {
+					Logger.debug(DatatableRestControllerV2.class, "Invalid row reorder request for entity ID: " + entityId);
+					return ResponseEntity.ok(false);
 				}
 
-				// Use BeanWrapperImpl to set the property value
-				beanWrapper.setPropertyValue(rowReorderDto.getDataSrc(), newValue);
+				// Only a field explicitly annotated as ROW_REORDER may be changed.
+				if (newValue == null || isRowReorderColumnAllowed(entity, dataSrc) == false) {
+					Logger.debug(DatatableRestControllerV2.class, "Invalid row reorder request for entity ID: " + entityId);
+					return ResponseEntity.ok(false);
+				}
+
+				// ROW_REORDER accepts integer values, therefore the target property must be writable and numeric.
+				Class<?> propertyType = beanWrapper.getPropertyType(dataSrc);
+				if (beanWrapper.isWritableProperty(dataSrc) == false || propertyType == null ||
+					Number.class.isAssignableFrom(ClassUtils.resolvePrimitiveIfNecessary(propertyType)) == false) {
+					Logger.debug(DatatableRestControllerV2.class, "Invalid row reorder request for entity ID: " + entityId);
+					return ResponseEntity.ok(false);
+				}
+
+				// Apply controller-specific row permissions, for example the admin/public user separation.
+				checkItemPermsThrows(entity, entityId);
+				newValues.add(newValue);
+			} catch (ConstraintViolationException e) {
+				throw e;
 			} catch (Exception e) {
-				Logger.error(DatatableRestControllerV2.class, "Error updating row order for entity: " + entity, e);
-				allGood = false;
+				Logger.error(DatatableRestControllerV2.class, "Error validating row reorder entity: " + entity, e);
+				return ResponseEntity.ok(false);
 			}
 		}
 
+		if (foundIds.size() != requestedIds.size()) return ResponseEntity.ok(false);
+
+		// No entity is changed before all rows, values, target fields and permissions have been validated.
+		for (int i = 0; i < entities.size(); i++) {
+			T entity = entities.get(i);
+			try {
+				BeanWrapperImpl beanWrapper = new BeanWrapperImpl(entity);
+				beanWrapper.setPropertyValue(dataSrc, newValues.get(i));
+			} catch (Exception e) {
+				Logger.error(DatatableRestControllerV2.class, "Error updating row order for entity: " + entity, e);
+				return ResponseEntity.ok(false);
+			}
+		}
+
+		// Persist only a fully validated and successfully modified batch.
 		this.repo.saveAll(entities);
 
-		return ResponseEntity.ok(allGood);
+		return ResponseEntity.ok(true);
+	}
+
+	/**
+	 * Checks whether a client-provided dataSrc is the exact name of a safe row-order field.
+	 * Primary keys and domainId are never writable through this endpoint, even if annotated incorrectly.
+	 */
+	private boolean isRowReorderColumnAllowed(T entity, String dataSrc) {
+		if (entity == null || Tools.isEmpty(dataSrc) || "id".equals(dataSrc) || "domainId".equals(dataSrc)) return false;
+
+		try {
+			// Search the complete class hierarchy because DataTable entities may inherit their fields.
+			Field field = getDeclaredFiledRecursive(entity.getClass(), dataSrc);
+			if (field.isAnnotationPresent(Id.class) || field.isAnnotationPresent(EmbeddedId.class)) return false;
+
+			DataTableColumn annotation = field.getAnnotation(DataTableColumn.class);
+			if (annotation == null) return false;
+
+			// inputType is an array, so ROW_REORDER may not necessarily be its first item.
+			for (DataTableColumnType inputType : annotation.inputType()) {
+				if (inputType == DataTableColumnType.ROW_REORDER) return true;
+			}
+		} catch (NoSuchFieldException e) {
+			return false;
+		}
+
+		return false;
 	}
 
 	public JpaRepository<T, Long> getRepo() {

@@ -825,4 +825,17 @@ Pre aktiváciu je potrebné v `@DataTableColumn` anotácii mať nastavený atrib
 private Integer sortPriority;
 ```
 
-Pri zmene poradia riadkov sa automaticky vyvolá backend endpoint `/row-reorder` z triedy [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java), ktorý aktualizuje hodnoty pre daný stĺpec označený ako `ROW_REORDER` a uloží zmeny do databázy. Ak uloženie bolo úspešné, tabuľka sa obnoví a zobrazí nové poradie riadkov, plus sa zobrazí notifikácia o úspešnom uložení zmien. V prípade chyby sa zobrazí chybová notifikácia.
+Pri zmene poradia riadkov sa automaticky vyvolá backend koncový bod `/row-reorder` z triedy [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java). Názov meneného poľa (`dataSrc`) posiela klient, preto koncový bod povolí zápis iba pri splnení všetkých nasledujúcich podmienok:
+
+- `dataSrc` presne zodpovedá Java poľu entity; pole môže byť deklarované aj v rodičovskej triede,
+- pole má anotáciu `@DataTableColumn`, ktorej pole `inputType` obsahuje hodnotu `DataTableColumnType.ROW_REORDER`,
+- vlastnosť je zapisovateľná a má numerický dátový typ,
+- nejde o pole `id`, `domainId` ani o pole označené anotáciou `@Id` alebo `@EmbeddedId`, a to ani v prípade, ak by zároveň bolo označené ako `ROW_REORDER`,
+- požiadavka obsahuje neprázdny zoznam jedinečných nenulových ID, všetky záznamy existujú a každý má zadanú novú hodnotu,
+- používateľ má oprávnenie upraviť každý záznam; overenie sa vykoná volaním `checkItemPermsThrows`, ktoré používa implementáciu `checkItemPerms` daného kontroléra.
+
+Celá požiadavka sa najskôr overí bez zmeny entít. Hodnoty sa nastavia a zavolá sa `saveAll` až po úspešnom overení všetkých záznamov. Pri chybe validácie sa požiadavka odmietne a `saveAll` sa nezavolá, čím sa zabráni čiastočnému uloženiu dávky.
+
+Koncový bod `/row-reorder` je samostatná operácia a nevolá CRUD metódy ani metódy `beforeSave` a `afterSave`. Oprávnenia špecifické pre entitu je preto potrebné implementovať v metóde `checkItemPerms`.
+
+Po úspešnom uložení sa tabuľka obnoví, zobrazí nové poradie riadkov a notifikáciu o úspechu. V prípade chyby sa zobrazí chybová notifikácia.

@@ -19,6 +19,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.upload.UploadSpringConfig;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.test.BaseWebjetTest;
 import sk.iway.iwcm.test.TestRequest;
 import sk.iway.spring.SpringApplication;
@@ -245,11 +246,154 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
         verify(repository, never()).saveAll(any());
     }
 
+    @Test
+    void testRowReorderRejectsUnannotatedNumericProperty() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<RowReorderTestEntity, Long> repository = mock(JpaRepository.class);
+        RowReorderTestEntity entity = new RowReorderTestEntity(1L, 10);
+        when(repository.findAllById(List.of(1L))).thenReturn(List.of(entity));
+
+        DatatableRestControllerV2<RowReorderTestEntity, Long> unrestrictedController =
+                new DatatableRestControllerV2<>(repository) {};
+        unrestrictedController.setRequest(controller.getRequest());
+
+        RowReorderDto request = new RowReorderDto();
+        request.setDataSrc("unrestrictedValue");
+        request.setValues(List.of(new RowReorderDto.RowReorderValue(1L, 0, 99)));
+
+        assertEquals(Boolean.FALSE, unrestrictedController.rowReorder(controller.getRequest(), request).getBody());
+        assertEquals(0, entity.getUnrestrictedValue());
+        verify(repository, never()).saveAll(any());
+    }
+
+    @Test
+    void testRowReorderUpdatesAnnotatedProperty() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<RowReorderTestEntity, Long> repository = mock(JpaRepository.class);
+        RowReorderTestEntity entity = new RowReorderTestEntity(1L, 10);
+        when(repository.findAllById(List.of(1L))).thenReturn(List.of(entity));
+
+        DatatableRestControllerV2<RowReorderTestEntity, Long> unrestrictedController =
+                new DatatableRestControllerV2<>(repository) {};
+        unrestrictedController.setRequest(controller.getRequest());
+
+        RowReorderDto request = new RowReorderDto();
+        request.setDataSrc("position");
+        request.setValues(List.of(new RowReorderDto.RowReorderValue(1L, 10, 20)));
+
+        assertEquals(Boolean.TRUE, unrestrictedController.rowReorder(controller.getRequest(), request).getBody());
+        assertEquals(20, entity.getPosition());
+        verify(repository).saveAll(List.of(entity));
+    }
+
+    @Test
+    void testRowReorderRejectsIdProperty() {
+        assertRejectedRowReorderProperty("id");
+    }
+
+    @Test
+    void testRowReorderRejectsDomainIdPropertyEvenWhenAnnotated() {
+        assertRejectedRowReorderProperty("domainId");
+    }
+
+    @Test
+    void testRowReorderDoesNotModifyOrSaveWhenAnyValueIsInvalid() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<RowReorderTestEntity, Long> repository = mock(JpaRepository.class);
+        RowReorderTestEntity first = new RowReorderTestEntity(1L, 10);
+        RowReorderTestEntity second = new RowReorderTestEntity(2L, 20);
+        when(repository.findAllById(List.of(1L, 2L))).thenReturn(List.of(first, second));
+
+        DatatableRestControllerV2<RowReorderTestEntity, Long> unrestrictedController =
+                new DatatableRestControllerV2<>(repository) {};
+        unrestrictedController.setRequest(controller.getRequest());
+
+        RowReorderDto request = new RowReorderDto();
+        request.setDataSrc("position");
+        request.setValues(List.of(
+            new RowReorderDto.RowReorderValue(1L, 10, 20),
+            new RowReorderDto.RowReorderValue(2L, 20, null)
+        ));
+
+        assertEquals(Boolean.FALSE, unrestrictedController.rowReorder(controller.getRequest(), request).getBody());
+        assertEquals(10, first.getPosition());
+        assertEquals(20, second.getPosition());
+        verify(repository, never()).saveAll(any());
+    }
+
+    @Test
+    void testRowReorderRejectsRequestWhenAnyEntityIsMissing() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<RowReorderTestEntity, Long> repository = mock(JpaRepository.class);
+        RowReorderTestEntity entity = new RowReorderTestEntity(1L, 10);
+        when(repository.findAllById(List.of(1L, 2L))).thenReturn(List.of(entity));
+
+        DatatableRestControllerV2<RowReorderTestEntity, Long> unrestrictedController =
+                new DatatableRestControllerV2<>(repository) {};
+        unrestrictedController.setRequest(controller.getRequest());
+
+        RowReorderDto request = new RowReorderDto();
+        request.setDataSrc("position");
+        request.setValues(List.of(
+            new RowReorderDto.RowReorderValue(1L, 10, 20),
+            new RowReorderDto.RowReorderValue(2L, 20, 10)
+        ));
+
+        assertEquals(Boolean.FALSE, unrestrictedController.rowReorder(controller.getRequest(), request).getBody());
+        assertEquals(10, entity.getPosition());
+        verify(repository, never()).saveAll(any());
+    }
+
+    @Test
+    void testRowReorderAllowsAnnotatedPropertyInheritedFromSuperclass() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<InheritedRowReorderTestEntity, Long> repository = mock(JpaRepository.class);
+        InheritedRowReorderTestEntity entity = new InheritedRowReorderTestEntity(1L, 10);
+        when(repository.findAllById(List.of(1L))).thenReturn(List.of(entity));
+
+        DatatableRestControllerV2<InheritedRowReorderTestEntity, Long> unrestrictedController =
+                new DatatableRestControllerV2<>(repository) {};
+        unrestrictedController.setRequest(controller.getRequest());
+
+        RowReorderDto request = new RowReorderDto();
+        request.setDataSrc("position");
+        request.setValues(List.of(new RowReorderDto.RowReorderValue(1L, 10, 20)));
+
+        assertEquals(Boolean.TRUE, unrestrictedController.rowReorder(controller.getRequest(), request).getBody());
+        assertEquals(20, entity.getPosition());
+        verify(repository).saveAll(List.of(entity));
+    }
+
+    private void assertRejectedRowReorderProperty(String dataSrc) {
+        @SuppressWarnings("unchecked")
+        JpaRepository<RowReorderTestEntity, Long> repository = mock(JpaRepository.class);
+        RowReorderTestEntity entity = new RowReorderTestEntity(1L, 10);
+        when(repository.findAllById(List.of(1L))).thenReturn(List.of(entity));
+
+        DatatableRestControllerV2<RowReorderTestEntity, Long> unrestrictedController =
+                new DatatableRestControllerV2<>(repository) {};
+        unrestrictedController.setRequest(controller.getRequest());
+
+        RowReorderDto request = new RowReorderDto();
+        request.setDataSrc(dataSrc);
+        request.setValues(List.of(new RowReorderDto.RowReorderValue(1L, 1, 2)));
+
+        assertEquals(Boolean.FALSE, unrestrictedController.rowReorder(controller.getRequest(), request).getBody());
+        assertEquals(1L, entity.getId());
+        assertEquals(1, entity.getDomainId());
+        verify(repository, never()).saveAll(any());
+    }
+
     private static class RowReorderTestEntity {
 
         @Id
+        @DataTableColumn(inputType = {DataTableColumnType.ID, DataTableColumnType.ROW_REORDER})
         private Long id;
+        @DataTableColumn(inputType = DataTableColumnType.ROW_REORDER)
         private Integer position;
+        @DataTableColumn(inputType = DataTableColumnType.ROW_REORDER)
+        private Integer domainId = 1;
+        private Integer unrestrictedValue = 0;
 
         RowReorderTestEntity(Long id, Integer position) {
             this.id = id;
@@ -266,6 +410,55 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
 
         public void setPosition(Integer position) {
             this.position = position;
+        }
+
+        public Integer getDomainId() {
+            return domainId;
+        }
+
+        public void setDomainId(Integer domainId) {
+            this.domainId = domainId;
+        }
+
+        public Integer getUnrestrictedValue() {
+            return unrestrictedValue;
+        }
+
+        public void setUnrestrictedValue(Integer unrestrictedValue) {
+            this.unrestrictedValue = unrestrictedValue;
+        }
+    }
+
+    private static class RowReorderTestEntityBase {
+
+        @DataTableColumn(inputType = DataTableColumnType.ROW_REORDER)
+        private Integer position;
+
+        RowReorderTestEntityBase(Integer position) {
+            this.position = position;
+        }
+
+        public Integer getPosition() {
+            return position;
+        }
+
+        public void setPosition(Integer position) {
+            this.position = position;
+        }
+    }
+
+    private static class InheritedRowReorderTestEntity extends RowReorderTestEntityBase {
+
+        @Id
+        private Long id;
+
+        InheritedRowReorderTestEntity(Long id, Integer position) {
+            super(position);
+            this.id = id;
+        }
+
+        public Long getId() {
+            return id;
         }
     }
 
