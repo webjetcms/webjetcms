@@ -1,6 +1,6 @@
 # Semantic Search (RAG)
 
-Semantic search allows visitors to find relevant pages based on the **meaning of the question**, not just keyword matches. It uses the vector database [pgvector](https://github.com/pgvector/pgvector) and embedding vectors generated via the OpenAI API.
+Semantic search allows visitors to find relevant pages based on the **meaning of the query**, not just keyword matching. It uses the vector database [pgvector](https://github.com/pgvector/pgvector) and embedding vectors generated through providers supported by the `webjet-ai` library.
 
 Above the same index, it is also possible to use:
 
@@ -19,8 +19,8 @@ Indexing process:
 
 1. **Content extraction** - from `DocDetails`, pure text without HTML tags is obtained via [DocDetailsContentExtractor](../../../../../../src/main/java/sk/iway/iwcm/rag/indexing/DocDetailsContentExtractor.java).
 2. **Dividing into parts** - the text is split using [SlidingWindowChunker](../../../../../src/main/java/sk/iway/iwcm/rag/indexing/SlidingWindowChunker.java). The configuration variables `ragEmbeddingChunkSize` and `ragEmbeddingChunkOverlap` are used.
-3. **Reuse of embeddings** - a hash is calculated for each chunk. If the chunk text has not changed and the embedding has the correct dimension, the existing vector is used.
-4. **Generating embeddings** - new or changed chunks are sent to the OpenAI API (`/v1/embeddings`) via [OpenAiEmbeddingProvider](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/OpenAiEmbeddingProvider.java).
+3. **Reuse of embeddings** - a hash is calculated for each chunk. If the chunk text has not changed and an embedding with the same provider, model, and correct dimension exists, the existing vector is used.
+4. **Generating embeddings** - new or changed chunks are processed by [EmbeddingService](../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java) according to the provider and model set in the indexing assistant `RAG-EMB-INDEX`.
 5. **Saving to database** - chunk metadata is stored via the JPA repository [EmbeddingChunkRepository](../../../../../../src/main/java/sk/iway/iwcm/rag/pgvector/EmbeddingChunkRepository.java), the `vector(N)` column itself is updated with native SQL via [PgVectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/PgVectorStore.java).
 
 Chunking prefers natural text boundaries: paragraph, line, sentence, space, and then hard splitting by limit. For decimal numbers, a period is not considered the end of a sentence.
@@ -31,23 +31,31 @@ When a visitor enters a search query:
 
 1. [SearchAction](../../../../../src/main/java/sk/iway/iwcm/doc/SearchAction.java) determines the search type from the application parameter `searchType`. If the value is `auto` or empty, it uses the global configuration variable `searchType`.
 2. For values ​​of `semantic` or `hybrid`, [SemanticSearchAction](../../../../../../src/main/java/sk/iway/iwcm/doc/SemanticSearchAction.java) is used.
-3. [SemanticSearchService](../../../../../../src/main/java/sk/iway/iwcm/rag/search/SemanticSearchService.java) generates a query embedding and searches for the nearest chunks in the pgvector database.
+3. [SemanticSearchService](../../../../../../src/main/java/sk/iway/iwcm/rag/search/SemanticSearchService.java) generates a query embedding according to the `RAG-EMB-SEARCH` assistant and searches for the closest chunks with the same provider and model in the pgvector database.
 4. Results will be limited by domain, language, entity type, and by folders selected in the **Search** application.
 5. If hybrid mode is enabled, fulltext is also run over `rag_embedding_chunks.chunk_text` and the results are merged via `RRF` (Reciprocal Rank Fusion).
 6. The resulting chunks are aggregated into documents and the documents are displayed in the same way as in a standard search.
 7. If the RAG response is enabled, the context for the AI ​​response is prepared from the found chunks.
 
+### Division of responsibilities between WebJET CMS and `webjet-ai`
+
+The core embedding logic has been separated from WebJET CMS into a separate, framework-independent library [webjet-ai](https://github.com/webjetcms/webjet-ai). The library contains provider-independent types `EmbeddingRequest`, `EmbeddingOptions`, `EmbeddingResponse` and `EmbeddingVector`, calls `AiClient.embed` and implementations for communicating with individual providers. The original CMS interface `EmbeddingProvider` and implementation `OpenAiEmbeddingProvider` have been removed.
+
+The CMS left a thin adapter [EmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java), which will convert the system AI assistant and domain settings to the library request, pass the provider configuration, and check the number and dimension of the returned vectors. Content extraction, chunking, vector reuse by hash value, token recording, queue processing, and storage in `pgvector` remain in the management of WebJET CMS.
+
+Therefore, when adding a new server provider, embedding communication is not implemented in the RAG module of the CMS. The provider must support the `AiProvider.embed` method in the `webjet-ai` library and be registered in the CMS according to the procedure in the [Adding a provider] section (../../ai/assistants/README.md).
+
 ## Requirements
 
 - **PostgreSQL** with the **pgvector** extension (image: `pgvector/pgvector:pg18-trixie` or later).
-- **OpenAI API key** - the same key is used as for AI assistants (`ai_openAiAuthKey`).
+- **API key of the selected provider** - the same setting is used as for AI assistants, e.g. `ai_openAiAuthKey` for OpenAI or the corresponding key for Gemini.
 - Semantic search only works over PostgreSQL/pgvector storage. If the primary database of WebJET CMS is not PostgreSQL, set up a separate PostgreSQL database via datasource `rag_jpa`.
 
 ### PostgreSQL as primary database
 
 If WebJET CMS runs directly on PostgreSQL, the vector database will be used automatically without further configuration.
 
-The datasource must be set as in [poolman-docker-pgsql.xml](../../../../../src/main/resources/poolman-docker-pgsql.xml).
+The datasource must be set as in [poolman-docker-pgsql.xml](../../../../../src/main/resources/poolman-docker-pgsql.xml). If you are using multiple schemas, the JDBC parameter `currentSchema` must contain both the schema with RAG tables and the schema with WebJET CMS features, for example `currentSchema=public,webjet_cms`.
 
 ### Standalone vector database
 
@@ -83,14 +91,28 @@ Activation and settings are done in [Configuration](../../../../admin/setup/conf
 
 | Variable | Default value | Description |
 | --- | --- | --- |
-| `ragEmbeddingModel` | `text-embedding-3-small` | The name of the OpenAI embedding model. |
+| `ragEmbeddingProvider` | `openai` | Provider used only when automatically creating a missing embedding assistant. Built-in values ​​are `openai`, `gemini`, `openrouter` ; the identifier of a properly registered custom provider can also be used. |
+| `ragEmbeddingModel` | `text-embedding-3-small` | Model used only when automatically creating a missing embedding assistant. |
 | `ragEmbeddingDimensions` | `1536` | Number of dimensions of the vector. Must match the model and database table used. |
 | `ragEmbeddingChunkSize` | `1000` | Maximum size of one piece of text in characters. |
 | `ragEmbeddingChunkOverlap` | `200` | The number of characters by which adjacent chunks overlap. |
 
+The system automatically creates two system AI assistants as needed:
+
+- `RAG-EMB-INDEX` in group `90-embedding-indexing` - generating embeddings during indexing,
+- `RAG-EMB-SEARCH` in group `91-embedding-search` - generating search query embedding.
+
+If an assistant already exists, its `provider` and `model` take precedence over the `ragEmbeddingProvider` and `ragEmbeddingModel` configuration variables. Assistants can be edited in the administration in the **Settings → AI assistants** section. The provider and model of the indexing assistant are displayed in an information message when you open the **Semantic index** page.
+
+Indexes are separated by provider and model combination. Reindexing will only replace data from the current combination, so for example, OpenAI and Gemini indexes of the same page can coexist. Indexing preview only counts indexes from the current assistant; deletion preview and page deletion work with all combinations.
+
+Queue `rag_index_queue` only stores the entity type, ID, and action. The provider and model are retrieved from assistant `RAG-EMB-INDEX` only when the item is processed. If you need to complete indexing with the original combination, let the queue fully process before changing the assistant.
+
+!>**Warning:** The indexing and search assistants must use the same provider and model identifier. Search will only load indexes that both values ​​exactly match the `RAG-EMB-SEARCH` assistant.
+
 !>**Note:** The older names `ragChunkSize` and `ragChunkOverlap` are no longer used.
 
-!>**Warning:** Changing `ragEmbeddingDimensions` will erase data for the current embedding model because the vectors will not be compatible. Run a full content index after changing the model or dimension.
+!>**Warning:** Changing `ragEmbeddingDimensions` will delete all data from `rag_embedding_chunks` for all providers and models, change the column type `embedding` to the new `vector(N)`, and recreate the HNSW index. Then run a full content index. Changing the model itself will not delete the other combinations, but you must index the new combination.
 
 ### Vector search
 
@@ -262,14 +284,14 @@ Important columns:
 - `chunk_text` - ​​text used for embedding and fulltext.
 - `content_hash` - ​​hash of chunk text for embedding reuse.
 - `embedding` - ​​native pgvector type `vector(N)`.
-- `embedding_model`, `dimensions` - model and dimension of the embedding.
+- `embedding_provider`, `embedding_model`, `dimensions` - provider, model and embedding dimension.
 - `language`, `domain_id` - language and domain.
 - `group_id`, `root_group_l1`, `root_group_l2`, `root_group_l3` - optimized document filtering by folders.
 - `status`, `error_message` - processing status.
 
 !>**Warning:** Column `embedding` is not mapped via JPA. All vector operations are performed via native SQL queries in the [PgVectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/PgVectorStore.java) class.
 
-The missing columns `group_id` and `root_group_l1..3` will be added when the schema is initialized. However, existing data does not have these values ​​backfilled, so re-index after the update.
+The schema migration will add the missing columns `group_id`, `root_group_l1..3`, and `embedding_provider`. The folder values ​​will be backfilled for existing valid website records. An empty `embedding_provider` will be set to the current value `ragEmbeddingProvider`, and the chunk uniqueness will be extended to include the provider and model combination. Since the older record did not contain a provider, the added value may not correspond to the provider that actually created the vector. Therefore, run a full index after the update; this will also restore records that could not be back-mapped to the page.
 
 ## Recommendations for Slovak and Czech content
 
@@ -286,13 +308,13 @@ When tuning, follow these recommendations:
 
 The default model `text-embedding-3-small` is multilingual and handles Slovak/Czech with sufficient quality for most web projects. If you require higher accuracy, the following alternatives are available:
 
-| Model | `ragEmbeddingModel` | `ragEmbeddingDimensions` | Quality for SK/CZ | Note |
+| Model | Assistant model | `ragEmbeddingDimensions` | Quality for SK/CZ | Note |
 | --- | --- | --- | --- | --- |
 | OpenAI `text-embedding-3-small` | `text-embedding-3-small` | `1536` | Good | Default model - cheap and fast. |
 | OpenAI `text-embedding-3-large` | `text-embedding-3-large` | `3072` | High | The most accurate OpenAI multilingual model, more expensive than `small`. |
 | OpenAI `text-embedding-3-large` abbreviated | `text-embedding-3-large` | `1024` or `1536` | High | Thanks to MRL, the vector can be shortened without significant loss of quality. |
 
-!>**Warning:** All vectors in the `rag_embedding_chunks` table must come from the same model and have the same dimension. You must run a full content index when changing the model or dimension.
+!>**Warning:** All vectors in table `rag_embedding_chunks` must have a dimension that matches the definition of column `embedding`. Different providers and models can coexist, but must generate the configured number of dimensions. Changing the dimension will remove all existing vectors and requires a full indexing of the content.
 
 ### What is Matryoshka (MRL)
 

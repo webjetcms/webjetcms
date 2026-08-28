@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,11 +17,12 @@ import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.rag.embedding.EmbeddingBatchResult;
-import sk.iway.iwcm.rag.embedding.EmbeddingProvider;
+import sk.iway.iwcm.rag.embedding.EmbeddingService;
 import sk.iway.iwcm.rag.service.RagEmbeddingStatService;
 import sk.iway.iwcm.rag.service.RagEntityType;
 import sk.iway.iwcm.rag.service.RagSettingsService;
@@ -41,15 +43,15 @@ public class SemanticSearchService {
     private static final String HYBRID_MODE_SHORT_QUERY_ONLY = "short_query_only";
     private static final String HYBRID_MODE_FALLBACK_ON_LOW_VECTOR = "fallback_on_low_vector";
 
-    private final EmbeddingProvider embeddingProvider;
+    private final EmbeddingService embeddingService;
     private final VectorStore vectorStore;
     private final RagEmbeddingStatService ragEmbeddingStatService;
 
     private final RagService ragService;
 
     @Autowired
-    public SemanticSearchService(EmbeddingProvider embeddingProvider, VectorStore vectorStore, RagEmbeddingStatService ragEmbeddingStatService, RagService ragService) {
-        this.embeddingProvider = embeddingProvider;
+    public SemanticSearchService(EmbeddingService embeddingService, VectorStore vectorStore, RagEmbeddingStatService ragEmbeddingStatService, RagService ragService) {
+        this.embeddingService = embeddingService;
         this.vectorStore = vectorStore;
         this.ragEmbeddingStatService = ragEmbeddingStatService;
 
@@ -75,11 +77,30 @@ public class SemanticSearchService {
             return List.of();
         }
 
-        String model = embeddingProvider.getDefaultModel();
+        AssistantDefinitionEntity embeddingAssistant;
+        String provider;
+        String model;
         EmbeddingBatchResult embeddingResult;
 
         try {
-            embeddingResult = embeddingProvider.embedWithUsage(List.of(query), model);
+            embeddingAssistant = ragEmbeddingStatService.getSearchAssistant();
+            if (embeddingAssistant == null) {
+                throw new ProviderCallException("RAG search embedding assistant is not available");
+            }
+            if (Tools.isEmpty(embeddingAssistant.getProvider())) {
+                throw new ProviderCallException("RAG search embedding assistant has no provider configured");
+            }
+            if (Tools.isEmpty(embeddingAssistant.getModel())) {
+                throw new ProviderCallException("RAG search embedding assistant has no model configured");
+            }
+
+            provider = embeddingAssistant.getProvider().trim().toLowerCase(Locale.ROOT);
+            model = embeddingAssistant.getModel();
+            embeddingResult = embeddingService.embedWithUsage(
+                List.of(query),
+                embeddingAssistant,
+                request
+            );
         } catch (ProviderCallException e) {
             Logger.error(SemanticSearchService.class, "Error generating query embedding: " + e.getMessage(), e);
             Adminlog.add(Adminlog.TYPE_SEARCH, "Error generating query embedding: " + e.getMessage(), null, null);
@@ -92,7 +113,7 @@ public class SemanticSearchService {
             return List.of();
         }
 
-        ragEmbeddingStatService.recordSearchTokens(embeddingResult.getUsedTokens());
+        ragEmbeddingStatService.recordSearchTokens(embeddingAssistant, embeddingResult.getUsedTokens());
 
         float[] queryEmbedding = queryEmbeddings.get(0);
         if (queryEmbedding.length == 0) {
@@ -143,7 +164,7 @@ public class SemanticSearchService {
             bonusParams.put("rootGroups", restGroups);
         }
 
-        List<VectorSearchResult> vectorChunkResults = vectorStore.search(queryEmbedding, model, entityType, domainId, language, chunkLimit, bonusParams);
+        List<VectorSearchResult> vectorChunkResults = vectorStore.search(queryEmbedding, provider, model, entityType, domainId, language, chunkLimit, bonusParams);
 
         boolean useHybridSearch = shouldUseHybridSearch(query, vectorChunkResults, minimumResultsForCall, pageParams);
         List<VectorSearchResult> chunkResults = vectorChunkResults;
@@ -151,7 +172,7 @@ public class SemanticSearchService {
             if(bonusParams == null) bonusParams = new HashMap<>();
             bonusParams.put("hybridFtsUseIlikeFallback", RagSettingsService.getHybridFtsUseIlikeFallback(pageParams));
 
-            List<VectorSearchResult> fulltextChunkResults = vectorStore.searchFulltext(query, model, entityType, domainId, language, chunkLimit, bonusParams);
+            List<VectorSearchResult> fulltextChunkResults = vectorStore.searchFulltext(query, provider, model, entityType, domainId, language, chunkLimit, bonusParams);
             if (fulltextChunkResults.isEmpty() == false) {
                 List<VectorSearchResult> mergedChunkResults = mergeChunkResultsWithRrf(vectorChunkResults, fulltextChunkResults, pageParams);
                 if (mergedChunkResults.isEmpty() == false) {

@@ -71,7 +71,7 @@ Ak v entite nechcete, aby sa pre pole zobrazovali možnosti AI nástrojov, stač
 
 ### Karta - Poskytovateľ
 
-Táto karta slúži na výber poskytovateľa AI služieb, ktorý bude použitý na spracovanie požiadavky asistenta. Vo výberovom poli sa zobrazia všetci dostupní a správne nakonfigurovaní poskytovatelia (napríklad tí, ktorí majú zadaný API kľúč). Po výbere konkrétneho poskytovateľa sa môžu zobraziť ďalšie špecifické nastavenia podľa možností daného poskytovateľa. Napríklad pri poskytovateľovi `OpenAI` je možné vybrať konkrétny model na spracovanie požiadavky, zatiaľ čo iní poskytovatelia môžu ponúkať iné alebo obmedzené možnosti konfigurácie.
+Táto karta slúži na výber poskytovateľa AI služieb, ktorý bude použitý na spracovanie požiadavky asistenta. Vo výberovom poli sa zobrazia všetci dostupní poskytovatelia; pri poskytovateľovi bez potrebnej konfigurácie sa k názvu doplní upozornenie **nenakonfigurovaný**. Pri nakonfigurovaných serverových poskytovateľoch sa zoznam modelov načíta priamo z ich API a ukladá sa do vyrovnávacej pamäte oddelene podľa poskytovateľa, domény a účinnej konfigurácie. Po výbere poskytovateľa sa zobrazia iba polia podporované jeho CMS adaptérom; prehliadačový poskytovateľ napríklad vlastný výber modelu nezobrazuje.
 
 ![](datatable-provider-tab.png)
 

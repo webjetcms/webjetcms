@@ -2,7 +2,6 @@ package sk.iway.upload;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;

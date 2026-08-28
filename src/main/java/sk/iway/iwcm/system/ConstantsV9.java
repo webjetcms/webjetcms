@@ -294,8 +294,9 @@ public class ConstantsV9 {
 		Constants.setString("ragSearchDistanceMetric", "cosine", Constants.MOD_RAG, "Metrika vzdialenosti pre pgvector vyhľadávanie. Možné hodnoty: 'cosine' (cosínusová vzdialenosť), 'inner_product' (vnútorný súčin, rýchlejší pre normalizované vektory), 'l2' (euklidovská vzdialenosť). Zmena vyžaduje reindex HNSW indexu.");
 
 		/* RAG - EMBEDDING */
+		Constants.setString("ragEmbeddingProvider", "openai", Constants.MOD_RAG, "Predvolený poskytovateľ použitý pri vytvorení chýbajúceho RAG embedding asistenta. Vstavané hodnoty sú openai, gemini a openrouter; použiť možno aj identifikátor zaregistrovaného vlastného poskytovateľa.");
+		Constants.setString("ragEmbeddingModel", "text-embedding-3-small", Constants.MOD_RAG, "Predvolený model použitý pri vytvorení chýbajúceho RAG embedding asistenta.");
 		Constants.setInt("ragEmbeddingDimensions", 1536, Constants.MOD_RAG, "Počet dimenzií embedding vektora generovaného pre RAG. Hodnota musí zodpovedať použitému modelu a definícii stĺpca vo vektorovej databáze.");
-		Constants.setString("ragEmbeddingModel", "text-embedding-3-small", Constants.MOD_RAG, "Názov embedding modelu použitého na generovanie vektorov pre RAG indexovanie a sémantické vyhľadávanie.");
 		Constants.setInt("ragEmbeddingChunkSize", 1000, Constants.MOD_RAG, "Maximálna veľkosť jedného textového chunku v znakoch pri rozdeľovaní dokumentov pre RAG indexovanie.");
 		Constants.setInt("ragEmbeddingChunkOverlap", 200, Constants.MOD_RAG, "Počet znakov, ktoré sa majú prekrývať medzi susednými chunkmi pri rozdeľovaní textu pre RAG indexovanie.");
 

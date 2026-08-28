@@ -34,7 +34,6 @@ block content
         });
 
         window.domReady.add(function () {
-
             embeddingChunksDataTable = WJ.DataTable({
                 url: url,
                 columns: columns,
@@ -49,7 +48,35 @@ block content
             embeddingChunksDataTable.button().add(buttonCounter++, getRemoveIndexButton());
 
             initPage();
+            loadCurrentEmbeddingConfiguration();
         });
+
+        function loadCurrentEmbeddingConfiguration() {
+            fetch(url + "/current-embedding-configuration", {
+                method: "GET",
+                headers: { "X-CSRF-Token": window.csrfToken }
+            })
+            .then(response => {
+                if(response.ok === false) throw new Error("Failed to load current embedding configuration");
+                return response.json();
+            })
+            .then(data => {
+                if(data.provider == null || data.provider.length === 0 || data.model == null || data.model.length === 0) {
+                    throw new Error("Current embedding configuration is not available");
+                }
+
+                const message = "[[\#{settings.embedding-chunks.embeddingProvider}]]: <strong>" + WJ.escapeHtml(data.provider) + "</strong><br>" +
+                    "[[\#{settings.embedding-chunks.embeddingModel}]]: <strong>" + WJ.escapeHtml(data.model) + "</strong>";
+                WJ.notifyInfo("[[\#{settings.embedding-chunks.currentConfiguration}]]", message, 5000);
+            })
+            .catch(() => {
+                WJ.notifyWarning(
+                    "[[\#{settings.embedding-chunks.currentConfiguration}]]",
+                    "[[\#{settings.embedding-chunks.currentConfigurationUnavailable}]]",
+                    5000
+                );
+            });
+        }
 
     style.
         label[for=includeSubfolders]::after {
@@ -57,11 +84,23 @@ block content
             font-size: 18px !important;
         }
 
-        table.datatableInit tbody tr.is-pending td {
+        #embeddingChunksDataTable_extfilter .custom-modal .custom-modal-wrapper {
+            margin: 32px auto;
+        }
+
+        #embeddingChunksDataTable_extfilter .custom-modal .jstree {
+            height: min(600px, calc(100vh - 240px));
+            max-height: calc(100vh - 240px);
+            overflow-y: auto;
+        }
+
+        table.datatableInit tbody tr.is-pending td,
+        table.datatableInit tbody tr.is-pending td a {
             color: #FABD00;
         }
 
-        table.datatableInit tbody tr.is-error td {
+        table.datatableInit tbody tr.is-error td,
+        table.datatableInit tbody tr.is-error td a {
             color: #FF4B58;
         }
 

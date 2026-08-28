@@ -10,6 +10,7 @@ When writing the text, it is necessary to adhere to the same terminology. Use on
 - multiple selection field `multi selection field` - ​​Google Translate
 - dropdown menu = `dropdown` - ​​Google Translate
 - endpoint = `endpoint` - ​​Google Translate
+- tooltip = `tooltip` - ​​Google Translate
 
 ## Code Nomenclature
 

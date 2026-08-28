@@ -78,17 +78,20 @@ Pri voľbe **Prepísať súbor** alebo **Premenovať súbor** sa obrázok v poli
 
 ### Vstup od používateľa
 
-Ak asistent vyžaduje dodatočné pokyny, zobrazí sa formulár. Doplňujúce polia sú špecifické pre konkrétneho **poskytovateľa**, preto sa môžu meniť. Pri poskytovateľovi `OpenAI` ide napríklad o:
+Ak asistent vyžaduje dodatočné pokyny, zobrazí sa formulár. Doplňujúce polia sa určujú podľa možností konkrétneho **poskytovateľa, modelu a operácie**, preto sa môžu meniť. Zobraziť sa môžu napríklad:
 
-- Počet obrázkov
-- Rozmer
-- Kvalita
+- **Počet obrázkov**,
+- **Rozmer**,
+- **Kvalita**,
+- **Pomer strán**.
+
+CMS zobrazí iba polia a hodnoty, ktoré vybraný model podporuje. Ak model pre danú operáciu nepublikuje žiadne doplnkové možnosti, formulár bude obsahovať iba používateľský pokyn.
 
 Asistenti, ktorí potrebujú vstup používateľa, majú pri názve ikonu <i class="ti ti-blockquote has-user-prompt"></i>.
 
 ![](image-prompt.png)
 
-Po potvrdení prebieha spracovanie štandardne s jednou výnimkou pre `OpenAI`: umožňuje naraz vygenerovať viac obrázkov (podľa **Počet obrázkov**). Na príklade nižšie bolo nastavené číslo 3.
+Ak vybraný model podporuje pole **Počet obrázkov**, môže v jednej požiadavke vygenerovať viac výsledkov. Na príklade nižšie bolo nastavené číslo 3.
 
 Vybrať a uložiť môžete len jeden výsledok – zvolíte ho kliknutím. Všetky náhľady je možné otvoriť cez <a target="_blank" class="zoom-in"><i class="ti ti-zoom-in"></i></a>.
 

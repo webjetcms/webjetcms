@@ -1,15 +1,73 @@
 package sk.iway.iwcm.rag.search;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.rag.embedding.EmbeddingBatchResult;
+import sk.iway.iwcm.rag.embedding.EmbeddingService;
+import sk.iway.iwcm.rag.service.RagEmbeddingStatService;
+import sk.iway.iwcm.rag.service.RagEntityType;
 import sk.iway.iwcm.rag.vectorstore.VectorSearchResult;
+import sk.iway.iwcm.rag.vectorstore.VectorStore;
 import sk.iway.iwcm.test.BaseWebjetTest;
+import sk.iway.iwcm.test.TestRequest;
 
 class SemanticSearchServiceFilterTest extends BaseWebjetTest {
+
+    @Test
+    void searchUsesProviderAndModelFromExistingAssistant() throws Exception {
+        boolean originalHybridEnabled = Constants.getBoolean("ragHybridSearchEnabled");
+        boolean originalAnswerAllowed = Constants.getBoolean("ragAnswerAllowed");
+        Constants.setBoolean("ragHybridSearchEnabled", false);
+        Constants.setBoolean("ragAnswerAllowed", false);
+
+        try {
+            EmbeddingService embeddingService = mock(EmbeddingService.class);
+            VectorStore vectorStore = mock(VectorStore.class);
+            RagEmbeddingStatService statService = mock(RagEmbeddingStatService.class);
+            AssistantDefinitionEntity assistant = new AssistantDefinitionEntity();
+            assistant.setProvider("GEMINI");
+            assistant.setModel("gemini-embedding-001");
+            TestRequest request = new TestRequest();
+            request.setAttribute("rootGroup", "");
+
+            when(vectorStore.isAvailableAndInitialized()).thenReturn(true);
+            when(statService.getSearchAssistant()).thenReturn(assistant);
+            when(embeddingService.embedWithUsage(List.of("query"), assistant, request))
+                .thenReturn(new EmbeddingBatchResult(List.of(new float[] {1f, 2f}), 3));
+
+            SemanticSearchService service = new SemanticSearchService(embeddingService, vectorStore, statService, mock(RagService.class));
+
+            service.search("query", 1, "sk", 10, RagEntityType.DOCUMENT, request);
+
+            verify(embeddingService).embedWithUsage(List.of("query"), assistant, request);
+            verify(vectorStore).search(
+                any(float[].class),
+                eq("gemini"),
+                eq("gemini-embedding-001"),
+                eq(RagEntityType.DOCUMENT),
+                eq(1),
+                eq("sk"),
+                anyInt(),
+                isNull()
+            );
+        } finally {
+            Constants.setBoolean("ragHybridSearchEnabled", originalHybridEnabled);
+            Constants.setBoolean("ragAnswerAllowed", originalAnswerAllowed);
+        }
+    }
 
     @Test
     void filterResultsBySimilarityAddsFallbackWhenThresholdKeepsTooFew() {

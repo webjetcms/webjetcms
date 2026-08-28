@@ -1,23 +1,18 @@
 package sk.iway.iwcm.components.ai.providers;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.webjetcms.ai.AiClient;
-import com.webjetcms.ai.provider.gemini.GeminiProvider;
-import com.webjetcms.ai.provider.openai.OpenAiProvider;
-import com.webjetcms.ai.provider.openrouter.OpenRouterProvider;
+import com.webjetcms.ai.AiProvider;
 
-/** Wires library-owned provider clients into the WebJET application lifecycle. */
+/** Wires bundled and application-defined providers into the WebJET application lifecycle. */
 @Configuration
 public class AiLibraryConfiguration {
 
     @Bean(destroyMethod = "close")
-    public AiClient webjetAiClient() {
-        return AiClient.of(
-            new OpenAiProvider(),
-            new GeminiProvider(),
-            new OpenRouterProvider()
-        );
+    public AiClient webjetAiClient(ObjectProvider<AiProvider> customProviders) {
+        return AiClient.discover(customProviders.stream().toArray(AiProvider[]::new));
     }
 }

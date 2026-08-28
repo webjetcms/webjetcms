@@ -98,6 +98,14 @@ public class EmbeddingChunkEntity extends BaseEditorFields {
     // embedding column is NOT mapped here - it's vector(1536) type handled via native SQL
     // Use PgVectorStore for embedding operations
 
+    @Column(name = "embedding_provider", nullable = false, length = 100)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DISABLED,
+        title = "settings.embedding-chunks.embeddingProvider",
+        tab = "main"
+    )
+    private String embeddingProvider;
+
     @Column(name = "embedding_model", nullable = false, length = 100)
     @DataTableColumn(
         inputType = DataTableColumnType.DISABLED,

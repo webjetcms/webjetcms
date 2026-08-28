@@ -65,10 +65,12 @@ public class AiAssistantsService {
     }
 
     /**
+     * Finds active, configured AI assistants applicable to the target field.
      *
-     * @param fieldTo
-     * @param srcClass
-     * @return Pair<String, String> where -> <aiAssistantName, fromField>
+     * @param fieldTo target entity field name
+     * @param column column metadata used to match classes and render formats
+     * @param srcClass fully qualified source entity class name
+     * @return matching assistant definitions, or an empty list when none apply
      */
     public static List<AssistantDefinitionEntity> getAssistantAndFieldFrom(String fieldTo, sk.iway.iwcm.system.datatable.json.DataTableColumn column, String srcClass) {
         List<AssistantDefinitionEntity> assistants = new ArrayList<>();

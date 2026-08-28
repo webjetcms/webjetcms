@@ -82,7 +82,13 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ![](redactor/apps/semantic-search/rag-result.png)
 
+- Embedding indexování a vyhledávání používá poskytovatele a model nastavený v systémovém AI asistentovi. Indexy různých poskytovatelů a modelů mohou existovat současně; stránka **Sémantický index** zobrazuje aktuální nastavení a při opětovném indexování zachová ostatní kombinace. Jádro embedding požadavků, odpovědí a komunikace s poskytovateli bylo vyčleněno do knihovny `webjet-ai` ; WebJET CMS nadále zajišťuje výběr asistenta, indexování a uložení vektorů (#58694).
+
 ### Aplikace
+
+- Číselníky - pro pojmenovaná řetězcová pole lze v nové kartě [Typy řetězcových polí](redactor/apps/enumeration/README.md#karta-typy-řetězcových-pole) nastavit typ pole, možnosti výběru, povinnost, pomocný text a omezení délky stejně jako u volitelných polí. Nabídka a názvy konfigurací vycházejí z poslední uložené verze typu číselníku. Nepojmenovaná pole zůstávají skrytá, nevyhodnocují se jako povinná a pole bez specifické konfigurace se zobrazí jako běžný text. Starší vlastní Excel šablony a integrace REST API je třeba upravit z atributů `string1` až `string12` na `fieldA` až `fieldL` (#58641).
+
+![](redactor/apps/enumeration/editor_stringFieldTypes.png)
 
 - Elektronický obchod - přidaná aplikace [Statistiky](redactor/apps/eshop/stats/README.md) se souhrnnými ukazateli, filtrováním podle stavu, měny a období a grafy tržeb, produktů, kategorií, způsobů doručení a platebních metod (#58065).
 
@@ -120,6 +126,10 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 - Přidána možnost nastavit volitelné pole jako povinné (#58413).
 - Přidány nové typy volitelných polí [přepínač a zaškrtávací pole](frontend/webpages/customfields/custom-fields-settings.md#rozdíl-mezi-selectmultiselect-a-radiocheckbox) s podporou statických možností i propojení na číselník. Typ `multiselect` nyní také podporuje [propojení na číselník](frontend/webpages/customfields/custom-fields-settings.md#zdroj-možností). Původní typ `enumeration` byl nahrazen přepínačem zdroje možností u typů `select`, `multiselect`, `radio` a `checkbox` kde se pro všechny tyto typy polí načtou možnosti z propojeného číselníku (#58637).
+
+### Přístupnost
+
+- Administrace - rozšířené ovládání klávesnicí a podpora čteček obrazovky pro datové tabulky, modální okna a notifikace, bublinová nápověda, výběr data a barvy a HTML editor. Upraveno bylo přesouvání a zvracení zaměření, výběr řádků a buněk, přístupné názvy a ARIA stavy, označení povinných polí, kontrasty ovládacích prvků a odkaz na přeskočení na hlavní obsah. Byly doplněny automatizované regresní testy `a11y` pro tyto scénáře (#235).
 
 ### Multiweb
 
@@ -178,6 +188,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Administrace - odstraněná závislost na [Vue.js](https://vuejs.org). Stromová pole, úvodní stránka, výběr oblasti obrázku a monitorování serveru používají nativní [web komponenty](developer/frameworks/web-components.md). Globální objekt `window.VueTools` ani balíky pro Vue již nejsou součástí administrace. Vlastní rozšíření je musí nahradit web komponenty nebo si Vue sestavit samostatně (#58722).
 
 - AI asistenti - klientská logika nezávislá na poskytovateli pro OpenAI, Gemini a OpenRouter, zpracování streamů, typy požadavků/odpovědí a ochrana promptů byly vyčleněny do samostatného artefaktu `com.webjetcms:webjet-ai` a externího [repozitáře webjet-ai](https://github.com/webjetcms/webjetcmi/webjetcmi). WebJET CMS předává konfiguraci přes typovaný adaptér a nadále zajišťuje auditování, perzistenci a integraci uživatelského rozhraní. Jedná se o nekompatibilní změnu: původní CMS SPI pro vlastní poskytovatele a jeho transportní a streamovací podpůrné třídy byly odstraněny. Vlastní poskytovatelé je nutné migrovat na rozhraní `AiProvider` knihovny a CMS adaptér `LibrarySupportLogic` (#58670).
+
+- AI poskytovatelé - vlastní implementaci lze [přidat do projektu](custom-apps/apps/ai/assistants/README.md) jako Spring bean `AiProvider` ; CMS ji automaticky spojí s vestavěnými poskytovateli. Konfigurace a pole editoru jsou soustředěny v jednom adaptéru `LibrarySupportLogic` /`AiAssitantsInterface`. Možnosti generování obrázků se načítají podle poskytovatele, modelu a operace z knihovny `webjet-ai`, takže se dynamicky zobrazí pouze podporovaný počet, rozměr, kvalita a poměr stran (#58694).
 
 - Datové tabulky - přidán nový typ pole `OPTIONS` pro [dynamický seznam hodnot](developer/datatables-editor/standard-fields.md#options) v editoru. Každý řádek obsahuje dvě textová pole (klíč a hodnota), podporuje přidávání, odebírání a změnu pořadí pomocí `drag & drop` (#58517).
 
@@ -396,6 +408,9 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 - Multiweb - opravena možnost smazat nebo upravit doménové přesměrování, které obsahuje `http/s` prefix (#58317-15).
 - Galerie - v editoru aplikace se mezi vizuálními styly zobrazují pouze JSP soubory ze složek `/components/{INSTALL_NAME}/gallery` a `/components/gallery`, bez duplicitních položek (#58317-16).
 - Vložení HTML kódu - v náhledu aplikace v editoru webových stránek se pro obsah tvořený pouze elementy `script` zobrazí zdrojový kód namísto prázdného obsahu (#OSK625).
+- Bezpečnost - zpřísněné ověřování odkazu na obnovu zapomenutého hesla. Ověřovací záznam se kontroluje pro vybraný uživatelský účet i při vlastním způsobu odesílání, respektuje časovou platnost a po použití se zneplatní pro všechny účty zahrnuté v žádosti (#292).
+- Bezpečnost - zpřísněná kontrola práv na složku při nahrávání souboru do administrace a její přepsání pokud soubor existuje.
+- Bezpečnost - zpřísněná validace názvů databázových sloupců při dynamickém uspořádání a filtrování. **Upozornění:** veřejné API již v parametrech uspořádání nepodporují vlastní SQL výrazy, používají se pouze bezpečné názvy sloupců nebo dostupné pojmenované konstanty (#294).
 
 ## 2026.0.28
 
