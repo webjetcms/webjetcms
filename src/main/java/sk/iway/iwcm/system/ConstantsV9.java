@@ -27,9 +27,9 @@ public class ConstantsV9 {
 		Constants.setString("propertiesAdminKeys",
 			  "button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*,text.warning,text.info,editor.directory_name,editor.confirmExitMessage,menu.forms,datatables.quill.toolbar.*,editor.form.sl.name,editor.form.sl.value,components.file_archiv.name,admin.dragDropFiles.*");
 		Constants.setInt("webpagesTreeAutoOpenLimit", 2);
-		Constants.setString("deepl_auth_key", "", "integrations.translations", "Preklady - authentifikacny kluc k sluzbe deepl.com pre preklad textov");
-		Constants.setString("deepl_api_url", "https://api-free.deepl.com/v2/translate", "integrations.translations", "URL adresa pre API volanie DeepL prekladu, ak mate PRO ucet pouzite https://api.deepl.com/v2/translate");
-		Constants.setString("deepl_api_usage_url", "/v2/usage", "integrations.translations", "URL adresa pre API volanie DeepL statistiky pouzitia");
+		Constants.setString("deepl_auth_key", "", "content.translations", "Preklady - authentifikacny kluc k sluzbe deepl.com pre preklad textov");
+		Constants.setString("deepl_api_url", "https://api-free.deepl.com/v2/translate", "content.translations", "URL adresa pre API volanie DeepL prekladu, ak mate PRO ucet pouzite https://api.deepl.com/v2/translate");
+		Constants.setString("deepl_api_usage_url", "/v2/usage", "content.translations", "URL adresa pre API volanie DeepL statistiky pouzitia");
 
 		Constants.setInt("formsDatatableServerSizeLimit", 5000, Constants.mods(Constants.MOD_PERFORMANCE, "apps.form"),
 				"Minimalny pocet zaznamov formularu pre ktore sa uz pouzije serverove strankovanie.");
@@ -86,7 +86,7 @@ public class ConstantsV9 {
 
 		Constants.setInt("restaurantMenu.alergensCount", 14, "apps.restaurant_menu", "Maximalny pocet alergenov, tie sa ziskavaju z prekladovych klucov s prefixom components.restaurant_menu.alergen");
 
-		Constants.setString("ntlmLogonAction.charsetEncoding", "windows-1250", "security.ntlm", "Nazov kodovania, ktore sa pouzije pre prekodovanie znakov ziskanych z LDAP servera. Ak je hodnota prazdna, tak sa nevykona ziadne prekodovanie.");
+		Constants.setString("ntlmLogonAction.charsetEncoding", "windows-1250", "security.ldap", "Nazov kodovania, ktore sa pouzije pre prekodovanie znakov ziskanych z LDAP servera. Ak je hodnota prazdna, tak sa nevykona ziadne prekodovanie.");
 
 		Constants.setString("webpagesFunctionsPerms", "menuWebpages|cmp_blog|cmp_blog_admin|cmp_news|cmp_abtesting|cmp_basket", Constants.MOD_SECURITY, "Zoznam prav pre funkcie web stranok, ktore sa pouzivaju aj v inych moduloch ako blog, novinky atd.");
 		Constants.setString("bloggerAppPermissions", "menuGallery,menuInquiry,cmp_quiz,cmp_form", "apps.blog", "Prava k apllikáciam, ktoré sa majú pridať vytvorenému používateľovi typu BLOGGER");
@@ -110,7 +110,7 @@ public class ConstantsV9 {
 
 		Constants.setString("propertiesRestControllerAllowedKeysPrefixes", "", Constants.MOD_CONFIG, "Povolene prefixi prekladových kľúčov");
 
-		Constants.setBoolean("monitoringEnableCountUsersOnAllNodes", true, "system.server_monitoring;system.performance", "Ak verejne nody nedokazu zapisovat do tabuly _conf_ nastavte na false pre vypnutie zapisu celkove poctu sessions");
+		Constants.setBoolean("monitoringEnableCountUsersOnAllNodes", true, "system.monitoring;system.performance", "Ak verejne nody nedokazu zapisovat do tabuly _conf_ nastavte na false pre vypnutie zapisu celkove poctu sessions");
 
 		Constants.setBoolean("webpagesNotifyAutorOnPublish", true, Constants.MOD_CONFIG, "Nastavenie odosielania notifikacie autorovi pri publikovani stranky.");
 
@@ -118,9 +118,9 @@ public class ConstantsV9 {
 
 		Constants.setString("changePasswordPageUrlAdmin", "/admin/logon/changePassword", Constants.MOD_USER, "cesta k suboru (alebo stranke) na zmenu hesla z admin sekcie");
 
-		Constants.setInt("dashboardRecentSize", 8, "apps.dashboard", "Pocet zaznamov v zozname poslednych stranok/auditu na uvodnej obrazovke");
+		Constants.setInt("dashboardRecentSize", 8, "system.admin", "Pocet zaznamov v zozname poslednych stranok/auditu na uvodnej obrazovke");
 
-		Constants.setInt("contentBlockTypeCount", 5, "apps.content_block", "Pocet dostupnych typov blokov pre obsah");
+		Constants.setInt("contentBlockTypeCount", 5, "content.editor", "Pocet dostupnych typov blokov pre obsah");
 
 		Constants.setBoolean("elfinderMoveConfirm", true, "files", "Zobrazi potvrdzovaci dialog pri presune priecinkov a suborov");
 
@@ -191,8 +191,8 @@ public class ConstantsV9 {
 
 		Constants.setString("basketNewCategoryHtmlCode", "!INCLUDE(/components/basket/bootstrap_products.jsp, style=01 ,groupIds=, orderType=priority, asc=yes, publishType=all, paging=yes, pageSize=15,pagingPosition=both, thumbWidth=190, thumbHeight=190, showCategory=yes, showSort=yes, testRun=no, katalogProduktov=no, overeneZakaznikmi=)!", Constants.MOD_BASKET, "HTML kód pre novú kategóriu v košíku.");
 
-		Constants.setString("translationEngineClasses", "sk.iway.iwcm.system.translation.DeepL", "integrations.translations", "Čiarkou oddelený zoznam tried, ktoré implemetujú prekaldový modul (napr. DeepL alebo Google)");
-		Constants.setString("deepl_model_type", "prefer_quality_optimized", "integrations.translations", "Špecifikuje, ktorý DeepL model by sa mal použiť na preklad.");
+		Constants.setString("translationEngineClasses", "sk.iway.iwcm.system.translation.DeepL", "content.translations", "Čiarkou oddelený zoznam tried, ktoré implemetujú prekaldový modul (napr. DeepL alebo Google)");
+		Constants.setString("deepl_model_type", "prefer_quality_optimized", "content.translations", "Špecifikuje, ktorý DeepL model by sa mal použiť na preklad.");
 
 		Constants.setString("mirroringMode", "mirror", "apps.structuremirroring", "Used to signalize that mirroring is running in basic mode mirroring or clonning");
 		Constants.setInt("cloneActionSrcId", -1, Constants.MOD_CONFIG,"Used to set SRC group id when performing clonning.");
@@ -220,7 +220,7 @@ public class ConstantsV9 {
 		Constants.setBoolean("sessionSingleLogon", false, Constants.MOD_SECURITY, "Ak je nastavené na true, používateľ bude odhlásený z ostatných sessions pri novom prihlásení.");
 		Constants.setString("ckeditor_pictureDialogBreakpoints", "", Constants.MOD_EDITOR, "Zoznam breakpointov pre dialóg vloženia obrázku v CKEditor. Formát JSON poľa objektov [{name:'Mobile',width:320},{name:'Desktop',width:640,fallback:true}]");
 
-        Constants.setString("smtpAuthMechanism", "", "system.config;apps.dmail;security", "SMTP autentifikacny mechanizmus. Ak je prazdne, pouzije sa defaultny mechanizmus kniznice JavaMail.");
+        Constants.setString("smtpAuthMechanism", "", "system.email;apps.dmail;security", "SMTP autentifikacny mechanizmus. Ak je prazdne, pouzije sa defaultny mechanizmus kniznice JavaMail.");
 
 		Constants.setString("ckeditor_svgIcon_path", "", Constants.MOD_EDITOR, "Cesta k SVG sprite suboru s ikonami pre CKEditor");
 		Constants.setString("ckeditor_svgIcon_icons", "{}", Constants.MOD_EDITOR, "JSON objekt definujúci ikony pre CKEditor vo formáte {nazov: [skupiny], nazov2: [skupiny]}, napr. {\"4g\": [\"other\"], \"5g\": [\"other\"], \"accessibility-mobility\": [\"people\"]}. Ak je prázdne získa sa zo SVG súboru podľa hodnoty ID elementov, skupiny v takom prípade nie sú dostupné.");
@@ -271,13 +271,13 @@ public class ConstantsV9 {
 		Constants.setString("password_passKeyAllowedOrigins", "", Constants.MOD_SECURITY, "Comma-separated list of allowed origins for PassKey/WebAuthN requests. If empty, all origins are allowed. This is used to restrict which domains can make authentication requests to your server when using PassKey/WebAuthN.");
 
 		//image magick custom params - value can have 2 lines: line 1 = params BEFORE operation (after input file), line 2 = params AFTER operation (before output file)
-		Constants.setString("imageMagickCustomParams", "-filter Lanczos\n-interlace Plane -sampling-factor 4:2:0 -unsharp 2x0.5+0.5+0", "files.images", "Custom parameters for ImageMagick operations. Value can have 2 lines: line 1 = params before operation (e.g. -filter), line 2 = params after operation (e.g. -define). Single line = all params before operation.");
-		Constants.setString("imageMagickCustomParams_resize", "", "files.images", "Custom parameters for ImageMagick resize operation. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
-		Constants.setString("imageMagickCustomParams_crop", "", "files.images", "Custom parameters for ImageMagick crop operation. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
-		Constants.setString("imageMagickCustomParams_rotate", "", "files.images", "Custom parameters for ImageMagick rotate operation. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
-		Constants.setString("imageMagickCustomParams_jpg", "---\n-define jpeg:optimize-coding=true", "files.images", "Custom parameters for ImageMagick JPG format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
-		Constants.setString("imageMagickCustomParams_png", "---\n-define png:compression-level=9 -define png:compression-strategy=1", "files.images", "Custom parameters for ImageMagick PNG format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
-		Constants.setString("imageMagickCustomParams_webp", "---\n-quality 80 -define webp:method=6 -define webp:auto-filter=true -define webp:sns-strength=50", "files.images", "Custom parameters for ImageMagick WebP format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams", "-filter Lanczos\n-interlace Plane -sampling-factor 4:2:0 -unsharp 2x0.5+0.5+0", "files.thumb", "Custom parameters for ImageMagick operations. Value can have 2 lines: line 1 = params before operation (e.g. -filter), line 2 = params after operation (e.g. -define). Single line = all params before operation.");
+		Constants.setString("imageMagickCustomParams_resize", "", "files.thumb", "Custom parameters for ImageMagick resize operation. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_crop", "", "files.thumb", "Custom parameters for ImageMagick crop operation. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_rotate", "", "files.thumb", "Custom parameters for ImageMagick rotate operation. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_jpg", "---\n-define jpeg:optimize-coding=true", "files.thumb", "Custom parameters for ImageMagick JPG format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_png", "---\n-define png:compression-level=9 -define png:compression-strategy=1", "files.thumb", "Custom parameters for ImageMagick PNG format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_webp", "---\n-quality 80 -define webp:method=6 -define webp:auto-filter=true -define webp:sns-strength=50", "files.thumb", "Custom parameters for ImageMagick WebP format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
 
 		Constants.setString("appWrapperClasses", "apps.wrapper.container:container,apps.wrapper.container-fluid:container-fluid,apps.wrapper.mt-1:mt-1,apps.wrapper.mt-2:mt-2,apps.wrapper.mt-3:mt-3,apps.wrapper.mt-4:mt-4,apps.wrapper.mb-1:mb-1,apps.wrapper.mb-2:mb-2,apps.wrapper.mb-3:mb-3,apps.wrapper.mb-4:mb-4,apps.wrapper.w-100:w-100,apps.wrapper.w-75:w-75,apps.wrapper.w-50:w-50,apps.wrapper.mx-auto:mx-auto", Constants.MOD_EDITOR, "Čiarkou oddelený zoznam CSS tried pre obalenie výstupu aplikácie do wrapper kontajnera. Formát: prekladový_kľúč:css_trieda alebo len css_trieda. Ak je uvedený prekladový kľúč, zobrazí sa preložený názov.");
 

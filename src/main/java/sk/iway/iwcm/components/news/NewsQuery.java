@@ -178,33 +178,10 @@ public class NewsQuery
 			}
 			else if (Constants.DB_TYPE==Constants.DB_MSSQL)
 			{
-			    if (Constants.getBoolean("mssqlUseOldTopQuery"))
-                {
-                    //toto je potrebne pre staru verziu MSSQL
-                    StringBuilder sqlPaging = new StringBuilder();
-                    if (offset==NOT_SET_INT && initialOffset==0)
-                    {
-                        sqlPaging.append("SELECT TOP ").append(limit).append(sql.substring(6));
-                    }
-                    else
-                    {
-                        sqlPaging.append("SELECT * FROM (SELECT TOP ").append(limit).append(" * FROM ( SELECT TOP ").append(limit + (offset>0?offset:0) + initialOffset);
-                        sqlPaging.append(sql.substring(6));
-                        sqlPaging.append(") AS _subQuery1 ");
-                        // pridam reverzny ordering
-                        setOrdering(sqlPaging, "_subQuery1", true);
-                        // znova zoradim do povodneho radenia
-                        sqlPaging.append(") AS _subQuery2 ");
-                        setOrdering(sqlPaging, "_subQuery2", false);
-                    }
-                    sql = sqlPaging;
-                }
-			    else
-                {
-                    /* LPA - uprava limit a offset pre MS SQL */
-                    sql.append("OFFSET ").append((offset > 0 ? offset : 0) + initialOffset).append(" ROWS ")
-                            .append("FETCH NEXT ").append(limit).append(" ROWS ONLY");
-                }
+
+				/* LPA - uprava limit a offset pre MS SQL */
+				sql.append("OFFSET ").append((offset > 0 ? offset : 0) + initialOffset).append(" ROWS ")
+						.append("FETCH NEXT ").append(limit).append(" ROWS ONLY");
 
 				/*
 				takto nejak:
