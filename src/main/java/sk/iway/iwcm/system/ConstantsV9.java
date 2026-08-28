@@ -40,7 +40,7 @@ public class ConstantsV9 {
 				"Aktivovanie ukladania posledných log záznamov do pamäte pre jednoduchšiu kontrolu logov.");
 		Constants.setInt("loggingInMemoryQueueSize", 200, "system.adminlog",
 				"Maximalny počet log záznamov držaných v pamäti.");
-		Constants.setString("passwordHashAlgorithm", "bcrypt", Constants.MOD_SECURITY, "Meno algoritmu pre hashovanie, možné hodnoty bcrypt alebo sha-512");
+		Constants.setString("passwordHashAlgorithm", "bcrypt", Constants.MOD_PASSWORD, "Meno algoritmu pre hashovanie, možné hodnoty bcrypt alebo sha-512");
 		Constants.setInt("bcryptSaltRounds", 12, Constants.MOD_SECURITY, "log2 počtu opakovaní saltovania pri bcrypt algoritme hashovania hesiel");
 
 		//pentesty, vylucene /components/user/logon.jsp
@@ -265,10 +265,10 @@ public class ConstantsV9 {
 
 		Constants.setInt("insertScriptCacheMinutes", 60, Constants.MOD_PERFORMANCE, "Pocet minut cachovania zoznamu scriptov aplikacie Skripty, predpoklad je, ze sa pouzivaju na kazdej stranke, preto sa musia cachovat");
 
-		Constants.setBoolean("password_passKeyEnabled", true, Constants.MOD_SECURITY, "Povoli prihlasovanie pomocou PassKey/WebAuthN technológie. Tá zabezpečuje prihlasovanie pomocou biometrických údajov alebo bezpečnostných kľúčov. Vyžaduje HTTPS komunikáciu.");
-		Constants.setString("password_passKeyRpId", "", Constants.MOD_SECURITY, "Relying Party ID pre PassKey/WebAuthN. Obvykle sa jedná o doménu bez subdomén (napr. example.com). Ak nie je nastavená, použije sa základná doména z URL adresy.");
-		Constants.setString("password_passKeyRpName", "WebJET CMS", Constants.MOD_SECURITY, "Relying Party Name pre PassKey/WebAuthN. Jedná sa o názov vašej aplikácie, ktorý sa zobrazí používateľom pri registrácii a prihlasovaní pomocou PassKey.");
-		Constants.setString("password_passKeyAllowedOrigins", "", Constants.MOD_SECURITY, "Comma-separated list of allowed origins for PassKey/WebAuthN requests. If empty, all origins are allowed. This is used to restrict which domains can make authentication requests to your server when using PassKey/WebAuthN.");
+		Constants.setBoolean("password_passKeyEnabled", true, "security.passkey", "Povoli prihlasovanie pomocou PassKey/WebAuthN technológie. Tá zabezpečuje prihlasovanie pomocou biometrických údajov alebo bezpečnostných kľúčov. Vyžaduje HTTPS komunikáciu.");
+		Constants.setString("password_passKeyRpId", "", "security.passkey", "Relying Party ID pre PassKey/WebAuthN. Obvykle sa jedná o doménu bez subdomén (napr. example.com). Ak nie je nastavená, použije sa základná doména z URL adresy.");
+		Constants.setString("password_passKeyRpName", "WebJET CMS", "security.passkey", "Relying Party Name pre PassKey/WebAuthN. Jedná sa o názov vašej aplikácie, ktorý sa zobrazí používateľom pri registrácii a prihlasovaní pomocou PassKey.");
+		Constants.setString("password_passKeyAllowedOrigins", "", "security.passkey", "Comma-separated list of allowed origins for PassKey/WebAuthN requests. If empty, all origins are allowed. This is used to restrict which domains can make authentication requests to your server when using PassKey/WebAuthN.");
 
 		//image magick custom params - value can have 2 lines: line 1 = params BEFORE operation (after input file), line 2 = params AFTER operation (before output file)
 		Constants.setString("imageMagickCustomParams", "-filter Lanczos\n-interlace Plane -sampling-factor 4:2:0 -unsharp 2x0.5+0.5+0", "files.thumb", "Custom parameters for ImageMagick operations. Value can have 2 lines: line 1 = params before operation (e.g. -filter), line 2 = params after operation (e.g. -define). Single line = all params before operation.");

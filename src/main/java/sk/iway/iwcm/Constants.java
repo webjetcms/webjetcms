@@ -48,6 +48,7 @@ public class Constants {
 	public static final String MOD_USER = "users";
 	public static final String SERVER_NAME_MACRO = "SERVER_NAME";
 	public static final String MOD_CAPTCHA = "security.captcha";
+	public static final String MOD_PASSWORD = "security.password";
 	public static final String MOD_FILE_ARCHIV = "files.file_archiv";
 	public static final String MOD_DMAIL = "apps.dmail";
 	public static final String MOD_RESERVATION = "apps.reservation";
@@ -764,29 +765,29 @@ public class Constants {
 		setString("usersPositionList", "", MOD_CONFIG,
 				"Pre verziu Intranet definuje zoznam moznych pozicii zamestnanca, jednotlive pozicie sa oddeluju znakom |.");
 
-		setInt("passwordMinLength", 5, mods(MOD_SECURITY, MOD_USER),
+		setInt("passwordMinLength", 5, MOD_PASSWORD,
 				"Určuje minimálne akej dĺžky ma byť heslo pre bežného užívateľa");
-		setInt("passwordAdminMinLength", 5, mods(MOD_SECURITY, MOD_USER),
+		setInt("passwordAdminMinLength", 5, MOD_PASSWORD,
 				"Určuje minimálne akej dĺžky ma byť heslo pre administrátora");
-		setInt("passwordMinCountOfSpecialSigns", 0, mods(MOD_SECURITY, MOD_USER),
+		setInt("passwordMinCountOfSpecialSigns", 0, MOD_PASSWORD,
 				"Určuje minimálny počet výskytu špecálnych znakov v hesle pre bežného užívateľa");
-		setInt("passwordAdminMinCountOfSpecialSigns", 0, mods(MOD_SECURITY, MOD_USER),
+		setInt("passwordAdminMinCountOfSpecialSigns", 0, MOD_PASSWORD,
 				"Určuje minimálny počet výskytu špecálnych znakov v hesle pre administrátora");
-		setInt("passwordMinUpperCaseLetters", 0, mods(MOD_SECURITY, MOD_USER),
+		setInt("passwordMinUpperCaseLetters", 0, MOD_PASSWORD,
 				"Určuje minimálny počet výskytu veľkých písmen v hesle pre bežného užívateľa");
-		setInt("passwordAdminMinUpperCaseLetters", 1, mods(MOD_SECURITY, MOD_USER),
+		setInt("passwordAdminMinUpperCaseLetters", 1, MOD_PASSWORD,
 				"Určuje minimálny počet výskytu veľkých písmen v hesle pre administrátora");
-		setInt("passwordMinLowerCaseLetters", 0, mods(MOD_SECURITY, MOD_USER),
+		setInt("passwordMinLowerCaseLetters", 0, MOD_PASSWORD,
 				"Určuje minimálny počet výskytu malých písmen v hesle pre bežného užívateľa");
-		setInt("passwordAdminMinLowerCaseLetters", 0, mods(MOD_SECURITY, MOD_USER),
+		setInt("passwordAdminMinLowerCaseLetters", 0, MOD_PASSWORD,
 				"Určuje minimálny počet výskytu malých písmen v hesle pre administrátora");
-		setInt("passwordMinCountOfDigits", 0, mods(MOD_SECURITY, MOD_USER),
+		setInt("passwordMinCountOfDigits", 0, MOD_PASSWORD,
 				"Určuje minimálny počet výskytu čísel v hesle pre bežného užívateľa");
-		setInt("passwordAdminMinCountOfDigits", 1, mods(MOD_SECURITY, MOD_USER),
+		setInt("passwordAdminMinCountOfDigits", 1, MOD_PASSWORD,
 				"Určuje minimálny počet výskytu čísel v hesle pre administrátora");
-		setInt("passwordExpiryDays", 0, mods(MOD_SECURITY, MOD_USER),
+		setInt("passwordExpiryDays", 0, MOD_PASSWORD,
 				"Určuje počet dní platnosti hesla pre bežného užívateľa. Po uplynutí času, bude užívateľ vyzvaný si zmeniť heslo.");
-		setInt("passwordAdminExpiryDays", 365, mods(MOD_SECURITY, MOD_USER),
+		setInt("passwordAdminExpiryDays", 365, MOD_PASSWORD,
 				"Určuje počet dní platnosti hesla pre administrátora. Po uplynutí času, bude užívateľ vyzvaný si zmeniť heslo.");
 
 		setString("stripes.MultipartWrapper.Class", "sk.iway.iwcm.system.stripes.MultipartWrapper", MOD_CONFIG,
@@ -870,9 +871,9 @@ public class Constants {
 		setBoolean("searchUseOracleText", false, "apps.search;system.performance",
 				"Ak je nastavene na true pouziva sa pre vyhladavanie v pripade Oracle databazy Oracle Text. Vyzaduje nastavenie prav a indexu, pre efektivne vyuzitie musi byt nastavena aj konfiguracna premenna searchDetaultInTitle na hodnotu false.");
 
-		setBoolean("passwordUseHash", false, mods(MOD_SECURITY, MOD_USER),
+		setBoolean("passwordUseHash", false, MOD_PASSWORD,
 				"Prepína medzi použitím SHA512 hashu a AES. Po prepnuti na true je nutne zavolat /admin/update/update_passwords.jsp. Tato zmena je NEVRATNA!!");
-		setInt("passwordResetValidityInMinutes", 30, mods(MOD_SECURITY, MOD_USER),
+		setInt("passwordResetValidityInMinutes", 30, MOD_PASSWORD,
 				"Ak sa na šifrovanie hesla použije SHA512, tento parameter určuje, ako dlho je platný token na zmenu hesla");
 
 		setString("jpaAddPackages", "", MOD_CONFIG, "Čiarkou oddelené zoznamy balíčkov, kde sa hľadajú JPA Beany");
@@ -924,7 +925,7 @@ public class Constants {
 		setString("editorSingleCharNbsp", "a,i,o,u,s,so,z,zo,v,vo,na,do,od,pre,k,\\d+(?:[.§§§]\\d+)?\\.?", MOD_EDITOR,
 				"Pre kazdu spojku v zozname sa medzera za nou nahradza &nbsp;. Ak potrebujete v regexp znak ciarka pouzite §§§ ten sa naradí po parsingu za ciarku.");
 
-		setInt("passwordUseHashIterations", 100, MOD_SECURITY,
+		setInt("passwordUseHashIterations", 100, MOD_PASSWORD,
 				"Pocet iteracii pre hashovanie hesla - POZOR po zahashovani sa uz nesmie zmenit");
 		setString("dmailBadEmailSmtpReplyStatuses",
 				"Invalid Addresses,Recipient address rejected,Bad recipient address,Local address contains control or whitespace,Domain ends with dot in string,Domain contains illegal character in string",
@@ -1620,7 +1621,7 @@ public class Constants {
 				"sk.iway.iwcm.components.file_archiv.FileArchivatorBean,sk.iway.iwcm.components.insertScript.InsertScriptBean,sk.iway.iwcm.components.gdpr.CookieManagerBean,sk.iway.iwcm.components.gdpr.model.GdprRegExpBean,",
 				MOD_CONFIG,
 				"Ak je zapnuta premenna enableStaticFilesExternalDir tak v JPA v metode getAll bude vracat zaznamy vyfiltrovane podla domain_id. Predpokladame ze Bean v tomto zozname ma property domainId");
-		setInt("passwordHistoryLength", 6, MOD_CONFIG,
+		setInt("passwordHistoryLength", 6, MOD_PASSWORD,
 				"Pocet pouzitych hesiel usera v db ktore sa ma ukladat aby user nepouzil pri zmene stare heslo");
 
 		setString("proxyHostHttps", "", MOD_CONFIG,
@@ -1636,7 +1637,7 @@ public class Constants {
 		setString("insertScriptPositions", "", "apps.insert_script",
 				"Zoznam pozicii v JSP sablonach pre zobrazenie select boxu pri vlozeni noveho scriptu, ak je prazdne pouzije sa autocomplete na uz existujuco definovanych scriptoch");
 
-		setBoolean("passwordHistoryEnabled", true, MOD_SECURITY,
+		setBoolean("passwordHistoryEnabled", true, MOD_PASSWORD,
 				"Ak je nastavene na true je kontrolovana v databaze aj historia hesiel a nie je povolene pri zmene hesla pouzit take, ktore bolo v minulosti.");
 
 		setString("propertiesEnabledKeys", "{INSTALL_NAME}.,components.{INSTALL_NAME},default.,checkform.", MOD_CONFIG,
