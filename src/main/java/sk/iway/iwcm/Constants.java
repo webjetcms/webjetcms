@@ -74,6 +74,42 @@ public class Constants {
 	public static final String MOD_SPAM = "security.spam";
 	public static final String MOD_SYNC = "system.sync";
 	public static final String MOD_XSS = "security.xss";
+	public static final String MOD_ABTEST = "apps.abtest";
+	public static final String MOD_APP_WEATHER = "apps.app-weather";
+	public static final String MOD_BANNER = "apps.banner";
+	public static final String MOD_BAZAR = "apps.bazar";
+	public static final String MOD_BLOG = "apps.blog";
+	public static final String MOD_CALENDAR = "apps.calendar";
+	public static final String MOD_FORUM = "apps.forum";
+	public static final String MOD_INQUIRY = "apps.inquiry";
+	public static final String MOD_INSERT_SCRIPT = "apps.insert_script";
+	public static final String MOD_MAP = "apps.map";
+	public static final String MOD_NEWS = "apps.news";
+	public static final String MOD_QA = "apps.qa";
+	public static final String MOD_RELATED_PAGES = "apps.related-pages";
+	public static final String MOD_RESTAURANT_MENU = "apps.restaurant_menu";
+	public static final String MOD_SEND_LINK = "apps.send_link";
+	public static final String MOD_STRUCTURE_MIRRORING = "apps.structuremirroring";
+	public static final String MOD_MEDIA = "content.media";
+	public static final String MOD_SEO = "content.seo";
+	public static final String MOD_TEMPLATES = "content.templates";
+	public static final String MOD_TOOLTIP = "content.tooltip";
+	public static final String MOD_TRANSLATIONS = "content.translations";
+	public static final String MOD_WEBPAGES = "content.webpages";
+	public static final String MOD_FILES = "files";
+	public static final String MOD_ELFINDER = "files.elfinder";
+	public static final String MOD_GFS = "files.gfs";
+	public static final String MOD_FILE_HISTORY = "files.history";
+	public static final String MOD_UPLOAD = "files.upload";
+	public static final String MOD_VIDEO = "files.video";
+	public static final String MOD_OAUTH2 = "security.oauth2";
+	public static final String MOD_SYSTEM_ADMIN = "system.admin";
+	public static final String MOD_SYSTEM_CLUSTER = "system.cluster";
+	public static final String MOD_SYSTEM_COMBINE = "system.combine";
+	public static final String MOD_SYSTEM_EMAIL = "system.email";
+	public static final String MOD_SYSTEM_MONITORING = "system.monitoring";
+	public static final String MOD_SYSTEM_MULTIDOMAIN = "system.multidomain";
+	public static final String MOD_SYSTEM_PKEY_GENERATOR = "system.pkeygenerator";
 
 	public static final String MOD_OBSOLETE = "system.obsolete";
 
@@ -156,23 +192,23 @@ public class Constants {
 				"Predvolené znakové kódovanie používané pri HTTP odpovediach, šablónach a čítaní súborov");
 
 		// format je: nazov, hodnota, relevantne moduly oddelene znakom;, popis
-		setInt("rootGroupId", 1, "content.webpages", "ID predvoleneho korenoveho adresara");
+		setInt("rootGroupId", 1, MOD_WEBPAGES, "ID predvoleneho korenoveho adresara");
 
-		setInt("tempGroupId", 2, "content.templates", "ID adresara System->Sablony");
+		setInt("tempGroupId", 2, MOD_TEMPLATES, "ID adresara System->Sablony");
 
-		setInt("menuGroupId", 3, "content.templates", "ID adresara System->Menu");
+		setInt("menuGroupId", 3, MOD_TEMPLATES, "ID adresara System->Menu");
 
-		setInt("headerFooterGroupId", 4, "content.templates", "ID adresara System->Hlavicky paticky");
+		setInt("headerFooterGroupId", 4, MOD_TEMPLATES, "ID adresara System->Hlavicky paticky");
 
 		setString("statNoLogIP", "", MOD_STAT,
 				"zoznam IP adries (alebo ich začiatkov) z ktorých sa nebude evidovať štatistika, napr. 192.168.1.,62.65.161.,147.175.111.112");
 
-		setInt("linkType", LINK_TYPE_HTML, "content.webpages",
+		setInt("linkType", LINK_TYPE_HTML, MOD_WEBPAGES,
 				"Typ liniek systemu - hodnota html pre html linky a docid pre showdoc.do linky");
 
 		// deprecated hodnoty
-		setString("htmlImportStart", "", mods(MOD_EDITOR, MOD_OBSOLETE), "");
-		setString("htmlImportEnd", "", mods(MOD_EDITOR, MOD_OBSOLETE), "");
+		setString("htmlImportStart", "", mods(MOD_EDITOR), "");
+		setString("htmlImportEnd", "", mods(MOD_EDITOR), "");
 
 		setString("dateFormat", "dd.MM.yyyy", MOD_LOCALIZATION, "Format datumu pre standardny vypis");
 
@@ -182,7 +218,7 @@ public class Constants {
 		setString("dateTimeFormat", "dd.MM.yyyy H:mm:ss", MOD_LOCALIZATION, "Format datumu a casu pre standardny vypis");
 		setString("timeFormat", "HH:mm", MOD_LOCALIZATION, "Format casu pre standardny vypis");
 
-		setString("smtpServer", "localhost", "system.email", "Adresa SMTP servera pre odosielanie emailov");
+		setString("smtpServer", "localhost", MOD_SYSTEM_EMAIL, "Adresa SMTP servera pre odosielanie emailov");
 
 		// deprecated
 		setString("editorWidth", "100%");
@@ -191,12 +227,12 @@ public class Constants {
 
 		setString("defaultLanguage", "", MOD_LOCALIZATION, "prednastavený jazyk admin časti, napr. cz");
 
-		setString("imagesRootDir", "/images", "files", "Hlavny adresar pre obrazky");
-		setString("galleryDirName", "gallery", MOD_GALLERY, "adresar v adresari images, v ktorom je foto galeria");
-		setString("filesRootDir", "/files", "files", "Hlavny adresar pre subory");
-		setString("editorPageCss", "/css/page.css", MOD_EDITOR,
+		setString("imagesRootDir", "/images", MOD_MEDIA, "Hlavny adresar pre obrazky");
+		setString("galleryDirName", "gallery", MOD_MEDIA, "adresar v adresari images, v ktorom je foto galeria");
+		setString("filesRootDir", "/files", MOD_MEDIA, "Hlavny adresar pre subory");
+		setString("editorPageCss", "/css/page.css", MOD_MEDIA,
 				"Hlavny CSS styl pre editor (stranku), sablona ho ale moze predefinovat");
-		setString("editorEditorCss", "/css/editor.css", MOD_EDITOR, "Doplnkovy CSS styl pre editor (stranku)");
+		setString("editorEditorCss", "/css/editor.css", MOD_MEDIA, "Doplnkovy CSS styl pre editor (stranku)");
 
 		setInt("imageThumbsWidth", 96, MOD_THUMB, "Predvolená šírka náhľadu obrázka v pixeloch");
 		setInt("imageThumbsHeight", 96, MOD_THUMB, "Predvolená výška náhľadu obrázka v pixeloch");
@@ -208,11 +244,11 @@ public class Constants {
 		setString("proxyPassword", "", MOD_NETWORK,
 				"Heslo pre proxy pre pripojenie servera do internetu (ak je vyzadovane)");
 
-		setString("adminEnableIPs", "", mods(MOD_SECURITY, "system.admin"),
+		setString("adminEnableIPs", "", mods(MOD_SECURITY, MOD_SYSTEM_ADMIN),
 				"zoznam IP adries (alebo ich začiatkov) z ktorých je možné sa prihlásiť do admin časti, napr. 192.168.1,62.65.161");
-		setBoolean("adminCheckUserGroups", false, "content.editor;content.webpages;security",
+		setBoolean("adminCheckUserGroups", false, mods(MOD_EDITOR, MOD_WEBPAGES, MOD_SECURITY),
 				"true || false - ak je nastavené na true bude sa vykonávať kontrola práv na zaheslované stránky aj administrátorom (štandardne sa nekontroluje, administrátor má prístup ku všetkým stránkam)");
-		setBoolean("adminRequireSSL", false, mods(MOD_SECURITY, "system.admin"),
+		setBoolean("adminRequireSSL", false, mods(MOD_SECURITY, MOD_SYSTEM_ADMIN),
 				"ak je nastavené na true a na serveri je nastavené SSL pre prístup do admin časti bude vyžadovaný httpS protokol");
 		setString("pathFilterBlockedPaths", ".DS_Store,debug.,config.properties,Thumbs.db,.git,.svn,/WEB-INF/,./", MOD_SECURITY,
 				"zoznam reťazcov oddelených čiarkami, ktoré ak sa nachádzajú v URL ceste budú blokované (vrátené 404). Používa sa na zabránenie odhalenia metadát súborov a adresárov ako .DS_Store, .git, .svn, Thumbs.db, /WEB-INF./web.xml a podobne");
@@ -223,23 +259,19 @@ public class Constants {
 		setString("statDisableUserAgent",
 				"bot,holmes,search,dig,godzilla,ocelli,crawl,slurp,spider,wauuu,http://,teoma,ia_archiver,libwww-perl,atlas factory,xenu,indy library,link verifier,froogle,inktomi,looksmart,firefly,nationaldirectory,ask jeeves,seek,galaxy.com,scooter,appie,webbug,spade,zyborg,rabaz,googleother",
 				MOD_STAT, "zoznam User Agent názvov oddelených čiarkami, ktoré sa nebudú evidovať v štatistike.");
-		setBoolean("exportFlash", false, mods(MOD_EDITOR, MOD_OBSOLETE),
-				"Ak je true, bude sa obsah stranok exportovat do XML pre Flash (do adresara /flash_xml/DOCID.xml)");
 
-		setString("multilang", "", MOD_OBSOLETE, "overwrite string na ziskanie moznych hodnot MultilangDB");
-
-		setInt("pkeyGenIncrement", 1, "system.pkeygenerator",
+		setInt("pkeyGenIncrement", 1, MOD_SYSTEM_PKEY_GENERATOR,
 				"Nastavenie PkeyGeneratora - hodnota o ktoru sa zvysuje");
-		setInt("pkeyGenOffset", 0, "system.pkeygenerator",
+		setInt("pkeyGenOffset", 0, MOD_SYSTEM_PKEY_GENERATOR,
 				"Nastavenie PkeyGeneratora - hodnota offsetu pre cluster");
-		setInt("pkeyGenBlockSize", 10, "system.pkeygenerator",
+		setInt("pkeyGenBlockSize", 10, MOD_SYSTEM_PKEY_GENERATOR,
 				"veľkosť výberu bloku pre generátor primárnych kľúčov. Štandardne nastavené na hodnotu 10, pre servre s vysokou záťažou odporúčame nastaviť na vyššiu hodnotu (100 - 1000)");
 
 		// deprecated - ak je true, pri ukladani stranky sa generuje HTML do
 		// /WEB-INF/docs_html
 		setBoolean("exportDocsHtml", false);
 
-		setString("navbarSeparator", "&gt;", "content.webpages",
+		setString("navbarSeparator", "&gt;", MOD_WEBPAGES,
 				"oddelovací znak pre generovanie navigačnej lišty. Štandardne nastavené na znak >");
 
 		// verzia webJetu
@@ -290,21 +322,21 @@ public class Constants {
 		setString("vulgarizmy",
 				"kokot, pica, piča, piče, pice, chuj, jebat, jebať, kurv, jebko, vyjeban, vijeban, prijeban, " +
 						"ujeban, pojeban, picu, piču, pici, piči, skurven, drbn, drbo, <iframe, <script",
-				"apps.forum", "Zoznam vulgarizmov, ktore forum nedovoli pridat");
+				MOD_FORUM, "Zoznam vulgarizmov, ktore forum nedovoli pridat");
 
-		setBoolean("defaultDisableUpload", false, mods(MOD_EDITOR, MOD_SECURITY, "files.upload"),
+		setBoolean("defaultDisableUpload", false, mods(MOD_EDITOR, MOD_SECURITY, MOD_UPLOAD),
 				"ak je nastavené na true a redaktor nemá nastavené žiadne cesty pre nahrávanie súborov nemôže nahrávať súbory na server. Štandardne nastavené na false.");
 
-		setString("formmailAllowedRecipients", "", "apps.form;security",
+		setString("formmailAllowedRecipients", "", mods(MOD_FORMMAIL, MOD_SECURITY),
 				"Zoznam koncových častí email adries na ktoré je možné odoslať formuláre, napríklad: @interway.sk,podpora@demo.webjet.sk. Štandardne prázdne, čo znamená, že formulár je možné odoslať na ľubovoľnú adresu");
 
-		setBoolean("disableWebJETToolbar", false, "content.editor;content.webpages",
+		setBoolean("disableWebJETToolbar", false, mods(MOD_EDITOR, MOD_WEBPAGES),
 				"ak je redaktor prihlásený v admin časti a zobrazí si stránku tak v pravej hornej časti sa zobrazí informácia o stránke a možnosť editácie stránky. Ak túto hodnotu nastavíte na true, tak sa to zobrazovať nebude.");
 
 		setString("imageMagickDir", "/usr/bin", MOD_THUMB,
 				"Ak je nastavene pouzije sa na resize obrazkov prikaz convert z balika ImageMagick");
 
-		setBoolean("disableDMailSender", false, "apps.dmail",
+		setBoolean("disableDMailSender", false, MOD_DMAIL,
 				"Ak je nastavene na true nebude sa na posielanie emailov pouzivat systemovy sender");
 
 		setString("loggerDateTimeFormat", "dd.MM H:mm:ss", MOD_AUDIT,
@@ -336,7 +368,7 @@ public class Constants {
 				"Ak je nastavene na true, v logu sa zobrazi nazov instalacie");
 
 		// dmail - casovy interval odosielania emailov
-		setInt("dmailWaitTimeout", 1000, "apps.dmail;system.performance",
+		setInt("dmailWaitTimeout", 1000, mods(MOD_DMAIL, MOD_PERFORMANCE),
 				"rýchlosť odosielania emailov z hromadného emailu v milisekundách. Štandardne nastavené na 5000, čo znamená že sa email odošle raz za 5 sekúnd. Ak hodnotu znížite tak pri odosielaní emailov bude viac zaťažený web server a SMTP server. Hodnota sa prejavi az po restarte servera");
 
 		// deprecated - ak je nastavene na true bude v editore aj pri skratenom menu
@@ -354,9 +386,9 @@ public class Constants {
 		setString("usrLogonMethod", "", MOD_USER,
 				"logon metoda (ak sa pouziva ina ako standardna WJ databaza) - napr. sk.iway.klient.specialLogon, pricom metoda ma signaturu: public static ActionErrors specialLogon(String username, String password, HttpServletRequest request)");
 
-		setString("emailEncoding", "", "system.email",
+		setString("emailEncoding", "", MOD_SYSTEM_EMAIL,
 				"znaková sada pre odosielanie emailov. Štandardne nastavené na prázdnu hodnotu, čo znamená, že sa použije rovnaké kódovanie znakov ako je nastavené pre web stránky.");
-		setString("formMailEncoding", "", "apps.form;system.email",
+		setString("formMailEncoding", "", mods(MOD_FORMMAIL, MOD_SYSTEM_EMAIL),
 				"znaková sada pre odosielanie emailov z formulárov. Štandardne nastavené na prázdnu hodnotu, čo znamená, že sa použije rovnaké kódovanie znakov ako je nastavené pre web stránky.");
 
 		// vypne WJResponseWrapper pre WriteTag (ak by robilo problem)
@@ -365,32 +397,32 @@ public class Constants {
 		setBoolean("usrLogonRequireSMS", false, mods(MOD_USER, MOD_SECURITY, MOD_SMS),
 				"ak je true, tak prihlasenie na stranke vyzaduje SMS autorizaciu, vyzaduje nastavenie modulu SMS");
 
-		setInt("bannerCacheTime", 0, "apps.banner;system.performance",
+		setInt("bannerCacheTime", 0, mods(MOD_BANNER, MOD_PERFORMANCE),
 				"ak je nastavené na hodnotu > 0 (v minútach) tak sa výber bannerov z DB cachuje, čo znamená, že sa nekontroluje zoznam bannerov pri každom zobrazení stránky (môže ale dôjsť k prekročeniu limitov videní)");
 		// deprecated
 		setBoolean("bannerDisableViewIP", false);
 
-		setString("statMode", "new", "apps.stat;system.performance",
+		setString("statMode", "new", mods(MOD_STAT, MOD_PERFORMANCE),
 				"ak je nastavené na hodnotu none tak sa vypne zapisovanie štatistiky do databázy, čo môže v prípade krízového stavu výrazne pomôcť výkonu servera. Inak môže nadobúdať hodnoty old (dostupná iba stará štatistika - zaberá menej miesta v databáze, ale neposkytuje všetky údaje), new (dostupná iba nová štatistika poskytujúca najpodrobnejšie údaje), old-new (v menu je najskôr zobrazená stará štatistika a je možné si zobraziť dáta aj novej, stará štatstika menej zaťažuje databázu pri zobrazení údajov), new-old (pri zobrazení štatistiky je najskôr zobrazená nová štatistika, je ale možné si zobraziť aj starú verziu štatistiky). Štandardne nastavené na new.");
 
-		setInt("sessionRemoveTimeout", 40, "apps.stat;system.performance",
+		setInt("sessionRemoveTimeout", 40, mods(MOD_STAT, MOD_PERFORMANCE),
 				"počet minút, po ktorých bude session vyradena pamäti servera.");
 
-		setString("dmailStatParam", "webjetDmsp", "apps.dmail",
+		setString("dmailStatParam", "webjetDmsp", MOD_DMAIL,
 				"nazov prarametra pre statistiku kliknuti z DMailu, nema zmysel menit");
 
-		setInt("RelatedPagesDBCacheMinutes", 30, "apps.related-pages;system.performance",
+		setInt("RelatedPagesDBCacheMinutes", 30, mods(MOD_RELATED_PAGES, MOD_PERFORMANCE),
 				"počet minút cachovanie informácie o súvisiacich stránkach. Štandardne nastavené na 30 minút.");
 
-		setString("dmailUnsubscribeMode", "disable", "apps.dmail;users",
+		setString("dmailUnsubscribeMode", "disable", mods(MOD_DMAIL, MOD_USER),
 				"režim odhlásenia sa z mailing listu ak už nezostane povolená žiadna skupina. Možné hodnoty sú: disable - používateľa zneaktívni, ale zostanú mu posledné skupiny, delete - používateľa vymaže, removeGroups - používateľa zneaktívni a aj mu odstráni skupiny. Štandardne nastavená je hodnota disable.");
 
 		setString("pathFilterBypassPath", "", mods(MOD_PERFORMANCE, MOD_SECURITY),
 				"cesty, ktoré preskočia processing cez PathFilter, vhodné nastaviť na /images,/css,/jscripts. POZOR k takýmto súborom sa nebudú kontrolovať práva.");
 
-		setString("forumDefaultApproveEmail", "", "apps.forum",
+		setString("forumDefaultApproveEmail", "", MOD_FORUM,
 				"predvolené email adresy pre schválenie po zadaní príspevku do fóra, ak nie sú zadané pre fórum samostatne. Štandardne nie je zadaná žiadna hodnota");
-		setString("forumDefaultNotifyEmail", "", "apps.forum",
+		setString("forumDefaultNotifyEmail", "", MOD_FORUM,
 				"predvolené email adresy pre notifikáciu po zadaní príspevku do fóra, ak nie sú zadané pre fórum samostatne. Štandardne nie je zadaná žiadna hodnota");
 
 		setBoolean("spamProtection", true, mods(MOD_SPAM, MOD_FORMMAIL),
@@ -399,7 +431,7 @@ public class Constants {
 		setBoolean("stripesEnableDirectActionCall", false, MOD_SECURITY,
 				"ak je nastavené na true bude možné priame volanie Stripes action tried. Štandardne nastavené na false.");
 
-		setString("calendarIcalDir", "/files/ical/", "apps.calendar",
+		setString("calendarIcalDir", "/files/ical/", MOD_CALENDAR,
 				"cesta, kam sa budu ukladat iCal (ics) subory pre kalendar");
 
 		// nastavenia pre formatovanie meny
@@ -409,8 +441,8 @@ public class Constants {
 				"oddelovač tisícok pre formátovač meny. Štandardne nastavené na znak \" \" (medzera).");
 		setString("currencyFormatLocale", "GERMANY", MOD_BASKET, "systemovy formater cisel");
 
-		setString("ffmpegPath", "", "files.video", "ffmpeg sluzi na konverziu videa, tu je nastavena cesta k suboru ffmpeg");
-		setString("yamdiPath", "", "files.video", "cesta k programu yamdi pre vlozenie meta info do FLV suborov");
+		setString("ffmpegPath", "", MOD_VIDEO, "ffmpeg sluzi na konverziu videa, tu je nastavena cesta k suboru ffmpeg");
+		setString("yamdiPath", "", MOD_VIDEO, "cesta k programu yamdi pre vlozenie meta info do FLV suborov");
 
 		// default skin pre WebJET
 		setString("defaultSkin", "webjet8");
@@ -420,7 +452,7 @@ public class Constants {
 		setInt("spamProtectionSendInterval", 30, mods(MOD_SPAM, MOD_FORMMAIL),
 				"čas v sekundách počas ktorého nie je možné znova odoslať formulár na email. Štandardne nastavené na 30.");
 
-		setBoolean("statEnableTablePartitioning", false, "system.performance;apps.stat",
+		setBoolean("statEnableTablePartitioning", false, mods(MOD_PERFORMANCE, MOD_STAT),
 				"ak je nastavené na true, tak sa štatistiky ukladajú do menších tabuliek podľa mesiacov. Po nastavení je potrebné skonvertovať už existujúcu databázu volaním stránky konverzia štatistiky - /components/stat/admin_db_convert.jsp. Štandardne nastavené na false.");
 
 		setInt("cacheDocDetailsNewerThanDays", 0, MOD_PERFORMANCE,
@@ -434,16 +466,13 @@ public class Constants {
 		// potrebne pri dlhej konverzii databazy
 		setBoolean("disableRemoveAbandoned", false);
 
-		setBoolean("disableReverseDns", false, "system.performance;apps.stat",
+		setBoolean("disableReverseDns", false, mods(MOD_PERFORMANCE, MOD_STAT),
 				"ak je nastavené na true nebude prekladaná IP adresa na doménový záznam pre štatistiku krajín");
 
 		setInt("logonBlockedDelay", 10, MOD_SECURITY,
 				"cas v sekundach, pocas ktorych nebude mozne znova sa prihlasit po zadani zleho hesla");
 
 		setString("chartDateFormat", "d.M.yy", mods(MOD_STAT, MOD_OBSOLETE), "format datumov pre grafy statistiky (Open Flash Chart)");
-
-		setString("chartColors", "#5C5CF7,#F75C5C,#5CF75C,#FFC165,#E463E4,#A13600,#55FFFF,#FFAFAF,#B10505,#065BD8",
-				mods(MOD_STAT, MOD_OBSOLETE), "farby ciar a textov pre grafy statistiky (Open Flash Chart)");
 
 		setInt("cacheRemoveCheckSeconds", 300, MOD_PERFORMANCE, "pocet sekund kontroly exspirovanych dat v cache");
 		setInt("cacheSmartRefreshSeconds", 30, MOD_PERFORMANCE, "pocet sekund kontroly smart cache");
@@ -471,7 +500,7 @@ public class Constants {
 		setString("kurz_eur_czk", "24.230", MOD_BASKET,"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
 		setString("kurz_usd_czk", "20.842", MOD_BASKET,"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
 
-		setInt("inquiryIpTimeout", 0, "apps.inquiry",
+		setInt("inquiryIpTimeout", 0, MOD_INQUIRY,
 				"nastavenie dlzky uchovania objektu v cache pre kontrolu IP adries pre ankety, ak hodnota je < 1 tak sa kontrola vypusti");
 
 		setInt("NTLMDefaultAdminUserId", 0, MOD_NTLM,
@@ -500,12 +529,12 @@ public class Constants {
 		setBoolean("iwfs_useFileCache", false, MOD_DBSTORAGE, "zapnutie cache suborov zo storage");
 		setInt("iwfs_timeInCacheInMinutes", 15, MOD_DBSTORAGE, "cas ktory sa drzia v cache subory v minutach");
 
-		setBoolean("multiDomainEnabled", false, "system.multidomain",
+		setBoolean("multiDomainEnabled", false, MOD_SYSTEM_MULTIDOMAIN,
 				"ak je nastavene na true, bezi WebJET v rezime MultiDomain");
-		setString("multiDomainAdminHost", "", "system.multidomain",
+		setString("multiDomainAdminHost", "", MOD_SYSTEM_MULTIDOMAIN,
 				"Adresa admin casti pre multidomain system (mala by byt ina ako jeden z webov, napr. admin.domena.sk)");
 
-		setBoolean("uploadDisableNotAllowedDirs", false, mods(MOD_EDITOR, MOD_SECURITY, "files.upload"),
+		setBoolean("uploadDisableNotAllowedDirs", false, mods(MOD_EDITOR, MOD_SECURITY, MOD_UPLOAD),
 				"ak je nastavene na true, tak pouzivatel nevidi adresare, na ktore nema prava v dialogu pre vlozenie linky a obrazku");
 
 		setString("pdfFontDirectory", "file://{ROOT_PATH}WEB-INF/fonts", MOD_PDF, "adresar s fontami pre generovanie PDF");
@@ -516,11 +545,11 @@ public class Constants {
 		setString("ldapLoginChars", "@_.-", MOD_NTLM,
 				"nealfanumericke znaky, ktore sa mozu nachadzat v LDAP filtri bez nutnosti ich escapovat");
 
-		setString("clusterNames", "", "system.cluster", "zoznam nodov clustra oddeleny ciarkami");
-		setInt("clusterRefreshTimeout", 5000, "system.cluster", "cas ako casto sa bude kontrolovat aktualnost objektov clustra");
+		setString("clusterNames", "", MOD_SYSTEM_CLUSTER, "zoznam nodov clustra oddeleny ciarkami");
+		setInt("clusterRefreshTimeout", 5000, MOD_SYSTEM_CLUSTER, "cas ako casto sa bude kontrolovat aktualnost objektov clustra");
 
 		//deprecated
-		setString("galleryDefaultStyle", "photoSwipe", mods(MOD_GALLERY, MOD_OBSOLETE),
+		setString("galleryDefaultStyle", "photoSwipe", mods(MOD_GALLERY),
 				"ak je potrebne zmenit vsetky galerie na webe na novy styl, staci nastavit do tejto premennej");
 
 		setBoolean("editorAutomaticWordClean", false, MOD_EDITOR,
@@ -533,10 +562,10 @@ public class Constants {
 		setString("NTLMisMemberOfMethod", "", MOD_NTLM,
 				"metoda pre vykonanie LDAP dotazu zaclenienia do skupiny pre NTLM autorizaciu, ak je prazdne pouzije sa default");
 
-		setBoolean("urlRemoveSpojky", true, mods(MOD_EDITOR, "content.webpages"),
+		setBoolean("urlRemoveSpojky", true, mods(MOD_EDITOR, MOD_WEBPAGES),
 				"ak je nastavene na true budu pri vytvarani URL odstranovane spojky -a- -i-...");
 
-		setBoolean("docTitleIncludePath", false, "content.webpages;content.editor",
+		setBoolean("docTitleIncludePath", false, mods(MOD_WEBPAGES, MOD_EDITOR),
 				"ak je nastavene na true bude do doc_title pre stranku generovat aj spatnu cestu");
 
 		setInt("fileIndexerSortPriority", 999, MOD_FILE_INDEXING,
@@ -545,7 +574,7 @@ public class Constants {
 		setInt("auditExceptionTimeout", 24 * 60, MOD_AUDIT,
 				"urcuje timeout pre logovanie rovnakej spravy pre audit (standardne 24 hodin)");
 
-		setBoolean("sortPriorityIncremental", true, mods(MOD_EDITOR, "content.webpages"),
+		setBoolean("sortPriorityIncremental", true, mods(MOD_EDITOR, MOD_WEBPAGES),
 				"ak je nastavene na true je priorita vytvarana zvysovanim podla hlbky zanorenia");
 
 		setString("FCKConfig.Tabs[Default]", "", MOD_EDITOR,
@@ -555,13 +584,13 @@ public class Constants {
 		setString("FCKConfig.Tabs[Inline]", "", MOD_EDITOR,
 				"zakazane zalozky pre editor pre inline editaciu, prazdna hodnota znamena vsetko, inak zoznam povolenych vo formate tabLink1,tabLink2...");
 
-		setString("clusterMyNodeType", "full", "system.cluster",
+		setString("clusterMyNodeType", "full", MOD_SYSTEM_CLUSTER,
 				"typ nodu clustra - full = admin+prezentacna, admin=iba admin, public=iba prezentacna cast");
 
-		setBoolean("filesHasFieldPermsAttributes", false, "files.upload;content.editor",
+		setBoolean("filesHasFieldPermsAttributes", false, mods(MOD_UPLOAD, MOD_EDITOR),
 				"ak je nastavene na true bude pri uploade suborov mozne nastavit hodnoty prav a field_a az field_l ako pre web stranku (pouziva sa na to FileIndexer)");
 
-		setInt("adminWelcomeDocId", -1, "system.admin", "docId stranky ktora sa moze zobrazit na welcome obrazovke");
+		setInt("adminWelcomeDocId", -1, MOD_SYSTEM_ADMIN, "docId stranky ktora sa moze zobrazit na welcome obrazovke");
 
 		setBoolean("NTLMdontCreateAutoIdUser", true, MOD_NTLM,
 				"ak je nastavene na true nevytvara sa pouizvatel v DB patriaci LEN do skupiny passwordProtectedAutoId");
@@ -569,7 +598,7 @@ public class Constants {
 		setBoolean("pixlrEnable", false, mods(MOD_IMAGE_EDITOR, MOD_SECURITY),
 				"ak je true, bude sa pri editor obrazkov zobrazovat odkaz na pixlr - rozsireny online editor obrazkov");
 
-		setString("adminLogoffLink", "/logoff.do?forward=/admin/logon/", "system.admin",
+		setString("adminLogoffLink", "/logoff.do?forward=/admin/logon/", MOD_SYSTEM_ADMIN,
 				"linka na odhlasenie z admin casti (pri NTLM treba smerovat inak)");
 
 		setString("FCKConfig.Heading[Default]", "h1,h2,h3,h4,h5,h6", MOD_EDITOR,
@@ -584,26 +613,26 @@ public class Constants {
 		setInt("editorImageMaxWidth", 9999, MOD_EDITOR,
 				"maximalna sirka obrazku co sa da vlozit do stranky (editor vacsiu nepovoli)");
 
-		setInt("FCKConfig.UploadMaxSize[Default][image]", 0, mods(MOD_EDITOR, MOD_SECURITY, "files.upload"),
+		setInt("FCKConfig.UploadMaxSize[Default][image]", 0, mods(MOD_EDITOR, MOD_SECURITY, MOD_UPLOAD),
 				"limity pre upload suborov cez editor v kB pre obrazky a standardne menu");
-		setInt("FCKConfig.UploadMaxSize[Basic][image]", 1024 * 2, mods(MOD_EDITOR, MOD_SECURITY, "files.upload"),
+		setInt("FCKConfig.UploadMaxSize[Basic][image]", 1024 * 2, mods(MOD_EDITOR, MOD_SECURITY, MOD_UPLOAD),
 				"limity pre upload suborov cez editor v kB pre obrazky a skratene menu");
-		setInt("FCKConfig.UploadMaxSize[Default][file]", 0, mods(MOD_EDITOR, MOD_SECURITY, "files.upload"),
+		setInt("FCKConfig.UploadMaxSize[Default][file]", 0, mods(MOD_EDITOR, MOD_SECURITY, MOD_UPLOAD),
 				"limity pre upload suborov cez editor v kB pre subory a standardne menu");
-		setInt("FCKConfig.UploadMaxSize[Basic][file]", 1024 * 20, mods(MOD_EDITOR, MOD_SECURITY, "files.upload"),
+		setInt("FCKConfig.UploadMaxSize[Basic][file]", 1024 * 20, mods(MOD_EDITOR, MOD_SECURITY, MOD_UPLOAD),
 				"limity pre upload suborov cez editor v kB pre subory a skratene menu");
-		setString("FCKConfig.UploadFileTypes[Default][image]", "", mods(MOD_EDITOR, MOD_SECURITY, "files.upload"),
+		setString("FCKConfig.UploadFileTypes[Default][image]", "", mods(MOD_EDITOR, MOD_SECURITY, MOD_UPLOAD),
 				"limity typov suborov pre upload cez editor pre obrazky a standardne menu"); // jpg,jpeg,png,gif,swf,mpg,mov,wmv,flv,avi,mp3,vma,wav
-		setString("FCKConfig.UploadFileTypes[Basic][image]", "jpg,jpeg,png,gif,svg,webp,mp3,mp4", mods(MOD_EDITOR, MOD_SECURITY, "files.upload"),
+		setString("FCKConfig.UploadFileTypes[Basic][image]", "jpg,jpeg,png,gif,svg,webp,mp3,mp4", mods(MOD_EDITOR, MOD_SECURITY, MOD_UPLOAD),
 				"limity typov suborov pre upload cez editor pre obrazky a skratene menu, prednastavene na jpg,jpeg,png,gif,svg,webp,mp3,mp4");
-		setString("FCKConfig.UploadFileTypes[Default][file]", "", mods(MOD_EDITOR, MOD_SECURITY, "files.upload"),
+		setString("FCKConfig.UploadFileTypes[Default][file]", "", mods(MOD_EDITOR, MOD_SECURITY, MOD_UPLOAD),
 				"limity typov suborov pre upload cez editor pre subory a standardne menu");
 		setString("FCKConfig.UploadFileTypes[Basic][file]", "doc,docx,xls,xlsx,pdf,zip,rtf",
-				mods(MOD_EDITOR, MOD_SECURITY, "files.upload"),
+				mods(MOD_EDITOR, MOD_SECURITY, MOD_UPLOAD),
 				"limity typov suborov pre upload cez editor pre subory a skratene menu, prednastavene na doc,xls,pdf,zip,rtf");
 
 		setString("urlRemoveSpojkyList",
-				"a,e,i,o,u,s,v,ze,ale,na,pre,len,no,sa,to,uz,and,or,the,in,of,for,with,to,by,at,a.s", mods(MOD_EDITOR, "content.webpages"),
+				"a,e,i,o,u,s,v,ze,ale,na,pre,len,no,sa,to,uz,and,or,the,in,of,for,with,to,by,at,a.s", mods(MOD_EDITOR, MOD_WEBPAGES),
 				"zoznam spojok ktore sa vymazavaju z URl");
 
 		setBoolean("passwordProtectedRenderMulti", true, MOD_PASSWORD,
@@ -617,10 +646,10 @@ public class Constants {
 		setInt("unloggedUserBrowserId", 1500000, MOD_STAT,
 				"konstanta browserId, od ktorej zaciname identifikovat neprihlasenych pouzivatelov");
 
-		setBoolean("smtpUseSSL", false, "system.email", "SMTP autentifikacia - aktivacia");
-		setString("smtpUser", "", "system.email", "SMTP autentifikacia - login");
-		setString("smtpPassword", "", "system.email", "SMTP autentifikacia - heslo");
-		setString("smtpPort", "", "system.email", "SMTP autentifikacia - port");
+		setBoolean("smtpUseSSL", false, MOD_SYSTEM_EMAIL, "SMTP autentifikacia - aktivacia");
+		setString("smtpUser", "", MOD_SYSTEM_EMAIL, "SMTP autentifikacia - login");
+		setString("smtpPassword", "", MOD_SYSTEM_EMAIL, "SMTP autentifikacia - heslo");
+		setString("smtpPort", "", MOD_SYSTEM_EMAIL, "SMTP autentifikacia - port");
 
 		setBoolean("fullNameIncludeTitle", false, MOD_USER,
 				"ak je nastavene na true, bude volanie getFullName() na UserDetails vkladat pred meno aj titul");
@@ -630,7 +659,7 @@ public class Constants {
 
 		setString("forumWysiwygIcons",
 				"bold,italic,createlink,unlink,insertimage,inserthorizontalrule,insertunorderedlist,insertorderedlist",
-				"apps.forum;apps.gallery", "povolene ikony pre editor fora / pohladnice");
+				mods(MOD_FORUM, MOD_GALLERY), "povolene ikony pre editor fora / pohladnice");
 
 		// zoznam XSS hodnot pre test filtra
 		// hodnoty <xml|<?xml som zmazal kvoli detekcii pri vkladani
@@ -638,18 +667,18 @@ public class Constants {
 				"<script|javascript:|javascript&colon;|onmouse|onload|onerror|onfocus|onblur|onclick|onchange|onselect|ondoubleclick|ondblclick|onkeydown|onkeypress|onkeyup|set-cookie|expression(|&#|<meta|<iframe|<layer|<link|<style|<frame|<base|<object|<embed|<jscript|activexobject|ecmascript|vbscript:|.fromcharcode|x-javascript|@import|alert(|/web-inf/|onwebkit",
 				MOD_XSS, "zoznam testovanych XSS vyrazov");
 
-		setString("webEnableIPs", "", mods(MOD_SECURITY, "content.webpages"),
+		setString("webEnableIPs", "", mods(MOD_SECURITY, MOD_WEBPAGES),
 				"zoznam IP adries (alebo ich začiatkov), z ktorých je možné si prezerať verejnú časť sídla. Vhodné nastaviť pri testovaní alebo tvorbe obsahu webu pred oficiálnym spustením. Príklad použitia: 192.168.1,62.65.161");
-		setString("webAllowedDomains", "", "security;content.webpages",
+		setString("webAllowedDomains", "", mods(MOD_SECURITY, MOD_WEBPAGES),
 				"zoznam domen, na ktorých je možné si prezerať verejnú časť sídla. Príklad použitia: interway.sk,test.iway.sk");
 
 		setString("searchActionOmitCharacters", "_?%';", mods(MOD_SECURITY, MOD_SEARCH),
 				"znaky, ktore budu vyhodene z vyhladavania kvoli tomu, ze ide o wildcardy");
 
-		setString("emailProtectionSenderEmail", "", mods("system.email", MOD_SECURITY),
+		setString("emailProtectionSenderEmail", "", mods(MOD_SYSTEM_EMAIL, MOD_SECURITY),
 				"nasilne vlozenie tejto hodnoty ako odosielatela e-mailu ku kazdemu odoslanemu e-mailu");
 
-		setBoolean("disableWysiwyg", false, mods(MOD_SECURITY, "apps.forum", MOD_GALLERY, "apps.send_link", "apps.qa"),
+		setBoolean("disableWysiwyg", false, mods(MOD_SECURITY, MOD_FORUM, MOD_GALLERY, MOD_SEND_LINK, MOD_QA),
 				"Vypnutie moznosti pouzivat wysiwyg editor pre frontend (forum, send_link)");
 
 		setInt("spamProtectionHourlyLimit", 20, MOD_SPAM,
@@ -663,13 +692,13 @@ public class Constants {
 		setString("baseHrefLoopback", "", MOD_NETWORK,
 				"loopback HTTP adresa pre stahovanie suborov/stranok, ak je prazdne pouzije sa rovnaka ako vonkajsia");
 
-		setBoolean("formMailSendPlainText", false, mods(MOD_FORMMAIL, "apps.send_link"),
+		setBoolean("formMailSendPlainText", false, mods(MOD_FORMMAIL, MOD_SEND_LINK),
 				"ak je nastavene na true je email z formularu odoslany ako plain text (nie HTML format)");
 
-		setBoolean("formMailRenderRadioCheckboxText", true, "apps.form",
+		setBoolean("formMailRenderRadioCheckboxText", true, MOD_FORMMAIL,
 				"ak je nastavene na true bude rendrovat radia a checkboxy ako text [X] alebo [ ]");
 
-		setBoolean("formMailCropForm", false, "apps.form",
+		setBoolean("formMailCropForm", false, MOD_FORMMAIL,
 				"ak je nastavene na true bude sa formmailom odosielat len cast obalena do tagov form");
 
 		setBoolean("editorAdvancedImageAlignment", false, MOD_EDITOR,
@@ -686,22 +715,22 @@ public class Constants {
 		setString("stripesXssNoFilteringPaths", "", MOD_XSS,
 				"Zoznam URL ciest oddelených bodkočiarkou, pre ktoré sa vo Stripes nebude filtrovať HTML kód");
 
-		setBoolean("statEnableDocCount", false, "apps.stat;system.performance",
+		setBoolean("statEnableDocCount", false, mods(MOD_STAT, MOD_PERFORMANCE),
 				"ak je nastavene na true bude sa aktualizovat celkovy pocet videni stranky (stlpec view_total tabulky documents), znizuje to ale vykon servera");
 
-		setBoolean("serverMonitoringEnable", false, "system.monitoring;system.performance",
+		setBoolean("serverMonitoringEnable", false, mods(MOD_SYSTEM_MONITORING, MOD_PERFORMANCE),
 				"ak je nastavene na true, spusta monitorovanie servera kazdych 30 sekund a zapisuje tieto hodnoty do tabulky monitoring");
 
-		setString("backupDirectory", "/files/backup", "files;security",
+		setString("backupDirectory", "/files/backup", mods(MOD_FILES, MOD_SECURITY),
 				"cesta, kam sa budu ukladat subory po tom, co pouzivatel stlaci backup tlacitko");
 
-		setBoolean("flvEnableStreaming", false, "files.video;system.performance",
+		setBoolean("flvEnableStreaming", false, mods(MOD_VIDEO, MOD_PERFORMANCE),
 				"ak je nastavene na true je povoleny HTTP streaming FLV videa");
 
 		setBoolean("cacheStaticContentForAdmin", false, MOD_PERFORMANCE,
 				"ak je nastavene na false (standardne) a je prihlaseny administrator neposielaju sa cache hlavicky pre staticke subory");
 
-		setBoolean("appendQueryStringWhenMonitoringDocuments", false, "system.monitoring",
+		setBoolean("appendQueryStringWhenMonitoringDocuments", false, MOD_SYSTEM_MONITORING,
 				"zachytavat pri monitorovani aj parametre ?");
 
 		setString("imageEditorSizeTemplates", "80x80;640x480;800x600;", MOD_IMAGE_EDITOR,
@@ -710,41 +739,41 @@ public class Constants {
 				"nastroj ktory bude predvoleny pri otvoreni editora obrazkov, moznosti : crop,scale,rotate");
 		setString("imageEditorSizeTemplate", "80x80", MOD_IMAGE_EDITOR, "predvolena sablona");
 
-		setBoolean("replaceExternalLinks", false, "apps.dmail",
+		setBoolean("replaceExternalLinks", false, MOD_DMAIL,
 				"ak je nastavene na true budu sa nahradzat aj externe linky preklikom cez dmail system (pre sledovanie statistiky)");
-		setInt("emailActionMaxItemsInList", 50, "apps.dmail",
+		setInt("emailActionMaxItemsInList", 50, MOD_DMAIL,
 				"maximalny pocet zaznamov pre select box vyberu stranky pre mailing (ak sa vyberie user grupa ktora je vo vsetkych strankach mohol by byt zbytocne dlhy)");
 
-		setInt("EventTypeDBCacheInMinutes", 15, "apps.calendar;system.performance",
+		setInt("EventTypeDBCacheInMinutes", 15, mods(MOD_CALENDAR, MOD_PERFORMANCE),
 				"default nastavenie poctu minut, pre triedu EventTypeDB");
 
-		setInt("searchTextAllLimit", 2000, "system.performance;content.webpages",
+		setInt("searchTextAllLimit", 2000, mods(MOD_PERFORMANCE, MOD_WEBPAGES),
 				"limit pre vyhladavanie cez searchTextAll - je to ochrana pred out of memmory na velkych DB");
-		setBoolean("searchDetaultInTitle", false, "apps.search;system.performance",
+		setBoolean("searchDetaultInTitle", false, mods(MOD_SEARCH, MOD_PERFORMANCE),
 				"vyhladavanie - ak je true defaultne sa hlada aj v title stlpci (je potrebne pre starsie instalacie)");
-		setInt("searchQuickSnippetSize", 40000, "apps.search;system.performance",
+		setInt("searchQuickSnippetSize", 40000, mods(MOD_SEARCH, MOD_PERFORMANCE),
 				"vyhladavanie - velkost stranky pre pouzitie rychlejsieho generovania snippetu");
 
-		setInt("fileAccessDeniedDocId", -1, mods(MOD_SECURITY, "files"),
+		setInt("fileAccessDeniedDocId", -1, mods(MOD_SECURITY, MOD_FILES),
 				"docId stranky ktora sa zobrazi ak prihlaseny pouzivatel nema pristup k zaheslovanemu suboru (alebo -1 = zobrazi sa standardna forbidden stranka)");
 
-		setBoolean("forumReallyDeleteMessages", false, "apps.forum",
+		setBoolean("forumReallyDeleteMessages", false, MOD_FORUM,
 				"ak je hodnota nastavena na true prispevky sa z DB skutocne vymazu (inak sa len oznacia za vymazane)");
 
 		// aktivovanie modulu DB Browser, je mozne ho pouzit len na MySQL a je urceny
 		// pre specialne pripady, preto je standardne vypnuty
 		setBoolean("dbBrowserEnabled", false);
 
-		setString("senderRunOnNode", "", "system.cluster",
+		setString("senderRunOnNode", "", MOD_SYSTEM_CLUSTER,
 				"ak je nastavene na inu ako prazdnu hodnotu obsahuje zoznam nodov clustra na ktorych ma sender bezat (napr. node1 alebo node1,node2)");
 
 		// POZOR: tieto hodnoty sa nacitavaju z web.xml, su tu len uvedene pre poriadok
 		// a jednotny zoznam
 		setString("clusterMyNodeName", "");
 
-		setBoolean("docAuthorLazyLoad", false, mods("content.webpages", MOD_PERFORMANCE),
+		setBoolean("docAuthorLazyLoad", false, mods(MOD_WEBPAGES, MOD_PERFORMANCE),
 				"lazy load informacii o autorovi - bezne sa robi JOIN medzi tabulkami users a documents");
-		setBoolean("searchActionOptimize", false, "system.performance;apps.search",
+		setBoolean("searchActionOptimize", false, mods(MOD_PERFORMANCE, MOD_SEARCH),
 				"vykonava iba 1 SQL dotaz miesto 2 pri vyhladavani - za cenu toho, ze nevieme celkovy pocet zaznamov");
 
 		setBoolean("editorQuickUrlFix", true, mods(MOD_EDITOR, MOD_REDIRECTS, MOD_PERFORMANCE),
@@ -758,18 +787,18 @@ public class Constants {
 		setInt("spamProtectionHourlyLimit-ThumbServlet", 300, mods(MOD_SPAM, MOD_THUMB),
 				"ochrana pre zahltenie thumb servletu - maximalny pocet obrazkov generovanych za hodinu");
 
-		setInt("inquiryGroupCacheInMinutes", 10, "apps.inquiry;system.performance", "cas ktory sa drzia v cache inquiry podla group");
+		setInt("inquiryGroupCacheInMinutes", 10, mods(MOD_INQUIRY, MOD_PERFORMANCE), "cas ktory sa drzia v cache inquiry podla group");
 
-		setBoolean("multiDomainEnableNested", false, "system.multidomain",
+		setBoolean("multiDomainEnableNested", false, MOD_SYSTEM_MULTIDOMAIN,
 				"ak je nastavene na true je povolene nastavovanie subdomen vramci stromovej struktury (cize domena nemusi byt len root folder)");
-		setString("multiDomainFolders", "images,files,css,jscripts", "system.multidomain",
+		setString("multiDomainFolders", "images,files,css,jscripts", MOD_SYSTEM_MULTIDOMAIN,
 				"zoznam adresarov, ktore sa pouziju pre MultiDomain aliasy");
 
 		setInt("imageMaxThumbsWidth", 2000, mods(MOD_THUMB, MOD_PERFORMANCE),
 				"maximalna velkost thumb obrazku (aby nebol problem s vykonom / pamatou servera)");
 		setInt("imageMaxThumbsHeight", 2000, mods(MOD_THUMB, MOD_PERFORMANCE),
 				"maximalna velkost thumb obrazku (aby nebol problem s vykonom / pamatou servera)");
-		setInt("relatedPagesMaxSize", 10, "system.performance;apps.related-pages",
+		setInt("relatedPagesMaxSize", 10, mods(MOD_PERFORMANCE, MOD_RELATED_PAGES),
 				"maximalny pocet zaznamov, ktory sa z DB vyberie pre related pages (pre jednu skupinu)");
 
 		setInt("basketDepositPercentage", 100, MOD_BASKET,
@@ -781,7 +810,7 @@ public class Constants {
 		setString("captchaComponents", "send_link,dmail", MOD_CAPTCHA,
 				"zoznam komponent oddelenych ciarkou pre ktore je vyzadovana captcha");
 
-		setString("mediaCheckAvailabilityMode", "full", "security;content.webpages;content.media",
+		setString("mediaCheckAvailabilityMode", "full", mods(MOD_SECURITY, MOD_WEBPAGES, MOD_MEDIA),
 				"rezim kontroly existencie a dostupnosti liniek v mediach, moze mat hodnoty none pre vypnutie kontroly, fast pre kontrolu existencie linky bez kontroly prav a full pre plnu kontrolu existencie linky aj prav");
 
 		setString("usersPositionList", "", MOD_USER,
@@ -812,28 +841,28 @@ public class Constants {
 		setInt("passwordAdminExpiryDays", 365, MOD_PASSWORD,
 				"Určuje počet dní platnosti hesla pre administrátora. Po uplynutí času, bude užívateľ vyzvaný si zmeniť heslo.");
 
-		setString("stripes.MultipartWrapper.Class", "sk.iway.iwcm.system.stripes.MultipartWrapper", "files.upload",
+		setString("stripes.MultipartWrapper.Class", "sk.iway.iwcm.system.stripes.MultipartWrapper", MOD_UPLOAD,
 				"Vlastná implementácia Multipart, keďže pôvodný pri Stripes nie je možné použiť, potom by nefungovali veci v admin časti WebJETu (používajúce Struts).");
-		setString("stripes.MultipartWrapperFactory.Class", "sk.iway.iwcm.system.stripes.MultipartWrapperFactory", "files.upload",
+		setString("stripes.MultipartWrapperFactory.Class", "sk.iway.iwcm.system.stripes.MultipartWrapperFactory", MOD_UPLOAD,
 				"Vlastná implementácia Multipart, keďže pôvodný pri Stripes nie je možné použiť, potom by nefungovali veci v admin časti WebJETu (používajúce Struts).");
 		setString("stripes.LocalizationBundleFactory.Class", "sk.iway.iwcm.system.stripes.LocalizationBundleFactory",
 				MOD_LOCALIZATION, "Factory trieda pre prácu s IwayResourceBundle.");
 		setString("stripes.ActionBeanPropertyBinder.Class", "sk.iway.iwcm.system.stripes.XssSafeActionBeanPropertyBinder",
 				MOD_XSS, "Pri nastavení parametrov z requestu filtruje html kód.");
-		setString("stripes.FileUpload.MaximumPostSize", "5000m", "files.upload",
+		setString("stripes.FileUpload.MaximumPostSize", "5000m", MOD_UPLOAD,
 				"Maximálny upload suboru pomocou Stripes, defaultne 5GB.");
 
-		setBoolean("httpsAvailable", true, mods(MOD_SECURITY, "content.webpages", MOD_NETWORK),
+		setBoolean("httpsAvailable", true, mods(MOD_SECURITY, MOD_WEBPAGES, MOD_NETWORK),
 				"nastavenim na true sa indikuje, ze na serveri je instalovany SSL certifikat a je mozne zobrazovat httpS stranky");
 
-		setString("forumNotifySenderEmail", "", "apps.forum",
+		setString("forumNotifySenderEmail", "", MOD_FORUM,
 				"E-mail odosielateľa pre fórum. Pokiaľ je premenná prázdna, tak sa ako odosielateľ použije e-mail autora príspevku.");
-		setString("forumNotifySenderName", "", "apps.forum",
+		setString("forumNotifySenderName", "", MOD_FORUM,
 				"Meno odosielateľa pre fórum. Pokiaľ je premenná prázdna, tak sa ako meno použije meno autora príspevku.");
 
-		setBoolean("dmailDisableInlineImages", false, "apps.dmail",
+		setBoolean("dmailDisableInlineImages", false, MOD_DMAIL,
 				"Pokiaľ je nastavené na true, tak sa obrázky nepošlú ako inline prílohy, ale použije sa pôvodná URL obrázku.");
-		setBoolean("statEnableClickTracking", true, "apps.stat;system.performance",
+		setBoolean("statEnableClickTracking", true, mods(MOD_STAT, MOD_PERFORMANCE),
 				"Umožňuje ukladanie informacii o používateľských klikoch pre potreby vytvárania teplotných máp klikov");
 
 		setString("smallImageLinkToOriginalSize", "<a href=\"{2}\" rel=\"wjimageviewer\"><img src=\"{1}\" alt=\"\"></a>",
@@ -849,10 +878,10 @@ public class Constants {
 				"Určuje čas existencie obrázku teplotnej mapy. Ak prekročí tento čas, bude zmazaný. Meria sa v sekundách.");
 		setInt("editorFastHTMLSize", 300000, mods(MOD_EDITOR, MOD_PERFORMANCE),
 				"Dlzka HTML kodu pre ktoru sa moze pouzit rychle ziskanie bez konverzie do XHTML");
-		setInt("statBufferSuspicionThreshold", 1000, mods(MOD_STAT, "system.monitoring"),
+		setInt("statBufferSuspicionThreshold", 1000, mods(MOD_STAT, MOD_SYSTEM_MONITORING),
 				"Hranica záznamov v bufferi, po prekročení ktorej sa považuje asynchrónny zápis do databázy za nefunkčný");
 
-		setBoolean("editorEnableMultipleFilesUpload", true, mods(MOD_EDITOR, "files.upload"),
+		setBoolean("editorEnableMultipleFilesUpload", true, mods(MOD_EDITOR, MOD_UPLOAD),
 				"Povolenie / zakázanie hromadného nahrávanie súborov v dialogu v editore.");
 		setBoolean("docBlockPublicHistory", true, mods(MOD_EDITOR, MOD_SECURITY),
 				"Defaultne je umožnené vidieť históriu stránky všetkým používateľom. Nastavením tejto premennej na true sa toto znemožní.");
@@ -866,7 +895,7 @@ public class Constants {
 		setString("spotlightIndexedDirectories", "/css, /images, /jscripts, /templates, /files", mods(MOD_SEARCH, MOD_PERFORMANCE),
 				"Zoznam adresárov, v ktorých sa vyhľadáva pri rýchlom vyhľadávaní");
 
-		setString("useSMTPServer", "true", "system.email", "Povolenie moznosti odosielania emailov");
+		setString("useSMTPServer", "true", MOD_SYSTEM_EMAIL, "Povolenie moznosti odosielania emailov");
 
 		setBoolean("statWebJET7Converted", false, MOD_STAT,
 				"Urcuje, ci uz prebehla konverzia databazy do formatu pre WebJET7");
@@ -890,7 +919,7 @@ public class Constants {
 		setBoolean("useUserIdAsBrowserId", true, MOD_STAT,
 				"Ak je nastavene na true a pouzivatel sa prihlasi je jeho userId pouzite ako browserId a je mozne usera trackovat v statistike stranok");
 
-		setBoolean("searchUseOracleText", false, "apps.search;system.performance",
+		setBoolean("searchUseOracleText", false, mods(MOD_SEARCH, MOD_PERFORMANCE),
 				"Ak je nastavene na true pouziva sa pre vyhladavanie v pripade Oracle databazy Oracle Text. Vyzaduje nastavenie prav a indexu, pre efektivne vyuzitie musi byt nastavena aj konfiguracna premenna searchDetaultInTitle na hodnotu false.");
 
 		setBoolean("passwordUseHash", false, MOD_PASSWORD,
@@ -900,16 +929,16 @@ public class Constants {
 
 		setString("jpaAddPackages", "", MOD_DATABASE, "Čiarkou oddelené zoznamy balíčkov, kde sa hľadajú JPA Beany");
 
-		setString("formmailHttpsDomains", "", "apps.form;security",
+		setString("formmailHttpsDomains", "", mods(MOD_FORMMAIL, MOD_SECURITY),
 				"Zoznam domen oddelenych ciarkou, pre ktore sa budu formulare vzdy odosielat cez zabezpecene httpS spojenie");
 
-		setBoolean("adminLogonShowSimpleErrorMessage", true, mods(MOD_SECURITY, "system.admin"),
+		setBoolean("adminLogonShowSimpleErrorMessage", true, mods(MOD_SECURITY, MOD_SYSTEM_ADMIN),
 				"Ak je nastavene na true nezobrazuje pri prihlasovani v admin casti podrobnu informaciu o tom, ci je zle zadane meno, alebo heslo a neponuka moznost poslat heslo na email");
 
 		setBoolean("cacheUrlRedirects", false, mods(MOD_REDIRECTS, MOD_PERFORMANCE),
 				"Po nastaveni na true sposobi uchovavanie presmerovani v cache pamati, moze zvysit vykon vysoko zatazeneho servera pri DOS utoku");
 
-		setString("galleryAllowUploadGroupIds", "", mods(MOD_GALLERY, MOD_SECURITY, "files.upload"),
+		setString("galleryAllowUploadGroupIds", "", mods(MOD_GALLERY, MOD_SECURITY, MOD_UPLOAD),
 				"Obsahuje zoznam užívateľských skupín oddelených čiarkou, ktoré majú povolené nahrávať obrázky aj mimo admin časti.");
 
 		setInt("editorNotAjaxSaveSize", 200000, mods(MOD_EDITOR, MOD_PERFORMANCE),
@@ -927,7 +956,7 @@ public class Constants {
 		setBoolean("cayenneSynchronized", false, mods(MOD_DATABASE, MOD_PERFORMANCE),
 				"Nastavuje synchornized vytvaranie cayenne objektu pre session, nastavenie na true je bezpecnejsie z pohladu transakcnosti, moze ale sposobovat lock threadov");
 
-		setBoolean("navbarRenderAllLinks", true, "content.webpages",
+		setBoolean("navbarRenderAllLinks", true, MOD_WEBPAGES,
 				"Upravene zobrazenie navigacnej listy, kedy sa aj pre aktualnu stranku v navigacnej liste zobrazuje linka, povodne spravanie ako vo WebJET6 sa da nastavit vypnutim tejto premennej na hodnotu false");
 		setString("luceneIndexDir", "/WEB-INF/lucene_index/", MOD_SEARCH, "cesta k adresáru s Lucene indexom");
 		setBoolean("luceneIncrementalDocumentIndexing", false, MOD_SEARCH,
@@ -935,8 +964,8 @@ public class Constants {
 		setBoolean("luceneTicketsSearch", false, MOD_SEARCH,
 				"Ak je true, tak sa pre vyhladavanie v ticketoch pouzije Lucene");
 		setBoolean("luceneIncrementalTicketIndexing", false, MOD_SEARCH, "Ak je true, tickety sa indexuju priebezne");
-		setBoolean("luceneForumsSearch", false, mods(MOD_SEARCH, "apps.forum"), "Ak je true, tak sa pre vyhladavanie vo fóre použije Lucene");
-		setBoolean("luceneIncrementalForumIndexing", false, mods(MOD_SEARCH, "apps.forum"), "Ak je true, fora sa indexuju priebezne");
+		setBoolean("luceneForumsSearch", false, mods(MOD_SEARCH, MOD_FORUM), "Ak je true, tak sa pre vyhladavanie vo fóre použije Lucene");
+		setBoolean("luceneIncrementalForumIndexing", false, mods(MOD_SEARCH, MOD_FORUM), "Ak je true, fora sa indexuju priebezne");
 		setBoolean("luceneIndexingSkAlgorithmicStemming", true, MOD_SEARCH,
 				"Ak je true, pouzije sa algoritmicky stemmer pre slovensky jazyk");
 		setBoolean("luceneIndexingSkSynonymExpansion", false, MOD_SEARCH,
@@ -951,9 +980,9 @@ public class Constants {
 				"Pocet iteracii pre hashovanie hesla - POZOR po zahashovani sa uz nesmie zmenit");
 		setString("dmailBadEmailSmtpReplyStatuses",
 				"Invalid Addresses,Recipient address rejected,Bad recipient address,Local address contains control or whitespace,Domain ends with dot in string,Domain contains illegal character in string",
-				"apps.dmail",
+				MOD_DMAIL,
 				"Zoznam ciarkou oddelenych vyrazov vratenych zo SMTP servera pre ktore sa email nebude znova pokusat odoslat");
-		setInt("linkCheckEmptyPageSize", 100, "content.webpages;content.editor",
+		setInt("linkCheckEmptyPageSize", 100, mods(MOD_WEBPAGES, MOD_EDITOR),
 				"Dlzka HTML kodu stranky, ktora sa pri kontrole povazuje za prazdnu");
 
 		setString("imageEditorRatio", "3:2, 4:3, 5:4, 7:5, 16:9", MOD_IMAGE_EDITOR,
@@ -962,19 +991,19 @@ public class Constants {
 		setBoolean("fulltextIncludeAttributes", false, MOD_SEARCH,
 				"ak je nastavene na true, fulltext bude obsahovat aj atributy stranky");
 
-		setInt("statHeatMapMaxWidth", 2000, "apps.stat;system.performance",
+		setInt("statHeatMapMaxWidth", 2000, mods(MOD_STAT, MOD_PERFORMANCE),
 				"Maximalna sirka generovaneho obrazku heatmapy, cim vacsie cislo tym vacsie zatazenie na pamat servera pri generovani");
-		setInt("statHeatMapMaxHeight", 6000, "apps.stat;system.performance",
+		setInt("statHeatMapMaxHeight", 6000, mods(MOD_STAT, MOD_PERFORMANCE),
 				"Maximalna vyska generovaneho obrazku heatmapy, cim vacsie cislo tym vacsie zatazenie na pamat servera pri generovani");
 
-		setString("dmailTrackopenGif", "/components/dmail/trackopen.gif", "apps.dmail",
+		setString("dmailTrackopenGif", "/components/dmail/trackopen.gif", MOD_DMAIL,
 				"Virtualna cesta ktora indikuje trackovanie otvorenia emailu");
 
 		// Amazon SES
-		setBoolean("useAmazonSES", false, mods("system.email", MOD_OBSOLETE),
+		setBoolean("useAmazonSES", false, mods(MOD_SYSTEM_EMAIL),
 				"Ak je true posielaju sa emaily cez Amazon Simple Email Service");
-		setString("amazonAccessKey", "", mods("system.email", MOD_OBSOLETE), "pristupovy kluc pre Amazon SES");
-		setString("amazonSecretKey", "", mods("system.email", MOD_OBSOLETE), "heslo pre Amazon SES");
+		setString("amazonAccessKey", "", mods(MOD_SYSTEM_EMAIL), "pristupovy kluc pre Amazon SES");
+		setString("amazonSecretKey", "", mods(MOD_SYSTEM_EMAIL), "heslo pre Amazon SES");
 
 		setString("editorBodyClass", "", MOD_EDITOR, "Trieda pre hlavny body element v editore stranok");
 
@@ -982,12 +1011,12 @@ public class Constants {
 				"alternate,appendix,bookmark,contents,copyright,friend,glossary,help,chapter,index,license,next,nofollow,prev,section,start,stylesheet,subsection,tag",
 				MOD_EDITOR, "Zoznam hodnot pre atribut REL znacky A");
 
-		setString("forumDefaultAddmessageGroups", "", "apps.forum",
+		setString("forumDefaultAddmessageGroups", "", MOD_FORUM,
 				"predvolené skupiny pouivatelov, ktory mozu pridat prispevok do fora (ak nie sú zadané pre fórum samostatne). Štandardne nie je zadaná žiadna hodnota");
 
 		setBoolean("galleryEnableExifDate", true, MOD_GALLERY,
 				"Pri uploade fotky sa ziska ako jej datum datum vytvorenia z exif informacie, pre vypnutie je potrebne nastavit tuto premennu na false");
-		setLong("maxSizeOfAttachments", 8000000, "system.email",
+		setLong("maxSizeOfAttachments", 8000000, MOD_SYSTEM_EMAIL,
 				"Nastaví maximálnu veľkosť príloh priložených k e-mailu. Velkosť sa udáva v bajtoch");
 
 		// 7.2
@@ -1003,7 +1032,7 @@ public class Constants {
 		// /admin/css/tabpane-luna.css je tam kvoli zalozkam na frontende (docman)
 		setString("allowAdminUrls",
 				"^/admin/$, /admin/images/, /admin/m/images/, /admin/logon.jsp, ^/admin/m/$, /admin/m/logon.jsp, /admin/m/content/logon_body.jsp, /admin/index.jsp, /admin/logon.do, /admin/approve.jsp, /admin/skins/webjet6/css/, /admin/skins/webjet6/images/, /admin/skins/webjet6/logon, /admin/css/, /admin/m/css/, /admin/scripts/, /admin/m/jscripts/, /admin/license.jsp, /admin/licence.do, /admin/setup, /admin/FCKeditor/editor_set_user.jsp, /components/messages/refresher-ac.jsp, /admin/multiplefileupload.do, /admin/mem, /admin/FCKeditor/editor/skins/webjet/fck_dialog.css, /admin/css/tabpane-luna.css, /admin/imageeditor/load_image.jsp, /admin/skins/webjet8/assets/, /admin/mobile-api/,/components/_common/fulltext_preview.jsp,^/admin/logon$,^/admin/logon/$,^/admin/logon/changePassword$,^/admin/logon/setadmin/$,/admin/scripts/qrcode.js,/admin/v9/dist/fonts/,/admin/v9/dist/images/logo-",
-				mods("system.admin", MOD_SECURITY),
+				mods(MOD_SYSTEM_ADMIN, MOD_SECURITY),
 				"URL prefixy stranok a suborov v admin casti, ktore budu pristupne aj pre neprihlaseneho pouzivatela.");
 
 		setInt("editorTitleSize", 33, MOD_EDITOR, "Sirka pola pre nadpis stranky v editore stranok");
@@ -1011,7 +1040,7 @@ public class Constants {
 		setString("galleryImageQuality", "", MOD_GALLERY,
 				"Parameter klality obrazkov pre konverziu cez ImageMagick, zapisuje sa vo formate sirka_px:kvalita;sirka_px:kvalita, teda napr. 0:30;100:50;400:70, pouzije sa najlepsi alebo koncovy interval");
 
-		setString("dmailWhitelistImageDomains", "track.adform.net", "apps.dmail",
+		setString("dmailWhitelistImageDomains", "track.adform.net", MOD_DMAIL,
 				"Zoznam domen oddelenych ciarkou, pre ktore sa nebude inlinovat obrazok do emailu (napr. kvoli statistike otvorenia emailu)");
 
 		// 7.3
@@ -1021,23 +1050,23 @@ public class Constants {
 				SERVER_NAME_MACRO + ",iwcm.interway.sk,cdn.pixlr.com,%pixlr.com,%.google.com,%.google.%,%.seznam.cz,docs.webjetcms.sk,docs.webjetcms.com",
 				MOD_CSRF,
 				"Ochrana pred XSRF. Zoznam trusted serverov oddelenych ciarkou, ak je prazdne, ochrana je vypnuta, SERVER_NAME_MACRO sa pri kontrole nahradi za aktualny server");
-		setString("adminLogonMethod", "", mods("system.admin", MOD_SECURITY),
+		setString("adminLogonMethod", "", mods(MOD_SYSTEM_ADMIN, MOD_SECURITY),
 				"logon metoda (ak sa pouziva ina ako standardna WJ databaza) - napr. sk.iway.klient.specialLogon, pricom metoda ma signaturu: public static String logon(String username, String password, Identity user, Map<String, String> errors, HttpServletRequest request, sk.iway.iwcm.i18n.Prop prop), vramci metody je potrebne nastavit aj disabled items, takze po zalogovani odporucame zavolat UsersDB.setDisabledItems(user); a aj nastavit ostatne prava (odporucema nacitat usera z DB WebJETu)");
 
-		setInt("monitorTestDocId", 1, "system.monitoring;system.performance",
+		setInt("monitorTestDocId", 1, mods(MOD_SYSTEM_MONITORING, MOD_PERFORMANCE),
 				"Doc ID stranky, ktorej databazove spojenie (ziskanie nazvu) sa testuje v komponente /components/server_monitoring/monitor.jsp ktoru moze testovat dohladovy SW");
 
 		// 7.4
 		setBoolean("xssDeleteSpaces", false, MOD_XSS,
 				"Ak sa ma pri testovani XSS vyrazov mazat aj medzera nastavte na true, zvysi to moznu bezpecnost ale moze obmedzit navstevnikov v moznych textoch, nepojde zadat napr. on selected");
 
-		setString("defaultVideoFormat", "mp4", "files.video",
+		setString("defaultVideoFormat", "mp4", MOD_VIDEO,
 				"Formát videa, do ktorého sa budú enkodovat videa. Mozne hodnoty: 'flv' alebo 'mp4'");
-		setBoolean("mp4EnableStreaming", false, "files.video;system.performance",
+		setBoolean("mp4EnableStreaming", false, mods(MOD_VIDEO, MOD_PERFORMANCE),
 				"ak je nastavene na true je povoleny HTTP streaming MP4 videa");
 		setString("ffmpegParams",
 				"ffmpeg  -i from -ar 22050 -b:a 32k -f format -s dimension -b:v bitrate -strict experimental -movflags +faststart -y to",
-				"files.video",
+				MOD_VIDEO,
 				"Formát pre parametre ffmpeg, pre starsie verzie ffmpeg napr : ffmpeg -y -i from -ar 22050 -ab 32 -f format -s dimension -b bitrate to ");
 
 		setBoolean("perexGroupUseJoin", false, mods(MOD_SEARCH, MOD_PERFORMANCE),
@@ -1052,7 +1081,7 @@ public class Constants {
 		setString("auditLogClient", "browser", MOD_AUDIT, "Konštanta auditLogClient pre FileLogger TB");
 		setString("auditLogEncoding", "windows-1250", MOD_AUDIT, "Kodovanie znakov suboru logu");
 
-		setString("contextPathAdmin", "", mods(MOD_CONTEXT, "system.cluster"),
+		setString("contextPathAdmin", "", mods(MOD_CONTEXT, MOD_SYSTEM_CLUSTER),
 				"Context path pre CMS node v cluster konfiguracii ak je instalovany na iny ako ROOT kontext");
 		setBoolean("contextPathDebug", false, MOD_CONTEXT,
 				"Ak je nastavene na true zapne sa debug rezim pre ContextPath filter");
@@ -1073,10 +1102,10 @@ public class Constants {
 				"Locale pouzite pre Stripes, nastavuje konfiguraciu LocalePicker.Locales, ak bude hodnota prazdna, pouzije sa systemovy DefaultLocale");
 		setBoolean("perexGroupIncludeId", true, MOD_EDITOR,
 				"Ak je nastavene na true bude sa v zozname perex skupin zobrazovat aj ID danej skuipny");
-		setBoolean("checkFormValidateOnInit", false, "apps.form",
+		setBoolean("checkFormValidateOnInit", false, MOD_FORMMAIL,
 				"Nastavenie validacie formularu pri jeho inicializacii, pri nastaveni na false sa pri zobrazeni nevaliduje cely formular, pri nastaveni na true sa validuje (tak to bolo aj doteraz)");
 
-		setString("newsComponentsDirs", "", mods(MOD_EDITOR, "apps.news"),
+		setString("newsComponentsDirs", "", mods(MOD_EDITOR, MOD_NEWS),
 				"Zoznam URL adries adresarov, v ktorych su custom news komponenty pre ich zobrazenie v dialogu pre vlozenie news komponenty. Automaticky sa hladaju v /components/INSTALL_NAME/news/ ak su aj v inych adresaroch nastavte do tejto premennej ich zoznam oddeleny ciarkou.");
 		setString("proxyHostsException", "", MOD_NETWORK, "Zoznam domen oddelenych ciarkou, pre ktore sa proxy nepouzije");
 
@@ -1092,12 +1121,12 @@ public class Constants {
 		setString("xssProtectionStrictPostUrlException", "", MOD_XSS,
 				"casti URL adries (ich zaciatky) pre ktore sa nepouzije xssProtectionStrict POST, jednotlive URL su oddelene ciarkou");
 
-		setBoolean("serverMonitoringEnablePerformance", false, "system.monitoring;system.performance",
+		setBoolean("serverMonitoringEnablePerformance", false, mods(MOD_SYSTEM_MONITORING, MOD_PERFORMANCE),
 				"ak je nastavene na true, spusta monitorovanie rychlosti SQL dotazov, web stranok a komponent");
-		setBoolean("serverMonitoringEnableJPA", false, "system.monitoring;system.performance",
+		setBoolean("serverMonitoringEnableJPA", false, mods(MOD_SYSTEM_MONITORING, MOD_PERFORMANCE),
 				"ak je nastavene na true, spusta monitorovanie rychlosti vykonavania SQL dotazov pre JPA, ma ale za nasledok zvysenie zataze na pamat servera");
 
-		setString("cacheOnDocCahngeMode", "", "system.performance",
+		setString("cacheOnDocCahngeMode", "", MOD_PERFORMANCE,
 				"Rezim aktualizacie cache po ulozeni web stranky, moznosti: prazdne/none=ziadna zmena, include=vymazanie vsetkych !INCLUDE cache, groupid=vymazanie cache kde sa zhoduje hodnota groupid s ID adresara stranky, all=vymazanie celej cache");
 
 		setString("requestIsSecureHeaderName", "x-forwarded-proto", mods(MOD_SECURITY, MOD_NETWORK),
@@ -1110,41 +1139,41 @@ public class Constants {
 		setInt("editorTableDefaultColumns", 2, MOD_EDITOR, "Prednastaveny pocet stlpcov pre vytvorenie novej tabulky");
 		setInt("editorTableDefaultRows", 3, MOD_EDITOR, "Prednastaveny pocet riadkov pre vytvorenie novej tabulky");
 
-		setString("httpsRedirectToNonSSLNodeNames", "", mods(MOD_SECURITY, MOD_NETWORK, "system.cluster"),
+		setString("httpsRedirectToNonSSLNodeNames", "", mods(MOD_SECURITY, MOD_NETWORK, MOD_SYSTEM_CLUSTER),
 				"Zoznam nodov clustra na ktorych bude vykonavany redirect zo zabezpecenej na nezabezpecenu verziu zobrazenia web stranky. Prazdna hodnota znamena, ze sa redirect nevykona nikdy, znak * znamena, ze sa vykona na vsetkych nodoch (alebo ak nie je cluster). Pre fungovanie musi byt zapnuty SSL rezim nastavenim httpsAvailable na true");
 
-		setString("galleryVideoMode", "big", mods(MOD_GALLERY, "files.video"),
+		setString("galleryVideoMode", "big", mods(MOD_GALLERY, MOD_VIDEO),
 				"Nastavenie rezimu konverzie videa pre foto galeriu, mozne hodnoty: all=vygeneruje sa male aj velke video, big=vygeneruje sa len velke video, small=vygeneruje sa len male video");
 
 		setString("thumbServletCacheDir", "/WEB-INF/imgcache/", MOD_THUMB,
 				"Cesta k adresaru pre cache /thumb obrazkov, pre server s vysokym mnozstvom obrazkov odporucame presunut na ine miesto ako /WEB-INF/ kvoli rychlosti startu Tomcatu");
 
-		setString("xRobotsTagValue", "noindex, nofollow", "content.webpages;content.seo",
+		setString("xRobotsTagValue", "noindex, nofollow", mods(MOD_WEBPAGES, MOD_SEO),
 				"Hodnota hlavicky X-Robots-Tag pre adresare nasatavene v premennej xRobotsTagUrls");
-		setString("xRobotsTagUrls", "/components/,NOT_SEARCHABLE_PAGE", "content.webpages;content.seo",
+		setString("xRobotsTagUrls", "/components/,NOT_SEARCHABLE_PAGE", mods(MOD_WEBPAGES, MOD_SEO),
 				"Zoznam prefixov adresarov oddelenych ciarkou pre nastavenie hlavicky X-Robots-Tag, ak zoznam obsahuje hodnotu NOT_SEARCHABLE_PAGE nastavi sa hlavicka aj pre stranky, ktore maju vypnute vyhladavanie");
 
-		setString("navbarDefaultType", "normal", "content.webpages;content.seo",
+		setString("navbarDefaultType", "normal", mods(MOD_WEBPAGES, MOD_SEO),
 				"Typ generovanej navigacnej listy, moze mat hodnoty normal pre standardny rezim, alebo RDF pre generovanie vo forme RDF, alebo schema.org pre generovanie vo forme schema.org");
 
-		setInt("defaultVideoWidth", 854, "files.video", "Prednastavena sirka videa");
-		setInt("defaultVideoHeight", 480, "files.video", "Prednastavena vyska videa");
-		setInt("defaultVideoBitrate", 2048, "files.video", "Prednastaveny bitrate videa");
+		setInt("defaultVideoWidth", 854, MOD_VIDEO, "Prednastavena sirka videa");
+		setInt("defaultVideoHeight", 480, MOD_VIDEO, "Prednastavena vyska videa");
+		setInt("defaultVideoBitrate", 2048, MOD_VIDEO, "Prednastaveny bitrate videa");
 
-		setBoolean("enableSessionSerializableCheck", true, "system.monitoring",
+		setBoolean("enableSessionSerializableCheck", true, MOD_SYSTEM_MONITORING,
 				"Prepinac na zapnutie/vypnutie kontroly serializovatelnosti objektov v session, tato je obmedzena este aj na domenu iwcm.interway.sk");
 
 		setBoolean("multiGroupKeepSortPriority", true, MOD_EDITOR,
 				"Možnosť zachovať poradie zobrazovania stránok v multi-kategóriách (pre kliknuti na kontextove menu posunut vyssie / nizsie).");
 
-		setBoolean("adminLogonMethodAllowNormalTry", true, mods("system.admin", MOD_SECURITY),
+		setBoolean("adminLogonMethodAllowNormalTry", true, mods(MOD_SYSTEM_ADMIN, MOD_SECURITY),
 				"Ak je nastavene na true je mozne parametricky zapnut standardnu metodu pre prihlasenie namiesto customizovanej");
 
 		setString("ntlmDefaultUserPhoto", "", MOD_NTLM, "URL adresa defaultneho obrazka");
 
-		setBoolean("mp4StreamingDebugSlowdown", false, "files.video",
+		setBoolean("mp4StreamingDebugSlowdown", false, MOD_VIDEO,
 				"Ak je nastavene na true je spomaleny streaming mp4 suborov pre testovanie");
-		setInt("mp4StreamingBufferSize", 64000, "files.video",
+		setInt("mp4StreamingBufferSize", 64000, MOD_VIDEO,
 				"Velkost interneho buffera pre streaming mp4 suborov");
 
 		setString("disableCookiesCookieName", "cc_cookie_decline", MOD_GDPR,
@@ -1164,19 +1193,19 @@ public class Constants {
 				"Zoznam zaciatkov URL adries pre ktore je povolena vynimka priameho volania JSP komponenty");
 
 		setString("serverMonitoringEnableIPs", "127.0.0.1,192.168.,10.,62.65.161.,85.248.107.,195.168.35.4,195.168.35.5,62.168.118.66,62.168.118.90,62.168.118.67,172.17.0.1",
-				mods(MOD_SECURITY, "system.monitoring"),
+				mods(MOD_SECURITY, MOD_SYSTEM_MONITORING),
 				"Zoznam IP adries z ktorych je dostupna komponenta monitor.jsp pre monitorovanie servera");
 
 		// cloud WebJET
-		setString("cloudStaticFilesDir", "", "system.multidomain",
+		setString("cloudStaticFilesDir", "", MOD_SYSTEM_MULTIDOMAIN,
 				"Hlavny adresar v ktorom su ukladane staticke subory jenodlitvych webov v cloude (musi koncit znakom /), mozne zadat hodnotu {FILE_ROOT}static-files/ pre umiestnenie do korenoveho-priecinka/static-files/");
-		setBoolean("templatesUseDomainLocalSystemFolder", false, mods(MOD_EDITOR, "content.templates", "system.multidomain"),
+		setBoolean("templatesUseDomainLocalSystemFolder", false, mods(MOD_EDITOR, MOD_TEMPLATES, MOD_SYSTEM_MULTIDOMAIN),
 				"Ak je nastavene na true su hladane objekty pre sablonu v korenovom priecinku aktualnej domeny v pod adresari System");
 
 		setBoolean("editorEscapeInvalidCharacters", false, MOD_EDITOR,
 				"Pri ukladani stranky odstranuje nepovolene znaky napr. z kopirovania z PDF, pre titulok, obsah a perex.");
 
-		setString("xUaCompatibleAdminValue", "IE=edge", "system.admin",
+		setString("xUaCompatibleAdminValue", "IE=edge", MOD_SYSTEM_ADMIN,
 				"Nastavenie HTTP hlavicky X-UA-Compatible pre MS IE pre admin cast");
 
 		setBoolean("inlineEditingEnabled", false, MOD_EDITOR,
@@ -1228,9 +1257,9 @@ public class Constants {
 		setString("projectSpecificComponentExporterResolverClass", "", MOD_SYNC,
 				"Project specific trieda pre exportovanie custom komponentov do xml v ramci sycnhronizacie WJ, musi implementovat Interface sk.iway.iwcm.sync.export.ComponentExporterResolver");
 
-		setString("fileHistoryPath", "/WEB-INF/libfilehistory/", "files.history", "Cesta k historii suborov");
+		setString("fileHistoryPath", "/WEB-INF/libfilehistory/", MOD_FILE_HISTORY, "Cesta k historii suborov");
 
-		setString("bazarApproveNotificationEmail", "", "apps.bazar", "Email adresa notifikacie pre schvalenie inzeratu");
+		setString("bazarApproveNotificationEmail", "", MOD_BAZAR, "Email adresa notifikacie pre schvalenie inzeratu");
 
 		setString("beforeFileIndexerEditorSaveMathod", "", MOD_FILE_INDEXING,
 				"Metoda, ktora sa zavola po zaindexovani suboru");
@@ -1267,7 +1296,7 @@ public class Constants {
 		setBoolean("nginxProxyMode", false, mods(MOD_NETWORK, MOD_PERFORMANCE),
 				"Po nastaveni na true zapne rezim WebJETu s vyuzitim nginx proxy modu, generuje cookie nc (no cache) s hodnotou 1 akonahle je prihlaseny pouzivatel alebo je nestandardny forceBrowserDetector");
 
-		setBoolean("fbrowserShowOnlyWritableFolders", false, mods(MOD_SECURITY, "files.elfinder"),
+		setBoolean("fbrowserShowOnlyWritableFolders", false, mods(MOD_SECURITY, MOD_ELFINDER),
 				"Po nastaveni na true sa budu v zalozke subory zobrazovat len adresare na ktore ma pouzivatel nastavene prava");
 
 		setString("captchaMode", "nonlinear", MOD_CAPTCHA,
@@ -1285,23 +1314,23 @@ public class Constants {
 		setBoolean("auditDontLogUsrlogon", false, MOD_AUDIT,
 				"Po nastaveni na true sa nebude auditovat bezne prihlasenie pouzivatela, vhodne na vysoko zatazeny intranet kde to zbytocne zahlcuje audit");
 
-		setInt("welcomeDataCacheMinutes", 60, mods("system.admin", MOD_PERFORMANCE), "pocet minut ulozenia dat do cache");
-		setInt("welcomeDataBackTime", 7 * 24 * 60, mods("system.admin", MOD_PERFORMANCE), "pocet minut za ktore sa budu data z DB vyberat");
-		setInt("welcomeWallDocId", 9800900, mods("system.admin", MOD_PERFORMANCE), "fiktivne docid pre nastenku WJ8");
-		setInt("welcomeDataSize", 10, mods("system.admin", MOD_PERFORMANCE), "pocet poloziek na uvitacej stranke");
-		setInt("welcomeDataSizeAudit", 20, mods("system.admin", MOD_PERFORMANCE), "pocet poloziek na uvitacej stranke v audite");
-		setInt("welcomeDataProjectId", 0, mods("system.admin", MOD_PERFORMANCE), "project id na welcome stranke");
+		setInt("welcomeDataCacheMinutes", 60, mods(MOD_SYSTEM_ADMIN, MOD_PERFORMANCE), "pocet minut ulozenia dat do cache");
+		setInt("welcomeDataBackTime", 7 * 24 * 60, mods(MOD_SYSTEM_ADMIN, MOD_PERFORMANCE), "pocet minut za ktore sa budu data z DB vyberat");
+		setInt("welcomeWallDocId", 9800900, mods(MOD_SYSTEM_ADMIN, MOD_PERFORMANCE), "fiktivne docid pre nastenku WJ8");
+		setInt("welcomeDataSize", 10, mods(MOD_SYSTEM_ADMIN, MOD_PERFORMANCE), "pocet poloziek na uvitacej stranke");
+		setInt("welcomeDataSizeAudit", 20, mods(MOD_SYSTEM_ADMIN, MOD_PERFORMANCE), "pocet poloziek na uvitacej stranke v audite");
+		setInt("welcomeDataProjectId", 0, mods(MOD_SYSTEM_ADMIN, MOD_PERFORMANCE), "project id na welcome stranke");
 		setString("welcomeDataUrlTicket", "https://helpdesk.interway.sk/components/magzilla/tickets_ajax.jsp");
 
 		setInt("galleryCacheResultMinutes", 0, mods(MOD_PERFORMANCE, MOD_GALLERY),
 				"Pocet minut pocas ktorych sa cachuje zoznam obrazkov v galerii, zmena sa detekuje podla zmeny datumu adresara (dostupne len na OS Linux)");
 
-		setBoolean("uploadSimulateSlowSpeed", false, mods("files.upload", MOD_PERFORMANCE),
+		setBoolean("uploadSimulateSlowSpeed", false, mods(MOD_UPLOAD, MOD_PERFORMANCE),
 				"Ak sa nastavi na true spomali sa upload pre jeho simulaciu");
-		setString("showDocActionAllowedDocids", "*", mods(MOD_SECURITY, "content.webpages"),
+		setString("showDocActionAllowedDocids", "*", mods(MOD_SECURITY, MOD_WEBPAGES),
 				" Nastavene na \"*\" nerobi ziadnu akciu, nastavene na \" \" (medzeru) blokuje vsetky volania showdoc.do a nastavne na cisla (docId) oddelene ciarkami, povoluje iba konkretne docId ");
 
-		setString("amazonEmailServiceHost", "", mods("system.email", MOD_OBSOLETE),
+		setString("amazonEmailServiceHost", "", mods(MOD_SYSTEM_EMAIL),
 				"V pripade ze je zapnute posielanie dmailu cez Amazon SES tak sa tymto specifikuje konkretny region pre odosielanie, inak sa region urcuje dynamicky");
 
 		setString("xXssProtection", "1; mode=block", MOD_SECURITY_HEADERS,
@@ -1312,14 +1341,14 @@ public class Constants {
 		setString("xContentTypeOptions", "nosniff", MOD_SECURITY_HEADERS,
 				"Hodnota hlavicky X-Content-Type-Options pre nastavenie urcovania typov suborov podla obsahu (ignorovanie pripony)");
 
-		setBoolean("formAllowOnlyExistingFormsOnPublicNode", true, mods(MOD_SECURITY, MOD_FORMMAIL, "system.cluster"),
+		setBoolean("formAllowOnlyExistingFormsOnPublicNode", true, mods(MOD_SECURITY, MOD_FORMMAIL, MOD_SYSTEM_CLUSTER),
 				"Povolenie odoslania len existujucich formularov na public nodoch clustra");
 
 		setInt("dmailMaxRetryCount", 5, MOD_DMAIL,
 				"Maximalny pocet pokusov odoslania emailu pre hromadny email pri chybe odoslania");
 		setInt("dmailSleepTimeAfterException", 20000, MOD_DMAIL,
 				"Pocet milisekund zastavenia odosielania emailov pri chybe odoslania");
-		setInt("smtpConnectionTimeoutMillis", 30 * 1000, "system.email",
+		setInt("smtpConnectionTimeoutMillis", 30 * 1000, MOD_SYSTEM_EMAIL,
 				"Pocet milisekund pre timeout cakania na vytvorenie SMTP spojenia");
 
 		setInt("fileIndexerMaxFileSize", 8 * 1024 * 1024, MOD_FILE_INDEXING,
@@ -1335,7 +1364,7 @@ public class Constants {
 				"Základná šírka obrázku pri vložení obrazku z fotobanky pixabay.");
 
 		// WebJET 8 konfiguracia
-		setString("elfinderLibraryFolders", "/images,/images/gallery,/images/video,/files", "files.elfinder",
+		setString("elfinderLibraryFolders", "/images,/images/gallery,/images/video,/files", MOD_ELFINDER,
 				"Zoznam adresarov, ktore sa zobrazia v suboroch v Kniznici");
 		setString("ckeditor_toolbar",
 				"{ name: 'clipboard', items: ['Paste', '|', 'Cut', 'Copy', ';' , 'PasteText', 'PasteFromWord']},\n" +
@@ -1363,7 +1392,7 @@ public class Constants {
 
 		setString("whiteListedUA", "chrome, firefox, msie");
 
-		setInt("editorUploadActualPageMaxDeep", 4, mods(MOD_EDITOR, "files.upload"),
+		setInt("editorUploadActualPageMaxDeep", 4, mods(MOD_EDITOR, MOD_UPLOAD),
 				"Maximálna hĺbka štruktúry pre upload obrázkov a súborov v editore.");
 
 		// import, export suborov
@@ -1380,13 +1409,13 @@ public class Constants {
 				MOD_SYNC, "Zoznam štandardných ciest zahrnutých do synchronizačného exportu");
 
 		// ABTesting
-		setBoolean("ABTesting", false, "apps.abtest", "Po nastaveni na true sa aktivuje AB testovanie web stranok");
-		setString("ABTestingRatio", "50:50", "apps.abtest", "Pomer pri generovani stranok medzi verziou A a B");
-		setString("ABTestingName", "abtestvariant", "apps.abtest",
+		setBoolean("ABTesting", false, MOD_ABTEST, "Po nastaveni na true sa aktivuje AB testovanie web stranok");
+		setString("ABTestingRatio", "50:50", MOD_ABTEST, "Pomer pri generovani stranok medzi verziou A a B");
+		setString("ABTestingName", "abtestvariant", MOD_ABTEST,
 				"Nazov, ktory sa pridava do URL adresy B verzie stranky na jej odlisenie - pouziva sa aj na dohladanie B verzie stranky");
-		setString("ABTestingCookieName", "wjabtesting", "apps.abtest",
+		setString("ABTestingCookieName", "wjabtesting", MOD_ABTEST,
 				"Meno cookie pouzitej pre zapamatanie si verzie testu pri split testoch - ak sa rozhodne pre B variantu, zapamata sa v cookie s tymto nazvom a podla toho sa dalej budu poskytovat B verzie stranok");
-		setInt("ABTestingCookieDays", 30, "apps.abtest",
+		setInt("ABTestingCookieDays", 30, MOD_ABTEST,
 				"Pocet dni zapamatania si zvolenej verzie pri AB testovani - cas exspiracie cookie");
 
 		//setInt("logonBlockedDelaySecondsMax", 5 * 60, MOD_SECURITY,
@@ -1400,12 +1429,12 @@ public class Constants {
 		setBoolean("captchaLoadAfterFocus", true, MOD_CAPTCHA,
 				"Nacitavanie JS pre captchu az po kliknuti do pola formularu");
 
-		setBoolean("multiDomainUseAliasAsInstallName", false, "system.multidomain",
+		setBoolean("multiDomainUseAliasAsInstallName", false, MOD_SYSTEM_MULTIDOMAIN,
 				"Nastavenim na true sa pre MultiDomain bude pouzivat hodnota z konfiguracnej premennej multiDomainAlias:domena=alias ako hodnota installName pre HTTP requesty");
-		setString("fbrowserAlwaysShowFolders", "", "files.elfinder",
+		setString("fbrowserAlwaysShowFolders", "", MOD_ELFINDER,
 				"V premennej je mozne nastavit adresare oddelene znakom noveho riadka ktore sa budu zobrazovat na citanie vzdy aj pri nastavenej premennej fbrowserShowOnlyWritableFolders na true");
 
-		setBoolean("sassCompilerEnabled", false, "content.templates",
+		setBoolean("sassCompilerEnabled", false, MOD_TEMPLATES,
 				"nastavenim na true, sa zapne kompilacia sass a scss suborov");
 
 		setBoolean("imageAlwaysCreateGalleryBean", false, MOD_GALLERY,
@@ -1418,27 +1447,27 @@ public class Constants {
 
 		setBoolean("editorGroupReplaceNumberWithDashInUrl", false, MOD_EDITOR,
 				"Ak je nastavene na true bude sa pre adresare ktorych nazov je cislo nahradzat ich URL za znak - co sposobi, ze sa nebudu do URL stranok generovat");
-		setBoolean("qaCheckedPublishOnWeb", false, "apps.qa",
+		setBoolean("qaCheckedPublishOnWeb", false, MOD_QA,
 				"Ak je true, tak sa v module Otazky a odpovede pri novom/editovanom zazname defaultne zaskrtne 'Zobrazovať na web stránke'");
 
 		setBoolean("galleryUploadDirVirtualPath", false, MOD_GALLERY,
 				"ak je nastavene na true pouzije sa URL adresa web stranky ako adresar pre upload suborov (normalne sa pouziva len struktura adresarov)");
 
-		setBoolean("showOnlyActualPublishedDoc", false, "content.webpages",
+		setBoolean("showOnlyActualPublishedDoc", false, MOD_WEBPAGES,
 				"Ak je true, zobrazi beznemu pouzivatelovi stranku platnu na zaklade datumov publikovania od-do");
 		setBoolean("editorShowTitleLettersCount", false, MOD_EDITOR,
 				"Po nastaveni na true bude v editore za titulkom zobrazovat pocet znakov titulku");
-		setString("adminAfterLogonRedirect", "", "system.admin",
+		setString("adminAfterLogonRedirect", "", MOD_SYSTEM_ADMIN,
 				"Moznost zadania presmerovacej URL po prihlaseni sa do adminu napr. rovno na WEB Stranky");
 
-		setString("symlinkTranslate", "", "files",
+		setString("symlinkTranslate", "", MOD_FILES,
 				"Preklad symlinkovanych adresarov nazad na standardne cesty akoby boli priamo realne v adresari, format rovnaky ako natUrlTranslate");
 		setBoolean("perexGroupsFastLoad", false, mods(MOD_EDITOR, MOD_PERFORMANCE),
 				"Ak je nastavene na true nebudu sa pri zmene clanku v editore reloadovat perex skupiny, ma zmysel nastavit na true na weboch kde je radovo 1000 perex skupin a vsetky su dostupne vsade");
 
-		setString("elfinderRedirectFolders", "/images,/files", "files.elfinder",
+		setString("elfinderRedirectFolders", "/images,/files", MOD_ELFINDER,
 				"Pri premenovani/vystrihnuti sa pri zadanych adresaroch a ich podadresaroch budu vytvarat presmerovania na subory");
-		setBoolean("elfinderUseFastLoading", false, mods("files.elfinder", MOD_PERFORMANCE),
+		setBoolean("elfinderUseFastLoading", false, mods(MOD_ELFINDER, MOD_PERFORMANCE),
 				"Ak je true nebude elfinder ziskavat last modified, size a nebude sa kontrolovat, ci priecinky maju podpriecinky(bude sa predpokladat, ze ano)");
 
 		setString("contentSecurityPolicy", "", MOD_SECURITY_HEADERS,
@@ -1448,7 +1477,7 @@ public class Constants {
 		setString("refererPolicy", "same-origin", MOD_SECURITY_HEADERS,
 				"Nastavenie HTTP hlavicky Referrer-Policy, odporucame nastavit na hodnotu same-origin");
 
-		setBoolean("constantsAliasSearch", false, "system.multidomain",
+		setBoolean("constantsAliasSearch", false, MOD_SYSTEM_MULTIDOMAIN,
 				"Ak je true, vsetky nazvy konstant sa budu menit na domena-nazovKonstanty (pouzitelne napr. pri multiwebe). Prejavy sa az po restarte wj.");
 
 		setString("editorMagiclineElements",
@@ -1461,9 +1490,9 @@ public class Constants {
 		setBoolean("userPermsActualPageAutomatic", true, mods(MOD_USER, MOD_SECURITY),
 				"Po prihlaseni sa automaticky pridaju do prav na subory prava podla povolenych adresarov vo web strankach");
 
-		setString("wundergroundWeatherApiKey", "", "apps.app-weather", "Api kluc k Wunderground napr. 9f95eb106c4734fe");
+		setString("wundergroundWeatherApiKey", "", MOD_APP_WEATHER, "Api kluc k Wunderground napr. 9f95eb106c4734fe");
 
-		setBoolean("templatesShowUsage", true, mods("content.templates", MOD_PERFORMANCE),
+		setBoolean("templatesShowUsage", true, mods(MOD_TEMPLATES, MOD_PERFORMANCE),
 				"Ak je nastavene na true zobrazuje v zozname sablon pocet pouziti danej sablony");
 
 		setInt("logonLoginBlockedDelay", 60, MOD_SECURITY,
@@ -1472,11 +1501,11 @@ public class Constants {
 				"Pocet neuspesnych prihlaseni po ktorych sa aplikuje delay 'logonBlockedDelayAfterUnsuccessCount' ");
 
 		setString("adminLoaderBannedUrls",
-				"/admin/FCKeditor/editor_set_user.jsp|/admin/refresher.jsp|/components/media/get_media.jsp", "system.admin",
+				"/admin/FCKeditor/editor_set_user.jsp|/admin/refresher.jsp|/components/media/get_media.jsp", MOD_SYSTEM_ADMIN,
 				"Zoznam URL pre ktore sa nebude zobrazovat loader pri ajax dotazoch");
 
-		setString("googleMapsApiKey", "", "apps.map", "Možnosť globálneho nastavenia API kľúču pre Google mapy");
-		setString("canBeShownForUserAgent", "", "content.webpages",
+		setString("googleMapsApiKey", "", MOD_MAP, "Možnosť globálneho nastavenia API kľúču pre Google mapy");
+		setString("canBeShownForUserAgent", "", MOD_WEBPAGES,
 				"Výnimka pre konštantu showOnlyActualPublishedDoc na hlavičku User-Agent obsahujúcu reťazce v tejto premennej oddelenej , alebo |, napr. facebookexternalhit,Facebot");
 
 		setBoolean("basketDiscountEnabled", false, MOD_BASKET,
@@ -1484,7 +1513,7 @@ public class Constants {
 		setInt("basketVatPercentage", 0, MOD_BASKET,
 				"Nastavuje sa v percentach. Zvolene percento sa priratava ku sume.(Sluzi na nastavenie DPH)");
 
-		setString("pageFunctionsInclude", "", "content.webpages",
+		setString("pageFunctionsInclude", "", MOD_WEBPAGES,
 				"Zoznam js suborov vlozenych do page_functions.js.jsp, oddelene znakom |");
 
 		setString("downloadUrlUserAgent",
@@ -1496,10 +1525,10 @@ public class Constants {
 				"Nastavenie dostupnosti bootstrap v sablonach, pouzivaju sa potom ine CSS triedy pre zarovnanie textov atd");
 		setString("problemReportEmail", "info@webjet.eu", MOD_EDITOR,
 				"Email adresa pre nahlasenie problemu z inline editacie");
-		setBoolean("alwaysStoreUploadedFileToRequest", false, "files.upload",
+		setBoolean("alwaysStoreUploadedFileToRequest", false, MOD_UPLOAD,
 				"Ak je true, po uloade vzdy ulozi uploadovane subory do requestu, do atributu 'MultipartWrapper.files' => sk.iway.iwcm.system.stripes.MultipartWrapper.build(HttpServletRequest, File, long)");
 
-		setInt("uploadProtectionInterval", 900, "files.upload",
+		setInt("uploadProtectionInterval", 900, MOD_UPLOAD,
 				"Cas ktory sa caka po kazdom uploade aby nenastalo Too Many Connections");
 
 		setString("restAllowedIpAddresses", "127.0.0.1", MOD_SECURITY,
@@ -1510,12 +1539,12 @@ public class Constants {
 
 		setString("appstorePromo", "cmp_news,menuGallery,menuBanner,cmp_video", MOD_EDITOR, "zoznam klucov promo aplikacii v appstore");
 
-		setBoolean("elfinderMetadataEnabled", false, mods(MOD_SECURITY, "files.elfinder"),
+		setBoolean("elfinderMetadataEnabled", false, mods(MOD_SECURITY, MOD_ELFINDER),
 				"Ak je nastavene na true, tak sa povoli metadata plugin pre elfinder (nastavenie opravneni na subory)");
-		setBoolean("elfinerMetadataAutopopup", false, mods(MOD_SECURITY, "files.elfinder"),
+		setBoolean("elfinerMetadataAutopopup", false, mods(MOD_SECURITY, MOD_ELFINDER),
 				"Ak je nastavene na true, tak sa automaticky po uploade suboru zobrazi dialog metadát");
 
-		setString("uploadFileActionReflectionLoader", "", "files.upload",
+		setString("uploadFileActionReflectionLoader", "", MOD_UPLOAD,
 				"Po uploade sa zavolaju nastavene triedy oddelene zankom | (sk.iway.vubintra.upload.UploadFile.checkFileClass|sk.iway.vubintra.upload.UploadFile2.checkFileClass). Metode sa poslu parametre - HttpServletRequest requsest, Identity user, String fileUrl");
 
 		setString("logInstallName", "", MOD_AUDIT,
@@ -1554,10 +1583,10 @@ public class Constants {
 						"\t\t\t\t{ name: 'tools', items: ['Undo', 'Redo', ';', 'Find', 'Replace']}",
 				MOD_EDITOR, "Konfiguracia poloziek ckeditor toolbaru pre standalone verziu");
 
-		setInt("metadataWaitTime", 0, mods(MOD_METADATA, "files.gfs"),
+		setInt("metadataWaitTime", 0, mods(MOD_METADATA, MOD_GFS),
 				"Pocet milisekund cakania pred vykonanim cistenia metadat, potrebne na GFS kvoli moznemu konfliktu v subore, kedze sa modifikuje existujuci subor po uploade");
 
-		setBoolean("enableStaticFilesExternalDir", false, "system.multidomain",
+		setBoolean("enableStaticFilesExternalDir", false, MOD_SYSTEM_MULTIDOMAIN,
 				"Zapnutie pouzivania externeho adresara pre /images, /files a /WEB-INF/imgcache/ adresare, cesta k externemu adresaru sa nastavuje v premennej cloudStaticFilesDir, standardne sa pre domenu vytvori v tomto adresari podadresar podla mena domeny");
 		setString("fulltextDataAscMethod", "", mods(MOD_EDITOR, MOD_SEARCH),
 				"Pridanie custom dat do fulltext indexu vid: EditorDB.getDataAsc()");
@@ -1570,9 +1599,9 @@ public class Constants {
 		setBoolean("multigroupRedirectDefault", false, mods(MOD_EDITOR, MOD_REDIRECTS),
 				"Ak je true, tak sa pri pridani dalsieho adresara v editore stranky, vzdy zaskrtne 'Presmerovať ďalšie adresáre'");
 
-		setBoolean("templatesUseRecursiveSystemFolder", false, mods(MOD_EDITOR, "content.templates"),
+		setBoolean("templatesUseRecursiveSystemFolder", false, mods(MOD_EDITOR, MOD_TEMPLATES),
 				"Ak je nastavene na true su hladane objekty pre sablonu vo vsetkych podadresaroch od root adresara ku aktualnemu adresaru.");
-		setInt("allSystemFoldersCacheMinutes", 5, mods("content.templates", MOD_PERFORMANCE),
+		setInt("allSystemFoldersCacheMinutes", 5, mods(MOD_TEMPLATES, MOD_PERFORMANCE),
 				"Pocet minut pre drzanie cache vsetkych systemovych adresarov vid. templatesUseRecursiveSystemFolder");
 
 		setString("basicNtlmLogonAttrs",
@@ -1590,7 +1619,7 @@ public class Constants {
 
 		setString("domainIdFixedUrls",
 				"/admin/saveuser,/admin/edituser,/admin/authorize,/reguser,/changeuser,/admin/authorize,/admin/listusers,/admin/logon,/components/user/change_password.jsp,/admin/saveevent,/sk/iway/iwcm/components/welcome/WallAjax.action,/thumb/images/gallery/user/,/images/gallery/user/,/admin/ajax_users.jsp",
-				"system.multidomain",
+				MOD_SYSTEM_MULTIDOMAIN,
 				"Zoznam URL adries, pre ktore sa ulozi domain_id=1, aby zaznamy boli dostupne zo vsetkych domen portalu napr. pouzivatelia, nastenka.");
 
 		setBoolean("galleryWatermarkApplyOnUpload", false, MOD_GALLERY,
@@ -1602,10 +1631,10 @@ public class Constants {
 				"sk.iway.iwcm.search.DocDetailsSearch, sk.iway.iwcm.search.AplicationSearch, sk.iway.iwcm.search.PropertiesSearch, sk.iway.iwcm.search.FileSearch",
 				MOD_SEARCH, "Kategorie pre vyhladavenie vo Webjete, zobrazia sa v admin/skins/webjet6/searchall.jsp");
 
-		setString("adminUsersAllowNormalLogon", "", mods(MOD_NTLM, "system.admin"),
+		setString("adminUsersAllowNormalLogon", "", mods(MOD_NTLM, MOD_SYSTEM_ADMIN),
 				"Zoznam loginov s ktorymi sa viem prihlasit aj priamo do WebJETu - obchadzam LDAP autorizaciu");
 
-		setInt("monitoringPreheatTime", 0, mods("system.monitoring", MOD_PERFORMANCE),
+		setInt("monitoringPreheatTime", 0, mods(MOD_SYSTEM_MONITORING, MOD_PERFORMANCE),
 				"Pocet sekund potrebnych pre zahriatie web sidla (nacitanie cache) po restarte pocas ktoreho bude monitor.jsp komponenta vracat nedostupnost nodu clustra");
 
 		setString("currencyDecoratorFormat", "0.00", MOD_LOCALIZATION,
@@ -1630,23 +1659,23 @@ public class Constants {
 		setString("adminlogCustomLogger", "", MOD_AUDIT,
 				"Custom Adminlog trieda - umoznuje pracovat s auditnym zaznamom, napr ulozit do suboru. Ocakava FQN triedy ktora implementuje interface sk.iway.iwcm.AdminlogCustomLogger");
 
-		setString("newsAdminGroupIds", "", "apps.news", "Zoznam ID adresárov s novinkami. ID sú oddelené čiarkami.");
+		setString("newsAdminGroupIds", "", MOD_NEWS, "Zoznam ID adresárov s novinkami. ID sú oddelené čiarkami.");
 
 		setBoolean("fulltextExecuteApps", false, MOD_SEARCH,
 				"Ak je nastavene na true pokusi sa pri ulozeni stranky vykonat vlozene aplikacie a do fulltext indexu pridat aj text vlozenych aplikacii");
 
-		setBoolean("webpagesAvailableInInternalFolders", false, mods(MOD_SECURITY, "content.webpages"),
+		setBoolean("webpagesAvailableInInternalFolders", false, mods(MOD_SECURITY, MOD_WEBPAGES),
 				"Ak je stranka v adresari oznacenom ako interny nebude dostupna bez prihlasenia do administracie. Nastavenim na true sa kontrola vypne a stranka bude verejne dostupna");
 		setString("tooltipReplacerAttributes",
 				"data-tooltip-class=\"tooltip\" data-toggle=\"tooltip\" data-placement=\"top\" data-html=\"true\"",
-				"content.tooltip", "Kód ktorý sa vloží do html pri nahradzovani tooltip requestu");
+				MOD_TOOLTIP, "Kód ktorý sa vloží do html pri nahradzovani tooltip requestu");
 
-		setString("robotsNoindexDomains", ".iway.sk,www2.,new.,test", "content.seo",
+		setString("robotsNoindexDomains", ".iway.sk,www2.,new.,test", MOD_SEO,
 				"Zoznam domen, alebo ich cast, pre ktore bude zakazane robotmi ich indexovanie cez robots.txt");
 
 		setString("jpaFilterByDomainIdBeanList",
 				"sk.iway.iwcm.components.file_archiv.FileArchivatorBean,sk.iway.iwcm.components.insertScript.InsertScriptBean,sk.iway.iwcm.components.gdpr.CookieManagerBean,sk.iway.iwcm.components.gdpr.model.GdprRegExpBean,",
-				mods(MOD_DATABASE, "system.multidomain"),
+				mods(MOD_DATABASE, MOD_SYSTEM_MULTIDOMAIN),
 				"Ak je zapnuta premenna enableStaticFilesExternalDir tak v JPA v metode getAll bude vracat zaznamy vyfiltrovane podla domain_id. Predpokladame ze Bean v tomto zozname ma property domainId");
 		setInt("passwordHistoryLength", 6, MOD_PASSWORD,
 				"Pocet pouzitych hesiel usera v db ktore sa ma ukladat aby user nepouzil pri zmene stare heslo");
@@ -1659,9 +1688,9 @@ public class Constants {
 		setString("basketInvoiceServerName", "", MOD_BASKET,
 				"Nazov domeny ktory sa ma pouzit v tele objednavky, napr. ak stahujeme obsah objednavky na inom node.");
 
-		setInt("insertScriptCacheMinutes", 10, mods("apps.insert_script", MOD_PERFORMANCE),
+		setInt("insertScriptCacheMinutes", 10, mods(MOD_INSERT_SCRIPT, MOD_PERFORMANCE),
 				"Pocet minut cachovania zoznamu scriptov aplikacie Skripty, predpoklad je, ze sa pouzivaju na kazdej stranke, preto sa musia cachovat");
-		setString("insertScriptPositions", "", "apps.insert_script",
+		setString("insertScriptPositions", "", MOD_INSERT_SCRIPT,
 				"Zoznam pozicii v JSP sablonach pre zobrazenie select boxu pri vlozeni noveho scriptu, ak je prazdne pouzije sa autocomplete na uz existujuco definovanych scriptoch");
 
 		setBoolean("passwordHistoryEnabled", true, MOD_PASSWORD,
@@ -1673,7 +1702,7 @@ public class Constants {
 		setString("editorPageExtension", ".html", MOD_EDITOR,
 				"Typ pripony pre stranky v adresari, ktore nie su hlavne, standardne .html, moze byt zmenene na / pre vytvaranie adresarovych URL");
 		setBoolean("CacheTagDisable", false, MOD_PERFORMANCE, "Moznost vypnut tag iwcm:cache");
-		setString("showOnHomepagePerexGroup", "", "apps.news",
+		setString("showOnHomepagePerexGroup", "", MOD_NEWS,
 				"Názov perex skupiny ktorou určíme, či sa novinka zobrazí na úvodnej stránke.");
 
 		setString("configEnabledKeys", "{INSTALL_NAME},smtp,captchaType,google,propertiesEnabledKeys,reCaptcha",
@@ -1711,19 +1740,19 @@ public class Constants {
 
 		setString("combineEnabledJspsSystem",
 				"/components/_common/javascript/page_functions.js.jsp,%jscript.jsp,/components/gallery/",
-				mods("system.combine", MOD_SECURITY),
+				mods(MOD_SYSTEM_COMBINE, MOD_SECURITY),
 				"Zoznam JSP suborov, ktore je mozne vkladat cez combine.jsp, definovane pre system, odporucame nemenit");
-		setString("combineEnabledJsps", "", mods("system.combine", MOD_SECURITY),
+		setString("combineEnabledJsps", "", mods(MOD_SYSTEM_COMBINE, MOD_SECURITY),
 				"Zoznam JSP suborov, ktore je mozne vkladat cez combine.jsp");
 		setString("combineEnabledPathsSystem",
 				"/css/,/jscripts/,/templates/,/components/_common/,/components/form/,/components/gallery/,%/js/,%/scripts/,%/javascript/,%jquery,%jscript.jsp",
-				mods("system.combine", MOD_SECURITY),
+				mods(MOD_SYSTEM_COMBINE, MOD_SECURITY),
 				"Zoznam JSP suborov, ktore je mozne vkladat cez combine.jsp, definovane pre system, odporucame nemenit");
-		setString("combineEnabledPaths", "", mods("system.combine", MOD_SECURITY),
+		setString("combineEnabledPaths", "", mods(MOD_SYSTEM_COMBINE, MOD_SECURITY),
 				"Zoznam JSP suborov, ktore je mozne vkladat cez combine.jsp");
 
 		setInt("csrfMaxTokensInSession", 60, MOD_CSRF, "Maximalny pocet CSRF tokenov drzanych v session");
-		setInt("adminLogonBgTime", 9000, mods("system.admin", MOD_PERFORMANCE),
+		setInt("adminLogonBgTime", 9000, mods(MOD_SYSTEM_ADMIN, MOD_PERFORMANCE),
 				"cas striedania obrazkov v pozadi na prihlasovacej obrazovke v admin casti, ak sa pripajate cez RDP a spomaluje vam to vykreslenie zvyste hodnotu");
 		setString("userEditableTreeMenuType", "rows", MOD_EDITOR,
 				"Zobrazenie stomu vo web strankach pokial ma pouzivatel nastavene prava na adresar. Momentalne mozne hodnoty su tree alebo rows");
@@ -1760,19 +1789,19 @@ public class Constants {
 
 		setBoolean("fileArchivUseCategoryAsLink", false, MOD_FILE_ARCHIV,
 				"Ak je nastavene na true,použije kategoriu ako cestu k suboru. Napr: 'defaultna cesta k archivu'/kategoria/subor.pdf");
-		setInt("nginxProxyModePageCacheTime", 0, mods(MOD_NETWORK, "content.webpages", MOD_PERFORMANCE),
+		setInt("nginxProxyModePageCacheTime", 0, mods(MOD_NETWORK, MOD_WEBPAGES, MOD_PERFORMANCE),
 				"Cas v sekundach cachovania vygenerovanej web stranky v rezime nginxProxy (nastavena premenna nginxProxyMode na true)");
 
-		setBoolean("smtpUseTLS", false, mods("system.email", MOD_SECURITY),
+		setBoolean("smtpUseTLS", false, mods(MOD_SYSTEM_EMAIL, MOD_SECURITY),
 				"TLS autentifikacia - ak je port 587, smtpUseTLS musi byt true");
 
-		setString("smtpTLSVersion", "TLSv1.2", mods("system.email", MOD_SECURITY),
+		setString("smtpTLSVersion", "TLSv1.2", mods(MOD_SYSTEM_EMAIL, MOD_SECURITY),
 				"TLS autentifikacia - verzia TLS pre smtp spojenie, vyzaduje nastavit aj smtpUseTLS na true");
 
 		setBoolean("gridEditorEnabled", false, MOD_EDITOR, "Povolenie grid editora - editora layoutu(gridu) v editore.");
 		setString("bootstrapVersion", "4", MOD_EDITOR, "Verzia bootstrap v danom projekte.");
 
-		setBoolean("monitorMaintenanceMode", false, "system.monitoring",
+		setBoolean("monitorMaintenanceMode", false, MOD_SYSTEM_MONITORING,
 				"Ak je nastavena na true tak bude komponenta /components/server_monitoring/monitor.jsp vracat chybu 'UNAVAILABLE' ");
 
 		setString("xsrfUrlExceptionSystem",
@@ -1788,13 +1817,13 @@ public class Constants {
 		setString("xsrfParamNameException", "", MOD_CSRF,
 				"Zoznam povolenych parametrov, ktore sa preskakuju pri GET poziadavke na kontrolu existencie parametra (bez ohladu na velkost pismen)");
 
-		setString("fbrowserDefaultWritableFolders", "", mods(MOD_SECURITY, "files.elfinder"),
+		setString("fbrowserDefaultWritableFolders", "", mods(MOD_SECURITY, MOD_ELFINDER),
 				"Zoznam adresarov (kazdy na novom riadku) na ktore ziska pouzivatel prava ak nema ziadne definovane a konf. premenna fbrowserShowOnlyWritableFolders je nastavena na true. Vhodne na multiweb, kde viete takto nastavit defaultne prava (vie vykonat aj makro {DOMAIN_ALIAS}.");
 
-		setString("forceDownloadSuffixes", "", "files",
+		setString("forceDownloadSuffixes", "", MOD_FILES,
 				"Zoznam pripon oddelenych ciarkamy (napr. .doc,.xls,.pdf) pre ktore sa bude generovat HTTP hlavicka Content-Disposition: attachment pre vyvolanie stiahnutia suboru (namiesto jeho zobrazenia v prehliadaci)");
 
-		setBoolean("elfinderCreateFolderForPages", true, mods(MOD_EDITOR, "files.elfinder"),
+		setBoolean("elfinderCreateFolderForPages", true, mods(MOD_EDITOR, MOD_ELFINDER),
 				"Vytvara podadresare suborov pre Media tejto stranky pre podstranky v adresari (cize ak ma adresar podstranky tak kazda podstranka ma vlastny adresar pre Media tejto stranky)");
 
 		setString("ckeditor_removeButtons", "", MOD_EDITOR,
@@ -1809,7 +1838,7 @@ public class Constants {
 				"\t\t\t\t\t{ name: 'div', \t\t items: [ 'FloatDiv', 'FloatDivCopy', 'FloatDivDelete','FloatDivDeleteContent' ]}",
 				MOD_EDITOR, "Zoznam poloziek pre floatingtoolbar");
 
-		setBoolean("isGoogleAuthRequiredForAdmin", false, mods(MOD_SECURITY, "system.admin"),
+		setBoolean("isGoogleAuthRequiredForAdmin", false, mods(MOD_SECURITY, MOD_SYSTEM_ADMIN),
 				"Ak je nastavene na true tak je pri prihlaseni uzivatel nuteny vytvorit si google auth. token a prihlasovat sa vzdy aj s kodom ");
 
 		setInt("regUserDefaultUserId", -1, MOD_USER,
@@ -1817,7 +1846,7 @@ public class Constants {
 
 		setBoolean("springEnableShowdoc", true, MOD_PERFORMANCE,
 				"Nastavuje, ci sa ma pouzivat Spring pre komponenty, pre vysoko zatazene servre pri nepouzivani Spring komponent je mozne vypnut nastavenim na false");
-		setString("mapProvider", "OpenStreetMap", "apps.map",
+		setString("mapProvider", "OpenStreetMap", MOD_MAP,
 				"Nastavenie typu mapy pre komponentu map.jsp, moznosti su GoogleMap alebo OpenStreetMap");
 
 		setString("fileIndexerNoDataFileExtension", "", MOD_FILE_INDEXING,
@@ -1826,7 +1855,7 @@ public class Constants {
 		setString("userAfterSaveMethod", "", MOD_USER,
 				"Meno metody, ktora sa zavola po ulozeni pouzivatela. Napr. sk.iway.package.UserFormTools.afterSaveMethod, metoda ma predpis: public static void afterSaveMethod(HttpServletRequest request, UserDetails oldUser, UserDetails user)");
 
-		setString("ampObjects", "doc_data", "content.webpages",
+		setString("ampObjects", "doc_data", MOD_WEBPAGES,
 				"Zoznam objektov v requeste pre ktore sa aplikuje uprava HTML kodu pre AMP verziu");
 
 		setString("ldapSecurityPrincipalDn", "", MOD_NTLM,
@@ -1834,7 +1863,7 @@ public class Constants {
 
 		setBoolean("gdprAllowAllCookies", false, MOD_GDPR,
 				"Nastavenim na true sa povoli odosielanie vsetkych cookies bez ohladu na GDPR cookies policy. Je potrebne nastavit na true, ak sa pouziva externy GDPR modul na spravu cookies (alebo sa jedna napr. o intranet a podobne)");
-		setString("allowUploadToDirUserGroupId", "", mods("files.upload", MOD_SECURITY),
+		setString("allowUploadToDirUserGroupId", "", mods(MOD_UPLOAD, MOD_SECURITY),
 				"Povolenie uploadu pouzivatelskej skupine pre adresar, napr. /files/project/:25, kde /files/project/ je adresar a 25 je id pouzivatelskej skupiny. Pre vsetky podadresare staci nastavit url s *, napr. /files/project/*:25, je mozne zadat aj viacero definicii oddelenych ciarkou, napr. /files/project/*:25,/files/project/*:26");
 
 		setString("xssHtmlAllowedFieldsSystem",
@@ -1917,27 +1946,27 @@ public class Constants {
 
 		setBoolean("editor.unpublishBeforeSaveAs", false, MOD_EDITOR,
 				"Ak je true, tak pri ulozit ako sa zduplikovana stranka automaticky nastavi ako nepublikovana.");
-		setString("sk.iway.iwcm.qa.AddAction.sendAdminMail.url", "", "apps.qa", "url na qa/admin_answer.jsp komponentu");
+		setString("sk.iway.iwcm.qa.AddAction.sendAdminMail.url", "", MOD_QA, "url na qa/admin_answer.jsp komponentu");
 
 		setString("ninjaNbspReplaceRegex", "(\\s.{1,2})\\s\n$1&nbsp;", MOD_EDITOR,
 				"Regex vyraz a replacement pre nahradenie medzery za nbsp entitu po spojke.");
 		setString("httpsDnsNameMatchingExceptions", "", mods(MOD_SECURITY, MOD_NETWORK),
 				"Zoznam domen pre ktore je povolena vynimka verifikacie DNS nazvov s SSL certifikatom pri stahovani cez Tools.downloadUrl. Moznost zadat len suffix.");
-		setString("logoffRedirectUrl", "/", mods(MOD_SECURITY, "system.admin"), "Umozni presmerovanie na inu stranku po odhlaseni z WJ");
+		setString("logoffRedirectUrl", "/", mods(MOD_SECURITY, MOD_SYSTEM_ADMIN), "Umozni presmerovanie na inu stranku po odhlaseni z WJ");
 
-		setBoolean("sendMailSaveEmail", false, "system.email", "Umozni ulozenie emailov na file system");
-		setString("sendMailSaveEmailPath", "/WEB-INF/tmp/emails", "system.email", "Adresar pre ulozenie emailov");
+		setBoolean("sendMailSaveEmail", false, MOD_SYSTEM_EMAIL, "Umozni ulozenie emailov na file system");
+		setString("sendMailSaveEmailPath", "/WEB-INF/tmp/emails", MOD_SYSTEM_EMAIL, "Adresar pre ulozenie emailov");
 
-		setInt("domainIdCommon", 0, "system.multidomain",
+		setInt("domainIdCommon", 0, MOD_SYSTEM_MULTIDOMAIN,
 				"Nastavuje ID spolocnej domeny, ktora obsahuje spolocne objekty medzi domenami (napr. bannery, file archiv a podobne). Je potrebne len pre specificke ucely, bezne nie je potrebne hodnotu nastavit. Technicky pridava OR podmienky do SQl prikazov WHERE (domain_id=XXX OR domain_id=${domainIdCommon})");
 
 		setString("ldapNewAdminTemplatePermsUserLogin", "", MOD_NTLM,
 				"Moznost povolit automaticke vytvorenie admin pouzivatela pri LDAP prihlasovani. Pre zapnutie je potrebne do hodnoty nastavit login pouzivatela, z ktoreho sa budu synchronizovat prava na moduly pre noveho admin pouzivatela.");
 
-		setString("weatherSourceApi", "https://api.met.no/weatherapi/locationforecast/2.0/classic.xml", "apps.app-weather",
+		setString("weatherSourceApi", "https://api.met.no/weatherapi/locationforecast/2.0/classic.xml", MOD_APP_WEATHER,
 				"URL API pre stiahnutie pocasia pre intranet");
 
-		setString("structureMirroringConfig", "", "apps.structuremirroring",
+		setString("structureMirroringConfig", "", MOD_STRUCTURE_MIRRORING,
 				"Nastavenie zrkadlenia jazykovych verzii stranok. Na kazdom riadku je zoznam ID adresarov oddelenych ciarkou, ktore sa maju zrkadlit, riadok moze mat za znakom : poznamku. Priklad: 773,774,775:docmirroring.webjet.sk");
 
 		setString("mariaDbDefaultEngine", "MyISAM", MOD_DATABASE,
@@ -1974,9 +2003,9 @@ public class Constants {
 		setString("accessControlAllowedOrigins", "", MOD_CORS,
 				"Ak nie je prazdne, vyzaduje pri requeste hlavicku origin, ktorej hodnota sa musi nachadzat v tomto zozname (ciarkou oddeleny zoznam bez medzier). Nastavuje sa len pri generovani hlavicky Access-Control-Allow-Origin");
 
-		setString("bannerCampaignParamName", "utm_campaign", "apps.banner",
+		setString("bannerCampaignParamName", "utm_campaign", MOD_BANNER,
 					"Nazov parametra pri kampanovom banneri na zaklade jeho hodnoty viem zobrazit prislusny banner. Pri zmene vychodzej hodnoty je potrebne pridat vynimku do xsrfParamNameException.");
-		setString("bannerDefaultImageUrl", "", "apps.banner",
+		setString("bannerDefaultImageUrl", "", MOD_BANNER,
 					"URL pre obrazok bannera, ktory sa zobrazi ak nenajde ziaden iny banner na zaklade include parametrov.");
 
 		setString("reCaptchaSiteKey", "", MOD_CAPTCHA, "Site Key pre Google re-captcha");
@@ -1985,7 +2014,7 @@ public class Constants {
 
 		setString("logonTokenHeaderName", "x-auth-token", MOD_SECURITY, "Meno HTTP hlavicky v ktorej sa nachadza prihlasovaci token pre API pristup");
 
-		setInt("GroupsDB.parentGroupsCacheMinutes", 60, mods("content.webpages", MOD_PERFORMANCE), "Pocet minut cachovania zoznamu parent priecinkov.");
+		setInt("GroupsDB.parentGroupsCacheMinutes", 60, mods(MOD_WEBPAGES, MOD_PERFORMANCE), "Pocet minut cachovania zoznamu parent priecinkov.");
 	}
 
 	/**

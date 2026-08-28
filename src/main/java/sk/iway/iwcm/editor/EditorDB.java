@@ -1802,8 +1802,6 @@ public class EditorDB
 
 			if (requestPublish)
 			{
-				if (Constants.getBoolean("exportFlash")) XmlExport.flashExport("/flash_xml/"+my_form.getDocId()+".xml", my_form.getDocId());
-
 				//	toto dava info pre ApproveAction ze to zbehlo OK
 				request.setAttribute("saveOK", "true");
 			}

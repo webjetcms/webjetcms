@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -72,6 +75,22 @@ class ConfigurationModulePathTest {
 				assertTrue(ConfigurationModulePath.isValidPath(path), configuration.getName() + ": " + path);
 				String root = path.substring(0, path.indexOf('.') == -1 ? path.length() : path.indexOf('.'));
 				assertTrue(ROOT_MODULES.contains(root), configuration.getName() + ": " + path);
+			}
+		}
+	}
+
+	@Test
+	void everyCatalogModuleHasDeclaredConstant() throws IllegalAccessException {
+		Set<String> declaredModules = new HashSet<>();
+		for (Field field : Constants.class.getFields()) {
+			if (field.getType() == String.class && Modifier.isStatic(field.getModifiers()) && field.getName().startsWith("MOD_")) {
+				declaredModules.add((String) field.get(null));
+			}
+		}
+
+		for (ConfDetails configuration : Constants.getAllValues()) {
+			for (String module : ConfigurationModulePath.parse(configuration.getModules())) {
+				assertTrue(declaredModules.contains(module), configuration.getName() + ": missing MOD_* constant for " + module);
 			}
 		}
 	}
