@@ -114,8 +114,6 @@ public class SimpleQuery
 					ps.close();
 				if (db_conn != null)
 					db_conn.close();
-				//Return number of updated columns
-				return updateCount;
 			}
 			catch (Exception ex2)
 			{

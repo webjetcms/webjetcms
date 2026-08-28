@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.IntStream;
@@ -197,8 +197,9 @@ public class BloggerService {
         newUser.setForumRank(0);
         newUser.setRatingRank(0);
         newUser.setParentId(0);
-        newUser.setAdmin(true);
-        newUser.setAuthorized(true);
+        //Keep the account fail-closed until all rights, password and blogger structure are provisioned.
+        newUser.setAdmin(false);
+        newUser.setAuthorized(false);
 
         //First save password as null for save
         newUser.setPassword(null);
@@ -219,7 +220,7 @@ public class BloggerService {
         savedUser.setPassword( password );
 
         //Set user rights
-        setUserRights(newUserId);
+        if (setUserRights(newUserId) == false) return false;
 
         //Set user password
         boolean savedPassword = UserDetailsService.savePassword(password, newUserId);
@@ -228,51 +229,55 @@ public class BloggerService {
         //MAKE - blogger structure
         prepareBloggerStructure(savedUser, bloggerToSave.getEditableGroup(), userDetailsRepository, editorFacade, request);
 
+        //Activate the admin account only after the whole provisioning finished successfully.
+        if (userDetailsRepository.activateBlogger(savedUser.getId()) != 1) return false;
+        savedUser.setAdmin(true);
+        savedUser.setAuthorized(true);
+
         //Send welcome email
         AuthorizeUserService.sendInfoEmail(savedUser, password, UsersDB.getCurrentUser(request), request);
 
         return true;
     }
 
-    private static void setUserRights(int userId) {
-        (new SimpleQuery()).execute("DELETE FROM user_disabled_items WHERE user_id=?", userId);
-
-        StringBuilder sb = new StringBuilder("INSERT INTO user_disabled_items VALUES");
+    private static boolean setUserRights(int userId) {
         List<ModuleInfo> modules = Modules.getInstance().getModules();
 
         String[] defaulPerm = {"cmp_blog", "addPage", "pageSave", "deletePage", "addSubdir", "cmp_diskusia" };
         String[] bonusPerm = Tools.getTokens( Constants.getString("bloggerAppPermissions") , ",");
-        Set<String> duplicity = new HashSet<>();
+        Set<String> disabledItems = new LinkedHashSet<>();
         for(ModuleInfo module : modules){
-            //
             if(module == null || module.getItemKey() == null || Arrays.stream(defaulPerm).anyMatch(module.getItemKey()::equals) || Arrays.stream(bonusPerm).anyMatch(module.getItemKey()::equals)) continue;
 
-            //If duplicity, skip
-            if(duplicity.contains(module.getItemKey())==false) {
-                duplicity.add(module.getItemKey());
-                sb.append(" (").append(userId).append(",'").append(module.getItemKey()).append("'),");
-            }
+            disabledItems.add(module.getItemKey());
 
-            //Submodules
             if(module.getSubmenus() == null) continue;
             for (ModuleInfo subModule : module.getSubmenus()) {
-                //
                 if(subModule == null || subModule.getItemKey() == null || Arrays.stream(defaulPerm).anyMatch(subModule.getItemKey()::equals) || Arrays.stream(bonusPerm).anyMatch(subModule.getItemKey()::equals)) continue;
 
-                //If duplicity, skip
-                if(duplicity.contains(subModule.getItemKey())) continue;
-                duplicity.add(subModule.getItemKey());
-
-                sb.append(" (").append(userId).append(",'").append(subModule.getItemKey()).append("'),");
+                disabledItems.add(subModule.getItemKey());
             }
         }
 
-        //If SB does not contain cmp_blog_admin, add it
-        if( sb.indexOf("(" + userId + ",'cmp_blog_admin'),") == -1 ) sb.append(" (").append(userId).append(",'cmp_blog_admin'),");
+        //Blogger must never be able to manage other bloggers.
+        disabledItems.add("cmp_blog_admin");
 
-        //Remove last ','
-        sb.deleteCharAt(sb.length() - 1);
-        (new SimpleQuery()).execute(sb.toString());
+        List<String> sqlCommands = new ArrayList<>();
+        List<Object[]> sqlParameters = new ArrayList<>();
+        sqlCommands.add("DELETE FROM user_disabled_items WHERE user_id=?");
+        sqlParameters.add(new Object[] { userId });
+
+        for (String disabledItem : disabledItems) {
+            sqlCommands.add("INSERT INTO user_disabled_items (user_id, item_name) VALUES (?, ?)");
+            sqlParameters.add(new Object[] { userId, disabledItem });
+        }
+
+        try {
+            return (new SimpleQuery()).executeInTransaction(sqlCommands, sqlParameters);
+        } catch (RuntimeException ex) {
+            sk.iway.iwcm.Logger.error(ex);
+            return false;
+        }
     }
 
     /**
