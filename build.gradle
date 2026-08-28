@@ -574,8 +574,8 @@ bootRun {
         // AspectJ weaver agent (same as used in test task)
         //"-javaagent:${configurations.agent.singleFile}",
         // Recommended system properties for Tomcat (from old gretty config)
-        '-Dsun.net.client.defaultConnectTimeout=3000',
-        '-Dsun.net.client.defaultReadTimeout=3000',
+        '-Dsun.net.client.defaultConnectTimeout=300000',
+        '-Dsun.net.client.defaultReadTimeout=300000',
         '-Dfile.encoding=utf-8',
         '-Duser.language=sk',
         '-Duser.country=SK',
