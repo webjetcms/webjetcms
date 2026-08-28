@@ -98,21 +98,21 @@ public class ConstantsV9 {
 
 		Constants.setString("amchartLicense", "", Constants.MOD_STAT, "Licencny kluc pre amchart kniznicu");
 
-		Constants.setString("basketInvoiceBonusStatuses", "", Constants.MOD_CONFIG, "Bonusove statusy pre objednávku v sekcií Elektonický obchod. Formát: ID_STATUSU|PREKALDOVÝ_KĽÚČ\nID_STATUSU|PREKALDOVÝ_KĽÚČ. ID_STATUSU musí byť číslo väčšie rovné 10.");
+		Constants.setString("basketInvoiceBonusStatuses", "", Constants.MOD_BASKET, "Bonusove statusy pre objednávku v sekcií Elektonický obchod. Formát: ID_STATUSU|PREKALDOVÝ_KĽÚČ\nID_STATUSU|PREKALDOVÝ_KĽÚČ. ID_STATUSU musí byť číslo väčšie rovné 10.");
 
 		Constants.setBoolean("ABTestingAllowVariantUrl", false, "apps.abtest", "Nastavenim na true povoli priame zobrazenie variantnej URL adresy aj ne-administratorom, napr. volanie /investicie/abtestvariantb.html");
 
 		Constants.setBoolean("showDocMoveStyleToHead", false, Constants.mods(Constants.MOD_PERFORMANCE, Constants.MOD_EDITOR, "content.webpages"), "Pri nastaveni na true sa <style> tagy z komponent presunu do <head> sekcie pre validny HTML kod. Riesenie problemu s HTML validaciou kde style tagy nemozu byt v body.");
 
-		Constants.setBoolean("forumAlwaysNotifyPageAuthor", false, Constants.MOD_CONFIG, "Pri nastaveni na true sa budú odosielať notifikácie autorovi stránky s Diskusiou, vždy keď bude pridaná nová téma alebo odpoveď.");
+		Constants.setBoolean("forumAlwaysNotifyPageAuthor", false, "apps.forum", "Pri nastaveni na true sa budú odosielať notifikácie autorovi stránky s Diskusiou, vždy keď bude pridaná nová téma alebo odpoveď.");
 
 		Constants.setLong("licenseExpiryDate", 0L, Constants.MOD_STAT, "Datum exspiracie licencie v milisekundach");
 
-		Constants.setString("propertiesRestControllerAllowedKeysPrefixes", "", Constants.MOD_CONFIG, "Povolene prefixi prekladových kľúčov");
+		Constants.setString("propertiesRestControllerAllowedKeysPrefixes", "", Constants.MOD_SECURITY, "Povolene prefixi prekladových kľúčov");
 
 		Constants.setBoolean("monitoringEnableCountUsersOnAllNodes", true, "system.monitoring;system.performance", "Ak verejne nody nedokazu zapisovat do tabuly _conf_ nastavte na false pre vypnutie zapisu celkove poctu sessions");
 
-		Constants.setBoolean("webpagesNotifyAutorOnPublish", true, Constants.MOD_CONFIG, "Nastavenie odosielania notifikacie autorovi pri publikovani stranky.");
+		Constants.setBoolean("webpagesNotifyAutorOnPublish", true, "content.webpages", "Nastavenie odosielania notifikacie autorovi pri publikovani stranky.");
 
 		Constants.setInt("perexGroupsRenderAsSelect", 30, Constants.MOD_EDITOR, "Počet perex skupín pri ktorom sa perex začne zobrazovať ako multiselect");
 
@@ -175,7 +175,7 @@ public class ConstantsV9 {
 		Constants.setString("reservationAllDayStartTime", "14:00", "apps.reservation", "Hodina, od ktorej sa začína celodenná rezervácia");
 		Constants.setString("reservationAllDayEndTime", "10:30", "apps.reservation", "Hodina, do ktorej sa končí celodenná rezervácia");
 
-		Constants.setBoolean("virtualPathLastSlash", true, Constants.MOD_CONFIG, "If true, virtual path will have last slash for main pages in folder");
+		Constants.setBoolean("virtualPathLastSlash", true, "content.webpages", "If true, virtual path will have last slash for main pages in folder");
 
 		Constants.setString("defaultSenderName", "", Constants.mods(Constants.MOD_DMAIL, Constants.MOD_RESERVATION, Constants.MOD_FORMMAIL), "If set, it will be used as sender name. For modules dmail,reservation,formmail you can specify custom value by prefix. e.g. dmailDefaultSenderName.");
 		Constants.setString("defaultSenderEmail", "", Constants.mods(Constants.MOD_DMAIL, Constants.MOD_RESERVATION, Constants.MOD_FORMMAIL), "If set, it will be used as sender email. For modules dmail,reservation,formmail you can specify custom value by prefix. e.g. dmailDefaultSenderEmail.");
@@ -195,8 +195,8 @@ public class ConstantsV9 {
 		Constants.setString("deepl_model_type", "prefer_quality_optimized", "content.translations", "Špecifikuje, ktorý DeepL model by sa mal použiť na preklad.");
 
 		Constants.setString("mirroringMode", "mirror", "apps.structuremirroring", "Used to signalize that mirroring is running in basic mode mirroring or clonning");
-		Constants.setInt("cloneActionSrcId", -1, Constants.MOD_CONFIG,"Used to set SRC group id when performing clonning.");
-		Constants.setInt("cloneActionDestId", -1, Constants.MOD_CONFIG, "Used to set DEST group id when performing clonning.");
+		Constants.setInt("cloneActionSrcId", -1, "apps.structuremirroring","Used to set SRC group id when performing clonning.");
+		Constants.setInt("cloneActionDestId", -1, "apps.structuremirroring", "Used to set DEST group id when performing clonning.");
 
 		Constants.setBoolean("ABTestingForLoggedUser", false, "apps.abtest", "Ak je nastavené na true, tak sa pre neprihláseného používateľa vždy použije variant A, pre prihláseného vždy variant B.");
 
@@ -326,7 +326,7 @@ public class ConstantsV9 {
 		Constants.setInt("ragAnswerMaxCharacters", 6000, Constants.MOD_RAG, "Maximalny celkovy pocet znakov post-processovaneho kontextu, ktory sa pouzije pri generovani RAG odpovede.");
 		Constants.setInt("ragAnswerMaxMergedBlockCharacters", 2200, Constants.MOD_RAG, "Maximalny pocet znakov jedneho zluceneho kontextoveho bloku po spojeni susednych chunkov pre RAG odpoved.");
 
-		Constants.setString("searchType", "db", Constants.MOD_CONFIG, "Typ vyhladavania: db (databazove), lucene (Lucene fulltext), semantic (sémanticke vyhladavanie cez pgvector), hybrid (kombinace vektoroveho a fulltext vyhledavania)");
+		Constants.setString("searchType", "db", Constants.MOD_SEARCH, "Typ vyhladavania: db (databazove), lucene (Lucene fulltext), semantic (sémanticke vyhladavanie cez pgvector), hybrid (kombinace vektoroveho a fulltext vyhledavania)");
 
 		Constants.setInt("gdprDeleteDocAndGroupsAfterDays", 186, Constants.MOD_GDPR, "Koľko dní staré priečinky a stránky, ktoré sú v koši, sa majú vymazať (POZOR, nie ako dlho sú v koši).");
 	}
