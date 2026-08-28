@@ -50,6 +50,7 @@ public class Constants {
 	public static final String MOD_CAPTCHA = "security.captcha";
 	public static final String MOD_PASSWORD = "security.password";
 	public static final String MOD_THUMB = "files.thumb";
+	public static final String MOD_GDPR = "apps.gdpr";
 	public static final String MOD_FILE_ARCHIV = "files.file_archiv";
 	public static final String MOD_DMAIL = "apps.dmail";
 	public static final String MOD_RESERVATION = "apps.reservation";
@@ -1126,9 +1127,9 @@ public class Constants {
 		setInt("mp4StreamingBufferSize", 64000, mods(MOD_CONFIG, "files.video"),
 				"Velkost interneho buffera pre streaming mp4 suborov");
 
-		setString("disableCookiesCookieName", "cc_cookie_decline", MOD_CONFIG,
+		setString("disableCookiesCookieName", "cc_cookie_decline", MOD_GDPR,
 				"Hodnotou konstanty je nazov cookie premennej ktora ked ma hodnotu ako ma nastavena konfiguracna premenna disableCookiesCookieValue, tak nedovoli generovat nove cookies premenne ( Ak su generovane cez -> Tools.addCookie() )");
-		setString("disableCookiesCookieValue", "cc_cookie_decline", MOD_CONFIG,
+		setString("disableCookiesCookieValue", "cc_cookie_decline", MOD_GDPR,
 				"Hodnota ktoru musi obsahovat cookie pre konfiguracnu premennu disableCookiesCookieName");
 
 		setString("contextFilterAddPathReplaces", "", MOD_CONFIG,
@@ -1668,13 +1669,13 @@ public class Constants {
 		setBoolean("inlineEditingEnabledDefaultValue", false, MOD_EDITOR,
 				"Nastavenie defultnej hodnoty zapnutia/vypnutia editovacieho toolbaru");
 		setInt("searchActionMinimumWordLength", 3, MOD_SEARCH, "Minimalna dlzka slova na vyhladavanie");
-		setInt("gdprDeleteUserAfterDays", 730, MOD_CONFIG,
+		setInt("gdprDeleteUserAfterDays", 730, MOD_GDPR,
 				"Kontrola Gdpr spustena userom alebo cronom zmaze user profily starsie ako X dni");
-		setInt("gdprDeleteFormDataAfterDays", 730, MOD_CONFIG,
+		setInt("gdprDeleteFormDataAfterDays", 730, MOD_GDPR,
 				"Kontrola Gdpr spustena userom alebo cronom zmaze data formularov starsie ako X dni");
-		setInt("gdprDeleteUserBasketOrdersAfterYears", 10, MOD_CONFIG,
+		setInt("gdprDeleteUserBasketOrdersAfterYears", 10, MOD_GDPR,
 				"Kontrola Gdpr spustena userom alebo cronom zmaze z eshopu objednavky starsie ako X rokov");
-		setInt("gdprDeleteEmailsAfterDays", 186, MOD_CONFIG,
+		setInt("gdprDeleteEmailsAfterDays", 186, MOD_GDPR,
 				"Kontrola Gdpr spustena userom alebo cronom zmaze odoslane emaily starsie ako X dni");
 
 		setString("formMailFixedSenderEmail", "", "apps.formmail",
@@ -1708,11 +1709,11 @@ public class Constants {
 		setBoolean("elfinderFileArchiveEnabled", false, mods(MOD_FILE_ARCHIV),
 				"Po nastaveni na true sa integruje archivu suborov do okna pri vytvarani odkazu vo web stranke alebo nastavovani externej linky");
 
-		setString("gdprCookieClassifications", "nutne,preferencne,marketingove,statisticke,neklasifikovane", MOD_CONFIG,
+		setString("gdprCookieClassifications", "nutne,preferencne,marketingove,statisticke,neklasifikovane", MOD_GDPR,
 				"Typy cookie ktore user moze / musi odsuhlasit");
-		setString("gdprCookieName", "enableCookieCategory", MOD_CONFIG,
+		setString("gdprCookieName", "enableCookieCategory", MOD_GDPR,
 				"Nazov cookie, v ktorej su ulozene POVOLENE kategorie (klasifikacie) z premennej gdprCookieClassifications");
-		setBoolean("gdprInsertAllScriptsBeforeAccept", false, MOD_CONFIG,
+		setBoolean("gdprInsertAllScriptsBeforeAccept", false, MOD_GDPR,
 				"Vkladanie vsetkych skriptov pred odsuhlasenim cookies");
 
 		setBoolean("formmailScrollTopAfterSend", true, "apps.formmail",
@@ -1806,7 +1807,7 @@ public class Constants {
 		setString("ldapSecurityPrincipalDn", "", MOD_NTLM,
 				"Nastavi pre LDAP custom SECURITY_PRINCIPAL napr. cn=!USERNAME!,dc=ad,dc=interway,dc=sk s tym, ze !USERNAME! zameni za login. Pokial je prazdne pouzije sa ldapUsername+ldapDomainAppend");
 
-		setBoolean("gdprAllowAllCookies", false, MOD_SECURITY,
+		setBoolean("gdprAllowAllCookies", false, MOD_GDPR,
 				"Nastavenim na true sa povoli odosielanie vsetkych cookies bez ohladu na GDPR cookies policy. Je potrebne nastavit na true, ak sa pouziva externy GDPR modul na spravu cookies (alebo sa jedna napr. o intranet a podobne)");
 		setString("allowUploadToDirUserGroupId", "", MOD_CONFIG,
 				"Povolenie uploadu pouzivatelskej skupine pre adresar, napr. /files/project/:25, kde /files/project/ je adresar a 25 je id pouzivatelskej skupiny. Pre vsetky podadresare staci nastavit url s *, napr. /files/project/*:25, je mozne zadat aj viacero definicii oddelenych ciarkou, napr. /files/project/*:25,/files/project/*:26");
@@ -1886,7 +1887,7 @@ public class Constants {
 				"Zoznam JPA entit (meno triedy vratane package) pre ktore sa vypne auditovanie zmien. Znakom * sa uplne vypne auditing.");
 
 		setString("gdprCookieClassificationsDefault", "nutne,preferencne,marketingove,statisticke,neklasifikovane",
-				MOD_SECURITY,
+				MOD_GDPR,
 				"Zoznam cookies kategorii ktore maju byt defaultne oznacene, cize ked uzivatel akceptuje cookies bez toho ze by si zobrazil detail, setnu sa kategorie z tejto konf premennej. Zoznam cookies sa do premennej oddeluje ciarkou, napr nutne,statisticke,marketingove");
 
 		setBoolean("editor.unpublishBeforeSaveAs", false, MOD_EDITOR,
