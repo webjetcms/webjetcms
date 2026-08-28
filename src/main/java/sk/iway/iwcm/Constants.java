@@ -51,6 +51,7 @@ public class Constants {
 	public static final String MOD_PASSWORD = "security.password";
 	public static final String MOD_THUMB = "files.thumb";
 	public static final String MOD_GDPR = "apps.gdpr";
+	public static final String MOD_AUDIT = "system.audit";
 	public static final String MOD_FILE_ARCHIV = "files.file_archiv";
 	public static final String MOD_DMAIL = "apps.dmail";
 	public static final String MOD_RESERVATION = "apps.reservation";
@@ -289,7 +290,8 @@ public class Constants {
 		setBoolean("disableDMailSender", false, "apps.dmail",
 				"Ak je nastavene na true nebude sa na posielanie emailov pouzivat systemovy sender");
 
-		setString("loggerDateTimeFormat", "dd.MM H:mm:ss");
+		setString("loggerDateTimeFormat", "dd.MM H:mm:ss", MOD_AUDIT,
+				"Format datumu a casu v logu");
 
 		// deprecated - ak je nastavene na true bude sa virtualna cesta forwardovat
 		// namiesto redirectovat (ked nie je pouzity LinkType=HTML)
@@ -310,9 +312,11 @@ public class Constants {
 				"ak je nastavene na true tak sa pri vytvoreni stranky automaticky predvyplni datum zaciatku publikovania na aktualny");
 
 		// default log level
-		setString("logLevel", "normal", "system.adminlog;system.performance", "Uroven logovania, moze mat hodnotu debug alebo normal");
-		setBoolean("logShowClassName", false);
-		setBoolean("logShowInstallName", true);
+		setString("logLevel", "normal", MOD_AUDIT, "Uroven logovania, moze mat hodnotu debug alebo normal");
+		setBoolean("logShowClassName", false, MOD_AUDIT,
+				"Ak je nastavene na true, v logu sa zobrazi nazov triedy");
+		setBoolean("logShowInstallName", true, MOD_AUDIT,
+				"Ak je nastavene na true, v logu sa zobrazi nazov instalacie");
 
 		// dmail - casovy interval odosielania emailov
 		setInt("dmailWaitTimeout", 1000, "apps.dmail;system.performance",
@@ -523,7 +527,7 @@ public class Constants {
 		setInt("fileIndexerSortPriority", 999, "files",
 				"priorita root adresara file indexera, dalsie adresare sa nasobia hodnotou 10");
 
-		setInt("auditExceptionTimeout", 24 * 60, MOD_PERFORMANCE,
+		setInt("auditExceptionTimeout", 24 * 60, MOD_AUDIT,
 				"urcuje timeout pre logovanie rovnakej spravy pre audit (standardne 24 hodin)");
 
 		setBoolean("sortPriorityIncremental", true, MOD_EDITOR,
@@ -1024,13 +1028,13 @@ public class Constants {
 				"Možnosť aby sa používalo vyhľadávanie perex skupín miesto IN v documents na JOIN s mapovacou tabuľkou perex skupín - perex_group_doc");
 
 		// TB AuditLogFile
-		setString("auditFileLocation", "", MOD_CONFIG,
+		setString("auditFileLocation", "", MOD_AUDIT,
 				"Cesta k log suboru FileLoggera pre audit. Medzi Dvoma bodkami je pattern pre rotaciu logsuborov kompatibilny s triedou SimpleDateFormat. Príklad: /www/webjet/log/audit.YYYYMMddHH.log");
-		setString("auditLogGateway", "AuditLogGateway", MOD_CONFIG, "Konštanta auditLogGateway pre FileLogger");
-		setString("auditLogtype", "audit", MOD_CONFIG, "Konštanta auditLogType pre FileLogger");
-		setString("auditLogSeparator", "|", MOD_CONFIG, "Oddelovac zaznamov pre auditLogger");
-		setString("auditLogClient", "browser", MOD_CONFIG, "Konštanta auditLogClient pre FileLogger TB");
-		setString("auditLogEncoding", "windows-1250", MOD_CONFIG, "Kodovanie znakov suboru logu");
+		setString("auditLogGateway", "AuditLogGateway", MOD_AUDIT, "Konštanta auditLogGateway pre FileLogger");
+		setString("auditLogtype", "audit", MOD_AUDIT, "Konštanta auditLogType pre FileLogger");
+		setString("auditLogSeparator", "|", MOD_AUDIT, "Oddelovac zaznamov pre auditLogger");
+		setString("auditLogClient", "browser", MOD_AUDIT, "Konštanta auditLogClient pre FileLogger TB");
+		setString("auditLogEncoding", "windows-1250", MOD_AUDIT, "Kodovanie znakov suboru logu");
 
 		setString("contextPathAdmin", "", MOD_CONFIG,
 				"Context path pre CMS node v cluster konfiguracii ak je instalovany na iny ako ROOT kontext");
@@ -1262,7 +1266,7 @@ public class Constants {
 		setString("xFrameOptions", "SAMEORIGIN", MOD_SECURITY,
 				"Hodnota hlavicky X-Frame-Options pre ochranu pred CSRF utokom");
 
-		setBoolean("auditDontLogUsrlogon", false, MOD_SECURITY,
+		setBoolean("auditDontLogUsrlogon", false, MOD_AUDIT,
 				"Po nastaveni na true sa nebude auditovat bezne prihlasenie pouzivatela, vhodne na vysoko zatazeny intranet kde to zbytocne zahlcuje audit");
 
 		setInt("welcomeDataCacheMinutes", 60, MOD_PERFORMANCE, "pocet minut ulozenia dat do cache");
@@ -1493,7 +1497,7 @@ public class Constants {
 		setString("uploadFileActionReflectionLoader", "", MOD_CONFIG,
 				"Po uploade sa zavolaju nastavene triedy oddelene zankom | (sk.iway.vubintra.upload.UploadFile.checkFileClass|sk.iway.vubintra.upload.UploadFile2.checkFileClass). Metode sa poslu parametre - HttpServletRequest requsest, Identity user, String fileUrl");
 
-		setString("logInstallName", "", MOD_CONFIG,
+		setString("logInstallName", "", MOD_AUDIT,
 				"Meno instalacie ktore sa zobrazi v logu, pouziva sa ked na jednom tomcate mame viac hostov s rovnakym install name");
 
 		setString("wjImageViewer", "photoswipe", MOD_GALLERY,
@@ -1602,7 +1606,7 @@ public class Constants {
 
 		setBoolean("enableUnsafeHttpMethods", false, "security",
 				"Ak je nastavene na true, povolia sa aj HTTP metody OPTIONS,HEAD,TRACE ktore standardne nie su potrebne");
-		setString("adminlogCustomLogger", "", MOD_CONFIG,
+		setString("adminlogCustomLogger", "", MOD_AUDIT,
 				"Custom Adminlog trieda - umoznuje pracovat s auditnym zaznamom, napr ulozit do suboru. Ocakava FQN triedy ktora implementuje interface sk.iway.iwcm.AdminlogCustomLogger");
 
 		setString("newsAdminGroupIds", "", "apps.news", "Zoznam ID adresárov s novinkami. ID sú oddelené čiarkami.");
@@ -1835,9 +1839,9 @@ public class Constants {
 		setBoolean("enableJspJarPackaging", false, MOD_CONFIG,
 				"Povolenie hladania statickych a JSP suborov zabalenych v JAR archivoch");
 
-		setString("logLevels", "sk.iway.iwcm.io=INFO", MOD_CONFIG,
+		setString("logLevels", "sk.iway.iwcm.io=INFO", MOD_AUDIT,
 				"Zoznam packages s urovnou logovania (kazdy na novom riadku), napr. sk.iway=DEBUG sk.iway.iwcm=WARN org.springframework=WARN");
-		setString("logWebjetPackages", "sk.iway,cz.webactive", MOD_CONFIG,
+		setString("logWebjetPackages", "sk.iway,cz.webactive", MOD_AUDIT,
 				"Zoznam packages, ktorych log level sa prepina cez konf. premennu logLevel alebo URL parameter _logLevel");
 
 		setBoolean("authorizeRegeneratePassword", true, MOD_SECURITY,
@@ -1877,13 +1881,13 @@ public class Constants {
 				"Aktivuje synchronizaciu mena adresara a hlavnej stranky adresara");
 
 		setString("responseHeaders", "/admin:X-Accel-Buffering:no", MOD_CONFIG, "nastavi HTTP hlavicky pre url");
-		setString("auditHideProperties", "password,password2,password_salt,html_data", MOD_SECURITY,
+		setString("auditHideProperties", "password,password2,password_salt,html_data", MOD_AUDIT,
 				"Zoznam nazvov vlastnosti objektu, ktorych hodnota sa nebude auditovat, napr. password, do auditu sa pre taketo property vypisu len *****");
-		setInt("auditMaxChangeLength", 100, MOD_SECURITY,
+		setInt("auditMaxChangeLength", 100, MOD_AUDIT,
 				"Maximalny pocet znakov auditu pri porovnani zmien v databazovych entitach");
 		setString("auditJpaDisabledEntities",
 				"sk.iway.iwcm.components.domainRedirects.DomainRedirectBean,sk.iway.iwcm.system.UrlRedirectBean",
-				MOD_SECURITY,
+				MOD_AUDIT,
 				"Zoznam JPA entit (meno triedy vratane package) pre ktore sa vypne auditovanie zmien. Znakom * sa uplne vypne auditing.");
 
 		setString("gdprCookieClassificationsDefault", "nutne,preferencne,marketingove,statisticke,neklasifikovane",

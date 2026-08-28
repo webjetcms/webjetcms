@@ -36,9 +36,9 @@ public class ConstantsV9 {
 
 		Constants.setString("sk.iway.iwcm.qa.AddAction.sendAdminMail.url", "/apps/qa/admin/");
 
-		Constants.setBoolean("loggingInMemoryEnabled", false, "system.adminlog",
+		Constants.setBoolean("loggingInMemoryEnabled", false, Constants.MOD_AUDIT,
 				"Aktivovanie ukladania posledných log záznamov do pamäte pre jednoduchšiu kontrolu logov.");
-		Constants.setInt("loggingInMemoryQueueSize", 200, "system.adminlog",
+		Constants.setInt("loggingInMemoryQueueSize", 200, Constants.MOD_AUDIT,
 				"Maximalny počet log záznamov držaných v pamäti.");
 		Constants.setString("passwordHashAlgorithm", "bcrypt", Constants.MOD_PASSWORD, "Meno algoritmu pre hashovanie, možné hodnoty bcrypt alebo sha-512");
 		Constants.setInt("bcryptSaltRounds", 12, Constants.MOD_SECURITY, "log2 počtu opakovaní saltovania pri bcrypt algoritme hashovania hesiel");
@@ -183,7 +183,7 @@ public class ConstantsV9 {
 		Constants.setInt("sortPriorityIncrementGroup", 10, Constants.MOD_EDITOR, "Increment for sort priority for groups");
 		Constants.setInt("sortPriorityIncrementDoc", 10, Constants.MOD_EDITOR, "Increment for sort priority for pages");
 
-		Constants.setBoolean("loggerUseAnsiColors", false, "system.adminlog", "If true, logger will use ANSI colors for console output");
+		Constants.setBoolean("loggerUseAnsiColors", false, Constants.MOD_AUDIT, "If true, logger will use ANSI colors for console output");
 		Constants.setBoolean("fileArchivAllowPatternVersion", true, Constants.MOD_FILE_ARCHIV, "Ak je povolene (true), manažér dokumentov povolí vytváranie verzií pre súbory typu VZOR.");
 		Constants.setString("basketInvoiceSupportedCountries", ".sk,.cz,.pl", Constants.MOD_BASKET, "Which countries are supported for delivery. Format is TLD: .sk,.cz,.pl");
 		Constants.setString("basketStatsLegacyDeliveryGroupPath", "/System/ModeOfTransport", Constants.MOD_BASKET, "Path to the legacy delivery method documents used in basket statistics.");
@@ -208,7 +208,7 @@ public class ConstantsV9 {
 		Constants.setString("ai_openAi_generateFileNameModel", "gpt-5-mini", Constants.MOD_AI_ASSISTANTS, "Model that will be used to generate AI image file name");
 		Constants.setString("ai_gemini_generateFileNameModel", "gemini-pro-latest", Constants.MOD_AI_ASSISTANTS, "Model that will be used to generate AI image file name");
 		Constants.setString("ai_openRouter_generateFileNameModel", "openai/gpt-5-mini", Constants.MOD_AI_ASSISTANTS, "Model that will be used to generate AI image file name");
-		Constants.setInt("ai_auditMaxLength", 1000, Constants.MOD_AI_ASSISTANTS, "Maximal length of AI request/response stored in audit");
+		Constants.setInt("ai_auditMaxLength", 1000, Constants.mods(Constants.MOD_AI_ASSISTANTS, Constants.MOD_AUDIT), "Maximal length of AI request/response stored in audit");
 		Constants.setInt("ai_providerConnectTimeoutSeconds", 0, Constants.MOD_AI_ASSISTANTS, "AI provider connection timeout in seconds, 0 disables the timeout");
 		Constants.setInt("ai_providerResponseTimeoutSeconds", 0, Constants.MOD_AI_ASSISTANTS, "AI provider response timeout in seconds, 0 disables the timeout");
 
