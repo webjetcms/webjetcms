@@ -149,6 +149,14 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 		this.entityClass = entityClass;
 	}
 
+	/**
+	 * Returns the domain ID used by domain-aware repository operations.
+	 * @return effective repository domain ID
+	 */
+	protected int getDomainId() {
+		return CloudToolsForCore.getDomainId();
+	}
+
 	/***************************** CITANIE / ZAPIS DAT *****************************/
 
 	/**
@@ -223,7 +231,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 		//pridaj domainId podmienku ak entita obsahuje domainId stlpec (aby sa neaktualizovali entity v inej domene)
 		if (InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
 			if (bw.getPropertyType("domainId")!=null) {
-				exp = exp.and(builder.get("domainId").equal(CloudToolsForCore.getDomainId()));
+				exp = exp.and(builder.get("domainId").equal(getDomainId()));
 			}
 		}
 
@@ -383,7 +391,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 
 			if (checkDomainId) {
 				DomainIdRepository<T, ID> domainRepo = getDomainRepo();
-				if (domainRepo!=null) byId = domainRepo.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId());
+				if (domainRepo!=null) byId = domainRepo.findFirstByIdAndDomainId(id, getDomainId());
 			} else {
 				byId = repo.findById(id);
 			}
@@ -409,8 +417,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 			DomainIdRepository<T, ID> domainRepo = getDomainRepo();
 			if (domainRepo!=null) {
 				//ak nemame size parameter tak sa jedna o serverSide: false, takze pageable nemame pouzit
-				if (getRequest().getParameter("size")==null) page = new DatatablePageImpl<>(domainRepo.findAllByDomainId(CloudToolsForCore.getDomainId()));
-				else page = domainRepo.findAllByDomainId(CloudToolsForCore.getDomainId(), pageable);
+				if (getRequest().getParameter("size")==null) page = new DatatablePageImpl<>(domainRepo.findAllByDomainId(getDomainId()));
+				else page = domainRepo.findAllByDomainId(getDomainId(), pageable);
 			}
 		} else {
 			//ak nemame size parameter tak sa jedna o serverSide: false, takze pageable nemame pouzit
@@ -696,7 +704,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 			boolean hasDomainIdField = Arrays.stream(clazz.getDeclaredFields())
 				.anyMatch(field -> field.getName().equals("domainId"));
 			if (hasDomainIdField) {
-				whereClause = " WHERE domain_id = " + CloudToolsForCore.getDomainId();
+				whereClause = " WHERE domain_id = " + getDomainId();
 			}
 
 			// Get all valid column names from the entity class, because columns[] is unsafe input/parameter
@@ -790,7 +798,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 	 * @param entity entity instance to validate
 	 */
 	public void validateEditorForCustomFields(HttpServletRequest request, DatatableRequest<Long, T> target, Identity user, Errors errors, Long id, T entity) {
-		for(Character alphabet : CustomFieldsService.getRequiredFieldsAlphabets(new CustomFieldsSearchDto(entity))) {
+		for(Character alphabet : CustomFieldsService.getRequiredFieldsAlphabets(getCustomFieldsSearchDto(entity))) {
 			try {
 				BeanWrapperImpl bw = new BeanWrapperImpl(entity);
 				Object value = bw.getPropertyValue("field" + alphabet);
@@ -802,6 +810,16 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 				// Failsafe: if property fieldX does not exist, simply skip validation for it
 			}
 		}
+	}
+
+	/**
+	 * Returns the lookup context used to validate required custom fields.
+	 * Subclasses may override this when custom fields belong to a parent context.
+	 * @param entity edited entity
+	 * @return custom fields lookup context
+	 */
+	protected CustomFieldsSearchDto getCustomFieldsSearchDto(T entity) {
+		return new CustomFieldsSearchDto(entity);
 	}
 
 	/**
@@ -1190,7 +1208,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 			}
 
 			//pridaj do vyhladavania automaticky podmienku podla domain_id ak je potrebna
-			if (checkDomainId) predicates.add(builder.equal(root.get("domainId"), CloudToolsForCore.getDomainId()));
+			if (checkDomainId) predicates.add(builder.equal(root.get("domainId"), getDomainId()));
 
 			addSpecSearch(params, predicates, root, builder);
 
@@ -1387,15 +1405,16 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 
 			//tu nepouzijeme podmienku checkDomainId, aby sa domainId nastavilo vzdy a nezostalo NULL/0 aj ked je aktualne enableStaticFilesExternalDir vypnute (napr. na produkcii)
 			if (repo instanceof DomainIdRepository) {
-				//over, ci entita ma property domainId a ci sedi voci aktualnemu CloudToolsForCore.getDomainId()
+				//Verify that the entity domainId matches the effective repository domain ID.
 				BeanWrapperImpl bw = new BeanWrapperImpl(entity);
 				Integer domainId = (Integer)bw.getPropertyValue("domainId");
+				int repositoryDomainId = getDomainId();
 				if (domainId == null || domainId.intValue()<1 || datatableRequest.isInsert()) {
-					//domainId nie je nastavene, setni na aktualnu hodnotu
-					domainId = CloudToolsForCore.getDomainId();
+					//Set missing domainId to the effective repository domain ID.
+					domainId = repositoryDomainId;
 					bw.setPropertyValue("domainId", domainId);
 				} else {
-					if (CloudToolsForCore.getDomainId() != domainId.intValue()) {
+					if (repositoryDomainId != domainId.intValue()) {
 						//domainId nesedi, je to nejaka manipulacia s datami, vyhod chybu
 						throwError("datatables.error.domainId");
 					}

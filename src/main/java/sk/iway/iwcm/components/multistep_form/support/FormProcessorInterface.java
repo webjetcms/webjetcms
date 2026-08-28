@@ -21,7 +21,7 @@ public interface FormProcessorInterface {
      * Validates user-submitted data for a specific step of a multistep form.
      *
      * @param formName logical identifier of the form
-     * @param currentStepId ID of the step being validated
+     * @param stepEntity step being validated
      * @param stepData JSON payload containing the step fields and values
      * @param request current HTTP request for context and additional data
      * @param errors mutable map to collect field or general error messages (key → message)
@@ -34,7 +34,7 @@ public interface FormProcessorInterface {
      * a verification code to email or SMS.
      *
      * @param formName logical identifier of the form
-     * @param currentStepId ID of the step that was submitted
+     * @param stepEntity step that was submitted
      * @param stepData JSON payload containing the step fields and values
      * @param request current HTTP request for context and additional data
      * @param errors mutable map to collect error messages produced by the interceptor

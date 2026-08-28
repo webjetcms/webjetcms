@@ -71,7 +71,7 @@ If you don't want AI tools options to appear for a field in an entity, simply se
 
 ### Card - Provider
 
-This tab is used to select the AI ​​service provider that will be used to process the assistant request. The selection field displays all available and correctly configured providers (for example, those with a specified API key). After selecting a specific provider, additional specific settings may appear according to the capabilities of that provider. For example, with provider `OpenAI`, it is possible to select a specific model for processing the request, while other providers may offer different or limited configuration options.
+This tab is used to select the AI ​​service provider that will be used to process the assistant request. The selection box displays all available providers; for providers without the required configuration, the name is appended with the warning **not configured**. For configured server providers, the list of models is loaded directly from their API and cached separately by provider, domain, and effective configuration. After selecting a provider, only the fields supported by its CMS adapter are displayed; for example, a browser provider does not display its own model selection.
 
 ![](datatable-provider-tab.png)
 

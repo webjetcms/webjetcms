@@ -21,6 +21,21 @@ public interface IndexQueueRepository extends DomainIdRepository<IndexQueueEntit
 
     List<IndexQueueEntity> findTop500ByOrderByCreateDateAsc();
 
+    /** @return highest queue ID present at the start of a cron run, or {@code null} for an empty queue */
+    @Query("SELECT MAX(q.id) FROM IndexQueueEntity q")
+    Long findMaxId();
+
+    /**
+     * Returns the next stable queue batch within a cron run's initial ID snapshot.
+     * The cursor ensures failed or undeletable rows are attempted only once per run,
+     * while later rows from the same snapshot can still be processed.
+     *
+     * @param afterId last queue ID attempted in the current run
+     * @param maxId highest queue ID included in the current run
+     * @return up to 500 subsequent queue rows
+     */
+    List<IndexQueueEntity> findTop500ByIdGreaterThanAndIdLessThanEqualOrderByIdAsc(Long afterId, Long maxId);
+
     @Modifying
     @Transactional
     @Query("DELETE FROM IndexQueueEntity q WHERE q.entityType = :entityType AND q.entityId = :entityId AND q.domainId = :domainId")

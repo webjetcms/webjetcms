@@ -21,7 +21,7 @@
         <jndiName>jndi-rag-jpa</jndiName>
         <driver>org.postgresql.Driver</driver>
 
-        <url>jdbc:postgresql://host.docker.internal:15432/webjetcms_autotest_web?currentSchema=public</url>
+        <url>jdbc:postgresql://host.docker.internal:15432/webjetcms_autotest_web?currentSchema=public,webjet_cms</url>
 
         <username>webjetcms_autotest_web</username>
         <password>${WEBJET_DB_PASS}</password>

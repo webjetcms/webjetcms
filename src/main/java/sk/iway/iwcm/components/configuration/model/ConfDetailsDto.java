@@ -16,7 +16,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Getter
 public class ConfDetailsDto extends ConfDetails {
 
-	@DataTableColumn(
+    @DataTableColumn(
         inputType = DataTableColumnType.ID,
         tab = "basic",
         filter = false,
@@ -29,6 +29,12 @@ public class ConfDetailsDto extends ConfDetails {
         }
     )
     private Long id;
+
+    /** Current value rendered in the table while the inherited value remains suitable for editing. */
+    private String displayValue;
+
+    /** Indicates that the current node value differs from the value stored in the database. */
+    private boolean runtimeValueDifferent;
 
 	@DataTableColumn(
         inputType = DataTableColumnType.TEXT,
@@ -70,10 +76,27 @@ public class ConfDetailsDto extends ConfDetails {
 
     @DataTableColumn(
         hidden = true,
+        inputType = DataTableColumnType.BOOLEAN,
+        title = "admin.conf_editor.set_temporary",
+        tab = "basic",
+        sortAfter = "encrypt",
+        className = "not-export",
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = "data-dt-import-hidden", value = "true")
+                }
+            )
+        }
+    )
+    private boolean temporary;
+
+    @DataTableColumn(
+        hidden = true,
         inputType = DataTableColumnType.DATETIME,
         title = "admin.conf_editor.change_from",
         tab = "basic",
-        sortAfter = "encrypt",
+        sortAfter = "temporary",
         className = "not-export",
         editor = {
             @DataTableColumnEditor(

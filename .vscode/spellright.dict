@@ -28,7 +28,9 @@ Angular
 anonymizovaná
 anonymizovane
 anonymizovaný
+anotovaná
 Anotované
+anotovanú
 anotovaný
 ANT
 antivírus
@@ -104,6 +106,7 @@ Builder
 Builderi
 buildu
 BVSSLA
+Cachovať
 cachuje
 callback
 Captcha
@@ -372,6 +375,7 @@ jstree
 jsTreeDocumentOpener
 JTB
 Keycloak
+klastra
 klastrovom
 klikateľné
 klikateľnú
@@ -462,6 +466,7 @@ našepkávaču
 naštýlovaný
 naštýlovať
 neaktivity
+neanotovanú
 nekonzistencii
 nekonzistentnosť
 nepoužívajúce
@@ -471,6 +476,7 @@ nespárujú
 nevyhladateľná
 newsletter
 newsletterov
+Nezapisovateľní
 Ninja
 Nothing
 notifikáciám
@@ -627,11 +633,14 @@ repozitári
 repozitároch
 repozitárom
 repozitárov
+repozitárových
 repozitáru
 requiredFields
 resetovanie
 resetovaný
 Resetovať
+resolvera
+Resolveru
 Responzíva
 Responzívna
 responzívne
@@ -642,6 +651,9 @@ restové
 Reštartnite
 reštartovania
 reštartovaniu
+reťazcové
+reťazcového
+reťazcových
 roadmap
 Rollback
 rolovateľné
@@ -841,6 +853,7 @@ zastrešujúca
 zip
 Zmigrovaný
 zmigrovať
+zneplatní
 zobraziteľná
 zobraziteľný
 zobraziteľných

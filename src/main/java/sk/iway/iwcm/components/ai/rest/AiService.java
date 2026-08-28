@@ -80,8 +80,17 @@ public class AiService {
 
     public List<LabelValue> getModelOptions(String provider, Prop prop, HttpServletRequest request) {
         List<LabelValue> supportedValues = new ArrayList<>();
+        AiInterface providerInterface = null;
+        for (AiInterface aiInterface : aiInterfaces) {
+            if (aiInterface.getProviderId().equals(provider)) {
+                providerInterface = aiInterface;
+                break;
+            }
+        }
+        if (providerInterface == null || providerInterface.isInit() == false) return supportedValues;
+
         String cacheKey = CACHE_OPTION_KEYS + provider + "."
-            + configurationService.modelCacheDiscriminator(provider, request);
+            + configurationService.modelCacheDiscriminator(providerInterface, request);
 
         //First check, if they are cached
         try {
@@ -94,12 +103,7 @@ public class AiService {
         }
 
         //No cached, get them from PROVIDER
-        for(AiInterface aiInterface : aiInterfaces) {
-            if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(provider)) {
-                supportedValues = aiInterface.getSupportedModels(prop, request);
-                break;
-            }
-        }
+        supportedValues = providerInterface.getSupportedModels(prop, request);
 
         if(supportedValues.size() < 1) return supportedValues;
 

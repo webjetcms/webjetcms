@@ -9,6 +9,7 @@
 [Components](.github/agents/AGENTS-components.md)
 [Common](.github/agents/AGENTS-common.md)
 [Utils](.github/agents/AGENTS-utils.md)
+[Design](.github/agents/AGENTS-design.md)
 
 For canonical agent guidance and conventions, use [.github/agents/AGENTS.md](.github/agents/AGENTS.md).
 

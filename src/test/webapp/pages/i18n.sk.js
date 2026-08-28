@@ -76,6 +76,7 @@ module.exports = {
             "An error occurred while calling AI assistant": "Nastala chyba pri volaní AI asistenta",
             "PassKey": "Prístupový kľúč",
             "Thumbnail": "Miniatúra",
+            "Submit": "Potvrdiť",
         }
     }
 }

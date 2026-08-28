@@ -23,8 +23,14 @@ import static org.junit.jupiter.api.Assertions.*;
 @Execution(ExecutionMode.SAME_THREAD)
 class PathFilterSecurityTest extends BaseWebjetTest {
 
+    private static final String[] JSP_FILE_EXTENSIONS = {
+        "jsp", "jspx", "jspf", "jsw", "jsv", "jspa", "jhtml", "tag", "tagx", "tagf"
+    };
+
     private Method isPathBlockedMethod;
     private Method isPathSafeMethod;
+    private Method isUploadPathBlockedMethod;
+    private Method isUploadRequestBlockedMethod;
 
     public PathFilterSecurityTest() throws Exception {
         // Get private methods via reflection
@@ -32,6 +38,10 @@ class PathFilterSecurityTest extends BaseWebjetTest {
         isPathBlockedMethod.setAccessible(true);
         isPathSafeMethod = PathFilter.class.getDeclaredMethod("isPathSafe", String.class);
         isPathSafeMethod.setAccessible(true);
+        isUploadPathBlockedMethod = PathFilter.class.getDeclaredMethod("isJspFromStaticFiles", String.class);
+        isUploadPathBlockedMethod.setAccessible(true);
+        isUploadRequestBlockedMethod = PathFilter.class.getDeclaredMethod("isJspFromStaticFiles", String.class, String.class);
+        isUploadRequestBlockedMethod.setAccessible(true);
     }
 
     // --- Tests for isPathBlocked ---
@@ -146,6 +156,49 @@ class PathFilterSecurityTest extends BaseWebjetTest {
     void testIsPathSafe_BackslashBlocked() throws Exception {
         assertFalse((Boolean) isPathSafeMethod.invoke(null, "/admin/doc\\file"),
             "Path with backslash should be blocked");
+    }
+
+    // --- Tests for JSP/Jasper files under upload roots ---
+
+    @Test
+    void testIsUploadPathBlocked_BlocksJSPFamily() throws Exception {
+        String[] uploadRoots = { "/images/", "/files/", "/shared/" };
+
+        for (String uploadRoot : uploadRoots) {
+            for (String extension : JSP_FILE_EXTENSIONS) {
+                String path = uploadRoot + "shell." + extension;
+                assertTrue((Boolean) isUploadPathBlockedMethod.invoke(null, path),
+                    path + " should be blocked");
+            }
+        }
+
+        assertTrue((Boolean) isUploadPathBlockedMethod.invoke(null, "/files/shell.JsPx"),
+            "JSP-family checks should be case-insensitive");
+    }
+
+    @Test
+    void testIsUploadPathBlocked_DoesNotBlockOtherFileTypes() throws Exception {
+        assertFalse((Boolean) isUploadPathBlockedMethod.invoke(null, "/images/photo.jpg"));
+        assertFalse((Boolean) isUploadPathBlockedMethod.invoke(null, "/files/download.png"));
+        assertFalse((Boolean) isUploadPathBlockedMethod.invoke(null, "/shared/application.css"));
+        assertFalse((Boolean) isUploadPathBlockedMethod.invoke(null, "/components/shell.txt"));
+    }
+
+    @Test
+    void testIsUploadPathBlocked_PreservesDirectoryBlocking() throws Exception {
+        assertTrue((Boolean) isUploadPathBlockedMethod.invoke(null, "/images/gallery/"));
+        assertTrue((Boolean) isUploadPathBlockedMethod.invoke(null, "/files/docs/"));
+        assertTrue((Boolean) isUploadPathBlockedMethod.invoke(null, "/shared/data/"));
+    }
+
+    @Test
+    void testIsUploadRequestBlocked_UsesDecodedServletPath() throws Exception {
+        assertTrue((Boolean) isUploadRequestBlockedMethod.invoke(
+            null, "/files/shell%2ejspx", "/files/shell.jspx"),
+            "The decoded servlet path should block an encoded JSPX extension");
+        assertFalse((Boolean) isUploadRequestBlockedMethod.invoke(
+            null, "/files/document%2epdf", "/files/document.pdf"),
+            "Safe encoded file extensions should remain accessible");
     }
 
     // --- Tests for resetBlockedPaths ---

@@ -53,8 +53,13 @@ public class AiStatService {
     private static final int PIE_CHART_TOP_N = 5;
 
     public static final void addRecord(Long assistantId, Integer usedTokens, AiStatRepository statRepo, HttpServletRequest request) {
+        addRecord(assistantId, usedTokens, statRepo, request, CloudToolsForCore.getDomainId());
+    }
+
+    public static final void addRecord(Long assistantId, Integer usedTokens, AiStatRepository statRepo, HttpServletRequest request, int domainId) {
         if(statRepo == null) throw new IllegalStateException("AiStatRepository is not provided");
         if(assistantId == null) throw new IllegalStateException("Assitant is not specified");
+        if(domainId < 1) throw new IllegalStateException("Domain is not specified");
 
         AiStatEntity newStatRecord = new AiStatEntity();
         newStatRecord.setAssistantId(assistantId);
@@ -71,7 +76,7 @@ public class AiStatService {
                 newStatRecord.setUserId((long)requestBean.getUserId());
             }
         }
-        newStatRecord.setDomainId(CloudToolsForCore.getDomainId());
+        newStatRecord.setDomainId(domainId);
         statRepo.save(newStatRecord);
     }
 

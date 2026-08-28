@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
@@ -12,9 +13,13 @@ import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
+import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
+import sk.iway.iwcm.components.customfields.rest.CustomFieldsService;
 import sk.iway.iwcm.editor.FieldType;
 import sk.iway.iwcm.editor.rest.Field;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -23,12 +28,9 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
 @Getter
 @Setter
-public class EnumerationDataEditorFields {
+public class EnumerationDataEditorFields extends BaseEditorFields {
 
-    private List<Field> fieldsDefinition;
-
-    private static final Integer STRING_FIELDS_COUNT = 12;
-    private static final String STRING_PREFIX = "string";
+    private static final char LAST_STRING_FIELD = 'L';
 
     private static final Integer DECIMAL_FIELDS_COUNT = 4;
     private static final String DECIMAL_PREFIX = "decimal";
@@ -65,7 +67,7 @@ public class EnumerationDataEditorFields {
                 attr = {
                     @DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/enumeration/enumeration-data/autocomplete-parent"),
                     @DataTableColumnEditorAttr(key = "data-ac-min-length", value = "1"),
-                    @DataTableColumnEditorAttr(key = "data-ac-params", value = "#DTE_Field_typeId, #DTE_Field_string1"),
+                    @DataTableColumnEditorAttr(key = "data-ac-params", value = "#DTE_Field_typeId, #DTE_Field_fieldA"),
                     @DataTableColumnEditorAttr(key = "data-ac-select", value = "true"),
                     @DataTableColumnEditorAttr(key = "data-ac-render-item-fn", value = "disableDeletedEnum")
                 }
@@ -75,7 +77,7 @@ public class EnumerationDataEditorFields {
     private String parentEnumDataName;
 
     public void fromEnumerationData(EnumerationDataBean entity, EnumerationTypeBean typeEntity, boolean addFields, Prop prop) {
-        fieldsDefinition = new ArrayList<>();
+        setFieldsDefinition(new ArrayList<>());
 
         String prefixForHidden = prop.getText("enum_type.deleted_type_mark.js");
         if(entity.getChildEnumerationType() != null) {
@@ -89,7 +91,7 @@ public class EnumerationDataEditorFields {
         }
 
         if(addFields == true) {
-            prepareAndAddFields(STRING_PREFIX, STRING_FIELDS_COUNT, entity, typeEntity);
+            prepareAndAddStringFields(entity, typeEntity);
             prepareAndAddFields(DECIMAL_PREFIX, DECIMAL_FIELDS_COUNT, entity, typeEntity);
             prepareAndAddFields(BOOLEAN_PREFIX, BOOLEAN_FIELDS_COUNT, entity, typeEntity);
             prepareAndAddFields(DATE_PREFIX, DATE_FIELDS_COUNT, entity, typeEntity);
@@ -166,6 +168,36 @@ public class EnumerationDataEditorFields {
         }
     }
 
+    private void prepareAndAddStringFields(EnumerationDataBean dataEntity, EnumerationTypeBean typeEntity) {
+        CustomFieldsSearchDto searchDto = new CustomFieldsSearchDto(EnumerationDataBean.class.getName(), typeEntity.getId());
+        Map<Character, CustomFieldsEntity> customFields = CustomFieldsService.getCustomFieldsMap(searchDto);
+        List<Field> stringFields = getFields(dataEntity, "enumeration", LAST_STRING_FIELD, searchDto);
+        setFieldsDefinitionAutocompleteUrl("/admin/rest/enumeration/enumeration-data/autocomplete-field");
+
+        for (int i = 0; i < stringFields.size(); i++) {
+            Field field = stringFields.get(i);
+            char alphabet = (char) ('A' + i);
+            BeanWrapper bwType = new BeanWrapperImpl(typeEntity);
+            String label = (String) bwType.getPropertyValue("string" + (i + 1) + "Name");
+
+            if (Tools.isEmpty(label)) {
+                field.setLabel(null);
+                field.setType(FieldType.NONE.name().toLowerCase());
+                field.setRequired(false);
+            } else {
+                field.setLabel(label);
+                if (customFields.get(alphabet) == null) {
+                    field.setType(FieldType.TEXT.name().toLowerCase());
+                    field.setMaxlength(1024);
+                    field.setRequired(false);
+                    field.setTooltip(null);
+                }
+            }
+        }
+
+        setFieldsDefinition(stringFields);
+    }
+
     private void prepareAndAddFields(String prefix, Integer count, EnumerationDataBean dataEntity, EnumerationTypeBean typeEntity) {
         for(Integer i = 1; i <= count; i++) {
             try {
@@ -181,13 +213,7 @@ public class EnumerationDataEditorFields {
                 if(label == null || label.isEmpty()) {
                     newField.setType(FieldType.NONE.name().toLowerCase());
                 } else {
-                    if(prefix.equals(STRING_PREFIX)) {
-                        fieldValue = (String)bwData.getPropertyValue(prefix + i);
-                        newField.setType(FieldType.TEXT.name().toLowerCase());
-                        newField.setLabel(label);
-                        newField.setMaxlength(1024);
-                    }
-                    else if(prefix.equals(DECIMAL_PREFIX)) {
+                    if(prefix.equals(DECIMAL_PREFIX)) {
                         BigDecimal tmpDecimal = (BigDecimal)bwData.getPropertyValue(prefix + i);
                         fieldValue = tmpDecimal != null ? tmpDecimal.toString() : null;
                         newField.setType(FieldType.NUMBER.name().toLowerCase());
@@ -206,7 +232,7 @@ public class EnumerationDataEditorFields {
                     }
                     newField.setValue(fieldValue);
                 }
-                fieldsDefinition.add(newField);
+                getFieldsDefinition().add(newField);
             } catch (Exception ex) {
                 Logger.error(EnumerationDataEditorFields.class, ex);
             }

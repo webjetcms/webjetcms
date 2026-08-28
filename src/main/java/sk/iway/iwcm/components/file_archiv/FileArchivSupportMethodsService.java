@@ -169,8 +169,10 @@ public abstract class FileArchivSupportMethodsService {
 		{
 			for(FileArchivatorBean fab2: fabHashList) {
 				//odstranime archivy a vzory
-				if(fab2.getReferenceId() == -1 && (!removePattern || Tools.isEmpty(fab2.getReferenceToMain())))
+				if(fab2.getReferenceId() == -1 && (!removePattern || Tools.isEmpty(fab2.getReferenceToMain()))) {
+					Logger.debug(FileArchiveService.class, "Same hash " + newFab.getMd5() + " in file: " + fab2.getVirtualPath());
 					sameFiles.add(fab2);
+				}
 			}
 		}
 	}

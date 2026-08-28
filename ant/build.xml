@@ -99,6 +99,9 @@
         <exec executable="./gradlew" failonerror="true">
             <arg value="javadoc"/>
         </exec>
+        <exec executable="./gradlew">
+            <arg value="delombok"/>
+        </exec>
     </target>
 
     <target name="expandwar" depends="setup,copyNodeModules" description="Expands war archive">
@@ -149,7 +152,7 @@
 
     </target>
 
-    <target name="makejars" depends="define-artifact-properties,expandwar,compile" description="prepare all jar files">
+    <target name="makejars" depends="define-artifact-properties,expandwar" description="prepare all jar files">
         <delete file="${artifact.dir}/${artifact.name}-${artifact.version}.jar" />
         <jar compress="${compress}" jarfile="${artifact.dir}/${artifact.name}-${artifact.version}.jar" defaultexcludes="true">
             <fileset dir="${root}/WebContent/WEB-INF/classes">
@@ -194,7 +197,7 @@
 
         <delete file="${artifact.dir}/${artifact.name}-${artifact.version}-sources.jar" />
         <jar compress="${compress}" jarfile="${artifact.dir}/${artifact.name}-${artifact.version}-sources.jar" defaultexcludes="true">
-            <fileset dir="${root}/src-delombok">
+            <fileset dir="${root}/../../build/generated/sources/delombok/java/main">
                 <include name="com/**"/>
                 <include name="cn/**"/>
                 <include name="cvu/**"/>
@@ -326,7 +329,7 @@
             </fileset>
         </copy>
         <copy todir="${finalwar}/WEB-INF/classes/sk/iway/" overwrite="true">
-            <fileset dir="${root}/WebContent/WEB-INF/classes/sk/iway">
+            <fileset dir="${root}/../../build/classes/java/main/sk/iway">
                 <include name="aceintegration/**"/>
                 <include name="basecms/**"/>
                 <include name="demo8/**"/>
@@ -347,10 +350,6 @@
             </zipfileset>
         </zip>
 
-    </target>
-
-    <target name="compile" depends="expandwar" description="compile all classes">
-        <ant antfile="compile.xml" inheritAll="false" target="compile" dir="ant" useNativeBasedir="true"/>
     </target>
 
     <target name="makepom" depends="define-artifact-properties,makejars" description="create POM file for deployment">
@@ -403,7 +402,6 @@
             </zipfileset>
             <zipfileset dir="src/main/resources/META-INF/" prefix="WEB-INF/classes/META-INF">
                 <include name="persistence-webjet.xml"/>
-                <include name="aop-ajc.xml"/>
             </zipfileset>
         </zip>
     </target>
@@ -431,7 +429,6 @@
             </zipfileset>
             <zipfileset dir="src/main/resources/META-INF/" prefix="WEB-INF/classes/META-INF">
                 <include name="persistence-webjet.xml"/>
-                <include name="aop-ajc.xml"/>
             </zipfileset>
         </zip>
     </target>

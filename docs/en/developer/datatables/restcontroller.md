@@ -145,6 +145,41 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
 }
 ```
 
+## Filtering by domain
+
+If the Spring DATA repository implements the `DomainIdRepository` interface, the `DatatableRestControllerV2` class works with the value `domainId`. When reading, automatic filtering is activated for MultiWeb/Cloud installations or when the `enableStaticFilesExternalDir` configuration variable is enabled. When writing, the missing `domainId` is always added for such a repository and it is verified that the value sent corresponds to the expected domain.
+
+The expected domain is returned by the protected method `getDomainId()`. Its default implementation uses the current domain from `CloudToolsForCore.getDomainId()`. The value is used in standard retrieval of one or all records, deletion, searching for a record via `findItemBy`, calculating sums, and when appending or checking `domainId` during storage.
+
+If the controller is to work with a domain other than the current one, override the `getDomainId()` method. Use the same method in the controller's own repository queries:
+
+```java
+@Override
+protected int getDomainId() {
+    return DomainIdScopeResolver.resolve(EnumerationDataBean.class);
+}
+```
+
+In the example, the controller manages auxiliary records `CustomFieldsEntity`, but their domain scope is determined by `EnumerationDataBean`. Therefore, the annotated context class is passed to the resolver, not necessarily the entity type used in the repository.
+
+The annotation [`@DomainIdCommon`](../../../../src/main/java/sk/iway/iwcm/system/multidomain/DomainIdCommon.java) indicates an entity whose data is common to all domains. It is available during application runtime and also applies to subclasses. It is evaluated by the class [`DomainIdScopeResolver`](../../../../src/main/java/sk/iway/iwcm/system/multidomain/DomainIdScopeResolver.java):
+
+- for an annotated class, returns the value of the configuration variable `domainIdCommon` ; if it is not set to a positive number, uses the domain `1`,
+- for an unannotated or unknown class, returns the current domain,
+- the class can be specified as `Class<?>` or its full name (`FQDN`).
+
+You mark an entity as follows:
+
+```java
+@Entity
+@DomainIdCommon
+public class EnumerationDataBean {
+    // ...
+}
+```
+
+The annotation itself does not automatically change database queries. The controller must use `DomainIdScopeResolver` in the overridden method `getDomainId()`, and services with their own queries must use the resolver result explicitly. Therefore, use the annotation only for data that is actually to be shared and modified across domains.
+
 ## Methods for data manipulation
 
 You can also construct a class with a ```NULL``` repository, in which case you need to implement methods for working with the data:

@@ -12,6 +12,7 @@
             { id: 'numbers', title: '[[#{enum_type.numbers}]]'},
             { id: 'booleans', title: '[[#{enum_type.booleans}]]'},
             { id: 'dates', title: '[[#{enum_type.dates}]]'},
+            { id: 'stringFieldTypes', title: '[[#{enum_type.string_field_types}]]', hideOnCreate: true},
         ];
 
     window.domReady.add(function () {
@@ -27,6 +28,90 @@
             customFieldsUpdateColumns: true,
             fetchOnCreate: true,
             fetchOnEdit: true
+        });
+
+        window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
+            if(event.detail.conf.id !== "DTE_Field_editorFields.stringFieldTypes") return;
+
+            const innerTable = event.detail.conf.datatable;
+
+            innerTable.EDITOR.on("open", function(e, mode, action) {
+                const editor = innerTable.EDITOR;
+                const openedAlphabet = action === "edit" ? String(editor.field("alphabet").val() || "") : "";
+                ["className", "entityId", "label", "bonusClassName", "bonusEntityId"].forEach(function(fieldName) {
+                    if(editor.fields().includes(fieldName)) editor.field(fieldName).hide();
+                });
+
+                if(action === "edit") {
+                    const alphabet = openedAlphabet;
+                    const alphabetOptions = innerTable.DATA.jsonOptions.alphabet;
+                    let selectedOption = Array.isArray(alphabetOptions)
+                        ? alphabetOptions.find(function(option) {
+                            return String(option.value) === alphabet;
+                        })
+                        : null;
+
+                    if(!selectedOption && alphabet.length === 1) {
+                        const fieldIndex = alphabet.charCodeAt(0) - 64;
+                        const fieldName = "string" + fieldIndex + "Name";
+                        if(fieldIndex >= 1 && fieldIndex <= 12 && enumerationTypeDataTable.EDITOR.fields().includes(fieldName)) {
+                            const outerField = enumerationTypeDataTable.EDITOR.field(fieldName);
+                            const baseLabel = String(outerField.s.opts.label || "").replace(/<[^>]+>/g, "").trim();
+                            selectedOption = {label: baseLabel, value: alphabet};
+                            editor.field("alphabet").update([selectedOption].concat(alphabetOptions || []));
+                            editor.field("alphabet").val(alphabet);
+                        }
+                    }
+
+                    if(selectedOption) {
+                        setTimeout(function() {
+                            const titleElement = document.querySelector("#datatableFieldDTE_Field_editorFields-stringFieldTypes_modal > div > div > div.DTE_Header.modal-header > div > span > div.row > div:nth-child(1) > h5");
+                            if(titleElement) {
+                                titleElement.textContent = WJ.translate("button.edit") + ": " + selectedOption.label;
+                            }
+                        }, 120);
+                    }
+                }
+
+                const specificFieldsVisibility = innerTable.DATA.jsonOptions.specificFieldsVisibility;
+                const typeSelect = document.getElementById("DTE_Field_type");
+                if(!typeSelect || !specificFieldsVisibility) return;
+
+                const updateFieldVisibility = function(selectedType) {
+                    const visibilityConfig = specificFieldsVisibility.find(function(item) {
+                        return item.label === selectedType;
+                    });
+                    const showFields = visibilityConfig && visibilityConfig.value
+                        ? new Set(visibilityConfig.value.split(",").map(function(field) { return field.trim(); }).filter(Boolean))
+                        : new Set();
+
+                    if(["select", "multiselect", "radio", "checkbox"].includes(selectedType)) {
+                        const source = editor.field("optionsSource").val();
+                        const selectedSource = Array.isArray(source) ? source[0] : source;
+                        showFields.add(selectedSource === "enumeration" ? "enumeration" : "selectOptions");
+                    }
+
+                    editor.fields().forEach(function(fieldName) {
+                        const field = editor.field(fieldName);
+                        const classNames = field.s.opts.className || "";
+                        if(classNames.includes("specific-field")) {
+                            showFields.has(fieldName) ? field.show() : field.hide();
+                        }
+                    });
+                };
+
+                typeSelect.onchange = function() {
+                    updateFieldVisibility(this.value);
+                };
+
+                document.querySelectorAll("#datatableFieldDTE_Field_editorFields-stringFieldTypes_modal .DTE_Field_Name_optionsSource input[type='radio']").forEach(function(input) {
+                    input.onchange = function() {
+                        updateFieldVisibility(typeSelect.value);
+                    };
+                });
+
+                updateFieldVisibility(typeSelect.value);
+            });
         });
 
         enumerationTypeDataTable.EDITOR.on('open', function (e, mode, action) {

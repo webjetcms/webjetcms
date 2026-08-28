@@ -95,10 +95,13 @@ export class EditorAi {
                         //skip OPTIONS, ENUMERATION, OPTIONS_SIMPLE field type - AI button is not supported
                     } else {
                         let inputField = $(field.dom.inputControl[0]).find(".form-control");
+                        const focusedInput = inputField.filter(':focus')[0];
 
                         //console.log("inputField:", inputField, "parents=", inputField.parents(".bootstrap-select").length);
 
-                        if (inputField.parents(".bootstrap-select").length > 0) {
+                        if (inputField.closest(".custom-field-ai-disabled").length > 0) {
+                            // This custom field type does not support AI actions.
+                        } else if (inputField.parents(".bootstrap-select").length > 0) {
                             //it is probably custom field set as selectpicker, skip it
                             //we should probably better handle custom fields in future
                         } else {
@@ -111,6 +114,10 @@ export class EditorAi {
                             if (inputField.parents(".input-group").find(".ti-sparkles").length === 0) {
                                 const button = this._getEditorButton(column, null);
                                 inputField.parents(".input-group").append(button);
+                            }
+
+                            if (focusedInput != null && document.activeElement !== focusedInput) {
+                                focusedInput.focus({preventScroll: true});
                             }
                         }
                     }

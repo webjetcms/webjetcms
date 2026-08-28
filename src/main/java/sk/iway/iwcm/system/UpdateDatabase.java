@@ -162,6 +162,7 @@ public class UpdateDatabase
 		parseFormsByType();
 
 		ragUpdateDatabase();
+		ragEmbeddingProviderUpdateDatabase();
 
 		if(InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
 			DomainIdUpdateService.updateExportDatDomainId();
@@ -458,46 +459,14 @@ public class UpdateDatabase
 						if (sql.indexOf("GRANT")!=-1 && "public".equals(Constants.getString("clusterMyNodeType"))) continue;
 
 						if (sql.contains("{CONSTRAIN:")) {
-							//MSSQL nema drop constrain podla mena ale musi sa najskor ziskat z DB presny nazov, az potom sa da spravit drop
 							try {
-								String tableName = sql.substring(sql.indexOf("ALTER TABLE")+11, sql.indexOf("DROP CONSTRAINT")).trim();
-								int i = sql.indexOf("{CONSTRAIN:");
-								String constrainName = sql.substring(sql.indexOf(":", i)+1, sql.indexOf("}", i));
-								String constrainSql;
-								if ("PK".equals(constrainName)) {
-									constrainSql = "SELECT name FROM sys.key_constraints WHERE type = 'PK' AND OBJECT_NAME(parent_object_id) = N'"+tableName+"'";
-								} else {
-									constrainSql = "SELECT name FROM sys.default_constraints WHERE OBJECT_NAME(parent_object_id) = N'"+tableName+"' AND name LIKE '%__"+constrainName+"__%'";
-								}
-
-								String constrainKey = new SimpleQuery(dbName).forString(constrainSql);
-
-								if (constrainKey==null) {
-									constrainSql = """
-											SELECT kc.name AS constraint_name,
-												t.name  AS table_name,
-												STRING_AGG(c.name, ', ') WITHIN GROUP (ORDER BY ic.key_ordinal) AS columns
-											FROM sys.key_constraints kc
-											JOIN sys.tables t          ON kc.parent_object_id = t.object_id
-											JOIN sys.indexes i         ON kc.unique_index_id = i.index_id AND i.object_id = t.object_id
-											JOIN sys.index_columns ic  ON ic.object_id = t.object_id AND ic.index_id = i.index_id
-											JOIN sys.columns c         ON c.object_id = t.object_id AND c.column_id = ic.column_id
-											WHERE kc.type = 'UQ'
-											AND t.name = N'%s'
-											AND SCHEMA_NAME(t.schema_id) = N'dbo'
-											GROUP BY kc.name, t.name
-											ORDER BY constraint_name;
-											""".formatted(tableName);
-									constrainKey = new SimpleQuery(dbName).forString(constrainSql);
-								}
-
-								if (constrainKey==null) continue;
-
-								String replaceText = sql.substring(i, sql.indexOf("}", i)+1);
-								sql = Tools.replace(sql, replaceText, constrainKey);
+								sql = resolveConstraintName(sql, dbName);
+								if (sql == null) continue;
 							}
 							catch (Exception ex) {
 								Logger.error(UpdateDatabase.class, ex);
+								updateSuccess = false;
+								continue;
 							}
 						}
 
@@ -643,6 +612,104 @@ public class UpdateDatabase
 		}
 
 		return(ret);
+	}
+
+	private static String resolveConstraintName(String sql, String dbName)
+	{
+		int markerStart = sql.indexOf("{CONSTRAIN:");
+		int markerEnd = sql.indexOf('}', markerStart);
+		int tableStart = sql.indexOf("ALTER TABLE") + 11;
+		int tableEnd = sql.indexOf("DROP CONSTRAINT");
+		if (markerStart < 0 || markerEnd < markerStart || tableStart < 11 || tableEnd < tableStart)
+		{
+			throw new IllegalArgumentException("Invalid constraint placeholder in SQL: " + sql);
+		}
+
+		String tableName = sql.substring(tableStart, tableEnd).trim();
+		String constraintReference = sql.substring(markerStart + 11, markerEnd);
+		String constraintName = constraintReference;
+
+		if (Constants.DB_TYPE == Constants.DB_MSSQL)
+		{
+			constraintName = getMssqlConstraintName(tableName, constraintReference, dbName);
+		}
+		else if (Constants.DB_TYPE == Constants.DB_ORACLE)
+		{
+			constraintName = getOracleConstraintName(tableName, constraintReference, dbName);
+		}
+
+		if (Tools.isEmpty(constraintName)) return null;
+
+		String replaceText = sql.substring(markerStart, markerEnd + 1);
+		return Tools.replace(sql, replaceText, constraintName);
+	}
+
+	private static String getMssqlConstraintName(String tableName, String constraintReference, String dbName)
+	{
+		SimpleQuery query = new SimpleQuery(dbName);
+		if ("PK".equals(constraintReference))
+		{
+			return query.forString(
+				"SELECT name FROM sys.key_constraints WHERE type = 'PK' AND OBJECT_NAME(parent_object_id) = ?",
+				tableName
+			);
+		}
+
+		String constraintName = query.forString(
+			"SELECT name FROM sys.key_constraints WHERE OBJECT_NAME(parent_object_id) = ? AND name = ?",
+			tableName, constraintReference
+		);
+		if (constraintName != null) return constraintName;
+
+		constraintName = query.forString(
+			"SELECT name FROM sys.default_constraints WHERE OBJECT_NAME(parent_object_id) = ? AND (name = ? OR name LIKE ?)",
+			tableName, constraintReference, "%__" + constraintReference + "__%"
+		);
+		if (constraintName != null) return constraintName;
+
+		return query.forString("""
+			SELECT TOP 1 kc.name
+			FROM sys.key_constraints kc
+			JOIN sys.tables t ON kc.parent_object_id = t.object_id
+			JOIN sys.indexes i ON kc.unique_index_id = i.index_id AND i.object_id = t.object_id
+			JOIN sys.index_columns ic ON ic.object_id = t.object_id AND ic.index_id = i.index_id
+			JOIN sys.columns c ON c.object_id = t.object_id AND c.column_id = ic.column_id
+			WHERE kc.type = 'UQ'
+			AND t.name = ?
+			AND SCHEMA_NAME(t.schema_id) = N'dbo'
+			AND c.name = ?
+			ORDER BY kc.name
+			""", tableName, constraintReference);
+	}
+
+	private static String getOracleConstraintName(String tableName, String constraintReference, String dbName)
+	{
+		SimpleQuery query = new SimpleQuery(dbName);
+		if ("PK".equals(constraintReference))
+		{
+			return query.forString(
+				"SELECT constraint_name FROM user_constraints WHERE table_name = UPPER(?) AND constraint_type = 'P' AND ROWNUM = 1",
+				tableName
+			);
+		}
+
+		String constraintName = query.forString(
+			"SELECT constraint_name FROM user_constraints WHERE table_name = UPPER(?) AND constraint_name = UPPER(?) AND ROWNUM = 1",
+			tableName, constraintReference
+		);
+		if (constraintName != null) return constraintName;
+
+		return query.forString("""
+			SELECT constraint_name FROM (
+				SELECT uc.constraint_name
+				FROM user_constraints uc
+				JOIN user_cons_columns ucc ON uc.constraint_name = ucc.constraint_name AND uc.table_name = ucc.table_name
+				WHERE uc.table_name = UPPER(?)
+				AND uc.constraint_type = 'U'
+				AND ucc.column_name = UPPER(?)
+				ORDER BY uc.constraint_name
+			) WHERE ROWNUM = 1
+			""", tableName, constraintReference);
 	}
 
 	/**
@@ -2855,5 +2922,46 @@ public class UpdateDatabase
 
 		//do not mark as done on failure, so the backfill is retried on the next startup
 		if (fillSuccess) saveSuccessUpdate(note);
+	}
+
+	public static void ragEmbeddingProviderUpdateDatabase() {
+		String note = "24.08.2026 [sivan] add embedding_provider column to rag_embedding_chunks.";
+		if (isAllreadyUpdated(note)) return;
+
+		String databaseName = PgvectorJpaConfig.getRagDataSourceName();
+		if (Tools.isEmpty(databaseName)) return;
+
+		String tableName = "rag_embedding_chunks";
+		String defaultProvider = Constants.getString("ragEmbeddingProvider");
+		if (Tools.isEmpty(defaultProvider)) defaultProvider = "openai";
+		defaultProvider = defaultProvider.trim().toLowerCase(java.util.Locale.ROOT);
+
+		try (Connection connection = DBPool.getConnection(databaseName)) {
+			DatabaseMetaData metadata = connection.getMetaData();
+			try (ResultSet tables = metadata.getTables(connection.getCatalog(), null, tableName, new String[] {"TABLE"})) {
+				if (tables.next() == false) return;
+			}
+
+			try (Statement statement = connection.createStatement()) {
+				statement.execute("ALTER TABLE " + tableName + " ADD COLUMN IF NOT EXISTS embedding_provider VARCHAR(100)");
+			}
+
+			try (PreparedStatement statement = connection.prepareStatement(
+				"UPDATE " + tableName + " SET embedding_provider = ? WHERE embedding_provider IS NULL OR embedding_provider = ''")) {
+				statement.setString(1, defaultProvider);
+				statement.executeUpdate();
+			}
+
+			try (Statement statement = connection.createStatement()) {
+				statement.execute("ALTER TABLE " + tableName + " ALTER COLUMN embedding_provider SET NOT NULL");
+				statement.execute("ALTER TABLE " + tableName + " DROP CONSTRAINT IF EXISTS uq_rag_chunk");
+				statement.execute("ALTER TABLE " + tableName + " ADD CONSTRAINT uq_rag_chunk UNIQUE (entity_type, entity_id, chunk_index, embedding_provider, embedding_model)");
+			}
+		} catch (Exception e) {
+			Logger.error(UpdateDatabase.class, "Error adding RAG embedding provider column: " + e.getMessage());
+			return;
+		}
+
+		saveSuccessUpdate(note);
 	}
 }

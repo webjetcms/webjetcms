@@ -45,15 +45,15 @@ Vysvetlenie použitých piktogramov:
 - [ ] Datatabuľka – upraviť polia typu `Date` a `Datetime` tak, aby správne fungovala validácia `not null`.
 - [ ] Datatabuľka – upraviť spôsob `mergovania` upravenej entity tak, aby bolo možné vynulovať hodnoty typu `number`.
 - [x] +Presmerovania - rozlíšiť v databáze automaticky vytvorené presmerovanie (hľadaj premennú `editorDisableAutomaticRedirect`) od manuálne vytvoreného, možnosť podľa toho filtrovať v UI (zobraziť len manuálne vytvorené presmerovania) (#58625).
-- [ ] +Presmerovania - doplniť funkciu čistenia presmerovaní - zmaže staré presmerovania (bolo pôvodne `aaa-bbb` a potom vzniklo `aaa-ccc` takže `aaa-bbb` nemá zmysel = zmaže sa) a skontroluje cyklické presmerovania v ktorom zmaže posledný krok. Tiež optimalizovať presmerovania `aaa-bbb-ccc` na `aaa-ccc` (#58629).
+- [x] +Presmerovania - doplniť funkciu čistenia presmerovaní - zmaže staré presmerovania (bolo pôvodne `aaa-bbb` a potom vzniklo `aaa-ccc` takže `aaa-bbb` nemá zmysel = zmaže sa) a skontroluje cyklické presmerovania v ktorom zmaže posledný krok. Tiež optimalizovať presmerovania `aaa-bbb-ccc` na `aaa-ccc` (#58629).
 - [x] +Galéria - pridať možnosť nastaviť iný spôsob zmeny veľkosti na veľký obrázok, napr. na malý obrázok sa aplikuje Orezať na mieru (chcú mať štvorec) a na veľký presná šírka (zachová pomer strán). Predvolene bude hodnota NULL=rovnako ako pre malý obrázok (#58633).
 - [x] Voliteľné polia - pridať možnosť výberu viac položiek pre napojenie na číselník (#58637).
-- [ ] +Číselníky - pridať možnosť definovať typ poľa pre reťazec ako máme vo voliteľných poliach (#58641).
+- [x] +Číselníky - pridať možnosť definovať typ poľa pre reťazec ako máme vo voliteľných poliach (#58641).
 - [x] +Fotobanka - pridať možnosť nastaviť názov súboru pred stiahnutím z fotobanky, automaticky nastaviť podľa hľadaného výrazu (#58645).
 - [x] +Úlohy na pozadí - možnosť manuálne spustiť úlohu na `node`, ktorý má úloha nastavený, teraz sa spustí na `node` kde je používateľ prihlásený (#58718).
 - [ ] +Číselník, Blog, Novinky - upraviť tak, aby výber typu číselníka alebo priečinka pre novinky bol vľavo podobne ako v galérii/webových stránkach. Nemusia byť potom karty ale všetko naraz zobrazené.
 - [x] +Prekladové kľúče - zobrazovať stromovú štruktúru prekladových kľúčov pre lepšiu orientáciu (#58714).
-- [ ] +Konfigurácia - doplniť možnosť nastaviť premennú len pre aktuálny uzol (neuložiť ju do databázy - len nastaviť do Constants objektu), pridať tam zaškrtávacie pole "Nastaviť dočasne" s info ikonou že hodnota sa nastaví len dočasne a pri reštarte sa obnoví hodnota ako je v databáze.
+- [x] +Konfigurácia - doplniť možnosť nastaviť premennú len pre aktuálny uzol (neuložiť ju do databázy - len nastaviť do Constants objektu), pridať tam zaškrtávacie pole "Nastaviť dočasne" s info ikonou že hodnota sa nastaví len dočasne a pri reštarte sa obnoví hodnota ako je v databáze. (#291)
 - [ ] Prieskumník - opraviť zobrazovanie súborov so špeciálnymi znakmi (napríklad `@`).
 - [ ] Automatický premazávať `temp` súbory, ktoré sa môžu hromadiť.
 - [x] +Administrácia - odstrániť závislosť od `Vue.js` a nahradiť interné komponenty natívnymi web komponentmi (#58722).

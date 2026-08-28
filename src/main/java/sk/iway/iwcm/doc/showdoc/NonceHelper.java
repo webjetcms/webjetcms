@@ -15,13 +15,14 @@ public final class NonceHelper {
 
 
     /**
-     * Injects CSP nonce into <script>, <style>, and <link rel="stylesheet"> tags in a single pass.
+     * Injects a CSP nonce into {@code <script>}, {@code <style>}, and
+     * {@code <link rel="stylesheet">} tags in a single pass.
      * Optimized for memory efficiency: uses single StringBuilder, processes all tag types in one pass.
      *
      * @param htmlContent The HTML content to process
      * @param nonce The CSP nonce value
-     * @param injectIntoScripts Whether to inject nonce into <script> tags (false if script-src allows unsafe-inline)
-     * @param injectIntoStyles Whether to inject nonce into <style> and <link> tags (false if style-src allows unsafe-inline)
+     * @param injectIntoScripts Whether to inject nonce into {@code <script>} tags (false if script-src allows unsafe-inline)
+     * @param injectIntoStyles Whether to inject nonce into {@code <style>} and {@code <link>} tags (false if style-src allows unsafe-inline)
      * @return HTML content with nonce injected into eligible tags
      */
     public static String injectCspNonceIntoTags(String htmlContent, String nonce, boolean injectIntoScripts, boolean injectIntoStyles) {

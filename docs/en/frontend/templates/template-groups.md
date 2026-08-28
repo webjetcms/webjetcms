@@ -40,7 +40,7 @@ The tab allows you to set default SEO values ​​for pages using a template fr
 - Default SEO image - used if the page does not have a specified SEO image or perex image. If it is not set in the template group, the value `defaultSeoImage` from the template configuration file will be used.
 - Default SEO image alt text - used if the page does not have its own alt text specified in the P field.
 
-The SEO description and alternative text are stored separately for the language selected in the list header. The SEO image is common to all languages ​​in the group. The exact order of using the values ​​is described in the [Page object API](../ninja-starter-kit/ninja-jv/page/README.md).
+The SEO description and alternative text are stored separately for the language selected in the list header. The SEO image is common to all languages ​​in the group. The exact order of values ​​is described in the [Page object API](../ninja-starter-kit/ninja-jv/page/README.md).
 
 ## Optional fields tab
 

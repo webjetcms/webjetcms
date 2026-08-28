@@ -26,14 +26,28 @@ public interface EmbeddingChunkRepository extends DomainIdRepository<EmbeddingCh
 
     @Transactional
     @Modifying
-    @Query("DELETE FROM EmbeddingChunkEntity c WHERE c.entityType = :entityType AND c.entityId = :entityId AND c.embeddingModel = :embeddingModel AND c.domainId = :domainId")
-    void deleteByEntityTypeAndEntityIdAndEmbeddingModelAndDomainId(@Param("entityType") RagEntityType entityType, @Param("entityId") Long entityId, @Param("embeddingModel") String embeddingModel, @Param("domainId") Integer domainId);
+    @Query("DELETE FROM EmbeddingChunkEntity c WHERE c.entityType = :entityType AND c.entityId = :entityId AND c.embeddingProvider = :embeddingProvider AND c.embeddingModel = :embeddingModel AND c.domainId = :domainId")
+    void deleteByEntityTypeAndEntityIdAndEmbeddingProviderAndEmbeddingModelAndDomainId(
+        @Param("entityType") RagEntityType entityType,
+        @Param("entityId") Long entityId,
+        @Param("embeddingProvider") String embeddingProvider,
+        @Param("embeddingModel") String embeddingModel,
+        @Param("domainId") Integer domainId
+    );
 
     @Query("SELECT DISTINCT c.entityType FROM EmbeddingChunkEntity c WHERE c.domainId = :domainId")
     List<RagEntityType> findDistinctEntityTypes(@Param("domainId") Integer domainId);
 
     @Query("SELECT DISTINCT c.entityId FROM EmbeddingChunkEntity c WHERE c.entityType = :entityType AND c.domainId = :domainId")
     List<Integer> findDistinctEntityIdsByEntityTypeAndDomainId(RagEntityType entityType, Integer domainId);
+
+    @Query("SELECT DISTINCT c.entityId FROM EmbeddingChunkEntity c WHERE c.entityType = :entityType AND c.embeddingProvider = :embeddingProvider AND c.embeddingModel = :embeddingModel AND c.domainId = :domainId")
+    List<Integer> findDistinctEntityIdsByEntityTypeAndEmbeddingProviderAndEmbeddingModelAndDomainId(
+        @Param("entityType") RagEntityType entityType,
+        @Param("embeddingProvider") String embeddingProvider,
+        @Param("embeddingModel") String embeddingModel,
+        @Param("domainId") Integer domainId
+    );
 
     @Query("SELECT DISTINCT c.entityId FROM EmbeddingChunkEntity c WHERE c.entityType = sk.iway.iwcm.rag.service.RagEntityType.DOCUMENT AND (c.groupId IS NULL OR c.rootGroupL1 IS NULL OR c.rootGroupL2 IS NULL OR c.rootGroupL3 IS NULL)")
     List<Long> findDistinctDocumentEntityIdsWithIncompleteGroupData();

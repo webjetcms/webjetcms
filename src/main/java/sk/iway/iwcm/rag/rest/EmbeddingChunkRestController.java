@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -26,6 +27,7 @@ import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -36,6 +38,7 @@ import sk.iway.iwcm.rag.pgvector.EmbeddingChunkEntity;
 import sk.iway.iwcm.rag.pgvector.EmbeddingChunkRepository;
 import sk.iway.iwcm.rag.pgvector.EmbeddingChunkStatus;
 import sk.iway.iwcm.rag.service.IndexQueueService;
+import sk.iway.iwcm.rag.service.RagEmbeddingStatService;
 import sk.iway.iwcm.rag.service.RagEntityType;
 import sk.iway.iwcm.rag.vectorstore.PgVectorStore;
 import sk.iway.iwcm.system.datatable.Datatable;
@@ -57,15 +60,17 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
 
     private final EmbeddingChunkRepository chunkRepository;
     private final IndexQueueService indexQueueService;
+    private final RagEmbeddingStatService ragEmbeddingStatService;
 
     private final PgVectorStore vectorStore;
 
     @Autowired
-    public EmbeddingChunkRestController(EmbeddingChunkRepository chunkRepository, IndexQueueService indexQueueService, PgVectorStore vectorStore) {
+    public EmbeddingChunkRestController(EmbeddingChunkRepository chunkRepository, IndexQueueService indexQueueService, PgVectorStore vectorStore, RagEmbeddingStatService ragEmbeddingStatService) {
         super(chunkRepository);
         this.chunkRepository = chunkRepository;
         this.indexQueueService = indexQueueService;
         this.vectorStore = vectorStore;
+        this.ragEmbeddingStatService = ragEmbeddingStatService;
     }
 
     @Override
@@ -150,6 +155,19 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
         return entity;
     }
 
+    @GetMapping("/current-embedding-configuration")
+    public Map<String, String> getCurrentEmbeddingConfiguration() {
+        AssistantDefinitionEntity assistant = ragEmbeddingStatService.getIndexingAssistant();
+        if (assistant == null || Tools.isEmpty(assistant.getProvider()) || Tools.isEmpty(assistant.getModel())) {
+            return Map.of();
+        }
+
+        return Map.of(
+            "provider", assistant.getProvider().trim().toLowerCase(Locale.ROOT),
+            "model", assistant.getModel()
+        );
+    }
+
     /**
      * Perform an indexing or deletion action on all documents in the specified folder.
      * Adds matched document IDs to the RAG indexing queue.
@@ -198,9 +216,8 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
             return response;
         }
 
-        Set<Integer> indexedDocIds = chunkRepository
-                .findDistinctEntityIdsByEntityTypeAndDomainId(RagEntityType.DOCUMENT, CloudToolsForCore.getDomainId())
-                .stream().collect(Collectors.toSet());
+        RagIndexAction ragAction = RagIndexAction.fromString(action);
+        Set<Integer> indexedDocIds = getIndexedDocumentIds(ragAction, CloudToolsForCore.getDomainId());
 
         int indexedCount = 0;
         if (data.getSecond() != null) {
@@ -210,7 +227,6 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
         }
         response.put("indexedDocuments", indexedCount);
 
-        RagIndexAction ragAction = RagIndexAction.fromString(action);
         if (ragAction == null) {
             response.put("queuedDocuments", 0);
             return response;
@@ -228,6 +244,29 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
         response.put("queuedDocuments", queuedCount);
 
         return response;
+    }
+
+    Set<Integer> getIndexedDocumentIds(RagIndexAction action, Integer domainId) {
+        if (RagIndexAction.INDEX.equals(action)) {
+            AssistantDefinitionEntity assistant = ragEmbeddingStatService.getIndexingAssistant();
+            if (assistant == null || Tools.isEmpty(assistant.getProvider()) || Tools.isEmpty(assistant.getModel())) {
+                return Set.of();
+            }
+
+            String provider = assistant.getProvider().trim().toLowerCase(Locale.ROOT);
+            return chunkRepository
+                .findDistinctEntityIdsByEntityTypeAndEmbeddingProviderAndEmbeddingModelAndDomainId(
+                    RagEntityType.DOCUMENT,
+                    provider,
+                    assistant.getModel(),
+                    domainId
+                )
+                .stream().collect(Collectors.toSet());
+        }
+
+        return chunkRepository
+            .findDistinctEntityIdsByEntityTypeAndDomainId(RagEntityType.DOCUMENT, domainId)
+            .stream().collect(Collectors.toSet());
     }
 
     /**
