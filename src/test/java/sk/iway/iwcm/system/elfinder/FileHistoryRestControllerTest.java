@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.stream.Stream;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -26,6 +28,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.datatable.DatatableResponse;
@@ -107,21 +110,44 @@ class FileHistoryRestControllerTest extends BaseWebjetTest {
         }
     }
 
-    @Test
-    void restEndpointsCannotCreateOrEditHistoryRows() {
+    @ParameterizedTest(name = "missingDomainId={0}")
+    @ValueSource(booleans = { false, true })
+    void rollbackRejectsEntityOutsideCurrentDomain(boolean missingDomainId) {
         FileHistoryEntity entity = createEntity(
             "/images/" + MISSING_FOLDER + "file.txt",
             historyPath("images/" + MISSING_FOLDER));
+        entity.setDomainId(missingDomainId ? null : CloudToolsForCore.getDomainId() + 1);
         FileHistoryRestController controller = createController(entity, "/images/*");
+
+        try (MockedConstruction<IwcmFile> files = mockConstruction(IwcmFile.class);
+                MockedStatic<FileTools> fileTools = mockStatic(FileTools.class)) {
+            assertActionNotification(controller, "user.rights.no_folder_rights");
+
+            assertEquals(0, files.constructed().size());
+            fileTools.verify(() -> FileTools.copyFile(any(IwcmFile.class), any(IwcmFile.class)), never());
+        }
+    }
+
+    @Test
+    void restEndpointsCannotCreateEditOrDeleteHistoryRows() {
+        FileHistoryEntity entity = createEntity(
+            "/images/" + MISSING_FOLDER + "file.txt",
+            historyPath("images/" + MISSING_FOLDER));
+        FileHistoryRepository repository = mock(FileHistoryRepository.class);
+        FileHistoryRestController controller = createController(entity, "/images/*", repository);
         String expectedMessage = controller.getProp().getText("datatables.error.recordIsNotEditable");
 
         RuntimeException insertException = assertThrows(RuntimeException.class,
             () -> controller.insertItem(entity));
         RuntimeException editException = assertThrows(RuntimeException.class,
             () -> controller.editItem(entity, HISTORY_ID));
+        RuntimeException deleteException = assertThrows(RuntimeException.class,
+            () -> controller.delete(HISTORY_ID, entity));
 
         assertEquals(expectedMessage, insertException.getMessage());
         assertEquals(expectedMessage, editException.getMessage());
+        assertEquals(expectedMessage, deleteException.getMessage());
+        verifyNoInteractions(repository);
     }
 
     private static Stream<Arguments> deniedRollbacks() {
@@ -181,14 +207,19 @@ class FileHistoryRestControllerTest extends BaseWebjetTest {
         entity.setId(HISTORY_ID);
         entity.setFileUrl(fileUrl);
         entity.setHistoryPath(historyPath);
+        entity.setDomainId(CloudToolsForCore.getDomainId());
         return entity;
     }
 
     private static FileHistoryRestController createController(FileHistoryEntity entity, String writableFolders) {
+        return createController(entity, writableFolders, null);
+    }
+
+    private static FileHistoryRestController createController(FileHistoryEntity entity, String writableFolders, FileHistoryRepository repository) {
         Prop prop = mock(Prop.class);
         when(prop.getText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        FileHistoryRestController controller = new FileHistoryRestController(null) {
+        FileHistoryRestController controller = new FileHistoryRestController(repository) {
             @Override
             public FileHistoryEntity getOneItem(long id) {
                 return entity;

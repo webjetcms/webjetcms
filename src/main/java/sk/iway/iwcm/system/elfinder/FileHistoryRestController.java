@@ -76,13 +76,20 @@ public class FileHistoryRestController extends DatatableRestControllerV2<FileHis
     }
 
     @Override
+    public boolean deleteItem(FileHistoryEntity entity, long id) {
+        throwError("datatables.error.recordIsNotEditable");
+        return false;
+    }
+
+    @Override
     public boolean processAction(FileHistoryEntity entity, String action) {
         if ("rollBack".equals(action)) {
             String fileUrl = entity == null ? null : entity.getFileUrl();
             String historyPath = entity == null ? null : entity.getHistoryPath();
             Identity user = getUser();
 
-            if (entity == null || entity.getId() == null || entity.getId() < 1 || user == null ||
+            if (entity == null || entity.getId() == null || entity.getId() < 1 || entity.getDomainId() == null ||
+                entity.getDomainId().intValue() != CloudToolsForCore.getDomainId() || user == null ||
                 isSafeVirtualPath(fileUrl) == false || fileUrl.endsWith("/") ||
                 isSafeVirtualPath(historyPath) == false || historyPath.endsWith("/") == false) {
                 addNotify(new NotifyBean(getProp().getText("elfinder.file_prop.rollback.title"), getProp().getText("user.rights.no_folder_rights"), NotifyType.ERROR, 15000));
