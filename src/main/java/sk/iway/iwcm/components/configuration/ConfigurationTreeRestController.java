@@ -198,6 +198,7 @@ public class ConfigurationTreeRestController extends JsTreeRestController<JsTree
         JsTreeItem item = new JsTreeItem();
         item.setId(id);
         item.setText(text);
+        item.setAAttr(Map.of("aria-label", text));
         item.setVirtualPath(virtualPath);
         item.setParent(parent);
         item.setChildren(hasChildren);

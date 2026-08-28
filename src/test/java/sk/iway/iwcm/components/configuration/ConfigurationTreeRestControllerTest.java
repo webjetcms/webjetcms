@@ -52,6 +52,22 @@ class ConfigurationTreeRestControllerTest {
     }
 
     @Test
+    void exposesPlainAccessibleNamesForIconNodes() {
+        List<JsTreeItem> rootItems = ConfigurationTreeRestController.getRootItems(MODULE_PATHS, "Changed", "Custom", "All");
+
+        assertEquals(
+            List.of("Changed", "Custom", "All", "apps", "security", "system"),
+            rootItems.stream().map(item -> item.getAAttr().get("aria-label")).toList()
+        );
+
+        List<JsTreeItem> moduleItems = ConfigurationTreeRestController.getModuleItems(MODULE_PATHS, "apps");
+        assertEquals(
+            List.of("basket", "gallery"),
+            moduleItems.stream().map(item -> item.getAAttr().get("aria-label")).toList()
+        );
+    }
+
+    @Test
     void resolvesTreeTranslationsForEveryUserSession() {
         ConfigurationService configurationService = mock(ConfigurationService.class);
         when(configurationService.getVisibleModulePaths(any(Identity.class))).thenReturn(List.of());

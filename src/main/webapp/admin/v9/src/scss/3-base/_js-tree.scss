@@ -184,18 +184,11 @@ div#vakata-dnd #jstree-dnd.jstree-default {
 }
 
 @media (max-width: ($bp-mobile - 1)) {
-  .configuration-tree-layout {
-    .tree-col {
-      border-right: 0;
-      border-bottom: 1px solid $nice-gray-100;
-      margin-bottom: 16px;
-    }
-
     #SomStromcek.jstree {
-      height: clamp(200px, 42vh, 360px);
+      height: clamp(200px, 42vh, 360px) !important;
     }
-  }
 }
+
 .jstree-rtl .jstree-anchor {
   padding: 0 1px 0 4px;
 }
