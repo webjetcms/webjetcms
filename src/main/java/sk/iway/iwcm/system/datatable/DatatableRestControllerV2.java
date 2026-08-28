@@ -279,6 +279,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			} catch (Exception ex) {
 				//failsafe
 			}
+			checkItemPermsThrows(entity, -1L);
 			T processed = insertItem(entity);
 			afterSave(entity, processed);
 			if (processed != null) new DatatableEvent<>(processed, DatatableEventType.AFTER_SAVE, entity).publishEvent();

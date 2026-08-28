@@ -41,6 +41,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.persistence.Id;
 import javax.validation.ConstraintViolationException;
@@ -221,6 +222,34 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
         assertEquals(1, controller.getAfterSaveCounter(), "afterSave should be called twice");
         assertEquals(0, controller.getBeforeDeleteCounter(), "beforeDelete should be called once");
         assertEquals(0, controller.getAfterDeleteCounter(), "afterDelete should be called once");
+    }
+
+    @Test
+    void testHandleEditorUpdateByColumnChecksInsertPermissionsWhenNoItemMatches() {
+        AtomicReference<Long> checkedId = new AtomicReference<>();
+        RestControllerMock restrictedController = new RestControllerMock() {
+            @Override
+            public boolean checkItemPerms(Object entity, Long id) {
+                checkedId.set(id);
+                return false;
+            }
+        };
+        restrictedController.setRequest(controller.getRequest());
+        restrictedController.setValidator(validator);
+
+        DatatableRequest<Long, Object> datatableRequest = new DatatableRequest<>();
+        datatableRequest.setData(Map.of(1L, new Object()));
+        datatableRequest.setAction("edit");
+        datatableRequest.setImportMode("update");
+        datatableRequest.setUpdateByColumn("id");
+
+        assertThrows(ConstraintViolationException.class,
+            () -> restrictedController.handleEditor(restrictedController.getRequest(), datatableRequest));
+
+        assertEquals(Long.valueOf(-1L), checkedId.get());
+        assertEquals(0, restrictedController.getInsertItemCounter());
+        assertEquals(1, restrictedController.getBeforeSaveCounter());
+        assertEquals(0, restrictedController.getAfterSaveCounter());
     }
 
     @Test
