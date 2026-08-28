@@ -106,7 +106,7 @@ public class AdresarDB
 				while (iterator.hasNext()) {
 					String filter = iterator.next();
 					if (Constants.DB_TYPE == Constants.DB_MSSQL)
-						filter += " COLLATE Latin1_general_CI_AI";
+						filter += " COLLATE Latin1_General_100_CI_AI_SC";
 					sql.append(filter).append(" LIKE ?");
 					if (iterator.hasNext())
 						sql.append(" OR ");

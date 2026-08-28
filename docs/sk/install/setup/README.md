@@ -59,6 +59,8 @@ Pre inštalácie produktov ako je `NET, LMS, DSK` je na serveri potrebné povoli
 </poolman>
 ```
 
+Pre novú databázu Microsoft SQL setup používa collation `Latin1_General_100_CI_AI_SC`: `Latin1_General` určuje jazykové pravidlá radenia a porovnávania, `_100` ich novšiu verziu, `CI` porovnávanie bez rozlišovania veľkosti písmen, `AI` bez rozlišovania diakritiky a `_SC` podporu doplnkových znakov Unicode. Vďaka `_SC` SQL Server spracuje UTF-16 surrogate pair ako jeden znak, čo je dôležité napríklad pre emoji a ďalšie znaky mimo základnej viacjazyčnej roviny; podrobnosti uvádza dokumentácia Microsoftu [Collation and Unicode support](https://learn.microsoft.com/sql/relational-databases/collations/collation-and-unicode-support?view=sql-server-ver17).
+
 [Oracle](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/):
 
 ```xml

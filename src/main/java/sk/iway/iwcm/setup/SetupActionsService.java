@@ -425,7 +425,7 @@ public class SetupActionsService {
 		if (MSSQL_DRIVER.equals(dbDriver)) {
 			// WebJET uses NVARCHAR/NTEXT on MS SQL. The _SC collation adds correct
 			// supplementary-character handling and remains compatible with SQL Server 2012+.
-			return "CREATE DATABASE " + quotedDbName + " COLLATE Latin1_General_CI_AI";
+			return "CREATE DATABASE " + quotedDbName + " COLLATE Latin1_General_100_CI_AI_SC";
 		}
 		throw new IllegalArgumentException("Automatic database creation is not supported for driver: " + dbDriver);
 	}

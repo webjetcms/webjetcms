@@ -46,7 +46,7 @@ class SetupActionsServiceTest {
     @Test
     void createsMicrosoftSqlDatabaseWithSupplementaryCharacterCollation() {
         assertEquals(
-            "CREATE DATABASE [webjet_web] COLLATE Latin1_General_CI_AI",
+            "CREATE DATABASE [webjet_web] COLLATE Latin1_General_100_CI_AI_SC",
             SetupActionsService.getCreateDatabaseSql("net.sourceforge.jtds.jdbc.Driver", "webjet_web")
         );
     }
@@ -58,7 +58,7 @@ class SetupActionsServiceTest {
             SetupActionsService.getCreateDatabaseSql("org.postgresql.Driver", "name\"with_quote")
         );
         assertEquals(
-            "CREATE DATABASE [name]]with_bracket] COLLATE Latin1_General_CI_AI",
+            "CREATE DATABASE [name]]with_bracket] COLLATE Latin1_General_100_CI_AI_SC",
             SetupActionsService.getCreateDatabaseSql("net.sourceforge.jtds.jdbc.Driver", "name]with_bracket")
         );
     }
