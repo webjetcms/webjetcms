@@ -45,7 +45,7 @@ public class IndexQueueService {
 
         removeFromQueue(entityIds, entityType, domainId);
 
-        if(RagIndexAction.DELETE.equals(action)) entityIds = filterIdsForRemove(entityIds, entityType, domainId);
+        if(RagIndexAction.DELETE.equals(action)) entityIds = filterIdsForRemove(entityIds, entityType);
         if(entityIds.isEmpty()) return;
 
         List<IndexQueueEntity> queueList = new ArrayList<>();
@@ -94,8 +94,11 @@ public class IndexQueueService {
      * Filter entity IDs to only those that have existing embedding chunks.
      * Used for DELETE actions to avoid unnecessary queue entries.
      */
-    private List<Integer> filterIdsForRemove(List<Integer> entityIds, RagEntityType entityType, int domainId) {
-        List<Integer> entityIdsThatHaveChunks = chunkRepository.findDistinctEntityIdsByEntityTypeAndDomainId(entityType, domainId);
+    private List<Integer> filterIdsForRemove(List<Integer> entityIds, RagEntityType entityType) {
+        List<Integer> entityIdsThatHaveChunks = chunkRepository.findDistinctEntityIdsByEntityTypeAndEntityIdIn(
+            entityType,
+            entityIds
+        );
         return entityIds.stream()
                 .filter(entityIdsThatHaveChunks::contains)
                 .toList();

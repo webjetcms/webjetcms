@@ -313,7 +313,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
         return html.append("</div>").toString();
     }
 
-    private AiRequest prepareProviderRequest(
+    protected AiRequest prepareProviderRequest(
         AiOperation operation,
         AssistantDefinitionEntity assistant,
         InputDataDTO inputData,
@@ -333,9 +333,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
         AssistantDefinitionEntity assistant,
         InputDataDTO inputData
     ) {
-        if (operation != AiOperation.GENERATE_IMAGE && operation != AiOperation.EDIT_IMAGE) {
-            return basicImageOptions(inputData);
-        }
+        if (isImageOperation(operation) == false) return null;
 
         Map<String, ImageOptionDefinition> definitions = aiClient.imageOptions(
             getProviderId(),
@@ -430,7 +428,13 @@ public abstract class LibrarySupportLogic implements AiInterface {
         InputDataDTO inputData,
         IncludesHandler includesHandler
     ) throws IOException {
-        return prepareRequest(operation, assistant, inputData, includesHandler, basicImageOptions(inputData));
+        return prepareRequest(
+            operation,
+            assistant,
+            inputData,
+            includesHandler,
+            isImageOperation(operation) ? basicImageOptions(inputData) : null
+        );
     }
 
     private static AiRequest prepareRequest(
@@ -497,7 +501,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
             instructions,
             inputText,
             userPrompt,
-            basicImageOptions(inputData)
+            isImageOperation(operation) ? basicImageOptions(inputData) : null
         );
     }
 
@@ -533,6 +537,10 @@ public abstract class LibrarySupportLogic implements AiInterface {
             inputData.getImageSize(),
             inputData.getImageQuality()
         );
+    }
+
+    private static boolean isImageOperation(AiOperation operation) {
+        return operation == AiOperation.GENERATE_IMAGE || operation == AiOperation.EDIT_IMAGE;
     }
 
     GeneratedImageName getGeneratedImageName(

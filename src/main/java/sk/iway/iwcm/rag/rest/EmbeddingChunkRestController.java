@@ -209,20 +209,14 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
         response.put("totalGroups", data.getFirst());
         response.put("totalDocuments", data.getSecond() != null ? data.getSecond().size() : 0);
 
-        if (vectorStore.isAvailableAndInitialized() == false) {
-            // Cannot check indexed status if vector store is not available or not initialized, return 0 for both indexed and queued
-            response.put("indexedDocuments", 0);
-            response.put("queuedDocuments", 0);
-            return response;
-        }
-
         RagIndexAction ragAction = RagIndexAction.fromString(action);
-        Set<Integer> indexedDocIds = getIndexedDocumentIds(ragAction, CloudToolsForCore.getDomainId());
-
         int indexedCount = 0;
-        if (data.getSecond() != null) {
-            for (Integer docId : data.getSecond()) {
-                if (indexedDocIds.contains(docId)) indexedCount++;
+        if (vectorStore.isAvailableAndInitialized()) {
+            Set<Integer> indexedDocIds = getIndexedDocumentIds(ragAction, CloudToolsForCore.getDomainId());
+            if (data.getSecond() != null) {
+                for (Integer docId : data.getSecond()) {
+                    if (indexedDocIds.contains(docId)) indexedCount++;
+                }
             }
         }
         response.put("indexedDocuments", indexedCount);

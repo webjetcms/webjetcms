@@ -93,7 +93,7 @@ public class IncludesHandler {
         return restored;
     }
 
-    boolean hasIncludes() {
+    public boolean hasIncludes() {
         return includes.isEmpty() == false;
     }
 

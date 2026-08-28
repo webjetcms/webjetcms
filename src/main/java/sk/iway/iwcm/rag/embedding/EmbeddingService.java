@@ -21,6 +21,7 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
 import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
+import sk.iway.iwcm.system.multidomain.DomainRequestBeanScope;
 
 /** Adapts CMS assistant and domain context to the framework-neutral embedding action. */
 @Service
@@ -79,7 +80,6 @@ public class EmbeddingService {
         if (Tools.isEmpty(assistant.getModel())) {
             throw new ProviderCallException("RAG embedding assistant has no model configured");
         }
-
         int dimensions = getDimensions();
         if (dimensions < 1) {
             throw new ProviderCallException("RAG embedding dimensions must be greater than zero");
@@ -124,7 +124,9 @@ public class EmbeddingService {
 
     /** Returns the dimension required by the configured pgvector column. */
     public int getDimensions() {
-        return Constants.getInt("ragEmbeddingDimensions");
+        try (DomainRequestBeanScope ignored = DomainRequestBeanScope.open(null)) {
+            return Constants.getInt("ragEmbeddingDimensions");
+        }
     }
 
     private AiProviderConfig resolveConfiguration(

@@ -21,8 +21,25 @@ public interface EmbeddingChunkRepository extends DomainIdRepository<EmbeddingCh
 
     @Transactional
     @Modifying
+    @Query("DELETE FROM EmbeddingChunkEntity c WHERE c.entityType = :entityType AND c.entityId = :entityId")
+    void deleteByEntityTypeAndEntityId(
+        @Param("entityType") RagEntityType entityType,
+        @Param("entityId") Long entityId
+    );
+
+    @Transactional
+    @Modifying
     @Query("DELETE FROM EmbeddingChunkEntity c WHERE c.entityType = :entityType AND c.entityId = :entityId AND c.domainId = :domainId")
     void deleteByEntityTypeAndEntityIdAndDomainId(@Param("entityType") RagEntityType entityType, @Param("entityId") Long entityId, @Param("domainId") Integer domainId);
+
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM EmbeddingChunkEntity c WHERE c.entityType = :entityType AND c.entityId = :entityId AND (c.domainId IS NULL OR c.domainId <> :domainId)")
+    void deleteByEntityTypeAndEntityIdAndDomainIdNot(
+        @Param("entityType") RagEntityType entityType,
+        @Param("entityId") Long entityId,
+        @Param("domainId") Integer domainId
+    );
 
     @Transactional
     @Modifying
@@ -40,6 +57,12 @@ public interface EmbeddingChunkRepository extends DomainIdRepository<EmbeddingCh
 
     @Query("SELECT DISTINCT c.entityId FROM EmbeddingChunkEntity c WHERE c.entityType = :entityType AND c.domainId = :domainId")
     List<Integer> findDistinctEntityIdsByEntityTypeAndDomainId(RagEntityType entityType, Integer domainId);
+
+    @Query("SELECT DISTINCT c.entityId FROM EmbeddingChunkEntity c WHERE c.entityType = :entityType AND c.entityId IN :entityIds")
+    List<Integer> findDistinctEntityIdsByEntityTypeAndEntityIdIn(
+        @Param("entityType") RagEntityType entityType,
+        @Param("entityIds") List<Integer> entityIds
+    );
 
     @Query("SELECT DISTINCT c.entityId FROM EmbeddingChunkEntity c WHERE c.entityType = :entityType AND c.embeddingProvider = :embeddingProvider AND c.embeddingModel = :embeddingModel AND c.domainId = :domainId")
     List<Integer> findDistinctEntityIdsByEntityTypeAndEmbeddingProviderAndEmbeddingModelAndDomainId(

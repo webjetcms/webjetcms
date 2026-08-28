@@ -13,6 +13,7 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
@@ -146,8 +147,8 @@ public class SemanticIndexService {
 
     /**
      * Route a queue item to the appropriate handler based on entity type and action.
-     * The queue domain is authoritative because a deleted entity may no longer be available
-     * for resolving its domain.
+     * The queue domain is authoritative for indexing and stale-domain cleanup. Document IDs
+     * are global, so a delete removes every stored domain copy of the document.
      * @param item queue item to process
      */
     private void processEntity(IndexQueueEntity item, Set<Integer> readyDomains) {
@@ -164,10 +165,9 @@ public class SemanticIndexService {
         int domainId = item.getDomainId();
         int entityId = item.getEntityId();
         if (item.getAction() == RagIndexAction.DELETE) {
-            embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainId(
+            embeddingChunkRepository.deleteByEntityTypeAndEntityId(
                 DocDetailsContentExtractor.ENTITY_TYPE,
-                (long) entityId,
-                domainId
+                (long) entityId
             );
         } else if (item.getAction() == RagIndexAction.INDEX) {
             indexDocument(entityId, domainId, readyDomains);
@@ -182,7 +182,11 @@ public class SemanticIndexService {
     private void indexDocument(int docId, int queueDomainId, Set<Integer> readyDomains) {
         DocDetails doc = DocDB.getInstance().getDoc(docId);
         if (doc == null) {
-            Logger.debug(SemanticIndexService.class, "Document " + docId + " not found, skipping indexing");
+            embeddingChunkRepository.deleteByEntityTypeAndEntityId(
+                DocDetailsContentExtractor.ENTITY_TYPE,
+                (long) docId
+            );
+            Logger.debug(SemanticIndexService.class, "Document " + docId + " not found, removed stale embeddings");
             return;
         }
 
@@ -199,12 +203,24 @@ public class SemanticIndexService {
                 documentDomainId = 1;
             }
             if (documentDomainId != queueDomainId) {
-                throw new IllegalStateException(
-                    "RAG queue/document domain mismatch for doc " + docId +
-                    ": queueDomainId=" + queueDomainId + ", documentDomainId=" + documentDomainId
+                embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainId(
+                    DocDetailsContentExtractor.ENTITY_TYPE,
+                    (long) docId,
+                    queueDomainId
                 );
+                Logger.debug(
+                    SemanticIndexService.class,
+                    "RAG queue/document domain mismatch for doc " + docId +
+                    ": removed stale domain " + queueDomainId + ", current domain is " + documentDomainId
+                );
+                return;
             }
 
+            embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainIdNot(
+                DocDetailsContentExtractor.ENTITY_TYPE,
+                (long) docId,
+                queueDomainId
+            );
             ensureVectorStoreReady(queueDomainId, readyDomains);
             indexDocument(doc, domainName, queueDomainId);
         }
@@ -232,7 +248,7 @@ public class SemanticIndexService {
         long entityId = doc.getDocId();
         String provider = normalizeProviderId(Constants.getString("ragEmbeddingProvider"));
         String model = Constants.getString("ragEmbeddingModel");
-        int dimensions = Constants.getInt("ragEmbeddingDimensions");
+        int dimensions = embeddingService.getDimensions();
         boolean chunkRowsSaved = false;
 
         try {
