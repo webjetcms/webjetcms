@@ -25,7 +25,7 @@ odtiaľ sa prenesie aj do `build.properties` pre zobrazenie verzie v administrá
 - ```expandwar``` - spustí ```setup``` a rozbalí vygenerovaný ```WAR``` archív do adresára ```build/updatezip/WebContent```
 - ```define-artifact-properties``` - definuje vlastnosti pre generovanie artifaktov; verzia vygenerovaného artifaktu sa nastavuje vo vlastnosti ```artifact.version```
 - ```makejars``` - pripraví JAR archívy s triedami, zdrojovými súbormi, JavaDoc dokumentáciou a obsahom adresárov ```/admin``` a ```/components```
-- ```makepom``` - vygeneruje ```POM``` súbor Gradle úlohou ```writePom``` na základe závislostí definovaných v ```build.gradle```
+- ```makepom``` - vygeneruje a overí ```POM``` súbor Gradle úlohou ```verifyGeneratedPom```. Konkrétne verzie priamych závislostí zapisuje Gradle cez ```versionMapping```; WebJET následne nastaví kontrakt pre externý Tomcat, upraví legacy rozsah a odstráni historické interné závislosti.
 - ```finalwar``` - vytvorí štruktúru ```build/updatezip/finalwar``` a archív ```build/updatezip/webjetcms.war``` s aplikáciami zabalenými ako JAR súbory
 - ```createUpdateZip``` - vytvorí ```build/updatezip/artifacts/archive.zip``` pre aktualizáciu starej rozbalenej inštalácie bez JAR balenia
 - ```createUpdateZipJar``` - vytvorí ```build/updatezip/artifacts/archive-jar.zip``` pre inštaláciu používajúcu JAR balenie; spúšťa sa po príprave artifaktov
