@@ -138,7 +138,7 @@ Scenario('BUG - buttons-create disabled #56393-17 @singlethread', async ({ I, DT
     I.amOnPage("/admin/v9/apps/gallery/");
     I.waitForElement(".tree-col .dt-buttons button.buttons-create.disabled");
 
-    I.jstreeClick("test");
+    I.jstreeClick("test", true);
     I.waitForElement(".tree-col .dt-buttons button.buttons-create:not(.disabled)");
 
     I.click(".tree-col button.buttons-create");
