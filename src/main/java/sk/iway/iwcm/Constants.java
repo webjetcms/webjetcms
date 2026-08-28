@@ -43,7 +43,6 @@ public class Constants {
 	public static final String MOD_PERFORMANCE = "system.performance";
 	public static final String MOD_SEARCH = "apps.search";
 	public static final String MOD_SECURITY = "security";
-	public static final String MOD_SMS = "integrations.sms";
 	public static final String MOD_STAT = "apps.stat";
 	public static final String MOD_USER = "users";
 	public static final String SERVER_NAME_MACRO = "SERVER_NAME";
@@ -98,7 +97,6 @@ public class Constants {
 	public static final String MOD_WEBPAGES = "content.webpages";
 	public static final String MOD_FILES = "files";
 	public static final String MOD_ELFINDER = "files.elfinder";
-	public static final String MOD_GFS = "files.gfs";
 	public static final String MOD_FILE_HISTORY = "files.history";
 	public static final String MOD_UPLOAD = "files.upload";
 	public static final String MOD_VIDEO = "files.video";
@@ -393,9 +391,6 @@ public class Constants {
 
 		// vypne WJResponseWrapper pre WriteTag (ak by robilo problem)
 		setBoolean("disableWJResponseWrapper", false);
-
-		setBoolean("usrLogonRequireSMS", false, mods(MOD_USER, MOD_SECURITY, MOD_SMS),
-				"ak je true, tak prihlasenie na stranke vyzaduje SMS autorizaciu, vyzaduje nastavenie modulu SMS");
 
 		setInt("bannerCacheTime", 0, mods(MOD_BANNER, MOD_PERFORMANCE),
 				"ak je nastavené na hodnotu > 0 (v minútach) tak sa výber bannerov z DB cachuje, čo znamená, že sa nekontroluje zoznam bannerov pri každom zobrazení stránky (môže ale dôjsť k prekročeniu limitov videní)");
@@ -692,7 +687,7 @@ public class Constants {
 		setString("baseHrefLoopback", "", MOD_NETWORK,
 				"loopback HTTP adresa pre stahovanie suborov/stranok, ak je prazdne pouzije sa rovnaka ako vonkajsia");
 
-		setBoolean("formMailSendPlainText", false, mods(MOD_FORMMAIL, MOD_SEND_LINK),
+		setBoolean("formMailSendPlainText", false, mods(MOD_FORMMAIL),
 				"ak je nastavene na true je email z formularu odoslany ako plain text (nie HTML format)");
 
 		setBoolean("formMailRenderRadioCheckboxText", true, MOD_FORMMAIL,
@@ -1434,9 +1429,6 @@ public class Constants {
 		setString("fbrowserAlwaysShowFolders", "", MOD_ELFINDER,
 				"V premennej je mozne nastavit adresare oddelene znakom noveho riadka ktore sa budu zobrazovat na citanie vzdy aj pri nastavenej premennej fbrowserShowOnlyWritableFolders na true");
 
-		setBoolean("sassCompilerEnabled", false, MOD_TEMPLATES,
-				"nastavenim na true, sa zapne kompilacia sass a scss suborov");
-
 		setBoolean("imageAlwaysCreateGalleryBean", false, MOD_GALLERY,
 				"Ak je zapnute na true bude sa zaznam v gallery DB tabulke vytvarat aj pre obrazky mimo foto galerie");
 
@@ -1583,7 +1575,7 @@ public class Constants {
 						"\t\t\t\t{ name: 'tools', items: ['Undo', 'Redo', ';', 'Find', 'Replace']}",
 				MOD_EDITOR, "Konfiguracia poloziek ckeditor toolbaru pre standalone verziu");
 
-		setInt("metadataWaitTime", 0, mods(MOD_METADATA, MOD_GFS),
+		setInt("metadataWaitTime", 0, mods(MOD_METADATA),
 				"Pocet milisekund cakania pred vykonanim cistenia metadat, potrebne na GFS kvoli moznemu konfliktu v subore, kedze sa modifikuje existujuci subor po uploade");
 
 		setBoolean("enableStaticFilesExternalDir", false, MOD_SYSTEM_MULTIDOMAIN,

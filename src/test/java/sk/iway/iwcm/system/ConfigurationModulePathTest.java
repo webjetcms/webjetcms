@@ -101,7 +101,6 @@ class ConfigurationModulePathTest {
 		assertEquals("apps.gallery", modulesOf("galleryImageQuality"));
 		assertEquals("system.email;apps.dmail;apps.reservation;apps.form", modulesOf("defaultSenderName"));
 		assertEquals("apps.reservation", modulesOf("reservationAllDayStartTime"));
-		assertTrue(ConfigurationModulePath.parse(modulesOf("usrLogonRequireSMS")).contains("integrations.sms"));
 		assertEquals("files.metadata;files.gfs", modulesOf("metadataWaitTime"));
 		assertEquals("files.imageeditor", modulesOf("imageEditorDefaultTool"));
 		assertEquals("apps.structuremirroring", modulesOf("structureMirroringConfig"));
