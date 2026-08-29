@@ -297,6 +297,8 @@ function initClosure() {
     var jsTreeMoveUrl = somStromcek.data("rest-move-url");
     var jsTreeParamName = somStromcek.data("rest-param-name");
     var jsTreeSearchLabel = somStromcek.data("search-label") || WJ.translate('editor.directory_name');
+    var jsTreeSingleSelect = somStromcek.data("single-select") === true;
+    var jsTreeStateBeforeSearch = null;
     var treeInitialJsonFired = false;
 
     function getJstreeUrl() {
@@ -307,6 +309,7 @@ function initClosure() {
     $.jstree.defaults.core.dblclick_toggle = false;
     window.jstree = somStromcek.jstree({
         'core': {
+            'multiple': !jsTreeSingleSelect,
             'check_callback': function (operation, node, parent, position, more) {
                 if (operation === 'copy_node') {
                     return false;
@@ -515,13 +518,13 @@ function initClosure() {
         '<table class="table datatableInit dataTable no-footer" data-server-side="true" style="margin-left: 0px;" id="jstreeSearchTable">' +
             '<thead>' +
                 '<tr>' +
-                    `<th class="dt-format-selector dt-select-td cell-not-editable" tabindex="0" aria-controls="jstreeSearchTable" rowspan="1" colspan="1" data-column-index="0" style="padding: 8px 24px 4px 0px !important;">${jsTreeSearchLabel}</th>` +
+                    `<th id="tree-folder-search-label" class="dt-format-selector dt-select-td cell-not-editable" tabindex="0" aria-controls="jstreeSearchTable" rowspan="1" colspan="1" data-column-index="0" style="padding: 8px 24px 4px 0px !important;">${jsTreeSearchLabel}</th>` +
                 '</tr>' +
                 '<tr>' +
                     '<th class="dt-format-text" data-column-index="2" rowspan="1" colspan="1" style="padding: 0px 0px 4px 0px !important;">' +
                         '<div class="input-group">' +
                             select +
-                            '<input id="tree-folder-search-input" class="form-control form-control-sm filter-input" aria-label="'+WJ.translate("datatables.defaults.search.js")+'" />' +
+                            '<input id="tree-folder-search-input" class="form-control form-control-sm filter-input" aria-labelledby="tree-folder-search-label" />' +
                             '<button id="tree-folder-search-button" class="btn btn-sm btn-outline-secondary btn-search" aria-label="'+WJ.translate("datatables.defaults.search.js")+'"><i class="ti ti-search"></i></button>' +
                             '<button id="tree-folder-search-clear-button" class="btn btn-sm btn-outline-secondary btn-clear" style="padding-top: 4px;" aria-label="'+WJ.translate("button.reset")+'"><i class="ti ti-circle-x"></i></button>' +
                         '</div>' +
@@ -559,12 +562,18 @@ function initClosure() {
                 //EMPTY SEARCH
                 cancelSearch();
             } else {
+                let tree = somStromcek.jstree(true);
+                let currentState = tree.get_state();
+                if (WJ.urlGetParam("treeSearchValue", getJstreeUrl()) === null || currentState.core.selected.length > 0) {
+                    jsTreeStateBeforeSearch = currentState;
+                }
+
                 // Update url with search string - fire refresh
                 let url = WJ.urlUpdateParam( getJstreeUrl() , "treeSearchValue", searchString);
                 url = WJ.urlUpdateParam( url , "treeSearchType", $('#tree-folder-search-type').val());
 
                 somStromcek.data('rest-url', url);
-                somStromcek.jstree(true).refresh();
+                tree.refresh();
             }
         }
     });
@@ -585,6 +594,7 @@ function initClosure() {
         } else {
             //NEEDS to be there - clear search after change of tabs
             somStromcek.jstree(true).search("");
+            jsTreeStateBeforeSearch = null;
         }
         // Hide loader
         WJ.hideLoader();
@@ -606,11 +616,20 @@ function initClosure() {
             // Cancel search
             somStromcek.jstree(true).search("");
 
+            let tree = somStromcek.jstree(true);
+            let stateToRestore = null;
+            if (WJ.urlGetParam("treeSearchValue", getJstreeUrl()) !== null) {
+                let currentState = tree.get_state();
+                stateToRestore = currentState.core.selected.length > 0 ? currentState : jsTreeStateBeforeSearch;
+            }
+            jsTreeStateBeforeSearch = null;
+
             // Clean url - fire refresh
             let url = WJ.urlRemoveParam(getJstreeUrl(), "treeSearchValue");
             url = WJ.urlRemoveParam(url, "treeSearchType");
             somStromcek.data('rest-url', url);
-            somStromcek.jstree(true).refresh();
+            if (stateToRestore === null) tree.refresh();
+            else tree.refresh(false, function () { return stateToRestore; });
         }
     }
 

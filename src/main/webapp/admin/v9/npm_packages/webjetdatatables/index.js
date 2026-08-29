@@ -3134,7 +3134,7 @@ export const dataTableInit = options => {
                 //console.log(DATA.id+" url=", url, "data=", restParams);
 
                 //finally, make the request
-                $.ajax({
+                return $.ajax({
                     "dataType": 'json',
                     "type": "GET",
                     "url": url,

@@ -27,8 +27,6 @@ import java.util.Map;
  */
 public abstract class JsTreeRestController<T> {
 
-    private Prop prop;
-
     @Autowired
     private HttpServletRequest request;
 
@@ -129,10 +127,7 @@ public abstract class JsTreeRestController<T> {
     public abstract boolean checkAccessAllowed(HttpServletRequest request);
 
     protected Prop getProp() {
-        if (prop == null) {
-            prop = Prop.getInstance(getRequest());
-        }
-        return prop;
+        return Prop.getInstance(getRequest());
     }
 
     public HttpServletRequest getRequest() {

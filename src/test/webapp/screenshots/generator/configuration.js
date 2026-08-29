@@ -6,12 +6,13 @@ Before(({ login }) => {
     login('admin');
 });
 
-Scenario('Components configuration', ({ I, DT, DTE, Document }) => {
+Scenario('Components configuration', async ({ I, DT, DTE, Document }) => {
     Document.setConfigValue('editorAutoFillPublishStart', 'true');
     Document.setConfigValue('usersSplitByDomain', 'false');
     Document.setConfigValue('ragSemanticSearchEnabled', 'false');
 
     I.amOnPage("/admin/v9/settings/configuration/");
+    I.waitForElement("#SomStromcek li[data-configuration-view='changed'] > a.jstree-anchor", 10);
 
     //
     I.say("Creating temporary value");
@@ -35,7 +36,7 @@ Scenario('Components configuration', ({ I, DT, DTE, Document }) => {
     Document.screenshot("/admin/setup/configuration/page.png");
     I.pressKey("Escape");
     I.waitToHide(".configuration-value-tooltip.show", 5);
-    I.toastrClose();
+    await I.clickIfVisible("#toast-container-webjet button.toast-close-button");
 
     I.clickCss("button.buttons-create");
     DTE.waitForEditor(datatableName);
