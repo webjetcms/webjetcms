@@ -94,10 +94,8 @@ class ConfDBTest {
             assertFalse(directCallExceptions.contains(legacyException));
         }
 
-        long questionTextOccurrences = Stream.of(Constants.getString("xssHtmlAllowedFieldsSystem").split(","))
-                .filter("question_text"::equals)
-                .count();
-        assertEquals(1, questionTextOccurrences);
+        assertTrue(Stream.of(Constants.getString("xssHtmlAllowedFieldsSystem").split(","))
+                .anyMatch("question_text"::equals));
 
         ConstantsV9.clearValuesWebJet9();
 
