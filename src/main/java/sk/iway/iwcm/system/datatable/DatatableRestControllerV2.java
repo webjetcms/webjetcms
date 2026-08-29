@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import javax.persistence.EmbeddedId;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Query;
 import javax.persistence.Table;
@@ -156,6 +157,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 * @return
 	 */
 	public T insertItem(T entity) {
+		prepareEntityForCreate(entity);
 		//musime z editoFields najskor prepisat hodnoty do entity
 		T processed = processToEntity(entity, ProcessItemAction.CREATE);
 		//ulozime
@@ -1581,6 +1583,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
 	@PostMapping("/add")
 	public ResponseEntity<T> add(@Valid @RequestBody T entity) {
+		prepareEntityForCreate(entity);
 		beforeSave(entity);
 		if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
 
@@ -1608,6 +1611,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
 	@PostMapping("/edit/{id}")
 	public ResponseEntity<T> edit(@PathVariable("id") long id, @Valid @RequestBody T entity) {
+		prepareEntityIdForUpdate(entity, id);
 		beforeSave(entity);
 		if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
 
@@ -1629,6 +1633,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	public ResponseEntity<Map<String, Object>> delete(@PathVariable("id") long id, @RequestBody T entity) {
 		clearThreadData();
 		Map<String, Object> result = new HashMap<>();
+		prepareEntityIdForUpdate(entity, id);
 		checkItemPermsThrows(entity, id);
 
 		boolean deleted = false;
@@ -2237,6 +2242,10 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	protected void copyEntityIntoOriginal(T entity, T one) {
 		List<String> alwaysCopyProperties = new ArrayList<>();
 		List<String> ignoreProperties = new ArrayList<>();
+		List<String> identifierProperties = new ArrayList<>();
+		for (Field field : getIdentifierFields(entity.getClass())) {
+			identifierProperties.add(field.getName());
+		}
 
 		Field[] declaredFields = AuditEntityListener.getDeclaredFieldsTwoLevels(entity.getClass());
 		for (Field field : declaredFields) {
@@ -2284,7 +2293,95 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			}
 		}
 
+		alwaysCopyProperties.removeAll(identifierProperties);
+		ignoreProperties.addAll(identifierProperties);
 		NullAwareBeanUtils.copyProperties(entity, one, alwaysCopyProperties, ignoreProperties.toArray(new String[0]));
+	}
+
+	/**
+	 * Override only for a legacy create endpoint that intentionally uses a generated ID as an update target.
+	 */
+	protected boolean allowGeneratedIdOnCreate(T entity) {
+		return false;
+	}
+
+	private void prepareEntityForCreate(T entity) {
+		if (allowGeneratedIdOnCreate(entity)==false) clearGeneratedEntityId(entity);
+	}
+
+	/**
+	 * A create request must never turn into an update just because the client sent a generated ID.
+	 * Assigned IDs are intentionally preserved for backwards compatibility.
+	 */
+	private void clearGeneratedEntityId(T entity) {
+		if (entity == null) return;
+
+		BeanWrapperImpl beanWrapper = new BeanWrapperImpl(entity);
+		for (Field field : getIdentifierFields(entity.getClass())) {
+			if (field.isAnnotationPresent(GeneratedValue.class)==false) continue;
+
+			try {
+				Object value = beanWrapper.getPropertyValue(field.getName());
+				if (value == null) continue;
+				beanWrapper.setPropertyValue(field.getName(), field.getType().isPrimitive() ? Integer.valueOf(0) : null);
+			} catch (RuntimeException ex) {
+				Logger.error(DatatableRestControllerV2.class, "Unable to clear generated ID field: " + field.getName(), ex);
+				throwConstraintViolation("datatables.error.recordIsNotEditable");
+			}
+		}
+	}
+
+	/**
+	 * Makes the URL ID authoritative before permissions and controller hooks are executed.
+	 * Missing IDs are filled for compatibility with older partial payloads; a different positive
+	 * ID is always rejected. Imports may intentionally use a non-positive ID to turn update into create.
+	 */
+	private void prepareEntityIdForUpdate(T entity, long pathId) {
+		if (entity == null) return;
+
+		List<Field> identifierFields = getIdentifierFields(entity.getClass());
+		if (identifierFields.size() != 1 || identifierFields.get(0).isAnnotationPresent(EmbeddedId.class)) return;
+
+		Field field = identifierFields.get(0);
+		BeanWrapperImpl beanWrapper = new BeanWrapperImpl(entity);
+		try {
+			Object value = beanWrapper.getPropertyValue(field.getName());
+			if (value instanceof Number) {
+				long entityId = ((Number)value).longValue();
+				if (entityId > 0 && entityId != pathId) {
+					throwConstraintViolation("datatables.error.recordIsNotEditable");
+				}
+				if (entityId > 0 || isImporting()) return;
+			} else if (value != null) {
+				throwConstraintViolation("datatables.error.recordIsNotEditable");
+			} else if (isImporting()) {
+				return;
+			}
+
+			beanWrapper.setPropertyValue(field.getName(), Long.valueOf(pathId));
+			Object normalizedId = beanWrapper.getPropertyValue(field.getName());
+			if (normalizedId instanceof Number == false || ((Number)normalizedId).longValue() != pathId) {
+				throwConstraintViolation("datatables.error.recordIsNotEditable");
+			}
+		} catch (ConstraintViolationException ex) {
+			throw ex;
+		} catch (RuntimeException ex) {
+			Logger.error(DatatableRestControllerV2.class, "Unable to validate ID field: " + field.getName(), ex);
+			throwConstraintViolation("datatables.error.recordIsNotEditable");
+		}
+	}
+
+	private static List<Field> getIdentifierFields(Class<?> initialClass) {
+		List<Field> fields = new ArrayList<>();
+		Class<?> targetClass = initialClass;
+		int failsafe = 0;
+		while (targetClass != null && failsafe++ < 15) {
+			for (Field field : targetClass.getDeclaredFields()) {
+				if (field.isAnnotationPresent(Id.class) || field.isAnnotationPresent(EmbeddedId.class)) fields.add(field);
+			}
+			targetClass = targetClass.getSuperclass();
+		}
+		return fields;
 	}
 
 	public void setValidator(Validator validator) {

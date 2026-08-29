@@ -29,6 +29,7 @@ import sk.iway.iwcm.test.TestRequest;
 import sk.iway.spring.SpringApplication;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -38,11 +39,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.persistence.Embeddable;
+import javax.persistence.EmbeddedId;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
@@ -113,6 +120,173 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
         // Verify that beforeSave and afterSave were called ONLY once
         assertEquals(1, controller.getBeforeSaveCounter(), "beforeSave should be called once");
         assertEquals(1, controller.getAfterSaveCounter(), "afterSave should be called once");
+    }
+
+    @Test
+    void testAddClearsInheritedGeneratedIdBeforeSave() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<GeneratedIdTestEntity, Long> repository = mock(JpaRepository.class);
+        AtomicReference<Long> idAtSave = new AtomicReference<>();
+        when(repository.save(any())).thenAnswer(invocation -> {
+            GeneratedIdTestEntity entity = invocation.getArgument(0);
+            idAtSave.set(entity.getRecordId());
+            return new GeneratedIdTestEntity(123L, entity.getName());
+        });
+
+        AtomicReference<Long> idSeenByBeforeSave = new AtomicReference<>();
+        DatatableRestControllerV2<GeneratedIdTestEntity, Long> generatedIdController =
+                createGeneratedIdController(repository, idSeenByBeforeSave);
+        GeneratedIdTestEntity submitted = new GeneratedIdTestEntity(999L, "new record");
+
+        GeneratedIdTestEntity saved = generatedIdController.add(submitted).getBody();
+
+        verify(repository).save(any());
+        assertNull(idSeenByBeforeSave.get(), "Controller hooks must not see a client-provided generated ID");
+        assertNull(idAtSave.get(), "A generated body ID must not turn create into JPA merge");
+        assertEquals(123L, saved.getRecordId());
+    }
+
+    @Test
+    void testAddAllowsExplicitLegacyGeneratedIdOptOut() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<GeneratedIdTestEntity, Long> repository = mock(JpaRepository.class);
+        AtomicReference<Long> idAtSave = new AtomicReference<>();
+        when(repository.save(any())).thenAnswer(invocation -> {
+            GeneratedIdTestEntity entity = invocation.getArgument(0);
+            idAtSave.set(entity.getRecordId());
+            return entity;
+        });
+
+        DatatableRestControllerV2<GeneratedIdTestEntity, Long> legacyController =
+                new DatatableRestControllerV2<>(repository) {
+                    @Override
+                    protected boolean allowGeneratedIdOnCreate(GeneratedIdTestEntity entity) {
+                        return true;
+                    }
+                };
+        legacyController.setValidator(validator);
+        legacyController.setRequest(controller.getRequest());
+
+        legacyController.add(new GeneratedIdTestEntity(999L, "legacy update"));
+
+        assertEquals(999L, idAtSave.get());
+    }
+
+    @Test
+    void testAddPreservesAssignedId() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<AssignedIdTestEntity, Long> repository = mock(JpaRepository.class);
+        when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        DatatableRestControllerV2<AssignedIdTestEntity, Long> assignedIdController =
+                new DatatableRestControllerV2<>(repository) {};
+        assignedIdController.setValidator(validator);
+        assignedIdController.setRequest(controller.getRequest());
+
+        AssignedIdTestEntity submitted = new AssignedIdTestEntity(999L);
+        assignedIdController.add(submitted);
+
+        assertEquals(999L, submitted.getRecordId(), "Application-assigned IDs must stay backwards compatible");
+    }
+
+    @Test
+    void testEditorCreateClearsGeneratedIdForNewAndDuplicatedRows() {
+        assertEditorCreateClearsGeneratedId(-1L);
+        assertEditorCreateClearsGeneratedId(999L);
+    }
+
+    @Test
+    void testEditRejectsDifferentPositiveBodyIdBeforeHooks() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<GeneratedIdTestEntity, Long> repository = mock(JpaRepository.class);
+        AtomicReference<Long> idSeenByBeforeSave = new AtomicReference<>();
+        DatatableRestControllerV2<GeneratedIdTestEntity, Long> generatedIdController =
+                createGeneratedIdController(repository, idSeenByBeforeSave);
+
+        GeneratedIdTestEntity submitted = new GeneratedIdTestEntity(999L, "attacker value");
+
+        assertThrows(ConstraintViolationException.class, () -> generatedIdController.edit(123L, submitted));
+        assertNull(idSeenByBeforeSave.get(), "Mismatched ID must be rejected before controller hooks");
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void testEditorEditRejectsDifferentPositiveBodyId() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<GeneratedIdTestEntity, Long> repository = mock(JpaRepository.class);
+        DatatableRestControllerV2<GeneratedIdTestEntity, Long> generatedIdController =
+                createGeneratedIdController(repository);
+
+        DatatableRequest<Long, GeneratedIdTestEntity> request = new DatatableRequest<>();
+        request.setAction("edit");
+        request.setData(Map.of(123L, new GeneratedIdTestEntity(999L, "attacker value")));
+
+        assertThrows(ConstraintViolationException.class,
+                () -> generatedIdController.handleEditor(generatedIdController.getRequest(), request));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void testDeleteRejectsDifferentPositiveBodyId() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<GeneratedIdTestEntity, Long> repository = mock(JpaRepository.class);
+        DatatableRestControllerV2<GeneratedIdTestEntity, Long> generatedIdController =
+                createGeneratedIdController(repository);
+
+        assertThrows(ConstraintViolationException.class,
+                () -> generatedIdController.delete(123L, new GeneratedIdTestEntity(999L, "attacker value")));
+
+        verify(repository, never()).delete(any());
+    }
+
+    @Test
+    void testEditUsesPathIdForOlderPayloadWithoutId() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<GeneratedIdTestEntity, Long> repository = mock(JpaRepository.class);
+        GeneratedIdTestEntity original = new GeneratedIdTestEntity(123L, "old value");
+        when(repository.existsById(123L)).thenReturn(true);
+        when(repository.findById(123L)).thenReturn(Optional.of(original));
+        when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        AtomicReference<Long> idSeenByBeforeSave = new AtomicReference<>();
+        DatatableRestControllerV2<GeneratedIdTestEntity, Long> generatedIdController =
+                createGeneratedIdController(repository, idSeenByBeforeSave);
+        GeneratedIdTestEntity submitted = new GeneratedIdTestEntity(null, "new value");
+
+        generatedIdController.edit(123L, submitted);
+
+        assertEquals(123L, submitted.getRecordId());
+        assertEquals(123L, idSeenByBeforeSave.get(), "Hooks must see the server-authoritative path ID");
+        assertEquals(123L, original.getRecordId());
+        assertEquals("new value", original.getName());
+    }
+
+    @Test
+    void testCopyEntityIntoOriginalNeverCopiesJpaIdentifiers() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<GeneratedIdTestEntity, Long> repository = mock(JpaRepository.class);
+        DatatableRestControllerV2<GeneratedIdTestEntity, Long> generatedIdController =
+                createGeneratedIdController(repository);
+        GeneratedIdTestEntity original = new GeneratedIdTestEntity(123L, "old value");
+
+        generatedIdController.copyEntityIntoOriginal(
+                new GeneratedIdTestEntity(999L, "new value"), original);
+
+        assertEquals(123L, original.getRecordId());
+        assertEquals("new value", original.getName());
+
+        @SuppressWarnings("unchecked")
+        JpaRepository<EmbeddedIdTestEntity, Long> embeddedRepository = mock(JpaRepository.class);
+        DatatableRestControllerV2<EmbeddedIdTestEntity, Long> embeddedController =
+                new DatatableRestControllerV2<>(embeddedRepository) {};
+        EmbeddedTestId originalId = new EmbeddedTestId(1L, 2L);
+        EmbeddedIdTestEntity embeddedOriginal = new EmbeddedIdTestEntity(originalId, "old value");
+
+        embeddedController.copyEntityIntoOriginal(
+                new EmbeddedIdTestEntity(new EmbeddedTestId(9L, 9L), "new value"), embeddedOriginal);
+
+        assertEquals(originalId, embeddedOriginal.getRecordId());
+        assertEquals("new value", embeddedOriginal.getName());
     }
 
     @Test
@@ -457,6 +631,161 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
         assertEquals(1L, entity.getId());
         assertEquals(1, entity.getDomainId());
         verify(repository, never()).saveAll(any());
+    }
+
+    private DatatableRestControllerV2<GeneratedIdTestEntity, Long> createGeneratedIdController(
+            JpaRepository<GeneratedIdTestEntity, Long> repository) {
+        return createGeneratedIdController(repository, null);
+    }
+
+    private DatatableRestControllerV2<GeneratedIdTestEntity, Long> createGeneratedIdController(
+            JpaRepository<GeneratedIdTestEntity, Long> repository, AtomicReference<Long> idSeenByBeforeSave) {
+        DatatableRestControllerV2<GeneratedIdTestEntity, Long> generatedIdController =
+                new DatatableRestControllerV2<>(repository) {
+                    @Override
+                    public void beforeSave(GeneratedIdTestEntity entity) {
+                        if (idSeenByBeforeSave != null) idSeenByBeforeSave.set(entity.getRecordId());
+                    }
+                };
+        generatedIdController.setValidator(validator);
+        generatedIdController.setRequest(controller.getRequest());
+        return generatedIdController;
+    }
+
+    private void assertEditorCreateClearsGeneratedId(long requestId) {
+        @SuppressWarnings("unchecked")
+        JpaRepository<GeneratedIdTestEntity, Long> repository = mock(JpaRepository.class);
+        AtomicReference<Long> idAtSave = new AtomicReference<>();
+        when(repository.save(any())).thenAnswer(invocation -> {
+            GeneratedIdTestEntity entity = invocation.getArgument(0);
+            idAtSave.set(entity.getRecordId());
+            return new GeneratedIdTestEntity(123L, entity.getName());
+        });
+
+        DatatableRestControllerV2<GeneratedIdTestEntity, Long> generatedIdController =
+                createGeneratedIdController(repository);
+        DatatableRequest<Long, GeneratedIdTestEntity> request = new DatatableRequest<>();
+        request.setAction("create");
+        request.setData(Map.of(requestId, new GeneratedIdTestEntity(999L, "new record")));
+
+        generatedIdController.handleEditor(generatedIdController.getRequest(), request);
+
+        verify(repository).save(any());
+        assertNull(idAtSave.get(), "Editor create must persist without a client-provided generated ID");
+    }
+
+    private static class GeneratedIdTestEntityBase {
+
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long recordId;
+
+        GeneratedIdTestEntityBase(Long recordId) {
+            this.recordId = recordId;
+        }
+
+        public Long getRecordId() {
+            return recordId;
+        }
+
+        public void setRecordId(Long recordId) {
+            this.recordId = recordId;
+        }
+    }
+
+    private static class GeneratedIdTestEntity extends GeneratedIdTestEntityBase {
+
+        private String name;
+
+        GeneratedIdTestEntity(Long recordId, String name) {
+            super(recordId);
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
+
+    private static class AssignedIdTestEntity {
+
+        @Id
+        private Long recordId;
+
+        AssignedIdTestEntity(Long recordId) {
+            this.recordId = recordId;
+        }
+
+        public Long getRecordId() {
+            return recordId;
+        }
+
+        public void setRecordId(Long recordId) {
+            this.recordId = recordId;
+        }
+    }
+
+    @Embeddable
+    private static class EmbeddedTestId implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+
+        private Long parentId;
+        private Long itemId;
+
+        EmbeddedTestId() {
+            // JPA constructor
+        }
+
+        EmbeddedTestId(Long parentId, Long itemId) {
+            this.parentId = parentId;
+            this.itemId = itemId;
+        }
+
+        @Override
+        public boolean equals(Object object) {
+            if (this == object) return true;
+            if (object instanceof EmbeddedTestId == false) return false;
+            EmbeddedTestId other = (EmbeddedTestId)object;
+            return java.util.Objects.equals(parentId, other.parentId) && java.util.Objects.equals(itemId, other.itemId);
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(parentId, itemId);
+        }
+    }
+
+    private static class EmbeddedIdTestEntity {
+
+        @EmbeddedId
+        private EmbeddedTestId recordId;
+        private String name;
+
+        EmbeddedIdTestEntity(EmbeddedTestId recordId, String name) {
+            this.recordId = recordId;
+            this.name = name;
+        }
+
+        public EmbeddedTestId getRecordId() {
+            return recordId;
+        }
+
+        public void setRecordId(EmbeddedTestId recordId) {
+            this.recordId = recordId;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
     }
 
     private static class RowReorderTestEntity {

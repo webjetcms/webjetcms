@@ -65,7 +65,7 @@ public class UserDetailsSelfController extends DatatableRestControllerV2<UserDet
             throwPermsDenied();
         }
         UserDetailsSelfEntity saved = super.editItem(entity, id);
-        UserDetailsService.savePassword(entity.getPassword(), entity.getId().intValue());
+        UserDetailsService.savePassword(entity.getPassword(), saved.getId().intValue());
         return saved;
 	}
 

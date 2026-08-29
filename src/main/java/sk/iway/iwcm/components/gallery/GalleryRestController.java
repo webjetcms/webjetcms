@@ -291,6 +291,11 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
     }
 
     @Override
+    protected boolean allowGeneratedIdOnCreate(GalleryEntity entity) {
+        return isImageEditor();
+    }
+
+    @Override
     public GalleryEntity editItem(GalleryEntity entity, long id) {
         GalleryEntity original = getOne(id);
         GalleryEntity saved = super.editItem(entity, id);
