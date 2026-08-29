@@ -8,8 +8,8 @@
 
 - The dependency on the [Vue.js](https://vuejs.org) library has been removed from the administration. We recommend checking the compatibility of your own applications before updating. The size of JavaScript files has been reduced by approximately 170kB, which also has an impact on the speed of administration initialization. More in the [programmer section](#programmer).
 - AspectJ - support for `load-time weavingu` (`aspectjweaver` and `META-INF/aop-ajc.xml`) has been removed from the distribution; built-in aspects are processed at compile time, more in [programmer section](#programmer section). When using in a MultiWeb installation, you can remove the `-javaagent:/www/tomcat/.../aspectjweaver.jar` setting from `JAVA_OPTS` in the application server (#290).
-- Flash content export - the legacy generation of `/flash_xml/{docId}.xml` files when publishing a page has been removed. The `exportFlash` configuration variable is no longer supported, and defining it in `SpringConfig` does not restore the feature (#293).
-- Microsoft SQL Server - support for versions earlier than 2012 and the `mssqlUseOldTopQuery` configuration variable have been removed. WebJET CMS requires Microsoft SQL Server 2012 or later; the legacy `TOP`-based pagination is no longer supported (#293).
+- Export content for Flash - the historical feature of generating XML files `/flash_xml/{docId}.xml` when publishing a page has been removed. The configuration variable `exportFlash` is no longer supported and defining it in `SpringConfig` will not restore the feature (#293).
+- Microsoft SQL Server - support for versions older than 2012 has been discontinued and the `mssqlUseOldTopQuery` configuration variable has been removed. WebJET CMS requires Microsoft SQL Server 2012 or later, the old paging method using `TOP` is no longer supported (#293).
 
 ### Websites
 

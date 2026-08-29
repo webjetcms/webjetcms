@@ -18,7 +18,7 @@ Instructions for setting up a new installation/clean database for a new project 
 - A functional DNS server.
 - To speed up the generation of preview images, we recommend installing the [ImageMagick](https://imagemagick.org/script/download.php) library.
 
-!>**Microsoft SQL Server:** version 2012 (11.x) or later is supported. Earlier versions are not supported because news-list pagination uses the `OFFSET/FETCH` clauses. The removed `mssqlUseOldTopQuery` configuration variable cannot be used to restore support for older versions.
+!>**Microsoft SQL Server:** Version 2012 or later is supported. Older versions are not supported.
 
 For installations of products such as `NET, LMS, DSK`, the minimum requirements are suitable for installations up to 50 users (25 working simultaneously). For a higher number of users, it is necessary to increase the RAM and CPU memory appropriately - for every additional 50 users working simultaneously +4GB of memory and 1CPU. For more than 200 users, we recommend a cluster solution.
 
