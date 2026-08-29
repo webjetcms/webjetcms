@@ -8,6 +8,8 @@
 
 - The dependency on the [Vue.js](https://vuejs.org) library has been removed from the administration. We recommend checking the compatibility of your own applications before updating. The size of JavaScript files has been reduced by approximately 170kB, which also has an impact on the speed of administration initialization. More in the [programmer section](#programmer).
 - AspectJ - support for `load-time weavingu` (`aspectjweaver` and `META-INF/aop-ajc.xml`) has been removed from the distribution; built-in aspects are processed at compile time, more in [programmer section](#programmer section). When using in a MultiWeb installation, you can remove the `-javaagent:/www/tomcat/.../aspectjweaver.jar` setting from `JAVA_OPTS` in the application server (#290).
+- Flash content export - the legacy generation of `/flash_xml/{docId}.xml` files when publishing a page has been removed. The `exportFlash` configuration variable is no longer supported, and defining it in `SpringConfig` does not restore the feature (#293).
+- Microsoft SQL Server - support for versions earlier than 2012 and the `mssqlUseOldTopQuery` configuration variable have been removed. WebJET CMS requires Microsoft SQL Server 2012 or later; the legacy `TOP`-based pagination is no longer supported (#293).
 
 ### Websites
 
@@ -216,8 +218,6 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 		setString("smsSendInternational", "", MOD_SMS, "Format cisla pre SMS, moze mat hodnoty ++42, +42, 42");
 		setInt("smsSendMaxlength", 140, MOD_SMS, "maximalna dlzka SMS spravy");
 		setString("syncRemoteServer", "", "sync", "Adresa servera, s ktorym sa tento synchronizuje");
-		setBoolean("exportFlash", false, MOD_EDITOR,
-				"Ak je true, bude sa obsah stranok exportovat do XML pre Flash (do adresara /flash_xml/DOCID.xml)");
 		setString("multilang", "", MOD_CONFIG, "overwrite string na ziskanie moznych hodnot MultilangDB");
 		setBoolean("editorEnableXHTML", true, MOD_OBSOLETE, "xhtml mode for Struts framework");
 		setBoolean("usrLogonRequireSMS", false, "user;security",
@@ -296,8 +296,6 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 		setString("mgzBugErrorStrings", "bug,chyba", MOD_MAGZILLA, " Vyhladavane texty pri nefakturovanom case");
 		setBoolean("zmluvyApprovEditChanges", false, "zmluvy",
 				"Pokial je nastavena hodnota na true, tak editovanu zmluvu bude treba opatovne schvalit na publikaciu. E-mail o zmene sa posle schvalovatelom ci je hodnota true alebo false.");
-		setString("saturFtpUsername", "proviz", "cestovka", "FTP prihlasovacie meno pre SATUR stahovanie obrazkov");
-		setString("saturFtpPassword", "proviz11", "cestovka", "FTP heslo pre SATUR stahovanie obrazkov");
 		setBoolean("portalStartup", false, "portal", "Spustanie portalu pri starte WJ");
 		setString("AngularCDNVersion", "2.0.0-beta.0");
 		setBoolean("sassCompilerEnabled", false, MOD_CONFIG,
@@ -306,8 +304,6 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 		setString("emailAttachmentsPublisher.pop3.host", "", "emailAttachmentsPublisher", "adresa na pop3");
 		setString("emailAttachmentsPublisher.pop3.user", "", "emailAttachmentsPublisher", "pouzivatel na pop3");
 		setString("emailAttachmentsPublisher.pop3.password", "", "emailAttachmentsPublisher", "heslo na pop3");
-		setBoolean("mssqlUseOldTopQuery", false, MOD_OBSOLETE,
-				"Zapnutie starej verzie TOP query pre MSSQL, je potrebne pre MSSQL < 2012, pouziva sa pri news query");
 		setBoolean("zmluvyEnableVo", false, "zmluvy",
 				"Ak je nastavena na true, tak sa budu zobrazovat aj skupiny pre verejne obstaravanie.");
 ```

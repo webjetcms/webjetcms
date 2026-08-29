@@ -108,6 +108,12 @@ public class ConfigurationController extends DatatableRestControllerV2<ConfDetai
     }
 
     @Override
+    public boolean checkItemPerms(ConfDetailsDto confDetailsDto, Long id) {
+        Identity user = getUser();
+        return user != null && confDetailsDto != null && ConfDB.isKeyVisibleToUser(user, confDetailsDto.getName());
+    }
+
+    @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, ConfDetailsDto> target, Identity currentUser, Errors errors, Long id, ConfDetailsDto confDetailsDto) {
         String configEnabledKeys = Constants.getStringExecuteMacro("configEnabledKeys");
         String[] enabledKeys = Tools.getTokens(configEnabledKeys, ",");

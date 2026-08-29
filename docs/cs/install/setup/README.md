@@ -18,6 +18,8 @@ Návod na zřízení nové instalace/čisté databáze pro nový projekt ve WebJ
 - Funkční DNS server.
 - Pro urychlení generování náhledových obrázků doporučujeme nainstalovanou knihovnu [ImageMagick](https://imagemagick.org/script/download.php).
 
+!>**Microsoft SQL Server:** podporována je verze 2012 (11.x) nebo novější. Starší verze nejsou podporovány, protože stránkování seznamu novinek používá příkazy `OFFSET/FETCH`. Odstraněnou konfigurační proměnnou `mssqlUseOldTopQuery` nelze použít k obnovení podpory starších verzí.
+
 Pro instalace produktů jako je `NET, LMS, DSK` jsou uvedeny minimální požadavky vhodné pro instalace do 50 uživatelů (současně pracujících 25). Pro vyšší počet uživatelů je třeba vhodně navýšit paměť RAM i CPU – pro každých dalších současně pracujících 50 uživatelů +4GB paměti a 1CPU. Pro více než 200 uživatelů doporučujeme clusterové řešení.
 
 Pro instalace produktů jako je `NET, LMS, DSK` je na serveru třeba povolit `websocket` spojení a instalovat server [RabbitMQ](https://www.rabbitmq.com/).
