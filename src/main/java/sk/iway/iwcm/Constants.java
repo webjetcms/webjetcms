@@ -440,7 +440,7 @@ public class Constants {
 		setString("yamdiPath", "", MOD_VIDEO, "cesta k programu yamdi pre vlozenie meta info do FLV suborov");
 
 		// default skin pre WebJET
-		setString("defaultSkin", "webjet8");
+		setString("defaultSkin", "webjet9", MOD_CONFIG, "Predvoleny skin administracie WebJET CMS.");
 
 		setString("spamProtectionJavascript", "all formtagCsrf formmailCsrf formmail mailto", mods(MOD_SPAM, MOD_FORMMAIL),
 				"ak je nastavené na all (budú chránené všetky formuláre) alebo formmail (chránené budú len formuláre odosielané na email), budú formuláre chránené javascriptom, pre deaktivovanie funkcie je potrebné zadať none. Štandardne nastavené na all.");
@@ -1182,7 +1182,7 @@ public class Constants {
 				"Zoznam nahrad URL adries pre ContextFilter.removeContextPath vo formate stara_url|nova_url, kazdy zaznam na novom riadku, vyraz {CP} sa nahradza za ContextPath");
 
 		setString("componentsDirectCallExceptionsSystem",
-				"/components/_common/clk.jsp,/components/_common/combine.jsp,/components/_common/html_tags_support.jsp,/components/_common/wysiwyg/,%.js.jsp,/components/banner/banner.jsp,%/invoice_email.jsp,/components/basket/order_payment_bank_reply.jsp,/components/blog/blog_save.jsp,%/detail.jsp,/components/cestovka/,%/upload.jsp,/components/forum/iframe.jsp,%new.jsp,%/saveok.jsp,%/savefail.jsp,%/new_file.jsp,%/send_card.jsp,%/show_gallery_image,%videoplayer.jsp,%ajax,%voteResultsDiv,%check_form,%/forum-open,%/forum_mb_open,%/forum_mb,/components/magzilla/,/components/helpdesk/,%-approve.jsp,/components/mail/,/components/mcalendar/,%send_link_form,/components/reservation/,/components/user/change_password.jsp,/components/user/authorize.jsp,%import.jsp,/components/zmluvy/,/components/server_monitoring/monitor.jsp,/components/chat/js.jsp,/components/page_update_info/add_subscriber,/components/page_update_info/remove_subscriber,%jscript.jsp,%addbasket_popup.jsp,/components/messages/refresher-ac.jsp,%/iframe_blank,/components/user/fileforward.jsp,%spamprotectiondisable.jsp,%/htmlarea/,%json,/components/qa/admin_answer.jsp,%popcalendar.jsp,%jscripts.jsp,%chart.jsp,%date_locale.jsp,%click.jsp,/components/user/logon.jsp,/components/cloud/calendar/potvrd_akciu_verejnost.jsp,/components/customer_reviews/potvrd_review.jsp,/components/gis/potvrd_gis.jsp,/components/gallery/photoswipe/photoswipe.jsp",
+				"/components/_common/clk.jsp,/components/_common/combine.jsp,/components/_common/html_tags_support.jsp,/components/_common/wysiwyg/,%.js.jsp,/components/banner/banner.jsp,%/invoice_email.jsp,/components/basket/order_payment_bank_reply.jsp,/components/blog/blog_save.jsp,%/detail.jsp,%/upload.jsp,/components/forum/iframe.jsp,%new.jsp,%/saveok.jsp,%/savefail.jsp,%/new_file.jsp,%/send_card.jsp,%/show_gallery_image,%videoplayer.jsp,%ajax,%voteResultsDiv,%check_form,%/forum-open,%/forum_mb_open,%/forum_mb,%-approve.jsp,%send_link_form,/components/reservation/,/components/user/change_password.jsp,/components/user/authorize.jsp,%import.jsp,/components/zmluvy/,/components/server_monitoring/monitor.jsp,/components/page_update_info/add_subscriber,/components/page_update_info/remove_subscriber,%jscript.jsp,%addbasket_popup.jsp,/components/messages/refresher-ac.jsp,%/iframe_blank,/components/user/fileforward.jsp,%spamprotectiondisable.jsp,%/htmlarea/,%json,/components/qa/admin_answer.jsp,%popcalendar.jsp,%jscripts.jsp,%chart.jsp,%date_locale.jsp,%click.jsp,/components/cloud/calendar/potvrd_akciu_verejnost.jsp,/components/customer_reviews/potvrd_review.jsp,/components/gis/potvrd_gis.jsp,/components/gallery/photoswipe/photoswipe.jsp",
 				MOD_SECURITY, "Zoznam zaciatkov URL adries pre ktore je povolena vynimka priameho volania JSP komponenty");
 		setString("componentsDirectCallExceptions", "", MOD_SECURITY,
 				"Zoznam zaciatkov URL adries pre ktore je povolena vynimka priameho volania JSP komponenty");
@@ -1680,7 +1680,7 @@ public class Constants {
 		setString("basketInvoiceServerName", "", MOD_BASKET,
 				"Nazov domeny ktory sa ma pouzit v tele objednavky, napr. ak stahujeme obsah objednavky na inom node.");
 
-		setInt("insertScriptCacheMinutes", 10, mods(MOD_INSERT_SCRIPT, MOD_PERFORMANCE),
+		setInt("insertScriptCacheMinutes", 60, mods(MOD_INSERT_SCRIPT, MOD_PERFORMANCE),
 				"Pocet minut cachovania zoznamu scriptov aplikacie Skripty, predpoklad je, ze sa pouzivaju na kazdej stranke, preto sa musia cachovat");
 		setString("insertScriptPositions", "", MOD_INSERT_SCRIPT,
 				"Zoznam pozicii v JSP sablonach pre zobrazenie select boxu pri vlozeni noveho scriptu, ak je prazdne pouzije sa autocomplete na uz existujuco definovanych scriptoch");
@@ -1803,7 +1803,7 @@ public class Constants {
 
 		setString("xsrfUrlException", "", MOD_CSRF, "Zoznam povolenych URL pre ktore sa nekontroluje referer");
 		setString("xsrfParamNameExceptionSystem",
-				"docid,historyid,_logLevel,combineEnabled,combineEnabledRequest,groupid,forward,forceBrowserDetector,_writePerfStat,_disableCache,printTrace,isPopup,isDmail,NO_WJTOOLBAR,userlngr,page,words,datumOd,datumDo,btnSubmit,search,language,__lng,lng,userid,userId,webjetDmsp,formId,hash,invoiceId,auth,loginName,t,f,v,forum,NO_WJTOOLBAR,isPdfVersion,fbclid,utm_source,utm_medium,utm_campaign,utm_term,utm_content,formName,showTextKeys,extURL,id,removePerm,showBanner",
+				"docid,historyid,_logLevel,combineEnabled,combineEnabledRequest,groupid,forward,forceBrowserDetector,_writePerfStat,_disableCache,printTrace,isPopup,isDmail,NO_WJTOOLBAR,userlngr,page,words,datumOd,datumDo,btnSubmit,search,language,__lng,lng,userid,userId,webjetDmsp,formId,hash,invoiceId,auth,loginName,t,f,v,forum,NO_WJTOOLBAR,isPdfVersion,fbclid,utm_source,utm_medium,utm_campaign,utm_term,utm_content,formName,showTextKeys,extURL,id,removePerm,showBanner,tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,c,noip,rnd,login,auth,reservationDate,iID,name,act,datum,basketAct,invoicePaymentId,email,save,scheduleId,rootDir",
 				MOD_CSRF,
 				"Zoznam systemovych povolenych parametrov, ktore sa preskakuju pri GET poziadavke na kontrolu existencie parametra (bez ohladu na velkost pismen)");
 		setString("xsrfParamNameException", "", MOD_CSRF,
@@ -1859,7 +1859,7 @@ public class Constants {
 				"Povolenie uploadu pouzivatelskej skupine pre adresar, napr. /files/project/:25, kde /files/project/ je adresar a 25 je id pouzivatelskej skupiny. Pre vsetky podadresare staci nastavit url s *, napr. /files/project/*:25, je mozne zadat aj viacero definicii oddelenych ciarkou, napr. /files/project/*:25,/files/project/*:26");
 
 		setString("xssHtmlAllowedFieldsSystem",
-				"value,prop_value,message_text,text,description,user_note,title,value_string,question,message,string1,string2,string3,string4,string5,string6,reg_exp,gallery_perex,watermark,regexp_value,body,room_description,question_text,answer_text_ok,answer_text_fail,script_body,junk_reason,media_info_sk,password,salt,crop_start,crop_end,auth_username,auth_password,question,answer,hash,kategoria,definicia,poznamka1,poznamka2,zdroj1,zdroj2,priklad,tip_text,svalue1,svalue2,svalue3,svalue4,signature,authorize_hash,password_salt,navbar,external_link,group_name,url",
+				"value,prop_value,message_text,text,description,user_note,title,value_string,question,message,string1,string2,string3,string4,string5,string6,reg_exp,gallery_perex,watermark,regexp_value,body,room_description,question_text,answer_text_ok,answer_text_fail,script_body,junk_reason,media_info_sk,password,salt,crop_start,crop_end,auth_username,auth_password,question,answer,hash,kategoria,definicia,poznamka1,poznamka2,zdroj1,zdroj2,priklad,tip_text,svalue1,svalue2,svalue3,svalue4,signature,authorize_hash,password_salt,navbar,external_link,group_name,url,question_text",
 				MOD_XSS,
 				"Zoznam stlpcov v databaze, ktore mozu obsahovat HTML kod (nebudu pri citani escapovane specialne znaky). Pre zakaznicke projekty nastavte premennu xssHtmlAllowedFields");
 		setString("xssHtmlAllowedFields", "", MOD_XSS,
@@ -1928,7 +1928,7 @@ public class Constants {
 		setInt("auditMaxChangeLength", 100, MOD_AUDIT,
 				"Maximalny pocet znakov auditu pri porovnani zmien v databazovych entitach");
 		setString("auditJpaDisabledEntities",
-				"sk.iway.iwcm.components.domainRedirects.DomainRedirectBean,sk.iway.iwcm.system.UrlRedirectBean",
+				"",
 				mods(MOD_AUDIT, MOD_DATABASE),
 				"Zoznam JPA entit (meno triedy vratane package) pre ktore sa vypne auditovanie zmien. Znakom * sa uplne vypne auditing.");
 
@@ -1938,7 +1938,8 @@ public class Constants {
 
 		setBoolean("editor.unpublishBeforeSaveAs", false, MOD_EDITOR,
 				"Ak je true, tak pri ulozit ako sa zduplikovana stranka automaticky nastavi ako nepublikovana.");
-		setString("sk.iway.iwcm.qa.AddAction.sendAdminMail.url", "", MOD_QA, "url na qa/admin_answer.jsp komponentu");
+		setString("sk.iway.iwcm.qa.AddAction.sendAdminMail.url", "/apps/qa/admin/", MOD_QA,
+				"URL adresa administrácie aplikácie Otázky a odpovede.");
 
 		setString("ninjaNbspReplaceRegex", "(\\s.{1,2})\\s\n$1&nbsp;", MOD_EDITOR,
 				"Regex vyraz a replacement pre nahradenie medzery za nbsp entitu po spojke.");
@@ -1961,7 +1962,7 @@ public class Constants {
 		setString("structureMirroringConfig", "", MOD_STRUCTURE_MIRRORING,
 				"Nastavenie zrkadlenia jazykovych verzii stranok. Na kazdom riadku je zoznam ID adresarov oddelenych ciarkou, ktore sa maju zrkadlit, riadok moze mat za znakom : poznamku. Priklad: 773,774,775:docmirroring.webjet.sk");
 
-		setString("mariaDbDefaultEngine", "MyISAM", MOD_DATABASE,
+		setString("mariaDbDefaultEngine", "InnoDB", MOD_DATABASE,
 				"Predvoleny typ engine pre MariaDB SQL server, moze byt nastavene na MyISAM alebo InnoDB. Pre pouzitie utf8mb4 je potrebny engine InnoDB.");
 
 		setBoolean("fileArchivIndexOnlyMainFiles", true, MOD_FILE_ARCHIV,

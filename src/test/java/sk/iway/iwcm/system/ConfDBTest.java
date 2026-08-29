@@ -13,9 +13,14 @@ import static org.mockito.Mockito.when;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.List;
+import java.util.stream.Stream;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 
@@ -27,10 +32,133 @@ import sk.iway.iwcm.database.SimpleQuery;
 
 class ConfDBTest {
 
+    private static final List<String> CONSOLIDATED_DEFAULT_NAMES = List.of(
+            "defaultSkin",
+            "auditJpaDisabledEntities",
+            "mariaDbDefaultEngine",
+            "sk.iway.iwcm.qa.AddAction.sendAdminMail.url",
+            "xsrfParamNameExceptionSystem",
+            "componentsDirectCallExceptionsSystem",
+            "insertScriptCacheMinutes",
+            "xssHtmlAllowedFieldsSystem");
+
+    private static final String XSRF_PARAM_NAME_EXCEPTION_SYSTEM =
+            "docid,historyid,_logLevel,combineEnabled,combineEnabledRequest,groupid,forward,forceBrowserDetector,_writePerfStat,_disableCache,printTrace,isPopup,isDmail,NO_WJTOOLBAR,userlngr,page,words,datumOd,datumDo,btnSubmit,search,language,__lng,lng,userid,userId,webjetDmsp,formId,hash,invoiceId,auth,loginName,t,f,v,forum,NO_WJTOOLBAR,isPdfVersion,fbclid,utm_source,utm_medium,utm_campaign,utm_term,utm_content,formName,showTextKeys,extURL,id,removePerm,showBanner"
+            + ",tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,c,noip,rnd,login,auth,reservationDate,iID,name,act,datum,basketAct,invoicePaymentId,email,save,scheduleId,rootDir";
+
     @BeforeEach
     void initializeConfigurationCatalog() {
         Constants.clearValues();
         ConstantsV9.clearValuesWebJet9();
+    }
+
+    @AfterEach
+    void restoreConfigurationCatalog() {
+        Constants.clearValues();
+        ConstantsV9.clearValuesWebJet9();
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("modernDefaults")
+    void modernDefaultIsCurrentAndCatalogued(String name, String expectedValue) {
+        Constants.clearValues();
+
+        List<ConfDetails> catalogEntries = Constants.getAllValues().stream()
+                .filter(conf -> name.equals(conf.getName()))
+                .toList();
+
+        assertTrue(Constants.containsKey(name));
+        assertEquals(expectedValue, Constants.getString(name));
+        assertEquals(1, catalogEntries.size());
+        assertEquals(expectedValue, catalogEntries.get(0).getValue());
+    }
+
+    @Test
+    void constantsV9DoesNotOverrideDefaultsConsolidatedInConstants() {
+        Constants.clearValues();
+        List<String> valuesBeforeV9Initialization = CONSOLIDATED_DEFAULT_NAMES.stream()
+                .map(Constants::getString)
+                .toList();
+
+        assertEquals("60", Constants.getString("insertScriptCacheMinutes"));
+
+        String directCallExceptions = Constants.getString("componentsDirectCallExceptionsSystem");
+        for (String legacyException : List.of(
+                "/components/cestovka/",
+                "/components/magzilla/",
+                "/components/helpdesk/",
+                "/components/mail/",
+                "/components/mcalendar/",
+                "/components/chat/js.jsp",
+                "/components/user/logon.jsp")) {
+            assertFalse(directCallExceptions.contains(legacyException));
+        }
+
+        long questionTextOccurrences = Stream.of(Constants.getString("xssHtmlAllowedFieldsSystem").split(","))
+                .filter("question_text"::equals)
+                .count();
+        assertEquals(1, questionTextOccurrences);
+
+        ConstantsV9.clearValuesWebJet9();
+
+        for (int i = 0; i < CONSOLIDATED_DEFAULT_NAMES.size(); i++) {
+            String name = CONSOLIDATED_DEFAULT_NAMES.get(i);
+            assertEquals(valuesBeforeV9Initialization.get(i), Constants.getString(name));
+            List<ConfDetails> catalogEntries = Constants.getAllValues().stream()
+                    .filter(conf -> name.equals(conf.getName()))
+                    .toList();
+            assertEquals(1, catalogEntries.size());
+            assertEquals(Constants.getString(name), catalogEntries.get(0).getValue());
+        }
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("consolidatedDefaultNames")
+    void deleteNameRestoresModernDefault(String name) throws Exception {
+        Constants.clearValues();
+        String expectedValue = Constants.getString(name);
+        String deleteSql = "DELETE FROM " + ConfDB.CONF_TABLE_NAME + " WHERE name=?";
+        Connection connection = mock(Connection.class);
+        PreparedStatement statement = mock(PreparedStatement.class);
+        when(connection.prepareStatement(deleteSql)).thenReturn(statement);
+        Constants.setString(name, "custom-value");
+
+        try (MockedStatic<DBPool> dbPool = mockStatic(DBPool.class);
+                MockedStatic<Adminlog> adminlog = mockStatic(Adminlog.class)) {
+            dbPool.when(DBPool::getConnection).thenReturn(connection);
+
+            assertTrue(ConfDB.deleteName(name));
+
+            assertTrue(Constants.containsKey(name));
+            assertEquals(expectedValue, Constants.getString(name));
+        }
+
+        verify(connection).prepareStatement(deleteSql);
+        verify(statement).setString(1, name);
+        verify(statement).execute();
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("consolidatedDefaultNames")
+    void refreshVariableRestoresModernDefaultAfterRemoteDelete(String name) {
+        Constants.clearValues();
+        String expectedValue = Constants.getString(name);
+        String valueSql = "SELECT value FROM " + ConfDB.CONF_TABLE_NAME + " WHERE name=?";
+        String countSql = "SELECT COUNT(*) FROM " + ConfDB.CONF_TABLE_NAME + " WHERE name=?";
+        Constants.setString(name, "custom-value");
+
+        try (MockedConstruction<SimpleQuery> queries = mockConstruction(SimpleQuery.class, (query, context) -> {
+            when(query.forString(valueSql, name)).thenReturn(null);
+            when(query.forInt(countSql, name)).thenReturn(0);
+        })) {
+            ConfDB.refreshVariable(name);
+
+            assertEquals(2, queries.constructed().size());
+            verify(queries.constructed().get(0)).forString(valueSql, name);
+            verify(queries.constructed().get(1)).forInt(countSql, name);
+            assertTrue(Constants.containsKey(name));
+            assertEquals(expectedValue, Constants.getString(name));
+        }
     }
 
     @Test
@@ -242,5 +370,19 @@ class ConfDBTest {
 
     private boolean containsConfiguration(List<ConfDetails> configuration, String name) {
         return configuration.stream().anyMatch(item -> name.equals(item.getName()));
+    }
+
+    private static Stream<Arguments> modernDefaults() {
+        return Stream.of(
+                Arguments.of("defaultSkin", "webjet9"),
+                Arguments.of("auditJpaDisabledEntities", ""),
+                Arguments.of("mariaDbDefaultEngine", "InnoDB"),
+                Arguments.of("sk.iway.iwcm.qa.AddAction.sendAdminMail.url", "/apps/qa/admin/"),
+                Arguments.of("xsrfParamNameExceptionSystem", XSRF_PARAM_NAME_EXCEPTION_SYSTEM),
+                Arguments.of("insertScriptCacheMinutes", "60"));
+    }
+
+    private static Stream<String> consolidatedDefaultNames() {
+        return CONSOLIDATED_DEFAULT_NAMES.stream();
     }
 }

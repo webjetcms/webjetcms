@@ -8,6 +8,8 @@ import sk.iway.iwcm.Constants;
 
 /**
  * Defines default configuration values introduced for WebJET 9 and later versions.
+ * Defaults already declared in {@link Constants} must be updated there instead of
+ * being overridden in this class.
  */
 public class ConstantsV9 {
 
@@ -15,14 +17,11 @@ public class ConstantsV9 {
 	}
 
 	/**
-	 * Initializes the default configuration values for WebJET 9.
+	 * Initializes configuration values introduced for WebJET 9.
 	 *
 	 * This method is reimplemented in the WebJET 9 distribution and must remain compatible with it.
 	 */
 	public static void clearValuesWebJet9() {
-		Constants.setString("defaultSkin", "webjet9");
-		Constants.setString("auditJpaDisabledEntities", "");
-		Constants.setString("mariaDbDefaultEngine", "InnoDB");
 		Constants.setString("chunksQuantity", "25", Constants.MOD_PERFORMANCE, "Pocet zaznamov spracovanych v jednej davke pri importe cez DataTable.");
 		Constants.setString("propertiesAdminKeys",
 			  "button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*,text.warning,text.info,editor.directory_name,editor.confirmExitMessage,menu.forms,datatables.quill.toolbar.*,editor.form.sl.name,editor.form.sl.value,components.file_archiv.name,admin.dragDropFiles.*",
@@ -35,8 +34,6 @@ public class ConstantsV9 {
 		Constants.setInt("formsDatatableServerSizeLimit", 5000, Constants.mods(Constants.MOD_PERFORMANCE, Constants.MOD_FORMMAIL),
 				"Minimalny pocet zaznamov formularu pre ktore sa uz pouzije serverove strankovanie.");
 
-		Constants.setString("sk.iway.iwcm.qa.AddAction.sendAdminMail.url", "/apps/qa/admin/");
-
 		Constants.setBoolean("loggingInMemoryEnabled", false, Constants.MOD_AUDIT,
 				"Aktivovanie ukladania posledných log záznamov do pamäte pre jednoduchšiu kontrolu logov.");
 		Constants.setInt("loggingInMemoryQueueSize", 200, Constants.MOD_AUDIT,
@@ -44,21 +41,9 @@ public class ConstantsV9 {
 		Constants.setString("passwordHashAlgorithm", "bcrypt", Constants.MOD_PASSWORD, "Meno algoritmu pre hashovanie, možné hodnoty bcrypt alebo sha-512");
 		Constants.setInt("bcryptSaltRounds", 12, Constants.MOD_PASSWORD, "log2 počtu opakovaní saltovania pri bcrypt algoritme hashovania hesiel");
 
-		//pentesty, vylucene /components/user/logon.jsp
-		Constants.setString("componentsDirectCallExceptionsSystem",
-				"/components/_common/clk.jsp,/components/_common/combine.jsp,/components/_common/html_tags_support.jsp,/components/_common/wysiwyg/,%.js.jsp,/components/banner/banner.jsp,%/invoice_email.jsp,/components/basket/order_payment_bank_reply.jsp,/components/blog/blog_save.jsp,%/detail.jsp,%/upload.jsp,/components/forum/iframe.jsp,%new.jsp,%/saveok.jsp,%/savefail.jsp,%/new_file.jsp,%/send_card.jsp,%/show_gallery_image,%videoplayer.jsp,%ajax,%voteResultsDiv,%check_form,%/forum-open,%/forum_mb_open,%/forum_mb,%-approve.jsp,%send_link_form,/components/reservation/,/components/user/change_password.jsp,/components/user/authorize.jsp,%import.jsp,/components/zmluvy/,/components/server_monitoring/monitor.jsp,/components/page_update_info/add_subscriber,/components/page_update_info/remove_subscriber,%jscript.jsp,%addbasket_popup.jsp,/components/messages/refresher-ac.jsp,%/iframe_blank,/components/user/fileforward.jsp,%spamprotectiondisable.jsp,%/htmlarea/,%json,/components/qa/admin_answer.jsp,%popcalendar.jsp,%jscripts.jsp,%chart.jsp,%date_locale.jsp,%click.jsp,/components/cloud/calendar/potvrd_akciu_verejnost.jsp,/components/customer_reviews/potvrd_review.jsp,/components/gis/potvrd_gis.jsp,/components/gallery/photoswipe/photoswipe.jsp",
-				Constants.MOD_SECURITY, "Zoznam zaciatkov URL adries pre ktore je povolena vynimka priameho volania JSP komponenty");
-
 		//domena a priecinok s novinkami pre dashboard
 		Constants.setString("overviewJsonUrl", "https://docs.webjetcms.sk/json/", Constants.MOD_SYSTEM_ADMIN, "Zakladna URL adresa pre nacitanie zoznamu noviniek na administracnom dashboarde.");
 		Constants.setString("languages", "sk,cz,en,de,pl,hu,cho,ru,esp", Constants.MOD_LOCALIZATION, "Zoznam jazykov pre webjet cms");
-
-		Constants.setString("xssHtmlAllowedFieldsSystem",
-				"value,prop_value,message_text,text,description,user_note,title,value_string,question,message,string1,string2,string3,string4,string5,string6,reg_exp,gallery_perex,watermark,regexp_value,body,room_description,question_text,answer_text_ok,answer_text_fail,script_body,junk_reason,media_info_sk,password,salt,crop_start,crop_end,auth_username,auth_password,question,answer,hash,kategoria,definicia,poznamka1,poznamka2,zdroj1,zdroj2,priklad,tip_text,svalue1,svalue2,svalue3,svalue4,signature,authorize_hash,password_salt,navbar,external_link,group_name,url,question_text",
-				Constants.MOD_XSS,
-				"Zoznam stlpcov v databaze, ktore mozu obsahovat HTML kod (nebudu pri citani escapovane specialne znaky). Pre zakaznicke projekty nastavte premennu xssHtmlAllowedFields");
-
-		Constants.setString("xsrfParamNameExceptionSystem", Constants.getString("xsrfParamNameExceptionSystem")+",tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,c,noip,rnd,login,auth,reservationDate,iID,name,act,datum,basketAct,invoicePaymentId,email,save,scheduleId,rootDir");
 
 		Constants.setString("jpaToLowerFields", "description,questionText,notifyIntrotext,question,data,dataAsc,htmlHead,htmlData,attachments,message,files,html,note,descriptionLong*,answer,afterBodyData,value,mediaInfo*,userNote,messageText,htmlCode,purpose,content,propValue,defaultValue,dataResult,descriptionText,scriptBody,relatedPages,name", Constants.MOD_DATABASE, "Zoznam nazvov CLOB stlpcov pre ktore sa v pripade Oracle pouzije LOWER funkcia pri vyhladavani");
 
@@ -263,8 +248,6 @@ public class ConstantsV9 {
 		Constants.setString("multistepform_emailFields", "email,e-mail", Constants.MOD_FORMMAIL, "");
 		Constants.setString("multistepform_attachmentDefaultName", "prilohy.html", Constants.MOD_FORMMAIL, "");
 		Constants.setString("multistepform_subjectDefaultValue", "components.form.default_subject", Constants.MOD_FORMMAIL, "");
-
-		Constants.setInt("insertScriptCacheMinutes", 60, Constants.mods(Constants.MOD_INSERT_SCRIPT, Constants.MOD_PERFORMANCE), "Pocet minut cachovania zoznamu scriptov aplikacie Skripty, predpoklad je, ze sa pouzivaju na kazdej stranke, preto sa musia cachovat");
 
 		Constants.setBoolean("password_passKeyEnabled", true, Constants.MOD_PASSWORD, "Povoli prihlasovanie pomocou PassKey/WebAuthN technológie. Tá zabezpečuje prihlasovanie pomocou biometrických údajov alebo bezpečnostných kľúčov. Vyžaduje HTTPS komunikáciu.");
 		Constants.setString("password_passKeyRpId", "", Constants.MOD_PASSWORD, "Relying Party ID pre PassKey/WebAuthN. Obvykle sa jedná o doménu bez subdomén (napr. example.com). Ak nie je nastavená, použije sa základná doména z URL adresy.");
