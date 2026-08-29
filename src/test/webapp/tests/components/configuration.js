@@ -613,14 +613,14 @@ Scenario("logout", ({ I }) => {
     I.logout();
 });
 
-const testConfiguration = "smsSendMaxlength";
+const testConfiguration = "perexGroupsRenderAsSelect";
 Scenario("check setting oldValue after delete", async ({ I, DT, DTE }) => {
-    const oldValue = 140;
-    const newValue = 299792;
+    const oldValue = 30;
+    const newValue = 3;
     const tableWrapper = "#configurationDatatable_wrapper";
     const allNode = "#SomStromcek li[data-configuration-view='all'] > a.jstree-anchor";
-    const integrationsNode = "#SomStromcek li[data-configuration-module='integrations'] > a.jstree-anchor";
-    const smsNode = "#SomStromcek li[data-configuration-module='integrations.sms'] > a.jstree-anchor";
+    const contentNode = "#SomStromcek li[data-configuration-module='content'] > a.jstree-anchor";
+    const contentEditorNode = "#SomStromcek li[data-configuration-module='content.editor'] > a.jstree-anchor";
 
     I.amOnPage("/admin/v9/settings/configuration/");
     I.waitForElement(allNode, 20);
@@ -657,13 +657,13 @@ Scenario("check setting oldValue after delete", async ({ I, DT, DTE }) => {
         I.seeInField("#DTE_Field_oldValue", oldValue);
         DTE.cancel();
 
-    I.say("Reset the database override directly in the integrations.sms module.");
-        I.clickCss(integrationsNode);
-        I.waitForElement(smsNode, 20);
-        I.clickCss(smsNode);
+    I.say("Reset the database override directly in the content.editor module.");
+        I.clickCss(contentNode);
+        I.waitForElement(contentEditorNode, 20);
+        I.clickCss(contentEditorNode);
         I.waitForFunction(() => {
             const url = new URL(configurationDatatable.getAjaxUrl(), location.origin);
-            return url.searchParams.get("view") === "module" && url.searchParams.get("module") === "integrations.sms";
+            return url.searchParams.get("view") === "module" && url.searchParams.get("module") === "content.editor";
         }, 20);
         DT.waitForLoader();
         I.see(testConfiguration, "#configurationDatatable");
