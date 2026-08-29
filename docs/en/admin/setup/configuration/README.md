@@ -1,13 +1,13 @@
 # Configuration
 
-The configuration section displays and manages configuration variables. The tree on the left divides them into the following views:
+The configuration section is used to view and manage configuration variables. On the left side there is a tree that divides the variables into the following views:
 
-- **Changed** - variables whose value is stored in the database. This view is selected when the page opens.
-- **Custom** - variables stored only in the database without a definition in `Constants`/`ConstantsV9`, or variables whose name starts with the current `Constants.getInstallName()` value (for example, `aceintegration_test`).
-- **All** - all registered variables, including their default values and custom variables stored only in the database.
-- **Modules** - hierarchical groups such as `apps.gallery` or `security.oauth2`. Selecting a parent node also displays variables from all its descendants. A variable can belong to multiple branches.
+- **Changed** - variables whose value is stored in the database. This view is selected after opening the page.
+- **Custom** - variables stored only in the database without definition in `Constants` /`ConstantsV9` or variables whose name starts with the current value `Constants.getInstallName()` (for example `aceintegration_test`).
+- **All** - all registered variables, including their default values ​​and custom variables stored only in the database.
+- **Modules** - hierarchical groups, for example `apps.gallery` or `security.oauth2`. Selecting a parent node will also display variables from all its subnodes. One variable can be included in multiple branches.
 
-The tree can be searched. Module names are technical names and are not translated. An existing variable can be edited in a selected module, but creating a new variable and importing are disabled because a custom database variable does not contain module metadata.
+The tree can be searched. Module names are technical names and are not translated. In the selected module, it is possible to edit an existing variable, but not to create a new one or to start an import, because the database variable itself does not have information about being included in the module.
 
 ![](page.png)
 
@@ -47,13 +47,13 @@ If you need to change the value of a configuration variable only to verify its b
 
 When set temporarily, the value cannot be encrypted or scheduled to change, so the **Encrypt** and **Change from** fields in the editor are hidden.
 
-If the current value on the node differs from the stored value, the **Value** column displays both values in the format "current value / stored value". The second value is dimmed and marked as currently inactive on hover. It can be either a value stored in the database or the default value of a variable without a database record. When the editor is reopened, the **Value** field loads the stored value, not the temporary value.
+If the current value on the node differs from the saved value, the **Value** column displays both values ​​in the format "current value / saved value". The second value is displayed in a dimmed color and is marked as currently inactive when the cursor is placed. This can be the value stored in the database or the default value for a variable without a database entry. When the editor is reopened, the saved, not temporary, value is loaded into the **Value** field.
 
 ## Deleting configuration items
 
-Deleting resets the database value. Two situations can occur:
+Deleting means resetting the database value. There can be 2 situations:
 
-- if **a default value exists**, it starts being used and the variable remains visible in **All** and its module views; it disappears from **Changed**,
-- if **no default value exists**, the custom database variable ceases to exist after the reset.
+- if **a preset value exists**, it will be used and the variable will remain displayed in the **All** view and in the relevant modules; it will disappear from the **Changed** view,
+- if **there is no preset value**, the custom database variable will cease to exist after reset.
 
-A variable without a database value cannot be deleted.
+A variable that does not have a database value cannot be deleted.
