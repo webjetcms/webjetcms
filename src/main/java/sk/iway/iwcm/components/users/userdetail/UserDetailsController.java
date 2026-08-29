@@ -129,6 +129,15 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
 
     @Override
 	public void beforeSave(UserDetailsEntity entity) {
+		if (UserDetailsService.isUsersSplitByDomain()) {
+			int currentDomainId = CloudToolsForCore.getDomainId();
+			Integer submittedDomainId = entity.getDomainId();
+			if (submittedDomainId != null && submittedDomainId.intValue() > 0 &&
+				submittedDomainId.intValue() != currentDomainId) {
+				throwError("datatables.error.domainId");
+			}
+			entity.setDomainId(currentDomainId);
+		}
 
         Identity user = UsersDB.getCurrentUser(getRequest());
         Boolean isCurrentUserAdmin = user.isEnabledItem(PERM_EDIT_ADMINS);
