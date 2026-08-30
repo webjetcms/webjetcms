@@ -1,5 +1,7 @@
 package sk.iway.iwcm.system.elfinder;
 
+import java.util.Locale;
+
 import cn.bluejoe.elfinder.service.FsItem;
 import cn.bluejoe.elfinder.service.FsSecurityChecker;
 import cn.bluejoe.elfinder.service.FsService;
@@ -95,7 +97,12 @@ public class FsSecurityCheckForAll implements FsSecurityChecker
 
 		String archivePath = FileArchivSupportMethodsService.normalizePath(FileArchivatorKit.getArchivPath());
 		String itemPath = FileArchivSupportMethodsService.normalizePath(iwcmFsItem.getFile().getVirtualPath());
-		return Tools.isNotEmpty(archivePath) && Tools.isNotEmpty(itemPath) && itemPath.startsWith(archivePath);
+		return Tools.isNotEmpty(archivePath) && Tools.isNotEmpty(itemPath) && normalizePathForComparison(itemPath).startsWith(normalizePathForComparison(archivePath));
+	}
+
+	private String normalizePathForComparison(String path)
+	{
+		return path.toLowerCase(Locale.ROOT).replaceAll("[. ]+/", "/");
 	}
 
 	public void setLocked(boolean locked)

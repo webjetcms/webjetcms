@@ -80,6 +80,11 @@ public class MkdirCommandExecutor extends AbstractJsonCommandExecutor
 			name = IwcmFsVolume.removeSpecialChars(name, fsi, user);
 
 			FsItemEx dir = new FsItemEx(fsi, name);
+			if (!dir.isWritable(dir))
+			{
+				json.put("error", prop.getText("components.elfinder.commands.mkdir.error", fsi.getPath()));
+				return null;
+			}
 			dir.createFolder();
 
 			return getFsItemInfo(request, dir);

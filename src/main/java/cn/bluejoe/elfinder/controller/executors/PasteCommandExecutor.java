@@ -53,6 +53,11 @@ public class PasteCommandExecutor extends AbstractJsonCommandExecutor
 				}
 				String name = ftgt.getName();
 				FsItemEx newFile = new FsItemEx(fdst, name);
+				if (!newFile.isWritable(newFile))
+				{
+					json.put("error", prop.getText("components.elfinder.commands.paste.error", fdst.getPath()));
+					continue;
+				}
 
 				//JEEFF: upravene pre podporu nasho DocGroup
 				if (ftgt.getVolumeId().equals(IwcmDocGroupFsVolume.VOLUME_ID))

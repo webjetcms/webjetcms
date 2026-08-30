@@ -41,6 +41,9 @@ class FsSecurityCheckForAllTest extends BaseWebjetTest {
         assertTrue(security.isLocked(fsService, item("/files/archiv")));
         assertFalse(security.isWritable(fsService, item("/files/archiv/contracts/document.pdf")));
         assertTrue(security.isLocked(fsService, item("/files/archiv/contracts/document.pdf")));
+        assertFalse(security.isWritable(fsService, item("/files/ARCHIV/contracts/document.pdf")));
+        assertFalse(security.isWritable(fsService, item("/files/archiv./contracts/document.pdf")));
+        assertFalse(security.isWritable(fsService, item("/files/archiv /contracts/document.pdf")));
     }
 
     @ParameterizedTest

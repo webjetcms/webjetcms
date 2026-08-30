@@ -34,6 +34,12 @@ public class MkfileCommandExecutor extends AbstractJsonCommandExecutor
 		if (user!=null && fsi.isWritable(fsi) && UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getPath()))
 		{
 			FsItemEx dir = new FsItemEx(fsi, name);
+			if (!dir.isWritable(dir))
+			{
+				json.put("error", prop.getText("components.elfinder.commands.mkfile.error", fsi.getPath()));
+				json.put("added", new Object[] {});
+				return;
+			}
 			dir.createFile();
 			json.put("added", new Object[] { getFsItemInfo(request, dir) });
 		}

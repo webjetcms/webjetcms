@@ -3,6 +3,7 @@ package cn.bluejoe.elfinder.controller.executors;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -28,6 +29,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.FileIndexerTools;
 import sk.iway.iwcm.common.ImageTools;
 import sk.iway.iwcm.common.UploadFileTools;
@@ -95,6 +97,19 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 	{
 		String[] directoriesArray = Tools.getTokens(directory, "/");
 		return new FsItemEx(itemEx, directoriesArray[0]);
+	}
+
+	private FsItemEx getDestination(FsItemEx parent, String directory, String fileName) throws IOException
+	{
+		String relativePath = Path.of(directory, fileName).normalize().toString().replace(File.separatorChar, '/');
+		while (relativePath.startsWith("/")) relativePath = relativePath.substring(1);
+		return new FsItemEx(parent, relativePath);
+	}
+
+	private boolean isWritable(FsItemEx item) throws IOException
+	{
+		String path = item.getPath();
+		return Tools.isNotEmpty(path) && item.isWritable(item);
 	}
 
 	// large file will be splitted into many parts
@@ -283,23 +298,42 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 		List<String> notUploadedSession = (List<String>) request.getAttribute("MultipartWrapper.notUploaded");
 		if (notUploadedSession != null) notUploaded.addAll(notUploadedSession) ;
 
-		if (user != null && dir.isWritable(dir) && UsersDB.isFolderWritable(user.getWritableFolders(), dir.getPath()) && filesMap != null)
+		if (user != null && isWritable(dir) && UsersDB.isFolderWritable(user.getWritableFolders(), dir.getPath()) && filesMap != null)
 		{
 
 			if (renames != null && renames.length > 0) {
 				String path = dir.getPath();
 				for (String rename : renames) {
+					if (FileBrowserTools.hasForbiddenSymbol(rename)) {
+						notUploaded.add(rename);
+						continue;
+					}
+
 					File file = new File(Tools.getRealPath(path + "/" + rename));
 
 					if (file.exists()) {
+						FsItemEx sourceItem = getDestination(dir, "", rename);
+						if (isWritable(sourceItem)==false) {
+							notUploaded.add(rename);
+							continue;
+						}
+
 						int i = 1;
 
 						File fileTo = null;
+						String filename;
 						do {
-							String filename = rename.contains(".") ? rename.substring(0, rename.lastIndexOf(".")) + "-" + (i++) + rename.substring(rename.lastIndexOf("."), rename.length()) : rename + "-" + (i++);
+							filename = rename.contains(".") ? rename.substring(0, rename.lastIndexOf(".")) + "-" + (i++) + rename.substring(rename.lastIndexOf("."), rename.length()) : rename + "-" + (i++);
 							fileTo = new File(Tools.getRealPath(path + "/" + filename));
 						}
 						while (fileTo.exists());
+
+						FsItemEx destinationItem = getDestination(dir, "", filename);
+						if (isWritable(destinationItem)==false) {
+							notUploaded.add(rename);
+							continue;
+						}
+
 						file.renameTo(fileTo); //NOSONAR
 
 						FsItemEx fsItem = new FsItemEx(dir, fileTo.getName());
@@ -326,12 +360,20 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 
 				String realPathDir = Tools.getRealPath(dir.getPath());
 				File file = new File(realPathDir);
+				FsItemEx destinationItem = dir;
 
 				// is not update
 				if (!file.exists() || !file.isFile()) {
 					realPathDir = Tools.getRealPath(dir.getPath() + directory + "/" + fileName);
 					file = new File(realPathDir);
+					destinationItem = getDestination(dir, directory, fileName);
 				}
+
+				if (isWritable(destinationItem)==false) {
+					notUploaded.add(filepath);
+					continue;
+				}
+				final FsItemEx uploadDestinationParent = destinationItem.getParent();
 
 				final File newFile = file;
 				//fi.write(newFile);
@@ -349,6 +391,12 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 						fileName = DocTools.removeCharsDir(fileName, true).toLowerCase();
 						fileName = Tools.replace(fileName, "/", ""+File.separatorChar);
 
+						FsItemEx newFileEx = getDestination(uploadDestinationParent, "", fileName);
+						if (isWritable(newFileEx)==false) {
+							notUploaded.add(fileName);
+							return null;
+						}
+
 						boolean isAllowedForUpload = UploadFileTools.isFileAllowed(uploadTypeFinal, fileName, size, user, request);
 
 						if (isAllowedForUpload)
@@ -359,8 +407,6 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 							// see
 							// https://github.com/bluejoe2008/elfinder-2.x-servlet/issues/22
 							//java.nio.file.Path p = java.nio.file.Paths.get(fileName);
-							FsItemEx newFileEx = new FsItemEx(dir, fileName);
-
 							/*
 							 * String fileName = fis.getName(); FsItemEx newFile = new
 							 * FsItemEx(dir, fileName);
@@ -582,11 +628,11 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 						totalSize += parts._parts.get(i)._content.getSize();
 					}
 
-					fw.createAndSave(fileName, parts.openInputStream(), totalSize);
+					FsItemEx uploadedFile = fw.createAndSave(fileName, parts.openInputStream(), totalSize);
 
 					// remove from application context
 					parts.removeFromApplicationContext(request);
-					return fileName;
+					if (uploadedFile != null) return fileName;
 				}
 			}
 			return null;

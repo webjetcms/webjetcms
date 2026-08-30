@@ -18,6 +18,7 @@ import cn.bluejoe.elfinder.controller.executor.FsItemEx;
 import cn.bluejoe.elfinder.service.FsService;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
@@ -79,9 +80,24 @@ public class ArchiveCommandExecutor extends AbstractJsonCommandExecutor
 			FsItemEx firstItem = super.findItem(fsService, targets[0]);
 
 			Prop prop = Prop.getInstance(request);
+			if (FileBrowserTools.hasForbiddenSymbol(name))
+			{
+				json.put("error", prop.getText("components.elfinder.commands.error.banned_character"));
+				json.put("added", files2JsonArray(request, added));
+				return null;
+			}
+
 			Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();
 			if (user!=null && firstItem.isWritable(firstItem) && firstItem.getParent().isWritable(firstItem.getParent()) && UsersDB.isFolderWritable(user.getWritableFolders(), firstItem.getParent().getPath()))
 			{
+				FsItemEx destination = new FsItemEx(firstItem.getParent(), name + ".zip");
+				if (!destination.isWritable(destination))
+				{
+					json.put("error", prop.getText("components.elfinder.commands.archive.error", firstItem.getParent().getPath()));
+					json.put("added", files2JsonArray(request, added));
+					return null;
+				}
+
 				// zipovanie jedneho adresaru
 				if(targets.length == 1)
 				{
@@ -90,7 +106,7 @@ public class ArchiveCommandExecutor extends AbstractJsonCommandExecutor
 					{
 						try {
 							zipDirectory(fsi.getPath(), fsi.getParent().getPath() + "/" + name + ".zip", false);
-							zipFilePath = new FsItemEx(fsi.getParent(), name + ".zip");
+							zipFilePath = destination;
 							added.add(zipFilePath);
 						} catch (ZipException e) {
 							if (e.getMessage() != null && e.getMessage().contains("ZIP file must have at least one entry"))
@@ -117,7 +133,7 @@ public class ArchiveCommandExecutor extends AbstractJsonCommandExecutor
 					}
 					zipDirectory(newTempDirName.getPath(), firstItem.getParent().getPath() + "/" + name + ".zip", true);
 					removeTempDir(newTempDirName);
-					zipFilePath = new FsItemEx(firstItem.getParent(), name + ".zip");
+					zipFilePath = destination;
 					added.add(zipFilePath);
 				}
 			}

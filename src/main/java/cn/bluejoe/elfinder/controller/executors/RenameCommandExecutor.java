@@ -38,6 +38,11 @@ public class RenameCommandExecutor extends AbstractJsonCommandExecutor
 			name = IwcmFsVolume.removeSpecialChars(name, fsi, user);
 
 			FsItemEx dst = new FsItemEx(fsi.getParent(), name);
+			if (!dst.isWritable(dst))
+			{
+				json.put("error", prop.getText("components.elfinder.commands.rename.error", fsi.getParent().getPath()));
+				return;
+			}
 
 			//#20481 - po vystrihnuti/premenovani vytvori redirect
 			if(PasteCommandExecutor.isAllowedFolder(fsi.getPath(), Constants.getString("elfinderRedirectFolders")))
