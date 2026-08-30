@@ -49,7 +49,7 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 		FsItemEx fsi = super.findItem(fsService, target);
 		Prop prop = Prop.getInstance(request);
 		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();
-		if (user!=null && UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getPath()))
+		if (user!=null && fsi.isWritable(fsi) && fsi.getParent().isWritable(fsi.getParent()) && UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getPath()))
 		{
 			String zipFile = fsi.getPath();
 

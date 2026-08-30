@@ -31,7 +31,7 @@ public class MkfileCommandExecutor extends AbstractJsonCommandExecutor
 		FsItemEx fsi = super.findItem(fsService, target);
 
 		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();
-		if (user!=null && UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getPath()))
+		if (user!=null && fsi.isWritable(fsi) && UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getPath()))
 		{
 			FsItemEx dir = new FsItemEx(fsi, name);
 			dir.createFile();

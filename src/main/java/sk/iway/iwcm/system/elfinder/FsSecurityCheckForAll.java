@@ -5,6 +5,9 @@ import cn.bluejoe.elfinder.service.FsSecurityChecker;
 import cn.bluejoe.elfinder.service.FsService;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.file_archiv.FileArchivSupportMethodsService;
+import sk.iway.iwcm.components.file_archiv.FileArchivatorKit;
 import sk.iway.iwcm.users.UsersDB;
 
 public class FsSecurityCheckForAll implements FsSecurityChecker
@@ -23,7 +26,7 @@ public class FsSecurityCheckForAll implements FsSecurityChecker
 	@Override
 	public boolean isLocked(FsService fsService, FsItem fsi)
 	{
-		return _locked;
+		return _locked || isFileArchiveReadOnly(fsService, fsi);
 	}
 
 	public boolean isReadable()
@@ -45,6 +48,8 @@ public class FsSecurityCheckForAll implements FsSecurityChecker
 	@Override
 	public boolean isWritable(FsService fsService, FsItem fsi)
 	{
+		if (isFileArchiveReadOnly(fsService, fsi)) return false;
+
 		if (fsi.getVolume() instanceof IwcmActualPageFsVolume)
 		{
 			return ((IwcmActualPageFsVolume)fsi.getVolume()).isWritable(fsi);
@@ -72,6 +77,27 @@ public class FsSecurityCheckForAll implements FsSecurityChecker
 		return _writable;
 	}
 
+	private boolean isFileArchiveReadOnly(FsService fsService, FsItem fsi)
+	{
+		if (!(fsService instanceof sk.iway.iwcm.system.elfinder.FsService iwcmFsService)) return false;
+
+		int selectedType = iwcmFsService.getSelectedType();
+		if (selectedType != sk.iway.iwcm.system.elfinder.FsService.TYPE_LINK &&
+			selectedType != sk.iway.iwcm.system.elfinder.FsService.TYPE_IMAGES &&
+			selectedType != sk.iway.iwcm.system.elfinder.FsService.TYPE_MULTIMEDIA &&
+			selectedType != sk.iway.iwcm.system.elfinder.FsService.TYPE_VIDEOS)
+		{
+			return false;
+		}
+
+		if (fsi.getVolume() instanceof IwcmArchivFsVolume) return true;
+		if (!(fsi instanceof IwcmFsItem iwcmFsItem)) return false;
+
+		String archivePath = FileArchivSupportMethodsService.normalizePath(FileArchivatorKit.getArchivPath());
+		String itemPath = FileArchivSupportMethodsService.normalizePath(iwcmFsItem.getFile().getVirtualPath());
+		return Tools.isNotEmpty(archivePath) && Tools.isNotEmpty(itemPath) && itemPath.startsWith(archivePath);
+	}
+
 	public void setLocked(boolean locked)
 	{
 		_locked = locked;
@@ -87,4 +113,4 @@ public class FsSecurityCheckForAll implements FsSecurityChecker
 		_writable = writable;
 	}
 
-} 
+}

@@ -87,6 +87,10 @@ Scenario('Obsah web stranky - zakladne ikony', ({ I, DT, DTE, Browser, Document 
      I.waitForElement(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-ro.elfinder-navbar-collapsed.ui-droppable.elfinder-subtree-loaded').withText('Médiá všetkých stránok'), 20);
      I.wait(1);
      I.click(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-ro.elfinder-navbar-collapsed.ui-droppable.elfinder-subtree-loaded').withText('Médiá všetkých stránok'), null, { position: { x: 20, y: 5 } });
+     I.waitForText('Súbory', 10, ".elfinder-cwd-file");
+     I.doubleClick(".elfinder-cwd-filename[title='Súbory']");
+     I.waitForElement(".elfinder-cwd-file.elfinder-ro .elfinder-cwd-filename[title='archiv']", 10);
+     I.click(".elfinder-button-icon-up");
      I.waitForText('Foto galéria', 10, ".elfinder-cwd-file");
      I.wait(1);
      I.doubleClick(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('Foto galéria'));
@@ -756,6 +760,7 @@ async function testLinkElfinder(DTE, I) {
      I.click(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-ro.elfinder-navbar-collapsed.ui-droppable.elfinder-subtree-loaded').withText('Médiá všetkých stránok'), null, { position: { x: 20, y: 5 } });
      I.waitForText('Súbory', 10, ".elfinder-cwd-file");
      I.doubleClick(".elfinder-cwd-filename[title='Súbory']");
+     I.waitForElement(".elfinder-cwd-file.elfinder-ro .elfinder-cwd-filename[title='archiv']", 10);
      I.click(".elfinder-cwd-filename[title='jurko.jpg']");
      await I.waitForElement(".elfinder-stat-selected[title^='jurko.jpg']", 10);
      I.switchTo();

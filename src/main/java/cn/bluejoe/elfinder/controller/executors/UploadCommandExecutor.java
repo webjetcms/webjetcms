@@ -283,7 +283,7 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 		List<String> notUploadedSession = (List<String>) request.getAttribute("MultipartWrapper.notUploaded");
 		if (notUploadedSession != null) notUploaded.addAll(notUploadedSession) ;
 
-		if (user != null && UsersDB.isFolderWritable(user.getWritableFolders(), dir.getPath()) && filesMap != null)
+		if (user != null && dir.isWritable(dir) && UsersDB.isFolderWritable(user.getWritableFolders(), dir.getPath()) && filesMap != null)
 		{
 
 			if (renames != null && renames.length > 0) {

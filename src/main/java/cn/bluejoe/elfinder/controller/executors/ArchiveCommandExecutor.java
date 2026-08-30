@@ -80,7 +80,7 @@ public class ArchiveCommandExecutor extends AbstractJsonCommandExecutor
 
 			Prop prop = Prop.getInstance(request);
 			Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();
-			if (user!=null && UsersDB.isFolderWritable(user.getWritableFolders(), firstItem.getParent().getPath()))
+			if (user!=null && firstItem.isWritable(firstItem) && firstItem.getParent().isWritable(firstItem.getParent()) && UsersDB.isFolderWritable(user.getWritableFolders(), firstItem.getParent().getPath()))
 			{
 				// zipovanie jedneho adresaru
 				if(targets.length == 1)

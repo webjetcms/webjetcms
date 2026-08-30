@@ -11,6 +11,7 @@ import cn.bluejoe.elfinder.service.FsService;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.ImageTools;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 
 /**
@@ -35,6 +36,11 @@ public class ResizeCommandExecutor extends AbstractJsonCommandExecutor
 		String target = request.getParameter("target");
 
 		FsItemEx fsi = super.findItem(fsService, target);
+		if (!fsi.isWritable(fsi))
+		{
+			json.put("error", Prop.getInstance(request).getText("admin.operationPermissionDenied"));
+			return;
+		}
 		String virtualPath = sk.iway.iwcm.system.elfinder.FsService.getVirtualPath(fsi);
 		if (virtualPath.startsWith("/")==false) virtualPath = "/"+virtualPath;
 		

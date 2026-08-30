@@ -58,6 +58,11 @@ public class ZipdlCommandExecutor extends AbstractCommandExecutor {
          ArchiveCommandExecutor archive = new ArchiveCommandExecutor();
          FsItemEx zipFilePath = archive.executeZip(fsService, request, servletContext, json);
 
+         if (zipFilePath == null) {
+            response.getWriter().println(json.toString());
+            return;
+         }
+
          response.getWriter().println("{\"zipdl\":{\"file\":\""+zipdlHashPrefix+zipFilePath.getHash()+"\"}}");
       }
    }

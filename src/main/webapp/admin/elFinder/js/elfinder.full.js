@@ -36044,7 +36044,7 @@ elFinder.prototype.commands.wjdirprops = function() {
 	this.getstate = function(sel) {
 		var sel = this.files(sel);
 
-		if (sel.length == 1 && typeof sel[0].mime != "undefined" && sel[0].mime == "directory") {
+		if (sel.length == 1 && typeof sel[0].mime != "undefined" && sel[0].mime == "directory" && sel[0].write && !sel[0].locked) {
 			return 0;
 		}
 
@@ -36452,7 +36452,7 @@ elFinder.prototype.commands.wjeditswitch = function() {
 	this.getstate = function(sel) {
 		var sel = this.files(sel);
 
-		if (sel.length == 1 && typeof sel[0].mime != "undefined" && sel[0].mime != "directory") {
+		if (sel.length == 1 && typeof sel[0].mime != "undefined" && sel[0].mime != "directory" && sel[0].write && !sel[0].locked) {
 			return 0;
 		}
 
@@ -36603,7 +36603,7 @@ elFinder.prototype.commands.wjfileprops = function() {
 	this.getstate = function(sel) {
 		var sel = this.files(sel);
 
-		if (sel.length == 1 && typeof sel[0].mime != "undefined" && sel[0].mime != "directory") {
+		if (sel.length == 1 && typeof sel[0].mime != "undefined" && sel[0].mime != "directory" && sel[0].write && !sel[0].locked) {
 			return 0;
 		}
 
@@ -36657,7 +36657,7 @@ elFinder.prototype.commands.wjfileupdate = function() {
 	this.getstate = function(sel) {
 		var sel = this.files(sel);
 
-		if (sel.length == 1 && typeof sel[0].mime != "undefined" && sel[0].mime != "directory") {
+		if (sel.length == 1 && typeof sel[0].mime != "undefined" && sel[0].mime != "directory" && sel[0].write && !sel[0].locked) {
 			return 0;
 		}
 
@@ -36715,7 +36715,11 @@ elFinder.prototype.commands.wjmetadata = function() {
             return result;
         }
 
-        var files = this.files(sel);
+        var files = this.files(sel),
+			cwd = this.fm.cwd();
+		if ($.grep(files, function(file) { return !file.write || file.locked; }).length || (cwd && (!cwd.write || cwd.locked))) {
+			return result;
+		}
         if (this.isMetadataAllowed() && this.isRootFiles(files)) {
 			result = 0;
     	}

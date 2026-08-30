@@ -32,7 +32,7 @@ public class RenameCommandExecutor extends AbstractJsonCommandExecutor
 		}
 
 		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();
-		if (user!=null && UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getParent().getPath()))
+		if (user!=null && fsi.isWritable(fsi) && UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getParent().getPath()))
 		{
 			// remove diacritics
 			name = IwcmFsVolume.removeSpecialChars(name, fsi, user);
