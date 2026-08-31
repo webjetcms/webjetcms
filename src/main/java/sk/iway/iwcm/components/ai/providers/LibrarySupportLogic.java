@@ -8,6 +8,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
+import org.jsoup.Jsoup;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -27,6 +29,7 @@ import com.webjetcms.ai.image.ImageOptionDefinition;
 import com.webjetcms.ai.image.ImageOptions;
 import com.webjetcms.ai.ModelInfo;
 import com.webjetcms.ai.TokenUsage;
+import com.webjetcms.ai.TranslationOptions;
 import com.webjetcms.ai.security.PromptInjectionDefense.UntrustedSource;
 
 import sk.iway.iwcm.Adminlog;
@@ -68,10 +71,31 @@ public abstract class LibrarySupportLogic implements AiInterface {
 
     private final AiClient aiClient;
     private final WebjetAiConfigurationService configurationService;
+    private final LiteralTranslationOptionsResolver literalTranslationOptionsResolver;
 
     protected LibrarySupportLogic(AiClient aiClient, WebjetAiConfigurationService configurationService) {
+        this(aiClient, configurationService, null);
+    }
+
+    /**
+     * Creates a CMS provider adapter with optional literal-translation support.
+     *
+     * The resolver may supply translation options only. Request construction and all security invariants remain
+     * owned by this class.
+     *
+     * @param aiClient client used to execute provider requests
+     * @param configurationService service used to resolve provider configuration
+     * @param literalTranslationOptionsResolver resolver for literal translation options, or {@code null} for the
+     *        standard protected-prompt request pipeline
+     */
+    protected LibrarySupportLogic(
+        AiClient aiClient,
+        WebjetAiConfigurationService configurationService,
+        LiteralTranslationOptionsResolver literalTranslationOptionsResolver
+    ) {
         this.aiClient = aiClient;
         this.configurationService = configurationService;
+        this.literalTranslationOptionsResolver = literalTranslationOptionsResolver;
     }
 
     @Override
@@ -373,7 +397,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
      * @return request ready for provider execution
      * @throws IOException if prompt validation or input media processing fails
      */
-    protected AiRequest prepareProviderRequest(
+    private AiRequest prepareProviderRequest(
         AiOperation operation,
         AssistantDefinitionEntity assistant,
         InputDataDTO inputData,
@@ -384,6 +408,9 @@ public abstract class LibrarySupportLogic implements AiInterface {
             inputData
         );
         validatePromptExpansion(expansion, assistant.getId());
+        if (literalTranslationOptionsResolver != null) {
+            return prepareLiteralTranslationRequest(operation, assistant, inputData, includesHandler, expansion);
+        }
         return prepareRequest(
             operation,
             assistant,
@@ -392,6 +419,66 @@ public abstract class LibrarySupportLogic implements AiInterface {
             supportedImageOptions(operation, assistant, inputData),
             expansion
         );
+    }
+
+    /**
+     * Builds a centrally validated request for a literal translation provider.
+     *
+     * Literal translation accepts plain, unstructured text only. Request construction stays private so subclasses
+     * cannot add prompt fields, remove input safeguards, or change storage behavior.
+     *
+     * @param operation requested AI operation
+     * @param assistant assistant configuration supplying the model and translation instructions
+     * @param inputData input data to translate
+     * @param includesHandler handler used to detect protected WebJET INCLUDE commands; may be {@code null}
+     * @param expansion expanded prompt metadata used to reject input macros and audit suspicious sources
+     * @return validated literal translation request
+     * @throws IOException if the operation, input, or translation configuration is unsupported
+     */
+    private AiRequest prepareLiteralTranslationRequest(
+        AiOperation operation,
+        AssistantDefinitionEntity assistant,
+        InputDataDTO inputData,
+        IncludesHandler includesHandler,
+        AiPromptTemplate.ExpansionResult expansion
+    ) throws IOException {
+        if (operation != AiOperation.TEXT) {
+            throw new IOException("Local translation supports text requests only");
+        }
+        if (InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType())) {
+            throw new IOException("Local translation does not support image input");
+        }
+        if (inputData.isStructuredInput()) {
+            throw new IOException("Local translation does not support structured input");
+        }
+        if (includesHandler != null && includesHandler.hasIncludes()) {
+            throw new IOException("Local translation cannot safely process WebJET INCLUDE commands");
+        }
+        if (expansion.consumedSources().isEmpty() == false) {
+            throw new IOException("Local translation instructions cannot contain input macros");
+        }
+        if (inputData.getInputValue() == null || inputData.getInputValue().isBlank()) {
+            throw new IOException("Local translation input must not be blank");
+        }
+        if (inputData.getUserPrompt() != null && inputData.getUserPrompt().isBlank() == false) {
+            throw new IOException("Local translation does not support a user prompt");
+        }
+        if (Jsoup.parseBodyFragment(inputData.getInputValue()).body().children().isEmpty() == false) {
+            throw new IOException("Local translation cannot safely process HTML input");
+        }
+
+        TranslationOptions translationOptions = literalTranslationOptionsResolver.resolve(assistant.getInstructions());
+        if (translationOptions == null) {
+            throw new IOException("Local translation options must not be null");
+        }
+        AiRequest request = AiRequest.builder()
+            .operation(operation)
+            .model(assistant.getModel())
+            .inputText(inputData.getInputValue())
+            .store(false)
+            .translationOptions(translationOptions)
+            .build();
+        return auditPreparedRequest(request, expansion, assistant.getId());
     }
 
     /**
@@ -583,10 +670,18 @@ public abstract class LibrarySupportLogic implements AiInterface {
             userPrompt,
             imageOptions
         );
+        return auditPreparedRequest(request, expansion, assistant.getId());
+    }
+
+    private static AiRequest auditPreparedRequest(
+        AiRequest request,
+        AiPromptTemplate.ExpansionResult expansion,
+        Long assistantId
+    ) {
         EnumSet<UntrustedSource> suspiciousSources = EnumSet.noneOf(UntrustedSource.class);
         suspiciousSources.addAll(expansion.suspiciousSources());
         suspiciousSources.addAll(request.suspiciousSources());
-        PromptInjectionDefense.auditDetections(suspiciousSources, assistant.getId());
+        PromptInjectionDefense.auditDetections(suspiciousSources, assistantId);
         return request;
     }
 
@@ -663,6 +758,20 @@ public abstract class LibrarySupportLogic implements AiInterface {
 
     private static boolean isImageOperation(AiOperation operation) {
         return operation == AiOperation.GENERATE_IMAGE || operation == AiOperation.EDIT_IMAGE;
+    }
+
+    /** Resolves immutable options for the private literal-translation request pipeline. */
+    @FunctionalInterface
+    protected interface LiteralTranslationOptionsResolver {
+
+        /**
+         * Resolves provider-neutral translation options from assistant configuration.
+         *
+         * @param instructions assistant instructions containing translation configuration
+         * @return validated translation options
+         * @throws IOException if the translation configuration is invalid
+         */
+        TranslationOptions resolve(String instructions) throws IOException;
     }
 
     /**

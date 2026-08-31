@@ -4,24 +4,19 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
-import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webjetcms.ai.AiClient;
-import com.webjetcms.ai.AiOperation;
-import com.webjetcms.ai.AiRequest;
 import com.webjetcms.ai.TranslationOptions;
 
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiAssitantsInterface;
-import sk.iway.iwcm.components.ai.providers.IncludesHandler;
 import sk.iway.iwcm.components.ai.providers.LibrarySupportLogic;
 import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
 import sk.iway.iwcm.i18n.Prop;
@@ -46,7 +41,7 @@ public class LocalTranslateService extends LibrarySupportLogic implements AiAssi
         WebjetAiConfigurationService configurationService,
         LocalTranslateProvider localTranslateProvider
     ) {
-        super(aiClient, configurationService);
+        super(aiClient, configurationService, LocalTranslateService::parseTranslationOptions);
         this.localTranslateProvider = localTranslateProvider;
     }
 
@@ -93,48 +88,6 @@ public class LocalTranslateService extends LibrarySupportLogic implements AiAssi
 
     @Override
     public void setProviderSpecificOptions(DatatablePageImpl<AssistantDefinitionEntity> page, Prop prop) {
-    }
-
-    /**
-     * Builds a validated plain-text request for the local translation provider.
-     *
-     * @param operation requested AI operation
-     * @param assistant assistant configuration supplying the model and translation instructions
-     * @param inputData input data to translate
-     * @param includesHandler handler used to detect protected WebJET INCLUDE commands; may be {@code null}
-     * @return request containing normalized translation options
-     * @throws IOException if the operation or input is unsupported, or the translation options are invalid
-     */
-    @Override
-    protected AiRequest prepareProviderRequest(
-        AiOperation operation,
-        AssistantDefinitionEntity assistant,
-        InputDataDTO inputData,
-        IncludesHandler includesHandler
-    ) throws IOException {
-        if (operation != AiOperation.TEXT) {
-            throw new IOException("Local translation supports text requests only");
-        }
-        if (InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType())) {
-            throw new IOException("Local translation does not support image input");
-        }
-        if (includesHandler != null && includesHandler.hasIncludes()) {
-            throw new IOException("Local translation cannot safely process WebJET INCLUDE commands");
-        }
-        if (inputData.getInputValue() == null || inputData.getInputValue().isBlank()) {
-            throw new IOException("Local translation input must not be blank");
-        }
-        if (Jsoup.parseBodyFragment(inputData.getInputValue()).body().children().isEmpty() == false) {
-            throw new IOException("Local translation cannot safely process HTML input");
-        }
-
-        return AiRequest.builder()
-            .operation(operation)
-            .model(assistant.getModel())
-            .inputText(inputData.getInputValue())
-            .store(false)
-            .translationOptions(parseTranslationOptions(assistant.getInstructions()))
-            .build();
     }
 
     /**
