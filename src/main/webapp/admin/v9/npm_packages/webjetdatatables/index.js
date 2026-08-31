@@ -3347,7 +3347,7 @@ export const dataTableInit = options => {
                          * - old values
                          * - new values
                          */
-                        const newUrl = DATA.url.split("?")[0] + "/row-reorder";
+                        const newUrl = WJ.urlAddPath(DATA.url, "/row-reorder");
                         const reorderData = {
                             dataSrc: edit.dataSrc,
                             values: diff.map(diffValue => ({

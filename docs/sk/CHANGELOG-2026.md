@@ -511,8 +511,12 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Galéria - v editore aplikácie sa medzi vizuálnymi štýlmi zobrazujú iba JSP súbory z priečinkov `/components/{INSTALL_NAME}/gallery` a `/components/gallery`, bez duplicitných položiek (#58317-16).
 - Vloženie HTML kódu - v náhľade aplikácie v editore webových stránok sa pre obsah tvorený iba elementmi `script` zobrazí zdrojový kód namiesto prázdneho obsahu (#OSK625).
 - Bezpečnosť - sprísnené overovanie odkazu na obnovu zabudnutého hesla. Overovací záznam sa kontroluje pre vybraný používateľský účet aj pri vlastnom spôsobe odosielania, rešpektuje časovú platnosť a po použití sa zneplatní pre všetky účty zahrnuté v žiadosti (#292).
+- Bezpečnosť - sprísnené overovanie oprávnení pri práci so záznamami v administrácii (#295).
 - Bezpečnosť - sprísnená kontrola práv na priečinok pri nahrávaní súboru do administrácie a jeho prepísaní ak súbor existuje.
+- Bezpečnosť - sprísnená kontrola oprávnení pri obnove historickej verzie súboru (#295).
+- Bezpečnosť - sprísnená kontrola oprávnení pri správe blogerov (#295).
 - Bezpečnosť - sprísnená validácia názvov databázových stĺpcov pri dynamickom usporiadaní a filtrovaní. **Upozornenie:** verejné API už v parametroch usporiadania nepodporujú vlastné SQL výrazy, používajú sa iba bezpečné názvy stĺpcov alebo dostupné pomenované konštanty (#294).
+- Bezpečnosť - [zabezpečený koncový bod `row-reorder`](developer/datatables/README.md#poradie-usporiadania-riadkov) dátových tabuliek. Povolené je meniť iba numerické pole označené `DataTableColumnType.ROW_REORDER`, pričom sa kontrolujú oprávnenia pre každý záznam aj dodatočný rozsah celej dávky pomocou `checkRowReorderScope`. Pri formulároch sa overuje príslušnosť k formuláru a kroku aj prístup používateľa; neplatná požiadavka sa neuloží (#295).
 
 ## 2026.0.28
 

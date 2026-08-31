@@ -20,6 +20,7 @@ public interface DomainIdRepository<T, ID> extends JpaRepository<T, ID>, JpaSpec
 
     Optional<T> findFirstByIdAndDomainId(Long id, int domainId);
 
+    List<T> findAllByIdInAndDomainId(List<Long> ids, int domainId);
     List<T> findAllByDomainId(int domainId);
     Page<T> findAllByDomainId(int domainId, Pageable pageable);
 

@@ -64,6 +64,8 @@ V aplikácii tak bude možné upravovať zoznam položiek, meniť ich poradie at
 
 Automaticky sa aktivuje aj funkcia pre možnosť zmeny poradia riadkov pomocou funkcie `Drag&Drop`. Z dôvodu konfliktov pri presune riadkov a ich rôzneho usporiadania je vypnutá možnosť usporiadať zoznam podľa ľubovoľného stĺpca, zoznam sa usporadúva automaticky podľa poradia usporiadania. Pre režim JSON editor sa tento stĺpec automaticky pridá - všimnite si, že trieda `ImpressSlideshowItem` v príklade nižšie neobsahuje ani `ID` ani `rowOrder` stĺpec, keďže technicky pre zobrazenie dát nie sú potrebné. Pridajú sa automaticky. Ak potrebujete stĺpec manuálne zobraziť, použite anotáciu `DataTableColumnType.ROW_REORDER`.
 
+!> Lokálny JSON režim nevolá backend koncový bod `/row-reorder`, pretože zmenu poradia spracuje v dátach editora na strane klienta. Pre dátovú tabuľku napojenú na REST službu platia [serverové podmienky pre povolenie zmeny poradia](../datatables/README.md#poradie-usporiadania-riadkov).
+
 Príklad použitia:
 
 ```java
