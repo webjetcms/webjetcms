@@ -13,6 +13,7 @@ import cn.bluejoe.elfinder.controller.executor.AbstractJsonCommandExecutor;
 import cn.bluejoe.elfinder.controller.executor.FsItemEx;
 import cn.bluejoe.elfinder.service.FsService;
 import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.elfinder.IwcmDocGroupFsVolume;
 
 public class DuplicateCommandExecutor extends AbstractJsonCommandExecutor
@@ -28,6 +29,11 @@ public class DuplicateCommandExecutor extends AbstractJsonCommandExecutor
 		for (String target : targets)
 		{
 			FsItemEx fsi = super.findItem(fsService, target);
+			if (!fsi.isWritable(fsi))
+			{
+				json.put("error", Prop.getInstance(request).getText("admin.operationPermissionDenied"));
+				continue;
+			}
 			String name = fsi.getName();
 			String baseName = FilenameUtils.getBaseName(name);
 			String extension = FilenameUtils.getExtension(name);

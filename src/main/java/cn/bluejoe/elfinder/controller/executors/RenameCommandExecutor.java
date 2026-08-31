@@ -32,12 +32,17 @@ public class RenameCommandExecutor extends AbstractJsonCommandExecutor
 		}
 
 		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();
-		if (user!=null && UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getParent().getPath()))
+		if (user!=null && fsi.isWritable(fsi) && UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getParent().getPath()))
 		{
 			// remove diacritics
 			name = IwcmFsVolume.removeSpecialChars(name, fsi, user);
 
 			FsItemEx dst = new FsItemEx(fsi.getParent(), name);
+			if (!dst.isWritable(dst))
+			{
+				json.put("error", prop.getText("components.elfinder.commands.rename.error", fsi.getParent().getPath()));
+				return;
+			}
 
 			//#20481 - po vystrihnuti/premenovani vytvori redirect
 			if(PasteCommandExecutor.isAllowedFolder(fsi.getPath(), Constants.getString("elfinderRedirectFolders")))

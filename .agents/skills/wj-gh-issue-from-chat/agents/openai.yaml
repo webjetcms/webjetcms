@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitHub Issue from Chat"
+  short_description: "Create an issue and check out its issue branch"
+  default_prompt: "Use $wj-gh-issue-from-chat to turn this discussion into a GitHub issue and check out its issue branch."

@@ -49,7 +49,7 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 		FsItemEx fsi = super.findItem(fsService, target);
 		Prop prop = Prop.getInstance(request);
 		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();
-		if (user!=null && UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getPath()))
+		if (user!=null && fsi.isWritable(fsi) && fsi.getParent().isWritable(fsi.getParent()) && UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getPath()))
 		{
 			String zipFile = fsi.getPath();
 
@@ -58,13 +58,26 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 			{
 				// outputFolder += "/unzip-"+Tools.getNow();
 				fsi = new FsItemEx(fsi.getParent(), "unzip-"+Tools.getNow()+"/"+fsi.getName());
-				fsi.getParent().createFolder();
 				makedir = fsi.getParent();
 			}
 
-			String outputFolder = fsi.getParent().getPath().replace(".zip", "");
+			String outputFolder = fsi.getParent().getPath();
+			if (areAllExtractEntriesWritable(zipFile, fsi.getParent()) == false)
+			{
+				json.put("error", prop.getText("components.elfinder.commands.extract.error", zipFile));
+				json.put("added", new Object[] {});
+				return;
+			}
+
+			if (makedir != null) makedir.createFolder();
 
 			List<FsItemEx> added = unZipFile(zipFile, outputFolder, fsi);
+			if (added == null)
+			{
+				json.put("error", prop.getText("components.elfinder.commands.extract.error", zipFile));
+				json.put("added", new Object[] {});
+				return;
+			}
 			if (makedir != null) added.add(0, makedir);
 
 			json.put("added", files2JsonArray(request, added));
@@ -76,6 +89,32 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 		}
 
 
+	}
+
+	protected boolean areAllExtractEntriesWritable(String zipFile, FsItemEx outputFolder)
+	{
+		try (ZipInputStream zis = new ZipInputStream(new FileInputStream(sk.iway.iwcm.Tools.getRealPath(zipFile))))
+		{
+			ZipEntry ze = zis.getNextEntry();
+			while (ze != null)
+			{
+				if (isExtractDestinationWritable(outputFolder, ze.getName()) == false) return false;
+				ze = zis.getNextEntry();
+			}
+		}
+		catch (IOException ex)
+		{
+			Logger.error(ex);
+			return false;
+		}
+
+		return true;
+	}
+
+	private boolean isExtractDestinationWritable(FsItemEx outputFolder, String name) throws IOException
+	{
+		FsItemEx destination = new FsItemEx(outputFolder, name);
+		return destination.getPath() != null && destination.isWritable(destination);
 	}
 
 	public static List<String> getAllowedTypes()
@@ -92,13 +131,12 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 		List<FsItemEx> added = new ArrayList<FsItemEx>();
 
 		byte[] buffer = new byte[64000];
-		try
+		try (ZipInputStream zis = new ZipInputStream(new FileInputStream(sk.iway.iwcm.Tools.getRealPath(zipFile))))
 		{
 			IwcmFile folder = new IwcmFile(sk.iway.iwcm.Tools.getRealPath(outputFolder));
 			if(!folder.exists()){
 				folder.mkdir();
 			}
-			ZipInputStream zis = new ZipInputStream(new FileInputStream(sk.iway.iwcm.Tools.getRealPath(zipFile)));
 			ZipEntry ze = zis.getNextEntry();
 
 			Set<String> allreadyAddedFolders = new HashSet<String>();
@@ -107,6 +145,7 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 			{
 				String fileName = ze.getName();
 				Logger.debug(this.getClass(), "ZE fileName="+fileName);
+				if (isExtractDestinationWritable(fsi.getParent(), fileName) == false) return null;
 				IwcmFile newFile = new IwcmFile(folder.getPath() + File.separator + fileName);
 
 				if (newFile.getParentFile().exists()==false)
@@ -148,9 +187,6 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 
 				ze = zis.getNextEntry();
 			}
-
-			zis.closeEntry();
-			zis.close();
 		}
 		catch(IOException ex)
 		{
