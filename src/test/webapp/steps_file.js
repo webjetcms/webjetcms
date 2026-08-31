@@ -469,7 +469,7 @@ module.exports = function () {
       var that = this;
       pathArray.forEach(function (name, index) {
         that.say("clicking on jstreitem: name=" + name + " index=" + index);
-        that.jstreeClick(name);
+        that.jstreeClick(name, true);
       });
     },
 

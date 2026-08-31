@@ -27,7 +27,7 @@ public class PutCommandExecutor extends AbstractJsonCommandExecutor
 
 		Prop prop = Prop.getInstance(request);
 		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();
-		if (user!=null && UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getParent().getPath()))
+		if (user!=null && fsi.isWritable(fsi) && UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getParent().getPath()))
 		{
 			//skus odhadnut encoding
 			String content = request.getParameter("content");
