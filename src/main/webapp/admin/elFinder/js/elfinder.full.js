@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1.65 (2026-08-06)
+ * Version 2.1.65 (2026-08-31)
  * http://elfinder.org
  * 
  * Copyright 2009-2026, Studio 42
@@ -36667,7 +36667,7 @@ elFinder.prototype.commands.wjfileupdate = function() {
 	this.exec = function(hashes) {
 		var dfrd  = $.Deferred().fail(function(error) { error && fm.error(error); });
 
-		if(hashes === null || hashes === undefined || hashes.length < 1) { 
+		if(hashes === null || hashes === undefined || hashes.length < 1) {
 			return dfrd.reject("Hashes are not valid.");
 		}
 
@@ -36833,7 +36833,7 @@ elFinder.prototype.commands.wjmetadata = function() {
 
         var self = this,
 			result = [];
-		
+
 		$.each(hashes, function(i, file) {
             if (self.isString(file)) {
 				file = self.fm.file(file);
@@ -36879,7 +36879,7 @@ elFinder.prototype.commands.wjmetadata = function() {
 		var fileUrl = file.url;
         fileUrl = fileUrl.replace(/\/$/, "");
         filesRoot = filesRoot.replace(/\/$/, "");
-		
+
         return fileUrl === filesRoot;
     };
 
