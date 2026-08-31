@@ -36717,7 +36717,7 @@ elFinder.prototype.commands.wjmetadata = function() {
 
         var files = this.files(sel),
 			cwd = this.fm.cwd();
-		if ($.grep(files, function(file) { return !file.write || file.locked; }).length || (cwd && (!cwd.write || cwd.locked))) {
+		if ($.grep(files, function(file) { return !file.write || file.locked; }).length || (!files.length && cwd && (!cwd.write || cwd.locked))) {
 			return result;
 		}
         if (this.isMetadataAllowed() && this.isRootFiles(files)) {
