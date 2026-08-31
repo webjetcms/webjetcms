@@ -123,6 +123,7 @@ public class SpringSecurityConf {
 		if (Tools.isNotEmpty(Constants.getString("oauth2_clients"))) {
 			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - oauth2Login");
 			http.oauth2Login(oauth2 -> {
+				oauth2.loginPage("/admin/logon/");
 				oauth2.clientRegistrationRepository(clientRegistrationRepository());
 				oauth2.authorizedClientService(authorizedClientService(clientRegistrationRepository()));
 				oauth2.successHandler(new OAuth2DynamicSuccessHandler());

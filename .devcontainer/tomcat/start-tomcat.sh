@@ -142,8 +142,24 @@ if docker container inspect "${container_name}" >/dev/null 2>&1; then
 fi
 
 echo "Creating container ${container_name}..."
+tomcat_jvm_args=(
+    '-Dsun.net.client.defaultConnectTimeout=300000'
+    '-Dsun.net.client.defaultReadTimeout=300000'
+    '-Dfile.encoding=utf-8'
+    '-Duser.language=sk'
+    '-Duser.country=SK'
+    '-Dwebjet.smtpServer=mxrelay.dev.iway.sk'
+    '-Dmail.smtp.localhost=webjetcms-tomcat11.localhost'
+    '-DwebjetDbname=/usr/local/tomcat/conf/poolman.xml'
+    "-Dwebjet.keystore.password=${keystore_password}"
+    '-Dwebjet.serverMonitoringEnableJPA=true'
+    '-Dwebjet.webEnableIPs=1,2,3,4,5,6,7,8,9,0'
+    '-Dwebjet.adminEnableIPs=1,2,3,4,5,6,7,8,9,0'
+    '-Dwebjet.passwordAdminExpiryDays=0'
+    '-Dwebjet.loggerUseAnsiColors=true'
+)
 container_environment_args=(
-    --env "CATALINA_OPTS=-DwebjetDbname=/usr/local/tomcat/conf/poolman.xml -Dwebjet.keystore.password=${keystore_password}"
+    --env "CATALINA_OPTS=${tomcat_jvm_args[*]}"
     --env "WEBJET_KEYSTORE_PATH=file:/usr/local/tomcat/conf/webjet-https-keystore.p12"
     --env "WEBJET_HTTPS_KEYSTORE_PASSWORD=${keystore_password}"
 )
