@@ -20,6 +20,12 @@ public final class LocalTextProvider extends ConfiguredLocalProvider {
         super(PROVIDER_ID, BUNDLE_PATH_CONSTANT, LocalGenerationModelProvider::open);
     }
 
+    /**
+     * Selects literal input for text generation and protected-prompt handling for other operations.
+     *
+     * @param operation requested AI operation
+     * @return literal handling for text operations; protected-prompt handling otherwise
+     */
     @Override
     public AiInputHandling inputHandling(AiOperation operation) {
         return operation == AiOperation.TEXT ? AiInputHandling.LITERAL : AiInputHandling.PROTECTED_PROMPT;

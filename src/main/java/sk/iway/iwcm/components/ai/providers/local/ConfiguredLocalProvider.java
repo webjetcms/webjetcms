@@ -64,6 +64,11 @@ public abstract class ConfiguredLocalProvider implements AiProvider {
         return Tools.isNotEmpty(configuredBundlePath());
     }
 
+    /**
+     * Closes the lazily opened delegate at most once.
+     *
+     * @throws Exception if the delegate cannot be closed
+     */
     @Override
     public final void close() throws Exception {
         AiProvider providerToClose;
@@ -76,6 +81,13 @@ public abstract class ConfiguredLocalProvider implements AiProvider {
         if (providerToClose != null) providerToClose.close();
     }
 
+    /**
+     * Returns the active delegate, opening the configured model bundle on first use.
+     *
+     * @return active local provider delegate
+     * @throws AiProviderException if the provider is closed, the bundle is not configured, the path is invalid,
+     *         or the bundle cannot be opened
+     */
     private AiProvider provider() throws AiProviderException {
         AiProvider current = delegate;
         if (current != null) return current;
@@ -102,13 +114,27 @@ public abstract class ConfiguredLocalProvider implements AiProvider {
         }
     }
 
+    /**
+     * Reads the global bundle path without inheriting a tenant-specific request context.
+     *
+     * @return configured bundle path, possibly empty when no path is configured
+     */
     private String configuredBundlePath() {
         try (DomainRequestBeanScope ignored = DomainRequestBeanScope.open(null)) {
             return Constants.getString(bundlePathConstant);
         }
     }
 
+    /** Opens a provider delegate from a configured local model bundle. */
     protected interface ProviderOpener {
+
+        /**
+         * Opens a provider for the supplied model bundle.
+         *
+         * @param bundle path to the model bundle
+         * @return opened provider delegate
+         * @throws AiProviderException if the bundle cannot be opened or validated
+         */
         AiProvider open(Path bundle) throws AiProviderException;
     }
 }

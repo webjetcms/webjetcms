@@ -17,6 +17,9 @@ import sk.iway.iwcm.components.ai.security.PromptInjectionDefense;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 
+/**
+ * Adapts the local EuroLLM text-generation provider to CMS assistant configuration and prompt validation.
+ */
 @Service
 public class LocalTextService extends LibrarySupportLogic implements AiAssitantsInterface {
 
@@ -55,6 +58,11 @@ public class LocalTextService extends LibrarySupportLogic implements AiAssitants
         return List.of();
     }
 
+    /**
+     * Applies the fixed local text model and feature flags required for local generation.
+     *
+     * @param assistantEntity assistant configuration being prepared for persistence
+     */
     @Override
     public void prepareBeforeSave(AssistantDefinitionEntity assistantEntity) {
         assistantEntity.setModel(DEFAULT_MODEL);
@@ -62,6 +70,13 @@ public class LocalTextService extends LibrarySupportLogic implements AiAssitants
         assistantEntity.setUseTemporal(true);
     }
 
+    /**
+     * Rejects prompt expansions that contain sources detected as prompt injection.
+     *
+     * @param expansion expanded prompt and its detected suspicious sources
+     * @param assistantId assistant identifier used when auditing detections
+     * @throws IOException if any expanded source is detected as prompt injection
+     */
     @Override
     protected void validatePromptExpansion(
         AiPromptTemplate.ExpansionResult expansion,

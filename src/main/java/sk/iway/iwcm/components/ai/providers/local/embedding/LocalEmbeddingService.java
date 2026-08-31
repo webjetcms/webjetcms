@@ -55,6 +55,11 @@ public class LocalEmbeddingService extends LibrarySupportLogic implements AiAssi
         return new ArrayList<>();
     }
 
+    /**
+     * Applies local embedding defaults and disables unsupported assistant features.
+     *
+     * @param assistantEntity assistant configuration being prepared for persistence
+     */
     @Override
     public void prepareBeforeSave(AssistantDefinitionEntity assistantEntity) {
         if (Tools.isEmpty(assistantEntity.getModel())) assistantEntity.setModel(DEFAULT_MODEL);

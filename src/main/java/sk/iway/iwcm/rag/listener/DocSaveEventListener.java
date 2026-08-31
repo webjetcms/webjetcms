@@ -61,6 +61,16 @@ public class DocSaveEventListener {
         }
     }
 
+    /**
+     * Resolves the domain that owns the supplied document.
+     *
+     * The document domain is preferred, followed by its group's domain. Single-domain installations fall back to
+     * domain ID {@code 1}.
+     *
+     * @param doc document whose domain should be resolved
+     * @return resolved positive domain ID
+     * @throws IllegalStateException if no domain can be resolved in multi-domain mode
+     */
     private int resolveDomainId(DocDetails doc) {
         String domainName = DocDB.getInstance().getDomain(doc.getDocId());
         int domainId = GroupsDB.getDomainId(domainName);

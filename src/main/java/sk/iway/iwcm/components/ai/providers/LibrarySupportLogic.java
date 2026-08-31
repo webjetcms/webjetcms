@@ -79,6 +79,15 @@ public abstract class LibrarySupportLogic implements AiInterface {
         return configurationService.isConfigured(this);
     }
 
+    /**
+     * Lists models available from the configured provider for the current request.
+     *
+     * Provider failures are recorded in the audit log and produce an empty result.
+     *
+     * @param prop translations used to format provider errors
+     * @param request request used to resolve provider configuration
+     * @return provider models represented as label-value options
+     */
     @Override
     public List<LabelValue> getSupportedModels(Prop prop, HttpServletRequest request) {
         List<LabelValue> values = new ArrayList<>();
@@ -98,6 +107,17 @@ public abstract class LibrarySupportLogic implements AiInterface {
         return values;
     }
 
+    /**
+     * Executes a text request, restores protected INCLUDE commands, and records usage and audit data.
+     *
+     * @param assistant assistant configuration used for the request
+     * @param inputData input text, user prompt, and related request data
+     * @param prop translations used to format provider errors
+     * @param statRepo repository used to record token statistics
+     * @param request request used to resolve provider configuration and statistics context
+     * @return response DTO containing the generated text and token usage
+     * @throws ProviderCallException if request preparation, provider execution, or response processing fails
+     */
     @Override
     public AssistantResponseDTO getAiResponse(
         AssistantDefinitionEntity assistant,
@@ -142,6 +162,18 @@ public abstract class LibrarySupportLogic implements AiInterface {
         return responseDto;
     }
 
+    /**
+     * Streams a text request while restoring protected INCLUDE commands and records usage and audit data.
+     *
+     * @param assistant assistant configuration used for the request
+     * @param inputData input text, user prompt, and related request data
+     * @param prop translations used to format provider errors
+     * @param statRepo repository used to record token statistics
+     * @param writer destination for streamed response content
+     * @param request request used to resolve provider configuration and statistics context
+     * @return response DTO containing the complete streamed text and token usage
+     * @throws ProviderCallException if request preparation, provider execution, streaming, or response processing fails
+     */
     @Override
     public AssistantResponseDTO getAiStreamResponse(
         AssistantDefinitionEntity assistant,
@@ -189,6 +221,17 @@ public abstract class LibrarySupportLogic implements AiInterface {
         return responseDto;
     }
 
+    /**
+     * Executes an image generation or editing request and stores returned images in temporary storage.
+     *
+     * @param assistant assistant configuration used for the request
+     * @param inputData image prompt, source image, and requested image options
+     * @param prop translations used to format provider errors
+     * @param statRepo repository used to record token statistics
+     * @param request request used to resolve provider configuration and statistics context
+     * @return response DTO containing temporary image files, a generated filename, and token usage
+     * @throws ProviderCallException if request preparation, provider execution, or image processing fails
+     */
     @Override
     public AssistantResponseDTO getAiImageResponse(
         AssistantDefinitionEntity assistant,
@@ -259,6 +302,13 @@ public abstract class LibrarySupportLogic implements AiInterface {
         return configurationService;
     }
 
+    /**
+     * Builds provider-supported image option controls for the assistant UI.
+     *
+     * @param assistant assistant whose operation and model define the available controls
+     * @param prop translations used for control labels
+     * @return HTML controls, or an empty string when the assistant has no supported image options
+     */
     @Override
     public String getBonusHtml(AssistantDefinitionEntity assistant, Prop prop) {
         AiOperation operation = assistantImageOperation(assistant);
@@ -313,6 +363,16 @@ public abstract class LibrarySupportLogic implements AiInterface {
         return html.append("</div>").toString();
     }
 
+    /**
+     * Expands prompt macros, validates the expansion, and builds a provider request with supported options.
+     *
+     * @param operation requested AI operation
+     * @param assistant assistant configuration used to build the request
+     * @param inputData input data supplied to the assistant
+     * @param includesHandler handler for protected WebJET INCLUDE commands; may be {@code null}
+     * @return request ready for provider execution
+     * @throws IOException if prompt validation or input media processing fails
+     */
     protected AiRequest prepareProviderRequest(
         AiOperation operation,
         AssistantDefinitionEntity assistant,
@@ -334,6 +394,16 @@ public abstract class LibrarySupportLogic implements AiInterface {
         );
     }
 
+    /**
+     * Validates content expanded into trusted prompt instructions before a request is built.
+     *
+     * The default implementation accepts every expansion. Providers may override this hook to reject suspicious
+     * expanded sources.
+     *
+     * @param expansion expanded prompt and its source classifications
+     * @param assistantId assistant identifier used when auditing validation failures
+     * @throws IOException if a provider-specific validation rejects the expansion
+     */
     protected void validatePromptExpansion(
         AiPromptTemplate.ExpansionResult expansion,
         Long assistantId
@@ -435,6 +505,16 @@ public abstract class LibrarySupportLogic implements AiInterface {
             ));
     }
 
+    /**
+     * Builds a provider request from CMS assistant input using the provider-independent option set.
+     *
+     * @param operation requested AI operation
+     * @param assistant assistant configuration used to build the request
+     * @param inputData input data supplied to the assistant
+     * @param includesHandler handler for protected WebJET INCLUDE commands; may be {@code null}
+     * @return request ready for provider execution
+     * @throws IOException if prompt expansion or input media processing fails
+     */
     static AiRequest prepareRequest(
         AiOperation operation,
         AssistantDefinitionEntity assistant,
@@ -455,6 +535,21 @@ public abstract class LibrarySupportLogic implements AiInterface {
         );
     }
 
+    /**
+     * Builds and audits a request from an already expanded prompt.
+     *
+     * Values consumed by prompt expansion are removed from their ordinary request fields so they are not submitted
+     * twice. Suspicious sources from both expansion and request construction are recorded for security auditing.
+     *
+     * @param operation requested AI operation
+     * @param assistant assistant configuration used to build the request
+     * @param inputData input data supplied to the assistant
+     * @param includesHandler handler for protected WebJET INCLUDE commands; may be {@code null}
+     * @param imageOptions validated image options; may be {@code null}
+     * @param expansion expanded prompt and its source classifications
+     * @return request ready for provider execution
+     * @throws IOException if input media cannot be read
+     */
     private static AiRequest prepareRequest(
         AiOperation operation,
         AssistantDefinitionEntity assistant,
@@ -501,6 +596,18 @@ public abstract class LibrarySupportLogic implements AiInterface {
             : AiOperation.GENERATE_IMAGE;
     }
 
+    /**
+     * Builds a request from explicitly supplied prompt fields and provider-independent image options.
+     *
+     * @param operation requested AI operation
+     * @param assistant assistant configuration supplying the model and storage behavior
+     * @param inputData input data supplying text or image content
+     * @param instructions trusted provider instructions
+     * @param inputText input text to submit
+     * @param userPrompt user prompt to submit
+     * @return constructed provider request
+     * @throws IOException if input media cannot be read
+     */
     static AiRequest buildRequest(
         AiOperation operation,
         AssistantDefinitionEntity assistant,
@@ -558,6 +665,16 @@ public abstract class LibrarySupportLogic implements AiInterface {
         return operation == AiOperation.GENERATE_IMAGE || operation == AiOperation.EDIT_IMAGE;
     }
 
+    /**
+     * Generates a filesystem-oriented name for an image-generation response.
+     *
+     * A timestamp-based name and empty usage are returned when name generation is disabled or fails.
+     *
+     * @param assistant assistant whose instructions and provider are used for name generation
+     * @param inputData input used to derive the filename prompt
+     * @param request request used to resolve provider configuration
+     * @return generated or fallback filename together with token usage
+     */
     GeneratedImageName getGeneratedImageName(
         AssistantDefinitionEntity assistant,
         InputDataDTO inputData,
@@ -772,6 +889,12 @@ public abstract class LibrarySupportLogic implements AiInterface {
             : exception.getLocalizedMessage();
     }
 
+    /**
+     * Couples a generated image filename with the token usage incurred while producing it.
+     *
+     * @param fileName generated or fallback filename
+     * @param usage token usage associated with filename generation
+     */
     record GeneratedImageName(String fileName, TokenUsage usage) {
     }
 }

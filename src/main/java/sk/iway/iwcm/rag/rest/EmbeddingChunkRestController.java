@@ -157,6 +157,12 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
         return entity;
     }
 
+    /**
+     * Returns the provider and model currently configured for RAG indexing.
+     *
+     * @return configuration map containing {@code provider} and {@code model}, or an empty map when no complete
+     *         indexing assistant is configured
+     */
     @GetMapping("/current-embedding-configuration")
     public Map<String, String> getCurrentEmbeddingConfiguration() {
         AssistantDefinitionEntity assistant = ragEmbeddingStatService.getIndexingAssistant();
@@ -171,12 +177,15 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
     }
 
     /**
-     * Perform an indexing or deletion action on all documents in the specified folder.
-     * Adds matched document IDs to the RAG indexing queue.
-     * @param rootDir the root directory group ID (-1 for all domain documents)
-     * @param includeSubfolders whether to include documents from subfolders
-     * @param action the action to perform ("INDEX" or "DELETE")
-     * @return the number of documents queued, or -1 on error
+     * Queues an indexing or deletion action for searchable documents in an authorized folder scope.
+     *
+     * @param rootDir root group ID, or {@code -1} for all documents in the current domain
+     * @param includeSubfolders whether documents in descendant groups should be included
+     * @param action action to perform, expected to be {@code INDEX} or {@code DELETE}
+     * @return number of matched documents considered for queueing, {@code 0} when none match, or {@code -1} when
+     *         queueing fails
+     * @throws AccessDeniedException if the requested group scope is invalid, not editable, or belongs to another
+     *         domain
      */
     @PostMapping("/document-action")
     public int performDocumentAction(@RequestParam("rootDir") int rootDir, @RequestParam("includeSubfolders") boolean includeSubfolders, @RequestParam("action") String action) {
@@ -201,6 +210,12 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
         return data.getSecond().size();
     }
 
+    /**
+     * Verifies that the current user may manage embeddings for the requested group scope.
+     *
+     * @param rootDir root group ID, or {@code -1} for every root group in the current domain
+     * @throws AccessDeniedException if the scope is invalid, not editable, or belongs to another domain
+     */
     private void validateDocumentActionRoot(int rootDir) {
         if (rootDir == -1) {
             for (Integer rootGroupId : getCurrentDomainRootGroupIds()) {
@@ -238,12 +253,15 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
     }
 
     /**
-     * Get statistics about document indexing status for the specified folder.
+     * Returns statistics about document indexing status for the specified folder.
+     *
      * Returns total groups, total documents, already indexed count, and currently queued count.
      * @param rootDir the root directory group ID (-1 for all domain documents)
      * @param includeSubfolders whether to include documents from subfolders
      * @param action the action to check queue status for
      * @return map with keys: totalGroups, totalDocuments, indexedDocuments, queuedDocuments
+     * @throws AccessDeniedException if the requested group scope is invalid, not editable, or belongs to another
+     *         domain
      */
     @GetMapping("/document-stat")
     public Map<String, Object> getDocumentStat(@RequestParam("rootDir") int rootDir, @RequestParam("includeSubfolders") boolean includeSubfolders, @RequestParam("action") String action) {
@@ -287,6 +305,16 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
         return response;
     }
 
+    /**
+     * Returns document IDs with stored chunks relevant to the requested action.
+     *
+     * For {@link RagIndexAction#INDEX}, only chunks created by the currently configured indexing provider and model
+     * qualify. For other actions, any stored document chunk in the domain qualifies.
+     *
+     * @param action action for which indexed documents are being determined
+     * @param domainId domain whose chunks should be queried
+     * @return matching document IDs
+     */
     Set<Integer> getIndexedDocumentIds(RagIndexAction action, Integer domainId) {
         if (RagIndexAction.INDEX.equals(action)) {
             AssistantDefinitionEntity assistant = ragEmbeddingStatService.getIndexingAssistant();
@@ -311,10 +339,12 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
     }
 
     /**
-     * Collect searchable document IDs from the specified folder (and optionally subfolders).
+     * Collects searchable document IDs from the specified folder and optionally its subfolders.
+     *
      * @param rootDir the root directory group ID (-1 for all domain documents)
      * @param includeSubfolders whether to include documents from subfolders
-     * @return pair of (total group count, list of document IDs), or null if folder not found
+     * @return pair containing the selected group count and searchable document IDs, or {@code null} when the requested
+     *         group scope cannot be resolved
      */
     private Pair<Integer, List<Integer>> getDocIds(int rootDir, boolean includeSubfolders) {
         DocDB docDB = DocDB.getInstance();

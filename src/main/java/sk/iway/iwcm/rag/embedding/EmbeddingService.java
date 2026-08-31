@@ -43,7 +43,16 @@ public class EmbeddingService {
     }
 
     /**
-     * Creates embeddings using the provider and model stored in the selected system assistant.
+     * Creates document embeddings using provider and model settings from the selected assistant.
+     *
+     * Provider configuration is resolved from the current request.
+     *
+     * @param texts texts to embed
+     * @param assistant assistant that selects the embedding provider and model
+     * @param request request used to resolve provider configuration
+     * @return generated embeddings and token usage, or an empty result when no texts are supplied
+     * @throws ProviderCallException if the assistant or provider configuration is invalid, or the provider response
+     *         cannot be used
      */
     public EmbeddingBatchResult embedWithUsage(
         List<String> texts,
@@ -53,6 +62,17 @@ public class EmbeddingService {
         return embedWithUsage(texts, assistant, request, EmbeddingInputType.DOCUMENT);
     }
 
+    /**
+     * Creates embeddings of the specified input type using request-scoped provider configuration.
+     *
+     * @param texts texts to embed
+     * @param assistant assistant that selects the embedding provider and model
+     * @param request request used to resolve provider configuration
+     * @param inputType embedding input type
+     * @return generated embeddings and token usage, or an empty result when no texts are supplied
+     * @throws ProviderCallException if the assistant or provider configuration is invalid, or the provider response
+     *         cannot be used
+     */
     public EmbeddingBatchResult embedWithUsage(
         List<String> texts,
         AssistantDefinitionEntity assistant,
@@ -63,7 +83,14 @@ public class EmbeddingService {
     }
 
     /**
-     * Creates embeddings using provider configuration resolved for the specified domain.
+     * Creates document embeddings using provider configuration resolved for the specified domain.
+     *
+     * @param texts texts to embed
+     * @param assistant assistant that selects the embedding provider and model
+     * @param domainName domain whose provider configuration should be used
+     * @return generated embeddings and token usage, or an empty result when no texts are supplied
+     * @throws ProviderCallException if the assistant or provider configuration is invalid, or the provider response
+     *         cannot be used
      */
     public EmbeddingBatchResult embedWithUsage(
         List<String> texts,
@@ -73,6 +100,17 @@ public class EmbeddingService {
         return embedWithUsage(texts, assistant, domainName, EmbeddingInputType.DOCUMENT);
     }
 
+    /**
+     * Creates embeddings of the specified input type using domain-scoped provider configuration.
+     *
+     * @param texts texts to embed
+     * @param assistant assistant that selects the embedding provider and model
+     * @param domainName domain whose provider configuration should be used
+     * @param inputType embedding input type
+     * @return generated embeddings and token usage, or an empty result when no texts are supplied
+     * @throws ProviderCallException if the assistant or provider configuration is invalid, or the provider response
+     *         cannot be used
+     */
     public EmbeddingBatchResult embedWithUsage(
         List<String> texts,
         AssistantDefinitionEntity assistant,
@@ -82,6 +120,21 @@ public class EmbeddingService {
         return embedWithUsage(texts, assistant, null, domainName, inputType);
     }
 
+    /**
+     * Creates and validates an embedding batch using configuration resolved from the supplied context.
+     *
+     * Request-scoped configuration takes precedence over domain-scoped configuration. When neither context is
+     * supplied, the provider's default configuration is used. Returned vector counts and dimensions are validated
+     * before the result is returned.
+     *
+     * @param texts texts to embed
+     * @param assistant assistant that selects the embedding provider and model
+     * @param servletRequest optional request used to resolve provider configuration
+     * @param domainName optional domain used when no request is supplied
+     * @param inputType embedding input type
+     * @return generated embeddings and token usage, or an empty result when no texts are supplied
+     * @throws ProviderCallException if configuration is invalid or the provider response is unusable
+     */
     private EmbeddingBatchResult embedWithUsage(
         List<String> texts,
         AssistantDefinitionEntity assistant,
@@ -149,6 +202,15 @@ public class EmbeddingService {
         }
     }
 
+    /**
+     * Resolves provider configuration from the most specific available context.
+     *
+     * @param providerId provider identifier
+     * @param request optional request context, which takes precedence over the domain
+     * @param domainName optional domain used when no request is supplied
+     * @return resolved provider configuration
+     * @throws ProviderCallException if the provider is unavailable or configuration cannot be resolved
+     */
     private AiProviderConfig resolveConfiguration(
         String providerId,
         HttpServletRequest request,

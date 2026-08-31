@@ -27,6 +27,9 @@ import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 
+/**
+ * Adapts the local M2M100 provider to CMS assistants and enforces explicitly configured plain-text translation.
+ */
 @Service
 public class LocalTranslateService extends LibrarySupportLogic implements AiAssitantsInterface {
 
@@ -68,6 +71,12 @@ public class LocalTranslateService extends LibrarySupportLogic implements AiAssi
         return List.of();
     }
 
+    /**
+     * Validates translation instructions and applies the fixed local translation settings.
+     *
+     * @param assistantEntity assistant configuration being prepared for persistence
+     * @throws IllegalStateException if the instructions do not contain valid translation options
+     */
     @Override
     public void prepareBeforeSave(AssistantDefinitionEntity assistantEntity) {
         try {
@@ -86,6 +95,16 @@ public class LocalTranslateService extends LibrarySupportLogic implements AiAssi
     public void setProviderSpecificOptions(DatatablePageImpl<AssistantDefinitionEntity> page, Prop prop) {
     }
 
+    /**
+     * Builds a validated plain-text request for the local translation provider.
+     *
+     * @param operation requested AI operation
+     * @param assistant assistant configuration supplying the model and translation instructions
+     * @param inputData input data to translate
+     * @param includesHandler handler used to detect protected WebJET INCLUDE commands; may be {@code null}
+     * @return request containing normalized translation options
+     * @throws IOException if the operation or input is unsupported, or the translation options are invalid
+     */
     @Override
     protected AiRequest prepareProviderRequest(
         AiOperation operation,
@@ -118,6 +137,13 @@ public class LocalTranslateService extends LibrarySupportLogic implements AiAssi
             .build();
     }
 
+    /**
+     * Parses and validates local translation options from JSON or a {@code Translator:} instruction.
+     *
+     * @param instructions assistant instructions containing source and target language configuration
+     * @return normalized translation options
+     * @throws IOException if the instructions are missing, malformed, or contain unsupported values
+     */
     static TranslationOptions parseTranslationOptions(String instructions) throws IOException {
         if (Tools.isEmpty(instructions)) {
             throw new IOException("Local translation instructions must define sourceLanguage and targetLanguage");
@@ -143,6 +169,14 @@ public class LocalTranslateService extends LibrarySupportLogic implements AiAssi
         return new TranslationOptions(sourceLanguage, targetLanguage, maximumOutputTokens);
     }
 
+    /**
+     * Reads, validates, and normalizes a required language option.
+     *
+     * @param config parsed translation configuration
+     * @param fieldName name of the required language field
+     * @return normalized lowercase language code, with {@code cz} converted to {@code cs}
+     * @throws IOException if the field is invalid or its dynamic user language cannot be resolved
+     */
     private static String requiredLanguage(JsonNode config, String fieldName) throws IOException {
         JsonNode value = config.get(fieldName);
         if (value == null || value.isTextual() == false || value.textValue().isBlank()) {
@@ -167,6 +201,14 @@ public class LocalTranslateService extends LibrarySupportLogic implements AiAssi
         return "cz".equals(normalized) ? "cs" : normalized;
     }
 
+    /**
+     * Reads an optional positive integer bounded by the local provider output-token limit.
+     *
+     * @param config parsed translation configuration
+     * @param fieldName name of the optional integer field
+     * @return validated integer, or {@code null} when the field is absent or null
+     * @throws IOException if the value is not a positive integer or exceeds the supported limit
+     */
     private static Integer optionalPositiveInteger(JsonNode config, String fieldName) throws IOException {
         JsonNode value = config.get(fieldName);
         if (value == null || value.isNull()) return null;
