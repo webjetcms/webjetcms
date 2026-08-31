@@ -25,7 +25,8 @@ Use `Feature("video.<scenario-name>")` so the source is easy to find in reports.
 - Synchronize with `waitFor*`, application state, or `DT.waitForLoader()`.
   Fixed waits must not be used for application synchronization.
 - Use `I.videoClick(locator)` for important clicks. It moves the rendered cursor
-  to the target before clicking and adds a short visual lead-in.
+  to the target on a gentle S-curve with ease-in-out timing, then adds a short
+  visual lead-in before clicking.
 - Keep manual shots in the accompanying shot plan instead of simulating an
   unreliable browser action.
 

@@ -24,8 +24,10 @@ The default frame and viewport are 1920 x 1080. Override them with
 feature specifically demonstrates another browser.
 
 `CODECEPT_VIDEO_CURSOR=true` installs a Shadow DOM overlay in every document.
-The overlay follows Playwright mouse events and shows a ring on mouse down. Use
-`I.videoClick(locator)` for presentation clicks. The optional
+The overlay follows Playwright mouse events and shows a ring on mouse down. Each
+`I.videoClick(locator)` moves along a gentle cubic Bezier S-curve, alternates the
+curve direction, and uses ease-in-out acceleration and braking. The duration
+adapts to the travel distance. The optional
 `CODECEPT_VIDEO_CLICK_DELAY` controls the short lead-in before a click. Every
 video click also leaves at least 500 milliseconds after the action for easier
 editing; increase it up to 2000 milliseconds with

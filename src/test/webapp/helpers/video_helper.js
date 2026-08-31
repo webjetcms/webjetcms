@@ -2,6 +2,9 @@ const { Helper } = codeceptjs;
 
 const DEFAULT_CLICK_DELAY = 350;
 const DEFAULT_POST_CLICK_DELAY = 500;
+const CURSOR_MIN_DURATION = 520;
+const CURSOR_MAX_DURATION = 900;
+const CURSOR_FRAME_DURATION = 16;
 
 function isCursorEnabled() {
   return "true" === process.env.CODECEPT_VIDEO_CURSOR;
@@ -17,6 +20,43 @@ function getPostClickDelay() {
   const value = Number.parseInt(process.env.CODECEPT_VIDEO_POST_CLICK_DELAY || DEFAULT_POST_CLICK_DELAY, 10);
   if (Number.isNaN(value) || value < 0) return DEFAULT_POST_CLICK_DELAY;
   return Math.min(Math.max(value, DEFAULT_POST_CLICK_DELAY), 2000);
+}
+
+function clamp(value, minimum, maximum) {
+  return Math.min(Math.max(value, minimum), maximum);
+}
+
+function easeInOutCubic(progress) {
+  if (progress < 0.5) return 4 * progress * progress * progress;
+  return 1 - Math.pow(-2 * progress + 2, 3) / 2;
+}
+
+function cubicBezierPoint(start, firstControl, secondControl, end, progress) {
+  const inverse = 1 - progress;
+  const startWeight = inverse * inverse * inverse;
+  const firstWeight = 3 * inverse * inverse * progress;
+  const secondWeight = 3 * inverse * progress * progress;
+  const endWeight = progress * progress * progress;
+  return {
+    x: startWeight * start.x + firstWeight * firstControl.x + secondWeight * secondControl.x + endWeight * end.x,
+    y: startWeight * start.y + firstWeight * firstControl.y + secondWeight * secondControl.y + endWeight * end.y
+  };
+}
+
+async function getViewportSize(page) {
+  const viewport = page.viewportSize();
+  if (viewport != null) return viewport;
+  return page.evaluate(() => ({ width: window.innerWidth, height: window.innerHeight }));
+}
+
+async function getRenderedCursorPosition(page) {
+  return page.evaluate(() => {
+    const host = document.querySelector("#wj-video-cursor-host");
+    const x = Number(host?.dataset.cursorX);
+    const y = Number(host?.dataset.cursorY);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+    return { x, y };
+  });
 }
 
 function installVideoCursor() {
@@ -50,7 +90,7 @@ function installVideoCursor() {
       height: "34px",
       opacity: "0",
       transform: "translate3d(-60px, -60px, 0)",
-      transition: "transform 220ms cubic-bezier(.22, .8, .25, 1), opacity 100ms linear",
+      transition: "opacity 100ms linear",
       willChange: "transform"
     });
 
@@ -87,6 +127,8 @@ function installVideoCursor() {
     document.documentElement.appendChild(host);
 
     const updatePosition = (event) => {
+      host.dataset.cursorX = String(event.clientX);
+      host.dataset.cursorY = String(event.clientY);
       cursor.style.opacity = "1";
       cursor.style.transform = `translate3d(${event.clientX}px, ${event.clientY}px, 0)`;
     };
@@ -125,8 +167,77 @@ class VideoHelper extends Helper {
     if (!isCursorEnabled()) return;
 
     const { browserContext, page } = this.helpers.Playwright;
+    this.videoCursorPosition = null;
+    this.videoCursorPage = null;
+    this.videoCurveDirection = 1;
     await browserContext.addInitScript(installVideoCursor);
     await page.evaluate(installVideoCursor);
+  }
+
+  async _moveCursorAlongCurve(locator) {
+    const helper = this.helpers.Playwright;
+    const page = helper.page;
+    const element = await helper._locateElement(locator);
+    if (element == null) throw new Error(`Unable to locate video cursor target: ${String(locator)}`);
+
+    await element.scrollIntoViewIfNeeded();
+    const box = await element.boundingBox();
+    if (box == null) throw new Error(`Video cursor target is not visible: ${String(locator)}`);
+
+    const viewport = await getViewportSize(page);
+    const renderedPosition = await getRenderedCursorPosition(page);
+    const rememberedPosition = this.videoCursorPage === page ? this.videoCursorPosition : null;
+    const fallbackPosition = { x: viewport.width / 2, y: viewport.height / 2 };
+    // The remembered position uses main-viewport coordinates even when the last target was in an iframe.
+    const rawStart = rememberedPosition || renderedPosition || fallbackPosition;
+    const start = {
+      x: clamp(rawStart.x, 0, viewport.width),
+      y: clamp(rawStart.y, 0, viewport.height)
+    };
+    const end = {
+      x: box.x + box.width / 2,
+      y: box.y + box.height / 2
+    };
+
+    const deltaX = end.x - start.x;
+    const deltaY = end.y - start.y;
+    const distance = Math.hypot(deltaX, deltaY);
+    if (distance < 1) {
+      await page.mouse.move(end.x, end.y);
+      this.videoCursorPosition = end;
+      this.videoCursorPage = page;
+      return;
+    }
+
+    const direction = this.videoCurveDirection || 1;
+    this.videoCurveDirection = -direction;
+    const normalX = -deltaY / distance;
+    const normalY = deltaX / distance;
+    const amplitude = Math.min(distance * 0.14, 120) * direction;
+    const firstControl = {
+      x: clamp(start.x + deltaX * 0.28 + normalX * amplitude, 0, viewport.width),
+      y: clamp(start.y + deltaY * 0.28 + normalY * amplitude, 0, viewport.height)
+    };
+    const secondControl = {
+      x: clamp(start.x + deltaX * 0.72 - normalX * amplitude, 0, viewport.width),
+      y: clamp(start.y + deltaY * 0.72 - normalY * amplitude, 0, viewport.height)
+    };
+    const duration = clamp(480 + distance * 0.25, CURSOR_MIN_DURATION, CURSOR_MAX_DURATION);
+    const steps = Math.max(24, Math.ceil(duration / CURSOR_FRAME_DURATION));
+    const frameDuration = duration / steps;
+
+    await page.mouse.move(start.x, start.y);
+    for (let step = 1; step <= steps; step++) {
+      const progress = easeInOutCubic(step / steps);
+      const point = cubicBezierPoint(start, firstControl, secondControl, end, progress);
+      await page.mouse.move(point.x, point.y);
+      if (step < steps) {
+        await new Promise((resolve) => setTimeout(resolve, frameDuration));
+      }
+    }
+
+    this.videoCursorPosition = end;
+    this.videoCursorPage = page;
   }
 
   /**
@@ -135,9 +246,11 @@ class VideoHelper extends Helper {
    */
   async videoClick(locator) {
     const helper = this.helpers.Playwright;
-    await helper.moveCursorTo(locator);
     if (isCursorEnabled()) {
+      await this._moveCursorAlongCurve(locator);
       await new Promise((resolve) => setTimeout(resolve, getClickDelay()));
+    } else {
+      await helper.moveCursorTo(locator);
     }
     const result = await helper.click(locator);
     await new Promise((resolve) => setTimeout(resolve, getPostClickDelay()));
