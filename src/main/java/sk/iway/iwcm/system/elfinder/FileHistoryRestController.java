@@ -2,8 +2,14 @@ package sk.iway.iwcm.system.elfinder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,12 +17,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
-import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.common.FileBrowserTools;
+import sk.iway.iwcm.io.FileHistoryDB;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
@@ -47,8 +51,13 @@ public class FileHistoryRestController extends DatatableRestControllerV2<FileHis
         //Without filePath, return empty page
         if(filePath == null) return new DatatablePageImpl<>(new ArrayList<>());
 
+        int domainId = CloudToolsForCore.getDomainId();
+        if (FileHistoryDB.isFileHistoryAccessible(filePath, domainId, getUser()) == false) {
+            return new DatatablePageImpl<>(new ArrayList<>());
+        }
+
         //Get data based on filePath and domainId
-        Page<FileHistoryEntity> page = fileHistoryRepository.findAllByFileUrlAndDomainIdOrderByChangeDateDesc(filePath, CloudToolsForCore.getDomainId(), pageable);
+        Page<FileHistoryEntity> page = fileHistoryRepository.findAllByFileUrlAndDomainIdOrderByChangeDateDesc(filePath, domainId, pageable);
 
         Map<Integer, String> usersMap = new HashMap<>();
         for(FileHistoryEntity entity : page.getContent()) {
@@ -61,6 +70,35 @@ public class FileHistoryRestController extends DatatableRestControllerV2<FileHis
         }
 
         return page;
+    }
+
+    @Override
+    public void addSpecSearch(Map<String, String> params, List<Predicate> predicates, Root<FileHistoryEntity> root, CriteriaBuilder builder) {
+        String filePath = Tools.getStringValue(getRequest().getParameter("filePath"), null);
+        int domainId = CloudToolsForCore.getDomainId();
+        if (FileHistoryDB.isFileHistoryAccessible(filePath, domainId, getUser()) == false) {
+            predicates.add(builder.disjunction());
+            return;
+        }
+
+        super.addSpecSearch(params, predicates, root, builder);
+        predicates.add(builder.equal(root.get("fileUrl"), filePath));
+        predicates.add(builder.equal(root.get("domainId"), domainId));
+    }
+
+    @Override
+    public JSONObject sumItems(FileHistoryEntity entity, String[] columns) {
+        return new JSONObject();
+    }
+
+    @Override
+    public boolean checkItemPerms(FileHistoryEntity entity, Long id) {
+        // Keep the existing rollback notification response; processAction performs the full check.
+        if (isRollbackActionRequest()) return true;
+
+        return entity != null && entity.getId() != null && id != null && id.longValue() > 0 &&
+            entity.getId().longValue() == id.longValue() &&
+            FileHistoryDB.isFileHistoryAccessible(entity.getFileUrl(), entity.getDomainId(), getUser());
     }
 
     @Override
@@ -86,24 +124,16 @@ public class FileHistoryRestController extends DatatableRestControllerV2<FileHis
         if ("rollBack".equals(action)) {
             String fileUrl = entity == null ? null : entity.getFileUrl();
             String historyPath = entity == null ? null : entity.getHistoryPath();
-            Identity user = getUser();
+            IwcmFile historyFile = null;
+            IwcmFile currentFile = null;
 
-            if (entity == null || entity.getId() == null || entity.getId() < 1 || entity.getDomainId() == null ||
-                entity.getDomainId().intValue() != CloudToolsForCore.getDomainId() || user == null ||
-                isSafeVirtualPath(fileUrl) == false || fileUrl.endsWith("/") ||
-                isSafeVirtualPath(historyPath) == false || historyPath.endsWith("/") == false) {
-                addNotify(new NotifyBean(getProp().getText("elfinder.file_prop.rollback.title"), getProp().getText("user.rights.no_folder_rights"), NotifyType.ERROR, 15000));
-                return true;
+            if (entity != null && entity.getId() != null) {
+                historyFile = FileHistoryDB.getFileHistorySourceFile(fileUrl, historyPath, entity.getId(),
+                    entity.getDomainId(), getUser());
+                currentFile = FileHistoryDB.getFileHistoryCurrentFile(fileUrl, entity.getDomainId(), getUser());
             }
 
-            IwcmFile historyFile = new IwcmFile( Tools.getRealPath( historyPath + entity.getId() ) );
-            IwcmFile currentFile = new IwcmFile( Tools.getRealPath( fileUrl ) );
-            IwcmFile currentFolder = currentFile.getParentFile();
-            String sourceFolder = getHistorySourceFolder(historyFile);
-
-            if (currentFolder == null || sourceFolder == null ||
-                user.isFolderWritable(currentFolder.getVirtualPath()) == false ||
-                user.isFolderWritable(sourceFolder) == false) {
+            if (historyFile == null || currentFile == null) {
                 addNotify(new NotifyBean(getProp().getText("elfinder.file_prop.rollback.title"), getProp().getText("user.rights.no_folder_rights"), NotifyType.ERROR, 15000));
                 return true;
             }
@@ -127,43 +157,8 @@ public class FileHistoryRestController extends DatatableRestControllerV2<FileHis
         return false;
     }
 
-    /**
-     * Maps the physical history folder back to the original virtual folder used by file-browser permissions.
-     * History files are stored below {@code fileHistoryPath} (by default {@code /WEB-INF/libfilehistory/})
-     * while preserving the original folder structure. For example,
-     * {@code /WEB-INF/libfilehistory/images/gallery/} maps to {@code /images/gallery/}.
-     * The configured history root must match on an exact folder boundary before it is removed.
-     *
-     * @param historyFile history file that will be used as the rollback source
-     * @return original virtual source folder, or {@code null} when the file is outside the history root
-     */
-    private String getHistorySourceFolder(IwcmFile historyFile) {
-        String configuredHistoryRoot = Constants.getString("fileHistoryPath");
-        if (isSafeVirtualPath(configuredHistoryRoot) == false) return null;
-
-        IwcmFile historyFolderFile = historyFile.getParentFile();
-        if (historyFolderFile == null) return null;
-
-        String historyRoot = IwcmFile.fromVirtualPath(configuredHistoryRoot).getVirtualPath();
-        String historyFolder = historyFolderFile.getVirtualPath();
-        if (historyRoot.equals(historyFolder)) return "/";
-        if (historyFolder.startsWith(historyRoot + "/") == false) return null;
-
-        String sourceFolder = historyFolder.substring(historyRoot.length());
-        return isSafeVirtualPath(sourceFolder) ? sourceFolder : null;
-    }
-
-    /**
-     * Validates a request-controlled virtual path before it is passed to {@link Tools#getRealPath(String)}.
-     * Only absolute virtual paths are accepted; traversal, encoded/special symbols, backslashes and control
-     * characters are rejected so path normalization cannot change the resource being authorized.
-     *
-     * @param path virtual path to validate
-     * @return {@code true} when the path is safe to resolve
-     */
-    private static boolean isSafeVirtualPath(String path) {
-        return Tools.isNotEmpty(path) && path.startsWith("/") && path.indexOf('\\') == -1 &&
-            path.indexOf('\0') == -1 && path.indexOf('\r') == -1 && path.indexOf('\n') == -1 &&
-            FileBrowserTools.hasForbiddenSymbol(path) == false;
+    private boolean isRollbackActionRequest() {
+        return getRequest() != null && getRequest().getRequestURI() != null &&
+            getRequest().getRequestURI().endsWith("/action/rollBack");
     }
 }

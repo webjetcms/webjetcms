@@ -1257,7 +1257,7 @@ public class PathFilter implements Filter
 				int fHistoryId = Tools.getIntValue(req.getParameter("fHistoryId"), -1);
 				if (fHistoryId > 0)
 				{
-					boolean sendOK = FileHistoryDB.sendFileFromHistory(path, fHistoryId, res);
+					boolean sendOK = FileHistoryDB.sendFileFromHistory(path, fHistoryId, user, res);
 					if (sendOK == false)
 					{
 						res.setStatus(404);

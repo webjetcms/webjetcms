@@ -2,27 +2,47 @@ package sk.iway.iwcm.system.elfinder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Stream;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.validation.ConstraintViolationException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import sk.iway.iwcm.Constants;
@@ -77,37 +97,179 @@ class FileHistoryRestControllerTest extends BaseWebjetTest {
     }
 
     @Test
-    void authorizedRollbackCopiesHistoryFile() {
+    void authorizedRollbackCopiesHistoryFile(@TempDir java.nio.file.Path tempDirectory) throws Exception {
+        String originalBasePath = System.getProperty("webjetTestBasepath");
+        String originalHistoryPath = Constants.getString("fileHistoryPath");
+
+        try {
+            System.setProperty("webjetTestBasepath", tempDirectory.toString());
+            Constants.setString("fileHistoryPath", "/history/");
+            FileHistoryEntity entity = createEntity(
+                "/images/" + MISSING_FOLDER + "file.txt",
+                historyPath("images/" + MISSING_FOLDER));
+            java.nio.file.Path historyFile = tempDirectory.resolve("history/images/" + MISSING_FOLDER + HISTORY_ID);
+            java.nio.file.Path currentFile = tempDirectory.resolve("images/" + MISSING_FOLDER + "file.txt");
+            Files.createDirectories(historyFile.getParent());
+            Files.createDirectories(currentFile.getParent());
+            Files.write(historyFile, "history".getBytes(StandardCharsets.UTF_8));
+            Files.write(currentFile, "current".getBytes(StandardCharsets.UTF_8));
+            String expectedHistoryPath = historyFile.toFile().getCanonicalPath();
+            String expectedCurrentPath = currentFile.toFile().getCanonicalPath();
+            FileHistoryRestController controller = createController(entity, "/images/*");
+
+            try (MockedStatic<FileTools> fileTools = mockStatic(FileTools.class)) {
+                fileTools.when(() -> FileTools.symlinkReplaceToRootPath(anyString()))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+                fileTools.when(() -> FileTools.copyFile(any(IwcmFile.class), any(IwcmFile.class))).thenReturn(true);
+
+                assertActionNotification(controller, "elfinder.file_prop.rollback.success", "success");
+
+                fileTools.verify(() -> FileTools.copyFile(
+                    argThat((IwcmFile file) -> expectedHistoryPath.equals(file.getCanonicalPath())),
+                    argThat((IwcmFile file) -> expectedCurrentPath.equals(file.getCanonicalPath()))));
+            }
+        } finally {
+            Constants.setString("fileHistoryPath", originalHistoryPath);
+            if (originalBasePath == null) System.clearProperty("webjetTestBasepath");
+            else System.setProperty("webjetTestBasepath", originalBasePath);
+        }
+    }
+
+    @Test
+    void allReturnsOnlyAuthorizedFileHistory() {
+        String fileUrl = "/images/" + MISSING_FOLDER + "file.txt";
+        FileHistoryEntity entity = createEntity(fileUrl, historyPath("images/" + MISSING_FOLDER));
+        FileHistoryRepository repository = mock(FileHistoryRepository.class);
+        FileHistoryRestController controller = createController(entity, "/images/*", repository);
+        setRequest(controller, "/admin/rest/elfinder/file-history/all", fileUrl);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<FileHistoryEntity> expected = new PageImpl<>(Collections.emptyList(), pageable, 0);
+        int domainId = CloudToolsForCore.getDomainId();
+        when(repository.findAllByFileUrlAndDomainIdOrderByChangeDateDesc(fileUrl, domainId, pageable))
+            .thenReturn(expected);
+
+        Page<FileHistoryEntity> actual = controller.getAllItems(pageable);
+
+        assertSame(expected, actual);
+        verify(repository).findAllByFileUrlAndDomainIdOrderByChangeDateDesc(fileUrl, domainId, pageable);
+    }
+
+    @Test
+    void allRejectsFileOutsideWritableFolders() {
+        String fileUrl = "/templates/" + MISSING_FOLDER + "template.jsp";
+        FileHistoryEntity entity = createEntity(fileUrl, historyPath("templates/" + MISSING_FOLDER));
+        FileHistoryRepository repository = mock(FileHistoryRepository.class);
+        FileHistoryRestController controller = createController(entity, "/images/*", repository);
+        setRequest(controller, "/admin/rest/elfinder/file-history/all", fileUrl);
+
+        Page<FileHistoryEntity> actual = controller.getAllItems(PageRequest.of(0, 10));
+
+        assertTrue(actual.isEmpty());
+        verifyNoInteractions(repository);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void searchAddsExactFileAndDomainPredicates() {
+        String fileUrl = "/images/" + MISSING_FOLDER + "file.txt";
+        FileHistoryEntity entity = createEntity(fileUrl, historyPath("images/" + MISSING_FOLDER));
+        FileHistoryRestController controller = createController(entity, "/images/*");
+        setRequest(controller, "/admin/rest/elfinder/file-history/search", fileUrl);
+        Root<FileHistoryEntity> root = mock(Root.class);
+        CriteriaBuilder builder = mock(CriteriaBuilder.class);
+        Path<Object> fileUrlPath = mock(Path.class);
+        Path<Object> domainIdPath = mock(Path.class);
+        Predicate filePredicate = mock(Predicate.class);
+        Predicate domainPredicate = mock(Predicate.class);
+        List<Predicate> predicates = new ArrayList<>();
+        int domainId = CloudToolsForCore.getDomainId();
+        when(root.get("fileUrl")).thenReturn(fileUrlPath);
+        when(root.get("domainId")).thenReturn(domainIdPath);
+        when(builder.equal(fileUrlPath, fileUrl)).thenReturn(filePredicate);
+        when(builder.equal(domainIdPath, domainId)).thenReturn(domainPredicate);
+
+        controller.addSpecSearch(Collections.emptyMap(), predicates, root, builder);
+
+        assertEquals(2, predicates.size());
+        assertSame(filePredicate, predicates.get(0));
+        assertSame(domainPredicate, predicates.get(1));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void searchRejectsFileOutsideWritableFolders() {
+        String fileUrl = "/templates/" + MISSING_FOLDER + "template.jsp";
+        FileHistoryEntity entity = createEntity(fileUrl, historyPath("templates/" + MISSING_FOLDER));
+        FileHistoryRestController controller = createController(entity, "/images/*");
+        setRequest(controller, "/admin/rest/elfinder/file-history/search", fileUrl);
+        Root<FileHistoryEntity> root = mock(Root.class);
+        CriteriaBuilder builder = mock(CriteriaBuilder.class);
+        Predicate deniedPredicate = mock(Predicate.class);
+        List<Predicate> predicates = new ArrayList<>();
+        when(builder.disjunction()).thenReturn(deniedPredicate);
+
+        controller.addSpecSearch(Collections.emptyMap(), predicates, root, builder);
+
+        assertEquals(1, predicates.size());
+        assertSame(deniedPredicate, predicates.get(0));
+        verifyNoInteractions(root);
+    }
+
+    @Test
+    void getOneReturnsAuthorizedFileHistory() {
         FileHistoryEntity entity = createEntity(
             "/images/" + MISSING_FOLDER + "file.txt",
             historyPath("images/" + MISSING_FOLDER));
         FileHistoryRestController controller = createController(entity, "/images/*");
-        IwcmFile historyFolder = mock(IwcmFile.class);
-        IwcmFile currentFolder = mock(IwcmFile.class);
-        when(historyFolder.getVirtualPath()).thenReturn(removeTrailingSlash(entity.getHistoryPath()));
-        when(currentFolder.getVirtualPath()).thenReturn("/images/" + removeTrailingSlash(MISSING_FOLDER));
+        setRequest(controller, "/admin/rest/elfinder/file-history/" + HISTORY_ID, null);
 
-        try (MockedConstruction<IwcmFile> files = mockConstruction(IwcmFile.class,
-                (file, context) -> {
-                    when(file.exists()).thenReturn(true);
-                    if (context.getCount() == 1) {
-                        when(file.getParentFile()).thenReturn(historyFolder);
-                    } else if (context.getCount() == 2) {
-                        when(file.getParentFile()).thenReturn(currentFolder);
-                    } else {
-                        when(file.getVirtualPath()).thenReturn(removeTrailingSlash(Constants.getString("fileHistoryPath")));
-                    }
-                });
-                MockedStatic<FileTools> fileTools = mockStatic(FileTools.class)) {
-            fileTools.when(() -> FileTools.symlinkReplaceToRootPath(anyString()))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-            fileTools.when(() -> FileTools.copyFile(any(IwcmFile.class), any(IwcmFile.class))).thenReturn(true);
+        assertSame(entity, controller.getOne(HISTORY_ID));
+    }
 
-            assertActionNotification(controller, "elfinder.file_prop.rollback.success", "success");
+    @Test
+    void getOneRejectsForeignDomain() {
+        FileHistoryEntity entity = createEntity(
+            "/images/" + MISSING_FOLDER + "file.txt",
+            historyPath("images/" + MISSING_FOLDER));
+        entity.setDomainId(CloudToolsForCore.getDomainId() + 1);
+        FileHistoryRestController controller = createController(entity, "/images/*");
+        setRequest(controller, "/admin/rest/elfinder/file-history/" + HISTORY_ID, null);
 
-            assertEquals(3, files.constructed().size());
-            fileTools.verify(() -> FileTools.copyFile(files.constructed().get(0), files.constructed().get(1)));
-        }
+        assertThrows(ConstraintViolationException.class, () -> controller.getOne(HISTORY_ID));
+    }
+
+    @Test
+    void getOneRejectsFileOutsideWritableFolders() {
+        FileHistoryEntity entity = createEntity(
+            "/templates/" + MISSING_FOLDER + "template.jsp",
+            historyPath("templates/" + MISSING_FOLDER));
+        FileHistoryRestController controller = createController(entity, "/images/*");
+        setRequest(controller, "/admin/rest/elfinder/file-history/" + HISTORY_ID, null);
+
+        assertThrows(ConstraintViolationException.class, () -> controller.getOne(HISTORY_ID));
+    }
+
+    @Test
+    void getOneRejectsMismatchedId() {
+        FileHistoryEntity entity = createEntity(
+            "/images/" + MISSING_FOLDER + "file.txt",
+            historyPath("images/" + MISSING_FOLDER));
+        FileHistoryRestController controller = createController(entity, "/images/*");
+        long requestedId = HISTORY_ID + 1;
+        setRequest(controller, "/admin/rest/elfinder/file-history/" + requestedId, null);
+
+        assertThrows(ConstraintViolationException.class, () -> controller.getOne(requestedId));
+    }
+
+    @Test
+    void sumAllReturnsEmptyObject() {
+        FileHistoryEntity entity = createEntity(
+            "/images/" + MISSING_FOLDER + "file.txt",
+            historyPath("images/" + MISSING_FOLDER));
+        FileHistoryRestController controller = createController(entity, "/images/*");
+        setRequest(controller, "/admin/rest/elfinder/file-history/sumAll", null);
+
+        assertEquals("{}", controller.getSum(entity, new String[] { "id", "userId" }));
     }
 
     @ParameterizedTest(name = "missingDomainId={0}")
@@ -232,6 +394,7 @@ class FileHistoryRestControllerTest extends BaseWebjetTest {
         };
 
         Identity user = new Identity();
+        user.setAdmin(true);
         user.setWritableFolders(writableFolders);
 
         MockHttpServletRequest request = new MockHttpServletRequest();
@@ -239,6 +402,12 @@ class FileHistoryRestControllerTest extends BaseWebjetTest {
         request.getSession().setAttribute(Constants.USER_KEY, user);
         controller.setRequest(request);
         return controller;
+    }
+
+    private static void setRequest(FileHistoryRestController controller, String requestUri, String filePath) {
+        MockHttpServletRequest request = (MockHttpServletRequest) controller.getRequest();
+        request.setRequestURI(requestUri);
+        if (filePath != null) request.setParameter("filePath", filePath);
     }
 
     private static void assertActionNotification(FileHistoryRestController controller, String expectedTextKey) {
@@ -268,7 +437,4 @@ class FileHistoryRestControllerTest extends BaseWebjetTest {
         return historyRoot + "-outside/" + relativeFolder;
     }
 
-    private static String removeTrailingSlash(String path) {
-        return path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
-    }
 }
