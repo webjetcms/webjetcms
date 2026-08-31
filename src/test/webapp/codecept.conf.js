@@ -9,6 +9,12 @@ let codeceptShow = process.env.CODECEPT_SHOW;
 let browser = process.env.CODECEPT_BROWSER || "chromium";
 let restart = process.env.CODECEPT_RESTART || "context";
 let autoDelayEnabled = "true" == process.env.CODECEPT_AUTODELAY;
+let videoEnabled = "true" == process.env.CODECEPT_VIDEO;
+
+let videoWidth = Number.parseInt(process.env.CODECEPT_VIDEO_WIDTH || "1920", 10);
+let videoHeight = Number.parseInt(process.env.CODECEPT_VIDEO_HEIGHT || "1080", 10);
+if (videoWidth < 1 || Number.isNaN(videoWidth)) videoWidth = 1920;
+if (videoHeight < 1 || Number.isNaN(videoHeight)) videoHeight = 1080;
 
 let language = process.env.CODECEPT_LNG || "sk"; //default sk
 
@@ -39,6 +45,7 @@ console.log("showBrowser=", showBrowser);
 console.log("browser=", browser);
 console.log("restart=", restart);
 console.log("autoDelayEnabled=", autoDelayEnabled);
+console.log("videoEnabled=", videoEnabled);
 
 exports.config = {
   tests: './tests/**/*.js',
@@ -56,12 +63,17 @@ exports.config = {
       keepCookies: true,
       keepBrowserState: true,
       ignoreHTTPSErrors: true,
-      /* este nefunguje, vid https://github.com/microsoft/playwright/pull/3526
-      ,
-      chromium: {
-        showUserInput: true
-      }
-      */
+      ...(videoEnabled ? {
+        windowSize: `${videoWidth}x${videoHeight}`,
+        video: true,
+        keepVideoForPassedTests: true,
+        recordVideo: {
+          size: {
+            width: videoWidth,
+            height: videoHeight
+          }
+        }
+      } : {}),
       //,emulate: devices['iPhone 6']
       chromium: {
         args: ['--lang=sk']
@@ -69,6 +81,9 @@ exports.config = {
     },
     CustomWebjetHelper: {
       require: './helpers/custom_helper.js'
+    },
+    VideoHelper: {
+      require: './helpers/video_helper.js'
     },
     ChaiWrapper: {
       //https://www.npmjs.com/package/codeceptjs-chai

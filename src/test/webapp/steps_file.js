@@ -202,7 +202,15 @@ module.exports = function () {
     },
 
     wjSetDefaultWindowSize() {
-      this.resizeWindow(1280, 760);
+      if ("true" === process.env.CODECEPT_VIDEO) {
+        const requestedWidth = Number.parseInt(process.env.CODECEPT_VIDEO_WIDTH || "1920", 10);
+        const requestedHeight = Number.parseInt(process.env.CODECEPT_VIDEO_HEIGHT || "1080", 10);
+        const width = requestedWidth > 0 ? requestedWidth : 1920;
+        const height = requestedHeight > 0 ? requestedHeight : 1080;
+        this.resizeWindow(width, height);
+      } else {
+        this.resizeWindow(1280, 760);
+      }
     },
 
     // odhlasenie z aplikacie
