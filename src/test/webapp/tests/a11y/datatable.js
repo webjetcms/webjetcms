@@ -443,7 +443,7 @@ Scenario("p47: modal window rowcount", async ({ I, DT, a11y }) => {
     await a11y.check(dialog);
 });
 
-Scenario("p48: DT dialog focus", async ({ I, DT, a11y }) => {
+Scenario("p48: DT dialog focus", async ({ I, DT, DTE, a11y }) => {
     I.amOnPage("/admin/v9/templates/temps-list/");
     DT.waitForLoader();
 
@@ -499,7 +499,8 @@ Scenario("p48: DT dialog focus", async ({ I, DT, a11y }) => {
     for (const action of actions) {
         I.executeScript(selector => document.querySelector(selector).focus(), action.selector);
         I.pressKey("Enter");
-        I.waitForVisible(`${modal}.show`, 5);
+        DTE.waitForEditor();
+        I.seeElement(`${modal}.DTED.show[data-dte-focus-state="ready"]`);
         I.waitForElement(`${modal} :focus`, 5);
 
         const state = await I.executeScript(selector => {
@@ -582,6 +583,65 @@ Scenario("p48: DT dialog focus", async ({ I, DT, a11y }) => {
         I.waitForInvisible(modal, 5);
         I.waitForElement(`${action.selector}:focus`, 5);
     }
+});
+
+Scenario("p48: webpage CKEditor priority focus", async ({ I, DTE }) => {
+    const modal = "#datatableInit_modal";
+    const assertCkEditorFocus = async label => {
+        I.seeElement(`${modal}.DTED.show[data-dte-focus-state="ready"]`);
+
+        const state = await I.executeScript(modalSelector => {
+            const dialog = document.querySelector(modalSelector);
+            const priorityTarget = dialog?.querySelector('.focus-priority.focus-priority-ckeditor');
+            const field = priorityTarget?.closest('.DTE_Field');
+            const editor = Object.values(window.CKEDITOR?.instances || {}).find(instance =>
+                instance.container?.$ != null && field?.contains(instance.container.$)
+            );
+            const frame = editor?.window?.getFrame()?.$;
+            const editable = editor?.editable?.()?.$;
+
+            return {
+                editorFound: editor != null,
+                editorMode: editor?.mode,
+                editorReady: editor?.status === 'ready',
+                focusManagerActive: editor?.focusManager?.hasFocus === true,
+                iframeActive: frame != null && document.activeElement === frame,
+                editableActive: frame?.contentDocument?.activeElement === editable,
+                priorityTargetFound: priorityTarget != null,
+                priorityTargetHidden: priorityTarget != null && priorityTarget.offsetParent == null
+            };
+        }, modal);
+
+        I.assertTrue(state.priorityTargetFound, `${label}: CKEditor source must have the focus priority markers`);
+        I.assertTrue(state.priorityTargetHidden, `${label}: the priority source textarea must remain hidden`);
+        I.assertTrue(state.editorFound, `${label}: the priority field must resolve its CKEditor instance`);
+        I.assertTrue(state.editorReady, `${label}: CKEditor must be ready before the DTE focus state is ready`);
+        I.assertEqual(state.editorMode, "wysiwyg", `${label}: CKEditor must use the editable WYSIWYG mode`);
+        I.assertTrue(state.focusManagerActive, `${label}: CKEditor focus manager must report focus`);
+        I.assertTrue(state.iframeActive, `${label}: the CKEditor iframe must own focus in the parent document`);
+        I.assertTrue(state.editableActive, `${label}: the editable CKEditor body must own focus`);
+    };
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=16");
+    DTE.waitForEditor();
+    await assertCkEditorFocus("initial open");
+
+    const contentBeforeTyping = await I.executeScript(() =>
+        Object.values(window.CKEDITOR.instances).find(editor => editor.focusManager?.hasFocus)?.getData()
+    );
+    I.pressKey("x");
+    const contentAfterTyping = await I.executeScript(() =>
+        Object.values(window.CKEDITOR.instances).find(editor => editor.focusManager?.hasFocus)?.getData()
+    );
+    I.assertNotEqual(contentAfterTyping, contentBeforeTyping,
+        "typing immediately after DTE.waitForEditor must update CKEditor content");
+
+    DTE.cancel();
+    I.fillField("#tree-doc-id", "16");
+    I.pressKey("Enter");
+    DTE.waitForEditor();
+    await assertCkEditorFocus("reopen");
+    DTE.cancel();
 });
 
 Scenario("p49: datatable interactive rows", async ({ I, DT, a11y }) => {

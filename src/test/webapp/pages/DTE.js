@@ -112,13 +112,12 @@ module.exports = {
      },
 
      /**
-      * Waits for the editor modal to be visible
+      * Waits for the editor modal to be visible and its default focus to be set
       * @param {String} [name] - Optional modal name
       */
      waitForEditor(name) {
           if (typeof name == "undefined") { name = "datatableInit"; }
-          I.waitForVisible("#" + name + "_modal", 200);
-          I.wait(0.2);
+          I.waitForVisible("#" + name + "_modal.DTED.show[data-dte-focus-state='ready']", 200);
      },
 
      /**

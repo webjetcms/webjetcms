@@ -2320,6 +2320,7 @@ export class DatatablesCkEditor {
 	setJson(json) {
 		//console.log("setJson, json=", json);
 		this.json = json;
+		let editingModeReadyPromise = Promise.resolve();
 		//undefined je json ked sa nacita zoznam a da sa zmazat stranka
 		if (typeof json != "undefined") {
 			this.setCssStyle();
@@ -2333,14 +2334,22 @@ export class DatatablesCkEditor {
 			this.setStyleComboList(this.json.editorFields.styleComboList);
 
 			//ckeditor is invisible, we must wait until it is visible
-			setTimeout(() => {
-				//toto musi byt posledne, inak sa zle nacitaval obsah stranky
-				this.setEditingMode(json);
-			}, 100);
+			editingModeReadyPromise = new Promise(resolve => {
+				setTimeout(() => {
+					//toto musi byt posledne, inak sa zle nacitaval obsah stranky
+					try {
+						this.setEditingMode(json);
+					} catch (error) {
+						console.error("Error setting CKEditor editing mode:", error);
+					}
+					resolve();
+				}, 100);
+			});
 		}
 		setTimeout(() => {
 			this.resizeEditor(this);
 		}, 1000);
+		return editingModeReadyPromise;
 	}
 
 	/**
@@ -2399,11 +2408,14 @@ export class DatatablesCkEditor {
 	setData(data) {
 		//console.log("Set data, instance=", this.ckEditorInstance, "useTimeout=", useTimeout, "data=", data);
 		//WARNING: this property is not YET set, do not count on it: if ("pageBuilder"===this.editingMode) {
-		try {
-			this.ckEditorInstance.setData(data);
-		} catch (error) {
-			console.error("Error setting data to CKEditor instance:", error);
-		}
+		return new Promise(resolve => {
+			try {
+				this.ckEditorInstance.setData(data, resolve);
+			} catch (error) {
+				console.error("Error setting data to CKEditor instance:", error);
+				resolve();
+			}
+		});
 	}
 
 	getData() {

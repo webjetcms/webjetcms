@@ -1,8 +1,55 @@
 export function typeWysiwyg() {
 
     var DIRTY_CHECK_DELAY_MS = 5000;
+    var FOCUS_READY_TIMEOUT_MS = 10000;
+    var FOCUS_RETRY_DELAY_MS = 50;
+
     function getThisField(conf) { //NOSONAR
         return conf.EDITOR.field(conf.data);
+    }
+
+    function trackEditorOperation(conf, operation) {
+        conf.wjeditorOperationPromise = Promise.all([
+            conf.wjeditorOperationPromise || Promise.resolve(),
+            Promise.resolve(operation)
+        ]);
+    }
+
+    function waitForRetry(deadline) {
+        return new Promise(resolve => {
+            setTimeout(resolve, Math.min(FOCUS_RETRY_DELAY_MS, Math.max(0, deadline - Date.now())));
+        });
+    }
+
+    async function waitForTrackedEditorOperations(conf, canFocus, deadline) {
+        while (canFocus() && Date.now() < deadline) {
+            const initializationPromise = conf.wjeditorInitializationPromise || Promise.resolve();
+            const operationPromise = conf.wjeditorOperationPromise || Promise.resolve();
+            let operationState = 'pending';
+
+            Promise.all([initializationPromise, operationPromise]).then(
+                () => operationState = 'ready',
+                error => {
+                    console.error("Error preparing CKEditor for focus:", error);
+                    operationState = 'failed';
+                }
+            );
+
+            await Promise.resolve();
+            while (operationState === 'pending' && canFocus() && Date.now() < deadline) {
+                await waitForRetry(deadline);
+            }
+
+            if (operationState !== 'ready') return false;
+            if (
+                initializationPromise === conf.wjeditorInitializationPromise &&
+                operationPromise === conf.wjeditorOperationPromise
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     return {
@@ -70,6 +117,10 @@ export function typeWysiwyg() {
             }
 
             conf.wjeditor = null;
+            conf.wjeditorOperationPromise = Promise.resolve();
+            conf.wjeditorInitializationPromise = new Promise(resolve => {
+                conf.resolveWjeditorInitialization = resolve;
+            });
             EDITOR.on( 'open', function ( e, type ) {
                 //console.log("DT WYSIWYG Editor OPEN, e=", e, "type=", type);
 
@@ -102,9 +153,12 @@ export function typeWysiwyg() {
                                 //instancia ckeditora, potrebuju to rozne pluginy a podobne, takze zatial takto kvoli spatnej kompatibilite
                                 window.ckEditorInstance = conf.wjeditor.ckEditorInstance;
 
-                                conf.wjeditor.setJson(EDITOR.currentJson);
+                                const jsonReadyPromise = conf.wjeditor.setJson(EDITOR.currentJson);
                                 //on first run call also setData to push HTML content after JSON is set (so there will be correct CSS styles allready set in editor)
-                                conf.wjeditor.setData(EDITOR.currentJson.data);
+                                const dataReadyPromise = conf.wjeditor.setData(EDITOR.currentJson.data);
+                                const initializationPromise = Promise.all([jsonReadyPromise, dataReadyPromise]);
+                                trackEditorOperation(conf, initializationPromise);
+                                conf.resolveWjeditorInitialization(initializationPromise);
 
                                 //nastav otvorene docid do inputu
                                 if (typeof window.jsTreeDocumentOpener != "undefined" && typeof EDITOR.currentJson != "undefined" && EDITOR.currentJson != null) window.jsTreeDocumentOpener.setInputValue(EDITOR.currentJson.docId);
@@ -129,7 +183,7 @@ export function typeWysiwyg() {
                     $("div.modal.DTED > div.modal-dialog").addClass("modal-xl");
                 } else {
                     //console.log("Setting json, json=", EDITOR.currentJson);
-                    conf.wjeditor.setJson(EDITOR.currentJson);
+                    trackEditorOperation(conf, conf.wjeditor.setJson(EDITOR.currentJson));
 
                     //nastav otvorene docid do inputu
                     if (typeof window.jsTreeDocumentOpener != "undefined" && typeof EDITOR.currentJson != "undefined") window.jsTreeDocumentOpener.setInputValue(EDITOR.currentJson.docId);
@@ -231,7 +285,7 @@ export function typeWysiwyg() {
         set: function ( conf, val ) {
             //console.log("WYSIWYG set, val=", val, "conf=", conf, "wjeditor=", conf.wjeditor);
             if (conf.wjeditor != null) {
-                conf.wjeditor.setData(val);
+                trackEditorOperation(conf, conf.wjeditor.setData(val));
             }
             // set directly as value to not propagate change events
             conf._input.value = val;
@@ -280,9 +334,39 @@ export function typeWysiwyg() {
             }, DIRTY_CHECK_DELAY_MS);
         },
 
+        focusWhenReady: async function(conf, canFocus) {
+            const isCurrentFocusRequest = typeof canFocus === 'function' ? canFocus : () => true;
+            const deadline = Date.now() + FOCUS_READY_TIMEOUT_MS;
+
+            if (!await waitForTrackedEditorOperations(conf, isCurrentFocusRequest, deadline)) return false;
+
+            while (isCurrentFocusRequest() && Date.now() < deadline) {
+                const wjeditor = conf.wjeditor;
+                const editor = wjeditor?.ckEditorInstance;
+
+                if (editor != null && typeof editor.isDestroyed === 'function' && editor.isDestroyed()) return false;
+                if (wjeditor?.editingMode === 'pageBuilder' || wjeditor?.editingMode === 'html') return false;
+
+                if (
+                    editor?.status === 'ready' &&
+                    editor.mode === 'wysiwyg' &&
+                    editor.container?.$ != null &&
+                    $(editor.container.$).is(':visible')
+                ) {
+                    editor.focus();
+                    await new Promise(resolve => requestAnimationFrame(resolve));
+                    if (editor.focusManager?.hasFocus === true) return true;
+                }
+
+                await waitForRetry(deadline);
+            }
+
+            return false;
+        },
+
         setJson: function(conf, json) {
             //console.log("field-type-wysiwyg setJson, json=", json, "conf=", conf);
-            conf.wjeditor.setJson(json);
+            trackEditorOperation(conf, conf.wjeditor.setJson(json));
         }
 
     }

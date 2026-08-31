@@ -263,6 +263,19 @@ export const dataTableInit = options => {
             });
     }
 
+    function getEditorFieldForElement(dte, element) {
+        const fieldContainer = $(element).closest('.DTE_Field')[0];
+        if (fieldContainer == null) return null;
+
+        for (const fieldName of dte.fields()) {
+            const field = dte.field(fieldName);
+            const fieldNode = field.node();
+            if (fieldNode === fieldContainer || fieldNode?.contains(element)) return field;
+        }
+
+        return null;
+    }
+
     function configureEditorAccessibility(dte, action) {
         const modal = document.getElementById(dte.TABLE.DATA.id + '_modal');
         if (modal == null) return;
@@ -306,7 +319,78 @@ export const dataTableInit = options => {
             }
         });
 
-        setTimeout(function() {
+        const focusState = $modal.attr('data-dte-focus-state');
+        if (focusState === 'scheduled' || focusState === 'ready') return;
+
+        const focusRequestId = $modal.data('dteFocusRequestId') || 0;
+        const isCurrentFocusRequest = function() {
+            return ($modal.data('dteFocusRequestId') || 0) === focusRequestId &&
+                $modal.attr('data-dte-focus-state') === 'scheduled' &&
+                $modal.hasClass('show');
+        };
+        const completeFocusRequest = function() {
+            if (!isCurrentFocusRequest()) return;
+            $modal.off('.wjDteDefaultFocus');
+            $modal.attr('data-dte-focus-state', 'ready');
+        };
+
+        $modal.attr('data-dte-focus-state', 'scheduled');
+        $modal.off('.wjDteDefaultFocus').on('pointerdown.wjDteDefaultFocus keydown.wjDteDefaultFocus', function(event) {
+            if (!isCurrentFocusRequest() || event.originalEvent?.isTrusted !== true) return;
+
+            const cancelDefaultFocus = function() {
+                if (!isCurrentFocusRequest() || !modal.contains(document.activeElement)) return;
+                $modal.data('dteFocusRequestId', focusRequestId + 1);
+                $modal.off('.wjDteDefaultFocus');
+                $modal.attr('data-dte-focus-state', 'ready');
+            };
+
+            if (event.type === 'pointerdown') setTimeout(cancelDefaultFocus, 0);
+            else cancelDefaultFocus();
+        });
+
+        setTimeout(async function() {
+            if (!isCurrentFocusRequest()) return;
+
+            if (action !== 'remove') {
+                const processedFields = new Set();
+                const priorityTargets = $modal.find('.DTE_Body .focus-priority')
+                    .filter(function() {
+                        if (this.disabled || $(this).attr('tabindex') === '-1') return false;
+                        if ($(this).hasClass('focus-priority-ckeditor')) {
+                            return $(this).closest('.DTE_Field').is(':visible');
+                        }
+                        return $(this).is(':visible');
+                    });
+
+                for (const priorityTarget of priorityTargets) {
+                    if (!isCurrentFocusRequest()) return;
+
+                    if ($(priorityTarget).hasClass('focus-priority-ckeditor')) {
+                        const fieldContainer = $(priorityTarget).closest('.DTE_Field')[0];
+                        if (processedFields.has(fieldContainer)) continue;
+                        processedFields.add(fieldContainer);
+
+                        const field = getEditorFieldForElement(dte, priorityTarget);
+                        if (typeof field?.focusWhenReady !== 'function') continue;
+
+                        const focused = await field.focusWhenReady(isCurrentFocusRequest);
+                        if (!isCurrentFocusRequest()) return;
+                        if (focused) {
+                            completeFocusRequest();
+                            return;
+                        }
+                        continue;
+                    }
+
+                    priorityTarget.focus({preventScroll: true});
+                    if (document.activeElement === priorityTarget) {
+                        completeFocusRequest();
+                        return;
+                    }
+                }
+            }
+
             let focusTarget = $modal.find('.DTE_Body input:not([type="hidden"]), .DTE_Body select, .DTE_Body textarea, .DTE_Body [contenteditable="true"]')
                 .filter(function() {
                     return $(this).is(':visible') && !this.disabled && $(this).attr('tabindex') !== '-1';
@@ -318,6 +402,7 @@ export const dataTableInit = options => {
             }
 
             if (focusTarget != null) focusTarget.focus({preventScroll: true});
+            completeFocusRequest();
         }, 0);
     }
 
@@ -1114,6 +1199,13 @@ export const dataTableInit = options => {
             //if it is opened by WJ.openDialog like passkey.pug insert editor into modal-body-content
             if (isInModalDialog) modalContainer = "#modalIframe .modal-body .modal-body-content";
             $(dom.content)
+                .on('show.bs.modal', function () {
+                    const $modal = $(this);
+                    const focusRequestId = ($modal.data('dteFocusRequestId') || 0) + 1;
+                    $modal
+                        .data('dteFocusRequestId', focusRequestId)
+                        .attr('data-dte-focus-state', 'pending');
+                })
                 .one('shown.bs.modal', function () {
                     // Can only give elements focus when shown
                     if ( dte.s.setFocus ) {
