@@ -204,7 +204,7 @@ public class ConstantsV9 {
 		Constants.setBoolean("ai_browserAiEnabled", true, Constants.MOD_AI_ASSISTANTS, "Enable AI assistants in browser - Chrome Built-in AI");
 		Constants.setString("ai_geminiAuthKey", "", Constants.MOD_AI_ASSISTANTS, "Authentifikacny kluc k aistudio.google.com");
 		Constants.setString("ai_openRouterAuthKey", "", Constants.MOD_AI_ASSISTANTS, "Authentifikacny kluc k openrouter.ai");
-		Constants.setString("ai_localModelBundlePath", "", Constants.MOD_RAG, "Absolute path to the approved local embedding model bundle ZIP. The value is global and a restart is required after changing it.");
+		Constants.setString("ai_localEmbeddingModelBundlePath", "", Constants.MOD_RAG, "Absolute path to the approved local embedding model bundle ZIP. The value is global and a restart is required after changing it.");
 		Constants.setString("ai_localTranslateModelBundlePath", "", Constants.MOD_AI_ASSISTANTS, "Absolute path to the approved local M2M100 translation model bundle ZIP. The value is global and a restart is required after changing it.");
 		Constants.setString("ai_localTextModelBundlePath", "", Constants.MOD_AI_ASSISTANTS, "Absolute path to the approved local EuroLLM-1.7B-Instruct model bundle ZIP. The value is global and a restart is required after changing it.");
 		Constants.setString("ai_generateFileNamePrompt", "Generate VERY short, filesystem-safe name for file (lowercase, hyphens). Try generate name as short as possible but meningfull to USER. Do not add explanations, return ONLY generated name.", Constants.MOD_AI_ASSISTANTS, "Prompt to generate image file name");
