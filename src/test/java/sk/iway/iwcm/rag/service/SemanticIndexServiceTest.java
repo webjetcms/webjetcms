@@ -24,6 +24,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
+import com.webjetcms.ai.EmbeddingInputType;
+
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
@@ -192,7 +194,12 @@ class SemanticIndexServiceTest {
             "model-2",
             2
         )).thenReturn(Map.of());
-        when(context.embeddingService.embedWithUsage(List.of("Indexed text"), assistant, domainName))
+        when(context.embeddingService.embedWithUsage(
+            List.of("Indexed text"),
+            assistant,
+            domainName,
+            EmbeddingInputType.DOCUMENT
+        ))
             .thenReturn(new EmbeddingBatchResult(List.of(new float[] {0.1f, 0.2f, 0.3f}), 7));
         when(context.embeddingChunkRepository.saveAllAndFlush(anyList())).thenAnswer(invocation -> {
             List<EmbeddingChunkEntity> chunks = invocation.getArgument(0);
@@ -259,6 +266,12 @@ class SemanticIndexServiceTest {
             2
         );
         verify(context.ragEmbeddingStatService).recordIndexingTokens(assistant, 7, 2);
+        verify(context.embeddingService).embedWithUsage(
+            List.of("Indexed text"),
+            assistant,
+            domainName,
+            EmbeddingInputType.DOCUMENT
+        );
         verify(context.queueRepository).deleteAllByIdInBatch(List.of(13L));
 
         @SuppressWarnings({"rawtypes", "unchecked"})
