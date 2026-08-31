@@ -6,13 +6,14 @@ Video scenarios live in `src/test/webapp/video`. The standard commands are:
 
 ```shell
 cd src/test/webapp
-npm run video -- --grep "<scenario-name>"
-npm run video:show -- --grep "<scenario-name>"
+npm run video -- video/<scenario-name>.js
+npm run video:current
 ```
 
-The first command records headlessly. The second records the same page while
-showing the browser for authoring or an external screen recorder. Successful
-recordings are retained as WebM files in `build/test/videos`.
+The first command records a selected video file. The second records the
+scenario marked with `@current`. Both show the browser for authoring or an
+external screen recorder. Recordings are retained as WebM files in
+`build/test/videos`.
 
 Disable native cursor capture in an external recorder. The scenario already
 renders a cursor and click effect, and capturing the system cursor as well can
@@ -25,8 +26,18 @@ feature specifically demonstrates another browser.
 `CODECEPT_VIDEO_CURSOR=true` installs a Shadow DOM overlay in every document.
 The overlay follows Playwright mouse events and shows a ring on mouse down. Use
 `I.videoClick(locator)` for presentation clicks. The optional
-`CODECEPT_VIDEO_CLICK_DELAY` controls the short lead-in before a click; it is not
-an application synchronization mechanism.
+`CODECEPT_VIDEO_CLICK_DELAY` controls the short lead-in before a click. Every
+video click also leaves at least 500 milliseconds after the action for easier
+editing; increase it up to 2000 milliseconds with
+`CODECEPT_VIDEO_POST_CLICK_DELAY` when necessary. These are presentation delays,
+not application synchronization mechanisms.
+
+The completed recording is saved atomically as
+`build/test/videos/<scenario-name>.webm`. A later run of the same scenario
+replaces that file. The video-specific Playwright helper also removes temporary
+raw UUID recordings and the legacy UUID-prefixed artifact for the current
+scenario. Only the active page at the end becomes the final recording; keep
+meaningful multi-tab transitions as manual shots.
 
 ## Scenario Template
 

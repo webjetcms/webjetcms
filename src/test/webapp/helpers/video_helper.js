@@ -1,6 +1,7 @@
 const { Helper } = codeceptjs;
 
 const DEFAULT_CLICK_DELAY = 350;
+const DEFAULT_POST_CLICK_DELAY = 500;
 
 function isCursorEnabled() {
   return "true" === process.env.CODECEPT_VIDEO_CURSOR;
@@ -10,6 +11,12 @@ function getClickDelay() {
   const value = Number.parseInt(process.env.CODECEPT_VIDEO_CLICK_DELAY || DEFAULT_CLICK_DELAY, 10);
   if (Number.isNaN(value) || value < 0) return DEFAULT_CLICK_DELAY;
   return Math.min(value, 2000);
+}
+
+function getPostClickDelay() {
+  const value = Number.parseInt(process.env.CODECEPT_VIDEO_POST_CLICK_DELAY || DEFAULT_POST_CLICK_DELAY, 10);
+  if (Number.isNaN(value) || value < 0) return DEFAULT_POST_CLICK_DELAY;
+  return Math.min(Math.max(value, DEFAULT_POST_CLICK_DELAY), 2000);
 }
 
 function installVideoCursor() {
@@ -123,7 +130,7 @@ class VideoHelper extends Helper {
   }
 
   /**
-   * Moves the synthetic cursor to a target and clicks it after a short presentation delay.
+   * Moves the synthetic cursor to a target, clicks it, and leaves editing room after the click.
    * @param {*} locator CodeceptJS locator of the target element
    */
   async videoClick(locator) {
@@ -132,7 +139,9 @@ class VideoHelper extends Helper {
     if (isCursorEnabled()) {
       await new Promise((resolve) => setTimeout(resolve, getClickDelay()));
     }
-    return helper.click(locator);
+    const result = await helper.click(locator);
+    await new Promise((resolve) => setTimeout(resolve, getPostClickDelay()));
+    return result;
   }
 }
 

@@ -27,20 +27,22 @@ npx codeceptjs run --override '{ "tests": "./screenshots/generator/**/*.js"}' --
 ## Nahrávanie prezentačných videí
 
 Video scenáre sú v priečinku `video`. Playwright ich nahráva do
-`build/test/videos` vo formáte WebM. Nahrávka obsahuje syntetický kurzor aj
-zvýraznenie kliknutia.
+`build/test/videos/<názov-scenára>.webm`. Opakovaný beh prepíše predošlé video
+rovnakého scenára. Nahrávka obsahuje syntetický kurzor aj zvýraznenie kliknutia.
 
 ```sh
 cd src/test/webapp
 
-# Nahratie všetkých video scenárov na pozadí
+# Nahratie všetkých video scenárov
 npm run video
 
-# Nahratie jedného scenára
-npm run video -- --grep "293-config-jstree-view"
+# Nahratie jedného súboru
+npm run video -- video/293-config-jstree-view.js
 
-# Rovnaký beh s viditeľným prehliadačom
-npm run video:show -- --grep "293-config-jstree-view"
+# Nahratie scenára označeného ako @current
+npm run video:current
 ```
+
+Oba príkazy používajú viditeľný prehliadač.
 
 Konvencie pre tvorbu scenárov sú v [video/README.md](video/README.md).

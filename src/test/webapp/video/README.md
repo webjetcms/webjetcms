@@ -34,13 +34,18 @@ Use `Feature("video.<scenario-name>")` so the source is easy to find in reports.
 From `src/test/webapp` run:
 
 ```shell
-npm run video video/scenario.js"
-npm run video:current"
+npm run video -- video/293-config-jstree-view.js
+npm run video:current
 ```
 
-Both commands create a 1920 x 1080 WebM file in `build/test/videos`. The second
-command also shows the browser, which is useful while adjusting the walkthrough
-or when an external screen recorder is preferred.
+Both commands create a 1920 x 1080 WebM file named after the scenario in
+`build/test/videos`, for example `293-config-jstree-view.webm`. Running the same
+scenario again replaces the previous file. Both commands show the browser,
+which is useful while adjusting the walkthrough or when an external screen
+recorder is preferred.
+
+Only the active page at the end of a scenario becomes the final recording.
+Keep meaningful multi-tab or browser-external transitions as manual shots.
 
 When using an external recorder, disable its native cursor capture. The video
 scenario already renders its own cursor and click effect, so recording both
@@ -51,4 +56,6 @@ in ElevenLabs and combine it with the recording in the video editor.
 
 The dimensions can be overridden with `CODECEPT_VIDEO_WIDTH` and
 `CODECEPT_VIDEO_HEIGHT`. The cursor lead-in can be adjusted between 0 and 2000
-milliseconds with `CODECEPT_VIDEO_CLICK_DELAY`.
+milliseconds with `CODECEPT_VIDEO_CLICK_DELAY`. Each `I.videoClick` leaves 500
+milliseconds after the click for editing; increase it up to 2000 milliseconds
+with `CODECEPT_VIDEO_POST_CLICK_DELAY`.
