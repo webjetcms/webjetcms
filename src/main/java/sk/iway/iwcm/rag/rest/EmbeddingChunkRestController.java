@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,6 +25,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -178,18 +180,61 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
      */
     @PostMapping("/document-action")
     public int performDocumentAction(@RequestParam("rootDir") int rootDir, @RequestParam("includeSubfolders") boolean includeSubfolders, @RequestParam("action") String action) {
+        validateDocumentActionRoot(rootDir);
+
         int domainId = CloudToolsForCore.getDomainId();
         Pair<Integer, List<Integer>> data = getDocIds(rootDir, includeSubfolders);
         if(data == null || data.getSecond() == null || data.getSecond().isEmpty()) return 0;
 
         try {
-            indexQueueService.addToQueue(data.getSecond(), RagEntityType.DOCUMENT, RagIndexAction.fromString(action), domainId);
+            indexQueueService.addToQueue(
+                data.getSecond(),
+                RagEntityType.DOCUMENT,
+                RagIndexAction.fromString(action),
+                domainId
+            );
         } catch (Exception e) {
             Logger.error(EmbeddingChunkRestController.class, "Error adding documents to index queue: " + e.getMessage());
             return -1;
         }
 
         return data.getSecond().size();
+    }
+
+    private void validateDocumentActionRoot(int rootDir) {
+        if (rootDir == -1) {
+            for (Integer rootGroupId : getCurrentDomainRootGroupIds()) {
+                if (GroupsDB.isGroupEditable(getUser(), rootGroupId) == false) {
+                    throw new AccessDeniedException(
+                        "User is not allowed to manage RAG embeddings for every group in this domain."
+                    );
+                }
+            }
+            return;
+        }
+        if (rootDir < 1) {
+            throw new AccessDeniedException("Invalid root group for RAG embedding management.");
+        }
+
+        GroupsDB groupsDB = GroupsDB.getInstance();
+        GroupDetails group = groupsDB.findGroup(rootDir);
+        if (group == null || GroupsDB.isGroupEditable(getUser(), rootDir) == false) {
+            throw new AccessDeniedException("User is not allowed to manage RAG embeddings for this group.");
+        }
+
+        if (InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")) {
+            String groupDomain = groupsDB.getDomain(rootDir);
+            if (CloudToolsForCore.getDomainName().equalsIgnoreCase(groupDomain) == false) {
+                throw new AccessDeniedException("User is not allowed to manage RAG embeddings for another domain.");
+            }
+        }
+    }
+
+    private List<Integer> getCurrentDomainRootGroupIds() {
+        return new SimpleQuery().forListInteger(
+            "SELECT group_id FROM groups WHERE parent_group_id = 0 AND domain_name = ? AND group_name != 'System'",
+            CloudToolsForCore.getDomainName()
+        );
     }
 
     /**
@@ -202,6 +247,8 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
      */
     @GetMapping("/document-stat")
     public Map<String, Object> getDocumentStat(@RequestParam("rootDir") int rootDir, @RequestParam("includeSubfolders") boolean includeSubfolders, @RequestParam("action") String action) {
+        validateDocumentActionRoot(rootDir);
+
         Pair<Integer, List<Integer>> data = getDocIds(rootDir, includeSubfolders);
         if (data == null) data = new Pair<>(0, new ArrayList<>());
 
@@ -281,7 +328,7 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
 
             if(includeSubfolders == false) return new Pair<>(allGroupCount, docIds);
 
-            List<Integer> rootGroupsIds = new SimpleQuery().forListInteger("SELECT group_id FROM groups WHERE parent_group_id = 0 AND domain_name = ? AND group_name != 'System'", CloudToolsForCore.getDomainName());
+            List<Integer> rootGroupsIds = getCurrentDomainRootGroupIds();
             if(rootGroupsIds.isEmpty()) return null;
             String idsJoined = rootGroupsIds.stream().map(String::valueOf).collect(Collectors.joining(","));
             docIds = new SimpleQuery().forListInteger("SELECT doc_id FROM documents WHERE root_group_l1 IN (" + idsJoined + ") AND searchable = "+DB.getBooleanSql(true));

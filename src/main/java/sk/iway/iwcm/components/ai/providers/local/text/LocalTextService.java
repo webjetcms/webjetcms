@@ -1,16 +1,19 @@
 package sk.iway.iwcm.components.ai.providers.local.text;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.webjetcms.ai.AiClient;
+import com.webjetcms.ai.AiPromptTemplate;
 
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiAssitantsInterface;
 import sk.iway.iwcm.components.ai.providers.LibrarySupportLogic;
 import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
+import sk.iway.iwcm.components.ai.security.PromptInjectionDefense;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 
@@ -57,6 +60,17 @@ public class LocalTextService extends LibrarySupportLogic implements AiAssitants
         assistantEntity.setModel(DEFAULT_MODEL);
         assistantEntity.setUseStreaming(false);
         assistantEntity.setUseTemporal(true);
+    }
+
+    @Override
+    protected void validatePromptExpansion(
+        AiPromptTemplate.ExpansionResult expansion,
+        Long assistantId
+    ) throws IOException {
+        if (expansion.suspiciousSources().isEmpty() == false) {
+            PromptInjectionDefense.auditDetections(expansion.suspiciousSources(), assistantId);
+            throw new IOException("Local text generation rejects input detected as prompt injection");
+        }
     }
 
     @Override

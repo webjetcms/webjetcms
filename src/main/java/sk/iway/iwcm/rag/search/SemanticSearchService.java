@@ -12,6 +12,7 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.webjetcms.ai.EmbeddingInputType;
 
 import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Adminlog;
@@ -100,7 +101,8 @@ public class SemanticSearchService {
             embeddingResult = embeddingService.embedWithUsage(
                 List.of(query),
                 embeddingAssistant,
-                request
+                request,
+                EmbeddingInputType.QUERY
             );
         } catch (ProviderCallException e) {
             Logger.error(SemanticSearchService.class, "Error generating query embedding: " + e.getMessage(), e);

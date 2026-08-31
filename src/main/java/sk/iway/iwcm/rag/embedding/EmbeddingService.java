@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.webjetcms.ai.AiClient;
 import com.webjetcms.ai.AiProviderConfig;
 import com.webjetcms.ai.AiProviderException;
+import com.webjetcms.ai.EmbeddingInputType;
 import com.webjetcms.ai.EmbeddingOptions;
 import com.webjetcms.ai.EmbeddingRequest;
 import com.webjetcms.ai.EmbeddingResponse;
@@ -49,7 +50,16 @@ public class EmbeddingService {
         AssistantDefinitionEntity assistant,
         HttpServletRequest request
     ) throws ProviderCallException {
-        return embedWithUsage(texts, assistant, request, null);
+        return embedWithUsage(texts, assistant, request, EmbeddingInputType.DOCUMENT);
+    }
+
+    public EmbeddingBatchResult embedWithUsage(
+        List<String> texts,
+        AssistantDefinitionEntity assistant,
+        HttpServletRequest request,
+        EmbeddingInputType inputType
+    ) throws ProviderCallException {
+        return embedWithUsage(texts, assistant, request, null, inputType);
     }
 
     /**
@@ -60,14 +70,24 @@ public class EmbeddingService {
         AssistantDefinitionEntity assistant,
         String domainName
     ) throws ProviderCallException {
-        return embedWithUsage(texts, assistant, null, domainName);
+        return embedWithUsage(texts, assistant, domainName, EmbeddingInputType.DOCUMENT);
+    }
+
+    public EmbeddingBatchResult embedWithUsage(
+        List<String> texts,
+        AssistantDefinitionEntity assistant,
+        String domainName,
+        EmbeddingInputType inputType
+    ) throws ProviderCallException {
+        return embedWithUsage(texts, assistant, null, domainName, inputType);
     }
 
     private EmbeddingBatchResult embedWithUsage(
         List<String> texts,
         AssistantDefinitionEntity assistant,
         HttpServletRequest servletRequest,
-        String domainName
+        String domainName,
+        EmbeddingInputType inputType
     ) throws ProviderCallException {
         if (texts == null || texts.isEmpty()) return EmbeddingBatchResult.empty();
         if (assistant == null) {
@@ -88,7 +108,7 @@ public class EmbeddingService {
         EmbeddingRequest request = EmbeddingRequest.builder()
             .model(assistant.getModel())
             .inputs(texts)
-            .options(new EmbeddingOptions(dimensions))
+            .options(new EmbeddingOptions(dimensions, inputType))
             .build();
 
         try {

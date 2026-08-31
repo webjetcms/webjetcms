@@ -319,13 +319,26 @@ public abstract class LibrarySupportLogic implements AiInterface {
         InputDataDTO inputData,
         IncludesHandler includesHandler
     ) throws IOException {
+        AiPromptTemplate.ExpansionResult expansion = AiAssistantsService.expandPromptMacros(
+            assistant.getInstructions(),
+            inputData
+        );
+        validatePromptExpansion(expansion, assistant.getId());
         return prepareRequest(
             operation,
             assistant,
             inputData,
             includesHandler,
-            supportedImageOptions(operation, assistant, inputData)
+            supportedImageOptions(operation, assistant, inputData),
+            expansion
         );
+    }
+
+    protected void validatePromptExpansion(
+        AiPromptTemplate.ExpansionResult expansion,
+        Long assistantId
+    ) throws IOException {
+        // Providers may reject suspicious values expanded into trusted instructions.
     }
 
     private ImageOptions supportedImageOptions(
@@ -428,12 +441,17 @@ public abstract class LibrarySupportLogic implements AiInterface {
         InputDataDTO inputData,
         IncludesHandler includesHandler
     ) throws IOException {
+        AiPromptTemplate.ExpansionResult expansion = AiAssistantsService.expandPromptMacros(
+            assistant.getInstructions(),
+            inputData
+        );
         return prepareRequest(
             operation,
             assistant,
             inputData,
             includesHandler,
-            isImageOperation(operation) ? basicImageOptions(inputData) : null
+            isImageOperation(operation) ? basicImageOptions(inputData) : null,
+            expansion
         );
     }
 
@@ -442,12 +460,9 @@ public abstract class LibrarySupportLogic implements AiInterface {
         AssistantDefinitionEntity assistant,
         InputDataDTO inputData,
         IncludesHandler includesHandler,
-        ImageOptions imageOptions
+        ImageOptions imageOptions,
+        AiPromptTemplate.ExpansionResult expansion
     ) throws IOException {
-        AiPromptTemplate.ExpansionResult expansion = AiAssistantsService.expandPromptMacros(
-            assistant.getInstructions(),
-            inputData
-        );
         String instructions = expansion.instructions();
         if (includesHandler != null && includesHandler.hasIncludes()) {
             instructions = instructions + "\n" + includesHandler.preservationInstructions();

@@ -13,6 +13,7 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.webjetcms.ai.EmbeddingInputType;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
@@ -147,8 +148,7 @@ public class SemanticIndexService {
 
     /**
      * Route a queue item to the appropriate handler based on entity type and action.
-     * The queue domain is authoritative for indexing and stale-domain cleanup. Document IDs
-     * are global, so a delete removes every stored domain copy of the document.
+     * The queue domain is authoritative for indexing and deletion.
      * @param item queue item to process
      */
     private void processEntity(IndexQueueEntity item, Set<Integer> readyDomains) {
@@ -165,9 +165,10 @@ public class SemanticIndexService {
         int domainId = item.getDomainId();
         int entityId = item.getEntityId();
         if (item.getAction() == RagIndexAction.DELETE) {
-            embeddingChunkRepository.deleteByEntityTypeAndEntityId(
+            embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainId(
                 DocDetailsContentExtractor.ENTITY_TYPE,
-                (long) entityId
+                (long) entityId,
+                domainId
             );
         } else if (item.getAction() == RagIndexAction.INDEX) {
             indexDocument(entityId, domainId, readyDomains);
@@ -182,11 +183,15 @@ public class SemanticIndexService {
     private void indexDocument(int docId, int queueDomainId, Set<Integer> readyDomains) {
         DocDetails doc = DocDB.getInstance().getDoc(docId);
         if (doc == null) {
-            embeddingChunkRepository.deleteByEntityTypeAndEntityId(
+            embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainId(
                 DocDetailsContentExtractor.ENTITY_TYPE,
-                (long) docId
+                (long) docId,
+                queueDomainId
             );
-            Logger.debug(SemanticIndexService.class, "Document " + docId + " not found, removed stale embeddings");
+            Logger.debug(
+                SemanticIndexService.class,
+                "Document " + docId + " not found, removed stale embeddings from domain " + queueDomainId
+            );
             return;
         }
 
@@ -216,11 +221,6 @@ public class SemanticIndexService {
                 return;
             }
 
-            embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainIdNot(
-                DocDetailsContentExtractor.ENTITY_TYPE,
-                (long) docId,
-                queueDomainId
-            );
             ensureVectorStoreReady(queueDomainId, readyDomains);
             indexDocument(doc, domainName, queueDomainId);
         }
@@ -314,7 +314,8 @@ public class SemanticIndexService {
                 EmbeddingBatchResult embeddingResult = embeddingService.embedWithUsage(
                     chunksToEmbedTexts,
                     embeddingAssistant,
-                    domainName
+                    domainName,
+                    EmbeddingInputType.DOCUMENT
                 );
 
                 List<float[]> newEmbeddings = embeddingResult.getEmbeddings();
