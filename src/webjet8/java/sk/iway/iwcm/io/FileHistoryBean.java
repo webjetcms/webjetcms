@@ -53,6 +53,8 @@ public class FileHistoryBean extends ActiveRecord implements Serializable
 	String historyPath;
 	@Column(name="ip_address")
 	String ipAddress;
+	@Column(name="domain_id")
+	int domainId = 1;
 
 	public int getFileHistoryId()
 	{
@@ -135,5 +137,15 @@ public class FileHistoryBean extends ActiveRecord implements Serializable
 	public void setIpAddress(String ipAddress)
 	{
 		this.ipAddress = ipAddress;
+	}
+
+	public int getDomainId()
+	{
+		return domainId;
+	}
+
+	public void setDomainId(int domainId)
+	{
+		this.domainId = domainId;
 	}
 }

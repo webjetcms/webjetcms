@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.IntStream;
@@ -127,6 +127,8 @@ public class BloggerService {
      * @return
      */
     public static boolean editBlogger(BloggerBean bloggerToEdit, UserDetailsRepository userDetailsRepository, HttpServletRequest request) {
+        if (bloggerToEdit == null || !isBloggerInCurrentScope(bloggerToEdit.getId())) return false;
+
         UserDetailsEntity userBlogger = userDetailsRepository.getById(bloggerToEdit.getId());
 
         //Field's login AND editableGroups CANT BE CHANGE
@@ -172,15 +174,20 @@ public class BloggerService {
      * @return
      */
     public static boolean saveBlogger(BloggerBean bloggerToSave, UserDetailsRepository userDetailsRepository, EditorFacade editorFacade, HttpServletRequest request) {
+        if (bloggerToSave == null || Tools.isEmpty(bloggerToSave.getLogin())) return false;
+
+        String login = bloggerToSave.getLogin();
+        // Use the same case/accent-insensitive lookup as authentication and reject collisions before any write.
+        if (UsersDB.getUser(login) != null) return false;
+
         UserDetailsEntity newUser = new UserDetailsEntity();
-        newUser.setId((long)-1);
+        newUser.setId(null);
         newUser.setFirstName( bloggerToSave.getFirstName() );
         newUser.setLastName( bloggerToSave.getLastName() );
         newUser.setEmail( bloggerToSave.getEmail() );
         newUser.setRegDate(new Date());
 
         //Set loggin and Writable folders
-        String login = bloggerToSave.getLogin();
         newUser.setLogin( login );
 
         //Blog groupID (without this group id, user not gonna be showed in blogger's list)
@@ -190,81 +197,87 @@ public class BloggerService {
         newUser.setForumRank(0);
         newUser.setRatingRank(0);
         newUser.setParentId(0);
-        newUser.setAdmin(true);
-        newUser.setAuthorized(true);
+        //Keep the account fail-closed until all rights, password and blogger structure are provisioned.
+        newUser.setAdmin(false);
+        newUser.setAuthorized(false);
 
         //First save password as null for save
         newUser.setPassword(null);
 
-        //Save new blogger user
-        userDetailsRepository.save(newUser);
+        //Save and flush before applying rights or password. The returned entity is the only trusted source of the new ID.
+        UserDetailsEntity savedUser = userDetailsRepository.saveAndFlush(newUser);
+        if (savedUser == null || savedUser.getId() == null) return false;
 
-        //Get new saved user
-        Integer newUserId = UsersDB.getUserIdByLogin(login);
-        if(newUserId == null) return false;
-        newUser.setId( newUserId.longValue() );
-        bloggerToSave.setId( newUserId.longValue() );
+        long savedUserId = savedUser.getId().longValue();
+        if (savedUserId < 1L || savedUserId > Integer.MAX_VALUE) return false;
+
+        int newUserId = (int) savedUserId;
+        bloggerToSave.setId(savedUserId);
 
         //After save, set password back
         String password = bloggerToSave.getPassword();
         if (Tools.isEmpty(password) || "*".equals(password)) password = Password.generatePassword(8);
-        newUser.setPassword( password );
+        savedUser.setPassword( password );
 
         //Set user rights
-        setUserRights(newUserId);
+        if (setUserRights(newUserId) == false) return false;
 
         //Set user password
         boolean savedPassword = UserDetailsService.savePassword(password, newUserId);
         if(!savedPassword) return false;
 
         //MAKE - blogger structure
-        prepareBloggerStructure(newUser, bloggerToSave.getEditableGroup(), userDetailsRepository, editorFacade, request);
+        prepareBloggerStructure(savedUser, bloggerToSave.getEditableGroup(), userDetailsRepository, editorFacade, request);
+
+        //Activate the admin account only after the whole provisioning finished successfully.
+        if (userDetailsRepository.activateBlogger(savedUser.getId()) != 1) return false;
+        savedUser.setAdmin(true);
+        savedUser.setAuthorized(true);
 
         //Send welcome email
-        AuthorizeUserService.sendInfoEmail(newUser, password, UsersDB.getCurrentUser(request), request);
+        AuthorizeUserService.sendInfoEmail(savedUser, password, UsersDB.getCurrentUser(request), request);
 
         return true;
     }
 
-    private static void setUserRights(int userId) {
-        (new SimpleQuery()).execute("DELETE FROM user_disabled_items WHERE user_id=?", userId);
-
-        StringBuilder sb = new StringBuilder("INSERT INTO user_disabled_items VALUES");
+    private static boolean setUserRights(int userId) {
         List<ModuleInfo> modules = Modules.getInstance().getModules();
 
         String[] defaulPerm = {"cmp_blog", "addPage", "pageSave", "deletePage", "addSubdir", "cmp_diskusia" };
         String[] bonusPerm = Tools.getTokens( Constants.getString("bloggerAppPermissions") , ",");
-        Set<String> duplicity = new HashSet<>();
+        Set<String> disabledItems = new LinkedHashSet<>();
         for(ModuleInfo module : modules){
-            //
             if(module == null || module.getItemKey() == null || Arrays.stream(defaulPerm).anyMatch(module.getItemKey()::equals) || Arrays.stream(bonusPerm).anyMatch(module.getItemKey()::equals)) continue;
 
-            //If duplicity, skip
-            if(duplicity.contains(module.getItemKey())==false) {
-                duplicity.add(module.getItemKey());
-                sb.append(" (").append(userId).append(",'").append(module.getItemKey()).append("'),");
-            }
+            disabledItems.add(module.getItemKey());
 
-            //Submodules
             if(module.getSubmenus() == null) continue;
             for (ModuleInfo subModule : module.getSubmenus()) {
-                //
                 if(subModule == null || subModule.getItemKey() == null || Arrays.stream(defaulPerm).anyMatch(subModule.getItemKey()::equals) || Arrays.stream(bonusPerm).anyMatch(subModule.getItemKey()::equals)) continue;
 
-                //If duplicity, skip
-                if(duplicity.contains(subModule.getItemKey())) continue;
-                duplicity.add(subModule.getItemKey());
-
-                sb.append(" (").append(userId).append(",'").append(subModule.getItemKey()).append("'),");
+                disabledItems.add(subModule.getItemKey());
             }
         }
 
-        //If SB does not contain cmp_blog_admin, add it
-        if( sb.indexOf("(" + userId + ",'cmp_blog_admin'),") == -1 ) sb.append(" (").append(userId).append(",'cmp_blog_admin'),");
+        //Blogger must never be able to manage other bloggers.
+        disabledItems.add("cmp_blog_admin");
 
-        //Remove last ','
-        sb.deleteCharAt(sb.length() - 1);
-        (new SimpleQuery()).execute(sb.toString());
+        List<String> sqlCommands = new ArrayList<>();
+        List<Object[]> sqlParameters = new ArrayList<>();
+        sqlCommands.add("DELETE FROM user_disabled_items WHERE user_id=?");
+        sqlParameters.add(new Object[] { userId });
+
+        for (String disabledItem : disabledItems) {
+            sqlCommands.add("INSERT INTO user_disabled_items (user_id, item_name) VALUES (?, ?)");
+            sqlParameters.add(new Object[] { userId, disabledItem });
+        }
+
+        try {
+            return (new SimpleQuery()).executeInTransaction(sqlCommands, sqlParameters);
+        } catch (RuntimeException ex) {
+            sk.iway.iwcm.Logger.error(ex);
+            return false;
+        }
     }
 
     /**
@@ -445,6 +458,18 @@ public class BloggerService {
         StringBuilder query = new StringBuilder(QUERY_PREFIX_ID);
         addQueryConditions(query);
         return (new SimpleQuery()).forListInteger(query.toString());
+    }
+
+    /**
+     * Check if the user ID belongs to a blogger in the current management scope.
+     * @param bloggerId user ID to check
+     * @return true if the user is a blogger in the current scope
+     */
+    static boolean isBloggerInCurrentScope(Long bloggerId) {
+        if (bloggerId == null || bloggerId.longValue() < 1L || bloggerId.longValue() > Integer.MAX_VALUE) return false;
+
+        List<Integer> bloggerIds = getAllBloggersIds();
+        return bloggerIds != null && bloggerIds.contains(bloggerId.intValue());
     }
 
     /**
