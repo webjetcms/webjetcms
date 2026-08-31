@@ -2,6 +2,7 @@ package sk.iway.iwcm.components.multistep_form.rest;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
@@ -25,6 +26,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.forms.FormsServiceImpl;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
@@ -44,13 +46,15 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
     private final FormItemsRepository formItemsRepository;
 
     private final MultistepFormsService multistepFormsService;
+    private final FormsServiceImpl formsService;
 
     @Autowired
-    public FormStepsRestController(FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository, MultistepFormsService multistepFormsService) {
+    public FormStepsRestController(FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository, MultistepFormsService multistepFormsService, FormsServiceImpl formsService) {
         super(formStepsRepository);
         this.formStepsRepository = formStepsRepository;
         this.formItemsRepository = formItemsRepository;
         this.multistepFormsService = multistepFormsService;
+        this.formsService = formsService;
     }
 
     @Override
@@ -93,6 +97,23 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
     }
 
     @Override
+    public boolean checkItemPerms(FormStepEntity entity, Long id) {
+        if(entity == null) return false;
+
+        int domainId = CloudToolsForCore.getDomainId();
+        if(entity.getDomainId() != null && entity.getDomainId().intValue() != domainId) return false;
+
+        String formName = entity.getFormName();
+        if(id != null && id.longValue() > 0) {
+            FormStepEntity stored = formStepsRepository.findFirstByIdAndDomainId(id, domainId).orElse(null);
+            if(stored == null || Objects.equals(stored.getFormName(), formName) == false) return false;
+            formName = stored.getFormName();
+        }
+
+        return Tools.isNotEmpty(formName) && getUser() != null && formsService.isFormAccessible(formName, getUser());
+    }
+
+    @Override
     public void afterDelete(FormStepEntity entity, long id) {
         // After delete remove all step items binded to this form step
         formItemsRepository.deleteAllByStepIdAndDomainId(id, CloudToolsForCore.getDomainId());
@@ -106,6 +127,13 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
 
     @Override
     public void beforeDuplicate(FormStepEntity entity) {
+        Long sourceId = entity == null ? null : entity.getIdForDuplication();
+        FormStepEntity source = sourceId == null || sourceId.longValue() < 1 ? null :
+            formStepsRepository.findFirstByIdAndDomainId(sourceId, CloudToolsForCore.getDomainId()).orElse(null);
+        if(source == null || Objects.equals(source.getFormName(), entity.getFormName()) == false || checkItemPerms(source, sourceId) == false) {
+            throwConstraintViolation("components.file_archiv.file_rename.nemate_pravo_na_tuto_editaciu");
+        }
+
         int tmpId = -getUser().getUserId();
 
         //IF something went wrong, delete all awaiting duplicate
@@ -162,14 +190,30 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
     @Override
     @PostMapping(value = "/row-reorder", consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Boolean> rowReorder(HttpServletRequest request, @RequestBody RowReorderDto rowReorderDto) {
+        String formName = MultistepFormsService.getFormName(request);
+
         // call super row reorder to update positions
         ResponseEntity<Boolean> response = super.rowReorder(request, rowReorderDto);
 
         if(response.getStatusCode().is2xxSuccessful() && response.getBody() == Boolean.TRUE) {
             // All good, now update steps positions in form
-            multistepFormsService.updateStepsPositions(rowReorderDto);
+            multistepFormsService.updateStepsPositions(formName);
         }
 
         return response;
+    }
+
+    @Override
+    protected boolean checkRowReorderScope(HttpServletRequest request, List<FormStepEntity> entities) {
+        String formName = MultistepFormsService.getFormName(request);
+        if(Tools.isEmpty(formName) || entities == null || entities.isEmpty() || getUser() == null) return false;
+
+        int domainId = CloudToolsForCore.getDomainId();
+        for(FormStepEntity entity : entities) {
+            if(entity == null || Objects.equals(formName, entity.getFormName()) == false ||
+                entity.getDomainId() == null || entity.getDomainId().intValue() != domainId) return false;
+        }
+
+        return formsService.isFormAccessible(formName, getUser());
     }
 }

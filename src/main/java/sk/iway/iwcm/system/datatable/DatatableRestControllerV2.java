@@ -1673,6 +1673,18 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 
 	/**
+	 * Checks whether all entities in a row-reorder request belong to the controller-specific scope.
+	 * Override this hook when the table is scoped by request parameters in addition to domain ID.
+	 *
+	 * @param request current HTTP request
+	 * @param entities complete batch of entities requested for reordering
+	 * @return true if the complete batch is within the allowed scope
+	 */
+	protected boolean checkRowReorderScope(HttpServletRequest request, List<T> entities) {
+		return true;
+	}
+
+	/**
 	 * Reorder rows based on RowReorderDto input.
 	 * @param request
 	 * @param rowReorderDto
@@ -1706,6 +1718,12 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		// Repository bulk lookups silently omit unknown or out-of-domain IDs. The operation must be all-or-nothing.
 		if (entities.size() != requestedIds.size()) {
 			Logger.debug(DatatableRestControllerV2.class, "Not all requested entities were found for row reorder");
+			return ResponseEntity.ok(false);
+		}
+
+		// Apply controller-specific list scope to the complete batch before validating or modifying any entity.
+		if (checkRowReorderScope(request, entities) == false) {
+			Logger.debug(DatatableRestControllerV2.class, "Requested entities are outside of the allowed row reorder scope");
 			return ResponseEntity.ok(false);
 		}
 

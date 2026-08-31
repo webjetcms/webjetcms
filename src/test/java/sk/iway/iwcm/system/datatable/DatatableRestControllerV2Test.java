@@ -453,6 +453,41 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
     }
 
     @Test
+    void testRowReorderRejectsScopeBeforeBatchModification() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<RowReorderTestEntity, Long> repository = mock(JpaRepository.class);
+        RowReorderTestEntity first = new RowReorderTestEntity(1L, 10);
+        RowReorderTestEntity second = new RowReorderTestEntity(2L, 20);
+        List<RowReorderTestEntity> entities = List.of(first, second);
+        when(repository.findAllById(List.of(1L, 2L))).thenReturn(entities);
+
+        AtomicReference<List<RowReorderTestEntity>> checkedEntities = new AtomicReference<>();
+        DatatableRestControllerV2<RowReorderTestEntity, Long> restrictedController =
+                new DatatableRestControllerV2<>(repository) {
+                    @Override
+                    protected boolean checkRowReorderScope(javax.servlet.http.HttpServletRequest request,
+                            List<RowReorderTestEntity> scopedEntities) {
+                        checkedEntities.set(scopedEntities);
+                        return false;
+                    }
+                };
+        restrictedController.setRequest(controller.getRequest());
+
+        RowReorderDto request = new RowReorderDto();
+        request.setDataSrc("position");
+        request.setValues(List.of(
+            new RowReorderDto.RowReorderValue(1L, 10, 20),
+            new RowReorderDto.RowReorderValue(2L, 20, 10)
+        ));
+
+        assertEquals(Boolean.FALSE, restrictedController.rowReorder(controller.getRequest(), request).getBody());
+        assertEquals(entities, checkedEntities.get());
+        assertEquals(10, first.getPosition());
+        assertEquals(20, second.getPosition());
+        verify(repository, never()).saveAll(any());
+    }
+
+    @Test
     void testRowReorderRejectsUnannotatedNumericProperty() {
         @SuppressWarnings("unchecked")
         JpaRepository<RowReorderTestEntity, Long> repository = mock(JpaRepository.class);
