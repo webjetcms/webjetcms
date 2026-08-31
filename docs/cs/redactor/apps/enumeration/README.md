@@ -22,6 +22,28 @@ tak se v datech daného číselníku zobrazí 2 sloupce/pole typu řetězec a 1 
 
 To znamená, že si můžete zadefinovat formát dat číselníků pro každý číselník zvlášť. Jak již napovídají názvy karet, můžete kombinovat textová, číselná, boolovská nebo datová pole. Jejich počet je omezen pro každý typ počtem polí v jednotlivých kartách.
 
+### Karta Typy řetězcových polí
+
+Po prvním uložení typu číselníku se zobrazí karta **Typy řetězcových polí**. Umožňuje rozšířit pojmenovaná pole z karty **Řetězce** o nastavení známá z [volitelných polí](../../../frontend/webpages/customfields/custom-fields-settings.md), například o výběrové pole, výběr více možností, automatické doplňování, propojení na jiný číselník, výběr obrázku, výběr obrázku.
+
+![](editor_stringFieldTypes.png)
+
+V tabulce se zobrazují pouze řetězcová pole, pro která je vytvořena konfigurace. Při jejím přidání jsou v poli **Volitelné pole** dostupná pouze pojmenovaná řetězcová pole ve formátu **Řetězec N – název**. Nabídka polí, jejich názvy a popisy vycházejí z poslední uložené verze typu číselníku. Po pojmenování nebo přejmenování řetězcového pole proto nejprve uložte typ číselníku; konfigurace se následně automaticky aktualizuje. Pokud název pole odstraníte, pole se skryje a jeho nastavení povinnosti se zruší.
+
+Pro každé pole lze nastavit:
+
+- typ pole a jeho typově specifické vlastnosti, například možnosti výběrového pole,
+- povinnost vyplnění,
+- pomocný text zobrazený jako `tooltip`
+
+![](editor_stringFieldType.png)
+
+Bez specifické konfigurace se pojmenované řetězcové pole zobrazí jako běžné textové pole s maximální délkou 1024 znaků. Nepojmenovaná řetězcová pole se v datech číselníku ani v možnostech konfigurace nezobrazí.
+
+!> **Upozornění** číselníky (zatím) nejsou děleny podle zvolené domény, nastavení volitelných polí (typy řetězcových polí) se tedy fixně ukládají do hlavní domény. Pokud přejdete do sekce [Volitelná pole](../../../frontend/webpages/customfields/custom-fields-settings.md) budete nastavené hodnoty vidět pouze v hlavní doméně. Doporučujeme ale v sekci Volitelná pole neměnit a nenastavovat a vždy použít kartu Typy řetězcových polí pro jejich nastavení.
+
+!> **Upozornění na zpětnou kompatibilitu:** datové atributy řetězcových polí se změnily z `string1` až `string12` na `fieldA` až `fieldL`. Ve vlastních nebo starších Excel šablonách pro import dat číselníku musíte kódové názvy v hlavičce ručně upravit, například `Mesto|string1` na `Mesto|fieldA`. Stejné názvy `fieldA` až `fieldL` používejte iv integracích REST API, které zpracovávají data číselníků. Databázové sloupce `string1` až `string12` zůstávají nezměněny.
+
 ### Karta Základní
 
 V kartě "Základní" se nastavují vlastnosti:

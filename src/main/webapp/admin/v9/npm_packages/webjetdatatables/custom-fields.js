@@ -148,7 +148,7 @@ export function update(EDITOR, action) {
     //WJ.log("CustomFields.update, json=", json);
 
     //pomen mena poli
-    var textTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="{maxlength}" data-warningLength="{warninglength}" data-warningMessage="{warningMessage}" value="{value}" {disabled} class="form-control" type="text">';
+    var textTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="{maxlength}" data-warningLength="{warninglength}" {disabled} class="form-control" type="text">';
     var textAreaTemplate = '<textarea id="DTE_Field_{customPrefix}{identifier}" {disabled} class="form-control wrap">{value}</textarea>';
     var autocompleteTemplate = '<div class="input-group"> <span class="input-group-text"><i class="ti ti-search"></i></span> <input type="text" class="form-control autocomplete" name="field{identifier}" value="{value}" id="DTE_Field_field{identifier}"/> </div>';
     var selectTemplate = '<select id="DTE_Field_field{identifier}" class="form-control form-select">{options}</select>';
@@ -158,9 +158,9 @@ export function update(EDITOR, action) {
     var booleanTemplate = '<div><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">Áno</label></div></div>';
     var booleanTextTemplate = '<div><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">{label_value}</label></div></div>';
     var dateTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" type="text" autocomplete="off" class="form-control">';
-    var uuidTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="255" value="{value}" class="form-control field-type-uuid" type="text">';
+    var uuidTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="255" value="{value}" class="form-control field-type-uuid custom-field-ai-disabled" type="text">';
     var colorTemplate = `
-        <div class="input-group">
+        <div class="input-group custom-field-ai-disabled">
             <button class="btn input-group-text color-preview" type="button" style="background-color: {value}" {disabled} aria-label="${WJ.translate("datatables.field.color.title.js")}" aria-haspopup="dialog" aria-expanded="false"></button>
             <input id="DTE_Field_{customPrefix}{identifier}" value="{value}" {disabled} class="form-control" type="text"/>
             <button class="btn btn-outline-secondary btn-clear" type="button" {disabled} aria-label="${WJ.translate("button.reset")}" title="${WJ.translate("button.reset")}"><i class="ti ti-circle-x" aria-hidden="true"></i></button>
@@ -243,7 +243,7 @@ export function update(EDITOR, action) {
         }
 
         //DEFAULT template, "textTemplate"
-        var template = textTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), getFieldValue(value, action, v.type)).replace(new RegExp('{maxlength}', 'g'), maxlength).replace(new RegExp('{warninglength}', 'g'), warninglength).replace(new RegExp('{warningMessage}', 'g'), warningMessage).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
+        var template = textTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{maxlength}', 'g'), maxlength).replace(new RegExp('{warninglength}', 'g'), warninglength).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
 
         if (v.type == 'textarea') {
             template = textAreaTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), getFieldValue(value, action, v.type)).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
@@ -339,13 +339,13 @@ export function update(EDITOR, action) {
                 backgroundImage = "url("+value+")";
                 prependClassName = " has-image";
             }
-            template = '<div class="input-group"> <span class="input-group-text'+prependClassName+'" style="background-image: '+backgroundImage+';"><i class="ti ti-photo"></i></span> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="ti ti-focus-2"></i></button> </div>';
+            template = '<div class="input-group custom-field-image custom-field-ai-disabled"> <span class="input-group-text'+prependClassName+'" style="background-image: '+backgroundImage+';"><i class="ti ti-photo"></i></span> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="ti ti-focus-2"></i></button> </div>';
         } else if (v.type == 'link') {
-            template = '<div class="input-group"> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="ti ti-focus-2"></i></button> </div>';
+            template = '<div class="input-group custom-field-link custom-field-ai-disabled"> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="ti ti-focus-2"></i></button> </div>';
         } else if (v.type == 'dir') {
-            template = '<div> ' + template + ' <div class="webjet-component" id="DTE_Field_' + customPrefix + identifier + '"></div> </div>';
+            template = '<div class="custom-field-ai-disabled"> ' + template + ' <div class="webjet-component" id="DTE_Field_' + customPrefix + identifier + '"></div> </div>';
         } else if (v.type == 'json_group' || v.type == 'json_doc') {
-            template = '<div> ' + template + ' <div class="webjet-component" id="DTE_Field_' + customPrefix + identifier + '"></div> </div>';
+            template = '<div class="custom-field-ai-disabled"> ' + template + ' <div class="webjet-component" id="DTE_Field_' + customPrefix + identifier + '"></div> </div>';
         } else if (v.type == 'none') {
             // LPA
             container.hide();
@@ -386,6 +386,12 @@ export function update(EDITOR, action) {
         }
 
         inputBox.html(template);
+
+        const textInput = inputBox.find("input[data-warninglength]").first();
+        if(textInput.length > 0) {
+            textInput.attr("data-warningmessage", warningMessage);
+            textInput.val(getFieldValue(value, action, v.type));
+        }
 
         if (v.required === true) {
             inputBox.find('input, select, textarea').attr('required', 'required');
@@ -524,9 +530,14 @@ export function update(EDITOR, action) {
         }
         else if (v.type == 'autocomplete') {
 
-            new AutoCompleter("#" + datatable.DATA.id + "_modal .DTE_Field_Name_field" + identifier + " input.autocomplete")
-                    .setUrl('/admin/FCKeditor/_editor_autocomplete.jsp?keyPrefix=' + json.editorFields?.fieldsDefinitionKeyPrefix + '&className=' + encodeURIComponent(json.editorFields?.fieldsDefinitionClassName || '') + '&objectId=' + json.id + '&template=' + json.tempId + '&field=' + identifier)
-                    .transform();
+            const configuredAutocompleteUrl = json.editorFields?.fieldsDefinitionAutocompleteUrl;
+            const autocompleteUrl = configuredAutocompleteUrl || '/admin/FCKeditor/_editor_autocomplete.jsp';
+            const querySeparator = autocompleteUrl.includes('?') ? '&' : '?';
+            const autocomplete = new AutoCompleter("#" + datatable.DATA.id + "_modal .DTE_Field_Name_field" + identifier + " input.autocomplete");
+            if(configuredAutocompleteUrl) autocomplete.setName("term");
+            autocomplete
+                .setUrl(autocompleteUrl + querySeparator + 'keyPrefix=' + json.editorFields?.fieldsDefinitionKeyPrefix + '&className=' + encodeURIComponent(json.editorFields?.fieldsDefinitionClassName || '') + '&objectId=' + (json.editorFields?.fieldsDefinitionEntityId ?? json.id) + '&template=' + json.tempId + '&field=' + identifier)
+                .transform();
 
         } else if (v.type == "dir") {
             let conf = {};
@@ -761,7 +772,7 @@ export function update(EDITOR, action) {
             input.on('input', function(){
                 if (dataWarningLength <= input.val().length) {
                     toastr.remove();
-                    WJ.notifyWarning(dataWarningMessage, null, 5000, null);
+                    WJ.notifyWarning(WJ.escapeHtml(dataWarningMessage || ""), null, 5000, null);
                 } else {
                     toastr.remove();
                 }

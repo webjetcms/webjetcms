@@ -591,12 +591,12 @@ public class EshopService {
 		return(ok);
 	}
 
-	/** Ak je dost produktov na sklade tak vrati true (mozeme vlozit do kosiku)
+	/**
+	 * Checks whether the requested product quantity can be added to the basket from available stock.
 	 *
-	 * @param req - HttpServletRequest
-	 * @return
-	 * @author		$Author: $(prau)
-	 * @Ticket 		Number: #16989 WJ Cloud - Rozšírenie košíka o počet položiek na sklade
+	 * @param req request containing the product and requested quantity
+	 * @return {@code true} if the requested quantity is available
+	 * @Ticket Number: #16989 WJ Cloud - Extend the basket with product stock quantities
 	 */
 	public boolean canAddItem(HttpServletRequest req)
 	{
@@ -694,14 +694,14 @@ public class EshopService {
         return curr;
     }
 
-	/** Ak je dost produktov na sklade tak vrati true (mozeme vlozit do kosiku)
+	/**
+	 * Checks whether the requested product quantity can be added to the basket from available stock.
 	 *
-	 * @param doc
-	 * @param basketInvoiceItemEntity
-	 * @param newQty - pocet produktov ktore pridavame
-	 * @return
-	 * @author		$Author: $(prau)
-	 * @Ticket 		Number: #16989 WJ Cloud - Rozšírenie košíka o počet položiek na sklade
+	 * @param doc product document containing stock information
+	 * @param basketInvoiceItemEntity existing basket item, or {@code null} for a new item
+	 * @param newQty quantity to add
+	 * @return {@code true} if the requested quantity is available
+	 * @Ticket Number: #16989 WJ Cloud - Extend the basket with product stock quantities
 	 */
 	public static boolean canAddItem(DocDetails doc, BasketInvoiceItemEntity basketInvoiceItemEntity, int newQty)
 	{

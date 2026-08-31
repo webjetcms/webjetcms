@@ -48,7 +48,7 @@ Explanation of the pictograms used:
 - [x] +Redirects - add redirect cleaning function - deletes old redirects (it was originally `aaa-bbb` and then `aaa-ccc` was created so `aaa-bbb` has no meaning = it is deleted) and checks for cyclic redirects in which it deletes the last step. Also optimize redirects `aaa-bbb-ccc` to `aaa-ccc` (#58629).
 - [x] +Gallery - add the option to set a different way to resize a large image, e.g. Crop to fit is applied to a small image (they want it to be square) and exact width is applied to a large image (preserves aspect ratio). By default, the value will be NULL=same as for a small image (#58633).
 - [x] Optional fields - add the ability to select multiple items for connection to the dialer (#58637).
-- [ ] +Numbers - add the ability to define the field type for a string like we have in optional fields (#58641).
+- [x] +Encoders - add the ability to define the field type for a string like we have in optional fields (#58641).
 - [x] +Photo bank - add the option to set the file name before downloading from the photo bank, automatically set according to the search term (#58645).
 - [x] +Background tasks - option to manually run a task on `node`, which the task is set to, will now run on `node` where the user is logged in (#58718).
 - [ ] + Dialer, Blog, News - adjust so that the dialer or news folder type selection is on the left, similar to the gallery/websites. Then the cards don't have to be displayed all at once.
@@ -108,7 +108,8 @@ Explanation of the pictograms used:
 - [x] +Structure mirroring - add option to delete `sync_id` values ​​for selected folder (recursively). To make it easy to cancel/reset synchronization. Also there is a problem that I clone `SK,DE,EN` then disable `DE` and want to have only `EN` but mirroring still applies changes to `DE` folder (#57561).
 - [ ] +Add `autoupdate` verification to GitHub tests for all supported database servers - i.e. initialize an empty database and verify all `autoupdate` and verify that they pass without error. Make it a separate pipeline.
 - [x] Gallery - allow changing the gallery path (folder) and set everything related to it (#58433).
-- [ ] +Configuration - add the group column with the value `modules` of the configuration variable (select field, can have multiple values). Add the option to display unset variables (i.e. complete list). Create a tool to generate all variables by groups/modules into the `md` file in the documentation for an overview of all variables.
+- [x] +Configuration - add hierarchical module tree and the ability to display unset variables (complete list).
+- [ ] +Configuration - create a tool to generate all variables by groups/modules into the `md` file in the documentation.
 - [x] +If I have an unsaved page with the title Cleaning and there is already another page called Cleaning, then the newly uploaded images will be uploaded to the `upratovanie` folder before saving it. But when the page is saved, it will get the URL cleaning-2.html and the other images will be uploaded to the `upratovanie-2` folder. You need to modify the code in `getPageUploadSubDir` so that instead of using the page title directly, it will try to get the URL for the new page and then use that (#58361).
 - [x] +HTTP headers - extend the maximum size of the HTTP header value to more than 255 characters, for `Content-Security-Policy` it is an insufficient size (#PR83, #58129).
 - [x] +Integration of AI tools, helpers, assistants (#57997).

@@ -289,7 +289,7 @@ public class MultistepFormsService {
      * Get the next step following the provided step within a form sequence.
      *
      * @param formName      logical form name
-     * @param currentStepId identifier of current step
+     * @param currentStep current step entity
      * @param repo          repository used to fetch ordered steps
      * @return next step entity or {@code null} if current step is the last
      * @throws IllegalStateException when the provided step does not belong to the form/domain

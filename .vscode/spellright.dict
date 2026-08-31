@@ -28,7 +28,9 @@ Angular
 anonymizovaná
 anonymizovane
 anonymizovaný
+anotovaná
 Anotované
+anotovanú
 anotovaný
 ANT
 antivírus
@@ -464,6 +466,7 @@ našepkávaču
 naštýlovaný
 naštýlovať
 neaktivity
+neanotovanú
 nekonzistencii
 nekonzistentnosť
 nepoužívajúce
@@ -552,6 +555,7 @@ podstránky
 podstránok
 podtémy
 Podtémy
+poduzlov
 point_left
 poolman
 poziciovaný
@@ -630,11 +634,14 @@ repozitári
 repozitároch
 repozitárom
 repozitárov
+repozitárových
 repozitáru
 requiredFields
 resetovanie
 resetovaný
 Resetovať
+resolvera
+Resolveru
 Responzíva
 Responzívna
 responzívne
@@ -645,6 +652,9 @@ restové
 Reštartnite
 reštartovania
 reštartovaniu
+reťazcové
+reťazcového
+reťazcových
 roadmap
 Rollback
 rolovateľné

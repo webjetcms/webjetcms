@@ -8,12 +8,32 @@ var numberName = "testNumberRow";
 var booleanName = "testBooleanRow";
 var stringTestValue = "testTestNow";
 var numberTestValue = 369;
+var stringFieldTypeEnumName;
+var stringFieldOriginalName;
+var stringFieldRenamedName;
+var stringFieldOptionLabel;
+var stringFieldOptionValue;
+var stringFieldOptionLabel2;
+var stringFieldOptionValue2;
+var stringFieldTooltip;
+
+const stringFieldsTableId = "datatableFieldDTE_Field_editorFields-stringFieldTypes";
+const stringFieldsWrapper = "#" + stringFieldsTableId + "_wrapper";
+const stringFieldsModal = "#" + stringFieldsTableId + "_modal";
 
 Before(({ I, login }) => {
     login('admin');
 
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomText();
+        stringFieldTypeEnumName = "EnumerationStringField-autotest-" + randomNumber;
+        stringFieldOriginalName = "City-autotest-" + randomNumber;
+        stringFieldRenamedName = "Country-autotest-" + randomNumber;
+        stringFieldOptionLabel = "Slovakia-autotest-" + randomNumber;
+        stringFieldOptionValue = "sk-autotest-" + randomNumber;
+        stringFieldOptionLabel2 = "Czechia-autotest-" + randomNumber;
+        stringFieldOptionValue2 = "cz-autotest-" + randomNumber;
+        stringFieldTooltip = "Enumeration-tooltip-autotest-" + randomNumber;
     }
 });
 
@@ -38,24 +58,22 @@ Scenario('Enum type zakladne testy @baseTest', async ({I, DataTables}) => {
 Scenario('Okresne mesta zakladne testy @baseTest', async ({I, DT, DataTables}) => {
     I.amOnPage("/apps/enumeration/admin/");
     DT.waitForLoader();
-    I.wait(1);
 
-    var string1 = "string1_"+randomNumber;
+    var fieldA = "fieldA_autotest_"+randomNumber;
 
     await DataTables.baseTest({
         dataTable: 'enumerationDataDataTable',
         perms: 'cmp_enumerations',
         testingData: {
-            "string1": string1
+            "fieldA": fieldA
         },
         createSteps: function(I, options) {
-            I.wait(3);
-            I.fillField("#DTE_Field_string1", string1);
-            I.fillField("#DTE_Field_string1", string1);
+            I.waitForVisible("#DTE_Field_fieldA", 10);
+            I.fillField("#DTE_Field_fieldA", fieldA);
         },
         afterCreateSteps: function(I, options, requiredFields) {
-            requiredFields.push("string1");
-            options.testingData[0] = string1;
+            requiredFields.push("fieldA");
+            options.testingData[0] = fieldA;
         },
         editSteps: function(I, options) {
 
@@ -228,6 +246,165 @@ Scenario('Enum type and data tests', ({I, DTE, DT}) => {
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });
 
+Scenario('Enumeration string field type setup', async ({I, DTE, DT}) => {
+    I.amOnPage("/apps/enumeration/admin/enumeration-type/");
+
+    I.clickCss("button.buttons-create");
+    DTE.waitForEditor('enumerationTypeDataTable');
+    I.dontSeeElement("#pills-dt-enumerationTypeDataTable-stringFieldTypes-tab");
+    I.fillField("#DTE_Field_typeName", stringFieldTypeEnumName);
+    I.clickCss("#pills-dt-enumerationTypeDataTable-strings-tab");
+    I.fillField("#DTE_Field_string1Name", stringFieldOriginalName);
+    DTE.save("enumerationTypeDataTable");
+
+    openEnumType(I, DT, DTE, stringFieldTypeEnumName);
+    I.clickCss("#pills-dt-enumerationTypeDataTable-stringFieldTypes-tab");
+    I.waitForVisible(stringFieldsWrapper, 10);
+    DT.waitForLoader(stringFieldsTableId);
+    I.see("Nenašli sa žiadne vyhovujúce záznamy", stringFieldsWrapper);
+
+    I.clickCss(stringFieldsWrapper + " button.buttons-create");
+    DTE.waitForEditor(stringFieldsTableId);
+    const alphabetOptions = await I.executeScript((selector) => {
+        return Array.from(document.querySelectorAll(selector)).map(option => option.value);
+    }, stringFieldsModal + " #DTE_Field_alphabet option");
+    I.assertTrue(alphabetOptions.includes("A"), "Named string field must be available for configuration");
+    I.assertFalse(alphabetOptions.includes("B"), "Unnamed string field must not be available for configuration");
+    DTE.selectOption("alphabet", "Reťazec 1 – " + stringFieldOriginalName);
+    DTE.selectOption("type", "Výberové pole");
+    I.waitForVisible(stringFieldsModal + " div.DTE_Field_Name_optionsSource", 10);
+    I.waitForVisible(stringFieldsModal + " div.DTE_Field_Name_selectOptions", 10);
+    I.dontSeeElement(stringFieldsModal + " div.DTE_Field_Name_enumeration");
+
+    I.checkOption(stringFieldsModal + " .DTE_Field_Name_optionsSource input[value='enumeration']");
+    I.waitForVisible(stringFieldsModal + " div.DTE_Field_Name_enumeration", 10);
+    I.waitForInvisible(stringFieldsModal + " div.DTE_Field_Name_selectOptions", 10);
+
+    I.checkOption(stringFieldsModal + " .DTE_Field_Name_optionsSource input[value='static']");
+    I.waitForVisible(stringFieldsModal + " div.DTE_Field_Name_selectOptions", 10);
+    I.waitForInvisible(stringFieldsModal + " div.DTE_Field_Name_enumeration", 10);
+    I.checkOption(stringFieldsModal + " #DTE_Field_required_0");
+    I.fillField(stringFieldsModal + " #DTE_Field_tooltip", stringFieldTooltip);
+    fillEnumerationStringFieldOptions(I, [
+        { label: stringFieldOptionLabel, value: stringFieldOptionValue },
+        { label: stringFieldOptionLabel2, value: stringFieldOptionValue2 }
+    ]);
+    DTE.save(stringFieldsTableId);
+
+    DT.checkTableRow(stringFieldsTableId, 1, [
+        "Reťazec 1 – " + stringFieldOriginalName,
+        "Výberové pole",
+        stringFieldOriginalName,
+        stringFieldTooltip
+    ]);
+
+    I.clickCss("#" + stringFieldsTableId + " tbody tr:first-child td:first-child");
+    I.clickCss(stringFieldsWrapper + " button.buttons-edit");
+    DTE.waitForEditor(stringFieldsTableId);
+    I.waitForText("Upraviť: Reťazec 1 – " + stringFieldOriginalName, 10, stringFieldsModal + " div.DTE_Header");
+    DTE.cancel(stringFieldsTableId, true);
+    DTE.cancel("enumerationTypeDataTable", true);
+});
+
+Scenario('Enumeration configured string field behavior', ({I, DTE, DT}) => {
+    I.amOnPage("/apps/enumeration/admin/");
+    filterEnumDataByType(I, DTE, stringFieldTypeEnumName);
+
+    I.clickCss("button.buttons-create");
+    DTE.waitForEditor('enumerationDataDataTable');
+    I.seeElement("#DTE_Field_fieldA");
+    I.dontSeeElement("#DTE_Field_fieldB");
+    I.seeElement(locate("label[for='DTE_Field_fieldA']").withText(stringFieldOriginalName));
+    I.seeElementInDOM("select#DTE_Field_fieldA");
+
+    DTE.save("enumerationDataDataTable");
+    I.see("Voliteľné pole je nastavené ako povinné.", "div.DTE_Field_Name_fieldA");
+    DTE.selectOption("fieldA", stringFieldOptionLabel2);
+    DTE.save("enumerationDataDataTable");
+    I.waitForText(stringFieldOptionLabel2, 10, "#enumerationDataDataTable tbody");
+});
+
+Scenario('Enumeration string field name synchronization', async ({I, DTE, DT}) => {
+    I.amOnPage("/apps/enumeration/admin/enumeration-type/");
+    openEnumType(I, DT, DTE, stringFieldTypeEnumName);
+
+    I.clickCss("#pills-dt-enumerationTypeDataTable-strings-tab");
+    I.fillField("#DTE_Field_string1Name", stringFieldRenamedName);
+    I.clickCss("#pills-dt-enumerationTypeDataTable-stringFieldTypes-tab");
+    I.waitForVisible(stringFieldsWrapper, 10);
+    DT.waitForLoader(stringFieldsTableId);
+
+    DT.checkTableRow(stringFieldsTableId, 1, [
+        "Reťazec 1 – " + stringFieldOriginalName,
+        "Výberové pole",
+        stringFieldOriginalName,
+        stringFieldTooltip
+    ]);
+    I.dontSee(stringFieldRenamedName, stringFieldsWrapper);
+
+    const requiredColumnVisible = await I.executeScript((wrapperSelector) => {
+        const header = document.querySelector(wrapperSelector + " th.dt-th-required");
+        return header != null && window.getComputedStyle(header).display !== "none";
+    }, stringFieldsWrapper);
+    I.assertFalse(requiredColumnVisible, "Required column must stay hidden in the nested table");
+
+    I.clickCss("#" + stringFieldsTableId + " tbody tr:first-child td:first-child");
+    I.clickCss(stringFieldsWrapper + " button.buttons-edit");
+    DTE.waitForEditor(stringFieldsTableId);
+    I.waitForText("Upraviť: Reťazec 1 – " + stringFieldOriginalName, 10, stringFieldsModal + " div.DTE_Header");
+    DTE.cancel(stringFieldsTableId, true);
+    DTE.save("enumerationTypeDataTable");
+
+    openEnumType(I, DT, DTE, stringFieldTypeEnumName);
+    I.clickCss("#pills-dt-enumerationTypeDataTable-stringFieldTypes-tab");
+    I.waitForVisible(stringFieldsWrapper, 10);
+    DT.waitForLoader(stringFieldsTableId);
+    DT.checkTableRow(stringFieldsTableId, 1, [
+        "Reťazec 1 – " + stringFieldRenamedName,
+        "Výberové pole",
+        stringFieldRenamedName,
+        stringFieldTooltip
+    ]);
+    I.clickCss("#" + stringFieldsTableId + " tbody tr:first-child td:first-child");
+    I.clickCss(stringFieldsWrapper + " button.buttons-edit");
+    DTE.waitForEditor(stringFieldsTableId);
+    I.waitForText("Upraviť: Reťazec 1 – " + stringFieldRenamedName, 10, stringFieldsModal + " div.DTE_Header");
+    DTE.cancel(stringFieldsTableId, true);
+    DTE.cancel("enumerationTypeDataTable", true);
+
+    I.amOnPage("/apps/enumeration/admin/");
+    filterEnumDataByType(I, DTE, stringFieldTypeEnumName);
+    I.see(stringFieldRenamedName, "#enumerationDataDataTable_wrapper thead");
+    I.clickCss("#enumerationDataDataTable tbody tr:first-child td.dt-select-td");
+    I.clickCss("#enumerationDataDataTable_wrapper button.buttons-edit");
+    DTE.waitForEditor("enumerationDataDataTable");
+    I.seeElement(locate("label[for='DTE_Field_fieldA']").withText(stringFieldRenamedName));
+    I.seeInField("#DTE_Field_fieldA", stringFieldOptionValue2);
+    DTE.cancel("enumerationDataDataTable", true);
+});
+
+Scenario('Enumeration string field type cleanup', async ({I, DTE, DT}) => {
+    I.amOnPage("/apps/enumeration/admin/enumeration-type/");
+    DT.waitForLoader("enumerationTypeDataTable");
+    openEnumType(I, DT, DTE, stringFieldTypeEnumName);
+    I.clickCss("#pills-dt-enumerationTypeDataTable-stringFieldTypes-tab");
+    I.waitForVisible(stringFieldsWrapper, 10);
+    DT.waitForLoader(stringFieldsTableId);
+    I.clickCss("#" + stringFieldsTableId + " tbody tr:first-child td:first-child");
+    I.clickCss(stringFieldsWrapper + " button.buttons-remove");
+    I.waitForVisible(stringFieldsModal + " div.DTE_Action_Remove", 10);
+    I.click("Zmazať", stringFieldsModal + " div.DTE_Action_Remove");
+    I.waitForInvisible("div.DTE_Processing_Indicator", 200);
+    I.waitForInvisible(stringFieldsModal, 30);
+    DT.waitForLoader(stringFieldsTableId);
+    I.see("Nenašli sa žiadne vyhovujúce záznamy", stringFieldsWrapper);
+    DTE.cancel("enumerationTypeDataTable", true);
+
+    DT.filterEquals("typeName", stringFieldTypeEnumName);
+    await deleteAllIfPresent(I, DT, "enumerationTypeDataTable");
+    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+});
+
 Scenario('Test special import logic', ({I, DTE, DT}) => {
     /**
      * During import when we choose option UPDATE, we can have data from another enum type.
@@ -297,8 +474,8 @@ function createEnumData(I, DTE, variant, childEnumType, parentEnumData, bonusStr
     I.see(booleanName + variant.toUpperCase());
 
     //Set enum data value
-    I.clickCss("#DTE_Field_string1");
-    I.fillField("#DTE_Field_string1", stringTestValue + bonusStrChar);
+    I.clickCss("#DTE_Field_fieldA");
+    I.fillField("#DTE_Field_fieldA", stringTestValue + bonusStrChar);
 
     I.clickCss("#DTE_Field_decimal1");
     I.fillField("#DTE_Field_decimal1", numberTestValue);
@@ -393,4 +570,28 @@ function filterEnumDataByType(I, DTE, typeName) {
     I.fillField("body > div.bs-container.dropdown.bootstrap-select.form-select > div > div.bs-searchbox > input", typeName);
     I.clickCss("a[role=option] > span");
     DTE.waitForLoader();
+}
+
+function fillEnumerationStringFieldOptions(I, options) {
+    I.waitForVisible(stringFieldsModal + " div.DTE_Field_Name_selectOptions", 10);
+
+    options.forEach((option, index) => {
+        if(index > 0) {
+            I.clickCss(stringFieldsModal + " div.DTE_Field_Name_selectOptions button.options-add-btn");
+        }
+
+        const rowSelector = stringFieldsModal + " div.DTE_Field_Name_selectOptions .options-inputs .options-input-row:nth-child(" + (index + 1) + ")";
+        I.fillField(rowSelector + " input.options-value-1", option.label);
+        I.fillField(rowSelector + " input.options-value-2", option.value);
+    });
+}
+
+async function deleteAllIfPresent(I, DT, tableId) {
+    const rowCount = await I.executeScript((id) => {
+        return window.$("#" + id).DataTable().page.info().recordsDisplay;
+    }, tableId);
+
+    if(rowCount > 0) {
+        DT.deleteAll(tableId);
+    }
 }

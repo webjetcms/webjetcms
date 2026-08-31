@@ -48,7 +48,7 @@ Vysvětlení použitých piktogramů:
 - [x] +Přesměrování - doplnit funkci čištění přesměrování - smaže staré přesměrování (bylo původně `aaa-bbb` a pak vzniklo `aaa-ccc` takže `aaa-bbb` nemá smysl = smaže se) a zkontroluje cyklické přesměrování ve kterém smaže poslední krok. Také optimalizovat přesměrování `aaa-bbb-ccc` na `aaa-ccc` (#58629).
 - [x] +Galerie - přidat možnost nastavit jiný způsob změny velikosti na velký obrázek. na malý obrázek se aplikuje Oříznout na míru (chtějí mít čtverec) a na velký přesná šířka (zachová poměr stran). Ve výchozím nastavení bude hodnota NULL=stejně jako pro malý obrázek (#58633).
 - [x] Volitelná pole - přidat možnost výběru více položek pro napojení na číselník (#58637).
-- [ ] +Číselníky - přidat možnost definovat typ pole pro řetězec jak máme ve volitelných polích (#58641).
+- [x] +Číselníky - přidat možnost definovat typ pole pro řetězec jak máme ve volitelných polích (#58641).
 - [x] +Fotobanka - přidat možnost nastavit název souboru před stažením z fotobanky, automaticky nastavit podle hledaného výrazu (#58645).
 - [x] +Úkoly na pozadí - možnost manuálně spustit úlohu na `node`, který má úloha nastaven, nyní se spustí na `node` kde je uživatel přihlášen (#58718).
 - [ ] +Číselník, Blog, Novinky - upravit tak, aby výběr typu číselníku nebo složky pro novinky byl vlevo podobně jako v galerii/webových stránkách. Nemusí být pak karty ale vše najednou zobrazeno.
@@ -108,7 +108,8 @@ Vysvětlení použitých piktogramů:
 - [x] +Zrcadlení struktury - přidat možnost vymazat `sync_id` hodnoty pro zvolenou složku (rekurzivní). Aby bylo snadno možné zrušit/resetovat synchronizaci. Také existuje problém, že naklonuji `SK,DE,EN` poté vypnu `DE` a chci mít jen `EN` ale zrcadlení stále aplikuje změny i na `DE` složku (#57561).
 - [ ] +Do testů v GitHube přidat verifikaci `autoupdate` pro všechny podporované databázové servery - čili inicializovat prázdnou databázi a ověřit všechny `autoupdate` a ověřit, že přejdou bez chyby. Udělat jako samostatnou pipeline.
 - [x] Galerie - umožnit změnu cesty galerie (složky) a nastavit vše s tím spojené (#58433).
-- [ ] +Konfigurace - doplnit sloupec skupina s hodnotou `modules` konfigurační proměnné (výběrové pole, může mít více hodnot). Doplnit možnost zobrazit i nenastavené proměnné (neboli kompletní seznam). Vytvořit nástroj pro vygenerování všech proměnných podle skupin/modulů do `md` souboru v dokumentaci pro přehled všech proměnných.
+- [x] +Konfigurace - doplnit hierarchický strom modulů a možnost zobrazit i nenastavené proměnné (kompletní seznam).
+- [ ] +Konfigurace - vytvořit nástroj pro vygenerování všech proměnných podle skupin/modulů do `md` souboru v dokumentaci.
 - [x] +Pokud mám neuloženou stránku s titulkem Úklid a už existuje jiná stránka s názvem Úklid, tak nově nahrané obrázky se před jejím uložením nahrají do složky `upratovanie`. Ale když se stránka uloží, získá URL adresu úklid-2.html a další obrázky se již nahrají do složky `upratovanie-2`. Je třeba upravit kód v `getPageUploadSubDir` tak, aby místo přímého použití titulku stránky zkusil získat URL adresu pro novou stránku a to pak použil (#58361).
 - [x] +HTTP hlavičky - rozšířit maximální velikost hodnoty HTTP hlavičky na více než 255 znaků, pro `Content-Security-Policy` je to nedostatečná velikost (#PR83, #58129).
 - [x] +Integrace AI nástrojů, pomocníků, asistentů (#57997).

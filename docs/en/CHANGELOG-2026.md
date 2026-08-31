@@ -8,6 +8,8 @@
 
 - The dependency on the [Vue.js](https://vuejs.org) library has been removed from the administration. We recommend checking the compatibility of your own applications before updating. The size of JavaScript files has been reduced by approximately 170kB, which also has an impact on the speed of administration initialization. More in the [programmer section](#programmer).
 - AspectJ - support for `load-time weavingu` (`aspectjweaver` and `META-INF/aop-ajc.xml`) has been removed from the distribution; built-in aspects are processed at compile time, more in [programmer section](#programmer section). When using in a MultiWeb installation, you can remove the `-javaagent:/www/tomcat/.../aspectjweaver.jar` setting from `JAVA_OPTS` in the application server (#290).
+- Export content for Flash - the historical feature of generating XML files `/flash_xml/{docId}.xml` when publishing a page has been removed. The configuration variable `exportFlash` is no longer supported and defining it in `SpringConfig` will not restore the feature (#293).
+- Microsoft SQL Server - support for versions older than 2012 has been discontinued and the `mssqlUseOldTopQuery` configuration variable has been removed. WebJET CMS requires Microsoft SQL Server 2012 or later, the old paging method using `TOP` is no longer supported (#293).
 
 ### Websites
 
@@ -86,6 +88,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Applications
 
+- Codebooks - for named string fields, the field type, selection options, mandatory, help text, and length restrictions can be set in the new [String Field Types] tab (redactor/apps/enumeration/README.md#karta-typy-ťazcových-polí) just like for optional fields. The menu and configuration names are based on the last saved version of the codebook type. Unnamed fields remain hidden, are not evaluated as mandatory, and fields without a specific configuration are displayed as regular text. Older custom Excel templates and REST API integrations need to be modified from `string1` to `string12` to `fieldA` to `fieldL` (#58641).
+
+![](editor/apps/enumeration/editor_stringFieldTypes.png)
+
 - E-commerce - added [Statistics] application (redactor/apps/eshop/stats/README.md) with summary indicators, filtering by status, currency and period, and graphs of sales, products, categories, delivery methods and payment methods (#58065).
 
 ![](redactor/apps/eshop/stats/stats.png)
@@ -136,6 +142,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Other minor changes
 
+- Configuration - added hierarchical tree of configuration variables with **Changed**, **Custom**, **All** views and module branches (#293).
 - Configuration - added **Set Temporarily** option, which sets the value of the configuration variable only on the current node without saving it to the database. After a restart, the value saved in the database will be restored (#291).
 
 ![](admin/setup/configuration/page.png)
@@ -202,6 +209,104 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Updated [Tabler Icons](https://tabler.io/icons) library to version 3.44.0, fixed issue with simultaneous use of `Outline` and `Filled` sets (#58509).
 - Web pages - if you need to have an empty first line in the configuration variable `imageMagickCustomParams*` for [custom parameter settings](redactor/apps/gallery/README.md#custom-parameters-imagemagick) `ImageMagick` enter the value `---`.
 - Translation keys - adjusted auditing of missing translation keys - excluded auditing if later testing whether the key actually exists (#261).
+
+- Configuration - obsolete configuration variables have been removed from classes `Constants` and `ConstantsV9`. If you use them in your project, you can add the necessary definition to your `SpringConfig`:
+
+```java
+		setString("smsSendCmd", "", MOD_SMS,
+				"Format pre odosielanie SMS, pre Orange:email e2sms@e2sms.orange.sk smtp.iway.sk tomas.kosec@interway.sk, pre T-Mobile:email sms.eurotel.sk obsidian.interway.sk");
+		setString("smsSendInternational", "", MOD_SMS, "Format cisla pre SMS, moze mat hodnoty ++42, +42, 42");
+		setInt("smsSendMaxlength", 140, MOD_SMS, "maximalna dlzka SMS spravy");
+		setString("syncRemoteServer", "", "sync", "Adresa servera, s ktorym sa tento synchronizuje");
+		setString("multilang", "", MOD_CONFIG, "overwrite string na ziskanie moznych hodnot MultilangDB");
+		setBoolean("editorEnableXHTML", true, MOD_OBSOLETE, "xhtml mode for Struts framework");
+		setBoolean("usrLogonRequireSMS", false, "user;security",
+				"ak je true, tak prihlasenie na stranke vyzaduje SMS autorizaciu, vyzaduje nastavenie modulu SMS");
+		setString("fbrowserFileEditor", "editarea", MOD_OBSOLETE, "typ editora suborov - normal, alebo editarea");
+		setString("chartColors", "#5C5CF7,#F75C5C,#5CF75C,#FFC165,#E463E4,#A13600,#55FFFF,#FFAFAF,#B10505,#065BD8",
+				"stat;config", "farby ciar a textov pre grafy statistiky (Open Flash Chart)");
+		setString("mapGoogleLicense", "", "map", "predvoleny licencny kluc pre google mapy");
+		setBoolean("magzillaChangeEmailRecipients", true, MOD_MAGZILLA,
+				"flag ci sa v magzille pri commente k bugu zobrazi moznost zmenit komu sa posle email, alebo sa nezobrazi a maily sa poslu podla default nastaveni");
+		setString("magzilla_mail_sufix", "interway.sk", MOD_MAGZILLA, "suffix emailu pre komunikaciu s magzillou");
+		setString("magzilla_web", "", MOD_MAGZILLA,
+				"base URL adresa pre magzilla stranky (napr. http://www.interway.sk/helpdesk)");
+		setString("magzilla_attachments_dir", "/files/helpdesk/", MOD_MAGZILLA, "adresar pre prilohy magzilly");
+		setString("mgz_mailbox", "INBOX", MOD_MAGZILLA, "udaje pre mail parser helpdesku - priecinok s inboxom");
+		setString("mgz_user_name", "", MOD_MAGZILLA, "udaje pre mail parser helpdesku - prihlasovacie meno");
+		setString("mgz_host", "", MOD_MAGZILLA, "udaje pre mail parser helpdesku - adresa POP3 servera");
+		setInt("mgz_port", -1, MOD_MAGZILLA, "udaje pre mail parser helpdesku - port POP3 servera");
+		setBoolean("mgz_use_ssl", false, MOD_MAGZILLA,
+				"udaje pre mail parser helpdesku - pouzitie SSL pri pristupe k POP3 serveru");
+		setString("mgz_password", "", MOD_MAGZILLA, "udaje pre mail parser helpdesku - heslo");
+		setString("mgz_client_type", "pop3", MOD_MAGZILLA, "udaje pre mail parser helpdesku - typ pripojenia");
+		setString("mgz_strings",
+				"__________ Informacia od ESET NOD32 Antivirus|--\nS pozdravom|<br>--\n<br>|<pre class=\"moz-signature\"|<p class=MsoAutoSig>",
+				MOD_MAGZILLA, "zoznam retazcov oddelenych znakom | za ktorymi sa povazuje sprava za ukoncenu");
+		setString("mgz_subjects", "Re:|Fwd:|FW:", MOD_MAGZILLA, "prefixy, ktore sa odstranuje z predmetu spravy");
+		setString("mgzManagerGroupName", "Prava-manazeri", MOD_MAGZILLA, "Nazov hlavnej skupiny manazerov");
+		setString("mgzClientGroupName", "HD Klienti", MOD_MAGZILLA, "Nazov hlavnej skupiny klientov");
+		setString("mgzSolverGroupName", "Prava-solveri", MOD_MAGZILLA, "Nazov hlavnej skupiny solverov");
+		setString("mgzTesterGroupName", "Prava-testeri", MOD_MAGZILLA, "Nazov hlavnej skupiny testerov");
+		setString("mgzManagerBugViews", "managerAllBugs,managerWaitingBugs,allNewBugs,allBugs,notSolvedBugs,solvedBugs",
+				MOD_MAGZILLA,
+				"predvolene pohlady bugov generovane do selectBoxu v MagZille pri parametri allowBugs=all, generuju sa do selectBoxu podla poradia - pre manazera");
+		setString("mgzClientBugViews", "clientAllBugs,clientWaitingBugs,clientSolvedBugs", MOD_MAGZILLA,
+				"predvolene pohlady bugov generovane do selectBoxu v MagZille pri parametri allowBugs=all, generuju sa do selectBoxu podla poradia -  pre klienta");
+		setString("mgzSolverBugViews", "assignedSolverBugs,allNewBugs,notSolvedBugs,solvedBugs", MOD_MAGZILLA,
+				"predvolene pohlady bugov generovane do selectBoxu v MagZille pri parametri allowBugs=all, generuju sa do selectBoxu podla poradia - pre solvera");
+		setString("mgzTesterBugViews", "assignedTesterBugs,newTesterBugs,allTesterBugs,notSolvedBugs,solvedBugs",
+				MOD_MAGZILLA,
+				"predvolene pohlady bugov generovane do selectBoxu v MagZille pri parametri allowBugs=all, generuju sa do selectBoxu podla poradia - pre testera");
+		setString("microsite_web", "", MOD_MICROSITE,
+				"base URL adresa pre microsite stranky (napr. http://www.interway.sk/microsite)");
+		setInt("KurzyDBCacheInMinutes", 60, "kurzy;performance", "default nastavenie poctu minut, pre KurzyDB");
+		setBoolean("magmaSaveAttendance", false, "magma",
+				"Nastavenim na true sa bude zaznamenavat prihlasenie pouzivatela do prace");
+		setString("magma_defaultApproverEmail", "", "magma",
+				"email adresa pre schvalovanie dovoleniek ak nie je nikto nastaveny");
+		setString("magma_holidaysApproveCC", "", "magma",
+				"CC email so spravou o schvaleni dovolenky (napr. email ekonomky)");
+		setString("magmaCalendarLoginEnabled", "", "magma",
+				"ciarkou oddeleny zoznam IP adries z ktorych sa zaznamena prichod a odchod do prace (aby sa nezaznamenal prichod do prace napr. z domu");
+		setString("usersPositionListReport", "", MOD_MAGZILLA,
+				"Pre helpdesk definuje zoznam pozicii zamestnanca, pre ktore sa budu generovat reporty. Jednotlive pozicie sa oddeluju znakom |.");
+		setString("magma_meetingUserGroup", "", "magma",
+				"Názov skupiny z ktorej sa budú zobrazovat pouzivatelia pri vytvarani schodzky");
+		setString("magzilla_private_web", "", MOD_MAGZILLA,
+				"interna base URL adresa pre magzilla stranky(napr. http://intra.iway.sk/helpdesk)");
+		setString("magzillaNotifyOnTicket", "", MOD_MAGZILLA,
+				"Zoznam bodkociarkou oddelenych zaznamov v tvare id ticketu:email napr. (5555:helpdesk@iway.sk;). Nasledne ak si pouzivatel prida ticket 5555 do kalendara, odosle sa mail na helpdesk@iway.sk");
+		setBoolean("webdavActive", false, "webdav", "Určuje či je prístup cez WebDav aktívny");
+		setString("webdavUrlPrefix", "webdav", "webdav", "Určuje prefix cez ktorý je WebDav pristupny napr 'webdav' ");
+		setString("webdavSharedDirectories", "/css/;/jscripts/;/files/;/images/", "webdav",
+				"Urcuje, ktore adresare su pristupne cez WebDav. Priklad : /images/;/files/;");
+		setString("mgzAutoreplyWords", "Out Of Office|Automatická odpoveď|AutoReply", MOD_MAGZILLA,
+				"Slovička, ktorými sa definujú autoreply maily v predmete správy. Takéto správy sa odstraňujú. Pokiaľ je hodnota prázdna, tak sa funkcia odstraňovania takýchto e-mailov vypne.");
+		setString("magzillaAutomaticChangeStatus", "RIESI SA,In progress", MOD_MAGZILLA,
+				"Automatická zmena statusu ticketu pri vytvorení nového záznamu do kalendára z prostredia helpdesk v intranete");
+		setBoolean("dragDropUploadEnabled", true, MOD_OBSOLETE,
+				"Povolenia Drag & Drop nahrávania súborov z desktopu do WebJETu vo FireFoxe");
+		setBoolean("googleDocsEnabled", false, "Googel Docs",
+				"Ak je nastavene na true, spristupni sa upload a otvorenie prilohy v ticketoch cez Google Docs.");
+		setString("googleDocsConsumerKey", "", "Googel Docs",
+				"Kluc pre domenu, cez ktoru sa bude ku Google Docs pristupovat. Ak je prazdne, Google Docs v tiketoch nie je pristupny.");
+		setString("googleDocsConsumerSecret", "", "Googel Docs",
+				"Secret pre domenu, cez ktoru sa bude ku Google Docs pristupovat. Ak je prazdne, Google Docs v tiketoch nie je pristupny.");
+		setString("mgzBugErrorStrings", "bug,chyba", MOD_MAGZILLA, " Vyhladavane texty pri nefakturovanom case");
+		setBoolean("zmluvyApprovEditChanges", false, "zmluvy",
+				"Pokial je nastavena hodnota na true, tak editovanu zmluvu bude treba opatovne schvalit na publikaciu. E-mail o zmene sa posle schvalovatelom ci je hodnota true alebo false.");
+		setBoolean("portalStartup", false, "portal", "Spustanie portalu pri starte WJ");
+		setString("AngularCDNVersion", "2.0.0-beta.0");
+		setBoolean("sassCompilerEnabled", false, MOD_CONFIG,
+				"nastavenim na true, sa zapne kompilacia sass a scss suborov");
+		setString("AngularCDNVersion", "", "angular", "Verzia angular.io ktora sa ma vlozit do stranky");
+		setString("emailAttachmentsPublisher.pop3.host", "", "emailAttachmentsPublisher", "adresa na pop3");
+		setString("emailAttachmentsPublisher.pop3.user", "", "emailAttachmentsPublisher", "pouzivatel na pop3");
+		setString("emailAttachmentsPublisher.pop3.password", "", "emailAttachmentsPublisher", "heslo na pop3");
+		setBoolean("zmluvyEnableVo", false, "zmluvy",
+				"Ak je nastavena na true, tak sa budu zobrazovat aj skupiny pre verejne obstaravanie.");
+```
 
 ## 2026.18
 
