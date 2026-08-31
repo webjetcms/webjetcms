@@ -2,6 +2,70 @@ const fs = require("fs").promises;
 const path = require("path");
 const { randomBytes } = require("crypto");
 const { threadId } = require("worker_threads");
+
+const PLAYWRIGHT_CORE_ROOT = path.dirname(require.resolve("playwright-core/package.json"));
+const PLAYWRIGHT_VIDEO_OPTIONS = {
+  "-b:v": { original: "1M", highQuality: "50M" },
+  "-crf": { original: "8", highQuality: "0" },
+  "-qmax": { original: "50", highQuality: "4" }
+};
+const PROCESS_LAUNCHER_PATCH = Symbol.for("webjet.video.high-quality.process-launcher");
+const CR_SESSION_PATCH = Symbol.for("webjet.video.high-quality.cr-session");
+
+function replacePlaywrightVideoOption(args, option, values, codecIndex) {
+  const optionIndex = args.indexOf(option, codecIndex);
+  if (optionIndex === -1 || args[optionIndex + 1] !== values.original) {
+    throw new Error(
+      `Unsupported Playwright video encoder signature for ${option}. ` +
+      "Revalidate the high-quality video profile after upgrading Playwright."
+    );
+  }
+  args[optionIndex + 1] = values.highQuality;
+}
+
+function installHighQualityVideoProfile() {
+  if (process.env.CODECEPT_VIDEO !== "true") return;
+
+  const processLauncher = require(path.join(PLAYWRIGHT_CORE_ROOT, "lib/utils/processLauncher.js"));
+  if (processLauncher[PROCESS_LAUNCHER_PATCH] !== true) {
+    const originalLaunchProcess = processLauncher.launchProcess;
+    processLauncher.launchProcess = (options) => {
+      const originalArgs = options.args;
+      if (!Array.isArray(originalArgs)) return originalLaunchProcess(options);
+
+      const codecIndex = originalArgs.findIndex((arg, index) => {
+        return arg === "-c:v" && originalArgs[index + 1] === "vp8";
+      });
+      const outputFile = originalArgs[originalArgs.length - 1];
+      const isPlaywrightVideoEncoder = codecIndex !== -1 &&
+        typeof outputFile === "string" && outputFile.endsWith(".webm") &&
+        path.basename(String(options.command)).startsWith("ffmpeg");
+      if (!isPlaywrightVideoEncoder) return originalLaunchProcess(options);
+
+      const args = [...originalArgs];
+      for (const [option, values] of Object.entries(PLAYWRIGHT_VIDEO_OPTIONS)) {
+        replacePlaywrightVideoOption(args, option, values, codecIndex);
+      }
+      return originalLaunchProcess({ ...options, args });
+    };
+    processLauncher[PROCESS_LAUNCHER_PATCH] = true;
+  }
+
+  const { CRSession } = require(path.join(PLAYWRIGHT_CORE_ROOT, "lib/server/chromium/crConnection.js"));
+  if (CRSession.prototype[CR_SESSION_PATCH] !== true) {
+    const originalSend = CRSession.prototype.send;
+    CRSession.prototype.send = function(method, params) {
+      if (method === "Page.startScreencast" && params?.format === "jpeg") {
+        params = { ...params, quality: 100 };
+      }
+      return originalSend.call(this, method, params);
+    };
+    CRSession.prototype[CR_SESSION_PATCH] = true;
+  }
+}
+
+installHighQualityVideoProfile();
+
 const Playwright = require("codeceptjs/lib/helper/Playwright");
 
 function sanitizeScenarioName(test) {

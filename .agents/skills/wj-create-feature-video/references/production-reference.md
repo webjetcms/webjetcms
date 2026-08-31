@@ -23,6 +23,14 @@ The default frame and viewport are 1920 x 1080. Override them with
 `CODECEPT_VIDEO_WIDTH` and `CODECEPT_VIDEO_HEIGHT`. Use Chromium unless the
 feature specifically demonstrates another browser.
 
+The Chromium recording profile is optimized as a high-quality editing source:
+screencast frames use JPEG quality 100 and the VP8 encoder uses a 50 Mb/s target
+bitrate, CRF 0, and a maximum quantizer of 4. This replaces Playwright's low
+1 Mb/s target bitrate, which produces visible artifacts in Full HD recordings.
+The actual bitrate is content-dependent and can be lower on static screens.
+This profile uses more CPU and produces much larger files, so run video
+scenarios serially and inspect motion continuity on the recording machine.
+
 `CODECEPT_VIDEO_CURSOR=true` installs a Shadow DOM overlay in every document.
 The overlay follows Playwright mouse events and shows a ring on mouse down. Each
 `I.videoClick(locator)` moves along a gentle cubic Bezier S-curve, alternates the
@@ -86,16 +94,31 @@ changing recording infrastructure. The repository originally introduced this
 workflow on CodeceptJS 3.6.10 and Playwright 1.49.1, which support WebM recording
 but not Playwright's newer screencast cursor.
 
+The high-quality profile currently applies a runtime adapter inside the
+video-only process to Playwright's private Chromium encoder because the public
+`recordVideo` API does not expose image quality, bitrate, codec, or format.
+Revalidate the adapter whenever Playwright is upgraded. Current upstream
+Playwright also uses a fixed 1 Mb/s VP8/WebM target bitrate, so an upgrade alone
+does not resolve recording quality.
+
 After upgrading to a compatible current stack, evaluate the native CodeceptJS
 `screencast` plugin and Playwright action annotations. Playwright 1.59 introduced
 `page.screencast`; Playwright 1.61 added a synthetic pointer to action overlays.
 Do not enable helper video and the screencast plugin together, because that
 creates two recordings.
 
+Keep WebM as the captured source unless a full external FFmpeg installation is
+part of the production environment. The bundled FFmpeg shipped with the pinned
+Playwright version exposes VP8 as its only video encoder. Post-converting to MP4
+or MOV changes compatibility, not captured detail, and should always start from
+the high-quality WebM rather than an older low-bitrate recording.
+
 Official references:
 
 - [Playwright videos](https://playwright.dev/docs/videos)
 - [Playwright screencast API](https://playwright.dev/docs/api/class-screencast)
+- [Playwright video encoder source](https://github.com/microsoft/playwright/blob/main/packages/playwright-core/src/server/videoRecorder.ts)
+- [Playwright video quality controls request](https://github.com/microsoft/playwright/issues/17217)
 - [Playwright BrowserContext addInitScript](https://playwright.dev/docs/api/class-browsercontext#browser-context-add-init-script)
 - [CodeceptJS Playwright integration](https://codecept.io/playwright/)
 - [CodeceptJS screencast plugin](https://codecept.io/plugins/screencast)

@@ -39,11 +39,18 @@ npm run video -- video/293-config-jstree-view.js
 npm run video:current
 ```
 
-Both commands create a 1920 x 1080 WebM file named after the scenario in
-`build/test/videos`, for example `293-config-jstree-view.webm`. Running the same
-scenario again replaces the previous file. Both commands show the browser,
-which is useful while adjusting the walkthrough or when an external screen
-recorder is preferred.
+Both commands create a high-quality 1920 x 1080 WebM file named after the
+scenario in `build/test/videos`, for example `293-config-jstree-view.webm`.
+The video-only helper raises Chromium frame quality to 100 and replaces
+Playwright's 1 Mb/s VP8 target bitrate with a 50 Mb/s target, CRF 0, and a
+maximum quantizer of 4 to preserve UI detail. Running the same scenario again
+replaces the previous file. Both commands show the browser, which is useful
+while adjusting the walkthrough or when an external screen recorder is
+preferred.
+
+The actual bitrate remains content-dependent. This profile uses more CPU and
+produces much larger files, so record video scenarios serially and check motion
+continuity on the recording machine.
 
 Only the active page at the end of a scenario becomes the final recording.
 Keep meaningful multi-tab or browser-external transitions as manual shots.
@@ -54,6 +61,12 @@ would produce two cursors.
 
 The WebM contains the browser viewport and no narration. Generate the voiceover
 in ElevenLabs and combine it with the recording in the video editor.
+
+WebM is the native container of Playwright's bundled VP8 encoder. Renaming the
+file to `.mp4` or `.mov` does not convert it. If an editor requires another
+format, convert the high-quality WebM with a full FFmpeg installation. This can
+improve editor compatibility but cannot add detail that was not captured in the
+source recording.
 
 The dimensions can be overridden with `CODECEPT_VIDEO_WIDTH` and
 `CODECEPT_VIDEO_HEIGHT`. The cursor lead-in can be adjusted between 0 and 2000
