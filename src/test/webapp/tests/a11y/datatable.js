@@ -592,8 +592,9 @@ Scenario("p48: webpage CKEditor priority focus", async ({ I, DTE }) => {
 
         const state = await I.executeScript(modalSelector => {
             const dialog = document.querySelector(modalSelector);
-            const priorityTarget = dialog?.querySelector('.focus-priority.focus-priority-ckeditor');
-            const field = priorityTarget?.closest('.DTE_Field');
+            const priorityMarker = dialog?.querySelector('.focus-priority');
+            const field = priorityMarker?.closest('.DTE_Field');
+            const source = field?.querySelector('textarea');
             const editor = Object.values(window.CKEDITOR?.instances || {}).find(instance =>
                 instance.container?.$ != null && field?.contains(instance.container.$)
             );
@@ -607,13 +608,13 @@ Scenario("p48: webpage CKEditor priority focus", async ({ I, DTE }) => {
                 focusManagerActive: editor?.focusManager?.hasFocus === true,
                 iframeActive: frame != null && document.activeElement === frame,
                 editableActive: frame?.contentDocument?.activeElement === editable,
-                priorityTargetFound: priorityTarget != null,
-                priorityTargetHidden: priorityTarget != null && priorityTarget.offsetParent == null
+                priorityFieldFound: field != null,
+                sourceHidden: source != null && source.offsetParent == null
             };
         }, modal);
 
-        I.assertTrue(state.priorityTargetFound, `${label}: CKEditor source must have the focus priority markers`);
-        I.assertTrue(state.priorityTargetHidden, `${label}: the priority source textarea must remain hidden`);
+        I.assertTrue(state.priorityFieldFound, `${label}: CKEditor field must have the focus priority marker`);
+        I.assertTrue(state.sourceHidden, `${label}: the CKEditor source textarea must remain hidden`);
         I.assertTrue(state.editorFound, `${label}: the priority field must resolve its CKEditor instance`);
         I.assertTrue(state.editorReady, `${label}: CKEditor must be ready before the DTE focus state is ready`);
         I.assertEqual(state.editorMode, "wysiwyg", `${label}: CKEditor must use the editable WYSIWYG mode`);

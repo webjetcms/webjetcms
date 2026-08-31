@@ -8,48 +8,25 @@ export function typeWysiwyg() {
         return conf.EDITOR.field(conf.data);
     }
 
+    /**
+     * Adds an asynchronous CKEditor write to the single readiness chain used by default focus.
+     * The DTE open lifecycle queues these writes before focusWhenReady reads the chain.
+     *
+     * @param {Object} conf DataTables Editor field configuration.
+     * @param {Promise} operation CKEditor operation that must finish before focus is safe.
+     * @returns {void}
+     */
     function trackEditorOperation(conf, operation) {
-        conf.wjeditorOperationPromise = Promise.all([
-            conf.wjeditorOperationPromise || Promise.resolve(),
-            Promise.resolve(operation)
+        conf.wjeditorReadyPromise = Promise.all([
+            conf.wjeditorReadyPromise,
+            operation
         ]);
     }
 
-    function waitForRetry(deadline) {
+    function wait(delay) {
         return new Promise(resolve => {
-            setTimeout(resolve, Math.min(FOCUS_RETRY_DELAY_MS, Math.max(0, deadline - Date.now())));
+            setTimeout(resolve, delay);
         });
-    }
-
-    async function waitForTrackedEditorOperations(conf, canFocus, deadline) {
-        while (canFocus() && Date.now() < deadline) {
-            const initializationPromise = conf.wjeditorInitializationPromise || Promise.resolve();
-            const operationPromise = conf.wjeditorOperationPromise || Promise.resolve();
-            let operationState = 'pending';
-
-            Promise.all([initializationPromise, operationPromise]).then(
-                () => operationState = 'ready',
-                error => {
-                    console.error("Error preparing CKEditor for focus:", error);
-                    operationState = 'failed';
-                }
-            );
-
-            await Promise.resolve();
-            while (operationState === 'pending' && canFocus() && Date.now() < deadline) {
-                await waitForRetry(deadline);
-            }
-
-            if (operationState !== 'ready') return false;
-            if (
-                initializationPromise === conf.wjeditorInitializationPromise &&
-                operationPromise === conf.wjeditorOperationPromise
-            ) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     return {
@@ -117,9 +94,9 @@ export function typeWysiwyg() {
             }
 
             conf.wjeditor = null;
-            conf.wjeditorOperationPromise = Promise.resolve();
-            conf.wjeditorInitializationPromise = new Promise(resolve => {
-                conf.resolveWjeditorInitialization = resolve;
+            let resolveInitialEditorReady;
+            conf.wjeditorReadyPromise = new Promise(resolve => {
+                resolveInitialEditorReady = resolve;
             });
             EDITOR.on( 'open', function ( e, type ) {
                 //console.log("DT WYSIWYG Editor OPEN, e=", e, "type=", type);
@@ -153,12 +130,11 @@ export function typeWysiwyg() {
                                 //instancia ckeditora, potrebuju to rozne pluginy a podobne, takze zatial takto kvoli spatnej kompatibilite
                                 window.ckEditorInstance = conf.wjeditor.ckEditorInstance;
 
-                                const jsonReadyPromise = conf.wjeditor.setJson(EDITOR.currentJson);
-                                //on first run call also setData to push HTML content after JSON is set (so there will be correct CSS styles allready set in editor)
-                                const dataReadyPromise = conf.wjeditor.setData(EDITOR.currentJson.data);
-                                const initializationPromise = Promise.all([jsonReadyPromise, dataReadyPromise]);
-                                trackEditorOperation(conf, initializationPromise);
-                                conf.resolveWjeditorInitialization(initializationPromise);
+                                // Set data after JSON on first initialization so CKEditor loads the correct page styles.
+                                resolveInitialEditorReady(Promise.all([
+                                    conf.wjeditor.setJson(EDITOR.currentJson),
+                                    conf.wjeditor.setData(EDITOR.currentJson.data)
+                                ]));
 
                                 //nastav otvorene docid do inputu
                                 if (typeof window.jsTreeDocumentOpener != "undefined" && typeof EDITOR.currentJson != "undefined" && EDITOR.currentJson != null) window.jsTreeDocumentOpener.setInputValue(EDITOR.currentJson.docId);
@@ -334,11 +310,27 @@ export function typeWysiwyg() {
             }, DIRTY_CHECK_DELAY_MS);
         },
 
+        /**
+         * Focuses the editable CKEditor surface after initialization and pending data writes complete.
+         *
+         * @param {Object} conf DataTables Editor field configuration.
+         * @param {Function} [canFocus] Returns false when the dialog focus request is obsolete.
+         * @returns {Promise<boolean>} True when CKEditor received focus.
+         */
         focusWhenReady: async function(conf, canFocus) {
             const isCurrentFocusRequest = typeof canFocus === 'function' ? canFocus : () => true;
             const deadline = Date.now() + FOCUS_READY_TIMEOUT_MS;
 
-            if (!await waitForTrackedEditorOperations(conf, isCurrentFocusRequest, deadline)) return false;
+            try {
+                const operationsReady = await Promise.race([
+                    conf.wjeditorReadyPromise.then(() => true),
+                    wait(FOCUS_READY_TIMEOUT_MS).then(() => false)
+                ]);
+                if (!operationsReady || !isCurrentFocusRequest()) return false;
+            } catch (error) {
+                console.error("Error preparing CKEditor for focus:", error);
+                return false;
+            }
 
             while (isCurrentFocusRequest() && Date.now() < deadline) {
                 const wjeditor = conf.wjeditor;
@@ -355,10 +347,10 @@ export function typeWysiwyg() {
                 ) {
                     editor.focus();
                     await new Promise(resolve => requestAnimationFrame(resolve));
-                    if (editor.focusManager?.hasFocus === true) return true;
+                    if (isCurrentFocusRequest() && editor.focusManager?.hasFocus === true) return true;
                 }
 
-                await waitForRetry(deadline);
+                await wait(Math.min(FOCUS_RETRY_DELAY_MS, Math.max(0, deadline - Date.now())));
             }
 
             return false;
