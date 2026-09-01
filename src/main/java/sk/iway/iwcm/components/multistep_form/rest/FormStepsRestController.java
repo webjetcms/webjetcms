@@ -210,7 +210,7 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
 
         int domainId = CloudToolsForCore.getDomainId();
         for(FormStepEntity entity : entities) {
-            if(entity == null || Objects.equals(formName, entity.getFormName()) == false ||
+            if(entity == null || formName.equalsIgnoreCase(entity.getFormName()) == false ||
                 entity.getDomainId() == null || entity.getDomainId().intValue() != domainId) return false;
         }
 
