@@ -14,13 +14,14 @@ before implementing or changing a video scenario.
 
 ## Produce These Outputs
 
-1. A Slovak narration block that can be copied directly into ElevenLabs.
+1. A Slovak narration block preserved in an `@audio` metadata scenario and
+   ready for ElevenLabs generation.
 2. A concise shot plan mapping narration beats to browser states and manual
    shots.
 3. A CodeceptJS scenario in `src/test/webapp/video` when the repository contains
    browser-visible changes.
-4. Exact commands for previewing and recording the scenario, plus the output
-   location.
+4. Exact commands for generating narration and previewing or recording the
+   scenario, plus the output locations.
 
 Whenever a CodeceptJS walkthrough is created, archive outputs 1 and 2 in the
 same JavaScript file as the metadata scenarios described in section 5. Keep
@@ -79,15 +80,21 @@ Default to these parameters unless the user specifies different ones:
   available. Revise the text to fit and report both the word count and estimated
   or measured duration.
 
-Recommend ElevenLabs Text to Speech with a Slovak-capable voice. Verify the
-current official model guidance when web access is available. For a calm product
-narration, use Eleven Multilingual v2 as the starting point unless a newer model
-is demonstrably better for the selected voice. Start around Stability 50,
-Similarity 75, Style 0, Speaker Boost on, and Speed 0.95 to 1.0, then adjust after
-a short pronunciation test.
+The repository defaults to Eleven Multilingual v2 (`eleven_multilingual_v2`)
+and the Luki Zajo voice (`Zai7B4Aol2bJtneyq0L1`). Do not send
+`voice_settings`; use the voice's stored or default ElevenLabs settings.
+Override a model or voice for one scenario with the optional
+`{ modelId, voiceId }` argument to
+`I.generateAudio`, or for one run with `ELEVENLABS_MODEL_ID` and
+`ELEVENLABS_VOICE_ID`. An explicit helper argument takes precedence over a
+non-empty environment variable, which takes precedence over the repository
+default.
 
-Do not call the ElevenLabs API or generate speech unless the user explicitly
-requests it. This workflow currently prepares and preserves the input text.
+Do not put the ElevenLabs API key in source code, a helper argument, or a
+command-line argument. The generator reads it only from
+`ELEVENLABS_API_KEY`. Do not call the ElevenLabs API or generate speech unless
+the user explicitly requests it; preparing or validating a scenario must not
+consume paid API credits.
 
 ## 4. Design the Shot Plan
 
@@ -108,9 +115,9 @@ requests it. This workflow currently prepares and preserves the input text.
 - Preserve unrelated working-tree changes and never create a commit.
 - Before the main recording scenario, add exactly two metadata scenarios named
   `ElevenLabs` and `Shot plan`. Each scenario must inject only `I` and contain a
-  single `I.say()` call with a backtick-delimited multiline string. Put the
-  copy-ready Slovak narration in `ElevenLabs` and the complete timed shot plan,
-  including every `MANUAL` shot, in `Shot plan`.
+  single call with a backtick-delimited multiline string. Put the copy-ready
+  Slovak narration in `I.generateAudio()` in `ElevenLabs`; put the complete
+  timed shot plan, including every `MANUAL` shot, in `I.say()` in `Shot plan`.
 - Put a newline immediately after the opening backtick and immediately before
   the closing backtick. Keep the content lines and closing backtick unindented
   so the copied text contains no leading spaces. Follow the exact template in
@@ -118,9 +125,10 @@ requests it. This workflow currently prepares and preserves the input text.
 - Keep both metadata scenarios free of login, navigation, assertions, and other
   browser actions. Do not use a global `Before` login hook; inject `login` into
   the main recording scenario and call `login("admin")` there instead.
-- Keep the metadata scenarios before the main recording scenario. Tag only the
-  main scenario with `@video`; the standard `npm run video` script filters by
-  this tag so metadata scenarios do not start a browser or video lifecycle.
+- Tag `ElevenLabs` with `@audio`, leave `Shot plan` untagged, and tag only the
+  main recording scenario with `@video`. Keep all three in this order. The
+  audio runner uses an audio-only CodeceptJS configuration without a browser or
+  login, while the video runner filters for `@video`.
 - Reuse selectors and waits from existing regression tests where possible.
 - Prefer a read-only walkthrough. If mutation is essential, create isolated test
   data and clean it up.
@@ -139,24 +147,29 @@ requests it. This workflow currently prepares and preserves the input text.
   `DT.waitForLoader()`. Never use a fixed wait to synchronize application state.
 - Keep test comments in English and organize them by shot.
 - Do not store narration or the shot plan as unused JavaScript constants. Keep
-  them in the two `I.say()` metadata scenarios and also deliver them in the
-  response.
+  them in the two metadata scenarios and also deliver them in the response.
 
 ## 6. Validate and Hand Off
 
 Run proportionate checks:
 
-1. Parse changed JavaScript and JSON files.
-2. Run CodeceptJS `dry-run` for the complete video file so both metadata
-   scenarios and the main recording scenario are discovered.
-3. Run only the tagged main recording scenario with
+1. Parse changed JavaScript and JSON files and run `npm run audio:test` and
+   `npm run video:test` after changing the infrastructure.
+2. Run CodeceptJS dry-runs for the audio-only and complete video
+   configurations. A dry-run must never contact ElevenLabs.
+3. Run `npm run audio video/<scenario-name>.js` only when the user explicitly
+   requested generation and `ELEVENLABS_API_KEY` is available. The command
+   accepts exactly one existing JavaScript file below `video` and generates
+   only its `@audio` scenario.
+4. Run only the tagged main recording scenario with
    `npm run video video/<scenario-name>.js` when the configured WebJET CMS
    instance and test credentials are available.
-4. Confirm a passed WebM is retained in `build/test/videos` and visually inspect
-   at least representative frames for resolution, cursor visibility, and
-   sensitive data.
+5. Confirm the successful MP3 and WebM artifacts in `build/test/videos`. A
+   successful audio response is written as `<scenario-name>.mp3` with format
+   `mp3_44100_128`; inspect or listen to generated output before handoff.
 
 In the final response, provide the copy-ready narration first, then its word
-count and duration, ElevenLabs settings, shot plan, the verified documentation
-URL, changed file paths, recording command, output path, validation result, and
-any manual shots. Keep technical caveats outside the narration.
+count and duration, ElevenLabs model and voice, shot plan, the verified
+documentation URL, changed file paths, audio and recording commands, output
+paths, validation result, and any manual shots. State whether audio generation
+was requested and completed; keep technical caveats outside the narration.

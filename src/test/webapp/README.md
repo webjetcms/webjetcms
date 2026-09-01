@@ -39,10 +39,15 @@ npm run video -- video/293-config-jstree-view.js
 
 # Nahratie scenára označeného ako @current
 npm run video:current
+
+# Generovanie hovoreného slova pre jeden video súbor
+npm run audio video/293-config-jstree-view.js
 ```
 
-Oba príkazy predvolene používajú viditeľný prehliadač; pre jedno spustenie ho môžete skryť pomocou `CODECEPT_SHOW=false`. Predvolenú silu krivky kurzora nastavuje `CODECEPT_VIDEO_CURVE_STRENGTH` vo video príkazoch v `package.json` s hodnotou `0.3`. Hodnota zadaná pred `npm run` má prednosť a explicitný druhý parameter `I.videoClick(locator, curveStrength)` má vždy prednosť pred hodnotou z prostredia.
+Príkazy `video` a `video:current` predvolene používajú viditeľný prehliadač; pre jedno spustenie ho môžete skryť pomocou `CODECEPT_SHOW=false`. Predvolenú silu krivky kurzora nastavuje `CODECEPT_VIDEO_CURVE_STRENGTH` vo video príkazoch v `package.json` s hodnotou `0.3`. Hodnota zadaná pred `npm run` má prednosť a explicitný druhý parameter `I.videoClick(locator, curveStrength)` má vždy prednosť pred hodnotou z prostredia.
 
 Rozlíšenie videa, zväčšenie obsahu stránky a cieľovú adresu nastavujú video príkazy v `package.json` pomocou `CODECEPT_VIDEO_WIDTH`, `CODECEPT_VIDEO_HEIGHT`, `CODECEPT_VIDEO_ZOOM` a `CODECEPT_URL`. Predvolené hodnoty môžete pre jedno nahrávanie prepísať zadaním premenných pred `npm run video` alebo `npm run video:current`.
 
-Konvencie pre tvorbu scenárov sú v dokumentácii [Nahrávanie prezentačných videí](../../../docs/sk/developer/testing/video.md).
+Audio príkaz vyžaduje práve jeden existujúci `.js` súbor z priečinka `video` a spustí iba jeho scenár `ElevenLabs` označený `@audio`. Nepoužíva prehliadač ani prihlásenie. API kľúč číta výhradne z `ELEVENLABS_API_KEY`; súbory `.env` sa automaticky nenačítavajú. Predvolene používa model `eleven_multilingual_v2`, hlas Luki Zajo `Zai7B4Aol2bJtneyq0L1` a výsledok uloží vo formáte `mp3_44100_128` do `build/test/videos/<názov-scenára>.mp3`. Model a hlas môžete prepísať cez `ELEVENLABS_MODEL_ID`, `ELEVENLABS_VOICE_ID` alebo explicitné parametre `I.generateAudio`, ktoré majú najvyššiu prioritu. Generovanie spúšťajte iba vedome, pretože volanie ElevenLabs API môže spotrebovať kredity.
+
+Postup vytvorenia obmedzeného ElevenLabs API kľúča, konvencie audio scenára a podrobné nastavenia sú v dokumentácii [Nahrávanie prezentačných videí](../../../docs/sk/developer/testing/video.md).

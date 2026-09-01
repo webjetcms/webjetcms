@@ -8,12 +8,8 @@ const allNode = `${treeSelector} li[data-configuration-view='all']`;
 const appsNode = `${treeSelector} li[data-configuration-module='apps']`;
 const formsNode = `${treeSelector} li[data-configuration-module='apps.form']`;
 
-Before(({ login }) => {
-    login("admin");
-});
-
 Scenario("ElevenLabs", ({ I }) => {
-    I.say(`
+    I.generateAudio(`
 Hľadáte jednu konfiguračnú premennú v dlhom zozname nastavení?
 
 Doteraz sa zobrazovali iba nastavenia s hodnotou uloženou v systéme a cesta ku konkrétnej položke mohla trvať zbytočne dlho.
@@ -30,7 +26,7 @@ Výsledkom je menej zdĺhavého posúvania, lepší prehľad a rýchlejšia spr�
 
 Podrobný popis nových pohľadov a práce s konfiguračnými premennými nájdete v dokumentácii WebJET CMS. Odkaz je v popise videa.
 `);
-});
+}).tag("@audio");
 
 Scenario("Shot plan", ({ I }) => {
     I.say(`
@@ -45,7 +41,8 @@ Scenario("Shot plan", ({ I }) => {
 `);
 });
 
-Scenario("293-config-jstree-view", ({ I, DT }) => {
+Scenario("293-config-jstree-view", ({ I, DT, login }) => {
+    login("admin");
     I.amOnPage("/admin/v9/settings/configuration/");
     I.waitForElement(`${changedNode} > a.jstree-clicked[aria-selected='true']`, 20);
     I.waitForVisible(`${tableWrapper} table`, 20);

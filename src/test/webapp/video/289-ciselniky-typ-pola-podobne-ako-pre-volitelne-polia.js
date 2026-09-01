@@ -14,7 +14,7 @@ const enumerationTypePicker = `${enumerationDataWrapper} .dt-buttons div.bootstr
 const enumerationDataCreateButton = `${enumerationDataWrapper} .dt-buttons button.buttons-create`;
 
 Scenario("ElevenLabs", ({ I }) => {
-    I.say(`
+    I.generateAudio(`
 Pri práci s číselníkmi nemusí každé textové pole zostať obyčajným vstupom na voľné písanie. Takéto polia často vedú k nejednotným hodnotám a zbytočným chybám. WebJET CMS preto prináša nastavenie typov reťazcových polí podobne, ako ho poznáte z voliteľných polí.
 
 Najskôr vytvoríte alebo upravíte typ číselníka a pomenujete potrebné reťazcové polia. Po prvom uložení sa zobrazí nová karta Typy reťazcových polí. V prehľadnej tabuľke hneď vidíte, aké ovládanie používa každé pomenované pole.
@@ -27,7 +27,7 @@ Keď redaktor pridáva údaje, WebJET CMS túto konfiguráciu automaticky prenes
 
 Výsledkom je rýchlejšie zadávanie, jednotnejšie údaje a menej chýb bez potreby meniť formulár programovaním. Viac informácií a prehľad podporovaných typov nájdete v dokumentácii WebJET CMS v kapitole Číselníky.
 `);
-});
+}).tag("@audio");
 
 Scenario("Shot plan", ({ I }) => {
     I.say(`

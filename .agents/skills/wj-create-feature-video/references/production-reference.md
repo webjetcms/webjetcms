@@ -6,11 +6,14 @@ Video scenarios live in `src/test/webapp/video`. The standard commands are:
 
 ```shell
 cd src/test/webapp
+npm run audio video/<scenario-name>.js
 npm run video video/<scenario-name>.js
 npm run video:current
 ```
 
-The first command records only the main walkthrough from a selected video file;
+The audio command generates narration only from the selected file's `@audio`
+scenario. It requires exactly one existing `.js` file below `video`. The first
+video command records only the main walkthrough from a selected video file;
 the npm script filters for `@video`, which deliberately excludes its
 `ElevenLabs` and `Shot plan` metadata scenarios. Keep the no-video-frames error
 enabled because it signals a real recording failure when a tagged walkthrough
@@ -86,16 +89,53 @@ recordings and the legacy UUID-prefixed artifact for the current scenario. Only
 the active page at the end becomes the final recording; keep meaningful
 multi-tab transitions as manual shots.
 
+## ElevenLabs Audio Profile
+
+Create an ElevenLabs API key under **Developers > API Keys**. Use a restricted
+key with only the `text_to_speech` scope and set a credit limit. Copy the key
+when it is created because ElevenLabs displays the complete value only once.
+Treat it as a secret: never put it in the repository, a scenario, a helper
+argument, or a command-line argument. Export it to the process environment as
+`ELEVENLABS_API_KEY`. The repository does not automatically load `.env` files.
+
+The default model is Eleven Multilingual v2
+(`eleven_multilingual_v2`), and the default voice is Luki Zajo
+(`Zai7B4Aol2bJtneyq0L1`). Override either value for a run with
+`ELEVENLABS_MODEL_ID` or `ELEVENLABS_VOICE_ID`, or for one narration with the
+optional `{ modelId, voiceId }` argument to `I.generateAudio`. Precedence is:
+explicit helper argument, non-empty environment variable, repository default.
+The API key is accepted only from the environment. The request uses
+`mp3_44100_128` and does not send `voice_settings`, leaving ElevenLabs to apply
+the voice's stored or default settings.
+
+The Luki Zajo default is a community voice. Community voice API access can
+depend on the account plan and may not be available on the free tier. If the
+voice is unavailable through the API, use a plan that permits Voice Library API
+access or set `ELEVENLABS_VOICE_ID` to a voice ID available to the account.
+Saving the voice to **My Voices** is optional and does not unlock API access on
+the free tier.
+
+`npm run audio video/<scenario-name>.js` uses an audio-only CodeceptJS
+configuration. It does not start a browser or run login hooks, and it selects
+only `@audio`. Run it only when audio generation was explicitly requested,
+because the API call can consume ElevenLabs credits. There is no automatic
+retry, avoiding a second charge after an ambiguous network failure.
+
+A successful response is written atomically as
+`build/test/videos/<scenario-name>.mp3`; a temporary file replaces the previous
+MP3 only after the complete response is available. An API, network, timeout, or
+disk error therefore leaves the last successful MP3 unchanged.
+
 ## Scenario Template
 
 ```javascript
 Feature("video.<scenario-name>");
 
 Scenario("ElevenLabs", ({ I }) => {
-    I.say(`
+    I.generateAudio(`
 <copy-ready Slovak narration across multiple lines>
 `);
-});
+}).tag("@audio");
 
 Scenario("Shot plan", ({ I }) => {
     I.say(`
@@ -121,21 +161,51 @@ roles, or stable `data-*` attributes are preferable to visual position or
 translated text.
 
 To use `npm run video:current`, add `.tag("@current")` to the same main scenario
-after `.tag("@video")`. Never tag either metadata scenario.
+after `.tag("@video")`. Never tag `Shot plan`; `ElevenLabs` must have only the
+`@audio` tag.
+
+To select a different model or voice for one narration, keep the options outside
+the spoken text:
+
+```javascript
+Scenario("ElevenLabs", ({ I }) => {
+    I.generateAudio(`
+<copy-ready Slovak narration across multiple lines>
+`, {
+        modelId: "eleven_v3",
+        voiceId: "<voice-id>",
+    });
+}).tag("@audio");
+```
 
 ## Validation Commands
 
 ```shell
+node --check helpers/audio_helper.js
+node --check helpers/audio_runner.js
 node --check helpers/video_helper.js
 node --check video/<scenario-name>.js
 node -e "JSON.parse(require('fs').readFileSync('package.json', 'utf8'))"
+CODECEPT_AUDIO_FILE="$(pwd)/video/<scenario-name>.js" npx codeceptjs dry-run -c codecept.audio.conf.js --steps --grep '@audio'
 CODECEPT_VIDEO=true CODECEPT_VIDEO_ZOOM=1.411764705882353 CODECEPT_VIDEO_CURSOR=true npx codeceptjs dry-run -c codecept.video.conf.js --steps -p autoLogin video/<scenario-name>.js
+npm run audio:test
+npm run video:test
 npm run video video/<scenario-name>.js
 ```
 
+`CODECEPT_AUDIO_FILE` is an internal runner/validation input, not a public
+authoring interface. Without it the audio configuration discovers no tests.
+The dry-run does not execute `I.generateAudio` and does not require an API key.
 Run the actual `npm run video` command only when the target environment and
 credentials are available. A generated video is finalized when its browser
 context closes, so do not interrupt the process immediately after the scenario.
+
+The following command makes a paid API request. Run it only when audio
+generation was explicitly requested and `ELEVENLABS_API_KEY` is available:
+
+```shell
+npm run audio video/<scenario-name>.js
+```
 
 ## Technology Upgrade Path
 
@@ -174,5 +244,8 @@ Official references:
 - [Playwright BrowserContext addInitScript](https://playwright.dev/docs/api/class-browsercontext#browser-context-add-init-script)
 - [CodeceptJS Playwright integration](https://codecept.io/playwright/)
 - [CodeceptJS screencast plugin](https://codecept.io/plugins/screencast)
-- [ElevenLabs Text to Speech](https://elevenlabs.io/docs/speech-synthesis/voice-settings)
+- [ElevenLabs API key authorization](https://elevenlabs.io/docs/help-center/technical/how-do-i-authorize-myself-using-an-api-key)
+- [ElevenLabs Text to Speech API](https://elevenlabs.io/docs/api-reference/text-to-speech/convert)
 - [ElevenLabs models](https://elevenlabs.io/docs/overview/models)
+- [ElevenLabs Slovak voices](https://elevenlabs.io/text-to-speech/slovak)
+- [ElevenLabs Voice Library](https://elevenlabs.io/docs/eleven-creative/voices/voice-library)

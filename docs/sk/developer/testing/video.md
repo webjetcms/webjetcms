@@ -30,6 +30,29 @@ Použite `Feature("video.<scenario-name>")`, aby sa dal zdroj scenára jednoduch
 
 - Manuálne zábery ponechajte v sprievodnom pláne záberov namiesto simulovania nespoľahlivej akcie prehliadača.
 
+Pred hlavným scenárom uchovávajte hovorený text a plán záberov v dvoch samostatných metadátových scenároch. `ElevenLabs` musí obsahovať jediné volanie `I.generateAudio` a značku `@audio`. `Shot plan` naďalej používa `I.say` a nemá značku. Ani jeden z nich nesmie prihlasovať používateľa, otvárať prehliadač alebo vykonávať kroky aplikácie. Nepoužívajte globálny prihlasovací `Before`; objekt `login` vložte až do hlavného scenára označeného `@video`.
+
+```javascript
+Feature("video.293-config-jstree-view");
+
+Scenario("ElevenLabs", ({ I }) => {
+    I.generateAudio(`
+<text hovoreného slova>
+`);
+}).tag("@audio");
+
+Scenario("Shot plan", ({ I }) => {
+    I.say(`
+<časový plán záberov>
+`);
+});
+
+Scenario("293-config-jstree-view", ({ I, login }) => {
+    login("admin");
+    // Kroky nahrávania videa.
+}).tag("@video");
+```
+
 ## Nahrávanie
 
 V priečinku `src/test/webapp` spustite:
@@ -51,7 +74,7 @@ Do výsledného videa sa uloží iba stránka, ktorá je aktívna na konci scen�
 
 Pri použití externého nahrávača vypnite zachytávanie systémového kurzora. Video scenár vykresľuje vlastný kurzor aj efekt kliknutia, takže zachytenie oboch kurzorov by vytvorilo rušivú duplicitu.
 
-WebM obsahuje plochu stránky v prehliadači bez hovoreného slova. Nahovorený text vytvorte v ElevenLabs a s nahrávkou ho spojte vo video editore.
+WebM obsahuje plochu stránky v prehliadači bez hovoreného slova. Vygenerovaný MP3 súbor s hovoreným textom spojte s nahrávkou vo video editore.
 
 WebM je natívny kontajner VP8 enkódera pribaleného k Playwright. Premenovanie súboru na `.mp4` alebo `.mov` ho nekonvertuje. Ak video editor vyžaduje iný formát, skonvertujte kvalitný WebM pomocou plnej inštalácie FFmpeg. Konverzia môže zlepšiť kompatibilitu s editorom, ale nemôže doplniť detaily, ktoré neboli zachytené v zdrojovej nahrávke.
 
@@ -76,3 +99,53 @@ CODECEPT_VIDEO_CURVE_STRENGTH=0.5 CODECEPT_URL=http://custom.webjetcms.test CODE
 Čas pred kliknutím je možné nastaviť v rozsahu od 0 do 2000 milisekúnd pomocou `CODECEPT_VIDEO_CLICK_DELAY`. Každé volanie `I.videoClick` ponechá po kliknutí 500 milisekúnd na jednoduchší strih. Túto hodnotu môžete pomocou `CODECEPT_VIDEO_POST_CLICK_DELAY` zvýšiť až na 2000 milisekúnd.
 
 Pohyb kurzora sa medzi kliknutiami mení, ale generátor používa ako základ názov scenára, takže opakované nahrávky zostávajú reprodukovateľné. Nastavením `CODECEPT_VIDEO_CURSOR_SEED` na inú hodnotu vytvoríte odlišný, ale opakovateľný variant pohybu.
+
+## Generovanie hovoreného slova
+
+Generovanie zvuku používa platené API služby ElevenLabs, preto ho spúšťajte iba vedome a pre konkrétny súbor. V priečinku `src/test/webapp` zadajte práve jeden existujúci JavaScript súbor z priečinka `video`:
+
+```shell
+npm run audio video/293-config-jstree-view.js
+```
+
+Príkaz spustí iba scenár označený `@audio` cez samostatnú konfiguráciu CodeceptJS. Neotvorí prehliadač, neprihlási používateľa a nespustí scenár videa ani plán záberov. Výsledok vo formáte `mp3_44100_128` uloží ako `build/test/videos/293-config-jstree-view.mp3`.
+
+### API kľúč ElevenLabs
+
+1. Prihláste sa do ElevenLabs a otvorte **Developers > API Keys**.
+2. Vytvorte obmedzený kľúč, povoľte mu iba oprávnenie `text_to_speech` a nastavte kreditný limit.
+3. Kľúč po vytvorení hneď skopírujte. ElevenLabs zobrazí jeho úplnú hodnotu iba raz.
+4. Uchovávajte ho ako tajomstvo mimo repozitára a nastavte ho do premennej prostredia `ELEVENLABS_API_KEY`.
+
+Podrobný postup je v [oficiálnej dokumentácii autorizácie ElevenLabs](https://elevenlabs.io/docs/help-center/technical/how-do-i-authorize-myself-using-an-api-key). Projekt súbory `.env` automaticky nenačítava. API kľúč preto nevkladajte do `.env` s očakávaním automatického použitia, do JavaScript scenára, parametra pomocníka ani argumentu príkazového riadka.
+
+```shell
+export ELEVENLABS_API_KEY="<váš-api-kľúč>"
+npm run audio video/293-config-jstree-view.js
+```
+
+### Model a hlas
+
+Predvolený model je Eleven Multilingual v2 s identifikátorom `eleven_multilingual_v2`. Predvolený hlas je `Luki Zajo` s identifikátorom `Zai7B4Aol2bJtneyq0L1`. Model a hlas môžete zmeniť premennými prostredia pre celé spustenie:
+
+```shell
+ELEVENLABS_MODEL_ID=eleven_v3 npm run audio video/293-config-jstree-view.js
+ELEVENLABS_VOICE_ID="<voice-id>" npm run audio video/293-config-jstree-view.js
+```
+
+Alebo ich nastavte iba pre jedno volanie pomocníka:
+
+```javascript
+I.generateAudio(`
+<text hovoreného slova>
+`, {
+    modelId: "eleven_v3",
+    voiceId: "<voice-id>",
+});
+```
+
+Explicitný parameter `modelId` alebo `voiceId` má prednosť pred neprázdnou premennou prostredia, tá má prednosť pred predvolenou hodnotou. API kľúč je možné zadať výhradne cez `ELEVENLABS_API_KEY`. Pomocník neposiela `voice_settings`, takže ElevenLabs použije uložené alebo predvolené nastavenia hlasu. Dostupné modely opisuje [dokumentácia modelov](https://elevenlabs.io/docs/overview/models) a formát požiadavky [Text to Speech API](https://elevenlabs.io/docs/api-reference/text-to-speech/convert).
+
+`Luki Zajo` je hlas z komunitnej knižnice. Jeho použitie cez API závisí od dostupnosti hlasu a programu účtu a nemusí byť dostupné v bezplatnom programe. V takom prípade použite program, ktorý povoľuje API prístup k hlasom z [Voice Library](https://elevenlabs.io/docs/eleven-creative/voices/voice-library), alebo nastavte `ELEVENLABS_VOICE_ID` na hlas dostupný pre váš účet. Uloženie hlasu do **My Voices** je voliteľné a samo osebe API prístup v bezplatnom programe neodomkne. Zoznam hlasov vhodných pre slovenčinu nájdete na stránke [Slovak Text to Speech](https://elevenlabs.io/text-to-speech/slovak).
+
+Pomocník ešte pred volaním API overí, že môže v cieľovom priečinku vytvoriť dočasný súbor. Potom načíta celú odpoveď, overí zvukový formát a až úplným dočasným súborom atómovo nahradí výsledný MP3 súbor. Pri chybe API, siete, časového limitu alebo zápisu zostane posledný úspešný súbor zachovaný. Požiadavka sa automaticky neopakuje, aby nejasná sieťová chyba nespôsobila druhé účtovanie kreditov.

@@ -11,7 +11,7 @@ const widthNode = `${treeSelector} li[data-translation-key-prefix='components.ma
 const gridEditorNode = `${treeSelector} li[data-translation-key-prefix='grideditor']`;
 
 Scenario("ElevenLabs", ({ I }) => {
-    I.say(`
+    I.generateAudio(`
 Keď spravujete veľa prekladových kľúčov, nájsť správnu skupinu v jednom dlhom zozname môže zbytočne zdržiavať.
 
 WebJET CMS preto zobrazuje prefixy prekladových kľúčov v prehľadnej stromovej štruktúre. Naľavo vidíte prefixy, ktoré poznáte z názvov kľúčov. Jednotlivé časti oddelené bodkou vytvárajú prirodzené úrovne stromu.
@@ -28,7 +28,7 @@ Nové usporiadanie zrýchľuje orientáciu, udržiava prehľad aj pri veľkom po
 
 Podrobný návod na správu prekladových kľúčov nájdete v dokumentácii WebJET CMS. Odkaz je v popise videa.
 `);
-});
+}).tag("@audio");
 
 Scenario("Shot plan", ({ I }) => {
     I.say(`
