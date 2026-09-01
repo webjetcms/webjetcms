@@ -14,6 +14,8 @@ var defaultConfig = {
 
 var defaultPasteFromWordDisallowedContent = "table[width],table[height],table[border],td(*),td[valign],td[align],th(*),th[valign],th[align],p[align],span,col[width]";
 
+var customPasteFromWordDisallowedContent = " table[width],\n table[height] , table[border], td(*) , td[valign], th(*), th[valign], p[align], span, col[width], , ";
+
 var pasteFromWordHtml = '<table width="640" height="120" border="2"><tbody><tr><th class="word-header" align="center" valign="bottom"><span>Header</span></th><td class="word-cell" align="right" valign="middle">Cell</td></tr></tbody></table><p align="justify"><span>Text</span></p>';
 
 var customConfig = {
@@ -62,12 +64,21 @@ function setPasteFromWordConfig(I, Document, value) {
     Document.setConfigValue("ckeditor_pasteFromWord_disallowedContent", value);
 }
 
-async function getPasteFromWordFilterResult(I, DTE) {
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=266");
+async function getPasteFromWordFilterResult(I, DTE, pageBuilder) {
+    var docId = pageBuilder === true ? 57 : 266;
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + docId);
     DTE.waitForEditor();
-    DTE.waitForCkeditor();
 
-    return await I.executeScript(function(html) {
+    if (pageBuilder === true) {
+        I.waitForElement("#DTE_Field_data-pageBuilderIframe", 10);
+        I.switchTo("#DTE_Field_data-pageBuilderIframe");
+        I.waitForElement("div.cke_inner", 10);
+        I.waitForText("Odstavec a zarovnanie", 10);
+    } else {
+        DTE.waitForCkeditor();
+    }
+
+    var result = await I.executeScript(function(html) {
         var eventData = { dataValue: html };
         window.ckEditorInstance.fire("afterPasteFromWord", eventData);
 
@@ -94,6 +105,9 @@ async function getPasteFromWordFilterResult(I, DTE) {
             hasSpan: container.querySelector("span") !== null
         };
     }, pasteFromWordHtml);
+
+    if (pageBuilder === true) I.switchTo();
+    return result;
 }
 
 function assertPasteFromWordFilterResult(I, result, expected) {
@@ -212,13 +226,12 @@ Scenario('table config-default', async ({ I, DT, DTE, Document, Browser }) => {
 });
 
 Scenario('pasteFromWord filter-custom', async ({ I, DTE, Document }) => {
-    var customDisallowedContent = " table[width], table[height] , table[border], td(*) , td[valign], th(*), th[valign], p[align], span, col[width], , ";
-    setPasteFromWordConfig(I, Document, customDisallowedContent);
+    setPasteFromWordConfig(I, Document, customPasteFromWordDisallowedContent);
 
     var result = await getPasteFromWordFilterResult(I, DTE);
 
     assertPasteFromWordFilterResult(I, result, {
-        config: customDisallowedContent,
+        config: customPasteFromWordDisallowedContent,
         tableWidth: null,
         tableHeight: null,
         tableBorder: null,
@@ -230,6 +243,50 @@ Scenario('pasteFromWord filter-custom', async ({ I, DTE, Document }) => {
         thValign: null,
         paragraphAlign: null,
         hasSpan: false
+    });
+});
+
+Scenario('pasteFromWord filter-pageBuilder-custom', async ({ I, DTE, Document }) => {
+    setPasteFromWordConfig(I, Document, customPasteFromWordDisallowedContent);
+    Document.resetPageBuilderMode();
+
+    var result = await getPasteFromWordFilterResult(I, DTE, true);
+
+    assertPasteFromWordFilterResult(I, result, {
+        config: customPasteFromWordDisallowedContent,
+        tableWidth: null,
+        tableHeight: null,
+        tableBorder: null,
+        tdClass: null,
+        tdAlign: "right",
+        tdValign: null,
+        thClass: null,
+        thAlign: "center",
+        thValign: null,
+        paragraphAlign: null,
+        hasSpan: false
+    });
+});
+
+Scenario('pasteFromWord filter-pageBuilder-empty', async ({ I, DTE, Document }) => {
+    setPasteFromWordConfig(I, Document, "");
+    Document.resetPageBuilderMode();
+
+    var result = await getPasteFromWordFilterResult(I, DTE, true);
+
+    assertPasteFromWordFilterResult(I, result, {
+        config: "",
+        tableWidth: "640",
+        tableHeight: "120",
+        tableBorder: "2",
+        tdClass: "word-cell",
+        tdAlign: "right",
+        tdValign: "middle",
+        thClass: "word-header",
+        thAlign: "center",
+        thValign: "bottom",
+        paragraphAlign: "justify",
+        hasSpan: true
     });
 });
 

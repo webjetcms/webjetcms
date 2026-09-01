@@ -1,4 +1,4 @@
-<%@page import="sk.iway.iwcm.Tools"%><%@page import="sk.iway.iwcm.FileTools,sk.iway.iwcm.Constants,java.util.List,java.util.ArrayList"%><%@ page import="sk.iway.iwcm.components.dictionary.DictionaryDB"%><%@ page import="sk.iway.iwcm.editor.InlineEditor"%><%
+<%@page import="sk.iway.iwcm.Tools"%><%@page import="sk.iway.iwcm.FileTools,sk.iway.iwcm.Constants,sk.iway.iwcm.JsonTools,java.util.List,java.util.ArrayList"%><%@ page import="sk.iway.iwcm.components.dictionary.DictionaryDB"%><%@ page import="sk.iway.iwcm.editor.InlineEditor"%><%
 	sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/javascript");
 	sk.iway.iwcm.PathFilter.setStaticContentHeaders("/_tmp_/ckeditor/custom/config.js", null, request, response);
 %><%@ page pageEncoding="utf-8" contentType="text/javascript" %><%@
@@ -59,7 +59,7 @@ CKEDITOR.editorConfig = function( config )
 	config.pasteFromWordRemoveStyles = true;
 	config.pasteFromWordRemoveFontStyles = true;
 	config.pasteTools_removeFontStyles = true;
-	config.pasteFromWordDisallowedContent = "<%=Constants.getString("ckeditor_pasteFromWord_disallowedContent")%>";
+	config.pasteFromWordDisallowedContent = <%=JsonTools.objectToJSON(Constants.getString("ckeditor_pasteFromWord_disallowedContent"))%>;
 	config.disableNativeSpellChecker = false;
 	config.editorAutomaticWordClean = <%=Constants.getBoolean("editorAutomaticWordClean")%>
 	config.clipboard_handleImages = false;

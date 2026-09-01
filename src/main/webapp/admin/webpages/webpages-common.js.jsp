@@ -3309,10 +3309,13 @@ function initializeCkEditorImpl(ckEditorElementId, ckEditorInitFunction, configL
 
 					//filter.allow("*{*}");
 
-					filter.disallow( 'table[width]' );
-					filter.disallow( 'table[height]' );
-					filter.disallow( 'table[border]' );
-					filter.disallow( 'span' );
+					var disallowedContent = evt.editor.config.pasteFromWordDisallowedContent;
+					if (typeof disallowedContent === "string") {
+						disallowedContent.split(",").forEach(function(rule) {
+							rule = rule.trim();
+							if (rule !== "") filter.disallow(rule);
+						});
+					}
 					filter.disabled = false;
 
 					filter.addTransformations([
