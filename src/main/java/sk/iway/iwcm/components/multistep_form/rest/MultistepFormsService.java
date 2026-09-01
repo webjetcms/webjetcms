@@ -6,11 +6,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.text.StringEscapeUtils;
@@ -303,6 +305,21 @@ public class MultistepFormsService {
     }
 
     /**
+     * Get the step preceding the provided step within a form sequence.
+     *
+     * @param formName logical form name
+     * @param currentStep current step entity
+     * @param repo repository used to fetch ordered steps
+     * @return previous step entity or {@code null} if current step is the first
+     */
+    public static final FormStepEntity getPreviousStep(String formName, FormStepEntity currentStep, FormStepsRepository repo) {
+        if(currentStep.getCurrentPosition() == null || currentStep.getCurrentPosition() <= 1) return null;
+
+        return repo.getStepByPosition(formName, currentStep.getCurrentPosition() - 1, CloudToolsForCore.getDomainId())
+            .orElseThrow(() -> new IllegalStateException("Previous step for currentStepId: " + currentStep.getId() + " and form " + formName + " does NOT exist") );
+    }
+
+    /**
      * Return technical field types used only for row/column layout in the form editor.
      *
      * @return list of non-input layout item field types
@@ -385,6 +402,64 @@ public class MultistepFormsService {
      */
     public final boolean validateFormInfo(String formName, Long currentStepId, HttpServletRequest request) {
         return getValidStepEntity(formName, currentStepId, request) != null;
+    }
+
+    /**
+     * Load values previously saved for a step and prepare metadata for temporary uploads.
+     *
+     * @param formName logical form name
+     * @param stepId step identifier
+     * @param request request containing the form session
+     * @return pair containing saved values and Dropzone-compatible upload metadata
+     */
+    public final Pair<JSONObject, JSONObject> getSavedStepData(String formName, Long stepId, HttpServletRequest request) {
+        JSONObject savedValues = new JSONObject();
+        JSONObject savedFiles = new JSONObject();
+        String sessionPrefix = getSessionKey(formName, request) + "_";
+        XhrFileUploadService uploadService = XhrFileUploadServlet.getService();
+
+        for(FormItemEntity stepItem : getStepItemsForValidation(stepId)) {
+            if("captcha".equals(stepItem.getFieldType())) continue;
+
+            String itemFormId = stepItem.getItemFormId();
+            Object sessionValueObject = request.getSession().getAttribute(sessionPrefix + itemFormId);
+            if(sessionValueObject == null) continue;
+
+            String sessionValue = sessionValueObject.toString();
+            if(isFileUploadField(stepItem.getFieldType())) {
+                JSONObject fileMetadata = new JSONObject();
+                List<String> validFileKeys = new ArrayList<>();
+
+                for(String fileKey : Tools.getTokens(sessionValue, ";")) {
+                    String filePath = uploadService.getTempFilePath(fileKey);
+                    if(Tools.isEmpty(filePath)) continue;
+
+                    IwcmFile file = new IwcmFile(filePath);
+                    if(file.exists() == false) continue;
+
+                    String originalFileName = uploadService.getOriginalFileName(fileKey);
+                    if(Tools.isEmpty(originalFileName)) continue;
+
+                    JSONObject fileInfo = new JSONObject();
+                    fileInfo.put("key", fileKey);
+                    fileInfo.put("name", originalFileName);
+                    fileInfo.put("size", file.length());
+                    fileInfo.put("success", true);
+
+                    validFileKeys.add(fileKey);
+                    fileMetadata.put(fileKey, fileInfo);
+                }
+
+                String validSessionValue = String.join(";", validFileKeys);
+                savedValues.put(itemFormId, validSessionValue);
+                request.getSession().setAttribute(sessionPrefix + itemFormId, validSessionValue);
+                if(fileMetadata.length() > 0) savedFiles.put(itemFormId, fileMetadata);
+            } else {
+                savedValues.put(itemFormId, sessionValue);
+            }
+        }
+
+        return new Pair<>(savedValues, savedFiles);
     }
 
     /**
@@ -1023,6 +1098,9 @@ public class MultistepFormsService {
             return;
         }
 
+        Set<String> currentStepFileFields = new HashSet<>(List.of(uploadedFilesParamNameList));
+        Set<String> activeFileKeys = getActiveFileKeys(formName, currentStepFileFields, received, request);
+
         // Build restriction from already-loaded formSettings to avoid redundant DB queries
         FormFileRestriction restriction = FormSettingsService.getFileRestriction(formName, formSettings);
 
@@ -1100,8 +1178,8 @@ public class MultistepFormsService {
             });
         }
 
-        // Drop deleted/expired temp files from the session map (e.g., user removed an upload)
-        fileSizeMap.entrySet().removeIf(e -> uploadService.getTempFilePath(e.getKey()) == null);
+        // Drop deleted, expired or deselected files from the accumulated size map.
+        fileSizeMap.entrySet().removeIf(e -> activeFileKeys.contains(e.getKey()) == false || uploadService.getTempFilePath(e.getKey()) == null);
 
         // Save file size map back to session
         request.getSession().setAttribute(fileSizeMapKey, fileSizeMap);
@@ -1113,6 +1191,30 @@ public class MultistepFormsService {
                 throw new SaveFormException(prop.getText("components.forms.combined_files_to_big_err", FileTools.formatFileSizeFromKb(restriction.getMaxCombinedSizeInKilobytes())), "bad_file", false, null);
             }
         }
+    }
+
+    private Set<String> getActiveFileKeys(String formName, Set<String> currentStepFileFields, JSONObject received, HttpServletRequest request) {
+        Set<String> activeFileKeys = new HashSet<>();
+        String sessionPrefix = getSessionKey(formName, request) + "_";
+
+        for(FormItemEntity formItem : getFormItemsForValidation(formName)) {
+            if(isFileUploadField(formItem.getFieldType()) == false) continue;
+
+            String itemFormId = formItem.getItemFormId();
+            String value;
+            if(currentStepFileFields.contains(itemFormId)) {
+                value = received.optString(itemFormId, "");
+            } else {
+                Object sessionValue = request.getSession().getAttribute(sessionPrefix + itemFormId);
+                value = sessionValue == null ? "" : sessionValue.toString();
+            }
+
+            for(String fileKey : Tools.getTokens(value, ";")) {
+                if(Tools.isNotEmpty(fileKey)) activeFileKeys.add(fileKey);
+            }
+        }
+
+        return activeFileKeys;
     }
 
     /* ********** PRIVATE - support methods ********** */

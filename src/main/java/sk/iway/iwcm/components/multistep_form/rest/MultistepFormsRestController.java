@@ -22,6 +22,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.multistep_form.support.SaveFormException;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
+import sk.iway.iwcm.utils.Pair;
 
 @RestController
 @RequestMapping("/rest/multistep-form")
@@ -80,6 +81,7 @@ public class MultistepFormsRestController {
 
             FormHtmlHandler formHtmlHandler = new FormHtmlHandler(formName, request);
             FormConditionsHandler formConditionsHandler = new FormConditionsHandler(formName, request);
+            Pair<JSONObject, JSONObject> savedStepData = multistepFormsService.getSavedStepData(formName, stepId, request);
             request.setAttribute("multistepFormPrefix", formHtmlHandler.getDomIdPrefix());
 
             JSONObject result = new JSONObject();
@@ -87,6 +89,8 @@ public class MultistepFormsRestController {
             result.put("domIdPrefix", formHtmlHandler.getDomIdPrefix());
             result.put("visibilityConditions", formConditionsHandler.getVisibilityConditions(stepId));
             result.put("requirementConditions", formConditionsHandler.getRequirementConditions(stepId));
+            result.put("savedValues", savedStepData.getFirst());
+            result.put("savedFiles", savedStepData.getSecond());
 
             return ResponseEntity.ok()
                 .header("Content-Type", contentTypeWithCharset)

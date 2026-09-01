@@ -318,7 +318,16 @@ public class FormHtmlHandler {
     private StringBuilder getFormEnd(Long stepId, HttpServletRequest request, FormStepEntity formStep) {
         Pair<String, String> buttonsLabels = getButtonsLabels(stepId);
 
-        StringBuilder formEndHtml =  getFormEnd(buttonsLabels.getSecond(), request);
+        StringBuilder formEndHtml = new StringBuilder();
+        FormStepEntity previousStep = MultistepFormsService.getPreviousStep(formName, formStep, formStepsRepository);
+        if(isEmailRender == false && previousStep != null) {
+            formEndHtml.append("<button type=\"button\" class=\"btn btn-outline-secondary mt-3 me-2\" data-multistep-back-step=\"")
+                .append(previousStep.getId())
+                .append("\">")
+                .append(StringEscapeUtils.escapeHtml4(buttonsLabels.getFirst()))
+                .append("</button>");
+        }
+        formEndHtml.append(getFormEnd(buttonsLabels.getSecond(), request));
 
         if(isEmailRender == false) {
             if(formStep.getStepBonusHtml() == null) formEndHtml.append("");

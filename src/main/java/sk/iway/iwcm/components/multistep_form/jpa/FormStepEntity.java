@@ -63,7 +63,7 @@ public class FormStepEntity {
     private String nextStepBtnLabel;
 
     @Column(name = "back_step_btn_label")
-    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, title = "components.mustistep.form.back_step.title", tab = "advanced", hidden = true)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.mustistep.form.back_step.title", tab = "advanced", hidden = true)
     private String backStepBtnLabel;
 
     @Lob

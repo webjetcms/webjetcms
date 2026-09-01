@@ -123,6 +123,8 @@ export class MultistepForm {
             this.domIdPrefix = typeof json.domIdPrefix === 'string' ? json.domIdPrefix : '';
             const visibilityConditions = json.visibilityConditions || {};
             const requirementConditions = json.requirementConditions || {};
+            const savedValues = json.savedValues || {};
+            const savedFiles = json.savedFiles || {};
 
             // hide previous errors
             this.hideErrors();
@@ -139,7 +141,20 @@ export class MultistepForm {
 
             // attach submit
             const form = this.wrapper.querySelector('.multistepStepContent > form');
-            if (form) form.addEventListener('submit', async (event) => { await this.doValidationAndSave(event); });
+            if (form) {
+                this._restoreStepValues(form, savedValues, savedFiles);
+                Object.assign(this.submittedValues, savedValues);
+
+                form.addEventListener('submit', async (event) => { await this.doValidationAndSave(event); });
+
+                const backButton = form.querySelector('[data-multistep-back-step]');
+                if (backButton) {
+                    backButton.addEventListener('click', async () => {
+                        const previousStepId = backButton.dataset.multistepBackStep;
+                        if (previousStepId) await this.loadStep(formName, previousStepId, true);
+                    });
+                }
+            }
 
             // Initialize remote autocomplete inputs rendered in this step
             this._initAutocompleteFields();
@@ -167,6 +182,58 @@ export class MultistepForm {
         } catch (err) {
             console.warn('Failed to load step:', err);
         }
+    }
+
+    /**
+     * Restore values saved by an earlier successful submission of this step.
+     * @param {HTMLFormElement} form - Currently rendered step form.
+     * @param {Object<string,string>} savedValues - Values keyed by logical field ID.
+     * @param {Object<string,Object>} savedFiles - Dropzone metadata keyed by logical field ID.
+     */
+    _restoreStepValues(form, savedValues, savedFiles) {
+        const controls = Array.from(form.querySelectorAll('input, textarea, select'));
+
+        Object.entries(savedValues).forEach(([fieldId, rawValue]) => {
+            const matchingControls = controls.filter(control => {
+                const grouped = control.type === 'checkbox' || control.type === 'radio';
+                const domKey = grouped ? (control.name || control.id) : (control.id || control.name);
+                return domKey && this._toLogicalFieldId(domKey) === fieldId;
+            });
+
+            const groupedControls = matchingControls.filter(control => control.type === 'checkbox' || control.type === 'radio');
+            if (groupedControls.length > 0) {
+                const selectedValues = this._getSavedGroupValues(rawValue, groupedControls);
+                groupedControls.forEach(control => { control.checked = selectedValues.includes(control.value); });
+                return;
+            }
+
+            const value = rawValue == null ? '' : String(rawValue);
+            matchingControls.forEach(control => { control.value = value; });
+        });
+
+        Object.entries(savedFiles).forEach(([fieldId, fileMetadata]) => {
+            const dropzoneId = this._toDomFieldId(fieldId) + '-dropzone';
+            const dropzone = Array.from(form.querySelectorAll('.wjdropzone')).find(element => element.id === dropzoneId);
+            if (!dropzone) return;
+
+            const uploadedObjectsInfo = dropzone.querySelector('input.uploadedObjectsInfo');
+            if (uploadedObjectsInfo) uploadedObjectsInfo.value = JSON.stringify(fileMetadata);
+        });
+    }
+
+    /**
+     * Convert the session representation of a radio/checkbox value back to selected options.
+     * @param {*} rawValue - Saved scalar value.
+     * @param {HTMLInputElement[]} controls - Controls belonging to the group.
+     * @returns {string[]} selected option values.
+     */
+    _getSavedGroupValues(rawValue, controls) {
+        if (Array.isArray(rawValue)) return rawValue.map(value => String(value));
+
+        const value = rawValue == null ? '' : String(rawValue);
+        if (value === '') return [];
+        if (controls.some(control => control.value === value)) return [value];
+        return value.split(',');
     }
 
     /**
