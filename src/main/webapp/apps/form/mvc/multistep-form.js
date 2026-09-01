@@ -264,6 +264,7 @@ export class MultistepForm {
                 appendTo: this.wrapper,
                 source: (request, response) => {
                     const url = new URL(sourceUrl, window.location.origin);
+                    url.searchParams.set('form-name', this.formName);
                     url.searchParams.set('term', request.term === '*' ? '%' : request.term);
 
                     fetch(url.toString(), {

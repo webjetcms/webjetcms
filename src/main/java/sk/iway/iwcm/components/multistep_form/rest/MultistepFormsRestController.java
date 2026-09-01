@@ -112,8 +112,14 @@ public class MultistepFormsRestController {
     }
 
     @GetMapping(value = "/autocomplete", params = {"step-id", "item-id", "term"})
-    public List<LabelValue> getAutocompleteOptions(@RequestParam("step-id") Long stepId, @RequestParam("item-id") Long itemId, @RequestParam String term, HttpServletRequest request) {
-        return multistepFormsService.getAutocompleteOptions(stepId, itemId, term, request);
+    public List<LabelValue> getAutocompleteOptions(
+        @RequestParam(value = "form-name", required = false) String formName,
+        @RequestParam("step-id") Long stepId,
+        @RequestParam("item-id") Long itemId,
+        @RequestParam String term,
+        HttpServletRequest request
+    ) {
+        return multistepFormsService.getAutocompleteOptions(formName, stepId, itemId, term, request);
     }
 
     @GetMapping(value = "/temp-file-preview", params = {"form-name", "file-key"})

@@ -564,21 +564,26 @@ public class MultistepFormsService {
     /**
      * Return matching configured options for an autocomplete form item.
      *
+     * @param formName form name used to initialize the current form session
      * @param stepId current form step
      * @param itemId autocomplete form item
      * @param term text entered by the user; at least two characters are required
      * @param request current form request
      * @return matching label/value options
      */
-    public final List<LabelValue> getAutocompleteOptions(Long stepId, Long itemId, String term, HttpServletRequest request) {
+    public final List<LabelValue> getAutocompleteOptions(String formName, Long stepId, Long itemId, String term, HttpServletRequest request) {
         List<LabelValue> options = new ArrayList<>();
         if(stepId == null || stepId < 1L || itemId == null || itemId < 1L) return options;
 
         FormItemEntity item = formItemsRepository.findById(itemId).orElse(null);
         int domainId = CloudToolsForCore.getDomainId();
-        if(item == null || AUTOCOMPLETE_FIELD_TYPE.equals(item.getFieldType()) == false ||
+        if(item == null) return options;
+
+        String sessionFormName = Tools.isNotEmpty(formName) ? formName : item.getFormName();
+        if(AUTOCOMPLETE_FIELD_TYPE.equals(item.getFieldType()) == false ||
             stepId.equals(item.getStepId()) == false || item.getDomainId() == null || item.getDomainId() != domainId ||
-            validateFormInfo(item.getFormName(), stepId, request) == false) {
+            Tools.isEmpty(item.getFormName()) || item.getFormName().equalsIgnoreCase(sessionFormName) == false ||
+            validateFormInfo(sessionFormName, stepId, request) == false) {
             return options;
         }
 
@@ -601,6 +606,19 @@ public class MultistepFormsService {
         }
 
         return options;
+    }
+
+    /**
+     * Backward-compatible variant for callers that do not provide the form instance name.
+     *
+     * @param stepId current form step
+     * @param itemId autocomplete form item
+     * @param term text entered by the user
+     * @param request current form request
+     * @return matching label/value options
+     */
+    public final List<LabelValue> getAutocompleteOptions(Long stepId, Long itemId, String term, HttpServletRequest request) {
+        return getAutocompleteOptions(null, stepId, itemId, term, request);
     }
 
     private static String normalizeAutocompleteValue(String value) {
