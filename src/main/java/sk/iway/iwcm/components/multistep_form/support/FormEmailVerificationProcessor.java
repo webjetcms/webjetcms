@@ -8,6 +8,7 @@ import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import org.jsoup.Jsoup;
 import org.json.JSONObject;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +17,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
+import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.rest.FormMailService;
 import sk.iway.iwcm.components.multistep_form.rest.MultistepFormsService;
@@ -40,6 +42,8 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
 
     public static final String SESSION_VERIFY_CODE_KEY = "MULTISTEP_FORM_EMAIL_VERIFY_CODE";
     public static final String SESSION_VERIFY_CODE_ATTEMPTS_KEY = "MULTISTEP_FORM_EMAIL_VERIFY_CODE_ATTEMPTS";
+    private static final String VERIFY_CODE_INPUT_CLASS = "verify-code-single";
+    private static final String FORM_SIMPLE_INPUT_KEY_PREFIX = "components.formsimple.input.";
     private static final Integer MAX_VERIFY_ATTEMPTS = 3;
 
     @Override
@@ -163,8 +167,9 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
 
     @SuppressWarnings("null")
     /**
-     * Validates the verification code provided by the user. Increments the
-     * attempt counter and enforces a maximum number of attempts.
+     * Validates the verification code provided in the input identified by the
+     * {@code verify-code-single} class. Increments the attempt counter and
+     * enforces a maximum number of attempts.
      *
      * @param formName the unique form name
      * @param currentReceived JSON payload from the current step containing submitted fields
@@ -175,14 +180,18 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
     private void emaiCodeValidation(String formName, JSONObject currentReceived, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
         String verifyCode = null;
         String foundKey = null;
-        for(String key : currentReceived.keySet()) {
-            foundKey = new String(key);
-            //remove key postfix
-            key = key.replaceFirst("-\\d+$", "");
-            if(key.equalsIgnoreCase("verify_code")) {
+        Prop prop = Prop.getInstance(request);
+        for(FormItemEntity formItem : MultistepFormsService.getFormItemsForValidation(formName)) {
+            String key = formItem.getItemFormId();
+            if(currentReceived.has(key) && isVerifyCodeInput(formItem, prop)) {
+                foundKey = key;
                 verifyCode = currentReceived.getString(foundKey);
                 break;
             }
+        }
+
+        if(foundKey == null) {
+            throw new SaveFormException(prop.getText("form_email_verification_processor.verify_code_field_not_found"), false, null);
         }
 
         String sessionKey = MultistepFormsService.getSessionKey(formName, request);
@@ -197,12 +206,19 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
                 request.getSession().removeAttribute(sessionKey + "_" + SESSION_VERIFY_CODE_KEY);
                 request.getSession().removeAttribute(sessionKey + "_" + SESSION_VERIFY_CODE_ATTEMPTS_KEY);
 
-                throw new SaveFormException(Prop.getInstance(request).getText("form_email_verification_processor.verify_code_max_attempts"), true, null);
+                throw new SaveFormException(prop.getText("form_email_verification_processor.verify_code_max_attempts"), true, null);
             } else {
                 // Update attempts count
                 request.getSession().setAttribute(sessionKey + "_" + SESSION_VERIFY_CODE_ATTEMPTS_KEY, attempCount);
-                errors.put(foundKey, Prop.getInstance(request).getText("form_email_verification_processor.verify_code_invalid"));
+                errors.put(foundKey, prop.getText("form_email_verification_processor.verify_code_invalid"));
             }
         }
+    }
+
+    private boolean isVerifyCodeInput(FormItemEntity formItem, Prop prop) {
+        String inputHtml = prop.getText(FORM_SIMPLE_INPUT_KEY_PREFIX + formItem.getFieldType());
+        if(Tools.isEmpty(inputHtml)) return false;
+
+        return Jsoup.parseBodyFragment(inputHtml).selectFirst("input." + VERIFY_CODE_INPUT_CLASS) != null;
     }
 }
