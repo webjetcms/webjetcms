@@ -13,6 +13,7 @@ const PLAYWRIGHT_VIDEO_OPTIONS = {
 const PROCESS_LAUNCHER_PATCH = Symbol.for("webjet.video.high-quality.process-launcher");
 const CR_SESSION_PATCH = Symbol.for("webjet.video.high-quality.cr-session");
 const CHROMIUM_PROFILE_PATCH = Symbol.for("webjet.video.native-zoom.chromium-profile");
+const CODECEPT_TEST_TAG_PATTERN = /@[a-zA-Z0-9_-]+/g;
 
 function videoZoomToChromiumLevel(zoom) {
   // Chromium stores page zoom logarithmically: zoom factor = 1.2 ^ zoom level.
@@ -107,11 +108,19 @@ installVideoProfile();
 const Playwright = require("codeceptjs/lib/helper/Playwright");
 
 function sanitizeScenarioName(test) {
-  const title = String(test?.title || "video").trim();
-  return title
+  const scenarioFile = typeof test?.file === "string" ? test.file.trim() : "";
+  const sourceName = scenarioFile !== ""
+    ? path.basename(scenarioFile, path.extname(scenarioFile))
+    : String(test?.title || "video").replace(CODECEPT_TEST_TAG_PATTERN, "").trim();
+  return sourceName
     .replace(/[<>:"/\\|?*\u0000-\u001f]/g, "-")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-") || "video";
+}
+
+function getVideoArtifactName(test, passed) {
+  const scenarioName = sanitizeScenarioName(test);
+  return passed ? `${scenarioName}.webm` : `${scenarioName}.failed.webm`;
 }
 
 function escapeRegularExpression(value) {
@@ -230,7 +239,7 @@ class VideoPlaywrightHelper extends Playwright {
 
     const scenarioName = sanitizeScenarioName(test);
     const videoDirectory = path.join(global.output_dir, "videos");
-    const targetName = passed ? `${scenarioName}.webm` : `${scenarioName}.failed.webm`;
+    const targetName = getVideoArtifactName(test, passed);
     const targetPath = path.join(videoDirectory, targetName);
     const temporaryPath = path.join(rawDirectory, targetName);
 
@@ -259,3 +268,4 @@ class VideoPlaywrightHelper extends Playwright {
 }
 
 module.exports = VideoPlaywrightHelper;
+module.exports.getVideoArtifactName = getVideoArtifactName;
