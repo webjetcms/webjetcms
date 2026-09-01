@@ -178,6 +178,19 @@ async function getViewportSize(page) {
   }));
 }
 
+async function resolveVisibleClickableTarget(helper, locator) {
+  const elements = await helper._locateClickable(locator);
+  if (!Array.isArray(elements) || elements.length === 0) {
+    throw new Error(`Unable to locate video cursor target: ${String(locator)}`);
+  }
+  if (elements.length === 1) return elements[0];
+
+  for (const element of elements) {
+    if (await element.isVisible()) return element;
+  }
+  return elements[0];
+}
+
 async function getRenderedCursorPosition(page) {
   return page.evaluate(() => {
     const host = document.querySelector("#wj-video-cursor-host");
@@ -308,11 +321,9 @@ class VideoHelper extends Helper {
     await page.evaluate(installVideoCursor, cursorScale);
   }
 
-  async _moveCursorNaturally(locator, curveStrength) {
+  async _moveCursorNaturally(element, locator, curveStrength) {
     const helper = this.helpers.Playwright;
     const page = helper.page;
-    const element = await helper._locateElement(locator);
-    if (element == null) throw new Error(`Unable to locate video cursor target: ${String(locator)}`);
 
     await element.scrollIntoViewIfNeeded();
     const box = await element.boundingBox();
@@ -383,13 +394,16 @@ class VideoHelper extends Helper {
   async videoClick(locator, curveStrength = getDefaultCurveStrength()) {
     const helper = this.helpers.Playwright;
     const resolvedCurveStrength = getCurveStrength(curveStrength);
+    const target = await resolveVisibleClickableTarget(helper, locator);
     if (isCursorEnabled()) {
-      await this._moveCursorNaturally(locator, resolvedCurveStrength);
+      await this._moveCursorNaturally(target, locator, resolvedCurveStrength);
       await new Promise((resolve) => setTimeout(resolve, getClickDelay()));
     } else {
-      await helper.moveCursorTo(locator);
+      await target.hover();
+      await helper._waitForAction();
     }
-    const result = await helper.click(locator);
+    await target.click();
+    const result = await Promise.all([helper._waitForAction()]);
     await new Promise((resolve) => setTimeout(resolve, getPostClickDelay()));
     return result;
   }

@@ -46,8 +46,7 @@ test("keeps synthetic cursor points inside the DOM viewport under browser zoom",
     Object.defineProperty(videoHelper, "helpers", {
       value: {
         Playwright: {
-          page,
-          _locateElement: (locator) => page.locator(locator).first()
+          page
         }
       }
     });
@@ -55,7 +54,7 @@ test("keeps synthetic cursor points inside the DOM viewport under browser zoom",
     videoHelper.videoCursorPosition = { x: 100, y: 750 };
     videoHelper.videoCursorRandom = () => 0.1;
 
-    await videoHelper._moveCursorNaturally("#target", 1);
+    await videoHelper._moveCursorNaturally(page.locator("#target"), "#target", 1);
 
     assert.ok(requestedMoves.length > 1, "The cursor must request multiple movement points");
     const outsideMoves = requestedMoves.filter(({ x, y }) => {
@@ -68,6 +67,89 @@ test("keeps synthetic cursor points inside the DOM viewport under browser zoom",
     );
   } finally {
     await browser?.close();
+    if (previousCodeceptjs === undefined) {
+      delete global.codeceptjs;
+    } else {
+      global.codeceptjs = previousCodeceptjs;
+    }
+  }
+});
+
+test("moves to and clicks the same visible target for a fuzzy locator", async () => {
+  const previousCodeceptjs = global.codeceptjs;
+  const previousCursorSetting = process.env.CODECEPT_VIDEO_CURSOR;
+  const previousClickDelay = process.env.CODECEPT_VIDEO_CLICK_DELAY;
+  let browser;
+
+  try {
+    process.env.CODECEPT_VIDEO_CURSOR = "true";
+    process.env.CODECEPT_VIDEO_CLICK_DELAY = "0";
+    global.codeceptjs = require("codeceptjs");
+    const CodeceptPlaywright = require("codeceptjs/lib/helper/Playwright");
+    const VideoHelper = require("./video_helper.js");
+
+    browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
+    await page.setContent(`
+      <save id="css-decoy" style="position: fixed; left: 20px; top: 20px; width: 40px; height: 20px;">Save</save>
+      <button id="hidden-save" style="display: none;">Save</button>
+      <button id="visible-save" style="position: fixed; left: 600px; top: 400px; width: 100px; height: 40px;">Save</button>
+      <script>
+        window.clickedTargetId = null;
+        document.addEventListener("click", (event) => {
+          window.clickedTargetId = event.target.id;
+        });
+      </script>
+    `);
+
+    let locateClickableCalls = 0;
+    let helperClickCalls = 0;
+    const playwrightHelper = {
+      page,
+      options: { highlightElement: false },
+      _getContext: async () => page,
+      _locateElement: CodeceptPlaywright.prototype._locateElement,
+      _locateClickable: async function(locator) {
+        locateClickableCalls++;
+        return CodeceptPlaywright.prototype._locateClickable.call(this, locator);
+      },
+      _waitForAction: async () => {},
+      moveCursorTo: CodeceptPlaywright.prototype.moveCursorTo,
+      click: async function(locator) {
+        helperClickCalls++;
+        return CodeceptPlaywright.prototype.click.call(this, locator);
+      }
+    };
+    const videoHelper = new VideoHelper({});
+    Object.defineProperty(videoHelper, "helpers", {
+      value: { Playwright: playwrightHelper }
+    });
+    videoHelper.videoCursorPage = page;
+    videoHelper.videoCursorPosition = { x: 400, y: 300 };
+    videoHelper.videoCursorRandom = () => 0.1;
+
+    const targetBox = await page.locator("#visible-save").boundingBox();
+    await videoHelper.videoClick("Save", 0);
+
+    assert.equal(await page.evaluate(() => window.clickedTargetId), "visible-save");
+    assert.equal(locateClickableCalls, 1, "The fuzzy clickable target must be resolved exactly once");
+    assert.equal(helperClickCalls, 0, "The original locator must not be resolved again for the click");
+    assert.deepEqual(videoHelper.videoCursorPosition, {
+      x: targetBox.x + targetBox.width / 2,
+      y: targetBox.y + targetBox.height / 2
+    });
+  } finally {
+    await browser?.close();
+    if (previousCursorSetting === undefined) {
+      delete process.env.CODECEPT_VIDEO_CURSOR;
+    } else {
+      process.env.CODECEPT_VIDEO_CURSOR = previousCursorSetting;
+    }
+    if (previousClickDelay === undefined) {
+      delete process.env.CODECEPT_VIDEO_CLICK_DELAY;
+    } else {
+      process.env.CODECEPT_VIDEO_CLICK_DELAY = previousClickDelay;
+    }
     if (previousCodeceptjs === undefined) {
       delete global.codeceptjs;
     } else {
