@@ -17,7 +17,7 @@
 - Bezpečnosť - sprísnená kontrola oprávnení pri správe blogerov (#295).
 - Bezpečnosť - sprísnená validácia názvov databázových stĺpcov pri dynamickom usporiadaní a filtrovaní. **Upozornenie:** verejné API už v parametroch usporiadania nepodporujú vlastné SQL výrazy, používajú sa iba bezpečné názvy stĺpcov alebo dostupné pomenované konštanty (#294).
 - Bezpečnosť - [zabezpečený koncový bod `row-reorder`](developer/datatables/README.md#poradie-usporiadania-riadkov) dátových tabuliek. Povolené je meniť iba numerické pole označené `DataTableColumnType.ROW_REORDER`, pričom sa kontrolujú oprávnenia pre každý záznam aj dodatočný rozsah celej dávky pomocou `checkRowReorderScope`. Pri formulároch sa overuje príslušnosť k formuláru a kroku aj prístup používateľa; neplatná požiadavka sa neuloží (#295).
-- CKEditor - doplnená možnosť konfigurovať pravidlá čistenia obsahu pri vložení z Word/Excel cez premennú `ckeditor_pasteFromWord_disallowedContent` (#300).
+- CKEditor - doplnená možnosť konfigurovať pravidlá čistenia obsahu pri vložení z Word/Excel cez premennú `ckeditor_pasteFromWord_disallowedContent` vrátane zložených ACF pravidiel (#300).
 
 ## 2026.0.28
 

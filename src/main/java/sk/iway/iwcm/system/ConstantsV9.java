@@ -188,7 +188,7 @@ public class ConstantsV9 {
 		Constants.setString("ckeditor_table_cellpadding", "1", Constants.MOD_EDITOR, "Predvolená hodnota cellpadding tabuľky v CKEditore.");
 		Constants.setString("ckeditor_table_cellspacing", "1", Constants.MOD_EDITOR, "Predvolená hodnota cellspacing tabuľky v CKEditore.");
 		Constants.setString("ckeditor_table_wrapper_class", "table-responsive", Constants.MOD_EDITOR, "Predvolený wrapper pre tabuľku v CKEditore.");
-		Constants.setString("ckeditor_pasteFromWord_disallowedContent", "table[width],table[height],table[border],td(*),td[valign],td[align],th(*),th[valign],th[align],p[align],span,col[width]", Constants.MOD_EDITOR, "Zoznam pravidiel CKEditor Advanced Content Filter, ktoré sa odstránia pri vložení obsahu z Wordu. Pravidlá sú oddelené čiarkou.");
+		Constants.setString("ckeditor_pasteFromWord_disallowedContent", "table[width,height,border];td(*);td[align,valign];th(*);th[align,valign];p[align];span;col[width]", Constants.MOD_EDITOR, "Zoznam pravidiel CKEditor Advanced Content Filter, ktoré sa odstránia pri vložení obsahu z Wordu. Pravidlá sú oddelené bodkočiarkou, položky v rámci pravidla čiarkou.");
 
 		Constants.setString("ckeditor_extraPlugins", "", Constants.MOD_EDITOR, "Zoznam doplnkov pre CKEditor oddelených čiarkou.");
 

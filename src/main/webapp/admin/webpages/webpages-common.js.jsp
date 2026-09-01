@@ -3311,9 +3311,19 @@ function initializeCkEditorImpl(ckEditorElementId, ckEditorInitFunction, configL
 
 					var disallowedContent = evt.editor.config.pasteFromWordDisallowedContent;
 					if (typeof disallowedContent === "string") {
-						disallowedContent.split(",").forEach(function(rule) {
+						disallowedContent.split(";").forEach(function(rule) {
 							rule = rule.trim();
-							if (rule !== "") filter.disallow(rule);
+							if (rule === "") return;
+
+							var ruleCount = filter.disallowedContent.length;
+							try {
+								var applied = filter.disallow(rule);
+								if (applied !== true || filter.disallowedContent.length === ruleCount) {
+									console.warn("Invalid CKEditor ACF rule in ckeditor_pasteFromWord_disallowedContent:", rule);
+								}
+							} catch (error) {
+								console.error("Error applying CKEditor ACF rule from ckeditor_pasteFromWord_disallowedContent:", rule, error);
+							}
 						});
 					}
 					filter.disabled = false;

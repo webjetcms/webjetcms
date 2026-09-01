@@ -12,9 +12,9 @@ var defaultConfig = {
     wrapperClass: "table-responsive"
 };
 
-var defaultPasteFromWordDisallowedContent = "table[width],table[height],table[border],td(*),td[valign],td[align],th(*),th[valign],th[align],p[align],span,col[width]";
+var defaultPasteFromWordDisallowedContent = "table[width,height,border];td(*);td[align,valign];th(*);th[align,valign];p[align];span;col[width]";
 
-var customPasteFromWordDisallowedContent = " table[width],\n table[height] , table[border], td(*) , td[valign], th(*), th[valign], p[align], span, col[width], , ";
+var customPasteFromWordDisallowedContent = " table[width,height,border];\n td(*) ; invalid[ ; td[align,valign] ; th(*) ; th[valign] ; p[align] ; span ; col[width] ; ";
 
 var pasteFromWordHtml = '<table width="640" height="120" border="2"><tbody><tr><th class="word-header" align="center" valign="bottom"><span>Header</span></th><td class="word-cell" align="right" valign="middle">Cell</td></tr></tbody></table><p align="justify"><span>Text</span></p>';
 
@@ -236,7 +236,7 @@ Scenario('pasteFromWord filter-custom', async ({ I, DTE, Document }) => {
         tableHeight: null,
         tableBorder: null,
         tdClass: null,
-        tdAlign: "right",
+        tdAlign: null,
         tdValign: null,
         thClass: null,
         thAlign: "center",
@@ -258,7 +258,7 @@ Scenario('pasteFromWord filter-pageBuilder-custom', async ({ I, DTE, Document })
         tableHeight: null,
         tableBorder: null,
         tdClass: null,
-        tdAlign: "right",
+        tdAlign: null,
         tdValign: null,
         thClass: null,
         thAlign: "center",
