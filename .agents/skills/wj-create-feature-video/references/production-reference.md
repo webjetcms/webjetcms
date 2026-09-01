@@ -39,7 +39,16 @@ Its minimum-jerk timing smoothly accelerates and brakes, while the shape and
 duration vary between clicks. The pseudo-random sequence is seeded by the
 scenario name, so re-recording the same scenario remains repeatable. Set
 `CODECEPT_VIDEO_CURSOR_SEED` to a different value when a new repeatable motion
-variant is wanted. The optional
+variant is wanted. The optional second argument controls the curve strength:
+`I.videoClick(locator, 0)` follows a straight line, `1` is the baseline, and
+higher finite non-negative values produce a more pronounced curve where
+viewport room allows it. Keep normal authoring values between `0` and `2`; very
+large values can look exaggerated and eventually saturate at the safe viewport
+boundary. The `video` and `video:current` npm scripts define a fallback
+`CODECEPT_VIDEO_CURVE_STRENGTH=1` for calls without the second argument. Change
+the fallback in `package.json` to tune all runs, or override one run with, for
+example, `CODECEPT_VIDEO_CURVE_STRENGTH=0.5 npm run video -- video/<scenario>.js`.
+An explicit second argument always takes precedence. The optional
 `CODECEPT_VIDEO_CLICK_DELAY` controls the short lead-in before a click. Every
 video click also leaves at least 500 milliseconds after the action for easier
 editing; increase it up to 2000 milliseconds with

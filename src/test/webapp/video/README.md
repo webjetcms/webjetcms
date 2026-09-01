@@ -27,7 +27,22 @@ Use `Feature("video.<scenario-name>")` so the source is easy to find in reports.
 - Use `I.videoClick(locator)` for important clicks. It moves the rendered cursor
   along a varied human-like path with a larger early arc, a much smaller late
   correction, and smooth acceleration and braking. It then adds a short visual
-  lead-in before clicking.
+  lead-in before clicking. Its optional second argument is a curve multiplier:
+
+  ```javascript
+  I.videoClick(locator);      // Environment default (falls back to 1).
+  I.videoClick(locator, 0);   // Straight path.
+  I.videoClick(locator, 0.5); // Subtle curve.
+  I.videoClick(locator, 1.5); // More pronounced curve.
+  ```
+
+  The strength must be a finite non-negative number. Values from `0` to `2` are
+  recommended for natural motion; larger values can look exaggerated and are
+  limited when the path approaches the viewport edge. Calls without the second
+  argument use `CODECEPT_VIDEO_CURVE_STRENGTH`. The `video` and `video:current`
+  scripts in `package.json` define its fallback as `0.3`; change it there for all
+  runs. An explicit argument always takes precedence over the environment default.
+
 - Keep manual shots in the accompanying shot plan instead of simulating an
   unreliable browser action.
 

@@ -99,12 +99,17 @@ a short pronunciation test.
 - Reuse selectors and waits from existing regression tests where possible.
 - Prefer a read-only walkthrough. If mutation is essential, create isolated test
   data and clean it up.
-- Use `I.videoClick(locator)` for important clicks so the rendered cursor follows
-  a varied human-like path with a larger early arc, a subtle late correction,
-  and smooth minimum-jerk acceleration and braking. The cursor reaches the
-  target before the click effect, and the recording keeps at least 500 ms of
-  editing room after it. This presentation timing is not application
-  synchronization.
+- Use `I.videoClick(locator, curveStrength)` for important clicks so the rendered
+  cursor follows a varied human-like path with a larger early arc, a subtle late
+  correction, and smooth minimum-jerk acceleration and braking. Omit the
+  optional strength to use the environment default, use `0` for a straight
+  path, use `1` for the baseline curve, and use higher values for a more
+  pronounced curve. Use a finite non-negative number and normally stay within
+  `0` to `2`. The environment default comes from
+  `CODECEPT_VIDEO_CURVE_STRENGTH`, falling back to `1`; an explicit second
+  argument overrides it. The cursor reaches the target before the click effect,
+  and the recording keeps at least 500 ms of editing room after it. This
+  presentation timing is not application synchronization.
 - Synchronize with `waitFor*`, URL or application state, and
   `DT.waitForLoader()`. Never use a fixed wait to synchronize application state.
 - Keep test comments in English and organize them by shot.

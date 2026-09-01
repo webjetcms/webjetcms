@@ -2,6 +2,7 @@ const { Helper } = codeceptjs;
 
 const DEFAULT_CLICK_DELAY = 350;
 const DEFAULT_POST_CLICK_DELAY = 500;
+const DEFAULT_CURVE_STRENGTH = 1;
 const CURSOR_MIN_DURATION = 240;
 const CURSOR_MAX_DURATION = 900;
 const CURSOR_FRAME_DURATION = 25;
@@ -20,6 +21,19 @@ function getPostClickDelay() {
   const value = Number.parseInt(process.env.CODECEPT_VIDEO_POST_CLICK_DELAY || DEFAULT_POST_CLICK_DELAY, 10);
   if (Number.isNaN(value) || value < 0) return DEFAULT_POST_CLICK_DELAY;
   return Math.min(Math.max(value, DEFAULT_POST_CLICK_DELAY), 2000);
+}
+
+function getCurveStrength(value) {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+    throw new Error("Video cursor curve strength must be a finite number greater than or equal to zero.");
+  }
+  return value;
+}
+
+function getDefaultCurveStrength() {
+  const configuredValue = process.env.CODECEPT_VIDEO_CURVE_STRENGTH;
+  if (configuredValue == null || configuredValue.trim() === "") return DEFAULT_CURVE_STRENGTH;
+  return getCurveStrength(Number(configuredValue));
 }
 
 function clamp(value, minimum, maximum) {
@@ -82,7 +96,7 @@ function getNormalClearance(point, normal, direction, viewport, padding = 36) {
   return Math.max(0, Math.min(...distances));
 }
 
-function createNaturalCursorPlan(start, end, viewport, distance, random) {
+function createNaturalCursorPlan(start, end, viewport, distance, random, curveStrength) {
   const delta = { x: end.x - start.x, y: end.y - start.y };
   const normal = { x: -delta.y / distance, y: delta.x / distance };
   const primaryPeak = randomBetween(random, 0.22, 0.4);
@@ -98,10 +112,20 @@ function createNaturalCursorPlan(start, end, viewport, distance, random) {
   const primaryRatio = distance < 35
     ? randomBetween(random, 0.03, 0.08)
     : randomBetween(random, 0.08, 0.2);
-  const primaryAmplitude = primaryDirection * Math.min(
+  const maximumPrimaryAmplitude = getNormalClearance(
+    primaryBase,
+    normal,
+    primaryDirection,
+    viewport
+  ) * 0.72;
+  const defaultPrimaryAmplitude = Math.min(
     distance * primaryRatio,
     120,
-    getNormalClearance(primaryBase, normal, primaryDirection, viewport) * 0.72
+    maximumPrimaryAmplitude
+  );
+  const primaryAmplitude = primaryDirection * Math.min(
+    defaultPrimaryAmplitude * curveStrength,
+    maximumPrimaryAmplitude
   );
 
   const secondaryPeak = randomBetween(random, 0.62, 0.78);
@@ -279,7 +303,7 @@ class VideoHelper extends Helper {
     await page.evaluate(installVideoCursor);
   }
 
-  async _moveCursorNaturally(locator) {
+  async _moveCursorNaturally(locator, curveStrength) {
     const helper = this.helpers.Playwright;
     const page = helper.page;
     const element = await helper._locateElement(locator);
@@ -317,7 +341,7 @@ class VideoHelper extends Helper {
     }
 
     const random = this.videoCursorRandom || Math.random;
-    const plan = createNaturalCursorPlan(start, end, viewport, distance, random);
+    const plan = createNaturalCursorPlan(start, end, viewport, distance, random, curveStrength);
     const duration = getCursorDuration(distance, random);
     const steps = Math.max(12, Math.ceil(duration / CURSOR_FRAME_DURATION));
     const frameDuration = duration / steps;
@@ -347,11 +371,15 @@ class VideoHelper extends Helper {
   /**
    * Moves the synthetic cursor to a target, clicks it, and leaves editing room after the click.
    * @param {*} locator CodeceptJS locator of the target element
+   * @param {number} [curveStrength] Finite non-negative curve multiplier; when omitted, the
+   * environment default is used, zero produces a straight path, and one uses the baseline curve
+   * @throws {Error} When curveStrength is negative, non-finite, or not a number
    */
-  async videoClick(locator) {
+  async videoClick(locator, curveStrength = getDefaultCurveStrength()) {
     const helper = this.helpers.Playwright;
+    const resolvedCurveStrength = getCurveStrength(curveStrength);
     if (isCursorEnabled()) {
-      await this._moveCursorNaturally(locator);
+      await this._moveCursorNaturally(locator, resolvedCurveStrength);
       await new Promise((resolve) => setTimeout(resolve, getClickDelay()));
     } else {
       await helper.moveCursorTo(locator);

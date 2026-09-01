@@ -26,9 +26,7 @@ npx codeceptjs run --override '{ "tests": "./screenshots/generator/**/*.js"}' --
 
 ## Nahrávanie prezentačných videí
 
-Video scenáre sú v priečinku `video`. Playwright ich nahráva do
-`build/test/videos/<názov-scenára>.webm`. Opakovaný beh prepíše predošlé video
-rovnakého scenára. Nahrávka obsahuje syntetický kurzor aj zvýraznenie kliknutia.
+Video scenáre sú v priečinku `video`. Playwright ich nahráva do `build/test/videos/<názov-scenára>.webm`. Opakovaný beh prepíše predošlé video rovnakého scenára. Nahrávka obsahuje syntetický kurzor aj zvýraznenie kliknutia.
 
 ```sh
 cd src/test/webapp
@@ -43,6 +41,6 @@ npm run video -- video/293-config-jstree-view.js
 npm run video:current
 ```
 
-Oba príkazy používajú viditeľný prehliadač.
+Oba príkazy používajú viditeľný prehliadač. Predvolenú silu krivky kurzora nastavuje `CODECEPT_VIDEO_CURVE_STRENGTH` vo video príkazoch v `package.json` s predvolenou hodnotou `0.3`. Explicitný druhý parameter `I.videoClick(locator, curveStrength)` má vždy prednosť.
 
 Konvencie pre tvorbu scenárov sú v [video/README.md](video/README.md).
