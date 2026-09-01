@@ -34,7 +34,12 @@ public class IncludesHandler {
         return wholeResponse.toString();
     }
 
-    /** Flushes any trailing fragment retained while checking a split protected token. */
+    /**
+     * Flushes any trailing fragment retained while checking a split protected token.
+     *
+     * @param writer destination for restored response content
+     * @throws IOException if the restored content cannot be written
+     */
     public void finish(BufferedWriter writer) throws IOException {
         if (finished) return;
         finished = true;
@@ -43,7 +48,14 @@ public class IncludesHandler {
         logValidation();
     }
 
-    /** Restores and writes the part of a streamed response that is safe to emit. */
+    /**
+     * Restores and writes the part of a streamed response that is safe to emit.
+     *
+     * @param line next streamed response fragment
+     * @param writer destination for restored response content
+     * @throws IOException if the restored content cannot be written
+     * @throws IllegalStateException if the stream has already been finished
+     */
     public void handleLine(String line, BufferedWriter writer) throws IOException {
         if (finished) throw new IllegalStateException("INCLUDE stream is already finished");
         if (line == null || line.isEmpty()) return;
@@ -55,7 +67,14 @@ public class IncludesHandler {
         write(writer, restoreKnownTokens(available));
     }
 
-    /** Protects all INCLUDE commands in the DTO input and returns their restoration state. */
+    /**
+     * Protects all INCLUDE commands in the DTO input and returns their restoration state.
+     *
+     * When commands are present, their placeholder tokens replace the original input value in the supplied DTO.
+     *
+     * @param inputData input whose INCLUDE commands should be protected
+     * @return handler containing the protected commands, or an empty handler when protection is unnecessary or fails
+     */
     static IncludesHandler protectIncludes(InputDataDTO inputData) {
         if (inputData.isStructuredInput()) return empty();
 
@@ -86,17 +105,27 @@ public class IncludesHandler {
         }
     }
 
-    /** Restores INCLUDE commands and reports tokens lost or duplicated by the provider. */
+    /**
+     * Restores INCLUDE commands and reports tokens lost or duplicated by the provider.
+     *
+     * @param value provider response containing protected tokens
+     * @return response with all recognized tokens restored
+     */
     String restoreIncludes(String value) {
         String restored = restoreKnownTokens(value);
         logValidation();
         return restored;
     }
 
-    boolean hasIncludes() {
+    public boolean hasIncludes() {
         return includes.isEmpty() == false;
     }
 
+    /**
+     * Returns instructions requiring the provider to preserve all protected tokens.
+     *
+     * @return preservation instructions, or an empty string when no tokens are protected
+     */
     String preservationInstructions() {
         if (includes.isEmpty()) return "";
         String example = includes.keySet().iterator().next();
@@ -105,6 +134,12 @@ public class IncludesHandler {
             + "remove, or otherwise change it. The output must contain every INCLUDE token.";
     }
 
+    /**
+     * Restores recognized tokens while recording how often each token occurred.
+     *
+     * @param value response fragment containing protected tokens
+     * @return fragment with all recognized tokens restored
+     */
     private String restoreKnownTokens(String value) {
         if (value == null || value.isEmpty() || includes.isEmpty()) return value;
 
@@ -117,7 +152,11 @@ public class IncludesHandler {
         return restored;
     }
 
-    /** Returns the start of a trailing fragment that may be an incomplete known token. */
+    /**
+     * Returns the start of a trailing fragment that may be an incomplete known token.
+     *
+     * @return index at which a possible incomplete token begins, or the pending length when none exists
+     */
     private int partialTokenStart() {
         int maximumSuffixLength = Math.min(pending.length(), Math.max(0, maximumTokenLength - 1));
         for (int length = maximumSuffixLength; length > 0; length--) {

@@ -1,5 +1,7 @@
 Feature('ai.ai-assistants');
 
+const path = require("path");
+
 Before(({ I, login }) => {
     login('admin');
 });
@@ -12,6 +14,15 @@ let originalImageLocation = "/images/gallery/test/editor/";
 let openAiId = "OpenAI";
 let geminiId = "Gemini";
 let openRouterId = "OpenRouter";
+let localTextId = "Lokálny model na generovanie textu";
+let localTranslateId = "Lokálny prekladový model";
+
+const localModelsDirectory = path.resolve(__dirname, "../../../../main/webapp/WEB-INF/local-ai-models");
+const localTextModelBundle = path.join(localModelsDirectory, "eurollm-1.7b-instruct-q4-k-m.zip");
+const localTranslateModelBundle = path.join(localModelsDirectory, "m2m100-418m-int8.zip");
+const localAssistantPrefix = "local-ai-autotest";
+const localTextAssistant = localAssistantPrefix + "-text";
+const localTranslateAssistant = localAssistantPrefix + "-translate";
 
 let defaultValue = "TO CHANGE TEXT";
 let containerAiContent = "#toast-container-ai-content";
@@ -144,7 +155,35 @@ Scenario('ai buttons usage', async ({I, DTE}) => {
     });
 });
 
-/* !!! LOCAL AI sa sa nedá otestovať, nakoľko server beží na Linuxe !!! */
+Scenario('local models return text', async ({I, DT, DTE, Document}) => {
+    Document.setConfigValue("ai_localTextModelBundlePath", localTextModelBundle);
+    Document.setConfigValue("ai_localTranslateModelBundlePath", localTranslateModelBundle);
+
+    await deleteLocalAssistants(I, DT);
+    createLocalAssistant(
+        I,
+        DT,
+        DTE,
+        localTextAssistant,
+        localTextId,
+        "Reply with one short word related to the input text."
+    );
+    createLocalAssistant(
+        I,
+        DT,
+        DTE,
+        localTranslateAssistant,
+        localTranslateId,
+        'Translator: {"sourceLanguage":"en","targetLanguage":"sk"}'
+    );
+
+    await assertLocalAssistantReturnsText(I, DTE, localTextAssistant, localTextId, "A green forest");
+    await assertLocalAssistantReturnsText(I, DTE, localTranslateAssistant, localTranslateId, "Good morning");
+});
+
+Scenario('cleanup local model assistants', async ({I, DT}) => {
+    await deleteLocalAssistants(I, DT);
+});
 
 
 let testUsersArray = ["tester", "tester4", "tester3", "webjet"];
@@ -468,6 +507,61 @@ Scenario('logout', ({ I }) => {
 });
 
 /* Support functions */
+
+function createLocalAssistant(I, DT, DTE, name, provider, instructions) {
+    I.amOnPage("/admin/v9/settings/ai-assistants/");
+    DT.waitForLoader();
+    I.clickCss("button.buttons-create");
+    DTE.waitForEditor();
+
+    I.fillField("#DTE_Field_name", name);
+    I.fillField("#DTE_Field_description", name);
+
+    I.clickCss("#pills-dt-datatableInit-action-tab");
+    DTE.selectOption("action", "Vygenerovať text");
+    I.fillField("#DTE_Field_className", "sk.iway.iwcm.doc.DocDetails");
+    I.fillField("#DTE_Field_fieldFrom", "fieldS");
+    I.fillField("#DTE_Field_fieldTo", "fieldS");
+
+    I.clickCss("#pills-dt-datatableInit-provider-tab");
+    DTE.selectOption("provider", provider);
+
+    I.clickCss("#pills-dt-datatableInit-instructions-tab");
+    I.fillField("#DTE_Field_instructions", instructions);
+    DTE.save();
+}
+
+async function assertLocalAssistantReturnsText(I, DTE, assistantName, provider, inputText) {
+    openPageAndPerexTab(I, DTE);
+    I.clickCss("#pills-dt-datatableInit-fields-tab");
+    I.fillField("#DTE_Field_fieldS", inputText);
+
+    startAssistant(I, "fieldS", assistantName, provider);
+    I.waitForText(
+        "Hotovo! Nepoužil sa žiadny token.",
+        180,
+        containerAiContent + " > .current-status > span"
+    );
+    I.waitForVisible(containerAiContent + " button.btn-ai-undo", 5);
+
+    const outputText = await I.grabValueFrom("#DTE_Field_fieldS");
+    I.assertNotEqual(outputText.trim(), "");
+    I.assertNotEqual(outputText, inputText);
+}
+
+async function deleteLocalAssistants(I, DT) {
+    I.amOnPage("/admin/v9/settings/ai-assistants/");
+    DT.waitForLoader();
+    DT.filterContains("name", localAssistantPrefix);
+
+    const matchingRows = await I.grabNumberOfVisibleElements(
+        locate("#datatableInit tbody td").withText(localAssistantPrefix)
+    );
+    if (matchingRows > 0) {
+        DT.deleteAll();
+        DT.waitForLoader();
+    }
+}
 
 function checkAutocomplete(I, id, value, valueToSelect, options) {
     I.fillField("#" + id, value);

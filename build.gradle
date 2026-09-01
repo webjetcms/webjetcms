@@ -30,6 +30,7 @@ plugins {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven {
         name = "github"
@@ -58,7 +59,7 @@ ext {
     allureVersion = "2.32.0";
     aspectJVersion = '1.9.25.1';
     eclipselinkVersion = '5.0.0-B13';
-    webjetAiVersion = '1.2.0';
+    webjetAiVersion = '2.0.0-SNAPSHOT';
 }
 
 lombok {
@@ -144,7 +145,7 @@ configurations {
 
 dependencies {
 
-    implementation "com.webjetcms:webjet-ai:${webjetAiVersion}"
+    implementation "com.webjetcms:webjet-ai-local:${webjetAiVersion}"
 
     //based on https://github.com/mapstruct/mapstruct-examples/blob/main/mapstruct-lombok/build.gradle
     implementation "org.mapstruct:mapstruct:${mapstructVersion}"

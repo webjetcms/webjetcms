@@ -12,6 +12,8 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.webjetcms.ai.EmbeddingInputType;
+
 import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Logger;
@@ -31,8 +33,10 @@ import sk.iway.iwcm.rag.vectorstore.VectorStore;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
 /**
- * Service for semantic search over document embeddings.
- * Embeds the query, searches pgvector, and returns results aggregated by document.
+ * Performs semantic and optional hybrid search over indexed document chunks.
+ *
+ * Embeds queries, combines vector and full-text rankings, aggregates the best chunk score per document, and
+ * optionally generates a sanitized answer for the current request.
  */
 @Service
 public class SemanticSearchService {
@@ -59,8 +63,11 @@ public class SemanticSearchService {
     }
 
     /**
-     * Search for documents similar to the query text.
+     * Searches for documents similar to the query text.
+     *
      * Returns unique document IDs ordered by best chunk similarity.
+     * Depending on component settings, vector results may be merged with full-text results. When answer generation is
+     * enabled, the sanitized answer is stored in the request attribute {@code ragAnswer}.
      *
      * @param query search query text
      * @param domainId domain to search in (null for all)
@@ -99,7 +106,8 @@ public class SemanticSearchService {
             embeddingResult = embeddingService.embedWithUsage(
                 List.of(query),
                 embeddingAssistant,
-                request
+                request,
+                EmbeddingInputType.QUERY
             );
         } catch (ProviderCallException e) {
             Logger.error(SemanticSearchService.class, "Error generating query embedding: " + e.getMessage(), e);
@@ -196,6 +204,15 @@ public class SemanticSearchService {
             .toList();
     }
 
+    /**
+     * Determines whether the configured hybrid mode requires full-text retrieval for this search.
+     *
+     * @param query original search query
+     * @param vectorChunkResults results returned by vector retrieval
+     * @param minimumResultsForCall minimum result count used by fallback mode
+     * @param pageParams component settings controlling hybrid search
+     * @return {@code true} when full-text retrieval should be combined with vector retrieval
+     */
     boolean shouldUseHybridSearch(String query, List<VectorSearchResult> vectorChunkResults, int minimumResultsForCall, PageParams pageParams) {
         if (RagSettingsService.isHybridSearchEnabled(pageParams) == false) return false;
 
@@ -232,6 +249,14 @@ public class SemanticSearchService {
         return topSimilarity == null ? 0d : topSimilarity.doubleValue();
     }
 
+    /**
+     * Merges vector and full-text rankings using weighted reciprocal rank fusion.
+     *
+     * @param vectorChunkResults ranked vector-search results
+     * @param fulltextChunkResults ranked full-text results
+     * @param pageParams component settings containing fusion weights and the RRF constant
+     * @return fused results sorted by descending normalized RRF score, or an empty list when both inputs are empty
+     */
     List<VectorSearchResult> mergeChunkResultsWithRrf(List<VectorSearchResult> vectorChunkResults, List<VectorSearchResult> fulltextChunkResults, PageParams pageParams) {
         if ((vectorChunkResults == null || vectorChunkResults.isEmpty()) && (fulltextChunkResults == null || fulltextChunkResults.isEmpty())) {
             return List.of();
@@ -265,6 +290,15 @@ public class SemanticSearchService {
             .toList();
     }
 
+    /**
+     * Accumulates weighted reciprocal-rank contributions for a result list.
+     *
+     * @param results ranked results whose scores should be added
+     * @param weight weight applied to this ranking source
+     * @param rrfK reciprocal-rank-fusion constant
+     * @param scoreByChunkKey accumulated score by stable chunk key
+     * @param resultByChunkKey representative result by stable chunk key
+     */
     private void addRrfScores(List<VectorSearchResult> results, double weight, int rrfK,
                               Map<String, Double> scoreByChunkKey,
                               Map<String, VectorSearchResult> resultByChunkKey) {
@@ -293,6 +327,12 @@ public class SemanticSearchService {
         return result.getEntityType() + ":" + result.getEntityId() + ":" + result.getChunkIndex();
     }
 
+    /**
+     * Aggregates document chunks by entity ID and retains each document's highest similarity.
+     *
+     * @param chunkResults chunk-level search results
+     * @return document-level results sorted by descending best similarity
+     */
     private List<SemanticSearchResult> aggregateByDocumentBestScore(List<VectorSearchResult> chunkResults) {
         Map<Long, SemanticSearchResult> docMap = new HashMap<>();
         for (VectorSearchResult chunk : chunkResults) {
@@ -318,12 +358,15 @@ public class SemanticSearchService {
     }
 
     /**
-     * Filter and sort semantic search results based on similarity thresholds and minimum result count.
-     * Uses an adaptive similarity threshold based on the top result to allow for more results when the top similarity is low.
-     * @param sortedResults - list of results sorted by similarity descending
-     * @param minimumSimilarity - absolute minimum similarity threshold (0.0 to 1.0)
-     * @param minimumResultCount - minimum number of results to return regardless of similarity (0 for no minimum)
-     * @return list of filtered semantic search results
+     * Filters pre-sorted semantic results using absolute and adaptive similarity thresholds.
+     *
+     * Input order is preserved. Results with a similarity value are retained until the requested minimum count is
+     * reached; subsequent results must meet the effective threshold. Results without a similarity value are omitted.
+     *
+     * @param sortedResults results ordered by descending similarity
+     * @param minimumSimilarity absolute similarity floor, clamped to the range {@code 0.0}–{@code 1.0}
+     * @param minimumResultCount requested minimum number of non-null-similarity results
+     * @return filtered results in their original order
      */
     public List<SemanticSearchResult> filterResultsBySimilarity(List<SemanticSearchResult> sortedResults, double minimumSimilarity, int minimumResultCount) {
         if (sortedResults == null || sortedResults.isEmpty()) {
