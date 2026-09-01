@@ -29,6 +29,10 @@
 
 <script type="module" th:inline="javascript">
 
+    const formDateRangeStorageKey = typeof urlFormName === "string" && urlFormName !== ""
+        ? "webjet.apps.form.stats.filter.dateRange." + encodeURIComponent(urlFormName)
+        : null;
+
     function insertFilterToStatsPills() {
         const pills = document.querySelector("ul#pills-form-stats");
         const element = document.getElementById("filter");
@@ -48,6 +52,8 @@
 
         pills.appendChild(element);
 
+        restoreDateRange();
+
         // Initialize datepicker on filter inputs
         $('#filter .datepicker').each(function (key, dateInput) {
             let $this = $(dateInput);
@@ -62,6 +68,16 @@
                 i18n: WJ.getDatetimeLocalization()
             });
         });
+    }
+
+    function restoreDateRange() {
+        if(formDateRangeStorageKey == null || window.localStorage.getItem(formDateRangeStorageKey) == null) return;
+
+        const searchCriteria = ChartTools.getSearchCriteria(formDateRangeStorageKey);
+        if(searchCriteria == null) return;
+
+        $("#filter .dt-filter-from-dayDate").val(searchCriteria[".dt-filter-from-dayDate"] || "");
+        $("#filter .dt-filter-to-dayDate").val(searchCriteria[".dt-filter-to-dayDate"] || "");
     }
 
     window.domReady.add(function () {
@@ -111,10 +127,12 @@
     }
 
     function getStatUrl(path, params = {}) {
+        if(formDateRangeStorageKey != null) ChartTools.saveSearchCriteria("#filter", formDateRangeStorageKey);
+
         const searchParams = new URLSearchParams();
         searchParams.set("form-name", urlFormName);
 
-        const dayDate = ChartTools.getDateRangeWithName("dayDate", 30);
+        const dayDate = ChartTools.getDateRangeWithName("dayDate");
         if(dayDate !== "") searchParams.set("dayDate", dayDate);
 
         Object.entries(params).forEach(([key, value]) => {

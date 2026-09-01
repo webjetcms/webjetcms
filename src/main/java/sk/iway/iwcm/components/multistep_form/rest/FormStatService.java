@@ -118,6 +118,12 @@ public class FormStatService {
             String stringRange = Tools.getStringValue(request.getParameter("dayDate"), "");
             if(Tools.isEmpty(stringRange)) stringRange = Tools.getStringValue(request.getParameter("searchDayDate"), "");
 
+            if(Tools.isEmpty(stringRange.replaceFirst("^daterange:", ""))) {
+                Date formCreationDate = getFormCreationDate(this.formName, this.domainId);
+                if(formCreationDate == null) formCreationDate = new Date(0L);
+                return new Date[] {formCreationDate, new Date()};
+            }
+
             return StatService.processDateRangeString(stringRange);
         }
 
@@ -275,6 +281,26 @@ public class FormStatService {
     }
 
     /**
+     * Resolves the form creation timestamp from its pattern row.
+     * Falls back to the first submitted response for legacy forms.
+     *
+     * @param formName the form name identifier
+     * @param domainId the current domain identifier
+     * @return form creation date, or {@code null} when no reliable timestamp exists
+     */
+    private Date getFormCreationDate(String formName, int domainId) {
+        long currentTime = Tools.getNow();
+        Long formCreationEpoch = formsRepository.getFormCreationDuration(formName, domainId).orElse(null);
+        if(formCreationEpoch != null && formCreationEpoch > 0L && formCreationEpoch <= currentTime / 1000L) {
+            return new Date(formCreationEpoch * 1000L);
+        }
+
+        Date firstResponseDate = formsRepository.getMinFormCreateDate(formName, domainId).orElse(null);
+        if(firstResponseDate != null && firstResponseDate.getTime() <= currentTime) return firstResponseDate;
+        return null;
+    }
+
+    /**
      * Calculates how many days have passed since the form was created.
      * Falls back to the first response date when the creation timestamp is unavailable.
      *
@@ -282,18 +308,10 @@ public class FormStatService {
      * @return number of elapsed days, {@code < 1} for same-day forms, or {@code 0} when unknown
      */
     private String computeDurationDays(StatContext context) {
-        Long formCreationEpoch = formsRepository.getFormCreationDuration(context.formName, context.domainId).orElse(null);
-        if(formCreationEpoch == null  || formCreationEpoch <= 0L) {
-            //try to use first response as fallback
-            Date minDate = formsRepository.getMinFormCreateDate(context.formName, context.domainId).orElse(null);
-            if(minDate != null) {
-                formCreationEpoch = minDate.getTime() / 1000;
-            }
-        }
+        Date formCreationDate = getFormCreationDate(context.formName, context.domainId);
+        if(formCreationDate == null) return "0";
 
-        if(formCreationEpoch == null || formCreationEpoch <= 0) return "0";
-        long currentEpoch = Tools.getNow() / 1000;
-        long durationDays = (currentEpoch - formCreationEpoch) / (60 * 60 * 24);
+        long durationDays = (Tools.getNow() - formCreationDate.getTime()) / (1000L * 60 * 60 * 24);
         if(durationDays < 1) return "< 1";
         return String.valueOf(durationDays);
     }
