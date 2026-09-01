@@ -11,6 +11,7 @@ Podporované sú nasledovné konfiguračné premenné:
 - `ckeditor_toolbar` - nastavenie položiek nástrojovej lišty pre sekciu webové stránky, hodnoty sú v JSON formáte.
 - `ckeditor_toolbar-standalone` - nastavenie položiek nástrojovej lišty pre vloženie editora do rôznych dátových tabuliek, hodnoty sú v JSON formáte.
 - `ckeditor_removeButtons` - zoznam tlačidiel, ktoré chcete v editore schovať (nezobraziť), nie je potrebné upraviť nastavenie `toolbar`, stačí sem nastaviť čiarkou oddelený zoznam.
+- `ckeditor_pasteFromWord_disallowedContent` - čiarkou oddelený zoznam pravidiel [CKEditor Advanced Content Filter](https://ckeditor.com/docs/ckeditor4/latest/guide/dev_allowed_content_rules.html), ktoré sa odstránia pri vložení obsahu z Word/Excel. Predvolená hodnota je `table[width],table[height],table[border],td(*),td[valign],td[align],th(*),th[valign],th[align],p[align],span,col[width]`. Ak chcete zachovať horizontálne zarovnanie buniek tabuľky, odstráňte zo zoznamu pravidlá `td[align]` a `th[align]`. Prázdna hodnota nevykoná žiadne dodatočné filtrovanie cez `filter.disallow`; ostatné štandardné čistenie obsahu zostane aktívne.
 
 Nastavenie pre tabuľky:
 

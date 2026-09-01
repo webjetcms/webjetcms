@@ -12,6 +12,10 @@ var defaultConfig = {
     wrapperClass: "table-responsive"
 };
 
+var defaultPasteFromWordDisallowedContent = "table[width],table[height],table[border],td(*),td[valign],td[align],th(*),th[valign],th[align],p[align],span,col[width]";
+
+var pasteFromWordHtml = '<table width="640" height="120" border="2"><tbody><tr><th class="word-header" align="center" valign="bottom"><span>Header</span></th><td class="word-cell" align="right" valign="middle">Cell</td></tr></tbody></table><p align="justify"><span>Text</span></p>';
+
 var customConfig = {
     class: "customTableClass",
     cols: "3",
@@ -51,6 +55,51 @@ function setCustomTableConfig(I, Document, config) {
     Document.setConfigValue("ckeditor_table_cellpadding", config.cellpadding);
     Document.setConfigValue("ckeditor_table_cellspacing", config.cellspacing);
     Document.setConfigValue("ckeditor_table_wrapper_class", config.wrapperClass);
+}
+
+function setPasteFromWordConfig(I, Document, value) {
+    I.say("Setting CKEditor paste from Word filter config");
+    Document.setConfigValue("ckeditor_pasteFromWord_disallowedContent", value);
+}
+
+async function getPasteFromWordFilterResult(I, DTE) {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=266");
+    DTE.waitForEditor();
+    DTE.waitForCkeditor();
+
+    return await I.executeScript(function(html) {
+        var eventData = { dataValue: html };
+        window.ckEditorInstance.fire("afterPasteFromWord", eventData);
+
+        var container = document.createElement("div");
+        container.innerHTML = eventData.dataValue;
+
+        var table = container.querySelector("table");
+        var td = container.querySelector("td");
+        var th = container.querySelector("th");
+        var paragraph = container.querySelector("p");
+
+        return {
+            config: window.ckEditorInstance.config.pasteFromWordDisallowedContent,
+            tableWidth: table.getAttribute("width"),
+            tableHeight: table.getAttribute("height"),
+            tableBorder: table.getAttribute("border"),
+            tdClass: td.getAttribute("class"),
+            tdAlign: td.getAttribute("align"),
+            tdValign: td.getAttribute("valign"),
+            thClass: th.getAttribute("class"),
+            thAlign: th.getAttribute("align"),
+            thValign: th.getAttribute("valign"),
+            paragraphAlign: paragraph.getAttribute("align"),
+            hasSpan: container.querySelector("span") !== null
+        };
+    }, pasteFromWordHtml);
+}
+
+function assertPasteFromWordFilterResult(I, result, expected) {
+    Object.keys(expected).forEach(function(key) {
+        I.assertEqual(result[key], expected[key], "Unexpected paste from Word filter result for " + key);
+    });
 }
 
 async function checkCkEditorValue(I, label, expectedValue) {
@@ -160,4 +209,68 @@ Scenario('table config-default', async ({ I, DT, DTE, Document, Browser }) => {
 
     await verifyTableConfig(I, DTE, Browser, defaultConfig, false);
     await verifyTableConfig(I, DTE, Browser, defaultConfig, true);
+});
+
+Scenario('pasteFromWord filter-custom', async ({ I, DTE, Document }) => {
+    var customDisallowedContent = " table[width], table[height] , table[border], td(*) , td[valign], th(*), th[valign], p[align], span, col[width], , ";
+    setPasteFromWordConfig(I, Document, customDisallowedContent);
+
+    var result = await getPasteFromWordFilterResult(I, DTE);
+
+    assertPasteFromWordFilterResult(I, result, {
+        config: customDisallowedContent,
+        tableWidth: null,
+        tableHeight: null,
+        tableBorder: null,
+        tdClass: null,
+        tdAlign: "right",
+        tdValign: null,
+        thClass: null,
+        thAlign: "center",
+        thValign: null,
+        paragraphAlign: null,
+        hasSpan: false
+    });
+});
+
+Scenario('pasteFromWord filter-empty', async ({ I, DTE, Document }) => {
+    setPasteFromWordConfig(I, Document, "");
+
+    var result = await getPasteFromWordFilterResult(I, DTE);
+
+    assertPasteFromWordFilterResult(I, result, {
+        config: "",
+        tableWidth: "640",
+        tableHeight: "120",
+        tableBorder: "2",
+        tdClass: "word-cell",
+        tdAlign: "right",
+        tdValign: "middle",
+        thClass: "word-header",
+        thAlign: "center",
+        thValign: "bottom",
+        paragraphAlign: "justify",
+        hasSpan: true
+    });
+});
+
+Scenario('pasteFromWord filter-default', async ({ I, DTE, Document }) => {
+    setPasteFromWordConfig(I, Document, defaultPasteFromWordDisallowedContent);
+
+    var result = await getPasteFromWordFilterResult(I, DTE);
+
+    assertPasteFromWordFilterResult(I, result, {
+        config: defaultPasteFromWordDisallowedContent,
+        tableWidth: null,
+        tableHeight: null,
+        tableBorder: null,
+        tdClass: null,
+        tdAlign: null,
+        tdValign: null,
+        thClass: null,
+        thAlign: null,
+        thValign: null,
+        paragraphAlign: null,
+        hasSpan: false
+    });
 });

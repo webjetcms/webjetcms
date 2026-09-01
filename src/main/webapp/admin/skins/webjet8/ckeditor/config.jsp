@@ -59,6 +59,7 @@ CKEDITOR.editorConfig = function( config )
 	config.pasteFromWordRemoveStyles = true;
 	config.pasteFromWordRemoveFontStyles = true;
 	config.pasteTools_removeFontStyles = true;
+	config.pasteFromWordDisallowedContent = "<%=Constants.getString("ckeditor_pasteFromWord_disallowedContent")%>";
 	config.disableNativeSpellChecker = false;
 	config.editorAutomaticWordClean = <%=Constants.getBoolean("editorAutomaticWordClean")%>
 	config.clipboard_handleImages = false;

@@ -1600,18 +1600,16 @@ export class DatatablesCkEditor {
 						filter.allowedContent[0].elements.table.colgroup = 0;
 					} catch (e) {}
 
-					filter.disallow( 'table[width]' );
-					filter.disallow( 'table[height]' );
-					filter.disallow( 'table[border]' );
-					filter.disallow( 'td(*)' ); //all class on TD
-					filter.disallow( 'td[valign]' );
-					filter.disallow( 'td[align]' );
-					filter.disallow( 'p[align]' );
-					filter.disallow( 'span' );
-					filter.disallow( 'col[width]' );
+					var ckConfig = that.ckEditorInstance.config;
+					var disallowedContent = ckConfig.pasteFromWordDisallowedContent;
+					if (typeof disallowedContent === "string") {
+						disallowedContent.split(",").forEach(function(rule) {
+							rule = rule.trim();
+							if (rule !== "") filter.disallow(rule);
+						});
+					}
 					filter.disabled = false;
 
-					var ckConfig = that.ckEditorInstance.config;
 					var tableClasses = ckConfig.qtClass.split(" ");
 					var tableStyle = "";
 					if (ckConfig.qtWidth != "") tableStyle = ' style="width: ' + ckConfig.qtWidth + ';"';
