@@ -71,4 +71,6 @@ Scenario("293-config-jstree-view", ({ I, DT }) => {
             url.searchParams.get("module") === "apps.form";
     }, 20);
     DT.waitForLoader();
+
+    I.wait(10);
 });

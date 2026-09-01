@@ -2,9 +2,9 @@ const { Helper } = codeceptjs;
 
 const DEFAULT_CLICK_DELAY = 350;
 const DEFAULT_POST_CLICK_DELAY = 500;
-const CURSOR_MIN_DURATION = 520;
+const CURSOR_MIN_DURATION = 240;
 const CURSOR_MAX_DURATION = 900;
-const CURSOR_FRAME_DURATION = 16;
+const CURSOR_FRAME_DURATION = 25;
 
 function isCursorEnabled() {
   return "true" === process.env.CODECEPT_VIDEO_CURSOR;
@@ -26,20 +26,123 @@ function clamp(value, minimum, maximum) {
   return Math.min(Math.max(value, minimum), maximum);
 }
 
-function easeInOutCubic(progress) {
-  if (progress < 0.5) return 4 * progress * progress * progress;
-  return 1 - Math.pow(-2 * progress + 2, 3) / 2;
+function hashString(value) {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index++) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
 }
 
-function cubicBezierPoint(start, firstControl, secondControl, end, progress) {
-  const inverse = 1 - progress;
-  const startWeight = inverse * inverse * inverse;
-  const firstWeight = 3 * inverse * inverse * progress;
-  const secondWeight = 3 * inverse * progress * progress;
-  const endWeight = progress * progress * progress;
+function createPseudoRandom(seed) {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6D2B79F5) >>> 0;
+    let value = state;
+    value = Math.imul(value ^ (value >>> 15), value | 1);
+    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+    return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function randomBetween(random, minimum, maximum) {
+  return minimum + random() * (maximum - minimum);
+}
+
+function minimumJerk(progress) {
+  return progress * progress * progress * (10 + progress * (-15 + 6 * progress));
+}
+
+function getCursorDuration(distance, random) {
+  const duration = (230 + Math.sqrt(distance) * 18) * randomBetween(random, 0.92, 1.08);
+  return clamp(duration, CURSOR_MIN_DURATION, CURSOR_MAX_DURATION);
+}
+
+function normalizedBump(progress, peak, concentration) {
+  if (progress <= 0 || progress >= 1) return 0;
+  const startExponent = peak * concentration;
+  const endExponent = (1 - peak) * concentration;
+  const value = Math.pow(progress, startExponent) * Math.pow(1 - progress, endExponent);
+  const maximum = Math.pow(peak, startExponent) * Math.pow(1 - peak, endExponent);
+  return value / maximum;
+}
+
+function getNormalClearance(point, normal, direction, viewport, padding = 36) {
+  const distances = [];
+  const directionX = normal.x * direction;
+  const directionY = normal.y * direction;
+  const maximumX = Math.max(padding, viewport.width - padding);
+  const maximumY = Math.max(padding, viewport.height - padding);
+
+  if (directionX > 0) distances.push((maximumX - point.x) / directionX);
+  if (directionX < 0) distances.push((point.x - padding) / -directionX);
+  if (directionY > 0) distances.push((maximumY - point.y) / directionY);
+  if (directionY < 0) distances.push((point.y - padding) / -directionY);
+  return Math.max(0, Math.min(...distances));
+}
+
+function createNaturalCursorPlan(start, end, viewport, distance, random) {
+  const delta = { x: end.x - start.x, y: end.y - start.y };
+  const normal = { x: -delta.y / distance, y: delta.x / distance };
+  const primaryPeak = randomBetween(random, 0.22, 0.4);
+  const primaryBase = {
+    x: start.x + delta.x * primaryPeak,
+    y: start.y + delta.y * primaryPeak
+  };
+  const positiveClearance = getNormalClearance(primaryBase, normal, 1, viewport);
+  const negativeClearance = getNormalClearance(primaryBase, normal, -1, viewport);
+  const clearanceTotal = positiveClearance + negativeClearance;
+  const primaryDirection = clearanceTotal > 0 &&
+    random() * clearanceTotal < positiveClearance ? 1 : -1;
+  const primaryRatio = distance < 35
+    ? randomBetween(random, 0.03, 0.08)
+    : randomBetween(random, 0.08, 0.2);
+  const primaryAmplitude = primaryDirection * Math.min(
+    distance * primaryRatio,
+    120,
+    getNormalClearance(primaryBase, normal, primaryDirection, viewport) * 0.72
+  );
+
+  const secondaryPeak = randomBetween(random, 0.62, 0.78);
+  const secondaryBase = {
+    x: start.x + delta.x * secondaryPeak,
+    y: start.y + delta.y * secondaryPeak
+  };
+  const secondaryDirection = random() < 0.68 ? -primaryDirection : primaryDirection;
+  const secondaryAmplitude = secondaryDirection * Math.min(
+    Math.abs(primaryAmplitude) * randomBetween(random, 0.025, 0.08),
+    getNormalClearance(secondaryBase, normal, secondaryDirection, viewport) * 0.65
+  );
+
   return {
-    x: startWeight * start.x + firstWeight * firstControl.x + secondWeight * secondControl.x + endWeight * end.x,
-    y: startWeight * start.y + firstWeight * firstControl.y + secondWeight * secondControl.y + endWeight * end.y
+    delta,
+    normal,
+    primaryPeak,
+    primaryAmplitude,
+    primaryConcentration: randomBetween(random, 5, 7.5),
+    secondaryPeak,
+    secondaryAmplitude,
+    secondaryConcentration: randomBetween(random, 5, 7.5)
+  };
+}
+
+function naturalCursorPoint(start, end, plan, progress) {
+  if (progress >= 1) return end;
+  const primaryOffset = plan.primaryAmplitude * normalizedBump(
+    progress,
+    plan.primaryPeak,
+    plan.primaryConcentration
+  );
+  const secondaryOffset = plan.secondaryAmplitude * normalizedBump(
+    progress,
+    plan.secondaryPeak,
+    plan.secondaryConcentration
+  );
+  const normalOffset = primaryOffset + secondaryOffset;
+  return {
+    x: start.x + plan.delta.x * progress + plan.normal.x * normalOffset,
+    y: start.y + plan.delta.y * progress + plan.normal.y * normalOffset
   };
 }
 
@@ -163,18 +266,20 @@ class VideoHelper extends Helper {
    * Installs a synthetic cursor in every document created by the current browser context.
    * The cursor is enabled only when CODECEPT_VIDEO_CURSOR is set to true.
    */
-  async _before() {
+  async _before(test) {
     if (!isCursorEnabled()) return;
 
     const { browserContext, page } = this.helpers.Playwright;
+    const scenarioName = String(test?.title || "webjet-video");
+    const configuredSeed = process.env.CODECEPT_VIDEO_CURSOR_SEED || "default";
     this.videoCursorPosition = null;
     this.videoCursorPage = null;
-    this.videoCurveDirection = 1;
+    this.videoCursorRandom = createPseudoRandom(hashString(`${scenarioName}:${configuredSeed}`));
     await browserContext.addInitScript(installVideoCursor);
     await page.evaluate(installVideoCursor);
   }
 
-  async _moveCursorAlongCurve(locator) {
+  async _moveCursorNaturally(locator) {
     const helper = this.helpers.Playwright;
     const page = helper.page;
     const element = await helper._locateElement(locator);
@@ -190,13 +295,15 @@ class VideoHelper extends Helper {
     const fallbackPosition = { x: viewport.width / 2, y: viewport.height / 2 };
     // The remembered position uses main-viewport coordinates even when the last target was in an iframe.
     const rawStart = rememberedPosition || renderedPosition || fallbackPosition;
+    const maximumX = Math.max(0, viewport.width - 1);
+    const maximumY = Math.max(0, viewport.height - 1);
     const start = {
-      x: clamp(rawStart.x, 0, viewport.width),
-      y: clamp(rawStart.y, 0, viewport.height)
+      x: clamp(rawStart.x, 0, maximumX),
+      y: clamp(rawStart.y, 0, maximumY)
     };
     const end = {
-      x: box.x + box.width / 2,
-      y: box.y + box.height / 2
+      x: clamp(box.x + box.width / 2, 0, maximumX),
+      y: clamp(box.y + box.height / 2, 0, maximumY)
     };
 
     const deltaX = end.x - start.x;
@@ -209,30 +316,27 @@ class VideoHelper extends Helper {
       return;
     }
 
-    const direction = this.videoCurveDirection || 1;
-    this.videoCurveDirection = -direction;
-    const normalX = -deltaY / distance;
-    const normalY = deltaX / distance;
-    const amplitude = Math.min(distance * 0.14, 120) * direction;
-    const firstControl = {
-      x: clamp(start.x + deltaX * 0.28 + normalX * amplitude, 0, viewport.width),
-      y: clamp(start.y + deltaY * 0.28 + normalY * amplitude, 0, viewport.height)
-    };
-    const secondControl = {
-      x: clamp(start.x + deltaX * 0.72 - normalX * amplitude, 0, viewport.width),
-      y: clamp(start.y + deltaY * 0.72 - normalY * amplitude, 0, viewport.height)
-    };
-    const duration = clamp(480 + distance * 0.25, CURSOR_MIN_DURATION, CURSOR_MAX_DURATION);
-    const steps = Math.max(24, Math.ceil(duration / CURSOR_FRAME_DURATION));
+    const random = this.videoCursorRandom || Math.random;
+    const plan = createNaturalCursorPlan(start, end, viewport, distance, random);
+    const duration = getCursorDuration(distance, random);
+    const steps = Math.max(12, Math.ceil(duration / CURSOR_FRAME_DURATION));
     const frameDuration = duration / steps;
 
     await page.mouse.move(start.x, start.y);
+    const movementStartedAt = Date.now();
     for (let step = 1; step <= steps; step++) {
-      const progress = easeInOutCubic(step / steps);
-      const point = cubicBezierPoint(start, firstControl, secondControl, end, progress);
-      await page.mouse.move(point.x, point.y);
+      const progress = minimumJerk(step / steps);
+      const point = naturalCursorPoint(start, end, plan, progress);
+      await page.mouse.move(
+        clamp(point.x, 0, maximumX),
+        clamp(point.y, 0, maximumY)
+      );
       if (step < steps) {
-        await new Promise((resolve) => setTimeout(resolve, frameDuration));
+        const nextFrameAt = movementStartedAt + step * frameDuration;
+        const remainingFrameTime = Math.max(0, nextFrameAt - Date.now());
+        if (remainingFrameTime > 0) {
+          await new Promise((resolve) => setTimeout(resolve, remainingFrameTime));
+        }
       }
     }
 
@@ -247,7 +351,7 @@ class VideoHelper extends Helper {
   async videoClick(locator) {
     const helper = this.helpers.Playwright;
     if (isCursorEnabled()) {
-      await this._moveCursorAlongCurve(locator);
+      await this._moveCursorNaturally(locator);
       await new Promise((resolve) => setTimeout(resolve, getClickDelay()));
     } else {
       await helper.moveCursorTo(locator);

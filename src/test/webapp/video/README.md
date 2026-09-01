@@ -25,8 +25,9 @@ Use `Feature("video.<scenario-name>")` so the source is easy to find in reports.
 - Synchronize with `waitFor*`, application state, or `DT.waitForLoader()`.
   Fixed waits must not be used for application synchronization.
 - Use `I.videoClick(locator)` for important clicks. It moves the rendered cursor
-  to the target on a gentle S-curve with ease-in-out timing, then adds a short
-  visual lead-in before clicking.
+  along a varied human-like path with a larger early arc, a much smaller late
+  correction, and smooth acceleration and braking. It then adds a short visual
+  lead-in before clicking.
 - Keep manual shots in the accompanying shot plan instead of simulating an
   unreliable browser action.
 
@@ -72,4 +73,7 @@ The dimensions can be overridden with `CODECEPT_VIDEO_WIDTH` and
 `CODECEPT_VIDEO_HEIGHT`. The cursor lead-in can be adjusted between 0 and 2000
 milliseconds with `CODECEPT_VIDEO_CLICK_DELAY`. Each `I.videoClick` leaves 500
 milliseconds after the click for editing; increase it up to 2000 milliseconds
-with `CODECEPT_VIDEO_POST_CLICK_DELAY`.
+with `CODECEPT_VIDEO_POST_CLICK_DELAY`. Cursor motion varies from click to click
+but is seeded by the scenario name, so repeated recordings remain reproducible.
+Set `CODECEPT_VIDEO_CURSOR_SEED` to another value to generate a different
+repeatable motion variant.

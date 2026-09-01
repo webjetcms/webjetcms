@@ -33,9 +33,13 @@ scenarios serially and inspect motion continuity on the recording machine.
 
 `CODECEPT_VIDEO_CURSOR=true` installs a Shadow DOM overlay in every document.
 The overlay follows Playwright mouse events and shows a ring on mouse down. Each
-`I.videoClick(locator)` moves along a gentle cubic Bezier S-curve, alternates the
-curve direction, and uses ease-in-out acceleration and braking. The duration
-adapts to the travel distance. The optional
+`I.videoClick(locator)` uses a varied human-like trajectory: a larger early arc,
+a much smaller late correction, and an almost straight approach to the target.
+Its minimum-jerk timing smoothly accelerates and brakes, while the shape and
+duration vary between clicks. The pseudo-random sequence is seeded by the
+scenario name, so re-recording the same scenario remains repeatable. Set
+`CODECEPT_VIDEO_CURSOR_SEED` to a different value when a new repeatable motion
+variant is wanted. The optional
 `CODECEPT_VIDEO_CLICK_DELAY` controls the short lead-in before a click. Every
 video click also leaves at least 500 milliseconds after the action for easier
 editing; increase it up to 2000 milliseconds with
