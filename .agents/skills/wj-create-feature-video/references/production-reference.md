@@ -19,9 +19,20 @@ Disable native cursor capture in an external recorder. The scenario already
 renders a cursor and click effect, and capturing the system cursor as well can
 produce a distracting duplicate.
 
-The default frame and viewport are 1920 x 1080. Override them with
-`CODECEPT_VIDEO_WIDTH` and `CODECEPT_VIDEO_HEIGHT`. Use Chromium unless the
-feature specifically demonstrates another browser.
+The standard npm scripts record a 1920 x 1080 frame and set the unzoomed browser
+viewport to the same size. Override both dimensions with `CODECEPT_VIDEO_WIDTH`
+and `CODECEPT_VIDEO_HEIGHT`. They also set
+`CODECEPT_VIDEO_ZOOM=1.411764705882353`, the exact ratio 24/17. It applies an
+approximately 141.18% recording scale by creating the browser context with a
+native default page zoom in Playwright's temporary Chromium profile before the
+browser starts. This uses Chromium's HostZoomMap, the same mechanism as the
+browser zoom menu. It is therefore active before the first document loads, and
+applications calculate layout dimensions from the resulting 1360 x 765 logical
+viewport instead of being restyled after initialization. The recorded frame
+remains 1920 x 1080 and the synthetic cursor compensates for the zoom to keep
+its output size unchanged. Set the zoom to `1` to disable it; a positive number
+or percentage is accepted. Use Chromium unless the feature specifically
+demonstrates another browser.
 
 The Chromium recording profile is optimized as a high-quality editing source:
 screencast frames use JPEG quality 100 and the VP8 encoder uses a 50 Mb/s target
@@ -97,7 +108,7 @@ translated text.
 node --check helpers/video_helper.js
 node --check video/<scenario-name>.js
 node -e "JSON.parse(require('fs').readFileSync('package.json', 'utf8'))"
-CODECEPT_VIDEO=true CODECEPT_VIDEO_CURSOR=true npx codeceptjs dry-run -c codecept.video.conf.js --steps -p autoLogin --grep "<scenario-name>"
+CODECEPT_VIDEO=true CODECEPT_VIDEO_ZOOM=1.411764705882353 CODECEPT_VIDEO_CURSOR=true npx codeceptjs dry-run -c codecept.video.conf.js --steps -p autoLogin --grep "<scenario-name>"
 ```
 
 Run the actual `npm run video` command only when the target environment and
@@ -112,11 +123,13 @@ workflow on CodeceptJS 3.6.10 and Playwright 1.49.1, which support WebM recordin
 but not Playwright's newer screencast cursor.
 
 The high-quality profile currently applies a runtime adapter inside the
-video-only process to Playwright's private Chromium encoder because the public
-`recordVideo` API does not expose image quality, bitrate, codec, or format.
-Revalidate the adapter whenever Playwright is upgraded. Current upstream
-Playwright also uses a fixed 1 Mb/s VP8/WebM target bitrate, so an upgrade alone
-does not resolve recording quality.
+video-only process to Playwright's private Chromium encoder and temporary
+profile preparation. The encoder adapter is needed because the public
+`recordVideo` API does not expose image quality, bitrate, codec, or format; the
+profile adapter sets Chromium's native default page zoom before launch.
+Revalidate both parts whenever Playwright or Chromium is upgraded. Current
+upstream Playwright also uses a fixed 1 Mb/s VP8/WebM target bitrate, so an
+upgrade alone does not resolve recording quality.
 
 After upgrading to a compatible current stack, evaluate the native CodeceptJS
 `screencast` plugin and Playwright action annotations. Playwright 1.59 introduced

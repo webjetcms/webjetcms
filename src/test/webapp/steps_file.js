@@ -1,5 +1,6 @@
 const moment = require("moment");
 const buttons = require('./pages/buttons.js')
+const { getVideoSettings } = require('./helpers/video_settings.js');
 
 module.exports = function () {
   return actor({
@@ -203,11 +204,8 @@ module.exports = function () {
 
     wjSetDefaultWindowSize() {
       if ("true" === process.env.CODECEPT_VIDEO) {
-        const requestedWidth = Number.parseInt(process.env.CODECEPT_VIDEO_WIDTH || "1920", 10);
-        const requestedHeight = Number.parseInt(process.env.CODECEPT_VIDEO_HEIGHT || "1080", 10);
-        const width = requestedWidth > 0 ? requestedWidth : 1920;
-        const height = requestedHeight > 0 ? requestedHeight : 1080;
-        this.resizeWindow(width, height);
+        const videoSettings = getVideoSettings();
+        this.resizeWindow(videoSettings.width, videoSettings.height);
       } else {
         this.resizeWindow(1280, 760);
       }

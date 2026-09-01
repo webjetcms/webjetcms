@@ -1,4 +1,5 @@
 const { setHeadlessWhen } = require('@codeceptjs/configure');
+const { getVideoSettings } = require('./helpers/video_settings.js');
 
 // turn on headless mode when running with HEADLESS=true environment variable
 // HEADLESS=true npx codecept run
@@ -11,10 +12,7 @@ let restart = process.env.CODECEPT_RESTART || "context";
 let autoDelayEnabled = "true" == process.env.CODECEPT_AUTODELAY;
 let videoEnabled = "true" == process.env.CODECEPT_VIDEO;
 
-let videoWidth = Number.parseInt(process.env.CODECEPT_VIDEO_WIDTH || "1920", 10);
-let videoHeight = Number.parseInt(process.env.CODECEPT_VIDEO_HEIGHT || "1080", 10);
-if (videoWidth < 1 || Number.isNaN(videoWidth)) videoWidth = 1920;
-if (videoHeight < 1 || Number.isNaN(videoHeight)) videoHeight = 1080;
+const videoSettings = getVideoSettings();
 
 let language = process.env.CODECEPT_LNG || "sk"; //default sk
 
@@ -46,6 +44,11 @@ console.log("browser=", browser);
 console.log("restart=", restart);
 console.log("autoDelayEnabled=", autoDelayEnabled);
 console.log("videoEnabled=", videoEnabled);
+if (videoEnabled) {
+  console.log("videoSize=", `${videoSettings.width}x${videoSettings.height}`);
+  console.log("videoViewport=", `${videoSettings.viewportWidth}x${videoSettings.viewportHeight}`);
+  console.log("videoZoom=", videoSettings.zoom);
+}
 
 exports.config = {
   tests: './tests/**/*.js',
@@ -64,13 +67,13 @@ exports.config = {
       keepBrowserState: true,
       ignoreHTTPSErrors: true,
       ...(videoEnabled ? {
-        windowSize: `${videoWidth}x${videoHeight}`,
+        windowSize: `${videoSettings.width}x${videoSettings.height}`,
         video: true,
         keepVideoForPassedTests: true,
         recordVideo: {
           size: {
-            width: videoWidth,
-            height: videoHeight
+            width: videoSettings.width,
+            height: videoSettings.height
           }
         }
       } : {}),

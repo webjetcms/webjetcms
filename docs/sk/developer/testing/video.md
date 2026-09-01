@@ -41,6 +41,8 @@ npm run video:current
 
 Oba príkazy vytvoria kvalitný WebM súbor s rozlíšením `1920 × 1080`, pomenovaný podľa scenára, v priečinku `build/test/videos`, napríklad `293-config-jstree-view.webm`. Pomocník určený pre nahrávanie videa zvyšuje kvalitu snímok Chrome na 100 a nahrádza predvolený cieľový dátový tok Playwright 1 Mb/s hodnotou 50 Mb/s, používa CRF 0 a maximálny kvantizátor 4, aby zachoval detaily používateľského rozhrania. Opakované úspešné spustenie rovnakého scenára nahradí predchádzajúci úspešný súbor. Neúspešná nahrávka sa uloží samostatne s príponou `.failed.webm`, napríklad `293-config-jstree-view.failed.webm`, a poslednú úspešnú nahrávku nenahradí.
 
+Štandardné príkazy nastavujú v `package.json` rozlíšenie `1920 × 1080` a zväčšenie obsahu stránky na pomer `24/17`, teda približne `141,18 %`. Video pomocník zapíše túto hodnotu ako predvolené priblíženie do dočasného profilu Chromium ešte pred spustením prehliadača. Ide o rovnaký mechanizmus, aký používa priblíženie cez menu Chrome. Aplikácia preto už počas inicializácie pracuje s logickým viewport `1360 × 765`, zatiaľ čo výsledok sa vykreslí priamo do Full HD videa. Texty a ovládacie prvky zostávajú dobre čitateľné bez dodatočného zväčšovania obrazu vo video editore.
+
 Oba príkazy zobrazia prehliadač. Je to užitočné pri ladení scenára alebo pri použití externého nástroja na nahrávanie obrazovky.
 
 Skutočný dátový tok závisí od obsahu obrazu. Nastavený profil využíva viac procesora a vytvára výrazne väčšie súbory, preto video scenáre spúšťajte sériovo a na nahrávacom počítači skontrolujte plynulosť pohybu.
@@ -55,7 +57,9 @@ WebM je natívny kontajner VP8 enkódera pribaleného k Playwright. Premenovanie
 
 ## Nastavenia nahrávania
 
-Rozlíšenie je možné zmeniť pomocou premenných `CODECEPT_VIDEO_WIDTH` a `CODECEPT_VIDEO_HEIGHT`.
+Rozlíšenie je možné zmeniť pomocou premenných `CODECEPT_VIDEO_WIDTH` a `CODECEPT_VIDEO_HEIGHT`. Štandardné hodnoty sú uvedené priamo v skriptoch `video` a `video:current` v súbore `package.json`, kde ich môžete upraviť pre všetky nahrávania.
+
+Zväčšenie obsahu stránky nastavuje `CODECEPT_VIDEO_ZOOM`. Štandardná hodnota `1.411764705882353` predstavuje presný pomer `24/17` a logickú plochu `1360 × 765`. Hodnota `1` vypne zväčšenie. Podporovaný je aj percentuálny zápis, napríklad `140%`. Hodnota sa nastaví ako natívne predvolené priblíženie v dočasnom profile Chromium; zväčšenie sa už dodatočne nenastavuje cez CSS. Rozlíšenie výsledného videa ani veľkosť syntetického kurzora sa nemenia. Ak chcete namiesto Full HD videa so zväčšením nahrávať priamo v rozlíšení `1360 × 768`, nastavte šírku na `1360`, výšku na `768` a zväčšenie na `1`.
 
 Čas pred kliknutím je možné nastaviť v rozsahu od 0 do 2000 milisekúnd pomocou `CODECEPT_VIDEO_CLICK_DELAY`. Každé volanie `I.videoClick` ponechá po kliknutí 500 milisekúnd na jednoduchší strih. Túto hodnotu môžete pomocou `CODECEPT_VIDEO_POST_CLICK_DELAY` zvýšiť až na 2000 milisekúnd.
 

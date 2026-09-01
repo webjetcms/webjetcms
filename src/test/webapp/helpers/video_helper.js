@@ -1,4 +1,5 @@
 const { Helper } = codeceptjs;
+const { getVideoSettings } = require("./video_settings.js");
 
 const DEFAULT_CLICK_DELAY = 350;
 const DEFAULT_POST_CLICK_DELAY = 500;
@@ -186,7 +187,7 @@ async function getRenderedCursorPosition(page) {
   });
 }
 
-function installVideoCursor() {
+function installVideoCursor(cursorScale = 1) {
   if (document.querySelector("#wj-video-cursor-host") != null) return;
 
   const mount = () => {
@@ -216,7 +217,8 @@ function installVideoCursor() {
       width: "30px",
       height: "34px",
       opacity: "0",
-      transform: "translate3d(-60px, -60px, 0)",
+      transform: `translate3d(-60px, -60px, 0) scale(${cursorScale})`,
+      transformOrigin: "0 0",
       transition: "opacity 100ms linear",
       willChange: "transform"
     });
@@ -257,7 +259,7 @@ function installVideoCursor() {
       host.dataset.cursorX = String(event.clientX);
       host.dataset.cursorY = String(event.clientY);
       cursor.style.opacity = "1";
-      cursor.style.transform = `translate3d(${event.clientX}px, ${event.clientY}px, 0)`;
+      cursor.style.transform = `translate3d(${event.clientX}px, ${event.clientY}px, 0) scale(${cursorScale})`;
     };
 
     document.addEventListener("mousemove", updatePosition, true);
@@ -288,19 +290,21 @@ class VideoHelper extends Helper {
 
   /**
    * Installs a synthetic cursor in every document created by the current browser context.
-   * The cursor is enabled only when CODECEPT_VIDEO_CURSOR is set to true.
+   * Its size compensates for the native Chromium page zoom.
    */
   async _before(test) {
     if (!isCursorEnabled()) return;
 
     const { browserContext, page } = this.helpers.Playwright;
+    const { zoom } = getVideoSettings();
+    const cursorScale = 1 / zoom;
     const scenarioName = String(test?.title || "webjet-video");
     const configuredSeed = process.env.CODECEPT_VIDEO_CURSOR_SEED || "default";
     this.videoCursorPosition = null;
     this.videoCursorPage = null;
     this.videoCursorRandom = createPseudoRandom(hashString(`${scenarioName}:${configuredSeed}`));
-    await browserContext.addInitScript(installVideoCursor);
-    await page.evaluate(installVideoCursor);
+    await browserContext.addInitScript(installVideoCursor, cursorScale);
+    await page.evaluate(installVideoCursor, cursorScale);
   }
 
   async _moveCursorNaturally(locator, curveStrength) {

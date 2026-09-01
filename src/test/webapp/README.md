@@ -43,4 +43,6 @@ npm run video:current
 
 Oba príkazy používajú viditeľný prehliadač. Predvolenú silu krivky kurzora nastavuje `CODECEPT_VIDEO_CURVE_STRENGTH` vo video príkazoch v `package.json` s predvolenou hodnotou `0.3`. Explicitný druhý parameter `I.videoClick(locator, curveStrength)` má vždy prednosť.
 
+Rozlíšenie videa a zväčšenie obsahu stránky nastavujú video príkazy v `package.json` pomocou `CODECEPT_VIDEO_WIDTH`, `CODECEPT_VIDEO_HEIGHT` a `CODECEPT_VIDEO_ZOOM`.
+
 Konvencie pre tvorbu scenárov sú v dokumentácii [Nahrávanie prezentačných videí](../../../docs/sk/developer/testing/video.md).

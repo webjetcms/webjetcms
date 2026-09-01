@@ -2,6 +2,7 @@ const fs = require("fs").promises;
 const path = require("path");
 const { randomBytes } = require("crypto");
 const { threadId } = require("worker_threads");
+const { getVideoSettings } = require("./video_settings.js");
 
 const PLAYWRIGHT_CORE_ROOT = path.dirname(require.resolve("playwright-core/package.json"));
 const PLAYWRIGHT_VIDEO_OPTIONS = {
@@ -11,6 +12,33 @@ const PLAYWRIGHT_VIDEO_OPTIONS = {
 };
 const PROCESS_LAUNCHER_PATCH = Symbol.for("webjet.video.high-quality.process-launcher");
 const CR_SESSION_PATCH = Symbol.for("webjet.video.high-quality.cr-session");
+const CHROMIUM_PROFILE_PATCH = Symbol.for("webjet.video.native-zoom.chromium-profile");
+
+function videoZoomToChromiumLevel(zoom) {
+  // Chromium stores page zoom logarithmically: zoom factor = 1.2 ^ zoom level.
+  return Math.log(zoom) / Math.log(1.2);
+}
+
+async function setChromiumDefaultZoom(userDataDir, zoom) {
+  const profileDirectory = path.join(userDataDir, "Default");
+  const preferencesPath = path.join(profileDirectory, "Preferences");
+  let preferences = {};
+
+  try {
+    preferences = JSON.parse(await fs.readFile(preferencesPath, "utf8"));
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+
+  if (preferences.partition == null) preferences.partition = {};
+  if (preferences.partition.default_zoom_level == null) {
+    preferences.partition.default_zoom_level = {};
+  }
+  preferences.partition.default_zoom_level.x = videoZoomToChromiumLevel(zoom);
+
+  await fs.mkdir(profileDirectory, { recursive: true });
+  await fs.writeFile(preferencesPath, JSON.stringify(preferences));
+}
 
 function replacePlaywrightVideoOption(args, option, values, codecIndex) {
   const optionIndex = args.indexOf(option, codecIndex);
@@ -23,8 +51,18 @@ function replacePlaywrightVideoOption(args, option, values, codecIndex) {
   args[optionIndex + 1] = values.highQuality;
 }
 
-function installHighQualityVideoProfile() {
+function installVideoProfile() {
   if (process.env.CODECEPT_VIDEO !== "true") return;
+
+  const { Chromium } = require(path.join(PLAYWRIGHT_CORE_ROOT, "lib/server/chromium/chromium.js"));
+  if (Chromium.prototype[CHROMIUM_PROFILE_PATCH] !== true) {
+    const originalPrepareUserDataDir = Chromium.prototype.prepareUserDataDir;
+    Chromium.prototype.prepareUserDataDir = async function(options, userDataDir) {
+      await originalPrepareUserDataDir.call(this, options, userDataDir);
+      await setChromiumDefaultZoom(userDataDir, getVideoSettings().zoom);
+    };
+    Chromium.prototype[CHROMIUM_PROFILE_PATCH] = true;
+  }
 
   const processLauncher = require(path.join(PLAYWRIGHT_CORE_ROOT, "lib/utils/processLauncher.js"));
   if (processLauncher[PROCESS_LAUNCHER_PATCH] !== true) {
@@ -64,7 +102,7 @@ function installHighQualityVideoProfile() {
   }
 }
 
-installHighQualityVideoProfile();
+installVideoProfile();
 
 const Playwright = require("codeceptjs/lib/helper/Playwright");
 
