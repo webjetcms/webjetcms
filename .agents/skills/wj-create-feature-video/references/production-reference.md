@@ -11,24 +11,28 @@ npm run video:current
 ```
 
 The first command records a selected video file. The second records the
-scenario marked with `@current`. Both show the browser for authoring or an
-external screen recorder. Recordings are retained as WebM files in
-`build/test/videos`.
+scenario marked with `@current`. Both show the browser by default for authoring
+or an external screen recorder; set `CODECEPT_SHOW=false` for a headless run.
+Recordings are retained as WebM files in `build/test/videos`.
 
 Disable native cursor capture in an external recorder. The scenario already
 renders a cursor and click effect, and capturing the system cursor as well can
 produce a distracting duplicate.
 
-The standard npm scripts record a 1920 x 1080 frame and set the unzoomed browser
-viewport to the same size. Override both dimensions with `CODECEPT_VIDEO_WIDTH`
-and `CODECEPT_VIDEO_HEIGHT`. They also set
-`CODECEPT_VIDEO_ZOOM=1.411764705882353`, the exact ratio 24/17. It applies an
-approximately 141.18% recording scale by creating the browser context with a
-native default page zoom in Playwright's temporary Chromium profile before the
-browser starts. This uses Chromium's HostZoomMap, the same mechanism as the
-browser zoom menu. It is therefore active before the first document loads, and
-applications calculate layout dimensions from the resulting 1360 x 765 logical
-viewport instead of being restyled after initialization. The recorded frame
+The standard npm scripts record a 1920 x 1080 frame by default and set the
+unzoomed browser viewport to the same size. Caller-provided values override the
+defaults, including `CODECEPT_VIDEO_WIDTH`, `CODECEPT_VIDEO_HEIGHT`,
+`CODECEPT_VIDEO_ZOOM`, `CODECEPT_VIDEO_CURVE_STRENGTH`, `CODECEPT_URL`, and
+`CODECEPT_SHOW`. For these settings, an unset or empty value uses the script
+default. `CODECEPT_URL` defaults to `http://iwcm.interway.sk`.
+The default `CODECEPT_VIDEO_ZOOM=1.411764705882353` is the exact ratio 24/17.
+It applies an approximately 141.18% recording scale by creating the browser
+context with a native default page zoom in Playwright's temporary Chromium
+profile before the browser starts. This uses Chromium's HostZoomMap, the same
+mechanism as the browser zoom menu. It is therefore active before the first
+document loads, and applications calculate layout dimensions from the
+resulting 1360 x 765 logical viewport instead of being restyled after
+initialization. The recorded frame
 remains 1920 x 1080 and the synthetic cursor compensates for the zoom to keep
 its output size unchanged. Set the zoom to `1` to disable it; a positive number
 or percentage is accepted. Use Chromium unless the feature specifically
@@ -57,9 +61,10 @@ viewport room allows it. Keep normal authoring values between `0` and `2`; very
 large values can look exaggerated and eventually saturate at the safe viewport
 boundary. When the environment variable is not set, the helper's internal
 fallback is `CODECEPT_VIDEO_CURVE_STRENGTH=1`. The `video` and `video:current`
-npm scripts explicitly set it to `0.3`, so calls without the second argument use
-`0.3` during standard npm video runs. Change the script value in `package.json`
-to tune all standard runs, or override one run with, for example,
+npm scripts provide a default of `0.3` only when the caller has not set the
+variable, so calls without the second argument use `0.3` during standard npm
+video runs. Change the script default in `package.json` to tune all standard
+runs, or override one run with, for example,
 `CODECEPT_VIDEO_CURVE_STRENGTH=0.5 npm run video -- video/<scenario>.js`. An
 explicit second argument always takes precedence. The optional
 `CODECEPT_VIDEO_CLICK_DELAY` controls the short lead-in before a click. Every

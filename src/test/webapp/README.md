@@ -41,8 +41,8 @@ npm run video -- video/293-config-jstree-view.js
 npm run video:current
 ```
 
-Oba príkazy používajú viditeľný prehliadač. Predvolenú silu krivky kurzora nastavuje `CODECEPT_VIDEO_CURVE_STRENGTH` vo video príkazoch v `package.json` s predvolenou hodnotou `0.3`. Explicitný druhý parameter `I.videoClick(locator, curveStrength)` má vždy prednosť.
+Oba príkazy predvolene používajú viditeľný prehliadač; pre jedno spustenie ho môžete skryť pomocou `CODECEPT_SHOW=false`. Predvolenú silu krivky kurzora nastavuje `CODECEPT_VIDEO_CURVE_STRENGTH` vo video príkazoch v `package.json` s hodnotou `0.3`. Hodnota zadaná pred `npm run` má prednosť a explicitný druhý parameter `I.videoClick(locator, curveStrength)` má vždy prednosť pred hodnotou z prostredia.
 
-Rozlíšenie videa a zväčšenie obsahu stránky nastavujú video príkazy v `package.json` pomocou `CODECEPT_VIDEO_WIDTH`, `CODECEPT_VIDEO_HEIGHT` a `CODECEPT_VIDEO_ZOOM`.
+Rozlíšenie videa, zväčšenie obsahu stránky a cieľovú adresu nastavujú video príkazy v `package.json` pomocou `CODECEPT_VIDEO_WIDTH`, `CODECEPT_VIDEO_HEIGHT`, `CODECEPT_VIDEO_ZOOM` a `CODECEPT_URL`. Predvolené hodnoty môžete pre jedno nahrávanie prepísať zadaním premenných pred `npm run video` alebo `npm run video:current`.
 
 Konvencie pre tvorbu scenárov sú v dokumentácii [Nahrávanie prezentačných videí](../../../docs/sk/developer/testing/video.md).
