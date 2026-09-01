@@ -220,8 +220,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         //
         if(MultistepFormsService.getChartStatInfo(getRequest()) != null) return;
 
-        if(MultistepFormsService.getRowViewItemTypes().contains(entity.getFieldType()))
-            entity.setShowStat(false);
+        MultistepFormsService.clearUnsupportedItemValues(entity, getRequest());
 
         if("captcha".equalsIgnoreCase(entity.getFieldType()))
             entity.setRequired(true); //captcha is allways required
@@ -379,8 +378,12 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         }
 
         // When usage of colorScheme is not allowed, remove value
-        if(Tools.isTrue(entity.getShowStat()) && Tools.isTrue(entity.getUseColorScheme())) return entity;
-        entity.setColorScheme("");
+        if(Tools.isTrue(entity.getShowStat()) == false || Tools.isTrue(entity.getUseColorScheme()) == false)
+            entity.setColorScheme("");
+
+        MultistepFormsService.clearUnsupportedItemValues(entity, getRequest());
+        if("captcha".equalsIgnoreCase(entity.getFieldType())) entity.setRequired(true);
+
         return entity;
     }
 

@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.text.StringEscapeUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -63,6 +64,7 @@ import sk.iway.iwcm.form.FormFileRestriction;
 import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.stat.ChartType;
 import sk.iway.iwcm.system.captcha.Captcha;
 import sk.iway.iwcm.system.datatable.RowReorderDto;
 import sk.iway.iwcm.system.datatable.RowReorderDto.RowReorderValue;
@@ -256,6 +258,51 @@ public class MultistepFormsService {
         options.add(new LabelValue("id,formName", "allwaysHidden"));
         options.add(new LabelValue("itemFormId", "hiddenOnCreate"));
         return options;
+    }
+
+    /**
+     * Clears values that are not available for the selected form item type.
+     *
+     * @param entity form item being saved
+     * @param request request used to resolve the field visibility configuration
+     */
+    public static final void clearUnsupportedItemValues(FormItemEntity entity, HttpServletRequest request) {
+        if(entity == null || Tools.isEmpty(entity.getFieldType())) return;
+
+        String visibilityType = entity.getFieldType();
+        if("new-row".equals(visibilityType)) visibilityType = "novy-riadok";
+        else if("empty-column".equals(visibilityType)) visibilityType = "prazdny-stlpec";
+
+        BeanWrapperImpl entityWrapper = new BeanWrapperImpl(entity);
+        for(LabelValue visibility : getFiledTypeVisibility(request)) {
+            if(visibilityType.equals(visibility.getValue()) == false) continue;
+
+            for(String fieldName : Tools.getTokens(visibility.getLabel(), ",")) {
+                if(entityWrapper.isWritableProperty(fieldName) == false) continue;
+
+                if("regexValidationArr".equals(fieldName)) {
+                    entity.setRegexValidationArr(new Integer[0]);
+                    entity.setRegexValidation("");
+                } else {
+                    Class<?> propertyType = entityWrapper.getPropertyType(fieldName);
+                    if(String.class.equals(propertyType)) entityWrapper.setPropertyValue(fieldName, "");
+                    else if(Boolean.class.equals(propertyType) || boolean.class.equals(propertyType)) entityWrapper.setPropertyValue(fieldName, false);
+                    else entityWrapper.setPropertyValue(fieldName, null);
+                }
+            }
+            break;
+        }
+
+        if(getRowViewItemTypes().contains(entity.getFieldType())) {
+            entity.setShowStat(false);
+            entity.setChartType(ChartType.NOT_CHART.getKey());
+            entity.setTopCount(0);
+            entity.setShowOtherCount(false);
+            entity.setShowUnanswered(false);
+            entity.setCompareInsensitive(false);
+            entity.setUseColorScheme(false);
+            entity.setColorScheme(null);
+        }
     }
 
     /**
