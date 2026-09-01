@@ -172,9 +172,10 @@ function naturalCursorPoint(start, end, plan, progress) {
 }
 
 async function getViewportSize(page) {
-  const viewport = page.viewportSize();
-  if (viewport != null) return viewport;
-  return page.evaluate(() => ({ width: window.innerWidth, height: window.innerHeight }));
+  return page.evaluate(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight
+  }));
 }
 
 async function getRenderedCursorPosition(page) {
