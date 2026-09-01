@@ -44,23 +44,27 @@ variant is wanted. The optional second argument controls the curve strength:
 higher finite non-negative values produce a more pronounced curve where
 viewport room allows it. Keep normal authoring values between `0` and `2`; very
 large values can look exaggerated and eventually saturate at the safe viewport
-boundary. The `video` and `video:current` npm scripts define a fallback
-`CODECEPT_VIDEO_CURVE_STRENGTH=1` for calls without the second argument. Change
-the fallback in `package.json` to tune all runs, or override one run with, for
-example, `CODECEPT_VIDEO_CURVE_STRENGTH=0.5 npm run video -- video/<scenario>.js`.
-An explicit second argument always takes precedence. The optional
+boundary. When the environment variable is not set, the helper's internal
+fallback is `CODECEPT_VIDEO_CURVE_STRENGTH=1`. The `video` and `video:current`
+npm scripts explicitly set it to `0.3`, so calls without the second argument use
+`0.3` during standard npm video runs. Change the script value in `package.json`
+to tune all standard runs, or override one run with, for example,
+`CODECEPT_VIDEO_CURVE_STRENGTH=0.5 npm run video -- video/<scenario>.js`. An
+explicit second argument always takes precedence. The optional
 `CODECEPT_VIDEO_CLICK_DELAY` controls the short lead-in before a click. Every
 video click also leaves at least 500 milliseconds after the action for easier
 editing; increase it up to 2000 milliseconds with
 `CODECEPT_VIDEO_POST_CLICK_DELAY` when necessary. These are presentation delays,
 not application synchronization mechanisms.
 
-The completed recording is saved atomically as
-`build/test/videos/<scenario-name>.webm`. A later run of the same scenario
-replaces that file. The video-specific Playwright helper also removes temporary
-raw UUID recordings and the legacy UUID-prefixed artifact for the current
-scenario. Only the active page at the end becomes the final recording; keep
-meaningful multi-tab transitions as manual shots.
+A completed successful recording is saved atomically as
+`build/test/videos/<scenario-name>.webm`. A failed run is saved separately as
+`build/test/videos/<scenario-name>.failed.webm`, so it does not replace the last
+successful recording. A later run with the same result replaces the respective
+file. The video-specific Playwright helper also removes temporary raw UUID
+recordings and the legacy UUID-prefixed artifact for the current scenario. Only
+the active page at the end becomes the final recording; keep meaningful
+multi-tab transitions as manual shots.
 
 ## Scenario Template
 

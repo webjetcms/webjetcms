@@ -39,7 +39,7 @@ npm run video -- video/293-config-jstree-view.js
 npm run video:current
 ```
 
-Oba príkazy vytvoria kvalitný WebM súbor s rozlíšením `1920 × 1080`, pomenovaný podľa scenára, v priečinku `build/test/videos`, napríklad `293-config-jstree-view.webm`. Pomocník určený pre nahrávanie videa zvyšuje kvalitu snímok Chrome na 100 a nahrádza predvolený cieľový dátový tok Playwright 1 Mb/s hodnotou 50 Mb/s, používa CRF 0 a maximálny kvantizátor 4, aby zachoval detaily používateľského rozhrania. Opakované spustenie rovnakého scenára nahradí predchádzajúci súbor.
+Oba príkazy vytvoria kvalitný WebM súbor s rozlíšením `1920 × 1080`, pomenovaný podľa scenára, v priečinku `build/test/videos`, napríklad `293-config-jstree-view.webm`. Pomocník určený pre nahrávanie videa zvyšuje kvalitu snímok Chrome na 100 a nahrádza predvolený cieľový dátový tok Playwright 1 Mb/s hodnotou 50 Mb/s, používa CRF 0 a maximálny kvantizátor 4, aby zachoval detaily používateľského rozhrania. Opakované úspešné spustenie rovnakého scenára nahradí predchádzajúci úspešný súbor. Neúspešná nahrávka sa uloží samostatne s príponou `.failed.webm`, napríklad `293-config-jstree-view.failed.webm`, a poslednú úspešnú nahrávku nenahradí.
 
 Oba príkazy zobrazia prehliadač. Je to užitočné pri ladení scenára alebo pri použití externého nástroja na nahrávanie obrazovky.
 

@@ -89,15 +89,8 @@ Scenario("293-config-jstree-view", ({ I, DT }) => {
     I.fillField("#tree-folder-search-input", "form");
     I.videoClick("#tree-folder-search-button");
     I.waitForElement(`${formsNode} > a.jstree-search`, 20);
+    I.videoClick(`${treeSelector} li[data-configuration-module='system.performance'] > a.jstree-anchor`);
 
     I.videoClick("#tree-folder-search-clear-button");
-    I.waitForElement(`${formsNode} > a.jstree-clicked[aria-selected='true']`, 20);
-    I.waitForFunction(() => {
-        const url = new URL(configurationDatatable.getAjaxUrl(), location.origin);
-        return url.searchParams.get("view") === "module" &&
-            url.searchParams.get("module") === "apps.form";
-    }, 20);
-    DT.waitForLoader();
-
     I.wait(10);
 });

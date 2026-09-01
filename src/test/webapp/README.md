@@ -26,7 +26,7 @@ npx codeceptjs run --override '{ "tests": "./screenshots/generator/**/*.js"}' --
 
 ## Nahrávanie prezentačných videí
 
-Video scenáre sú v priečinku `video`. Playwright ich nahráva do `build/test/videos/<názov-scenára>.webm`. Opakovaný beh prepíše predošlé video rovnakého scenára. Nahrávka obsahuje syntetický kurzor aj zvýraznenie kliknutia.
+Video scenáre sú v priečinku `video`. Playwright ich nahráva do `build/test/videos/<názov-scenára>.webm`. Opakovaný úspešný beh prepíše predošlé úspešné video rovnakého scenára. Neúspešný beh sa uloží ako `build/test/videos/<názov-scenára>.failed.webm`, takže posledné úspešné video zostane zachované. Nahrávka obsahuje syntetický kurzor aj zvýraznenie kliknutia.
 
 ```sh
 cd src/test/webapp

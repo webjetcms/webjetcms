@@ -228,7 +228,7 @@ function installVideoCursor() {
       top: "-11px",
       width: "26px",
       height: "26px",
-      border: "3px solid #00a88f",
+      border: "3px solid #00BE9F",
       borderRadius: "50%",
       boxSizing: "border-box",
       opacity: "0"

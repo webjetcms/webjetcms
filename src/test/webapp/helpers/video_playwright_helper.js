@@ -140,6 +140,7 @@ class VideoPlaywrightHelper extends Playwright {
 
   async _passed(test) {
     this.videoArtifactTest = test;
+    this.videoArtifactPassed = true;
     const recordVideo = this.options.recordVideo;
     this.options.recordVideo = undefined;
     try {
@@ -151,6 +152,7 @@ class VideoPlaywrightHelper extends Playwright {
 
   async _failed(test) {
     this.videoArtifactTest = test;
+    this.videoArtifactPassed = false;
     const recordVideo = this.options.recordVideo;
     this.options.recordVideo = undefined;
     try {
@@ -162,6 +164,7 @@ class VideoPlaywrightHelper extends Playwright {
 
   async _after() {
     const test = this.videoArtifactTest;
+    const passed = this.videoArtifactPassed === true;
     const video = this.page?.video();
     const rawDirectory = this.videoRawDirectory;
 
@@ -171,6 +174,7 @@ class VideoPlaywrightHelper extends Playwright {
       process.exitCode = 1;
       error.message = `${error.message}\nRaw video retained in ${rawDirectory}`;
       this.videoArtifactTest = null;
+      this.videoArtifactPassed = null;
       this.videoRawDirectory = null;
       throw error;
     }
@@ -180,6 +184,7 @@ class VideoPlaywrightHelper extends Playwright {
         await removeRawDirectory(rawDirectory);
       } finally {
         this.videoArtifactTest = null;
+        this.videoArtifactPassed = null;
         this.videoRawDirectory = null;
       }
       return;
@@ -187,7 +192,7 @@ class VideoPlaywrightHelper extends Playwright {
 
     const scenarioName = sanitizeScenarioName(test);
     const videoDirectory = path.join(global.output_dir, "videos");
-    const targetName = `${scenarioName}.webm`;
+    const targetName = passed ? `${scenarioName}.webm` : `${scenarioName}.failed.webm`;
     const targetPath = path.join(videoDirectory, targetName);
     const temporaryPath = path.join(rawDirectory, targetName);
 
@@ -209,6 +214,7 @@ class VideoPlaywrightHelper extends Playwright {
     } finally {
       if (finalized) await removeRawDirectory(rawDirectory);
       this.videoArtifactTest = null;
+      this.videoArtifactPassed = null;
       this.videoRawDirectory = null;
     }
   }
