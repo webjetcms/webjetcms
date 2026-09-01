@@ -12,6 +12,39 @@ Before(({ login }) => {
     login("admin");
 });
 
+Scenario("ElevenLabs", ({ I }) => {
+    I.say(`
+Hľadáte jednu konfiguračnú premennú v dlhom zozname nastavení?
+
+Doteraz sa zobrazovali iba nastavenia s hodnotou uloženou v systéme a cesta ku konkrétnej položke mohla trvať zbytočne dlho.
+
+Vo WebJET CMS je teraz orientácia v konfigurácii jednoduchšia. Na ľavej strane pribudol strom, ktorý rozdeľuje nastavenia do logických pohľadov a oblastí.
+
+Po otvorení zostáva zvolený pohľad Zmenené. Nájdete v ňom nastavenia, ktoré majú hodnotu uloženú v systéme. Pohľad Zákaznícke sústredí vlastné nastavenia vašej inštalácie. A v pohľade Všetky uvidíte kompletný zoznam vrátane nastavení, ktoré stále používajú predvolenú hodnotu.
+
+Nastavenia si môžete prezerať aj podľa oblastí. Stačí rozbaliť napríklad bezpečnosť a potom prihlásenie cez externé služby. Tabuľka sa zúži iba na súvisiace položky. Výber širšej oblasti zahŕňa aj jej podskupiny. Ak poznáte názov oblasti, použite vyhľadávanie modulov a dostanete sa k nej ešte rýchlejšie.
+
+Jedno nastavenie môže súvisieť s viacerými časťami systému. Preto sa zobrazí vo všetkých relevantných vetvách a nájdete ho tam, kde ho prirodzene očakávate.
+
+Výsledkom je menej zdĺhavého posúvania, lepší prehľad a rýchlejšia správa konfigurácie aj pri veľkom množstve nastavení.
+
+Podrobný popis nových pohľadov a práce s konfiguračnými premennými nájdete v dokumentácii WebJET CMS. Odkaz je v popise videa.
+`);
+});
+
+Scenario("Shot plan", ({ I }) => {
+    I.say(`
+| 0-4 s | Detail dlhej tabuľky, strom zatiaľ mimo záberu. Krátky scroll. Voliteľný titulok: „Jedno nastavenie. Dlhý zoznam.“ |
+| 4-12 s | Ukážte počet strán alebo pokračujte krátkym scrollovaním zoznamu. |
+| 12-23 s | Plynulo odhaľte celú obrazovku so stromom vľavo. |
+| 23-39 s | Ukážte predvolený pohľad **Zmenené**, potom kliknite na **Zákaznícke** a **Všetky**. Po každom kliknutí počkajte približne sekundu. |
+| 39-59 s | Rozbaľte security, kliknite naň, následne rozbaľte oauth2. Potom do poľa **Hľadať modul** zadajte oauth2. |
+| 59-68 s | Voliteľne strihom ukážte rovnakú premennú xhrFileUploadAllowedExtensions vo vetvách apps.form, security a files.upload. Jednoduchšia alternatíva je titulok „Jedno nastavenie • viac relevantných oblastí“. |
+| 68-76 s | Celkový pohľad na strom a prefiltrovanú tabuľku. Titulok: „Menej hľadania. Lepší prehľad.“ |
+| 76-90 s | Kliknite na **Pomocník** a ukážte dokumentáciu konfigurácie. Záverečný titulok: „Podrobný návod nájdete v popise videa.“ |
+`);
+});
+
 Scenario("293-config-jstree-view", ({ I, DT }) => {
     I.amOnPage("/admin/v9/settings/configuration/");
     I.waitForElement(`${changedNode} > a.jstree-clicked[aria-selected='true']`, 20);
@@ -93,4 +126,4 @@ Scenario("293-config-jstree-view", ({ I, DT }) => {
 
     I.videoClick("#tree-folder-search-clear-button");
     I.wait(10);
-});
+}).tag("@video");

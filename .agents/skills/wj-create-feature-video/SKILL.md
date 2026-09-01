@@ -22,6 +22,10 @@ before implementing or changing a video scenario.
 4. Exact commands for previewing and recording the scenario, plus the output
    location.
 
+Whenever a CodeceptJS walkthrough is created, archive outputs 1 and 2 in the
+same JavaScript file as the metadata scenarios described in section 5. Keep
+returning them in the final response as well.
+
 Do not force an E2E scenario when a change has no useful browser-visible state.
 Explain that limitation and keep the narration and manual shot plan useful.
 
@@ -36,10 +40,11 @@ Explain that limitation and keep the narration and manual shot plan useful.
   safely, ask for it.
 - Remove only a leading `feature/` or `hotfix/` from the branch name. Sanitize the
   remainder to a lowercase hyphenated slug.
-- Name both the JavaScript file and the `Scenario` as
+- Name both the JavaScript file and the main recording `Scenario` as
   `<PR-ID>-<branch-slug>`. Example: PR 293 from
   `feature/config-jstree-view` becomes `293-config-jstree-view.js` and
   `Scenario("293-config-jstree-view", ...)`.
+- Tag the main recording scenario with `@video`.
 - Use `Feature("video.<scenario-name>")`.
 
 ## 2. Frame the Customer Story
@@ -81,6 +86,9 @@ is demonstrably better for the selected voice. Start around Stability 50,
 Similarity 75, Style 0, Speaker Boost on, and Speed 0.95 to 1.0, then adjust after
 a short pronunciation test.
 
+Do not call the ElevenLabs API or generate speech unless the user explicitly
+requests it. This workflow currently prepares and preserves the input text.
+
 ## 4. Design the Shot Plan
 
 - Map every narration beat to a stable screen or action.
@@ -91,11 +99,28 @@ a short pronunciation test.
 - Mark browser-external actions, unreliable third-party pages, and title/outro
   cards as `MANUAL` in the shot plan. Do not hide manual gaps inside brittle E2E
   code.
+- Use only the ASCII hyphen `-` for time ranges and separators. Never use an en
+  dash (`U+2013`) or em dash (`U+2014`) in the shot plan.
 - Avoid sensitive data and customer-specific identifiers in the frame.
 
 ## 5. Implement the Walkthrough
 
 - Preserve unrelated working-tree changes and never create a commit.
+- Before the main recording scenario, add exactly two metadata scenarios named
+  `ElevenLabs` and `Shot plan`. Each scenario must inject only `I` and contain a
+  single `I.say()` call with a backtick-delimited multiline string. Put the
+  copy-ready Slovak narration in `ElevenLabs` and the complete timed shot plan,
+  including every `MANUAL` shot, in `Shot plan`.
+- Put a newline immediately after the opening backtick and immediately before
+  the closing backtick. Keep the content lines and closing backtick unindented
+  so the copied text contains no leading spaces. Follow the exact template in
+  the production reference.
+- Keep both metadata scenarios free of login, navigation, assertions, and other
+  browser actions. Do not use a global `Before` login hook; inject `login` into
+  the main recording scenario and call `login("admin")` there instead.
+- Keep the metadata scenarios before the main recording scenario. Tag only the
+  main scenario with `@video`; the standard `npm run video` script filters by
+  this tag so metadata scenarios do not start a browser or video lifecycle.
 - Reuse selectors and waits from existing regression tests where possible.
 - Prefer a read-only walkthrough. If mutation is essential, create isolated test
   data and clean it up.
@@ -113,17 +138,20 @@ a short pronunciation test.
 - Synchronize with `waitFor*`, URL or application state, and
   `DT.waitForLoader()`. Never use a fixed wait to synchronize application state.
 - Keep test comments in English and organize them by shot.
-- Do not include narration text as unused JavaScript data. Deliver it separately
-  in the response.
+- Do not store narration or the shot plan as unused JavaScript constants. Keep
+  them in the two `I.say()` metadata scenarios and also deliver them in the
+  response.
 
 ## 6. Validate and Hand Off
 
 Run proportionate checks:
 
 1. Parse changed JavaScript and JSON files.
-2. Run CodeceptJS `dry-run` for the new video scenario.
-3. Run the actual scenario when the configured WebJET CMS instance and test
-   credentials are available.
+2. Run CodeceptJS `dry-run` for the complete video file so both metadata
+   scenarios and the main recording scenario are discovered.
+3. Run only the tagged main recording scenario with
+   `npm run video video/<scenario-name>.js` when the configured WebJET CMS
+   instance and test credentials are available.
 4. Confirm a passed WebM is retained in `build/test/videos` and visually inspect
    at least representative frames for resolution, cursor visibility, and
    sensitive data.

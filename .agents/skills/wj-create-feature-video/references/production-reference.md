@@ -6,13 +6,17 @@ Video scenarios live in `src/test/webapp/video`. The standard commands are:
 
 ```shell
 cd src/test/webapp
-npm run video -- video/<scenario-name>.js
+npm run video video/<scenario-name>.js
 npm run video:current
 ```
 
-The first command records a selected video file. The second records the
-scenario marked with `@current`. Both show the browser by default for authoring
-or an external screen recorder; set `CODECEPT_SHOW=false` for a headless run.
+The first command records only the main walkthrough from a selected video file;
+the npm script filters for `@video`, which deliberately excludes its
+`ElevenLabs` and `Shot plan` metadata scenarios. Keep the no-video-frames error
+enabled because it signals a real recording failure when a tagged walkthrough
+does not render. The second command records the scenario marked with `@current`.
+Both show the browser by default for authoring or an external screen recorder;
+set `CODECEPT_SHOW=false` for a headless run.
 Recordings are retained as WebM files in `build/test/videos`.
 
 Disable native cursor capture in an external recorder. The scenario already
@@ -65,7 +69,7 @@ npm scripts provide a default of `0.3` only when the caller has not set the
 variable, so calls without the second argument use `0.3` during standard npm
 video runs. Change the script default in `package.json` to tune all standard
 runs, or override one run with, for example,
-`CODECEPT_VIDEO_CURVE_STRENGTH=0.5 npm run video -- video/<scenario>.js`. An
+`CODECEPT_VIDEO_CURVE_STRENGTH=0.5 npm run video video/<scenario>.js`. An
 explicit second argument always takes precedence. The optional
 `CODECEPT_VIDEO_CLICK_DELAY` controls the short lead-in before a click. Every
 video click also leaves at least 500 milliseconds after the action for easier
@@ -87,11 +91,20 @@ multi-tab transitions as manual shots.
 ```javascript
 Feature("video.<scenario-name>");
 
-Before(({ login }) => {
-    login("admin");
+Scenario("ElevenLabs", ({ I }) => {
+    I.say(`
+<copy-ready Slovak narration across multiple lines>
+`);
 });
 
-Scenario("<scenario-name>", ({ I, DT }) => {
+Scenario("Shot plan", ({ I }) => {
+    I.say(`
+<timed shot plan across multiple lines, including MANUAL shots>
+`);
+});
+
+Scenario("<scenario-name>", ({ I, DT, login }) => {
+    login("admin");
     I.amOnPage("<admin-url>");
     I.waitForElement("<initial-state>", 20);
     DT.waitForLoader();
@@ -100,12 +113,15 @@ Scenario("<scenario-name>", ({ I, DT }) => {
     I.videoClick("<stable-selector>");
     I.waitForElement("<result-state>", 20);
     DT.waitForLoader();
-});
+}).tag("@video");
 ```
 
 Use only the injected objects needed by the scenario. Selectors based on IDs,
 roles, or stable `data-*` attributes are preferable to visual position or
 translated text.
+
+To use `npm run video:current`, add `.tag("@current")` to the same main scenario
+after `.tag("@video")`. Never tag either metadata scenario.
 
 ## Validation Commands
 
@@ -113,7 +129,8 @@ translated text.
 node --check helpers/video_helper.js
 node --check video/<scenario-name>.js
 node -e "JSON.parse(require('fs').readFileSync('package.json', 'utf8'))"
-CODECEPT_VIDEO=true CODECEPT_VIDEO_ZOOM=1.411764705882353 CODECEPT_VIDEO_CURSOR=true npx codeceptjs dry-run -c codecept.video.conf.js --steps -p autoLogin --grep "<scenario-name>"
+CODECEPT_VIDEO=true CODECEPT_VIDEO_ZOOM=1.411764705882353 CODECEPT_VIDEO_CURSOR=true npx codeceptjs dry-run -c codecept.video.conf.js --steps -p autoLogin video/<scenario-name>.js
+npm run video video/<scenario-name>.js
 ```
 
 Run the actual `npm run video` command only when the target environment and

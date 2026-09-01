@@ -1,4 +1,4 @@
 interface:
-  display_name: "WebJET Feature Video"
+  display_name: "WJ Feature Video"
   short_description: "Create voiceover and automated feature demos"
   default_prompt: "Use $wj-create-feature-video to prepare a Slovak ElevenLabs script and CodeceptJS video walkthrough for this PR."
