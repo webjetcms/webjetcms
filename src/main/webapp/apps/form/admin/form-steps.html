@@ -201,6 +201,7 @@
                     let itsCreateAction = false;
 
                     const editDialog = $("div.DTE.DTE_Action_Edit");
+                    $("#pills-dt-formItemsDataTable-stat-tab").show();
                     if(editDialog != undefined && editDialog != null && editDialog.length) {
                         // Its edit
 
@@ -209,23 +210,23 @@
                             $("#pills-dt-formItemsDataTable-" + tabId + "-tab").show();
                         });
 
-                        const hiddenTabsByType = formItemsDataTable.DATA.jsonOptions.hiddenTabsByType;
-                        hiddenTabsByType.forEach(tab => {
-                            if(tab.value === selectedFieldType) {
-                                let label = tab.label;
-                                if(label != null && label.trim().length > 0) {
-                                    label.split(",").map(s => s.trim()).forEach(tabId => {
-                                        $("#pills-dt-formItemsDataTable-" + tabId + "-tab").hide();
-                                    });
-                                }
-                            }
-                        });
-
                         //
                         itsCreateAction = false;
                     } else {
                         itsCreateAction = true;
                     }
+
+                    const hiddenTabsByType = formItemsDataTable.DATA.jsonOptions.hiddenTabsByType;
+                    hiddenTabsByType.forEach(tab => {
+                        if(tab.value === selectedFieldType) {
+                            let label = tab.label;
+                            if(label != null && label.trim().length > 0) {
+                                label.split(",").map(s => s.trim()).forEach(tabId => {
+                                    $("#pills-dt-formItemsDataTable-" + tabId + "-tab").hide();
+                                });
+                            }
+                        }
+                    });
 
                     let fieldsToHide = [];
                     for(let i = 0; i < hiddenFieldsByType.length; i++) {
@@ -473,6 +474,10 @@
         border-bottom-width: 0px;
     }
     tr.even-step td { background-color: #F3F3F6 !important; }
+    #formItemsDataTable tbody tr.form-item-support:not(.selected) td {
+        color: var(--wj-gray-text) !important;
+        background-color: var(--wj-nice-gray) !important;
+    }
     button.dt-filtrujem-stepId { display: none; }
     #stepIdSelect > form > div > div > button:hover { background: #999; }
     #stepIdSelect > form > div > div > button {

@@ -143,7 +143,7 @@ public class FormStatService {
         }
 
         /**
-         * Loads form items that are enabled for statistics ({@code show_stat=1}).
+         * Loads form items that are enabled for statistics ({@code show_stat=1}), excluding layout support items.
          * Results are ordered by step and item priority.
          * Consecutive radio items with the same {@code itemFormId} are collapsed to one record.
          *
@@ -171,6 +171,8 @@ public class FormStatService {
                 @Override
                 public FormItemEntity map(ResultSet rs) throws SQLException {
                     FormItemEntity stepItem = resultSetToItemEntity(rs);
+
+                    if(MultistepFormsService.getRowViewItemTypes().contains(stepItem.getFieldType())) return null;
 
                     // Radio buttons may be stored as separate rows; collapse consecutive rows with the same id.
                     if("radio".equals(stepItem.getFieldType()) &&  previous.get(0).equals(stepItem.getItemFormId())) return null;

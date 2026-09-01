@@ -92,6 +92,10 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
 
             if(even) item.setRowClass("even-step");
             else item.setRowClass("odd-step");
+
+            if(MultistepFormsService.getRowViewItemTypes().contains(item.getFieldType())) {
+                item.addRowClass("form-item-support");
+            }
         }
 
         Pair<List<LabelValue>, List<LabelValue>> optionsPair = MultistepFormsService.getFieldTypes(getRequest());
@@ -215,6 +219,9 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
     public void beforeSave(FormItemEntity entity) {
         //
         if(MultistepFormsService.getChartStatInfo(getRequest()) != null) return;
+
+        if(MultistepFormsService.getRowViewItemTypes().contains(entity.getFieldType()))
+            entity.setShowStat(false);
 
         if("captcha".equalsIgnoreCase(entity.getFieldType()))
             entity.setRequired(true); //captcha is allways required

@@ -98,6 +98,7 @@ public class MultistepFormsService {
 
     public static final String VISIBILITY_TAB = "visibilityConditions";
     public static final String REQUIREMENT_TAB = "requirementConditions";
+    public static final String STATISTICS_TAB = "stat";
 
     private final SaveFormService saveFormService;
     private final FormsRepository formsRepository;
@@ -278,7 +279,9 @@ public class MultistepFormsService {
         for(Entry<String, String> entry : formsimpleFields.entrySet()) {
             String type = entry.getKey().substring(ITEM_KEY_LABEL_PREFIX.length());
 
-            if(getRowViewItemTypes().contains(type) || "captcha".equals(type) || "verify_code".equals(type)) {
+            if(getRowViewItemTypes().contains(type)) {
+                options.add(new LabelValue(VISIBILITY_TAB + "," + REQUIREMENT_TAB + "," + STATISTICS_TAB, type));
+            } else if("captcha".equals(type) || "verify_code".equals(type)) {
                 options.add(new LabelValue(VISIBILITY_TAB + "," + REQUIREMENT_TAB, type));
             } else if(fieldVisibilityMap.getOrDefault(type, List.of()).contains("required")) {
                 options.add(new LabelValue(REQUIREMENT_TAB, type));
