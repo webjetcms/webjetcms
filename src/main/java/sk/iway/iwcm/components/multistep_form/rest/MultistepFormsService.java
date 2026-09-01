@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -20,8 +21,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import sk.iway.Html2Text;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
@@ -445,6 +448,15 @@ public class MultistepFormsService {
                     fileInfo.put("name", originalFileName);
                     fileInfo.put("size", file.length());
                     fileInfo.put("success", true);
+                    if(FileTools.isImage(originalFileName) && originalFileName.toLowerCase(Locale.ROOT).endsWith(".svg") == false) {
+                        String thumbnailUrl = UriComponentsBuilder.fromPath("/rest/multistep-form/temp-file-preview")
+                            .queryParam("form-name", formName)
+                            .queryParam("file-key", fileKey)
+                            .build()
+                            .encode()
+                            .toUriString();
+                        fileInfo.put("thumbnailUrl", thumbnailUrl);
+                    }
 
                     validFileKeys.add(fileKey);
                     fileMetadata.put(fileKey, fileInfo);
@@ -460,6 +472,43 @@ public class MultistepFormsService {
         }
 
         return new Pair<>(savedValues, savedFiles);
+    }
+
+    public IwcmFile getSavedTempFilePreview(String formName, String fileKey, HttpServletRequest request) {
+        if(Tools.isEmpty(formName) || Tools.isEmpty(fileKey) || fileKey.length() > 100 || fileKey.matches("[A-Za-z0-9]+") == false) return null;
+
+        Set<String> fileFieldSuffixes = getFormItemsForValidation(formName).stream()
+            .filter(item -> isFileUploadField(item.getFieldType()))
+            .map(item -> "_" + item.getItemFormId())
+            .collect(Collectors.toSet());
+        if(fileFieldSuffixes.isEmpty()) return null;
+
+        HttpSession session = request.getSession(false);
+        if(session == null) return null;
+
+        String sessionPrefix = SESSION_PREFIX + formName + "_" + CloudToolsForCore.getDomainId() + "_";
+        Enumeration<String> attributeNames = session.getAttributeNames();
+        while(attributeNames.hasMoreElements()) {
+            String attributeName = attributeNames.nextElement();
+            if(attributeName.startsWith(sessionPrefix) == false || fileFieldSuffixes.stream().noneMatch(attributeName::endsWith)) continue;
+
+            Object sessionValue = session.getAttribute(attributeName);
+            if(sessionValue == null) continue;
+
+            for(String savedFileKey : Tools.getTokens(sessionValue.toString(), ";")) {
+                if(fileKey.equals(savedFileKey)) {
+                    String filePath = XhrFileUploadServlet.getService().getTempFilePath(fileKey);
+                    if(Tools.isEmpty(filePath)) return null;
+
+                    IwcmFile file = new IwcmFile(filePath);
+                    String originalFileName = XhrFileUploadServlet.getService().getOriginalFileName(fileKey);
+                    boolean previewableImage = file.exists() && Tools.isNotEmpty(originalFileName) && FileTools.isImage(originalFileName) && originalFileName.toLowerCase(Locale.ROOT).endsWith(".svg") == false;
+                    return previewableImage ? file : null;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

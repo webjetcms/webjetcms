@@ -105,8 +105,12 @@ PageParams pp = new PageParams(request);
                                 uploadedFiles = JSON.parse(prepopulateWithFiles);
 
                                 for(var i in files) {
-                                    myDropzone.emit("addedfile", files[i]);
-                                    myDropzone.files.push(files[i]);
+                                    var restoredFile = files[i];
+                                    restoredFile.status = Dropzone.SUCCESS;
+                                    myDropzone.emit("addedfile", restoredFile);
+                                    if(restoredFile.thumbnailUrl) myDropzone.emit("thumbnail", restoredFile, restoredFile.thumbnailUrl);
+                                    myDropzone.emit("complete", restoredFile);
+                                    myDropzone.files.push(restoredFile);
                                 }
                                 if (myDropzone.files.length > 0) setSingleFileLocked(true);
                             }

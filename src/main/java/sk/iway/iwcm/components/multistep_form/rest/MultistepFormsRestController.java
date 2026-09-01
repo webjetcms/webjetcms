@@ -3,6 +3,7 @@ package sk.iway.iwcm.components.multistep_form.rest;
 import java.util.List;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +20,10 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.FilePathTools;
 import sk.iway.iwcm.components.multistep_form.support.SaveFormException;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
 
@@ -111,5 +114,18 @@ public class MultistepFormsRestController {
     @GetMapping(value = "/autocomplete", params = {"step-id", "item-id", "term"})
     public List<LabelValue> getAutocompleteOptions(@RequestParam("step-id") Long stepId, @RequestParam("item-id") Long itemId, @RequestParam String term, HttpServletRequest request) {
         return multistepFormsService.getAutocompleteOptions(stepId, itemId, term, request);
+    }
+
+    @GetMapping(value = "/temp-file-preview", params = {"form-name", "file-key"})
+    public void getTempFilePreview(@RequestParam("form-name") String formName, @RequestParam("file-key") String fileKey, HttpServletRequest request, HttpServletResponse response) throws java.io.IOException {
+        IwcmFile file = multistepFormsService.getSavedTempFilePreview(formName, fileKey, request);
+        if(file == null) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        response.setHeader("Cache-Control", "private, no-store");
+        response.setHeader("X-Content-Type-Options", "nosniff");
+        if(FilePathTools.writeFileOut(file, request, response) == false) response.sendError(HttpServletResponse.SC_NOT_FOUND);
     }
 }
