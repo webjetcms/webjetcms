@@ -207,5 +207,5 @@ Scenario('pasteFromWord filter-empty @singlethread', async ({ I, DTE, Document }
 
 Scenario('reset', async ({ I, Document }) => {
     //reset back to default value
-    Document.setConfigValue("ckeditor_pasteFromWord_disallowedContent", "table[width,height,border];td(*);td[align,valign];th(*);th[align,valign];p[align];span;col[width]");
+    Document.setConfigValue("ckeditor_pasteFromWord_disallowedContent", "table[width,height,border];td(*);td[align,valign,nowrap];th(*);th[align,valign];p[align];span;col[width]");
 });
