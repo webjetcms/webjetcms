@@ -62,7 +62,9 @@ npm run video -- video/293-config-jstree-view.js
 npm run video:current
 ```
 
-Oba príkazy predvolene vytvoria kvalitný WebM súbor s rozlíšením `1920 × 1080`, pomenovaný podľa scenára, v priečinku `build/test/videos`, napríklad `293-config-jstree-view.webm`. Pomocník určený pre nahrávanie videa zvyšuje kvalitu snímok Chrome na 100 a nahrádza predvolený cieľový dátový tok Playwright 1 Mb/s hodnotou 50 Mb/s, používa CRF 0 a maximálny kvantizátor 4, aby zachoval detaily používateľského rozhrania. Opakované úspešné spustenie rovnakého scenára nahradí predchádzajúci úspešný súbor. Neúspešná nahrávka sa uloží samostatne s príponou `.failed.webm`, napríklad `293-config-jstree-view.failed.webm`, a poslednú úspešnú nahrávku nenahradí.
+Oba príkazy predvolene vytvoria kvalitný WebM súbor s rozlíšením `1920 × 1080`, pomenovaný podľa scenára, v priečinku `docs/feature-video` v koreňovom priečinku repozitára, napríklad `293-config-jstree-view.webm`. Pomocník určený pre nahrávanie videa zvyšuje kvalitu snímok Chrome na 100 a nahrádza predvolený cieľový dátový tok Playwright 1 Mb/s hodnotou 50 Mb/s, používa CRF 0 a maximálny kvantizátor 4, aby zachoval detaily používateľského rozhrania. Opakované úspešné spustenie rovnakého scenára nahradí predchádzajúci úspešný súbor. Neúspešná nahrávka sa uloží samostatne s príponou `.failed.webm`, napríklad `293-config-jstree-view.failed.webm`, a poslednú úspešnú nahrávku nenahradí.
+
+Priečinok `docs/feature-video` je lokálny a ignorovaný cez `.gitignore`, takže vygenerované médiá sa nepridajú do Gitu. Finálne MP3 a WebM súbory aj pracovné súbory vznikajú v tomto priečinku a prežijú vyčistenie `build/test`. Playwright najprv nahráva do podpriečinka `.video-raw`. Po dokončení sa jeho UUID súbor atómovo premenuje na stabilný názov a prázdny pracovný priečinok sa odstráni. Pri chybe zostane raw nahrávka zachovaná na diagnostiku.
 
 Štandardné príkazy používajú v `package.json` predvolené rozlíšenie `1920 × 1080` a zväčšenie obsahu stránky na pomer `24/17`, teda približne `141,18 %`. Video pomocník zapíše túto hodnotu ako predvolené priblíženie do dočasného profilu Chromium ešte pred spustením prehliadača. Ide o rovnaký mechanizmus, aký používa priblíženie cez menu Chrome. Aplikácia preto už počas inicializácie pracuje s logickým viewport `1360 × 765`, zatiaľ čo výsledok sa vykreslí priamo do Full HD videa. Texty a ovládacie prvky zostávajú dobre čitateľné bez dodatočného zväčšovania obrazu vo video editore.
 
@@ -108,7 +110,7 @@ Generovanie zvuku používa platené API služby ElevenLabs, preto ho spúšťaj
 npm run audio video/293-config-jstree-view.js
 ```
 
-Príkaz spustí iba scenár označený `@audio` cez samostatnú konfiguráciu CodeceptJS. Neotvorí prehliadač, neprihlási používateľa a nespustí scenár videa ani plán záberov. Výsledok vo formáte `mp3_44100_128` uloží ako `build/test/videos/293-config-jstree-view.mp3`.
+Príkaz spustí iba scenár označený `@audio` cez samostatnú konfiguráciu CodeceptJS. Neotvorí prehliadač, neprihlási používateľa a nespustí scenár videa ani plán záberov. Výsledok vo formáte `mp3_44100_128` uloží ako `docs/feature-video/293-config-jstree-view.mp3` v koreňovom priečinku repozitára.
 
 ### API kľúč ElevenLabs
 

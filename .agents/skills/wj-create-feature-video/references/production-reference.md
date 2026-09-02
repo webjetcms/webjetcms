@@ -20,7 +20,13 @@ enabled because it signals a real recording failure when a tagged walkthrough
 does not render. The second command records the scenario marked with `@current`.
 Both show the browser by default for authoring or an external screen recorder;
 set `CODECEPT_SHOW=false` for a headless run.
-Recordings are retained as WebM files in `build/test/videos`.
+Final recordings are retained as WebM files in `docs/feature-video` at the
+repository root. This local directory is gitignored, so generated media does
+not enter version control, but final MP3 and WebM artifacts survive cleanup of
+`build/test`. Playwright records below `docs/feature-video/.video-raw`; after a
+successful run its UUID file is atomically renamed to the stable target and the
+empty raw directory is removed. A failed finalization retains the raw recording
+for diagnosis.
 
 Disable native cursor capture in an external recorder. The scenario already
 renders a cursor and click effect, and capturing the system cursor as well can
@@ -81,13 +87,14 @@ editing; increase it up to 2000 milliseconds with
 not application synchronization mechanisms.
 
 A completed successful recording is saved atomically as
-`build/test/videos/<scenario-name>.webm`. A failed run is saved separately as
-`build/test/videos/<scenario-name>.failed.webm`, so it does not replace the last
+`docs/feature-video/<scenario-name>.webm`. A failed run is saved separately as
+`docs/feature-video/<scenario-name>.failed.webm`, so it does not replace the last
 successful recording. A later run with the same result replaces the respective
-file. The video-specific Playwright helper also removes temporary raw UUID
-recordings and the legacy UUID-prefixed artifact for the current scenario. Only
-the active page at the end becomes the final recording; keep meaningful
-multi-tab transitions as manual shots.
+file. The video-specific Playwright helper moves the raw UUID file from its
+isolated `.video-raw` run directory, removes that empty directory, and cleans up
+the legacy UUID-prefixed artifact for the current scenario. Only the active page
+at the end becomes the final recording; keep meaningful multi-tab transitions
+as manual shots.
 
 ## ElevenLabs Audio Profile
 
@@ -122,7 +129,7 @@ because the API call can consume ElevenLabs credits. There is no automatic
 retry, avoiding a second charge after an ambiguous network failure.
 
 A successful response is written atomically as
-`build/test/videos/<scenario-name>.mp3`; a temporary file replaces the previous
+`docs/feature-video/<scenario-name>.mp3`; a temporary file replaces the previous
 MP3 only after the complete response is available. An API, network, timeout, or
 disk error therefore leaves the last successful MP3 unchanged.
 
@@ -181,9 +188,11 @@ Scenario("ElevenLabs", ({ I }) => {
 ## Validation Commands
 
 ```shell
+node --check helpers/feature_video_paths.js
 node --check helpers/audio_helper.js
 node --check helpers/audio_runner.js
 node --check helpers/video_helper.js
+node --check helpers/video_playwright_helper.js
 node --check video/<scenario-name>.js
 node -e "JSON.parse(require('fs').readFileSync('package.json', 'utf8'))"
 CODECEPT_AUDIO_FILE="$(pwd)/video/<scenario-name>.js" npx codeceptjs dry-run -c codecept.audio.conf.js --steps --grep '@audio'

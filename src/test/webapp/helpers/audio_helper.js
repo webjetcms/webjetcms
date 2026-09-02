@@ -1,6 +1,7 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { randomBytes } = require("node:crypto");
+const { FEATURE_VIDEO_DIRECTORY } = require("./feature_video_paths.js");
 
 const { Helper } = codeceptjs;
 
@@ -56,6 +57,10 @@ function getAudioArtifactName(test) {
 
   const extension = path.extname(scenarioFile);
   return `${path.basename(scenarioFile, extension)}.mp3`;
+}
+
+function getAudioArtifactPath(test, outputDirectory = FEATURE_VIDEO_DIRECTORY) {
+  return path.join(outputDirectory, getAudioArtifactName(test));
 }
 
 function assertAudioTestIdentity(test) {
@@ -257,6 +262,9 @@ class AudioHelper extends Helper {
       generationEnabled: false,
       ...config
     };
+    this.featureVideoDirectory = config.featureVideoDirectory == null
+      ? FEATURE_VIDEO_DIRECTORY
+      : path.resolve(getRequiredText(config.featureVideoDirectory, "featureVideoDirectory"));
     this.audioGenerationStarted = false;
     this.audioSuiteValidated = false;
     this.allowedAudioTest = null;
@@ -314,11 +322,7 @@ class AudioHelper extends Helper {
       throw new Error("ELEVENLABS_API_KEY must be set before generating audio.");
     }
 
-    const artifactName = getAudioArtifactName(this.audioTest);
-    if (typeof global.output_dir !== "string" || global.output_dir.trim() === "") {
-      throw new Error("CodeceptJS output directory is not configured.");
-    }
-    const targetPath = path.join(global.output_dir, "videos", artifactName);
+    const targetPath = getAudioArtifactPath(this.audioTest, this.featureVideoDirectory);
     await generateAudioArtifact({
       targetPath,
       apiKey,
@@ -341,6 +345,7 @@ module.exports.REQUEST_TIMEOUT_MS = REQUEST_TIMEOUT_MS;
 module.exports.assertAudioTestIdentity = assertAudioTestIdentity;
 module.exports.getRegisteredAudioTests = getRegisteredAudioTests;
 module.exports.getAudioArtifactName = getAudioArtifactName;
+module.exports.getAudioArtifactPath = getAudioArtifactPath;
 module.exports.getAudioSettings = getAudioSettings;
 module.exports.normalizeNarration = normalizeNarration;
 module.exports.prepareAtomicWrite = prepareAtomicWrite;

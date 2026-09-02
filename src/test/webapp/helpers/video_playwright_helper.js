@@ -2,6 +2,7 @@ const fs = require("fs").promises;
 const path = require("path");
 const { randomBytes } = require("crypto");
 const { threadId } = require("worker_threads");
+const { FEATURE_VIDEO_DIRECTORY } = require("./feature_video_paths.js");
 const { getVideoSettings } = require("./video_settings.js");
 
 const PLAYWRIGHT_CORE_ROOT = path.dirname(require.resolve("playwright-core/package.json"));
@@ -123,6 +124,18 @@ function getVideoArtifactName(test, passed) {
   return passed ? `${scenarioName}.webm` : `${scenarioName}.failed.webm`;
 }
 
+function getVideoArtifactPath(test, passed) {
+  return path.join(FEATURE_VIDEO_DIRECTORY, getVideoArtifactName(test, passed));
+}
+
+function getVideoRawDirectory(test, runId) {
+  return path.join(
+    FEATURE_VIDEO_DIRECTORY,
+    ".video-raw",
+    `${runId}-${sanitizeScenarioName(test)}`
+  );
+}
+
 function escapeRegularExpression(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -161,23 +174,20 @@ async function removeRawDirectory(rawDirectory) {
   });
 }
 
-async function replaceFile(sourcePath, targetPath) {
-  try {
-    await fs.rename(sourcePath, targetPath);
-  } catch (error) {
-    if (error.code !== "EEXIST" && error.code !== "ENOTEMPTY" && error.code !== "EPERM") throw error;
-    await fs.rm(targetPath, { force: true });
-    await fs.rename(sourcePath, targetPath);
-  }
+async function finalizeVideoArtifact(video, targetPath, options = {}) {
+  const fsImpl = options.fsImpl || fs;
+
+  await fsImpl.mkdir(path.dirname(targetPath), { recursive: true });
+  const sourcePath = await video.path();
+  await fsImpl.rename(sourcePath, targetPath);
 }
 
 class VideoPlaywrightHelper extends Playwright {
 
   async _before(test) {
     if (this.options.recordVideo != null) {
-      const scenarioName = sanitizeScenarioName(test);
       const runId = `${process.pid}-${threadId}-${randomBytes(6).toString("hex")}`;
-      this.videoRawDirectory = path.join(global.output_dir, ".video-raw", `${runId}-${scenarioName}`);
+      this.videoRawDirectory = getVideoRawDirectory(test, runId);
       await fs.rm(this.videoRawDirectory, { recursive: true, force: true });
       await fs.mkdir(this.videoRawDirectory, { recursive: true });
       this.options.recordVideo.dir = this.videoRawDirectory;
@@ -238,25 +248,23 @@ class VideoPlaywrightHelper extends Playwright {
     }
 
     const scenarioName = sanitizeScenarioName(test);
-    const videoDirectory = path.join(global.output_dir, "videos");
-    const targetName = getVideoArtifactName(test, passed);
-    const targetPath = path.join(videoDirectory, targetName);
-    const temporaryPath = path.join(rawDirectory, targetName);
+    const targetPath = getVideoArtifactPath(test, passed);
+    const videoDirectory = path.dirname(targetPath);
 
     let finalized = false;
     try {
-      await fs.mkdir(videoDirectory, { recursive: true });
-      await fs.rm(temporaryPath, { force: true });
-      await video.saveAs(temporaryPath);
-      await replaceFile(temporaryPath, targetPath);
+      await finalizeVideoArtifact(video, targetPath);
+      finalized = true;
       if (test.artifacts == null) test.artifacts = {};
       test.artifacts.video = targetPath;
       await video.delete().catch(() => {});
       await removeLegacyScenarioVideos(videoDirectory, scenarioName, targetPath);
-      finalized = true;
     } catch (error) {
       process.exitCode = 1;
-      error.message = `${error.message}\nRaw video retained in ${rawDirectory}`;
+      const artifactStatus = finalized
+        ? `Final video saved in ${targetPath}`
+        : `Raw video retained in ${rawDirectory}`;
+      error.message = `${error.message}\n${artifactStatus}`;
       throw error;
     } finally {
       if (finalized) await removeRawDirectory(rawDirectory);
@@ -268,4 +276,7 @@ class VideoPlaywrightHelper extends Playwright {
 }
 
 module.exports = VideoPlaywrightHelper;
+module.exports.finalizeVideoArtifact = finalizeVideoArtifact;
 module.exports.getVideoArtifactName = getVideoArtifactName;
+module.exports.getVideoArtifactPath = getVideoArtifactPath;
+module.exports.getVideoRawDirectory = getVideoRawDirectory;

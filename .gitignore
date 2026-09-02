@@ -37,6 +37,7 @@ src/main/resources/certificates/https-keystore.p12
 docs/examples/headless-astro/.cert/
 docs/examples/headless-astro/.astro/dev.json
 docs/examples/headless-astro/.astro/settings.json
+docs/feature-video/
 
 # Environment variables (keep .env.example only)
 .env

@@ -26,7 +26,9 @@ npx codeceptjs run --override '{ "tests": "./screenshots/generator/**/*.js"}' --
 
 ## Nahrávanie prezentačných videí
 
-Video scenáre sú v priečinku `video`. Playwright ich nahráva do `build/test/videos/<názov-scenára>.webm`. Opakovaný úspešný beh prepíše predošlé úspešné video rovnakého scenára. Neúspešný beh sa uloží ako `build/test/videos/<názov-scenára>.failed.webm`, takže posledné úspešné video zostane zachované. Nahrávka obsahuje syntetický kurzor aj zvýraznenie kliknutia.
+Video scenáre sú v priečinku `video`. Playwright ich nahráva do `docs/feature-video/<názov-scenára>.webm` v koreňovom priečinku repozitára. Opakovaný úspešný beh prepíše predošlé úspešné video rovnakého scenára. Neúspešný beh sa uloží ako `docs/feature-video/<názov-scenára>.failed.webm`, takže posledné úspešné video zostane zachované. Nahrávka obsahuje syntetický kurzor aj zvýraznenie kliknutia.
+
+Priečinok `docs/feature-video` je lokálny a ignorovaný cez `.gitignore`, takže vygenerované médiá sa nepridajú do Gitu. Finálne MP3 a WebM súbory aj pracovné súbory vznikajú v tomto priečinku a prežijú vyčistenie `build/test`. Playwright nahráva do podpriečinka `.video-raw`; po úspešnom dokončení sa raw súbor premenuje na stabilný názov a pracovný priečinok sa odstráni. Pri chybe zostane raw nahrávka zachovaná na diagnostiku.
 
 ```sh
 cd src/test/webapp
@@ -48,6 +50,6 @@ Príkazy `video` a `video:current` predvolene používajú viditeľný prehliada
 
 Rozlíšenie videa, zväčšenie obsahu stránky a cieľovú adresu nastavujú video príkazy v `package.json` pomocou `CODECEPT_VIDEO_WIDTH`, `CODECEPT_VIDEO_HEIGHT`, `CODECEPT_VIDEO_ZOOM` a `CODECEPT_URL`. Predvolené hodnoty môžete pre jedno nahrávanie prepísať zadaním premenných pred `npm run video` alebo `npm run video:current`.
 
-Audio príkaz vyžaduje práve jeden existujúci `.js` súbor z priečinka `video` a spustí iba jeho scenár `ElevenLabs` označený `@audio`. Nepoužíva prehliadač ani prihlásenie. API kľúč číta výhradne z `ELEVENLABS_API_KEY`; súbory `.env` sa automaticky nenačítavajú. Predvolene používa model `eleven_v3`, hlas Luki Zajo `Zai7B4Aol2bJtneyq0L1` a výsledok uloží vo formáte `mp3_44100_128` do `build/test/videos/<názov-scenára>.mp3`. Model a hlas môžete prepísať cez `ELEVENLABS_MODEL_ID`, `ELEVENLABS_VOICE_ID` alebo explicitné parametre `I.generateAudio`, ktoré majú najvyššiu prioritu. Generovanie spúšťajte iba vedome, pretože volanie ElevenLabs API môže spotrebovať kredity.
+Audio príkaz vyžaduje práve jeden existujúci `.js` súbor z priečinka `video` a spustí iba jeho scenár `ElevenLabs` označený `@audio`. Nepoužíva prehliadač ani prihlásenie. API kľúč číta výhradne z `ELEVENLABS_API_KEY`; súbory `.env` sa automaticky nenačítavajú. Predvolene používa model `eleven_v3`, hlas Luki Zajo `Zai7B4Aol2bJtneyq0L1` a výsledok uloží vo formáte `mp3_44100_128` do `docs/feature-video/<názov-scenára>.mp3`. Model a hlas môžete prepísať cez `ELEVENLABS_MODEL_ID`, `ELEVENLABS_VOICE_ID` alebo explicitné parametre `I.generateAudio`, ktoré majú najvyššiu prioritu. Generovanie spúšťajte iba vedome, pretože volanie ElevenLabs API môže spotrebovať kredity.
 
 Postup vytvorenia obmedzeného ElevenLabs API kľúča, konvencie audio scenára a podrobné nastavenia sú v dokumentácii [Nahrávanie prezentačných videí](../../../docs/sk/developer/testing/video.md).

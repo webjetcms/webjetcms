@@ -164,9 +164,14 @@ Run proportionate checks:
 4. Run only the tagged main recording scenario with
    `npm run video video/<scenario-name>.js` when the configured WebJET CMS
    instance and test credentials are available.
-5. Confirm the successful MP3 and WebM artifacts in `build/test/videos`. A
+5. Confirm the successful MP3 and WebM artifacts in `docs/feature-video`. A
    successful audio response is written as `<scenario-name>.mp3` with format
-   `mp3_44100_128`; inspect or listen to generated output before handoff.
+   `mp3_44100_128`; inspect or listen to generated output before handoff. This
+   local, gitignored directory preserves final artifacts when `build/test` is
+   cleaned. Playwright records below `docs/feature-video/.video-raw`; after a
+   successful run its UUID file is atomically renamed to the stable target and
+   the empty raw directory is removed. Retain raw recordings when finalization
+   fails so the failure can be diagnosed.
 
 In the final response, provide the copy-ready narration first, then its word
 count and duration, ElevenLabs model and voice, shot plan, the verified

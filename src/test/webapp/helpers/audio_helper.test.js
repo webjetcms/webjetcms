@@ -12,6 +12,7 @@ const {
   DEFAULT_VOICE_ID,
   OUTPUT_FORMAT,
   generateAudioArtifact,
+  getAudioArtifactPath,
   getAudioSettings,
   requestSpeechAudio,
   writeFileAtomically
@@ -26,12 +27,10 @@ const originalEnvironment = Object.fromEntries(
   ENVIRONMENT_NAMES.map((name) => [name, process.env[name]])
 );
 const originalFetch = global.fetch;
-const originalOutputDirectory = global.output_dir;
 
 test.beforeEach(() => {
   for (const name of ENVIRONMENT_NAMES) delete process.env[name];
   global.fetch = originalFetch;
-  global.output_dir = originalOutputDirectory;
 });
 
 test.after(() => {
@@ -40,14 +39,12 @@ test.after(() => {
     else process.env[name] = value;
   }
   global.fetch = originalFetch;
-  global.output_dir = originalOutputDirectory;
   if (previousCodeceptjs === undefined) delete global.codeceptjs;
   else global.codeceptjs = previousCodeceptjs;
 });
 
 async function withOutputDirectory(callback) {
   const outputDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "wj-audio-helper-"));
-  global.output_dir = outputDirectory;
   try {
     return await callback(outputDirectory);
   } finally {
@@ -91,13 +88,15 @@ test("generates the default MP3 request and registers the scenario-file artifact
     const scenario = createAudioTest(
       path.join("project", "video", "293-config-jstree-view.js")
     );
-    const helper = new AudioHelper({ generationEnabled: true });
+    const helper = new AudioHelper({
+      generationEnabled: true,
+      featureVideoDirectory: outputDirectory
+    });
     registerAudioTest(helper, scenario);
 
     const result = await helper.generateAudio("\r\nFirst line.\r\nSecond line.\r\n");
     const expectedPath = path.join(
       outputDirectory,
-      "videos",
       "293-config-jstree-view.mp3"
     );
 
@@ -126,8 +125,19 @@ test("generates the default MP3 request and registers the scenario-file artifact
   });
 });
 
+test("resolves the default audio artifact directly below docs/feature-video", () => {
+  const scenario = createAudioTest(
+    path.join("project", "video", "293-config-jstree-view.js")
+  );
+
+  assert.equal(
+    getAudioArtifactPath(scenario),
+    path.resolve(__dirname, "../../../../docs/feature-video/293-config-jstree-view.mp3")
+  );
+});
+
 test("prefers helper overrides over environment settings", async () => {
-  await withOutputDirectory(async () => {
+  await withOutputDirectory(async (outputDirectory) => {
     process.env.ELEVENLABS_API_KEY = "test-api-key";
     process.env.ELEVENLABS_MODEL_ID = "environment-model";
     process.env.ELEVENLABS_VOICE_ID = "environment-voice";
@@ -137,7 +147,10 @@ test("prefers helper overrides over environment settings", async () => {
       return successfulResponse();
     };
 
-    const helper = new AudioHelper({ generationEnabled: true });
+    const helper = new AudioHelper({
+      generationEnabled: true,
+      featureVideoDirectory: outputDirectory
+    });
     registerAudioTest(helper, createAudioTest("/project/video/voice-over.js"));
     await helper.generateAudio("Narration", {
       modelId: "  explicit-model  ",
