@@ -13,7 +13,7 @@ Scenario('basic tests', async ({I, DT, DTE}) => {
 
     I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10);
     I.click(DT.btn.menu_add_button);
-    DTE.waitForLoader("menuDataTable");
+    DTE.waitForEditor("menuDataTable");
     I.pressKey("Escape"); //close date dialog
     DTE.selectOption('editorFields\\.mealCathegory', 'Hlavné jedlo');
     DTE.selectOption('editorFields\\.selectedMealId', 'Rezeň so zemiakmi');
@@ -32,7 +32,7 @@ Scenario('basic tests', async ({I, DT, DTE}) => {
     //First
     I.clickCss("#menuDataTable > tbody > tr > td.dt-select-td.cell-not-editable");
     I.click("button.btn.btn-sm.buttons-selected.buttons-edit");
-    DTE.waitForLoader("menuDataTable");
+    DTE.waitForEditor("menuDataTable");
     I.pressKey("Escape"); //close date dialog
     DTE.selectOption('editorFields\\.mealCathegory', 'Príloha');
     DTE.selectOption('editorFields\\.selectedMealId', 'Hranolky');
@@ -110,7 +110,7 @@ Scenario('priority logic test', async ({I, DT, DTE}) => {
 
     DT.setExtfilterDate("27.11.2023");
     I.click(DT.btn.menu_add_button);
-    DTE.waitForLoader("menuDataTable");
+    DTE.waitForEditor("menuDataTable");
     I.pressKey("Escape"); //close date dialog
 
     const dateValue = await I.grabValueFrom("#DTE_Field_dayDate");

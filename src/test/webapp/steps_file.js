@@ -345,8 +345,7 @@ module.exports = function () {
 
     dtWaitForEditor(name) {
       if (typeof name == "undefined") { name = "datatableInit"; }
-      this.waitForVisible("#" + name + "_modal", 60);
-      this.wait(1);
+      I.waitForVisible("#" + name + "_modal.DTED.show[data-dte-focus-state='ready']", 200);
     },
 
     waitForModal(id) {

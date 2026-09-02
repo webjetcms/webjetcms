@@ -473,7 +473,7 @@ Scenario('Edit folder again as NON-approver and APPROVE the change ', async ({I,
     I.switchTo();
 
     I.say("Verify all changes were applied after approval");
-    openCreatedFolder(I, DT, DTE, newFolderName);
+    openCreatedFolder(I, DT, DTE, newFolderName + "_edited_2");
 
     I.seeInField("#DTE_Field_groupName", newFolderName + "_edited_2");
 
@@ -491,7 +491,7 @@ Scenario('Edit folder AS APPROVER - no approval needed ', async ({I, DT, DTE, Do
     I.say("Edit folder directly as approver - changes should be applied immediately");
     I.relogin("admin");
 
-    openCreatedFolder(I, DT, DTE, newFolderName);
+    openCreatedFolder(I, DT, DTE, newFolderName + "_edited_2");
 
     I.fillField("#DTE_Field_groupName", newFolderName + "_edited_3");
 

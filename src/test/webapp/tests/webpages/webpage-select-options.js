@@ -87,7 +87,7 @@ Scenario('Webstranky - vyber z moznosti', ({ I, DTE }) => {
      I.clickCss('#pills-dt-datatableInit-menu-tab');
      I.waitForText('Poradie usporiadania', 10);
      I.waitForElement(locate('.filter-option-inner-inner').withText('Nezobraziť'), 10); // Zobrazenie odkazu neprihlasenemu uzivatelovi - Menu
-     I.dtEditorCancel();
+     DTE.cancel();
 });
 
 Scenario('Zmaz strukturu', ({ I }) => {

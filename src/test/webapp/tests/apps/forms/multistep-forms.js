@@ -733,7 +733,8 @@ Scenario('RowView version - test appearance', async ({ I, DT, Document }) => {
 });
 
 Scenario('Check form stat tab behaviour', ({ I, DT, DTE }) => {
-    I.amOnPage("/apps/form/admin/form-steps/");
+    I.amOnPage("/apps/form/admin/form-steps/?formName=Multistepform_screens");
+    DT.waitForLoader("formItemsDataTable");
     I.click(DT.btn.formItems_add_button);
     DTE.waitForEditor("formItemsDataTable");
 
