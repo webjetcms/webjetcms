@@ -4,7 +4,7 @@ const { randomBytes } = require("node:crypto");
 
 const { Helper } = codeceptjs;
 
-const DEFAULT_MODEL_ID = "eleven_multilingual_v2";
+const DEFAULT_MODEL_ID = "eleven_v3";
 const DEFAULT_VOICE_ID = "Zai7B4Aol2bJtneyq0L1";
 const OUTPUT_FORMAT = "mp3_44100_128";
 const REQUEST_TIMEOUT_MS = 120_000;

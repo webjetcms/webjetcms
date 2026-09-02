@@ -98,8 +98,8 @@ Treat it as a secret: never put it in the repository, a scenario, a helper
 argument, or a command-line argument. Export it to the process environment as
 `ELEVENLABS_API_KEY`. The repository does not automatically load `.env` files.
 
-The default model is Eleven Multilingual v2
-(`eleven_multilingual_v2`), and the default voice is Luki Zajo
+The default model is Eleven v3
+(`eleven_v3`), and the default voice is Luki Zajo
 (`Zai7B4Aol2bJtneyq0L1`). Override either value for a run with
 `ELEVENLABS_MODEL_ID` or `ELEVENLABS_VOICE_ID`, or for one narration with the
 optional `{ modelId, voiceId }` argument to `I.generateAudio`. Precedence is:
@@ -172,7 +172,7 @@ Scenario("ElevenLabs", ({ I }) => {
     I.generateAudio(`
 <copy-ready Slovak narration across multiple lines>
 `, {
-        modelId: "eleven_v3",
+        modelId: "eleven_multilingual_v2",
         voiceId: "<voice-id>",
     });
 }).tag("@audio");

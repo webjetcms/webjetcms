@@ -126,10 +126,10 @@ npm run audio video/293-config-jstree-view.js
 
 ### Model a hlas
 
-Predvolený model je Eleven Multilingual v2 s identifikátorom `eleven_multilingual_v2`. Predvolený hlas je `Luki Zajo` s identifikátorom `Zai7B4Aol2bJtneyq0L1`. Model a hlas môžete zmeniť premennými prostredia pre celé spustenie:
+Predvolený model je Eleven v3 s identifikátorom `eleven_v3`. Predvolený hlas je `Luki Zajo` s identifikátorom `Zai7B4Aol2bJtneyq0L1`. Model a hlas môžete zmeniť premennými prostredia pre celé spustenie:
 
 ```shell
-ELEVENLABS_MODEL_ID=eleven_v3 npm run audio video/293-config-jstree-view.js
+ELEVENLABS_MODEL_ID=eleven_multilingual_v2 npm run audio video/293-config-jstree-view.js
 ELEVENLABS_VOICE_ID="<voice-id>" npm run audio video/293-config-jstree-view.js
 ```
 
@@ -139,7 +139,7 @@ Alebo ich nastavte iba pre jedno volanie pomocníka:
 I.generateAudio(`
 <text hovoreného slova>
 `, {
-    modelId: "eleven_v3",
+    modelId: "eleven_multilingual_v2",
     voiceId: "<voice-id>",
 });
 ```

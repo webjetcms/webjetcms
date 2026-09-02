@@ -80,7 +80,7 @@ Default to these parameters unless the user specifies different ones:
   available. Revise the text to fit and report both the word count and estimated
   or measured duration.
 
-The repository defaults to Eleven Multilingual v2 (`eleven_multilingual_v2`)
+The repository defaults to Eleven v3 (`eleven_v3`)
 and the Luki Zajo voice (`Zai7B4Aol2bJtneyq0L1`). Do not send
 `voice_settings`; use the voice's stored or default ElevenLabs settings.
 Override a model or voice for one scenario with the optional

@@ -78,6 +78,7 @@ function registerAudioTest(helper, audioTest) {
 
 test("generates the default MP3 request and registers the scenario-file artifact", async () => {
   await withOutputDirectory(async (outputDirectory) => {
+    assert.equal(DEFAULT_MODEL_ID, "eleven_v3");
     process.env.ELEVENLABS_API_KEY = "  test-api-key  ";
     process.env.ELEVENLABS_MODEL_ID = "   ";
     process.env.ELEVENLABS_VOICE_ID = "";
