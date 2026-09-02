@@ -11,9 +11,40 @@ Podporované sú nasledovné konfiguračné premenné:
 - `ckeditor_toolbar` - nastavenie položiek nástrojovej lišty pre sekciu webové stránky, hodnoty sú v JSON formáte.
 - `ckeditor_toolbar-standalone` - nastavenie položiek nástrojovej lišty pre vloženie editora do rôznych dátových tabuliek, hodnoty sú v JSON formáte.
 - `ckeditor_removeButtons` - zoznam tlačidiel, ktoré chcete v editore schovať (nezobraziť), nie je potrebné upraviť nastavenie `toolbar`, stačí sem nastaviť čiarkou oddelený zoznam.
-- `ckeditor_pasteFromWord_disallowedContent` - zoznam pravidiel [CKEditor Advanced Content Filter](https://ckeditor.com/docs/ckeditor4/latest/guide/dev_allowed_content_rules.html), ktoré sa odstránia pri vložení obsahu z Word/Excel. Jednotlivé pravidlá sú oddelené bodkočiarkou, položky v rámci pravidla čiarkou, napríklad `td[align,valign]`. Predvolená hodnota je `table[width,height,border];td(*);td[align,valign];th(*);th[align,valign];p[align];span;col[width]`. Ak chcete zachovať horizontálne zarovnanie buniek tabuľky, upravte pravidlá na `td[valign]` a `th[valign]`. Prázdna hodnota nevykoná žiadne dodatočné filtrovanie cez `filter.disallow`; ostatné štandardné čistenie obsahu zostane aktívne.
 
-Nastavenie pre tabuľky:
+### Čistenie HTML kódu pri vložení z Word/Excel
+
+Pravidlá sa nastavujú cez konfiguračnú premenné:
+
+- `ckeditor_pasteFromWord_disallowedContent` - zoznam pravidiel [CKEditor Advanced Content Filter](https://ckeditor.com/docs/ckeditor4/latest/guide/dev_allowed_content_rules.html), ktoré sa odstránia pri vložení obsahu z Word/Excel. Pravidlá sa používajú v štandardnom editore aj v režime Page Builder. Prázdna hodnota nevykoná žiadne dodatočné filtrovanie cez `filter.disallow`; ostatné štandardné čistenie obsahu zostane aktívne.
+
+Každé pravidlo určuje HTML element a jeho vlastnosti, ktoré sa majú z vloženého obsahu odstrániť. Formát ACF pravidla je:
+
+```text
+element[atribúty]{štýly}(triedy)
+```
+
+Jednotlivé časti majú nasledovný význam:
+
+| Zápis | Význam | Príklad |
+| --- | --- | --- |
+| `element` | Názov HTML elementu. Pravidlo bez ďalších častí odstráni samotný element, jeho vnorený obsah zostane zachovaný. | `span` odstráni značku `span`. |
+| `[atribút1,atribút2]` | HTML atribúty elementu. | `td[align,valign,nowrap]` odstráni z `td` atribúty `align`, `valign` a `nowrap`. |
+| `{štýl1,štýl2}` | CSS vlastnosti zapísané v atribúte `style`. | `td{width,height}` odstráni z `td` štýly `width` a `height`. |
+| `(trieda1,trieda2)` | CSS triedy elementu. | `td(word-cell)` odstráni z `td` triedu `word-cell`. |
+| `*` | Zástupný znak pre všetky položky danej skupiny. | `td(*)` odstráni z `td` všetky CSS triedy, `td[*]` všetky atribúty a `td{*}` všetky štýly. |
+
+Pravidlá sa oddeľujú bodkočiarkou. Čiarka oddeľuje položky iba vo vnútri hranatých, zložených alebo okrúhlych zátvoriek, preto napríklad `td[align,valign,nowrap]` predstavuje jedno pravidlo. Medzery, nové riadky a prázdne položky medzi bodkočiarkami sa ignorujú. Každé pravidlo sa aplikuje samostatne; neplatné pravidlo sa zaznamená do JavaScript konzoly a nebráni použitiu ostatných platných pravidiel.
+
+Predvolená hodnota je:
+
+```text
+table[width,height,border];td(*);td[align,valign,nowrap];th(*);th[align,valign];p[align];span;col[width]
+```
+
+Predvolené pravidlá odstránia rozmery a orámovanie tabuľky, všetky CSS triedy buniek `td` a `th`, uvedené atribúty zarovnania buniek, atribút `nowrap` z `td`, atribút `align` z odsekov, elementy `span` a atribút `width` z elementov `col`. Ak chcete zachovať horizontálne zarovnanie buniek, zmeňte príslušné pravidlá na `td[valign,nowrap]` a `th[valign]`.
+
+### Nastavenie pre tabuľky
 
 - `ckeditor_table_class` - Predvolená CSS trieda pre tabuľky v CKEditore, štandardne `table table-sm tabulkaStandard`.
 - `ckeditor_table_cols` - Predvolený počet stĺpcov tabuľky v CKEditore, štandardne 5.
