@@ -269,7 +269,6 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
         campaingsRepository.save(entity);
     }
 
-
     @Override
     protected boolean allowGeneratedIdOnCreate(CampaingsEntity entity) {
         //we are editing by path not by generated ID
