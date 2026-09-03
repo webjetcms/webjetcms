@@ -1,5 +1,4 @@
 const { setHeadlessWhen } = require('@codeceptjs/configure');
-const { getVideoSettings } = require('./helpers/video_settings.js');
 
 // turn on headless mode when running with HEADLESS=true environment variable
 // HEADLESS=true npx codecept run
@@ -10,9 +9,6 @@ let codeceptShow = process.env.CODECEPT_SHOW;
 let browser = process.env.CODECEPT_BROWSER || "chromium";
 let restart = process.env.CODECEPT_RESTART || "context";
 let autoDelayEnabled = "true" == process.env.CODECEPT_AUTODELAY;
-let videoEnabled = "true" == process.env.CODECEPT_VIDEO;
-
-const videoSettings = getVideoSettings();
 
 let language = process.env.CODECEPT_LNG || "sk"; //default sk
 
@@ -43,12 +39,6 @@ console.log("showBrowser=", showBrowser);
 console.log("browser=", browser);
 console.log("restart=", restart);
 console.log("autoDelayEnabled=", autoDelayEnabled);
-console.log("videoEnabled=", videoEnabled);
-if (videoEnabled) {
-  console.log("videoSize=", `${videoSettings.width}x${videoSettings.height}`);
-  console.log("videoViewport=", `${videoSettings.viewportWidth}x${videoSettings.viewportHeight}`);
-  console.log("videoZoom=", videoSettings.zoom);
-}
 
 exports.config = {
   tests: './tests/**/*.js',
@@ -66,17 +56,12 @@ exports.config = {
       keepCookies: true,
       keepBrowserState: true,
       ignoreHTTPSErrors: true,
-      ...(videoEnabled ? {
-        windowSize: `${videoSettings.width}x${videoSettings.height}`,
-        video: true,
-        keepVideoForPassedTests: true,
-        recordVideo: {
-          size: {
-            width: videoSettings.width,
-            height: videoSettings.height
-          }
-        }
-      } : {}),
+      /* este nefunguje, vid https://github.com/microsoft/playwright/pull/3526
+      ,
+      chromium: {
+        showUserInput: true
+      }
+      */
       //,emulate: devices['iPhone 6']
       chromium: {
         args: ['--lang=sk']
@@ -84,9 +69,6 @@ exports.config = {
     },
     CustomWebjetHelper: {
       require: './helpers/custom_helper.js'
-    },
-    VideoHelper: {
-      require: './helpers/video_helper.js'
     },
     ChaiWrapper: {
       //https://www.npmjs.com/package/codeceptjs-chai
