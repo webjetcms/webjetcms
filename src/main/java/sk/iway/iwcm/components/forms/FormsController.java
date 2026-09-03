@@ -238,13 +238,13 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
         String formName = entity.getFormName();
         if ("archiveForm".equals(action)) {
             boolean success = FormDB.setFormName(formName, "Archiv-"+formName);
-            Adminlog.add(Adminlog.TYPE_FORM_ARCHIVE, "Archivacia formularu: "+formName, -1, -1);
+            if (success) Adminlog.add(Adminlog.TYPE_FORM_ARCHIVE, "Archivacia formularu: "+formName, -1, -1);
             return success;
         } else if ("archiveFormDetail".equals(action) && entity.getId()!=null) {
             String idsQuery = String.valueOf(entity.getId());
             int smallestId = entity.getId().intValue();
             boolean success = FormDB.setFormName(formName, "Archiv-"+formName, (" AND id IN (" + idsQuery + ")"), smallestId, false);
-			Adminlog.add(Adminlog.TYPE_FORM_ARCHIVE, "Archivacia formularu: "+formName, -1, -1);
+            if (success) Adminlog.add(Adminlog.TYPE_FORM_ARCHIVE, "Archivacia formularu: "+formName, -1, -1);
             return success;
         }
         return false;

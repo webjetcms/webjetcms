@@ -3944,5 +3944,17 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>03.09.2026</string></void>
+                <void property="desc"><string>forms_archive - add form metadata columns</string></void>
+                <void property="mysql"><string>ALTER TABLE forms_archive ADD COLUMN form_type VARCHAR(255) NULL, ADD COLUMN duration INT DEFAULT 0, ADD COLUMN referer VARCHAR(255), ADD COLUMN language VARCHAR(3)</string></void>
+                <void property="mssql"><string>ALTER TABLE forms_archive ADD form_type NVARCHAR(255) NULL, duration INT DEFAULT 0, referer NVARCHAR(255), language NVARCHAR(3)</string></void>
+                <void property="oracle"><string>ALTER TABLE forms_archive ADD (form_type NVARCHAR2(255) NULL, duration INTEGER DEFAULT 0, referer NVARCHAR2(255), language NVARCHAR2(3))</string></void>
+                <void property="pgsql"><string>ALTER TABLE forms_archive ADD COLUMN form_type VARCHAR(255) NULL, ADD COLUMN duration INT DEFAULT 0, ADD COLUMN referer VARCHAR(255), ADD COLUMN language VARCHAR(3)</string></void>
+            </object>
+        </void>
+
     </object>
 </java>
