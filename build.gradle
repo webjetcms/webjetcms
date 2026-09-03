@@ -129,6 +129,7 @@ lombok {
 }
 
 tasks.withType(org.gradle.api.tasks.bundling.War).configureEach {
+    dependsOn 'npmbuild'
     zip64 = true
     exclude('**/node_modules/**')
     exclude('**/node_scripts/**')
@@ -503,20 +504,26 @@ task npmwatch(type:Exec) {
     commandLine project.ext.'npmExe', 'run', 'watch'
 }
 
-task npmbuild(type:Exec) {
-    workingDir 'src/main/webapp/admin/v9/'
-    project.ext."npmExe" = Os.isFamily(Os.FAMILY_WINDOWS) ? "npm.cmd" : "npm"
-    commandLine project.ext.'npmExe', 'run', 'prod'
+// nvm changes PATH only for its shell, so each npm task must run in that same shell.
+def nvmNpmCommand = { List<String> npmArguments ->
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        def nodeVersion = file('.nvmrc').text.trim()
+        return ['cmd', '/d', '/c', "nvm use ${nodeVersion} && npm.cmd ${npmArguments.join(' ')}"]
+    }
+    return ['bash', '-c',
+        'source "${NVM_DIR:-$HOME/.nvm}/nvm.sh" && nvm use && exec npm "$@"',
+        'npm'] + npmArguments
 }
 
-task npminstall {
-    doLast {
-        exec {
-            workingDir 'src/main/webapp/admin/v9/'
-            project.ext."npmExe" = Os.isFamily(Os.FAMILY_WINDOWS) ? "npm.cmd" : "npm"
-            commandLine project.ext.'npmExe', 'install'
-        }
-    }
+task npmbuild(type:Exec) {
+    dependsOn 'npminstall'
+    workingDir 'src/main/webapp/admin/v9/'
+    commandLine nvmNpmCommand(['run', 'prod'])
+}
+
+task npminstall(type:Exec) {
+    workingDir 'src/main/webapp/admin/v9/'
+    commandLine nvmNpmCommand(['install'])
 }
 
 //dependency check - https://jeremylong.github.io/DependencyCheck/dependency-check-gradle/configuration.html

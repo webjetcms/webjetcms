@@ -83,12 +83,6 @@
         </exec>
         <delete dir="src/main/webapp/admin/v9/dist"/>
         <exec executable="./gradlew" failonerror="true">
-            <arg value="npminstall"/>
-        </exec>
-        <exec executable="./gradlew" failonerror="true">
-            <arg value="npmbuild"/>
-        </exec>
-        <exec executable="./gradlew" failonerror="true">
             <arg value="compileJava"/>
             <arg value="--refresh-dependencies"/>
             <arg value="--info"/>
