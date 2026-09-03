@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
@@ -115,6 +116,12 @@ public class FormSimpleApp extends WebjetComponentAbstract {
 
         //Set formAttributes into params
         if(Tools.isNotEmpty(formName)) {
+            formName = formName
+                    .replace("&nbsp;"," ")
+                    .replace("&amp;", "&")
+                    .replace(Constants.NON_BREAKING_SPACE, " ")
+                    .trim();
+
             StringBuilder sb = new StringBuilder();
 
             this.formSettings = formSettingsRepository.findByFormNameAndDomainId(DocTools.removeChars(formName, true), CloudToolsForCore.getDomainId());
