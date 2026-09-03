@@ -53,6 +53,10 @@ Scenario("aktualne hodnoty", ({ I }) => {
   //over fungovanie prekladov
   I.see("Dátum a čas spustenia servera");
   I.see("Správca jazyka JAVA");
+  I.seeNumberOfElements(".server-monitoring-tables > .col-md-6", 2);
+  I.see("Kódovanie znakov", ".server-monitoring-tables > .col-md-6:first-child");
+  I.see("file.encoding");
+  I.see("sun.jnu.encoding");
   I.see("0 dní");
   I.see("hodín");
   I.see("minút");
@@ -164,5 +168,3 @@ Scenario("Monitoring server sql", ({I, DT}) => {
 
   phase3(I, DT);
 });
-
-

@@ -10,7 +10,8 @@ const TABLE_KEYS = [
     ["wjVersion", "licenseExpirationDate", "serverActualTime", "serverStartTime", "serverRuntime", "remoteIP", "serverIP", "serverContry", "serverLanguage", "serverCpus", "clusterNodeName"],
     ["swRuntime", "swVmVersion", "swVmName", "swJavaVersion", "swJavaVendor", "swSpringVersion", "swSpringDataVersion", "swSpringSecurityVersion", "swServerName", "swServerOs", "swServerOsVersion"],
     ["dbTotal", "dbActive", "dbIdle", "dbWaiting", "dbServerName"],
-    ["memTotal", "memFree", "memUsed", "memMax", "cacheItems", "sessionsTotal"]
+    ["memTotal", "memFree", "memUsed", "memMax", "cacheItems", "sessionsTotal"],
+    ["HTTP Response Encoding", "file.encoding", "native.encoding", "sun.jnu.encoding", "LANG", "LC_ALL", "LC_CTYPE"]
 ];
 
 const STRONG_KEYS = new Set(["serverActualTime", "remoteIP", "serverIP", "cacheItems", "serverCpus", "dbIdle", "sessionsTotal"]);
@@ -188,12 +189,15 @@ export class WebjetServerMonitoringElement extends HTMLElement {
         formatted.serverActualTime = moment(data.serverActualTime).format("DD.MM.YYYY HH:mm:ss");
         formatted.serverIP = Array.isArray(data.serverIP) ? data.serverIP[0] : data.serverIP;
         ["memTotal", "memFree", "memUsed", "memMax"].forEach(key => formatted[key] = this._bytesToSize(data[key]));
-        const titles = [this.labels.generalInformation, this.labels.softwareInformation, this.labels.dbPool, this.labels.memInfo];
-        const icons = ["ti-info-square", "ti-server", "ti-database", "ti-cpu-2"];
+        Object.assign(formatted, data.characterEncoding || {});
+        const titles = [this.labels.generalInformation, this.labels.softwareInformation, this.labels.dbPool, this.labels.memInfo, this.labels.characterEncoding];
+        const icons = ["ti-info-square", "ti-server", "ti-database", "ti-cpu-2", "ti-language"];
+        const columns = [document.createElement("div"), document.createElement("div")];
+        columns.forEach(column => column.className = "col-md-6");
 
-        container.replaceChildren(...TABLE_KEYS.map((keys, index) => {
+        TABLE_KEYS.forEach((keys, index) => {
             const wrapper = document.createElement("div");
-            wrapper.className = "col-md-6";
+            if (index === 2 || index === 3) wrapper.className = "server-monitoring-table-numeric";
             const heading = document.createElement("h6");
             heading.className = "server-monitoring-table-header";
             heading.innerHTML = `<i class="ti ${icons[index]}"></i> `;
@@ -216,8 +220,9 @@ export class WebjetServerMonitoringElement extends HTMLElement {
                 content.appendChild(element);
             });
             wrapper.append(heading, table);
-            return wrapper;
-        }));
+            columns[index % columns.length].appendChild(wrapper);
+        });
+        container.replaceChildren(...columns);
     }
 
     _msToDays(ms = 0) {

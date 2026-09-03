@@ -5,8 +5,10 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 
 import lombok.Getter;
@@ -82,6 +84,9 @@ public class MonitoringActualBean {
     private String swSpringVersion;
     private String swSpringDataVersion;
     private String swSpringSecurityVersion;
+
+    /** Character encoding properties and locale environment of the current process. */
+    private Map<String, String> characterEncoding;
 
     private String wjVersion;
 
@@ -176,6 +181,15 @@ public class MonitoringActualBean {
         swServerOs = props.getProperty("os.name");
         swServerOsVersion = props.getProperty("os.version");
 
+        characterEncoding = new LinkedHashMap<>();
+        characterEncoding.put("HTTP Response Encoding", notNull(SetCharacterEncodingFilter.getEncoding()));
+        characterEncoding.put("file.encoding", notNull(props.getProperty("file.encoding")));
+        characterEncoding.put("native.encoding", notNull(props.getProperty("native.encoding")));
+        characterEncoding.put("sun.jnu.encoding", notNull(props.getProperty("sun.jnu.encoding")));
+        characterEncoding.put("LANG", notNull(System.getenv("LANG")));
+        characterEncoding.put("LC_ALL", notNull(System.getenv("LC_ALL")));
+        characterEncoding.put("LC_CTYPE", notNull(System.getenv("LC_CTYPE")));
+
         Long licenseExpirationTimeInMillis =  Constants.getLong("licenseExpiryDate");
         if(licenseExpirationTimeInMillis != null && licenseExpirationTimeInMillis > 0L)
         {
@@ -211,5 +225,9 @@ public class MonitoringActualBean {
             return pkg.getImplementationVersion();
         }
         return "not available";
+    }
+
+    private String notNull(String s) {
+        return s == null ? "" : s;
     }
 }

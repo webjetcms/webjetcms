@@ -6,9 +6,45 @@ Analýza výkonu a záťaže servera, jednotlivých aplikácií, databázových 
 
 Modul poskytuje nasledovné možnosti:
 
-- **Aktuálne hodnoty** - aktuálne hodnoty zaťaženia servera, pamäte a počet databázových spojení.
+- **Aktuálne hodnoty** - aktuálne informácie o serveri a použitom softvéri, hodnoty zaťaženia servera, pamäte, počet databázových spojení a kódovanie znakov.
 
 ![](actual.png)
+
+V hornej časti sa zobrazuje voľné miesto na disku a priebežne aktualizované grafy využitia pamäte a zaťaženia procesora. Interval aktualizácie údajov je možné zmeniť pomocou výberového poľa v nástrojovej lište.
+
+### Všeobecné informácie
+
+Sekcia obsahuje základné prevádzkové informácie o WebJET CMS a aplikačnom serveri. Zobrazuje verziu WebJET CMS, platnosť licencie, aktuálny čas, dátum spustenia a dobu behu servera, sieťové adresy, jazyk a krajinu servera, počet procesorov a názov aktuálneho uzla clustra.
+
+### Informácie o softvéri na serveri
+
+Sekcia sumarizuje verzie a názvy softvérových komponentov použitých na serveri. Obsahuje informácie o Java Runtime a JVM, verziu a dodávateľa Java, verzie Spring Core, Spring Data a Spring Security, názov aplikačného servera a názov a verziu operačného systému.
+
+### Databázové spojenia
+
+Sekcia zobrazuje aktuálny stav zásobníka databázových spojení. Uvádza celkový počet spojení a počty aktívnych, nečinných a čakajúcich spojení spolu s typom používaného databázového servera.
+
+### Pamäť
+
+Sekcia poskytuje prehľad o pamäti pridelenej JVM vrátane celkovej, voľnej, využitej a maximálnej pamäte. Zobrazuje tiež počet položiek v cache pamäti a počet otvorených používateľských session; v režime clustra sú session rozpísané aj podľa jednotlivých uzlov.
+
+### Kódovanie znakov
+
+V časti **Aktuálne hodnoty** sa zobrazuje sekcia **Kódovanie znakov** s nastavením HTTP odpovedí, JVM a locale prostredia bežiaceho procesu aplikačného servera. Zobrazené hodnoty pochádzajú priamo z procesu, v ktorom beží WebJET CMS, preto sa môžu líšiť od hodnôt v interaktívnom termináli používateľa.
+
+Pre korektné spracovanie diakritiky v obsahu a názvoch súborov sa odporúčajú nasledujúce hodnoty:
+
+| Hodnota | Význam | Odporúčaná hodnota |
+| --- | --- | --- |
+| `HTTP Response Encoding` | Kódovanie HTTP odpovedí nastavené vo WebJET CMS. | `utf-8` |
+| `file.encoding` | Predvolené kódovanie JVM pre operácie, ktoré nemajú kódovanie určené explicitne. | `UTF-8` |
+| `native.encoding` | Natívne kódovanie operačného systému zistené pri spustení JVM. | `UTF-8` |
+| `sun.jnu.encoding` | Kódovanie používané JVM pri komunikácii s operačným systémom, napríklad pre názvy súborov. | `UTF-8` |
+| `LANG` | Predvolené locale procesu aplikačného servera. | UTF-8 locale, napríklad `C.UTF-8` alebo `sk_SK.UTF-8` |
+| `LC_ALL` | Voliteľné prepísanie locale pre všetky kategórie. | Prázdna hodnota alebo UTF-8 locale |
+| `LC_CTYPE` | Voliteľné prepísanie locale pre spracovanie znakov. | Prázdna hodnota alebo UTF-8 locale |
+
+Veľkosť písmen v označení kódovania nie je podstatná, hodnoty `utf-8` a `UTF-8` sú rovnocenné. Prázdne hodnoty `LC_ALL` a `LC_CTYPE` sú korektné, ak `LANG` obsahuje UTF-8 locale. Ak je niektorá z týchto premenných nastavená, nesmie prepisovať `LANG` locale hodnotou bez podpory UTF-8. Pri diagnostike názvov súborov je dôležitá najmä hodnota `sun.jnu.encoding`.
 
 - **Zaznamenané hodnoty** - výpis historických zaznamenaných hodnôt využitia pamäte, ```sessions```, cache a spojení s databázou. Pre ukladanie historických hodnôt je potrebné nastaviť konf. premennú ```serverMonitoringEnable``` na hodnotu ```true```.
 
