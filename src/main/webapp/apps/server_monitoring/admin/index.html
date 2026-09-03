@@ -20,8 +20,7 @@
     .row-no-padding [class*=col]:nth-child(2) {
         padding-right: 0 !important;
     }
-    .row-no-padding [class*=col]:nth-child(3) .monitoring-table tr td:nth-child(2),
-    .row-no-padding [class*=col]:nth-child(4) .monitoring-table tr td:nth-child(2) {
+    .server-monitoring-table-numeric .monitoring-table tr td:nth-child(2) {
         text-align: right;
     }
     div div.amcharts:last-child {
@@ -87,7 +86,8 @@
                 memUsed: '[[#{components.monitoring.memUsed}]]',
                 memMax: '[[#{components.monitoring.memMax}]]',
                 dbPool: '[[#{components.monitoring.dbPool}]]',
-                memInfo: '[[#{components.monitoring.memInfo}]]'
+                memInfo: '[[#{components.monitoring.memInfo}]]',
+                characterEncoding: '[[#{components.monitoring.character_encoding}]]'
             }
         });
     });

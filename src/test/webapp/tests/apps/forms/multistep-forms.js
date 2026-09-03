@@ -274,6 +274,30 @@ Scenario('Test form detail and filled data', async ({ I, DT, DTE }) => {
     compareTwoHtml(I, actualHtml, expectedHtml);
 });
 
+Scenario('Archive one form submission', async ({ I, DT }) => {
+    I.amOnPage('/apps/form/admin/detail/?formName=' + newMultistepFormName);
+    DT.waitForLoader('formDetailDataTable');
+    DT.filterStartsWith('col_emailova-adresa-1', 'sivan@noopmail.com');
+    I.waitForText('Záznamy 1 až 1 z 1', 10, '#formDetailDataTable_wrapper');
+
+    I.clickCss('#formDetailDataTable tbody tr:first-child td.dt-select-td');
+    const archiveButton = '#formDetailDataTable_wrapper button.buttons-archive';
+    I.waitForEnabled(archiveButton, 10);
+    const archiveLabel = await I.grabAttributeFrom(archiveButton, 'aria-label');
+    I.assertEqual(archiveLabel, 'Archivuj formulár', 'Archive action must use a translated label');
+
+    I.click(archiveButton);
+    DT.waitForLoader('formDetailDataTable');
+    I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 10, '#formDetailDataTable');
+
+    I.amOnPage('/apps/form/admin/archived-detail/?formName=' + newMultistepFormName);
+    DT.waitForLoader('formDetailDataTable');
+    DT.filterStartsWith('col_emailova-adresa-1', 'sivan@noopmail.com');
+    I.waitForText('sivan@noopmail.com', 10, '#formDetailDataTable');
+    I.see('Záznamy 1 až 1 z 1', '#formDetailDataTable_wrapper');
+    I.see('Trvanie vyplnenia', '#formDetailDataTable_wrapper');
+});
+
 Scenario('Test send email', async ({ I, TempMail }) => {
     await TempMail.login(baseAdminMail);
     await TempMail.openLatestEmail();
@@ -427,6 +451,28 @@ Scenario('Change form_settings and test it No.1', async ({ I, DT, DTE, TempMail 
     // TODO, check file with form ?
 });
 
+Scenario('Archive another submission into an existing archive', async ({ I, DT, TempMail }) => {
+    const email = baseUserMail + TempMail.getTempMailDomain();
+
+    I.amOnPage('/apps/form/admin/detail/?formName=' + newMultistepFormName);
+    DT.waitForLoader('formDetailDataTable');
+    DT.filterStartsWith('col_emailova-adresa-1', email);
+    I.waitForText('Záznamy 1 až 1 z 1', 10, '#formDetailDataTable_wrapper');
+
+    I.clickCss('#formDetailDataTable tbody tr:first-child td.dt-select-td');
+    const archiveButton = '#formDetailDataTable_wrapper button.buttons-archive';
+    I.waitForEnabled(archiveButton, 10);
+    I.click(archiveButton);
+    DT.waitForLoader('formDetailDataTable');
+    I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 10, '#formDetailDataTable');
+
+    I.amOnPage('/apps/form/admin/archived-detail/?formName=' + newMultistepFormName);
+    DT.waitForLoader('formDetailDataTable');
+    DT.filterStartsWith('col_emailova-adresa-1', email);
+    I.waitForText(email, 10, '#formDetailDataTable');
+    I.see('Záznamy 1 až 1 z 1', '#formDetailDataTable_wrapper');
+});
+
 Scenario('Change form_settings and test it No.2', async ({ I, DT, DTE, TempMail }) => {
     I.say("too fast - sometimes spam problem -> wait 35 sec");
     await I.waitForTime(Date.now() + 35000);
@@ -561,6 +607,21 @@ Scenario('Remove original and duplicated form definitions', ({ I, DT }) => {
 
     removeFormDefinition(I, DT, newMultistepFormName);
     removeFormDefinition(I, DT, duplicatedMultistepFormName);
+});
+
+Scenario('Remove archived form data', async ({ I, DT, DTE }) => {
+    I.amOnPage('/apps/form/admin/archived/');
+    DT.waitForLoader('formDetailArchivedTable');
+    DT.filterEquals('formName', newMultistepFormName);
+
+    const archivedForms = await I.grabNumberOfVisibleElements('#formDetailArchivedTable tbody td.dt-select-td');
+    if (archivedForms > 0) {
+        I.clickCss('#formDetailArchivedTable tbody tr:first-child td.dt-select-td');
+        I.clickCss('#formDetailArchivedTable_wrapper button.buttons-remove');
+        I.waitForElement('#formDetailArchivedTable_modal', 10);
+        DTE.save('formDetailArchivedTable');
+    }
+    I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 10, '#formDetailArchivedTable');
 });
 
 Scenario('Insert and test multiple forms in one page - before clear page', ({ I, DTE, Apps }) => {

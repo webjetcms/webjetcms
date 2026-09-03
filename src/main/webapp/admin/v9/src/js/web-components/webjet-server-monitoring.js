@@ -10,10 +10,12 @@ const TABLE_KEYS = [
     ["wjVersion", "licenseExpirationDate", "serverActualTime", "serverStartTime", "serverRuntime", "remoteIP", "serverIP", "serverContry", "serverLanguage", "serverCpus", "clusterNodeName"],
     ["swRuntime", "swVmVersion", "swVmName", "swJavaVersion", "swJavaVendor", "swSpringVersion", "swSpringDataVersion", "swSpringSecurityVersion", "swServerName", "swServerOs", "swServerOsVersion"],
     ["dbTotal", "dbActive", "dbIdle", "dbWaiting", "dbServerName"],
-    ["memTotal", "memFree", "memUsed", "memMax", "cacheItems", "sessionsTotal"]
+    ["memTotal", "memFree", "memUsed", "memMax", "cacheItems", "sessionsTotal"],
+    ["HTTP Response Encoding", "file.encoding", "native.encoding", "sun.jnu.encoding", "LANG", "LC_ALL", "LC_CTYPE"]
 ];
 
 const STRONG_KEYS = new Set(["serverActualTime", "remoteIP", "serverIP", "cacheItems", "serverCpus", "dbIdle", "sessionsTotal"]);
+let monitoringInstanceCounter = 0;
 
 /**
  * Displays live server memory and CPU charts with optional detailed monitoring data.
@@ -30,6 +32,7 @@ export class WebjetServerMonitoringElement extends HTMLElement {
         this.chartData = null;
         this._initialized = false;
         this._configured = false;
+        this._instanceId = ++monitoringInstanceCounter;
     }
 
     /**
@@ -188,18 +191,25 @@ export class WebjetServerMonitoringElement extends HTMLElement {
         formatted.serverActualTime = moment(data.serverActualTime).format("DD.MM.YYYY HH:mm:ss");
         formatted.serverIP = Array.isArray(data.serverIP) ? data.serverIP[0] : data.serverIP;
         ["memTotal", "memFree", "memUsed", "memMax"].forEach(key => formatted[key] = this._bytesToSize(data[key]));
-        const titles = [this.labels.generalInformation, this.labels.softwareInformation, this.labels.dbPool, this.labels.memInfo];
-        const icons = ["ti-info-square", "ti-server", "ti-database", "ti-cpu-2"];
+        Object.assign(formatted, data.characterEncoding || {});
+        const titles = [this.labels.generalInformation, this.labels.softwareInformation, this.labels.dbPool, this.labels.memInfo, this.labels.characterEncoding];
+        const icons = ["ti-info-square", "ti-server", "ti-database", "ti-cpu-2", "ti-language"];
+        const columns = [document.createElement("div"), document.createElement("div")];
+        columns.forEach(column => column.className = "col-md-6");
 
-        container.replaceChildren(...TABLE_KEYS.map((keys, index) => {
+        TABLE_KEYS.forEach((keys, index) => {
             const wrapper = document.createElement("div");
-            wrapper.className = "col-md-6";
+            if (index === 2 || index === 3) wrapper.className = "server-monitoring-table-numeric";
             const heading = document.createElement("h6");
             heading.className = "server-monitoring-table-header";
-            heading.innerHTML = `<i class="ti ${icons[index]}"></i> `;
-            heading.append(document.createTextNode(titles[index] || ""));
+            heading.id = `server-monitoring-table-heading-${this._instanceId}-${index}`;
+            const icon = document.createElement("i");
+            icon.className = `ti ${icons[index]}`;
+            icon.setAttribute("aria-hidden", "true");
+            heading.append(icon, document.createTextNode(` ${titles[index] || ""}`));
             const table = document.createElement("table");
             table.className = "monitoring-table";
+            table.setAttribute("aria-labelledby", heading.id);
             const values = [...keys.map(key => [key, formatted[key]])];
             if (index === 3 && Array.isArray(data.sessionsList)) data.sessionsList.forEach(item => values.push([`- ${item.label}`, item.value]));
             values.forEach(([key, value], rowIndex) => {
@@ -207,17 +217,20 @@ export class WebjetServerMonitoringElement extends HTMLElement {
                 const row = table.insertRow();
                 row.className = "table-data";
                 row.dataset.index = rowIndex;
-                const name = row.insertCell();
+                const name = document.createElement("th");
+                name.scope = "row";
                 name.style.whiteSpace = "nowrap";
                 name.textContent = key.startsWith("-") ? key : (this.labels[key] || key);
+                row.appendChild(name);
                 const content = row.insertCell();
                 const element = document.createElement(STRONG_KEYS.has(key) ? "strong" : "span");
                 element.textContent = value;
                 content.appendChild(element);
             });
             wrapper.append(heading, table);
-            return wrapper;
-        }));
+            columns[index % columns.length].appendChild(wrapper);
+        });
+        container.replaceChildren(...columns);
     }
 
     _msToDays(ms = 0) {

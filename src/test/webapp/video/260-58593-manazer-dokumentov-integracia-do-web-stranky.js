@@ -117,10 +117,42 @@ Scenario("260-58593-manazer-dokumentov-integracia-do-web-stranky", async ({ I, D
     }, [expectedProductUrl], 20);
     I.wait(8);
 
+    // Full file archive
+    I.amOnPage("/apps/file-archive/admin/");
+    selectArchiveFolderForVideo(I, DT);
+    I.wait(10);
+
     // Remove isolated archive records in a disposable tab and return to the final editor state.
     await deleteArchiveRowsByFilter(I, DT);
     removeLocalArchiveFiles([productFileName, priceListFileName]);
-    I.waitForVisible("#trEditor", 20);
+
+    I.amOnPage("https://docs.webjetcms.sk/latest/sk/redactor/files/file-archive/README");
+    I.waitForElement("article", 20);
+    I.usePlaywrightTo("slowly scroll through the documentation", async ({ page }) => {
+        await page.evaluate(async () => {
+            const scrollElement = document.scrollingElement || document.documentElement;
+            const scrollDistance = scrollElement.scrollHeight - scrollElement.clientHeight;
+            const pixelsPerSecond = 160;
+            const duration = scrollDistance / pixelsPerSecond * 1000;
+            const startedAt = performance.now();
+
+            window.scrollTo(0, 0);
+            await new Promise(resolve => {
+                const scrollStep = (now) => {
+                    const progress = Math.min((now - startedAt) / duration, 1);
+                    window.scrollTo(0, scrollDistance * progress);
+                    if (progress < 1) {
+                        requestAnimationFrame(scrollStep);
+                    } else {
+                        resolve();
+                    }
+                };
+
+                requestAnimationFrame(scrollStep);
+            });
+        });
+    });
+
     I.wait(8);
 }).tag("@video");
 

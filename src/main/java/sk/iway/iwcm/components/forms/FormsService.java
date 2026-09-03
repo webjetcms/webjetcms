@@ -341,9 +341,9 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         E entity = formsRepository.findFirstByFormNameAndDomainIdAndCreateDateIsNullOrderByIdAsc(formName, CloudToolsForCore.getDomainId());
 
         Map<String, String> itemNames = new HashMap<>();
-        if(formItemsRepository!= null && entity instanceof FormsEntity fe) {
-            formColumns.setFormType(fe.getFormType());
-            if(FORM_TYPE.MULTISTEP.value.equals(fe.getFormType())) {
+        if(formItemsRepository != null) {
+            formColumns.setFormType(entity.getFormType());
+            if(entity instanceof FormsEntity && FORM_TYPE.MULTISTEP.value.equals(entity.getFormType())) {
 
                 int index = 1;
                 Map<Long, String> stepNames = new HashMap<>();
@@ -352,7 +352,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                     index++;
                 }
 
-                for(FormItemEntity fie : formItemsRepository.findAllByFormNameAndDomainId(fe.getFormName(), fe.getDomainId())) {
+                for(FormItemEntity fie : formItemsRepository.findAllByFormNameAndDomainId(entity.getFormName(), entity.getDomainId())) {
                     StringBuilder itemName = new StringBuilder(MultistepFormsService.getFieldName(fie, prop));
                     if(stepNames != null && stepNames.size() > 1) itemName.append(" (").append(stepNames.get(fie.getStepId())).append(")");
                     itemNames.put(fie.getItemFormId(), itemName.toString());
