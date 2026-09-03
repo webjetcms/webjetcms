@@ -14,7 +14,7 @@ Podporované sú nasledovné konfiguračné premenné:
 
 ### Čistenie HTML kódu pri vložení z Word/Excel
 
-Pravidlá sa nastavujú cez konfiguračnú premenné:
+Pravidlá sa nastavujú cez konfiguračnú premennú:
 
 - `ckeditor_pasteFromWord_disallowedContent` - zoznam pravidiel [CKEditor Advanced Content Filter](https://ckeditor.com/docs/ckeditor4/latest/guide/dev_allowed_content_rules.html), ktoré sa odstránia pri vložení obsahu z Word/Excel. Pravidlá sa používajú v štandardnom editore aj v režime Page Builder. Prázdna hodnota nevykoná žiadne dodatočné filtrovanie cez `filter.disallow`; ostatné štandardné čistenie obsahu zostane aktívne.
 

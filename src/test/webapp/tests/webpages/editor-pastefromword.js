@@ -8,56 +8,6 @@ var customPasteFromWordDisallowedContent = " table[width,height,border];\n td(*)
 
 var pasteFromWordHtml = '<table width="640" height="120" border="2"><tbody><tr><th class="word-header" align="center" valign="bottom"><span>Header</span></th><td class="word-cell" align="right" valign="middle">Cell</td></tr></tbody></table><p align="justify"><span>Text</span></p>';
 
-async function getPasteFromWordConfigState(I) {
-    var response = await I.sendGetRequest(configDetailUrl);
-    if (response.status !== 200 || response.data.name !== configName) {
-        throw new Error("Unable to read configuration value " + configName);
-    }
-
-    return {
-        exists: response.data.id != null,
-        id: response.data.id,
-        value: response.data.value
-    };
-}
-
-async function restorePasteFromWordConfig(I) {
-    if (originalConfigState == null) return;
-
-    var currentConfigState = await getPasteFromWordConfigState(I);
-
-    if (originalConfigState.exists === true) {
-        if (currentConfigState.exists === true && currentConfigState.value === originalConfigState.value) return;
-
-        var saveResponse = await I.sendPostRequest("/admin/rest/settings/configuration/add", {
-            name: configName,
-            value: originalConfigState.value
-        });
-        if (saveResponse.status !== 201 || saveResponse.data.name !== configName || saveResponse.data.value !== originalConfigState.value) {
-            throw new Error("Unable to restore configuration value " + configName);
-        }
-        return;
-    }
-
-    if (currentConfigState.exists === false) return;
-
-    var deleteResponse = await I.sendDeleteRequestWithPayload(
-        "/admin/rest/settings/configuration/" + currentConfigState.id,
-        { name: configName }
-    );
-    if (deleteResponse.status !== 200 || deleteResponse.data.result !== true) {
-        throw new Error("Unable to remove temporary configuration value " + configName);
-    }
-}
-
-BeforeSuite(async ({ I }) => {
-    originalConfigState = await getPasteFromWordConfigState(I);
-});
-
-AfterSuite(async ({ I }) => {
-    await restorePasteFromWordConfig(I);
-});
-
 Before(({ login }) => {
     login('admin');
 });
@@ -77,13 +27,25 @@ async function getPasteFromWordFilterResult(I, DTE, pageBuilder) {
         I.switchTo("#DTE_Field_data-pageBuilderIframe");
         I.waitForElement("div.cke_inner", 10);
         I.waitForText("Odstavec a zarovnanie", 10);
+        I.waitForElement("#wjInline-docdata [data-ckeditor-instance]", 10);
     } else {
         DTE.waitForCkeditor();
     }
 
-    var result = await I.executeScript(function(html) {
+    var result = await I.executeScript(function(htmlOrRootElement, iframeHtml) {
+        var html = typeof iframeHtml === "string" ? iframeHtml : htmlOrRootElement;
+        var editor = window.ckEditorInstance;
+        var pageBuilderEditorElement = document.querySelector("#wjInline-docdata [data-ckeditor-instance]");
+        if (pageBuilderEditorElement !== null) {
+            var editorName = pageBuilderEditorElement.getAttribute("data-ckeditor-instance");
+            editor = window.CKEDITOR.instances[editorName];
+        }
+        if (editor == null) {
+            throw new Error("CKEditor instance is not available");
+        }
+
         var eventData = { dataValue: html };
-        window.ckEditorInstance.fire("afterPasteFromWord", eventData);
+        editor.fire("afterPasteFromWord", eventData);
 
         var container = document.createElement("div");
         container.innerHTML = eventData.dataValue;
@@ -93,8 +55,12 @@ async function getPasteFromWordFilterResult(I, DTE, pageBuilder) {
         var th = container.querySelector("th");
         var paragraph = container.querySelector("p");
 
+        if (table === null || td === null || th === null || paragraph === null) {
+            throw new Error("Unexpected pasteFromWord HTML: " + eventData.dataValue);
+        }
+
         return {
-            config: window.ckEditorInstance.config.pasteFromWordDisallowedContent,
+            config: editor.config.pasteFromWordDisallowedContent,
             tableWidth: table.getAttribute("width"),
             tableHeight: table.getAttribute("height"),
             tableBorder: table.getAttribute("border"),
@@ -207,5 +173,5 @@ Scenario('pasteFromWord filter-empty @singlethread', async ({ I, DTE, Document }
 
 Scenario('reset', async ({ I, Document }) => {
     //reset back to default value
-    Document.setConfigValue("ckeditor_pasteFromWord_disallowedContent", "table[width,height,border];td(*);td[align,valign,nowrap];th(*);th[align,valign];p[align];span;col[width]");
+    setPasteFromWordConfig(I, Document, "table[width,height,border];td(*);td[align,valign,nowrap];th(*);th[align,valign];p[align];span;col[width]");
 });
