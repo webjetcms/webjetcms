@@ -10,8 +10,13 @@
     width: 100%;
     background-color: $nice-gray;
     border-radius: $border-radius;
+    th,
     td {
         padding: 15px;
+    }
+    th[scope="row"] {
+        font-weight: inherit;
+        text-align: left;
     }
     .table-data {
         padding: 10px !important;

@@ -15,6 +15,7 @@ const TABLE_KEYS = [
 ];
 
 const STRONG_KEYS = new Set(["serverActualTime", "remoteIP", "serverIP", "cacheItems", "serverCpus", "dbIdle", "sessionsTotal"]);
+let monitoringInstanceCounter = 0;
 
 /**
  * Displays live server memory and CPU charts with optional detailed monitoring data.
@@ -31,6 +32,7 @@ export class WebjetServerMonitoringElement extends HTMLElement {
         this.chartData = null;
         this._initialized = false;
         this._configured = false;
+        this._instanceId = ++monitoringInstanceCounter;
     }
 
     /**
@@ -200,10 +202,14 @@ export class WebjetServerMonitoringElement extends HTMLElement {
             if (index === 2 || index === 3) wrapper.className = "server-monitoring-table-numeric";
             const heading = document.createElement("h6");
             heading.className = "server-monitoring-table-header";
-            heading.innerHTML = `<i class="ti ${icons[index]}"></i> `;
-            heading.append(document.createTextNode(titles[index] || ""));
+            heading.id = `server-monitoring-table-heading-${this._instanceId}-${index}`;
+            const icon = document.createElement("i");
+            icon.className = `ti ${icons[index]}`;
+            icon.setAttribute("aria-hidden", "true");
+            heading.append(icon, document.createTextNode(` ${titles[index] || ""}`));
             const table = document.createElement("table");
             table.className = "monitoring-table";
+            table.setAttribute("aria-labelledby", heading.id);
             const values = [...keys.map(key => [key, formatted[key]])];
             if (index === 3 && Array.isArray(data.sessionsList)) data.sessionsList.forEach(item => values.push([`- ${item.label}`, item.value]));
             values.forEach(([key, value], rowIndex) => {
@@ -211,9 +217,11 @@ export class WebjetServerMonitoringElement extends HTMLElement {
                 const row = table.insertRow();
                 row.className = "table-data";
                 row.dataset.index = rowIndex;
-                const name = row.insertCell();
+                const name = document.createElement("th");
+                name.scope = "row";
                 name.style.whiteSpace = "nowrap";
                 name.textContent = key.startsWith("-") ? key : (this.labels[key] || key);
+                row.appendChild(name);
                 const content = row.insertCell();
                 const element = document.createElement(STRONG_KEYS.has(key) ? "strong" : "span");
                 element.textContent = value;
