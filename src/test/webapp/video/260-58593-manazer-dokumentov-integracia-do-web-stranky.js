@@ -76,7 +76,7 @@ Scenario("260-58593-manazer-dokumentov-integracia-do-web-stranky", async ({ I, D
     I.switchTo(fileArchiveFrame);
     I.waitForVisible(fileArchiveTable, 20);
     DT.waitForLoader(fileArchiveTableId);
-    selectArchiveFolder(I, DT);
+    selectArchiveFolderForVideo(I, DT);
     I.wait(5);
 
     // Shot 3: upload two documents and show individual and total progress.
@@ -143,6 +143,23 @@ function removeLocalArchiveFiles(fileNames) {
     for (const fileName of fileNames) {
         fs.rmSync(path.join(localArchiveFolder, fileName.toLowerCase()), { force: true });
     }
+}
+
+function selectArchiveFolderForVideo(I, DT) {
+    const marketingFolderToggle =
+        "#SomStromcek li[id='/files/archiv/marketing'].jstree-closed > i.jstree-ocl";
+    const archiveFolderNode = "#SomStromcek li[id='/files/archiv/marketing/webjet-cms']";
+    const archiveFolderAnchor = `${archiveFolderNode} > a.jstree-anchor`;
+
+    I.waitForElement("#SomStromcek", 20);
+    I.jstreeWaitForLoader();
+    I.waitForVisible(marketingFolderToggle, 20);
+    I.videoClick(marketingFolderToggle, 0.2);
+    I.jstreeWaitForLoader();
+    I.waitForVisible(archiveFolderAnchor, 20);
+    I.videoClick(archiveFolderAnchor, 0.3);
+    I.waitForElement(`${archiveFolderNode} > a.jstree-clicked[aria-selected='true']`, 20);
+    DT.waitForLoader(fileArchiveTableId);
 }
 
 function selectArchiveFolder(I, DT) {
