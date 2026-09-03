@@ -23,6 +23,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 
@@ -69,7 +70,9 @@ public class BrowserIdentifierMigrationService {
 
     public Preview preview() throws SQLException {
         try (Connection connection = DBPool.getConnection()) {
-            return new Preview(buildSeoBotMappings(connection, false), buildStatKeyMappings(connection, false), discoverTables(connection));
+            List<Mapping> botMappings = buildSeoBotMappings(connection, false);
+            StatKeyMappingResult keyMappings = buildStatKeyMappings(connection, false);
+            return new Preview(botMappings, keyMappings.mappings(), discoverTables(connection));
         }
     }
 
@@ -84,15 +87,15 @@ public class BrowserIdentifierMigrationService {
             connection.setAutoCommit(false);
             try {
                 List<Mapping> botMappings = buildSeoBotMappings(connection, true);
-                List<Mapping> keyMappings = buildStatKeyMappings(connection, true);
+                StatKeyMappingResult keyMappingResult = buildStatKeyMappings(connection, true);
+                List<Mapping> keyMappings = keyMappingResult.mappings();
                 List<TableDefinition> tables = tableDefinitions(connection);
 
                 if (state.getTableIndex() >= tables.size()) {
                     verifyNoReferences(connection, tables, botMappings, keyMappings);
                     finalizeSeoBots(connection, botMappings);
                     connection.commit();
-                    StatDB.getInstance(true);
-                    ClusterDB.addRefresh(StatDB.class);
+                    refreshStatKeyCache();
                     state.setDone(true);
                     state.setTable("done");
                     return state;
@@ -106,6 +109,7 @@ public class BrowserIdentifierMigrationService {
                 Map<Long, Long> keyIds = toIdMap(keyMappings);
                 long lastId = migrateRows(connection, table, state, botIds, keyIds);
                 connection.commit();
+                refreshStatKeyCacheIfNeeded(keyMappingResult);
 
                 if (lastId == 0 || lastId >= state.getTableMaxId()) {
                     state.setTableIndex(state.getTableIndex() + 1);
@@ -164,27 +168,133 @@ public class BrowserIdentifierMigrationService {
         return result;
     }
 
-    private List<Mapping> buildStatKeyMappings(Connection connection, boolean prepare) throws SQLException {
+    StatKeyMappingResult buildStatKeyMappings(Connection connection, boolean prepare) throws SQLException {
+        List<StatKeyRow> rows = new ArrayList<>();
         List<Mapping> mappings = new ArrayList<>();
         Map<String, Long> existing = new HashMap<>();
         try (PreparedStatement ps = connection.prepareStatement("SELECT stat_keys_id, value FROM stat_keys");
              ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) existing.putIfAbsent(rs.getString(2).toLowerCase(Locale.ROOT), rs.getLong(1));
-        }
-        try (PreparedStatement ps = connection.prepareStatement("SELECT stat_keys_id, value FROM stat_keys");
-             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                long sourceId = rs.getLong(1);
-                String source = rs.getString(2);
-                String target = normalizeBrowserIdentifier(source);
-                if (!target.equals(source) && !VERSION_ONLY.matcher(source.trim()).matches()) {
-                    long targetId = existing.getOrDefault(target.toLowerCase(Locale.ROOT), 0L);
-                    if (targetId < 1 && prepare) targetId = StatDB.getStatKeyId(target);
-                    if (targetId != sourceId) mappings.add(new Mapping(sourceId, targetId, source, target));
+                StatKeyRow row = new StatKeyRow(rs.getLong(1), rs.getString(2));
+                rows.add(row);
+                existing.putIfAbsent(row.value.toLowerCase(Locale.ROOT), row.id);
+            }
+        }
+
+        boolean cacheRefreshRequired = false;
+        for (StatKeyRow row : rows) {
+            String target = normalizeBrowserIdentifier(row.value);
+            if (!target.equals(row.value) && !VERSION_ONLY.matcher(row.value.trim()).matches()) {
+                String targetKey = target.toLowerCase(Locale.ROOT);
+                long targetId = existing.getOrDefault(targetKey, 0L);
+                if (targetId < 1 && prepare) {
+                    targetId = getOrCreateStatKey(connection, target);
+                    existing.put(targetKey, targetId);
+                    cacheRefreshRequired = true;
+                }
+                if (targetId != row.id) mappings.add(new Mapping(row.id, targetId, row.value, target));
+            }
+        }
+        if (prepare) verifyStatKeyTargets(connection, mappings);
+        return new StatKeyMappingResult(mappings, cacheRefreshRequired);
+    }
+
+    private long getOrCreateStatKey(Connection connection, String target) throws SQLException {
+        long targetId = findStatKeyId(connection, target);
+        if (targetId > 0) return targetId;
+
+        long allocatedId = PkeyGenerator.getNextValue("stat_keys");
+        if (allocatedId < 1) throw new SQLException("Failed to allocate stat_keys ID for: " + target);
+        verifyStatKeyIdIsAvailable(connection, allocatedId);
+
+        try (PreparedStatement ps = connection.prepareStatement("INSERT INTO stat_keys (stat_keys_id, value) VALUES (?, ?)")) {
+            ps.setLong(1, allocatedId);
+            ps.setString(2, target);
+            if (ps.executeUpdate() != 1) throw new SQLException("Failed to insert stat_keys value: " + target);
+        }
+
+        targetId = findStatKeyId(connection, target);
+        if (targetId < 1) throw new SQLException("Inserted stat_keys value cannot be found: " + target);
+        return targetId;
+    }
+
+    private long findStatKeyId(Connection connection, String target) throws SQLException {
+        long targetId = 0;
+        boolean found = false;
+        try (PreparedStatement ps = connection.prepareStatement("SELECT stat_keys_id, value FROM stat_keys WHERE value=?")) {
+            ps.setString(1, target);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    if (found) throw new SQLException("Multiple stat_keys rows found for value: " + target);
+                    targetId = rs.getLong(1);
+                    String value = rs.getString(2);
+                    if (value == null || !target.equalsIgnoreCase(value)) {
+                        throw new SQLException("Unexpected stat_keys value found for: " + target);
+                    }
+                    found = true;
                 }
             }
         }
-        return mappings;
+        if (found && targetId < 1) throw new SQLException("Invalid stat_keys ID for value: " + target);
+        return targetId;
+    }
+
+    private void verifyStatKeyIdIsAvailable(Connection connection, long targetId) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("SELECT value FROM stat_keys WHERE stat_keys_id=?")) {
+            ps.setLong(1, targetId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) throw new SQLException("Allocated stat_keys ID already exists: " + targetId);
+            }
+        }
+    }
+
+    void verifyStatKeyTargets(Connection connection, List<Mapping> mappings) throws SQLException {
+        Map<Long, String> targets = new LinkedHashMap<>();
+        for (Mapping mapping : mappings) {
+            if (mapping.targetId < 1) throw new SQLException("Invalid target stat_keys ID for: " + mapping.target);
+            String previous = targets.putIfAbsent(mapping.targetId, mapping.target);
+            if (previous != null && !previous.equalsIgnoreCase(mapping.target)) {
+                throw new SQLException("Target stat_keys ID maps to multiple values: " + mapping.targetId);
+            }
+        }
+
+        for (Map.Entry<Long, String> target : targets.entrySet()) {
+            int rows = 0;
+            try (PreparedStatement ps = connection.prepareStatement("SELECT value FROM stat_keys WHERE stat_keys_id=?")) {
+                ps.setLong(1, target.getKey());
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        rows++;
+                        String value = rs.getString(1);
+                        if (value == null || !target.getValue().equalsIgnoreCase(value)) {
+                            throw new SQLException("Target stat_keys ID does not match value: " + target.getKey());
+                        }
+                    }
+                }
+            }
+            if (rows != 1) throw new SQLException("Target stat_keys ID must reference exactly one row: " + target.getKey());
+        }
+    }
+
+    private void refreshStatKeyCache() {
+        StatDB.getInstance(true);
+        ClusterDB.addRefresh(StatDB.class);
+    }
+
+    private void refreshStatKeyCacheIfNeeded(StatKeyMappingResult result) {
+        if (result.cacheRefreshRequired()) {
+            refreshStatKeyCache();
+            return;
+        }
+        if (result.mappings().isEmpty()) return;
+
+        StatDB statDB = StatDB.getInstance();
+        for (Mapping mapping : result.mappings()) {
+            if (mapping.targetId > Integer.MAX_VALUE || !mapping.target.equalsIgnoreCase(statDB.getValue((int) mapping.targetId))) {
+                refreshStatKeyCache();
+                return;
+            }
+        }
     }
 
     private long migrateRows(Connection connection, TableDefinition table, State state,
@@ -347,5 +457,7 @@ public class BrowserIdentifierMigrationService {
     }
 
     private record BrowserRow(long id, String name) {}
+    private record StatKeyRow(long id, String value) {}
     private record TableDefinition(String name, String idColumn, boolean browserKey) {}
+    record StatKeyMappingResult(List<Mapping> mappings, boolean cacheRefreshRequired) {}
 }
