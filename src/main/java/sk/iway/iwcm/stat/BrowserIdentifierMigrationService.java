@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -298,8 +299,8 @@ public class BrowserIdentifierMigrationService {
         }
     }
 
-    private long migrateRows(Connection connection, TableDefinition table, State state,
-                             Map<Long, Long> botIds, Map<Long, Long> keyIds) throws SQLException {
+    long migrateRows(Connection connection, TableDefinition table, State state,
+                     Map<Long, Long> botIds, Map<Long, Long> keyIds) throws SQLException {
         String select = "SELECT " + table.idColumn + ", browser_id" + (table.browserKey ? ", browser_ua_id" : "") +
             " FROM " + table.name + " WHERE " + table.idColumn + ">? AND " + table.idColumn + "<=? ORDER BY " + table.idColumn;
         String update = "UPDATE " + table.name + " SET browser_id=?" + (table.browserKey ? ", browser_ua_id=?" : "") +
@@ -315,15 +316,25 @@ public class BrowserIdentifierMigrationService {
                 while (rs.next()) {
                     long id = rs.getLong(1);
                     long oldBot = rs.getLong(2);
-                    long newBot = botIds.getOrDefault(oldBot, oldBot);
-                    long oldKey = table.browserKey ? rs.getLong(3) : 0;
-                    long newKey = table.browserKey ? keyIds.getOrDefault(oldKey, oldKey) : 0;
+                    boolean oldBotNull = rs.wasNull();
+                    long newBot = oldBotNull ? oldBot : botIds.getOrDefault(oldBot, oldBot);
+                    long oldKey = 0;
+                    boolean oldKeyNull = false;
+                    if (table.browserKey) {
+                        oldKey = rs.getLong(3);
+                        oldKeyNull = rs.wasNull();
+                    }
+                    long newKey = !table.browserKey || oldKeyNull ? oldKey : keyIds.getOrDefault(oldKey, oldKey);
                     lastId = id;
                     state.setScanned(state.getScanned() + 1);
-                    if (newBot != oldBot || newKey != oldKey) {
+                    if ((!oldBotNull && newBot != oldBot) || (table.browserKey && !oldKeyNull && newKey != oldKey)) {
                         int parameter = 1;
-                        write.setLong(parameter++, newBot);
-                        if (table.browserKey) write.setLong(parameter++, newKey);
+                        if (oldBotNull) write.setNull(parameter++, Types.BIGINT);
+                        else write.setLong(parameter++, newBot);
+                        if (table.browserKey) {
+                            if (oldKeyNull) write.setNull(parameter++, Types.INTEGER);
+                            else write.setLong(parameter++, newKey);
+                        }
                         write.setLong(parameter, id);
                         write.addBatch();
                         pending++;
@@ -533,7 +544,7 @@ public class BrowserIdentifierMigrationService {
 
     private record BrowserRow(long id, String name) {}
     private record StatKeyRow(long id, String value) {}
-    private record TableDefinition(String name, String idColumn, boolean browserKey) {}
+    record TableDefinition(String name, String idColumn, boolean browserKey) {}
     private record TableReference(String catalog, String schema, String name) {}
     private record IndexReference(String qualifier, String name) {}
     private record IndexColumn(int position, String name, String filterCondition) {}

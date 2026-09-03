@@ -21,7 +21,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -44,6 +46,10 @@ class BrowserIdentifierMigrationServiceTest {
     private static final String UPDATE_SEO_BOT_STATS = "UPDATE seo_bots SET visit_count=?, last_visit=? WHERE seo_bots_id=?";
     private static final String DELETE_SEO_BOT = "DELETE FROM seo_bots WHERE seo_bots_id=?";
     private static final String CREATE_SEO_BOTS_NAME_INDEX = "CREATE UNIQUE INDEX ix_seo_bots_name ON seo_bots (name)";
+    private static final String LOAD_STAT_VIEW = "SELECT view_id, browser_id, browser_ua_id FROM stat_views WHERE view_id>? AND view_id<=? ORDER BY view_id";
+    private static final String UPDATE_STAT_VIEW = "UPDATE stat_views SET browser_id=?, browser_ua_id=? WHERE view_id=?";
+    private static final String LOAD_STAT_FROM = "SELECT from_id, browser_id FROM stat_from WHERE from_id>? AND from_id<=? ORDER BY from_id";
+    private static final String UPDATE_STAT_FROM = "UPDATE stat_from SET browser_id=? WHERE from_id=?";
 
     @ParameterizedTest
     @CsvSource({
@@ -184,6 +190,106 @@ class BrowserIdentifierMigrationServiceTest {
         );
 
         assertTrue(thrown.getMessage().contains("exactly one row"));
+    }
+
+    @Test
+    void migrateRowsShouldPreserveNullBrowserIdWhenUaIdChanges() throws Exception {
+        BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService();
+        BrowserIdentifierMigrationService.State state = new BrowserIdentifierMigrationService.State();
+        BrowserIdentifierMigrationService.TableDefinition table =
+            new BrowserIdentifierMigrationService.TableDefinition("stat_views", "view_id", true);
+        Connection connection = mock(Connection.class);
+        PreparedStatement read = mock(PreparedStatement.class);
+        PreparedStatement write = mock(PreparedStatement.class);
+        ResultSet rows = mock(ResultSet.class);
+        state.setTableMaxId(1);
+
+        when(connection.prepareStatement(LOAD_STAT_VIEW)).thenReturn(read);
+        when(connection.prepareStatement(UPDATE_STAT_VIEW)).thenReturn(write);
+        when(read.executeQuery()).thenReturn(rows);
+        when(rows.next()).thenReturn(true, false);
+        when(rows.getLong(1)).thenReturn(1L);
+        when(rows.getLong(2)).thenReturn(0L);
+        when(rows.getLong(3)).thenReturn(41L);
+        when(rows.wasNull()).thenReturn(true, false);
+
+        long lastId = service.migrateRows(connection, table, state, Map.of(), Map.of(41L, 100L));
+
+        InOrder readOrder = inOrder(rows);
+        readOrder.verify(rows).getLong(2);
+        readOrder.verify(rows).wasNull();
+        readOrder.verify(rows).getLong(3);
+        readOrder.verify(rows).wasNull();
+        verify(write).setNull(1, Types.BIGINT);
+        verify(write).setLong(2, 100L);
+        verify(write).setLong(3, 1L);
+        verify(write).addBatch();
+        verify(write).executeBatch();
+        assertEquals(1L, lastId);
+        assertEquals(1L, state.getScanned());
+        assertEquals(1L, state.getUpdated());
+    }
+
+    @Test
+    void migrateRowsShouldPreserveNullUaIdWhenBrowserIdChanges() throws Exception {
+        BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService();
+        BrowserIdentifierMigrationService.State state = new BrowserIdentifierMigrationService.State();
+        BrowserIdentifierMigrationService.TableDefinition table =
+            new BrowserIdentifierMigrationService.TableDefinition("stat_views", "view_id", true);
+        Connection connection = mock(Connection.class);
+        PreparedStatement read = mock(PreparedStatement.class);
+        PreparedStatement write = mock(PreparedStatement.class);
+        ResultSet rows = mock(ResultSet.class);
+        state.setTableMaxId(1);
+
+        when(connection.prepareStatement(LOAD_STAT_VIEW)).thenReturn(read);
+        when(connection.prepareStatement(UPDATE_STAT_VIEW)).thenReturn(write);
+        when(read.executeQuery()).thenReturn(rows);
+        when(rows.next()).thenReturn(true, false);
+        when(rows.getLong(1)).thenReturn(1L);
+        when(rows.getLong(2)).thenReturn(41L);
+        when(rows.getLong(3)).thenReturn(0L);
+        when(rows.wasNull()).thenReturn(false, true);
+
+        long lastId = service.migrateRows(connection, table, state, Map.of(41L, 100L), Map.of());
+
+        verify(write).setLong(1, 100L);
+        verify(write).setNull(2, Types.INTEGER);
+        verify(write).setLong(3, 1L);
+        verify(write).addBatch();
+        verify(write).executeBatch();
+        assertEquals(1L, lastId);
+        assertEquals(1L, state.getScanned());
+        assertEquals(1L, state.getUpdated());
+    }
+
+    @Test
+    void migrateRowsShouldNotApplyZeroMappingToNullBrowserId() throws Exception {
+        BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService();
+        BrowserIdentifierMigrationService.State state = new BrowserIdentifierMigrationService.State();
+        BrowserIdentifierMigrationService.TableDefinition table =
+            new BrowserIdentifierMigrationService.TableDefinition("stat_from", "from_id", false);
+        Connection connection = mock(Connection.class);
+        PreparedStatement read = mock(PreparedStatement.class);
+        PreparedStatement write = mock(PreparedStatement.class);
+        ResultSet rows = mock(ResultSet.class);
+        state.setTableMaxId(1);
+
+        when(connection.prepareStatement(LOAD_STAT_FROM)).thenReturn(read);
+        when(connection.prepareStatement(UPDATE_STAT_FROM)).thenReturn(write);
+        when(read.executeQuery()).thenReturn(rows);
+        when(rows.next()).thenReturn(true, false);
+        when(rows.getLong(1)).thenReturn(1L);
+        when(rows.getLong(2)).thenReturn(0L);
+        when(rows.wasNull()).thenReturn(true);
+
+        long lastId = service.migrateRows(connection, table, state, Map.of(0L, 100L), Map.of());
+
+        verify(write, never()).addBatch();
+        verify(write, never()).executeBatch();
+        assertEquals(1L, lastId);
+        assertEquals(1L, state.getScanned());
+        assertEquals(0L, state.getUpdated());
     }
 
     @Test
