@@ -504,14 +504,18 @@ task npmwatch(type:Exec) {
     commandLine project.ext.'npmExe', 'run', 'watch'
 }
 
-// nvm changes PATH only for its shell, so each npm task must run in that same shell.
+// nvm changes PATH only for its shell, so each npm task runs in the configured interactive shell.
 def nvmNpmCommand = { List<String> npmArguments ->
     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
         def nodeVersion = file('.nvmrc').text.trim()
-        return ['cmd', '/d', '/c', "nvm use ${nodeVersion} && npm.cmd ${npmArguments.join(' ')}"]
+        return ['cmd', '/d', '/c',
+            "(nvm use ${nodeVersion} >nul 2>&1 || nvm install ${nodeVersion}) " +
+            "&& nvm use ${nodeVersion} && npm.cmd ${npmArguments.join(' ')}"]
     }
-    return ['bash', '-c',
-        'source "${NVM_DIR:-$HOME/.nvm}/nvm.sh" && nvm use && exec npm "$@"',
+    def shellExe = System.getenv('SHELL') ?: 'bash'
+    return [shellExe, '-ic',
+        '{ nvm use --silent || nvm install; } ' +
+        '&& nvm use && exec npm "$@"',
         'npm'] + npmArguments
 }
 
