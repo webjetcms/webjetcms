@@ -1,0 +1,129 @@
+extends ../../partials/layout
+
+block content
+
+    script.
+        window.domReady.add(function () {
+            const endpoint = "/admin/rest/settings/stat-browser-migration";
+            let running = false;
+            let state = readState();
+
+            function readState() {
+                const params = new URLSearchParams(window.location.search);
+                return {
+                    tableIndex: Number(params.get("tableIndex") || 0),
+                    cursor: Number(params.get("cursor") || 0),
+                    tableMaxId: Number(params.get("tableMaxId") || 0),
+                    scanned: Number(params.get("scanned") || 0),
+                    updated: Number(params.get("updated") || 0),
+                    done: params.get("done") === "true"
+                };
+            }
+
+            function saveState() {
+                const params = new URLSearchParams();
+                Object.keys(state).forEach(key => params.set(key, state[key]));
+                history.replaceState(null, "", window.location.pathname + "?" + params.toString());
+            }
+
+            function renderState() {
+                $("#migrationScanned").text(state.scanned || 0);
+                $("#migrationUpdated").text(state.updated || 0);
+                $("#migrationTable").text(state.table || "—");
+                const percent = state.done ? 100 : (state.tableMaxId > 0 ? Math.min(100, Math.round(state.cursor * 100 / state.tableMaxId)) : 0);
+                $("#migrationProgress").css("width", percent + "%").attr("aria-valuenow", percent).text(percent + "%");
+                $("#migrationStart").prop("disabled", running || state.done);
+                $("#migrationPause").prop("disabled", !running);
+                if (state.done) $("#migrationStatus").removeClass("d-none");
+            }
+
+            function renderPreview(data) {
+                $("#seoMappingCount").text(data.seoBots.length);
+                $("#keyMappingCount").text(data.browserKeys.length);
+                $("#tableCount").text(data.tables.length);
+                const body = $("#migrationMappings tbody").empty();
+                data.seoBots.concat(data.browserKeys).forEach(item => {
+                    $("<tr>").append($("<td>").text(item.source)).append($("<td>").text(item.target)).appendTo(body);
+                });
+                $("#migrationPreview").removeClass("d-none");
+            }
+
+            function analyze() {
+                $("#migrationAnalyze").prop("disabled", true).addClass("processing");
+                $.getJSON(endpoint).done(renderPreview).fail(() => WJ.notifyError("[[\#{stat.browser-migration.error}]]"))
+                    .always(() => $("#migrationAnalyze").prop("disabled", false).removeClass("processing"));
+            }
+
+            function processBatch() {
+                if (!running) return;
+                $.ajax({url: endpoint, method: "POST", contentType: "application/json", data: JSON.stringify(state)})
+                    .done(function (response) {
+                        state = response;
+                        if (state.done) running = false;
+                        saveState();
+                        renderState();
+                        if (!state.done) window.setTimeout(processBatch, 50);
+                    })
+                    .fail(function () {
+                        running = false;
+                        renderState();
+                        WJ.notifyError("[[\#{stat.browser-migration.error}]]");
+                    });
+            }
+
+            $("#migrationAnalyze").on("click", analyze);
+            $("#migrationStart").on("click", function () { running = true; renderState(); processBatch(); });
+            $("#migrationPause").on("click", function () { running = false; renderState(); });
+            renderState();
+        });
+
+    div.dt-header-row.clearfix
+        div.dt-buttons
+            button#migrationAnalyze.btn.btn-sm.btn-outline-secondary.with-text(type="button")
+                i.ti.ti-scan
+                span [[\#{stat.browser-migration.analyze}]]
+            button#migrationStart.btn.btn-sm.btn-success.with-text(type="button")
+                i.ti.ti-player-play
+                span [[\#{stat.browser-migration.start}]]
+            button#migrationPause.btn.btn-sm.btn-warning.with-text(type="button" disabled)
+                i.ti.ti-player-pause
+                span [[\#{stat.browser-migration.pause}]]
+
+    .alert.alert-info.mt-3(role="alert")
+        i.ti.ti-info-circle.me-2
+        | [[\#{stat.browser-migration.description}]]
+
+    #migrationStatus.alert.alert-success.d-none(role="status") [[\#{stat.browser-migration.done}]]
+
+    .card.mb-3
+        .card-body
+            .row.g-3
+                .col-md-4
+                    .text-muted [[\#{stat.browser-migration.current-table}]]
+                    #migrationTable.fs-5 —
+                .col-md-4
+                    .text-muted [[\#{stat.browser-migration.scanned}]]
+                    #migrationScanned.fs-5 0
+                .col-md-4
+                    .text-muted [[\#{stat.browser-migration.updated}]]
+                    #migrationUpdated.fs-5 0
+            .progress.mt-3
+                #migrationProgress.progress-bar(role="progressbar" style="width: 0%" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0") 0%
+
+    #migrationPreview.card.d-none
+        .card-header [[\#{stat.browser-migration.preview}]]
+        .card-body
+            p
+                span.badge.bg-primary.me-2#seoMappingCount 0
+                | [[\#{stat.browser-migration.seo-count}]]
+                span.badge.bg-secondary.ms-3.me-2#keyMappingCount 0
+                | [[\#{stat.browser-migration.key-count}]]
+                span.badge.bg-info.ms-3.me-2#tableCount 0
+                | [[\#{stat.browser-migration.table-count}]]
+            .table-responsive(style="max-height: 420px")
+                table#migrationMappings.table.table-sm.table-hover
+                    thead
+                        tr
+                            th [[\#{stat.browser-migration.source}]]
+                            th [[\#{stat.browser-migration.target}]]
+                    tbody

@@ -789,6 +789,17 @@ public class Modules
 		sub.setShowInLeftMenu(true);
 		sub.setGroup("config");
 		sub.setMenuIcon("refresh");
+		ModuleInfo browserMigration = new ModuleInfo().setMenuOrder(7301);
+		browserMigration.setNameKey("stat.browser-migration.title");
+		browserMigration.setPath("/admin/v9/settings/stat-browser-migration/");
+		browserMigration.setWjVersions("BPECDIM");
+		browserMigration.setUserItem(true);
+		browserMigration.setItemKey("modUpdate");
+		browserMigration.setDefaultDisabled(false);
+		browserMigration.setShowInLeftMenu(false);
+		browserMigration.setGroup("config");
+		sub.addSubmenu(browserMigration);
+		sub.setHideSubmenu(true);
 		loadModule(sub);
 
 		// Embedding-chunks
