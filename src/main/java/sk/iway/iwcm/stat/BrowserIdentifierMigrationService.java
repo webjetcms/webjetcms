@@ -5,6 +5,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -339,7 +340,7 @@ public class BrowserIdentifierMigrationService {
         return lastId;
     }
 
-    private void finalizeSeoBots(Connection connection, List<Mapping> mappings) throws SQLException {
+    void finalizeSeoBots(Connection connection, List<Mapping> mappings) throws SQLException {
         Map<Long, List<Long>> sources = new HashMap<>();
         for (Mapping mapping : mappings) sources.computeIfAbsent(mapping.targetId, key -> new ArrayList<>()).add(mapping.sourceId);
         for (Map.Entry<Long, List<Long>> entry : sources.entrySet()) {
@@ -401,14 +402,88 @@ public class BrowserIdentifierMigrationService {
         }
     }
 
-    private void ensureUniqueNameIndex(Connection connection) throws SQLException {
+    void ensureUniqueNameIndex(Connection connection) throws SQLException {
         DatabaseMetaData metadata = connection.getMetaData();
-        try (ResultSet rs = metadata.getIndexInfo(null, null, "seo_bots", true, false)) {
-            while (rs.next()) if ("name".equalsIgnoreCase(rs.getString("COLUMN_NAME"))) return;
-        }
+        TableReference table = findTable(connection, metadata, "seo_bots");
+        if (hasUniqueSingleColumnIndex(metadata, table, "name")) return;
+
+        SQLException createFailure = null;
         try (Statement statement = connection.createStatement()) {
             statement.executeUpdate("CREATE UNIQUE INDEX ix_seo_bots_name ON seo_bots (name)");
+        } catch (SQLException ex) {
+            createFailure = ex;
         }
+
+        if (hasUniqueSingleColumnIndex(connection.getMetaData(), table, "name")) return;
+        if (createFailure != null) throw createFailure;
+        throw new SQLException("Unique index on seo_bots(name) was not created");
+    }
+
+    private TableReference findTable(Connection connection, DatabaseMetaData metadata, String expectedName) throws SQLException {
+        String catalog = connection.getCatalog();
+        String schema = null;
+        String driverName = metadata.getDriverName();
+        if (driverName == null || !driverName.toLowerCase(Locale.ROOT).contains("jtds")) {
+            try {
+                schema = connection.getSchema();
+            } catch (SQLFeatureNotSupportedException ignored) {
+                // Continue with a catalog-wide lookup when the driver cannot expose the current schema.
+            }
+        }
+
+        TableReference table = findTable(metadata, catalog, schema, expectedName);
+        if (table == null && schema != null) table = findTable(metadata, catalog, null, expectedName);
+        if (table == null && catalog != null) table = findTable(metadata, null, null, expectedName);
+        if (table == null) throw new SQLException("Table not found in database metadata: " + expectedName);
+        return table;
+    }
+
+    private TableReference findTable(DatabaseMetaData metadata, String catalog, String schema, String expectedName) throws SQLException {
+        TableReference match = null;
+        try (ResultSet rs = metadata.getTables(catalog, schema, "%", new String[] { "TABLE" })) {
+            while (rs.next()) {
+                String tableName = rs.getString("TABLE_NAME");
+                if (expectedName.equalsIgnoreCase(tableName)) {
+                    TableReference candidate = new TableReference(rs.getString("TABLE_CAT"), rs.getString("TABLE_SCHEM"), tableName);
+                    if (match != null && !match.equals(candidate)) {
+                        throw new SQLException("Multiple tables found in database metadata: " + expectedName);
+                    }
+                    match = candidate;
+                }
+            }
+        }
+        return match;
+    }
+
+    private boolean hasUniqueSingleColumnIndex(DatabaseMetaData metadata, TableReference table, String expectedColumn) throws SQLException {
+        Map<IndexReference, List<IndexColumn>> indexes = new LinkedHashMap<>();
+        try (ResultSet rs = metadata.getIndexInfo(table.catalog, table.schema, table.name, true, false)) {
+            while (rs.next()) {
+                String indexName = rs.getString("INDEX_NAME");
+                boolean nonUnique = rs.getBoolean("NON_UNIQUE");
+                if (indexName == null || nonUnique || rs.wasNull() || rs.getShort("TYPE") == DatabaseMetaData.tableIndexStatistic) {
+                    continue;
+                }
+                IndexReference index = new IndexReference(rs.getString("INDEX_QUALIFIER"), indexName);
+                indexes.computeIfAbsent(index, key -> new ArrayList<>())
+                    .add(new IndexColumn(
+                        rs.getShort("ORDINAL_POSITION"),
+                        rs.getString("COLUMN_NAME"),
+                        rs.getString("FILTER_CONDITION")
+                    ));
+            }
+        }
+
+        for (List<IndexColumn> columns : indexes.values()) {
+            columns.sort(Comparator.comparingInt(IndexColumn::position));
+            if (columns.size() == 1) {
+                IndexColumn column = columns.get(0);
+                if (column.position == 1 && expectedColumn.equalsIgnoreCase(column.name) && Tools.isEmpty(column.filterCondition)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private List<TableDefinition> tableDefinitions(Connection connection) throws SQLException {
@@ -459,5 +534,8 @@ public class BrowserIdentifierMigrationService {
     private record BrowserRow(long id, String name) {}
     private record StatKeyRow(long id, String value) {}
     private record TableDefinition(String name, String idColumn, boolean browserKey) {}
+    private record TableReference(String catalog, String schema, String name) {}
+    private record IndexReference(String qualifier, String name) {}
+    private record IndexColumn(int position, String name, String filterCondition) {}
     record StatKeyMappingResult(List<Mapping> mappings, boolean cacheRefreshRequired) {}
 }

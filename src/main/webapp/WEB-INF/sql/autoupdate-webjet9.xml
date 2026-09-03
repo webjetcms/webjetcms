@@ -3944,17 +3944,5 @@
             </object>
         </void>
 
-        <void method="add">
-            <object class="sk.iway.iwcm.system.UpdateDBBean">
-                <void property="author"><string>lbalat</string></void>
-                <void property="date"><string>03.09.2026</string></void>
-                <void property="desc"><string>seo_bots - add unique index on name</string></void>
-                <void property="mysql"><string>CREATE UNIQUE INDEX ix_seo_bots_name ON seo_bots (name)</string></void>
-                <void property="mssql"><string>CREATE UNIQUE INDEX ix_seo_bots_name ON seo_bots (name)</string></void>
-                <void property="oracle"><string>CREATE UNIQUE INDEX ix_seo_bots_name ON seo_bots (name)</string></void>
-                <void property="pgsql"><string>CREATE UNIQUE INDEX ix_seo_bots_name ON seo_bots (name)</string></void>
-            </object>
-        </void>
-
     </object>
 </java>
