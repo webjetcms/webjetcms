@@ -41,13 +41,23 @@ public class PasteCommandExecutor extends AbstractJsonCommandExecutor
 		//skontrolujem prava na zapis do cieloveho adresara
 		Prop prop = Prop.getInstance(request);
 		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();
-		if (user!=null && UsersDB.isFolderWritable(user.getWritableFolders(), fdst.getPath()))
+		if (user!=null && fdst.isWritable(fdst) && UsersDB.isFolderWritable(user.getWritableFolders(), fdst.getPath()))
 		{
 			for (String target : targets)
 			{
 				FsItemEx ftgt = super.findItem(fsService, target);
+				if (cut && !ftgt.isWritable(ftgt))
+				{
+					json.put("error", prop.getText("components.elfinder.commands.paste.cut.error", ftgt.getParent().getPath()));
+					continue;
+				}
 				String name = ftgt.getName();
 				FsItemEx newFile = new FsItemEx(fdst, name);
+				if (!newFile.isWritable(newFile))
+				{
+					json.put("error", prop.getText("components.elfinder.commands.paste.error", fdst.getPath()));
+					continue;
+				}
 
 				//JEEFF: upravene pre podporu nasho DocGroup
 				if (ftgt.getVolumeId().equals(IwcmDocGroupFsVolume.VOLUME_ID))
@@ -59,7 +69,7 @@ public class PasteCommandExecutor extends AbstractJsonCommandExecutor
 					super.createAndCopy(ftgt, newFile, request);
 					if (cut)
 					{
-						if (UsersDB.isFolderWritable(user.getWritableFolders(), ftgt.getParent().getPath()))
+						if (ftgt.isWritable(ftgt) && UsersDB.isFolderWritable(user.getWritableFolders(), ftgt.getParent().getPath()))
 						{
 							//#20481 - po vystrihnuti/premenovani vytvori redirect
 							if(isAllowedFolder(ftgt.getPath(), Constants.getString("elfinderRedirectFolders")))

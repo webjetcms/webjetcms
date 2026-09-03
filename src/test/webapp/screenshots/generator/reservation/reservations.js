@@ -35,7 +35,7 @@ Scenario('reservation screens', async ({ I, DT, DTE, Document }) => {
     Document.screenshot("/redactor/apps/reservation/reservations/reservation-datatable.png");
 
     I.clickCss("button.buttons-create");
-    I.dtWaitForEditor("reservationDataTable");
+    DTE.waitForEditor("reservationDataTable");
 
 
     setReservation(I, reservationObjectNameA, "01.01.2050", "01.01.2050", "08:00", "16:00");

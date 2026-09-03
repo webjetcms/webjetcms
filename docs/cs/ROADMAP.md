@@ -108,7 +108,8 @@ Vysvětlení použitých piktogramů:
 - [x] +Zrcadlení struktury - přidat možnost vymazat `sync_id` hodnoty pro zvolenou složku (rekurzivní). Aby bylo snadno možné zrušit/resetovat synchronizaci. Také existuje problém, že naklonuji `SK,DE,EN` poté vypnu `DE` a chci mít jen `EN` ale zrcadlení stále aplikuje změny i na `DE` složku (#57561).
 - [ ] +Do testů v GitHube přidat verifikaci `autoupdate` pro všechny podporované databázové servery - čili inicializovat prázdnou databázi a ověřit všechny `autoupdate` a ověřit, že přejdou bez chyby. Udělat jako samostatnou pipeline.
 - [x] Galerie - umožnit změnu cesty galerie (složky) a nastavit vše s tím spojené (#58433).
-- [ ] +Konfigurace - doplnit sloupec skupina s hodnotou `modules` konfigurační proměnné (výběrové pole, může mít více hodnot). Doplnit možnost zobrazit i nenastavené proměnné (neboli kompletní seznam). Vytvořit nástroj pro vygenerování všech proměnných podle skupin/modulů do `md` souboru v dokumentaci pro přehled všech proměnných.
+- [x] +Konfigurace - doplnit hierarchický strom modulů a možnost zobrazit i nenastavené proměnné (kompletní seznam).
+- [ ] +Konfigurace - vytvořit nástroj pro vygenerování všech proměnných podle skupin/modulů do `md` souboru v dokumentaci.
 - [x] +Pokud mám neuloženou stránku s titulkem Úklid a už existuje jiná stránka s názvem Úklid, tak nově nahrané obrázky se před jejím uložením nahrají do složky `upratovanie`. Ale když se stránka uloží, získá URL adresu úklid-2.html a další obrázky se již nahrají do složky `upratovanie-2`. Je třeba upravit kód v `getPageUploadSubDir` tak, aby místo přímého použití titulku stránky zkusil získat URL adresu pro novou stránku a to pak použil (#58361).
 - [x] +HTTP hlavičky - rozšířit maximální velikost hodnoty HTTP hlavičky na více než 255 znaků, pro `Content-Security-Policy` je to nedostatečná velikost (#PR83, #58129).
 - [x] +Integrace AI nástrojů, pomocníků, asistentů (#57997).

@@ -280,6 +280,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 		DocDB docDB = DocDB.getInstance();
 
         E lastOne = formsRepository.findTopByFormNameAndDomainIdAndCreateDateNotNullOrderByCreateDateDesc(formName, domainId);
+		if (lastOne == null) return false;
 
         return isFormAccessible(lastOne, userEditableGroups, userEditablePages, docDB);
     }

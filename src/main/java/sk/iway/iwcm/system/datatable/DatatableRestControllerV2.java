@@ -42,6 +42,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.ClassUtils;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
@@ -55,6 +56,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Query;
 import jakarta.persistence.Table;
@@ -83,6 +86,7 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.ConstantsV9;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.events.DatatableEvent;
@@ -165,6 +169,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 	 * @return
 	 */
 	public T insertItem(T entity) {
+		prepareEntityForCreate(entity);
 		//musime z editoFields najskor prepisat hodnoty do entity
 		T processed = processToEntity(entity, ProcessItemAction.CREATE);
 		//ulozime
@@ -288,6 +293,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 			} catch (Exception ex) {
 				//failsafe
 			}
+			checkItemPermsThrows(entity, -1L);
 			T processed = insertItem(entity);
 			afterSave(entity, processed);
 			if (processed != null) new DatatableEvent<>(processed, DatatableEventType.AFTER_SAVE, entity).publishEvent();
@@ -1673,6 +1679,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 	@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
 	@PostMapping("/add")
 	public ResponseEntity<T> add(@Valid @RequestBody T entity) {
+		prepareEntityForCreate(entity);
 		beforeSave(entity);
 		if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
 
@@ -1700,6 +1707,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 	@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
 	@PostMapping("/edit/{id}")
 	public ResponseEntity<T> edit(@PathVariable("id") long id, @Valid @RequestBody T entity) {
+		prepareEntityIdForUpdate(entity, id);
 		beforeSave(entity);
 		if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
 
@@ -1721,6 +1729,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 	public ResponseEntity<Map<String, Object>> delete(@PathVariable("id") long id, @RequestBody T entity) {
 		clearThreadData();
 		Map<String, Object> result = new HashMap<>();
+		prepareEntityIdForUpdate(entity, id);
 		checkItemPermsThrows(entity, id);
 
 		boolean deleted = false;
@@ -1760,6 +1769,18 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 
 
 	/**
+	 * Checks whether all entities in a row-reorder request belong to the controller-specific scope.
+	 * Override this hook when the table is scoped by request parameters in addition to domain ID.
+	 *
+	 * @param request current HTTP request
+	 * @param entities complete batch of entities requested for reordering
+	 * @return true if the complete batch is within the allowed scope
+	 */
+	protected boolean checkRowReorderScope(HttpServletRequest request, List<T> entities) {
+		return true;
+	}
+
+	/**
 	 * Reorder rows based on RowReorderDto input.
 	 * @param request
 	 * @param rowReorderDto
@@ -1768,20 +1789,52 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 	@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
 	@PostMapping(value = "/row-reorder", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Boolean> rowReorder(HttpServletRequest request, @RequestBody RowReorderDto rowReorderDto) {
-		boolean allGood = true;
-
-		List<T> entities = new ArrayList<>();
+		List<Long> requestedIds;
+		List<T> entities;
 		try {
-			entities = this.repo.findAllById( rowReorderDto.getIds() );
+			// Reject an empty request, null IDs and duplicate IDs before accessing the database.
+			requestedIds = rowReorderDto.getIds();
+			if (requestedIds.isEmpty() || requestedIds.contains(null) || new HashSet<>(requestedIds).size() != requestedIds.size()) {
+				return ResponseEntity.ok(false);
+			}
+
+			// Load only the rows explicitly named in the request and, when enabled, only from the current domain.
+			if (checkDomainId) {
+				DomainIdRepository<T, ID> domainRepo = getDomainRepo();
+				if (domainRepo == null) return ResponseEntity.ok(false);
+				entities = domainRepo.findAllByIdInAndDomainId(requestedIds, CloudToolsForCore.getDomainId());
+			} else {
+				entities = this.repo.findAllById(requestedIds);
+			}
 		} catch (Exception e) {
 			Logger.error(DatatableRestControllerV2.class, "Error fetching entities for row reorder", e);
 			return ResponseEntity.ok(false);
 		}
 
-		// Loop through entities and set new value to the column specified by dataSrc
+		// Repository bulk lookups silently omit unknown or out-of-domain IDs. The operation must be all-or-nothing.
+		if (entities.size() != requestedIds.size()) {
+			Logger.debug(DatatableRestControllerV2.class, "Not all requested entities were found for row reorder");
+			return ResponseEntity.ok(false);
+		}
+
+		// Apply controller-specific list scope to the complete batch before validating or modifying any entity.
+		if (checkRowReorderScope(request, entities) == false) {
+			Logger.debug(DatatableRestControllerV2.class, "Requested entities are outside of the allowed row reorder scope");
+			return ResponseEntity.ok(false);
+		}
+
+		// dataSrc is controlled by the client, so it must never be used before it passes the annotation allowlist below.
+		String dataSrc = rowReorderDto.getDataSrc();
+		Set<Long> foundIds = new HashSet<>();
+		// Values are collected in repository order and applied only after every row passes all validation checks.
+		List<Integer> newValues = new ArrayList<>();
+
+		// Validate the whole request and verify permissions before modifying any entity.
 		for (T entity : entities) {
 			try {
 				BeanWrapperImpl beanWrapper = new BeanWrapperImpl(entity);
+
+				// Resolve the stored row ID and find its requested new ordering value.
 				String idColumnName = getIdColumnName(entity);
 
 				// Get entity ID using id column name
@@ -1790,23 +1843,81 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 				// Get new value for this entity
 				Integer newValue = rowReorderDto.getNewValueById(entityId);
 
-				if(newValue == null) {
-					allGood = false;
-					Logger.error(DatatableRestControllerV2.class, "Error updating row order, entity missing new value for entity ID: " + entityId);
-					break;
+				// Every loaded row must correspond to one unique request item.
+				if (entityId == null || requestedIds.contains(entityId) == false || foundIds.add(entityId) == false) {
+					Logger.debug(DatatableRestControllerV2.class, "Invalid row reorder request for entity ID: " + entityId);
+					return ResponseEntity.ok(false);
 				}
 
-				// Use BeanWrapperImpl to set the property value
-				beanWrapper.setPropertyValue(rowReorderDto.getDataSrc(), newValue);
+				// Only a field explicitly annotated as ROW_REORDER may be changed.
+				if (newValue == null || isRowReorderColumnAllowed(entity, dataSrc) == false) {
+					Logger.debug(DatatableRestControllerV2.class, "Invalid row reorder request for entity ID: " + entityId);
+					return ResponseEntity.ok(false);
+				}
+
+				// ROW_REORDER accepts integer values, therefore the target property must be writable and numeric.
+				Class<?> propertyType = beanWrapper.getPropertyType(dataSrc);
+				if (beanWrapper.isWritableProperty(dataSrc) == false || propertyType == null ||
+					Number.class.isAssignableFrom(ClassUtils.resolvePrimitiveIfNecessary(propertyType)) == false) {
+					Logger.debug(DatatableRestControllerV2.class, "Invalid row reorder request for entity ID: " + entityId);
+					return ResponseEntity.ok(false);
+				}
+
+				// Apply controller-specific row permissions, for example the admin/public user separation.
+				checkItemPermsThrows(entity, entityId);
+				newValues.add(newValue);
+			} catch (ConstraintViolationException e) {
+				throw e;
 			} catch (Exception e) {
-				Logger.error(DatatableRestControllerV2.class, "Error updating row order for entity: " + entity, e);
-				allGood = false;
+				Logger.error(DatatableRestControllerV2.class, "Error validating row reorder entity: " + entity, e);
+				return ResponseEntity.ok(false);
 			}
 		}
 
+		if (foundIds.size() != requestedIds.size()) return ResponseEntity.ok(false);
+
+		// No entity is changed before all rows, values, target fields and permissions have been validated.
+		for (int i = 0; i < entities.size(); i++) {
+			T entity = entities.get(i);
+			try {
+				BeanWrapperImpl beanWrapper = new BeanWrapperImpl(entity);
+				beanWrapper.setPropertyValue(dataSrc, newValues.get(i));
+			} catch (Exception e) {
+				Logger.error(DatatableRestControllerV2.class, "Error updating row order for entity: " + entity, e);
+				return ResponseEntity.ok(false);
+			}
+		}
+
+		// Persist only a fully validated and successfully modified batch.
 		this.repo.saveAll(entities);
 
-		return ResponseEntity.ok(allGood);
+		return ResponseEntity.ok(true);
+	}
+
+	/**
+	 * Checks whether a client-provided dataSrc is the exact name of a safe row-order field.
+	 * Primary keys and domainId are never writable through this endpoint, even if annotated incorrectly.
+	 */
+	private boolean isRowReorderColumnAllowed(T entity, String dataSrc) {
+		if (entity == null || Tools.isEmpty(dataSrc) || "id".equals(dataSrc) || "domainId".equals(dataSrc)) return false;
+
+		try {
+			// Search the complete class hierarchy because DataTable entities may inherit their fields.
+			Field field = getDeclaredFiledRecursive(entity.getClass(), dataSrc);
+			if (field.isAnnotationPresent(Id.class) || field.isAnnotationPresent(EmbeddedId.class)) return false;
+
+			DataTableColumn annotation = field.getAnnotation(DataTableColumn.class);
+			if (annotation == null) return false;
+
+			// inputType is an array, so ROW_REORDER may not necessarily be its first item.
+			for (DataTableColumnType inputType : annotation.inputType()) {
+				if (inputType == DataTableColumnType.ROW_REORDER) return true;
+			}
+		} catch (NoSuchFieldException e) {
+			return false;
+		}
+
+		return false;
 	}
 
 	public JpaRepository<T, Long> getRepo() {
@@ -2249,6 +2360,10 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 	protected void copyEntityIntoOriginal(T entity, T one) {
 		List<String> alwaysCopyProperties = new ArrayList<>();
 		List<String> ignoreProperties = new ArrayList<>();
+		List<String> identifierProperties = new ArrayList<>();
+		for (Field field : getIdentifierFields(entity.getClass())) {
+			identifierProperties.add(field.getName());
+		}
 
 		Field[] declaredFields = AuditEntityListener.getDeclaredFieldsTwoLevels(entity.getClass());
 		for (Field field : declaredFields) {
@@ -2296,7 +2411,95 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 			}
 		}
 
+		alwaysCopyProperties.removeAll(identifierProperties);
+		ignoreProperties.addAll(identifierProperties);
 		NullAwareBeanUtils.copyProperties(entity, one, alwaysCopyProperties, ignoreProperties.toArray(new String[0]));
+	}
+
+	/**
+	 * Override only for a legacy create endpoint that intentionally uses a generated ID as an update target.
+	 */
+	protected boolean allowGeneratedIdOnCreate(T entity) {
+		return false;
+	}
+
+	private void prepareEntityForCreate(T entity) {
+		if (allowGeneratedIdOnCreate(entity)==false) clearGeneratedEntityId(entity);
+	}
+
+	/**
+	 * A create request must never turn into an update just because the client sent a generated ID.
+	 * Assigned IDs are intentionally preserved for backwards compatibility.
+	 */
+	private void clearGeneratedEntityId(T entity) {
+		if (entity == null) return;
+
+		BeanWrapperImpl beanWrapper = new BeanWrapperImpl(entity);
+		for (Field field : getIdentifierFields(entity.getClass())) {
+			if (field.isAnnotationPresent(GeneratedValue.class)==false) continue;
+
+			try {
+				Object value = beanWrapper.getPropertyValue(field.getName());
+				if (value == null) continue;
+				beanWrapper.setPropertyValue(field.getName(), field.getType().isPrimitive() ? Integer.valueOf(0) : null);
+			} catch (RuntimeException ex) {
+				Logger.error(DatatableRestControllerV2.class, "Unable to clear generated ID field: " + field.getName(), ex);
+				throwConstraintViolation("datatables.error.recordIsNotEditable");
+			}
+		}
+	}
+
+	/**
+	 * Makes the URL ID authoritative before permissions and controller hooks are executed.
+	 * Missing IDs are filled for compatibility with older partial payloads; a different positive
+	 * ID is always rejected. Imports may intentionally use a non-positive ID to turn update into create.
+	 */
+	private void prepareEntityIdForUpdate(T entity, long pathId) {
+		if (entity == null) return;
+
+		List<Field> identifierFields = getIdentifierFields(entity.getClass());
+		if (identifierFields.size() != 1 || identifierFields.get(0).isAnnotationPresent(EmbeddedId.class)) return;
+
+		Field field = identifierFields.get(0);
+		BeanWrapperImpl beanWrapper = new BeanWrapperImpl(entity);
+		try {
+			Object value = beanWrapper.getPropertyValue(field.getName());
+			if (value instanceof Number) {
+				long entityId = ((Number)value).longValue();
+				if (entityId > 0 && entityId != pathId) {
+					throwConstraintViolation("datatables.error.recordIsNotEditable");
+				}
+				if (entityId > 0 || isImporting()) return;
+			} else if (value != null) {
+				throwConstraintViolation("datatables.error.recordIsNotEditable");
+			} else if (isImporting()) {
+				return;
+			}
+
+			beanWrapper.setPropertyValue(field.getName(), Long.valueOf(pathId));
+			Object normalizedId = beanWrapper.getPropertyValue(field.getName());
+			if (normalizedId instanceof Number == false || ((Number)normalizedId).longValue() != pathId) {
+				throwConstraintViolation("datatables.error.recordIsNotEditable");
+			}
+		} catch (ConstraintViolationException ex) {
+			throw ex;
+		} catch (RuntimeException ex) {
+			Logger.error(DatatableRestControllerV2.class, "Unable to validate ID field: " + field.getName(), ex);
+			throwConstraintViolation("datatables.error.recordIsNotEditable");
+		}
+	}
+
+	private static List<Field> getIdentifierFields(Class<?> initialClass) {
+		List<Field> fields = new ArrayList<>();
+		Class<?> targetClass = initialClass;
+		int failsafe = 0;
+		while (targetClass != null && failsafe++ < 15) {
+			for (Field field : targetClass.getDeclaredFields()) {
+				if (field.isAnnotationPresent(Id.class) || field.isAnnotationPresent(EmbeddedId.class)) fields.add(field);
+			}
+			targetClass = targetClass.getSuperclass();
+		}
+		return fields;
 	}
 
 	public void setValidator(Validator validator) {

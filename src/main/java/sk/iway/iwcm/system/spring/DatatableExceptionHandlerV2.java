@@ -139,26 +139,9 @@ public class DatatableExceptionHandlerV2
 			}
 
 			response.setFieldErrors(errorsList);
-		} else if (ex instanceof TransactionSystemException) {
-			String err = ex.getMessage();
-			try {
-				if (err != null) {
-					int start = err.indexOf("Duplicate entry");
-					if (start > 0) {
-						int end = err.indexOf("Error Code", start);
-						if (end > start) err = err.substring(start, end).trim();
-					}
-				}
-			} catch (Exception e) {
-				//failsafe
-			}
-			response.setError(err);
-			String message = ex.getMessage();
-			if (message != null && message.contains("Could not commit JPA transaction")) Logger.error(DatatableExceptionHandlerV2.class, "TransactionSystemException: " + ex.getMessage(), ex);
-			else Logger.error(DatatableExceptionHandlerV2.class, "TransactionSystemException: " + ex.getMessage());
 		} else {
-			response.setError(ex.getMessage());
-			Logger.error(DatatableExceptionHandlerV2.class, "TransactionSystemException, exception: " + ex.getMessage(), ex);
+			response.setError(getTransactionErrorMessage(ex));
+			Logger.error(DatatableExceptionHandlerV2.class, "TransactionSystemException: " + ex.getMessage());
 		}
 
 		if (Tools.isEmpty(response.getError())) {
@@ -167,6 +150,24 @@ public class DatatableExceptionHandlerV2
 		}
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	private String getTransactionErrorMessage(TransactionSystemException ex) {
+		Throwable cause = ex;
+		while (cause != null) {
+			String message = cause.getMessage();
+			if (message != null) {
+				int start = message.indexOf("Duplicate entry");
+				if (start >= 0) {
+					int end = message.indexOf("Error Code", start);
+					if (end < 0) end = message.length();
+					return message.substring(start, end).trim();
+				}
+			}
+			cause = cause.getCause();
+		}
+
+		return ex.getMessage();
 	}
 
 	@ExceptionHandler(EditorException.class)

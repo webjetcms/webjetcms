@@ -36,7 +36,7 @@ public class RmCommandExecutor extends AbstractJsonCommandExecutor
 			FsItemEx ftgt = super.findItem(fsService, target);
 			boolean deleted = false;
 			boolean isFolder = ftgt.isFolder();
-			if (user!=null && UsersDB.isFolderWritable(user.getWritableFolders(), ftgt.getParent().getPath()))
+			if (user!=null && ftgt.isWritable(ftgt) && UsersDB.isFolderWritable(user.getWritableFolders(), ftgt.getParent().getPath()))
 			{
 				deleted = ftgt.delete();
 				if (deleted)

@@ -51,6 +51,12 @@
             }
         }
     }
+    /* disable lock icon, we are using elfinder-perms to show lock icon */
+    .elfinder-cwd-file-wrapper {
+        .elfinder-lock {
+            display: none !important;
+        }
+    }
 }
 
 .elfinder-cwd-wrapper {

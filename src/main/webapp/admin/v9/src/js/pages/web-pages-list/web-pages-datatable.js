@@ -553,6 +553,10 @@ export class WebPagesDatatable {
                     }
                 });
                 $("#DTE_Field_title").on("blur", function() {
+                    if ($("#DTE_Field_title").val()=="") {
+                        $("#DTE_Field_title").val(newPageTitle);
+                    }
+
                     if ($("#DTE_Field_navbar").val()=="" || $("#DTE_Field_navbar").val()==newPageTitle) {
                         if ($("#DTE_Field_navbar").val()==newPageTitle) {
                             //zresetuj aj URL, aby sa znova vygenerovalo
@@ -607,6 +611,9 @@ export class WebPagesDatatable {
                         //je to nova stranka, prepni sa na kartu Zakladne
                         setTimeout(()=> {
                             $("#pills-dt-"+self.webpagesDatatable.DATA.id+"-basic-tab").trigger("click");
+                            setTimeout(()=> {
+                                $("#"+self.webpagesDatatable.DATA.id+"_modal #DTE_Field_title").focus();
+                            }, 200);
                         }, 700);
                     }
                 }

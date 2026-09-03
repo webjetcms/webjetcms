@@ -33,8 +33,11 @@ public class ConfDetailsDto extends ConfDetails {
     /** Current value rendered in the table while the inherited value remains suitable for editing. */
     private String displayValue;
 
-    /** Indicates that the current node value differs from the value stored in the database. */
+    /** Indicates that the current node value differs from its stored or default value. */
     private boolean runtimeValueDifferent;
+
+    /** Indicates that the configuration value has an override stored in the database. */
+    private boolean databaseValuePresent;
 
 	@DataTableColumn(
         inputType = DataTableColumnType.TEXT,

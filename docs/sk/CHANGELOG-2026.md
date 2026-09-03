@@ -8,6 +8,8 @@
 
 - Z administrácie bola odstránená závislosť na knižnici [Vue.js](https://vuejs.org). Pred aktualizáciou odporúčame overiť kompatibilitu vlastných aplikácií. Veľkosť JavaScript súborov sa zmenšila o cca 170kB, čo má dopad aj na rýchlosť inicializácie administrácie. Viac v [sekcii pre programátora](#pre-programátora).
 - AspectJ - z distribúcie bola odstránená podpora `load-time weavingu` (`aspectjweaver` a `META-INF/aop-ajc.xml`); vstavané aspekty sa spracujú už pri kompilácii, viac v [sekcii pre programátora](#pre-programátora). Pri použití v MultiWeb inštalácii môžete odstrániť `-javaagent:/www/tomcat/.../aspectjweaver.jar` nastavenie z `JAVA_OPTS` v aplikačnom serveri (#290).
+- Export obsahu pre Flash - odstránená bola historická funkcia generovania XML súborov `/flash_xml/{docId}.xml` pri publikovaní stránky. Konfiguračná premenná `exportFlash` už nie je podporovaná a jej definovanie v `SpringConfig` funkciu neobnoví (#293).
+- Microsoft SQL Server - ukončená bola podpora verzií starších ako 2012 a odstránená konfiguračná premenná `mssqlUseOldTopQuery`. WebJET CMS vyžaduje Microsoft SQL Server 2012 alebo novší, starý spôsob stránkovania pomocou `TOP` už nie je podporovaný (#293).
 
 ### Webové stránky
 
@@ -36,6 +38,8 @@
 - V dialógu vkladania odkazu pridaná karta [Manažér dokumentov](redactor/files/file-archive/README.md) pre jednoduché vkladanie odkazov na súbory v manažérovi dokumentov, nahrávanie nových súborov a ich správu. Viac sa dozviete v časti [Odkazy na súbory a nahrávanie súborov](redactor/webpages/working-in-editor/README.md#odkazy-na-súbory-a-nahrávanie-súborov) (#58593).
 
 ![](redactor/webpages/working-in-editor/link_dialog-file-archive.png)
+
+- Súbory Manažéra dokumentov v priečinku `/files/archiv` sú v dialógoch vkladania odkazu a obrázka dostupné iba na zobrazenie a výber. Nahrávanie, premenovanie, mazanie a ostatné úpravy je možné vykonať len cez [Manažér dokumentov](redactor/files/file-archive/README.md).
 
 - [Fotobanka](redactor/webpages/working-in-editor/README.md#karta-fotobanka) - pri sťahovaní obrázka z fotobanky je možné nastaviť názov súboru. Názov sa automaticky predvyplní a očistí, prípona sa určí podľa zdrojového obrázka a existujúci súbor sa neprepíše. Pridaná aj podpora výberu typu a kategórie obrázku a možnosť hľadať video súbory (#58645).
 
@@ -140,6 +144,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Iné menšie zmeny
 
+- Konfigurácia - pridaný hierarchický strom konfiguračných premenných s pohľadmi **Zmenené**, **Zákaznícke**, **Všetky** a modulovými vetvami (#293).
 - Konfigurácia - pridaná možnosť **Nastaviť dočasne**, ktorá nastaví hodnotu konfiguračnej premennej len na aktuálnom uzle bez uloženia do databázy. Po reštarte sa obnoví hodnota uložená v databáze (#291).
 
 ![](admin/setup/configuration/page.png)
@@ -209,6 +214,104 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Aktualizovaná knižnica [Tabler Icons](https://tabler.io/icons) na verziu 3.44.0, vyriešený problém so súčasným používaním `Outline` a `Filled` sád (#58509).
 - Web stránky - ak potrebujete mať prázdny prvý riadok v konfiguračnej premennej `imageMagickCustomParams*` pre [nastavenie vlastných parametrov](redactor/apps/gallery/README.md#vlastné-parametre-imagemagick) `ImageMagick` zadajte hodnotu `---`.
 - Prekladové kľúče - upravené auditovanie chýbajúcich prekladových kľúčov - vylúčené auditovanie ak sa neskôr testuje, či kľúč skutočne existuje (#261).
+
+- Konfigurácia - z tried `Constants` a `ConstantsV9` boli odstránené zastarané konfiguračné premenné. Ak ich vo svojom projekte používate môžete si do vášho `SpringConfig` pridať potrebnú definíciu:
+
+```java
+		setString("smsSendCmd", "", MOD_SMS,
+				"Format pre odosielanie SMS, pre Orange:email e2sms@e2sms.orange.sk smtp.iway.sk tomas.kosec@interway.sk, pre T-Mobile:email sms.eurotel.sk obsidian.interway.sk");
+		setString("smsSendInternational", "", MOD_SMS, "Format cisla pre SMS, moze mat hodnoty ++42, +42, 42");
+		setInt("smsSendMaxlength", 140, MOD_SMS, "maximalna dlzka SMS spravy");
+		setString("syncRemoteServer", "", "sync", "Adresa servera, s ktorym sa tento synchronizuje");
+		setString("multilang", "", MOD_CONFIG, "overwrite string na ziskanie moznych hodnot MultilangDB");
+		setBoolean("editorEnableXHTML", true, MOD_OBSOLETE, "xhtml mode for Struts framework");
+		setBoolean("usrLogonRequireSMS", false, "user;security",
+				"ak je true, tak prihlasenie na stranke vyzaduje SMS autorizaciu, vyzaduje nastavenie modulu SMS");
+		setString("fbrowserFileEditor", "editarea", MOD_OBSOLETE, "typ editora suborov - normal, alebo editarea");
+		setString("chartColors", "#5C5CF7,#F75C5C,#5CF75C,#FFC165,#E463E4,#A13600,#55FFFF,#FFAFAF,#B10505,#065BD8",
+				"stat;config", "farby ciar a textov pre grafy statistiky (Open Flash Chart)");
+		setString("mapGoogleLicense", "", "map", "predvoleny licencny kluc pre google mapy");
+		setBoolean("magzillaChangeEmailRecipients", true, MOD_MAGZILLA,
+				"flag ci sa v magzille pri commente k bugu zobrazi moznost zmenit komu sa posle email, alebo sa nezobrazi a maily sa poslu podla default nastaveni");
+		setString("magzilla_mail_sufix", "interway.sk", MOD_MAGZILLA, "suffix emailu pre komunikaciu s magzillou");
+		setString("magzilla_web", "", MOD_MAGZILLA,
+				"base URL adresa pre magzilla stranky (napr. http://www.interway.sk/helpdesk)");
+		setString("magzilla_attachments_dir", "/files/helpdesk/", MOD_MAGZILLA, "adresar pre prilohy magzilly");
+		setString("mgz_mailbox", "INBOX", MOD_MAGZILLA, "udaje pre mail parser helpdesku - priecinok s inboxom");
+		setString("mgz_user_name", "", MOD_MAGZILLA, "udaje pre mail parser helpdesku - prihlasovacie meno");
+		setString("mgz_host", "", MOD_MAGZILLA, "udaje pre mail parser helpdesku - adresa POP3 servera");
+		setInt("mgz_port", -1, MOD_MAGZILLA, "udaje pre mail parser helpdesku - port POP3 servera");
+		setBoolean("mgz_use_ssl", false, MOD_MAGZILLA,
+				"udaje pre mail parser helpdesku - pouzitie SSL pri pristupe k POP3 serveru");
+		setString("mgz_password", "", MOD_MAGZILLA, "udaje pre mail parser helpdesku - heslo");
+		setString("mgz_client_type", "pop3", MOD_MAGZILLA, "udaje pre mail parser helpdesku - typ pripojenia");
+		setString("mgz_strings",
+				"__________ Informacia od ESET NOD32 Antivirus|--\nS pozdravom|<br>--\n<br>|<pre class=\"moz-signature\"|<p class=MsoAutoSig>",
+				MOD_MAGZILLA, "zoznam retazcov oddelenych znakom | za ktorymi sa povazuje sprava za ukoncenu");
+		setString("mgz_subjects", "Re:|Fwd:|FW:", MOD_MAGZILLA, "prefixy, ktore sa odstranuje z predmetu spravy");
+		setString("mgzManagerGroupName", "Prava-manazeri", MOD_MAGZILLA, "Nazov hlavnej skupiny manazerov");
+		setString("mgzClientGroupName", "HD Klienti", MOD_MAGZILLA, "Nazov hlavnej skupiny klientov");
+		setString("mgzSolverGroupName", "Prava-solveri", MOD_MAGZILLA, "Nazov hlavnej skupiny solverov");
+		setString("mgzTesterGroupName", "Prava-testeri", MOD_MAGZILLA, "Nazov hlavnej skupiny testerov");
+		setString("mgzManagerBugViews", "managerAllBugs,managerWaitingBugs,allNewBugs,allBugs,notSolvedBugs,solvedBugs",
+				MOD_MAGZILLA,
+				"predvolene pohlady bugov generovane do selectBoxu v MagZille pri parametri allowBugs=all, generuju sa do selectBoxu podla poradia - pre manazera");
+		setString("mgzClientBugViews", "clientAllBugs,clientWaitingBugs,clientSolvedBugs", MOD_MAGZILLA,
+				"predvolene pohlady bugov generovane do selectBoxu v MagZille pri parametri allowBugs=all, generuju sa do selectBoxu podla poradia -  pre klienta");
+		setString("mgzSolverBugViews", "assignedSolverBugs,allNewBugs,notSolvedBugs,solvedBugs", MOD_MAGZILLA,
+				"predvolene pohlady bugov generovane do selectBoxu v MagZille pri parametri allowBugs=all, generuju sa do selectBoxu podla poradia - pre solvera");
+		setString("mgzTesterBugViews", "assignedTesterBugs,newTesterBugs,allTesterBugs,notSolvedBugs,solvedBugs",
+				MOD_MAGZILLA,
+				"predvolene pohlady bugov generovane do selectBoxu v MagZille pri parametri allowBugs=all, generuju sa do selectBoxu podla poradia - pre testera");
+		setString("microsite_web", "", MOD_MICROSITE,
+				"base URL adresa pre microsite stranky (napr. http://www.interway.sk/microsite)");
+		setInt("KurzyDBCacheInMinutes", 60, "kurzy;performance", "default nastavenie poctu minut, pre KurzyDB");
+		setBoolean("magmaSaveAttendance", false, "magma",
+				"Nastavenim na true sa bude zaznamenavat prihlasenie pouzivatela do prace");
+		setString("magma_defaultApproverEmail", "", "magma",
+				"email adresa pre schvalovanie dovoleniek ak nie je nikto nastaveny");
+		setString("magma_holidaysApproveCC", "", "magma",
+				"CC email so spravou o schvaleni dovolenky (napr. email ekonomky)");
+		setString("magmaCalendarLoginEnabled", "", "magma",
+				"ciarkou oddeleny zoznam IP adries z ktorych sa zaznamena prichod a odchod do prace (aby sa nezaznamenal prichod do prace napr. z domu");
+		setString("usersPositionListReport", "", MOD_MAGZILLA,
+				"Pre helpdesk definuje zoznam pozicii zamestnanca, pre ktore sa budu generovat reporty. Jednotlive pozicie sa oddeluju znakom |.");
+		setString("magma_meetingUserGroup", "", "magma",
+				"Názov skupiny z ktorej sa budú zobrazovat pouzivatelia pri vytvarani schodzky");
+		setString("magzilla_private_web", "", MOD_MAGZILLA,
+				"interna base URL adresa pre magzilla stranky(napr. http://intra.iway.sk/helpdesk)");
+		setString("magzillaNotifyOnTicket", "", MOD_MAGZILLA,
+				"Zoznam bodkociarkou oddelenych zaznamov v tvare id ticketu:email napr. (5555:helpdesk@iway.sk;). Nasledne ak si pouzivatel prida ticket 5555 do kalendara, odosle sa mail na helpdesk@iway.sk");
+		setBoolean("webdavActive", false, "webdav", "Určuje či je prístup cez WebDav aktívny");
+		setString("webdavUrlPrefix", "webdav", "webdav", "Určuje prefix cez ktorý je WebDav pristupny napr 'webdav' ");
+		setString("webdavSharedDirectories", "/css/;/jscripts/;/files/;/images/", "webdav",
+				"Urcuje, ktore adresare su pristupne cez WebDav. Priklad : /images/;/files/;");
+		setString("mgzAutoreplyWords", "Out Of Office|Automatická odpoveď|AutoReply", MOD_MAGZILLA,
+				"Slovička, ktorými sa definujú autoreply maily v predmete správy. Takéto správy sa odstraňujú. Pokiaľ je hodnota prázdna, tak sa funkcia odstraňovania takýchto e-mailov vypne.");
+		setString("magzillaAutomaticChangeStatus", "RIESI SA,In progress", MOD_MAGZILLA,
+				"Automatická zmena statusu ticketu pri vytvorení nového záznamu do kalendára z prostredia helpdesk v intranete");
+		setBoolean("dragDropUploadEnabled", true, MOD_OBSOLETE,
+				"Povolenia Drag & Drop nahrávania súborov z desktopu do WebJETu vo FireFoxe");
+		setBoolean("googleDocsEnabled", false, "Googel Docs",
+				"Ak je nastavene na true, spristupni sa upload a otvorenie prilohy v ticketoch cez Google Docs.");
+		setString("googleDocsConsumerKey", "", "Googel Docs",
+				"Kluc pre domenu, cez ktoru sa bude ku Google Docs pristupovat. Ak je prazdne, Google Docs v tiketoch nie je pristupny.");
+		setString("googleDocsConsumerSecret", "", "Googel Docs",
+				"Secret pre domenu, cez ktoru sa bude ku Google Docs pristupovat. Ak je prazdne, Google Docs v tiketoch nie je pristupny.");
+		setString("mgzBugErrorStrings", "bug,chyba", MOD_MAGZILLA, " Vyhladavane texty pri nefakturovanom case");
+		setBoolean("zmluvyApprovEditChanges", false, "zmluvy",
+				"Pokial je nastavena hodnota na true, tak editovanu zmluvu bude treba opatovne schvalit na publikaciu. E-mail o zmene sa posle schvalovatelom ci je hodnota true alebo false.");
+		setBoolean("portalStartup", false, "portal", "Spustanie portalu pri starte WJ");
+		setString("AngularCDNVersion", "2.0.0-beta.0");
+		setBoolean("sassCompilerEnabled", false, MOD_CONFIG,
+				"nastavenim na true, sa zapne kompilacia sass a scss suborov");
+		setString("AngularCDNVersion", "", "angular", "Verzia angular.io ktora sa ma vlozit do stranky");
+		setString("emailAttachmentsPublisher.pop3.host", "", "emailAttachmentsPublisher", "adresa na pop3");
+		setString("emailAttachmentsPublisher.pop3.user", "", "emailAttachmentsPublisher", "pouzivatel na pop3");
+		setString("emailAttachmentsPublisher.pop3.password", "", "emailAttachmentsPublisher", "heslo na pop3");
+		setBoolean("zmluvyEnableVo", false, "zmluvy",
+				"Ak je nastavena na true, tak sa budu zobrazovat aj skupiny pre verejne obstaravanie.");
+```
 
 ## 2026.18
 
@@ -411,8 +514,13 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Galéria - v editore aplikácie sa medzi vizuálnymi štýlmi zobrazujú iba JSP súbory z priečinkov `/components/{INSTALL_NAME}/gallery` a `/components/gallery`, bez duplicitných položiek (#58317-16).
 - Vloženie HTML kódu - v náhľade aplikácie v editore webových stránok sa pre obsah tvorený iba elementmi `script` zobrazí zdrojový kód namiesto prázdneho obsahu (#OSK625).
 - Bezpečnosť - sprísnené overovanie odkazu na obnovu zabudnutého hesla. Overovací záznam sa kontroluje pre vybraný používateľský účet aj pri vlastnom spôsobe odosielania, rešpektuje časovú platnosť a po použití sa zneplatní pre všetky účty zahrnuté v žiadosti (#292).
+- Bezpečnosť - sprísnené overovanie oprávnení pri práci so záznamami v administrácii (#295).
 - Bezpečnosť - sprísnená kontrola práv na priečinok pri nahrávaní súboru do administrácie a jeho prepísaní ak súbor existuje.
+- Bezpečnosť - sprísnená kontrola oprávnení pri obnove historickej verzie súboru (#295).
+- Bezpečnosť - sprísnená kontrola oprávnení pri správe blogerov (#295).
 - Bezpečnosť - sprísnená validácia názvov databázových stĺpcov pri dynamickom usporiadaní a filtrovaní. **Upozornenie:** verejné API už v parametroch usporiadania nepodporujú vlastné SQL výrazy, používajú sa iba bezpečné názvy stĺpcov alebo dostupné pomenované konštanty (#294).
+- Bezpečnosť - [zabezpečený koncový bod `row-reorder`](developer/datatables/README.md#poradie-usporiadania-riadkov) dátových tabuliek. Povolené je meniť iba numerické pole označené `DataTableColumnType.ROW_REORDER`, pričom sa kontrolujú oprávnenia pre každý záznam aj dodatočný rozsah celej dávky pomocou `checkRowReorderScope`. Pri formulároch sa overuje príslušnosť k formuláru a kroku aj prístup používateľa; neplatná požiadavka sa neuloží (#295).
+- CKEditor - doplnená možnosť [konfigurovať pravidlá čistenia obsahu](frontend/setup/ckeditor.md#čistenie-html-kódu-pri-vložení-z-wordexcel) pri vložení z Word/Excel. **Upozornenie:** predvolené čistenie po novom odstraňuje aj atribút `nowrap` z buniek `TD` a CSS triedy s atribútmi `align` a `valign` z buniek `TH` (#300).
 
 ## 2026.0.28
 

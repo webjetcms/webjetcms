@@ -18,6 +18,8 @@ Návod na zriadenie novej inštalácie/čistej databázy pre nový projekt vo We
 - Funkčný DNS server.
 - Pre urýchlenie generovania náhľadových obrázkov odporúčame nainštalovanú knižnicu [ImageMagick](https://imagemagick.org/script/download.php).
 
+!>**Microsoft SQL Server:** podporovaná je verzia 2012 alebo novšia. Staršie verzie nie sú podporované.
+
 Pre inštalácie produktov ako je `NET, LMS, DSK` sú uvedené minimálne požiadavky vhodné pre inštalácie do 50 používateľov (súčasne pracujúcich 25). Pre vyšší počet používateľov je potrebné vhodne navýšiť pamäť RAM aj CPU - pre každých ďalších súčasne pracujúcich 50 používateľov +4GB pamäte a 1CPU. Pre viac ako 200 používateľov odporúčame clustrové riešenie.
 
 Pre inštalácie produktov ako je `NET, LMS, DSK` je na serveri potrebné povoliť `websocket` spojenie a inštalovať server [RabbitMQ](https://www.rabbitmq.com/).

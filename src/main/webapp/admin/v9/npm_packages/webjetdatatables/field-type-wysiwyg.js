@@ -1,8 +1,32 @@
 export function typeWysiwyg() {
 
     var DIRTY_CHECK_DELAY_MS = 5000;
+    var FOCUS_READY_TIMEOUT_MS = 10000;
+    var FOCUS_RETRY_DELAY_MS = 50;
+
     function getThisField(conf) { //NOSONAR
         return conf.EDITOR.field(conf.data);
+    }
+
+    /**
+     * Adds an asynchronous CKEditor write to the single readiness chain used by default focus.
+     * The DTE open lifecycle queues these writes before focusWhenReady reads the chain.
+     *
+     * @param {Object} conf DataTables Editor field configuration.
+     * @param {Promise} operation CKEditor operation that must finish before focus is safe.
+     * @returns {void}
+     */
+    function trackEditorOperation(conf, operation) {
+        conf.wjeditorReadyPromise = Promise.all([
+            conf.wjeditorReadyPromise,
+            operation
+        ]);
+    }
+
+    function wait(delay) {
+        return new Promise(resolve => {
+            setTimeout(resolve, delay);
+        });
     }
 
     return {
@@ -70,6 +94,10 @@ export function typeWysiwyg() {
             }
 
             conf.wjeditor = null;
+            let resolveInitialEditorReady;
+            conf.wjeditorReadyPromise = new Promise(resolve => {
+                resolveInitialEditorReady = resolve;
+            });
             EDITOR.on( 'open', function ( e, type ) {
                 //console.log("DT WYSIWYG Editor OPEN, e=", e, "type=", type);
 
@@ -102,9 +130,11 @@ export function typeWysiwyg() {
                                 //instancia ckeditora, potrebuju to rozne pluginy a podobne, takze zatial takto kvoli spatnej kompatibilite
                                 window.ckEditorInstance = conf.wjeditor.ckEditorInstance;
 
-                                conf.wjeditor.setJson(EDITOR.currentJson);
-                                //on first run call also setData to push HTML content after JSON is set (so there will be correct CSS styles allready set in editor)
-                                conf.wjeditor.setData(EDITOR.currentJson.data);
+                                // Set data after JSON on first initialization so CKEditor loads the correct page styles.
+                                resolveInitialEditorReady(Promise.all([
+                                    conf.wjeditor.setJson(EDITOR.currentJson),
+                                    conf.wjeditor.setData(EDITOR.currentJson.data)
+                                ]));
 
                                 //nastav otvorene docid do inputu
                                 if (typeof window.jsTreeDocumentOpener != "undefined" && typeof EDITOR.currentJson != "undefined" && EDITOR.currentJson != null) window.jsTreeDocumentOpener.setInputValue(EDITOR.currentJson.docId);
@@ -129,7 +159,7 @@ export function typeWysiwyg() {
                     $("div.modal.DTED > div.modal-dialog").addClass("modal-xl");
                 } else {
                     //console.log("Setting json, json=", EDITOR.currentJson);
-                    conf.wjeditor.setJson(EDITOR.currentJson);
+                    trackEditorOperation(conf, conf.wjeditor.setJson(EDITOR.currentJson));
 
                     //nastav otvorene docid do inputu
                     if (typeof window.jsTreeDocumentOpener != "undefined" && typeof EDITOR.currentJson != "undefined") window.jsTreeDocumentOpener.setInputValue(EDITOR.currentJson.docId);
@@ -231,7 +261,7 @@ export function typeWysiwyg() {
         set: function ( conf, val ) {
             //console.log("WYSIWYG set, val=", val, "conf=", conf, "wjeditor=", conf.wjeditor);
             if (conf.wjeditor != null) {
-                conf.wjeditor.setData(val);
+                trackEditorOperation(conf, conf.wjeditor.setData(val));
             }
             // set directly as value to not propagate change events
             conf._input.value = val;
@@ -280,9 +310,55 @@ export function typeWysiwyg() {
             }, DIRTY_CHECK_DELAY_MS);
         },
 
+        /**
+         * Focuses the editable CKEditor surface after initialization and pending data writes complete.
+         *
+         * @param {Object} conf DataTables Editor field configuration.
+         * @param {Function} [canFocus] Returns false when the dialog focus request is obsolete.
+         * @returns {Promise<boolean>} True when CKEditor received focus.
+         */
+        focusWhenReady: async function(conf, canFocus) {
+            const isCurrentFocusRequest = typeof canFocus === 'function' ? canFocus : () => true;
+            const deadline = Date.now() + FOCUS_READY_TIMEOUT_MS;
+
+            try {
+                const operationsReady = await Promise.race([
+                    conf.wjeditorReadyPromise.then(() => true),
+                    wait(FOCUS_READY_TIMEOUT_MS).then(() => false)
+                ]);
+                if (!operationsReady || !isCurrentFocusRequest()) return false;
+            } catch (error) {
+                console.error("Error preparing CKEditor for focus:", error);
+                return false;
+            }
+
+            while (isCurrentFocusRequest() && Date.now() < deadline) {
+                const wjeditor = conf.wjeditor;
+                const editor = wjeditor?.ckEditorInstance;
+
+                if (editor != null && typeof editor.isDestroyed === 'function' && editor.isDestroyed()) return false;
+                if (wjeditor?.editingMode === 'pageBuilder' || wjeditor?.editingMode === 'html') return false;
+
+                if (
+                    editor?.status === 'ready' &&
+                    editor.mode === 'wysiwyg' &&
+                    editor.container?.$ != null &&
+                    $(editor.container.$).is(':visible')
+                ) {
+                    editor.focus();
+                    await new Promise(resolve => requestAnimationFrame(resolve));
+                    if (isCurrentFocusRequest() && editor.focusManager?.hasFocus === true) return true;
+                }
+
+                await wait(Math.min(FOCUS_RETRY_DELAY_MS, Math.max(0, deadline - Date.now())));
+            }
+
+            return false;
+        },
+
         setJson: function(conf, json) {
             //console.log("field-type-wysiwyg setJson, json=", json, "conf=", conf);
-            conf.wjeditor.setJson(json);
+            trackEditorOperation(conf, conf.wjeditor.setJson(json));
         }
 
     }

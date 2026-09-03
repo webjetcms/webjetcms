@@ -1930,42 +1930,6 @@ public class Tools
 		return returnCode.toString();
 	}
 
-	public static String insertAngular2(HttpServletRequest request) {
-		return insertAngular2(request, true, true);
-	}
-
-	public static String insertAngular2(HttpServletRequest request, boolean minified, boolean insertBaseHref)
-	{
-		boolean alreadyInserted = Tools.getBooleanValue((String) request.getAttribute("angular2Inserted"), false);
-		request.setAttribute("angular2Inserted", "true");
-
-		if (!alreadyInserted)
-		{
-			StringBuilder htmlCode = new StringBuilder();
-
-			if (insertBaseHref) {
-				DocDetails docDetails = new RequestHelper(request).getDocument();
-				if (docDetails != null) {
-					htmlCode.append("<base href=\"").append(Tools.getBaseHref(request)).append(docDetails.getDocLink()).append("/\">");
-				}
-			}
-
-			String version = Constants.getString("AngularCDNVersion");
-
-			htmlCode.append("<script src=\"https://cdnjs.cloudflare.com/ajax/libs/angular.js/").append(version).append("/angular2-polyfills");
-
-			if (minified) {
-				htmlCode.append(".min");
-			}
-
-			htmlCode.append(".js\"></script>");
-
-			return htmlCode.toString();
-		}
-
-		return "";
-	}
-
 	public static String getDomainBaseHref(HttpServletRequest request) {
 
 		StringBuilder sb = new StringBuilder();

@@ -62,7 +62,7 @@ module.exports = {
       */
      save(name, waitForClose=false) {
           var prefixSelector = "div";
-          if (typeof name != "undefined") prefixSelector = "#" + name + "_modal";
+          if (typeof name != "undefined" && name != null) prefixSelector = "#" + name + "_modal";
 
           //ideme cez slector, pretoze to moze byt Pridat (novy zaznam) alebo Ulozit (existujuci)
           I.click({ css: prefixSelector + ".DTED.show div.DTE_Footer.modal-footer button.btn.btn-primary" });
@@ -112,13 +112,12 @@ module.exports = {
      },
 
      /**
-      * Waits for the editor modal to be visible
+      * Waits for the editor modal to be visible and its default focus to be set
       * @param {String} [name] - Optional modal name
       */
      waitForEditor(name) {
           if (typeof name == "undefined") { name = "datatableInit"; }
-          I.waitForVisible("#" + name + "_modal", 200);
-          I.wait(0.2);
+          I.waitForVisible("#" + name + "_modal.DTED.show[data-dte-focus-state='ready']", 200);
      },
 
      /**

@@ -345,8 +345,7 @@ module.exports = function () {
 
     dtWaitForEditor(name) {
       if (typeof name == "undefined") { name = "datatableInit"; }
-      this.waitForVisible("#" + name + "_modal", 60);
-      this.wait(1);
+      I.waitForVisible("#" + name + "_modal.DTED.show[data-dte-focus-state='ready']", 200);
     },
 
     waitForModal(id) {
@@ -469,7 +468,7 @@ module.exports = function () {
       var that = this;
       pathArray.forEach(function (name, index) {
         that.say("clicking on jstreitem: name=" + name + " index=" + index);
-        that.jstreeClick(name);
+        that.jstreeClick(name, true);
       });
     },
 

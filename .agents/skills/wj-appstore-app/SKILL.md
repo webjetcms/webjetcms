@@ -1,6 +1,6 @@
 ---
 name: wj-appstore-app
-description: 'Create WebJET CMS AppStore applications (page components) that appear in the editor application list and can be inserted into pages. Use when: creating new applications for the page editor, adding components to the AppStore, building page-insertable apps with @WebjetAppStore annotation, creating Spring MVC components with Thymeleaf views, adding application parameters with @DataTableColumn, configuring dynamic select options, or setting up multi-tab application editors.'
+description: 'Create WebJET CMS AppStore applications (page components) through a guided intake and implementation workflow. Use when creating a new page-editor application, adding a component to the AppStore, building page-insertable apps with @WebjetAppStore, creating Spring MVC components with Thymeleaf views, adding @DataTableColumn parameters, configuring dynamic options, or setting up multi-tab application editors.'
 ---
 
 # WebJET CMS AppStore Application Skill
@@ -8,6 +8,30 @@ description: 'Create WebJET CMS AppStore applications (page components) that app
 This skill provides complete instructions for creating an AppStore application in WebJET CMS — a page component that appears in the editor's application list and can be inserted into web pages via `!INCLUDE(...)!`.
 
 **This is NOT for admin datatable CRUD pages** (use `wj-datatable` skill for those). AppStore apps are frontend page components rendered within the website content.
+
+## Invocation and Mandatory Intake
+
+In Codex, invoke this skill as `$wj-appstore-app` or select it through `/skills`. A repository skill is not exposed as a standalone `/wj-appstore-app` slash command.
+
+Before inspecting implementation files or generating code for a new application, collect the following information:
+
+1. **Application class** — Java class name and fully qualified package, for example `sk.iway.basecms.weather.WeatherApp`.
+2. **Purpose** — what the application displays or does on the page.
+3. **Parameters** — configurable editor fields, including field names and types; accept `none` for a parameterless application.
+4. **Icon** — a Tabler Icons CSS class; offer `ti ti-app-window` as the default.
+5. **Data source** — view-only, JPA entity/repository, external API, or a stated combination.
+
+Ask for all missing information in one concise numbered message, then stop and wait for the user's answer. Do not scaffold files in the same turn unless the user already supplied every item. Preserve information already provided and ask only for missing or ambiguous items.
+
+After the intake is complete, proceed without asking for another confirmation. Derive the application slug and paths from the class name, state any small assumptions, inspect the closest reference implementations, and create the requested application. If the selected data source needs credentials, schema details, or an endpoint contract that cannot be discovered in the repository, ask only for those additional details before implementation.
+
+The generated application must include:
+
+- a Java component with `@WebjetComponent`, `@WebjetAppStore`, and `WebjetComponentAbstract`;
+- a Thymeleaf view under `src/main/webapp/apps/{appname}/mvc/`;
+- `modinfo.properties` under `src/main/webapp/apps/{appname}/`;
+- translation keys in the applicable project language bundles;
+- a JPA entity and repository only when required by the selected data source.
 
 ## Architecture Overview
 

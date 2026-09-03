@@ -1137,13 +1137,6 @@ public class InitServlet extends HttpServlet
 				Constants.setBoolean("adminRequireSSL", param);
 			}
 
-			param = getInitParameter("exportFlash", databaseValues, servletContext);
-			skipValues.put("exportFlash", "true");
-			if (param != null && param.length() > 0)
-			{
-				Constants.setBoolean("exportFlash", param);
-			}
-
 			param = getInitParameter("exportDocsHtml", databaseValues, servletContext);
 			skipValues.put("exportDocsHtml", "true");
 			if (param != null && param.length() > 0)

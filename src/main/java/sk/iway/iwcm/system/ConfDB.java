@@ -194,12 +194,7 @@ public class ConfDB
 				db_conn = null;
 				Adminlog.add(Adminlog.TYPE_CONF_DELETE, "Zmazana konfiguracna premenna: "+name, -1, -1);
 
-				if ("statLanguageDomain".equals(name)) StatDB.setLanguageDomainTable(null);
-				if (name.startsWith("multiDomainAlias:")) MultiDomainFilter.clearDomainAlias();
-				if ("responseHeaders".equals(name)) PathFilter.resetResponseHeaders();
-
-				String oldValue = ConfDB.getOldValue(name);
-				Constants.setString(name, oldValue);
+				restoreDefaultValue(name);
 
 				//if (update != 0)
 				return true;
@@ -367,7 +362,8 @@ public class ConfDB
 		String normalizedValue = tryDecrypt(value);
 		if ("linkType".equals(name))
 		{
-			return String.valueOf("html".equalsIgnoreCase(normalizedValue) ? Constants.LINK_TYPE_HTML : Constants.LINK_TYPE_DOCID);
+			boolean isHtml = "html".equalsIgnoreCase(normalizedValue) || String.valueOf(Constants.LINK_TYPE_HTML).equals(normalizedValue);
+			return String.valueOf(isHtml ? Constants.LINK_TYPE_HTML : Constants.LINK_TYPE_DOCID);
 		}
 
 		return normalizedValue;
@@ -384,20 +380,44 @@ public class ConfDB
 		}
 		else
 		{
-			if ("statLanguageDomain".equals(name)) StatDB.setLanguageDomainTable(null);
-			else if (name.startsWith("multiDomainAlias:")) MultiDomainFilter.clearDomainAlias();
-			else if ("logLevel".equals(name)) Logger.setWJLogLevel(value);
-			else if ("logLevels".equals(name)) Logger.setWJLogLevels(Logger.getLogLevelsMap(value));
-			else if ("cacheStaticContentSeconds".equals(name) || "cacheStaticContentSuffixes".equals(name)) PathFilter.resetCacheStaticContentSeconds();
-			else if ("responseHeaders".equals(name)) PathFilter.resetResponseHeaders();
-			else if ("pathFilterBlockedPaths".equals(name)) PathFilter.resetBlockedPaths();
-			else if ("constantsAliasSearch".equals(name)) Constants.setConstantsAliasSearch("true".equals(value));
-			else if ("multiDomainFolders".equals(name)) MultiDomainFilter.clearDomainFolders();
-			else if ("xssHtmlAllowedFields".equals(name)) DB.resetHtmlAllowedFields();
-			else if ("ninjaNbspReplaceRegex".equals(name)) Ninja.resetNbspReplaceRegex();
-			else if ("thumbServletAllowedSizes".equals(name)) ThumbServlet.cleanAllowedSizesCache();
+			applyConstantValueSideEffects(name, value);
 			Constants.setString(name, value);
 		}
+	}
+
+	private static void applyConstantValueSideEffects(String name, String value)
+	{
+		if ("statLanguageDomain".equals(name)) StatDB.setLanguageDomainTable(null);
+		else if (name.startsWith("multiDomainAlias:")) MultiDomainFilter.clearDomainAlias();
+		else if ("logLevel".equals(name)) Logger.setWJLogLevel(value);
+		else if ("logLevels".equals(name)) Logger.setWJLogLevels(Logger.getLogLevelsMap(value));
+		else if ("cacheStaticContentSeconds".equals(name) || "cacheStaticContentSuffixes".equals(name)) PathFilter.resetCacheStaticContentSeconds();
+		else if ("responseHeaders".equals(name)) PathFilter.resetResponseHeaders();
+		else if ("pathFilterBlockedPaths".equals(name)) PathFilter.resetBlockedPaths();
+		else if ("constantsAliasSearch".equals(name)) Constants.setConstantsAliasSearch("true".equals(value));
+		else if ("multiDomainFolders".equals(name)) MultiDomainFilter.clearDomainFolders();
+		else if ("xssHtmlAllowedFields".equals(name)) DB.resetHtmlAllowedFields();
+		else if ("ninjaNbspReplaceRegex".equals(name)) Ninja.resetNbspReplaceRegex();
+		else if ("thumbServletAllowedSizes".equals(name)) ThumbServlet.cleanAllowedSizesCache();
+	}
+
+	private static void restoreDefaultValue(String name)
+	{
+		List<ConfDetails> constantsData = Constants.getAllValues();
+		if (constantsData != null)
+		{
+			for (ConfDetails conf : constantsData)
+			{
+				if (conf != null && name.equals(conf.getName()) && conf.getValue() != null)
+				{
+					setConstantValueImpl(name, conf.getValue());
+					return;
+				}
+			}
+		}
+
+		applyConstantValueSideEffects(name, "");
+		Constants.deleteConstant(name);
 	}
 
 	/**
@@ -563,7 +583,15 @@ public class ConfDB
 			if (i != -1) url = url.substring(i+1);
 
 			i = url.lastIndexOf('.');
-			if (i != -1) url = url.substring(0, i);
+			if (i != -1)
+			{
+				String extension = url.substring(i + 1);
+				if ("jsp".equalsIgnoreCase(extension) || "jspx".equalsIgnoreCase(extension) || "do".equalsIgnoreCase(extension)
+					|| "html".equalsIgnoreCase(extension) || "htm".equalsIgnoreCase(extension))
+				{
+					url = url.substring(0, i);
+				}
+			}
 
 			if ("banner_system".equals(url)) url = "banner";
 			else if ("forms".equals(url)) url = "form";
@@ -575,7 +603,7 @@ public class ConfDB
 
 			for (ConfDetails conf : Constants.getAllValues())
 			{
-				if (conf.getModules()!=null && (conf.getModules().indexOf(url)==0 || conf.getModules().indexOf(";"+url)!=-1)) list.add(conf);
+				if (ConfigurationModulePath.matchesLegacyModule(conf.getModules(), url)) list.add(conf);
 			}
 		}
 		catch (Exception e)
@@ -623,6 +651,12 @@ public class ConfDB
 			if (count > 0) {
 				//ak je v DB ale hodnota je null tak ju nastavime na prazdny retazec
 				value = "";
+			}
+			else
+			{
+				// The configuration override was deleted on another cluster node, restore the default value.
+				restoreDefaultValue(name);
+				return;
 			}
 		 }
 		 setConstantValueImpl(name, value);
