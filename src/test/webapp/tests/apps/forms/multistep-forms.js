@@ -195,6 +195,83 @@ Scenario('Insert multistep into page and test it', async ({ I, DTE, Document, Ap
 
     await Document.compareScreenshotElement("div.multistep-form-app", "multistep-form/multistep-form-page-step-2.png", null, null, 5);
 
+    I.say("Verify tooltip accessibility after AJAX step rendering");
+    const tooltipTrigger = "label[for='f1-select-pole-1'] + button.popover-link[data-toggle='tooltip']";
+    const tooltipField = "#f1-select-pole-1";
+    const visualTooltip = ".tooltip.wj-form-tooltip-hoverable[role='tooltip']";
+    I.waitForElement(tooltipTrigger, 5);
+    I.seeElement(tooltipTrigger + "[type='button'][data-trigger='hover focus'][data-bs-trigger='hover focus'][aria-describedby][data-wj-form-tooltip-description-id]");
+    I.assertTrue(await I.executeScript((selector) => document.querySelector(selector)?.closest("label") === null, tooltipTrigger), "Tooltip trigger must be outside the field label");
+    const tooltipLabel = await I.grabAttributeFrom(tooltipTrigger, "aria-label");
+    I.assertEqual(tooltipLabel, "Pomoc k poľu Select pole", "Tooltip trigger must have a contextual accessible name");
+    const tooltipId = await I.grabAttributeFrom(tooltipTrigger, "aria-describedby");
+    const configuredTooltipId = await I.grabAttributeFrom(tooltipTrigger, "data-wj-form-tooltip-description-id");
+    I.assertEqual(tooltipId, configuredTooltipId, "Tooltip trigger must reference its stable description before focus");
+    I.assertTrue(tooltipId.startsWith("info-tooltip-f1-select-pole-1-"), "Tooltip description must use the field-specific stable ID");
+    I.assertEqual(await I.executeScript((id) => {
+        const description = document.getElementById(id);
+        return description?.matches(".wj-form-tooltip-description[role='tooltip']") ? description.textContent.replace(/\s+/g, " ").trim() : "";
+    }, tooltipId), "zoznam tooltip", "Stable tooltip content must contain the field-specific help");
+
+    const getAccessibleDescription = async () => I.executeScript((selector) => {
+        const trigger = document.querySelector(selector);
+        const describedBy = trigger?.getAttribute("aria-describedby");
+        if (!describedBy) return "";
+        return describedBy.split(/\s+/)
+            .map(id => document.getElementById(id)?.textContent || "")
+            .join(" ").replace(/\s+/g, " ").trim();
+    }, tooltipTrigger);
+    I.assertEqual(await getAccessibleDescription(), "zoznam tooltip", "Tooltip trigger must expose its description before focus");
+    const tooltipDescriptionIds = await I.executeScript(() => Array.from(document.querySelectorAll(".wj-form-tooltip-description"), element => element.id));
+    I.assertTrue(tooltipDescriptionIds.length >= 2, "Rendered tooltip descriptions must be present in the AJAX step");
+    I.assertEqual(new Set(tooltipDescriptionIds).size, tooltipDescriptionIds.length, "Every rendered tooltip description ID must be unique");
+
+    I.focus(tooltipField);
+    I.pressKey(["Shift", "Tab"]);
+    I.waitForElement(tooltipTrigger + ":focus", 5);
+    I.assertTrue(await I.executeScript((selector) => {
+        const style = getComputedStyle(document.querySelector(selector));
+        return style.outlineStyle === "solid" && parseFloat(style.outlineWidth) >= 2;
+    }, tooltipTrigger), "Tooltip trigger must have a visible keyboard focus indicator");
+
+    I.waitForVisible(visualTooltip, 5);
+    I.see("zoznam tooltip", visualTooltip);
+    I.assertEqual(await I.grabAttributeFrom(tooltipTrigger, "aria-describedby"), tooltipId, "Visual tooltip must not replace the stable accessible description");
+    I.assertEqual(await getAccessibleDescription(), "zoznam tooltip", "Tooltip trigger must retain its accessible description while open");
+
+    I.pressKey("Escape");
+    I.waitForInvisible(visualTooltip, 5);
+    I.waitForFunction(([selector]) => document.querySelector(selector) === null, [visualTooltip], 5);
+    I.waitForElement(tooltipTrigger + ":focus", 5);
+    I.assertEqual(await I.grabAttributeFrom(tooltipTrigger, "aria-describedby"), tooltipId, "Escape must preserve the stable accessible description");
+    I.assertEqual(await getAccessibleDescription(), "zoznam tooltip", "Tooltip trigger must retain its description after dismissal");
+
+    I.pressKey("Enter");
+    I.waitForVisible(visualTooltip, 5);
+    I.assertEqual(await I.grabAttributeFrom(tooltipTrigger, "aria-describedby"), tooltipId, "Keyboard activation must preserve the stable accessible description");
+    I.pressKey("Escape");
+    I.waitForInvisible(visualTooltip, 5);
+    I.waitForFunction(([selector]) => document.querySelector(selector) === null, [visualTooltip], 5);
+
+    I.focus(tooltipField);
+    I.waitForElement(tooltipField + ":focus", 5);
+    I.moveCursorTo(tooltipTrigger);
+    I.waitForVisible(visualTooltip, 5);
+    I.moveCursorTo(visualTooltip);
+    I.waitForFunction(([selector]) => document.querySelector(selector)?.matches(":hover") === true, [visualTooltip], 5);
+    const hoverStartedAt = await I.executeScript(() => performance.now());
+    I.waitForFunction(([selector, startedAt]) => {
+        const tooltip = document.querySelector(selector);
+        if (performance.now() - startedAt < 500 || !tooltip) return false;
+        const style = getComputedStyle(tooltip);
+        return style.display !== "none" && style.visibility !== "hidden" && parseFloat(style.opacity || "1") > 0;
+    }, [visualTooltip, hoverStartedAt], 2);
+    I.pressKey("Escape");
+    I.waitForInvisible(visualTooltip, 5);
+    I.waitForElement(tooltipField + ":focus", 5);
+    I.assertEqual(await I.grabAttributeFrom(tooltipTrigger, "aria-describedby"), tooltipId, "Hover dismissal must preserve the stable accessible description");
+    I.blur(tooltipField);
+
     I.say("Test and submit step 2 - final");
 
     I.dontSee("Odstrániť súbor");

@@ -46,10 +46,11 @@ class FormsServiceTest {
     void replaceFieldsResolvesTooltipPlaceholdersAndAriaRelation() {
         Prop prop = mock(Prop.class);
         when(prop.getText("components.formsimple.tooltipCode")).thenReturn(
-            "<i class=\"custom-tooltip-trigger ${classes}\" aria-describedby=\"${tooltipId}\" " +
-                "aria-owns=\"${tooltipId}\" data-field-id=\"${id}\" data-item-id=\"${itemId}\" " +
+            "<button type=\"button\" class=\"custom-tooltip-trigger ${classes}\" " +
+                "aria-label=\"Help for ${labelSanitized}\" aria-describedby=\"${tooltipId}\" " +
+                "data-description-id=\"${tooltipId}\" data-field-id=\"${id}\" data-item-id=\"${itemId}\" " +
                 "data-label-sanitized=\"${labelSanitized}\" data-value=\"${value}\" " +
-                "data-value-sanitized=\"${valueSanitized}\" data-placeholder=\"${placeholder}\"></i>" +
+                "data-value-sanitized=\"${valueSanitized}\" data-placeholder=\"${placeholder}\"></button>" +
                 "<span id=\"${tooltipId}\" role=\"tooltip\">${label} (${stepId})</span>"
         );
 
@@ -58,15 +59,15 @@ class FormsServiceTest {
             .put("id", 42)
             .put("stepId", 7)
             .put("itemFormId", "f2-customer.name=1")
-            .put("label", "Customer <b>name</b>")
-            .put("labelOriginal", "Customer <b>name</b>")
+            .put("label", "Customer <b>\"name\"</b>")
+            .put("labelOriginal", "Customer <b>\"name\"</b>")
             .put("required", true)
             .put("value", "Some value")
             .put("placeholder", "Enter a value")
             .put("tooltip", "Enter ${id}, ${itemId} and ${stepId} literally");
 
         String result = FormsService.replaceFields(
-            "<label for=\"${id}\">${label}${tooltip}</label>",
+            "<label for=\"${id}\">${label}</label>${tooltip}",
             "contact-form",
             "",
             item,
@@ -83,15 +84,19 @@ class FormsServiceTest {
         assertNotNull(trigger);
 
         String tooltipId = "info-tooltip-f2-customer-name-1-42";
+        assertEquals("button", trigger.tagName());
+        assertEquals("button", trigger.attr("type"));
         assertEquals(tooltipId, trigger.attr("aria-describedby"));
-        assertEquals(tooltipId, trigger.attr("aria-owns"));
+        assertEquals(tooltipId, trigger.attr("data-description-id"));
+        assertEquals("Help for Customer \"name\"", trigger.attr("aria-label"));
         assertEquals("f2-customer.name=1", trigger.attr("data-field-id"));
         assertEquals("42", trigger.attr("data-item-id"));
-        assertEquals("Customer name", trigger.attr("data-label-sanitized"));
+        assertEquals("Customer \"name\"", trigger.attr("data-label-sanitized"));
         assertEquals("Some value", trigger.attr("data-value"));
         assertEquals("some-value", trigger.attr("data-value-sanitized"));
         assertEquals("Enter a value", trigger.attr("data-placeholder"));
         assertEquals("custom-tooltip-trigger required", trigger.className());
+        assertFalse("label".equals(trigger.parent().tagName()));
 
         Element tooltip = document.getElementById(tooltipId);
         assertNotNull(tooltip);

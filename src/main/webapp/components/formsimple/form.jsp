@@ -97,7 +97,7 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%!
                   if (Tools.isNotEmpty(tooltipLabel)) tooltipLabel = ResponseUtils.filter(tooltipLabel);
               }
 
-              String labelSanitized = Jsoup.parse(label).text();
+              String labelSanitized = ResponseUtils.filter(Jsoup.parse(label).text());
               String id = DocTools.removeChars(label, true);
               String classes = "";
               if (required)

@@ -152,7 +152,9 @@
                 // I dont want to call DRAW/reload to clear table, call cost performance
                 formItemsDataTable.clear();
                 $("table#formItemsDataTable tbody").html('<tr><td colspan="2" class="dt-empty">' + WJ.translate('datatables.defaults.empty_table.js') + '</td></tr>');
-                $("div.stepPreview").html("");
+                const stepPreview = document.querySelector("div.stepPreview");
+                if (window.WebJETFormTooltip && typeof window.WebJETFormTooltip.dispose === "function") window.WebJETFormTooltip.dispose(stepPreview);
+                $(stepPreview).html("");
             }, 0);
         });
 
@@ -404,7 +406,9 @@
 
         let selectedStep = $(`#formStepsDataTable tbody tr.selected`);
         if(selectedStep.length === 0) {
-            $("div.stepPreview").html("");
+            const stepPreview = document.querySelector("div.stepPreview");
+            if (window.WebJETFormTooltip && typeof window.WebJETFormTooltip.dispose === "function") window.WebJETFormTooltip.dispose(stepPreview);
+            $(stepPreview).html("");
             loadingPreview = false;
             return;
         }
@@ -423,7 +427,18 @@
             }
             const html = await r.text();
 
-            $("div.stepPreview").html(html);
+            let initFormTooltips = null;
+            let disposeFormTooltips = null;
+            try {
+                ({ initFormTooltips, disposeFormTooltips } = await import("/apps/form/mvc/multistep-form.js"));
+            } catch (error) {
+                console.warn("Failed to load form tooltips:", error);
+            }
+
+            const stepPreview = document.querySelector("div.stepPreview");
+            if (disposeFormTooltips) disposeFormTooltips(stepPreview);
+            $(stepPreview).html(html);
+            if (initFormTooltips) initFormTooltips(stepPreview);
 
             onResize();
 

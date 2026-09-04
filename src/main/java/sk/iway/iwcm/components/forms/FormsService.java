@@ -819,7 +819,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         fields.put("labelSanitized", Tools.getStringValue(labelSanitized, ""));
         fields.put("value", safeValue);
         fields.put("valueSanitized", DocTools.removeChars(safeValue, true));
-        fields.put("placeholder", Tools.getStringValue(placeholder, ""));
+        fields.put("placeholder", ResponseUtils.filter(Jsoup.parse(Tools.getStringValue(placeholder, "")).text()));
         fields.put("classes", Tools.getStringValue(classes, ""));
         fields.put("tooltip", Tools.getStringValue(tooltip, ""));
         return fields;
@@ -903,7 +903,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                     if (Tools.isNotEmpty(tooltipLabel)) tooltipLabel = ResponseUtils.filter(tooltipLabel);
                 }
 
-                String labelSanitized = Jsoup.parse(label).text();
+                String labelSanitized = ResponseUtils.filter(Jsoup.parse(label).text());
 
                 // Prefer explicit itemFormId; fallback keeps backward compatibility.
                 String id = Tools.getStringValue(item.optString("itemFormId", ""), "");
