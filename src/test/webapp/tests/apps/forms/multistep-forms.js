@@ -146,6 +146,23 @@ Scenario('Insert multistep into page and test it', async ({ I, DTE, Document, Ap
     I.seeElement("label[for='f1-vase-priezvisko-1']");
     I.dontSeeElement("input#priezvisko-1");
 
+    I.executeScript(() => {
+        window.__wjMultistepStepShownEvents = [];
+        window.addEventListener('WJ.multistepForm.stepShown', (event) => {
+            const detail = event.detail;
+            window.__wjMultistepStepShownEvents.push({
+                formName: detail.formName,
+                stepId: String(detail.stepId),
+                language: detail.language,
+                domIdPrefix: detail.domIdPrefix,
+                isInitialStep: detail.isInitialStep,
+                hasWrapper: detail.wrapper?.classList.contains('multistep-form-app') === true,
+                hasStepElement: detail.stepElement?.classList.contains('multistepStepContent') === true,
+                hasForm: detail.form?.matches('form.multistep-form') === true
+            });
+        }, { once: true });
+    });
+
     I.say("Test and submit step 1");
     I.clickCss("button[type='submit']");
     I.waitForText(customEmailError, 5);
@@ -164,6 +181,18 @@ Scenario('Insert multistep into page and test it', async ({ I, DTE, Document, Ap
     I.waitForVisible("#f1-pridajte-obrazky-1-dropzone");
     I.waitForText("2 - Druhy krok | Email: sivan@noopmail.com | User: Tester", 5, ".step-header");
     I.waitForElement("div.cleditorToolbar", 20);
+
+    const stepShownEvents = await I.executeScript(() => window.__wjMultistepStepShownEvents);
+    I.assertEqual(stepShownEvents.length, 1, "One stepShown event should be dispatched for the second step");
+    I.assertEqual(stepShownEvents[0].formName, newMultistepFormName);
+    I.assertTrue(stepShownEvents[0].stepId.length > 0, "The event should contain the rendered step ID");
+    I.assertEqual(stepShownEvents[0].language, "sk");
+    I.assertEqual(stepShownEvents[0].domIdPrefix, "f1-");
+    I.assertEqual(stepShownEvents[0].isInitialStep, false);
+    I.assertTrue(stepShownEvents[0].hasWrapper, "The event should contain the form wrapper");
+    I.assertTrue(stepShownEvents[0].hasStepElement, "The event should contain the step wrapper");
+    I.assertTrue(stepShownEvents[0].hasForm, "The event should contain the rendered form");
+
     await Document.compareScreenshotElement("div.multistep-form-app", "multistep-form/multistep-form-page-step-2.png", null, null, 5);
 
     I.say("Test and submit step 2 - final");

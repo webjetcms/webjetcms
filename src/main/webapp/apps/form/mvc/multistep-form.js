@@ -1,10 +1,25 @@
 let autocompleteAssetsPromise;
 
 /**
+ * Details emitted with the `WJ.multistepForm.stepShown` window event.
+ *
+ * @typedef {Object} MultistepFormStepShownDetail
+ * @property {HTMLElement} wrapper - Root element of the multistep form instance.
+ * @property {HTMLElement} stepElement - Element containing the rendered step.
+ * @property {HTMLFormElement|null} form - Form element rendered for the step.
+ * @property {string} formName - Backend form identifier.
+ * @property {string|number} stepId - Identifier of the rendered step.
+ * @property {string} language - Language used to render the step.
+ * @property {string} domIdPrefix - Instance-specific prefix used by form controls.
+ * @property {boolean} isInitialStep - Whether this is the first step shown by the controller instance.
+ */
+
+/**
  * Multistep Form application controller.
  *
  * Renders the shell, loads individual steps from server, submits data,
- * and handles success/error UI states.
+ * and handles success/error UI states. After rendering each step it dispatches
+ * `WJ.multistepForm.stepShown` as a non-cancelable `CustomEvent` on `window`.
  */
 export class MultistepForm {
 
@@ -16,7 +31,7 @@ export class MultistepForm {
      * @param {string} [options.formName] - Form identifier used by the backend.
      * @param {string|number} [options.stepId] - Initial step identifier to load.
      * @param {string} [options.csrf] - CSRF token added to POST requests.
-        * @param {string} [options.language] - Language code appended to backend requests.
+     * @param {string} [options.language] - Language code appended to backend requests.
      */
     constructor(options = {}) {
         // Preferred container selector; defaults to body > article > div.container
@@ -36,6 +51,8 @@ export class MultistepForm {
 
         // Maps logical form item IDs used by metadata/data to instance-specific DOM IDs.
         this.domIdPrefix = '';
+
+        this._hasShownStep = false;
 
         // Centralized map: element -> array of conditions (parsed once from data-visibility-condition attributes)
         this.visibilityConditions = new Map();
@@ -99,7 +116,7 @@ export class MultistepForm {
      * @param {string} formName - The form name to query.
      * @param {string|number} stepId - The step identifier to load.
      * @param {boolean} [scrollToForm=false] - Whether to scroll to the newly rendered form.
-     * @returns {Promise<void>} Resolves when the step content is injected.
+     * @returns {Promise<void>} Resolves when the step content is injected and the step-shown event is dispatched.
      */
     async loadStep(formName, stepId, scrollToForm = false) {
         if (!formName || !stepId) {
@@ -150,6 +167,12 @@ export class MultistepForm {
             // Initialize conditional field requirement from server-provided map
             this._initConditionalRequirement(requirementConditions);
 
+            const isInitialStep = this._hasShownStep === false;
+            this.formName = formName;
+            this.stepId = stepId;
+            this._hasShownStep = true;
+            if (holder) this._dispatchStepShown(holder, form, isInitialStep);
+
             if (scrollToForm && form) {
                 form.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
@@ -167,6 +190,28 @@ export class MultistepForm {
         } catch (err) {
             console.warn('Failed to load step:', err);
         }
+    }
+
+    /**
+     * Notify public-page integrations that a form step is available in the DOM.
+     *
+     * @param {HTMLElement} stepElement - Element containing the rendered step.
+     * @param {HTMLFormElement|null} form - Form element rendered for the step.
+     * @param {boolean} isInitialStep - Whether this is the first rendered step.
+     */
+    _dispatchStepShown(stepElement, form, isInitialStep) {
+        const detail = {
+            wrapper: this.wrapper,
+            stepElement,
+            form,
+            formName: this.formName,
+            stepId: this.stepId,
+            language: this.language,
+            domIdPrefix: this.domIdPrefix,
+            isInitialStep
+        };
+
+        window.dispatchEvent(new CustomEvent('WJ.multistepForm.stepShown', { detail }));
     }
 
     /**
