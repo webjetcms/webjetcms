@@ -1,9 +1,4 @@
-export const formTooltip = new FormTooltip();
-
 let autocompleteAssetsPromise;
-window.WebJETFormTooltip = window.WebJETFormTooltip || {};
-window.WebJETFormTooltip.init = root => formTooltip.init(root);
-window.WebJETFormTooltip.dispose = root => formTooltip.dispose(root);
 
 /**
  * Details emitted with the `WJ.multistepForm.stepShown` window event.
@@ -1313,3 +1308,9 @@ export class FormTooltip {
         });
     }
 }
+
+export const formTooltip = new FormTooltip();
+
+window.WebJETFormTooltip = window.WebJETFormTooltip || {};
+window.WebJETFormTooltip.init = root => formTooltip.init(root);
+window.WebJETFormTooltip.dispose = root => formTooltip.dispose(root);
