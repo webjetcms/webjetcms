@@ -221,6 +221,55 @@ function saveStyleModal(I) {
     I.dontSeeElement("#wjInline-docdata div.pb-modal");
 }
 
+const pricingListsSelector = "section.prices .card-body ul.list-group";
+
+function getDuplicableItem(listIndex, itemIndex) {
+    return locate(pricingListsSelector)
+        .at(listIndex)
+        .find("li.pb-duplicable-element:nth-of-type("+itemIndex+")");
+}
+
+async function getDuplicableItemTexts(I, listIndex) {
+    return await I.executeScript((root, { selector, index }) => {
+        const list = document.querySelectorAll(selector)[index];
+        if (list == null) return [];
+
+        return Array.from(list.children)
+            .filter(item => item.matches("li.pb-duplicable-element"))
+            .map(item => Array.from(item.childNodes)
+                .filter(node => node.nodeType === Node.TEXT_NODE)
+                .map(node => node.textContent.trim())
+                .filter(Boolean)
+                .join(" "));
+    }, { selector: pricingListsSelector, index: listIndex - 1 });
+}
+
+async function openDuplicableElementsPage(I, DTE, Document) {
+    Document.resetPageBuilderMode();
+    I.resizeWindow(1280, 960);
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
+    DTE.waitForEditor();
+    DTE.waitForCkeditor();
+    I.waitForElement("#DTE_Field_data-pageBuilderIframe", 10);
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.waitForElement(pricingListsSelector, 10);
+
+    const fixtureState = await I.executeScript((root, { selector }) => {
+        const lists = Array.from(document.querySelectorAll(selector));
+        lists.forEach(list => Array.from(list.children).forEach(item => item.classList.add("pb-duplicable")));
+        window.pageBuilder.mark_duplicable_elements();
+
+        return {
+            listCount: lists.length,
+            itemCounts: lists.map(list => list.querySelectorAll(":scope > li.pb-duplicable").length)
+        };
+    }, { selector: pricingListsSelector });
+
+    assert.strictEqual(fixtureState.listCount, 3, "The pricing fixture must contain three lists");
+    assert.deepStrictEqual(fixtureState.itemCounts, [3, 3, 3], "Each pricing list must contain three marked items");
+    I.waitForElement(getDuplicableItem(1, 1).find("aside.pb-toolbar"), 10);
+}
+
 Scenario('check toolbar elements', ({I, DTE, Document}) => {
     //reset PB settings
     Document.resetPageBuilderMode();
@@ -250,6 +299,119 @@ Scenario('check toolbar elements', ({I, DTE, Document}) => {
     I.dontSeeElement("iframe.cke_panel_frame");
 
     I.switchTo();
+});
+
+Scenario('duplicable elements toolbar, cleanup and operations', async ({I, DTE, Document}) => {
+    await openDuplicableElementsPage(I, DTE, Document);
+
+    const controllerState = await I.executeScript((root, { selector }) => {
+        const item = document.querySelectorAll(selector)[0].querySelector(":scope > li.pb-duplicable-element");
+        const toolbar = item.querySelector(":scope > aside.pb-toolbar");
+        const columnToolbar = item.closest(".pb-column").querySelector(":scope > aside.pb-toolbar");
+
+        return {
+            buttonCount: toolbar.querySelectorAll("button.pb-toolbar-button").length,
+            hasMove: toolbar.querySelector("button.pb-toolbar-button__move") != null,
+            hasDuplicate: toolbar.querySelector("button.pb-toolbar-button__duplicate") != null,
+            hasRemove: toolbar.querySelector("button.pb-toolbar-button__remove") != null,
+            hasStyle: toolbar.querySelector("button.pb-toolbar-button__style") != null,
+            hasResize: toolbar.querySelector("button.pb-toolbar-button__resize") != null,
+            hasFavorite: toolbar.querySelector("button.pb-toolbar-button__add_to_favorites") != null,
+            highlighterCount: item.querySelectorAll(":scope > aside.pb-highlighter").length,
+            plusButtonCount: item.querySelectorAll(":scope > aside.pb-plus-button").length,
+            dimmerCount: item.querySelectorAll(":scope > aside.pb-dimmer").length,
+            highlighterColor: getComputedStyle(item.querySelector(":scope > aside.pb-highlighter__top")).backgroundColor,
+            prependDisplay: getComputedStyle(item.querySelector(":scope > aside.pb-prepend")).display,
+            appendDisplay: getComputedStyle(item.querySelector(":scope > aside.pb-append")).display,
+            controllersAreNotEditable: Array.from(item.querySelectorAll(":scope > aside"))
+                .every(controller => controller.getAttribute("contenteditable") === "false"),
+            columnHasStyle: columnToolbar.querySelector("button.pb-toolbar-button__style") != null,
+            columnHasFavorite: columnToolbar.querySelector("button.pb-toolbar-button__add_to_favorites") != null
+        };
+    }, { selector: pricingListsSelector });
+
+    assert.strictEqual(controllerState.buttonCount, 3, "A duplicable toolbar must contain exactly three actions");
+    assert.strictEqual(controllerState.hasMove, true, "The move action must be available");
+    assert.strictEqual(controllerState.hasDuplicate, true, "The duplicate action must be available");
+    assert.strictEqual(controllerState.hasRemove, true, "The remove action must be available");
+    assert.strictEqual(controllerState.hasStyle, false, "The style action must not be available");
+    assert.strictEqual(controllerState.hasResize, false, "The resize action must not be available");
+    assert.strictEqual(controllerState.hasFavorite, false, "The favorite action must not be available");
+    assert.strictEqual(controllerState.highlighterCount, 4, "A duplicable element must have four highlighter sides");
+    assert.strictEqual(controllerState.plusButtonCount, 2, "A duplicable element must have prepend and append targets");
+    assert.strictEqual(controllerState.dimmerCount, 1, "A duplicable element must have one dimmer");
+    assert.strictEqual(controllerState.highlighterColor, "rgb(209, 122, 0)", "A duplicable element must use the orange highlighter");
+    assert.strictEqual(controllerState.prependDisplay, "none", "The prepend target must stay hidden while idle");
+    assert.strictEqual(controllerState.appendDisplay, "none", "The append target must stay hidden while idle");
+    assert.strictEqual(controllerState.controllersAreNotEditable, true, "Page Builder controllers must not be editable by CKEditor");
+    assert.strictEqual(controllerState.columnHasStyle, true, "The existing column toolbar must keep the style action");
+    assert.strictEqual(controllerState.columnHasFavorite, true, "The existing column toolbar must keep the favorite action");
+
+    const cleanState = await I.executeScript((root, { selector }) => {
+        const pageBuilder = window.pageBuilder;
+        const node = pageBuilder.getClearNode();
+        pageBuilder.clearEditorAttributes(node);
+
+        return {
+            markerCount: node.find(selector+" > li.pb-duplicable").length,
+            runtimeClassCount: node.find(selector+" > li.pb-duplicable-element, "+selector+" > li.pb-grid-element").length,
+            controllerCount: node.find(selector+" > li > aside.pb-toolbar, "+selector+" > li > aside.pb-plus-button, "+selector+" > li > aside.pb-highlighter, "+selector+" > li > aside.pb-dimmer").length
+        };
+    }, { selector: pricingListsSelector });
+
+    assert.strictEqual(cleanState.markerCount, 9, "Clean HTML must preserve all source marker classes");
+    assert.strictEqual(cleanState.runtimeClassCount, 0, "Clean HTML must remove Page Builder runtime classes");
+    assert.strictEqual(cleanState.controllerCount, 0, "Clean HTML must remove Page Builder controllers");
+
+    I.forceClick(getDuplicableItem(1, 1).find("button.pb-toolbar-button__duplicate"));
+    I.waitForElement("#wjInline-docdata.pb-is-moving-child.pb-is-moving-duplicable-element.pb-is-duplicating", 10);
+
+    const duplicateTargets = await I.executeScript((root, { selector }) => Array.from(document.querySelectorAll(selector))
+        .map(list => list.querySelectorAll(":scope > li.pb-is-duplicable-target").length), { selector: pricingListsSelector });
+    assert.ok(duplicateTargets[0] > 0, "Compatible items in the same list must become duplicate targets");
+    assert.deepStrictEqual(duplicateTargets.slice(1), [0, 0], "Items with another parent must not become duplicate targets");
+
+    // A forced click verifies that JavaScript also rejects a visually hidden incompatible target.
+    I.forceClick(getDuplicableItem(2, 1).find("aside.pb-append"));
+    I.seeElement("#wjInline-docdata.pb-is-moving-child.pb-is-moving-duplicable-element.pb-is-duplicating");
+    assert.deepStrictEqual(await getDuplicableItemTexts(I, 1), ["Nunc sed purus", "rutrum varius sollicitudin", "vulputate purus"]);
+    assert.deepStrictEqual(await getDuplicableItemTexts(I, 2), ["Nunc sed purus", "rutrum varius sollicitudin", "vulputate purus"]);
+
+    I.forceClick(getDuplicableItem(1, 2).find("aside.pb-append"));
+    I.waitForElement(getDuplicableItem(1, 4), 10);
+    assert.deepStrictEqual(await getDuplicableItemTexts(I, 1), ["Nunc sed purus", "rutrum varius sollicitudin", "Nunc sed purus", "vulputate purus"]);
+    I.dontSeeElement("#wjInline-docdata.pb-is-moving-child");
+    I.dontSeeElement("li.pb-is-duplicable-target");
+
+    I.forceClick(getDuplicableItem(1, 4).find("button.pb-toolbar-button__move"));
+    I.waitForElement("#wjInline-docdata.pb-is-moving-child.pb-is-moving-duplicable-element", 10);
+    I.dontSeeElement("#wjInline-docdata.pb-is-duplicating");
+    I.dontSeeElement(locate(pricingListsSelector).at(2).find("li.pb-is-duplicable-target"));
+    I.forceClick(getDuplicableItem(1, 1).find("aside.pb-prepend"));
+    assert.deepStrictEqual(await getDuplicableItemTexts(I, 1), ["vulputate purus", "Nunc sed purus", "rutrum varius sollicitudin", "Nunc sed purus"]);
+
+    I.forceClick(getDuplicableItem(1, 2).find("button.pb-toolbar-button__move"));
+    I.waitForElement("#wjInline-docdata.pb-is-moving-child.pb-is-moving-duplicable-element", 10);
+    const iframeFocused = await I.executeScript((root) => {
+        const cancelButton = root.querySelector("button.pb-notify__footer__button");
+        cancelButton.focus();
+        return root.ownerDocument.activeElement === cancelButton;
+    });
+    assert.strictEqual(iframeFocused, true, "The Page Builder iframe must receive the Escape key");
+    I.pressKey("Escape");
+    I.dontSeeElement("#wjInline-docdata.pb-is-moving-child");
+    I.dontSeeElement("li.pb-is-moving, li.pb-is-duplicable-target");
+    assert.deepStrictEqual(await getDuplicableItemTexts(I, 1), ["vulputate purus", "Nunc sed purus", "rutrum varius sollicitudin", "Nunc sed purus"]);
+
+    I.amAcceptingPopups();
+    I.forceClick(getDuplicableItem(1, 4).find("button.pb-toolbar-button__remove"));
+    I.acceptPopup();
+    assert.deepStrictEqual(await getDuplicableItemTexts(I, 1), ["vulputate purus", "Nunc sed purus", "rutrum varius sollicitudin"]);
+
+    // Close the editor without saving the DOM-only fixture changes.
+    I.switchTo();
+    DTE.cancel();
+    I.acceptPopup();
 });
 
 Scenario('reset PB settings', ({Document}) => {

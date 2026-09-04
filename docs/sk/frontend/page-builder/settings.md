@@ -132,6 +132,31 @@ Ak má column CSS triedu ```pb-not-editable``` tak sa **nebude považovať za co
 
 Nastavením CSS triedy ```pb-not-column``` sa element **nebude považovať za columns* aj keď má CSS triedu ```col-```.
 
+### Duplikovateľný element (oranžová farba)
+
+Ak chcete umožniť opakovanému elementu vo vnútri `COLUMN` presun, duplikovanie a zmazanie, označte ho CSS triedou `pb-duplicable`. Typickým príkladom sú položky zoznamu:
+
+```html
+<ul class="cards">
+    <li class="pb-duplicable">Prvá karta</li>
+    <li class="pb-duplicable">Druhá karta</li>
+</ul>
+```
+
+Page Builder zobrazí na označenom elemente oranžový rámik a nástrojovú lištu s akciami na presun, duplikovanie a zmazanie. Element je možné presunúť alebo duplikovať iba pred alebo za element s rovnakým HTML tagom a rovnakým priamym rodičom. Napríklad jednotlivé `LI` elementy je možné meniť v rámci jedného `UL`, nie medzi dvoma zoznamami.
+
+Predvolený selektor vychádza z konfiguračnej premennej `pageBuilderPrefix` a má hodnotu `.pb-duplicable`. Ak potrebujete použiť existujúce CSS triedy alebo viac selektorov, nastavte ich vo funkcii [`pbCustomSettings`](blocks.md#podporný-javascript-kód):
+
+```javascript
+window.pbCustomSettings = function (me) {
+    me.grid.duplicable = ".pb-duplicable, .feature-item, ul.cards > li";
+};
+```
+
+Pri vlastnom selektore sa do uloženého HTML nepridáva trieda `pb-duplicable`; zostanú v ňom pôvodné triedy, ktoré selektor používa.
+
+!>**Upozornenie:** prvky vo vnútri `pb-not-editable` sa neoznačia. Ak sú duplikovateľné elementy vnorené do seba, Page Builder ovláda iba vonkajší element. Funkcia je určená pre kontajnerové HTML elementy, nie pre prázdne elementy ako `IMG`. Pri duplikovaní sa zachovávajú atribúty vrátane `id`; ich jedinečné hodnoty sa automaticky negenerujú.
+
 ## Výnimky editácie
 
 ### Editovateľný element

@@ -136,6 +136,7 @@
                     .removeClass(me.tag.container)
                     .removeClass(me.tag.row)
                     .removeClass(me.tag.column)
+                    .removeClass(me.tag.duplicable)
                     //.removeClass(me.tag.editable_section)
                     //.removeClass(me.tag.editable_container)
                     .removeClass(me.tag.editable_element)
@@ -146,7 +147,7 @@
                     let value = me.state[key];
                     if (typeof value === "string") {
                         //console.log("Removing class: "+value);
-                        node.find("section."+value+",div."+value)
+                        node.find("."+value)
                             .removeClass(value);
                     }
                 }
@@ -189,6 +190,7 @@
                 container:                      prefix+'container',
                 row:                            prefix+'row',
                 column:                         prefix+'column',
+                duplicable:                     prefix+'duplicable-element',
                 column_content:                 prefix+'column__content',
                 content:                        prefix+'content',
 
@@ -294,6 +296,7 @@
                 container:                      me.tag.container                      +' '+ me.tag._grid_element,
                 row:                            me.tag.row                            +' '+ me.tag._grid_element,
                 column:                         me.tag.column                         +' '+ me.tag._grid_element,
+                duplicable:                     me.tag.duplicable                     +' '+ me.tag._grid_element,
 
                 append:                         me.tag.append                         +' '+ me.tag._plus_button,
                 prepend:                        me.tag.prepend                        +' '+ me.tag._plus_button,
@@ -338,6 +341,7 @@
                 is_moving_child:                prefix+'is-moving-child',
                 is_sibling_left:                prefix+'is-sibling-left',
                 is_sibling_right:               prefix+'is-sibling-right',
+                is_duplicable_target:           prefix+'is-duplicable-target',
                 is_moving_type:                 function(type){
                     var new_type = type.replace(prefix, '');
                     return me.state.is_moving_child + ' ' + me.state.is_moving + '-' + new_type;
@@ -358,8 +362,13 @@
                 row_default_class:              'row',
                 column:                         'div[class*="col-"]:not(.pb-not-column), div[class*="pb-col"]',
                 column_default_class:           'col col-md-12',
-                column_content:                 'div.column-content'
+                column_content:                 'div.column-content',
+                duplicable:                     '.'+prefix+'duplicable'
             };
+
+            if (typeof me.grid.duplicable !== "string" || me.grid.duplicable.trim().length === 0) {
+                me.grid.duplicable = '.'+prefix+'duplicable';
+            }
 
             me.column = {
                 min_size:                       1,
@@ -503,6 +512,10 @@
         set_settings_after: function() {
             var me = this,
                 prefix = me.options.prefix+'-';
+
+            if (typeof me.grid.duplicable !== "string" || me.grid.duplicable.trim().length === 0) {
+                me.grid.duplicable = '.'+prefix+'duplicable';
+            }
 
             $.each(me.tag, function(key, val) {
                 me.tagc[key]= '.'+val;
@@ -811,10 +824,51 @@
             if ($(column).hasClass(this.tag.not_editable_element)==false) {
                 me.wrap_column_content(column);
                 me.clear_column_content(column);
+                me.mark_duplicable_elements(column);
             }
             me.set_column_sizes(column);
             me.create_controllers(column);
             me.create_column_size_changer(column);
+        },
+
+        mark_duplicable_elements: function(column) {
+            var me = this,
+                column_contents;
+
+            if (typeof column === "undefined" || column === null) {
+                column_contents = $(me.$wrapper).find(me.tagc.column).children(me.tagc.column_content);
+            } else {
+                column_contents = $(column).children(me.tagc.column_content);
+            }
+
+            column_contents.each(function(index, column_content) {
+                $(column_content).find(me.grid.duplicable).each(function(candidateIndex, candidate) {
+                    var $candidate = $(candidate);
+
+                    if ($candidate.closest(me.tagc.column_content)[0] !== column_content) {
+                        return;
+                    }
+                    if ($candidate.closest(me.tagc.not_editable_element).length > 0) {
+                        return;
+                    }
+                    if ($candidate.is(me.grid.section) || $candidate.is(me.grid.container) ||
+                        $candidate.is(me.grid.row) || $candidate.is(me.grid.column)) {
+                        return;
+                    }
+                    if ($candidate.hasClass(me.tag._grid_element) && !$candidate.hasClass(me.tag.duplicable)) {
+                        return;
+                    }
+                    if ($candidate.parentsUntil(column_content).filter(me.grid.duplicable).length > 0) {
+                        return;
+                    }
+                    if (/^(AREA|BASE|BR|COL|EMBED|HR|IMG|INPUT|LINK|META|PARAM|SOURCE|TRACK|WBR)$/.test(candidate.tagName)) {
+                        return;
+                    }
+
+                    $candidate.addClass(me.tags.duplicable);
+                    me.create_duplicable_controllers(candidate);
+                });
+            });
         },
 
         wrap_column_content: function(column) {
@@ -1044,24 +1098,46 @@
             this.create_dimmer(el)
         },
 
+        create_duplicable_controllers: function (el) {
+            this.create_toolbar(el);
+            this.create_plus_button(el);
+            this.create_highlighter(el);
+            this.create_dimmer(el);
+
+            $(el).children(
+                this.tagc.toolbar+', '+
+                this.tagc._plus_button+', '+
+                this.tagc._highlighter+', '+
+                this.tagc.dimmer
+            ).attr('contenteditable', 'false');
+        },
+
         create_toolbar: function (el) {
             var $el = $(el);
             if($el.children(this.tagc.toolbar).length < 1) {
 
-                var buttons = this.build_button(this.tags.toolbar_button_style, null, "<iwcm:text key='pagebuilder.toolbar.style'/>");
+                var buttons = '';
 
-                if($el.hasClass(this.tag.column)) {
-                    if ($el.hasClass("pb-col") || $el.hasClass("pb-col-auto")) {
-                        //ak to mama classu pb-col alebo pb-col-auto nezobrazime nastavenie velkosti
-                    } else {
-                        buttons += this.build_button(this.tags.toolbar_button_resize, null, "<iwcm:text key='pagebuilder.toolbar.resize'/>");
+                if ($el.hasClass(this.tag.duplicable)) {
+                    buttons += this.build_button(this.tags.toolbar_button_move, null, "<iwcm:text key='pagebuilder.toolbar.move'/>");
+                    buttons += this.build_button(this.tags.toolbar_button_duplicate, null, "<iwcm:text key='pagebuilder.toolbar.duplicate'/>");
+                    buttons += this.build_button(this.tags.toolbar_button_remove, null, "<iwcm:text key='pagebuilder.toolbar.remove'/>");
+                } else {
+                    buttons += this.build_button(this.tags.toolbar_button_style, null, "<iwcm:text key='pagebuilder.toolbar.style'/>");
+
+                    if($el.hasClass(this.tag.column)) {
+                        if ($el.hasClass("pb-col") || $el.hasClass("pb-col-auto")) {
+                            //ak to mama classu pb-col alebo pb-col-auto nezobrazime nastavenie velkosti
+                        } else {
+                            buttons += this.build_button(this.tags.toolbar_button_resize, null, "<iwcm:text key='pagebuilder.toolbar.resize'/>");
+                        }
                     }
-                }
 
-                buttons += this.build_button(this.tags.toolbar_button_move, null, "<iwcm:text key='pagebuilder.toolbar.move'/>");
-                buttons += this.build_button(this.tags.toolbar_button_duplicate, null, "<iwcm:text key='pagebuilder.toolbar.duplicate'/>");
-                buttons += this.build_button(this.tags.toolbar_button_add_to_favorites, null, "<iwcm:text key='pagebuilder.toolbar.add_to_favorites'/>");
-                buttons += this.build_button(this.tags.toolbar_button_remove, null, "<iwcm:text key='pagebuilder.toolbar.remove'/>");
+                    buttons += this.build_button(this.tags.toolbar_button_move, null, "<iwcm:text key='pagebuilder.toolbar.move'/>");
+                    buttons += this.build_button(this.tags.toolbar_button_duplicate, null, "<iwcm:text key='pagebuilder.toolbar.duplicate'/>");
+                    buttons += this.build_button(this.tags.toolbar_button_add_to_favorites, null, "<iwcm:text key='pagebuilder.toolbar.add_to_favorites'/>");
+                    buttons += this.build_button(this.tags.toolbar_button_remove, null, "<iwcm:text key='pagebuilder.toolbar.remove'/>");
+                }
 
                 var content = this.build_aside(this.tag.toolbar_content,buttons);
 
@@ -1160,7 +1236,9 @@
         },
 
         create_dimmer: function(el){
-            $(el).append(this.build_aside(this.tag.dimmer));
+            if($(el).children(this.tagc.dimmer).length < 1) {
+                $(el).append(this.build_aside(this.tag.dimmer));
+            }
         },
 
         /*==================================================================
@@ -1451,11 +1529,24 @@
         /*=================================================================*/
 
         allow_move_grid_element: function (el) {
-            var grid_element = this.get_parent_grid_element(el);
+            var grid_element = this.get_parent_grid_element(el),
+                is_duplicable = $(grid_element).hasClass(this.tag.duplicable);
 
             $(grid_element).addClass(this.state.is_moving);
             $(grid_element).prev(this.tagc._grid_element).addClass(this.state.is_sibling_left);
             $(grid_element).next(this.tagc._grid_element).addClass(this.state.is_sibling_right);
+
+            if (is_duplicable) {
+                var tag_name = $(grid_element).prop('tagName'),
+                    targets = $(grid_element).parent().children(this.tagc.duplicable).filter(function() {
+                        return $(this).prop('tagName') === tag_name;
+                    });
+
+                if (!this.duplicate) {
+                    targets = targets.not(grid_element);
+                }
+                targets.addClass(this.state.is_duplicable_target);
+            }
 
             this.set_toolbar_invisible();
 
@@ -1466,7 +1557,10 @@
                 this.update_notify_content("<iwcm:text key='pagebuilder.notify_content.move'/>",'');
             }
 
-            if($(grid_element).hasClass(this.tag.column)) {
+            if(is_duplicable) {
+                $(this.$wrapper).addClass(this.state.is_moving_type(this.tag.duplicable));
+            }
+            else if($(grid_element).hasClass(this.tag.column)) {
                 $(this.$wrapper).addClass(this.state.is_moving_type(this.tag.column));
             }
             else if($(grid_element).hasClass(this.tag.row)) {
@@ -1484,9 +1578,25 @@
         move_grid_element_here: function (el) {
 
             var grid_element = this.get_parent_grid_element($(el)),
-                moving = $(this.tagc._grid_element+this.statec.is_moving),
-                clone = moving.clone().addClass(this.state.is_special_helper),
-                moving_parent = this.get_parent_grid_element(moving);
+                moving = $(this.$wrapper).find(this.tagc._grid_element+this.statec.is_moving).first(),
+                is_duplicable = moving.hasClass(this.tag.duplicable);
+
+            if (moving.length < 1 || grid_element === null) {
+                return;
+            }
+
+            if (is_duplicable && (
+                !$(grid_element).hasClass(this.state.is_duplicable_target) ||
+                (!$(el).hasClass(this.tag.append) && !$(el).hasClass(this.tag.prepend)) ||
+                (!this.duplicate && moving[0] === $(grid_element)[0]) ||
+                moving.parent()[0] !== $(grid_element).parent()[0] ||
+                moving.prop('tagName') !== $(grid_element).prop('tagName')
+            )) {
+                return;
+            }
+
+            var clone = moving.clone().addClass(this.state.is_special_helper),
+                moving_parent = is_duplicable ? moving.parent() : this.get_parent_grid_element(moving);
 
             if(!this.duplicate) {
                 $(moving).unbind().off().remove();
@@ -1506,8 +1616,9 @@
             if(this.duplicate) {
                 this.duplicatedElement = $(this.statec.is_special_helper);
                 //remove binded editors
-                this.duplicatedElement.find("*[class*='editableElement']").removeAttr("data-ckeditor-instance");
-                this.duplicatedElement.find("*[class*='editableElement']").removeClass("editableElement cke_editable cke_editable_inline cke_contents_ltr cke_show_borders");
+                var duplicated_editors = this.duplicatedElement.find("*[class*='editableElement']").addBack("*[class*='editableElement']");
+                duplicated_editors.removeAttr("data-ckeditor-instance");
+                duplicated_editors.removeClass("editableElement cke_editable cke_editable_inline cke_contents_ltr cke_show_borders");
 
                 this.options.onElementDuplicated();
                 this.changedElement = $(this.statec.is_special_helper);
@@ -1521,8 +1632,10 @@
 
             this.duplicate_user_style_element();
             this.set_toolbar_visible($(this.statec.is_special_helper));
-            this.create_empty_placeholder(moving_parent);
-            this.check_if_parent_is_empty_row(moving_parent);
+            if (!is_duplicable) {
+                this.create_empty_placeholder(moving_parent);
+                this.check_if_parent_is_empty_row(moving_parent);
+            }
             this.cancel_move_grid_element();
             this.hide_notify();
 
@@ -1562,11 +1675,12 @@
             this.removeClassStartingWith($(this.$wrapper),this.state.is_moving);
             $(this.$wrapper).removeClass(this.state.is_duplicating);
 
-            $(this.tagc._grid_element)
+            $(this.$wrapper).find(this.tagc._grid_element)
                 .removeClass(this.state.is_special_helper)
                 .removeClass(this.state.is_moving)
                 .removeClass(this.state.is_sibling_left)
                 .removeClass(this.state.is_sibling_right)
+                .removeClass(this.state.is_duplicable_target)
                 .removeClass("som-hover-append")
                 .removeClass("som-hover-prepend");
         },
@@ -4035,13 +4149,15 @@
                 .removeClass(me.tag.container)
                 .removeClass(me.tag.row)
                 .removeClass(me.tag.column)
+                .removeClass(me.tag.duplicable)
                 .removeClass(me.tag.editable_section)
                 .removeClass(me.tag.editable_container)
                 .removeClass(me.tag.editable_element)
                 .removeClass(me.tag._grid_element)
                 .removeClass(me.state.has_toolbar_active)
                 .removeClass(me.state.has_child_toolbar_active)
-                .removeClass(me.state.is_resize_columns);
+                .removeClass(me.state.is_resize_columns)
+                .removeClass(me.state.is_duplicable_target);
 
             $(wrapper).removeClass(me.tag.wrapper);
 
