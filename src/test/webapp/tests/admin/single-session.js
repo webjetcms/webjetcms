@@ -1,4 +1,4 @@
-Feature("apps.user.single-session");
+Feature("admin.single-session");
 
 var logoffLocator = "#toast-container-logoff";
 
