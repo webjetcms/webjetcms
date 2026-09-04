@@ -64,6 +64,8 @@ V aplikaci tak bude možné upravovat seznam položek, měnit jejich pořadí at
 
 Automaticky se aktivuje také funkce pro možnost změny pořadí řádků pomocí funkce `Drag&Drop`. Z důvodu konfliktů při přesunu řádků a jejich různého uspořádání je vypnuta možnost uspořádat seznam podle libovolného sloupce, seznam se pořádá automaticky podle pořadí uspořádání. Pro režim JSON editor se tento sloupec automaticky přidá - všimněte si, že třída `ImpressSlideshowItem` v příkladu níže neobsahuje ani `ID` ani `rowOrder` sloupec, protože technicky pro zobrazení dat nejsou potřeba. Přidají se automaticky. Pokud potřebujete sloupec ručně zobrazit, použijte anotaci `DataTableColumnType.ROW_REORDER`.
 
+!> Lokální JSON režim nevolá backend koncový bod `/row-reorder`, protože změnu pořadí zpracuje v datech editoru na straně klienta. Pro datovou tabulku napojenou na REST službu platí [serverové podmínky pro povolení změny pořadí](../datatables/README.md#pořadí-uspořádání-řádků).
+
 Příklad použití:
 
 ```java

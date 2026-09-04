@@ -1,6 +1,6 @@
 # Sample headless application (Astro)
 
-The directory [docs/examples/headless-astro/](../../../examples/headless-astro/) contains a complete sample application built on the **[Astro 7](https://astro.build) ** framework, which demonstrates headless integration with WebJET CMS.
+The directory [docs/examples/headless-astro/](https://github.com/webjetcms/webjetcms/tree/main/docs/examples/headless-astro) contains a complete sample application built on the **[Astro 7](https://astro.build) ** framework, which demonstrates headless integration with WebJET CMS.
 
 ![](home.png)
 

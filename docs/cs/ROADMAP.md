@@ -27,8 +27,7 @@ Vysvětlení použitých piktogramů:
 - [ ] Smazat přidružené soubory k web stránce když ji smažu - zeptat se ale předem uživatele, zda soubory chce smazat. Kontrolovat, zda se nepoužívají někde jinde.
 - [x] Mazání dat - přidat možnost mazat stránky a složky z koše. Vyřešit i možnost mazání dat spouštět jako automatizovanou úlohu (#58617) (#271).
 - [x] Nepoužívané soubory - udělat možnost získat seznam nepoužívaných souborů - nikde ve stránce se nepoužívají, ani v médiích atp. Byla k tomu API `FileTools.getDirFileUsage(currentDir, request)`. Přidat jako kartu do vlastností složky v průzkumníku (#58621).
-- [ ] Nepoužívané soubory - udělat možnost získat seznam nepoužívaných souborů - nikde ve stránce se nepoužívají, ani v médiích atp. Byla k tomu API `FileTools.getDirFileUsage(currentDir, request)`. Přidat jako kartu do vlastností složky v průzkumníku (#58621).
-- [ ] Průzkumník - zamezit práci se složkou pro Manažer dokumentů, aby se se soubory nedalo manipulovat mimo Manažer dokumentů.
+- [x] Průzkumník - zamezit práci se složkou pro Manažer dokumentů, aby se se soubory nedalo manipulovat mimo Manažer dokumentů (#298).
 - [x] +Průzkumník - přidat právo pro nahrávání souborů s diakritikou (odstraňuje se pro `/images` a `/files` složky) (#58589).
 - [x] +Web stránky - lepší integrovat manažer dokumentů pro vkládání odkazu do stránky - nová karta podobně jako je fotobanka u obrázků (#58593).
 - [x] +Formuláře - přidat podrobnější statistiku chyb vyplněných formulářů (#58509).
