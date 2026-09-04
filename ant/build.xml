@@ -161,6 +161,8 @@
                 <include name="mp4/**"/>
                 <include name="net/**"/>
                 <include name="org/**"/>
+                <!-- Displaytag with WebJET overrides is packaged in the libs classifier. -->
+                <exclude name="org/displaytag/**"/>
                 <include name="sk/*"/>
                 <include name="sk/updater/**"/>
                 <include name="sk/iway/*.class"/>
@@ -413,10 +415,15 @@
         <zip destfile="${artifact.dir}/archive-jar.zip">
             <zipfileset dir="${outdir}WEB-INF/lib" prefix="WEB-INF/lib">
                 <include name="**/**"/>
+                <!-- These libraries are merged into the WebJET libs classifier. -->
+                <exclude name="wj*.jar"/>
+                <exclude name="stripes-*.jar"/>
+                <exclude name="displaytag-*.jar"/>
             </zipfileset>
             <zipfileset dir="${artifact.dir}" prefix="WEB-INF/lib">
                 <include name="webjetcms-${artifact.version}-components.jar"/>
                 <include name="webjetcms-${artifact.version}-admin.jar"/>
+                <include name="webjetcms-${artifact.version}-libs.jar"/>
                 <include name="webjetcms-${artifact.version}.jar"/>
             </zipfileset>
             <zipfileset dir="${outdir}WEB-INF/fonts" prefix="WEB-INF/fonts">

@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.text.StringEscapeUtils;
+import org.apache.commons.text.StringSubstitutor;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.springframework.beans.BeanWrapperImpl;
@@ -837,13 +838,10 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                     }
                 }
 
-                String tooltip = "";
+                String tooltipLabel = "";
                 if (item.has("tooltip")) {
-                    tooltip = StringEscapeUtils.unescapeHtml4(Tools.getStringValue(item.optString("tooltip", ""), ""));
-                    if (Tools.isNotEmpty(tooltip)) {
-                        tooltip = ResponseUtils.filter(tooltip);
-                        tooltip = " " + Tools.replace(prop.getText("components.formsimple.tooltipCode"), "${label}", tooltip);
-                    }
+                    tooltipLabel = StringEscapeUtils.unescapeHtml4(Tools.getStringValue(item.optString("tooltip", ""), ""));
+                    if (Tools.isNotEmpty(tooltipLabel)) tooltipLabel = ResponseUtils.filter(tooltipLabel);
                 }
 
                 String labelSanitized = Jsoup.parse(label).text();
@@ -851,6 +849,11 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                 // Prefer explicit itemFormId; fallback keeps backward compatibility.
                 String id = Tools.getStringValue(item.optString("itemFormId", ""), "");
                 if (Tools.isEmpty(id)) id = DocTools.removeChars(label, true);
+                String itemId = item.optString("id", "");
+                String stepId = item.optString("stepId", "");
+                String valueSanitized = DocTools.removeChars(value, true);
+                String tooltipId = ("info-tooltip-" + id + "-" + itemId)
+                    .replaceAll("[^A-Za-z0-9_-]", "-");
 
                 String classes = "";
                 if (required) {
@@ -862,7 +865,24 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                     }
                 }
 
-                if (isEmailRender) tooltip = "";
+                String tooltip = "";
+                if (isEmailRender == false && Tools.isNotEmpty(tooltipLabel)) {
+                    Map<String, String> tooltipFields = new HashMap<>();
+                    tooltipFields.put("tooltipId", tooltipId);
+                    tooltipFields.put("id", id);
+                    tooltipFields.put("itemId", itemId);
+                    tooltipFields.put("stepId", stepId);
+                    tooltipFields.put("label", tooltipLabel);
+                    tooltipFields.put("labelSanitized", labelSanitized);
+                    tooltipFields.put("value", value);
+                    tooltipFields.put("valueSanitized", valueSanitized);
+                    tooltipFields.put("placeholder", placeholder);
+                    tooltipFields.put("classes", classes);
+
+                    StringSubstitutor substitutor = new StringSubstitutor(tooltipFields);
+                    substitutor.setDisableSubstitutionInValues(true);
+                    tooltip = " " + substitutor.replace(prop.getText("components.formsimple.tooltipCode"));
+                }
 
                 //skus zobrazit nadpis nad pole ak je definovany cez components.formsimple.firstTime.xxx
                 String firstTimeHeadingKey = "components.formsimple.firstTimeHeading." + fieldType;
@@ -904,13 +924,14 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                     html = Tools.replace(html, "${iterable}", iterable.toString());
                 }
 
+                html = Tools.replace(html, "${tooltipId}", tooltipId);
                 html = Tools.replace(html, "${id}", id);
-                html = Tools.replace(html, "${itemId}", item.optString("id", ""));
-                html = Tools.replace(html, "${stepId}", item.optString("stepId", ""));
+                html = Tools.replace(html, "${itemId}", itemId);
+                html = Tools.replace(html, "${stepId}", stepId);
                 html = Tools.replace(html, "${label}", label);
                 html = Tools.replace(html, "${labelSanitized}", labelSanitized);
                 html = Tools.replace(html, "${value}", value);
-                html = Tools.replace(html, "${valueSanitized}", DocTools.removeChars(value, true));
+                html = Tools.replace(html, "${valueSanitized}", valueSanitized);
                 html = Tools.replace(html, "${placeholder}", placeholder);
                 html = Tools.replace(html, "${classes}", classes);
                 html = Tools.replace(html, "${tooltip}", tooltip);

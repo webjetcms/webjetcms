@@ -3,6 +3,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="org.apache.commons.beanutils.BeanUtils" %><%@
 page import="org.apache.commons.codec.binary.Base64" %><%@
 page import="org.apache.commons.codec.binary.StringUtils" %><%@
+page import="org.apache.commons.text.StringSubstitutor" %><%@
 page import="sk.iway.iwcm.tags.support.ResponseUtils" %><%@
 page import="org.json.JSONArray" %><%@
 page import="org.json.JSONObject" %><%@
@@ -20,6 +21,7 @@ page import="java.net.URLDecoder" %><%@
 page import="java.util.List" %><%@
 page import="java.util.Set" %><%@
 page import="java.util.HashSet" %><%@
+page import="java.util.HashMap" %><%@
 page import="sk.iway.iwcm.components.form_settings.rest.FormSettingsService" %><%@
 page import="java.util.Map" %><%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
@@ -88,19 +90,20 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%!
                   }
               }
 
-              String tooltip = "";
+              String tooltipLabel = "";
               if (item.has("tooltip"))
               {
-                  tooltip = Tools.getStringValue(item.getString("tooltip"), "");
-                  if (Tools.isNotEmpty(tooltip))
-                  {
-                     tooltip = ResponseUtils.filter(tooltip);
-                     tooltip = " " + Tools.replace(prop.getText("components.formsimple.tooltipCode"), "${label}", tooltip);
-                  }
+                  tooltipLabel = Tools.getStringValue(item.getString("tooltip"), "");
+                  if (Tools.isNotEmpty(tooltipLabel)) tooltipLabel = ResponseUtils.filter(tooltipLabel);
               }
 
               String labelSanitized = Jsoup.parse(label).text();
               String id = DocTools.removeChars(label, true);
+              String itemId = item.optString("id", "");
+              String stepId = item.optString("stepId", "");
+              String valueSanitized = DocTools.removeChars(value, true);
+              String tooltipId = ("info-tooltip-" + id + "-" + itemId)
+                 .replaceAll("[^A-Za-z0-9_-]", "-");
               String classes = "";
               if (required)
               {
@@ -113,7 +116,25 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%!
                  }
               }
 
-              if (isEmailRender) tooltip = "";
+              String tooltip = "";
+              if (isEmailRender == false && Tools.isNotEmpty(tooltipLabel))
+              {
+                 Map<String, String> tooltipFields = new HashMap<String, String>();
+                 tooltipFields.put("tooltipId", tooltipId);
+                 tooltipFields.put("id", id);
+                 tooltipFields.put("itemId", itemId);
+                 tooltipFields.put("stepId", stepId);
+                 tooltipFields.put("label", tooltipLabel);
+                 tooltipFields.put("labelSanitized", labelSanitized);
+                 tooltipFields.put("value", value);
+                 tooltipFields.put("valueSanitized", valueSanitized);
+                 tooltipFields.put("placeholder", placeholder);
+                 tooltipFields.put("classes", classes);
+
+                 StringSubstitutor substitutor = new StringSubstitutor(tooltipFields);
+                 substitutor.setDisableSubstitutionInValues(true);
+                 tooltip = " " + substitutor.replace(prop.getText("components.formsimple.tooltipCode"));
+              }
 
               //System.out.println("html="+html+" label="+label+" placeholder="+placeholder+" id="+id);
 
@@ -165,11 +186,14 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%!
                  html = Tools.replace(html, "${iterable}", iterable.toString());
               }
 
+              html = Tools.replace(html, "${tooltipId}", tooltipId);
               html = Tools.replace(html, "${id}", id);
+              html = Tools.replace(html, "${itemId}", itemId);
+              html = Tools.replace(html, "${stepId}", stepId);
               html = Tools.replace(html, "${label}", isEmailRender && label.trim().endsWith(":") == false ? label+":" : label);
               html = Tools.replace(html, "${labelSanitized}", labelSanitized);
               html = Tools.replace(html, "${value}", value);
-              html = Tools.replace(html, "${valueSanitized}", DocTools.removeChars(value, true));
+              html = Tools.replace(html, "${valueSanitized}", valueSanitized);
               html = Tools.replace(html, "${placeholder}", placeholder);
               html = Tools.replace(html, "${classes}", classes);
               html = Tools.replace(html, "${tooltip}", tooltip);
@@ -305,6 +329,10 @@ String formName = sanitizeFieldId(pageParams.getValue("formName", ""));
 
 if (Tools.isEmpty(formName)) formName = "form-simple";
 
+String formCounterAttribute = "webjet_formsimple_form_counter";
+int formInstanceCounter = Tools.getIntValue(String.valueOf(request.getAttribute(formCounterAttribute)), 0) + 1;
+request.setAttribute(formCounterAttribute, formInstanceCounter);
+
 Map<String, String> attributes = FormSettingsService.load(DocTools.removeChars(formName, true));
 boolean rowView = pageParams.getBooleanValue("rowView", false);
 if (rowView == false && attributes.containsKey("rowView")) {
@@ -352,6 +380,7 @@ boolean containsWysiwyg = false;
 for(int i = 0; i < itemsList.length(); i++)
 {
     JSONObject item = itemsList.getJSONObject(i);
+    item.put("id", formInstanceCounter + "-" + i);
 
     String fieldType = item.getString("fieldType");
 
