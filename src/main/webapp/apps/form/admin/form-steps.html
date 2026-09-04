@@ -427,18 +427,17 @@
             }
             const html = await r.text();
 
-            let initFormTooltips = null;
-            let disposeFormTooltips = null;
+            let formTooltip = null;
             try {
-                ({ initFormTooltips, disposeFormTooltips } = await import("/apps/form/mvc/multistep-form.js"));
+                ({ formTooltip } = await import("/apps/form/mvc/multistep-form.js"));
             } catch (error) {
                 console.warn("Failed to load form tooltips:", error);
             }
 
             const stepPreview = document.querySelector("div.stepPreview");
-            if (disposeFormTooltips) disposeFormTooltips(stepPreview);
+            if (formTooltip) formTooltip.dispose(stepPreview);
             $(stepPreview).html(html);
-            if (initFormTooltips) initFormTooltips(stepPreview);
+            if (formTooltip) formTooltip.init(stepPreview);
 
             onResize();
 

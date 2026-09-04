@@ -1,377 +1,9 @@
-const FORM_TOOLTIP_EVENT_NAMESPACE = '.wjFormTooltip';
-const FORM_TOOLTIP_INITIALIZED_ATTRIBUTE = 'data-wj-form-tooltip-initialized';
-const FORM_TOOLTIP_DESCRIPTION_ID_ATTRIBUTE = 'data-wj-form-tooltip-description-id';
-const FORM_TOOLTIP_TRIGGER_SELECTOR = ".popover-link[data-toggle='tooltip'], .popover-link[data-bs-toggle='tooltip']";
-const FORM_TOOLTIP_CONFIG = {
-    trigger: 'hover focus',
-    html: true,
-    delay: { show: 0, hide: 150 }
-};
-const formTooltipAdapters = new WeakMap();
-const formTooltipElements = new WeakMap();
-const formTooltipActivationBindings = new WeakSet();
-const formTooltipNativeLifecycleBindings = new WeakSet();
-const formTooltipHoverBindings = new WeakSet();
-const formTooltipForcedHideTriggers = new WeakSet();
-let formTooltipEscapeHandlerBound = false;
+export const formTooltip = new FormTooltip();
+
 let autocompleteAssetsPromise;
-
-/**
- * Return the native Bootstrap Tooltip class when available.
- * @returns {Function|null} Bootstrap Tooltip class.
- */
-function getNativeTooltipClass() {
-    const Tooltip = window.bootstrap?.Tooltip;
-    return typeof Tooltip === 'function' ? Tooltip : null;
-}
-
-/**
- * Return jQuery when its Bootstrap tooltip plugin is available.
- * @returns {jQuery|null} jQuery instance or null when the legacy plugin is unavailable.
- */
-function getLegacyTooltipJQuery() {
-    const jQueryInstance = window.jQuery || window.$;
-    if (!jQueryInstance || !jQueryInstance.fn || typeof jQueryInstance.fn.tooltip !== 'function') return null;
-    return jQueryInstance;
-}
-
-/**
- * Resolve the Bootstrap tooltip currently associated with a trigger.
- * @param {HTMLElement} trigger - Tooltip trigger element.
- * @returns {HTMLElement|null} Generated tooltip element.
- */
-function getTooltipElement(trigger) {
-    const rememberedTooltip = formTooltipElements.get(trigger);
-    if (rememberedTooltip?.isConnected) return rememberedTooltip;
-    formTooltipElements.delete(trigger);
-
-    const stableDescriptionId = trigger.getAttribute(FORM_TOOLTIP_DESCRIPTION_ID_ATTRIBUTE);
-    const tooltipIds = (trigger.getAttribute('aria-describedby') || '').trim().split(/\s+/).filter(Boolean);
-    for (const tooltipId of tooltipIds) {
-        const tooltip = trigger.ownerDocument.getElementById(tooltipId);
-        if (tooltipId !== stableDescriptionId && tooltip?.matches('.tooltip[role="tooltip"]')) return tooltip;
-    }
-    return null;
-}
-
-/**
- * Restore the field-specific description that must remain available before and after display.
- * @param {HTMLElement} trigger - Tooltip trigger element.
- */
-function restoreFormTooltipDescription(trigger) {
-    const descriptionId = trigger.getAttribute(FORM_TOOLTIP_DESCRIPTION_ID_ATTRIBUTE);
-    if (descriptionId && trigger.ownerDocument.getElementById(descriptionId)) {
-        trigger.setAttribute('aria-describedby', descriptionId);
-    }
-}
-
-/**
- * Remember Bootstrap's generated visual tooltip before restoring the stable description relation.
- * @param {HTMLElement} trigger - Tooltip trigger element.
- */
-function captureFormTooltipElement(trigger) {
-    const descriptionId = trigger.getAttribute(FORM_TOOLTIP_DESCRIPTION_ID_ATTRIBUTE);
-    const tooltipIds = (trigger.getAttribute('aria-describedby') || '').trim().split(/\s+/).filter(Boolean);
-    for (const tooltipId of tooltipIds) {
-        const tooltip = trigger.ownerDocument.getElementById(tooltipId);
-        if (tooltipId !== descriptionId && tooltip?.matches('.tooltip[role="tooltip"]')) {
-            formTooltipElements.set(trigger, tooltip);
-            break;
-        }
-    }
-    restoreFormTooltipDescription(trigger);
-}
-
-/**
- * Check whether Bootstrap's generated tooltip is currently visible.
- * @param {HTMLElement|null} tooltip - Generated tooltip element.
- * @returns {boolean} True when the tooltip is rendered and visible.
- */
-function isFormTooltipVisible(tooltip) {
-    if (!tooltip?.isConnected) return false;
-    const style = tooltip.ownerDocument.defaultView.getComputedStyle(tooltip);
-    return style.display !== 'none' && style.visibility !== 'hidden' && parseFloat(style.opacity || '1') > 0;
-}
-
-/**
- * Dispatch a native mouse transition consumed by both older and newer Bootstrap versions.
- * @param {HTMLElement} trigger - Tooltip trigger element.
- * @param {string} type - Mouse event type.
- * @param {EventTarget|null} relatedTarget - Element related to the transition.
- */
-function dispatchTooltipMouseTransition(trigger, type, relatedTarget) {
-    const ownerDocument = trigger.ownerDocument;
-    const view = ownerDocument.defaultView || window;
-    let event;
-
-    try {
-        event = new view.MouseEvent(type, {
-            bubbles: true,
-            cancelable: true,
-            relatedTarget
-        });
-    } catch (error) {
-        event = ownerDocument.createEvent('MouseEvents');
-        event.initMouseEvent(type, true, true, view, 0, 0, 0, 0, 0, false, false, false, false, 0, relatedTarget);
-    }
-
-    trigger.dispatchEvent(event);
-}
-
-/**
- * Keep an open tooltip visible while the pointer moves from its trigger to its content.
- * @param {HTMLElement} trigger - Tooltip trigger element.
- */
-function makeFormTooltipHoverable(trigger) {
-    const tooltip = getTooltipElement(trigger);
-    if (!tooltip) return;
-
-    tooltip.classList.add('wj-form-tooltip-hoverable');
-    tooltip.style.pointerEvents = 'auto';
-
-    if (formTooltipHoverBindings.has(tooltip)) return;
-
-    tooltip.addEventListener('mouseenter', () => {
-        dispatchTooltipMouseTransition(trigger, 'mouseover', tooltip);
-    });
-    tooltip.addEventListener('mouseleave', event => {
-        dispatchTooltipMouseTransition(trigger, 'mouseout', event.relatedTarget || tooltip);
-    });
-    formTooltipHoverBindings.add(tooltip);
-}
-
-/**
- * Prevent Bootstrap's delayed hide while the pointer is over the tooltip content.
- * @param {Event|jQuery.Event} event - Bootstrap hide event.
- * @param {HTMLElement} trigger - Tooltip trigger element.
- */
-function keepHoveredFormTooltipVisible(event, trigger) {
-    if (formTooltipForcedHideTriggers.has(trigger)) return;
-
-    const tooltip = getTooltipElement(trigger);
-    if (tooltip?.matches(':hover')) event.preventDefault();
-}
-
-/**
- * Check whether a key event should activate a non-native button.
- * @param {KeyboardEvent|jQuery.Event} event - Keyboard event.
- * @returns {boolean} True for Enter and Space.
- */
-function isFormTooltipActivationKey(event) {
-    return event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar' || event.which === 13 || event.which === 32;
-}
-
-/**
- * Create a common adapter for native Bootstrap 5 and legacy jQuery tooltips.
- * @param {HTMLElement} trigger - Tooltip trigger element.
- * @returns {Object|null} Tooltip adapter or null when neither API is available.
- */
-function createFormTooltipAdapter(trigger) {
-    const Tooltip = getNativeTooltipClass();
-    if (Tooltip) {
-        const instance = typeof Tooltip.getOrCreateInstance === 'function'
-            ? Tooltip.getOrCreateInstance(trigger, FORM_TOOLTIP_CONFIG)
-            : (typeof Tooltip.getInstance === 'function' && Tooltip.getInstance(trigger)) || new Tooltip(trigger, FORM_TOOLTIP_CONFIG);
-        return {
-            kind: 'native',
-            show: () => instance.show(),
-            hide: () => instance.hide(),
-            dispose: () => instance.dispose()
-        };
-    }
-
-    const jQueryInstance = getLegacyTooltipJQuery();
-    if (!jQueryInstance) return null;
-
-    const $trigger = jQueryInstance(trigger);
-    $trigger.tooltip(FORM_TOOLTIP_CONFIG);
-    return {
-        kind: 'jquery',
-        $trigger,
-        show: () => $trigger.tooltip('show'),
-        hide: () => $trigger.tooltip('hide'),
-        dispose: () => {
-            try {
-                $trigger.tooltip('dispose');
-            } catch (error) {
-                $trigger.tooltip('destroy');
-            }
-        }
-    };
-}
-
-/**
- * Activate a tooltip through a non-native key press or a keyboard-generated native button click.
- * @param {KeyboardEvent|MouseEvent} event - Activation event.
- * @param {HTMLElement} trigger - Tooltip trigger element.
- */
-function activateFormTooltip(event, trigger) {
-    const isNativeButton = trigger.tagName.toLowerCase() === 'button';
-    const tooltip = getTooltipElement(trigger);
-
-    if (isNativeButton) {
-        if (event.type !== 'click' || event.detail !== 0 || isFormTooltipVisible(tooltip)) return;
-        event.preventDefault();
-        formTooltipAdapters.get(trigger)?.show();
-        return;
-    }
-
-    if (trigger.getAttribute('role') !== 'button' || !isFormTooltipActivationKey(event)) return;
-
-    event.preventDefault();
-    if (!isFormTooltipVisible(tooltip)) formTooltipAdapters.get(trigger)?.show();
-}
-
-/**
- * Bind tooltip lifecycle events for either the native or jQuery Bootstrap API.
- * @param {HTMLElement} trigger - Tooltip trigger element.
- * @param {Object} adapter - Tooltip API adapter.
- */
-function bindFormTooltipLifecycle(trigger, adapter) {
-    if (!formTooltipActivationBindings.has(trigger)) {
-        trigger.addEventListener('keydown', event => activateFormTooltip(event, trigger));
-        if (trigger.tagName.toLowerCase() === 'button') {
-            trigger.addEventListener('click', event => activateFormTooltip(event, trigger));
-        }
-        formTooltipActivationBindings.add(trigger);
-    }
-
-    if (adapter.kind === 'native') {
-        if (formTooltipNativeLifecycleBindings.has(trigger)) return;
-        const captureAndMakeHoverable = () => {
-            captureFormTooltipElement(trigger);
-            makeFormTooltipHoverable(trigger);
-        };
-        const restoreDescription = () => {
-            formTooltipElements.delete(trigger);
-            restoreFormTooltipDescription(trigger);
-        };
-        trigger.addEventListener('inserted.bs.tooltip', captureAndMakeHoverable);
-        trigger.addEventListener('shown.bs.tooltip', captureAndMakeHoverable);
-        trigger.addEventListener('hide.bs.tooltip', event => keepHoveredFormTooltipVisible(event, trigger));
-        trigger.addEventListener('hidden.bs.tooltip', restoreDescription);
-        formTooltipNativeLifecycleBindings.add(trigger);
-        return;
-    }
-
-    adapter.$trigger.off(FORM_TOOLTIP_EVENT_NAMESPACE)
-        .on(`inserted.bs.tooltip${FORM_TOOLTIP_EVENT_NAMESPACE} shown.bs.tooltip${FORM_TOOLTIP_EVENT_NAMESPACE}`, () => {
-            captureFormTooltipElement(trigger);
-            makeFormTooltipHoverable(trigger);
-        })
-        .on(`hide.bs.tooltip${FORM_TOOLTIP_EVENT_NAMESPACE}`, event => keepHoveredFormTooltipVisible(event, trigger))
-        .on(`hidden.bs.tooltip${FORM_TOOLTIP_EVENT_NAMESPACE}`, () => {
-            formTooltipElements.delete(trigger);
-            restoreFormTooltipDescription(trigger);
-        });
-}
-
-/**
- * Initialize one form tooltip trigger.
- * @param {HTMLElement} trigger - Tooltip trigger element.
- * @returns {boolean} True when a supported Bootstrap tooltip API is available.
- */
-function initializeFormTooltipTrigger(trigger) {
-    restoreFormTooltipDescription(trigger);
-    const adapter = createFormTooltipAdapter(trigger);
-    if (!adapter) return false;
-
-    formTooltipAdapters.set(trigger, adapter);
-    trigger.setAttribute(FORM_TOOLTIP_INITIALIZED_ATTRIBUTE, 'true');
-    trigger.classList.add('wj-form-tooltip-trigger');
-    bindFormTooltipLifecycle(trigger, adapter);
-    makeFormTooltipHoverable(trigger);
-    return true;
-}
-
-/**
- * Dismiss every visible initialized form tooltip when Escape is pressed.
- * @param {KeyboardEvent} event - Captured keyboard event.
- */
-function hideActiveFormTooltips(event) {
-    const isEscape = event.key === 'Escape' || event.key === 'Esc' || event.which === 27;
-    if (!isEscape) return;
-
-    const activeTriggers = [];
-    document.querySelectorAll(FORM_TOOLTIP_TRIGGER_SELECTOR).forEach(trigger => {
-        if (trigger.getAttribute(FORM_TOOLTIP_INITIALIZED_ATTRIBUTE) !== 'true') return;
-        const tooltip = getTooltipElement(trigger);
-        if (tooltip?.getAttribute('role') === 'tooltip' && isFormTooltipVisible(tooltip)) activeTriggers.push(trigger);
-    });
-
-    if (activeTriggers.length === 0) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-    activeTriggers.forEach(trigger => {
-        formTooltipForcedHideTriggers.add(trigger);
-        try {
-            formTooltipAdapters.get(trigger)?.hide();
-        } catch (error) {
-            console.warn('Failed to hide form tooltip:', error);
-        } finally {
-            formTooltipForcedHideTriggers.delete(trigger);
-        }
-    });
-}
-
-/**
- * Initialize accessible Bootstrap tooltips below the supplied root.
- * @param {Document|Element|jQuery} [root=document] - Root to scan.
- * @returns {boolean} True when the Bootstrap tooltip plugin is available.
- */
-export function initFormTooltips(root = document) {
-    const rootElement = root?.jquery ? root[0] : root;
-    if (!rootElement) return false;
-
-    const triggers = [];
-    if (rootElement.matches?.(FORM_TOOLTIP_TRIGGER_SELECTOR)) triggers.push(rootElement);
-    triggers.push(...rootElement.querySelectorAll(FORM_TOOLTIP_TRIGGER_SELECTOR));
-
-    let tooltipApiAvailable = Boolean(getNativeTooltipClass() || getLegacyTooltipJQuery());
-    triggers.forEach(trigger => {
-        try {
-            tooltipApiAvailable = initializeFormTooltipTrigger(trigger) || tooltipApiAvailable;
-        } catch (error) {
-            console.warn('Failed to initialize form tooltip:', error);
-        }
-    });
-
-    if (tooltipApiAvailable && !formTooltipEscapeHandlerBound) {
-        document.addEventListener('keydown', hideActiveFormTooltips, true);
-        formTooltipEscapeHandlerBound = true;
-    }
-
-    return tooltipApiAvailable;
-}
-
-/**
- * Dispose initialized Bootstrap tooltip instances below the supplied root before its DOM is replaced.
- * @param {Document|Element|jQuery} [root=document] - Root containing tooltip triggers.
- */
-export function disposeFormTooltips(root = document) {
-    const rootElement = root?.jquery ? root[0] : root;
-    if (!rootElement) return;
-
-    const triggers = [];
-    if (rootElement.matches?.(FORM_TOOLTIP_TRIGGER_SELECTOR)) triggers.push(rootElement);
-    triggers.push(...rootElement.querySelectorAll(FORM_TOOLTIP_TRIGGER_SELECTOR));
-
-    triggers.forEach(trigger => {
-        const adapter = formTooltipAdapters.get(trigger);
-        try {
-            adapter?.dispose?.();
-        } catch (error) {
-            console.warn('Failed to dispose form tooltip:', error);
-        }
-        formTooltipAdapters.delete(trigger);
-        formTooltipElements.delete(trigger);
-    });
-}
-
 window.WebJETFormTooltip = window.WebJETFormTooltip || {};
-window.WebJETFormTooltip.init = initFormTooltips;
-window.WebJETFormTooltip.dispose = disposeFormTooltips;
+window.WebJETFormTooltip.init = root => formTooltip.init(root);
+window.WebJETFormTooltip.dispose = root => formTooltip.dispose(root);
 
 /**
  * Details emitted with the `WJ.multistepForm.stepShown` window event.
@@ -520,14 +152,14 @@ export class MultistepForm {
             // inject HTML (exec any inline scripts) using jQuery when available
             const holder = this.wrapper.querySelector('.multistepStepContent');
             if (holder) {
-                disposeFormTooltips(holder);
+                formTooltip.dispose(holder);
                 if (window.$) {
                     $(holder).html(html);
                 } else {
                     holder.innerHTML = html;
                 }
 
-                initFormTooltips(holder);
+                formTooltip.init(holder);
             }
 
             // attach submit
@@ -1298,5 +930,386 @@ export class MultistepForm {
                 await this.loadStep(formName, stepId, true);
             }
         }
+    }
+}
+
+
+/**
+ * Manages accessible Bootstrap tooltips rendered by multistep forms.
+ */
+export class FormTooltip {
+
+    static EVENT_NAMESPACE = '.wjFormTooltip';
+    static INITIALIZED_ATTRIBUTE = 'data-wj-form-tooltip-initialized';
+    static DESCRIPTION_ID_ATTRIBUTE = 'data-wj-form-tooltip-description-id';
+    static TRIGGER_SELECTOR = ".popover-link[data-toggle='tooltip'], .popover-link[data-bs-toggle='tooltip']";
+    static CONFIG = {
+        trigger: 'hover focus',
+        html: true,
+        delay: { show: 0, hide: 150 }
+    };
+
+    constructor() {
+        this.adapters = new WeakMap();
+        this.tooltipElements = new WeakMap();
+        this.activationBindings = new WeakSet();
+        this.nativeLifecycleBindings = new WeakSet();
+        this.hoverBindings = new WeakSet();
+        this.forcedHideTriggers = new WeakSet();
+        this.escapeHandlerBound = false;
+        this._hideActiveTooltips = this._hideActiveTooltips.bind(this);
+    }
+
+    /**
+     * Return the native Bootstrap Tooltip class when available.
+     * @returns {Function|null} Bootstrap Tooltip class.
+     */
+    _getNativeTooltipClass() {
+        const Tooltip = window.bootstrap?.Tooltip;
+        return typeof Tooltip === 'function' ? Tooltip : null;
+    }
+
+    /**
+     * Return jQuery when its Bootstrap tooltip plugin is available.
+     * @returns {jQuery|null} jQuery instance or null when the legacy plugin is unavailable.
+     */
+    _getLegacyTooltipJQuery() {
+        const jQueryInstance = window.jQuery || window.$;
+        if (!jQueryInstance || !jQueryInstance.fn || typeof jQueryInstance.fn.tooltip !== 'function') return null;
+        return jQueryInstance;
+    }
+
+    /**
+     * Resolve the Bootstrap tooltip currently associated with a trigger.
+     * @param {HTMLElement} trigger - Tooltip trigger element.
+     * @returns {HTMLElement|null} Generated tooltip element.
+     */
+    _getTooltipElement(trigger) {
+        const rememberedTooltip = this.tooltipElements.get(trigger);
+        if (rememberedTooltip?.isConnected) return rememberedTooltip;
+        this.tooltipElements.delete(trigger);
+
+        const stableDescriptionId = trigger.getAttribute(FormTooltip.DESCRIPTION_ID_ATTRIBUTE);
+        const tooltipIds = (trigger.getAttribute('aria-describedby') || '').trim().split(/\s+/).filter(Boolean);
+        for (const tooltipId of tooltipIds) {
+            const tooltip = trigger.ownerDocument.getElementById(tooltipId);
+            if (tooltipId !== stableDescriptionId && tooltip?.matches('.tooltip[role="tooltip"]')) return tooltip;
+        }
+        return null;
+    }
+
+    /**
+     * Restore the field-specific description that must remain available before and after display.
+     * @param {HTMLElement} trigger - Tooltip trigger element.
+     */
+    _restoreDescription(trigger) {
+        const descriptionId = trigger.getAttribute(FormTooltip.DESCRIPTION_ID_ATTRIBUTE);
+        if (descriptionId && trigger.ownerDocument.getElementById(descriptionId)) {
+            trigger.setAttribute('aria-describedby', descriptionId);
+        }
+    }
+
+    /**
+     * Remember Bootstrap's generated visual tooltip before restoring the stable description relation.
+     * @param {HTMLElement} trigger - Tooltip trigger element.
+     */
+    _captureTooltipElement(trigger) {
+        const descriptionId = trigger.getAttribute(FormTooltip.DESCRIPTION_ID_ATTRIBUTE);
+        const tooltipIds = (trigger.getAttribute('aria-describedby') || '').trim().split(/\s+/).filter(Boolean);
+        for (const tooltipId of tooltipIds) {
+            const tooltip = trigger.ownerDocument.getElementById(tooltipId);
+            if (tooltipId !== descriptionId && tooltip?.matches('.tooltip[role="tooltip"]')) {
+                this.tooltipElements.set(trigger, tooltip);
+                break;
+            }
+        }
+        this._restoreDescription(trigger);
+    }
+
+    /**
+     * Check whether Bootstrap's generated tooltip is currently visible.
+     * @param {HTMLElement|null} tooltip - Generated tooltip element.
+     * @returns {boolean} True when the tooltip is rendered and visible.
+     */
+    _isTooltipVisible(tooltip) {
+        if (!tooltip?.isConnected) return false;
+        const style = tooltip.ownerDocument.defaultView.getComputedStyle(tooltip);
+        return style.display !== 'none' && style.visibility !== 'hidden' && parseFloat(style.opacity || '1') > 0;
+    }
+
+    /**
+     * Dispatch a native mouse transition consumed by both older and newer Bootstrap versions.
+     * @param {HTMLElement} trigger - Tooltip trigger element.
+     * @param {string} type - Mouse event type.
+     * @param {EventTarget|null} relatedTarget - Element related to the transition.
+     */
+    _dispatchMouseTransition(trigger, type, relatedTarget) {
+        const ownerDocument = trigger.ownerDocument;
+        const view = ownerDocument.defaultView || window;
+        let event;
+
+        try {
+            event = new view.MouseEvent(type, {
+                bubbles: true,
+                cancelable: true,
+                relatedTarget
+            });
+        } catch (error) {
+            event = ownerDocument.createEvent('MouseEvents');
+            event.initMouseEvent(type, true, true, view, 0, 0, 0, 0, 0, false, false, false, false, 0, relatedTarget);
+        }
+
+        trigger.dispatchEvent(event);
+    }
+
+    /**
+     * Keep an open tooltip visible while the pointer moves from its trigger to its content.
+     * @param {HTMLElement} trigger - Tooltip trigger element.
+     */
+    _makeTooltipHoverable(trigger) {
+        const tooltip = this._getTooltipElement(trigger);
+        if (!tooltip) return;
+
+        tooltip.classList.add('wj-form-tooltip-hoverable');
+        tooltip.style.pointerEvents = 'auto';
+
+        if (this.hoverBindings.has(tooltip)) return;
+
+        tooltip.addEventListener('mouseenter', () => {
+            this._dispatchMouseTransition(trigger, 'mouseover', tooltip);
+        });
+        tooltip.addEventListener('mouseleave', event => {
+            this._dispatchMouseTransition(trigger, 'mouseout', event.relatedTarget || tooltip);
+        });
+        this.hoverBindings.add(tooltip);
+    }
+
+    /**
+     * Prevent Bootstrap's delayed hide while the pointer is over the tooltip content.
+     * @param {Event|jQuery.Event} event - Bootstrap hide event.
+     * @param {HTMLElement} trigger - Tooltip trigger element.
+     */
+    _keepHoveredTooltipVisible(event, trigger) {
+        if (this.forcedHideTriggers.has(trigger)) return;
+
+        const tooltip = this._getTooltipElement(trigger);
+        if (tooltip?.matches(':hover')) event.preventDefault();
+    }
+
+    /**
+     * Check whether a key event should activate a non-native button.
+     * @param {KeyboardEvent|jQuery.Event} event - Keyboard event.
+     * @returns {boolean} True for Enter and Space.
+     */
+    _isActivationKey(event) {
+        return event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar' || event.which === 13 || event.which === 32;
+    }
+
+    /**
+     * Create a common adapter for native Bootstrap 5 and legacy jQuery tooltips.
+     * @param {HTMLElement} trigger - Tooltip trigger element.
+     * @returns {Object|null} Tooltip adapter or null when neither API is available.
+     */
+    _createAdapter(trigger) {
+        const Tooltip = this._getNativeTooltipClass();
+        if (Tooltip) {
+            const instance = typeof Tooltip.getOrCreateInstance === 'function'
+                ? Tooltip.getOrCreateInstance(trigger, FormTooltip.CONFIG)
+                : (typeof Tooltip.getInstance === 'function' && Tooltip.getInstance(trigger)) || new Tooltip(trigger, FormTooltip.CONFIG);
+            return {
+                kind: 'native',
+                show: () => instance.show(),
+                hide: () => instance.hide(),
+                dispose: () => instance.dispose()
+            };
+        }
+
+        const jQueryInstance = this._getLegacyTooltipJQuery();
+        if (!jQueryInstance) return null;
+
+        const $trigger = jQueryInstance(trigger);
+        $trigger.tooltip(FormTooltip.CONFIG);
+        return {
+            kind: 'jquery',
+            $trigger,
+            show: () => $trigger.tooltip('show'),
+            hide: () => $trigger.tooltip('hide'),
+            dispose: () => {
+                try {
+                    $trigger.tooltip('dispose');
+                } catch (error) {
+                    $trigger.tooltip('destroy');
+                }
+            }
+        };
+    }
+
+    /**
+     * Activate a tooltip through a non-native key press or a keyboard-generated native button click.
+     * @param {KeyboardEvent|MouseEvent} event - Activation event.
+     * @param {HTMLElement} trigger - Tooltip trigger element.
+     */
+    _activate(event, trigger) {
+        const isNativeButton = trigger.tagName.toLowerCase() === 'button';
+        const tooltip = this._getTooltipElement(trigger);
+
+        if (isNativeButton) {
+            if (event.type !== 'click' || event.detail !== 0 || this._isTooltipVisible(tooltip)) return;
+            event.preventDefault();
+            this.adapters.get(trigger)?.show();
+            return;
+        }
+
+        if (trigger.getAttribute('role') !== 'button' || !this._isActivationKey(event)) return;
+
+        event.preventDefault();
+        if (!this._isTooltipVisible(tooltip)) this.adapters.get(trigger)?.show();
+    }
+
+    /**
+     * Bind tooltip lifecycle events for either the native or jQuery Bootstrap API.
+     * @param {HTMLElement} trigger - Tooltip trigger element.
+     * @param {Object} adapter - Tooltip API adapter.
+     */
+    _bindLifecycle(trigger, adapter) {
+        if (!this.activationBindings.has(trigger)) {
+            trigger.addEventListener('keydown', event => this._activate(event, trigger));
+            if (trigger.tagName.toLowerCase() === 'button') {
+                trigger.addEventListener('click', event => this._activate(event, trigger));
+            }
+            this.activationBindings.add(trigger);
+        }
+
+        if (adapter.kind === 'native') {
+            if (this.nativeLifecycleBindings.has(trigger)) return;
+            const captureAndMakeHoverable = () => {
+                this._captureTooltipElement(trigger);
+                this._makeTooltipHoverable(trigger);
+            };
+            const restoreDescription = () => {
+                this.tooltipElements.delete(trigger);
+                this._restoreDescription(trigger);
+            };
+            trigger.addEventListener('inserted.bs.tooltip', captureAndMakeHoverable);
+            trigger.addEventListener('shown.bs.tooltip', captureAndMakeHoverable);
+            trigger.addEventListener('hide.bs.tooltip', event => this._keepHoveredTooltipVisible(event, trigger));
+            trigger.addEventListener('hidden.bs.tooltip', restoreDescription);
+            this.nativeLifecycleBindings.add(trigger);
+            return;
+        }
+
+        adapter.$trigger.off(FormTooltip.EVENT_NAMESPACE)
+            .on(`inserted.bs.tooltip${FormTooltip.EVENT_NAMESPACE} shown.bs.tooltip${FormTooltip.EVENT_NAMESPACE}`, () => {
+                this._captureTooltipElement(trigger);
+                this._makeTooltipHoverable(trigger);
+            })
+            .on(`hide.bs.tooltip${FormTooltip.EVENT_NAMESPACE}`, event => this._keepHoveredTooltipVisible(event, trigger))
+            .on(`hidden.bs.tooltip${FormTooltip.EVENT_NAMESPACE}`, () => {
+                this.tooltipElements.delete(trigger);
+                this._restoreDescription(trigger);
+            });
+    }
+
+    /**
+     * Initialize one form tooltip trigger.
+     * @param {HTMLElement} trigger - Tooltip trigger element.
+     * @returns {boolean} True when a supported Bootstrap tooltip API is available.
+     */
+    _initializeTrigger(trigger) {
+        this._restoreDescription(trigger);
+        const adapter = this._createAdapter(trigger);
+        if (!adapter) return false;
+
+        this.adapters.set(trigger, adapter);
+        trigger.setAttribute(FormTooltip.INITIALIZED_ATTRIBUTE, 'true');
+        trigger.classList.add('wj-form-tooltip-trigger');
+        this._bindLifecycle(trigger, adapter);
+        this._makeTooltipHoverable(trigger);
+        return true;
+    }
+
+    /**
+     * Dismiss every visible initialized form tooltip when Escape is pressed.
+     * @param {KeyboardEvent} event - Captured keyboard event.
+     */
+    _hideActiveTooltips(event) {
+        const isEscape = event.key === 'Escape' || event.key === 'Esc' || event.which === 27;
+        if (!isEscape) return;
+
+        const activeTriggers = [];
+        document.querySelectorAll(FormTooltip.TRIGGER_SELECTOR).forEach(trigger => {
+            if (trigger.getAttribute(FormTooltip.INITIALIZED_ATTRIBUTE) !== 'true') return;
+            const tooltip = this._getTooltipElement(trigger);
+            if (tooltip?.getAttribute('role') === 'tooltip' && this._isTooltipVisible(tooltip)) activeTriggers.push(trigger);
+        });
+
+        if (activeTriggers.length === 0) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+        activeTriggers.forEach(trigger => {
+            this.forcedHideTriggers.add(trigger);
+            try {
+                this.adapters.get(trigger)?.hide();
+            } catch (error) {
+                console.warn('Failed to hide form tooltip:', error);
+            } finally {
+                this.forcedHideTriggers.delete(trigger);
+            }
+        });
+    }
+
+    /**
+     * Initialize accessible Bootstrap tooltips below the supplied root.
+     * @param {Document|Element|jQuery} [root=document] - Root to scan.
+     * @returns {boolean} True when the Bootstrap tooltip plugin is available.
+     */
+    init(root = document) {
+        const rootElement = root?.jquery ? root[0] : root;
+        if (!rootElement) return false;
+
+        const triggers = [];
+        if (rootElement.matches?.(FormTooltip.TRIGGER_SELECTOR)) triggers.push(rootElement);
+        triggers.push(...rootElement.querySelectorAll(FormTooltip.TRIGGER_SELECTOR));
+
+        let tooltipApiAvailable = Boolean(this._getNativeTooltipClass() || this._getLegacyTooltipJQuery());
+        triggers.forEach(trigger => {
+            try {
+                tooltipApiAvailable = this._initializeTrigger(trigger) || tooltipApiAvailable;
+            } catch (error) {
+                console.warn('Failed to initialize form tooltip:', error);
+            }
+        });
+
+        if (tooltipApiAvailable && !this.escapeHandlerBound) {
+            document.addEventListener('keydown', this._hideActiveTooltips, true);
+            this.escapeHandlerBound = true;
+        }
+
+        return tooltipApiAvailable;
+    }
+
+    /**
+     * Dispose initialized Bootstrap tooltip instances below the supplied root before its DOM is replaced.
+     * @param {Document|Element|jQuery} [root=document] - Root containing tooltip triggers.
+     */
+    dispose(root = document) {
+        const rootElement = root?.jquery ? root[0] : root;
+        if (!rootElement) return;
+
+        const triggers = [];
+        if (rootElement.matches?.(FormTooltip.TRIGGER_SELECTOR)) triggers.push(rootElement);
+        triggers.push(...rootElement.querySelectorAll(FormTooltip.TRIGGER_SELECTOR));
+
+        triggers.forEach(trigger => {
+            const adapter = this.adapters.get(trigger);
+            try {
+                adapter?.dispose?.();
+            } catch (error) {
+                console.warn('Failed to dispose form tooltip:', error);
+            }
+            this.adapters.delete(trigger);
+            this.tooltipElements.delete(trigger);
+        });
     }
 }
