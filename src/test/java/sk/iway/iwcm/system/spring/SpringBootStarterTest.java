@@ -15,9 +15,13 @@ import static org.mockito.Mockito.when;
 
 import java.nio.file.Path;
 import java.util.Properties;
+import java.util.Set;
 import java.util.function.Function;
 
+import jakarta.servlet.ServletContext;
+
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.web.WebProperties;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.bind.Binder;
@@ -27,6 +31,7 @@ import org.springframework.core.env.PropertiesPropertySource;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
+import org.springframework.web.context.WebApplicationContext;
 
 class SpringBootStarterTest {
 
@@ -145,5 +150,30 @@ class SpringBootStarterTest {
         assertEquals("/error", webProperties.getError().getPath());
         assertNull(applicationProperties.getProperty("server.error.whitelabel.enabled"));
         assertNull(applicationProperties.getProperty("server.error.path"));
+    }
+
+    @Test
+    void externalWarDelegatesErrorPagesToServletContainer() {
+        CapturingSpringBootStarter starter = new CapturingSpringBootStarter();
+
+        Set<Object> applicationSources = starter.captureApplicationSources(mock(ServletContext.class));
+
+        assertEquals(Set.of(SpringBootStarter.class), applicationSources);
+    }
+
+    private static class CapturingSpringBootStarter extends SpringBootStarter {
+
+        private Set<Object> applicationSources;
+
+        Set<Object> captureApplicationSources(ServletContext servletContext) {
+            createRootApplicationContext(servletContext);
+            return applicationSources;
+        }
+
+        @Override
+        protected WebApplicationContext run(SpringApplication application) {
+            applicationSources = application.getAllSources();
+            return mock(WebApplicationContext.class);
+        }
     }
 }

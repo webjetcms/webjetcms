@@ -30,6 +30,10 @@ class ExternalWarRegistrationContractTest {
     private static final List<Path> DEPLOYMENT_DESCRIPTORS = List.of(
         Path.of("src/main/webapp/WEB-INF/web.xml")
     );
+    private static final List<Path> MIME_MAPPING_DESCRIPTORS = List.of(
+        Path.of("src/main/webapp/WEB-INF/web.xml"),
+        Path.of("src/main/webapp/WEB-INF/web-v2023.xml")
+    );
     private static final Map<String, String> DESCRIPTOR_FILTERS = Map.of(
         "ContextFilter", "sk.iway.iwcm.system.context.ContextFilter",
         "StripesFilter", "net.sourceforge.stripes.controller.StripesFilterIway",
@@ -39,6 +43,14 @@ class ExternalWarRegistrationContractTest {
         "GetProtectedFile", "sk.iway.iwcm.doc.GetProtectedFileServlet",
         "iwcminit", "sk.iway.iwcm.InitServlet",
         "StripesDispatcher", "net.sourceforge.stripes.controller.DispatcherServlet"
+    );
+    private static final Map<String, String> DESCRIPTOR_ERROR_PAGES = Map.of(
+        "400", "/403.jsp",
+        "401", "/403.jsp",
+        "403", "/403.jsp",
+        "404", "/404.jsp",
+        "405", "/403.jsp",
+        "500", "/500.jsp"
     );
     private static final Set<String> ANNOTATED_SERVLET_CLASSES = Set.of(
         "sk.iway.iwcm.doc.ShowDoc",
@@ -95,6 +107,12 @@ class ExternalWarRegistrationContractTest {
                 "url-pattern", "/files/protected/*", null, descriptorPath);
             assertMapping(descriptor, "servlet-mapping", "servlet-name", "StripesDispatcher",
                 "url-pattern", "*.action", null, descriptorPath);
+            DESCRIPTOR_ERROR_PAGES.forEach((errorCode, location) -> {
+                assertMapping(descriptor, "error-page", "error-code", errorCode,
+                    "location", location, null, descriptorPath);
+                assertEquals(1, countElements(descriptor, "error-page", "error-code", errorCode),
+                    () -> "Error page " + errorCode + " must be declared exactly once in " + descriptorPath);
+            });
         }
     }
 
@@ -107,6 +125,18 @@ class ExternalWarRegistrationContractTest {
         assertNull(sk.iway.iwcm.doc.GetProtectedFileServlet.class.getAnnotation(WebServlet.class));
         assertNull(sk.iway.iwcm.InitServlet.class.getAnnotation(WebServlet.class));
         assertNull(net.sourceforge.stripes.controller.DispatcherServlet.class.getAnnotation(WebServlet.class));
+    }
+
+    @Test
+    void deploymentDescriptorsServePropertiesFilesAsPlainText() throws Exception {
+        for (Path descriptorPath : MIME_MAPPING_DESCRIPTORS) {
+            Document descriptor = parseDescriptor(descriptorPath);
+
+            assertMapping(descriptor, "mime-mapping", "extension", "properties",
+                "mime-type", "text/plain", null, descriptorPath);
+            assertEquals(1, countElements(descriptor, "mime-mapping", "extension", "properties"),
+                () -> "Properties MIME mapping must be declared exactly once in " + descriptorPath);
+        }
     }
 
     @Test

@@ -99,7 +99,8 @@ Scenario("API volanie zle heslo @singlethread", async ({ I }) => {
     I.sendGetRequest('/admin/rest/web-pages/all?groupId=25', {
         'x-auth-token': 'aaaksjdhfkashdflaksdhj'
     });
-    I.seeResponseCodeIs(code403);
+    if (basicAuthEnabled === true) I.seeResponseCodeIs(code401);
+    else I.seeResponseCodeIs(code403);
 
     I.wait(10);
 

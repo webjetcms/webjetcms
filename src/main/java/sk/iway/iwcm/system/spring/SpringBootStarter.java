@@ -68,6 +68,12 @@ public class SpringBootStarter extends SpringBootServletInitializer {
     private static final org.apache.commons.logging.Log BOOTSTRAP_LOG =
         org.apache.commons.logging.LogFactory.getLog(SpringBootStarter.class);
 
+    public SpringBootStarter() {
+        // External WAR deployments declare their error pages in WEB-INF/web.xml.
+        // Container handling also works across legacy RequestDispatcher forwards.
+        setRegisterErrorPageFilter(false);
+    }
+
     public static void main(String[] args) {
         Logger.info(SpringBootStarter.class, "=== WebJET CMS starting with Spring Boot 4.x ===");
 
