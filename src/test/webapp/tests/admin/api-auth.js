@@ -17,7 +17,10 @@ function setApiTokenAuthConf(I, Document, allowed=true) {
 }
 
 async function isBasicAuthEnabled(I) {
-    if (basicAuthEnabled!==null) return basicAuthEnabled;
+    if (basicAuthEnabled!==null) {
+        I.say("Basic auth is "+basicAuthEnabled+" (cached)");
+        return basicAuthEnabled;
+    }
 
     let response = await I.sendGetRequest('/rest/basic-auth-enabled', {
         'x-auth-token': ''
@@ -72,7 +75,8 @@ Scenario("API volanie - disabled", async ({ I, Document }) => {
 
     I.sendGetRequest('/admin/rest/web-pages/all?groupId=25');
     //always 403 when api-token auth is disabled
-    I.seeResponseCodeIs(code403);
+    if (basicAuthEnabled === true) I.seeResponseCodeIs(code401);
+    else I.seeResponseCodeIs(code403);
 });
 
 Scenario("API token auth - reset", ({ I, Document }) => {
@@ -87,14 +91,16 @@ Scenario("API volanie zle heslo @singlethread", async ({ I }) => {
         'x-auth-token': 'dGVzdGVyOmNrTzxIfXRid05bTEldXGx3OURUa2szQ1pOVnJ+Njg8'
     });
     //it is always 403 because x-auth-token is not valid thus CSRF is required
-    I.seeResponseCodeIs(code403);
+    if (basicAuthEnabled === true) I.seeResponseCodeIs(code401);
+    else I.seeResponseCodeIs(code403);
 
     I.say("Testing logon blocking");
     I.wait(2);
     I.sendGetRequest('/admin/rest/web-pages/all?groupId=25', {
         'x-auth-token': 'aaaksjdhfkashdflaksdhj'
     });
-    I.seeResponseCodeIs(code403);
+    if (basicAuthEnabled === true) I.seeResponseCodeIs(code401);
+    else I.seeResponseCodeIs(code403);
 
     I.wait(10);
 

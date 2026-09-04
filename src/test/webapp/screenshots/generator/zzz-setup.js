@@ -6,6 +6,20 @@ Before(({ I }) => {
     confLng = I.getConfLng();
 });
 
+function loginToSetup(I, expectedFormAction) {
+    const setupToken = process.env.CODECEPT_SETUP_TOKEN;
+    I.assertTrue(
+        typeof setupToken === "string" && setupToken.length >= 16,
+        "Set CODECEPT_SETUP_TOKEN to the same token as WEBJET_SETUP_TOKEN before running setup screenshots"
+    );
+
+    I.waitForElement('form[action$="/login"]', 10);
+    I.fillField('input[name="username"]', "setup");
+    I.fillField('input[name="password"]', secret(setupToken));
+    I.clickCss('form[action$="/login"] button[type="submit"]');
+    I.waitForElement(`form[action="${expectedFormAction}"]`, 30);
+}
+
 /*
 POZOR: tieto testy je potrebne vykonavat postupne cez @current po jednom scenari a zakazdym restartovat server.
 Kod ale obsahuje pause(), takze da sa pustit aj naraz a pri kazdom pause len spravit restart app servera.
@@ -22,11 +36,10 @@ Scenario('Setup action', ({I, Document}) => {
     I.say("CREATE DATABASE blank_web DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_general_ci;");
     I.say("POZOR ! POZOR ! POZOR ! POZOR ! POZOR ! POZOR ! POZOR ! POZOR !");
     I.say("Databaza musí byť prázdna !!! Nesmie obsahovať žiadne tabuľky");
+    I.say("Spustite server s WEBJET_SETUP_ENABLED=true a WEBJET_SETUP_TOKEN");
+    I.say("Nastavte CODECEPT_SETUP_TOKEN na rovnakú tajnú hodnotu");
     I.say("-----------------------------------------------------------------");
     pause();
-
-    I.amOnPage("/admin");
-    Document.screenshot("/install/setup/error.png", 660, 200);
 
     switch (confLng) {
         case 'sk':
@@ -41,6 +54,7 @@ Scenario('Setup action', ({I, Document}) => {
         default:
             throw new Error(`Unsupported language code: ${confLng}`);
     }
+    loginToSetup(I, "/wjerrorpages/setup/perform-setup");
 
     I.say("Nastavte udaje na screenshot");
     I.fillField("#dbDomain", "mariadb.srv.local");
@@ -67,6 +81,7 @@ Scenario('Setup action', ({I, Document}) => {
     }
 
     I.say("We dont set license key - start as free version");
+    I.fillField("#dbPassword", secret("${WEBJET_DB_PASS}"));
 
     I.clickCss("#btnOk");
 
@@ -85,6 +100,7 @@ Scenario('Setup action', ({I, Document}) => {
 Scenario('First login/password change /and others', ({I, DTE, Document}) => {
     I.say("POZOR ! POZOR ! POZOR ! POZOR ! POZOR ! POZOR ! POZOR ! POZOR !");
     I.say("Tento test musí byť vykonaný po inicializácií DB (setup akcie) a po následnom reštartovaní");
+    I.say("Pred reštartom odstráňte WEBJET_SETUP_ENABLED a WEBJET_SETUP_TOKEN");
     I.say("WebJET musí byť naštartovaný !!");
     I.say("-----------------------------------------------------------------");
     pause();
@@ -190,8 +206,9 @@ Scenario('Pridanie/zmena licencie', ({I, Document}) => {
 
     I.fillField("#username", "admin");
 
-    I.say("Zadaj heslo a licencne cislo");
+    I.say("Zadaj platne licencne cislo a pokracuj v teste");
     I.fillField("#password", secret(I.getDefaultPassword()));
+    pause();
 
     I.clickCss("#btnOk");
 
@@ -211,6 +228,8 @@ Scenario('Pridanie/zmena licencie', ({I, Document}) => {
 
 
     Document.screenshot("/install/license/license-saved.png");
+
+    I.say("Reštartni aplikačný server, aby sa použila nová licencia");
 });
 
 Scenario('reset DB', async({ I, DT, DTE, Document }) => {

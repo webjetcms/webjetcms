@@ -181,6 +181,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Bezpečnosť
 
+- Inštalácia - [setup režim](install/setup/README.md#aktivácia-setup-režimu) sa aktivuje iba explicitne a je chránený samostatným tokenom. Výpadok databázy už aplikáciu neprepne do setup režimu; po dokončení je potrebné setup vypnúť a reštartovať aplikačný server (#58569).
 - Pridaná podpora generovania `nonce` pre [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
 - AI asistenti - pridaná ochrana pred `prompt injection` útokmi s oddelením systémových inštrukcií od používateľského obsahu a detekciou kódovaných vstupov (#58549).
 
@@ -190,6 +191,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Vytvorená sekcia [Riešenie problémov](sysadmin/troubleshooting/README.md) v manuáli pre prevádzku.
 
 ### Pre programátora
+
+- Maven artefakt WebJET CMS je určený pre zákaznícky WAR nasadený do externého Tomcatu 11. Embedded Tomcat sa už neprenáša ako runtime/compile závislosť: kontajnerové balíky a Jakarta serverové API sú publikované so scope `provided` a tranzitívne Tomcat vetvy sú vylúčené. Embedded runtime zostáva dostupný iba pre lokálny vývoj a executable WAR v `WEB-INF/lib-provided` (#58569).
 
 - Administrácia - odstránená závislosť od [Vue.js](https://vuejs.org). Stromové polia, úvodná stránka, výber oblasti obrázka a monitorovanie servera používajú natívne [web komponenty](developer/frameworks/web-components.md). Globálny objekt `window.VueTools` ani balíky pre Vue už nie sú súčasťou administrácie. Vlastné rozšírenia ich musia nahradiť web komponentmi alebo si Vue zostaviť samostatne (#58722).
 - AI asistenti - klientska logika nezávislá od poskytovateľa pre OpenAI, Gemini a OpenRouter, spracovanie streamov, typy požiadaviek/odpovedí a ochrana promptov boli vyčlenené do samostatného artefaktu `com.webjetcms:webjet-ai` a externého [repozitára webjet-ai](https://github.com/webjetcms/webjet-ai). WebJET CMS odovzdáva konfiguráciu cez typovaný adaptér a naďalej zabezpečuje auditovanie, perzistenciu a integráciu používateľského rozhrania. Ide o nekompatibilnú zmenu: pôvodné CMS SPI pre vlastných poskytovateľov a jeho transportné a streamovacie podporné triedy boli odstránené. Vlastných poskytovateľov je nutné migrovať na rozhranie `AiProvider` knižnice a CMS adaptér `LibrarySupportLogic`  (#58670).

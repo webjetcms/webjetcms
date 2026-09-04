@@ -1,10 +1,10 @@
 # Zriadenie novej inštalácie
 
-Návod na zriadenie novej inštalácie/čistej databázy pre nový projekt vo WebJETe. Inštalácia je z bezpečnostných dôvodov povolená len na doméne `localhost`, po inštalácii môžete používať štandardné doménové meno.
+Návod na zriadenie novej inštalácie/čistej databázy pre nový projekt vo WebJETe. Setup je možné vykonať lokálne aj vzdialene. Z bezpečnostných dôvodov sa musí pred štartom explicitne povoliť a je chránený samostatným tokenom.
 
 ## Predpoklady
 
-- lokálne funkčný WebJET (nakonfigurovaný Tomcat, web aplikácia)
+- funkčný WebJET (nakonfigurovaný Tomcat, web aplikácia)
 - prístup na DB server s právami pre zriadenie novej DB schémy (alebo už zriadená DB schéma)
 
 !>**Upozornenie:** ak zriaďujete novú inštaláciu použite ako základ repozitár [basecms](https://github.com/webjetcms/basecms) nie repozitár [webjetcms](https://github.com/webjetcms/webjetcms). Rozdiel je v tom, že `basemcs` je základný projekt použitia WebJET CMS s možnosťou vlastného [dizajnu web stránok](../../frontend/README.md) a programovania [zákazníckych aplikácií](../../custom-apps/README.md). Repozitár `webjetcms` je určený pre programátora jadra WebJET CMS a vyžaduje [zložitejšie nastavenie](../../developer/install/README.md).
@@ -13,7 +13,7 @@ Návod na zriadenie novej inštalácie/čistej databázy pre nový projekt vo We
 
 - Server s minimálne 8 GB pamäte (pre aplikácie s väčšou záťažou minimálne 12GB), procesor aspoň `Dual Core 2 GHz` (pre servery s väčšou záťažou Quad core), miesto na disku aspoň 40GB.
 - Databáza `MySQL/MariaDB verzie 5.0+` (s kódovaním UTF-8), alebo databáza `Microsoft SQL 2012+` alebo databáza `Oracle 11g+` alebo `PostgreSQL 16+`.
-- [Open JDK](https://adoptium.net/temurin/releases/) verzie 17 a aplikačný server [Tomcat](https://tomcat.apache.org/download-90.cgi) 9.
+- [Open JDK](https://adoptium.net/temurin/releases/) verzie 17 a aplikačný server [Tomcat](https://tomcat.apache.org/download-11.cgi) 11.
 - Pripojenie na SMTP server pre posielanie emailov.
 - Funkčný DNS server.
 - Pre urýchlenie generovania náhľadových obrázkov odporúčame nainštalovanú knižnicu [ImageMagick](https://imagemagick.org/script/download.php).
@@ -60,6 +60,8 @@ Pre inštalácie produktov ako je `NET, LMS, DSK` je na serveri potrebné povoli
   </datasource>
 </poolman>
 ```
+
+Pre novú databázu Microsoft SQL setup používa collation `Latin1_General_100_CI_AI_SC`: `Latin1_General` určuje jazykové pravidlá radenia a porovnávania, `_100` ich novšiu verziu, `CI` porovnávanie bez rozlišovania veľkosti písmen, `AI` bez rozlišovania diakritiky a `_SC` podporu doplnkových znakov Unicode. Vďaka `_SC` SQL Server spracuje UTF-16 surrogate pair ako jeden znak, čo je dôležité napríklad pre emoji a ďalšie znaky mimo základnej viacjazyčnej roviny; podrobnosti uvádza dokumentácia Microsoftu [Collation and Unicode support](https://learn.microsoft.com/sql/relational-databases/collations/collation-and-unicode-support?view=sql-server-ver17).
 
 [Oracle](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/):
 
@@ -139,47 +141,53 @@ Príklad nastavenia špecifických vlastností:
 </poolman>
 ```
 
+## Aktivácia setup režimu
+
+Setup režim sa neaktivuje automaticky pri nedostupnej, prázdnej ani nesprávne nakonfigurovanej databáze. Pred prvým spustením ho dočasne povoľte a nastavte bezpečnostný token.
+
+Vygenerujte náhodný token s dĺžkou najmenej 16 znakov, napríklad:
+
+```sh
+openssl rand -base64 32
+```
+
+Pred spustením aplikačného servera nastavte premenné prostredia:
+
+```sh
+export WEBJET_SETUP_ENABLED=true
+export WEBJET_SETUP_TOKEN="VYGENEROVANY_TOKEN"
+```
+
+Zodpovedajúce Spring vlastnosti sú `webjet.setup.enabled` a `webjet.setup.token`. Token ukladajte ako tajnú hodnotu v konfigurácii aplikačného servera alebo v správe tajomstiev. Nevkladajte ho do repozitára, URL adresy ani logu.
+
+!>**Upozornenie:** pri vzdialenom setupe musí aplikačný server alebo reverzný proxy server HTTP prístup zablokovať alebo presmerovať na HTTPS. Predvolený embedded setup nezašifrovaný HTTP port automaticky neotvára.
+
+Bez `WEBJET_SETUP_ENABLED=true` sa WebJET pri nedostupnej alebo neplatnej databázovej konfigurácii ukončí s chybou. Výpadok existujúcej produkčnej databázy preto nikdy automaticky nesprístupní setup.
+
 ## Naplnenie DB schémy
 
 WebJET obsahuje vstavanú konfiguráciu, ktorá vie naplniť prázdnu DB schému.
 
-- spustite WebJET / Tomcat
-- pri štarte WebJET zahlási chybu (viacero chýb)
-
-```log
-[27.11 8:32:49 {webjet} {InitServlet}] -----------------------------------------------
-[27.11 8:32:49 {webjet} {InitServlet}] WebJET initializing, root: ...
-[27.11 8:32:49 {webjet} {InitServlet}]
-[27.11 8:32:49 {webjet} {InitServlet}] Checking database connection:
-[27.11 8:32:49 {webjet} {InitServlet}]    Database connection: [OK]
-java.sql.SQLSyntaxErrorException: Table 'MENO-SCHEMY._conf_' doesn't exist
-...
-[27.11 8:32:49 {webjet} {InitServlet}] ERROR: Server not configured.
-[27.11 8:32:49 {webjet} {InitServlet}] ERROR: Server not configured.
-[27.11 8:32:49 {webjet} {InitServlet}] ERROR: Server not configured.
-...
-```
-
-Pri pokuse o prihlásenie alebo prístup k web stránke WebJET-u zobrazí chybové hlásenie:
-
-![](./error.png)
-
-- V prehliadači otvorte URL adresu [inštalácie](http://localhost/wjerrorpages/setup/setup).
-
-> WebJET všetko čo začína na `/wjerrorpages/` spracuje aj keď nie je naštartovaný. Automaticky poskytuje statický súbor [/wjerrorpages/dberror.html](http://localhost/wjerrorpages/dberror.html) pri akejkoľvek GET požiadavke. V adresári `/wjerrorpages/` je možné mať aj obrázky, odporúčame ich ale radšej vložiť cez `data:` zápis priamo do `dberror.html`.
-
-- Vyššie uvedená URL má výnimku a je povolené jej použitie aj pri nekorektne naštartovanom WebJETe (ale len na doméne `localhost` alebo `iwcm.interway.sk`).
-- Zobrazí sa vám dialóg inštalácie WebJETu:
+- spustite WebJET / Tomcat s aktivovaným setup režimom,
+- ak aplikáciu prevádzkujete v klastri, počas setupu spustite iba jednu inštanciu a ostatné nechajte zastavené,
+- v prehliadači otvorte adresu `https://MENO-SERVERA/wjerrorpages/setup/setup`,
+- WebJET vás presmeruje na prihlasovaciu stránku,
+- použite meno `setup` a ako heslo zadajte vygenerovaný setup token,
+- po úspešnom prihlásení sa zobrazí dialóg inštalácie WebJETu:
 
 ![](./setup.png)
 
-- Skontrolujte/zadajte údaje pre nastavenie databázového pripojenia (predvolia sa hodnoty zo súboru poolman.xml). Inštalácia vytvára spojenie priamo na uvedené hodnoty (ignoruje hodnoty v poolman.xml), preto ich potrebuje. Ak ale súbor `poolman.xml` už existuje, neprepíše ho, čiže pre ďalší štart sa už použijú hodnoty v `poolman.xml`. Ak súbor neexistuje, vytvorí sa podľa zadaných hodnôt.
+- Skontrolujte/zadajte údaje pre nastavenie databázového pripojenia. Server, názov databázy a používateľ zo súboru `poolman.xml` sa môžu predvoliť. Heslá ani potenciálne citlivé parametre JDBC URL sa nepredvypĺňajú a musíte ich zadať. Inštalácia najskôr overí spojenie priamo na hodnoty z formulára. Ak súbor `poolman.xml` už existuje, neprepíše ho; pri ďalšom štarte sa použijú jeho hodnoty. Ak súbor neexistuje, vytvorí sa až po úspešnom overení spojenia a pri neúspešnom naplnení databázy sa odstráni, aby bolo možné údaje opraviť a setup zopakovať.
 - Zadajte unikátny názov inštalácie (bez medzier a diakritiky, napr. `interway2023`) a licenčné číslo (ak nepoužívate Open Sorce verziu) a skontrolujte ostatné hodnoty.
-- Kliknite na OK pre spustenie inštalácie. Ak validácia zadaných hodnôt prebehne úspešne, uvidíte nasledujúce hlásenie:
+- Kliknite na OK pre spustenie inštalácie. WebJET naplní iniciálne dáta podľa `/WEB-INF/sql/blank_web_DBTYPE.sql` a zobrazí potvrdenie o úspešnej konfigurácii.
 
-![](./setup-saved.png)
+Po úspešnom naplnení databázy:
 
-Na pozadí WebJET naplní iniciálne dáta (podľa `/WEB-INF/sql/blank_web_DBTYPE.sql`) a následne vykoná reštart. Ak sa reštart nevykoná automaticky (server nemá nastavené automatické reštartovanie) reštartnite aplikačný server manuálne.
+1. zastavte aplikačný server,
+2. odstráňte premenné `WEBJET_SETUP_ENABLED` a `WEBJET_SETUP_TOKEN`,
+3. vykonajte úplný manuálny reštart aplikačného servera.
+
+Automatické obnovenie aplikácie nestačí. Po reštarte WebJET overí databázu a spustí sa v produkčnom režime. Až potom otvorte administračnú časť.
 
 V logu by ste mali vidieť niečo ako:
 
@@ -211,8 +219,6 @@ Executing:
 INSERT INTO users VALUES("2", "", "Obchodny", "Partner", "partner", "34f414bd2609b73403ea09787fb0aac4", "0", "2", "Interway s.r.o.", "Hattalova 12/a", "", "lubos.balat@interway.sk", "83103", "Slovensko", "0903-945990", "1", "", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
 Executing:
 INSERT INTO users VALUES("3", "", "VIP", "Klient", "vipklient", "d1a9b4b9977e4829011396ec9dd2cf6a", "0", "1", "Interway s.r.o.", "Hattalova 12/a", NULL, "lubos.balat@interway.sk", "83103", "Slovensko", "0903-945990", "1", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
-[27.11 9:24:31 {webjet} {InitServlet}] RESTART request ret=true
-[27.11 9:24:31 {webjet} {InitServlet}] RESTART request ret=true
 ```
 
 Po reštarte sa vykoná aktualizáciu schémy podľa `autoupdate.xml`:

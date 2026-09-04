@@ -17,6 +17,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.security.web.webauthn.management.PublicKeyCredentialUserEntityRepository;
 import org.springframework.security.web.webauthn.management.UserCredentialRepository;
@@ -108,13 +109,21 @@ public class SpringSecurityConf {
 		if (springSecurityAllowedAuths != null && springSecurityAllowedAuths.contains("basic")) {
 			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - httpBasic");
 			basicAuthEnabled = true; //NOSONAR
-			http.httpBasic(customizer -> {});
+			http.httpBasic(customizer -> customizer.authenticationEntryPoint((request, response, authException) -> {
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				response.setHeader("WWW-Authenticate", "Basic realm=\"Secure Area\"");
+				if (request.getRequestURI().contains("/rest/")) {
+					response.setContentType("application/json");
+					response.getWriter().write("{\"error\":\"Authentication required\",\"status\":401}");
+				}
+			}));
 		}
 
 		// OAuth2 login support
 		if (Tools.isNotEmpty(Constants.getString("oauth2_clients"))) {
 			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - oauth2Login");
 			http.oauth2Login(oauth2 -> {
+				oauth2.loginPage("/admin/logon/");
 				oauth2.clientRegistrationRepository(clientRegistrationRepository());
 				oauth2.authorizedClientService(authorizedClientService(clientRegistrationRepository()));
 				oauth2.successHandler(new OAuth2DynamicSuccessHandler());
@@ -203,6 +212,9 @@ public class SpringSecurityConf {
 			configureSecurity(http, "sk.iway." + Constants.getLogInstallName() + ".SpringConfig");
 		}
 
+		// Keep the public fallback after all project-specific authorization rules.
+		http.authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll());
+
 		SecurityFilterChain chain = http.build();
 		SpringAppInitializer.dtDiff("configureSecurity END");
 		return chain;
@@ -232,9 +244,12 @@ public class SpringSecurityConf {
 				ConfigurableSecurity cs = (ConfigurableSecurity) configClass.getDeclaredConstructor().newInstance();
 				cs.configureSecurity(http);
 			}
+		} catch (ClassNotFoundException e)
+		{
+			Logger.debug(SpringSecurityConf.class, "Optional security configuration class not found: " + className);
 		} catch (Exception e)
 		{
-			// config class asi neexistuje.
+			throw new IllegalStateException("Unable to configure security from " + className, e);
 		}
 
 		Logger.info(SpringSecurityConf.class, "configure - SpringSecurityConf - end - " + className);

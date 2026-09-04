@@ -7,13 +7,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.support.ConversionServiceFactoryBean;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 
@@ -31,7 +32,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
  */
 @EnableSpringDataWebSupport
 @Configuration
-@EnableWebMvc
+@Import(V9JpaDBConfig.class)
 @ComponentScan({
     "sk.iway.iwcm.admin",
     "sk.iway.iwcm.calendar",
@@ -128,7 +129,6 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.users.userdetail",
     "sk.iway.iwcm.components.users.usergroups",
     "sk.iway.iwcm.components.welcome",
-    "sk.iway.webjet.v9",
     "sk.iway.iwcm.components.forum",
     "sk.iway.iwcm.components.emoticon",
     "sk.iway.iwcm.components.appuser",
@@ -170,7 +170,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 
-    @Bean
+    @Bean(name = DispatcherServlet.LOCALE_RESOLVER_BEAN_NAME)
     public AcceptHeaderLocaleResolver localeResolver() {
         AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver() {
             @Override
@@ -186,7 +186,7 @@ public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
         return localeResolver;
     }
 
-    @Bean(name = "multipartResolver")
+    @Bean(name = DispatcherServlet.MULTIPART_RESOLVER_BEAN_NAME)
     public StandardServletMultipartResolver multipartResolver() {
         StandardServletMultipartResolver multipartResolver = new StandardServletMultipartResolver();
         return multipartResolver;

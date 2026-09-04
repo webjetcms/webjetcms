@@ -2985,6 +2985,10 @@ export const dataTableInit = options => {
         runDataTables();
         dtWJ.initializeHeaderFilters(dataTableSelector+"_wrapper div.dt-scroll-head table ", false, DATA, TABLE);
 
+        function notifyAccessDenied() {
+            WJ.notifyError(WJ.translate("datatables.accessDenied.title.js"), WJ.translate("datatables.accessDenied.desc.js"));
+        }
+
         function datatable2SpringData(data, fnCallback, oSettings) {
 
             var sSource = DATA.url;
@@ -3216,12 +3220,15 @@ export const dataTableInit = options => {
                     "type": "GET",
                     "url": url,
                     "data": restParams,
+                    "statusCode": {
+                        403: notifyAccessDenied
+                    },
                     "success": function (sourceData) {
                         //console.log("sourceData=", sourceData);
 
                         if (sourceData.hasOwnProperty("error") && sourceData.error !== null && sourceData.error !== "") {
-                            if ("Access is denied" === sourceData.error || "Access Denied" === sourceData.error) {
-                                WJ.notifyError(WJ.translate("datatables.accessDenied.title.js"), WJ.translate("datatables.accessDenied.desc.js"));
+                            if ("Access is denied" === sourceData.error || "Access Denied" === sourceData.error || "exception: Access is denied" === sourceData.error) {
+                                notifyAccessDenied();
                                 return;
                             } else {
                                 WJ.notifyError(WJ.translate("datatables.error.title.js"), sourceData.error);

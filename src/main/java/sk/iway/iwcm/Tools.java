@@ -30,6 +30,7 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.tags.support.ResponseUtils;
+import sk.iway.iwcm.system.spring.components.SpringContext;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -38,6 +39,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509ExtendedTrustManager;
+import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -3205,11 +3207,22 @@ public class Tools
 	 */
 	public static ApplicationContext getSpringContext() {
 		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
-		ApplicationContext context;
-      	if (requestBean == null) context = (ApplicationContext) Constants.getServletContext().getAttribute("springContext");
-		else context = requestBean.getSpringContext();
+		if (requestBean != null) {
+			ApplicationContext context = requestBean.getAssignedSpringContext();
+			if (context != null) {
+				return context;
+			}
+		}
 
-		return context;
+		ServletContext servletContext = Constants.getServletContext();
+		if (servletContext != null) {
+			ApplicationContext context = (ApplicationContext) servletContext.getAttribute("springContext");
+			if (context != null) {
+				return context;
+			}
+		}
+
+		return SpringContext.getApplicationContext();
 	}
 
 	/**

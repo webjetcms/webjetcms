@@ -39,7 +39,6 @@ import jakarta.activation.MimetypesFileTypeMap;
 import jakarta.mail.*;
 import jakarta.mail.internet.*;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -60,9 +59,12 @@ import java.util.*;
  *@created      ďż˝tvrtok, 2002, marec 28
  *@modified     $Date: 2004/03/23 19:23:02 $
  */
-public class FormMailAction extends HttpServlet
+public class FormMailAction
 {
-	private static final long serialVersionUID = 1L;
+	private FormMailAction()
+	{
+		//no instance
+	}
 
 	/**
 	 *  Description of the Field
