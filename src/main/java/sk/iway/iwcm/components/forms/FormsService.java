@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.text.StringEscapeUtils;
+import org.apache.commons.text.StringSubstitutor;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.springframework.beans.BeanWrapperImpl;
@@ -781,6 +782,65 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
+     * Creates the placeholder map shared by form field and tooltip templates.
+     *
+     * @param item form item metadata
+     * @param id rendered field identifier
+     * @param label label rendered by the target template
+     * @param labelSanitized label without HTML markup
+     * @param value field value
+     * @param placeholder field placeholder
+     * @param classes CSS classes added to the field
+     * @param tooltip rendered tooltip HTML
+     * @return mutable placeholder map
+     */
+    public static Map<String, String> getFieldReplacementMap(
+        JSONObject item,
+        String id,
+        String label,
+        String labelSanitized,
+        String value,
+        String placeholder,
+        String classes,
+        String tooltip
+    ) {
+        String safeId = Tools.getStringValue(id, "");
+        String safeValue = Tools.getStringValue(value, "");
+        String itemId = item == null ? "" : item.optString("id", "");
+        String stepId = item == null ? "" : item.optString("stepId", "");
+        String tooltipId = ("info-tooltip-" + safeId + "-" + itemId).replaceAll("[^A-Za-z0-9_-]", "-");
+
+        Map<String, String> fields = new HashMap<>();
+        fields.put("tooltipId", tooltipId);
+        fields.put("id", safeId);
+        fields.put("itemId", itemId);
+        fields.put("stepId", stepId);
+        fields.put("label", Tools.getStringValue(label, ""));
+        fields.put("labelSanitized", Tools.getStringValue(labelSanitized, ""));
+        fields.put("value", safeValue);
+        fields.put("valueSanitized", DocTools.removeChars(safeValue, true));
+        fields.put("placeholder", ResponseUtils.filter(Jsoup.parse(Tools.getStringValue(placeholder, "")).text()));
+        fields.put("classes", Tools.getStringValue(classes, ""));
+        fields.put("tooltip", Tools.getStringValue(tooltip, ""));
+        return fields;
+    }
+
+    /**
+     * Replaces form placeholders in one pass without interpreting placeholders contained in replacement values.
+     *
+     * @param html template containing placeholders in the {@code ${name}} format
+     * @param fields placeholder values
+     * @return template with known placeholders replaced
+     */
+    public static String replaceFields(String html, Map<String, String> fields) {
+        StringSubstitutor substitutor = new StringSubstitutor(fields);
+        substitutor.setDisableSubstitutionInValues(true);
+        substitutor.setValueDelimiterMatcher(null);
+        substitutor.setEscapeChar('\0');
+        return substitutor.replace(Tools.getStringValue(html, ""));
+    }
+
+    /**
      * Renders a form field template by replacing form, item, label, value, validation, and iterable placeholders.
      *
      * Selected item metadata is filtered before being inserted into HTML, optional first-use headings are applied,
@@ -837,16 +897,13 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                     }
                 }
 
-                String tooltip = "";
+                String tooltipLabel = "";
                 if (item.has("tooltip")) {
-                    tooltip = StringEscapeUtils.unescapeHtml4(Tools.getStringValue(item.optString("tooltip", ""), ""));
-                    if (Tools.isNotEmpty(tooltip)) {
-                        tooltip = ResponseUtils.filter(tooltip);
-                        tooltip = " " + Tools.replace(prop.getText("components.formsimple.tooltipCode"), "${label}", tooltip);
-                    }
+                    tooltipLabel = StringEscapeUtils.unescapeHtml4(Tools.getStringValue(item.optString("tooltip", ""), ""));
+                    if (Tools.isNotEmpty(tooltipLabel)) tooltipLabel = ResponseUtils.filter(tooltipLabel);
                 }
 
-                String labelSanitized = Jsoup.parse(label).text();
+                String labelSanitized = ResponseUtils.filter(Jsoup.parse(label).text());
 
                 // Prefer explicit itemFormId; fallback keeps backward compatibility.
                 String id = Tools.getStringValue(item.optString("itemFormId", ""), "");
@@ -862,7 +919,14 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                     }
                 }
 
-                if (isEmailRender) tooltip = "";
+                String tooltip = "";
+                Map<String, String> replacementFields = getFieldReplacementMap(item, id, label, labelSanitized, value, placeholder, classes, tooltip);
+                if (isEmailRender == false && Tools.isNotEmpty(tooltipLabel)) {
+                    Map<String, String> tooltipFields = new HashMap<>(replacementFields);
+                    tooltipFields.put("label", tooltipLabel);
+                    tooltip = " " + replaceFields(prop.getText("components.formsimple.tooltipCode"), tooltipFields);
+                    replacementFields.put("tooltip", tooltip);
+                }
 
                 //skus zobrazit nadpis nad pole ak je definovany cez components.formsimple.firstTime.xxx
                 String firstTimeHeadingKey = "components.formsimple.firstTimeHeading." + fieldType;
@@ -904,16 +968,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                     html = Tools.replace(html, "${iterable}", iterable.toString());
                 }
 
-                html = Tools.replace(html, "${id}", id);
-                html = Tools.replace(html, "${itemId}", item.optString("id", ""));
-                html = Tools.replace(html, "${stepId}", item.optString("stepId", ""));
-                html = Tools.replace(html, "${label}", label);
-                html = Tools.replace(html, "${labelSanitized}", labelSanitized);
-                html = Tools.replace(html, "${value}", value);
-                html = Tools.replace(html, "${valueSanitized}", DocTools.removeChars(value, true));
-                html = Tools.replace(html, "${placeholder}", placeholder);
-                html = Tools.replace(html, "${classes}", classes);
-                html = Tools.replace(html, "${tooltip}", tooltip);
+                html = replaceFields(html, replacementFields);
 
                 StringBuilder csError = new StringBuilder();
                 csError.append("<div class=\"help-block cs-error cs-error-").append(id);

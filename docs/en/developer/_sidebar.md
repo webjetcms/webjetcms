@@ -61,6 +61,7 @@
     - [Automatic Testing of DataTables](/developer/testing/datatable.md)
     - [DataTables - import testing](/developer/testing/datatable-import.md)
     - [Generate documentation screenshots](/developer/testing/screenshots.md)
+    - [Recording presentation videos](/developer/testing/video.md)
     - [Reports via Allure](/developer/testing/allure.md)
     - [Code Coverage](/developer/testing/codecoverage.md)
     - [Parallel test execution](/developer/testing/parallel.md)

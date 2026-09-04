@@ -28,6 +28,16 @@
     padding-left: 20px;
 }
 
+form.multistep-form .wj-form-tooltip-trigger:focus-visible {
+    border-radius: 2px;
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+.tooltip.wj-form-tooltip-hoverable {
+    pointer-events: auto;
+}
+
 /* Autocomplete styles — dropdown is appended inside .multistep-form-app via appendTo. */
 .multistep-form-app .ui-helper-hidden-accessible {
     border: 0;

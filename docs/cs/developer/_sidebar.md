@@ -61,6 +61,7 @@
     - [Automatické testování DataTables](/developer/testing/datatable.md)
     - [DataTables - testování importu](/developer/testing/datatable-import.md)
     - [Generování screenshotů dokumentace](/developer/testing/screenshots.md)
+    - [Nahrávání prezentačních videí](/developer/testing/video.md)
     - [Reporty přes Allure](/developer/testing/allure.md)
     - [Pokrytí kódem](/developer/testing/codecoverage.md)
     - [Paralelní spuštění testů](/developer/testing/parallel.md)

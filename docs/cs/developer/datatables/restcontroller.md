@@ -969,6 +969,51 @@ Pokud potřebujete speciálně kontrolovat práva (např. u webových stránek p
     }
 ```
 
+## Kontrola rozsahu při změně pořadí
+
+Koncový bod `/row-reorder` načte z repozitáře celou požadovanou dávku a pro každý záznam zavolá `checkItemPerms`. Pokud je však seznam tabulky omezen také parametrem požadavku nebo nadřazeným záznamem, například `formName`, `stepId`, `parentId` nebo kategorií, samotná kontrola jednotlivých záznamů nemusí zaručit, že všechny patří do aktuálně zobrazeného rozsahu.
+
+V takovém kontroléru implementujte metodu:
+
+```java
+protected boolean checkRowReorderScope(HttpServletRequest request, List<T> entities)
+```
+
+Metoda se jmenuje po načtení kompletní dávky z repozitáře a před validací měněného pole nebo změnou entit. Parametr `entities` proto obsahuje uložené entity, nikoli hodnoty z těla požadavku. Výchozí implementace vrací `true`, aby zůstalo zachováno chování stávajících kontrolérů.
+
+Provádění musí postupovat bezpečně a při neplatném vstupu vrátit `false`:
+
+- ověřit přítomnost a platnost všech parametrů určujících rozsah,
+- porovnat tento rozsah s každou entitou v seznamu,
+- ověřit aktuální doménu, pokud ji daná entita používá,
+- ověřit existenci a vztah nadřazeného záznamu,
+- ověřit, že aktuální uživatel může daný rozsah upravovat.
+
+Například položky vícekrokového formuláře ověřují název formuláře, krok, doménu i oprávnění uživatele:
+
+```java
+@Override
+protected boolean checkRowReorderScope(HttpServletRequest request, List<FormItemEntity> entities) {
+    String formName = MultistepFormsService.getFormName(request);
+    int stepId = Tools.getIntValue(request.getParameter("stepId"), -1);
+    if (Tools.isEmpty(formName) || stepId < 1 || entities == null || entities.isEmpty() || getUser() == null) return false;
+
+    int domainId = CloudToolsForCore.getDomainId();
+    for (FormItemEntity entity : entities) {
+        if (entity == null || Objects.equals(formName, entity.getFormName()) == false ||
+            entity.getStepId() == null || entity.getStepId().intValue() != stepId ||
+            entity.getDomainId() == null || entity.getDomainId().intValue() != domainId) return false;
+    }
+
+    if (formStepsRepository.getValidStep(formName, Long.valueOf(stepId), domainId).isEmpty()) return false;
+    return formsService.isFormAccessible(formName, getUser());
+}
+```
+
+Klient při sestavení URL pro `/row-reorder` zachová parametry z `DATA.url`. Tyto parametry jsou však ovládány klientem, proto je nelze považovat za důkaz oprávnění. Stejně tak nestačí rozsah definovat pouze přes `addSpecSearch`, protože ten se na koncový bod `/row-reorder` automaticky neaplikuje.
+
+Pokud metoda vrátí `false`, celá operace se odmítne a nic se neuloží. `checkRowReorderScope` je kontrola celé dávky a nenahrazuje `checkItemPerms`, která se nadále používá pro oprávnění ke každému jednotlivému záznamu.
+
 ## Vyvolání chyby
 
 Programově kontrolované chyby je třeba ošetřit přetížením metody ```validateEditor``` (viz příklad výše), kde můžete provést validace před uložením záznamu. Z parametru ```target.getAction()``` (DatatableRequest) můžete identifikovat typ akce.

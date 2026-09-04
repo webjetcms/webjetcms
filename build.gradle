@@ -722,6 +722,12 @@ task writePom() {
                 println "----> removing: "+artifactName
                 i.remove();
             }
+
+            //remove displaytag, it is integrated with our changes in libs jar
+            if ("com.github.hazendaz".equals(groupId) && "displaytag".equals(artifactName)) {
+                println "----> removing: "+artifactName
+                i.remove();
+            }
         }
 
         // zapis pom subor

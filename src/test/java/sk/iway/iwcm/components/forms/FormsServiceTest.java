@@ -1,6 +1,8 @@
 package sk.iway.iwcm.components.forms;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -9,6 +11,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.HashSet;
+import java.util.Map;
+
+import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
@@ -18,9 +27,85 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.users.UserDetails;
 
 class FormsServiceTest {
+
+    @Test
+    void replaceFieldsPreservesReplacementValuesAndUnknownExpressions() {
+        Map<String, String> fields = Map.of("id", "field-${stepId}");
+
+        assertEquals(
+            "field-${stepId}|${unknown}|${unknown:-fallback}|$field-${stepId}",
+            FormsService.replaceFields("${id}|${unknown}|${unknown:-fallback}|$${id}", fields)
+        );
+    }
+
+    @Test
+    void replaceFieldsResolvesTooltipPlaceholdersAndAriaRelation() {
+        Prop prop = mock(Prop.class);
+        when(prop.getText("components.formsimple.tooltipCode")).thenReturn(
+            "<button type=\"button\" class=\"custom-tooltip-trigger ${classes}\" " +
+                "aria-label=\"Help for ${labelSanitized}\" aria-describedby=\"${tooltipId}\" " +
+                "data-description-id=\"${tooltipId}\" data-field-id=\"${id}\" data-item-id=\"${itemId}\" " +
+                "data-label-sanitized=\"${labelSanitized}\" data-value=\"${value}\" " +
+                "data-value-sanitized=\"${valueSanitized}\" data-placeholder=\"${placeholder}\"></button>" +
+                "<span id=\"${tooltipId}\" role=\"tooltip\">${label} (${stepId})</span>"
+        );
+
+        JSONObject item = new JSONObject()
+            .put("fieldType", "text")
+            .put("id", 42)
+            .put("stepId", 7)
+            .put("itemFormId", "f2-customer.name=1")
+            .put("label", "Customer <b>\"name\"</b>")
+            .put("labelOriginal", "Customer <b>\"name\"</b>")
+            .put("required", true)
+            .put("value", "Some value")
+            .put("placeholder", "Enter a value")
+            .put("tooltip", "Enter ${id}, ${itemId} and ${stepId} literally");
+
+        String result = FormsService.replaceFields(
+            "<label for=\"${id}\">${label}</label>${tooltip}",
+            "contact-form",
+            "",
+            item,
+            "",
+            false,
+            false,
+            new HashSet<>(),
+            prop,
+            null
+        );
+
+        Document document = Jsoup.parseBodyFragment(result);
+        Element trigger = document.selectFirst(".custom-tooltip-trigger");
+        assertNotNull(trigger);
+
+        String tooltipId = "info-tooltip-f2-customer-name-1-42";
+        assertEquals("button", trigger.tagName());
+        assertEquals("button", trigger.attr("type"));
+        assertEquals(tooltipId, trigger.attr("aria-describedby"));
+        assertEquals(tooltipId, trigger.attr("data-description-id"));
+        assertEquals("Help for Customer \"name\"", trigger.attr("aria-label"));
+        assertEquals("f2-customer.name=1", trigger.attr("data-field-id"));
+        assertEquals("42", trigger.attr("data-item-id"));
+        assertEquals("Customer \"name\"", trigger.attr("data-label-sanitized"));
+        assertEquals("Some value", trigger.attr("data-value"));
+        assertEquals("some-value", trigger.attr("data-value-sanitized"));
+        assertEquals("Enter a value", trigger.attr("data-placeholder"));
+        assertEquals("custom-tooltip-trigger required", trigger.className());
+        assertFalse("label".equals(trigger.parent().tagName()));
+
+        Element tooltip = document.getElementById(tooltipId);
+        assertNotNull(tooltip);
+        assertEquals(1, document.select("#" + tooltipId).size());
+        assertEquals("tooltip", tooltip.attr("role"));
+        assertEquals("Enter ${id}, ${itemId} and ${stepId} literally (7)", tooltip.text());
+        assertFalse(trigger.outerHtml().contains("${"));
+        assertFalse(tooltip.attr("id").contains("${"));
+    }
 
     @Test
     void isFormAccessibleReturnsFalseForRestrictedUserWhenSubmittedFormDoesNotExist() {
