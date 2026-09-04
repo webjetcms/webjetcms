@@ -22,6 +22,7 @@ import sk.iway.iwcm.components.seo.rest.SeoService;
 import sk.iway.iwcm.stat.Column;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.stat.StatNewDB;
+import sk.iway.iwcm.stat.StatWriteBuffer;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
@@ -59,56 +60,42 @@ public class SeoManager
 	 */
 	public static boolean addSearchEngineVisit(String browserName)
 	{
-		Connection db_conn = null;
-		PreparedStatement ps = null;
+		if (Tools.isEmpty(browserName)) return false;
 
-		int updated = 0;
-		Calendar cal = Calendar.getInstance();
+		if (ensureSearchEngineExists(browserName) < 1) return false;
 
-		if (Tools.isNotEmpty(browserName)) {
-			try
+		Timestamp visitTime = new Timestamp(Tools.getNow());
+		String sql = "UPDATE seo_bots SET visit_count=COALESCE(visit_count, 0)+1, " +
+			"last_visit=CASE WHEN last_visit IS NULL OR last_visit < ? THEN ? ELSE last_visit END WHERE name=?";
+		StatWriteBuffer.add(sql, "seo_bots", visitTime, visitTime, browserName);
+		return true;
+	}
+
+	private static int ensureSearchEngineExists(String browserName)
+	{
+		int id = getSearchEngineId(browserName);
+		if (id > 0) return id;
+
+		synchronized (SeoManager.class)
+		{
+			id = getSearchEngineId(browserName);
+			if (id > 0) return id;
+
+			try (Connection connection = DBPool.getConnection();
+				 PreparedStatement statement = connection.prepareStatement(
+					 "INSERT INTO seo_bots (name, last_visit, visit_count) VALUES (?, NULL, 0)"))
 			{
-				db_conn = DBPool.getConnection();
-				String sql="UPDATE seo_bots SET visit_count = visit_count + 1, last_visit = ? WHERE name = ?";
-				ps = db_conn.prepareStatement(sql);
-				ps.setTimestamp(1, new Timestamp(cal.getTimeInMillis()));
-				ps.setString(2, browserName);
-				updated = ps.executeUpdate();
-				ps.close();
-				if (updated < 1)
-				{
-					sql = "INSERT INTO seo_bots (name,last_visit, visit_count) VALUES (?, ?, 1)";
-					ps = db_conn.prepareStatement(sql);
-					ps.setString(1, browserName);
-					ps.setTimestamp(2, new Timestamp(cal.getTimeInMillis()));
-					ps.execute();
-					ps.close();
-				}
-				db_conn.close();
-
-				ps = null;
-				db_conn = null;
+				statement.setString(1, browserName);
+				statement.executeUpdate();
 			}
 			catch (Exception ex)
 			{
-				//on clustered MariaDB (Galera) concurrent UPDATE of the same bot row from multiple nodes can cause certification conflict / deadlock, losing one visit count is acceptable
-				Logger.debug(SeoManager.class, "addSearchEngineVisit failed for " + browserName + " (will count on next visit): " + ex.getMessage());
+				// Another cluster node may have inserted the same browser family concurrently.
+				Logger.debug(SeoManager.class, "Concurrent seo_bots insert for " + browserName + ": " + ex.getMessage());
 			}
-			finally
-			{
-				try
-				{
-					if (ps != null)
-						ps.close();
-					if (db_conn != null)
-						db_conn.close();
-				}
-				catch (Exception ex2)
-				{
-				}
-			}
+
+			return getSearchEngineId(browserName);
 		}
-		return true;
 	}
 
 	/**
@@ -1442,4 +1429,3 @@ public class SeoManager
 		return (seoKeyword);
 	}
 }
-

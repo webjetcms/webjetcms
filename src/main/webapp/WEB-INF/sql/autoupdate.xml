@@ -1764,9 +1764,9 @@
     <void property="author"><string>kmarton</string></void>
     <void property="date"><string>14.03.2009</string></void>
     <void property="desc"><string>seo_bots - tabulka so zoznamom vyhladavacich botov, ktori pristupili na stranky WebJET-u</string></void>
-    <void property="mysql"><string>CREATE TABLE seo_bots ( seo_bots_id int NOT NULL AUTO_INCREMENT, name varchar(255) DEFAULT NULL, last_visit datetime DEFAULT NULL, visit_count int DEFAULT NULL, PRIMARY KEY (seo_bots_id)) ENGINE=MyISAM</string></void>
-    <void property="mssql"><string>CREATE TABLE seo_bots (seo_bots_id int IDENTITY(1, 1) NOT NULL, name nvarchar(255) DEFAULT NULL, last_visit datetime DEFAULT NULL, visit_count int DEFAULT NULL, PRIMARY KEY (seo_bots_id))</string></void>
-    <void property="oracle"><string>CREATE TABLE seo_bots (seo_bots_id int NOT NULL, name nvarchar2(255) DEFAULT NULL, last_visit date DEFAULT NULL, visit_count int DEFAULT NULL, CONSTRAINT seo_bots_pk PRIMARY KEY (seo_bots_id));
+    <void property="mysql"><string>CREATE TABLE seo_bots ( seo_bots_id int NOT NULL AUTO_INCREMENT, name varchar(255) DEFAULT NULL, last_visit datetime DEFAULT NULL, visit_count int DEFAULT NULL, PRIMARY KEY (seo_bots_id), UNIQUE KEY ix_seo_bots_name (name)) ENGINE=MyISAM</string></void>
+    <void property="mssql"><string>CREATE TABLE seo_bots (seo_bots_id int IDENTITY(1, 1) NOT NULL, name nvarchar(255) DEFAULT NULL, last_visit datetime DEFAULT NULL, visit_count int DEFAULT NULL, PRIMARY KEY (seo_bots_id)); CREATE UNIQUE INDEX ix_seo_bots_name ON seo_bots (name)</string></void>
+    <void property="oracle"><string>CREATE TABLE seo_bots (seo_bots_id int NOT NULL, name nvarchar2(255) DEFAULT NULL, last_visit date DEFAULT NULL, visit_count int DEFAULT NULL, CONSTRAINT seo_bots_pk PRIMARY KEY (seo_bots_id), CONSTRAINT ix_seo_bots_name UNIQUE (name));
      CREATE SEQUENCE S_seo_bots START WITH 1;
      CREATE TRIGGER T_seo_bots BEFORE INSERT ON seo_bots
      FOR EACH ROW

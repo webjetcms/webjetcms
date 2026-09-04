@@ -75,7 +75,7 @@ class BrowserDetectorJUnit
 				ahrefs, "AhrefsBot",
 				claude, "ClaudeBot",
 				perplexity, "PerplexityBot",
-				openAi, "ChatGPTBot",
+				openAi, "GPTBot",
 				amazon, "Amzn-SearchBot",
 				uptime, "UptimeRobot",
 				amazon2, "Amazonbot",

@@ -9,6 +9,7 @@ import sk.iway.iwcm.tags.support.ResponseUtils;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.Serializable;
+import java.io.InputStream;
 import java.util.StringTokenizer;
 
 import ua_parser.Parser;
@@ -86,6 +87,13 @@ public class BrowserDetector implements Serializable {
 				}
 			} catch (Exception ie) {
 				Logger.error(BrowserDetector.class, "Failed to initialize parser from "+configPath, ie);
+			}
+		}
+		if (uaParser == null) {
+			try (InputStream is = BrowserDetector.class.getResourceAsStream("/ua-parser/regexes.yaml")) {
+				if (is != null) uaParser = new Parser(is, Parser.getDefaultLoaderOptions());
+			} catch (Exception ex) {
+				Logger.error(BrowserDetector.class, "Failed to initialize bundled user-agent parser", ex);
 			}
 		}
 		if (uaParser == null) uaParser = new Parser();
@@ -209,14 +217,14 @@ public class BrowserDetector implements Serializable {
 			 * ulozi vyhladavaci stroj do tabulky kvoli statistike
 			 */
 			if (!statUserAgentAllowed) {
-				SeoManager.addSearchEngineVisit(this.browserName + " " + this.browserVersion);
+				SeoManager.addSearchEngineVisit(getBrowserName());
 				if ("unknown".equals(getBrowserPlatform()))
 					browserPlatform = "Search Bot";
 			}
 		}
 
 		// nastav idecka
-		browserUaId = StatDB.getStatKeyId(getBrowserName() + " " + getBrowserVersionShort());
+		browserUaId = StatDB.getStatKeyId(getBrowserName());
 		platformId = StatDB.getStatKeyId(getBrowserPlatform());
 		subplatformId = StatDB.getStatKeyId(getBrowserSubplatform());
 
