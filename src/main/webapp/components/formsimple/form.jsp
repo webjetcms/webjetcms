@@ -3,7 +3,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="org.apache.commons.beanutils.BeanUtils" %><%@
 page import="org.apache.commons.codec.binary.Base64" %><%@
 page import="org.apache.commons.codec.binary.StringUtils" %><%@
-page import="org.apache.commons.text.StringSubstitutor" %><%@
 page import="sk.iway.iwcm.tags.support.ResponseUtils" %><%@
 page import="org.json.JSONArray" %><%@
 page import="org.json.JSONObject" %><%@
@@ -12,6 +11,7 @@ page import="sk.iway.iwcm.PageLng" %><%@
 page import="sk.iway.iwcm.PageParams" %><%@
 page import="sk.iway.iwcm.Tools" %><%@
 page import="sk.iway.iwcm.common.DocTools" %><%@
+page import="sk.iway.iwcm.components.forms.FormsService" %><%@
 page import="sk.iway.iwcm.components.enumerations.EnumerationDataDB" %><%@
 page import="sk.iway.iwcm.components.enumerations.EnumerationTypeDB" %><%@
 page import="sk.iway.iwcm.components.enumerations.model.EnumerationDataBean" %><%@
@@ -99,11 +99,6 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%!
 
               String labelSanitized = Jsoup.parse(label).text();
               String id = DocTools.removeChars(label, true);
-              String itemId = item.optString("id", "");
-              String stepId = item.optString("stepId", "");
-              String valueSanitized = DocTools.removeChars(value, true);
-              String tooltipId = ("info-tooltip-" + id + "-" + itemId)
-                 .replaceAll("[^A-Za-z0-9_-]", "-");
               String classes = "";
               if (required)
               {
@@ -117,23 +112,14 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%!
               }
 
               String tooltip = "";
+              String renderedLabel = isEmailRender && label.trim().endsWith(":") == false ? label+":" : label;
+              Map<String, String> replacementFields = FormsService.getFieldReplacementMap(item, id, renderedLabel, labelSanitized, value, placeholder, classes, tooltip);
               if (isEmailRender == false && Tools.isNotEmpty(tooltipLabel))
               {
-                 Map<String, String> tooltipFields = new HashMap<String, String>();
-                 tooltipFields.put("tooltipId", tooltipId);
-                 tooltipFields.put("id", id);
-                 tooltipFields.put("itemId", itemId);
-                 tooltipFields.put("stepId", stepId);
+                 Map<String, String> tooltipFields = new HashMap<String, String>(replacementFields);
                  tooltipFields.put("label", tooltipLabel);
-                 tooltipFields.put("labelSanitized", labelSanitized);
-                 tooltipFields.put("value", value);
-                 tooltipFields.put("valueSanitized", valueSanitized);
-                 tooltipFields.put("placeholder", placeholder);
-                 tooltipFields.put("classes", classes);
-
-                 StringSubstitutor substitutor = new StringSubstitutor(tooltipFields);
-                 substitutor.setDisableSubstitutionInValues(true);
-                 tooltip = " " + substitutor.replace(prop.getText("components.formsimple.tooltipCode"));
+                 tooltip = " " + FormsService.replaceFields(prop.getText("components.formsimple.tooltipCode"), tooltipFields);
+                 replacementFields.put("tooltip", tooltip);
               }
 
               //System.out.println("html="+html+" label="+label+" placeholder="+placeholder+" id="+id);
@@ -186,17 +172,7 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%!
                  html = Tools.replace(html, "${iterable}", iterable.toString());
               }
 
-              html = Tools.replace(html, "${tooltipId}", tooltipId);
-              html = Tools.replace(html, "${id}", id);
-              html = Tools.replace(html, "${itemId}", itemId);
-              html = Tools.replace(html, "${stepId}", stepId);
-              html = Tools.replace(html, "${label}", isEmailRender && label.trim().endsWith(":") == false ? label+":" : label);
-              html = Tools.replace(html, "${labelSanitized}", labelSanitized);
-              html = Tools.replace(html, "${value}", value);
-              html = Tools.replace(html, "${valueSanitized}", valueSanitized);
-              html = Tools.replace(html, "${placeholder}", placeholder);
-              html = Tools.replace(html, "${classes}", classes);
-              html = Tools.replace(html, "${tooltip}", tooltip);
+              html = FormsService.replaceFields(html, replacementFields);
 
               StringBuilder csError = new StringBuilder();
               csError.append("<div class=\"help-block cs-error cs-error-").append(id);

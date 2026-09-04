@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.HashSet;
+import java.util.Map;
 
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
@@ -30,6 +31,16 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.users.UserDetails;
 
 class FormsServiceTest {
+
+    @Test
+    void replaceFieldsPreservesReplacementValuesAndUnknownExpressions() {
+        Map<String, String> fields = Map.of("id", "field-${stepId}");
+
+        assertEquals(
+            "field-${stepId}|${unknown}|${unknown:-fallback}|$field-${stepId}",
+            FormsService.replaceFields("${id}|${unknown}|${unknown:-fallback}|$${id}", fields)
+        );
+    }
 
     @Test
     void replaceFieldsResolvesTooltipPlaceholdersAndAriaRelation() {
