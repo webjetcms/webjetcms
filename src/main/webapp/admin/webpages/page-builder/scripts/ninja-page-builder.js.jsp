@@ -3935,6 +3935,18 @@
         bind_events: function() {
             var me = this;
 
+            // CKEditor handles mouseup on buttons before the delegated Page Builder click handlers run.
+            // Stop only duplicable toolbar mouseups while keeping the following click event unchanged.
+            me.duplicable_toolbar_mouseup_handler = function(e) {
+                var $toolbar_button = $(e.target).closest(me.tagc._toolbar_button),
+                    $toolbar = $toolbar_button.closest(me.tagc.toolbar);
+
+                if ($toolbar_button.length > 0 && $toolbar.parent().hasClass(me.tag.duplicable)) {
+                    e.stopPropagation();
+                }
+            };
+            me.$wrapper[0].addEventListener('mouseup', me.duplicable_toolbar_mouseup_handler, true);
+
             me.$wrapper.on('click', me.tagc.toolbar, function(e) {
                 if (e.target !== this) { return; }
                 me.toggle_toolbar_visibility($(this));
@@ -4065,6 +4077,10 @@
         unbind_events: function() {
 
             var me = this;
+            if (me.duplicable_toolbar_mouseup_handler) {
+                me.$wrapper[0].removeEventListener('mouseup', me.duplicable_toolbar_mouseup_handler, true);
+                me.duplicable_toolbar_mouseup_handler = null;
+            }
             me.$wrapper.unbind().off('.'+me._name);
             $(me.tagc.size_changer_down).unbind().off();
             $(me.tagc.size_changer_up).unbind().off();

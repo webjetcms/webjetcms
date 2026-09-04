@@ -229,6 +229,12 @@ function getDuplicableItem(listIndex, itemIndex) {
         .find("li.pb-duplicable-element:nth-of-type("+itemIndex+")");
 }
 
+function openDuplicableToolbar(I, listIndex, itemIndex, action) {
+    const item = getDuplicableItem(listIndex, itemIndex);
+    I.forceClick(item.find("aside.pb-toolbar"));
+    I.waitForVisible(item.find("aside.pb-toolbar.pb-is-toolbar-active button.pb-toolbar-button__"+action), 10);
+}
+
 async function getDuplicableItemTexts(I, listIndex) {
     return await I.executeScript((root, { selector, index }) => {
         const list = document.querySelectorAll(selector)[index];
@@ -242,6 +248,47 @@ async function getDuplicableItemTexts(I, listIndex) {
                 .filter(Boolean)
                 .join(" "));
     }, { selector: pricingListsSelector, index: listIndex - 1 });
+}
+
+async function armDuplicableToolbarMouseupProbe(I, listIndex, itemIndex, action) {
+    const armed = await I.executeScript((root, args) => {
+        const list = document.querySelectorAll(args.selector)[args.listIndex - 1];
+        const item = list && list.querySelector(":scope > li.pb-duplicable-element:nth-of-type("+args.itemIndex+")");
+        const button = item && item.querySelector("button.pb-toolbar-button__"+args.action);
+        const editable = button && button.closest('[contenteditable="true"]');
+
+        if (button == null || editable == null) return false;
+
+        const probe = {
+            button: button,
+            editable: editable,
+            reached: false
+        };
+        probe.listener = function(event) {
+            if (event.target === probe.button || probe.button.contains(event.target)) {
+                probe.reached = true;
+            }
+        };
+
+        window.pbDuplicableToolbarMouseupProbe = probe;
+        editable.addEventListener("mouseup", probe.listener);
+        return true;
+    }, { selector: pricingListsSelector, listIndex, itemIndex, action });
+
+    assert.strictEqual(armed, true, "The duplicable toolbar mouseup probe must be armed");
+}
+
+async function assertDuplicableToolbarMouseupStopped(I, action) {
+    const reachedEditable = await I.executeScript(() => {
+        const probe = window.pbDuplicableToolbarMouseupProbe;
+        if (probe == null) return null;
+
+        probe.editable.removeEventListener("mouseup", probe.listener);
+        delete window.pbDuplicableToolbarMouseupProbe;
+        return probe.reached;
+    });
+
+    assert.strictEqual(reachedEditable, false, action+" mouseup must not reach the CKEditor editable");
 }
 
 async function openDuplicableElementsPage(I, DTE, Document) {
@@ -363,8 +410,12 @@ Scenario('duplicable elements toolbar, cleanup and operations', async ({I, DTE, 
     assert.strictEqual(cleanState.runtimeClassCount, 0, "Clean HTML must remove Page Builder runtime classes");
     assert.strictEqual(cleanState.controllerCount, 0, "Clean HTML must remove Page Builder controllers");
 
-    I.forceClick(getDuplicableItem(1, 1).find("button.pb-toolbar-button__duplicate"));
+    openDuplicableToolbar(I, 1, 1, "duplicate");
+    await armDuplicableToolbarMouseupProbe(I, 1, 1, "duplicate");
+    I.click(getDuplicableItem(1, 1).find("button.pb-toolbar-button__duplicate"));
     I.waitForElement("#wjInline-docdata.pb-is-moving-child.pb-is-moving-duplicable-element.pb-is-duplicating", 10);
+    await assertDuplicableToolbarMouseupStopped(I, "Duplicate");
+    I.dontSeeElement(".cke_reset_all.cke_dialog_container");
 
     const duplicateTargets = await I.executeScript((root, { selector }) => Array.from(document.querySelectorAll(selector))
         .map(list => list.querySelectorAll(":scope > li.pb-is-duplicable-target").length), { selector: pricingListsSelector });
@@ -404,8 +455,12 @@ Scenario('duplicable elements toolbar, cleanup and operations', async ({I, DTE, 
     assert.deepStrictEqual(await getDuplicableItemTexts(I, 1), ["vulputate purus", "Nunc sed purus", "rutrum varius sollicitudin", "Nunc sed purus"]);
 
     I.amAcceptingPopups();
-    I.forceClick(getDuplicableItem(1, 4).find("button.pb-toolbar-button__remove"));
+    openDuplicableToolbar(I, 1, 4, "remove");
+    await armDuplicableToolbarMouseupProbe(I, 1, 4, "remove");
+    I.click(getDuplicableItem(1, 4).find("button.pb-toolbar-button__remove"));
     I.acceptPopup();
+    await assertDuplicableToolbarMouseupStopped(I, "Remove");
+    I.dontSeeElement(".cke_reset_all.cke_dialog_container");
     assert.deepStrictEqual(await getDuplicableItemTexts(I, 1), ["vulputate purus", "Nunc sed purus", "rutrum varius sollicitudin"]);
 
     // Close the editor without saving the DOM-only fixture changes.
