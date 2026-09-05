@@ -92,7 +92,9 @@ vznikne po inicializácii Page Builder kód:
 
 ## Ovládanie v editore
 
-Page Builder zobrazuje jeden rámik vybraného bloku a spoločnú nástrojovú lištu pod CKEditorom. Rámik sa kreslí v samostatnej vrstve mimo obsahu stránky, s odstupom od jeho hrany. Nepridáva sa kvôli nemu `padding`, `margin` ani `border` do blokov, takže nemení ich šírku a zalomenie textu. Vrstva nezachytáva kliknutia do obsahu a neoreže ju `overflow: hidden` rodičovského bloku.
+Page Builder predvolene zobrazuje jeden rámik vybraného bloku a spoločnú nástrojovú lištu pod CKEditorom. Rámik sa kreslí v samostatnej vrstve mimo obsahu stránky, s odstupom od jeho hrany. Nepridáva sa kvôli nemu `padding`, `margin` ani `border` do blokov, takže nemení ich šírku a zalomenie textu. Vrstva nezachytáva kliknutia do obsahu a neoreže ju `overflow: hidden` rodičovského bloku.
+
+Tlačidlo s ikonou oka prepína tri režimy: rámik vybraného bloku (predvolený), žiadne rámiky a rámiky celej hierarchie aktívneho bloku (ikona vrstiev). Obrysy predkov sú odsadené smerom von, aby sa neprekrývali ani pri zhodných hranách blokov. Voľba sa ukladá do `localStorage` pod kľúčom `webjet.pagebuilder.guides` (`selected`, `hidden`, `all`). Pri nedostupnom úložisku funguje prepínanie pre aktuálne otvorený editor. Prepínanie nemení nástrojovú lištu ani výber bloku.
 
 Strom **Štruktúra** používa elementy rozpoznané existujúcou inicializáciou a názvy odvodzuje z obsahu. Nepridáva do blokov identifikátory ani ďalšie metadáta. Samostatné `pb-editable` elementy umožňuje vybrať, ale nepridáva im operácie určené pre stĺpce. Skryté elementy možno nájsť v strome bez zmeny ich viditeľnosti.
 

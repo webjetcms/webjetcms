@@ -74,7 +74,7 @@
         create_workbench: function() {
             var me = this, prefix = me.options.prefix;
             me.ui = {
-                selected: null, hovered: null, quiet: false, hidden: false, frame: null,
+                selected: null, hovered: null, quiet: false, guideMode: 'selected', frame: null,
                 treeDirty: true, expanded: new WeakSet(), treeNodes: new Map(), bookmarks: null,
                 labels: {
                     structure: "<iwcm:text key='pagebuilder.ui.structure'/>",
@@ -88,8 +88,11 @@
                     item: "<iwcm:text key='pagebuilder.ui.item'/>",
                     text: "<iwcm:text key='pagebuilder.ui.text'/>",
                     hidden: "<iwcm:text key='pagebuilder.ui.hidden'/>",
-                    hide: "<iwcm:text key='pagebuilder.ui.hide'/>",
-                    show: "<iwcm:text key='pagebuilder.ui.show'/>",
+                    guides: {
+                        selected: "<iwcm:text key='pagebuilder.ui.guides.selected'/>",
+                        hidden: "<iwcm:text key='pagebuilder.ui.guides.hidden'/>",
+                        all: "<iwcm:text key='pagebuilder.ui.guides.all'/>"
+                    },
                     more: "<iwcm:text key='pagebuilder.ui.more'/>",
                     duplicate: "<iwcm:text key='pagebuilder.ui.duplicate'/>",
                     previous: "<iwcm:text key='pagebuilder.ui.previous'/>",
@@ -105,10 +108,11 @@
             ui.bar.append(me.workbench_button('structure', ui.labels.structure, 'structure').attr('aria-expanded', 'false'));
             ui.path = $('<nav>', { 'class': prefix+'-workbench-path', 'aria-label': ui.labels.structure }).appendTo(ui.bar);
             ui.actions = $('<div>', { 'class': prefix+'-workbench-actions' }).appendTo(ui.bar);
-            ui.bar.append(me.workbench_button('guides', ui.labels.hide, 'eye').attr('aria-pressed', 'false'));
+            ui.bar.append(me.workbench_button('guides', ui.labels.guides.selected, 'eye'));
             ui.menu = $('<div>', { 'class': prefix+'-workbench-menu', hidden: true }).appendTo(ui.bar);
             ui.layer = $('<div>', { 'class': prefix+'-outline-layer', 'aria-hidden': 'true' }).appendTo(document.body);
             ui.outline = $('<div>', { 'class': prefix+'-outline', hidden: true }).appendTo(ui.layer);
+            ui.outlines = ui.outline;
             ui.drawer = $('<div>', { 'class': prefix+'-structure', hidden: true, role: 'region', 'aria-label': ui.labels.structure }).appendTo(document.body);
             $('<div>', { 'class': prefix+'-structure-heading' }).append($('<strong>').text(ui.labels.structure), me.workbench_button('close-structure', ui.labels.close, 'close')).appendTo(ui.drawer);
             ui.search = $('<input>', { type: 'search', placeholder: ui.labels.search, 'aria-label': ui.labels.search }).appendTo(ui.drawer);
@@ -206,8 +210,6 @@
                 } else if (!ui.drawer.prop('hidden')) {
                     me.toggle_workbench_structure(false);
                     ui.bar.find('[data-pb-action=structure]').trigger('focus');
-                } else if (ui.hidden) {
-                    me.workbench_action('guides');
                 } else if (ui.selected) {
                     me.select_workbench_element(null);
                 } else handled = false;
@@ -233,6 +235,10 @@
                 }
             };
             document.addEventListener('pointerdown', ui.outsideHandler);
+            var guideMode;
+            try { guideMode = window.localStorage.getItem('webjet.pagebuilder.guides'); }
+            catch (e) { /* Storage may be unavailable in embedded or restricted browsers. */ }
+            me.set_workbench_guides(guideMode, false);
             me.refresh_workbench_selection();
             me.schedule_workbench();
         },
@@ -248,6 +254,8 @@
                 previous: 'M6 14l6-6 6 6', next: 'M6 10l6 6 6-6',
                 plus: 'M12 5v14M5 12h14', close: 'M6 6l12 12M18 6L6 18',
                 eye: 'M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7M9 12a3 3 0 1 0 6 0a3 3 0 1 0-6 0',
+                'eye-off': 'M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.2A11 11 0 0 1 12 5c7 0 10 7 10 7a16 16 0 0 1-3.1 4.1M6.2 6.2A18 18 0 0 0 2 12s3 7 10 7a12 12 0 0 0 5.8-1.8',
+                layers: 'M12 3L2 8l10 5 10-5-10-5M2 12l10 5 10-5M2 16l10 5 10-5',
                 more: 'M5 11h1v2H5zM11 11h1v2h-1zM17 11h1v2h-1z',
                 favorite: 'M12 3l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z',
                 remove: 'M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6'
@@ -375,6 +383,23 @@
             return index >= 0 && index < siblings.length ? siblings[index] : null;
         },
 
+        /** Applies the outline preference without changing content, selection or toolbar actions. */
+        set_workbench_guides: function(mode, remember) {
+            var ui = this.ui;
+            if (!['selected', 'hidden', 'all'].includes(mode)) mode = 'selected';
+            ui.guideMode = mode;
+            this.$wrapper.toggleClass(this.options.prefix+'-hide-guides', mode === 'hidden');
+            var label = ui.labels.guides[mode], icon = {selected: 'eye', hidden: 'eye-off', all: 'layers'}[mode];
+            var button = ui.bar.find('[data-pb-action=guides]');
+            button.attr({'data-pb-guides': mode, 'aria-label': label, title: label}).find('span').text(label);
+            button.children('svg').replaceWith(this.workbench_button('guides', label, icon).children('svg'));
+            if (remember) {
+                try { window.localStorage.setItem('webjet.pagebuilder.guides', mode); }
+                catch (e) { /* Keep the preference for this editor session when storage is blocked. */ }
+            }
+            this.schedule_workbench();
+        },
+
         /** Routes quick actions through the original move/copy and cleanup lifecycle. */
         workbench_action: function(action, invoker) {
             var me = this, ui = me.ui, node = $(ui.selected);
@@ -390,12 +415,7 @@
                 return;
             }
             if (action === 'guides') {
-                ui.hidden = !ui.hidden;
-                me.$wrapper.toggleClass(me.options.prefix+'-hide-guides', ui.hidden);
-                var label = ui.hidden ? ui.labels.show : ui.labels.hide;
-                ui.bar.find('[data-pb-action=guides]').attr({ 'aria-pressed': String(ui.hidden), 'aria-label': label, title: label }).find('span').text(label);
-                if (ui.hidden) me.toggle_workbench_structure(false);
-                me.schedule_workbench();
+                me.set_workbench_guides({selected: 'hidden', hidden: 'all', all: 'selected'}[ui.guideMode], true);
                 return;
             }
             if (action === 'more') {
@@ -406,7 +426,6 @@
                 return;
             }
             if (me.workbench_busy()) return;
-            if (ui.hidden) me.workbench_action('guides');
             ui.returnAction = action;
             me.toggle_workbench_structure(false);
             ui.menu.prop('hidden', true);
@@ -562,13 +581,28 @@
                 var moving = me.$wrapper.hasClass(me.state.is_moving_child);
                 var element = (moving ? ui.hovered : ui.selected) || ui.hovered;
                 var obstructed = me.$wrapper.hasClass(me.state.is_modal_open) || me.$wrapper.hasClass(me.state.is_library_active);
-                var visible = element && element.isConnected && $(element).is(':visible') && !ui.hidden && !obstructed && !document.body.classList.contains('is-view-mode');
-                ui.outline.prop('hidden', !visible);
-                if (visible) {
-                    var rect = element.getBoundingClientRect(), type = me.workbench_type(element);
-                    if (type === 'row' && $(element).hasClass(me.tag.duplicable)) type = 'item';
-                    ui.outline.attr('data-type', type).toggleClass('is-quiet', ui.quiet).css({ left: rect.left - 4, top: rect.top - top - 4, width: rect.width + 8, height: rect.height + 8 });
+                var visible = element && element.isConnected && $(element).is(':visible') && ui.guideMode !== 'hidden' && !obstructed && !document.body.classList.contains('is-view-mode');
+                var elements = visible ? [element] : [];
+                if (visible && ui.guideMode === 'all') elements = elements.concat($(element).parentsUntil(me.$wrapper, me.tagc._grid_element).get());
+                while (ui.outlines.length < elements.length) {
+                    ui.outlines = ui.outlines.add($('<div>', { 'class': me.options.prefix+'-outline', hidden: true }).appendTo(ui.layer));
                 }
+                var bounds;
+                ui.outlines.each(function(index) {
+                    var target = elements[index], outline = $(this);
+                    outline.prop('hidden', !target).toggleClass('is-quiet', !!target && ui.quiet);
+                    if (!target) return;
+                    var rect = target.getBoundingClientRect(), type = me.workbench_type(target);
+                    if (type === 'row' && $(target).hasClass(me.tag.duplicable)) type = 'item';
+                    // Keep every ancestor outside its child, even when their actual edges coincide.
+                    bounds = {
+                        left: Math.min(rect.left, bounds ? bounds.left : rect.left) - 4,
+                        top: Math.min(rect.top, bounds ? bounds.top : rect.top) - 4,
+                        right: Math.max(rect.right, bounds ? bounds.right : rect.right) + 4,
+                        bottom: Math.max(rect.bottom, bounds ? bounds.bottom : rect.bottom) + 4
+                    };
+                    outline.attr('data-type', type).css({ left: bounds.left, top: bounds.top - top, width: bounds.right - bounds.left, height: bounds.bottom - bounds.top });
+                });
                 if (ui.treeDirty && !ui.drawer.prop('hidden')) me.render_workbench_tree();
                 var busy = me.workbench_busy();
                 ui.path.find('button').prop('disabled', busy);

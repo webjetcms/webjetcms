@@ -18,7 +18,7 @@ V prípade potreby je v okne možnosť prepnúť editor do štandardného režim
 
 ## Základná práca
 
-Pri použití Page Builder vytvárate web stránku z vopred pripravených blokov. Kliknutím do obsahu vyberiete blok a zároveň môžete ihneď písať. Zvýraznený je vždy jeden blok; počas písania sa jeho rámik zjemní. Farba označuje typ bloku:
+Pri použití Page Builder vytvárate web stránku z vopred pripravených blokov. Kliknutím do obsahu vyberiete blok a zároveň môžete ihneď písať. Predvolene je zvýraznený jeden blok; počas písania sa jeho rámik zjemní. Farba označuje typ bloku:
 
 - Modrá farba reprezentuje sekciu - hlavný stavebný blok, zvyčajne na celú šírku obrazovky.
 - Červená farba reprezentuje kontajner - blok určený na vkladanie stĺpcov, je zvyčajne užší ako sekcia pre lepšiu čitateľnosť textov na stránke.
@@ -63,7 +63,7 @@ Skryté bloky majú označenie **Skrytý**. Ich výber nemení viditeľnosť ani
 
 V strome sa pohybujete šípkami, vetvy otvárate a zatvárate šípkami doprava a doľava a výber potvrdíte klávesom Enter alebo medzerníkom. Escape zatvorí otvorenú ponuku či panel alebo zruší presun.
 
-Tlačidlo **Skryť pomôcky** dočasne skryje označenia a strom. Obsah aj jeho zalomenie zostávajú zachované, pomôcky obnovíte rovnakým tlačidlom. Skutočný **Náhľad** a uloženie používajú HTML očistené od ovládacích prvkov PageBuildera.
+Tlačidlo s ikonou oka postupne prepína tri režimy: **rámik vybraného bloku** (predvolený), **žiadne rámiky** (preškrtnuté oko) a **rámiky celej hierarchie aktívneho bloku** (ikona vrstiev). V treťom režime vidíte aj nadradenú sekciu, kontajner a riadok; rámiky majú odstup, aby sa neprekrývali. Prehliadač si voľbu pamätá aj po opätovnom otvorení editora. Lišta, panel Štruktúra a zalomenie obsahu sa prepínaním nemenia. Skutočný **Náhľad** a uloženie používajú HTML očistené od ovládacích prvkov PageBuildera.
 
 ## Nastavenie šírky stĺpcov
 

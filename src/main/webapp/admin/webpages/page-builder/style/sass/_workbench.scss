@@ -204,9 +204,6 @@
     }
     &:not(.#{$prefix}-is-moving-child) .#{$prefix}-grid-element > .#{$prefix}-plus-button { display: none !important; }
     [data-ckeditor-instance]:focus { outline: none; }
-    &.#{$prefix}-hide-guides {
-        .#{$prefix}-plus-button, .#{$prefix}-empty-placeholder, .#{$prefix}-size-changer, .#{$prefix}-connection-button { visibility: hidden !important; }
-    }
 }
 body:has(.#{$prefix}-has-workbench) {
     #inlineEditorToolbarTopPlaceHolder, #inlineEditorToolbarTop { transition: none; }

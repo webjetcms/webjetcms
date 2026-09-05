@@ -739,6 +739,7 @@ const workbenchFixture = 'section.pb-workbench-autotest';
 /** Opens a DOM-only fixture so workbench regressions never publish changes to the demo page. */
 async function openWorkbenchFixture(I, DTE, Document) {
     Document.resetPageBuilderMode();
+    I.executeScript(() => localStorage.removeItem('webjet.pagebuilder.guides'));
     I.resizeWindow(1440, 1000);
     I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
     DTE.waitForEditor();
@@ -836,10 +837,97 @@ Scenario('workbench selection, structure and unchanged canvas geometry', async (
     I.waitForInvisible('.pb-outline', 10);
     assert.deepStrictEqual(await workbenchGeometry(I), before, 'Hiding guides must preserve the complete canvas geometry');
     I.click('.pb-workbench [data-pb-action=guides]');
-    I.waitForVisible('.pb-outline', 10);
+    I.click('.pb-workbench [data-pb-action=guides]');
+    I.waitForVisible('.pb-outline:not([hidden])', 10);
     I.saveScreenshot('pagebuilder-workbench.png');
     I.switchTo();
     I.amAcceptingPopups();
+    DTE.cancel();
+});
+
+Scenario('workbench outline modes, offsets and remembered preference', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    const button = '.pb-workbench [data-pb-action=guides]';
+    const before = await workbenchGeometry(I);
+    const initial = await I.executeScript(() => ({
+        icon: document.querySelector('[data-pb-action=guides] path').getAttribute('d'),
+        html: window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data
+    }));
+    I.seeElement(button+'[data-pb-guides=selected]');
+    I.click('.pb-workbench [data-pb-action=structure]');
+    I.click(button);
+    I.seeElement(button+'[data-pb-guides=hidden]');
+    I.waitForInvisible('.pb-outline:not([hidden])', 10);
+    I.seeElement('.pb-structure');
+    I.seeElement('.pb-workbench [data-pb-action=style]');
+    const hiddenIcon = await I.grabAttributeFrom(button+' path', 'd');
+    assert.notStrictEqual(hiddenIcon, initial.icon, 'Hidden outlines must have their own crossed-out eye icon');
+    I.click(button);
+    I.seeElement(button+'[data-pb-guides=all]');
+    I.waitForVisible('.pb-outline[data-type=section]:not([hidden])', 10);
+    const all = await I.executeScript(() => ({
+        icon: document.querySelector('[data-pb-action=guides] path').getAttribute('d'),
+        stored: localStorage.getItem('webjet.pagebuilder.guides'),
+        outlines: Array.from(document.querySelectorAll('.pb-outline:not([hidden])')).map(node => {
+            const rect = node.getBoundingClientRect();
+            return {type: node.dataset.type, left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom,
+                color: getComputedStyle(node).borderColor, pointerEvents: getComputedStyle(node).pointerEvents};
+        }),
+        html: window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data
+    }));
+    assert.deepStrictEqual(all.outlines.map(outline => outline.type), ['column', 'row', 'container', 'section']);
+    assert.strictEqual(new Set(all.outlines.map(outline => outline.color)).size, 4, 'Each structural level must keep its distinct color');
+    assert.ok(all.outlines.every(outline => outline.pointerEvents === 'none'), 'All outlines must let clicks reach the content');
+    for (let index = 1; index < all.outlines.length; index++) {
+        const inner = all.outlines[index - 1], outer = all.outlines[index];
+        assert.ok(outer.left <= inner.left - 4 && outer.top <= inner.top - 4 &&
+            outer.right >= inner.right + 4 && outer.bottom >= inner.bottom + 4,
+        'Ancestor borders must be separated even where the underlying block edges coincide');
+    }
+    assert.notStrictEqual(all.icon, initial.icon, 'The hierarchy mode must have a distinct layers icon');
+    assert.notStrictEqual(all.icon, hiddenIcon);
+    assert.strictEqual(all.stored, 'all');
+    assert.strictEqual(all.html, initial.html, 'Outline preferences and helper elements must never enter saved HTML');
+    assert.deepStrictEqual(await workbenchGeometry(I), before, 'All outline modes must preserve box sizes and text wrapping');
+    I.click('.pb-structure [data-pb-action=close-structure]');
+    I.saveScreenshot('pagebuilder-outline-hierarchy.png');
+    I.click(workbenchFixture+' > .container > p.pb-editable');
+    I.waitForVisible('.pb-outline[data-type=text]:not([hidden])', 10);
+    I.seeNumberOfVisibleElements('.pb-outline', 3);
+    I.click(button);
+    I.seeElement(button+'[data-pb-guides=selected]');
+    I.seeNumberOfVisibleElements('.pb-outline', 1);
+    I.click(button);
+    I.seeElement(button+'[data-pb-guides=hidden]');
+    I.click(button);
+    I.switchTo();
+    I.amAcceptingPopups();
+    DTE.cancel();
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+    DTE.waitForEditor();
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.waitForVisible(button+'[data-pb-guides=all]', 20);
+
+    const fallback = await I.executeScript(() => {
+        const builder = window.pageBuilder;
+        localStorage.setItem('webjet.pagebuilder.guides', 'invalid-autotest');
+        builder.destroy_workbench();
+        builder.create_workbench();
+        const invalid = builder.ui.guideMode;
+        const descriptor = Object.getOwnPropertyDescriptor(window, 'localStorage');
+        try {
+            Object.defineProperty(window, 'localStorage', {configurable: true, get() { throw new Error('autotest blocked storage'); }});
+            builder.destroy_workbench();
+            builder.create_workbench();
+            builder.workbench_action('guides');
+            return {invalid, blocked: builder.ui.guideMode};
+        } finally {
+            Object.defineProperty(window, 'localStorage', descriptor);
+            localStorage.removeItem('webjet.pagebuilder.guides');
+        }
+    });
+    assert.deepStrictEqual(fallback, {invalid: 'selected', blocked: 'hidden'}, 'Invalid or unavailable storage must not prevent outline switching');
+    I.switchTo();
     DTE.cancel();
 });
 

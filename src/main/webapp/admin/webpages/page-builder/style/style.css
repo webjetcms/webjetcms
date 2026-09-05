@@ -2817,9 +2817,6 @@ div.exit-inline-editor a[aria-pressed=true] {
 .pb-wrapper.pb-has-workbench [data-ckeditor-instance]:focus {
   outline: none;
 }
-.pb-wrapper.pb-has-workbench.pb-hide-guides .pb-plus-button, .pb-wrapper.pb-has-workbench.pb-hide-guides .pb-empty-placeholder, .pb-wrapper.pb-has-workbench.pb-hide-guides .pb-size-changer, .pb-wrapper.pb-has-workbench.pb-hide-guides .pb-connection-button {
-  visibility: hidden !important;
-}
 
 body:has(.pb-has-workbench) #inlineEditorToolbarTopPlaceHolder, body:has(.pb-has-workbench) #inlineEditorToolbarTop {
   transition: none;
