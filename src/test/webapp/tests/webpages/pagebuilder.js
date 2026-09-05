@@ -64,7 +64,7 @@ Scenario('overenie zobrazenia podla sablony', async ({I, DTE, Document}) => {
     Document.resetPageBuilderMode();
 });
 
-Scenario('bug - prepnutie editora', ({I, DTE, Apps, Document}) => {
+Scenario('bug - prepnutie editora', async ({I, DTE, Apps, Document}) => {
     //bug: nacitam do editora stranku, prepnem na Standardny editor, prepnem do HTML kodu, ulozim
     //otvorim inu stranku, prepnem editor na Standardny a vidim stary text
 
@@ -82,7 +82,8 @@ Scenario('bug - prepnutie editora', ({I, DTE, Apps, Document}) => {
 
     I.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
     Apps.switchEditor('html');
-    I.see("Suspendisse interdum dolor justo, ac venenatis massa");
+    const html = await I.executeScript(() => document.querySelector('.CodeMirror').CodeMirror.getValue());
+    assert.ok(html.includes('Suspendisse interdum dolor justo, ac venenatis massa'), 'The HTML editor must retain the complete page, including content outside its virtual viewport');
 
     I.wait(1);
     I.switchTo();
@@ -200,14 +201,14 @@ function openStyleModal(I, colSelector=".col-3") {
 
     //
     I.waitForElement("#wjInline-docdata.pb-wrapper", 10);
-    I.say("Click on col toolbar");
-    I.seeElementInDOM("section:nth-child(1) aside.pb-toolbar");
-    I.forceClick({css: "section:nth-child(1) .container .row "+colSelector+":nth-child(1) aside.pb-toolbar"});
-    I.seeElement("section:nth-child(1) .container .row "+colSelector+":nth-child(1) aside.pb-highlighter__top");
+    I.say("Select a column using the shared toolbar");
+    I.click({css: "section:nth-child(1) .container .row "+colSelector+":nth-child(1) :is(h1,h2,h3,h4,p):not(:has(img))"});
+    I.click(locate(".pb-workbench-path button[data-type=column]").last());
+    I.waitForVisible(".pb-outline[data-type=column]", 10);
 
     //
     I.say("Open style modal");
-    I.forceClick({css: "aside.pb-is-toolbar-active button.pb-toolbar-button__style"});
+    I.click(".pb-workbench [data-pb-action=style]");
     I.waitForElement("#wjInline-docdata.pb-is-modal-open div.pb-modal", 10);
 }
 
@@ -233,8 +234,9 @@ function getDuplicableItem(listIndex, itemIndex) {
 
 function openDuplicableToolbar(I, listIndex, itemIndex, action) {
     const item = getDuplicableItem(listIndex, itemIndex);
-    I.forceClick(item.find("aside.pb-toolbar"));
-    I.waitForVisible(item.find("aside.pb-toolbar.pb-is-toolbar-active button.pb-toolbar-button__"+action), 10);
+    I.click(item);
+    I.click(".pb-workbench [data-pb-action=more]");
+    I.waitForVisible(".pb-workbench [data-pb-action="+action+"]", 10);
 }
 
 async function getDuplicableItemTexts(I, listIndex) {
@@ -256,8 +258,8 @@ async function armDuplicableToolbarMouseupProbe(I, listIndex, itemIndex, action)
     const armed = await I.executeScript((root, args) => {
         const list = document.querySelectorAll(args.selector)[args.listIndex - 1];
         const item = list && list.querySelector(":scope > li.pb-duplicable-element:nth-of-type("+args.itemIndex+")");
-        const button = item && item.querySelector("button.pb-toolbar-button__"+args.action);
-        const editable = button && button.closest('[contenteditable="true"]');
+        const button = document.querySelector(".pb-workbench [data-pb-action="+args.action+"]");
+        const editable = item && item.closest('[contenteditable="true"]');
 
         if (button == null || editable == null) return false;
 
@@ -324,9 +326,10 @@ function getDuplicableRowController(rowIndex, controllerSelector) {
 }
 
 function openDuplicableRowToolbar(I, rowIndex, action) {
-    I.executeScript(() => window.pageBuilder.set_toolbar_invisible());
-    I.forceClick(getDuplicableRowController(rowIndex, "aside.pb-toolbar"));
-    I.waitForVisible(getDuplicableRowController(rowIndex, "aside.pb-toolbar.pb-is-toolbar-active button.pb-toolbar-button__"+action), 10);
+    I.click(getDuplicableRowController(rowIndex, ".pb-column .column-content p"));
+    I.click(locate(".pb-workbench-path button[data-type=row]").last());
+    I.click(".pb-workbench [data-pb-action=more]");
+    I.waitForVisible(".pb-workbench [data-pb-action="+action+"]", 10);
 }
 
 async function getPageBuilderFrame(page) {
@@ -480,7 +483,7 @@ Scenario('duplicable elements toolbar, cleanup and operations', async ({I, DTE, 
 
     openDuplicableToolbar(I, 1, 1, "duplicate");
     await armDuplicableToolbarMouseupProbe(I, 1, 1, "duplicate");
-    I.click(getDuplicableItem(1, 1).find("button.pb-toolbar-button__duplicate"));
+    I.click(".pb-workbench [data-pb-action=duplicate]");
     I.waitForElement("#wjInline-docdata.pb-is-moving-child.pb-is-moving-duplicable-element.pb-is-duplicating", 10);
     await assertDuplicableToolbarMouseupStopped(I, "Duplicate");
     I.dontSeeElement(".cke_reset_all.cke_dialog_container");
@@ -502,14 +505,16 @@ Scenario('duplicable elements toolbar, cleanup and operations', async ({I, DTE, 
     I.dontSeeElement("#wjInline-docdata.pb-is-moving-child");
     I.dontSeeElement("li.pb-is-duplicable-target");
 
-    I.forceClick(getDuplicableItem(1, 4).find("button.pb-toolbar-button__move"));
+    openDuplicableToolbar(I, 1, 4, "move");
+    I.click(".pb-workbench [data-pb-action=move]");
     I.waitForElement("#wjInline-docdata.pb-is-moving-child.pb-is-moving-duplicable-element", 10);
     I.dontSeeElement("#wjInline-docdata.pb-is-duplicating");
     I.dontSeeElement(locate(pricingListsSelector).at(2).find("li.pb-is-duplicable-target"));
     I.forceClick(getDuplicableItem(1, 1).find("aside.pb-prepend"));
     assert.deepStrictEqual(await getDuplicableItemTexts(I, 1), ["vulputate purus", "Nunc sed purus", "rutrum varius sollicitudin", "Nunc sed purus"]);
 
-    I.forceClick(getDuplicableItem(1, 2).find("button.pb-toolbar-button__move"));
+    openDuplicableToolbar(I, 1, 2, "move");
+    I.click(".pb-workbench [data-pb-action=move]");
     I.waitForElement("#wjInline-docdata.pb-is-moving-child.pb-is-moving-duplicable-element", 10);
     const iframeFocused = await I.executeScript((root) => {
         const cancelButton = root.querySelector("button.pb-notify__footer__button");
@@ -525,7 +530,7 @@ Scenario('duplicable elements toolbar, cleanup and operations', async ({I, DTE, 
     I.amAcceptingPopups();
     openDuplicableToolbar(I, 1, 4, "remove");
     await armDuplicableToolbarMouseupProbe(I, 1, 4, "remove");
-    I.click(getDuplicableItem(1, 4).find("button.pb-toolbar-button__remove"));
+    I.click(".pb-workbench [data-pb-action=remove]");
     I.acceptPopup();
     await assertDuplicableToolbarMouseupStopped(I, "Remove");
     I.dontSeeElement(".cke_reset_all.cke_dialog_container");
@@ -604,13 +609,13 @@ Scenario('duplicable row toolbar, CKEditor lifecycle and cleanup', async ({I, DT
     assert.strictEqual(initialState.buttonClasses.some(classes => classes.includes("pb-toolbar-button__duplicate")), true, "The row duplicate action must be available");
     assert.strictEqual(initialState.buttonClasses.some(classes => classes.includes("pb-toolbar-button__remove")), true, "The row remove action must be available");
     assert.strictEqual(initialState.columnToolbarCount, 1, "The column inside a duplicable row must keep its own toolbar");
-    assert.strictEqual(initialState.sideHighlighterWidths.every(width => width >= 1.9 && width <= 2.1), true, "A duplicable row must render two-pixel side highlighters");
+    assert.strictEqual(initialState.sideHighlighterWidths.every(width => width === 0), true, "Legacy highlighters must be hidden behind the shared outline");
     assert.strictEqual(initialState.controllersHaveNoHorizontalPadding, true, "Page Builder controllers inside a Bootstrap row must not inherit row gutter padding");
     assert.strictEqual(initialState.toolbarHandlesOverlap, false, "The row and column toolbar handles must not overlap");
-    assert.ok(initialState.toolbarHorizontalGap >= 7.9, "The row and column toolbar handles must have a visible gap");
+    assert.strictEqual(initialState.toolbarHorizontalGap, 0, "Legacy handles must not occupy canvas space");
 
     openDuplicableRowToolbar(I, 1, "duplicate");
-    I.click(getDuplicableRowController(1, "aside.pb-toolbar button.pb-toolbar-button__duplicate"));
+    I.click(".pb-workbench [data-pb-action=duplicate]");
     I.waitForElement("#wjInline-docdata.pb-is-moving-child.pb-is-moving-duplicable-element.pb-is-duplicating", 10);
     I.waitForVisible(getDuplicableRowController(1, "aside.pb-append"), 10);
     I.click(getDuplicableRowController(1, "aside.pb-append"));
@@ -649,7 +654,7 @@ Scenario('duplicable row toolbar, CKEditor lifecycle and cleanup', async ({I, DT
     assert.ok(editorData[1].includes("row-autotest-clone-edited") && !editorData[1].includes("row-autotest-source-edited"), "The clone editor must contain only its new content");
 
     openDuplicableRowToolbar(I, 2, "move");
-    I.click(getDuplicableRowController(2, "aside.pb-toolbar button.pb-toolbar-button__move"));
+    I.click(".pb-workbench [data-pb-action=move]");
     I.waitForElement("#wjInline-docdata.pb-is-moving-child.pb-is-moving-duplicable-element", 10);
     I.dontSeeElement("#wjInline-docdata.pb-is-duplicating");
     I.waitForVisible(getDuplicableRowController(1, "aside.pb-prepend"), 10);
@@ -706,7 +711,7 @@ Scenario('duplicable row toolbar, CKEditor lifecycle and cleanup', async ({I, DT
 
     I.amAcceptingPopups();
     openDuplicableRowToolbar(I, 2, "remove");
-    I.click(getDuplicableRowController(2, "aside.pb-toolbar button.pb-toolbar-button__remove"));
+    I.click(".pb-workbench [data-pb-action=remove]");
     I.acceptPopup();
     await waitForDuplicableRowEditors(I, 1);
     let removedEditorsState = await I.executeScript((root, editorName) => CKEDITOR.instances[editorName] == null,
@@ -714,7 +719,7 @@ Scenario('duplicable row toolbar, CKEditor lifecycle and cleanup', async ({I, DT
     assert.strictEqual(removedEditorsState, true, "Deleting a row must destroy its CKEditor instance");
 
     openDuplicableRowToolbar(I, 1, "remove");
-    I.click(getDuplicableRowController(1, "aside.pb-toolbar button.pb-toolbar-button__remove"));
+    I.click(".pb-workbench [data-pb-action=remove]");
     I.acceptPopup();
     await waitForDuplicableRowCount(I, 0);
     I.waitForElement(duplicableRowFixtureSelector+" > .row.pb-row > aside.pb-empty-placeholder", 10);
@@ -727,6 +732,201 @@ Scenario('duplicable row toolbar, CKEditor lifecycle and cleanup', async ({I, DT
     I.switchTo();
     DTE.cancel();
     I.acceptPopup();
+});
+
+const workbenchFixture = 'section.pb-workbench-autotest';
+
+/** Opens a DOM-only fixture so workbench regressions never publish changes to the demo page. */
+async function openWorkbenchFixture(I, DTE, Document) {
+    Document.resetPageBuilderMode();
+    I.resizeWindow(1440, 1000);
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+    DTE.waitForEditor();
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.waitForVisible('.pb-workbench', 20);
+    await I.executeScript(() => {
+        const section = document.createElement('section');
+        section.className = 'pb-workbench-autotest';
+        section.innerHTML = '<div class="container"><div class="row">' +
+            '<div class="col-12 col-md-6 col-xl-6"><div class="column-content" style="overflow:hidden">' +
+            '<h2>Workbench autotest</h2><p class="pb-workbench-copy">Editable text for the workbench autotest. This paragraph must keep its exact wrapping when the structure panel is opened and when guides are hidden.</p>' +
+            '<ul><li class="pb-duplicable">First autotest item</li><li class="pb-duplicable">Second autotest item</li></ul></div></div>' +
+            '<div class="col-12 col-md-6 col-xl-6"><p>Second autotest column</p></div>' +
+            '</div><p class="pb-editable">Standalone autotest text</p></div>';
+        document.querySelector('#wjInline-docdata').prepend(section);
+        window.markPbElements('doc_data');
+    });
+    await I.usePlaywrightTo('wait for the workbench fixture editors', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        await frame.waitForFunction(selector => Array.from(document.querySelectorAll(selector+' [data-ckeditor-instance]'))
+            .length === 3 && Array.from(document.querySelectorAll(selector+' [data-ckeditor-instance]'))
+            .every(element => CKEDITOR.instances[element.dataset.ckeditorInstance]?.status === 'ready'), workbenchFixture);
+    });
+    I.click(workbenchFixture+' .pb-workbench-copy');
+    I.waitForVisible('.pb-outline[data-type=column]', 10);
+}
+
+/** Captures layout relative to the content root, independent of selection-induced scrolling. */
+async function workbenchGeometry(I) {
+    return I.executeScript((root, selector) => {
+        const wrapper = document.querySelector('#wjInline-docdata').getBoundingClientRect();
+        return Array.from(document.querySelectorAll(selector+' .col-12, '+selector+' p')).map(element => {
+            const rect = element.getBoundingClientRect();
+            const range = document.createRange();
+            range.selectNodeContents(element);
+            return { left: rect.left - wrapper.left, top: rect.top - wrapper.top, width: rect.width, height: rect.height, lines: range.getClientRects().length };
+        });
+    }, workbenchFixture);
+}
+
+Scenario('workbench selection, structure and unchanged canvas geometry', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    const before = await workbenchGeometry(I);
+    const state = await I.executeScript(() => {
+        const selected = window.pageBuilder.ui.selected;
+        const block = selected.getBoundingClientRect();
+        const frame = document.querySelector('.pb-outline').getBoundingClientRect();
+        const content = selected.querySelector('.pb-workbench-copy');
+        const text = content.getBoundingClientRect();
+        return {
+            outside: [block.left - frame.left, block.top - frame.top, frame.right - block.right, frame.bottom - block.bottom],
+            pointerEvents: getComputedStyle(document.querySelector('.pb-outline')).pointerEvents,
+            legacyVisible: Array.from(document.querySelectorAll('.pb-toolbar, .pb-highlighter')).filter(node => node.getClientRects().length).length,
+            chromeInContent: selected.closest('#wjInline-docdata').querySelectorAll('.pb-workbench, .pb-outline-layer, .pb-structure').length,
+            textReachable: content.contains(document.elementFromPoint(text.left + 2, text.top + 5))
+        };
+    });
+    assert.deepStrictEqual(state.outside, [4, 4, 4, 4], 'The outline must remain four pixels outside the selected box');
+    assert.strictEqual(state.pointerEvents, 'none', 'The outline must not capture content clicks');
+    assert.strictEqual(state.legacyVisible, 0, 'Ancestor outlines and local palettes must remain hidden');
+    assert.strictEqual(state.chromeInContent, 0, 'New chrome must live outside serialized content');
+    assert.strictEqual(state.textReachable, true, 'The first text character must remain clickable');
+    const cleanLayout = await I.executeScript((root, selector) => {
+        const wrapper = document.querySelector('#wjInline-docdata');
+        const original = document.querySelector(selector);
+        const clone = wrapper.cloneNode(false);
+        clone.append(original.cloneNode(true));
+        window.pageBuilder.getClearNode($(clone));
+        window.pageBuilder.clearEditorAttributes($(clone));
+        Object.assign(clone.style, {position: 'fixed', left: '-20000px', top: '0', width: wrapper.getBoundingClientRect().width+'px'});
+        document.body.append(clone);
+        const geometry = section => Array.from(section.querySelectorAll('.col-12, p')).map(element => {
+            const rect = element.getBoundingClientRect();
+            return {left: rect.left - section.getBoundingClientRect().left, width: rect.width, height: rect.height};
+        });
+        const result = {editing: geometry(original), clean: geometry(clone.querySelector(selector))};
+        clone.remove();
+        return result;
+    }, workbenchFixture);
+    assert.deepStrictEqual(cleanLayout.editing, cleanLayout.clean, 'Editor chrome must preserve the same box sizes and text wrapping as cleaned HTML');
+
+    I.click('.pb-workbench [data-pb-action=structure]');
+    I.waitForVisible('.pb-structure [role=treeitem]', 10);
+    I.saveScreenshot('pagebuilder-workbench-structure.png');
+    assert.deepStrictEqual(await workbenchGeometry(I), before, 'Opening the tree must not shrink or reflow the canvas');
+    I.fillField('.pb-structure input[type=search]', 'Second autotest column');
+    I.waitForText('Second autotest column', 10, '.pb-structure');
+    I.click(locate('.pb-structure [role=treeitem] > div').withText('Second autotest column').last());
+    const selectedText = await I.executeScript(() => window.pageBuilder.ui.selected.textContent);
+    assert.ok(selectedText.includes('Second autotest column'), 'Selecting a search result must select its actual column');
+    I.fillField('.pb-structure input[type=search]', 'no-such-autotest-block');
+    I.waitForVisible('.pb-structure > p', 10);
+    I.click('.pb-structure [data-pb-action=close-structure]');
+    I.click('.pb-workbench [data-pb-action=guides]');
+    I.waitForInvisible('.pb-outline', 10);
+    assert.deepStrictEqual(await workbenchGeometry(I), before, 'Hiding guides must preserve the complete canvas geometry');
+    I.click('.pb-workbench [data-pb-action=guides]');
+    I.waitForVisible('.pb-outline', 10);
+    I.saveScreenshot('pagebuilder-workbench.png');
+    I.switchTo();
+    I.amAcceptingPopups();
+    DTE.cancel();
+});
+
+Scenario('workbench quick actions, source markers and clean serialization', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    I.click(locate(workbenchFixture+' li.pb-duplicable-element').first());
+    I.waitForVisible('.pb-outline[data-type=item]', 10);
+    I.dontSeeElement('.pb-workbench [data-pb-action=style]');
+    I.dontSeeElement('.pb-workbench [data-pb-action=resize]');
+    I.click('.pb-workbench [data-pb-action=duplicate-adjacent]');
+    I.waitForElement(workbenchFixture+' li.pb-duplicable-element:nth-child(3)', 10);
+    let texts = await I.executeScript((root, selector) => Array.from(document.querySelectorAll(selector+' li')).map(element => Array.from(element.childNodes).filter(node => node.nodeType === Node.TEXT_NODE).map(node => node.textContent.trim()).join('')), workbenchFixture);
+    assert.deepStrictEqual(texts, ['First autotest item', 'First autotest item', 'Second autotest item']);
+    I.dontSeeElement('#wjInline-docdata.pb-is-moving-child');
+    I.click('.pb-workbench [data-pb-action=more]');
+    I.click('.pb-workbench [data-pb-action=next]');
+    const moved = await I.executeScript((root, selector) => ({
+        selectedLast: window.pageBuilder.ui.selected === document.querySelector(selector+' li:last-child'),
+        html: window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data
+    }), workbenchFixture);
+    assert.strictEqual(moved.selectedLast, true, 'Quick move must select the moved clone');
+    assert.ok(moved.html.includes('pb-duplicable'), 'Authored duplicable markers must survive serialization');
+    assert.ok(moved.html.includes('overflow:hidden') || moved.html.includes('overflow: hidden'), 'Authored style must survive serialization');
+    for (const token of ['pb-workbench-path', 'pb-structure', 'pb-outline-layer', 'pb-has-workbench', 'pb-hide-guides', 'data-pb-action', 'data-ckeditor-instance', 'pb-duplicable-element', 'pb-toolbar']) {
+        assert.ok(!moved.html.includes(token), 'Serialized HTML must not contain runtime chrome: '+token);
+    }
+    I.click('.pb-workbench [data-pb-action=more]');
+    I.seeElement('.pb-workbench [data-pb-action=next]:disabled');
+    I.pressKey('Escape');
+    I.click(workbenchFixture+' > .container > p.pb-editable');
+    I.waitForVisible('.pb-outline[data-type=text]', 10);
+    I.dontSeeElement('.pb-workbench [data-pb-action=duplicate-adjacent]');
+    I.switchTo();
+    I.amAcceptingPopups();
+    DTE.cancel();
+});
+
+Scenario('workbench keyboard, responsive toolbar and lifecycle', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    I.click('.pb-workbench [data-pb-action=structure]');
+    I.pressKey('Tab');
+    I.pressKey('Home');
+    I.pressKey('ArrowRight');
+    I.pressKey('ArrowDown');
+    I.pressKey('Enter');
+    const treeFocus = await I.executeScript(() => ({ role: document.activeElement.getAttribute('role'), selected: document.activeElement.getAttribute('aria-selected') }));
+    assert.deepStrictEqual(treeFocus, {role: 'treeitem', selected: 'true'}, 'Tree navigation must retain focus and select the requested block');
+    I.pressKey('Escape');
+    I.waitForInvisible('.pb-structure', 10);
+    I.click(workbenchFixture+' .pb-workbench-copy');
+    I.pressKey('End');
+    I.type(' keyboard-autotest');
+    I.waitForVisible('.pb-outline.is-quiet', 10);
+    I.click('.pb-workbench [data-pb-action=style]');
+    I.waitForVisible('.pb-modal', 10);
+    I.pressKey('Escape');
+    I.waitForInvisible('.pb-modal', 10);
+    I.dontSeeElement('.pb-workbench-menu:not([hidden])');
+    const editorText = await I.executeScript(() => window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data);
+    assert.ok(editorText.includes('keyboard-autotest'), 'Opening and closing properties must preserve typed content');
+    I.switchTo();
+    I.executeScript(() => window.pbSetWindowSize('phone'));
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    await I.usePlaywrightTo('wait for responsive workbench sizing', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        await frame.waitForFunction(() => window.innerWidth <= 576);
+    });
+    I.click('.pb-workbench [data-pb-action=ancestors]');
+    I.waitForVisible('.pb-workbench-path.is-expanded', 10);
+    I.pressKey('Escape');
+    I.dontSeeElement('.pb-workbench-path.is-expanded');
+    const responsive = await I.executeScript(() => {
+        const toolbar = document.querySelector('.pb-workbench').getBoundingClientRect();
+        return {fits: toolbar.width <= window.innerWidth, controlsFit: Array.from(document.querySelectorAll('.pb-workbench-actions button')).every(button => button.getBoundingClientRect().right <= window.innerWidth)};
+    });
+    assert.deepStrictEqual(responsive, {fits: true, controlsFit: true}, 'The mobile toolbar must keep all primary actions reachable');
+    const destroyed = await I.executeScript(() => {
+        const builder = window.pageBuilder;
+        builder.destroy_workbench();
+        const remaining = document.querySelectorAll('.pb-workbench, .pb-outline-layer, .pb-structure').length;
+        builder.create_workbench();
+        return {remaining, count: document.querySelectorAll('.pb-workbench').length};
+    });
+    assert.deepStrictEqual(destroyed, {remaining: 0, count: 1}, 'Recreating chrome must not retain old UI or duplicate its toolbar');
+    I.switchTo();
+    I.amAcceptingPopups();
+    DTE.cancel();
 });
 
 Scenario('reset PB settings', ({Document}) => {

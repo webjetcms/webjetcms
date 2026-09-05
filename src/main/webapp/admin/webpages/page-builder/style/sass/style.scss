@@ -138,10 +138,8 @@ $tooltip-bg: $sidebar-active-bg;
 @import "magicline";
 @import "duplicable";
 
-.#{$prefix}-column { padding:0; }
 .#{$prefix}-column__content {
 	position: relative;
-	padding: 0 5px; /*this is only problematic in simple col-12 with text and cursor hover*/
 	//lebo potom nevidno magicline overflow: hidden;
 }
 
@@ -399,3 +397,11 @@ div.exit-inline-editor a img {
   height: 18px;
   vertical-align: text-bottom;
 }
+
+div.exit-inline-editor a[aria-pressed=true] {
+  background: #edf3ff;
+  outline: 1px solid $primary;
+  border-radius: 3px;
+}
+
+@import "workbench";

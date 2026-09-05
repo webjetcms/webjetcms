@@ -67,6 +67,544 @@
             this.create_fixed_empty_placeholder();
             // <%--// this.create_library();--%>
             this.bind_events();
+            this.create_workbench();
+        },
+
+        /** Creates editor chrome outside the document that is serialized for publishing. */
+        create_workbench: function() {
+            var me = this, prefix = me.options.prefix;
+            me.ui = {
+                selected: null, hovered: null, quiet: false, hidden: false, frame: null,
+                treeDirty: true, expanded: new WeakSet(), treeNodes: new Map(), bookmarks: null,
+                labels: {
+                    structure: "<iwcm:text key='pagebuilder.ui.structure'/>",
+                    search: "<iwcm:text key='pagebuilder.ui.search'/>",
+                    empty: "<iwcm:text key='pagebuilder.ui.empty'/>",
+                    select: "<iwcm:text key='pagebuilder.ui.select'/>",
+                    section: "<iwcm:text key='pagebuilder.ui.section'/>",
+                    container: "<iwcm:text key='pagebuilder.ui.container'/>",
+                    row: "<iwcm:text key='pagebuilder.ui.row'/>",
+                    column: "<iwcm:text key='pagebuilder.ui.column'/>",
+                    item: "<iwcm:text key='pagebuilder.ui.item'/>",
+                    text: "<iwcm:text key='pagebuilder.ui.text'/>",
+                    hidden: "<iwcm:text key='pagebuilder.ui.hidden'/>",
+                    hide: "<iwcm:text key='pagebuilder.ui.hide'/>",
+                    show: "<iwcm:text key='pagebuilder.ui.show'/>",
+                    more: "<iwcm:text key='pagebuilder.ui.more'/>",
+                    duplicate: "<iwcm:text key='pagebuilder.ui.duplicate'/>",
+                    previous: "<iwcm:text key='pagebuilder.ui.previous'/>",
+                    next: "<iwcm:text key='pagebuilder.ui.next'/>",
+                    before: "<iwcm:text key='pagebuilder.ui.before'/>",
+                    after: "<iwcm:text key='pagebuilder.ui.after'/>",
+                    close: "<iwcm:text key='button.close'/>",
+                    add: "<iwcm:text key='pagebuilder.toolbar.add_section'/>"
+                }
+            };
+            var ui = me.ui;
+            ui.bar = $('<div>', { 'class': prefix+'-workbench', role: 'toolbar', 'aria-label': "<iwcm:text key='pagebuilder.toolbar.title'/>" });
+            ui.bar.append(me.workbench_button('structure', ui.labels.structure, 'structure').attr('aria-expanded', 'false'));
+            ui.path = $('<nav>', { 'class': prefix+'-workbench-path', 'aria-label': ui.labels.structure }).appendTo(ui.bar);
+            ui.actions = $('<div>', { 'class': prefix+'-workbench-actions' }).appendTo(ui.bar);
+            ui.bar.append(me.workbench_button('guides', ui.labels.hide, 'eye').attr('aria-pressed', 'false'));
+            ui.menu = $('<div>', { 'class': prefix+'-workbench-menu', hidden: true }).appendTo(ui.bar);
+            ui.layer = $('<div>', { 'class': prefix+'-outline-layer', 'aria-hidden': 'true' }).appendTo(document.body);
+            ui.outline = $('<div>', { 'class': prefix+'-outline', hidden: true }).appendTo(ui.layer);
+            ui.drawer = $('<div>', { 'class': prefix+'-structure', hidden: true, role: 'region', 'aria-label': ui.labels.structure }).appendTo(document.body);
+            $('<div>', { 'class': prefix+'-structure-heading' }).append($('<strong>').text(ui.labels.structure), me.workbench_button('close-structure', ui.labels.close, 'close')).appendTo(ui.drawer);
+            ui.search = $('<input>', { type: 'search', placeholder: ui.labels.search, 'aria-label': ui.labels.search }).appendTo(ui.drawer);
+            ui.tree = $('<ul>', { role: 'tree', 'aria-label': ui.labels.structure }).appendTo(ui.drawer);
+            ui.noResults = $('<p>', { hidden: true }).text(ui.labels.empty).appendTo(ui.drawer);
+            ui.toolbarHost = $('#inlineEditorToolbarTop');
+            ui.toolbarContent = $('#wjInlineCkEditorToolbarOffsetElement');
+            ui.placeholder = $('#inlineEditorToolbarTopPlaceHolder');
+            ui.oldHostStyle = ui.toolbarHost.attr('style');
+            ui.oldPlaceholderStyle = ui.placeholder.attr('style');
+            if (ui.toolbarHost.length) {
+                ui.toolbarHost.append(ui.bar);
+            } else {
+                ui.bar.addClass(prefix+'-workbench-standalone').appendTo(document.body);
+            }
+            me.$wrapper.addClass(prefix+'-has-workbench');
+
+            ui.bar.add(ui.drawer).on('mousedown', function() {
+                var editor = typeof getCkEditorInstance === 'function' ? getCkEditorInstance() : null;
+                if (editor && editor.focusManager.hasFocus && editor.getSelection()) {
+                    ui.bookmarks = { editor: editor, marks: editor.getSelection().createBookmarks2(true) };
+                }
+            }).on('click', 'button[data-pb-action]', function() {
+                me.workbench_action(this.getAttribute('data-pb-action'), this);
+            });
+            ui.search.on('input', function() { ui.treeDirty = true; me.schedule_workbench(); });
+            ui.tree.on('click', '[role=treeitem]', function(e) {
+                e.stopPropagation();
+                if (me.workbench_busy()) return;
+                if ($(e.target).closest('[data-pb-expand]').length) {
+                    me.toggle_workbench_branch(this);
+                } else {
+                    me.select_workbench_element($(this).data('element'), true);
+                    this.focus({ preventScroll: true });
+                    if (window.innerWidth < 768) me.toggle_workbench_structure(false);
+                }
+            }).on('keydown', function(e) { me.workbench_tree_key(e); });
+            ui.bar.on('keydown', function(e) {
+                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+                var buttons = ui.bar.find('button:visible:not(:disabled)'), index = buttons.index(e.target);
+                if (index < 0) return;
+                e.preventDefault();
+                if (e.key === 'Home') index = 0;
+                else if (e.key === 'End') index = buttons.length - 1;
+                else index = (index + (e.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length;
+                buttons[index].focus();
+            });
+            me.$wrapper.on('click.workbench focusin.workbench', function(e) {
+                if (ui.restoringFocus || me.workbench_busy() || $(e.target).closest('aside, '+me.tagc.modal+', '+me.tagc.library+', '+me.tagc.notify).length) return;
+                var element = me.workbench_target(e.target);
+                if (element) me.select_workbench_element(element);
+            }).on('pointermove.workbench', function(e) {
+                ui.quiet = false;
+                if (me.$wrapper.hasClass(me.state.is_moving_child)) {
+                    var target = me.workbench_target(e.target);
+                    // The existing controller visibility already encodes valid drop destinations.
+                    ui.hovered = target && $(target).children(me.tagc.append+', '+me.tagc.prepend).is(':visible') ? target : null;
+                } else if (!ui.selected) ui.hovered = me.workbench_target(e.target);
+                me.schedule_workbench();
+            }).on('pointerleave.workbench', function() {
+                ui.hovered = null;
+                me.schedule_workbench();
+            }).on('input.workbench', function() {
+                ui.quiet = true;
+                ui.treeDirty = true;
+                me.schedule_workbench();
+            });
+            ui.layoutHandler = function() { me.schedule_workbench(); };
+            window.addEventListener('scroll', ui.layoutHandler, true);
+            window.addEventListener('resize', ui.layoutHandler);
+            me.$wrapper[0].addEventListener('load', ui.layoutHandler, true);
+            ui.resizeObserver = new ResizeObserver(ui.layoutHandler);
+            ui.resizeObserver.observe(me.$wrapper[0]);
+            if (ui.toolbarContent.length) ui.resizeObserver.observe(ui.toolbarContent[0]);
+            ui.resizeObserver.observe(ui.bar[0]);
+            ui.observer = new MutationObserver(function(records) {
+                if (records.some(record => record.type !== 'attributes')) ui.treeDirty = true;
+                me.schedule_workbench();
+            });
+            ui.observer.observe(me.$wrapper[0], { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'style', 'hidden'] });
+            ui.escapeHandler = function(e) {
+                if (e.key !== 'Escape' || e.defaultPrevented || !me.$wrapper.is(':visible')) return;
+                if ($(e.target).closest('.cke_dialog, .cke_panel').length) return;
+                var handled = true;
+                if (ui.path.hasClass('is-expanded')) {
+                    ui.path.removeClass('is-expanded').find('[data-pb-action=ancestors]').attr('aria-expanded', 'false').trigger('focus');
+                } else if (!ui.menu.prop('hidden')) {
+                    ui.menu.prop('hidden', true);
+                    ui.actions.find('[data-pb-action=more]').attr('aria-expanded', 'false').trigger('focus');
+                } else if (me.$wrapper.hasClass(me.state.is_modal_open)) {
+                    me.close_modal();
+                } else if (me.workbench_busy()) {
+                    me.disable_after_esc_pressed(true);
+                    me.restore_workbench_focus();
+                } else if (!ui.drawer.prop('hidden')) {
+                    me.toggle_workbench_structure(false);
+                    ui.bar.find('[data-pb-action=structure]').trigger('focus');
+                } else if (ui.hidden) {
+                    me.workbench_action('guides');
+                } else if (ui.selected) {
+                    me.select_workbench_element(null);
+                } else handled = false;
+                if (handled) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    ui.escapeConsumed = true;
+                }
+            };
+            ui.escapeUpHandler = function(e) {
+                if (e.key === 'Escape' && ui.escapeConsumed) {
+                    ui.escapeConsumed = false;
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                }
+            };
+            document.addEventListener('keydown', ui.escapeHandler, true);
+            document.addEventListener('keyup', ui.escapeUpHandler, true);
+            ui.outsideHandler = function(e) {
+                if (!ui.bar[0].contains(e.target)) {
+                    ui.menu.prop('hidden', true);
+                    ui.actions.find('[data-pb-action=more]').attr('aria-expanded', 'false');
+                }
+            };
+            document.addEventListener('pointerdown', ui.outsideHandler);
+            me.refresh_workbench_selection();
+            me.schedule_workbench();
+        },
+
+        /** Builds a named button using the same Tabler outline icon vocabulary as the editor. */
+        workbench_button: function(action, label, icon) {
+            var paths = {
+                structure: 'M4 4h6v6H4zM14 14h6v6h-6zM4 7H2v10h12M14 4h6v6h-6zM10 7h4',
+                style: 'M4 20h4l12-12-4-4L4 16v4M14 6l4 4',
+                resize: 'M4 5v14M20 5v14M7 12h10M10 9l-3 3 3 3M14 9l3 3-3 3',
+                duplicate: 'M8 8h12v12H8zM16 8V4H4v12h4',
+                move: 'M12 3v18M3 12h18M8 7l4-4 4 4M8 17l4 4 4-4M7 8l-4 4 4 4M17 8l4 4-4 4',
+                previous: 'M6 14l6-6 6 6', next: 'M6 10l6 6 6-6',
+                plus: 'M12 5v14M5 12h14', close: 'M6 6l12 12M18 6L6 18',
+                eye: 'M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7M9 12a3 3 0 1 0 6 0a3 3 0 1 0-6 0',
+                more: 'M5 11h1v2H5zM11 11h1v2h-1zM17 11h1v2h-1z',
+                favorite: 'M12 3l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z',
+                remove: 'M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6'
+            };
+            return $('<button>', { type: 'button', 'data-pb-action': action, 'aria-label': label, title: label })
+                .append('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="'+paths[icon]+'"/></svg>')
+                .append($('<span>').text(label));
+        },
+
+        workbench_busy: function() {
+            return [this.state.is_moving_child, this.state.is_modal_open, this.state.is_library_active, this.state.is_resize_columns]
+                .some(state => this.$wrapper.hasClass(state) || this.$wrapper.find('.'+state).length > 0);
+        },
+
+        /** Resolves only elements recognized by the existing grid/editor initialization. */
+        workbench_target: function(target) {
+            if ($(target).closest(this.tagc.empty_placeholder_wrapper+', '+this.tagc.modal+', '+this.tagc.library+', '+this.tagc.notify).length) return null;
+            var node = $(target).closest(this.tagc._grid_element+', [data-ckeditor-instance]')[0];
+            if (node && $(node).is('[data-ckeditor-instance]') && !$(node).hasClass(this.tag._grid_element)) {
+                node = $(node).closest(this.tagc.column)[0] || node;
+            }
+            return node && this.$wrapper[0].contains(node) ? node : null;
+        },
+
+        workbench_type: function(element) {
+            var node = $(element);
+            if (node.hasClass(this.tag.duplicable)) return node.hasClass(this.tag.row) ? 'row' : 'item';
+            for (var type of ['column', 'row', 'container', 'section']) {
+                if (node.hasClass(this.tag[type])) return type;
+            }
+            return 'text';
+        },
+
+        /** Returns a short content-derived name without adding metadata to the authored HTML. */
+        workbench_name: function(element) {
+            var node = $(element), heading = node.find('h1,h2,h3,h4,h5,h6').first();
+            var text = heading.text();
+            if (!text) {
+                var walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT), part;
+                while ((part = walker.nextNode()) && text.length < 80) {
+                    if (!$(part.parentElement).closest('aside, script, style, '+this.tagc.modal+', '+this.tagc.library).length) text += ' '+part.textContent;
+                }
+            }
+            text = text.replace(/\s+/g, ' ').trim();
+            return text ? text.slice(0, 60) : this.ui.labels[this.workbench_type(element)]+' '+(node.prevAll(this.tagc._grid_element).length + 1);
+        },
+
+        select_workbench_element: function(element, scroll) {
+            if (!this.ui) return;
+            var ui = this.ui;
+            if (ui.selected && ui.selected !== element) ui.resizeObserver.unobserve(ui.selected);
+            ui.selected = element;
+            ui.hovered = null;
+            ui.quiet = false;
+            ui.menu.prop('hidden', true);
+            ui.path.removeClass('is-expanded');
+            if (element) {
+                ui.resizeObserver.observe(element);
+                $(element).parentsUntil(this.$wrapper).each(function() { ui.expanded.add(this); });
+                if (scroll && $(element).is(':visible')) {
+                    var rect = element.getBoundingClientRect(), top = ui.bar[0].getBoundingClientRect().bottom;
+                    window.scrollBy({ top: rect.top - top - 20, behavior: 'instant' });
+                }
+            }
+            ui.treeDirty = true;
+            this.refresh_workbench_selection();
+            this.schedule_workbench();
+        },
+
+        /** Mirrors the existing local controller capabilities into the shared toolbar. */
+        refresh_workbench_selection: function() {
+            if (!this.ui) return;
+            var me = this, ui = me.ui, node = $(ui.selected);
+            var focusedAction = ui.bar[0].contains(document.activeElement) ? document.activeElement.getAttribute('data-pb-action') : null;
+            ui.path.empty();
+            ui.actions.empty();
+            ui.menu.empty().prop('hidden', true);
+            if (!ui.selected) {
+                $('<span>').text(ui.labels.select).appendTo(ui.path);
+                ui.actions.append(me.workbench_button('add-section', ui.labels.add, 'plus'));
+                return;
+            }
+            var ancestors = node.parentsUntil(me.$wrapper, me.tagc._grid_element).get().reverse().concat(ui.selected);
+            ui.path.append(me.workbench_button('ancestors', ui.labels.structure, 'structure').attr('aria-expanded', 'false'));
+            ancestors.forEach(function(element, index) {
+                var type = me.workbench_type(element);
+                var button = $('<button>', { type: 'button', 'data-type': type, title: me.workbench_name(element) })
+                    .text(ui.labels[type]).on('click', function() { if (!me.workbench_busy()) me.select_workbench_element(element, true); });
+                if (index === ancestors.length - 1) button.attr('aria-current', 'location');
+                ui.path.append(button);
+            });
+            var toolbar = node.children(me.tagc.toolbar);
+            var actions = [
+                ['style', 'style'], ['resize', 'resize'], ['duplicate-adjacent', 'duplicate'],
+                ['before', 'plus'], ['after', 'plus'], ['previous', 'previous'], ['next', 'next'],
+                ['move', 'move'], ['duplicate', 'duplicate'], ['add_to_favorites', 'favorite'], ['remove', 'remove']
+            ];
+            actions.forEach(function(entry, index) {
+                var action = entry[0], source = action;
+                if (['duplicate-adjacent', 'before', 'after'].includes(action)) source = 'duplicate';
+                if (['previous', 'next'].includes(action)) source = 'move';
+                var original = toolbar.find(me.tagc['toolbar_button_'+source]);
+                if (!original.length || (['before', 'after'].includes(action) && node.hasClass(me.tag.duplicable))) return;
+                var label = action === 'duplicate-adjacent' ? ui.labels.duplicate :
+                    ['before', 'after', 'previous', 'next'].includes(action) ? ui.labels[action] : original.attr('data-title');
+                var button = me.workbench_button(action, label, entry[1]);
+                if (['previous', 'next'].includes(action)) button.prop('disabled', !me.workbench_sibling(action));
+                if (action === 'resize') button.find('span').text(me.get_actual_column_size(node)+' / '+me.options.max_col_size);
+                (index < 3 ? ui.actions : ui.menu).append(button);
+            });
+            if (ui.menu.children().length) ui.actions.append(me.workbench_button('more', ui.labels.more, 'more').attr('aria-expanded', 'false'));
+            if (focusedAction) {
+                var focusTarget = ui.bar.find('[data-pb-action="'+focusedAction+'"]:visible');
+                (focusTarget.length ? focusTarget : ui.actions.find('[data-pb-action=more]')).first().trigger('focus');
+            }
+        },
+
+        workbench_sibling: function(direction) {
+            var me = this, node = $(me.ui.selected), type = me.workbench_type(node);
+            var siblings = node.parent().children(me.tagc._grid_element).filter(function() {
+                return me.workbench_type(this) === type && (!node.hasClass(me.tag.duplicable) ||
+                    ($(this).hasClass(me.tag.duplicable) && this.tagName === node[0].tagName));
+            });
+            var index = siblings.index(node) + (direction === 'previous' ? -1 : 1);
+            return index >= 0 && index < siblings.length ? siblings[index] : null;
+        },
+
+        /** Routes quick actions through the original move/copy and cleanup lifecycle. */
+        workbench_action: function(action, invoker) {
+            var me = this, ui = me.ui, node = $(ui.selected);
+            ui.quiet = false;
+            if (action === 'ancestors') {
+                ui.path.toggleClass('is-expanded');
+                $(invoker).attr('aria-expanded', String(ui.path.hasClass('is-expanded')));
+                return;
+            }
+            if (action === 'structure' || action === 'close-structure') {
+                me.toggle_workbench_structure(action === 'structure' && ui.drawer.prop('hidden'));
+                if (action === 'close-structure') ui.bar.find('[data-pb-action=structure]').trigger('focus');
+                return;
+            }
+            if (action === 'guides') {
+                ui.hidden = !ui.hidden;
+                me.$wrapper.toggleClass(me.options.prefix+'-hide-guides', ui.hidden);
+                var label = ui.hidden ? ui.labels.show : ui.labels.hide;
+                ui.bar.find('[data-pb-action=guides]').attr({ 'aria-pressed': String(ui.hidden), 'aria-label': label, title: label }).find('span').text(label);
+                if (ui.hidden) me.toggle_workbench_structure(false);
+                me.schedule_workbench();
+                return;
+            }
+            if (action === 'more') {
+                var open = ui.menu.prop('hidden');
+                ui.menu.prop('hidden', !open);
+                $(invoker).attr('aria-expanded', String(open));
+                if (open) ui.menu.find('button:enabled').first().trigger('focus');
+                return;
+            }
+            if (me.workbench_busy()) return;
+            if (ui.hidden) me.workbench_action('guides');
+            ui.returnAction = action;
+            me.toggle_workbench_structure(false);
+            ui.menu.prop('hidden', true);
+            ui.actions.find('[data-pb-action=more]').attr('aria-expanded', 'false');
+            if (action === 'add-section') {
+                me.$wrapper.find(me.tagc.empty_placeholder_wrapper+' '+me.tagc.empty_placeholder_button).first().trigger('click');
+            } else if (['before', 'after'].includes(action)) {
+                node.children(action === 'before' ? me.tagc.prepend : me.tagc.append).trigger('click');
+            } else if (['duplicate-adjacent', 'previous', 'next'].includes(action)) {
+                var target = action === 'duplicate-adjacent' ? node[0] : me.workbench_sibling(action);
+                if (!target) return;
+                var button = node.children(me.tagc.toolbar).find(me.tagc['toolbar_button_'+(action === 'duplicate-adjacent' ? 'duplicate' : 'move')]);
+                button.trigger('click');
+                me.move_grid_element_here($(target).children(action === 'previous' ? me.tagc.prepend : me.tagc.append).first());
+            } else {
+                node.children(me.tagc.toolbar).find(me.tagc['toolbar_button_'+action]).trigger('click');
+            }
+            me.refresh_workbench_selection();
+            me.schedule_workbench();
+        },
+
+        restore_workbench_focus: function() {
+            if (!this.ui) return;
+            var ui = this.ui, bookmark = ui.bookmarks;
+            ui.restoringFocus = true;
+            if (bookmark && bookmark.editor.status === 'ready' && bookmark.editor.element.$.isConnected) {
+                bookmark.editor.focus();
+                bookmark.editor.getSelection().selectBookmarks(bookmark.marks);
+            }
+            ui.restoringFocus = false;
+            ui.bookmarks = null;
+            this.refresh_workbench_selection();
+            var button = ui.bar.find('[data-pb-action="'+ui.returnAction+'"]:visible');
+            (button.length ? button : ui.bar.find('[data-pb-action=more]')).first().trigger('focus');
+        },
+
+        toggle_workbench_structure: function(open) {
+            var ui = this.ui;
+            ui.drawer.prop('hidden', !open);
+            ui.bar.find('[data-pb-action=structure]').attr('aria-expanded', String(open));
+            if (open) {
+                ui.treeDirty = true;
+                this.schedule_workbench();
+                ui.search.trigger('focus');
+            }
+        },
+
+        /** Rebuilds the navigation only when its content changes, preserving DOM-backed expansion. */
+        render_workbench_tree: function() {
+            var me = this, ui = me.ui, query = ui.search.val().trim().toLocaleLowerCase();
+            var focused = $(document.activeElement).data('element');
+            ui.tree.empty();
+            ui.treeNodes.clear();
+            var elements = me.$wrapper.find(me.tagc._grid_element+', [data-ckeditor-instance]').filter(function() {
+                return me.workbench_target(this) === this;
+            }).get();
+            var allowed = new Set(elements);
+            var visible = new Set();
+            elements.forEach(function(element) {
+                if (!query || (ui.labels[me.workbench_type(element)]+' '+me.workbench_name(element)).toLocaleLowerCase().includes(query)) {
+                    visible.add(element);
+                    $(element).parentsUntil(me.$wrapper).each(function() { if (allowed.has(this)) visible.add(this); });
+                }
+            });
+            elements.forEach(function(element) {
+                if (!visible.has(element)) return;
+                var type = me.workbench_type(element), parent = $(element).parents().get().find(ancestor => ui.treeNodes.has(ancestor));
+                var list = parent ? ui.treeNodes.get(parent).children('[role=group]') : ui.tree;
+                if (parent && !list.length) {
+                    var parentItem = ui.treeNodes.get(parent), expanded = query.length > 0 || ui.expanded.has(parent);
+                    parentItem.attr('aria-expanded', String(expanded));
+                    parentItem.find('[data-pb-expand]').first().prop('hidden', false);
+                    list = $('<ul>', { role: 'group', hidden: !expanded }).appendTo(parentItem);
+                }
+                var item = $('<li>', { role: 'treeitem', tabindex: -1, 'aria-selected': String(element === ui.selected), 'data-type': type }).data('element', element);
+                var row = $('<div>').appendTo(item);
+                $('<button>', { type: 'button', tabindex: -1, 'data-pb-expand': '', hidden: true, 'aria-label': ui.labels[type] }).text('›').appendTo(row);
+                $('<span>', { 'class': me.options.prefix+'-structure-dot', 'aria-hidden': 'true' }).appendTo(row);
+                $('<span>').append($('<small>').text(ui.labels[type]), $('<span>').text(me.workbench_name(element))).appendTo(row);
+                if (!$(element).is(':visible')) $('<span>', { 'class': me.options.prefix+'-structure-hidden', title: ui.labels.hidden }).text(ui.labels.hidden).appendTo(row);
+                list.append(item);
+                ui.treeNodes.set(element, item);
+            });
+            ui.noResults.prop('hidden', visible.size > 0);
+            var active = ui.treeNodes.get(focused) || ui.treeNodes.get(ui.selected) || ui.tree.children().first();
+            if (active && !active.is(':visible')) active = ui.tree.find('[role=treeitem]:visible').first();
+            if (active && active.length) {
+                active.attr('tabindex', 0);
+                if (focused) active[0].focus({ preventScroll: true });
+            }
+            ui.treeDirty = false;
+        },
+
+        toggle_workbench_branch: function(item, expand) {
+            var node = $(item), element = node.data('element');
+            if (!node.is('[aria-expanded]')) return;
+            if (expand === undefined) expand = node.attr('aria-expanded') !== 'true';
+            node.attr('aria-expanded', String(expand)).children('[role=group]').prop('hidden', !expand);
+            if (expand) this.ui.expanded.add(element);
+            else this.ui.expanded.delete(element);
+        },
+
+        workbench_tree_key: function(e) {
+            var item = $(e.target).closest('[role=treeitem]'), nodes = this.ui.tree.find('[role=treeitem]:visible');
+            if (!item.length) return;
+            var index = nodes.index(item), next;
+            if (e.key === 'ArrowDown') next = nodes[Math.min(index + 1, nodes.length - 1)];
+            else if (e.key === 'ArrowUp') next = nodes[Math.max(index - 1, 0)];
+            else if (e.key === 'Home') next = nodes[0];
+            else if (e.key === 'End') next = nodes[nodes.length - 1];
+            else if (e.key === 'ArrowRight') {
+                if (item.attr('aria-expanded') === 'true') next = item.children('[role=group]').children()[0];
+                else this.toggle_workbench_branch(item, true);
+            } else if (e.key === 'ArrowLeft') {
+                if (item.attr('aria-expanded') === 'true') this.toggle_workbench_branch(item, false);
+                else next = item.parent().closest('[role=treeitem]')[0];
+            } else if (e.key === 'Enter' || e.key === ' ') {
+                this.select_workbench_element(item.data('element'), true);
+            } else return;
+            e.preventDefault();
+            e.stopPropagation();
+            if (next) {
+                nodes.attr('tabindex', -1);
+                $(next).attr('tabindex', 0).trigger('focus');
+            }
+        },
+
+        /** Coalesces geometry reads; selection chrome never participates in the page grid. */
+        schedule_workbench: function() {
+            var me = this, ui = me.ui;
+            if (!ui || ui.frame !== null) return;
+            ui.frame = window.requestAnimationFrame(function() {
+                ui.frame = null;
+                if (ui.selected && !me.$wrapper[0].contains(ui.selected)) me.select_workbench_element(null);
+                var contentBottom = ui.toolbarContent.length ? ui.toolbarContent[0].getBoundingClientRect().bottom : 0;
+                if (ui.toolbarHost.length) {
+                    var hostTop = ui.toolbarHost[0].getBoundingClientRect().top;
+                    ui.bar.css('top', Math.max(0, contentBottom - hostTop));
+                    var height = Math.max(0, contentBottom - hostTop) + ui.bar[0].getBoundingClientRect().height;
+                    if (ui.hostHeight !== height) {
+                        ui.hostHeight = height;
+                        ui.toolbarHost[0].style.setProperty('height', height+'px', 'important');
+                        ui.placeholder.each(function() { this.style.setProperty('height', height+'px', 'important'); this.style.setProperty('margin-bottom', '0px'); });
+                    }
+                }
+                var top = Math.max(0, ui.bar[0].getBoundingClientRect().bottom);
+                ui.layer.css('top', top);
+                ui.drawer.css('top', top + 8);
+                if (ui.viewportWidth !== window.innerWidth) {
+                    ui.viewportWidth = window.innerWidth;
+                    ui.treeDirty = true;
+                }
+                var moving = me.$wrapper.hasClass(me.state.is_moving_child);
+                var element = (moving ? ui.hovered : ui.selected) || ui.hovered;
+                var obstructed = me.$wrapper.hasClass(me.state.is_modal_open) || me.$wrapper.hasClass(me.state.is_library_active);
+                var visible = element && element.isConnected && $(element).is(':visible') && !ui.hidden && !obstructed && !document.body.classList.contains('is-view-mode');
+                ui.outline.prop('hidden', !visible);
+                if (visible) {
+                    var rect = element.getBoundingClientRect(), type = me.workbench_type(element);
+                    if (type === 'row' && $(element).hasClass(me.tag.duplicable)) type = 'item';
+                    ui.outline.attr('data-type', type).toggleClass('is-quiet', ui.quiet).css({ left: rect.left - 4, top: rect.top - top - 4, width: rect.width + 8, height: rect.height + 8 });
+                }
+                if (ui.treeDirty && !ui.drawer.prop('hidden')) me.render_workbench_tree();
+                var busy = me.workbench_busy();
+                ui.path.find('button').prop('disabled', busy);
+                if (busy) me.toggle_workbench_structure(false);
+                ui.actions.find('button').each(function() {
+                    var action = this.getAttribute('data-pb-action');
+                    this.disabled = busy || (['previous', 'next'].includes(action) && !me.workbench_sibling(action));
+                });
+                ui.bar.find('[data-pb-action=structure], [data-pb-action=guides]').prop('disabled', busy);
+                ui.bar.find('[data-pb-action=resize] span').text(ui.selected ? me.get_actual_column_size($(ui.selected))+' / '+me.options.max_col_size : '');
+                var width = window.innerWidth, size = width < 768 ? 'phone' : width < 1200 ? 'tablet' : 'desktop';
+                $('.exit-inline-editor a[href*="pbSetWindowSize"]').each(function() {
+                    $(this).attr('aria-pressed', String(this.getAttribute('href').includes("'"+size+"'")));
+                });
+            });
+        },
+
+        destroy_workbench: function() {
+            var ui = this.ui;
+            if (!ui) return;
+            if (ui.frame !== null) window.cancelAnimationFrame(ui.frame);
+            ui.resizeObserver.disconnect();
+            ui.observer.disconnect();
+            window.removeEventListener('scroll', ui.layoutHandler, true);
+            window.removeEventListener('resize', ui.layoutHandler);
+            document.removeEventListener('keydown', ui.escapeHandler, true);
+            document.removeEventListener('keyup', ui.escapeUpHandler, true);
+            document.removeEventListener('pointerdown', ui.outsideHandler);
+            this.$wrapper[0].removeEventListener('load', ui.layoutHandler, true);
+            this.$wrapper.off('.workbench').removeClass(this.options.prefix+'-has-workbench '+this.options.prefix+'-hide-guides');
+            ui.bar.add(ui.drawer).add(ui.layer).remove();
+            if (ui.oldHostStyle === undefined) ui.toolbarHost.removeAttr('style');
+            else ui.toolbarHost.attr('style', ui.oldHostStyle);
+            if (ui.oldPlaceholderStyle === undefined) ui.placeholder.removeAttr('style');
+            else ui.placeholder.attr('style', ui.oldPlaceholderStyle);
+            this.ui = null;
         },
 
         /*==================================================================
@@ -167,6 +705,7 @@
         /*=================================================================*/
 
         destroy: function() {
+            this.destroy_workbench();
             this.unbind_events();
             this.remove_elements();
             this.remove_attributes();
@@ -1280,7 +1819,7 @@
             if (class_name.indexOf("size-changer__number") !== -1) {
                 tagName = "span";
             }
-            return '<'+tagName+' class="'+class_name+'"'+title+'>'+content+'</'+tagName+'>';
+            return '<'+tagName+(tagName === 'button' ? ' type="button"' : '')+' class="'+class_name+'"'+title+'>'+content+'</'+tagName+'>';
         },
 
         build_aside: function (class_name, content = null, tooltip = null) {
@@ -1512,6 +2051,7 @@
             $(parent).addClass(this.state.has_toolbar_active);
             $(parents).addClass(this.state.has_child_toolbar_active);
             $(this.$wrapper).addClass(this.state.has_child_toolbar_active);
+            if (this.ui) this.select_workbench_element($(parent)[0]);
         },
 
         /*==================================================================
@@ -1552,6 +2092,7 @@
             this.create_empty_placeholder($(parent));
 
             this.options.onElementRemoved(grid_element, parent);
+            if (this.ui) this.select_workbench_element($(parent).is(this.tagc._grid_element) ? $(parent)[0] : null);
 
             let pbElement = $(this.element);
             if (pbElement.find("section").length==0) {
@@ -3409,6 +3950,9 @@
             me.set_modal_default_state();
 
             $(me.$wrapper).addClass(me.state.is_modal_open);
+            if (me.ui) {
+                $(me.tagc.modal).attr({ role: 'dialog', tabindex: -1, 'aria-label': $(me.tagc.modal+' .header-title').text() }).trigger('focus');
+            }
         },
 
         set_modal_title: function () {
@@ -3478,6 +4022,7 @@
         close_modal: function () {
             this.clear_after_close_modal();
             this.set_old_style();
+            if (this.ui) this.restore_workbench_focus();
         },
 
         /*==================================================================
@@ -3486,6 +4031,7 @@
 
         save_modal: function () {
             this.clear_after_close_modal();
+            if (this.ui) this.restore_workbench_focus();
         },
 
         /*==================================================================
@@ -4026,6 +4572,7 @@
 
             me.$wrapper.on('click', me.tagc.modal_footer_button_reset, function() {
                 me.reset_modal($(this));
+                if (me.ui) me.restore_workbench_focus();
             });
 
             me.$wrapper.on('click', me.tagc.modal_footer_button_save, function() {
@@ -4169,6 +4716,7 @@
             $wrapper.find(me.tagc.notify).remove();
             $wrapper.find(me.tagc.modal).remove();
             $wrapper.find(me.tagc.library).remove();
+            $wrapper.find('.'+me.options.prefix+'-workbench, .'+me.options.prefix+'-outline-layer, .'+me.options.prefix+'-structure').remove();
 
             if (typeof clone !== 'undefined') {
                 return $wrapper;
@@ -4218,6 +4766,7 @@
                 .removeClass(me.state.is_duplicable_target);
 
             $(wrapper).removeClass(me.tag.wrapper);
+            $(wrapper).removeClass(me.options.prefix+'-has-workbench '+me.options.prefix+'-hide-guides');
 
             if (typeof clone !== 'undefined') {
                 return $(wrapper);

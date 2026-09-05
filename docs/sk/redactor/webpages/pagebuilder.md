@@ -18,26 +18,30 @@ V prípade potreby je v okne možnosť prepnúť editor do štandardného režim
 
 ## Základná práca
 
-Pri použití Page Builder vytvárate web stránku z vopred pripravených blokov. Prechodom kurzoru ponad blok sa zvýraznia jednotlivé časti, kde:
+Pri použití Page Builder vytvárate web stránku z vopred pripravených blokov. Kliknutím do obsahu vyberiete blok a zároveň môžete ihneď písať. Zvýraznený je vždy jeden blok; počas písania sa jeho rámik zjemní. Farba označuje typ bloku:
 
 - Modrá farba reprezentuje sekciu - hlavný stavebný blok, zvyčajne na celú šírku obrazovky.
 - Červená farba reprezentuje kontajner - blok určený na vkladanie stĺpcov, je zvyčajne užší ako sekcia pre lepšiu čitateľnosť textov na stránke.
 - Zelená farba reprezentuje stĺpec - ten už obsahuje typicky editovateľný text, obrázky alebo aplikácie.
+- Oranžová farba reprezentuje duplikovateľnú položku alebo riadok.
 
 ![](pagebuilder.png)
 
-Každá zvýraznená časť zobrazuje ikonu ozubeného kolesa, kliknutím na ozubené koleso sa zobrazí nástrojová lišta. Tá obsahuje možnosti:
+Nástroje vybraného bloku sú v pevnej lište pod CKEditorom. Klikateľná cesta, napríklad **Sekcia › Kontajner › Riadok › Stĺpec**, umožňuje vybrať nadradenú časť bez hľadania rámikov v texte. Na úzkej obrazovke otvoríte zoznam predkov tlačidlom vedľa aktuálneho typu bloku. Lišta obsahuje možnosti:
 
 - Štýl - umožní pokročilo nastaviť štýl/vlastnosti bloku ako obrázok pozadia, farby, zarovnania, odsadenia a podobne.
 - Šírka stĺpca - nastavuje šírku stĺpca, je možné nastaviť rôzne šírky pre rôzne zariadenia (telefón, tablet, počítač).
 - Presun bloku - umožňuje presunúť blok na iné miesto v stránke, po kliknutí na ikonu sa zobrazia možnosti kam je blok možné presunúť.
-- Duplikovať - duplikuje označený blok.
+- Duplikovať vedľa - vloží kópiu hneď za vybraný blok a označí ju.
+- Ďalšie akcie - otvorí ponuku na vloženie bloku pred alebo za výber, presun o jednu pozíciu a pôvodné duplikovanie alebo presun s výberom cieľového miesta.
 - Obľúbené - pridá blok do zoznamu obľúbených blokov.
 - Zmazať - zmaže označený blok.
 
 ![](pagebuilder-style.png)
 
-Po kliknutí na ozubené koleso sa taktiež zobrazia ikony + pre vloženie nového bloku. Kliknutím na príslušné miesto sa zobrazí výber bloku. Ten obsahuje karty:
+Ponuka obsahuje iba operácie podporované vybraným typom. Bežný riadok slúži na orientáciu; duplikovateľný riadok a položka podporujú presun, duplikovanie a zmazanie. Samostatný editovateľný text nemá nástroje na úpravu štruktúry. Presun duplikovateľných prvkov zostáva obmedzený na kompatibilných súrodencov toho istého rodiča.
+
+Voľbou **Vložiť blok pred** alebo **Vložiť blok za** otvoríte existujúci výber blokov. Ten obsahuje karty:
 
 - Základné - jednoduché bloky rôznych veľkostí.
 - Knižnica - bloky vytvorené pre vašu web stránku.
@@ -50,6 +54,16 @@ V karte knižnica môžete vyhľadávať bloky podľa názvu, alebo filtrovať b
 Na konci stránky sa zobrazuje ikona `+` pre jednoduchšie pridanie novej sekcie.
 
 ![](pagebuilder-plusbutton.png)
+
+## Štruktúra stránky a pokojné zobrazenie
+
+Tlačidlo **Štruktúra** otvorí strom blokov s názvami odvodenými z ich obsahu. Vetvy možno rozbaliť a bloky vyhľadať podľa názvu. Výber položky označí príslušný blok a posunie stránku na jeho miesto. Panel sa otvára nad obsahom a nemení šírku ani zalomenie stránky. Na úzkej obrazovke sa po výbere zatvorí.
+
+Skryté bloky majú označenie **Skrytý**. Ich výber nemení viditeľnosť ani aktívnu kartu stránky. Strom nepridáva do HTML nové názvy alebo identifikátory a neumožňuje presun ťahaním myšou. Na presun použite akcie hornej lišty.
+
+V strome sa pohybujete šípkami, vetvy otvárate a zatvárate šípkami doprava a doľava a výber potvrdíte klávesom Enter alebo medzerníkom. Escape zatvorí otvorenú ponuku či panel alebo zruší presun.
+
+Tlačidlo **Skryť pomôcky** dočasne skryje označenia a strom. Obsah aj jeho zalomenie zostávajú zachované, pomôcky obnovíte rovnakým tlačidlom. Skutočný **Náhľad** a uloženie používajú HTML očistené od ovládacích prvkov PageBuildera.
 
 ## Nastavenie šírky stĺpcov
 
