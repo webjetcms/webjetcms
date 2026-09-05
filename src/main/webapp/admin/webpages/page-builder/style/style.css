@@ -1993,6 +1993,118 @@
     outline-width: 4px;
   }
 }
+.pb-grid-element.pb-duplicable-element > .pb-highlighter {
+  z-index: 100104;
+  background-color: #D17A00;
+}
+.pb-grid-element.pb-duplicable-element > .pb-highlighter::after {
+  background-color: #D17A00;
+}
+.pb-grid-element.pb-duplicable-element > .pb-highlighter__top {
+  top: 0;
+  left: 0;
+  right: 0;
+}
+.pb-grid-element.pb-duplicable-element > .pb-highlighter__bottom {
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+.pb-grid-element.pb-duplicable-element > .pb-highlighter__left {
+  top: 0;
+  bottom: 0;
+  left: 0;
+}
+.pb-grid-element.pb-duplicable-element > .pb-highlighter__right {
+  top: 0;
+  right: 0;
+  bottom: 0;
+}
+.pb-grid-element.pb-duplicable-element > .pb-toolbar {
+  left: 50%;
+  margin-left: -16px;
+  background: linear-gradient(to top, #D17A00, #F6BE3F);
+}
+.pb-grid-element.pb-duplicable-element > .pb-toolbar.pb-is-toolbar-active, .pb-grid-element.pb-duplicable-element > .pb-toolbar:hover {
+  filter: brightness(1.1);
+}
+.pb-grid-element.pb-duplicable-element > .pb-toolbar .pb-toolbar__content {
+  left: 50%;
+  margin-left: -60px;
+}
+.pb-grid-element.pb-duplicable-element > .pb-plus-button {
+  background: linear-gradient(to bottom, #D17A00, #F6BE3F);
+}
+.pb-grid-element.pb-duplicable-element > .pb-plus-button:hover {
+  filter: brightness(1.1);
+}
+.pb-grid-element.pb-duplicable-element > .pb-plus-button.pb-prepend {
+  top: 2px;
+  left: 50%;
+  margin-left: 2px;
+  border-bottom-right-radius: 6px;
+  border-bottom-left-radius: 6px;
+  box-shadow: 0 4px 25px 2px rgba(50, 50, 50, 0.25);
+}
+.pb-grid-element.pb-duplicable-element > .pb-plus-button.pb-prepend span {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-up"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 11l5 -5l5 5" /><path d="M7 17l5 -5l5 5" /></svg>');
+}
+.pb-grid-element.pb-duplicable-element > .pb-plus-button.pb-append {
+  right: 50%;
+  bottom: 2px;
+  margin-right: 2px;
+  border-top-right-radius: 6px;
+  border-top-left-radius: 6px;
+  background: linear-gradient(to top, #D17A00, #F6BE3F);
+  box-shadow: 0 -4px 25px 2px rgba(50, 50, 50, 0.25);
+}
+.pb-grid-element.pb-duplicable-element > .pb-plus-button.pb-append span {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7l5 5l5 -5" /><path d="M7 13l5 5l5 -5" /></svg>');
+}
+.pb-grid-element.pb-duplicable-element.pb-row > .pb-toolbar,
+.pb-grid-element.pb-duplicable-element.pb-row > .pb-plus-button,
+.pb-grid-element.pb-duplicable-element.pb-row > .pb-highlighter,
+.pb-grid-element.pb-duplicable-element.pb-row > .pb-dimmer {
+  padding-right: 0;
+  padding-left: 0;
+  margin-top: 0;
+}
+.pb-grid-element.pb-duplicable-element.pb-row > .pb-toolbar {
+  left: calc(50% - 40px);
+}
+
+.pb-wrapper.pb-has-child-toolbar-active .pb-grid-element.pb-duplicable-element.pb-has-toolbar-active > .pb-plus-button {
+  display: none;
+  opacity: 0;
+}
+
+.pb-wrapper.pb-is-moving-child.pb-is-moving-duplicable-element .pb-duplicable-element.pb-is-duplicable-target > .pb-highlighter,
+.pb-wrapper.pb-is-moving-child.pb-is-moving-duplicable-element .pb-duplicable-element.pb-is-duplicable-target > .pb-plus-button {
+  display: block;
+  opacity: 1;
+}
+.pb-wrapper.pb-is-moving-child.pb-is-moving-duplicable-element .pb-duplicable-element.pb-is-duplicable-target > .pb-plus-button {
+  z-index: 100155;
+  border-radius: 6px;
+}
+
+.pb-duplicable-element.pb-is-duplicable-target.som-hover-prepend:hover > .pb-highlighter__top,
+.pb-duplicable-element.pb-is-duplicable-target.som-hover-append:hover > .pb-highlighter__bottom {
+  z-index: 100151;
+}
+.pb-duplicable-element.pb-is-duplicable-target.som-hover-prepend:hover > .pb-highlighter__top::after,
+.pb-duplicable-element.pb-is-duplicable-target.som-hover-append:hover > .pb-highlighter__bottom::after {
+  visibility: visible;
+  opacity: 1;
+  right: 0;
+  left: 0;
+  animation: eye_catcher_horizontal 1s ease-in-out infinite;
+}
+
+.pb-duplicable-element.pb-is-duplicable-target.som-hover-append:hover > .pb-highlighter__bottom::after {
+  animation: eye_catcher_horizontal_bottom 1s ease-in-out infinite;
+}
+
 .pb-column {
   padding: 0;
 }

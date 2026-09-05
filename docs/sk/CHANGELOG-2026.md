@@ -46,6 +46,8 @@
 
 ![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
 
+- Page Builder - elementy označené CSS triedou [`pb-duplicable`](frontend/page-builder/settings.md#duplikovateľný-element-oranžová-farba) je možné v rámci rovnakého rodiča presúvať, duplikovať a zmazať. Vlastné alebo viaceré selektory je možné nastaviť cez `pbCustomSettings` (#58750).
+
 ### Headless režim
 
 Pridaná [podpora headless režimu](frontend/headless/README.md), v ktorom WebJET CMS slúži čisto ako `backend` CMS. Obsah, navigácia, vyhľadávanie a formuláre sú dostupné cez REST API. Frontend aplikácia (napr. Astro, Next.js, Vue, React alebo akýkoľvek HTTP klient) si dáta stiahne a zobrazuje ich podľa vlastných šablón (#258).
