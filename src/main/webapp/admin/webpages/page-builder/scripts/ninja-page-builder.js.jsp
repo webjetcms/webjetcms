@@ -277,7 +277,7 @@
                 favorite: 'M12 3l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z',
                 remove: 'M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6'
             };
-            return $('<button>', { type: 'button', 'data-pb-action': action, 'aria-label': label, title: label })
+            return $('<button>', { type: 'button', 'class': this.options.prefix+'-tooltip', 'data-pb-action': action, 'aria-label': label, 'data-title': label })
                 .append('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="'+paths[icon]+'"/></svg>')
                 .append($('<span>').text(label));
         },
@@ -408,7 +408,7 @@
             this.$wrapper.toggleClass(this.options.prefix+'-hide-guides', mode === 'hidden');
             var label = ui.labels.guides[mode], icon = {selected: 'eye', hidden: 'eye-off', all: 'layers'}[mode];
             var button = ui.bar.find('[data-pb-action=guides]');
-            button.attr({'data-pb-guides': mode, 'aria-label': label, title: label}).find('span').text(label);
+            button.attr({'data-pb-guides': mode, 'aria-label': label, 'data-title': label}).find('span').text(label);
             button.children('svg').replaceWith(this.workbench_button('guides', label, icon).children('svg'));
             if (remember) {
                 try { window.localStorage.setItem('webjet.pagebuilder.guides', mode); }
@@ -702,6 +702,11 @@
                     var y = point.header ? point.header[0].getBoundingClientRect().top+24+point.lane*48 : rect.top+Math.min(40, rect.height/2);
                     point.element.css({ left: Math.max(radius, Math.min(window.innerWidth-radius, x)), top: y-top });
                 }
+                var buttonRect = point.button[0].getBoundingClientRect();
+                var tooltipHalfWidth = Math.min(160, (window.innerWidth-32)/2);
+                var center = (buttonRect.left+buttonRect.right)/2;
+                point.button.attr('data-tooltip-align', center < tooltipHalfWidth+16 ? 'left' : center > window.innerWidth-tooltipHalfWidth-16 ? 'right' : null);
+                point.button.attr('data-tooltip-above', buttonRect.bottom > window.innerHeight-100 ? '' : null);
             });
         },
 

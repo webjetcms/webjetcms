@@ -858,6 +858,48 @@ async function chooseWorkbenchInsertion(I, type, parent, index) {
     I.waitForVisible('.pb-library--'+type, 10);
 }
 
+Scenario('workbench CSS tooltips on toolbar and insertion buttons', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    await I.usePlaywrightTo('verify styled tooltip placement and keyboard focus', async ({page}) => {
+        const frame=await getPageBuilderFrame(page);
+        const selector='.pb-workbench [data-pb-action=guides]';
+        await frame.locator(selector).hover();
+        await frame.waitForFunction(selector=>getComputedStyle(document.querySelector(selector),'::before').opacity==='1',selector);
+        const tooltip=await frame.locator(selector).evaluate(button=>{
+            const style=getComputedStyle(button,'::before');
+            const rect=button.getBoundingClientRect();
+            return {title:button.getAttribute('title'),text:button.dataset.title,content:style.content,color:style.color,background:style.backgroundColor,left:rect.right-parseFloat(style.width),right:rect.right,width:innerWidth};
+        });
+        assert.equal(tooltip.title,null,'A styled tooltip must not also show the browser title');
+        assert.ok(tooltip.content.includes(tooltip.text),'The tooltip must show the current button label');
+        assert.equal(tooltip.color,'rgb(255, 255, 255)');
+        assert.notEqual(tooltip.background,'rgba(0, 0, 0, 0)');
+        assert.ok(tooltip.left>=0 && tooltip.right<=tooltip.width,'The last toolbar tooltip must fit the viewport');
+        await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path:'../../../build/test/pagebuilder-tooltip-toolbar.png'});
+        await frame.locator(selector).click();
+        const changed=await frame.locator(selector).getAttribute('data-title');
+        assert.notEqual(changed,tooltip.text,'Guide mode changes must update the styled tooltip');
+        await page.keyboard.press('Tab');
+        await page.keyboard.press('Shift+Tab');
+        await frame.waitForFunction(selector=>document.activeElement.matches(selector) && getComputedStyle(document.activeElement,'::before').opacity==='1',selector);
+        await frame.locator('.pb-workbench [data-pb-action=insert]').click();
+        await frame.waitForFunction(()=>window.pageBuilder.ui.insertAnimations.every(animation=>animation.playState==='finished'));
+        await frame.evaluate(()=>{
+            const point=window.pageBuilder.ui.insertPoints.find(point=>point.type==='column' && !point.previous && point.parent.closest('section.pb-workbench-autotest'));
+            point.button.attr('data-autotest-tooltip','true');
+            point.button[0].focus();
+        });
+        await frame.locator('[data-autotest-tooltip]').hover();
+        await frame.waitForFunction(()=>getComputedStyle(document.querySelector('[data-autotest-tooltip]'),'::before').opacity==='1');
+        assert.equal(await frame.locator('[data-autotest-tooltip]').getAttribute('data-tooltip-align'),'left');
+        await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path:'../../../build/test/pagebuilder-tooltip-insert.png'});
+        await page.keyboard.press('Escape');
+        await frame.waitForFunction(()=>!window.pageBuilder.ui.inserting);
+    });
+    I.switchTo();
+    DTE.cancel();
+});
+
 Scenario('workbench insertion expands without scrolling away from the first section', async ({I, DTE, Document}) => {
     await openWorkbenchFixture(I, DTE, Document);
     for (const reducedMotion of ['no-preference', 'reduce']) {

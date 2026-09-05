@@ -2659,6 +2659,86 @@ html.pb-insertion-open {
   overflow-anchor: none;
 }
 
+.pb-workbench > button.pb-tooltip::before,
+.pb-workbench-actions > button.pb-tooltip::before,
+.pb-structure-heading button.pb-tooltip::before,
+.pb-insert-point > button.pb-tooltip::before {
+  width: max-content;
+  max-width: min(320px, 100vw - 32px);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+  bottom: calc(100% + 8px);
+  left: auto;
+  right: 0;
+  transform: translateY(4px);
+}
+.pb-workbench > button.pb-tooltip:is(:hover, :focus-visible):not(:disabled)::before,
+.pb-workbench-actions > button.pb-tooltip:is(:hover, :focus-visible):not(:disabled)::before,
+.pb-structure-heading button.pb-tooltip:is(:hover, :focus-visible):not(:disabled)::before,
+.pb-insert-point > button.pb-tooltip:is(:hover, :focus-visible):not(:disabled)::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.pb-workbench > button.pb-tooltip:disabled::before,
+.pb-workbench-actions > button.pb-tooltip:disabled::before,
+.pb-structure-heading button.pb-tooltip:disabled::before,
+.pb-insert-point > button.pb-tooltip:disabled::before {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.pb-workbench > [data-pb-action=structure]::before {
+  left: 0;
+  right: auto;
+}
+
+.pb-structure-heading button.pb-tooltip::before {
+  top: calc(100% + 8px);
+  bottom: auto;
+}
+
+.pb-workbench-menu button.pb-tooltip::before,
+.pb-insert-hint button.pb-tooltip::before,
+.pb-workbench-path > [data-pb-action=ancestors]::before {
+  content: none;
+}
+
+.pb-insert-point > button.pb-tooltip::before {
+  top: calc(100% + 8px);
+  bottom: auto;
+  left: 50%;
+  right: auto;
+  transform: translate(-50%, -4px);
+}
+.pb-insert-point > button.pb-tooltip:is(:hover, :focus-visible):not(:disabled)::before {
+  transform: translate(-50%, 0);
+}
+.pb-insert-point > button.pb-tooltip[data-tooltip-align=left]::before {
+  left: 0;
+  transform: translateY(-4px);
+}
+.pb-insert-point > button.pb-tooltip[data-tooltip-align=right]::before {
+  left: auto;
+  right: 0;
+  transform: translateY(-4px);
+}
+.pb-insert-point > button.pb-tooltip[data-tooltip-align]:is(:hover, :focus-visible):not(:disabled)::before {
+  transform: translateY(0);
+}
+.pb-insert-point > button.pb-tooltip[data-tooltip-above]::before {
+  top: auto;
+  bottom: calc(100% + 8px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pb-workbench .pb-tooltip::before,
+  .pb-structure .pb-tooltip::before,
+  .pb-insert-layer .pb-tooltip::before {
+    transition: none;
+  }
+}
 .pb-insert-hint {
   flex: 0 0 calc(100% + 20px);
   display: flex;

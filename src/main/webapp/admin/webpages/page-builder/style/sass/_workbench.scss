@@ -114,6 +114,44 @@
 }
 
 html.pb-insertion-open { overflow-anchor: none; }
+// Reuse the original CSS tooltip, with placement adapted to the fixed editor chrome.
+.#{$prefix}-workbench > button.#{$prefix}-tooltip,
+.#{$prefix}-workbench-actions > button.#{$prefix}-tooltip,
+.#{$prefix}-structure-heading button.#{$prefix}-tooltip,
+.#{$prefix}-insert-point > button.#{$prefix}-tooltip {
+    &::before {
+        width: max-content;
+        max-width: min(320px, calc(100vw - 32px));
+        white-space: normal;
+        overflow-wrap: anywhere;
+        text-align: center;
+        bottom: calc(100% + 8px);
+        left: auto;
+        right: 0;
+        transform: translateY(4px);
+    }
+    &:is(:hover, :focus-visible):not(:disabled)::before { opacity: 1; visibility: visible; transform: translateY(0); }
+    &:disabled::before { opacity: 0; visibility: hidden; }
+}
+.#{$prefix}-workbench > [data-pb-action=structure]::before { left: 0; right: auto; }
+.#{$prefix}-structure-heading button.#{$prefix}-tooltip::before { top: calc(100% + 8px); bottom: auto; }
+// These controls already show their full label, or live in a clipped navigation strip.
+.#{$prefix}-workbench-menu button.#{$prefix}-tooltip::before,
+.#{$prefix}-insert-hint button.#{$prefix}-tooltip::before,
+.#{$prefix}-workbench-path > [data-pb-action=ancestors]::before { content: none; }
+.#{$prefix}-insert-point > button.#{$prefix}-tooltip {
+    &::before { top: calc(100% + 8px); bottom: auto; left: 50%; right: auto; transform: translate(-50%, -4px); }
+    &:is(:hover, :focus-visible):not(:disabled)::before { transform: translate(-50%, 0); }
+    &[data-tooltip-align=left]::before { left: 0; transform: translateY(-4px); }
+    &[data-tooltip-align=right]::before { left: auto; right: 0; transform: translateY(-4px); }
+    &[data-tooltip-align]:is(:hover, :focus-visible):not(:disabled)::before { transform: translateY(0); }
+    &[data-tooltip-above]::before { top: auto; bottom: calc(100% + 8px); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .#{$prefix}-workbench .#{$prefix}-tooltip::before,
+    .#{$prefix}-structure .#{$prefix}-tooltip::before,
+    .#{$prefix}-insert-layer .#{$prefix}-tooltip::before { transition: none; }
+}
 .#{$prefix}-insert-hint {
     flex: 0 0 calc(100% + 20px);
     display: flex;
