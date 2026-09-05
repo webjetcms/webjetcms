@@ -82,6 +82,21 @@
             }
         }
     }
+
+    &.#{$prefix}-row {
+        > .#{$prefix}-toolbar,
+        > .#{$prefix}-plus-button,
+        > .#{$prefix}-highlighter,
+        > .#{$prefix}-dimmer {
+            padding-right: 0;
+            padding-left: 0;
+            margin-top: 0;
+        }
+
+        > .#{$prefix}-toolbar {
+            left: calc(50% - #{$toolbar-size + $toolbar-content-gap});
+        }
+    }
 }
 
 .#{$prefix}-wrapper.#{$prefix}-has-child-toolbar-active {

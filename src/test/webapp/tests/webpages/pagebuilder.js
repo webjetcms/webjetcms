@@ -567,7 +567,12 @@ Scenario('duplicable row toolbar, CKEditor lifecycle and cleanup', async ({I, DT
     const initialState = await I.executeScript((root, { selector }) => {
         const row = document.querySelector(selector);
         const toolbar = row.querySelector(":scope > aside.pb-toolbar");
+        const columnToolbar = row.querySelector(":scope > .pb-column > aside.pb-toolbar");
+        const leftHighlighter = row.querySelector(":scope > aside.pb-highlighter__left");
+        const rightHighlighter = row.querySelector(":scope > aside.pb-highlighter__right");
         const editable = row.querySelector(":scope > .pb-column > .pb-column__content");
+        const rowToolbarRect = toolbar.getBoundingClientRect();
+        const columnToolbarRect = columnToolbar.getBoundingClientRect();
 
         return {
             hasRowRuntimeClass: row.classList.contains("pb-row"),
@@ -575,7 +580,21 @@ Scenario('duplicable row toolbar, CKEditor lifecycle and cleanup', async ({I, DT
                 .map(button => button.className),
             sourceEditorName: editable.getAttribute("data-ckeditor-instance"),
             editorNames: Object.keys(CKEDITOR.instances),
-            columnToolbarCount: row.querySelectorAll(":scope > .pb-column > aside.pb-toolbar").length
+            columnToolbarCount: row.querySelectorAll(":scope > .pb-column > aside.pb-toolbar").length,
+            sideHighlighterWidths: [
+                leftHighlighter.getBoundingClientRect().width,
+                rightHighlighter.getBoundingClientRect().width
+            ],
+            controllersHaveNoHorizontalPadding: Array.from(row.querySelectorAll(":scope > aside")).every(controller => {
+                const style = getComputedStyle(controller);
+                return parseFloat(style.paddingLeft) === 0 && parseFloat(style.paddingRight) === 0;
+            }),
+            toolbarHandlesOverlap:
+                rowToolbarRect.left < columnToolbarRect.right &&
+                rowToolbarRect.right > columnToolbarRect.left &&
+                rowToolbarRect.top < columnToolbarRect.bottom &&
+                rowToolbarRect.bottom > columnToolbarRect.top,
+            toolbarHorizontalGap: columnToolbarRect.left - rowToolbarRect.right
         };
     }, { selector: duplicableRowSelector });
 
@@ -585,6 +604,10 @@ Scenario('duplicable row toolbar, CKEditor lifecycle and cleanup', async ({I, DT
     assert.strictEqual(initialState.buttonClasses.some(classes => classes.includes("pb-toolbar-button__duplicate")), true, "The row duplicate action must be available");
     assert.strictEqual(initialState.buttonClasses.some(classes => classes.includes("pb-toolbar-button__remove")), true, "The row remove action must be available");
     assert.strictEqual(initialState.columnToolbarCount, 1, "The column inside a duplicable row must keep its own toolbar");
+    assert.strictEqual(initialState.sideHighlighterWidths.every(width => width >= 1.9 && width <= 2.1), true, "A duplicable row must render two-pixel side highlighters");
+    assert.strictEqual(initialState.controllersHaveNoHorizontalPadding, true, "Page Builder controllers inside a Bootstrap row must not inherit row gutter padding");
+    assert.strictEqual(initialState.toolbarHandlesOverlap, false, "The row and column toolbar handles must not overlap");
+    assert.ok(initialState.toolbarHorizontalGap >= 7.9, "The row and column toolbar handles must have a visible gap");
 
     openDuplicableRowToolbar(I, 1, "duplicate");
     I.click(getDuplicableRowController(1, "aside.pb-toolbar button.pb-toolbar-button__duplicate"));
