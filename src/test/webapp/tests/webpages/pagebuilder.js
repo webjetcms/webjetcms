@@ -910,6 +910,49 @@ Scenario('workbench insertion expands without scrolling away from the first sect
     DTE.cancel();
 });
 
+Scenario('workbench insertion cancellation collapses smoothly and restores focus', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    const before=await workbenchGeometry(I);
+    for (const action of ['Escape','end-insert','insert']) {
+        I.executeScript(() => window.scrollTo({top:0,behavior:'instant'}));
+        I.click('.pb-workbench [data-pb-action=insert]');
+        await I.usePlaywrightTo('sample the collapsing insertion gaps', async ({page}) => {
+            const frame=await getPageBuilderFrame(page);
+            await frame.waitForFunction(() => window.pageBuilder.ui.insertAnimations.every(animation=>animation.playState==='finished'));
+            await frame.evaluate(() => {
+                window.pbCollapseSamples=[];
+                const point=window.pageBuilder.ui.insertPoints.find(point=>point.type==='section');
+                function sample() {
+                    const ui=window.pageBuilder.ui;
+                    window.pbCollapseSamples.push({height:point.space[0].getBoundingClientRect().height,scroll:window.scrollY});
+                    if (ui.inserting) requestAnimationFrame(sample);
+                }
+                requestAnimationFrame(sample);
+            });
+            if (action==='Escape') await page.keyboard.press('Escape');
+            else await frame.locator('.pb-workbench [data-pb-action='+action+']').click();
+            await frame.waitForFunction(() => !window.pageBuilder.ui.inserting);
+        });
+        const state=await I.executeScript(() => ({samples:window.pbCollapseSamples,focused:document.activeElement.matches('[data-pb-action=insert]'),animations:window.pageBuilder.ui.insertAnimations.length}));
+        assert.ok(state.samples.some(sample=>sample.height>0 && sample.height<48),'Cancellation must animate the gap instead of removing it immediately');
+        assert.ok(state.samples.every(sample=>sample.scroll<=1),'Collapsing at the top must not scroll the page');
+        assert.equal(state.focused,true,'Focus must return to the rebuilt insertion toggle');
+        assert.equal(state.animations,0,'Completed collapse animations must be cleaned up');
+        I.dontSeeElement('.pb-insert-space');
+        assert.deepStrictEqual(await workbenchGeometry(I),before,'Cancellation must restore the authored geometry');
+    }
+    await I.usePlaywrightTo('cancel while the insertion gaps are still opening', async ({page}) => {
+        const frame=await getPageBuilderFrame(page);
+        await frame.locator('.pb-workbench [data-pb-action=insert]').click();
+        await page.keyboard.press('Escape');
+        await page.keyboard.press('Escape');
+        await frame.waitForFunction(() => !window.pageBuilder.ui.inserting && !document.querySelector('.pb-insert-space'));
+    });
+    assert.deepStrictEqual(await workbenchGeometry(I),before,'Interrupted expansion must also restore the authored geometry');
+    I.switchTo();
+    DTE.cancel();
+});
+
 Scenario('workbench insertion destinations, cancellation and clean geometry', async ({I, DTE, Document}) => {
     await openWorkbenchFixture(I, DTE, Document);
     const before = await workbenchGeometry(I);

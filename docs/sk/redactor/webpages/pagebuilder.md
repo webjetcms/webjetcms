@@ -58,7 +58,7 @@ Na konci stránky sa zobrazuje ikona `+` pre jednoduchšie pridanie novej sekcie
 
 Tlačidlom **Pridať blok** (`+`) v hornej lište zapnete režim výberu miesta. Modré pásy označujú vloženie sekcie, ružové kontajnera a zelené pluská stĺpca. Miesta sú pred prvým blokom, medzi susednými blokmi a za posledným blokom. Názov pri vodorovnom páse a popis tlačidla rozlišujú typ aj konkrétnu pozíciu.
 
-Pásy plynulo rozbalia dočasné medzery v stránke bez odscrollovania viditeľných miest vkladania. Ak máte v systéme nastavené obmedzenie animácií, zobrazia sa okamžite. Šírky stĺpcov sa nemenia: pluská sa zobrazujú v medzerách medzi nimi, pri zalomení medzi riadkami a pri nedostatku priestoru nad obsahom. Bežné rámiky sa počas výberu miesta skryjú.
+Pásy plynulo rozbalia dočasné medzery v stránke bez odscrollovania viditeľných miest vkladania. Pri zrušení režimu cez **Escape**, **Ukončiť** alebo opätovné kliknutie na `+` sa medzery plynulo zbalia a fokus sa vráti na `+` v lište. Ak máte v systéme nastavené obmedzenie animácií, zobrazenie aj skrytie prebehne okamžite. Šírky stĺpcov sa nemenia: pluská sa zobrazujú v medzerách medzi nimi, pri zalomení medzi riadkami a pri nedostatku priestoru nad obsahom. Bežné rámiky sa počas výberu miesta skryjú.
 
 Kliknutím na plus otvoríte knižnicu príslušného typu bloku s informáciou o mieste vloženia. Zatvorením knižnice sa vrátite na vybrané plus. Po vložení sa režim ukončí, nový blok sa označí a jeho editovateľný obsah dostane fokus. Režim môžete ukončiť aj druhým kliknutím na `+`, tlačidlom **Ukončiť**, klávesom **Escape** alebo kliknutím do obsahu. Pôvodné rámiky a rozostupy sa obnovia; pomocné pásy sa neukladajú ani nezobrazujú v náhľade.
 

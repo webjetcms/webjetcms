@@ -222,7 +222,7 @@
                     me.disable_after_esc_pressed(true);
                     me.restore_workbench_focus();
                 } else if (ui.inserting) {
-                    me.set_workbench_insertion(false);
+                    me.close_workbench_insertion();
                     ui.bar.find('[data-pb-action=insert]').trigger('focus');
                 } else if (!ui.drawer.prop('hidden')) {
                     me.toggle_workbench_structure(false);
@@ -423,7 +423,8 @@
             ui.quiet = false;
             if (action === 'insert' || action === 'end-insert') {
                 if (me.workbench_busy()) return;
-                me.set_workbench_insertion(action === 'insert' && !ui.inserting);
+                if (action === 'insert' && !ui.inserting) me.set_workbench_insertion(true);
+                else me.close_workbench_insertion();
                 ui.bar.find('[data-pb-action=insert]').trigger('focus');
                 return;
             }
@@ -512,9 +513,45 @@
         clear_workbench_insertion: function() {
             (this.ui.insertAnimations || []).forEach(animation => animation.cancel());
             this.ui.insertAnimations = [];
+            this.ui.insertClosing = false;
             this.$wrapper.find('aside.'+this.options.prefix+'-insert-space').remove();
             this.ui.insertLayer.empty();
             this.ui.insertPoints = [];
+        },
+
+        /** Reverses the visible expansion before removing insertion helpers on user cancellation. */
+        close_workbench_insertion: function() {
+            var me = this, ui = me.ui;
+            if (!ui.inserting || ui.insertClosing) return;
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                me.set_workbench_insertion(false);
+                return;
+            }
+            ui.insertClosing = true;
+            var viewportTop = ui.bar[0].getBoundingClientRect().bottom;
+            var anchor = me.$wrapper.find(me.tagc.column+':visible').get().find(element => element.getBoundingClientRect().bottom > viewportTop);
+            var top = anchor ? anchor.getBoundingClientRect().top : 0;
+            var spaces = me.$wrapper.find('aside.'+me.options.prefix+'-insert-space').get();
+            var elements = spaces.concat(ui.insertHint[0]);
+            var heights = elements.map(element => element.getBoundingClientRect().height);
+            var above = spaces.map(element => element.getBoundingClientRect().bottom < viewportTop);
+            var opacity = getComputedStyle(ui.insertLayer[0]).opacity;
+            (ui.insertAnimations || []).forEach(animation => animation.cancel());
+            var animations = elements.map(function(element, index) {
+                return element.animate([{ height: heights[index]+'px' }, { height: '0px' }], { duration: 220, easing: 'ease-in', fill: 'forwards' });
+            });
+            above.forEach(function(offscreen, index) { if (offscreen) animations[index].finish(); });
+            if (window.scrollY > 1 && anchor) window.scrollBy({ top: anchor.getBoundingClientRect().top-top, behavior: 'instant' });
+            animations.push(ui.insertLayer[0].animate([{ opacity: opacity }, { opacity: 0 }], { duration: 140, fill: 'forwards' }));
+            ui.insertAnimations = animations;
+            ui.insertLayer.find('button').prop('disabled', true);
+            me.schedule_workbench();
+            Promise.all(animations.map(animation => animation.finished)).then(function() {
+                if (me.ui === ui && ui.insertAnimations === animations) {
+                    me.set_workbench_insertion(false);
+                    ui.bar.find('[data-pb-action=insert]')[0].focus({ preventScroll: true });
+                }
+            }).catch(function() { /* A content click or editor teardown cancels the pending collapse. */ });
         },
 
         /** Expands visible gaps in place; only gaps above the viewport need scroll compensation. */
@@ -644,7 +681,7 @@
             var me = this, ui = me.ui;
             ui.insertLayer.css('top', top).prop('hidden', !ui.inserting || me.workbench_busy() || document.body.classList.contains('is-view-mode'));
             if (!ui.inserting) return;
-            if (ui.insertWidth !== window.innerWidth && !me.workbench_busy()) {
+            if (ui.insertWidth !== window.innerWidth && !me.workbench_busy() && !ui.insertClosing) {
                 me.clear_workbench_insertion();
                 me.build_workbench_insertion();
             }
@@ -670,7 +707,7 @@
 
         open_workbench_insertion: function(point) {
             var ui = this.ui;
-            if (!ui.inserting || this.workbench_busy() || !point.source[0].isConnected) return;
+            if (!ui.inserting || ui.insertClosing || this.workbench_busy() || !point.source[0].isConnected) return;
             ui.insertPending = point;
             ui.insertScroll = { x: window.scrollX, y: window.scrollY };
             this.show_library_tab(point.source);
