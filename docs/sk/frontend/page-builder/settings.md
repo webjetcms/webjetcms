@@ -116,7 +116,7 @@ Inicializácia pri použití CSS triedy: ```container``` alebo ```pb-custom-cont
 
 ### `ROW`
 
-```<div class="row">``` sa momentálne nedá editovať pomocou Page Builder, je použitý z dôvodu bootstrap kompatibility.
+```<div class="row">``` sa štandardne nedá editovať ani štýlovať pomocou Page Builder a používa sa z dôvodu Bootstrap kompatibility. Ak riadok explicitne označíte CSS triedou `pb-duplicable` (`<div class="row pb-duplicable">`), Page Builder preň zobrazí oranžový rámik a nástroje na presun, duplikovanie a zmazanie. Stĺpce a ich obsah vo vnútri riadku zostanú editovateľné štandardným spôsobom.
 
 ### `COLUMN` (zelená farba)
 
@@ -134,7 +134,7 @@ Nastavením CSS triedy ```pb-not-column``` sa element **nebude považovať za co
 
 ### Duplikovateľný element (oranžová farba)
 
-Ak chcete umožniť opakovanému elementu vo vnútri `COLUMN` presun, duplikovanie a zmazanie, označte ho CSS triedou `pb-duplicable`. Typickým príkladom sú položky zoznamu:
+Ak chcete umožniť opakovanému elementu vo vnútri `COLUMN` alebo celému `ROW` presun, duplikovanie a zmazanie, označte ho CSS triedou `pb-duplicable`. Typickým príkladom sú položky zoznamu:
 
 ```html
 <ul class="cards">
@@ -143,7 +143,20 @@ Ak chcete umožniť opakovanému elementu vo vnútri `COLUMN` presun, duplikovan
 </ul>
 ```
 
-Page Builder zobrazí na označenom elemente oranžový rámik a nástrojovú lištu s akciami na presun, duplikovanie a zmazanie. Element je možné presunúť alebo duplikovať iba pred alebo za element s rovnakým HTML tagom a rovnakým priamym rodičom. Napríklad jednotlivé `LI` elementy je možné meniť v rámci jedného `UL`, nie medzi dvoma zoznamami.
+Celý Bootstrap riadok môžete označiť rovnakým spôsobom:
+
+```html
+<div class="container">
+    <div class="row pb-duplicable">
+        <div class="col-12"><p>Prvý riadok</p></div>
+    </div>
+    <div class="row pb-duplicable">
+        <div class="col-12"><p>Druhý riadok</p></div>
+    </div>
+</div>
+```
+
+Page Builder zobrazí na označenom elemente oranžový rámik a nástrojovú lištu s akciami na presun, duplikovanie a zmazanie. Element je možné presunúť alebo duplikovať iba pred alebo za cieľový element, ktorý je tiež označený ako duplikovateľný, má rovnaký HTML tag, rovnaký typ (`ROW` alebo bežný element) a rovnakého priameho rodiča. Napríklad jednotlivé `LI` elementy je možné meniť v rámci jedného `UL`, nie medzi dvoma zoznamami. `ROW` je možné meniť iba medzi označenými súrodeneckými `DIV.row` elementmi v tom istom kontajneri; presun medzi kontajnermi nie je podporovaný. Na presun musia byť v kontajneri aspoň dva označené riadky, jeden označený riadok je však možné duplikovať. Duplikovanie `ROW` zahŕňa celý riadok vrátane jeho stĺpcov a obsahu.
 
 Predvolený selektor vychádza z konfiguračnej premennej `pageBuilderPrefix` a má hodnotu `.pb-duplicable`. Ak potrebujete použiť existujúce CSS triedy alebo viac selektorov, nastavte ich vo funkcii [`pbCustomSettings`](blocks.md#podporný-javascript-kód):
 
@@ -154,6 +167,8 @@ window.pbCustomSettings = function (me) {
 ```
 
 Pri vlastnom selektore sa do uloženého HTML nepridáva trieda `pb-duplicable`; zostanú v ňom pôvodné triedy, ktoré selektor používa.
+
+Pri presune alebo duplikovaní celého `ROW` Page Builder automaticky znova inicializuje CKEditor vo vnorených editovateľných blokoch.
 
 !>**Upozornenie:** prvky vo vnútri `pb-not-editable` sa neoznačia. Ak sú duplikovateľné elementy vnorené do seba, Page Builder ovláda iba vonkajší element. Funkcia je určená pre kontajnerové HTML elementy, nie pre prázdne elementy ako `IMG`. Pri duplikovaní sa zachovávajú atribúty vrátane `id`; ich jedinečné hodnoty sa automaticky negenerujú.
 
@@ -206,6 +221,7 @@ window.addEventListener("WJ.PageBuilder.gridChanged", function(e) {
 Aktuálne sú podporované nasledovné udalosti:
 
 - ```WJ.PageBuilder.loaded``` - po nahratí stránky v editore
+- ```WJ.PageBuilder.instanceReady``` - po inicializácii CKEditor inštancie v editovateľnom bloku; po presune alebo duplikovaní `ROW` môže byť vyvolaná opakovane
 - ```WJ.PageBuilder.gridChanged``` - zmena v ```gride```
 - ```WJ.PageBuilder.styleChange``` - zmena vo vlastnostiach bloku (štýlovanie)
 - ```WJ.PageBuilder.newElementAdded``` - pridaný nový element

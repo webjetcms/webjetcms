@@ -222,6 +222,8 @@ function saveStyleModal(I) {
 }
 
 const pricingListsSelector = "section.prices .card-body ul.list-group";
+const duplicableRowFixtureSelector = ".pb-row-duplicable-autotest";
+const duplicableRowSelector = duplicableRowFixtureSelector+" > [data-pb-autotest='duplicable-row'].pb-duplicable-element";
 
 function getDuplicableItem(listIndex, itemIndex) {
     return locate(pricingListsSelector)
@@ -315,6 +317,72 @@ async function openDuplicableElementsPage(I, DTE, Document) {
     assert.strictEqual(fixtureState.listCount, 3, "The pricing fixture must contain three lists");
     assert.deepStrictEqual(fixtureState.itemCounts, [3, 3, 3], "Each pricing list must contain three marked items");
     I.waitForElement(getDuplicableItem(1, 1).find("aside.pb-toolbar"), 10);
+}
+
+function getDuplicableRowController(rowIndex, controllerSelector) {
+    return {css: duplicableRowSelector+":nth-of-type("+rowIndex+") > "+controllerSelector};
+}
+
+function openDuplicableRowToolbar(I, rowIndex, action) {
+    I.executeScript(() => window.pageBuilder.set_toolbar_invisible());
+    I.forceClick(getDuplicableRowController(rowIndex, "aside.pb-toolbar"));
+    I.waitForVisible(getDuplicableRowController(rowIndex, "aside.pb-toolbar.pb-is-toolbar-active button.pb-toolbar-button__"+action), 10);
+}
+
+async function getPageBuilderFrame(page) {
+    const iframeElement = await page.locator("#DTE_Field_data-pageBuilderIframe").elementHandle();
+    assert.ok(iframeElement, "The Page Builder iframe element must exist");
+
+    const frame = await iframeElement.contentFrame();
+    assert.ok(frame, "The Page Builder iframe must have a content frame");
+    return frame;
+}
+
+async function waitForDuplicableRowEditors(I, expectedCount) {
+    await I.usePlaywrightTo("wait for independent duplicable row CKEditor instances", async ({ page }) => {
+        const frame = await getPageBuilderFrame(page);
+        await frame.waitForFunction(args => {
+            const rows = Array.from(document.querySelectorAll(args.selector));
+            const editorNames = rows.map(row => {
+                const editable = row.querySelector(":scope > .pb-column > .pb-column__content");
+                return editable && editable.getAttribute("data-ckeditor-instance");
+            });
+            return rows.length === args.count && editorNames.every((editorName, index) => {
+                const editable = rows[index].querySelector(":scope > .pb-column > .pb-column__content");
+                const editor = editorName && CKEDITOR.instances[editorName];
+                return editor && editor.status === "ready" && editor.element.$ === editable;
+            }) && new Set(editorNames).size === args.count;
+        }, { selector: duplicableRowSelector, count: expectedCount }, { timeout: 20000 });
+    });
+}
+
+async function waitForDuplicableRowCount(I, expectedCount) {
+    await I.usePlaywrightTo("wait for the duplicable row count", async ({ page }) => {
+        const frame = await getPageBuilderFrame(page);
+        await frame.waitForFunction(args => document.querySelectorAll(args.selector).length === args.count,
+            { selector: duplicableRowSelector, count: expectedCount }, { timeout: 10000 });
+    });
+}
+
+async function setDuplicableRowEditorData(I, rowIndex, text) {
+    await I.usePlaywrightTo("set and wait for duplicable row CKEditor data", async ({ page }) => {
+        const frame = await getPageBuilderFrame(page);
+        const args = { selector: duplicableRowSelector, rowIndex, text };
+
+        await frame.evaluate(args => {
+            const row = document.querySelectorAll(args.selector)[args.rowIndex - 1];
+            const editable = row.querySelector(":scope > .pb-column > .pb-column__content");
+            const editor = CKEDITOR.instances[editable.getAttribute("data-ckeditor-instance")];
+            editor.setData("<p>"+args.text+"</p>");
+        }, args);
+        await frame.waitForFunction(args => {
+            const row = document.querySelectorAll(args.selector)[args.rowIndex - 1];
+            const editable = row && row.querySelector(":scope > .pb-column > .pb-column__content");
+            const editorName = editable && editable.getAttribute("data-ckeditor-instance");
+            const editor = editorName && CKEDITOR.instances[editorName];
+            return editor && editor.getData().includes(args.text) && editable.textContent.includes(args.text);
+        }, args, { timeout: 10000 });
+    });
 }
 
 Scenario('check toolbar elements', ({I, DTE, Document}) => {
@@ -462,6 +530,175 @@ Scenario('duplicable elements toolbar, cleanup and operations', async ({I, DTE, 
     await assertDuplicableToolbarMouseupStopped(I, "Remove");
     I.dontSeeElement(".cke_reset_all.cke_dialog_container");
     assert.deepStrictEqual(await getDuplicableItemTexts(I, 1), ["vulputate purus", "Nunc sed purus", "rutrum varius sollicitudin"]);
+
+    // Close the editor without saving the DOM-only fixture changes.
+    I.switchTo();
+    DTE.cancel();
+    I.acceptPopup();
+});
+
+Scenario('duplicable row toolbar, CKEditor lifecycle and cleanup', async ({I, DTE, Document}) => {
+    Document.resetPageBuilderMode();
+    I.resizeWindow(1280, 960);
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
+    DTE.waitForEditor();
+    I.waitForElement("#DTE_Field_data-pageBuilderIframe", 10);
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.waitForElement("#wjInline-docdata.pb-wrapper", 10);
+
+    const fixtureInserted = await I.executeScript((root, { fixtureClass }) => {
+        const section = document.querySelector("#wjInline-docdata > section.pb-section");
+        if (section == null) return false;
+
+        const fixture = document.createElement("div");
+        fixture.className = "container "+fixtureClass;
+        fixture.innerHTML = '<div class="row pb-duplicable" data-pb-autotest="duplicable-row">' +
+            '<div class="col-12"><p>row-autotest-initial</p></div>' +
+            '</div>';
+        section.appendChild(fixture);
+        window.markPbElements("doc_data");
+        return true;
+    }, { fixtureClass: duplicableRowFixtureSelector.substring(1) });
+
+    assert.strictEqual(fixtureInserted, true, "The row fixture must be inserted into a Page Builder section");
+    I.waitForElement(duplicableRowSelector, 10);
+    await waitForDuplicableRowEditors(I, 1);
+
+    const initialState = await I.executeScript((root, { selector }) => {
+        const row = document.querySelector(selector);
+        const toolbar = row.querySelector(":scope > aside.pb-toolbar");
+        const editable = row.querySelector(":scope > .pb-column > .pb-column__content");
+
+        return {
+            hasRowRuntimeClass: row.classList.contains("pb-row"),
+            buttonClasses: Array.from(toolbar.querySelectorAll("button.pb-toolbar-button"))
+                .map(button => button.className),
+            sourceEditorName: editable.getAttribute("data-ckeditor-instance"),
+            editorNames: Object.keys(CKEDITOR.instances),
+            columnToolbarCount: row.querySelectorAll(":scope > .pb-column > aside.pb-toolbar").length
+        };
+    }, { selector: duplicableRowSelector });
+
+    assert.strictEqual(initialState.hasRowRuntimeClass, true, "A duplicable row must retain its Page Builder row identity");
+    assert.strictEqual(initialState.buttonClasses.length, 3, "A duplicable row toolbar must contain exactly three actions");
+    assert.strictEqual(initialState.buttonClasses.some(classes => classes.includes("pb-toolbar-button__move")), true, "The row move action must be available");
+    assert.strictEqual(initialState.buttonClasses.some(classes => classes.includes("pb-toolbar-button__duplicate")), true, "The row duplicate action must be available");
+    assert.strictEqual(initialState.buttonClasses.some(classes => classes.includes("pb-toolbar-button__remove")), true, "The row remove action must be available");
+    assert.strictEqual(initialState.columnToolbarCount, 1, "The column inside a duplicable row must keep its own toolbar");
+
+    openDuplicableRowToolbar(I, 1, "duplicate");
+    I.click(getDuplicableRowController(1, "aside.pb-toolbar button.pb-toolbar-button__duplicate"));
+    I.waitForElement("#wjInline-docdata.pb-is-moving-child.pb-is-moving-duplicable-element.pb-is-duplicating", 10);
+    I.waitForVisible(getDuplicableRowController(1, "aside.pb-append"), 10);
+    I.click(getDuplicableRowController(1, "aside.pb-append"));
+    await waitForDuplicableRowEditors(I, 2);
+
+    const duplicatedState = await I.executeScript((root, { selector }) => Array.from(document.querySelectorAll(selector)).map(row => {
+        const editable = row.querySelector(":scope > .pb-column > .pb-column__content");
+        const editorName = editable.getAttribute("data-ckeditor-instance");
+        const editor = CKEDITOR.instances[editorName];
+        return {
+            editorName: editorName,
+            editorOwnsElement: editor.element.$ === editable
+        };
+    }), { selector: duplicableRowSelector });
+
+    assert.strictEqual(duplicatedState.length, 2, "Duplicating a row must create one new row");
+    assert.strictEqual(duplicatedState[0].editorName, initialState.sourceEditorName, "The source row must keep its CKEditor instance");
+    assert.notStrictEqual(duplicatedState[1].editorName, initialState.sourceEditorName, "The duplicated row must get a distinct CKEditor instance");
+    assert.strictEqual(initialState.editorNames.includes(duplicatedState[1].editorName), false, "The duplicated row CKEditor instance must be newly initialized");
+    assert.strictEqual(duplicatedState.every(state => state.editorOwnsElement), true, "Each CKEditor instance must own its row content element");
+
+    await setDuplicableRowEditorData(I, 1, "row-autotest-source-edited");
+    let editorData = await I.executeScript((root, { selector }) => Array.from(document.querySelectorAll(selector)).map(row => {
+        const editable = row.querySelector(":scope > .pb-column > .pb-column__content");
+        return CKEDITOR.instances[editable.getAttribute("data-ckeditor-instance")].getData();
+    }), { selector: duplicableRowSelector });
+    assert.ok(editorData[0].includes("row-autotest-source-edited"), "The source editor must contain its new content");
+    assert.ok(editorData[1].includes("row-autotest-initial"), "Editing the source row must not change the duplicated row");
+
+    await setDuplicableRowEditorData(I, 2, "row-autotest-clone-edited");
+    editorData = await I.executeScript((root, { selector }) => Array.from(document.querySelectorAll(selector)).map(row => {
+        const editable = row.querySelector(":scope > .pb-column > .pb-column__content");
+        return CKEDITOR.instances[editable.getAttribute("data-ckeditor-instance")].getData();
+    }), { selector: duplicableRowSelector });
+    assert.ok(editorData[0].includes("row-autotest-source-edited") && !editorData[0].includes("row-autotest-clone-edited"), "Editing the clone must not change the source row");
+    assert.ok(editorData[1].includes("row-autotest-clone-edited") && !editorData[1].includes("row-autotest-source-edited"), "The clone editor must contain only its new content");
+
+    openDuplicableRowToolbar(I, 2, "move");
+    I.click(getDuplicableRowController(2, "aside.pb-toolbar button.pb-toolbar-button__move"));
+    I.waitForElement("#wjInline-docdata.pb-is-moving-child.pb-is-moving-duplicable-element", 10);
+    I.dontSeeElement("#wjInline-docdata.pb-is-duplicating");
+    I.waitForVisible(getDuplicableRowController(1, "aside.pb-prepend"), 10);
+    I.click(getDuplicableRowController(1, "aside.pb-prepend"));
+    await waitForDuplicableRowEditors(I, 2);
+
+    const movedState = await I.executeScript((root, { selector, removedEditorName }) => {
+        const rows = Array.from(document.querySelectorAll(selector));
+        return {
+            rows: rows.map(row => {
+                const editable = row.querySelector(":scope > .pb-column > .pb-column__content");
+                const editorName = editable.getAttribute("data-ckeditor-instance");
+                const editor = CKEDITOR.instances[editorName];
+                return {
+                    editorName: editorName,
+                    editorData: editor.getData(),
+                    editorOwnsElement: editor.element.$ === editable
+                };
+            }),
+            removedEditorExists: CKEDITOR.instances[removedEditorName] != null
+        };
+    }, { selector: duplicableRowSelector, removedEditorName: duplicatedState[1].editorName });
+
+    assert.ok(movedState.rows[0].editorData.includes("row-autotest-clone-edited"), "The moved row must keep its own content");
+    assert.ok(movedState.rows[1].editorData.includes("row-autotest-source-edited"), "The source row content must remain unchanged after moving its sibling");
+    assert.notStrictEqual(movedState.rows[0].editorName, duplicatedState[1].editorName, "The moved row must get a new CKEditor instance");
+    assert.strictEqual(movedState.rows[1].editorName, initialState.sourceEditorName, "Moving the clone must not replace the source CKEditor instance");
+    assert.strictEqual(movedState.rows.every(state => state.editorOwnsElement), true, "Each CKEditor instance must remain bound to its own element after moving a row");
+    assert.strictEqual(movedState.removedEditorExists, false, "Moving a row must destroy the CKEditor instance bound to the removed DOM element");
+
+    const cleanState = await I.executeScript((root, { fixtureSelector }) => {
+        const saveData = window.getSaveData();
+        const docData = saveData.editable.find(item => item.wjAppField === "doc_data");
+        const savedPage = document.createElement("div");
+        savedPage.innerHTML = docData.data;
+        const fixture = savedPage.querySelector(fixtureSelector);
+        const rows = Array.from(fixture.querySelectorAll(":scope > .row.pb-duplicable"));
+
+        const runtimeSelector = ".pb-container, .pb-row, .pb-column, .pb-duplicable-element, .pb-grid-element";
+        return {
+            rowTexts: rows.map(row => row.textContent.trim()),
+            markerCount: rows.length,
+            runtimeClassCount: (fixture.matches(runtimeSelector) ? 1 : 0) + fixture.querySelectorAll(runtimeSelector).length,
+            controllerCount: fixture.querySelectorAll("aside[class^='pb-']").length,
+            editorAttributeCount: fixture.querySelectorAll("[data-ckeditor-instance], .editableElement").length
+        };
+    }, { fixtureSelector: duplicableRowFixtureSelector });
+
+    assert.deepStrictEqual(cleanState.rowTexts, ["row-autotest-clone-edited", "row-autotest-source-edited"], "Saved HTML must use data from each row's own CKEditor instance in the moved order");
+    assert.strictEqual(cleanState.markerCount, 2, "Saved HTML must preserve the duplicable marker on both rows");
+    assert.strictEqual(cleanState.runtimeClassCount, 0, "Saved HTML must remove Page Builder runtime classes");
+    assert.strictEqual(cleanState.controllerCount, 0, "Saved HTML must remove Page Builder controllers");
+    assert.strictEqual(cleanState.editorAttributeCount, 0, "Saved HTML must remove CKEditor runtime attributes and classes");
+
+    I.amAcceptingPopups();
+    openDuplicableRowToolbar(I, 2, "remove");
+    I.click(getDuplicableRowController(2, "aside.pb-toolbar button.pb-toolbar-button__remove"));
+    I.acceptPopup();
+    await waitForDuplicableRowEditors(I, 1);
+    let removedEditorsState = await I.executeScript((root, editorName) => CKEDITOR.instances[editorName] == null,
+        movedState.rows[1].editorName);
+    assert.strictEqual(removedEditorsState, true, "Deleting a row must destroy its CKEditor instance");
+
+    openDuplicableRowToolbar(I, 1, "remove");
+    I.click(getDuplicableRowController(1, "aside.pb-toolbar button.pb-toolbar-button__remove"));
+    I.acceptPopup();
+    await waitForDuplicableRowCount(I, 0);
+    I.waitForElement(duplicableRowFixtureSelector+" > .row.pb-row > aside.pb-empty-placeholder", 10);
+    I.dontSeeElement(duplicableRowFixtureSelector+" > .pb-duplicable-element");
+    removedEditorsState = await I.executeScript((root, editorName) => CKEDITOR.instances[editorName] == null,
+        movedState.rows[0].editorName);
+    assert.strictEqual(removedEditorsState, true, "Deleting the last row must destroy its CKEditor instance");
 
     // Close the editor without saving the DOM-only fixture changes.
     I.switchTo();

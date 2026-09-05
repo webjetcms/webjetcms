@@ -783,11 +783,31 @@
         },
 
         mark_row: function (row) {
-            if($(row).hasClass(this.tag.not_editable_element)){
+            var me = this,
+                $row = $(row),
+                column_content = $row.closest(this.tagc.column_content),
+                has_source_duplicable_ancestor = false;
+
+            if($row.hasClass(this.tag.not_editable_element)){
                 return;
             }
 
-            $(row).addClass(this.tags.row);
+            if (column_content.length > 0) {
+                has_source_duplicable_ancestor = $row.parentsUntil(column_content[0]).filter(this.grid.duplicable).filter(function() {
+                    var $ancestor = $(this);
+                    return !$ancestor.is(me.grid.section) && !$ancestor.is(me.grid.container) &&
+                        !$ancestor.is(me.grid.column);
+                }).length > 0;
+            }
+
+            $row.addClass(this.tags.row);
+            if ($row.is(this.grid.duplicable) &&
+                $row.closest(this.tagc.not_editable_element).length < 1 &&
+                !has_source_duplicable_ancestor &&
+                $row.parents(this.tagc.duplicable).length < 1) {
+                $row.addClass(this.tags.duplicable);
+                this.create_duplicable_controllers(row);
+            }
             this.create_empty_placeholder(row);
             this.mark_columns(row);
         },
@@ -858,7 +878,8 @@
                     if ($candidate.hasClass(me.tag._grid_element) && !$candidate.hasClass(me.tag.duplicable)) {
                         return;
                     }
-                    if ($candidate.parentsUntil(column_content).filter(me.grid.duplicable).length > 0) {
+                    if ($candidate.parentsUntil(column_content).filter(me.grid.duplicable).length > 0 ||
+                        $candidate.parents(me.tagc.duplicable).length > 0) {
                         return;
                     }
                     if (/^(AREA|BASE|BR|COL|EMBED|HR|IMG|INPUT|LINK|META|PARAM|SOURCE|TRACK|WBR)$/.test(candidate.tagName)) {
@@ -1199,7 +1220,8 @@
                     $(el).children(this.tagc.column_content).is(':empty')
                 ) {
                     if($(el).hasClass(this.tag.container)) {
-                        $(this.make_new_row()).prependTo($(el));
+                        var new_row = $(this.make_new_row()).prependTo($(el));
+                        this.mark_row(new_row);
                     } else {
                         if($(el).hasClass(me.tag.row) || $(el).hasClass(me.tag.section)) {
                             $(el).append(this.build_aside(this.tag.empty_placeholder, content));
@@ -1496,6 +1518,21 @@
         /*====================|> REMOVE GRID ELEMENT
         /*=================================================================*/
 
+        destroy_ckeditor_instances: function (el) {
+            if (typeof CKEDITOR === "undefined" || typeof CKEDITOR.instances === "undefined") {
+                return;
+            }
+
+            $(el).find("*[data-ckeditor-instance]").addBack("*[data-ckeditor-instance]").each(function() {
+                var editor_name = $(this).attr("data-ckeditor-instance"),
+                    editor = CKEDITOR.instances[editor_name];
+
+                if (editor && editor.element && editor.element.$ === this) {
+                    editor.destroy(true);
+                }
+            });
+        },
+
         remove_grid_element: function (el) {
 
             if(!confirm("<iwcm:text key='pagebuilder.delete.confirm'/>")){
@@ -1508,6 +1545,7 @@
             var style_id = grid_element.attr(this.user_style.attr_name);
             if( $(this.$wrapper).find(this.tagc._grid_element+'[data-pb-user-style-id='+style_id+']').length < 2 ) $('style[style-id="'+style_id+'"]').remove();
 
+            this.destroy_ckeditor_instances(grid_element);
             $(grid_element).off().unbind().remove();
 
             this.set_toolbar_invisible();
@@ -1537,9 +1575,12 @@
             $(grid_element).next(this.tagc._grid_element).addClass(this.state.is_sibling_right);
 
             if (is_duplicable) {
-                var tag_name = $(grid_element).prop('tagName'),
+                var me = this,
+                    tag_name = $(grid_element).prop('tagName'),
+                    is_row = $(grid_element).hasClass(this.tag.row),
                     targets = $(grid_element).parent().children(this.tagc.duplicable).filter(function() {
-                        return $(this).prop('tagName') === tag_name;
+                        return $(this).prop('tagName') === tag_name &&
+                            $(this).hasClass(me.tag.row) === is_row;
                     });
 
                 if (!this.duplicate) {
@@ -1590,7 +1631,8 @@
                 (!$(el).hasClass(this.tag.append) && !$(el).hasClass(this.tag.prepend)) ||
                 (!this.duplicate && moving[0] === $(grid_element)[0]) ||
                 moving.parent()[0] !== $(grid_element).parent()[0] ||
-                moving.prop('tagName') !== $(grid_element).prop('tagName')
+                moving.prop('tagName') !== $(grid_element).prop('tagName') ||
+                moving.hasClass(this.tag.row) !== $(grid_element).hasClass(this.tag.row)
             )) {
                 return;
             }
@@ -1598,7 +1640,12 @@
             var clone = moving.clone().addClass(this.state.is_special_helper),
                 moving_parent = is_duplicable ? moving.parent() : this.get_parent_grid_element(moving);
 
+            var cloned_editors = clone.find("*[class*='editableElement']").addBack("*[class*='editableElement']");
+            cloned_editors.removeAttr("data-ckeditor-instance");
+            cloned_editors.removeClass("editableElement cke_editable cke_editable_inline cke_contents_ltr cke_show_borders");
+
             if(!this.duplicate) {
+                this.destroy_ckeditor_instances(moving);
                 $(moving).unbind().off().remove();
             }
 
@@ -1615,11 +1662,6 @@
 
             if(this.duplicate) {
                 this.duplicatedElement = $(this.statec.is_special_helper);
-                //remove binded editors
-                var duplicated_editors = this.duplicatedElement.find("*[class*='editableElement']").addBack("*[class*='editableElement']");
-                duplicated_editors.removeAttr("data-ckeditor-instance");
-                duplicated_editors.removeClass("editableElement cke_editable cke_editable_inline cke_contents_ltr cke_show_borders");
-
                 this.options.onElementDuplicated();
                 this.changedElement = $(this.statec.is_special_helper);
                 this.options.onGridChanged();
