@@ -1,3 +1,4 @@
+@charset "UTF-8";
 @font-face {
   font-family: "Asap";
   font-style: normal;
@@ -35,15 +36,15 @@
   opacity: 0;
 }
 
-.pb-wrapper.pb-has-child-toolbar-active .pb-section:not(.pb-has-child-toolbar-active):not(.pb-has-toolbar-active) {
+.pb-wrapper.pb-has-child-toolbar-active:not(.pb-has-workbench) .pb-section:not(.pb-has-child-toolbar-active):not(.pb-has-toolbar-active) {
   opacity: 0.8;
 }
-.pb-wrapper.pb-has-child-toolbar-active .pb-section:not(.pb-has-child-toolbar-active):not(.pb-has-toolbar-active) .pb-dimmer {
+.pb-wrapper.pb-has-child-toolbar-active:not(.pb-has-workbench) .pb-section:not(.pb-has-child-toolbar-active):not(.pb-has-toolbar-active) .pb-dimmer {
   visibility: visible;
   opacity: 1;
   background-color: rgba(0, 0, 0, 0.3);
 }
-.pb-wrapper.pb-has-child-toolbar-active .pb-section.pb-has-child-toolbar-active .pb-container:not(.pb-has-child-toolbar-active):not(.pb-has-toolbar-active) {
+.pb-wrapper.pb-has-child-toolbar-active:not(.pb-has-workbench) .pb-section.pb-has-child-toolbar-active .pb-container:not(.pb-has-child-toolbar-active):not(.pb-has-toolbar-active) {
   opacity: 0.1;
 }
 
@@ -317,7 +318,7 @@
   border-color: #8a8e93;
 }
 .pb-column > .pb-empty-placeholder .pb-empty-placeholder__button:hover {
-  background-color: #64686c;
+  background-color: rgb(100.08, 103.7866666667, 108.42);
 }
 .pb-row > .pb-empty-placeholder .pb-empty-placeholder__button, .pb-container > .pb-empty-placeholder .pb-empty-placeholder__button {
   background-color: #00A186;
@@ -326,7 +327,7 @@
   border-color: #00A186;
 }
 .pb-row > .pb-empty-placeholder .pb-empty-placeholder__button:hover, .pb-container > .pb-empty-placeholder .pb-empty-placeholder__button:hover {
-  background-color: #005546;
+  background-color: rgb(0, 84.5, 70.3291925466);
 }
 .pb-section > .pb-empty-placeholder .pb-empty-placeholder__button {
   background-color: #F64D91;
@@ -335,7 +336,7 @@
   border-color: #F64D91;
 }
 .pb-section > .pb-empty-placeholder .pb-empty-placeholder__button:hover {
-  background-color: #eb0c66;
+  background-color: rgb(234.6363636364, 11.8636363636, 101.5);
 }
 .pb-wrapper > .pb-empty-placeholder .pb-empty-placeholder__button {
   background-color: #ccc;
@@ -344,7 +345,7 @@
   border-color: #ccc;
 }
 .pb-wrapper > .pb-empty-placeholder .pb-empty-placeholder__button:hover {
-  background-color: #a6a6a6;
+  background-color: rgb(165.75, 165.75, 165.75);
 }
 
 .pb-wrapper.pb-is-moving-child .pb-empty-placeholder, .pb-wrapper.pb-has-child-toolbar-active .pb-empty-placeholder {
@@ -367,7 +368,7 @@
   border-color: #6486FF;
 }
 .pb-wrapper > .pb-empty-placeholder-wrapper > .pb-empty-placeholder > .pb-empty-placeholder__button:hover {
-  background-color: #184aff;
+  background-color: rgb(23.5, 74.2806451613, 255);
 }
 
 .pb-toolbar {
@@ -386,7 +387,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(0, 33, 96)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-settings"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(0, 33, 96)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-settings" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065" /> <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /> </svg>');
   background-repeat: no-repeat;
   background-position: center;
   background-size: auto 16px;
@@ -397,7 +398,7 @@
   opacity: 1;
 }
 .pb-toolbar.pb-is-toolbar-active > span {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(0, 33, 96)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-x"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(0, 33, 96)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-x" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M18 6l-12 12" /> <path d="M6 6l12 12" /> </svg>');
 }
 .pb-toolbar__content {
   opacity: 0;
@@ -429,22 +430,22 @@
   background-color: transparent;
 }
 .pb-toolbar__content > .pb-toolbar-button__style {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(221, 223, 230)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-brush"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 21v-4a4 4 0 1 1 4 4h-4" /><path d="M21 3a16 16 0 0 0 -12.8 10.2" /><path d="M21 3a16 16 0 0 1 -10.2 12.8" /><path d="M10.6 9a9 9 0 0 1 4.4 4.4" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(221, 223, 230)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-brush" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M3 21v-4a4 4 0 1 1 4 4h-4" /> <path d="M21 3a16 16 0 0 0 -12.8 10.2" /> <path d="M21 3a16 16 0 0 1 -10.2 12.8" /> <path d="M10.6 9a9 9 0 0 1 4.4 4.4" /> </svg>');
 }
 .pb-toolbar__content > .pb-toolbar-button__resize {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="rgb(221, 223, 230)" class="icon icon-tabler icons-tabler-filled icon-tabler-arrow-autofit-width"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M20.121 12.879a3 3 0 0 0 -4.242 0l-.085 .09l-.083 .094l-.08 .096l-.115 .158a3 3 0 0 0 -.515 1.59l.001 .093h-6.003v-.092a3 3 0 0 0 -5.12 -2.03a.514 .514 0 0 1 -.878 -.363l-.001 -6.515a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v6.514a.515 .515 0 0 1 -.879 .365" /><path d="M11 18a1 1 0 0 1 -1 1h-4.584l1.291 1.293a1 1 0 0 1 .083 1.32l-.083 .094a1 1 0 0 1 -1.414 0l-3 -3a1 1 0 0 1 -.097 -.112l-.071 -.11l-.054 -.114l-.035 -.105l-.03 -.149l-.006 -.117l.003 -.075l.017 -.126l.03 -.111l.044 -.111l.052 -.098l.067 -.096l.08 -.09l3 -3a1 1 0 0 1 1.414 1.414l-1.293 1.293h4.586a1 1 0 0 1 1 1m10.989 -.148l.007 .058l.004 .09l-.003 .075l-.017 .126l-.03 .111l-.044 .111l-.052 .098l-.074 .104l-.073 .082l-3 3a1 1 0 1 1 -1.414 -1.414l1.292 -1.293h-4.585a1 1 0 0 1 0 -2h4.585l-1.292 -1.293a1 1 0 0 1 -.083 -1.32l.083 -.094a1 1 0 0 1 1.414 0l3 3q .054 .053 .097 .112l.071 .11l.054 .114l.035 .105z" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="rgb(221, 223, 230)" class="icon icon-tabler icons-tabler-filled icon-tabler-arrow-autofit-width" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M20.121 12.879a3 3 0 0 0 -4.242 0l-.085 .09l-.083 .094l-.08 .096l-.115 .158a3 3 0 0 0 -.515 1.59l.001 .093h-6.003v-.092a3 3 0 0 0 -5.12 -2.03a.514 .514 0 0 1 -.878 -.363l-.001 -6.515a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v6.514a.515 .515 0 0 1 -.879 .365" /> <path d="M11 18a1 1 0 0 1 -1 1h-4.584l1.291 1.293a1 1 0 0 1 .083 1.32l-.083 .094a1 1 0 0 1 -1.414 0l-3 -3a1 1 0 0 1 -.097 -.112l-.071 -.11l-.054 -.114l-.035 -.105l-.03 -.149l-.006 -.117l.003 -.075l.017 -.126l.03 -.111l.044 -.111l.052 -.098l.067 -.096l.08 -.09l3 -3a1 1 0 0 1 1.414 1.414l-1.293 1.293h4.586a1 1 0 0 1 1 1m10.989 -.148l.007 .058l.004 .09l-.003 .075l-.017 .126l-.03 .111l-.044 .111l-.052 .098l-.074 .104l-.073 .082l-3 3a1 1 0 1 1 -1.414 -1.414l1.292 -1.293h-4.585a1 1 0 0 1 0 -2h4.585l-1.292 -1.293a1 1 0 0 1 -.083 -1.32l.083 -.094a1 1 0 0 1 1.414 0l3 3q .054 .053 .097 .112l.071 .11l.054 .114l.035 .105z" /> </svg>');
 }
 .pb-toolbar__content > .pb-toolbar-button__move {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(221, 223, 230)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-menu-order"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 10h16" /><path d="M4 14h16" /><path d="M9 18l3 3l3 -3" /><path d="M9 6l3 -3l3 3" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(221, 223, 230)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-menu-order" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M4 10h16" /> <path d="M4 14h16" /> <path d="M9 18l3 3l3 -3" /> <path d="M9 6l3 -3l3 3" /> </svg>');
 }
 .pb-toolbar__content > .pb-toolbar-button__duplicate {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(221, 223, 230)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-copy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7m0 2.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667z" /><path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(221, 223, 230)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-copy" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M7 9.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667l0 -8.666" /> <path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" /> </svg>');
 }
 .pb-toolbar__content > .pb-toolbar-button__add_to_favorites {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(221, 223, 230)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-heart"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(221, 223, 230)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-heart" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572" /> </svg>');
 }
 .pb-toolbar__content > .pb-toolbar-button__remove {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(221, 223, 230)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trash"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0" /><path d="M10 11l0 6" /><path d="M14 11l0 6" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(221, 223, 230)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trash" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M4 7l16 0" /> <path d="M10 11l0 6" /> <path d="M14 11l0 6" /> <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /> <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /> </svg>');
 }
 .pb-toolbar__content > .pb-toolbar-button:first-child {
   border-top-left-radius: 6px;
@@ -533,7 +534,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(0, 33, 96)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-plus"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(0, 33, 96)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-plus" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M12 5l0 14" /> <path d="M5 12l14 0" /> </svg>');
   background-repeat: no-repeat;
   background-position: center;
   background-size: auto 16px;
@@ -656,10 +657,10 @@
   z-index: 100155;
 }
 .pb-wrapper.pb-is-moving-child.pb-is-moving-column .pb-column > .pb-plus-button.pb-prepend span {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M11 7l-5 5l5 5" /><path d="M17 7l-5 5l5 5" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-left" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M11 7l-5 5l5 5" /> <path d="M17 7l-5 5l5 5" /> </svg>');
 }
 .pb-wrapper.pb-is-moving-child.pb-is-moving-column .pb-column > .pb-plus-button.pb-append span {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7l5 5l-5 5" /><path d="M13 7l5 5l-5 5" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-right" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M7 7l5 5l-5 5" /> <path d="M13 7l5 5l-5 5" /> </svg>');
 }
 .pb-wrapper.pb-is-moving-child.pb-is-moving-container .pb-section > .pb-empty-placeholder, .pb-wrapper.pb-is-moving-child.pb-is-moving-row .pb-section > .pb-empty-placeholder {
   opacity: 1;
@@ -678,19 +679,19 @@
 }
 .pb-wrapper.pb-is-moving-child.pb-is-moving-container .pb-container > .pb-plus-button.pb-prepend span,
 .pb-wrapper.pb-is-moving-child.pb-is-moving-container .pb-section > .pb-plus-button.pb-prepend span {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-up"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 11l5 -5l5 5" /><path d="M7 17l5 -5l5 5" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-up" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M7 11l5 -5l5 5" /> <path d="M7 17l5 -5l5 5" /> </svg>');
 }
 .pb-wrapper.pb-is-moving-child.pb-is-moving-section .pb-container > .pb-plus-button.pb-prepend span,
 .pb-wrapper.pb-is-moving-child.pb-is-moving-section .pb-section > .pb-plus-button.pb-prepend span {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-up"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 11l5 -5l5 5" /><path d="M7 17l5 -5l5 5" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-up" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M7 11l5 -5l5 5" /> <path d="M7 17l5 -5l5 5" /> </svg>');
 }
 .pb-wrapper.pb-is-moving-child.pb-is-moving-container .pb-container > .pb-plus-button.pb-append span,
 .pb-wrapper.pb-is-moving-child.pb-is-moving-container .pb-section > .pb-plus-button.pb-append span {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7l5 5l5 -5" /><path d="M7 13l5 5l5 -5" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-down" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M7 7l5 5l5 -5" /> <path d="M7 13l5 5l5 -5" /> </svg>');
 }
 .pb-wrapper.pb-is-moving-child.pb-is-moving-section .pb-container > .pb-plus-button.pb-append span,
 .pb-wrapper.pb-is-moving-child.pb-is-moving-section .pb-section > .pb-plus-button.pb-append span {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7l5 5l5 -5" /><path d="M7 13l5 5l5 -5" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-down" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M7 7l5 5l5 -5" /> <path d="M7 13l5 5l5 -5" /> </svg>');
 }
 .pb-wrapper.pb-is-moving-child .pb-grid-element.pb-is-moving > .pb-plus-button,
 .pb-wrapper.pb-is-moving-child .pb-grid-element + .pb-grid-element > .pb-prepend, .pb-wrapper.pb-is-moving-child .pb-grid-element.pb-is-sibling-left > .pb-plus-button.pb-append, .pb-wrapper.pb-is-moving-child .pb-grid-element.pb-is-sibling-right > .pb-plus-button.pb-prepend {
@@ -709,7 +710,7 @@
   }
   20% {
     box-shadow: 0 0 0 0 rgba(100, 134, 255, 0.6);
-    background-color: #315eff;
+    background-color: rgb(49, 94.1870967742, 255);
   }
   70% {
     box-shadow: 0 0 0 30px rgba(100, 134, 255, 0);
@@ -724,7 +725,7 @@
   }
   20% {
     box-shadow: 0 0 0 0 rgba(246, 77, 145, 0.6);
-    background-color: #eb0c66;
+    background-color: rgb(234.6363636364, 11.8636363636, 101.5);
   }
   70% {
     box-shadow: 0 0 0 30px rgba(246, 77, 145, 0);
@@ -739,7 +740,7 @@
   }
   20% {
     box-shadow: 0 0 0 0 rgba(0, 161, 134, 0.6);
-    background-color: #006e5c;
+    background-color: rgb(0, 110, 91.5527950311);
   }
   70% {
     box-shadow: 0 0 0 20px rgba(0, 161, 134, 0);
@@ -785,7 +786,7 @@
 }
 .pb-has-same-style > .pb-connection-button, .pb-connection-button:hover {
   cursor: pointer;
-  background-color: #b37400;
+  background-color: rgb(178.5, 115.5, 0);
 }
 .pb-has-same-style > .pb-connection-button::after, .pb-connection-button:hover::after {
   transform: scale(1.4, 1.4);
@@ -855,13 +856,13 @@
 }
 .pb-size-changer__down:hover, .pb-size-changer__up:hover {
   cursor: pointer;
-  background-color: #008871;
+  background-color: rgb(0, 135.5, 112.7763975155);
 }
 .pb-size-changer__down {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(0, 33, 96)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 6l-6 6l6 6" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(0, 33, 96)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-left" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M15 6l-6 6l6 6" /> </svg>');
 }
 .pb-size-changer__up {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(0, 33, 96)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6l6 6l-6 6" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(0, 33, 96)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-right" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M9 6l6 6l-6 6" /> </svg>');
 }
 .pb-container.pb-is-resize-columns .pb-size-changer {
   display: block;
@@ -1977,7 +1978,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(0, 33, 96)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-plus"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(0, 33, 96)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-plus" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M12 5l0 14" /> <path d="M5 12l14 0" /> </svg>');
   background-repeat: no-repeat;
   background-position: center;
   background-size: auto 16px;
@@ -2047,7 +2048,7 @@
   box-shadow: 0 4px 25px 2px rgba(50, 50, 50, 0.25);
 }
 .pb-grid-element.pb-duplicable-element > .pb-plus-button.pb-prepend span {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-up"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 11l5 -5l5 5" /><path d="M7 17l5 -5l5 5" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-up" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M7 11l5 -5l5 5" /> <path d="M7 17l5 -5l5 5" /> </svg>');
 }
 .pb-grid-element.pb-duplicable-element > .pb-plus-button.pb-append {
   right: 50%;
@@ -2059,7 +2060,7 @@
   box-shadow: 0 -4px 25px 2px rgba(50, 50, 50, 0.25);
 }
 .pb-grid-element.pb-duplicable-element > .pb-plus-button.pb-append span {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7l5 5l5 -5" /><path d="M7 13l5 5l5 -5" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-down" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M7 7l5 5l5 -5" /> <path d="M7 13l5 5l5 -5" /> </svg>');
 }
 .pb-grid-element.pb-duplicable-element.pb-row > .pb-toolbar,
 .pb-grid-element.pb-duplicable-element.pb-row > .pb-plus-button,
@@ -2105,13 +2106,8 @@
   animation: eye_catcher_horizontal_bottom 1s ease-in-out infinite;
 }
 
-.pb-column {
-  padding: 0;
-}
-
 .pb-column__content {
   position: relative;
-  padding: 0 5px; /*this is only problematic in simple col-12 with text and cursor hover*/
 }
 
 .pb-light {
@@ -2127,7 +2123,7 @@
 }
 
 .section.pb-dark {
-  color: #e6e6e6;
+  color: rgb(229.5, 229.5, 229.5);
 }
 
 .section.npg-img-left,
@@ -2440,6 +2436,700 @@ div.exit-inline-editor select {
 div.exit-inline-editor a img {
   height: 18px;
   vertical-align: text-bottom;
+}
+
+div.exit-inline-editor a[aria-pressed=true] {
+  background: #edf3ff;
+  outline: 1px solid #0063FB;
+  border-radius: 3px;
+}
+
+.pb-workbench,
+.pb-structure,
+.pb-insert-layer {
+  --pb-ui-color: #0063FB;
+  font: 400 14px/1.4 "Asap", sans-serif, Arial, Helvetica;
+  color: #13151B;
+  text-align: left;
+  letter-spacing: normal;
+  text-transform: none;
+  box-sizing: border-box;
+}
+.pb-workbench *, .pb-workbench *::before, .pb-workbench *::after,
+.pb-structure *,
+.pb-structure *::before,
+.pb-structure *::after,
+.pb-insert-layer *,
+.pb-insert-layer *::before,
+.pb-insert-layer *::after {
+  box-sizing: border-box;
+}
+.pb-workbench [hidden],
+.pb-structure [hidden],
+.pb-insert-layer [hidden] {
+  display: none !important;
+}
+.pb-workbench button,
+.pb-structure button,
+.pb-insert-layer button {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 31px;
+  height: 31px;
+  margin: 0;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #13151B;
+  font: inherit;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-transform: none;
+  box-shadow: none;
+  cursor: pointer;
+}
+.pb-workbench button:hover:not(:disabled),
+.pb-structure button:hover:not(:disabled),
+.pb-insert-layer button:hover:not(:disabled) {
+  background: #F3F3F6;
+}
+.pb-workbench button:active:not(:disabled), .pb-workbench button[aria-expanded=true], .pb-workbench button[aria-pressed=true],
+.pb-structure button:active:not(:disabled),
+.pb-structure button[aria-expanded=true],
+.pb-structure button[aria-pressed=true],
+.pb-insert-layer button:active:not(:disabled),
+.pb-insert-layer button[aria-expanded=true],
+.pb-insert-layer button[aria-pressed=true] {
+  color: #0063FB;
+  background: #edf3ff;
+}
+.pb-workbench button:disabled,
+.pb-structure button:disabled,
+.pb-insert-layer button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.pb-workbench button:focus-visible,
+.pb-structure button:focus-visible,
+.pb-insert-layer button:focus-visible {
+  outline: 2px solid #13151B;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px white;
+}
+.pb-workbench button svg,
+.pb-structure button svg,
+.pb-insert-layer button svg {
+  flex: 0 0 18px;
+  pointer-events: none;
+}
+.pb-workbench [data-type=section],
+.pb-structure [data-type=section],
+.pb-insert-layer [data-type=section] {
+  --pb-ui-color: #6486FF;
+}
+.pb-workbench [data-type=container],
+.pb-structure [data-type=container],
+.pb-insert-layer [data-type=container] {
+  --pb-ui-color: #F64D91;
+}
+.pb-workbench [data-type=column], .pb-workbench [data-type=text],
+.pb-structure [data-type=column],
+.pb-structure [data-type=text],
+.pb-insert-layer [data-type=column],
+.pb-insert-layer [data-type=text] {
+  --pb-ui-color: #00A186;
+}
+.pb-workbench [data-type=item],
+.pb-structure [data-type=item],
+.pb-insert-layer [data-type=item] {
+  --pb-ui-color: #D17A00;
+}
+.pb-workbench [data-type=row],
+.pb-structure [data-type=row],
+.pb-insert-layer [data-type=row] {
+  --pb-ui-color: #686F83;
+}
+
+.pb-workbench {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 100011;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 43px;
+  padding: 6px 10px;
+  border-top: 1px solid #DDDFE6;
+  border-bottom: 1px solid #DDDFE6;
+  background: white;
+  box-shadow: 0 3px 8px rgba(19, 21, 27, 0.06);
+}
+.pb-workbench-standalone {
+  position: fixed;
+  top: 0;
+  z-index: 102000;
+}
+.pb-workbench-path {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 3px;
+  min-width: 0;
+  overflow: hidden;
+}
+.pb-workbench-path > span {
+  color: #686F83;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pb-workbench-path > button {
+  flex-shrink: 0;
+  font-size: 12px;
+}
+.pb-workbench-path > button::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--pb-ui-color);
+}
+.pb-workbench-path > button[aria-current] {
+  font-weight: 700;
+  background: #F3F3F6;
+}
+.pb-workbench-path > button:not(:last-child)::after {
+  content: "›";
+  color: #686F83;
+  margin-left: 6px;
+}
+.pb-workbench-path > [data-pb-action=ancestors] {
+  display: none;
+}
+.pb-workbench-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 2px;
+  border-left: 1px solid #DDDFE6;
+  padding-left: 6px;
+}
+.pb-workbench [data-pb-action=guides] > span,
+.pb-workbench [data-pb-action=insert] > span,
+.pb-workbench [data-pb-action=more] > span,
+.pb-workbench [data-pb-action=duplicate-adjacent] > span {
+  display: none;
+}
+.pb-workbench-menu {
+  position: absolute;
+  right: 10px;
+  top: calc(100% + 6px);
+  width: 250px;
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+  padding: 6px;
+  border: 1px solid #DDDFE6;
+  border-radius: 6px;
+  background: white;
+  box-shadow: 0 8px 28px rgba(19, 21, 27, 0.16);
+}
+.pb-workbench-menu button {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+  height: auto;
+  min-height: 35px;
+  padding: 6px 8px;
+  text-align: left;
+  white-space: normal;
+}
+.pb-workbench-menu [data-pb-action=remove] {
+  color: #e00028;
+  border-top: 1px solid #DDDFE6;
+  margin-top: 4px;
+  border-radius: 0 0 4px 4px;
+}
+
+html.pb-insertion-open {
+  overflow-anchor: none;
+}
+
+.pb-workbench > button.pb-tooltip::before,
+.pb-workbench-actions > button.pb-tooltip::before,
+.pb-structure-heading button.pb-tooltip::before,
+.pb-insert-point > button.pb-tooltip::before {
+  width: max-content;
+  max-width: min(320px, 100vw - 32px);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+  bottom: calc(100% + 8px);
+  left: auto;
+  right: 0;
+  transform: translateY(4px);
+}
+.pb-workbench > button.pb-tooltip:is(:hover, :focus-visible):not(:disabled)::before,
+.pb-workbench-actions > button.pb-tooltip:is(:hover, :focus-visible):not(:disabled)::before,
+.pb-structure-heading button.pb-tooltip:is(:hover, :focus-visible):not(:disabled)::before,
+.pb-insert-point > button.pb-tooltip:is(:hover, :focus-visible):not(:disabled)::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.pb-workbench > button.pb-tooltip:disabled::before,
+.pb-workbench-actions > button.pb-tooltip:disabled::before,
+.pb-structure-heading button.pb-tooltip:disabled::before,
+.pb-insert-point > button.pb-tooltip:disabled::before {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.pb-workbench > [data-pb-action=structure]::before {
+  left: 0;
+  right: auto;
+}
+
+.pb-structure-heading button.pb-tooltip::before {
+  top: calc(100% + 8px);
+  bottom: auto;
+}
+
+.pb-workbench-menu button.pb-tooltip::before,
+.pb-insert-hint button.pb-tooltip::before,
+.pb-workbench-path > [data-pb-action=ancestors]::before {
+  content: none;
+}
+
+.pb-insert-point > button.pb-tooltip::before {
+  top: calc(100% + 8px);
+  bottom: auto;
+  left: 50%;
+  right: auto;
+  transform: translate(-50%, -4px);
+}
+.pb-insert-point > button.pb-tooltip:is(:hover, :focus-visible):not(:disabled)::before {
+  transform: translate(-50%, 0);
+}
+.pb-insert-point > button.pb-tooltip[data-tooltip-align=left]::before {
+  left: 0;
+  transform: translateY(-4px);
+}
+.pb-insert-point > button.pb-tooltip[data-tooltip-align=right]::before {
+  left: auto;
+  right: 0;
+  transform: translateY(-4px);
+}
+.pb-insert-point > button.pb-tooltip[data-tooltip-align]:is(:hover, :focus-visible):not(:disabled)::before {
+  transform: translateY(0);
+}
+.pb-insert-point > button.pb-tooltip[data-tooltip-above]::before {
+  top: auto;
+  bottom: calc(100% + 8px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pb-workbench .pb-tooltip::before,
+  .pb-structure .pb-tooltip::before,
+  .pb-insert-layer .pb-tooltip::before {
+    transition: none;
+  }
+}
+.pb-insert-hint {
+  flex: 0 0 calc(100% + 20px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 10px;
+  margin: 0 -10px -6px;
+  border-top: 1px solid #DDDFE6;
+  background: #edf3ff;
+  font-size: 12px;
+  overflow: hidden;
+}
+.pb-insert-hint button {
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.pb-wrapper aside.pb-insert-space {
+  display: block !important;
+  position: relative !important;
+  flex: 0 0 100% !important;
+  grid-column: 1/-1;
+  width: 100% !important;
+  height: 48px;
+  min-height: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  clear: both;
+  pointer-events: none;
+}
+
+.pb-insert-layer {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 101600;
+}
+.pb-insert-layer[hidden] {
+  display: none;
+}
+.pb-insert-layer .pb-insert-point {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--pb-ui-color);
+  transform: translate(-50%, -50%);
+}
+.pb-insert-layer .pb-insert-point::before {
+  content: "";
+  position: absolute;
+  height: 48px;
+  left: 50%;
+  border-left: 1px dashed currentColor;
+  opacity: 0.65;
+}
+.pb-insert-layer .pb-insert-point.is-horizontal {
+  transform: none;
+}
+.pb-insert-layer .pb-insert-point.is-horizontal::before {
+  left: 0;
+  right: 0;
+  height: 0;
+  border-left: 0;
+  border-top: 1px dashed currentColor;
+}
+.pb-insert-layer .pb-insert-point.is-horizontal button {
+  width: auto;
+  padding: 0 8px;
+}
+.pb-insert-layer .pb-insert-point.is-horizontal button > span {
+  display: inline;
+  color: #13151B;
+  font-size: 12px;
+}
+.pb-insert-layer .pb-insert-point:hover::before, .pb-insert-layer .pb-insert-point:focus-within::before {
+  opacity: 1;
+  border-style: solid;
+}
+.pb-insert-layer .pb-insert-point button {
+  position: relative;
+  pointer-events: auto;
+  color: var(--pb-ui-color);
+  background: white;
+  border: 1px solid currentColor;
+  border-radius: 18px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  box-shadow: 0 1px 4px rgba(19, 21, 27, 0.08);
+}
+.pb-insert-layer .pb-insert-point button > span {
+  display: none;
+}
+
+.pb-insert-context {
+  clear: both;
+  padding: 8px 16px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #686F83;
+  background: white;
+  border-bottom: 1px solid #DDDFE6;
+}
+
+.pb-wrapper.pb-is-inserting .pb-empty-placeholder, .pb-wrapper.pb-is-inserting .pb-empty-placeholder-wrapper {
+  display: none !important;
+}
+
+@media (pointer: coarse) {
+  .pb-insert-layer .pb-insert-point button {
+    min-width: 44px;
+    height: 44px;
+    border-radius: 24px;
+  }
+}
+.pb-outline-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 101500;
+  contain: strict;
+}
+
+.pb-outline {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid #686F83;
+  border-radius: 3px;
+  pointer-events: none;
+}
+.pb-outline[hidden] {
+  display: none !important;
+}
+.pb-outline[data-type=section] {
+  border-color: #6486FF;
+}
+.pb-outline[data-type=container] {
+  border-color: #F64D91;
+}
+.pb-outline[data-type=column], .pb-outline[data-type=text] {
+  border-color: #00A186;
+}
+.pb-outline[data-type=item] {
+  border-color: #D17A00;
+}
+.pb-outline.is-quiet {
+  border-width: 1px;
+}
+
+.pb-structure {
+  position: fixed;
+  left: 8px;
+  bottom: 8px;
+  width: 280px;
+  max-width: calc(100vw - 16px);
+  z-index: 102001;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  border: 1px solid #DDDFE6;
+  border-radius: 6px;
+  background: white;
+  box-shadow: 0 8px 28px rgba(19, 21, 27, 0.16);
+}
+.pb-structure[hidden] {
+  display: none !important;
+}
+.pb-structure-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.pb-structure [data-pb-action=close-structure] span {
+  display: none;
+}
+.pb-structure input[type=search] {
+  flex: 0 0 auto;
+  width: 100%;
+  height: 35px;
+  margin: 0 0 10px;
+  padding: 6px 10px;
+  border: 1px solid #868EA5;
+  border-radius: 6px;
+  background: white;
+  color: #13151B;
+  font: inherit;
+}
+.pb-structure input[type=search]:focus-visible {
+  outline: 2px solid #0063FB;
+  outline-offset: 1px;
+}
+.pb-structure ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.pb-structure > ul {
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+.pb-structure ul ul {
+  margin-left: 13px;
+  padding-left: 6px;
+  border-left: 1px solid #DDDFE6;
+}
+.pb-structure li {
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+.pb-structure li::before, .pb-structure li::after {
+  display: none;
+}
+.pb-structure li > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 4px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+}
+.pb-structure li > div:hover {
+  background: #F3F3F6;
+}
+.pb-structure li[aria-selected=true] > div {
+  background: white;
+  border-color: var(--pb-ui-color);
+}
+.pb-structure li[aria-selected=true] > div > span > span {
+  font-weight: 600;
+}
+.pb-structure li:focus-visible {
+  outline: none;
+}
+.pb-structure li:focus-visible > div {
+  outline: 2px solid #13151B;
+  outline-offset: -2px;
+}
+.pb-structure li > div > span:not(.pb-structure-dot):not(.pb-structure-hidden) {
+  flex: 1;
+  min-width: 0;
+}
+.pb-structure li > div > span:not(.pb-structure-dot):not(.pb-structure-hidden) > span, .pb-structure li > div > span:not(.pb-structure-dot):not(.pb-structure-hidden) small {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.pb-structure li > div > span:not(.pb-structure-dot):not(.pb-structure-hidden) small {
+  color: #686F83;
+  font-size: 11px;
+}
+.pb-structure li [data-pb-expand] {
+  width: 24px;
+  min-width: 24px;
+  height: 28px;
+  padding: 0;
+  font-size: 22px;
+}
+.pb-structure li [data-pb-expand][hidden] {
+  display: block !important;
+  visibility: hidden;
+}
+.pb-structure li[aria-expanded=true] > div > [data-pb-expand] {
+  transform: rotate(90deg);
+}
+.pb-structure-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  flex: 0 0 7px;
+  background: var(--pb-ui-color);
+}
+.pb-structure-hidden {
+  font-size: 10px;
+  color: #686F83;
+  max-width: 65px;
+}
+.pb-structure > p {
+  color: #686F83;
+  padding: 12px 4px;
+}
+
+.pb-wrapper.pb-has-workbench .pb-grid-element > .pb-toolbar,
+.pb-wrapper.pb-has-workbench .pb-grid-element > .pb-highlighter,
+.pb-wrapper.pb-has-workbench .pb-grid-element > .pb-dimmer {
+  display: none !important;
+}
+.pb-wrapper.pb-has-workbench:not(.pb-is-moving-child) .pb-grid-element > .pb-plus-button {
+  display: none !important;
+}
+.pb-wrapper.pb-has-workbench [data-ckeditor-instance]:focus {
+  outline: none;
+}
+
+body:has(.pb-has-workbench) #inlineEditorToolbarTopPlaceHolder, body:has(.pb-has-workbench) #inlineEditorToolbarTop {
+  transition: none;
+}
+body:has(.pb-has-workbench) .wj-toolbar-panel .wj-content-line {
+  box-shadow: none;
+}
+body:has(.pb-has-workbench) #pb-wjmagicline {
+  animation: none !important;
+  transition: none;
+  outline-width: 1px !important;
+}
+body:has(.pb-has-workbench):has(.pb-outline.is-quiet) #pb-wjmagicline, body:has(.pb-has-workbench):has(.pb-outline.is-quiet) #pb-wjmagiclinePlus, body:has(.pb-has-workbench):has(.pb-hide-guides) #pb-wjmagicline, body:has(.pb-has-workbench):has(.pb-hide-guides) #pb-wjmagiclinePlus, body:has(.pb-has-workbench):has(.pb-is-inserting) #pb-wjmagicline, body:has(.pb-has-workbench):has(.pb-is-inserting) #pb-wjmagiclinePlus, body:has(.pb-has-workbench):has(.pb-is-moving-child) #pb-wjmagicline, body:has(.pb-has-workbench):has(.pb-is-moving-child) #pb-wjmagiclinePlus, body:has(.pb-has-workbench):has(.pb-is-modal-open) #pb-wjmagicline, body:has(.pb-has-workbench):has(.pb-is-modal-open) #pb-wjmagiclinePlus, body:has(.pb-has-workbench):has(.pb-is-library-active) #pb-wjmagicline, body:has(.pb-has-workbench):has(.pb-is-library-active) #pb-wjmagiclinePlus {
+  display: none !important;
+}
+
+body.is-view-mode .pb-workbench, body.is-view-mode .pb-structure, body.is-view-mode .pb-outline-layer, body.is-view-mode .pb-insert-layer, body.is-view-mode .pb-insert-space {
+  display: none !important;
+}
+
+.pb-modal, .pb-library {
+  font-family: "Asap", sans-serif, Arial, Helvetica;
+  box-shadow: 0 8px 32px rgba(19, 21, 27, 0.18);
+  border: 1px solid #DDDFE6;
+}
+.pb-modal__content, .pb-library__content {
+  background: white;
+  backdrop-filter: none;
+}
+.pb-modal .tab-content, .pb-library .tab-content {
+  background: white;
+  backdrop-filter: none;
+}
+
+@media (max-width: 767px) {
+  .pb-workbench {
+    padding: 6px;
+    gap: 3px;
+  }
+  .pb-workbench .pb-insert-hint {
+    flex-basis: calc(100% + 12px);
+    margin-inline: -6px;
+    padding-inline: 6px;
+  }
+  .pb-workbench > [data-pb-action=structure] span, .pb-workbench [data-pb-action=style] span {
+    display: none;
+  }
+  .pb-workbench-path > button:not(:last-child):not([data-pb-action=ancestors]) {
+    display: none;
+  }
+  .pb-workbench-path > [data-pb-action=ancestors] {
+    display: inline-flex;
+  }
+  .pb-workbench-path > [data-pb-action=ancestors]::before, .pb-workbench-path > [data-pb-action=ancestors]::after, .pb-workbench-path > [data-pb-action=ancestors] span {
+    display: none;
+  }
+  .pb-workbench-path.is-expanded {
+    overflow: visible;
+    position: absolute;
+    top: 100%;
+    left: 6px;
+    width: 220px;
+    flex-direction: column;
+    align-items: stretch;
+    max-height: 50vh;
+    overflow-y: auto;
+    padding: 6px;
+    background: white;
+    border: 1px solid #DDDFE6;
+    border-radius: 6px;
+    box-shadow: 0 8px 28px rgba(19, 21, 27, 0.16);
+  }
+  .pb-workbench-path.is-expanded > button:not([data-pb-action=ancestors]):not(:last-child) {
+    display: inline-flex;
+    position: relative;
+  }
+  .pb-workbench-path.is-expanded > button {
+    justify-content: flex-start;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pb-has-workbench > .pb-notify, .pb-workbench *, .pb-structure * {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 /*# sourceMappingURL=style.css.map */

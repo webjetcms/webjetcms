@@ -1,0 +1,395 @@
+// Editor chrome stays outside the authored grid; insertion spacers exist only while choosing a destination.
+.#{$prefix}-workbench,
+.#{$prefix}-structure,
+.#{$prefix}-insert-layer {
+    --pb-ui-color: #{$primary};
+    font: 400 14px/1.4 $font-family-base;
+    color: $secondary;
+    text-align: left;
+    letter-spacing: normal;
+    text-transform: none;
+    box-sizing: border-box;
+
+    *, *::before, *::after { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    button {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-width: 31px;
+        height: 31px;
+        margin: 0;
+        padding: 0 8px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        background: transparent;
+        color: $secondary;
+        font: inherit;
+        line-height: 1.2;
+        white-space: nowrap;
+        text-transform: none;
+        box-shadow: none;
+        cursor: pointer;
+
+        &:hover:not(:disabled) { background: $nice-gray; }
+        &:active:not(:disabled), &[aria-expanded=true], &[aria-pressed=true] {
+            color: $primary;
+            background: #edf3ff;
+        }
+        &:disabled { opacity: .45; cursor: default; }
+        &:focus-visible {
+            outline: 2px solid $secondary;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px white;
+        }
+        svg { flex: 0 0 18px; pointer-events: none; }
+    }
+
+    [data-type=section] { --pb-ui-color: #{$color-section}; }
+    [data-type=container] { --pb-ui-color: #{$color-container}; }
+    [data-type=column], [data-type=text] { --pb-ui-color: #{$color-column}; }
+    [data-type=item] { --pb-ui-color: #{$color-duplicable}; }
+    [data-type=row] { --pb-ui-color: #{$dark-60}; }
+}
+
+.#{$prefix}-workbench {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 100011;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-height: 43px;
+    padding: 6px 10px;
+    border-top: 1px solid $nice-gray-100;
+    border-bottom: 1px solid $nice-gray-100;
+    background: white;
+    box-shadow: 0 3px 8px rgba(19, 21, 27, .06);
+
+    &-standalone { position: fixed; top: 0; z-index: 102000; }
+    &-path {
+        display: flex;
+        align-items: center;
+        flex: 1;
+        gap: 3px;
+        min-width: 0;
+        overflow: hidden;
+
+        > span { color: $dark-60; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        > button {
+            flex-shrink: 0;
+            font-size: 12px;
+            &::before { content: ''; width: 7px; height: 7px; border-radius: 2px; background: var(--pb-ui-color); }
+            &[aria-current] { font-weight: 700; background: $nice-gray; }
+            &:not(:last-child)::after { content: '›'; color: $dark-60; margin-left: 6px; }
+        }
+        > [data-pb-action=ancestors] { display: none; }
+    }
+    &-actions { display: flex; flex: 0 0 auto; gap: 2px; border-left: 1px solid $nice-gray-100; padding-left: 6px; }
+    [data-pb-action=guides] > span,
+    [data-pb-action=insert] > span,
+    [data-pb-action=more] > span,
+    [data-pb-action=duplicate-adjacent] > span { display: none; }
+
+    &-menu {
+        position: absolute;
+        right: 10px;
+        top: calc(100% + 6px);
+        width: 250px;
+        max-height: calc(100vh - 180px);
+        overflow-y: auto;
+        padding: 6px;
+        border: 1px solid $nice-gray-100;
+        border-radius: 6px;
+        background: white;
+        box-shadow: 0 8px 28px rgba(19, 21, 27, .16);
+        button { display: flex; justify-content: flex-start; width: 100%; height: auto; min-height: 35px; padding: 6px 8px; text-align: left; white-space: normal; }
+        [data-pb-action=remove] { color: #e00028; border-top: 1px solid $nice-gray-100; margin-top: 4px; border-radius: 0 0 4px 4px; }
+    }
+}
+
+html.pb-insertion-open { overflow-anchor: none; }
+// Reuse the original CSS tooltip, with placement adapted to the fixed editor chrome.
+.#{$prefix}-workbench > button.#{$prefix}-tooltip,
+.#{$prefix}-workbench-actions > button.#{$prefix}-tooltip,
+.#{$prefix}-structure-heading button.#{$prefix}-tooltip,
+.#{$prefix}-insert-point > button.#{$prefix}-tooltip {
+    &::before {
+        width: max-content;
+        max-width: min(320px, calc(100vw - 32px));
+        white-space: normal;
+        overflow-wrap: anywhere;
+        text-align: center;
+        bottom: calc(100% + 8px);
+        left: auto;
+        right: 0;
+        transform: translateY(4px);
+    }
+    &:is(:hover, :focus-visible):not(:disabled)::before { opacity: 1; visibility: visible; transform: translateY(0); }
+    &:disabled::before { opacity: 0; visibility: hidden; }
+}
+.#{$prefix}-workbench > [data-pb-action=structure]::before { left: 0; right: auto; }
+.#{$prefix}-structure-heading button.#{$prefix}-tooltip::before { top: calc(100% + 8px); bottom: auto; }
+// These controls already show their full label, or live in a clipped navigation strip.
+.#{$prefix}-workbench-menu button.#{$prefix}-tooltip::before,
+.#{$prefix}-insert-hint button.#{$prefix}-tooltip::before,
+.#{$prefix}-workbench-path > [data-pb-action=ancestors]::before { content: none; }
+.#{$prefix}-insert-point > button.#{$prefix}-tooltip {
+    &::before { top: calc(100% + 8px); bottom: auto; left: 50%; right: auto; transform: translate(-50%, -4px); }
+    &:is(:hover, :focus-visible):not(:disabled)::before { transform: translate(-50%, 0); }
+    &[data-tooltip-align=left]::before { left: 0; transform: translateY(-4px); }
+    &[data-tooltip-align=right]::before { left: auto; right: 0; transform: translateY(-4px); }
+    &[data-tooltip-align]:is(:hover, :focus-visible):not(:disabled)::before { transform: translateY(0); }
+    &[data-tooltip-above]::before { top: auto; bottom: calc(100% + 8px); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .#{$prefix}-workbench .#{$prefix}-tooltip::before,
+    .#{$prefix}-structure .#{$prefix}-tooltip::before,
+    .#{$prefix}-insert-layer .#{$prefix}-tooltip::before { transition: none; }
+}
+.#{$prefix}-insert-hint {
+    flex: 0 0 calc(100% + 20px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 10px;
+    margin: 0 -10px -6px;
+    border-top: 1px solid $nice-gray-100;
+    background: #edf3ff;
+    font-size: 12px;
+    overflow: hidden;
+    button { flex-shrink: 0; font-size: 12px; }
+}
+.#{$prefix}-wrapper aside.#{$prefix}-insert-space {
+    display: block !important;
+    position: relative !important;
+    flex: 0 0 100% !important;
+    grid-column: 1 / -1;
+    width: 100% !important;
+    height: 48px;
+    min-height: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    clear: both;
+    pointer-events: none;
+}
+.#{$prefix}-insert-layer {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 101600;
+    &[hidden] { display: none; }
+    .#{$prefix}-insert-point {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--pb-ui-color);
+        transform: translate(-50%, -50%);
+        &::before {
+            content: '';
+            position: absolute;
+            height: 48px;
+            left: 50%;
+            border-left: 1px dashed currentColor;
+            opacity: .65;
+        }
+        &.is-horizontal {
+            transform: none;
+            &::before { left: 0; right: 0; height: 0; border-left: 0; border-top: 1px dashed currentColor; }
+            button { width: auto; padding: 0 8px; }
+            button > span { display: inline; color: $secondary; font-size: 12px; }
+        }
+        &:hover::before, &:focus-within::before { opacity: 1; border-style: solid; }
+        button {
+            position: relative;
+            pointer-events: auto;
+            color: var(--pb-ui-color);
+            background: white;
+            border: 1px solid currentColor;
+            border-radius: 18px;
+            min-width: 32px;
+            height: 32px;
+            padding: 0;
+            box-shadow: 0 1px 4px rgba(19, 21, 27, .08);
+            > span { display: none; }
+        }
+    }
+}
+.#{$prefix}-insert-context { clear: both; padding: 8px 16px; font-size: 12px; line-height: 1.4; color: $dark-60; background: white; border-bottom: 1px solid $nice-gray-100; }
+.#{$prefix}-wrapper.#{$prefix}-is-inserting {
+    .#{$prefix}-empty-placeholder, .#{$prefix}-empty-placeholder-wrapper { display: none !important; }
+}
+@media (pointer: coarse) {
+    .#{$prefix}-insert-layer .#{$prefix}-insert-point button { min-width: 44px; height: 44px; border-radius: 24px; }
+}
+
+.#{$prefix}-outline-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 101500;
+    contain: strict;
+}
+.#{$prefix}-outline {
+    position: absolute;
+    box-sizing: border-box;
+    border: 2px solid $dark-60;
+    border-radius: 3px;
+    pointer-events: none;
+    &[hidden] { display: none !important; }
+    &[data-type=section] { border-color: $color-section; }
+    &[data-type=container] { border-color: $color-container; }
+    &[data-type=column], &[data-type=text] { border-color: $color-column; }
+    &[data-type=item] { border-color: $color-duplicable; }
+    &.is-quiet { border-width: 1px; }
+}
+
+.#{$prefix}-structure {
+    position: fixed;
+    left: 8px;
+    bottom: 8px;
+    width: 280px;
+    max-width: calc(100vw - 16px);
+    z-index: 102001;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    border: 1px solid $nice-gray-100;
+    border-radius: 6px;
+    background: white;
+    box-shadow: 0 8px 28px rgba(19, 21, 27, .16);
+
+    &[hidden] { display: none !important; }
+    &-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    [data-pb-action=close-structure] span { display: none; }
+    input[type=search] {
+        flex: 0 0 auto;
+        width: 100%;
+        height: 35px;
+        margin: 0 0 10px;
+        padding: 6px 10px;
+        border: 1px solid $nice-gray-300;
+        border-radius: 6px;
+        background: white;
+        color: $secondary;
+        font: inherit;
+        &:focus-visible { outline: 2px solid $primary; outline-offset: 1px; }
+    }
+    ul { list-style: none; margin: 0; padding: 0; }
+    > ul { overflow: auto; flex: 1; min-height: 0; }
+    ul ul { margin-left: 13px; padding-left: 6px; border-left: 1px solid $nice-gray-100; }
+    li {
+        margin: 0;
+        padding: 0;
+        cursor: pointer;
+        border: 0;
+        background: none;
+        color: inherit;
+        font: inherit;
+        &::before, &::after { display: none; }
+        > div { display: flex; align-items: center; gap: 6px; min-height: 48px; padding: 4px; border: 1px solid transparent; border-radius: 3px; }
+        > div:hover { background: $nice-gray; }
+        &[aria-selected=true] > div {
+            background: white;
+            border-color: var(--pb-ui-color);
+            > span > span { font-weight: 600; }
+        }
+        &:focus-visible { outline: none; }
+        &:focus-visible > div { outline: 2px solid $secondary; outline-offset: -2px; }
+        > div > span:not(.#{$prefix}-structure-dot):not(.#{$prefix}-structure-hidden) {
+            flex: 1;
+            min-width: 0;
+            > span, small { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+            small { color: $dark-60; font-size: 11px; }
+        }
+        [data-pb-expand] { width: 24px; min-width: 24px; height: 28px; padding: 0; font-size: 22px; }
+        [data-pb-expand][hidden] { display: block !important; visibility: hidden; }
+        &[aria-expanded=true] > div > [data-pb-expand] { transform: rotate(90deg); }
+    }
+    &-dot { width: 7px; height: 7px; border-radius: 2px; flex: 0 0 7px; background: var(--pb-ui-color); }
+    &-hidden { font-size: 10px; color: $dark-60; max-width: 65px; }
+    > p { color: $dark-60; padding: 12px 4px; }
+}
+
+// Keep the existing controllers as operation targets, but replace their visual chrome.
+.#{$prefix}-wrapper.#{$prefix}-has-workbench {
+    .#{$prefix}-grid-element {
+        > .#{$prefix}-toolbar,
+        > .#{$prefix}-highlighter,
+        > .#{$prefix}-dimmer { display: none !important; }
+    }
+    &:not(.#{$prefix}-is-moving-child) .#{$prefix}-grid-element > .#{$prefix}-plus-button { display: none !important; }
+    [data-ckeditor-instance]:focus { outline: none; }
+}
+body:has(.#{$prefix}-has-workbench) {
+    #inlineEditorToolbarTopPlaceHolder, #inlineEditorToolbarTop { transition: none; }
+    .wj-toolbar-panel .wj-content-line { box-shadow: none; }
+    ##{$prefix}-wjmagicline { animation: none !important; transition: none; outline-width: 1px !important; }
+    &:has(.#{$prefix}-outline.is-quiet), &:has(.#{$prefix}-hide-guides), &:has(.#{$prefix}-is-inserting), &:has(.#{$prefix}-is-moving-child), &:has(.#{$prefix}-is-modal-open), &:has(.#{$prefix}-is-library-active) {
+        ##{$prefix}-wjmagicline, ##{$prefix}-wjmagiclinePlus { display: none !important; }
+    }
+}
+body.is-view-mode {
+    .#{$prefix}-workbench, .#{$prefix}-structure, .#{$prefix}-outline-layer, .#{$prefix}-insert-layer, .#{$prefix}-insert-space { display: none !important; }
+}
+
+// Match the administration surfaces while preserving the existing forms and tabs.
+.#{$prefix}-modal, .#{$prefix}-library {
+    font-family: $font-family-base;
+    box-shadow: 0 8px 32px rgba(19, 21, 27, .18);
+    border: 1px solid $nice-gray-100;
+    &__content { background: white; backdrop-filter: none; }
+    .tab-content { background: white; backdrop-filter: none; }
+}
+
+@media (max-width: 767px) {
+    .#{$prefix}-workbench {
+        padding: 6px;
+        gap: 3px;
+        .#{$prefix}-insert-hint { flex-basis: calc(100% + 12px); margin-inline: -6px; padding-inline: 6px; }
+        > [data-pb-action=structure] span, [data-pb-action=style] span { display: none; }
+        &-path {
+            > button:not(:last-child):not([data-pb-action=ancestors]) { display: none; }
+            > [data-pb-action=ancestors] { display: inline-flex; }
+            > [data-pb-action=ancestors]::before, > [data-pb-action=ancestors]::after, > [data-pb-action=ancestors] span { display: none; }
+            &.is-expanded {
+                overflow: visible;
+                > button:not([data-pb-action=ancestors]):not(:last-child) {
+                    display: inline-flex;
+                    position: relative;
+                }
+                position: absolute;
+                top: 100%;
+                left: 6px;
+                width: 220px;
+                flex-direction: column;
+                align-items: stretch;
+                max-height: 50vh;
+                overflow-y: auto;
+                padding: 6px;
+                background: white;
+                border: 1px solid $nice-gray-100;
+                border-radius: 6px;
+                box-shadow: 0 8px 28px rgba(19, 21, 27, .16);
+                > button { justify-content: flex-start; }
+            }
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .#{$prefix}-has-workbench > .#{$prefix}-notify, .#{$prefix}-workbench *, .#{$prefix}-structure * {
+        animation: none !important;
+        transition: none !important;
+    }
+}
