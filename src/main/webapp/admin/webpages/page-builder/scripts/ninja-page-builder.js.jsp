@@ -154,6 +154,7 @@
                 if ($(e.target).closest('[data-pb-expand]').length) {
                     me.toggle_workbench_branch(this);
                 } else {
+                    me.toggle_workbench_branch(this, true);
                     me.select_workbench_element($(this).data('element'), true);
                     this.focus({ preventScroll: true });
                     if (window.innerWidth < 768) me.toggle_workbench_structure(false);
@@ -820,6 +821,7 @@
                 if (item.attr('aria-expanded') === 'true') this.toggle_workbench_branch(item, false);
                 else next = item.parent().closest('[role=treeitem]')[0];
             } else if (e.key === 'Enter' || e.key === ' ') {
+                this.toggle_workbench_branch(item, true);
                 this.select_workbench_element(item.data('element'), true);
             } else return;
             e.preventDefault();

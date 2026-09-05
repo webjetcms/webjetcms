@@ -826,6 +826,24 @@ Scenario('workbench selection, structure and unchanged canvas geometry', async (
     I.waitForVisible('.pb-structure [role=treeitem]', 10);
     I.saveScreenshot('pagebuilder-workbench-structure.png');
     assert.deepStrictEqual(await workbenchGeometry(I), before, 'Opening the tree must not shrink or reflow the canvas');
+    await I.usePlaywrightTo('expand a selected branch through its label while preserving arrow toggling', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        const branch = frame.locator('.pb-structure > ul > li').first();
+        const arrow = branch.locator(':scope > div > [data-pb-expand]');
+        const label = branch.locator(':scope > div > span').last();
+        await arrow.click();
+        assert.equal(await branch.getAttribute('aria-expanded'), 'false');
+        await label.click();
+        assert.equal(await branch.getAttribute('aria-expanded'), 'true', 'Clicking the label must expand a collapsed branch');
+        assert.equal(await branch.getAttribute('aria-selected'), 'true', 'Expanding through the label must also select the block');
+        assert.ok(await branch.locator(':scope > ul').isVisible(), 'The subtree must become visible');
+        await label.click();
+        assert.equal(await branch.getAttribute('aria-expanded'), 'true', 'Clicking an expanded label must keep its subtree open');
+        await arrow.click();
+        assert.equal(await branch.getAttribute('aria-expanded'), 'false', 'The arrow must still collapse the branch');
+        await branch.press('Enter');
+        assert.equal(await branch.getAttribute('aria-expanded'), 'true', 'Keyboard activation must also expand the branch');
+    });
     I.fillField('.pb-structure input[type=search]', 'Second autotest column');
     I.waitForText('Second autotest column', 10, '.pb-structure');
     I.click(locate('.pb-structure [role=treeitem] > div').withText('Second autotest column').last());

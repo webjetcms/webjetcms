@@ -297,9 +297,13 @@ html.pb-insertion-open { overflow-anchor: none; }
         color: inherit;
         font: inherit;
         &::before, &::after { display: none; }
-        > div { display: flex; align-items: center; gap: 6px; min-height: 48px; padding: 5px; border-radius: 5px; }
+        > div { display: flex; align-items: center; gap: 6px; min-height: 48px; padding: 4px; border: 1px solid transparent; border-radius: 3px; }
         > div:hover { background: $nice-gray; }
-        &[aria-selected=true] > div { background: #edf3ff; box-shadow: inset 3px 0 var(--pb-ui-color); }
+        &[aria-selected=true] > div {
+            background: white;
+            border-color: var(--pb-ui-color);
+            > span > span { font-weight: 600; }
+        }
         &:focus-visible { outline: none; }
         &:focus-visible > div { outline: 2px solid $secondary; outline-offset: -2px; }
         > div > span:not(.#{$prefix}-structure-dot):not(.#{$prefix}-structure-hidden) {

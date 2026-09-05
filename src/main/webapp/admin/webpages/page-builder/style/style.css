@@ -2968,15 +2968,19 @@ html.pb-insertion-open {
   align-items: center;
   gap: 6px;
   min-height: 48px;
-  padding: 5px;
-  border-radius: 5px;
+  padding: 4px;
+  border: 1px solid transparent;
+  border-radius: 3px;
 }
 .pb-structure li > div:hover {
   background: #F3F3F6;
 }
 .pb-structure li[aria-selected=true] > div {
-  background: #edf3ff;
-  box-shadow: inset 3px 0 var(--pb-ui-color);
+  background: white;
+  border-color: var(--pb-ui-color);
+}
+.pb-structure li[aria-selected=true] > div > span > span {
+  font-weight: 600;
 }
 .pb-structure li:focus-visible {
   outline: none;
