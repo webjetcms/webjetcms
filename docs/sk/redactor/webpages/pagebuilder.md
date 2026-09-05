@@ -29,7 +29,7 @@ Pri použití Page Builder vytvárate web stránku z vopred pripravených blokov
 
 Nástroje vybraného bloku sú v pevnej lište pod CKEditorom. Klikateľná cesta, napríklad **Sekcia › Kontajner › Riadok › Stĺpec**, umožňuje vybrať nadradenú časť bez hľadania rámikov v texte. Na úzkej obrazovke otvoríte zoznam predkov tlačidlom vedľa aktuálneho typu bloku. Lišta obsahuje možnosti:
 
-- Štýl - umožní pokročilo nastaviť štýl/vlastnosti bloku ako obrázok pozadia, farby, zarovnania, odsadenia a podobne.
+- Štýl (v ponuke **Ďalšie akcie**) - umožní pokročilo nastaviť štýl/vlastnosti bloku ako obrázok pozadia, farby, zarovnania, odsadenia a podobne.
 - Šírka stĺpca - nastavuje šírku stĺpca, je možné nastaviť rôzne šírky pre rôzne zariadenia (telefón, tablet, počítač).
 - Presun bloku - umožňuje presunúť blok na iné miesto v stránke, po kliknutí na ikonu sa zobrazia možnosti kam je blok možné presunúť.
 - Duplikovať vedľa - vloží kópiu hneď za vybraný blok a označí ju.

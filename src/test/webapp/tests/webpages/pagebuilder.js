@@ -208,6 +208,7 @@ function openStyleModal(I, colSelector=".col-3") {
 
     //
     I.say("Open style modal");
+    I.click(".pb-workbench [data-pb-action=more]");
     I.click(".pb-workbench [data-pb-action=style]");
     I.waitForElement("#wjInline-docdata.pb-is-modal-open div.pb-modal", 10);
 }
@@ -859,7 +860,7 @@ Scenario('workbench outline modes, offsets and remembered preference', async ({I
     I.seeElement(button+'[data-pb-guides=hidden]');
     I.waitForInvisible('.pb-outline:not([hidden])', 10);
     I.seeElement('.pb-structure');
-    I.seeElement('.pb-workbench [data-pb-action=style]');
+    I.seeElement('.pb-workbench [data-pb-action=resize]');
     const hiddenIcon = await I.grabAttributeFrom(button+' path', 'd');
     assert.notStrictEqual(hiddenIcon, initial.icon, 'Hidden outlines must have their own crossed-out eye icon');
     I.click(button);
@@ -1076,6 +1077,8 @@ Scenario('workbench keyboard, responsive toolbar and lifecycle', async ({I, DTE,
     I.pressKey('End');
     I.type(' keyboard-autotest');
     I.waitForVisible('.pb-outline.is-quiet', 10);
+    I.dontSeeElement('.pb-workbench [data-pb-action=style]');
+    I.click('.pb-workbench [data-pb-action=more]');
     I.click('.pb-workbench [data-pb-action=style]');
     I.waitForVisible('.pb-modal', 10);
     I.pressKey('Escape');

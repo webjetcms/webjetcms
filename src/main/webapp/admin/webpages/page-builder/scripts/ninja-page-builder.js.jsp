@@ -353,7 +353,7 @@
                 ['before', 'plus'], ['after', 'plus'], ['previous', 'previous'], ['next', 'next'],
                 ['move', 'move'], ['duplicate', 'duplicate'], ['add_to_favorites', 'favorite'], ['remove', 'remove']
             ];
-            actions.forEach(function(entry, index) {
+            actions.forEach(function(entry) {
                 var action = entry[0], source = action;
                 if (['duplicate-adjacent', 'before', 'after'].includes(action)) source = 'duplicate';
                 if (['previous', 'next'].includes(action)) source = 'move';
@@ -364,7 +364,7 @@
                 var button = me.workbench_button(action, label, entry[1]);
                 if (['previous', 'next'].includes(action)) button.prop('disabled', !me.workbench_sibling(action));
                 if (action === 'resize') button.find('span').text(me.get_actual_column_size(node)+' / '+me.options.max_col_size);
-                (index < 3 ? ui.actions : ui.menu).append(button);
+                (['resize', 'duplicate-adjacent'].includes(action) ? ui.actions : ui.menu).append(button);
             });
             if (ui.menu.children().length) ui.actions.append(me.workbench_button('more', ui.labels.more, 'more').attr('aria-expanded', 'false'));
             if (focusedAction) {
