@@ -2058,6 +2058,40 @@
         /*====================|> REMOVE GRID ELEMENT
         /*=================================================================*/
 
+        /** Finds a surviving editable region, preferring its containing editor or the next field. */
+        get_surviving_ckeditor_element: function(el) {
+            var node = $(el)[0], selector = '[data-ckeditor-instance]';
+            var containing = $(node).parent().closest(selector);
+            if (containing.length) return containing;
+            var editors = this.$wrapper.find(selector).filter(':visible').filter(function() {
+                return !node.contains(this);
+            });
+            var next = editors.filter(function() { return node.compareDocumentPosition(this) & Node.DOCUMENT_POSITION_FOLLOWING; }).first();
+            return next.length ? next : editors.last();
+        },
+
+        /** Restores the shared toolbar without changing the structural selection or scrolling the canvas. */
+        focus_ckeditor_element: function(el) {
+            if (typeof CKEDITOR === 'undefined') return;
+            var me = this, node = $(el).closest('[data-ckeditor-instance]');
+            if (!node.length) node = $(el).find('[data-ckeditor-instance]').filter(':visible').first();
+            var editor = CKEDITOR.instances[node.attr('data-ckeditor-instance')];
+            if (!editor || !editor.element || editor.element.$ !== node[0]) return;
+            var ui = me.ui, selected = ui && ui.selected;
+            var focus = function() {
+                if (editor.status !== 'ready' || !me.$wrapper[0].contains(node[0]) ||
+                    (ui && (me.ui !== ui || ui.selected !== selected))) return;
+                var x = window.scrollX, y = window.scrollY;
+                if (ui) ui.restoringFocus = true;
+                editor.focus();
+                if (ui) ui.restoringFocus = false;
+                window.scrollTo(x, y);
+                me.schedule_workbench();
+            };
+            if (editor.status === 'ready') focus();
+            else editor.once('instanceReady', focus);
+        },
+
         destroy_ckeditor_instances: function (el) {
             if (typeof CKEDITOR === "undefined" || typeof CKEDITOR.instances === "undefined") {
                 return;
@@ -2085,6 +2119,8 @@
             var style_id = grid_element.attr(this.user_style.attr_name);
             if( $(this.$wrapper).find(this.tagc._grid_element+'[data-pb-user-style-id='+style_id+']').length < 2 ) $('style[style-id="'+style_id+'"]').remove();
 
+            // Focus a surviving editor before destroying the one that owns the visible shared toolbar.
+            this.focus_ckeditor_element(this.get_surviving_ckeditor_element(grid_element));
             this.destroy_ckeditor_instances(grid_element);
             $(grid_element).off().unbind().remove();
 
@@ -2186,6 +2222,7 @@
             cloned_editors.removeClass("editableElement cke_editable cke_editable_inline cke_contents_ltr cke_show_borders");
 
             if(!this.duplicate) {
+                this.focus_ckeditor_element(this.get_surviving_ckeditor_element(moving));
                 this.destroy_ckeditor_instances(moving);
                 $(moving).unbind().off().remove();
             }
@@ -2221,8 +2258,7 @@
             }
             this.cancel_move_grid_element();
             this.hide_notify();
-
-
+            this.focus_ckeditor_element(clone);
         },
 
         duplicate_user_style_element: function () {

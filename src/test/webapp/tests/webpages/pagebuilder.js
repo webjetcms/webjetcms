@@ -877,6 +877,101 @@ Scenario('workbench quick actions, source markers and clean serialization', asyn
     DTE.cancel();
 });
 
+/** Waits for real editing focus, including asynchronously recreated inline editors. */
+async function assertWorkbenchEditorFocused(I, selector) {
+    await I.usePlaywrightTo('wait for CKEditor focus and its shared toolbar', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        await frame.waitForFunction(selector => {
+            const element = document.querySelector(selector)?.closest('[data-ckeditor-instance]');
+            const editor = element && CKEDITOR.instances[element.dataset.ckeditorInstance];
+            return editor?.status === 'ready' && editor.focusManager.hasFocus &&
+                element.contains(document.activeElement) &&
+                document.querySelector('#wjInlineCkEditorToolbarElement').getBoundingClientRect().height > 50;
+        }, selector, {timeout: 10000});
+    });
+}
+
+Scenario('workbench keeps CKEditor toolbar after deleting the active column', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    I.executeScript((root, selector) => document.querySelector(selector).closest('[data-ckeditor-instance]').focus(), workbenchFixture+' .pb-workbench-copy');
+    await assertWorkbenchEditorFocused(I, workbenchFixture+' .pb-workbench-copy');
+    const initial = await I.executeScript((root, selector) => ({
+        editor: document.querySelector(selector+' .pb-workbench-copy').closest('[data-ckeditor-instance]').dataset.ckeditorInstance,
+        height: document.querySelector('#inlineEditorToolbarTop').getBoundingClientRect().height
+    }), workbenchFixture);
+    I.amAcceptingPopups();
+    I.click('.pb-workbench [data-pb-action=more]');
+    I.click('.pb-workbench [data-pb-action=remove]');
+    I.acceptPopup();
+    I.waitForDetached(workbenchFixture+' .pb-workbench-copy', 10);
+    await assertWorkbenchEditorFocused(I, workbenchFixture+' .pb-column p');
+    const state = await I.executeScript((root, initial) => ({
+        destroyed: CKEDITOR.instances[initial.editor] === undefined,
+        height: document.querySelector('#inlineEditorToolbarTop').getBoundingClientRect().height
+    }), initial);
+    assert.strictEqual(state.destroyed, true, 'Deleting a column must destroy its CKEditor instance');
+    assert.strictEqual(state.height, initial.height, 'Deleting the active column must not collapse the toolbar header');
+    I.type(' focused-autotest');
+    I.see('focused-autotest', workbenchFixture+' .pb-column');
+
+    // Delete a whole section at the end of the page to exercise the previous-editor fallback.
+    const previousEditor = await I.executeScript((root, selector) => {
+        const section = document.querySelector(selector);
+        section.parentElement.append(section);
+        return Array.from(document.querySelectorAll('#wjInline-docdata [data-ckeditor-instance]'))
+            .filter(element => !section.contains(element)).pop().dataset.ckeditorInstance;
+    }, workbenchFixture);
+    I.click(workbenchFixture+' .pb-column p');
+    I.click('.pb-workbench-path [data-type=section]');
+    I.click('.pb-workbench [data-pb-action=more]');
+    I.click('.pb-workbench [data-pb-action=remove]');
+    I.acceptPopup();
+    I.waitForDetached(workbenchFixture, 10);
+    await assertWorkbenchEditorFocused(I, '[data-ckeditor-instance="'+previousEditor+'"]');
+    I.switchTo();
+    DTE.cancel();
+});
+
+Scenario('workbench keeps CKEditor toolbar when moving a column in both directions', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    const selector = workbenchFixture+' .pb-workbench-copy';
+    I.executeScript((root, selector) => document.querySelector(selector).closest('[data-ckeditor-instance]').focus(), selector);
+    await assertWorkbenchEditorFocused(I, selector);
+    await I.executeScript(() => {
+        const toolbar = document.querySelector('#wjInlineCkEditorToolbarElement');
+        window.pbAutotestToolbarHeights = [];
+        window.pbAutotestToolbarObserver = new ResizeObserver(() => {
+            window.pbAutotestToolbarHeights.push(toolbar.getBoundingClientRect().height);
+        });
+        window.pbAutotestToolbarObserver.observe(toolbar);
+    });
+    for (const action of ['next', 'previous']) {
+        const initial = await I.executeScript((root, selector) => ({
+            editor: document.querySelector(selector).closest('[data-ckeditor-instance]').dataset.ckeditorInstance,
+            height: document.querySelector('#inlineEditorToolbarTop').getBoundingClientRect().height
+        }), selector);
+        I.click('.pb-workbench [data-pb-action=more]');
+        I.click('.pb-workbench [data-pb-action='+action+']');
+        await assertWorkbenchEditorFocused(I, selector);
+        const state = await I.executeScript((root, params) => ({
+            destroyed: CKEDITOR.instances[params.initial.editor] === undefined,
+            selected: window.pageBuilder.ui.selected === document.querySelector(params.selector).closest('.pb-column'),
+            height: document.querySelector('#inlineEditorToolbarTop').getBoundingClientRect().height
+        }), {selector, initial});
+        assert.strictEqual(state.destroyed, true, 'Moving a column must dispose of the original CKEditor instance');
+        assert.strictEqual(state.selected, true, 'Editor focus must retain the moved column selection');
+        assert.strictEqual(state.height, initial.height, 'Moving a column must preserve the toolbar header height');
+    }
+    const heights = await I.executeScript(() => {
+        window.pbAutotestToolbarObserver.disconnect();
+        return window.pbAutotestToolbarHeights;
+    });
+    assert.ok(heights.length > 0 && heights.every(height => height > 50), 'The shared toolbar must remain visible while CKEditor instances are recreated');
+    I.switchTo();
+    I.amAcceptingPopups();
+    DTE.cancel();
+});
+
 Scenario('workbench keyboard, responsive toolbar and lifecycle', async ({I, DTE, Document}) => {
     await openWorkbenchFixture(I, DTE, Document);
     I.click('.pb-workbench [data-pb-action=structure]');
