@@ -2445,7 +2445,8 @@ div.exit-inline-editor a[aria-pressed=true] {
 }
 
 .pb-workbench,
-.pb-structure {
+.pb-structure,
+.pb-insert-layer {
   --pb-ui-color: #0063FB;
   font: 400 14px/1.4 "Asap", sans-serif, Arial, Helvetica;
   color: #13151B;
@@ -2457,15 +2458,20 @@ div.exit-inline-editor a[aria-pressed=true] {
 .pb-workbench *, .pb-workbench *::before, .pb-workbench *::after,
 .pb-structure *,
 .pb-structure *::before,
-.pb-structure *::after {
+.pb-structure *::after,
+.pb-insert-layer *,
+.pb-insert-layer *::before,
+.pb-insert-layer *::after {
   box-sizing: border-box;
 }
 .pb-workbench [hidden],
-.pb-structure [hidden] {
+.pb-structure [hidden],
+.pb-insert-layer [hidden] {
   display: none !important;
 }
 .pb-workbench button,
-.pb-structure button {
+.pb-structure button,
+.pb-insert-layer button {
   appearance: none;
   display: inline-flex;
   align-items: center;
@@ -2487,51 +2493,64 @@ div.exit-inline-editor a[aria-pressed=true] {
   cursor: pointer;
 }
 .pb-workbench button:hover:not(:disabled),
-.pb-structure button:hover:not(:disabled) {
+.pb-structure button:hover:not(:disabled),
+.pb-insert-layer button:hover:not(:disabled) {
   background: #F3F3F6;
 }
 .pb-workbench button:active:not(:disabled), .pb-workbench button[aria-expanded=true], .pb-workbench button[aria-pressed=true],
 .pb-structure button:active:not(:disabled),
 .pb-structure button[aria-expanded=true],
-.pb-structure button[aria-pressed=true] {
+.pb-structure button[aria-pressed=true],
+.pb-insert-layer button:active:not(:disabled),
+.pb-insert-layer button[aria-expanded=true],
+.pb-insert-layer button[aria-pressed=true] {
   color: #0063FB;
   background: #edf3ff;
 }
 .pb-workbench button:disabled,
-.pb-structure button:disabled {
+.pb-structure button:disabled,
+.pb-insert-layer button:disabled {
   opacity: 0.45;
   cursor: default;
 }
 .pb-workbench button:focus-visible,
-.pb-structure button:focus-visible {
+.pb-structure button:focus-visible,
+.pb-insert-layer button:focus-visible {
   outline: 2px solid #13151B;
   outline-offset: 2px;
   box-shadow: 0 0 0 4px white;
 }
 .pb-workbench button svg,
-.pb-structure button svg {
+.pb-structure button svg,
+.pb-insert-layer button svg {
   flex: 0 0 18px;
   pointer-events: none;
 }
 .pb-workbench [data-type=section],
-.pb-structure [data-type=section] {
+.pb-structure [data-type=section],
+.pb-insert-layer [data-type=section] {
   --pb-ui-color: #6486FF;
 }
 .pb-workbench [data-type=container],
-.pb-structure [data-type=container] {
+.pb-structure [data-type=container],
+.pb-insert-layer [data-type=container] {
   --pb-ui-color: #F64D91;
 }
 .pb-workbench [data-type=column], .pb-workbench [data-type=text],
 .pb-structure [data-type=column],
-.pb-structure [data-type=text] {
+.pb-structure [data-type=text],
+.pb-insert-layer [data-type=column],
+.pb-insert-layer [data-type=text] {
   --pb-ui-color: #00A186;
 }
 .pb-workbench [data-type=item],
-.pb-structure [data-type=item] {
+.pb-structure [data-type=item],
+.pb-insert-layer [data-type=item] {
   --pb-ui-color: #D17A00;
 }
 .pb-workbench [data-type=row],
-.pb-structure [data-type=row] {
+.pb-structure [data-type=row],
+.pb-insert-layer [data-type=row] {
   --pb-ui-color: #686F83;
 }
 
@@ -2541,6 +2560,7 @@ div.exit-inline-editor a[aria-pressed=true] {
   right: 0;
   z-index: 100011;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
   min-height: 43px;
@@ -2600,6 +2620,7 @@ div.exit-inline-editor a[aria-pressed=true] {
   padding-left: 6px;
 }
 .pb-workbench [data-pb-action=guides] > span,
+.pb-workbench [data-pb-action=insert] > span,
 .pb-workbench [data-pb-action=more] > span,
 .pb-workbench [data-pb-action=duplicate-adjacent] > span {
   display: none;
@@ -2634,6 +2655,129 @@ div.exit-inline-editor a[aria-pressed=true] {
   border-radius: 0 0 4px 4px;
 }
 
+html.pb-insertion-open {
+  overflow-anchor: none;
+}
+
+.pb-insert-hint {
+  flex: 0 0 calc(100% + 20px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 10px;
+  margin: 0 -10px -6px;
+  border-top: 1px solid #DDDFE6;
+  background: #edf3ff;
+  font-size: 12px;
+  overflow: hidden;
+}
+.pb-insert-hint button {
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.pb-wrapper aside.pb-insert-space {
+  display: block !important;
+  position: relative !important;
+  flex: 0 0 100% !important;
+  grid-column: 1/-1;
+  width: 100% !important;
+  height: 48px;
+  min-height: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  clear: both;
+  pointer-events: none;
+}
+
+.pb-insert-layer {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 101600;
+}
+.pb-insert-layer[hidden] {
+  display: none;
+}
+.pb-insert-layer .pb-insert-point {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--pb-ui-color);
+  transform: translate(-50%, -50%);
+}
+.pb-insert-layer .pb-insert-point::before {
+  content: "";
+  position: absolute;
+  height: 48px;
+  left: 50%;
+  border-left: 1px dashed currentColor;
+  opacity: 0.65;
+}
+.pb-insert-layer .pb-insert-point.is-horizontal {
+  transform: none;
+}
+.pb-insert-layer .pb-insert-point.is-horizontal::before {
+  left: 0;
+  right: 0;
+  height: 0;
+  border-left: 0;
+  border-top: 1px dashed currentColor;
+}
+.pb-insert-layer .pb-insert-point.is-horizontal button {
+  width: auto;
+  padding: 0 8px;
+}
+.pb-insert-layer .pb-insert-point.is-horizontal button > span {
+  display: inline;
+  color: #13151B;
+  font-size: 12px;
+}
+.pb-insert-layer .pb-insert-point:hover::before, .pb-insert-layer .pb-insert-point:focus-within::before {
+  opacity: 1;
+  border-style: solid;
+}
+.pb-insert-layer .pb-insert-point button {
+  position: relative;
+  pointer-events: auto;
+  color: var(--pb-ui-color);
+  background: white;
+  border: 1px solid currentColor;
+  border-radius: 18px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  box-shadow: 0 1px 4px rgba(19, 21, 27, 0.08);
+}
+.pb-insert-layer .pb-insert-point button > span {
+  display: none;
+}
+
+.pb-insert-context {
+  clear: both;
+  padding: 8px 16px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #686F83;
+  background: white;
+  border-bottom: 1px solid #DDDFE6;
+}
+
+.pb-wrapper.pb-is-inserting .pb-empty-placeholder, .pb-wrapper.pb-is-inserting .pb-empty-placeholder-wrapper {
+  display: none !important;
+}
+
+@media (pointer: coarse) {
+  .pb-insert-layer .pb-insert-point button {
+    min-width: 44px;
+    height: 44px;
+    border-radius: 24px;
+  }
+}
 .pb-outline-layer {
   position: fixed;
   inset: 0;
@@ -2829,11 +2973,11 @@ body:has(.pb-has-workbench) #pb-wjmagicline {
   transition: none;
   outline-width: 1px !important;
 }
-body:has(.pb-has-workbench):has(.pb-outline.is-quiet) #pb-wjmagicline, body:has(.pb-has-workbench):has(.pb-outline.is-quiet) #pb-wjmagiclinePlus, body:has(.pb-has-workbench):has(.pb-hide-guides) #pb-wjmagicline, body:has(.pb-has-workbench):has(.pb-hide-guides) #pb-wjmagiclinePlus, body:has(.pb-has-workbench):has(.pb-is-moving-child) #pb-wjmagicline, body:has(.pb-has-workbench):has(.pb-is-moving-child) #pb-wjmagiclinePlus, body:has(.pb-has-workbench):has(.pb-is-modal-open) #pb-wjmagicline, body:has(.pb-has-workbench):has(.pb-is-modal-open) #pb-wjmagiclinePlus, body:has(.pb-has-workbench):has(.pb-is-library-active) #pb-wjmagicline, body:has(.pb-has-workbench):has(.pb-is-library-active) #pb-wjmagiclinePlus {
+body:has(.pb-has-workbench):has(.pb-outline.is-quiet) #pb-wjmagicline, body:has(.pb-has-workbench):has(.pb-outline.is-quiet) #pb-wjmagiclinePlus, body:has(.pb-has-workbench):has(.pb-hide-guides) #pb-wjmagicline, body:has(.pb-has-workbench):has(.pb-hide-guides) #pb-wjmagiclinePlus, body:has(.pb-has-workbench):has(.pb-is-inserting) #pb-wjmagicline, body:has(.pb-has-workbench):has(.pb-is-inserting) #pb-wjmagiclinePlus, body:has(.pb-has-workbench):has(.pb-is-moving-child) #pb-wjmagicline, body:has(.pb-has-workbench):has(.pb-is-moving-child) #pb-wjmagiclinePlus, body:has(.pb-has-workbench):has(.pb-is-modal-open) #pb-wjmagicline, body:has(.pb-has-workbench):has(.pb-is-modal-open) #pb-wjmagiclinePlus, body:has(.pb-has-workbench):has(.pb-is-library-active) #pb-wjmagicline, body:has(.pb-has-workbench):has(.pb-is-library-active) #pb-wjmagiclinePlus {
   display: none !important;
 }
 
-body.is-view-mode .pb-workbench, body.is-view-mode .pb-structure, body.is-view-mode .pb-outline-layer {
+body.is-view-mode .pb-workbench, body.is-view-mode .pb-structure, body.is-view-mode .pb-outline-layer, body.is-view-mode .pb-insert-layer, body.is-view-mode .pb-insert-space {
   display: none !important;
 }
 
@@ -2855,6 +2999,11 @@ body.is-view-mode .pb-workbench, body.is-view-mode .pb-structure, body.is-view-m
   .pb-workbench {
     padding: 6px;
     gap: 3px;
+  }
+  .pb-workbench .pb-insert-hint {
+    flex-basis: calc(100% + 12px);
+    margin-inline: -6px;
+    padding-inline: 6px;
   }
   .pb-workbench > [data-pb-action=structure] span, .pb-workbench [data-pb-action=style] span {
     display: none;

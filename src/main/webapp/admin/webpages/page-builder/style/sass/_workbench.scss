@@ -1,6 +1,7 @@
-// Editor chrome stays outside the authored grid and never changes its box model.
+// Editor chrome stays outside the authored grid; insertion spacers exist only while choosing a destination.
 .#{$prefix}-workbench,
-.#{$prefix}-structure {
+.#{$prefix}-structure,
+.#{$prefix}-insert-layer {
     --pb-ui-color: #{$primary};
     font: 400 14px/1.4 $font-family-base;
     color: $secondary;
@@ -60,6 +61,7 @@
     right: 0;
     z-index: 100011;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 6px;
     min-height: 43px;
@@ -90,6 +92,7 @@
     }
     &-actions { display: flex; flex: 0 0 auto; gap: 2px; border-left: 1px solid $nice-gray-100; padding-left: 6px; }
     [data-pb-action=guides] > span,
+    [data-pb-action=insert] > span,
     [data-pb-action=more] > span,
     [data-pb-action=duplicate-adjacent] > span { display: none; }
 
@@ -108,6 +111,87 @@
         button { display: flex; justify-content: flex-start; width: 100%; height: auto; min-height: 35px; padding: 6px 8px; text-align: left; white-space: normal; }
         [data-pb-action=remove] { color: #e00028; border-top: 1px solid $nice-gray-100; margin-top: 4px; border-radius: 0 0 4px 4px; }
     }
+}
+
+html.pb-insertion-open { overflow-anchor: none; }
+.#{$prefix}-insert-hint {
+    flex: 0 0 calc(100% + 20px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 10px;
+    margin: 0 -10px -6px;
+    border-top: 1px solid $nice-gray-100;
+    background: #edf3ff;
+    font-size: 12px;
+    overflow: hidden;
+    button { flex-shrink: 0; font-size: 12px; }
+}
+.#{$prefix}-wrapper aside.#{$prefix}-insert-space {
+    display: block !important;
+    position: relative !important;
+    flex: 0 0 100% !important;
+    grid-column: 1 / -1;
+    width: 100% !important;
+    height: 48px;
+    min-height: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    clear: both;
+    pointer-events: none;
+}
+.#{$prefix}-insert-layer {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 101600;
+    &[hidden] { display: none; }
+    .#{$prefix}-insert-point {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--pb-ui-color);
+        transform: translate(-50%, -50%);
+        &::before {
+            content: '';
+            position: absolute;
+            height: 48px;
+            left: 50%;
+            border-left: 1px dashed currentColor;
+            opacity: .65;
+        }
+        &.is-horizontal {
+            transform: none;
+            &::before { left: 0; right: 0; height: 0; border-left: 0; border-top: 1px dashed currentColor; }
+            button { width: auto; padding: 0 8px; }
+            button > span { display: inline; color: $secondary; font-size: 12px; }
+        }
+        &:hover::before, &:focus-within::before { opacity: 1; border-style: solid; }
+        button {
+            position: relative;
+            pointer-events: auto;
+            color: var(--pb-ui-color);
+            background: white;
+            border: 1px solid currentColor;
+            border-radius: 18px;
+            min-width: 32px;
+            height: 32px;
+            padding: 0;
+            box-shadow: 0 1px 4px rgba(19, 21, 27, .08);
+            > span { display: none; }
+        }
+    }
+}
+.#{$prefix}-insert-context { clear: both; padding: 8px 16px; font-size: 12px; line-height: 1.4; color: $dark-60; background: white; border-bottom: 1px solid $nice-gray-100; }
+.#{$prefix}-wrapper.#{$prefix}-is-inserting {
+    .#{$prefix}-empty-placeholder, .#{$prefix}-empty-placeholder-wrapper { display: none !important; }
+}
+@media (pointer: coarse) {
+    .#{$prefix}-insert-layer .#{$prefix}-insert-point button { min-width: 44px; height: 44px; border-radius: 24px; }
 }
 
 .#{$prefix}-outline-layer {
@@ -209,12 +293,12 @@ body:has(.#{$prefix}-has-workbench) {
     #inlineEditorToolbarTopPlaceHolder, #inlineEditorToolbarTop { transition: none; }
     .wj-toolbar-panel .wj-content-line { box-shadow: none; }
     ##{$prefix}-wjmagicline { animation: none !important; transition: none; outline-width: 1px !important; }
-    &:has(.#{$prefix}-outline.is-quiet), &:has(.#{$prefix}-hide-guides), &:has(.#{$prefix}-is-moving-child), &:has(.#{$prefix}-is-modal-open), &:has(.#{$prefix}-is-library-active) {
+    &:has(.#{$prefix}-outline.is-quiet), &:has(.#{$prefix}-hide-guides), &:has(.#{$prefix}-is-inserting), &:has(.#{$prefix}-is-moving-child), &:has(.#{$prefix}-is-modal-open), &:has(.#{$prefix}-is-library-active) {
         ##{$prefix}-wjmagicline, ##{$prefix}-wjmagiclinePlus { display: none !important; }
     }
 }
 body.is-view-mode {
-    .#{$prefix}-workbench, .#{$prefix}-structure, .#{$prefix}-outline-layer { display: none !important; }
+    .#{$prefix}-workbench, .#{$prefix}-structure, .#{$prefix}-outline-layer, .#{$prefix}-insert-layer, .#{$prefix}-insert-space { display: none !important; }
 }
 
 // Match the administration surfaces while preserving the existing forms and tabs.
@@ -230,6 +314,7 @@ body.is-view-mode {
     .#{$prefix}-workbench {
         padding: 6px;
         gap: 3px;
+        .#{$prefix}-insert-hint { flex-basis: calc(100% + 12px); margin-inline: -6px; padding-inline: 6px; }
         > [data-pb-action=structure] span, [data-pb-action=style] span { display: none; }
         &-path {
             > button:not(:last-child):not([data-pb-action=ancestors]) { display: none; }

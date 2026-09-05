@@ -98,6 +98,8 @@ Tlačidlo s ikonou oka prepína tri režimy: rámik vybraného bloku (predvolen�
 
 Strom **Štruktúra** používa elementy rozpoznané existujúcou inicializáciou a názvy odvodzuje z obsahu. Nepridáva do blokov identifikátory ani ďalšie metadáta. Samostatné `pb-editable` elementy umožňuje vybrať, ale nepridáva im operácie určené pre stĺpce. Skryté elementy možno nájsť v strome bez zmeny ich viditeľnosti.
 
+Režim **Pridať blok** v spoločnej lište zobrazí pozície medzi sekciami, kontajnermi a stĺpcami. Tlačidlá zostávajú v samostatnej vrstve mimo obsahu; do štruktúry sa dočasne vložia iba neaktívne elementy `aside.pb-insert-space` na vytvorenie miesta. Nie sú súčasťou CKEditor polí a `getClearNode` ich odstráni aj pri ukladaní počas aktívneho režimu. Šírky stĺpcov sa nemenia. Vkladanie používa pôvodné ovládače a knižnicu, po vložení obnoví fokus CKEditora. Režim sa nepamätá v úložisku a nemení preferenciu rámikov.
+
 Pôvodné HTML, CSS triedy, vlastné selektory a funkcie `pbCustomOptions`/`pbCustomSettings` zostávajú platné. Akcie hornej lišty používajú existujúce operácie Page Builder vrátane obmedzení presunu duplikovateľných elementov. Pri príprave náhľadu a uložení sa používajú pôvodné funkcie `getClearNode` a `clearEditorAttributes`; nové ovládacie prvky sú navyše umiestnené mimo serializovaného obsahu.
 
 ## Štýlovanie elementov

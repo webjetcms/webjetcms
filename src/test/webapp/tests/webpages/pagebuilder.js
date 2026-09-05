@@ -846,6 +846,209 @@ Scenario('workbench selection, structure and unchanged canvas geometry', async (
     DTE.cancel();
 });
 
+/** Focuses a real insertion button, allowing its keyboard handler to reveal off-screen destinations. */
+async function chooseWorkbenchInsertion(I, type, parent, index) {
+    await I.executeScript((root, args) => {
+        document.querySelectorAll('[data-autotest-insert]').forEach(button => button.removeAttribute('data-autotest-insert'));
+        const point = window.pageBuilder.ui.insertPoints.filter(point => point.type === args.type && point.parent.matches(args.parent))[args.index];
+        point.button.attr('data-autotest-insert', 'true');
+        point.button[0].focus();
+    }, {type, parent, index});
+    I.click('[data-autotest-insert]');
+    I.waitForVisible('.pb-library--'+type, 10);
+}
+
+Scenario('workbench insertion expands without scrolling away from the first section', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    for (const reducedMotion of ['no-preference', 'reduce']) {
+        await I.usePlaywrightTo('set the motion preference', async ({page}) => page.emulateMedia({reducedMotion}));
+        I.executeScript(() => {
+            window.scrollTo(0,0);
+            document.querySelector('.pb-workbench [data-pb-action=insert]').addEventListener('click', () => {
+                window.pbInsertionSamples=[];
+                function sample() {
+                    const ui=window.pageBuilder.ui;
+                    const point=ui.insertPoints.find(point=>point.type==='section');
+                    window.pbInsertionSamples.push({scroll:window.scrollY,height:point.space[0].getBoundingClientRect().height});
+                    if (ui.insertAnimations.some(animation=>animation.playState==='running')) requestAnimationFrame(sample);
+                }
+                requestAnimationFrame(sample);
+            }, {once:true});
+        });
+        I.click('.pb-workbench [data-pb-action=insert]');
+        await I.usePlaywrightTo('wait for insertion expansion', async ({page}) => {
+            const frame=await getPageBuilderFrame(page);
+            await frame.waitForFunction(() => window.pbInsertionSamples?.length>0 && window.pageBuilder.ui.insertAnimations.every(animation=>animation.playState==='finished'));
+        });
+        const state=await I.executeScript(() => {
+            const ui=window.pageBuilder.ui, point=ui.insertPoints.find(point=>point.type==='section');
+            return {samples:window.pbInsertionSamples, firstTop:point.button[0].getBoundingClientRect().top, toolbarBottom:ui.bar[0].getBoundingClientRect().bottom};
+        });
+        assert.ok(state.samples.every(sample=>sample.scroll<=1),'Opening insertion mode at the top must never scroll the first destination out of view');
+        assert.ok(state.firstTop>=state.toolbarBottom,'The first section destination must be visible without scrolling back up');
+        if (reducedMotion==='no-preference') assert.ok(state.samples.some(sample=>sample.height>0 && sample.height<48),'Visible gaps must expand gradually');
+        else assert.ok(state.samples.every(sample=>sample.height===48),'Reduced motion must show the completed layout immediately');
+        I.click('.pb-workbench [data-pb-action=insert]');
+        I.dontSeeElement('.pb-insert-space');
+    }
+    await I.usePlaywrightTo('restore the motion preference', async ({page}) => page.emulateMedia({reducedMotion:'no-preference'}));
+    const scrolled = await I.executeScript(() => {
+        window.scrollTo({top:window.innerHeight,behavior:'instant'});
+        const ui=window.pageBuilder.ui, top=ui.bar[0].getBoundingClientRect().bottom;
+        window.pbScrollAnchor=window.pageBuilder.$wrapper.find('.pb-column:visible').get().find(element=>element.getBoundingClientRect().bottom>top);
+        return window.pbScrollAnchor.getBoundingClientRect().top-top;
+    });
+    I.click('.pb-workbench [data-pb-action=insert]');
+    await I.usePlaywrightTo('wait for expansion after scrolling without changing selection', async ({page}) => {
+        const frame=await getPageBuilderFrame(page);
+        await frame.waitForFunction(() => window.pageBuilder.ui.insertAnimations.every(animation=>animation.playState==='finished'));
+    });
+    const afterScroll=await I.executeScript(() => window.pbScrollAnchor.getBoundingClientRect().top-window.pageBuilder.ui.bar[0].getBoundingClientRect().bottom);
+    assert.ok(Math.abs(afterScroll-scrolled)<2,'Offscreen gaps must preserve the visible content even when the selected column is elsewhere: '+scrolled+' -> '+afterScroll);
+    I.pressKey('Escape');
+    I.switchTo();
+    DTE.cancel();
+});
+
+Scenario('workbench insertion destinations, cancellation and clean geometry', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    const before = await workbenchGeometry(I);
+    const html = await I.executeScript(() => window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data);
+    I.click('.pb-workbench [data-pb-action=insert]');
+    I.waitForVisible('.pb-insert-hint', 10);
+    I.dontSeeElement('.pb-outline:not([hidden])');
+    const state = await I.executeScript(() => {
+        const pb = window.pageBuilder, points = pb.ui.insertPoints;
+        return {
+            sections: points.filter(point => point.type === 'section').length,
+            expectedSections: pb.$wrapper.children('.pb-section:visible').length+1,
+            containers: points.filter(point => point.type === 'container' && point.parent.matches('section.pb-workbench-autotest')).length,
+            columns: points.filter(point => point.type === 'column' && point.parent.closest('section.pb-workbench-autotest')).length,
+            editorSpacers: document.querySelectorAll('[data-ckeditor-instance] .pb-insert-space').length,
+            html: window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data
+        };
+    });
+    assert.equal(state.sections, state.expectedSections, 'Every section boundary must have exactly one destination');
+    assert.equal(state.containers, 2, 'A single container must have two destinations');
+    assert.equal(state.columns, 3, 'Two columns must have three destinations');
+    assert.equal(state.editorSpacers, 0, 'Insertion helpers must stay outside CKEditor regions');
+    assert.equal(state.html, html, 'Saving in insertion mode must not persist any helpers or labels');
+    const during = await workbenchGeometry(I);
+    assert.deepStrictEqual(during.map(item => [item.left,item.width,item.height,item.lines]), before.map(item => [item.left,item.width,item.height,item.lines]), 'Insertion mode must preserve column widths and text wrapping');
+    await chooseWorkbenchInsertion(I, 'column', workbenchFixture+' .row', 1);
+    I.seeElement('.pb-insert-context');
+    I.pressKey('Escape');
+    I.waitForInvisible('.pb-library', 10);
+    I.seeElement('.pb-insert-layer:not([hidden])');
+    const returned = await I.executeScript(() => document.activeElement.matches('[data-autotest-insert]'));
+    assert.equal(returned, true, 'Cancelling the library must return focus to the chosen destination');
+    I.pressKey('Escape');
+    I.waitForInvisible('.pb-insert-layer', 10);
+    I.dontSeeElement('.pb-insert-space');
+    assert.deepStrictEqual(await workbenchGeometry(I), before, 'Leaving insertion mode must restore the original geometry');
+    I.switchTo();
+    DTE.cancel();
+});
+
+Scenario('workbench inserts sections containers and columns through the library', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    for (const target of [
+        {type:'column', parent:workbenchFixture+' .row', index:1},
+        {type:'container', parent:workbenchFixture, index:0},
+        {type:'section', parent:'#wjInline-docdata', index:1}
+    ]) {
+        I.click('.pb-workbench [data-pb-action=insert]');
+        await chooseWorkbenchInsertion(I, target.type, target.parent, target.index);
+        const position = await I.executeScript(() => {
+            const point = window.pageBuilder.ui.insertPending;
+            window.pbAutotestInsertPoint = point;
+            return Array.from(point.parent.children).filter(node=>node.matches('.pb-'+point.type)).length;
+        });
+        I.click('.pb-library .library-tab-link[data-library-type=basic]');
+        I.click(locate('.pb-library .library-tab-item--basic .library-template-block--'+target.type+' .library-tab-item-button').first());
+        I.waitForInvisible('.pb-library', 10);
+        I.waitForInvisible('.pb-insert-layer', 10);
+        await I.usePlaywrightTo('wait for the inserted block editor and shared toolbar', async ({page}) => {
+            const frame = await getPageBuilderFrame(page);
+            await frame.waitForFunction(() => {
+                const selected=window.pageBuilder.ui.selected;
+                const field=selected?.querySelector('[data-ckeditor-instance]');
+                const editor=field && CKEDITOR.instances[field.dataset.ckeditorInstance];
+                return editor?.status==='ready' && editor.focusManager.hasFocus && document.querySelector('#wjInlineCkEditorToolbarOffsetElement').getBoundingClientRect().height>0;
+            });
+        });
+        const result = await I.executeScript(() => {
+            const pb=window.pageBuilder, point=window.pbAutotestInsertPoint;
+            const siblings=Array.from(point.parent.children).filter(node=>node.matches('.pb-'+point.type));
+            const selected=pb.ui.selected;
+            const at=siblings.indexOf(selected);
+            return {count:siblings.length, correctPosition:point.next ? siblings[at+1]===point.next : siblings[at-1]===point.previous,
+                html:window.getSaveData().editable.find(item=>item.wjAppField==='doc_data').data};
+        });
+        assert.equal(result.count, position+1, 'The library must insert exactly one block of the requested type');
+        assert.equal(result.correctPosition, true, 'The new block must appear at the chosen sibling boundary');
+        assert.ok(!/pb-insert-(space|point|context)|pb-is-inserting/.test(result.html), 'Inserted HTML must contain no transient UI');
+    }
+    I.switchTo();
+    DTE.cancel();
+});
+
+Scenario('workbench insertion in narrow gutters and wrapped columns', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    await I.executeScript(() => {
+        document.querySelectorAll('section.pb-workbench-autotest .pb-column').forEach(column => column.style.padding='0');
+    });
+    I.click('.pb-workbench [data-pb-action=insert]');
+    const gutter = await I.executeScript(() => {
+        const point=window.pageBuilder.ui.insertPoints.find(point=>point.type==='column' && point.next && point.previous && point.parent.closest('section.pb-workbench-autotest'));
+        return {hasLane:!!point.header, top:point.button[0].getBoundingClientRect().bottom, contentTop:point.next.getBoundingClientRect().top};
+    });
+    assert.equal(gutter.hasLane,true,'A narrow gutter must get an insertion lane above its content');
+    assert.ok(gutter.top<=gutter.contentTop,'The insertion button must not overlap column text');
+    I.executeScript(() => window.scrollTo(0,0));
+    await I.usePlaywrightTo('capture desktop insertion destinations', async ({page}) => {
+        const frame=await getPageBuilderFrame(page);
+        await frame.waitForFunction(() => {
+            const pb=window.pageBuilder;
+            const first=pb.ui.insertPoints.find(point=>point.type==='section');
+            return first.button[0].getBoundingClientRect().top>=pb.ui.bar[0].getBoundingClientRect().bottom;
+        });
+        await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path:'../../../build/test/pagebuilder-insertion-desktop.png'});
+    });
+    const edges = await I.executeScript(() => window.pageBuilder.ui.insertPoints
+        .filter(point=>point.type==='column' && point.parent.closest('section.pb-workbench-autotest') && (!point.next || !point.previous))
+        .every(point=>point.next ? point.button[0].getBoundingClientRect().right<=point.next.getBoundingClientRect().left :
+            point.button[0].getBoundingClientRect().left>=point.previous.getBoundingClientRect().right));
+    assert.equal(edges,true,'Edge destinations must not cover text in columns without padding');
+    I.switchTo();
+    I.executeScript(() => window.pbSetWindowSize('phone'));
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    await I.usePlaywrightTo('wait for wrapped insertion destinations', async ({page}) => {
+        const frame=await getPageBuilderFrame(page);
+        await frame.waitForFunction(() => window.innerWidth<768 && window.pageBuilder.ui.insertPoints.some(point=>
+            point.type==='column' && point.next && point.previous && point.parent.closest('section.pb-workbench-autotest') && point.space));
+    });
+    const wrapped = await I.executeScript(() => {
+        const points=window.pageBuilder.ui.insertPoints.filter(point=>point.type==='column' && point.parent.closest('section.pb-workbench-autotest'));
+        const middle=points.find(point=>point.next&&point.previous);
+        const rect=middle.button[0].getBoundingClientRect();
+        return {count:points.length, before:middle.previous.getBoundingClientRect().bottom, after:middle.next.getBoundingClientRect().top, top:rect.top,bottom:rect.bottom};
+    });
+    assert.equal(wrapped.count,3,'Wrapping must not duplicate sibling boundaries');
+    assert.ok(wrapped.top>=wrapped.before && wrapped.bottom<=wrapped.after,'A wrapped boundary must sit in the gap between the columns');
+    await I.usePlaywrightTo('capture mobile insertion destinations', async ({page}) => {
+        await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path:'../../../build/test/pagebuilder-insertion-mobile.png'});
+    });
+    await chooseWorkbenchInsertion(I,'column',workbenchFixture+' .row',1);
+    I.click('.pb-library__footer__button');
+    I.waitForInvisible('.pb-library',10);
+    I.click(workbenchFixture+' .pb-workbench-copy');
+    I.waitForInvisible('.pb-insert-layer',10);
+    I.dontSeeElement('.pb-insert-space');
+    I.switchTo();
+    DTE.cancel();
+});
+
 Scenario('workbench outline modes, offsets and remembered preference', async ({I, DTE, Document}) => {
     await openWorkbenchFixture(I, DTE, Document);
     const button = '.pb-workbench [data-pb-action=guides]';

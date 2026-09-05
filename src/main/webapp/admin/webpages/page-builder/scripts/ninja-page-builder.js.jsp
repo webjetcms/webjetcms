@@ -74,7 +74,7 @@
         create_workbench: function() {
             var me = this, prefix = me.options.prefix;
             me.ui = {
-                selected: null, hovered: null, quiet: false, guideMode: 'selected', frame: null,
+                selected: null, hovered: null, quiet: false, guideMode: 'selected', frame: null, inserting: false, insertPoints: [],
                 treeDirty: true, expanded: new WeakSet(), treeNodes: new Map(), bookmarks: null,
                 labels: {
                     structure: "<iwcm:text key='pagebuilder.ui.structure'/>",
@@ -100,7 +100,12 @@
                     before: "<iwcm:text key='pagebuilder.ui.before'/>",
                     after: "<iwcm:text key='pagebuilder.ui.after'/>",
                     close: "<iwcm:text key='button.close'/>",
-                    add: "<iwcm:text key='pagebuilder.toolbar.add_section'/>"
+                    insert: "<iwcm:text key='pagebuilder.toolbar.add_block'/>",
+                    insertHint: "<iwcm:text key='pagebuilder.ui.insert.hint'/>",
+                    insertEnd: "<iwcm:text key='pagebuilder.ui.insert.end'/>",
+                    insertStart: "<iwcm:text key='pagebuilder.ui.insert.start'/>",
+                    insertAfter: "<iwcm:text key='pagebuilder.ui.insert.after'/>",
+                    insertBefore: "<iwcm:text key='pagebuilder.ui.insert.before'/>"
                 }
             };
             var ui = me.ui;
@@ -110,6 +115,10 @@
             ui.actions = $('<div>', { 'class': prefix+'-workbench-actions' }).appendTo(ui.bar);
             ui.bar.append(me.workbench_button('guides', ui.labels.guides.selected, 'eye'));
             ui.menu = $('<div>', { 'class': prefix+'-workbench-menu', hidden: true }).appendTo(ui.bar);
+            ui.insertHint = $('<div>', { 'class': prefix+'-insert-hint', hidden: true }).append(
+                $('<span>').text(ui.labels.insertHint), me.workbench_button('end-insert', ui.labels.insertEnd, 'close')
+            ).appendTo(ui.bar);
+            ui.insertLayer = $('<div>', { 'class': prefix+'-insert-layer', hidden: true, 'aria-label': ui.labels.insert }).appendTo(document.body);
             ui.layer = $('<div>', { 'class': prefix+'-outline-layer', 'aria-hidden': 'true' }).appendTo(document.body);
             ui.outline = $('<div>', { 'class': prefix+'-outline', hidden: true }).appendTo(ui.layer);
             ui.outlines = ui.outline;
@@ -163,7 +172,10 @@
             me.$wrapper.on('click.workbench focusin.workbench', function(e) {
                 if (ui.restoringFocus || me.workbench_busy() || $(e.target).closest('aside, '+me.tagc.modal+', '+me.tagc.library+', '+me.tagc.notify).length) return;
                 var element = me.workbench_target(e.target);
-                if (element) me.select_workbench_element(element);
+                if (element) {
+                    if (ui.inserting) me.set_workbench_insertion(false, element);
+                    me.select_workbench_element(element);
+                }
             }).on('pointermove.workbench', function(e) {
                 ui.quiet = false;
                 if (me.$wrapper.hasClass(me.state.is_moving_child)) {
@@ -204,9 +216,14 @@
                     ui.actions.find('[data-pb-action=more]').attr('aria-expanded', 'false').trigger('focus');
                 } else if (me.$wrapper.hasClass(me.state.is_modal_open)) {
                     me.close_modal();
+                } else if (ui.inserting && me.$wrapper.hasClass(me.state.is_library_active)) {
+                    me.hide_library();
                 } else if (me.workbench_busy()) {
                     me.disable_after_esc_pressed(true);
                     me.restore_workbench_focus();
+                } else if (ui.inserting) {
+                    me.set_workbench_insertion(false);
+                    ui.bar.find('[data-pb-action=insert]').trigger('focus');
                 } else if (!ui.drawer.prop('hidden')) {
                     me.toggle_workbench_structure(false);
                     ui.bar.find('[data-pb-action=structure]').trigger('focus');
@@ -333,9 +350,9 @@
             ui.path.empty();
             ui.actions.empty();
             ui.menu.empty().prop('hidden', true);
+            ui.actions.append(me.workbench_button('insert', ui.labels.insert, 'plus').attr('aria-pressed', String(ui.inserting)));
             if (!ui.selected) {
                 $('<span>').text(ui.labels.select).appendTo(ui.path);
-                ui.actions.append(me.workbench_button('add-section', ui.labels.add, 'plus'));
                 return;
             }
             var ancestors = node.parentsUntil(me.$wrapper, me.tagc._grid_element).get().reverse().concat(ui.selected);
@@ -404,6 +421,13 @@
         workbench_action: function(action, invoker) {
             var me = this, ui = me.ui, node = $(ui.selected);
             ui.quiet = false;
+            if (action === 'insert' || action === 'end-insert') {
+                if (me.workbench_busy()) return;
+                me.set_workbench_insertion(action === 'insert' && !ui.inserting);
+                ui.bar.find('[data-pb-action=insert]').trigger('focus');
+                return;
+            }
+            if (ui.inserting) return;
             if (action === 'ancestors') {
                 ui.path.toggleClass('is-expanded');
                 $(invoker).attr('aria-expanded', String(ui.path.hasClass('is-expanded')));
@@ -430,9 +454,7 @@
             me.toggle_workbench_structure(false);
             ui.menu.prop('hidden', true);
             ui.actions.find('[data-pb-action=more]').attr('aria-expanded', 'false');
-            if (action === 'add-section') {
-                me.$wrapper.find(me.tagc.empty_placeholder_wrapper+' '+me.tagc.empty_placeholder_button).first().trigger('click');
-            } else if (['before', 'after'].includes(action)) {
+            if (['before', 'after'].includes(action)) {
                 node.children(action === 'before' ? me.tagc.prepend : me.tagc.append).trigger('click');
             } else if (['duplicate-adjacent', 'previous', 'next'].includes(action)) {
                 var target = action === 'duplicate-adjacent' ? node[0] : me.workbench_sibling(action);
@@ -460,6 +482,200 @@
             this.refresh_workbench_selection();
             var button = ui.bar.find('[data-pb-action="'+ui.returnAction+'"]:visible');
             (button.length ? button : ui.bar.find('[data-pb-action=more]')).first().trigger('focus');
+        },
+
+        /** Opens a temporary insertion mode without changing authored column widths or saved outline preferences. */
+        set_workbench_insertion: function(open, anchor) {
+            var me = this, ui = me.ui;
+            if (!anchor) {
+                var viewportTop = ui.bar[0].getBoundingClientRect().bottom;
+                anchor = me.$wrapper.find(me.tagc.column+':visible').get().find(element => element.getBoundingClientRect().bottom > viewportTop) || ui.selected;
+            }
+            var top = anchor ? anchor.getBoundingClientRect().top : 0;
+            var scroll = { x: window.scrollX, y: window.scrollY };
+            me.clear_workbench_insertion();
+            ui.inserting = open;
+            document.documentElement.classList.toggle('pb-insertion-open', open);
+            me.$wrapper.toggleClass(me.options.prefix+'-is-inserting', open);
+            ui.insertHint.prop('hidden', !open);
+            ui.insertLayer.prop('hidden', !open);
+            me.toggle_workbench_structure(false);
+            me.refresh_workbench_selection();
+            if (open) {
+                me.build_workbench_insertion();
+                me.animate_workbench_insertion(anchor, top, scroll);
+            }
+            me.schedule_workbench();
+            if (!open && anchor && anchor.isConnected) window.scrollBy({ top: anchor.getBoundingClientRect().top - top, behavior: 'instant' });
+        },
+
+        clear_workbench_insertion: function() {
+            (this.ui.insertAnimations || []).forEach(animation => animation.cancel());
+            this.ui.insertAnimations = [];
+            this.$wrapper.find('aside.'+this.options.prefix+'-insert-space').remove();
+            this.ui.insertLayer.empty();
+            this.ui.insertPoints = [];
+        },
+
+        /** Expands visible gaps in place; only gaps above the viewport need scroll compensation. */
+        animate_workbench_insertion: function(anchor, top, scroll) {
+            var me = this, ui = me.ui;
+            var spaces = me.$wrapper.find('aside.'+me.options.prefix+'-insert-space').get();
+            var elements = spaces.concat(ui.insertHint[0]);
+            var heights = elements.map(element => element.getBoundingClientRect().height);
+            ui.insertAnimations = elements.map(function(element, index) {
+                var animation = element.animate([{ height: '0px' }, { height: heights[index]+'px' }], { duration: 220, easing: 'ease-out' });
+                animation.pause();
+                return animation;
+            });
+            var viewportTop = ui.bar[0].getBoundingClientRect().bottom;
+            // Measure with collapsed gaps before expanding any offscreen gaps.
+            var above = spaces.map(element => element.getBoundingClientRect().bottom < viewportTop);
+            above.forEach(function(offscreen, index) { if (offscreen) ui.insertAnimations[index].finish(); });
+            var offset = scroll.y > 1 && anchor && anchor.isConnected ? anchor.getBoundingClientRect().top - top : 0;
+            window.scrollTo({ left: scroll.x, top: scroll.y + offset, behavior: 'instant' });
+            ui.insertAnimations.push(ui.insertLayer[0].animate([{ opacity: 0 }, { opacity: 1 }], { duration: 140, delay: 80, fill: 'backwards' }));
+            var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            ui.insertAnimations.forEach(function(animation) {
+                if (reducedMotion) animation.finish();
+                else if (animation.playState !== 'finished') animation.play();
+            });
+        },
+
+        /** Makes one destination per sibling boundary, backed by the existing library insertion controller. */
+        build_workbench_insertion: function() {
+            var me = this, ui = me.ui, prefix = me.options.prefix, groups = [];
+            function group(parent, type) {
+                if (groups.some(item => item.parent === parent && item.type === type)) return;
+                groups.push({ parent: parent, type: type });
+            }
+            group(me.$wrapper[0], 'section');
+            me.$wrapper.find(me.tagc.section+', '+me.tagc.container+', '+me.tagc.column+', '+me.tagc.row).filter(':visible').each(function() {
+                if ($(this).closest('[data-ckeditor-instance]').length || $(this).hasClass(me.tag.duplicable)) return;
+                var type = me.workbench_type(this);
+                if (type === 'container' || type === 'column') group(this.parentElement, type);
+                if (type === 'section' && !$(this).find(me.tagc.container).length) group(this, 'container');
+                if (type === 'row' && !$(this).children(me.tagc.column).length) group(this, 'column');
+            });
+            groups.forEach(function(item) {
+                var nodes = $(item.parent).children(me.tagc[item.type]).filter(':visible').get();
+                var points = [];
+                for (var i = 0; i <= nodes.length; i++) {
+                    var next = nodes[i], previous = nodes[i-1];
+                    var source = next ? $(next).children(me.tagc.prepend) : previous ? $(previous).children(me.tagc.append) :
+                        $(item.parent).children(me.tagc.empty_placeholder).find(me.tagc.empty_placeholder_button);
+                    if (!nodes.length && item.type === 'section') source = me.$wrapper.find(me.tagc.empty_placeholder_wrapper+' '+me.tagc.empty_placeholder_button);
+                    if (!source.length) continue;
+                    var position = next ? ui.labels.insertBefore+' “'+me.workbench_name(next)+'”' :
+                        previous ? ui.labels.insertAfter+' “'+me.workbench_name(previous)+'”' : ui.labels.insertStart;
+                    var context = item.parent === me.$wrapper[0] ? ui.labels.section : me.workbench_name(item.parent);
+                    var label = ui.labels[item.type]+' · '+context+' · '+position;
+                    var point = { type: item.type, parent: item.parent, next: next, previous: previous, source: source.first(), label: label };
+                    point.element = $('<div>', { 'class': prefix+'-insert-point', 'data-type': item.type }).appendTo(ui.insertLayer);
+                    point.button = me.workbench_button('insert-here', label, 'plus').appendTo(point.element);
+                    point.button.children('span').text(ui.labels[item.type]);
+                    point.button.on('click', function(point) { return function() { me.open_workbench_insertion(point); }; }(point));
+                    point.button.on('focus', function(point) { return function() {
+                        var rect = point.element[0].getBoundingClientRect(), top = ui.bar[0].getBoundingClientRect().bottom;
+                        if (rect.top < top || rect.bottom > window.innerHeight) {
+                            var anchor = point.space || point.header || $(point.next || point.previous || point.parent);
+                            window.scrollBy(0, anchor[0].getBoundingClientRect().top - top - 60);
+                            me.position_workbench_insertion(top);
+                        }
+                    }; }(point));
+                    points.push(point);
+                    ui.insertPoints.push(point);
+                    if (item.type !== 'column' || !nodes.length) me.create_workbench_insert_space(point);
+                }
+                if (item.type === 'column' && nodes.length) me.prepare_workbench_column_points(points, nodes);
+            });
+            // Keep keyboard order aligned with the authored document, including nested destinations.
+            ui.insertPoints.sort(function(a, b) {
+                var first = (a.space || a.source)[0], second = (b.space || b.source)[0];
+                return first === second ? 0 : first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+            }).forEach(point => ui.insertLayer.append(point.element));
+            ui.insertWidth = window.innerWidth;
+        },
+
+        create_workbench_insert_space: function(point) {
+            var space = $('<aside>', { 'class': this.options.prefix+'-insert-space', 'aria-hidden': 'true', contenteditable: 'false' });
+            if (point.next) space.insertBefore(point.next);
+            else if (point.previous) space.insertAfter(point.previous);
+            else space.prependTo(point.parent);
+            point.space = space;
+            point.element.addClass('is-horizontal');
+            return space;
+        },
+
+        /** Places wrapped boundaries between visual rows and reserves a lane when a gutter is too narrow. */
+        prepare_workbench_column_points: function(points, nodes) {
+            var me = this, rows = [], minGap = window.matchMedia('(pointer: coarse)').matches ? 44 : 32;
+            nodes.forEach(function(node) {
+                var rect = node.getBoundingClientRect(), row = rows[rows.length-1];
+                if (!row || rect.top >= row.bottom - 1) rows.push(row = { nodes: [], bottom: rect.bottom, lanes: [] });
+                row.nodes.push(node);
+                row.bottom = Math.max(row.bottom, rect.bottom);
+            });
+            points.forEach(function(point) {
+                var row = rows.find(row => row.nodes.includes(point.next || point.previous));
+                if ((point.next && point.previous && !row.nodes.includes(point.previous)) ||
+                    (window.innerWidth < 768 && rows.length === nodes.length && (!point.next || !point.previous))) {
+                    me.create_workbench_insert_space(point);
+                    return;
+                }
+                var next = point.next && point.next.getBoundingClientRect(), previous = point.previous && point.previous.getBoundingClientRect();
+                var left = previous ? previous.right - parseFloat(getComputedStyle(point.previous).paddingRight) : 0;
+                var right = next ? next.left + parseFloat(getComputedStyle(point.next).paddingLeft) : window.innerWidth;
+                if (right-left >= minGap) return;
+                if (!row.header) {
+                    row.header = $('<aside>', { 'class': me.options.prefix+'-insert-space', 'aria-hidden': 'true', contenteditable: 'false' }).insertBefore(row.nodes[0]);
+                }
+                var x = Math.max(24, Math.min(window.innerWidth-24, next ? next.left : previous.right));
+                var lane = row.lanes.findIndex(positions => positions.every(position => Math.abs(position-x) >= 48));
+                if (lane < 0) { lane = row.lanes.length; row.lanes.push([]); }
+                row.lanes[lane].push(x);
+                row.header.css('height', row.lanes.length*48);
+                point.header = row.header;
+                point.lane = lane;
+            });
+        },
+
+        position_workbench_insertion: function(top) {
+            var me = this, ui = me.ui;
+            ui.insertLayer.css('top', top).prop('hidden', !ui.inserting || me.workbench_busy() || document.body.classList.contains('is-view-mode'));
+            if (!ui.inserting) return;
+            if (ui.insertWidth !== window.innerWidth && !me.workbench_busy()) {
+                me.clear_workbench_insertion();
+                me.build_workbench_insertion();
+            }
+            ui.insertPoints.forEach(function(point) {
+                var anchor = point.next || point.previous || point.parent;
+                point.element.prop('hidden', !anchor.isConnected || !$(anchor).is(':visible'));
+                if (!anchor.isConnected) return;
+                if (point.space) {
+                    var rect = point.space[0].getBoundingClientRect();
+                    point.element.css({ left: Math.max(8, rect.left), top: rect.top-top, width: Math.min(window.innerWidth-8, rect.right)-Math.max(8, rect.left), height: rect.height });
+                } else {
+                    var rect = anchor.getBoundingClientRect();
+                    var x = point.next ? rect.left : rect.right;
+                    if (point.next && point.previous) x = (point.previous.getBoundingClientRect().right+rect.left)/2;
+                    var radius = window.matchMedia('(pointer: coarse)').matches ? 22 : 16;
+                    if (!point.header && !point.previous) x -= radius - parseFloat(getComputedStyle(anchor).paddingLeft)/2;
+                    if (!point.header && !point.next) x += radius - parseFloat(getComputedStyle(anchor).paddingRight)/2;
+                    var y = point.header ? point.header[0].getBoundingClientRect().top+24+point.lane*48 : rect.top+Math.min(40, rect.height/2);
+                    point.element.css({ left: Math.max(radius, Math.min(window.innerWidth-radius, x)), top: y-top });
+                }
+            });
+        },
+
+        open_workbench_insertion: function(point) {
+            var ui = this.ui;
+            if (!ui.inserting || this.workbench_busy() || !point.source[0].isConnected) return;
+            ui.insertPending = point;
+            ui.insertScroll = { x: window.scrollX, y: window.scrollY };
+            this.show_library_tab(point.source);
+            $('<div>', { 'class': this.options.prefix+'-insert-context' }).text(point.label).appendTo($(this.tagc.library_header));
+            this.schedule_workbench();
         },
 
         toggle_workbench_structure: function(open) {
@@ -581,7 +797,7 @@
                 var moving = me.$wrapper.hasClass(me.state.is_moving_child);
                 var element = (moving ? ui.hovered : ui.selected) || ui.hovered;
                 var obstructed = me.$wrapper.hasClass(me.state.is_modal_open) || me.$wrapper.hasClass(me.state.is_library_active);
-                var visible = element && element.isConnected && $(element).is(':visible') && ui.guideMode !== 'hidden' && !obstructed && !document.body.classList.contains('is-view-mode');
+                var visible = element && element.isConnected && $(element).is(':visible') && ui.guideMode !== 'hidden' && !ui.inserting && !obstructed && !document.body.classList.contains('is-view-mode');
                 var elements = visible ? [element] : [];
                 if (visible && ui.guideMode === 'all') elements = elements.concat($(element).parentsUntil(me.$wrapper, me.tagc._grid_element).get());
                 while (ui.outlines.length < elements.length) {
@@ -605,18 +821,21 @@
                 });
                 if (ui.treeDirty && !ui.drawer.prop('hidden')) me.render_workbench_tree();
                 var busy = me.workbench_busy();
-                ui.path.find('button').prop('disabled', busy);
+                me.position_workbench_insertion(top);
+                ui.path.find('button').prop('disabled', busy || ui.inserting);
                 if (busy) me.toggle_workbench_structure(false);
                 ui.actions.find('button').each(function() {
                     var action = this.getAttribute('data-pb-action');
-                    this.disabled = busy || (['previous', 'next'].includes(action) && !me.workbench_sibling(action));
+                    this.disabled = busy || (ui.inserting && action !== 'insert') || (['previous', 'next'].includes(action) && !me.workbench_sibling(action));
                 });
-                ui.bar.find('[data-pb-action=structure], [data-pb-action=guides]').prop('disabled', busy);
+                ui.bar.find('[data-pb-action=structure], [data-pb-action=guides]').prop('disabled', busy || ui.inserting);
+                ui.bar.find('[data-pb-action=end-insert]').prop('disabled', busy);
                 ui.bar.find('[data-pb-action=resize] span').text(ui.selected ? me.get_actual_column_size($(ui.selected))+' / '+me.options.max_col_size : '');
                 var width = window.innerWidth, size = width < 768 ? 'phone' : width < 1200 ? 'tablet' : 'desktop';
                 $('.exit-inline-editor a[href*="pbSetWindowSize"]').each(function() {
                     $(this).attr('aria-pressed', String(this.getAttribute('href').includes("'"+size+"'")));
                 });
+                if ((ui.insertAnimations || []).some(animation => animation.playState === 'running')) me.schedule_workbench();
             });
         },
 
@@ -626,14 +845,16 @@
             if (ui.frame !== null) window.cancelAnimationFrame(ui.frame);
             ui.resizeObserver.disconnect();
             ui.observer.disconnect();
+            this.clear_workbench_insertion();
+            document.documentElement.classList.remove('pb-insertion-open');
             window.removeEventListener('scroll', ui.layoutHandler, true);
             window.removeEventListener('resize', ui.layoutHandler);
             document.removeEventListener('keydown', ui.escapeHandler, true);
             document.removeEventListener('keyup', ui.escapeUpHandler, true);
             document.removeEventListener('pointerdown', ui.outsideHandler);
             this.$wrapper[0].removeEventListener('load', ui.layoutHandler, true);
-            this.$wrapper.off('.workbench').removeClass(this.options.prefix+'-has-workbench '+this.options.prefix+'-hide-guides');
-            ui.bar.add(ui.drawer).add(ui.layer).remove();
+            this.$wrapper.off('.workbench').removeClass(this.options.prefix+'-has-workbench '+this.options.prefix+'-hide-guides '+this.options.prefix+'-is-inserting');
+            ui.bar.add(ui.drawer).add(ui.layer).add(ui.insertLayer).remove();
             if (ui.oldHostStyle === undefined) ui.toolbarHost.removeAttr('style');
             else ui.toolbarHost.attr('style', ui.oldHostStyle);
             if (ui.oldPlaceholderStyle === undefined) ui.placeholder.removeAttr('style');
@@ -2924,7 +3145,7 @@
                     me.options.onGridChanged();
                 }
 
-                me.hide_library();
+                me.hide_library(insert_content);
 
                 //console.log("kliknutie na pridaj v zakladne, esc simulate");
                 me.disable_after_esc_pressed(true);
@@ -3135,7 +3356,7 @@
                 me.changedElement = $(insert_content);
                 me.options.onGridChanged();
 
-                me.hide_library();
+                me.hide_library(insert_content);
 
                 //console.log("kliknutie na pridaj v library, esc simulate");
                 me.disable_after_esc_pressed(true);
@@ -3357,12 +3578,29 @@
             $(me.$wrapper).addClass(me.state.is_library_active);
             me.set_toolbar_invisible();
             setTimeout(function(){
+                if (!me.$wrapper.hasClass(me.state.is_library_active)) return;
                 $(me.$wrapper).find('.library-tab-item.active .library-filter-input').focus();
                 me.filter_library();
             },100);
         },
-        hide_library: function () {
+        hide_library: function (inserted) {
             $(this.$wrapper).removeClass(this.state.is_library_active);
+            $(this.tagc.library_header).find('.'+this.options.prefix+'-insert-context').remove();
+            var ui = this.ui;
+            if (!ui || !ui.inserting || !ui.insertPending) return;
+            var point = ui.insertPending;
+            ui.insertPending = null;
+            if (inserted && $(inserted)[0] && $(inserted)[0].isConnected) {
+                ui.bookmarks = null;
+                this.set_workbench_insertion(false);
+                this.select_workbench_element($(inserted)[0], true);
+                this.focus_ckeditor_element($(inserted)[0]);
+            } else {
+                window.scrollTo(ui.insertScroll.x, ui.insertScroll.y);
+                this.position_workbench_insertion(ui.bar[0].getBoundingClientRect().bottom);
+                var destination = ui.insertPoints.find(item => item.source[0] === point.source[0]);
+                (destination ? destination.button : ui.bar.find('[data-pb-action=insert]'))[0].focus({ preventScroll: true });
+            }
         },
 
         /**
@@ -4787,6 +5025,7 @@
             $wrapper.find(me.tagc.modal).remove();
             $wrapper.find(me.tagc.library).remove();
             $wrapper.find('.'+me.options.prefix+'-workbench, .'+me.options.prefix+'-outline-layer, .'+me.options.prefix+'-structure').remove();
+            $wrapper.find('aside.'+me.options.prefix+'-insert-space').remove();
 
             if (typeof clone !== 'undefined') {
                 return $wrapper;
@@ -4836,7 +5075,7 @@
                 .removeClass(me.state.is_duplicable_target);
 
             $(wrapper).removeClass(me.tag.wrapper);
-            $(wrapper).removeClass(me.options.prefix+'-has-workbench '+me.options.prefix+'-hide-guides');
+            $(wrapper).removeClass(me.options.prefix+'-has-workbench '+me.options.prefix+'-hide-guides '+me.options.prefix+'-is-inserting');
 
             if (typeof clone !== 'undefined') {
                 return $(wrapper);
