@@ -11,7 +11,10 @@ JavaScript object; derive the narration, shot plan and walkthrough from it.
 
 Read [references/production-reference.md](references/production-reference.md)
 before implementing or changing a video scenario. It contains the exact schema,
-scenario template, recording defaults and validation commands.
+scenario template, recording defaults and validation commands. Use
+[308-pb-redesign.js](../../../src/test/webapp/video/308-pb-redesign.js) as the
+working example of the current architecture; adapt its application-specific
+selectors, fixture and lifecycle callbacks to the feature being demonstrated.
 
 ## 1. Establish the Source and Name
 
@@ -52,16 +55,21 @@ is available; `durationSeconds` remains an editing estimate until adjusted.
 - Declare a top-level `const videoPlan = { ... };` before the scenarios. Its
   initializer is a JavaScript object literal, with `shot` and optional `prepare`
   functions directly inside each automatic shot. Keep metadata literal and
-  static; comments, unquoted keys and trailing commas are allowed. Do not use
-  computed keys, spreads, getters, shorthand references or dynamic expressions.
+  static; comments, unquoted keys and trailing commas are allowed. In metadata,
+  do not use computed keys, spreads, getters, shorthand references or dynamic
+  expressions. Callback bodies contain ordinary JavaScript browser steps.
   The audio preflight reads metadata from the syntax tree and skips callback
   bodies without executing them. Function values belong only in `shot`/`prepare`.
   This is not strict JSON: serializing it with `JSON.stringify` omits callbacks.
-- Use `language: "sk"` and a `shots` array. Each shot has a stable descriptive
-  `id`, `type` (`"auto"` or `"manual"`), positive integer `durationSeconds`,
-  English `title`, localized `text-sk`, and optional production `notes`.
+- Use `language: "sk"` and a non-empty `shots` array. Each shot has a unique,
+  stable lowercase hyphenated `id` (e.g. `text-editing`), `type` (`"auto"` or
+  `"manual"`), positive integer `durationSeconds`, English `title`, localized
+  `text-sk`, and optional production `notes`.
 - `auto` means browser steps are automated; `manual` means footage/cards are
-  supplied during editing. Old `AUTO 1`, `AUTO 2` labels were shot numbers, not
+  supplied during editing. A manual shot produces a warning slate in its plan
+  position instead of browser steps. Give each manual shot concise filming
+  instructions in `notes`; those instructions appear in full on the slate.
+  Old `AUTO 1`, `AUTO 2` labels were shot numbers, not
   different execution types. Never encode position in the type or use an array
   index as the action id.
 - Store one narration beat and matching browser action/state per shot. If an
@@ -103,6 +111,8 @@ shot's title, narration and notes. Add an inline `prepare` with the same context
 argument when that shot needs extra preparation. Manual shots need no callbacks.
 Keep shared selectors and helper functions in the main async scenario and pass
 them through `context`; the runner adds `I` and the current resolved `shot`.
+Top-level callbacks cannot access variables declared inside the main scenario;
+destructure each required dependency from their context argument.
 For example, `shot: async ({ I, services }) => { await I.videoClick(services); }`
 uses `context: { services }` from the main scenario.
 
@@ -112,23 +122,40 @@ or maintain separate callback maps. Pass `I` first and one options object with
 `plan`, optional `context` and `language`, and the lifecycle callbacks needed:
 
 - `setup`: one-time login and shared setup, after automatic callbacks are validated.
-- `prepare`: a shared baseline before every shot; receives the resolved shot.
-- `cleanup`: cleanup after each successful shot; receives the resolved shot.
+- `prepare`: a shared baseline before every automatic shot; receives the resolved shot.
+- `cleanup`: cleanup after each successful automatic shot; receives the resolved shot.
 
-The runner logs `Recording shot <index>/<total> <id> (<duration>s)` and displays
+For automatic shots, the runner logs
+`Recording shot <index>/<total> <id> (<duration>s)` and displays
 a two-second `SETUP shot <index>/<total> <id> (<duration>s)` slate. The index and
-total count only automatic shots in their current recording order. It then awaits shared
-`prepare`, runs `shot.prepare(context)` if present, displays the normal two-second
-shot slate, runs `shot.shot(context)` and awaits cleanup. The normal slate includes
+total count only automatic shots in their current recording order. It then
+awaits shared `prepare`, runs `shot.prepare(context)` if present, displays the
+normal two-second shot slate, runs `shot.shot(context)` and awaits cleanup.
+The normal slate includes
 the derived number/title and first 200 Unicode characters of localized narration.
+That number uses the full plan, including manual shots; the SETUP counter measures
+only automatic recording progress. The runner owns the editing slates: do not repeat
+`I.videoTitle` inside individual `shot` or `prepare` functions.
 Cut everything from the SETUP slate through the normal slate out of the final
 film, along with cleanup. Neither slate contributes to the edited timeline.
 
+For manual shots, the runner logs a warning and calls `I.videoTitle(shot)` at
+their position in the full plan. This shows `WARNING: manual steps | Shot N: title`
+and the complete `notes` for two seconds. Missing notes produce a reminder to
+add filming instructions. The shared `prepare`/`cleanup` and inline callbacks
+are skipped for manual shots; one-time `setup` still runs. Replace this warning
+slate with the required manual footage during editing. Manual narration and
+estimated duration remain in the edited plan and audio; the marker does not
+wait for a person to record the scene or contribute to the edited duration.
+
 A reordered shot must not depend on a prior shot's dialog, selection, search or
 mutation. Reopen/reset the editor with isolated browser-only content when that
-is the simplest reliable baseline. Use ordinary `I.click` during preparation to
-avoid cursor animation and editing holds in footage that will be cut. Discard
-temporary changes during cleanup, including handling native confirmation dialogs.
+is the simplest reliable baseline. Use `I.clickCss` for CSS selectors or ordinary
+`I.click` during preparation to avoid cursor animation and editing holds in
+footage that will be cut. Discard temporary changes during cleanup. When a shot
+uses an iframe, return to the top-level page before closing its editor. Handle
+native confirmation dialogs only if the actual flow displays one; do not add
+unconditional popup acceptance steps to the current Page Builder cleanup.
 
 Await actor steps inside async callbacks so recording order stays deterministic.
 `recordVideoPlan` is an ordinary async module function invoked from a Scenario,
@@ -139,8 +166,10 @@ with another shot.
 Reuse selectors and waits from regression tests. Prefer read-only actions or
 isolated test data. Synchronize with `waitFor*`, URLs, application state and
 `DT.waitForLoader()`, not fixed delays. Presentation holds belong after readiness
-checks. Use `I.videoClick(locator, curveStrength)` for important on-camera
-clicks; the production reference documents cursor defaults and editing holds.
+checks. Keep initial readiness waits in preparation and result assertions after
+the corresponding actions inside `shot`. Use `I.videoClick(locator, curveStrength)`
+for important on-camera clicks; the production reference documents cursor defaults
+and editing holds.
 The video helper renders only one cursor in the top-level page and relays mouse
 events from iframes, including nested frames; never install a second visible
 cursor in the editor. Keep code comments and shot titles in English.
@@ -156,13 +185,15 @@ explicit `{ modelId, voiceId }`, non-empty `ELEVENLABS_MODEL_ID` /
 `I.generateAudio(videoPlan)` joins only the selected `text-<language>` fields,
 including manual shots, in array order and makes one request for the complete
 narration. It never invokes `shot` or `prepare`. It does not generate separate
-MP3s per shot or force speech to match the estimated durations. Run paid generation only when explicitly requested.
+MP3s per shot or force speech to match the estimated durations. Run paid
+generation only when explicitly requested.
 
 Run proportionate checks:
 
 1. Parse changed JavaScript and run `npm run audio:test` and
    `npm run video:test` after infrastructure changes. Verify reordered plans,
-   translation errors, manual-shot narration, callback validation and slates.
+   translation errors, manual-shot narration and warning slates, callback
+   validation, and skipped automatic lifecycle callbacks for manual shots.
    Verify that audio validation and generation do not execute inline callbacks.
 2. Dry-run the audio-only and complete video configurations; neither may call
    ElevenLabs. Check legacy scenarios remain compatible when changing helpers.

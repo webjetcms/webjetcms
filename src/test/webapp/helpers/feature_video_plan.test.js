@@ -20,7 +20,8 @@ test("reordering shots changes narration, timing and automatic callback order to
   const calls = [];
   for (const shot of plan.shots) shot.shot = async () => calls.push(shot.id);
   const recording = getRecordingShots(plan);
-  for (const shot of recording) await shot.shot();
+  assert.deepEqual(recording.map(shot => shot.id), ["preview", "intro", "edit"]);
+  for (const shot of recording.filter(shot => shot.type === "auto")) await shot.shot();
   assert.deepEqual(calls, ["preview", "edit"]);
   assert.deepEqual(resolveVideoPlan(plan).shots.map(shot => [shot.id, shot.number, shot.startSeconds, shot.endSeconds]), [
     ["preview", 1, 0, 15], ["intro", 2, 15, 20], ["edit", 3, 20, 30]
@@ -57,10 +58,11 @@ test("rejects ambiguous metadata and missing actions before recording", () => {
   assert.throws(() => getRecordingShots(plan), /Missing video action.*preview/);
 });
 
-test("records reordered shots through setup, slate, preparation and cleanup without running manual shots", async () => {
+test("records reordered shots and manual warning slates without running manual callbacks", async () => {
   const { recordVideoPlan } = require("./feature_video_plan.js");
   const plan = createPlan();
   plan.shots = [plan.shots[2], plan.shots[0], plan.shots[1]];
+  plan.shots[1].notes = "Film the opening card separately.";
   const events = [];
   const messages = [];
   const callback = name => async shot => {
@@ -69,7 +71,8 @@ test("records reordered shots through setup, slate, preparation and cleanup with
   };
   const I = {
     say: async message => messages.push(message),
-    videoTitle: async shot => events.push(typeof shot === "string" ? shot : `SLATE:${shot.id}`)
+    videoTitle: async shot => events.push(typeof shot === "string" ? shot :
+      shot.type === "manual" ? `MANUAL:${shot.id}:${shot.notes}` : `SLATE:${shot.id}`)
   };
   const helpers = { selector: ".content" };
   const context = { helpers, I: "must not override the actor", shot: "must not override metadata" };
@@ -92,13 +95,35 @@ test("records reordered shots through setup, slate, preparation and cleanup with
   });
   assert.deepEqual(events, [
     "LOGIN", "SETUP shot 1/2 preview (15s)", "BASELINE:preview", "PREPARE:preview", "SLATE:preview", "RUN:preview", "CLEANUP:preview",
+    "MANUAL:intro:Film the opening card separately.",
     "SETUP shot 2/2 edit (10s)", "BASELINE:edit", "SLATE:edit", "RUN:edit", "CLEANUP:edit"
   ]);
   assert.deepEqual(messages.filter(message => message.startsWith("Recording ")), [
     "Recording shot 1/2 preview (15s)",
     "Recording shot 2/2 edit (10s)"
   ], "Progress must count only automatic shots, even with manual shots between them");
+  assert.equal(messages.find(message => message.startsWith("WARNING:")),
+    "WARNING: manual steps | Shot 2/3 [intro]: Intro (5s)\nFilm the opening card separately.");
   assert.equal(context.shot, "must not override metadata", "Recording must not mutate caller context");
+});
+
+test("records a manual-only plan without automatic preparation, actions or cleanup", async () => {
+  const { recordVideoPlan } = require("./feature_video_plan.js");
+  const plan = createPlan();
+  plan.shots = [plan.shots[0]];
+  const unexpected = async () => { throw new Error("Automatic lifecycle must not run for a manual shot"); };
+  plan.shots[0].prepare = unexpected;
+  plan.shots[0].shot = unexpected;
+  const events = [];
+  await recordVideoPlan({
+    say: async message => events.push(message),
+    videoTitle: async shot => events.push(`MANUAL:${shot.id}`)
+  }, { plan, setup: async () => events.push("SETUP"), prepare: unexpected, cleanup: unexpected });
+  assert.equal(events[0], "SETUP");
+  assert.equal(events.at(-1), "MANUAL:intro");
+  assert.ok(events.some(message => message.includes("WARNING: manual steps | Shot 1/1")));
+  assert.ok(events.some(message => message.includes("Add filming instructions to this shot's notes.")));
+  assert.ok(events.every(message => !message.startsWith("Recording ")));
 });
 
 test("validates callbacks before setup and stops recording after a failed shot", async () => {

@@ -91,24 +91,42 @@ editing; increase it up to 2000 milliseconds with
 not application synchronization mechanisms.
 
 `I.videoTitle(shot)` accepts a resolved shot returned by `getRecordingShots`.
-It renders a black full-window slate with the derived shot number/title and the
-first 200 Unicode characters of localized narration in smaller white text. It
-holds for two seconds after painting, then removes itself before the next step.
+For automatic shots, it renders a black full-window slate with the derived shot
+number/title and the first 200 Unicode characters of localized narration in
+smaller white text. For manual shots, the heading is
+`WARNING: manual steps | Shot N: title` and the smaller text contains the full
+filming instructions from `notes`, without the 200-character truncation. Missing
+or blank notes display a reminder to add filming instructions. Keep notes concise
+enough to fit in one frame; they replace the narration excerpt on manual slates.
+Both kinds hold for two seconds after painting, then remove themselves.
 The top-level overlay does not change active iframe context, focus or selection
 and works with cursor rendering disabled. Text is rendered literally, not HTML.
 Legacy `I.videoTitle("Shot 1: description.")` calls remain supported. The shared
 runner also calls `I.videoTitle("SETUP shot <index>/<total> <id> (<duration>s)")` before
 preparation and includes the same progress in `I.say`. Index and total count
-only automatic shots, excluding manual footage. This
-marks the start of footage to discard, up to and including the normal shot slate.
-Use `I.click` for off-camera preparation, keeping animated `I.videoClick` calls
-for the shot itself.
+only automatic shots, excluding manual footage. The normal `Shot <number>` slate
+uses the full plan's numbering, including manual entries, to match the edited
+shot plan. For example, a plan with two manual intro shots and twelve automatic
+shots starts with two manual warnings, then `SETUP shot 1/12 ...` followed by
+`Shot 3: ...`.
+Manual warnings use the full plan number and do not advance the automatic counter.
+The SETUP slate marks footage to discard, up to and including the normal slate.
+The runner inserts all editing slates; individual callbacks must not duplicate them.
+Use `I.clickCss` for CSS selectors or ordinary `I.click` for off-camera
+preparation, keeping animated `I.videoClick` calls for the shot itself.
+
+Every manual shot stays in recording order as a warning, including manual shots
+at the start or end and plans containing only manual shots. One-time `setup`
+still runs, but manual entries skip shared `prepare`, inline `prepare`/`shot`
+and shared `cleanup`. The warning does not pause automation for human input.
+Replace it with separately recorded footage or a card during editing.
 
 Slates are captured editing markers. Cut them and inter-shot preparation/cleanup
-out of the final video. They are excluded from the edited timeline. Place all
-readiness waits and preparation before the slate. Shot durations are estimates
-for the edited voiceover, not application synchronization or automatic audio/video
-alignment.
+out of the final video. They are excluded from the edited timeline. Place
+initial-state preparation and readiness waits before the normal shot slate.
+Keep waits for action results immediately after those actions inside `shot`.
+Shot durations are estimates for the edited voiceover, not application
+synchronization or automatic audio/video alignment.
 
 A completed successful recording is saved atomically as
 `docs/feature-video/<scenario-name>.webm`. A failed run is saved separately as
@@ -166,10 +184,18 @@ are allowed. The audio preflight reads literal values from the syntax tree and
 skips these function bodies without evaluating source code. Do not use getters,
 computed keys, spreads, shorthand references or dynamic metadata expressions.
 Functions are allowed only as each shot's `shot` and `prepare` properties.
-Use stable descriptive ids rather than position-dependent `auto1` names.
+Keep the `shots` array non-empty and ids unique, lowercase and hyphenated,
+for example `text-editing`; do not use position-dependent `auto1` names. These
+literal-data restrictions apply to metadata, not to the browser steps inside
+callback bodies. Static strings can use quotes or template literals without
+interpolation.
 
 The plan is not strict JSON. `JSON.stringify(videoPlan)` omits the callbacks;
 that export retains metadata but cannot reproduce browser steps on its own.
+
+This template demonstrates editing in a DataTable editor. Adapt its selectors,
+shared preparation and cleanup to the feature; features without an editor do
+not need DTE callbacks. Keep the same plan/runner structure.
 
 ```javascript
 Feature("video.<scenario-name>");
@@ -192,13 +218,15 @@ const videoPlan = {
             "title": "Edit content directly",
             "text-sk": "<Slovak narration matching these actions>",
             prepare: async ({ I, selector }) => {
-                await I.waitForVisible(selector, 20);
+                await I.clickCss(selector);
+                await I.waitForVisible("<shot-ready-state>", 20);
             },
-            shot: async ({ I, DT, selector }) => {
+            shot: async ({ I, selector, typeText }) => {
                 await I.videoClick(selector);
-                await I.waitForElement("<result-state>", 20);
-                DT.waitForLoader();
-                await I.waitForVisible("<stable-result>", 20);
+                await I.pressKey("End");
+                await typeText(" <demo text>");
+                await I.waitForText("<demo text>", 20, selector);
+                await I.wait(3); // Presentation hold after the result assertion.
             }
         }
     ]
@@ -213,20 +241,27 @@ Scenario("Shot plan", ({ I }) => {
     I.say(formatShotPlan(videoPlan));
 });
 
-Scenario("<scenario-name>", async ({ I, DT, login }) => {
+Scenario("<scenario-name>", async ({ I, DTE, login }) => {
     const { recordVideoPlan } = require("../helpers/feature_video_plan.js");
-    const selector = "<stable-selector>";
+    const selector = "<editable-content-selector>";
+    const typeText = text => I.usePlaywrightTo("type the demonstration text", async ({ page }) => {
+        await page.keyboard.type(text, { delay: 70 });
+    });
     await recordVideoPlan(I, {
         plan: videoPlan,
-        context: { DT, selector },
+        context: { selector, typeText },
         setup: async () => { login("admin"); },
         prepare: async () => {
-            await I.amOnPage("<admin-url>");
-            await I.waitForElement("<initial-state>", 20);
-            DT.waitForLoader();
-            await I.waitForVisible("<stable-initial-state>", 20);
+            await I.amOnPage("<editor-url>");
+            DTE.waitForEditor();
+            // Restore isolated content and enter the content iframe here if needed.
+            await I.waitForVisible(selector, 20);
+        },
+        cleanup: async () => {
+            await I.switchTo();
+            DTE.cancel();
+            await I.waitForInvisible("div.DTED.show", 10);
         }
-        // Add cleanup when this walkthrough needs to discard temporary changes.
     });
 }).tag("@video");
 ```
@@ -235,18 +270,22 @@ Scenario("<scenario-name>", async ({ I, DT, login }) => {
 `durationSeconds`, titles and selected localized text. It derives `number`,
 `startSeconds`, `endSeconds` and `narration` without mutating the editable plan.
 `formatShotPlan` includes manual footage, production notes and narration.
-`getRecordingShots(plan, language)` filters out manual shots and validates each
-automatic `shot` function and optional `prepare` function before recording.
-`recordVideoPlan(I, options)` uses that validation before its one-time `setup`,
-then sequences logging, the SETUP slate, shared `prepare`, optional inline
-`shot.prepare(context)`, the normal slate, `shot.shot(context)`, and `cleanup`.
+`getRecordingShots(plan, language)` retains all shots in array order and validates
+each automatic `shot` function and optional `prepare` function before recording.
+Manual shots need no functions. `recordVideoPlan(I, options)` uses that validation
+before its one-time `setup`. For automatic shots it sequences logging, the SETUP
+slate, shared `prepare`, optional inline `shot.prepare(context)`, the normal slate,
+`shot.shot(context)`, and `cleanup`. For manual shots it only logs the warning and
+shows `I.videoTitle(shot)` with the filming instructions.
 
 Pass `I` separately, then one options object with `plan`. Optional `context`
 contains selectors, injected page objects and reusable functions defined in the
-main scenario. Each inline callback receives `{ ...context, I, shot }`; `I` and
-`shot` are supplied by the runner and cannot be overridden by context values.
-Shared `prepare` and `cleanup` callbacks receive the resolved shot directly;
-`setup` receives no arguments. The `language` option overrides narration for
+main scenario. Top-level inline callbacks cannot close over those local variables;
+destructure the dependencies they use from the context argument. Each inline
+callback receives `{ ...context, I, shot }`; `I` and `shot` are supplied by the
+runner and cannot be overridden by context values.
+Shared `prepare` and `cleanup` callbacks run only for automatic shots and receive
+the resolved shot directly; `setup` receives no arguments. The `language` option overrides narration for
 recording slates. No separate action or preparation maps are needed.
 
 Keep application-specific actions (such as DTE cancellation and discard
@@ -261,6 +300,16 @@ by old timestamps or maintain another ordered callback list. Each callback needs
 independent baseline. The `308-pb-redesign.js` example reopens the editor and
 installs isolated browser-only content per shot, with extra preparation for the
 structure drawer and library. Setup and cleanup are cut out during editing.
+For Page Builder footage, also reuse its iframe-aware `waitForPageBuilder`
+helper: the installed CodeceptJS FrameLocator has no `waitForFunction`, so it
+resolves the Playwright content frame first. The `typeText` helper uses
+`page.keyboard.type` for Slovak characters; `I.type` interprets them as key names
+in this stack. These are feature-specific helpers passed through `context`.
+
+The template's cleanup follows the current example: switch to the top-level
+page, cancel DTE, then wait for the editor to close. Add native popup handling
+only if the actual flow requires confirmation; do not call `I.acceptPopup()`
+unconditionally when no popup is displayed.
 
 `durationSeconds` does not set speech speed, insert silence or make a callback
 last that long. Update estimates after measuring narration. The generator joins
@@ -286,13 +335,21 @@ Scenario("ElevenLabs", ({ I }) => {
 Object-plan audio artifacts have a language suffix so different languages coexist.
 Browser UI language, fixture text and language-dependent locators must be adapted
 separately when producing foreign-language footage. Current npm video commands
-and the Page Builder example target the Slovak UI.
+and the Page Builder example target the Slovak UI: the npm scripts explicitly
+set `CODECEPT_LNG=sk`, so prefixing them with another `CODECEPT_LNG` value does
+not override it. Adapt the recording command/configuration as well as the
+fixture and locators for another UI language.
 
 Use only needed injected objects. Prefer selectors based on IDs, roles or stable
 `data-*` attributes. Add `.tag("@current")` only to the main recording scenario
 for `npm run video:current`. Never tag `Shot plan`; `ElevenLabs` has only `@audio`.
 
 ## Validation Commands
+
+Run these from `src/test/webapp`; choose checks proportionate to the change.
+For skill-only edits, validate the skill metadata and parse/preflight its complete
+scenario template with `validateAudioScenarioSource` from `helpers/audio_runner.js`.
+No new media or paid audio request is needed for an instruction-only review.
 
 ```shell
 node --check helpers/feature_video_paths.js

@@ -60,6 +60,41 @@ test("shows a two-second full-page slate and preserves editing focus inside an i
   }
 });
 
+test("shows full manual filming instructions instead of the narration excerpt", async () => {
+  const previousCodeceptjs = global.codeceptjs;
+  let browser;
+  try {
+    global.codeceptjs = require("codeceptjs");
+    const VideoHelper = require("./video_helper.js");
+    browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage({ viewport: { width: 1360, height: 765 } });
+    const helper = new VideoHelper({});
+    Object.defineProperty(helper, "helpers", { value: { Playwright: { page } } });
+    const notes = "Film the old editor and its floating controls. ".repeat(5) + "\n<em>Keep this final instruction.</em>";
+    for (const instructions of [notes, undefined]) {
+      const showing = helper.videoTitle({
+        type: "manual", number: 2, title: "Before the update", notes: instructions,
+        narration: "Spoken narration must not replace filming instructions."
+      });
+      await Promise.all([showing, (async () => {
+        const slate = page.locator("#wj-video-title-host div").first();
+        await slate.waitFor({ state: "visible" });
+        assert.equal(await slate.locator("div").first().textContent(), "WARNING: manual steps | Shot 2: Before the update");
+        const description = slate.locator("[data-video-instructions]");
+        assert.equal(await description.textContent(), instructions || "Add filming instructions to this shot's notes.");
+        assert.equal(await slate.locator("[data-video-narration], em").count(), 0);
+        const box = await description.boundingBox();
+        assert.ok(box.y >= 0 && box.y + box.height <= 765, "Filming instructions must fit in the frame");
+      })()]);
+      assert.equal(await page.locator("#wj-video-title-host").count(), 0);
+    }
+  } finally {
+    await browser?.close();
+    if (previousCodeceptjs === undefined) delete global.codeceptjs;
+    else global.codeceptjs = previousCodeceptjs;
+  }
+});
+
 test("keeps synthetic cursor points inside the DOM viewport under browser zoom", async () => {
   const previousCodeceptjs = global.codeceptjs;
   let browser;

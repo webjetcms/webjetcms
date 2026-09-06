@@ -67,10 +67,11 @@ function formatShotPlan(plan, language) {
   ].filter(Boolean).join("\n\n");
 }
 
-/** Checks every automatic callback before recording and preserves the plan's shot order. */
+/** Keeps all shots in plan order and checks automatic callbacks before recording. */
 function getRecordingShots(plan, language) {
-  const shots = resolveVideoPlan(plan, language).shots.filter(shot => shot.type === "auto");
+  const shots = resolveVideoPlan(plan, language).shots;
   for (const shot of shots) {
+    if (shot.type === "manual") continue;
     if (typeof shot.shot !== "function") {
       throw new Error(`Missing video action for automatic shot: ${shot.id}`);
     }
@@ -82,25 +83,32 @@ function getRecordingShots(plan, language) {
 }
 
 /**
- * Records automatic shots in plan order with setup slates and scenario-specific lifecycle callbacks.
+ * Records automatic shots and manual-footage warning slates in plan order.
  * Call this plain async function from a Scenario, outside the CodeceptJS helper step queue.
  * @param {object} I CodeceptJS actor
  * @param {object} options Shot plan and recording callbacks
  * @param {object} options.plan Shot plan with a shot function and optional prepare function on each automatic shot
  * @param {object} [options.context] Dependencies passed to inline callbacks, augmented with the actor I and resolved shot
  * @param {Function} [options.setup] One-time login and shared setup, after plan validation
- * @param {Function} [options.prepare] Baseline preparation before every shot; receives the resolved shot
- * @param {Function} [options.cleanup] Cleanup after each successful shot; receives the resolved shot
+ * @param {Function} [options.prepare] Baseline preparation before every automatic shot; receives the resolved shot
+ * @param {Function} [options.cleanup] Cleanup after each successful automatic shot; receives the resolved shot
  * @param {string} [options.language] Narration language override
- * @returns {Promise<void>} Resolves after every automatic shot and its cleanup
+ * @returns {Promise<void>} Resolves after every automatic shot, its cleanup and all manual warning slates
  */
 async function recordVideoPlan(I, { plan, context = {}, setup, prepare, cleanup, language }) {
   const recordingShots = getRecordingShots(plan, language);
+  const automaticCount = recordingShots.filter(shot => shot.type === "auto").length;
+  let automaticIndex = 0;
   if (setup) await setup();
-  for (const [index, shot] of recordingShots.entries()) {
-    const shotContext = { ...context, I, shot };
-    const shotLabel = `shot ${index + 1}/${recordingShots.length} ${shot.id}`;
+  for (const shot of recordingShots) {
     await I.say("----------------------------------------------------------------------------");
+    if (shot.type === "manual") {
+      await I.say(`WARNING: manual steps | Shot ${shot.number}/${recordingShots.length} [${shot.id}]: ${shot.title} (${shot.durationSeconds}s)\n${shot.notes || "Add filming instructions to this shot's notes."}`);
+      await I.videoTitle(shot);
+      continue;
+    }
+    const shotContext = { ...context, I, shot };
+    const shotLabel = `shot ${++automaticIndex}/${automaticCount} ${shot.id}`;
     await I.say(`Recording ${shotLabel} (${shot.durationSeconds}s)`);
     await I.videoTitle(`SETUP ${shotLabel} (${shot.durationSeconds}s)`);
     if (prepare) await prepare(shot);

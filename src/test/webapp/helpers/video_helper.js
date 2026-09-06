@@ -324,13 +324,16 @@ class VideoHelper extends Helper {
 
   /**
    * Shows a full-window editing slate for two seconds without changing focus or the active iframe.
-   * @param {string|object} title Legacy title or a resolved shot from getRecordingShots
+   * @param {string|object} title Legacy title or a resolved shot; manual shots show a warning and full filming notes
    * @returns {Promise<void>} Resolves after the slate has been removed
    */
   async videoTitle(title) {
-    const heading = typeof title === "string" ? title : `Shot ${title.number}: ${title.title}`;
-    const excerpt = typeof title === "string" ? "" : Array.from(title.narration).slice(0, 200).join("");
-    await this.helpers.Playwright.page.evaluate(async ({ heading, excerpt }) => {
+    const manual = typeof title === "object" && title.type === "manual";
+    const heading = typeof title === "string" ? title : `${manual ? "WARNING: manual steps | " : ""}Shot ${title.number}: ${title.title}`;
+    const excerpt = typeof title === "string" ? "" : manual
+      ? (typeof title.notes === "string" && title.notes.trim()) || "Add filming instructions to this shot's notes."
+      : Array.from(title.narration).slice(0, 200).join("");
+    await this.helpers.Playwright.page.evaluate(async ({ heading, excerpt, manual }) => {
       const host = document.createElement("div");
       host.id = "wj-video-title-host";
       host.setAttribute("aria-hidden", "true");
@@ -363,12 +366,12 @@ class VideoHelper extends Helper {
       label.textContent = heading;
       slate.appendChild(label);
       if (excerpt !== "") {
-        const audio = document.createElement("div");
-        audio.setAttribute("data-video-narration", "");
-        audio.style.font = "400 clamp(16px, 2vw, 32px)/1.5 sans-serif";
-        audio.style.whiteSpace = "pre-line";
-        audio.textContent = excerpt;
-        slate.appendChild(audio);
+        const description = document.createElement("div");
+        description.setAttribute(manual ? "data-video-instructions" : "data-video-narration", "");
+        description.style.font = "400 clamp(16px, 2vw, 32px)/1.5 sans-serif";
+        description.style.whiteSpace = "pre-line";
+        description.textContent = excerpt;
+        slate.appendChild(description);
       }
       shadow.appendChild(slate);
       document.documentElement.appendChild(host);
@@ -379,7 +382,7 @@ class VideoHelper extends Helper {
       } finally {
         host.remove();
       }
-    }, { heading, excerpt });
+    }, { heading, excerpt, manual });
   }
 
   /**
