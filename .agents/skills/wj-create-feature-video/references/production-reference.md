@@ -94,23 +94,22 @@ not application synchronization mechanisms.
 For automatic shots, it renders a black full-window slate with the derived shot
 number/title and the first 200 Unicode characters of localized narration in
 smaller white text. For manual shots, the heading is
-`WARNING: manual steps | Shot N: title` and the smaller text contains the full
+`WARNING: manual steps | Shot N/total: title` and the smaller text contains the full
 filming instructions from `notes`, without the 200-character truncation. Missing
 or blank notes display a reminder to add filming instructions. Keep notes concise
 enough to fit in one frame; they replace the narration excerpt on manual slates.
-Head slates show `WARNING: head video | Shot N: title`, full localized narration
+Head slates show `WARNING: head video | Shot N/total: title`, full localized narration
 and notes. All three kinds hold for two seconds after painting, then remove themselves.
 The top-level overlay does not change active iframe context, focus or selection
 and works with cursor rendering disabled. Text is rendered literally, not HTML.
 Legacy `I.videoTitle("Shot 1: description.")` calls remain supported. The shared
 runner also calls `I.videoTitle("SETUP shot <index>/<total> <id> (<duration>s)")` before
 preparation and includes the same progress in `I.say`. Index and total count
-only automatic shots, excluding manual footage. The normal `Shot <number>` slate
-uses the full plan's numbering, including manual entries, to match the edited
-shot plan. For example, a plan with two manual intro shots and twelve automatic
-shots starts with two manual warnings, then `SETUP shot 1/12 ...` followed by
-`Shot 3: ...`.
-Manual warnings use the full plan number and do not advance the automatic counter.
+all shots in the full plan, including manual and head entries. Normal slates use
+`Shot <index>/<total>: <title>` with exactly the same numbers. A plan with two
+manual intro shots and twelve automatic shots starts with two manual warnings,
+then `SETUP shot 3/14 ...` followed by `Shot 3/14: ...`.
+Warnings use the same full-plan number and total. There is no separate automatic counter.
 The SETUP slate marks footage to discard, up to and including the normal slate.
 The runner inserts all editing slates; individual callbacks must not duplicate them.
 Use `I.clickCss` for CSS selectors or ordinary `I.click` for off-camera
@@ -333,7 +332,7 @@ Scenario("<scenario-name>", async ({ I, DTE, login }) => {
 
 `resolveVideoPlan` validates unique ids, `auto`/`manual`/`head` types, positive integer
 `durationSeconds`, titles and selected localized text. It derives `number`,
-`startSeconds`, `endSeconds` and `narration` without mutating the editable plan.
+`total`, `startSeconds`, `endSeconds` and `narration` without mutating the editable plan.
 `formatShotPlan` includes manual footage, production notes and narration.
 `getRecordingShots(plan, language)` retains all shots in array order and validates
 each automatic `shot` function and optional `prepare` function before recording.

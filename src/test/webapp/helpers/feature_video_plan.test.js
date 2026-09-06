@@ -29,6 +29,7 @@ test("reordering shots changes narration, timing and automatic callback order to
   assert.equal(getPlanNarration(plan), "Preview the result.\n\nIntroduction.\n\nEdit the content.");
   assert.equal(getPlanNarration(plan, "en"), "English preview.\n\nEnglish intro.\n\nEnglish editing.");
   assert.match(formatShotPlan(plan), /0:15-0:20 \| MANUAL \| Shot 2 \[intro\]/);
+  assert.deepEqual(recording.map(shot => shot.total), [3, 3, 3]);
   assert.equal(JSON.stringify(plan), original, "Derived numbering must not mutate the editable plan");
 });
 
@@ -62,9 +63,9 @@ test("head shots retain localized narration and timing while skipping all shot c
     videoTitle: async shot => events.push(typeof shot === "string" ? shot : `${shot.type}:${shot.id}:${shot.narration}`)
   }, { plan, language: "en", prepare: async shot => events.push(`PREPARE:${shot.id}`), cleanup: async shot => events.push(`CLEANUP:${shot.id}`) });
   assert.deepEqual(events, [
-    "SETUP shot 1/2 edit (10s)", "PREPARE:edit", "auto:edit:English editing.", "RUN:edit", "CLEANUP:edit",
+    "SETUP shot 1/3 edit (10s)", "PREPARE:edit", "auto:edit:English editing.", "RUN:edit", "CLEANUP:edit",
     "head:intro:English intro.",
-    "SETUP shot 2/2 preview (15s)", "PREPARE:preview", "auto:preview:English preview.", "RUN:preview", "CLEANUP:preview"
+    "SETUP shot 3/3 preview (15s)", "PREPARE:preview", "auto:preview:English preview.", "RUN:preview", "CLEANUP:preview"
   ]);
   assert.ok(messages.includes("WARNING: head video | Shot 2/3 [intro]: Intro (5s)\nEnglish intro.\nInsert the generated talking-head clip."));
 });
@@ -122,14 +123,14 @@ test("records reordered shots and manual warning slates without running manual c
     cleanup: callback("CLEANUP")
   });
   assert.deepEqual(events, [
-    "LOGIN", "SETUP shot 1/2 preview (15s)", "BASELINE:preview", "PREPARE:preview", "SLATE:preview", "RUN:preview", "CLEANUP:preview",
+    "LOGIN", "SETUP shot 1/3 preview (15s)", "BASELINE:preview", "PREPARE:preview", "SLATE:preview", "RUN:preview", "CLEANUP:preview",
     "MANUAL:intro:Film the opening card separately.",
-    "SETUP shot 2/2 edit (10s)", "BASELINE:edit", "SLATE:edit", "RUN:edit", "CLEANUP:edit"
+    "SETUP shot 3/3 edit (10s)", "BASELINE:edit", "SLATE:edit", "RUN:edit", "CLEANUP:edit"
   ]);
   assert.deepEqual(messages.filter(message => message.startsWith("Recording ")), [
-    "Recording shot 1/2 preview (15s)",
-    "Recording shot 2/2 edit (10s)"
-  ], "Progress must count only automatic shots, even with manual shots between them");
+    "Recording shot 1/3 preview (15s)",
+    "Recording shot 3/3 edit (10s)"
+  ], "Progress must use full-plan numbering, including manual shots between automatic shots");
   assert.equal(messages.find(message => message.startsWith("WARNING:")),
     "WARNING: manual steps | Shot 2/3 [intro]: Intro (5s)\nFilm the opening card separately.");
   assert.equal(context.shot, "must not override metadata", "Recording must not mutate caller context");

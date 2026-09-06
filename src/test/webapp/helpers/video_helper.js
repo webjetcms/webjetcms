@@ -330,7 +330,7 @@ class VideoHelper extends Helper {
   async videoTitle(title) {
     const manual = typeof title === "object" && title.type === "manual";
     const head = typeof title === "object" && title.type === "head";
-    const heading = typeof title === "string" ? title : `${manual ? "WARNING: manual steps | " : head ? "WARNING: head video | " : ""}Shot ${title.number}: ${title.title}`;
+    const heading = typeof title === "string" ? title : `${manual ? "WARNING: manual steps | " : head ? "WARNING: head video | " : ""}Shot ${title.number}${title.total == null ? "" : `/${title.total}`}: ${title.title}`;
     const excerpt = typeof title === "string" ? "" : manual
       ? (typeof title.notes === "string" && title.notes.trim()) || "Add filming instructions to this shot's notes."
       : head ? [title.narration, title.notes || "Generate this clip with npm run head and insert it during editing."].join("\n\n")

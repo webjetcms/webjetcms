@@ -157,7 +157,7 @@ Pomocník ešte pred volaním API overí, že môže v cieľovom priečinku vytv
 
 Spoločný `videoPlan` je statický JavaScript objekt. Poradie jeho `shots` určuje číslovanie, časovú os aj poradie hovoreného slova. Každý záber obsahuje jedinečné `id`, typ `auto`, `manual` alebo `head`, názov `title`, kladný celočíselný odhad `durationSeconds` a lokalizovaný `text-sk`, prípadne `text-cs` a `text-en`. Automatické kroky patria do inline funkcií `shot` a voliteľne `prepare`.
 
-Typ `head` vytvorí samostatný klip s hovoriacou postavou. V hlavnej nahrávke sa na jeho mieste zobrazí dvojsekundová tabuľa `WARNING: head video` s číslom, názvom, celým lokalizovaným textom a poznámkami. Preskočí sa príprava, akcia aj cleanup tohto záberu. Záber zostáva súčasťou časovej osi a spoločného MP3 z `npm run audio`; počítadlo automatických záberov ho nezapočítava. Tabuľu pri strihu nahraďte vygenerovaným MP4.
+Typ `head` vytvorí samostatný klip s hovoriacou postavou. V hlavnej nahrávke sa na jeho mieste zobrazí dvojsekundová tabuľa `WARNING: head video` s číslom, názvom, celým lokalizovaným textom a poznámkami. Preskočí sa príprava, akcia aj cleanup tohto záberu. Záber zostáva súčasťou časovej osi a spoločného MP3 z `npm run audio`; číslovanie aj celkový počet v SETUP a titulkoch zahŕňajú všetky typy záberov. Napríklad siedmy záber zo šestnástich má `SETUP shot 7/16` aj `Shot 7/16: ...`. Tabuľu pri strihu nahraďte vygenerovaným MP4.
 
 ```javascript
 const videoPlan = {

@@ -130,19 +130,19 @@ or maintain separate callback maps. Pass `I` first and one options object with
 For automatic shots, the runner logs
 `Recording shot <index>/<total> <id> (<duration>s)` and displays
 a two-second `SETUP shot <index>/<total> <id> (<duration>s)` slate. The index and
-total count only automatic shots in their current recording order. It then
+total use the full plan, including manual and head shots. It then
 awaits shared `prepare`, runs `shot.prepare(context)` if present, displays the
 normal two-second shot slate, runs `shot.shot(context)` and awaits cleanup.
 The normal slate includes
-the derived number/title and first 200 Unicode characters of localized narration.
-That number uses the full plan, including manual and head shots; the SETUP counter measures
-only automatic recording progress. The runner owns the editing slates: do not repeat
+`Shot <index>/<total>: <title>` and first 200 Unicode characters of localized narration.
+SETUP, normal slates and warnings use the same full-plan numbering and total.
+The runner owns the editing slates: do not repeat
 `I.videoTitle` inside individual `shot` or `prepare` functions.
 Cut everything from the SETUP slate through the normal slate out of the final
 film, along with cleanup. Neither slate contributes to the edited timeline.
 
 For manual shots, the runner logs a warning and calls `I.videoTitle(shot)` at
-their position in the full plan. This shows `WARNING: manual steps | Shot N: title`
+their position in the full plan. This shows `WARNING: manual steps | Shot N/total: title`
 and the complete `notes` for two seconds. Missing notes produce a reminder to
 add filming instructions. The shared `prepare`/`cleanup` and inline callbacks
 are skipped for manual shots; one-time `setup` still runs. Replace this warning

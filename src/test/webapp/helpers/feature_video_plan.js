@@ -32,6 +32,7 @@ function resolveVideoPlan(plan, language = plan?.language || "sk") {
     return {
       ...shot,
       number: index + 1,
+      total: plan.shots.length,
       startSeconds,
       endSeconds: elapsed,
       narration: text.trim().replace(/\r\n?/g, "\n")
@@ -97,8 +98,6 @@ function getRecordingShots(plan, language) {
  */
 async function recordVideoPlan(I, { plan, context = {}, setup, prepare, cleanup, language }) {
   const recordingShots = getRecordingShots(plan, language);
-  const automaticCount = recordingShots.filter(shot => shot.type === "auto").length;
-  let automaticIndex = 0;
   if (setup) await setup();
   for (const shot of recordingShots) {
     await I.say("----------------------------------------------------------------------------");
@@ -113,7 +112,7 @@ async function recordVideoPlan(I, { plan, context = {}, setup, prepare, cleanup,
       continue;
     }
     const shotContext = { ...context, I, shot };
-    const shotLabel = `shot ${++automaticIndex}/${automaticCount} ${shot.id}`;
+    const shotLabel = `shot ${shot.number}/${shot.total} ${shot.id}`;
     await I.say(`Recording ${shotLabel} (${shot.durationSeconds}s)`);
     await I.videoTitle(`SETUP ${shotLabel} (${shot.durationSeconds}s)`);
     if (prepare) await prepare(shot);
