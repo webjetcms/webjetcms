@@ -80,6 +80,41 @@ function containsEagerCall(node) {
   });
 }
 
+/** Reads literal plan metadata from the AST, skipping inline callbacks without evaluating code. */
+function readPlanMetadata(node, location = []) {
+  const label = location.join(".") || "plan";
+  if (node?.type === "Literal" && (node.value === null ||
+    ["string", "boolean", "number"].includes(typeof node.value))) return node.value;
+  if (node?.type === "TemplateLiteral" && node.expressions.length === 0) return node.quasis[0].value.cooked;
+  if (node?.type === "ArrayExpression") {
+    return node.elements.map((element, index) => readPlanMetadata(element, [...location, index]));
+  }
+  if (node?.type === "ObjectExpression") {
+    const result = Object.create(null);
+    for (const property of node.properties) {
+      const name = property.key?.type === "Identifier" ? property.key.name : getStringLiteral(property.key);
+      if (property.type !== "Property" || property.kind !== "init" || property.computed ||
+        property.shorthand || name == null || name === "__proto__") {
+        throw new Error(`${label} must use explicit, non-computed data properties.`);
+      }
+      if (Object.hasOwn(result, name)) throw new Error(`${label}.${name} must not be repeated.`);
+      const inlineCallback = location.length === 2 && location[0] === "shots" &&
+        typeof location[1] === "number" && ["shot", "prepare"].includes(name);
+      if (inlineCallback) {
+        if (!["ArrowFunctionExpression", "FunctionExpression"].includes(property.value.type)) {
+          throw new Error(`${label}.${name} must be an inline function.`);
+        }
+        // Keep the key for duplicate detection; narration does not use these callbacks.
+        result[name] = undefined;
+      } else {
+        result[name] = readPlanMetadata(property.value, [...location, name]);
+      }
+    }
+    return result;
+  }
+  throw new Error(`${label} must contain static literal data; only shot and prepare may be functions.`);
+}
+
 function validateGenerateAudioOptions(node, fail) {
   if (node.type !== "ObjectExpression") {
     fail("I.generateAudio options must be an object literal.");
@@ -255,18 +290,17 @@ function validateAudioScenarioSource(source, sourcePath = "<audio scenario>") {
         statement.start < audioScenario.call.start)
       .flatMap(statement => statement.declarations)
       .find(item => item.id.type === "Identifier" && item.id.name === narration.name);
-    if (!declaration) fail("I.generateAudio plan must reference a preceding const JSON object.");
+    if (!declaration) fail("I.generateAudio plan must reference a preceding const plan object.");
     narration = declaration.init;
   }
   if (narration?.type === "ObjectExpression") {
     try {
-      // Parse data only; never evaluate scenario code during the audio preflight.
-      const plan = JSON.parse(source.slice(narration.start, narration.end));
+      const plan = readPlanMetadata(narration);
       const languageOption = generateAudioCall.arguments[1]?.properties.find(property =>
         (property.key.name || getStringLiteral(property.key)) === "language");
       getPlanNarration(plan, languageOption ? getStringLiteral(languageOption.value) : undefined);
     } catch (error) {
-      fail(`I.generateAudio plan must be valid JSON shot data: ${error.message}`);
+      fail(`I.generateAudio plan must contain static shot data with optional inline callbacks: ${error.message}`);
     }
     return;
   }

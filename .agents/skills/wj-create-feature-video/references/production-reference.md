@@ -97,7 +97,7 @@ holds for two seconds after painting, then removes itself before the next step.
 The top-level overlay does not change active iframe context, focus or selection
 and works with cursor rendering disabled. Text is rendered literally, not HTML.
 Legacy `I.videoTitle("Shot 1: description.")` calls remain supported. The shared
-runner also calls `I.videoTitle("SETUP shot <index>/<total> <id>")` before
+runner also calls `I.videoTitle("SETUP shot <index>/<total> <id> (<duration>s)")` before
 preparation and includes the same progress in `I.say`. Index and total count
 only automatic shots, excluding manual footage. This
 marks the start of footage to discard, up to and including the normal shot slate.
@@ -153,17 +153,23 @@ because the API call can consume ElevenLabs credits. There is no automatic
 retry, avoiding a second charge after an ambiguous network failure.
 
 A successful response is written atomically as
-`docs/feature-video/<scenario-name>-<language>.mp3` for JSON plans; legacy string
+`docs/feature-video/<scenario-name>-<language>.mp3` for object plans; legacy string
 narration retains `<scenario-name>.mp3`. A temporary file replaces the previous
 MP3 only after the complete response is available. An API, network, timeout, or
 disk error therefore leaves the last successful MP3 unchanged.
 
-## JSON Plan and Scenario Template
+## JavaScript Plan and Scenario Template
 
-The plan initializer is strict JSON inside a JavaScript `const`: no functions,
-comments, trailing commas or interpolation. The audio preflight parses it as
-JSON without executing the source. Keep callbacks separately inside the main
-scenario. Use stable descriptive ids rather than position-dependent `auto1` names.
+Declare the plan as a top-level JavaScript object literal with static metadata
+and inline `shot`/`prepare` functions. Comments, unquoted keys and trailing commas
+are allowed. The audio preflight reads literal values from the syntax tree and
+skips these function bodies without evaluating source code. Do not use getters,
+computed keys, spreads, shorthand references or dynamic metadata expressions.
+Functions are allowed only as each shot's `shot` and `prepare` properties.
+Use stable descriptive ids rather than position-dependent `auto1` names.
+
+The plan is not strict JSON. `JSON.stringify(videoPlan)` omits the callbacks;
+that export retains metadata but cannot reproduce browser steps on its own.
 
 ```javascript
 Feature("video.<scenario-name>");
@@ -184,7 +190,16 @@ const videoPlan = {
             "type": "auto",
             "durationSeconds": 15,
             "title": "Edit content directly",
-            "text-sk": "<Slovak narration matching these actions>"
+            "text-sk": "<Slovak narration matching these actions>",
+            prepare: async ({ I, selector }) => {
+                await I.waitForVisible(selector, 20);
+            },
+            shot: async ({ I, DT, selector }) => {
+                await I.videoClick(selector);
+                await I.waitForElement("<result-state>", 20);
+                DT.waitForLoader();
+                await I.waitForVisible("<stable-result>", 20);
+            }
         }
     ]
 };
@@ -200,17 +215,10 @@ Scenario("Shot plan", ({ I }) => {
 
 Scenario("<scenario-name>", async ({ I, DT, login }) => {
     const { recordVideoPlan } = require("../helpers/feature_video_plan.js");
-    const shots = {
-        "edit-content": async () => {
-            await I.videoClick("<stable-selector>");
-            await I.waitForElement("<result-state>", 20);
-            DT.waitForLoader();
-            await I.waitForVisible("<stable-result>", 20);
-        }
-    };
+    const selector = "<stable-selector>";
     await recordVideoPlan(I, {
         plan: videoPlan,
-        scenarios: shots,
+        context: { DT, selector },
         setup: async () => { login("admin"); },
         prepare: async () => {
             await I.amOnPage("<admin-url>");
@@ -218,38 +226,47 @@ Scenario("<scenario-name>", async ({ I, DT, login }) => {
             DT.waitForLoader();
             await I.waitForVisible("<stable-initial-state>", 20);
         }
-        // Add prepareShots keyed by id and cleanup when this walkthrough needs them.
+        // Add cleanup when this walkthrough needs to discard temporary changes.
     });
 }).tag("@video");
 ```
 
 `resolveVideoPlan` validates unique ids, `auto`/`manual` types, positive integer
 `durationSeconds`, titles and selected localized text. It derives `number`,
-`startSeconds`, `endSeconds` and `narration` without mutating the editable JSON.
+`startSeconds`, `endSeconds` and `narration` without mutating the editable plan.
 `formatShotPlan` includes manual footage, production notes and narration.
-`getRecordingShots` filters out manual shots and validates all automatic callback
-names before recording. `recordVideoPlan(I, options)` uses that validation
-before its one-time `setup`, then sequences logging, the SETUP slate, `prepare`,
-optional `prepareShots[id]`, the normal slate, `scenarios[id]`, and `cleanup`. All
-per-shot callbacks receive the resolved shot. Pass `I` separately, then an
-options object with `plan` and `scenarios`; lifecycle callbacks and `language`
-are optional. Keep application-specific actions (such
-as DTE cancellation and discard confirmation) in callbacks instead of coupling
-the generic runner to Page Builder. Use this plain async function directly from
-the main Scenario, not as a CodeceptJS actor helper step. It stops on failure.
-These utilities live in `helpers/feature_video_plan.js`.
+`getRecordingShots(plan, language)` filters out manual shots and validates each
+automatic `shot` function and optional `prepare` function before recording.
+`recordVideoPlan(I, options)` uses that validation before its one-time `setup`,
+then sequences logging, the SETUP slate, shared `prepare`, optional inline
+`shot.prepare(context)`, the normal slate, `shot.shot(context)`, and `cleanup`.
+
+Pass `I` separately, then one options object with `plan`. Optional `context`
+contains selectors, injected page objects and reusable functions defined in the
+main scenario. Each inline callback receives `{ ...context, I, shot }`; `I` and
+`shot` are supplied by the runner and cannot be overridden by context values.
+Shared `prepare` and `cleanup` callbacks receive the resolved shot directly;
+`setup` receives no arguments. The `language` option overrides narration for
+recording slates. No separate action or preparation maps are needed.
+
+Keep application-specific actions (such as DTE cancellation and discard
+confirmation) in lifecycle callbacks instead of coupling the generic runner to
+Page Builder. Call this plain async function directly from the main Scenario,
+not as a CodeceptJS actor helper step. It stops on failure. These utilities live
+in `helpers/feature_video_plan.js`.
 
 Move whole objects in `shots` to reorder the film. Derived numbering and time
-ranges update automatically; callbacks follow their stable ids. Never sort by
-old timestamps or maintain another ordered callback list. Each callback needs an
+ranges update automatically; inline callbacks move with the metadata. Never sort
+by old timestamps or maintain another ordered callback list. Each callback needs an
 independent baseline. The `308-pb-redesign.js` example reopens the editor and
 installs isolated browser-only content per shot, with extra preparation for the
 structure drawer and library. Setup and cleanup are cut out during editing.
 
 `durationSeconds` does not set speech speed, insert silence or make a callback
 last that long. Update estimates after measuring narration. The generator joins
-all selected localized texts with paragraph breaks and makes one API request;
-manual shots are included and explicit empty strings mean intentional silence.
+all selected localized texts with paragraph breaks and makes one API request.
+It never runs `shot` or `prepare`. Manual shots are included and explicit empty
+strings mean intentional silence.
 Missing language fields fail before the paid request; there is no silent fallback.
 
 Add `text-cs` for Czech (language code `cs`, not country code `cz`) and `text-en`
@@ -266,7 +283,7 @@ Scenario("ElevenLabs", ({ I }) => {
 }).tag("@audio");
 ```
 
-JSON audio artifacts have a language suffix so different languages coexist.
+Object-plan audio artifacts have a language suffix so different languages coexist.
 Browser UI language, fixture text and language-dependent locators must be adapted
 separately when producing foreign-language footage. Current npm video commands
 and the Page Builder example target the Slovak UI.

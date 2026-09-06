@@ -136,7 +136,7 @@ test("resolves the default audio artifact directly below docs/feature-video", ()
   );
 });
 
-test("generates localized JSON narration in shot order with a language-specific artifact", async () => {
+test("generates localized plan narration in shot order without executing inline callbacks", async () => {
   await withOutputDirectory(async outputDirectory => {
     process.env.ELEVENLABS_API_KEY = "test-api-key";
     const requests = [];
@@ -148,6 +148,11 @@ test("generates localized JSON narration in shot order with a language-specific 
       { id: "second", type: "auto", durationSeconds: 5, title: "Not spoken", "text-sk": "Second.", "text-en": "English second." },
       { id: "first", type: "manual", durationSeconds: 3, title: "Not spoken either", "text-sk": "First.", "text-en": "English first." }
     ] };
+    let callbackCalls = 0;
+    for (const shot of plan.shots) {
+      shot.shot = async () => { callbackCalls++; };
+      shot.prepare = async () => { callbackCalls++; };
+    }
     for (const language of ["sk", "en"]) {
       const helper = new AudioHelper({ generationEnabled: true, featureVideoDirectory: outputDirectory });
       registerAudioTest(helper, createAudioTest("/project/video/plan.js"));
@@ -161,6 +166,7 @@ test("generates localized JSON narration in shot order with a language-specific 
     registerAudioTest(invalidHelper, createAudioTest("/project/video/plan.js"));
     await assert.rejects(invalidHelper.generateAudio(plan, { language: "cs" }), /missing text-cs/);
     assert.equal(requests.length, 2, "Missing translations must fail before the paid API call");
+    assert.equal(callbackCalls, 0, "Audio generation must never execute browser callbacks");
   });
 });
 

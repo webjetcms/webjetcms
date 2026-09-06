@@ -287,12 +287,42 @@ Scenario("ElevenLabs", ({ I }) => { I.generateAudio(videoPlan); }).tag("@audio")
   assert.doesNotThrow(() => validateAudioScenarioSource(source));
   assert.doesNotThrow(() => validateAudioScenarioSource(source.replace("generateAudio(videoPlan)", 'generateAudio(videoPlan, { language: "en" })')));
   const invalid = [
-    [source.replace("const videoPlan", "let videoPlan"), /preceding const JSON object/],
+    [source.replace("const videoPlan", "let videoPlan"), /preceding const plan object/],
     [source.replace('"Narration."', 'process.exit()'), /only static declarations/],
     [source.replace('"Narration."', '`${process.exit()}`'), /only static declarations/],
     [source.replace('"text-sk"', '"text-cs"'), /missing text-sk/],
     [source.replace('"manual"', '"auto1"'), /type must be auto or manual/],
     [source.replace("generateAudio(videoPlan)", 'generateAudio(videoPlan, { language: "en", language: "sk" })'), /must not be repeated/]
+  ];
+  for (const [input, message] of invalid) assert.throws(() => validateAudioScenarioSource(input), message);
+});
+
+test("preflights JavaScript plan metadata and skips inline shot and prepare function bodies", () => {
+  const source = `Feature("video.inline");
+const videoPlan = {
+  language: "sk",
+  shots: [{
+    id: "edit", type: "auto", durationSeconds: 10, title: "Edit",
+    "text-sk": \`Narration.\`, // Static template literals and trailing commas are allowed.
+    prepare: async ({ I }) => { throw new Error("Do not execute preparation"); },
+    shot: async ({ I, selector }) => { await I.videoClick(selector); },
+  }],
+};
+Scenario("ElevenLabs", ({ I }) => { I.generateAudio(videoPlan); }).tag("@audio");`;
+  assert.doesNotThrow(() => validateAudioScenarioSource(source));
+  const invalid = [
+    [source.replace('title: "Edit"', 'title: dynamicTitle'), /static literal data/],
+    [source.replace('title: "Edit"', 'title: `${dynamicTitle}`'), /static literal data/],
+    [source.replace('title: "Edit"', 'get title() { throw new Error("Do not execute getters"); }'), /data properties/],
+    [source.replace('title: "Edit"', '["title"]: "Edit"'), /data properties/],
+    [source.replace('title: "Edit"', '...metadata'), /data properties/],
+    [source.replace('title: "Edit"', 'title'), /data properties/],
+    [source.replace('title: "Edit"', '__proto__: {}, title: "Edit"'), /data properties/],
+    [source.replace('title: "Edit"', 'title: () => "Edit"'), /only shot and prepare may be functions/],
+    [source.replace('title: "Edit"', 'title: "First", title: "Edit"'), /must not be repeated/],
+    [source.replace('prepare: async ({ I }) => { throw new Error("Do not execute preparation"); }', 'prepare: false'), /prepare must be an inline function/],
+    [source.replace('shot: async ({ I, selector }) => { await I.videoClick(selector); }', 'shot: savedCallback'), /shot must be an inline function/],
+    [source.replace('shot: async', 'prepare: async'), /must not be repeated/]
   ];
   for (const [input, message] of invalid) assert.throws(() => validateAudioScenarioSource(input), message);
 });

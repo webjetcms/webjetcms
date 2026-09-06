@@ -7,8 +7,8 @@ function createPlan() {
     language: "sk",
     shots: [
       { id: "intro", type: "manual", durationSeconds: 5, title: "Intro", "text-sk": "Introduction.", "text-en": "English intro." },
-      { id: "edit", type: "auto", durationSeconds: 10, title: "Editing", "text-sk": "Edit the content.", "text-en": "English editing." },
-      { id: "preview", type: "auto", durationSeconds: 15, title: "Preview", "text-sk": "Preview the result.", "text-en": "English preview." }
+      { id: "edit", type: "auto", durationSeconds: 10, title: "Editing", "text-sk": "Edit the content.", "text-en": "English editing.", shot: async () => {} },
+      { id: "preview", type: "auto", durationSeconds: 15, title: "Preview", "text-sk": "Preview the result.", "text-en": "English preview.", shot: async () => {} }
     ]
   };
 }
@@ -18,9 +18,9 @@ test("reordering shots changes narration, timing and automatic callback order to
   plan.shots = [plan.shots[2], plan.shots[0], plan.shots[1]];
   const original = JSON.stringify(plan);
   const calls = [];
-  const actions = { edit: async () => calls.push("edit"), preview: async () => calls.push("preview") };
-  const recording = getRecordingShots(plan, actions);
-  for (const shot of recording) await actions[shot.id]();
+  for (const shot of plan.shots) shot.shot = async () => calls.push(shot.id);
+  const recording = getRecordingShots(plan);
+  for (const shot of recording) await shot.shot();
   assert.deepEqual(calls, ["preview", "edit"]);
   assert.deepEqual(resolveVideoPlan(plan).shots.map(shot => [shot.id, shot.number, shot.startSeconds, shot.endSeconds]), [
     ["preview", 1, 0, 15], ["intro", 2, 15, 20], ["edit", 3, 20, 30]
@@ -52,7 +52,9 @@ test("rejects ambiguous metadata and missing actions before recording", () => {
     mutate(plan);
     assert.throws(() => resolveVideoPlan(plan), message);
   }
-  assert.throws(() => getRecordingShots(createPlan(), { edit() {} }), /Missing video action.*preview/);
+  const plan = createPlan();
+  delete plan.shots[2].shot;
+  assert.throws(() => getRecordingShots(plan), /Missing video action.*preview/);
 });
 
 test("records reordered shots through setup, slate, preparation and cleanup without running manual shots", async () => {
@@ -69,22 +71,34 @@ test("records reordered shots through setup, slate, preparation and cleanup with
     say: async message => messages.push(message),
     videoTitle: async shot => events.push(typeof shot === "string" ? shot : `SLATE:${shot.id}`)
   };
+  const helpers = { selector: ".content" };
+  const context = { helpers, I: "must not override the actor", shot: "must not override metadata" };
+  const inlineCallback = name => async ({ I: actor, shot, helpers: receivedHelpers }) => {
+    assert.equal(actor, I);
+    assert.equal(receivedHelpers, helpers);
+    assert.equal(shot.narration, shot["text-en"]);
+    await callback(name)(shot);
+  };
+  for (const shot of plan.shots) shot.shot = inlineCallback("RUN");
+  plan.shots[0].prepare = inlineCallback("PREPARE");
+  plan.shots[1].prepare = async () => { throw new Error("Manual preparation must not run"); };
   await recordVideoPlan(I, {
     plan,
-    scenarios: { edit: callback("RUN"), preview: callback("RUN") },
+    context,
+    language: "en",
     setup: async () => events.push("LOGIN"),
     prepare: callback("BASELINE"),
-    prepareShots: { preview: callback("PREPARE") },
     cleanup: callback("CLEANUP")
   });
   assert.deepEqual(events, [
-    "LOGIN", "SETUP shot 1/2 preview", "BASELINE:preview", "PREPARE:preview", "SLATE:preview", "RUN:preview", "CLEANUP:preview",
-    "SETUP shot 2/2 edit", "BASELINE:edit", "SLATE:edit", "RUN:edit", "CLEANUP:edit"
+    "LOGIN", "SETUP shot 1/2 preview (15s)", "BASELINE:preview", "PREPARE:preview", "SLATE:preview", "RUN:preview", "CLEANUP:preview",
+    "SETUP shot 2/2 edit (10s)", "BASELINE:edit", "SLATE:edit", "RUN:edit", "CLEANUP:edit"
   ]);
   assert.deepEqual(messages.filter(message => message.startsWith("Recording ")), [
     "Recording shot 1/2 preview (15s)",
     "Recording shot 2/2 edit (10s)"
   ], "Progress must count only automatic shots, even with manual shots between them");
+  assert.equal(context.shot, "must not override metadata", "Recording must not mutate caller context");
 });
 
 test("validates callbacks before setup and stops recording after a failed shot", async () => {
@@ -94,12 +108,17 @@ test("validates callbacks before setup and stops recording after a failed shot",
   const options = {
     plan: createPlan(),
     setup: async () => events.push("setup"),
-    scenarios: { edit: async () => { throw new Error("shot failed"); } },
     cleanup: async () => events.push("cleanup")
   };
+  options.plan.shots[1].shot = async () => { throw new Error("shot failed"); };
+  delete options.plan.shots[2].shot;
   await assert.rejects(recordVideoPlan(I, options), /Missing video action.*preview/);
   assert.deepEqual(events, []);
-  options.scenarios.preview = async () => events.push("preview");
+  options.plan.shots[2].shot = async () => events.push("preview");
+  options.plan.shots[2].prepare = "invalid callback";
+  await assert.rejects(recordVideoPlan(I, options), /preview prepare must be a function/);
+  assert.deepEqual(events, [], "All inline preparation must be validated before setup");
+  delete options.plan.shots[2].prepare;
   await assert.rejects(recordVideoPlan(I, options), /shot failed/);
   assert.deepEqual(events, ["setup"], "A failed shot must not run further shots or mask the original error");
 });

@@ -1,13 +1,13 @@
 ---
 name: wj-create-feature-video
-description: "Create WebJET CMS feature-video assets from a pull request or branch: one JSON shot plan with localized narration, reorderable CodeceptJS/Playwright shot functions, ElevenLabs audio generation, and browser recordings with editing slates and a visible cursor. Use when preparing a YouTube demo, release video, PR walkthrough, or automated product-video scenario."
+description: "Create WebJET CMS feature-video assets from a pull request or branch: one JavaScript shot plan with localized narration and inline CodeceptJS/Playwright shot functions, ElevenLabs audio generation, and browser recordings with editing slates and a visible cursor. Use when preparing a YouTube demo, release video, PR walkthrough, or automated product-video scenario."
 ---
 
 # Create a WebJET CMS Feature Video
 
 Prepare a customer-focused product story and repeatable browser footage. Keep
-shot metadata, localized narration and execution order in one JSON-compatible
-object; derive the narration, shot plan and walkthrough from it.
+shot metadata, localized narration, preparation and browser steps in one
+JavaScript object; derive the narration, shot plan and walkthrough from it.
 
 Read [references/production-reference.md](references/production-reference.md)
 before implementing or changing a video scenario. It contains the exact schema,
@@ -47,12 +47,16 @@ Start around 170 to 195 Slovak words for the default duration. Count words
 across all shots, including manual ones. Use measured voice duration when it
 is available; `durationSeconds` remains an editing estimate until adjusted.
 
-## 3. Keep One JSON Shot Plan
+## 3. Keep One JavaScript Shot Plan
 
 - Declare a top-level `const videoPlan = { ... };` before the scenarios. Its
-  initializer must be strict JSON: quoted keys and strings, no comments,
-  trailing commas, functions, interpolation or expressions inside the object.
-  This lets the audio runner validate the data without executing scenario code.
+  initializer is a JavaScript object literal, with `shot` and optional `prepare`
+  functions directly inside each automatic shot. Keep metadata literal and
+  static; comments, unquoted keys and trailing commas are allowed. Do not use
+  computed keys, spreads, getters, shorthand references or dynamic expressions.
+  The audio preflight reads metadata from the syntax tree and skips callback
+  bodies without executing them. Function values belong only in `shot`/`prepare`.
+  This is not strict JSON: serializing it with `JSON.stringify` omits callbacks.
 - Use `language: "sk"` and a `shots` array. Each shot has a stable descriptive
   `id`, `type` (`"auto"` or `"manual"`), positive integer `durationSeconds`,
   English `title`, localized `text-sk`, and optional production `notes`.
@@ -64,15 +68,15 @@ is available; `durationSeconds` remains an editing estimate until adjusted.
   old shot covers different narration beats, split it into separate stable ids.
 - The array order is authoritative for narration, shot-plan numbering, derived
   time ranges and automatic execution. Move the entire shot object to reorder
-  it; keep its id and callback together by name. Do not maintain a separate
-  narration block, hard-coded timeline, ordered callback list or title strings.
+  it, including its inline callbacks. Do not maintain a separate narration block,
+  hard-coded timeline, ordered callback list or title strings.
 - Use `text-cs` for Czech and `text-en` for English. Select the default with
   `videoPlan.language`; `I.generateAudio(videoPlan, { language: "en" })` can
   override audio language for one run. Missing translations fail explicitly;
   use `""` only for a deliberately silent shot. Translating narration alone does
   not translate UI selectors, fixture content or the browser login language.
 - Put browser-external actions, unreliable third-party pages and final
-  title/outro cards in manual shots. Keep every manual shot in the JSON so its
+  title/outro cards in manual shots. Keep every manual shot in the plan so its
   audio and duration remain part of the story. Avoid sensitive data in footage.
 - Time ranges are derived cumulatively from `durationSeconds`. They describe
   the edited film, excluding setup, cleanup and two-second editing slates.
@@ -91,24 +95,31 @@ Keep these scenarios in order:
 Keep metadata callbacks free of browser actions. Do not add global login hooks.
 Require shared utilities inside the relevant callback; the audio runner permits
 only static declarations and direct Feature/Scenario calls at file scope.
-Existing plain-text audio scenarios remain supported, but use JSON for new work.
+Existing plain-text and JSON audio plans remain supported, but use the unified
+JavaScript plan for new productions.
 
-In the main async scenario, map each automatic id to its own async function and
-call `await recordVideoPlan(I, { plan: videoPlan, scenarios: shots, ... })` from
-`helpers/feature_video_plan.js`. Do not copy the recording loop into scenarios.
-Pass the injected `I` as the first argument. The second argument is an options
-object containing `plan`, `scenarios` (callbacks keyed by shot id), and only the
-lifecycle callbacks needed:
+Define `shot: async ({ I, ...dependencies }) => { ... }` next to each automatic
+shot's title, narration and notes. Add an inline `prepare` with the same context
+argument when that shot needs extra preparation. Manual shots need no callbacks.
+Keep shared selectors and helper functions in the main async scenario and pass
+them through `context`; the runner adds `I` and the current resolved `shot`.
+For example, `shot: async ({ I, services }) => { await I.videoClick(services); }`
+uses `context: { services }` from the main scenario.
 
-- `setup`: one-time login and shared setup, after all action ids are validated.
-- `prepare`: a shared baseline before every shot.
-- `prepareShots`: optional extra preparation functions keyed by shot id.
-- `cleanup`: scenario-specific cleanup after each successful shot.
+Call `await recordVideoPlan(I, { plan: videoPlan, context, ... })` from
+`helpers/feature_video_plan.js`. Do not copy the recording loop into scenarios
+or maintain separate callback maps. Pass `I` first and one options object with
+`plan`, optional `context` and `language`, and the lifecycle callbacks needed:
+
+- `setup`: one-time login and shared setup, after automatic callbacks are validated.
+- `prepare`: a shared baseline before every shot; receives the resolved shot.
+- `cleanup`: cleanup after each successful shot; receives the resolved shot.
 
 The runner logs `Recording shot <index>/<total> <id> (<duration>s)` and displays
-a two-second `SETUP shot <index>/<total> <id>` slate. The index and total count
-only automatic shots in their current recording order. It then awaits baseline and id-specific preparation, displays the normal two-second
-shot slate, executes its callback and awaits cleanup. The normal slate includes
+a two-second `SETUP shot <index>/<total> <id> (<duration>s)` slate. The index and
+total count only automatic shots in their current recording order. It then awaits shared
+`prepare`, runs `shot.prepare(context)` if present, displays the normal two-second
+shot slate, runs `shot.shot(context)` and awaits cleanup. The normal slate includes
 the derived number/title and first 200 Unicode characters of localized narration.
 Cut everything from the SETUP slate through the normal slate out of the final
 film, along with cleanup. Neither slate contributes to the edited timeline.
@@ -144,18 +155,19 @@ explicit `{ modelId, voiceId }`, non-empty `ELEVENLABS_MODEL_ID` /
 
 `I.generateAudio(videoPlan)` joins only the selected `text-<language>` fields,
 including manual shots, in array order and makes one request for the complete
-narration. It does not generate separate MP3s per shot or force speech to match
-the estimated durations. Run paid generation only when explicitly requested.
+narration. It never invokes `shot` or `prepare`. It does not generate separate
+MP3s per shot or force speech to match the estimated durations. Run paid generation only when explicitly requested.
 
 Run proportionate checks:
 
-1. Parse changed JavaScript/JSON and run `npm run audio:test` and
+1. Parse changed JavaScript and run `npm run audio:test` and
    `npm run video:test` after infrastructure changes. Verify reordered plans,
    translation errors, manual-shot narration, callback validation and slates.
+   Verify that audio validation and generation do not execute inline callbacks.
 2. Dry-run the audio-only and complete video configurations; neither may call
    ElevenLabs. Check legacy scenarios remain compatible when changing helpers.
 3. Run `npm run audio video/<scenario-name>.js` only on explicit request with
-   an available API key. JSON plans produce `<scenario-name>-<language>.mp3`;
+   an available API key. Object plans produce `<scenario-name>-<language>.mp3`;
    legacy string narration retains `<scenario-name>.mp3`.
 4. Run the tagged recording with `npm run video video/<scenario-name>.js`
    when the configured instance and test credentials are available. Reordering

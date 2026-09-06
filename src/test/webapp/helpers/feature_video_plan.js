@@ -67,43 +67,46 @@ function formatShotPlan(plan, language) {
   ].filter(Boolean).join("\n\n");
 }
 
-/** Checks every automatic callback before recording and preserves the JSON shot order. */
-function getRecordingShots(plan, actions, language) {
+/** Checks every automatic callback before recording and preserves the plan's shot order. */
+function getRecordingShots(plan, language) {
   const shots = resolveVideoPlan(plan, language).shots.filter(shot => shot.type === "auto");
   for (const shot of shots) {
-    if (!actions || !Object.hasOwn(actions, shot.id) || typeof actions[shot.id] !== "function") {
+    if (typeof shot.shot !== "function") {
       throw new Error(`Missing video action for automatic shot: ${shot.id}`);
+    }
+    if (shot.prepare !== undefined && typeof shot.prepare !== "function") {
+      throw new Error(`Shot ${shot.id} prepare must be a function.`);
     }
   }
   return shots;
 }
 
 /**
- * Records automatic shots in JSON order with setup slates and scenario-specific lifecycle callbacks.
+ * Records automatic shots in plan order with setup slates and scenario-specific lifecycle callbacks.
  * Call this plain async function from a Scenario, outside the CodeceptJS helper step queue.
  * @param {object} I CodeceptJS actor
  * @param {object} options Shot plan and recording callbacks
- * @param {object} options.plan JSON shot plan
- * @param {Object<string, Function>} options.scenarios Automatic shot callbacks keyed by id
+ * @param {object} options.plan Shot plan with a shot function and optional prepare function on each automatic shot
+ * @param {object} [options.context] Dependencies passed to inline callbacks, augmented with the actor I and resolved shot
  * @param {Function} [options.setup] One-time login and shared setup, after plan validation
- * @param {Function} [options.prepare] Baseline preparation before every shot
- * @param {Object<string, Function>} [options.prepareShots] Additional preparation keyed by shot id
- * @param {Function} [options.cleanup] Cleanup after each successful shot
+ * @param {Function} [options.prepare] Baseline preparation before every shot; receives the resolved shot
+ * @param {Function} [options.cleanup] Cleanup after each successful shot; receives the resolved shot
  * @param {string} [options.language] Narration language override
  * @returns {Promise<void>} Resolves after every automatic shot and its cleanup
  */
-async function recordVideoPlan(I, { plan, scenarios, setup, prepare, prepareShots = {}, cleanup, language }) {
-  const recordingShots = getRecordingShots(plan, scenarios, language);
+async function recordVideoPlan(I, { plan, context = {}, setup, prepare, cleanup, language }) {
+  const recordingShots = getRecordingShots(plan, language);
   if (setup) await setup();
   for (const [index, shot] of recordingShots.entries()) {
+    const shotContext = { ...context, I, shot };
     const shotLabel = `shot ${index + 1}/${recordingShots.length} ${shot.id}`;
     await I.say("----------------------------------------------------------------------------");
     await I.say(`Recording ${shotLabel} (${shot.durationSeconds}s)`);
     await I.videoTitle(`SETUP ${shotLabel} (${shot.durationSeconds}s)`);
     if (prepare) await prepare(shot);
-    if (Object.hasOwn(prepareShots, shot.id)) await prepareShots[shot.id](shot);
+    if (shot.prepare) await shot.prepare(shotContext);
     await I.videoTitle(shot);
-    await scenarios[shot.id](shot);
+    await shot.shot(shotContext);
     if (cleanup) await cleanup(shot);
   }
 }

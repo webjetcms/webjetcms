@@ -293,7 +293,7 @@ class AudioHelper extends Helper {
 
   /**
    * Generates an MP3 narration for the current scenario file with ElevenLabs.
-   * @param {string|object} text Legacy narration or a JSON video plan with localized shot text
+   * @param {string|object} text Legacy narration or a video plan with localized shot text; callbacks are not executed
    * @param {{modelId?: string, voiceId?: string, language?: string}} [options] Voice and language overrides
    * @returns {Promise<string>} Absolute path of the generated MP3 file
    * @throws {Error} When generation is disabled, configuration is invalid, or generation fails
