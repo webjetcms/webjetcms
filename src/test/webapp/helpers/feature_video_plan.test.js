@@ -41,10 +41,38 @@ test("requires a translation for every shot and allows explicitly silent shots",
   assert.throws(() => getPlanNarration(plan), /narration must not be empty/);
 });
 
+test("head shots retain localized narration and timing while skipping all shot callbacks", async () => {
+  const { recordVideoPlan } = require("./feature_video_plan.js");
+  const plan = createPlan();
+  const intro = plan.shots[0];
+  intro.type = "head";
+  intro.notes = "Insert the generated talking-head clip.";
+  intro.shot = intro.prepare = async () => { throw new Error("Head callbacks must not execute"); };
+  plan.shots = [plan.shots[1], intro, plan.shots[2]];
+  assert.equal(getPlanNarration(plan, "en"), "English editing.\n\nEnglish intro.\n\nEnglish preview.");
+  assert.deepEqual(resolveVideoPlan(plan, "en").shots.map(shot => [shot.id, shot.number, shot.startSeconds]), [
+    ["edit", 1, 0], ["intro", 2, 10], ["preview", 3, 15]
+  ]);
+  assert.match(formatShotPlan(plan), /0:10-0:15 \| HEAD \| Shot 2 \[intro\]/);
+  const events = [];
+  const messages = [];
+  for (const shot of plan.shots.filter(shot => shot.type === "auto")) shot.shot = async () => events.push(`RUN:${shot.id}`);
+  await recordVideoPlan({
+    say: async message => messages.push(message),
+    videoTitle: async shot => events.push(typeof shot === "string" ? shot : `${shot.type}:${shot.id}:${shot.narration}`)
+  }, { plan, language: "en", prepare: async shot => events.push(`PREPARE:${shot.id}`), cleanup: async shot => events.push(`CLEANUP:${shot.id}`) });
+  assert.deepEqual(events, [
+    "SETUP shot 1/2 edit (10s)", "PREPARE:edit", "auto:edit:English editing.", "RUN:edit", "CLEANUP:edit",
+    "head:intro:English intro.",
+    "SETUP shot 2/2 preview (15s)", "PREPARE:preview", "auto:preview:English preview.", "RUN:preview", "CLEANUP:preview"
+  ]);
+  assert.ok(messages.includes("WARNING: head video | Shot 2/3 [intro]: Intro (5s)\nEnglish intro.\nInsert the generated talking-head clip."));
+});
+
 test("rejects ambiguous metadata and missing actions before recording", () => {
   const invalid = [
     [plan => plan.shots.push({ ...plan.shots[0] }), /Duplicate shot id/],
-    [plan => plan.shots[0].type = "auto1", /type must be auto or manual/],
+    [plan => plan.shots[0].type = "auto1", /type must be auto, manual or head/],
     [plan => plan.shots[0].durationSeconds = -1, /positive integer/],
     [plan => plan.language = "../en", /language code/]
   ];

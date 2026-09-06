@@ -62,8 +62,8 @@ is available; `durationSeconds` remains an editing estimate until adjusted.
   bodies without executing them. Function values belong only in `shot`/`prepare`.
   This is not strict JSON: serializing it with `JSON.stringify` omits callbacks.
 - Use `language: "sk"` and a non-empty `shots` array. Each shot has a unique,
-  stable lowercase hyphenated `id` (e.g. `text-editing`), `type` (`"auto"` or
-  `"manual"`), positive integer `durationSeconds`, English `title`, localized
+  stable lowercase hyphenated `id` (e.g. `text-editing`), `type` (`"auto"`,
+  `"manual"` or `"head"`), positive integer `durationSeconds`, English `title`, localized
   `text-sk`, and optional production `notes`.
 - `auto` means browser steps are automated; `manual` means footage/cards are
   supplied during editing. A manual shot produces a warning slate in its plan
@@ -90,15 +90,17 @@ is available; `durationSeconds` remains an editing estimate until adjusted.
   the edited film, excluding setup, cleanup and two-second editing slates.
   Never use these durations as application waits. Use ASCII hyphens in ranges.
 
-## 4. Implement the Three Scenarios
+## 4. Implement the Scenarios
 
 Keep these scenarios in order:
 
 1. `ElevenLabs`: inject only `I`, use a synchronous callback containing one
    `I.generateAudio(videoPlan)` call and tag only `@audio`.
-2. `Shot plan`: format the same object with `formatShotPlan(videoPlan)` from
+2. For plans with head shots, `ElevenLabs Head`: inject only `I`, call
+   `I.generateHead(videoPlan)` once in a synchronous callback and tag only `@head`.
+3. `Shot plan`: format the same object with `formatShotPlan(videoPlan)` from
    `helpers/feature_video_plan.js` and print it with `I.say`; leave it untagged.
-3. The named main walkthrough: tag `@video`. Add `@current` here only if needed.
+4. The named main walkthrough: tag `@video`. Add `@current` here only if needed.
 
 Keep metadata callbacks free of browser actions. Do not add global login hooks.
 Require shared utilities inside the relevant callback; the audio runner permits
@@ -108,7 +110,7 @@ JavaScript plan for new productions.
 
 Define `shot: async ({ I, ...dependencies }) => { ... }` next to each automatic
 shot's title, narration and notes. Add an inline `prepare` with the same context
-argument when that shot needs extra preparation. Manual shots need no callbacks.
+argument when that shot needs extra preparation. Manual and head shots need no callbacks.
 Keep shared selectors and helper functions in the main async scenario and pass
 them through `context`; the runner adds `I` and the current resolved `shot`.
 Top-level callbacks cannot access variables declared inside the main scenario;
@@ -133,7 +135,7 @@ awaits shared `prepare`, runs `shot.prepare(context)` if present, displays the
 normal two-second shot slate, runs `shot.shot(context)` and awaits cleanup.
 The normal slate includes
 the derived number/title and first 200 Unicode characters of localized narration.
-That number uses the full plan, including manual shots; the SETUP counter measures
+That number uses the full plan, including manual and head shots; the SETUP counter measures
 only automatic recording progress. The runner owns the editing slates: do not repeat
 `I.videoTitle` inside individual `shot` or `prepare` functions.
 Cut everything from the SETUP slate through the normal slate out of the final
@@ -183,19 +185,19 @@ explicit `{ modelId, voiceId }`, non-empty `ELEVENLABS_MODEL_ID` /
 `ELEVENLABS_API_KEY`; never store it in code or command arguments.
 
 `I.generateAudio(videoPlan)` joins only the selected `text-<language>` fields,
-including manual shots, in array order and makes one request for the complete
+including manual and head shots, in array order and makes one request for the complete
 narration. It never invokes `shot` or `prepare`. It does not generate separate
 MP3s per shot or force speech to match the estimated durations. Run paid
 generation only when explicitly requested.
 
 Run proportionate checks:
 
-1. Parse changed JavaScript and run `npm run audio:test` and
+1. Parse changed JavaScript and run `npm run audio:test`, `npm run head:test` and
    `npm run video:test` after infrastructure changes. Verify reordered plans,
    translation errors, manual-shot narration and warning slates, callback
    validation, and skipped automatic lifecycle callbacks for manual shots.
    Verify that audio validation and generation do not execute inline callbacks.
-2. Dry-run the audio-only and complete video configurations; neither may call
+2. Dry-run the audio-only, head-only and complete video configurations; none may call
    ElevenLabs. Check legacy scenarios remain compatible when changing helpers.
 3. Run `npm run audio video/<scenario-name>.js` only on explicit request with
    an available API key. Object plans produce `<scenario-name>-<language>.mp3`;
@@ -203,7 +205,7 @@ Run proportionate checks:
 4. Run the tagged recording with `npm run video video/<scenario-name>.js`
    when the configured instance and test credentials are available. Reordering
    checks should include a shot that previously depended on its predecessor.
-5. Final MP3/WebM files live in gitignored `docs/feature-video`. Confirm and
+5. Final MP3/MP4/WebM files live in gitignored `docs/feature-video`. Confirm and
    inspect generated media before handing it off. The production reference
    describes atomic output replacement and retention of failed raw recordings.
 
@@ -213,3 +215,39 @@ commands, output paths, validation and manual gaps. For workflow refactoring,
 explain the schema, reorder/language controls, changed files and verification;
 do not repeat the unchanged complete narration. State whether media was actually
 generated and any unverified browser behavior.
+
+## Talking Heads and Credits
+
+Use `type: "head"` for an explicitly requested generated presenter. It keeps
+its narration, numbering and estimated duration in the shared plan and combined
+audio. In the browser recording it shows a two-second `WARNING: head video`
+slate with title, full localized narration and notes. All per-shot preparation,
+actions and cleanup are skipped; replace the marker with the clip during editing.
+
+`npm run head video/<scenario-name>.js` runs only `@head` without a browser or
+login. It validates every head text, option, image and output before paid calls,
+then generates separate TTS and a lip-sync video for each head shot in order.
+Default reference: Jack / Home Vlog Style, framed for 16:9 in
+`video/assets/head/jack-home-vlog-style.png`. Default model/resolution:
+`creatify-aurora` / `720p`; leave other Aurora settings at their defaults.
+The `imagePath` option selects another reference (relative to the scenario file).
+`I.generateHead` also accepts `language`, `modelId`, `resolution` and
+`audio: { modelId, voiceId }`. Each shot's `head` object overrides the same
+settings except language, with individual audio fields merged. Head text must
+not be empty. Audio uses the existing TTS defaults and environment precedence.
+
+Run paid head generation only when explicitly requested. Each invocation
+regenerates all head clips; there is no cache or automatic paid retry. Files are
+`docs/feature-video/<scenario-name>-<shot-id>-<language>.mp3` and `.mp4`, replaced
+atomically on completion. Video duration follows audio, not `durationSeconds`.
+Failures stop later shots and include the generation ID when available. Inspect
+resolution, framing, sound and lip synchronization before handing off a real run.
+
+Keep the key only in `ELEVENLABS_API_KEY`. Head generation requires
+`text_to_speech` and `image_video_generation`; both audio and head credit
+summaries additionally need `user_read`. Audio reports `character-cost` from the
+TTS response, falling back to an explicitly approximate account delta. Head
+reports the whole run's account delta, including TTS and video. Both display
+credits remaining in the current limit; reporting is non-fatal, runs even after
+partial failure, and labels pending jobs provisional. Dry-runs call neither the
+generation nor credit APIs. See the production reference for API and failure details.

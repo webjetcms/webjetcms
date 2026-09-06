@@ -14,8 +14,8 @@ function resolveVideoPlan(plan, language = plan?.language || "sk") {
     }
     if (ids.has(shot.id)) throw new Error(`Duplicate shot id: ${shot.id}`);
     ids.add(shot.id);
-    if (!["auto", "manual"].includes(shot.type)) {
-      throw new Error(`Shot ${shot.id} type must be auto or manual.`);
+    if (!["auto", "manual", "head"].includes(shot.type)) {
+      throw new Error(`Shot ${shot.id} type must be auto, manual or head.`);
     }
     if (!Number.isInteger(shot.durationSeconds) || shot.durationSeconds <= 0) {
       throw new Error(`Shot ${shot.id} durationSeconds must be a positive integer.`);
@@ -40,7 +40,7 @@ function resolveVideoPlan(plan, language = plan?.language || "sk") {
   return { language, shots };
 }
 
-/** Joins only localized narration, including manual shots, in the edited order. */
+/** Joins only localized narration, including manual and head shots, in the edited order. */
 function getPlanNarration(plan, language) {
   const resolved = resolveVideoPlan(plan, language);
   const text = resolved.shots.map(shot => shot.narration).filter(Boolean).join("\n\n");
@@ -57,7 +57,7 @@ function formatShotPlan(plan, language) {
   const resolved = resolveVideoPlan(plan, language);
   return [
     `Language: ${resolved.language}. Times describe the edited timeline; adjust durations to the recorded voice.`,
-    "Cut setup, cleanup and two-second slates out of the recording. Manual shots require separate footage.",
+    "Cut setup, cleanup and two-second slates out of the recording. Manual shots require separate footage; head shots require npm run head.",
     plan.notes || "",
     ...resolved.shots.map(shot => [
       `${formatTime(shot.startSeconds)}-${formatTime(shot.endSeconds)} | ${shot.type.toUpperCase()} | Shot ${shot.number} [${shot.id}] | ${shot.title}`,
@@ -71,7 +71,7 @@ function formatShotPlan(plan, language) {
 function getRecordingShots(plan, language) {
   const shots = resolveVideoPlan(plan, language).shots;
   for (const shot of shots) {
-    if (shot.type === "manual") continue;
+    if (shot.type !== "auto") continue;
     if (typeof shot.shot !== "function") {
       throw new Error(`Missing video action for automatic shot: ${shot.id}`);
     }
@@ -83,7 +83,7 @@ function getRecordingShots(plan, language) {
 }
 
 /**
- * Records automatic shots and manual-footage warning slates in plan order.
+ * Records automatic shots and manual/head warning slates in plan order.
  * Call this plain async function from a Scenario, outside the CodeceptJS helper step queue.
  * @param {object} I CodeceptJS actor
  * @param {object} options Shot plan and recording callbacks
@@ -93,7 +93,7 @@ function getRecordingShots(plan, language) {
  * @param {Function} [options.prepare] Baseline preparation before every automatic shot; receives the resolved shot
  * @param {Function} [options.cleanup] Cleanup after each successful automatic shot; receives the resolved shot
  * @param {string} [options.language] Narration language override
- * @returns {Promise<void>} Resolves after every automatic shot, its cleanup and all manual warning slates
+ * @returns {Promise<void>} Resolves after every automatic shot, its cleanup and all warning slates
  */
 async function recordVideoPlan(I, { plan, context = {}, setup, prepare, cleanup, language }) {
   const recordingShots = getRecordingShots(plan, language);
@@ -102,6 +102,11 @@ async function recordVideoPlan(I, { plan, context = {}, setup, prepare, cleanup,
   if (setup) await setup();
   for (const shot of recordingShots) {
     await I.say("----------------------------------------------------------------------------");
+    if (shot.type === "head") {
+      await I.say(`WARNING: head video | Shot ${shot.number}/${recordingShots.length} [${shot.id}]: ${shot.title} (${shot.durationSeconds}s)\n${shot.narration}\n${shot.notes || "Generate this clip with npm run head and insert it during editing."}`);
+      await I.videoTitle(shot);
+      continue;
+    }
     if (shot.type === "manual") {
       await I.say(`WARNING: manual steps | Shot ${shot.number}/${recordingShots.length} [${shot.id}]: ${shot.title} (${shot.durationSeconds}s)\n${shot.notes || "Add filming instructions to this shot's notes."}`);
       await I.videoTitle(shot);

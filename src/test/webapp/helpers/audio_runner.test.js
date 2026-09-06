@@ -291,7 +291,7 @@ Scenario("ElevenLabs", ({ I }) => { I.generateAudio(videoPlan); }).tag("@audio")
     [source.replace('"Narration."', 'process.exit()'), /only static declarations/],
     [source.replace('"Narration."', '`${process.exit()}`'), /only static declarations/],
     [source.replace('"text-sk"', '"text-cs"'), /missing text-sk/],
-    [source.replace('"manual"', '"auto1"'), /type must be auto or manual/],
+    [source.replace('"manual"', '"auto1"'), /type must be auto, manual or head/],
     [source.replace("generateAudio(videoPlan)", 'generateAudio(videoPlan, { language: "en", language: "sk" })'), /must not be repeated/]
   ];
   for (const [input, message] of invalid) assert.throws(() => validateAudioScenarioSource(input), message);

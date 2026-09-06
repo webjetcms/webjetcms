@@ -4,9 +4,10 @@ Feature("video.308-pb-redesign");
 // Compare with origin/main: floating gear palettes are replaced by the shared toolbar.
 // Documentation: https://docs.webjetcms.sk/latest/sk/redactor/webpages/pagebuilder
 // The shot plan describes the edited timeline. Short holds below provide editing room;
-// extend them to the recorded narration and insert the explicitly marked manual shots.
+// extend them to the recorded narration and insert the manual footage and head clips.
 // Run from src/test/webapp: npm run video video/308-pb-redesign.js
 // Generate speech only on request: npm run audio video/308-pb-redesign.js
+// Generate the talking-head intro: npm run head video/308-pb-redesign.js
 
 // Reorder shots here; ids remain stable and timing is derived from durationSeconds.
 const videoPlan = {
@@ -15,11 +16,11 @@ const videoPlan = {
     "shots": [
         {
             "id": "intro",
-            "type": "manual",
+            "type": "head",
             "durationSeconds": 18,
             "title": "New Page Builder: familiar tools",
             "text-sk": "Používali ste Page Builder a po aktualizácii hľadáte známe nástroje? V tomto videu si ukážeme, kam sa presunuli a ako sa pracuje s novou verziou. Stránku naďalej skladáte z pripravených blokov. Vylepšili sme ale spôsob ich výberu a úprav.",
-            "notes": "Titulok „Nový Page Builder: kde nájdete známe nástroje“. Celkový pohľad nového editora z nasledujúceho záberu."
+            "notes": "Insert the separately generated Jack / Home Vlog Style intro, cropped to 16:9. Generate it with npm run head video/308-pb-redesign.js."
         },
         {
             "id": "old-editor",
@@ -348,6 +349,10 @@ const videoPlan = {
 Scenario("ElevenLabs", ({ I }) => {
     I.generateAudio(videoPlan);
 }).tag("@audio");
+
+Scenario("ElevenLabs Head", ({ I }) => {
+    I.generateHead(videoPlan);
+}).tag("@head");
 
 Scenario("Shot plan", ({ I }) => {
     const { formatShotPlan } = require("../helpers/feature_video_plan.js");

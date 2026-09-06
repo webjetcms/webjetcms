@@ -30,7 +30,7 @@ Použite `Feature("video.<scenario-name>")`, aby sa dal zdroj scenára jednoduch
 
 - Manuálne zábery ponechajte v sprievodnom pláne záberov namiesto simulovania nespoľahlivej akcie prehliadača.
 
-Pred hlavným scenárom uchovávajte hovorený text a plán záberov v dvoch samostatných metadátových scenároch. `ElevenLabs` musí obsahovať jediné volanie `I.generateAudio` a značku `@audio`. `Shot plan` naďalej používa `I.say` a nemá značku. Ani jeden z nich nesmie prihlasovať používateľa, otvárať prehliadač alebo vykonávať kroky aplikácie. Nepoužívajte globálny prihlasovací `Before`; objekt `login` vložte až do hlavného scenára označeného `@video`.
+Pred hlavným scenárom uchovávajte hovorený text a plán záberov v samostatných metadátových scenároch. Pri pláne s typom `head` medzi ne pridajte aj scenár `ElevenLabs Head` opísaný nižšie. `ElevenLabs` musí obsahovať jediné volanie `I.generateAudio` a značku `@audio`. `Shot plan` naďalej používa `I.say` a nemá značku. Ani jeden z nich nesmie prihlasovať používateľa, otvárať prehliadač alebo vykonávať kroky aplikácie. Nepoužívajte globálny prihlasovací `Before`; objekt `login` vložte až do hlavného scenára označeného `@video`.
 
 ```javascript
 Feature("video.293-config-jstree-view");
@@ -64,7 +64,7 @@ npm run video:current
 
 Oba príkazy predvolene vytvoria kvalitný WebM súbor s rozlíšením `1920 × 1080`, pomenovaný podľa scenára, v priečinku `docs/feature-video` v koreňovom priečinku repozitára, napríklad `293-config-jstree-view.webm`. Pomocník určený pre nahrávanie videa zvyšuje kvalitu snímok Chrome na 100 a nahrádza predvolený cieľový dátový tok Playwright 1 Mb/s hodnotou 50 Mb/s, používa CRF 0 a maximálny kvantizátor 4, aby zachoval detaily používateľského rozhrania. Opakované úspešné spustenie rovnakého scenára nahradí predchádzajúci úspešný súbor. Neúspešná nahrávka sa uloží samostatne s príponou `.failed.webm`, napríklad `293-config-jstree-view.failed.webm`, a poslednú úspešnú nahrávku nenahradí.
 
-Priečinok `docs/feature-video` je lokálny a ignorovaný cez `.gitignore`, takže vygenerované médiá sa nepridajú do Gitu. Finálne MP3 a WebM súbory aj pracovné súbory vznikajú v tomto priečinku a prežijú vyčistenie `build/test`. Playwright najprv nahráva do podpriečinka `.video-raw`. Po dokončení sa jeho UUID súbor atómovo premenuje na stabilný názov a prázdny pracovný priečinok sa odstráni. Pri chybe zostane raw nahrávka zachovaná na diagnostiku.
+Priečinok `docs/feature-video` je lokálny a ignorovaný cez `.gitignore`, takže vygenerované médiá sa nepridajú do Gitu. Finálne MP3, MP4 a WebM súbory aj pracovné súbory vznikajú v tomto priečinku a prežijú vyčistenie `build/test`. Playwright najprv nahráva do podpriečinka `.video-raw`. Po dokončení sa jeho UUID súbor atómovo premenuje na stabilný názov a prázdny pracovný priečinok sa odstráni. Pri chybe zostane raw nahrávka zachovaná na diagnostiku.
 
 Štandardné príkazy používajú v `package.json` predvolené rozlíšenie `1920 × 1080` a zväčšenie obsahu stránky na pomer `24/17`, teda približne `141,18 %`. Video pomocník zapíše túto hodnotu ako predvolené priblíženie do dočasného profilu Chromium ešte pred spustením prehliadača. Ide o rovnaký mechanizmus, aký používa priblíženie cez menu Chrome. Aplikácia preto už počas inicializácie pracuje s logickým viewport `1360 × 765`, zatiaľ čo výsledok sa vykreslí priamo do Full HD videa. Texty a ovládacie prvky zostávajú dobre čitateľné bez dodatočného zväčšovania obrazu vo video editore.
 
@@ -115,7 +115,7 @@ Príkaz spustí iba scenár označený `@audio` cez samostatnú konfiguráciu Co
 ### API kľúč ElevenLabs
 
 1. Prihláste sa do ElevenLabs a otvorte **Developers > API Keys**.
-2. Vytvorte obmedzený kľúč, povoľte mu iba oprávnenie `text_to_speech` a nastavte kreditný limit.
+2. Vytvorte obmedzený kľúč, povoľte mu `text_to_speech` a nastavte kreditný limit. Na prehľad kreditov povoľte tiež `user_read` (čítanie používateľských údajov/predplatného); na hovoriace videá aj `image_video_generation`.
 3. Kľúč po vytvorení hneď skopírujte. ElevenLabs zobrazí jeho úplnú hodnotu iba raz.
 4. Uchovávajte ho ako tajomstvo mimo repozitára a nastavte ho do premennej prostredia `ELEVENLABS_API_KEY`.
 
@@ -151,3 +151,90 @@ Explicitný parameter `modelId` alebo `voiceId` má prednosť pred neprázdnou p
 `Luki Zajo` je hlas z komunitnej knižnice. Jeho použitie cez API závisí od dostupnosti hlasu a programu účtu a nemusí byť dostupné v bezplatnom programe. V takom prípade použite program, ktorý povoľuje API prístup k hlasom z [Voice Library](https://elevenlabs.io/docs/eleven-creative/voices/voice-library), alebo nastavte `ELEVENLABS_VOICE_ID` na hlas dostupný pre váš účet. Uloženie hlasu do **My Voices** je voliteľné a samo osebe API prístup v bezplatnom programe neodomkne. Zoznam hlasov vhodných pre slovenčinu nájdete na stránke [Slovak Text to Speech](https://elevenlabs.io/text-to-speech/slovak).
 
 Pomocník ešte pred volaním API overí, že môže v cieľovom priečinku vytvoriť dočasný súbor. Potom načíta celú odpoveď, overí zvukový formát a až úplným dočasným súborom atómovo nahradí výsledný MP3 súbor. Pri chybe API, siete, časového limitu alebo zápisu zostane posledný úspešný súbor zachovaný. Požiadavka sa automaticky neopakuje, aby nejasná sieťová chyba nespôsobila druhé účtovanie kreditov.
+
+
+## Hovoriace videá (`head`)
+
+Spoločný `videoPlan` je statický JavaScript objekt. Poradie jeho `shots` určuje číslovanie, časovú os aj poradie hovoreného slova. Každý záber obsahuje jedinečné `id`, typ `auto`, `manual` alebo `head`, názov `title`, kladný celočíselný odhad `durationSeconds` a lokalizovaný `text-sk`, prípadne `text-cs` a `text-en`. Automatické kroky patria do inline funkcií `shot` a voliteľne `prepare`.
+
+Typ `head` vytvorí samostatný klip s hovoriacou postavou. V hlavnej nahrávke sa na jeho mieste zobrazí dvojsekundová tabuľa `WARNING: head video` s číslom, názvom, celým lokalizovaným textom a poznámkami. Preskočí sa príprava, akcia aj cleanup tohto záberu. Záber zostáva súčasťou časovej osi a spoločného MP3 z `npm run audio`; počítadlo automatických záberov ho nezapočítava. Tabuľu pri strihu nahraďte vygenerovaným MP4.
+
+```javascript
+const videoPlan = {
+    language: "sk",
+    shots: [{
+        id: "intro",
+        type: "head",
+        title: "Introduce the benefit",
+        durationSeconds: 8,
+        "text-sk": "Predstavujeme vám novinky vo WebJET CMS.",
+        notes: "Insert the generated talking-head clip."
+    }]
+};
+
+Scenario("ElevenLabs", ({ I }) => {
+    I.generateAudio(videoPlan);
+}).tag("@audio");
+
+Scenario("ElevenLabs Head", ({ I }) => {
+    I.generateHead(videoPlan);
+}).tag("@head");
+
+Scenario("Shot plan", ({ I }) => {
+    const { formatShotPlan } = require("../helpers/feature_video_plan.js");
+    I.say(formatShotPlan(videoPlan));
+});
+```
+
+Za tieto scenáre patrí hlavný scenár `@video` používajúci `recordVideoPlan`. `ElevenLabs Head` musí obsahovať jediné volanie `I.generateHead` a iba značku `@head`. Jeho runner používa tú istú statickú kontrolu zdrojového kódu ako audio; pri čítaní metadát nevykonáva callbacky.
+
+Z priečinka `src/test/webapp` spustite:
+
+```shell
+npm run head video/308-pb-redesign.js
+```
+
+Spustí sa len `@head`, bez prehliadača a prihlasovania. Predvolené nastavenia sú obrázok **Jack / Home Vlog Style** pripravený na pomer 16:9 v `video/assets/head/jack-home-vlog-style.png`, model `creatify-aurora` a explicitné rozlíšenie `720p`. TTS používa rovnaké predvolené hodnoty ako audio: `eleven_v3` a Luki Zajo, vrátane premenných `ELEVENLABS_MODEL_ID` a `ELEVENLABS_VOICE_ID`. Ostatné nastavenia Aurora zostávajú predvolené. Dostupnosť Image & Video API vyžaduje podporovaný platený program ElevenLabs (aktuálne Pro alebo vyšší).
+
+Spoločné nastavenia možno prepísať parametrom pomocníka:
+
+```javascript
+I.generateHead(videoPlan, {
+    language: "en",
+    imagePath: "assets/my-presenter.png",
+    modelId: "creatify-aurora",
+    resolution: "720p",
+    audio: { modelId: "eleven_v3", voiceId: "<voice-id>" }
+});
+```
+
+Jednotlivý záber môže obsahovať `head: { imagePath, modelId, resolution, audio: { modelId, voiceId } }`. Každá jeho hodnota prepíše spoločné nastavenie; `language` sa nastavuje len pre celý beh. Relatívny `imagePath` sa vyhodnotí voči súboru scenára. Podporované sú PNG, JPEG a WebP do 25 MB; pomer strán určíte referenčným obrázkom. Podporované rozlíšenia sú `480p` a `720p`. Iný `modelId` musí podporovať rovnaký Lip Sync vstup; overený je Aurora. Avatar a scénu verejné API nevyberá podľa mena, preto sa používa uložený obrázok.
+
+Pred API volaniami sa overí celý plán, preklady, neprázdne texty `head`, nastavenia, obrázky a možnosť vytvoriť všetky výstupy. Plán bez `head` skončí informatívne bez API volaní. Zábery sa spracujú postupne: samostatné TTS, odoslanie obrázka a MP3 ako `inline_base64` do `POST /v1/flows/video`, kontrola `GET /v1/flows/video/{id}` a stiahnutie MP4. API kľúč sa neposiela úložisku výsledkov. Kontroly stavu majú intervaly 10, 20, 40 a potom 60 sekúnd; limit je 30 minút na video.
+
+Výstupy sú v ignorovanom `docs/feature-video`: `<scenario>-<shot-id>-<language>.mp3` a `.mp4`. Intro scenára 308 vytvorí `308-pb-redesign-intro-sk.mp4`. Každé spustenie generuje nanovo a spotrebúva kredity. Platené požiadavky sa automaticky neopakujú. Chyba zastaví ďalšie zábery a pri vytvorenej úlohe uvedie jej ID. Dokončené súbory sa nahradia atómovo; pri chybe videa zostáva posledný úspešný MP4 aj už vygenerovaný nový MP3. Dĺžku klipu určuje audio, `durationSeconds` je len odhad pre strih. Automatické skladanie finálneho filmu nie je súčasťou generovania.
+
+Podrobnosti vstupov a stavov uvádza [ElevenLabs Video API](https://elevenlabs.io/docs/api-reference/flows/video/create).
+
+## Spotreba a zostávajúce kredity
+
+Po `audio` aj `head` sa vypíše súhrn kreditov. Pred a po generovaní sa načíta [predplatné](https://elevenlabs.io/docs/api-reference/user/subscription/get/). Zostávajúce kredity aktuálneho limitu sú `max(0, character_limit - character_count)`.
+
+- **Audio:** skutočne účtovaná spotreba pochádza z hlavičky `character-cost` odpovede TTS. Ak chýba, výpis použije označený orientačný rozdiel spotreby účtu. Počet znakov vstupného textu sa ako odhad nepoužíva.
+- **Head:** orientačná spotreba je rozdiel `character_count` po a pred celým behom. Zahŕňa TTS aj video všetkých spracovaných záberov. Súbežná aktivita účtu a oneskorené účtovanie ju môžu ovplyvniť.
+- Súhrn sa vypíše aj po čiastočnom zlyhaní. Pri nedokončenej alebo neistej vzdialenej úlohe je označený ako priebežný. Chyba načítania, chýbajúce údaje či oprávnenie `user_read` zobrazia `unavailable` s dôvodom. Zmena fakturačného obdobia zneplatní rozdiel spotreby účtu; priamo účtovaná TTS spotreba a platný aktuálny zostatok zostávajú použiteľné.
+
+Chyba reportovania nezneplatní vytvorené médiá ani neprekryje pôvodnú chybu generovania. Hlavičku TTS opisuje [úvod k ElevenLabs API](https://elevenlabs.io/docs/api-reference/introduction).
+
+## Overenie pomocníkov bez plateného generovania
+
+```shell
+npm run audio:test
+npm run head:test
+npm run video:test
+CODECEPT_AUDIO_FILE="$PWD/video/308-pb-redesign.js" npx codeceptjs dry-run -c codecept.audio.conf.js --steps --grep '@audio'
+CODECEPT_HEAD_FILE="$PWD/video/308-pb-redesign.js" npx codeceptjs dry-run -c codecept.head.conf.js --steps --grep '@head'
+CODECEPT_VIDEO=true npx codeceptjs dry-run -c codecept.video.conf.js --steps -p autoLogin video/308-pb-redesign.js
+```
+
+Dry-run nevykonáva generovanie ani kreditné API a nepotrebuje API kľúč. Bežné video nahrávanie, audio a head majú navzájom oddelené spúšťanie. Reálne generovanie overujte vedome pre konkrétny scenár; po dokončení skontrolujte obraz, zvuk a synchronizáciu pier.

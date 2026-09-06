@@ -52,6 +52,12 @@ async function withOutputDirectory(callback) {
   }
 }
 
+function mockGenerationFetch(generate) {
+  return async (url, options) => url.endsWith('/user/subscription')
+    ? Response.json({ character_count: 100, character_limit: 1000 })
+    : generate(url, options);
+}
+
 function successfulResponse(data = "generated-mp3") {
   return new Response(Buffer.from(data), {
     status: 200,
@@ -80,10 +86,10 @@ test("generates the default MP3 request and registers the scenario-file artifact
     process.env.ELEVENLABS_MODEL_ID = "   ";
     process.env.ELEVENLABS_VOICE_ID = "";
     const requests = [];
-    global.fetch = async (url, options) => {
+    global.fetch = mockGenerationFetch(async (url, options) => {
       requests.push({ url, options });
       return successfulResponse();
-    };
+    });
 
     const scenario = createAudioTest(
       path.join("project", "video", "293-config-jstree-view.js")
@@ -140,10 +146,10 @@ test("generates localized plan narration in shot order without executing inline 
   await withOutputDirectory(async outputDirectory => {
     process.env.ELEVENLABS_API_KEY = "test-api-key";
     const requests = [];
-    global.fetch = async (url, options) => {
+    global.fetch = mockGenerationFetch(async (url, options) => {
       requests.push(JSON.parse(options.body));
       return successfulResponse();
-    };
+    });
     const plan = { language: "sk", shots: [
       { id: "second", type: "auto", durationSeconds: 5, title: "Not spoken", "text-sk": "Second.", "text-en": "English second." },
       { id: "first", type: "manual", durationSeconds: 3, title: "Not spoken either", "text-sk": "First.", "text-en": "English first." }
@@ -176,10 +182,10 @@ test("prefers helper overrides over environment settings", async () => {
     process.env.ELEVENLABS_MODEL_ID = "environment-model";
     process.env.ELEVENLABS_VOICE_ID = "environment-voice";
     let request;
-    global.fetch = async (url, options) => {
+    global.fetch = mockGenerationFetch(async (url, options) => {
       request = { url, options };
       return successfulResponse();
-    };
+    });
 
     const helper = new AudioHelper({
       generationEnabled: true,
@@ -216,10 +222,10 @@ test("uses non-empty environment settings before defaults", () => {
 test("requires the API key before making a request and guards the complete run to one call", async () => {
   await withOutputDirectory(async () => {
     let requestCount = 0;
-    global.fetch = async () => {
+    global.fetch = mockGenerationFetch(async () => {
       requestCount++;
       return successfulResponse();
-    };
+    });
 
     const helper = new AudioHelper({ generationEnabled: true });
     registerAudioTest(helper, createAudioTest("/project/video/missing-key.js"));
@@ -248,10 +254,10 @@ test("keeps generation disabled unless the dedicated audio configuration enables
 test("rejects a different runtime scenario before making a request", async () => {
   process.env.ELEVENLABS_API_KEY = "test-api-key";
   let requestCount = 0;
-  global.fetch = async () => {
+  global.fetch = mockGenerationFetch(async () => {
     requestCount++;
     return successfulResponse();
-  };
+  });
 
   const helper = new AudioHelper({ generationEnabled: true });
   const wrongTest = createAudioTest("/project/video/wrong.js", {
@@ -267,10 +273,10 @@ test("rejects a different runtime scenario before making a request", async () =>
 
 test("rejects duplicate registered audio scenarios before making a request", () => {
   let requestCount = 0;
-  global.fetch = async () => {
+  global.fetch = mockGenerationFetch(async () => {
     requestCount++;
     return successfulResponse();
-  };
+  });
 
   const helper = new AudioHelper({ generationEnabled: true });
   const suite = {

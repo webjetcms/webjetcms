@@ -95,6 +95,41 @@ test("shows full manual filming instructions instead of the narration excerpt", 
   }
 });
 
+test("shows a two-second head warning with the full localized narration and notes", async () => {
+  const previousCodeceptjs = global.codeceptjs;
+  let browser;
+  try {
+    global.codeceptjs = require("codeceptjs");
+    const VideoHelper = require("./video_helper.js");
+    browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage({ viewport: { width: 1360, height: 765 } });
+    const helper = new VideoHelper({});
+    Object.defineProperty(helper, "helpers", { value: { Playwright: { page } } });
+    const narration = "Vitajte pri predstavení WebJET CMS. ".repeat(7);
+    const notes = "Insert <intro.mp4> during editing.";
+    const startedAt = Date.now();
+    await Promise.all([
+      helper.videoTitle({ type: "head", number: 1, title: "Intro", narration, notes }),
+      (async () => {
+        const slate = page.locator("#wj-video-title-host div").first();
+        await slate.waitFor({ state: "visible" });
+        assert.equal(await slate.locator("div").first().textContent(), "WARNING: head video | Shot 1: Intro");
+        const description = slate.locator("[data-video-narration]");
+        assert.equal(await description.textContent(), `${narration}\n\n${notes}`);
+        const box = await description.boundingBox();
+        assert.ok(box.y >= 0 && box.y + box.height <= 765);
+        assert.equal(await slate.locator("intro\\.mp4").count(), 0, "Notes must render as literal text");
+      })()
+    ]);
+    assert.ok(Date.now() - startedAt >= 2000);
+    assert.equal(await page.locator("#wj-video-title-host").count(), 0);
+  } finally {
+    await browser?.close();
+    if (previousCodeceptjs === undefined) delete global.codeceptjs;
+    else global.codeceptjs = previousCodeceptjs;
+  }
+});
+
 test("keeps synthetic cursor points inside the DOM viewport under browser zoom", async () => {
   const previousCodeceptjs = global.codeceptjs;
   let browser;

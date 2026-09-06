@@ -324,14 +324,16 @@ class VideoHelper extends Helper {
 
   /**
    * Shows a full-window editing slate for two seconds without changing focus or the active iframe.
-   * @param {string|object} title Legacy title or a resolved shot; manual shots show a warning and full filming notes
+   * @param {string|object} title Legacy title or a resolved shot; manual/head shots show warnings with full notes or narration
    * @returns {Promise<void>} Resolves after the slate has been removed
    */
   async videoTitle(title) {
     const manual = typeof title === "object" && title.type === "manual";
-    const heading = typeof title === "string" ? title : `${manual ? "WARNING: manual steps | " : ""}Shot ${title.number}: ${title.title}`;
+    const head = typeof title === "object" && title.type === "head";
+    const heading = typeof title === "string" ? title : `${manual ? "WARNING: manual steps | " : head ? "WARNING: head video | " : ""}Shot ${title.number}: ${title.title}`;
     const excerpt = typeof title === "string" ? "" : manual
       ? (typeof title.notes === "string" && title.notes.trim()) || "Add filming instructions to this shot's notes."
+      : head ? [title.narration, title.notes || "Generate this clip with npm run head and insert it during editing."].join("\n\n")
       : Array.from(title.narration).slice(0, 200).join("");
     await this.helpers.Playwright.page.evaluate(async ({ heading, excerpt, manual }) => {
       const host = document.createElement("div");

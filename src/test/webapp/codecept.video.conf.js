@@ -28,6 +28,10 @@ exports.config = {
     VideoHelper: {
       require: "./helpers/video_helper.js"
     },
+    HeadHelper: {
+      require: "./helpers/head_helper.js",
+      generationEnabled: false
+    },
     AudioHelper: {
       require: "./helpers/audio_helper.js",
       generationEnabled: false

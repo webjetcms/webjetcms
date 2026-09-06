@@ -98,7 +98,8 @@ smaller white text. For manual shots, the heading is
 filming instructions from `notes`, without the 200-character truncation. Missing
 or blank notes display a reminder to add filming instructions. Keep notes concise
 enough to fit in one frame; they replace the narration excerpt on manual slates.
-Both kinds hold for two seconds after painting, then remove themselves.
+Head slates show `WARNING: head video | Shot N: title`, full localized narration
+and notes. All three kinds hold for two seconds after painting, then remove themselves.
 The top-level overlay does not change active iframe context, focus or selection
 and works with cursor rendering disabled. Text is rendered literally, not HTML.
 Legacy `I.videoTitle("Shot 1: description.")` calls remain supported. The shared
@@ -141,7 +142,8 @@ as manual shots.
 ## ElevenLabs Audio Profile
 
 Create an ElevenLabs API key under **Developers > API Keys**. Use a restricted
-key with only the `text_to_speech` scope and set a credit limit. Copy the key
+key with `text_to_speech` and set a credit limit. Add `user_read` for credit
+summaries and `image_video_generation` for head generation. Copy the key
 when it is created because ElevenLabs displays the complete value only once.
 Treat it as a secret: never put it in the repository, a scenario, a helper
 argument, or a command-line argument. Export it to the process environment as
@@ -176,6 +178,65 @@ narration retains `<scenario-name>.mp3`. A temporary file replaces the previous
 MP3 only after the complete response is available. An API, network, timeout, or
 disk error therefore leaves the last successful MP3 unchanged.
 
+## ElevenLabs Head Profile and Credit Reports
+
+`npm run head video/<scenario-name>.js` runs only the synchronous
+`Scenario("ElevenLabs Head", ({ I }) => { I.generateHead(videoPlan); }).tag("@head")`.
+Place it between audio and Shot plan. The dedicated configuration contains only
+HeadHelper, without a browser, login or plugins. Both runners statically inspect
+metadata and skip inline callbacks. Dry-runs call neither generation nor credit APIs.
+
+Defaults: `creatify-aurora`, explicit `720p`, shared Jack / Home Vlog Style reference
+`video/assets/head/jack-home-vlog-style.png`, framed for 16:9. The API uses an image,
+not avatar/scene names. `I.generateHead(videoPlan, options)` accepts `language`,
+`imagePath`, `modelId`, `resolution` (`480p` or `720p`) and `audio: { modelId, voiceId }`.
+Each shot's `head` object overrides these options except language; merge individual
+audio fields. TTS uses the existing defaults and environment precedence. Relative
+image paths resolve beside the scenario. Supported images: PNG/JPEG/WebP up to
+25 MB; their framing determines aspect ratio. Other models must support the same
+Lip Sync contract; Aurora is verified. Image & Video API requires an eligible
+Pro-or-higher account.
+
+Validate all plan metadata, selected translations, non-empty head narration,
+options, images and output reservations before API calls. No head shots means no
+API calls. Process shots sequentially: fresh TTS, then `POST /v1/flows/video` with
+`model_id`, `resolution`, and `image`/`audio` references of
+`{ type: "inline_base64", content_base64, mime_type }`. Leave Aurora guidance at
+its defaults; do not send prompt, aspect ratio or duration settings. Poll
+`GET /v1/flows/video/{id}` after 10, 20, 40 and then 60 seconds, with a 30-minute
+video deadline. Download `content_url` over HTTPS without the ElevenLabs key.
+
+Every run regenerates all head clips; never automatically retry paid POSTs.
+Failures stop later shots and include the generation ID when available. Each
+completed MP3/MP4 atomically replaces
+`docs/feature-video/<scenario-name>-<shot-id>-<language>.mp3` or `.mp4`. Failed
+video generation keeps the previous MP4 and newly generated speech. Scenario 308
+uses head only for intro, preserving its narration and duration estimate; its
+output is `308-pb-redesign-intro-sk.mp4`. Clip duration follows audio, not
+`durationSeconds`. Assembly remains a manual editing step.
+
+Both commands read `GET /v1/user/subscription` before and after generation.
+Remaining credits in the current limit are
+`max(0, character_limit - character_count)`. Audio uses the exact `character-cost`
+TTS response header, falling back to an explicitly approximate account delta.
+Never estimate costs from text length. Head reports the whole run's account
+delta including TTS and video; concurrent activity and delayed charges can affect
+it. Report after partial failure too and label pending/uncertain jobs provisional.
+Missing scope/data or failed reads produce `unavailable` with a reason. A changed
+billing period or decreased counter invalidates the delta; valid exact TTS costs
+and current remaining credits remain usable. Reporting must never invalidate
+media or hide a generation error. Subscription reads require `user_read`.
+
+Run `npm run head:test` alongside audio/video tests. Mock coverage includes full
+preflight, localization, overrides, inline media, polling/timeouts, failures,
+atomic outputs, downloads without key headers and whole-run credit summaries.
+For an explicitly authorized integration test, run head on 308 and inspect
+16:9/720p framing, sound, lip synchronization and the credit summary.
+
+- [Video API](https://elevenlabs.io/docs/api-reference/flows/video/create)
+- [Subscription API](https://elevenlabs.io/docs/api-reference/user/subscription/get/)
+- [TTS credit cost](https://elevenlabs.io/docs/api-reference/introduction)
+
 ## JavaScript Plan and Scenario Template
 
 Declare the plan as a top-level JavaScript object literal with static metadata
@@ -205,11 +266,11 @@ const videoPlan = {
     "shots": [
         {
             "id": "intro",
-            "type": "manual",
+            "type": "head",
             "durationSeconds": 8,
             "title": "Introduce the benefit",
             "text-sk": "<Slovak narration>",
-            "notes": "MANUAL: opening card."
+            "notes": "Insert the generated Jack / Home Vlog Style clip."
         },
         {
             "id": "edit-content",
@@ -235,6 +296,10 @@ const videoPlan = {
 Scenario("ElevenLabs", ({ I }) => {
     I.generateAudio(videoPlan);
 }).tag("@audio");
+
+Scenario("ElevenLabs Head", ({ I }) => {
+    I.generateHead(videoPlan);
+}).tag("@head");
 
 Scenario("Shot plan", ({ I }) => {
     const { formatShotPlan } = require("../helpers/feature_video_plan.js");
@@ -266,13 +331,13 @@ Scenario("<scenario-name>", async ({ I, DTE, login }) => {
 }).tag("@video");
 ```
 
-`resolveVideoPlan` validates unique ids, `auto`/`manual` types, positive integer
+`resolveVideoPlan` validates unique ids, `auto`/`manual`/`head` types, positive integer
 `durationSeconds`, titles and selected localized text. It derives `number`,
 `startSeconds`, `endSeconds` and `narration` without mutating the editable plan.
 `formatShotPlan` includes manual footage, production notes and narration.
 `getRecordingShots(plan, language)` retains all shots in array order and validates
 each automatic `shot` function and optional `prepare` function before recording.
-Manual shots need no functions. `recordVideoPlan(I, options)` uses that validation
+Manual and head shots need no functions. `recordVideoPlan(I, options)` uses that validation
 before its one-time `setup`. For automatic shots it sequences logging, the SETUP
 slate, shared `prepare`, optional inline `shot.prepare(context)`, the normal slate,
 `shot.shot(context)`, and `cleanup`. For manual shots it only logs the warning and
@@ -314,8 +379,9 @@ unconditionally when no popup is displayed.
 `durationSeconds` does not set speech speed, insert silence or make a callback
 last that long. Update estimates after measuring narration. The generator joins
 all selected localized texts with paragraph breaks and makes one API request.
-It never runs `shot` or `prepare`. Manual shots are included and explicit empty
-strings mean intentional silence.
+It never runs `shot` or `prepare`. Manual and head shots are included and explicit
+empty strings mean intentional silence in combined audio. Head generation requires
+non-empty head narration.
 Missing language fields fail before the paid request; there is no silent fallback.
 
 Add `text-cs` for Czech (language code `cs`, not country code `cz`) and `text-en`
@@ -363,6 +429,7 @@ node -e "JSON.parse(require('fs').readFileSync('package.json', 'utf8'))"
 CODECEPT_AUDIO_FILE="$(pwd)/video/<scenario-name>.js" npx codeceptjs dry-run -c codecept.audio.conf.js --steps --grep '@audio'
 CODECEPT_VIDEO=true CODECEPT_VIDEO_ZOOM=1.411764705882353 CODECEPT_VIDEO_CURSOR=true npx codeceptjs dry-run -c codecept.video.conf.js --steps -p autoLogin video/<scenario-name>.js
 npm run audio:test
+npm run head:test
 npm run video:test
 npm run video video/<scenario-name>.js
 ```
@@ -370,6 +437,9 @@ npm run video video/<scenario-name>.js
 `CODECEPT_AUDIO_FILE` is an internal runner/validation input, not a public
 authoring interface. Without it the audio configuration discovers no tests.
 The dry-run does not execute `I.generateAudio` and does not require an API key.
+For plans with head shots also run
+`CODECEPT_HEAD_FILE="$PWD/video/<scenario-name>.js" npx codeceptjs dry-run -c codecept.head.conf.js --steps --grep '@head'`.
+It executes neither head generation nor subscription reads.
 Run the actual `npm run video` command only when the target environment and
 credentials are available. A generated video is finalized when its browser
 context closes, so do not interrupt the process immediately after the scenario.

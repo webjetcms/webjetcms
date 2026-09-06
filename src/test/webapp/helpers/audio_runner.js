@@ -53,17 +53,17 @@ function unwrapDefinitionExpression(expression, definitionName) {
   return null;
 }
 
-function isAudioTag(modifier) {
-  return modifier.name === "tag" && getStringLiteral(modifier.arguments[0]) === AUDIO_TAG;
+function isAudioTag(modifier, tag = AUDIO_TAG) {
+  return modifier.name === "tag" && getStringLiteral(modifier.arguments[0]) === tag;
 }
 
-function matchesAudioGrep(value) {
-  return typeof value === "string" && new RegExp(AUDIO_GREP).test(value);
+function matchesAudioGrep(value, grep = AUDIO_GREP) {
+  return typeof value === "string" && new RegExp(grep).test(value);
 }
 
-function tagMatchesAudioGrep(modifier) {
+function tagMatchesAudioGrep(modifier, grep = AUDIO_GREP) {
   const tag = modifier.name === "tag" ? getStringLiteral(modifier.arguments[0]) : null;
-  return matchesAudioGrep(tag);
+  return matchesAudioGrep(tag, grep);
 }
 
 function containsEagerCall(node) {
@@ -140,9 +140,15 @@ function validateGenerateAudioOptions(node, fail) {
   }
 }
 
-function validateAudioScenarioSource(source, sourcePath = "<audio scenario>") {
+/** Shares the AST preflight between audio and head without evaluating scenario code. */
+function validateGenerationScenarioSource(source, sourcePath = "<audio scenario>", mode = "audio") {
+  const head = mode === "head";
+  const AUDIO_SCENARIO_TITLE = head ? "ElevenLabs Head" : "ElevenLabs";
+  const AUDIO_TAG = head ? "@head" : "@audio";
+  const AUDIO_GREP = head ? "(^|\\s)@head(\\s|$)" : "(^|\\s)@audio(\\s|$)";
+  const method = head ? "generateHead" : "generateAudio";
   const fail = (message) => {
-    throw new Error(`Invalid audio scenario ${sourcePath}: ${message}`);
+    throw new Error(`Invalid ${mode} scenario ${sourcePath}: ${head ? message.replaceAll("generateAudio", "generateHead").replaceAll("audio scenario", "head scenario") : message}`);
   };
 
   let syntaxTree;
@@ -208,7 +214,7 @@ function validateAudioScenarioSource(source, sourcePath = "<audio scenario>") {
   if (dynamicFeatureTag != null) {
     fail("Feature tags must be static string literals in audio scenario files.");
   }
-  if (matchesAudioGrep(featureTitle) || features[0].modifiers.some(tagMatchesAudioGrep)) {
+  if (matchesAudioGrep(featureTitle, AUDIO_GREP) || features[0].modifiers.some(modifier => tagMatchesAudioGrep(modifier, AUDIO_GREP))) {
     fail(`${AUDIO_TAG} must not appear in the Feature title or tags.`);
   }
   for (const scenario of scenarios) {
@@ -216,7 +222,7 @@ function validateAudioScenarioSource(source, sourcePath = "<audio scenario>") {
     if (scenarioTitle == null) {
       fail("Every Scenario must have a static title.");
     }
-    if (matchesAudioGrep(scenarioTitle)) {
+    if (matchesAudioGrep(scenarioTitle, AUDIO_GREP)) {
       fail(`${AUDIO_TAG} must not appear in a Scenario title.`);
     }
     const dynamicTag = scenario.modifiers.find(
@@ -231,7 +237,7 @@ function validateAudioScenarioSource(source, sourcePath = "<audio scenario>") {
     (scenario) => getStringLiteral(scenario.call.arguments[0]) === AUDIO_SCENARIO_TITLE
   );
   const taggedScenarios = scenarios.filter(
-    (scenario) => scenario.modifiers.some(tagMatchesAudioGrep)
+    (scenario) => scenario.modifiers.some(modifier => tagMatchesAudioGrep(modifier, AUDIO_GREP))
   );
 
   if (namedScenarios.length !== 1) {
@@ -245,7 +251,7 @@ function validateAudioScenarioSource(source, sourcePath = "<audio scenario>") {
   if (audioScenario !== taggedScenarios[0]) {
     fail(`Scenario("${AUDIO_SCENARIO_TITLE}") must be the scenario tagged ${AUDIO_TAG}.`);
   }
-  if (audioScenario.modifiers.length !== 1 || !isAudioTag(audioScenario.modifiers[0]) ||
+  if (audioScenario.modifiers.length !== 1 || !isAudioTag(audioScenario.modifiers[0], AUDIO_TAG) ||
     audioScenario.modifiers[0].arguments.length !== 1) {
     fail(`Scenario("${AUDIO_SCENARIO_TITLE}") must have only the ${AUDIO_TAG} tag.`);
   }
@@ -274,14 +280,16 @@ function validateAudioScenarioSource(source, sourcePath = "<audio scenario>") {
   const isGenerateAudioCall = generateAudioCall?.type === "CallExpression" &&
     callee?.type === "MemberExpression" && !callee.computed &&
     callee.object?.type === "Identifier" && callee.object.name === "I" &&
-    callee.property?.type === "Identifier" && callee.property.name === "generateAudio";
+    callee.property?.type === "Identifier" && callee.property.name === method;
   if (!isGenerateAudioCall || generateAudioCall.arguments.length < 1 ||
     generateAudioCall.arguments.length > 2) {
     fail(`Scenario("${AUDIO_SCENARIO_TITLE}") must contain only one I.generateAudio call.`);
   }
 
   if (generateAudioCall.arguments.length === 2) {
-    validateGenerateAudioOptions(generateAudioCall.arguments[1], fail);
+    if (head) {
+      require("./head_settings.js").validateHeadOptions(readPlanMetadata(generateAudioCall.arguments[1]));
+    } else validateGenerateAudioOptions(generateAudioCall.arguments[1], fail);
   }
   let narration = generateAudioCall.arguments[0];
   if (narration?.type === "Identifier") {
@@ -298,18 +306,25 @@ function validateAudioScenarioSource(source, sourcePath = "<audio scenario>") {
       const plan = readPlanMetadata(narration);
       const languageOption = generateAudioCall.arguments[1]?.properties.find(property =>
         (property.key.name || getStringLiteral(property.key)) === "language");
-      getPlanNarration(plan, languageOption ? getStringLiteral(languageOption.value) : undefined);
+      if (head) {
+        require("./head_settings.js").getHeadShots(plan, generateAudioCall.arguments[1] ? readPlanMetadata(generateAudioCall.arguments[1]) : {}, sourcePath);
+      } else getPlanNarration(plan, languageOption ? getStringLiteral(languageOption.value) : undefined);
     } catch (error) {
       fail(`I.generateAudio plan must contain static shot data with optional inline callbacks: ${error.message}`);
     }
     return;
   }
+  if (head) fail("I.generateHead requires a static video plan object.");
   const narrationText = narration?.quasis?.[0]?.value?.cooked;
   if (narration?.type !== "TemplateLiteral" || narration.expressions.length !== 0 ||
     narration.quasis.length !== 1 || typeof narrationText !== "string" ||
     narrationText.trim() === "") {
     fail("I.generateAudio narration must be a non-empty template literal without interpolation.");
   }
+}
+
+function validateAudioScenarioSource(source, sourcePath) {
+  return validateGenerationScenarioSource(source, sourcePath);
 }
 
 function resolveAudioScenario(argument, options = {}) {
@@ -337,7 +352,7 @@ function resolveAudioScenario(argument, options = {}) {
   if (!fsImpl.statSync(scenarioPath).isFile()) {
     throw new Error("The audio scenario must be a file.");
   }
-  validateAudioScenarioSource(fsImpl.readFileSync(scenarioPath, "utf8"), scenarioPath);
+  (options.validateSource || validateAudioScenarioSource)(fsImpl.readFileSync(scenarioPath, "utf8"), scenarioPath);
   return scenarioPath;
 }
 
@@ -392,5 +407,6 @@ module.exports = {
   isPathInside,
   resolveAudioScenario,
   runAudio,
-  validateAudioScenarioSource
+  validateAudioScenarioSource,
+  validateGenerationScenarioSource
 };
