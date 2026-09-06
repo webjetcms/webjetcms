@@ -39,7 +39,7 @@ Scenario("Shot plan", ({ I }) => {
 0:55-1:08 - Zavrieť panel nahrávania, prefiltrovať dokumenty a kliknúť na „PR 260 produktovy list“. Podržať záber na automaticky vyplnenom poli URL.
 1:08-1:19 - Potvrdiť dialóg a ukázať odkaz vložený do označeného textu bez uloženia webovej stránky.
 1:19-1:25 - Celkový pohľad na editor s hotovým odkazom. Voliteľný titulok: „Menej prepínania. Rýchlejšia práca. Bezpečné verzie.“
-1:25-1:30 - MANUAL: otvoriť https://docs.webjetcms.sk/latest/sk/redactor/webpages/working-in-editor/?id=odkazy-na-s%C3%BAbory-a-nahr%C3%A1vanie-s%C3%BAborov a zobraziť záverečný titulok „Podrobný postup nájdete v dokumentácii WebJET CMS.“
+1:25-1:30 - Otvoriť dokumentáciu Manažéra dokumentov a pomaly posúvať stránku nadol.
 `);
 });
 
@@ -126,32 +126,7 @@ Scenario("260-58593-manazer-dokumentov-integracia-do-web-stranky", async ({ I, D
     await deleteArchiveRowsByFilter(I, DT);
     removeLocalArchiveFiles([productFileName, priceListFileName]);
 
-    I.amOnPage("https://docs.webjetcms.sk/latest/sk/redactor/files/file-archive/README");
-    I.waitForElement("article", 20);
-    I.usePlaywrightTo("slowly scroll through the documentation", async ({ page }) => {
-        await page.evaluate(async () => {
-            const scrollElement = document.scrollingElement || document.documentElement;
-            const scrollDistance = scrollElement.scrollHeight - scrollElement.clientHeight;
-            const pixelsPerSecond = 160;
-            const duration = scrollDistance / pixelsPerSecond * 1000;
-            const startedAt = performance.now();
-
-            window.scrollTo(0, 0);
-            await new Promise(resolve => {
-                const scrollStep = (now) => {
-                    const progress = Math.min((now - startedAt) / duration, 1);
-                    window.scrollTo(0, scrollDistance * progress);
-                    if (progress < 1) {
-                        requestAnimationFrame(scrollStep);
-                    } else {
-                        resolve();
-                    }
-                };
-
-                requestAnimationFrame(scrollStep);
-            });
-        });
-    });
+    I.videoDocumentation("https://docs.webjetcms.sk/latest/sk/redactor/files/file-archive/README");
 
     I.wait(8);
 }).tag("@video");

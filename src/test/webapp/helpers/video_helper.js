@@ -323,6 +323,45 @@ function installVideoCursor(cursorScale = 1) {
 class VideoHelper extends Helper {
 
   /**
+   * Opens a documentation article and scrolls from top to bottom at 160 pixels per second.
+   * @param {string} url Documentation page URL, including an optional section anchor
+   * @returns {Promise<void>} Resolves when the bottom of the page is visible
+   */
+  async videoDocumentation(url) {
+    const helper = this.helpers.Playwright;
+    await helper.switchTo();
+    await helper.amOnPage(url);
+    await helper.waitForVisible("article h1", 20);
+    await this.videoScroll();
+  }
+
+  /**
+   * Scrolls the current top-level page from top to bottom at 160 pixels per second.
+   * @returns {Promise<void>} Resolves when the bottom of the page is visible
+   */
+  async videoScroll() {
+    await this.helpers.Playwright.page.evaluate(async () => {
+      await document.fonts.ready;
+      const scrollElement = document.scrollingElement || document.documentElement;
+      const scrollDistance = Math.max(0, scrollElement.scrollHeight - scrollElement.clientHeight);
+      window.scrollTo({ top: 0, behavior: "instant" });
+      if (scrollDistance === 0) return;
+
+      const duration = scrollDistance / 160 * 1000;
+      const startedAt = performance.now();
+      await new Promise(resolve => {
+        const scrollStep = now => {
+          const progress = Math.min((now - startedAt) / duration, 1);
+          window.scrollTo({ top: scrollDistance * progress, behavior: "instant" });
+          if (progress < 1) requestAnimationFrame(scrollStep);
+          else resolve();
+        };
+        requestAnimationFrame(scrollStep);
+      });
+    });
+  }
+
+  /**
    * Shows a full-window editing slate for two seconds without changing focus or the active iframe.
    * @param {string|object} title Legacy title or a resolved shot; manual/head shots show warnings with full notes or narration
    * @returns {Promise<void>} Resolves after the slate has been removed

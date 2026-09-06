@@ -4,7 +4,7 @@ Feature("video.308-pb-redesign");
 // Compare with origin/main: floating gear palettes are replaced by the shared toolbar.
 // Documentation: https://docs.webjetcms.sk/latest/sk/redactor/webpages/pagebuilder
 // The shot plan describes the edited timeline. Short holds below provide editing room;
-// extend them to the recorded narration and insert the manual footage and head clips.
+// extend them to the recorded narration and insert the generated head clip.
 // Run from src/test/webapp: npm run video video/308-pb-redesign.js
 // Generate speech only on request: npm run audio video/308-pb-redesign.js
 // Generate the talking-head intro: npm run head video/308-pb-redesign.js
@@ -24,11 +24,32 @@ const videoPlan = {
         },
         {
             "id": "old-editor",
-            "type": "manual",
+            "type": "auto",
             "durationSeconds": 12,
             "title": "Before the update",
             "text-sk": "V staršej verzii ste prešli myšou nad obsah a nástroje otvorili ozubeným kolieskom pri farebnom rámiku.",
-            "notes": "Autentická stará snímka docs/sk/redactor/webpages/pagebuilder.png: farebné rámiky, ovládač pri bloku a plávajúca paleta. Označiť „Pred aktualizáciou“. Nový editor neupravovať tak, aby predstieral starý."
+            "notes": "Show the legacy Page Builder on demo.webjetcms.sk while it still runs the version before this update. Hover a column and open its gear palette without saving changes.",
+            prepare: async ({ I, DTE, iframe, oldColumn }) => {
+                await I.amOnPage("https://demo.webjetcms.sk/logoff.do?forward=/admin/logon/");
+                // Keep the recording tab and log in on the demo origin, not CODECEPT_URL.
+                await I.relogin("admin", false);
+                await I.amOnPage("https://demo.webjetcms.sk/admin/v9/webpages/web-pages-list/?docid=57");
+                DTE.waitForEditor();
+                await I.clickCss("div.DTED.show button.maximize");
+                await I.waitForInvisible("div.DTED.show button.maximize", 10);
+                await I.switchTo(iframe);
+                await I.waitForVisible(oldColumn, 20);
+                await I.dontSeeElement(".pb-workbench");
+            },
+            shot: async ({ I, oldColumn }) => {
+                const toolbar = oldColumn.find("aside.pb-toolbar").first();
+                await I.moveCursorTo(oldColumn);
+                await I.waitForVisible(toolbar, 10);
+                await I.wait(3);
+                await I.videoClick(toolbar);
+                await I.waitForVisible(toolbar.find(".pb-toolbar-button__style"), 10);
+                await I.wait(6);
+            }
         },
         {
             "id": "text-editing",
@@ -329,19 +350,43 @@ const videoPlan = {
         },
         {
             "id": "preview",
-            "type": "manual",
+            "type": "auto",
             "durationSeconds": 7,
             "title": "Preview the resulting page",
             "text-sk": "Na kontrolu výslednej stránky použite samostatný Náhľad.",
-            "notes": "Zväčšiť samostatné tlačidlo Náhľad v päte editora; prípadné otvorenie ďalšej karty natočiť samostatne."
+            "notes": "Click Preview and switch to its tab. Reopen the same preview URL in the recording tab and slowly scroll to the bottom so the resulting page is included in the main WebM. Cut out the tab cleanup and repeated navigation.",
+            prepare: async ({ I }) => {
+                await I.switchTo();
+                await I.waitForVisible("#datatableInit_modal button.btn-preview", 10);
+            },
+            shot: async ({ I, services, closeEditor }) => {
+                await I.videoClick("#datatableInit_modal button.btn-preview");
+                await I.usePlaywrightTo("wait for the preview tab", async ({ page }) => {
+                    await page.waitForFunction(() => window.previewWindow != null && !window.previewWindow.closed);
+                });
+                await I.switchToNextTab();
+                await I.waitForVisible(services, 20);
+                const previewUrl = await I.grabCurrentUrl();
+                await I.closeCurrentTab();
+                await closeEditor();
+                // Playwright records each tab separately; retain this view in the main recording.
+                await I.amOnPage(previewUrl);
+                await I.waitForVisible(services, 20);
+                await I.videoScroll();
+                await I.wait(5);
+            }
         },
         {
             "id": "outro",
-            "type": "manual",
+            "type": "auto",
             "durationSeconds": 18,
             "title": "Page Builder documentation",
             "text-sk": "Pri ďalšej úprave teda začnite výberom obsahu. V ceste alebo v Štruktúre overte správnu úroveň a potom použite nástroje hornej lišty. Podrobný návod k Page Builderu nájdete v dokumentácii WebJET CMS. Odkaz je v popise videa.",
-            "notes": "Zopakovať cestu „Obsah > správna úroveň > akcia“ a ukázať slovenský návod https://docs.webjetcms.sk/latest/sk/redactor/webpages/pagebuilder. Pred publikovaním overiť, že verejný návod už opisuje tento PR. Outro s odkazom v popise videa."
+            "notes": "Slowly scroll through the Slovak Page Builder documentation. Before publishing, verify that the public article describes this update. Include its URL in the video description.",
+            shot: async ({ I }) => {
+                await I.videoDocumentation("https://docs.webjetcms.sk/latest/sk/redactor/webpages/pagebuilder");
+                await I.wait(8);
+            }
         }
     ]
 };
@@ -364,6 +409,7 @@ Scenario("308-pb-redesign", async ({ I, DTE, Document, login }) => {
     const iframe = "#DTE_Field_data-pageBuilderIframe";
     const fixture = ".pb-video-autotest";
     const services = `${fixture} .video-services`;
+    const oldColumn = locate("div.col-3.text-center.pb-column").first();
     const action = name => `.pb-workbench [data-pb-action=${name}]`;
     const treeRow = (type, text) => locate(`.pb-structure [role=treeitem][data-type=${type}] > div`).withText(text);
     // CodeceptJS 3.6 uses a FrameLocator that has no waitForFunction method.
@@ -375,6 +421,11 @@ Scenario("308-pb-redesign", async ({ I, DTE, Document, login }) => {
     const typeText = text => I.usePlaywrightTo("type the Slovak demonstration text", async ({ page }) => {
         await page.keyboard.type(text, { delay: 70 });
     });
+    const closeEditor = async () => {
+        await I.switchTo();
+        DTE.cancel();
+        await I.waitForInvisible("div.DTED.show", 10);
+    };
 
     // Reopen the editor and replace browser-only content before each shot, so order is independent.
     const prepareEditor = async () => {
@@ -424,16 +475,18 @@ Scenario("308-pb-redesign", async ({ I, DTE, Document, login }) => {
 
     await recordVideoPlan(I, {
         plan: videoPlan,
-        context: { fixture, services, action, treeRow, waitForPageBuilder, typeText },
+        context: { DTE, iframe, oldColumn, fixture, services, action, treeRow, waitForPageBuilder, typeText, closeEditor },
         setup: async () => {
             login("admin");
             Document.resetPageBuilderMode();
         },
-        prepare: prepareEditor,
-        cleanup: async () => {
-            await I.switchTo();
-            DTE.cancel();
-            await I.waitForInvisible("div.DTED.show", 10);
+        prepare: async shot => {
+            if (shot.id === "old-editor" || shot.id === "outro") return;
+            await prepareEditor();
+        },
+        cleanup: async shot => {
+            if (shot.id === "outro" || shot.id === "preview") return;
+            await closeEditor();
         }
     });
 }).tag("@video");

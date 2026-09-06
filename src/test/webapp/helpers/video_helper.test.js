@@ -2,6 +2,51 @@ const assert = require("node:assert/strict");
 const test = require("node:test");
 const { chromium } = require("playwright");
 
+test("scrolls documentation and standalone pages smoothly and handles content that fits on screen", async () => {
+  const previousCodeceptjs = global.codeceptjs;
+  let browser;
+  try {
+    global.codeceptjs = require("codeceptjs");
+    const VideoHelper = require("./video_helper.js");
+    browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
+    await page.route("https://docs.example.test/**", route => route.fulfill({
+      contentType: "text/html",
+      body: `<style>html { scroll-behavior: smooth } body { margin: 0 } h1 { margin: 0 }</style>
+        <article style="height: ${route.request().url().endsWith("/long") ? 920 : 200}px"></article>
+        <script>setTimeout(() => document.querySelector('article').innerHTML = '<h1>Documentation</h1>', 100)</script>`
+    }));
+    const playwright = new (require("codeceptjs/lib/helper/Playwright"))({ url: "https://docs.example.test" });
+    playwright.page = page;
+    playwright.context = page;
+    const helper = new VideoHelper({});
+    Object.defineProperty(helper, "helpers", { value: { Playwright: playwright } });
+
+    const scrolling = helper.videoDocumentation("https://docs.example.test/long");
+    await page.waitForFunction(() => window.scrollY > 40 && window.scrollY < 280);
+    await scrolling;
+    assert.equal(page.url(), "https://docs.example.test/long");
+    assert.equal(await page.evaluate(() => window.scrollY), 320);
+
+    await helper.videoDocumentation("https://docs.example.test/short");
+    assert.equal(page.url(), "https://docs.example.test/short");
+    assert.equal(await page.evaluate(() => window.scrollY), 0);
+    assert.equal(await page.locator("article h1").textContent(), "Documentation");
+
+    await page.setContent('<style>body { margin: 0 }</style><main style="height: 920px">Preview</main>');
+    const previewScrolling = helper.videoScroll();
+    await page.waitForFunction(() => window.scrollY > 40 && window.scrollY < 280);
+    await previewScrolling;
+    assert.equal(await page.evaluate(() => window.scrollY), 320);
+    assert.equal(await page.locator("main").textContent(), "Preview");
+    assert.equal(page.url(), "https://docs.example.test/short", "Standalone scrolling must preserve the current page");
+  } finally {
+    await browser?.close();
+    if (previousCodeceptjs === undefined) delete global.codeceptjs;
+    else global.codeceptjs = previousCodeceptjs;
+  }
+});
+
 test("shows a two-second full-page slate and preserves editing focus inside an iframe", async () => {
   const previousCodeceptjs = global.codeceptjs;
   let browser;
