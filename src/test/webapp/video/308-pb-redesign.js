@@ -20,7 +20,7 @@ const videoPlan = {
             "durationSeconds": 18,
             "title": "New Page Builder: familiar tools",
             "text-sk": "Používali ste Page Builder a po aktualizácii hľadáte známe nástroje? V tomto videu si ukážeme, kam sa presunuli a ako sa pracuje s novou verziou. Stránku naďalej skladáte z pripravených blokov. Vylepšili sme ale spôsob ich výberu a úprav.",
-            "notes": "Insert the separately generated Jack / Home Vlog Style intro, cropped to 16:9. Generate it with npm run head video/308-pb-redesign.js."
+            "notes": "Insert the separately generated Jack / Home Vlog Style intro, with its reference background expanded to 16:9. Generate it with npm run head video/308-pb-redesign.js."
         },
         {
             "id": "old-editor",
@@ -198,23 +198,23 @@ const videoPlan = {
             "id": "insertion",
             "type": "auto",
             "durationSeconds": 34,
-            "title": "Choose an insertion point",
+            "title": "Choose a section insertion point",
             "text-sk": "Pridávanie blokov má nový vstup. Kliknite na plus v hornej lište. Nemusíte predtým hľadať ozubené koliesko ani označiť blok. Priamo v stránke sa ukážu miesta vloženia. Modré pásy pridávajú sekcie, ružové kontajnery a zelené pluská stĺpce. Popis vám povie, pred ktorý blok alebo za ktorý blok vkladáte. Rozbalené medzery sú iba dočasnou pomôckou.",
-            "notes": "Plus v lište, modré a ružové pásy, zelené pluská a popisy polôh. Vybrať miesto na stĺpec medzi existujúcimi stĺpcami.",
+            "notes": "Show the toolbar plus, colored insertion points and position labels. Choose the section boundary between Services and Contact and open the section library.",
             shot: async ({ I, action }) => {
                 await I.videoClick(action("insert"));
                 await I.waitForVisible(".pb-insert-hint", 10);
-                await I.waitForVisible(".pb-insert-point[data-type=column]", 10);
+                await I.waitForVisible(".pb-insert-point[data-type=section]", 10);
                 await I.wait(5);
                 await I.saveScreenshot("308-pb-redesign-insert.png");
                 await I.executeScript(() => {
                     const point = window.pageBuilder.ui.insertPoints.find(point =>
-                        point.type === "column" && point.previous && point.next && point.parent.closest(".pb-video-autotest"));
+                        point.type === "section" && point.previous?.matches(".pb-video-autotest") && point.next?.matches(".pb-video-contact-autotest"));
                     point.button.attr("data-autotest-insert", "true");
                     point.button[0].focus();
                 });
                 await I.videoClick("[data-autotest-insert]");
-                await I.waitForVisible(".pb-library--column", 10);
+                await I.waitForVisible(".pb-library--section", 10);
                 await I.seeElement(".pb-insert-context");
             }
         },
@@ -222,20 +222,20 @@ const videoPlan = {
             "id": "library",
             "type": "auto",
             "durationSeconds": 33,
-            "title": "Explore the library and insert a column",
+            "title": "Explore the library and insert a section",
             "text-sk": "Vyberte miesto a otvorí sa výber blokov príslušného typu. Zostávajú známe karty Základné, Knižnica a Obľúbené. V knižnici naďalej nájdete bloky pripravené pre svoj web, vyhľadávanie a štítky. Po vložení sa nový blok označí a môžete upraviť jeho obsah. Ak knižnicu zatvoríte, vrátite sa k vybranému plusku. Celý režim ukončíte cez Ukončiť, Escape alebo opätovným kliknutím na plus.",
-            "notes": "Ukázať karty Základné, Knižnica, Obľúbené a kontext vloženia. Zrušiť knižnicu, ukázať návrat na plus. Otvoriť znova, vložiť základný stĺpec a ukázať fokus v jeho obsahu. Nový režim plus ukončiť cez Ukončiť.",
+            "notes": "Show Basic, Library and Favorites for sections and the insertion context between Services and Contact. Cancel the library, show focus returning to the plus, reopen it and insert a basic section. Show the selected section with focus in its content, then demonstrate ending insertion mode.",
             prepare: async ({ I, action }) => {
                 await I.click(action("insert"));
-                await I.waitForVisible(".pb-insert-point[data-type=column]", 10);
+                await I.waitForVisible(".pb-insert-point[data-type=section]", 10);
                 await I.executeScript(() => {
                     const point = window.pageBuilder.ui.insertPoints.find(point =>
-                        point.type === "column" && point.previous && point.next && point.parent.closest(".pb-video-autotest"));
+                        point.type === "section" && point.previous?.matches(".pb-video-autotest") && point.next?.matches(".pb-video-contact-autotest"));
                     point.button.attr("data-autotest-insert", "true");
                     point.button[0].focus();
                 });
                 await I.click("[data-autotest-insert]");
-                await I.waitForVisible(".pb-library--column", 10);
+                await I.waitForVisible(".pb-library--section", 10);
             },
             shot: async ({ I, action, waitForPageBuilder }) => {
                 for (const type of ["basic", "library", "favorite"]) {
@@ -248,15 +248,16 @@ const videoPlan = {
                 await I.waitForVisible("[data-autotest-insert]", 10);
                 await I.wait(3);
                 await I.videoClick("[data-autotest-insert]");
-                await I.waitForVisible(".pb-library--column", 10);
+                await I.waitForVisible(".pb-library--section", 10);
                 await I.videoClick(".pb-library .library-tab-link[data-library-type=basic]");
-                await I.videoClick(locate(".pb-library .library-tab-item--basic .library-template-block--column .library-tab-item-button").first());
+                await I.videoClick(locate(".pb-library .library-tab-item--basic .library-template-block--section .library-tab-item-button").first());
                 await I.waitForInvisible(".pb-library", 10);
                 await I.waitForInvisible(".pb-insert-layer", 10);
-                await waitForPageBuilder("wait for the inserted column editor to receive focus", () => {
-                    const field = window.pageBuilder.ui.selected?.querySelector("[data-ckeditor-instance]");
+                await waitForPageBuilder("wait for the inserted section to be selected and its editor to receive focus", () => {
+                    const selected = window.pageBuilder.ui.selected;
+                    const field = selected?.querySelector("[data-ckeditor-instance]");
                     const editor = field && CKEDITOR.instances[field.dataset.ckeditorInstance];
-                    return editor?.status === "ready" && editor.focusManager.hasFocus;
+                    return selected?.matches(".pb-section") && editor?.status === "ready" && editor.focusManager.hasFocus;
                 });
                 await I.wait(4);
                 await I.videoClick(action("insert"));

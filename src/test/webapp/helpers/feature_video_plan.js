@@ -118,7 +118,9 @@ async function recordVideoPlan(I, { plan, context = {}, setup, prepare, cleanup,
     if (prepare) await prepare(shot);
     if (shot.prepare) await shot.prepare(shotContext);
     await I.videoTitle(shot);
+    await I.wait(2); // allow to use transition effects between shots
     await shot.shot(shotContext);
+    await I.wait(2); // allow to use transition effects between shots
     if (cleanup) await cleanup(shot);
   }
 }
