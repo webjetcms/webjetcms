@@ -68,7 +68,7 @@ test("shows a two-second full-page slate and preserves editing focus inside an i
     const title = "Shot 2/3: <em>literal text</em> & stable selection.";
     const startedAt = Date.now();
     const narration = "🎬".repeat(199) + "Z" + "THIS MUST BE TRUNCATED";
-    const showing = videoHelper.videoTitle({ number: 2, total: 3, title: title.replace("Shot 2/3: ", ""), narration });
+    const showing = videoHelper.videoTitle({ number: 2, total: 3, id: title.replace("Shot 2/3: ", ""), title: "Human-readable title", narration });
     await Promise.all([
       showing,
       (async () => {
@@ -118,13 +118,13 @@ test("shows full manual filming instructions instead of the narration excerpt", 
     const notes = "Film the old editor and its floating controls. ".repeat(5) + "\n<em>Keep this final instruction.</em>";
     for (const instructions of [notes, undefined]) {
       const showing = helper.videoTitle({
-        type: "manual", number: 2, total: 3, title: "Before the update", notes: instructions,
+        type: "manual", number: 2, total: 3, id: "old-editor", title: "Before the update", notes: instructions,
         narration: "Spoken narration must not replace filming instructions."
       });
       await Promise.all([showing, (async () => {
         const slate = page.locator("#wj-video-title-host div").first();
         await slate.waitFor({ state: "visible" });
-        assert.equal(await slate.locator("div").first().textContent(), "WARNING: manual steps | Shot 2/3: Before the update");
+        assert.equal(await slate.locator("div").first().textContent(), "WARNING: manual steps | Shot 2/3: old-editor");
         const description = slate.locator("[data-video-instructions]");
         assert.equal(await description.textContent(), instructions || "Add filming instructions to this shot's notes.");
         assert.equal(await slate.locator("[data-video-narration], em").count(), 0);
@@ -154,11 +154,11 @@ test("shows a two-second head warning with the full localized narration and note
     const notes = "Insert <intro.mp4> during editing.";
     const startedAt = Date.now();
     await Promise.all([
-      helper.videoTitle({ type: "head", number: 1, total: 3, title: "Intro", narration, notes }),
+      helper.videoTitle({ type: "head", number: 1, total: 3, id: "intro", title: "Intro", narration, notes }),
       (async () => {
         const slate = page.locator("#wj-video-title-host div").first();
         await slate.waitFor({ state: "visible" });
-        assert.equal(await slate.locator("div").first().textContent(), "WARNING: head video | Shot 1/3: Intro");
+        assert.equal(await slate.locator("div").first().textContent(), "WARNING: head video | Shot 1/3: intro");
         const description = slate.locator("[data-video-narration]");
         assert.equal(await description.textContent(), `${narration}\n\n${notes}`);
         const box = await description.boundingBox();

@@ -92,13 +92,13 @@ not application synchronization mechanisms.
 
 `I.videoTitle(shot)` accepts a resolved shot returned by `getRecordingShots`.
 For automatic shots, it renders a black full-window slate with the derived shot
-number/title and the first 200 Unicode characters of localized narration in
-smaller white text. For manual shots, the heading is
-`WARNING: manual steps | Shot N/total: title` and the smaller text contains the full
+number/id (`Shot N/total: id`) and the first 200 Unicode characters of localized
+narration in smaller white text. For manual shots, the heading is
+`WARNING: manual steps | Shot N/total: id` and the smaller text contains the full
 filming instructions from `notes`, without the 200-character truncation. Missing
 or blank notes display a reminder to add filming instructions. Keep notes concise
 enough to fit in one frame; they replace the narration excerpt on manual slates.
-Head slates show `WARNING: head video | Shot N/total: title`, full localized narration
+Head slates show `WARNING: head video | Shot N/total: id`, full localized narration
 and notes. All three kinds hold for two seconds after painting, then remove themselves.
 The top-level overlay does not change active iframe context, focus or selection
 and works with cursor rendering disabled. Text is rendered literally, not HTML.
@@ -106,14 +106,26 @@ Legacy `I.videoTitle("Shot 1: description.")` calls remain supported. The shared
 runner also calls `I.videoTitle("SETUP shot <index>/<total> <id> (<duration>s)")` before
 preparation and includes the same progress in `I.say`. Index and total count
 all shots in the full plan, including manual and head entries. Normal slates use
-`Shot <index>/<total>: <title>` with exactly the same numbers. A plan with two
+`Shot <index>/<total>: <id>` with exactly the same numbers. A plan with two
 manual intro shots and twelve automatic shots starts with two manual warnings,
 then `SETUP shot 3/14 ...` followed by `Shot 3/14: ...`.
 Warnings use the same full-plan number and total. There is no separate automatic counter.
 The SETUP slate marks footage to discard, up to and including the normal slate.
 The runner inserts all editing slates; individual callbacks must not duplicate them.
+After the normal slate disappears, the runner holds the prepared scene for two
+seconds, executes the action, then holds the result for two seconds before
+cleanup. These transition handles are extra footage, excluded from the edited
+duration estimates; add further presentation holds only when the shot needs them.
 Use `I.clickCss` for CSS selectors or ordinary `I.click` for off-camera
 preparation, keeping animated `I.videoClick` calls for the shot itself.
+
+`I.videoScroll()` waits for fonts, resets the current top-level page to the top
+and scrolls its document smoothly to the bottom at 160 pixels per second. It
+returns immediately after font readiness when no scrolling is needed. It does
+not scroll a nested iframe or an editor's internal scroll container.
+`I.videoDocumentation(url)` returns to the top-level context, opens the URL in
+the same tab, waits for `article h1` (20-second timeout), then calls
+`I.videoScroll()`. Verify the feature documentation URL and article structure.
 
 Every manual shot stays in recording order as a warning, including manual shots
 at the start or end and plans containing only manual shots. One-time `setup`
@@ -135,8 +147,13 @@ successful recording. A later run with the same result replaces the respective
 file. The video-specific Playwright helper moves the raw UUID file from its
 isolated `.video-raw` run directory, removes that empty directory, and cleans up
 the legacy UUID-prefixed artifact for the current scenario. Only the active page
-at the end becomes the final recording; keep meaningful multi-tab transitions
-as manual shots.
+at the end becomes the final recording; each tab has its own video. Keep the
+walkthrough in the original recording tab. If a preview must open a second tab,
+wait for it, capture its URL, close it, return to the original tab and open the
+URL there before scrolling. Scenario 308 demonstrates this flow and closes its
+editor before navigating. Mark the intermediate tab work for removal in editing.
+A legacy/demo site can also be recorded in the original tab, but needs its own
+login on that origin; the default instance session does not authenticate it.
 
 ## ElevenLabs Audio Profile
 
@@ -255,7 +272,9 @@ that export retains metadata but cannot reproduce browser steps on its own.
 
 This template demonstrates editing in a DataTable editor. Adapt its selectors,
 shared preparation and cleanup to the feature; features without an editor do
-not need DTE callbacks. Keep the same plan/runner structure.
+not need DTE callbacks. The introductory head is optional and assumes it was
+requested; use `manual` and omit the head scenario for a separately made card.
+Keep the same plan/runner structure.
 
 ```javascript
 Feature("video.<scenario-name>");
@@ -286,7 +305,17 @@ const videoPlan = {
                 await I.pressKey("End");
                 await typeText(" <demo text>");
                 await I.waitForText("<demo text>", 20, selector);
-                await I.wait(3); // Presentation hold after the result assertion.
+                await I.wait(3); // Extra presentation hold after the result assertion.
+            }
+        },
+        {
+            "id": "documentation",
+            "type": "auto",
+            "durationSeconds": 10,
+            "title": "Find out more in the documentation",
+            "text-sk": "<Slovak documentation call to action>",
+            shot: async ({ I }) => {
+                await I.videoDocumentation("<verified-feature-documentation-url>");
             }
         }
     ]
@@ -315,13 +344,15 @@ Scenario("<scenario-name>", async ({ I, DTE, login }) => {
         plan: videoPlan,
         context: { selector, typeText },
         setup: async () => { login("admin"); },
-        prepare: async () => {
+        prepare: async shot => {
+            if (shot.id === "documentation") return;
             await I.amOnPage("<editor-url>");
             DTE.waitForEditor();
             // Restore isolated content and enter the content iframe here if needed.
             await I.waitForVisible(selector, 20);
         },
-        cleanup: async () => {
+        cleanup: async shot => {
+            if (shot.id === "documentation") return;
             await I.switchTo();
             DTE.cancel();
             await I.waitForInvisible("div.DTED.show", 10);
@@ -339,8 +370,10 @@ each automatic `shot` function and optional `prepare` function before recording.
 Manual and head shots need no functions. `recordVideoPlan(I, options)` uses that validation
 before its one-time `setup`. For automatic shots it sequences logging, the SETUP
 slate, shared `prepare`, optional inline `shot.prepare(context)`, the normal slate,
-`shot.shot(context)`, and `cleanup`. For manual shots it only logs the warning and
-shows `I.videoTitle(shot)` with the filming instructions.
+a two-second hold, `shot.shot(context)`, another two-second hold, and `cleanup`.
+For manual/head shots it only logs the warning and shows `I.videoTitle(shot)`
+with the filming instructions or full head narration and notes. Neither gets
+per-shot lifecycle callbacks or transition holds.
 
 Pass `I` separately, then one options object with `plan`. Optional `context`
 contains selectors, injected page objects and reusable functions defined in the
@@ -363,7 +396,17 @@ ranges update automatically; inline callbacks move with the metadata. Never sort
 by old timestamps or maintain another ordered callback list. Each callback needs an
 independent baseline. The `308-pb-redesign.js` example reopens the editor and
 installs isolated browser-only content per shot, with extra preparation for the
-structure drawer and library. Setup and cleanup are cut out during editing.
+structure drawer and section library. Its shared lifecycle branches by stable
+shot id for the legacy editor, preview and documentation. The legacy editor
+logs in on the demo origin, the preview reopens its URL in the recording tab,
+and the automatic outro uses `I.videoDocumentation`. Shared Page Builder
+preparation skips the legacy editor and documentation; shared cleanup skips
+the preview and documentation because neither leaves an editor open. Setup and cleanup are cut out during editing.
+The migrated 260, 283, 289 and 293 scenarios provide examples for scoped upload
+fixtures, tree selection, nested editors and configuration views. Each shot must
+prepare its own prerequisites with ordinary clicks; never invoke another shot
+as its setup. When migrating, compare the original narration with joined plan
+text after normalizing whitespace and preserve deliberate silence and manual gaps.
 For Page Builder footage, also reuse its iframe-aware `waitForPageBuilder`
 helper: the installed CodeceptJS FrameLocator has no `waitForFunction`, so it
 resolves the Playwright content frame first. The `typeText` helper uses
