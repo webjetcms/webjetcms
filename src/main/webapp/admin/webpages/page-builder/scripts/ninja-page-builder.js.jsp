@@ -264,7 +264,7 @@
         /** Builds a named button with an original Tabler Icons outline SVG. */
         workbench_button: function(action, label, icon) {
             // Original SVGs from @tabler/icons 3.44.0 (https://tabler.io/icons).
-            // MIT license and copyright: ../tabler-icons-LICENSE.txt. Only size and accessibility attributes are adapted.
+            // MIT license and copyright: https://github.com/tabler/tabler-icons/blob/main/LICENSE. Only size and accessibility attributes are adapted.
             var icons = {
                 // ti-sitemap
                 'structure': '<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-sitemap" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M3 17a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2l0 -2" /> <path d="M15 17a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2l0 -2" /> <path d="M9 5a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2l0 -2" /> <path d="M6 15v-1a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v1" /> <path d="M12 9l0 3" /> </svg>',
