@@ -276,3 +276,23 @@ test("preserves the CodeceptJS exit status and reports launch failures", () => {
     fs.rmSync(webappRoot, { recursive: true, force: true });
   }
 });
+
+test("preflights a static JSON plan without evaluating code or generating audio", () => {
+  const plan = { language: "sk", shots: [
+    { id: "intro", type: "manual", durationSeconds: 5, title: "Intro", "text-sk": "Narration.", "text-en": "English narration." }
+  ] };
+  const source = `Feature("video.plan");
+const videoPlan = ${JSON.stringify(plan)};
+Scenario("ElevenLabs", ({ I }) => { I.generateAudio(videoPlan); }).tag("@audio");`;
+  assert.doesNotThrow(() => validateAudioScenarioSource(source));
+  assert.doesNotThrow(() => validateAudioScenarioSource(source.replace("generateAudio(videoPlan)", 'generateAudio(videoPlan, { language: "en" })')));
+  const invalid = [
+    [source.replace("const videoPlan", "let videoPlan"), /preceding const JSON object/],
+    [source.replace('"Narration."', 'process.exit()'), /only static declarations/],
+    [source.replace('"Narration."', '`${process.exit()}`'), /only static declarations/],
+    [source.replace('"text-sk"', '"text-cs"'), /missing text-sk/],
+    [source.replace('"manual"', '"auto1"'), /type must be auto or manual/],
+    [source.replace("generateAudio(videoPlan)", 'generateAudio(videoPlan, { language: "en", language: "sk" })'), /must not be repeated/]
+  ];
+  for (const [input, message] of invalid) assert.throws(() => validateAudioScenarioSource(input), message);
+});

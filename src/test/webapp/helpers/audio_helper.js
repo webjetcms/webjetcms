@@ -2,6 +2,7 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const { randomBytes } = require("node:crypto");
 const { FEATURE_VIDEO_DIRECTORY } = require("./feature_video_paths.js");
+const { resolveVideoPlan, getPlanNarration } = require("./feature_video_plan.js");
 
 const { Helper } = codeceptjs;
 
@@ -292,8 +293,8 @@ class AudioHelper extends Helper {
 
   /**
    * Generates an MP3 narration for the current scenario file with ElevenLabs.
-   * @param {string} text Narration sent to ElevenLabs
-   * @param {{modelId?: string, voiceId?: string}} [options] Per-scenario model and voice overrides
+   * @param {string|object} text Legacy narration or a JSON video plan with localized shot text
+   * @param {{modelId?: string, voiceId?: string, language?: string}} [options] Voice and language overrides
    * @returns {Promise<string>} Absolute path of the generated MP3 file
    * @throws {Error} When generation is disabled, configuration is invalid, or generation fails
    */
@@ -315,14 +316,18 @@ class AudioHelper extends Helper {
     }
     this.audioGenerationStarted = true;
 
-    const narration = normalizeNarration(text);
     const { modelId, voiceId } = getAudioSettings(options);
+    const language = typeof text === "string" ? null : resolveVideoPlan(text, options.language).language;
+    const narration = typeof text === "string"
+      ? normalizeNarration(text)
+      : getPlanNarration(text, language);
     const apiKey = getEnvironmentOverride("ELEVENLABS_API_KEY");
     if (apiKey == null) {
       throw new Error("ELEVENLABS_API_KEY must be set before generating audio.");
     }
 
-    const targetPath = getAudioArtifactPath(this.audioTest, this.featureVideoDirectory);
+    const defaultPath = getAudioArtifactPath(this.audioTest, this.featureVideoDirectory);
+    const targetPath = language == null ? defaultPath : defaultPath.replace(/\.mp3$/, `-${language}.mp3`);
     await generateAudioArtifact({
       targetPath,
       apiKey,

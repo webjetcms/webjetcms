@@ -2,6 +2,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const acorn = require("acorn");
+const { getPlanNarration } = require("./feature_video_plan.js");
 
 const WEBAPP_ROOT = path.resolve(__dirname, "..");
 const CODECEPT_BIN = require.resolve("codeceptjs/bin/codecept.js");
@@ -84,7 +85,7 @@ function validateGenerateAudioOptions(node, fail) {
     fail("I.generateAudio options must be an object literal.");
   }
 
-  const allowedNames = new Set(["modelId", "voiceId"]);
+  const allowedNames = new Set(["modelId", "voiceId", "language"]);
   const configuredNames = new Set();
   for (const property of node.properties) {
     const propertyName = property.key?.type === "Identifier"
@@ -92,7 +93,7 @@ function validateGenerateAudioOptions(node, fail) {
       : getStringLiteral(property.key);
     if (property.type !== "Property" || property.kind !== "init" || property.computed ||
       property.method || !allowedNames.has(propertyName)) {
-      fail("I.generateAudio options may contain only modelId and voiceId string literals.");
+      fail("I.generateAudio options may contain only modelId, voiceId and language string literals.");
     }
     if (configuredNames.has(propertyName)) {
       fail(`I.generateAudio option ${propertyName} must not be repeated.`);
@@ -244,15 +245,36 @@ function validateAudioScenarioSource(source, sourcePath = "<audio scenario>") {
     fail(`Scenario("${AUDIO_SCENARIO_TITLE}") must contain only one I.generateAudio call.`);
   }
 
-  const narration = generateAudioCall.arguments[0];
+  if (generateAudioCall.arguments.length === 2) {
+    validateGenerateAudioOptions(generateAudioCall.arguments[1], fail);
+  }
+  let narration = generateAudioCall.arguments[0];
+  if (narration?.type === "Identifier") {
+    const declaration = syntaxTree.body
+      .filter(statement => statement.type === "VariableDeclaration" && statement.kind === "const" &&
+        statement.start < audioScenario.call.start)
+      .flatMap(statement => statement.declarations)
+      .find(item => item.id.type === "Identifier" && item.id.name === narration.name);
+    if (!declaration) fail("I.generateAudio plan must reference a preceding const JSON object.");
+    narration = declaration.init;
+  }
+  if (narration?.type === "ObjectExpression") {
+    try {
+      // Parse data only; never evaluate scenario code during the audio preflight.
+      const plan = JSON.parse(source.slice(narration.start, narration.end));
+      const languageOption = generateAudioCall.arguments[1]?.properties.find(property =>
+        (property.key.name || getStringLiteral(property.key)) === "language");
+      getPlanNarration(plan, languageOption ? getStringLiteral(languageOption.value) : undefined);
+    } catch (error) {
+      fail(`I.generateAudio plan must be valid JSON shot data: ${error.message}`);
+    }
+    return;
+  }
   const narrationText = narration?.quasis?.[0]?.value?.cooked;
   if (narration?.type !== "TemplateLiteral" || narration.expressions.length !== 0 ||
     narration.quasis.length !== 1 || typeof narrationText !== "string" ||
     narrationText.trim() === "") {
     fail("I.generateAudio narration must be a non-empty template literal without interpolation.");
-  }
-  if (generateAudioCall.arguments.length === 2) {
-    validateGenerateAudioOptions(generateAudioCall.arguments[1], fail);
   }
 }
 

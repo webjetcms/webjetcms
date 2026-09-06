@@ -59,8 +59,12 @@ The actual bitrate is content-dependent and can be lower on static screens.
 This profile uses more CPU and produces much larger files, so run video
 scenarios serially and inspect motion continuity on the recording machine.
 
-`CODECEPT_VIDEO_CURSOR=true` installs a Shadow DOM overlay in every document.
-The overlay follows Playwright mouse events and shows a ring on mouse down. Each
+`CODECEPT_VIDEO_CURSOR=true` renders one Shadow DOM cursor overlay in the
+top-level page. Mouse listeners inside iframes relay coordinates and clicks to
+their parent, accounting for frame offsets, borders and scaling. This also
+supports nested and cross-origin frames without leaving a second cursor behind.
+Ordinary `I.click` updates the same cursor; `I.videoClick` adds animated movement
+and editing holds. The overlay shows a ring on mouse down. Each
 `I.videoClick(locator)` uses a varied human-like trajectory: a larger early arc,
 a much smaller late correction, and an almost straight approach to the target.
 Its minimum-jerk timing smoothly accelerates and brakes, while the shape and
@@ -85,6 +89,26 @@ video click also leaves at least 500 milliseconds after the action for easier
 editing; increase it up to 2000 milliseconds with
 `CODECEPT_VIDEO_POST_CLICK_DELAY` when necessary. These are presentation delays,
 not application synchronization mechanisms.
+
+`I.videoTitle(shot)` accepts a resolved shot returned by `getRecordingShots`.
+It renders a black full-window slate with the derived shot number/title and the
+first 200 Unicode characters of localized narration in smaller white text. It
+holds for two seconds after painting, then removes itself before the next step.
+The top-level overlay does not change active iframe context, focus or selection
+and works with cursor rendering disabled. Text is rendered literally, not HTML.
+Legacy `I.videoTitle("Shot 1: description.")` calls remain supported. The shared
+runner also calls `I.videoTitle("SETUP shot <index>/<total> <id>")` before
+preparation and includes the same progress in `I.say`. Index and total count
+only automatic shots, excluding manual footage. This
+marks the start of footage to discard, up to and including the normal shot slate.
+Use `I.click` for off-camera preparation, keeping animated `I.videoClick` calls
+for the shot itself.
+
+Slates are captured editing markers. Cut them and inter-shot preparation/cleanup
+out of the final video. They are excluded from the edited timeline. Place all
+readiness waits and preparation before the slate. Shot durations are estimates
+for the edited voiceover, not application synchronization or automatic audio/video
+alignment.
 
 A completed successful recording is saved atomically as
 `docs/feature-video/<scenario-name>.webm`. A failed run is saved separately as
@@ -129,66 +153,133 @@ because the API call can consume ElevenLabs credits. There is no automatic
 retry, avoiding a second charge after an ambiguous network failure.
 
 A successful response is written atomically as
-`docs/feature-video/<scenario-name>.mp3`; a temporary file replaces the previous
+`docs/feature-video/<scenario-name>-<language>.mp3` for JSON plans; legacy string
+narration retains `<scenario-name>.mp3`. A temporary file replaces the previous
 MP3 only after the complete response is available. An API, network, timeout, or
 disk error therefore leaves the last successful MP3 unchanged.
 
-## Scenario Template
+## JSON Plan and Scenario Template
+
+The plan initializer is strict JSON inside a JavaScript `const`: no functions,
+comments, trailing commas or interpolation. The audio preflight parses it as
+JSON without executing the source. Keep callbacks separately inside the main
+scenario. Use stable descriptive ids rather than position-dependent `auto1` names.
 
 ```javascript
 Feature("video.<scenario-name>");
 
+const videoPlan = {
+    "language": "sk",
+    "shots": [
+        {
+            "id": "intro",
+            "type": "manual",
+            "durationSeconds": 8,
+            "title": "Introduce the benefit",
+            "text-sk": "<Slovak narration>",
+            "notes": "MANUAL: opening card."
+        },
+        {
+            "id": "edit-content",
+            "type": "auto",
+            "durationSeconds": 15,
+            "title": "Edit content directly",
+            "text-sk": "<Slovak narration matching these actions>"
+        }
+    ]
+};
+
 Scenario("ElevenLabs", ({ I }) => {
-    I.generateAudio(`
-<copy-ready Slovak narration across multiple lines>
-`);
+    I.generateAudio(videoPlan);
 }).tag("@audio");
 
 Scenario("Shot plan", ({ I }) => {
-    I.say(`
-<timed shot plan across multiple lines, including MANUAL shots>
-`);
+    const { formatShotPlan } = require("../helpers/feature_video_plan.js");
+    I.say(formatShotPlan(videoPlan));
 });
 
-Scenario("<scenario-name>", ({ I, DT, login }) => {
-    login("admin");
-    I.amOnPage("<admin-url>");
-    I.waitForElement("<initial-state>", 20);
-    DT.waitForLoader();
-
-    // Shot 1: describe the visible customer benefit.
-    I.videoClick("<stable-selector>");
-    I.waitForElement("<result-state>", 20);
-    DT.waitForLoader();
+Scenario("<scenario-name>", async ({ I, DT, login }) => {
+    const { recordVideoPlan } = require("../helpers/feature_video_plan.js");
+    const shots = {
+        "edit-content": async () => {
+            await I.videoClick("<stable-selector>");
+            await I.waitForElement("<result-state>", 20);
+            DT.waitForLoader();
+            await I.waitForVisible("<stable-result>", 20);
+        }
+    };
+    await recordVideoPlan(I, {
+        plan: videoPlan,
+        scenarios: shots,
+        setup: async () => { login("admin"); },
+        prepare: async () => {
+            await I.amOnPage("<admin-url>");
+            await I.waitForElement("<initial-state>", 20);
+            DT.waitForLoader();
+            await I.waitForVisible("<stable-initial-state>", 20);
+        }
+        // Add prepareShots keyed by id and cleanup when this walkthrough needs them.
+    });
 }).tag("@video");
 ```
 
-Use only the injected objects needed by the scenario. Selectors based on IDs,
-roles, or stable `data-*` attributes are preferable to visual position or
-translated text.
+`resolveVideoPlan` validates unique ids, `auto`/`manual` types, positive integer
+`durationSeconds`, titles and selected localized text. It derives `number`,
+`startSeconds`, `endSeconds` and `narration` without mutating the editable JSON.
+`formatShotPlan` includes manual footage, production notes and narration.
+`getRecordingShots` filters out manual shots and validates all automatic callback
+names before recording. `recordVideoPlan(I, options)` uses that validation
+before its one-time `setup`, then sequences logging, the SETUP slate, `prepare`,
+optional `prepareShots[id]`, the normal slate, `scenarios[id]`, and `cleanup`. All
+per-shot callbacks receive the resolved shot. Pass `I` separately, then an
+options object with `plan` and `scenarios`; lifecycle callbacks and `language`
+are optional. Keep application-specific actions (such
+as DTE cancellation and discard confirmation) in callbacks instead of coupling
+the generic runner to Page Builder. Use this plain async function directly from
+the main Scenario, not as a CodeceptJS actor helper step. It stops on failure.
+These utilities live in `helpers/feature_video_plan.js`.
 
-To use `npm run video:current`, add `.tag("@current")` to the same main scenario
-after `.tag("@video")`. Never tag `Shot plan`; `ElevenLabs` must have only the
-`@audio` tag.
+Move whole objects in `shots` to reorder the film. Derived numbering and time
+ranges update automatically; callbacks follow their stable ids. Never sort by
+old timestamps or maintain another ordered callback list. Each callback needs an
+independent baseline. The `308-pb-redesign.js` example reopens the editor and
+installs isolated browser-only content per shot, with extra preparation for the
+structure drawer and library. Setup and cleanup are cut out during editing.
 
-To select a different model or voice for one narration, keep the options outside
-the spoken text:
+`durationSeconds` does not set speech speed, insert silence or make a callback
+last that long. Update estimates after measuring narration. The generator joins
+all selected localized texts with paragraph breaks and makes one API request;
+manual shots are included and explicit empty strings mean intentional silence.
+Missing language fields fail before the paid request; there is no silent fallback.
+
+Add `text-cs` for Czech (language code `cs`, not country code `cz`) and `text-en`
+for English. Change `videoPlan.language` to select the default for all derived
+outputs. For an audio-only override, use:
 
 ```javascript
 Scenario("ElevenLabs", ({ I }) => {
-    I.generateAudio(`
-<copy-ready Slovak narration across multiple lines>
-`, {
-        modelId: "eleven_multilingual_v2",
-        voiceId: "<voice-id>",
+    I.generateAudio(videoPlan, {
+        language: "en",
+        modelId: "eleven_v3",
+        voiceId: "<voice-id>"
     });
 }).tag("@audio");
 ```
+
+JSON audio artifacts have a language suffix so different languages coexist.
+Browser UI language, fixture text and language-dependent locators must be adapted
+separately when producing foreign-language footage. Current npm video commands
+and the Page Builder example target the Slovak UI.
+
+Use only needed injected objects. Prefer selectors based on IDs, roles or stable
+`data-*` attributes. Add `.tag("@current")` only to the main recording scenario
+for `npm run video:current`. Never tag `Shot plan`; `ElevenLabs` has only `@audio`.
 
 ## Validation Commands
 
 ```shell
 node --check helpers/feature_video_paths.js
+node --check helpers/feature_video_plan.js
 node --check helpers/audio_helper.js
 node --check helpers/audio_runner.js
 node --check helpers/video_helper.js

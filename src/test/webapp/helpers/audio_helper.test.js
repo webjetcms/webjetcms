@@ -136,6 +136,34 @@ test("resolves the default audio artifact directly below docs/feature-video", ()
   );
 });
 
+test("generates localized JSON narration in shot order with a language-specific artifact", async () => {
+  await withOutputDirectory(async outputDirectory => {
+    process.env.ELEVENLABS_API_KEY = "test-api-key";
+    const requests = [];
+    global.fetch = async (url, options) => {
+      requests.push(JSON.parse(options.body));
+      return successfulResponse();
+    };
+    const plan = { language: "sk", shots: [
+      { id: "second", type: "auto", durationSeconds: 5, title: "Not spoken", "text-sk": "Second.", "text-en": "English second." },
+      { id: "first", type: "manual", durationSeconds: 3, title: "Not spoken either", "text-sk": "First.", "text-en": "English first." }
+    ] };
+    for (const language of ["sk", "en"]) {
+      const helper = new AudioHelper({ generationEnabled: true, featureVideoDirectory: outputDirectory });
+      registerAudioTest(helper, createAudioTest("/project/video/plan.js"));
+      const result = await helper.generateAudio(plan, { language });
+      assert.equal(result, path.join(outputDirectory, `plan-${language}.mp3`));
+      assert.equal(await fs.readFile(result, "utf8"), "generated-mp3");
+    }
+    assert.deepEqual(requests.map(request => request.text), ["Second.\n\nFirst.", "English second.\n\nEnglish first."]);
+    assert.deepEqual((await fs.readdir(outputDirectory)).sort(), ["plan-en.mp3", "plan-sk.mp3"]);
+    const invalidHelper = new AudioHelper({ generationEnabled: true, featureVideoDirectory: outputDirectory });
+    registerAudioTest(invalidHelper, createAudioTest("/project/video/plan.js"));
+    await assert.rejects(invalidHelper.generateAudio(plan, { language: "cs" }), /missing text-cs/);
+    assert.equal(requests.length, 2, "Missing translations must fail before the paid API call");
+  });
+});
+
 test("prefers helper overrides over environment settings", async () => {
   await withOutputDirectory(async (outputDirectory) => {
     process.env.ELEVENLABS_API_KEY = "test-api-key";
