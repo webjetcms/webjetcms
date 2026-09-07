@@ -1,4 +1,4 @@
-package sk.iway.iwcm.stat;
+package sk.iway.iwcm.stat.rest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -33,6 +33,8 @@ import org.mockito.MockedStatic;
 
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.PkeyGenerator;
+import sk.iway.iwcm.stat.StatDB;
+import sk.iway.iwcm.system.UpdateDatabase;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 
 class BrowserIdentifierMigrationServiceTest {
@@ -50,6 +52,30 @@ class BrowserIdentifierMigrationServiceTest {
     private static final String UPDATE_STAT_VIEW = "UPDATE stat_views SET browser_id=?, browser_ua_id=? WHERE view_id=?";
     private static final String LOAD_STAT_FROM = "SELECT from_id, browser_id FROM stat_from WHERE from_id>? AND from_id<=? ORDER BY from_id";
     private static final String UPDATE_STAT_FROM = "UPDATE stat_from SET browser_id=? WHERE from_id=?";
+
+    @Test
+    void markAsCompletedShouldSaveUpdateNote() {
+        BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService();
+
+        try (MockedStatic<UpdateDatabase> updateDatabase = mockStatic(UpdateDatabase.class)) {
+            service.markAsCompleted();
+
+            updateDatabase.verify(() -> UpdateDatabase.saveSuccessUpdate(BrowserIdentifierMigrationService.UPDATE_NOTE));
+        }
+    }
+
+    @Test
+    void markAsCompletedShouldNotSaveExistingUpdateNoteAgain() {
+        BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService();
+
+        try (MockedStatic<UpdateDatabase> updateDatabase = mockStatic(UpdateDatabase.class)) {
+            updateDatabase.when(() -> UpdateDatabase.isAllreadyUpdated(BrowserIdentifierMigrationService.UPDATE_NOTE)).thenReturn(true);
+
+            service.markAsCompleted();
+
+            updateDatabase.verify(() -> UpdateDatabase.saveSuccessUpdate(BrowserIdentifierMigrationService.UPDATE_NOTE), never());
+        }
+    }
 
     @ParameterizedTest
     @CsvSource({

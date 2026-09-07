@@ -31,6 +31,8 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.stat.SessionClusterService;
 import sk.iway.iwcm.stat.SessionDetails;
 import sk.iway.iwcm.stat.SessionHolder;
+import sk.iway.iwcm.stat.rest.BrowserIdentifierMigrationService;
+import sk.iway.iwcm.system.UpdateDatabase;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
@@ -200,6 +202,7 @@ public class DashboardListener {
                 }
             }
             model.addAttribute("show2FARecommendation", show2FARecommendation);
+            model.addAttribute("showBrowserIdentifierMigrationWarning", UpdateDatabase.isAllreadyUpdated(BrowserIdentifierMigrationService.UPDATE_NOTE) == false);
 
         } catch (JsonProcessingException e) {
             Logger.error(DashboardListener.class, e);

@@ -81,6 +81,16 @@ block content
                     }
                 ], false, container);
             }
+            if ([(${showBrowserIdentifierMigrationWarning==true})]) {
+                WJ.notify("warning", "[[\#{text.warning}]]", "[[\#{stat.browser-migration.warning}]]", 0, [
+                    {
+                        title: "[[\#{stat.browser-migration.warning-start}]]",
+                        cssClass: "btn btn-outline-secondary",
+                        click: "window.open('/admin/v9/settings/stat-browser-migration/')",
+                        closeOnClick: false
+                    }
+                ], false, container);
+            }
             if ([(${showErrorLog==true})]) {
                 WJ.notify("error", "[[\#{update.failed}]]", "[[\#{overview.update.showErrors}]]", 0, [
                     {

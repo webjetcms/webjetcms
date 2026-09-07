@@ -1,4 +1,4 @@
-package sk.iway.iwcm.stat;
+package sk.iway.iwcm.stat.rest;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -27,11 +27,15 @@ import lombok.Setter;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.stat.StatDB;
+import sk.iway.iwcm.system.UpdateDatabase;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 
 /** Performs the explicit, resumable migration of versioned browser identifiers. */
 @Service
 public class BrowserIdentifierMigrationService {
+
+    public static final String UPDATE_NOTE = "07.09.2026 [jeeff] browser identifier migration";
 
     private static final int ROW_BATCH_SIZE = 10_000;
     private static final int UPDATE_BATCH_SIZE = 500;
@@ -98,6 +102,7 @@ public class BrowserIdentifierMigrationService {
                     finalizeSeoBots(connection, botMappings);
                     connection.commit();
                     refreshStatKeyCache();
+                    markAsCompleted();
                     state.setDone(true);
                     state.setTable("done");
                     return state;
@@ -127,6 +132,12 @@ public class BrowserIdentifierMigrationService {
             }
         }
         return state;
+    }
+
+    void markAsCompleted() {
+        if (UpdateDatabase.isAllreadyUpdated(UPDATE_NOTE) == false) {
+            UpdateDatabase.saveSuccessUpdate(UPDATE_NOTE);
+        }
     }
 
     static String normalizeBrowserIdentifier(String value) {
