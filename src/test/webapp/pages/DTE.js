@@ -89,26 +89,24 @@ module.exports = {
      },
 
      /**
-      * Cancels the editing process and closes the editor
+      * Cancels editing and waits for the modal to close and restore focus.
       * @param {String} [name] - Optional modal name to target
       * @param {Boolean} [clickTopButton=false] - Determines which close button to click (top or footer)
       */
      cancel(name, clickTopButton=false) {
-          var prefixSelector = "div";
-          if (typeof name != "undefined" && name != null) prefixSelector = "#" + name + "_modal";
+          if (name == null) { name = "datatableInit"; }
+          const modalSelector = "#" + name + "_modal";
 
+          I.waitForVisible(modalSelector + ".DTED.show", 200);
           if (clickTopButton===true) {
                //use X button on header for inner tables
-               I.click({ css: prefixSelector + ".DTED.show div.DTE_Header button.btn-close-editor" });
+               I.click({ css: modalSelector + ".DTED.show div.DTE_Header button.btn-close-editor" });
           } else {
-               I.click({ css: prefixSelector + ".DTED.show div.DTE_Footer.modal-footer button.btn-close-editor" });
+               I.click({ css: modalSelector + ".DTED.show div.DTE_Footer.modal-footer button.btn-close-editor" });
           }
 
-          if (typeof name == "undefined") { name = "datatableInit"; }
-          I.waitForInvisible("#" + name + "_modal", 200);
-
-          //wait for fade animation
-          I.wait(0.5);
+          I.waitForElement(modalSelector + '[data-dte-close-state="closed"]', 200);
+          I.waitForInvisible(modalSelector, 200);
      },
 
      /**
