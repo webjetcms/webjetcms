@@ -94,19 +94,24 @@ module.exports = {
       * @param {Boolean} [clickTopButton=false] - Determines which close button to click (top or footer)
       */
      cancel(name, clickTopButton=false) {
-          if (name == null) { name = "datatableInit"; }
-          const modalSelector = "#" + name + "_modal";
+          var prefixSelector = "div";
+          if (typeof name != "undefined" && name != null) prefixSelector = "#" + name + "_modal";
 
-          I.waitForVisible(modalSelector + ".DTED.show", 200);
           if (clickTopButton===true) {
                //use X button on header for inner tables
-               I.click({ css: modalSelector + ".DTED.show div.DTE_Header button.btn-close-editor" });
+               I.click({ css: prefixSelector + ".DTED.show div.DTE_Header button.btn-close-editor" });
           } else {
-               I.click({ css: modalSelector + ".DTED.show div.DTE_Footer.modal-footer button.btn-close-editor" });
+               I.click({ css: prefixSelector + ".DTED.show div.DTE_Footer.modal-footer button.btn-close-editor" });
           }
 
-          I.waitForElement(modalSelector + '[data-dte-close-state="closed"]', 200);
-          I.waitForInvisible(modalSelector, 200);
+          if (typeof name == "undefined") { name = "datatableInit"; }
+
+          //we can't use name here because often DTE.cancel is called without name, so this selector is bit relaxed...
+          I.waitForElement({ css: prefixSelector + '.DTED[data-dte-close-state="closed"]' }, 200);
+          I.waitForInvisible("#" + name + "_modal", 200);
+
+          //wait for fade animation
+          I.wait(0.5);
      },
 
      /**
