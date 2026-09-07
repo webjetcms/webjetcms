@@ -969,6 +969,51 @@ If you need to specifically check permissions (e.g. folder permissions for websi
     }
 ```
 
+## Range check when changing order
+
+The `/row-reorder` endpoint retrieves the entire requested batch from the repository and calls `checkItemPerms` for each record. However, if the table list is also limited by a request parameter or a parent record, such as `formName`, `stepId`, `parentId`, or a category, simply checking each record may not guarantee that all of them fall within the currently displayed range.
+
+In such a controller, implement the method:
+
+```java
+protected boolean checkRowReorderScope(HttpServletRequest request, List<T> entities)
+```
+
+The method is called after the complete batch has been loaded from the repository and before validating the changed field or changing the entities. The `entities` parameter therefore contains the stored entities, not the values ​​from the request body. The default implementation returns `true` to preserve the behavior of existing controllers.
+
+The implementation must proceed safely and return `false` on invalid input:
+
+- verify the presence and validity of all parameters determining the scope,
+- compare this range with each entity in the list,
+- verify the current domain, if the entity uses it,
+- verify the existence and relationship of the parent record,
+- verify that the current user can edit the given scope.
+
+For example, multi-step form items validate the form name, step, domain, and user permissions:
+
+```java
+@Override
+protected boolean checkRowReorderScope(HttpServletRequest request, List<FormItemEntity> entities) {
+    String formName = MultistepFormsService.getFormName(request);
+    int stepId = Tools.getIntValue(request.getParameter("stepId"), -1);
+    if (Tools.isEmpty(formName) || stepId < 1 || entities == null || entities.isEmpty() || getUser() == null) return false;
+
+    int domainId = CloudToolsForCore.getDomainId();
+    for (FormItemEntity entity : entities) {
+        if (entity == null || Objects.equals(formName, entity.getFormName()) == false ||
+            entity.getStepId() == null || entity.getStepId().intValue() != stepId ||
+            entity.getDomainId() == null || entity.getDomainId().intValue() != domainId) return false;
+    }
+
+    if (formStepsRepository.getValidStep(formName, Long.valueOf(stepId), domainId).isEmpty()) return false;
+    return formsService.isFormAccessible(formName, getUser());
+}
+```
+
+The client will preserve the parameters from `DATA.url` when constructing the URL for `/row-reorder`. However, these parameters are client-controlled and cannot be considered as proof of authorization. Similarly, it is not sufficient to define the scope only via `addSpecSearch`, as this does not automatically apply to the endpoint `/row-reorder`.
+
+If the method returns `false`, the entire operation is rejected and nothing is saved. `checkRowReorderScope` is a batch-wide check and does not replace `checkItemPerms`, which is still used for permissions on each individual record.
+
 ## Error triggering
 
 Programmatically checked errors need to be handled by overloading the ```validateEditor``` method (see example above), where you can perform validations before saving the record. You can identify the type of action from the ```target.getAction()``` (DatatableRequest) parameter.

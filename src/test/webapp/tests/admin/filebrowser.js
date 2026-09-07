@@ -12,7 +12,7 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('dir properties', async ({I, DT}) => {
+Scenario('dir properties', async ({I, DT, DTE}) => {
     I.amOnPage("/admin/elFinder/#elf_iwcm_1_");
 
     //Find our file in tree
@@ -33,7 +33,7 @@ Scenario('dir properties', async ({I, DT}) => {
 
         //Save
         I.switchTo();
-        I.click( locate("div.modal-footer").find("button.btn.btn-primary") );
+        DTE.save(null, true);
 
         // TODO - later when save return some message - do check
     //

@@ -242,6 +242,42 @@ Vytvorený formulár môžete vložiť do web stránky pomocou aplikácie Formul
 
 Na jednu stránku môžete vložiť aj viac inštancií rovnakého viackrokového formulára. Každá inštancia pracuje nezávisle a vygenerované HTML identifikátory polí dostanú vlastný prefix, napríklad `f1-` a `f2-`, aby sa navzájom neovplyvňovali.
 
+### JavaScript udalosť po zobrazení kroku
+
+Po vložení HTML kódu kroku do stránky a inicializácii jeho podmienok formulár odošle na objekte `window` natívnu udalosť `CustomEvent` s názvom `WJ.multistepForm.stepShown`. Udalosť sa odošle pre prvý krok aj po každom prechode na ďalší krok. Nie je potrebné načítať administračný súbor `webjet.js` ani knižnicu `jQuery`.
+
+```javascript
+window.addEventListener("WJ.multistepForm.stepShown", (event) => {
+    const {
+        wrapper,
+        stepElement,
+        form,
+        formName,
+        stepId,
+        language,
+        domIdPrefix,
+        isInitialStep
+    } = event.detail;
+
+    console.log("Multistep form step shown", formName, stepId, stepElement);
+});
+```
+
+Objekt `event.detail` obsahuje:
+
+- `wrapper` - koreňový `div.multistep-form-app` konkrétnej inštancie formulára,
+- `stepElement` - `div.multistepStepContent` s práve vloženým krokom,
+- `form` - element `form` práve zobrazeného kroku,
+- `formName` - názov formulára používaný na serveri,
+- `stepId` - identifikátor práve zobrazeného kroku,
+- `language` - jazyk použitý pri načítaní kroku,
+- `domIdPrefix` - prefix HTML identifikátorov polí konkrétnej inštancie, napríklad `f1-`,
+- `isInitialStep` - hodnota `true` pri prvom zobrazenom kroku danej inštancie, inak `false`.
+
+Ak je na stránke viac viackrokových formulárov, event listener prijme udalosti zo všetkých inštancií. Konkrétny formulár rozlíšite pomocou hodnôt `wrapper` alebo `formName`.
+
+Ak potrebujete zachytiť aj udalosť prvého kroku, listener zaregistrujte pred inicializáciou aplikácie viackrokového formulára.
+
 ## Konfiguračné premenné
 
 Dostupné konfiguračné premenné pre viackrokové formuláre:

@@ -553,6 +553,10 @@ export class WebPagesDatatable {
                     }
                 });
                 $("#DTE_Field_title").on("blur", function() {
+                    if ($("#DTE_Field_title").val()=="") {
+                        $("#DTE_Field_title").val(newPageTitle);
+                    }
+
                     if ($("#DTE_Field_navbar").val()=="" || $("#DTE_Field_navbar").val()==newPageTitle) {
                         if ($("#DTE_Field_navbar").val()==newPageTitle) {
                             //zresetuj aj URL, aby sa znova vygenerovalo

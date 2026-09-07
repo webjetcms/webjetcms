@@ -80,7 +80,7 @@ Základný kód formuláru je v kľúčoch:
 - ```components.formsimple.form.start``` - HTML kód začiatku formuláru (otvárací form tag)
 - ```components.formsimple.form.end``` - HTML kód konca formuláru (zatvárací form tag)
 - ```components.formsimple.requiredLabelAdd``` - text, ktorý sa pridá k textu label elementu pre povinné pole (typicky znak *)
-- ```components.formsimple.tooltipCode``` - HTML kód pre generovanie ${tooltip} náhrady
+- ```components.formsimple.tooltipCode``` - HTML kód pre generovanie ```${tooltip}``` náhrady
 - ```components.formsimple.techinfo``` - HTML kód pre generovanie technických informácií do emailu
 
 Jednotlivé položky definujete cez kľúče:
@@ -132,17 +132,37 @@ V kóde je možné použiť nasledovné značky, ktoré sa pri zobrazení formul
 - ```${formname}``` - meno formuláru bez medzier, diakritiky, malými písmenami, používa sa pre form element do atribútu name (to by malo ešte začínať výrazom formMail pre použitie v štandardnom validačnom mechanizme)
 - ```${savedb}``` - rovnaká hodnota ako ```formname```, používa sa pre prehľadnosť v URL odoslania formuláru
 - ```${id}``` - ID elementu generované z jeho názvu (pole Hodnota v administrácii), bez medzier, diakritiky, malými písmenami
+- ```${itemId}``` - identifikátor položky v rámci vykresleného formulára
+- ```${stepId}``` - identifikátor kroku viackrokového formulára; pri formulári ľahko je hodnota prázdna
 - ```${label}``` - text pre label element, hodnota z poľa názov v administrácii
 - ```${labelSanitized}``` - text pre label element, hodnota z poľa názov v administrácii, upravené špeciálne znaky aby ho bolo možné použiť v HTML atribúte
 - ```${value}``` - text z poľa hodnota v administrácii
+- ```${valueSanitized}``` - hodnota poľa upravená bez medzier, diakritiky a špeciálnych znakov na použitie v HTML atribúte
 - ```${placeholder}``` - zástupný text, zobrazí sa keď má pole prázdnu hodnotu
 - ```${classes}``` - dodatočné CSS štýly, aktuálne ```required``` ak je zaškrtnuté Povinné pole v administrácii
 - ```${tooltip}``` - HTML kód pre tooltip, hodnota z poľa Tooltip v administrácii
+- ```${tooltipId}``` - unikátne a pre HTML atribút bezpečné ID tooltipu, určené na prepojenie ovládacieho prvku s obsahom tooltipu
 - ```${cs-error}``` - generovaný HTML kód pre chybovú hlášku
 - ```${iterable}``` - na uvedené miesto sa vloží opakujúci zoznam polí (napr. skupina výberových polí), pričom kód, ktorý sa opakuje je definovaný kľúčom ```components.formsimple.iterable.MENO_POLA```
 - ```${counter}``` - poradové číslo pre opakujúci záznam, je potrebný na nastavenie unikátneho ```id``` a ```for``` atribútu
 - ```${value-label}``` - textová hodnota (label) pre opakujúci záznam, ak obsahuje inú hodnotu pre ```value``` a pre ```label``` (napr v ```option``` tagu). Používateľ zadáva možné hodnoty ako ```label:value```, teda ako napr. ```Pomaranč:orange,Jablko:apple``` pre zobrazenie uvedených možností.
 - ```{enumeration-options|ID_CISELNIKA|MENO_VALUE|MENO_LABEL}``` - napojenie získania zoznamu ```option``` hodnôt z aplikácie číselník. Zadané je ID číselníka, názov stĺpca pre hodnotu a názov stĺpca pre text.
+
+### Vlastný HTML kód tooltipu
+
+HTML kód tooltipu môžete v projekte upraviť prekladovým kľúčom `components.formsimple.tooltipCode`. V jeho hodnote sú dostupné značky `${tooltipId}`, `${id}`, `${itemId}`, `${stepId}`, `${label}`, `${labelSanitized}`, `${value}`, `${valueSanitized}`, `${placeholder}` a `${classes}`. Značka `${label}` v tomto kľúči obsahuje text z poľa **Tooltip**, nie názov formulárového poľa.
+
+Na prístupné a jednoznačné prepojenie ovládacieho prvku s obsahom tooltipu použite rovnakú hodnotu `${tooltipId}` v atribúte `aria-describedby` ovládacieho prvku a v atribúte `id` elementu s `role="tooltip"`. Nevytvárajte ID ručne iba z `${id}`, `${itemId}` alebo `${stepId}`, pretože samostatne nemusia byť pri opakovanom vložení formulára unikátne.
+
+Príklad:
+
+```properties
+components.formsimple.tooltipCode=<button type="button" class="info-tooltip" data-tooltip-trigger="true" aria-describedby="${tooltipId}" aria-owns="${tooltipId}"><svg class="icon info-tooltip__icon" aria-hidden="true"><use xlink:href="/sprite.svg#assistance"></use></svg><span class="sr-only">Info</span></button><span id="${tooltipId}" class="tooltip" role="tooltip" hidden="" data-tooltip="true"><span class="tooltip__arrow"> </span><span class="tooltip__dialog">${label}</span></span>
+```
+
+Pre opisnú väzbu tooltipu je rozhodujúci atribút `aria-describedby`, ktorého hodnota musí zodpovedať `id` elementu s obsahom tooltipu.
+
+Hodnota tooltipu sa nahrádza iba raz. Ak samotný text tooltipu obsahuje výraz ako `${id}`, zostane zobrazený doslovne a nevykoná sa nad ním ďalšia substitúcia.
 
 V zobrazení do emailu sa hodnota poľa tooltip nahrádza za prázdny znak (aby v emaile nebol zbytočne nefunkčný tooltip).
 

@@ -19,7 +19,8 @@ Scenario("Odporúčania - test zobrazovania", async ({ I }) => {
 });
 
 Scenario("Editor test", ({ I, login, Apps }) => {
-    login('admin');
+    I.closeOtherTabs();
+    I.relogin('admin');
 
     Apps.openAppEditor(77773);
 

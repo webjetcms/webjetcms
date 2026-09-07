@@ -4,14 +4,17 @@
     }
 
     /**
-     * Initialize Form Detail view (normal or archived)
-     * @param {Object} config
-     * @param {Array} config.columns - Base columns from server (Thymeleaf injected)
-     * @param {boolean} config.isArchived - Whether this is the archived detail view
+     * Initializes the active or archived form detail view.
+     *
+     * @param {Object} config - View configuration.
+     * @param {Object[]} [config.columns=[]] - Base columns injected by the server.
+     * @param {boolean} [config.isArchived=false] - Whether this is the archived detail view.
+     * @param {string} [config.archiveButtonTitle=""] - Server-localized label for the archive action.
      */
     window.FormDetail.init = function(config) {
         const isArchived = !!(config && config.isArchived);
         const baseColumns = (config && config.columns) ? config.columns : [];
+        const archiveButtonTitle = (config && config.archiveButtonTitle) ? config.archiveButtonTitle : '';
 
         const columnsToKeep = ["id", "preview", "createDate", "lastExportDate", "note", "files", "formName"];
         const removeUserFields = ["admin", "apiKey", "password"];
@@ -310,9 +313,9 @@
                     init: function ( dt ) {
                         $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
                     },
-                    className: 'btn btn-outline-secondary',
+                    className: 'btn btn-outline-secondary buttons-archive',
                     attr: {
-                        'title': WJ.translate('components.form.admin_forms.archivuj_formular'),
+                        'title': archiveButtonTitle,
                         'data-toggle': 'tooltip'
                     }
                 });

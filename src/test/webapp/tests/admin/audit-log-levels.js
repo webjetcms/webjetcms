@@ -98,10 +98,11 @@ Scenario("Logic tests DEFAULT log level", async ({ I, DT, DTE }) => {
     I.say("Delete CANT remove DEFAULT log level");
         I.clickCss("td.dt-select-td.sorting_1");
         I.clickCss("button.buttons-remove");
+        DTE.waitForEditor();
         I.click("Zmazať", "div.DTE_Action_Remove");
 
         I.waitForText("Položku sa nepodarilo zmazať.");
-        I.clickCss("Button.btn-close-editor");
+        DTE.cancel();
 
         DT.filterContains("packageName", defaultLogLevel);
         I.see(defaultLogLevel);

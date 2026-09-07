@@ -105,6 +105,8 @@ Chcete-li vytvořit odkaz na dokument/soubor označte si text, který má být o
 
 ![](link_dialog-file-archive.png)
 
+!> Soubory a složky [Manažéra dokumentů](../../files/file-archive/README.md) uložené v `/files/archiv` jsou ve stromové struktuře dialogů **Odkaz** a **Obrázek** dostupné pouze pro zobrazení a výběr. Nelze je nahrávat, přejmenovat, mazat ani jinak upravovat. Pro správu těchto souborů a složek použijte kartu **Manažer dokumentů**.
+
 - v případě, že je dokument **určen pouze pro aktuální web stránku**, je třeba zvolit položku “Média této stránky” av ní položku “Soubory”.
   - Vyhledáte dokument, kliknete na něj a odkaz na dokument se automaticky zkopíruje do pole URL.
   - V případě, že se v seznamu požadovaný dokument nenachází, funkcí ```drag&drop``` je možné nahrát dokument z vašeho počítače

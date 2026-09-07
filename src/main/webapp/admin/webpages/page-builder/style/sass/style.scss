@@ -38,6 +38,7 @@ $color-dark-text: #002160; //Blue90
 
 $color-magicline: #F6BE3F; //Yellow30
 $color-magicline-g: #F9D76E; //Yellow10
+$color-duplicable: #D17A00;
 
 $font-family-base: "Asap", sans-serif, Arial, Helvetica;
 
@@ -135,6 +136,7 @@ $tooltip-bg: $sidebar-active-bg;
 @import "library";
 @import "tooltip";
 @import "magicline";
+@import "duplicable";
 
 .#{$prefix}-column { padding:0; }
 .#{$prefix}-column__content {
