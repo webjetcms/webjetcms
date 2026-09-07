@@ -45,7 +45,7 @@
             outline-offset: 2px;
             box-shadow: 0 0 0 4px white;
         }
-        svg { flex: 0 0 18px; pointer-events: none; }
+        svg { flex: 0 0 18px; pointer-events: none; fill: none; width: 18px; height: 18px; stroke: currentColor; stroke-width: 1.5; }
     }
 
     [data-type=section] { --pb-ui-color: #{$color-section}; }

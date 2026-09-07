@@ -2525,6 +2525,11 @@ div.exit-inline-editor a[aria-pressed=true] {
 .pb-insert-layer button svg {
   flex: 0 0 18px;
   pointer-events: none;
+  fill: none;
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 1.5;
 }
 .pb-workbench [data-type=section],
 .pb-structure [data-type=section],
