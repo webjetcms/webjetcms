@@ -211,13 +211,18 @@ public class FormMailService {
 				if (sendMessageAsAttach==false && forceTextPlain==false)
 					messageBody = FormHtmlHandler.appendStyle(htmlData.toString(), cssData, emailEncoding, forceTextPlain);
 
-				Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Formular " + form.getFormName() + " uspesne ulozeny do databazy, odoslany bude neskor", (long)MultistepFormsService.getFormIdStatic(form.getFormName()), form.getId());
-
 				//musime kvoli clustru a potencionalnemu zapisu suborov pozdrzat email
 				long sendLaterTime = Tools.getNow();
 				sendLaterTime += (5 * Constants.getInt("clusterRefreshTimeout"));
 
-				SendMail.sendLater(meno, FormMailAction.getFirstEmail(email), recipients, formSettings.getReplyTo(), formSettings.getCcEmails(), formSettings.getBccEmails(), subject, messageBody, Tools.getBaseHref(request), Tools.formatDate(sendLaterTime), Tools.formatTime(sendLaterTime), formFiles.getFileNamesSendLater().toString());
+				boolean queued = SendMail.sendLater(meno, FormMailAction.getFirstEmail(email), recipients, formSettings.getReplyTo(), formSettings.getCcEmails(), formSettings.getBccEmails(), subject, messageBody, Tools.getBaseHref(request), Tools.formatDate(sendLaterTime), Tools.formatTime(sendLaterTime), formFiles.getFileNamesSendLater().toString());
+				if (queued) {
+					Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Email for form " + form.getFormName() + " was queued for later delivery", (long)MultistepFormsService.getFormIdStatic(form.getFormName()), form.getId());
+				} else {
+					sb.append(" queuing email to ").append(recipients).append(" FAILED");
+					RequestBean.addAuditValue("formfail", "emailNotSend");
+					sendFailed = true;
+				}
 			} else {
 				//vygeneruj mail a posli ho
 				Properties props = System.getProperties();

@@ -77,7 +77,11 @@
 
         const cssPath = document.getElementById("previewCssTemplate")?.value;
         const preview = document.querySelector("div.stepPreview");
-        if(cssPath == null || cssPath === "" || preview == null) return;
+        if(preview == null) return;
+        preview.removeAttribute("data-multistep-css-template");
+        if(cssPath == null || cssPath === "") return;
+
+        preview.setAttribute("data-multistep-css-template", cssPath);
 
         const stylesheet = document.createElement("link");
         stylesheet.id = "formStepPreviewCssTemplate";
@@ -570,6 +574,7 @@
         display: flex;
         gap: 10px;
         align-items: center;
+        justify-content: flex-end;
         height: 39px;
     }
     .preview-css-template label {
@@ -630,15 +635,15 @@
 
     <div class="col-md-6 stepPreviewWrapper">
         <div id="" class="dt-header-row clearfix">
-            <div class="row align-items-center">
-                <div class="col-auto">
+            <div class="row align-items-center flex-nowrap">
+                <div class="col-auto w-auto">
                     <div class="dt-buttons" style="height: 39px; max-height: none;">
                         <div style="padding-top: 5px;">
                             <i class="ti ti-eye"></i> [[#{components.multistep_form.form-content.step-preview}]]
                         </div>
                     </div>
                 </div>
-                <div class="col-auto ms-auto">
+                <div class="col">
                     <div class="preview-css-template">
                         <label for="previewCssTemplate">[[#{components.multistep_form.form-content.css-template}]]</label>
                         <select id="previewCssTemplate" class="form-select form-select-sm no-picker">

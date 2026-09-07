@@ -534,17 +534,20 @@ public class SendMail
 	}
 
 	/**
-	 * Oneskorene odoslanie emailu
+	 * Queues an email for delayed delivery.
 	 * @param senderName
 	 * @param senderEmail
 	 * @param recipientEmail
 	 * @param replyTo
+	 * @param ccEmail
+	 * @param bccEmail
 	 * @param subject
 	 * @param message
 	 * @param baseHref
 	 * @param date
 	 * @param time
-	 * @return
+	 * @param attachments
+	 * @return {@code true} when the email was queued, or {@code false} when the database operation failed
 	 */
 	public static boolean sendLater(String senderName, String senderEmail, String recipientEmail, String replyTo, String ccEmail, String bccEmail, String subject, String message, String baseHref, String date, String time, String attachments)
 	{
@@ -606,6 +609,7 @@ public class SendMail
 		{
 			sk.iway.iwcm.Logger.error(ex);
 			Adminlog.add(Adminlog.TYPE_SENDMAIL, "ERROR sending email later ex:"+ex.getMessage(), -1, -1);
+			return false;
 		}
 
 		return(true);

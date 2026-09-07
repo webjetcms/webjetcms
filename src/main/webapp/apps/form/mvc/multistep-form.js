@@ -149,7 +149,7 @@ export class MultistepForm {
             // inject HTML (exec any inline scripts) using jQuery when available
             const holder = this.wrapper.querySelector('.multistepStepContent');
             if (holder) {
-                formTooltip.dispose(holder);
+                this._disposeStep(holder);
                 if (window.$) {
                     $(holder).html(html);
                 } else {
@@ -211,9 +211,25 @@ export class MultistepForm {
     }
 
     /**
+     * Dispose widgets before removing a step, including Dropzone inputs appended to the document body.
+     * @param {HTMLElement} holder - Container of the step being removed.
+     */
+    _disposeStep(holder) {
+        formTooltip.dispose(holder);
+        holder.querySelectorAll('.wjdropzone').forEach(element => {
+            const dropzone = element.dropzone;
+            if (!dropzone) return;
+
+            // Teardown must not run file-removal callbacks or alter saved upload metadata.
+            dropzone.off();
+            dropzone.destroy();
+        });
+    }
+
+    /**
      * Restore values saved by an earlier successful submission of this step.
      * @param {HTMLFormElement} form - Currently rendered step form.
-     * @param {Object<string,string>} savedValues - Values keyed by logical field ID.
+     * @param {Object<string,string|string[]>} savedValues - Scalar values or selected options keyed by logical field ID.
      * @param {Object<string,Object>} savedFiles - Dropzone metadata keyed by logical field ID.
      */
     _restoreStepValues(form, savedValues, savedFiles) {
@@ -388,6 +404,7 @@ export class MultistepForm {
         url.searchParams.set('language', this.language || '');
 
         const result = {};
+        const stepFieldIds = new Set();
         form.querySelectorAll('input, textarea, select').forEach(el => {
 
             // Checkbox/radio options of a group share one name but have unique ids
@@ -399,6 +416,7 @@ export class MultistepForm {
             const domKey = isGrouped || isCaptchaResponse ? (el.name || el.id) : (el.id || el.name);
             if (!domKey) return;
             const key = this._toLogicalFieldId(domKey);
+            stepFieldIds.add(key);
             // Skip fields hidden by visibility conditions
             if (this._isFieldHidden(el.closest('.form-group') || el.parentElement)) return;
             if (el.type === 'checkbox' || el.type === 'radio') {
@@ -433,14 +451,24 @@ export class MultistepForm {
             try { parsed = JSON.parse(text); } catch (_) { parsed = { raw: text }; }
 
             if (resp.ok === true) {
-                // Store submitted values for cross-step visibility conditions
-                Object.assign(this.submittedValues, result);
+                if (!parsed.fieldErrors || Object.keys(parsed.fieldErrors).length === 0) {
+                    // Replace this step's cache, including fields cleared or hidden after going back.
+                    stepFieldIds.forEach(key => { delete this.submittedValues[key]; });
+                    Object.assign(this.submittedValues, result);
+                }
                 await this.postSaveAction(parsed);
             } else {
                 const errRedirect = parsed.err_redirect || null;
                 if (errRedirect) {
                     window.location.href = errRedirect;
                     return;
+                }
+                if (parsed.end_try === true) {
+                    const holder = this.wrapper.querySelector('.multistepStepContent');
+                    if (holder) {
+                        this._disposeStep(holder);
+                        holder.replaceChildren();
+                    }
                 }
                 await this.showGlobalErr(parsed);
             }
@@ -989,7 +1017,10 @@ export class MultistepForm {
         if (formName && (stepId !== undefined && stepId !== null)) {
             if (stepId === -1 || stepId === '-1') {
                 const holder = this.wrapper.querySelector('.multistepStepContent');
-                if (holder) holder.remove();
+                if (holder) {
+                    this._disposeStep(holder);
+                    holder.remove();
+                }
                 await this.showGlobalSuccess();
             } else {
                 const danger = this.wrapper.querySelector('div.alert.alert-danger');

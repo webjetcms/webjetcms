@@ -3,6 +3,7 @@ package sk.iway.iwcm.components.multistep_form.rest;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -297,7 +298,7 @@ public class FormHtmlHandler {
                     // Do not change HTML, this html can be unbalanced like "</div><div class="row">" and its not valid ... so editFieldHtmlToEmailRender would return "<div class="row"></div>" because of Jsoup.parseBodyFragment
                 } else {
                     // !! its for show or for email... remaster item html
-                    itemHtml = editFieldHtmlToEmailRender(itemHtml, stepItem);
+                    itemHtml = editFieldHtmlToEmailRender(itemHtml, stepItem, request);
                 }
 
                 stepItemsHtml.append(itemHtml);
@@ -618,7 +619,7 @@ public class FormHtmlHandler {
         return new Pair<>(cssData, cssLink);
     }
 
-    private String editFieldHtmlToEmailRender(String itemHtml, FormItemEntity stepItem) {
+    private String editFieldHtmlToEmailRender(String itemHtml, FormItemEntity stepItem, HttpServletRequest request) {
         if("captcha".equals(stepItem.getFieldType())) return "";
 
         if (itemHtml.contains("!INCLUDE"))
@@ -635,7 +636,7 @@ public class FormHtmlHandler {
             if(Tools.isEmpty(inputType)) inputType = "";
 
             if("radio".equals(inputType) || "checkbox".equals(inputType)) {
-                boolean isSelected = isCheckboxOrRadioSelected(input.val(), stepItem.getItemFormId());
+                boolean isSelected = isCheckboxOrRadioSelected(input.val(), stepItem.getItemFormId(), request);
 
                 if ("radio".equals(inputType))
                     input.before( getHtmlForRadioInput(isSelected, radioCheckboxAsText) );
@@ -685,7 +686,10 @@ public class FormHtmlHandler {
         return doc.body().html();
     }
 
-    private boolean isCheckboxOrRadioSelected(String inputValue, String itemFormId) {
+    private boolean isCheckboxOrRadioSelected(String inputValue, String itemFormId, HttpServletRequest request) {
+        String[] selectedValues = MultistepFormsService.getSavedSelectedValues(this.formName, itemFormId, request);
+        if(selectedValues != null) return Arrays.asList(selectedValues).contains(inputValue);
+
         String values = this.formData.get(itemFormId);
         if(Tools.isEmpty(values)) return false;
 

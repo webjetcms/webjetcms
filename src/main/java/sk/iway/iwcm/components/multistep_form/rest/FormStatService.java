@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -787,7 +788,7 @@ public class FormStatService {
         valuesArray.put( getChartObject(context.prop.getText("components.multistep_form.system_errors.badFile"), badFileCount) );
         valuesArray.put( getChartObject(context.prop.getText("components.multistep_form.system_errors.csrfErrors"), csrfErrorsCount) );
         errorData.put("pieSystemErrorData",  valuesArray);
-        errorData.put("timelineErrorData", getTimelineErrorData(context, logs, context.dateRange[0], context.dateRange[1]));
+        errorData.put("timelineErrorData", getTimelineErrorData(context.formId, context.prop, logs, context.dateRange[0], context.dateRange[1]));
 
         return errorData;
     }
@@ -809,13 +810,16 @@ public class FormStatService {
     /**
      * Builds timeline data for system errors grouped by day and operation type.
      *
-     * @param context shared context containing form and localization data
+     * @param formId identifier of the form whose events are displayed
+     * @param prop localization provider for series labels
      * @param logs audit log entries for the selected form and date range
+     * @param dateFrom first day included in the timeline
+     * @param dateTo last day included in the timeline
      * @return JSON object keyed by localized operation names with daily error counts
      */
-    private JSONObject getTimelineErrorData(StatContext context, List<AuditLogEntity> logs, Date dateFrom, Date dateTo) {
+    JSONObject getTimelineErrorData(int formId, Prop prop, List<AuditLogEntity> logs, Date dateFrom, Date dateTo) {
         JSONObject timelineErrorData = new JSONObject();
-        if(context.formId < 1) return timelineErrorData;
+        if(formId < 1) return timelineErrorData;
 
         TreeMap<String, TreeMap<Long, Integer>> dayErrorCounts = new TreeMap<>();
         dayErrorCounts.put("errorStepGet", new TreeMap<>());
@@ -846,21 +850,22 @@ public class FormStatService {
         for (Map.Entry<String, TreeMap<Long, Integer>> entry : dayErrorCounts.entrySet()) {
             TreeMap<Long, Integer> value = entry.getValue();
             JSONArray valuesArray = new JSONArray();
-            long cursor = dateFromNorm.getTime();
-            while (cursor <= dateToNorm.getTime()) {
+            Calendar cursor = Calendar.getInstance();
+            cursor.setTime(dateFromNorm);
+            while (cursor.getTimeInMillis() <= dateToNorm.getTime()) {
                 JSONObject obj = new JSONObject();
-                obj.put("dayDate", cursor);
-                obj.put("count", value.getOrDefault(cursor, 0));
+                obj.put("dayDate", cursor.getTimeInMillis());
+                obj.put("count", value.getOrDefault(cursor.getTimeInMillis(), 0));
                 valuesArray.put(obj);
-                cursor += 86400000L;
+                cursor.add(Calendar.DATE, 1);
             }
             String key = entry.getKey();
             if ("errorStepGet".equals(key)) {
-                key = context.prop.getText("components.multistep_form.system_errors.error_get_step");
+                key = prop.getText("components.multistep_form.system_errors.error_get_step");
             } else if ("errorStepSave".equals(key)) {
-                key = context.prop.getText("components.multistep_form.system_errors.error_save_step");
+                key = prop.getText("components.multistep_form.system_errors.error_save_step");
             } else if ("successSave".equals(key)) {
-                key = context.prop.getText("components.multistep_form.system_errors.success_save_step");
+                key = prop.getText("components.multistep_form.system_errors.success_save_step");
             }
             timelineErrorData.put(key, valuesArray);
         }

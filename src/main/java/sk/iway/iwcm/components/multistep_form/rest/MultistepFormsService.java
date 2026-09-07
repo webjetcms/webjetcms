@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.text.StringEscapeUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.jsoup.Jsoup;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -90,6 +91,7 @@ public class MultistepFormsService {
     public static final String FILE_INPUT_FIELD_TYPE = "file_input";
 
     private static final String ALL_FILES_SIZE_SESSION_KEY_SUFFIX = "_allFilesSizeInKB";
+    private static final String SELECTED_VALUES_SESSION_KEY_SUFFIX = "-selectedValues-";
 
     private static final String ITEM_KEY_LABEL_PREFIX = "components.formsimple.label.";
     private static final String ITEM_KEY_HIDE_FIELDS_PREFIX = "components.formsimple.hide.";
@@ -517,11 +519,34 @@ public class MultistepFormsService {
                 request.getSession().setAttribute(sessionPrefix + itemFormId, validSessionValue);
                 if(fileMetadata.length() > 0) savedFiles.put(itemFormId, fileMetadata);
             } else {
-                savedValues.put(itemFormId, sessionValue);
+                String[] selectedValues = getSavedSelectedValues(formName, itemFormId, request);
+                if(selectedValues != null) {
+                    savedValues.put(itemFormId, new JSONArray(selectedValues));
+                } else {
+                    savedValues.put(itemFormId, sessionValue);
+                }
             }
         }
 
         return new Pair<>(savedValues, savedFiles);
+    }
+
+    /**
+     * Returns exact saved choices while their legacy string value remains unchanged.
+     *
+     * @param formName logical form name
+     * @param itemFormId logical field identifier
+     * @param request request containing the current form session
+     * @return exact choices, or {@code null} for legacy or processor-modified values
+     */
+    static String[] getSavedSelectedValues(String formName, String itemFormId, HttpServletRequest request) {
+        String sessionKey = getSessionKey(formName, request);
+        Object selectedValues = request.getSession().getAttribute(sessionKey + SELECTED_VALUES_SESSION_KEY_SUFFIX + itemFormId);
+        Object sessionValue = request.getSession().getAttribute(sessionKey + "_" + itemFormId);
+        if(selectedValues instanceof String[] values && sessionValue != null && sessionValue.toString().equals(Tools.join(values, ","))) {
+            return values;
+        }
+        return null;
     }
 
     public IwcmFile getSavedTempFilePreview(String formName, String fileKey, HttpServletRequest request) {
@@ -1051,6 +1076,7 @@ public class MultistepFormsService {
     private void saveStepData(String formName, Long stepId, JSONObject received, HttpServletRequest request) {
         String sessionKey = getSessionKey(formName, request);
         String prefix = sessionKey + "_";
+        Prop prop = Prop.getInstance(request);
 
         for(FormItemEntity stepItem : getStepItemsForValidation(stepId)) {
             String[] values = asArray(stepItem.getItemFormId(), received);
@@ -1059,6 +1085,17 @@ public class MultistepFormsService {
                 // Skip captcha fields
             } else {
                 request.getSession().setAttribute(prefix + stepItem.getItemFormId(), stringValue);
+                String selectedValuesKey = sessionKey + SELECTED_VALUES_SESSION_KEY_SUFFIX + stepItem.getItemFormId();
+                String inputHtml = prop.getText(ITEM_KEY_INPUT_PREFIX + stepItem.getFieldType());
+                if(inputHtml != null && inputHtml.contains("${iterable}")) {
+                    inputHtml += prop.getText("components.formsimple.iterable." + stepItem.getFieldType());
+                }
+                if(inputHtml != null && Jsoup.parseBodyFragment(inputHtml).selectFirst("input[type=checkbox], input[type=radio]") != null) {
+                    // Keep exact choices for restoration without changing the legacy string session value.
+                    request.getSession().setAttribute(selectedValuesKey, values);
+                } else {
+                    request.getSession().removeAttribute(selectedValuesKey);
+                }
             }
         }
     }
@@ -1318,16 +1355,18 @@ public class MultistepFormsService {
             if(isFileUploadField(formItem.getFieldType()) == false) continue;
 
             String itemFormId = formItem.getItemFormId();
-            String value;
+            String[] values;
             if(currentStepFileFields.contains(itemFormId)) {
-                value = received.optString(itemFormId, "");
+                values = asArray(itemFormId, received);
             } else {
                 Object sessionValue = request.getSession().getAttribute(sessionPrefix + itemFormId);
-                value = sessionValue == null ? "" : sessionValue.toString();
+                values = new String[] {sessionValue == null ? "" : sessionValue.toString()};
             }
 
-            for(String fileKey : Tools.getTokens(value, ";")) {
-                if(Tools.isNotEmpty(fileKey)) activeFileKeys.add(fileKey);
+            for(String value : values) {
+                for(String fileKey : Tools.getTokens(value, ";")) {
+                    if(Tools.isNotEmpty(fileKey)) activeFileKeys.add(fileKey);
+                }
             }
         }
 
