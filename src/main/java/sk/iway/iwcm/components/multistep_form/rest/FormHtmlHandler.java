@@ -49,13 +49,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 /**
- * Renders multi‑step form HTML for both on‑page and email contexts.
- * <p>
- * Responsibilities:
- * - Builds step and item markup using translation keys and form settings
- * - Transforms inputs to read‑only representations for email/PDF rendering
- * - Collects and inlines CSS for email/PDF variants
- * - Optionally encrypts rendered email HTML using a provided public key
+ * Renders a multistep form for page, email, and PDF contexts.
+ *
+ * <p>The handler builds localized step and item markup, converts interactive controls
+ * to read-only email representations, collects CSS, and optionally encrypts rendered
+ * email HTML with the configured public key.</p>
  */
 public class FormHtmlHandler {
 
@@ -91,6 +89,14 @@ public class FormHtmlHandler {
 
     private int formCounter;
 
+    /**
+     * Creates a renderer for a specific form instance.
+     *
+     * @param formName  name of the form to render
+     * @param formCounter  one-based form instance number used to create unique DOM identifiers
+     * @param request  current HTTP request used to resolve language and form settings
+     * @throws IllegalStateException if a required repository is unavailable or {@code formCounter} is invalid
+     */
     public FormHtmlHandler(String formName, int formCounter, HttpServletRequest request) {
         this.formStepsRepository = Tools.getSpringBean("formStepsRepository", FormStepsRepository.class);
         if(this.formStepsRepository == null) throw new IllegalStateException("FormHtmlHandler was not able to obtain FormStepsRepository");
@@ -126,6 +132,13 @@ public class FormHtmlHandler {
         }
     }
 
+    /**
+     * Creates a renderer and resolves the form instance number from the current request state.
+     *
+     * @param formName  name of the form to render
+     * @param request  current HTTP request used to resolve the form instance, language, and settings
+     * @throws IllegalStateException if a required service or repository is unavailable or the resolved counter is invalid
+     */
     public FormHtmlHandler(String formName, HttpServletRequest request) {
         this(formName, getFormCounter(formName, request), request);
     }
@@ -137,10 +150,9 @@ public class FormHtmlHandler {
     }
 
     /**
-     * Returns the last rendered form HTML without appended CSS.
-     * Useful for plain email etc.
+     * Returns the last rendered form content before CSS or encryption is applied.
      *
-     * @return HTML content without CSS, or empty string if not available
+     * @return rendered HTML or plain text, depending on form settings, or an empty string if unavailable
      */
     public final String getFormHtmlBeforeCss() {
         if(formHtmlBeforeCss == null) return "";
@@ -150,7 +162,8 @@ public class FormHtmlHandler {
     /**
      * Returns CSS collected during the last render.
      *
-     * @return pair of (inline <style> CSS, <link> tags); empty values if not available
+     * @return pair whose first value contains inline {@code <style>} CSS and whose second
+     *         value contains {@code <link>} elements; both values are empty if unavailable
      */
     public final Pair<String, String> getCssDataPair() {
         if(cssDataPair == null) return new Pair<>("", "");
@@ -158,7 +171,7 @@ public class FormHtmlHandler {
     }
 
     /**
-     * Return the prefix used to map logical form item IDs to DOM IDs.
+     * Returns the prefix used to map logical form item identifiers to DOM identifiers.
      *
      * @return form-instance-specific DOM ID prefix
      */
@@ -217,8 +230,8 @@ public class FormHtmlHandler {
     /**
      * Creates the HTML wrapper for a step and injects the step items.
      *
-     * @param stepId step ID to render
-     * @param request HTTP request
+     * @param request  current HTTP request
+     * @param formStep  step whose wrapper and items are rendered
      * @return HTML builder with step content
      */
     private StringBuilder getStepHtml(HttpServletRequest request, FormStepEntity formStep) {
@@ -312,8 +325,9 @@ public class FormHtmlHandler {
      * Creates the closing HTML of the form and decides the submit button text
      * based on whether the step is the last one.
      *
-     * @param stepId current step ID
-     * @param request HTTP request
+     * @param stepId  current step ID
+     * @param request  current HTTP request
+     * @param formStep  current step used to resolve navigation and optional trailing HTML
      * @return HTML builder with form end content
      */
     private StringBuilder getFormEnd(Long stepId, HttpServletRequest request, FormStepEntity formStep) {
@@ -358,12 +372,14 @@ public class FormHtmlHandler {
     }
 
     /**
-     * Renders full multi‑step form as email‑ready HTML into the provided {@link FormsEntity}.
-     * Applies optional encryption and collects CSS for inlining.
+     * Builds and stores the complete multistep form representation for email delivery.
+     * Converts it to plain text when configured, optionally encrypts it, and collects
+     * stylesheet data for email and PDF variants.
      *
-     * @param form target form entity to populate with rendered HTML
-     * @param request current HTTP request
-     * @param docId ID of the document used to resolve template/group CSS
+     * @param form  entity whose HTML field receives the rendered email content
+     * @param request  current HTTP request
+     * @param docId  ID of the document used to resolve template and group CSS
+     * @throws IllegalStateException if the entity belongs to a different form than this handler
      */
     public final void setFormHtml(FormsEntity form, HttpServletRequest request, Integer docId) {
         // Check that provided form has same name as formName provided in constructor
@@ -430,14 +446,10 @@ public class FormHtmlHandler {
     }
 
     /**
-     * Method can be called ONLY if method:setFormHtml was already called
-     * @return
-     */
-    /**
-     * Returns HTML wrapped with inline CSS suitable for PDF generation
+     * Returns the PDF-oriented form representation,
      * based on the last {@link #setFormHtml(FormsEntity, HttpServletRequest, Integer)} call.
      *
-     * @return HTML with inline CSS, or empty string if not available
+     * @return HTML with inline CSS, plain text when configured, or an empty string if unavailable
      */
     public final String getFormPdfVersion() {
         //Check if form html and css styles were allready set
@@ -448,13 +460,13 @@ public class FormHtmlHandler {
     }
 
     /**
-     * Wraps provided HTML with minimal email document structure and appends inline CSS.
+     * Wraps provided HTML with minimal email document structure and appends stylesheet markup.
      * Uses instance flag forcing plain text when configured.
      *
-     * @param htmlData HTML body content
-     * @param styleHtml inline CSS wrapped in <style> tag
-     * @param emailEncoding optional charset for meta header
-     * @return full HTML document or plain text when plain‑text mode is enabled
+     * @param htmlData  HTML body content
+     * @param styleHtml  stylesheet markup such as {@code <style>} or {@code <link>} elements
+     * @param emailEncoding  optional character set for the metadata header
+     * @return full HTML document, or the original content when plain-text mode is enabled
      */
     private String appendStyle(String htmlData, String styleHtml, String emailEncoding) {
         boolean forceTextPlain = this.formForceTextPlain || Constants.getBoolean("formMailSendPlainText");
@@ -462,13 +474,13 @@ public class FormHtmlHandler {
     }
 
     /**
-     * Static helper to wrap HTML with minimal email document structure and append CSS.
+     * Wraps HTML with minimal email document structure and appends stylesheet markup.
      *
-     * @param htmlData HTML body content
-     * @param styleHtml inline CSS wrapped in <style> tag
-     * @param emailEncoding optional charset for meta header
-     * @param forceTextPlain when true returns original htmlData without wrapping
-     * @return full HTML document or plain text when {@code forceTextPlain} is true
+     * @param htmlData  HTML body content
+     * @param styleHtml  stylesheet markup such as {@code <style>} or {@code <link>} elements
+     * @param emailEncoding  optional character set for the metadata header
+     * @param forceTextPlain  whether to return {@code htmlData} without wrapping
+     * @return full HTML document, or {@code htmlData} when {@code forceTextPlain} is true
      */
     public static String appendStyle(String htmlData, String styleHtml, String emailEncoding, boolean forceTextPlain) {
 		if (forceTextPlain == true) return htmlData;
@@ -489,8 +501,9 @@ public class FormHtmlHandler {
     /**
      * Resolves CSS for the current render using instance settings.
      *
-     * @param docId document ID used to resolve template/group CSS
-     * @return pair of (inline <style> CSS, <link> tags)
+     * @param docId  document ID used to resolve template and group CSS
+     * @return pair containing inline {@code <style>} CSS and {@code <link>} elements,
+     *         or {@code null} if the document cannot be resolved
      */
     private Pair<String, String> getCssDataLink(Integer docId) {
         return getCssDataLink(docId, this.formForceTextPlain, this.formCss);
@@ -499,9 +512,10 @@ public class FormHtmlHandler {
     /**
      * Resolves CSS for email/PDF rendering given a document context.
      *
-     * @param docId document ID
-     * @param forceTextPlain when true returns empty CSS
-     * @return pair of (inline <style> CSS, <link> tags) or empty pair when plain text
+     * @param docId  document ID
+     * @param forceTextPlain  whether to return empty CSS
+     * @return pair containing inline {@code <style>} CSS and {@code <link>} elements,
+     *         an empty pair for plain text, or {@code null} if the document cannot be resolved
      */
     public static Pair<String, String> getCssDataLink(Integer docId, boolean forceTextPlain) {
         return getCssDataLink(docId, forceTextPlain, null);
@@ -510,10 +524,11 @@ public class FormHtmlHandler {
     /**
      * Resolves CSS for email/PDF rendering including template, editor and form‑specific CSS.
      *
-     * @param docId document ID
-     * @param forceTextPlain when true returns empty CSS
-     * @param formSpecificCssStr newline‑separated list of additional CSS paths from form settings
-     * @return pair of (inline <style> CSS, <link> tags); returns null if document cannot be resolved
+     * @param docId  document ID
+     * @param forceTextPlain  whether to return empty CSS
+     * @param formSpecificCssStr  newline-separated list of additional CSS paths from form settings
+     * @return pair containing inline {@code <style>} CSS and {@code <link>} elements,
+     *         an empty pair for plain text, or {@code null} if the document cannot be resolved
      */
     public static Pair<String, String> getCssDataLink(Integer docId, boolean forceTextPlain, String formSpecificCssStr) {
         if(Constants.getBoolean("formMailSendPlainText") == true || forceTextPlain) return new Pair<>("", "");
@@ -619,6 +634,14 @@ public class FormHtmlHandler {
         return new Pair<>(cssData, cssLink);
     }
 
+    /**
+     * Converts interactive controls in a form item to read-only email markup.
+     *
+     * @param itemHtml  source markup for the form item
+     * @param stepItem  item whose submitted value is rendered
+     * @param request  current HTTP request used to resolve saved selections
+     * @return serialized body markup containing read-only control values, or an empty string for CAPTCHA
+     */
     private String editFieldHtmlToEmailRender(String itemHtml, FormItemEntity stepItem, HttpServletRequest request) {
         if("captcha".equals(stepItem.getFieldType())) return "";
 
@@ -686,6 +709,16 @@ public class FormHtmlHandler {
         return doc.body().html();
     }
 
+    /**
+     * Determines whether a radio button or checkbox value was selected.
+     *
+     * <p>Values saved in the current request flow take precedence over persisted form data.</p>
+     *
+     * @param inputValue  value represented by the rendered control
+     * @param itemFormId  logical identifier of the form item
+     * @param request  current HTTP request used to resolve saved selections
+     * @return {@code true} when the value is selected
+     */
     private boolean isCheckboxOrRadioSelected(String inputValue, String itemFormId, HttpServletRequest request) {
         String[] selectedValues = MultistepFormsService.getSavedSelectedValues(this.formName, itemFormId, request);
         if(selectedValues != null) return Arrays.asList(selectedValues).contains(inputValue);
@@ -708,6 +741,15 @@ public class FormHtmlHandler {
         return value;
     }
 
+    /**
+     * Resolves the back and next button labels for a form step.
+     *
+     * <p>The final step uses its configured next label or the localized submit label.</p>
+     *
+     * @param currentStepId  identifier of the current form step
+     * @return pair containing the back label followed by the next or submit label
+     * @throws IllegalStateException if the requested step does not exist
+     */
     private Pair<String, String> getButtonsLabels(Long currentStepId) {
         FormStepEntity actualStep = formStepsRepository.findById(currentStepId).orElse(null);
 

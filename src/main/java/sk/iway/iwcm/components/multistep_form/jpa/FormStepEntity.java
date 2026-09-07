@@ -23,6 +23,12 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
+/**
+ * Represents a configurable step of a multi-step form.
+ *
+ * Stores the step order, displayed content, navigation labels, and domain ownership
+ * used when rendering and editing a form workflow.
+ */
 @Entity
 @Table(name = "form_steps")
 @Getter

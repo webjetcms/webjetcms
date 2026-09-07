@@ -24,7 +24,7 @@ import sk.iway.iwcm.system.audit.jpa.AuditLogEntity;
 class FormStatServiceTest {
 
     /**
-     * Verifies that the spring transition does not hide events on the following day.
+     * Verifies that the spring transition does not hide events later on the transition day.
      */
     @Test
     void keepsEventsAfterSpringDaylightSavingChange() {

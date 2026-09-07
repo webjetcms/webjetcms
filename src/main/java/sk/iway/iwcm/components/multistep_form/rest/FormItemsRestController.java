@@ -50,6 +50,13 @@ import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
 
+/**
+ * Manages multistep form items through the administration DataTable.
+ *
+ * <p>The controller scopes records to a form, step, and domain, prepares editor
+ * options and previews, validates field dependencies, and keeps the generated form
+ * pattern synchronized after changes.</p>
+ */
 @RestController
 @RequestMapping("/admin/rest/form-items")
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_form')")
@@ -76,6 +83,12 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         this.formsService = formsService;
     }
 
+    /**
+     * Loads form items and enriches the page with row styling and editor options.
+     *
+     * @param pageable  requested page and sorting information
+     * @return page of form items prepared for the administration DataTable
+     */
     @Override
     public Page<FormItemEntity> getAllItems(Pageable pageable) {
         DatatablePageImpl<FormItemEntity> page = new DatatablePageImpl<>(super.getAllItemsIncludeSpecSearch(new FormItemEntity(), pageable));
@@ -114,6 +127,14 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         return page;
     }
 
+    /**
+     * Restricts table search to the requested form and, when supplied, its step.
+     *
+     * @param params  submitted search parameters
+     * @param predicates  predicates to extend with form-specific constraints
+     * @param root  form item query root
+     * @param builder  criteria builder used to create predicates
+     */
     @Override
     public void addSpecSearch(Map<String, String> params, List<Predicate> predicates, Root<FormItemEntity> root, CriteriaBuilder builder) {
 
@@ -126,6 +147,13 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         }
     }
 
+    /**
+     * Applies the fixed step and item-priority ordering required by the form editor.
+     *
+     * @param params  request parameters from which any client-provided sort is removed
+     * @param pageable  requested paging information
+     * @return paging information ordered by step and item priority
+     */
     @Override
     public Pageable addSpecSort(Map<String, String> params, Pageable pageable) {
          //remove default sort
@@ -144,6 +172,19 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         return pageableNew;
     }
 
+    /**
+     * Validates form identity, row-view compatibility, and field condition dependencies.
+     *
+     * <p>Chart-statistics edits bypass these form-item checks because they only update
+     * reporting options on an existing field.</p>
+     *
+     * @param request  current HTTP request
+     * @param target  submitted DataTable request, including the editor action
+     * @param user  authenticated user performing the operation
+     * @param errors  validation result to which inherited checks may add errors
+     * @param id  identifier of the edited item
+     * @param entity  submitted form item
+     */
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, FormItemEntity> target, Identity user, Errors errors, Long id, FormItemEntity entity) {
         super.validateEditor(request, target, user, errors, id, entity);
@@ -165,6 +206,15 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         }
     }
 
+    /**
+     * Loads an item for editing or creates an editor model with context-specific defaults.
+     *
+     * <p>Chart-statistics requests resolve the field identified by the chart context;
+     * an ID of {@code -1} creates a new item for the requested form and step.</p>
+     *
+     * @param id  item identifier, or {@code -1} when preparing a new item
+     * @return form item prepared for the editor
+     */
     @Override
     public FormItemEntity getOneItem(long id) {
         FormItemEntity entity;
@@ -190,6 +240,12 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         return processFromEntity(entity, ProcessItemAction.GETONE);
     }
 
+    /**
+     * Inserts a form item or updates only reporting options in chart-statistics mode.
+     *
+     * @param entity  submitted form item
+     * @return persisted form item, or {@code null} when chart-statistics mode receives no entity
+     */
     @Override
     public FormItemEntity insertItem(FormItemEntity entity) {
         Pair<String, String> chartStatInfo = MultistepFormsService.getChartStatInfo(getRequest());
@@ -215,6 +271,15 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         return super.insertItem(entity);
     }
 
+    /**
+     * Normalizes a form item before persistence.
+     *
+     * <p>The hook removes unsupported values, enforces CAPTCHA requirements, serializes
+     * regular-expression selections, assigns a valid item identifier, and prevents
+     * duplicate sort priorities within a step.</p>
+     *
+     * @param entity  form item to normalize
+     */
     @Override
     public void beforeSave(FormItemEntity entity) {
         //
@@ -254,6 +319,13 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         }
     }
 
+    /**
+     * Verifies that an item belongs to an accessible form, valid step, and current domain.
+     *
+     * @param entity  submitted form item
+     * @param id  persisted item identifier, or {@code null} or a non-positive value for a new item
+     * @return {@code true} when the current user may access the item
+     */
     @Override
     public boolean checkItemPerms(FormItemEntity entity, Long id) {
         if(entity == null || Tools.isEmpty(entity.getFormName()) || entity.getStepId() == null) return false;
@@ -272,6 +344,12 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         return validStep && getUser() != null && formsService.isFormAccessible(formName, getUser());
     }
 
+    /**
+     * Regenerates the stored form pattern after a standard item save.
+     *
+     * @param entity  submitted form item
+     * @param saved  persisted form item
+     */
     @Override
     public void afterSave(FormItemEntity entity, FormItemEntity saved) {
         //
@@ -281,6 +359,12 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         multistepFormsService.updateFormPattern(entity.getFormName());
     }
 
+    /**
+     * Prevents deletion of a field referenced by another field condition.
+     *
+     * @param entity  form item requested for deletion
+     * @return result of the inherited pre-delete hook when no dependency blocks deletion
+     */
     @Override
     public boolean beforeDelete(FormItemEntity entity) {
         //
@@ -289,12 +373,23 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         return super.beforeDelete(entity);
     }
 
+    /**
+     * Regenerates the stored form pattern after an item is deleted.
+     *
+     * @param entity  deleted form item
+     * @param id  identifier of the deleted item
+     */
     @Override
     public void afterDelete(FormItemEntity entity, long id) {
         // After save ensure that form pattern is updated
         multistepFormsService.updateFormPattern(entity.getFormName());
     }
 
+    /**
+     * Renders an item preview using its configured or localized default label.
+     *
+     * @param stepItem  form item to enrich with generated preview markup
+     */
     private void setItemPreview(FormItemEntity stepItem) {
         JSONObject item = new JSONObject(stepItem);
         String fieldType = item.getString("fieldType");
@@ -313,6 +408,13 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         stepItem.setGeneratedItem(itemHtml);
     }
 
+    /**
+     * Prepares persisted values and transient editor fields for a DataTable response.
+     *
+     * @param entity  form item returned from persistence
+     * @param action  operation for which the entity is being prepared
+     * @return the enriched form item
+     */
     @Override
     public FormItemEntity processFromEntity(FormItemEntity entity, ProcessItemAction action) {
 
@@ -361,6 +463,13 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         return entity;
     }
 
+    /**
+     * Maps transient editor values to persistent fields and clears incompatible settings.
+     *
+     * @param entity  submitted form item
+     * @param action  operation for which the entity is being prepared
+     * @return normalized form item ready for persistence
+     */
     @Override
     public FormItemEntity processToEntity(FormItemEntity entity, ProcessItemAction action) {
         // if field type is iterable, value is stored in valueAsOptions
@@ -387,6 +496,13 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         return entity;
     }
 
+    /**
+     * Verifies that every reordered item belongs to the requested form, step, and domain.
+     *
+     * @param request  current HTTP request containing the form and step scope
+     * @param entities  complete batch of form items requested for reordering
+     * @return {@code true} when the batch is within an accessible and valid step
+     */
     @Override
     protected boolean checkRowReorderScope(HttpServletRequest request, List<FormItemEntity> entities) {
         String formName = MultistepFormsService.getFormName(request);
@@ -404,6 +520,12 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         return formsService.isFormAccessible(formName, getUser());
     }
 
+    /**
+     * Resolves default regular-expression validators from a field template's input classes.
+     *
+     * @param fieldType  form field type whose template is inspected
+     * @return identifiers of matching regular-expression validators, or an empty list when none apply
+     */
     @GetMapping("/default-regex")
     public List<Long> getDefaultRegex(@RequestParam("fieldType") String fieldType) {
         List<Long> regexIds = new ArrayList<>();
@@ -431,6 +553,14 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         else return regExpRepository.findRegexIdsByTypeIn(inputClasses);
     }
 
+    /**
+     * Rejects a save or deletion when other field conditions depend on the item.
+     *
+     * <p>A notification listing the dependent fields is attached to the editor error.</p>
+     *
+     * @param entity  form item whose dependencies are checked
+     * @param isDelete  whether to use the deletion-specific error message
+     */
     private void validateFieldConditionDependencies(FormItemEntity entity, boolean isDelete) {
         List<Long> conditionsUsingField = formItemsConditionsRepository.getDependedItems(entity.getFormName(), entity.getItemFormId(), CloudToolsForCore.getDomainId());
         if(conditionsUsingField != null && conditionsUsingField.size() > 0) {

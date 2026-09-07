@@ -50,13 +50,11 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
- * Service responsible for preparing and sending emails for multi‑step forms.
- * <p>
- * Responsibilities:
- * - Extracts sender name and email from submitted form data based on configured field keys
- * - Composes HTML or plain‑text email body including optional CSS and attachments
- * - Applies repository settings (encoding, reply-to/cc/bcc, delayed send, double‑opt‑in)
- * - Sends email via configured SMTP or schedules deferred sending when SMTP is disabled
+ * Prepares and sends notification emails for submitted multistep forms.
+ *
+ * <p>The service derives sender details from submitted fields, applies form mail
+ * settings, composes HTML or plain-text content, handles attachments, and supports
+ * immediate or delayed delivery.</p>
  */
 @Service
 public class FormMailService {
@@ -107,22 +105,21 @@ public class FormMailService {
 
 	/**
 	 * Sends a notification email for the given form submission.
-	 * <p>
-	 * Behavior overview:
-	 * - Determines sender name/email from form data using configuration keys
-	 * - Applies form settings (encoding, reply-to/cc/bcc, delayed sending, attachments handling)
-	 * - Inlines CSS into HTML body when sending as HTML unless forced to plain text
-	 * - Optionally attaches message HTML as a separate file when configured
-	 * - Sends immediately via SMTP or schedules for later when SMTP is disabled
+	 *
+	 * <p>The method derives sender details from configured form fields, applies encoding
+	 * and recipient settings, prepares HTML or plain-text content and attachments, and
+	 * either sends immediately or schedules delayed delivery.</p>
 	 *
 	 * @param form       form entity with metadata and serialized field data
 	 * @param recipients comma‑separated list of recipient emails
 	 * @param subject    email subject
 	 * @param formFiles  uploaded files container to optionally attach
 	 * @param attachFiles when true attaches uploaded files to the email
-	 * @param cssData    inline <style> block or CSS links already made absolute
+	 * @param cssData    stylesheet markup whose relative paths are converted to absolute URLs
 	 * @param htmlData   rendered form body HTML (will be transformed as needed)
 	 * @param request    current HTTP request used for context and headers
+	 * @throws SaveFormException when the submission is rejected for email reasons or the message cannot
+	 *         be sent or queued
 	 */
     public void sendMail(FormsEntity form, String recipients, String subject, FormFiles formFiles, boolean attachFiles, String cssData, StringBuilder htmlData, HttpServletRequest request) throws SaveFormException{
 		Prop prop = Prop.getInstance( PageLng.getUserLng(request) );

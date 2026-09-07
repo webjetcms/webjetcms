@@ -41,6 +41,12 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.users.UserDetails;
 
+/**
+ * Produces domain-scoped statistics and chart data for multi-step forms.
+ *
+ * <p>The service combines form metadata with stored submissions and audit events
+ * filtered to the requested date range, producing JSON payloads for statistics views.</p>
+ */
 @Service
 public class FormStatService {
 
@@ -217,7 +223,7 @@ public class FormStatService {
      * bonus chart data, and validation error chart data.
      *
      * @param formName the form name identifier
-     * @param request the HTTP request used to resolve localization
+     * @param request the HTTP request used to resolve localization and date filters
      * @return JSON object with all calculated statistics, or {@code null} when formName is empty
      */
     public final JSONObject getFormStatData(String formName, HttpServletRequest request) {
@@ -252,7 +258,7 @@ public class FormStatService {
      *
      * @param formName the form name identifier
      * @param itemFormId form item identifier that must be non-empty
-     * @param request the HTTP request used to resolve localization
+     * @param request the HTTP request used to resolve localization and date filters
      * @return JSON array with chart data, or {@code null} when required parameters are empty
      */
     public final JSONArray getFormStatChartData(String formName, String itemFormId, HttpServletRequest request) {
@@ -308,7 +314,7 @@ public class FormStatService {
      * Falls back to the first response date when the creation timestamp is unavailable.
      *
      * @param context shared request statistics context
-     * @return number of elapsed days, {@code < 1} for same-day forms, or {@code 0} when unknown
+     * @return elapsed-day label, {@code < 1} for same-day forms, or {@code 0} when unknown
      */
     private String computeDurationDays(StatContext context) {
         Date formCreationDate = getFormCreationDate(context.formName, context.domainId);
@@ -321,7 +327,7 @@ public class FormStatService {
 
     /**
      * Computes the average time users spend filling out the form.
-     * Only entities with non-null createDate and positive duration are included.
+     * Only entities with a non-null, positive duration are included.
      *
      * @param formEntities list of form submissions
      * @return average duration formatted as {@code MM:SS}
@@ -815,7 +821,8 @@ public class FormStatService {
      * @param logs audit log entries for the selected form and date range
      * @param dateFrom first day included in the timeline
      * @param dateTo last day included in the timeline
-     * @return JSON object keyed by localized operation names with daily error counts
+     * @return JSON object keyed by localized operation names with daily error counts, or an empty
+     *         object when {@code formId < 1}
      */
     JSONObject getTimelineErrorData(int formId, Prop prop, List<AuditLogEntity> logs, Date dateFrom, Date dateTo) {
         JSONObject timelineErrorData = new JSONObject();

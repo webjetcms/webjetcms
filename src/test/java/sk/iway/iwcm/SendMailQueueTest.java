@@ -22,6 +22,8 @@ class SendMailQueueTest {
 
     /**
      * Verifies that a failed queue insertion is not reported as successful delivery.
+     *
+     * @throws Exception if the mocked database interaction cannot be configured or closed
      */
     @Test
     void reportsQueueInsertionFailure() throws Exception {

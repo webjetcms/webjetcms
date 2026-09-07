@@ -40,6 +40,12 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.users.UsersDB;
 
+/**
+ * Renders and configures the multistep form application.
+ *
+ * <p>The component prepares request-scoped form state, enforces the single-submission
+ * setting, exposes editor options, and resolves optional CSS templates.</p>
+ */
 @WebjetComponent("sk.iway.iwcm.components.multistep_form.mvc.MultistepFormApp")
 @WebjetAppStore(
     nameKey = "multistep_form.title",
@@ -91,6 +97,16 @@ public class MultistepFormApp extends WebjetComponentAbstract {
         Logger.debug(MultistepFormApp.class, "Init of MultistepFormApp app");
     }
 
+    /**
+     * Prepares the first step of the configured form for rendering.
+     *
+     * <p>The handler rejects duplicate submissions when required, initializes the
+     * session state used by subsequent steps, and records the form view.</p>
+     *
+     * @param model  MVC model populated for the form view
+     * @param request  current HTTP request used to initialize form and session state
+     * @return path to the multistep form view, or the error view when another submission is not allowed
+     */
     @DefaultHandler
 	public String view(Model model, HttpServletRequest request) {
         //Check first, if user can fill form
@@ -139,6 +155,13 @@ public class MultistepFormApp extends WebjetComponentAbstract {
         return VIEW_PATH;
     }
 
+    /**
+     * Builds editor options for available multistep forms and CSS templates.
+     *
+     * @param componentRequest  current component editor request
+     * @param request  current HTTP request used to localize option labels
+     * @return options keyed by {@code formName} and {@code cssTemplate}
+     */
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
         List<String> multistepFormNames = formStepsRepository.getMultistepFormNames(CloudToolsForCore.getDomainId());
@@ -161,6 +184,12 @@ public class MultistepFormApp extends WebjetComponentAbstract {
         return options;
     }
 
+    /**
+     * Lists readable CSS template files available to the multistep form component.
+     *
+     * @return sorted label-value pairs containing each template file name and public path,
+     *         or an empty list when the template directory is unavailable
+     */
     public static List<LabelValue> getCssTemplates() {
         List<LabelValue> templates = new ArrayList<>();
         IwcmFile directory = new IwcmFile(Tools.getRealPath(CSS_TEMPLATES_PATH));
