@@ -6,6 +6,7 @@
 
 ### Prelomové zmeny
 
+- Štatistika - prehliadače sa po aktualizácii ukladajú bez čísla verzie. Po nasadení tejto verzie je potrebné spustiť migráciu historických štatistík na URL `/admin/v9/settings/stat-browser-migration/`, bez jej dokončenia zostanú historické údaje rozdelené podľa verzií prehliadačov (#303).
 - Z administrácie bola odstránená závislosť na knižnici [Vue.js](https://vuejs.org). Pred aktualizáciou odporúčame overiť kompatibilitu vlastných aplikácií. Veľkosť JavaScript súborov sa zmenšila o cca 170kB, čo má dopad aj na rýchlosť inicializácie administrácie. Viac v [sekcii pre programátora](#pre-programátora).
 - AspectJ - z distribúcie bola odstránená podpora `load-time weavingu` (`aspectjweaver` a `META-INF/aop-ajc.xml`); vstavané aspekty sa spracujú už pri kompilácii, viac v [sekcii pre programátora](#pre-programátora). Pri použití v MultiWeb inštalácii môžete odstrániť `-javaagent:/www/tomcat/.../aspectjweaver.jar` nastavenie z `JAVA_OPTS` v aplikačnom serveri (#290).
 - Export obsahu pre Flash - odstránená bola historická funkcia generovania XML súborov `/flash_xml/{docId}.xml` pri publikovaní stránky. Konfiguračná premenná `exportFlash` už nie je podporovaná a jej definovanie v `SpringConfig` funkciu neobnoví (#293).
@@ -168,7 +169,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Multiweb - doplnená možnosť premenovať existujúcu doménu + presmerovanie po premenovaní (#58317-15).
 - Multiweb - upravené [zobrazenie skupín šablón](install/multiweb/README.md) podľa dostupných šablón a aliasu aktuálnej domény (#58317-17).
 - Štatistika - nastavený dátum/rozsah od-do sa ukladá v prehliadači a je zapamätaný aj po odhlásení/reštarte prehliadača (#58065).
-- Štatistika - prehliadače sa ukladajú bez často sa meniaceho čísla verzie. Doplnená je ručne spúšťaná dávková migrácia v sekcii Aktualizácia WebJET, ktorá zlúči historické záznamy bez výpadku webu.
+- Štatistika - prehliadače sa ukladajú bez často sa meniaceho čísla verzie. Doplnená je ručne spúšťaná dávková migrácia v sekcii Aktualizácia WebJET, ktorá zlúči historické záznamy bez výpadku webu. Aktualizovaný je zoznam `User-Agent` prehliadačov pre lepšiu detekciu (#303).
 - Viackrokové formuláre - doplnené presunutie (`scroll`) na začiatok formuláru po prechode na ďalší krok (#osk573).
 
 ### Oprava chýb
