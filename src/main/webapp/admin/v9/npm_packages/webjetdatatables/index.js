@@ -1184,12 +1184,36 @@ export const dataTableInit = options => {
             //if it is opened by WJ.openDialog like passkey.pug insert editor into modal-body-content
             if (isInModalDialog) modalContainer = "#modalIframe .modal-body .modal-body-content";
             $(dom.content)
-                .on('show.bs.modal', function () {
+                .off('.wjDteLifecycle')
+                .on('show.bs.modal.wjDteLifecycle', function (event) {
+                    if (event.target !== this) return;
                     const $modal = $(this);
                     $modal
                         .removeData('dteFocusRequest')
                         .off('.wjDteDefaultFocus')
-                        .attr('data-dte-focus-state', 'pending');
+                        .attr('data-dte-focus-state', 'pending')
+                        .attr('data-dte-close-state', 'open');
+                })
+                .on('hide.bs.modal.wjDteLifecycle', function (event) {
+                    if (event.target !== this) return;
+                    $(this)
+                        .removeData('dteFocusRequest')
+                        .off('.wjDteDefaultFocus')
+                        .attr('data-dte-close-state', 'closing');
+                })
+                .on('hidden.bs.modal.wjDteLifecycle', function (event) {
+                    if (event.target !== this) return;
+                    const $modal = $(this);
+                    let target = dte._wjFocusReturnElement;
+                    if (target == null || !document.contains(target) || target.disabled) {
+                        target = $('#' + dte.TABLE.DATA.id + '_wrapper button[data-dtbtn="' + dte._wjFocusReturnButton + '"]:visible:not(:disabled)')[0];
+                    }
+                    if (target != null) target.focus({preventScroll: true});
+
+                    // Focus handlers may reopen the editor; do not mark that new dialog as closed.
+                    if ($modal.attr('data-dte-close-state') === 'closing') {
+                        $modal.attr('data-dte-close-state', 'closed');
+                    }
                 })
                 .one('shown.bs.modal', function () {
                     // Can only give elements focus when shown
@@ -1564,18 +1588,6 @@ export const dataTableInit = options => {
         });
         EDITOR.on('close', function (e) {
             //console.log("Editor.on close, editor=", EDITOR, "url=", EDITOR.TABLE.DATA.url, "close=", EDITOR.close, "e=", e);
-
-            const focusReturnElement = EDITOR._wjFocusReturnElement;
-            const focusReturnButton = EDITOR._wjFocusReturnButton;
-            const modalElement = document.getElementById(DATA.id + '_modal');
-            const restoreFocus = function() {
-                let target = focusReturnElement;
-                if (target == null || !document.contains(target) || target.disabled) {
-                    target = $('#' + DATA.id + '_wrapper button[data-dtbtn="' + focusReturnButton + '"]:visible:not(:disabled)')[0];
-                }
-                if (target != null) target.focus({preventScroll: true});
-            };
-            if (modalElement != null) modalElement.addEventListener('hidden.bs.modal', restoreFocus, {once: true});
 
             //pre istotu zatvor, niekedy pri nested dialogu zostava otvoreny kvoli nejakemu bugu
             if (typeof EDITOR._bootstrapDisplay != "undefined" && $("#" + EDITOR._bootstrapDisplay.id).hasClass("show")) {
