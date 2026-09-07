@@ -30,10 +30,12 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
+import sk.iway.iwcm.components.multistep_form.mvc.MultistepFormApp;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.RowReorderDto;
+import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 @RestController
 @RequestMapping("/admin/rest/form-steps")
@@ -185,6 +187,11 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
                 .header("Content-Type", contentTypeWithCharset)
                 .body("");
         }
+    }
+
+    @GetMapping(value = "/css-templates", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<LabelValue> getCssTemplates() {
+        return MultistepFormApp.getCssTemplates();
     }
 
     @Override

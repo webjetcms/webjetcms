@@ -1,0 +1,383 @@
+.multistep-form {
+    --gf-primary: #673ab7;
+    --gf-primary-dark: #5f2dab;
+    --gf-primary-soft: #ede7f6;
+    --gf-page: #f0ebf8;
+    --gf-surface: #ffffff;
+    --gf-text: #202124;
+    --gf-muted: #5f6368;
+    --gf-border: #dadce0;
+    --gf-error: #d93025;
+
+    width: min(100%, 770px);
+    margin: 0 auto 3rem;
+    padding: 12px;
+    color: var(--gf-text);
+    background: var(--gf-page);
+    border-radius: 12px;
+    font-family: Roboto, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.45;
+}
+
+.multistep-form,
+.multistep-form * {
+    box-sizing: border-box;
+}
+
+.multistep-form .form-step {
+    margin-top: 0 !important;
+}
+
+.multistep-form .step-header {
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 12px;
+    padding: 28px 24px 24px;
+    background: var(--gf-surface);
+    border: 1px solid var(--gf-border);
+    border-top: 10px solid var(--gf-primary);
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.08);
+}
+
+.multistep-form .step-header p,
+.multistep-form .step-header h1,
+.multistep-form .step-header h2,
+.multistep-form .step-header h3 {
+    margin: 0;
+    color: var(--gf-text);
+    font-size: clamp(1.45rem, 3vw, 2rem);
+    font-weight: 400;
+    line-height: 1.25;
+}
+
+.multistep-form .form-step > .row {
+    --bs-gutter-x: 24px;
+
+    margin: 0 0 12px;
+    padding: 24px 12px 12px;
+    background: var(--gf-surface);
+    border: 1px solid var(--gf-border);
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.06);
+}
+
+.multistep-form .form-step > .row:empty {
+    display: none;
+}
+
+.multistep-form .col {
+    min-width: 0;
+}
+
+.multistep-form .form-group {
+    margin-bottom: 1rem !important;
+}
+
+.multistep-form label,
+.multistep-form .form-label {
+    display: inline-block;
+    margin-bottom: 0.45rem;
+    color: var(--gf-text);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.multistep-form label.first-time {
+    margin-bottom: 0.75rem;
+    font-size: 1.05rem;
+    font-weight: 500;
+}
+
+.multistep-form .requirement-mark,
+.multistep-form .text-danger {
+    color: var(--gf-error) !important;
+}
+
+.multistep-form .popover-link {
+    margin-left: 0.25rem;
+    color: var(--gf-primary);
+}
+
+.multistep-form input.form-control,
+.multistep-form textarea.form-control,
+.multistep-form .formsimple-autocomplete {
+    min-height: 44px;
+    padding: 0.65rem 0 0.45rem;
+    color: var(--gf-text);
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--gf-border);
+    border-radius: 0;
+    box-shadow: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.multistep-form textarea.form-control {
+    min-height: 96px;
+    resize: vertical;
+}
+
+.multistep-form input.form-control:hover,
+.multistep-form textarea.form-control:hover,
+.multistep-form .formsimple-autocomplete:hover {
+    border-bottom-color: #9aa0a6;
+}
+
+.multistep-form input.form-control:focus,
+.multistep-form textarea.form-control:focus,
+.multistep-form .formsimple-autocomplete:focus {
+    color: var(--gf-text);
+    background: transparent;
+    border-bottom-color: var(--gf-primary);
+    box-shadow: inset 0 -2px 0 var(--gf-primary);
+    outline: none;
+}
+
+.multistep-form .form-control::placeholder {
+    color: #80868b;
+    opacity: 1;
+}
+
+.multistep-form select.form-control,
+.multistep-form select.form-select,
+.multistep-form select {
+    min-height: 44px;
+    padding: 0.65rem 2.5rem 0.65rem 0.8rem;
+    color: var(--gf-text);
+    background-color: var(--gf-surface);
+    border: 1px solid var(--gf-border);
+    border-radius: 4px;
+    box-shadow: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.multistep-form select.form-control:hover,
+.multistep-form select.form-select:hover,
+.multistep-form select:hover {
+    border-color: #9aa0a6;
+}
+
+.multistep-form select.form-control:focus,
+.multistep-form select.form-select:focus,
+.multistep-form select:focus {
+    border-color: var(--gf-primary);
+    box-shadow: 0 0 0 2px rgba(103, 58, 183, 0.16);
+    outline: none;
+}
+
+.multistep-form .form-check {
+    min-height: 32px;
+    margin-bottom: 0.35rem;
+    padding: 0.35rem 0.5rem 0.35rem 2rem;
+    border-radius: 4px;
+    transition: background-color 0.16s ease;
+}
+
+.multistep-form .form-check:hover {
+    background: #f8f5fc;
+}
+
+.multistep-form .form-check-input {
+    width: 1.15rem;
+    height: 1.15rem;
+    margin-top: 0.22rem;
+    border-color: #5f6368;
+    box-shadow: none;
+}
+
+.multistep-form .form-check-input[type="radio"] {
+    border-radius: 50%;
+}
+
+.multistep-form .form-check-input:checked {
+    background-color: var(--gf-primary);
+    border-color: var(--gf-primary);
+}
+
+.multistep-form .form-check-input:focus {
+    border-color: var(--gf-primary);
+    box-shadow: 0 0 0 3px rgba(103, 58, 183, 0.18);
+}
+
+.multistep-form .form-check-label {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.multistep-form .form-text {
+    color: var(--gf-muted);
+    font-size: 0.875rem;
+}
+
+.multistep-form .help-block,
+.multistep-form .cs-error {
+    margin-top: 0.4rem;
+    color: var(--gf-error);
+    font-size: 0.8rem;
+}
+
+.multistep-form .ui-autocomplete {
+    background: var(--gf-surface);
+    border: 1px solid var(--gf-border);
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(60, 64, 67, 0.18);
+}
+
+.multistep-form .ql-toolbar,
+.multistep-form .ql-container,
+.multistep-form .cleditorMain {
+    border-color: var(--gf-border) !important;
+}
+
+.multistep-form .ql-toolbar,
+.multistep-form .cleditorToolbar {
+    background: #f8f9fa;
+}
+
+.multistep-form .ql-toolbar {
+    border-radius: 4px 4px 0 0;
+}
+
+.multistep-form .ql-container {
+    min-height: 150px;
+    background: var(--gf-surface);
+    border-radius: 0 0 4px 4px;
+}
+
+.multistep-form .cleditorMain {
+    overflow: hidden;
+    height: 210px !important;
+    background: var(--gf-surface);
+    border-radius: 4px;
+}
+
+.multistep-form .cleditorMain iframe,
+.multistep-form .cleditorMain textarea {
+    height: 176px !important;
+}
+
+.multistep-form .form-group-captcha {
+    display: grid;
+    grid-template-columns: auto minmax(180px, 1fr);
+    gap: 1rem;
+    align-items: end;
+}
+
+.multistep-form .form-group-captcha img {
+    max-width: 100%;
+    border: 1px solid var(--gf-border);
+    border-radius: 4px;
+}
+
+.multistep-form .drop-zone-box.dropzone {
+    min-height: 150px;
+    padding: 1rem;
+    background: #faf8fd;
+    border: 2px dashed #b39ddb !important;
+    border-radius: 8px;
+}
+
+.multistep-form .drop-zone-box.dropzone:hover {
+    background: var(--gf-primary-soft);
+    border-color: var(--gf-primary) !important;
+}
+
+.multistep-form .wjdropzone-single-file {
+    min-height: 0;
+    padding: 0.85rem;
+    background: #faf8fd;
+    border: 1px solid var(--gf-border);
+    border-radius: 6px;
+}
+
+.multistep-form .dz-preview {
+    background: var(--gf-surface) !important;
+    border-radius: 6px;
+}
+
+.multistep-form button.btn {
+    min-height: 40px;
+    padding: 0.55rem 1.45rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    box-shadow: none;
+    transition: background-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+}
+
+.multistep-form button.btn-primary {
+    color: #fff;
+    background: var(--gf-primary);
+    border-color: var(--gf-primary);
+}
+
+.multistep-form button.btn-primary:hover,
+.multistep-form button.btn-primary:focus {
+    color: #fff;
+    background: var(--gf-primary-dark);
+    border-color: var(--gf-primary-dark);
+    box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3);
+}
+
+.multistep-form button.btn-outline-primary,
+.multistep-form button[data-multistep-back-step] {
+    color: var(--gf-primary);
+    background: transparent;
+    border-color: transparent;
+}
+
+.multistep-form button.btn-outline-primary:hover,
+.multistep-form button.btn-outline-primary:focus,
+.multistep-form button[data-multistep-back-step]:hover,
+.multistep-form button[data-multistep-back-step]:focus {
+    color: var(--gf-primary-dark);
+    background: var(--gf-primary-soft);
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.multistep-form-app:has(.multistep-form) {
+    padding: clamp(1rem, 3vw, 2rem);
+    background: var(--gf-page, #f0ebf8);
+}
+
+.multistep-form-app:has(.multistep-form) > .alert {
+    width: min(100%, 770px);
+    margin-right: auto;
+    margin-left: auto;
+    border: 1px solid var(--gf-border, #dadce0);
+    border-radius: 8px;
+}
+
+@media (max-width: 767.98px) {
+    .multistep-form {
+        margin-bottom: 2rem;
+        padding: 8px;
+        border-radius: 8px;
+    }
+
+    .multistep-form .step-header {
+        padding: 22px 18px 20px;
+    }
+
+    .multistep-form .form-step > .row {
+        display: block;
+        padding: 20px 8px 8px;
+    }
+
+    .multistep-form .col {
+        width: 100%;
+    }
+
+    .multistep-form .form-group-captcha {
+        grid-template-columns: 1fr;
+    }
+
+    .multistep-form button.btn {
+        margin-top: 0.5rem !important;
+    }
+}

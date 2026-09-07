@@ -395,11 +395,6 @@ export class MultistepForm {
                     window.location.href = errRedirect;
                     return;
                 }
-                const endTry = parsed.end_try || false;
-                if (endTry) {
-                    const holder = this.wrapper.querySelector('.multistepStepContent');
-                    if (holder) holder.innerHTML = '';
-                }
                 await this.showGlobalErr(parsed);
             }
         } catch (err) {
@@ -701,10 +696,17 @@ export class MultistepForm {
 
         const transitionDurationMs = 260;
         const currentlyHidden = this._isFieldHidden(field);
+        const fieldColumn = field.parentElement?.classList.contains('col') ? field.parentElement : null;
 
         // Avoid replaying animations when visibility state has not changed.
-        if (visible && !currentlyHidden) return;
-        if (!visible && currentlyHidden) return;
+        if (visible && !currentlyHidden) {
+            fieldColumn?.classList.remove('mf-field-column-hidden');
+            return;
+        }
+        if (!visible && currentlyHidden) {
+            fieldColumn?.classList.add('mf-field-column-hidden');
+            return;
+        }
 
         if (field._visibilityTimeoutId) {
             window.clearTimeout(field._visibilityTimeoutId);
@@ -712,6 +714,7 @@ export class MultistepForm {
         }
 
         if (visible) {
+            fieldColumn?.classList.remove('mf-field-column-hidden');
             field.style.display = '';
             field.classList.remove('mf-hide', 'mf-collapsed', 'mf-hidden');
 
@@ -749,6 +752,7 @@ export class MultistepForm {
             field.classList.remove('mf-hide', 'mf-enter');
             field.classList.add('mf-collapsed');
             field.style.maxHeight = '0px';
+            fieldColumn?.classList.add('mf-field-column-hidden');
             return;
         }
 
@@ -766,6 +770,7 @@ export class MultistepForm {
             field.classList.remove('mf-hide');
             field.classList.add('mf-hidden');
             field.style.maxHeight = '0px';
+            fieldColumn?.classList.add('mf-field-column-hidden');
             if (field._visibilityTimeoutId) {
                 window.clearTimeout(field._visibilityTimeoutId);
                 field._visibilityTimeoutId = null;

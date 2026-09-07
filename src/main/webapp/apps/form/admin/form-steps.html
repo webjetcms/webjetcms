@@ -47,6 +47,46 @@
     var stepsFirstLoad = true;
     var itemsFirstLoad = true;
 
+    async function loadPreviewCssTemplates() {
+        const select = document.getElementById("previewCssTemplate");
+        if(select == null) return;
+
+        select.addEventListener("change", applyPreviewCssTemplate);
+        try {
+            const response = await fetch("/admin/rest/form-steps/css-templates", {
+                method: "GET",
+                headers: { "Accept": "application/json", "X-CSRF-Token": window.csrfToken }
+            });
+            if(response.ok == false) throw new Error(`HTTP ${response.status}`);
+
+            const templates = await response.json();
+            if(Array.isArray(templates) == false) throw new Error("Invalid CSS templates response");
+            templates.forEach(template => {
+                const option = document.createElement("option");
+                option.textContent = template.label;
+                option.value = template.value;
+                select.appendChild(option);
+            });
+        } catch(error) {
+            console.error("Error fetching CSS templates:", error);
+        }
+    }
+
+    function applyPreviewCssTemplate() {
+        document.getElementById("formStepPreviewCssTemplate")?.remove();
+
+        const cssPath = document.getElementById("previewCssTemplate")?.value;
+        const preview = document.querySelector("div.stepPreview");
+        if(cssPath == null || cssPath === "" || preview == null) return;
+
+        const stylesheet = document.createElement("link");
+        stylesheet.id = "formStepPreviewCssTemplate";
+        stylesheet.rel = "stylesheet";
+        stylesheet.type = "text/css";
+        stylesheet.href = cssPath;
+        preview.appendChild(stylesheet);
+    }
+
     function getActualPath(stepId) {
         let urlWithParams = WJ.urlUpdateParam(itemUrl, "formName", urlFormName);
         urlWithParams = WJ.urlUpdateParam(urlWithParams, "stepId", stepId);
@@ -75,6 +115,8 @@
     }
 
     window.domReady.add(function () {
+        loadPreviewCssTemplates();
+
         WJ.headerTabs({
             id: 'tabsFilter',
             tabs: [
@@ -425,6 +467,7 @@
             const html = await r.text();
 
             $("div.stepPreview").html(html);
+            applyPreviewCssTemplate();
 
             onResize();
 
@@ -508,6 +551,39 @@
     div.stepPreview form {
         pointer-events: none;
     }
+    .preview-css-template {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        height: 39px;
+    }
+    .preview-css-template label {
+        margin: 0;
+        color: var(--wj-gray-text);
+        font-size: 14px;
+        white-space: nowrap;
+    }
+    .preview-css-template select {
+        width: 220px;
+        min-width: 0;
+        height: 34px;
+        padding: 4px 34px 4px 12px;
+        color: var(--wj-secondary, #212529);
+        background-color: white;
+        border: 1px solid var(--wj-nice-gray-300, #d7dbe3);
+        border-radius: 6px;
+        font-size: 14px;
+        line-height: 24px;
+        box-shadow: none;
+    }
+    .preview-css-template select:hover {
+        border-color: var(--wj-gray-text, #6c757d);
+    }
+    .preview-css-template select:focus {
+        border-color: var(--wj-primary);
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+        outline: none;
+    }
 
     /* HIDE filter headers */
     #formStepsDataTable_wrapper div.dt-scroll-head { display: none; }
@@ -539,12 +615,20 @@
 
     <div class="col-md-6 stepPreviewWrapper">
         <div id="" class="dt-header-row clearfix">
-            <div class="row">
+            <div class="row align-items-center">
                 <div class="col-auto">
                     <div class="dt-buttons" style="height: 39px; max-height: none;">
                         <div style="padding-top: 5px;">
                             <i class="ti ti-eye"></i> [[#{components.multistep_form.form-content.step-preview}]]
                         </div>
+                    </div>
+                </div>
+                <div class="col-auto ms-auto">
+                    <div class="preview-css-template">
+                        <label for="previewCssTemplate">[[#{components.multistep_form.form-content.css-template}]]</label>
+                        <select id="previewCssTemplate" class="form-select form-select-sm no-picker">
+                            <option value="">[[#{components.multistep_form.form-content.css-template-none}]]</option>
+                        </select>
                     </div>
                 </div>
             </div>

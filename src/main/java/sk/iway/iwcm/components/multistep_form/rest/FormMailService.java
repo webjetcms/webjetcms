@@ -217,7 +217,7 @@ public class FormMailService {
 				long sendLaterTime = Tools.getNow();
 				sendLaterTime += (5 * Constants.getInt("clusterRefreshTimeout"));
 
-				SendMail.sendLater(meno, FormMailAction.getFirstEmail(email), recipients, formSettings.getReplyTo(), formSettings.getCcEmails(), formSettings.getBccEmails(), subject, messageBody, Tools.getBaseHref(request), Tools.formatDate(sendLaterTime), Tools.formatTime(sendLaterTime), formFiles.getFileNamesSendLater() != null ? "" : formFiles.getFileNamesSendLater().toString());
+				SendMail.sendLater(meno, FormMailAction.getFirstEmail(email), recipients, formSettings.getReplyTo(), formSettings.getCcEmails(), formSettings.getBccEmails(), subject, messageBody, Tools.getBaseHref(request), Tools.formatDate(sendLaterTime), Tools.formatTime(sendLaterTime), formFiles.getFileNamesSendLater().toString());
 			} else {
 				//vygeneruj mail a posli ho
 				Properties props = System.getProperties();
@@ -347,8 +347,33 @@ public class FormMailService {
 				catch (Exception ex) {
 					Logger.error(FormMailService.class, ex);
 					sb.append(" sending to email ").append(recipients).append(" FAILED: ").append(ex.getMessage());
-					RequestBean.addAuditValue("formfail", "emailNotSend");
-					sendFailed = true;
+
+					StringBuilder sendLaterAttachments = new StringBuilder();
+					if (attachFiles && formFiles.getAttachs() != null) {
+						for (IwcmFile file : formFiles.getAttachs()) {
+							if (sendLaterAttachments.length() > 0) sendLaterAttachments.append(';');
+							sendLaterAttachments.append(file.getVirtualPath()).append(';').append(file.getName());
+						}
+					}
+					if (sendMessageAsAttach && messageAsAttachFile != null) {
+						if (sendLaterAttachments.length() > 0) sendLaterAttachments.append(';');
+						sendLaterAttachments.append(messageAsAttachFile.getVirtualPath()).append(';').append(messageAsAttachFile.getName());
+					}
+
+					StringBuilder sendLaterBody = new StringBuilder(htmlData);
+					String messageBody = forceTextPlain
+						? SearchTools.htmlToPlain(sendLaterBody.toString())
+						: FormHtmlHandler.appendStyle(sendLaterBody.toString(), cssData, emailEncoding, false);
+
+					long sendLaterTime = Tools.getNow() + (5L * Constants.getInt("clusterRefreshTimeout"));
+					boolean queued = SendMail.sendLater(meno, FormMailAction.getFirstEmail(email), recipients, formSettings.getReplyTo(), formSettings.getCcEmails(), formSettings.getBccEmails(), subject, messageBody, Tools.getBaseHref(request), Tools.formatDate(sendLaterTime), Tools.formatTime(sendLaterTime), sendLaterAttachments.toString());
+					if (queued) {
+						sb.append("; queued for later delivery");
+						Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Email for form " + form.getFormName() + " could not be sent immediately and was queued for later delivery", (long)MultistepFormsService.getFormIdStatic(form.getFormName()), form.getId());
+					} else {
+						RequestBean.addAuditValue("formfail", "emailNotSend");
+						sendFailed = true;
+					}
 				}
 			}
 		} else {

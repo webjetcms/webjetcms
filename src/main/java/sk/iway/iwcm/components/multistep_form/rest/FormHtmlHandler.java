@@ -629,24 +629,12 @@ public class FormHtmlHandler {
 
         Document doc = Jsoup.parseBodyFragment(itemHtml);
 
-        // Pre-query all labels with 'for' attribute to avoid re-querying inside the loop
-        org.jsoup.select.Elements labelsWithFor = doc.select("label[for]");
-
         // Loop input and handle text, radio and checkbox types
         for (Element input : doc.select("input")) {
             String inputType = input.attr("type");
             if(Tools.isEmpty(inputType)) inputType = "";
 
             if("radio".equals(inputType) || "checkbox".equals(inputType)) {
-                Element label = null;
-                for (Element l : labelsWithFor) {
-                    if (l.attr("for").equals(input.id())) {
-                        label = l;
-                        break;
-                    }
-                }
-                if (label != null) { label.text(input.val()); }
-
                 boolean isSelected = isCheckboxOrRadioSelected(input.val(), stepItem.getItemFormId());
 
                 if ("radio".equals(inputType))
@@ -673,7 +661,21 @@ public class FormHtmlHandler {
 
         // Loop selects
         for (Element select : doc.select("select")) {
-            select.before("<span class=\"form-control emailInput-select\">" + fieldValue + "</span>");
+            Element readonlyValue = new Element("span");
+            readonlyValue.addClass("form-control").addClass("emailInput-select");
+
+            Element selectedOption = null;
+            for (Element option : select.select("option")) {
+                if (fieldValue.equals(option.val())) {
+                    selectedOption = option;
+                    break;
+                }
+            }
+
+            if (selectedOption != null) readonlyValue.text(selectedOption.text());
+            else readonlyValue.html(fieldValue);
+
+            select.before(readonlyValue);
             select.remove();
         }
 

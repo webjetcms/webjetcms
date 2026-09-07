@@ -4,6 +4,7 @@
 <script type="text/javascript" src="/components/_common/cleditor/jquery.cleditor.icon.js"></script>
 
 <link rel="stylesheet" type="text/css" href="/apps/form/mvc/default.css" />
+<link data-th-if="${not #strings.isEmpty(cssTemplatePath)}" rel="stylesheet" type="text/css" data-th-href="${cssTemplatePath}" />
 
 <!-- Wrapper will be appended inside div.container by the JS module -->
 

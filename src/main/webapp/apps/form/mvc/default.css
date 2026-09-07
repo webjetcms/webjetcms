@@ -23,6 +23,17 @@
     display: none;
 }
 
+.multistep-form-app .row > .col.mf-field-column-hidden {
+    display: none;
+}
+
+.multistep-form-app .step-header .step-description {
+    margin-top: 0.65rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
 .multistep-form-app .mf-error-list {
     margin: 0px;
     padding-left: 20px;
