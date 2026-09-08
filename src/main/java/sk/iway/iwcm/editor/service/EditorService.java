@@ -281,7 +281,8 @@ public class EditorService {
 		}
 		dt.diff("after requestPublish");
 
-		JsonEditorValidator.validateBeforeSave(editedDoc, new CustomFieldsSearchDto(editedDoc), "editor", prop);
+		JsonEditorValidator.validateBeforeSave(editedDoc,
+			JsonEditorValidator.getRules(editedDoc, new CustomFieldsSearchDto(editedDoc), "editor"), prop);
 
 		DocHistory editedHistory = DocDetailsToDocHistoryMapper.INSTANCE.docDetailsToDocHistory(editedDoc);
 

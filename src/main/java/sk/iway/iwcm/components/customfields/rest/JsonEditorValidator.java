@@ -1,6 +1,5 @@
 package sk.iway.iwcm.components.customfields.rest;
 
-import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -32,6 +31,7 @@ import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationTypeRepository;
+import sk.iway.iwcm.components.enumerations.rest.EnumerationService;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocEditorFields;
 import sk.iway.iwcm.editor.FieldType;
@@ -91,14 +91,13 @@ public final class JsonEditorValidator {
         Map<String, Boolean> rules = new LinkedHashMap<>();
         BeanWrapperImpl bean = new BeanWrapperImpl(entity);
         Map<Character, CustomFieldsEntity> configuredFields = null;
-        BeanWrapperImpl enumerationType = null;
+        EnumerationTypeBean enumerationType = null;
         boolean enumerationTypeLoaded = false;
         Prop typeProp = Prop.getInstance(Constants.getString("defaultLanguage"));
-        for (PropertyDescriptor property : bean.getPropertyDescriptors()) {
-            String name = property.getName();
-            if (name.matches("field[A-Z]") == false || property.getReadMethod() == null) continue;
+        for (char alphabet = 'A'; alphabet <= 'Z'; alphabet++) {
+            String name = "field" + alphabet;
+            if (bean.isReadableProperty(name) == false) continue;
             if (configuredFields == null) configuredFields = CustomFieldsService.getCustomFieldsMap(context);
-            char alphabet = name.charAt(5);
             CustomFieldsEntity configuredField = configuredFields.get(alphabet);
             if (entity instanceof EnumerationDataBean && configuredField == null) continue;
             String labelKey = getLabelKey(entity.getClass(), name, keyPrefix);
@@ -109,10 +108,10 @@ public final class JsonEditorValidator {
                         EnumerationTypeRepository repository = Tools.getSpringBean("enumerationTypeRepository", EnumerationTypeRepository.class);
                         if (repository == null) throw new IllegalStateException("Cannot resolve the enumeration custom-field context");
                         EnumerationTypeBean parent = repository.getNonHiddenByEnumId(context.getEntityId().intValue(), false);
-                        if (parent != null) enumerationType = new BeanWrapperImpl(parent);
+                        if (parent != null) enumerationType = parent;
                         enumerationTypeLoaded = true;
                     }
-                    if (enumerationType == null || Tools.isEmpty((String)enumerationType.getPropertyValue("string" + (alphabet - 'A' + 1) + "Name"))) continue;
+                    if (Tools.isEmpty(EnumerationService.getStringFieldName(enumerationType, alphabet))) continue;
                 }
                 rules.put(name, configuredField != null && Tools.isTrue(configuredField.getRequired()));
             }
@@ -196,12 +195,11 @@ public final class JsonEditorValidator {
     /**
      * Rejects invalid values at a persistence boundary using native field errors.
      * @param entity final entity values
-     * @param context server lookup context
-     * @param keyPrefix optional legacy translation prefix
+     * @param rules server-resolved field names and required flags
      * @param prop localized messages
      */
-    public static void validateBeforeSave(Object entity, CustomFieldsSearchDto context, String keyPrefix, Prop prop) {
-        List<DatatableFieldError> errors = validate(entity, getRules(entity, context, keyPrefix), prop);
+    public static void validateBeforeSave(Object entity, Map<String, Boolean> rules, Prop prop) {
+        List<DatatableFieldError> errors = validate(entity, rules, prop);
         if (errors.isEmpty() == false) throw new CustomFieldsValidationException(errors);
     }
 }

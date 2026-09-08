@@ -175,7 +175,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		prepareEntityForCreate(entity);
 		//musime z editoFields najskor prepisat hodnoty do entity
 		T processed = processToEntity(entity, ProcessItemAction.CREATE);
-		JsonEditorValidator.validateBeforeSave(processed, getCustomFieldsSearchDto(processed), getCustomFieldsKeyPrefix(processed), getProp());
+		JsonEditorValidator.validateBeforeSave(processed, JsonEditorValidator.getRules(processed,
+			getCustomFieldsSearchDto(processed), getCustomFieldsKeyPrefix(processed)), getProp());
 		//ulozime
 		T saved = repo.save(processed);
 		//nastavime editorFields atributy
@@ -206,9 +207,10 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		//musime z editoFields najskor prepisat hodnoty do entity
 		T processed = processToEntity(one, ProcessItemAction.EDIT);
-		JsonEditorValueReader.restoreRetained(processed, one, entity, JsonEditorValidator.getRules(processed,
-			getCustomFieldsSearchDto(processed), getCustomFieldsKeyPrefix(processed)));
-		JsonEditorValidator.validateBeforeSave(processed, getCustomFieldsSearchDto(processed), getCustomFieldsKeyPrefix(processed), getProp());
+		Map<String, Boolean> jsonEditorRules = JsonEditorValidator.getRules(processed,
+			getCustomFieldsSearchDto(processed), getCustomFieldsKeyPrefix(processed));
+		JsonEditorValueReader.restoreRetained(processed, one, entity, jsonEditorRules);
+		JsonEditorValidator.validateBeforeSave(processed, jsonEditorRules, getProp());
 		//ulozime
 		T saved = repo.save(processed);
 		//nastavime editorFields atributy
@@ -886,15 +888,17 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 					if (needsTemplate && copy instanceof DocDetails doc && original instanceof DocDetails originalDoc) {
 						doc.setTempId(originalDoc.getTempId());
 					}
-					JsonEditorValueReader.restoreRetained(copy, original, entity, JsonEditorValidator.getRules(copy,
-						getCustomFieldsSearchDto(copy), getCustomFieldsKeyPrefix(copy)));
+					rules = JsonEditorValidator.getRules(copy, getCustomFieldsSearchDto(copy), getCustomFieldsKeyPrefix(copy));
+					JsonEditorValueReader.restoreRetained(copy, original, entity, rules);
 					candidate = copy;
 				} catch (ReflectiveOperationException ex) {
 					throw new IllegalStateException("Cannot prepare custom-field validation for " + entity.getClass().getName(), ex);
 				}
 			}
 		}
-		rules = JsonEditorValidator.getRules(candidate, getCustomFieldsSearchDto(candidate), getCustomFieldsKeyPrefix(candidate));
+		if (id > 0 && candidate == entity) {
+			rules = JsonEditorValidator.getRules(candidate, getCustomFieldsSearchDto(candidate), getCustomFieldsKeyPrefix(candidate));
+		}
 		return new JsonEditorValidation(rules, JsonEditorValidator.validate(candidate, rules, getProp()));
 	}
 
