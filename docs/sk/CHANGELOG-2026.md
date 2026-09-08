@@ -129,6 +129,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Voliteľné polia
 
+- Doplnená dokumentácia [JSON Editora](frontend/webpages/customfields/README.md#json-editor) vrátane limitu 255 znakov a príkladov rozšírenia databázových stĺpcov pre všetky podporované databázy (#OSK659).
+
 - Formátovanie JSON ponecháva komentáre za hodnotou na rovnakom riadku, aby bolo jasné, ku ktorej vlastnosti patria (#OSK659).
 
 - Editor JSON má nad poľom panel s tlačidlami bez rámika na formátovanie a AI asistenta. Počas focusu poľa zobrazuje aktuálny riadok a stĺpec kurzora, čo uľahčuje dohľadanie chyby podľa validačného hlásenia (#OSK659).

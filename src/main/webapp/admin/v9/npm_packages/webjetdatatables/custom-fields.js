@@ -159,8 +159,8 @@ export function update(EDITOR, action) {
     var choiceTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" class="custom-field-choice-value" type="hidden"><div class="custom-field-choice-options">{options}</div>';
     var labelTemplate = '<div class="input-group"> <span class="input-group-text noborders field-type-label">{value}</span> <input value="{value}" id="DTE_Field_{customPrefix}{identifier}" class="form-control" type="hidden"></div>';
     var numberTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" type="number" value="{value}" {disabled} class="form-control">';
-    var booleanTemplate = '<div><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">Áno</label></div></div>';
-    var booleanTextTemplate = '<div><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">{label_value}</label></div></div>';
+    var booleanTemplate = '<div class="DTE_Field_Type_boolean"><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">Áno</label></div></div>';
+    var booleanTextTemplate = '<div class="DTE_Field_Type_boolean DTE_Field_Type_booleantext"><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">{label_value}</label></div></div>';
     var dateTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" type="text" autocomplete="off" class="form-control">';
     var uuidTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="255" value="{value}" class="form-control field-type-uuid custom-field-ai-disabled" type="text">';
     var colorTemplate = `

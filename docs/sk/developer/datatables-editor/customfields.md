@@ -215,7 +215,7 @@ Predvolená hodnota `null` ponechá odvodenie z anotácií. Kontext konfiguráci
 
 Hodnota zostáva textom v existujúcom atribúte `fieldA` až `fieldT` a v príslušnom databázovom stĺpci `field_a` až `field_t`. Typ `jsoneditor` nemení databázový typ ani automaticky nerozširuje stĺpce.
 
-Základná schéma pre voliteľné polia webových stránok používa dĺžku 255 znakov. Pred nasadením pre JSON s veľkosťou niekoľko KB overte skutočnú kapacitu konkrétneho stĺpca a prípadne ju rozšírte **v tabuľke `documents` aj `documents_history`**. Ide o samostatnú úpravu zákazníckej inštalácie. Syntakticky platný JSON musí zároveň spĺňať obmedzenia dĺžky uložených údajov.
+Základná schéma pre voliteľné polia webových stránok používa dĺžku 255 znakov. Pred nasadením pre JSON s veľkosťou niekoľko KB overte skutočnú kapacitu konkrétneho stĺpca a prípadne ju rozšírte **v tabuľke `documents` aj `documents_history`**. Príklady SQL pre podporované databázy sú v časti [Kapacita databázy](../../frontend/webpages/customfields/README.md#kapacita-databázy). Ide o samostatnú úpravu zákazníckej inštalácie. Syntakticky platný JSON musí zároveň spĺňať obmedzenia dĺžky uložených údajov.
 
 ## Frontend
 
