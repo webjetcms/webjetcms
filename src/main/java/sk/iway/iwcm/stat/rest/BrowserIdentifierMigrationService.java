@@ -91,6 +91,7 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
     @NoArgsConstructor
     public static class State {
         private int tableIndex;
+        private int totalTables;
         private long cursor;
         private long tableMaxId;
         private long scanned;
@@ -159,6 +160,10 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
     void runMigration() {
         try {
             MigrationPlan plan = prepareMigrationPlan();
+            State preparedState = getStateSnapshot();
+            preparedState.setTotalTables(plan.tables().size());
+            publishRunningState(preparedState);
+
             while (isStopRequested() == false) {
                 State nextState = getStateSnapshot();
                 if (nextState.getTableIndex() >= plan.tables().size()) {
@@ -316,6 +321,7 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
     private State copyState(State source) {
         State copy = new State();
         copy.setTableIndex(source.getTableIndex());
+        copy.setTotalTables(source.getTotalTables());
         copy.setCursor(source.getCursor());
         copy.setTableMaxId(source.getTableMaxId());
         copy.setScanned(source.getScanned());

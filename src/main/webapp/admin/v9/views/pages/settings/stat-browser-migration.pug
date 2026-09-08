@@ -16,6 +16,12 @@ block content
                 $("#migrationTable").text(state.table || "—");
                 const percent = state.done ? 100 : (state.tableMaxId > 0 ? Math.min(100, Math.round(state.cursor * 100 / state.tableMaxId)) : 0);
                 $("#migrationProgress").css("width", percent + "%").attr("aria-valuenow", percent).text(percent + "%");
+                const totalTables = state.totalTables || 0;
+                const completedTables = state.done ? totalTables : Math.min(state.tableIndex || 0, totalTables);
+                const overallPercent = state.done ? 100 : (totalTables > 0 ? Math.round(completedTables * 100 / totalTables) : 0);
+                $("#migrationCompletedTables").text(completedTables);
+                $("#migrationTotalTables").text(totalTables);
+                $("#migrationOverallProgress").css("width", overallPercent + "%").attr("aria-valuenow", overallPercent).text(overallPercent + "%");
                 $("#migrationStart").prop("disabled", state.running || state.done);
                 $("#migrationPause").prop("disabled", !state.running || state.stopRequested);
                 $("#migrationStatus").toggleClass("d-none", !state.done);
@@ -33,6 +39,10 @@ block content
                 $("#seoMappingCount").text(data.seoBots.length);
                 $("#keyMappingCount").text(data.browserKeys.length);
                 $("#tableCount").text(data.tables.length);
+                if (!state.totalTables) {
+                    state.totalTables = data.tables.length;
+                    renderState();
+                }
                 const body = $("#migrationMappings tbody").empty();
                 data.seoBots.concat(data.browserKeys).forEach(item => {
                     $("<tr>").append($("<td>").text(item.source)).append($("<td>").text(item.target)).appendTo(body);
@@ -121,8 +131,19 @@ block content
                 .col-md-4
                     .text-muted [[\#{stat.browser-migration.updated}]]
                     #migrationUpdated.fs-5 0
-            .progress.mt-3
+            .d-flex.justify-content-between.mt-3
+                .text-muted [[\#{stat.browser-migration.current-progress}]]
+            .progress.mt-1
                 #migrationProgress.progress-bar(role="progressbar" style="width: 0%" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0") 0%
+            .d-flex.justify-content-between.mt-3
+                .text-muted [[\#{stat.browser-migration.overall-progress}]]
+                .text-muted
+                    span#migrationCompletedTables 0
+                    |  /
+                    span#migrationTotalTables 0
+                    |  [[\#{stat.browser-migration.table-count}]]
+            .progress.mt-1
+                #migrationOverallProgress.progress-bar.bg-success(role="progressbar" style="width: 0%" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0") 0%
 
     #migrationPreview.card.d-none
         .card-header [[\#{stat.browser-migration.preview}]]
