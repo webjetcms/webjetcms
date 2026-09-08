@@ -826,4 +826,22 @@ To activate it, you need to set the `inputType` attribute to the value `DataTabl
 private Integer sortPriority;
 ```
 
-When changing the row order, the backend endpoint `/row-reorder` from the [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java) class is automatically called, which updates the values ​​for the given column marked as `ROW_REORDER` and saves the changes to the database. If the save was successful, the table is refreshed and displays the new row order, plus a notification about the successful saving of the changes is displayed. In case of an error, an error notification is displayed.
+When changing the order of rows, the backend endpoint `/row-reorder` from the [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java) is automatically called. The name of the changed field (`dataSrc`) is sent by the client, so the endpoint will only allow writing if all of the following conditions are met:
+
+- `dataSrc` corresponds exactly to a Java entity field; the field can also be declared in the parent class,
+- the field has the annotation `@DataTableColumn`, whose field `inputType` contains the value `DataTableColumnType.ROW_REORDER`,
+- the property is writable and has a numeric data type,
+- it is not a field `id`, `domainId` or a field marked with the annotation `@Id` or `@EmbeddedId`, even if it is also marked as `ROW_REORDER`,
+- the request contains a non-empty list of unique non-null IDs, all records exist and each has a new value specified,
+- the entire batch complies with the additional controller scope verified by the `checkRowReorderScope` method, if the controller implements it,
+- the user has permission to modify each record; validation is performed by calling `checkItemPermsThrows`, which uses the `checkItemPerms` implementation of the given controller.
+
+The entire request is first validated without changing the entities. The values ​​are set and `saveAll` is called only after all records have been successfully validated. If there is a validation error, the request is rejected and `saveAll` is not called, preventing a partial batch save.
+
+If the table list is restricted in a way other than by domain, such as by the `formName`, `stepId`, `parentId` parameters or by rights to the parent record, the controller must implement the `checkRowReorderScope` method. The method receives the entire batch of entities loaded from the repository and must verify that each one falls within the required scope and that the user can edit the given scope. A missing or invalid parameter must return `false`. For detailed usage and an example, see [scope-checking-on-reorder](restcontroller.md#scope-checking-on-reorder).
+
+The client will retain the parameters from the URL set in `DATA.url` when calling `/row-reorder`. However, the server must consider them untrusted and compare them with each retrieved entity and the permissions of the current user.
+
+The `/row-reorder` endpoint is a standalone operation and does not call CRUD methods or the `beforeSave` and `afterSave` methods. The `checkRowReorderScope` method supplements, but does not replace, the individual record check in the `checkItemPerms` method.
+
+After successful saving, the table will refresh, display the new row order, and display a success notification. In case of an error, an error notification will be displayed.

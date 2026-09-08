@@ -41,6 +41,9 @@ import sk.iway.iwcm.users.UserGroupsDB;
  */
 public class FormDB
 {
+	static final String FORM_ARCHIVE_COLUMNS_WITHOUT_ID = "form_name, data, files, create_date, html, user_id, note, doc_id, last_export_date, domain_id, double_optin_confirmation_date, double_optin_hash, form_type, duration, referer, language";
+	private static final String ACTIVE_FORM_HEADER_ID_SQL = "SELECT MIN(f2.id) FROM forms f2 WHERE f2.form_name = ? AND f2.domain_id = ? AND f2.create_date IS NULL";
+
 	private static FormDB instance;
 	private List<String[]> regExpList = null;
 
@@ -245,9 +248,14 @@ public class FormDB
 	private static int updateManageRecord(Connection db_conn, String formName) throws SQLException
 	{
 		PreparedStatement ps = null;
-		String sql = "UPDATE forms_archive f1, forms f2 SET f1.data = f2.data WHERE f1.form_name = f2.form_name AND f2.form_name = ? AND f2.create_date IS NULL AND f1.create_date IS NULL";
+		String sql = getArchiveHeaderUpdateSql();
 		ps = db_conn.prepareStatement(sql);
 		ps.setString(1, formName);
+		ps.setInt(2, CloudToolsForCore.getDomainId());
+		ps.setString(3, formName);
+		ps.setInt(4, CloudToolsForCore.getDomainId());
+		ps.setString(5, formName);
+		ps.setInt(6, CloudToolsForCore.getDomainId());
 		int res = ps.executeUpdate();
 		ps.close();
 		return res;
@@ -256,9 +264,10 @@ public class FormDB
 	private static boolean addManageRecord(Connection db_conn, String formName) throws SQLException
 	{
 		PreparedStatement ps = null;
-		String sql = "INSERT INTO forms_archive SELECT f.* FROM forms f WHERE f.form_name = ? AND create_date IS NULL";
+		String sql = getArchiveHeaderInsertSql();
 		ps = db_conn.prepareStatement(sql);
 		ps.setString(1, formName);
+		ps.setInt(2, CloudToolsForCore.getDomainId());
 		boolean res = ps.execute();
 		ps.close();
 		return res;
@@ -267,8 +276,9 @@ public class FormDB
 	private static boolean tableContainsManageRecord(Connection db_conn, String formName) throws SQLException
 	{
 		PreparedStatement ps = null;
-		ps = db_conn.prepareStatement("SELECT * FROM forms_archive WHERE form_name = ? AND create_date IS NULL");
+		ps = db_conn.prepareStatement("SELECT 1 FROM forms_archive WHERE form_name = ? AND domain_id = ? AND create_date IS NULL");
 		ps.setString(1, formName);
+		ps.setInt(2, CloudToolsForCore.getDomainId());
 		ResultSet rs = ps.executeQuery();
 		boolean res = rs.next();
 		ps.close();
@@ -278,12 +288,43 @@ public class FormDB
 	private static boolean insertRecord(Connection db_conn, int formId) throws SQLException
 	{
 		PreparedStatement ps = null;
-		String sql = "INSERT INTO forms_archive SELECT f.* FROM forms f WHERE id = ? AND create_date IS NOT NULL";
+		String sql = getArchiveInsertSql("f.id = ? AND f.create_date IS NOT NULL");
 		ps = db_conn.prepareStatement(sql);
 		ps.setInt(1, formId);
 		boolean res = ps.execute();
 		ps.close();
 		return res;
+	}
+
+	static String getArchiveInsertSql(String condition)
+	{
+		return getArchiveInsertSql(condition, Constants.DB_TYPE != Constants.DB_MSSQL);
+	}
+
+	static String getArchiveHeaderInsertSql()
+	{
+		return getArchiveInsertSql("f.id = (" + ACTIVE_FORM_HEADER_ID_SQL + ")");
+	}
+
+	static String getArchiveHeaderUpdateSql()
+	{
+		String activeHeaderDataSql = "SELECT f.data FROM forms f WHERE f.id = (" + ACTIVE_FORM_HEADER_ID_SQL + ")";
+		String activeHeaderTypeSql = "SELECT f.form_type FROM forms f WHERE f.id = (" + ACTIVE_FORM_HEADER_ID_SQL + ")";
+		return "UPDATE forms_archive SET data = (" + activeHeaderDataSql + "), form_type = (" + activeHeaderTypeSql + ") WHERE form_name = ? AND domain_id = ? AND create_date IS NULL";
+	}
+
+	static String getArchiveInsertSql(String condition, boolean includeId)
+	{
+		String targetColumns = getArchiveColumnList("", includeId);
+		String sourceColumns = getArchiveColumnList("f.", includeId);
+		return "INSERT INTO forms_archive (" + targetColumns + ") SELECT " + sourceColumns + " FROM forms f WHERE " + condition;
+	}
+
+	private static String getArchiveColumnList(String prefix, boolean includeId)
+	{
+		String columns = prefix + FORM_ARCHIVE_COLUMNS_WITHOUT_ID.replace(", ", ", " + prefix);
+		if (includeId) columns = prefix + "id, " + columns;
+		return columns;
 	}
 
 	private static boolean removeRecord(Connection db_conn, int formId) throws SQLException

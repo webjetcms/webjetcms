@@ -1,5 +1,6 @@
 const moment = require("moment");
 const buttons = require('./pages/buttons.js')
+const { getVideoSettings } = require('./helpers/video_settings.js');
 
 module.exports = function () {
   return actor({
@@ -202,7 +203,12 @@ module.exports = function () {
     },
 
     wjSetDefaultWindowSize() {
-      this.resizeWindow(1280, 760);
+      if ("true" === process.env.CODECEPT_VIDEO) {
+        const videoSettings = getVideoSettings();
+        this.resizeWindow(videoSettings.width, videoSettings.height);
+      } else {
+        this.resizeWindow(1280, 760);
+      }
     },
 
     // odhlasenie z aplikacie

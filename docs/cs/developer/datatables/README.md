@@ -826,4 +826,22 @@ Pro aktivaci je třeba v `@DataTableColumn` anotaci mít nastavený atribut `inp
 private Integer sortPriority;
 ```
 
-Při změně pořadí řádků se automaticky vyvolá backend endpoint `/row-reorder` ze třídy [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java), který aktualizuje hodnoty pro @@y . Pokud uložení bylo úspěšné, tabulka se obnoví a zobrazí nové pořadí řádků, plus se zobrazí oznámení o úspěšném uložení změn. V případě chyby se zobrazí chybová notifikace.
+Při změně pořadí řádků se automaticky vyvolá backend koncový bod `/row-reorder` ze třídy [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java). Název měněného pole (`dataSrc`) posílá klient, proto koncový bod povolí zápis pouze při splnění všech následujících podmínek:
+
+- `dataSrc` přesně odpovídá Java poli entity; pole může být deklarováno iv rodičovské třídě,
+- pole má anotaci `@DataTableColumn`, jejíž pole `inputType` obsahuje hodnotu `DataTableColumnType.ROW_REORDER`,
+- vlastnost je zapisovatelná a má numerický datový typ,
+- nejde o pole `id`, `domainId` ani o pole označené anotací `@Id` nebo `@EmbeddedId`, a to ani v případě, že by zároveň bylo označeno jako `ROW_REORDER`,
+- požadavek obsahuje neprázdný seznam jedinečných nenulových ID, všechny záznamy existují a každý má zadanou novou hodnotu,
+- celá dávka vyhovuje dodatečnému rozsahu kontroléru ověřenému metodou `checkRowReorderScope`, pokud ji kontrolér implementuje,
+- uživatel má oprávnění upravit každý záznam; ověření se provede voláním `checkItemPermsThrows`, které používá implementaci `checkItemPerms` daného kontroléru.
+
+Celý požadavek se nejprve ověří beze změny entit. Hodnoty se nastaví a zavolá se `saveAll` až po úspěšném ověření všech záznamů. Při chybě validace se požadavek odmítne a `saveAll` se nezavolá, čímž se zabrání částečnému uložení dávky.
+
+Pokud je seznam tabulky omezen i jinak než podle domény, například parametry `formName`, `stepId`, `parentId` nebo právy na nadřazený záznam, kontrolér musí implementovat metodu `checkRowReorderScope`. Metoda obdrží celou dávku entit načtených z repozitáře a musí ověřit, že každá patří do požadovaného rozsahu a uživatel může daný rozsah upravovat. Chybějící nebo neplatný parametr musí vrátit `false`. Podrobné použití a příklad jsou v části [kontrola rozsahu při změně pořadí](restcontroller.md#kontrola-rozsahu-při-změně-pořadí).
+
+Parametry z URL nastavené v `DATA.url` klient zachová i při volání `/row-reorder`. Server je však musí považovat za nedůvěryhodné a porovnat je s každou načtenou entitou a oprávněními aktuálního uživatele.
+
+Koncový bod `/row-reorder` je samostatná operace a nevolá CRUD metody ani metody `beforeSave` a `afterSave`. Metoda `checkRowReorderScope` doplňuje, ale nenahrazuje kontrolu jednotlivých záznamů v metodě `checkItemPerms`.
+
+Po úspěšném uložení se tabulka obnoví, zobrazí nové pořadí řádků a oznámení o úspěchu. V případě chyby se zobrazí chybová notifikace.

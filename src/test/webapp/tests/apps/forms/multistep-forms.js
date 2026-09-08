@@ -146,6 +146,23 @@ Scenario('Insert multistep into page and test it', async ({ I, DTE, Document, Ap
     I.seeElement("label[for='f1-vase-priezvisko-1']");
     I.dontSeeElement("input#priezvisko-1");
 
+    I.executeScript(() => {
+        window.__wjMultistepStepShownEvents = [];
+        window.addEventListener('WJ.multistepForm.stepShown', (event) => {
+            const detail = event.detail;
+            window.__wjMultistepStepShownEvents.push({
+                formName: detail.formName,
+                stepId: String(detail.stepId),
+                language: detail.language,
+                domIdPrefix: detail.domIdPrefix,
+                isInitialStep: detail.isInitialStep,
+                hasWrapper: detail.wrapper?.classList.contains('multistep-form-app') === true,
+                hasStepElement: detail.stepElement?.classList.contains('multistepStepContent') === true,
+                hasForm: detail.form?.matches('form.multistep-form') === true
+            });
+        }, { once: true });
+    });
+
     I.say("Test and submit step 1");
     I.clickCss("button[type='submit']");
     I.waitForText(customEmailError, 5);
@@ -164,7 +181,96 @@ Scenario('Insert multistep into page and test it', async ({ I, DTE, Document, Ap
     I.waitForVisible("#f1-pridajte-obrazky-1-dropzone");
     I.waitForText("2 - Druhy krok | Email: sivan@noopmail.com | User: Tester", 5, ".step-header");
     I.waitForElement("div.cleditorToolbar", 20);
+
+    const stepShownEvents = await I.executeScript(() => window.__wjMultistepStepShownEvents);
+    I.assertEqual(stepShownEvents.length, 1, "One stepShown event should be dispatched for the second step");
+    I.assertEqual(stepShownEvents[0].formName, newMultistepFormName);
+    I.assertTrue(stepShownEvents[0].stepId.length > 0, "The event should contain the rendered step ID");
+    I.assertEqual(stepShownEvents[0].language, "sk");
+    I.assertEqual(stepShownEvents[0].domIdPrefix, "f1-");
+    I.assertEqual(stepShownEvents[0].isInitialStep, false);
+    I.assertTrue(stepShownEvents[0].hasWrapper, "The event should contain the form wrapper");
+    I.assertTrue(stepShownEvents[0].hasStepElement, "The event should contain the step wrapper");
+    I.assertTrue(stepShownEvents[0].hasForm, "The event should contain the rendered form");
+
     await Document.compareScreenshotElement("div.multistep-form-app", "multistep-form/multistep-form-page-step-2.png", null, null, 5);
+
+    I.say("Verify tooltip accessibility after AJAX step rendering");
+    const tooltipTrigger = "label[for='f1-select-pole-1'] + button.popover-link[data-toggle='tooltip']";
+    const tooltipField = "#f1-select-pole-1";
+    const visualTooltip = ".tooltip.wj-form-tooltip-hoverable[role='tooltip']";
+    I.waitForElement(tooltipTrigger, 5);
+    I.seeElement(tooltipTrigger + "[type='button'][data-trigger='hover focus'][data-bs-trigger='hover focus'][aria-describedby][data-wj-form-tooltip-description-id]");
+    I.assertTrue(await I.executeScript((selector) => document.querySelector(selector)?.closest("label") === null, tooltipTrigger), "Tooltip trigger must be outside the field label");
+    const tooltipLabel = await I.grabAttributeFrom(tooltipTrigger, "aria-label");
+    I.assertEqual(tooltipLabel, "Pomoc k poľu Select pole", "Tooltip trigger must have a contextual accessible name");
+    const tooltipId = await I.grabAttributeFrom(tooltipTrigger, "aria-describedby");
+    const configuredTooltipId = await I.grabAttributeFrom(tooltipTrigger, "data-wj-form-tooltip-description-id");
+    I.assertEqual(tooltipId, configuredTooltipId, "Tooltip trigger must reference its stable description before focus");
+    I.assertTrue(tooltipId.startsWith("info-tooltip-f1-select-pole-1-"), "Tooltip description must use the field-specific stable ID");
+    I.assertEqual(await I.executeScript((id) => {
+        const description = document.getElementById(id);
+        return description?.matches(".wj-form-tooltip-description[role='tooltip']") ? description.textContent.replace(/\s+/g, " ").trim() : "";
+    }, tooltipId), "zoznam tooltip", "Stable tooltip content must contain the field-specific help");
+
+    const getAccessibleDescription = async () => I.executeScript((selector) => {
+        const trigger = document.querySelector(selector);
+        const describedBy = trigger?.getAttribute("aria-describedby");
+        if (!describedBy) return "";
+        return describedBy.split(/\s+/)
+            .map(id => document.getElementById(id)?.textContent || "")
+            .join(" ").replace(/\s+/g, " ").trim();
+    }, tooltipTrigger);
+    I.assertEqual(await getAccessibleDescription(), "zoznam tooltip", "Tooltip trigger must expose its description before focus");
+    const tooltipDescriptionIds = await I.executeScript(() => Array.from(document.querySelectorAll(".wj-form-tooltip-description"), element => element.id));
+    I.assertTrue(tooltipDescriptionIds.length >= 2, "Rendered tooltip descriptions must be present in the AJAX step");
+    I.assertEqual(new Set(tooltipDescriptionIds).size, tooltipDescriptionIds.length, "Every rendered tooltip description ID must be unique");
+
+    I.focus(tooltipField);
+    I.pressKey(["Shift", "Tab"]);
+    I.waitForElement(tooltipTrigger + ":focus", 5);
+    I.assertTrue(await I.executeScript((selector) => {
+        const style = getComputedStyle(document.querySelector(selector));
+        return style.outlineStyle === "solid" && parseFloat(style.outlineWidth) >= 2;
+    }, tooltipTrigger), "Tooltip trigger must have a visible keyboard focus indicator");
+
+    I.waitForVisible(visualTooltip, 5);
+    I.see("zoznam tooltip", visualTooltip);
+    I.assertEqual(await I.grabAttributeFrom(tooltipTrigger, "aria-describedby"), tooltipId, "Visual tooltip must not replace the stable accessible description");
+    I.assertEqual(await getAccessibleDescription(), "zoznam tooltip", "Tooltip trigger must retain its accessible description while open");
+
+    I.pressKey("Escape");
+    I.waitForInvisible(visualTooltip, 5);
+    I.waitForFunction(([selector]) => document.querySelector(selector) === null, [visualTooltip], 5);
+    I.waitForElement(tooltipTrigger + ":focus", 5);
+    I.assertEqual(await I.grabAttributeFrom(tooltipTrigger, "aria-describedby"), tooltipId, "Escape must preserve the stable accessible description");
+    I.assertEqual(await getAccessibleDescription(), "zoznam tooltip", "Tooltip trigger must retain its description after dismissal");
+
+    I.pressKey("Enter");
+    I.waitForVisible(visualTooltip, 5);
+    I.assertEqual(await I.grabAttributeFrom(tooltipTrigger, "aria-describedby"), tooltipId, "Keyboard activation must preserve the stable accessible description");
+    I.pressKey("Escape");
+    I.waitForInvisible(visualTooltip, 5);
+    I.waitForFunction(([selector]) => document.querySelector(selector) === null, [visualTooltip], 5);
+
+    I.focus(tooltipField);
+    I.waitForElement(tooltipField + ":focus", 5);
+    I.moveCursorTo(tooltipTrigger);
+    I.waitForVisible(visualTooltip, 5);
+    I.moveCursorTo(visualTooltip);
+    I.waitForFunction(([selector]) => document.querySelector(selector)?.matches(":hover") === true, [visualTooltip], 5);
+    const hoverStartedAt = await I.executeScript(() => performance.now());
+    I.waitForFunction(([selector, startedAt]) => {
+        const tooltip = document.querySelector(selector);
+        if (performance.now() - startedAt < 500 || !tooltip) return false;
+        const style = getComputedStyle(tooltip);
+        return style.display !== "none" && style.visibility !== "hidden" && parseFloat(style.opacity || "1") > 0;
+    }, [visualTooltip, hoverStartedAt], 2);
+    I.pressKey("Escape");
+    I.waitForInvisible(visualTooltip, 5);
+    I.waitForElement(tooltipField + ":focus", 5);
+    I.assertEqual(await I.grabAttributeFrom(tooltipTrigger, "aria-describedby"), tooltipId, "Hover dismissal must preserve the stable accessible description");
+    I.blur(tooltipField);
 
     I.say("Test and submit step 2 - final");
 
@@ -272,6 +378,30 @@ Scenario('Test form detail and filled data', async ({ I, DT, DTE }) => {
 
     I.say("Compare actual vs expected form HTML");
     compareTwoHtml(I, actualHtml, expectedHtml);
+});
+
+Scenario('Archive one form submission', async ({ I, DT }) => {
+    I.amOnPage('/apps/form/admin/detail/?formName=' + newMultistepFormName);
+    DT.waitForLoader('formDetailDataTable');
+    DT.filterStartsWith('col_emailova-adresa-1', 'sivan@noopmail.com');
+    I.waitForText('Záznamy 1 až 1 z 1', 10, '#formDetailDataTable_wrapper');
+
+    I.clickCss('#formDetailDataTable tbody tr:first-child td.dt-select-td');
+    const archiveButton = '#formDetailDataTable_wrapper button.buttons-archive';
+    I.waitForEnabled(archiveButton, 10);
+    const archiveLabel = await I.grabAttributeFrom(archiveButton, 'aria-label');
+    I.assertEqual(archiveLabel, 'Archivuj formulár', 'Archive action must use a translated label');
+
+    I.click(archiveButton);
+    DT.waitForLoader('formDetailDataTable');
+    I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 10, '#formDetailDataTable');
+
+    I.amOnPage('/apps/form/admin/archived-detail/?formName=' + newMultistepFormName);
+    DT.waitForLoader('formDetailDataTable');
+    DT.filterStartsWith('col_emailova-adresa-1', 'sivan@noopmail.com');
+    I.waitForText('sivan@noopmail.com', 10, '#formDetailDataTable');
+    I.see('Záznamy 1 až 1 z 1', '#formDetailDataTable_wrapper');
+    I.see('Trvanie vyplnenia', '#formDetailDataTable_wrapper');
 });
 
 Scenario('Test send email', async ({ I, TempMail }) => {
@@ -427,6 +557,28 @@ Scenario('Change form_settings and test it No.1', async ({ I, DT, DTE, TempMail 
     // TODO, check file with form ?
 });
 
+Scenario('Archive another submission into an existing archive', async ({ I, DT, TempMail }) => {
+    const email = baseUserMail + TempMail.getTempMailDomain();
+
+    I.amOnPage('/apps/form/admin/detail/?formName=' + newMultistepFormName);
+    DT.waitForLoader('formDetailDataTable');
+    DT.filterStartsWith('col_emailova-adresa-1', email);
+    I.waitForText('Záznamy 1 až 1 z 1', 10, '#formDetailDataTable_wrapper');
+
+    I.clickCss('#formDetailDataTable tbody tr:first-child td.dt-select-td');
+    const archiveButton = '#formDetailDataTable_wrapper button.buttons-archive';
+    I.waitForEnabled(archiveButton, 10);
+    I.click(archiveButton);
+    DT.waitForLoader('formDetailDataTable');
+    I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 10, '#formDetailDataTable');
+
+    I.amOnPage('/apps/form/admin/archived-detail/?formName=' + newMultistepFormName);
+    DT.waitForLoader('formDetailDataTable');
+    DT.filterStartsWith('col_emailova-adresa-1', email);
+    I.waitForText(email, 10, '#formDetailDataTable');
+    I.see('Záznamy 1 až 1 z 1', '#formDetailDataTable_wrapper');
+});
+
 Scenario('Change form_settings and test it No.2', async ({ I, DT, DTE, TempMail }) => {
     I.say("too fast - sometimes spam problem -> wait 35 sec");
     await I.waitForTime(Date.now() + 35000);
@@ -561,6 +713,21 @@ Scenario('Remove original and duplicated form definitions', ({ I, DT }) => {
 
     removeFormDefinition(I, DT, newMultistepFormName);
     removeFormDefinition(I, DT, duplicatedMultistepFormName);
+});
+
+Scenario('Remove archived form data', async ({ I, DT, DTE }) => {
+    I.amOnPage('/apps/form/admin/archived/');
+    DT.waitForLoader('formDetailArchivedTable');
+    DT.filterEquals('formName', newMultistepFormName);
+
+    const archivedForms = await I.grabNumberOfVisibleElements('#formDetailArchivedTable tbody td.dt-select-td');
+    if (archivedForms > 0) {
+        I.clickCss('#formDetailArchivedTable tbody tr:first-child td.dt-select-td');
+        I.clickCss('#formDetailArchivedTable_wrapper button.buttons-remove');
+        I.waitForElement('#formDetailArchivedTable_modal', 10);
+        DTE.save('formDetailArchivedTable');
+    }
+    I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 10, '#formDetailArchivedTable');
 });
 
 Scenario('Insert and test multiple forms in one page - before clear page', ({ I, DTE, Apps }) => {

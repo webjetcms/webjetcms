@@ -242,6 +242,42 @@ Vytvořený formulář můžete vložit do web stránky pomocí aplikace Formul�
 
 Na jednu stránku můžete vložit i více instancí stejného vícekrokového formuláře. Každá instance pracuje nezávisle a vygenerované HTML identifikátory polí obdrží vlastní prefix, například `f1-` a `f2-`, aby se navzájem neovlivňovaly.
 
+### JavaScript událost po zobrazení kroku
+
+Po vložení HTML kódu kroku do stránky a inicializaci jeho podmínek formulář odešle na objektu `window` nativní událost `CustomEvent` s názvem `WJ.multistepForm.stepShown`. Událost se odešle pro první krok i po každém přechodu na další krok. Není třeba načítat administrační soubor `webjet.js` ani knihovnu `jQuery`.
+
+```javascript
+window.addEventListener("WJ.multistepForm.stepShown", (event) => {
+    const {
+        wrapper,
+        stepElement,
+        form,
+        formName,
+        stepId,
+        language,
+        domIdPrefix,
+        isInitialStep
+    } = event.detail;
+
+    console.log("Multistep form step shown", formName, stepId, stepElement);
+});
+```
+
+Objekt `event.detail` obsahuje:
+
+- `wrapper` - ​​kořenový `div.multistep-form-app` konkrétní instance formuláře,
+- `stepElement` - ​​`div.multistepStepContent` s právě vloženým krokem,
+- `form` - ​​element `form` právě zobrazeného kroku,
+- `formName` - ​​název formuláře používaný na serveru,
+- `stepId` - ​​identifikátor právě zobrazeného kroku,
+- `language` - ​​jazyk použitý při načtení kroku,
+- `domIdPrefix` - ​​prefix HTML identifikátorů polí konkrétní instance, například `f1-`,
+- `isInitialStep` - ​​hodnota `true` při prvním zobrazeném kroku dané instance, jinak `false`.
+
+Pokud je na stránce více vícekrokových formulářů, event listener přijme události ze všech instancí. Konkrétní formulář rozlišíte pomocí hodnot `wrapper` nebo `formName`.
+
+Pokud potřebujete zachytit i událost prvního kroku, listener zaregistrujte před inicializací aplikace vícekrokového formuláře.
+
 ## Konfigurační proměnné
 
 Dostupné konfigurační proměnné pro vícekrokové formuláře:

@@ -89,7 +89,7 @@ module.exports = {
      },
 
      /**
-      * Cancels the editing process and closes the editor
+      * Cancels editing and waits for the modal to close and restore focus.
       * @param {String} [name] - Optional modal name to target
       * @param {Boolean} [clickTopButton=false] - Determines which close button to click (top or footer)
       */
@@ -105,6 +105,9 @@ module.exports = {
           }
 
           if (typeof name == "undefined") { name = "datatableInit"; }
+
+          //we can't use name here because often DTE.cancel is called without name, so this selector is bit relaxed...
+          I.waitForElement({ css: prefixSelector + '.DTED[data-dte-close-state="closed"]' }, 200);
           I.waitForInvisible("#" + name + "_modal", 200);
 
           //wait for fade animation

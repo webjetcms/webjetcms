@@ -201,14 +201,14 @@ String key = null;
 .center { text-align: center; }
 </style>
 
-<display:table class="sort_table" name="modules" uid="m" export="true" defaultsort="1"><%ModuleInfo mi = (ModuleInfo)pageContext.getAttribute("m"); %>
+<display:table class="sort_table" name="modules" uid="m" export="true" defaultsort="1" pagesize="999"><%ModuleInfo mi = (ModuleInfo)pageContext.getAttribute("m"); %>
 
 	<display:setProperty name="export.excel.filename" value="modules.xls" />
 	<display:setProperty name="export.csv.filename" value="modules.csv" />
 	<display:setProperty name="export.xml.filename" value="modules.xml" />
 	<display:setProperty name="export.pdf.filename" value="modules.pdf" />
 
-	<display:column title="Modul" sortable="true"><%
+	<display:column titleKey="components.cookies.cookie_manager.application" sortable="true"><%
 		String value = mi.getNameKey();
 		key = null;
 		if (value.startsWith("webjet_cmp_"))
@@ -245,8 +245,8 @@ String key = null;
 
 		out.print(value);
 	%></display:column>
-	<display:column property="nameKey" sortable="true"/>
-	<display:column title="Popis" sortable="true"><%
+	<display:column titleKey="user.admin.key" property="nameKey" sortable="true"/>
+	<display:column titleKey="admin.conf_editor.description" sortable="true"><%
 		String descKey = Tools.replace(key, ".title", ".desc");
 		String test = prop.getText(descKey);
 		if (test.equals(descKey)) {

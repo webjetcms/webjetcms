@@ -242,6 +242,42 @@ You can insert the created form into a web page using the Form application, wher
 
 You can also insert multiple instances of the same multi-step form on a single page. Each instance works independently, and the generated HTML field identifiers are given their own prefix, such as `f1-` and `f2-`, so that they don't interfere with each other.
 
+### JavaScript event after step is displayed
+
+After inserting the HTML code of the step into the page and initializing its conditions, the form sends a native event `CustomEvent` on the object `window` with the name `WJ.multistepForm.stepShown`. The event is sent for the first step and after each transition to the next step. There is no need to load the administration file `webjet.js` or the library `jQuery`.
+
+```javascript
+window.addEventListener("WJ.multistepForm.stepShown", (event) => {
+    const {
+        wrapper,
+        stepElement,
+        form,
+        formName,
+        stepId,
+        language,
+        domIdPrefix,
+        isInitialStep
+    } = event.detail;
+
+    console.log("Multistep form step shown", formName, stepId, stepElement);
+});
+```
+
+Object `event.detail` contains:
+
+- `wrapper` - ​​root `div.multistep-form-app` of a specific form instance,
+- `stepElement` - ​​`div.multistepStepContent` with the step just inserted,
+- `form` - ​​element `form` of the currently displayed step,
+- `formName` - ​​form name used on the server,
+- `stepId` - ​​identifier of the currently displayed step,
+- `language` - ​​language used when loading the step,
+- `domIdPrefix` - ​​HTML prefix of field identifiers of a specific instance, for example `f1-`,
+- `isInitialStep` - ​​value `true` at the first displayed step of the given instance, otherwise `false`.
+
+If there are multiple multi-step forms on a page, the event listener will receive events from all instances. You can distinguish a specific form using the values ​​`wrapper` or `formName`.
+
+If you also need to capture the first step event, register the listener before initializing the multi-step form application.
+
 ## Configuration variables
 
 Available configuration variables for multi-step forms:
