@@ -132,23 +132,30 @@ export function formatJsonObject(text) {
         if (!lineStart) output += "\n";
         lineStart = true;
     };
+    const hasInlineCommentAfter = index => {
+        const current = tokens[index];
+        const next = tokens[index + 1];
+        return next?.type.endsWith("comment") &&
+            !/[\r\n]/.test(text.slice(current.position + current.raw.length, next.position));
+    };
     tokens.forEach((token, index) => {
         const raw = token.raw;
         if (token.type.endsWith("comment")) {
+            if (index > 0 && !hasInlineCommentAfter(index - 1)) newline();
             if (!lineStart) write(" ");
             write(raw);
-            newline();
+            if (!hasInlineCommentAfter(index)) newline();
         } else if (raw === "{" || raw === "[") {
             write(raw);
             depth++;
-            if (tokens[index + 1]?.raw !== "}" && tokens[index + 1]?.raw !== "]") newline();
+            if (tokens[index + 1]?.raw !== "}" && tokens[index + 1]?.raw !== "]" && !hasInlineCommentAfter(index)) newline();
         } else if (raw === "}" || raw === "]") {
             depth--;
             if (tokens[index - 1]?.raw !== "{" && tokens[index - 1]?.raw !== "[") newline();
             write(raw);
         } else if (raw === ",") {
             write(",");
-            newline();
+            if (!hasInlineCommentAfter(index)) newline();
         } else if (raw === ":") {
             write(": ");
         } else {

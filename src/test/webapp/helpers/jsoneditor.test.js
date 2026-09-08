@@ -53,6 +53,53 @@ test("Syntax errors report the original position after comments and single-quote
     assert.deepEqual(validateJsonObject("{\n // comment\n title: 'test',\n data-toggle: ]\n}"), {valid: false, error: "invalid", line: 4, column: 15});
 });
 
+test("Formatting keeps trailing comments beside the property they describe", async () => {
+    const {formatJsonObject, validateJsonObject} = await utilities;
+    const source = `{
+    'user' : {
+        'id' : '{444555678}', //”uuId”
+        'clientId' : '{44AAA4555678}',//CookieId
+        'loggedId' : '{444555678}',
+        'snId' : '{11133487}',// SSO_OUSER_ID || user?code
+        'missionsAvailable' : '{2}',
+        'missionsCompleted' : '{8}',
+        'paymentType' : '{prepaid}',//prepaid/postpaid
+        'geoDefault' : '{1}', //only for geo offers like FTTH geo offer
+        'geoActual' : '{2}', //only for geo offers like FTTH geo offer
+        'role' : '{customerAdmin}'
+    }
+}`;
+    const expected = `{
+  'user': {
+    'id': '{444555678}', //”uuId”
+    'clientId': '{44AAA4555678}', //CookieId
+    'loggedId': '{444555678}',
+    'snId': '{11133487}', // SSO_OUSER_ID || user?code
+    'missionsAvailable': '{2}',
+    'missionsCompleted': '{8}',
+    'paymentType': '{prepaid}', //prepaid/postpaid
+    'geoDefault': '{1}', //only for geo offers like FTTH geo offer
+    'geoActual': '{2}', //only for geo offers like FTTH geo offer
+    'role': '{customerAdmin}'
+  }
+}`;
+    for (const newline of ["\n", "\r\n", "\r"]) {
+        const formatted = formatJsonObject(source.replaceAll("\n", newline));
+        assert.equal(formatted, expected);
+        assert.equal(validateJsonObject(formatted).valid, true);
+        assert.equal(formatJsonObject(formatted), formatted, "Repeated formatting must retain comment placement");
+    }
+});
+
+test("Formatting distinguishes standalone comments from inline comments in nested containers", async () => {
+    const {formatJsonObject, validateJsonObject} = await utilities;
+    const source = "{ // object\nitems:[ // array\n1,/* first */ // trailing\n// second\n2\n// array end\n], // items\nlast:{} // last\n}\n// footer";
+    const expected = "{ // object\n  items: [ // array\n    1, /* first */ // trailing\n    // second\n    2\n    // array end\n  ], // items\n  last: {} // last\n}\n// footer";
+    assert.equal(formatJsonObject(source), expected);
+    assert.equal(validateJsonObject(expected).valid, true);
+    assert.equal(formatJsonObject(expected), expected);
+});
+
 test("JSON formatting preserves numeric spelling, duplicate keys and order", async () => {
     const {formatJsonObject} = await utilities;
     const text = '{"id":9007199254740993,"id":1.2300e+42,"negative":-0,"empty":{},"items":[1,[]]}';

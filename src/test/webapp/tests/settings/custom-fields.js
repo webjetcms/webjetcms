@@ -227,8 +227,8 @@ Scenario('JSON editor validates objects and preserves source text', async ({ I, 
     const escapedString = String.raw`"\u0061\n\""`;
     const source = '{"id":9007199254740993,"html":"</textarea>&quot;","nested":{"items":[true,null]},"decimal":1.00,"escapes":' + escapedString + '}';
     const formatted = '{\n  "id": 9007199254740993,\n  "html": "</textarea>&quot;",\n  "nested": {\n    "items": [\n      true,\n      null\n    ]\n  },\n  "decimal": 1.00,\n  "escapes": ' + escapedString + '\n}';
-    const extended = "{title:'test',data-toggle:'tooltip',action:{content:'{Question?}' // text of question\n}}";
-    const extendedFormatted = "{\n  title: 'test',\n  data-toggle: 'tooltip',\n  action: {\n    content: '{Question?}' // text of question\n  }\n}";
+    const extended = "{title:'test', // title comment\ndata-toggle:'tooltip',action:{content:'{Question?}' // text of question\n}}";
+    const extendedFormatted = "{\n  title: 'test', // title comment\n  data-toggle: 'tooltip',\n  action: {\n    content: '{Question?}' // text of question\n  }\n}";
 
     await deleteCustomFieldSettingsByTooltip(I, DT, DTE, jsonEditorMarker);
     openDocFieldsTab(I, DT, DTE, docId_2);

@@ -157,7 +157,7 @@ Editor používa textovú oblasť s číslami riadkov, písmom s pevnou šírkou
 
 Nad textovou oblasťou je panel s tlačidlom **Formátovať JSON** bez rámika a dostupným AI asistentom vľavo a aktuálnou pozíciou kurzora vpravo, napríklad **Riadok 10, stĺpec 12**. Pozícia sa zobrazuje len počas focusu textovej oblasti a pri jeho strate sa skryje. Aktualizuje sa pri písaní, kliknutí a pohybe klávesnicou; pri označení textu zobrazuje aktívny koniec výberu. Riadky aj stĺpce sa počítajú od 1.
 
-Tlačidlo **Formátovať JSON** najskôr overí vstup a potom ho odsadí dvoma medzerami. Mení iba biele znaky mimo reťazcov a komentárov; zachováva úvodzovky/apostrofy, číselné zápisy, poradie vlastností aj escape sekvencie. Nepoužíva spätnú serializáciu parsovaných hodnôt, ktorá by mohla zaokrúhliť veľké číselné identifikátory. Otvorenie editora a uloženie záznamu text automaticky neformátuje.
+Tlačidlo **Formátovať JSON** najskôr overí vstup a potom ho odsadí dvoma medzerami. Mení iba biele znaky mimo reťazcov a komentárov; zachováva úvodzovky/apostrofy, číselné zápisy, poradie vlastností aj escape sekvencie. Komentáre za hodnotou zostávajú na rovnakom riadku; samostatné komentáre zostávajú na vlastnom riadku. Nepoužíva spätnú serializáciu parsovaných hodnôt, ktorá by mohla zaokrúhliť veľké číselné identifikátory. Otvorenie editora a uloženie záznamu text automaticky neformátuje.
 
 Príklad platnej hodnoty:
 

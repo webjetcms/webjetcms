@@ -129,6 +129,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Voliteľné polia
 
+- Formátovanie JSON ponecháva komentáre za hodnotou na rovnakom riadku, aby bolo jasné, ku ktorej vlastnosti patria (#OSK659).
+
 - Editor JSON má nad poľom panel s tlačidlami bez rámika na formátovanie a AI asistenta. Počas focusu poľa zobrazuje aktuálny riadok a stĺpec kurzora, čo uľahčuje dohľadanie chyby podľa validačného hlásenia (#OSK659).
 - Editor JSON podporuje aj apostrofy, názvy vlastností bez úvodzoviek vrátane pomlčiek a komentáre. Validácia v prehliadači aj na serveri používa rovnaké pravidlá; formátovanie zachováva pôvodné hodnoty a komentáre (#OSK659).
 - Pridaný typ [Editor JSON](developer/datatables-editor/customfields.md#editor-json) (`jsoneditor`) pre priame zadávanie JSON objektu s číslami riadkov a tlačidlom na formátovanie. Neplatný JSON zablokuje uloženie v editore aj na serveri vrátane REST a importu. Povinnosť sa riadi nastavením poľa, formátovanie zachováva aj veľké číselné identifikátory. Pre väčšie hodnoty treba overiť kapacitu stĺpca stránky aj jej histórie (#OSK659).
