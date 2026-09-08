@@ -5,12 +5,14 @@ Before(({ I, login }) => {
     I.amOnPage('/admin/v9/settings/stat-browser-migration/');
 });
 
-Scenario('shows migration preview without changing data', ({ I }) => {
+Scenario('shows migration preview without changing data @screenshot', ({ I, Document }) => {
     I.seeElement('#migrationAnalyze');
     I.seeElement('#migrationStart');
     I.click('#migrationAnalyze');
     I.waitForElement('#migrationPreview:not(.d-none)', 20);
     I.seeElement('#migrationMappings');
+
+    Document.screenshot("/sysadmin/update/stat-browser-migration.png");
 });
 
 Scenario('checks permissions', ({ I }) => {

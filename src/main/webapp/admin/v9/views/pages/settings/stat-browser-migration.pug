@@ -4,6 +4,9 @@ block content
 
     script.
         window.domReady.add(function () {
+
+            WJ.selectMenuItem("/admin/v9/settings/update/");
+
             const endpoint = "/admin/rest/settings/stat-browser-migration";
             let state = {};
             let pollTimeout;

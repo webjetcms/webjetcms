@@ -35,6 +35,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InOrder;
 import org.mockito.MockedStatic;
 
+import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PkeyGenerator;
@@ -57,6 +58,24 @@ class BrowserIdentifierMigrationServiceTest {
     private static final String UPDATE_STAT_VIEW = "UPDATE stat_views SET browser_id=?, browser_ua_id=? WHERE view_id=?";
     private static final String LOAD_STAT_FROM = "SELECT from_id, browser_id FROM stat_from WHERE from_id>? AND from_id<=? ORDER BY from_id";
     private static final String UPDATE_STAT_FROM = "UPDATE stat_from SET browser_id=? WHERE from_id=?";
+
+    @Test
+    void auditCompletedTableShouldWriteMigrationDetails() {
+        BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService();
+
+        try (MockedStatic<Adminlog> adminlog = mockStatic(Adminlog.class)) {
+            service.auditCompletedTable("stat_views_2026", 123, 62_345);
+
+            adminlog.verify(() -> Adminlog.add(
+                Adminlog.TYPE_UPDATEDB,
+                "Browser identifier migration completed: table=stat_views_2026, convertedRecords=123, duration=00:01:02.345",
+                -1,
+                -1
+            ));
+        }
+
+        service.destroy();
+    }
 
     @Test
     void startAndStopShouldUseSingleBackgroundTask() {

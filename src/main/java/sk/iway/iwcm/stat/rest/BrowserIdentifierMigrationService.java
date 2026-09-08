@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.DisposableBean;
@@ -31,6 +32,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PkeyGenerator;
@@ -96,6 +98,8 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         private long tableMaxId;
         private long scanned;
         private long updated;
+        private long tableUpdated;
+        private long tableDurationMillis;
         private boolean running;
         private boolean stopRequested;
         private boolean paused;
@@ -175,7 +179,18 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
                 publishRunningState(nextState);
                 if (isStopRequested()) break;
 
+                int tableIndex = nextState.getTableIndex();
+                long updatedBefore = nextState.getUpdated();
+                long batchStarted = System.nanoTime();
                 processNextBatch(plan, nextState);
+                nextState.setTableDurationMillis(nextState.getTableDurationMillis() +
+                    TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - batchStarted));
+                nextState.setTableUpdated(nextState.getTableUpdated() + nextState.getUpdated() - updatedBefore);
+                if (nextState.getTableIndex() > tableIndex) {
+                    auditCompletedTable(nextState.getTable(), nextState.getTableUpdated(), nextState.getTableDurationMillis());
+                    nextState.setTableUpdated(0);
+                    nextState.setTableDurationMillis(0);
+                }
                 publishRunningState(nextState);
             }
             publishStoppedState();
@@ -326,6 +341,8 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         copy.setTableMaxId(source.getTableMaxId());
         copy.setScanned(source.getScanned());
         copy.setUpdated(source.getUpdated());
+        copy.setTableUpdated(source.getTableUpdated());
+        copy.setTableDurationMillis(source.getTableDurationMillis());
         copy.setRunning(source.isRunning());
         copy.setStopRequested(source.isStopRequested());
         copy.setPaused(source.isPaused());
@@ -333,6 +350,25 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         copy.setTable(source.getTable());
         copy.setError(source.getError());
         return copy;
+    }
+
+    void auditCompletedTable(String table, long convertedRecords, long durationMillis) {
+        Adminlog.add(
+            Adminlog.TYPE_UPDATEDB,
+            "Browser identifier migration completed: table=" + table +
+                ", convertedRecords=" + convertedRecords +
+                ", duration=" + formatDuration(durationMillis),
+            -1,
+            -1
+        );
+    }
+
+    static String formatDuration(long durationMillis) {
+        long hours = TimeUnit.MILLISECONDS.toHours(durationMillis);
+        long minutes = TimeUnit.MILLISECONDS.toMinutes(durationMillis) % 60;
+        long seconds = TimeUnit.MILLISECONDS.toSeconds(durationMillis) % 60;
+        long millis = durationMillis % 1_000;
+        return String.format(Locale.ROOT, "%02d:%02d:%02d.%03d", hours, minutes, seconds, millis);
     }
 
     @Override
