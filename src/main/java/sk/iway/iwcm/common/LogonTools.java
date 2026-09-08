@@ -1058,7 +1058,7 @@ public class LogonTools {
         {
             //prihlasenie pre SPRING / REST
             //RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
-            if (Constants.getServletContext().getAttribute("springContext")!=null)
+            if (Tools.getSpringContext() != null)
             {
                 final Authentication authentication = WebjetAuthentificationProvider.authenticate(user);
                 SecurityContext context = SecurityContextHolder.createEmptyContext();

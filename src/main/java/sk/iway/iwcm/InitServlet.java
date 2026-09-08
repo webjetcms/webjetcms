@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import jakarta.servlet.ServletContext;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -73,13 +72,14 @@ public class InitServlet extends HttpServlet
 
 	private static String[] domain = null;
 
-	private static boolean valid = false;
+	private static volatile boolean valid = false;
+	private static volatile boolean licenseInvalid = false;
 
 	private static int licenseId = -1;
 
-	private static boolean webjetInitialized = false;
-	private static boolean webjetConfigured = false;
-	private static boolean springInitialized = false;
+	private static volatile boolean webjetInitialized = false;
+	private static volatile boolean webjetConfigured = false;
+	private static volatile boolean springInitialized = false;
 
 	private static final Date SERVER_START_DATETIME = new Date();
 
@@ -87,13 +87,7 @@ public class InitServlet extends HttpServlet
 
 	private static String contextDbName = null;
 
-	/**
-	 *  Description of the Method
-	 *
-	 *@exception  ServletException  Description of the Exception
-	 */
-	@Override
-	public void init() throws ServletException
+	public static void initAfterSpring()
 	{
 		//not used anymore, initialized from spring on start
 		if (isSpringInitialized()) {
@@ -148,6 +142,11 @@ public class InitServlet extends HttpServlet
 	}
 
 	public static boolean initializeWebJET(DebugTimer dt, ServletContext servletContext) {
+		webjetInitialized = false;
+		webjetConfigured = false;
+		springInitialized = false;
+		valid = false;
+		licenseInvalid = false;
 
 		//toto musime setnut - inak nebude fungovat Tools.getRealPath pri inite Spring komponent
 		Constants.setServletContext(servletContext);
@@ -193,7 +192,7 @@ public class InitServlet extends HttpServlet
 			{
 				Logger.println(InitServlet.class,"   Database connection: [FAILED]");
 				Logger.println(InitServlet.class,"ERROR: Server halted (Database connection failed).");
-				Logger.println(InitServlet.class,"Open http://localhost/wjerrorpages/setup/setup to setup WebJET");
+				Logger.println(InitServlet.class,"For a new installation, restart with webjet.setup.enabled=true and a configured webjet.setup.token.");
 				return false;
 			}
 
@@ -367,6 +366,8 @@ public class InitServlet extends HttpServlet
 				if (diff < 0)
 				{
 					Logger.println(InitServlet.class,"ERROR: License is out of date, please contact\n  InterWay (www.interway.sk)\n  for new license.");
+					Logger.println(InitServlet.class,"Update the license at /wjerrorpages/setup/license and restart the application server.");
+					licenseInvalid = true;
 					return false;
 				}
 
@@ -536,19 +537,13 @@ public class InitServlet extends HttpServlet
 					Logger.println(InitServlet.class,"ERROR: Server not configured.");
 					Logger.println(InitServlet.class,"ERROR: Server not configured.");
 					Logger.println(InitServlet.class,"ERROR: Server not configured.");
-					Logger.println(InitServlet.class,"Open http://localhost/wjerrorpages/setup/setup to setup WebJET");
+					Logger.println(InitServlet.class,"For a new installation, restart with webjet.setup.enabled=true and a configured webjet.setup.token.");
 					return false;
 				} else {
 					sk.iway.iwcm.Logger.error(ex);
-					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
-					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
-					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
-					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
-					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
-					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
-					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
-					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
-					Logger.println(InitServlet.class,"Update license on http://localhost/wjerrorpages/setup/license");
+					Logger.println(InitServlet.class,"ERROR: License is not valid.");
+					Logger.println(InitServlet.class,"Update the license at /wjerrorpages/setup/license and restart the application server.");
+					licenseInvalid = true;
 					return false;
 				}
 			}
@@ -804,6 +799,7 @@ public class InitServlet extends HttpServlet
 		{
 			sk.iway.iwcm.Logger.error(ex);
 			Logger.println(InitServlet.class,"   Database connection: [FAILED]");
+			return false;
 		}
 		finally
 		{
@@ -935,31 +931,46 @@ public class InitServlet extends HttpServlet
 	@Override
 	public void destroy()
 	{
-		if (isWebjetInitialized()) {
+		if (isWebjetInitialized() || isSpringInitialized()) {
 			setWebjetInitialized(false);
-
-			Logger.println(InitServlet.class,"Destroying Cron4j");
-			CronFacade.getInstance().stop();
-			Logger.println(InitServlet.class,"Cron 4j destroyed");
-
-			Sender sender = Sender.getInstance();
-			if (sender != null)
-			{
-				sender.cancelTask();
-			}
-
-			SpamProtection.destroy();
-
-			if (clusterRefresher != null)
-			{
-				clusterRefresher.cancelTask();
-				clusterRefresher = null; //NOSONAR
-			}
+			springInitialized = false;
+			destroyBackgroundServices();
 		}
 
 		//JRASKA destroy JPA
 		DBPool.jpaDestroy();
 		DBPool.getInstance().destroy(false);
+	}
+
+	/**
+	 * Rolls back background services when production post-initialization fails.
+	 */
+	public static void cleanupAfterFailedSpringInitialization()
+	{
+		setWebjetInitialized(false);
+		springInitialized = false;
+		destroyBackgroundServices();
+	}
+
+	private static void destroyBackgroundServices()
+	{
+		Logger.println(InitServlet.class,"Destroying Cron4j");
+		CronFacade.getInstance().stop();
+		Logger.println(InitServlet.class,"Cron 4j destroyed");
+
+		Sender sender = Sender.getInstance();
+		if (sender != null)
+		{
+			sender.cancelTask();
+		}
+
+		SpamProtection.destroy();
+
+		if (clusterRefresher != null)
+		{
+			clusterRefresher.cancelTask();
+			clusterRefresher = null; //NOSONAR
+		}
 	}
 
 	/**
@@ -1540,6 +1551,11 @@ public class InitServlet extends HttpServlet
 	public static boolean isWebjetConfigured()
 	{
 		return webjetConfigured;
+	}
+
+	public static boolean isLicenseInvalid()
+	{
+		return licenseInvalid;
 	}
 
 	public static void setContextDbName(String name)

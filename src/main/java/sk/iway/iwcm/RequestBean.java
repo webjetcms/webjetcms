@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.users.UserDetails;
 
 import org.springframework.context.ApplicationContext;
+import sk.iway.iwcm.system.spring.components.SpringContext;
 
 /**
  *  RequestBean.java - drzi zakladne info z requestu, uklada sa do hash tabulky podla thread ID
@@ -426,6 +427,14 @@ public class RequestBean
     }
 
 	public ApplicationContext getSpringContext() {
+		if (springContext != null) {
+			return springContext;
+		}
+
+		return SpringContext.getApplicationContext();
+	}
+
+	protected ApplicationContext getAssignedSpringContext() {
 		return springContext;
 	}
 
@@ -434,11 +443,12 @@ public class RequestBean
 	}
 
 	public <T> T getSpringBean(String name, Class<T> clazz) {
-        if (springContext == null || !springContext.containsBean(name)) {
+		ApplicationContext context = getSpringContext();
+		if (context == null || !context.containsBean(name)) {
             return null;
         }
 
-        return springContext.getBean(name, clazz);
+		return context.getBean(name, clazz);
     }
 
 	/**
