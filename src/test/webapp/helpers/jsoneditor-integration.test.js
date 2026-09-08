@@ -62,6 +62,41 @@ async function createFixture(t, {entityDecode, required = false} = {}) {
     return {window, editor, field, textarea, context, originalEntityDecode};
 }
 
+test("DataTable renders JSON containing an incomplete HTML tag as literal text", async t => {
+    const dom = new JSDOM("<!doctype html><html><body><div id='result'></div></body></html>");
+    const window = dom.window;
+    const $ = adminRequire("jquery")(window);
+    const context = vm.createContext({
+        $,
+        WJ: {
+            escapeHtml: text => $("<div>").text(text).html(),
+            htmlToText: text => text,
+            translate: key => key
+        },
+        ...await utilities
+    });
+    loadBrowserModule(context, "npm_packages/webjetdatatables/datatables-config.js");
+    t.after(() => window.close());
+
+    const source = '{"entity":"&lt;","x":"<img src=x onerror=window.__jsonEditorXss=true//"}';
+    const row = {
+        col: 0,
+        settings: {
+            aoColumns: [{name: "fieldA", editor: {type: "text"}, className: "allow-html"}]
+        }
+    };
+    const rowData = {
+        editorFields: {
+            fieldsDefinition: [{key: "a", type: "jsoneditor"}]
+        }
+    };
+    const result = window.document.querySelector("#result");
+    result.innerHTML = context.renderText(source, "display", rowData, row);
+
+    assert.equal(result.textContent, source, "Rendering must preserve the displayed JSON source");
+    assert.equal(result.querySelector("img"), null, "JSON text must not create executable HTML elements");
+});
+
 test("JSON field preserves literal HTML entities through the Editor API and restores decoding", async t => {
     for (const entityDecode of [undefined, true, false]) {
         const {field, textarea, editor, context, originalEntityDecode} = await createFixture(t, {entityDecode});

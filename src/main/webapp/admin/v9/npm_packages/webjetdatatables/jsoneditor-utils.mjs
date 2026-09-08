@@ -1,5 +1,22 @@
 const unquotedName = /^[\p{L}_$][\p{L}\p{N}_$-]*$/u;
 const literal = /^(?:true|false|null|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?)$/;
+const htmlTextEntities = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+};
+
+/**
+ * Escapes raw JSON for an HTML text-content context without decoding existing entities.
+ * @param {*} text Raw JSON value.
+ * @returns {string} HTML-safe text preserving the original displayed value.
+ */
+export function escapeJsonForHtml(text) {
+    if (text == null) return "";
+    return String(text).replace(/[&<>"']/g, character => htmlTextEntities[character]);
+}
 
 /**
  * Reads JSON with single quotes, unquoted names and comments without evaluating code or numbers.

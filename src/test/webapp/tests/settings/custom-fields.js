@@ -370,6 +370,32 @@ Scenario('JSON editor validates objects and preserves source text', async ({ I, 
     I.assertEqual(1, await I.grabNumberOfVisibleElements("#datatableInit_modal .DTE_Field_Name_fieldA .md-jsoneditor-toolbar"), "Reopening must not duplicate the toolbar");
     DTE.cancel();
 
+    const xssSource = '{"x":"<img src=x onerror=window.__jsonEditorXss=true//"}';
+    openDocFieldsTab(I, DT, DTE, docId_2);
+    I.executeScript(() => { window.__jsonEditorXss = false; });
+    I.fillField(fieldA, xssSource);
+    DTE.save();
+    DT.waitForLoader();
+    I.wait(1);
+    const renderedJson = await I.executeScript(docId => {
+        const table = $("#datatableInit").DataTable();
+        const columnIndex = table.column("fieldA:name").index();
+        const cell = table.cell("#" + docId, columnIndex).node();
+        return {
+            executed: window.__jsonEditorXss,
+            hasImage: cell?.querySelector("img") != null,
+            text: cell?.textContent.trim()
+        };
+    }, docId_2);
+    I.assertFalse(renderedJson.executed, "Rendering JSON must not execute inline event handlers");
+    I.assertFalse(renderedJson.hasImage, "Rendering JSON must not create HTML elements");
+    I.assertEqual(xssSource, renderedJson.text, "The table cell must display the JSON payload as literal text");
+
+    openDocFieldsTab(I, DT, DTE, docId_2);
+    I.assertEqual(xssSource, await I.grabValueFrom(fieldA), "The safely rendered value must remain unchanged in the editor");
+    I.fillField(fieldA, formatted);
+    DTE.save();
+
     const historyBefore = await getJsonEditorHistoryIds(I, docId_2);
     for (const operation of ["editor", "edit/" + docId_2, "import"]) {
         const rejectedFields = await I.executeScript(async ({ docId, operation }) => {
