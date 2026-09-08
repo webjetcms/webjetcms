@@ -64,7 +64,7 @@ Pri zmene typu poľa sa v editore dynamicky zobrazia doplnkové polia, ktoré pa
 
 Ak je pri typoch `select`, `docsIn`, `json_group`, `json_doc` vypnuté **Povinné pole**, editor automaticky ponúkne aj prázdnu hodnotu. Pri typoch `radio` a `checkbox` vypnuté povinné pole znamená, že používateľ nemusí vybrať žiadnu možnosť.
 
-Pri type `jsoneditor` je prázdny vstup povolený iba pri vypnutom **Povinnom poli**. Vyplnený vstup musí obsahovať jeden objekt v zložených zátvorkách `{}`; samotné pole `[]` ani hodnota `null` nie sú povolené. Podporované sú aj apostrofy, názvy vlastností bez úvodzoviek (napr. `data-toggle`) a komentáre `//` alebo `/* … */`. Za komentárom `//` musia byť uzatváracie zátvorky na ďalšom riadku. Chyba zablokuje uloženie v editore aj na serveri. Podrobnosti vrátane formátovania, rozšírenej syntaxe a kapacity databázových stĺpcov sú v dokumentácii [Editor JSON](../../../developer/datatables-editor/customfields.md#editor-json).
+Pri type `jsoneditor` sa prázdny vstup riadi nastavením **Povinné pole** a vyplnená hodnota musí obsahovať jeden objekt v zložených zátvorkách `{}`. Chyba zablokuje uloženie v editore aj na serveri. Podporovanú syntax, formátovanie a kapacitu databázových stĺpcov opisuje dokumentácia [Editor JSON](../../../developer/datatables-editor/customfields.md#json-editor).
 
 ### Zdroj možností
 

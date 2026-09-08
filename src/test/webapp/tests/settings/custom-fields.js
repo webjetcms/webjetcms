@@ -372,7 +372,7 @@ Scenario('JSON editor validates objects and preserves source text', async ({ I, 
 
     const historyBefore = await getJsonEditorHistoryIds(I, docId_2);
     for (const operation of ["editor", "edit/" + docId_2, "import"]) {
-        const rejected = await I.executeScript(async ({ docId, operation }) => {
+        const rejectedFields = await I.executeScript(async ({ docId, operation }) => {
             const entity = await fetch("/admin/rest/web-pages/" + docId, {
                 headers: { "X-CSRF-Token": window.csrfToken }
             }).then(response => response.json());
@@ -394,9 +394,9 @@ Scenario('JSON editor validates objects and preserves source text', async ({ I, 
                 body: JSON.stringify(body)
             });
             const result = await response.json();
-            return { status: response.status, fields: result.fieldErrors || [], error: result.error };
+            return result.fieldErrors || [];
         }, { docId: docId_2, operation });
-        I.assertTrue(rejected.fields.some(field => field.name === "fieldA"), "REST validation must identify the JSON field: " + operation);
+        I.assertTrue(rejectedFields.some(field => field.name === "fieldA"), "REST validation must identify the JSON field: " + operation);
         I.assertEqual(formatted, (await getJsonEditorDocument(I, docId_2)).fieldA, "A rejected REST request must not change the page");
     }
     I.assertDeepEqual(historyBefore, await getJsonEditorHistoryIds(I, docId_2), "Rejected JSON must not create a history version");

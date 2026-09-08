@@ -77,14 +77,9 @@ block content
                         getTranslatedKey($("#DTE_Field_userPromptLabel").val(), "editorFields-translatedUserPromptLabel");
                     });
 
-                    // Initialize the shared textarea line-number gutter
-                    initInstructionsEnhancements();
-
                     eventsBinded = true;
-                } else {
-                    // Ensure enhancements applied on subsequent opens
-                    initInstructionsEnhancements();
                 }
+                initInstructionsEnhancements();
             });
 
             function initInstructionsEnhancements() {
