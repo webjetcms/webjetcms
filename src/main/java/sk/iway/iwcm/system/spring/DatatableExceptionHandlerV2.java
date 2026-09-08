@@ -30,6 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -46,6 +48,8 @@ import java.util.stream.Collectors;
 @ControllerAdvice(annotations = {Datatable.class})
 public class DatatableExceptionHandlerV2
 {
+	private static final Pattern DATA_TOO_LONG_PATTERN = Pattern.compile("Data too long for column ['\"`]([^'\"`]+)['\"`]", Pattern.CASE_INSENSITIVE);
+
 	@ResponseBody
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<DatatableResponse<Object>> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
@@ -160,6 +164,11 @@ public class DatatableExceptionHandlerV2
 		while (cause != null) {
 			String message = cause.getMessage();
 			if (message != null) {
+				Matcher dataTooLongMatcher = DATA_TOO_LONG_PATTERN.matcher(message);
+				if (dataTooLongMatcher.find()) {
+					return Prop.getInstance().getText("datatable.error.valueTooLong", dataTooLongMatcher.group(1));
+				}
+
 				int start = message.indexOf("Duplicate entry");
 				if (start >= 0) {
 					int end = message.indexOf("Error Code", start);
