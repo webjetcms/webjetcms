@@ -2,7 +2,9 @@ package sk.iway.iwcm.components.customfields.rest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
@@ -11,7 +13,7 @@ import static org.mockito.Mockito.when;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.Map;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -22,24 +24,44 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
+import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
 import sk.iway.iwcm.doc.DocDetails;
-import sk.iway.iwcm.doc.DocHistory;
+import sk.iway.iwcm.editor.rest.Field;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.BaseEditorFields;
 
 /** Verifies exact JSON recovery from JDBC without decoding submitted or unrelated values. */
 class JsonEditorValueReaderTest {
 
-    /** Verifies literal entities, significant number text and whitespace survive the JPA filter. */
+    /** Verifies generated definitions restore only JSON fields and retain their exact persisted text. */
     @Test
     void restoresExactTextAndLeavesOrdinaryFieldsFiltered() throws Exception {
         String raw = " \n{\"id\":9007199254740993,\"html\":\"</textarea>&quot;&amp;&#39;\",\"decimal\":1.00}\t ";
         TestEntity entity = new TestEntity();
         entity.setFieldA(DB.filterHtml(raw));
         entity.setFieldB(DB.filterHtml("<b>ordinary text</b>"));
-        try (StoredRow row = new StoredRow(raw)) {
-            JsonEditorValueReader.restore(entity, Map.of("fieldA", false));
+        Prop prop = mock(Prop.class);
+        when(prop.getText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        CustomFieldsEntity configuration = new CustomFieldsEntity();
+        configuration.setType("jsoneditor");
+        configuration.setValue("jsoneditor");
+        try (StoredRow row = new StoredRow(raw);
+                MockedStatic<Constants> constants = mockStatic(Constants.class);
+                MockedStatic<Prop> props = mockStatic(Prop.class);
+                MockedStatic<CustomFieldsService> fields = mockStatic(CustomFieldsService.class, CALLS_REAL_METHODS)) {
+            constants.when(() -> Constants.getString("defaultLanguage")).thenReturn("sk");
+            props.when(Prop::getInstance).thenReturn(prop);
+            props.when(() -> Prop.getInstance("sk")).thenReturn(prop);
+            fields.when(() -> CustomFieldsService.getCustomFieldsMap(any(CustomFieldsSearchDto.class))).thenReturn(java.util.Map.of('A', configuration));
+
+            CustomFieldsSearchDto context = new CustomFieldsSearchDto(TestEntity.class.getName(), 7L);
+            List<Field> definitions = new BaseEditorFields().getFields(entity, "test", 'B', context);
             assertEquals(raw, entity.getFieldA());
+            assertEquals(raw, definitions.get(0).getValue());
             assertEquals("&lt;b&gt;ordinary text&lt;/b&gt;", entity.getFieldB());
+            assertEquals("&lt;b&gt;ordinary text&lt;/b&gt;", definitions.get(1).getValue());
             verify(row.connection).prepareStatement("SELECT field_a FROM jsoneditor_fixture WHERE record_id=?");
             verify(row.statement).setObject(1, 7L);
         }
@@ -52,7 +74,7 @@ class JsonEditorValueReaderTest {
         TestEntity entity = new TestEntity();
         entity.setFieldA(DB.filterHtml(raw));
         try (StoredRow row = new StoredRow(raw)) {
-            JsonEditorValueReader.restore(entity, Map.of("fieldA", false));
+            JsonEditorValueReader.restore(entity, List.of("fieldA"));
             assertEquals(raw, entity.getFieldA());
             Prop prop = mock(Prop.class);
             when(prop.getText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -67,7 +89,7 @@ class JsonEditorValueReaderTest {
         TestEntity entity = new TestEntity();
         entity.setFieldA(literal);
         try (StoredRow row = new StoredRow(literal)) {
-            JsonEditorValueReader.restore(entity, Map.of("fieldA", false));
+            JsonEditorValueReader.restore(entity, List.of("fieldA"));
             assertEquals(literal, entity.getFieldA());
         }
     }
@@ -79,25 +101,8 @@ class JsonEditorValueReaderTest {
         String changed = "{&quot;changed&quot;:&quot;&lt;tag&gt;&quot;}";
         entity.setFieldA(changed);
         try (StoredRow row = new StoredRow("{\"original\":\"<tag>\"}")) {
-            JsonEditorValueReader.restore(entity, Map.of("fieldA", false));
+            JsonEditorValueReader.restore(entity, List.of("fieldA"));
             assertEquals(changed, entity.getFieldA());
-        }
-    }
-
-    /** Verifies a mapped page reads selected history data using the history primary key. */
-    @Test
-    void readsActualHistorySource() throws Exception {
-        String raw = " {\"history\":\"<tag>&quot;\"} ";
-        DocDetails doc = new DocDetails();
-        doc.setDocId(163800);
-        doc.setFieldA(DB.filterHtml(raw));
-        DocHistory history = new DocHistory();
-        history.setId(1234L);
-        try (StoredRow row = new StoredRow(raw)) {
-            JsonEditorValueReader.restore(doc, history, Map.of("fieldA", false));
-            assertEquals(raw, doc.getFieldA());
-            verify(row.connection).prepareStatement("SELECT field_a FROM documents_history WHERE history_id=?");
-            verify(row.statement).setObject(1, 1234L);
         }
     }
 
@@ -110,7 +115,7 @@ class JsonEditorValueReaderTest {
         doc.setHistoryId(1234);
         doc.setFieldA(DB.filterHtml(raw));
         try (StoredRow row = new StoredRow(raw)) {
-            JsonEditorValueReader.restore(doc, Map.of("fieldA", false));
+            JsonEditorValueReader.restore(doc, List.of("fieldA"));
             assertEquals(raw, doc.getFieldA());
             verify(row.statement).setObject(1, 1234L);
         }
@@ -123,7 +128,7 @@ class JsonEditorValueReaderTest {
         TestEntity entity = new TestEntity() {};
         entity.setFieldA(DB.filterHtml(raw));
         try (StoredRow row = new StoredRow(raw)) {
-            JsonEditorValueReader.restore(entity, Map.of("fieldA", false));
+            JsonEditorValueReader.restore(entity, List.of("fieldA"));
             assertEquals(raw, entity.getFieldA());
         }
     }
@@ -134,9 +139,9 @@ class JsonEditorValueReaderTest {
         TestEntity entity = new TestEntity();
         entity.setFieldA(DB.filterHtml("{\"html\":\"<tag>\"}"));
         try (MockedStatic<DBPool> pool = mockStatic(DBPool.class)) {
-            JsonEditorValueReader.restore(entity, Map.of());
+            JsonEditorValueReader.restore(entity, List.of());
             entity.setId(-1L);
-            JsonEditorValueReader.restore(entity, Map.of("fieldA", false));
+            JsonEditorValueReader.restore(entity, List.of("fieldA"));
             pool.verifyNoInteractions();
         }
     }

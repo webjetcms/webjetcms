@@ -20,12 +20,6 @@ import com.fasterxml.jackson.core.json.JsonReadFeature;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.components.basket.delivery_methods.jpa.DeliveryMethodEntity;
-import sk.iway.iwcm.components.basket.delivery_methods.rest.BaseDeliveryMethod;
-import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentMethodEntity;
-import sk.iway.iwcm.components.basket.payment_methods.rest.BasePaymentMethod;
-import sk.iway.iwcm.components.basket.support.FieldMapAttr;
-import sk.iway.iwcm.components.basket.support.FieldsConfig;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
@@ -56,38 +50,17 @@ public final class JsonEditorValidator {
      * Resolves JSON field names and required flags exclusively from server configuration.
      * @param entity entity providing field metadata and template context
      * @param context database configuration lookup context
-     * @param keyPrefix optional translation prefix for fields without annotated label keys
      * @return field names mapped to their required flags
      */
-    public static Map<String, Boolean> getRules(Object entity, CustomFieldsSearchDto context, String keyPrefix) {
+    public static Map<String, Boolean> getRules(Object entity, CustomFieldsSearchDto context) {
         if (entity == null) return Map.of();
-        if (entity instanceof PaymentMethodEntity payment) return getProviderRules(payment.getPaymentMethodName(), BasePaymentMethod.class);
-        if (entity instanceof DeliveryMethodEntity delivery) return getProviderRules(delivery.getDeliveryMethodName(), BaseDeliveryMethod.class);
         if (entity instanceof DocDetails doc) {
-            return DocEditorFields.withCustomFieldTextPrefixes(doc.getTempId(), () -> resolveRules(entity, context, keyPrefix));
+            return DocEditorFields.withCustomFieldTextPrefixes(doc.getTempId(), () -> resolveRules(entity, context));
         }
-        return resolveRules(entity, context, keyPrefix);
+        return resolveRules(entity, context);
     }
 
-    private static Map<String, Boolean> getProviderRules(String className, Class<?> providerType) {
-        Map<String, Boolean> rules = new LinkedHashMap<>();
-        if (Tools.isEmpty(className)) return rules;
-        try {
-            Class<?> provider = Class.forName(className, false, providerType.getClassLoader());
-            if (providerType.isAssignableFrom(provider) == false) return rules;
-            FieldsConfig configuration = provider.getAnnotation(FieldsConfig.class);
-            if (configuration != null) {
-                for (FieldMapAttr field : configuration.fieldMap()) {
-                    if (field.fieldType() == FieldType.JSONEDITOR) rules.put("field" + field.fieldAlphabet(), field.isRequired());
-                }
-            }
-            return rules;
-        } catch (ClassNotFoundException ex) {
-            throw new IllegalStateException("Unknown custom-field provider: " + className, ex);
-        }
-    }
-
-    private static Map<String, Boolean> resolveRules(Object entity, CustomFieldsSearchDto context, String keyPrefix) {
+    private static Map<String, Boolean> resolveRules(Object entity, CustomFieldsSearchDto context) {
         Map<String, Boolean> rules = new LinkedHashMap<>();
         BeanWrapperImpl bean = new BeanWrapperImpl(entity);
         Map<Character, CustomFieldsEntity> configuredFields = null;
@@ -100,7 +73,7 @@ public final class JsonEditorValidator {
             if (configuredFields == null) configuredFields = CustomFieldsService.getCustomFieldsMap(context);
             CustomFieldsEntity configuredField = configuredFields.get(alphabet);
             if (entity instanceof EnumerationDataBean && configuredField == null) continue;
-            String labelKey = getLabelKey(entity.getClass(), name, keyPrefix);
+            String labelKey = getLabelKey(entity.getClass(), name);
             String type = CustomFieldsService.getConfiguredFieldType(configuredField, labelKey, typeProp);
             if (FieldType.asFieldType(type) == FieldType.JSONEDITOR) {
                 if (entity instanceof EnumerationDataBean) {
@@ -119,8 +92,7 @@ public final class JsonEditorValidator {
         return rules;
     }
 
-    private static String getLabelKey(Class<?> entityClass, String name, String keyPrefix) {
-        if (Tools.isNotEmpty(keyPrefix)) return keyPrefix + ".field_" + Character.toLowerCase(name.charAt(5));
+    private static String getLabelKey(Class<?> entityClass, String name) {
         Field field = ReflectionUtils.findField(entityClass, name);
         if (field == null) return null;
         DataTableColumn column = field.getAnnotation(DataTableColumn.class);
@@ -192,14 +164,4 @@ public final class JsonEditorValidator {
         }
     }
 
-    /**
-     * Rejects invalid values at a persistence boundary using native field errors.
-     * @param entity final entity values
-     * @param rules server-resolved field names and required flags
-     * @param prop localized messages
-     */
-    public static void validateBeforeSave(Object entity, Map<String, Boolean> rules, Prop prop) {
-        List<DatatableFieldError> errors = validate(entity, rules, prop);
-        if (errors.isEmpty() == false) throw new CustomFieldsValidationException(errors);
-    }
 }

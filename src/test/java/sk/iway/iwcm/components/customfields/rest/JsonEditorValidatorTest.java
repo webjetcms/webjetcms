@@ -32,10 +32,6 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentMethodEntity;
-import sk.iway.iwcm.components.basket.payment_methods.rest.BasePaymentMethod;
-import sk.iway.iwcm.components.basket.support.FieldMapAttr;
-import sk.iway.iwcm.components.basket.support.FieldsConfig;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
@@ -47,9 +43,7 @@ import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.editor.FieldType;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
-import sk.iway.iwcm.system.datatable.DatatableFieldError;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
-import sk.iway.iwcm.system.spring.DatatableExceptionHandlerV2;
 
 /**
  * Verifies supported object syntax, authoritative field rules and native validation errors.
@@ -156,43 +150,20 @@ class JsonEditorValidatorTest {
             props.when(Prop::getInstance).thenReturn(prop);
             fields.when(() -> CustomFieldsService.getCustomFieldsMap(any(CustomFieldsSearchDto.class))).thenReturn(Map.of());
 
-            assertEquals(Map.of("fieldA", false), JsonEditorValidator.getRules(bean, new CustomFieldsSearchDto(bean), null));
+            assertEquals(Map.of("fieldA", false), JsonEditorValidator.getRules(bean, new CustomFieldsSearchDto(bean)));
             assertEquals("jsoneditor", new BaseEditorFields().getFields(bean, "test", 'A').get(0).getType());
 
             CustomFieldsEntity override = new CustomFieldsEntity();
             override.setType("text");
             override.setValue("text");
             fields.when(() -> CustomFieldsService.getCustomFieldsMap(any(CustomFieldsSearchDto.class))).thenReturn(Map.of('A', override));
-            assertTrue(JsonEditorValidator.getRules(bean, new CustomFieldsSearchDto(bean), null).isEmpty(), "Database text overrides must disable legacy JSON validation");
+            assertTrue(JsonEditorValidator.getRules(bean, new CustomFieldsSearchDto(bean)).isEmpty(), "Database text overrides must disable legacy JSON validation");
 
             override.setType("jsoneditor");
             override.setValue("jsoneditor");
             override.setRequired(true);
-            assertEquals(Map.of("fieldA", true), JsonEditorValidator.getRules(bean, new CustomFieldsSearchDto(bean), null));
+            assertEquals(Map.of("fieldA", true), JsonEditorValidator.getRules(bean, new CustomFieldsSearchDto(bean)));
         }
-    }
-
-    /** Verifies controllers can supply a trusted prefix when annotation titles are not standard. */
-    @Test
-    void supportsExplicitServerPrefix() {
-        FieldBean bean = new FieldBean();
-        when(prop.getText("custom.field_a.type")).thenReturn("jsoneditor");
-        try (MockedStatic<Constants> constants = mockStatic(Constants.class);
-                MockedStatic<Prop> props = mockStatic(Prop.class);
-                MockedStatic<CustomFieldsService> fields = mockStatic(CustomFieldsService.class, CALLS_REAL_METHODS)) {
-            constants.when(() -> Constants.getString("defaultLanguage")).thenReturn("sk");
-            props.when(() -> Prop.getInstance("sk")).thenReturn(prop);
-            fields.when(() -> CustomFieldsService.getCustomFieldsMap(any(CustomFieldsSearchDto.class))).thenReturn(Map.of());
-            assertEquals(Map.of("fieldA", false), JsonEditorValidator.getRules(bean, new CustomFieldsSearchDto(bean), "custom"));
-        }
-    }
-
-    /** Verifies annotation-driven providers validate the types actually rendered by their field helper. */
-    @Test
-    void usesProviderAnnotationInsteadOfOverwrittenDatabaseTypes() {
-        PaymentMethodEntity payment = new PaymentMethodEntity();
-        payment.setPaymentMethodName(TestPayment.class.getName());
-        assertEquals(Map.of("fieldB", true), JsonEditorValidator.getRules(payment, new CustomFieldsSearchDto(payment), null));
     }
 
     /** Verifies hidden enumeration strings are excluded while named database JSON fields use fieldA errors. */
@@ -217,13 +188,13 @@ class JsonEditorValidatorTest {
             constants.when(() -> Constants.getString("defaultLanguage")).thenReturn("sk");
             props.when(() -> Prop.getInstance("sk")).thenReturn(prop);
             fields.when(() -> CustomFieldsService.getCustomFieldsMap(context)).thenReturn(Map.of());
-            assertTrue(JsonEditorValidator.getRules(entity, context, null).isEmpty());
+            assertTrue(JsonEditorValidator.getRules(entity, context).isEmpty());
             fields.when(() -> CustomFieldsService.getCustomFieldsMap(context)).thenReturn(Map.of('A', configuration));
-            assertTrue(JsonEditorValidator.getRules(entity, context, null).isEmpty());
+            assertTrue(JsonEditorValidator.getRules(entity, context).isEmpty());
             configuration.setLabel("");
             parent.setString1Name("JSON data");
             entity.setFieldA("invalid");
-            Map<String, Boolean> rules = JsonEditorValidator.getRules(entity, context, null);
+            Map<String, Boolean> rules = JsonEditorValidator.getRules(entity, context);
             assertEquals(Map.of("fieldA", false), rules);
             assertEquals("fieldA", JsonEditorValidator.validate(entity, rules, prop).get(0).getName());
         }
@@ -251,14 +222,9 @@ class JsonEditorValidatorTest {
         }
     }
 
-    /** Verifies save-boundary failures retain the field name consumed by DataTables Editor. */
+    /** Verifies the JSON editor remains registered as a supported custom-field type. */
     @Test
-    void exposesNativeFieldErrors() {
-        CustomFieldsValidationException failure = new CustomFieldsValidationException(List.of(new DatatableFieldError("fieldA", "Invalid JSON")));
-        var response = new DatatableExceptionHandlerV2().handleException(failure).getBody();
-        assertNotNull(response);
-        assertEquals("fieldA", response.getFieldErrors().get(0).getName());
-        assertEquals("Invalid JSON", response.getFieldErrors().get(0).getStatus());
+    void registersJsonEditorFieldType() {
         assertEquals(FieldType.JSONEDITOR, FieldType.asFieldType("jsoneditor"));
         assertEquals(FieldType.JSON_DOC, FieldType.asFieldType("json_doc"));
         assertTrue(CustomFieldsService.isSupportedFieldType("jsoneditor"));
@@ -286,11 +252,4 @@ class JsonEditorValidatorTest {
         public BaseEditorFields getEditorFields() { return editorFields; }
         public void setEditorFields(BaseEditorFields value) { editorFields = value; }
     }
-
-    /** Provider metadata can be inspected without constructing an instance of the payment implementation. */
-    @FieldsConfig(fieldMap = {
-        @FieldMapAttr(fieldAlphabet = 'A', fieldType = FieldType.TEXT),
-        @FieldMapAttr(fieldAlphabet = 'B', fieldType = FieldType.JSONEDITOR, isRequired = true)
-    })
-    public abstract static class TestPayment extends BasePaymentMethod {}
 }

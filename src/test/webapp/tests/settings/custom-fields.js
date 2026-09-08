@@ -397,7 +397,7 @@ Scenario('JSON editor validates objects and preserves source text', async ({ I, 
     DTE.save();
 
     const historyBefore = await getJsonEditorHistoryIds(I, docId_2);
-    for (const operation of ["editor", "edit/" + docId_2, "import"]) {
+    for (const operation of ["editor", "import"]) {
         const rejectedFields = await I.executeScript(async ({ docId, operation }) => {
             const entity = await fetch("/admin/rest/web-pages/" + docId, {
                 headers: { "X-CSRF-Token": window.csrfToken }
@@ -406,10 +406,10 @@ Scenario('JSON editor validates objects and preserves source text', async ({ I, 
             // Client-provided definitions must never disable server-side validation.
             entity.editorFields.fieldsDefinition = [];
             entity.editorFields.fieldsDefinitionKeyPrefix = "autotest-untrusted-prefix";
-            const endpoint = operation === "import" ? "editor" : operation;
-            let body = endpoint === "editor" ? { action: "edit", data: { [docId]: entity } } : entity;
+            const endpoint = "editor";
+            let body = { action: "edit", data: { [docId]: entity } };
             if (operation === "import") {
-                // Match the importer's row keys and defer validation until its target record is resolved.
+                // Match the importer's row keys and validate the explicitly imported JSON column.
                 body = { action: "edit", data: { 0: entity }, dztotalchunkcount: 1, dzchunkindex: 0,
                     importMode: "update", updateByColumn: "id", skipWrongData: false,
                     importedColumns: ["id", "title", "tempId", "fieldA"], name: "autotest-jsoneditor.json" };

@@ -6,10 +6,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
 
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.util.ReflectionUtils;
@@ -35,42 +33,14 @@ public final class JsonEditorValueReader {
     /**
      * Restores JSON properties of an entity that has already been loaded and authorized.
      * @param entity persisted entity
-     * @param rules JSON property names resolved from server configuration
+     * @param fieldNames JSON property names taken from generated field definitions
      */
-    public static void restore(Object entity, Map<String, Boolean> rules) {
-        restore(entity, entity, rules);
+    public static void restore(Object entity, Collection<String> fieldNames) {
+        restore(entity, entity, fieldNames);
     }
 
-    /**
-     * Restores retained values under the effective configuration after a partial-update merge.
-     * Values copied from the submitted entity are excluded, including malformed encoded text.
-     * @param target merged entity
-     * @param source original persisted entity identifying the database row
-     * @param submitted submitted properties before the merge
-     * @param rules effective JSON property rules after the merge
-     */
-    public static void restoreRetained(Object target, Object source, Object submitted, Map<String, Boolean> rules) {
-        if (rules.isEmpty()) return;
-        BeanWrapperImpl merged = new BeanWrapperImpl(target);
-        BeanWrapperImpl incoming = new BeanWrapperImpl(submitted);
-        Map<String, Boolean> retained = new LinkedHashMap<>();
-        for (Map.Entry<String, Boolean> rule : rules.entrySet()) {
-            if (Objects.equals(merged.getPropertyValue(rule.getKey()), incoming.getPropertyValue(rule.getKey())) == false) {
-                retained.put(rule.getKey(), rule.getValue());
-            }
-        }
-        restore(target, source, retained);
-    }
-
-    /**
-     * Restores JSON properties from their actual persisted source, including a mapped history record.
-     * Use {@link #restoreRetained(Object, Object, Object, Map)} for an entity containing submitted values.
-     * @param target loaded entity or its mapped copy
-     * @param source persisted entity identifying the source table and primary key
-     * @param rules JSON property names resolved from server configuration
-     */
-    public static void restore(Object target, Object source, Map<String, Boolean> rules) {
-        if (target == null || source == null || rules.isEmpty()) return;
+    private static void restore(Object target, Object source, Collection<String> fieldNames) {
+        if (target == null || source == null || fieldNames.isEmpty()) return;
         if (source instanceof DocDetails doc && doc.getHistoryId() > 0) {
             DocHistory history = new DocHistory();
             history.setId((long)doc.getHistoryId());
@@ -84,7 +54,7 @@ public final class JsonEditorValueReader {
         BeanWrapperImpl bean = new BeanWrapperImpl(target);
         List<String> names = new ArrayList<>();
         List<String> columns = new ArrayList<>();
-        for (String name : rules.keySet()) {
+        for (String name : fieldNames) {
             Object value = bean.getPropertyValue(name);
             if (value instanceof String text && text.indexOf('<') < 0 && text.indexOf('>') < 0
                     && (text.contains("&lt;") || text.contains("&gt;"))) {
