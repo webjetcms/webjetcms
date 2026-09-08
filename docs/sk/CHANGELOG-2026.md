@@ -129,19 +129,15 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Voliteľné polia
 
-- Doplnená dokumentácia [JSON Editora](frontend/webpages/customfields/README.md#json-editor) vrátane limitu 255 znakov a príkladov rozšírenia databázových stĺpcov pre všetky podporované databázy (#OSK659).
-
-- Formátovanie JSON ponecháva komentáre za hodnotou na rovnakom riadku, aby bolo jasné, ku ktorej vlastnosti patria (#OSK659).
-
-- Editor JSON má nad poľom panel s tlačidlami bez rámika na formátovanie a AI asistenta. Počas focusu poľa zobrazuje aktuálny riadok a stĺpec kurzora, čo uľahčuje dohľadanie chyby podľa validačného hlásenia (#OSK659).
-- Editor JSON podporuje aj apostrofy, názvy vlastností bez úvodzoviek vrátane pomlčiek a komentáre. Validácia v prehliadači aj na serveri používa rovnaké pravidlá; formátovanie zachováva pôvodné hodnoty a komentáre (#OSK659).
-- Pridaný typ [Editor JSON](developer/datatables-editor/customfields.md#editor-json) (`jsoneditor`) pre priame zadávanie JSON objektu s číslami riadkov a tlačidlom na formátovanie. Neplatný JSON zablokuje uloženie v editore aj na serveri vrátane REST a importu. Povinnosť sa riadi nastavením poľa, formátovanie zachováva aj veľké číselné identifikátory. Pre väčšie hodnoty treba overiť kapacitu stĺpca stránky aj jej histórie (#OSK659).
 - Kompletne implementovaná funkčnosť [nastavenia voliteľných polí](frontend/webpages/customfields/custom-fields-settings.md). Umožňuje centrálne nastaviť vlastnosti polí bez editácie prekladových kľúčov. Podporované sú všetky typy polí (text, textarea, select, multiselect, autocomplete, enumeration, obrázok, odkaz, JSON a ďalšie) s typovo špecifickými nastaveniami ako maximálna dĺžka textu, možnosti výberu, prepojenie na číselníky alebo závislosť na iných poliach. Používateľské rozhranie ponúka aj jednoduchý spôsob nastavenia možných hodnôt pre výberové/autocomplete polia (#58529).
 
 ![](frontend/webpages/customfields/custom-fields-settings-editor.png)
 
 - Pridaná možnosť nastaviť voliteľné pole ako povinné (#58413).
 - Pridané nové typy voliteľných polí [prepínač a zaškrtávacie pole](frontend/webpages/customfields/custom-fields-settings.md#rozdiel-medzi-selectmultiselect-a-radiocheckbox) s podporou statických možností aj prepojenia na číselník. Typ `multiselect` teraz tiež podporuje [prepojenie na číselník](frontend/webpages/customfields/custom-fields-settings.md#zdroj-možností). Pôvodný typ `enumeration` bol nahradený prepínačom zdroja možností pri typoch `select`, `multiselect`, `radio` a `checkbox` kde sa pre všetky tieto typy polí načítajú možnosti z prepojeného číselníka (#58637).
+- Pridaný typ [Editor JSON](developer/datatables-editor/customfields.md#json-editor) (`jsoneditor`) pre priame zadávanie JSON objektu s číslami riadkov a tlačidlom na formátovanie. Neplatný JSON zablokuje uloženie v editore (#OSK659).
+
+![](frontend/webpages/customfields/webpages-jsoneditor.png)
 
 ### Prístupnosť
 

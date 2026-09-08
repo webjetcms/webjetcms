@@ -140,14 +140,16 @@ Používané formáty:
 
 Transformáciu medzi editor poľami a internou hodnotou zabezpečujú metódy `CustomFieldsService.toEntity` a `CustomFieldsService.fromEntity`.
 
-## Editor JSON
+## JSON Editor
 
 Typ `jsoneditor` umožňuje priamo zadávať JSON objekt. V [nastaveniach voliteľných polí](../../frontend/webpages/customfields/custom-fields-settings.md) vyberte typ **Editor JSON**, alebo použite prekladové kľúče:
 
 ```properties
-editor.field_a=MHUB data
+editor.field_a=JSON data
 editor.field_a.type=jsoneditor
 ```
+
+![](../../frontend/webpages/customfields/webpages-jsoneditor.png)
 
 Pre inú entitu použite jej prefix prekladových kľúčov. Na serveri typ reprezentuje hodnota `FieldType.JSONEDITOR`, v `editorFields.fieldsDefinition` sa odosiela `type: "jsoneditor"`. Typy `JSON`, `json_doc` a `json_group`, ktoré sa používajú na výber existujúcich záznamov, majú naďalej pôvodný význam.
 
@@ -181,7 +183,7 @@ Príklad platnej hodnoty:
 - Server vykonáva rovnakú kontrolu nezávisle od JavaScriptu pri ukladaní cez DataTables Editor, priamy REST aj import. Konfiguráciu typu a povinnosti načíta zo servera podľa entity, šablóny a domény; definícia poľa odoslaná klientom nemôže validáciu vypnúť. Pri čiastočnej úprave sa overí výsledná hodnota vrátane zachovaných údajov z existujúceho záznamu.
 - Ukladanie webových stránok overí hodnoty aj v `EditorService.saveEditedDoc()` pred zápisom stránky a jej histórie. Neplatná hodnota zablokuje uloženie a nevytvorí novú historickú verziu.
 
-Validácia kontroluje syntax a koreňový objekt. Neoveruje prítomnosť ani význam konkrétnych MHUB atribútov podľa JSON Schema.
+Validácia kontroluje syntax a koreňový objekt. Neoveruje prítomnosť ani význam konkrétnych atribútov podľa JSON Schema.
 
 Príklad podporovaného rozšíreného zápisu:
 

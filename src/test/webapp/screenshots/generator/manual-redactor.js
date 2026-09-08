@@ -335,10 +335,10 @@ Scenario('custom-fields', async({ I, DT, DTE, Document }) => {
 
     I.scrollTo("div.DTE_Action_Edit div.DTE_Field_Name_fieldP");
     DTE.fillField("fieldP", `{
-  'user': {
-    'id': '{444555678}', // User identifier
-    'missionsAvailable': 2
-  }
+  "productId": 9007199254740993,
+  "variants": [
+    {"code": "blue", "available": true}
+  ]
 }`);
     Document.screenshotElement("div.DTE_Action_Edit div.DTE_Field_Name_fieldP", "/frontend/webpages/customfields/webpages-jsoneditor.png");
 
