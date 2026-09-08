@@ -1,6 +1,7 @@
 package sk.iway.iwcm.stat.rest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -18,12 +20,14 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -32,6 +36,7 @@ import org.mockito.InOrder;
 import org.mockito.MockedStatic;
 
 import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.system.UpdateDatabase;
@@ -52,6 +57,57 @@ class BrowserIdentifierMigrationServiceTest {
     private static final String UPDATE_STAT_VIEW = "UPDATE stat_views SET browser_id=?, browser_ua_id=? WHERE view_id=?";
     private static final String LOAD_STAT_FROM = "SELECT from_id, browser_id FROM stat_from WHERE from_id>? AND from_id<=? ORDER BY from_id";
     private static final String UPDATE_STAT_FROM = "UPDATE stat_from SET browser_id=? WHERE from_id=?";
+
+    @Test
+    void startAndStopShouldUseSingleBackgroundTask() {
+        ExecutorService executor = mock(ExecutorService.class);
+        BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService(executor);
+
+        try (MockedStatic<UpdateDatabase> updateDatabase = mockStatic(UpdateDatabase.class)) {
+            BrowserIdentifierMigrationService.State started = service.start();
+            BrowserIdentifierMigrationService.State alreadyRunning = service.start();
+            BrowserIdentifierMigrationService.State stopping = service.stop();
+
+            assertTrue(started.isRunning());
+            assertTrue(alreadyRunning.isRunning());
+            assertTrue(stopping.isRunning());
+            assertTrue(stopping.isStopRequested());
+            verify(executor, times(1)).execute(any(Runnable.class));
+        }
+
+        service.destroy();
+        verify(executor).shutdownNow();
+    }
+
+    @Test
+    void tableDefinitionsShouldInspectColumnsWithoutJdbcMetadataQueries() throws Exception {
+        BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService();
+        Connection connection = mock(Connection.class);
+        DatabaseMetaData databaseMetadata = mock(DatabaseMetaData.class);
+        ResultSet tables = mock(ResultSet.class);
+        Statement statement = mock(Statement.class);
+        ResultSet emptyTable = mock(ResultSet.class);
+        ResultSetMetaData tableMetadata = mock(ResultSetMetaData.class);
+        when(connection.getMetaData()).thenReturn(databaseMetadata);
+        when(databaseMetadata.getTables(isNull(), isNull(), eq("%"), any(String[].class))).thenReturn(tables);
+        when(tables.next()).thenReturn(true, false);
+        when(tables.getString("TABLE_NAME")).thenReturn("stat_from_2018_2");
+        when(connection.createStatement()).thenReturn(statement);
+        when(statement.executeQuery("SELECT * FROM stat_from_2018_2 WHERE 1=0")).thenReturn(emptyTable);
+        when(emptyTable.getMetaData()).thenReturn(tableMetadata);
+        when(tableMetadata.getColumnCount()).thenReturn(2);
+        when(tableMetadata.getColumnName(1)).thenReturn("FROM_ID");
+        when(tableMetadata.getColumnName(2)).thenReturn("BROWSER_ID");
+
+        List<BrowserIdentifierMigrationService.TableDefinition> definitions = service.tableDefinitions(connection);
+
+        assertEquals(1, definitions.size());
+        assertEquals("stat_from_2018_2", definitions.get(0).name());
+        assertEquals("from_id", definitions.get(0).idColumn());
+        assertFalse(definitions.get(0).browserKey());
+        verify(databaseMetadata, never()).getColumns(any(), any(), any(), any());
+        service.destroy();
+    }
 
     @Test
     void markAsCompletedShouldSaveUpdateNote() {
@@ -147,7 +203,7 @@ class BrowserIdentifierMigrationServiceTest {
     }
 
     @Test
-    void processShouldRollbackAndPropagateStatKeyInsertFailure() throws Exception {
+    void runMigrationShouldRollbackAndExposeStatKeyInsertFailure() throws Exception {
         BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService();
         Connection connection = mock(Connection.class);
         PreparedStatement loadSeoBots = mock(PreparedStatement.class);
@@ -181,14 +237,14 @@ class BrowserIdentifierMigrationServiceTest {
         try (MockedStatic<DBPool> dbPool = mockStatic(DBPool.class);
              MockedStatic<PkeyGenerator> pkeyGenerator = mockStatic(PkeyGenerator.class);
              MockedStatic<StatDB> statDB = mockStatic(StatDB.class);
-             MockedStatic<ClusterDB> clusterDB = mockStatic(ClusterDB.class)) {
+             MockedStatic<ClusterDB> clusterDB = mockStatic(ClusterDB.class);
+             MockedStatic<UpdateDatabase> updateDatabase = mockStatic(UpdateDatabase.class);
+             MockedStatic<Logger> logger = mockStatic(Logger.class)) {
             dbPool.when(DBPool::getConnection).thenReturn(connection);
             pkeyGenerator.when(() -> PkeyGenerator.getNextValue("stat_keys")).thenReturn(100);
-            SQLException thrown = assertThrows(
-                SQLException.class,
-                () -> service.process(new BrowserIdentifierMigrationService.State())
-            );
-            assertSame(insertFailure, thrown);
+            service.runMigration();
+
+            assertEquals(insertFailure.getMessage(), service.getStatus().getError());
             statDB.verify(() -> StatDB.getInstance(true), never());
             clusterDB.verify(() -> ClusterDB.addRefresh(StatDB.class), never());
         }

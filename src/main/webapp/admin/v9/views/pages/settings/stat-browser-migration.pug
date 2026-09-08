@@ -5,26 +5,10 @@ block content
     script.
         window.domReady.add(function () {
             const endpoint = "/admin/rest/settings/stat-browser-migration";
-            let running = false;
-            let state = readState();
-
-            function readState() {
-                const params = new URLSearchParams(window.location.search);
-                return {
-                    tableIndex: Number(params.get("tableIndex") || 0),
-                    cursor: Number(params.get("cursor") || 0),
-                    tableMaxId: Number(params.get("tableMaxId") || 0),
-                    scanned: Number(params.get("scanned") || 0),
-                    updated: Number(params.get("updated") || 0),
-                    done: params.get("done") === "true"
-                };
-            }
-
-            function saveState() {
-                const params = new URLSearchParams();
-                Object.keys(state).forEach(key => params.set(key, state[key]));
-                history.replaceState(null, "", window.location.pathname + "?" + params.toString());
-            }
+            let state = {};
+            let pollTimeout;
+            let lastError;
+            let statusLoadFailed = false;
 
             function renderState() {
                 $("#migrationScanned").text(state.scanned || 0);
@@ -32,9 +16,17 @@ block content
                 $("#migrationTable").text(state.table || "—");
                 const percent = state.done ? 100 : (state.tableMaxId > 0 ? Math.min(100, Math.round(state.cursor * 100 / state.tableMaxId)) : 0);
                 $("#migrationProgress").css("width", percent + "%").attr("aria-valuenow", percent).text(percent + "%");
-                $("#migrationStart").prop("disabled", running || state.done);
-                $("#migrationPause").prop("disabled", !running);
-                if (state.done) $("#migrationStatus").removeClass("d-none");
+                $("#migrationStart").prop("disabled", state.running || state.done);
+                $("#migrationPause").prop("disabled", !state.running || state.stopRequested);
+                $("#migrationStatus").toggleClass("d-none", !state.done);
+                $("#migrationStopping").toggleClass("d-none", !state.stopRequested);
+                $("#migrationPaused").toggleClass("d-none", !state.paused);
+
+                if (state.error && state.error !== lastError) {
+                    lastError = state.error;
+                    WJ.notifyError("[[\#{stat.browser-migration.error}]] " + state.error);
+                }
+                if (!state.error) lastError = null;
             }
 
             function renderPreview(data) {
@@ -54,27 +46,47 @@ block content
                     .always(() => $("#migrationAnalyze").prop("disabled", false).removeClass("processing"));
             }
 
-            function processBatch() {
-                if (!running) return;
-                $.ajax({url: endpoint, method: "POST", contentType: "application/json", data: JSON.stringify(state)})
-                    .done(function (response) {
-                        state = response;
-                        if (state.done) running = false;
-                        saveState();
-                        renderState();
-                        if (!state.done) window.setTimeout(processBatch, 50);
-                    })
-                    .fail(function () {
-                        running = false;
-                        renderState();
-                        WJ.notifyError("[[\#{stat.browser-migration.error}]]");
+            function scheduleStatusPoll() {
+                window.clearTimeout(pollTimeout);
+                if (state.running || state.stopRequested) pollTimeout = window.setTimeout(loadStatus, 1000);
+            }
+
+            function updateState(response) {
+                statusLoadFailed = false;
+                state = response;
+                renderState();
+                scheduleStatusPoll();
+            }
+
+            function loadStatus() {
+                $.getJSON(endpoint + "/status")
+                    .done(updateState)
+                    .fail(() => {
+                        if (!statusLoadFailed) WJ.notifyError("[[\#{stat.browser-migration.error}]]");
+                        statusLoadFailed = true;
+                        pollTimeout = window.setTimeout(loadStatus, 3000);
                     });
             }
 
             $("#migrationAnalyze").on("click", analyze);
-            $("#migrationStart").on("click", function () { running = true; renderState(); processBatch(); });
-            $("#migrationPause").on("click", function () { running = false; renderState(); });
-            renderState();
+            $("#migrationStart").on("click", function () {
+                $(this).prop("disabled", true).addClass("processing");
+                $.post(endpoint + "/start").done(updateState)
+                    .fail(() => {
+                        $("#migrationStart").prop("disabled", false);
+                        WJ.notifyError("[[\#{stat.browser-migration.error}]]");
+                    })
+                    .always(() => $(this).removeClass("processing"));
+            });
+            $("#migrationPause").on("click", function () {
+                $(this).prop("disabled", true);
+                $.post(endpoint + "/stop").done(updateState)
+                    .fail(() => {
+                        $("#migrationPause").prop("disabled", !state.running);
+                        WJ.notifyError("[[\#{stat.browser-migration.error}]]");
+                    });
+            });
+            loadStatus();
         });
 
     div.dt-header-row.clearfix
@@ -94,6 +106,8 @@ block content
         | [[\#{stat.browser-migration.description}]]
 
     #migrationStatus.alert.alert-success.d-none(role="status") [[\#{stat.browser-migration.done}]]
+    #migrationStopping.alert.alert-info.d-none(role="status") [[\#{stat.browser-migration.stopping}]]
+    #migrationPaused.alert.alert-warning.d-none(role="status") [[\#{stat.browser-migration.paused}]]
 
     .card.mb-3
         .card-body

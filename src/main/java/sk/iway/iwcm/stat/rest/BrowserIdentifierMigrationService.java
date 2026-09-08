@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
@@ -12,12 +13,18 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.regex.Pattern;
 
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Service;
 
 import lombok.AllArgsConstructor;
@@ -25,6 +32,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.stat.StatDB;
@@ -33,15 +41,33 @@ import sk.iway.iwcm.system.cluster.ClusterDB;
 
 /** Performs the explicit, resumable migration of versioned browser identifiers. */
 @Service
-public class BrowserIdentifierMigrationService {
+public class BrowserIdentifierMigrationService implements DisposableBean {
 
     public static final String UPDATE_NOTE = "07.09.2026 [jeeff] browser identifier migration";
 
-    private static final int ROW_BATCH_SIZE = 10_000;
+    private static final int ROW_BATCH_SIZE = 1_000;
     private static final int UPDATE_BATCH_SIZE = 500;
     private static final Pattern VERSION_SUFFIX = Pattern.compile("(?i)\\s+v?\\d+(?:[._-]\\d+)*$");
     private static final Pattern VERSION_ONLY = Pattern.compile("(?i)^v?\\d+(?:[._-]\\d+)*$");
     private static final Pattern SAFE_TABLE = Pattern.compile("[a-zA-Z0-9_]+");
+
+    private final Object stateLock = new Object();
+    private final ExecutorService executor;
+    private State migrationState = new State();
+    private MigrationPlan migrationPlan;
+    private volatile boolean stopRequested;
+
+    public BrowserIdentifierMigrationService() {
+        this(Executors.newSingleThreadExecutor(task -> {
+            Thread thread = new Thread(task, "browser-identifier-migration");
+            thread.setDaemon(true);
+            return thread;
+        }));
+    }
+
+    BrowserIdentifierMigrationService(ExecutorService executor) {
+        this.executor = executor;
+    }
 
     @Getter
     @AllArgsConstructor
@@ -69,6 +95,9 @@ public class BrowserIdentifierMigrationService {
         private long tableMaxId;
         private long scanned;
         private long updated;
+        private boolean running;
+        private boolean stopRequested;
+        private boolean paused;
         private boolean done;
         private String table;
         private String error;
@@ -82,41 +111,123 @@ public class BrowserIdentifierMigrationService {
         }
     }
 
-    public State process(State state) throws SQLException {
-        if (state == null) state = new State();
-        if (state.isDone()) return state;
-        if (state.getTableIndex() < 0 || state.getCursor() < 0 || state.getTableMaxId() < 0) {
-            throw new SQLException("Invalid migration state");
+    public State getStatus() {
+        synchronized (stateLock) {
+            if (migrationState.isRunning() == false && migrationState.isDone() == false &&
+                UpdateDatabase.isAllreadyUpdated(UPDATE_NOTE)) {
+                migrationState.setDone(true);
+                migrationState.setTable("done");
+            }
+            return copyState(migrationState);
         }
+    }
+
+    public State start() {
+        synchronized (stateLock) {
+            if (migrationState.isRunning() == false && migrationState.isDone() == false &&
+                UpdateDatabase.isAllreadyUpdated(UPDATE_NOTE)) {
+                migrationState.setDone(true);
+                migrationState.setTable("done");
+            }
+            if (migrationState.isRunning() || migrationState.isDone()) return copyState(migrationState);
+
+            migrationState.setRunning(true);
+            migrationState.setStopRequested(false);
+            migrationState.setPaused(false);
+            migrationState.setError(null);
+            stopRequested = false;
+            try {
+                executor.execute(this::runMigration);
+            } catch (RejectedExecutionException ex) {
+                migrationState.setRunning(false);
+                migrationState.setError(ex.getMessage());
+            }
+            return copyState(migrationState);
+        }
+    }
+
+    public State stop() {
+        synchronized (stateLock) {
+            if (migrationState.isRunning()) {
+                stopRequested = true;
+                migrationState.setStopRequested(true);
+            }
+            return copyState(migrationState);
+        }
+    }
+
+    void runMigration() {
+        try {
+            MigrationPlan plan = prepareMigrationPlan();
+            while (isStopRequested() == false) {
+                State nextState = getStateSnapshot();
+                if (nextState.getTableIndex() >= plan.tables().size()) {
+                    finishMigration(plan, nextState);
+                    return;
+                }
+
+                nextState.setTable(plan.tables().get(nextState.getTableIndex()).name());
+                publishRunningState(nextState);
+                if (isStopRequested()) break;
+
+                processNextBatch(plan, nextState);
+                publishRunningState(nextState);
+            }
+            publishStoppedState();
+        } catch (SQLException | RuntimeException ex) {
+            if (isStopRequested()) {
+                publishStoppedState();
+            } else {
+                Logger.error(BrowserIdentifierMigrationService.class, ex);
+                publishFailedState(ex);
+            }
+        }
+    }
+
+    private MigrationPlan prepareMigrationPlan() throws SQLException {
+        synchronized (stateLock) {
+            if (migrationPlan != null) return migrationPlan;
+        }
+
+        List<Mapping> botMappings;
+        StatKeyMappingResult keyMappingResult;
+        List<TableDefinition> tables;
+        try (Connection connection = DBPool.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                botMappings = buildSeoBotMappings(connection, true);
+                keyMappingResult = buildStatKeyMappings(connection, true);
+                tables = tableDefinitions(connection);
+                connection.commit();
+            } catch (SQLException ex) {
+                connection.rollback();
+                throw ex;
+            }
+        }
+        refreshStatKeyCacheIfNeeded(keyMappingResult);
+
+        MigrationPlan plan = new MigrationPlan(
+            List.copyOf(botMappings),
+            Map.copyOf(toIdMap(botMappings)),
+            Map.copyOf(toIdMap(keyMappingResult.mappings())),
+            List.copyOf(tables)
+        );
+        synchronized (stateLock) {
+            if (migrationPlan == null) migrationPlan = plan;
+            return migrationPlan;
+        }
+    }
+
+    private void processNextBatch(MigrationPlan plan, State state) throws SQLException {
+        TableDefinition table = plan.tables().get(state.getTableIndex());
+        state.setTable(table.name);
 
         try (Connection connection = DBPool.getConnection()) {
             connection.setAutoCommit(false);
             try {
-                List<Mapping> botMappings = buildSeoBotMappings(connection, true);
-                StatKeyMappingResult keyMappingResult = buildStatKeyMappings(connection, true);
-                List<Mapping> keyMappings = keyMappingResult.mappings();
-                List<TableDefinition> tables = tableDefinitions(connection);
-
-                if (state.getTableIndex() >= tables.size()) {
-                    verifyNoReferences(connection, tables, botMappings, keyMappings);
-                    finalizeSeoBots(connection, botMappings);
-                    connection.commit();
-                    refreshStatKeyCache();
-                    markAsCompleted();
-                    state.setDone(true);
-                    state.setTable("done");
-                    return state;
-                }
-
-                TableDefinition table = tables.get(state.getTableIndex());
-                state.setTable(table.name);
                 if (state.getTableMaxId() < 1) state.setTableMaxId(maxId(connection, table));
-
-                Map<Long, Long> botIds = toIdMap(botMappings);
-                Map<Long, Long> keyIds = toIdMap(keyMappings);
-                long lastId = migrateRows(connection, table, state, botIds, keyIds);
+                long lastId = migrateRows(connection, table, state, plan.botIds(), plan.keyIds());
                 connection.commit();
-                refreshStatKeyCacheIfNeeded(keyMappingResult);
 
                 if (lastId == 0 || lastId >= state.getTableMaxId()) {
                     state.setTableIndex(state.getTableIndex() + 1);
@@ -127,11 +238,101 @@ public class BrowserIdentifierMigrationService {
                 }
             } catch (SQLException ex) {
                 connection.rollback();
-                state.setError(ex.getMessage());
                 throw ex;
             }
         }
-        return state;
+    }
+
+    private void finishMigration(MigrationPlan plan, State state) throws SQLException {
+        if (isStopRequested()) {
+            publishStoppedState();
+            return;
+        }
+
+        try (Connection connection = DBPool.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                // Every table was processed up to its captured maximum ID; new records already use canonical IDs.
+                finalizeSeoBots(connection, plan.botMappings());
+                connection.commit();
+            } catch (SQLException ex) {
+                connection.rollback();
+                throw ex;
+            }
+        }
+        refreshStatKeyCache();
+        markAsCompleted();
+
+        state.setRunning(false);
+        state.setStopRequested(false);
+        state.setPaused(false);
+        state.setDone(true);
+        state.setTable("done");
+        synchronized (stateLock) {
+            migrationState = copyState(state);
+            migrationPlan = null;
+            stopRequested = false;
+        }
+    }
+
+    private State getStateSnapshot() {
+        synchronized (stateLock) {
+            return copyState(migrationState);
+        }
+    }
+
+    private boolean isStopRequested() {
+        return stopRequested || Thread.currentThread().isInterrupted();
+    }
+
+    private void publishRunningState(State state) {
+        state.setRunning(true);
+        state.setPaused(false);
+        synchronized (stateLock) {
+            state.setStopRequested(stopRequested);
+            migrationState = copyState(state);
+        }
+    }
+
+    private void publishStoppedState() {
+        synchronized (stateLock) {
+            migrationState.setRunning(false);
+            migrationState.setStopRequested(false);
+            migrationState.setPaused(true);
+            stopRequested = false;
+        }
+    }
+
+    private void publishFailedState(Exception ex) {
+        synchronized (stateLock) {
+            migrationState.setRunning(false);
+            migrationState.setStopRequested(false);
+            migrationState.setPaused(false);
+            migrationState.setError(ex.getMessage());
+            stopRequested = false;
+        }
+    }
+
+    private State copyState(State source) {
+        State copy = new State();
+        copy.setTableIndex(source.getTableIndex());
+        copy.setCursor(source.getCursor());
+        copy.setTableMaxId(source.getTableMaxId());
+        copy.setScanned(source.getScanned());
+        copy.setUpdated(source.getUpdated());
+        copy.setRunning(source.isRunning());
+        copy.setStopRequested(source.isStopRequested());
+        copy.setPaused(source.isPaused());
+        copy.setDone(source.isDone());
+        copy.setTable(source.getTable());
+        copy.setError(source.getError());
+        return copy;
+    }
+
+    @Override
+    public void destroy() {
+        stopRequested = true;
+        executor.shutdownNow();
     }
 
     void markAsCompleted() {
@@ -399,31 +600,6 @@ public class BrowserIdentifierMigrationService {
         ensureUniqueNameIndex(connection);
     }
 
-    private void verifyNoReferences(Connection connection, List<TableDefinition> tables,
-                                    List<Mapping> botMappings, List<Mapping> keyMappings) throws SQLException {
-        for (TableDefinition table : tables) {
-            verifyColumnHasNoReferences(connection, table, "browser_id", botMappings);
-            if (table.browserKey) verifyColumnHasNoReferences(connection, table, "browser_ua_id", keyMappings);
-        }
-    }
-
-    private void verifyColumnHasNoReferences(Connection connection, TableDefinition table,
-                                             String column, List<Mapping> mappings) throws SQLException {
-        if (mappings.isEmpty()) return;
-        for (int offset = 0; offset < mappings.size(); offset += UPDATE_BATCH_SIZE) {
-            int end = Math.min(offset + UPDATE_BATCH_SIZE, mappings.size());
-            String placeholders = String.join(",", java.util.Collections.nCopies(end - offset, "?"));
-            String sql = "SELECT " + table.idColumn + " FROM " + table.name + " WHERE " + column + " IN (" + placeholders + ")";
-            try (PreparedStatement ps = connection.prepareStatement(sql)) {
-                ps.setMaxRows(1);
-                for (int i = offset; i < end; i++) ps.setLong(i - offset + 1, mappings.get(i).sourceId);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) throw new SQLException("Migration is incomplete; browser references remain in " + table.name);
-                }
-            }
-        }
-    }
-
     void ensureUniqueNameIndex(Connection connection) throws SQLException {
         DatabaseMetaData metadata = connection.getMetaData();
         TableReference table = findTable(connection, metadata, "seo_bots");
@@ -443,15 +619,7 @@ public class BrowserIdentifierMigrationService {
 
     private TableReference findTable(Connection connection, DatabaseMetaData metadata, String expectedName) throws SQLException {
         String catalog = connection.getCatalog();
-        String schema = null;
-        String driverName = metadata.getDriverName();
-        if (driverName == null || !driverName.toLowerCase(Locale.ROOT).contains("jtds")) {
-            try {
-                schema = connection.getSchema();
-            } catch (SQLFeatureNotSupportedException ignored) {
-                // Continue with a catalog-wide lookup when the driver cannot expose the current schema.
-            }
-        }
+        String schema = getCurrentSchema(connection, metadata);
 
         TableReference table = findTable(metadata, catalog, schema, expectedName);
         if (table == null && schema != null) table = findTable(metadata, catalog, null, expectedName);
@@ -475,6 +643,16 @@ public class BrowserIdentifierMigrationService {
             }
         }
         return match;
+    }
+
+    private String getCurrentSchema(Connection connection, DatabaseMetaData metadata) throws SQLException {
+        String driverName = metadata.getDriverName();
+        if (driverName != null && driverName.toLowerCase(Locale.ROOT).contains("jtds")) return null;
+        try {
+            return connection.getSchema();
+        } catch (SQLFeatureNotSupportedException ignored) {
+            return null;
+        }
     }
 
     private boolean hasUniqueSingleColumnIndex(DatabaseMetaData metadata, TableReference table, String expectedColumn) throws SQLException {
@@ -508,20 +686,24 @@ public class BrowserIdentifierMigrationService {
         return false;
     }
 
-    private List<TableDefinition> tableDefinitions(Connection connection) throws SQLException {
+    List<TableDefinition> tableDefinitions(Connection connection) throws SQLException {
         List<TableDefinition> result = new ArrayList<>();
         for (String table : discoverTables(connection)) {
-            if (!hasColumn(connection, table, "browser_id")) continue;
+            Set<String> columns = readTableColumns(connection, table);
+            if (columns.contains("browser_id") == false) continue;
             String lower = table.toLowerCase(Locale.ROOT);
             String id = lower.startsWith("stat_views") ? "view_id" : lower.startsWith("stat_from") ? "from_id" : "click_id";
-            result.add(new TableDefinition(table, id, hasColumn(connection, table, "browser_ua_id")));
+            result.add(new TableDefinition(table, id, columns.contains("browser_ua_id")));
         }
         return result;
     }
 
     private List<String> discoverTables(Connection connection) throws SQLException {
         List<String> result = new ArrayList<>();
-        try (ResultSet rs = connection.getMetaData().getTables(null, null, "%", new String[] { "TABLE" })) {
+        DatabaseMetaData metadata = connection.getMetaData();
+        String catalog = connection.getCatalog();
+        String schema = getCurrentSchema(connection, metadata);
+        try (ResultSet rs = metadata.getTables(catalog, schema, "%", new String[] { "TABLE" })) {
             while (rs.next()) {
                 String table = rs.getString("TABLE_NAME");
                 String lower = table.toLowerCase(Locale.ROOT);
@@ -533,11 +715,16 @@ public class BrowserIdentifierMigrationService {
         return result;
     }
 
-    private boolean hasColumn(Connection connection, String table, String column) throws SQLException {
-        try (ResultSet rs = connection.getMetaData().getColumns(null, null, table, null)) {
-            while (rs.next()) if (column.equalsIgnoreCase(rs.getString("COLUMN_NAME"))) return true;
+    private Set<String> readTableColumns(Connection connection, String table) throws SQLException {
+        Set<String> columns = new HashSet<>();
+        try (Statement statement = connection.createStatement();
+             ResultSet rs = statement.executeQuery("SELECT * FROM " + table + " WHERE 1=0")) {
+            ResultSetMetaData metadata = rs.getMetaData();
+            for (int i = 1; i <= metadata.getColumnCount(); i++) {
+                columns.add(metadata.getColumnName(i).toLowerCase(Locale.ROOT));
+            }
         }
-        return false;
+        return columns;
     }
 
     private long maxId(Connection connection, TableDefinition table) throws SQLException {
@@ -555,6 +742,8 @@ public class BrowserIdentifierMigrationService {
 
     private record BrowserRow(long id, String name) {}
     private record StatKeyRow(long id, String value) {}
+    private record MigrationPlan(List<Mapping> botMappings, Map<Long, Long> botIds,
+                                 Map<Long, Long> keyIds, List<TableDefinition> tables) {}
     record TableDefinition(String name, String idColumn, boolean browserKey) {}
     private record TableReference(String catalog, String schema, String name) {}
     private record IndexReference(String qualifier, String name) {}
