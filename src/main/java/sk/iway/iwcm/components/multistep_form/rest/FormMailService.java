@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
-import jakarta.mail.Address;
 import jakarta.mail.Message;
 import jakarta.mail.Multipart;
 import jakarta.mail.Session;
@@ -187,6 +186,23 @@ public class FormMailService {
 
 			if (meno == null || meno.trim().length() < 1) meno = email;
 
+			String effectiveSenderName = meno;
+			String effectiveSenderEmail = FormMailAction.getFirstEmail(email);
+			String effectiveReplyTo = Tools.isEmail(formSettings.getReplyTo()) ? formSettings.getReplyTo() : null;
+			String formMailFixedSenderEmail = Constants.getString("formMailFixedSenderEmail");
+			if (Tools.isEmail(formMailFixedSenderEmail)) {
+				effectiveSenderName = formMailFixedSenderEmail;
+				effectiveSenderEmail = formMailFixedSenderEmail;
+			} else {
+				String emailProtectionSenderEmail = Constants.getString(SendMail.EMAIL_PROTECTION_SENDER_KEY);
+				if (Tools.isEmail(emailProtectionSenderEmail)) {
+					if (effectiveReplyTo == null && emailProtectionSenderEmail.equals(effectiveSenderEmail) == false) effectiveReplyTo = effectiveSenderEmail;
+					effectiveSenderName = emailProtectionSenderEmail;
+					effectiveSenderEmail = emailProtectionSenderEmail;
+				}
+			}
+			from = effectiveSenderEmail;
+
 			if (emailEncoding.indexOf("ASCII") != -1) htmlData = new StringBuilder(DB.internationalToEnglish(htmlData.toString()));
 			htmlData = new StringBuilder(FormMailAction.createAbsolutePath(htmlData.toString(), request));
 			cssData = FormMailAction.createAbsolutePath(cssData, request);
@@ -223,7 +239,7 @@ public class FormMailService {
 					long sendLaterTime = Tools.getNow();
 					sendLaterTime += (5 * Constants.getInt("clusterRefreshTimeout"));
 
-					boolean queued = SendMail.sendLater(meno, FormMailAction.getFirstEmail(email), recipients, formSettings.getReplyTo(), formSettings.getCcEmails(), formSettings.getBccEmails(), subject, messageBody, Tools.getBaseHref(request), Tools.formatDate(sendLaterTime), Tools.formatTime(sendLaterTime), formFiles.getFileNamesSendLater().toString());
+					boolean queued = SendMail.sendLater(effectiveSenderName, effectiveSenderEmail, recipients, effectiveReplyTo, formSettings.getCcEmails(), formSettings.getBccEmails(), subject, messageBody, Tools.getBaseHref(request), Tools.formatDate(sendLaterTime), Tools.formatTime(sendLaterTime), formFiles.getFileNamesSendLater().toString(), true);
 					if (queued) {
 						Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Email for form " + form.getFormName() + " was queued for later delivery", (long)MultistepFormsService.getFormIdStatic(form.getFormName()), form.getId());
 					} else {
@@ -287,8 +303,7 @@ public class FormMailService {
 						msg.setRecipients(Message.RecipientType.BCC, bccAddrs);
 					}
 
-					from = email;
-					msg.setFrom(new InternetAddress(FormMailAction.getFirstEmail(email), meno));
+					msg.setFrom(new InternetAddress(effectiveSenderEmail, effectiveSenderName));
 
 					msg.setSubject(MimeUtility.encodeText(subject, emailEncoding, null));
 					msg.setSentDate(new java.util.Date());
@@ -333,22 +348,8 @@ public class FormMailService {
 						msg.setContent(htmlDataNoBR, "text/plain; charset="+emailEncoding);
 					}
 
-					String formMailFixedSenderEmail = Constants.getString("formMailFixedSenderEmail");
-					if (Tools.isEmail(formMailFixedSenderEmail)) {
-						msg.setFrom(new InternetAddress(formMailFixedSenderEmail, formMailFixedSenderEmail));
-					} else {
-						if (Tools.isEmail(Constants.getString(SendMail.EMAIL_PROTECTION_SENDER_KEY))) {
-							from = Constants.getString(SendMail.EMAIL_PROTECTION_SENDER_KEY);
-							Address[] oldSenders = msg.getFrom();
-							if (oldSenders != null && oldSenders.length>0 && from.equals(oldSenders[0].toString()) == false) msg.setReplyTo(oldSenders);
-							msg.setFrom(new InternetAddress(from, from));
-						}
-					}
-
-					//ak mame parameter "replyTo", nastavme ho
-					String replyTo = formSettings.getReplyTo();
-					if(Tools.isEmail(replyTo)) {
-						InternetAddress[] replyToAddrs = InternetAddress.parse(replyTo, false);
+					if(Tools.isEmail(effectiveReplyTo)) {
+						InternetAddress[] replyToAddrs = InternetAddress.parse(effectiveReplyTo, false);
 						msg.setReplyTo(replyToAddrs);
 					}
 
@@ -386,7 +387,7 @@ public class FormMailService {
 							: FormHtmlHandler.appendStyle(sendLaterBody.toString(), cssData, emailEncoding, false);
 
 						long sendLaterTime = Tools.getNow() + (5L * Constants.getInt("clusterRefreshTimeout"));
-						boolean queued = SendMail.sendLater(meno, FormMailAction.getFirstEmail(email), recipients, formSettings.getReplyTo(), formSettings.getCcEmails(), formSettings.getBccEmails(), subject, messageBody, Tools.getBaseHref(request), Tools.formatDate(sendLaterTime), Tools.formatTime(sendLaterTime), sendLaterAttachments.toString());
+						boolean queued = SendMail.sendLater(effectiveSenderName, effectiveSenderEmail, recipients, effectiveReplyTo, formSettings.getCcEmails(), formSettings.getBccEmails(), subject, messageBody, Tools.getBaseHref(request), Tools.formatDate(sendLaterTime), Tools.formatTime(sendLaterTime), sendLaterAttachments.toString(), true);
 						if (queued) {
 							sb.append("; queued for later delivery");
 							Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Email for form " + form.getFormName() + " could not be sent immediately and was queued for later delivery", (long)MultistepFormsService.getFormIdStatic(form.getFormName()), form.getId());

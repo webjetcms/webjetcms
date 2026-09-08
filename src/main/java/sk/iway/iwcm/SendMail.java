@@ -143,12 +143,13 @@ public class SendMail
 		String attachmentsList = mailHelper.getAttachments();
 		boolean sendLaterWhenException = mailHelper.isSendLaterWhenException();
 		boolean writeToAuditLog = mailHelper.isWriteToAuditLog();
+		boolean senderPolicyApplied = mailHelper.isSenderPolicyApplied();
 		List< Pair<String, String> > headers = mailHelper.getHeaders();
 
 		if ("false".equals(Constants.getString("useSMTPServer")) && writeToAuditLog) // mail neodosleme ale ulozime do db pre \odoslanie na inom node, okrem pripadu, ze potrebujeme odoslat chybu sposobenu pri dosiahnuti maximalenho poctu DB spojeni
 		{
 			Logger.debug(SendMail.class, "useSMTPServer=false -> sending later. " );
-			boolean result = sendLater(senderName, senderEmail, recipientEmail, replyTo, ccEmail, bccEmail, subject, message, baseHref, null, null, attachmentsList);
+			boolean result = sendLater(senderName, senderEmail, recipientEmail, replyTo, ccEmail, bccEmail, subject, message, baseHref, null, null, attachmentsList, senderPolicyApplied);
 			return Pair.of(result, null);
 		}
 
@@ -168,7 +169,7 @@ public class SendMail
 		Prop prop = Prop.getInstance(Constants.getString("defaultLanguage"));
 
 		//vynimka helpdesk@websupport.sk je kvoli Cloudu a notifikaciam na WebSupport kedy nam odmietaju emaili z noreply@webjet.eu spracovat
-		if (Tools.isEmail(Constants.getString(EMAIL_PROTECTION_SENDER_KEY)) && "helpdesk@websupport.sk".equals(recipientEmail)==false)
+		if (senderPolicyApplied == false && Tools.isEmail(Constants.getString(EMAIL_PROTECTION_SENDER_KEY)) && "helpdesk@websupport.sk".equals(recipientEmail)==false)
 		{
 			String from = Constants.getString(EMAIL_PROTECTION_SENDER_KEY);
 			String oldSender = senderEmail;
@@ -478,7 +479,7 @@ public class SendMail
 					if (sendLaterWhenException) //mail ulozim pre neskorsie poslanie
 					{
 						Logger.debug(SendMail.class, "sendLaterWhenException=true -> sending later." );
-						sendLater(senderName, senderEmail, recipientEmail, replyTo, ccEmail, bccEmail, subject, message, baseHref, null, null, attachmentsList);
+						sendLater(senderName, senderEmail, recipientEmail, replyTo, ccEmail, bccEmail, subject, message, baseHref, null, null, attachmentsList, senderPolicyApplied);
 					}
 				}
 				return Pair.of(false, ex);
@@ -552,6 +553,29 @@ public class SendMail
 	 */
 	public static boolean sendLater(String senderName, String senderEmail, String recipientEmail, String replyTo, String ccEmail, String bccEmail, String subject, String message, String baseHref, String date, String time, String attachments)
 	{
+		return sendLater(senderName, senderEmail, recipientEmail, replyTo, ccEmail, bccEmail, subject, message, baseHref, date, time, attachments, false);
+	}
+
+	/**
+	 * Stores an email for deferred delivery and records whether its sender policy was already resolved.
+	 *
+	 * @param senderName sender display name
+	 * @param senderEmail sender email address
+	 * @param recipientEmail recipient email address or comma-separated addresses
+	 * @param replyTo reply-to address, or {@code null}
+	 * @param ccEmail carbon-copy addresses, or {@code null}
+	 * @param bccEmail blind-carbon-copy addresses, or {@code null}
+	 * @param subject message subject
+	 * @param message plain-text or HTML message body
+	 * @param baseHref base URL used to resolve root-relative links
+	 * @param date scheduled delivery date, or {@code null}
+	 * @param time scheduled delivery time, or {@code null}
+	 * @param attachments semicolon-separated path and file-name pairs, or {@code null}
+	 * @param senderPolicyApplied whether sender protection was applied before queuing
+	 * @return {@code true} when the email was queued, or {@code false} when the database operation failed
+	 */
+	public static boolean sendLater(String senderName, String senderEmail, String recipientEmail, String replyTo, String ccEmail, String bccEmail, String subject, String message, String baseHref, String date, String time, String attachments, boolean senderPolicyApplied)
+	{
 		//pridanie ContextPath pre admin cast (ak je nastavene)
 		if (Tools.isNotEmpty(Constants.getString("contextPathAdmin")) && message.indexOf("://cms")!=-1)
 		{
@@ -565,7 +589,7 @@ public class SendMail
 			Connection db_conn = DBPool.getConnection();
 			try
 			{
-				PreparedStatement ps = db_conn.prepareStatement("INSERT INTO emails (recipient_email, recipient_name, sender_name, sender_email, subject, url, attachments, retry, sent_date, created_by_user_id, create_date, send_at, message, reply_to, cc_email, bcc_email, domain_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+				PreparedStatement ps = db_conn.prepareStatement("INSERT INTO emails (recipient_email, recipient_name, sender_name, sender_email, subject, url, attachments, retry, sent_date, created_by_user_id, create_date, send_at, message, reply_to, cc_email, bcc_email, domain_id, sender_policy_applied) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 				try
 				{
 					int counter = 1;
@@ -599,7 +623,8 @@ public class SendMail
 					ps.setString(counter++, replyTo);
 					ps.setString(counter++, ccEmail);
 					ps.setString(counter++, bccEmail);
-					ps.setInt(counter, CloudToolsForCore.getDomainId());
+					ps.setInt(counter++, CloudToolsForCore.getDomainId());
+					ps.setBoolean(counter, senderPolicyApplied);
 					ps.execute();
 				}
 				finally { ps.close(); }
