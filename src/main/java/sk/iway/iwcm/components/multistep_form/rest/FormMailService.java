@@ -366,36 +366,12 @@ public class FormMailService {
 					if (formDataEncrypted) {
 						Logger.warn(FormMailService.class, "Failed email for encrypted form " + form.getFormName() + " cannot be queued for later delivery");
 						sb.append("; queuing encrypted form email denied");
-						RequestBean.addAuditValue("formfail", "emailNotSend");
-						sendFailed = true;
 					} else {
-						StringBuilder sendLaterAttachments = new StringBuilder();
-						if (attachFiles && formFiles.getAttachs() != null) {
-							for (IwcmFile file : formFiles.getAttachs()) {
-								if (sendLaterAttachments.length() > 0) sendLaterAttachments.append(';');
-								sendLaterAttachments.append(file.getVirtualPath()).append(';').append(file.getName());
-							}
-						}
-						if (sendMessageAsAttach && messageAsAttachFile != null) {
-							if (sendLaterAttachments.length() > 0) sendLaterAttachments.append(';');
-							sendLaterAttachments.append(messageAsAttachFile.getVirtualPath()).append(';').append(messageAsAttachFile.getName());
-						}
-
-						StringBuilder sendLaterBody = new StringBuilder(htmlData);
-						String messageBody = forceTextPlain
-							? SearchTools.htmlToPlain(sendLaterBody.toString())
-							: FormHtmlHandler.appendStyle(sendLaterBody.toString(), cssData, emailEncoding, false);
-
-						long sendLaterTime = Tools.getNow() + (5L * Constants.getInt("clusterRefreshTimeout"));
-						boolean queued = SendMail.sendLater(effectiveSenderName, effectiveSenderEmail, recipients, effectiveReplyTo, formSettings.getCcEmails(), formSettings.getBccEmails(), subject, messageBody, Tools.getBaseHref(request), Tools.formatDate(sendLaterTime), Tools.formatTime(sendLaterTime), sendLaterAttachments.toString(), true);
-						if (queued) {
-							sb.append("; queued for later delivery");
-							Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Email for form " + form.getFormName() + " could not be sent immediately and was queued for later delivery", (long)MultistepFormsService.getFormIdStatic(form.getFormName()), form.getId());
-						} else {
-							RequestBean.addAuditValue("formfail", "emailNotSend");
-							sendFailed = true;
-						}
+						Logger.warn(FormMailService.class, "Failed email for form " + form.getFormName() + " will not be queued because the delivery result may be partial or the failure may be permanent");
+						sb.append("; email was not queued to avoid an unsafe retry");
 					}
+					RequestBean.addAuditValue("formfail", "emailNotSend");
+					sendFailed = true;
 				}
 			}
 		} else {
