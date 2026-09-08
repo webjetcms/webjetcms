@@ -926,7 +926,7 @@ public class MultistepFormsService {
         validateFields(formName, stepItems, received, spamProtectionEnabled, request, errors);
 
         /* Separate validate file fields */
-        validateFileFields(formName, formSettings, received, errors, request);
+        validateFileFields(formName, formSettings, stepItems, received, errors, request);
 
         // GET form processor that can have custom validation / interceptor / form save
         FormProcessorInterface formProcessor = getFormProcessor(request, formName, stepId, formSettings);
@@ -1255,12 +1255,13 @@ public class MultistepFormsService {
      *
      * @param formName     logical form name
      * @param formSettings already-loaded form settings (may be null)
+     * @param stepItems    trusted field definitions belonging to the current step
      * @param received     submitted step payload
      * @param errors       mutable map collecting file validation errors
      * @param request      HTTP request with localization context
      * @throws SaveFormException when the combined upload size exceeds the configured limit
      */
-    private void validateFileFields(String formName, FormSettingsEntity formSettings, JSONObject received, Map<String, String> errors, HttpServletRequest request) throws SaveFormException {
+    private void validateFileFields(String formName, FormSettingsEntity formSettings, List<FormItemEntity> stepItems, JSONObject received, Map<String, String> errors, HttpServletRequest request) throws SaveFormException {
         Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
 
         String sessionKey = getSessionKey(formName, request);
@@ -1277,12 +1278,15 @@ public class MultistepFormsService {
             }
         }
 
-        String[] uploadedFilesParamNameList = asArray("Multiupload.formElementName", received);
-        if (uploadedFilesParamNameList == null || uploadedFilesParamNameList.length == 0) {
-            return;
-        }
+        List<FormItemEntity> currentStepFileItems = stepItems.stream()
+            .filter(item -> isFileUploadField(item.getFieldType()))
+            .toList();
+        if (currentStepFileItems.isEmpty()) return;
 
-        Set<String> currentStepFileFields = new HashSet<>(List.of(uploadedFilesParamNameList));
+        Set<String> currentStepFileFields = currentStepFileItems.stream()
+            .map(FormItemEntity::getItemFormId)
+            .collect(Collectors.toSet());
+
         Set<String> activeFileKeys = getActiveFileKeys(formName, currentStepFileFields, received, request);
 
         // Build restriction from already-loaded formSettings to avoid redundant DB queries
@@ -1290,12 +1294,13 @@ public class MultistepFormsService {
 
         XhrFileUploadService uploadService = XhrFileUploadServlet.getService();
 
-        for (String uploadedFilesParamName : uploadedFilesParamNameList) {
+        for (FormItemEntity fileItem : currentStepFileItems) {
+            String uploadedFilesParamName = fileItem.getItemFormId();
+
             // Skip if there is no value for this parameter
             if (Tools.isEmpty(received.optString(uploadedFilesParamName, ""))) continue;
 
-            FormItemEntity fileItem = formItemsRepository.findFirstByFormNameAndItemFormIdAndDomainIdOrderBySortPriorityAsc(formName, uploadedFilesParamName, CloudToolsForCore.getDomainId());
-            boolean singleFileInput = fileItem != null && FILE_INPUT_FIELD_TYPE.equals(fileItem.getFieldType());
+            boolean singleFileInput = FILE_INPUT_FIELD_TYPE.equals(fileItem.getFieldType());
             int uploadedFileCount = 0;
             Map<String, Integer> sameImageCount = new HashMap<>();
             StringBuilder fileNames = new StringBuilder(); // collected names (currently unused, kept for compatibility)
@@ -1381,7 +1386,7 @@ public class MultistepFormsService {
      * Collects temporary upload keys still referenced by the submitted step or session.
      *
      * @param formName logical form name
-     * @param currentStepFileFields upload fields submitted for the current step
+     * @param currentStepFileFields upload fields defined for the current step
      * @param received submitted step payload
      * @param request request containing values saved for other steps
      * @return active temporary upload keys across the form
@@ -1699,8 +1704,8 @@ public class MultistepFormsService {
     /**
      * Removes the rendered form-instance prefix from submitted field names.
      *
-     * <p>The same prefix is also removed from upload marker values so they continue
-     * to reference the normalized field names.</p>
+     * <p>The same prefix is also removed from upload marker values so custom processors
+     * receive field references consistent with the normalized payload keys.</p>
      *
      * @param received submitted form payload
      * @param formCounter rendered form instance counter
@@ -1714,8 +1719,8 @@ public class MultistepFormsService {
             Object value = received.get(key);
 
             // The multiupload marker input value references a field name that is
-            // rendered with the form-counter prefix, strip it so it matches the
-            // counter-stripped keys used later in validateFileFields().
+            // rendered with the form-counter prefix, so keep it consistent with
+            // the counter-stripped payload keys.
             if ("Multiupload.formElementName".equals(key)) {
                 value = removeFormCounterFromValue(value, prefix);
             }

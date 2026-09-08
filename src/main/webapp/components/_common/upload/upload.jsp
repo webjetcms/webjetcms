@@ -107,11 +107,13 @@ PageParams pp = new PageParams(request);
                                 for(var i in files) {
                                     var restoredFile = files[i];
                                     restoredFile.status = Dropzone.SUCCESS;
+                                    restoredFile.accepted = true;
                                     myDropzone.emit("addedfile", restoredFile);
                                     if(restoredFile.thumbnailUrl) myDropzone.emit("thumbnail", restoredFile, restoredFile.thumbnailUrl);
                                     myDropzone.emit("complete", restoredFile);
                                     myDropzone.files.push(restoredFile);
                                 }
+                                myDropzone._updateMaxFilesReachedClass();
                                 if (myDropzone.files.length > 0) setSingleFileLocked(true);
                             }
                         }, 700);

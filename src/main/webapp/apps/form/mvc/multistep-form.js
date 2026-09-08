@@ -191,9 +191,7 @@ export class MultistepForm {
             this._hasShownStep = true;
             if (holder) this._dispatchStepShown(holder, form, isInitialStep);
 
-            if (scrollToForm && form) {
-                form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
+            if (scrollToForm && form) this._focusStep(form);
 
             // init cleditor if needed
             window.setTimeout(() => {
@@ -224,6 +222,30 @@ export class MultistepForm {
             dropzone.off();
             dropzone.destroy();
         });
+    }
+
+    /**
+     * Focus and reveal a newly rendered step after navigation.
+     * The step header is preferred so assistive technology announces the new context.
+     * @param {HTMLFormElement} form - Newly rendered step form.
+     */
+    _focusStep(form) {
+        const firstControl = form.querySelector('input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), a[href]');
+        const focusTarget = form.querySelector('.step-header') || firstControl || form;
+        const needsTemporaryTabIndex = focusTarget.matches('input, select, textarea, button, a[href], [tabindex]') === false;
+
+        if (needsTemporaryTabIndex) focusTarget.setAttribute('tabindex', '-1');
+        focusTarget.focus({ preventScroll: true });
+        if (needsTemporaryTabIndex) {
+            focusTarget.addEventListener('blur', () => focusTarget.removeAttribute('tabindex'), { once: true });
+        }
+
+        form.scrollIntoView({ behavior: this._prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+    }
+
+    /** @returns {boolean} true when the user requested reduced motion. */
+    _prefersReducedMotion() {
+        return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     }
 
     /**
@@ -506,7 +528,7 @@ export class MultistepForm {
         if (p) p.textContent = this.errorMessage;
         const ul = danger.querySelector('ul');
         if (ul) ul.innerHTML = `<li><span>${errorMsg}</span></li>`;
-        danger.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        danger.scrollIntoView({ behavior: this._prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
     }
 
     /**
@@ -770,6 +792,7 @@ export class MultistepForm {
         if (!field) return;
 
         const transitionDurationMs = 260;
+        const shouldAnimate = animate && this._prefersReducedMotion() === false;
         const currentlyHidden = this._isFieldHidden(field);
         const fieldColumn = field.parentElement?.classList.contains('col') ? field.parentElement : null;
 
@@ -793,7 +816,7 @@ export class MultistepForm {
             field.style.display = '';
             field.classList.remove('mf-hide', 'mf-collapsed', 'mf-hidden');
 
-            if (!animate) {
+            if (!shouldAnimate) {
                 field.classList.remove('mf-enter', 'mf-collapsed');
                 field.style.maxHeight = '';
                 return;
@@ -822,7 +845,7 @@ export class MultistepForm {
             return;
         }
 
-        if (!animate || field.style.display === 'none') {
+        if (!shouldAnimate || field.style.display === 'none') {
             field.style.display = 'none';
             field.classList.remove('mf-hide', 'mf-enter');
             field.classList.add('mf-collapsed');

@@ -29,8 +29,9 @@
 
 <script type="module" th:inline="javascript">
 
+    const currentDomainId = document.getElementById("header.currentDomain")?.value || "0";
     const formDateRangeStorageKey = typeof urlFormName === "string" && urlFormName !== ""
-        ? "webjet.apps.form.stats.filter.dateRange." + encodeURIComponent(urlFormName)
+        ? "webjet.apps.form.stats.filter.dateRange." + encodeURIComponent(currentDomainId) + "." + encodeURIComponent(urlFormName)
         : null;
 
     function insertFilterToStatsPills() {
