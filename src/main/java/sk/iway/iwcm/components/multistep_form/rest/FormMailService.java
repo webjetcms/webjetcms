@@ -122,8 +122,13 @@ public class FormMailService {
 	 *         be sent or queued
 	 */
     public void sendMail(FormsEntity form, String recipients, String subject, FormFiles formFiles, boolean attachFiles, String cssData, StringBuilder htmlData, HttpServletRequest request) throws SaveFormException{
-		Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
 		FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(form.getFormName(), CloudToolsForCore.getDomainId());
+		sendMail(form, formSettings, recipients, subject, formFiles, attachFiles, cssData, htmlData, request);
+	}
+
+	void sendMail(FormsEntity form, FormSettingsEntity formSettings, String recipients, String subject, FormFiles formFiles, boolean attachFiles, String cssData, StringBuilder htmlData, HttpServletRequest request) throws SaveFormException{
+		Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
+		boolean formDataEncrypted = Tools.isNotEmpty(formSettings.getEncryptKey());
 
         String meno = null;
         List<String> namesList = getFieldsValues(form, NAME_FIELD_KEY);
@@ -156,7 +161,7 @@ public class FormMailService {
 		request.setAttribute("doubleOptIn", formSettings.getDoubleOptIn());
 
 		if (sendUserInfoDocId > 0)
-			FormMailAction.sendUserInfo(sendUserInfoDocId, form.getId().intValue(), email, formFiles.getAttachs(), null, request);
+			FormMailAction.sendUserInfo(sendUserInfoDocId, form.getId().intValue(), email, formFiles.getAttachs(), null, request, !formDataEncrypted);
 
 		Logger.println(FormMailService.class,"FormMailService recipients=" + recipients);
 
@@ -197,28 +202,35 @@ public class FormMailService {
 			}
 
 			if ("false".equals(Constants.getString("useSMTPServer"))) {
-				if(sendMessageAsAttach && messageAsAttachFile!=null) {
-					htmlData = new StringBuilder(prop.getText("form.formmailaction.pozrite_si_prilozeny_subor"));
-					formFiles.getFileNamesSendLater().append(";").append(FormMailAction.FORM_FILE_DIR).append(messageAsAttachFile.getName()).append(";").append(messageAsAttachFile.getName());
-				}
-
-				if(formFiles.getAttachs() != null && !attachFiles) htmlData.append(prop.getText("email.too_large_attachments"));
-
-				String messageBody = htmlData.toString();
-				if (sendMessageAsAttach==false && forceTextPlain==false)
-					messageBody = FormHtmlHandler.appendStyle(htmlData.toString(), cssData, emailEncoding, forceTextPlain);
-
-				//musime kvoli clustru a potencionalnemu zapisu suborov pozdrzat email
-				long sendLaterTime = Tools.getNow();
-				sendLaterTime += (5 * Constants.getInt("clusterRefreshTimeout"));
-
-				boolean queued = SendMail.sendLater(meno, FormMailAction.getFirstEmail(email), recipients, formSettings.getReplyTo(), formSettings.getCcEmails(), formSettings.getBccEmails(), subject, messageBody, Tools.getBaseHref(request), Tools.formatDate(sendLaterTime), Tools.formatTime(sendLaterTime), formFiles.getFileNamesSendLater().toString());
-				if (queued) {
-					Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Email for form " + form.getFormName() + " was queued for later delivery", (long)MultistepFormsService.getFormIdStatic(form.getFormName()), form.getId());
-				} else {
-					sb.append(" queuing email to ").append(recipients).append(" FAILED");
+				if (formDataEncrypted) {
+					Logger.warn(FormMailService.class, "Email for encrypted form " + form.getFormName() + " cannot be queued for later delivery");
+					sb.append(" queuing encrypted form email to ").append(recipients).append(" DENIED");
 					RequestBean.addAuditValue("formfail", "emailNotSend");
 					sendFailed = true;
+				} else {
+					if(sendMessageAsAttach && messageAsAttachFile!=null) {
+						htmlData = new StringBuilder(prop.getText("form.formmailaction.pozrite_si_prilozeny_subor"));
+						formFiles.getFileNamesSendLater().append(";").append(FormMailAction.FORM_FILE_DIR).append(messageAsAttachFile.getName()).append(";").append(messageAsAttachFile.getName());
+					}
+
+					if(formFiles.getAttachs() != null && !attachFiles) htmlData.append(prop.getText("email.too_large_attachments"));
+
+					String messageBody = htmlData.toString();
+					if (sendMessageAsAttach==false && forceTextPlain==false)
+						messageBody = FormHtmlHandler.appendStyle(htmlData.toString(), cssData, emailEncoding, forceTextPlain);
+
+					//musime kvoli clustru a potencionalnemu zapisu suborov pozdrzat email
+					long sendLaterTime = Tools.getNow();
+					sendLaterTime += (5 * Constants.getInt("clusterRefreshTimeout"));
+
+					boolean queued = SendMail.sendLater(meno, FormMailAction.getFirstEmail(email), recipients, formSettings.getReplyTo(), formSettings.getCcEmails(), formSettings.getBccEmails(), subject, messageBody, Tools.getBaseHref(request), Tools.formatDate(sendLaterTime), Tools.formatTime(sendLaterTime), formFiles.getFileNamesSendLater().toString());
+					if (queued) {
+						Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Email for form " + form.getFormName() + " was queued for later delivery", (long)MultistepFormsService.getFormIdStatic(form.getFormName()), form.getId());
+					} else {
+						sb.append(" queuing email to ").append(recipients).append(" FAILED");
+						RequestBean.addAuditValue("formfail", "emailNotSend");
+						sendFailed = true;
+					}
 				}
 			} else {
 				//vygeneruj mail a posli ho
@@ -350,31 +362,38 @@ public class FormMailService {
 					Logger.error(FormMailService.class, ex);
 					sb.append(" sending to email ").append(recipients).append(" FAILED: ").append(ex.getMessage());
 
-					StringBuilder sendLaterAttachments = new StringBuilder();
-					if (attachFiles && formFiles.getAttachs() != null) {
-						for (IwcmFile file : formFiles.getAttachs()) {
-							if (sendLaterAttachments.length() > 0) sendLaterAttachments.append(';');
-							sendLaterAttachments.append(file.getVirtualPath()).append(';').append(file.getName());
-						}
-					}
-					if (sendMessageAsAttach && messageAsAttachFile != null) {
-						if (sendLaterAttachments.length() > 0) sendLaterAttachments.append(';');
-						sendLaterAttachments.append(messageAsAttachFile.getVirtualPath()).append(';').append(messageAsAttachFile.getName());
-					}
-
-					StringBuilder sendLaterBody = new StringBuilder(htmlData);
-					String messageBody = forceTextPlain
-						? SearchTools.htmlToPlain(sendLaterBody.toString())
-						: FormHtmlHandler.appendStyle(sendLaterBody.toString(), cssData, emailEncoding, false);
-
-					long sendLaterTime = Tools.getNow() + (5L * Constants.getInt("clusterRefreshTimeout"));
-					boolean queued = SendMail.sendLater(meno, FormMailAction.getFirstEmail(email), recipients, formSettings.getReplyTo(), formSettings.getCcEmails(), formSettings.getBccEmails(), subject, messageBody, Tools.getBaseHref(request), Tools.formatDate(sendLaterTime), Tools.formatTime(sendLaterTime), sendLaterAttachments.toString());
-					if (queued) {
-						sb.append("; queued for later delivery");
-						Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Email for form " + form.getFormName() + " could not be sent immediately and was queued for later delivery", (long)MultistepFormsService.getFormIdStatic(form.getFormName()), form.getId());
-					} else {
+					if (formDataEncrypted) {
+						Logger.warn(FormMailService.class, "Failed email for encrypted form " + form.getFormName() + " cannot be queued for later delivery");
+						sb.append("; queuing encrypted form email denied");
 						RequestBean.addAuditValue("formfail", "emailNotSend");
 						sendFailed = true;
+					} else {
+						StringBuilder sendLaterAttachments = new StringBuilder();
+						if (attachFiles && formFiles.getAttachs() != null) {
+							for (IwcmFile file : formFiles.getAttachs()) {
+								if (sendLaterAttachments.length() > 0) sendLaterAttachments.append(';');
+								sendLaterAttachments.append(file.getVirtualPath()).append(';').append(file.getName());
+							}
+						}
+						if (sendMessageAsAttach && messageAsAttachFile != null) {
+							if (sendLaterAttachments.length() > 0) sendLaterAttachments.append(';');
+							sendLaterAttachments.append(messageAsAttachFile.getVirtualPath()).append(';').append(messageAsAttachFile.getName());
+						}
+
+						StringBuilder sendLaterBody = new StringBuilder(htmlData);
+						String messageBody = forceTextPlain
+							? SearchTools.htmlToPlain(sendLaterBody.toString())
+							: FormHtmlHandler.appendStyle(sendLaterBody.toString(), cssData, emailEncoding, false);
+
+						long sendLaterTime = Tools.getNow() + (5L * Constants.getInt("clusterRefreshTimeout"));
+						boolean queued = SendMail.sendLater(meno, FormMailAction.getFirstEmail(email), recipients, formSettings.getReplyTo(), formSettings.getCcEmails(), formSettings.getBccEmails(), subject, messageBody, Tools.getBaseHref(request), Tools.formatDate(sendLaterTime), Tools.formatTime(sendLaterTime), sendLaterAttachments.toString());
+						if (queued) {
+							sb.append("; queued for later delivery");
+							Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Email for form " + form.getFormName() + " could not be sent immediately and was queued for later delivery", (long)MultistepFormsService.getFormIdStatic(form.getFormName()), form.getId());
+						} else {
+							RequestBean.addAuditValue("formfail", "emailNotSend");
+							sendFailed = true;
+						}
 					}
 				}
 			}
