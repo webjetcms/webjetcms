@@ -19,9 +19,12 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
 import sk.iway.iwcm.components.customfields.rest.CustomFieldsService;
+import sk.iway.iwcm.components.customfields.rest.JsonEditorValidator;
+import sk.iway.iwcm.components.customfields.rest.JsonEditorValueReader;
 import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocBasic;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
@@ -97,6 +100,9 @@ public class BaseEditorFields {
      * @return generated field definitions
      */
     public List<Field> getFields(Object bean, String keyPrefix, char lastAlphabet, CustomFieldsSearchDto searchDto) {
+		if (bean instanceof DocBasic == false) {
+            JsonEditorValueReader.restore(bean, JsonEditorValidator.getRules(bean, searchDto, keyPrefix));
+        }
 		//tu musi byt getInstance aby sa prebral jazyk podla prihlaseneho usera
         Prop prop = Prop.getInstance();
 		Prop propType = Prop.getInstance(Constants.getString("defaultLanguage"));
@@ -126,7 +132,7 @@ public class BaseEditorFields {
 
                     label = prop.getText(labelKey);
                     typeKey = labelKey + ".type";
-                    type = propType.getText(typeKey);
+                    type = CustomFieldsService.getConfiguredFieldType(null, labelKey, propType);
                     String tooltipKey = labelKey + ".tooltip";
                     String translatedTooltip = prop.getText(tooltipKey);
                     if (tooltipKey.equals(translatedTooltip) == false) tooltip = translatedTooltip;
@@ -134,7 +140,7 @@ public class BaseEditorFields {
                     field.setRequired(false);
                 } else {
                     label = prop.getText( cfe.getLabel() );
-                    type = cfe.getValue();
+                    type = CustomFieldsService.getConfiguredFieldType(cfe, null, propType);
                     if (Tools.isNotEmpty(cfe.getTooltip())) tooltip = prop.getText(cfe.getTooltip());
                     // typeKey = dont know
                     field.setRequired( Tools.isTrue(cfe.getRequired()) );

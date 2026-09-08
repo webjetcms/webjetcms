@@ -107,7 +107,8 @@ export class EditorAi {
                         } else {
                             //if it doesnt have input-group, wrap it
                             if (inputField.parents(".input-group").length === 0) {
-                                inputField.wrap('<div class="input-group"></div>');
+                                const textareaEditor = inputField.closest(".md-textarea-editor");
+                                (textareaEditor.length > 0 ? textareaEditor : inputField).wrap('<div class="input-group"></div>');
                             }
 
                             //if it doesnt have ti-sparkles button add it
@@ -137,7 +138,8 @@ export class EditorAi {
             } else {
                 //if it doesnt have input-group, wrap it
                 if (inputField.parents(".input-group").length === 0) {
-                    inputField.wrap('<div class="input-group"></div>');
+                    const textareaEditor = inputField.closest(".md-textarea-editor");
+                    (textareaEditor.length > 0 ? textareaEditor : inputField).wrap('<div class="input-group"></div>');
                 }
 
                 //if it doesnt have ti-sparkles button add it

@@ -1,0 +1,67 @@
+.md-textarea-editor {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    height: 20rem;
+    min-height: 6rem;
+    overflow: hidden;
+    resize: vertical;
+    border: 1px solid var(--wj-nice-gray-300);
+    border-radius: var(--wj-border-radius);
+    background: var(--bs-body-bg);
+
+    &:focus-within {
+        outline: 2px solid var(--wj-secondary);
+        outline-offset: 2px;
+    }
+
+    &__lines {
+        flex: 0 0 auto;
+        min-width: 4ch;
+        padding: 5px 6px 25px;
+        overflow: hidden;
+        text-align: right;
+        white-space: pre;
+        user-select: none;
+        color: var(--wj-gray-text);
+        background: var(--wj-nice-gray);
+        border-right: 1px solid var(--wj-nice-gray-300);
+    }
+}
+
+.DTE .DTE_Field .md-textarea-editor {
+    > textarea, > .md-textarea-editor__lines {
+        font-family: monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        tab-size: 2;
+    }
+
+    > textarea {
+        flex: 1 1 auto;
+        width: 0;
+        min-width: 0;
+        height: 100%;
+        margin: 0;
+        padding: 5px 8px;
+        border: 0;
+        border-radius: 0;
+        resize: none;
+        white-space: pre;
+        overflow: auto;
+        box-shadow: none;
+    }
+}
+
+.input-group > .md-textarea-editor {
+    flex: 1 1 auto;
+    width: 1%;
+}
+
+.md-jsoneditor-format {
+    margin-top: 5px;
+}
+
+.DTE_Field_StateError .md-jsoneditor .md-textarea-editor {
+    border-color: var(--bs-danger);
+}

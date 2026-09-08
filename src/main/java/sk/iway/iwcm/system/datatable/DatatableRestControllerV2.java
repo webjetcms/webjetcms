@@ -80,8 +80,12 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
 import sk.iway.iwcm.components.customfields.rest.CustomFieldsService;
+import sk.iway.iwcm.components.customfields.rest.CustomFieldsValidationException;
+import sk.iway.iwcm.components.customfields.rest.JsonEditorValidator;
+import sk.iway.iwcm.components.customfields.rest.JsonEditorValueReader;
 import sk.iway.iwcm.database.ActiveRecordBase;
 import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.ConstantsV9;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
@@ -171,6 +175,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		prepareEntityForCreate(entity);
 		//musime z editoFields najskor prepisat hodnoty do entity
 		T processed = processToEntity(entity, ProcessItemAction.CREATE);
+		JsonEditorValidator.validateBeforeSave(processed, getCustomFieldsSearchDto(processed), getCustomFieldsKeyPrefix(processed), getProp());
 		//ulozime
 		T saved = repo.save(processed);
 		//nastavime editorFields atributy
@@ -201,6 +206,9 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		//musime z editoFields najskor prepisat hodnoty do entity
 		T processed = processToEntity(one, ProcessItemAction.EDIT);
+		JsonEditorValueReader.restoreRetained(processed, one, entity, JsonEditorValidator.getRules(processed,
+			getCustomFieldsSearchDto(processed), getCustomFieldsKeyPrefix(processed)));
+		JsonEditorValidator.validateBeforeSave(processed, getCustomFieldsSearchDto(processed), getCustomFieldsKeyPrefix(processed), getProp());
 		//ulozime
 		T saved = repo.save(processed);
 		//nastavime editorFields atributy
@@ -293,6 +301,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				//failsafe
 			}
 			checkItemPermsThrows(entity, -1L);
+			validateJsonEditorFieldsBeforeSave(entity, -1L);
 			T processed = insertItem(entity);
 			afterSave(entity, processed);
 			if (processed != null) new DatatableEvent<>(processed, DatatableEventType.AFTER_SAVE, entity).publishEvent();
@@ -332,6 +341,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
 			checkItemPermsThrows(entity, id);
 
+			validateJsonEditorFieldsBeforeSave(entity, id);
 			T saved = editItem(entity, id);
 
 			afterSave(entity, saved);
@@ -803,7 +813,11 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 * @param entity entity instance to validate
 	 */
 	public void validateEditorForCustomFields(HttpServletRequest request, DatatableRequest<Long, T> target, Identity user, Errors errors, Long id, T entity) {
+		boolean validateJson = (target.isInsert() || target.isUpdate()) && target.getDztotalchunkcount() < 1;
+		JsonEditorValidation jsonValidation = validateJson ? getJsonEditorValidation(entity, target.isInsert() ? -1L : id)
+			: new JsonEditorValidation(JsonEditorValidator.getRules(entity, getCustomFieldsSearchDto(entity), getCustomFieldsKeyPrefix(entity)), List.of());
 		for(Character alphabet : CustomFieldsService.getRequiredFieldsAlphabets(getCustomFieldsSearchDto(entity))) {
+			if (jsonValidation.rules().containsKey("field" + alphabet)) continue;
 			try {
 				BeanWrapperImpl bw = new BeanWrapperImpl(entity);
 				Object value = bw.getPropertyValue("field" + alphabet);
@@ -815,6 +829,73 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				// Failsafe: if property fieldX does not exist, simply skip validation for it
 			}
 		}
+		if (validateJson) {
+			for (DatatableFieldError error : jsonValidation.errors()) {
+				String fieldName = "errorField." + error.getName();
+				if (errors.hasFieldErrors(fieldName) == false) errors.rejectValue(fieldName, null, error.getStatus());
+			}
+		}
+	}
+
+	/**
+	 * Returns a legacy custom-field translation prefix when annotation titles do not identify it.
+	 * @param entity edited entity
+	 * @return custom component prefix, or null to use annotated field titles
+	 */
+	protected String getCustomFieldsKeyPrefix(T entity) {
+		return null;
+	}
+
+	private void validateJsonEditorFieldsBeforeSave(T entity, long id) {
+		List<DatatableFieldError> errors = getJsonEditorFieldErrors(entity, id);
+		if (errors.isEmpty() == false) throw new CustomFieldsValidationException(errors);
+	}
+
+	/**
+	 * Checks the effective custom-field values while preserving existing partial-update merging rules.
+	 * @param entity submitted values
+	 * @param id effective update ID, or a nonpositive value for creation
+	 * @return native custom-field errors
+	 */
+	protected List<DatatableFieldError> getJsonEditorFieldErrors(T entity, long id) {
+		return getJsonEditorValidation(entity, id).errors();
+	}
+
+	private record JsonEditorValidation(Map<String, Boolean> rules, List<DatatableFieldError> errors) {}
+
+	private JsonEditorValidation getJsonEditorValidation(T entity, long id) {
+		if (entity == null) return new JsonEditorValidation(Map.of(), List.of());
+		CustomFieldsSearchDto context = getCustomFieldsSearchDto(entity);
+		if (id > 0 && context.getEntityIdColumnName() != null && context.getEntityId() < 1) {
+			CustomFieldsSearchDto identifiedContext = new CustomFieldsSearchDto(context.getClassName(), id);
+			identifiedContext.setBonusParam(context.getBonusParam());
+			context = identifiedContext;
+		}
+		Map<String, Boolean> rules = JsonEditorValidator.getRules(entity, context, getCustomFieldsKeyPrefix(entity));
+		boolean needsTemplate = entity instanceof DocDetails doc && doc.getTempId() < 1;
+		if (rules.isEmpty() && (id < 1 || needsTemplate == false)) return new JsonEditorValidation(rules, List.of());
+		T candidate = entity;
+		if (id > 0) {
+			T original = getOneItem(id);
+			if (original != null) {
+				try {
+					@SuppressWarnings("unchecked")
+					T copy = (T)entity.getClass().getDeclaredConstructor().newInstance();
+					NullAwareBeanUtils.copyProperties(original, copy);
+					copyEntityIntoOriginal(entity, copy);
+					if (needsTemplate && copy instanceof DocDetails doc && original instanceof DocDetails originalDoc) {
+						doc.setTempId(originalDoc.getTempId());
+					}
+					JsonEditorValueReader.restoreRetained(copy, original, entity, JsonEditorValidator.getRules(copy,
+						getCustomFieldsSearchDto(copy), getCustomFieldsKeyPrefix(copy)));
+					candidate = copy;
+				} catch (ReflectiveOperationException ex) {
+					throw new IllegalStateException("Cannot prepare custom-field validation for " + entity.getClass().getName(), ex);
+				}
+			}
+		}
+		rules = JsonEditorValidator.getRules(candidate, getCustomFieldsSearchDto(candidate), getCustomFieldsKeyPrefix(candidate));
+		return new JsonEditorValidation(rules, JsonEditorValidator.validate(candidate, rules, getProp()));
 	}
 
 	/**
@@ -1567,8 +1648,13 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 					}
 				}
 				else {
-					re = edit(id, entity);
-					response.add(re.getBody());
+					try {
+						re = edit(id, entity);
+						response.add(re.getBody());
+					} catch (CustomFieldsValidationException ex) {
+						if (skipWrongData == false) throw ex;
+						addImportedColumnError(ex);
+					}
 				}
 			} else if (datatableRequest.isDelete()) {
 
@@ -1681,6 +1767,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		prepareEntityForCreate(entity);
 		beforeSave(entity);
 		if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
+		validateJsonEditorFieldsBeforeSave(entity, -1L);
 
 		// validacia
 		Set<ConstraintViolation<T>> violations = validator.validate(entity);
@@ -1709,6 +1796,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		prepareEntityIdForUpdate(entity, id);
 		beforeSave(entity);
 		if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
+		validateJsonEditorFieldsBeforeSave(entity, id);
 
 		// validacia
 		Set<ConstraintViolation<T>> violations = validator.validate(entity);

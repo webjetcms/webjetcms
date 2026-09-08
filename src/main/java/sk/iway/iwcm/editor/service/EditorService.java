@@ -18,6 +18,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.css.CssDto;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
+import sk.iway.iwcm.components.customfields.rest.JsonEditorValidator;
+import sk.iway.iwcm.components.customfields.rest.JsonEditorValueReader;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
@@ -159,6 +162,11 @@ public class EditorService {
 			}
         }
 
+        if (doc != null) {
+            JsonEditorValueReader.restore(doc, history == null ? doc : history,
+                JsonEditorValidator.getRules(doc, new CustomFieldsSearchDto(doc), "editor"));
+        }
+
         if (historyId > 0 && history != null && doc != null) {
 			//prenes hodnoty do DocDetails objektu z History (je to takto kvoli spatnej kompatibilite)
             if (history.getApprovedBy()!=null) doc.setHistoryApprovedBy(history.getApprovedBy());
@@ -272,6 +280,8 @@ public class EditorService {
 				editedDoc.getEditorFields().setRequestPublish(false);
 		}
 		dt.diff("after requestPublish");
+
+		JsonEditorValidator.validateBeforeSave(editedDoc, new CustomFieldsSearchDto(editedDoc), "editor", prop);
 
 		DocHistory editedHistory = DocDetailsToDocHistoryMapper.INSTANCE.docDetailsToDocHistory(editedDoc);
 

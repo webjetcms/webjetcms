@@ -15,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.customfields.rest.CustomFieldsValidationException;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatableFieldError;
@@ -180,6 +181,10 @@ public class DatatableExceptionHandlerV2
 		message = prepareMessage(message, ex);
 
 		response.setNotify(ex.getNotifyBeans());
+
+		if (ex instanceof CustomFieldsValidationException customFieldsException) {
+			response.setFieldErrors(customFieldsException.getFieldErrors());
+		}
 
 		response.setError(message);
 		Logger.error(DatatableExceptionHandlerV2.class, "EditorException: " + ex.getMessage());

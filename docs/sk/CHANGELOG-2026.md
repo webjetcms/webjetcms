@@ -129,6 +129,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Voliteľné polia
 
+- Pridaný typ [Editor JSON](developer/datatables-editor/customfields.md#editor-json) (`jsoneditor`) pre priame zadávanie JSON objektu s číslami riadkov a tlačidlom na formátovanie. Neplatný JSON zablokuje uloženie v editore aj na serveri vrátane REST a importu. Povinnosť sa riadi nastavením poľa, formátovanie zachováva aj veľké číselné identifikátory. Pre väčšie hodnoty treba overiť kapacitu stĺpca stránky aj jej histórie (#OSK659).
 - Kompletne implementovaná funkčnosť [nastavenia voliteľných polí](frontend/webpages/customfields/custom-fields-settings.md). Umožňuje centrálne nastaviť vlastnosti polí bez editácie prekladových kľúčov. Podporované sú všetky typy polí (text, textarea, select, multiselect, autocomplete, enumeration, obrázok, odkaz, JSON a ďalšie) s typovo špecifickými nastaveniami ako maximálna dĺžka textu, možnosti výberu, prepojenie na číselníky alebo závislosť na iných poliach. Používateľské rozhranie ponúka aj jednoduchý spôsob nastavenia možných hodnôt pre výberové/autocomplete polia (#58529).
 
 ![](frontend/webpages/customfields/custom-fields-settings-editor.png)

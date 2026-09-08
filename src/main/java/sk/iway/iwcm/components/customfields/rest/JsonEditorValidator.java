@@ -1,0 +1,189 @@
+package sk.iway.iwcm.components.customfields.rest;
+
+import java.beans.PropertyDescriptor;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.util.ReflectionUtils;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonLocation;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JsonToken;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.basket.delivery_methods.jpa.DeliveryMethodEntity;
+import sk.iway.iwcm.components.basket.delivery_methods.rest.BaseDeliveryMethod;
+import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentMethodEntity;
+import sk.iway.iwcm.components.basket.payment_methods.rest.BasePaymentMethod;
+import sk.iway.iwcm.components.basket.support.FieldMapAttr;
+import sk.iway.iwcm.components.basket.support.FieldsConfig;
+import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
+import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
+import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
+import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
+import sk.iway.iwcm.components.enumerations.model.EnumerationTypeRepository;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocEditorFields;
+import sk.iway.iwcm.editor.FieldType;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.DatatableFieldError;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+
+/**
+ * Validates raw JSON custom fields without converting or rewriting their string values.
+ */
+public final class JsonEditorValidator {
+
+    private static final JsonFactory JSON_FACTORY = new JsonFactory();
+    private static final String MESSAGE_PREFIX = "settings.custom-fields.jsoneditor.";
+
+    private JsonEditorValidator() {}
+
+    /**
+     * Resolves JSON field names and required flags exclusively from server configuration.
+     * @param entity entity providing field metadata and template context
+     * @param context database configuration lookup context
+     * @param keyPrefix optional translation prefix for fields without annotated label keys
+     * @return field names mapped to their required flags
+     */
+    public static Map<String, Boolean> getRules(Object entity, CustomFieldsSearchDto context, String keyPrefix) {
+        if (entity == null) return Map.of();
+        if (entity instanceof PaymentMethodEntity payment) return getProviderRules(payment.getPaymentMethodName(), BasePaymentMethod.class);
+        if (entity instanceof DeliveryMethodEntity delivery) return getProviderRules(delivery.getDeliveryMethodName(), BaseDeliveryMethod.class);
+        if (entity instanceof DocDetails doc) {
+            return DocEditorFields.withCustomFieldTextPrefixes(doc.getTempId(), () -> resolveRules(entity, context, keyPrefix));
+        }
+        return resolveRules(entity, context, keyPrefix);
+    }
+
+    private static Map<String, Boolean> getProviderRules(String className, Class<?> providerType) {
+        Map<String, Boolean> rules = new LinkedHashMap<>();
+        if (Tools.isEmpty(className)) return rules;
+        try {
+            Class<?> provider = Class.forName(className, false, providerType.getClassLoader());
+            if (providerType.isAssignableFrom(provider) == false) return rules;
+            FieldsConfig configuration = provider.getAnnotation(FieldsConfig.class);
+            if (configuration != null) {
+                for (FieldMapAttr field : configuration.fieldMap()) {
+                    if (field.fieldType() == FieldType.JSONEDITOR) rules.put("field" + field.fieldAlphabet(), field.isRequired());
+                }
+            }
+            return rules;
+        } catch (ClassNotFoundException ex) {
+            throw new IllegalStateException("Unknown custom-field provider: " + className, ex);
+        }
+    }
+
+    private static Map<String, Boolean> resolveRules(Object entity, CustomFieldsSearchDto context, String keyPrefix) {
+        Map<String, Boolean> rules = new LinkedHashMap<>();
+        BeanWrapperImpl bean = new BeanWrapperImpl(entity);
+        Map<Character, CustomFieldsEntity> configuredFields = null;
+        BeanWrapperImpl enumerationType = null;
+        boolean enumerationTypeLoaded = false;
+        Prop typeProp = Prop.getInstance(Constants.getString("defaultLanguage"));
+        for (PropertyDescriptor property : bean.getPropertyDescriptors()) {
+            String name = property.getName();
+            if (name.matches("field[A-Z]") == false || property.getReadMethod() == null) continue;
+            if (configuredFields == null) configuredFields = CustomFieldsService.getCustomFieldsMap(context);
+            char alphabet = name.charAt(5);
+            CustomFieldsEntity configuredField = configuredFields.get(alphabet);
+            if (entity instanceof EnumerationDataBean && configuredField == null) continue;
+            String labelKey = getLabelKey(entity.getClass(), name, keyPrefix);
+            String type = CustomFieldsService.getConfiguredFieldType(configuredField, labelKey, typeProp);
+            if (FieldType.asFieldType(type) == FieldType.JSONEDITOR) {
+                if (entity instanceof EnumerationDataBean) {
+                    if (enumerationTypeLoaded == false) {
+                        EnumerationTypeRepository repository = Tools.getSpringBean("enumerationTypeRepository", EnumerationTypeRepository.class);
+                        if (repository == null) throw new IllegalStateException("Cannot resolve the enumeration custom-field context");
+                        EnumerationTypeBean parent = repository.getNonHiddenByEnumId(context.getEntityId().intValue(), false);
+                        if (parent != null) enumerationType = new BeanWrapperImpl(parent);
+                        enumerationTypeLoaded = true;
+                    }
+                    if (enumerationType == null || Tools.isEmpty((String)enumerationType.getPropertyValue("string" + (alphabet - 'A' + 1) + "Name"))) continue;
+                }
+                rules.put(name, configuredField != null && Tools.isTrue(configuredField.getRequired()));
+            }
+        }
+        return rules;
+    }
+
+    private static String getLabelKey(Class<?> entityClass, String name, String keyPrefix) {
+        if (Tools.isNotEmpty(keyPrefix)) return keyPrefix + ".field_" + Character.toLowerCase(name.charAt(5));
+        Field field = ReflectionUtils.findField(entityClass, name);
+        if (field == null) return null;
+        DataTableColumn column = field.getAnnotation(DataTableColumn.class);
+        if (column == null) return null;
+        String labelKey = column.title();
+        if (labelKey.startsWith("[[#{") && labelKey.endsWith("}]]")) {
+            labelKey = labelKey.substring(4, labelKey.length() - 3);
+        }
+        return labelKey.endsWith(".field_" + Character.toLowerCase(name.charAt(5))) ? labelKey : null;
+    }
+
+    /**
+     * Validates the supplied entity against resolved JSON field rules.
+     * @param entity entity whose string values are checked
+     * @param rules server-resolved field names and required flags
+     * @param prop localized validation messages
+     * @return native DataTable field errors, empty when all values are valid
+     */
+    public static List<DatatableFieldError> validate(Object entity, Map<String, Boolean> rules, Prop prop) {
+        List<DatatableFieldError> errors = new ArrayList<>();
+        if (rules.isEmpty()) return errors;
+        BeanWrapperImpl bean = new BeanWrapperImpl(entity);
+        for (Map.Entry<String, Boolean> rule : rules.entrySet()) {
+            Object value = bean.getPropertyValue(rule.getKey());
+            String error = validateValue(value == null ? null : value.toString(), rule.getValue(), prop);
+            if (error != null) errors.add(new DatatableFieldError(rule.getKey(), error));
+        }
+        return errors;
+    }
+
+    /**
+     * Checks that a nonempty value contains exactly one complete JSON object.
+     * @param value original text, which is never changed
+     * @param required whether an empty value is invalid
+     * @param prop localized validation messages
+     * @return localized error or null for a valid value
+     */
+    public static String validateValue(String value, boolean required, Prop prop) {
+        if (value == null || value.trim().isEmpty()) {
+            return required ? prop.getText("settings.custom-fields.required-err") : null;
+        }
+        try (JsonParser parser = JSON_FACTORY.createParser(value)) {
+            if (parser.nextToken() != JsonToken.START_OBJECT) return prop.getText(MESSAGE_PREFIX + "object.js");
+            parser.skipChildren();
+            if (parser.nextToken() != null) return prop.getText(MESSAGE_PREFIX + "invalid.js");
+            return null;
+        } catch (JsonProcessingException ex) {
+            JsonLocation location = ex.getLocation();
+            String message = prop.getText(MESSAGE_PREFIX + "invalid.js");
+            if (location != null && location.getLineNr() > 0 && location.getColumnNr() > 0) {
+                message += " " + prop.getText(MESSAGE_PREFIX + "position.js", String.valueOf(location.getLineNr()), String.valueOf(location.getColumnNr()));
+            }
+            return message;
+        } catch (IOException ex) {
+            return prop.getText(MESSAGE_PREFIX + "invalid.js");
+        }
+    }
+
+    /**
+     * Rejects invalid values at a persistence boundary using native field errors.
+     * @param entity final entity values
+     * @param context server lookup context
+     * @param keyPrefix optional legacy translation prefix
+     * @param prop localized messages
+     */
+    public static void validateBeforeSave(Object entity, CustomFieldsSearchDto context, String keyPrefix, Prop prop) {
+        List<DatatableFieldError> errors = validate(entity, getRules(entity, context, keyPrefix), prop);
+        if (errors.isEmpty() == false) throw new CustomFieldsValidationException(errors);
+    }
+}

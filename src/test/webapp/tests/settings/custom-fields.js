@@ -11,6 +11,8 @@ const docClass = "sk.iway.iwcm.doc.DocDetails";
 const templateId = "4319";
 const templateClass = "sk.iway.iwcm.doc.TemplateDetails";
 const tooltipText = "autotest-custom-fields-required-tooltip";
+const jsonEditorMarker = "autotest-jsoneditor-settings";
+let jsonEditorOriginal;
 const requiredOverrideAlphabet = "K";
 const overrideAlphabet = "T";
 const overrideGlobalLabel = "autotest-custom-fields-global-text";
@@ -219,9 +221,160 @@ Scenario('Custom fields required logic test - AFTER @screenshot', async ({ I, DT
     await deleteCustomFieldSettingsByTooltip(I, DT, DTE);
 });
 
-async function deleteCustomFieldSettingsByTooltip(I, DT, DTE) {
+Scenario('JSON editor validates objects and preserves source text', async ({ I, DT, DTE }) => {
+    const fieldA = "#datatableInit_modal #DTE_Field_fieldA";
+    const fieldB = "#datatableInit_modal #DTE_Field_fieldB";
+    const escapedString = String.raw`"\u0061\n\""`;
+    const source = '{"id":9007199254740993,"html":"</textarea>&quot;","nested":{"items":[true,null]},"decimal":1.00,"escapes":' + escapedString + '}';
+    const formatted = '{\n  "id": 9007199254740993,\n  "html": "</textarea>&quot;",\n  "nested": {\n    "items": [\n      true,\n      null\n    ]\n  },\n  "decimal": 1.00,\n  "escapes": ' + escapedString + '\n}';
+
+    await deleteCustomFieldSettingsByTooltip(I, DT, DTE, jsonEditorMarker);
+    openDocFieldsTab(I, DT, DTE, docId_2);
+    jsonEditorOriginal = await getJsonEditorDocument(I, docId_2);
+    DTE.cancel();
+
     I.amOnPage("/admin/v9/settings/custom-fields/");
-    DT.filterEquals("tooltip", tooltipText);
+    for (const alphabet of ["A", "B"]) {
+        addCustomFieldSetting(I, DTE, docClass, alphabet, docId_2, alphabet === "A", null, null, null, null, {
+            type: "jsoneditor",
+            label: "autotest-jsoneditor-" + alphabet,
+            tooltip: jsonEditorMarker
+        });
+    }
+
+    openDocFieldsTab(I, DT, DTE, docId_2);
+    I.waitForVisible(fieldA, 10);
+    I.seeElementInDOM(fieldB);
+    I.dontSeeElementInDOM(fieldA + "[maxlength='255']");
+    I.fillField(fieldB, "");
+
+    for (const invalid of [" ", "null", "[]", '"text"', '{"a":1,}', "{} {}"]) {
+        I.fillField(fieldA, invalid);
+        I.clickCss("#pills-dt-datatableInit-basic-tab");
+        DTE.save();
+        I.waitForVisible(fieldA + "[aria-invalid='true']", 10);
+        I.seeElement("#datatableInit_modal .DTE_Field_Name_fieldA .form-text.text-danger");
+    }
+
+    I.fillField(fieldA, source);
+    I.fillField(fieldB, "[]");
+    DTE.save();
+    I.waitForVisible(fieldB + "[aria-invalid='true']", 10);
+    I.fillField(fieldB, "   ");
+    I.clickCss("#datatableInit_modal .DTE_Field_Name_fieldA .md-jsoneditor-format");
+    I.assertEqual(formatted, await I.grabValueFrom(fieldA), "Formatting must preserve numeric lexemes and string contents");
+    I.dontSeeElement("#datatableInit_modal .DTE_Field_Name_fieldA script");
+    I.saveScreenshot("jsoneditor-desktop.png");
+
+    const lineCount = await I.executeScript(() => document.querySelector("#datatableInit_modal .DTE_Field_Name_fieldA .md-textarea-editor__lines").textContent.split("\n").length);
+    I.assertEqual(formatted.split("\n").length, lineCount, "The gutter must track every logical line");
+    const typography = await I.executeScript(() => {
+        const textarea = document.querySelector("#datatableInit_modal #DTE_Field_fieldA");
+        const gutter = textarea.closest(".md-textarea-editor").querySelector(".md-textarea-editor__lines");
+        return { input: getComputedStyle(textarea).fontFamily, lines: getComputedStyle(gutter).fontFamily,
+            inputHeight: getComputedStyle(textarea).lineHeight, lineHeight: getComputedStyle(gutter).lineHeight };
+    });
+    I.assertContain(typography.input, "monospace", "JSON must use a monospace font even with AI controls");
+    I.assertEqual(typography.input, typography.lines, "The gutter and textarea must share a font");
+    I.assertEqual(typography.inputHeight, typography.lineHeight, "Line numbers must align with JSON lines");
+    I.fillField(fieldA, '{\n  "items": [\n' + Array.from({ length: 40 }, (_, index) => "    " + (index === 0 ? JSON.stringify("x".repeat(180)) : index)).join(",\n") + '\n  ]\n}');
+    const scrollState = await I.executeScript(() => {
+        const textarea = document.querySelector("#datatableInit_modal #DTE_Field_fieldA");
+        const gutter = textarea.closest(".md-textarea-editor").querySelector(".md-textarea-editor__lines");
+        textarea.scrollTop = textarea.scrollHeight;
+        textarea.dispatchEvent(new Event("scroll"));
+        return { textarea: textarea.scrollTop, gutter: gutter.scrollTop, horizontal: textarea.scrollWidth > textarea.clientWidth };
+    });
+    I.assertAbove(scrollState.textarea, 0, "Long JSON must scroll inside the editor");
+    I.assertEqual(scrollState.textarea, scrollState.gutter, "Line numbers must follow vertical scrolling");
+    I.assertTrue(scrollState.horizontal, "Long JSON lines must scroll horizontally without wrapping");
+    I.resizeWindow(720, 900);
+    const fitsViewport = await I.executeScript(() => document.querySelector("#datatableInit_modal #DTE_Field_fieldA").getBoundingClientRect().right <= window.innerWidth);
+    I.assertTrue(fitsViewport, "The JSON textarea must fit a narrow viewport");
+    I.saveScreenshot("jsoneditor-narrow.png");
+    I.wjSetDefaultWindowSize();
+    I.fillField(fieldA, formatted);
+    I.clickCss(fieldA);
+    I.pressKey("Tab");
+    const tabLeftTextarea = await I.executeScript(() => document.activeElement.id !== "DTE_Field_fieldA");
+    I.assertTrue(tabLeftTextarea, "Tab must move keyboard focus out of the textarea");
+    I.pressKey(["Shift", "Tab"]);
+    const shiftTabReturned = await I.executeScript(() => document.activeElement.id === "DTE_Field_fieldA");
+    I.assertTrue(shiftTabReturned, "Shift+Tab must move keyboard focus back to the textarea");
+    DTE.save();
+
+    openDocFieldsTab(I, DT, DTE, docId_2);
+    I.assertEqual(formatted, await I.grabValueFrom(fieldA), "Saving and reopening must preserve the exact JSON source");
+    I.assertEqual(1, await I.grabNumberOfVisibleElements("#datatableInit_modal .DTE_Field_Name_fieldA .md-textarea-editor__lines"), "Reopening must not duplicate the gutter");
+    DTE.cancel();
+
+    const historyBefore = await getJsonEditorHistoryIds(I, docId_2);
+    for (const operation of ["editor", "edit/" + docId_2, "import"]) {
+        const rejected = await I.executeScript(async ({ docId, operation }) => {
+            const entity = await fetch("/admin/rest/web-pages/" + docId, {
+                headers: { "X-CSRF-Token": window.csrfToken }
+            }).then(response => response.json());
+            entity.fieldA = '{"invalid":}';
+            // Client-provided definitions must never disable server-side validation.
+            entity.editorFields.fieldsDefinition = [];
+            entity.editorFields.fieldsDefinitionKeyPrefix = "autotest-untrusted-prefix";
+            const endpoint = operation === "import" ? "editor" : operation;
+            let body = endpoint === "editor" ? { action: "edit", data: { [docId]: entity } } : entity;
+            if (operation === "import") {
+                // Match the importer's row keys and defer validation until its target record is resolved.
+                body = { action: "edit", data: { 0: entity }, dztotalchunkcount: 1, dzchunkindex: 0,
+                    importMode: "update", updateByColumn: "id", skipWrongData: false,
+                    importedColumns: ["id", "title", "tempId", "fieldA"], name: "autotest-jsoneditor.json" };
+            }
+            const response = await fetch("/admin/rest/web-pages/" + endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-CSRF-Token": window.csrfToken },
+                body: JSON.stringify(body)
+            });
+            const result = await response.json();
+            return { status: response.status, fields: result.fieldErrors || [], error: result.error };
+        }, { docId: docId_2, operation });
+        I.assertTrue(rejected.fields.some(field => field.name === "fieldA"), "REST validation must identify the JSON field: " + operation);
+        I.assertEqual(formatted, (await getJsonEditorDocument(I, docId_2)).fieldA, "A rejected REST request must not change the page");
+    }
+    I.assertDeepEqual(historyBefore, await getJsonEditorHistoryIds(I, docId_2), "Rejected JSON must not create a history version");
+});
+
+Scenario('JSON editor cleanup', async ({ I, DT, DTE }) => {
+    await deleteCustomFieldSettingsByTooltip(I, DT, DTE, jsonEditorMarker);
+    if (jsonEditorOriginal == null) return;
+    openDocFieldsTab(I, DT, DTE, docId_2);
+    I.fillField("#datatableInit_modal #DTE_Field_fieldA", jsonEditorOriginal.fieldA || "");
+    I.fillField("#datatableInit_modal #DTE_Field_fieldB", jsonEditorOriginal.fieldB || "");
+    DTE.save();
+});
+
+async function getJsonEditorDocument(I, docId) {
+    return I.executeScript(async docId => {
+        const response = await fetch("/admin/rest/web-pages/" + docId, {
+            headers: { "X-CSRF-Token": window.csrfToken }
+        });
+        if (!response.ok) throw new Error("Could not read the autotest document");
+        const document = await response.json();
+        return { fieldA: document.fieldA, fieldB: document.fieldB };
+    }, docId);
+}
+
+async function getJsonEditorHistoryIds(I, docId) {
+    return I.executeScript(async docId => {
+        const response = await fetch("/admin/rest/web-pages/history/all?docId=" + docId, {
+            headers: { "X-CSRF-Token": window.csrfToken }
+        });
+        if (!response.ok) throw new Error("Could not read the autotest document history");
+        const history = await response.json();
+        if (!Array.isArray(history.content)) throw new Error("Missing document history rows");
+        return history.content.map(row => row.id).sort((a, b) => a - b);
+    }, docId);
+}
+
+async function deleteCustomFieldSettingsByTooltip(I, DT, DTE, marker = tooltipText) {
+    I.amOnPage("/admin/v9/settings/custom-fields/");
+    DT.filterEquals("tooltip", marker);
 
     const initialRowsCount = await getCustomFieldSettingsFilteredRowsCount(I);
 
@@ -568,7 +721,7 @@ function addCustomFieldSetting(I, DTE, className, alphabet, entityId, isRequired
         I.clickCss("#pills-dt-customFieldsDataTable-basic-tab");
     }
 
-    I.fillField("#DTE_Field_tooltip", tooltipText);
+    I.fillField("#DTE_Field_tooltip", fieldSettings.tooltip || tooltipText);
 
     DTE.save();
 
