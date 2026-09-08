@@ -31,10 +31,33 @@ export function initJsonEditor(editor, name, textarea, required) {
     const lines = initTextareaLineNumbers(textarea);
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "btn btn-sm btn-outline-secondary md-jsoneditor-format";
+    button.className = "btn btn-sm md-jsoneditor-format";
     button.textContent = WJ.translate("settings.custom-fields.jsoneditor.format.js");
     button.disabled = textarea.disabled;
-    textarea.parentElement.after(button);
+    const control = document.createElement("div");
+    control.className = "md-jsoneditor-control";
+    const toolbar = document.createElement("div");
+    toolbar.className = "md-jsoneditor-toolbar";
+    const position = document.createElement("span");
+    position.className = "md-jsoneditor-position";
+    position.setAttribute("aria-live", "off");
+    toolbar.append(button, position);
+    const wrapper = textarea.closest(".md-textarea-editor");
+    const body = wrapper.parentElement.classList.contains("input-group") ? wrapper.parentElement : wrapper;
+    body.before(control);
+    control.append(toolbar, body);
+
+    const updatePosition = () => {
+        position.hidden = document.activeElement !== textarea;
+        const offset = textarea.selectionDirection === "backward" ? textarea.selectionStart : textarea.selectionEnd;
+        const precedingLines = textarea.value.slice(0, offset).split("\n");
+        position.textContent = WJ.translate("settings.custom-fields.jsoneditor.cursor.js",
+            precedingLines.length, precedingLines[precedingLines.length - 1].length + 1);
+    };
+    for (const event of ["input", "keyup", "click", "select", "focus", "blur", "selectionchange"]) {
+        textarea.addEventListener(event, updatePosition);
+    }
+    updatePosition();
 
     const error = $(field.node()).find('[data-dte-e="msg-error"]').first();
     const errorId = editor.TABLE.DATA.id + "_" + textarea.id + "_jsonerror";
@@ -69,6 +92,7 @@ export function initJsonEditor(editor, name, textarea, required) {
     });
     $(field.node()).on("change.jsoneditor", () => {
         lines.refresh();
+        updatePosition();
         if (field.isMultiValue() || textarea.getAttribute("aria-invalid") === "true") validate();
     });
     button.addEventListener("click", () => {

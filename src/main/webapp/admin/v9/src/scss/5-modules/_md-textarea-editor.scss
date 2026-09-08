@@ -58,10 +58,61 @@
     width: 1%;
 }
 
-.md-jsoneditor-format {
-    margin-top: 5px;
+.md-jsoneditor-control {
+    min-width: 0;
+    border: 1px solid var(--wj-nice-gray-300);
+    border-radius: var(--wj-border-radius);
+
+    &:focus-within {
+        outline: 2px solid var(--wj-secondary);
+        outline-offset: 2px;
+    }
+
+    .md-textarea-editor {
+        border: 0;
+        border-radius: 0 0 var(--wj-border-radius) var(--wj-border-radius);
+
+        &:focus-within {
+            outline: none;
+        }
+    }
 }
 
-.DTE_Field_StateError .md-jsoneditor .md-textarea-editor {
+.md-jsoneditor-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px 10px;
+    padding: 5px 8px;
+    border-bottom: 1px solid var(--wj-nice-gray-300);
+
+    > .btn {
+        border: 0;
+        background-color: transparent;
+
+        &:hover, &:active {
+            background-color: var(--wj-nice-gray);
+        }
+
+        &.btn-ai:hover, &.btn-ai:focus, &.btn-ai:active {
+            background-color: var(--wj-ai-color-hover);
+        }
+    }
+}
+
+.DTE .DTE_Field .md-jsoneditor-control textarea.is-invalid {
+    padding-right: 40px;
+    background-position: right 24px top 8px;
+}
+
+.md-jsoneditor-position {
+    margin-left: auto;
+    color: var(--wj-gray-text);
+    font-size: 14px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.DTE_Field_StateError .md-jsoneditor-control {
     border-color: var(--bs-danger);
 }

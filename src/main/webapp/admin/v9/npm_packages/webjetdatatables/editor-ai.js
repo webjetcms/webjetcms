@@ -101,6 +101,12 @@ export class EditorAi {
 
                         if (inputField.closest(".custom-field-ai-disabled").length > 0) {
                             // This custom field type does not support AI actions.
+                        } else if (inputField.closest(".md-jsoneditor-control").length > 0) {
+                            const toolbar = inputField.closest(".md-jsoneditor-control").find(".md-jsoneditor-toolbar");
+                            if (toolbar.find(".ti-sparkles").length === 0) {
+                                const button = this._getEditorButton(column, "btn-sm");
+                                toolbar.find(".md-jsoneditor-position").before(button);
+                            }
                         } else if (inputField.parents(".bootstrap-select").length > 0) {
                             //it is probably custom field set as selectpicker, skip it
                             //we should probably better handle custom fields in future

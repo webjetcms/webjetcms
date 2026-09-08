@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.util.ReflectionUtils;
@@ -16,6 +17,7 @@ import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.json.JsonReadFeature;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
@@ -42,7 +44,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
  */
 public final class JsonEditorValidator {
 
-    private static final JsonFactory JSON_FACTORY = new JsonFactory();
+    private static final JsonFactory JSON_FACTORY = JsonFactory.builder()
+        .enable(JsonReadFeature.ALLOW_SINGLE_QUOTES, JsonReadFeature.ALLOW_UNQUOTED_FIELD_NAMES, JsonReadFeature.ALLOW_JAVA_COMMENTS)
+        .build();
+    private static final Pattern UNQUOTED_NAME = Pattern.compile("[\\p{L}_$][\\p{L}\\p{N}_$-]*");
     private static final String MESSAGE_PREFIX = "settings.custom-fields.jsoneditor.";
 
     private JsonEditorValidator() {}
@@ -148,7 +153,7 @@ public final class JsonEditorValidator {
     }
 
     /**
-     * Checks that a nonempty value contains exactly one complete JSON object.
+     * Checks one complete object, allowing single quotes, unquoted names and Java-style comments.
      * @param value original text, which is never changed
      * @param required whether an empty value is invalid
      * @param prop localized validation messages
@@ -160,7 +165,20 @@ public final class JsonEditorValidator {
         }
         try (JsonParser parser = JSON_FACTORY.createParser(value)) {
             if (parser.nextToken() != JsonToken.START_OBJECT) return prop.getText(MESSAGE_PREFIX + "object.js");
-            parser.skipChildren();
+            int depth = 1;
+            while (depth > 0) {
+                JsonToken token = parser.nextToken();
+                if (token == null) return prop.getText(MESSAGE_PREFIX + "invalid.js");
+                if (token == JsonToken.FIELD_NAME) {
+                    int offset = (int)parser.currentTokenLocation().getCharOffset();
+                    char first = value.charAt(offset);
+                    if (first != '\"' && first != '\'' && !UNQUOTED_NAME.matcher(parser.currentName()).matches()) {
+                        return prop.getText(MESSAGE_PREFIX + "invalid.js");
+                    }
+                }
+                if (token.isStructStart()) depth++;
+                else if (token.isStructEnd()) depth--;
+            }
             if (parser.nextToken() != null) return prop.getText(MESSAGE_PREFIX + "invalid.js");
             return null;
         } catch (JsonProcessingException ex) {

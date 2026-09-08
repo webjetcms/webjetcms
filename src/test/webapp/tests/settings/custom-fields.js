@@ -227,6 +227,8 @@ Scenario('JSON editor validates objects and preserves source text', async ({ I, 
     const escapedString = String.raw`"\u0061\n\""`;
     const source = '{"id":9007199254740993,"html":"</textarea>&quot;","nested":{"items":[true,null]},"decimal":1.00,"escapes":' + escapedString + '}';
     const formatted = '{\n  "id": 9007199254740993,\n  "html": "</textarea>&quot;",\n  "nested": {\n    "items": [\n      true,\n      null\n    ]\n  },\n  "decimal": 1.00,\n  "escapes": ' + escapedString + '\n}';
+    const extended = "{title:'test',data-toggle:'tooltip',action:{content:'{Question?}' // text of question\n}}";
+    const extendedFormatted = "{\n  title: 'test',\n  data-toggle: 'tooltip',\n  action: {\n    content: '{Question?}' // text of question\n  }\n}";
 
     await deleteCustomFieldSettingsByTooltip(I, DT, DTE, jsonEditorMarker);
     openDocFieldsTab(I, DT, DTE, docId_2);
@@ -260,10 +262,39 @@ Scenario('JSON editor validates objects and preserves source text', async ({ I, 
     I.fillField(fieldB, "[]");
     DTE.save();
     I.waitForVisible(fieldB + "[aria-invalid='true']", 10);
+    I.fillField(fieldB, "{title:'test' // closing brace is part of the comment }");
+    DTE.save();
+    I.waitForVisible(fieldB + "[aria-invalid='true']", 10);
     I.fillField(fieldB, "   ");
     I.clickCss("#datatableInit_modal .DTE_Field_Name_fieldA .md-jsoneditor-format");
     I.assertEqual(formatted, await I.grabValueFrom(fieldA), "Formatting must preserve numeric lexemes and string contents");
     I.dontSeeElement("#datatableInit_modal .DTE_Field_Name_fieldA script");
+    const cursor = "#datatableInit_modal .DTE_Field_Name_fieldA .md-jsoneditor-position";
+    const toolbarLayout = await I.executeScript(() => {
+        const field = document.querySelector("#datatableInit_modal .DTE_Field_Name_fieldA");
+        const toolbar = field.querySelector(".md-jsoneditor-toolbar").getBoundingClientRect();
+        const textarea = field.querySelector("textarea").getBoundingClientRect();
+        const button = field.querySelector(".md-jsoneditor-format").getBoundingClientRect();
+        const position = field.querySelector(".md-jsoneditor-position").getBoundingClientRect();
+        return { above: toolbar.bottom <= textarea.top, aligned: button.right < position.left,
+            border: getComputedStyle(field.querySelector(".md-jsoneditor-format")).borderTopWidth,
+            aiInToolbar: field.querySelectorAll(".md-jsoneditor-toolbar .btn-ai").length,
+            sideButtons: field.querySelectorAll(".input-group > .btn-ai").length };
+    });
+    I.assertEqual("0px", toolbarLayout.border, "Toolbar actions must be borderless");
+    I.assertEqual(1, toolbarLayout.aiInToolbar, "AI must be available in the JSON toolbar");
+    I.assertEqual(0, toolbarLayout.sideButtons, "AI must not occupy a side column beside JSON");
+    I.assertTrue(toolbarLayout.above, "The JSON toolbar must be above the textarea");
+    I.assertTrue(toolbarLayout.aligned, "Cursor coordinates must be aligned to the right of the format button");
+    I.executeScript(() => {
+        const textarea = document.querySelector("#datatableInit_modal #DTE_Field_fieldA");
+        textarea.focus();
+        textarea.setSelectionRange(4, 4);
+    });
+    I.pressKey("ArrowRight");
+    I.waitForText("Riadok 2, stĺpec 4", 5, cursor);
+    I.pressKey("ArrowDown");
+    I.waitForText("Riadok 3, stĺpec 4", 5, cursor);
     I.saveScreenshot("jsoneditor-desktop.png");
 
     const lineCount = await I.executeScript(() => document.querySelector("#datatableInit_modal .DTE_Field_Name_fieldA .md-textarea-editor__lines").textContent.split("\n").length);
@@ -288,9 +319,33 @@ Scenario('JSON editor validates objects and preserves source text', async ({ I, 
     I.assertAbove(scrollState.textarea, 0, "Long JSON must scroll inside the editor");
     I.assertEqual(scrollState.textarea, scrollState.gutter, "Line numbers must follow vertical scrolling");
     I.assertTrue(scrollState.horizontal, "Long JSON lines must scroll horizontally without wrapping");
+    const errorIcon = await I.executeScript(() => {
+        const textarea = document.querySelector("#datatableInit_modal #DTE_Field_fieldA");
+        textarea.value += "}";
+        textarea.dispatchEvent(new Event("input", { bubbles: true }));
+        textarea.blur();
+        textarea.scrollTop = 0;
+        const style = getComputedStyle(textarea);
+        return { invalid: textarea.getAttribute("aria-invalid"), position: style.backgroundPosition,
+            padding: parseFloat(style.paddingRight), image: style.backgroundImage };
+    });
+    I.assertEqual("true", errorIcon.invalid, "Invalid long JSON must expose the error state");
+    I.assertContain(errorIcon.position, "24px", "The error icon must leave space beside the scrollbar");
+    I.assertAbove(errorIcon.padding, 24, "Invalid JSON must reserve text space for the error icon");
+    I.assertNotEqual("none", errorIcon.image, "The error icon must remain visible");
+    I.dontSeeElement(cursor);
+    I.saveScreenshot("jsoneditor-error.png");
+    I.executeScript(() => {
+        const textarea = document.querySelector("#datatableInit_modal #DTE_Field_fieldA");
+        textarea.value = textarea.value.slice(0, -1);
+        textarea.dispatchEvent(new Event("input", { bubbles: true }));
+        textarea.focus();
+    });
     I.resizeWindow(720, 900);
     const fitsViewport = await I.executeScript(() => document.querySelector("#datatableInit_modal #DTE_Field_fieldA").getBoundingClientRect().right <= window.innerWidth);
     I.assertTrue(fitsViewport, "The JSON textarea must fit a narrow viewport");
+    const toolbarFits = await I.executeScript(() => document.querySelector("#datatableInit_modal .DTE_Field_Name_fieldA .md-jsoneditor-position").getBoundingClientRect().right <= window.innerWidth);
+    I.assertTrue(toolbarFits, "Cursor coordinates must fit the narrow viewport");
     I.saveScreenshot("jsoneditor-narrow.png");
     I.wjSetDefaultWindowSize();
     I.fillField(fieldA, formatted);
@@ -298,14 +353,21 @@ Scenario('JSON editor validates objects and preserves source text', async ({ I, 
     I.pressKey("Tab");
     const tabLeftTextarea = await I.executeScript(() => document.activeElement.id !== "DTE_Field_fieldA");
     I.assertTrue(tabLeftTextarea, "Tab must move keyboard focus out of the textarea");
+    I.dontSeeElement(cursor);
     I.pressKey(["Shift", "Tab"]);
     const shiftTabReturned = await I.executeScript(() => document.activeElement.id === "DTE_Field_fieldA");
     I.assertTrue(shiftTabReturned, "Shift+Tab must move keyboard focus back to the textarea");
+    I.seeElement(cursor);
+    I.fillField(fieldB, extended);
+    I.clickCss("#datatableInit_modal .DTE_Field_Name_fieldB .md-jsoneditor-format");
+    I.assertEqual(extendedFormatted, await I.grabValueFrom(fieldB), "Formatting must preserve supported extensions and comments");
     DTE.save();
 
     openDocFieldsTab(I, DT, DTE, docId_2);
     I.assertEqual(formatted, await I.grabValueFrom(fieldA), "Saving and reopening must preserve the exact JSON source");
+    I.assertEqual(extendedFormatted, await I.grabValueFrom(fieldB), "Saving and reopening must preserve the extended object syntax");
     I.assertEqual(1, await I.grabNumberOfVisibleElements("#datatableInit_modal .DTE_Field_Name_fieldA .md-textarea-editor__lines"), "Reopening must not duplicate the gutter");
+    I.assertEqual(1, await I.grabNumberOfVisibleElements("#datatableInit_modal .DTE_Field_Name_fieldA .md-jsoneditor-toolbar"), "Reopening must not duplicate the toolbar");
     DTE.cancel();
 
     const historyBefore = await getJsonEditorHistoryIds(I, docId_2);

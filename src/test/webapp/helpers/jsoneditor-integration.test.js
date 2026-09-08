@@ -46,7 +46,7 @@ async function createFixture(t, {entityDecode, required = false} = {}) {
         Event: window.Event,
         $,
         WJ: {
-            translate: key => key,
+            translate: (key, line, column) => key === "settings.custom-fields.jsoneditor.cursor.js" ? `Line ${line}, column ${column}` : key,
             escapeHtml: text => $("<div>").text(text).html()
         },
         ...await utilities
@@ -122,29 +122,69 @@ test("Line numbers refresh after Editor setters and repeated enhancement without
     assert.equal(gutter.scrollTop, textarea.scrollTop);
 });
 
-test("AI buttons preserve the complete line-number editor after repeated binding", async t => {
+test("AI buttons remain in the JSON toolbar after repeated binding", async t => {
     const {window, editor, field, textarea, context} = await createFixture(t);
     textarea.classList.add("form-control");
     editor.TABLE.DATA.fields = [{name: "fieldA", type: "text", ai: [{}]}];
     context.WJ.hasPermission = () => true;
     loadBrowserModule(context, "npm_packages/webjetdatatables/editor-ai.js");
+    let aiClicks = 0;
     context.editorAiFixture = {
         EDITOR: editor,
-        _getEditorButton: () => context.$('<button type="button"><i class="ti-sparkles"></i></button>')
+        aiUserInterface: {generateAssistentOptions: () => aiClicks++}
     };
+    vm.runInContext("editorAiFixture._getEditorButton = EditorAi.prototype._getEditorButton", context);
     const wrapper = textarea.parentElement;
     textarea.focus();
     vm.runInContext("EditorAi.prototype.bindEditorButtons.call(editorAiFixture)", context);
     vm.runInContext("EditorAi.prototype.bindEditorButtons.call(editorAiFixture)", context);
 
-    assert.equal(textarea.parentElement, wrapper, "AI must wrap the whole editor so textarea and gutter keep matching layout");
-    assert.equal(wrapper.parentElement.className, "input-group");
+    assert.equal(textarea.parentElement, wrapper, "AI must preserve the textarea and gutter layout");
+    assert.equal(wrapper.parentElement.className, "md-jsoneditor-control");
     assert.equal(wrapper.querySelectorAll(".input-group").length, 0);
-    assert.equal(field.node().querySelectorAll(".input-group").length, 1);
+    assert.equal(field.node().querySelectorAll(".input-group").length, 0);
+    assert.equal(field.node().querySelectorAll(".md-jsoneditor-toolbar .ti-sparkles").length, 1);
     assert.equal(field.node().querySelectorAll(".ti-sparkles").length, 1);
     assert.equal(window.document.activeElement, textarea, "AI wrapping must retain the active textarea focus");
 
+    field.node().querySelector(".md-jsoneditor-toolbar .btn-ai").click();
+    assert.equal(aiClicks, 1, "The toolbar AI action must keep its original click handler");
     textarea.value = '{\n  "value": true\n}';
     textarea.dispatchEvent(new window.Event("input", {bubbles: true}));
     assert.equal(wrapper.querySelector(".md-textarea-editor__lines").textContent, "1\n2\n3");
+});
+
+test("JSON toolbar tracks the active caret through selection, input and formatting", async t => {
+    const {window, field, textarea} = await createFixture(t);
+    const toolbar = field.node().querySelector(".md-jsoneditor-toolbar");
+    const position = toolbar.querySelector(".md-jsoneditor-position");
+    const button = toolbar.querySelector(".md-jsoneditor-format");
+    assert.equal(toolbar.nextElementSibling, textarea.parentElement, "The toolbar must precede the textarea editor");
+    assert.equal(position.hidden, true, "Coordinates must be hidden before focus");
+    field.val("{\n  title: 'test'\n}");
+    textarea.focus();
+    assert.equal(position.hidden, false, "Focus must reveal coordinates");
+    textarea.setSelectionRange(5, 5);
+    textarea.dispatchEvent(new window.Event("keyup"));
+    assert.equal(position.textContent, "Line 2, column 4");
+
+    textarea.setSelectionRange(0, 5, "backward");
+    textarea.dispatchEvent(new window.Event("select"));
+    assert.equal(position.textContent, "Line 1, column 1", "Backward selection must report its active end");
+    textarea.setSelectionRange(0, 5, "forward");
+    textarea.dispatchEvent(new window.Event("select"));
+    assert.equal(position.textContent, "Line 2, column 4");
+
+    textarea.value = "{}";
+    textarea.dispatchEvent(new window.Event("input"));
+    assert.equal(position.textContent, "Line 1, column 3");
+    button.focus();
+    assert.equal(position.hidden, true, "Toolbar focus must hide textarea coordinates");
+    field.val("{title:'test'}");
+    assert.equal(position.hidden, true, "A programmatic update must not reveal inactive coordinates");
+    button.click();
+    assert.equal(position.hidden, false, "Formatting must restore focus and coordinates");
+    assert.equal(textarea.value, "{\n  title: 'test'\n}");
+    assert.equal(position.textContent, "Line 3, column 2");
+    assert.equal(window.document.activeElement, textarea);
 });

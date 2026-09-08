@@ -13,8 +13,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,7 +52,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.spring.DatatableExceptionHandlerV2;
 
 /**
- * Verifies strict JSON syntax, authoritative field rules and native validation errors.
+ * Verifies supported object syntax, authoritative field rules and native validation errors.
  */
 class JsonEditorValidatorTest {
 
@@ -77,12 +81,26 @@ class JsonEditorValidatorTest {
     /** Verifies malformed syntax and trailing input cannot be accepted as a partial document. */
     @ParameterizedTest
     @ValueSource(strings = {
-        "{", "{\"x\":}", "{\"x\":1,}", "{'x':1}", "{x:1}", "{/*comment*/\"x\":1}",
+        "{", "{\"x\":}", "{\"x\":1,}",
         "{\"x\":NaN}", "{\"x\":Infinity}", "{\"x\":01}", "{\"x\":\"\\q\"}",
-        "{\"x\":\"a\nb\"}", "{} {}", "{} null", "{} trailing", "{} //comment"
+        "{\"x\":\"a\nb\"}", "{} {}", "{} null", "{} trailing"
     })
     void rejectsMalformedOrTrailingInput(String value) {
         assertNotNull(JsonEditorValidator.validateValue(value, false, prop), "Invalid syntax must block saving");
+    }
+
+    /** Verifies the exact same extended syntax fixtures as the browser validator. */
+    @Test
+    void supportsSharedExtendedSyntax() throws Exception {
+        try (InputStream stream = getClass().getResourceAsStream("/sk/iway/iwcm/components/customfields/jsoneditor-syntax.json")) {
+            JsonNode fixtures = new ObjectMapper().readTree(stream);
+            for (JsonNode value : fixtures.get("valid")) {
+                assertNull(JsonEditorValidator.validateValue(value.asText(), true, prop), value.asText());
+            }
+            for (JsonNode value : fixtures.get("invalid")) {
+                assertNotNull(JsonEditorValidator.validateValue(value.asText(), true, prop), value.asText());
+            }
+        }
     }
 
     /** Verifies other legal JSON root values are not accepted as MHUB objects. */
