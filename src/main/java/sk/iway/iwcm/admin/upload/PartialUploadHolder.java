@@ -8,9 +8,10 @@ public class PartialUploadHolder implements Serializable {
     private static final long serialVersionUID = 1L;
     private int chunks;
     private String name;
-    
+
     private List<String> partPaths;
-    
+    private FileArchiveBulkUploadOptions fileArchiveBulkUploadOptions;
+
     public PartialUploadHolder(int chunks, String name)
     {
         this.chunks = chunks;
@@ -46,5 +47,15 @@ public class PartialUploadHolder implements Serializable {
     public void setPartPaths(List<String> partPaths)
     {
         this.partPaths = partPaths;
+    }
+
+    FileArchiveBulkUploadOptions getFileArchiveBulkUploadOptions()
+    {
+        return fileArchiveBulkUploadOptions;
+    }
+
+    void setFileArchiveBulkUploadOptions(FileArchiveBulkUploadOptions fileArchiveBulkUploadOptions)
+    {
+        this.fileArchiveBulkUploadOptions = fileArchiveBulkUploadOptions;
     }
 }

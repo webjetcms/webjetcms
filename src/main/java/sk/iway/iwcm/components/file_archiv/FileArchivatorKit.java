@@ -47,6 +47,9 @@ import sk.iway.iwcm.users.UsersDB;
  */
 public class FileArchivatorKit
 {
+    /** Serializes non-atomic archive file lifecycle operations within one JVM. */
+    static final Object FILE_OPERATION_LOCK = new Object();
+
     private Prop prop = Prop.getInstance();
     private List<String> errorsList;
 

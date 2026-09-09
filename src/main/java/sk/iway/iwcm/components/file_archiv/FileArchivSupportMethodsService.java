@@ -120,10 +120,28 @@ public abstract class FileArchivSupportMethodsService {
         return fab.getFilePath();
     }
 
-	// vrati cestu  k suboru alebo null
-	protected String getFileDirPath() {
-		String dirPath = getPreferredDirPath();
-		if(saveLater) dirPath = FileArchivatorKit.getFullInsertLaterPath() + dirPath;
+	/**
+	 * Resolves and validates the final destination directory without creating it.
+	 *
+	 * @return normalized directory path, or {@code null} when it is outside the archive root
+	 */
+	protected String resolveFileDestinationDirPath() {
+		return validateFileDirPath(getPreferredDirPath());
+	}
+
+	/**
+	 * Resolves and validates the physical storage directory without creating it.
+	 * Scheduled uploads use the insert-later staging prefix.
+	 *
+	 * @return normalized storage directory path, or {@code null} when it is outside the archive root
+	 */
+	protected String resolveFileDirPath() {
+		String dirPath = resolveFileDestinationDirPath();
+		if(dirPath == null || saveLater == false) return dirPath;
+		return validateFileDirPath(FileArchivatorKit.getFullInsertLaterPath() + dirPath);
+	}
+
+	private String validateFileDirPath(String dirPath) {
 		dirPath = normalizePath(dirPath);
 		String fileArchivPath = normalizePath( FileArchivatorKit.getArchivPath() );
 
@@ -133,6 +151,14 @@ public abstract class FileArchivSupportMethodsService {
 			errorParams = new String[] {fileArchivPath};
 			return null;
 		}
+
+		return dirPath;
+	}
+
+	// vrati cestu  k suboru alebo null
+	protected String getFileDirPath() {
+		String dirPath = resolveFileDirPath();
+		if(dirPath == null) return null;
 
 		IwcmFile fileDir = new IwcmFile(Tools.getRealPath(dirPath));
 		if (!fileDir.exists()) fileDir.mkdirs();

@@ -57,6 +57,15 @@ public interface FileArchiveRepository extends DomainIdRepository<FileArchivator
 
     List<FileArchivatorBean> findAllByUploadedAndDomainId(Integer uploaded, Integer domainId);
 
+    /**
+     * Atomically claims a waiting scheduled upload. The failed state is used as a fail-closed
+     * processing marker so another cluster node cannot publish the same detached row.
+     */
+    @Transactional
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE FileArchivatorBean fab SET fab.uploaded = -2 WHERE fab.id = :id AND fab.uploaded = 0 AND fab.domainId = :domainId")
+    int claimWaitingFile(@Param("id") Long id, @Param("domainId") Integer domainId);
+
     @Transactional
     @Modifying
     @Query("UPDATE FileArchivatorBean fab SET fab.referenceToMain = :newReferenceToMain WHERE fab.referenceToMain = :oldReferenceToMain AND fab.domainId = :domainId")

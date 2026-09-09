@@ -103,16 +103,33 @@ public class AdminUploadController {
 
         String errorKey = FileArchiveUploadService.validateArchiveUploadPermission(user, destinationFolder, referer);
         if (errorKey != null) {
+            AdminUploadServlet.deleteTempFile(fileKey);
             output.put("success", false);
             output.put("error", prop.getText(errorKey));
             return output.toString();
         }
 
         String archiveFolder = FileArchiveUploadService.normalizeArchiveFolder(destinationFolder);
+        FileArchiveBulkUploadOptions bulkUploadOptions = FileArchiveBulkUploadOptions.fromRequest(request);
+        if (bulkUploadOptions.getErrorKey() != null) {
+            AdminUploadServlet.deleteTempFile(fileKey);
+            output.put("success", false);
+            output.put("error", prop.getText(bulkUploadOptions.getErrorKey()));
+            return output.toString();
+        }
+        if (keepBoth == false && bulkUploadOptions.isSaveLater()) {
+            AdminUploadServlet.deleteTempFile(fileKey);
+            output.put("success", false);
+            output.put("error", prop.getText(FileArchiveBulkUploadOptions.ERROR_SAVE_LATER_REPLACE));
+            return output.toString();
+        }
+
         if (keepBoth) {
-            FileArchiveUploadService.uploadNewArchiveFileVersion(user, prop, archiveFolder, fileName, fileKey, output);
+            FileArchiveUploadService.uploadNewArchiveFileVersion(user, prop, archiveFolder, fileName, fileKey,
+                bulkUploadOptions, output);
         } else {
-            FileArchiveUploadService.overwriteArchiveFile(user, prop, archiveFolder, fileName, fileKey, output);
+            FileArchiveUploadService.overwriteArchiveFile(user, prop, archiveFolder, fileName, fileKey,
+                bulkUploadOptions, output);
         }
 
         return output.toString();

@@ -60,6 +60,7 @@ public class AdminUploadServlet extends HttpServlet
         boolean isBase64 = "base64".equals(request.getParameter("encoding"));
         String uploadType = Tools.getStringValue(request.getParameter("uploadType"), "");
         boolean saveIntoArchive = "fileArchive".equals(uploadType);
+        FileArchiveBulkUploadOptions bulkUploadOptions = null;
 
         JSONObject output = new JSONObject();
 
@@ -83,6 +84,18 @@ public class AdminUploadServlet extends HttpServlet
 
         String extension = FileTools.getFileExtension(name);
 
+        int chunk = Tools.getIntValue(request.getParameter("chunk"), 0);
+        int chunks = Tools.getIntValue(request.getParameter("chunks"), 0);
+
+        //dropzone.js compatibility
+        if (request.getParameter("dzchunkindex")!=null) chunk = Tools.getIntValue(request.getParameter("dzchunkindex"), 0);
+        if (request.getParameter("dztotalchunkcount")!=null) chunks = Tools.getIntValue(request.getParameter("dztotalchunkcount"), 0);
+
+        HttpSession session = request.getSession();
+        String partialUploadSessionKey = "partialUploadFile-"+name;
+        PartialUploadHolder holder = (PartialUploadHolder)session.getAttribute(partialUploadSessionKey);
+
+        //bulkUploadOptions stays non-null whenever errorKey remains null on the archive upload path below
         String errorKey;
         if (saveIntoArchive) {
             errorKey = AdminUploadValidator.validateUserAndFile(
@@ -93,6 +106,12 @@ public class AdminUploadServlet extends HttpServlet
                 errorKey = FileArchiveUploadService.validateArchiveUploadPermission(user, destinationFolder, referer);
                 if (errorKey == null) {
                     destinationFolder = FileArchiveUploadService.normalizeArchiveFolder(destinationFolder);
+                    if (chunk > 0 && holder != null && holder.getFileArchiveBulkUploadOptions() != null) {
+                        bulkUploadOptions = holder.getFileArchiveBulkUploadOptions();
+                    } else {
+                        bulkUploadOptions = FileArchiveBulkUploadOptions.fromRequest(request);
+                    }
+                    errorKey = bulkUploadOptions.getErrorKey();
                 }
             }
         } else {
@@ -103,6 +122,7 @@ public class AdminUploadServlet extends HttpServlet
         }
 
 		if (errorKey != null) {
+			cleanupPartialUpload(session, partialUploadSessionKey, holder);
 			try {
 				Prop prop = Prop.getInstance();
 				output.put("error", prop.getText(errorKey));
@@ -114,23 +134,16 @@ public class AdminUploadServlet extends HttpServlet
 			}
 		}
         else {
-            int chunk = Tools.getIntValue(request.getParameter("chunk"), 0);
-            int chunks = Tools.getIntValue(request.getParameter("chunks"), 0);
-
-            //dropzone.js kompatibilita
-            if (request.getParameter("dzchunkindex")!=null) chunk = Tools.getIntValue(request.getParameter("dzchunkindex"), 0);
-            if (request.getParameter("dztotalchunkcount")!=null) chunks = Tools.getIntValue(request.getParameter("dztotalchunkcount"), 0);
-
             Logger.debug(AdminUploadServlet.class, "doPost, chunk="+chunk+" chunks="+chunks);
 
             Part filePart = request.getPart("file");
 
-            HttpSession session = request.getSession();
-            PartialUploadHolder holder = (PartialUploadHolder)session.getAttribute("partialUploadFile-"+name);
             if (holder==null || chunk == 0)
             {
+                cleanupPartialUpload(session, partialUploadSessionKey, holder);
                 holder = new PartialUploadHolder(chunks, name);
-                session.setAttribute("partialUploadFile-"+name, holder);
+                holder.setFileArchiveBulkUploadOptions(bulkUploadOptions);
+                session.setAttribute(partialUploadSessionKey, holder);
             }
             boolean isLast = false;
             if (holder.getPartPaths().size()+1 == holder.getChunks() || holder.getChunks()==0)
@@ -168,7 +181,7 @@ public class AdminUploadServlet extends HttpServlet
 
             if (isLast)
             {
-                session.removeAttribute("partialUploadFile-"+name);
+                session.removeAttribute(partialUploadSessionKey);
                 // mam posledny, spojim ich do jedneho
 
                 IwcmOutputStream fos = null;
@@ -270,7 +283,8 @@ public class AdminUploadServlet extends HttpServlet
 
                         if (saveIntoArchive && writeDirectlyToDestination) {
                             Prop prop = Prop.getInstance(request);
-                            FileArchiveUploadService.saveNewArchiveFile(user, prop, destinationFolder, name, originalName, random, output);
+                            FileArchiveUploadService.saveNewArchiveFile(user, prop, destinationFolder, name,
+                                originalName, random, bulkUploadOptions, output);
                         }
                     }
                 }
@@ -289,6 +303,18 @@ public class AdminUploadServlet extends HttpServlet
 		response.setCharacterEncoding("UTF-8");
 		response.getWriter().write(output.toString());
 	}
+
+    private static void cleanupPartialUpload(HttpSession session, String sessionKey, PartialUploadHolder holder) {
+        if (holder == null) return;
+
+        session.removeAttribute(sessionKey);
+        for (String partPath : holder.getPartPaths()) {
+            File partFile = new File(partPath);
+            if (partFile.exists() && partFile.delete() == false) {
+                Logger.debug(AdminUploadServlet.class, "Failed to delete partial upload file: " + partPath);
+            }
+        }
+    }
 
     /**
      * Presunie uploadnuty subor z docasneho umiestnenia do cieloveho adresara

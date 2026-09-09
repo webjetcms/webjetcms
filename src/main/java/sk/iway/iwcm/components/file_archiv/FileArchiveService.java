@@ -36,6 +36,7 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 	private static final String ACTION_NOT_SUPPORTED = "components.file_archiv.action_not_allowed";
 	private static final String RECORD_NOT_FOUND = "components.file_archiv.not_found_archiv_record";
 	private static final String DB_SAVE_FAILED = "components.file_archiv.upload.after_save_error";
+	private static final String DESTINATION_CHANGE_NOT_ALLOWED = "components.file_archiv.upload.destination_change_not_allowed";
 	private static final String LOGGER_USER_ID = "Pouzivatel id: ";
 
 	private static final String UPLOAD_NEW_FILE_VERSION = "uploadNewFileVersion";
@@ -158,11 +159,23 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 	}
 
 	public void checkFileProperties(Errors errors) {
+		checkFileProperties(errors, true);
+	}
+
+	/**
+	 * Validates file properties while optionally enforcing the archive edit permission.
+	 * The bulk upload create flow historically requires only the archive upload permission,
+	 * while edits and the standard archive editor require the edit permission as well.
+	 *
+	 * @param errors validation errors
+	 * @param requireEditPermission whether the archive edit permission is required
+	 */
+	public void checkFileProperties(Errors errors, boolean requireEditPermission) {
 		boolean needCheckFile = false;
 		String tempFileKey = fab.getEditorFields().getFile();
 
 		//First check perms
-		if(currentUser.isEnabledItem("cmp_fileArchiv_edit_del_rollback") == false) {
+		if(requireEditPermission && currentUser.isEnabledItem("cmp_fileArchiv_edit_del_rollback") == false) {
 			errorList.add(PERMISSION_DENIED);
 			return;
 		}
@@ -266,14 +279,29 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 	}
 
 	private void checkFilePropertiesDetails(Errors errors) {
-		//kontrola prav na zapis do suboru
-		if(currentUser.isFolderWritable( normalizePath(getFileDirPath()) ) == false) {
-			errorList.add( "components.elfinder.commands.upload.error");
-			Logger.debug(this, "User nema pravo na zapis do priecinku:  " + normalizePath(getFileDirPath()) );
+		String destinationDirPath = resolveFileDestinationDirPath();
+		if(destinationDirPath == null) return;
+
+		if(FileBrowserTools.hasForbiddenSymbol(destinationDirPath)) {
+			errorList.add(FILE_UPLOAD_ERR);
 			return;
 		}
 
-		if(getFileDirPath() == null || FileBrowserTools.hasForbiddenSymbol(getFileDirPath())) {
+		if(isUploadDestinationChangeNotAllowed(destinationDirPath)) {
+			errors.rejectValue(FILE_FIELD, "", prop.getText(DESTINATION_CHANGE_NOT_ALLOWED));
+			return;
+		}
+
+		//kontrola prav na zapis do suboru
+		if(currentUser.isFolderWritable(destinationDirPath) == false) {
+			errorList.add( "components.elfinder.commands.upload.error");
+			Logger.debug(this, "User nema pravo na zapis do priecinku:  " + destinationDirPath);
+			return;
+		}
+
+		String fileDirPath = resolveFileDirPath();
+		if(fileDirPath == null) return;
+		if(FileBrowserTools.hasForbiddenSymbol(fileDirPath)) {
 			errorList.add(FILE_UPLOAD_ERR);
 			return;
 		}
@@ -303,7 +331,7 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 
 		//ak uz existuje referencia v databaze k suboru ktory este len ideme nahrat, tak je to problem. Niekto zmazal subor rucne.
 		//subor nemozeme nahrat pretoze by mohol byt zmazany inym zaznamom v databaze - omylom
-		if(FileArchivatorKit.existsPathInDB(getFileDirPath() + fileToUploadName) && !FileTools.isFile(getFileDirPath() + fileToUploadName) ) {
+		if(FileArchivatorKit.existsPathInDB(fileDirPath + fileToUploadName) && !FileTools.isFile(fileDirPath + fileToUploadName) ) {
 			errors.rejectValue(FILE_FIELD, "", prop.getText("components.file_archiv.upload.db_enrty_exists"));
 			return;
 		}
@@ -319,6 +347,12 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 	}
 
 	public String saveFile() {
+		synchronized(FileArchivatorKit.FILE_OPERATION_LOCK) {
+			return saveFileLocked();
+		}
+	}
+
+	private String saveFileLocked() {
 		if(fab.getId() == null || fab.getId() < 1) {
 			//CREATE action - can only upload file
 
@@ -358,14 +392,15 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		}
 	}
 
-	private synchronized String uploadFile(UploadType uploadType) {
+	private String uploadFile(UploadType uploadType) {
 		// Create requires perm to archive
 		if(currentUser.isEnabledItem("cmp_file_archiv") == false) return PERMISSION_DENIED;
 
 		String uniqueFileName = FileArchivatorKit.getUniqueFileName(fileToUploadName, getFileDirPath(), null);
+		String fileUrl = getFileDirPath() + uniqueFileName;
 
 		//Create file, write content into file AND check if file exists
-		String responseTxt = createWriteCheckFile( getFileDirPath() + uniqueFileName );
+		String responseTxt = createWriteCheckFile(fileUrl);
 		if(responseTxt != null) return responseTxt;
 
 		//
@@ -375,13 +410,14 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		fab.setEmails( fab.getEditorFields().getEmails() );
 
 		if(fab.saveWithDebugLog(getClass(), "uploadFile") == false) {
+			deleteCreatedFile(fileUrl);
 			return DB_SAVE_FAILED;
 		}
 
 		return null;
 	}
 
-	private synchronized String uploadNewFileVersion() {
+	private String uploadNewFileVersion() {
 		if(checkPerms() == false) return PERMISSION_DENIED;
 
 		FileArchivatorBean fabOld = repository.findFirstByIdAndDomainId(Long.valueOf(referenceId), domainId).orElse(null);
@@ -391,9 +427,13 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		String dateStamp = FileArchivatorKit.getDateStampAsString(fabOld.getDateInsert());
 		//if we are updating existing file, we want to keep the original file name
 		fileToUploadName = fabOld.getFileName();
+		String destinationDirPath = resolveFileDestinationDirPath();
+		if(isUploadDestinationChangeNotAllowed(destinationDirPath, fabOld.getFilePath(), fabOld.getUploaded())) return DESTINATION_CHANGE_NOT_ALLOWED;
+		String targetDirPath = getFileDirPath();
+		if(targetDirPath == null) return FILE_UPLOAD_ERR;
 
-		String uniqueFileName = FileArchivatorKit.getUniqueFileName(fileToUploadName, getFileDirPath(), dateStamp);
-		String fileUrl = getFileDirPath() + uniqueFileName;
+		String uniqueFileName = FileArchivatorKit.getUniqueFileName(fileToUploadName, targetDirPath, dateStamp);
+		String fileUrl = targetDirPath + uniqueFileName;
 		IwcmFile realFile = new IwcmFile( Tools.getRealPath(fileUrl) );
 
 		try {
@@ -419,17 +459,20 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 
 		if(saveLater == true) {
 			//fab is working with new file
-			prepareFileArchivatorBean(getFileDirPath(), uniqueFileName, referenceId, true);
+			prepareFileArchivatorBean(targetDirPath, uniqueFileName, referenceId, true);
 			fab.setDateUploadLater( fab.getEditorFields().getDateUploadLater() );
 			fab.setEmails( fab.getEditorFields().getEmails() );
 			fab.setOrderId(-1);
 
 			//Its all, just save IT
-			fab.saveWithDebugLog(getClass(), UPLOAD_NEW_FILE_VERSION);
+			if(fab.saveWithDebugLog(getClass(), UPLOAD_NEW_FILE_VERSION) == false) {
+				deleteCreatedFile(fileUrl);
+				return DB_SAVE_FAILED;
+			}
 			return null;
 		} else {
 			//fab is working with OLD file where we copied new content
-			prepareFileArchivatorBean(getFileDirPath(), fabOld.getFileName(), null, true);
+			prepareFileArchivatorBean(targetDirPath, fabOld.getFileName(), null, true);
 
 			//pri nahravani neskor existenciu kontrolujeme skor kvoli multidomain
 			if(!FileTools.isFile(fab.getVirtualPath())) return FILE_UPLOAD_ERR;
@@ -463,12 +506,35 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		return null;
 	}
 
+	private boolean isUploadDestinationChangeNotAllowed(String destinationDirPath) {
+		if(destinationDirPath == null || referenceId < 1) return false;
+		if(uploadType != UploadType.NEW_VERSION && uploadType != UploadType.REPLACEMENT) return false;
+
+		FileArchivatorBean persistedFab = repository.findFirstByIdAndDomainId(Long.valueOf(referenceId), domainId).orElse(null);
+		if(persistedFab != null) {
+			return isUploadDestinationChangeNotAllowed(destinationDirPath, persistedFab.getFilePath(), persistedFab.getUploaded());
+		}
+		return isUploadDestinationChangeNotAllowed(destinationDirPath, fab.getFilePath(), fab.getUploaded());
+	}
+
+	private boolean isUploadDestinationChangeNotAllowed(String destinationDirPath, String currentFilePath, Integer uploaded) {
+		String requestedDirPath = destinationDirPath;
+		if(uploaded != null && uploaded == 0 && uploadType == UploadType.REPLACEMENT) {
+			requestedDirPath = resolveFileDirPath();
+		}
+		return requestedDirPath != null && requestedDirPath.equals(normalizePath(currentFilePath)) == false;
+	}
+
 	private String replaceFile()
 	{
 		if(checkPerms() == false) return PERMISSION_DENIED;
 
 		FileArchivatorBean fabOld = repository.findFirstByIdAndDomainId(Long.valueOf(referenceId), domainId).orElse(null);
 		if(fabOld == null) return RECORD_NOT_FOUND;
+		String destinationDirPath = resolveFileDestinationDirPath();
+		if(isUploadDestinationChangeNotAllowed(destinationDirPath, fabOld.getFilePath(), fabOld.getUploaded())) return DESTINATION_CHANGE_NOT_ALLOWED;
+		String targetDirPath = getFileDirPath();
+		if(targetDirPath == null) return FILE_UPLOAD_ERR;
 
 		//vymazanie stareho suboru
 		IwcmFile iFile = new IwcmFile( fabOld.getRealPath() );
@@ -477,13 +543,13 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 			return  FILE_UPLOAD_ERR;
 		}
 
-		String fileUrl = getFileDirPath() + fabOld.getFileName();
+		String fileUrl = targetDirPath + fabOld.getFileName();
 
 		//Create file, write content into file AND check if file exists
 		String responseTxt = createWriteCheckFile(fileUrl);
 		if(responseTxt != null) return responseTxt;
 
-		prepareFileArchivatorBean(getFileDirPath(), fabOld.getFileName(), null, false);
+		prepareFileArchivatorBean(targetDirPath, fabOld.getFileName(), null, false);
 
 		if(fab.saveWithDebugLog(getClass(), "replaceFile") == false) {
 			return DB_SAVE_FAILED;
@@ -791,6 +857,13 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 			return FILE_UPLOAD_ERR;
 		}
 		return null;
+	}
+
+	private void deleteCreatedFile(String fileUrl) {
+		IwcmFile createdFile = new IwcmFile(Tools.getRealPath(fileUrl));
+		if(createdFile.exists() && createdFile.delete() == false) {
+			Logger.debug(FileArchiveService.class, "Failed to delete file after database save error: " + fileUrl);
+		}
 	}
 
 	/**

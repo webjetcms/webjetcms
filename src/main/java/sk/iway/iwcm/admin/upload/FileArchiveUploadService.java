@@ -3,6 +3,7 @@ package sk.iway.iwcm.admin.upload;
 import java.util.Date;
 
 import org.json.JSONObject;
+import org.springframework.validation.BeanPropertyBindingResult;
 
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
@@ -16,6 +17,7 @@ import sk.iway.iwcm.components.file_archiv.FileArchivatorBean;
 import sk.iway.iwcm.components.file_archiv.FileArchivatorEditorFields;
 import sk.iway.iwcm.components.file_archiv.FileArchivatorKit;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.DatatableRequest;
 
 /**
  * Shared service for file archive upload operations used by both AdminUploadServlet and AdminUploadController.
@@ -70,6 +72,13 @@ public class FileArchiveUploadService {
      */
     public static void saveNewArchiveFile(Identity user, Prop prop, String destinationFolder, String fileName,
                                           String originalName, String fileKey, JSONObject output) {
+        saveNewArchiveFile(user, prop, destinationFolder, fileName, originalName, fileKey,
+            FileArchiveBulkUploadOptions.none(), output);
+    }
+
+    static void saveNewArchiveFile(Identity user, Prop prop, String destinationFolder, String fileName,
+                                   String originalName, String fileKey, FileArchiveBulkUploadOptions bulkUploadOptions,
+                                   JSONObject output) {
         FileArchiveRepository repository = Tools.getSpringBean("fileArchiveRepository", FileArchiveRepository.class);
         Long existingFileId = FileArchiveService.getId(destinationFolder, fileName, repository);
 
@@ -89,12 +98,10 @@ public class FileArchiveUploadService {
             editorFields.setDir(destinationFolder);
             editorFields.setFile(fileKey);
             entity.setEditorFields(editorFields);
-
-            String result = saveArchiveEntity(user, prop, entity, repository);
-
-            if (Tools.isNotEmpty(result)) {
-                putError(output, prop, result);
-            } else {
+            String optionsError = bulkUploadOptions.applyTo(entity);
+            if (Tools.isNotEmpty(optionsError)) {
+                putError(output, prop, optionsError);
+            } else if (validateAndSaveArchiveEntity(user, prop, entity, repository, output)) {
                 output.put("name", entity.getFileName());
                 output.put("destinationFolder", entity.getFilePath());
                 output.put("virtualPath", entity.getVirtualPath());
@@ -116,7 +123,13 @@ public class FileArchiveUploadService {
      */
     public static void overwriteArchiveFile(Identity user, Prop prop, String archiveFolder, String fileName,
                                             String fileKey, JSONObject output) {
-        saveArchiveFileVersion(user, prop, archiveFolder, fileName, fileKey, "replacement", output);
+        overwriteArchiveFile(user, prop, archiveFolder, fileName, fileKey, FileArchiveBulkUploadOptions.none(), output);
+    }
+
+    static void overwriteArchiveFile(Identity user, Prop prop, String archiveFolder, String fileName,
+                                     String fileKey, FileArchiveBulkUploadOptions bulkUploadOptions,
+                                     JSONObject output) {
+        saveArchiveFileVersion(user, prop, archiveFolder, fileName, fileKey, "replacement", bulkUploadOptions, output);
     }
 
     /**
@@ -130,15 +143,24 @@ public class FileArchiveUploadService {
      */
     public static void uploadNewArchiveFileVersion(Identity user, Prop prop, String archiveFolder, String fileName,
                                                    String fileKey, JSONObject output) {
-        saveArchiveFileVersion(user, prop, archiveFolder, fileName, fileKey, "new_version", output);
+        uploadNewArchiveFileVersion(user, prop, archiveFolder, fileName, fileKey,
+            FileArchiveBulkUploadOptions.none(), output);
+    }
+
+    static void uploadNewArchiveFileVersion(Identity user, Prop prop, String archiveFolder, String fileName,
+                                            String fileKey, FileArchiveBulkUploadOptions bulkUploadOptions,
+                                            JSONObject output) {
+        saveArchiveFileVersion(user, prop, archiveFolder, fileName, fileKey, "new_version", bulkUploadOptions, output);
     }
 
     private static void saveArchiveFileVersion(Identity user, Prop prop, String archiveFolder, String fileName,
-                                               String fileKey, String uploadType, JSONObject output) {
+                                               String fileKey, String uploadType, FileArchiveBulkUploadOptions bulkUploadOptions,
+                                               JSONObject output) {
         FileArchiveRepository repository = Tools.getSpringBean("fileArchiveRepository", FileArchiveRepository.class);
         Long existingFileId = FileArchiveService.getId(archiveFolder, fileName, repository);
         FileArchivatorBean entity = repository.findFirstByIdAndDomainId(existingFileId, CloudToolsForCore.getDomainId()).orElse(null);
         if (entity == null) {
+            AdminUploadServlet.deleteTempFile(fileKey);
             putError(output, prop, "components.file_archiv.not_found_archiv_record");
             return;
         }
@@ -148,29 +170,64 @@ public class FileArchiveUploadService {
         editorFields.setFile(fileKey);
         editorFields.setUploadType(uploadType);
         entity.setEditorFields(editorFields);
-
-        String result = saveArchiveEntity(user, prop, entity, repository);
-
-        if (Tools.isNotEmpty(result)) {
-            putError(output, prop, result);
-        } else {
+        String optionsError = bulkUploadOptions.applyTo(entity);
+        if (Tools.isNotEmpty(optionsError)) {
             AdminUploadServlet.deleteTempFile(fileKey);
+            putError(output, prop, optionsError);
+            return;
+        }
+
+        boolean saved = validateAndSaveArchiveEntity(user, prop, entity, repository, output);
+        AdminUploadServlet.deleteTempFile(fileKey);
+        if (saved) {
             output.put("success", true);
             output.put("virtualPath", entity.getVirtualPath());
         }
     }
 
-    private static String saveArchiveEntity(Identity user, Prop prop, FileArchivatorBean entity, FileArchiveRepository repository) {
+    static boolean validateAndSaveArchiveEntity(Identity user, Prop prop, FileArchivatorBean entity,
+                                                FileArchiveRepository repository, JSONObject output) {
         FileArchiveService fileArchiveService = new FileArchiveService(user, prop, entity, repository);
+        DatatableRequest<Long, FileArchivatorBean> validationTarget = new DatatableRequest<>();
+        validationTarget.setErrorField(entity);
+        BeanPropertyBindingResult errors = new BeanPropertyBindingResult(validationTarget, "datatableRequest");
+        boolean requireEditPermission = entity.getId() != null && entity.getId() > 0;
+        fileArchiveService.checkFileProperties(errors, requireEditPermission);
+
+        if (fileArchiveService.getErrorList().isEmpty() == false) {
+            putError(output, prop, fileArchiveService.getErrorList().get(0), fileArchiveService.getErrorParams());
+            return false;
+        }
+        if (errors.hasErrors()) {
+            putLocalizedError(output, errors.getAllErrors().get(0).getDefaultMessage());
+            return false;
+        }
+
         String result = fileArchiveService.saveFile();
         if (Tools.isEmpty(result) && fileArchiveService.getErrorList().isEmpty() == false) {
             result = fileArchiveService.getErrorList().get(0);
         }
-        return result;
+        if (Tools.isNotEmpty(result)) {
+            putError(output, prop, result, fileArchiveService.getErrorParams());
+            return false;
+        }
+        return true;
     }
 
     private static void putError(JSONObject output, Prop prop, String errorKey) {
+        putError(output, prop, errorKey, null);
+    }
+
+    private static void putError(JSONObject output, Prop prop, String errorKey, String[] errorParams) {
         output.put("success", false);
-        output.put("error", prop.getText(errorKey));
+        String error = errorParams != null && errorParams.length > 0
+            ? prop.getTextWithParams(errorKey, errorParams)
+            : prop.getText(errorKey);
+        output.put("error", error);
+    }
+
+    private static void putLocalizedError(JSONObject output, String error) {
+        output.put("success", false);
+        output.put("error", error);
     }
 }
