@@ -46,6 +46,8 @@
 
 ![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
 
+- Page Builder - elements marked with the CSS class [`pb-duplicable`](frontend/page-builder/settings.md#duplicate-element-orange-color) can be moved, duplicated, and deleted within the same parent. Custom or multiple selectors can be set via `pbCustomSettings` (#58750).
+
 ### Headless mode
 
 Added [headless mode support](frontend/headless/README.md), in which WebJET CMS serves purely as a `backend` CMS. Content, navigation, search and forms are accessible via REST API. Frontend application (e.g. Astro, Next.js, Vue, React or any HTTP client) will download the data and display it according to its own templates (#258).
@@ -133,6 +135,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 - Added option to set optional field as required (#58413).
 - Added new optional field types [radio check box and radio check box](frontend/webpages/customfields/custom-fields-settings.md#difference-between-selectmultiselect-and-radiocheckbox) with support for both static options and codebook linking. The `multiselect` type now also supports [codebook linking](frontend/webpages/customfields/custom-fields-settings.md#option-source). The original `enumeration` type has been replaced by an option source switch for types `select`, `multiselect`, `radio` and `checkbox` where options are loaded from a linked codebook for all these field types (#58637).
+- Added [JSON Editor](developer/datatables-editor/customfields.md#json-editor) type (`jsoneditor`) for direct input of JSON object with line numbers and formatting button (#OSK659).
+
+![](frontend/webpages/customfields/webpages-jsoneditor.png)
 
 ### Accessibility
 

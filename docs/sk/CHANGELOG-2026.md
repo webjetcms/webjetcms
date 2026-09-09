@@ -135,6 +135,9 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 - Pridaná možnosť nastaviť voliteľné pole ako povinné (#58413).
 - Pridané nové typy voliteľných polí [prepínač a zaškrtávacie pole](frontend/webpages/customfields/custom-fields-settings.md#rozdiel-medzi-selectmultiselect-a-radiocheckbox) s podporou statických možností aj prepojenia na číselník. Typ `multiselect` teraz tiež podporuje [prepojenie na číselník](frontend/webpages/customfields/custom-fields-settings.md#zdroj-možností). Pôvodný typ `enumeration` bol nahradený prepínačom zdroja možností pri typoch `select`, `multiselect`, `radio` a `checkbox` kde sa pre všetky tieto typy polí načítajú možnosti z prepojeného číselníka (#58637).
+- Pridaný typ [Editor JSON](developer/datatables-editor/customfields.md#json-editor) (`jsoneditor`) pre priame zadávanie JSON objektu s číslami riadkov a tlačidlom na formátovanie (#311).
+
+![](frontend/webpages/customfields/webpages-jsoneditor.png)
 
 ### Prístupnosť
 
@@ -183,6 +186,10 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Webové stránky - opravené pridávanie prázdneho `P` elementu na koniec stránky (#58317-13).
 - Webové stránky - opravené načítanie hodnoty `ckeditor_button_sizes` pre tlačidlo typu `A` (#OSK674).
 - Monitorovanie SQL - opravená správa životného cyklu meraní `PreparedStatement`. Záznam sa odstráni aj pri zatvorení pred spustením merania a jednotlivé objekty `PreparedStatement` sa rozlišujú podľa identity bez volania JDBC `hashCode()` a `equals()`. Súbežný prístup používa `ConcurrentHashMap` a atomický stav bez globálneho `synchronized` bloku, takže vlákna nečakajú na spoločný zámok a merania sa nespoja ani pri kolízii identitných hashov.
+
+### Výkon
+
+- Optimalizované načítanie skupiny šablón pri zobrazení stránky a hľadaní voliteľných polí. Skupina je uložená do cache a znova použitá bez potreby jej čítania z databázy (#311).
 
 ### Bezpečnosť
 
