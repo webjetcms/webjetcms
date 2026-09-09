@@ -41,7 +41,15 @@ import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.system.UpdateDatabase;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 
-/** Performs the explicit, resumable migration of versioned browser identifiers. */
+/**
+ * Migrates versioned browser identifiers to canonical browser-family identifiers.
+ *
+ * <p>The migration runs on a single background worker, commits changes in bounded batches,
+ * and exposes a synchronized progress snapshot so an administrator can pause, resume, and
+ * monitor it. Finalization is a separate explicit step that merges browser counters, removes
+ * obsolete identifiers, creates the uniqueness constraint, and refreshes statistics caches
+ * across the cluster.</p>
+ */
 @Service
 public class BrowserIdentifierMigrationService implements DisposableBean {
 
@@ -51,14 +59,13 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
     private static final int UPDATE_BATCH_SIZE = 500;
     private static final Pattern VERSION_SUFFIX = Pattern.compile("(?i)\\s+v?\\d+(?:[._-]\\d+)*$");
     private static final Pattern VERSION_ONLY = Pattern.compile("(?i)^v?\\d+(?:[._-]\\d+)*$");
-    private static final Pattern SAFE_TABLE = Pattern.compile("[a-zA-Z0-9_]+");
-
     private final Object stateLock = new Object();
     private final ExecutorService executor;
     private State migrationState = new State();
     private MigrationPlan migrationPlan;
     private volatile boolean stopRequested;
 
+    /** Creates the production service with one dedicated daemon worker thread. */
     public BrowserIdentifierMigrationService() {
         this(Executors.newSingleThreadExecutor(task -> {
             Thread thread = new Thread(task, "browser-identifier-migration");
@@ -67,10 +74,16 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         }));
     }
 
+    /**
+     * Creates the service with an externally supplied executor, primarily for deterministic tests.
+     *
+     * @param executor executor that accepts migration and finalization tasks
+     */
     BrowserIdentifierMigrationService(ExecutorService executor) {
         this.executor = executor;
     }
 
+    /** Describes one source identifier that must be replaced by its canonical target. */
     @Getter
     @AllArgsConstructor
     public static class Mapping {
@@ -80,6 +93,7 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         private final String target;
     }
 
+    /** Contains the read-only analysis shown before an administrator starts the migration. */
     @Getter
     @AllArgsConstructor
     public static class Preview {
@@ -88,6 +102,7 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         private final List<String> tables;
     }
 
+    /** Summarizes how many obsolete statistics keys were deleted or retained during finalization. */
     @Getter
     @AllArgsConstructor
     public static class FinalizationResult {
@@ -95,6 +110,13 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         private final int retainedStatKeys;
     }
 
+    /**
+     * Mutable migration progress transferred through the REST API as a detached snapshot.
+     *
+     * <p>Cursor values describe the current table, while the cumulative counters cover the
+     * complete migration. Lifecycle flags distinguish active migration, cooperative pause,
+     * completion, and the separate finalization phase.</p>
+     */
     @Getter
     @Setter
     @NoArgsConstructor
@@ -120,6 +142,12 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         private String error;
     }
 
+    /**
+     * Analyzes the current database without creating identifiers or modifying statistics.
+     *
+     * @return mappings that would be applied and the statistics tables that would be processed
+     * @throws SQLException if identifiers or table metadata cannot be read
+     */
     public Preview preview() throws SQLException {
         try (Connection connection = DBPool.getConnection()) {
             List<Mapping> botMappings = buildSeoBotMappings(connection, false);
@@ -128,24 +156,32 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         }
     }
 
+    /**
+     * Returns the latest detached progress snapshot.
+     *
+     * <p>A newly created service also restores the completed flag from the persistent update
+     * marker before returning the snapshot.</p>
+     *
+     * @return a copy of the current migration state
+     */
     public State getStatus() {
         synchronized (stateLock) {
-            if (migrationState.isRunning() == false && migrationState.isDone() == false &&
-                UpdateDatabase.isAllreadyUpdated(UPDATE_NOTE)) {
-                migrationState.setDone(true);
-                migrationState.setTable("done");
-            }
+            restoreCompletedState();
             return copyState(migrationState);
         }
     }
 
+    /**
+     * Starts or resumes migration on the background worker.
+     *
+     * <p>The request is ignored when a task is already running or the persistent migration
+     * marker reports completion. A paused migration reuses its prepared plan and cursor.</p>
+     *
+     * @return the state immediately after the start request
+     */
     public State start() {
         synchronized (stateLock) {
-            if (migrationState.isRunning() == false && migrationState.isDone() == false &&
-                UpdateDatabase.isAllreadyUpdated(UPDATE_NOTE)) {
-                migrationState.setDone(true);
-                migrationState.setTable("done");
-            }
+            restoreCompletedState();
             if (migrationState.isRunning() || migrationState.isDone()) return copyState(migrationState);
 
             migrationState.setRunning(true);
@@ -156,16 +192,16 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
             migrationState.setUpdatedStatErrors(0);
             migrationState.setError(null);
             stopRequested = false;
-            try {
-                executor.execute(this::runMigration);
-            } catch (RejectedExecutionException ex) {
-                migrationState.setRunning(false);
-                migrationState.setError(ex.getMessage());
-            }
+            executeInBackground(this::runMigration);
             return copyState(migrationState);
         }
     }
 
+    /**
+     * Requests a cooperative pause after the currently executing database batch finishes.
+     *
+     * @return the state containing the stop-request flag when migration is active
+     */
     public State stop() {
         synchronized (stateLock) {
             if (migrationState.isRunning()) {
@@ -176,6 +212,12 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         }
     }
 
+    /**
+     * Starts asynchronous cleanup after all statistics references have been migrated.
+     *
+     * @return the state immediately after the finalization request
+     * @throws SQLException if the migration has not been marked as completed
+     */
     public State finalizeCompletedMigration() throws SQLException {
         synchronized (stateLock) {
             if (migrationState.isRunning()) return copyState(migrationState);
@@ -195,17 +237,43 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
             migrationState.setUpdatedStatErrors(0);
             migrationState.setError(null);
             migrationState.setTable("finalizing");
-            try {
-                executor.execute(this::runFinalization);
-            } catch (RejectedExecutionException ex) {
-                migrationState.setRunning(false);
-                migrationState.setFinalizing(false);
-                migrationState.setError(ex.getMessage());
-            }
+            executeInBackground(this::runFinalization);
             return copyState(migrationState);
         }
     }
 
+    /**
+     * Restores in-memory completion from the persistent update marker.
+     *
+     * <p>The caller must hold {@link #stateLock} while invoking this method.</p>
+     */
+    private void restoreCompletedState() {
+        if (migrationState.isRunning() == false && migrationState.isDone() == false &&
+            UpdateDatabase.isAllreadyUpdated(UPDATE_NOTE)) {
+            migrationState.setDone(true);
+            migrationState.setTable("done");
+        }
+    }
+
+    /**
+     * Submits a migration phase to the worker and publishes submission failures as state errors.
+     *
+     * @param task background migration or finalization task to execute
+     */
+    private void executeInBackground(Runnable task) {
+        try {
+            executor.execute(task);
+        } catch (RejectedExecutionException ex) {
+            publishFailedState(ex);
+        }
+    }
+
+    /**
+     * Rebuilds and validates canonical mappings, then removes obsolete identifiers transactionally.
+     *
+     * <p>Successful cleanup is audited and followed by a local and cluster-wide statistics cache
+     * refresh. Any database or runtime failure is logged and exposed in the shared state.</p>
+     */
     private void runFinalization() {
         try {
             List<Mapping> botMappings;
@@ -260,6 +328,17 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         }
     }
 
+    public static boolean isAllreadyUpdated() {
+        return UpdateDatabase.isAllreadyUpdated(BrowserIdentifierMigrationService.UPDATE_NOTE);
+    }
+
+    /**
+     * Processes the prepared migration plan until completion, pause, or failure.
+     *
+     * <p>Each loop iteration commits at most one bounded batch and publishes a new detached
+     * progress snapshot. A failed batch leaves the previously published cursor unchanged so the
+     * same work can be retried.</p>
+     */
     void runMigration() {
         try {
             MigrationPlan plan = prepareMigrationPlan();
@@ -303,6 +382,15 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         }
     }
 
+    /**
+     * Creates canonical identifiers and builds the immutable work plan used by background batches.
+     *
+     * <p>The plan is cached after the first successful preparation so a paused migration resumes
+     * with exactly the same mappings and ordered table list.</p>
+     *
+     * @return the existing resumable plan or a newly prepared plan
+     * @throws SQLException if mappings, target identifiers, or table definitions cannot be prepared
+     */
     private MigrationPlan prepareMigrationPlan() throws SQLException {
         synchronized (stateLock) {
             if (migrationPlan != null) return migrationPlan;
@@ -337,6 +425,16 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         }
     }
 
+    /**
+     * Processes and commits the next batch for the table selected by the supplied state.
+     *
+     * <p>Regular statistics tables advance by their numeric row identifier. {@code stat_error}
+     * tables have no row identifier and therefore advance through chunks of identifier mappings.</p>
+     *
+     * @param plan immutable identifier mappings and ordered table definitions
+     * @param state detached state to update after the batch succeeds
+     * @throws SQLException if the batch cannot be read, updated, committed, or rolled back
+     */
     private void processNextBatch(MigrationPlan plan, State state) throws SQLException {
         TableDefinition table = plan.tables().get(state.getTableIndex());
         state.setTable(table.name);
@@ -367,6 +465,15 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         }
     }
 
+    /**
+     * Applies one mapping chunk to a {@code stat_error} table using a set-based update.
+     *
+     * @param connection transactional connection used for the current batch
+     * @param table {@code stat_error} table being updated
+     * @param state detached state whose mapping cursor and counters are advanced
+     * @param mappings ordered browser-key mappings processed by cursor offset
+     * @throws SQLException if the set-based update fails
+     */
     private void processStatErrorBatch(Connection connection, TableDefinition table, State state,
                                        List<Mapping> mappings) throws SQLException {
         if (state.getTableMaxId() < 1) state.setTableMaxId(mappings.size());
@@ -386,6 +493,18 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         }
     }
 
+    /**
+     * Rewrites one group of browser-key identifiers in a {@code stat_error} table.
+     *
+     * <p>The table name must come from the migration's strict table-name allowlist. A single
+     * {@code UPDATE CASE} statement replaces every source ID in the supplied mapping chunk.</p>
+     *
+     * @param connection transactional connection used for the update
+     * @param table validated physical table name
+     * @param mappings source-to-target browser-key mappings for this batch
+     * @return number of database rows changed by the update
+     * @throws SQLException if the update cannot be prepared or executed
+     */
     long updateStatErrorMappingBatch(Connection connection, String table, List<Mapping> mappings) throws SQLException {
         if (mappings.isEmpty()) return 0;
         StringBuilder sql = new StringBuilder("UPDATE ").append(table)
@@ -405,6 +524,14 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         }
     }
 
+    /**
+     * Persists successful completion and publishes the terminal migration state.
+     *
+     * <p>A late stop request wins over completion. Otherwise the resumable plan is discarded only
+     * after the update marker and terminal state have been stored.</p>
+     *
+     * @param state detached state positioned after the final table
+     */
     private void finishMigration(State state) {
         if (isStopRequested()) {
             publishStoppedState();
@@ -425,16 +552,31 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         }
     }
 
+    /**
+     * Copies the shared state while holding its synchronization lock.
+     *
+     * @return detached state safe for mutation by the background worker
+     */
     private State getStateSnapshot() {
         synchronized (stateLock) {
             return copyState(migrationState);
         }
     }
 
+    /**
+     * Checks both the cooperative stop flag and worker-thread interruption.
+     *
+     * @return {@code true} when the active phase should stop after its current safe point
+     */
     private boolean isStopRequested() {
         return stopRequested || Thread.currentThread().isInterrupted();
     }
 
+    /**
+     * Publishes a running-state snapshot while preserving the latest stop request.
+     *
+     * @param state detached progress state produced by the worker
+     */
     private void publishRunningState(State state) {
         state.setRunning(true);
         state.setPaused(false);
@@ -444,6 +586,7 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         }
     }
 
+    /** Marks the current phase as paused and clears the consumed stop request. */
     private void publishStoppedState() {
         synchronized (stateLock) {
             migrationState.setRunning(false);
@@ -453,6 +596,11 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         }
     }
 
+    /**
+     * Publishes a terminal error state and clears active lifecycle flags.
+     *
+     * @param ex failure whose message is exposed to the administrator
+     */
     private void publishFailedState(Exception ex) {
         synchronized (stateLock) {
             migrationState.setRunning(false);
@@ -464,6 +612,12 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         }
     }
 
+    /**
+     * Creates a field-for-field copy so REST clients and workers never mutate shared state directly.
+     *
+     * @param source state to copy
+     * @return independent state containing the same progress and lifecycle values
+     */
     private State copyState(State source) {
         State copy = new State();
         copy.setTableIndex(source.getTableIndex());
@@ -488,6 +642,13 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         return copy;
     }
 
+    /**
+     * Writes an audit entry for a fully processed statistics table.
+     *
+     * @param table physical table that completed migration
+     * @param convertedRecords number of rows changed in that table
+     * @param durationMillis cumulative processing time for the table in milliseconds
+     */
     void auditCompletedTable(String table, long convertedRecords, long durationMillis) {
         Adminlog.add(
             Adminlog.TYPE_UPDATEDB,
@@ -499,6 +660,12 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         );
     }
 
+    /**
+     * Writes an audit entry summarizing identifier cleanup.
+     *
+     * @param deletedSeoBots number of obsolete {@code seo_bots} rows removed
+     * @param result statistics-key deletion and retention counts
+     */
     void auditFinalization(int deletedSeoBots, FinalizationResult result) {
         Adminlog.add(
             Adminlog.TYPE_UPDATEDB,
@@ -510,6 +677,12 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         );
     }
 
+    /**
+     * Formats an elapsed duration for audit output.
+     *
+     * @param durationMillis elapsed time in milliseconds
+     * @return duration formatted as {@code HH:mm:ss.SSS}
+     */
     static String formatDuration(long durationMillis) {
         long hours = TimeUnit.MILLISECONDS.toHours(durationMillis);
         long minutes = TimeUnit.MILLISECONDS.toMinutes(durationMillis) % 60;
@@ -518,18 +691,29 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         return String.format(Locale.ROOT, "%02d:%02d:%02d.%03d", hours, minutes, seconds, millis);
     }
 
+    /** Stops the worker and interrupts any active background migration during bean destruction. */
     @Override
     public void destroy() {
         stopRequested = true;
         executor.shutdownNow();
     }
 
+    /** Persists the migration update marker once, leaving an existing marker unchanged. */
     void markAsCompleted() {
         if (UpdateDatabase.isAllreadyUpdated(UPDATE_NOTE) == false) {
             UpdateDatabase.saveSuccessUpdate(UPDATE_NOTE);
         }
     }
 
+    /**
+     * Converts a versioned identifier to its whitespace-normalized browser-family name.
+     *
+     * <p>Empty values and identifiers containing only a version become {@code Unknown}. A trailing
+     * numeric version is removed, while already canonical identifiers remain unchanged.</p>
+     *
+     * @param value stored browser identifier; may be {@code null} or empty
+     * @return canonical browser-family identifier
+     */
     static String normalizeBrowserIdentifier(String value) {
         if (Tools.isEmpty(value)) return "Unknown";
         String normalized = value.trim().replaceAll("\\s+", " ");
@@ -538,6 +722,18 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         return Tools.isEmpty(normalized) ? "Unknown" : normalized;
     }
 
+    /**
+     * Groups {@code seo_bots} rows by normalized name and maps duplicates to one canonical row.
+     *
+     * <p>Rows are loaded by ascending ID. An existing row whose name already equals the canonical
+     * value is preferred as the target; otherwise the oldest row becomes the target and is renamed
+     * only in preparation mode.</p>
+     *
+     * @param connection connection used to load and optionally rename browser rows
+     * @param prepare whether missing canonical names may be written to the database
+     * @return mappings for every duplicate row except the selected canonical targets
+     * @throws SQLException if browser rows cannot be loaded or a target cannot be renamed
+     */
     private List<Mapping> buildSeoBotMappings(Connection connection, boolean prepare) throws SQLException {
         List<BrowserRow> rows = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement("SELECT seo_bots_id, name FROM seo_bots ORDER BY seo_bots_id");
@@ -556,7 +752,7 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
             String canonical = normalizeBrowserIdentifier(group.get(0).name);
             BrowserRow target = group.stream()
                 .filter(row -> canonical.equalsIgnoreCase(row.name))
-                .min(Comparator.comparingLong(row -> row.id)).orElse(group.get(0));
+                .findFirst().orElse(group.get(0));
             if (prepare && !canonical.equals(target.name)) {
                 try (PreparedStatement ps = connection.prepareStatement("UPDATE seo_bots SET name=? WHERE seo_bots_id=?")) {
                     ps.setString(1, canonical);
@@ -571,6 +767,18 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         return result;
     }
 
+    /**
+     * Maps versioned browser entries in the shared {@code stat_keys} table to canonical entries.
+     *
+     * <p>Values containing only a version are deliberately excluded because {@code stat_keys}
+     * stores non-browser dimensions as well. Preparation mode creates missing canonical targets,
+     * validates every target ID, and reports whether the statistics cache must be refreshed.</p>
+     *
+     * @param connection transactional connection used to inspect and optionally extend stat keys
+     * @param prepare whether missing canonical target rows may be created
+     * @return mappings and an indication that newly inserted targets require a cache refresh
+     * @throws SQLException if stat keys cannot be loaded, created, or validated
+     */
     StatKeyMappingResult buildStatKeyMappings(Connection connection, boolean prepare) throws SQLException {
         List<StatKeyRow> rows = new ArrayList<>();
         List<Mapping> mappings = new ArrayList<>();
@@ -602,6 +810,18 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         return new StatKeyMappingResult(mappings, cacheRefreshRequired);
     }
 
+    /**
+     * Resolves a canonical stat key or inserts it with a newly allocated application ID.
+     *
+     * <p>The database is checked again before insertion to account for another cluster node. The
+     * allocated ID is also checked explicitly because legacy schemas do not guarantee uniqueness
+     * of {@code stat_keys_id}.</p>
+     *
+     * @param connection transactional connection used for lookup and insertion
+     * @param target canonical stat-key value
+     * @return existing or newly allocated positive stat-key ID
+     * @throws SQLException if lookup, ID allocation validation, or insertion fails
+     */
     private long getOrCreateStatKey(Connection connection, String target) throws SQLException {
         long targetId = findStatKeyId(connection, target);
         if (targetId > 0) return targetId;
@@ -616,11 +836,17 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
             if (ps.executeUpdate() != 1) throw new SQLException("Failed to insert stat_keys value: " + target);
         }
 
-        targetId = findStatKeyId(connection, target);
-        if (targetId < 1) throw new SQLException("Inserted stat_keys value cannot be found: " + target);
-        return targetId;
+        return allocatedId;
     }
 
+    /**
+     * Finds the unique stat-key row for a canonical value.
+     *
+     * @param connection connection used for the lookup
+     * @param target canonical value to find
+     * @return matching positive ID, or {@code 0} when no row exists
+     * @throws SQLException if the query returns duplicate, mismatched, or invalid rows
+     */
     private long findStatKeyId(Connection connection, String target) throws SQLException {
         long targetId = 0;
         boolean found = false;
@@ -642,6 +868,13 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         return targetId;
     }
 
+    /**
+     * Ensures a newly allocated ID is not already present in a legacy {@code stat_keys} table.
+     *
+     * @param connection connection used for the lookup
+     * @param targetId allocated ID that must be unused
+     * @throws SQLException if the lookup fails or the ID already exists
+     */
     private void verifyStatKeyIdIsAvailable(Connection connection, long targetId) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement("SELECT value FROM stat_keys WHERE stat_keys_id=?")) {
             ps.setLong(1, targetId);
@@ -651,6 +884,16 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         }
     }
 
+    /**
+     * Verifies that every mapping points to exactly one row with the expected canonical value.
+     *
+     * <p>The preliminary in-memory check also rejects one target ID associated with multiple
+     * canonical values before any statistics table is rewritten.</p>
+     *
+     * @param connection connection used to validate target rows
+     * @param mappings source-to-target mappings to validate
+     * @throws SQLException if a target is invalid, ambiguous, missing, or has an unexpected value
+     */
     void verifyStatKeyTargets(Connection connection, List<Mapping> mappings) throws SQLException {
         Map<Long, String> targets = new LinkedHashMap<>();
         for (Mapping mapping : mappings) {
@@ -679,11 +922,17 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         }
     }
 
+    /** Reloads the local stat-key cache and requests the same refresh on other cluster nodes. */
     private void refreshStatKeyCache() {
         StatDB.getInstance(true);
         ClusterDB.addRefresh(StatDB.class);
     }
 
+    /**
+     * Refreshes caches when targets were inserted or are absent from the current local cache.
+     *
+     * @param result prepared mappings and their cache-refresh requirement
+     */
     private void refreshStatKeyCacheIfNeeded(StatKeyMappingResult result) {
         if (result.cacheRefreshRequired()) {
             refreshStatKeyCache();
@@ -700,6 +949,20 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         }
     }
 
+    /**
+     * Migrates one cursor-bounded batch from a regular statistics table.
+     *
+     * <p>At most {@link #ROW_BATCH_SIZE} rows are scanned. Changed browser IDs and optional
+     * browser-UA IDs are queued in JDBC batches while SQL {@code NULL} values are preserved.</p>
+     *
+     * @param connection transactional connection used to scan and update rows
+     * @param table validated regular statistics-table definition
+     * @param state detached progress state providing the cursor and maximum row ID
+     * @param botIds source-to-target mappings for {@code browser_id}
+     * @param keyIds source-to-target mappings for {@code browser_ua_id}
+     * @return ID of the last scanned row, or {@code 0} when the cursor found no rows
+     * @throws SQLException if rows cannot be read or a JDBC update batch fails
+     */
     long migrateRows(Connection connection, TableDefinition table, State state,
                      Map<Long, Long> botIds, Map<Long, Long> keyIds) throws SQLException {
         String select = "SELECT " + table.idColumn + ", browser_id" + (table.browserKey ? ", browser_ua_id" : "") +
@@ -752,6 +1015,18 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         return lastId;
     }
 
+    /**
+     * Merges browser counters into canonical rows and removes their obsolete source rows.
+     *
+     * <p>For each target, visit counts from the target and all sources are summed and the latest
+     * non-null visit timestamp is retained. The unique name index is created only after source
+     * rows have been deleted.</p>
+     *
+     * @param connection transactional connection used for aggregation, deletion, and index DDL
+     * @param mappings duplicate browser rows that will be grouped by canonical target ID
+     * @throws SQLException if counters cannot be read or written, rows cannot be deleted, or the
+     * unique index cannot be verified
+     */
     void finalizeSeoBots(Connection connection, List<Mapping> mappings) throws SQLException {
         Map<Long, List<Long>> sources = new HashMap<>();
         for (Mapping mapping : mappings) sources.computeIfAbsent(mapping.targetId, key -> new ArrayList<>()).add(mapping.sourceId);
@@ -789,6 +1064,15 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         ensureUniqueNameIndex(connection);
     }
 
+    /**
+     * Finalizes both browser rows and shared stat-key rows in one transaction.
+     *
+     * @param connection transactional connection used for all cleanup operations
+     * @param botMappings duplicate {@code seo_bots} rows to merge and delete
+     * @param keyMappings obsolete {@code stat_keys} rows to delete
+     * @return counts of deleted and database-retained stat-key rows
+     * @throws SQLException if either cleanup operation fails
+     */
     private FinalizationResult finalizeIdentifiers(Connection connection, List<Mapping> botMappings,
                                                      List<Mapping> keyMappings) throws SQLException {
         finalizeSeoBots(connection, botMappings);
@@ -796,6 +1080,14 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         return new FinalizationResult(deleted, keyMappings.size() - deleted);
     }
 
+    /**
+     * Deletes obsolete source rows from {@code stat_keys} in bounded JDBC batches.
+     *
+     * @param connection transactional connection used for deletion
+     * @param mappings mappings whose source IDs should be removed
+     * @return number of rows reported as deleted by the database driver
+     * @throws SQLException if a delete batch fails
+     */
     int deleteStatKeys(Connection connection, List<Mapping> mappings) throws SQLException {
         int deleted = 0;
         try (PreparedStatement ps = connection.prepareStatement("DELETE FROM stat_keys WHERE stat_keys_id=?")) {
@@ -814,6 +1106,16 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         return deleted;
     }
 
+    /**
+     * Converts JDBC batch result codes into an affected-row count.
+     *
+     * <p>{@link Statement#SUCCESS_NO_INFO} counts as one successful deletion because each batch
+     * entry contains one source ID. {@link Statement#EXECUTE_FAILED} aborts finalization.</p>
+     *
+     * @param results result codes returned by {@link PreparedStatement#executeBatch()}
+     * @return number of successful or positively counted batch entries
+     * @throws SQLException if any batch entry reports execution failure
+     */
     private int sumBatchResults(int[] results) throws SQLException {
         int count = 0;
         for (int result : results) {
@@ -824,6 +1126,17 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         return count;
     }
 
+    /**
+     * Ensures {@code seo_bots(name)} has an exact, unfiltered, single-column unique index.
+     *
+     * <p>Metadata is checked before and after DDL. The second check accepts an index created
+     * concurrently by another node, while still propagating the original DDL failure when the
+     * required index remains absent.</p>
+     *
+     * @param connection connection used for metadata inspection and index creation
+     * @throws SQLException if the table is ambiguous or missing, metadata cannot be read, or the
+     * required index cannot be created and verified
+     */
     void ensureUniqueNameIndex(Connection connection) throws SQLException {
         DatabaseMetaData metadata = connection.getMetaData();
         TableReference table = findTable(connection, metadata, "seo_bots");
@@ -841,6 +1154,15 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         throw new SQLException("Unique index on seo_bots(name) was not created");
     }
 
+    /**
+     * Resolves a table in the current catalog and schema with driver-compatible fallbacks.
+     *
+     * @param connection connection that supplies the current catalog and schema
+     * @param metadata database metadata used for table discovery
+     * @param expectedName case-insensitive table name to resolve
+     * @return unambiguous physical table reference
+     * @throws SQLException if metadata lookup fails or the table is missing or ambiguous
+     */
     private TableReference findTable(Connection connection, DatabaseMetaData metadata, String expectedName) throws SQLException {
         String catalog = connection.getCatalog();
         String schema = getCurrentSchema(connection, metadata);
@@ -852,6 +1174,16 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         return table;
     }
 
+    /**
+     * Searches one metadata scope for a case-insensitive table-name match.
+     *
+     * @param metadata database metadata used for discovery
+     * @param catalog catalog to search, or {@code null} for an unrestricted catalog
+     * @param schema schema to search, or {@code null} for an unrestricted schema
+     * @param expectedName case-insensitive table name to resolve
+     * @return matching table reference, or {@code null} when the scope contains no match
+     * @throws SQLException if metadata lookup fails or multiple physical tables match
+     */
     private TableReference findTable(DatabaseMetaData metadata, String catalog, String schema, String expectedName) throws SQLException {
         TableReference match = null;
         try (ResultSet rs = metadata.getTables(catalog, schema, "%", new String[] { "TABLE" })) {
@@ -869,6 +1201,17 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         return match;
     }
 
+    /**
+     * Reads the active schema when supported by the JDBC driver.
+     *
+     * <p>jTDS and drivers that throw {@link SQLFeatureNotSupportedException} are treated as having
+     * no usable schema so metadata discovery can fall back to a broader scope.</p>
+     *
+     * @param connection connection whose active schema is requested
+     * @param metadata metadata used to identify drivers with unsupported schema access
+     * @return current schema, or {@code null} when schema lookup is unsupported
+     * @throws SQLException if driver metadata or schema lookup fails for another reason
+     */
     private String getCurrentSchema(Connection connection, DatabaseMetaData metadata) throws SQLException {
         String driverName = metadata.getDriverName();
         if (driverName != null && driverName.toLowerCase(Locale.ROOT).contains("jtds")) return null;
@@ -879,6 +1222,18 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         }
     }
 
+    /**
+     * Checks whether a table has an unfiltered unique index containing only one expected column.
+     *
+     * <p>Index metadata rows are grouped by qualifier and name, sorted by ordinal position, and
+     * statistics or nullable uniqueness metadata are ignored.</p>
+     *
+     * @param metadata database metadata used to inspect indexes
+     * @param table resolved physical table reference
+     * @param expectedColumn case-insensitive column name required as the sole index column
+     * @return {@code true} only for an exact non-filtered unique index
+     * @throws SQLException if index metadata cannot be read
+     */
     private boolean hasUniqueSingleColumnIndex(DatabaseMetaData metadata, TableReference table, String expectedColumn) throws SQLException {
         Map<IndexReference, List<IndexColumn>> indexes = new LinkedHashMap<>();
         try (ResultSet rs = metadata.getIndexInfo(table.catalog, table.schema, table.name, true, false)) {
@@ -910,6 +1265,17 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         return false;
     }
 
+    /**
+     * Builds migration definitions for all discovered statistics tables with supported columns.
+     *
+     * <p>Regular tables require {@code browser_id} and use a name-derived row-ID column.
+     * {@code stat_error} tables are included only when they contain {@code browser_ua_id} and are
+     * marked for mapping-based processing because they have no migration cursor column.</p>
+     *
+     * @param connection connection used for table and column discovery
+     * @return ordered definitions for tables that can be migrated
+     * @throws SQLException if table or column metadata cannot be inspected
+     */
     List<TableDefinition> tableDefinitions(Connection connection) throws SQLException {
         List<TableDefinition> result = new ArrayList<>();
         for (String table : discoverTables(connection)) {
@@ -926,6 +1292,13 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         return result;
     }
 
+    /**
+     * Discovers allowlisted current and monthly statistics tables in the active metadata scope.
+     *
+     * @param connection connection used for metadata lookup
+     * @return case-insensitively sorted physical table names
+     * @throws SQLException if catalog, schema, or table metadata cannot be read
+     */
     private List<String> discoverTables(Connection connection) throws SQLException {
         List<String> result = new ArrayList<>();
         DatabaseMetaData metadata = connection.getMetaData();
@@ -935,15 +1308,22 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
             while (rs.next()) {
                 String table = rs.getString("TABLE_NAME");
                 String lower = table.toLowerCase(Locale.ROOT);
-                if (SAFE_TABLE.matcher(table).matches() && (lower.matches("stat_views(_\\d{4}_\\d{1,2})?") ||
-                    lower.matches("stat_from(_\\d{4}_\\d{1,2})?") || lower.matches("stat_error(_\\d{4}_\\d{1,2})?") ||
-                    lower.equals("emails_stat_click"))) result.add(table);
+                if (lower.matches("stat_views(_\\d{4}_\\d{1,2})?") || lower.matches("stat_from(_\\d{4}_\\d{1,2})?") ||
+                    lower.matches("stat_error(_\\d{4}_\\d{1,2})?") || lower.equals("emails_stat_click")) result.add(table);
             }
         }
         result.sort(String::compareToIgnoreCase);
         return result;
     }
 
+    /**
+     * Reads normalized column names from a zero-row query against an allowlisted table.
+     *
+     * @param connection connection used to inspect result-set metadata
+     * @param table validated physical table name
+     * @return lowercase column names exposed by the table
+     * @throws SQLException if the metadata query cannot be executed or inspected
+     */
     private Set<String> readTableColumns(Connection connection, String table) throws SQLException {
         Set<String> columns = new HashSet<>();
         try (Statement statement = connection.createStatement();
@@ -956,6 +1336,14 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         return columns;
     }
 
+    /**
+     * Captures the highest row ID that belongs to the current migration run for one table.
+     *
+     * @param connection connection used for the aggregate query
+     * @param table regular statistics-table definition with a cursor column
+     * @return maximum existing ID, or {@code 0} when the table has no rows
+     * @throws SQLException if the aggregate query fails
+     */
     private long maxId(Connection connection, TableDefinition table) throws SQLException {
         try (Statement statement = connection.createStatement();
              ResultSet rs = statement.executeQuery("SELECT MAX(" + table.idColumn + ") FROM " + table.name)) {
@@ -963,23 +1351,44 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         }
     }
 
+    /**
+     * Converts detailed mappings to the lookup form used while scanning statistics rows.
+     *
+     * @param mappings detailed source-to-target mappings
+     * @return map keyed by source ID with canonical target IDs as values
+     */
     private Map<Long, Long> toIdMap(List<Mapping> mappings) {
         Map<Long, Long> result = new HashMap<>();
         for (Mapping mapping : mappings) result.put(mapping.sourceId, mapping.targetId);
         return result;
     }
 
+    /** Represents one persisted {@code seo_bots} row during mapping analysis. */
     private record BrowserRow(long id, String name) {}
+
+    /** Represents one persisted {@code stat_keys} row during mapping analysis. */
     private record StatKeyRow(long id, String value) {}
+
+    /** Holds the stable mappings and table order reused while a migration is paused and resumed. */
     private record MigrationPlan(List<Mapping> keyMappings, Map<Long, Long> botIds, Map<Long, Long> keyIds,
                                  List<TableDefinition> tables) {}
+
+    /** Describes how one discovered statistics table must be migrated. */
     record TableDefinition(String name, String idColumn, boolean browserKey, boolean statError) {
         TableDefinition(String name, String idColumn, boolean browserKey) {
             this(name, idColumn, browserKey, false);
         }
     }
+
+    /** Identifies a physical table within JDBC catalog and schema metadata. */
     private record TableReference(String catalog, String schema, String name) {}
+
+    /** Groups the metadata rows that belong to one database index. */
     private record IndexReference(String qualifier, String name) {}
+
+    /** Captures the index-column metadata needed to recognize an exact uniqueness constraint. */
     private record IndexColumn(int position, String name, String filterCondition) {}
+
+    /** Returns prepared stat-key mappings together with their cache-refresh requirement. */
     record StatKeyMappingResult(List<Mapping> mappings, boolean cacheRefreshRequired) {}
 }

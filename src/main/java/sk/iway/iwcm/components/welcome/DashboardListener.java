@@ -202,7 +202,7 @@ public class DashboardListener {
                 }
             }
             model.addAttribute("show2FARecommendation", show2FARecommendation);
-            model.addAttribute("showBrowserIdentifierMigrationWarning", UpdateDatabase.isAllreadyUpdated(BrowserIdentifierMigrationService.UPDATE_NOTE) == false);
+            model.addAttribute("showBrowserIdentifierMigrationWarning", BrowserIdentifierMigrationService.isAllreadyUpdated() == false);
 
         } catch (JsonProcessingException e) {
             Logger.error(DashboardListener.class, e);

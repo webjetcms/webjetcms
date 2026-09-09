@@ -177,6 +177,7 @@
                 <include name="sk/iway/tags/**"/>
                 <include name="sk/iway/upload/**"/>
                 <include name="sk/iway/webjet/**"/>
+                <include name="ua-parser/regexes.yaml"/>
 
                 <exclude name="**/*Test.class"/>
                 <exclude name="**/*Test$1.class"/>

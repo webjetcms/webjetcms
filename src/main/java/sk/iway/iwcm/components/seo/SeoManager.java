@@ -6,7 +6,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,9 +64,8 @@ public class SeoManager
 		if (ensureSearchEngineExists(browserName) < 1) return false;
 
 		Timestamp visitTime = new Timestamp(Tools.getNow());
-		String sql = "UPDATE seo_bots SET visit_count=COALESCE(visit_count, 0)+1, " +
-			"last_visit=CASE WHEN last_visit IS NULL OR last_visit < ? THEN ? ELSE last_visit END WHERE name=?";
-		StatWriteBuffer.add(sql, "seo_bots", visitTime, visitTime, browserName);
+		String sql = "UPDATE seo_bots SET visit_count=COALESCE(visit_count, 0)+1, last_visit=? WHERE name=?";
+		StatWriteBuffer.add(sql, "seo_bots", visitTime, browserName);
 		return true;
 	}
 

@@ -299,22 +299,19 @@ class BrowserIdentifierMigrationServiceTest {
         PreparedStatement findBeforeInsert = mock(PreparedStatement.class);
         PreparedStatement checkAvailableId = mock(PreparedStatement.class);
         PreparedStatement insertStatement = mock(PreparedStatement.class);
-        PreparedStatement findAfterInsert = mock(PreparedStatement.class);
         PreparedStatement validateTarget = mock(PreparedStatement.class);
         ResultSet sourceRows = mock(ResultSet.class);
         ResultSet missingTarget = mock(ResultSet.class);
         ResultSet availableId = mock(ResultSet.class);
-        ResultSet insertedTarget = mock(ResultSet.class);
         ResultSet validatedTarget = mock(ResultSet.class);
 
         when(connection.prepareStatement(LOAD_STAT_KEYS)).thenReturn(loadStatement);
-        when(connection.prepareStatement(FIND_STAT_KEY)).thenReturn(findBeforeInsert, findAfterInsert);
+        when(connection.prepareStatement(FIND_STAT_KEY)).thenReturn(findBeforeInsert);
         when(connection.prepareStatement(CHECK_STAT_KEY_ID)).thenReturn(checkAvailableId, validateTarget);
         when(connection.prepareStatement(INSERT_STAT_KEY)).thenReturn(insertStatement);
         when(loadStatement.executeQuery()).thenReturn(sourceRows);
         when(findBeforeInsert.executeQuery()).thenReturn(missingTarget);
         when(checkAvailableId.executeQuery()).thenReturn(availableId);
-        when(findAfterInsert.executeQuery()).thenReturn(insertedTarget);
         when(validateTarget.executeQuery()).thenReturn(validatedTarget);
         when(sourceRows.next()).thenReturn(true, true, false);
         when(sourceRows.getLong(1)).thenReturn(41L, 42L);
@@ -322,9 +319,6 @@ class BrowserIdentifierMigrationServiceTest {
         when(missingTarget.next()).thenReturn(false);
         when(availableId.next()).thenReturn(false);
         when(insertStatement.executeUpdate()).thenReturn(1);
-        when(insertedTarget.next()).thenReturn(true, false);
-        when(insertedTarget.getLong(1)).thenReturn(100L);
-        when(insertedTarget.getString(2)).thenReturn("Chrome");
         when(validatedTarget.next()).thenReturn(true, false);
         when(validatedTarget.getString(1)).thenReturn("Chrome");
 
