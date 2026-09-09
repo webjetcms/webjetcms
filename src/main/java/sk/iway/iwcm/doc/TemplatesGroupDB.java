@@ -133,7 +133,7 @@ public class TemplatesGroupDB extends JpaDB<TemplatesGroupBean> {
         EntityManager em = threadEm.getEntityManagerFactory().createEntityManager();
 
         TemplatesGroupBean templatesGroupBean;
-        if(isDomainIdFilterEnabled())
+        if((InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")) && Constants.getString("jpaFilterByDomainIdBeanList").contains(TemplatesGroupBean.class.getName()))
         {
             Map<String,Object>  hashMap = new HashMap<>();
             hashMap.put("domainId", CloudToolsForCore.getDomainId());
@@ -158,8 +158,8 @@ public class TemplatesGroupDB extends JpaDB<TemplatesGroupBean> {
     public TemplatesGroupBean getByIdCached(Long id) {
         if (id == null) return null;
 
-        int cacheDomainId = CloudToolsForCore.getDomainId();
-        Map<Long, TemplatesGroupBean> domainCache = templatesGroupByDomainAndIdCache.computeIfAbsent(cacheDomainId, key -> new ConcurrentHashMap<>());
+        int domainId = CloudToolsForCore.getDomainId();
+        Map<Long, TemplatesGroupBean> domainCache = templatesGroupByDomainAndIdCache.computeIfAbsent(domainId, key -> new ConcurrentHashMap<>());
         return domainCache.computeIfAbsent(id, this::getById);
     }
 
@@ -169,11 +169,6 @@ public class TemplatesGroupDB extends JpaDB<TemplatesGroupBean> {
     public void clearCache() {
         templatesGroupByDomainAndIdCache.clear();
         ClusterDB.addRefresh("sk.iway.iwcm.TemplatesGroupDB");
-    }
-
-    private static boolean isDomainIdFilterEnabled() {
-        return (InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")) &&
-                Constants.getString("jpaFilterByDomainIdBeanList").contains(TemplatesGroupBean.class.getName());
     }
 
     /**
