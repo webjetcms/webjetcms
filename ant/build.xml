@@ -373,6 +373,12 @@
 
     </target>
 
+    <target name="updateUaParserRegexes" description="Update bundled user-agent parser rules from uap-core">
+        <exec executable="ant/update-uap-core.sh" failonerror="true">
+            <arg value="refs/heads/master"/>
+        </exec>
+    </target>
+
     <target name="createUpdateZip" depends="define-artifact-properties,makejars,makepom"  description="Create update.zip for update directly from WebJET CMS in old/expanded mode (no jar packaging)">
         <delete file="${artifact.dir}/archive.zip"/>
 
