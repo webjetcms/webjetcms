@@ -2239,18 +2239,26 @@ export class DatatablesCkEditor {
 						filter.allowedContent[0].elements.table.colgroup = 0;
 					} catch (e) {}
 
-					filter.disallow( 'table[width]' );
-					filter.disallow( 'table[height]' );
-					filter.disallow( 'table[border]' );
-					filter.disallow( 'td(*)' ); //all class on TD
-					filter.disallow( 'td[valign]' );
-					filter.disallow( 'td[align]' );
-					filter.disallow( 'p[align]' );
-					filter.disallow( 'span' );
-					filter.disallow( 'col[width]' );
+					var ckConfig = that.ckEditorInstance.config;
+					var disallowedContent = ckConfig.pasteFromWordDisallowedContent;
+					if (typeof disallowedContent === "string") {
+						disallowedContent.split(";").forEach(function(rule) {
+							rule = rule.trim();
+							if (rule === "") return;
+
+							var ruleCount = filter.disallowedContent.length;
+							try {
+								var applied = filter.disallow(rule);
+								if (applied !== true || filter.disallowedContent.length === ruleCount) {
+									console.warn("Invalid CKEditor ACF rule in ckeditor_pasteFromWord_disallowedContent:", rule);
+								}
+							} catch (error) {
+								console.error("Error applying CKEditor ACF rule from ckeditor_pasteFromWord_disallowedContent:", rule, error);
+							}
+						});
+					}
 					filter.disabled = false;
 
-					var ckConfig = that.ckEditorInstance.config;
 					var tableClasses = ckConfig.qtClass.split(" ");
 					var tableStyle = "";
 					if (ckConfig.qtWidth != "") tableStyle = ' style="width: ' + ckConfig.qtWidth + ';"';
@@ -2320,6 +2328,7 @@ export class DatatablesCkEditor {
 	setJson(json) {
 		//console.log("setJson, json=", json);
 		this.json = json;
+		let editingModeReadyPromise = Promise.resolve();
 		//undefined je json ked sa nacita zoznam a da sa zmazat stranka
 		if (typeof json != "undefined") {
 			this.setCssStyle();
@@ -2333,14 +2342,22 @@ export class DatatablesCkEditor {
 			this.setStyleComboList(this.json.editorFields.styleComboList);
 
 			//ckeditor is invisible, we must wait until it is visible
-			setTimeout(() => {
-				//toto musi byt posledne, inak sa zle nacitaval obsah stranky
-				this.setEditingMode(json);
-			}, 100);
+			editingModeReadyPromise = new Promise(resolve => {
+				setTimeout(() => {
+					//toto musi byt posledne, inak sa zle nacitaval obsah stranky
+					try {
+						this.setEditingMode(json);
+					} catch (error) {
+						console.error("Error setting CKEditor editing mode:", error);
+					}
+					resolve();
+				}, 100);
+			});
 		}
 		setTimeout(() => {
 			this.resizeEditor(this);
 		}, 1000);
+		return editingModeReadyPromise;
 	}
 
 	/**
@@ -2399,11 +2416,14 @@ export class DatatablesCkEditor {
 	setData(data) {
 		//console.log("Set data, instance=", this.ckEditorInstance, "useTimeout=", useTimeout, "data=", data);
 		//WARNING: this property is not YET set, do not count on it: if ("pageBuilder"===this.editingMode) {
-		try {
-			this.ckEditorInstance.setData(data);
-		} catch (error) {
-			console.error("Error setting data to CKEditor instance:", error);
-		}
+		return new Promise(resolve => {
+			try {
+				this.ckEditorInstance.setData(data, resolve);
+			} catch (error) {
+				console.error("Error setting data to CKEditor instance:", error);
+				resolve();
+			}
+		});
 	}
 
 	getData() {

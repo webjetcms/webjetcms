@@ -156,12 +156,12 @@ Scenario('media tabulka v NOVEJ stranke @singlethread', async ({I, DT, DTE}) => 
 
     //click to add media button and fill media name
     I.clickCss("#datatableFieldDTE_Field_editorFields-media_wrapper button.buttons-create");
-    DTE.waitForEditor();
+    DTE.waitForEditor("datatableFieldDTE_Field_editorFields-media");
     DTE.fillField("mediaTitleSk", newMediaName);
 
     //click to save media button
     I.clickCss("#datatableFieldDTE_Field_editorFields-media_modal button.btn-primary");
-    DTE.waitForLoader();
+    DTE.waitForLoader("datatableFieldDTE_Field_editorFields-media");
 
     //click to save webPage button
     I.clickCss("#datatableInit_modal button.btn-primary");
@@ -639,7 +639,7 @@ Scenario('media tabulka v stranke-multigroup', async ({I, DataTables, DT, DTE, B
     I.say("edit master media to verify only one copy");
     DT.filterContains("mediaTitleSk", mediaTitleMaster);
     I.click(mediaTitleMaster, container);
-    DTE.waitForEditor();
+    DTE.waitForEditor("datatableFieldDTE_Field_editorFields-media");
     DTE.fillField("mediaTitleSk", mediaTitleMaster+"-chan.ge");
     DTE.save("datatableFieldDTE_Field_editorFields-media");
 

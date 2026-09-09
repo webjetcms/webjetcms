@@ -1,24 +1,25 @@
 ---
 name: wj-gh-issue-from-chat
-description: Convert the user's original request, subsequent discussion and agreed implementation plan into a GitHub issue, then use GitHub's "Create a branch for this issue" action and check out that linked branch. Use when the user asks to create a GitHub issue from the current chat, preserve their clarifications or decisions, include the implementation plan as a separate section, and prepare an issue-linked branch without committing or implementing changes.
+description: Convert the user's original request, subsequent discussion and agreed implementation plan into a GitHub issue with an English title, then suggest a local branch name without creating or checking out a branch. Use when the user asks to create a GitHub issue from the current chat, preserve their clarifications or decisions, include the implementation plan as a separate section, and receive a feature or hotfix branch suggestion without modifying Git state.
 ---
 
 # GitHub Issue from Chat
 
-Turn the current conversation into one approved GitHub issue and, after a second approval, create and check out its linked development branch.
+Turn the current conversation into one approved GitHub issue, then suggest a name for a branch the user will create locally. Always write the issue title in English. Keep the issue body in the conversation's language unless the user requests another language.
 
 ## Safety contract
 
-Treat the workflow as documentation and branch setup only.
+Treat the workflow as issue documentation only.
 
 - Never edit, create or delete project files.
 - Never implement the requested change.
-- Never run `git add`, `git commit`, `git push`, `git merge`, `git rebase`, `git stash`, `git reset`, `git clean`, `git checkout --` or an equivalent operation.
+- Never run a command that changes Git state, including `git add`, `git commit`, `git push`, `git merge`, `git rebase`, `git stash`, `git reset`, `git clean`, `git switch`, `git checkout`, or branch creation.
+- Never create, check out, rename or delete a branch locally or remotely.
 - Never create or modify a pull request.
 - Never edit, close, label, assign, comment on or otherwise mutate an issue after creating it.
 - Preserve all existing tracked and untracked changes exactly as they are.
-- Permit only read-only discovery, creation of the approved GitHub issue, GitHub's **Create a branch for this issue** action, and checkout of that linked branch.
-- Require explicit user approval immediately before issue creation and require a separate explicit approval immediately before branch creation and checkout. Earlier approval of the task does not satisfy either gate.
+- Permit only read-only discovery, creation of the approved GitHub issue, read-only verification, and a textual branch-name suggestion.
+- Require explicit user approval immediately before issue creation. Earlier approval of the task does not satisfy this gate.
 - If authentication is missing, stop and ask the user to authenticate. Do not start an authentication flow or change GitHub credentials.
 - If any step would require another mutation, stop and ask the user instead of improvising.
 
@@ -33,7 +34,7 @@ Use read-only commands to determine:
 - current branch and `git status --short --branch`,
 - repository issue templates or contribution instructions when present.
 
-Do not change branches, remotes, credentials or the working tree during discovery. If the worktree is dirty, retain it and mention it before requesting branch approval.
+Do not change branches, remotes, credentials or the working tree during discovery. If the worktree is dirty, retain it and mention it when presenting the issue draft.
 
 ### 2. Draft the issue from the conversation
 
@@ -65,9 +66,9 @@ Create a concise issue draft with this structure:
 
 Preserve important paths, identifiers, configuration names and scope decisions. Exclude hidden reasoning, tool traces, credentials, unrelated conversation and claims that were not agreed. Describe open questions explicitly instead of silently deciding them.
 
-Generate a short, actionable issue title. Do not add labels, assignees, projects or milestones.
+Generate a short, actionable issue title in English regardless of the conversation or issue-body language. Translate natural-language wording as needed while preserving paths, identifiers, product names and technical terms. Do not add labels, assignees, projects or milestones.
 
-### 3. First approval gate: issue creation
+### 3. Approval gate: issue creation
 
 Show the user:
 
@@ -85,37 +86,21 @@ gh issue create --repo OWNER/REPO --title APPROVED_TITLE --body-file -
 
 Send the exact approved body through standard input. Do not interpolate the body into a shell command and do not create a file inside the repository. Capture and report the resulting issue number and URL. Verify it using a read-only `gh issue view` call.
 
-### 4. Second approval gate: linked branch
+### 4. Suggest a local branch name
 
-Determine the repository's default branch using a read-only query. Let GitHub generate the issue-linked branch name unless the user explicitly requested a name before approval.
+After creating and verifying the issue, query the current branch again. Derive a short lowercase ASCII kebab-case slug from the approved English issue title and combine it with the issue number:
 
-Before branch creation, show:
+- On `hotfix/*`, suggest `hotfix/ISSUE_NUMBER-SLUG`.
+- On `main`, suggest `feature/ISSUE_NUMBER-SLUG`.
+- On any other branch, state that no prefix rule was specified and present both `feature/ISSUE_NUMBER-SLUG` and `hotfix/ISSUE_NUMBER-SLUG` instead of guessing.
 
-- issue number and URL,
-- current branch,
-- default base branch,
-- proposed generated or explicit branch name,
-- whether the worktree contains changes and that they will remain uncommitted and untouched.
-
-Ask for separate explicit approval to run GitHub's **Create a branch for this issue** action and check it out.
-
-After approval, use:
-
-```text
-gh issue develop ISSUE_NUMBER --repo OWNER/REPO --base DEFAULT_BRANCH --checkout
-```
-
-Add `--name APPROVED_BRANCH_NAME` only when the user explicitly approved that name. This command is the only allowed branch creation and checkout mechanism for this skill. Do not use `git switch -c`, `git checkout -b` or create an unlinked branch.
-
-If checkout cannot proceed safely, stop. Never stash, discard, move or commit existing changes to make it succeed.
+Collapse repeated hyphens and omit punctuation or filler words from `SLUG`, while retaining meaningful technical identifiers when practical. This is a textual suggestion only: do not create, check out or publish the branch, and do not call `gh issue develop`.
 
 ### 5. Finish
 
 Verify with read-only commands that:
 
 - the issue is open,
-- the linked branch exists,
-- Git is currently on that branch,
 - pre-existing working-tree changes remain present.
 
-Report the issue URL, checked-out branch and worktree status. End the workflow. Do not begin implementation and do not commit anything.
+Report the issue number and URL, its English title, the branch-name suggestion, the current branch and worktree status. Explicitly state that the suggested branch was not created. End the workflow. Do not begin implementation and do not commit anything.

@@ -104,7 +104,7 @@ Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE }) =>{
     randomLogin = 'testerga' + I.getRandomText();
     I.fillField('#DTE_Field_editorFields-login', randomLogin);
     I.fillField('#DTE_Field_password', secret(I.getDefaultPassword()));
-    DTE.save();
+    DTE.save(undefined, true);
 
     I.say('Prihlasenie sa do nového účtu');
     I.relogin(randomLogin, true, false);

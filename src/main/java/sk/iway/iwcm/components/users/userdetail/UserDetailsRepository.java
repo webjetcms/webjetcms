@@ -34,6 +34,11 @@ public interface UserDetailsRepository extends JpaRepository<UserDetailsEntity, 
     @Query(value = "UPDATE UserDetailsEntity SET editableGroups = :editableGroups, writableFolders = :writableFolders WHERE id = :userId")
     void updateEditableGroupsWritableFolders(@Param("editableGroups") String editableGroups, @Param("writableFolders") String writableFolders, @Param("userId") Long userId);
 
+    @Transactional
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = "UPDATE UserDetailsEntity SET admin = true, authorized = true WHERE id = :userId AND admin = false AND authorized = false")
+    int activateBlogger(@Param("userId") Long userId);
+
     @Query(value = "SELECT mobile_device FROM users WHERE user_id=?1", nativeQuery=true)
     String getMobileDeviceByUserId(Long userId);
 

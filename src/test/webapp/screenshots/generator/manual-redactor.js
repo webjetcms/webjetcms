@@ -240,6 +240,7 @@ Scenario('perex-groups', ({ I, DTE, Document }) => {
 
 Scenario('custom-fields', async({ I, DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
+    I.resizeWindow(1280, 780); //so the editor will not be full screen
     I.jstreeNavigate(["Test stavov", "Voliteľné polia"]);
     I.click("Voliteľné polia", "#datatableInit_wrapper");
     DTE.waitForEditor();
@@ -281,6 +282,12 @@ Scenario('custom-fields', async({ I, DT, DTE, Document }) => {
         $('div.DTE_Action_Edit div.DTE_Field_Name_fieldN').css("padding-top", "10px");
         $('div.DTE_Action_Edit div.DTE_Field_Name_fieldN').css("padding-bottom", "10px");
 
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldO').css("padding-top", "10px");
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldO').css("padding-bottom", "10px");
+
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldP').css("padding-top", "10px");
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldP').css("padding-bottom", "10px");
+
     });
     Document.screenshotElement("div.DTE_Action_Edit div.DTE_Field_Name_fieldA", "/frontend/webpages/customfields/webpages-text.png");
 
@@ -308,7 +315,7 @@ Scenario('custom-fields', async({ I, DT, DTE, Document }) => {
     I.scrollTo("div.DTE_Action_Edit div.DTE_Field_Name_fieldI");
     I.fillField("div.DTE_Action_Edit div.DTE_Field_Name_fieldI input", "123456");
     Document.screenshot("/frontend/webpages/customfields/webpages-length.png");
-    I.wjSetDefaultWindowSize();
+    I.resizeWindow(1280, 780); //so the editor will not be full screen
 
     I.click("div.DTE_Action_Edit div.DTE_Field_Name_fieldJ button.dropdown-toggle")
     Document.screenshotElement("div.DTE_Action_Edit div.DTE_Field_Name_fieldJ", "/frontend/webpages/customfields/webpages-select-multi.png");
@@ -323,12 +330,21 @@ Scenario('custom-fields', async({ I, DT, DTE, Document }) => {
     I.scrollTo("div.DTE_Action_Edit div.DTE_Field_Name_fieldN");
     Document.screenshotElement("div.DTE_Action_Edit div.DTE_Field_Name_fieldN", "/frontend/webpages/customfields/webpages-color.png");
 
+    I.scrollTo("div.DTE_Action_Edit div.DTE_Field_Name_fieldO");
+    Document.screenshotElement("div.DTE_Action_Edit div.DTE_Field_Name_fieldO", "/frontend/webpages/customfields/webpages-boolean.png");
+
+    I.scrollTo("div.DTE_Action_Edit div.DTE_Field_Name_fieldP");
+    DTE.fillField("fieldP", `{
+  "productId": 9007199254740993,
+  "variants": [
+    {"code": "blue", "available": true}
+  ]
+}`);
+    Document.screenshotElement("div.DTE_Action_Edit div.DTE_Field_Name_fieldP", "/frontend/webpages/customfields/webpages-jsoneditor.png");
+
     I.amOnPage("/admin/v9/settings/translation-keys/");
     DT.waitForLoader();
-    I.click("button.buttons-settings");
-    I.click("button.buttons-page-length");
-    I.click("50", "div.dropdown-menu.dt-button-collection");
-    I.click("div.dropdown-menu.dt-button-collection button.dt-close-modal");
+    DT.setPageLength(50);
     DT.filterContains("key", "temp-3");
     Document.screenshot("/frontend/webpages/customfields/translations.png");
 

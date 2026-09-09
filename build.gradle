@@ -68,8 +68,44 @@ lombok {
     //config['lombok.addLombokGeneratedAnnotation'] = 'false'
 }
 
+def webAppSourcePrefix = 'src/main/webapp/'
+def gitIgnoredWebAppPathsOutput = providers.exec {
+    workingDir(rootDir)
+    setIgnoreExitValue(true)
+    commandLine(
+        'git', 'ls-files', '-z', '--others', '--ignored', '--directory',
+        '--exclude-from=.gitignore', '--',
+        "${webAppSourcePrefix}components", "${webAppSourcePrefix}templates"
+    )
+}
+def gitIgnoredWebAppPaths = gitIgnoredWebAppPathsOutput.result.zip(
+    gitIgnoredWebAppPathsOutput.standardOutput.asText
+) { result, output ->
+    if (result.exitValue != 0) {
+        throw new GradleException("Cannot determine Git-ignored webapp paths; refusing to build WAR (git exit code ${result.exitValue}).")
+    }
+
+    output.tokenize('\u0000').collect { sourcePath ->
+        if (!sourcePath.startsWith(webAppSourcePrefix)) {
+            throw new GradleException("Unexpected Git-ignored webapp path: ${sourcePath}")
+        }
+
+        sourcePath.substring(webAppSourcePrefix.length()).replaceFirst('/$', '')
+    }.sort()
+}
+
 war {
     zip64 = true
+
+    //exclude files/folders in .gitignore for /components and /templates
+    inputs.property('gitIgnoredWebAppPaths', gitIgnoredWebAppPaths)
+    exclude { element ->
+        def archivePath = element.relativePath.pathString
+        gitIgnoredWebAppPaths.get().any { ignoredPath ->
+            archivePath == ignoredPath || archivePath.startsWith(ignoredPath + '/')
+        }
+    }
+
     exclude('**/node_modules/**')
     exclude('**/node_scripts/**')
     exclude('**/src/**')
@@ -99,14 +135,7 @@ war {
     exclude('**/prepros-6.config')
 
     //templates
-    exclude('templates/bare/**')
-    exclude('templates/agency/**')
-    exclude('templates/creative/**')
     exclude('templates/firma/**')
-    exclude('templates/interway/**')
-    exclude('templates/kostal/**')
-    exclude('templates/wa/**')
-    exclude('templates/vesmir/**')
 
     rootSpec.exclude('**/poolman-*.xml')
 }
@@ -720,6 +749,12 @@ task writePom() {
 
             //remove stripes, it is integrated with our changes in libs jar
             if ("stripes".equals(artifactName)) {
+                println "----> removing: "+artifactName
+                i.remove();
+            }
+
+            //remove displaytag, it is integrated with our changes in libs jar
+            if ("com.github.hazendaz".equals(groupId) && "displaytag".equals(artifactName)) {
                 println "----> removing: "+artifactName
                 i.remove();
             }

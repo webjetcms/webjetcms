@@ -29,6 +29,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -45,6 +47,8 @@ import java.util.stream.Collectors;
 @ControllerAdvice(annotations = {Datatable.class})
 public class DatatableExceptionHandlerV2
 {
+	private static final Pattern DATA_TOO_LONG_PATTERN = Pattern.compile("Data too long for column ['\"`]([^'\"`]+)['\"`]", Pattern.CASE_INSENSITIVE);
+
 	@ResponseBody
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<DatatableResponse<Object>> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
@@ -141,24 +145,9 @@ public class DatatableExceptionHandlerV2
 			}
 
 			response.setFieldErrors(errorsList);
-		} else if (ex instanceof TransactionSystemException) {
-			String err = ex.getMessage();
-			try {
-				if (err != null) {
-					int start = err.indexOf("Duplicate entry");
-					if (start > 0) {
-						int end = err.indexOf("Error Code", start);
-						if (end > start) err = err.substring(start, end).trim();
-					}
-				}
-			} catch (Exception e) {
-				//failsafe
-			}
-			response.setError(err);
-			Logger.error(DatatableExceptionHandlerV2.class, "TransactionSystemException: " + ex.getMessage());
 		} else {
-			response.setError(ex.getMessage());
-			Logger.error(DatatableExceptionHandlerV2.class, "TransactionSystemException, exception: " + ex.getMessage(), ex);
+			response.setError(getTransactionErrorMessage(ex));
+			Logger.error(DatatableExceptionHandlerV2.class, "TransactionSystemException: " + ex.getMessage());
 		}
 
 		if (Tools.isEmpty(response.getError())) {
@@ -167,6 +156,29 @@ public class DatatableExceptionHandlerV2
 		}
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	private String getTransactionErrorMessage(TransactionSystemException ex) {
+		Throwable cause = ex;
+		while (cause != null) {
+			String message = cause.getMessage();
+			if (message != null) {
+				Matcher dataTooLongMatcher = DATA_TOO_LONG_PATTERN.matcher(message);
+				if (dataTooLongMatcher.find()) {
+					return Prop.getInstance().getText("datatable.error.valueTooLong", dataTooLongMatcher.group(1));
+				}
+
+				int start = message.indexOf("Duplicate entry");
+				if (start >= 0) {
+					int end = message.indexOf("Error Code", start);
+					if (end < 0) end = message.length();
+					return message.substring(start, end).trim();
+				}
+			}
+			cause = cause.getCause();
+		}
+
+		return ex.getMessage();
 	}
 
 	@ExceptionHandler(EditorException.class)

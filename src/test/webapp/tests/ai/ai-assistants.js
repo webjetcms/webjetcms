@@ -102,6 +102,45 @@ Scenario('ai_assistants editor logic', async ({I, DTE}) => {
         checkAutocomplete(I, "DTE_Field_model", "gemini-2.5", null, optionsE);
 });
 
+Scenario('AI instructions textarea preserves shared gutter and keyboard behavior', async ({I, DT, DTE}) => {
+    I.amOnPage("/admin/v9/settings/ai-assistants/");
+    DT.waitForLoader();
+    const textarea = "#datatableInit_modal #DTE_Field_instructions";
+    const gutter = "#datatableInit_modal .DTE_Field_Name_instructions .md-textarea-editor__lines";
+    const source = "autotest instructions\nSecond instruction";
+    let initialValue;
+
+    for (let opening = 0; opening < 2; opening++) {
+        I.clickCss("#datatableInit_wrapper button.buttons-create");
+        DTE.waitForEditor();
+        try {
+            I.clickCss("#pills-dt-datatableInit-instructions-tab");
+            I.waitForVisible(textarea, 10);
+            I.assertEqual(await I.grabNumberOfVisibleElements(gutter), 1, "Opening the editor must create exactly one gutter");
+            const value = await I.grabValueFrom(textarea);
+            if (opening === 0) initialValue = value;
+            else I.assertEqual(value, initialValue, "Cancelling must discard instruction changes");
+
+            I.fillField(textarea, source);
+            I.assertEqual(await I.grabTextFrom(gutter), "1\n2", "Typing must update logical line numbers");
+            I.pressKey("End");
+            I.pressKey("Tab");
+            I.assertEqual(await I.grabValueFrom(textarea), source + "\t", "The AI editor must retain its Tab indentation shortcut");
+            const focusedField = await I.executeScript(() => document.activeElement.id);
+            I.assertEqual(focusedField, "DTE_Field_instructions", "Tab indentation must keep focus in the AI instructions textarea");
+
+            I.doubleClick(textarea);
+            I.waitForInvisible(gutter, 10);
+            const wrappedWhitespace = await I.grabCssPropertyFrom(textarea, "white-space");
+            I.assertEqual(wrappedWhitespace, "break-spaces", "Double-click must retain the instructions wrapping toggle");
+            I.doubleClick(textarea);
+            I.waitForVisible(gutter, 10);
+        } finally {
+            DTE.cancel();
+        }
+    }
+});
+
 Scenario('ai buttons usage', async ({I, DTE}) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + pageId);
     DTE.waitForEditor();

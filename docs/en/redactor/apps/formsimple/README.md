@@ -80,7 +80,7 @@ The basic form code is in the keys:
 - ```components.formsimple.form.start``` - ​​HTML code for the beginning of the form (opening form tag)
 - ```components.formsimple.form.end``` - ​​HTML code for the end of the form (closing form tag)
 - ```components.formsimple.requiredLabelAdd``` - ​​text that will be added to the label element text for a required field (typically the * character)
-- ```components.formsimple.tooltipCode``` - ​​HTML code for generating ${tooltip} replacement
+- ```components.formsimple.tooltipCode``` - ​​HTML code for generating ```${tooltip}``` replacement
 - ```components.formsimple.techinfo``` - ​​HTML code for generating technical information in an email
 
 You define individual items using keys:
@@ -132,17 +132,37 @@ The following tags can be used in the code, which will be replaced when the form
 - ```${formname}``` - ​​form name without spaces, diacritics, in lowercase, used for form element in name attribute (it should still start with formMail for use in standard validation mechanism)
 - ```${savedb}``` - ​​same value as ```formname```, used for clarity in the form submission URL
 - ```${id}``` - ​​Element ID generated from its name (Value field in administration), without spaces, diacritics, in lowercase letters
+- ```${itemId}``` - ​​item identifier within the rendered form
+- ```${stepId}``` - ​​multi-step form step identifier; for easy forms the value is empty
 - ```${label}``` - ​​text for label element, value from name field in administration
 - ```${labelSanitized}``` - ​​text for label element, value from name field in administration, special characters modified so it can be used in HTML attribute
 - ```${value}``` - ​​text from the value field in the administration
+- ```${valueSanitized}``` - ​​field value edited without spaces, diacritics and special characters for use in HTML attribute
 - ```${placeholder}``` - ​​placeholder text, displayed when the field has an empty value
 - ```${classes}``` - ​​additional CSS styles, currently ```required``` if checked Required field in administration
 - ```${tooltip}``` - ​​HTML code for tooltip, value from Tooltip field in administration
+- ```${tooltipId}``` - ​​unique and HTML attribute-safe tooltip ID, designed to link the control to the tooltip content
 - ```${cs-error}``` - ​​generated HTML code for error message
 - ```${iterable}``` - ​​a repeating list of fields (e.g. a group of selection fields) is inserted at the specified location, with the code that is repeated being defined by the key ```components.formsimple.iterable.MENO_POLA```
 - ```${counter}``` - ​​sequence number for a repeating record, needed to set the unique ```id``` and ```for``` attributes
 - ```${value-label}``` - ​​text value (label) for a repeating record, if it contains a different value for ```value``` and for ```label``` (e.g. in the ```option``` tag). The user enters possible values ​​as ```label:value```, i.e. as ```Pomaranč:orange,Jablko:apple``` to display the listed options.
 - ```{enumeration-options|ID_CISELNIKA|MENO_VALUE|MENO_LABEL}``` - ​​connection to get a list of ```option``` values ​​from the codebook application. The codebook ID, column name for the value, and column name for the text are specified.
+
+### Custom HTML tooltip code
+
+You can edit the HTML code of the tooltip in the project with the translation key `components.formsimple.tooltipCode`. Its value includes the tags `${tooltipId}`, `${id}`, `${itemId}`, `${stepId}`, `${label}`, `${labelSanitized}`, `${value}`, `${valueSanitized}`, `${placeholder}` and `${classes}`. The tag `${label}` in this key contains the text from the **Tooltip** field, not the name of the form field.
+
+To accessibly and unambiguously link the control to the tooltip content, use the same `${tooltipId}` value in the `aria-describedby` attribute of the control and in the `id` attribute of the element with `role="tooltip"`. Do not manually create an ID from only `${id}`, `${itemId}`, or `${stepId}`, as they may not be unique on their own when the form is submitted repeatedly.
+
+Example:
+
+```properties
+components.formsimple.tooltipCode=<button type="button" class="info-tooltip" data-tooltip-trigger="true" aria-describedby="${tooltipId}" aria-owns="${tooltipId}"><svg class="icon info-tooltip__icon" aria-hidden="true"><use xlink:href="/sprite.svg#assistance"></use></svg><span class="sr-only">Info</span></button><span id="${tooltipId}" class="tooltip" role="tooltip" hidden="" data-tooltip="true"><span class="tooltip__arrow"> </span><span class="tooltip__dialog">${label}</span></span>
+```
+
+The `aria-describedby` attribute is crucial for the descriptive binding of the tooltip, the value of which must correspond to the `id` element with the tooltip content.
+
+The tooltip value is only substituted once. If the tooltip text itself contains an expression like `${id}`, it will remain displayed verbatim and no further substitution will be performed on it.
 
 In the email view, the value of the tooltip field is replaced with a blank character (so that there is no unnecessary non-functional tooltip in the email).
 

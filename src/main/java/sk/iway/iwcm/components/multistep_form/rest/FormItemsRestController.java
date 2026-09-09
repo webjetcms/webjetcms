@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,6 +31,7 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.EditorToolsForCore;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.forms.FormsService;
+import sk.iway.iwcm.components.forms.FormsServiceImpl;
 import sk.iway.iwcm.components.forms.RegExpRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsConditionsRepository;
@@ -37,6 +39,7 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.ChartType;
 import sk.iway.iwcm.stat.rest.StatService;
+import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
@@ -58,15 +61,19 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
     private final MultistepFormsService multistepFormsService;
     private final FormSettingsRepository formSettingsRepository;
     private final FormItemsConditionsRepository formItemsConditionsRepository;
+    private final FormStepsRepository formStepsRepository;
+    private final FormsServiceImpl formsService;
 
     @Autowired
-    public FormItemsRestController(FormItemsRepository formItemsRepository, RegExpRepository regExpRepository, MultistepFormsService multistepFormsService, FormSettingsRepository formSettingsRepository, FormItemsConditionsRepository formItemsConditionsRepository) {
+    public FormItemsRestController(FormItemsRepository formItemsRepository, RegExpRepository regExpRepository, MultistepFormsService multistepFormsService, FormSettingsRepository formSettingsRepository, FormItemsConditionsRepository formItemsConditionsRepository, FormStepsRepository formStepsRepository, FormsServiceImpl formsService) {
         super(formItemsRepository);
         this.formItemsRepository = formItemsRepository;
         this.regExpRepository = regExpRepository;
         this.multistepFormsService = multistepFormsService;
         this.formSettingsRepository = formSettingsRepository;
         this.formItemsConditionsRepository = formItemsConditionsRepository;
+        this.formStepsRepository = formStepsRepository;
+        this.formsService = formsService;
     }
 
     @Override
@@ -242,6 +249,24 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
     }
 
     @Override
+    public boolean checkItemPerms(FormItemEntity entity, Long id) {
+        if(entity == null || Tools.isEmpty(entity.getFormName()) || entity.getStepId() == null) return false;
+
+        int domainId = CloudToolsForCore.getDomainId();
+        if(entity.getDomainId() != null && entity.getDomainId().intValue() != domainId) return false;
+
+        String formName = entity.getFormName();
+        if(id != null && id.longValue() > 0) {
+            FormItemEntity stored = formItemsRepository.findFirstByIdAndDomainId(id, domainId).orElse(null);
+            if(stored == null || Objects.equals(stored.getFormName(), formName) == false) return false;
+            formName = stored.getFormName();
+        }
+
+        boolean validStep = formStepsRepository.getValidStep(formName, entity.getStepId().longValue(), domainId).isPresent();
+        return validStep && getUser() != null && formsService.isFormAccessible(formName, getUser());
+    }
+
+    @Override
     public void afterSave(FormItemEntity entity, FormItemEntity saved) {
         //
         if(MultistepFormsService.getChartStatInfo(getRequest()) != null) return;
@@ -350,6 +375,23 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         if(Tools.isTrue(entity.getShowStat()) && Tools.isTrue(entity.getUseColorScheme())) return entity;
         entity.setColorScheme("");
         return entity;
+    }
+
+    @Override
+    protected boolean checkRowReorderScope(HttpServletRequest request, List<FormItemEntity> entities) {
+        String formName = MultistepFormsService.getFormName(request);
+        int stepId = Tools.getIntValue(request.getParameter("stepId"), -1);
+        if(Tools.isEmpty(formName) || stepId < 1 || entities == null || entities.isEmpty() || getUser() == null) return false;
+
+        int domainId = CloudToolsForCore.getDomainId();
+        for(FormItemEntity entity : entities) {
+            if(entity == null || Objects.equals(formName, entity.getFormName()) == false ||
+                entity.getStepId() == null || entity.getStepId().intValue() != stepId ||
+                entity.getDomainId() == null || entity.getDomainId().intValue() != domainId) return false;
+        }
+
+        if(formStepsRepository.getValidStep(formName, Long.valueOf(stepId), domainId).isEmpty()) return false;
+        return formsService.isFormAccessible(formName, getUser());
     }
 
     @GetMapping("/default-regex")

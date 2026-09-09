@@ -312,7 +312,7 @@ Scenario('BUG pocty prijemcov', ({I, DT, DTE}) => {
 
     /* CREATE TEST */
     I.clickCss("div.dt-buttons button.buttons-create");
-    I.dtWaitForEditor("campaingsDataTable");
+    DTE.waitForEditor("campaingsDataTable");
 
     I.clickCss("button.btn-webjet-jstree-item-edit")
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
@@ -329,36 +329,36 @@ Scenario('BUG pocty prijemcov', ({I, DT, DTE}) => {
     DTE.save();
 
     //
-    overPocetPrijemcov(I, prijemcoviaEntityName, pocetPrijemcovNewsletter);
+    overPocetPrijemcov(I, DTE, prijemcoviaEntityName, pocetPrijemcovNewsletter);
 
     // IN the end, number of recipients must be 3
     I.say("Pridam skupinu Vianocne pozdravy, overim pocet prijemcov");
     I.click(prijemcoviaEntityName);
-    I.dtWaitForEditor("campaingsDataTable");
+    DTE.waitForEditor("campaingsDataTable");
     editGroups(I, DT, ["Vianočné pozdravy"], []);
     DTE.save();
 
-    overPocetPrijemcov(I, prijemcoviaEntityName, pocetPrijemcovNewsletter+pocetPrijemcovVianocnePozdravy);
+    overPocetPrijemcov(I, DTE, prijemcoviaEntityName, pocetPrijemcovNewsletter+pocetPrijemcovVianocnePozdravy);
 
     //
     I.say("Odoberem skupinu Vianocne pozdravy, overim pocet prijemcov");
     I.click(prijemcoviaEntityName);
-    I.dtWaitForEditor("campaingsDataTable");
+    DTE.waitForEditor("campaingsDataTable");
     editGroups(I, DT, [], ["Vianočné pozdravy"]);
     DTE.save();
 
-    overPocetPrijemcov(I, prijemcoviaEntityName, pocetPrijemcovNewsletter);
+    overPocetPrijemcov(I, DTE, prijemcoviaEntityName, pocetPrijemcovNewsletter);
 });
 
 Scenario('campaings pocty prijemcov delete', ({I, DT, DTE}) => {
     deleteCampaingByName(I, DT, DTE, prijemcoviaEntityName);
 });
 
-Scenario('zobrazenie nahladu emailu', ({I, DT}) => {
+Scenario('zobrazenie nahladu emailu', ({I, DT, DTE}) => {
     DT.waitForLoader();
     DT.filterContains("subject", "Testovaci email");
     I.click("Testovaci email");
-    I.dtWaitForEditor("campaingsDataTable");
+    DTE.waitForEditor("campaingsDataTable");
 
     I.clickCss("#pills-dt-campaingsDataTable-preview-tab");
     I.wait(1);
@@ -367,12 +367,12 @@ Scenario('zobrazenie nahladu emailu', ({I, DT}) => {
     I.see("Formular", "div.container");
     I.switchTo();
 
-    I.dtEditorCancel();
+    DTE.cancel();
 
     //
     DT.filterContains("subject", "Test_1");
     I.click("Test_1");
-    I.dtWaitForEditor("campaingsDataTable");
+    DTE.waitForEditor("campaingsDataTable");
 
     I.clickCss("#pills-dt-campaingsDataTable-preview-tab");
     I.wait(1);
@@ -396,12 +396,12 @@ Scenario('zobrazenie nahladu emailu', ({I, DT}) => {
     I.see("Testovací newsletter");
     I.switchTo();
 
-    I.dtEditorCancel();
+    DTE.cancel();
 
     //
     I.say("Vyskusam novy email");
     I.clickCss("button.buttons-create");
-    I.dtWaitForEditor("campaingsDataTable");
+    DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-preview-tab");
     I.wait(1);
     I.switchTo("#emailPreviewIframe");
@@ -410,7 +410,7 @@ Scenario('zobrazenie nahladu emailu', ({I, DT}) => {
     I.dontSee("Testovací newsletter");
     I.switchTo();
 
-    I.dtEditorCancel();
+    DTE.cancel();
 });
 
 Scenario('Test sort in inner tables', ({I, DT, DTE}) => {
@@ -830,15 +830,15 @@ function addEmail(I, DTE, recipientName, recipientEmail, checkModalClose=true, s
     }
 }
 
-function overPocetPrijemcov(I, entityName, pocetPrijemcov) {
+function overPocetPrijemcov(I, DTE, entityName, pocetPrijemcov) {
     I.say("Over pocet prijemcov");
     I.dtFilter("subject", entityName);
     I.see("0 / "+pocetPrijemcov, "#campaingsDataTable tbody tr td.cell-not-editable");
     I.click(entityName);
-    I.dtWaitForEditor("campaingsDataTable");
+    DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
     I.see("Záznamy 1 až "+pocetPrijemcov+" z "+pocetPrijemcov, "#datatableFieldDTE_Field_recipientsTab_info");
-    I.dtEditorCancel();
+    DTE.cancel();
 }
 
 Scenario('BUG recipients for new email', ({I, DT, DTE}) => {

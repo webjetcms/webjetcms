@@ -739,7 +739,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	@Lob
 	@Column(name = "data")
 	@DataTableColumn(inputType = DataTableColumnType.WYSIWYG, title="components.news.template_html",
-		hidden = true, tab="content"
+		hidden = true, tab="content", className = "focus-priority"
 	)
 	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String data;

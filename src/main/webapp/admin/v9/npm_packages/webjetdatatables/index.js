@@ -263,6 +263,24 @@ export const dataTableInit = options => {
             });
     }
 
+    /**
+     * Returns the first visible and enabled DTE field marked for initial focus.
+     *
+     * @param {Object} dte DataTables Editor instance.
+     * @returns {Object|null} Matching DataTables Editor field.
+     */
+    function getPriorityEditorField(dte) {
+        for (const fieldName of dte.fields()) {
+            const field = dte.field(fieldName);
+            const $field = $(field.node());
+            const hasPriority = $field.hasClass('focus-priority') || $field.find('.focus-priority').length > 0;
+
+            if (hasPriority && field.enabled() && $field.is(':visible')) return field;
+        }
+
+        return null;
+    }
+
     function configureEditorAccessibility(dte, action) {
         const modal = document.getElementById(dte.TABLE.DATA.id + '_modal');
         if (modal == null) return;
@@ -306,7 +324,58 @@ export const dataTableInit = options => {
             }
         });
 
-        setTimeout(function() {
+        const focusState = $modal.attr('data-dte-focus-state');
+        if (focusState === 'scheduled' || focusState === 'ready') return;
+
+        // CKEditor can finish after a dialog was closed or reopened. The token prevents
+        // an obsolete asynchronous request from stealing focus from the user.
+        const focusRequest = {};
+        $modal.data('dteFocusRequest', focusRequest);
+        const isCurrentFocusRequest = function() {
+            return $modal.data('dteFocusRequest') === focusRequest &&
+                $modal.attr('data-dte-focus-state') === 'scheduled' &&
+                $modal.hasClass('show');
+        };
+        const completeFocusRequest = function() {
+            if (!isCurrentFocusRequest()) return;
+            $modal.off('.wjDteDefaultFocus');
+            $modal.removeData('dteFocusRequest');
+            $modal.attr('data-dte-focus-state', 'ready');
+        };
+
+        $modal.attr('data-dte-focus-state', 'scheduled');
+        $modal.off('.wjDteDefaultFocus').on('pointerdown.wjDteDefaultFocus keydown.wjDteDefaultFocus', function(event) {
+            if (!isCurrentFocusRequest() || event.originalEvent?.isTrusted !== true) return;
+
+            const cancelDefaultFocus = function() {
+                if (!isCurrentFocusRequest() || !modal.contains(document.activeElement)) return;
+                completeFocusRequest();
+            };
+
+            if (event.type === 'pointerdown') setTimeout(cancelDefaultFocus, 0);
+            else cancelDefaultFocus();
+        });
+
+        setTimeout(async function() {
+            if (!isCurrentFocusRequest()) return;
+
+            const priorityField = action === 'remove' ? null : getPriorityEditorField(dte);
+            if (priorityField != null) {
+                let focused;
+                if (typeof priorityField.focusWhenReady === 'function') {
+                    focused = await priorityField.focusWhenReady(isCurrentFocusRequest);
+                } else {
+                    priorityField.focus();
+                    focused = priorityField.node().contains(document.activeElement);
+                }
+
+                if (!isCurrentFocusRequest()) return;
+                if (focused) {
+                    completeFocusRequest();
+                    return;
+                }
+            }
+
             let focusTarget = $modal.find('.DTE_Body input:not([type="hidden"]), .DTE_Body select, .DTE_Body textarea, .DTE_Body [contenteditable="true"]')
                 .filter(function() {
                     return $(this).is(':visible') && !this.disabled && $(this).attr('tabindex') !== '-1';
@@ -318,6 +387,7 @@ export const dataTableInit = options => {
             }
 
             if (focusTarget != null) focusTarget.focus({preventScroll: true});
+            completeFocusRequest();
         }, 0);
     }
 
@@ -1114,6 +1184,37 @@ export const dataTableInit = options => {
             //if it is opened by WJ.openDialog like passkey.pug insert editor into modal-body-content
             if (isInModalDialog) modalContainer = "#modalIframe .modal-body .modal-body-content";
             $(dom.content)
+                .off('.wjDteLifecycle')
+                .on('show.bs.modal.wjDteLifecycle', function (event) {
+                    if (event.target !== this) return;
+                    const $modal = $(this);
+                    $modal
+                        .removeData('dteFocusRequest')
+                        .off('.wjDteDefaultFocus')
+                        .attr('data-dte-focus-state', 'pending')
+                        .attr('data-dte-close-state', 'open');
+                })
+                .on('hide.bs.modal.wjDteLifecycle', function (event) {
+                    if (event.target !== this) return;
+                    $(this)
+                        .removeData('dteFocusRequest')
+                        .off('.wjDteDefaultFocus')
+                        .attr('data-dte-close-state', 'closing');
+                })
+                .on('hidden.bs.modal.wjDteLifecycle', function (event) {
+                    if (event.target !== this) return;
+                    const $modal = $(this);
+                    let target = dte._wjFocusReturnElement;
+                    if (target == null || !document.contains(target) || target.disabled) {
+                        target = $('#' + dte.TABLE.DATA.id + '_wrapper button[data-dtbtn="' + dte._wjFocusReturnButton + '"]:visible:not(:disabled)')[0];
+                    }
+                    if (target != null) target.focus({preventScroll: true});
+
+                    // Focus handlers may reopen the editor; do not mark that new dialog as closed.
+                    if ($modal.attr('data-dte-close-state') === 'closing') {
+                        $modal.attr('data-dte-close-state', 'closed');
+                    }
+                })
                 .one('shown.bs.modal', function () {
                     // Can only give elements focus when shown
                     if ( dte.s.setFocus ) {
@@ -1441,6 +1542,8 @@ export const dataTableInit = options => {
             // upravi multiple volne polia
             prepareCustomFieldsDataBeforeSend(data, me);
 
+            if (action !== "remove" && !CustomFields.validateJsonEditors(me)) return false;
+
             /*if (action !== 'remove') {
 
                 $.each($(e.target.dom.wrapper).find("[data-dt-validation]"), function (k, v) {
@@ -1487,18 +1590,6 @@ export const dataTableInit = options => {
         });
         EDITOR.on('close', function (e) {
             //console.log("Editor.on close, editor=", EDITOR, "url=", EDITOR.TABLE.DATA.url, "close=", EDITOR.close, "e=", e);
-
-            const focusReturnElement = EDITOR._wjFocusReturnElement;
-            const focusReturnButton = EDITOR._wjFocusReturnButton;
-            const modalElement = document.getElementById(DATA.id + '_modal');
-            const restoreFocus = function() {
-                let target = focusReturnElement;
-                if (target == null || !document.contains(target) || target.disabled) {
-                    target = $('#' + DATA.id + '_wrapper button[data-dtbtn="' + focusReturnButton + '"]:visible:not(:disabled)')[0];
-                }
-                if (target != null) target.focus({preventScroll: true});
-            };
-            if (modalElement != null) modalElement.addEventListener('hidden.bs.modal', restoreFocus, {once: true});
 
             //pre istotu zatvor, niekedy pri nested dialogu zostava otvoreny kvoli nejakemu bugu
             if (typeof EDITOR._bootstrapDisplay != "undefined" && $("#" + EDITOR._bootstrapDisplay.id).hasClass("show")) {
@@ -3270,7 +3361,7 @@ export const dataTableInit = options => {
                          * - old values
                          * - new values
                          */
-                        const newUrl = DATA.url.split("?")[0] + "/row-reorder";
+                        const newUrl = WJ.urlAddPath(DATA.url, "/row-reorder");
                         const reorderData = {
                             dataSrc: edit.dataSrc,
                             values: diff.map(diffValue => ({

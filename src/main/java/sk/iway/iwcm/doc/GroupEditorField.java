@@ -235,7 +235,7 @@ public class GroupEditorField extends BaseEditorFields {
                 //nastavenie prefixu klucov podla skupiny sablon
                 TemplateDetails temp = TemplatesDB.getInstance().getTemplate(group.getTempId());
                 if (temp != null && temp.getTemplatesGroupId()!=null && temp.getTemplatesGroupId().longValue() > 0) {
-                    TemplatesGroupBean tgb = TemplatesGroupDB.getInstance().getById(temp.getTemplatesGroupId());
+                    TemplatesGroupBean tgb = TemplatesGroupDB.getInstance().getByIdCached(temp.getTemplatesGroupId());
                     if (tgb != null && Tools.isNotEmpty(tgb.getKeyPrefix())) {
                         RequestBean.addTextKeyPrefix(tgb.getKeyPrefix(), false);
                     }

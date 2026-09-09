@@ -3,14 +3,24 @@ package sk.iway.iwcm.security;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.mockito.MockedStatic;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.io.FileHistoryDB;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
 import java.lang.reflect.Method;
 
+import jakarta.servlet.FilterChain;
+
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 /**
  * JUnit tests for PathFilter security fixes.
@@ -211,5 +221,33 @@ class PathFilterSecurityTest extends BaseWebjetTest {
         // The reset simply clears the cached array - verify it doesn't throw
         assertDoesNotThrow(PathFilter::resetBlockedPaths,
             "resetBlockedPaths should not throw");
+    }
+
+    @Test
+    void historyDownloadPassesSessionUserToSecuredOverloadAndReturns404WhenRejected() throws Exception {
+        String path = "/images/file-history-security-test-does-not-exist/file.txt";
+        int historyId = 987654321;
+        Identity user = new Identity();
+        user.setAdmin(true);
+        user.setWritableFolders("/images/*");
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI(path);
+        request.addHeader("Referer", "http://localhost/admin/v9/elfinder/");
+        request.setParameter("fHistoryId", String.valueOf(historyId));
+        request.getSession().setAttribute(Constants.USER_KEY, user);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        FilterChain chain = mock(FilterChain.class);
+
+        try (MockedStatic<FileHistoryDB> history = mockStatic(FileHistoryDB.class)) {
+            history.when(() -> FileHistoryDB.sendFileFromHistory(path, historyId, user, response))
+                .thenReturn(false);
+
+            new PathFilter().doFilter(request, response, chain);
+
+            assertEquals(404, response.getStatus());
+            history.verify(() -> FileHistoryDB.sendFileFromHistory(path, historyId, user, response));
+            verifyNoInteractions(chain);
+        }
     }
 }

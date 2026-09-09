@@ -12,7 +12,39 @@ The following configuration variables are supported:
 - `ckeditor_toolbar-standalone` - ​​setting toolbar items for inserting the editor into various data tables, values ​​are in JSON format.
 - `ckeditor_removeButtons` - ​​list of buttons that you want to hide (not display) in the editor, no need to adjust the `toolbar` setting, just set a comma-separated list here.
 
-Settings for tables:
+### Cleaning HTML code when pasting from Word/Excel
+
+The rules are set via a configuration variable:
+
+- `ckeditor_pasteFromWord_disallowedContent` - ​​list of [CKEditor Advanced Content Filter](https://ckeditor.com/docs/ckeditor4/latest/guide/dev_allowed_content_rules.html) rules that are removed when inserting content from Word/Excel. The rules are used in both the standard editor and Page Builder mode. An empty value will not perform any additional filtering via `filter.disallow` ; other standard content cleaning will remain active.
+
+Each rule specifies the HTML element and its properties to be removed from the embedded content. The ACF rule format is:
+
+```text
+element[atribúty]{štýly}(triedy)
+```
+
+The individual parts have the following meaning:
+
+| Registration | Meaning | Example |
+| --- | --- | --- |
+| `element` | The name of the HTML element. A rule without additional parts will remove the element itself, leaving its nested content intact. | `span` removes the `span` tag. |
+| `[attribute1,attribute2]` | HTML element attributes. | `td[align,valign,nowrap]` removes the `align`, `valign` and `nowrap` attributes from `td`. |
+| `{style1,style2}` | CSS properties written in the `style` attribute. | `td{width,height}` removes the `width` and `height` styles from `td`. |
+| `(class1,class2)` | CSS element classes. | `td(word-cell)` removes the `word-cell` class from `td`. |
+| A wildcard for all items in a given group. | `td(*)` removes all CSS classes from `td`, `td[*]` all attributes, and `td{*}` all styles. | `td(*)` odstráni z `td` všetky CSS triedy, `td[*]` všetky atribúty a `td{*}` všetky štýly. |
+
+Rules are separated by a semicolon. A comma separates items only inside square, curly, or parentheses, so for example `td[align,valign,nowrap]` represents a single rule. Spaces, newlines, and empty items between semicolons are ignored. Each rule is applied separately; an invalid rule is logged in the JavaScript console and does not prevent other valid rules from being applied.
+
+The default value is:
+
+```text
+table[width,height,border];td(*);td[align,valign,nowrap];th(*);th[align,valign];p[align];span;col[width]
+```
+
+The default rules remove the table dimensions and borders, all CSS cell classes `td` and `th`, the listed cell alignment attributes, the `nowrap` attribute from `td`, the `align` attribute from paragraphs, the `span` elements, and the `width` attribute from `col` elements. To preserve the horizontal alignment of the cells, change the corresponding rules to `td[valign,nowrap]` and `th[valign]`.
+
+### Settings for tables
 
 - `ckeditor_table_class` - ​​Default CSS class for tables in CKEditor, defaults to `table table-sm tabulkaStandard`.
 - `ckeditor_table_cols` - ​​Default number of table columns in CKEditor, default 5.

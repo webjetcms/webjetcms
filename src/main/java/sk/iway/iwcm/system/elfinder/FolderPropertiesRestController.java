@@ -75,4 +75,10 @@ public class FolderPropertiesRestController extends DatatableRestControllerV2<Fo
             Logger.error(e);
         }
     }
+
+    @Override
+    protected boolean allowGeneratedIdOnCreate(FolderPropertiesEntity entity) {
+        //we are editing by path not by generated ID
+        return true;
+    }
 }

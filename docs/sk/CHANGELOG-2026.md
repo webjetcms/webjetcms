@@ -10,6 +10,7 @@
 - AspectJ - z distribúcie bola odstránená podpora `load-time weavingu` (`aspectjweaver` a `META-INF/aop-ajc.xml`); vstavané aspekty sa spracujú už pri kompilácii, viac v [sekcii pre programátora](#pre-programátora). Pri použití v MultiWeb inštalácii môžete odstrániť `-javaagent:/www/tomcat/.../aspectjweaver.jar` nastavenie z `JAVA_OPTS` v aplikačnom serveri (#290).
 - Export obsahu pre Flash - odstránená bola historická funkcia generovania XML súborov `/flash_xml/{docId}.xml` pri publikovaní stránky. Konfiguračná premenná `exportFlash` už nie je podporovaná a jej definovanie v `SpringConfig` funkciu neobnoví (#293).
 - Microsoft SQL Server - ukončená bola podpora verzií starších ako 2012 a odstránená konfiguračná premenná `mssqlUseOldTopQuery`. WebJET CMS vyžaduje Microsoft SQL Server 2012 alebo novší, starý spôsob stránkovania pomocou `TOP` už nie je podporovaný (#293).
+- Formulár ľahko a viackrokové formuláre - upravené zobrazenie `tooltip` z pôvodného `i` elementu na štandardný `button`. Je tak splnená požiadavka na prístupnosť - tooltip je dostupný myšou aj klávesnicou (#306).
 
 ### Webové stránky
 
@@ -45,6 +46,8 @@
 
 ![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
 
+- Page Builder - elementy označené CSS triedou [`pb-duplicable`](frontend/page-builder/settings.md#duplikovateľný-element-oranžová-farba) je možné v rámci rovnakého rodiča presúvať, duplikovať a zmazať. Vlastné alebo viaceré selektory je možné nastaviť cez `pbCustomSettings` (#58750).
+
 ### Headless režim
 
 Pridaná [podpora headless režimu](frontend/headless/README.md), v ktorom WebJET CMS slúži čisto ako `backend` CMS. Obsah, navigácia, vyhľadávanie a formuláre sú dostupné cez REST API. Frontend aplikácia (napr. Astro, Next.js, Vue, React alebo akýkoľvek HTTP klient) si dáta stiahne a zobrazuje ich podľa vlastných šablón (#258).
@@ -77,6 +80,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - [Viackrokové formuláre](redactor/apps/multistep-form/README.md) - pridané duplikovanie celého formulára vrátane nastavení, krokov a položiek. Editor položiek zobrazuje ich automaticky vytvorený identifikátor a podporuje vlastnú chybovú správu, orezanie medzier, prázdnu možnosť vo výberovom zozname a nový typ poľa automatické dopĺňanie s vyhľadávaním bez rozlíšenia diakritiky (#osk573).
 - [Viackrokové formuláre](redactor/apps/multistep-form/README.md) - do úvodného textu kroku a [stránky s verziou pre email](redactor/apps/form/README.md#karta---nastavenia) je možné vložiť hodnoty položiek pomocou značiek. Opravené bolo rozpoznávanie polí mena a emailu podľa začiatku identifikátora, spracovanie jazyka, reCAPTCHA v3, nezávislé vloženie viacerých inštancií formulára na jednu stránku a vymazanie všetkých odpovedí bez odstránenia definície formulára (#osk573).
 - [Viackrokové formuláre](redactor/apps/multistep-form/README.md) - pridaná možnosť zadať vlastnú chybovú správu a orezať medzery na začiatku a konci textu zadaného návštevníkom (#osk573).
+- Formulár ľahko a viackrokové formuláre - [vlastný HTML kód tooltipu](redactor/apps/formsimple/README.md#vlastný-html-kód-tooltipu) v prekladovom kľúči `components.formsimple.tooltipCode` podporuje značky s identifikátormi poľa, položky a kroku vrátane unikátneho `${tooltipId}`. Ovládací prvok je tak možné pomocou `aria-describedby` jednoznačne prepojiť s obsahom tooltipu aj pri opakovanom vložení formulára na stránku. Viackrokový formulár po každom zobrazení kroku publikuje na objekte `window` [udalosť `WJ.multistepForm.stepShown`](redactor/apps/multistep-form/README.md#javascript-udalosť-po-zobrazení-kroku) s odkazmi na jeho HTML elementy a identifikátormi formulára a kroku (#306).
+- Formulár ľahko a viackrokové formuláre - predvolený tooltip je po novom dostupný myšou aj klávesnicou, poskytuje stabilný kontextový názov a opis, zostáva zobrazený pri presune kurzora na jeho obsah a je možné ho zatvoriť klávesom `Escape` (#306).
 
 ### Sémantické vyhľadávanie
 
@@ -132,6 +137,9 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 - Pridaná možnosť nastaviť voliteľné pole ako povinné (#58413).
 - Pridané nové typy voliteľných polí [prepínač a zaškrtávacie pole](frontend/webpages/customfields/custom-fields-settings.md#rozdiel-medzi-selectmultiselect-a-radiocheckbox) s podporou statických možností aj prepojenia na číselník. Typ `multiselect` teraz tiež podporuje [prepojenie na číselník](frontend/webpages/customfields/custom-fields-settings.md#zdroj-možností). Pôvodný typ `enumeration` bol nahradený prepínačom zdroja možností pri typoch `select`, `multiselect`, `radio` a `checkbox` kde sa pre všetky tieto typy polí načítajú možnosti z prepojeného číselníka (#58637).
+- Pridaný typ [Editor JSON](developer/datatables-editor/customfields.md#json-editor) (`jsoneditor`) pre priame zadávanie JSON objektu s číslami riadkov a tlačidlom na formátovanie (#311).
+
+![](frontend/webpages/customfields/webpages-jsoneditor.png)
 
 ### Prístupnosť
 
@@ -146,6 +154,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Iné menšie zmeny
 
+- Monitorovanie servera - v aktuálnych hodnotách bola pridaná sekcia [Kódovanie znakov](sysadmin/monitoring/README.md#kódovanie-znakov), ktorá zobrazuje kódovanie HTTP odpovedí, JVM a locale prostredie bežiaceho procesu aplikačného servera (#305).
 - Konfigurácia - pridaný hierarchický strom konfiguračných premenných s pohľadmi **Zmenené**, **Zákaznícke**, **Všetky** a modulovými vetvami (#293).
 - Konfigurácia - pridaná možnosť **Nastaviť dočasne**, ktorá nastaví hodnotu konfiguračnej premennej len na aktuálnom uzle bez uloženia do databázy. Po reštarte sa obnoví hodnota uložená v databáze (#291).
 
@@ -174,10 +183,15 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Formuláre - opravené archivovanie formulárov (#305).
 - Prieskumník - upravené porovnávanie súborov s diakritikou pri kontrole existencie súboru pri jeho prepísaní - formát `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Webové stránky - opravené pridávanie prázdneho `P` elementu na koniec stránky (#58317-13).
 - Webové stránky - opravené načítanie hodnoty `ckeditor_button_sizes` pre tlačidlo typu `A` (#OSK674).
 - Monitorovanie SQL - opravená správa životného cyklu meraní `PreparedStatement`. Záznam sa odstráni aj pri zatvorení pred spustením merania a jednotlivé objekty `PreparedStatement` sa rozlišujú podľa identity bez volania JDBC `hashCode()` a `equals()`. Súbežný prístup používa `ConcurrentHashMap` a atomický stav bez globálneho `synchronized` bloku, takže vlákna nečakajú na spoločný zámok a merania sa nespoja ani pri kolízii identitných hashov.
+
+### Výkon
+
+- Optimalizované načítanie skupiny šablón pri zobrazení stránky a hľadaní voliteľných polí. Skupina je uložená do cache a znova použitá bez potreby jej čítania z databázy (#311).
 
 ### Bezpečnosť
 
@@ -192,11 +206,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 ### Pre programátora
 
 - Administrácia - odstránená závislosť od [Vue.js](https://vuejs.org). Stromové polia, úvodná stránka, výber oblasti obrázka a monitorovanie servera používajú natívne [web komponenty](developer/frameworks/web-components.md). Globálny objekt `window.VueTools` ani balíky pre Vue už nie sú súčasťou administrácie. Vlastné rozšírenia ich musia nahradiť web komponentmi alebo si Vue zostaviť samostatne (#58722).
-
 - AI asistenti - klientska logika nezávislá od poskytovateľa pre OpenAI, Gemini a OpenRouter, spracovanie streamov, typy požiadaviek/odpovedí a ochrana promptov boli vyčlenené do samostatného artefaktu `com.webjetcms:webjet-ai` a externého [repozitára webjet-ai](https://github.com/webjetcms/webjet-ai). WebJET CMS odovzdáva konfiguráciu cez typovaný adaptér a naďalej zabezpečuje auditovanie, perzistenciu a integráciu používateľského rozhrania. Ide o nekompatibilnú zmenu: pôvodné CMS SPI pre vlastných poskytovateľov a jeho transportné a streamovacie podporné triedy boli odstránené. Vlastných poskytovateľov je nutné migrovať na rozhranie `AiProvider` knižnice a CMS adaptér `LibrarySupportLogic`  (#58670).
-
 - AI poskytovatelia - vlastnú implementáciu je možné [pridať do projektu](custom-apps/apps/ai/assistants/README.md) ako Spring bean `AiProvider`; CMS ju automaticky spojí so vstavanými poskytovateľmi. Konfigurácia a polia editora sú sústredené v jednom adaptéri `LibrarySupportLogic`/`AiAssitantsInterface`. Možnosti generovania obrázkov sa načítajú podľa poskytovateľa, modelu a operácie z knižnice `webjet-ai`, takže sa dynamicky zobrazí iba podporovaný počet, rozmer, kvalita a pomer strán (#58694).
-
 - Dátové tabuľky - pridaný nový typ poľa `OPTIONS` pre [dynamický zoznam hodnôt](developer/datatables-editor/standard-fields.md#options) v editore. Každý riadok obsahuje dva textové polia (kľúč a hodnota), podporuje pridávanie, odoberanie a zmenu poradia pomocou `drag & drop` (#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced.png)
@@ -213,7 +224,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Aktualizovaná knižnica [Tabler Icons](https://tabler.io/icons) na verziu 3.44.0, vyriešený problém so súčasným používaním `Outline` a `Filled` sád (#58509).
 - Web stránky - ak potrebujete mať prázdny prvý riadok v konfiguračnej premennej `imageMagickCustomParams*` pre [nastavenie vlastných parametrov](redactor/apps/gallery/README.md#vlastné-parametre-imagemagick) `ImageMagick` zadajte hodnotu `---`.
 - Prekladové kľúče - upravené auditovanie chýbajúcich prekladových kľúčov - vylúčené auditovanie ak sa neskôr testuje, či kľúč skutočne existuje (#261).
-
+- Testovanie - pridané [automatizované nahrávanie prezentačných videí](developer/testing/video.md) pomocou CodeceptJS a Playwright. Video scenáre vytvárajú kvalitný WebM výstup so syntetickým kurzorom, prirodzenou dráhou pohybu a reprodukovateľným priebehom kliknutí. Hovorené slovo je možné zo scenára automaticky vygenerovať cez ElevenLabs API ako MP3 súbor s nastaviteľným modelom a hlasom (#299).
 - Konfigurácia - z tried `Constants` a `ConstantsV9` boli odstránené zastarané konfiguračné premenné. Ak ich vo svojom projekte používate môžete si do vášho `SpringConfig` pridať potrebnú definíciu:
 
 ```java
@@ -513,8 +524,13 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Galéria - v editore aplikácie sa medzi vizuálnymi štýlmi zobrazujú iba JSP súbory z priečinkov `/components/{INSTALL_NAME}/gallery` a `/components/gallery`, bez duplicitných položiek (#58317-16).
 - Vloženie HTML kódu - v náhľade aplikácie v editore webových stránok sa pre obsah tvorený iba elementmi `script` zobrazí zdrojový kód namiesto prázdneho obsahu (#OSK625).
 - Bezpečnosť - sprísnené overovanie odkazu na obnovu zabudnutého hesla. Overovací záznam sa kontroluje pre vybraný používateľský účet aj pri vlastnom spôsobe odosielania, rešpektuje časovú platnosť a po použití sa zneplatní pre všetky účty zahrnuté v žiadosti (#292).
+- Bezpečnosť - sprísnené overovanie oprávnení pri práci so záznamami v administrácii (#295).
 - Bezpečnosť - sprísnená kontrola práv na priečinok pri nahrávaní súboru do administrácie a jeho prepísaní ak súbor existuje.
+- Bezpečnosť - sprísnená kontrola oprávnení pri obnove historickej verzie súboru (#295).
+- Bezpečnosť - sprísnená kontrola oprávnení pri správe blogerov (#295).
 - Bezpečnosť - sprísnená validácia názvov databázových stĺpcov pri dynamickom usporiadaní a filtrovaní. **Upozornenie:** verejné API už v parametroch usporiadania nepodporujú vlastné SQL výrazy, používajú sa iba bezpečné názvy stĺpcov alebo dostupné pomenované konštanty (#294).
+- Bezpečnosť - [zabezpečený koncový bod `row-reorder`](developer/datatables/README.md#poradie-usporiadania-riadkov) dátových tabuliek. Povolené je meniť iba numerické pole označené `DataTableColumnType.ROW_REORDER`, pričom sa kontrolujú oprávnenia pre každý záznam aj dodatočný rozsah celej dávky pomocou `checkRowReorderScope`. Pri formulároch sa overuje príslušnosť k formuláru a kroku aj prístup používateľa; neplatná požiadavka sa neuloží (#295).
+- CKEditor - doplnená možnosť [konfigurovať pravidlá čistenia obsahu](frontend/setup/ckeditor.md#čistenie-html-kódu-pri-vložení-z-wordexcel) pri vložení z Word/Excel. **Upozornenie:** predvolené čistenie po novom odstraňuje aj atribút `nowrap` z buniek `TD` a CSS triedy s atribútmi `align` a `valign` z buniek `TH` (#300).
 
 ## 2026.0.28
 

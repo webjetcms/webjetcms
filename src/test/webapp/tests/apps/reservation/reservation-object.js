@@ -130,7 +130,7 @@ Scenario('reservation object + special prices test', ({I, DT, DTE}) => {
     I.amOnPage("/apps/reservation/admin/reservation-objects/");
 
     I.clickCss("button.buttons-create");
-    I.dtWaitForEditor("reservationObjectDataTable");
+    DTE.waitForEditor("reservationObjectDataTable");
 
     I.clickCss("#DTE_Field_name");
     I.fillField("#DTE_Field_name", prices_reservation_object);

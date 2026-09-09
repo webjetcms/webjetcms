@@ -1,5 +1,7 @@
 package sk.iway.iwcm.aspect;
 
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
@@ -44,7 +46,10 @@ class AspectExceptionTest
 			cacheStatic.when(Cache::getInstance).thenReturn(cache);
 			dbPool.when(() -> DBPool.getConnection("iwcm")).thenReturn(connection);
 
-			new SimpleQuery().execute(SQL);
+			IllegalStateException thrown = assertThrows(
+				IllegalStateException.class,
+				() -> new SimpleQuery().execute(SQL));
+			assertSame(exception, thrown.getCause());
 
 			logger.verify(() -> Logger.error(
 				eq(SimpleQuery.class),

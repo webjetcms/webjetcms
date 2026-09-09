@@ -6,8 +6,8 @@ Before(({ I, login }) => {
 
 Scenario('monitoring', ({ I, Document }) => {
     I.amOnPage("/apps/server_monitoring/admin/");
-    I.wait(120);
-    Document.screenshot("/sysadmin/monitoring/actual.png", 1360, 1000);
+    I.wait(10*60);
+    Document.screenshot("/sysadmin/monitoring/actual.png", 1360, 2050);
 
     I.amOnPage("/apps/server_monitoring/admin/records/");
     Document.screenshot("/sysadmin/monitoring/historical.png", 1360, 1000);
