@@ -157,9 +157,9 @@ Pre inú entitu použite jej prefix prekladových kľúčov. Na serveri typ repr
 
 Editor používa textovú oblasť s číslami riadkov, písmom s pevnou šírkou znakov a horizontálnym posuvníkom. Číslovanie sa posúva spolu s textom. Klávesy `Tab` a `Shift+Tab` zachovávajú bežný presun medzi formulárovými prvkami.
 
-Nad textovou oblasťou je panel s tlačidlom **Formátovať JSON** bez rámika a dostupným AI asistentom vľavo a aktuálnou pozíciou kurzora vpravo, napríklad **Riadok 10, stĺpec 12**. Pozícia sa zobrazuje len počas focusu textovej oblasti a pri jeho strate sa skryje. Aktualizuje sa pri písaní, kliknutí a pohybe klávesnicou; pri označení textu zobrazuje aktívny koniec výberu. Riadky aj stĺpce sa počítajú od 1.
+Nad textovou oblasťou je panel s tlačidlom **Formátovať JSON** bez rámika a dostupným AI asistentom vľavo a aktuálnou pozíciou kurzora vpravo, napríklad **Riadok 10, stĺpec 12**. Pozícia sa zobrazuje len počas fokusu textovej oblasti a pri jeho strate sa skryje. Aktualizuje sa pri písaní, kliknutí a pohybe klávesnicou; pri označení textu zobrazuje aktívny koniec výberu. Riadky aj stĺpce sa počítajú od 1.
 
-Tlačidlo **Formátovať JSON** najskôr overí vstup a potom ho odsadí dvoma medzerami. Mení iba biele znaky mimo reťazcov a komentárov; zachováva úvodzovky/apostrofy, číselné zápisy, poradie vlastností aj escape sekvencie. Komentáre za hodnotou zostávajú na rovnakom riadku; samostatné komentáre zostávajú na vlastnom riadku. Nepoužíva spätnú serializáciu parsovaných hodnôt, ktorá by mohla zaokrúhliť veľké číselné identifikátory. Otvorenie editora a uloženie záznamu text automaticky neformátuje.
+Tlačidlo **Formátovať JSON** najskôr overí vstup a potom ho odsadí dvoma medzerami. Mení iba biele znaky mimo reťazcov a komentárov; zachováva úvodzovky/apostrofy, číselné zápisy, poradie vlastností aj escape sekvencie. Komentáre za hodnotou zostávajú na rovnakom riadku; samostatné komentáre zostávajú na vlastnom riadku. Nepoužíva spätnú serializáciu parsovaných hodnôt, ktorá by mohla zaokrúhliť veľké číselné identifikátory. Otvorenie editora text automaticky neformátuje.
 
 Príklad platnej hodnoty:
 
@@ -174,14 +174,14 @@ Príklad platnej hodnoty:
 
 ### Validácia a uloženie
 
-- Okrem štandardného JSON je podporovaný rozšírený zápis: jednoduché úvodzovky (apostrofy), názvy vlastností bez úvodzoviek a komentáre `//` aj `/* … */`. Neúvodzovkovaný názov začína písmenom, `_` alebo `$`; ďalej môže obsahovať aj číslice a pomlčky, napríklad `data-toggle`. Pomlčka bez úvodzoviek je rozšírením tohto editora, nie štandardnou syntaxou JavaScriptu.
+- Okrem štandardného JSON je podporovaný rozšírený zápis: jednoduché úvodzovky (apostrofy), názvy vlastností bez úvodzoviek a komentáre `//` aj `/* … */`. Názov bez úvodzoviek začína písmenom, `_` alebo `$`, ďalej môže obsahovať aj číslice a pomlčky, napríklad `data-toggle`. Pomlčka bez úvodzoviek je rozšírením tohto editora, nie štandardnou syntaxou JavaScriptu.
 - Povolený je práve jeden JSON objekt v zložených zátvorkách `{}`. Vnorené objekty a polia sú povolené; samotné pole `[]`, reťazec, číslo, `true`, `false` a `null` na koreni sa odmietnu.
 - Kontroluje sa celý vstup. Koncová čiarka, chýbajúce zátvorky alebo druhý objekt za prvým sú neplatné. Funkcie, volania JavaScriptu, `undefined`, `NaN` a `Infinity` nie sú povolené. Parser kód nikdy nespúšťa.
 - Komentár `//` pokračuje až po koniec riadka. Uzatváracie zátvorky objektu preto musia byť na ďalšom riadku; v jednoriadkovom zápise použite komentár `/* … */`.
 - Prázdny vstup vrátane samotných medzier je povolený, ak je vypnuté **Povinné pole**. Pri zapnutej povinnosti sa musí zadať objekt; prázdny objekt `{}` je platná hodnota.
 - V prehliadači sa vstup kontroluje pri opustení poľa aj pred uložením. Chyba sa zobrazí pri poli a pri pokuse o uloženie sa otvorí jeho karta. Ak parser poskytne polohu syntaktickej chyby, hlásenie obsahuje riadok a stĺpec.
-- Server vykonáva rovnakú kontrolu nezávisle od JavaScriptu pri ukladaní cez DataTables Editor, priamy REST aj import. Konfiguráciu typu a povinnosti načíta zo servera podľa entity, šablóny a domény; definícia poľa odoslaná klientom nemôže validáciu vypnúť. Pri čiastočnej úprave sa overí výsledná hodnota vrátane zachovaných údajov z existujúceho záznamu.
-- Ukladanie webových stránok overí hodnoty aj v `EditorService.saveEditedDoc()` pred zápisom stránky a jej histórie. Neplatná hodnota zablokuje uloženie a nevytvorí novú historickú verziu.
+- Server vykonáva rovnakú kontrolu nezávisle od JavaScriptu v `DatatableRestControllerV2.validateEditorForCustomFields()` pri ukladaní cez DataTables Editor a pri importe. Konfiguráciu typu a povinnosti načíta zo servera podľa entity a kontextu voliteľných polí; definícia poľa odoslaná klientom nemôže validáciu vypnúť. Pri čiastočnom importe kontroluje iba importované JSON polia.
+- Po úspešnej validácii sa znaky `<` a `>` pred uložením zapíšu ako JSON Unicode escape sekvencie `\u003C` a `\u003E`. JSON parser ich načíta späť ako pôvodné znaky, ale samotný text v databáze a po opätovnom otvorení editora používa kanonickú escape podobu.
 
 Validácia kontroluje syntax a koreňový objekt. Neoveruje prítomnosť ani význam konkrétnych atribútov podľa JSON Schema.
 
@@ -200,24 +200,15 @@ Príklad podporovaného rozšíreného zápisu:
 }
 ```
 
-Rozšírený zápis sa ukladá v pôvodnej podobe vrátane apostrofov a komentárov. Nie je automaticky prevedený na striktný JSON pre `JSON.parse`; aplikácia, ktorá hodnotu spracúva, musí podporovať použitú syntax.
+Rozšírený zápis sa okrem kanonizácie znakov `<` a `>` ukladá v pôvodnej podobe vrátane apostrofov a komentárov. Nie je automaticky prevedený na striktný JSON pre `JSON.parse`; aplikácia, ktorá hodnotu spracúva, musí podporovať použitú syntax.
 
-Pre vlastné REST controllery odvodené od `DatatableRestControllerV2` sa prekladové kľúče pre validáciu predvolene odvodia z `@DataTableColumn.title` na atribútoch `fieldA` až `fieldZ`. Ak vaša aplikácia používa iný prefix, než vyplýva z anotácií, prekryte serverový hook `protected String getCustomFieldsKeyPrefix(T entity)` tak, aby vracal rovnaký prefix ako volanie `BaseEditorFields.getFields()`:
-
-```java
-@Override
-protected String getCustomFieldsKeyPrefix(QuestionsAnswersEntity entity) {
-    return "components.qa";
-}
-```
-
-Predvolená hodnota `null` ponechá odvodenie z anotácií. Kontext konfigurácie v tabuľke `custom_fields`, napríklad väzbu na rodičovskú entitu, naďalej určuje existujúci hook `getCustomFieldsSearchDto(T entity)`. Oba hooky vychádzajú zo serverových údajov a vyhodnocujú sa pre konkrétny ukladaný záznam.
+Pre vlastné REST služby odvodené od `DatatableRestControllerV2` sa prekladové kľúče pre validáciu odvodia z `@DataTableColumn.title` na atribútoch `fieldA` až `fieldZ`. Kontext konfigurácie v tabuľke `custom_fields`, napríklad väzbu na rodičovskú entitu, určuje existujúci hook `getCustomFieldsSearchDto(T entity)`. Hook vychádza zo serverových údajov a vyhodnocuje sa pre konkrétny ukladaný záznam.
 
 ### Kapacita databázy
 
 Hodnota zostáva textom v príslušnom databázovom stĺpci `field_a` až `field_t`. Typ `jsoneditor` nemení databázový typ ani automaticky nerozširuje stĺpce.
 
-Základná schéma pre voliteľné polia webových stránok používa dĺžku 255 znakov. Pred nasadením pre JSON s veľkosťou niekoľko KB overte skutočnú kapacitu konkrétneho stĺpca a prípadne ju rozšírte **v tabuľke `documents` aj `documents_history`**. Príklady SQL pre podporované databázy sú v časti [Kapacita databázy](../../frontend/webpages/customfields/README.md#kapacita-databázy). Ide o samostatnú úpravu zákazníckej inštalácie. Syntakticky platný JSON musí zároveň spĺňať obmedzenia dĺžky uložených údajov.
+Základná schéma pre voliteľné polia webových stránok používa dĺžku 255 znakov. Pred nasadením pre JSON s veľkosťou niekoľko KB overte skutočnú kapacitu konkrétneho stĺpca a prípadne ju rozšírte **v tabuľke `documents` aj `documents_history`**. Príklady SQL pre podporované databázy sú v časti [Kapacita databázy](../../frontend/webpages/customfields/README.md#kapacita-databázy). Ide o samostatnú úpravu zákazníckej inštalácie. Syntakticky platný JSON musí zároveň spĺňať obmedzenia dĺžky uložených údajov; každé kanonizované `<` alebo `>` zaberie namiesto jedného znaku šesť znakov.
 
 ## Frontend
 
@@ -277,4 +268,4 @@ Nastavením `customFieldsUpdateColumnsPreserveVisibility` na hodnotu `true` sa p
 
 Spracovanie je v ```index.js``` vo funkcii ```updateOptionsFromJson```. Ak je zapnutá možnosť ```DATA.customFieldsUpdateColumns===true``` a JSON objekt obsahuje v prvom zázname obsahuje ```editorFields?.fieldsDefinition``` tak sa zmenia názvy stĺpcov v hlavičke a aj v ```DATA``` objekte. Stĺpce s názvom ```null``` sa schovajú (to zabezpečuje konfigurácia ```colVis``` vo funkcii ```columns``` kde sa stĺpce s názvom ```null``` vynechajú). Následne sa vyvolá ```$("#"+DATA.id).trigger("column-reorder.dt");``` aby sa aktualizovali názvy stĺpcov v nastavení zobrazenia stĺpcov (```colvis```).
 
-V definícii ```buttons.colvis``` je upravené čítanie ```columnText``` tak, aby zobralo vždy aktuálnu hodnotu z ```DATA``` definície a ```columns``` funkcii, ktorá definuje aké stĺpce sa v nastavení zobrazia, sa vráti ```true/false``` podľa toho, či má stĺpec názov ```null```. Takto sa vždy v nastavení zobrazenia stĺpcov zobrazia aktuálne názvy stĺpcov a schovajú sa tie, ktoré nemajú definovaný názov (napoužívajú sa).
+V definícii ```buttons.colvis``` je upravené čítanie ```columnText``` tak, aby zobralo vždy aktuálnu hodnotu z ```DATA``` definície a ```columns``` funkcii, ktorá definuje aké stĺpce sa v nastavení zobrazia, sa vráti ```true/false``` podľa toho, či má stĺpec názov ```null```. Takto sa vždy v nastavení zobrazenia stĺpcov zobrazia aktuálne názvy stĺpcov a schovajú sa tie, ktoré nemajú definovaný názov (nepoužívajú sa).

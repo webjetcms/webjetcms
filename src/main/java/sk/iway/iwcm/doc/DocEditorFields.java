@@ -3,7 +3,6 @@ package sk.iway.iwcm.doc;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -263,15 +262,19 @@ public class DocEditorFields extends BaseEditorFields {
                 TemplateDetails temp = TemplatesDB.getInstance().getTemplate(tempId);
                 if (temp != null && temp.getTemplatesGroupId()!=null && temp.getTemplatesGroupId().longValue() > 0) {
                     TemplatesGroupBean tgb = TemplatesGroupDB.getInstance().getById(temp.getTemplatesGroupId());
+                    if (tgb != null && Tools.isNotEmpty(tgb.getKeyPrefix())) {
+                        RequestBean.addTextKeyPrefix(tgb.getKeyPrefix(), false);
+                    }
                     if (tgb != null && group != null) {
                         //nastav typ editora
                         setEditingMode(doc, temp, tgb, group, docDB);
                     }
                 }
 
+                RequestBean.addTextKeyPrefix("temp-"+tempId, false);
             }
 
-            setFieldsDefinition(withCustomFieldTextPrefixes(tempId, () -> getFields(doc, "editor", 'T')));
+            setFieldsDefinition( getFields(doc, "editor", 'T') );
 
             if (doc instanceof DocDetails) {
                 styleComboList = EditorService.getCssListJson(doc);
@@ -356,37 +359,8 @@ public class DocEditorFields extends BaseEditorFields {
     }
 
     /**
-     * Resolves custom-field translations in the template context without leaking prefixes to another row.
-     * @param tempId effective template ID
-     * @param operation field generation or validation to run in this context
-     * @param <T> result type
-     * @return operation result
-     */
-    public static <T> T withCustomFieldTextPrefixes(int tempId, Supplier<T> operation) {
-        List<String> current = RequestBean.getTextKeyPrefixes();
-        List<String> original = current == null ? List.of() : new ArrayList<>(current);
-        try {
-            if (tempId > 0) {
-                TemplateDetails template = TemplatesDB.getInstance().getTemplate(tempId);
-                if (template != null && template.getTemplatesGroupId() != null && template.getTemplatesGroupId() > 0) {
-                    TemplatesGroupBean group = TemplatesGroupDB.getInstance().getById(template.getTemplatesGroupId());
-                    if (group != null && Tools.isNotEmpty(group.getKeyPrefix())) RequestBean.addTextKeyPrefix(group.getKeyPrefix(), false);
-                }
-                RequestBean.addTextKeyPrefix("temp-" + tempId, false);
-            }
-            return operation.get();
-        } finally {
-            List<String> prefixes = RequestBean.getTextKeyPrefixes();
-            if (prefixes != null) {
-                prefixes.clear();
-                prefixes.addAll(original);
-            }
-        }
-    }
-
-    /**
-     * Copies editor-only values back into the edited document.
-     * @param doc edited document
+     * Nastavi hodnoty atributov nazad do DocDetails objektu
+     * @param doc
      */
     public void toDocDetails(DocDetails doc) {
         doc.setPasswordProtected(UserDetailsService.getUserGroupIds(permisions, emails));

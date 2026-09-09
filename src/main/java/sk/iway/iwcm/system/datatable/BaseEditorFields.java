@@ -3,7 +3,6 @@ package sk.iway.iwcm.system.datatable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +19,6 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
 import sk.iway.iwcm.components.customfields.rest.CustomFieldsService;
-import sk.iway.iwcm.components.customfields.rest.JsonEditorValueReader;
 import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.doc.DocDB;
@@ -103,7 +101,6 @@ public class BaseEditorFields {
         Prop prop = Prop.getInstance();
 		Prop propType = Prop.getInstance(Constants.getString("defaultLanguage"));
         List<Field> fields = new ArrayList<>();
-        Map<String, Field> jsonEditorFields = new LinkedHashMap<>();
         fieldsDefinitionKeyPrefix = keyPrefix;
         fieldsDefinitionClassName = searchDto != null && Tools.isNotEmpty(searchDto.getClassName()) ? searchDto.getClassName() : bean.getClass().getName();
         fieldsDefinitionEntityId = searchDto != null ? searchDto.getEntityId() : null;
@@ -384,18 +381,8 @@ public class BaseEditorFields {
                 }
 
                 fields.add(field);
-                if (fieldType == FieldType.JSONEDITOR) jsonEditorFields.put("field" + alphabet, field);
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                 Logger.error(BaseEditorFields.class, e);
-            }
-        }
-
-        JsonEditorValueReader.restore(bean, jsonEditorFields.keySet());
-        if (jsonEditorFields.isEmpty() == false) {
-            BeanWrapperImpl wrapper = new BeanWrapperImpl(bean);
-            for (Map.Entry<String, Field> entry : jsonEditorFields.entrySet()) {
-                Object value = wrapper.getPropertyValue(entry.getKey());
-                entry.getValue().setValue(value == null ? "" : value.toString());
             }
         }
 

@@ -20,6 +20,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.validation.BeanPropertyBindingResult;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
@@ -72,11 +75,13 @@ class JsonEditorDatatableTest {
     @Test
     void mapsEditorErrorsAndAllowsDelete() {
         TestEntity entity = new TestEntity();
-        entity.setFieldA("invalid");
+        String invalid = "{\"html\":<invalid>}";
+        entity.setFieldA(invalid);
         DatatableRequest<Long, TestEntity> request = request("edit", entity);
 
         BeanPropertyBindingResult errors = validate(request, entity);
         assertTrue(errors.hasFieldErrors("errorField.fieldA"));
+        assertEquals(invalid, entity.getFieldA(), "Invalid input must not be canonicalized");
 
         request.setAction("remove");
         entity.setFieldA("");
@@ -94,6 +99,20 @@ class JsonEditorDatatableTest {
         assertEquals(value, entity.getFieldA());
     }
 
+    /** Verifies valid JSON is stored in a form that remains unchanged by the JPA XSS filter. */
+    @Test
+    void canonicalizesValidEditorValueForPersistence() throws Exception {
+        TestEntity entity = new TestEntity();
+        String source = "{\"html\":\"<img src=x onerror=alert(1)>\",\"entity\":\"&lt;\"}";
+        String canonical = "{\"html\":\"\\u003Cimg src=x onerror=alert(1)\\u003E\",\"entity\":\"&lt;\"}";
+        entity.setFieldA(source);
+
+        assertTrue(validate(request("edit", entity), entity).getAllErrors().isEmpty());
+        assertEquals(canonical, entity.getFieldA());
+        assertEquals(canonical, DB.filterHtml(canonical), "The JPA filter must leave canonical JSON unchanged");
+        assertEquals(new ObjectMapper().readTree(source), new ObjectMapper().readTree(canonical));
+    }
+
     /** Verifies an imported JSON column is checked by the same editor validation method. */
     @Test
     void validatesImportedJsonColumn() {
@@ -104,6 +123,19 @@ class JsonEditorDatatableTest {
         request.setImportedColumns(Set.of("fieldA"));
 
         assertTrue(validate(request, entity).hasFieldErrors("errorField.fieldA"));
+    }
+
+    /** Verifies imported JSON columns use the same persistence canonicalization. */
+    @Test
+    void canonicalizesImportedJsonColumn() {
+        TestEntity entity = new TestEntity();
+        entity.setFieldA("{\"html\":\"<imported>\"}");
+        DatatableRequest<Long, TestEntity> request = request("edit", entity);
+        request.setDztotalchunkcount(1);
+        request.setImportedColumns(Set.of("fieldA"));
+
+        assertFalse(validate(request, entity).hasErrors());
+        assertEquals("{\"html\":\"\\u003Cimported\\u003E\"}", entity.getFieldA());
     }
 
     /** Verifies an omitted imported JSON column retains its stored value and is not treated as blank. */

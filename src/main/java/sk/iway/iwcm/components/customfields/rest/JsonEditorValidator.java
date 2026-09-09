@@ -3,6 +3,7 @@ package sk.iway.iwcm.components.customfields.rest;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,15 +27,13 @@ import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationTypeRepository;
 import sk.iway.iwcm.components.enumerations.rest.EnumerationService;
-import sk.iway.iwcm.doc.DocDetails;
-import sk.iway.iwcm.doc.DocEditorFields;
 import sk.iway.iwcm.editor.FieldType;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DatatableFieldError;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 
 /**
- * Validates raw JSON custom fields without converting or rewriting their string values.
+ * Validates JSON custom fields and prepares valid values for safe persistence.
  */
 public final class JsonEditorValidator {
 
@@ -54,9 +53,6 @@ public final class JsonEditorValidator {
      */
     public static Map<String, Boolean> getRules(Object entity, CustomFieldsSearchDto context) {
         if (entity == null) return Map.of();
-        if (entity instanceof DocDetails doc) {
-            return DocEditorFields.withCustomFieldTextPrefixes(doc.getTempId(), () -> resolveRules(entity, context));
-        }
         return resolveRules(entity, context);
     }
 
@@ -121,6 +117,23 @@ public final class JsonEditorValidator {
             if (error != null) errors.add(new DatatableFieldError(rule.getKey(), error));
         }
         return errors;
+    }
+
+    /**
+     * Replaces literal angle brackets with equivalent JSON Unicode escapes.
+     * The operation is idempotent and does not parse or reserialize the source text.
+     * @param entity entity whose validated JSON values are prepared for persistence
+     * @param fieldNames server-resolved JSON property names
+     */
+    public static void canonicalizeForPersistence(Object entity, Collection<String> fieldNames) {
+        if (entity == null || fieldNames.isEmpty()) return;
+        BeanWrapperImpl bean = new BeanWrapperImpl(entity);
+        for (String fieldName : fieldNames) {
+            Object value = bean.getPropertyValue(fieldName);
+            if (value instanceof String text && (text.indexOf('<') >= 0 || text.indexOf('>') >= 0)) {
+                bean.setPropertyValue(fieldName, text.replace("<", "\\u003C").replace(">", "\\u003E"));
+            }
+        }
     }
 
     /**

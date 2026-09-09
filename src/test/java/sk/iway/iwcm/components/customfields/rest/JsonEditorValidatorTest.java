@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -37,7 +36,6 @@ import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationTypeRepository;
-import sk.iway.iwcm.doc.DocEditorFields;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.editor.FieldType;
@@ -131,6 +129,22 @@ class JsonEditorValidatorTest {
         assertEquals(text, bean.getFieldA(), "Validation must not trim, format or reserialize the original text");
     }
 
+    /** Verifies persistence canonicalization changes only literal angle brackets and preserves JSON meaning. */
+    @Test
+    void canonicalizesHtmlSensitiveCharactersWithoutReserializing() throws Exception {
+        FieldBean bean = new FieldBean();
+        String source = "{\"html\":\"<tag>&quot;&lt;\",\"literalEscape\":\"\\\\u003C\",\"decimal\":1.00}";
+        String canonical = "{\"html\":\"\\u003Ctag\\u003E&quot;&lt;\",\"literalEscape\":\"\\\\u003C\",\"decimal\":1.00}";
+        bean.setFieldA(source);
+
+        JsonEditorValidator.canonicalizeForPersistence(bean, List.of("fieldA"));
+        assertEquals(canonical, bean.getFieldA());
+        assertEquals(new ObjectMapper().readTree(source), new ObjectMapper().readTree(canonical));
+
+        JsonEditorValidator.canonicalizeForPersistence(bean, List.of("fieldA"));
+        assertEquals(canonical, bean.getFieldA(), "Canonicalization must be idempotent");
+    }
+
     /** Verifies inherited annotation labels and database overrides agree with generated field definitions. */
     @Test
     void usesTrustedConfigurationAndIgnoresPostedMetadata() {
@@ -212,12 +226,7 @@ class JsonEditorValidatorTest {
             requests.when(SetCharacterEncodingFilter::getCurrentRequestBean).thenReturn(requestBean);
             templateDb.when(TemplatesDB::getInstance).thenReturn(templates);
             RequestBean.addTextKeyPrefix("shared", true);
-            assertEquals(List.of("temp-7", "shared"), DocEditorFields.withCustomFieldTextPrefixes(7, () -> List.copyOf(RequestBean.getTextKeyPrefixes())));
             assertEquals(List.of("shared"), RequestBean.getTextKeyPrefixes());
-            assertThrows(IllegalArgumentException.class, () -> DocEditorFields.withCustomFieldTextPrefixes(8, () -> {
-                assertFalse(RequestBean.getTextKeyPrefixes().contains("temp-7"));
-                throw new IllegalArgumentException("Expected test failure");
-            }));
             assertEquals(List.of("shared"), RequestBean.getTextKeyPrefixes());
         }
     }

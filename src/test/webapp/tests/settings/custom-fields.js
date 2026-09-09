@@ -221,12 +221,13 @@ Scenario('Custom fields required logic test - AFTER @screenshot', async ({ I, DT
     await deleteCustomFieldSettingsByTooltip(I, DT, DTE);
 });
 
-Scenario('JSON editor validates objects and preserves source text', async ({ I, DT, DTE }) => {
+Scenario('JSON editor validates objects and canonicalizes HTML-sensitive characters', async ({ I, DT, DTE }) => {
     const fieldA = "#datatableInit_modal #DTE_Field_fieldA";
     const fieldB = "#datatableInit_modal #DTE_Field_fieldB";
     const escapedString = String.raw`"\u0061\n\""`;
     const source = '{"id":9007199254740993,"html":"</textarea>&quot;","nested":{"items":[true,null]},"decimal":1.00,"escapes":' + escapedString + '}';
     const formatted = '{\n  "id": 9007199254740993,\n  "html": "</textarea>&quot;",\n  "nested": {\n    "items": [\n      true,\n      null\n    ]\n  },\n  "decimal": 1.00,\n  "escapes": ' + escapedString + '\n}';
+    const storedFormatted = canonicalizeJsonForStorage(formatted);
     const extended = "{title:'test', // title comment\ndata-toggle:'tooltip',action:{content:'{Question?}' // text of question\n}}";
     const extendedFormatted = "{\n  title: 'test', // title comment\n  data-toggle: 'tooltip',\n  action: {\n    content: '{Question?}' // text of question\n  }\n}";
 
@@ -364,19 +365,19 @@ Scenario('JSON editor validates objects and preserves source text', async ({ I, 
     DTE.save();
 
     openDocFieldsTab(I, DT, DTE, docId_2);
-    I.assertEqual(formatted, await I.grabValueFrom(fieldA), "Saving and reopening must preserve the exact JSON source");
+    I.assertEqual(storedFormatted, await I.grabValueFrom(fieldA), "Saving must canonicalize literal angle brackets");
     I.assertEqual(extendedFormatted, await I.grabValueFrom(fieldB), "Saving and reopening must preserve the extended object syntax");
     I.assertEqual(1, await I.grabNumberOfVisibleElements("#datatableInit_modal .DTE_Field_Name_fieldA .md-textarea-editor__lines"), "Reopening must not duplicate the gutter");
     I.assertEqual(1, await I.grabNumberOfVisibleElements("#datatableInit_modal .DTE_Field_Name_fieldA .md-jsoneditor-toolbar"), "Reopening must not duplicate the toolbar");
     DTE.cancel();
 
     const xssSource = '{"x":"<img src=x onerror=window.__jsonEditorXss=true//"}';
+    const storedXssSource = canonicalizeJsonForStorage(xssSource);
     openDocFieldsTab(I, DT, DTE, docId_2);
     I.executeScript(() => { window.__jsonEditorXss = false; });
     I.fillField(fieldA, xssSource);
     DTE.save();
     DT.waitForLoader();
-    I.wait(1);
     const renderedJson = await I.executeScript(docId => {
         const table = $("#datatableInit").DataTable();
         const columnIndex = table.column("fieldA:name").index();
@@ -389,10 +390,10 @@ Scenario('JSON editor validates objects and preserves source text', async ({ I, 
     }, docId_2);
     I.assertFalse(renderedJson.executed, "Rendering JSON must not execute inline event handlers");
     I.assertFalse(renderedJson.hasImage, "Rendering JSON must not create HTML elements");
-    I.assertEqual(xssSource, renderedJson.text, "The table cell must display the JSON payload as literal text");
+    I.assertEqual(storedXssSource, renderedJson.text, "The table cell must display canonical JSON as literal text");
 
     openDocFieldsTab(I, DT, DTE, docId_2);
-    I.assertEqual(xssSource, await I.grabValueFrom(fieldA), "The safely rendered value must remain unchanged in the editor");
+    I.assertEqual(storedXssSource, await I.grabValueFrom(fieldA), "The editor must receive the canonical value returned by JPA");
     I.fillField(fieldA, formatted);
     DTE.save();
 
@@ -423,7 +424,7 @@ Scenario('JSON editor validates objects and preserves source text', async ({ I, 
             return result.fieldErrors || [];
         }, { docId: docId_2, operation });
         I.assertTrue(rejectedFields.some(field => field.name === "fieldA"), "REST validation must identify the JSON field: " + operation);
-        I.assertEqual(formatted, (await getJsonEditorDocument(I, docId_2)).fieldA, "A rejected REST request must not change the page");
+        I.assertEqual(storedFormatted, (await getJsonEditorDocument(I, docId_2)).fieldA, "A rejected REST request must not change the page");
     }
     I.assertDeepEqual(historyBefore, await getJsonEditorHistoryIds(I, docId_2), "Rejected JSON must not create a history version");
 });
@@ -446,6 +447,10 @@ async function getJsonEditorDocument(I, docId) {
         const document = await response.json();
         return { fieldA: document.fieldA, fieldB: document.fieldB };
     }, docId);
+}
+
+function canonicalizeJsonForStorage(value) {
+    return value.replace(/</g, "\\u003C").replace(/>/g, "\\u003E");
 }
 
 async function getJsonEditorHistoryIds(I, docId) {

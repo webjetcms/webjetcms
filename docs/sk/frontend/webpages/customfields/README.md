@@ -68,7 +68,9 @@ editor.field_g.type=jsoneditor
 
 ![](webpages-jsoneditor.png)
 
-Editor zobrazuje čísla riadkov a panel s tlačidlom **Formátovať JSON** a dostupným AI asistentom. Počas focusu textovej oblasti zobrazuje vpravo aktuálny riadok a stĺpec kurzora. Formátovanie odsadí text dvoma medzerami a zachová hodnoty vrátane veľkých čísel, escape sekvencií a komentárov. Komentár za hodnotou zostáva na rovnakom riadku.
+Editor zobrazuje čísla riadkov a panel s tlačidlom **Formátovať JSON** a dostupným AI asistentom. Počas fokusu textovej oblasti zobrazuje vpravo aktuálny riadok a stĺpec kurzora. Formátovanie odsadí text dvoma medzerami a zachová hodnoty vrátane veľkých čísel, escape sekvencií a komentárov. Komentár za hodnotou zostáva na rovnakom riadku.
+
+Pri ukladaní sa znaky `<` a `>` nahradia významovo rovnakými JSON Unicode escape sekvenciami `\u003C` a `\u003E`. Po opätovnom otvorení ich editor zobrazí v tejto kanonickej podobe; JSON parser z nich vráti pôvodné znaky.
 
 Hodnota musí byť platný objekt s koreňom `{...}`. Vnorené objekty a polia sú povolené, samotné pole `[]`, `null`, číslo alebo reťazec na koreni sa odmietnu. Podporované sú aj apostrofy, názvy vlastností bez úvodzoviek vrátane pomlčiek a komentáre `//` alebo `/* ... */`. Príklad:
 
@@ -89,7 +91,7 @@ Typ `jsoneditor` je samostatný typ pre editáciu textu. Existujúce typy `json_
 
 #### Kapacita databázy
 
-!>**Voliteľné polia majú v štandardnej databázovej schéme veľkosť 255 znakov.** Nastavenie typu `jsoneditor` túto kapacitu automaticky nezväčší. Pre väčšie JSON objekty je potrebné rozšíriť príslušný stĺpec v databáze, pri webových stránkach **v tabuľke `documents` aj `documents_history`**, aby bolo možné uložiť aj históriu stránky.
+!>**Voliteľné polia majú v štandardnej databázovej schéme veľkosť 255 znakov.** Nastavenie typu `jsoneditor` túto kapacitu automaticky nezväčší. Pre väčšie JSON objekty je potrebné rozšíriť príslušný stĺpec v databáze, pri webových stránkach **v tabuľke `documents` aj `documents_history`**, aby bolo možné uložiť aj históriu stránky. Pri výpočte kapacity počítajte s tým, že kanonické `\u003C` a `\u003E` majú po šesť znakov.
 
 Nasledujúce príklady rozširujú pole G (`field_g`) na veľký textový typ. Údaje zostávajú textom; databázový typ `JSON`/`JSONB` nepoužívajte, pretože editor podporuje aj apostrofy a komentáre.
 
@@ -126,7 +128,7 @@ ALTER TABLE documents_history ALTER COLUMN field_g TYPE TEXT;
 
 **Oracle**
 
-Štandardný stĺpec má typ `NVARCHAR2(255)`. Pre veľký Unicode text použite `NCLOB`. Priamy prevod existujúceho textového stĺpca na LOB pomocou `MODIFY` nie je podporovaný; je potrebné pridať nový stĺpec, preniesť údaje a nahradiť pôvodný stĺpec. Tento postup opisuje [Oracle](https://asktom.oracle.com/pls/asktom/f?p=100:11:0::::P11_QUESTION_ID:1770086700346491686); pre národnú znakovú sadu slúži funkcia [TO_NCLOB](https://docs.oracle.com/en/database/oracle/oracle-database/19/sqlrf/TO_NCLOB.html).
+Štandardný stĺpec má typ `NVARCHAR2(255)`. Pre veľký Unicode text použite `NCLOB`. Priamy prevod existujúceho textového stĺpca na LOB pomocou `MODIFY` nie je podporovaný, je potrebné pridať nový stĺpec, preniesť údaje a nahradiť pôvodný stĺpec.
 
 Počas celého prevodu zastavte zápisy do oboch tabuliek. Príkazy DDL v Oracle implicitne potvrdzujú transakcie, preto tento postup nemožno vrátiť jedným `ROLLBACK`.
 

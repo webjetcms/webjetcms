@@ -786,12 +786,13 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	public void validateEditor(HttpServletRequest request, DatatableRequest<Long, T> target, Identity user, Errors errors, Long id, T entity) {}
 
 	/**
-	 * Validates required custom fields for the provided entity.
+	 * Validates custom fields and prepares valid JSON editor values for persistence.
 	 *
 	 * <p>The method resolves required field alphabets via {@link CustomFieldsService} and checks
 	 * corresponding properties ({@code fieldX}) on the entity. Missing values are reported using
 	 * {@link Errors#rejectValue(String, String, String)} to keep validation consistent with editor
-	 * error handling.</p>
+	 * error handling. Valid JSON values have literal angle brackets replaced with equivalent Unicode
+	 * escapes so the JPA XSS filter does not alter their syntax when the entity is loaded again.</p>
 	 *
 	 * <p>If a field property is not readable on the entity, the method logs the issue and continues
 	 * without failing the whole validation pass.</p>
@@ -831,10 +832,12 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			}
 		}
 		if (validateJson) {
-			for (DatatableFieldError error : JsonEditorValidator.validate(entity, rulesToValidate, getProp())) {
+			List<DatatableFieldError> jsonErrors = JsonEditorValidator.validate(entity, rulesToValidate, getProp());
+			for (DatatableFieldError error : jsonErrors) {
 				String fieldName = "errorField." + error.getName();
 				if (errors.hasFieldErrors(fieldName) == false) errors.rejectValue(fieldName, null, error.getStatus());
 			}
+			if (jsonErrors.isEmpty()) JsonEditorValidator.canonicalizeForPersistence(entity, rulesToValidate.keySet());
 		}
 	}
 
