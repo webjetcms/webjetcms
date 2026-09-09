@@ -12,8 +12,10 @@ block content
             let pollTimeout;
             let lastError;
             let statusLoadFailed = false;
+            let pendingFinalization = 0;
 
             function renderState() {
+                if (state.finalized) pendingFinalization = 0;
                 $("#migrationScanned").text(state.scanned || 0);
                 $("#migrationUpdated").text(state.updated || 0);
                 $("#migrationTable").text(state.table || "—");
@@ -26,10 +28,15 @@ block content
                 $("#migrationTotalTables").text(totalTables);
                 $("#migrationOverallProgress").css("width", overallPercent + "%").attr("aria-valuenow", overallPercent).text(overallPercent + "%");
                 $("#migrationStart").prop("disabled", state.running || state.done);
-                $("#migrationPause").prop("disabled", !state.running || state.stopRequested);
+                $("#migrationPause").prop("disabled", !state.running || state.stopRequested || state.finalizing);
+                $("#migrationFinalize").prop("disabled", state.running || !state.done || pendingFinalization < 1);
                 $("#migrationStatus").toggleClass("d-none", !state.done);
                 $("#migrationStopping").toggleClass("d-none", !state.stopRequested);
                 $("#migrationPaused").toggleClass("d-none", !state.paused);
+                $("#migrationFinalizing").toggleClass("d-none", !state.finalizing);
+                $("#migrationFinalized").toggleClass("d-none", !state.finalized);
+                $("#migrationDeletedKeys").text(state.deletedStatKeys || 0);
+                $("#migrationRetainedKeys").text(state.retainedStatKeys || 0);
 
                 if (state.error && state.error !== lastError) {
                     lastError = state.error;
@@ -41,6 +48,7 @@ block content
             function renderPreview(data) {
                 $("#seoMappingCount").text(data.seoBots.length);
                 $("#keyMappingCount").text(data.browserKeys.length);
+                pendingFinalization = data.seoBots.length + data.browserKeys.length;
                 $("#tableCount").text(data.tables.length);
                 if (!state.totalTables) {
                     state.totalTables = data.tables.length;
@@ -51,6 +59,7 @@ block content
                     $("<tr>").append($("<td>").text(item.source)).append($("<td>").text(item.target)).appendTo(body);
                 });
                 $("#migrationPreview").removeClass("d-none");
+                renderState();
             }
 
             function analyze() {
@@ -99,6 +108,18 @@ block content
                         WJ.notifyError("[[\#{stat.browser-migration.error}]]");
                     });
             });
+            $("#migrationFinalize").on("click", function () {
+                WJ.confirm({
+                    title: "[[\#{stat.browser-migration.finalize-confirm-title}]]",
+                    message: "[[\#{stat.browser-migration.finalize-confirm-message}]]",
+                    success: function () {
+                        $("#migrationFinalize").prop("disabled", true).addClass("processing");
+                        $.post(endpoint + "/finalize").done(updateState)
+                            .fail(() => WJ.notifyError("[[\#{stat.browser-migration.error}]]"))
+                            .always(() => $("#migrationFinalize").removeClass("processing"));
+                    }
+                });
+            });
             loadStatus();
         });
 
@@ -113,6 +134,9 @@ block content
             button#migrationPause.btn.btn-sm.btn-warning.with-text(type="button" disabled)
                 i.ti.ti-player-pause
                 span [[\#{stat.browser-migration.pause}]]
+            button#migrationFinalize.btn.btn-sm.btn-outline-danger.with-text(type="button" disabled)
+                i.ti.ti-database-check
+                span [[\#{stat.browser-migration.finalize}]]
 
     .alert.alert-info.mt-3(role="alert")
         i.ti.ti-info-circle.me-2
@@ -121,6 +145,13 @@ block content
     #migrationStatus.alert.alert-success.d-none(role="status") [[\#{stat.browser-migration.done}]]
     #migrationStopping.alert.alert-info.d-none(role="status") [[\#{stat.browser-migration.stopping}]]
     #migrationPaused.alert.alert-warning.d-none(role="status") [[\#{stat.browser-migration.paused}]]
+    #migrationFinalizing.alert.alert-info.d-none(role="status") [[\#{stat.browser-migration.finalizing}]]
+    #migrationFinalized.alert.alert-success.d-none(role="status")
+        | [[\#{stat.browser-migration.finalize-success-prefix}]]
+        strong#migrationDeletedKeys.mx-1 0
+        | [[\#{stat.browser-migration.finalize-success-deleted}]]
+        strong#migrationRetainedKeys.mx-1 0
+        | [[\#{stat.browser-migration.finalize-success-retained}]]
 
     .card.mb-3
         .card-body

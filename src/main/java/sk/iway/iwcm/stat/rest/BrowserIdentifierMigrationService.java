@@ -45,7 +45,7 @@ import sk.iway.iwcm.system.cluster.ClusterDB;
 @Service
 public class BrowserIdentifierMigrationService implements DisposableBean {
 
-    public static final String UPDATE_NOTE = "07.09.2026 [jeeff] browser identifier migration";
+    public static final String UPDATE_NOTE = "08.09.2026 [jeeff] browser identifier migration including stat_error";
 
     private static final int ROW_BATCH_SIZE = 1_000;
     private static final int UPDATE_BATCH_SIZE = 500;
@@ -89,6 +89,13 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
     }
 
     @Getter
+    @AllArgsConstructor
+    public static class FinalizationResult {
+        private final int deletedStatKeys;
+        private final int retainedStatKeys;
+    }
+
+    @Getter
     @Setter
     @NoArgsConstructor
     public static class State {
@@ -104,6 +111,11 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         private boolean stopRequested;
         private boolean paused;
         private boolean done;
+        private boolean finalizing;
+        private boolean finalized;
+        private int deletedStatKeys;
+        private int retainedStatKeys;
+        private long updatedStatErrors;
         private String table;
         private String error;
     }
@@ -139,6 +151,9 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
             migrationState.setRunning(true);
             migrationState.setStopRequested(false);
             migrationState.setPaused(false);
+            migrationState.setFinalizing(false);
+            migrationState.setFinalized(false);
+            migrationState.setUpdatedStatErrors(0);
             migrationState.setError(null);
             stopRequested = false;
             try {
@@ -161,6 +176,89 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         }
     }
 
+    public State finalizeCompletedMigration() throws SQLException {
+        synchronized (stateLock) {
+            if (migrationState.isRunning()) return copyState(migrationState);
+            if (UpdateDatabase.isAllreadyUpdated(UPDATE_NOTE) == false) {
+                throw new SQLException("Browser identifier migration must be completed before finalization");
+            }
+            migrationState.setRunning(true);
+            migrationState.setDone(false);
+            migrationState.setFinalizing(true);
+            migrationState.setFinalized(false);
+            migrationState.setTableIndex(0);
+            migrationState.setTotalTables(0);
+            migrationState.setCursor(0);
+            migrationState.setTableMaxId(0);
+            migrationState.setScanned(0);
+            migrationState.setUpdated(0);
+            migrationState.setUpdatedStatErrors(0);
+            migrationState.setError(null);
+            migrationState.setTable("finalizing");
+            try {
+                executor.execute(this::runFinalization);
+            } catch (RejectedExecutionException ex) {
+                migrationState.setRunning(false);
+                migrationState.setFinalizing(false);
+                migrationState.setError(ex.getMessage());
+            }
+            return copyState(migrationState);
+        }
+    }
+
+    private void runFinalization() {
+        try {
+            List<Mapping> botMappings;
+            StatKeyMappingResult keyMappings;
+            try (Connection connection = DBPool.getConnection()) {
+                connection.setAutoCommit(false);
+                try {
+                    botMappings = buildSeoBotMappings(connection, false);
+                    keyMappings = buildStatKeyMappings(connection, false);
+                    verifyStatKeyTargets(connection, keyMappings.mappings());
+                    connection.commit();
+                } catch (SQLException ex) {
+                    connection.rollback();
+                    throw ex;
+                }
+            }
+            refreshStatKeyCacheIfNeeded(keyMappings);
+
+            State cleanupState = getStateSnapshot();
+            cleanupState.setTableIndex(0);
+            cleanupState.setTotalTables(1);
+            cleanupState.setTable("seo_bots / stat_keys");
+            cleanupState.setCursor(0);
+            cleanupState.setTableMaxId(1);
+            publishRunningState(cleanupState);
+
+            FinalizationResult result;
+            try (Connection connection = DBPool.getConnection()) {
+                connection.setAutoCommit(false);
+                try {
+                    result = finalizeIdentifiers(connection, botMappings, keyMappings.mappings());
+                    connection.commit();
+                } catch (SQLException ex) {
+                    connection.rollback();
+                    throw ex;
+                }
+            }
+            refreshStatKeyCache();
+            synchronized (stateLock) {
+                migrationState.setRunning(false);
+                migrationState.setDone(true);
+                migrationState.setFinalizing(false);
+                migrationState.setFinalized(true);
+                migrationState.setDeletedStatKeys(result.deletedStatKeys);
+                migrationState.setRetainedStatKeys(result.retainedStatKeys);
+                migrationState.setTable("done");
+            }
+        } catch (SQLException | RuntimeException ex) {
+            Logger.error(BrowserIdentifierMigrationService.class, ex);
+            publishFailedState(ex);
+        }
+    }
+
     void runMigration() {
         try {
             MigrationPlan plan = prepareMigrationPlan();
@@ -171,7 +269,7 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
             while (isStopRequested() == false) {
                 State nextState = getStateSnapshot();
                 if (nextState.getTableIndex() >= plan.tables().size()) {
-                    finishMigration(plan, nextState);
+                    finishMigration(nextState);
                     return;
                 }
 
@@ -227,7 +325,7 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         refreshStatKeyCacheIfNeeded(keyMappingResult);
 
         MigrationPlan plan = new MigrationPlan(
-            List.copyOf(botMappings),
+            List.copyOf(keyMappingResult.mappings()),
             Map.copyOf(toIdMap(botMappings)),
             Map.copyOf(toIdMap(keyMappingResult.mappings())),
             List.copyOf(tables)
@@ -245,6 +343,11 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         try (Connection connection = DBPool.getConnection()) {
             connection.setAutoCommit(false);
             try {
+                if (table.statError) {
+                    processStatErrorBatch(connection, table, state, plan.keyMappings());
+                    connection.commit();
+                    return;
+                }
                 if (state.getTableMaxId() < 1) state.setTableMaxId(maxId(connection, table));
                 long lastId = migrateRows(connection, table, state, plan.botIds(), plan.keyIds());
                 connection.commit();
@@ -263,24 +366,50 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         }
     }
 
-    private void finishMigration(MigrationPlan plan, State state) throws SQLException {
+    private void processStatErrorBatch(Connection connection, TableDefinition table, State state,
+                                       List<Mapping> mappings) throws SQLException {
+        if (state.getTableMaxId() < 1) state.setTableMaxId(mappings.size());
+        int offset = Math.toIntExact(state.getCursor());
+        int end = Math.min(offset + UPDATE_BATCH_SIZE, mappings.size());
+        if (offset < end) {
+            long updatedRows = updateStatErrorMappingBatch(connection, table.name, mappings.subList(offset, end));
+            state.setUpdated(state.getUpdated() + updatedRows);
+            state.setUpdatedStatErrors(state.getUpdatedStatErrors() + updatedRows);
+            state.setScanned(state.getScanned() + updatedRows);
+            state.setCursor(end);
+        }
+        if (state.getCursor() >= mappings.size()) {
+            state.setTableIndex(state.getTableIndex() + 1);
+            state.setCursor(0);
+            state.setTableMaxId(0);
+        }
+    }
+
+    long updateStatErrorMappingBatch(Connection connection, String table, List<Mapping> mappings) throws SQLException {
+        if (mappings.isEmpty()) return 0;
+        StringBuilder sql = new StringBuilder("UPDATE ").append(table)
+            .append(" SET browser_ua_id=CASE browser_ua_id ");
+        for (int i = 0; i < mappings.size(); i++) sql.append("WHEN ? THEN ? ");
+        sql.append("ELSE browser_ua_id END WHERE browser_ua_id IN (")
+            .append(String.join(",", java.util.Collections.nCopies(mappings.size(), "?")))
+            .append(')');
+        try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+            int parameter = 1;
+            for (Mapping mapping : mappings) {
+                ps.setLong(parameter++, mapping.sourceId);
+                ps.setLong(parameter++, mapping.targetId);
+            }
+            for (Mapping mapping : mappings) ps.setLong(parameter++, mapping.sourceId);
+            return ps.executeUpdate();
+        }
+    }
+
+    private void finishMigration(State state) {
         if (isStopRequested()) {
             publishStoppedState();
             return;
         }
 
-        try (Connection connection = DBPool.getConnection()) {
-            connection.setAutoCommit(false);
-            try {
-                // Every table was processed up to its captured maximum ID; new records already use canonical IDs.
-                finalizeSeoBots(connection, plan.botMappings());
-                connection.commit();
-            } catch (SQLException ex) {
-                connection.rollback();
-                throw ex;
-            }
-        }
-        refreshStatKeyCache();
         markAsCompleted();
 
         state.setRunning(false);
@@ -328,6 +457,7 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
             migrationState.setRunning(false);
             migrationState.setStopRequested(false);
             migrationState.setPaused(false);
+            migrationState.setFinalizing(false);
             migrationState.setError(ex.getMessage());
             stopRequested = false;
         }
@@ -347,6 +477,11 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         copy.setStopRequested(source.isStopRequested());
         copy.setPaused(source.isPaused());
         copy.setDone(source.isDone());
+        copy.setFinalizing(source.isFinalizing());
+        copy.setFinalized(source.isFinalized());
+        copy.setDeletedStatKeys(source.getDeletedStatKeys());
+        copy.setRetainedStatKeys(source.getRetainedStatKeys());
+        copy.setUpdatedStatErrors(source.getUpdatedStatErrors());
         copy.setTable(source.getTable());
         copy.setError(source.getError());
         return copy;
@@ -642,6 +777,41 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         ensureUniqueNameIndex(connection);
     }
 
+    private FinalizationResult finalizeIdentifiers(Connection connection, List<Mapping> botMappings,
+                                                     List<Mapping> keyMappings) throws SQLException {
+        finalizeSeoBots(connection, botMappings);
+        int deleted = deleteStatKeys(connection, keyMappings);
+        return new FinalizationResult(deleted, keyMappings.size() - deleted);
+    }
+
+    int deleteStatKeys(Connection connection, List<Mapping> mappings) throws SQLException {
+        int deleted = 0;
+        try (PreparedStatement ps = connection.prepareStatement("DELETE FROM stat_keys WHERE stat_keys_id=?")) {
+            int pending = 0;
+            for (Mapping mapping : mappings) {
+                ps.setLong(1, mapping.sourceId);
+                ps.addBatch();
+                pending++;
+                if (pending == UPDATE_BATCH_SIZE) {
+                    deleted += sumBatchResults(ps.executeBatch());
+                    pending = 0;
+                }
+            }
+            if (pending > 0) deleted += sumBatchResults(ps.executeBatch());
+        }
+        return deleted;
+    }
+
+    private int sumBatchResults(int[] results) throws SQLException {
+        int count = 0;
+        for (int result : results) {
+            if (result == Statement.EXECUTE_FAILED) throw new SQLException("A finalization database batch failed");
+            if (result == Statement.SUCCESS_NO_INFO) count++;
+            else if (result > 0) count += result;
+        }
+        return count;
+    }
+
     void ensureUniqueNameIndex(Connection connection) throws SQLException {
         DatabaseMetaData metadata = connection.getMetaData();
         TableReference table = findTable(connection, metadata, "seo_bots");
@@ -732,10 +902,14 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         List<TableDefinition> result = new ArrayList<>();
         for (String table : discoverTables(connection)) {
             Set<String> columns = readTableColumns(connection, table);
-            if (columns.contains("browser_id") == false) continue;
             String lower = table.toLowerCase(Locale.ROOT);
+            if (lower.startsWith("stat_error")) {
+                if (columns.contains("browser_ua_id")) result.add(new TableDefinition(table, null, true, true));
+                continue;
+            }
+            if (columns.contains("browser_id") == false) continue;
             String id = lower.startsWith("stat_views") ? "view_id" : lower.startsWith("stat_from") ? "from_id" : "click_id";
-            result.add(new TableDefinition(table, id, columns.contains("browser_ua_id")));
+            result.add(new TableDefinition(table, id, columns.contains("browser_ua_id"), false));
         }
         return result;
     }
@@ -750,7 +924,8 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
                 String table = rs.getString("TABLE_NAME");
                 String lower = table.toLowerCase(Locale.ROOT);
                 if (SAFE_TABLE.matcher(table).matches() && (lower.matches("stat_views(_\\d{4}_\\d{1,2})?") ||
-                    lower.matches("stat_from(_\\d{4}_\\d{1,2})?") || lower.equals("emails_stat_click"))) result.add(table);
+                    lower.matches("stat_from(_\\d{4}_\\d{1,2})?") || lower.matches("stat_error(_\\d{4}_\\d{1,2})?") ||
+                    lower.equals("emails_stat_click"))) result.add(table);
             }
         }
         result.sort(String::compareToIgnoreCase);
@@ -784,9 +959,13 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
 
     private record BrowserRow(long id, String name) {}
     private record StatKeyRow(long id, String value) {}
-    private record MigrationPlan(List<Mapping> botMappings, Map<Long, Long> botIds,
-                                 Map<Long, Long> keyIds, List<TableDefinition> tables) {}
-    record TableDefinition(String name, String idColumn, boolean browserKey) {}
+    private record MigrationPlan(List<Mapping> keyMappings, Map<Long, Long> botIds, Map<Long, Long> keyIds,
+                                 List<TableDefinition> tables) {}
+    record TableDefinition(String name, String idColumn, boolean browserKey, boolean statError) {
+        TableDefinition(String name, String idColumn, boolean browserKey) {
+            this(name, idColumn, browserKey, false);
+        }
+    }
     private record TableReference(String catalog, String schema, String name) {}
     private record IndexReference(String qualifier, String name) {}
     private record IndexColumn(int position, String name, String filterCondition) {}

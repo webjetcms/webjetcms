@@ -24,7 +24,7 @@ Scenario('shows migration preview without changing data @screenshot', ({ I, Docu
                     stopRequested: false,
                     paused: false,
                     done: false,
-                    table: 'stat_views_2024_2',
+                    table: 'stat_error_2024_2',
                     error: null
                 })
             });
@@ -49,12 +49,13 @@ Scenario('shows migration preview without changing data @screenshot', ({ I, Docu
         });
     });
     I.refreshPage();
-    I.waitForText('stat_views_2024_2', 10, '#migrationTable');
+    I.waitForText('stat_error_2024_2', 10, '#migrationTable');
     I.waitForText('64%', 10, '#migrationProgress');
     I.waitForText('42%', 10, '#migrationOverallProgress');
 
     I.seeElement('#migrationAnalyze');
     I.seeElement('#migrationStart');
+    I.seeElement('#migrationFinalize');
     I.click('#migrationAnalyze');
     I.waitForElement('#migrationPreview:not(.d-none)', 20);
     I.seeElement('#migrationMappings');

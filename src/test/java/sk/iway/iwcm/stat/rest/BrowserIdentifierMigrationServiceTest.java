@@ -2,6 +2,7 @@ package sk.iway.iwcm.stat.rest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -53,11 +54,14 @@ class BrowserIdentifierMigrationServiceTest {
     private static final String LOAD_SEO_BOT_STATS = "SELECT visit_count, last_visit FROM seo_bots WHERE seo_bots_id=?";
     private static final String UPDATE_SEO_BOT_STATS = "UPDATE seo_bots SET visit_count=?, last_visit=? WHERE seo_bots_id=?";
     private static final String DELETE_SEO_BOT = "DELETE FROM seo_bots WHERE seo_bots_id=?";
+    private static final String DELETE_STAT_KEY = "DELETE FROM stat_keys WHERE stat_keys_id=?";
     private static final String CREATE_SEO_BOTS_NAME_INDEX = "CREATE UNIQUE INDEX ix_seo_bots_name ON seo_bots (name)";
     private static final String LOAD_STAT_VIEW = "SELECT view_id, browser_id, browser_ua_id FROM stat_views WHERE view_id>? AND view_id<=? ORDER BY view_id";
     private static final String UPDATE_STAT_VIEW = "UPDATE stat_views SET browser_id=?, browser_ua_id=? WHERE view_id=?";
     private static final String LOAD_STAT_FROM = "SELECT from_id, browser_id FROM stat_from WHERE from_id>? AND from_id<=? ORDER BY from_id";
     private static final String UPDATE_STAT_FROM = "UPDATE stat_from SET browser_id=? WHERE from_id=?";
+    private static final String UPDATE_STAT_ERROR = "UPDATE stat_error_2023_9 SET browser_ua_id=CASE browser_ua_id " +
+        "WHEN ? THEN ? WHEN ? THEN ? ELSE browser_ua_id END WHERE browser_ua_id IN (?,?)";
 
     @Test
     void auditCompletedTableShouldWriteMigrationDetails() {
@@ -99,6 +103,50 @@ class BrowserIdentifierMigrationServiceTest {
     }
 
     @Test
+    void finalizeShouldStartAsSingleBackgroundTask() throws Exception {
+        ExecutorService executor = mock(ExecutorService.class);
+        BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService(executor);
+
+        try (MockedStatic<UpdateDatabase> updateDatabase = mockStatic(UpdateDatabase.class)) {
+            updateDatabase.when(() -> UpdateDatabase.isAllreadyUpdated(BrowserIdentifierMigrationService.UPDATE_NOTE)).thenReturn(true);
+
+            BrowserIdentifierMigrationService.State started = service.finalizeCompletedMigration();
+            BrowserIdentifierMigrationService.State alreadyRunning = service.finalizeCompletedMigration();
+
+            assertTrue(started.isRunning());
+            assertTrue(started.isFinalizing());
+            assertFalse(started.isDone());
+            assertTrue(alreadyRunning.isRunning());
+            verify(executor, times(1)).execute(any(Runnable.class));
+        }
+
+        service.destroy();
+    }
+
+    @Test
+    void deleteStatKeysShouldDeleteAllMigratedSources() throws Exception {
+        BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService();
+        Connection connection = mock(Connection.class);
+        PreparedStatement delete = mock(PreparedStatement.class);
+        when(connection.prepareStatement(DELETE_STAT_KEY)).thenReturn(delete);
+        when(delete.executeBatch()).thenReturn(new int[] { 1, 1 });
+
+        int deleted = service.deleteStatKeys(
+            connection,
+            List.of(
+                new BrowserIdentifierMigrationService.Mapping(41L, 100L, "Chrome 127", "Chrome"),
+                new BrowserIdentifierMigrationService.Mapping(42L, 100L, "Chrome 128", "Chrome")
+            )
+        );
+
+        assertEquals(2, deleted);
+        verify(delete).setLong(1, 41L);
+        verify(delete).setLong(1, 42L);
+        verify(delete).executeBatch();
+        service.destroy();
+    }
+
+    @Test
     void tableDefinitionsShouldInspectColumnsWithoutJdbcMetadataQueries() throws Exception {
         BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService();
         Connection connection = mock(Connection.class);
@@ -125,6 +173,64 @@ class BrowserIdentifierMigrationServiceTest {
         assertEquals("from_id", definitions.get(0).idColumn());
         assertFalse(definitions.get(0).browserKey());
         verify(databaseMetadata, never()).getColumns(any(), any(), any(), any());
+        service.destroy();
+    }
+
+    @Test
+    void tableDefinitionsShouldIncludeStatErrorWithoutIdColumn() throws Exception {
+        BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService();
+        Connection connection = mock(Connection.class);
+        DatabaseMetaData databaseMetadata = mock(DatabaseMetaData.class);
+        ResultSet tables = mock(ResultSet.class);
+        Statement statement = mock(Statement.class);
+        ResultSet emptyTable = mock(ResultSet.class);
+        ResultSetMetaData tableMetadata = mock(ResultSetMetaData.class);
+        when(connection.getMetaData()).thenReturn(databaseMetadata);
+        when(databaseMetadata.getTables(isNull(), isNull(), eq("%"), any(String[].class))).thenReturn(tables);
+        when(tables.next()).thenReturn(true, false);
+        when(tables.getString("TABLE_NAME")).thenReturn("stat_error_2023_9");
+        when(connection.createStatement()).thenReturn(statement);
+        when(statement.executeQuery("SELECT * FROM stat_error_2023_9 WHERE 1=0")).thenReturn(emptyTable);
+        when(emptyTable.getMetaData()).thenReturn(tableMetadata);
+        when(tableMetadata.getColumnCount()).thenReturn(1);
+        when(tableMetadata.getColumnName(1)).thenReturn("BROWSER_UA_ID");
+
+        List<BrowserIdentifierMigrationService.TableDefinition> definitions = service.tableDefinitions(connection);
+
+        assertEquals(1, definitions.size());
+        assertEquals("stat_error_2023_9", definitions.get(0).name());
+        assertNull(definitions.get(0).idColumn());
+        assertTrue(definitions.get(0).browserKey());
+        assertTrue(definitions.get(0).statError());
+        service.destroy();
+    }
+
+    @Test
+    void updateStatErrorMappingBatchShouldUseSingleSetBasedUpdate() throws Exception {
+        BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService();
+        Connection connection = mock(Connection.class);
+        PreparedStatement update = mock(PreparedStatement.class);
+        when(connection.prepareStatement(UPDATE_STAT_ERROR)).thenReturn(update);
+        when(update.executeUpdate()).thenReturn(17);
+
+        long updated = service.updateStatErrorMappingBatch(
+            connection,
+            "stat_error_2023_9",
+            List.of(
+                new BrowserIdentifierMigrationService.Mapping(2694L, 3251L, "Chrome 127", "Chrome"),
+                new BrowserIdentifierMigrationService.Mapping(2695L, 3251L, "Chrome 128", "Chrome")
+            )
+        );
+
+        assertEquals(17, updated);
+        InOrder parameters = inOrder(update);
+        parameters.verify(update).setLong(1, 2694L);
+        parameters.verify(update).setLong(2, 3251L);
+        parameters.verify(update).setLong(3, 2695L);
+        parameters.verify(update).setLong(4, 3251L);
+        parameters.verify(update).setLong(5, 2694L);
+        parameters.verify(update).setLong(6, 2695L);
+        parameters.verify(update).executeUpdate();
         service.destroy();
     }
 

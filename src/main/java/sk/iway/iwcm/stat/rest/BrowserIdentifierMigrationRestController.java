@@ -37,4 +37,9 @@ public class BrowserIdentifierMigrationRestController {
     public BrowserIdentifierMigrationService.State stop() {
         return service.stop();
     }
+
+    @PostMapping("/finalize")
+    public BrowserIdentifierMigrationService.State finalizeIdentifiers() throws SQLException {
+        return service.finalizeCompletedMigration();
+    }
 }
