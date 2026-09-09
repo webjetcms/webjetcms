@@ -64,8 +64,8 @@
     border-radius: var(--wj-border-radius);
 
     &:focus-within {
-        outline: 2px solid var(--wj-secondary);
-        outline-offset: 2px;
+        border-color: $input-focus-border-color;
+        box-shadow: $input-focus-box-shadow;
     }
 
     .md-textarea-editor {
