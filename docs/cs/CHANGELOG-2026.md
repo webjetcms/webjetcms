@@ -46,6 +46,8 @@
 
 ![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
 
+- Page Builder - elementy označené CSS třídou [`pb-duplicable`](frontend/page-builder/settings.md#duplikovatelný-element-oranžová-barva) lze v rámci stejného rodiče přesouvat, duplikovat a smazat. Vlastní nebo více selektorů lze nastavit přes `pbCustomSettings` (#58750).
+
 ### Headless režim
 
 Přidána [podpora headless režimu](frontend/headless/README.md), ve kterém WebJET CMS slouží čistě jako `backend` CMS. Obsah, navigace, vyhledávání a formuláře jsou dostupné přes REST API. Frontend aplikace (např. Astro, Next.js, Vue, React nebo jakýkoli HTTP klient) si data stáhne a zobrazuje je podle vlastních šablon (#258).
@@ -133,6 +135,9 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 - Přidána možnost nastavit volitelné pole jako povinné (#58413).
 - Přidány nové typy volitelných polí [přepínač a zaškrtávací pole](frontend/webpages/customfields/custom-fields-settings.md#rozdíl-mezi-selectmultiselect-a-radiocheckbox) s podporou statických možností i propojení na číselník. Typ `multiselect` nyní také podporuje [propojení na číselník](frontend/webpages/customfields/custom-fields-settings.md#zdroj-možností). Původní typ `enumeration` byl nahrazen přepínačem zdroje možností u typů `select`, `multiselect`, `radio` a `checkbox` kde se pro všechny tyto typy polí načtou možnosti z propojeného číselníku (#58637).
+- Přidán typ [Editor JSON](developer/datatables-editor/customfields.md#json-editor) (`jsoneditor`) pro přímé zadávání JSON objektu s čísly řádků a tlačítkem pro formátování (#OSK659).
+
+![](frontend/webpages/customfields/webpages-jsoneditor.png)
 
 ### Přístupnost
 
