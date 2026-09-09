@@ -70,7 +70,7 @@ editor.field_g.type=jsoneditor
 
 Editor zobrazuje čísla riadkov a panel s tlačidlom **Formátovať JSON** a dostupným AI asistentom. Počas fokusu textovej oblasti zobrazuje vpravo aktuálny riadok a stĺpec kurzora. Formátovanie odsadí text dvoma medzerami a zachová hodnoty vrátane veľkých čísel, escape sekvencií a komentárov. Komentár za hodnotou zostáva na rovnakom riadku.
 
-Pri ukladaní sa znaky `<` a `>` nahradia významovo rovnakými JSON Unicode escape sekvenciami `\u003C` a `\u003E`. Po opätovnom otvorení ich editor zobrazí v tejto kanonickej podobe; JSON parser z nich vráti pôvodné znaky.
+Pri ukladaní sa znaky `<` a `>` nahradia významovo rovnakými JSON Unicode escape sekvenciami `\u003C` a `\u003E`. Po opätovnom otvorení ich editor zobrazí v tejto kanonickej podobe. Na vrátenie pôvodnej hodnoty môžete na frontende použiť volanie `JsonEditorValidator.unescape(String value)`, pozor ale na `XSS injection`.
 
 Hodnota musí byť platný objekt s koreňom `{...}`. Vnorené objekty a polia sú povolené, samotné pole `[]`, `null`, číslo alebo reťazec na koreni sa odmietnu. Podporované sú aj apostrofy, názvy vlastností bez úvodzoviek vrátane pomlčiek a komentáre `//` alebo `/* ... */`. Príklad:
 

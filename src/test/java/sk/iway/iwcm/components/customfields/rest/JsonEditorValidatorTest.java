@@ -137,11 +137,11 @@ class JsonEditorValidatorTest {
         String canonical = "{\"html\":\"\\u003Ctag\\u003E&quot;&lt;\",\"literalEscape\":\"\\\\u003C\",\"decimal\":1.00}";
         bean.setFieldA(source);
 
-        JsonEditorValidator.canonicalizeForPersistence(bean, List.of("fieldA"));
+        JsonEditorValidator.escapeForPersistence(bean, List.of("fieldA"));
         assertEquals(canonical, bean.getFieldA());
         assertEquals(new ObjectMapper().readTree(source), new ObjectMapper().readTree(canonical));
 
-        JsonEditorValidator.canonicalizeForPersistence(bean, List.of("fieldA"));
+        JsonEditorValidator.escapeForPersistence(bean, List.of("fieldA"));
         assertEquals(canonical, bean.getFieldA(), "Canonicalization must be idempotent");
     }
 

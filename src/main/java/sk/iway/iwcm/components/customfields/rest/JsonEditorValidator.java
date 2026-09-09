@@ -125,7 +125,7 @@ public final class JsonEditorValidator {
      * @param entity entity whose validated JSON values are prepared for persistence
      * @param fieldNames server-resolved JSON property names
      */
-    public static void canonicalizeForPersistence(Object entity, Collection<String> fieldNames) {
+    public static void escapeForPersistence(Object entity, Collection<String> fieldNames) {
         if (entity == null || fieldNames.isEmpty()) return;
         BeanWrapperImpl bean = new BeanWrapperImpl(entity);
         for (String fieldName : fieldNames) {
@@ -134,6 +134,16 @@ public final class JsonEditorValidator {
                 bean.setPropertyValue(fieldName, text.replace("<", "\\u003C").replace(">", "\\u003E"));
             }
         }
+    }
+
+    /**
+     * Replaces JSON Unicode escapes for angle brackets with literal characters.
+     * @param value
+     * @return
+     */
+    public static String unescape(String value) {
+        if (value == null || value.isEmpty()) return value;
+        return value.replace("\\u003C", "<").replace("\\u003E", ">");
     }
 
     /**

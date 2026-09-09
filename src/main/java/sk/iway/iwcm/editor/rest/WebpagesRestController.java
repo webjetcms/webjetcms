@@ -4,18 +4,24 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocDetailsRepository;
+import sk.iway.iwcm.doc.DocEditorFields;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
 import sk.iway.iwcm.editor.facade.EditorFacade;
 import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatableRequest;
 
 @Datatable
 @RestController
@@ -46,5 +52,18 @@ public class WebpagesRestController extends WebpagesDatatable {
 
         return result;
     }
+
+    @Override
+    public void validateEditorForCustomFields(HttpServletRequest request, DatatableRequest<Long, DocDetails> target,
+            Identity user, Errors errors, Long id, DocDetails entity) {
+
+        //set textKeyPrefix to properly resolve custom fields
+        RequestBean.clearTextKeyPrefixes();
+        if (entity != null) DocEditorFields.setRequestBeanTextPrefixes(entity.getTempId());
+
+        super.validateEditorForCustomFields(request, target, user, errors, id, entity);
+    }
+
+
 
 }

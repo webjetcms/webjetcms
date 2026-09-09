@@ -181,7 +181,7 @@ Príklad platnej hodnoty:
 - Prázdny vstup vrátane samotných medzier je povolený, ak je vypnuté **Povinné pole**. Pri zapnutej povinnosti sa musí zadať objekt; prázdny objekt `{}` je platná hodnota.
 - V prehliadači sa vstup kontroluje pri opustení poľa aj pred uložením. Chyba sa zobrazí pri poli a pri pokuse o uloženie sa otvorí jeho karta. Ak parser poskytne polohu syntaktickej chyby, hlásenie obsahuje riadok a stĺpec.
 - Server vykonáva rovnakú kontrolu nezávisle od JavaScriptu v `DatatableRestControllerV2.validateEditorForCustomFields()` pri ukladaní cez DataTables Editor a pri importe. Konfiguráciu typu a povinnosti načíta zo servera podľa entity a kontextu voliteľných polí; definícia poľa odoslaná klientom nemôže validáciu vypnúť. Pri čiastočnom importe kontroluje iba importované JSON polia.
-- Po úspešnej validácii sa znaky `<` a `>` pred uložením zapíšu ako JSON Unicode escape sekvencie `\u003C` a `\u003E`. JSON parser ich načíta späť ako pôvodné znaky, ale samotný text v databáze a po opätovnom otvorení editora používa kanonickú escape podobu.
+- Po úspešnej validácii sa znaky `<` a `>` pred uložením zapíšu ako JSON Unicode escape sekvencie `\u003C` a `\u003E`. Na vrátenie pôvodnej hodnoty môžete na frontende použiť volanie `JsonEditorValidator.unescape(String value)`, pozor ale na `XSS injection`.
 
 Validácia kontroluje syntax a koreňový objekt. Neoveruje prítomnosť ani význam konkrétnych atribútov podľa JSON Schema.
 

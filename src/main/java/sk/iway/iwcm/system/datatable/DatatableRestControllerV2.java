@@ -837,7 +837,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				String fieldName = "errorField." + error.getName();
 				if (errors.hasFieldErrors(fieldName) == false) errors.rejectValue(fieldName, null, error.getStatus());
 			}
-			if (jsonErrors.isEmpty()) JsonEditorValidator.canonicalizeForPersistence(entity, rulesToValidate.keySet());
+			if (jsonErrors.isEmpty()) JsonEditorValidator.escapeForPersistence(entity, rulesToValidate.keySet());
 		}
 	}
 
