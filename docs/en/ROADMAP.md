@@ -21,7 +21,7 @@ Explanation of the pictograms used:
 - [x] Testing - add accessibility testing using the [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) extension (#58389).
 - [ ] Rights - add the option to set read-only rights and optionally set only allowed IDs for editing.
 - [x] Forms - add option to set total attachment size for form, now can only be set per file (#58517).
-- [ ] Statistics - adjust write to `seo_bots` through `StatWriteBuffer` for fewer conflicts under high load and cluster database.
+- [x] Statistics - adjust write to `seo_bots` via `StatWriteBuffer` for fewer conflicts under high load and cluster database (#303).
 - [x] Scripts - add option to set whether the script should also be inserted in the page editor or not (#58349).
 - [x] Forms - add a group of selection and checkbox fields `radio/checkbox` connected to the number list, similar to what we have for the `select` field (#58517).
 - [ ] Delete files associated with a web page when I delete it - but ask the user in advance if they want to delete the files. Check if they are not being used somewhere else.

@@ -6,6 +6,7 @@
 
 ### Průlomové změny
 
+- Statistika - prohlížeče se po aktualizaci ukládají bez čísla verze. Po nasazení této verze je třeba spustit migraci historických statistik na URL `/admin/v9/settings/stat-browser-migration/`, bez jejího dokončení zůstanou historické údaje rozděleny podle verzí prohlížečů (#303).
 - Z administrace byla odstraněna závislost na knihovně [Vue.js](https://vuejs.org). Před aktualizací doporučujeme ověřit kompatibilitu vlastních aplikací. Velikost JavaScript souborů se zmenšila o cca 170kB, což má dopad také na rychlost inicializace administrace. Více v [sekci pro programátora](#pre-programátora).
 - AspectJ - z distribuce byla odstraněna podpora `load-time weavingu` (`aspectjweaver` a `META-INF/aop-ajc.xml`); vestavěné aspekty se zpracují již při kompilaci, více v [sekci pro programátora](#pre-programátora). Při použití v MultiWeb instalaci můžete odstranit `-javaagent:/www/tomcat/.../aspectjweaver.jar` nastavení z `JAVA_OPTS` v aplikačním serveru (#290).
 - Export obsahu pro Flash - odstraněna byla historická funkce generování XML souborů `/flash_xml/{docId}.xml` při publikování stránky. Konfigurační proměnná `exportFlash` již není podporována a její definování v `SpringConfig` funkci neobnoví (#293).
@@ -45,6 +46,8 @@
 - [Fotobanka](redactor/webpages/working-in-editor/README.md#karta-fotobanka) - při stahování obrázku z fotobanky lze nastavit název souboru. Název se automaticky předvyplní a očistí, přípona se určí podle zdrojového obrázku a stávající soubor se nepřepíše. Přidána také podpora výběru typu a kategorie obrázku a možnost hledat video soubory (#58645).
 
 ![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
+
+- Page Builder - elementy označené CSS třídou [`pb-duplicable`](frontend/page-builder/settings.md#duplikovatelný-element-oranžová-barva) lze v rámci stejného rodiče přesouvat, duplikovat a smazat. Vlastní nebo více selektorů lze nastavit přes `pbCustomSettings` (#58750).
 
 ### Headless režim
 
@@ -172,6 +175,10 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Multiweb - doplněna možnost přejmenovat existující doménu + přesměrování po přejmenování (#58317-15).
 - Multiweb - upraveno [zobrazení skupin šablon](install/multiweb/README.md) podle dostupných šablon a aliasu aktuální domény (#58317-17).
 - Statistika - nastavené datum/rozsah od-do se ukládá v prohlížeči a je zapamatován i po odhlášení/restartu prohlížeče (#58065).
+- Statistika - prohlížeče se ukládají bez často se měnícího čísla verze. Doplněna je ručně spouštěná dávková migrace v sekci Aktualizace WebJET, která sloučí historické záznamy bez výpadku webu. Aktualizován je seznam `User-Agent` prohlížečů pro lepší detekci (#303).
+
+![](sysadmin/update/stat-browser-migration.png)
+
 - Vícekrokové formuláře - doplněné přesunutí (`scroll`) na začátek formuláře po přechodu na další krok (#osk573).
 
 ### Oprava chyb

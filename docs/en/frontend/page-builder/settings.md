@@ -116,7 +116,7 @@ Styling using a class, with prefix: ```pb-style-container-```
 
 ### `ROW`
 
-```<div class="row">``` sa momentálne nedá editovať pomocou Page Builder, je použitý z dôvodu bootstrap kompatibility.
+```<div class="row">``` sa štandardne nedá editovať ani štýlovať pomocou Page Builder a používa sa z dôvodu Bootstrap kompatibility. Ak riadok explicitne označíte CSS triedou `pb-duplicable` (`<div class="row pb-duplicable">`), Page Builder preň zobrazí oranžový rámik a nástroje na presun, duplikovanie a zmazanie. Stĺpce a ich obsah vo vnútri riadku zostanú editovateľné štandardným spôsobom.
 
 ### `COLUMN` (zelená farba)
 
@@ -131,6 +131,46 @@ Ak má column CSS triedu ```pb-not-editable``` tak sa **nebude považovať za co
 ```
 
 By setting the CSS class ```pb-not-column```, the element **will not be considered columns* even if it has the CSS class ```col-```.
+
+### Duplicate element (orange color)
+
+To allow a repeating element inside `COLUMN` or the entire `ROW` to be moved, duplicated, and deleted, mark it with the CSS class `pb-duplicable`. A typical example is list items:
+
+```html
+<ul class="cards">
+    <li class="pb-duplicable">Prvá karta</li>
+    <li class="pb-duplicable">Druhá karta</li>
+</ul>
+```
+
+You can mark up the entire Bootstrap line in the same way:
+
+```html
+<div class="container">
+    <div class="row pb-duplicable">
+        <div class="col-12"><p>Prvý riadok</p></div>
+    </div>
+    <div class="row pb-duplicable">
+        <div class="col-12"><p>Druhý riadok</p></div>
+    </div>
+</div>
+```
+
+Page Builder displays an orange frame on the selected element and a toolbar with actions for moving, duplicating, and deleting. An element can only be moved or duplicated before or after a target element that is also marked as duplicatable, has the same HTML tag, the same type (`ROW` or regular element), and the same immediate parent. For example, individual `LI` elements can be changed within a single `UL` list, not between two lists. `ROW` can only be changed between marked sibling `DIV.row` elements in the same container; moving between containers is not supported. To move, there must be at least two marked rows in the container, but a single marked row can be duplicated. Duplication `ROW` includes the entire row, including its columns and content.
+
+The default selector is based on the configuration variable `pageBuilderPrefix` and has the value `.pb-duplicable`. If you need to use existing CSS classes or multiple selectors, set them in the [`pbCustomSettings`](blocks.md#support-javascript-code) function:
+
+```javascript
+window.pbCustomSettings = function (me) {
+    me.grid.duplicable = ".pb-duplicable, .feature-item, ul.cards > li";
+};
+```
+
+With a custom selector, the `pb-duplicable` class is not added to the saved HTML; the original classes used by the selector remain.
+
+When moving or duplicating the entire `ROW` Page Builder automatically reinitializes CKEditor in nested editable blocks.
+
+!>**Warning:** elements inside `pb-not-editable` are not marked. If duplicatable elements are nested within each other, Page Builder only handles the outer element. The feature is intended for container HTML elements, not empty elements like `IMG`. Attributes including `id` are preserved when duplicating; their unique values ​​are not automatically generated.
 
 ## Editing exceptions
 
@@ -181,6 +221,7 @@ window.addEventListener("WJ.PageBuilder.gridChanged", function(e) {
 The following events are currently supported:
 
 - ```WJ.PageBuilder.loaded``` - ​​after loading the page in the editor
+- ```WJ.PageBuilder.instanceReady``` - ​​after initializing a CKEditor instance in an editable block; after moving or duplicating `ROW` it can be called repeatedly
 - ```WJ.PageBuilder.gridChanged``` - ​​change in ```gride```
 - ```WJ.PageBuilder.styleChange``` - ​​change in block properties (styling)
 - ```WJ.PageBuilder.newElementAdded``` - ​​new element added
