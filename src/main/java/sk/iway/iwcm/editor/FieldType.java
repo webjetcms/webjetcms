@@ -17,6 +17,7 @@ public enum FieldType {
     NONE,
     DIR,
     TEXTAREA,
+    JSONEDITOR,
     //just text label
     LABEL,
     DATE,

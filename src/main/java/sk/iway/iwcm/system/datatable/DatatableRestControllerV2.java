@@ -80,6 +80,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
 import sk.iway.iwcm.components.customfields.rest.CustomFieldsService;
+import sk.iway.iwcm.components.customfields.rest.JsonEditorValidator;
 import sk.iway.iwcm.database.ActiveRecordBase;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.i18n.Prop;
@@ -785,12 +786,13 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	public void validateEditor(HttpServletRequest request, DatatableRequest<Long, T> target, Identity user, Errors errors, Long id, T entity) {}
 
 	/**
-	 * Validates required custom fields for the provided entity.
+	 * Validates custom fields and prepares valid JSON editor values for persistence.
 	 *
 	 * <p>The method resolves required field alphabets via {@link CustomFieldsService} and checks
 	 * corresponding properties ({@code fieldX}) on the entity. Missing values are reported using
 	 * {@link Errors#rejectValue(String, String, String)} to keep validation consistent with editor
-	 * error handling.</p>
+	 * error handling. Valid JSON values have literal angle brackets replaced with equivalent Unicode
+	 * escapes so the JPA XSS filter does not alter their syntax when the entity is loaded again.</p>
 	 *
 	 * <p>If a field property is not readable on the entity, the method logs the issue and continues
 	 * without failing the whole validation pass.</p>
@@ -803,7 +805,22 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 * @param entity entity instance to validate
 	 */
 	public void validateEditorForCustomFields(HttpServletRequest request, DatatableRequest<Long, T> target, Identity user, Errors errors, Long id, T entity) {
-		for(Character alphabet : CustomFieldsService.getRequiredFieldsAlphabets(getCustomFieldsSearchDto(entity))) {
+		boolean validateJson = target.isInsert() || target.isUpdate();
+		CustomFieldsSearchDto customFields = getCustomFieldsSearchDto(entity);
+		Map<String, Boolean> jsonRules = JsonEditorValidator.getRules(entity, customFields);
+		Map<String, Boolean> rulesToValidate = jsonRules;
+		if (validateJson && target.getDztotalchunkcount() > 0) {
+			//for import resolves only rules for imported columns, so we don't validate non-imported fields
+			rulesToValidate = new HashMap<>();
+			Set<String> importedColumns = target.getImportedColumns();
+			if (importedColumns != null) {
+				for (Map.Entry<String, Boolean> rule : jsonRules.entrySet()) {
+					if (importedColumns.contains(rule.getKey())) rulesToValidate.put(rule.getKey(), rule.getValue());
+				}
+			}
+		}
+		for(Character alphabet : CustomFieldsService.getRequiredFieldsAlphabets(customFields)) {
+			if (jsonRules.containsKey("field" + alphabet)) continue;
 			try {
 				BeanWrapperImpl bw = new BeanWrapperImpl(entity);
 				Object value = bw.getPropertyValue("field" + alphabet);
@@ -814,6 +831,14 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				Logger.error(this.getClass(), "Error validating custom fields, property field" + alphabet + " not found in entity " + entity.getClass().getName(), ex);
 				// Failsafe: if property fieldX does not exist, simply skip validation for it
 			}
+		}
+		if (validateJson) {
+			List<DatatableFieldError> jsonErrors = JsonEditorValidator.validate(entity, rulesToValidate, getProp());
+			for (DatatableFieldError error : jsonErrors) {
+				String fieldName = "errorField." + error.getName();
+				if (errors.hasFieldErrors(fieldName) == false) errors.rejectValue(fieldName, null, error.getStatus());
+			}
+			if (jsonErrors.isEmpty()) JsonEditorValidator.escapeForPersistence(entity, rulesToValidate.keySet());
 		}
 	}
 
@@ -1681,7 +1706,6 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		prepareEntityForCreate(entity);
 		beforeSave(entity);
 		if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
-
 		// validacia
 		Set<ConstraintViolation<T>> violations = validator.validate(entity);
 
@@ -1709,7 +1733,6 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		prepareEntityIdForUpdate(entity, id);
 		beforeSave(entity);
 		if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
-
 		// validacia
 		Set<ConstraintViolation<T>> violations = validator.validate(entity);
 		if (!violations.isEmpty()) {
