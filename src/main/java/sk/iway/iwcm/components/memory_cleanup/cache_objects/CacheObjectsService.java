@@ -13,6 +13,7 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.TemplatesDB;
+import sk.iway.iwcm.doc.TemplatesGroupDB;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.tags.CombineTag;
@@ -63,6 +64,7 @@ public class CacheObjectsService {
             GroupsDB.getInstance(true);
             TemplatesDB.getInstance(true);
             UserGroupsDB.getInstance(true);
+            TemplatesGroupDB.getInstance(true);
             //prenes zmenu na cely cluster
             ClusterDB.addRefresh("sk.iway.iwcm.Cache-delAll");
 

@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.persistence.jpa.JpaEntityManager;
 import sk.iway.iwcm.Constants;
@@ -13,6 +14,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.utils.Pair;
 
@@ -37,7 +39,17 @@ public class TemplatesGroupDB extends JpaDB<TemplatesGroupBean> {
 
     private static TemplatesGroupDB instance = new TemplatesGroupDB();
 
+    private final Map<Long, TemplatesGroupBean> templatesGroupByIdCache = new ConcurrentHashMap<>();
+
     public static TemplatesGroupDB getInstance() {
+        return instance;
+    }
+
+    public static TemplatesGroupDB getInstance(boolean forceRefresh) {
+        instance = getInstance();
+        if (forceRefresh) {
+            instance.clearCache();
+        }
         return instance;
     }
 
@@ -135,6 +147,25 @@ public class TemplatesGroupDB extends JpaDB<TemplatesGroupBean> {
         if (em.isOpen()) em.close();
 
         return templatesGroupBean;
+    }
+
+    /**
+     * Returns a template group from the in-memory cache, loading it from the database when necessary.
+     *
+     * @param id template group ID
+     * @return template group or {@code null} when it does not exist
+     */
+    public TemplatesGroupBean getByIdCached(Long id) {
+        if (id == null) return null;
+        return templatesGroupByIdCache.computeIfAbsent(id, this::getById);
+    }
+
+    /**
+     * Clears all cached template groups.
+     */
+    public void clearCache() {
+        templatesGroupByIdCache.clear();
+        ClusterDB.addRefresh("sk.iway.iwcm.TemplatesGroupDB");
     }
 
     /**
