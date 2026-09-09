@@ -83,6 +83,7 @@ public class LocalTranslateService extends LibrarySupportLogic implements AiAssi
         assistantEntity.setUseStreaming(false);
         assistantEntity.setUseTemporal(true);
         assistantEntity.setUserPromptEnabled(false);
+        // Affects only response post-processing; plain-text input is enforced when building the request.
         assistantEntity.setKeepHtml(true);
     }
 

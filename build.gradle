@@ -30,7 +30,6 @@ plugins {
 }
 
 repositories {
-    mavenLocal()
     mavenCentral()
     maven {
         name = "github"
