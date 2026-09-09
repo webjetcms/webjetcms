@@ -136,6 +136,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 - Added option to set optional field as required (#58413).
 - Added new optional field types [radio check box and radio check box](frontend/webpages/customfields/custom-fields-settings.md#difference-between-selectmultiselect-and-radiocheckbox) with support for both static options and codebook linking. The `multiselect` type now also supports [codebook linking](frontend/webpages/customfields/custom-fields-settings.md#option-source). The original `enumeration` type has been replaced by an option source switch for types `select`, `multiselect`, `radio` and `checkbox` where options are loaded from a linked codebook for all these field types (#58637).
+- Added [JSON Editor](developer/datatables-editor/customfields.md#json-editor) type (`jsoneditor`) for direct input of JSON object with line numbers and formatting button (#OSK659).
+
+![](frontend/webpages/customfields/webpages-jsoneditor.png)
 
 ### Accessibility
 
