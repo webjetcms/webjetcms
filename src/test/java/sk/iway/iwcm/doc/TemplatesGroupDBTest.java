@@ -3,8 +3,16 @@ package sk.iway.iwcm.doc;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.Mockito.mockStatic;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.common.CloudToolsForCore;
 
 class TemplatesGroupDBTest {
 
@@ -41,9 +49,36 @@ class TemplatesGroupDBTest {
         assertEquals(2, database.getDatabaseReadCount());
     }
 
+    @Test
+    void getByIdCachedDoesNotShareTemplateGroupsBetweenDomains() {
+        AtomicInteger currentDomainId = new AtomicInteger(1);
+        TemplatesGroupBean firstDomainTemplateGroup = new TemplatesGroupBean();
+        firstDomainTemplateGroup.setId(12L);
+        TestTemplatesGroupDB database = new TestTemplatesGroupDB(firstDomainTemplateGroup);
+
+        try (MockedStatic<InitServlet> initServlet = mockStatic(InitServlet.class);
+                MockedStatic<Constants> constants = mockStatic(Constants.class);
+                MockedStatic<CloudToolsForCore> cloudTools = mockStatic(CloudToolsForCore.class)) {
+            initServlet.when(InitServlet::isTypeCloud).thenReturn(true);
+            constants.when(() -> Constants.getString("jpaFilterByDomainIdBeanList"))
+                    .thenReturn(TemplatesGroupBean.class.getName());
+            cloudTools.when(CloudToolsForCore::getDomainId).thenAnswer(invocation -> currentDomainId.get());
+
+            assertSame(firstDomainTemplateGroup, database.getByIdCached(12L));
+
+            currentDomainId.set(2);
+            database.setResult(null);
+            assertNull(database.getByIdCached(12L));
+
+            currentDomainId.set(1);
+            assertSame(firstDomainTemplateGroup, database.getByIdCached(12L));
+            assertEquals(2, database.getDatabaseReadCount());
+        }
+    }
+
     private static class TestTemplatesGroupDB extends TemplatesGroupDB {
 
-        private final TemplatesGroupBean result;
+        private TemplatesGroupBean result;
         private int databaseReadCount;
 
         private TestTemplatesGroupDB(TemplatesGroupBean result) {
@@ -58,6 +93,10 @@ class TemplatesGroupDBTest {
 
         private int getDatabaseReadCount() {
             return databaseReadCount;
+        }
+
+        private void setResult(TemplatesGroupBean result) {
+            this.result = result;
         }
     }
 }

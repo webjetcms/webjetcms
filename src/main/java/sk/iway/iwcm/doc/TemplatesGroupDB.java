@@ -39,7 +39,7 @@ public class TemplatesGroupDB extends JpaDB<TemplatesGroupBean> {
 
     private static TemplatesGroupDB instance = new TemplatesGroupDB();
 
-    private final Map<Long, TemplatesGroupBean> templatesGroupByIdCache = new ConcurrentHashMap<>();
+    private final Map<Integer, Map<Long, TemplatesGroupBean>> templatesGroupByDomainAndIdCache = new ConcurrentHashMap<>();
 
     public static TemplatesGroupDB getInstance() {
         return instance;
@@ -133,7 +133,7 @@ public class TemplatesGroupDB extends JpaDB<TemplatesGroupBean> {
         EntityManager em = threadEm.getEntityManagerFactory().createEntityManager();
 
         TemplatesGroupBean templatesGroupBean;
-        if((InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")) && Constants.getString("jpaFilterByDomainIdBeanList").contains(TemplatesGroupBean.class.getName()))
+        if(isDomainIdFilterEnabled())
         {
             Map<String,Object>  hashMap = new HashMap<>();
             hashMap.put("domainId", CloudToolsForCore.getDomainId());
@@ -157,15 +157,23 @@ public class TemplatesGroupDB extends JpaDB<TemplatesGroupBean> {
      */
     public TemplatesGroupBean getByIdCached(Long id) {
         if (id == null) return null;
-        return templatesGroupByIdCache.computeIfAbsent(id, this::getById);
+
+        int cacheDomainId = CloudToolsForCore.getDomainId();
+        Map<Long, TemplatesGroupBean> domainCache = templatesGroupByDomainAndIdCache.computeIfAbsent(cacheDomainId, key -> new ConcurrentHashMap<>());
+        return domainCache.computeIfAbsent(id, this::getById);
     }
 
     /**
      * Clears all cached template groups.
      */
     public void clearCache() {
-        templatesGroupByIdCache.clear();
+        templatesGroupByDomainAndIdCache.clear();
         ClusterDB.addRefresh("sk.iway.iwcm.TemplatesGroupDB");
+    }
+
+    private static boolean isDomainIdFilterEnabled() {
+        return (InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")) &&
+                Constants.getString("jpaFilterByDomainIdBeanList").contains(TemplatesGroupBean.class.getName());
     }
 
     /**

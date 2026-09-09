@@ -64,7 +64,8 @@ public class CacheObjectsService {
             GroupsDB.getInstance(true);
             TemplatesDB.getInstance(true);
             UserGroupsDB.getInstance(true);
-            TemplatesGroupDB.getInstance(true);
+            TemplatesGroupDB.getInstance().clearCache(); //this prevents duplicated refresh
+
             //prenes zmenu na cely cluster
             ClusterDB.addRefresh("sk.iway.iwcm.Cache-delAll");
 
