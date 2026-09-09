@@ -44,6 +44,7 @@ Dropzone.autoDiscover = false;
  * @param {string} [options.destinationFolder] - target upload folder path
  * @param {boolean} [options.writeDirectlyToDestination] - if true, writes directly to destination
  * @param {string} [options.overwriteMode] - default conflict mode ("skip", "overwrite", "keepboth")
+ * @param {boolean} [options.autoProcessQueue=true] - if false, files remain queued until explicitly processed
  * @returns {Dropzone} the initialized Dropzone instance
  */
 function adminUploadInit(options) {
@@ -85,8 +86,10 @@ function adminUploadInit(options) {
         url: '/admin/upload/chunk',
         params: function (files, xhr, chunk) {
             var retParams = {};
+            var uploadFile = files && files[0];
 
             if (chunk) {
+                uploadFile = chunk.file;
                 retParams = {
                     dzuuid: chunk.file.upload.uuid,
                     dzchunkindex: chunk.index,
@@ -104,6 +107,10 @@ function adminUploadInit(options) {
             retParams.writeDirectlyToDestination = writeDirectlyToDestination;
             retParams.overwriteMode = overwriteMode;
 
+            if (uploadFile && uploadFile.wjAdminUploadRequestParams) {
+                Object.assign(retParams, uploadFile.wjAdminUploadRequestParams);
+            }
+
             //console.log("returning params=", retParams);
 
             return retParams;
@@ -111,6 +118,7 @@ function adminUploadInit(options) {
         createImageThumbnails: false,
         parallelUploads: 1,
         uploadMultiple: false,
+        autoProcessQueue: options.autoProcessQueue !== false,
         maxFilesize: 5000, //<%=Tools.replace(Constants.getString("stripes.FileUpload.MaximumPostSize"), "m", "")%>,
 
         maxFiles: maxFiles,
@@ -212,6 +220,13 @@ function adminUploadInit(options) {
                 if (response.destinationFolder && response.destinationFolder!="" && response.exists === true)
                 {
                     var overwriteToast = file.toaster;
+                    var saveLater = file.wjAdminUploadRequestParams
+                        && file.wjAdminUploadRequestParams.fileArchiveSaveLater === true;
+
+                    if (saveLater) {
+                        overwriteToast.attr('data-upload-save-later', 'true');
+                        overwriteToast.find('.btn-toast-overwrite').hide();
+                    }
 
                     setStatus(file.toaster, 'exist');
                     uploadWrapper.find('div.upload-wrapper-footer div.process-all').show();
@@ -239,7 +254,8 @@ function adminUploadInit(options) {
                             response.destinationFolder,
                             response.name,
                             response.uploadType,
-                            callback
+                            callback,
+                            file.wjAdminUploadRequestParams
                         );
                         setStatus(overwriteToast, 'processing');
                     });
@@ -250,7 +266,8 @@ function adminUploadInit(options) {
                             response.destinationFolder,
                             response.name,
                             response.uploadType,
-                            callback
+                            callback,
+                            file.wjAdminUploadRequestParams
                         );
                         setStatus(overwriteToast, 'processing');
                     });
@@ -413,6 +430,12 @@ function adminUploadInit(options) {
     function setStatus(toast, status) {
         //console.log("Setting status ", status, "to", toast);
         if (toast != null) toast.attr("data-upload-status", status);
+        var scheduledConflicts = toastContainer.find(
+            'div.toast[data-upload-save-later="true"][data-upload-status="exist"], ' +
+            'div.toast[data-upload-save-later="true"][data-upload-status="waitforprocess"], ' +
+            'div.toast[data-upload-save-later="true"][data-upload-status="processing"]'
+        );
+        uploadWrapper.find('#btn-toast-overwrite-all').toggle(scheduledConflicts.length === 0);
     }
 
     function setError(toast, message) {
@@ -470,7 +493,7 @@ function adminUploadInit(options) {
         callRestService(url, params, callback);
     };
 
-    adminUpload.overwrite = function (key, destinationFolder, fileName, uploadType, callback) {
+    adminUpload.overwrite = function (key, destinationFolder, fileName, uploadType, callback, requestParams) {
         var url = '/admin/upload/overwrite';
         var params = {
             fileKey: key,
@@ -478,11 +501,12 @@ function adminUploadInit(options) {
             fileName: fileName,
             uploadType: uploadType,
         };
+        Object.assign(params, requestParams || {});
 
         callRestService(url, params, callback);
     };
 
-    adminUpload.keepboth = function (key, destinationFolder, fileName, uploadType, callback) {
+    adminUpload.keepboth = function (key, destinationFolder, fileName, uploadType, callback, requestParams) {
         var url = '/admin/upload/keepboth';
         var params = {
             fileKey: key,
@@ -490,8 +514,24 @@ function adminUploadInit(options) {
             fileName: fileName,
             uploadType: uploadType,
         };
+        Object.assign(params, requestParams || {});
 
         callRestService(url, params, callback);
+    };
+
+    /**
+     * Temporarily prevents selecting or dropping additional files without
+     * canceling files that are already queued or uploading.
+     * @param {boolean} disabled - true to block new file selection
+     */
+    adminUpload.setFileSelectionDisabled = function (disabled) {
+        if ((adminUpload.wjFileSelectionDisabled === true) === (disabled === true)) return;
+        adminUpload.wjFileSelectionDisabled = disabled === true;
+        adminUpload.clickableElements.forEach(function (clickableElement) {
+            clickableElement.classList.toggle('dz-clickable', disabled !== true);
+        });
+        if (disabled === true) adminUpload.removeEventListeners();
+        else adminUpload.setupEventListeners();
     };
 
     adminUpload.setDestinationFolder = function (newDetinationFolder) {
@@ -515,6 +555,8 @@ function adminUploadInit(options) {
     function hideUploadWrapper() {
         uploadWrapper.hide();
     }
+
+    adminUpload.hideUploadWrapper = hideUploadWrapper;
 
     uploadWrapper.find('#upload-wrapper-close').click(function () {
         hideUploadWrapper();
@@ -548,7 +590,8 @@ window.addEventListener('dragenter', function (e) {
     // Skip fullscreen drop overlay if the main dropzone element doesn't exist or is disabled
     // (e.g. when the upload field is inside an iframe or another component controls the dropzone)
     var fullscreenDropZone = document.getElementById('dt-upload');
-    if (fullscreenDropZone == null || (fullscreenDropZone.dropzone && fullscreenDropZone.dropzone.disabled === true)) {
+    if (fullscreenDropZone == null || (fullscreenDropZone.dropzone
+        && (fullscreenDropZone.dropzone.disabled === true || fullscreenDropZone.dropzone.wjFileSelectionDisabled === true))) {
         return;
     }
 

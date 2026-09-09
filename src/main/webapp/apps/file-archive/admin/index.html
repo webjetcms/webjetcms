@@ -431,44 +431,201 @@
         fileArchiveDataTable.hideButton("duplicate");
         fileArchiveDataTable.hideButton("celledit");
 
-        function setArchiveSubmitDisabled(disabled) {
-            $("div.DTE .DTE_Footer button.btn-primary").prop("disabled", disabled);
-        }
-
         function setArchiveUploadDisabled(disabled) {
             if (!fileArchiveAdminUpload) return;
 
             if (disabled === true) {
-                fileArchiveAdminUpload.disable();
+                fileArchiveAdminUpload.setFileSelectionDisabled(true);
                 $("#dt-upload").css('visibility', 'hidden');
                 $("#dt-upload").css('opacity', 0);
             } else {
-                fileArchiveAdminUpload.enable();
+                fileArchiveAdminUpload.setFileSelectionDisabled(false);
             }
         }
+
+        var pendingBulkUploadFiles = [];
+        var bulkUploadEditorActive = false;
+        var bulkUploadCollectionTimer = null;
+        var bulkUploadFieldsChanged = {};
+        var bulkUploadAllowedFields = [
+            "validFrom", "validTo", "editorFields.saveLater", "editorFields.dateUploadLater", "editorFields.emails",
+            "product", "category", "productCode", "showFile", "indexFile", "priority", "referenceToMain", "note",
+            "editorFields.uploadRedundantFile"
+        ];
+        var bulkUploadBooleanFields = ["showFile", "indexFile", "editorFields.uploadRedundantFile"];
+
+        function processNextBulkUploadFile() {
+            if (fileArchiveAdminUpload.getUploadingFiles().length > 0) return;
+
+            var nextFile = fileArchiveAdminUpload.getQueuedFiles().find(file => file.wjAdminUploadRequestParams);
+            if (nextFile) fileArchiveAdminUpload.processFile(nextFile);
+        }
+
+        function hasActiveBulkUploads() {
+            if (fileArchiveAdminUpload.getUploadingFiles().length > 0) return true;
+
+            var hasApprovedQueuedFile = fileArchiveAdminUpload.getQueuedFiles().some(function(file) {
+                return file.wjAdminUploadRequestParams != null;
+            });
+            if (hasApprovedQueuedFile) return true;
+
+            return $("#toast-container-upload div.toast").filter(function() {
+                var status = $(this).attr("data-upload-status");
+                return status === "progress" || status === "processing"
+                    || status === "exist" || status === "waitforprocess";
+            }).length > 0;
+        }
+
+        function cancelPendingBulkUpload() {
+            clearTimeout(bulkUploadCollectionTimer);
+            pendingBulkUploadFiles.forEach(function(file) {
+                if (file.toaster) file.toaster.remove();
+                fileArchiveAdminUpload.removeFile(file);
+            });
+            pendingBulkUploadFiles = [];
+            if (hasActiveBulkUploads() === false) fileArchiveAdminUpload.hideUploadWrapper();
+        }
+
+        function openBulkUploadEditor() {
+            if (pendingBulkUploadFiles.length === 0 || bulkUploadEditorActive === true) return;
+
+            bulkUploadEditorActive = true;
+            fileArchiveDataTable.wjCreate();
+        }
+
+        function prepareBulkUploadEditor() {
+            var editor = fileArchiveDataTable.EDITOR;
+
+            editor.fields().forEach(function(fieldName) {
+                if (bulkUploadAllowedFields.indexOf(fieldName) === -1) {
+                    $(editor.node(fieldName)).addClass("d-none file-archive-bulk-hidden");
+                }
+            });
+
+            ["customFields", "listOfVersions", "waitingFiles", "listOfPattern"].forEach(function(tabId) {
+                $("#pills-dt-fileArchiveDataTable-" + tabId + "-tab")
+                    .closest("li")
+                    .addClass("d-none file-archive-bulk-hidden");
+            });
+            $("#fileArchiveDataTable_modal .row-headline, #fileArchiveDataTable_modal .row-hr")
+                .addClass("d-none file-archive-bulk-hidden");
+
+            editor.field("filePath").val(fileArchiveAdminUpload.getDestinationFolder());
+            editor.field("fileName").val("");
+            editor.field("editorFields.dir").val(fileArchiveAdminUpload.getDestinationFolder());
+            editor.field("editorFields.saveLater").val(false);
+            editor.field("editorFields.dateUploadLater").hide();
+            editor.field("editorFields.emails").hide();
+
+            bulkUploadAllowedFields.forEach(function(fieldName) {
+                $(editor.node(fieldName)).find("input, select, textarea")
+                    .off(".fileArchiveBulkUpload")
+                    .on("input.fileArchiveBulkUpload change.fileArchiveBulkUpload " +
+                        "autocompleteselect.fileArchiveBulkUpload autocompletechange.fileArchiveBulkUpload", function(event, eventData) {
+                        if (eventData && (eventData.editor === true || eventData.editorSet === true)) return;
+                        bulkUploadFieldsChanged[fieldName] = true;
+                    });
+            });
+
+            $("#fileArchiveDataTable_modal .DTE_Header_Content h5.modal-title").first()
+                .text((/*[[#{components.file_archiv.bulk_upload.title}]]*/ "") + " (" + pendingBulkUploadFiles.length + ")");
+            $("#fileArchiveDataTable_modal .DTE_Form_Buttons button.btn-primary").last()
+                .html('<i class="ti ti-upload"></i> ' + (/*[[#{button.upload}]]*/ ""));
+            editor.message((/*[[#{components.file_archiv.bulk_upload.description}]]*/ "") + " " + (/*[[#{components.file_archiv.bulk_upload.files_count}]]*/ "") + " " + pendingBulkUploadFiles.length);
+            $("#pills-dt-fileArchiveDataTable-basic-tab").trigger("click");
+        }
+
+        function cleanupBulkUploadEditor() {
+            var editor = fileArchiveDataTable.EDITOR;
+            $("#fileArchiveDataTable_modal .file-archive-bulk-hidden")
+                .removeClass("d-none file-archive-bulk-hidden");
+            bulkUploadAllowedFields.forEach(function(fieldName) {
+                $(editor.node(fieldName)).find("input, select, textarea").off(".fileArchiveBulkUpload");
+            });
+            editor.message("");
+            bulkUploadFieldsChanged = {};
+        }
+
+        function getBulkUploadBoolean(fieldName) {
+            var value = fileArchiveDataTable.EDITOR.field(fieldName).val();
+            if (Array.isArray(value)) value = value[0];
+            return value === true || value === "true";
+        }
+
+        function confirmBulkUpload() {
+            var requestParams = {
+                destinationFolder: fileArchiveAdminUpload.getDestinationFolder()
+            };
+
+            bulkUploadAllowedFields.forEach(function(fieldName) {
+                if (bulkUploadFieldsChanged[fieldName] !== true) return;
+
+                var value;
+                if (bulkUploadBooleanFields.includes(fieldName)) {
+                    value = getBulkUploadBoolean(fieldName);
+                } else {
+                    if (fieldName.startsWith("editorFields.")) return;
+                    value = fileArchiveDataTable.EDITOR.field(fieldName).val();
+                    if (fieldName !== "validFrom" && fieldName !== "validTo") value = String(value || "").trim();
+                    if (value == null || String(value).trim() === "") return;
+                }
+                var parameter = fieldName.replace("editorFields.", "");
+                requestParams["fileArchive" + parameter[0].toUpperCase() + parameter.slice(1)] = value;
+            });
+
+            if (bulkUploadFieldsChanged["editorFields.saveLater"] === true
+                && getBulkUploadBoolean("editorFields.saveLater")) {
+                requestParams.fileArchiveSaveLater = true;
+                requestParams.fileArchiveDateUploadLater = fileArchiveDataTable.EDITOR.field("editorFields.dateUploadLater").val();
+                requestParams.fileArchiveEmails = String(fileArchiveDataTable.EDITOR.field("editorFields.emails").val() || "").trim();
+            }
+
+            pendingBulkUploadFiles.forEach(function(file) {
+                file.wjAdminUploadRequestParams = Object.assign({}, requestParams);
+            });
+            pendingBulkUploadFiles = [];
+            fileArchiveDataTable.EDITOR.close();
+            processNextBulkUploadFile();
+        }
+
+        fileArchiveDataTable.EDITOR.on("preSubmit", function(e, data, action) {
+            if (bulkUploadEditorActive === false || action !== "create") return true;
+            confirmBulkUpload();
+            return false;
+        });
 
         fileArchiveAdminUpload = window.AdminUpload({
             element: "#dt-upload",
             uploadType: "fileArchive",
             acceptedFiles: fileArchiveAcceptedFiles.join(","),
             destinationFolder: fileArchiveTreeDir,
-            writeDirectlyToDestination: true
+            writeDirectlyToDestination: true,
+            autoProcessQueue: false
         });
         $("#upload-toastr-template.file-archive-upload-template").remove();
 
         if (fileArchiveAdminUpload) {
-            fileArchiveAdminUpload.on("addedfile", function() {
-                setArchiveSubmitDisabled(true);
+            fileArchiveAdminUpload.on("addedfile", function(file) {
+                setTimeout(function() {
+                    if (file.accepted !== true || file.status === "error"
+                        || file.wjAdminUploadRequestParams != null || pendingBulkUploadFiles.indexOf(file) !== -1) return;
+
+                    pendingBulkUploadFiles.push(file);
+
+                    clearTimeout(bulkUploadCollectionTimer);
+                    bulkUploadCollectionTimer = setTimeout(openBulkUploadEditor, 250);
+                }, 0);
             });
 
             fileArchiveAdminUpload.on("error", function(file) {
-                setArchiveSubmitDisabled(false);
                 fileArchiveAdminUpload.removeFile(file);
             });
 
             fileArchiveAdminUpload.on("success", function(file) {
                 fileArchiveDataTable.ajax.reload();
             });
+
+            fileArchiveAdminUpload.on("complete", processNextBulkUploadFile);
         }
 
         //Initialize tree
@@ -539,7 +696,7 @@
         }
 
         fileArchiveDataTable.EDITOR.on('open', function (e, type, action) {
-            setArchiveUploadDisabled(true);
+            if (bulkUploadEditorActive === false) setArchiveUploadDisabled(true);
 
             if(action === "create") {
                 actualAction = 'create';
@@ -662,9 +819,28 @@
                 }
             });
             setCheckboxWarningMsg("newFileName", "renameFile", /*[[#{components.file_archiv.rename_warning}]]*/);
+
+            if (bulkUploadEditorActive === true) prepareBulkUploadEditor();
+        });
+
+        fileArchiveDataTable.EDITOR.on('opened', function () {
+            if (bulkUploadEditorActive === false) return;
+
+            $("#fileArchiveDataTable_modal")
+                .attr("tabindex", "-1")
+                .removeData("dteFocusRequest")
+                .off(".wjDteDefaultFocus")
+                .attr("data-dte-focus-state", "ready")
+                .trigger("focus");
         });
 
         fileArchiveDataTable.EDITOR.on('close', function () {
+            if (bulkUploadEditorActive === true) {
+                cleanupBulkUploadEditor();
+                bulkUploadEditorActive = false;
+                if (pendingBulkUploadFiles.length > 0) cancelPendingBulkUpload();
+                return;
+            }
             setArchiveUploadDisabled(false);
         });
 

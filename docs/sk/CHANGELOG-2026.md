@@ -119,6 +119,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 - Manažér dokumentov - pridaná možnosť nahrať viac súborov naraz cez `drag&drop` (#58593).
 
+- Manažér dokumentov - pri [hromadnom nahrávaní súborov](redactor/files/file-archive/README.md#hromadné-nahrávanie-súborov) je možné na kartách **Základné** a **Pokročilé** nastaviť spoločnú platnosť, naplánovať neskoršie nahratie s e-mailovou notifikáciou a zadať rozšírené metadáta dokumentov (#58754).
+
 ![](redactor/files/file-archive/drag-drop-upload-dialog.png)
 
 ### Galéria

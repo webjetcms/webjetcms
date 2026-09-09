@@ -13,6 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 
+/**
+ * Provides domain-scoped persistence and bulk-update operations for file archive records.
+ */
 @Repository
 public interface FileArchiveRepository extends DomainIdRepository<FileArchivatorBean, Long> {
 
@@ -56,6 +59,19 @@ public interface FileArchiveRepository extends DomainIdRepository<FileArchivator
     List<FileArchivatorBean> findAllByReferenceToMainAndReferenceIdAndDomainId(String referenceToMain, Integer referenceId, Integer domainId);
 
     List<FileArchivatorBean> findAllByUploadedAndDomainId(Integer uploaded, Integer domainId);
+
+    /**
+     * Atomically claims a waiting scheduled upload. The failed state is used as a fail-closed
+     * processing marker so another cluster node cannot publish the same detached row.
+     *
+     * @param id identifier of the waiting archive record
+     * @param domainId domain that owns the record
+     * @return number of claimed records; {@code 1} when the claim succeeds, otherwise {@code 0}
+     */
+    @Transactional
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE FileArchivatorBean fab SET fab.uploaded = -2 WHERE fab.id = :id AND fab.uploaded = 0 AND fab.domainId = :domainId")
+    int claimWaitingFile(@Param("id") Long id, @Param("domainId") Integer domainId);
 
     @Transactional
     @Modifying

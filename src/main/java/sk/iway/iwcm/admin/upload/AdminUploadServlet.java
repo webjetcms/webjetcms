@@ -43,6 +43,11 @@ import sk.iway.iwcm.io.IwcmOutputStream;
 import sk.iway.iwcm.system.stripes.MultipartWrapper;
 import sk.iway.iwcm.users.UsersDB;
 
+/**
+ * Receives administrative uploads in chunks, validates their destination, and assembles them.
+ * Completed uploads are either written directly to an approved folder or retained temporarily
+ * for a subsequent conflict-resolution request.
+ */
 @WebServlet("/admin/upload/chunk")
 @MultipartConfig
 public class AdminUploadServlet extends HttpServlet
@@ -50,6 +55,15 @@ public class AdminUploadServlet extends HttpServlet
 	private static final long serialVersionUID = 1L;
 	private static final Map<String,PathHolder> temporary = new ConcurrentHashMap<>();
 
+	/**
+	 * Validates and stores one upload chunk, assembling and processing the file after the final chunk.
+	 * File archive requests also preserve their validated bulk metadata across all chunks.
+	 *
+	 * @param request multipart upload request
+	 * @param response response receiving the JSON upload status
+	 * @throws ServletException when the servlet container cannot process the multipart request
+	 * @throws IOException when request data cannot be read or the response cannot be written
+	 */
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
@@ -60,6 +74,7 @@ public class AdminUploadServlet extends HttpServlet
         boolean isBase64 = "base64".equals(request.getParameter("encoding"));
         String uploadType = Tools.getStringValue(request.getParameter("uploadType"), "");
         boolean saveIntoArchive = "fileArchive".equals(uploadType);
+        FileArchiveBulkUploadOptions bulkUploadOptions = null;
 
         JSONObject output = new JSONObject();
 
@@ -83,6 +98,18 @@ public class AdminUploadServlet extends HttpServlet
 
         String extension = FileTools.getFileExtension(name);
 
+        int chunk = Tools.getIntValue(request.getParameter("chunk"), 0);
+        int chunks = Tools.getIntValue(request.getParameter("chunks"), 0);
+
+        //dropzone.js compatibility
+        if (request.getParameter("dzchunkindex")!=null) chunk = Tools.getIntValue(request.getParameter("dzchunkindex"), 0);
+        if (request.getParameter("dztotalchunkcount")!=null) chunks = Tools.getIntValue(request.getParameter("dztotalchunkcount"), 0);
+
+        HttpSession session = request.getSession();
+        String partialUploadSessionKey = "partialUploadFile-"+name;
+        PartialUploadHolder holder = (PartialUploadHolder)session.getAttribute(partialUploadSessionKey);
+
+        //bulkUploadOptions stays non-null whenever errorKey remains null on the archive upload path below
         String errorKey;
         if (saveIntoArchive) {
             errorKey = AdminUploadValidator.validateUserAndFile(
@@ -93,6 +120,12 @@ public class AdminUploadServlet extends HttpServlet
                 errorKey = FileArchiveUploadService.validateArchiveUploadPermission(user, destinationFolder, referer);
                 if (errorKey == null) {
                     destinationFolder = FileArchiveUploadService.normalizeArchiveFolder(destinationFolder);
+                    if (chunk > 0 && holder != null && holder.getFileArchiveBulkUploadOptions() != null) {
+                        bulkUploadOptions = holder.getFileArchiveBulkUploadOptions();
+                    } else {
+                        bulkUploadOptions = FileArchiveBulkUploadOptions.fromRequest(request);
+                    }
+                    errorKey = bulkUploadOptions.getErrorKey();
                 }
             }
         } else {
@@ -103,6 +136,7 @@ public class AdminUploadServlet extends HttpServlet
         }
 
 		if (errorKey != null) {
+			cleanupPartialUpload(session, partialUploadSessionKey, holder);
 			try {
 				Prop prop = Prop.getInstance();
 				output.put("error", prop.getText(errorKey));
@@ -114,23 +148,16 @@ public class AdminUploadServlet extends HttpServlet
 			}
 		}
         else {
-            int chunk = Tools.getIntValue(request.getParameter("chunk"), 0);
-            int chunks = Tools.getIntValue(request.getParameter("chunks"), 0);
-
-            //dropzone.js kompatibilita
-            if (request.getParameter("dzchunkindex")!=null) chunk = Tools.getIntValue(request.getParameter("dzchunkindex"), 0);
-            if (request.getParameter("dztotalchunkcount")!=null) chunks = Tools.getIntValue(request.getParameter("dztotalchunkcount"), 0);
-
             Logger.debug(AdminUploadServlet.class, "doPost, chunk="+chunk+" chunks="+chunks);
 
             Part filePart = request.getPart("file");
 
-            HttpSession session = request.getSession();
-            PartialUploadHolder holder = (PartialUploadHolder)session.getAttribute("partialUploadFile-"+name);
             if (holder==null || chunk == 0)
             {
+                cleanupPartialUpload(session, partialUploadSessionKey, holder);
                 holder = new PartialUploadHolder(chunks, name);
-                session.setAttribute("partialUploadFile-"+name, holder);
+                holder.setFileArchiveBulkUploadOptions(bulkUploadOptions);
+                session.setAttribute(partialUploadSessionKey, holder);
             }
             boolean isLast = false;
             if (holder.getPartPaths().size()+1 == holder.getChunks() || holder.getChunks()==0)
@@ -168,7 +195,7 @@ public class AdminUploadServlet extends HttpServlet
 
             if (isLast)
             {
-                session.removeAttribute("partialUploadFile-"+name);
+                session.removeAttribute(partialUploadSessionKey);
                 // mam posledny, spojim ich do jedneho
 
                 IwcmOutputStream fos = null;
@@ -270,7 +297,8 @@ public class AdminUploadServlet extends HttpServlet
 
                         if (saveIntoArchive && writeDirectlyToDestination) {
                             Prop prop = Prop.getInstance(request);
-                            FileArchiveUploadService.saveNewArchiveFile(user, prop, destinationFolder, name, originalName, random, output);
+                            FileArchiveUploadService.saveNewArchiveFile(user, prop, destinationFolder, name,
+                                originalName, random, bulkUploadOptions, output);
                         }
                     }
                 }
@@ -291,12 +319,32 @@ public class AdminUploadServlet extends HttpServlet
 	}
 
     /**
-     * Presunie uploadnuty subor z docasneho umiestnenia do cieloveho adresara
-     * @param fileKey
-     * @param destinationFolder - URL adresa cieloveho adresara, napr. /images/gallery/
-     * @param fileNameParam
-     * @return - meno suboru po presune, alebo null ak sa subor nepresunul
-     * @throws IOException
+     * Removes a partial upload from the session and deletes every temporary chunk already stored.
+     *
+     * @param session session containing the partial upload
+     * @param sessionKey session attribute key for the upload
+     * @param holder partial upload state, or {@code null} when no upload is in progress
+     */
+    private static void cleanupPartialUpload(HttpSession session, String sessionKey, PartialUploadHolder holder) {
+        if (holder == null) return;
+
+        session.removeAttribute(sessionKey);
+        for (String partPath : holder.getPartPaths()) {
+            File partFile = new File(partPath);
+            if (partFile.exists() && partFile.delete() == false) {
+                Logger.debug(AdminUploadServlet.class, "Failed to delete partial upload file: " + partPath);
+            }
+        }
+    }
+
+    /**
+     * Moves a temporary upload to its final destination, replacing an existing file if necessary.
+     *
+     * @param fileKey unique key of the temporary upload
+     * @param destinationFolder virtual path of the destination folder, for example {@code /images/gallery/}
+     * @param fileNameParam requested destination file name
+     * @return the final file name, or {@code null} when the temporary file was not moved
+     * @throws IOException when the file cannot be moved
      */
     public static String moveAndReplaceFile(String fileKey, String destinationFolder, String fileNameParam) throws IOException
     {
@@ -330,9 +378,10 @@ public class AdminUploadServlet extends HttpServlet
     }
 
     /**
-     * Zmaze docasny subor (ak napr. user klikol na moznost neprepisat subor)
-     * @param fileKey
-     * @return - true ak subor existoval a zmazal sa
+     * Deletes a temporary upload that is no longer needed.
+     *
+     * @param fileKey unique key of the temporary upload
+     * @return {@code true} when the temporary file existed and was deleted
      */
     public static boolean deleteTempFile(String fileKey) {
         PathHolder pathHolder = temporary.remove(fileKey);
@@ -344,6 +393,11 @@ public class AdminUploadServlet extends HttpServlet
         return false;
     }
 
+    /**
+     * Decodes Base64 upload content and restores the requested image format when necessary.
+     *
+     * @param f temporary file containing Base64-encoded data
+     */
     private void decodeBase64File(IwcmFile f) {
         try {
             if (f.exists() && f.canRead()) {
@@ -414,9 +468,10 @@ public class AdminUploadServlet extends HttpServlet
     }
 
     /**
-	 * Vrati cestu k temp suboru, pozuiva sa vo FormMail na detekciu ci subor vyhovuje poziadavkam
-	 * @param fileKey
-	 * @return
+	 * Returns the physical path of a temporary upload for validation by downstream consumers.
+	 *
+	 * @param fileKey unique key of the temporary upload
+	 * @return temporary file path, or {@code null} when the key is unknown
 	 */
 	public static String getTempFilePath(String fileKey)
 	{
@@ -428,9 +483,10 @@ public class AdminUploadServlet extends HttpServlet
 	}
 
     /**
-     * Return original file name. If file is not found, return null.
-     * @param fileKey
-     * @return
+     * Returns the original name of a temporary upload.
+     *
+     * @param fileKey unique key of the temporary upload
+     * @return original file name, or {@code null} when the key is unknown
      */
     public static String getOriginalFileName(String fileKey) {
         if (Tools.isNotEmpty(fileKey) && temporary.containsKey(fileKey))
