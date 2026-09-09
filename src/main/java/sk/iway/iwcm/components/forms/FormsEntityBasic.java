@@ -11,6 +11,7 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -61,6 +62,23 @@ public class FormsEntityBasic {
         }
     )
     private String formName;
+
+    @Column(name = "form_type")
+    @DataTableColumn(inputType = DataTableColumnType.SELECT,
+        title = "components.form.form_type.title", tab = "basic", sortAfter = "formName"
+    )
+    private String formType;
+
+    @Column(name = "duration")
+    private Long duration;
+
+    @Column(name = "referer")
+    @Size(max = 255)
+    private String referer;
+
+    @Column(name = "language")
+    @Size(max = 3)
+    private String language;
 
     @Transient
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title="formslist.pocet_zaznamov", tab = "basic",

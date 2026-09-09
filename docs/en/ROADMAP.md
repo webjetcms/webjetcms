@@ -27,8 +27,7 @@ Explanation of the pictograms used:
 - [ ] Delete files associated with a web page when I delete it - but ask the user in advance if they want to delete the files. Check if they are not being used somewhere else.
 - [x] Data deletion - add the option to delete pages and folders from the trash. Also fix the option to run data deletion as an automated task (#58617) (#271).
 - [x] Unused files - make it possible to get a list of unused files - they are not used anywhere on the page, not even in media, etc. There was an API for this `FileTools.getDirFileUsage(currentDir, request)`. Add as a tab to folder properties in explorer (#58621).
-- [ ] Unused files - make it possible to get a list of unused files - they are not used anywhere on the page, not even in media, etc. There was an API for this `FileTools.getDirFileUsage(currentDir, request)`. Add as a tab to folder properties in explorer (#58621).
-- [ ] Explorer - prevent working with the Document Manager folder so that files cannot be manipulated outside of the Document Manager.
+- [x] Explorer - prevent working with the Document Manager folder so that files cannot be manipulated outside of the Document Manager (#298).
 - [x] +Explorer - add permission to upload files with accented characters (removed for `/images` and `/files` folders) (#58589).
 - [x] +Websites - better integrate document manager for inserting links into the page - new tab similar to Photobank for images (#58593).
 - [x] +Forms - add more detailed statistics on errors in completed forms (#58509).

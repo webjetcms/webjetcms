@@ -173,6 +173,46 @@ Scenario("vyplnenie formsimple", ({ I }) => {
     I.see("Formulár bol úspešne odoslaný");
 });
 
+Scenario("formsimple tooltip fallback without multistep assets", async ({ I }) => {
+    I.amOnPage("/apps/formular-lahko/");
+    I.waitForElement("form.formsimple", 10);
+
+    I.assertFalse(await I.executeScript(() => Boolean(window.WebJETFormTooltip?.init)), "FormSimple must not load the multistep tooltip helper");
+    I.assertTrue(await I.executeScript(() => {
+        const fallbackScript = Array.from(document.scripts)
+            .find(script => script.textContent.includes("wjFormTooltipFallback"));
+        if (!fallbackScript) return false;
+
+        const fixture = document.createElement("div");
+        fixture.innerHTML = `
+            <button id="formsimple-tooltip-fallback" type="button" class="popover-link"
+                data-html="true" data-toggle="tooltip" data-trigger="hover focus"
+                title="Fallback tooltip description" aria-label="Help for fallback field"
+                aria-describedby="formsimple-tooltip-description"
+                data-wj-form-tooltip-description-id="formsimple-tooltip-description"></button>
+            <span id="formsimple-tooltip-description" class="sr-only" role="tooltip">Fallback tooltip description</span>
+            <button id="formsimple-tooltip-after" type="button">After tooltip</button>`;
+        document.body.appendChild(fixture);
+        const executableFallback = document.createElement("script");
+        executableFallback.textContent = fallbackScript.textContent;
+        document.body.appendChild(executableFallback);
+        return true;
+    }), "The rendered FormSimple page must contain its inline tooltip fallback");
+
+    const tooltipTrigger = "#formsimple-tooltip-fallback";
+    const stableDescriptionId = "formsimple-tooltip-description";
+    I.waitForElement(tooltipTrigger + "[data-trigger='hover focus']", 5);
+    I.focus(tooltipTrigger);
+    I.waitForVisible(".tooltip[role='tooltip']", 5);
+    I.see("Fallback tooltip description", ".tooltip[role='tooltip']");
+    I.assertEqual(await I.grabAttributeFrom(tooltipTrigger, "aria-describedby"), stableDescriptionId, "Fallback must preserve the stable description while open");
+
+    I.focus("#formsimple-tooltip-after");
+    I.waitForInvisible(".tooltip[role='tooltip']", 5);
+    I.wait(0.2);
+    I.assertEqual(await I.grabAttributeFrom(tooltipTrigger, "aria-describedby"), stableDescriptionId, "Fallback must restore the stable description after hide");
+});
+
 function checkFormSimpleRowHtml(I, random, rowNumber, isWysiwyg=false) {
 
     I.say("checkFormSimpleRowHtml");

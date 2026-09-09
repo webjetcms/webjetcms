@@ -10,6 +10,7 @@
 - AspectJ - support for `load-time weavingu` (`aspectjweaver` and `META-INF/aop-ajc.xml`) has been removed from the distribution; built-in aspects are processed at compile time, more in [programmer section](#programmer section). When using in a MultiWeb installation, you can remove the `-javaagent:/www/tomcat/.../aspectjweaver.jar` setting from `JAVA_OPTS` in the application server (#290).
 - Export content for Flash - the historical feature of generating XML files `/flash_xml/{docId}.xml` when publishing a page has been removed. The configuration variable `exportFlash` is no longer supported and defining it in `SpringConfig` will not restore the feature (#293).
 - Microsoft SQL Server - support for versions older than 2012 has been discontinued and the `mssqlUseOldTopQuery` configuration variable has been removed. WebJET CMS requires Microsoft SQL Server 2012 or later, the old paging method using `TOP` is no longer supported (#293).
+- Easy form and multi-step forms - modified display of `tooltip` from the original `i` element to the standard `button`. This meets the accessibility requirement - the tooltip is available with both the mouse and keyboard (#306).
 
 ### Websites
 
@@ -38,6 +39,8 @@
 - Added [Document Manager](redactor/files/file-archive/README.md) tab in the insert link dialog for easy insertion of file links in the document manager, uploading new files, and managing them. Learn more in [File Links and File Uploading](redactor/webpages/working-in-editor/README.md#odkazy-na-syubory-a-nahravanie-syuborov) (#58593).
 
 ![](redactor/webpages/working-in-editor/link_dialog-file-archive.png)
+
+- Document Manager files in the `/files/archiv` folder are only available for viewing and selection in the link and image insertion dialogs. Uploading, renaming, deleting and other editing can only be done via the [Document Manager](redactor/files/file-archive/README.md).
 
 - [Photobank](redactor/webpages/working-in-editor/README.md#karta-fotobanka) - when downloading an image from the photobank, it is possible to set the file name. The name is automatically pre-filled and cleaned, the extension is determined by the source image and the existing file is not overwritten. Also added support for selecting the image type and category and the ability to search for video files (#58645).
 
@@ -75,6 +78,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - [Multistep Forms](redactor/apps/multistep-form/README.md) - added duplication of the entire form including settings, steps and items. The item editor displays their automatically generated identifier and supports custom error message, whitespace trimming, empty option in picklist and new field type autocomplete with diacritic-insensitive search (#osk573).
 - [Multistep forms](redactor/apps/multistep-form/README.md) - it is possible to insert item values ​​using tags in the introductory text of the step and [page with email version](redactor/apps/form/README.md#tab---settings). The recognition of name and email fields by the beginning of the identifier, language processing, reCAPTCHA v3, independent insertion of multiple form instances on one page and deleting all responses without deleting the form definition (#osk573) have been fixed.
 - [Multistep forms](redactor/apps/multistep-form/README.md) - added the ability to enter a custom error message and trim spaces at the beginning and end of the text entered by the visitor (#osk573).
+- Easy form and multi-step forms - [custom HTML tooltip code](redactor/apps/formsimple/README.md#custom-html-tooltip-code) in the translation key `components.formsimple.tooltipCode` supports tags with field, item and step identifiers, including the unique `${tooltipId}`. The control can thus be unambiguously linked to the tooltip content using `aria-describedby` even when the form is repeatedly inserted into the page. After each step is displayed, the multi-step form publishes an [event `WJ.multistepForm.stepShown`](redactor/apps/multistep-form/README.md#javascript-event-after-display-step) on the `window` object with references to its HTML elements and form and step identifiers (#306).
+- Easy form and multi-step forms - the default tooltip is now available with both mouse and keyboard, provides a stable contextual title and description, remains displayed when the cursor is moved to its content, and can be closed with the `Escape` key (#306).
 
 ### Semantic search
 
@@ -142,6 +147,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Other minor changes
 
+- Server monitoring - in the current values, the [Character encoding] section has been added (sysadmin/monitoring/README.md#character-encoding), which displays the encoding of HTTP responses, JVM and locale environment of the running application server process (#305).
 - Configuration - added hierarchical tree of configuration variables with **Changed**, **Custom**, **All** views and module branches (#293).
 - Configuration - added **Set Temporarily** option, which sets the value of the configuration variable only on the current node without saving it to the database. After a restart, the value saved in the database will be restored (#291).
 
@@ -170,6 +176,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Forms - fixed archiving of forms (#305).
 - Explorer - modified comparison of files with diacritics when checking the existence of a file when overwriting it - format `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Web pages - fixed adding empty `P` element to the end of the page (#58317-13).
 - Websites - fixed loading of `ckeditor_button_sizes` value for button type `A` (#OSK674).
@@ -188,11 +195,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 ### For the programmer
 
 - Administration - removed dependency on [Vue.js](https://vuejs.org). Tree fields, start page, image area selection and server monitoring use native [web components](developer/frameworks/web-components.md). The global object `window.VueTools` and packages for Vue are no longer part of the administration. Custom extensions must replace them with web components or compile Vue themselves (#58722).
-
 - AI Assistants - Provider-independent client logic for OpenAI, Gemini, and OpenRouter, stream processing, request/response types, and prompt protection have been separated into a separate artifact `com.webjetcms:webjet-ai` and an external [webjet-ai repository](https://github.com/webjetcms/webjet-ai). WebJET CMS passes configuration through a typed adapter and continues to provide auditing, persistence, and UI integration. This is an incompatible change: the original CMS SPI for custom providers and its transport and streaming support classes have been removed. Custom providers must be migrated to the `AiProvider` library interface and the CMS adapter `LibrarySupportLogic` (#58670).
-
 - AI providers - your own implementation can be [added to the project](custom-apps/apps/ai/assistants/README.md) as a Spring bean `AiProvider` ; the CMS will automatically connect it to the built-in providers. The configuration and editor fields are concentrated in a single adapter `LibrarySupportLogic` /`AiAssitantsInterface`. Image generation options are loaded by provider, model and operation from the library `webjet-ai`, so only the supported number, size, quality and aspect ratio are dynamically displayed (#58694).
-
 - Datatables - added a new field type `OPTIONS` for [dynamic list of values](developer/datatables-editor/standard-fields.md#options) in the editor. Each row contains two text fields (key and value), supports adding, removing and reordering using `drag & drop` (#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced.png)
@@ -209,7 +213,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Updated [Tabler Icons](https://tabler.io/icons) library to version 3.44.0, fixed issue with simultaneous use of `Outline` and `Filled` sets (#58509).
 - Web pages - if you need to have an empty first line in the configuration variable `imageMagickCustomParams*` for [custom parameter settings](redactor/apps/gallery/README.md#custom-parameters-imagemagick) `ImageMagick` enter the value `---`.
 - Translation keys - adjusted auditing of missing translation keys - excluded auditing if later testing whether the key actually exists (#261).
-
+- Testing - added [automated presentation video recording](developer/testing/video.md) using CodeceptJS and Playwright. Video scripts produce high-quality WebM output with a synthetic cursor, natural movement path, and reproducible click flow. Spoken word can be automatically generated from the script via the ElevenLabs API as an MP3 file with customizable model and voice (#299).
 - Configuration - obsolete configuration variables have been removed from classes `Constants` and `ConstantsV9`. If you use them in your project, you can add the necessary definition to your `SpringConfig`:
 
 ```java
@@ -509,8 +513,13 @@ Redesigned application properties settings in the editor from the old code in `J
 - Gallery - in the application editor, only JSP files from the `/components/{INSTALL_NAME}/gallery` and `/components/gallery` folders are displayed among the visual styles, without duplicate items (#58317-16).
 - Inserting HTML code - in the application preview in the website editor, for content consisting only of `script` elements, the source code is displayed instead of empty content (#OSK625).
 - Security - tightened verification of the link to recover a forgotten password. The verification record is checked for the selected user account even with the custom sending method, respects the time validity and after use is invalidated for all accounts included in the request (#292).
+- Security - tightened authorization verification when working with records in administration (#295).
 - Security - tightened control of folder rights when uploading a file to the administration and overwriting it if the file exists.
+- Security - tightened permission check when restoring a historical version of a file (#295).
+- Security - tightened permission control when managing bloggers (#295).
 - Security - tightened validation of database column names when performing dynamic sorting and filtering. **Warning:** Public APIs no longer support custom SQL expressions in sort parameters, only safe column names or available named constants are used (#294).
+- Security - [secured endpoint `row-reorder`](developer/datatables/README.md#row-order) of data tables. Only the numeric field marked `DataTableColumnType.ROW_REORDER` is allowed to be changed, while permissions are checked for each record and additionally for the entire batch using `checkRowReorderScope`. For forms, form and step membership and user access are verified; an invalid request is not saved (#295).
+- CKEditor - added option [configure content cleaning rules](frontend/setup/ckeditor.md#cleaning-html-code-when-pasting-from-wordexcel) when pasting from Word/Excel. **Warning:** default cleaning now also removes the `nowrap` attribute from `TD` cells and CSS classes with `align` and `valign` attributes from `TH` cells (#300).
 
 ## 2026.0.28
 

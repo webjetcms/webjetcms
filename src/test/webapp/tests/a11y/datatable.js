@@ -585,6 +585,38 @@ Scenario("p48: DT dialog focus", async ({ I, DT, DTE, a11y }) => {
     }
 });
 
+Scenario("p48: cancel waits for focus restoration", async ({ I, DTE }) => {
+    I.amOnPage("/admin/v9/apps/audit-log-levels/");
+
+    const createButton = '#datatableInit_wrapper button[data-dtbtn="create"]';
+    const filter = '#datatableInit_wrapper .dt-scroll-headInner input.dt-filter-packageName';
+
+    I.executeScript(() => {
+        const style = document.createElement('style');
+        style.id = 'autotest-slow-modal-backdrop';
+        // Bootstrap restores focus only after the backdrop finishes hiding.
+        style.textContent = '.modal-backdrop { transition-duration: 1.2s !important; }';
+        document.head.appendChild(style);
+    });
+
+    for (const clickTopButton of [false, true]) {
+        I.clickCss(createButton);
+        DTE.waitForEditor();
+        I.seeElement('#datatableInit_modal[data-dte-close-state="open"]');
+        DTE.cancel(clickTopButton ? "datatableInit" : undefined, clickTopButton);
+
+        const focusRestored = await I.executeScript(selector =>
+            document.activeElement === document.querySelector(selector), createButton);
+        I.assertTrue(focusRestored, "DTE.cancel must finish after focus returns to the opening button");
+
+        const value = `focus-autotest-${clickTopButton}`;
+        I.fillField(filter, value);
+        I.seeInField(filter, value);
+    }
+
+    I.executeScript(() => document.getElementById('autotest-slow-modal-backdrop').remove());
+});
+
 Scenario("p48: webpage CKEditor priority focus", async ({ I, DTE }) => {
     const modal = "#datatableInit_modal";
     const assertCkEditorFocus = async label => {
