@@ -116,6 +116,9 @@ class MultistepFormsServiceTest {
         FormFileRestriction restriction = mock(FormFileRestriction.class);
         XhrFileUploadService uploads = mock(XhrFileUploadService.class);
         Prop prop = mock(Prop.class);
+        FormItemEntity uploadItem = new FormItemEntity();
+        uploadItem.setItemFormId("upload");
+        uploadItem.setFieldType("multiupload");
         JSONObject received = new JSONObject()
             .put("Multiupload.formElementName", "upload")
             .put("upload", new JSONArray().put("fileA;fileB"));
@@ -140,7 +143,7 @@ class MultistepFormsServiceTest {
             props.when(() -> Prop.getInstance("en")).thenReturn(prop);
 
             UndeclaredThrowableException exception = assertThrows(UndeclaredThrowableException.class, () ->
-                ReflectionTestUtils.invokeMethod(service, "validateFileFields", "contact-form", settings, received, new HashMap<String, String>(), request)
+                ReflectionTestUtils.invokeMethod(service, "validateFileFields", "contact-form", settings, List.of(uploadItem), received, new HashMap<String, String>(), request)
             );
 
             assertInstanceOf(SaveFormException.class, exception.getCause());
