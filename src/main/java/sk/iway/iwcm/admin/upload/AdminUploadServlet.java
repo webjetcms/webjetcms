@@ -43,6 +43,11 @@ import sk.iway.iwcm.io.IwcmOutputStream;
 import sk.iway.iwcm.system.stripes.MultipartWrapper;
 import sk.iway.iwcm.users.UsersDB;
 
+/**
+ * Receives administrative uploads in chunks, validates their destination, and assembles them.
+ * Completed uploads are either written directly to an approved folder or retained temporarily
+ * for a subsequent conflict-resolution request.
+ */
 @WebServlet("/admin/upload/chunk")
 @MultipartConfig
 public class AdminUploadServlet extends HttpServlet
@@ -50,6 +55,15 @@ public class AdminUploadServlet extends HttpServlet
 	private static final long serialVersionUID = 1L;
 	private static final Map<String,PathHolder> temporary = new ConcurrentHashMap<>();
 
+	/**
+	 * Validates and stores one upload chunk, assembling and processing the file after the final chunk.
+	 * File archive requests also preserve their validated bulk metadata across all chunks.
+	 *
+	 * @param request multipart upload request
+	 * @param response response receiving the JSON upload status
+	 * @throws ServletException when the servlet container cannot process the multipart request
+	 * @throws IOException when request data cannot be read or the response cannot be written
+	 */
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
@@ -304,6 +318,13 @@ public class AdminUploadServlet extends HttpServlet
 		response.getWriter().write(output.toString());
 	}
 
+    /**
+     * Removes a partial upload from the session and deletes every temporary chunk already stored.
+     *
+     * @param session session containing the partial upload
+     * @param sessionKey session attribute key for the upload
+     * @param holder partial upload state, or {@code null} when no upload is in progress
+     */
     private static void cleanupPartialUpload(HttpSession session, String sessionKey, PartialUploadHolder holder) {
         if (holder == null) return;
 
@@ -317,12 +338,13 @@ public class AdminUploadServlet extends HttpServlet
     }
 
     /**
-     * Presunie uploadnuty subor z docasneho umiestnenia do cieloveho adresara
-     * @param fileKey
-     * @param destinationFolder - URL adresa cieloveho adresara, napr. /images/gallery/
-     * @param fileNameParam
-     * @return - meno suboru po presune, alebo null ak sa subor nepresunul
-     * @throws IOException
+     * Moves a temporary upload to its final destination, replacing an existing file if necessary.
+     *
+     * @param fileKey unique key of the temporary upload
+     * @param destinationFolder virtual path of the destination folder, for example {@code /images/gallery/}
+     * @param fileNameParam requested destination file name
+     * @return the final file name, or {@code null} when the temporary file was not moved
+     * @throws IOException when the file cannot be moved
      */
     public static String moveAndReplaceFile(String fileKey, String destinationFolder, String fileNameParam) throws IOException
     {
@@ -356,9 +378,10 @@ public class AdminUploadServlet extends HttpServlet
     }
 
     /**
-     * Zmaze docasny subor (ak napr. user klikol na moznost neprepisat subor)
-     * @param fileKey
-     * @return - true ak subor existoval a zmazal sa
+     * Deletes a temporary upload that is no longer needed.
+     *
+     * @param fileKey unique key of the temporary upload
+     * @return {@code true} when the temporary file existed and was deleted
      */
     public static boolean deleteTempFile(String fileKey) {
         PathHolder pathHolder = temporary.remove(fileKey);
@@ -370,6 +393,11 @@ public class AdminUploadServlet extends HttpServlet
         return false;
     }
 
+    /**
+     * Decodes Base64 upload content and restores the requested image format when necessary.
+     *
+     * @param f temporary file containing Base64-encoded data
+     */
     private void decodeBase64File(IwcmFile f) {
         try {
             if (f.exists() && f.canRead()) {
@@ -440,9 +468,10 @@ public class AdminUploadServlet extends HttpServlet
     }
 
     /**
-	 * Vrati cestu k temp suboru, pozuiva sa vo FormMail na detekciu ci subor vyhovuje poziadavkam
-	 * @param fileKey
-	 * @return
+	 * Returns the physical path of a temporary upload for validation by downstream consumers.
+	 *
+	 * @param fileKey unique key of the temporary upload
+	 * @return temporary file path, or {@code null} when the key is unknown
 	 */
 	public static String getTempFilePath(String fileKey)
 	{
@@ -454,9 +483,10 @@ public class AdminUploadServlet extends HttpServlet
 	}
 
     /**
-     * Return original file name. If file is not found, return null.
-     * @param fileKey
-     * @return
+     * Returns the original name of a temporary upload.
+     *
+     * @param fileKey unique key of the temporary upload
+     * @return original file name, or {@code null} when the key is unknown
      */
     public static String getOriginalFileName(String fileKey) {
         if (Tools.isNotEmpty(fileKey) && temporary.containsKey(fileKey))

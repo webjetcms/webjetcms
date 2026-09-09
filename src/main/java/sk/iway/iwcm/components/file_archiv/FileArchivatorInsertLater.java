@@ -23,10 +23,20 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 
+/**
+ * Publishes file archive uploads that were scheduled for a future date.
+ * The job claims each waiting record atomically, moves its staged file into the archive,
+ * updates version history, and sends the configured notification.
+ */
 public class FileArchivatorInsertLater
 {
     private static final String AUDIT_FILE_ARCHIVATOR_INSERT_LATER = "FileArchivatorInsertLater";
 
+    /**
+     * Runs the scheduled-upload publisher on an administrative cluster node.
+     *
+     * @param args command-line arguments; not used
+     */
     public static void main(String[] args)
     {
         if (ClusterDB.isPublicNode()) {
@@ -115,15 +125,24 @@ public class FileArchivatorInsertLater
         SetCharacterEncodingFilter.unRegisterDataContext();
     }
 
-    /**
-	 * zamena obsahu suborov dirPath+fileName &lt;-&gt; oldFileBean.getFilePath()+oldFileBean.getFileName()
-	 * BHR: musel som prerobit z Tools.renameFile, pretoze sa stalo, ze niekedy nezmazalo zdrojovy subor a teda sa premenovanie nedokoncilo
+	/**
+	 * Claims and publishes a scheduled archive upload using the configured repository.
+	 *
+	 * @param scheduledBean waiting archive record whose staged file should be published
+	 * @return the published file name, or {@code null} when the record could not be claimed or published
 	 */
 	public static String renameFile(FileArchivatorBean scheduledBean) {
         FileArchiveRepository repository = Tools.getSpringBean("fileArchiveRepository", FileArchiveRepository.class);
         return renameFile(scheduledBean, repository);
     }
 
+    /**
+     * Atomically claims a waiting upload and serializes its file-system publication within this JVM.
+     *
+     * @param scheduledBean waiting archive record
+     * @param repository repository used to claim the record
+     * @return the published file name, or {@code null} when the claim or publication fails
+     */
     static String renameFile(FileArchivatorBean scheduledBean, FileArchiveRepository repository) {
         if(scheduledBean.getId() == null || repository.claimWaitingFile(scheduledBean.getId(), scheduledBean.getDomainId()) != 1) {
             return null;
@@ -135,6 +154,12 @@ public class FileArchivatorInsertLater
         }
     }
 
+    /**
+     * Publishes an already claimed scheduled record and updates its archive version history.
+     *
+     * @param scheduledBean claimed archive record in the durable processing state
+     * @return the published file name, or {@code null} when publication fails
+     */
     private static String renameFileLocked(FileArchivatorBean scheduledBean) {
         IwcmFile stagedFile = new IwcmFile(Tools.getRealPath(scheduledBean.getFilePath() + scheduledBean.getFileName()));
         if(stagedFile.exists() == false) {
@@ -234,7 +259,10 @@ public class FileArchivatorInsertLater
 	}
 
     /**
-     * vrati domenu na zaklade domainId
+     * Resolves the domain associated with an archive record.
+     *
+     * @param fab archive record containing the domain identifier
+     * @return configured domain name, falling back to the current domain
      */
     private static String getDomainByFab(FileArchivatorBean fab)
     {
@@ -249,6 +277,12 @@ public class FileArchivatorInsertLater
         return domainName;
     }
 
+    /**
+     * Converts a validated insert-later staging path to its final archive destination.
+     *
+     * @param oldPath virtual staging path
+     * @return normalized archive path, or {@code null} when the staging path is invalid
+     */
     private static String newPath(String oldPath)
     {
         String normalizedOldPath = FileArchivSupportMethodsService.normalizePath(oldPath);
@@ -268,6 +302,12 @@ public class FileArchivatorInsertLater
         return destinationPath;
     }
 
+    /**
+     * Sends the scheduled-upload result notification and records failed publications in the audit log.
+     *
+     * @param fileArchivatorBean processed archive record
+     * @param stav result code, where zero represents success
+     */
     private static void sendMail(FileArchivatorBean fileArchivatorBean, int stav)
     {
         Prop prop = Prop.getInstance();
@@ -380,11 +420,11 @@ public class FileArchivatorInsertLater
     }
 
     /**
-     * vymaze vsetky prazdne priecinky od startDir po stopDir vratane
+     * Removes the empty directory chain from a starting directory up to the configured boundary.
      *
-     * @param startDir
-     * @param stopDir
-     * @return
+     * @param startDir first directory considered for removal
+     * @param stopDir boundary directory that must not be traversed past
+     * @return {@code true} when no deletion is needed or the empty directory tree is removed
      */
     public static boolean removeEmptyDirs(String startDir, String stopDir)
     {

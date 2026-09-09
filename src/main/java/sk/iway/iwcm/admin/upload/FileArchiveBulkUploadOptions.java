@@ -11,7 +11,9 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.file_archiv.FileArchivatorBean;
 
 /**
- * Validated bulk action parameters attached to one file archive upload.
+ * Holds validated bulk-edit metadata for a single file archive upload.
+ * Instances can apply optional validity, publication, indexing, and delayed-upload
+ * settings to an archive entity without changing unspecified values.
  */
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 final class FileArchiveBulkUploadOptions implements Serializable {
@@ -54,6 +56,7 @@ final class FileArchiveBulkUploadOptions implements Serializable {
     /**
      * Parses and validates bulk metadata from an upload request.
      * Missing parameters retain the original upload behavior.
+     *
      * @param request upload request
      * @return validated options, including an error key for invalid input
      */
@@ -107,6 +110,13 @@ final class FileArchiveBulkUploadOptions implements Serializable {
         return saveLater;
     }
 
+    /**
+     * Applies all supplied bulk metadata to an archive entity.
+     * Existing values are retained for options that were omitted from the request.
+     *
+     * @param entity archive entity receiving the metadata
+     * @return an error key when the requested validity interval is invalid; otherwise {@code null}
+     */
     String applyTo(FileArchivatorBean entity) {
         if (validFrom != null || validTo != null) {
             Date effectiveValidFrom = validFrom != null ? validFrom : entity.getValidFrom();

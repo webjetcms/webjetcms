@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Stores the temporary part paths and request metadata for a chunked upload in the HTTP session.
+ */
 public class PartialUploadHolder implements Serializable {
     private static final long serialVersionUID = 1L;
     private int chunks;

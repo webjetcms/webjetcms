@@ -33,17 +33,12 @@ import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
- *	FileArchivatorKit.java
+ * Provides legacy file archive validation, naming, versioning, and cache utilities.
+ * Older Java and JSP integrations use this class to prepare archive records and keep
+ * their physical files and version references consistent.
  *
- *
- * Title			webjet7
- * Company		Interway s.r.o. (www.interway.sk)
- * Copyright 	Interway s.r.o. (c) 2001-2015
  * @author		$Author: jeeff $(prau)
  * @version		Revision: 1.3  11.2.2015
- * created		Date: 11.2.2015 14:40:05
- * modified   	Date: 11.2.2015 14:40:05
- * Ticket 		Number: #17263
  */
 public class FileArchivatorKit
 {
@@ -61,17 +56,22 @@ public class FileArchivatorKit
         }
     }
 
-    /** Skontroluje ci je modul File Archiv povoleny pre aktualneho usera
+    /**
+     * Checks whether the current request user can access the file archive module.
      *
+     * @param request current HTTP request
+     * @return {@code true} when the current user has file archive access
      */
     public static boolean isArchivEnabled(HttpServletRequest request)
     {
         return isArchivEnabled(UsersDB.getCurrentUser(request));
     }
 
-    /** Skontroluje ci je modul File Archiv povoleny pre usera
+    /**
+     * Checks whether a user can access the file archive module.
      *
-     * @param userIdentity Identity
+     * @param userIdentity user identity to check
+     * @return {@code true} when the user has file archive access
      */
     public static boolean isArchivEnabled(Identity userIdentity)
     {
@@ -102,11 +102,13 @@ public class FileArchivatorKit
 		return getArchivPath() + getInsertLaterPath();
 	}
 
-	/** Vrati unikatne meno suboru
+	/**
+	 * Creates a sanitized file name that does not collide with an existing file in the directory.
 	 *
-	 * @param fileNameParam - subor
-	 * @param directoryPath - cesta k suboru
-	 * @param preferredDate - null / preferovany datum
+	 * @param fileNameParam requested file name
+	 * @param directoryPath destination directory
+	 * @param preferredDate preferred version timestamp, or {@code null} to use the current timestamp
+	 * @return available file name, or {@code null} when the name or directory is empty
 	 */
 	public static String getUniqueFileName(String fileNameParam, String directoryPath, String preferredDate)
 	{
@@ -147,8 +149,12 @@ public class FileArchivatorKit
 	}
 
 	/**
-	 * zamena obsahu suborov dirPath+fileName &lt;-&gt; oldFileBean.getFilePath()+oldFileBean.getFileName()
-	 * BHR: musel som prerobit z Tools.renameFile, pretoze sa stalo, ze niekedy nezmazalo zdrojovy subor a teda sa premenovanie nedokoncilo
+	 * Exchanges the content of a newly uploaded file with the current archive file through a temporary copy.
+	 *
+	 * @param dirPath directory containing the newly uploaded file
+	 * @param fileName name of the newly uploaded file
+	 * @param oldFileBean record describing the current archive file
+	 * @return {@code true} when all file copies complete successfully
 	 */
 	public static boolean renameFile(String dirPath, String fileName, FileArchivatorBean oldFileBean)
 	{
@@ -190,6 +196,14 @@ public class FileArchivatorKit
 		return renamed;
 	}
 
+	/**
+	 * Moves every history reference from an old main-file identifier to a new one.
+	 * The new main record is detached from its previous reference after the migration.
+	 *
+	 * @param oldReferenceId previous main-file identifier
+	 * @param newReferenceId new main-file identifier
+	 * @return {@code true} when all affected records are saved successfully
+	 */
 	public static boolean reSetReference(Long oldReferenceId, Long newReferenceId)
 	{
 		List<FileArchivatorBean> files = FileArchivatorDB.getByReferenceId(oldReferenceId);
@@ -215,6 +229,12 @@ public class FileArchivatorKit
 		return true;
 	}
 
+	/**
+	 * Calculates the MD5 digest of a physical archive file.
+	 *
+	 * @param iwcmFile file to hash
+	 * @return hexadecimal digest, or the literal {@code "null"} when the file is unavailable
+	 */
 	public static String getMD5(IwcmFile iwcmFile)
 	{
 		String md5Hex = "null";
@@ -235,16 +255,21 @@ public class FileArchivatorKit
 		return md5Hex;
 	}
 
-	/** Vrati datum ako String.
+	/**
+	 * Formats the current date and time for use in an archive version file name.
 	 *
+	 * @return current timestamp in the archive file-name format
 	 */
 	public static String getDateStampAsString()
 	{
 		return getDateStampAsString(null);
 	}
 
-	/** Vrati datum a cas ako String.
+	/**
+	 * Formats a date and time for use in an archive version file name.
 	 *
+	 * @param date date to format, or {@code null} to use the current time
+	 * @return timestamp in the archive file-name format
 	 */
 	public static String getDateStampAsString(Date date)
 	{
@@ -282,6 +307,12 @@ public class FileArchivatorKit
         return "nul";
     }
 
+	/**
+	 * Advances the history order of every version belonging to a main archive file.
+	 * The archive cache is cleared after the records are updated.
+	 *
+	 * @param referenceId main-file identifier shared by the history records
+	 */
 	public static void incrementOrderId(Long referenceId)
 	{
 		List<FileArchivatorBean> files = FileArchivatorDB.getByReferenceId(referenceId);
@@ -309,8 +340,11 @@ public class FileArchivatorKit
 		return Tools.getTokens(Constants.getString("fileArchivDomainsName"), ",");
 	}
 
-	/** Zisti ci na subor ktory chceme nahrat uz v databaze neexistovala URL a subor bol zmazany bez zmazania zaznamu o subore
+	/**
+	 * Checks whether an archive record already reserves a requested virtual file path.
 	 *
+	 * @param path virtual path containing a directory and file name
+	 * @return {@code true} when a matching database record exists
 	 */
 	public static boolean existsPathInDB(String path)
 	{
@@ -323,8 +357,11 @@ public class FileArchivatorKit
 		return false;
 	}
 
-	/**Skontroluje konzisteciu suborov, ak niektory chyba, vrati naplneny string. Pozor ! Vypoctovo narocne, prechadza vsetky zaznamy v DB a fyzicky kontroluje ci subory existuju
+	/**
+	 * Scans every archive record and reports physical files that are missing.
+	 * This operation is expensive because it checks the file system for the full archive table.
 	 *
+	 * @return HTML-formatted consistency errors, or an empty string when every file exists
 	 */
 	public static String checkFileConsistency()
 	{
@@ -338,8 +375,11 @@ public class FileArchivatorKit
 		return result.toString();
 	}
 
-	/** Ziska security hash zo stringu, pri chybe vrati prazdny string
+	/**
+	 * Generates the legacy MD5 security hash for a string and its length.
 	 *
+	 * @param input source value
+	 * @return hexadecimal hash, or an empty string when hashing fails
 	 */
 	public static String getSecurityHash(String input)
 	{
@@ -362,8 +402,12 @@ public class FileArchivatorKit
 		return ret;
 	}
 
-	/** Ak uz fyzicky existuje subor s rovnakym hash-om, vratime list beanov, inak null
+	/**
+	 * Finds other uploaded main files with the same content hash as a newly saved record.
 	 *
+	 * @param newFab newly saved archive record
+	 * @param removePattern {@code true} to exclude pattern files
+	 * @return matching archive records, or {@code null} when no duplicate exists
 	 */
 	public static List<FileArchivatorBean> existSameFiles(FileArchivatorBean newFab, boolean removePattern)
 	{
@@ -388,9 +432,8 @@ public class FileArchivatorKit
 		return null;
 	}
 
-	/** Zmaze celu cache archivu suborov na vsetkych nodoch ak je systemova premenna "fileArchiv-delete-cache-public-node"
-	 *
-	 *
+	/**
+	 * Clears the local file archive cache and, when configured, requests invalidation on cluster nodes.
 	 */
 	public static void deleteFileArchiveCache()
 	{
@@ -410,6 +453,13 @@ public class FileArchivatorKit
 		return PkeyGenerator.getNextValue("file_archiv_global_id");//nn_file_archives_global_id
 	}
 
+    /**
+     * Parses a plus-delimited request parameter into a collection.
+     *
+     * @param paramName request parameter name
+     * @param req current HTTP request
+     * @return parsed values, or {@code null} when the parameter contains no values
+     */
     public static Collection<String> createCollection(String paramName, HttpServletRequest req)
     {
         String[] propertyArray = Tools.getTokens(Tools.getParameter(req,paramName), "+");
@@ -418,6 +468,13 @@ public class FileArchivatorKit
         return null;
     }
 
+    /**
+     * Returns a sanitized request parameter value with an empty-string fallback.
+     *
+     * @param request current HTTP request
+     * @param parameterName request parameter name
+     * @return sanitized parameter value, or an empty string when the parameter is absent
+     */
     public static String getVal(HttpServletRequest request, String parameterName)
     {
         if(request.getParameter(parameterName) == null)
@@ -425,11 +482,14 @@ public class FileArchivatorKit
         return Tools.getParameter(request,parameterName);
     }
 
-    /** bean ulozeny v ResultArchivBean.fab je potrebne ulozit.
+    /**
+     * Validates and prepares an uploaded archive record for a create operation.
+     * The record must provide its file path, file name, and upload metadata.
      *
-     * @param fab FileArchivatorBean (Musi mat vyplneny filePath - cestu k subroru bez lomitka na zaciatku (napr files/archiv/89/) a fileName - nazov suboru s priponou (priloha_1.pdf) a userId - id usera ktory subor nahrava)
-     * @param oldId - id suboru, ktory aktualizujeme
-     * @return ResultArchivBean
+     * @param fab uploaded archive record
+     * @param oldId identifier of the record being versioned, or a non-positive value for a new file
+     * @param user user performing the upload
+     * @return validation result containing the prepared archive record or localized errors
      */
     //prepareAndValidate
     public ResultArchivBean prepareAndValidate(FileArchivatorBean fab, Long oldId, UserDetails user)
@@ -437,6 +497,15 @@ public class FileArchivatorKit
         return prepareAndValidate(fab, oldId, user, false) ;
     }
 
+    /**
+     * Validates an uploaded archive record and synchronizes its file metadata before persistence.
+     *
+     * @param fab uploaded archive record
+     * @param oldId identifier of the record being versioned, or a non-positive value for a new file
+     * @param user user performing the upload
+     * @param isEdit {@code true} to allow validation of an existing virtual path
+     * @return validation result containing the prepared archive record or localized errors
+     */
     public ResultArchivBean prepareAndValidate(FileArchivatorBean fab, Long oldId, UserDetails user, boolean isEdit)
     {
         ResultArchivBean resultBean = new ResultArchivBean();
@@ -523,6 +592,15 @@ public class FileArchivatorKit
         errorsList.add(text);
     }
 
+	 /**
+	  * Validates an uploaded file name, extension, size, and reserved archive path.
+	  *
+	  * @param fileName uploaded file name
+	  * @param length uploaded file size in bytes
+	  * @param pathName requested virtual file path
+	  * @param oldId existing archive record identifier when uploading a new version
+	  * @return {@code true} when all file properties are valid
+	  */
 	 public boolean checkFileProperties(String fileName, long length, String pathName, Long oldId)
 	 {
 		  // errorsList = new ArrayList<String>();
@@ -557,8 +635,13 @@ public class FileArchivatorKit
 		  return true;
 	 }
 
-    /** Sluzi na validaciu {@link FileArchivatorBean} pred ulozenim. Skontroluje velkost suboru, priponu atd.
-     * @return Ak vrati true, mozeme {@link FileArchivatorBean} ulozit.
+    /**
+     * Checks whether an uploaded file has an extension allowed for its archive operation.
+     * New versions must retain the extension of the current file, while new files use the configured allowlist.
+     *
+     * @param fileName uploaded file name
+     * @param oldId existing archive record identifier, or a non-positive value for a new file
+     * @return {@code true} when the file extension is allowed
      */
     public boolean hasAllowedExtensions(String fileName, Long oldId)
     {
@@ -603,6 +686,13 @@ public class FileArchivatorKit
         return Tools.getIntValue(Constants.getString("fileArchivMaxUploadFileSize"), 60000000);
     }
 
+    /**
+     * Persists a newly uploaded archive file and updates version references when replacing a current file.
+     *
+     * @param newFab archive record describing the uploaded file
+     * @param oldId identifier of the current archive file, or a non-positive value for a new main file
+     * @return {@code true} when the archive update completes without a detected file or versioning error
+     */
     public boolean setFilePropertiesAfterUpload(FileArchivatorBean newFab, Long oldId)
     {
         if(!FileTools.isFile(newFab.getFilePath()+newFab.getFileName()))
@@ -710,6 +800,13 @@ public class FileArchivatorKit
         Adminlog.add(Adminlog.TYPE_FILE_ARCHIVE, "EDIT: File Archiv "+strNewVersion+"ulozenie:\n"+fab.toString(true), fab.getFileArchiveId(), -1);
     }
 
+    /**
+     * Formats the property differences between an updated object and its original value.
+     *
+     * @param newObj updated object
+     * @param originalObj original object
+     * @return formatted differences, or {@code "Bez zmeny"} when either object is absent
+     */
     public static String getPojoZmeny(Object newObj,Object originalObj)
     {
         if(newObj == null || originalObj == null)
@@ -726,14 +823,13 @@ public class FileArchivatorKit
 	/***************************** BACKWARD COMPATIBILITY ******************************/
 
 	/**
-	 * Deprecated, use:
-	 * FileArchiveService fas = new FileArchiveService(getRequest(), getProp(), entity, repository);
-	 * result = fas.deleteStructure();
-	 * if(result != null) throwError(result);
+	 * Deletes an archive structure through the current {@link FileArchiveService} implementation.
+	 * Retained for callers that still provide legacy user details and an integer identifier.
 	 *
-	 * @param fabId
-	 * @param user
-	 * @return
+	 * @param fabId archive record identifier
+	 * @param user user performing the deletion
+	 * @return {@code true} when the structure is deleted successfully
+	 * @deprecated create a {@link FileArchiveService} and call {@link FileArchiveService#deleteStructure()}
 	 */
 	@Deprecated
 	public static boolean deleteStructure(int fabId, UserDetails user)
