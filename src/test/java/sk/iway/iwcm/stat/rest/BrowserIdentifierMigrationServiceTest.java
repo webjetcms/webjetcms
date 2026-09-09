@@ -82,6 +82,26 @@ class BrowserIdentifierMigrationServiceTest {
     }
 
     @Test
+    void auditFinalizationShouldWriteCleanupDetails() {
+        BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService();
+        BrowserIdentifierMigrationService.FinalizationResult result =
+            new BrowserIdentifierMigrationService.FinalizationResult(997, 3);
+
+        try (MockedStatic<Adminlog> adminlog = mockStatic(Adminlog.class)) {
+            service.auditFinalization(189, result);
+
+            adminlog.verify(() -> Adminlog.add(
+                Adminlog.TYPE_UPDATEDB,
+                "Browser identifier migration finalized: deletedSeoBots=189, deletedStatKeys=997, retainedStatKeys=3",
+                -1,
+                -1
+            ));
+        }
+
+        service.destroy();
+    }
+
+    @Test
     void startAndStopShouldUseSingleBackgroundTask() {
         ExecutorService executor = mock(ExecutorService.class);
         BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService(executor);

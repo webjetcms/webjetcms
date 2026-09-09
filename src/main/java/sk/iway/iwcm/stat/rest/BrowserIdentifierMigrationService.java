@@ -243,6 +243,7 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
                     throw ex;
                 }
             }
+            auditFinalization(botMappings.size(), result);
             refreshStatKeyCache();
             synchronized (stateLock) {
                 migrationState.setRunning(false);
@@ -493,6 +494,17 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
             "Browser identifier migration completed: table=" + table +
                 ", convertedRecords=" + convertedRecords +
                 ", duration=" + formatDuration(durationMillis),
+            -1,
+            -1
+        );
+    }
+
+    void auditFinalization(int deletedSeoBots, FinalizationResult result) {
+        Adminlog.add(
+            Adminlog.TYPE_UPDATEDB,
+            "Browser identifier migration finalized: deletedSeoBots=" + deletedSeoBots +
+                ", deletedStatKeys=" + result.deletedStatKeys +
+                ", retainedStatKeys=" + result.retainedStatKeys,
             -1,
             -1
         );
