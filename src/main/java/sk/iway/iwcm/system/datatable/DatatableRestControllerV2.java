@@ -810,6 +810,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		Map<String, Boolean> jsonRules = JsonEditorValidator.getRules(entity, customFields);
 		Map<String, Boolean> rulesToValidate = jsonRules;
 		if (validateJson && target.getDztotalchunkcount() > 0) {
+			//for import resolves only rules for imported columns, so we don't validate non-imported fields
 			rulesToValidate = new HashMap<>();
 			Set<String> importedColumns = target.getImportedColumns();
 			if (importedColumns != null) {

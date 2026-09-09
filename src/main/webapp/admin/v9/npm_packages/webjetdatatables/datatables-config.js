@@ -208,15 +208,17 @@ export function renderTd(row, td, rowData) {
             const isJsonEditor = "jsoneditor" === editorType;
             var text = isJsonEditor ? escapeJsonForHtml(td) : WJ.htmlToText(td);
             try {
-                var className = row.settings.aoColumns[row.col].className;
-                //console.log("className=", className);
-                if (isJsonEditor === false && typeof className != "undefined" && className != null && className.indexOf("allow-html")!=-1) {
-                    //console.log("allowing html, td=", td);
-                    text = td;
-                }
-                if (isJsonEditor === false && typeof className != "undefined" && className != null && className.indexOf("show-html")!=-1) {
-                    //console.log("allowing html, td=", td);
-                    text = WJ.escapeHtml(td);
+                if (isJsonEditor === false) {
+                    var className = row.settings.aoColumns[row.col].className;
+                    //console.log("className=", className);
+                    if (typeof className != "undefined" && className != null && className.indexOf("allow-html")!=-1) {
+                        //console.log("allowing html, td=", td);
+                        text = td;
+                    }
+                    if (typeof className != "undefined" && className != null && className.indexOf("show-html")!=-1) {
+                        //console.log("allowing html, td=", td);
+                        text = WJ.escapeHtml(td);
+                    }
                 }
             } catch (e) {}
             //console.log("class: ", row.settings.aoColumns[row.col].className);

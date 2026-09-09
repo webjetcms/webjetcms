@@ -58,101 +58,6 @@ Typ poľa `textarea` je štandardná textová (viac riadková) oblasť.
 
 ![](webpages-textarea.png)
 
-### JSON Editor
-
-Typ poľa `jsoneditor` slúži na priame zadávanie a úpravu JSON objektu. Pre pole nastavte v [nastaveniach voliteľných polí](custom-fields-settings.md) typ **Editor JSON**, alebo použite prekladový kľúč:
-
-```properties
-editor.field_g.type=jsoneditor
-```
-
-![](webpages-jsoneditor.png)
-
-Editor zobrazuje čísla riadkov a panel s tlačidlom **Formátovať JSON** a dostupným AI asistentom. Počas fokusu textovej oblasti zobrazuje vpravo aktuálny riadok a stĺpec kurzora. Formátovanie odsadí text dvoma medzerami a zachová hodnoty vrátane veľkých čísel, escape sekvencií a komentárov. Komentár za hodnotou zostáva na rovnakom riadku.
-
-Pri ukladaní sa znaky `<` a `>` nahradia významovo rovnakými JSON Unicode escape sekvenciami `\u003C` a `\u003E`. Po opätovnom otvorení ich editor zobrazí v tejto kanonickej podobe. Na vrátenie pôvodnej hodnoty môžete na frontende použiť volanie `JsonEditorValidator.unescape(String value)`, pozor ale na `XSS injection`.
-
-Hodnota musí byť platný objekt s koreňom `{...}`. Vnorené objekty a polia sú povolené, samotné pole `[]`, `null`, číslo alebo reťazec na koreni sa odmietnu. Podporované sú aj apostrofy, názvy vlastností bez úvodzoviek vrátane pomlčiek a komentáre `//` alebo `/* ... */`. Príklad:
-
-```js
-{
-  'user': {
-    'id': '{444555678}', // User identifier
-    'missionsAvailable': 2
-  }
-}
-```
-
-Zápis `{2}` nie je platná hodnota: pre číslo použite `2`, pre textový zástupný údaj `'{2}'`. Prázdna hodnota sa riadi nastavením **Povinné pole**; samotné medzery sa považujú za prázdnu hodnotu.
-
-Validácia prebieha pri opustení poľa aj pred uložením. Chyba sa zobrazí pri poli a zabráni uloženiu stránky. Kontrola prebieha aj na serveri vrátane REST a importu. Overuje sa syntax a koreňový objekt, nie konkrétne atribúty podľa JSON Schema.
-
-Typ `jsoneditor` je samostatný typ pre editáciu textu. Existujúce typy `json_doc` a `json_group` slúžia na výber stránky alebo priečinka. Podrobnosti sú v [dokumentácii pre programátora](../../../developer/datatables-editor/customfields.md#editor-json).
-
-#### Kapacita databázy
-
-!>**Voliteľné polia majú v štandardnej databázovej schéme veľkosť 255 znakov.** Nastavenie typu `jsoneditor` túto kapacitu automaticky nezväčší. Pre väčšie JSON objekty je potrebné rozšíriť príslušný stĺpec v databáze, pri webových stránkach **v tabuľke `documents` aj `documents_history`**, aby bolo možné uložiť aj históriu stránky. Pri výpočte kapacity počítajte s tým, že kanonické `\u003C` a `\u003E` majú po šesť znakov.
-
-Nasledujúce príklady rozširujú pole G (`field_g`) na veľký textový typ. Údaje zostávajú textom; databázový typ `JSON`/`JSONB` nepoužívajte, pretože editor podporuje aj apostrofy a komentáre.
-
-Úpravu vykonáva správca databázy na konkrétnej inštalácii. Pred vykonaním vytvorte zálohu a zmenu overte na testovacej databáze. Príklady vychádzajú zo štandardných stĺpcov, ktoré povoľujú `NULL`. Pri upravenej schéme zachovajte jej kódovanie, collation, predvolené hodnoty a obmedzenia; skontrolujte aj prípadné indexy a závislosti na stĺpci.
-
-**MySQL / MariaDB**
-
-Použite typ `LONGTEXT`. Zápis `MODIFY COLUMN` je podporovaný v [MySQL](https://dev.mysql.com/doc/refman/8.4/en/alter-table.html) aj [MariaDB](https://mariadb.com/docs/server/reference/sql-statements/data-definition/alter/alter-table).
-
-```sql
-ALTER TABLE documents MODIFY COLUMN field_g LONGTEXT NULL;
-ALTER TABLE documents_history MODIFY COLUMN field_g LONGTEXT NULL;
-```
-
-Ak má pôvodný stĺpec vlastné `CHARACTER SET` alebo `COLLATE` odlišné od tabuľky, doplňte ich aj do novej definície stĺpca.
-
-**Microsoft SQL Server**
-
-Použite Unicode textový typ `NVARCHAR(MAX)` a príkaz [ALTER COLUMN](https://learn.microsoft.com/en-us/sql/t-sql/statements/alter-table-transact-sql).
-
-```sql
-ALTER TABLE documents ALTER COLUMN field_g NVARCHAR(MAX) NULL;
-ALTER TABLE documents_history ALTER COLUMN field_g NVARCHAR(MAX) NULL;
-```
-
-**PostgreSQL**
-
-Použite typ `TEXT` a príkaz [ALTER COLUMN ... TYPE](https://www.postgresql.org/docs/16/sql-altertable.html).
-
-```sql
-ALTER TABLE documents ALTER COLUMN field_g TYPE TEXT;
-ALTER TABLE documents_history ALTER COLUMN field_g TYPE TEXT;
-```
-
-**Oracle**
-
-Štandardný stĺpec má typ `NVARCHAR2(255)`. Pre veľký Unicode text použite `NCLOB`. Priamy prevod existujúceho textového stĺpca na LOB pomocou `MODIFY` nie je podporovaný, je potrebné pridať nový stĺpec, preniesť údaje a nahradiť pôvodný stĺpec.
-
-Počas celého prevodu zastavte zápisy do oboch tabuliek. Príkazy DDL v Oracle implicitne potvrdzujú transakcie, preto tento postup nemožno vrátiť jedným `ROLLBACK`.
-
-```sql
-ALTER TABLE documents ADD (field_g_json_tmp NCLOB);
-ALTER TABLE documents_history ADD (field_g_json_tmp NCLOB);
-
-UPDATE documents SET field_g_json_tmp = TO_NCLOB(field_g);
-UPDATE documents_history SET field_g_json_tmp = TO_NCLOB(field_g);
-COMMIT;
-```
-
-Po overení prenesených údajov v oboch tabuľkách nahraďte pôvodné stĺpce:
-
-```sql
-ALTER TABLE documents DROP COLUMN field_g;
-ALTER TABLE documents RENAME COLUMN field_g_json_tmp TO field_g;
-
-ALTER TABLE documents_history DROP COLUMN field_g;
-ALTER TABLE documents_history RENAME COLUMN field_g_json_tmp TO field_g;
-```
-
-Ak má stĺpec v zákazníckej schéme vlastné obmedzenia, indexy alebo komentár, správca databázy ich musí pri náhrade zohľadniť a podľa možností typu `NCLOB` obnoviť. Po rozšírení overte uloženie, opätovné otvorenie a históriu stránky s hodnotou dlhšou ako 255 znakov.
-
 ### Ne-editovateľný text
 
 Pre zobrazenie jednoduchého textu môžete nastaviť ty poľa na hodnotu `label`. Hodnota sa len zobrazí bez možnosti jej editácie.
@@ -326,6 +231,101 @@ Typ poľa `uuid` umožňuje generovať unikátny identifikátor. Ak má pole pri
 Typ poľa `color` umožňuje vybrať farbu vrátane nastavenia priesvitnosti.
 
 ![](webpages-color.png)
+
+### JSON Editor
+
+Typ poľa `jsoneditor` slúži na priame zadávanie a úpravu JSON objektu. Pre pole nastavte v [nastaveniach voliteľných polí](custom-fields-settings.md) typ **Editor JSON**, alebo použite prekladový kľúč:
+
+```properties
+editor.field_g.type=jsoneditor
+```
+
+![](webpages-jsoneditor.png)
+
+Editor zobrazuje čísla riadkov a panel s tlačidlom **Formátovať JSON** a dostupným AI asistentom. Počas fokusu textovej oblasti zobrazuje vpravo aktuálny riadok a stĺpec kurzora. Formátovanie odsadí text dvoma medzerami a zachová hodnoty vrátane veľkých čísel, escape sekvencií a komentárov. Komentár za hodnotou zostáva na rovnakom riadku.
+
+Pri ukladaní sa znaky `<` a `>` nahradia významovo rovnakými JSON Unicode escape sekvenciami `\u003C` a `\u003E`. Po opätovnom otvorení ich editor zobrazí v tejto kanonickej podobe. Na vrátenie pôvodnej hodnoty môžete na frontende použiť volanie `JsonEditorValidator.unescape(String value)`, pozor ale na `XSS injection`.
+
+Hodnota musí byť platný objekt s koreňom `{...}`. Vnorené objekty a polia sú povolené, samotné pole `[]`, `null`, číslo alebo reťazec na koreni sa odmietnu. Podporované sú aj apostrofy, názvy vlastností bez úvodzoviek vrátane pomlčiek a komentáre `//` alebo `/* ... */`. Príklad:
+
+```js
+{
+  'user': {
+    'id': '{444555678}', // User identifier
+    'missionsAvailable': 2
+  }
+}
+```
+
+Zápis `{2}` nie je platná hodnota: pre číslo použite `2`, pre textový zástupný údaj `'{2}'`. Prázdna hodnota sa riadi nastavením **Povinné pole**; samotné medzery sa považujú za prázdnu hodnotu.
+
+Validácia prebieha pri opustení poľa aj pred uložením. Chyba sa zobrazí pri poli a zabráni uloženiu stránky. Kontrola prebieha aj na serveri vrátane REST a importu. Overuje sa syntax a koreňový objekt, nie konkrétne atribúty podľa JSON Schema.
+
+Typ `jsoneditor` je samostatný typ pre editáciu textu. Existujúce typy `json_doc` a `json_group` slúžia na výber stránky alebo priečinka. Podrobnosti sú v [dokumentácii pre programátora](../../../developer/datatables-editor/customfields.md#editor-json).
+
+#### Kapacita databázy
+
+!>**Voliteľné polia majú v štandardnej databázovej schéme veľkosť 255 znakov.** Nastavenie typu `jsoneditor` túto kapacitu automaticky nezväčší. Pre väčšie JSON objekty je potrebné rozšíriť príslušný stĺpec v databáze, pri webových stránkach **v tabuľke `documents` aj `documents_history`**, aby bolo možné uložiť aj históriu stránky. Pri výpočte kapacity počítajte s tým, že kanonické `\u003C` a `\u003E` majú po šesť znakov.
+
+Nasledujúce príklady rozširujú pole G (`field_g`) na veľký textový typ. Údaje zostávajú textom; databázový typ `JSON`/`JSONB` nepoužívajte, pretože editor podporuje aj apostrofy a komentáre.
+
+Úpravu vykonáva správca databázy na konkrétnej inštalácii. Pred vykonaním vytvorte zálohu a zmenu overte na testovacej databáze. Príklady vychádzajú zo štandardných stĺpcov, ktoré povoľujú `NULL`. Pri upravenej schéme zachovajte jej kódovanie, collation, predvolené hodnoty a obmedzenia; skontrolujte aj prípadné indexy a závislosti na stĺpci.
+
+**MySQL / MariaDB**
+
+Použite typ `LONGTEXT`. Zápis `MODIFY COLUMN` je podporovaný v [MySQL](https://dev.mysql.com/doc/refman/8.4/en/alter-table.html) aj [MariaDB](https://mariadb.com/docs/server/reference/sql-statements/data-definition/alter/alter-table).
+
+```sql
+ALTER TABLE documents MODIFY COLUMN field_g LONGTEXT NULL;
+ALTER TABLE documents_history MODIFY COLUMN field_g LONGTEXT NULL;
+```
+
+Ak má pôvodný stĺpec vlastné `CHARACTER SET` alebo `COLLATE` odlišné od tabuľky, doplňte ich aj do novej definície stĺpca.
+
+**Microsoft SQL Server**
+
+Použite Unicode textový typ `NVARCHAR(MAX)` a príkaz [ALTER COLUMN](https://learn.microsoft.com/en-us/sql/t-sql/statements/alter-table-transact-sql).
+
+```sql
+ALTER TABLE documents ALTER COLUMN field_g NVARCHAR(MAX) NULL;
+ALTER TABLE documents_history ALTER COLUMN field_g NVARCHAR(MAX) NULL;
+```
+
+**PostgreSQL**
+
+Použite typ `TEXT` a príkaz [ALTER COLUMN ... TYPE](https://www.postgresql.org/docs/16/sql-altertable.html).
+
+```sql
+ALTER TABLE documents ALTER COLUMN field_g TYPE TEXT;
+ALTER TABLE documents_history ALTER COLUMN field_g TYPE TEXT;
+```
+
+**Oracle**
+
+Štandardný stĺpec má typ `NVARCHAR2(255)`. Pre veľký Unicode text použite `NCLOB`. Priamy prevod existujúceho textového stĺpca na LOB pomocou `MODIFY` nie je podporovaný, je potrebné pridať nový stĺpec, preniesť údaje a nahradiť pôvodný stĺpec.
+
+Počas celého prevodu zastavte zápisy do oboch tabuliek. Príkazy DDL v Oracle implicitne potvrdzujú transakcie, preto tento postup nemožno vrátiť jedným `ROLLBACK`.
+
+```sql
+ALTER TABLE documents ADD (field_g_json_tmp NCLOB);
+ALTER TABLE documents_history ADD (field_g_json_tmp NCLOB);
+
+UPDATE documents SET field_g_json_tmp = TO_NCLOB(field_g);
+UPDATE documents_history SET field_g_json_tmp = TO_NCLOB(field_g);
+COMMIT;
+```
+
+Po overení prenesených údajov v oboch tabuľkách nahraďte pôvodné stĺpce:
+
+```sql
+ALTER TABLE documents DROP COLUMN field_g;
+ALTER TABLE documents RENAME COLUMN field_g_json_tmp TO field_g;
+
+ALTER TABLE documents_history DROP COLUMN field_g;
+ALTER TABLE documents_history RENAME COLUMN field_g_json_tmp TO field_g;
+```
+
+Ak má stĺpec v zákazníckej schéme vlastné obmedzenia, indexy alebo komentár, správca databázy ich musí pri náhrade zohľadniť a podľa možností typu `NCLOB` obnoviť. Po rozšírení overte uloženie, opätovné otvorenie a históriu stránky s hodnotou dlhšou ako 255 znakov.
 
 ## Prepojenie na šablónu
 

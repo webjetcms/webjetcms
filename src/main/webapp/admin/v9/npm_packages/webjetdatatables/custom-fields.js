@@ -392,7 +392,6 @@ export function update(EDITOR, action) {
         }
 
         inputBox.html(template);
-        inputBox.toggleClass("md-jsoneditor", v.type === "jsoneditor");
         if (v.type === "jsoneditor") inputBox.find('textarea').val(valueUnescaped);
 
         const textInput = inputBox.find("input[data-warninglength]").first();

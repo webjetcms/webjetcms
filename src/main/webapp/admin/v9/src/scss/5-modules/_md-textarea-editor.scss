@@ -9,10 +9,11 @@
     border: 1px solid var(--wj-nice-gray-300);
     border-radius: var(--wj-border-radius);
     background: var(--bs-body-bg);
+    margin-left: 6px;
 
     &:focus-within {
-        outline: 2px solid var(--wj-secondary);
-        outline-offset: 2px;
+        border-color: $input-focus-border-color;
+        box-shadow: $input-focus-box-shadow;
     }
 
     &__lines {
@@ -32,8 +33,8 @@
 .DTE .DTE_Field .md-textarea-editor {
     > textarea, > .md-textarea-editor__lines {
         font-family: monospace;
-        font-size: 14px;
-        line-height: 1.5;
+        font-size: 13px;
+        line-height: 1.2;
         tab-size: 2;
     }
 
@@ -71,9 +72,11 @@
     .md-textarea-editor {
         border: 0;
         border-radius: 0 0 var(--wj-border-radius) var(--wj-border-radius);
+        margin-left: 0;
 
         &:focus-within {
             outline: none;
+            box-shadow: none;
         }
     }
 }

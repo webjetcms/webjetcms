@@ -56,6 +56,20 @@ public final class JsonEditorValidator {
         return resolveRules(entity, context);
     }
 
+    /**
+     * Resolves readable {@code fieldA} through {@code fieldZ} properties configured as JSON editors.
+     *
+     * <p>The database configuration takes precedence over the field type declared by the entity's
+     * {@link DataTableColumn} translation key. Enumeration values are included only when the field is
+     * configured for the value entity and enabled by its parent enumeration type. The resulting map
+     * preserves alphabetical field order and marks a field as required only when its database
+     * configuration explicitly requires it.</p>
+     *
+     * @param entity entity whose custom-field properties and annotations are inspected
+     * @param context lookup context used to resolve effective custom-field configuration
+     * @return JSON editor property names mapped to their required flags in alphabetical order
+     * @throws IllegalStateException if an enumeration field requires parent-type resolution but the repository is unavailable
+     */
     private static Map<String, Boolean> resolveRules(Object entity, CustomFieldsSearchDto context) {
         Map<String, Boolean> rules = new LinkedHashMap<>();
         BeanWrapperImpl bean = new BeanWrapperImpl(entity);
@@ -88,6 +102,12 @@ public final class JsonEditorValidator {
         return rules;
     }
 
+    /**
+     * Get label key from entity field, e.g. from fieldA returns editor.field_a
+     * @param entityClass
+     * @param name - field name, e.g. fieldA
+     * @return label key, e.g. editor.field_a or null if not found
+     */
     private static String getLabelKey(Class<?> entityClass, String name) {
         Field field = ReflectionUtils.findField(entityClass, name);
         if (field == null) return null;

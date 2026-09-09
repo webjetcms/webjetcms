@@ -356,11 +356,8 @@ public class DocEditorFields extends BaseEditorFields {
     }
 
     /**
-     * Resolves custom-field translations in the template context without leaking prefixes to another row.
-     * @param tempId effective template ID
-     * @param operation field generation or validation to run in this context
-     * @param <T> result type
-     * @return operation result
+     * Nastavi prefixy klucov pre RequestBean podla sablony a skupiny sablon
+     * @param tempId
      */
     public static void setRequestBeanTextPrefixes(int tempId) {
         if (tempId > 0) {
