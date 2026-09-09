@@ -32,7 +32,6 @@ import sk.iway.iwcm.stat.SessionClusterService;
 import sk.iway.iwcm.stat.SessionDetails;
 import sk.iway.iwcm.stat.SessionHolder;
 import sk.iway.iwcm.stat.rest.BrowserIdentifierMigrationService;
-import sk.iway.iwcm.system.UpdateDatabase;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;

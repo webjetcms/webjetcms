@@ -6,7 +6,7 @@
 
 ### Prelomové zmeny
 
-- Štatistika - prehliadače sa po aktualizácii ukladajú bez čísla verzie. Po nasadení tejto verzie je potrebné spustiť migráciu historických štatistík na URL `/admin/v9/settings/stat-browser-migration/`, bez jej dokončenia zostanú historické údaje rozdelené podľa verzií prehliadačov (#303).
+- Štatistika - prehliadače sa po aktualizácii ukladajú bez čísla verzie, ktoré sa v dnešnej dobe veľmi často menia. Po nasadení tejto verzie je potrebné spustiť migráciu historických štatistík na URL `/admin/v9/settings/stat-browser-migration/`, bez jej dokončenia zostanú historické údaje rozdelené podľa čísla verzie prehliadačov (#303).
 - Z administrácie bola odstránená závislosť na knižnici [Vue.js](https://vuejs.org). Pred aktualizáciou odporúčame overiť kompatibilitu vlastných aplikácií. Veľkosť JavaScript súborov sa zmenšila o cca 170kB, čo má dopad aj na rýchlosť inicializácie administrácie. Viac v [sekcii pre programátora](#pre-programátora).
 - AspectJ - z distribúcie bola odstránená podpora `load-time weavingu` (`aspectjweaver` a `META-INF/aop-ajc.xml`); vstavané aspekty sa spracujú už pri kompilácii, viac v [sekcii pre programátora](#pre-programátora). Pri použití v MultiWeb inštalácii môžete odstrániť `-javaagent:/www/tomcat/.../aspectjweaver.jar` nastavenie z `JAVA_OPTS` v aplikačnom serveri (#290).
 - Export obsahu pre Flash - odstránená bola historická funkcia generovania XML súborov `/flash_xml/{docId}.xml` pri publikovaní stránky. Konfiguračná premenná `exportFlash` už nie je podporovaná a jej definovanie v `SpringConfig` funkciu neobnoví (#293).

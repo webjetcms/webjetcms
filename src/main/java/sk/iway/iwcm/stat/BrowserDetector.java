@@ -90,7 +90,7 @@ public class BrowserDetector implements Serializable {
 			}
 		}
 		if (uaParser == null) {
-			try (InputStream is = BrowserDetector.class.getResourceAsStream("/ua-parser/regexes.yaml")) {
+			try (InputStream is = BrowserDetector.class.getResourceAsStream("/ua-parser/regexes-webjet.yaml")) {
 				if (is != null) uaParser = new Parser(is, Parser.getDefaultLoaderOptions());
 			} catch (Exception ex) {
 				Logger.error(BrowserDetector.class, "Failed to initialize bundled user-agent parser", ex);

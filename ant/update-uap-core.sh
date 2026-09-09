@@ -5,7 +5,7 @@ set -euo pipefail
 UPSTREAM_REPOSITORY="https://github.com/ua-parser/uap-core.git"
 UPSTREAM_RAW_URL="https://raw.githubusercontent.com/ua-parser/uap-core"
 UPSTREAM_REF="${1:-refs/heads/master}"
-REGEXES_FILE="src/main/resources/ua-parser/regexes.yaml"
+REGEXES_FILE="src/main/resources/ua-parser/regexes-webjet.yaml"
 COMMIT_FILE="src/main/resources/ua-parser/upstream-commit.txt"
 TEMP_FILE="$(mktemp "${TMPDIR:-/tmp}/webjet-uap-core.XXXXXX")"
 
@@ -43,7 +43,7 @@ if (( $(wc -c < "$TEMP_FILE") < 100000 )); then
 fi
 
 if cmp -s "$TEMP_FILE" "$REGEXES_FILE"; then
-    echo "regexes.yaml is already up to date"
+    echo "regexes-webjet.yaml is already up to date"
 else
     cp "$TEMP_FILE" "$REGEXES_FILE"
     echo "Updated $REGEXES_FILE"
