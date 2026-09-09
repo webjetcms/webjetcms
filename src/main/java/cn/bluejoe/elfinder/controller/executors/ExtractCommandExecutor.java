@@ -23,6 +23,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmOutputStream;
+import sk.iway.iwcm.system.elfinder.IwcmFsVolume;
 import sk.iway.iwcm.system.zip.ZipEntry;
 import sk.iway.iwcm.system.zip.ZipInputStream;
 import sk.iway.iwcm.users.UsersDB;
@@ -98,7 +99,10 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 			ZipEntry ze = zis.getNextEntry();
 			while (ze != null)
 			{
-				if (isExtractDestinationWritable(outputFolder, ze.getName()) == false) return false;
+				String fileName = IwcmFsVolume.normalizeUnicode(ze.getName());
+				FsItemEx destination = new FsItemEx(outputFolder, fileName);
+				// Entries with forbidden paths are skipped during extraction.
+				if (destination.getPath() != null && isExtractDestinationWritable(destination) == false) return false;
 				ze = zis.getNextEntry();
 			}
 		}
@@ -111,10 +115,14 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 		return true;
 	}
 
-	private boolean isExtractDestinationWritable(FsItemEx outputFolder, String name) throws IOException
+	private boolean isExtractDestinationWritable(FsItemEx destination) throws IOException
 	{
-		FsItemEx destination = new FsItemEx(outputFolder, name);
-		return destination.getPath() != null && destination.isWritable(destination);
+		boolean writable = destination.isWritable(destination);
+		if (writable == false)
+		{
+			Logger.debug(this.getClass(), "isExtractDestinationWritable, destination="+destination.getPath()+", writable="+writable);
+		}
+		return writable;
 	}
 
 	public static List<String> getAllowedTypes()
@@ -143,18 +151,25 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 
 			while(ze != null)
 			{
-				String fileName = ze.getName();
+				String fileName = IwcmFsVolume.normalizeUnicode(ze.getName());
 				Logger.debug(this.getClass(), "ZE fileName="+fileName);
-				if (isExtractDestinationWritable(fsi.getParent(), fileName) == false) return null;
+				FsItemEx destination = new FsItemEx(fsi.getParent(), fileName);
+				if (destination.getPath() == null)
+				{
+					Logger.debug(this.getClass(), "Skipping ZIP entry with forbidden path, zipFile="+zipFile+", fileName="+fileName);
+					ze = zis.getNextEntry();
+					continue;
+				}
+				if (isExtractDestinationWritable(destination) == false) return null;
 				IwcmFile newFile = new IwcmFile(folder.getPath() + File.separator + fileName);
 
 				if (newFile.getParentFile().exists()==false)
 				{
 					new IwcmFile(newFile.getParent()).mkdirs();
-					if (ze.getName().indexOf("/")>1)
+					if (fileName.indexOf("/")>1)
 					{
 						//je tam indexOf namiesto lastIndexOf lebo chceme tam pridat len root priecinky a nie tie posledne
-						String folderName = ze.getName().substring(0, ze.getName().indexOf("/"));
+						String folderName = fileName.substring(0, fileName.indexOf("/"));
 						if (allreadyAddedFolders.contains(folderName)==false)
 						{
 							allreadyAddedFolders.add(folderName);
@@ -167,7 +182,7 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 				if (ze.isDirectory())
 				{
 					newFile.mkdirs();
-					FsItemEx addedFile = new FsItemEx(fsi.getParent(), ze.getName());
+					FsItemEx addedFile = new FsItemEx(fsi.getParent(), fileName);
 					added.add(addedFile);
 				}
 				else
@@ -182,7 +197,7 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 					fos.close();
 				}
 
-				FsItemEx addedFile = new FsItemEx(fsi.getParent(), ze.getName());
+				FsItemEx addedFile = new FsItemEx(fsi.getParent(), fileName);
 				added.add(addedFile);
 
 				ze = zis.getNextEntry();

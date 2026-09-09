@@ -55,6 +55,48 @@ class ExtractCommandExecutorReadOnlyTest {
     }
 
     @Test
+    void shouldCheckReadOnlyEntriesAfterSkippingForbiddenNames() throws Exception {
+        Path zipFile = createZip("skipped$file.txt", "read-only.txt");
+        FsItemEx outputFolder = mock(FsItemEx.class);
+
+        try (MockedStatic<Tools> tools = mockStatic(Tools.class);
+             MockedConstruction<FsItemEx> destinations = mockConstruction(FsItemEx.class, (destination, context) -> {
+                 if ("read-only.txt".equals(context.arguments().get(1))) {
+                     when(destination.getPath()).thenReturn("/files/read-only.txt");
+                 }
+                 when(destination.isWritable(destination)).thenReturn(false);
+             })) {
+            tools.when(() -> Tools.getRealPath("/files/import.zip")).thenReturn(zipFile.toString());
+
+            assertFalse(new ExtractCommandExecutor().areAllExtractEntriesWritable("/files/import.zip", outputFolder));
+            assertEquals(2, destinations.constructed().size());
+            verify(destinations.constructed().get(0), never()).isWritable(destinations.constructed().get(0));
+            verify(destinations.constructed().get(1)).isWritable(destinations.constructed().get(1));
+        }
+    }
+
+    @Test
+    void shouldNormalizeUnicodeEntryNameBeforeCheckingDestination() throws Exception {
+        String nfdName = "a\u0301.txt";
+        String nfcName = "á.txt";
+        Path zipFile = createZip(nfdName);
+        FsItemEx outputFolder = mock(FsItemEx.class);
+        List<?>[] destinationArguments = new List<?>[1];
+
+        try (MockedStatic<Tools> tools = mockStatic(Tools.class);
+             MockedConstruction<FsItemEx> destinations = mockConstruction(FsItemEx.class, (destination, context) -> {
+                 destinationArguments[0] = context.arguments();
+                 when(destination.getPath()).thenReturn("/files/" + nfcName);
+                 when(destination.isWritable(destination)).thenReturn(true);
+             })) {
+            tools.when(() -> Tools.getRealPath("/files/import.zip")).thenReturn(zipFile.toString());
+
+            assertTrue(new ExtractCommandExecutor().areAllExtractEntriesWritable("/files/import.zip", outputFolder));
+            assertEquals(nfcName, destinationArguments[0].get(1));
+        }
+    }
+
+    @Test
     void shouldRecheckDestinationImmediatelyBeforeExtracting() throws Exception {
         Path zipFile = createZip("archiv/document.pdf");
         Path outputDirectory = Files.createDirectory(tempDir.resolve("output"));
@@ -158,12 +200,14 @@ class ExtractCommandExecutorReadOnlyTest {
         assertEquals("/files/archiv.zip", executor.extractedOutputFolder);
     }
 
-    private Path createZip(String entryName) throws IOException {
+    private Path createZip(String... entryNames) throws IOException {
         Path zipFile = tempDir.resolve("import.zip");
         try (java.util.zip.ZipOutputStream output = new java.util.zip.ZipOutputStream(Files.newOutputStream(zipFile))) {
-            output.putNextEntry(new java.util.zip.ZipEntry(entryName));
-            output.write(1);
-            output.closeEntry();
+            for (String entryName : entryNames) {
+                output.putNextEntry(new java.util.zip.ZipEntry(entryName));
+                output.write(1);
+                output.closeEntry();
+            }
         }
         return zipFile;
     }
