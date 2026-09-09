@@ -175,7 +175,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Multiweb - doplnená možnosť premenovať existujúcu doménu + presmerovanie po premenovaní (#58317-15).
 - Multiweb - upravené [zobrazenie skupín šablón](install/multiweb/README.md) podľa dostupných šablón a aliasu aktuálnej domény (#58317-17).
 - Štatistika - nastavený dátum/rozsah od-do sa ukladá v prehliadači a je zapamätaný aj po odhlásení/reštarte prehliadača (#58065).
-- Štatistika - prehliadače sa ukladajú bez často sa meniaceho čísla verzie. Doplnená je ručne spúšťaná dávková migrácia v sekcii Aktualizácia WebJET, ktorá zlúči historické záznamy bez výpadku webu. Aktualizovaný je zoznam `User-Agent` prehliadačov pre lepšiu detekciu (#303).
+- Štatistika - prehliadače sa ukladajú bez často sa meniaceho čísla verzie. Doplnená je ručne spúšťaná dávková migrácia v sekcii Aktualizácia WebJET, ktorá zlúči historické záznamy bez výpadku webu. Na stránke `/admin/v9/settings/stat-browser-migration/` kliknite na Analyzovať a potom spustite migráciu. Po úspešnej migrácii kliknite na Finalizovať. Aktualizovaný je zoznam `User-Agent` prehliadačov pre lepšiu detekciu (#303).
 
 ![](sysadmin/update/stat-browser-migration.png)
 
