@@ -72,7 +72,7 @@ public class FileBrowserTools {
         name = name.toLowerCase();
         for (String fSymbol : forbiddenSymbols)
         {
-            if ("$".equals(fSymbol) && name.endsWith(".aaclass"))
+            if ("$".equals(fSymbol) && name.endsWith(".class"))
             {
                 // Allow JVM inner class names, but keep dollar signs forbidden in parent directories.
                 int fileNameStart = Math.max(name.lastIndexOf('/'), name.lastIndexOf('\\')) + 1;
