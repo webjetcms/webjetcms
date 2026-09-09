@@ -59,7 +59,7 @@ ext {
     allureVersion = "2.32.0";
     aspectJVersion = '1.9.25.1';
     eclipselinkVersion = '5.0.0-B13';
-    webjetAiVersion = '2.0.0-SNAPSHOT';
+    webjetAiVersion = '2.0.0';
 }
 
 lombok {
