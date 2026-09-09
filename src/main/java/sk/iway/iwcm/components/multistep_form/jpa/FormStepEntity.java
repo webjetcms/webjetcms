@@ -23,6 +23,12 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
+/**
+ * Represents a configurable step of a multi-step form.
+ *
+ * Stores the step order, displayed content, navigation labels, and domain ownership
+ * used when rendering and editing a form workflow.
+ */
 @Entity
 @Table(name = "form_steps")
 @Getter
@@ -63,7 +69,7 @@ public class FormStepEntity {
     private String nextStepBtnLabel;
 
     @Column(name = "back_step_btn_label")
-    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, title = "components.mustistep.form.back_step.title", tab = "advanced", hidden = true)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.mustistep.form.back_step.title", tab = "advanced", hidden = true)
     private String backStepBtnLabel;
 
     @Lob

@@ -32,28 +32,10 @@ import java.util.*;
 //import sk.iway.intranet.dms.DmsNotify;
 
 /**
- *  Odosielanie emailu, priklad telnet spojenia:
-
-EHLO tau19.iway.sk
-MAIL FROM:noreply@interway.sk
-RCPT TO:veronika.husarova@employment.gov.sk
-DATA
-From:noreply@interway.sk
-To:veronika.husarova@employment.gov.sk
-Subject:test
-
-Test
-.
-QUIT
-
+ * Sends email messages immediately or queues them for delayed delivery.
  *
- *@Title        magma-web
- *@Company      Interway s.r.o. (www.interway.sk)
- *@Copyright    Interway s.r.o. (c) 2001-2002
- *@author       $Author: jeeff $
- *@version      $Revision: 1.13 $
- *@created      Nedeďż˝e, 2003, februďż˝r 2
- *@modified     $Date: 2004/03/23 19:23:05 $
+ * Supports plain-text and HTML content, inline and regular attachments,
+ * configurable SMTP or Amazon SES sessions, and optional audit logging.
  */
 public class SendMail
 {
@@ -102,19 +84,23 @@ public class SendMail
 	 }
 
 	/**
-	 * Odoslanie emailu
-	 * @param senderName - meno odosielatela emailu
-	 * @param senderEmail - email odosielatela emailu
-	 * @param recipientEmail - email prijemcu
-	 * @param replyTo - email pre pole replyTo, alebo null
-	 * @param subject - predmet
-	 * @param message - body emailu, moze byt v HTML formate, vratane odkazov na obrazky a linky
-	 * @param baseHref - base HTTP adresa (aby bolo mozne nalinkovat obrazky a spravit relativne linky)
-	 * @param attachmentsList - zoznam priloh vo formate url_adresa1;nazov_suboru_do_emailu1;url_adresa2;nazov_suboru_do_emailu2;
-	 * @param sendLaterWhenException - ak je true, tak pri exception pri odosielani, ulozi e-mail pre neskorsie odoslanie
-	 * @param writeToAuditLog - ak je false, tak sa posle len e-mail, ale nezapise sa nic do auditlogu
-	 * @return true, ak sa email podarilo odoslat, inak false
-	 * @throws Exception
+	 * Sends an email and captures any delivery exception in the result.
+	 *
+	 * The message can be queued for later delivery when immediate delivery fails.
+	 *
+	 * @param senderName sender display name
+	 * @param senderEmail sender email address
+	 * @param recipientEmail recipient email address or comma-separated addresses
+	 * @param replyTo reply-to address, or {@code null} when no reply-to address is required
+	 * @param ccEmail carbon-copy addresses, or {@code null}
+	 * @param bccEmail blind-carbon-copy addresses, or {@code null}
+	 * @param subject message subject
+	 * @param message plain-text or HTML message body
+	 * @param baseHref base URL used to resolve root-relative links in HTML content
+	 * @param attachmentsList semicolon-separated path and file-name pairs, or {@code null}
+	 * @param sendLaterWhenException whether to queue the message after an immediate delivery failure
+	 * @param writeToAuditLog whether to record the delivery attempt in the audit log
+	 * @return a pair containing the delivery result and the captured exception, if any
 	 */
 	public static Pair<Boolean, Exception> sendCapturingException(String senderName, String senderEmail, String recipientEmail, String replyTo, String ccEmail, String bccEmail, String subject, String message, String baseHref, String attachmentsList, boolean sendLaterWhenException, boolean writeToAuditLog) {
 		MailHelper mailHelper = new MailHelper()
@@ -134,6 +120,15 @@ public class SendMail
 		return sendCapturingException(mailHelper);
 	}
 
+	/**
+	 * Sends the email configured by the supplied helper and captures any delivery exception.
+	 *
+	 * Applies sender protection, link normalization, MIME attachment handling, and the
+	 * configured delivery and audit behavior before sending or queuing the message.
+	 *
+	 * @param mailHelper email content and delivery configuration
+	 * @return a pair containing the delivery result and the captured exception, if any
+	 */
 	public static Pair<Boolean, Exception> sendCapturingException(MailHelper mailHelper)
 	{
 		String senderName = mailHelper.getFromName();
@@ -148,12 +143,13 @@ public class SendMail
 		String attachmentsList = mailHelper.getAttachments();
 		boolean sendLaterWhenException = mailHelper.isSendLaterWhenException();
 		boolean writeToAuditLog = mailHelper.isWriteToAuditLog();
+		boolean senderPolicyApplied = mailHelper.isSenderPolicyApplied();
 		List< Pair<String, String> > headers = mailHelper.getHeaders();
 
 		if ("false".equals(Constants.getString("useSMTPServer")) && writeToAuditLog) // mail neodosleme ale ulozime do db pre \odoslanie na inom node, okrem pripadu, ze potrebujeme odoslat chybu sposobenu pri dosiahnuti maximalenho poctu DB spojeni
 		{
 			Logger.debug(SendMail.class, "useSMTPServer=false -> sending later. " );
-			boolean result = sendLater(senderName, senderEmail, recipientEmail, replyTo, ccEmail, bccEmail, subject, message, baseHref, null, null, attachmentsList);
+			boolean result = sendLater(senderName, senderEmail, recipientEmail, replyTo, ccEmail, bccEmail, subject, message, baseHref, null, null, attachmentsList, senderPolicyApplied);
 			return Pair.of(result, null);
 		}
 
@@ -173,7 +169,7 @@ public class SendMail
 		Prop prop = Prop.getInstance(Constants.getString("defaultLanguage"));
 
 		//vynimka helpdesk@websupport.sk je kvoli Cloudu a notifikaciam na WebSupport kedy nam odmietaju emaili z noreply@webjet.eu spracovat
-		if (Tools.isEmail(Constants.getString(EMAIL_PROTECTION_SENDER_KEY)) && "helpdesk@websupport.sk".equals(recipientEmail)==false)
+		if (senderPolicyApplied == false && Tools.isEmail(Constants.getString(EMAIL_PROTECTION_SENDER_KEY)) && "helpdesk@websupport.sk".equals(recipientEmail)==false)
 		{
 			String from = Constants.getString(EMAIL_PROTECTION_SENDER_KEY);
 			String oldSender = senderEmail;
@@ -483,7 +479,7 @@ public class SendMail
 					if (sendLaterWhenException) //mail ulozim pre neskorsie poslanie
 					{
 						Logger.debug(SendMail.class, "sendLaterWhenException=true -> sending later." );
-						sendLater(senderName, senderEmail, recipientEmail, replyTo, ccEmail, bccEmail, subject, message, baseHref, null, null, attachmentsList);
+						sendLater(senderName, senderEmail, recipientEmail, replyTo, ccEmail, bccEmail, subject, message, baseHref, null, null, attachmentsList, senderPolicyApplied);
 					}
 				}
 				return Pair.of(false, ex);
@@ -500,6 +496,11 @@ public class SendMail
 		}
 	}
 
+	/**
+	 * Writes a message to a timestamped EML file when the save path is configured.
+	 *
+	 * @param mes message to serialize
+	 */
 	private static void saveEmailToFile(Message mes) {
 		String sendMailSaveEmailPath = Constants.getString("sendMailSaveEmailPath", "");
 		if (Tools.isEmpty(sendMailSaveEmailPath)) {
@@ -534,19 +535,46 @@ public class SendMail
 	}
 
 	/**
-	 * Oneskorene odoslanie emailu
-	 * @param senderName
-	 * @param senderEmail
-	 * @param recipientEmail
-	 * @param replyTo
-	 * @param subject
-	 * @param message
-	 * @param baseHref
-	 * @param date
-	 * @param time
-	 * @return
+	 * Queues an email for delayed delivery.
+	 *
+	 * @param senderName sender display name
+	 * @param senderEmail sender email address
+	 * @param recipientEmail recipient email address or comma-separated addresses
+	 * @param replyTo reply-to address, or {@code null}
+	 * @param ccEmail carbon-copy addresses, or {@code null}
+	 * @param bccEmail blind-carbon-copy addresses, or {@code null}
+	 * @param subject message subject
+	 * @param message plain-text or HTML message body
+	 * @param baseHref base URL used to resolve root-relative links
+	 * @param date scheduled delivery date, or {@code null} for no explicit schedule
+	 * @param time scheduled delivery time, or {@code null} for no explicit schedule
+	 * @param attachments semicolon-separated path and file-name pairs, or {@code null}
+	 * @return {@code true} when the email was queued, or {@code false} when the database operation failed
 	 */
 	public static boolean sendLater(String senderName, String senderEmail, String recipientEmail, String replyTo, String ccEmail, String bccEmail, String subject, String message, String baseHref, String date, String time, String attachments)
+	{
+		return sendLater(senderName, senderEmail, recipientEmail, replyTo, ccEmail, bccEmail, subject, message, baseHref, date, time, attachments, false);
+	}
+
+	/**
+	 * Stores an email for deferred delivery and records whether its sender policy was already resolved.
+	 *
+	 * @param senderName sender display name
+	 * @param senderEmail sender email address
+	 * @param recipientEmail recipient email address or comma-separated addresses
+	 * @param replyTo reply-to address, or {@code null}
+	 * @param ccEmail carbon-copy addresses, or {@code null}
+	 * @param bccEmail blind-carbon-copy addresses, or {@code null}
+	 * @param subject message subject
+	 * @param message plain-text or HTML message body
+	 * @param baseHref base URL used to resolve root-relative links
+	 * @param date scheduled delivery date, or {@code null}
+	 * @param time scheduled delivery time, or {@code null}
+	 * @param attachments semicolon-separated path and file-name pairs, or {@code null}
+	 * @param senderPolicyApplied whether sender protection was applied before queuing
+	 * @return {@code true} when the email was queued, or {@code false} when the database operation failed
+	 */
+	public static boolean sendLater(String senderName, String senderEmail, String recipientEmail, String replyTo, String ccEmail, String bccEmail, String subject, String message, String baseHref, String date, String time, String attachments, boolean senderPolicyApplied)
 	{
 		//pridanie ContextPath pre admin cast (ak je nastavene)
 		if (Tools.isNotEmpty(Constants.getString("contextPathAdmin")) && message.indexOf("://cms")!=-1)
@@ -561,7 +589,7 @@ public class SendMail
 			Connection db_conn = DBPool.getConnection();
 			try
 			{
-				PreparedStatement ps = db_conn.prepareStatement("INSERT INTO emails (recipient_email, recipient_name, sender_name, sender_email, subject, url, attachments, retry, sent_date, created_by_user_id, create_date, send_at, message, reply_to, cc_email, bcc_email, domain_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+				PreparedStatement ps = db_conn.prepareStatement("INSERT INTO emails (recipient_email, recipient_name, sender_name, sender_email, subject, url, attachments, retry, sent_date, created_by_user_id, create_date, send_at, message, reply_to, cc_email, bcc_email, domain_id, sender_policy_applied) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 				try
 				{
 					int counter = 1;
@@ -595,7 +623,8 @@ public class SendMail
 					ps.setString(counter++, replyTo);
 					ps.setString(counter++, ccEmail);
 					ps.setString(counter++, bccEmail);
-					ps.setInt(counter, CloudToolsForCore.getDomainId());
+					ps.setInt(counter++, CloudToolsForCore.getDomainId());
+					ps.setBoolean(counter, senderPolicyApplied);
 					ps.execute();
 				}
 				finally { ps.close(); }
@@ -606,15 +635,17 @@ public class SendMail
 		{
 			sk.iway.iwcm.Logger.error(ex);
 			Adminlog.add(Adminlog.TYPE_SENDMAIL, "ERROR sending email later ex:"+ex.getMessage(), -1, -1);
+			return false;
 		}
 
 		return(true);
 	}
 
 	/**
-	 * Ziska zoznam inline priloh (obrazkov)
-	 * @param htmlCode
-	 * @return
+	 * Extracts unique inline image and background references from HTML content.
+	 *
+	 * @param htmlCode HTML content to inspect
+	 * @return referenced source values in first-seen order, or an empty list when none are found
 	 */
 	public static List<String> getInlineAttachments(String htmlCode)
 	{
@@ -669,13 +700,16 @@ public class SendMail
 	}
 
 	/**
-	 * Prida do emailu Inline obrazky
-	 * @param atts
-	 * @param related
-	 * @param message
-	 * @param baseHref
-	 * @return
-	 * @throws Exception
+	 * Adds eligible images to the related MIME content and rewrites their message references.
+	 *
+	 * Images excluded by configuration or domain whitelisting remain external URLs.
+	 *
+	 * @param atts attachment container retained for compatibility with the legacy API
+	 * @param related MIME container that receives inline image parts
+	 * @param message message body whose image references are processed
+	 * @param baseHref base URL used to resolve relative image references
+	 * @return message body with embedded image references replaced by content IDs
+	 * @throws Exception retained by the legacy signature; processing failures are logged internally
 	 */
 	private static String putInlineAttachments(Multipart atts, Multipart related, String message, String baseHref) throws Exception
 	{
@@ -851,11 +885,14 @@ public class SendMail
 	}
 
 	/**
-	 * Prida do emailu message part
-	 * @param mp
-	 * @param message
-	 * @param related
-	 * @throws MessagingException
+	 * Adds alternative plain-text and HTML representations of a message to a MIME container.
+	 *
+	 * Related MIME parts are wrapped with the HTML representation when present.
+	 *
+	 * @param mp target MIME container
+	 * @param message plain-text or HTML message body
+	 * @param related related MIME parts, or {@code null} when the message has none
+	 * @throws MessagingException if the MIME content cannot be created or added
 	 */
 	private static void putMessagePart(Multipart mp, String message, Multipart related) throws MessagingException
 	{
@@ -933,9 +970,10 @@ public class SendMail
 	}
 
 	/**
-	 * Otestuje, ci zadany test je HTML kod
-	 * @param html
-	 * @return
+	 * Checks whether text contains one of the supported common HTML tags.
+	 *
+	 * @param html text to inspect
+	 * @return {@code true} when the text appears to contain HTML content
 	 */
 	public static boolean isHtmlContent(String html)
 	{
@@ -958,10 +996,11 @@ public class SendMail
 	}
 
 	/**
-	 * Vypocita HASH hodnotu pre inline prilohu
-	 * @param message
-	 * @param iurl
-	 * @return
+	 * Computes a content-ID hash for an inline resource referenced by the message.
+	 *
+	 * @param message message body to inspect
+	 * @param iurl inline resource URL
+	 * @return the URL hash when it occurs in the message, or {@code null} otherwise
 	 */
 	private static String putAsInline(String message, String iurl)
 	{
@@ -979,9 +1018,12 @@ public class SendMail
 
 
 	/**
-	 * Vrati nazov suboru z cesty
-	 * @param f
-	 * @return
+	 * Extracts and sanitizes a file name from a path or URL.
+	 *
+	 * Query parameters are removed before the value is decoded and normalized.
+	 *
+	 * @param f path or URL containing the file name
+	 * @return sanitized file name without its parent path
 	 */
 	private static String onlyFile(String f)
 	{
@@ -1011,11 +1053,13 @@ public class SendMail
 
 
 	/**
-	 *  Description of the Method
+	 * Adds a readable non-DMS local file to a MIME message as an attachment.
 	 *
-	 *@param  serverPath            Description of the Parameter
-	 *@param  fileName              Description of the Parameter
-	 *@param  mp  Description of the Parameter
+	 * Missing files and attachment failures do not interrupt message construction.
+	 *
+	 * @param serverPath virtual or absolute path to the attachment
+	 * @param fileName file name to expose in the email, or an empty value to use the source name
+	 * @param mp target MIME container
 	 */
 	public static void attFile(String serverPath, String fileName, Multipart mp)
 	{
@@ -1071,8 +1115,9 @@ public class SendMail
 	}
 
 	/**
-	 * Vrati kodovanie pre email podla nastavenia servera, alebo ak nie je prazdne podla konfiguracnej premennej emailEncoding
-	 * @return
+	 * Resolves the configured email encoding with a fallback to the server encoding.
+	 *
+	 * @return encoding name used for email content
 	 */
 	public String getEncoding()
 	{
@@ -1085,10 +1130,11 @@ public class SendMail
 	}
 
 	/**
-	 * Vytvori absolutne cesty v zadanom HTML kode
-	 * @param htmlCode - HTML kod
-	 * @param basePath - absolutna adresa, bez koncoveho /, napr. http://www.iway.sk
-	 * @return
+	 * Converts root-relative links and form actions in HTML content to absolute URLs.
+	 *
+	 * @param htmlCode HTML content to update
+	 * @param basePath absolute base URL without a trailing slash, or {@code null} to leave the content unchanged
+	 * @return HTML content with supported root-relative references expanded
 	 */
 	public static String createAbsolutePath(String htmlCode, String basePath)
 	{
@@ -1127,8 +1173,13 @@ public class SendMail
 	}
 
 	/**
-	 * @param props
-	 * @return
+	 * Creates a mail session using the configured SMTP or Amazon SES settings.
+	 *
+	 * The supplied properties are enriched with transport, timeout, security, and
+	 * authentication settings as applicable.
+	 *
+	 * @param props base mail properties to configure
+	 * @return configured mail session
 	 */
 	public static Session getSession(Properties props)
 	{
@@ -1214,9 +1265,10 @@ public class SendMail
 	}
 
 	/**
-	 * Ziska prvu email adresu zo stringu typu meno@domena.sk,ine@domena.sk (pre polia, ktore mozu mat len jeden email ako from a replyTo)
-	 * @param email
-	 * @return
+	 * Selects the first address from a comma-separated email address value.
+	 *
+	 * @param email email address or comma-separated addresses
+	 * @return the first address, or the original value when no comma is present
 	 */
 	public static String getFirstEmailAddress(String email) {
 		int i = email.indexOf(',');
@@ -1228,11 +1280,11 @@ public class SendMail
 	}
 
 	/**
-	 * Return senderName of various email from config value moduleDefaultSenderName or defaultSenderName if module version is not defined.
-	 * If config value is not defined, fallback is empty then domain name will be used.
-	 * @param module
-	 * @param fallbackName - if no defaultSenderName constants is defined this value will be used
-	 * @return
+	 * Resolves a default sender name from module, global, fallback, and request-domain values.
+	 *
+	 * @param module module prefix used for the {@code DefaultSenderName} configuration key
+	 * @param fallbackName value to use when neither module nor global configuration is defined
+	 * @return resolved sender name, which may be {@code null} or empty when no source provides a value
 	 */
 	public static String getDefaultSenderName(String module, String fallbackName) {
 		String senderName = Constants.getStringExecuteMacro(module + "DefaultSenderName");
@@ -1250,11 +1302,11 @@ public class SendMail
 	}
 
 	/**
-	 * Return senderEmail of various email from config value moduleDefaultSenderEmail or defaultSenderEmail if module version is not defined.
-	 * If config value is not defined, fallback is empty then domain name will be used.
-	 * @param module
-	 * @param fallbackEmail - if no defaultSenderEmail constants is defined this value will be used
-	 * @return
+	 * Resolves a default sender address from module, global, fallback, and request-domain values.
+	 *
+	 * @param module module prefix used for the {@code DefaultSenderEmail} configuration key
+	 * @param fallbackEmail value to use when neither module nor global configuration is defined
+	 * @return resolved sender address, which may be {@code null} or empty when no source provides a value
 	 */
 	public static String getDefaultSenderEmail(String module, String fallbackEmail) {
 		String senderEmail = Constants.getStringExecuteMacro(module + "DefaultSenderEmail");

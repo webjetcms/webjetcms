@@ -5,21 +5,28 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import sk.iway.Html2Text;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
@@ -58,6 +65,7 @@ import sk.iway.iwcm.form.FormFileRestriction;
 import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.stat.ChartType;
 import sk.iway.iwcm.system.captcha.Captcha;
 import sk.iway.iwcm.system.datatable.RowReorderDto;
 import sk.iway.iwcm.system.datatable.RowReorderDto.RowReorderValue;
@@ -66,23 +74,22 @@ import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.utils.Pair;
 
+/**
+ * Validates, stores, and submits multistep forms.
+ *
+ * <p>The service maintains intermediate values in the HTTP session, applies field,
+ * anti-spam, and file validation, invokes optional form processors, and persists the
+ * completed form through {@link SaveFormService}.</p>
+ */
 @Service
 public class MultistepFormsService {
-    /**
-     * Service handling validation, session persistence and saving of multistep forms.
-     * <p>
-     * Responsibilities:
-     * - Generate stable session keys per form and user request
-     * - Validate step inputs (required, regex, XSS, CAPTCHA, CSRF, file rules)
-     * - Orchestrate custom processors/interceptors for steps and final save
-     * - Persist intermediate step data into HTTP session and finalize DB save
-     */
 
     public static final String SESSION_PREFIX = "MultistepForm_";
     public static final String MULTIUPLOAD_PREFIX = "multiupload";
     public static final String FILE_INPUT_FIELD_TYPE = "file_input";
 
     private static final String ALL_FILES_SIZE_SESSION_KEY_SUFFIX = "_allFilesSizeInKB";
+    private static final String SELECTED_VALUES_SESSION_KEY_SUFFIX = "-selectedValues-";
 
     private static final String ITEM_KEY_LABEL_PREFIX = "components.formsimple.label.";
     private static final String ITEM_KEY_HIDE_FIELDS_PREFIX = "components.formsimple.hide.";
@@ -93,6 +100,7 @@ public class MultistepFormsService {
 
     public static final String VISIBILITY_TAB = "visibilityConditions";
     public static final String REQUIREMENT_TAB = "requirementConditions";
+    public static final String STATISTICS_TAB = "stat";
 
     private final SaveFormService saveFormService;
     private final FormsRepository formsRepository;
@@ -114,7 +122,7 @@ public class MultistepFormsService {
     /**
      * Build the session key used to store per-form, per-request step data.
      *
-     * @param formName logical form name (will be sanitized elsewhere)
+     * @param formName logical form name
      * @param request  HTTP request providing the CSRF token header
      * @return stable session key in format {@code MultistepForm_<formName>_<domainId>_<csrf>}
      */
@@ -138,10 +146,10 @@ public class MultistepFormsService {
     }
 
     /**
-     * Extract and sanitize the {@code formName} from a params map.
+     * Reads the {@code formName} value from a parameter map.
      *
      * @param params map potentially containing key {@code formName}
-     * @return sanitized form name (safe for identifiers)
+     * @return form name, or an empty string when the value is missing
      */
     public static final String getFormName(Map<String, String> params) {
         String formName = Tools.getStringValue(params.get("formName"), "");
@@ -149,10 +157,10 @@ public class MultistepFormsService {
     }
 
     /**
-     * Extract and sanitize the {@code formName} from the request.
+     * Reads the {@code formName} parameter from the request.
      *
      * @param request HTTP request containing parameter {@code formName}
-     * @return sanitized form name (safe for identifiers)
+     * @return form name, or an empty string when the parameter is missing
      */
     public static final String getFormName(HttpServletRequest request) {
         String formName = Tools.getStringValue(request.getParameter("formName"), "");
@@ -180,7 +188,7 @@ public class MultistepFormsService {
      * Provide supported form field types as label/value pairs.
      *
      * @param request request used to resolve localized labels
-     * @return list of field type options
+     * @return pair containing localized visible options and technical iterable/text classifications
      */
     public static final Pair<List<LabelValue>, List<LabelValue>> getFieldTypes(HttpServletRequest request) {
         Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
@@ -253,10 +261,55 @@ public class MultistepFormsService {
     }
 
     /**
+     * Clears values that are not available for the selected form item type.
+     *
+     * @param entity form item being saved
+     * @param request request used to resolve the field visibility configuration
+     */
+    public static final void clearUnsupportedItemValues(FormItemEntity entity, HttpServletRequest request) {
+        if(entity == null || Tools.isEmpty(entity.getFieldType())) return;
+
+        String visibilityType = entity.getFieldType();
+        if("new-row".equals(visibilityType)) visibilityType = "novy-riadok";
+        else if("empty-column".equals(visibilityType)) visibilityType = "prazdny-stlpec";
+
+        BeanWrapperImpl entityWrapper = new BeanWrapperImpl(entity);
+        for(LabelValue visibility : getFiledTypeVisibility(request)) {
+            if(visibilityType.equals(visibility.getValue()) == false) continue;
+
+            for(String fieldName : Tools.getTokens(visibility.getLabel(), ",")) {
+                if(entityWrapper.isWritableProperty(fieldName) == false) continue;
+
+                if("regexValidationArr".equals(fieldName)) {
+                    entity.setRegexValidationArr(new Integer[0]);
+                    entity.setRegexValidation("");
+                } else {
+                    Class<?> propertyType = entityWrapper.getPropertyType(fieldName);
+                    if(String.class.equals(propertyType)) entityWrapper.setPropertyValue(fieldName, "");
+                    else if(Boolean.class.equals(propertyType) || boolean.class.equals(propertyType)) entityWrapper.setPropertyValue(fieldName, false);
+                    else entityWrapper.setPropertyValue(fieldName, null);
+                }
+            }
+            break;
+        }
+
+        if(getRowViewItemTypes().contains(entity.getFieldType())) {
+            entity.setShowStat(false);
+            entity.setChartType(ChartType.NOT_CHART.getKey());
+            entity.setTopCount(0);
+            entity.setShowOtherCount(false);
+            entity.setShowUnanswered(false);
+            entity.setCompareInsensitive(false);
+            entity.setUseColorScheme(false);
+            entity.setColorScheme(null);
+        }
+    }
+
+    /**
      * Provide tab visibility configuration per field type.
      * <p>
-     * Depending on the field type, returns list of tabs that should be shown in admin:
-     * visibility conditions, requirement conditions, both, or none.
+     * Depending on the field type, returns the visibility, requirement, and statistics
+     * tabs that should be shown in administration.
      *
      * @param request request used to resolve localized labels and field metadata
      * @return list mapping field type to a comma-separated list of visible tabs
@@ -273,7 +326,9 @@ public class MultistepFormsService {
         for(Entry<String, String> entry : formsimpleFields.entrySet()) {
             String type = entry.getKey().substring(ITEM_KEY_LABEL_PREFIX.length());
 
-            if(getRowViewItemTypes().contains(type) || "captcha".equals(type) || "verify_code".equals(type)) {
+            if(getRowViewItemTypes().contains(type)) {
+                options.add(new LabelValue(VISIBILITY_TAB + "," + REQUIREMENT_TAB + "," + STATISTICS_TAB, type));
+            } else if("captcha".equals(type) || "verify_code".equals(type)) {
                 options.add(new LabelValue(VISIBILITY_TAB + "," + REQUIREMENT_TAB, type));
             } else if(fieldVisibilityMap.getOrDefault(type, List.of()).contains("required")) {
                 options.add(new LabelValue(REQUIREMENT_TAB, type));
@@ -292,7 +347,7 @@ public class MultistepFormsService {
      * @param currentStep current step entity
      * @param repo          repository used to fetch ordered steps
      * @return next step entity or {@code null} if current step is the last
-     * @throws IllegalStateException when the provided step does not belong to the form/domain
+     * @throws IllegalStateException when the expected next step does not exist in the current domain
      */
     public static final FormStepEntity getNextStep(String formName, FormStepEntity currentStep, FormStepsRepository repo) {
         // Return null indicating its last step and there are no more steps
@@ -300,6 +355,21 @@ public class MultistepFormsService {
 
         return repo.getStepByPosition(formName, currentStep.getCurrentPosition() + 1, CloudToolsForCore.getDomainId())
             .orElseThrow(() -> new IllegalStateException("Given currentStepId: " + currentStep.getId() + " for form " + formName + " does NOT exist") );
+    }
+
+    /**
+     * Get the step preceding the provided step within a form sequence.
+     *
+     * @param formName logical form name
+     * @param currentStep current step entity
+     * @param repo repository used to fetch ordered steps
+     * @return previous step entity or {@code null} if current step is the first
+     */
+    public static final FormStepEntity getPreviousStep(String formName, FormStepEntity currentStep, FormStepsRepository repo) {
+        if(currentStep.getCurrentPosition() == null || currentStep.getCurrentPosition() <= 1) return null;
+
+        return repo.getStepByPosition(formName, currentStep.getCurrentPosition() - 1, CloudToolsForCore.getDomainId())
+            .orElseThrow(() -> new IllegalStateException("Previous step for currentStepId: " + currentStep.getId() + " and form " + formName + " does NOT exist") );
     }
 
     /**
@@ -315,7 +385,7 @@ public class MultistepFormsService {
      * Convert serialized form data into a key/value map.
      * <p>
      * Input format is expected as {@code itemFormId~value} pairs separated by {@code |}.
-     * Multi-upload synthetic suffix {@code -fileNames} is normalized away.
+     * The upload-field suffix {@code -fileNames} is normalized away.
      *
      * @param form persisted form entity with serialized data
      * @return ordered map of field identifiers and their values
@@ -363,12 +433,24 @@ public class MultistepFormsService {
 
     /* ********** PUBLIC - support methods ********** */
 
+    /**
+     * Resolves the settings identifier of a form in the current domain.
+     *
+     * @param formName logical form name
+     * @return form settings identifier, or {@code -1} when the form is not found
+     */
     public final int getFormId(String formName) {
         if(Tools.isEmpty(formName)) return -1;
         Long formId = formSettingsRepository.findId(formName, CloudToolsForCore.getDomainId());
         return formId != null ? formId.intValue() : -1;
     }
 
+    /**
+     * Resolves a form settings identifier through the registered service bean.
+     *
+     * @param formName logical form name
+     * @return form settings identifier, or {@code -1} when the form is not found
+     */
     public static int getFormIdStatic(String formName) {
         //get SpringBean
         MultistepFormsService multistepFormsService = Tools.getSpringBean("multistepFormsService", MultistepFormsService.class);
@@ -388,23 +470,166 @@ public class MultistepFormsService {
     }
 
     /**
+     * Load values previously saved for a step and prepare metadata for temporary uploads.
+     *
+     * @param formName logical form name
+     * @param stepId step identifier
+     * @param request request containing the form session
+     * @return pair containing saved values and Dropzone-compatible upload metadata
+     */
+    public final Pair<JSONObject, JSONObject> getSavedStepData(String formName, Long stepId, HttpServletRequest request) {
+        JSONObject savedValues = new JSONObject();
+        JSONObject savedFiles = new JSONObject();
+        String sessionPrefix = getSessionKey(formName, request) + "_";
+        XhrFileUploadService uploadService = XhrFileUploadServlet.getService();
+
+        for(FormItemEntity stepItem : getStepItemsForValidation(stepId)) {
+            if("captcha".equals(stepItem.getFieldType())) continue;
+
+            String itemFormId = stepItem.getItemFormId();
+            Object sessionValueObject = request.getSession().getAttribute(sessionPrefix + itemFormId);
+            if(sessionValueObject == null) continue;
+
+            String sessionValue = sessionValueObject.toString();
+            if(isFileUploadField(stepItem.getFieldType())) {
+                JSONObject fileMetadata = new JSONObject();
+                List<String> validFileKeys = new ArrayList<>();
+
+                for(String fileKey : Tools.getTokens(sessionValue, ";")) {
+                    String filePath = uploadService.getTempFilePath(fileKey);
+                    if(Tools.isEmpty(filePath)) continue;
+
+                    IwcmFile file = new IwcmFile(filePath);
+                    if(file.exists() == false) continue;
+
+                    String originalFileName = uploadService.getOriginalFileName(fileKey);
+                    if(Tools.isEmpty(originalFileName)) continue;
+
+                    JSONObject fileInfo = new JSONObject();
+                    fileInfo.put("key", fileKey);
+                    fileInfo.put("name", originalFileName);
+                    fileInfo.put("size", file.length());
+                    fileInfo.put("success", true);
+                    if(FileTools.isImage(originalFileName) && originalFileName.toLowerCase(Locale.ROOT).endsWith(".svg") == false) {
+                        String thumbnailUrl = UriComponentsBuilder.fromPath("/rest/multistep-form/temp-file-preview")
+                            .queryParam("form-name", formName)
+                            .queryParam("file-key", fileKey)
+                            .build()
+                            .encode()
+                            .toUriString();
+                        fileInfo.put("thumbnailUrl", thumbnailUrl);
+                    }
+
+                    validFileKeys.add(fileKey);
+                    fileMetadata.put(fileKey, fileInfo);
+                }
+
+                String validSessionValue = String.join(";", validFileKeys);
+                savedValues.put(itemFormId, validSessionValue);
+                request.getSession().setAttribute(sessionPrefix + itemFormId, validSessionValue);
+                if(fileMetadata.length() > 0) savedFiles.put(itemFormId, fileMetadata);
+            } else {
+                String[] selectedValues = getSavedSelectedValues(formName, itemFormId, request);
+                if(selectedValues != null) {
+                    savedValues.put(itemFormId, new JSONArray(selectedValues));
+                } else {
+                    savedValues.put(itemFormId, sessionValue);
+                }
+            }
+        }
+
+        return new Pair<>(savedValues, savedFiles);
+    }
+
+    /**
+     * Returns exact saved choices while their legacy string value remains unchanged.
+     *
+     * @param formName logical form name
+     * @param itemFormId logical field identifier
+     * @param request request containing the current form session
+     * @return exact choices, or {@code null} for legacy or processor-modified values
+     */
+    static String[] getSavedSelectedValues(String formName, String itemFormId, HttpServletRequest request) {
+        String sessionKey = getSessionKey(formName, request);
+        Object selectedValues = request.getSession().getAttribute(sessionKey + SELECTED_VALUES_SESSION_KEY_SUFFIX + itemFormId);
+        Object sessionValue = request.getSession().getAttribute(sessionKey + "_" + itemFormId);
+        if(selectedValues instanceof String[] values && sessionValue != null && sessionValue.toString().equals(Tools.join(values, ","))) {
+            return values;
+        }
+        return null;
+    }
+
+    /**
+     * Resolves a previewable temporary image owned by the current form session.
+     *
+     * <p>The file key must belong to an upload field stored in the session. Missing
+     * files, unsupported image formats, and SVG files are rejected.</p>
+     *
+     * @param formName logical form name
+     * @param fileKey temporary upload key
+     * @param request request containing the form session
+     * @return validated image file, or {@code null} when it cannot be previewed
+     */
+    public IwcmFile getSavedTempFilePreview(String formName, String fileKey, HttpServletRequest request) {
+        if(Tools.isEmpty(formName) || Tools.isEmpty(fileKey) || fileKey.length() > 100 || fileKey.matches("[A-Za-z0-9]+") == false) return null;
+
+        Set<String> fileFieldSuffixes = getFormItemsForValidation(formName).stream()
+            .filter(item -> isFileUploadField(item.getFieldType()))
+            .map(item -> "_" + item.getItemFormId())
+            .collect(Collectors.toSet());
+        if(fileFieldSuffixes.isEmpty()) return null;
+
+        HttpSession session = request.getSession(false);
+        if(session == null) return null;
+
+        String sessionPrefix = SESSION_PREFIX + formName + "_" + CloudToolsForCore.getDomainId() + "_";
+        Enumeration<String> attributeNames = session.getAttributeNames();
+        while(attributeNames.hasMoreElements()) {
+            String attributeName = attributeNames.nextElement();
+            if(attributeName.startsWith(sessionPrefix) == false || fileFieldSuffixes.stream().noneMatch(attributeName::endsWith)) continue;
+
+            Object sessionValue = session.getAttribute(attributeName);
+            if(sessionValue == null) continue;
+
+            for(String savedFileKey : Tools.getTokens(sessionValue.toString(), ";")) {
+                if(fileKey.equals(savedFileKey)) {
+                    String filePath = XhrFileUploadServlet.getService().getTempFilePath(fileKey);
+                    if(Tools.isEmpty(filePath)) return null;
+
+                    IwcmFile file = new IwcmFile(filePath);
+                    String originalFileName = XhrFileUploadServlet.getService().getOriginalFileName(fileKey);
+                    boolean previewableImage = file.exists() && Tools.isNotEmpty(originalFileName) && FileTools.isImage(originalFileName) && originalFileName.toLowerCase(Locale.ROOT).endsWith(".svg") == false;
+                    return previewableImage ? file : null;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Return matching configured options for an autocomplete form item.
      *
+     * @param formName form name used to validate the current session; the item's form name is used when empty
      * @param stepId current form step
      * @param itemId autocomplete form item
      * @param term text entered by the user; at least two characters are required
      * @param request current form request
      * @return matching label/value options
      */
-    public final List<LabelValue> getAutocompleteOptions(Long stepId, Long itemId, String term, HttpServletRequest request) {
+    public final List<LabelValue> getAutocompleteOptions(String formName, Long stepId, Long itemId, String term, HttpServletRequest request) {
         List<LabelValue> options = new ArrayList<>();
         if(stepId == null || stepId < 1L || itemId == null || itemId < 1L) return options;
 
         FormItemEntity item = formItemsRepository.findById(itemId).orElse(null);
         int domainId = CloudToolsForCore.getDomainId();
-        if(item == null || AUTOCOMPLETE_FIELD_TYPE.equals(item.getFieldType()) == false ||
+        if(item == null) return options;
+
+        String sessionFormName = Tools.isNotEmpty(formName) ? formName : item.getFormName();
+        if(AUTOCOMPLETE_FIELD_TYPE.equals(item.getFieldType()) == false ||
             stepId.equals(item.getStepId()) == false || item.getDomainId() == null || item.getDomainId() != domainId ||
-            validateFormInfo(item.getFormName(), stepId, request) == false) {
+            Tools.isEmpty(item.getFormName()) || item.getFormName().equalsIgnoreCase(sessionFormName) == false ||
+            validateFormInfo(sessionFormName, stepId, request) == false) {
             return options;
         }
 
@@ -427,6 +652,19 @@ public class MultistepFormsService {
         }
 
         return options;
+    }
+
+    /**
+     * Backward-compatible variant for callers that do not provide the form instance name.
+     *
+     * @param stepId current form step
+     * @param itemId autocomplete form item
+     * @param term text entered by the user
+     * @param request current form request
+     * @return matching label/value options
+     */
+    public final List<LabelValue> getAutocompleteOptions(Long stepId, Long itemId, String term, HttpServletRequest request) {
+        return getAutocompleteOptions(null, stepId, itemId, term, request);
     }
 
     private static String normalizeAutocompleteValue(String value) {
@@ -516,7 +754,8 @@ public class MultistepFormsService {
      * Build human-readable options for steps of a form suitable for selection inputs.
      *
      * @param formName logical form name
-     * @return list of label/value pairs ordered by step sorting
+     * @param prop localization provider used for step labels
+     * @return list of label/value pairs for the form steps
      */
     public final List<LabelValue> getFormStepsOptions(String formName, Prop prop) {
         List<LabelValue> options = new ArrayList<>();
@@ -536,14 +775,14 @@ public class MultistepFormsService {
     }
 
     /**
-     * Generate a valid and unique {@code itemFormId} for a form item within a form.
+     * Generates a valid {@code itemFormId} for a form item within a form.
      * <p>
-     * For {@code radio} fields, derives id from label/placeholder and required flag,
-     * allowing multiple radio buttons to share the same logical id. For other fields,
-     * generates a unique suffix (numeric) to avoid collisions within the form and domain.
+     * For {@code radio} fields, derives the identifier from the label or field type and
+     * required flag, allowing radio buttons to share the same logical identifier.
+     * For other fields, adds a numeric suffix to avoid collisions within the form and domain.
      *
      * @param entity form item to generate id for
-     * @return unique itemFormId string safe for storage and queries
+     * @return identifier safe for storage and queries, unique for non-radio fields
      */
     public final String getValidItemFormId(FormItemEntity entity) {
 
@@ -615,9 +854,9 @@ public class MultistepFormsService {
     /* ********** PUBLIC - main logic methods to work with form ********** */
 
     /**
-     * Update or create the pattern entity (form definition) for the form by
-     * concatenating all unique {@code itemFormId}s in validation order.
-     * Multi-upload fields append the {@code -fileNames} postfix.
+     * Updates or creates the pattern entity for a form by concatenating its validation
+     * item identifiers in order.
+     * Upload fields append the {@code -fileNames} postfix.
      *
      * @param formName logical form name
      */
@@ -687,7 +926,7 @@ public class MultistepFormsService {
         validateFields(formName, stepItems, received, spamProtectionEnabled, request, errors);
 
         /* Separate validate file fields */
-        validateFileFields(formName, formSettings, received, errors, request);
+        validateFileFields(formName, formSettings, stepItems, received, errors, request);
 
         // GET form processor that can have custom validation / interceptor / form save
         FormProcessorInterface formProcessor = getFormProcessor(request, formName, stepId, formSettings);
@@ -830,9 +1069,15 @@ public class MultistepFormsService {
     }
 
     /**
-     * @return
-     *  TRUE - continue with WebJET basic save
-     *  FALSE - skip basic save
+     * Lets the configured processor handle the final form save.
+     *
+     * @param formProcessor optional processor implementation
+     * @param formName logical form name
+     * @param request current form request
+     * @param formSettings settings used for the submission
+     * @param iLastDocId document containing the form, or {@code null} when unavailable
+     * @return {@code true} to continue with the standard WebJET save; {@code false} to skip it
+     * @throws SaveFormException when the custom processor cannot complete the save
      */
     private boolean customFormSave(FormProcessorInterface formProcessor, String formName, HttpServletRequest request, FormSettingsEntity formSettings, Integer iLastDocId) throws SaveFormException {
         if(formProcessor != null) {
@@ -859,6 +1104,7 @@ public class MultistepFormsService {
     private void saveStepData(String formName, Long stepId, JSONObject received, HttpServletRequest request) {
         String sessionKey = getSessionKey(formName, request);
         String prefix = sessionKey + "_";
+        Prop prop = Prop.getInstance(request);
 
         for(FormItemEntity stepItem : getStepItemsForValidation(stepId)) {
             String[] values = asArray(stepItem.getItemFormId(), received);
@@ -867,17 +1113,29 @@ public class MultistepFormsService {
                 // Skip captcha fields
             } else {
                 request.getSession().setAttribute(prefix + stepItem.getItemFormId(), stringValue);
+                String selectedValuesKey = sessionKey + SELECTED_VALUES_SESSION_KEY_SUFFIX + stepItem.getItemFormId();
+                String inputHtml = prop.getText(ITEM_KEY_INPUT_PREFIX + stepItem.getFieldType());
+                if(inputHtml != null && inputHtml.contains("${iterable}")) {
+                    inputHtml += prop.getText("components.formsimple.iterable." + stepItem.getFieldType());
+                }
+                if(inputHtml != null && Jsoup.parseBodyFragment(inputHtml).selectFirst("input[type=checkbox], input[type=radio]") != null) {
+                    // Keep exact choices for restoration without changing the legacy string session value.
+                    request.getSession().setAttribute(selectedValuesKey, values);
+                } else {
+                    request.getSession().removeAttribute(selectedValuesKey);
+                }
             }
         }
     }
 
     /**
-     * Validate non-file step fields including required flags, captcha, XSS and regex rules.
+     * Validates step fields against required, CAPTCHA, XSS, and regular-expression rules.
+     * Multi-upload fields are handled separately by {@link #validateFileFields}.
      *
      * @param formName              logical form name
-     * @param stepId                current step id
+     * @param stepItems             field definitions belonging to the current step
      * @param received              submitted step payload
-     * @param spamProtectionEnabled whether captcha/csrf protections are active
+     * @param spamProtectionEnabled whether CAPTCHA validation is active
      * @param request               HTTP request with localization/session context
      * @param errors                mutable map collecting field validation errors
      * @throws SaveFormException when anti-spam XSS checks fail
@@ -993,15 +1251,17 @@ public class MultistepFormsService {
     }
 
     /**
-     * Validate multi-upload file fields including restrictions and duplicate file names.
+     * Validates upload fields against file restrictions and duplicate file names.
      *
      * @param formName     logical form name
      * @param formSettings already-loaded form settings (may be null)
+     * @param stepItems    trusted field definitions belonging to the current step
      * @param received     submitted step payload
      * @param errors       mutable map collecting file validation errors
      * @param request      HTTP request with localization context
+     * @throws SaveFormException when the combined upload size exceeds the configured limit
      */
-    private void validateFileFields(String formName, FormSettingsEntity formSettings, JSONObject received, Map<String, String> errors, HttpServletRequest request) throws SaveFormException {
+    private void validateFileFields(String formName, FormSettingsEntity formSettings, List<FormItemEntity> stepItems, JSONObject received, Map<String, String> errors, HttpServletRequest request) throws SaveFormException {
         Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
 
         String sessionKey = getSessionKey(formName, request);
@@ -1018,22 +1278,29 @@ public class MultistepFormsService {
             }
         }
 
-        String[] uploadedFilesParamNameList = asArray("Multiupload.formElementName", received);
-        if (uploadedFilesParamNameList == null || uploadedFilesParamNameList.length == 0) {
-            return;
-        }
+        List<FormItemEntity> currentStepFileItems = stepItems.stream()
+            .filter(item -> isFileUploadField(item.getFieldType()))
+            .toList();
+        if (currentStepFileItems.isEmpty()) return;
+
+        Set<String> currentStepFileFields = currentStepFileItems.stream()
+            .map(FormItemEntity::getItemFormId)
+            .collect(Collectors.toSet());
+
+        Set<String> activeFileKeys = getActiveFileKeys(formName, currentStepFileFields, received, request);
 
         // Build restriction from already-loaded formSettings to avoid redundant DB queries
         FormFileRestriction restriction = FormSettingsService.getFileRestriction(formName, formSettings);
 
         XhrFileUploadService uploadService = XhrFileUploadServlet.getService();
 
-        for (String uploadedFilesParamName : uploadedFilesParamNameList) {
+        for (FormItemEntity fileItem : currentStepFileItems) {
+            String uploadedFilesParamName = fileItem.getItemFormId();
+
             // Skip if there is no value for this parameter
             if (Tools.isEmpty(received.optString(uploadedFilesParamName, ""))) continue;
 
-            FormItemEntity fileItem = formItemsRepository.findFirstByFormNameAndItemFormIdAndDomainIdOrderBySortPriorityAsc(formName, uploadedFilesParamName, CloudToolsForCore.getDomainId());
-            boolean singleFileInput = fileItem != null && FILE_INPUT_FIELD_TYPE.equals(fileItem.getFieldType());
+            boolean singleFileInput = FILE_INPUT_FIELD_TYPE.equals(fileItem.getFieldType());
             int uploadedFileCount = 0;
             Map<String, Integer> sameImageCount = new HashMap<>();
             StringBuilder fileNames = new StringBuilder(); // collected names (currently unused, kept for compatibility)
@@ -1100,8 +1367,8 @@ public class MultistepFormsService {
             });
         }
 
-        // Drop deleted/expired temp files from the session map (e.g., user removed an upload)
-        fileSizeMap.entrySet().removeIf(e -> uploadService.getTempFilePath(e.getKey()) == null);
+        // Drop deleted, expired or deselected files from the accumulated size map.
+        fileSizeMap.entrySet().removeIf(e -> activeFileKeys.contains(e.getKey()) == false || uploadService.getTempFilePath(e.getKey()) == null);
 
         // Save file size map back to session
         request.getSession().setAttribute(fileSizeMapKey, fileSizeMap);
@@ -1113,6 +1380,41 @@ public class MultistepFormsService {
                 throw new SaveFormException(prop.getText("components.forms.combined_files_to_big_err", FileTools.formatFileSizeFromKb(restriction.getMaxCombinedSizeInKilobytes())), "bad_file", false, null);
             }
         }
+    }
+
+    /**
+     * Collects temporary upload keys still referenced by the submitted step or session.
+     *
+     * @param formName logical form name
+     * @param currentStepFileFields upload fields defined for the current step
+     * @param received submitted step payload
+     * @param request request containing values saved for other steps
+     * @return active temporary upload keys across the form
+     */
+    private Set<String> getActiveFileKeys(String formName, Set<String> currentStepFileFields, JSONObject received, HttpServletRequest request) {
+        Set<String> activeFileKeys = new HashSet<>();
+        String sessionPrefix = getSessionKey(formName, request) + "_";
+
+        for(FormItemEntity formItem : getFormItemsForValidation(formName)) {
+            if(isFileUploadField(formItem.getFieldType()) == false) continue;
+
+            String itemFormId = formItem.getItemFormId();
+            String[] values;
+            if(currentStepFileFields.contains(itemFormId)) {
+                values = asArray(itemFormId, received);
+            } else {
+                Object sessionValue = request.getSession().getAttribute(sessionPrefix + itemFormId);
+                values = new String[] {sessionValue == null ? "" : sessionValue.toString()};
+            }
+
+            for(String value : values) {
+                for(String fileKey : Tools.getTokens(value, ";")) {
+                    if(Tools.isNotEmpty(fileKey)) activeFileKeys.add(fileKey);
+                }
+            }
+        }
+
+        return activeFileKeys;
     }
 
     /* ********** PRIVATE - support methods ********** */
@@ -1232,7 +1534,7 @@ public class MultistepFormsService {
      * Fetch distinct minimal form item definitions required for validation for the form.
      *
      * @param formName logical form name
-     * @return list of simplified {@code FormItemEntity} containing id, label, type, regex, required
+     * @return simplified form items containing the fields required by validation
      */
     public static List<FormItemEntity> getFormItemsForValidation(String formName) {
         String sql = "SELECT f.id, item_form_id, label, field_type, regex_validation, required, custom_error, trim_value FROM form_items f, form_steps s WHERE f.form_name = ? AND f.domain_id = ? AND f.step_id=s.id ORDER BY s.sort_priority ASC, f.sort_priority ASC";
@@ -1279,7 +1581,7 @@ public class MultistepFormsService {
     /**
      * Perform pre-save anti-spam checks based on cookies and CSRF token.
      *
-     * @param spamProtectionEnabled flag whether CSRF/captcha checks are enforced
+     * @param spamProtectionEnabled current spam-protection setting, retained for compatibility but not used
      * @param request               current HTTP request
      * @throws SaveFormException when anti-spam checks fail
      */
@@ -1385,12 +1687,12 @@ public class MultistepFormsService {
      * Retrieve the form instance counter for the current request.
      * <p>
      * When multiple instances of the same form appear on a single page,
-     * each gets a unique counter value (1, 2, 3, ...) stored in session
+     * each gets a unique counter value stored in the session
      * during {@link MultistepFormApp#view}.
      *
      * @param formName logical form name
      * @param request  HTTP request with session containing the counter
-     * @return form instance counter (1-based), defaults to 1 when not set or invalid
+     * @return stored form instance counter clamped to at least {@code -1}, or {@code -1} when absent
      */
     public int getFormCounter(String formName, HttpServletRequest request) {
         if(Tools.isEmpty(formName)) return -1;
@@ -1399,6 +1701,16 @@ public class MultistepFormsService {
         return -1;
     }
 
+    /**
+     * Removes the rendered form-instance prefix from submitted field names.
+     *
+     * <p>The same prefix is also removed from upload marker values so custom processors
+     * receive field references consistent with the normalized payload keys.</p>
+     *
+     * @param received submitted form payload
+     * @param formCounter rendered form instance counter
+     * @return payload with normalized field names
+     */
     private JSONObject removeFormCounter(JSONObject received, int formCounter) {
         // loop received and remove form counter + "-" as prefix from keys
         String prefix = "f" + formCounter + "-";
@@ -1407,8 +1719,8 @@ public class MultistepFormsService {
             Object value = received.get(key);
 
             // The multiupload marker input value references a field name that is
-            // rendered with the form-counter prefix, strip it so it matches the
-            // counter-stripped keys used later in validateFileFields().
+            // rendered with the form-counter prefix, so keep it consistent with
+            // the counter-stripped payload keys.
             if ("Multiupload.formElementName".equals(key)) {
                 value = removeFormCounterFromValue(value, prefix);
             }
@@ -1449,6 +1761,14 @@ public class MultistepFormsService {
         return value;
     }
 
+    /**
+     * Replaces form value placeholders with values stored for the current session.
+     *
+     * @param formName logical form name
+     * @param request request containing values saved by earlier steps
+     * @param formHtml form markup containing {@code !fieldId!} placeholders
+     * @return updated markup, {@code null} when {@code formHtml} is {@code null}
+     */
     public static final StringBuilder updateFormValues(String formName, HttpServletRequest request, StringBuilder formHtml) {
         if (formHtml == null) return null;
         if (Tools.isEmpty(formName) || request == null) return formHtml;

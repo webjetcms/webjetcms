@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -40,6 +41,12 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.users.UserDetails;
 
+/**
+ * Produces domain-scoped statistics and chart data for multi-step forms.
+ *
+ * <p>The service combines form metadata with stored submissions and audit events
+ * filtered to the requested date range, producing JSON payloads for statistics views.</p>
+ */
 @Service
 public class FormStatService {
 
@@ -118,6 +125,12 @@ public class FormStatService {
             String stringRange = Tools.getStringValue(request.getParameter("dayDate"), "");
             if(Tools.isEmpty(stringRange)) stringRange = Tools.getStringValue(request.getParameter("searchDayDate"), "");
 
+            if(Tools.isEmpty(stringRange.replaceFirst("^daterange:", ""))) {
+                Date formCreationDate = getFormCreationDate(this.formName, this.domainId);
+                if(formCreationDate == null) formCreationDate = new Date(0L);
+                return new Date[] {formCreationDate, new Date()};
+            }
+
             return StatService.processDateRangeString(stringRange);
         }
 
@@ -137,7 +150,7 @@ public class FormStatService {
         }
 
         /**
-         * Loads form items that are enabled for statistics ({@code show_stat=1}).
+         * Loads form items that are enabled for statistics ({@code show_stat=1}), excluding layout support items.
          * Results are ordered by step and item priority.
          * Consecutive radio items with the same {@code itemFormId} are collapsed to one record.
          *
@@ -165,6 +178,8 @@ public class FormStatService {
                 @Override
                 public FormItemEntity map(ResultSet rs) throws SQLException {
                     FormItemEntity stepItem = resultSetToItemEntity(rs);
+
+                    if(MultistepFormsService.getRowViewItemTypes().contains(stepItem.getFieldType())) return null;
 
                     // Radio buttons may be stored as separate rows; collapse consecutive rows with the same id.
                     if("radio".equals(stepItem.getFieldType()) &&  previous.get(0).equals(stepItem.getItemFormId())) return null;
@@ -208,7 +223,7 @@ public class FormStatService {
      * bonus chart data, and validation error chart data.
      *
      * @param formName the form name identifier
-     * @param request the HTTP request used to resolve localization
+     * @param request the HTTP request used to resolve localization and date filters
      * @return JSON object with all calculated statistics, or {@code null} when formName is empty
      */
     public final JSONObject getFormStatData(String formName, HttpServletRequest request) {
@@ -243,7 +258,7 @@ public class FormStatService {
      *
      * @param formName the form name identifier
      * @param itemFormId form item identifier that must be non-empty
-     * @param request the HTTP request used to resolve localization
+     * @param request the HTTP request used to resolve localization and date filters
      * @return JSON array with chart data, or {@code null} when required parameters are empty
      */
     public final JSONArray getFormStatChartData(String formName, String itemFormId, HttpServletRequest request) {
@@ -275,32 +290,44 @@ public class FormStatService {
     }
 
     /**
+     * Resolves the form creation timestamp from its pattern row.
+     * Falls back to the first submitted response for legacy forms.
+     *
+     * @param formName the form name identifier
+     * @param domainId the current domain identifier
+     * @return form creation date, or {@code null} when no reliable timestamp exists
+     */
+    private Date getFormCreationDate(String formName, int domainId) {
+        long currentTime = Tools.getNow();
+        Long formCreationEpoch = formsRepository.getFormCreationDuration(formName, domainId).orElse(null);
+        if(formCreationEpoch != null && formCreationEpoch > 0L && formCreationEpoch <= currentTime / 1000L) {
+            return new Date(formCreationEpoch * 1000L);
+        }
+
+        Date firstResponseDate = formsRepository.getMinFormCreateDate(formName, domainId).orElse(null);
+        if(firstResponseDate != null && firstResponseDate.getTime() <= currentTime) return firstResponseDate;
+        return null;
+    }
+
+    /**
      * Calculates how many days have passed since the form was created.
      * Falls back to the first response date when the creation timestamp is unavailable.
      *
      * @param context shared request statistics context
-     * @return number of elapsed days, {@code < 1} for same-day forms, or {@code 0} when unknown
+     * @return elapsed-day label, {@code < 1} for same-day forms, or {@code 0} when unknown
      */
     private String computeDurationDays(StatContext context) {
-        Long formCreationEpoch = formsRepository.getFormCreationDuration(context.formName, context.domainId).orElse(null);
-        if(formCreationEpoch == null  || formCreationEpoch <= 0L) {
-            //try to use first response as fallback
-            Date minDate = formsRepository.getMinFormCreateDate(context.formName, context.domainId).orElse(null);
-            if(minDate != null) {
-                formCreationEpoch = minDate.getTime() / 1000;
-            }
-        }
+        Date formCreationDate = getFormCreationDate(context.formName, context.domainId);
+        if(formCreationDate == null) return "0";
 
-        if(formCreationEpoch == null || formCreationEpoch <= 0) return "0";
-        long currentEpoch = Tools.getNow() / 1000;
-        long durationDays = (currentEpoch - formCreationEpoch) / (60 * 60 * 24);
+        long durationDays = (Tools.getNow() - formCreationDate.getTime()) / (1000L * 60 * 60 * 24);
         if(durationDays < 1) return "< 1";
         return String.valueOf(durationDays);
     }
 
     /**
      * Computes the average time users spend filling out the form.
-     * Only entities with non-null createDate and positive duration are included.
+     * Only entities with a non-null, positive duration are included.
      *
      * @param formEntities list of form submissions
      * @return average duration formatted as {@code MM:SS}
@@ -767,7 +794,7 @@ public class FormStatService {
         valuesArray.put( getChartObject(context.prop.getText("components.multistep_form.system_errors.badFile"), badFileCount) );
         valuesArray.put( getChartObject(context.prop.getText("components.multistep_form.system_errors.csrfErrors"), csrfErrorsCount) );
         errorData.put("pieSystemErrorData",  valuesArray);
-        errorData.put("timelineErrorData", getTimelineErrorData(context, logs, context.dateRange[0], context.dateRange[1]));
+        errorData.put("timelineErrorData", getTimelineErrorData(context.formId, context.prop, logs, context.dateRange[0], context.dateRange[1]));
 
         return errorData;
     }
@@ -789,13 +816,17 @@ public class FormStatService {
     /**
      * Builds timeline data for system errors grouped by day and operation type.
      *
-     * @param context shared context containing form and localization data
+     * @param formId identifier of the form whose events are displayed
+     * @param prop localization provider for series labels
      * @param logs audit log entries for the selected form and date range
-     * @return JSON object keyed by localized operation names with daily error counts
+     * @param dateFrom first day included in the timeline
+     * @param dateTo last day included in the timeline
+     * @return JSON object keyed by localized operation names with daily error counts, or an empty
+     *         object when {@code formId < 1}
      */
-    private JSONObject getTimelineErrorData(StatContext context, List<AuditLogEntity> logs, Date dateFrom, Date dateTo) {
+    JSONObject getTimelineErrorData(int formId, Prop prop, List<AuditLogEntity> logs, Date dateFrom, Date dateTo) {
         JSONObject timelineErrorData = new JSONObject();
-        if(context.formId < 1) return timelineErrorData;
+        if(formId < 1) return timelineErrorData;
 
         TreeMap<String, TreeMap<Long, Integer>> dayErrorCounts = new TreeMap<>();
         dayErrorCounts.put("errorStepGet", new TreeMap<>());
@@ -826,21 +857,22 @@ public class FormStatService {
         for (Map.Entry<String, TreeMap<Long, Integer>> entry : dayErrorCounts.entrySet()) {
             TreeMap<Long, Integer> value = entry.getValue();
             JSONArray valuesArray = new JSONArray();
-            long cursor = dateFromNorm.getTime();
-            while (cursor <= dateToNorm.getTime()) {
+            Calendar cursor = Calendar.getInstance();
+            cursor.setTime(dateFromNorm);
+            while (cursor.getTimeInMillis() <= dateToNorm.getTime()) {
                 JSONObject obj = new JSONObject();
-                obj.put("dayDate", cursor);
-                obj.put("count", value.getOrDefault(cursor, 0));
+                obj.put("dayDate", cursor.getTimeInMillis());
+                obj.put("count", value.getOrDefault(cursor.getTimeInMillis(), 0));
                 valuesArray.put(obj);
-                cursor += 86400000L;
+                cursor.add(Calendar.DATE, 1);
             }
             String key = entry.getKey();
             if ("errorStepGet".equals(key)) {
-                key = context.prop.getText("components.multistep_form.system_errors.error_get_step");
+                key = prop.getText("components.multistep_form.system_errors.error_get_step");
             } else if ("errorStepSave".equals(key)) {
-                key = context.prop.getText("components.multistep_form.system_errors.error_save_step");
+                key = prop.getText("components.multistep_form.system_errors.error_save_step");
             } else if ("successSave".equals(key)) {
-                key = context.prop.getText("components.multistep_form.system_errors.success_save_step");
+                key = prop.getText("components.multistep_form.system_errors.success_save_step");
             }
             timelineErrorData.put(key, valuesArray);
         }

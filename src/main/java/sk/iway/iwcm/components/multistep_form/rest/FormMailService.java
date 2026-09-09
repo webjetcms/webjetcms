@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
-import jakarta.mail.Address;
 import jakarta.mail.Message;
 import jakarta.mail.Multipart;
 import jakarta.mail.Session;
@@ -50,13 +49,11 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
- * Service responsible for preparing and sending emails for multi‑step forms.
- * <p>
- * Responsibilities:
- * - Extracts sender name and email from submitted form data based on configured field keys
- * - Composes HTML or plain‑text email body including optional CSS and attachments
- * - Applies repository settings (encoding, reply-to/cc/bcc, delayed send, double‑opt‑in)
- * - Sends email via configured SMTP or schedules deferred sending when SMTP is disabled
+ * Prepares and sends notification emails for submitted multistep forms.
+ *
+ * <p>The service derives sender details from submitted fields, applies form mail
+ * settings, composes HTML or plain-text content, handles attachments, and supports
+ * immediate or delayed delivery.</p>
  */
 @Service
 public class FormMailService {
@@ -107,26 +104,30 @@ public class FormMailService {
 
 	/**
 	 * Sends a notification email for the given form submission.
-	 * <p>
-	 * Behavior overview:
-	 * - Determines sender name/email from form data using configuration keys
-	 * - Applies form settings (encoding, reply-to/cc/bcc, delayed sending, attachments handling)
-	 * - Inlines CSS into HTML body when sending as HTML unless forced to plain text
-	 * - Optionally attaches message HTML as a separate file when configured
-	 * - Sends immediately via SMTP or schedules for later when SMTP is disabled
+	 *
+	 * <p>The method derives sender details from configured form fields, applies encoding
+	 * and recipient settings, prepares HTML or plain-text content and attachments, and
+	 * either sends immediately or schedules delayed delivery.</p>
 	 *
 	 * @param form       form entity with metadata and serialized field data
 	 * @param recipients comma‑separated list of recipient emails
 	 * @param subject    email subject
 	 * @param formFiles  uploaded files container to optionally attach
 	 * @param attachFiles when true attaches uploaded files to the email
-	 * @param cssData    inline <style> block or CSS links already made absolute
+	 * @param cssData    stylesheet markup whose relative paths are converted to absolute URLs
 	 * @param htmlData   rendered form body HTML (will be transformed as needed)
 	 * @param request    current HTTP request used for context and headers
+	 * @throws SaveFormException when the submission is rejected for email reasons or the message cannot
+	 *         be sent or queued
 	 */
     public void sendMail(FormsEntity form, String recipients, String subject, FormFiles formFiles, boolean attachFiles, String cssData, StringBuilder htmlData, HttpServletRequest request) throws SaveFormException{
-		Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
 		FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(form.getFormName(), CloudToolsForCore.getDomainId());
+		sendMail(form, formSettings, recipients, subject, formFiles, attachFiles, cssData, htmlData, request);
+	}
+
+	void sendMail(FormsEntity form, FormSettingsEntity formSettings, String recipients, String subject, FormFiles formFiles, boolean attachFiles, String cssData, StringBuilder htmlData, HttpServletRequest request) throws SaveFormException{
+		Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
+		boolean formDataEncrypted = Tools.isNotEmpty(formSettings.getEncryptKey());
 
         String meno = null;
         List<String> namesList = getFieldsValues(form, NAME_FIELD_KEY);
@@ -159,7 +160,7 @@ public class FormMailService {
 		request.setAttribute("doubleOptIn", formSettings.getDoubleOptIn());
 
 		if (sendUserInfoDocId > 0)
-			FormMailAction.sendUserInfo(sendUserInfoDocId, form.getId().intValue(), email, formFiles.getAttachs(), null, request);
+			FormMailAction.sendUserInfo(sendUserInfoDocId, form.getId().intValue(), email, formFiles.getAttachs(), null, request, !formDataEncrypted);
 
 		Logger.println(FormMailService.class,"FormMailService recipients=" + recipients);
 
@@ -185,6 +186,23 @@ public class FormMailService {
 
 			if (meno == null || meno.trim().length() < 1) meno = email;
 
+			String effectiveSenderName = meno;
+			String effectiveSenderEmail = FormMailAction.getFirstEmail(email);
+			String effectiveReplyTo = Tools.isEmail(formSettings.getReplyTo()) ? formSettings.getReplyTo() : null;
+			String formMailFixedSenderEmail = Constants.getString("formMailFixedSenderEmail");
+			if (Tools.isEmail(formMailFixedSenderEmail)) {
+				effectiveSenderName = formMailFixedSenderEmail;
+				effectiveSenderEmail = formMailFixedSenderEmail;
+			} else {
+				String emailProtectionSenderEmail = Constants.getString(SendMail.EMAIL_PROTECTION_SENDER_KEY);
+				if (Tools.isEmail(emailProtectionSenderEmail)) {
+					if (effectiveReplyTo == null && emailProtectionSenderEmail.equals(effectiveSenderEmail) == false) effectiveReplyTo = effectiveSenderEmail;
+					effectiveSenderName = emailProtectionSenderEmail;
+					effectiveSenderEmail = emailProtectionSenderEmail;
+				}
+			}
+			from = effectiveSenderEmail;
+
 			if (emailEncoding.indexOf("ASCII") != -1) htmlData = new StringBuilder(DB.internationalToEnglish(htmlData.toString()));
 			htmlData = new StringBuilder(FormMailAction.createAbsolutePath(htmlData.toString(), request));
 			cssData = FormMailAction.createAbsolutePath(cssData, request);
@@ -200,24 +218,36 @@ public class FormMailService {
 			}
 
 			if ("false".equals(Constants.getString("useSMTPServer"))) {
-				if(sendMessageAsAttach && messageAsAttachFile!=null) {
-					htmlData = new StringBuilder(prop.getText("form.formmailaction.pozrite_si_prilozeny_subor"));
-					formFiles.getFileNamesSendLater().append(";").append(FormMailAction.FORM_FILE_DIR).append(messageAsAttachFile.getName()).append(";").append(messageAsAttachFile.getName());
+				if (formDataEncrypted) {
+					Logger.warn(FormMailService.class, "Email for encrypted form " + form.getFormName() + " cannot be queued for later delivery");
+					sb.append(" queuing encrypted form email to ").append(recipients).append(" DENIED");
+					RequestBean.addAuditValue("formfail", "emailNotSend");
+					sendFailed = true;
+				} else {
+					if(sendMessageAsAttach && messageAsAttachFile!=null) {
+						htmlData = new StringBuilder(prop.getText("form.formmailaction.pozrite_si_prilozeny_subor"));
+						formFiles.getFileNamesSendLater().append(";").append(FormMailAction.FORM_FILE_DIR).append(messageAsAttachFile.getName()).append(";").append(messageAsAttachFile.getName());
+					}
+
+					if(formFiles.getAttachs() != null && !attachFiles) htmlData.append(prop.getText("email.too_large_attachments"));
+
+					String messageBody = htmlData.toString();
+					if (sendMessageAsAttach==false && forceTextPlain==false)
+						messageBody = FormHtmlHandler.appendStyle(htmlData.toString(), cssData, emailEncoding, forceTextPlain);
+
+					//musime kvoli clustru a potencionalnemu zapisu suborov pozdrzat email
+					long sendLaterTime = Tools.getNow();
+					sendLaterTime += (5 * Constants.getInt("clusterRefreshTimeout"));
+
+					boolean queued = SendMail.sendLater(effectiveSenderName, effectiveSenderEmail, recipients, effectiveReplyTo, formSettings.getCcEmails(), formSettings.getBccEmails(), subject, messageBody, Tools.getBaseHref(request), Tools.formatDate(sendLaterTime), Tools.formatTime(sendLaterTime), formFiles.getFileNamesSendLater().toString(), true);
+					if (queued) {
+						Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Email for form " + form.getFormName() + " was queued for later delivery", (long)MultistepFormsService.getFormIdStatic(form.getFormName()), form.getId());
+					} else {
+						sb.append(" queuing email to ").append(recipients).append(" FAILED");
+						RequestBean.addAuditValue("formfail", "emailNotSend");
+						sendFailed = true;
+					}
 				}
-
-				if(formFiles.getAttachs() != null && !attachFiles) htmlData.append(prop.getText("email.too_large_attachments"));
-
-				String messageBody = htmlData.toString();
-				if (sendMessageAsAttach==false && forceTextPlain==false)
-					messageBody = FormHtmlHandler.appendStyle(htmlData.toString(), cssData, emailEncoding, forceTextPlain);
-
-				Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Formular " + form.getFormName() + " uspesne ulozeny do databazy, odoslany bude neskor", (long)MultistepFormsService.getFormIdStatic(form.getFormName()), form.getId());
-
-				//musime kvoli clustru a potencionalnemu zapisu suborov pozdrzat email
-				long sendLaterTime = Tools.getNow();
-				sendLaterTime += (5 * Constants.getInt("clusterRefreshTimeout"));
-
-				SendMail.sendLater(meno, FormMailAction.getFirstEmail(email), recipients, formSettings.getReplyTo(), formSettings.getCcEmails(), formSettings.getBccEmails(), subject, messageBody, Tools.getBaseHref(request), Tools.formatDate(sendLaterTime), Tools.formatTime(sendLaterTime), formFiles.getFileNamesSendLater() != null ? "" : formFiles.getFileNamesSendLater().toString());
 			} else {
 				//vygeneruj mail a posli ho
 				Properties props = System.getProperties();
@@ -273,8 +303,7 @@ public class FormMailService {
 						msg.setRecipients(Message.RecipientType.BCC, bccAddrs);
 					}
 
-					from = email;
-					msg.setFrom(new InternetAddress(FormMailAction.getFirstEmail(email), meno));
+					msg.setFrom(new InternetAddress(effectiveSenderEmail, effectiveSenderName));
 
 					msg.setSubject(MimeUtility.encodeText(subject, emailEncoding, null));
 					msg.setSentDate(new java.util.Date());
@@ -319,22 +348,8 @@ public class FormMailService {
 						msg.setContent(htmlDataNoBR, "text/plain; charset="+emailEncoding);
 					}
 
-					String formMailFixedSenderEmail = Constants.getString("formMailFixedSenderEmail");
-					if (Tools.isEmail(formMailFixedSenderEmail)) {
-						msg.setFrom(new InternetAddress(formMailFixedSenderEmail, formMailFixedSenderEmail));
-					} else {
-						if (Tools.isEmail(Constants.getString(SendMail.EMAIL_PROTECTION_SENDER_KEY))) {
-							from = Constants.getString(SendMail.EMAIL_PROTECTION_SENDER_KEY);
-							Address[] oldSenders = msg.getFrom();
-							if (oldSenders != null && oldSenders.length>0 && from.equals(oldSenders[0].toString()) == false) msg.setReplyTo(oldSenders);
-							msg.setFrom(new InternetAddress(from, from));
-						}
-					}
-
-					//ak mame parameter "replyTo", nastavme ho
-					String replyTo = formSettings.getReplyTo();
-					if(Tools.isEmail(replyTo)) {
-						InternetAddress[] replyToAddrs = InternetAddress.parse(replyTo, false);
+					if(Tools.isEmail(effectiveReplyTo)) {
+						InternetAddress[] replyToAddrs = InternetAddress.parse(effectiveReplyTo, false);
 						msg.setReplyTo(replyToAddrs);
 					}
 
@@ -347,6 +362,14 @@ public class FormMailService {
 				catch (Exception ex) {
 					Logger.error(FormMailService.class, ex);
 					sb.append(" sending to email ").append(recipients).append(" FAILED: ").append(ex.getMessage());
+
+					if (formDataEncrypted) {
+						Logger.warn(FormMailService.class, "Failed email for encrypted form " + form.getFormName() + " cannot be queued for later delivery");
+						sb.append("; queuing encrypted form email denied");
+					} else {
+						Logger.warn(FormMailService.class, "Failed email for form " + form.getFormName() + " will not be queued because the delivery result may be partial or the failure may be permanent");
+						sb.append("; email was not queued to avoid an unsafe retry");
+					}
 					RequestBean.addAuditValue("formfail", "emailNotSend");
 					sendFailed = true;
 				}

@@ -3,6 +3,7 @@ package sk.iway.iwcm.components.multistep_form.mvc;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
@@ -27,15 +29,23 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.components.multistep_form.rest.MultistepFormsService;
 import sk.iway.iwcm.editor.rest.ComponentRequest;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.annotations.DefaultHandler;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.annotations.WebjetComponent;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.users.UsersDB;
 
+/**
+ * Renders and configures the multistep form application.
+ *
+ * <p>The component prepares request-scoped form state, enforces the single-submission
+ * setting, exposes editor options, and resolves optional CSS templates.</p>
+ */
 @WebjetComponent("sk.iway.iwcm.components.multistep_form.mvc.MultistepFormApp")
 @WebjetAppStore(
     nameKey = "multistep_form.title",
@@ -60,6 +70,7 @@ public class MultistepFormApp extends WebjetComponentAbstract {
 
     private static final String VIEW_PATH = "/apps/form/mvc/multistep-form"; //NOSONAR
     private static final String ERROR_PATH = "/apps/form/mvc/error"; //NOSONAR
+    private static final String CSS_TEMPLATES_PATH = "/apps/form/mvc/styles/";
 
     /* Its importtant, that we use "-" and not "_" */
     public static final String DOC_ID = "-docid";
@@ -70,6 +81,9 @@ public class MultistepFormApp extends WebjetComponentAbstract {
 
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "formslist.nazov_formularu", tab = "basic")
     private String formName;
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.multistep_form.form-content.css-template", tab = "basic")
+    private String cssTemplate;
 
     @Autowired
     public MultistepFormApp(FormStepsRepository formStepsRepository, FormSettingsRepository formSettingsRepository, FormsRepository formsRepository) {
@@ -83,6 +97,16 @@ public class MultistepFormApp extends WebjetComponentAbstract {
         Logger.debug(MultistepFormApp.class, "Init of MultistepFormApp app");
     }
 
+    /**
+     * Prepares the first step of the configured form for rendering.
+     *
+     * <p>The handler rejects duplicate submissions when required, initializes the
+     * session state used by subsequent steps, and records the form view.</p>
+     *
+     * @param model  MVC model populated for the form view
+     * @param request  current HTTP request used to initialize form and session state
+     * @return path to the multistep form view, or the error view when another submission is not allowed
+     */
     @DefaultHandler
 	public String view(Model model, HttpServletRequest request) {
         //Check first, if user can fill form
@@ -101,6 +125,7 @@ public class MultistepFormApp extends WebjetComponentAbstract {
 
         model.addAttribute("stepPath", "/rest/multistep-form/get-step");
         model.addAttribute("formName", formName);
+        model.addAttribute("cssTemplatePath", getValidCssTemplatePath(cssTemplate));
 
         Logger.debug(MultistepFormApp.class, "Generating CSRF token for multistep form, formName= " + formName + " actual datetime is : " + Tools.getNow());
 
@@ -130,17 +155,62 @@ public class MultistepFormApp extends WebjetComponentAbstract {
         return VIEW_PATH;
     }
 
+    /**
+     * Builds editor options for available multistep forms and CSS templates.
+     *
+     * @param componentRequest  current component editor request
+     * @param request  current HTTP request used to localize option labels
+     * @return options keyed by {@code formName} and {@code cssTemplate}
+     */
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
-       List<String> multistepFormNames = formStepsRepository.getMultistepFormNames(CloudToolsForCore.getDomainId());
+        List<String> multistepFormNames = formStepsRepository.getMultistepFormNames(CloudToolsForCore.getDomainId());
 
         List<OptionDto> formNameOption = new ArrayList<>();
         for(String formName : multistepFormNames) {
             formNameOption.add( new OptionDto(formName, formName, "") );
         }
 
+        Prop prop = Prop.getInstance(request);
+        List<OptionDto> cssTemplateOptions = new ArrayList<>();
+        cssTemplateOptions.add(new OptionDto(prop.getText("components.multistep_form.form-content.css-template-none"), "", null));
+        for(LabelValue template : getCssTemplates()) {
+            cssTemplateOptions.add(new OptionDto(template.getLabel(), template.getValue(), null));
+        }
+
         Map<String, List<OptionDto>> options = new HashMap<>();
         options.put("formName", formNameOption);
+        options.put("cssTemplate", cssTemplateOptions);
         return options;
+    }
+
+    /**
+     * Lists readable CSS template files available to the multistep form component.
+     *
+     * @return sorted label-value pairs containing each template file name and public path,
+     *         or an empty list when the template directory is unavailable
+     */
+    public static List<LabelValue> getCssTemplates() {
+        List<LabelValue> templates = new ArrayList<>();
+        IwcmFile directory = new IwcmFile(Tools.getRealPath(CSS_TEMPLATES_PATH));
+        if(directory.exists() == false || directory.isDirectory() == false || directory.canRead() == false) return templates;
+
+        IwcmFile[] files = FileTools.sortFilesByName(directory.listFiles());
+        if(files == null) return templates;
+
+        for(IwcmFile file : files) {
+            if(file.isFile() == false || file.canRead() == false || file.getName().toLowerCase(Locale.ROOT).endsWith(".css") == false) continue;
+            templates.add(new LabelValue(file.getName(), CSS_TEMPLATES_PATH + file.getName()));
+        }
+        return templates;
+    }
+
+    private static String getValidCssTemplatePath(String cssTemplate) {
+        if(Tools.isEmpty(cssTemplate)) return "";
+
+        for(LabelValue template : getCssTemplates()) {
+            if(cssTemplate.equals(template.getValue())) return template.getValue();
+        }
+        return "";
     }
 }

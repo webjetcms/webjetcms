@@ -102,6 +102,8 @@ Scenario('Fill and test form content', async ({ I, DT, DTE, Document }) => {
     DTE.waitForEditor("formStepsDataTable");
 
     DTE.fillQuill("header", "2 - Druhy krok | Email: !emailova-adresa-1! | User: !LOGGED_USER_FIRSTNAME!");
+    I.clickCss("#pills-dt-formStepsDataTable-advanced-tab");
+    DTE.fillField("backStepBtnLabel", "Späť na údaje");
     DTE.save();
 
     I.click( locate("table#formStepsDataTable > tbody > tr > td").withText("Krok 2") );
@@ -118,6 +120,16 @@ Scenario('Fill and test form content', async ({ I, DT, DTE, Document }) => {
     I.seeElement("input#f1-emailova-adresa-1");
     I.seeElement("input#f1-checkboxgroup-1-0");
     await Document.compareScreenshotElement("div.stepPreviewWrapper > div.stepPreview", "multistep-form/multistep-form-step-1.png", null, null, 5);
+
+    I.say("Preview CSS templates without changing the form settings");
+    I.waitForElement("#previewCssTemplate option[value='/apps/form/mvc/styles/template-1.css']", 10);
+    for (const template of ["template-1.css", "template-2.css", "template-3.css"]) {
+        I.selectOption("#previewCssTemplate", template);
+        I.waitForElement(`div.stepPreview[data-multistep-css-template='/apps/form/mvc/styles/${template}'] #formStepPreviewCssTemplate`);
+    }
+    I.selectOption("#previewCssTemplate", "Bez šablóny");
+    I.dontSeeElement("#formStepPreviewCssTemplate");
+
     I.click( locate("table#formStepsDataTable > tbody > tr > td").withText("Krok 2") );
     //wait for cleditor to load
     I.waitForElement("div.cleditorToolbar", 20);
@@ -271,6 +283,26 @@ Scenario('Insert multistep into page and test it', async ({ I, DTE, Document, Ap
     I.waitForElement(tooltipField + ":focus", 5);
     I.assertEqual(await I.grabAttributeFrom(tooltipTrigger, "aria-describedby"), tooltipId, "Hover dismissal must preserve the stable accessible description");
     I.blur(tooltipField);
+
+    I.say("Go back, restore saved choices and persist a cleared checkbox");
+    I.see("Späť na údaje", "[data-multistep-back-step]");
+    I.clickCss("[data-multistep-back-step]");
+    I.waitForVisible("#f1-emailova-adresa-1");
+    I.seeInField("#f1-emailova-adresa-1", "sivan@noopmail.com");
+    I.seeCheckboxIsChecked("#f1-checkboxgroup-1-0");
+    I.seeCheckboxIsChecked("#f1-checkboxgroup-1-1");
+    I.seeCheckboxIsChecked("#f1-radiogroup-1-2");
+    I.dontSeeElement("[data-multistep-back-step]");
+    I.uncheckOption("#f1-checkboxgroup-1-1");
+    I.clickCss("button[type='submit']");
+    I.waitForVisible("[data-multistep-back-step]");
+    I.clickCss("[data-multistep-back-step]");
+    I.waitForVisible("#f1-checkboxgroup-1-1");
+    I.dontSeeCheckboxIsChecked("#f1-checkboxgroup-1-1");
+    I.checkOption("#f1-checkboxgroup-1-1");
+    I.clickCss("button[type='submit']");
+    I.waitForVisible("#f1-pridajte-obrazky-1-dropzone");
+    I.waitForElement("div.cleditorToolbar", 20);
 
     I.say("Test and submit step 2 - final");
 
@@ -749,6 +781,7 @@ Scenario('Insert and test multiple forms in one page - insert two same apps', ({
         I.switchTo('#editorComponent');
 
         DTE.selectOption("formName", "Multistepform_light");
+        DTE.selectOption("cssTemplate", "template-1.css");
         I.switchTo();
         I.switchTo();
         I.clickCss('.cke_dialog_ui_button_ok');
@@ -763,6 +796,7 @@ Scenario('Insert and test multiple forms in one page - insert two same apps', ({
         I.switchTo('#editorComponent');
 
         DTE.selectOption("formName", "Multistepform_light");
+        DTE.selectOption("cssTemplate", "Bez šablóny");
         I.switchTo();
         I.switchTo();
         I.clickCss('.cke_dialog_ui_button_ok');
@@ -792,6 +826,23 @@ Scenario('Insert and test multiple forms in one page - test apps independent beh
     // First get form ids
     const formIds = await I.grabAttributeFromAll('div.multistep-form-app', 'id');
     const escapedFormIds = formIds.map(id => escapeCssId(id));
+
+    I.say("Check that the selected CSS template only styles its own form");
+    const formStyles = await I.executeScript(() => Array.from(document.querySelectorAll("div.multistep-form-app"), wrapper => {
+        const style = getComputedStyle(wrapper.querySelector(".multistep-form"));
+        return {
+            template: wrapper.getAttribute("data-multistep-css-template") || "",
+            accent: style.getPropertyValue("--mf-accent").trim(),
+            borderRadius: style.borderRadius
+        };
+    }));
+    const styledForms = formStyles.filter(form => form.template === "/apps/form/mvc/styles/template-1.css");
+    const plainForms = formStyles.filter(form => form.template === "");
+    I.assertEqual(styledForms.length, 1, "Exactly one form must use the selected template");
+    I.assertEqual(plainForms.length, 1, "Exactly one form must remain without a template");
+    I.assertEqual(styledForms[0].accent, "#079fc5", "The selected template must style its form");
+    I.assertEqual(styledForms[0].borderRadius, "18px", "The styled form must use the template's border radius");
+    I.assertEqual(plainForms[0].accent, "", "The form without a template must remain unstyled");
 
     I.say("Check that generated field IDs are unique for every form instance");
     I.seeElement("#" + escapedFormIds[0] + " input#f1-meno-1");
@@ -998,6 +1049,10 @@ function removeFormDefinition(I, DT, formName) {
 }
 
 function createAndFillFormItem(I, DT,  DTE, fieldType, required, label, value, tooltip, placeholder, options = {}) {
+    I.waitForFunction(() => {
+        const selectedStep = document.querySelector("#formStepsDataTable tbody tr.selected");
+        return selectedStep && new URL(formItemsDataTable.getAjaxUrl(), window.location.origin).searchParams.get("stepId") === selectedStep.id;
+    }, [], 10);
     I.click(DT.btn.formItems_add_button);
     DTE.waitForEditor("formItemsDataTable");
     if(options.checkGeneratedId === true) { I.dontSeeElement("div.DTE_Field_Name_itemFormId"); }
@@ -1123,7 +1178,7 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
     I.waitForElement( locate("table#formStepsDataTable > tbody > tr.selected > td").withText("Krok 1") );
 
     createAndFillFormItem(I, DT, DTE, 'Meno', true, "Vase meno", "!LOGGED_USER_FIRSTNAME!", "Vase prve meno", null, { trimValue: true, checkGeneratedId: true });
-    createAndFillFormItem(I, DT, DTE, 'Skupina zaškrtávacích polí', false, null, "labelA:valueA|labelB:valueB|labelC:valueC|labelD:valueD", null, null);
+    createAndFillFormItem(I, DT, DTE, 'Skupina zaškrtávacích polí', false, null, "labelA:valueA|labelB:valueB,with-comma|labelC:valueC|labelD:valueD", null, null);
 
     // Special enum must be add separate
     I.click(DT.btn.formItems_add_button);
@@ -1161,6 +1216,12 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
     I.seeCheckboxIsChecked("#DTE_Field_valueAsOptions input.options-empty-option-btn");
     DTE.cancel("formItemsDataTable");
 
+    I.say("Add an empty confirmation step for returning to saved values");
+    I.click(DT.btn.formSteps_add_button);
+    DTE.waitForEditor("formStepsDataTable");
+    DTE.fillQuill("header", "autotest confirmation");
+    DTE.save();
+
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appInsertTestPageId);
 
     // Set new multistep form as form for the page
@@ -1176,7 +1237,11 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
 
     I.fillField("#f1-vase-meno-1", "  Trim autotest  ");
 
-    testRadioCheckgroup(I, "f1-checkboxgroup-1", "value", "label");
+    ["A", "B", "C", "D"].forEach((suffix, index) => {
+        const value = suffix === "B" ? "valueB,with-comma" : "value" + suffix;
+        I.seeElement("#f1-checkboxgroup-1-" + index + "[value='" + value + "']");
+        I.seeElement(locate("label[for='f1-checkboxgroup-1-" + index + "']").withText("label" + suffix));
+    });
 
     testRadioCheckgroup(I, "f1-radiogroup-1", "valueEnum", "labelEnum");
 
@@ -1224,7 +1289,27 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
     I.waitForText(uploadedFileName, 10, fileDropzoneSelector + " [data-dz-name]");
     I.waitForElement(fileButtonSelector + "[disabled]", 5);
 
-    //submit
+    const fileInputSelector = "input[name='f1-upload-cv-autotest-1']";
+    const uploadedFileKey = await I.grabValueFrom(fileInputSelector);
+    I.assertTrue(uploadedFileKey.length > 0, "The uploaded PDF must have a temporary file key");
+
+    I.say("Return from confirmation and restore saved selections and the PDF");
+    I.clickCss("button[type='submit']");
+    I.waitForText("autotest confirmation", 10, ".step-header");
+    I.clickCss("button[data-multistep-back-step]");
+    I.waitForVisible("#f1-vase-meno-1", 10);
+    I.seeInField("#f1-vase-meno-1", "Trim autotest");
+    I.seeCheckboxIsChecked("#f1-checkboxgroup-1-1[value='valueB,with-comma']");
+    I.seeCheckboxIsChecked("#f1-checkboxgroup-1-2");
+    I.seeCheckboxIsChecked("#f1-radiogroup-1-0");
+    I.waitForText(uploadedFileName, 10, fileDropzoneSelector + " [data-dz-name]");
+    I.waitForElement(fileButtonSelector + "[disabled]", 5);
+    I.seeInField(fileInputSelector, uploadedFileKey);
+    const restoredFilesCount = await I.grabNumberOfVisibleElements(fileDropzoneSelector + " .dz-preview");
+    I.assertEqual(restoredFilesCount, 1, "Returning to the step must restore the PDF exactly once");
+
+    I.clickCss("button[type='submit']");
+    I.waitForText("autotest confirmation", 10, ".step-header");
     I.clickCss("button[type='submit']");
     I.waitForText("Formulár bol úspešne odoslaný");
 
@@ -1239,30 +1324,30 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
         </div><div class="form-group mb-3">
         <label for="checkboxgroup-1">Skupina zaškrtávacích polí</label>
         <div class="form-check">
-        <span class="inputcheckbox emailinput-cb input-unchecked">[&nbsp;]</span> <label for="checkboxgroup-1-0" class="form-check-label">valueA</label>
+        <span class="inputcheckbox emailinput-cb input-unchecked">[&nbsp;]</span> <label for="checkboxgroup-1-0" class="form-check-label">labelA</label>
         </div>
         <div class="form-check">
-        <span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-1" class="form-check-label">valueB</label>
+        <span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-1" class="form-check-label">labelB</label>
         </div>
         <div class="form-check">
-        <span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-2" class="form-check-label">valueC</label>
+        <span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-2" class="form-check-label">labelC</label>
         </div>
         <div class="form-check">
-        <span class="inputcheckbox emailinput-cb input-unchecked">[&nbsp;]</span> <label for="checkboxgroup-1-3" class="form-check-label">valueD</label>
+        <span class="inputcheckbox emailinput-cb input-unchecked">[&nbsp;]</span> <label for="checkboxgroup-1-3" class="form-check-label">labelD</label>
         </div>
         </div><div class="form-group mb-3">
         <label for="radiogroup-1">Skupina výberových polí</label>
         <div class="form-check">
-        <span class="inputradio emailinput-radio input-checked">[X]</span> <label for="radiogroup-1-0" class="form-check-label">valueEnumA</label>
+        <span class="inputradio emailinput-radio input-checked">[X]</span> <label for="radiogroup-1-0" class="form-check-label">labelEnumA</label>
         </div>
         <div class="form-check">
-        <span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-1" class="form-check-label">valueEnumB</label>
+        <span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-1" class="form-check-label">labelEnumB</label>
         </div>
         <div class="form-check">
-        <span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-2" class="form-check-label">valueEnumC</label>
+        <span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-2" class="form-check-label">labelEnumC</label>
         </div>
         <div class="form-check">
-        <span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-3" class="form-check-label">valueEnumD</label>
+        <span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-3" class="form-check-label">labelEnumD</label>
         </div>
         </div><div class="form-group mb-3">
         <label for="empty-option-autotest-1">Empty option autotest</label><span class="form-control emailInput-select">&nbsp;</span>
@@ -1274,6 +1359,7 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
         Please use a PDF file - autotest
         </div><span class="form-control emailInput-text">archive_file_test.pdf</span>
         </div></div>
+        <hr><div class="form-step mt-3"><div class="step-header"><p>autotest confirmation</p></div></div>
     `;
 
     const actualHtml = await getSubmitedFormPreview(I);

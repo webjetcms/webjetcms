@@ -140,6 +140,8 @@ export class MultistepForm {
             this.domIdPrefix = typeof json.domIdPrefix === 'string' ? json.domIdPrefix : '';
             const visibilityConditions = json.visibilityConditions || {};
             const requirementConditions = json.requirementConditions || {};
+            const savedValues = json.savedValues || {};
+            const savedFiles = json.savedFiles || {};
 
             // hide previous errors
             this.hideErrors();
@@ -147,7 +149,7 @@ export class MultistepForm {
             // inject HTML (exec any inline scripts) using jQuery when available
             const holder = this.wrapper.querySelector('.multistepStepContent');
             if (holder) {
-                formTooltip.dispose(holder);
+                this._disposeStep(holder);
                 if (window.$) {
                     $(holder).html(html);
                 } else {
@@ -159,7 +161,20 @@ export class MultistepForm {
 
             // attach submit
             const form = this.wrapper.querySelector('.multistepStepContent > form');
-            if (form) form.addEventListener('submit', async (event) => { await this.doValidationAndSave(event); });
+            if (form) {
+                this._restoreStepValues(form, savedValues, savedFiles);
+                Object.assign(this.submittedValues, savedValues);
+
+                form.addEventListener('submit', async (event) => { await this.doValidationAndSave(event); });
+
+                const backButton = form.querySelector('[data-multistep-back-step]');
+                if (backButton) {
+                    backButton.addEventListener('click', async () => {
+                        const previousStepId = backButton.dataset.multistepBackStep;
+                        if (previousStepId) await this.loadStep(formName, previousStepId, true);
+                    });
+                }
+            }
 
             // Initialize remote autocomplete inputs rendered in this step
             this._initAutocompleteFields();
@@ -176,9 +191,7 @@ export class MultistepForm {
             this._hasShownStep = true;
             if (holder) this._dispatchStepShown(holder, form, isInitialStep);
 
-            if (scrollToForm && form) {
-                form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
+            if (scrollToForm && form) this._focusStep(form);
 
             // init cleditor if needed
             window.setTimeout(() => {
@@ -196,7 +209,98 @@ export class MultistepForm {
     }
 
     /**
-     * Notify public-page integrations that a form step is available in the DOM.
+     * Dispose widgets before removing a step, including Dropzone inputs appended to the document body.
+     * @param {HTMLElement} holder - Container of the step being removed.
+     */
+    _disposeStep(holder) {
+        formTooltip.dispose(holder);
+        holder.querySelectorAll('.wjdropzone').forEach(element => {
+            const dropzone = element.dropzone;
+            if (!dropzone) return;
+
+            // Teardown must not run file-removal callbacks or alter saved upload metadata.
+            dropzone.off();
+            dropzone.destroy();
+        });
+    }
+
+    /**
+     * Focus and reveal a newly rendered step after navigation.
+     * The step header is preferred so assistive technology announces the new context.
+     * @param {HTMLFormElement} form - Newly rendered step form.
+     */
+    _focusStep(form) {
+        const firstControl = form.querySelector('input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), a[href]');
+        const focusTarget = form.querySelector('.step-header') || firstControl || form;
+        const needsTemporaryTabIndex = focusTarget.matches('input, select, textarea, button, a[href], [tabindex]') === false;
+
+        if (needsTemporaryTabIndex) focusTarget.setAttribute('tabindex', '-1');
+        focusTarget.focus({ preventScroll: true });
+        if (needsTemporaryTabIndex) {
+            focusTarget.addEventListener('blur', () => focusTarget.removeAttribute('tabindex'), { once: true });
+        }
+
+        form.scrollIntoView({ behavior: this._prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+    }
+
+    /** @returns {boolean} true when the user requested reduced motion. */
+    _prefersReducedMotion() {
+        return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+
+    /**
+     * Restore values saved by an earlier successful submission of this step.
+     * @param {HTMLFormElement} form - Currently rendered step form.
+     * @param {Object<string,string|string[]>} savedValues - Scalar values or selected options keyed by logical field ID.
+     * @param {Object<string,Object>} savedFiles - Dropzone metadata keyed by logical field ID.
+     */
+    _restoreStepValues(form, savedValues, savedFiles) {
+        const controls = Array.from(form.querySelectorAll('input, textarea, select'));
+
+        Object.entries(savedValues).forEach(([fieldId, rawValue]) => {
+            const matchingControls = controls.filter(control => {
+                const grouped = control.type === 'checkbox' || control.type === 'radio';
+                const domKey = grouped ? (control.name || control.id) : (control.id || control.name);
+                return domKey && this._toLogicalFieldId(domKey) === fieldId;
+            });
+
+            const groupedControls = matchingControls.filter(control => control.type === 'checkbox' || control.type === 'radio');
+            if (groupedControls.length > 0) {
+                const selectedValues = this._getSavedGroupValues(rawValue, groupedControls);
+                groupedControls.forEach(control => { control.checked = selectedValues.includes(control.value); });
+                return;
+            }
+
+            const value = rawValue == null ? '' : String(rawValue);
+            matchingControls.forEach(control => { control.value = value; });
+        });
+
+        Object.entries(savedFiles).forEach(([fieldId, fileMetadata]) => {
+            const dropzoneId = this._toDomFieldId(fieldId) + '-dropzone';
+            const dropzone = Array.from(form.querySelectorAll('.wjdropzone')).find(element => element.id === dropzoneId);
+            if (!dropzone) return;
+
+            const uploadedObjectsInfo = dropzone.querySelector('input.uploadedObjectsInfo');
+            if (uploadedObjectsInfo) uploadedObjectsInfo.value = JSON.stringify(fileMetadata);
+        });
+    }
+
+    /**
+     * Convert the session representation of a radio/checkbox value back to selected options.
+     * @param {*} rawValue - Saved scalar value.
+     * @param {HTMLInputElement[]} controls - Controls belonging to the group.
+     * @returns {string[]} selected option values.
+     */
+    _getSavedGroupValues(rawValue, controls) {
+        if (Array.isArray(rawValue)) return rawValue.map(value => String(value));
+
+        const value = rawValue == null ? '' : String(rawValue);
+        if (value === '') return [];
+        if (controls.some(control => control.value === value)) return [value];
+        return value.split(',');
+    }
+
+    /** Notify public-page integrations that a form step is available in the DOM.
      *
      * @param {HTMLElement} stepElement - Element containing the rendered step.
      * @param {HTMLFormElement|null} form - Form element rendered for the step.
@@ -245,6 +349,7 @@ export class MultistepForm {
                 appendTo: this.wrapper,
                 source: (request, response) => {
                     const url = new URL(sourceUrl, window.location.origin);
+                    url.searchParams.set('form-name', this.formName);
                     url.searchParams.set('term', request.term === '*' ? '%' : request.term);
 
                     fetch(url.toString(), {
@@ -321,6 +426,7 @@ export class MultistepForm {
         url.searchParams.set('language', this.language || '');
 
         const result = {};
+        const stepFieldIds = new Set();
         form.querySelectorAll('input, textarea, select').forEach(el => {
 
             // Checkbox/radio options of a group share one name but have unique ids
@@ -332,6 +438,7 @@ export class MultistepForm {
             const domKey = isGrouped || isCaptchaResponse ? (el.name || el.id) : (el.id || el.name);
             if (!domKey) return;
             const key = this._toLogicalFieldId(domKey);
+            stepFieldIds.add(key);
             // Skip fields hidden by visibility conditions
             if (this._isFieldHidden(el.closest('.form-group') || el.parentElement)) return;
             if (el.type === 'checkbox' || el.type === 'radio') {
@@ -366,8 +473,11 @@ export class MultistepForm {
             try { parsed = JSON.parse(text); } catch (_) { parsed = { raw: text }; }
 
             if (resp.ok === true) {
-                // Store submitted values for cross-step visibility conditions
-                Object.assign(this.submittedValues, result);
+                if (!parsed.fieldErrors || Object.keys(parsed.fieldErrors).length === 0) {
+                    // Replace this step's cache, including fields cleared or hidden after going back.
+                    stepFieldIds.forEach(key => { delete this.submittedValues[key]; });
+                    Object.assign(this.submittedValues, result);
+                }
                 await this.postSaveAction(parsed);
             } else {
                 const errRedirect = parsed.err_redirect || null;
@@ -375,10 +485,12 @@ export class MultistepForm {
                     window.location.href = errRedirect;
                     return;
                 }
-                const endTry = parsed.end_try || false;
-                if (endTry) {
+                if (parsed.end_try === true) {
                     const holder = this.wrapper.querySelector('.multistepStepContent');
-                    if (holder) holder.innerHTML = '';
+                    if (holder) {
+                        this._disposeStep(holder);
+                        holder.replaceChildren();
+                    }
                 }
                 await this.showGlobalErr(parsed);
             }
@@ -416,7 +528,7 @@ export class MultistepForm {
         if (p) p.textContent = this.errorMessage;
         const ul = danger.querySelector('ul');
         if (ul) ul.innerHTML = `<li><span>${errorMsg}</span></li>`;
-        danger.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        danger.scrollIntoView({ behavior: this._prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
     }
 
     /**
@@ -680,11 +792,19 @@ export class MultistepForm {
         if (!field) return;
 
         const transitionDurationMs = 260;
+        const shouldAnimate = animate && this._prefersReducedMotion() === false;
         const currentlyHidden = this._isFieldHidden(field);
+        const fieldColumn = field.parentElement?.classList.contains('col') ? field.parentElement : null;
 
         // Avoid replaying animations when visibility state has not changed.
-        if (visible && !currentlyHidden) return;
-        if (!visible && currentlyHidden) return;
+        if (visible && !currentlyHidden) {
+            fieldColumn?.classList.remove('mf-field-column-hidden');
+            return;
+        }
+        if (!visible && currentlyHidden) {
+            fieldColumn?.classList.add('mf-field-column-hidden');
+            return;
+        }
 
         if (field._visibilityTimeoutId) {
             window.clearTimeout(field._visibilityTimeoutId);
@@ -692,10 +812,11 @@ export class MultistepForm {
         }
 
         if (visible) {
+            fieldColumn?.classList.remove('mf-field-column-hidden');
             field.style.display = '';
             field.classList.remove('mf-hide', 'mf-collapsed', 'mf-hidden');
 
-            if (!animate) {
+            if (!shouldAnimate) {
                 field.classList.remove('mf-enter', 'mf-collapsed');
                 field.style.maxHeight = '';
                 return;
@@ -724,11 +845,12 @@ export class MultistepForm {
             return;
         }
 
-        if (!animate || field.style.display === 'none') {
+        if (!shouldAnimate || field.style.display === 'none') {
             field.style.display = 'none';
             field.classList.remove('mf-hide', 'mf-enter');
             field.classList.add('mf-collapsed');
             field.style.maxHeight = '0px';
+            fieldColumn?.classList.add('mf-field-column-hidden');
             return;
         }
 
@@ -746,6 +868,7 @@ export class MultistepForm {
             field.classList.remove('mf-hide');
             field.classList.add('mf-hidden');
             field.style.maxHeight = '0px';
+            fieldColumn?.classList.add('mf-field-column-hidden');
             if (field._visibilityTimeoutId) {
                 window.clearTimeout(field._visibilityTimeoutId);
                 field._visibilityTimeoutId = null;
@@ -917,7 +1040,10 @@ export class MultistepForm {
         if (formName && (stepId !== undefined && stepId !== null)) {
             if (stepId === -1 || stepId === '-1') {
                 const holder = this.wrapper.querySelector('.multistepStepContent');
-                if (holder) holder.remove();
+                if (holder) {
+                    this._disposeStep(holder);
+                    holder.remove();
+                }
                 await this.showGlobalSuccess();
             } else {
                 const danger = this.wrapper.querySelector('div.alert.alert-danger');
