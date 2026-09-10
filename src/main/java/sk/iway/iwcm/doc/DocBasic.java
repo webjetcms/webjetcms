@@ -27,6 +27,7 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.BasketTools;
 import sk.iway.iwcm.common.GalleryToolsForCore;
 import sk.iway.iwcm.components.basket.rest.EshopService;
+import sk.iway.iwcm.components.basket.rest.BasketPricingService;
 import sk.iway.iwcm.gallery.GalleryDB;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -56,7 +57,6 @@ public class DocBasic implements DocGroupInterface, Serializable
 {
 	private static final BigDecimal VALUE_OF_MINUS_1 = new BigDecimal(-1);
 	private static final BigDecimal VALUE_OF_0 = new BigDecimal(0);
-	private static final BigDecimal VALUE_OF_1 = new BigDecimal(1);
 	private static final BigDecimal VALUE_OF_100 = new BigDecimal(100);
 
 	public enum FollowLinksMode {
@@ -926,9 +926,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	 */
 	public BigDecimal getLocalPriceVat(HttpServletRequest request)
 	{
-		BigDecimal localPrice = getLocalPrice(request);
-		//AKA (getVat / 100 + 1) * localPrice
-		return ( (getVat().divide(VALUE_OF_100)).add(VALUE_OF_1) ).multiply(localPrice);
+		return BasketPricingService.sellingPriceWithVat(getLocalPrice(request), getVat());
 	}
 
 	/**
@@ -939,9 +937,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	 */
 	public BigDecimal getLocalPriceVat(HttpServletRequest request, String currency)
 	{
-		BigDecimal localPrice = getLocalPrice(request, currency);
-		//AKA (getVat / 100 + 1) * localPrice
-		return ( ( getVat().divide(VALUE_OF_100) ).add(VALUE_OF_1) ).multiply(localPrice);
+		return BasketPricingService.sellingPriceWithVat(getLocalPrice(request, currency), getVat());
 	}
 
 	@JsonIgnore
@@ -964,19 +960,13 @@ public class DocBasic implements DocGroupInterface, Serializable
 	@JsonIgnore
 	public BigDecimal getPriceVat()
 	{
-		BigDecimal vat = getVat();
-		vat = (vat.divide(VALUE_OF_100)).add(VALUE_OF_1);
-
-		return getPrice().multiply(vat);
+		return BasketPricingService.sellingPriceWithVat(getPrice(), getVat());
 	}
 
 	@JsonIgnore
 	public BigDecimal getPriceVat(HttpServletRequest request)
 	{
-		BigDecimal vat = getVat();
-		vat = (vat.divide(VALUE_OF_100)).add(VALUE_OF_1);
-
-		return getPrice(request).multiply(vat);
+		return BasketPricingService.sellingPriceWithVat(getPrice(request), getVat());
 	}
 
 	@JsonIgnore

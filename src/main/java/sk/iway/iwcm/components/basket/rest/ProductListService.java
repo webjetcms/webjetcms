@@ -405,6 +405,10 @@ public class ProductListService {
         else
             invoiceItems = biir.findAllByInvoiceIdAndDomainId(invoiceId, domainId);
 
+        if (BasketPricingService.isEnabled()) {
+            BasketPricingService.allocateVat(invoiceItems);
+        }
+
         Integer itemsCount = 0;
         BigDecimal priceToPayNoVat = BigDecimal.ZERO; //NO VAT
         BigDecimal priceToPayVat = BigDecimal.ZERO; //WITH VAT
@@ -424,14 +428,26 @@ public class ProductListService {
         if(updateStatus) {
             //SAME time, it can change the status of invoice
             BigDecimal totalPayedPrice = getPayedPrice(invoice.getId(), bipr);
-            invoice.setStatusId( ProductListService.getInvoiceStatusByValues(priceToPayVat, totalPayedPrice) );
+            invoice.setStatusId( ProductListService.getInvoiceStatusByValues(priceToPayVat, totalPayedPrice, BasketPricingService.isEnabled()) );
         }
 
         bir.save(invoice);
     }
 
+    /** Updates payment balance and status without recalculating the agreed invoice totals. */
+    public static void updatePaymentStatus(Long invoiceId, boolean updateStatus) {
+        BasketInvoicesRepository invoices = Tools.getSpringBean("basketInvoicesRepository", BasketInvoicesRepository.class);
+        BasketInvoicePaymentsRepository payments = Tools.getSpringBean("basketInvoicePaymentsRepository", BasketInvoicePaymentsRepository.class);
+        BasketInvoiceEntity invoice = invoices.findFirstByIdAndDomainId(invoiceId, CloudToolsForCore.getDomainId()).orElse(null);
+        if (invoice == null) return;
+        BigDecimal paid = getPayedPrice(invoiceId, payments);
+        invoice.setBalanceToPay(invoice.getTotalPriceVat().subtract(paid));
+        if (updateStatus) invoice.setStatusId(getInvoiceStatusByValues(invoice.getTotalPriceVat(), paid, true));
+        invoices.save(invoice);
+    }
+
     /**
-     * Calculates the VAT-inclusive total price of all items in an invoice.
+     * Returns the stored invoice total, independent of current pricing settings.
      *
      * @param invoiceId  invoice identifier
      * @param biir  invoice item repository
@@ -439,14 +455,9 @@ public class ProductListService {
      */
     public static BigDecimal getPriceToPay(Long invoiceId, BasketInvoiceItemsRepository biir) {
         if(invoiceId == null || invoiceId < 0) return new BigDecimal(-1);
-
-        List<BasketInvoiceItemEntity> invoiceItems = biir.findAllByInvoiceIdAndDomainId(invoiceId, CloudToolsForCore.getDomainId());
-        if(invoiceItems == null || invoiceItems.isEmpty()) return BigDecimal.ZERO;
-
-        return invoiceItems.stream()
-                           .map(item -> item.getItemPriceVatQty())
-                           .reduce(BigDecimal.ZERO, BigDecimal::add)
-                           .setScale(2, RoundingMode.HALF_UP);
+        BasketInvoicesRepository invoices = Tools.getSpringBean("basketInvoicesRepository", BasketInvoicesRepository.class);
+        return invoices.findFirstByIdAndDomainId(invoiceId, CloudToolsForCore.getDomainId())
+            .map(BasketInvoiceEntity::getTotalPriceVat).orElse(BigDecimal.ZERO);
     }
 
     /**
@@ -479,13 +490,13 @@ public class ProductListService {
     public static Map<String, String> getPriceInfo(Long invoiceId, BasketInvoiceItemsRepository biir, BasketInvoicePaymentsRepository bipr) {
         BigDecimal priceToPay = getPriceToPay(invoiceId, biir);
         BigDecimal payedPrice = getPayedPrice(invoiceId, bipr);
-        int status = getInvoiceStatusByValues(priceToPay, payedPrice);
+        int status = getInvoiceStatusByValues(priceToPay, payedPrice, true);
         return Map.of(
             "priceToPay", priceToPay.toString(),
             "payedPrice", payedPrice.toString(),
             "status", String.valueOf(status)
         );
-        }
+    }
 
     /**
      * Derives an invoice status by comparing its total price with received payments.
@@ -495,7 +506,21 @@ public class ProductListService {
      * @return paid, partially paid, or new invoice status identifier
      */
     public static final Integer getInvoiceStatusByValues(BigDecimal priceToPayVat, BigDecimal totalPayedPrice) {
-        if(CurrencyTag.formatNumber(priceToPayVat).equals(CurrencyTag.formatNumber(totalPayedPrice)))
+        return getInvoiceStatusByValues(priceToPayVat, totalPayedPrice, false);
+    }
+
+    /**
+     * Compares rounded invoice amounts exactly while retaining the legacy display-based comparison.
+     *
+     * @param priceToPayVat VAT-inclusive invoice total
+     * @param totalPayedPrice total confirmed payments
+     * @param roundedPrices whether the invoice uses exact rounded gross prices
+     * @return paid, partially paid, or new invoice status identifier
+     */
+    public static final Integer getInvoiceStatusByValues(BigDecimal priceToPayVat, BigDecimal totalPayedPrice, boolean roundedPrices) {
+        boolean paid = roundedPrices ? priceToPayVat.compareTo(totalPayedPrice) == 0
+            : CurrencyTag.formatNumber(priceToPayVat, false).equals(CurrencyTag.formatNumber(totalPayedPrice, false));
+        if(paid)
             return InvoiceStatus.INVOICE_STATUS_PAID.getValue();
         else if(totalPayedPrice.compareTo(BigDecimal.valueOf(0)) > 0)
             return InvoiceStatus.INVOICE_STATUS_PARTIALLY_PAID.getValue();
@@ -515,6 +540,9 @@ public class ProductListService {
     public static void addItemToInvoice(Long invoiceId, List<Integer> itemIdsToAdd, BasketInvoiceItemsRepository biir, int userId, HttpServletRequest request) {
 		DocDB docDB = DocDB.getInstance();
 		int domainId = CloudToolsForCore.getDomainId();
+		BasketInvoicesRepository invoices = Tools.getSpringBean("basketInvoicesRepository", BasketInvoicesRepository.class);
+		BasketInvoiceEntity invoice = invoices.findFirstByIdAndDomainId(invoiceId, domainId).orElse(null);
+		if (invoice == null) return;
 
 		Long browserId = biir.getBrowserIdByInvoiceId(invoiceId, domainId).orElse(null);
 		if(browserId == null) browserId = Long.valueOf( PkeyGenerator.getNextValue("basket_browser_id") );
@@ -544,11 +572,17 @@ public class ProductListService {
 					newItem.setDateInsert(new Date(Tools.getNow()));
 					newItem.setInvoiceId(invoiceId.intValue());
 					newItem.setDomainId(domainId);
+					if (BasketPricingService.isEnabled()) {
+						newItem.setItemPrice(BasketTools.convertCurrency(newItem.getItemPrice(), itemDoc.getCurrency(), invoice.getCurrency()));
+						BasketPricingService.recalculateLinePrice(newItem);
+						BasketPricingService.prepareForSave(newItem);
+					}
 
 					biir.save(newItem);
 				}
 
 			}
 		}
+		updateInvoiceStats(invoiceId, true);
 	}
 }

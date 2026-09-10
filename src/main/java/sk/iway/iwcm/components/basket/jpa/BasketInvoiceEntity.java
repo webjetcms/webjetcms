@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.components.basket.rest.BasketPricingService;
 import sk.iway.Password;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
@@ -44,6 +45,7 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 
 	@PrePersist
 	public void onPrePersist() {
+		if (priceToPayVat != null) return;
 		//After insert update invoice stats
 		ProductListService.updateInvoiceStats(this.getId(), this.browserId, true);
 	}
@@ -400,7 +402,9 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 	@JsonIgnore
 	public List<BasketInvoiceItemEntity> getBasketItems() {
 		BasketInvoiceItemsRepository biir = Tools.getSpringBean("basketInvoiceItemsRepository", BasketInvoiceItemsRepository.class);
-		return biir.findAllByBrowserIdAndDomainId(browserId, domainId);
+		List<BasketInvoiceItemEntity> items = biir.findAllByBrowserIdAndDomainId(browserId, domainId);
+		if (BasketPricingService.isEnabled()) BasketPricingService.allocateVat(items);
+		return items;
 	}
 
 	@JsonIgnore
