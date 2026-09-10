@@ -2,6 +2,7 @@ package cn.bluejoe.elfinder.controller.executors;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -41,12 +42,12 @@ class ExtractCommandExecutorForbiddenNameTest extends BaseWebjetTest {
     void shouldSkipForbiddenEntriesAndExtractRemainingFiles() throws Exception {
         byte[] content = new byte[] {1, 2, 3};
         List<String> allowedNames = List.of("before.txt", "nested/Name$subname.class", "nested/Name$1.class", "after.txt");
-        List<String> skippedNames = List.of("skipped$file.txt", "nested/source.java", "folder$/Name.class");
+        List<String> skippedNames = List.of("skipped$1.txt", "nested/source.java", "folder$/Name.class", "nested/<script>.txt");
         assertTrue(FileBrowserTools.hasForbiddenSymbol(skippedNames.get(0)));
         Path archive = tempDir.resolve("import.zip");
         try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(archive))) {
-            for (String name : List.of("before.txt", "skipped$file.txt", "nested/Name$subname.class",
-                    "nested/source.java", "nested/Name$1.class", "folder$/Name.class", "after.txt")) {
+            for (String name : List.of("before.txt", "skipped$1.txt", "nested/Name$subname.class",
+                    "nested/source.java", "nested/Name$1.class", "folder$/Name.class", "nested/<script>.txt", "after.txt")) {
                 zip.putNextEntry(new ZipEntry(name));
                 zip.write(content);
                 zip.closeEntry();
@@ -73,8 +74,10 @@ class ExtractCommandExecutorForbiddenNameTest extends BaseWebjetTest {
             ExtractCommandExecutor executor = new ExtractCommandExecutor();
 
             assertTrue(executor.areAllExtractEntriesWritable("/import.zip", parent));
-            List<FsItemEx> added = executor.unZipFile("/import.zip", "/files", source);
+            List<String> skippedFiles = new ArrayList<>();
+            List<FsItemEx> added = executor.unZipFile("/import.zip", "/files", source, skippedFiles);
             assertNotNull(added);
+            assertEquals(skippedNames.stream().map(name -> "/files/" + name).toList(), skippedFiles);
             for (String name : allowedNames) {
                 assertArrayEquals(content, Files.readAllBytes(outputDirectory.resolve(name)), name);
             }

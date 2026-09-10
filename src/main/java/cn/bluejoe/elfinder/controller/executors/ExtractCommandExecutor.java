@@ -12,6 +12,7 @@ import java.util.Set;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import cn.bluejoe.elfinder.controller.executor.AbstractJsonCommandExecutor;
@@ -72,7 +73,8 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 
 			if (makedir != null) makedir.createFolder();
 
-			List<FsItemEx> added = unZipFile(zipFile, outputFolder, fsi);
+			List<String> skippedFiles = new ArrayList<>();
+			List<FsItemEx> added = unZipFile(zipFile, outputFolder, fsi, skippedFiles);
 			if (added == null)
 			{
 				json.put("error", prop.getText("components.elfinder.commands.extract.error", zipFile));
@@ -82,6 +84,16 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 			if (makedir != null) added.add(0, makedir);
 
 			json.put("added", files2JsonArray(request, added));
+			if (skippedFiles.isEmpty() == false)
+			{
+				JSONArray warning = new JSONArray().put(prop.getText("components.elfinder.commands.extract.skipped"));
+				for (String skippedFile : skippedFiles)
+				{
+					// Pass paths as values so elFinder does not interpret "$1" in file names as a placeholder.
+					warning.put("$1").put(skippedFile);
+				}
+				json.put("warning", warning);
+			}
 		}
 		else
 		{
@@ -134,6 +146,20 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 
 	protected List<FsItemEx> unZipFile(String zipFile, String outputFolder, FsItemEx fsi)
 	{
+		return unZipFile(zipFile, outputFolder, fsi, new ArrayList<>());
+	}
+
+	/**
+	 * Extracts permitted entries and collects virtual destination paths of skipped entries.
+	 *
+	 * @param zipFile virtual path of the archive
+	 * @param outputFolder virtual extraction directory
+	 * @param fsi archive item whose parent is the extraction directory
+	 * @param skippedFiles destination list for entries skipped because of forbidden paths
+	 * @return added items, or {@code null} if a destination is not writable
+	 */
+	protected List<FsItemEx> unZipFile(String zipFile, String outputFolder, FsItemEx fsi, List<String> skippedFiles)
+	{
 		Logger.debug(this.getClass(), "unzipFile, outputFolder="+outputFolder);
 
 		List<FsItemEx> added = new ArrayList<FsItemEx>();
@@ -156,6 +182,7 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 				FsItemEx destination = new FsItemEx(fsi.getParent(), fileName);
 				if (destination.getPath() == null)
 				{
+					skippedFiles.add(outputFolder + (outputFolder.endsWith("/") ? "" : "/") + fileName);
 					Logger.debug(this.getClass(), "Skipping ZIP entry with forbidden path, zipFile="+zipFile+", fileName="+fileName);
 					ze = zis.getNextEntry();
 					continue;

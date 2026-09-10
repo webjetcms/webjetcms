@@ -11,6 +11,8 @@ import cn.bluejoe.elfinder.util.FsServiceUtils;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -164,8 +166,9 @@ class ExtractCommandExecutorReadOnlyTest {
         assertTrue(json.has("error"));
     }
 
-    @Test
-    void shouldValidateAndExtractAgainstTheSameParentPath() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldValidateAndExtractAgainstTheSameParentPath(boolean hasSkippedFiles) throws Exception {
         FsService fsService = mock(FsService.class);
         FsItemEx zipFile = mock(FsItemEx.class);
         FsItemEx zipParent = mock(FsItemEx.class);
@@ -178,11 +181,20 @@ class ExtractCommandExecutorReadOnlyTest {
         when(zipParent.getPath()).thenReturn("/files/archiv.zip");
         when(user.getWritableFolders()).thenReturn("/");
         when(prop.getText(anyString(), anyString())).thenReturn("Extract is not allowed");
+        when(prop.getText("components.elfinder.commands.extract.skipped")).thenReturn("Some files were skipped:");
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addParameter("target", "zipHash");
         JSONObject json = new JSONObject();
         CapturingExtractCommandExecutor executor = new CapturingExtractCommandExecutor();
+        FsItemEx extractedFile = mock(FsItemEx.class);
+        when(extractedFile.getName()).thenReturn("extracted.txt");
+        when(extractedFile.getMimeType()).thenReturn("text/plain");
+        when(extractedFile.getParent()).thenReturn(zipParent);
+        executor.added = List.of(extractedFile);
+        if (hasSkippedFiles) {
+            executor.skippedFiles = List.of("/files/archiv.zip/skipped$1.txt", "/files/archiv.zip/nested/<script>.txt");
+        }
 
         try (MockedStatic<FsServiceUtils> finder = mockStatic(FsServiceUtils.class);
              MockedStatic<sk.iway.iwcm.system.elfinder.FsService> currentUser = mockStatic(sk.iway.iwcm.system.elfinder.FsService.class);
@@ -198,6 +210,14 @@ class ExtractCommandExecutorReadOnlyTest {
 
         assertSame(zipParent, executor.validatedOutputFolder);
         assertEquals("/files/archiv.zip", executor.extractedOutputFolder);
+        JSONObject response = new JSONObject(json.toString());
+        assertFalse(response.has("error"));
+        assertEquals("extracted.txt", response.getJSONArray("added").getJSONObject(0).getString("name"));
+        assertEquals(hasSkippedFiles, response.has("warning"));
+        if (hasSkippedFiles) {
+            assertEquals(List.of("Some files were skipped:", "$1", "/files/archiv.zip/skipped$1.txt",
+                "$1", "/files/archiv.zip/nested/<script>.txt"), response.getJSONArray("warning").toList());
+        }
     }
 
     private Path createZip(String... entryNames) throws IOException {
@@ -221,7 +241,7 @@ class ExtractCommandExecutorReadOnlyTest {
         }
 
         @Override
-        protected List<FsItemEx> unZipFile(String zipFile, String outputFolder, FsItemEx fsi) {
+        protected List<FsItemEx> unZipFile(String zipFile, String outputFolder, FsItemEx fsi, List<String> skippedFiles) {
             unzipCalled = true;
             return List.of();
         }
@@ -230,6 +250,8 @@ class ExtractCommandExecutorReadOnlyTest {
     private static class CapturingExtractCommandExecutor extends ExtractCommandExecutor {
         private FsItemEx validatedOutputFolder;
         private String extractedOutputFolder;
+        private List<FsItemEx> added = List.of();
+        private List<String> skippedFiles = List.of();
 
         @Override
         protected boolean areAllExtractEntriesWritable(String zipFile, FsItemEx outputFolder) {
@@ -238,9 +260,10 @@ class ExtractCommandExecutorReadOnlyTest {
         }
 
         @Override
-        protected List<FsItemEx> unZipFile(String zipFile, String outputFolder, FsItemEx fsi) {
+        protected List<FsItemEx> unZipFile(String zipFile, String outputFolder, FsItemEx fsi, List<String> skippedFiles) {
             extractedOutputFolder = outputFolder;
-            return List.of();
+            skippedFiles.addAll(this.skippedFiles);
+            return added;
         }
     }
 }
