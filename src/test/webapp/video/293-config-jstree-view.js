@@ -8,119 +8,192 @@ const allNode = `${treeSelector} li[data-configuration-view='all']`;
 const appsNode = `${treeSelector} li[data-configuration-module='apps']`;
 const formsNode = `${treeSelector} li[data-configuration-module='apps.form']`;
 
+const securityNode = `${treeSelector} li[data-configuration-module='security']`;
+const oauth2Node = `${treeSelector} li[data-configuration-module='security.oauth2']`;
+
+// Move whole shot objects to reorder narration, slates and browser actions.
+const videoPlan = {
+    "language": "sk",
+    "notes": "Durations estimate the edited narration. Cut setup, cleanup and slates; use the runner's transition holds when editing.",
+    "shots": [
+        {
+            "id": "long-list",
+            "type": "auto",
+            "durationSeconds": 12,
+            "title": "Browse the saved configuration list",
+            "text-sk": "Hľadáte jednu konfiguračnú premennú v dlhom zozname nastavení?\n\nDoteraz sa zobrazovali iba nastavenia s hodnotou uloženou v systéme a cesta ku konkrétnej položke mohla trvať zbytočne dlho.",
+            "notes": "Show several pages of the current saved-settings list. Crop to the table during editing for the opening detail; this is not historical footage.",
+            shot: async ({ I, DT }) => {
+                for (const page of [2, 3, 4, 5]) {
+                    await I.videoClick(locate(`${tableWrapper} button.page-link`).withText(String(page)));
+                    await I.waitForElement(locate(`${tableWrapper} li.dt-paging-button.page-item.active button.page-link`).withText(String(page)), 20);
+                    DT.waitForLoader();
+                }
+                await I.wait(3);
+            }
+        },
+        {
+            "id": "tree-overview",
+            "type": "auto",
+            "durationSeconds": 11,
+            "title": "Show configuration views and modules",
+            "text-sk": "Vo WebJET CMS je teraz orientácia v konfigurácii jednoduchšia. Na ľavej strane pribudol strom, ktorý rozdeľuje nastavenia do logických pohľadov a oblastí.",
+            "notes": "Show the current tree and table together, with Changed selected.",
+            shot: async ({ I }) => {
+                await I.seeElement(".configuration-tree-layout > .datatable-col.col-md-8");
+                await I.see("Zmenené", changedNode);
+                await I.see("Zákaznícke", customNode);
+                await I.see("Všetky", allNode);
+                await I.see("Hľadať modul", "#tree-folder-search-label");
+                await I.wait(5);
+            }
+        },
+        {
+            "id": "views",
+            "type": "auto",
+            "durationSeconds": 16,
+            "title": "Switch between Changed, Custom and All",
+            "text-sk": "Po otvorení zostáva zvolený pohľad Zmenené. Nájdete v ňom nastavenia, ktoré majú hodnotu uloženú v systéme. Pohľad Zákaznícke sústredí vlastné nastavenia vašej inštalácie. A v pohľade Všetky uvidíte kompletný zoznam vrátane nastavení, ktoré stále používajú predvolenú hodnotu.",
+            "notes": "Start from Changed, then select Custom and All.",
+            shot: async ({ I, DT }) => {
+                await I.wait(3);
+                await I.videoClick(`${customNode} > a.jstree-anchor`);
+                await I.waitForElement(`${customNode} > a.jstree-clicked[aria-selected='true']`, 20);
+                await I.waitForFunction(() => new URL(configurationDatatable.getAjaxUrl(), location.origin).searchParams.get("view") === "custom", 20);
+                DT.waitForLoader();
+                await I.wait(3);
+                await I.videoClick(`${allNode} > a.jstree-anchor`);
+                await I.waitForElement(`${allNode} > a.jstree-clicked[aria-selected='true']`, 20);
+                await I.waitForFunction(() => new URL(configurationDatatable.getAjaxUrl(), location.origin).searchParams.get("view") === "all", 20);
+                DT.waitForLoader();
+                await I.wait(4);
+            }
+        },
+        {
+            "id": "module-hierarchy",
+            "type": "auto",
+            "durationSeconds": 14,
+            "title": "Narrow configuration by module",
+            "text-sk": "Nastavenia si môžete prezerať aj podľa oblastí. Stačí rozbaliť napríklad bezpečnosť a potom prihlásenie cez externé služby. Tabuľka sa zúži iba na súvisiace položky. Výber širšej oblasti zahŕňa aj jej podskupiny.",
+            "notes": "Select security and then security.oauth2 to match the narration. Sensitive values are masked in the recording only.",
+            shot: async ({ I, DT }) => {
+                await I.videoClick(`${securityNode} > a.jstree-anchor`);
+                await I.waitForElement(`${securityNode} > a.jstree-clicked[aria-selected='true']`, 20);
+                await I.waitForElement(`${oauth2Node} > a.jstree-anchor`, 20);
+                DT.waitForLoader();
+                await I.wait(3);
+                await I.videoClick(`${oauth2Node} > a.jstree-anchor`);
+                await I.waitForElement(`${oauth2Node} > a.jstree-clicked[aria-selected='true']`, 20);
+                await I.waitForFunction(() => {
+                    const url = new URL(configurationDatatable.getAjaxUrl(), location.origin);
+                    const names = configurationDatatable.rows().data().toArray().map(row => row.name);
+                    return url.searchParams.get("module") === "security.oauth2" && names.includes("oauth2_githubClientId") && !names.includes("captchaType");
+                }, 20);
+                DT.waitForLoader();
+                await I.wait(4);
+            }
+        },
+        {
+            "id": "module-search",
+            "type": "auto",
+            "durationSeconds": 6,
+            "title": "Search modules and clear the query",
+            "text-sk": "Ak poznáte názov oblasti, použite vyhľadávanie modulov a dostanete sa k nej ešte rýchlejšie.",
+            "notes": "Find oauth2, select it, clear the search and preserve the selected module.",
+            shot: async ({ I, DT }) => {
+                await I.videoClick("#tree-folder-search-input");
+                await I.fillField("#tree-folder-search-input", "oauth2");
+                await I.videoClick("#tree-folder-search-button");
+                await I.waitForElement(`${oauth2Node} > a.jstree-search`, 20);
+                await I.videoClick(`${oauth2Node} > a.jstree-anchor`);
+                await I.waitForElement(`${oauth2Node} > a.jstree-clicked[aria-selected='true']`, 20);
+                DT.waitForLoader();
+                await I.videoClick("#tree-folder-search-clear-button");
+                await I.waitForElement(`${oauth2Node} > a.jstree-clicked[aria-selected='true']`, 20);
+                await I.dontSeeInField("#tree-folder-search-input", "oauth2");
+                await I.wait(4);
+            }
+        },
+        {
+            "id": "related-areas",
+            "type": "manual",
+            "durationSeconds": 9,
+            "title": "One setting in related areas",
+            "text-sk": "Jedno nastavenie môže súvisieť s viacerými časťami systému. Preto sa zobrazí vo všetkých relevantných vetvách a nájdete ho tam, kde ho prirodzene očakávate.",
+            "notes": "Create a caption: Jedno nastavenie - viac relevantných oblastí. Optionally add a montage of xhrFileUploadAllowedExtensions in apps.form, security and files.upload."
+        },
+        {
+            "id": "summary",
+            "type": "auto",
+            "durationSeconds": 8,
+            "title": "Keep the selected module and results together",
+            "text-sk": "Výsledkom je menej zdĺhavého posúvania, lepší prehľad a rýchlejšia správa konfigurácie aj pri veľkom množstve nastavení.",
+            "notes": "Hold the Forms module and its filtered table. Add the benefit caption during editing.",
+            prepare: async ({ I, DT }) => {
+                await I.clickCss(`${appsNode} > a.jstree-anchor`);
+                await I.waitForElement(`${formsNode} > a.jstree-anchor`, 20);
+                await I.clickCss(`${formsNode} > a.jstree-anchor`);
+                await I.waitForElement(`${formsNode} > a.jstree-clicked[aria-selected='true']`, 20);
+                DT.waitForLoader();
+                await I.waitForText("xhrFileUploadAllowedExtensions", 20, tableWrapper);
+            },
+            shot: async ({ I }) => {
+                await I.seeElement(`${formsNode} > a.jstree-clicked[aria-selected='true']`);
+                await I.see("xhrFileUploadAllowedExtensions", tableWrapper);
+                await I.wait(6);
+            }
+        },
+        {
+            "id": "documentation",
+            "type": "auto",
+            "durationSeconds": 14,
+            "title": "Configuration documentation",
+            "text-sk": "Podrobný popis nových pohľadov a práce s konfiguračnými premennými nájdete v dokumentácii WebJET CMS. Odkaz je v popise videa.",
+            "notes": "Scroll the configuration documentation in the recording tab.",
+            shot: async ({ I }) => {
+                await I.videoDocumentation("https://docs.webjetcms.sk/latest/sk/admin/setup/configuration/README");
+                await I.wait(5);
+            }
+        }
+    ]
+};
+
 Scenario("ElevenLabs", ({ I }) => {
-    I.generateAudio(`
-Hľadáte jednu konfiguračnú premennú v dlhom zozname nastavení?
-
-Doteraz sa zobrazovali iba nastavenia s hodnotou uloženou v systéme a cesta ku konkrétnej položke mohla trvať zbytočne dlho.
-
-Vo WebJET CMS je teraz orientácia v konfigurácii jednoduchšia. Na ľavej strane pribudol strom, ktorý rozdeľuje nastavenia do logických pohľadov a oblastí.
-
-Po otvorení zostáva zvolený pohľad Zmenené. Nájdete v ňom nastavenia, ktoré majú hodnotu uloženú v systéme. Pohľad Zákaznícke sústredí vlastné nastavenia vašej inštalácie. A v pohľade Všetky uvidíte kompletný zoznam vrátane nastavení, ktoré stále používajú predvolenú hodnotu.
-
-Nastavenia si môžete prezerať aj podľa oblastí. Stačí rozbaliť napríklad bezpečnosť a potom prihlásenie cez externé služby. Tabuľka sa zúži iba na súvisiace položky. Výber širšej oblasti zahŕňa aj jej podskupiny. Ak poznáte názov oblasti, použite vyhľadávanie modulov a dostanete sa k nej ešte rýchlejšie.
-
-Jedno nastavenie môže súvisieť s viacerými časťami systému. Preto sa zobrazí vo všetkých relevantných vetvách a nájdete ho tam, kde ho prirodzene očakávate.
-
-Výsledkom je menej zdĺhavého posúvania, lepší prehľad a rýchlejšia správa konfigurácie aj pri veľkom množstve nastavení.
-
-Podrobný popis nových pohľadov a práce s konfiguračnými premennými nájdete v dokumentácii WebJET CMS. Odkaz je v popise videa.
-`);
+    I.generateAudio(videoPlan);
 }).tag("@audio");
 
 Scenario("Shot plan", ({ I }) => {
-    I.say(`
-| 0-4 s | Detail dlhej tabuľky, strom zatiaľ mimo záberu. Krátky scroll. Voliteľný titulok: „Jedno nastavenie. Dlhý zoznam.“ |
-| 4-12 s | Ukážte počet strán alebo pokračujte krátkym scrollovaním zoznamu. |
-| 12-23 s | Plynulo odhaľte celú obrazovku so stromom vľavo. |
-| 23-39 s | Ukážte predvolený pohľad **Zmenené**, potom kliknite na **Zákaznícke** a **Všetky**. Po každom kliknutí počkajte približne sekundu. |
-| 39-59 s | Rozbaľte security, kliknite naň, následne rozbaľte oauth2. Potom do poľa **Hľadať modul** zadajte oauth2. |
-| 59-68 s | Voliteľne strihom ukážte rovnakú premennú xhrFileUploadAllowedExtensions vo vetvách apps.form, security a files.upload. Jednoduchšia alternatíva je titulok „Jedno nastavenie • viac relevantných oblastí“. |
-| 68-76 s | Celkový pohľad na strom a prefiltrovanú tabuľku. Titulok: „Menej hľadania. Lepší prehľad.“ |
-| 76-90 s | Kliknite na **Pomocník** a ukážte dokumentáciu konfigurácie. Záverečný titulok: „Podrobný návod nájdete v popise videa.“ |
-`);
+    const { formatShotPlan } = require("../helpers/feature_video_plan.js");
+    I.say(formatShotPlan(videoPlan));
 });
 
-Scenario("293-config-jstree-view", ({ I, DT, login }) => {
-    login("admin");
-    I.amOnPage("/admin/v9/settings/configuration/");
-    I.waitForElement(`${changedNode} > a.jstree-clicked[aria-selected='true']`, 20);
-    I.waitForVisible(`${tableWrapper} table`, 20);
-    DT.waitForLoader();
-
-    // Shot 1: simulate the legacy full-width list without the configuration tree.
-    I.executeScript(() => {
-        document.querySelector(".configuration-tree-layout > .tree-col").classList.add("d-none");
-        const datatableColumn = document.querySelector(".configuration-tree-layout > .datatable-col");
-        datatableColumn.classList.remove("col-md-8");
-        datatableColumn.classList.add("col-md-12");
-        configurationDatatable.columns.adjust();
+Scenario("293-config-jstree-view", async ({ I, DT, login }) => {
+    const { recordVideoPlan } = require("../helpers/feature_video_plan.js");
+    await recordVideoPlan(I, {
+        plan: videoPlan,
+        context: { DT },
+        setup: async () => { login("admin"); },
+        prepare: async shot => {
+            if (shot.id === "documentation") return;
+            await I.amOnPage("/admin/v9/settings/configuration/");
+            await I.waitForVisible(".configuration-tree-layout > .tree-col", 20);
+            await I.waitForElement(`${changedNode} > a.jstree-clicked[aria-selected='true']`, 20);
+            await I.waitForVisible(`${tableWrapper} table`, 20);
+            DT.waitForLoader();
+            // Redact sensitive cells after every draw without changing table data or saved settings.
+            await I.executeScript(() => {
+                const maskValues = () => {
+                    configurationDatatable.rows({ page: "current" }).every(function () {
+                        if (!/(password|secret|privatekey|apikey|accesstoken|refreshtoken)/i.test(this.data().name)) return;
+                        for (const column of ["value", "oldValue"]) {
+                            const cell = configurationDatatable.cell(this.index(), `${column}:name`).node();
+                            if (cell?.textContent.trim()) cell.textContent = "••••••••";
+                        }
+                    });
+                };
+                configurationDatatable.on("draw.dt.videoMask", maskValues);
+                maskValues();
+            });
+        }
     });
-    I.waitForInvisible(".configuration-tree-layout > .tree-col", 5);
-    I.seeElement(".configuration-tree-layout > .datatable-col.col-md-12");
-    I.wait(3);
-
-    // Browse several pages to demonstrate the length of the legacy list.
-    for (const page of [2, 3, 4, 5]) {
-        I.videoClick(locate(`${tableWrapper} button.page-link`).withText(String(page)));
-        I.waitForElement(
-            locate(`${tableWrapper} li.dt-paging-button.page-item.active button.page-link`).withText(String(page)),
-            20
-        );
-        DT.waitForLoader();
-    }
-    I.wait(1);
-
-    // Shot 2: reveal the new tree with the Changed view selected by default.
-    I.amOnPage("/admin/v9/settings/configuration/");
-    I.waitForVisible(".configuration-tree-layout > .tree-col", 5);
-    I.seeElement(".configuration-tree-layout > .datatable-col.col-md-8");
-    I.waitForElement(`${changedNode} > a.jstree-clicked[aria-selected='true']`, 5);
-    I.see("Zmenené", changedNode);
-    I.see("Zákaznícke", customNode);
-    I.see("Všetky", allNode);
-    I.see("Hľadať modul", "#tree-folder-search-label");
-
-    // Shot 3: switch between customer-defined and all available variables.
-    I.videoClick(`${customNode} > a.jstree-anchor`);
-    I.waitForElement(`${customNode} > a.jstree-clicked[aria-selected='true']`, 20);
-    I.waitForFunction(() => new URL(configurationDatatable.getAjaxUrl(), location.origin).searchParams.get("view") === "custom", 20);
-    DT.waitForLoader();
-
-    I.videoClick(`${allNode} > a.jstree-anchor`);
-    I.waitForElement(`${allNode} > a.jstree-clicked[aria-selected='true']`, 20);
-    I.waitForFunction(() => new URL(configurationDatatable.getAjaxUrl(), location.origin).searchParams.get("view") === "all", 20);
-    DT.waitForLoader();
-
-    // Shot 4: select a module to narrow the table to a relevant group.
-    I.videoClick(`${appsNode} > a.jstree-anchor`);
-    I.waitForElement(`${appsNode} > a.jstree-clicked[aria-selected='true']`, 20);
-    I.waitForElement(`${formsNode} > a.jstree-anchor`, 20);
-    I.waitForFunction(() => {
-        const url = new URL(configurationDatatable.getAjaxUrl(), location.origin);
-        return url.searchParams.get("view") === "module" &&
-            url.searchParams.get("module") === "apps";
-    }, 20);
-    DT.waitForLoader();
-
-    I.videoClick(`${formsNode} > a.jstree-anchor`);
-    I.waitForElement(`${formsNode} > a.jstree-clicked[aria-selected='true']`, 20);
-    I.waitForFunction(() => {
-        const url = new URL(configurationDatatable.getAjaxUrl(), location.origin);
-        const names = configurationDatatable.rows().data().toArray().map((row) => row.name);
-        return url.searchParams.get("view") === "module" &&
-            url.searchParams.get("module") === "apps.form" &&
-            names.includes("xhrFileUploadAllowedExtensions");
-    }, 20);
-    DT.waitForLoader();
-
-    // Shot 5: search the module tree and keep the selected module after clearing it.
-    I.videoClick("#tree-folder-search-input");
-    I.fillField("#tree-folder-search-input", "form");
-    I.videoClick("#tree-folder-search-button");
-    I.waitForElement(`${formsNode} > a.jstree-search`, 20);
-    I.videoClick(`${treeSelector} li[data-configuration-module='system.performance'] > a.jstree-anchor`);
-
-    I.videoClick("#tree-folder-search-clear-button");
-    I.wait(10);
 }).tag("@video");

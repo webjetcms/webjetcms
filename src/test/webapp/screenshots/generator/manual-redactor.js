@@ -549,59 +549,112 @@ Scenario('editor-virtualPath', ({ I, DTE, Document }) => {
 });
 
 Scenario('pagebuilder', async ({ I, DTE, Document }) => {
-
+    Document.resetPageBuilderMode();
+    I.executeScript(() => localStorage.removeItem('webjet.pagebuilder.guides'));
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
-
     DTE.waitForEditor();
-    I.wait(5);
-
-    //add PB classes to simulate mouse over
-    await I.executeScript(()=>{
-        var pbElement = $('#DTE_Field_data-pageBuilderIframe')[0].contentWindow.$("div.col-3.text-center.pb-column.pb-grid-element").first();
-        pbElement.addClass("pb-has-toolbar-active").closest(".container").addClass("pb-has-child-toolbar-active").closest("section").addClass("pb-has-child-toolbar-active");
-        pbElement.find("aside.pb-toolbar").trigger("click");
-    });
-
-    Document.screenshot("/redactor/webpages/pagebuilder.png");
-
-    await I.executeScript(()=>{
-        var pbElement = $('#DTE_Field_data-pageBuilderIframe')[0].contentWindow.$("div.col-3.text-center.pb-column.pb-grid-element").first();
-        pbElement.find(".pb-toolbar-button__style.pb-toolbar-button").trigger("click");
-    });
-
-    Document.screenshot("/redactor/webpages/pagebuilder-style.png");
-
-    await I.executeScript(()=>{
-        var mainWindow = $('#DTE_Field_data-pageBuilderIframe')[0].contentWindow;
-        mainWindow.$(".pb-modal .pb-modal__footer__button-close").trigger("click");
-        var pbElement = mainWindow.$("section.pb-section.pb-grid-element").first();
-        pbElement.addClass("pb-has-toolbar-active");
-        pbElement.children("aside.pb-toolbar").first().trigger("click");
-        pbElement.children(".pb-prepend.pb-plus-button").first().trigger("click");
-        //mainWindow.$(".library-tab-item-button__toggler[data-library-item-id='c2VjdGlvbi9Db250YWN0']").trigger("click");
-    });
-
     I.switchTo('#DTE_Field_data-pageBuilderIframe');
-    I.wait(1);
+    I.waitForVisible('.pb-workbench', 20);
+
+    // Select a real content block and show its hierarchy using the shared toolbar.
+    const column = '.pb-column.col-3.text-center';
+    await I.usePlaywrightTo('wait for the screenshot column editor and select its content', async ({page}) => {
+        const frame = await (await page.locator('#DTE_Field_data-pageBuilderIframe').elementHandle()).contentFrame();
+        await frame.waitForFunction(selector => {
+            const editable = document.querySelector(selector)?.querySelector('[data-ckeditor-instance]');
+            return editable && CKEDITOR.instances[editable.dataset.ckeditorInstance]?.status === 'ready';
+        }, column, {timeout: 20000});
+        await frame.locator(column).first().evaluate(element => element.scrollIntoView({block: 'center', behavior: 'instant'}));
+        await frame.locator(column).first().locator(':is(h1,h2,h3,h4,p):not(:has(img))').first().click();
+    });
+    I.waitForVisible('.pb-outline[data-type=column]:not([hidden])', 10);
+    I.click('.pb-workbench [data-pb-action=guides]');
+    I.click('.pb-workbench [data-pb-action=guides]');
+    I.waitForVisible('.pb-outline[data-type=section]:not([hidden])', 10);
+    I.executeScript((root, selector) => {
+        const container = document.querySelector(selector).closest('.pb-container');
+        const toolbar = document.querySelector('.pb-workbench').getBoundingClientRect();
+        window.scrollBy({top: container.getBoundingClientRect().top - toolbar.bottom - 24, behavior: 'instant'});
+    }, column);
+    I.moveCursorTo('.pb-workbench-path');
+    Document.screenshot('/redactor/webpages/pagebuilder.png');
+
+    // Show the difference between the selected column and a hover guide.
+    I.click('.pb-workbench [data-pb-action=guides]');
+    I.seeElement('.pb-workbench [data-pb-guides=selected]');
+    I.moveCursorTo(locate(column+' h3').last());
+    I.waitForVisible('.pb-outline.is-hover[data-type=column]:not([hidden])', 10);
+    Document.screenshot('/redactor/webpages/pagebuilder-hover.png');
+    I.moveCursorTo('.pb-workbench-path');
+
+    I.click('.pb-workbench [data-pb-action=structure]');
+    I.waitForVisible('.pb-structure [role=treeitem][aria-selected=true]', 10);
+    I.moveCursorTo('.pb-structure-heading strong');
+    Document.screenshot('/redactor/webpages/pagebuilder-structure.png');
+    I.click('.pb-structure [data-pb-action=close-structure]');
+    I.waitForInvisible('.pb-structure', 10);
+
+    I.click('.pb-workbench [data-pb-action=resize]');
+    I.waitForVisible('.pb-is-resize-columns .pb-size-changer', 10);
+    I.waitForVisible('.pb-workbench [data-pb-action=resize][aria-pressed=true]:enabled', 10);
+    I.waitForVisible('.pb-resize-hint', 10);
+    I.dontSee('pagebuilder.ui.resize.', '.pb-resize-hint');
+    I.dontSeeElement('.pb-notify');
+    I.moveCursorTo('.pb-resize-hint > span');
+    Document.screenshot('/redactor/webpages/pagebuilder-width.png');
+    I.click('.pb-resize-hint [data-pb-action=end-resize]');
+    I.waitForInvisible('.pb-is-resize-columns', 10);
+    I.waitForInvisible('.pb-resize-hint', 10);
+
+    I.click('.pb-workbench [data-pb-action=more]');
+    I.click('.pb-workbench [data-pb-action=style]');
+    I.waitForVisible('#wjInline-docdata.pb-is-modal-open .pb-modal', 10);
+    I.moveCursorTo('.pb-modal__header');
+    Document.screenshot('/redactor/webpages/pagebuilder-style.png');
+    I.click('.pb-modal .pb-modal__footer__button-close');
+    I.waitForInvisible('.pb-modal', 10);
+
+    // Open the section library from an insertion point, as an editor would.
+    I.executeScript(() => window.scrollTo({top: 0, behavior: 'instant'}));
+    I.click('.pb-workbench [data-pb-action=insert]');
+    I.waitForVisible('.pb-insert-point[data-type=section] button', 10);
+    I.moveCursorTo('.pb-insert-hint > span');
+    Document.screenshot('/redactor/webpages/pagebuilder-insert.png');
+    I.click(locate('.pb-insert-point[data-type=section] button').first());
+    I.waitForVisible('.pb-library--section', 10);
     I.clickCss(".library-tab-item-button__toggler[data-library-item-id='c2VjdGlvbi9Db250YWN0']");
-    I.wait(1);
-    I.switchTo();
+    I.waitForVisible(".library-tab-item-button__toggler.active[data-library-item-id='c2VjdGlvbi9Db250YWN0'] .library-full-width-item", 10);
+    I.moveCursorTo('.pb-library__header');
+    Document.screenshot('/redactor/webpages/pagebuilder-library.png');
+    I.click('.pb-library__footer__button');
+    I.waitForInvisible('.pb-library', 10);
+    I.pressKey('Escape');
+    I.waitForInvisible('.pb-insert-layer', 10);
 
-    Document.screenshot("/redactor/webpages/pagebuilder-library.png");
+    I.waitForVisible('#DTE_Field_data-editorTypeSelector', 10);
+    Document.screenshotElement('#DTE_Field_data-editorTypeSelector', '/redactor/webpages/pagebuilder-switcher.png');
 
+    // Verify the documented route to splitting a column without changing its content.
+    I.click(locate(column+' h3').first());
+    I.click('.cke_button__htmlbox');
+    I.waitForVisible('.pb-library--content', 10);
+    I.click('.pb-library .library-tab-link[data-library-type=basic]');
+    I.waitForVisible('.pb-library--content .library-tab-item.active [data-library-item-id="pb-basic-4.12"]', 10);
+    I.click('.pb-library__footer__button');
+    I.waitForInvisible('.pb-library', 10);
     I.switchTo();
-    Document.screenshotElement("#trEditor > #DTE_Field_data-editorTypeSelector", "/redactor/webpages/pagebuilder-switcher.png");
+    DTE.cancel();
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=152046");
     DTE.waitForEditor();
-    I.wait(5);
-
     I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.waitForVisible('.pb-empty-placeholder-wrapper .pb-empty-placeholder__button', 20);
     I.moveCursorTo(".pb-empty-placeholder-wrapper .pb-empty-placeholder__button");
-
     Document.screenshot("/redactor/webpages/pagebuilder-plusbutton.png");
 
     I.switchTo();
+    DTE.cancel();
+    I.executeScript(() => localStorage.removeItem('webjet.pagebuilder.guides'));
 });
 
 Scenario('welcome', ({ I, Document }) => {

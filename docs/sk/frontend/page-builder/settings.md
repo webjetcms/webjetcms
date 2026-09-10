@@ -90,6 +90,18 @@ vznikne po inicializácii Page Builder kód:
 </div>
 ```
 
+## Ovládanie v editore
+
+Page Builder predvolene zobrazuje jeden rámik vybraného bloku a spoločnú nástrojovú lištu pod CKEditorom. Rámik sa kreslí v samostatnej vrstve mimo obsahu stránky, s odstupom od jeho hrany. Nepridáva sa kvôli nemu `padding`, `margin` ani `border` do blokov, takže nemení ich šírku a zalomenie textu. Vrstva nezachytáva kliknutia do obsahu a neoreže ju `overflow: hidden` rodičovského bloku.
+
+Tlačidlo s ikonou oka prepína tri režimy: rámik vybraného bloku (predvolený), žiadne rámiky a rámiky celej hierarchie aktívneho bloku (ikona vrstiev). Obrysy predkov sú odsadené smerom von, aby sa neprekrývali ani pri zhodných hranách blokov. Voľba sa ukladá do `localStorage` pod kľúčom `webjet.pagebuilder.guides` (`selected`, `hidden`, `all`). Pri nedostupnom úložisku funguje prepínanie pre aktuálne otvorený editor. Prepínanie nemení nástrojovú lištu ani výber bloku.
+
+Strom **Štruktúra** používa elementy rozpoznané existujúcou inicializáciou a názvy odvodzuje z obsahu. Nepridáva do blokov identifikátory ani ďalšie metadáta. Samostatné `pb-editable` elementy umožňuje vybrať, ale nepridáva im operácie určené pre stĺpce. Skryté elementy možno nájsť v strome bez zmeny ich viditeľnosti.
+
+Režim **Pridať blok** v spoločnej lište zobrazí pozície medzi sekciami, kontajnermi a stĺpcami. Tlačidlá zostávajú v samostatnej vrstve mimo obsahu; do štruktúry sa dočasne vložia iba neaktívne elementy `aside.pb-insert-space` na vytvorenie miesta. Nie sú súčasťou CKEditor polí a `getClearNode` ich odstráni aj pri ukladaní počas aktívneho režimu. Šírky stĺpcov sa nemenia. Vkladanie používa pôvodné ovládače a knižnicu, po vložení obnoví fokus CKEditora. Režim sa nepamätá v úložisku a nemení preferenciu rámikov.
+
+Pôvodné HTML, CSS triedy, vlastné selektory a funkcie `pbCustomOptions`/`pbCustomSettings` zostávajú platné. Akcie hornej lišty používajú existujúce operácie Page Builder vrátane obmedzení presunu duplikovateľných elementov. Pri príprave náhľadu a uložení sa používajú pôvodné funkcie `getClearNode` a `clearEditorAttributes`; nové ovládacie prvky sú navyše umiestnené mimo serializovaného obsahu.
+
 ## Štýlovanie elementov
 
 ### `SECTION` (modrá farba)
