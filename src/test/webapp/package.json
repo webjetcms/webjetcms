@@ -4,6 +4,7 @@
   "description": "Automated testing, after update of codeceptjs chromium change version in dev-reload-client.js",
   "scripts": {
     "postinstall": "npx playwright install",
+    "test:helpers": "node --test --test-reporter=spec helpers/*.test.js",
     "codeceptjs": "codeceptjs run --steps",
     "codeceptjs:ui": "codecept-ui --app",
     "all": "CODECEPT_URL='http://iwcm.interway.sk' CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_AUTODELAY='true' codeceptjs run -p allure",
