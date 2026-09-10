@@ -124,6 +124,85 @@ npm --prefix "$WORKTREE_PATH/src/test/webapp" install
 echo "Installing documentation dependencies"
 npm --prefix "$WORKTREE_PATH/docs" install
 
+# Search input fields are workspace UI state, not .vscode/settings.json settings.
+# Seed only a new storage directory, before VS Code loads its database into memory.
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    if command -v sqlite3 >/dev/null 2>&1; then
+        echo "Copying VS Code search filters"
+        if ! node - "$LOCAL_FILES_SOURCE" "$WORKTREE_PATH" <<'NODE'
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+const crypto = require('crypto');
+const { execFileSync } = require('child_process');
+
+const [sourceFolder, targetFolder] = process.argv.slice(2);
+const storageRoot = path.join(os.homedir(), 'Library/Application Support/Code/User/workspaceStorage');
+const searchKey = 'memento/workbench.view.search';
+
+function workspaceStorage(folder) {
+    // Match VS Code's macOS folder identity, including Node's birthtime rounding.
+    // https://github.com/microsoft/vscode/blob/main/src/vs/platform/workspaces/node/workspaces.ts
+    const birthtime = fs.statSync(folder).birthtime.getTime();
+    const id = crypto.createHash('md5').update(folder).update(birthtime ? String(birthtime) : '').digest('hex');
+    return path.join(storageRoot, id);
+}
+
+try {
+    const sourceDb = path.join(workspaceStorage(sourceFolder), 'state.vscdb');
+    if (!fs.existsSync(sourceDb)) {
+        console.log('No saved VS Code search filters found for the source folder; skipping.');
+        process.exit(0);
+    }
+
+    const saved = execFileSync('sqlite3', ['-readonly', sourceDb,
+        `SELECT value FROM ItemTable WHERE key = '${searchKey}';`], { encoding: 'utf8' }).trim();
+    const sourceQuery = saved ? JSON.parse(saved).query : undefined;
+    if (!sourceQuery || (typeof sourceQuery.folderIncludes !== 'string' && typeof sourceQuery.folderExclusions !== 'string')) {
+        console.log('No saved VS Code search filters found for the source folder; skipping.');
+        process.exit(0);
+    }
+
+    const query = { queryDetailsExpanded: true };
+    for (const key of ['folderIncludes', 'folderExclusions', 'useExcludesAndIgnoreFiles']) {
+        if (Object.hasOwn(sourceQuery, key)) query[key] = sourceQuery[key];
+    }
+
+    const targetStorage = workspaceStorage(targetFolder);
+    if (fs.existsSync(targetStorage)) {
+        console.log('VS Code workspace storage already exists for the target folder; leaving it unchanged.');
+        process.exit(0);
+    }
+    fs.mkdirSync(targetStorage);
+    fs.writeFileSync(path.join(targetStorage, 'workspace.json'), JSON.stringify({
+        folder: require('url').pathToFileURL(targetFolder).href
+    }, null, 2));
+
+    // Hex literals preserve quotes, backslashes and Unicode in user-entered patterns.
+    const searchState = Buffer.from(JSON.stringify({ query })).toString('hex');
+    const storageTargets = Buffer.from(JSON.stringify({ [searchKey]: 1 })).toString('hex');
+    execFileSync('sqlite3', [path.join(targetStorage, 'state.vscdb')], {
+        input: `BEGIN;
+            CREATE TABLE ItemTable (key TEXT UNIQUE ON CONFLICT REPLACE, value BLOB);
+            INSERT INTO ItemTable VALUES ('${searchKey}', CAST(X'${searchState}' AS TEXT));
+            INSERT INTO ItemTable VALUES ('__$__targetStorageMarker', CAST(X'${storageTargets}' AS TEXT));
+            COMMIT;`,
+        encoding: 'utf8'
+    });
+    console.log('VS Code search filters copied.');
+} catch (error) {
+    console.error(`Could not copy VS Code search filters: ${error.message}`);
+    process.exitCode = 1;
+}
+NODE
+        then
+            echo "Opening VS Code without copying search filters." >&2
+        fi
+    else
+        echo "sqlite3 is not available; skipping VS Code search filters." >&2
+    fi
+fi
+
 echo "Opening the new worktree in VS Code"
 (
     cd -- "$WORKTREE_PATH"
