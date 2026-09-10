@@ -389,7 +389,7 @@ Scenario('webjet-toolbar', ({ I, Document }) => {
     Document.screenshot('/redactor/webpages/webjet-toolbar.png');
 });
 
-Scenario('thumb-servlet', ({ I, Document, DTE, i18n }) => {
+function makeDialogScreenshot(imagePath, I, Document, DTE, i18n) {
     var elementText = "Etiam orci";
 
     Document.resetPageBuilderMode();
@@ -404,5 +404,15 @@ Scenario('thumb-servlet', ({ I, Document, DTE, i18n }) => {
     I.waitForElement(locate("a.cke_dialog_tab").withText(i18n.get("Thumbnail")), 10);
     I.click(locate("a.cke_dialog_tab").withText(i18n.get("Thumbnail")));
 
-    Document.screenshotElement( locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/image_dialog-thumb.png');
+    Document.screenshotElement( locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), imagePath);
+
+    I.switchTo();
+}
+
+Scenario('thumb-servlet', ({ I, Document, DTE, i18n }) => {
+    Document.setConfigValue('thumbServletAllowedSizeMode', 'learn');
+    makeDialogScreenshot('/redactor/webpages/working-in-editor/image_dialog-thumb.png', I, Document, DTE, i18n);
+    Document.setConfigValue('thumbServletAllowedSizeMode', 'strict');
+    makeDialogScreenshot('/redactor/webpages/working-in-editor/image_dialog-thumb-strict.png', I, Document, DTE, i18n);
+    Document.setConfigValue('thumbServletAllowedSizeMode', 'learn');
 });

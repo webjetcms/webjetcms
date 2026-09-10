@@ -46,6 +46,10 @@ Generovanie obrázkov zaťažuje server, je teda chránené SPAM ochranou. Použ
   - `check` - povolí len zadané hodnoty, ak je prihlásený administrátor, automaticky pridá nový rozmer do zoznamu
   - `strict` - povolí vygenerovať obrázok len pre zadané hodnoty (kontroluje zoznam povolených hodnôt)
 
+V režime `strict` sa v karte **Miniatúra** vo vlastnostiach obrázka zobrazí jeden výber povolených rozmerov namiesto samostatných polí. Možnosti sa načítajú z konfiguračnej premennej `thumbServletAllowedSizes` (oddelené čiarkou alebo novým riadkom) a zoradia sa číselne podľa šírky a následne výšky. Napríklad `159x159ip1` sa zobrazí ako `159 x 159 (1 - Fixná šírka)`, hodnota bez `ip` ako maximálne rozmery. Pri zadaní farby, vypnutia bodu záujmu alebo kvality sa zobrazia aj tieto údaje.
+
+Pri potvrdení sa vybraná kombinácia uloží do URL obrázka aj CSS triedy `fixedSize`. Ak obsahuje kvalitu, trieda má navyše príponu `-q90` (napríklad `fixedSize-730-401-5-ff00ff-true-q90`). Pri opätovnom otvorení sa zvolí zodpovedajúca povolená možnosť. Prázdna voľba použije obrázok v pôvodnej veľkosti: odstráni prefix `/thumb/`, parametre miniatúry a triedu `fixedSize`, rovnako ako v ostatných režimoch. Ak pôvodný rozmer nie je povolený, možno vybrať povolený rozmer alebo ponechať prázdnu voľbu na použitie pôvodného obrázka. V ostatných režimoch zostávajú samostatné polia dostupné.
+
 Nastavte najskôr režim `learn` pre naučenie sa existujúcich hodnôt a následne nastavte režim `check` v ktorom sa hodnoty kontrolujú, ale ak je prihlásený administrátor automaticky sa pridá nová hodnota do zoznamu povolených hodnôt. WebJET automaticky pri aktualizácii nastaví režim `learn` a následne po minimálne mesiaci a ďalšom reštarte prepne na režim `check`.
 
 V prípade viac uzlovej inštalácie môžete nastaviť režim `deny` a generovať náhľadové obrázky len na administrátorských uzloch. Rozdiel medzi `deny` a `check` je v tom, že `deny` ani nekontroluje zoznam povolených možností a je teda rýchlejší na spracovanie. Zároveň ak je prihlásený administrátor obrázok je vygenerovaný.

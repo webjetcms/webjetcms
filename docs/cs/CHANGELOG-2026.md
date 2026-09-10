@@ -32,7 +32,7 @@
 
 ![](frontend/templates/templates-edit-advanced.png)
 
-- V dialogu vkládání obrázků přidána karta **Miniatura** pro nastavení parametrů [generování zmenšených obrázků](redactor/webpages/working-in-editor/README.md#karta-miniatura) `thumbnail` (#58317).
+- V dialogu vkládání obrázků přidána karta **Miniatura** pro nastavení parametrů [generování zmenšených obrázků](redactor/webpages/working-in-editor/README.md#karta-miniatura) `thumbnail`. Podporován je volný režim nastavení rozměrů, ale také režim [přesně definovaných rozměrů](frontend/thumb-servlet/README.md#omezení) výběrem z možností (#58317,#58758).
 
 ![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
 

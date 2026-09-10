@@ -32,7 +32,7 @@
 
 ![](frontend/templates/templates-edit-advanced.png)
 
-- Added **Thumbnail** tab in the image insertion dialog for setting parameters for [generating thumbnail images](redactor/webpages/working-in-editor/README.md#thumbnail-tab) `thumbnail` (#58317).
+- Added **Thumbnail** tab in the image insertion dialog for setting parameters for [generating thumbnail images](redactor/webpages/working-in-editor/README.md#thumbnail-tab) `thumbnail`. Free size setting mode is supported, as well as [precisely defined size](frontend/thumb-servlet/README.md#constraints) mode by selecting from the options (#58317,#58758).
 
 ![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
 
