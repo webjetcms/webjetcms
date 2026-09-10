@@ -5,9 +5,11 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.rag.RagIndexAction;
 import sk.iway.iwcm.rag.service.IndexQueueService;
@@ -44,11 +46,8 @@ public class DocSaveEventListener {
         DocDetails doc = event.getSource();
         if (doc == null || doc.getDocId() < 1) return;
 
-        int docId = doc.getDocId();
-        String domainName = DocDB.getInstance().getDomain(docId);
-        int domainId = GroupsDB.getDomainId(domainName);
-
         try {
+            int domainId = resolveDomainId(doc);
             if (event.getEventType() == WebjetEventType.AFTER_SAVE || event.getEventType() == WebjetEventType.AFTER_RECOVER) {
                 // updated or recovered, re-index
                 indexQueueService.addToQueue(doc.getDocId(), ENTITY_TYPE, RagIndexAction.INDEX, domainId);
@@ -60,5 +59,31 @@ public class DocSaveEventListener {
         } catch (Exception e) {
             Logger.error(DocSaveEventListener.class, "Error adding doc " + doc.getDocId() + " to RAG queue: " + e.getMessage());
         }
+    }
+
+    /**
+     * Resolves the domain that owns the supplied document.
+     *
+     * The document domain is preferred, followed by its group's domain. Single-domain installations fall back to
+     * domain ID {@code 1}.
+     *
+     * @param doc document whose domain should be resolved
+     * @return resolved positive domain ID
+     * @throws IllegalStateException if no domain can be resolved in multi-domain mode
+     */
+    private int resolveDomainId(DocDetails doc) {
+        String domainName = DocDB.getInstance().getDomain(doc.getDocId());
+        int domainId = GroupsDB.getDomainId(domainName);
+        if (domainId > 0) return domainId;
+
+        GroupDetails group = GroupsDB.getInstance().getGroup(doc.getGroupId());
+        if (group != null) {
+            domainId = GroupsDB.getDomainId(group.getDomainName());
+            if (domainId > 0) return domainId;
+        }
+
+        boolean multiDomainMode = InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir");
+        if (multiDomainMode == false) return 1;
+        throw new IllegalStateException("Cannot resolve domain for document " + doc.getDocId());
     }
 }

@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,6 +25,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -155,6 +157,12 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
         return entity;
     }
 
+    /**
+     * Returns the provider and model currently configured for RAG indexing.
+     *
+     * @return configuration map containing {@code provider} and {@code model}, or an empty map when no complete
+     *         indexing assistant is configured
+     */
     @GetMapping("/current-embedding-configuration")
     public Map<String, String> getCurrentEmbeddingConfiguration() {
         AssistantDefinitionEntity assistant = ragEmbeddingStatService.getIndexingAssistant();
@@ -169,21 +177,31 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
     }
 
     /**
-     * Perform an indexing or deletion action on all documents in the specified folder.
-     * Adds matched document IDs to the RAG indexing queue.
-     * @param rootDir the root directory group ID (-1 for all domain documents)
-     * @param includeSubfolders whether to include documents from subfolders
-     * @param action the action to perform ("INDEX" or "DELETE")
-     * @return the number of documents queued, or -1 on error
+     * Queues an indexing or deletion action for searchable documents in an authorized folder scope.
+     *
+     * @param rootDir root group ID, or {@code -1} for all documents in the current domain
+     * @param includeSubfolders whether documents in descendant groups should be included
+     * @param action action to perform, expected to be {@code INDEX} or {@code DELETE}
+     * @return number of matched documents considered for queueing, {@code 0} when none match, or {@code -1} when
+     *         queueing fails
+     * @throws AccessDeniedException if the requested group scope is invalid, not editable, or belongs to another
+     *         domain
      */
     @PostMapping("/document-action")
     public int performDocumentAction(@RequestParam("rootDir") int rootDir, @RequestParam("includeSubfolders") boolean includeSubfolders, @RequestParam("action") String action) {
+        validateDocumentActionRoot(rootDir);
+
         int domainId = CloudToolsForCore.getDomainId();
         Pair<Integer, List<Integer>> data = getDocIds(rootDir, includeSubfolders);
         if(data == null || data.getSecond() == null || data.getSecond().isEmpty()) return 0;
 
         try {
-            indexQueueService.addToQueue(data.getSecond(), RagEntityType.DOCUMENT, RagIndexAction.fromString(action), domainId);
+            indexQueueService.addToQueue(
+                data.getSecond(),
+                RagEntityType.DOCUMENT,
+                RagIndexAction.fromString(action),
+                domainId
+            );
         } catch (Exception e) {
             Logger.error(EmbeddingChunkRestController.class, "Error adding documents to index queue: " + e.getMessage());
             return -1;
@@ -193,15 +211,62 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
     }
 
     /**
-     * Get statistics about document indexing status for the specified folder.
+     * Verifies that the current user may manage embeddings for the requested group scope.
+     *
+     * @param rootDir root group ID, or {@code -1} for every root group in the current domain
+     * @throws AccessDeniedException if the scope is invalid, not editable, or belongs to another domain
+     */
+    private void validateDocumentActionRoot(int rootDir) {
+        if (rootDir == -1) {
+            for (Integer rootGroupId : getCurrentDomainRootGroupIds()) {
+                if (GroupsDB.isGroupEditable(getUser(), rootGroupId) == false) {
+                    throw new AccessDeniedException(
+                        "User is not allowed to manage RAG embeddings for every group in this domain."
+                    );
+                }
+            }
+            return;
+        }
+        if (rootDir < 1) {
+            throw new AccessDeniedException("Invalid root group for RAG embedding management.");
+        }
+
+        GroupsDB groupsDB = GroupsDB.getInstance();
+        GroupDetails group = groupsDB.findGroup(rootDir);
+        if (group == null || GroupsDB.isGroupEditable(getUser(), rootDir) == false) {
+            throw new AccessDeniedException("User is not allowed to manage RAG embeddings for this group.");
+        }
+
+        if (InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")) {
+            String groupDomain = groupsDB.getDomain(rootDir);
+            if (CloudToolsForCore.getDomainName().equalsIgnoreCase(groupDomain) == false) {
+                throw new AccessDeniedException("User is not allowed to manage RAG embeddings for another domain.");
+            }
+        }
+    }
+
+    private List<Integer> getCurrentDomainRootGroupIds() {
+        return new SimpleQuery().forListInteger(
+            "SELECT group_id FROM groups WHERE parent_group_id = 0 AND domain_name = ? AND group_name != 'System'",
+            CloudToolsForCore.getDomainName()
+        );
+    }
+
+    /**
+     * Returns statistics about document indexing status for the specified folder.
+     *
      * Returns total groups, total documents, already indexed count, and currently queued count.
      * @param rootDir the root directory group ID (-1 for all domain documents)
      * @param includeSubfolders whether to include documents from subfolders
      * @param action the action to check queue status for
      * @return map with keys: totalGroups, totalDocuments, indexedDocuments, queuedDocuments
+     * @throws AccessDeniedException if the requested group scope is invalid, not editable, or belongs to another
+     *         domain
      */
     @GetMapping("/document-stat")
     public Map<String, Object> getDocumentStat(@RequestParam("rootDir") int rootDir, @RequestParam("includeSubfolders") boolean includeSubfolders, @RequestParam("action") String action) {
+        validateDocumentActionRoot(rootDir);
+
         Pair<Integer, List<Integer>> data = getDocIds(rootDir, includeSubfolders);
         if (data == null) data = new Pair<>(0, new ArrayList<>());
 
@@ -209,20 +274,14 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
         response.put("totalGroups", data.getFirst());
         response.put("totalDocuments", data.getSecond() != null ? data.getSecond().size() : 0);
 
-        if (vectorStore.isAvailableAndInitialized() == false) {
-            // Cannot check indexed status if vector store is not available or not initialized, return 0 for both indexed and queued
-            response.put("indexedDocuments", 0);
-            response.put("queuedDocuments", 0);
-            return response;
-        }
-
         RagIndexAction ragAction = RagIndexAction.fromString(action);
-        Set<Integer> indexedDocIds = getIndexedDocumentIds(ragAction, CloudToolsForCore.getDomainId());
-
         int indexedCount = 0;
-        if (data.getSecond() != null) {
-            for (Integer docId : data.getSecond()) {
-                if (indexedDocIds.contains(docId)) indexedCount++;
+        if (vectorStore.isAvailableAndInitialized()) {
+            Set<Integer> indexedDocIds = getIndexedDocumentIds(ragAction, CloudToolsForCore.getDomainId());
+            if (data.getSecond() != null) {
+                for (Integer docId : data.getSecond()) {
+                    if (indexedDocIds.contains(docId)) indexedCount++;
+                }
             }
         }
         response.put("indexedDocuments", indexedCount);
@@ -246,6 +305,16 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
         return response;
     }
 
+    /**
+     * Returns document IDs with stored chunks relevant to the requested action.
+     *
+     * For {@link RagIndexAction#INDEX}, only chunks created by the currently configured indexing provider and model
+     * qualify. For other actions, any stored document chunk in the domain qualifies.
+     *
+     * @param action action for which indexed documents are being determined
+     * @param domainId domain whose chunks should be queried
+     * @return matching document IDs
+     */
     Set<Integer> getIndexedDocumentIds(RagIndexAction action, Integer domainId) {
         if (RagIndexAction.INDEX.equals(action)) {
             AssistantDefinitionEntity assistant = ragEmbeddingStatService.getIndexingAssistant();
@@ -270,10 +339,12 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
     }
 
     /**
-     * Collect searchable document IDs from the specified folder (and optionally subfolders).
+     * Collects searchable document IDs from the specified folder and optionally its subfolders.
+     *
      * @param rootDir the root directory group ID (-1 for all domain documents)
      * @param includeSubfolders whether to include documents from subfolders
-     * @return pair of (total group count, list of document IDs), or null if folder not found
+     * @return pair containing the selected group count and searchable document IDs, or {@code null} when the requested
+     *         group scope cannot be resolved
      */
     private Pair<Integer, List<Integer>> getDocIds(int rootDir, boolean includeSubfolders) {
         DocDB docDB = DocDB.getInstance();
@@ -287,7 +358,7 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
 
             if(includeSubfolders == false) return new Pair<>(allGroupCount, docIds);
 
-            List<Integer> rootGroupsIds = new SimpleQuery().forListInteger("SELECT group_id FROM groups WHERE parent_group_id = 0 AND domain_name = ? AND group_name != 'System'", CloudToolsForCore.getDomainName());
+            List<Integer> rootGroupsIds = getCurrentDomainRootGroupIds();
             if(rootGroupsIds.isEmpty()) return null;
             String idsJoined = rootGroupsIds.stream().map(String::valueOf).collect(Collectors.joining(","));
             docIds = new SimpleQuery().forListInteger("SELECT doc_id FROM documents WHERE root_group_l1 IN (" + idsJoined + ") AND searchable = "+DB.getBooleanSql(true));

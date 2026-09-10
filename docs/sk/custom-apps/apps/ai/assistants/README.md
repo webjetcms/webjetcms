@@ -254,6 +254,18 @@ public Map<String, ImageOptionDefinition> imageOptions(
 
 `LibrarySupportLogic` z metadát automaticky zobrazí iba podporované polia **Počet obrázkov**, **Rozmer**, **Kvalita** a **Pomer strán** a do požiadavky odošle iba ich podporované hodnoty. Pre prenosný rozmer použite kľúč `size`, podporovaný je aj poskytovateľský kľúč `resolution`. Pre pomer strán sú rozpoznané kľúče `aspectRatio` a `aspect_ratio`. Prázdna mapa znamená, že CMS pre daný model a operáciu doplnkové polia nezobrazí. Metadáta nesmú vyžadovať API kľúč ani sieťové volanie.
 
+## Vstavané lokálne modely
+
+Artefakt `com.webjetcms:webjet-ai-local` rozširuje základnú knižnicu o lokálnych poskytovateľov modelov. WebJET CMS registruje tri adaptéry:
+
+- [LocalTextService](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/local/text/LocalTextService.java) pre `utter-project/EuroLLM-1.7B-Instruct`,
+- [LocalTranslateService](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/local/translate/LocalTranslateService.java) pre `facebook/m2m100_418M`,
+- [LocalEmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/local/embedding/LocalEmbeddingService.java) pre `intfloat/multilingual-e5-base`.
+
+Každý adaptér používa samostatnú globálnu cestu k modelovému ZIP balíku. [ConfiguredLocalProvider](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/local/ConfiguredLocalProvider.java) načíta cestu bez doménového kontextu, poskytovateľa otvorí lenivo pri prvom volaní a jednu inštanciu bezpečne opakovane používa až do ukončenia aplikácie. Zmena cesty preto vyžaduje reštart.
+
+Lokálny preklad nepoužíva bežný prompt. [LibrarySupportLogic](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/LibrarySupportLogic.java) preň vytvorí požiadavku s `TranslationOptions` a odmietne HTML, `INCLUDE` príkazy, štruktúrovaný vstup, používateľský prompt aj makrá vstupu v inštrukciách. Inštrukcie musia obsahovať JSON s `sourceLanguage` a `targetLanguage`; voliteľná hodnota `maximumOutputTokens` je najviac `200`. Lokálne generovanie textu odmietne rozbalenie promptov, v ktorom ochrana deteguje pokus o `prompt injection`.
+
 ## Výnimka `AiInterface` iba pre prehliadač
 
 [BrowserService](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/browser/BrowserService.java) implementuje [AiInterface](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiInterface.java) priamo, pretože Chrome Built-in AI beží v prehliadači a nepoužíva serverovú komunikáciu s poskytovateľom. Toto je jediný spôsob priamej implementácie. Noví serveroví poskytovatelia musia používať `AiProvider` a `LibrarySupportLogic`.
@@ -266,7 +278,7 @@ Pri súbežnom lokálnom vývoji CMS a susedného repozitára `webjet-ai` použi
 ./gradlew --include-build ../webjet-ai compileJava test
 ```
 
-Rovnakú voľbu `--include-build ../webjet-ai` použite pri každej lokálnej zostavovacej a testovacej úlohe, ktorá má používať nezverejnené zmeny knižnice. Inak sa použije verzia `com.webjetcms:webjet-ai` určená premennou `webjetAiVersion` v `build.gradle`.
+Rovnakú voľbu `--include-build ../webjet-ai` použite pri každej lokálnej zostavovacej a testovacej úlohe, ktorá má používať nezverejnené zmeny knižnice. Inak sa použije verzia `com.webjetcms:webjet-ai-local` určená premennou `webjetAiVersion` v `build.gradle`.
 
 ## `AiAssistantsService`
 

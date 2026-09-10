@@ -149,13 +149,13 @@ public class BasketInvoicePaymentRestController extends DatatableRestControllerV
     @Override
     public void afterSave(BasketInvoicePaymentEntity entity, BasketInvoicePaymentEntity saved) {
         //After save we need to update invoice status
-        ProductListService.updateInvoiceStats(entity.getInvoiceId(), true);
+        ProductListService.updatePaymentStatus(entity.getInvoiceId(), true);
     }
 
     @Override
     public void afterDelete(BasketInvoicePaymentEntity entity, long id) {
         //After delete we need to update invoice status
-        ProductListService.updateInvoiceStats(entity.getInvoiceId(), true);
+        ProductListService.updatePaymentStatus(entity.getInvoiceId(), true);
     }
 
     private final long getInvoiceId() {
