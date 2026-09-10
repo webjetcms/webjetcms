@@ -56,7 +56,7 @@ Zobrazuje návštevnosť podľa krajín. Krajina sa určí podľa HTTP hlavičky
 
 > Aké prehliadače návštevníci používajú? Na aké prehliadače a aké operačné systémy je potrebné stránku optimalizovať?
 
-Zoznam používaných prehliadačov a ich verzií. V grafe sú zobrazené najpoužívanejšie prehliadače s verziou, časové zobrazenie a kompletná tabuľka.
+Zoznam používaných prehliadačov bez čísla verzie. V grafe sú zobrazené najpoužívanejšie rodiny prehliadačov, časové zobrazenie a kompletná tabuľka. Vynechanie často sa meniaceho čísla verzie sprehľadňuje výsledky a znižuje počet pomocných záznamov štatistiky.
 
 Hodnota **Neznámy** alebo **???** sa zobrazuje pre neznáme prehliadače a pre prehliadače pri ktorých návštevník nedal súhlas na zbieranie štatistických cookies.
 

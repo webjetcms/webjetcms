@@ -6,6 +6,7 @@
 
 ### Groundbreaking changes
 
+- Statistics - browsers are saved without a version number after the update. After deploying this version, it is necessary to start the migration of historical statistics to the URL `/admin/v9/settings/stat-browser-migration/`, without completing it, historical data will remain divided by browser versions (#303).
 - The dependency on the [Vue.js](https://vuejs.org) library has been removed from the administration. We recommend checking the compatibility of your own applications before updating. The size of JavaScript files has been reduced by approximately 170kB, which also has an impact on the speed of administration initialization. More in the [programmer section](#programmer).
 - AspectJ - support for `load-time weavingu` (`aspectjweaver` and `META-INF/aop-ajc.xml`) has been removed from the distribution; built-in aspects are processed at compile time, more in [programmer section](#programmer section). When using in a MultiWeb installation, you can remove the `-javaagent:/www/tomcat/.../aspectjweaver.jar` setting from `JAVA_OPTS` in the application server (#290).
 - Export content for Flash - the historical feature of generating XML files `/flash_xml/{docId}.xml` when publishing a page has been removed. The configuration variable `exportFlash` is no longer supported and defining it in `SpringConfig` will not restore the feature (#293).
@@ -176,6 +177,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Multiweb - added option to rename an existing domain + redirection after renaming (#58317-15).
 - Multiweb - modified [display of template groups](install/multiweb/README.md) according to available templates and alias of current domain (#58317-17).
 - Statistics - the set date/from-to range is saved in the browser and is remembered even after logging out/restarting the browser (#58065).
+- Statistics - browsers are saved without frequently changing version numbers. Added manually triggered batch migration in the WebJET Update section, which will merge historical records without website downtime. Updated list of `User-Agent` browsers for better detection (#303).
+
+![](sysadmin/update/stat-browser-migration.png)
+
 - Multi-step forms - added moving (`scroll`) to the beginning of the form after moving to the next step (#osk573).
 
 ### Bug fixes

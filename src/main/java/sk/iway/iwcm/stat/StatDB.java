@@ -1055,7 +1055,7 @@ public class StatDB extends DB
 		if (browser == null) browser = BrowserDetector.getInstance(request);
 		if (!browser.isStatUserAgentAllowed())
 		{
-			browserId = SeoManager.getSearchEngineId(browser.getBrowserName() + " " + browser.getBrowserVersion());
+			browserId = SeoManager.getSearchEngineId(browser.getBrowserName());
 			if (session != null) Tools.sessionSetAttribute(session, "statFromBrowserId", Long.valueOf(browserId));
 		}
 
