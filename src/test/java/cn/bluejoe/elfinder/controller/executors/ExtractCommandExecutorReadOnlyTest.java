@@ -9,6 +9,7 @@ import cn.bluejoe.elfinder.controller.executor.FsItemEx;
 import cn.bluejoe.elfinder.service.FsService;
 import cn.bluejoe.elfinder.util.FsServiceUtils;
 import org.json.JSONObject;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -18,7 +19,9 @@ import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.test.BaseWebjetTest;
 import sk.iway.iwcm.users.UsersDB;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,10 +37,16 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class ExtractCommandExecutorReadOnlyTest {
+class ExtractCommandExecutorReadOnlyTest extends BaseWebjetTest {
 
     @TempDir
     Path tempDir;
+
+    @BeforeAll
+    static void initializePathValidation() {
+        // Load configured forbidden symbols before Tools is statically mocked.
+        FileBrowserTools.hasForbiddenSymbol("");
+    }
 
     @Test
     void shouldRejectReadOnlyZipEntryDestination() throws Exception {

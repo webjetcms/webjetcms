@@ -7,8 +7,9 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 
 import cn.bluejoe.elfinder.controller.executor.FsItemEx;
@@ -18,6 +19,7 @@ import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.system.elfinder.IwcmFsItem;
 import sk.iway.iwcm.system.elfinder.IwcmFsVolume;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
@@ -38,18 +40,21 @@ class ExtractCommandExecutorForbiddenNameTest extends BaseWebjetTest {
     @TempDir
     Path tempDir;
 
-    @Test
-    void shouldSkipForbiddenEntriesAndExtractRemainingFiles() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"folder$", "folder$.class", "nested/folder$.class"})
+    void shouldSkipForbiddenEntriesAndExtractRemainingFiles(String forbiddenDirectory) throws Exception {
         byte[] content = new byte[] {1, 2, 3};
         List<String> allowedNames = List.of("before.txt", "nested/Name$subname.class", "nested/Name$1.class", "after.txt");
-        List<String> skippedNames = List.of("skipped$1.txt", "nested/source.java", "folder$/Name.class", "nested/<script>.txt");
+        List<String> skippedNames = List.of("skipped$1.txt", "nested/source.java", "folder$/Name.class", "nested/<script>.txt",
+            forbiddenDirectory + "/", forbiddenDirectory + "/child.txt");
         assertTrue(FileBrowserTools.hasForbiddenSymbol(skippedNames.get(0)));
         Path archive = tempDir.resolve("import.zip");
         try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(archive))) {
             for (String name : List.of("before.txt", "skipped$1.txt", "nested/Name$subname.class",
-                    "nested/source.java", "nested/Name$1.class", "folder$/Name.class", "nested/<script>.txt", "after.txt")) {
+                    "nested/source.java", "nested/Name$1.class", "folder$/Name.class", "nested/<script>.txt",
+                    forbiddenDirectory + "/", forbiddenDirectory + "/child.txt", "after.txt")) {
                 zip.putNextEntry(new ZipEntry(name));
-                zip.write(content);
+                if (name.endsWith("/") == false) zip.write(content);
                 zip.closeEntry();
             }
         }
@@ -58,7 +63,11 @@ class ExtractCommandExecutorForbiddenNameTest extends BaseWebjetTest {
         FsService service = mock(FsService.class);
         FsSecurityChecker security = mock(FsSecurityChecker.class);
         when(service.getSecurityChecker()).thenReturn(security);
-        when(security.isWritable(eq(service), any())).thenReturn(true);
+        when(security.isWritable(eq(service), any())).thenAnswer(call -> {
+            IwcmFsItem destination = call.getArgument(1);
+            // Forbidden directories must be skipped before checking write permissions.
+            return destination.getFile().getVirtualPath().endsWith("/" + forbiddenDirectory) == false;
+        });
         FsItemEx source = mock(FsItemEx.class);
 
         try (MockedStatic<Tools> tools = mockStatic(Tools.class);

@@ -21,6 +21,7 @@ import cn.bluejoe.elfinder.service.FsService;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmOutputStream;
@@ -113,8 +114,11 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 			{
 				String fileName = IwcmFsVolume.normalizeUnicode(ze.getName());
 				FsItemEx destination = new FsItemEx(outputFolder, fileName);
-				// Entries with forbidden paths are skipped during extraction.
-				if (destination.getPath() != null && isExtractDestinationWritable(destination) == false) return false;
+				// ZIP names retain the trailing slash needed to distinguish directories from .class files.
+				if (FileBrowserTools.hasForbiddenSymbol(fileName) == false && destination.getPath() != null)
+				{
+					if (isExtractDestinationWritable(destination) == false) return false;
+				}
 				ze = zis.getNextEntry();
 			}
 		}
@@ -180,7 +184,7 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 				String fileName = IwcmFsVolume.normalizeUnicode(ze.getName());
 				Logger.debug(this.getClass(), "ZE fileName="+fileName);
 				FsItemEx destination = new FsItemEx(fsi.getParent(), fileName);
-				if (destination.getPath() == null)
+				if (FileBrowserTools.hasForbiddenSymbol(fileName) || destination.getPath() == null)
 				{
 					skippedFiles.add(outputFolder + (outputFolder.endsWith("/") ? "" : "/") + fileName);
 					Logger.debug(this.getClass(), "Skipping ZIP entry with forbidden path, zipFile="+zipFile+", fileName="+fileName);
