@@ -26,6 +26,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -50,8 +51,8 @@ import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
 /**
- * Verifies that {@link BrowserIdentifierMigrationService} preserves referenced stat keys and
- * error totals, reports progress, and avoids unnecessary reference scans.
+ * Verifies that {@link BrowserIdentifierMigrationService} preserves referenced stat keys,
+ * bot visits and error totals, reports progress, and avoids unnecessary reference scans.
  *
  * <p>Database tests run on MariaDB using table definitions from the CI fixture
  * {@code .github/workflows/blank_web_autotest.sql}. Each database test uses an isolated schema,
@@ -59,6 +60,69 @@ import sk.iway.iwcm.test.BaseWebjetTest;
  * Database tests are skipped before any DDL if the original database contains {@code stat_views_2024_2}.</p>
  */
 class BrowserIdentifierMigrationReferenceTest extends BaseWebjetTest {
+
+    /**
+     * Verifies that finalization adds source counts to the current target and retains the latest
+     * non-null visit time, including a visit committed after aggregation but before the target update.
+     */
+    @ParameterizedTest
+    @CsvSource({
+        "100, 2026-09-01 10:00:00, 2026-09-02 10:00:00, , 120, 2026-09-02 10:00:00",
+        "100, 2026-09-03 10:00:00, 2026-09-02 10:00:00, , 120, 2026-09-03 10:00:00",
+        "100, , 2026-09-02 10:00:00, , 120, 2026-09-02 10:00:00",
+        "100, 2026-09-01 10:00:00, , , 120, 2026-09-01 10:00:00",
+        ", , , , 20, ",
+        "100, 2026-09-01 10:00:00, 2026-09-02 10:00:00, 2026-09-04 10:00:00, 121, 2026-09-04 10:00:00",
+        "100, 2026-09-05 10:00:00, 2026-09-02 10:00:00, 2026-09-04 10:00:00, 121, 2026-09-05 10:00:00"
+    })
+    void botFinalizationShouldPreserveCurrentTargetStats(Integer targetCount, String sourceVisit, String targetVisit,
+                                                         String concurrentVisit, int expectedCount, String expectedVisit) throws Exception {
+        BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService(mock(ExecutorService.class));
+        try (TestDatabase fixture = new TestDatabase("seo_bots");
+             Statement sql = fixture.connection.createStatement()) {
+            sql.execute("INSERT INTO seo_bots (seo_bots_id, name, visit_count) VALUES " +
+                "(41, 'Googlebot 2.1', 8), (42, 'Googlebot 2.2', 12), (100, 'Googlebot', " + targetCount + ")");
+            try (PreparedStatement dates = fixture.connection.prepareStatement("UPDATE seo_bots SET last_visit=? WHERE seo_bots_id=?")) {
+                dates.setTimestamp(1, sourceVisit == null ? null : Timestamp.valueOf(sourceVisit));
+                dates.setInt(2, 42);
+                dates.executeUpdate();
+                dates.setTimestamp(1, targetVisit == null ? null : Timestamp.valueOf(targetVisit));
+                dates.setInt(2, 100);
+                dates.executeUpdate();
+            }
+
+            fixture.connection.setAutoCommit(false);
+            Connection connection = spy(fixture.connection);
+            if (concurrentVisit != null) {
+                doAnswer(query -> {
+                    try (Connection writer = DBPool.getConnection();
+                         PreparedStatement visit = writer.prepareStatement("UPDATE " + fixture.catalog +
+                             ".seo_bots SET visit_count=COALESCE(visit_count, 0)+1, last_visit=? WHERE name=?")) {
+                        visit.setTimestamp(1, Timestamp.valueOf(concurrentVisit));
+                        visit.setString(2, "Googlebot");
+                        assertEquals(1, visit.executeUpdate());
+                    }
+                    return query.callRealMethod();
+                }).when(connection).prepareStatement(startsWith("UPDATE seo_bots SET visit_count="));
+            }
+
+            service.finalizeSeoBots(connection, List.of(
+                new BrowserIdentifierMigrationService.Mapping(41L, 100L, "Googlebot 2.1", "Googlebot"),
+                new BrowserIdentifierMigrationService.Mapping(42L, 100L, "Googlebot 2.2", "Googlebot")));
+            connection.commit();
+
+            verify(connection, times(2)).prepareStatement("SELECT visit_count, last_visit FROM seo_bots WHERE seo_bots_id=?");
+            try (ResultSet rs = sql.executeQuery("SELECT seo_bots_id, visit_count, last_visit FROM seo_bots")) {
+                assertTrue(rs.next());
+                assertEquals(100, rs.getInt(1));
+                assertEquals(expectedCount, rs.getLong(2));
+                assertEquals(expectedVisit == null ? null : Timestamp.valueOf(expectedVisit), rs.getTimestamp(3));
+                assertFalse(rs.next(), "Only the canonical bot must remain after finalization");
+            }
+        } finally {
+            service.destroy();
+        }
+    }
 
     /**
      * Verifies that current and monthly error tables retain one summed counter per affected bucket,

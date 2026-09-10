@@ -1073,9 +1073,9 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
     /**
      * Merges browser counters into canonical rows and removes their obsolete source rows.
      *
-     * <p>For each target, visit counts from the target and all sources are summed and the latest
-     * non-null visit timestamp is retained. The unique name index is created only after source
-     * rows have been deleted.</p>
+     * <p>Source visit counts are added atomically to the current target count, retaining the latest
+     * non-null visit timestamp without reading the target first. The unique name index is created
+     * only after source rows have been deleted.</p>
      *
      * @param connection transactional connection used for aggregation, deletion, and index DDL
      * @param mappings duplicate browser rows that will be grouped by canonical target ID
@@ -1088,9 +1088,7 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         for (Map.Entry<Long, List<Long>> entry : sources.entrySet()) {
             long count = 0;
             Timestamp latest = null;
-            List<Long> ids = new ArrayList<>(entry.getValue());
-            ids.add(entry.getKey());
-            for (Long id : ids) {
+            for (Long id : entry.getValue()) {
                 try (PreparedStatement ps = connection.prepareStatement("SELECT visit_count, last_visit FROM seo_bots WHERE seo_bots_id=?")) {
                     ps.setLong(1, id);
                     try (ResultSet rs = ps.executeQuery()) {
@@ -1102,10 +1100,12 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
                     }
                 }
             }
-            try (PreparedStatement ps = connection.prepareStatement("UPDATE seo_bots SET visit_count=?, last_visit=? WHERE seo_bots_id=?")) {
+            try (PreparedStatement ps = connection.prepareStatement("UPDATE seo_bots SET visit_count=COALESCE(visit_count, 0)+?, " +
+                    "last_visit=CASE WHEN last_visit IS NULL OR last_visit<? THEN ? ELSE last_visit END WHERE seo_bots_id=?")) {
                 ps.setLong(1, count);
                 ps.setTimestamp(2, latest);
-                ps.setLong(3, entry.getKey());
+                ps.setTimestamp(3, latest);
+                ps.setLong(4, entry.getKey());
                 ps.executeUpdate();
             }
             try (PreparedStatement ps = connection.prepareStatement("DELETE FROM seo_bots WHERE seo_bots_id=?")) {
