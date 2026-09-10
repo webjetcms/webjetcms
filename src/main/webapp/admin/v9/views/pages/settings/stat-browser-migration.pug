@@ -57,7 +57,7 @@ block content
             function renderPreview(data) {
                 $("#seoMappingCount").text(data.seoBots.length);
                 $("#keyMappingCount").text(data.browserKeys.length);
-                pendingFinalization = data.seoBots.length + data.browserKeys.length;
+                pendingFinalization = data.seoBots.length + data.browserKeys.length + (data.seoBotsIndexReady === false ? 1 : 0);
                 $("#tableCount").text(data.tables.length);
                 if (!state.totalTables) {
                     state.totalTables = data.tables.length;

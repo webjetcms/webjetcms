@@ -101,6 +101,7 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         private final List<Mapping> seoBots;
         private final List<Mapping> browserKeys;
         private final List<String> tables;
+        private final boolean seoBotsIndexReady;
     }
 
     /** Summarizes how many obsolete statistics keys were deleted or retained during finalization. */
@@ -147,14 +148,16 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
     /**
      * Analyzes the current database without creating identifiers or modifying statistics.
      *
-     * @return mappings that would be applied and the statistics tables that would be processed
+     * @return mappings, statistics tables, and whether the unique bot-name index already exists
      * @throws SQLException if identifiers or table metadata cannot be read
      */
     public Preview preview() throws SQLException {
         try (Connection connection = DBPool.getConnection()) {
             List<Mapping> botMappings = buildSeoBotMappings(connection, false);
             StatKeyMappingResult keyMappings = buildStatKeyMappings(connection, false);
-            return new Preview(botMappings, keyMappings.mappings(), discoverTables(connection));
+            DatabaseMetaData metadata = connection.getMetaData();
+            boolean indexReady = hasUniqueSingleColumnIndex(metadata, findTable(connection, metadata, "seo_bots"), "name");
+            return new Preview(botMappings, keyMappings.mappings(), discoverTables(connection), indexReady);
         }
     }
 

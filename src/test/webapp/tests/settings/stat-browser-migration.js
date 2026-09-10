@@ -111,6 +111,27 @@ Scenario('shows reference scan progress and retained identifiers', ({ I }) => {
     I.see('5', '#migrationRetainedKeys');
 });
 
+Data([{ seoBotsIndexReady: false }, { seoBotsIndexReady: true }]).Scenario('finalization with empty mappings follows index readiness', ({ I, current }) => {
+    I.usePlaywrightTo('mock empty mappings and index readiness', async ({ page }) => {
+        await page.route('**/admin/rest/settings/stat-browser-migration/status', route => route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ running: false, done: true })
+        }));
+        await page.route('**/admin/rest/settings/stat-browser-migration', route => route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ seoBots: [], browserKeys: [], tables: [], seoBotsIndexReady: current.seoBotsIndexReady })
+        }));
+    });
+    I.refreshPage();
+    I.waitForElement('#migrationStart:disabled', 10);
+    I.click('#migrationAnalyze');
+    I.waitForElement('#migrationPreview:not(.d-none)', 10);
+    if (current.seoBotsIndexReady) I.verifyDisabled('#migrationFinalize');
+    else I.seeElement('#migrationFinalize:not(:disabled)');
+});
+
 Scenario('checks permissions', ({ I }) => {
     I.amOnPage('/admin/v9/settings/stat-browser-migration/?removePerm=modUpdate');
     I.see('Na túto aplikáciu/funkciu nemáte prístupové práva');

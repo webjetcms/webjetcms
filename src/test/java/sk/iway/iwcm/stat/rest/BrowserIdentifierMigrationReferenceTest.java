@@ -61,6 +61,34 @@ import sk.iway.iwcm.test.BaseWebjetTest;
  */
 class BrowserIdentifierMigrationReferenceTest extends BaseWebjetTest {
 
+    /** Verifies that analysis reports index readiness with no mappings and empty finalization ensures uniqueness. */
+    @ParameterizedTest
+    @ValueSource(booleans = { false, true })
+    void emptyMappingsShouldStillReportAndCreateMissingIndex(boolean indexReady) throws Exception {
+        BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService(mock(ExecutorService.class));
+        try (TestDatabase fixture = new TestDatabase("seo_bots", "stat_keys");
+             Statement sql = fixture.connection.createStatement();
+             MockedStatic<DBPool> dbPool = mockStatic(DBPool.class)) {
+            if (indexReady == false) sql.execute("DROP INDEX ix_seo_bots_name ON seo_bots");
+            Connection connection = spy(fixture.connection);
+            doNothing().when(connection).close();
+            dbPool.when(DBPool::getConnection).thenReturn(connection);
+
+            BrowserIdentifierMigrationService.Preview preview = service.preview();
+            assertTrue(preview.getSeoBots().isEmpty());
+            assertTrue(preview.getBrowserKeys().isEmpty());
+            assertEquals(indexReady, preview.isSeoBotsIndexReady());
+
+            service.finalizeSeoBots(connection, List.of());
+
+            assertTrue(service.preview().isSeoBotsIndexReady());
+            sql.execute("INSERT INTO seo_bots (name) VALUES ('autotest-bot')");
+            assertThrows(SQLException.class, () -> sql.execute("INSERT INTO seo_bots (name) VALUES ('autotest-bot')"));
+        } finally {
+            service.destroy();
+        }
+    }
+
     /**
      * Verifies that finalization adds source counts to the current target and retains the latest
      * non-null visit time, including a visit committed after aggregation but before the target update.
