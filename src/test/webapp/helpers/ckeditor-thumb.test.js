@@ -26,7 +26,7 @@ function functionsFromSource(source, names) {
 }
 
 const urlFunctions = functionsFromSource(webjetSource, ['urlAddParam', 'urlUpdateParam', 'urlRemoveParam', 'urlGetParam']);
-const translations = {thumbIp0: 'Maximum size', thumbIp1: 'Fixed Width', thumbIp4: 'Fixed Width and Height Filled with Color - Centered', thumbIp5: 'Centered with Aspect Ratio - Scaled'};
+const translations = {thumbIp0: 'Maximum size', thumbIp1: 'Fixed Width', thumbIp4: 'Fixed Width and Height Filled with Color - Centered', thumbIp5: 'Centered with Aspect Ratio - Scaled', allowedSizeRequired: 'Select an allowed thumbnail size'};
 
 /** Runs the actual thumbnail tab definition and callbacks with dialog field values. */
 function createFixture(sizes, mode = 'strict') {
@@ -113,15 +113,54 @@ test('setup restores allowed images from classes or URLs and normalizes fixed-wi
     assert.equal(fixture.select.getValue(), '159x159ip1', 'Link setup must not replace image settings');
 });
 
-test('strict mode requires a configured option and never commits a missing or arbitrary value', () => {
+test('strict mode rejects an unconfigured nonempty option for thumbnail URLs', () => {
     for (const config of ['', '159x159ip1']) {
         const fixture = createFixture(config);
-        for (const value of ['', '999x999ip5']) {
-            fixture.select.setValue(value);
-            assert.equal(fixture.select.validate(), 'editor.image.allowedSizeRequired.js');
+        const url = '/thumb/images/autotest.jpg?w=160&h=160&ip=5';
+        fixture.fields['info.txtUrl'].setValue(url);
+        fixture.select.setValue('999x999ip5');
+        assert.equal(fixture.select.validate(), translations.allowedSizeRequired);
+        fixture.commit();
+        assert.equal(fixture.fields['info.txtUrl'].getValue(), url);
+        assert.equal(fixture.fields['advanced.txtGenClass'].getValue(), 'img-fluid fixedSize-160-160-5');
+    }
+});
+
+test('clearing the size restores the original image in strict and non-strict modes', () => {
+    for (const mode of ['strict', 'check']) {
+        const fixture = createFixture('730x401ip5ncff00ffq90', mode);
+        fixture.fields['info.txtUrl'].setValue('/thumb/images/autotest.jpg?w=730&h=401&ip=5&c=ff00ff&noip=true&q=90&v=123');
+        fixture.fields['advanced.txtGenClass'].setValue('img-fluid fixedSize-730-401-5-ff00ff-true-q90 custom-image');
+        if (mode === 'strict') {
+            fixture.select.setValue('730x401ip5ncff00ffq90');
+            fixture.select.setValue('');
+            assert.equal(fixture.fields['info.txtUrl'].getValue(), '/images/autotest.jpg?v=123');
+            assert.equal(fixture.select.validate(), true);
+        } else {
+            fixture.fields['thumb.thumbIpMode'].setValue('');
+        }
+        fixture.commit();
+        assert.equal(fixture.fields['info.txtUrl'].getValue(), '/images/autotest.jpg?v=123');
+        assert.equal(fixture.fields['advanced.txtGenClass'].getValue(), 'img-fluid custom-image');
+    }
+    const fixture = createFixture('');
+    fixture.fields['info.txtUrl'].setValue('/thumb/images/autotest.jpg?w=160&h=160&ip=5');
+    assert.equal(fixture.select.validate(), true, 'The original image remains available when no sizes are configured');
+    fixture.commit();
+    assert.equal(fixture.fields['info.txtUrl'].getValue(), '/images/autotest.jpg');
+    assert.equal(fixture.fields['advanced.txtGenClass'].getValue(), 'img-fluid');
+});
+
+test('strict mode accepts original image URLs without selecting a thumbnail size', () => {
+    for (const config of ['', '159x159ip1']) {
+        const fixture = createFixture(config);
+        fixture.fields['advanced.txtGenClass'].setValue('img-fluid');
+        for (const url of ['/images/autotest.jpg', 'https://example.test/images/autotest.jpg', '//example.test/images/autotest.jpg', '/images/thumb/autotest.jpg', '/images/autotest.jpg?next=/thumb/images/other.jpg', '/thumbnail/autotest.jpg']) {
+            fixture.fields['info.txtUrl'].setValue(url);
+            assert.equal(fixture.select.validate(), true, url);
             fixture.commit();
-            assert.equal(fixture.fields['info.txtUrl'].getValue(), '/images/autotest-thumb.jpg?v=123');
-            assert.equal(fixture.fields['advanced.txtGenClass'].getValue(), 'img-fluid fixedSize-160-160-5');
+            assert.equal(fixture.fields['info.txtUrl'].getValue(), url);
+            assert.equal(fixture.fields['advanced.txtGenClass'].getValue(), 'img-fluid');
         }
     }
 });
@@ -165,7 +204,7 @@ test('replacing an image keeps quality from fixedSize and removes parameters fro
     assert.deepEqual(Object.fromEntries(url.searchParams), {w: '413', h: '275', ip: '0'});
 });
 
-test('CKEditor renders the strict select, blocks an unlisted size and restores the committed selection', {timeout: 30000}, async t => {
+test('CKEditor restores committed thumbnails and clears them back to the original image', {timeout: 30000}, async t => {
     const {chromium} = require('playwright');
     const browser = await chromium.launch({headless: true});
     t.after(() => browser.close());
@@ -179,7 +218,7 @@ test('CKEditor renders the strict select, blocks an unlisted size and restores t
     await page.route('**/*', async route => {
         const pathname = new URL(route.request().url()).pathname;
         if (pathname === '/autotest-thumb') {
-            return route.fulfill({contentType: 'text/html', body: '<textarea id="autotest-editor"><img id="autotest-image" src="/images/autotest.jpg" class="img-fluid fixedSize-99-99-5"></textarea>'});
+            return route.fulfill({contentType: 'text/html', body: '<textarea id="autotest-editor"><img id="autotest-image" src="/images/autotest.jpg" class="img-fluid"></textarea>'});
         }
         if (pathname === '/admin/v9/files/wj_image/') {
             return route.fulfill({contentType: 'text/html', body: '<script>function refreshValuesFromCk() {}</script>'});
@@ -235,13 +274,15 @@ test('CKEditor renders the strict select, blocks an unlisted size and restores t
     assert.equal(await page.locator('.cke_dialog input:visible').count(), 0);
     assert.deepEqual(await select.locator('option').evaluateAll(options => options.map(option => option.value)), ['', '159x159ip1', '413x275', '730x401ip5ncff00ffq90']);
     assert.equal(await select.inputValue(), '');
-    const alertPromise = page.waitForEvent('dialog');
-    const clickPromise = page.locator('.cke_dialog_ui_button_ok').click();
-    const alert = await alertPromise;
-    assert.equal(alert.message(), 'editor.image.allowedSizeRequired.js');
-    await alert.accept();
-    await clickPromise;
-    assert.equal(await page.evaluate(() => CKEDITOR.dialog.getCurrent().getElement().isVisible()), true);
+    await page.locator('.cke_dialog_ui_button_ok').click();
+    await page.waitForFunction(() => !CKEDITOR.dialog.getCurrent()?.getElement().isVisible());
+    assert.equal(await page.evaluate(() => autotestEditor.document.getById('autotest-image').getAttribute('src')), '/images/autotest.jpg');
+    await openImage();
+    await page.evaluate(() => CKEDITOR.dialog.getCurrent().getContentElement('info', 'txtUrl').setValue('/thumb/images/autotest.jpg?w=99&h=99&ip=5'));
+    await page.locator('.cke_dialog_ui_button_ok').click();
+    await page.waitForFunction(() => !CKEDITOR.dialog.getCurrent()?.getElement().isVisible());
+    assert.equal(await page.evaluate(() => autotestEditor.document.getById('autotest-image').getAttribute('src')), '/images/autotest.jpg');
+    await openImage();
 
     await select.selectOption('730x401ip5ncff00ffq90');
     await page.locator('.cke_dialog_ui_button_ok').click();
@@ -254,6 +295,17 @@ test('CKEditor renders the strict select, blocks an unlisted size and restores t
     assert.equal(new URL(result.src, 'http://iwcm.interway.sk').searchParams.get('q'), '90');
     await openImage();
     assert.equal(await select.inputValue(), '730x401ip5ncff00ffq90');
+    await select.selectOption('');
+    assert.equal(await page.evaluate(() => CKEDITOR.dialog.getCurrent().getContentElement('info', 'txtUrl').getValue()), '/images/autotest.jpg');
+    await page.locator('.cke_dialog_ui_button_ok').click();
+    await page.waitForFunction(() => !CKEDITOR.dialog.getCurrent()?.getElement().isVisible());
+    const original = await page.evaluate(() => {
+        const image = autotestEditor.document.getById('autotest-image');
+        return {className: image.getAttribute('class'), src: image.getAttribute('src')};
+    });
+    assert.deepEqual(original, {className: 'img-fluid', src: '/images/autotest.jpg'});
+    await openImage();
+    assert.equal(await select.inputValue(), '');
     await select.selectOption('413x275');
     await page.locator('.cke_dialog_ui_button_ok').click();
     await page.waitForFunction(() => !CKEDITOR.dialog.getCurrent()?.getElement().isVisible());

@@ -623,6 +623,9 @@ export class DatatablesCkEditor {
 								updateThumbUrl(this.getDialog());
 							},
 							validate: function() {
+								if (this.getValue() === '') return true;
+								var url = this.getDialog().getContentElement('info', 'txtUrl').getValue();
+								if (url.trim().startsWith("/thumb/") == false) return true;
 								return allowedThumbSizes.some(size => size.value === this.getValue()) || that.translate("allowedSizeRequired");
 							}
 						}] : [
@@ -736,6 +739,7 @@ export class DatatablesCkEditor {
 					function getThumbValues(dialog) {
 						if (strictThumbSizes) {
 							var value = dialog.getContentElement('thumb', 'thumbAllowedSize').getValue();
+							if (value === '') return { ipMode: '' };
 							return allowedThumbSizes.some(size => size.value === value) ? parseAllowedThumbSize(value) : null;
 						}
 						return {
@@ -823,7 +827,7 @@ export class DatatablesCkEditor {
 
 						if (ipMode === "") {
 							//remove /thumb prefix and ?w,h,ip URL parameters
-							txtUrl = txtUrl.replace(/\/thumb\//, '/');
+							if (txtUrl.startsWith('/thumb/')) txtUrl = txtUrl.replace('/thumb/', '/');
 							txtUrl = WJ.urlRemoveParam(txtUrl, 'w');
 							txtUrl = WJ.urlRemoveParam(txtUrl, 'h');
 							txtUrl = WJ.urlRemoveParam(txtUrl, 'ip');
