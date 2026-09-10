@@ -252,6 +252,21 @@ html.pb-insertion-open { overflow-anchor: none; }
     &[data-type=column], &[data-type=text] { border-color: $color-column; }
     &[data-type=item] { border-color: $color-duplicable; }
     &.is-quiet { border-width: 1px; }
+    &.is-hover {
+        border-width: 1px;
+        border-style: solid;
+        opacity: .6;
+        transition: opacity 100ms ease, visibility 0s;
+        &.is-ancestor { opacity: .3; }
+        &[hidden] {
+            display: block !important;
+            opacity: 0;
+            visibility: hidden;
+            transition-delay: 0s, 100ms;
+        }
+        @starting-style { opacity: 0; }
+        @media (prefers-reduced-motion: reduce) { transition: none; }
+    }
 }
 
 .#{$prefix}-structure {

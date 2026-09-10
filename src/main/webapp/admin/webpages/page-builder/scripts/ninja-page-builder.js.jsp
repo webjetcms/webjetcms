@@ -122,6 +122,7 @@
             ui.layer = $('<div>', { 'class': prefix+'-outline-layer', 'aria-hidden': 'true' }).appendTo(document.body);
             ui.outline = $('<div>', { 'class': prefix+'-outline', hidden: true }).appendTo(ui.layer);
             ui.outlines = ui.outline;
+            ui.hoverOutlines = $();
             ui.drawer = $('<div>', { 'class': prefix+'-structure', hidden: true, role: 'region', 'aria-label': ui.labels.structure }).appendTo(document.body);
             $('<div>', { 'class': prefix+'-structure-heading' }).append($('<strong>').text(ui.labels.structure), me.workbench_button('close-structure', ui.labels.close, 'close')).appendTo(ui.drawer);
             ui.search = $('<input>', { type: 'search', placeholder: ui.labels.search, 'aria-label': ui.labels.search }).appendTo(ui.drawer);
@@ -183,13 +184,14 @@
                     var target = me.workbench_target(e.target);
                     // The existing controller visibility already encodes valid drop destinations.
                     ui.hovered = target && $(target).children(me.tagc.append+', '+me.tagc.prepend).is(':visible') ? target : null;
-                } else if (!ui.selected) ui.hovered = me.workbench_target(e.target);
+                } else ui.hovered = e.originalEvent.pointerType === 'touch' ? null : me.workbench_target(e.target);
                 me.schedule_workbench();
             }).on('pointerleave.workbench', function() {
                 ui.hovered = null;
                 me.schedule_workbench();
             }).on('input.workbench', function() {
                 ui.quiet = true;
+                ui.hovered = null;
                 ui.treeDirty = true;
                 me.schedule_workbench();
             });
@@ -832,6 +834,32 @@
             }
         },
 
+        /** Positions selection and hover outlines with identical geometry, suppressing shared ancestors on hover. */
+        render_workbench_outlines: function(outlines, elements, top, hover, selectedElements) {
+            var me = this, bounds;
+            while (outlines.length < elements.length) {
+                outlines = outlines.add($('<div>', { 'class': me.options.prefix+'-outline'+(hover ? ' is-hover' : ''), hidden: true }).appendTo(me.ui.layer));
+            }
+            outlines.each(function(index) {
+                var target = elements[index], outline = $(this);
+                outline.prop('hidden', !target || (hover && selectedElements.includes(target)))
+                    .toggleClass('is-quiet', !hover && !!target && me.ui.quiet)
+                    .toggleClass('is-ancestor', hover && index > 0);
+                if (!target) return;
+                var rect = target.getBoundingClientRect(), type = me.workbench_type(target);
+                if (type === 'row' && $(target).hasClass(me.tag.duplicable)) type = 'item';
+                // Keep every ancestor outside its child, even when their actual edges coincide.
+                bounds = {
+                    left: Math.min(rect.left, bounds ? bounds.left : rect.left) - 4,
+                    top: Math.min(rect.top, bounds ? bounds.top : rect.top) - 4,
+                    right: Math.max(rect.right, bounds ? bounds.right : rect.right) + 4,
+                    bottom: Math.max(rect.bottom, bounds ? bounds.bottom : rect.bottom) + 4
+                };
+                outline.attr('data-type', type).css({ left: bounds.left, top: bounds.top - top, width: bounds.right - bounds.left, height: bounds.bottom - bounds.top });
+            });
+            return outlines;
+        },
+
         /** Coalesces geometry reads; selection chrome never participates in the page grid. */
         schedule_workbench: function() {
             var me = this, ui = me.ui;
@@ -858,30 +886,17 @@
                     ui.treeDirty = true;
                 }
                 var moving = me.$wrapper.hasClass(me.state.is_moving_child);
-                var element = (moving ? ui.hovered : ui.selected) || ui.hovered;
+                var element = moving ? ui.hovered : ui.selected;
                 var obstructed = me.$wrapper.hasClass(me.state.is_modal_open) || me.$wrapper.hasClass(me.state.is_library_active);
-                var visible = element && element.isConnected && $(element).is(':visible') && ui.guideMode !== 'hidden' && !ui.inserting && !obstructed && !document.body.classList.contains('is-view-mode');
+                var showGuides = ui.guideMode !== 'hidden' && !ui.inserting && !obstructed && !document.body.classList.contains('is-view-mode');
+                var visible = showGuides && element && element.isConnected && $(element).is(':visible');
                 var elements = visible ? [element] : [];
                 if (visible && ui.guideMode === 'all') elements = elements.concat($(element).parentsUntil(me.$wrapper, me.tagc._grid_element).get());
-                while (ui.outlines.length < elements.length) {
-                    ui.outlines = ui.outlines.add($('<div>', { 'class': me.options.prefix+'-outline', hidden: true }).appendTo(ui.layer));
-                }
-                var bounds;
-                ui.outlines.each(function(index) {
-                    var target = elements[index], outline = $(this);
-                    outline.prop('hidden', !target).toggleClass('is-quiet', !!target && ui.quiet);
-                    if (!target) return;
-                    var rect = target.getBoundingClientRect(), type = me.workbench_type(target);
-                    if (type === 'row' && $(target).hasClass(me.tag.duplicable)) type = 'item';
-                    // Keep every ancestor outside its child, even when their actual edges coincide.
-                    bounds = {
-                        left: Math.min(rect.left, bounds ? bounds.left : rect.left) - 4,
-                        top: Math.min(rect.top, bounds ? bounds.top : rect.top) - 4,
-                        right: Math.max(rect.right, bounds ? bounds.right : rect.right) + 4,
-                        bottom: Math.max(rect.bottom, bounds ? bounds.bottom : rect.bottom) + 4
-                    };
-                    outline.attr('data-type', type).css({ left: bounds.left, top: bounds.top - top, width: bounds.right - bounds.left, height: bounds.bottom - bounds.top });
-                });
+                ui.outlines = me.render_workbench_outlines(ui.outlines, elements, top, false, []);
+                var hovered = ui.hovered;
+                var hoverElements = showGuides && !moving && !ui.quiet && hovered && me.$wrapper[0].contains(hovered) && $(hovered).is(':visible') ? [hovered] : [];
+                if (hoverElements.length && ui.guideMode === 'all') hoverElements = hoverElements.concat($(hovered).parentsUntil(me.$wrapper, me.tagc._grid_element).get());
+                ui.hoverOutlines = me.render_workbench_outlines(ui.hoverOutlines, hoverElements, top, true, elements);
                 if (ui.treeDirty && !ui.drawer.prop('hidden')) me.render_workbench_tree();
                 var busy = me.workbench_busy();
                 me.position_workbench_insertion(top);

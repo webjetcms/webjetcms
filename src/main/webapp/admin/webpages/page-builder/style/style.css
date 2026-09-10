@@ -318,7 +318,7 @@
   border-color: #8a8e93;
 }
 .pb-column > .pb-empty-placeholder .pb-empty-placeholder__button:hover {
-  background-color: rgb(100.08, 103.7866666667, 108.42);
+  background-color: #64686c;
 }
 .pb-row > .pb-empty-placeholder .pb-empty-placeholder__button, .pb-container > .pb-empty-placeholder .pb-empty-placeholder__button {
   background-color: #00A186;
@@ -327,7 +327,7 @@
   border-color: #00A186;
 }
 .pb-row > .pb-empty-placeholder .pb-empty-placeholder__button:hover, .pb-container > .pb-empty-placeholder .pb-empty-placeholder__button:hover {
-  background-color: rgb(0, 84.5, 70.3291925466);
+  background-color: #005546;
 }
 .pb-section > .pb-empty-placeholder .pb-empty-placeholder__button {
   background-color: #F64D91;
@@ -336,7 +336,7 @@
   border-color: #F64D91;
 }
 .pb-section > .pb-empty-placeholder .pb-empty-placeholder__button:hover {
-  background-color: rgb(234.6363636364, 11.8636363636, 101.5);
+  background-color: #eb0c66;
 }
 .pb-wrapper > .pb-empty-placeholder .pb-empty-placeholder__button {
   background-color: #ccc;
@@ -345,7 +345,7 @@
   border-color: #ccc;
 }
 .pb-wrapper > .pb-empty-placeholder .pb-empty-placeholder__button:hover {
-  background-color: rgb(165.75, 165.75, 165.75);
+  background-color: #a6a6a6;
 }
 
 .pb-wrapper.pb-is-moving-child .pb-empty-placeholder, .pb-wrapper.pb-has-child-toolbar-active .pb-empty-placeholder {
@@ -368,7 +368,7 @@
   border-color: #6486FF;
 }
 .pb-wrapper > .pb-empty-placeholder-wrapper > .pb-empty-placeholder > .pb-empty-placeholder__button:hover {
-  background-color: rgb(23.5, 74.2806451613, 255);
+  background-color: #184aff;
 }
 
 .pb-toolbar {
@@ -710,7 +710,7 @@
   }
   20% {
     box-shadow: 0 0 0 0 rgba(100, 134, 255, 0.6);
-    background-color: rgb(49, 94.1870967742, 255);
+    background-color: #315eff;
   }
   70% {
     box-shadow: 0 0 0 30px rgba(100, 134, 255, 0);
@@ -725,7 +725,7 @@
   }
   20% {
     box-shadow: 0 0 0 0 rgba(246, 77, 145, 0.6);
-    background-color: rgb(234.6363636364, 11.8636363636, 101.5);
+    background-color: #eb0c66;
   }
   70% {
     box-shadow: 0 0 0 30px rgba(246, 77, 145, 0);
@@ -740,7 +740,7 @@
   }
   20% {
     box-shadow: 0 0 0 0 rgba(0, 161, 134, 0.6);
-    background-color: rgb(0, 110, 91.5527950311);
+    background-color: #006e5c;
   }
   70% {
     box-shadow: 0 0 0 20px rgba(0, 161, 134, 0);
@@ -786,7 +786,7 @@
 }
 .pb-has-same-style > .pb-connection-button, .pb-connection-button:hover {
   cursor: pointer;
-  background-color: rgb(178.5, 115.5, 0);
+  background-color: #b37400;
 }
 .pb-has-same-style > .pb-connection-button::after, .pb-connection-button:hover::after {
   transform: scale(1.4, 1.4);
@@ -856,7 +856,7 @@
 }
 .pb-size-changer__down:hover, .pb-size-changer__up:hover {
   cursor: pointer;
-  background-color: rgb(0, 135.5, 112.7763975155);
+  background-color: #008871;
 }
 .pb-size-changer__down {
   background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(0, 33, 96)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-left" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M15 6l-6 6l6 6" /> </svg>');
@@ -2123,7 +2123,7 @@
 }
 
 .section.pb-dark {
-  color: rgb(229.5, 229.5, 229.5);
+  color: #e6e6e6;
 }
 
 .section.npg-img-left,
@@ -2739,8 +2739,8 @@ html.pb-insertion-open {
 
 @media (prefers-reduced-motion: reduce) {
   .pb-workbench .pb-tooltip::before,
-  .pb-structure .pb-tooltip::before,
-  .pb-insert-layer .pb-tooltip::before {
+.pb-structure .pb-tooltip::before,
+.pb-insert-layer .pb-tooltip::before {
     transition: none;
   }
 }
@@ -2896,6 +2896,31 @@ html.pb-insertion-open {
 }
 .pb-outline.is-quiet {
   border-width: 1px;
+}
+.pb-outline.is-hover {
+  border-width: 1px;
+  border-style: solid;
+  opacity: 0.6;
+  transition: opacity 100ms ease, visibility 0s;
+}
+.pb-outline.is-hover.is-ancestor {
+  opacity: 0.3;
+}
+.pb-outline.is-hover[hidden] {
+  display: block !important;
+  opacity: 0;
+  visibility: hidden;
+  transition-delay: 0s, 100ms;
+}
+@starting-style {
+  .pb-outline.is-hover {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pb-outline.is-hover {
+    transition: none;
+  }
 }
 
 .pb-structure {

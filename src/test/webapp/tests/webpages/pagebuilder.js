@@ -333,6 +333,17 @@ function openDuplicableRowToolbar(I, rowIndex, action) {
     I.waitForVisible(".pb-workbench [data-pb-action="+action+"]", 10);
 }
 
+/** Keeps a move/duplicate destination below the sticky editor toolbar before a real pointer click. */
+async function clickDuplicableRowTarget(I, rowIndex, controllerSelector) {
+    await I.usePlaywrightTo("reveal and click the duplicable row destination", async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        const target = frame.locator(getDuplicableRowController(rowIndex, controllerSelector).css);
+        await target.waitFor({state: 'visible'});
+        await target.evaluate(element => element.scrollIntoView({block: 'center', behavior: 'instant'}));
+        await target.click();
+    });
+}
+
 async function getPageBuilderFrame(page) {
     const iframeElement = await page.locator("#DTE_Field_data-pageBuilderIframe").elementHandle();
     assert.ok(iframeElement, "The Page Builder iframe element must exist");
@@ -618,8 +629,7 @@ Scenario('duplicable row toolbar, CKEditor lifecycle and cleanup', async ({I, DT
     openDuplicableRowToolbar(I, 1, "duplicate");
     I.click(".pb-workbench [data-pb-action=duplicate]");
     I.waitForElement("#wjInline-docdata.pb-is-moving-child.pb-is-moving-duplicable-element.pb-is-duplicating", 10);
-    I.waitForVisible(getDuplicableRowController(1, "aside.pb-append"), 10);
-    I.click(getDuplicableRowController(1, "aside.pb-append"));
+    await clickDuplicableRowTarget(I, 1, "aside.pb-append");
     await waitForDuplicableRowEditors(I, 2);
 
     const duplicatedState = await I.executeScript((root, { selector }) => Array.from(document.querySelectorAll(selector)).map(row => {
@@ -658,8 +668,7 @@ Scenario('duplicable row toolbar, CKEditor lifecycle and cleanup', async ({I, DT
     I.click(".pb-workbench [data-pb-action=move]");
     I.waitForElement("#wjInline-docdata.pb-is-moving-child.pb-is-moving-duplicable-element", 10);
     I.dontSeeElement("#wjInline-docdata.pb-is-duplicating");
-    I.waitForVisible(getDuplicableRowController(1, "aside.pb-prepend"), 10);
-    I.click(getDuplicableRowController(1, "aside.pb-prepend"));
+    await clickDuplicableRowTarget(I, 1, "aside.pb-prepend");
     await waitForDuplicableRowEditors(I, 2);
 
     const movedState = await I.executeScript((root, { selector, removedEditorName }) => {
@@ -755,6 +764,13 @@ async function openWorkbenchFixture(I, DTE, Document) {
             '<ul><li class="pb-duplicable">First autotest item</li><li class="pb-duplicable">Second autotest item</li></ul></div></div>' +
             '<div class="col-12 col-md-6 col-xl-6"><p>Second autotest column</p></div>' +
             '</div><p class="pb-editable">Standalone autotest text</p></div>';
+        // Include the active template's grid classes so the fixture also works with custom selectors.
+        const grid = window.pageBuilder.grid;
+        const row = section.querySelector('.row');
+        if (!$(row).is(grid.row)) row.classList.add(...grid.row_default_class.split(/\s+/).filter(Boolean));
+        section.querySelectorAll('.col-12').forEach(column => {
+            if (!$(column).is(grid.column)) column.classList.add(...grid.column_default_class.split(/\s+/).filter(Boolean));
+        });
         document.querySelector('#wjInline-docdata').prepend(section);
         window.markPbElements('doc_data');
     });
@@ -762,7 +778,7 @@ async function openWorkbenchFixture(I, DTE, Document) {
         const frame = await getPageBuilderFrame(page);
         await frame.waitForFunction(selector => Array.from(document.querySelectorAll(selector+' [data-ckeditor-instance]'))
             .length === 3 && Array.from(document.querySelectorAll(selector+' [data-ckeditor-instance]'))
-            .every(element => CKEDITOR.instances[element.dataset.ckeditorInstance]?.status === 'ready'), workbenchFixture);
+            .every(element => CKEDITOR.instances[element.dataset.ckeditorInstance]?.status === 'ready'), workbenchFixture, {timeout: 20000});
     });
     I.click(workbenchFixture+' .pb-workbench-copy');
     I.waitForVisible('.pb-outline[data-type=column]', 10);
@@ -835,6 +851,7 @@ Scenario('workbench selection, structure and unchanged canvas geometry', async (
         assert.equal(await branch.getAttribute('aria-expanded'), 'false');
         await label.click();
         assert.equal(await branch.getAttribute('aria-expanded'), 'true', 'Clicking the label must expand a collapsed branch');
+        await frame.waitForFunction(() => document.querySelector('.pb-structure > ul > li').getAttribute('aria-selected') === 'true', null, {timeout: 10000});
         assert.equal(await branch.getAttribute('aria-selected'), 'true', 'Expanding through the label must also select the block');
         assert.ok(await branch.locator(':scope > ul').isVisible(), 'The subtree must become visible');
         await label.click();
@@ -1152,12 +1169,90 @@ Scenario('workbench insertion in narrow gutters and wrapped columns', async ({I,
     DTE.cancel();
 });
 
+Scenario('workbench hover outlines preserve selection and match click geometry', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    const before = await workbenchGeometry(I);
+    await I.usePlaywrightTo('verify independent hover guides and outline modes', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        const second = frame.locator(workbenchFixture+' .col-12').nth(1).locator('p');
+        const guides = frame.locator('.pb-workbench [data-pb-action=guides]');
+        const hoverSelector = '.pb-outline.is-hover:not([hidden])';
+        const selectedSelector = '.pb-outline:not(.is-hover):not([hidden])';
+        const geometry = selector => frame.locator(selector).evaluateAll(nodes => nodes.map(node => {
+            const rect = node.getBoundingClientRect();
+            return {type: node.dataset.type, x: rect.x, y: rect.y, width: rect.width, height: rect.height};
+        }));
+        const initial = await frame.evaluate(() => ({
+            path: document.querySelector('.pb-workbench-path').textContent,
+            html: window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data
+        }));
+        const selected = await geometry(selectedSelector);
+        await second.hover();
+        await frame.waitForFunction(selector => {
+            const node = document.querySelector(selector);
+            return node && getComputedStyle(node).opacity === '0.6';
+        }, hoverSelector, {timeout: 10000});
+        assert.equal(await frame.locator(hoverSelector).count(), 1, 'Default mode must show only the hovered block');
+        assert.deepStrictEqual(await geometry(selectedSelector), selected, 'Hover must keep the selected outline in place');
+        assert.equal(await frame.locator('.pb-workbench-path').textContent(), initial.path, 'Hover must not change toolbar selection');
+        const style = await frame.locator(hoverSelector).evaluate(node => {
+            const css = getComputedStyle(node);
+            return {style: css.borderStyle, width: css.borderWidth, pointerEvents: css.pointerEvents};
+        });
+        assert.deepStrictEqual(style, {style: 'solid', width: '1px', pointerEvents: 'none'});
+        const hoverGeometry = await geometry(hoverSelector);
+        await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path: '../../../build/test/pagebuilder-hover-selected.png'});
+        await second.click();
+        await frame.waitForFunction(selector => !document.querySelector(selector), hoverSelector, {timeout: 10000});
+        assert.deepStrictEqual(await geometry(selectedSelector), hoverGeometry, 'Click must use exactly the same bounds as hover');
+        await second.hover({position: {x: 10, y: 5}});
+        assert.equal(await frame.locator(hoverSelector).count(), 0, 'The selected block must not receive a duplicate hover outline');
+
+        await guides.click();
+        await frame.locator(workbenchFixture+' .pb-workbench-copy').hover();
+        await frame.waitForFunction(() => !document.querySelector('.pb-outline:not([hidden])'), null, {timeout: 10000});
+        await guides.click();
+        await frame.evaluate(() => window.pageBuilder.select_workbench_element(null));
+        await second.hover();
+        await frame.waitForFunction(selector => document.querySelectorAll(selector).length === 4, hoverSelector, {timeout: 10000});
+        const hierarchy = await geometry(hoverSelector);
+        assert.deepStrictEqual(hierarchy.map(node => node.type), ['column', 'row', 'container', 'section']);
+        await second.click();
+        await frame.waitForFunction(selector => document.querySelectorAll(selector).length === 4, selectedSelector, {timeout: 10000});
+        assert.deepStrictEqual(await geometry(selectedSelector), hierarchy, 'All hover ancestors must match the clicked hierarchy');
+        await frame.locator(workbenchFixture+' .pb-workbench-copy').hover();
+        await frame.waitForFunction(selector => document.querySelectorAll(selector).length === 1, hoverSelector, {timeout: 10000});
+        assert.equal(await frame.locator(hoverSelector).getAttribute('data-type'), 'column', 'Shared ancestors must not receive duplicate outlines');
+        await page.keyboard.type('a');
+        await frame.waitForFunction(selector => !document.querySelector(selector), hoverSelector, {timeout: 10000});
+        await page.keyboard.press('Backspace');
+        await frame.locator(workbenchFixture+' .pb-workbench-copy').hover({position: {x: 20, y: 5}});
+        await frame.waitForFunction(selector => !!document.querySelector(selector), hoverSelector, {timeout: 10000});
+        await guides.hover();
+        await frame.waitForFunction(() => Array.from(document.querySelectorAll('.pb-outline.is-hover')).every(node => getComputedStyle(node).visibility === 'hidden'), null, {timeout: 10000});
+        await frame.locator('.pb-workbench [data-pb-action=insert]').click();
+        await frame.locator(workbenchFixture+' .pb-workbench-copy').hover();
+        await frame.waitForFunction(() => !document.querySelector('.pb-outline:not([hidden])'), null, {timeout: 10000});
+        await page.keyboard.press('Escape');
+        await frame.waitForFunction(() => !window.pageBuilder.ui.inserting, null, {timeout: 10000});
+        await page.emulateMedia({reducedMotion: 'reduce'});
+        const duration = await frame.locator('.pb-outline.is-hover').first().evaluate(node => parseFloat(getComputedStyle(node).transitionDuration));
+        assert.ok(duration < 0.001, 'Reduced motion must make the transition effectively immediate');
+        await page.emulateMedia({reducedMotion: 'no-preference'});
+        assert.equal(await frame.evaluate(() => window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data), initial.html, 'Hover chrome must stay outside saved content');
+    });
+    assert.deepStrictEqual(await workbenchGeometry(I), before, 'Hover guides must preserve layout and text wrapping');
+    I.switchTo();
+    I.amAcceptingPopups();
+    DTE.cancel();
+});
+
 Scenario('workbench outline modes, offsets and remembered preference', async ({I, DTE, Document}) => {
     await openWorkbenchFixture(I, DTE, Document);
     const button = '.pb-workbench [data-pb-action=guides]';
     const before = await workbenchGeometry(I);
     const initial = await I.executeScript(() => ({
-        icon: document.querySelector('[data-pb-action=guides] path').getAttribute('d'),
+        icon: document.querySelector('[data-pb-action=guides] path:not([stroke=none])').getAttribute('d'),
         html: window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data
     }));
     I.seeElement(button+'[data-pb-guides=selected]');
@@ -1167,13 +1262,13 @@ Scenario('workbench outline modes, offsets and remembered preference', async ({I
     I.waitForInvisible('.pb-outline:not([hidden])', 10);
     I.seeElement('.pb-structure');
     I.seeElement('.pb-workbench [data-pb-action=resize]');
-    const hiddenIcon = await I.grabAttributeFrom(button+' path', 'd');
+    const hiddenIcon = await I.grabAttributeFrom(button+' path:not([stroke=none])', 'd');
     assert.notStrictEqual(hiddenIcon, initial.icon, 'Hidden outlines must have their own crossed-out eye icon');
     I.click(button);
     I.seeElement(button+'[data-pb-guides=all]');
     I.waitForVisible('.pb-outline[data-type=section]:not([hidden])', 10);
     const all = await I.executeScript(() => ({
-        icon: document.querySelector('[data-pb-action=guides] path').getAttribute('d'),
+        icon: document.querySelector('[data-pb-action=guides] path:not([stroke=none])').getAttribute('d'),
         stored: localStorage.getItem('webjet.pagebuilder.guides'),
         outlines: Array.from(document.querySelectorAll('.pb-outline:not([hidden])')).map(node => {
             const rect = node.getBoundingClientRect();
