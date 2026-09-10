@@ -1,4 +1,4 @@
-<%@page import="sk.iway.iwcm.gallery.ImageInfo,sk.iway.iwcm.FileTools,sk.iway.iwcm.Constants,sk.iway.iwcm.tags.support.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.gallery.ImageInfo,sk.iway.iwcm.FileTools,sk.iway.iwcm.Constants,sk.iway.iwcm.tags.support.ResponseUtils,sk.iway.iwcm.components.video.VideoApp"%>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" %><%@page import="sk.iway.iwcm.PageParams,sk.iway.iwcm.Tools,org.json.JSONObject"%><%
@@ -78,13 +78,6 @@ if (request.getAttribute("videoCounter") != null)
 }
 request.setAttribute("videoCounter", videoCounter);
 
-/*
-*	Youtube video moze byt vo formatoch:
-*	http://www.youtube.com/watch?v=mThslEcqO1g
-*	http://www.youtube.com/v/mThslEcqO1g
-*   http://www.youtu.be/watch?v=mThslEcqO1g
-*	http://www.youtu.be/v/mThslEcqO1g
-*/
 int type = TYPE_HTML;
 String link = "";
 
@@ -94,28 +87,13 @@ String allowFullscreen = "";
 if (file.indexOf("youtube.com") != -1 || file.indexOf("youtu.be") != -1)
 {
 
-	if (file.indexOf("youtu.be")!=-1 && file.indexOf("v=") == -1 && file.indexOf("/v/") == -1){
-		file = file.substring(file.indexOf(".be/") + 4);
-	}
-	else if (file.indexOf("v=") != -1)
-	{
-		file = file.substring(file.indexOf("v=") + 2);
-	}
-	else if (file.indexOf("/v/") != -1)
-	{
-		file = file.substring(file.indexOf("/v/") + 3);
-	}
-	else if (file.indexOf("/shorts/") != -1)
-	{
-		file = file.substring(file.indexOf("/shorts/") + 8);
-	}
-
-	link = "http://www.youtube.com/v/" + file + "?version=3";
+	String youtubeUrl = VideoApp.getYoutubeEmbedUrl(file, "enablejsapi=1&showinfo="+showinfo+"&autoplay="+autoplay+"&modestbranding="+branding+"&controls="+controls+"&rel="+rel+"&origin=" + Tools.URLEncode(Tools.getBaseHref(request)));
+	if (Tools.isEmpty(youtubeUrl)) return;
 	if(percentageWidth > 0) {
 		iframeVersion += "<div class=\"" + baseClass + " " + ratioClass +" video_align-"+align+" clearfix videoPlaceholder"+ videoCounter +" \" >";
 	}
 	if(fullscreen > 0)  allowFullscreen = "allowfullscreen";
-	iframeVersion += "<iframe class=\""+ videoItemClass +"\" id=\"videoPlaceholder"+ videoCounter +"\" "+widthHeightParams+"src=\"//www.youtube.com/embed/"+ file +"?enablejsapi=1&showinfo="+showinfo+"&autoplay="+autoplay+"&modestbranding="+branding+"&controls="+controls+"&rel="+rel+"&origin=" + Tools.getBaseHref(request) + "\" frameborder=\"0\" "+allowFullscreen+" referrerpolicy=\"strict-origin-when-cross-origin\"></iframe>";
+	iframeVersion += "<iframe class=\""+ videoItemClass +"\" id=\"videoPlaceholder"+ videoCounter +"\" "+widthHeightParams+"src=\""+ Tools.escapeHtml(youtubeUrl) +"\" frameborder=\"0\" "+allowFullscreen+" referrerpolicy=\"strict-origin-when-cross-origin\"></iframe>";
 
 	if(percentageWidth >0) {
 		iframeVersion += "</div>";

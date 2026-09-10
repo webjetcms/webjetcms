@@ -6,7 +6,7 @@ div.controls { margin-top: 5px; height: 23px; }
 div.controls a { padding: 0; }
 div.ss-controls { float: left; }
 div.slideshow-container { position: relative; clear: both; height: 250px; }
-div.loader { position: absolute; top: 0; left: 0; background-image: url(loader.gif); background-repeat: no-repeat; background-position: center; width: 320px; height: 250px; }
+div.loader { position: absolute; top: 0; left: 0; background-image: url(/components/gallery/ajax/galleriffic/loader.gif); background-repeat: no-repeat; background-position: center; width: 320px; height: 250px; }
 div.slideshow span.image-wrapper { display: block; position: absolute; top: 0; left: 0; }
 div.slideshow a.advance-link { display: block; width: 320px; height: 225px; line-height: 225px; text-align: center; }
 div.slideshow a.advance-link: hover,div.slideshow a.advance-link: active,div.slideshow a.advance-link: visited { text-decoration: none; }

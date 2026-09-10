@@ -310,7 +310,7 @@ private static String combineCss(String cssStyle)
 		long tempGroupId = temp.getTemplatesGroupId();
 		if (tempGroupId > 0)
         {
-            TemplatesGroupBean tgb = TemplatesGroupDB.getInstance().getById(temp.getTemplatesGroupId());
+            TemplatesGroupBean tgb = TemplatesGroupDB.getInstance().getByIdCached(temp.getTemplatesGroupId());
             if (tgb != null)
             {
                 request.setAttribute("templatesGroupDetails", tgb);

@@ -32,7 +32,7 @@ Testovanie spustíte pomocou nasledovných príkazov:
 ```shell
 cd src/test/webapp/
 
-#spustenie vsetkych testov
+# Run all E2E and helper tests
 npm run all
 
 #spustenie konkrétneho testu a zastavenie v prípade chyby
@@ -57,6 +57,44 @@ CODECEPT_URL="http://demotest.webjetcms.sk" CODECEPT_SHOW=false npm run all
 ```
 
 **Poznámka:** v prehliadači Firefox sme mali problémy s rýchlosťou testov. Preto sa pre tento prehliadač v súbore ```codecept.conf.js``` nastaví premenná ```autodeayEnabled``` na hodnotu ```true``` a aktivuje sa doplnok ```autodelay```. Ten oneskoruje vykonanie funkcií ```amOnPage,click,forceClick``` o 200ms pred a 300ms po zavolaní príkazu. Tiež sme identifikovali zvláštne správanie prehliadača, ktorý pokiaľ nie je na popredí tak testy z ničoho nič prestanú fungovať a zobrazuje nezmyselné chyby. Pri jednorázovom spustení testu sa vždy test vykonal korektne. Prisudzujeme to nejakej optimalizácii vykonávania JavaScript kódu v prehliadači, keď nie je aktívny. Pri spustení s nezobrazením prehliadača je všetko v poriadku, preto pre spustenie všetkých testov vždy používajte nastavenie ```CODECEPT_SHOW=false```.
+
+### Testy JavaScript funkcií a komponentov
+
+Súbory `src/test/webapp/helpers/*.test.js` používa vstavaný testovací nástroj Node.js (`node:test`). Overujú jednotlivé funkcie a komponenty, napríklad správanie JSON editora. Dopĺňajú E2E testy v `tests/**/*.js`, ktoré overujú celé používateľské postupy v spustenom WebJET CMS. Príkaz `npm run all` zahŕňa aj helper testy prostredníctvom CodeceptJS scenárov v `tests/helpers/node-tests.js`.
+
+Všetky helper testy spustíte z priečinka `src/test/webapp`:
+
+```shell
+npm run test:helpers
+```
+
+Konkrétny súbor alebo test podľa názvu spustíte priamo cez Node.js:
+
+```shell
+node --test helpers/jsoneditor.test.js
+node --test --test-name-pattern="rejects every non-object root" helpers/jsoneditor.test.js
+```
+
+Použite Node.js 22 a nainštalujte npm závislosti v `src/test/webapp` aj v `src/main/webapp/admin/v9` podľa postupu vyššie. Tieto testy nepotrebujú spustený aplikačný server ani databázu. Niektoré otvárajú lokálne komponenty v Chromium cez Playwright, preto musí byť nainštalovaný aj tento prehliadač (`npx playwright install chromium` z priečinka `src/test/webapp`; na Linuxe je možné nainštalovať systémové závislosti pomocou `npx playwright install --with-deps chromium`).
+
+Výpis obsahuje názvy úspešných a neúspešných testov, pri chybe aj očakávanú a skutočnú hodnotu alebo popis chyby. Úspešné spustenie končí návratovým kódom `0`, zlyhanie nenulovým kódom. Nové testy ukladajte priamo do `helpers` s príponou `.test.js`, aby ich spoločný príkaz automaticky zahrnul.
+
+[Skript `npx-allure.sh`](allure.md) spúšťa tieto testy automaticky v rámci CodeceptJS. V Allure ich nájdete v suite `helpers.node-tests`: každý helper súbor má vlastný scenár a prílohu s výpisom všetkých jeho testov. Ak niektorý test zlyhá, scenár sa označí ako neúspešný a zlyhá aj pipeline. Výpis je dostupný aj v konzole.
+
+Iba helper testy so zápisom výsledkov do Allure spustíte takto:
+
+```shell
+npm run all -- tests/helpers/node-tests.js
+npx allure serve ../../../build/test/allure-results
+```
+
+Pre výber konkrétnych súborov pridajte k príkazu CodeceptJS napríklad `--grep "jsoneditor"`. Samostatný `npm run test:helpers` zostáva rýchlym lokálnym spustením s výsledkami iba v konzole.
+
+Zobrazenie povolených rozmerov miniatúr v CKEditore overuje bežný E2E test `tests/webpages/editor-thumb.js`. Prepne konfiguráciu na `strict`, overí možnosti na stránke s `docid=57` a v samostatnom scenári obnoví režim `learn`. Spúšťajte celý súbor, aby sa vykonal aj návrat konfigurácie:
+
+```shell
+npm run all -- tests/webpages/editor-thumb.js
+```
 
 ### Codecept UI
 

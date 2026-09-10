@@ -46,6 +46,10 @@ Generování obrázků zatěžuje server, je tedy chráněno SPAM ochranou. Pou�
   - `check` - ​​povolí pouze zadané hodnoty, pokud je přihlášen administrátor, automaticky přidá nový rozměr do seznamu
   - `strict` - ​​povolí vygenerovat obrázek pouze pro zadané hodnoty (kontroluje seznam povolených hodnot)
 
+V režimu `strict` se v kartě **Miniatura** ve vlastnostech obrázku zobrazí jeden výběr povolených rozměrů namísto samostatných polí. Možnosti se načtou z konfigurační proměnné `thumbServletAllowedSizes` (oddělené čárkou nebo novým řádkem) a seřadí se číselně podle šířky a následně výšky. Například `159x159ip1` se zobrazí jako `159 x 159 (1 - Fixná šírka)`, hodnota bez `ip` jako maximální rozměry. Při zadání barvy, vypnutí bodu zájmu nebo kvality se zobrazí i tyto údaje.
+
+Při potvrzení se vybraná kombinace uloží do URL obrázku i CSS třídy `fixedSize`. Obsahuje-li kvalitu, má třída navíc příponu `-q90` (například `fixedSize-730-401-5-ff00ff-true-q90`). Při opětovném otevření se zvolí odpovídající povolená možnost. Prázdná volba použije obrázek v původní velikosti: odstraní prefix `/thumb/`, parametry miniatury a třídu `fixedSize`, stejně jako v ostatních režimech. Pokud původní rozměr není povolen, lze vybrat povolený rozměr nebo ponechat prázdnou volbu pro použití původního obrázku. V ostatních režimech zůstávají samostatná pole dostupná.
+
 Nastavte nejprve režim `learn` pro naučení se existujících hodnot a následně nastavte režim `check` ve kterém se hodnoty kontrolují, ale pokud je přihlášen administrátor automaticky se přidá nová hodnota do seznamu povolených hodnot. WebJET automaticky při aktualizaci nastaví režim `learn` a následně po minimálně měsíci a dalším restartu přepne na režim `check`.
 
 V případě více uzlové instalace můžete nastavit režim `deny` a generovat náhledové obrázky pouze na administrátorských uzlech. Rozdíl mezi `deny` a `check` je v tom, že `deny` ani nekontroluje seznam povolených možností a je tedy rychlejší ke zpracování. Zároveň je-li přihlášen administrátor obrázek je vygenerován.

@@ -45,7 +45,7 @@ public class TempGroup {
         if (templatesGroupBean == null && ninja.getPage() != null && ninja.getPage().getDoc() != null) {
             TemplateDetails template = TemplatesDB.getInstance().getTemplate(ninja.getPage().getDoc().getTempId());
             if (template != null && template.getTemplatesGroupId() != null) {
-                templatesGroupBean = TemplatesGroupDB.getInstance().getById(template.getTemplatesGroupId());
+                templatesGroupBean = TemplatesGroupDB.getInstance().getByIdCached(template.getTemplatesGroupId());
             }
         }
         return templatesGroupBean;

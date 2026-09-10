@@ -28,6 +28,7 @@ In the **Field type** field, the available types are:
 | --- | --- | --- |
 | `text` | Text field | Single-valued |
 | `textarea` | Text area (multiple lines) | Single-valued |
+| `json editor` | JSON object editor with line numbers, formatting, and validation | Single-valued |
 | `select` | Dropdown | Single-valued |
 | `multiselect` | Multiple-value selection field | Multivalued (values ​​separated by `\|`) |
 | `radio` | List of radio buttons | Single-valued |
@@ -62,6 +63,8 @@ When changing a field type, additional fields that belong only to that type are 
 ### Required field behavior by type
 
 If **Required field** is disabled for types `select`, `docsIn`, `json_group`, `json_doc`, the editor will automatically offer an empty value. For types `radio` and `checkbox`, disabled required field means that the user does not have to select any option.
+
+For type `jsoneditor`, empty input is governed by the **Required field** setting and the filled value must contain a single object in curly brackets `{}`. The error will block saving in the editor and on the server. The supported syntax, formatting, and database column capacity are described in the [JSON Editor](../../../developer/datatables-editor/customfields.md#json-editor) documentation.
 
 ### Source of options
 
