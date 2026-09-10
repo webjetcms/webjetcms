@@ -236,6 +236,12 @@ The fields on the Thumbnail tab are dynamically shown/hidden based on the select
 - `5` mode: Both dimensional fields are displayed without a color field.
 - The **Disable POI** field is displayed for all modes except the empty value. This sets whether the set POI is also applied during generation, or the entire image is used.
 
+**Strict mode**
+
+In [precisely defined dimensions](../../../frontend/thumb-servlet/README.md#restrictions) mode, a selection box of options is displayed from which the dimension can be selected, it is not possible to set an arbitrary value:
+
+![](image_dialog-thumb-strict.png)
+
 ### Video files
 
 You can also insert video files through the image insertion dialog box. Either directly from your server by selecting a video file, or by entering a link to the website `YouTube/Facebook/TikTok` in the URL address field.
