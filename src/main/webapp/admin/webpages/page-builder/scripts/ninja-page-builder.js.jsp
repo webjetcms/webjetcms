@@ -103,6 +103,11 @@
                     insert: "<iwcm:text key='pagebuilder.toolbar.add_block'/>",
                     insertHint: "<iwcm:text key='pagebuilder.ui.insert.hint'/>",
                     insertEnd: "<iwcm:text key='pagebuilder.ui.insert.end'/>",
+                    resizeHint: "<iwcm:text key='pagebuilder.ui.resize.hint'/>",
+                    resizeMobile: "<iwcm:text key='pagebuilder.ui.resize.mobile'/>",
+                    resizeTablet: "<iwcm:text key='pagebuilder.ui.resize.tablet'/>",
+                    resizeDesktop: "<iwcm:text key='pagebuilder.ui.resize.desktop'/>",
+                    resizeCustom: "<iwcm:text key='pagebuilder.ui.resize.custom'/>",
                     insertStart: "<iwcm:text key='pagebuilder.ui.insert.start'/>",
                     insertAfter: "<iwcm:text key='pagebuilder.ui.insert.after'/>",
                     insertBefore: "<iwcm:text key='pagebuilder.ui.insert.before'/>"
@@ -115,8 +120,12 @@
             ui.actions = $('<div>', { 'class': prefix+'-workbench-actions' }).appendTo(ui.bar);
             ui.bar.append(me.workbench_button('guides', ui.labels.guides.selected, 'eye'));
             ui.menu = $('<div>', { 'class': prefix+'-workbench-menu', hidden: true }).appendTo(ui.bar);
-            ui.insertHint = $('<div>', { 'class': prefix+'-insert-hint', hidden: true }).append(
+            ui.insertHint = $('<div>', { 'class': prefix+'-mode-hint '+prefix+'-insert-hint', hidden: true }).append(
                 $('<span>').text(ui.labels.insertHint), me.workbench_button('end-insert', ui.labels.insertEnd, 'close')
+            ).appendTo(ui.bar);
+            ui.resizeHint = $('<div>', { 'class': prefix+'-mode-hint '+prefix+'-resize-hint', hidden: true }).append(
+                $('<span>', { role: 'status' }).text(ui.labels.resizeHint+' ').append($('<strong>')),
+                me.workbench_button('end-resize', ui.labels.insertEnd, 'close')
             ).appendTo(ui.bar);
             ui.insertLayer = $('<div>', { 'class': prefix+'-insert-layer', hidden: true, 'aria-label': ui.labels.insert }).appendTo(document.body);
             ui.layer = $('<div>', { 'class': prefix+'-outline-layer', 'aria-hidden': 'true' }).appendTo(document.body);
@@ -402,7 +411,11 @@
                     ['before', 'after', 'previous', 'next'].includes(action) ? ui.labels[action] : original.attr('data-title');
                 var button = me.workbench_button(action, label, entry[1]);
                 if (['previous', 'next'].includes(action)) button.prop('disabled', !me.workbench_sibling(action));
-                if (action === 'resize') button.find('span').text(me.get_actual_column_size(node)+' / '+me.options.max_col_size);
+                if (action === 'resize') {
+                    var resizing = node.closest('.'+me.state.is_resize_columns).length > 0;
+                    button.attr('aria-pressed', String(resizing))
+                        .find('span').text(me.get_actual_column_size(node)+' / '+me.options.max_col_size);
+                }
                 (['resize', 'duplicate-adjacent'].includes(action) ? ui.actions : ui.menu).append(button);
             });
             if (ui.menu.children().length) ui.actions.append(me.workbench_button('more', ui.labels.more, 'more').attr('aria-expanded', 'false'));
@@ -443,6 +456,11 @@
         workbench_action: function(action, invoker) {
             var me = this, ui = me.ui, node = $(ui.selected);
             ui.quiet = false;
+            if (action === 'end-resize' || (action === 'resize' && me.$wrapper.find('.'+me.state.is_resize_columns).length)) {
+                me.cancel_resize_columns();
+                me.restore_workbench_focus();
+                return;
+            }
             if (action === 'insert' || action === 'end-insert') {
                 if (me.workbench_busy()) return;
                 if (action === 'insert' && !ui.inserting) me.set_workbench_insertion(true);
@@ -835,7 +853,7 @@
         },
 
         /** Positions selection and hover outlines with identical geometry, suppressing shared ancestors on hover. */
-        render_workbench_outlines: function(outlines, elements, top, hover, selectedElements) {
+        render_workbench_outlines: function(outlines, elements, top, hover, selectedElements, resizing) {
             var me = this, bounds;
             while (outlines.length < elements.length) {
                 outlines = outlines.add($('<div>', { 'class': me.options.prefix+'-outline'+(hover ? ' is-hover' : ''), hidden: true }).appendTo(me.ui.layer));
@@ -843,10 +861,12 @@
             outlines.each(function(index) {
                 var target = elements[index], outline = $(this);
                 outline.prop('hidden', !target || (hover && selectedElements.includes(target)))
-                    .toggleClass('is-quiet', !hover && !!target && me.ui.quiet)
+                    .toggleClass('is-quiet', !hover && !!target && me.ui.quiet && !resizing)
                     .toggleClass('is-ancestor', hover && index > 0);
                 if (!target) return;
                 var rect = target.getBoundingClientRect(), type = me.workbench_type(target);
+                // Resizable columns are peers, not a chain of enclosing ancestors.
+                if (resizing) { bounds = null; type = 'column'; }
                 if (type === 'row' && $(target).hasClass(me.tag.duplicable)) type = 'item';
                 // Keep every ancestor outside its child, even when their actual edges coincide.
                 bounds = {
@@ -867,6 +887,20 @@
             ui.frame = window.requestAnimationFrame(function() {
                 ui.frame = null;
                 if (ui.selected && !me.$wrapper[0].contains(ui.selected)) me.select_workbench_element(null);
+                var resizeColumns = me.$wrapper.find('.'+me.state.is_resize_columns).find(me.tagc.column).filter(':visible');
+                var resizing = resizeColumns.length > 0, columnPrefix = me.get_actual_screen_size();
+                if (resizing) {
+                    if (ui.columnPrefix !== columnPrefix) resizeColumns.each(function() { me.update_column_size_label($(this)); });
+                    var suffix = me.get_column_size_suffix(), device = ui.labels.resizeCustom;
+                    if (typeof window.pbScreenSizePrefix !== 'function') {
+                        device = columnPrefix === me.column.valid_prefixes[0] ? ui.labels.resizeMobile : columnPrefix === me.column.valid_prefixes[2] ? ui.labels.resizeTablet : ui.labels.resizeDesktop;
+                    }
+                    var description = (suffix ? suffix+' — ' : '')+device;
+                    if (ui.resizeHint.find('strong').text() !== description) ui.resizeHint.find('strong').text(description);
+                }
+                ui.columnPrefix = columnPrefix;
+                // Include the mode hint in toolbar and outline geometry in this same frame.
+                ui.resizeHint.prop('hidden', !resizing);
                 var contentBottom = ui.toolbarContent.length ? ui.toolbarContent[0].getBoundingClientRect().bottom : 0;
                 if (ui.toolbarHost.length) {
                     var hostTop = ui.toolbarHost[0].getBoundingClientRect().top;
@@ -888,13 +922,15 @@
                 var moving = me.$wrapper.hasClass(me.state.is_moving_child);
                 var element = moving ? ui.hovered : ui.selected;
                 var obstructed = me.$wrapper.hasClass(me.state.is_modal_open) || me.$wrapper.hasClass(me.state.is_library_active);
-                var showGuides = ui.guideMode !== 'hidden' && !ui.inserting && !obstructed && !document.body.classList.contains('is-view-mode');
+                ui.layer.toggleClass('is-resizing', resizing);
+                var showGuides = (resizing || ui.guideMode !== 'hidden') && !ui.inserting && !obstructed && !document.body.classList.contains('is-view-mode');
                 var visible = showGuides && element && element.isConnected && $(element).is(':visible');
                 var elements = visible ? [element] : [];
                 if (visible && ui.guideMode === 'all') elements = elements.concat($(element).parentsUntil(me.$wrapper, me.tagc._grid_element).get());
-                ui.outlines = me.render_workbench_outlines(ui.outlines, elements, top, false, []);
+                if (resizing) elements = showGuides ? resizeColumns.get() : [];
+                ui.outlines = me.render_workbench_outlines(ui.outlines, elements, top, false, [], resizing);
                 var hovered = ui.hovered;
-                var hoverElements = showGuides && !moving && !ui.quiet && hovered && me.$wrapper[0].contains(hovered) && $(hovered).is(':visible') ? [hovered] : [];
+                var hoverElements = showGuides && !resizing && !moving && !ui.quiet && hovered && me.$wrapper[0].contains(hovered) && $(hovered).is(':visible') ? [hovered] : [];
                 if (hoverElements.length && ui.guideMode === 'all') hoverElements = hoverElements.concat($(hovered).parentsUntil(me.$wrapper, me.tagc._grid_element).get());
                 ui.hoverOutlines = me.render_workbench_outlines(ui.hoverOutlines, hoverElements, top, true, elements);
                 if (ui.treeDirty && !ui.drawer.prop('hidden')) me.render_workbench_tree();
@@ -904,11 +940,11 @@
                 if (busy) me.toggle_workbench_structure(false);
                 ui.actions.find('button').each(function() {
                     var action = this.getAttribute('data-pb-action');
-                    this.disabled = busy || (ui.inserting && action !== 'insert') || (['previous', 'next'].includes(action) && !me.workbench_sibling(action));
+                    this.disabled = (busy && !(resizing && action === 'resize')) || (ui.inserting && action !== 'insert') || (['previous', 'next'].includes(action) && !me.workbench_sibling(action));
                 });
                 ui.bar.find('[data-pb-action=structure], [data-pb-action=guides]').prop('disabled', busy || ui.inserting);
                 ui.bar.find('[data-pb-action=end-insert]').prop('disabled', busy);
-                ui.bar.find('[data-pb-action=resize] span').text(ui.selected ? me.get_actual_column_size($(ui.selected))+' / '+me.options.max_col_size : '');
+                ui.bar.find('[data-pb-action=resize]').attr('aria-pressed', String(resizing)).find('span').text(ui.selected ? me.get_actual_column_size($(ui.selected))+' / '+me.options.max_col_size : '');
                 var width = window.innerWidth, size = width < 768 ? 'phone' : width < 1200 ? 'tablet' : 'desktop';
                 $('.exit-inline-editor a[href*="pbSetWindowSize"]').each(function() {
                     $(this).attr('aria-pressed', String(this.getAttribute('href').includes("'"+size+"'")));
@@ -2073,10 +2109,14 @@
 
         create_column_size_changer: function (el) {
             if($(el).children(this.tagc.size_changer).length < 1) {
-                var content  = this.build_button(this.tag.size_changer_down);
+                var label = "<iwcm:text key='pagebuilder.toolbar.resize'/>";
+                var content  = this.build_button(this.tag.size_changer_down, null, label+' −1');
                 content += this.build_button(this.tag.size_changer_number,this.get_actual_column_size(el));
-                content += this.build_button(this.tag.size_changer_up);
+                content += this.build_button(this.tag.size_changer_up, null, label+' +1');
                 $(el).append(this.build_aside(this.tag.size_changer,content));
+                $(el).children(this.tagc.size_changer).attr({'role': 'group', 'aria-label': label}).find('button').each(function() {
+                    $(this).attr('aria-label', $(this).attr('data-title'));
+                });
             }
         },
 
@@ -2274,6 +2314,12 @@
                 .removeClass(this.get_actual_screen_size() + actual_size)
                 .addClass(this.get_actual_screen_size() + new_size);
 
+            this.update_column_size_label(column);
+            this.schedule_workbench();
+        },
+
+        /** Returns the breakpoint marker shared by column controls and the resize hint. */
+        get_column_size_suffix: function() {
             var screenSizeText = this.get_actual_screen_size();
             try {
                 //remove valid_prefixes[0] from screenSizeText
@@ -2293,11 +2339,14 @@
             if (screenSizeText.length > 4) {
                 screenSizeText = screenSizeText.slice(-4);
             }
-            if (screenSizeText !== "") {
-                screenSizeText = " [" + screenSizeText + "]";
-            }
+            return screenSizeText.toUpperCase();
+        },
 
-            $(column).find(this.tagc.size_changer_number).html(new_size+screenSizeText.toUpperCase());
+        /** Updates the displayed size without changing classes when entering resize mode or switching devices. */
+        update_column_size_label: function(column) {
+            $(column).children(this.tagc.size_changer).find(this.tagc.size_changer_number)
+                .text(this.get_actual_column_size(column)+' / '+this.options.max_col_size)
+                .append($('<small>').text(this.get_column_size_suffix()));
         },
 
         listen_for_shift_key: function(e) {
@@ -2327,16 +2376,15 @@
         allow_resize_columns: function (el) {
             var container = $(el).closest(this.tagc.container);
             $(container).addClass(this.state.is_resize_columns);
-            this.update_notify_content("<iwcm:text key='pagebuilder.column.resize'/>",'');
-
-            //aktualizuj cisla
-            //console.log("element:", $(container).find(this.tagc.size_changer).find(this.tagc.size_changer_number));
+            if (!this.ui) this.update_notify_content("<iwcm:text key='pagebuilder.column.resize'/>",'');
             var me = this;
-            $(container).find(this.tagc.size_changer).find(this.tagc.size_changer_number).each(function(index) {
-                //console.log("update size, this=", this);
-                me.change_column_size($(this), 0);
-                //sizeEl.html(this.get_actual_column_size(el));
-            })
+            $(container).find(this.tagc.column).each(function() {
+                // Reserve space inside the column, including short headings and narrow columns.
+                $(this).children(me.tagc.size_changer).prependTo(this);
+                me.update_column_size_label($(this));
+            });
+            me.refresh_workbench_selection();
+            me.schedule_workbench();
         },
 
         /*==================================================================
@@ -2344,8 +2392,14 @@
         /*=================================================================*/
 
         cancel_resize_columns: function () {
+            var me = this;
+            me.$wrapper.find('.'+me.state.is_resize_columns).find(me.tagc.column).each(function() {
+                $(this).children(me.tagc.size_changer).appendTo(this);
+            });
             $(this.tagc._grid_element).removeClass(this.state.is_resize_columns);
             this.set_toolbar_invisible();
+            this.refresh_workbench_selection();
+            this.schedule_workbench();
         },
 
         /*==================================================================
@@ -3733,6 +3787,7 @@
         disable_after_esc_pressed: function (forceEsc) {
             //console.log("forceEsc=", forceEsc);
             if(this.esc_key_down || (typeof forceEsc != "undefined" && forceEsc==true)) {
+                if (this.$wrapper.find('.'+this.state.is_resize_columns).length) this.cancel_resize_columns();
 
                 if($(this.$wrapper).hasClass(this.state.has_child_toolbar_active) && !$(this.$wrapper).hasClass(this.state.is_notify_active)){
                     this.set_toolbar_invisible();

@@ -596,10 +596,15 @@ Scenario('pagebuilder', async ({ I, DTE, Document }) => {
 
     I.click('.pb-workbench [data-pb-action=resize]');
     I.waitForVisible('.pb-is-resize-columns .pb-size-changer', 10);
-    I.moveCursorTo('.pb-workbench-path');
+    I.waitForVisible('.pb-workbench [data-pb-action=resize][aria-pressed=true]:enabled', 10);
+    I.waitForVisible('.pb-resize-hint', 10);
+    I.dontSee('pagebuilder.ui.resize.', '.pb-resize-hint');
+    I.dontSeeElement('.pb-notify');
+    I.moveCursorTo('.pb-resize-hint > span');
     Document.screenshot('/redactor/webpages/pagebuilder-width.png');
-    I.pressKey('Escape');
+    I.click('.pb-resize-hint [data-pb-action=end-resize]');
     I.waitForInvisible('.pb-is-resize-columns', 10);
+    I.waitForInvisible('.pb-resize-hint', 10);
 
     I.click('.pb-workbench [data-pb-action=more]');
     I.click('.pb-workbench [data-pb-action=style]');

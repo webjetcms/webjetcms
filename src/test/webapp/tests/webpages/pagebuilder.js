@@ -1247,6 +1247,170 @@ Scenario('workbench hover outlines preserve selection and match click geometry',
     DTE.cancel();
 });
 
+Scenario('workbench column sizing outlines, toolbar exit and responsive values', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    const before = await workbenchGeometry(I);
+    const resize = '.pb-workbench [data-pb-action=resize]';
+    const hint = '.pb-resize-hint';
+    const originalButton = await I.executeScript((root, selector) => {
+        const button = document.querySelector(selector);
+        return {text: button.textContent, icon: button.querySelector('svg').outerHTML, label: button.getAttribute('aria-label')};
+    }, resize);
+    I.click('.pb-workbench [data-pb-action=guides]');
+    const initialHtml = await I.executeScript(() => window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data);
+    I.click(resize);
+    I.waitForVisible(resize+'[aria-pressed=true]:enabled', 10);
+    I.waitForVisible(hint, 10);
+    I.dontSeeElement('.pb-insert-hint');
+    assert.deepStrictEqual(await I.executeScript((root, selector) => {
+        const button = document.querySelector(selector);
+        return {text: button.textContent, icon: button.querySelector('svg').outerHTML, label: button.getAttribute('aria-label')};
+    }, resize), originalButton, 'Entering sizing mode must preserve the width button value, icon and label');
+    I.waitForVisible('.pb-outline-layer.is-resizing .pb-outline:not([hidden])', 10);
+    const widths = entries => entries.map(({left, width}) => ({left, width}));
+    assert.deepStrictEqual(widths(await workbenchGeometry(I)), widths(before), 'The internal control strip must preserve column and text widths');
+    I.click(resize);
+    I.waitForInvisible('.pb-is-resize-columns', 10);
+    I.waitForInvisible(hint, 10);
+    assert.deepStrictEqual(await workbenchGeometry(I), before, 'Leaving sizing mode without edits must restore the original geometry and text wrapping');
+    I.click(resize);
+    I.waitForVisible('.pb-outline-layer.is-resizing .pb-outline:not([hidden])', 10);
+    await I.usePlaywrightTo('verify all sizing outlines, responsive edits and keyboard exit', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        const checkHint = async (marker, range) => {
+            const text = await frame.locator(hint+' strong').textContent();
+            assert.ok(text.includes(marker) && text.includes(range), 'The hint must explain the active breakpoint');
+            assert.ok(!(await frame.locator(hint).textContent()).includes('pagebuilder.ui.'), 'Hint translations must be available');
+            const appearance = await frame.evaluate(({resize, hint}) => ({
+                button: getComputedStyle(document.querySelector(resize)).backgroundColor,
+                hint: getComputedStyle(document.querySelector(hint)).backgroundColor,
+                insertion: getComputedStyle(document.querySelector('.pb-insert-hint')).backgroundColor
+            }), {resize, hint});
+            assert.equal(appearance.hint, appearance.insertion, 'Both mode hints must use the same appearance');
+            assert.equal(appearance.button, appearance.insertion, 'The active width button must be highlighted');
+        };
+        await checkHint('XL', '1200');
+        const checkControls = async () => {
+            const controls = await frame.locator('.pb-is-resize-columns .pb-size-changer').evaluateAll(nodes => nodes.filter(node => node.getClientRects().length).map(node => {
+                const column = node.parentElement.getBoundingClientRect();
+                const rect = node.getBoundingClientRect();
+                const content = Array.from(node.parentElement.children).find(child => !child.matches('aside'));
+                const css = getComputedStyle(node);
+                return {
+                    inside: [node, ...node.children].every(child => {
+                        const bounds = child.getBoundingClientRect();
+                        return bounds.left >= column.left - 0.5 && bounds.right <= column.right + 0.5 && bounds.top >= column.top - 0.5 && bounds.bottom <= column.bottom + 0.5;
+                    }),
+                    aboveContent: !content || rect.bottom <= content.getBoundingClientRect().top + 0.5,
+                    border: css.borderTopWidth,
+                    shadow: css.boxShadow
+                };
+            }));
+            assert.ok(controls.length > 0, 'Sizing controls must be visible');
+            controls.forEach(control => {
+                assert.ok(control.inside, 'Every width control and button must stay inside its own column');
+                assert.ok(control.aboveContent, 'The internal control strip must not cover authored content');
+                assert.equal(control.border, '0px', 'Width controls must not add another frame');
+                assert.equal(control.shadow, 'none');
+            });
+            return controls.length;
+        };
+        await checkControls();
+        const state = await frame.evaluate(selector => {
+            const pb = window.pageBuilder;
+            const columns = Array.from(document.querySelectorAll(selector+' .pb-column'));
+            const outlines = Array.from(document.querySelectorAll('.pb-outline:not([hidden])'));
+            return {
+                count: outlines.length,
+                geometry: outlines.map((node, index) => {
+                    const outline = node.getBoundingClientRect(), column = columns[index].getBoundingClientRect();
+                    return [column.left-outline.left, column.top-outline.top, outline.right-column.right, outline.bottom-column.bottom];
+                }),
+                types: outlines.map(node => node.dataset.type),
+                notifyVisible: document.querySelector('.pb-notify').getClientRects().length > 0,
+                selected: pb.ui.selected === columns[0],
+                preference: pb.ui.guideMode,
+                labels: columns.map(node => node.querySelector('.pb-size-changer__number').textContent),
+                html: window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data
+            };
+        }, workbenchFixture);
+        assert.equal(state.count, 2, 'Every resizable column must have its own outline, even with guides hidden');
+        assert.deepStrictEqual(state.types, ['column', 'column']);
+        state.geometry.forEach(offsets => offsets.forEach(offset => assert.ok(Math.abs(offset-4) < 0.5, 'Sizing outlines must follow each column independently')));
+        assert.equal(state.notifyVisible, false, 'Sizing must use the toolbar exit instead of the floating notice');
+        assert.equal(state.selected, true);
+        assert.equal(state.preference, 'hidden');
+        assert.equal(state.html, initialHtml, 'Entering sizing mode must not change saved content');
+        assert.ok(state.labels.every(label => label === '6 / 12XL'));
+
+        const second = frame.locator(workbenchFixture+' .pb-column').nth(1);
+        const up = second.locator('.pb-size-changer__up');
+        assert.ok(await up.getAttribute('aria-label'), 'Size buttons must have accessible names');
+        await up.focus();
+        await page.keyboard.press('Space');
+        await frame.waitForFunction(selector => document.querySelectorAll(selector+' .pb-column')[1].classList.contains('col-xl-7'), workbenchFixture);
+        await frame.waitForFunction(selector => {
+            const columns = document.querySelectorAll(selector+' .pb-column');
+            const outline = document.querySelectorAll('.pb-outline:not([hidden])')[1].getBoundingClientRect();
+            const rect = columns[1].getBoundingClientRect();
+            return rect.top > columns[0].getBoundingClientRect().top && Math.abs(rect.top-outline.top-4) < 0.5;
+        }, workbenchFixture);
+        await checkControls();
+        await frame.locator('.exit-inline-editor a[href*="pbSetWindowSize(\'tablet\')"]').click();
+        await frame.waitForFunction(selector => document.querySelectorAll(selector+' .pb-size-changer__number')[1].textContent === '6 / 12MD', workbenchFixture);
+        await checkHint('MD', '768–1199');
+        await up.click();
+        assert.ok(await second.evaluate(node => node.classList.contains('col-md-7') && node.classList.contains('col-xl-7')), 'Device edits must preserve the other breakpoint');
+        await checkControls();
+        await frame.locator(hint+' [data-pb-action=end-resize]').click();
+        await frame.waitForFunction(() => !document.querySelector('.pb-is-resize-columns') && !document.querySelector('.pb-outline:not([hidden])'));
+        assert.equal(await frame.locator(hint).isVisible(), false, 'The hint exit must close sizing mode');
+        assert.equal(await frame.evaluate(() => localStorage.getItem('webjet.pagebuilder.guides')), 'hidden');
+        assert.equal(await frame.evaluate(() => document.activeElement?.dataset.pbAction), 'resize');
+        await frame.locator(resize).click();
+        await frame.waitForFunction(() => !!document.querySelector('.pb-outline-layer.is-resizing .pb-outline:not([hidden])'));
+        await page.keyboard.press('Escape');
+        await frame.waitForFunction(() => !document.querySelector('.pb-is-resize-columns') && !document.querySelector('.pb-outline:not([hidden])'));
+        assert.equal(await frame.locator(resize).getAttribute('aria-pressed'), 'false');
+        assert.equal(await frame.locator(hint).isVisible(), false, 'Escape must also hide the sizing hint');
+        await frame.locator('.exit-inline-editor a[href*="pbSetWindowSize(\'desktop\')"]').click();
+        // The real page includes a short heading row directly above a multi-column row.
+        await frame.locator('.pb-column.col-3.text-center h3').first().click();
+        await frame.locator(resize).click();
+        await frame.waitForFunction(() => !!document.querySelector('.pb-outline-layer.is-resizing'));
+        await frame.locator('.pb-workbench-path').hover();
+        assert.ok(await checkControls() >= 4, 'The fixture must include the short heading and content columns');
+        await frame.locator('.exit-inline-editor a[href*="pbSetWindowSize(\'phone\')"]').click();
+        await frame.waitForFunction(() => innerWidth < 768);
+        await frame.waitForFunction(() => Array.from(document.querySelectorAll('.pb-is-resize-columns .pb-size-changer__number small')).every(node => node.textContent === ''));
+        await checkHint('', '768');
+        const narrow = await frame.locator(resize).evaluate(node => ({x: node.getBoundingClientRect().x, width: node.getBoundingClientRect().width}));
+        const viewport = await frame.evaluate(() => innerWidth);
+        assert.ok(narrow.x >= 0 && narrow.x + narrow.width <= viewport, 'The toolbar exit must remain reachable on mobile');
+        const exit = await frame.locator(hint+' [data-pb-action=end-resize]').evaluate(node => ({left: node.getBoundingClientRect().left, right: node.getBoundingClientRect().right}));
+        assert.ok(exit.left >= 0 && exit.right <= viewport, 'The hint exit must remain reachable beside wrapped text on mobile');
+        await checkControls();
+        const originalPrefix = await frame.evaluateHandle(() => window.pbScreenSizePrefix);
+        await frame.evaluate(() => {
+            window.pbScreenSizePrefix = () => 'col-sm-';
+            window.dispatchEvent(new Event('resize'));
+        });
+        await frame.waitForFunction(() => document.querySelector('.pb-resize-hint strong').textContent.startsWith('SM'));
+        assert.equal(await frame.locator(hint+' strong').textContent(), await frame.evaluate(() => 'SM — '+window.pageBuilder.ui.labels.resizeCustom), 'Custom breakpoints must not inherit guessed device ranges');
+        await frame.evaluate(original => {
+            window.pbScreenSizePrefix = original;
+            window.dispatchEvent(new Event('resize'));
+        }, originalPrefix);
+        await originalPrefix.dispose();
+        await page.keyboard.press('Escape');
+        await frame.waitForFunction(() => !document.querySelector('.pb-is-resize-columns'));
+        await frame.locator('.exit-inline-editor a[href*="pbSetWindowSize(\'desktop\')"]').click();
+    });
+    I.switchTo();
+    I.amAcceptingPopups();
+    DTE.cancel();
+});
+
 Scenario('workbench outline modes, offsets and remembered preference', async ({I, DTE, Document}) => {
     await openWorkbenchFixture(I, DTE, Document);
     const button = '.pb-workbench [data-pb-action=guides]';

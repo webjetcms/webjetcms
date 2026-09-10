@@ -60,7 +60,7 @@ Ponuka obsahuje iba operácie podporované vybraným typom. Bežný riadok slú�
 
 Najrýchlejší postup pridania bloku nevyžaduje označenie existujúcej sekcie ani stĺpca:
 
-1. Kliknite na **Pridať blok** (`+`) v hornej lište.
+1. Kliknite na **Pridať blok** (`+`) v hornej lište. Tlačidlo sa zvýrazní modrou a pod lištou sa zobrazí pomocník s pokynom na výber miesta a tlačidlom **Ukončiť · Esc**.
 2. V stránke kliknite na plus na mieste, kam chcete nový blok vložiť. Modré pásy označujú vloženie sekcie, ružové kontajnera a zelené pluská stĺpca. Miesta sú pred prvým blokom, medzi susednými blokmi a za posledným blokom. Názov pri páse a popis tlačidla pomáhajú určiť typ aj pozíciu.
 3. V otvorenej knižnici vyberte blok. Knižnica ponúka príslušný typ a v hornej časti pripomína miesto vloženia. Po vložení sa režim ukončí, nový blok sa označí a môžete upravovať jeho obsah.
 
@@ -82,7 +82,7 @@ Na konci stránky sa zobrazuje ikona `+` pre jednoduchšie pridanie novej sekcie
 
 Pri zapnutí režimu vkladania sa plynulo rozbalia dočasné medzery bez odscrollovania viditeľných miest. Šírky stĺpcov sa nemenia: pluská sa zobrazujú v medzerách medzi nimi, pri zalomení medzi riadkami a pri nedostatku priestoru nad obsahom. Rámiky výberu aj rámiky pod myšou sa počas výberu miesta skryjú.
 
-Zatvorením knižnice sa vrátite na vybrané plus. Režim vkladania ukončíte tlačidlom **Ukončiť**, klávesom **Escape** alebo opätovným kliknutím na `+` v lište. Medzery sa plynulo zbalia a fokus sa vráti na `+`. Kliknutie do obsahu ukončí režim a vyberie daný blok. Ak máte v systéme nastavené obmedzenie animácií, zobrazenie aj skrytie prebehne okamžite. Pomocné pásy sa neukladajú ani nezobrazujú v náhľade.
+Zatvorením knižnice sa vrátite na vybrané plus. Režim vkladania ukončíte tlačidlom **Ukončiť · Esc** v pomocníkovi, klávesom **Escape** alebo opätovným kliknutím na `+` v lište. Medzery sa plynulo zbalia a fokus sa vráti na `+`. Kliknutie do obsahu ukončí režim a vyberie daný blok. Ak máte v systéme nastavené obmedzenie animácií, zobrazenie aj skrytie prebehne okamžite. Pomocné pásy sa neukladajú ani nezobrazujú v náhľade.
 
 ## Štruktúra stránky a pokojné zobrazenie
 
@@ -94,7 +94,7 @@ Vybraná položka má tenký rámik vo farbe svojho typu, ktorý zodpovedá rám
 
 Skryté bloky majú označenie **Skrytý**. Ich výber nemení viditeľnosť ani aktívnu kartu stránky. Strom nepridáva do HTML nové názvy alebo identifikátory a neumožňuje presun ťahaním myšou. Na presun použite akcie hornej lišty.
 
-V strome sa pohybujete šípkami nahor a nadol. Vetvy otvárate a zatvárate šípkami doprava a doľava. Kláves **Enter** alebo medzerník vyberie položku a rozbalí jej zatvorenú vetvu. **Escape** zatvorí otvorenú ponuku či panel alebo zruší výber miesta presunu či vkladania.
+V strome sa pohybujete šípkami nahor a nadol. Vetvy otvárate a zatvárate šípkami doprava a doľava. Kláves **Enter** alebo medzerník vyberie položku a rozbalí jej zatvorenú vetvu. **Escape** zatvorí otvorenú ponuku či panel, ukončí nastavovanie šírky alebo zruší výber miesta presunu či vkladania.
 
 Tlačidlo s ikonou oka postupne prepína tri režimy:
 
@@ -109,19 +109,27 @@ Prehliadač si voľbu pamätá aj po opätovnom otvorení editora. Lišta, panel
 Editor umožňuje nastaviť odlišnú šírku stĺpca pre mobil, tablet a počítač:
 
 1. Pri výbere **Editor** zvoľte ikonou veľkosť zariadenia.
-2. Kliknite do požadovaného stĺpca a v lište vyberte **Šírka stĺpca**, napríklad `3 / 12`.
-3. Ovládacími tlačidlami pri stĺpcoch zmeňte ich šírku. Hodnota označuje počet dielov mriežky; v predvolenej 12-dielnej mriežke je `3` štvrtina a `12` celá šírka. Dostupná je aj hodnota `auto` pre automatické prispôsobenie.
-4. Režim nastavenia šírky ukončíte tlačidlom **Ukončiť** alebo klávesom **Escape**. Podľa potreby zvoľte ďalšie zariadenie a nastavte jeho šírky.
+2. Kliknite do požadovaného stĺpca a v lište vyberte **Šírka stĺpca**, napríklad `3 / 12`. Tlačidlo sa zvýrazní modrou a zachová si ikonu aj hodnotu. Pod lištou sa zobrazí rovnaký modrý pomocník ako pri vkladaní blokov; vysvetľuje práve upravovaný rozmer, napríklad **MD — Tablet (768–1199 px)**.
+3. Šípkami vnútri jednotlivých stĺpcov zmeňte ich šírku. Hodnota označuje počet dielov mriežky; v predvolenej 12-dielnej mriežke je `3 / 12` štvrtina a `12 / 12` celá šírka. Dostupná je aj hodnota `auto` pre automatické prispôsobenie.
+4. Režim ukončíte tlačidlom **Ukončiť · Esc** v pomocníkovi, klávesom **Escape** alebo opätovným kliknutím na tlačidlo šírky. Obnoví sa pôvodné nastavenie rámikov.
 
-![Ovládanie šírky stĺpcov v kontajneri](pagebuilder-width.png)
+Zelené rámiky počas nastavovania označujú všetky stĺpce v danom kontajneri, ktorých šírku môžete meniť, aj keď máte bežné rámiky skryté. Ovládače s jemným zeleným pozadím majú vyhradené miesto vnútri svojho stĺpca nad jeho obsahom. V úzkych stĺpcoch sa hodnota zobrazí nad šípkami. Po ukončení režimu sa miesto pre ovládače uvoľní.
+
+![Nastavenie šírky s modrým pomocníkom a ovládačmi vnútri stĺpcov](pagebuilder-width.png)
+
+Zariadenie môžete prepnúť aj počas nastavovania. Ovládače aj pomocník sa aktualizujú a ďalšie zmeny šírky sa použijú pre zvolené zariadenie.
 
 ![](pagebuilder-switcher.png)
 
-Predvolené veľkosti zariadení sú:
+Skratka vedľa hodnoty šírky označuje práve upravovanú veľkosť zariadenia. Predvolené nastavenia sú:
 
-- Desktop - šírka väčšia alebo rovná ako 1200 bodov (nastavuje CSS triedu `col-xl-`).
-- Tablet - šírka 768–1199 bodov (nastavuje CSS triedu `col-md-`).
-- Mobil - šírka menšia ako 768 bodov (nastavuje CSS triedu `col-`).
+| Zariadenie | Označenie | Šírka náhľadu | CSS trieda |
+| --- | --- | --- | --- |
+| Počítač | `XL` | od 1200 px | `col-xl-` |
+| Tablet | `MD` | 768–1199 px | `col-md-` |
+| Mobil | bez skratky | menej než 768 px | `col-` |
+
+Šablóna môže používať vlastné označenia a hranice rozlíšenia. V takom prípade pomocník zobrazí označenie podľa šablóny, napríklad `SM`, bez predvolených hraníc uvedených v tabuľke.
 
 <div class="video-container">
     <iframe width="560" height="315" src="https://www.youtube.com/embed/aru-B1vxReo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>

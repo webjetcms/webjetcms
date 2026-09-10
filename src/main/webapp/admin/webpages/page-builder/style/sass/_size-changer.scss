@@ -1,38 +1,66 @@
 .#{$prefix}-size-changer {
     display: none;
-    position: absolute;
-    top: $highlighter-size*3;
-    left: $highlighter-size*3;
-    height: $size-changer-size;
+    position: relative;
+    box-sizing: border-box;
+    align-items: center;
+    flex-wrap: wrap;
+    width: 110px;
+    max-width: 100%;
+    min-height: 24px;
+    margin: 0 0 6px;
     z-index: $size-changer-index;
-    overflow: hidden;
+    overflow: visible;
     white-space: nowrap;
-    background-color: $color-column;
-    border-bottom-right-radius: $size-changer-radius;
+    padding: 0;
+    background: rgba($color-column, .1);
+    border: 0;
+    border-radius: 3px;
+    box-shadow: none;
+    font: 400 12px/1.2 $font-family-base;
+    container: #{$prefix}-column-size / inline-size;
 
     button {
-        border: 0px;
+        appearance: none;
+        border: 0;
+        border-radius: 4px;
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
         background-color: transparent;
+        &:focus-visible { outline: 2px solid $secondary; outline-offset: 1px; box-shadow: 0 0 0 3px white; }
     }
 
     &__down,
     &__up,
     &__number {
-        display: inline-block;
-        width: $size-changer-size;
-        height: $size-changer-size;
-        line-height: $size-changer-size;
-        overflow: hidden;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        width: 24px;
+        height: 24px;
+        line-height: 1.2;
         text-align: center;
-        font-size: 13px;
-        color: $color-dark-text;
-        font-weight: bold;
+        font-size: 12px;
+        color: $secondary;
+        font-weight: 600;
         background-repeat: no-repeat;
         background-position: center;
         background-size: auto $toolbar-icon-size;
     }
     &__number {
-        width: 60px;
+        width: auto;
+        flex: 1 1 auto;
+        min-width: 54px;
+        padding: 0 4px;
+        gap: 5px;
+        font-variant-numeric: tabular-nums;
+        small {
+            font-size: 10px;
+            font-weight: 400;
+            color: $dark-60;
+            &:empty { display: none; }
+        }
     }
 
     &__down,
@@ -41,15 +69,33 @@
 
         &:hover {
             cursor: pointer;
-            background-color: darken($color-column, 5%);
+            background-color: rgba($color-column, .15);
         }
+        &:active { background-color: rgba($color-column, .25); }
+        &::before { text-indent: 0; }
+        &:focus-visible::before { opacity: 1; visibility: visible; }
     }
 
     &__down {   background-image: $icon-left; }
     &__up {     background-image: $icon-right; }
 
     .#{$prefix}-container.#{$prefix}-is-resize-columns & {
-        display: block;
+        display: flex;
     }
-
+    @container #{$prefix}-column-size (max-width: 100px) {
+        &__number {
+            order: -1;
+            flex-basis: 100%;
+            flex-wrap: wrap;
+            min-width: 0;
+            height: auto;
+            min-height: 24px;
+            padding: 2px 0;
+            white-space: normal;
+        }
+        &__down, &__up { width: 50%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        button::before { transition: none; }
+    }
 }
