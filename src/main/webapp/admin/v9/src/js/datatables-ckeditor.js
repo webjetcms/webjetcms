@@ -593,11 +593,39 @@ export class DatatablesCkEditor {
 					}
 
 					// Thumb tab - configure /thumb image parameters
+					var strictThumbSizes = ev.editor.config.thumbServletAllowedSizeMode === 'strict';
+					var allowedThumbSizes = strictThumbSizes ? [...new Set((ev.editor.config.thumbServletAllowedSizes || '').split(/[,\r\n]+/).map(value => value.trim()))]
+						.map(parseAllowedThumbSize).filter(size => size !== null)
+						.sort((a, b) => Number(a.width) - Number(b.width) || Number(a.height) - Number(b.height) || a.value.localeCompare(b.value)) : [];
+
 					dialogDefinition.addContents(
 					{
 						id: 'thumb',
 						label: that.translate("thumbTabTitle"),
-						elements: [
+						elements: strictThumbSizes ? [{
+							type: 'select',
+							id: 'thumbAllowedSize',
+							label: that.translate("allowedSize"),
+							'default': '',
+							items: [['', ''], ...allowedThumbSizes.map(size => {
+								var modeLabel = that.translate("thumbIp" + size.ipMode) || that.translate("thumbIpMode");
+								var label = size.width + ' x ' + size.height + ' (' + size.ipMode + ' - ' + modeLabel + ')';
+								if (size.bgColor) label += ', ' + that.translate("thumbBackgroundColor") + ': #' + size.bgColor;
+								if (size.noIp) label += ', ' + that.translate("thumbNoIp");
+								if (size.quality) label += ', ' + that.translate("thumbQuality") + ': ' + size.quality;
+								return [label, size.value];
+							})],
+							setup: function(type, element) {
+								if (type !== 1) return;
+								this.setValue(findAllowedThumbSize(element.getAttribute('class') || '', element.getAttribute('src') || ''), true);
+							},
+							onChange: function() {
+								updateThumbUrl(this.getDialog());
+							},
+							validate: function() {
+								return allowedThumbSizes.some(size => size.value === this.getValue()) || that.translate("allowedSizeRequired");
+							}
+						}] : [
 							{
 								type: 'select',
 								id: 'thumbIpMode',
@@ -679,6 +707,47 @@ export class DatatablesCkEditor {
 						]
 					}, 'info');
 
+					/** Parses the cache-size format used by ThumbServlet, including optional POI, color and quality. */
+					function parseAllowedThumbSize(value) {
+						var match = /^(\d+)x(\d+)(?:ip([0-6]))?(n)?(?:c([a-fA-F0-9]{6}))?(?:q(\d+))?$/.exec(value);
+						if (!match || Number(match[1]) < 1 || Number(match[2]) < 1) return null;
+						return { value, width: match[1], height: match[2], ipMode: match[3] || '0', noIp: !!match[4], bgColor: match[5] || '', quality: match[6] || '' };
+					}
+
+					/** Matches existing image settings against the cache key checked by ThumbServlet. */
+					function findAllowedThumbSize(classNames, url) {
+						var match = /(?:^|\s)fixedSize-(\d+)-(\d+)(?:-(\d+))?(?:-([a-fA-F0-9]{6}))?(?:-(true))?(?:-q(\d+))?(?=\s|$)/.exec(classNames);
+						var width = match ? match[1] : WJ.urlGetParam('w', url);
+						var height = match ? match[2] : WJ.urlGetParam('h', url);
+						var ipMode = (match && match[3]) || WJ.urlGetParam('ip', url) || '0';
+						var color = WJ.urlGetParam('c', url) || (match && match[4]) || '';
+						var noIp = WJ.urlGetParam('noip', url) === 'true' || !!(match && match[5]);
+						var quality = WJ.urlGetParam('q', url) || (match && match[6]) || '';
+						if (ipMode === '1') height = width;
+						if (ipMode === '2') width = height;
+						var value = width + 'x' + height;
+						if (Number(ipMode) > 0) value += 'ip' + ipMode;
+						if (noIp) value += 'n';
+						if (color && color.toLowerCase() !== 'ffffff') value += 'c' + color.toLowerCase();
+						if (Number(quality) > 10 && Number(quality) <= 100) value += 'q' + quality;
+						return allowedThumbSizes.some(size => size.value === value) ? value : '';
+					}
+
+					function getThumbValues(dialog) {
+						if (strictThumbSizes) {
+							var value = dialog.getContentElement('thumb', 'thumbAllowedSize').getValue();
+							return allowedThumbSizes.some(size => size.value === value) ? parseAllowedThumbSize(value) : null;
+						}
+						return {
+							width: dialog.getContentElement('thumb', 'thumbWidth').getValue(),
+							height: dialog.getContentElement('thumb', 'thumbHeight').getValue(),
+							ipMode: dialog.getContentElement('thumb', 'thumbIpMode').getValue(),
+							bgColor: dialog.getContentElement('thumb', 'thumbBackgroundColor').getValue().replace(/^#/, ''),
+							noIp: dialog.getContentElement('thumb', 'thumbNoIp').getValue(),
+							quality: WJ.urlGetParam('q', dialog.getContentElement('info', 'txtUrl').getValue()) || ''
+						};
+					}
+
 					// Helper function to update thumb tab field visibility
 					function updateThumbTabVisibility(thumbElement) {
 						var dialog = thumbElement.getDialog();
@@ -715,23 +784,21 @@ export class DatatablesCkEditor {
 					}
 
 					// Helper function to generate CSS class from thumb tab values
-					// Format: fixedSize-w-h-ip[-color][-true] where color is hex without # or c prefix
+					// Format: fixedSize-w-h-ip[-color][-true][-qQuality] where color is hex without # or c prefix
 					function generateThumbClass(dialog) {
-						var width = dialog.getContentElement('thumb', 'thumbWidth').getValue();
-						var height = dialog.getContentElement('thumb', 'thumbHeight').getValue();
-						var ipMode = dialog.getContentElement('thumb', 'thumbIpMode').getValue();
-						var bgColor = dialog.getContentElement('thumb', 'thumbBackgroundColor').getValue();
-						var noIp = dialog.getContentElement('thumb', 'thumbNoIp').getValue();
+						var values = getThumbValues(dialog);
+						if (!values) return;
+						var { width, height, ipMode, bgColor, noIp, quality } = values;
 
 						// Remove existing fixedSize class (all formats)
 						var currentClass = dialog.getContentElement('advanced', 'txtGenClass').getValue();
-						currentClass = currentClass.replace(/\s*fixedSize-\d+-\d+(?:-\d+)?(?:-[a-fA-F0-9]{6})?(?:-true)?/g, '').trim();
+						currentClass = currentClass.replace(/\s*fixedSize-\d+-\d+(?:-\d+)?(?:-[a-fA-F0-9]{6})?(?:-true)?(?:-q\d+)?/g, '').trim();
 
 						// Generate new class: fixedSize-w-h-ip (required) + optional color and/or noip
 						if (ipMode && (width || height)) {
 							var newClass = 'fixedSize-' + (width || '0') + '-' + (height || '0') + '-' + ipMode;
 							// Add color if present (strip # prefix, no c prefix)
-							if (bgColor && (ipMode == "3" || ipMode == "4")) {
+							if (bgColor && (strictThumbSizes || ipMode == "3" || ipMode == "4")) {
 								var colorValue = bgColor.replace(/^#/, '');
 								newClass += '-' + colorValue;
 							}
@@ -739,6 +806,7 @@ export class DatatablesCkEditor {
 							if (noIp) {
 								newClass += '-true';
 							}
+							if (quality) newClass += '-q' + quality;
 							currentClass = (currentClass ? currentClass + ' ' : '') + newClass;
 						}
 
@@ -748,15 +816,10 @@ export class DatatablesCkEditor {
 					}
 
 					function updateThumbUrl(dialog) {
+						var values = getThumbValues(dialog);
+						if (!values) return;
+						var { width, height, ipMode, bgColor: color, noIp, quality } = values;
 						var txtUrl = dialog.getContentElement("info", "txtUrl").getValue();
-						var width = dialog.getContentElement('thumb', 'thumbWidth').getValue();
-						var height = dialog.getContentElement('thumb', 'thumbHeight').getValue();
-						var ipMode = dialog.getContentElement('thumb', 'thumbIpMode').getValue();
-						var color = dialog.getContentElement('thumb', 'thumbBackgroundColor').getValue();
-						if (color.indexOf("#") === 0) {
-							color = color.substring(1);
-						}
-						var noIp = dialog.getContentElement('thumb', 'thumbNoIp').getValue();
 
 						if (ipMode === "") {
 							//remove /thumb prefix and ?w,h,ip URL parameters
@@ -766,6 +829,7 @@ export class DatatablesCkEditor {
 							txtUrl = WJ.urlRemoveParam(txtUrl, 'ip');
 							txtUrl = WJ.urlRemoveParam(txtUrl, 'c');
 							txtUrl = WJ.urlRemoveParam(txtUrl, 'noip');
+							txtUrl = WJ.urlRemoveParam(txtUrl, 'q');
 							//remove last & or ? if it's the last parameter
 							txtUrl = txtUrl.replace(/(\?|&)$/, '');
 						} else {
@@ -777,8 +841,11 @@ export class DatatablesCkEditor {
 							txtUrl = WJ.urlUpdateParam(txtUrl, 'h', height);
 							txtUrl = WJ.urlUpdateParam(txtUrl, 'ip', ipMode);
 
-							if (ipMode == "3" || ipMode == "4") txtUrl = WJ.urlUpdateParam(txtUrl, 'c', color);
+							if (color && (strictThumbSizes || ipMode == "3" || ipMode == "4")) txtUrl = WJ.urlUpdateParam(txtUrl, 'c', color);
 							else txtUrl = WJ.urlRemoveParam(txtUrl, 'c');
+
+							if (quality) txtUrl = WJ.urlUpdateParam(txtUrl, 'q', quality);
+							else txtUrl = WJ.urlRemoveParam(txtUrl, 'q');
 
 							if (noIp) {
 								txtUrl = WJ.urlUpdateParam(txtUrl, 'noip', 'true');
