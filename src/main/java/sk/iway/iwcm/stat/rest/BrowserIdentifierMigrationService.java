@@ -292,19 +292,14 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
             }
             refreshStatKeyCacheIfNeeded(keyMappings);
 
-            State cleanupState = getStateSnapshot();
-            cleanupState.setTableIndex(0);
-            cleanupState.setTotalTables(1);
-            cleanupState.setTable("seo_bots / stat_keys");
-            cleanupState.setCursor(0);
-            cleanupState.setTableMaxId(1);
-            publishRunningState(cleanupState);
-
             FinalizationResult result;
             try (Connection connection = DBPool.getConnection()) {
+                List<Mapping> unusedKeys = findUnusedStatKeys(connection, keyMappings.mappings());
                 connection.setAutoCommit(false);
                 try {
-                    result = finalizeIdentifiers(connection, botMappings, keyMappings.mappings());
+                    finalizeSeoBots(connection, botMappings);
+                    int deleted = deleteStatKeys(connection, unusedKeys);
+                    result = new FinalizationResult(deleted, keyMappings.mappings().size() - deleted);
                     connection.commit();
                 } catch (SQLException ex) {
                     connection.rollback();
@@ -1065,26 +1060,70 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
     }
 
     /**
-     * Finalizes both browser rows and shared stat-key rows in one transaction.
+     * Finds obsolete stat keys that are no longer referenced by any statistics dimension.
      *
-     * @param connection transactional connection used for all cleanup operations
-     * @param botMappings duplicate {@code seo_bots} rows to merge and delete
-     * @param keyMappings obsolete {@code stat_keys} rows to delete
-     * @return counts of deleted and database-retained stat-key rows
-     * @throws SQLException if either cleanup operation fails
+     * <p>Each table is scanned at most once, selecting distinct combinations of its available
+     * key columns together. Used candidates are removed immediately, and remaining tables are
+     * skipped when no deletion candidates remain. Progress is published before and after each
+     * table; a zero table maximum denotes a scan of unknown duration.</p>
+     *
+     * @param connection connection used for read-only reference checks before the cleanup transaction
+     * @param mappings obsolete identifiers considered for deletion
+     * @return only mappings whose source IDs have no remaining statistics references
+     * @throws SQLException if any reference check fails, preventing identifier deletion
      */
-    private FinalizationResult finalizeIdentifiers(Connection connection, List<Mapping> botMappings,
-                                                     List<Mapping> keyMappings) throws SQLException {
-        finalizeSeoBots(connection, botMappings);
-        int deleted = deleteStatKeys(connection, keyMappings);
-        return new FinalizationResult(deleted, keyMappings.size() - deleted);
+    List<Mapping> findUnusedStatKeys(Connection connection, List<Mapping> mappings) throws SQLException {
+        Set<Long> unusedIds = new HashSet<>();
+        for (Mapping mapping : mappings) unusedIds.add(mapping.sourceId);
+        List<String> tables = unusedIds.isEmpty() ? List.of() : discoverTables(connection);
+        State state = getStateSnapshot();
+        state.setTableIndex(0);
+        state.setTotalTables(tables.size() + 1);
+
+        for (String table : tables) {
+            if (unusedIds.isEmpty()) break;
+            state.setTable(table);
+            state.setCursor(0);
+            state.setTableMaxId(0);
+            publishRunningState(state);
+
+            Set<String> columns = readTableColumns(connection, table);
+            List<String> keyColumns = List.of("browser_ua_id", "platform_id", "subplatform_id").stream()
+                .filter(columns::contains).toList();
+            if (keyColumns.isEmpty() == false) {
+                String sql = "SELECT DISTINCT " + String.join(", ", keyColumns) + " FROM " + table;
+                try (PreparedStatement ps = connection.prepareStatement(sql);
+                     ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        for (int column = 1; column <= keyColumns.size(); column++) {
+                            long id = rs.getLong(column);
+                            if (rs.wasNull() == false) unusedIds.remove(id);
+                        }
+                        state.setScanned(state.getScanned() + 1);
+                        if (unusedIds.isEmpty()) break;
+                    }
+                }
+            }
+            state.setRetainedStatKeys(mappings.size() - unusedIds.size());
+            state.setTableIndex(state.getTableIndex() + 1);
+            state.setTableMaxId(1);
+            state.setCursor(1);
+            publishRunningState(state);
+        }
+
+        state.setTableIndex(tables.size());
+        state.setTable("seo_bots / stat_keys");
+        state.setCursor(0);
+        state.setTableMaxId(1);
+        publishRunningState(state);
+        return mappings.stream().filter(mapping -> unusedIds.contains(mapping.sourceId)).toList();
     }
 
     /**
      * Deletes obsolete source rows from {@code stat_keys} in bounded JDBC batches.
      *
      * @param connection transactional connection used for deletion
-     * @param mappings mappings whose source IDs should be removed
+     * @param mappings mappings whose source IDs were verified as unused by {@link #findUnusedStatKeys}
      * @return number of rows reported as deleted by the database driver
      * @throws SQLException if a delete batch fails
      */
