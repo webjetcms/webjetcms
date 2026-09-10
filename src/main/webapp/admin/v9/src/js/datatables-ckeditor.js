@@ -605,6 +605,7 @@ export class DatatablesCkEditor {
 								'default': '',
 								items: [
 									['', ''],
+									['0 - ' + that.translate("thumbIp0"), '0'],
 									['1 - ' + that.translate("thumbIp1"), '1'],
 									['2 - ' + that.translate("thumbIp2"), '2'],
 									['3 - ' + that.translate("thumbIp3"), '3'],
@@ -706,7 +707,7 @@ export class DatatablesCkEditor {
 						} else {
 							colorField.getElement().hide();
 						}
-						if (ipMode == '') {
+						if (ipMode == '' || ipMode == '0') {
 							dialog.getContentElement('thumb', 'thumbNoIp').getElement().hide();
 						} else {
 							dialog.getContentElement('thumb', 'thumbNoIp').getElement().show();
