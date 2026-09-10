@@ -60,7 +60,7 @@ CODECEPT_URL="http://demotest.webjetcms.sk" CODECEPT_SHOW=false npm run all
 
 ### Testy JavaScript funkcií a komponentov
 
-Súbory `src/test/webapp/helpers/*.test.js` používa vstavaný testovací nástroj Node.js (`node:test`). Overujú jednotlivé funkcie a komponenty, napríklad parsovanie povolených rozmerov miniatúr alebo správanie JSON editora. Dopĺňajú E2E testy v `tests/**/*.js`, ktoré overujú celé používateľské postupy v spustenom WebJET CMS. Príkaz `npm run all` zahŕňa aj helper testy prostredníctvom CodeceptJS scenárov v `tests/helpers/node-tests.js`.
+Súbory `src/test/webapp/helpers/*.test.js` používa vstavaný testovací nástroj Node.js (`node:test`). Overujú jednotlivé funkcie a komponenty, napríklad správanie JSON editora. Dopĺňajú E2E testy v `tests/**/*.js`, ktoré overujú celé používateľské postupy v spustenom WebJET CMS. Príkaz `npm run all` zahŕňa aj helper testy prostredníctvom CodeceptJS scenárov v `tests/helpers/node-tests.js`.
 
 Všetky helper testy spustíte z priečinka `src/test/webapp`:
 
@@ -71,11 +71,11 @@ npm run test:helpers
 Konkrétny súbor alebo test podľa názvu spustíte priamo cez Node.js:
 
 ```shell
-node --test helpers/ckeditor-thumb.test.js
-node --test --test-name-pattern="clearing the size" helpers/ckeditor-thumb.test.js
+node --test helpers/jsoneditor.test.js
+node --test --test-name-pattern="rejects every non-object root" helpers/jsoneditor.test.js
 ```
 
-Použite Node.js 22 a nainštalujte npm závislosti v `src/test/webapp` aj v `src/main/webapp/admin/v9` podľa postupu vyššie. Tieto testy nepotrebujú spustený aplikačný server ani databázu. Niektoré otvárajú lokálne komponenty v Chromium cez Playwright, preto musí byť nainštalovaný aj tento prehliadač (`npx playwright install chromium` z priečinka `src/test/webapp`; na Linuxe je možné doinštalovať systémové závislosti pomocou `npx playwright install --with-deps chromium`).
+Použite Node.js 22 a nainštalujte npm závislosti v `src/test/webapp` aj v `src/main/webapp/admin/v9` podľa postupu vyššie. Tieto testy nepotrebujú spustený aplikačný server ani databázu. Niektoré otvárajú lokálne komponenty v Chromium cez Playwright, preto musí byť nainštalovaný aj tento prehliadač (`npx playwright install chromium` z priečinka `src/test/webapp`; na Linuxe je možné nainštalovať systémové závislosti pomocou `npx playwright install --with-deps chromium`).
 
 Výpis obsahuje názvy úspešných a neúspešných testov, pri chybe aj očakávanú a skutočnú hodnotu alebo popis chyby. Úspešné spustenie končí návratovým kódom `0`, zlyhanie nenulovým kódom. Nové testy ukladajte priamo do `helpers` s príponou `.test.js`, aby ich spoločný príkaz automaticky zahrnul.
 
@@ -88,7 +88,13 @@ npm run all -- tests/helpers/node-tests.js
 npx allure serve ../../../build/test/allure-results
 ```
 
-Pre výber jediného súboru pridajte k príkazu CodeceptJS napríklad `--grep "ckeditor-thumb"`. Samostatný `npm run test:helpers` zostáva rýchlym lokálnym spustením s výsledkami iba v konzole.
+Pre výber konkrétnych súborov pridajte k príkazu CodeceptJS napríklad `--grep "jsoneditor"`. Samostatný `npm run test:helpers` zostáva rýchlym lokálnym spustením s výsledkami iba v konzole.
+
+Zobrazenie povolených rozmerov miniatúr v CKEditore overuje bežný E2E test `tests/webpages/editor-thumb.js`. Prepne konfiguráciu na `strict`, overí možnosti na stránke s `docid=57` a v samostatnom scenári obnoví režim `learn`. Spúšťajte celý súbor, aby sa vykonal aj návrat konfigurácie:
+
+```shell
+npm run all -- tests/webpages/editor-thumb.js
+```
 
 ### Codecept UI
 
