@@ -116,6 +116,38 @@ Scenario('checks permissions', ({ I }) => {
     I.see('Na túto aplikáciu/funkciu nemáte prístupové práva');
 });
 
+Scenario('shows error merge progress before completing the table', ({ I }) => {
+    const state = {
+        tableIndex: 1,
+        totalTables: 3,
+        cursor: 500,
+        tableMaxId: 1000,
+        running: true,
+        mergingStatErrors: true,
+        table: 'stat_error_2024_2'
+    };
+    I.usePlaywrightTo('mock error counter merging', async ({ page }) => {
+        await page.route('**/admin/rest/settings/stat-browser-migration/status', route => route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify(state)
+        }));
+    });
+    I.amOnPage('/admin/v9/settings/stat-browser-migration/?userlngr=true');
+    I.waitForText('Zlučovanie záznamov chýb', 10, '#migrationProgress');
+    I.see('stat_error_2024_2', '#migrationTable');
+    I.see('33%', '#migrationOverallProgress');
+    I.seeElement('#migrationProgress.progress-bar-striped.progress-bar-animated');
+    I.dontSeeElement('#migrationProgress[aria-valuenow]');
+    I.verifyDisabled('#migrationStart');
+
+    I.usePlaywrightTo('complete the mocked merge', async () => {
+        Object.assign(state, { mergingStatErrors: false, tableIndex: 2, cursor: 0, tableMaxId: 0 });
+    });
+    I.waitForText('67%', 10, '#migrationOverallProgress');
+    I.seeElement('#migrationProgress[aria-valuenow="0"]:not(.progress-bar-animated)');
+});
+
 Scenario('logout', ({ I }) => {
     I.logout();
 });

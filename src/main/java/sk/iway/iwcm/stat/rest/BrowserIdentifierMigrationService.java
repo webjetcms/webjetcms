@@ -57,6 +57,7 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
 
     private static final int ROW_BATCH_SIZE = 1_000;
     private static final int UPDATE_BATCH_SIZE = 500;
+    private static final String STAT_ERROR_COLUMNS = "year, week, url, query_string, browser_ua_id, domain_id";
     private static final Pattern VERSION_SUFFIX = Pattern.compile("(?i)\\s+v?\\d+(?:[._-]\\d+)*$");
     private static final Pattern VERSION_ONLY = Pattern.compile("(?i)^v?\\d+(?:[._-]\\d+)*$");
     private final Object stateLock = new Object();
@@ -134,6 +135,7 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         private boolean paused;
         private boolean done;
         private boolean finalizing;
+        private boolean mergingStatErrors;
         private boolean finalized;
         private int deletedStatKeys;
         private int retainedStatKeys;
@@ -453,7 +455,7 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
                 } else {
                     state.setCursor(lastId);
                 }
-            } catch (SQLException ex) {
+            } catch (SQLException | RuntimeException ex) {
                 connection.rollback();
                 throw ex;
             }
@@ -461,13 +463,13 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
     }
 
     /**
-     * Applies one mapping chunk to a {@code stat_error} table using a set-based update.
+     * Rewrites one mapping chunk and merges colliding error counters before advancing progress.
      *
      * @param connection transactional connection used for the current batch
      * @param table {@code stat_error} table being updated
      * @param state detached state whose mapping cursor and counters are advanced
      * @param mappings ordered browser-key mappings processed by cursor offset
-     * @throws SQLException if the set-based update fails
+     * @throws SQLException if rewriting identifiers or merging their counters fails
      */
     private void processStatErrorBatch(Connection connection, TableDefinition table, State state,
                                        List<Mapping> mappings) throws SQLException {
@@ -475,7 +477,12 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         int offset = Math.toIntExact(state.getCursor());
         int end = Math.min(offset + UPDATE_BATCH_SIZE, mappings.size());
         if (offset < end) {
-            long updatedRows = updateStatErrorMappingBatch(connection, table.name, mappings.subList(offset, end));
+            List<Mapping> batch = mappings.subList(offset, end);
+            long updatedRows = updateStatErrorMappingBatch(connection, table.name, batch);
+            state.setMergingStatErrors(true);
+            publishRunningState(state);
+            mergeStatErrorCounts(connection, table.name, batch);
+            state.setMergingStatErrors(false);
             state.setUpdated(state.getUpdated() + updatedRows);
             state.setUpdatedStatErrors(state.getUpdatedStatErrors() + updatedRows);
             state.setScanned(state.getScanned() + updatedRows);
@@ -516,6 +523,56 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
             }
             for (Mapping mapping : mappings) ps.setLong(parameter++, mapping.sourceId);
             return ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Replaces duplicate error buckets for the current target IDs with their summed counters.
+     * Existing canonical rows participate in the same aggregation. Other browser IDs are untouched.
+     * Concurrent error writes are intentionally not synchronized with this one-time migration.
+     *
+     * @param connection transactional connection used for the current mapping batch
+     * @param table allowlisted table whose browser IDs have just been rewritten
+     * @param mappings mappings applied in the current batch
+     * @throws SQLException if aggregation or replacement fails; the caller must roll back the batch
+     */
+    private void mergeStatErrorCounts(Connection connection, String table, List<Mapping> mappings) throws SQLException {
+        List<Long> targetIds = mappings.stream().map(Mapping::getTargetId).distinct().toList();
+        if (targetIds.isEmpty()) return;
+        String select = "SELECT " + STAT_ERROR_COLUMNS + ", SUM(count) FROM " + table +
+            " WHERE browser_ua_id IN (" + String.join(",", java.util.Collections.nCopies(targetIds.size(), "?")) +
+            ") GROUP BY " + STAT_ERROR_COLUMNS + " HAVING COUNT(*)>1";
+        String predicate = String.join(" AND ", java.util.Arrays.stream(STAT_ERROR_COLUMNS.split(", "))
+            .map(column -> "(" + column + "=? OR (" + column + " IS NULL AND ? IS NULL))").toList());
+        try (PreparedStatement read = connection.prepareStatement(select);
+             PreparedStatement delete = connection.prepareStatement("DELETE FROM " + table + " WHERE " + predicate);
+             PreparedStatement insert = connection.prepareStatement("INSERT INTO " + table + " (" +
+                 STAT_ERROR_COLUMNS + ", count) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+            for (int i = 0; i < targetIds.size(); i++) read.setLong(i + 1, targetIds.get(i));
+            int pending = 0;
+            try (ResultSet rs = read.executeQuery()) {
+                while (rs.next()) {
+                    for (int column = 1; column <= 6; column++) {
+                        Object value = rs.getObject(column);
+                        int type = column == 3 || column == 4 ? Types.VARCHAR : Types.INTEGER;
+                        delete.setObject(column * 2 - 1, value, type);
+                        delete.setObject(column * 2, value, type);
+                        insert.setObject(column, value, type);
+                    }
+                    insert.setObject(7, rs.getObject(7), Types.BIGINT);
+                    delete.addBatch();
+                    insert.addBatch();
+                    if (++pending == UPDATE_BATCH_SIZE) {
+                        sumBatchResults(delete.executeBatch());
+                        sumBatchResults(insert.executeBatch());
+                        pending = 0;
+                    }
+                }
+            }
+            if (pending > 0) {
+                sumBatchResults(delete.executeBatch());
+                sumBatchResults(insert.executeBatch());
+            }
         }
     }
 
@@ -587,6 +644,7 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
             migrationState.setRunning(false);
             migrationState.setStopRequested(false);
             migrationState.setPaused(true);
+            migrationState.setMergingStatErrors(false);
             stopRequested = false;
         }
     }
@@ -602,6 +660,7 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
             migrationState.setStopRequested(false);
             migrationState.setPaused(false);
             migrationState.setFinalizing(false);
+            migrationState.setMergingStatErrors(false);
             migrationState.setError(ex.getMessage());
             stopRequested = false;
         }
@@ -628,6 +687,7 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         copy.setPaused(source.isPaused());
         copy.setDone(source.isDone());
         copy.setFinalizing(source.isFinalizing());
+        copy.setMergingStatErrors(source.isMergingStatErrors());
         copy.setFinalized(source.isFinalized());
         copy.setDeletedStatKeys(source.getDeletedStatKeys());
         copy.setRetainedStatKeys(source.getRetainedStatKeys());

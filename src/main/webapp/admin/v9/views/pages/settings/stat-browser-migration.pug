@@ -21,10 +21,15 @@ block content
                 $("#migrationTable").text(state.table || "—");
                 const percent = state.done ? 100 : (state.tableMaxId > 0 ? Math.min(100, Math.round(state.cursor * 100 / state.tableMaxId)) : 0);
                 const checkingReferences = state.running && state.finalizing && state.tableMaxId === 0;
-                $("#migrationProgress").css("width", checkingReferences ? "100%" : percent + "%")
-                    .toggleClass("progress-bar-striped progress-bar-animated", checkingReferences)
-                    .attr("aria-valuenow", checkingReferences ? null : percent)
-                    .text(checkingReferences ? "[[\#{stat.browser-migration.checking-references}]]" : percent + "%");
+                const mergingErrors = state.running && state.mergingStatErrors;
+                const indeterminate = checkingReferences || mergingErrors;
+                let progressText = percent + "%";
+                if (checkingReferences) progressText = "[[\#{stat.browser-migration.checking-references}]]";
+                if (mergingErrors) progressText = "[[\#{stat.browser-migration.merging-errors}]]";
+                $("#migrationProgress").css("width", indeterminate ? "100%" : percent + "%")
+                    .toggleClass("progress-bar-striped progress-bar-animated", indeterminate)
+                    .attr("aria-valuenow", indeterminate ? null : percent)
+                    .text(progressText);
                 const totalTables = state.totalTables || 0;
                 const completedTables = state.done ? totalTables : Math.min(state.tableIndex || 0, totalTables);
                 const overallPercent = state.done ? 100 : (totalTables > 0 ? Math.round(completedTables * 100 / totalTables) : 0);

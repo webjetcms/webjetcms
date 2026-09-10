@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.mockito.ArgumentMatchers.startsWith;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.spy;
@@ -34,6 +35,7 @@ import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
@@ -48,8 +50,8 @@ import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
 /**
- * Verifies that {@link BrowserIdentifierMigrationService} preserves referenced stat keys,
- * reports progress, and stops scanning once all deletion candidates are known to be in use.
+ * Verifies that {@link BrowserIdentifierMigrationService} preserves referenced stat keys and
+ * error totals, reports progress, and avoids unnecessary reference scans.
  *
  * <p>Database tests run on MariaDB using table definitions from the CI fixture
  * {@code .github/workflows/blank_web_autotest.sql}. Each database test uses an isolated schema,
@@ -57,6 +59,115 @@ import sk.iway.iwcm.test.BaseWebjetTest;
  * Database tests are skipped before any DDL if the original database contains {@code stat_views_2024_2}.</p>
  */
 class BrowserIdentifierMigrationReferenceTest extends BaseWebjetTest {
+
+    /**
+     * Verifies that current and monthly error tables retain one summed counter per affected bucket,
+     * count the next error once, and restore identifiers and counters if replacement fails.
+     */
+    @ParameterizedTest
+    @CsvSource({ "stat_error, false", "stat_error_2026_9, false", "stat_error, true", "stat_error_2026_9, true" })
+    void errorMigrationShouldMergeCountersBeforeAdvancingProgress(String table, boolean failMerge) throws Exception {
+        ExecutorService executor = mock(ExecutorService.class);
+        BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService(executor);
+        List<BrowserIdentifierMigrationService.State> progress = new ArrayList<>();
+        try (TestDatabase fixture = new TestDatabase("seo_bots", "stat_keys", "stat_error");
+             Statement sql = fixture.connection.createStatement();
+             MockedStatic<DBPool> dbPool = mockStatic(DBPool.class);
+             MockedStatic<UpdateDatabase> updates = mockStatic(UpdateDatabase.class);
+             MockedStatic<StatDB> statDB = mockStatic(StatDB.class);
+             MockedStatic<ClusterDB> cluster = mockStatic(ClusterDB.class);
+             MockedStatic<Adminlog> audit = mockStatic(Adminlog.class);
+             MockedStatic<Logger> logger = mockStatic(Logger.class)) {
+            sql.execute("INSERT INTO stat_keys (stat_keys_id, value) VALUES " +
+                "(41, 'Chrome 127'), (42, 'Chrome 128'), (100, 'Chrome'), (200, 'Firefox')");
+            sql.execute("ALTER TABLE stat_error ADD COLUMN browser_ua_id INT");
+            if (table.equals("stat_error") == false) sql.execute("RENAME TABLE stat_error TO " + table);
+            sql.execute("INSERT INTO " + table + " (year, week, url, query_string, browser_ua_id, domain_id, count) VALUES " +
+                "(2026, 37, '/autotest-error', '', 41, 0, 10), (2026, 37, '/autotest-error', '', 42, 0, 15), " +
+                "(2026, 37, '/autotest-error', '', 100, 0, 5), " +
+                "(2025, 37, '/autotest-error', '', 100, 0, 7), (2026, 36, '/autotest-error', '', 100, 0, 7), " +
+                "(2026, 37, '/autotest-other', '', 100, 0, 7), (2026, 37, '/autotest-error', 'q=1', 100, 0, 7), " +
+                "(2026, 37, '/autotest-error', '', 100, 1, 7), " +
+                "(2026, 37, '/autotest-error', '', 200, 0, 4), (2026, 37, '/autotest-error', '', 200, 0, 6)");
+            try (PreparedStatement insert = fixture.connection.prepareStatement("INSERT INTO " + table +
+                    " (year, week, url, query_string, browser_ua_id, domain_id, count) VALUES (2026, 37, ?, NULL, ?, 0, ?)")) {
+                for (int bucket = 0; bucket < 501; bucket++) {
+                    for (int version = 1; version <= 2; version++) {
+                        insert.setString(1, "/autotest-batch-" + bucket);
+                        insert.setInt(2, 40 + version);
+                        insert.setInt(3, version);
+                        insert.addBatch();
+                    }
+                }
+                insert.executeBatch();
+            }
+
+            statDB.when(StatDB::getInstance).thenReturn(mock(StatDB.class));
+            Connection connection = spy(fixture.connection);
+            doNothing().when(connection).close();
+            doAnswer(query -> {
+                progress.add(service.getStatus());
+                return query.callRealMethod();
+            }).when(connection).prepareStatement(startsWith("SELECT year, week, url, query_string"));
+            if (failMerge) {
+                doAnswer(query -> {
+                    PreparedStatement insert = spy((PreparedStatement) query.callRealMethod());
+                    doThrow(new SQLException("Counter replacement failed")).when(insert).executeBatch();
+                    return insert;
+                }).when(connection).prepareStatement(startsWith("INSERT INTO " + table));
+            }
+            dbPool.when(DBPool::getConnection).thenReturn(connection);
+
+            service.start();
+            ArgumentCaptor<Runnable> task = ArgumentCaptor.forClass(Runnable.class);
+            verify(executor).execute(task.capture());
+            task.getValue().run();
+
+            assertEquals(1, progress.size(), "Target counters must be aggregated once per mapping batch");
+            BrowserIdentifierMigrationService.State merging = progress.get(0);
+            assertTrue(merging.isRunning());
+            assertTrue(merging.isMergingStatErrors());
+            assertEquals(0, merging.getTableIndex());
+            assertEquals(0, merging.getCursor(), "Progress must not advance before counters have been merged");
+            assertEquals(2, merging.getTableMaxId());
+            BrowserIdentifierMigrationService.State state = service.getStatus();
+            assertFalse(state.isRunning());
+            assertFalse(state.isMergingStatErrors());
+            assertEquals(!failMerge, state.isDone());
+            assertEquals(failMerge ? 0 : 1, state.getTableIndex());
+            if (failMerge) assertEquals("Counter replacement failed", state.getError());
+            try (ResultSet rs = sql.executeQuery("SELECT COUNT(*), SUM(count) FROM " + table)) {
+                assertTrue(rs.next());
+                assertEquals(failMerge ? 1012 : 509, rs.getInt(1));
+                assertEquals(1578, rs.getInt(2), "Migration and rollback must preserve the total error count");
+            }
+            try (ResultSet rs = sql.executeQuery("SELECT COUNT(*) FROM " + table + " WHERE browser_ua_id IN (41, 42)")) {
+                assertTrue(rs.next());
+                assertEquals(failMerge ? 1004 : 0, rs.getInt(1));
+            }
+            if (failMerge == false) {
+                String bucket = "url='/autotest-error' AND query_string='' AND year=2026 AND week=37 AND browser_ua_id=100 AND domain_id=0";
+                assertEquals(1, sql.executeUpdate("UPDATE " + table + " SET count=count+1 WHERE " + bucket));
+                try (ResultSet rs = sql.executeQuery("SELECT count FROM " + table + " WHERE " + bucket)) {
+                    assertTrue(rs.next());
+                    assertEquals(31, rs.getInt(1), "A single new error must change the merged count from 30 to 31");
+                    assertFalse(rs.next());
+                }
+                try (ResultSet rs = sql.executeQuery("SELECT COUNT(*), MIN(count), MAX(count) FROM " + table + " WHERE query_string IS NULL")) {
+                    assertTrue(rs.next());
+                    assertEquals(501, rs.getInt(1));
+                    assertEquals(3, rs.getInt(2));
+                    assertEquals(3, rs.getInt(3));
+                }
+                try (ResultSet rs = sql.executeQuery("SELECT COUNT(*) FROM " + table + " WHERE browser_ua_id=200")) {
+                    assertTrue(rs.next());
+                    assertEquals(2, rs.getInt(1), "Unrelated browser buckets must remain untouched");
+                }
+            }
+        } finally {
+            service.destroy();
+        }
+    }
 
     /**
      * Verifies that finalization deletes only unused keys, preserves browser and OS references,
