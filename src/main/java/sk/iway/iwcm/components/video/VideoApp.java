@@ -1,11 +1,19 @@
 package sk.iway.iwcm.components.video;
 
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
+
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.client.utils.URLEncodedUtils;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -25,6 +33,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Getter
 @Setter
 public class VideoApp extends WebjetComponentAbstract {
+
+    private static final Pattern YOUTUBE_TIME = Pattern.compile("(?:(\\d+)h)?(?:(\\d+)m)?(?:(\\d+)s)?");
 
     @DataTableColumn(inputType = DataTableColumnType.IMAGE_RADIO, title = "&nbsp", tab = "basic", className = "image-radio-horizontal image-radio-fullwidth")
     private String field;
@@ -146,6 +156,61 @@ public class VideoApp extends WebjetComponentAbstract {
         }
     )
     private Integer badge = 1;
+
+    /**
+     * Converts a YouTube page or share URL to an embed URL. Component settings
+     * override matching URL parameters, while the shared playback time is preserved.
+     */
+    public static String getYoutubeEmbedUrl(String file, String playerParameters) {
+        if (file == null || file.isBlank()) return "";
+
+        try {
+            URIBuilder source = new URIBuilder(file.trim().replace("&amp;", "&"));
+            Map<String, String> parameters = new LinkedHashMap<>();
+            source.getQueryParams().forEach(parameter -> parameters.putIfAbsent(parameter.getName(), parameter.getValue()));
+
+            String videoId = parameters.remove("v");
+            if (videoId == null) {
+                String path = source.getPath();
+                if (path == null) return "";
+                videoId = path.substring(path.lastIndexOf('/') + 1);
+            }
+            if (!videoId.matches("[a-zA-Z0-9_-]+")) return "";
+
+            int start = parseYoutubeTime(parameters.remove("start"));
+            String time = parameters.remove("t");
+            if (start < 0) start = parseYoutubeTime(time);
+            if (start >= 0) parameters.put("start", Integer.toString(start));
+
+            URLEncodedUtils.parse(playerParameters, StandardCharsets.UTF_8)
+                .forEach(parameter -> parameters.put(parameter.getName(), parameter.getValue()));
+
+            URIBuilder embed = new URIBuilder("//www.youtube.com/embed/" + videoId);
+            parameters.forEach(embed::addParameter);
+            return embed.toString();
+        } catch (URISyntaxException ex) {
+            return "";
+        }
+    }
+
+    private static int parseYoutubeTime(String value) {
+        if (value == null || value.isEmpty()) return -1;
+
+        try {
+            if (value.matches("\\d+")) return Integer.parseInt(value);
+
+            Matcher matcher = YOUTUBE_TIME.matcher(value);
+            if (!matcher.matches()) return -1;
+
+            long seconds = 0;
+            for (int group = 1; group <= 3; group++) {
+                seconds = seconds * 60 + (matcher.group(group) == null ? 0 : Integer.parseInt(matcher.group(group)));
+            }
+            return seconds <= Integer.MAX_VALUE ? (int) seconds : -1;
+        } catch (NumberFormatException ex) {
+            return -1;
+        }
+    }
 
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {

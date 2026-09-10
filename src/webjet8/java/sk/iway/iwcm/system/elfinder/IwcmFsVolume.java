@@ -122,7 +122,7 @@ public class IwcmFsVolume implements FsVolume
 				FileIndexerTools.deleteIndexedFile(virtualPath);
 			}
 
-			Adminlog.add(Adminlog.TYPE_FILE_DELETE, "elfinder deleteFile, path="+virtualPath, -1, -1);
+			Adminlog.add(Adminlog.TYPE_FILE_DELETE, "elfinder deleteFile, path="+virtualPath+" deleted="+deleted, -1, -1);
 		}
 		return deleted;
 	}
@@ -146,7 +146,7 @@ public class IwcmFsVolume implements FsVolume
 		{
 			//JEEFF FileUtils.deleteDirectory(file);
 			deleted = FileTools.deleteDirTree(file);
-			Adminlog.add(Adminlog.TYPE_FILE_DELETE, "elfinder deleteFolder, path="+file.getVirtualPath(), -1, -1);
+			Adminlog.add(Adminlog.TYPE_FILE_DELETE, "elfinder deleteFolder, path="+file.getVirtualPath()+" deleted="+deleted, -1, -1);
 		}
 
 		return deleted;

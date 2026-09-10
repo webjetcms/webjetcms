@@ -119,6 +119,48 @@ Scenario('testovanie app - Video', async ({ I, Apps, Document, DTE }) => {
     I.seeElement(".videoBox.videoBox1");
 });
 
+Scenario("YouTube share URL preserves playback start time", async ({ I, Apps, DTE }) => {
+    const videoUrl = "https://youtu.be/q8xs3qDq-G4?si=6uc7EwqSIvciV14s&t=115";
+
+    Apps.insertApp('Video', '#components-video-title', null, false);
+    I.switchTo('iframe[src$="webjetcomponet.jsp"]');
+    I.switchTo('#editorComponent');
+    I.clickCss(".image_radio_item > label[for=DTE_Field_field_0]");
+    DTE.fillField("file", videoUrl);
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok');
+    I.waitForInvisible('.cke_dialog');
+
+    I.clickCss('#pills-dt-datatableInit-basic-tab');
+    DTE.fillField("title", "autotest-video-start-" + randomNumber);
+    I.clickCss('#pills-dt-datatableInit-content-tab');
+    await Apps.assertParams({ file: videoUrl.replace(/&/g, "&amp;") }, "/components/video/video_player.jsp");
+
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    I.switchToNextTab();
+
+    const iframe = '.videoBox iframe.embed-responsive-item';
+    I.waitForVisible(iframe);
+    const src = await I.grabAttributeFrom(iframe, "src");
+    const embedUrl = new URL(src, await I.grabCurrentUrl());
+
+    I.assertEqual(embedUrl.hostname, "www.youtube.com");
+    I.assertEqual(embedUrl.pathname, "/embed/q8xs3qDq-G4");
+    I.assertEqual(src.split("?").length, 2, "The embed URL must contain exactly one query separator");
+    I.assertEqual(embedUrl.searchParams.get("start"), "115");
+    I.assertEqual(embedUrl.searchParams.getAll("start").length, 1);
+    I.assertFalse(embedUrl.searchParams.has("t"), "The share time must be converted to the embed start parameter");
+    I.assertEqual(embedUrl.searchParams.get("si"), "6uc7EwqSIvciV14s");
+    I.assertEqual(embedUrl.searchParams.get("enablejsapi"), "1");
+    I.assertEqual(embedUrl.searchParams.get("autoplay"), "0");
+    I.assertEqual(embedUrl.searchParams.get("controls"), "1");
+
+    I.switchToPreviousTab();
+    I.closeOtherTabs();
+    DTE.cancel();
+});
+
 Scenario("Video - test zobrazovania v bannery", ({ I }) => {
     I.amOnPage("/en/apps/banner-system/classic_video_banner_yt.html");
     I.waitForElement('iframe[src*="youtube.com"]');
