@@ -2,6 +2,7 @@ package sk.iway.tags;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 
@@ -13,6 +14,7 @@ import org.displaytag.tags.TableTagParameters;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.basket.rest.BasketPricingService;
 
 /**
  *  Will format body of tag (number) to currency value
@@ -61,8 +63,14 @@ public class CurrencyTag extends BodyTagSupport
    @Override
 	public int doAfterBody() throws JspTagException
    {
+      boolean decimalPrices = BasketPricingService.isEnabled();
+
    	DecimalFormat formater;
-	   if(Tools.isEmpty(format))
+	   if (decimalPrices)
+	   {
+          formater = formatter(true);
+	   }
+	   else if(Tools.isEmpty(format))
 	   {
 	   	if (groupingSize > -1)
 	   	{
@@ -70,7 +78,7 @@ public class CurrencyTag extends BodyTagSupport
 	   	}
 	   	else
 	   	{
-	   		formater = nf;
+            formater = (DecimalFormat) nf.clone();
 	   	}
 	   }
 	   else
@@ -88,7 +96,7 @@ public class CurrencyTag extends BodyTagSupport
       bc.clearBody();
       //NumberFormat nf = NumberFormat.getCurrencyInstance();
 
-		if (round == null) round = Boolean.valueOf(Constants.getBoolean("currencyTagRound"));
+		boolean roundPrice = isRound();
 
 		boolean isExport = (pageContext.getRequest().getParameter(TableTagParameters.PARAMETER_EXPORTING) != null);
 
@@ -97,20 +105,27 @@ public class CurrencyTag extends BodyTagSupport
          String out = body;
          try
          {
-            double number = Double.parseDouble(body);
-
-            if (round)
+            if (decimalPrices)
             {
-            	//zaokruhli cislo
-            	int celeCislo = (int)number;
-            	double zvysok = number - celeCislo;
-
-            	if (zvysok < 0.3) number = celeCislo;
-            	else if (zvysok < 0.7) number = celeCislo + 0.5;
-            	else if (zvysok < 1) number = celeCislo + 1;
+               out = formater.format(new BigDecimal(body.trim()));
             }
+            else
+            {
+               double number = Double.parseDouble(body);
 
-            out = formater.format(number);
+               if (roundPrice)
+               {
+                  // Apply legacy rounding to whole or half currency units.
+                  int celeCislo = (int)number;
+                  double zvysok = number - celeCislo;
+
+                  if (zvysok < 0.3) number = celeCislo;
+                  else if (zvysok < 0.7) number = celeCislo + 0.5;
+                  else if (zvysok < 1) number = celeCislo + 1;
+               }
+
+               out = formater.format(number);
+            }
 
             if (Tools.isNotEmpty(currency))
             {
@@ -135,28 +150,51 @@ public class CurrencyTag extends BodyTagSupport
    }
 
    /**
-    * Naformatuje <code>double</code> cislo
-    * @param number
-    * @return
+    * Formats a price according to the active pricing policy.
+    * @param number amount to display
+    * @return localized amount without a currency label
     */
    public static String formatNumber(double number)
    {
-   	return nf.format(number);
+      return BasketPricingService.isEnabled() ? formatNumber(BigDecimal.valueOf(number)) : ((DecimalFormat) nf.clone()).format(number);
    }
 
    /**
-    * Naformatuje <code>BigDecimal</code> cislo
-    * @param number
-    * @return
+    * Formats a price according to the active pricing policy.
+    * @param number amount to display
+    * @return localized amount without a currency label
     */
    public static String formatNumber(BigDecimal number)
    {
-   	return nf.format(number);
+      return formatNumber(number, BasketPricingService.isEnabled());
+   }
+
+   /**
+    * Formats an amount using the active pattern or explicitly retains legacy formatting.
+    * @param number amount to display
+    * @param roundedPrices whether to use the active rounded price pattern
+    * @return localized amount without a currency label
+    */
+   public static String formatNumber(BigDecimal number, boolean roundedPrices)
+   {
+      return formatter(roundedPrices).format(number);
+   }
+
+   private static DecimalFormat formatter(boolean roundedPrices)
+   {
+      if (!roundedPrices) return (DecimalFormat) nf.clone();
+      DecimalFormat formatter = BasketPricingService.createPriceFormat();
+      formatter.setDecimalFormatSymbols(symbols);
+      formatter.setMinimumFractionDigits(Math.max(2, formatter.getMinimumFractionDigits()));
+      formatter.setGroupingSize(3);
+      formatter.setGroupingUsed(true);
+      formatter.setRoundingMode(RoundingMode.HALF_UP);
+      return formatter;
    }
 
    public boolean isRound()
 	{
-		return round;
+		return round != null ? round : Constants.getBoolean("currencyTagRound");
 	}
 
 	public void setRound(boolean round)
@@ -169,6 +207,9 @@ public class CurrencyTag extends BodyTagSupport
 	{
 		super.release();
 		round = null;
+		currency = null;
+		format = null;
+		groupingSize = 3;
 	}
 
 	public String getFormat() {

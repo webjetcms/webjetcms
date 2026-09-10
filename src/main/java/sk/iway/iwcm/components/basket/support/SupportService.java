@@ -13,6 +13,8 @@ import sk.iway.iwcm.common.BasketTools;
 import sk.iway.iwcm.components.basket.delivery_methods.jpa.DeliveryMethodEntity;
 import sk.iway.iwcm.editor.rest.Field;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.components.basket.rest.BasketPricingService;
+import sk.iway.iwcm.components.basket.rest.EshopService;
 import sk.iway.tags.CurrencyTag;
 
 public class SupportService {
@@ -61,28 +63,24 @@ public class SupportService {
     }
 
     public static final String getCustomerTitle(BigDecimal priceVat, HttpServletRequest request, Prop prop, FieldsConfig annotation) {
-        StringBuilder name = new StringBuilder();
-        name.append( prop.getText(annotation.nameKey()) ).append(": ");
-        BigDecimal convertedPrice = BasketTools.convertToBasketDisplayCurrency(priceVat, request);
-        name.append( CurrencyTag.formatNumber(convertedPrice) ).append(" ");
-        name.append( CurrencyTag.getLabelFromCurrencyCode( Constants.getString("basketDisplayCurrency") ) );
-        return name.toString();
+        return prop.getText(annotation.nameKey()) + ": " + formatPrice(priceVat, request);
     }
 
     public static final String getCustomerTitle(DeliveryMethodEntity dme, HttpServletRequest request, Prop prop, FieldsConfig annotation) {
-        StringBuilder name = new StringBuilder();
+        String title = Tools.isNotEmpty(dme.getTitle()) ? dme.getTitle() : annotation.nameKey();
+        return prop.getText(title, false) + ": " + formatPrice(dme.getPriceVat(), request);
+    }
 
-        if (Tools.isNotEmpty(dme.getTitle())) {
-            name.append(prop.getText(dme.getTitle(), false));
-        } else {
-            name.append(prop.getText(annotation.nameKey(), false));
-        }
-        name.append(": ");
+    /** Returns the converted fee amount used by labels and fee previews. */
+    public static BigDecimal getLocalPriceVat(BigDecimal priceVat, HttpServletRequest request) {
+        BigDecimal converted = BasketTools.convertToBasketDisplayCurrency(priceVat, request);
+        return BasketPricingService.isEnabled()
+            ? BasketPricingService.roundLineGross(BasketPricingService.roundGross(converted), 1) : converted;
+    }
 
-        BigDecimal convertedPrice = BasketTools.convertToBasketDisplayCurrency(dme.getPriceVat(), request);
-        name.append( CurrencyTag.formatNumber(convertedPrice) ).append(" ");
-        name.append( CurrencyTag.getLabelFromCurrencyCode( Constants.getString("basketDisplayCurrency") ) );
-        return name.toString();
+    private static String formatPrice(BigDecimal priceVat, HttpServletRequest request) {
+        String currency = BasketPricingService.isEnabled() ? EshopService.getDisplayCurrency(request) : Constants.getString("basketDisplayCurrency");
+        return CurrencyTag.formatNumber(getLocalPriceVat(priceVat, request)) + " " + CurrencyTag.getLabelFromCurrencyCode(currency);
     }
 
     public static final String getFieldValue(SupportMethodEntity method, char fieldAlphabet) {
