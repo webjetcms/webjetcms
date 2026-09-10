@@ -95,7 +95,7 @@ Na tejto karte nájdete rozšírené možnosti konfigurácie asistenta, ktoré u
 
 ## Poskytovatelia
 
-Poskytovateľ je externá služba alebo platforma, ktorá zabezpečuje AI nástroje, modely a funkcionality využívané pri spracovaní požiadaviek v CMS. Aby bolo možné poskytovateľa používať, musí byť najskôr správne implementovaný a nakonfigurovaný v systéme (napríklad zadaním API kľúča). Jednotliví poskytovatelia sa môžu líšiť v možnostiach, cene, kvalite výsledkov alebo špecializácii na konkrétne typy úloh. Výber vhodného poskytovateľa závisí od vašich potrieb a požiadaviek na konkrétnu AI funkcionalitu.
+Poskytovateľ zabezpečuje AI nástroje, modely a funkcionality využívané pri spracovaní požiadaviek v CMS. Môže ísť o externú službu nakonfigurovanú napríklad API kľúčom alebo o lokálny model spustený priamo na serveri. Jednotliví poskytovatelia sa môžu líšiť v možnostiach, cene, kvalite výsledkov alebo špecializácii na konkrétne typy úloh. Výber vhodného poskytovateľa závisí od vašich potrieb a požiadaviek na konkrétnu AI funkcionalitu.
 
 ### OpenAI
 
@@ -141,6 +141,34 @@ Vygenerovaný API kľúč nastavte do konfiguračnej premennej `ai_openRouterAut
 
 ![](openrouter.png)
 
+### Lokálne modely
+
+Lokálne modely vykonávajú požiadavky priamo na serveri WebJET CMS bez odosielania spracúvanej hodnoty do externej AI služby. Dostupné sú tri samostatné typy poskytovateľov:
+
+- **Lokálny model na generovanie textu** - používa model `utter-project/EuroLLM-1.7B-Instruct` a podporuje iba generovanie textu. Streamovanie odpovede nie je podporované a požiadavky sa neukladajú.
+- **Lokálny prekladový model** - používa model `facebook/m2m100_418M` na preklad čistého textu. Nepodporuje HTML kód, `INCLUDE` príkazy, štruktúrovaný vstup ani doplňujúci vstup používateľa.
+- **Lokálny embeddingový model** - používa model `intfloat/multilingual-e5-base` na [sémantické indexovanie a vyhľadávanie](../../apps/semantic-search/README.md). Model generuje vektory s `768` dimenziami.
+
+Modelové balíky vo formáte ZIP musia byť vopred pripravené a schválené pre WebJET CMS. Absolútne cesty k nim nastavte v konfiguračných premenných:
+
+| Premenná | Model |
+| --- | --- |
+| `ai_localTextModelBundlePath` | `utter-project/EuroLLM-1.7B-Instruct` |
+| `ai_localTranslateModelBundlePath` | `facebook/m2m100_418M` |
+| `ai_localEmbeddingModelBundlePath` | `intfloat/multilingual-e5-base` |
+
+Cesty sú globálne pre celú inštaláciu, súbor musí byť čitateľný procesom aplikačného servera a po ich zmene je potrebný reštart. Model sa otvorí až pri prvom použití. Poskytovateľ sa v editore označí ako nenakonfigurovaný, kým príslušná cesta nie je nastavená.
+
+Pre lokálny preklad musí pole **Inštrukcie** obsahovať zdrojový a cieľový jazyk vo formáte JSON, prípadne s prefixom `Translator:`:
+
+```text
+Translator: {"sourceLanguage":"sk","targetLanguage":"en","maximumOutputTokens":200}
+```
+
+Jazyky musia byť určené explicitne; hodnota `autodetect` nie je podporovaná. Hodnota `userLng` použije aktuálny jazyk používateľa a kód `cz` sa automaticky zmení na `cs`. Voliteľná hodnota `maximumOutputTokens` musí byť kladné celé číslo, najviac `200`.
+
+!>**Upozornenie:** Modelové súbory môžu mať stovky megabajtov až niekoľko gigabajtov. Pred aktiváciou overte dostatok diskového priestoru a operačnej pamäte a použite iba balík z dôveryhodného zdroja.
+
 ### Prehliadač
 
 AI priamo v prehliadači je aktuálne [pripravovaný štandard](https://developer.chrome.com/docs/ai/get-started) vytvorený spoločnosťou Google. Aktuálne je podporovaný v prehliadači Google Chrome za použitia zabezpečeného (HTTPS) spojenia. Po štandardizácii API sa predpokladá, že bude dostupný aj v iných prehliadačoch. Dostupnosť AI v prehliadači môžete vypnúť nastavením konfiguračnej premennej `ai_browserAiEnabled` na hodnotu `false`, kedy sa možnosti prestanú zobrazovať.
@@ -162,7 +190,7 @@ Niektoré API zatiaľ nepodporujú prácu vo všetkých jazykoch, preto môže p
 
 ## Pripojenie
 
-Volanie AI služieb vyžaduje pripojenie na internet. Uistite sa, že váš server má prístup k vonkajším službám a že firewall alebo iné bezpečnostné opatrenia neblokujú požiadavky na API daného poskytovateľa. Použité sú nasledovné doménové mená:
+Volanie externých AI služieb vyžaduje pripojenie na internet. Uistite sa, že váš server má prístup k vonkajším službám a že firewall alebo iné bezpečnostné opatrenia neblokujú požiadavky na API daného poskytovateľa. Lokálne modely internetové pripojenie pri spracovaní nevyžadujú. Pre externých poskytovateľov sa používajú nasledovné doménové mená:
 
 - OpenAI: `api.openai.com`
 - Gemini: `generativelanguage.googleapis.com`
