@@ -881,6 +881,75 @@ Scenario('workbench selection, structure and unchanged canvas geometry', async (
     DTE.cancel();
 });
 
+Scenario('workbench structure follows selection and preserves scroll during refresh', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    await I.executeScript((root, selector) => {
+        const list = document.querySelector(selector+' ul');
+        for (let index = 0; index < 24; index++) {
+            const item = document.createElement('li');
+            item.className = 'pb-duplicable';
+            item.textContent = 'Scroll autotest item '+index;
+            list.append(item);
+        }
+        window.markPbElements('doc_data');
+    }, workbenchFixture);
+    I.click(workbenchFixture+' li.pb-duplicable:last-child');
+    I.click('.pb-workbench [data-pb-action=structure]');
+    I.waitForVisible('.pb-structure [aria-selected=true]', 10);
+
+    await I.usePlaywrightTo('verify structure scrolling across selection and content updates', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        const tree = frame.locator('.pb-structure > ul');
+        const selectedRow = tree.locator('[aria-selected=true] > div');
+        const assertSelectionVisible = async () => {
+            const bounds = await tree.boundingBox();
+            const row = await selectedRow.boundingBox();
+            assert.ok(row && row.y >= bounds.y - 1 && row.y + row.height <= bounds.y + bounds.height + 1,
+                'The selected row must be fully visible within the structure panel');
+        };
+        await assertSelectionVisible();
+        assert.ok(await tree.evaluate(element => element.scrollTop) > 0, 'Opening the panel must reveal a selected block near the bottom');
+
+        // Keep a manual position away from the selection while DOM mutations rebuild the tree.
+        const scrollTop = await tree.evaluate(element => {
+            element.scrollTop = 240;
+            return element.scrollTop;
+        });
+        for (let index = 0; index < 3; index++) {
+            const title = 'Refresh autotest '+index;
+            await frame.locator(workbenchFixture+' h2').evaluate((element, text) => { element.textContent = text; }, title);
+            await frame.waitForFunction(text => {
+                const ui = window.pageBuilder.ui;
+                return !ui.treeDirty && ui.tree.text().includes(text);
+            }, title);
+            assert.equal(await tree.evaluate(element => element.scrollTop), scrollTop, 'Background refresh must preserve manual tree scrolling');
+        }
+
+        await frame.locator(workbenchFixture+' li.pb-duplicable:last-child').click();
+        await frame.waitForFunction(() => !window.pageBuilder.ui.treeDirty);
+        assert.equal(await tree.evaluate(element => element.scrollTop), scrollTop, 'Clicking the same block must preserve manual tree scrolling');
+
+        // Select visible siblings through the page, including both scroll directions.
+        for (const itemIndex of [1, 25]) {
+            await frame.locator(workbenchFixture+' li.pb-duplicable').nth(itemIndex).click();
+            await frame.waitForFunction(() => !window.pageBuilder.ui.treeDirty);
+            await assertSelectionVisible();
+        }
+
+        await selectedRow.click();
+        await frame.waitForFunction(() => document.activeElement?.getAttribute('aria-selected') === 'true');
+        const focusedScroll = await tree.evaluate(element => element.scrollTop);
+        await frame.locator(workbenchFixture+' h2').evaluate(element => { element.textContent = 'Focused refresh autotest'; });
+        await frame.waitForFunction(() => !window.pageBuilder.ui.treeDirty && window.pageBuilder.ui.tree.text().includes('Focused refresh autotest'));
+        assert.equal(await tree.evaluate(element => element.scrollTop), focusedScroll, 'Refreshing a focused tree row must preserve scrolling');
+        assert.equal(await tree.locator('[aria-selected=true]').evaluate(element => document.activeElement === element), true, 'The rebuilt row must retain keyboard focus');
+    });
+
+    I.switchTo();
+    I.amAcceptingPopups();
+    DTE.cancel();
+});
+
 /** Focuses a real insertion button, allowing its keyboard handler to reveal off-screen destinations. */
 async function chooseWorkbenchInsertion(I, type, parent, index) {
     await I.executeScript((root, args) => {

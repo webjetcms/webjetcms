@@ -47,7 +47,7 @@ V ponuke **Ďalšie akcie** nájdete podľa typu vybraného bloku:
 
 - Štýl - nastavenie obrázka pozadia, farieb, zarovnania, odsadenia a ďalších vlastností.
 - Vložiť blok pred / Vložiť blok za - otvorí knižnicu pre rovnaký typ bloku na zvolenej strane výberu.
-- Presunúť pred predchádzajúci blok / Presunúť za nasledujúci blok - posunie blok o jednu pozíciu.
+- Posunúť vyššie / Posunúť nižšie - posunie blok o jednu pozíciu v poradí.
 - Presunúť / Duplikovať - zobrazí dostupné cieľové miesta v stránke; kliknutím vyberiete, kam blok presunúť alebo vložiť jeho kópiu. Výber miesta môžete zrušiť klávesom **Escape**.
 - Pridať do obľúbených - uloží blok medzi vaše obľúbené bloky v knižnici.
 - Zmazať - zmaže označený blok.

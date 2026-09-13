@@ -75,7 +75,7 @@
             var me = this, prefix = me.options.prefix;
             me.ui = {
                 selected: null, hovered: null, quiet: false, guideMode: 'selected', frame: null, inserting: false, insertPoints: [],
-                treeDirty: true, expanded: new WeakSet(), treeNodes: new Map(), bookmarks: null,
+                treeDirty: true, treeRevealSelection: false, expanded: new WeakSet(), treeNodes: new Map(), bookmarks: null,
                 labels: {
                     structure: "<iwcm:text key='pagebuilder.ui.structure'/>",
                     search: "<iwcm:text key='pagebuilder.ui.search'/>",
@@ -354,6 +354,7 @@
         select_workbench_element: function(element, scroll) {
             if (!this.ui) return;
             var ui = this.ui;
+            if (ui.selected !== element) ui.treeRevealSelection = true;
             if (ui.selected && ui.selected !== element) ui.resizeObserver.unobserve(ui.selected);
             ui.selected = element;
             ui.hovered = null;
@@ -766,15 +767,17 @@
             ui.bar.find('[data-pb-action=structure]').attr('aria-expanded', String(open));
             if (open) {
                 ui.treeDirty = true;
+                ui.treeRevealSelection = true;
                 this.schedule_workbench();
                 ui.search.trigger('focus');
             }
         },
 
-        /** Rebuilds the navigation only when its content changes, preserving DOM-backed expansion. */
+        /** Rebuilds navigation while preserving expansion, focus and manual scrolling between selections. */
         render_workbench_tree: function() {
             var me = this, ui = me.ui, query = ui.search.val().trim().toLocaleLowerCase();
             var focused = $(document.activeElement).data('element');
+            var tree = ui.tree[0], scrollTop = tree.scrollTop;
             ui.tree.empty();
             ui.treeNodes.clear();
             var elements = me.$wrapper.find(me.tagc._grid_element+', [data-ckeditor-instance]').filter(function() {
@@ -814,6 +817,15 @@
                 active.attr('tabindex', 0);
                 if (focused) active[0].focus({ preventScroll: true });
             }
+            // Emptying the tree temporarily removes its scroll range, so restore it after rebuilding.
+            tree.scrollTop = scrollTop;
+            var selected = ui.treeNodes.get(ui.selected);
+            if (ui.treeRevealSelection && selected && selected.is(':visible')) {
+                var bounds = tree.getBoundingClientRect(), row = selected.children('div')[0].getBoundingClientRect();
+                if (row.top < bounds.top) tree.scrollTop += row.top - bounds.top;
+                else if (row.bottom > bounds.bottom) tree.scrollTop += row.bottom - bounds.bottom;
+            }
+            ui.treeRevealSelection = false;
             ui.treeDirty = false;
         },
 
