@@ -42,7 +42,6 @@ $color-duplicable: #D17A00;
 
 $font-family-base: "Asap", sans-serif, Arial, Helvetica;
 
-$scrollbar-width: 17px;
 $minimum-index: 100000;
 
 $highlighter-size: 2px;
@@ -258,16 +257,6 @@ $npb-dark: #e6e6e6;
 		-webkit-filter: invert(0%);
 		filter: invert(0%);
 	}
-}
-
-/* JEEFF zmeny pre library */
-.pb-library__content .library-tab-content {
-	border-radius: 0px;
-	padding-top: 10px;
-	padding-bottom: 10px;
-}
-.library-tab-item-group {
-	color: white;
 }
 
 .pb-section > .pb-toolbar:before {

@@ -1188,6 +1188,10 @@ Scenario('workbench insertion in narrow gutters and wrapped columns', async ({I,
         document.querySelectorAll('section.pb-workbench-autotest .pb-column').forEach(column => column.style.padding='0');
     });
     I.click('.pb-workbench [data-pb-action=insert]');
+    await I.usePlaywrightTo('wait for insertion geometry after removing column padding', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        await frame.waitForFunction(() => window.pageBuilder.ui.frame === null && window.pageBuilder.ui.insertAnimations.every(animation => animation.playState === 'finished'));
+    });
     const gutter = await I.executeScript(() => {
         const point=window.pageBuilder.ui.insertPoints.find(point=>point.type==='column' && point.next && point.previous && point.parent.closest('section.pb-workbench-autotest'));
         return {hasLane:!!point.header, top:point.button[0].getBoundingClientRect().bottom, contentTop:point.next.getBoundingClientRect().top};
@@ -1229,7 +1233,7 @@ Scenario('workbench insertion in narrow gutters and wrapped columns', async ({I,
         await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path:'../../../build/test/pagebuilder-insertion-mobile.png'});
     });
     await chooseWorkbenchInsertion(I,'column',workbenchFixture+' .row',1);
-    I.click('.pb-library__footer__button');
+    I.click('.pb-library__close');
     I.waitForInvisible('.pb-library',10);
     I.click(workbenchFixture+' .pb-workbench-copy');
     I.waitForInvisible('.pb-insert-layer',10);
@@ -2003,124 +2007,311 @@ Scenario("custom PB settings", ({I, DTE, Apps, Document}) => {
     checkStyleModal(147174, ".col-md-3", false, I, DTE, Apps);
 });
 
-Scenario("filtering and tags", ({I, DTE, Apps, Document}) => {
+/** Opens the existing empty-page fixture without saving any library interactions. */
+async function openBlockLibrary(I, DTE, Document) {
     Document.resetPageBuilderMode();
-
+    I.resizeWindow(1057, 1052);
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=152046");
     DTE.waitForEditor();
-    I.wait(3);
     I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.waitForVisible(".pb-empty-placeholder-wrapper .pb-empty-placeholder__button", 20);
     I.click(".pb-empty-placeholder-wrapper .pb-empty-placeholder__button");
+    I.waitForVisible(".pb-library--section .library-tab-item--library .library-template-block--section", 10);
+    await I.usePlaywrightTo('wait for library opening to focus the search field', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        await frame.waitForFunction(() => document.activeElement.matches('.pb-library--section .library-tab-item--library .library-template-block--section .library-filter-input'));
+    });
+}
 
-    I.waitForElement(".library-template-block--section", 10);
+Scenario("filtering and tags", async ({I, DTE, Document}) => {
+    await openBlockLibrary(I, DTE, Document);
+    await I.usePlaywrightTo('verify combined filters, counts and one expanded category', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        const library = frame.locator('.pb-library--section .library-tab-item--library .library-template-block--section');
+        const groups = library.locator('.library-tab-item-button__toggler');
+        const category = name => groups.filter({has: frame.locator('.library-group-label', {hasText: name})});
+        const accordion = category('Harmonika');
+        const contact = category('Kontakt');
+        const search = library.locator('input.library-filter-input');
+        const tags = library.locator('button.library-tag-item-btn');
+        const all = library.locator('button.library-tag-item-btn[data-library-tag=""]');
+        const source = await frame.evaluate(() => window.pageBuilder.template.library.find(item => item.textKey === 'section').groups);
+        const blocks = source.flatMap(group => group.blocks || []);
+        const secondarySource = source.find(group => group.textKey !== 'Kontakt' && (group.blocks || []).some(block => (block.tags || []).includes('Formulár')));
+        assert.ok(secondarySource, 'The fixture must supply another category matching the form tag');
+        const secondaryCategory = category(secondarySource.textKey);
+        const secondaryQuery = secondarySource.blocks.find(block => (block.tags || []).includes('Formulár')).textKey;
+        assert.ok(blocks.length > 0, 'The fixture must supply section blocks');
+        for (const group of source.filter(group => group.blocks)) {
+            assert.equal(await library.locator('.library-tab-item-button__toggler[data-library-item-id="'+group.id+'"] .library-group-toggle .library-count').textContent(), String(group.blocks.length), 'Category counts must reflect the loaded blocks in '+group.textKey);
+        }
+        const tagCounts = await tags.evaluateAll(elements => elements.map(element => ({tag: element.dataset.libraryTag, count: Number(element.querySelector('.library-count').textContent)})));
+        for (const tag of tagCounts) {
+            const expected = tag.tag ? blocks.filter(block => (block.tags || []).some(value => value.trim() === tag.tag)).length : blocks.length + source.filter(group => group.blocks == null).length;
+            assert.equal(tag.count, expected, 'Tag counts must reflect all matching section blocks');
+        }
+        assert.equal(await library.locator('.library-group-toggle[aria-expanded=true]').count(), 0, 'Categories must start collapsed');
+        await accordion.locator('.library-group-toggle').focus();
+        await page.keyboard.press('Enter');
+        assert.equal(await accordion.locator('.library-group-toggle').getAttribute('aria-expanded'), 'true', 'Enter must expand a category');
+        await contact.locator('.library-group-toggle').click();
+        assert.equal(await accordion.locator('.library-group-toggle').getAttribute('aria-expanded'), 'false', 'Opening another category must close the previous one');
+        await contact.locator('.library-group-toggle').click();
+        assert.equal(await library.locator('.library-group-toggle[aria-expanded=true]').count(), 0, 'The open category must also be collapsible');
+        await accordion.locator('.library-group-toggle').click();
 
-    var baseHarmonika = locate(".library-tab-item-button__toggler").withText("Harmonika");;
-    var baseKontakt = locate(".library-tab-item-button__toggler").withText("Kontakt");
-    var subHarmonika = locate(".library-full-width-item").withText("Harmonika");;
-    var subKontakt = locate(".library-full-width-item").withText("Kontaktný formulár");
-    var subKontaktOSK = locate(".library-tab-item-button__toggler").withText("OSK-case3").find(".library-full-width-item").withText("form");
+        await library.locator('button.library-tag-item-btn[data-library-tag="Formulár"]').click();
+        await contact.locator('.library-full-width-item', {hasText: 'Kontaktný formulár'}).waitFor({state: 'visible'});
+        assert.equal(await accordion.isVisible(), false, 'Unmatched categories must be hidden');
+        assert.equal(await library.locator('.library-group-toggle[aria-expanded=true]').count(), 1, 'Filtering must open only the first matching category');
+        assert.ok(await library.locator('.library-tab-item-button__toggler:visible .library-group-toggle[aria-expanded=false]').count() > 0, 'Other matching categories must remain collapsed');
 
-    //
-    I.say("Check main items are present");
-    I.seeElement(baseHarmonika);
-    I.seeElement(baseKontakt);
+        await search.fill('form');
+        assert.equal(await contact.locator('.library-group-toggle').getAttribute('aria-expanded'), 'true', 'A matching open category must stay open when search changes');
+        assert.equal(await contact.locator('.library-group-toggle .library-count').textContent(), '1', 'Category counts must reflect the combined filter');
+        await library.locator('button.library-tag-item-btn[data-library-tag="Kontakt"]').click();
+        assert.equal(await contact.isVisible(), false, 'Search and tag selection must both apply');
+        assert.equal(await library.locator('.library-empty').isVisible(), true, 'An incompatible search and tag must produce empty results');
+        assert.equal(await library.locator('button.library-tag-item-btn[aria-pressed=true]').count(), 1, 'Exactly one tag must be selected');
+        await search.fill(secondaryQuery);
+        await library.locator('button.library-tag-item-btn[data-library-tag="Formulár"]').click();
+        assert.equal(await secondaryCategory.locator('.library-group-toggle').getAttribute('aria-expanded'), 'true', 'An unmatched open category must give way to the first matching category');
+        await all.click();
+        assert.equal(await secondaryCategory.locator('.library-group-toggle').getAttribute('aria-expanded'), 'true', 'The current category must survive a matching tag reset');
+        assert.equal(await search.inputValue(), secondaryQuery, 'Resetting the tag must preserve the search query');
+        assert.deepStrictEqual(await tags.evaluateAll(elements => elements.map(element => ({tag: element.dataset.libraryTag, count: Number(element.querySelector('.library-count').textContent)}))), tagCounts, 'Search must not change total tag counts');
 
-    //
-    I.say("Check main items are not opened");
-    I.dontSeeElement(subHarmonika);
-    I.dontSeeElement(subKontakt);
+        await search.fill('autotest-no-matching-block');
+        await library.locator('.library-empty').waitFor({state: 'visible'});
+        assert.equal(await library.locator('.library-tab-item-button__toggler:visible').count(), 0, 'Empty search must hide every category');
+        assert.equal(await library.locator('.library-full-width-item:visible').count(), 0, 'Empty search must hide every card');
+        await library.locator('button.library-clear-filters').click();
+        assert.equal(await search.inputValue(), '', 'Clearing empty results must reset search');
+        assert.equal(await all.getAttribute('aria-pressed'), 'true', 'Clearing empty results must select All');
+        assert.equal(await library.locator('.library-group-toggle[aria-expanded=true]').count(), 0, 'Clearing both filters must collapse categories');
 
-    //
-    I.say("Open Harmonika");
-    I.click(baseHarmonika);
-    I.seeElement(subHarmonika);
-    I.dontSeeElement(subKontakt);
-
-    //
-    I.say("Filter by tag 'form'");
-    I.click(locate("label.library-tag-item-btn").withText("Formulár"));
-    I.wait(1);
-    I.dontSeeElement(baseHarmonika);
-    I.seeElement(baseKontakt);
-    I.seeElement(subKontakt);
-    I.dontSeeElement(subHarmonika);
-
-    //
-    I.say("Clear filter");
-    I.click(locate("label.library-tag-item-btn").withText("Formulár"));
-    I.wait(1);
-    I.seeElement(baseHarmonika);
-    I.seeElement(baseKontakt);
-    I.dontSeeElement(subHarmonika);
-    I.dontSeeElement(subKontakt);
-
-    //
-    I.say("Search form");
-    I.fillField(".library-filter-block input.library-filter-input", "form");
-    I.dontSeeElement(baseHarmonika);
-    I.seeElement(baseKontakt);
-    I.seeElement(subKontakt);
-    I.dontSeeElement(subHarmonika);
-
-    //
-    I.say("Search notfound something");
-    I.fillField(".library-filter-block input.library-filter-input", "notfound");
-    I.wait(1);
-    I.dontSeeElement("div.library-tab-item-button__toggler");
-    I.dontSeeElement("div.library-full-width-item");
-
-    //
-    I.say("Search form + tags");
-    I.fillField(".library-filter-block input.library-filter-input", "form");
-    I.click(locate("label.library-tag-item-btn").withText("Formulár"));
-    I.wait(1);
-    I.dontSeeElement(baseHarmonika);
-    I.seeElement(baseKontakt);
-    I.seeElement(subKontakt);
-    I.seeElement(subKontaktOSK);
-    I.dontSeeElement(subHarmonika);
-    I.click(locate("label.library-tag-item-btn").withText("Kontakt"));
-    I.dontSeeElement(baseHarmonika);
-    I.dontSeeElement(baseKontakt);
-    I.dontSeeElement(subKontakt);
-    I.seeElement(subKontaktOSK);
-    I.dontSeeElement(subHarmonika);
-
-    //
-    I.click(locate("label.library-tag-item-btn").withText("Kontakt")); //unclick kontakt tag
-    I.fillField(".library-filter-block input.library-filter-input", "harmon");
-    I.seeElement(baseHarmonika);
-    I.dontSeeElement(baseKontakt);
-    I.seeElement(subHarmonika);
-    I.dontSeeElement(subKontakt);
-
-    //
-    I.say("Clear search");
-    I.fillField(".library-filter-block input.library-filter-input", "");
-    I.wait(1);
-    I.seeElement(baseHarmonika);
-    I.seeElement(baseKontakt);
-    I.dontSeeElement(subHarmonika);
-    I.dontSeeElement(subKontakt);
-
-    //
+        await search.fill('harmon');
+        await accordion.locator('.library-full-width-item:visible').first().waitFor({state: 'visible'});
+        await library.locator('button.library-tag-item-btn[data-library-tag="Formulár"]').click();
+        await library.locator('.library-empty').waitFor({state: 'visible'});
+        await all.click();
+        assert.equal(await search.inputValue(), 'harmon', 'All must reset the tag while preserving search');
+        assert.equal(await accordion.locator('.library-group-toggle').getAttribute('aria-expanded'), 'true', 'All must reveal the first category matching search');
+        await search.fill('');
+        assert.equal(await library.locator('.library-group-toggle[aria-expanded=true]').count(), 0, 'Clearing the final filter must collapse categories');
+    });
     I.switchTo();
+    DTE.cancel();
+    I.wjSetDefaultWindowSize();
 });
 
-Scenario("insert blocks into page", ({I, DTE, Apps, Document}) => {
-    Document.resetPageBuilderMode();
+Scenario('library panel geometry, previews and keyboard dismissal', async ({I, DTE, Document}) => {
+    await openBlockLibrary(I, DTE, Document);
+    let favoriteRemovalChecked = false;
+    I.amCancellingPopups();
+    await I.usePlaywrightTo('verify compact geometry, natural previews, dragging and keyboard controls', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        const panel = frame.locator('.pb-library--section');
+        const library = panel.locator('.library-tab-item--library .library-template-block--section');
+        const contact = library.locator('.library-tab-item-button__toggler').filter({has: frame.locator('.library-group-label', {hasText: 'Kontakt'})});
+        const results = library.locator('.library-results');
+        assert.equal(Math.round((await panel.boundingBox()).width), 360, 'The desktop library must be 360 pixels wide');
+        assert.equal(await panel.locator('.pb-library__footer').count(), 0, 'The library must not render a footer');
+        await contact.locator('.library-group-toggle').click();
+        await frame.waitForFunction(() => {
+            const images = Array.from(document.querySelectorAll('.pb-library--section .library-tab-item--library .library-template-block--section .library-tab-item-button__toggler.active img')).filter(image => image.getClientRects().length);
+            return images.length >= 2 && images.every(image => image.complete && image.naturalWidth > 0);
+        });
+        const previews = await contact.locator('.library-full-width-item img').evaluateAll(images => images.map(image => ({width: image.getBoundingClientRect().width, height: image.getBoundingClientRect().height, ratio: image.naturalWidth / image.naturalHeight})));
+        assert.ok(new Set(previews.map(image => Math.round(image.height))).size > 1, 'Different preview ratios must retain different heights');
+        for (const image of previews) {
+            assert.ok(Math.abs(image.height - image.width / image.ratio) < 1, 'Preview images must keep their natural aspect ratio');
+        }
+        await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path: '../../../build/test/pagebuilder-library-redesign.png'});
+        for (const gutter of ['auto', 'stable']) {
+            await results.evaluate((element, value) => element.style.scrollbarGutter = value, gutter);
+            const margins = await contact.locator('.library-full-width-item').evaluateAll(cards => cards.map(card => {
+                const wrapper = card.parentElement.getBoundingClientRect();
+                const rect = card.getBoundingClientRect();
+                return {left: rect.left - wrapper.left, right: wrapper.right - rect.right};
+            }));
+            assert.ok(margins.every(margin => Math.abs(margin.left - margin.right) < 1), 'Card gutters must remain symmetric with automatic and reserved scrollbar space');
+        }
+        const fixedSelectors = '.pb-library__header, .library-tab-item--library .library-template-block--section .library-filters';
+        const before = await panel.locator(fixedSelectors).evaluateAll(elements => elements.map(element => ({top: element.getBoundingClientRect().top, height: element.getBoundingClientRect().height})));
+        const scrolled = await results.evaluate(element => {element.scrollTop = element.scrollHeight; return element.scrollTop;});
+        assert.ok(scrolled > 0, 'The fixture must exercise a scrolling results list');
+        assert.deepStrictEqual(await panel.locator(fixedSelectors).evaluateAll(elements => elements.map(element => ({top: element.getBoundingClientRect().top, height: element.getBoundingClientRect().height}))), before, 'Header and filters must stay still when results scroll');
+        await results.evaluate(element => element.scrollTop = 0);
 
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=152046");
-    DTE.waitForEditor();
-    I.wait(3);
-    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+        const start = await panel.locator('.pb-library__header__title').boundingBox();
+        const originalLeft = (await panel.boundingBox()).x;
+        await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
+        await page.mouse.down();
+        await page.mouse.move(page.viewportSize().width - 5, start.y + start.height / 2, {steps: 10});
+        await page.mouse.up();
+        assert.ok((await panel.boundingBox()).x > originalLeft, 'Dragging the header must move the library');
+        const iframe = page.locator('#DTE_Field_data-pageBuilderIframe');
+        const originalStyle = await iframe.getAttribute('style');
+        await iframe.evaluate(element => {
+            element.style.maxWidth = '320px';
+            element.style.setProperty('height', '420px', 'important');
+            element.style.setProperty('min-height', '0', 'important');
+        });
+        await frame.waitForFunction(() => {
+            const rect = document.querySelector('.pb-library').getBoundingClientRect();
+            return innerWidth <= 320 && innerHeight <= 420 && rect.left >= 0 && rect.right <= innerWidth && rect.top >= 0 && rect.bottom <= innerHeight;
+        });
+        assert.ok((await panel.boundingBox()).width <= 320, 'A narrow viewport must constrain the entire library');
+        for (const selector of ['.pb-library__header', '.library-tab-item--library .library-template-block--section .library-filter-input', '.pb-library__close']) {
+            assert.equal(await panel.locator(selector).isVisible(), true, 'The compact viewport must retain access to the header, search and close button');
+        }
+        assert.ok((await results.boundingBox()).height > 0, 'The compact viewport must retain a usable results area');
+        await iframe.evaluate((element, value) => value === null ? element.removeAttribute('style') : element.setAttribute('style', value), originalStyle);
+        await frame.waitForFunction(() => document.querySelector('.pb-library').getBoundingClientRect().width === 360);
 
-    I.click(".pb-empty-placeholder-wrapper .pb-empty-placeholder__button");
-    I.waitForElement(".library-template-block--section", 10);
+        for (const type of ['basic', 'favorite', 'library']) {
+            const tab = panel.locator('button.library-tab-link[data-library-type='+type+']');
+            await tab.focus();
+            await page.keyboard.press('Enter');
+            assert.equal(await tab.getAttribute('aria-selected'), 'true', 'Keyboard activation must expose the selected tab');
+            assert.equal(await panel.locator('.library-tab-link[aria-selected=true]').count(), 1, 'Exactly one tab must be selected');
+            if (type === 'favorite') {
+                const removals = panel.locator('.library-tab-item--favorite .library-template-block--section button.library-tab-item-delete-favorite');
+                const existingFavorites = await removals.count();
+                console.log('Existing section favorites available for keyboard removal: '+existingFavorites);
+                if (!existingFavorites) {
+                    await frame.evaluate(() => {
+                        const pb = window.pageBuilder;
+                        pb.template.favorite.find(item => item.textKey === 'section').groups.push({id: 'autotest-library-favorite', textKey: 'autotest library favorite', content: '<section>autotest library favorite</section>', filePath: '/autotest-library-favorite.html'});
+                        pb.update_library_content();
+                    });
+                }
+                const count = await removals.count();
+                await removals.first().focus();
+                const popup = page.waitForEvent('dialog');
+                await page.keyboard.press('Enter');
+                assert.equal((await popup).type(), 'confirm', 'Removing a favorite must request confirmation');
+                favoriteRemovalChecked = true;
+                assert.equal(await removals.count(), count, 'Cancelling removal must preserve favorite blocks');
+                assert.equal(await panel.isVisible(), true, 'The removal button must not insert its favorite block');
+            }
+        }
+        for (const close of ['.pb-library__close', 'Escape']) {
+            if (close === 'Escape') {
+                await library.locator('input.library-filter-input').focus();
+                await page.keyboard.press('Escape');
+            } else {
+                await panel.locator(close).focus();
+                await page.keyboard.press('Enter');
+            }
+            await panel.waitFor({state: 'hidden'});
+            assert.equal(await frame.evaluate(() => document.activeElement.matches('.pb-empty-placeholder__button')), true, 'Closing the library must restore focus to its insertion trigger');
+            if (close !== 'Escape') {
+                await frame.locator('.pb-empty-placeholder-wrapper .pb-empty-placeholder__button').click();
+                await panel.waitFor({state: 'visible'});
+            }
+        }
+    });
+    if (favoriteRemovalChecked) I.cancelPopup();
+    I.amAcceptingPopups();
+    I.switchTo();
+    DTE.cancel();
+    I.wjSetDefaultWindowSize();
+});
+
+Scenario('library direct leaf blocks remain searchable and insertable', async ({I, DTE, Document}) => {
+    await openBlockLibrary(I, DTE, Document);
+    await I.usePlaywrightTo('verify a browser-only direct leaf template without changing server fixtures', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        const panel = frame.locator('.pb-library--section');
+        const library = panel.locator('.library-tab-item--library .library-template-block--section');
+        const all = library.locator('.library-tag-item-btn[data-library-tag=""]');
+        const initialCount = Number(await all.locator('.library-count').textContent());
+        await frame.evaluate(() => {
+            const pb = window.pageBuilder;
+            const content = document.createElement('template');
+            content.innerHTML = pb.template.basic.find(item => item.textKey === 'section').groups[0].content;
+            const marker = document.createElement('p');
+            marker.className = 'autotest-library-leaf';
+            marker.textContent = 'autotest direct library leaf';
+            content.content.querySelector(pb.grid.column).append(marker);
+            pb.template.library.find(item => item.textKey === 'section').groups.push({id: 'autotest-library-leaf', textKey: 'autotest direct library leaf', content: content.innerHTML, blocks: null});
+            pb.$wrapper.find('.library-tab-item--library').html(pb.create_library_content_template('library'));
+            pb.filter_library();
+        });
+        assert.equal(Number(await all.locator('.library-count').textContent()), initialCount+1, 'All must count direct leaf templates as blocks');
+        const search = library.locator('.library-filter-input');
+        const leaf = library.locator('button.library-tab-item-button[data-library-item-id=autotest-library-leaf]');
+        await search.fill('autotest direct library leaf');
+        assert.equal(await leaf.isVisible(), true, 'Search must retain matching direct leaf templates');
+        assert.equal(await library.locator('.library-empty').isVisible(), false, 'A matching leaf must prevent the empty state');
+        assert.equal(await library.locator('.library-tab-item-button__toggler:visible').count(), 0, 'Unmatched categories must be hidden while a leaf matches');
+        await library.locator('.library-tag-item-btn[data-library-tag="Formulár"]').click();
+        assert.equal(await leaf.isVisible(), false, 'An untagged leaf must not match a selected tag');
+        assert.equal(await library.locator('.library-empty').isVisible(), true, 'Search and tag must both apply to direct leaf templates');
+        await all.click();
+        await leaf.click();
+        await panel.waitFor({state: 'hidden'});
+        assert.equal(await frame.locator('section.pb-section p.autotest-library-leaf').count(), 1, 'One click must insert the direct leaf exactly once');
+    });
+    I.switchTo();
+    DTE.cancel();
+    I.wjSetDefaultWindowSize();
+});
+
+Scenario('library content insertion preserves the CKEditor selection', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    await assertWorkbenchEditorFocused(I, workbenchFixture+' .pb-workbench-copy');
+    await I.usePlaywrightTo('open content blocks through CKEditor and preserve the insertion caret', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        const selector = workbenchFixture+' .pb-workbench-copy';
+        const caret = await frame.locator(selector).evaluate(element => {
+            const range = document.createRange();
+            range.selectNodeContents(element);
+            range.collapse(false);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            return {offset: selection.anchorOffset, collapsed: selection.isCollapsed};
+        });
+        const editor = frame.locator(workbenchFixture+' .pb-column').first();
+        const headingCount = await editor.locator('h1').count();
+        const blocks = frame.getByRole('button', {name: 'Bloky', exact: true});
+        await blocks.click();
+        const panel = frame.locator('.pb-library--content');
+        await panel.waitFor({state: 'visible'});
+        await frame.waitForFunction(() => document.activeElement.matches('.pb-library--content .library-filter-input'));
+        assert.equal(await panel.locator('.pb-library__header__title').textContent(), 'Vložiť blok', 'CKEditor must open the content picker');
+        assert.equal(await panel.locator('[data-library-type=favorite]').isVisible(), false, 'Content insertion must hide the unsupported favorites tab');
+        await page.keyboard.press('Escape');
+        await panel.waitFor({state: 'hidden'});
+        const restored = await frame.locator(selector).evaluate(element => {
+            const selection = window.getSelection();
+            return {inside: element === selection.anchorNode || element.contains(selection.anchorNode), offset: selection.anchorOffset, collapsed: selection.isCollapsed};
+        });
+        assert.deepStrictEqual(restored, {inside: true, ...caret}, 'Escape must restore the original CKEditor caret');
+        await blocks.click();
+        await panel.waitFor({state: 'visible'});
+        await frame.waitForFunction(() => document.activeElement.matches('.pb-library--content .library-filter-input'));
+        await panel.locator('[data-library-type=basic]').click();
+        await panel.locator('.library-template-block--content button.library-tab-item-button').first().click();
+        await panel.waitFor({state: 'hidden'});
+        await editor.locator('h1').last().waitFor({state: 'visible'});
+        assert.equal(await editor.locator('h1').count(), headingCount+1, 'One card click must insert exactly one content block into the original column');
+        assert.equal(await editor.locator('.pb-workbench-copy + h1').count(), 1, 'Content insertion must preserve the caret position after the original paragraph');
+        assert.equal(await editor.locator('h1').last().textContent(), 'Nadpis 1', 'The inserted content must match the selected basic block');
+    });
+    I.switchTo();
+    DTE.cancel();
+});
+
+Scenario("insert blocks into page", async ({I, DTE, Document}) => {
+    await openBlockLibrary(I, DTE, Document);
 
     //
     I.say("Inserting contact form block");
-    I.click(locate("label.library-tag-item-btn").withText("Formulár"));
+    I.click(locate("button.library-tag-item-btn").withText("Formulár"));
     I.click(locate(".library-full-width-item").withText("Kontaktný formulár"));
 
     I.waitForElement(locate("section.pb-section h2.text-center").withText("Contact us"), 10);
@@ -2143,11 +2334,14 @@ Scenario("insert blocks into page", ({I, DTE, Apps, Document}) => {
     I.selectOption({css: "div.exit-inline-editor select"}, "html");
     I.switchTo();
 
-    I.seeElement(locate(".CodeMirror-line").withText("!INCLUDE(/components/formsimple/form.jsp"));
-    I.seeElement(locate(".CodeMirror-line").withText('Text'));
-    I.seeElement(locate(".CodeMirror-line .cm-string").withText('col-2'));
-    I.seeElement(locate(".CodeMirror-line .cm-string").withText('c2VjdGlvbi9Db250YWN0L2NvbnRhY3RfMDY'));
+    I.waitForVisible('.CodeMirror', 10);
+    const html = await I.executeScript(() => document.querySelector('.CodeMirror').CodeMirror.getValue());
+    assert.ok(html.includes('!INCLUDE(/components/formsimple/form.jsp'), 'The serialized page must preserve the inserted contact form application');
+    assert.ok(html.includes('Text'), 'The serialized page must preserve the basic section text');
+    assert.ok(html.includes('col-2'), 'The serialized page must preserve the chosen column widths');
+    assert.ok(html.includes('c2VjdGlvbi9Db250YWN0L2NvbnRhY3RfMDY'), 'The serialized page must preserve the inserted block identifier');
 
+    DTE.cancel();
     I.wjSetDefaultWindowSize();
 });
 
