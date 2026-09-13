@@ -1159,6 +1159,11 @@
 .pb-modal .pb-style-input:not([type=radio]):not([type=checkbox]):not([type=hidden])[data-changed=true]:not(:disabled) {
   border-color: #0063FB;
 }
+.pb-modal .pb-style-input:not([type=radio]):not([type=checkbox]):not([type=hidden]):focus:not(:disabled) {
+  border-color: rgb(127.5, 177, 253);
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(0, 99, 251, 0.25);
+}
 .pb-modal input[type=checkbox] {
   flex: 0 0 16px;
   width: 16px;
@@ -1210,11 +1215,16 @@
 .pb-modal .input-group {
   display: flex;
   flex-wrap: nowrap;
-  gap: 6px;
+  gap: 0;
 }
-.pb-modal .input-group > .pb-style-input {
+.pb-modal .input-group > .pb-style-input:not([type=radio]):not([type=checkbox]):not([type=hidden]) {
   flex: 1;
   width: 0 !important;
+  position: relative;
+  border-radius: 6px 0 0 6px;
+}
+.pb-modal .input-group > .pb-style-input:not([type=radio]):not([type=checkbox]):not([type=hidden]):focus {
+  z-index: 1;
 }
 .pb-modal .pb-input-group-addon {
   display: inline-flex;
@@ -1223,9 +1233,10 @@
   flex: 0 0 32px;
   width: 32px;
   height: 32px;
+  margin-left: -1px;
   padding: 0;
   border: 1px solid #868EA5;
-  border-radius: 6px;
+  border-radius: 0 6px 6px 0;
   background: white;
   color: #13151B;
   font-size: 18px;
@@ -2919,6 +2930,20 @@ div.exit-inline-editor a[aria-pressed=true] {
   background: white;
   box-shadow: 0 3px 8px rgba(19, 21, 27, 0.06);
 }
+.pb-workbench.is-inserting, .pb-workbench.is-resizing {
+  padding: 0;
+  gap: 0;
+  background: #edf3ff;
+}
+.pb-workbench.is-inserting > .pb-mode-hint, .pb-workbench.is-resizing > .pb-mode-hint {
+  flex: 1 1 100%;
+  margin: 0;
+  padding: 6px 10px;
+  border-top: 0;
+}
+.pb-workbench.is-inserting > :not(.pb-insert-hint), .pb-workbench.is-resizing > :not(.pb-resize-hint) {
+  display: none !important;
+}
 .pb-workbench-standalone {
   position: fixed;
   top: 0;
@@ -3104,6 +3129,14 @@ html.pb-insertion-open {
 .pb-mode-hint button {
   flex-shrink: 0;
   font-size: 12px;
+}
+.pb-mode-hint button:hover:not(:disabled) {
+  background: #0063FB;
+  color: white;
+}
+.pb-mode-hint button:active:not(:disabled) {
+  background: #0049BE;
+  color: white;
 }
 
 .pb-wrapper aside.pb-insert-space {

@@ -181,6 +181,11 @@
         line-height: 20px;
         &:disabled { background: $nice-gray; color: $dark-60; }
         &[data-changed=true]:not(:disabled) { border-color: $primary; }
+        &:focus:not(:disabled) {
+            border-color: mix(white, $primary, 50%);
+            outline: 0;
+            box-shadow: 0 0 0 .25rem rgba($primary, .25);
+        }
     }
     input[type=checkbox] {
         flex: 0 0 16px;
@@ -222,8 +227,14 @@
     .input-group {
         display: flex;
         flex-wrap: nowrap;
-        gap: 6px;
-        > .#{$prefix}-style-input { flex: 1; width: 0 !important; }
+        gap: 0;
+        > .#{$prefix}-style-input:not([type=radio]):not([type=checkbox]):not([type=hidden]) {
+            flex: 1;
+            width: 0 !important;
+            position: relative;
+            border-radius: $modal-radius 0 0 $modal-radius;
+            &:focus { z-index: 1; }
+        }
     }
     .#{$prefix}-input-group-addon {
         display: inline-flex;
@@ -232,9 +243,10 @@
         flex: 0 0 32px;
         width: 32px;
         height: 32px;
+        margin-left: -1px;
         padding: 0;
         border: 1px solid $nice-gray-300;
-        border-radius: $modal-radius;
+        border-radius: 0 $modal-radius $modal-radius 0;
         background: white;
         color: $secondary;
         font-size: 18px;

@@ -1034,8 +1034,8 @@ Scenario('workbench insertion expands without scrolling away from the first sect
         assert.ok(state.firstTop>=state.toolbarBottom,'The first section destination must be visible without scrolling back up');
         if (reducedMotion==='no-preference') assert.ok(state.samples.some(sample=>sample.height>0 && sample.height<48),'Visible gaps must expand gradually');
         else assert.ok(state.samples.every(sample=>sample.height===48),'Reduced motion must show the completed layout immediately');
-        I.click('.pb-workbench [data-pb-action=insert]');
-        I.dontSeeElement('.pb-insert-space');
+        I.click('.pb-workbench [data-pb-action=end-insert]');
+        I.waitForInvisible('.pb-insert-space', 10);
     }
     await I.usePlaywrightTo('restore the motion preference', async ({page}) => page.emulateMedia({reducedMotion:'no-preference'}));
     const scrolled = await I.executeScript(() => {
@@ -1056,15 +1056,47 @@ Scenario('workbench insertion expands without scrolling away from the first sect
     DTE.cancel();
 });
 
+/** Checks that insertion replaces the normal toolbar controls with one hint row. */
+async function assertWorkbenchInsertionRow(frame, inserting) {
+    const bar = frame.locator('.pb-workbench');
+    await frame.waitForFunction(inserting => document.querySelector('.pb-workbench').classList.contains('is-inserting') === inserting, inserting);
+    assert.equal(await bar.locator('.pb-insert-hint').isVisible(), inserting, 'The insertion hint must only appear while choosing a destination');
+    assert.equal(await bar.locator('.pb-resize-hint').isVisible(), false, 'Insertion must not show a second resize hint');
+    if (inserting) {
+        assert.deepStrictEqual(await bar.locator('button:visible').evaluateAll(buttons => buttons.map(button => button.dataset.pbAction)), ['end-insert'], 'The active insertion toolbar must expose only the Exit button');
+        const children = await bar.evaluate(element => Array.from(element.children).filter(child => child.getBoundingClientRect().height > 0 && getComputedStyle(child).display !== 'none').map(child => child.classList.contains('pb-insert-hint')));
+        assert.deepStrictEqual(children, [true], 'The hint must replace every normal toolbar child without leaving a second row');
+    } else {
+        for (const selector of ['.pb-workbench-path', '.pb-workbench-actions', '[data-pb-action=structure]', '[data-pb-action=insert]', '[data-pb-action=guides]']) {
+            assert.equal(await bar.locator(selector).isVisible(), true, 'Leaving insertion must restore the normal toolbar controls');
+        }
+    }
+}
+
+/** Verifies the shared high-contrast hover appearance of a mode's Exit action. */
+async function assertWorkbenchExitHover(page, frame, action, screenshot) {
+    const button = frame.locator('.pb-workbench [data-pb-action='+action+']');
+    await button.hover();
+    const appearance = await button.evaluate(element => ({background: getComputedStyle(element).backgroundColor, color: getComputedStyle(element).color}));
+    assert.deepStrictEqual(appearance, {background: 'rgb(0, 99, 251)', color: 'rgb(255, 255, 255)'}, 'Hovering Exit must show white text on the primary blue background');
+    await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path: '../../../build/test/'+screenshot});
+}
+
 Scenario('workbench insertion cancellation collapses smoothly and restores focus', async ({I, DTE, Document}) => {
     await openWorkbenchFixture(I, DTE, Document);
     const before=await workbenchGeometry(I);
-    for (const action of ['Escape','end-insert','insert']) {
+    for (const action of ['Escape','end-insert']) {
         I.executeScript(() => window.scrollTo({top:0,behavior:'instant'}));
         I.click('.pb-workbench [data-pb-action=insert]');
         await I.usePlaywrightTo('sample the collapsing insertion gaps', async ({page}) => {
             const frame=await getPageBuilderFrame(page);
             await frame.waitForFunction(() => window.pageBuilder.ui.insertAnimations.every(animation=>animation.playState==='finished'));
+            await assertWorkbenchInsertionRow(frame, true);
+            assert.equal(await frame.evaluate(() => document.activeElement.matches('.pb-workbench [data-pb-action=end-insert]')), true, 'Starting insertion must focus the visible Exit action');
+            if (action === 'Escape') {
+                await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path: '../../../build/test/pagebuilder-insertion-toolbar.png'});
+                await assertWorkbenchExitHover(page, frame, 'end-insert', 'pagebuilder-insertion-exit-hover.png');
+            }
             await frame.evaluate(() => {
                 window.pbCollapseSamples=[];
                 const point=window.pageBuilder.ui.insertPoints.find(point=>point.type==='section');
@@ -1078,6 +1110,7 @@ Scenario('workbench insertion cancellation collapses smoothly and restores focus
             if (action==='Escape') await page.keyboard.press('Escape');
             else await frame.locator('.pb-workbench [data-pb-action='+action+']').click();
             await frame.waitForFunction(() => !window.pageBuilder.ui.inserting);
+            await assertWorkbenchInsertionRow(frame, false);
         });
         const state=await I.executeScript(() => ({samples:window.pbCollapseSamples,focused:document.activeElement.matches('[data-pb-action=insert]'),animations:window.pageBuilder.ui.insertAnimations.length}));
         assert.ok(state.samples.some(sample=>sample.height>0 && sample.height<48),'Cancellation must animate the gap instead of removing it immediately');
@@ -1093,6 +1126,7 @@ Scenario('workbench insertion cancellation collapses smoothly and restores focus
         await page.keyboard.press('Escape');
         await page.keyboard.press('Escape');
         await frame.waitForFunction(() => !window.pageBuilder.ui.inserting && !document.querySelector('.pb-insert-space'));
+        await assertWorkbenchInsertionRow(frame, false);
     });
     assert.deepStrictEqual(await workbenchGeometry(I),before,'Interrupted expansion must also restore the authored geometry');
     I.switchTo();
@@ -1165,6 +1199,7 @@ Scenario('workbench inserts sections containers and columns through the library'
                 const editor=field && CKEDITOR.instances[field.dataset.ckeditorInstance];
                 return editor?.status==='ready' && editor.focusManager.hasFocus && document.querySelector('#wjInlineCkEditorToolbarOffsetElement').getBoundingClientRect().height>0;
             });
+            await assertWorkbenchInsertionRow(frame, false);
         });
         const result = await I.executeScript(() => {
             const pb=window.pageBuilder, point=window.pbAutotestInsertPoint;
@@ -1332,19 +1367,28 @@ Scenario('workbench column sizing outlines, toolbar exit and responsive values',
     I.click('.pb-workbench [data-pb-action=guides]');
     const initialHtml = await I.executeScript(() => window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data);
     I.click(resize);
-    I.waitForVisible(resize+'[aria-pressed=true]:enabled', 10);
     I.waitForVisible(hint, 10);
+    I.waitForVisible(hint+' [data-pb-action=end-resize]:enabled', 10);
     I.dontSeeElement('.pb-insert-hint');
     assert.deepStrictEqual(await I.executeScript((root, selector) => {
         const button = document.querySelector(selector);
         return {text: button.textContent, icon: button.querySelector('svg').outerHTML, label: button.getAttribute('aria-label')};
     }, resize), originalButton, 'Entering sizing mode must preserve the width button value, icon and label');
     I.waitForVisible('.pb-outline-layer.is-resizing .pb-outline:not([hidden])', 10);
+    await I.usePlaywrightTo('verify the single sizing toolbar row and contrasting Exit hover', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        assert.equal(await frame.evaluate(() => document.activeElement.matches('.pb-workbench [data-pb-action=end-resize]')), true, 'Starting sizing must focus its visible Exit action');
+        const children = await frame.locator('.pb-workbench').evaluate(element => Array.from(element.children).filter(child => child.getBoundingClientRect().height > 0 && getComputedStyle(child).display !== 'none').map(child => child.classList.contains('pb-resize-hint')));
+        assert.deepStrictEqual(children, [true], 'Sizing must replace every normal toolbar child with the resize hint');
+        await assertWorkbenchExitHover(page, frame, 'end-resize', 'pagebuilder-resize-exit-hover.png');
+    });
     const widths = entries => entries.map(({left, width}) => ({left, width}));
     assert.deepStrictEqual(widths(await workbenchGeometry(I)), widths(before), 'The internal control strip must preserve column and text widths');
-    I.click(resize);
+    I.click(hint+' [data-pb-action=end-resize]');
     I.waitForInvisible('.pb-is-resize-columns', 10);
     I.waitForInvisible(hint, 10);
+    I.waitForVisible(resize, 10);
+    assert.equal(await I.executeScript(() => document.activeElement?.dataset.pbAction), 'resize', 'Leaving sizing must restore focus to the normal width control');
     assert.deepStrictEqual(await workbenchGeometry(I), before, 'Leaving sizing mode without edits must restore the original geometry and text wrapping');
     I.click(resize);
     I.waitForVisible('.pb-outline-layer.is-resizing .pb-outline:not([hidden])', 10);
@@ -1354,13 +1398,12 @@ Scenario('workbench column sizing outlines, toolbar exit and responsive values',
             const text = await frame.locator(hint+' strong').textContent();
             assert.ok(text.includes(marker) && text.includes(range), 'The hint must explain the active breakpoint');
             assert.ok(!(await frame.locator(hint).textContent()).includes('pagebuilder.ui.'), 'Hint translations must be available');
-            const appearance = await frame.evaluate(({resize, hint}) => ({
-                button: getComputedStyle(document.querySelector(resize)).backgroundColor,
+            const appearance = await frame.evaluate(hint => ({
                 hint: getComputedStyle(document.querySelector(hint)).backgroundColor,
                 insertion: getComputedStyle(document.querySelector('.pb-insert-hint')).backgroundColor
-            }), {resize, hint});
+            }), hint);
             assert.equal(appearance.hint, appearance.insertion, 'Both mode hints must use the same appearance');
-            assert.equal(appearance.button, appearance.insertion, 'The active width button must be highlighted');
+            assert.deepStrictEqual(await frame.locator('.pb-workbench button:visible').evaluateAll(buttons => buttons.map(button => button.dataset.pbAction)), ['end-resize'], 'Sizing must expose only its Exit button in the toolbar at every breakpoint');
         };
         await checkHint('XL', '1200');
         const checkControls = async () => {
@@ -1438,6 +1481,7 @@ Scenario('workbench column sizing outlines, toolbar exit and responsive values',
         await frame.locator(hint+' [data-pb-action=end-resize]').click();
         await frame.waitForFunction(() => !document.querySelector('.pb-is-resize-columns') && !document.querySelector('.pb-outline:not([hidden])'));
         assert.equal(await frame.locator(hint).isVisible(), false, 'The hint exit must close sizing mode');
+        await assertWorkbenchInsertionRow(frame, false);
         assert.equal(await frame.evaluate(() => localStorage.getItem('webjet.pagebuilder.guides')), 'hidden');
         assert.equal(await frame.evaluate(() => document.activeElement?.dataset.pbAction), 'resize');
         await frame.locator(resize).click();
@@ -1446,20 +1490,20 @@ Scenario('workbench column sizing outlines, toolbar exit and responsive values',
         await frame.waitForFunction(() => !document.querySelector('.pb-is-resize-columns') && !document.querySelector('.pb-outline:not([hidden])'));
         assert.equal(await frame.locator(resize).getAttribute('aria-pressed'), 'false');
         assert.equal(await frame.locator(hint).isVisible(), false, 'Escape must also hide the sizing hint');
+        await assertWorkbenchInsertionRow(frame, false);
+        assert.equal(await frame.evaluate(() => document.activeElement?.dataset.pbAction), 'resize', 'Escape must restore focus to the normal width control');
         await frame.locator('.exit-inline-editor a[href*="pbSetWindowSize(\'desktop\')"]').click();
         // The real page includes a short heading row directly above a multi-column row.
         await frame.locator('.pb-column.col-3.text-center h3').first().click();
         await frame.locator(resize).click();
         await frame.waitForFunction(() => !!document.querySelector('.pb-outline-layer.is-resizing'));
-        await frame.locator('.pb-workbench-path').hover();
+        await frame.locator(hint).hover();
         assert.ok(await checkControls() >= 4, 'The fixture must include the short heading and content columns');
         await frame.locator('.exit-inline-editor a[href*="pbSetWindowSize(\'phone\')"]').click();
         await frame.waitForFunction(() => innerWidth < 768);
         await frame.waitForFunction(() => Array.from(document.querySelectorAll('.pb-is-resize-columns .pb-size-changer__number small')).every(node => node.textContent === ''));
         await checkHint('', '768');
-        const narrow = await frame.locator(resize).evaluate(node => ({x: node.getBoundingClientRect().x, width: node.getBoundingClientRect().width}));
         const viewport = await frame.evaluate(() => innerWidth);
-        assert.ok(narrow.x >= 0 && narrow.x + narrow.width <= viewport, 'The toolbar exit must remain reachable on mobile');
         const exit = await frame.locator(hint+' [data-pb-action=end-resize]').evaluate(node => ({left: node.getBoundingClientRect().left, right: node.getBoundingClientRect().right}));
         assert.ok(exit.left >= 0 && exit.right <= viewport, 'The hint exit must remain reachable beside wrapped text on mobile');
         await checkControls();
@@ -2042,8 +2086,25 @@ Scenario('style panel accordions preserve values and save cancel reset behavior'
         assert.deepStrictEqual(await panel.locator('.pb-style-accordion').evaluateAll(groups => groups.map(group => group.dataset.inputGroupId)), ['10','01','08','03','02','07','05','04','06','11','12'], 'Style groups must follow the approved order and omit empty animation controls');
         assert.equal(await panel.locator('.pb-style-accordion__toggle[aria-expanded=true]').count(), 1, 'Only ID and classes must initially be open');
         assert.equal(await group('10').locator('.pb-style-accordion__toggle').getAttribute('aria-expanded'), 'true');
+        await page.keyboard.press('Tab');
+        await page.keyboard.press('Shift+Tab');
+        const focusStyle = await panel.locator('[name=selector-id]').evaluate(element => {
+            const style = getComputedStyle(element);
+            return {focused: element === document.activeElement, outlineWidth: style.outlineWidth, shadow: style.boxShadow};
+        });
+        assert.equal(focusStyle.focused, true, 'The ID input must remain reachable through keyboard navigation');
+        assert.equal(focusStyle.outlineWidth, '0px', 'Focused style inputs must not have the old black outline');
+        assert.ok(focusStyle.shadow.includes('rgba(0, 99, 251, 0.25)'), 'Focused style inputs must use the Bootstrap blue focus glow');
         await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path: '../../../build/test/pagebuilder-style-redesign.png'});
         await group('01').locator('.pb-style-accordion__toggle').click();
+        const imageInput = group('01').locator('[name=background-image]');
+        const imageButton = group('01').locator('button[data-image-property=background-image]');
+        const inputBox = await imageInput.boundingBox();
+        const buttonBox = await imageButton.boundingBox();
+        assert.ok(Math.abs(inputBox.x+inputBox.width-buttonBox.x-1) <= 0.5, 'The image field and picker button must share one overlapping border without a gap');
+        assert.equal(inputBox.y, buttonBox.y, 'The joined image controls must align vertically');
+        assert.equal(inputBox.height, buttonBox.height, 'The joined image controls must have the same height');
+        await imageInput.focus();
         await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path: '../../../build/test/pagebuilder-style-background.png'});
         await frame.evaluate(() => {
             window.pbAutotestImageDialog = window.openImageDialogWindow;

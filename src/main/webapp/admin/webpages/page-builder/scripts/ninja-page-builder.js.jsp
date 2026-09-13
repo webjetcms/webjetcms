@@ -235,7 +235,7 @@
                     me.restore_workbench_focus();
                 } else if (ui.inserting) {
                     me.close_workbench_insertion();
-                    ui.bar.find('[data-pb-action=insert]').trigger('focus');
+                    if (!ui.insertClosing) ui.bar.find('[data-pb-action=insert]').trigger('focus');
                 } else if (!ui.drawer.prop('hidden')) {
                     me.toggle_workbench_structure(false);
                     ui.bar.find('[data-pb-action=structure]').trigger('focus');
@@ -464,9 +464,13 @@
             }
             if (action === 'insert' || action === 'end-insert') {
                 if (me.workbench_busy()) return;
-                if (action === 'insert' && !ui.inserting) me.set_workbench_insertion(true);
-                else me.close_workbench_insertion();
-                ui.bar.find('[data-pb-action=insert]').trigger('focus');
+                if (action === 'insert' && !ui.inserting) {
+                    me.set_workbench_insertion(true);
+                    ui.insertHint.find('[data-pb-action=end-insert]')[0].focus({ preventScroll: true });
+                } else {
+                    me.close_workbench_insertion();
+                    if (!ui.insertClosing) ui.bar.find('[data-pb-action=insert]').trigger('focus');
+                }
                 return;
             }
             if (ui.inserting) return;
@@ -537,6 +541,12 @@
             var scroll = { x: window.scrollX, y: window.scrollY };
             me.clear_workbench_insertion();
             ui.inserting = open;
+            ui.bar.toggleClass('is-inserting', open);
+            if (open) {
+                ui.path.removeClass('is-expanded').find('[data-pb-action=ancestors]').attr('aria-expanded', 'false');
+                ui.menu.prop('hidden', true);
+                ui.actions.find('[data-pb-action=more]').attr('aria-expanded', 'false');
+            }
             document.documentElement.classList.toggle('pb-insertion-open', open);
             me.$wrapper.toggleClass(me.options.prefix+'-is-inserting', open);
             ui.insertHint.prop('hidden', !open);
@@ -573,7 +583,7 @@
             var anchor = me.$wrapper.find(me.tagc.column+':visible').get().find(element => element.getBoundingClientRect().bottom > viewportTop);
             var top = anchor ? anchor.getBoundingClientRect().top : 0;
             var spaces = me.$wrapper.find('aside.'+me.options.prefix+'-insert-space').get();
-            var elements = spaces.concat(ui.insertHint[0]);
+            var elements = spaces;
             var heights = elements.map(element => element.getBoundingClientRect().height);
             var above = spaces.map(element => element.getBoundingClientRect().bottom < viewportTop);
             var opacity = getComputedStyle(ui.insertLayer[0]).opacity;
@@ -599,7 +609,7 @@
         animate_workbench_insertion: function(anchor, top, scroll) {
             var me = this, ui = me.ui;
             var spaces = me.$wrapper.find('aside.'+me.options.prefix+'-insert-space').get();
-            var elements = spaces.concat(ui.insertHint[0]);
+            var elements = spaces;
             var heights = elements.map(element => element.getBoundingClientRect().height);
             ui.insertAnimations = elements.map(function(element, index) {
                 var animation = element.animate([{ height: '0px' }, { height: heights[index]+'px' }], { duration: 220, easing: 'ease-out' });
@@ -911,7 +921,15 @@
                 }
                 ui.columnPrefix = columnPrefix;
                 // Include the mode hint in toolbar and outline geometry in this same frame.
+                var resizeStarted = resizing && !ui.bar.hasClass('is-resizing');
+                ui.bar.toggleClass('is-resizing', resizing);
                 ui.resizeHint.prop('hidden', !resizing);
+                if (resizeStarted) {
+                    ui.path.removeClass('is-expanded').find('[data-pb-action=ancestors]').attr('aria-expanded', 'false');
+                    ui.menu.prop('hidden', true);
+                    ui.actions.find('[data-pb-action=more]').attr('aria-expanded', 'false');
+                    ui.resizeHint.find('[data-pb-action=end-resize]')[0].focus({ preventScroll: true });
+                }
                 var contentBottom = ui.toolbarContent.length ? ui.toolbarContent[0].getBoundingClientRect().bottom : 0;
                 if (ui.toolbarHost.length) {
                     var hostTop = ui.toolbarHost[0].getBoundingClientRect().top;
@@ -2407,6 +2425,10 @@
                 $(this).children(me.tagc.size_changer).appendTo(this);
             });
             $(this.tagc._grid_element).removeClass(this.state.is_resize_columns);
+            if (me.ui) {
+                me.ui.bar.removeClass('is-resizing');
+                me.ui.resizeHint.prop('hidden', true);
+            }
             this.set_toolbar_invisible();
             this.refresh_workbench_selection();
             this.schedule_workbench();

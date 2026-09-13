@@ -71,6 +71,19 @@
     background: white;
     box-shadow: 0 3px 8px rgba(19, 21, 27, .06);
 
+    &.is-inserting, &.is-resizing {
+        padding: 0;
+        gap: 0;
+        background: #edf3ff;
+        > .#{$prefix}-mode-hint {
+            flex: 1 1 100%;
+            margin: 0;
+            padding: 6px 10px;
+            border-top: 0;
+        }
+    }
+    &.is-inserting > :not(.#{$prefix}-insert-hint),
+    &.is-resizing > :not(.#{$prefix}-resize-hint) { display: none !important; }
     &-standalone { position: fixed; top: 0; z-index: 102000; }
     &-path {
         display: flex;
@@ -164,7 +177,12 @@ html.pb-insertion-open { overflow-anchor: none; }
     background: #edf3ff;
     font-size: 12px;
     overflow: hidden;
-    button { flex-shrink: 0; font-size: 12px; }
+    button {
+        flex-shrink: 0;
+        font-size: 12px;
+        &:hover:not(:disabled) { background: $primary; color: white; }
+        &:active:not(:disabled) { background: $primary-hover; color: white; }
+    }
 }
 .#{$prefix}-wrapper aside.#{$prefix}-insert-space {
     display: block !important;
