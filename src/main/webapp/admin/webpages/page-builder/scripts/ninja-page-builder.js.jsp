@@ -1161,6 +1161,7 @@
                 modal:                          prefix+'modal',
                 modal_header:                   prefix+'modal__header',
                 modal_header_button_show:       prefix+'modal__header__button-show',
+                modal_header_button_close:      prefix+'modal__header__button-close',
                 modal_content:                  prefix+'modal__content',
                 modal_footer:                   prefix+'modal__footer',
                 modal_footer_button_close:      prefix+'modal__footer__button-close',
@@ -3874,13 +3875,18 @@
             z_index += '<div class="'+me.tag.modal_zindex+'"></div>';
             content += me.build_input_group(z_index,'12');
 
-            var header = '<span class="header-title"></span>'+ me.build_button(me.tag.modal_header_button_show, '') + me.build_tab_menu();
+            var header = '<div class="'+me.options.prefix+'-modal__header-row"><i class="modal-drag-handle ti ti-grip-vertical" aria-hidden="true"></i>';
+            header += '<span class="header-title" id="'+me.options.prefix+'-style-title"></span>';
+            header += '<button type="button" class="'+me.tag.modal_header_button_show+'" aria-label="<iwcm:text key="pagebuilder.modal.locate"/>" title="<iwcm:text key="pagebuilder.modal.locate"/>"><i class="ti ti-focus-2" aria-hidden="true"></i></button>';
+            header += '<button type="button" class="'+me.tag.modal_header_button_close+'" aria-label="<iwcm:text key="pagebuilder.modal.btn.close"/>"><i class="ti ti-x" aria-hidden="true"></i></button></div>';
+            header += '<div class="'+me.options.prefix+'-modal__context"></div>';
+            content = me.build_style_accordion(content);
 
-            var footer = me.build_button(me.tag.modal_footer_button_close, '<iwcm:text key="pagebuilder.modal.btn.close"/>');
-            footer += me.build_button(me.tag.modal_footer_button_reset, '<iwcm:text key="pagebuilder.modal.btn.reset"/>');
+            var footer = me.build_button(me.tag.modal_footer_button_reset, '<iwcm:text key="pagebuilder.modal.btn.reset"/>');
+            footer += me.build_button(me.tag.modal_footer_button_close, '<iwcm:text key="pagebuilder.modal.btn.close"/>');
             footer += me.build_button(me.tag.modal_footer_button_save, '<iwcm:text key="pagebuilder.modal.btn.save"/>');
 
-            var modal = '<div class="'+me.tag.modal+'">';
+            var modal = '<div class="'+me.tag.modal+'" role="dialog" aria-labelledby="'+me.options.prefix+'-style-title" tabindex="-1" contenteditable="false">';
             modal += '<div class="'+me.tag.modal_header+'">'+header+'</div>';
             modal += '<div class="'+me.tag.modal_content+'"><form name="'+me.options.prefix+'-form">'+content+'</form></div>';
             modal += '<div class="'+me.tag.modal_footer+'">'+footer+'</div>';
@@ -3889,6 +3895,15 @@
             $(modal).appendTo(me.$wrapper);
 
             me.make_modal_draggable();
+            me.$wrapper.on('click', '.'+me.options.prefix+'-style-accordion__toggle', function() {
+                var button = $(this), open = button.attr('aria-expanded') !== 'true';
+                button.attr('aria-expanded', String(open));
+                button.next().prop('hidden', !open);
+            });
+            me.$wrapper.on('click', me.tagc.modal_header_button_close, function() { me.close_modal(); });
+            me.$wrapper.on('click', me.tagc.modal+' .'+me.options.prefix+'-input-group-addon', function() {
+                openImageDialogWindow(me.options.prefix+'-form', $(this).attr('data-image-property'), '');
+            });
 
             me.set_spinner('margin-top', -500, 500);
             me.set_spinner('margin-bottom', -500, 500);
@@ -4015,26 +4030,23 @@
 
         make_modal_draggable: function() {
             var me = this;
-            $(this.tagc.modal).draggable({
-                handle: '.header-title',
-                drag: function( event, ui ) {
-
-                    var window_width = $(window).outerWidth(),
-                        window_height = $(window).outerHeight(),
-                        modal_width = $(me.tagc.modal).outerWidth(),
-                        modal_height = $(me.tagc.modal).outerHeight(),
-                        offset = 10,
-                        min_left = offset,
-                        max_left = window_width - modal_width - offset,
-                        min_top = offset,
-                        max_top = window_height - modal_height - offset;
-
-                    if(ui.position.left < min_left)   { ui.position.left = min_left; }
-                    if(ui.position.left > max_left)   { ui.position.left = max_left; }
-                    if(ui.position.top < min_top)     { ui.position.top = min_top; }
-                    if(ui.position.top > max_top)     { ui.position.top = max_top; }
-                }
+            me.$wrapper.find(me.tagc.modal).draggable({
+                handle: '.'+me.options.prefix+'-modal__header-row',
+                drag: function(event, ui) { me.keep_modal_in_viewport(ui.position); }
             });
+            me.modal_resize_handler = function() {
+                if (me.$wrapper.hasClass(me.state.is_modal_open)) me.keep_modal_in_viewport();
+            };
+            $(window).on('resize', me.modal_resize_handler);
+        },
+
+        /** Keeps the complete style panel reachable without scrolling the document. */
+        keep_modal_in_viewport: function(position) {
+            var modal = this.$wrapper.find(this.tagc.modal), rect = modal[0].getBoundingClientRect();
+            var target = position || { left: rect.left, top: rect.top }, margin = 8;
+            target.left = Math.max(margin, Math.min(target.left, window.innerWidth-rect.width-margin));
+            target.top = Math.max(margin, Math.min(target.top, window.innerHeight-rect.height-margin));
+            if (!position) modal.css(target);
         },
 
         build_input_group: function(buttons, id) {
@@ -4051,7 +4063,8 @@
             var klass = (options!=undefined && 'class' in options)? options.class:'';
             var disabled = "";
             if (typeof options != "undefined" && true===options.disabled) disabled = ' disabled="disabled"';
-            return '<div class="'+this.tag.style_input_wrapper+' '+klass+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="number"'+disabled+' class="'+this.tag.style_input+' ui-spinner-input" name="'+prop+'" value="0" /></div>';
+            var id = this.options.prefix+'-style-field-'+prop;
+            return '<div class="'+this.tag.style_input_wrapper+' '+klass+'"><label class="'+this.tag.style_label+'" for="'+id+'">'+label+'</label><input type="number"'+disabled+' id="'+id+'" class="'+this.tag.style_input+' ui-spinner-input" name="'+prop+'" value="0" /></div>';
         },
 
         build_four_inputs_in_row: function(label,sets){
@@ -4062,9 +4075,9 @@
             ret += '<div class="'+me.tag.style_input_group_headline+'">'+label+'</div>';
             ret += '<div class="'+me.tag.style_input_group_four_in_row+' all">';
             ret +='<div class="'+me.tag.style_input_group_four_in_row_tools+'">';
-            ret +='<input type="checkbox" class="'+me.tag.style_input_group_four_in_row_checkbox+' '+me.tag.style_input_group_four_in_row_checkbox_all+'" name="connection-all" checked="true" />';
-            ret +='<input type="checkbox" class="'+me.tag.style_input_group_four_in_row_checkbox+' '+me.tag.style_input_group_four_in_row_checkbox_first_second+'" name="connection-first-second" checked="true" disabled="true"/>';
-            ret +='<input type="checkbox" class="'+me.tag.style_input_group_four_in_row_checkbox+' '+me.tag.style_input_group_four_in_row_checkbox_third_fourth+'" name="connection-third-fourth" checked="true" disabled="true"/>';
+            ret +='<input type="checkbox" class="'+me.tag.style_input_group_four_in_row_checkbox+' '+me.tag.style_input_group_four_in_row_checkbox_all+'" name="connection-all" aria-label="<iwcm:text key="pagebuilder.modal.link.all"/>" title="<iwcm:text key="pagebuilder.modal.link.all"/>" checked="true" />';
+            ret +='<input type="checkbox" class="'+me.tag.style_input_group_four_in_row_checkbox+' '+me.tag.style_input_group_four_in_row_checkbox_first_second+'" name="connection-first-second" aria-label="<iwcm:text key="pagebuilder.modal.link.first_second"/>" title="<iwcm:text key="pagebuilder.modal.link.first_second"/>" checked="true" disabled="true"/>';
+            ret +='<input type="checkbox" class="'+me.tag.style_input_group_four_in_row_checkbox+' '+me.tag.style_input_group_four_in_row_checkbox_third_fourth+'" name="connection-third-fourth" aria-label="<iwcm:text key="pagebuilder.modal.link.third_fourth"/>" title="<iwcm:text key="pagebuilder.modal.link.third_fourth"/>" checked="true" disabled="true"/>';
             ret += '</div>';
             $.each(sets,function(i,v){
                 var disabled = true;
@@ -4077,24 +4090,22 @@
         },
 
         build_input: function (prop,label) {
-            return '<div class="'+this.tag.style_input_wrapper+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="text" class="'+this.tag.style_input+'" name="'+prop+'" value="" /></div>';
+            var id = this.options.prefix+'-style-field-'+prop;
+            return '<div class="'+this.tag.style_input_wrapper+'"><label class="'+this.tag.style_label+'" for="'+id+'">'+label+'</label><input type="text" id="'+id+'" class="'+this.tag.style_input+'" name="'+prop+'" value="" /></div>';
         },
 
-        build_input_elfinder: function (prop,label) {
-            var htmlCode =
-                '<div class="'+this.tag.style_input_wrapper+'">'+
-                    '<div class="'+this.tag.style_label+'">'+label+'</div>'+
-                    '<div class="input-group">'+
-                        '<input type="text" class="'+this.tag.style_input+'" name="'+prop+'" value="" style="width:80%" />'+
-                        '<span class="'+this.options.prefix+'-input-group-addon" style="background-image:url(\'/admin/webpages/page-builder/images/photo.png\')" onclick="openImageDialogWindow(\''+this.options.prefix+'-form\', \''+prop+'\', \'\')"></span>'+
-                    '</div>'+
-                '</div>';
-
-            return htmlCode;
+        build_input_elfinder: function(prop, label) {
+            var id = this.options.prefix+'-style-field-'+prop;
+            return '<div class="'+this.tag.style_input_wrapper+'"><label class="'+this.tag.style_label+'" for="'+id+'">'+label+'</label>'+
+                '<div class="input-group"><input type="text" id="'+id+'" class="'+this.tag.style_input+'" name="'+prop+'" value="">'+
+                '<button type="button" class="'+this.options.prefix+'-input-group-addon" data-image-property="'+prop+'" aria-label="<iwcm:text key="pagebuilder.modal.image.choose"/>"><i class="ti ti-photo" aria-hidden="true"></i></button></div></div>';
         },
 
-        build_checkbox: function (prop,label) {
-            return '<div class="'+this.tag.style_input_wrapper+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="checkbox" class="'+this.tag.style_input+'" name="'+prop+'" value="true" /></div>';
+        build_checkbox: function(prop, label) {
+            var id = this.options.prefix+'-style-field-'+prop;
+            var icons = { 'visibility-sm': 'device-mobile', 'visibility-md': 'device-tablet', 'visibility-xl': 'device-desktop' };
+            var icon = icons[prop] ? '<i class="ti ti-'+icons[prop]+'" aria-hidden="true"></i>' : '';
+            return '<div class="'+this.tag.style_input_wrapper+'"><label class="'+this.tag.style_label+'" for="'+id+'">'+icon+'<span>'+label+'</span></label><input type="checkbox" id="'+id+'" class="'+this.tag.style_input+'" name="'+prop+'" value="true"></div>';
         },
 
         build_style_connections: function () {
@@ -4108,10 +4119,11 @@
         build_radio: function (values,prop,label) {
             var me = this,
                 id,
-                html = '<div class="'+me.tag.style_input_wrapper+'"><div class="'+me.tag.style_label+'">'+label+'</div><div class="radio-group">';
+                labelId = me.options.prefix+'-style-label-'+prop,
+                html = '<div class="'+me.tag.style_input_wrapper+'"><div class="'+me.tag.style_label+'" id="'+labelId+'">'+label+'</div><div class="radio-group" role="group" aria-labelledby="'+labelId+'">';
 
             $.each(values, function( key, value ) {
-                id = prop + '-' + key;
+                id = me.options.prefix+'-style-field-'+prop+'-'+key;
                 html += '<input type="radio" class="'+me.tag.style_input+'" name="'+prop+'" value="'+key+'" id="'+id+'"><label for="'+id+'">'+value+'</label>';
             });
 
@@ -4122,7 +4134,7 @@
 
         /**
          * Returns default tab menu configuration for the style modal.
-         * Can be customized by defining window.pbBuildTabMenu = function(config) { return config; }
+         * Can be customized by defining window.pbBuildTabMenu = function(me, config) { return config; }
          * @returns {Object} Tab menu configuration
          */
         getTabMenuConfig: function() {
@@ -4158,89 +4170,41 @@
             };
         },
 
-        build_tab_menu: function() {
-
-            // Get default configuration
-            var config = this.getTabMenuConfig();
-
-            // Allow customization via window.pbBuildTabMenu callback
-            if (typeof window.pbBuildTabMenu === 'function') {
-                config = window.pbBuildTabMenu(this, config);
-            }
-
-            // Build tab menu HTML from configuration
-            var tab = '<div class="tab-menu">';
-            var tabContent = '<div class="tab-content">';
-            var isFirst = true;
-
-            for (var i = 0; i < config.tabs.length; i++) {
-                var tabConfig = config.tabs[i];
-
-                // Skip hidden tabs
-                if (tabConfig.visible === false) {
-                    continue;
-                }
-
-                // Build tab link
-                var activeClass = isFirst ? ' active' : '';
-                tab += '<span class="tab-link' + activeClass + '" data-tab-id="' + tabConfig.id + '">' + tabConfig.name + '</span>';
-
-                // Build tab content with item buttons
-                var itemButtons = '';
-                for (var j = 0; j < tabConfig.items.length; j++) {
-                    var item = tabConfig.items[j];
-                    // Skip hidden items
-                    if (item.visible === false) {
-                        continue;
-                    }
-                    itemButtons += '<span class="tab-item-button" data-input-group-id="' + item.id + '">' + item.name + '</span>';
-                }
-
-                tabContent += '<div class="tab-item' + activeClass + '" data-tab-id="' + tabConfig.id + '">' + itemButtons + '</div>';
-                isFirst = false;
-            }
-
-            tab += '</div>';
-            tabContent += '</div>';
-            tab += tabContent;
-
-            var me = this;
-
-            me.$wrapper.on('click', '.tab-menu .tab-link', function() {
-
-                var id = $(this).attr('data-tab-id');
-                if($(this).hasClass('active')) {
-                } else {
-
-                    $('.tab-item .tab-item-button').removeClass('active');
-                    $(me.tagc.style_input_group).removeClass('active');
-
-                    $('.tab-menu .tab-link').not($(this)).removeClass('active');
-                    $(this).addClass('active');
-                    $('.tab-content .tab-item').removeClass('active');
-                    $('.tab-content .tab-item[data-tab-id="'+id+'"]').addClass('active');
-
-                    //select first menu tab
-                    $('.tab-content .tab-item[data-tab-id="'+id+'"] .tab-item-button').first().trigger('click');
-                }
+        /** Renders legacy tab configuration as independent accordions without discarding hidden style fields. */
+        build_style_accordion: function(content) {
+            var me = this, prefix = me.options.prefix, config = me.getTabMenuConfig();
+            var baseline = config.tabs.flatMap(function(tab) { return tab.items.map(function(item) { return String(item.id); }); });
+            if (typeof window.pbBuildTabMenu === 'function') config = window.pbBuildTabMenu(me, config);
+            var source = $('<div>').append(content), output = $('<div>');
+            var groups = source.children(me.tagc.style_input_group).filter(function() {
+                return $(this).text().trim() || $(this).find('input, select, textarea, button').length;
             });
-
-            me.$wrapper.on('click', '.tab-item .tab-item-button', function() {
-                var id = $(this).attr('data-input-group-id');
-
-                if($(this).hasClass('active')) {
-                    $('.tab-item .tab-item-button').removeClass('active');
-                    $(me.tagc.style_input_group).removeClass('active');
-                    $(this).removeClass('active');
-                } else {
-                    $('.tab-item .tab-item-button').removeClass('active');
-                    $(me.tagc.style_input_group).removeClass('active');
-                    $(this).addClass('active');
-                    $(me.tagc.style_input_group+'[data-input-group-id="'+id+'"]').addClass('active');
-                }
+            var items = config.tabs.filter(function(tab) { return tab.visible !== false; }).flatMap(function(tab) {
+                return tab.items.filter(function(item) {
+                    return item.visible !== false && groups.filter(function() { return $(this).attr('data-input-group-id') === String(item.id); }).length;
+                });
             });
-
-            return tab;
+            var ids = items.map(function(item) { return String(item.id); });
+            var originalOrder = baseline.filter(function(id) { return ids.includes(id); });
+            var returnedOrder = ids.filter(function(id) { return baseline.includes(id); });
+            if (originalOrder.join(',') === returnedOrder.join(',')) {
+                var order = ['10', '01', '08', '03', '02', '07', '05', '04', '06', '11', '12'];
+                items.sort(function(a, b) {
+                    var first = order.indexOf(String(a.id)), second = order.indexOf(String(b.id));
+                    return (first < 0 ? order.length : first)-(second < 0 ? order.length : second);
+                });
+            }
+            items.forEach(function(item, index) {
+                var panelId = prefix+'-style-panel-'+index, headingId = prefix+'-style-heading-'+index;
+                var accordion = $('<div>', { 'class': prefix+'-style-accordion', 'data-input-group-id': item.id }).appendTo(output);
+                var button = $('<button>', { type: 'button', 'class': prefix+'-style-accordion__toggle', id: headingId, 'aria-expanded': 'false', 'aria-controls': panelId }).appendTo(accordion);
+                $('<i>', { 'class': 'ti ti-chevron-down', 'aria-hidden': 'true' }).appendTo(button);
+                $('<span>').text(item.name).appendTo(button);
+                var body = $('<div>', { 'class': prefix+'-style-accordion__content', id: panelId, hidden: true, 'aria-labelledby': headingId }).appendTo(accordion);
+                groups.filter(function() { return $(this).attr('data-input-group-id') === String(item.id); }).appendTo(body);
+            });
+            $('<div>', { 'class': prefix+'-style-hidden-groups', hidden: true }).append(source.children()).appendTo(output);
+            return output.html();
         },
 
         set_box_shadow: function(prop) {
@@ -4307,6 +4271,21 @@
             if (this.options.color_picker === false) {
                 input.parent().addClass("no-color-picker");
             }
+            var swatches = input.parent().find('.minicolors-swatches li');
+            swatches.each(function() {
+                var swatch = $(this), name = swatch.attr('title') || swatch.data('swatch-color');
+                swatch.attr({ role: 'button', tabindex: '0', 'aria-label': "<iwcm:text key='pagebuilder.modal.color'/> "+name });
+            }).on('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    $(this).trigger('click');
+                }
+            });
+            function updateSwatches() {
+                swatches.each(function() { $(this).attr('aria-pressed', String($(this).hasClass('selected'))); });
+            }
+            input.on('change', updateSwatches);
+            updateSwatches();
 
             //initial value
             input.attr("data-changed", "false");
@@ -4316,54 +4295,68 @@
         /*====================|> OPEN MODAL
         /*=================================================================*/
 
-        open_modal: function (el) {
-
-            var me = this,
-                grid_element = me.get_parent_grid_element(el);
-
+        open_modal: function(el) {
+            var me = this, grid_element = me.get_parent_grid_element(el);
+            var active = document.activeElement;
+            me.modal_return_focus = $(active).closest('.'+me.options.prefix+'-workbench').length ? active : $(el)[0];
             me.user_style.current_element = $(grid_element);
-            $(me.user_style.current_element).addClass(me.state.is_styling);
+            me.user_style.current_element.addClass(me.state.is_styling);
             me.set_current_element_style_id();
             me.set_modal_title();
             me.set_modal_actual_style(true);
             me.set_style_connections();
             me.set_modal_zindex(el);
             me.set_toolbar_invisible();
+            me.$wrapper.addClass(me.state.is_modal_open);
+            me.keep_modal_in_viewport();
             me.set_modal_default_state();
-
-            $(me.$wrapper).addClass(me.state.is_modal_open);
-            if (me.ui) {
-                $(me.tagc.modal).attr({ role: 'dialog', tabindex: -1, 'aria-label': $(me.tagc.modal+' .header-title').text() }).trigger('focus');
-            }
         },
 
-        set_modal_title: function () {
-            var me = this;
-
-            if($(me.user_style.current_element).hasClass(me.tag.section)) {
-                $(me.$wrapper).addClass(me.state.is_styling_section);
-                $('div.'+me.options.prefix + '-modal .header-title').html('<iwcm:text key="pagebuilder.modal.title.section"/>');
-            }
-
-            else if($(me.user_style.current_element).hasClass(me.tag.container)) {
-                $(me.$wrapper).addClass(me.state.is_styling_container);
-                $('div.'+me.options.prefix + '-modal .header-title').html('<iwcm:text key="pagebuilder.modal.title.container"/>');
-            }
-
-            else if($(me.user_style.current_element).hasClass(me.tag.column)) {
-                $(me.$wrapper).addClass(me.state.is_styling_column);
-                $('div.'+me.options.prefix + '-modal .header-title').html('<iwcm:text key="pagebuilder.modal.title.column"/>');
-            }
-
-            else {
-
-            }
+        set_modal_title: function() {
+            var me = this, type = 'element';
+            ['section', 'container', 'column'].forEach(function(candidate) {
+                if (me.user_style.current_element.hasClass(me.tag[candidate])) type = candidate;
+            });
+            if (type !== 'element') me.$wrapper.addClass(me.state['is_styling_'+type]);
+            var titles = {
+                section: "<iwcm:text key='pagebuilder.modal.style.section'/>",
+                container: "<iwcm:text key='pagebuilder.modal.style.container'/>",
+                column: "<iwcm:text key='pagebuilder.modal.style.column'/>",
+                element: "<iwcm:text key='pagebuilder.modal.style.element'/>"
+            };
+            var modal = me.$wrapper.find(me.tagc.modal);
+            modal.find('.header-title').text(titles[type]);
+            var context = me.ui ? me.workbench_name(me.user_style.current_element[0]) : me.user_style.current_element.attr('title') || '';
+            modal.find('.'+me.options.prefix+'-modal__context').text(context).prop('hidden', !context);
         },
 
-        set_modal_default_state: function(){
-            $('div.'+this.options.prefix + '-modal .tab-menu .tab-link').first().click();
-            if ($('div.'+this.options.prefix + '-modal .tab-item .tab-item-button').first().hasClass('active')==false) {
-                $('div.'+this.options.prefix + '-modal .tab-item .tab-item-button').first().click();
+        set_modal_default_state: function() {
+            var modal = this.$wrapper.find(this.tagc.modal), prefix = this.options.prefix;
+            var accordions = modal.find('.'+prefix+'-style-accordion');
+            accordions.children('button').attr('aria-expanded', 'false');
+            accordions.children('.'+prefix+'-style-accordion__content').prop('hidden', true);
+            var first = accordions.filter('[data-input-group-id="10"]').first();
+            if (!first.length) first = accordions.first();
+            first.children('button').attr('aria-expanded', 'true');
+            first.children('.'+prefix+'-style-accordion__content').prop('hidden', false);
+            var scroller = modal.find(this.tagc.modal_content)[0];
+            scroller.scrollTop = 0;
+            var input = first.find('[name="selector-id"]:enabled').first();
+            if (!input.length) input = first.find('input:not([type="hidden"]):enabled:visible, button:enabled:visible, select:enabled:visible, textarea:enabled:visible').first();
+            if (!input.length) input = first.children('button');
+            if (!input.length) input = modal.find(this.tagc.modal_header_button_close);
+            if (first.length) scroller.scrollTop += first[0].getBoundingClientRect().top-scroller.getBoundingClientRect().top;
+            input[0].focus({ preventScroll: true });
+        },
+
+        restore_modal_focus: function() {
+            var target = this.modal_return_focus;
+            this.modal_return_focus = null;
+            if (this.ui && (!target || !target.isConnected || !$(target).is(':visible') || $(target).closest('.'+this.options.prefix+'-workbench').length)) {
+                this.restore_workbench_focus();
+            } else if (target && target.isConnected) {
+                if (!$(target).is(':visible')) this.set_toolbar_visible(target);
+                target.focus({ preventScroll: true });
             }
         },
 
@@ -4404,7 +4397,7 @@
         close_modal: function () {
             this.clear_after_close_modal();
             this.set_old_style();
-            if (this.ui) this.restore_workbench_focus();
+            this.restore_modal_focus();
         },
 
         /*==================================================================
@@ -4413,7 +4406,7 @@
 
         save_modal: function () {
             this.clear_after_close_modal();
-            if (this.ui) this.restore_workbench_focus();
+            this.restore_modal_focus();
         },
 
         /*==================================================================
@@ -4837,7 +4830,7 @@
                     return;
                 }
 
-                link = $('<div class="'+me.tag.connection_reference+'">');
+                link = $('<button type="button" class="'+me.tag.connection_reference+'">');
                 link.data('connection-reference', $(el));
                 link.html(counter+'. prepojenie');
 
@@ -4954,7 +4947,7 @@
 
             me.$wrapper.on('click', me.tagc.modal_footer_button_reset, function() {
                 me.reset_modal($(this));
-                if (me.ui) me.restore_workbench_focus();
+                me.restore_modal_focus();
             });
 
             me.$wrapper.on('click', me.tagc.modal_footer_button_save, function() {
@@ -5045,6 +5038,7 @@
 
             var me = this;
             if (me.library_resize_handler) $(window).off('resize', me.library_resize_handler);
+            if (me.modal_resize_handler) $(window).off('resize', me.modal_resize_handler);
             if (me.duplicable_toolbar_mouseup_handler) {
                 me.$wrapper[0].removeEventListener('mouseup', me.duplicable_toolbar_mouseup_handler, true);
                 me.duplicable_toolbar_mouseup_handler = null;

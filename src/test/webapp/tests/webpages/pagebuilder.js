@@ -1939,7 +1939,7 @@ Scenario('BUG: when you open PB doc and then empty NON PB it has PB content', ({
 
 });
 
-function checkStyleModal(docId, colSelector, isCustom, I, DTE, Apps) {
+async function checkStyleModal(docId, colSelector, isCustom, I, DTE, Apps) {
 
     //to force codemirror render all items
     I.resizeWindow(1280, 1800);
@@ -1950,6 +1950,7 @@ function checkStyleModal(docId, colSelector, isCustom, I, DTE, Apps) {
     DTE.waitForCkeditor();
 
     openStyleModal(I, colSelector);
+    I.click('.pb-style-accordion[data-input-group-id="01"] > .pb-style-accordion__toggle');
 
     var color = "0, 116, 217";
     var columnSelector = "column-content";
@@ -1961,14 +1962,29 @@ function checkStyleModal(docId, colSelector, isCustom, I, DTE, Apps) {
         I.seeElement({css: '.pb-modal span.minicolors-swatch-color[style="background-color: rgb('+color+');"]'});
         I.dontSeeElement({css: '.pb-modal div.minicolors .minicolors-slider'});
         I.dontSeeElement({css: '.pb-modal div.minicolors .minicolors-grid'});
-        I.clickCss('.pb-modal span.minicolors-swatch-color[style="background-color: rgb('+color+');"]');
     } else {
         I.say("Check DEFAULT color picker");
         I.seeElement({css: '.pb-modal div.minicolors .minicolors-slider'});
         I.seeElement({css: '.pb-modal div.minicolors .minicolors-grid'});
-        I.clickCss('.pb-modal span.minicolors-swatch-color[style="background-color: rgb('+color+');"]');
-        I.pressKey('Enter');
     }
+    await I.usePlaywrightTo('choose a palette color using the keyboard', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        const background = frame.locator('.pb-style-accordion[data-input-group-id="01"]');
+        const swatch = background.locator('.minicolors-swatches li.minicolors-swatch[role=button]').filter({has: frame.locator('span.minicolors-swatch-color[style="background-color: rgb('+color+');"]')});
+        await swatch.focus();
+        await page.keyboard.press('Enter');
+        const input = background.locator('[name=background-color]');
+        assert.equal(await input.inputValue(), 'rgba('+color+', 1)', 'Keyboard palette activation must set the chosen color');
+        assert.equal(await input.isVisible(), !isCustom, 'Free color entry must only be available with the full picker');
+        if (!isCustom) {
+            await input.focus();
+            assert.equal(await input.evaluate(element => element === document.activeElement), true, 'The full color picker input must be keyboard reachable');
+            color = '17, 85, 136';
+            await input.fill('rgba('+color+', 1)');
+            await input.press('Tab');
+            assert.equal(await input.inputValue(), 'rgba('+color+', 1)', 'The full picker must accept a manually entered color');
+        }
+    });
 
     var textToCheck = "div."+columnSelector+"{background-color:rgba("+color+", 1);}";
 
@@ -1990,21 +2006,246 @@ function checkStyleModal(docId, colSelector, isCustom, I, DTE, Apps) {
     I.selectOption({css: "div.exit-inline-editor select"}, "html");
     I.switchTo();
 
-    I.seeElement(locate(".CodeMirror span.cm-qualifier").withText(columnSelector));
-    I.seeElement(locate(".CodeMirror span.cm-property").withText("background-color"));
+    I.waitForVisible('.CodeMirror', 10);
+    const html = await I.executeScript(() => document.querySelector('.CodeMirror').CodeMirror.getValue());
+    assert.ok(html.includes(textToCheck), 'Switching editor mode must preserve the applied custom selector and exact color');
+    DTE.cancel();
+}
 
-    //split colors and check values
-    var colors = color.split(", ");
-    colors.forEach(function(c, index){
-        I.seeElement(locate(".CodeMirror span.cm-number").withText(c));
+Scenario("custom PB settings", async ({I, DTE, Apps, Document}) => {
+    Document.resetPageBuilderMode();
+
+    await checkStyleModal(150095, ".col-md-12", true, I, DTE, Apps);
+    await checkStyleModal(147174, ".col-md-3", false, I, DTE, Apps);
+});
+
+/** Opens properties through the shared toolbar and waits for the default ID field focus. */
+async function openWorkbenchStyle(I, type = 'column') {
+    I.click(workbenchFixture+' .pb-workbench-copy');
+    I.click(locate('.pb-workbench-path button[data-type='+type+']').last());
+    I.click('.pb-workbench [data-pb-action=more]');
+    I.click('.pb-workbench [data-pb-action=style]');
+    I.waitForVisible('.pb-modal', 10);
+    await I.usePlaywrightTo('wait for style panel initial focus', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        await frame.waitForFunction(() => document.activeElement.matches('.pb-modal [name=selector-id]'));
     });
 }
 
-Scenario("custom PB settings", ({I, DTE, Apps, Document}) => {
-    Document.resetPageBuilderMode();
+Scenario('style panel accordions preserve values and save cancel reset behavior', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    await openWorkbenchStyle(I);
+    await I.usePlaywrightTo('verify simultaneous sections and linked side inputs', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        const panel = frame.locator('.pb-modal');
+        const group = id => panel.locator('.pb-style-accordion[data-input-group-id="'+id+'"]');
+        assert.deepStrictEqual(await panel.locator('.pb-style-accordion').evaluateAll(groups => groups.map(group => group.dataset.inputGroupId)), ['10','01','08','03','02','07','05','04','06','11','12'], 'Style groups must follow the approved order and omit empty animation controls');
+        assert.equal(await panel.locator('.pb-style-accordion__toggle[aria-expanded=true]').count(), 1, 'Only ID and classes must initially be open');
+        assert.equal(await group('10').locator('.pb-style-accordion__toggle').getAttribute('aria-expanded'), 'true');
+        await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path: '../../../build/test/pagebuilder-style-redesign.png'});
+        await group('01').locator('.pb-style-accordion__toggle').click();
+        await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path: '../../../build/test/pagebuilder-style-background.png'});
+        await frame.evaluate(() => {
+            window.pbAutotestImageDialog = window.openImageDialogWindow;
+            window.openImageDialogWindow = (...args) => { window.pbAutotestImageDialogArgs = args; };
+        });
+        try {
+            await group('01').locator('button[data-image-property=background-image]').focus();
+            await page.keyboard.press('Enter');
+            assert.deepStrictEqual(await frame.evaluate(() => window.pbAutotestImageDialogArgs), ['pb-form', 'background-image', ''], 'Keyboard image selection must call the existing dialog with the original form and property arguments');
+        } finally {
+            await frame.evaluate(() => {
+                window.openImageDialogWindow = window.pbAutotestImageDialog;
+                delete window.pbAutotestImageDialog;
+                delete window.pbAutotestImageDialogArgs;
+            });
+        }
+        for (const id of ['03', '08']) await group(id).locator('.pb-style-accordion__toggle').click();
+        assert.equal(await panel.locator('.pb-style-accordion__toggle[aria-expanded=true]').count(), 4, 'Opening another style group must preserve already open groups');
+        await panel.locator('[name=selector-id]').fill('autotest-style-panel');
+        await panel.locator('[name=selector-id]').press('Tab');
+        const padding = group('03').locator('.pb-style-input-group-four-in-row').filter({has: frame.locator('[name=padding-top]')});
+        await padding.locator('[name=padding-top]').fill('18');
+        await padding.locator('[name=padding-top]').press('Tab');
+        for (const side of ['bottom','left','right']) {
+            assert.equal(await padding.locator('[name=padding-'+side+']').inputValue(), '18', 'Linked padding must update every side');
+            assert.equal(await padding.locator('[name=padding-'+side+']').isDisabled(), true, 'Linked secondary inputs must remain disabled');
+        }
+        await group('03').locator('.pb-style-accordion__toggle').focus();
+        await page.keyboard.press('Enter');
+        assert.equal(await group('03').locator('[name=padding-top]').isVisible(), false, 'Enter must collapse the focused accordion');
+        await page.keyboard.press('Enter');
+        assert.equal(await padding.locator('[name=padding-top]').inputValue(), '18', 'Collapsing a group must preserve unsaved values');
+        assert.equal(await panel.locator('[name=selector-id]').inputValue(), 'autotest-style-panel', 'Other open groups must retain their unsaved values');
+        await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path: '../../../build/test/pagebuilder-style-multi-open.png'});
+        await frame.evaluate(() => {
+            const pb = window.pageBuilder;
+            const target = Array.from(document.querySelectorAll('.pb-workbench-autotest .pb-column')).find(element => element !== pb.user_style.current_element[0]);
+            window.pbAutotestStyleConnection = {target, attribute: pb.user_style.attr_name, value: target.getAttribute(pb.user_style.attr_name), className: target.className};
+            target.setAttribute(pb.user_style.attr_name, pb.get_current_element_style_id());
+            pb.set_style_connections();
+        });
+        try {
+            await group('11').locator('.pb-style-accordion__toggle').click();
+            const reference = group('11').locator('button.pb-connection-reference');
+            assert.equal(await reference.count(), 1, 'The temporary shared style must expose one keyboard accessible reference');
+            await reference.focus();
+            await page.keyboard.press('Enter');
+            await frame.waitForFunction(() => window.pbAutotestStyleConnection.target.classList.contains(window.pageBuilder.state.is_blinking));
+            await group('11').locator('.pb-style-accordion__toggle').click();
+        } finally {
+            await frame.evaluate(() => {
+                const original = window.pbAutotestStyleConnection;
+                if (original.value === null) original.target.removeAttribute(original.attribute);
+                else original.target.setAttribute(original.attribute, original.value);
+                original.target.className = original.className;
+                window.pageBuilder.set_style_connections();
+                delete window.pbAutotestStyleConnection;
+            });
+        }
+        await panel.locator('.pb-modal__footer__button-save').click();
+        await panel.waitFor({state: 'hidden'});
+    });
+    await openWorkbenchStyle(I);
+    await I.usePlaywrightTo('verify saved values and cancel reverting the live preview', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        const panel = frame.locator('.pb-modal');
+        assert.equal(await panel.locator('[name=selector-id]').inputValue(), 'autotest-style-panel', 'Save must retain the entered ID');
+        assert.equal(await panel.locator('[name=padding-top]').inputValue(), '18', 'Save must retain padding');
+        assert.equal(await panel.locator('.pb-style-accordion__toggle[aria-expanded=true]').count(), 1, 'Each opening must restore the default expanded group');
+        await panel.locator('.pb-style-accordion[data-input-group-id="03"] > button').click();
+        await panel.locator('[name=padding-top]').fill('31');
+        await panel.locator('[name=padding-top]').press('Tab');
+        await panel.locator('.pb-modal__footer__button-close').click();
+        await panel.waitFor({state: 'hidden'});
+    });
+    await openWorkbenchStyle(I);
+    await I.usePlaywrightTo('verify reset removes the saved style rule', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        const panel = frame.locator('.pb-modal');
+        assert.equal(await panel.locator('[name=padding-top]').inputValue(), '18', 'Cancel must restore the previously saved padding');
+        const styleId = await frame.evaluate(() => window.pageBuilder.get_current_element_style_id());
+        await panel.locator('.pb-modal__footer__button-reset').click();
+        await panel.waitFor({state: 'hidden'});
+        assert.equal(await frame.locator('style[style-id="'+styleId+'"]').count(), 0, 'Reset must remove the current generated style rule');
+    });
+    I.switchTo();
+    DTE.cancel();
+});
 
-    checkStyleModal(150095, ".col-md-12", true, I, DTE, Apps);
-    checkStyleModal(147174, ".col-md-3", false, I, DTE, Apps);
+Scenario('style panel geometry types and keyboard dismissal', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    for (const type of ['column', 'container', 'section']) {
+        await openWorkbenchStyle(I, type);
+        await I.usePlaywrightTo('verify compact '+type+' properties and keyboard closing', async ({page}) => {
+            const frame = await getPageBuilderFrame(page);
+            const panel = frame.locator('.pb-modal');
+            const content = panel.locator('.pb-modal__content');
+            const size = await panel.boundingBox();
+            assert.equal(Math.round(size.width), 360, 'Style properties must stay 360 pixels wide');
+            assert.ok(size.height <= 760, 'Style properties must stay within the approved maximum height');
+            assert.equal(await frame.evaluate(type => window.pageBuilder.user_style.current_element.hasClass('pb-'+type), type), true, 'Properties must edit the chosen structural element');
+            const title = (await panel.locator('.header-title').textContent()).trim();
+            assert.equal(title.includes('pagebuilder.'), false, 'The style title must render a translation rather than its key');
+            assert.equal(title, {section: 'Štýl sekcie', container: 'Štýl kontajnera', column: 'Štýl stĺpca'}[type], 'The Slovak title must identify the selected structural type');
+            assert.ok((await panel.locator('.pb-modal__context').textContent()).trim(), 'The header must identify the edited content');
+            const footer = await panel.locator('.pb-modal__footer').evaluate(element => {
+                const save = element.querySelector('.pb-modal__footer__button-save');
+                return {rightGap: element.getBoundingClientRect().right-save.getBoundingClientRect().right, paddingRight: parseFloat(getComputedStyle(element).paddingRight), saveColor: getComputedStyle(save).color};
+            });
+            assert.ok(Math.abs(footer.rightGap-footer.paddingRight) <= 1, 'Save must align with the right footer padding');
+            assert.equal(footer.saveColor, 'rgb(255, 255, 255)', 'The primary Save action must retain white text');
+            await panel.locator('.pb-style-accordion[data-input-group-id="01"] > button').click();
+            await panel.locator('.pb-style-accordion[data-input-group-id="03"] > button').click();
+            const fixed = panel.locator('.pb-modal__header, .pb-modal__footer');
+            const before = await fixed.evaluateAll(elements => elements.map(element => element.getBoundingClientRect().top));
+            assert.ok(await content.evaluate(element => { element.scrollTop = element.scrollHeight; return element.scrollTop; }) > 0, 'Expanded controls must exercise content scrolling');
+            assert.deepStrictEqual(await fixed.evaluateAll(elements => elements.map(element => element.getBoundingClientRect().top)), before, 'The header and footer must stay fixed while properties scroll');
+            if (type === 'column') {
+                const handle = await panel.locator('.pb-modal__header-row .header-title').boundingBox();
+                const initialLeft = (await panel.boundingBox()).x;
+                await page.mouse.move(handle.x+handle.width/2, handle.y+handle.height/2);
+                await page.mouse.down();
+                await page.mouse.move(page.viewportSize().width-5, handle.y+handle.height/2, {steps: 10});
+                await page.mouse.up();
+                assert.ok((await panel.boundingBox()).x > initialLeft, 'Dragging the header must move the properties panel');
+                const iframe = page.locator('#DTE_Field_data-pageBuilderIframe');
+                const originalStyle = await iframe.getAttribute('style');
+                await iframe.evaluate(element => {
+                    element.style.maxWidth = '320px';
+                    element.style.setProperty('height', '420px', 'important');
+                    element.style.setProperty('min-height', '0', 'important');
+                });
+                await frame.waitForFunction(() => {
+                    const rect = document.querySelector('.pb-modal').getBoundingClientRect();
+                    return innerWidth <= 320 && innerHeight <= 420 && rect.left >= 0 && rect.right <= innerWidth && rect.top >= 0 && rect.bottom <= innerHeight;
+                });
+                assert.ok((await content.boundingBox()).height > 0, 'Compact viewports must retain a scrollable controls area');
+                for (const selector of ['.pb-modal__header', '.pb-modal__header__button-close', '.pb-modal__footer']) assert.equal(await panel.locator(selector).isVisible(), true, 'Compact viewports must keep closing and footer actions available');
+                await iframe.screenshot({path: '../../../build/test/pagebuilder-style-compact.png'});
+                await iframe.evaluate((element, value) => value === null ? element.removeAttribute('style') : element.setAttribute('style', value), originalStyle);
+                await frame.waitForFunction(() => document.querySelector('.pb-modal').getBoundingClientRect().width === 360);
+            }
+            if (type === 'container') {
+                await panel.locator('.pb-style-accordion[data-input-group-id="10"] [name=selector-id]').focus();
+                await page.keyboard.press('Escape');
+            } else {
+                await panel.locator('.pb-modal__header__button-close').focus();
+                await page.keyboard.press('Enter');
+            }
+            await panel.waitFor({state: 'hidden'});
+            assert.equal(await frame.evaluate(() => document.activeElement.matches('.pb-workbench [data-pb-action=more]')), true, 'Closing properties must return focus to the shared toolbar');
+        });
+    }
+    I.switchTo();
+    DTE.cancel();
+});
+
+Scenario('style panel preserves legacy menu customization', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    await openWorkbenchStyle(I);
+    await I.usePlaywrightTo('verify hidden groups renamed headers and custom order', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        await frame.evaluate(() => {
+            const pb = window.pageBuilder;
+            window.pbAutotestStyleGroups = pb.$wrapper.find('.pb-modal form .pb-style-input-group').clone();
+            window.pbBuildTabMenu = function(builder, config) {
+                config.tabs[0].items.find(item => item.id === '01').visible = false;
+                config.tabs[1].items.find(item => item.id === '10').name = 'autotest renamed identifiers';
+                return config;
+            };
+            pb.$wrapper.find('.pb-modal form').html(pb.build_style_accordion(window.pbAutotestStyleGroups.clone()));
+            pb.set_modal_default_state();
+        });
+        const panel = frame.locator('.pb-modal');
+        assert.deepStrictEqual(await panel.locator('.pb-style-accordion').evaluateAll(groups => groups.map(group => group.dataset.inputGroupId)), ['10','08','03','02','07','05','04','06','11','12'], 'Hiding one legacy item must preserve the default presentation order');
+        assert.equal((await panel.locator('.pb-style-accordion[data-input-group-id="10"] > button').textContent()).trim(), 'autotest renamed identifiers', 'Legacy item names must label the new accordion');
+        assert.equal(await panel.locator('[name=background-color]').count(), 1, 'Hidden groups must retain their controls for existing style serialization');
+        assert.equal(await panel.locator('[name=background-color]').isVisible(), false, 'Hidden legacy groups must not expose controls');
+        await frame.evaluate(() => {
+            const pb = window.pageBuilder;
+            window.pbBuildTabMenu = function(builder, config) {
+                const items = config.tabs.flatMap(tab => tab.items);
+                config.tabs = [{id: 'autotest', items: ['07','10','01'].map(id => items.find(item => item.id === id))}];
+                return config;
+            };
+            pb.$wrapper.find('.pb-modal form').html(pb.build_style_accordion(window.pbAutotestStyleGroups.clone()));
+            pb.set_modal_default_state();
+        });
+        assert.deepStrictEqual(await panel.locator('.pb-style-accordion').evaluateAll(groups => groups.map(group => group.dataset.inputGroupId)), ['07','10','01'], 'An explicit legacy custom order must be preserved');
+        assert.equal(await panel.locator('.pb-style-accordion[data-input-group-id="10"] > button').getAttribute('aria-expanded'), 'true', 'ID must remain the default open group when reordered');
+        await frame.evaluate(() => {
+            const pb = window.pageBuilder;
+            window.pbBuildTabMenu = function(builder, config) { config.tabs[1].visible = false; return config; };
+            pb.$wrapper.find('.pb-modal form').html(pb.build_style_accordion(window.pbAutotestStyleGroups.clone()));
+            pb.set_modal_default_state();
+        });
+        assert.deepStrictEqual(await panel.locator('.pb-style-accordion').evaluateAll(groups => groups.map(group => group.dataset.inputGroupId)), ['01','03','02','05','04','06'], 'Hiding a legacy tab must hide all of its groups');
+        assert.equal(await panel.locator('.pb-style-accordion[data-input-group-id="01"] > button').getAttribute('aria-expanded'), 'true', 'The first available group must open when ID is hidden');
+        await panel.locator('.pb-modal__header__button-close').click();
+    });
+    I.switchTo();
+    DTE.cancel();
 });
 
 /** Opens the existing empty-page fixture without saving any library interactions. */
