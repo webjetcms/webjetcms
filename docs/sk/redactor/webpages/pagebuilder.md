@@ -18,7 +18,7 @@ Pri prepnutí sa aktuálny obsah prenesie do zvoleného editora. Môžete tak na
 
 ## Základná práca
 
-Pri použití Page Builder vytvárate web stránku z vopred pripravených blokov. Pri prechode myšou ponad obsah sa zobrazí jemný polopriehľadný rámik. Ukazuje hranice bloku, do ktorého môžete kliknúť; zelený rámik pomáha nájsť časti určené na úpravu textu.
+Pri použití Page Builder vytvárate web stránku z vopred pripravených blokov. Pri prechode myšou ponad obsah sa zobrazí jemný polo priehľadný rámik. Ukazuje hranice bloku, do ktorého môžete kliknúť; zelený rámik pomáha nájsť časti určené na úpravu textu.
 
 Kliknutím do textu vyberiete blok a zároveň môžete ihneď písať. Vybraný blok má výraznejší rámik a zobrazí sa v ceste v hornej lište. Prechod myšou na iný blok tento výber nemení. Počas písania sa rámik výberu zjemní a pomocný rámik pod myšou sa skryje.
 
@@ -52,17 +52,29 @@ V ponuke **Ďalšie akcie** nájdete podľa typu vybraného bloku:
 - Pridať do obľúbených - uloží blok medzi vaše obľúbené bloky v knižnici.
 - Zmazať - zmaže označený blok.
 
+Ponuka obsahuje iba operácie podporované vybraným typom. Bežný riadok slúži na orientáciu; duplikovateľný riadok a položka podporujú presun, duplikovanie a zmazanie. Samostatný editovateľný text nemá nástroje na úpravu štruktúry. Presun duplikovateľných prvkov zostáva obmedzený na kompatibilných súrodencov toho istého rodiča.
+
+## Nastavenie štýlu
+
+Cez **Ďalšie akcie → Štýl** otvoríte kompaktné okno vlastností. Názov, napríklad **Štýl stĺpca**, a text pod ním označujú upravovaný blok. Tlačidlo **Nájsť na stránke** posunie obsah k tomuto bloku a krátko ho zvýrazní. Okno môžete presunúť ťahaním za hlavičku.
+
 ![](pagebuilder-style.png)
 
-Ponuka obsahuje iba operácie podporované vybraným typom. Bežný riadok slúži na orientáciu; duplikovateľný riadok a položka podporujú presun, duplikovanie a zmazanie. Samostatný editovateľný text nemá nástroje na úpravu štruktúry. Presun duplikovateľných prvkov zostáva obmedzený na kompatibilných súrodencov toho istého rodiča.
+Vlastnosti sú usporiadané do rozbaľovacích skupín: **Identifikácia**, **Pozadie**, **Viditeľnosť**, **Odsadenie**, **Zarovnanie**, **Rozmery**, **Orámovanie**, **Zaoblenie**, **Tieň**, **Prepojené štýly** a **Z-index**. Po otvorení je rozbalená **Identifikácia** s ID, CSS triedami a titulkom. Web dizajnér môže zoznam aj poradie skupín prispôsobiť šablóne.
+
+Môžete rozbaliť viac skupín súčasne. Ich zbalenie nerozpracované hodnoty nezahodí. Pri posúvaní vlastností zostáva hlavička aj spodné tlačidlá dostupné. Obrázok pozadia vyberiete tlačidlom pri jeho adrese. Pri odsadení, orámovaní a zaoblení môžete prepojiť všetky štyri hodnoty alebo dvojice; prepojené hodnoty sa preberajú z prvého poľa príslušnej skupiny.
+
+![Nastavenie odsadenia s prepojenými hodnotami](pagebuilder-style-settings.png)
+
+Zmeny priebežne vidíte v stránke. Tlačidlo **Uložiť** v tomto okne potvrdí štýl v rozpracovanej stránke; celú stránku následne uložíte hlavným tlačidlom **Uložiť** v editore. **Zrušiť**, krížik v hlavičke alebo **Escape** zatvoria okno a vrátia nepotvrdené úpravy štýlu. **Resetovať** odstráni používateľský štýl daného bloku, aby sa opäť uplatnili štýly šablóny.
 
 ## Vkladanie blokov
 
 Najrýchlejší postup pridania bloku nevyžaduje označenie existujúcej sekcie ani stĺpca:
 
-1. Kliknite na **Pridať blok** (`+`) v hornej lište. Tlačidlo sa zvýrazní modrou a pod lištou sa zobrazí pomocník s pokynom na výber miesta a tlačidlom **Ukončiť · Esc**.
-2. V stránke kliknite na plus na mieste, kam chcete nový blok vložiť. Modré pásy označujú vloženie sekcie, ružové kontajnera a zelené pluská stĺpca. Miesta sú pred prvým blokom, medzi susednými blokmi a za posledným blokom. Názov pri páse a popis tlačidla pomáhajú určiť typ aj pozíciu.
-3. V otvorenej knižnici vyberte blok. Knižnica ponúka príslušný typ a v hornej časti pripomína miesto vloženia. Po vložení sa režim ukončí, nový blok sa označí a môžete upravovať jeho obsah.
+1. Kliknite na **Pridať blok** (`+`) v hornej lište. Nástroje a cestu k bloku dočasne nahradí modrý pomocník s pokynom na výber miesta a tlačidlom **Ukončiť · Esc**.
+2. V stránke kliknite na plus na mieste, kam chcete nový blok vložiť. Modré pásy označujú vloženie sekcie, ružové kontajnera a zelené plus stĺpca. Miesta sú pred prvým blokom, medzi susednými blokmi a za posledným blokom. Názov pri páse a popis tlačidla pomáhajú určiť typ aj pozíciu.
+3. V otvorenej knižnici kliknite na kartu požadovaného bloku. Knižnica ponúka príslušný typ a v hornej časti pripomína miesto vloženia. Kliknutie blok rovno vloží; ďalšie potvrdenie nie je potrebné. Po vložení sa režim ukončí, nový blok sa označí a môžete upravovať jeho obsah.
 
 ![Miesta na pridanie sekcie, kontajnera a stĺpca](pagebuilder-insert.png)
 
@@ -74,15 +86,23 @@ Knižnicu môžete otvoriť aj pre označený blok cez **Ďalšie akcie → Vlo�
 
 ![](pagebuilder-library.png)
 
-V karte knižnica môžete vyhľadávať bloky podľa názvu, alebo filtrovať bloky podľa štítkov. Tie môžete definovať v súbore `pagebuilder.properties` pri [vytváraní blokov](../../frontend/page-builder/blocks.md#názov-a-značky-bloku) pre vašu web stránku.
+Knižnica sa otvára ako úzke okno nad stránkou. Hlavička uvádza napríklad **Vložiť sekciu** a pod ňou miesto vloženia. Ťahaním za hlavičku môžete okno presunúť. Zatvoríte ho krížikom vpravo hore alebo klávesom **Escape**.
+
+V karte **Knižnica** sú bloky zoskupené do kategórií s počtom blokov. Kliknutím kategóriu rozbalíte; otvorená zostáva vždy iba jedna. Karty zobrazujú názov a náhľad v pôvodnom pomere strán. Kliknutím na náhľad alebo názov vložíte blok do stránky.
+
+Pole **Hľadať blok…** filtruje podľa názvu a dá sa kombinovať s jedným štítkom. Pri filtrovaní sa ponechá otvorená vyhovujúca kategória alebo sa otvorí prvá s výsledkom. Počty pri kategóriách zohľadňujú filter, počty pri štítkoch označujú celkový počet blokov s daným štítkom. **Všetky** zruší len štítok a ponechá hľadaný text. Ak sa nič nenájde, tlačidlo **Vyčistiť filtre** zruší text aj štítok. Pri posúvaní výsledkov zostávajú vyhľadávanie a štítky dostupné.
+
+![Vyhľadávanie blokov v kombinácii so štítkom](pagebuilder-library-filter.png)
+
+Názvy a štítky blokov definuje web dizajnér v súbore `pagebuilder.properties` pri [vytváraní blokov](../../frontend/page-builder/blocks.md#názov-a-značky-bloku). Sú súčasťou knižnice danej šablóny a nemusia sa meniť s jazykom administrácie. V karte **Obľúbené** môžete uložený blok odstrániť tlačidlom pri jeho názve; odstránenie vyžaduje potvrdenie.
 
 Na konci stránky sa zobrazuje ikona `+` pre jednoduchšie pridanie novej sekcie.
 
 ![](pagebuilder-plusbutton.png)
 
-Pri zapnutí režimu vkladania sa plynulo rozbalia dočasné medzery bez odscrollovania viditeľných miest. Šírky stĺpcov sa nemenia: pluská sa zobrazujú v medzerách medzi nimi, pri zalomení medzi riadkami a pri nedostatku priestoru nad obsahom. Rámiky výberu aj rámiky pod myšou sa počas výberu miesta skryjú.
+Pri zapnutí režimu vkladania sa plynulo rozbalia dočasné medzery bez odsunutia viditeľných miest. Šírky stĺpcov sa nemenia: plus sa zobrazujú v medzerách medzi nimi, pri zalomení medzi riadkami a pri nedostatku priestoru nad obsahom. Rámiky výberu aj rámiky pod myšou sa počas výberu miesta skryjú.
 
-Zatvorením knižnice sa vrátite na vybrané plus. Režim vkladania ukončíte tlačidlom **Ukončiť · Esc** v pomocníkovi, klávesom **Escape** alebo opätovným kliknutím na `+` v lište. Medzery sa plynulo zbalia a fokus sa vráti na `+`. Kliknutie do obsahu ukončí režim a vyberie daný blok. Ak máte v systéme nastavené obmedzenie animácií, zobrazenie aj skrytie prebehne okamžite. Pomocné pásy sa neukladajú ani nezobrazujú v náhľade.
+Zatvorením knižnice sa vrátite na vybrané plus. Režim vkladania ukončíte tlačidlom **Ukončiť · Esc** v pomocníkovi alebo klávesom **Escape**. Medzery sa plynulo zbalia, obnoví sa bežná lišta a fokus sa vráti na `+`. Kliknutie do obsahu ukončí režim a vyberie daný blok. Ak máte v systéme nastavené obmedzenie animácií, zobrazenie aj skrytie prebehne okamžite. Pomocné pásy sa neukladajú ani nezobrazujú v náhľade.
 
 ## Štruktúra stránky a pokojné zobrazenie
 
@@ -109,9 +129,9 @@ Prehliadač si voľbu pamätá aj po opätovnom otvorení editora. Lišta, panel
 Editor umožňuje nastaviť odlišnú šírku stĺpca pre mobil, tablet a počítač:
 
 1. Pri výbere **Editor** zvoľte ikonou veľkosť zariadenia.
-2. Kliknite do požadovaného stĺpca a v lište vyberte **Šírka stĺpca**, napríklad `3 / 12`. Tlačidlo sa zvýrazní modrou a zachová si ikonu aj hodnotu. Pod lištou sa zobrazí rovnaký modrý pomocník ako pri vkladaní blokov; vysvetľuje práve upravovaný rozmer, napríklad **MD — Tablet (768–1199 px)**.
+2. Kliknite do požadovaného stĺpca a v lište vyberte **Šírka stĺpca**, napríklad `3 / 12`. Nástroje a cestu k bloku nahradí modrý pomocník podobne ako pri vkladaní blokov. Vysvetľuje práve upravovaný rozmer, napríklad **MD — Tablet (768–1199 px)**.
 3. Šípkami vnútri jednotlivých stĺpcov zmeňte ich šírku. Hodnota označuje počet dielov mriežky; v predvolenej 12-dielnej mriežke je `3 / 12` štvrtina a `12 / 12` celá šírka. Dostupná je aj hodnota `auto` pre automatické prispôsobenie.
-4. Režim ukončíte tlačidlom **Ukončiť · Esc** v pomocníkovi, klávesom **Escape** alebo opätovným kliknutím na tlačidlo šírky. Obnoví sa pôvodné nastavenie rámikov.
+4. Režim ukončíte tlačidlom **Ukončiť · Esc** v pomocníkovi alebo klávesom **Escape**. Obnoví sa bežná lišta aj pôvodné nastavenie rámikov.
 
 Zelené rámiky počas nastavovania označujú všetky stĺpce v danom kontajneri, ktorých šírku môžete meniť, aj keď máte bežné rámiky skryté. Ovládače s jemným zeleným pozadím majú vyhradené miesto vnútri svojho stĺpca nad jeho obsahom. V úzkych stĺpcoch sa hodnota zobrazí nad šípkami. Po ukončení režimu sa miesto pre ovládače uvoľní.
 
@@ -143,4 +163,4 @@ Funkcia **Rozdeliť stĺpec** je súčasťou blokov vkladaných do textu:
 2. V lište CKEditora kliknite na **Bloky**.
 3. V otvorenej knižnici prejdite na kartu **Základné** a vyberte **Rozdeliť stĺpec**.
 
-Obsah sa rozdelí do dvoch stĺpcov v mieste kurzora. Nemusíte ručne vytvárať nový stĺpec a presúvať doň text. Tlačidlo **Bloky** používajte aj na vkladanie pripravených textových častí; tlačidlo `+` v lište Page Buildera slúži na pridávanie sekcií, kontajnerov a stĺpcov.
+Obsah sa rozdelí do dvoch stĺpcov v mieste kurzora. Nemusíte ručne vytvárať nový stĺpec a presúvať doň text. Tlačidlo **Bloky** používajte aj na vkladanie pripravených textových častí; tlačidlo `+` v lište Page Builder slúži na pridávanie sekcií, kontajnerov a stĺpcov.

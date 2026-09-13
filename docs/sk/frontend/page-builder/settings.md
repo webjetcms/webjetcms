@@ -19,7 +19,6 @@ Pre správne spustenie Page Builder nastavte:
 
 Ďalšie konf. premenné, ktoré je možné upraviť:
 
-- `pagebuilderFilterAutoOpenItems` - počet položiek, ktoré sa pri filtrovaní v zozname blokov automaticky otvoria, predvolene 10.
 - `pagebuilderLibraryImageWidth` - šírka náhľadových obrázkov v knižnici blokov, predvolene 310.
 - `inlineEditingDisabledUrls` - zoznam URL adries, pre ktoré nebude dostupný inline editor
 - `pageBuilderPrefix` - prefix, ktorý sa používa pre CSS triedy Page Builder (predvolene pb), zmeniť je možné len ak zmeníte aj prefixy v CSS triedach Page Builder
@@ -100,6 +99,8 @@ Strom **Štruktúra** používa elementy rozpoznané existujúcou inicializácio
 
 Režim **Pridať blok** v spoločnej lište zobrazí pozície medzi sekciami, kontajnermi a stĺpcami. Tlačidlá zostávajú v samostatnej vrstve mimo obsahu; do štruktúry sa dočasne vložia iba neaktívne elementy `aside.pb-insert-space` na vytvorenie miesta. Nie sú súčasťou CKEditor polí a `getClearNode` ich odstráni aj pri ukladaní počas aktívneho režimu. Šírky stĺpcov sa nemenia. Vkladanie používa pôvodné ovládače a knižnicu, po vložení obnoví fokus CKEditora. Režim sa nepamätá v úložisku a nemení preferenciu rámikov.
 
+Počas vkladania a nastavovania šírky stĺpcov nahradí cestu a nástroje v lište modrý pomocník s tlačidlom **Ukončiť · Esc**. Ukončenie obnoví bežnú lištu. Pri nastavovaní šírky zostáva dostupné prepínanie zariadení.
+
 Pôvodné HTML, CSS triedy, vlastné selektory a funkcie `pbCustomOptions`/`pbCustomSettings` zostávajú platné. Akcie hornej lišty používajú existujúce operácie Page Builder vrátane obmedzení presunu duplikovateľných elementov. Pri príprave náhľadu a uložení sa používajú pôvodné funkcie `getClearNode` a `clearEditorAttributes`; nové ovládacie prvky sú navyše umiestnené mimo serializovaného obsahu.
 
 ## Štýlovanie elementov
@@ -116,7 +117,7 @@ Inicializácia pri použití elementu: ```<section>```.
 
 Nastavením CSS triedy ```pb-not-section``` sa element **nebude považovať za section* element.
 
-### `CONTAINER` (červená farba)
+### `CONTAINER` (ružová farba)
 
 Inicializácia pri použití CSS triedy: ```container``` alebo ```pb-custom-container```. Nastavením CSS triedy ```pb-not-container``` sa element **nebude považovať za kontajner** aj keď má CSS triedu ```container```.
 

@@ -5178,7 +5178,6 @@
             return {
                 prefix: 'pb',
                 max_col_size: 12,
-                filter_auto_open_items: 10,
                 template_group_id: 0,
                 grid: '',
                 onNewElementAdded: function () {

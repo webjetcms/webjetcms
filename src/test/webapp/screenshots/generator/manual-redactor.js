@@ -596,7 +596,8 @@ Scenario('pagebuilder', async ({ I, DTE, Document }) => {
 
     I.click('.pb-workbench [data-pb-action=resize]');
     I.waitForVisible('.pb-is-resize-columns .pb-size-changer', 10);
-    I.waitForVisible('.pb-workbench [data-pb-action=resize][aria-pressed=true]:enabled', 10);
+    I.waitForVisible('.pb-workbench.is-resizing', 10);
+    I.dontSeeElement('.pb-workbench [data-pb-action=resize]');
     I.waitForVisible('.pb-resize-hint', 10);
     I.dontSee('pagebuilder.ui.resize.', '.pb-resize-hint');
     I.dontSeeElement('.pb-notify');
@@ -611,6 +612,16 @@ Scenario('pagebuilder', async ({ I, DTE, Document }) => {
     I.waitForVisible('#wjInline-docdata.pb-is-modal-open .pb-modal', 10);
     I.moveCursorTo('.pb-modal__header');
     Document.screenshot('/redactor/webpages/pagebuilder-style.png');
+    I.click('.pb-modal .pb-style-accordion[data-input-group-id="10"] > button');
+    I.click('.pb-modal .pb-style-accordion[data-input-group-id="03"] > button');
+    I.waitForVisible('.pb-modal [name=padding-top]', 10);
+    I.executeScript(() => {
+        const content = document.querySelector('.pb-modal__content');
+        const group = content.querySelector('.pb-style-accordion[data-input-group-id="03"]');
+        content.scrollTop += group.getBoundingClientRect().top - content.getBoundingClientRect().top;
+    });
+    I.moveCursorTo('.pb-modal__header');
+    Document.screenshot('/redactor/webpages/pagebuilder-style-settings.png');
     I.click('.pb-modal .pb-modal__footer__button-close');
     I.waitForInvisible('.pb-modal', 10);
 
@@ -622,11 +633,23 @@ Scenario('pagebuilder', async ({ I, DTE, Document }) => {
     Document.screenshot('/redactor/webpages/pagebuilder-insert.png');
     I.click(locate('.pb-insert-point[data-type=section] button').first());
     I.waitForVisible('.pb-library--section', 10);
-    I.clickCss(".library-tab-item-button__toggler[data-library-item-id='c2VjdGlvbi9Db250YWN0']");
+    I.clickCss(".library-tab-item-button__toggler[data-library-item-id='c2VjdGlvbi9Db250YWN0'] .library-group-toggle");
     I.waitForVisible(".library-tab-item-button__toggler.active[data-library-item-id='c2VjdGlvbi9Db250YWN0'] .library-full-width-item", 10);
+    await I.usePlaywrightTo('wait for the library preview images', async ({page}) => {
+        const frame = await (await page.locator('#DTE_Field_data-pageBuilderIframe').elementHandle()).contentFrame();
+        await frame.waitForFunction(() => {
+            const images = Array.from(document.querySelectorAll('.pb-library .library-tab-item-button__toggler.active img'));
+            return images.length > 0 && images.every(image => image.complete && image.naturalWidth > 0);
+        });
+    });
     I.moveCursorTo('.pb-library__header');
     Document.screenshot('/redactor/webpages/pagebuilder-library.png');
-    I.click('.pb-library__footer__button');
+    I.fillField('.pb-library--section .library-tab-item--library .library-template-block--section .library-filter-input', 'form');
+    I.click('.pb-library--section .library-tab-item--library .library-template-block--section [data-library-tag="Formulár"]');
+    I.waitForVisible('.pb-library .library-tab-item-button__toggler.active .library-full-width-item', 10);
+    I.moveCursorTo('.pb-library__header');
+    Document.screenshot('/redactor/webpages/pagebuilder-library-filter.png');
+    I.click('.pb-library__close');
     I.waitForInvisible('.pb-library', 10);
     I.pressKey('Escape');
     I.waitForInvisible('.pb-insert-layer', 10);
@@ -640,7 +663,7 @@ Scenario('pagebuilder', async ({ I, DTE, Document }) => {
     I.waitForVisible('.pb-library--content', 10);
     I.click('.pb-library .library-tab-link[data-library-type=basic]');
     I.waitForVisible('.pb-library--content .library-tab-item.active [data-library-item-id="pb-basic-4.12"]', 10);
-    I.click('.pb-library__footer__button');
+    I.click('.pb-library__close');
     I.waitForInvisible('.pb-library', 10);
     I.switchTo();
     DTE.cancel();

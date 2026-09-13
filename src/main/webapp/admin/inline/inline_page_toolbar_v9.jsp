@@ -88,7 +88,6 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
         pageDiv.ninjaPageBuilder({
             max_col_size: <%=Constants.getInt("bootstrapColumns", 12)%>,
             prefix: "<%=pbPrefix%>",
-            filter_auto_open_items: <%=Constants.getInt("pagebuilderFilterAutoOpenItems")%>,
             //toto sa berie z inline_script.jsp kde sa hodnota inicializuje
             template_group_id: templateGroupId,
             <%

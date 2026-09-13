@@ -1900,8 +1900,6 @@ public class Constants {
 				"Prefix pre PageBuilder, musi voci nemu korespondovat aj CSS PageBuildera (napr. pre CSS PREFIX-column-text-wrapper, predvolene pb-column-text-wrapper)");
 		setString("pageBuilderGrid", "", MOD_EDITOR,
 				"Zoznam grid elementov/selectorov pre pageBuilder, pouziva sa ak je potrebne mat specialne selectory, format je section: 'section', container: 'div.container', row: 'div.row', column: 'div[class*=\"col-\"]', column_content: 'div.column-content'");
-		setInt("pagebuilderFilterAutoOpenItems", 10, MOD_EDITOR,
-				"Počet automaticky otvorených položiek v zozname komponentov PageBuildera pri filtrovaní.");
 		setInt("pagebuilderLibraryImageWidth", 310, MOD_EDITOR,
 				"Maximálna šírka náhľadového obrázka v knižnici obrázkov PageBuildera.");
 

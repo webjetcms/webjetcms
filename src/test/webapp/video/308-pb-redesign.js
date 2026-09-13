@@ -1,6 +1,6 @@
 Feature("video.308-pb-redesign");
 
-// Source: https://github.com/webjetcms/webjetcms/pull/308, feature/pb-redesign at 3addf9ca4.
+// Source: https://github.com/webjetcms/webjetcms/pull/308, reviewed through e9dec3c2e.
 // Compare with origin/main: floating gear palettes are replaced by the shared toolbar.
 // Documentation: https://docs.webjetcms.sk/latest/sk/redactor/webpages/pagebuilder
 // The shot plan describes the edited timeline. Short holds below provide editing room;
@@ -56,9 +56,12 @@ const videoPlan = {
             "type": "auto",
             "durationSeconds": 18,
             "title": "Direct text editing and stable selection",
-            "text-sk": "Teraz kliknete priamo do obsahu. Vyberie sa príslušný blok a jeho nástroje nájdete na jednom mieste, v pevnej lište pod nástrojmi textového editora. Kliknutím do textu môžete rovno písať. Výber zostáva stabilný a rámik sa počas písania zjemní.",
+            "text-sk": "Jemný rámik pod myšou teraz napovie, čo môžete vybrať. Kliknite priamo do textu a rovno píšte. Blok zostane vybraný aj pri prechode myšou inde. Jeho nástroje sú v pevnej lište pod textovým editorom. Počas písania sa rámik výberu zjemní.",
             "notes": "Kliknúť do „Naše služby“, ukázať jeden rámik a pevnú lištu, dopísať krátky text. MANUAL: detail jemnejšieho rámika počas písania.",
-            shot: async ({ I, services, typeText }) => {
+            shot: async ({ I, services, fixture, typeText }) => {
+                await I.moveCursorTo(`${fixture} .row > .pb-column:nth-child(2) h2`);
+                await I.waitForVisible(".pb-outline.is-hover[data-type=column]:not([hidden])", 10);
+                await I.wait(3);
                 await I.videoClick(services);
                 await I.waitForVisible(".pb-outline[data-type=column]:not([hidden])", 10);
                 await I.pressKey("End");
@@ -72,7 +75,7 @@ const videoPlan = {
             "type": "auto",
             "durationSeconds": 26,
             "title": "Understand the block hierarchy",
-            "text-sk": "Najprv si vysvetlime štruktúru. Modrá sekcia je veľká časť stránky, napríklad predstavenie služieb. V nej je červený kontajner, ktorý drží obsah pokope. Riadok usporadúva stĺpce vedľa seba. Zelený stĺpec obsahuje text, obrázok alebo aplikáciu. Oranžová označuje opakovateľnú položku alebo duplikovateľný riadok. Tieto úrovne nie sú novým spôsobom skladania stránky. Nové ovládanie vám ich pomáha jasnejšie rozlíšiť.",
+            "text-sk": "Najprv si vysvetlime štruktúru. Modrá sekcia je veľká časť stránky, napríklad predstavenie služieb. V nej je ružový kontajner, ktorý drží obsah pokope. Sivý riadok usporadúva stĺpce vedľa seba. Zelený stĺpec obsahuje text, obrázok alebo aplikáciu. Oranžová označuje opakovateľnú položku alebo duplikovateľný riadok. Tieto úrovne nie sú novým spôsobom skladania stránky. Nové ovládanie vám ich pomáha jasnejšie rozlíšiť.",
             "notes": "Postupne vybrať Stĺpec, Riadok, Kontajner a Sekcia v ceste. MANUAL: postupne pripájať popisky úrovní k reálnemu záberu, zachovať farby rozhrania.",
             shot: async ({ I, services }) => {
                 for (const type of ["row", "container", "section"]) {
@@ -124,24 +127,50 @@ const videoPlan = {
         {
             "id": "more-actions",
             "type": "auto",
-            "durationSeconds": 27,
+            "durationSeconds": 20,
             "title": "Find the original tools in More actions",
-            "text-sk": "Kde teraz nájdete pôvodné nástroje? Otvorte Ďalšie akcie. Tu je Štýl s nastavením pozadia, zarovnania či odsadenia. Nájdete tu aj vloženie pred alebo za blok, presun, pôvodné duplikovanie, pridanie do obľúbených a zmazanie. Šírka stĺpca a nové Duplikovať vedľa sú priamo v lište. Ponuka sa vždy prispôsobí výberu.",
-            "notes": "Stĺpec > Ďalšie akcie > Štýl. Detail existujúcich vlastností, zavrieť Zrušiť. Znova otvoriť menu a ukázať pôvodné operácie; nič nezmazať ani neukladať do obľúbených.",
+            "text-sk": "Kde teraz nájdete pôvodné nástroje? Otvorte Ďalšie akcie. Tu je Štýl, vloženie pred alebo za blok, presun, duplikovanie, pridanie do obľúbených a zmazanie. Šírka stĺpca a Duplikovať vedľa sú priamo v lište. Ponuka sa prispôsobí výberu.",
+            "notes": "Open More actions for a column and hold the complete menu. Do not delete content or save favorites; the next shot demonstrates Style independently.",
             shot: async ({ I, services, action }) => {
                 await I.videoClick(services);
                 await I.videoClick(action("more"));
                 await I.waitForVisible(action("style"), 10);
+                await I.waitForVisible(action("add_to_favorites"), 10);
+                await I.wait(6);
+                await I.pressKey("Escape");
+            }
+        },
+        {
+            "id": "style-settings",
+            "type": "auto",
+            "durationSeconds": 32,
+            "title": "Explore the compact style properties",
+            "text-sk": "Aj Štýl má nové, kompaktné okno. V hlavičke vidíte, ktorý blok upravujete. Vlastnosti sú rozdelené do rozbaľovacích skupín. Pozadie a odsadenie môžete nechať otvorené súčasne. Prepojením hodnôt nastavíte rovnaké odsadenie na všetkých stranách. Zmenu hneď vidíte na stránke. Uložiť potvrdí štýl, Zrušiť vráti nepotvrdené úpravy. Celú stránku potom uložíte hlavným tlačidlom editora.",
+            "notes": "Open Style for the selected column. Show its title and content label, collapse Identification, expand Background and Spacing together, set linked padding and cancel. The fixture is browser-only; do not save the page.",
+            prepare: async ({ I, action }) => {
+                await I.click(action("more"));
+                await I.click(action("style"));
+                await I.waitForVisible(".pb-modal [name=selector-id]", 10);
+            },
+            shot: async ({ I, waitForPageBuilder }) => {
+                await I.see("Štýl stĺpca", ".pb-modal .header-title");
+                await I.see("Naše služby", ".pb-modal__context");
                 await I.wait(3);
-                await I.videoClick(action("style"));
-                await I.waitForVisible(".pb-modal", 10);
+                await I.videoClick('.pb-modal .pb-style-accordion[data-input-group-id="10"] > button');
+                await I.videoClick('.pb-modal .pb-style-accordion[data-input-group-id="01"] > button');
+                await I.waitForVisible(".pb-modal [name=background-image]", 10);
+                await I.videoClick('.pb-modal .pb-style-accordion[data-input-group-id="03"] > button');
+                await I.waitForVisible(".pb-modal [name=padding-top]", 10);
+                await I.fillField(".pb-modal [name=padding-top]", "24");
+                await I.pressKey("Tab");
+                await waitForPageBuilder("wait for linked padding and its live preview", () => {
+                    const panel = document.querySelector(".pb-modal");
+                    return ["top", "bottom", "left", "right"].every(side => panel.querySelector(`[name=padding-${side}]`).value === "24") &&
+                        getComputedStyle(document.querySelector(".pb-video-autotest .column-content")).paddingTop === "24px";
+                });
                 await I.wait(5);
                 await I.videoClick(".pb-modal__footer__button-close");
                 await I.waitForInvisible(".pb-modal", 10);
-                await I.videoClick(action("more"));
-                await I.waitForVisible(action("add_to_favorites"), 10);
-                await I.wait(4);
-                await I.pressKey("Escape");
             }
         },
         {
@@ -199,7 +228,7 @@ const videoPlan = {
             "type": "auto",
             "durationSeconds": 34,
             "title": "Choose a section insertion point",
-            "text-sk": "Pridávanie blokov má nový vstup. Kliknite na plus v hornej lište. Nemusíte predtým hľadať ozubené koliesko ani označiť blok. Priamo v stránke sa ukážu miesta vloženia. Modré pásy pridávajú sekcie, ružové kontajnery a zelené pluská stĺpce. Popis vám povie, pred ktorý blok alebo za ktorý blok vkladáte. Rozbalené medzery sú iba dočasnou pomôckou.",
+            "text-sk": "Kliknite na plus v hornej lište. Blok nemusíte vopred označiť. Lištu dočasne nahradí modrý pomocník s tlačidlom Ukončiť. Priamo v stránke sa ukážu miesta vloženia. Modré pásy pridávajú sekcie, ružové kontajnery a zelené pluská stĺpce. Popis vám povie, pred ktorý blok alebo za ktorý blok vkladáte. Rozbalené medzery sú iba dočasnou pomôckou.",
             "notes": "Show the toolbar plus, colored insertion points and position labels. Choose the section boundary between Services and Contact and open the section library.",
             shot: async ({ I, action }) => {
                 await I.videoClick(action("insert"));
@@ -223,7 +252,7 @@ const videoPlan = {
             "type": "auto",
             "durationSeconds": 33,
             "title": "Explore the library and insert a section",
-            "text-sk": "Vyberte miesto a otvorí sa výber blokov príslušného typu. Zostávajú známe karty Základné, Knižnica a Obľúbené. V knižnici naďalej nájdete bloky pripravené pre svoj web, vyhľadávanie a štítky. Po vložení sa nový blok označí a môžete upraviť jeho obsah. Ak knižnicu zatvoríte, vrátite sa k vybranému plusku. Celý režim ukončíte cez Ukončiť, Escape alebo opätovným kliknutím na plus.",
+            "text-sk": "Vyberte miesto a otvorí sa kompaktné okno pre príslušný typ bloku. Hlavička pripomína, kam vkladáte. Zostávajú karty Základné, Knižnica a Obľúbené. Kliknutím na blok ho rovno vložíte. Nový blok sa označí a môžete upraviť jeho obsah. Krížikom knižnicu zatvoríte a vrátite sa k vybranému plusku. Celý režim ukončíte tlačidlom Ukončiť alebo klávesom Escape.",
             "notes": "Show Basic, Library and Favorites for sections and the insertion context between Services and Contact. Cancel the library, show focus returning to the plus, reopen it and insert a basic section. Show the selected section with focus in its content, then demonstrate ending insertion mode.",
             prepare: async ({ I, action }) => {
                 await I.click(action("insert"));
@@ -243,7 +272,7 @@ const videoPlan = {
                     await I.waitForVisible(`.pb-library .library-tab-item--${type}`, 10);
                     await I.wait(3);
                 }
-                await I.videoClick(".pb-library__footer__button");
+                await I.videoClick(".pb-library__close");
                 await I.waitForInvisible(".pb-library", 10);
                 await I.waitForVisible("[data-autotest-insert]", 10);
                 await I.wait(3);
@@ -267,11 +296,44 @@ const videoPlan = {
             }
         },
         {
+            "id": "library-search",
+            "type": "auto",
+            "durationSeconds": 25,
+            "title": "Find a block with categories and filters",
+            "text-sk": "V Knižnici rozbalíte kategóriu a uvidíte náhľady blokov s názvami. Naraz je otvorená jedna kategória. Hľadanie podľa názvu môžete spojiť so štítkom. Počty pri kategóriách ukazujú vyhovujúce bloky. Všetky zruší iba štítok a ponechá hľadaný text. Ak sa nič nenájde, Vyčistiť filtre obnoví celý zoznam.",
+            "notes": "Open the section library independently through Insert after. Expand Contact, combine the form search with its tag, show All preserving the query, then an empty result and Clear filters. Template block names and tags remain Slovak even in other administration languages.",
+            prepare: async ({ I, action }) => {
+                await I.clickCss(".pb-workbench-path [data-type=section]");
+                await I.click(action("more"));
+                await I.click(action("after"));
+                await I.waitForVisible(".pb-library--section", 10);
+                await I.clickCss(".pb-library .library-tab-link[data-library-type=library]");
+            },
+            shot: async ({ I }) => {
+                const library = ".pb-library--section .library-tab-item--library .library-template-block--section";
+                await I.videoClick(`${library} [data-library-item-id="c2VjdGlvbi9Db250YWN0"] .library-group-toggle`);
+                await I.waitForVisible(`${library} .library-tab-item-button__toggler.active .library-full-width-item`, 10);
+                await I.wait(3);
+                await I.fillField(`${library} .library-filter-input`, "form");
+                await I.videoClick(`${library} [data-library-tag="Formulár"]`);
+                await I.waitForVisible(`${library} .library-tab-item-button__toggler.active .library-full-width-item`, 10);
+                await I.wait(3);
+                await I.videoClick(`${library} [data-library-tag=""]`);
+                await I.seeInField(`${library} .library-filter-input`, "form");
+                await I.fillField(`${library} .library-filter-input`, "nenájdený blok");
+                await I.waitForVisible(`${library} .library-empty`, 10);
+                await I.videoClick(`${library} .library-clear-filters`);
+                await I.seeInField(`${library} .library-filter-input`, "");
+                await I.videoClick(".pb-library__close");
+                await I.waitForInvisible(".pb-library", 10);
+            }
+        },
+        {
             "id": "duplicate-move",
             "type": "auto",
             "durationSeconds": 39,
             "title": "Duplicate and reorder items",
-            "text-sk": "Pri opakovaní obsahu vyskúšajte Duplikovať vedľa. Kópia vznikne hneď za výberom a automaticky sa označí. Netreba vyberať cieľ. Na malú zmenu poradia použite v Ďalších akciách presun pred predchádzajúci alebo za nasledujúci blok. Na okraji zoznamu je príslušná akcia neaktívna. Pôvodný presun s výberom miesta zostáva dostupný. Pri opakovateľných položkách sa presúvate len medzi kompatibilnými položkami rovnakého rodiča.",
+            "text-sk": "Pri opakovaní obsahu vyskúšajte Duplikovať vedľa. Kópia vznikne hneď za výberom a automaticky sa označí. Netreba vyberať cieľ. Na malú zmenu poradia použite v Ďalších akciách Posunúť vyššie alebo Posunúť nižšie. Na okraji zoznamu je príslušná akcia neaktívna. Pôvodný presun s výberom miesta zostáva dostupný. Pri opakovateľných položkách sa presúvate len medzi kompatibilnými položkami rovnakého rodiča.",
             "notes": "Vybrať Konzultácia, Duplikovať vedľa, podržať vybranú kópiu. Presunúť ju za Podpora a ukázať neaktívny ďalší presun na konci. Otvoriť pôvodný Presunúť, ukázať povolené ciele, zrušiť Escape.",
             shot: async ({ I, fixture, action }) => {
                 await I.videoClick(locate(`${fixture} li.pb-duplicable-element`).withText("Konzultácia"));
@@ -298,20 +360,23 @@ const videoPlan = {
             "type": "auto",
             "durationSeconds": 28,
             "title": "Responsive widths and the compact path",
-            "text-sk": "Aj prepínanie mobilu, tabletu a desktopu zostáva pri výbere editora. Vyberte zariadenie, potom stĺpec a jeho šírku. Nastavujete rozloženie pre danú veľkosť. V úzkom zobrazení sa cesta skráti a nadradené prvky otvoríte tlačidlom vedľa aktuálneho typu. Panel Štruktúra sa po výbere na úzkej obrazovke zatvorí.",
+            "text-sk": "Mobil, tablet a desktop prepínate pri výbere editora. Vyberte stĺpec a jeho šírku. Lištu nahradí pomocník s označením zariadenia. Šípkami priamo v stĺpcoch meníte rozloženie pre túto veľkosť. Ukončiť alebo Escape obnoví lištu. Na mobile otvoríte skrátenú cestu tlačidlom pri type bloku. Panel Štruktúra sa po výbere zatvorí.",
             "notes": "Mobil > stĺpec > šírka 12, zmeniť na 11 a späť na 12. Rozbaliť skrátenú cestu, otvoriť Štruktúru a výberom ju zavrieť. Tablet a Desktop, návrat k rozloženiu pre desktop. MANUAL: zväčšiť detail mobilného iframe a vystrihnúť prázdnu plochu mimo neho.",
             shot: async ({ I, services, fixture, action, treeRow, waitForPageBuilder }) => {
                 await I.videoClick("a[title=Mobil]");
                 await waitForPageBuilder("wait for the mobile viewport", () => window.innerWidth < 768);
                 await I.videoClick(services);
                 await I.videoClick(action("resize"));
+                await I.waitForVisible(".pb-workbench.is-resizing .pb-resize-hint", 10);
+                await I.see("Mobil", ".pb-resize-hint");
                 await I.waitForVisible(`${fixture} .pb-size-changer__down`, 10);
                 await I.videoClick(locate(`${fixture} .pb-size-changer__down`).first());
                 await I.waitForElement(`${fixture} .col-11`, 10);
                 await I.wait(3);
                 await I.videoClick(locate(`${fixture} .pb-size-changer__up`).first());
                 await I.waitForElement(`${fixture} .col-12`, 10);
-                await I.pressKey("Escape");
+                await I.videoClick(action("end-resize"));
+                await I.waitForInvisible(".pb-resize-hint", 10);
                 await I.videoClick(action("ancestors"));
                 await I.waitForVisible(".pb-workbench-path.is-expanded", 10);
                 await I.wait(3);
@@ -383,7 +448,7 @@ const videoPlan = {
             "durationSeconds": 18,
             "title": "Page Builder documentation",
             "text-sk": "Pri ďalšej úprave teda začnite výberom obsahu. V ceste alebo v Štruktúre overte správnu úroveň a potom použite nástroje hornej lišty. Podrobný návod k Page Builderu nájdete v dokumentácii WebJET CMS. Odkaz je v popise videa.",
-            "notes": "Slowly scroll through the Slovak Page Builder documentation. Before publishing, verify that the public article describes this update. Include its URL in the video description.",
+            "notes": "Slowly scroll through the Slovak Page Builder documentation. The public article still described the previous interface during final validation on 2026-09-13. Record this shot after the updated documentation and screenshots are published. Include its URL in the video description.",
             shot: async ({ I }) => {
                 await I.videoDocumentation("https://docs.webjetcms.sk/latest/sk/redactor/webpages/pagebuilder");
                 await I.wait(8);
@@ -410,7 +475,6 @@ Scenario("308-pb-redesign", async ({ I, DTE, Document, login }) => {
     const iframe = "#DTE_Field_data-pageBuilderIframe";
     const fixture = ".pb-video-autotest";
     const services = `${fixture} .video-services`;
-    const oldColumn = locate("div.col-3.text-center.pb-column").first();
     const action = name => `.pb-workbench [data-pb-action=${name}]`;
     const treeRow = (type, text) => locate(`.pb-structure [role=treeitem][data-type=${type}] > div`).withText(text);
     // CodeceptJS 3.6 uses a FrameLocator that has no waitForFunction method.
@@ -476,13 +540,13 @@ Scenario("308-pb-redesign", async ({ I, DTE, Document, login }) => {
 
     await recordVideoPlan(I, {
         plan: videoPlan,
-        context: { DTE, iframe, oldColumn, fixture, services, action, treeRow, waitForPageBuilder, typeText, closeEditor },
+        context: { fixture, services, action, treeRow, waitForPageBuilder, typeText, closeEditor },
         setup: async () => {
             login("admin");
             Document.resetPageBuilderMode();
         },
         prepare: async shot => {
-            if (shot.id === "old-editor" || shot.id === "outro") return;
+            if (shot.id === "outro") return;
             await prepareEditor();
         },
         cleanup: async shot => {
