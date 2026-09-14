@@ -17,6 +17,7 @@ import org.springframework.beans.MutablePropertyValues;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.web.util.WebUtils;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
@@ -56,6 +57,8 @@ public class EshopService {
 	private static final String BASKET_ITEM_ID = "basketItemId";
 	private static final String BASKET_QTY = "basketQty";
 	private static final String PRICE_OVERRIDES = "basket.priceOverrides";
+	/** Request attribute carrying a customer-facing checkout error surfaced by {@link #saveOrder(HttpServletRequest)}. */
+	public static final String ORDER_ERROR_ATTR = "basket.orderError";
 
 	private final BasketInvoicesRepository bir;
     private final BasketInvoiceItemsRepository biir;
@@ -118,14 +121,24 @@ public class EshopService {
 			BeanUtils.copyProperties(original, item, "doc", "editorFields", "itemsBasketInvoice");
 			if (original.getItemIdInt() > 0) {
 				DocDetails doc = original.getDoc();
-				if (doc == null) throw new IllegalStateException("A basket product is no longer available.");
-				item.setDoc(doc);
-				item.setItemTitle(doc.getTitle());
+				if (doc == null) {
+					//Product page was removed, drop it from the basket instead of failing the whole view.
+					Logger.println(EshopService.class, "Skipping basket item " + original.getId() + ", product is no longer available");
+					continue;
+				}
 				PriceOverride override = getPriceOverrides(request).get(original.getId());
 				BigDecimal net = override != null && override.net() != null ? override.net() : doc.getPrice(request);
 				BigDecimal vat = override != null && override.vat() != null ? override.vat() : doc.getVat();
+				Integer vatRate = toVatRate(vat);
+				if (vatRate == null) {
+					//VAT is stored as a whole-number percentage, skip products with an unexpected rate.
+					Logger.error(EshopService.class, "Skipping basket item " + original.getId() + ", VAT rate is not a whole number: " + vat);
+					continue;
+				}
+				item.setDoc(doc);
+				item.setItemTitle(doc.getTitle());
 				item.setItemPrice(BasketTools.convertCurrency(net, doc.getCurrency(), currency));
-				item.setItemVat(vat.intValueExact());
+				item.setItemVat(vatRate);
 			}
 			BasketPricingService.recalculateLinePrice(item, scale);
 			items.add(item);
@@ -140,6 +153,20 @@ public class EshopService {
 	private Map<Long, PriceOverride> getPriceOverrides(HttpServletRequest request) {
 		Object stored = request.getSession().getAttribute(PRICE_OVERRIDES);
 		return stored instanceof Map ? (Map<Long, PriceOverride>) stored : Map.of();
+	}
+
+	/** Returns the whole-number VAT percentage, or null when the rate cannot be represented as one. */
+	private static Integer toVatRate(BigDecimal vat) {
+		try {
+			return vat.intValueExact();
+		} catch (ArithmeticException ex) {
+			return null;
+		}
+	}
+
+	/** Builds a localized, customer-facing checkout validation error. */
+	private static IllegalArgumentException orderError(HttpServletRequest request, String messageKey) {
+		return new IllegalArgumentException(Prop.getInstance(request).getText(messageKey));
 	}
 
 	/**
@@ -275,7 +302,8 @@ public class EshopService {
 
     public BasketInvoiceEntity saveOrder(HttpServletRequest request) {
 		if (!BasketPricingService.isEnabled()) return createOrder(request);
-		synchronized (request.getSession()) {
+		//Container-portable per-session lock so concurrent checkout requests cannot double-submit an order.
+		synchronized (WebUtils.getSessionMutex(request.getSession())) {
 			try {
 				TransactionTemplate transaction = new TransactionTemplate(Tools.getSpringBean("webjet2022TransactionManager", PlatformTransactionManager.class));
 				BasketInvoiceEntity invoice = transaction.execute(status -> createOrder(request));
@@ -286,9 +314,19 @@ public class EshopService {
 				return invoice;
 			} catch (Exception ex) {
 				Logger.error(EshopService.class, ex);
+				String message = resolveOrderErrorMessage(ex);
+				if (message != null) request.setAttribute(ORDER_ERROR_ATTR, message);
 				return null;
 			}
 		}
+	}
+
+	/** Extracts the customer-facing validation reason baked into a checkout exception, or null for internal failures. */
+	private static String resolveOrderErrorMessage(Throwable ex) {
+		Throwable cause = ex;
+		while (cause.getCause() != null) cause = cause.getCause();
+		if (cause instanceof IllegalArgumentException && cause.getMessage() != null && !cause.getMessage().isBlank()) return cause.getMessage();
+		return null;
 	}
 
     private BasketInvoiceEntity createOrder(HttpServletRequest request)
@@ -321,7 +359,7 @@ public class EshopService {
 				try {
 					DeliveryMethodEntity dme = dms.getDeliveryMethod(deliveryMethodId, null, Prop.getInstance(request));
 					if (BasketPricingService.isEnabled() && !dme.getSupportedCountriesList().contains(country))
-						throw new IllegalArgumentException("Delivery is unavailable.");
+						throw orderError(request, "components.basket.order_form.error.delivery_unavailable");
 					String title = dme.getTitle();
 					if (Tools.isEmpty(title)) title = dme.getDeliveryMethodName();
 					invoice.setDeliveryMethod(title);
@@ -335,9 +373,9 @@ public class EshopService {
 			if (BasketPricingService.isEnabled()) {
 				if (!List.of("eur", "czk").contains(invoice.getCurrency())) throw new IllegalStateException("Rounded checkout supports EUR and CZK.");
 				if (deliveryMethodId <= 0 && !dms.getAllDeliveryMethods(request, Prop.getInstance(request), country).isEmpty())
-					throw new IllegalArgumentException("Select a delivery method.");
+					throw orderError(request, "components.basket.order_form.error.select_delivery");
 				if (!PaymentMethodsService.isPaymentMethodConfigured(invoice.getPaymentMethod(), request, Prop.getInstance(request)))
-					throw new IllegalArgumentException("Select a payment method.");
+					throw orderError(request, "components.basket.order_form.error.select_payment");
 			}
 
 			//Get all items for adminlog
@@ -353,7 +391,7 @@ public class EshopService {
 
 			if (BasketPricingService.isEnabled()) {
 				basketItems = getBasketItems(request);
-				if (basketItems.stream().noneMatch(item -> item.getItemIdInt() > 0)) throw new IllegalStateException("The basket is empty.");
+				if (basketItems.stream().noneMatch(item -> item.getItemIdInt() > 0)) throw orderError(request, "components.basket.order_form.error.empty_basket");
 				for (BasketInvoiceItemEntity item : basketItems) BasketPricingService.prepareForSave(item);
 				invoice.setPriceToPayVat(getTotalLocalPriceVat(basketItems, request));
 				invoice.setPriceToPayNoVat(getTotalLocalPrice(basketItems, request));

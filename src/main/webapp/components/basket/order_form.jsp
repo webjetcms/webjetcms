@@ -107,6 +107,17 @@
 
 		BasketInvoiceEntity invoice = EshopService.getInstance().saveOrder(request);
 
+		//order could not be created, show the surfaced validation reason instead of an error page
+		if (invoice == null)
+		{
+			Object orderError = request.getAttribute(EshopService.ORDER_ERROR_ATTR);
+			String orderErrorMessage = orderError != null ? orderError.toString() : prop.getText("components.basket.order_form.canot_save_order");
+			%>
+				<div class="alert alert-danger" role="alert"><%= Tools.escapeHtml(orderErrorMessage) %></div>
+			<%
+			return;
+		}
+
 		//nesmie obsahovat nulovu cenu
 		if ( invoice.getTotalPriceVat().compareTo(BigDecimal.ZERO) < 1)
 		{
