@@ -6,7 +6,7 @@
 
 ### Průlomové změny
 
-- Statistika - prohlížeče se po aktualizaci ukládají bez čísla verze. Po nasazení této verze je třeba spustit migraci historických statistik na URL `/admin/v9/settings/stat-browser-migration/`, bez jejího dokončení zůstanou historické údaje rozděleny podle verzí prohlížečů (#303).
+- Statistika – prohlížeče se po aktualizaci ukládají bez čísla verze, která se v dnešní době velmi často mění. Po nasazení této verze je třeba spustit migraci historických statistik na URL `/admin/v9/settings/stat-browser-migration/`, bez jejího dokončení zůstanou historické údaje rozděleny podle čísla verze prohlížečů (#303).
 - Z administrace byla odstraněna závislost na knihovně [Vue.js](https://vuejs.org). Před aktualizací doporučujeme ověřit kompatibilitu vlastních aplikací. Velikost JavaScript souborů se zmenšila o cca 170kB, což má dopad také na rychlost inicializace administrace. Více v [sekci pro programátora](#pre-programátora).
 - AspectJ - z distribuce byla odstraněna podpora `load-time weavingu` (`aspectjweaver` a `META-INF/aop-ajc.xml`); vestavěné aspekty se zpracují již při kompilaci, více v [sekci pro programátora](#pre-programátora). Při použití v MultiWeb instalaci můžete odstranit `-javaagent:/www/tomcat/.../aspectjweaver.jar` nastavení z `JAVA_OPTS` v aplikačním serveru (#290).
 - Export obsahu pro Flash - odstraněna byla historická funkce generování XML souborů `/flash_xml/{docId}.xml` při publikování stránky. Konfigurační proměnná `exportFlash` již není podporována a její definování v `SpringConfig` funkci neobnoví (#293).
@@ -177,7 +177,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Multiweb - doplněna možnost přejmenovat existující doménu + přesměrování po přejmenování (#58317-15).
 - Multiweb - upraveno [zobrazení skupin šablon](install/multiweb/README.md) podle dostupných šablon a aliasu aktuální domény (#58317-17).
 - Statistika - nastavené datum/rozsah od-do se ukládá v prohlížeči a je zapamatován i po odhlášení/restartu prohlížeče (#58065).
-- Statistika - prohlížeče se ukládají bez často se měnícího čísla verze. Doplněna je ručně spouštěná dávková migrace v sekci Aktualizace WebJET, která sloučí historické záznamy bez výpadku webu. Aktualizován je seznam `User-Agent` prohlížečů pro lepší detekci (#303).
+- Statistika - prohlížeče se ukládají bez často se měnícího čísla verze. Doplněna je ručně spouštěná dávková migrace v sekci Aktualizace WebJET, která sloučí historické záznamy bez výpadku webu. Na stránce `/admin/v9/settings/stat-browser-migration/` klikněte na Analyzovat a potom spusťte migraci. Po úspěšné migraci klikněte na Finalizovat. Finalizace před mazáním ověřuje používání identifikátorů včetně operačních systémů a jejich verzí, zachovává používané hodnoty a zobrazuje průběh kontroly po tabulkách. Aktualizován je seznam `User-Agent` prohlížečů pro lepší detekci (#303).
 
 ![](sysadmin/update/stat-browser-migration.png)
 
@@ -525,6 +525,7 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 - Multiweb - opravena možnost smazat nebo upravit doménové přesměrování, které obsahuje `http/s` prefix (#58317-15).
 - Galerie - v editoru aplikace se mezi vizuálními styly zobrazují pouze JSP soubory ze složek `/components/{INSTALL_NAME}/gallery` a `/components/gallery`, bez duplicitních položek (#58317-16).
 - Vložení HTML kódu - v náhledu aplikace v editoru webových stránek se pro obsah tvořený pouze elementy `script` zobrazí zdrojový kód namísto prázdného obsahu (#OSK625).
+- Video - opraveno zpracování YouTube odkazů s dalšími URL parametry včetně času spuštění videa (`t` nebo `start`). Parametry se správně spojí s nastavením přehrávače bez duplicitního znaku `?` (#OSK714).
 - Bezpečnost - zpřísněné ověřování odkazu na obnovu zapomenutého hesla. Ověřovací záznam se kontroluje pro vybraný uživatelský účet i při vlastním způsobu odesílání, respektuje časovou platnost a po použití se zneplatní pro všechny účty zahrnuté v žádosti (#292).
 - Bezpečnost - zpřísněné ověřování oprávnění při práci se záznamy v administraci (#295).
 - Bezpečnost - zpřísněná kontrola práv na složku při nahrávání souboru do administrace a její přepsání pokud soubor existuje.

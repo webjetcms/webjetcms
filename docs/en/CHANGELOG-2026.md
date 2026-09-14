@@ -6,7 +6,7 @@
 
 ### Groundbreaking changes
 
-- Statistics - browsers are saved without a version number after the update. After deploying this version, it is necessary to start the migration of historical statistics to the URL `/admin/v9/settings/stat-browser-migration/`, without completing it, historical data will remain divided by browser versions (#303).
+- Statistics - browsers are saved without version numbers after updating, which change very often these days. After deploying this version, it is necessary to start the migration of historical statistics to URL `/admin/v9/settings/stat-browser-migration/`, without completing it, historical data will remain divided by browser version number (#303).
 - The dependency on the [Vue.js](https://vuejs.org) library has been removed from the administration. We recommend checking the compatibility of your own applications before updating. The size of JavaScript files has been reduced by approximately 170kB, which also has an impact on the speed of administration initialization. More in the [programmer section](#programmer).
 - AspectJ - support for `load-time weavingu` (`aspectjweaver` and `META-INF/aop-ajc.xml`) has been removed from the distribution; built-in aspects are processed at compile time, more in [programmer section](#programmer section). When using in a MultiWeb installation, you can remove the `-javaagent:/www/tomcat/.../aspectjweaver.jar` setting from `JAVA_OPTS` in the application server (#290).
 - Export content for Flash - the historical feature of generating XML files `/flash_xml/{docId}.xml` when publishing a page has been removed. The configuration variable `exportFlash` is no longer supported and defining it in `SpringConfig` will not restore the feature (#293).
@@ -177,7 +177,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Multiweb - added option to rename an existing domain + redirection after renaming (#58317-15).
 - Multiweb - modified [display of template groups](install/multiweb/README.md) according to available templates and alias of current domain (#58317-17).
 - Statistics - the set date/from-to range is saved in the browser and is remembered even after logging out/restarting the browser (#58065).
-- Statistics - browsers are saved without frequently changing version numbers. Added manually triggered batch migration in the WebJET Update section, which will merge historical records without website downtime. Updated list of `User-Agent` browsers for better detection (#303).
+- Statistics - browsers are saved without a frequently changing version number. A manually triggered batch migration has been added in the WebJET Update section, which will merge historical records without a website outage. On the `/admin/v9/settings/stat-browser-migration/` page, click Analyze and then start the migration. After a successful migration, click Finalize. Finalization verifies the use of identifiers before deletion, including operating systems and their versions, preserves the values ​​used, and displays the progress of the scan by table. The list of `User-Agent` browsers has been updated for better detection (#303).
 
 ![](sysadmin/update/stat-browser-migration.png)
 
@@ -525,6 +525,7 @@ Redesigned application properties settings in the editor from the old code in `J
 - Multiweb - fixed the ability to delete or edit a domain redirect that contains the `http/s` prefix (#58317-15).
 - Gallery - in the application editor, only JSP files from the `/components/{INSTALL_NAME}/gallery` and `/components/gallery` folders are displayed among the visual styles, without duplicate items (#58317-16).
 - Inserting HTML code - in the application preview in the website editor, for content consisting only of `script` elements, the source code is displayed instead of empty content (#OSK625).
+- Video - fixed handling of YouTube links with additional URL parameters including video start time (`t` or `start`). Parameters are now correctly linked to player settings without duplicate `?` character (#OSK714).
 - Security - tightened verification of the link to recover a forgotten password. The verification record is checked for the selected user account even with the custom sending method, respects the time validity and after use is invalidated for all accounts included in the request (#292).
 - Security - tightened authorization verification when working with records in administration (#295).
 - Security - tightened control of folder rights when uploading a file to the administration and overwriting it if the file exists.
