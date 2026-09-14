@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/admin/rest/settings/stat-browser-migration")
-@PreAuthorize("@WebjetSecurityService.hasPermission('modUpdate')")
+@PreAuthorize("@WebjetSecurityService.hasPermission('modUpdate|users.edit_admins')")
 public class BrowserIdentifierMigrationRestController {
 
     private final BrowserIdentifierMigrationService service;

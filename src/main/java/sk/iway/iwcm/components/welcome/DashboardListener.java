@@ -201,7 +201,10 @@ public class DashboardListener {
                 }
             }
             model.addAttribute("show2FARecommendation", show2FARecommendation);
-            model.addAttribute("showBrowserIdentifierMigrationWarning", BrowserIdentifierMigrationService.isAllreadyUpdated() == false);
+
+            boolean browserMigrationUpdated = true;
+            if (user.isEnabledItem("modUpdate|users.edit_admins")) browserMigrationUpdated = BrowserIdentifierMigrationService.isAllreadyUpdated();
+            model.addAttribute("showBrowserIdentifierMigrationWarning", browserMigrationUpdated == false);
 
         } catch (JsonProcessingException e) {
             Logger.error(DashboardListener.class, e);

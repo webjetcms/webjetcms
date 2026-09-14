@@ -53,7 +53,7 @@ import sk.iway.iwcm.system.cluster.ClusterDB;
 @Service
 public class BrowserIdentifierMigrationService implements DisposableBean {
 
-    public static final String UPDATE_NOTE = "08.09.2026 [jeeff] browser identifier migration including stat_error";
+    public static final String UPDATE_NOTE = "08.09.2026 [lbalat] browser identifier migration including stat_error";
 
     private static final int ROW_BATCH_SIZE = 1_000;
     private static final int UPDATE_BATCH_SIZE = 500;
