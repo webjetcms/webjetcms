@@ -59,7 +59,8 @@
     position: absolute;
     left: 0;
     right: 0;
-    z-index: 100011;
+    // Stay below the CKEditor toolbar stacking context (.wj-content-line: 100010), including its floating panels.
+    z-index: 100009;
     display: flex;
     flex-wrap: wrap;
     align-items: center;

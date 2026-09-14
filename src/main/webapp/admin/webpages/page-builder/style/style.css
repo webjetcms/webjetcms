@@ -2932,7 +2932,7 @@ div.exit-inline-editor a[aria-pressed=true] {
   position: absolute;
   left: 0;
   right: 0;
-  z-index: 100011;
+  z-index: 100009;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -3517,6 +3517,9 @@ body.is-view-mode .pb-workbench, body.is-view-mode .pb-structure, body.is-view-m
     flex-basis: calc(100% + 12px);
     margin-inline: -6px;
     padding-inline: 6px;
+  }
+  .pb-workbench > [data-pb-action=structure] span, .pb-workbench [data-pb-action=style] span {
+    display: none;
   }
   .pb-workbench-path > button:not(:last-child):not([data-pb-action=ancestors]) {
     display: none;
