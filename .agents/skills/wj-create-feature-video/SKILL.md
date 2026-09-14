@@ -180,6 +180,19 @@ preparation and cancellation for a documentation shot or a shot that opens its
 own route. Keep those decisions independent of array position. A preview can
 close its editor itself, so its shared cleanup must not close it again.
 
+For a single-shot retake, run
+`VIDEO_SHOT=outro npm run video video/<scenario-name>.js` with the exact shot ID.
+The shared runner validates the full plan and all automatic callbacks, runs
+one-time setup, then records only that shot with its normal lifecycle, slates
+and transition holds. It retains full-plan numbering and timing. Manual/head
+selections show only their warning slate after setup. Unknown IDs fail before
+setup and list the available IDs; malformed IDs fail when loading the video
+configuration. Surrounding whitespace is trimmed; unset or blank selects the
+full plan. The same selection works with `video:current`. A retake is saved as
+`<scenario-name>-<shot-id>.webm` or `<scenario-name>-<shot-id>.failed.webm`, replacing
+only the same shot and result status. Full recordings are retained. `VIDEO_SHOT`
+does not filter audio, head generation or `video:plan` output.
+
 A reordered shot must not depend on a prior shot's dialog, selection, search or
 mutation. Reopen/reset the editor with isolated browser-only content when that
 is the simplest reliable baseline. Use `I.clickCss` for CSS selectors or ordinary

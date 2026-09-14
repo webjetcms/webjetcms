@@ -98,6 +98,22 @@ WebM obsahuje plochu stránky v prehliadači bez hovoreného slova. Vygenerovan�
 
 WebM je natívny kontajner VP8 enkódera pribaleného k Playwright. Premenovanie súboru na `.mp4` alebo `.mov` ho nekonvertuje. Ak video editor vyžaduje iný formát, skonvertujte kvalitný WebM pomocou plnej inštalácie FFmpeg. Konverzia môže zlepšiť kompatibilitu s editorom, ale nemôže doplniť detaily, ktoré neboli zachytené v zdrojovej nahrávke.
 
+### Opakované nahratie jedného záberu
+
+Pri scenároch so spoločným `videoPlan` a runnerom `recordVideoPlan` môžete nahrať iba jeden záber pomocou premennej `VIDEO_SHOT`. Zadajte presné `id` záberu z plánu, napríklad `outro`:
+
+```shell
+VIDEO_SHOT=outro npm run video video/308-pb-redesign.js
+```
+
+Výsledok sa uloží ako `docs/feature-video/308-pb-redesign-outro.webm`; neúspešný beh ako `308-pb-redesign-outro.failed.webm`. Opakované spustenie nahradí iba retake rovnakého záberu a rovnakého stavu. Celé video aj posledný úspešný retake pri neúspechu zostanú zachované. Premenná funguje aj s `npm run video:current`.
+
+Spoločný `setup` sa vykoná raz. Potom sa vykoná iba príprava, titulky, dvojsekundové rezervy, akcia a cleanup vybraného záberu. Ostatné zábery sa nespustia. Titulky a výpisy zachovávajú pôvodné číslo záberu a celkový počet z celého plánu; retake nemení jeho časovú os. Výber `manual` alebo `head` zobrazí iba existujúcu varovnú tabuľku po spoločnom setupe.
+
+Nenastavená alebo prázdna hodnota znamená celý plán; okolité medzery sa orežú. ID musí používať malé písmená, číslice a prípadné spojovníky, napríklad `text-editing`. Neplatný formát sa odmietne pri načítaní konfigurácie. Neznáme ID ukončí beh pred spoločným setupom a vypíše dostupné ID. Aj pri retake sa overuje platnosť celého plánu a všetkých automatických callbackov.
+
+`VIDEO_SHOT` ovplyvňuje iba nahrávanie prehliadača. Príkazy `audio`, `head` a `video:plan` naďalej spracujú celý plán.
+
 ## Nastavenia nahrávania
 
 Predvolené hodnoty `CODECEPT_VIDEO_WIDTH`, `CODECEPT_VIDEO_HEIGHT`, `CODECEPT_VIDEO_ZOOM`, `CODECEPT_VIDEO_CURVE_STRENGTH`, `CODECEPT_URL` a `CODECEPT_SHOW` sa použijú iba vtedy, keď príslušná premenná nie je nastavená alebo je prázdna. Hodnoty zadané pred `npm run video` alebo `npm run video:current` majú prednosť.

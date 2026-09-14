@@ -47,6 +47,31 @@ successful run its UUID file is atomically renamed to the stable target and the
 empty raw directory is removed. A failed finalization retains the raw recording
 for diagnosis.
 
+To retake one shot from a scenario using `recordVideoPlan`, select its exact
+stable `id` with `VIDEO_SHOT`:
+
+```shell
+VIDEO_SHOT=outro npm run video video/308-pb-redesign.js
+```
+
+The runner still validates the complete plan and all automatic callbacks and
+runs one-time `setup`. Only the selected shot then runs, with its shared and
+inline preparation, editing slates, two-second lead-in/tail holds, action and
+cleanup. No other shot callbacks run. Original shot numbers, full-plan totals
+and edited timeline positions are retained. Manual/head selections show their
+usual warning slate after setup and skip all automatic lifecycle callbacks.
+An unknown ID fails before setup and lists the available IDs. IDs must use the
+same lowercase hyphenated format as the plan; malformed values fail at video
+configuration load. Surrounding whitespace is trimmed, and unset or blank
+values record the full plan. Selection also applies to `video:current`.
+
+Retakes are saved as `docs/feature-video/<scenario-name>-<shot-id>.webm`, or
+`<scenario-name>-<shot-id>.failed.webm` on failure. Repeated runs atomically
+replace only the corresponding shot and result status, preserving the full
+recording and the last successful retake on failure. Raw recording retention
+works as for full runs. `VIDEO_SHOT` only selects browser footage; audio,
+head generation and `video:plan` continue to process the full plan.
+
 Disable native cursor capture in an external recorder. The scenario already
 renders a cursor and click effect, and capturing the system cursor as well can
 produce a distracting duplicate.

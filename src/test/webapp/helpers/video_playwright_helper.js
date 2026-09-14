@@ -3,7 +3,7 @@ const path = require("path");
 const { randomBytes } = require("crypto");
 const { threadId } = require("worker_threads");
 const { FEATURE_VIDEO_DIRECTORY } = require("./feature_video_paths.js");
-const { getVideoSettings } = require("./video_settings.js");
+const { getVideoSettings, getVideoShot } = require("./video_settings.js");
 
 const PLAYWRIGHT_CORE_ROOT = path.dirname(require.resolve("playwright-core/package.json"));
 const PLAYWRIGHT_VIDEO_OPTIONS = {
@@ -120,7 +120,8 @@ function sanitizeScenarioName(test) {
 }
 
 function getVideoArtifactName(test, passed) {
-  const scenarioName = sanitizeScenarioName(test);
+  const shotId = getVideoShot();
+  const scenarioName = sanitizeScenarioName(test) + (shotId ? `-${shotId}` : "");
   return passed ? `${scenarioName}.webm` : `${scenarioName}.failed.webm`;
 }
 
@@ -258,7 +259,7 @@ class VideoPlaywrightHelper extends Playwright {
       if (test.artifacts == null) test.artifacts = {};
       test.artifacts.video = targetPath;
       await video.delete().catch(() => {});
-      await removeLegacyScenarioVideos(videoDirectory, scenarioName, targetPath);
+      if (!getVideoShot()) await removeLegacyScenarioVideos(videoDirectory, scenarioName, targetPath);
     } catch (error) {
       process.exitCode = 1;
       const artifactStatus = finalized

@@ -1,3 +1,5 @@
+const { getVideoShot } = require("./video_settings.js");
+
 /** Validates shot metadata and derives the edited timeline from the array order. */
 function resolveVideoPlan(plan, language = plan?.language || "sk") {
   if (!plan || typeof plan !== "object" || !Array.isArray(plan.shots) || plan.shots.length === 0) {
@@ -68,8 +70,14 @@ function formatShotPlan(plan, language) {
   ].filter(Boolean).join("\n\n");
 }
 
-/** Keeps all shots in plan order and checks automatic callbacks before recording. */
-function getRecordingShots(plan, language) {
+/**
+ * Validates the full plan and its automatic callbacks, then optionally selects one recording shot.
+ * @param {object} plan Editable video plan
+ * @param {string} [language] Narration language override
+ * @param {string} [shotId] Exact shot ID; omitted or empty selects the full plan
+ * @returns {object[]} Recording shots with their original full-plan numbering and timing
+ */
+function getRecordingShots(plan, language, shotId) {
   const shots = resolveVideoPlan(plan, language).shots;
   for (const shot of shots) {
     if (shot.type !== "auto") continue;
@@ -80,11 +88,16 @@ function getRecordingShots(plan, language) {
       throw new Error(`Shot ${shot.id} prepare must be a function.`);
     }
   }
-  return shots;
+  if (!shotId) return shots;
+  const selectedShot = shots.find(shot => shot.id === shotId);
+  if (!selectedShot) {
+    throw new Error(`Unknown video shot: ${shotId}. Available shot IDs: ${shots.map(shot => shot.id).join(", ")}.`);
+  }
+  return [selectedShot];
 }
 
 /**
- * Records automatic shots and manual/head warning slates in plan order.
+ * Records automatic shots and manual/head warning slates, optionally selecting one with VIDEO_SHOT.
  * Call this plain async function from a Scenario, outside the CodeceptJS helper step queue.
  * @param {object} I CodeceptJS actor
  * @param {object} options Shot plan and recording callbacks
@@ -97,17 +110,17 @@ function getRecordingShots(plan, language) {
  * @returns {Promise<void>} Resolves after every automatic shot, its cleanup and all warning slates
  */
 async function recordVideoPlan(I, { plan, context = {}, setup, prepare, cleanup, language }) {
-  const recordingShots = getRecordingShots(plan, language);
+  const recordingShots = getRecordingShots(plan, language, getVideoShot());
   if (setup) await setup();
   for (const shot of recordingShots) {
     await I.say("----------------------------------------------------------------------------");
     if (shot.type === "head") {
-      await I.say(`WARNING: head video | Shot ${shot.number}/${recordingShots.length} [${shot.id}]: ${shot.title} (${shot.durationSeconds}s)\n${shot.narration}\n${shot.notes || "Generate this clip with npm run head and insert it during editing."}`);
+      await I.say(`WARNING: head video | Shot ${shot.number}/${shot.total} [${shot.id}]: ${shot.title} (${shot.durationSeconds}s)\n${shot.narration}\n${shot.notes || "Generate this clip with npm run head and insert it during editing."}`);
       await I.videoTitle(shot);
       continue;
     }
     if (shot.type === "manual") {
-      await I.say(`WARNING: manual steps | Shot ${shot.number}/${recordingShots.length} [${shot.id}]: ${shot.title} (${shot.durationSeconds}s)\n${shot.notes || "Add filming instructions to this shot's notes."}`);
+      await I.say(`WARNING: manual steps | Shot ${shot.number}/${shot.total} [${shot.id}]: ${shot.title} (${shot.durationSeconds}s)\n${shot.notes || "Add filming instructions to this shot's notes."}`);
       await I.videoTitle(shot);
       continue;
     }

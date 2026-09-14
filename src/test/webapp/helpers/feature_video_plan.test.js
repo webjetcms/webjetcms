@@ -1,6 +1,16 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
 const { resolveVideoPlan, getPlanNarration, formatShotPlan, getRecordingShots } = require("./feature_video_plan.js");
+const { getVideoShot } = require("./video_settings.js");
+
+test.beforeEach(t => {
+  const previousShot = process.env.VIDEO_SHOT;
+  delete process.env.VIDEO_SHOT;
+  t.after(() => {
+    if (previousShot === undefined) delete process.env.VIDEO_SHOT;
+    else process.env.VIDEO_SHOT = previousShot;
+  });
+});
 
 function createPlan() {
   return {
@@ -12,6 +22,89 @@ function createPlan() {
     ]
   };
 }
+
+test("normalizes VIDEO_SHOT and rejects malformed IDs", () => {
+  assert.equal(getVideoShot({}), "");
+  for (const value of ["", "  ", "\t\n"]) assert.equal(getVideoShot({ VIDEO_SHOT: value }), "");
+  assert.equal(getVideoShot({ VIDEO_SHOT: " outro \n" }), "outro");
+  assert.equal(getVideoShot({ VIDEO_SHOT: "text-editing" }), "text-editing");
+  for (const value of ["Outro", "../outro", "outro,edit", "out*", "text_editing", "-outro", "outro--edit"]) {
+    assert.throws(() => getVideoShot({ VIDEO_SHOT: value }), /VIDEO_SHOT must be a lowercase hyphenated shot ID/);
+  }
+});
+
+test("selects one shot without changing the full-plan numbering, timing or narration", () => {
+  const plan = createPlan();
+  process.env.VIDEO_SHOT = "preview";
+  const [shot] = getRecordingShots(plan, "en", getVideoShot());
+  assert.deepEqual([shot.id, shot.number, shot.total, shot.startSeconds, shot.endSeconds], ["preview", 3, 3, 15, 30]);
+  assert.equal(shot.shot, plan.shots[2].shot);
+  assert.equal(shot.narration, "English preview.");
+  assert.equal(getPlanNarration(plan), "Introduction.\n\nEdit the content.\n\nPreview the result.");
+  assert.match(formatShotPlan(plan), /0:05-0:15 \| AUTO \| Shot 2 \[edit\]/);
+  assert.equal(getRecordingShots(plan).length, 3, "Selection must be explicit in the pure plan helper");
+  assert.equal(getRecordingShots(plan, undefined, "").length, 3);
+});
+
+test("records only the selected shot with setup, preparation, slates, holds and cleanup", async () => {
+  const { recordVideoPlan } = require("./feature_video_plan.js");
+  process.env.VIDEO_SHOT = " preview ";
+  const plan = createPlan();
+  const events = [];
+  const messages = [];
+  const unexpected = async () => { throw new Error("Unselected shot callbacks must not execute"); };
+  for (const shot of plan.shots) shot.prepare = shot.shot = unexpected;
+  plan.shots[2].prepare = async ({ shot }) => events.push(`PREPARE:${shot.id}`);
+  plan.shots[2].shot = async ({ shot }) => events.push(`RUN:${shot.id}`);
+  await recordVideoPlan({
+    say: async message => messages.push(message),
+    videoTitle: async shot => events.push(typeof shot === "string" ? shot : `SLATE:${shot.number}/${shot.total}:${shot.id}`),
+    wait: async seconds => events.push(`HOLD:${seconds}`)
+  }, {
+    plan,
+    setup: async () => events.push("SETUP"),
+    prepare: async shot => events.push(`BASELINE:${shot.id}`),
+    cleanup: async shot => events.push(`CLEANUP:${shot.id}`)
+  });
+  assert.deepEqual(events, [
+    "SETUP", "SETUP shot 3/3 preview (15s)", "BASELINE:preview", "PREPARE:preview", "SLATE:3/3:preview",
+    "HOLD:2", "RUN:preview", "HOLD:2", "CLEANUP:preview"
+  ]);
+  assert.deepEqual(messages.filter(message => message.startsWith("Recording ")), ["Recording shot 3/3 preview (15s)"]);
+});
+
+test("rejects unknown selections and invalid unselected callbacks before setup", async () => {
+  const { recordVideoPlan } = require("./feature_video_plan.js");
+  const unexpected = async () => { throw new Error("Setup and actor steps must not execute"); };
+  const I = { say: unexpected, videoTitle: unexpected, wait: unexpected };
+  const plan = createPlan();
+  process.env.VIDEO_SHOT = "missing";
+  await assert.rejects(recordVideoPlan(I, { plan, setup: unexpected }),
+    /Unknown video shot: missing\. Available shot IDs: intro, edit, preview\./);
+  process.env.VIDEO_SHOT = "preview";
+  delete plan.shots[1].shot;
+  await assert.rejects(recordVideoPlan(I, { plan, setup: unexpected }), /Missing video action.*edit/);
+});
+
+test("selected manual and head shots keep full-plan warning numbers and skip automatic lifecycle", async () => {
+  const { recordVideoPlan } = require("./feature_video_plan.js");
+  process.env.VIDEO_SHOT = "intro";
+  for (const type of ["manual", "head"]) {
+    const plan = createPlan();
+    plan.shots = [plan.shots[1], plan.shots[2], { ...plan.shots[0], type }];
+    const unexpected = async () => { throw new Error("Automatic lifecycle must not execute"); };
+    for (const shot of plan.shots) shot.prepare = shot.shot = unexpected;
+    const events = [];
+    const messages = [];
+    await recordVideoPlan({
+      say: async message => messages.push(message),
+      videoTitle: async shot => events.push(`${shot.type}:${shot.number}/${shot.total}:${shot.id}`),
+      wait: unexpected
+    }, { plan, setup: async () => events.push("SETUP"), prepare: unexpected, cleanup: unexpected });
+    assert.deepEqual(events, ["SETUP", `${type}:3/3:intro`]);
+    assert.match(messages.find(message => message.startsWith("WARNING:")), /Shot 3\/3 \[intro\]/);
+  }
+});
 
 test("reordering shots changes narration, timing and automatic callback order together", async () => {
   const plan = createPlan();

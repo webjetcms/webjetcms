@@ -1,11 +1,13 @@
 const baseConfig = require("./codecept.conf.js").config;
-const { getVideoSettings } = require("./helpers/video_settings.js");
+const { getVideoSettings, getVideoShot } = require("./helpers/video_settings.js");
 
+const videoShot = getVideoShot();
 const videoSettings = getVideoSettings();
 
 console.log("videoSize=", `${videoSettings.width}x${videoSettings.height}`);
 console.log("videoViewport=", `${videoSettings.viewportWidth}x${videoSettings.viewportHeight}`);
 console.log("videoZoom=", videoSettings.zoom);
+if (videoShot) console.log("videoShot=", videoShot);
 
 exports.config = {
   ...baseConfig,

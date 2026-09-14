@@ -448,10 +448,47 @@ const videoPlan = {
             "durationSeconds": 18,
             "title": "Page Builder documentation",
             "text-sk": "Pri ďalšej úprave teda začnite výberom obsahu. V ceste alebo v Štruktúre overte správnu úroveň a potom použite nástroje hornej lišty. Podrobný návod k Page Builderu nájdete v dokumentácii WebJET CMS. Odkaz je v popise videa.",
-            "notes": "Slowly scroll through the Slovak Page Builder documentation. The public article still described the previous interface during final validation on 2026-09-13. Record this shot after the updated documentation and screenshots are published. Include its URL in the video description.",
+            "notes": "Open the Slovak documentation home page during preparation. Click the editor manual and Page Builder sidebar links, then slowly scroll through the article. Include its public URL in the video description.",
+            prepare: async ({ I }) => {
+                await I.switchTo();
+                await I.amOnPage("http://docs.interway.sk:3000/sk/");
+                await I.waitForVisible(locate(".sidebar-nav a").withText("Manuál pre redaktora"), 20);
+                await I.waitForVisible("article h1", 20);
+            },
             shot: async ({ I }) => {
-                await I.videoDocumentation("https://docs.webjetcms.sk/latest/sk/redactor/webpages/pagebuilder");
-                await I.wait(8);
+                await I.wait(1);
+                await I.videoClick(locate(".sidebar-nav a").withText("Manuál pre redaktora"));
+                await I.waitForVisible(locate(".sidebar-nav a").withText("Page Builder"), 20);
+                await I.wait(1);
+                await I.usePlaywrightTo("scroll the documentation menu to Page Builder", async ({ page }) => {
+                    await page.locator(".sidebar-nav").getByRole("link", { name: "Page Builder", exact: true }).evaluate(async link => {
+                        await document.fonts.ready;
+                        const sidebar = link.closest(".sidebar");
+                        const start = sidebar.scrollTop;
+                        const linkBox = link.getBoundingClientRect();
+                        const target = start + linkBox.top - sidebar.getBoundingClientRect().top -
+                            (sidebar.clientHeight - linkBox.height) / 2;
+                        const end = Math.max(0, Math.min(target, sidebar.scrollHeight - sidebar.clientHeight));
+                        if (Math.abs(end - start) < 1) return;
+
+                        // Center the link over one second without moving the article.
+                        const startedAt = performance.now();
+                        await new Promise(resolve => {
+                            const scrollStep = now => {
+                                const progress = Math.min((now - startedAt) / 1000, 1);
+                                const eased = progress * progress * (3 - 2 * progress);
+                                sidebar.scrollTo({ top: start + (end - start) * eased, behavior: "instant" });
+                                if (progress < 1) requestAnimationFrame(scrollStep);
+                                else resolve();
+                            };
+                            requestAnimationFrame(scrollStep);
+                        });
+                    });
+                });
+                await I.videoClick(locate(".sidebar-nav a").withText("Page Builder"));
+                await I.waitForText("Page Builder", 20, "article h1");
+                await I.wait(2);
+                await I.videoScroll();
             }
         }
     ]
