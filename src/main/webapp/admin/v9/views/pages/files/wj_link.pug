@@ -22,6 +22,13 @@ block content
         let haveFileIndexerPerm = [(${haveFileIndexerPerm})];
         let elfinderMetadataEnabled = [(${elfinderMetadataEnabled})];
         let elfinderMetadataAutopopup = [(${elfinderMetadataAutopopup})];
+        let archivePath = "[(${archivPath})]".replace(/^\/+|\/+$/g, '').toLowerCase();
+        let archiveRoot = archivePath ? '/' + archivePath : '';
+
+        function isReadOnlyArchive(file) {
+            let path = file.virtualPath && file.virtualPath.replace(/[. ]+\//g, '/').replace(/\/+$/, '').toLowerCase();
+            return file.read && !file.write && !file.notfound && archiveRoot && path && (path === archiveRoot || path.indexOf(archiveRoot + '/') === 0);
+        }
 
         var wjCkMapping = [
             {wj: 'txtUrl', tab:'info', ck:'url'},
@@ -185,6 +192,7 @@ block content
                 rememberLastDir: false,
                 requestType: 'post',
                 customData: customData,
+                readOnlyMarker: isReadOnlyArchive,
                 //transport: new elFinderSupportVer1(),
                 getFileCallback: function(files, fm)
                 {

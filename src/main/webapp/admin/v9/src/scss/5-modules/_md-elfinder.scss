@@ -316,8 +316,9 @@ html.pg-iframe {
     border: 0px transparent !important;
 }
 
-/* NAVBAR PERMS aka lock icon*/
-.elfinder-perms {
+/* FILE AND FOLDER PERMISSION MARKERS */
+.elfinder-perms,
+.elfinder-read-only {
     background: none !important;
     font-family: 'tabler-icons-filled';
     left: -2px !important;
@@ -330,12 +331,18 @@ html.pg-iframe {
     color: $dark-60;
 }
 .elfinder-perms::before { content: $ti-icon-lock-filled; }
+.elfinder-read-only::before { content: $ti-icon-pencil-off; }
+.elfinder-read-only { width: 16px; height: 16px; }
 
-.elfinder-cwd-view-icons .elfinder-perms {
+.elfinder-cwd-view-icons .elfinder-perms,
+.elfinder-cwd-view-icons .elfinder-read-only {
     bottom: 29px !important;
     left: 43px !important;
     position: absolute !important;
 }
+
+.elfinder-cwd-view-list .elfinder-read-only { margin-top: -6px; }
+.elfinder-navbar .elfinder-read-only { margin-top: -8px; }
 
 /* CLOSED NAVBAR FOLDER ICON */
 .elfinder-navbar-dir > .elfinder-navbar-arrow {
@@ -715,6 +722,10 @@ html.pg-iframe {
     display: flex;
     flex-direction: column;
 
+    .elfinder-info-title .elfinder-cwd-icon {
+        position: relative;
+    }
+
     .ui-dialog-titlebar.ui-widget-header {
         flex: 0 0 auto;
     }
@@ -782,6 +793,20 @@ html.pg-iframe {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
         text-align: center;
+
+        &:not(:has(.elfinder-upload-dialog-or)) {
+            display: flex;
+            align-items: center;
+
+            > .ui-button {
+                flex: 1;
+            }
+
+            .elfinder-upload-dirselect {
+                position: static !important;
+                flex: 0 0 34px;
+            }
+        }
     }
 
     .elfinder-upload-dropbox {
@@ -902,7 +927,7 @@ html.pg-iframe {
         }
     }
 
-    .elfinder-upload-dialog-or ~ .ui-button {
+    .elfinder-upload-dialog-wrapper > .ui-button {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -949,7 +974,8 @@ html.pg-iframe {
         }
     }
 
-    .elfinder-upload-dialog-or + .ui-button {
+    .elfinder-upload-dialog-or + .ui-button,
+    .elfinder-upload-dialog-wrapper:not(:has(.elfinder-upload-dialog-or)) > .ui-button {
         color: white !important;
         background: $primary !important;
 
@@ -1356,21 +1382,78 @@ div.ui-dialog-content:has(div.CodeMirror) {
     }
 }
 
-.elfinder-notify-customErrorDialog {
-    padding: 2px !important;
+.ui-dialog.elfinder-dialog.elfinder-dialog-notify .elfinder-notify-customErrorDialog {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) 28px;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px !important;
+    text-align: left;
+    overflow: visible;
+
+    .elfinder-notify-progressbar {
+        display: none;
+    }
 
     .elfinder-dialog-icon-customError {
-        background: none !important;
-        display: contents;
+        position: static !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        margin: 0;
+        background: rgba($danger, 0.08) !important;
+        color: $danger;
+        border-radius: 8px;
     }
     .elfinder-dialog-icon-customError::before {
         font-family: 'tabler-icons-filled' !important;
         content: $ti-icon-exclamation-circle !important;
-        color: lighten($danger, 25%) !important;
-        background-color: transparent !important;
-        font-size: 2rem;
+        color: inherit !important;
+        font-size: 24px;
+        line-height: 1;
     }
-    .elfinder-notify-msg{display: block;}
+    .elfinder-notify-msg {
+        display: block;
+        min-width: 0;
+        color: $secondary;
+        font-family: $admin-font-family;
+        font-size: 14px;
+        line-height: 20px;
+        overflow-wrap: anywhere;
+    }
+    .elfinder-notify-cnt {
+        display: none;
+    }
+    .elfinder-notify-cancel {
+        position: static;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+    }
+    .elfinder-notify-button.ui-icon-close {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        color: $dark-60;
+        border-radius: 6px;
+
+        &:hover {
+            background: $nice-gray !important;
+            color: $secondary;
+        }
+
+        &::before {
+            color: inherit !important;
+            font-size: 18px;
+            line-height: 1;
+        }
+    }
 }
 
 /* Mobile version */
