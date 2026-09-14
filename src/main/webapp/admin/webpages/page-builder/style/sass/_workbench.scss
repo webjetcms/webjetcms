@@ -257,7 +257,14 @@ html.pb-insertion-open { overflow-anchor: none; }
     overflow: hidden;
     z-index: 101500;
     contain: strict;
-    &.is-resizing .#{$prefix}-outline { border-width: 1px; }
+    &.is-resizing .#{$prefix}-outline {
+        border-width: 1px;
+        &.is-resize-active {
+            border-width: 3px;
+            box-shadow: 0 0 0 1px white;
+            z-index: 1;
+        }
+    }
 }
 .#{$prefix}-outline {
     position: absolute;

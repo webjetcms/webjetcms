@@ -74,7 +74,7 @@
         create_workbench: function() {
             var me = this, prefix = me.options.prefix;
             me.ui = {
-                selected: null, hovered: null, quiet: false, guideMode: 'selected', frame: null, inserting: false, insertPoints: [],
+                selected: null, hovered: null, resizeActive: null, quiet: false, guideMode: 'selected', frame: null, inserting: false, insertPoints: [],
                 treeDirty: true, treeRevealSelection: false, expanded: new WeakSet(), treeNodes: new Map(), bookmarks: null,
                 labels: {
                     structure: "<iwcm:text key='pagebuilder.ui.structure'/>",
@@ -194,14 +194,20 @@
                     // The existing controller visibility already encodes valid drop destinations.
                     ui.hovered = target && $(target).children(me.tagc.append+', '+me.tagc.prepend).is(':visible') ? target : null;
                 } else ui.hovered = e.originalEvent.pointerType === 'touch' ? null : me.workbench_target(e.target);
+                ui.resizeActive = me.workbench_resize_column(ui.hovered) || me.workbench_resize_column($(document.activeElement).closest(me.tagc.size_changer));
                 me.schedule_workbench();
             }).on('pointerleave.workbench', function() {
                 ui.hovered = null;
+                ui.resizeActive = me.workbench_resize_column($(document.activeElement).closest(me.tagc.size_changer));
                 me.schedule_workbench();
             }).on('input.workbench', function() {
                 ui.quiet = true;
                 ui.hovered = null;
                 ui.treeDirty = true;
+                me.schedule_workbench();
+            }).on('focusin.workbench focusout.workbench', me.tagc.size_changer, function(e) {
+                var control = $(e.type === 'focusin' ? e.target : e.relatedTarget).closest(me.tagc.size_changer);
+                ui.resizeActive = me.workbench_resize_column(control.length ? control : ui.hovered);
                 me.schedule_workbench();
             });
             ui.layoutHandler = function() { me.schedule_workbench(); };
@@ -326,6 +332,12 @@
                 node = $(node).closest(this.tagc.column)[0] || node;
             }
             return node && this.$wrapper[0].contains(node) ? node : null;
+        },
+
+        /** Resolves the nearest resizable column without highlighting enclosing columns. */
+        workbench_resize_column: function(target) {
+            var column = $(target).closest(this.tagc.column);
+            return column.closest('.'+this.state.is_resize_columns).length && this.$wrapper[0].contains(column[0]) ? column[0] : null;
         },
 
         workbench_type: function(element) {
@@ -883,7 +895,8 @@
                 var target = elements[index], outline = $(this);
                 outline.prop('hidden', !target || (hover && selectedElements.includes(target)))
                     .toggleClass('is-quiet', !hover && !!target && me.ui.quiet && !resizing)
-                    .toggleClass('is-ancestor', hover && index > 0);
+                    .toggleClass('is-ancestor', hover && index > 0)
+                    .toggleClass('is-resize-active', !!target && !!resizing && target === me.ui.resizeActive);
                 if (!target) return;
                 var rect = target.getBoundingClientRect(), type = me.workbench_type(target);
                 // Resizable columns are peers, not a chain of enclosing ancestors.
@@ -910,6 +923,10 @@
                 if (ui.selected && !me.$wrapper[0].contains(ui.selected)) me.select_workbench_element(null);
                 var resizeColumns = me.$wrapper.find('.'+me.state.is_resize_columns).find(me.tagc.column).filter(':visible');
                 var resizing = resizeColumns.length > 0, columnPrefix = me.get_actual_screen_size();
+                if (!resizeColumns.is(ui.resizeActive)) ui.resizeActive = null;
+                resizeColumns.each(function() {
+                    $(this).children(me.tagc.size_changer).toggleClass('is-resize-active', this === ui.resizeActive);
+                });
                 if (resizing) {
                     if (ui.columnPrefix !== columnPrefix) resizeColumns.each(function() { me.update_column_size_label($(this)); });
                     var suffix = me.get_column_size_suffix(), device = ui.labels.resizeCustom;
@@ -2422,10 +2439,11 @@
         cancel_resize_columns: function () {
             var me = this;
             me.$wrapper.find('.'+me.state.is_resize_columns).find(me.tagc.column).each(function() {
-                $(this).children(me.tagc.size_changer).appendTo(this);
+                $(this).children(me.tagc.size_changer).removeClass('is-resize-active').appendTo(this);
             });
             $(this.tagc._grid_element).removeClass(this.state.is_resize_columns);
             if (me.ui) {
+                me.ui.resizeActive = null;
                 me.ui.bar.removeClass('is-resizing');
                 me.ui.resizeHint.prop('hidden', true);
             }

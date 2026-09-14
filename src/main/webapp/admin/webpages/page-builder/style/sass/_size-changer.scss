@@ -4,20 +4,27 @@
     box-sizing: border-box;
     align-items: center;
     flex-wrap: wrap;
-    width: 110px;
+    width: 144px;
     max-width: 100%;
+    min-width: 24px;
     min-height: 24px;
     margin: 0 0 6px;
     z-index: $size-changer-index;
     overflow: visible;
     white-space: nowrap;
     padding: 0;
-    background: rgba($color-column, .1);
+    background: mix(white, $color-column, 90%);
     border: 0;
     border-radius: 3px;
     box-shadow: none;
     font: 400 12px/1.2 $font-family-base;
     container: #{$prefix}-column-size / inline-size;
+
+    &.is-resize-active {
+        background: $color-column;
+        button:hover { background-color: rgba($secondary, .1); }
+        button:active { background-color: rgba($secondary, .2); }
+    }
 
     button {
         appearance: none;
@@ -38,6 +45,7 @@
         justify-content: center;
         flex: 0 0 auto;
         width: 24px;
+        min-width: 24px;
         height: 24px;
         line-height: 1.2;
         text-align: center;
@@ -50,15 +58,15 @@
     }
     &__number {
         width: auto;
-        flex: 1 1 auto;
-        min-width: 54px;
+        flex: 1 1 0;
+        min-width: 0;
         padding: 0 4px;
         gap: 5px;
         font-variant-numeric: tabular-nums;
         small {
             font-size: 10px;
             font-weight: 400;
-            color: $dark-60;
+            color: inherit;
             &:empty { display: none; }
         }
     }
@@ -82,7 +90,7 @@
     .#{$prefix}-container.#{$prefix}-is-resize-columns & {
         display: flex;
     }
-    @container #{$prefix}-column-size (max-width: 100px) {
+    @container #{$prefix}-column-size (width < 144px) {
         &__number {
             order: -1;
             flex-basis: 100%;
@@ -92,8 +100,12 @@
             min-height: 24px;
             padding: 2px 0;
             white-space: normal;
+            overflow-wrap: anywhere;
         }
         &__down, &__up { width: 50%; }
+    }
+    @container #{$prefix}-column-size (width < 48px) {
+        &__down, &__up { width: 100%; }
     }
     @media (prefers-reduced-motion: reduce) {
         button::before { transition: none; }

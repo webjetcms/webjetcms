@@ -824,20 +824,30 @@
   box-sizing: border-box;
   align-items: center;
   flex-wrap: wrap;
-  width: 110px;
+  width: 144px;
   max-width: 100%;
+  min-width: 24px;
   min-height: 24px;
   margin: 0 0 6px;
   z-index: 101550;
   overflow: visible;
   white-space: nowrap;
   padding: 0;
-  background: rgba(0, 161, 134, 0.1);
+  background: rgb(229.5, 245.6, 242.9);
   border: 0;
   border-radius: 3px;
   box-shadow: none;
   font: 400 12px/1.2 "Asap", sans-serif, Arial, Helvetica;
   container: pb-column-size/inline-size;
+}
+.pb-size-changer.is-resize-active {
+  background: #00A186;
+}
+.pb-size-changer.is-resize-active button:hover {
+  background-color: rgba(19, 21, 27, 0.1);
+}
+.pb-size-changer.is-resize-active button:active {
+  background-color: rgba(19, 21, 27, 0.2);
 }
 .pb-size-changer button {
   appearance: none;
@@ -859,6 +869,7 @@
   justify-content: center;
   flex: 0 0 auto;
   width: 24px;
+  min-width: 24px;
   height: 24px;
   line-height: 1.2;
   text-align: center;
@@ -871,8 +882,8 @@
 }
 .pb-size-changer__number {
   width: auto;
-  flex: 1 1 auto;
-  min-width: 54px;
+  flex: 1 1 0;
+  min-width: 0;
   padding: 0 4px;
   gap: 5px;
   font-variant-numeric: tabular-nums;
@@ -880,7 +891,7 @@
 .pb-size-changer__number small {
   font-size: 10px;
   font-weight: 400;
-  color: #686F83;
+  color: inherit;
 }
 .pb-size-changer__number small:empty {
   display: none;
@@ -911,7 +922,7 @@
 .pb-container.pb-is-resize-columns .pb-size-changer {
   display: flex;
 }
-@container pb-column-size (max-width: 100px) {
+@container pb-column-size (width < 144px) {
   .pb-size-changer__number {
     order: -1;
     flex-basis: 100%;
@@ -921,9 +932,15 @@
     min-height: 24px;
     padding: 2px 0;
     white-space: normal;
+    overflow-wrap: anywhere;
   }
   .pb-size-changer__down, .pb-size-changer__up {
     width: 50%;
+  }
+}
+@container pb-column-size (width < 48px) {
+  .pb-size-changer__down, .pb-size-changer__up {
+    width: 100%;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -3250,6 +3267,11 @@ html.pb-insertion-open {
 }
 .pb-outline-layer.is-resizing .pb-outline {
   border-width: 1px;
+}
+.pb-outline-layer.is-resizing .pb-outline.is-resize-active {
+  border-width: 3px;
+  box-shadow: 0 0 0 1px white;
+  z-index: 1;
 }
 
 .pb-outline {

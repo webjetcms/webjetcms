@@ -1412,12 +1412,16 @@ Scenario('workbench column sizing outlines, toolbar exit and responsive values',
                 const rect = node.getBoundingClientRect();
                 const content = Array.from(node.parentElement.children).find(child => !child.matches('aside'));
                 const css = getComputedStyle(node);
+                const [down, number, up] = Array.from(node.children).map(child => child.getBoundingClientRect());
                 return {
                     inside: [node, ...node.children].every(child => {
                         const bounds = child.getBoundingClientRect();
                         return bounds.left >= column.left - 0.5 && bounds.right <= column.right + 0.5 && bounds.top >= column.top - 0.5 && bounds.bottom <= column.bottom + 0.5;
                     }),
                     aboveContent: !content || rect.bottom <= content.getBoundingClientRect().top + 0.5,
+                    targets: [down, up].every(button => button.width >= 24 && button.height >= 24),
+                    layout: rect.width >= 144 ? down.top === number.top && up.top === number.top :
+                        number.bottom <= down.top && (rect.width >= 48 ? down.top === up.top : down.bottom <= up.top),
                     border: css.borderTopWidth,
                     shadow: css.boxShadow
                 };
@@ -1426,6 +1430,8 @@ Scenario('workbench column sizing outlines, toolbar exit and responsive values',
             controls.forEach(control => {
                 assert.ok(control.inside, 'Every width control and button must stay inside its own column');
                 assert.ok(control.aboveContent, 'The internal control strip must not cover authored content');
+                assert.ok(control.targets, 'Both size buttons must retain 24 by 24 pixel targets');
+                assert.ok(control.layout, 'Size controls must use complete rows, never wrap only one arrow');
                 assert.equal(control.border, '0px', 'Width controls must not add another frame');
                 assert.equal(control.shadow, 'none');
             });
@@ -1459,12 +1465,107 @@ Scenario('workbench column sizing outlines, toolbar exit and responsive values',
         assert.equal(state.html, initialHtml, 'Entering sizing mode must not change saved content');
         assert.ok(state.labels.every(label => label === '6 / 12XL'));
 
+        const checkActive = async column => {
+            const index = column ? await column.evaluate(node => Array.from(document.querySelectorAll('.pb-is-resize-columns .pb-column')).indexOf(node)) : -1;
+            await frame.waitForFunction(index => {
+                const columns = document.querySelectorAll('.pb-is-resize-columns .pb-column');
+                const controls = document.querySelectorAll('.pb-size-changer.is-resize-active');
+                const outlines = document.querySelectorAll('.pb-outline.is-resize-active:not([hidden])');
+                return index < 0 ? controls.length === 0 && outlines.length === 0 :
+                    controls.length === 1 && outlines.length === 1 && controls[0].parentElement === columns[index] &&
+                    Math.abs(outlines[0].getBoundingClientRect().left - columns[index].getBoundingClientRect().left + 4) < 0.5;
+            }, index);
+            if (!column) return;
+            const appearance = await column.evaluate(node => {
+                const control = node.querySelector(':scope > .pb-size-changer');
+                const outline = getComputedStyle(document.querySelector('.pb-outline.is-resize-active'));
+                const background = getComputedStyle(control).backgroundColor;
+                const luminance = color => color.match(/[\d.]+/g).slice(0, 3).map(value => {
+                    const channel = Number(value) / 255;
+                    return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+                }).reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
+                const contrasts = ['.pb-size-changer__number', 'small'].map(selector => {
+                    const foreground = luminance(getComputedStyle(control.querySelector(selector)).color);
+                    const surface = luminance(background);
+                    return (Math.max(foreground, surface) + 0.05) / (Math.min(foreground, surface) + 0.05);
+                });
+                return {border: outline.borderWidth, shadow: outline.boxShadow, zIndex: outline.zIndex, background, contrasts};
+            });
+            assert.equal(appearance.border, '3px', 'The active column must have a thicker outline');
+            assert.ok(appearance.shadow.includes('rgb(255, 255, 255)'), 'The active outline must have a white separating edge');
+            assert.equal(appearance.zIndex, '1', 'The active outline must appear above adjacent outlines');
+            assert.equal(appearance.background, 'rgb(0, 161, 134)');
+            assert.ok(appearance.contrasts.every(ratio => ratio >= 4.5), 'Both the value and breakpoint must meet text contrast requirements');
+        };
+        const first = frame.locator(workbenchFixture+' .pb-column').first();
         const second = frame.locator(workbenchFixture+' .pb-column').nth(1);
         const up = second.locator('.pb-size-changer__up');
+        const sizingGeometry = () => frame.locator(workbenchFixture+' .pb-column, '+workbenchFixture+' p').evaluateAll(nodes => {
+            const root = document.querySelector('#wjInline-docdata').getBoundingClientRect();
+            return nodes.map(node => {
+                const rect = node.getBoundingClientRect();
+                return [rect.left - root.left, rect.top - root.top, rect.width, rect.height];
+            });
+        });
+        const geometry = await sizingGeometry();
+        await second.locator('p').hover();
+        await checkActive(second);
+        await up.hover();
+        await checkActive(second);
+        await first.locator('h2').hover();
+        await checkActive(first);
+        await frame.locator(hint).hover();
+        await checkActive(null);
+        assert.deepStrictEqual(await sizingGeometry(), geometry, 'Highlighting columns and controls must not change layout');
+        await up.focus();
+        await checkActive(second);
+        await page.keyboard.press('Shift+Tab');
+        assert.equal(await second.locator('.pb-size-changer__down').evaluate(node => node === document.activeElement), true);
+        await checkActive(second);
+        await page.keyboard.press('Tab');
+        await checkActive(second);
+        assert.equal(await up.evaluate(node => getComputedStyle(node).outlineWidth), '2px', 'The focused arrow must retain its own focus indicator');
+        await first.locator('h2').hover();
+        await checkActive(first);
+        await frame.locator(hint).hover();
+        await checkActive(second);
+        assert.equal(await frame.evaluate(() => window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data), initialHtml, 'Active sizing chrome must not enter saved content');
+
+        // Exercise nested columns without publishing or changing the surrounding fixture.
+        await second.evaluate(node => {
+            const row = document.createElement('div');
+            row.className = 'row pb-row pb-resize-nested-autotest';
+            row.innerHTML = '<div class="col-12 pb-column pb-grid-element"><p>Nested sizing autotest</p></div>';
+            node.append(row);
+            window.pageBuilder.create_column_size_changer(row.firstElementChild);
+            window.pageBuilder.update_column_size_label(row.firstElementChild);
+            row.firstElementChild.prepend(row.querySelector('.pb-size-changer'));
+        });
+        const nested = second.locator('.pb-resize-nested-autotest .pb-column');
+        await nested.locator('p').hover();
+        await checkActive(nested);
+        await nested.locator('.pb-size-changer__up').focus();
+        await checkActive(nested);
+        await second.locator('p').first().hover();
+        await checkActive(second);
+        await second.locator('.pb-resize-nested-autotest').evaluate(node => node.remove());
+
+        const originalStyle = await second.getAttribute('style');
+        for (const width of [144, 80, 32]) {
+            await second.evaluate((node, width) => {
+                const css = getComputedStyle(node);
+                const size = width + parseFloat(css.paddingLeft) + parseFloat(css.paddingRight) + 'px';
+                Object.assign(node.style, {width: size, flexBasis: size, maxWidth: 'none'});
+            }, width);
+            await checkControls();
+        }
+        await second.evaluate((node, style) => style === null ? node.removeAttribute('style') : node.setAttribute('style', style), originalStyle);
         assert.ok(await up.getAttribute('aria-label'), 'Size buttons must have accessible names');
         await up.focus();
         await page.keyboard.press('Space');
         await frame.waitForFunction(selector => document.querySelectorAll(selector+' .pb-column')[1].classList.contains('col-xl-7'), workbenchFixture);
+        assert.equal(await up.evaluate(node => node === document.activeElement), true, 'Changing width must preserve focus');
+        await checkActive(second);
         await frame.waitForFunction(selector => {
             const columns = document.querySelectorAll(selector+' .pb-column');
             const outline = document.querySelectorAll('.pb-outline:not([hidden])')[1].getBoundingClientRect();
@@ -1478,9 +1579,14 @@ Scenario('workbench column sizing outlines, toolbar exit and responsive values',
         await up.click();
         assert.ok(await second.evaluate(node => node.classList.contains('col-md-7') && node.classList.contains('col-xl-7')), 'Device edits must preserve the other breakpoint');
         await checkControls();
+        await second.locator('.pb-size-changer__down').focus();
+        await page.keyboard.press('Enter');
+        await frame.waitForFunction(selector => document.querySelectorAll(selector+' .pb-column')[1].classList.contains('col-md-6'), workbenchFixture);
+        await checkActive(second);
         await frame.locator(hint+' [data-pb-action=end-resize]').click();
         await frame.waitForFunction(() => !document.querySelector('.pb-is-resize-columns') && !document.querySelector('.pb-outline:not([hidden])'));
         assert.equal(await frame.locator(hint).isVisible(), false, 'The hint exit must close sizing mode');
+        await checkActive(null);
         await assertWorkbenchInsertionRow(frame, false);
         assert.equal(await frame.evaluate(() => localStorage.getItem('webjet.pagebuilder.guides')), 'hidden');
         assert.equal(await frame.evaluate(() => document.activeElement?.dataset.pbAction), 'resize');
@@ -1499,6 +1605,13 @@ Scenario('workbench column sizing outlines, toolbar exit and responsive values',
         await frame.waitForFunction(() => !!document.querySelector('.pb-outline-layer.is-resizing'));
         await frame.locator(hint).hover();
         assert.ok(await checkControls() >= 4, 'The fixture must include the short heading and content columns');
+        await frame.locator('.exit-inline-editor a[href*="pbSetWindowSize(\'tablet\')"]').click();
+        await frame.waitForFunction(() => document.querySelector('.pb-resize-hint strong').textContent.startsWith('MD'));
+        await checkControls();
+        const realColumn = frame.locator('.pb-column.col-3.text-center').nth(1);
+        await realColumn.locator('h3').hover();
+        await checkActive(realColumn);
+        await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path: '../../../build/test/pagebuilder-resize-active.png'});
         await frame.locator('.exit-inline-editor a[href*="pbSetWindowSize(\'phone\')"]').click();
         await frame.waitForFunction(() => innerWidth < 768);
         await frame.waitForFunction(() => Array.from(document.querySelectorAll('.pb-is-resize-columns .pb-size-changer__number small')).every(node => node.textContent === ''));
