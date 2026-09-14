@@ -91,6 +91,8 @@ Kliknite na tlačidlo <button class="btn btn-sm btn-success" type="button"><span
 
 Dialóg zobrazí prehľad stránok zvoleného priečinka - celkový počet, počet už indexovaných a počet vo fronte. Za indexované sa považujú iba stránky, ktoré majú index pre aktuálneho poskytovateľa a model asistenta `RAG-EMB-INDEX`. Index vytvorený iným poskytovateľom alebo modelom sa preto v tomto počte nezohľadní.
 
+Manuálnu akciu možno vykonať iba nad priečinkami aktuálnej domény, pre ktoré má používateľ právo na úpravu. Pri výbere koreňového priečinka musí mať právo na všetky koreňové priečinky domény.
+
 Priečinok aj voľba **Zobraziť aj z podpriečinkov** sa prevezmú z aktívneho filtra. Po potvrdení sa do fronty zaradia všetky vyhľadateľné stránky zo zvoleného rozsahu. Ak sa text chunku nezmenil, systém sa pokúsi použiť existujúci embedding s rovnakým poskytovateľom a modelom podľa jeho hash hodnoty. Opätovné indexovanie nahradí iba index aktuálnej kombinácie poskytovateľa a modelu; ostatné indexy rovnakej stránky zostanú zachované.
 
 Akciu spustíte tlačidlom <button class="btn btn-primary"><i class="ti ti-check"></i> <span>Spustiť akciu</span></button>.
@@ -111,7 +113,7 @@ Akciu spustíte tlačidlom <button class="btn btn-primary"><i class="ti ti-check
 
 Ak pri indexovaní stránky nastane chyba, systém uloží záznam so stavom **ERROR** a skrátenou chybovou správou. Chyba sa zapisuje aj do administrátorského logu v kategórii **Vyhľadávanie** (`SEARCH`). Ak zlyhá spracovanie položky ešte na úrovni fronty, položka zostane vo fronte a systém sa ju pokúsi spracovať pri ďalšom behu cron úlohy.
 
-!>**Upozornenie:** Zmena konfiguračnej premennej `ragEmbeddingDimensions` vymaže celý sémantický index pre všetkých poskytovateľov a modely, pretože databázový stĺpec `vector(N)` má spoločnú dimenziu. Po zmene je potrebné znova zaindexovať celý obsah.
+!>**Upozornenie:** Konfiguračná premenná `ragEmbeddingDimensions` je globálna pre celú inštaláciu. Jej zmena vymaže celý sémantický index pre všetkých poskytovateľov a modely, pretože databázový stĺpec `vector(N)` má spoločnú dimenziu. Po zmene je potrebné znova zaindexovať celý obsah. Lokálny model `intfloat/multilingual-e5-base` vyžaduje hodnotu `768`.
 
 ## Detaily implementácie
 

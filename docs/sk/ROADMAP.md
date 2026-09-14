@@ -15,7 +15,7 @@ Vysvetlenie použitých piktogramov:
 ## 2026
 
 - [x] Sémantické vyhľadávanie - využiť AI na zlepšenie vyhľadávania pomocou `RAG` (#211).
-- [ ] AI - možnosť použiť malé lokálne modely bežiace priamo na CPU, minimálne pre Sémantické vyhľadávanie (#58561).
+- [x] AI - možnosť použiť malé lokálne modely bežiace priamo na CPU, minimálne pre Sémantické vyhľadávanie (#58561).
 - [x] `Headless` CMS - pripraviť REST rozhrania pre použitie WebJET CMS v `headless` móde (#58597) (#258).
 - [ ] Migrácia na `Spring Boot` projekt (#58569).
 - [x] Testovanie - pridať testovanie prístupnosti pomocou rozšírenia [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) (#58389).
