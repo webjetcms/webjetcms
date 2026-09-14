@@ -1,5 +1,9 @@
 Feature('files.file-archive');
 
+const path = require("path");
+
+const DROPZONE_INPUT = "input.dz-hidden-input.dz-hidden-input-dt-upload";
+
 Before(({ I, login }) => {
     login('admin');
 
@@ -57,6 +61,30 @@ Scenario('Base screens', ({ I, DT, DTE, Document, i18n }) => {
     I.waitForVisible("div.toast.toast-warning");
     I.moveCursorTo("div.toast-container div.toast");
     Document.screenshotElement("div.toast-container div.toast", "/redactor/files/file-archive/file-duplicity-notif.png");
+});
+
+Scenario('Drag and drop bulk upload dialog', ({ I, DT, Document }) => {
+    const uploadFiles = [
+        path.resolve(__dirname, "../../../tests/apps/file-archive/docs/archive_file_test.pdf"),
+        path.resolve(__dirname, "../../../tests/apps/file-archive/docs/archive_file_test_second.pdf")
+    ];
+
+    I.amOnPage('/apps/file-archive/admin/');
+    I.resizeWindow(1400, 850);
+    DT.waitForLoader('fileArchiveDataTable');
+    I.waitForElement(DROPZONE_INPUT, 20);
+    I.usePlaywrightTo("select files for bulk upload", async ({ page }) => {
+        await page.locator(DROPZONE_INPUT).setInputFiles(uploadFiles);
+    });
+
+    I.waitForVisible("#fileArchiveDataTable_modal", 20);
+    I.waitForVisible("#pills-dt-fileArchiveDataTable-basic-tab.active", 20);
+    I.waitForElement("#fileArchiveDataTable_modal:focus", 10);
+    I.dontSeeElement(".flatpickr-calendar.open");
+    Document.screenshotElement(
+        "#fileArchiveDataTable_modal .modal-content",
+        "/redactor/files/file-archive/drag-drop-upload-settings-dialog.png"
+    );
 });
 
 Scenario('Edit and actions screens', ({ I, DT, DTE, Document, i18n }) => {

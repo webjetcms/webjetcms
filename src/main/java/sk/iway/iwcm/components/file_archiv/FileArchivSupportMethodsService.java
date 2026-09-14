@@ -17,6 +17,10 @@ import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 
+/**
+ * Provides shared state, validation, path handling, and file operations for file archive services.
+ * Subclasses use these helpers to keep archive records and their physical files synchronized.
+ */
 public abstract class FileArchivSupportMethodsService {
 
 	protected static String cachePrefix = "fileArchiv-";
@@ -49,8 +53,9 @@ public abstract class FileArchivSupportMethodsService {
 	protected List<FileArchivatorBean> sameFiles = new ArrayList<>();
 
 	/**
-	 * When MAIN file is changed, update all references to this file
-	 * @param oldReferenceToMain
+	 * Redirects pattern references from an old main-file path to the current archive file.
+	 *
+	 * @param oldReferenceToMain previous virtual path of the main file
 	 */
     protected void updateReferenceToMainFile(String oldReferenceToMain)
 	{
@@ -58,13 +63,21 @@ public abstract class FileArchivSupportMethodsService {
 	}
 
 	/**
-	 * When referenceToMain is set update all history files references
+	 * Updates the pattern reference stored by every history record in a file thread.
+	 *
+	 * @param referenceId identifier of the main file whose history is updated
+	 * @param referenceToMain new main-file virtual path
 	 */
 	protected void updateReferenceToMainFile(Long referenceId, String referenceToMain)
 	{
 		repository.updateReferenceToMain(referenceId, referenceToMain, domainId);
 	}
-
+    /**
+     * Checks whether the configured delayed-upload date is in the future.
+     *
+     * @param fromEditorFields {@code true} to read the pending editor value; {@code false} to read the entity value
+     * @return {@code true} when the selected upload date is present and still in the future
+     */
     protected boolean isUploadDateCorrect(boolean fromEditorFields) {
 		Date uploadLAterDate = null;
 
@@ -77,6 +90,12 @@ public abstract class FileArchivSupportMethodsService {
 		return uploadLAterDate.after(new java.util.Date());
 	}
 
+	/**
+	 * Validates the comma-separated notification addresses configured for a delayed upload.
+	 *
+	 * @param fromEditorFields {@code true} to read the pending editor value; {@code false} to read the entity value
+	 * @return {@code true} when at least one address is present and every address is valid
+	 */
 	protected boolean isCorrectEmails(boolean fromEditorFields) {
 		String emailsStr = null;
 
@@ -95,8 +114,12 @@ public abstract class FileArchivSupportMethodsService {
 		return true;
 	}
 
-    /** Zisti ci sa nejde menit hlavny (aktualny) subor na ktory odkazuju ostatne. napriklad pri editacii viacerymi pouzivatelmi
+	/**
+	 * Detects whether the main file changed since the current edit operation began.
 	 *
+	 * @param oldId identifier of the file originally loaded for editing
+	 * @param referenceId identifier used to reload the current archive record
+	 * @return {@code true} when the reloaded record is no longer the main file
 	 */
 	protected boolean isConcurrentModification(Long oldId, Long referenceId) {
 		if(oldId > 0) {
@@ -109,6 +132,11 @@ public abstract class FileArchivSupportMethodsService {
 		return false;
 	}
 
+	/**
+	 * Selects the configured archive destination, optionally deriving it from the file category.
+	 *
+	 * @return preferred virtual destination path
+	 */
 	private String getPreferredDirPath()
     {
         if(Constants.getBoolean("fileArchivUseCategoryAsLink") && Tools.isNotEmpty(fab.getCategory()))
@@ -120,10 +148,34 @@ public abstract class FileArchivSupportMethodsService {
         return fab.getFilePath();
     }
 
-	// vrati cestu  k suboru alebo null
-	protected String getFileDirPath() {
-		String dirPath = getPreferredDirPath();
-		if(saveLater) dirPath = FileArchivatorKit.getFullInsertLaterPath() + dirPath;
+	/**
+	 * Resolves and validates the final destination directory without creating it.
+	 *
+	 * @return normalized directory path, or {@code null} when it is outside the archive root
+	 */
+	protected String resolveFileDestinationDirPath() {
+		return validateFileDirPath(getPreferredDirPath());
+	}
+
+	/**
+	 * Resolves and validates the physical storage directory without creating it.
+	 * Scheduled uploads use the insert-later staging prefix.
+	 *
+	 * @return normalized storage directory path, or {@code null} when it is outside the archive root
+	 */
+	protected String resolveFileDirPath() {
+		String dirPath = resolveFileDestinationDirPath();
+		if(dirPath == null || saveLater == false) return dirPath;
+		return validateFileDirPath(FileArchivatorKit.getFullInsertLaterPath() + dirPath);
+	}
+
+	/**
+	 * Normalizes a directory and verifies that it remains within the configured archive root.
+	 *
+	 * @param dirPath virtual directory path to validate
+	 * @return normalized directory path, or {@code null} when validation fails
+	 */
+	private String validateFileDirPath(String dirPath) {
 		dirPath = normalizePath(dirPath);
 		String fileArchivPath = normalizePath( FileArchivatorKit.getArchivPath() );
 
@@ -134,6 +186,18 @@ public abstract class FileArchivSupportMethodsService {
 			return null;
 		}
 
+		return dirPath;
+	}
+
+	/**
+	 * Resolves the physical storage path and creates its directory when it does not exist.
+	 *
+	 * @return normalized storage directory path, or {@code null} when validation fails
+	 */
+	protected String getFileDirPath() {
+		String dirPath = resolveFileDirPath();
+		if(dirPath == null) return null;
+
 		IwcmFile fileDir = new IwcmFile(Tools.getRealPath(dirPath));
 		if (!fileDir.exists()) fileDir.mkdirs();
 
@@ -141,6 +205,14 @@ public abstract class FileArchivSupportMethodsService {
 		return dirPath;
 	}
 
+	/**
+	 * Populates archive persistence fields from the file placed in its storage directory.
+	 *
+	 * @param dirPath normalized storage directory
+	 * @param fileName stored file name
+	 * @param referenceId identifier of the main file, or {@code -1} for a new main file
+	 * @param isNew {@code true} to reset the entity identifier before persistence
+	 */
 	protected void prepareFileArchivatorBean(String dirPath, String fileName, Long referenceId, boolean isNew)
 	{
 		//uz sa musim tvarit ako novy subor
@@ -156,8 +228,12 @@ public abstract class FileArchivSupportMethodsService {
 		fab.setDomainId(domainId);
 	}
 
-	/** Ak uz fyzicky existuje subor s rovnakym hash-om, vratime list beanov, inak null
+	/**
+	 * Finds uploaded main files whose content hash matches the candidate file.
 	 *
+	 * @param newFab candidate archive record
+	 * @param removePattern {@code true} to exclude pattern files from the result
+	 * @param isBeforeSave {@code true} to calculate the candidate hash from the temporary upload
 	 */
 	protected void findSameFiles(FileArchivatorBean newFab, boolean removePattern, boolean isBeforeSave)
 	{
@@ -177,8 +253,13 @@ public abstract class FileArchivSupportMethodsService {
 		}
 	}
 
-	/** Skontroluje prava na subory, zmaze subor fyzicky z disku a zmaze aj Bean
+	/**
+	 * Deletes an archive file and its database record after verifying user permissions.
 	 *
+	 * @param fabToDelete archive record to remove
+	 * @param prefixText description prefix used in diagnostic messages
+	 * @param ignoreMissingFile {@code true} to delete the record even when the physical file is absent
+	 * @return {@code true} when permission and physical-file checks allow the record deletion attempt
 	 */
 	protected boolean deleteFile(FileArchivatorBean fabToDelete, String prefixText, boolean ignoreMissingFile)
 	{
@@ -225,6 +306,13 @@ public abstract class FileArchivSupportMethodsService {
 		return isSuccess;
 	}
 
+	/**
+	 * Deletes all pattern files that refer to the supplied main file.
+	 *
+	 * @param file main archive record
+	 * @param ignoreMissingFile {@code true} to remove records whose physical files are already absent
+	 * @return {@code true} when every matching pattern is removed
+	 */
 	protected boolean deleteFilePatterns(FileArchivatorBean file, boolean ignoreMissingFile) {
 		if(file == null) return false;
 
@@ -244,6 +332,12 @@ public abstract class FileArchivSupportMethodsService {
 		return isSuccess;
 	}
 
+	/**
+	 * Resolves the cache lifetime for a specific archive operation with a component-wide fallback.
+	 *
+	 * @param methodName operation name used in the method-specific configuration key
+	 * @return cache lifetime in minutes
+	 */
 	protected static int getCacheTime(String methodName)
 	{
 		int timeMinutes = Tools.getIntValue(Constants.getInt(CONSTANTS_PREFIX+CACHE_TIME_KEY+"-"+methodName),-1) ;
@@ -257,6 +351,12 @@ public abstract class FileArchivSupportMethodsService {
 		return 120;
 	}
 
+	/**
+	 * Normalizes an archive directory path to include leading and trailing separators.
+	 *
+	 * @param path path to normalize
+	 * @return normalized path, or the original empty value
+	 */
 	public static String normalizePath(String path) {
 		if(Tools.isEmpty(path)) return path;
 
@@ -267,6 +367,12 @@ public abstract class FileArchivSupportMethodsService {
 		return path.replace("//", SEPARATOR);
 	}
 
+	/**
+	 * Converts an archive directory to the legacy form without a leading separator.
+	 *
+	 * @param path path to normalize
+	 * @return legacy path form, or an empty string for empty input
+	 */
 	public static String normalizeToOldPath(String path) {
 		if(Tools.isEmpty(path)) return "";
 
@@ -277,6 +383,11 @@ public abstract class FileArchivSupportMethodsService {
 		return path.replace("//", SEPARATOR);
 	}
 
+	/**
+	 * Checks the permissions and feature flag required by the current archive operation.
+	 *
+	 * @return {@code true} when the current user may perform the selected operation
+	 */
 	protected final boolean checkPerms() {
 		// For everything we needs this perm
 		if(currentUser.isEnabledItem("cmp_file_archiv") == false) return false;
