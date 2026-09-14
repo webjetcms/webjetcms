@@ -143,6 +143,9 @@ public class EmailsEntity extends ActiveRecordRepository {
     @Column(name = "sender_email")
     private String senderEmail;
 
+    @Column(name = "sender_policy_applied")
+    private Boolean senderPolicyApplied;
+
     @Column(name = "created_by_user_id")
     private Integer createdByUserId;
 

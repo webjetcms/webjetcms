@@ -41,6 +41,7 @@ public class MailHelper
 	String baseHref;
 	boolean sendLaterWhenException = true;
 	boolean writeToAuditLog = true;
+	boolean senderPolicyApplied = false;
 	List< Pair<String, String> > headers = null;
 
 	public boolean send() {

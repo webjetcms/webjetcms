@@ -152,6 +152,8 @@ Po exporte sa automaticky nastaví stĺpec Dátum posledného exportu na aktuál
 
 ## Možné konfiguračné premenné
 
+- ```sendMailSaveEmail``` - ak je nastavené na ```true```, emaily z klasických aj viackrokových formulárov sa namiesto SMTP odoslania uložia ako súbory `.eml`. Ak sa zápis nepodarí, formulár oznámi chybu odoslania.
+- ```sendMailSaveEmailPath``` - adresár na ukladanie súborov `.eml`, predvolene ```/WEB-INF/tmp/emails```. Pre vývojové prostredie môžete nastaviť napríklad ```/files/protected/emails```; adresár musí byť zapisovateľný. Pri ```useSMTPServer=false``` zostáva zachované prednostné odložené odoslanie emailu.
 - ```formmailAllowedRecipients``` - Zoznam koncových častí email adries na ktoré je možné odoslať formuláre, napríklad: ```@interway.sk,podpora@demo.webjet.sk```. Štandardne prázdne, čo znamená, že formulár je možné odoslať na ľubovoľnú adresu
 - ```formMailEncoding``` - znaková sada pre odosielanie emailov z formulárov. Štandardne nastavené na prázdnu hodnotu, čo znamená, že sa použije rovnaké kódovanie znakov ako je nastavené pre web stránky.
 - ```spamProtection``` - ak je nastavené na ```true```, bude zapnutá ochrana proti spamu vo formulároch. Štandardne nastavené na ```true```.

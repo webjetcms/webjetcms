@@ -1665,7 +1665,7 @@ public class FormMailAction extends HttpServlet
 
 						if(beforePostReturnParams==null || beforePostReturnParams.indexOf("doNotSend") == -1)
 						{
-							Transport.send(msg);
+							boolean savedToFile = SendMail.sendMessage(msg);
 
 							RequestBean.addParameter("formName", formName);
 							RequestBean.addParameter("beforePostMethod", beforePostMethod);
@@ -1673,7 +1673,7 @@ public class FormMailAction extends HttpServlet
 							RequestBean.addParameter("to", recipients);
 							RequestBean.addParameter("subject", subject);
 
-							Adminlog.add(Adminlog.TYPE_FORMMAIL, "Formular "+formName+" uspesne odoslany na email "+recipients, docId, formId);
+							Adminlog.add(Adminlog.TYPE_FORMMAIL, savedToFile ? "Formular "+formName+" saved as EML for email "+recipients : "Formular "+formName+" uspesne odoslany na email "+recipients, docId, formId);
 						}
 						else
 						{
@@ -2450,6 +2450,22 @@ public class FormMailAction extends HttpServlet
 	 */
 	public static void sendUserInfo(int sendUserInfoDocId, int formId, String email, List<IwcmFile> attachs, Map<String, List<UploadedFile>> formFilesTable, HttpServletRequest request)
 	{
+		sendUserInfo(sendUserInfoDocId, formId, email, attachs, formFilesTable, request, true);
+	}
+
+	/**
+	 * Sends the visitor notification while optionally disabling every deferred-delivery path.
+	 *
+	 * @param sendUserInfoDocId notification page ID
+	 * @param formId saved form ID
+	 * @param email visitor email address
+	 * @param attachs files attached to the notification
+	 * @param formFilesTable uploaded files indexed by form field
+	 * @param request current HTTP request
+	 * @param allowDeferredDelivery whether a failed or disabled SMTP delivery may be persisted in the email queue
+	 */
+	public static void sendUserInfo(int sendUserInfoDocId, int formId, String email, List<IwcmFile> attachs, Map<String, List<UploadedFile>> formFilesTable, HttpServletRequest request, boolean allowDeferredDelivery)
+	{
 		DocDB docDB = DocDB.getInstance();
 
 		DocDetails doc = docDB.getDoc(sendUserInfoDocId);
@@ -2489,7 +2505,13 @@ public class FormMailAction extends HttpServlet
 			String authorEmail = Constants.getString("formmailSendUserInfoSenderEmail");
 			if(Tools.isEmail(authorEmail) == false) authorEmail = SendMail.getDefaultSenderEmail("formmail", doc.getAuthorEmail());
 			Logger.debug(FormMailAction.class,"sendUserInfoSenderName="+authorName+", sendUserInfoSenderEmail="+authorEmail);
-			SendMail.send(authorName, authorEmail, email, null, null, null, doc.getTitle(), "<html><body>"+data+"</body></html>", Tools.getBaseHref(request), attachments.toString());
+			if (allowDeferredDelivery) {
+				SendMail.send(authorName, authorEmail, email, null, null, null, doc.getTitle(), "<html><body>"+data+"</body></html>", Tools.getBaseHref(request), attachments.toString());
+			} else if ("false".equals(Constants.getString("useSMTPServer"))) {
+				Logger.warn(FormMailAction.class, "Visitor email for encrypted form cannot be queued for later delivery, formId=" + formId);
+			} else {
+				SendMail.sendCapturingException(authorName, authorEmail, email, null, null, null, doc.getTitle(), "<html><body>"+data+"</body></html>", Tools.getBaseHref(request), attachments.toString(), false, false);
+			}
 		}
 	}
 

@@ -323,6 +323,7 @@ public class Sender extends TimerTask
 			String url = null;
 			String body = "";
 			String attachments = null;
+			boolean senderPolicyApplied = false;
 			int retry = 0;
 			int emailId = -1;
 			int campainId = -1;
@@ -354,6 +355,7 @@ public class Sender extends TimerTask
 				url = DB.getDbString(rs, "url");
 				body = DB.getDbString(rs, "message");
 				attachments = DB.getDbString(rs, "attachments");
+				senderPolicyApplied = rs.getBoolean("sender_policy_applied");
 				retry = rs.getInt("retry");
 				campainId = rs.getInt("campain_id");
 				//recipientUserId = rs.getInt("recipient_user_id");
@@ -588,6 +590,7 @@ public class Sender extends TimerTask
 								.setAttachments(attachments)
 								.setSendLaterWhenException(false)
 								.setWriteToAuditLog(true)
+								.setSenderPolicyApplied(senderPolicyApplied)
 								.addHeader("List-Unsubscribe-Post", "List-Unsubscribe=One-Click")
 								.addHeader("List-Unsubscribe", unsubscribedUrl.toString())
 								.sendCapturingException();
