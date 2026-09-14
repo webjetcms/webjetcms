@@ -881,7 +881,7 @@ Scenario('workbench selection, structure and unchanged canvas geometry', async (
     DTE.cancel();
 });
 
-Scenario('workbench structure follows selection and preserves scroll during refresh', async ({I, DTE, Document}) => {
+Scenario('workbench structure stays stable until reopened and follows selection in place', async ({I, DTE, Document}) => {
     await openWorkbenchFixture(I, DTE, Document);
     await I.executeScript((root, selector) => {
         const list = document.querySelector(selector+' ul');
@@ -897,7 +897,7 @@ Scenario('workbench structure follows selection and preserves scroll during refr
     I.click('.pb-workbench [data-pb-action=structure]');
     I.waitForVisible('.pb-structure [aria-selected=true]', 10);
 
-    await I.usePlaywrightTo('verify structure scrolling across selection and content updates', async ({page}) => {
+    await I.usePlaywrightTo('verify a stable structure snapshot during page mutations', async ({page}) => {
         const frame = await getPageBuilderFrame(page);
         const tree = frame.locator('.pb-structure > ul');
         const selectedRow = tree.locator('[aria-selected=true] > div');
@@ -910,39 +910,67 @@ Scenario('workbench structure follows selection and preserves scroll during refr
         await assertSelectionVisible();
         assert.ok(await tree.evaluate(element => element.scrollTop) > 0, 'Opening the panel must reveal a selected block near the bottom');
 
-        // Keep a manual position away from the selection while DOM mutations rebuild the tree.
+        const firstItem = await tree.locator('[role=treeitem]').first().elementHandle();
+        const originalTree = await tree.innerHTML();
+        // Allow MutationObserver callbacks and the scheduled workbench frame to finish.
+        const flushLayout = () => frame.evaluate(() => new Promise(resolve => {
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+        }));
+        // Simulate page scripts updating tabs, accordions and text while the drawer is open.
         const scrollTop = await tree.evaluate(element => {
             element.scrollTop = 240;
             return element.scrollTop;
         });
         for (let index = 0; index < 3; index++) {
             const title = 'Refresh autotest '+index;
-            await frame.locator(workbenchFixture+' h2').evaluate((element, text) => { element.textContent = text; }, title);
-            await frame.waitForFunction(text => {
-                const ui = window.pageBuilder.ui;
-                return !ui.treeDirty && ui.tree.text().includes(text);
+            await frame.locator(workbenchFixture+' h2').evaluate((element, text) => {
+                element.textContent = text;
+                element.firstChild.textContent += ' updated';
+                element.classList.toggle('autotest-active');
+                element.style.color = 'red';
+                element.dispatchEvent(new Event('input', {bubbles: true}));
             }, title);
-            assert.equal(await tree.evaluate(element => element.scrollTop), scrollTop, 'Background refresh must preserve manual tree scrolling');
+            await flushLayout();
+            assert.equal(await firstItem.evaluate(element => element.isConnected), true, 'Page mutations must not replace tree rows');
+            assert.equal(await tree.innerHTML(), originalTree, 'Page mutations must not update the open structure snapshot');
+            assert.equal(await tree.evaluate(element => element.scrollTop), scrollTop, 'Page mutations must preserve manual tree scrolling');
         }
 
+        await page.setViewportSize({width: 1320, height: 1000});
+        await flushLayout();
+        assert.equal(await firstItem.evaluate(element => element.isConnected), true, 'Resizing the viewport must not rebuild tree rows');
+
         await frame.locator(workbenchFixture+' li.pb-duplicable:last-child').click();
-        await frame.waitForFunction(() => !window.pageBuilder.ui.treeDirty);
+        await flushLayout();
         assert.equal(await tree.evaluate(element => element.scrollTop), scrollTop, 'Clicking the same block must preserve manual tree scrolling');
 
         // Select visible siblings through the page, including both scroll directions.
         for (const itemIndex of [1, 25]) {
             await frame.locator(workbenchFixture+' li.pb-duplicable').nth(itemIndex).click();
-            await frame.waitForFunction(() => !window.pageBuilder.ui.treeDirty);
+            await frame.waitForFunction(() => !window.pageBuilder.ui.treeRevealSelection);
             await assertSelectionVisible();
+            assert.equal(await firstItem.evaluate(element => element.isConnected), true, 'Selection changes must update existing rows in place');
         }
 
         await selectedRow.click();
         await frame.waitForFunction(() => document.activeElement?.getAttribute('aria-selected') === 'true');
+        assert.equal(await tree.locator('[aria-selected=true]').getAttribute('tabindex'), '0', 'The focused row must remain in the keyboard tab order');
         const focusedScroll = await tree.evaluate(element => element.scrollTop);
+        const focusedItem = await selectedRow.elementHandle();
         await frame.locator(workbenchFixture+' h2').evaluate(element => { element.textContent = 'Focused refresh autotest'; });
+        await flushLayout();
+        assert.equal(await focusedItem.evaluate(element => element.isConnected && document.activeElement === element.parentElement), true, 'Page mutations must preserve the focused row');
+        assert.equal(await tree.evaluate(element => element.scrollTop), focusedScroll, 'Page mutations must preserve scrolling while the tree is focused');
+
+        // New content is picked up when the user closes and reopens the structure.
+        await frame.locator('.pb-structure [data-pb-action=close-structure]').click();
+        await frame.locator('.pb-workbench [data-pb-action=structure]').click();
         await frame.waitForFunction(() => !window.pageBuilder.ui.treeDirty && window.pageBuilder.ui.tree.text().includes('Focused refresh autotest'));
-        assert.equal(await tree.evaluate(element => element.scrollTop), focusedScroll, 'Refreshing a focused tree row must preserve scrolling');
-        assert.equal(await tree.locator('[aria-selected=true]').evaluate(element => document.activeElement === element), true, 'The rebuilt row must retain keyboard focus');
+        assert.equal(await firstItem.evaluate(element => element.isConnected), false, 'Reopening the structure must rebuild its snapshot');
+        await assertSelectionVisible();
+        await frame.locator('.pb-structure input[type=search]').fill('Focused refresh autotest');
+        await frame.waitForFunction(() => !window.pageBuilder.ui.treeDirty);
+        assert.ok((await tree.innerText()).includes('Focused refresh autotest'), 'Searching must filter the refreshed structure');
     });
 
     I.switchTo();

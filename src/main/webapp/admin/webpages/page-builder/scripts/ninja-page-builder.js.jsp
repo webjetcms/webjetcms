@@ -75,7 +75,7 @@
             var me = this, prefix = me.options.prefix;
             me.ui = {
                 selected: null, hovered: null, resizeActive: null, quiet: false, guideMode: 'selected', frame: null, inserting: false, insertPoints: [],
-                treeDirty: true, treeRevealSelection: false, expanded: new WeakSet(), treeNodes: new Map(), bookmarks: null,
+                treeDirty: false, treeRevealSelection: false, expanded: new WeakSet(), treeNodes: new Map(), bookmarks: null,
                 labels: {
                     structure: "<iwcm:text key='pagebuilder.ui.structure'/>",
                     search: "<iwcm:text key='pagebuilder.ui.search'/>",
@@ -203,7 +203,6 @@
             }).on('input.workbench', function() {
                 ui.quiet = true;
                 ui.hovered = null;
-                ui.treeDirty = true;
                 me.schedule_workbench();
             }).on('focusin.workbench focusout.workbench', me.tagc.size_changer, function(e) {
                 var control = $(e.type === 'focusin' ? e.target : e.relatedTarget).closest(me.tagc.size_changer);
@@ -218,10 +217,8 @@
             ui.resizeObserver.observe(me.$wrapper[0]);
             if (ui.toolbarContent.length) ui.resizeObserver.observe(ui.toolbarContent[0]);
             ui.resizeObserver.observe(ui.bar[0]);
-            ui.observer = new MutationObserver(function(records) {
-                if (records.some(record => record.type !== 'attributes')) ui.treeDirty = true;
-                me.schedule_workbench();
-            });
+            // Page scripts may mutate content continuously; only refresh outline geometry here.
+            ui.observer = new MutationObserver(ui.layoutHandler);
             ui.observer.observe(me.$wrapper[0], { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'style', 'hidden'] });
             ui.escapeHandler = function(e) {
                 if (e.key !== 'Escape' || e.defaultPrevented || !me.$wrapper.is(':visible')) return;
@@ -381,7 +378,6 @@
                     window.scrollBy({ top: rect.top - top - 20, behavior: 'instant' });
                 }
             }
-            ui.treeDirty = true;
             this.refresh_workbench_selection();
             this.schedule_workbench();
         },
@@ -794,7 +790,7 @@
             }
         },
 
-        /** Rebuilds navigation while preserving expansion, focus and manual scrolling between selections. */
+        /** Builds the structure on opening or searching, preserving expansion and manual scrolling. */
         render_workbench_tree: function() {
             var me = this, ui = me.ui, query = ui.search.val().trim().toLocaleLowerCase();
             var focused = $(document.activeElement).data('element');
@@ -840,14 +836,27 @@
             }
             // Emptying the tree temporarily removes its scroll range, so restore it after rebuilding.
             tree.scrollTop = scrollTop;
+            ui.treeDirty = false;
+        },
+
+        /** Updates the selected row in place without rebuilding the structure snapshot. */
+        refresh_workbench_tree_selection: function() {
+            var me = this, ui = me.ui, tree = ui.tree[0];
+            ui.tree.find('[aria-selected=true]').attr('aria-selected', 'false');
             var selected = ui.treeNodes.get(ui.selected);
-            if (ui.treeRevealSelection && selected && selected.is(':visible')) {
+            if (selected) {
+                selected.attr('aria-selected', 'true');
+                selected.parentsUntil(ui.tree, '[role=treeitem]').each(function() { me.toggle_workbench_branch(this, true); });
+            }
+            var active = tree.contains(document.activeElement) ? $(document.activeElement).closest('[role=treeitem]') : selected;
+            ui.tree.find('[tabindex=0]').attr('tabindex', -1);
+            (active && active.length ? active : ui.tree.find('[role=treeitem]:visible').first()).attr('tabindex', 0);
+            if (selected && selected.is(':visible')) {
                 var bounds = tree.getBoundingClientRect(), row = selected.children('div')[0].getBoundingClientRect();
                 if (row.top < bounds.top) tree.scrollTop += row.top - bounds.top;
                 else if (row.bottom > bounds.bottom) tree.scrollTop += row.bottom - bounds.bottom;
             }
             ui.treeRevealSelection = false;
-            ui.treeDirty = false;
         },
 
         toggle_workbench_branch: function(item, expand) {
@@ -963,10 +972,6 @@
                 var top = Math.max(0, ui.bar[0].getBoundingClientRect().bottom);
                 ui.layer.css('top', top);
                 ui.drawer.css('top', top + 8);
-                if (ui.viewportWidth !== window.innerWidth) {
-                    ui.viewportWidth = window.innerWidth;
-                    ui.treeDirty = true;
-                }
                 var moving = me.$wrapper.hasClass(me.state.is_moving_child);
                 var element = moving ? ui.hovered : ui.selected;
                 var obstructed = me.$wrapper.hasClass(me.state.is_modal_open) || me.$wrapper.hasClass(me.state.is_library_active);
@@ -982,6 +987,7 @@
                 if (hoverElements.length && ui.guideMode === 'all') hoverElements = hoverElements.concat($(hovered).parentsUntil(me.$wrapper, me.tagc._grid_element).get());
                 ui.hoverOutlines = me.render_workbench_outlines(ui.hoverOutlines, hoverElements, top, true, elements);
                 if (ui.treeDirty && !ui.drawer.prop('hidden')) me.render_workbench_tree();
+                if (ui.treeRevealSelection && !ui.drawer.prop('hidden')) me.refresh_workbench_tree_selection();
                 var busy = me.workbench_busy();
                 me.position_workbench_insertion(top);
                 ui.path.find('button').prop('disabled', busy || ui.inserting);
