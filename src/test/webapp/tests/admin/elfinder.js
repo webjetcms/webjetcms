@@ -107,6 +107,31 @@ Scenario('file update accepts one file and does not show progress for validation
     I.dontSeeElement('.elfinder-notify-customErrorDialog .elfinder-notify-progressbar');
 });
 
+Scenario('link dialog marks archive volume paths read-only', async ({ I, DTE }) => {
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=16');
+    DTE.waitForEditor();
+    I.clickCss('#trEditor');
+    I.clickCss('.cke_button_icon.cke_button__link_icon');
+    I.waitForText('Informácie o odkaze', 10);
+    I.switchTo('#wjLinkIframe');
+    I.waitForElement('#finder .elfinder-navbar', 20);
+
+    const markers = await I.executeScript(() => {
+        const readOnlyMarker = $('#finder').elfinder('instance').options.readOnlyMarker;
+        const file = { read: 1, write: 0, notfound: false };
+        return {
+            archiveRoot: readOnlyMarker({ ...file, virtualPath: '//files/archiv' }),
+            archiveChild: readOnlyMarker({ ...file, virtualPath: '//files//archiv/category' }),
+            otherFolder: readOnlyMarker({ ...file, virtualPath: '//files/archiv-other' }),
+            writableFile: readOnlyMarker({ ...file, virtualPath: '//files/archiv/file.pdf', write: 1 })
+        };
+    });
+    I.assertTrue(markers.archiveRoot, 'The archive volume root must show the read-only marker');
+    I.assertTrue(markers.archiveChild, 'Archive subfolders must show the read-only marker');
+    I.assertFalse(markers.otherFolder, 'Folders outside the archive must keep their usual marker');
+    I.assertFalse(markers.writableFile, 'Writable files must not show the read-only marker');
+});
+
 Scenario('search files', ({I}) => {
 
     //all media/images/apps/

@@ -26,7 +26,7 @@ block content
         let archiveRoot = archivePath ? '/' + archivePath : '';
 
         function isReadOnlyArchive(file) {
-            let path = file.virtualPath && file.virtualPath.replace(/[. ]+\//g, '/').replace(/\/+$/, '').toLowerCase();
+            let path = file.virtualPath && file.virtualPath.replace(/[. ]+\//g, '/').replace(/\/+/g, '/').replace(/\/+$/, '').toLowerCase();
             return file.read && !file.write && !file.notfound && archiveRoot && path && (path === archiveRoot || path.indexOf(archiveRoot + '/') === 0);
         }
 
