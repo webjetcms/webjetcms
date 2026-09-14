@@ -4350,7 +4350,6 @@
             me.modal_return_focus = $(active).closest('.'+me.options.prefix+'-workbench').length ? active : $(el)[0];
             me.user_style.current_element = $(grid_element);
             me.user_style.current_element.addClass(me.state.is_styling);
-            me.set_current_element_style_id();
             me.set_modal_title();
             me.set_modal_actual_style(true);
             me.set_style_connections();
@@ -4870,6 +4869,7 @@
             $('.style-connections-list').html('');
 
             if(typeof style_id === 'undefined') {
+                $('.style-connections-list').html('<iwcm:text key="pagebuilder.connections.none"/>');
                 return;
             }
 
@@ -4925,6 +4925,7 @@
                 $(parent).addClass(me.state.has_same_style);
                 $(parent).addClass(me.state.is_style_connected);
 
+                me.set_current_element_style_id();
                 var style_id = me.get_current_element_style_id();
 
                 $(me.user_style.current_element).removeClass(me.state.is_style_connected);

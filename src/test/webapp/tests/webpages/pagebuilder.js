@@ -2229,6 +2229,58 @@ async function openWorkbenchStyle(I, type = 'column') {
     });
 }
 
+Scenario('style panel without edits preserves serialized HTML', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    const before = await I.executeScript(() => getSaveData());
+    for (const close of ['.pb-modal__header__button-close', '.pb-modal__footer__button-close', '.pb-modal__footer__button-save', 'Escape']) {
+        await openWorkbenchStyle(I);
+        await I.usePlaywrightTo('verify unchanged HTML while opening and closing style properties', async ({page}) => {
+            const frame = await getPageBuilderFrame(page);
+            const panel = frame.locator('.pb-modal');
+            assert.deepStrictEqual(await frame.evaluate(() => getSaveData()), before, 'Opening style properties must not change serialized HTML, even while a dirty baseline is captured');
+            assert.ok((await panel.locator('.style-connections-list').textContent()).trim(), 'An unstyled element must display the empty connections message');
+            if (close === 'Escape') await page.keyboard.press('Escape');
+            else await panel.locator(close).click();
+            await panel.waitFor({state: 'hidden'});
+            assert.deepStrictEqual(await frame.evaluate(() => getSaveData()), before, 'Closing or saving unchanged style properties must preserve serialized HTML');
+        });
+    }
+    I.switchTo();
+    DTE.cancel();
+});
+
+Scenario('style linking creates an ID for unstyled elements', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    await openWorkbenchStyle(I);
+    await I.usePlaywrightTo('link unstyled columns and apply a shared style', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        const panel = frame.locator('.pb-modal');
+        const columns = frame.locator(workbenchFixture+' .pb-column');
+        assert.equal(await columns.nth(0).getAttribute('data-pb-user-style-id'), null, 'Opening properties must leave an unstyled column without a style ID');
+        assert.equal(await columns.nth(1).getAttribute('data-pb-user-style-id'), null, 'The other column must initially have no style ID');
+        await columns.nth(1).hover();
+        await columns.nth(1).locator(':scope > .pb-connection-button').click();
+        const styleId = await columns.nth(0).getAttribute('data-pb-user-style-id');
+        assert.ok(styleId?.startsWith('pb-user-style-'), 'Linking must create a valid style ID for the current element');
+        assert.equal(await columns.nth(1).getAttribute('data-pb-user-style-id'), styleId, 'Both linked columns must share the newly created ID');
+        assert.equal(await panel.locator('.pb-connection-reference').count(), 1, 'The linked column must appear in the connections list');
+        await panel.locator('.pb-style-accordion[data-input-group-id="07"] > button').click();
+        await panel.locator('[name=width]').fill('180px');
+        await panel.locator('[name=width]').press('Tab');
+        const rule = frame.locator('style[style-id="'+styleId+'"]');
+        assert.ok((await rule.textContent()).includes('width:180px'), 'A style change must create a CSS rule for the shared ID');
+        await columns.nth(1).hover();
+        await columns.nth(1).locator(':scope > .pb-connection-button').click();
+        const detachedId = await columns.nth(1).getAttribute('data-pb-user-style-id');
+        assert.ok(detachedId && detachedId !== styleId, 'Unlinking must give the detached column an independent ID');
+        assert.ok((await frame.locator('style[style-id="'+detachedId+'"]').textContent()).includes('width:180px'), 'Unlinking must preserve the detached column style');
+        await panel.locator('.pb-modal__footer__button-save').click();
+        await panel.waitFor({state: 'hidden'});
+    });
+    I.switchTo();
+    DTE.cancel();
+});
+
 Scenario('style panel accordions preserve values and save cancel reset behavior', async ({I, DTE, Document}) => {
     await openWorkbenchFixture(I, DTE, Document);
     await openWorkbenchStyle(I);
