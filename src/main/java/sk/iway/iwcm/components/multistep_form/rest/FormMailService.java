@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 import jakarta.mail.Message;
 import jakarta.mail.Multipart;
 import jakarta.mail.Session;
-import jakarta.mail.Transport;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
@@ -353,11 +352,11 @@ public class FormMailService {
 						msg.setReplyTo(replyToAddrs);
 					}
 
-					Transport.send(msg);
+					boolean savedToFile = SendMail.sendMessage(msg);
 
-					sb.append(" succesfully send to email ").append(recipients);
+					sb.append(savedToFile ? " saved email as EML for " : " successfully sent email to ").append(recipients);
 
-					Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "email from:" + from + " to:" + recipients + " subject:" + subject, (long)MultistepFormsService.getFormIdStatic(form.getFormName()), form.getId());
+					Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, (savedToFile ? "email saved as EML from:" : "email from:") + from + " to:" + recipients + " subject:" + subject, (long)MultistepFormsService.getFormIdStatic(form.getFormName()), form.getId());
 				}
 				catch (Exception ex) {
 					Logger.error(FormMailService.class, ex);

@@ -1665,7 +1665,7 @@ public class FormMailAction extends HttpServlet
 
 						if(beforePostReturnParams==null || beforePostReturnParams.indexOf("doNotSend") == -1)
 						{
-							Transport.send(msg);
+							boolean savedToFile = SendMail.sendMessage(msg);
 
 							RequestBean.addParameter("formName", formName);
 							RequestBean.addParameter("beforePostMethod", beforePostMethod);
@@ -1673,7 +1673,7 @@ public class FormMailAction extends HttpServlet
 							RequestBean.addParameter("to", recipients);
 							RequestBean.addParameter("subject", subject);
 
-							Adminlog.add(Adminlog.TYPE_FORMMAIL, "Formular "+formName+" uspesne odoslany na email "+recipients, docId, formId);
+							Adminlog.add(Adminlog.TYPE_FORMMAIL, savedToFile ? "Formular "+formName+" saved as EML for email "+recipients : "Formular "+formName+" uspesne odoslany na email "+recipients, docId, formId);
 						}
 						else
 						{

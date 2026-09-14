@@ -23,6 +23,8 @@ import javax.swing.text.html.HTML;
 import javax.swing.text.html.HTMLEditorKit;
 import java.io.*;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
@@ -460,14 +462,8 @@ public class SendMail
 
 			try
 			{
-				if (Constants.getBoolean("sendMailSaveEmail")) {
-					saveEmailToFile(mes);
-				}
-				else
-				{
-					Transport.send(mes);
-				}
-				Logger.debug(SendMail.class,"email odoslany");
+				boolean savedToFile = sendMessage(mes);
+				Logger.debug(SendMail.class, savedToFile ? "email saved as EML" : "email sent");
 				return Pair.of(true, null);
 			}
 			catch (Exception ex)
@@ -497,36 +493,48 @@ public class SendMail
 	}
 
 	/**
-	 * Writes a message to a timestamped EML file when the save path is configured.
+	 * Delivers an already composed message through SMTP or saves it as an EML file.
 	 *
-	 * @param mes message to serialize
+	 * @param message message to deliver
+	 * @return {@code true} when saved as EML, {@code false} when sent through SMTP
+	 * @throws IOException when the EML path is missing or the file cannot be written
+	 * @throws MessagingException when the message cannot be sent or serialized
 	 */
-	private static void saveEmailToFile(Message mes) {
+	public static boolean sendMessage(Message message) throws IOException, MessagingException {
+		if (Constants.getBoolean("sendMailSaveEmail")) {
+			saveEmailToFile(message);
+			return true;
+		}
+
+		Transport.send(message);
+		return false;
+	}
+
+	private static void saveEmailToFile(Message mes) throws IOException, MessagingException {
 		String sendMailSaveEmailPath = Constants.getString("sendMailSaveEmailPath", "");
 		if (Tools.isEmpty(sendMailSaveEmailPath)) {
-			Logger.debug(SendMail.class, "sendMailSaveEmailPath is not configured");
-			return;
+			throw new IOException("sendMailSaveEmailPath is not configured");
 		}
 
-		Logger.debug(SendMail.class, String.format("Email neodosielam, zapisujem do: %s", sendMailSaveEmailPath));
 		String realPath = Tools.getRealPath(sendMailSaveEmailPath);
-		if (!realPath.endsWith("/")) {
-			realPath += "/";
+		if (Tools.isEmpty(realPath)) {
+			throw new IOException("sendMailSaveEmailPath cannot be resolved: " + sendMailSaveEmailPath);
 		}
 
-		File file = new File(realPath + new Date().getTime() + ".eml");
-		if (!file.getParentFile().exists()) {
-			file.getParentFile().mkdirs();
-		}
-		try {
-			FileOutputStream fileOutputStream = new FileOutputStream(file);
-			mes.writeTo(fileOutputStream);
-			fileOutputStream.close();
-
-			Logger.debug(SendMail.class, "Email zapisany");
+		Path directory = Files.createDirectories(Path.of(realPath));
+		Path file = Files.createTempFile(directory, System.currentTimeMillis() + "-", ".eml");
+		try (OutputStream output = Files.newOutputStream(file)) {
+			mes.writeTo(output);
 		} catch (IOException | MessagingException e) {
-			sk.iway.iwcm.Logger.error(e);
+			try {
+				Files.deleteIfExists(file);
+			} catch (IOException cleanupFailure) {
+				e.addSuppressed(cleanupFailure);
+			}
+			throw e;
 		}
+
+		Logger.debug(SendMail.class, "Email saved as EML to " + file);
 	}
 
 	public static boolean sendLater(String senderName, String senderEmail, String recipientEmail, String replyTo, String ccEmail, String bccEmail, String subject, String message, String baseHref, String date, String time)
