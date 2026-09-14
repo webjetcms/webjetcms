@@ -65,7 +65,15 @@ block content
                 }
                 const body = $("#migrationMappings tbody").empty();
                 data.seoBots.concat(data.browserKeys).forEach(item => {
-                    $("<tr>").append($("<td>").text(item.source)).append($("<td>").text(item.target)).appendTo(body);
+                    $("<tr>").append($("<td>").text(item.source || "[[\#{stat.browser-migration.empty-value}]]")).append($("<td>").text(item.target)).appendTo(body);
+                });
+                $("#migrationMappings").toggleClass("d-none", data.seoBots.length + data.browserKeys.length === 0);
+                const retainedKeys = data.retainedKeys || [];
+                $("#migrationRetainedPreview").toggleClass("d-none", retainedKeys.length === 0);
+                $("#retainedKeyCount").text(retainedKeys.length);
+                const retainedBody = $("#migrationRetainedMappings tbody").empty();
+                retainedKeys.forEach(item => {
+                    $("<tr>").append($("<td>").text(item.source || "[[\#{stat.browser-migration.empty-value}]]")).appendTo(retainedBody);
                 });
                 $("#migrationPreview").removeClass("d-none");
                 renderState();
@@ -182,7 +190,7 @@ block content
                 .text-muted [[\#{stat.browser-migration.overall-progress}]]
                 .text-muted
                     span#migrationCompletedTables 0
-                    |  /
+                    |/
                     span#migrationTotalTables 0
                     |  [[\#{stat.browser-migration.table-count}]]
             .progress.mt-1
@@ -198,10 +206,21 @@ block content
                 | [[\#{stat.browser-migration.key-count}]]
                 span.badge.bg-info.ms-3.me-2#tableCount 0
                 | [[\#{stat.browser-migration.table-count}]]
-            .table-responsive(style="max-height: 420px")
+            .table-responsive
                 table#migrationMappings.table.table-sm.table-hover
                     thead
                         tr
                             th [[\#{stat.browser-migration.source}]]
                             th [[\#{stat.browser-migration.target}]]
                     tbody
+            #migrationRetainedPreview.mt-3.d-none
+                p
+                    span.badge.bg-secondary.me-2#retainedKeyCount 0
+                    | [[\#{stat.browser-migration.retained-count}]]
+                p.text-muted [[\#{stat.browser-migration.retained-description}]]
+                .table-responsive
+                    table#migrationRetainedMappings.table.table-sm.table-hover
+                        thead
+                            tr
+                                th [[\#{stat.browser-migration.source}]]
+                        tbody

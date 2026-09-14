@@ -100,6 +100,7 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
     public static class Preview {
         private final List<Mapping> seoBots;
         private final List<Mapping> browserKeys;
+        private final List<Mapping> retainedKeys;
         private final List<String> tables;
         private final boolean seoBotsIndexReady;
     }
@@ -148,17 +149,65 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
     /**
      * Analyzes the current database without creating identifiers or modifying statistics.
      *
-     * @return mappings, statistics tables, and whether the unique bot-name index already exists
+     * @return actionable mappings, keys retained only for non-browser dimensions, statistics
+     * tables, and whether the unique bot-name index already exists
      * @throws SQLException if identifiers or table metadata cannot be read
      */
     public Preview preview() throws SQLException {
         try (Connection connection = DBPool.getConnection()) {
             List<Mapping> botMappings = buildSeoBotMappings(connection, false);
             StatKeyMappingResult keyMappings = buildStatKeyMappings(connection, false);
+            List<String> tables = discoverTables(connection);
+            Set<Long> retainedIds = findNonBrowserStatKeys(connection, keyMappings.mappings(), tables);
             DatabaseMetaData metadata = connection.getMetaData();
             boolean indexReady = hasUniqueSingleColumnIndex(metadata, findTable(connection, metadata, "seo_bots"), "name");
-            return new Preview(botMappings, keyMappings.mappings(), discoverTables(connection), indexReady);
+            return new Preview(botMappings,
+                keyMappings.mappings().stream().filter(mapping -> !retainedIds.contains(mapping.sourceId)).toList(),
+                keyMappings.mappings().stream().filter(mapping -> retainedIds.contains(mapping.sourceId)).toList(),
+                tables, indexReady);
         }
+    }
+
+    /**
+     * Finds mapping candidates used only as operating systems or their versions, not as browsers.
+     * Unreferenced keys remain actionable because finalization can remove them. A browser reference
+     * in any table takes precedence over non-browser references, including those found earlier.
+     * This read-only analysis never changes migration progress.
+     *
+     * @param connection connection used to inspect statistics references
+     * @param mappings candidates from the shared stat-key dictionary
+     * @param tables allowlisted statistics tables to inspect
+     * @return source IDs referenced exclusively by non-browser dimensions
+     * @throws SQLException if table columns or references cannot be read
+     */
+    Set<Long> findNonBrowserStatKeys(Connection connection, List<Mapping> mappings, List<String> tables) throws SQLException {
+        Set<Long> candidates = new HashSet<>();
+        for (Mapping mapping : mappings) candidates.add(mapping.sourceId);
+        Set<Long> retained = new HashSet<>();
+        for (String table : tables) {
+            if (candidates.isEmpty()) break;
+            Set<String> columns = readTableColumns(connection, table);
+            List<String> keyColumns = List.of("browser_ua_id", "platform_id", "subplatform_id").stream()
+                .filter(columns::contains).toList();
+            if (keyColumns.isEmpty()) continue;
+            try (PreparedStatement ps = connection.prepareStatement("SELECT DISTINCT " + String.join(", ", keyColumns) + " FROM " + table);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    for (int column = 1; column <= keyColumns.size(); column++) {
+                        long id = rs.getLong(column);
+                        if (rs.wasNull() || !candidates.contains(id)) continue;
+                        if ("browser_ua_id".equals(keyColumns.get(column - 1))) {
+                            candidates.remove(id);
+                            retained.remove(id);
+                        } else {
+                            retained.add(id);
+                        }
+                    }
+                    if (candidates.isEmpty()) break;
+                }
+            }
+        }
+        return retained;
     }
 
     /**

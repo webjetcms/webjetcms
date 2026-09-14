@@ -90,6 +90,77 @@ class BrowserIdentifierMigrationReferenceTest extends BaseWebjetTest {
     }
 
     /**
+     * Verifies that analysis separates retained OS keys from browser references and unused cleanup
+     * candidates, including a key used as an OS version before a browser reference is found later.
+     * After migration and finalization, reanalysis must report no remaining browser work.
+     */
+    @Test
+    void previewShouldSeparateNonBrowserKeysBeforeAndAfterFinalization() throws Exception {
+        ExecutorService executor = mock(ExecutorService.class);
+        BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService(executor);
+        try (TestDatabase fixture = new TestDatabase("seo_bots", "stat_keys", "stat_views", "stat_error");
+             Statement sql = fixture.connection.createStatement();
+             MockedStatic<DBPool> dbPool = mockStatic(DBPool.class);
+             MockedStatic<UpdateDatabase> updates = mockStatic(UpdateDatabase.class);
+             MockedStatic<StatDB> statDB = mockStatic(StatDB.class);
+             MockedStatic<ClusterDB> cluster = mockStatic(ClusterDB.class);
+             MockedStatic<Adminlog> audit = mockStatic(Adminlog.class)) {
+            sql.execute("INSERT INTO stat_keys (stat_keys_id, value) VALUES (4, ''), (41, 'Chrome 33'), " +
+                "(42, 'Safari 4.0'), (43, 'Chrome 137'), (44, 'Chrome 110.0'), (45, 'Nokia Series 40'), " +
+                "(100, 'Chrome'), (200, 'Safari'), (300, 'Unknown'), (400, 'Nokia Series')");
+            sql.execute("INSERT INTO stat_views (browser_ua_id, platform_id, subplatform_id) VALUES " +
+                "(100, 45, 4), (100, NULL, 41), (100, NULL, 42)");
+            sql.execute("CREATE TABLE stat_views_2024_2 LIKE stat_views");
+            sql.execute("INSERT INTO stat_views_2024_2 (browser_ua_id, subplatform_id) VALUES (42, 4)");
+            sql.execute("ALTER TABLE stat_error ADD COLUMN IF NOT EXISTS browser_ua_id INT");
+            sql.execute("INSERT INTO stat_error (browser_ua_id) VALUES (44)");
+            Connection connection = spy(fixture.connection);
+            doNothing().when(connection).close();
+            dbPool.when(DBPool::getConnection).thenReturn(connection);
+            statDB.when(StatDB::getInstance).thenReturn(mock(StatDB.class));
+
+            BrowserIdentifierMigrationService.Preview before = service.preview();
+            assertEquals(List.of(42L, 43L, 44L), before.getBrowserKeys().stream()
+                .map(BrowserIdentifierMigrationService.Mapping::getSourceId).sorted().toList());
+            assertEquals(List.of(4L, 41L, 45L), before.getRetainedKeys().stream()
+                .map(BrowserIdentifierMigrationService.Mapping::getSourceId).sorted().toList());
+            assertFalse(service.getStatus().isRunning(), "Analysis must not change migration state");
+            assertEquals(0, service.getStatus().getScanned());
+            assertEquals(10, countKeys(sql), "Analysis must not change the shared dictionary");
+
+            service.start();
+            ArgumentCaptor<Runnable> task = ArgumentCaptor.forClass(Runnable.class);
+            verify(executor).execute(task.capture());
+            task.getValue().run();
+            assertTrue(service.getStatus().isDone(), service.getStatus().getError());
+            updates.when(() -> UpdateDatabase.isAllreadyUpdated(BrowserIdentifierMigrationService.UPDATE_NOTE)).thenReturn(true);
+            service.finalizeCompletedMigration();
+            verify(executor, times(2)).execute(task.capture());
+            task.getValue().run();
+            BrowserIdentifierMigrationService.State completed = service.getStatus();
+            assertTrue(completed.isFinalized(), completed.getError());
+            assertEquals(2, completed.getDeletedStatKeys());
+            assertEquals(4, completed.getRetainedStatKeys());
+
+            BrowserIdentifierMigrationService.Preview after = service.preview();
+            assertTrue(after.getBrowserKeys().isEmpty());
+            assertEquals(List.of(4L, 41L, 42L, 45L), after.getRetainedKeys().stream()
+                .map(BrowserIdentifierMigrationService.Mapping::getSourceId).sorted().toList());
+            assertEquals(completed.getScanned(), service.getStatus().getScanned());
+            assertEquals(completed.getTable(), service.getStatus().getTable());
+            assertTrue(service.getStatus().isFinalized());
+            try (ResultSet rs = sql.executeQuery("SELECT subplatform_id FROM stat_views ORDER BY view_id")) {
+                for (int id : List.of(4, 41, 42)) {
+                    assertTrue(rs.next());
+                    assertEquals(id, rs.getInt(1), "OS version references must remain unchanged");
+                }
+            }
+        } finally {
+            service.destroy();
+        }
+    }
+
+    /**
      * Verifies that finalization adds source counts to the current target and retains the latest
      * non-null visit time, including a visit committed after aggregation but before the target update.
      */

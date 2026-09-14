@@ -132,6 +132,39 @@ Data([{ seoBotsIndexReady: false }, { seoBotsIndexReady: true }]).Scenario('fina
     else I.seeElement('#migrationFinalize:not(:disabled)');
 });
 
+Data([{ finalized: false }, { finalized: true }]).Scenario('analysis separates retained OS values from completed browser migration', ({ I, current }) => {
+    I.usePlaywrightTo('mock completed migration with retained OS values', async ({ page }) => {
+        await page.route('**/admin/rest/settings/stat-browser-migration/status', route => route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ running: false, done: true, finalized: current.finalized, deletedStatKeys: 991, retainedStatKeys: 6 })
+        }));
+        await page.route('**/admin/rest/settings/stat-browser-migration', route => route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                seoBots: [], browserKeys: [], tables: ['stat_views_2021_7'], seoBotsIndexReady: true,
+                retainedKeys: ['', 'Safari 4.0', 'Chrome 110.0', 'Chrome 33', 'Edge Mobile 118', 'Chrome 137']
+                    .map(source => ({ source }))
+            })
+        }));
+    });
+    I.amOnPage('/admin/v9/settings/stat-browser-migration/?userlngr=true');
+    I.waitForElement('#migrationStart:disabled', 10);
+    I.click('#migrationAnalyze');
+    I.waitForVisible('#migrationRetainedPreview', 10);
+    I.see('0', '#keyMappingCount');
+    I.see('6', '#retainedKeyCount');
+    I.see('nevyžadujú ďalšiu migráciu', '#migrationRetainedPreview');
+    I.see('(prázdna hodnota)', '#migrationRetainedMappings');
+    I.see('Safari 4.0', '#migrationRetainedMappings');
+    I.see('Chrome 137', '#migrationRetainedMappings');
+    I.dontSeeElement('#migrationMappings');
+    I.verifyDisabled('#migrationStart');
+    I.verifyDisabled('#migrationFinalize');
+    I.saveScreenshot(`stat-browser-retained-analysis-${current.finalized}.png`);
+});
+
 Scenario('checks permissions', ({ I }) => {
     I.amOnPage('/admin/v9/settings/stat-browser-migration/?removePerm=modUpdate');
     I.see('Na túto aplikáciu/funkciu nemáte prístupové práva');
