@@ -3518,9 +3518,6 @@ body.is-view-mode .pb-workbench, body.is-view-mode .pb-structure, body.is-view-m
     margin-inline: -6px;
     padding-inline: 6px;
   }
-  .pb-workbench > [data-pb-action=structure] span, .pb-workbench [data-pb-action=style] span {
-    display: none;
-  }
   .pb-workbench-path > button:not(:last-child):not([data-pb-action=ancestors]) {
     display: none;
   }
