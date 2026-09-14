@@ -5960,6 +5960,8 @@ ALTER TABLE ONLY "webjet_cms"."restaurant_menu_meals"
 ALTER TABLE ONLY "webjet_cms"."seo_bots"
     ADD CONSTRAINT "idx_81760_primary" PRIMARY KEY ("seo_bots_id");
 
+CREATE UNIQUE INDEX "ix_seo_bots_name" ON "webjet_cms"."seo_bots" ("name");
+
 
 
 ALTER TABLE ONLY "webjet_cms"."seo_google_position"
