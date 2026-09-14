@@ -588,7 +588,7 @@
 			'cmdwjmetadata' : 'Bezpečnostné nastavenia def',
             'cmdwjfileupdate'  : 'Aktualizovať súbor',
 			'wjfileupdate-onlyOneFileErr': 'Pri aktualizácii súboru je možné vybrať iba jeden súbor',
-			'wjfileupdate-typeMismatch': 'Typ vybraného súboru musí byť rovnaký ako typ súboru, ktorý sa má aktualizovať a to : ',
+			'wjfileupdate-typeMismatch': 'Nesprávny typ súboru. Vyberte súbor typu ',
 			'wjsearch-title' : 'Hľadať'
 		}
 	};

@@ -332,7 +332,7 @@ html.pg-iframe {
 }
 .elfinder-perms::before { content: $ti-icon-lock-filled; }
 .elfinder-read-only::before { content: $ti-icon-pencil-off; }
-.elfinder-read-only { width: 16px; height: 16px; }
+.elfinder-read-only { width: 16px; height: 16px; font-family: 'tabler-icons'; }
 
 .elfinder-cwd-view-icons .elfinder-perms,
 .elfinder-cwd-view-icons .elfinder-read-only {
