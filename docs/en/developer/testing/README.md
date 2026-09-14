@@ -32,7 +32,7 @@ You can start testing using the following commands:
 ```shell
 cd src/test/webapp/
 
-#spustenie vsetkych testov
+# Run all E2E and helper tests
 npm run all
 
 #spustenie konkrétneho testu a zastavenie v prípade chyby
@@ -57,6 +57,44 @@ CODECEPT_URL="http://demotest.webjetcms.sk" CODECEPT_SHOW=false npm run all
 ```
 
 **Note:** We had problems with the speed of the tests in the Firefox browser. Therefore, for this browser, the ```autodeayEnabled``` variable is set to the value ```true``` in the ```codecept.conf.js``` file and the ```autodelay``` plugin is activated. It delays the execution of the ```amOnPage,click,forceClick``` functions by 200ms before and 300ms after the command is called. We also identified a strange behavior of the browser, which, if it is not in the foreground, the tests suddenly stop working and display meaningless errors. When running the test once, the test always ran correctly. We attribute this to some optimization of the execution of JavaScript code in the browser when it is not active. When running with the browser not displayed, everything is fine, so always use the ```CODECEPT_SHOW=false``` setting to run all tests.
+
+### JavaScript function and component tests
+
+The `src/test/webapp/helpers/*.test.js` files are used by the built-in Node.js testing tool (`node:test`). They verify individual functions and components, such as the behavior of the JSON editor. They complement the E2E tests in `tests/**/*.js`, which verify the entire user experience in a running WebJET CMS. The `npm run all` command also includes helper tests via CodeceptJS scripts in `tests/helpers/node-tests.js`.
+
+You can run all helper tests from the `src/test/webapp` folder:
+
+```shell
+npm run test:helpers
+```
+
+You can run a specific file or test by name directly via Node.js:
+
+```shell
+node --test helpers/jsoneditor.test.js
+node --test --test-name-pattern="rejects every non-object root" helpers/jsoneditor.test.js
+```
+
+Use Node.js 22 and install the npm dependencies in both `src/test/webapp` and `src/main/webapp/admin/v9` as above. These tests do not require a running application server or database. Some open local components in Chromium via Playwright, so that browser must also be installed (`npx playwright install chromium` from the `src/test/webapp` folder; on Linux, system dependencies can be installed using `npx playwright install --with-deps chromium`).
+
+The output contains the names of successful and failed tests, and in case of an error, the expected and actual value or error description. A successful run ends with a return code of `0`, a failure with a non-zero code. Save new tests directly to `helpers` with the extension `.test.js` so that the common command automatically includes them.
+
+[Script `npx-allure.sh`](allure.md) runs these tests automatically within CodeceptJS. In Allure, you can find them in the suite `helpers.node-tests`: each helper file has its own script and an attachment with a list of all its tests. If any test fails, the script is marked as failed and the pipeline fails as well. The list is also available in the console.
+
+To run only helper tests with results written to Allure, do the following:
+
+```shell
+npm run all -- tests/helpers/node-tests.js
+npx allure serve ../../../build/test/allure-results
+```
+
+To select specific files, add `--grep "jsoneditor"` to the CodeceptJS command, for example. `npm run test:helpers` alone remains a quick local run with results in the console only.
+
+Displaying allowed thumbnail sizes in CKEditor verifies the regular E2E test `tests/webpages/editor-thumb.js`. It switches the configuration to `strict`, verifies the options on the page with `docid=57`, and in a separate scenario restores the mode to `learn`. Run the entire file to also perform the configuration rollback:
+
+```shell
+npm run all -- tests/webpages/editor-thumb.js
+```
 
 ### Codecept UI
 
