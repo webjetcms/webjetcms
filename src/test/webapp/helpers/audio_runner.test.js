@@ -326,3 +326,18 @@ Scenario("ElevenLabs", ({ I }) => { I.generateAudio(videoPlan); }).tag("@audio")
   ];
   for (const [input, message] of invalid) assert.throws(() => validateAudioScenarioSource(input), message);
 });
+
+test("preflights complete-shot splitting and rejects oversized shots before launching CodeceptJS", () => {
+  const plan = { language: "sk", shots: ["first", "second"].map(id => ({
+    id, type: "auto", title: id, durationSeconds: 10, "text-sk": "x".repeat(3000), "text-en": "x".repeat(5001)
+  })) };
+  const source = `Feature("video.long-plan");
+const videoPlan = ${JSON.stringify(plan)};
+Scenario("ElevenLabs", ({ I }) => { I.generateAudio(videoPlan, { modelId: "eleven_v3" }); }).tag("@audio");`;
+  assert.doesNotThrow(() => validateAudioScenarioSource(source));
+  const translated = source.replace('modelId: "eleven_v3"', 'modelId: "eleven_v3", language: "en"');
+  assert.throws(() => validateAudioScenarioSource(translated), /Shot first has 5001 characters.*5000-character limit/);
+  assert.doesNotThrow(() => validateAudioScenarioSource(translated.replace('modelId: "eleven_v3"', 'modelId: "eleven_multilingual_v2"')));
+  const legacy = withFeature(`Scenario("ElevenLabs", ({ I }) => { I.generateAudio(\`${"x".repeat(5001)}\`, { modelId: "eleven_v3" }); }).tag("@audio");`);
+  assert.throws(() => validateAudioScenarioSource(legacy), /Legacy narration has 5001 characters/);
+});

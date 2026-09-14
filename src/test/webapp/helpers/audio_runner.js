@@ -2,7 +2,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const acorn = require("acorn");
-const { getPlanNarration } = require("./feature_video_plan.js");
+const { resolveAudioPlan } = require("./audio_plan.js");
+const { isPathInside, resolveVideoScenarioPath, readPlanMetadata } = require("./video_plan_source.js");
 
 const WEBAPP_ROOT = path.resolve(__dirname, "..");
 const CODECEPT_BIN = require.resolve("codeceptjs/bin/codecept.js");
@@ -17,14 +18,6 @@ const CODECEPT_HOOK_NAMES = new Set([
   "BeforeStep",
   "BeforeSuite"
 ]);
-
-function isPathInside(parentPath, candidatePath) {
-  const relativePath = path.relative(parentPath, candidatePath);
-  return relativePath !== "" &&
-    relativePath !== ".." &&
-    !relativePath.startsWith(`..${path.sep}`) &&
-    !path.isAbsolute(relativePath);
-}
 
 function getStringLiteral(node) {
   return node?.type === "Literal" && typeof node.value === "string" ? node.value : null;
@@ -78,41 +71,6 @@ function containsEagerCall(node) {
     if (Array.isArray(value)) return value.some(containsEagerCall);
     return value?.type != null && containsEagerCall(value);
   });
-}
-
-/** Reads literal plan metadata from the AST, skipping inline callbacks without evaluating code. */
-function readPlanMetadata(node, location = []) {
-  const label = location.join(".") || "plan";
-  if (node?.type === "Literal" && (node.value === null ||
-    ["string", "boolean", "number"].includes(typeof node.value))) return node.value;
-  if (node?.type === "TemplateLiteral" && node.expressions.length === 0) return node.quasis[0].value.cooked;
-  if (node?.type === "ArrayExpression") {
-    return node.elements.map((element, index) => readPlanMetadata(element, [...location, index]));
-  }
-  if (node?.type === "ObjectExpression") {
-    const result = Object.create(null);
-    for (const property of node.properties) {
-      const name = property.key?.type === "Identifier" ? property.key.name : getStringLiteral(property.key);
-      if (property.type !== "Property" || property.kind !== "init" || property.computed ||
-        property.shorthand || name == null || name === "__proto__") {
-        throw new Error(`${label} must use explicit, non-computed data properties.`);
-      }
-      if (Object.hasOwn(result, name)) throw new Error(`${label}.${name} must not be repeated.`);
-      const inlineCallback = location.length === 2 && location[0] === "shots" &&
-        typeof location[1] === "number" && ["shot", "prepare"].includes(name);
-      if (inlineCallback) {
-        if (!["ArrowFunctionExpression", "FunctionExpression"].includes(property.value.type)) {
-          throw new Error(`${label}.${name} must be an inline function.`);
-        }
-        // Keep the key for duplicate detection; narration does not use these callbacks.
-        result[name] = undefined;
-      } else {
-        result[name] = readPlanMetadata(property.value, [...location, name]);
-      }
-    }
-    return result;
-  }
-  throw new Error(`${label} must contain static literal data; only shot and prepare may be functions.`);
 }
 
 function validateGenerateAudioOptions(node, fail) {
@@ -304,11 +262,10 @@ function validateGenerationScenarioSource(source, sourcePath = "<audio scenario>
   if (narration?.type === "ObjectExpression") {
     try {
       const plan = readPlanMetadata(narration);
-      const languageOption = generateAudioCall.arguments[1]?.properties.find(property =>
-        (property.key.name || getStringLiteral(property.key)) === "language");
+      const options = generateAudioCall.arguments[1] ? readPlanMetadata(generateAudioCall.arguments[1]) : {};
       if (head) {
-        require("./head_settings.js").getHeadShots(plan, generateAudioCall.arguments[1] ? readPlanMetadata(generateAudioCall.arguments[1]) : {}, sourcePath);
-      } else getPlanNarration(plan, languageOption ? getStringLiteral(languageOption.value) : undefined);
+        require("./head_settings.js").getHeadShots(plan, options, sourcePath);
+      } else resolveAudioPlan(plan, options);
     } catch (error) {
       fail(`I.generateAudio plan must contain static shot data with optional inline callbacks: ${error.message}`);
     }
@@ -321,6 +278,11 @@ function validateGenerationScenarioSource(source, sourcePath = "<audio scenario>
     narrationText.trim() === "") {
     fail("I.generateAudio narration must be a non-empty template literal without interpolation.");
   }
+  try {
+    resolveAudioPlan(narrationText, generateAudioCall.arguments[1] ? readPlanMetadata(generateAudioCall.arguments[1]) : {});
+  } catch (error) {
+    fail(error.message);
+  }
 }
 
 function validateAudioScenarioSource(source, sourcePath) {
@@ -328,30 +290,8 @@ function validateAudioScenarioSource(source, sourcePath) {
 }
 
 function resolveAudioScenario(argument, options = {}) {
-  const webappRoot = options.webappRoot || WEBAPP_ROOT;
   const fsImpl = options.fsImpl || fs;
-  const videoDirectory = fsImpl.realpathSync(path.join(webappRoot, "video"));
-
-  if (typeof argument !== "string" || path.extname(argument) !== ".js") {
-    throw new Error("The audio scenario must be a .js file.");
-  }
-
-  let scenarioPath;
-  try {
-    scenarioPath = fsImpl.realpathSync(path.resolve(webappRoot, argument));
-  } catch (error) {
-    if (error.code === "ENOENT") {
-      throw new Error(`Audio scenario does not exist: ${argument}`);
-    }
-    throw error;
-  }
-
-  if (!isPathInside(videoDirectory, scenarioPath)) {
-    throw new Error("The audio scenario must be located inside the video directory.");
-  }
-  if (!fsImpl.statSync(scenarioPath).isFile()) {
-    throw new Error("The audio scenario must be a file.");
-  }
+  const scenarioPath = resolveVideoScenarioPath(argument, options);
   (options.validateSource || validateAudioScenarioSource)(fsImpl.readFileSync(scenarioPath, "utf8"), scenarioPath);
   return scenarioPath;
 }

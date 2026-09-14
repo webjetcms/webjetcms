@@ -68,7 +68,7 @@ test("finishes one report after partial failure and never throws a logger failur
 test("audio artifact reports its actual response cost even when billing reads fail, without masking generation errors", async () => {
   const fs = require("node:fs/promises");
   const path = require("node:path");
-  const { generateAudioArtifact } = require("./elevenlabs_client.js");
+  const { generateAudioArtifacts } = require("./elevenlabs_client.js");
   const directory = await fs.mkdtemp(path.join(require("node:os").tmpdir(), "wj-audio-credits-"));
   const targetPath = path.join(directory, "voice.mp3");
   const originalLog = console.log;
@@ -77,7 +77,7 @@ test("audio artifact reports its actual response cost even when billing reads fa
   try {
     for (const failed of [false, true]) {
       let subscriptions = 0;
-      const generation = generateAudioArtifact({ targetPath, apiKey: "key", text: "Narration", modelId: "model", voiceId: "voice", creditLabel: "audio",
+      const generation = generateAudioArtifacts({ chunks: [{ targetPath, text: "Narration" }], apiKey: "key", modelId: "model", voiceId: "voice", creditLabel: "audio",
         fetchImpl: async url => {
           if (url.endsWith("/subscription")) { subscriptions++; throw new Error("Billing service offline"); }
           return failed ? new Response("Voice unavailable", { status: 400 }) :
@@ -88,8 +88,9 @@ test("audio artifact reports its actual response cost even when billing reads fa
       assert.equal(subscriptions, 2);
       assert.equal(await fs.readFile(targetPath, "utf8"), "valid audio");
     }
-    assert.match(lines[0], /Credits used: 7 \(TTS response\).*Credits remaining in current limit: unavailable/);
-    assert.match(lines[1], /Credits used: unavailable \(Billing service offline\)/);
+    const reports = lines.filter(line => line.includes("Credits used:"));
+    assert.match(reports[0], /Credits used: 7 \(TTS response\).*Credits remaining in current limit: unavailable/);
+    assert.match(reports[1], /Credits used: unavailable \(Billing service offline\)/);
   } finally {
     console.log = originalLog;
     await fs.rm(directory, { recursive: true, force: true });

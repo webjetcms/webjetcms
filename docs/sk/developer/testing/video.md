@@ -53,6 +53,24 @@ Scenario("293-config-jstree-view", ({ I, login }) => {
 }).tag("@video");
 ```
 
+## Prehľad textov a plánu záberov
+
+Scenár so spoločným objektom `const videoPlan` si môžete prečítať v prehľadnej podobe bez spustenia nahrávania. V priečinku `src/test/webapp` spustite:
+
+```shell
+npm run video:plan video/308-pb-redesign.js
+```
+
+Príkaz vypíše súhrn s jazykom, počtom záberov, odhadovanou dĺžkou, počtom slov a znakov. Nasleduje časť `NARRATION` s celým hovoreným textom v poradí záberov a časť `SHOT PLAN` s časovou osou, typmi záberov, ID, názvami, poznámkami a textom každého záberu. Časy vychádzajú z `durationSeconds` a označujú odhad zostrihaného videa. Jazyk určuje `videoPlan.language`, predvolená hodnota je `sk`.
+
+Nie je potrebný API kľúč ani spustená inštancia WebJET CMS. Príkaz iba staticky prečíta objekt: nespúšťa CodeceptJS, prehliadač, generovanie audia ani funkcie `prepare` a `shot`. Deklarácia `Scenario("Shot plan")` môže zostať v súbore, ale príkaz ju nepotrebuje ani nevykonáva. Funguje aj pre rozpracovaný plán bez audio scenára či pripravených obrázkov pre `head`. Starší ručne písaný text v `I.say` bez objektu `const videoPlan` tento príkaz nečíta.
+
+Prehľad môžete uložiť do textového súboru. Parameter `--silent` potlačí úvodný výpis npm:
+
+```shell
+npm run --silent video:plan video/308-pb-redesign.js > /tmp/308-pb-redesign-plan.txt
+```
+
 ## Nahrávanie
 
 V priečinku `src/test/webapp` spustite:
@@ -110,7 +128,11 @@ Generovanie zvuku používa platené API služby ElevenLabs, preto ho spúšťaj
 npm run audio video/293-config-jstree-view.js
 ```
 
-Príkaz spustí iba scenár označený `@audio` cez samostatnú konfiguráciu CodeceptJS. Neotvorí prehliadač, neprihlási používateľa a nespustí scenár videa ani plán záberov. Výsledok vo formáte `mp3_44100_128` uloží ako `docs/feature-video/293-config-jstree-view.mp3` v koreňovom priečinku repozitára.
+Príkaz spustí iba scenár označený `@audio` cez samostatnú konfiguráciu CodeceptJS. Neotvorí prehliadač, neprihlási používateľa a nespustí scenár videa ani plán záberov. Výsledok vo formáte `mp3_44100_128` uloží do `docs/feature-video` v koreňovom priečinku repozitára. Súbory majú názvy `293-config-jstree-view-sk-1.mp3`, `293-config-jstree-view-sk-2.mp3` atď. podľa zvoleného jazyka a počtu častí. Poradové číslo je prítomné aj pri jedinom súbore. Staršie scenáre s textovým reťazcom namiesto plánu vytvoria `293-config-jstree-view-1.mp3` bez označenia jazyka.
+
+Pomocník postupne spája celé texty záberov v poradí `shots`. Keď by pridaním ďalšieho záberu prekročil limit modelu, začne novú časť. Počíta aj medzery a dva konce riadka medzi zábermi. Pre `eleven_v3` je limit 5 000 znakov; jeden záber sa nikdy nerozdelí medzi súbory. Ak samotný záber prekročí limit, kontrola pred spustením vypíše jeho ID a počet znakov. Taký záber treba v pláne rozdeliť na menšie zábery. Texty `manual` a `head` zostávajú súčasťou narácie, prázdne texty nevytvárajú prázdne súbory. Starší textový reťazec sa považuje za jednu nedeliteľnú časť.
+
+Pred volaním ElevenLabs konzola vypíše číslo každej časti, jej zábery, počet znakov, názov súboru a celý text pod označením `[ElevenLabs audio] Text to generate:`. Generovanie častí prebieha postupne; každá požiadavka má časový limit 10 minút. `I.generateAudio` vráti pole ciest k súborom v správnom poradí a zaregistruje ich ako artefakty `audio-1`, `audio-2` atď. Na konci vypíše jeden súhrn kreditov za celé spustenie.
 
 ### API kľúč ElevenLabs
 
@@ -150,14 +172,14 @@ Explicitný parameter `modelId` alebo `voiceId` má prednosť pred neprázdnou p
 
 `Luki Zajo` je hlas z komunitnej knižnice. Jeho použitie cez API závisí od dostupnosti hlasu a programu účtu a nemusí byť dostupné v bezplatnom programe. V takom prípade použite program, ktorý povoľuje API prístup k hlasom z [Voice Library](https://elevenlabs.io/docs/eleven-creative/voices/voice-library), alebo nastavte `ELEVENLABS_VOICE_ID` na hlas dostupný pre váš účet. Uloženie hlasu do **My Voices** je voliteľné a samo osebe API prístup v bezplatnom programe neodomkne. Zoznam hlasov vhodných pre slovenčinu nájdete na stránke [Slovak Text to Speech](https://elevenlabs.io/text-to-speech/slovak).
 
-Pomocník ešte pred volaním API overí, že môže v cieľovom priečinku vytvoriť dočasný súbor. Potom načíta celú odpoveď, overí zvukový formát a až úplným dočasným súborom atómovo nahradí výsledný MP3 súbor. Pri chybe API, siete, časového limitu alebo zápisu zostane posledný úspešný súbor zachovaný. Požiadavka sa automaticky neopakuje, aby nejasná sieťová chyba nespôsobila druhé účtovanie kreditov.
+Pomocník ešte pred volaním API overí texty a vytvorí dočasné súbory pre všetky časti. Pri každej požiadavke načíta celú odpoveď, overí zvukový formát a až úplným dočasným súborom atómovo nahradí príslušný MP3 súbor. Chyba zastaví ďalšie požiadavky a uvedie číslo časti aj názov súboru. Už dokončené časti zostávajú dostupné; predchádzajúce súbory neúspešných alebo nespustených častí sa nemenia. Požiadavka sa automaticky neopakuje, aby nejasná sieťová chyba nespôsobila druhé účtovanie kreditov. Pri strihu používajte súbory vypísané aktuálnym spustením: staré súbory bez čísla alebo nadbytočné časti z predchádzajúceho dlhšieho plánu sa automaticky nemažú.
 
 
 ## Hovoriace videá (`head`)
 
 Spoločný `videoPlan` je statický JavaScript objekt. Poradie jeho `shots` určuje číslovanie, časovú os aj poradie hovoreného slova. Každý záber obsahuje jedinečné `id`, typ `auto`, `manual` alebo `head`, názov `title`, kladný celočíselný odhad `durationSeconds` a lokalizovaný `text-sk`, prípadne `text-cs` a `text-en`. Automatické kroky patria do inline funkcií `shot` a voliteľne `prepare`.
 
-Typ `head` vytvorí samostatný klip s hovoriacou postavou. V hlavnej nahrávke sa na jeho mieste zobrazí dvojsekundová tabuľa `WARNING: head video` s číslom, názvom, celým lokalizovaným textom a poznámkami. Preskočí sa príprava, akcia aj cleanup tohto záberu. Záber zostáva súčasťou časovej osi a spoločného MP3 z `npm run audio`; číslovanie aj celkový počet v SETUP a titulkoch zahŕňajú všetky typy záberov. Napríklad siedmy záber zo šestnástich má `SETUP shot 7/16` aj `Shot 7/16: ...`. Tabuľu pri strihu nahraďte vygenerovaným MP4.
+Typ `head` vytvorí samostatný klip s hovoriacou postavou. V hlavnej nahrávke sa na jeho mieste zobrazí dvojsekundová tabuľa `WARNING: head video` s číslom, názvom, celým lokalizovaným textom a poznámkami. Preskočí sa príprava, akcia aj cleanup tohto záberu. Záber zostáva súčasťou časovej osi a číslovaných MP3 z `npm run audio`; číslovanie aj celkový počet v SETUP a titulkoch zahŕňajú všetky typy záberov. Napríklad siedmy záber zo šestnástich má `SETUP shot 7/16` aj `Shot 7/16: ...`. Tabuľu pri strihu nahraďte vygenerovaným MP4.
 
 ```javascript
 const videoPlan = {

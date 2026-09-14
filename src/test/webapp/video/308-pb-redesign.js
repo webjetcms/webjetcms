@@ -34,7 +34,7 @@ const videoPlan = {
                 // Keep the recording tab and log in on the demo origin, not CODECEPT_URL.
                 await I.relogin("admin", false);
                 await I.amOnPage("https://demo.webjetcms.sk/admin/v9/webpages/web-pages-list/?docid=57");
-                DTE.waitForEditor();
+                await DTE.waitForEditor();
                 await I.clickCss("div.DTED.show button.maximize");
                 await I.waitForInvisible("div.DTED.show button.maximize", 10);
                 await I.switchTo(iframe);
@@ -473,6 +473,7 @@ Scenario("Shot plan", ({ I }) => {
 Scenario("308-pb-redesign", async ({ I, DTE, Document, login }) => {
     const { recordVideoPlan } = require("../helpers/feature_video_plan.js");
     const iframe = "#DTE_Field_data-pageBuilderIframe";
+    const oldColumn = locate(".pb-column").first();
     const fixture = ".pb-video-autotest";
     const services = `${fixture} .video-services`;
     const action = name => `.pb-workbench [data-pb-action=${name}]`;
@@ -540,13 +541,13 @@ Scenario("308-pb-redesign", async ({ I, DTE, Document, login }) => {
 
     await recordVideoPlan(I, {
         plan: videoPlan,
-        context: { fixture, services, action, treeRow, waitForPageBuilder, typeText, closeEditor },
+        context: { iframe, oldColumn, fixture, services, action, treeRow, waitForPageBuilder, typeText, closeEditor },
         setup: async () => {
             login("admin");
             Document.resetPageBuilderMode();
         },
         prepare: async shot => {
-            if (shot.id === "outro") return;
+            if (shot.id === "old-editor" || shot.id === "outro") return;
             await prepareEditor();
         },
         cleanup: async shot => {

@@ -108,6 +108,14 @@ Keep these scenarios in order:
    `helpers/feature_video_plan.js` and print it with `I.say`; leave it untagged.
 4. The named main walkthrough: tag `@video`. Add `@current` here only if needed.
 
+For a quick readable overview, run `npm run video:plan video/<scenario-name>.js`
+from `src/test/webapp`. It statically reads the top-level `const videoPlan` and
+prints the complete narration, word/character counts, estimated duration and
+the ordered shot plan with types, titles, notes and narration. It uses
+`videoPlan.language` (default `sk`) and runs no CodeceptJS scenario, callbacks,
+browser or API calls. It needs no API key or `Scenario("Shot plan")` declaration
+and can inspect draft plans before their audio or browser actions are ready.
+
 Keep metadata callbacks free of browser actions. Do not add global login hooks.
 Require shared utilities inside the relevant callback; the audio runner permits
 only static declarations and direct Feature/Scenario calls at file scope.
@@ -118,7 +126,15 @@ Define `shot: async ({ I, ...dependencies }) => { ... }` next to each automatic
 shot's title, narration and notes. Add an inline `prepare` with the same context
 argument when that shot needs extra preparation. Manual and head shots need no callbacks.
 Keep shared selectors and helper functions in the main async scenario and pass
-them through `context`; the runner adds `I` and the current resolved `shot`.
+them through `context`; the runner automatically includes all configured
+CodeceptJS `inject()` objects (such as `DT`, `DTE` and `Document`), `I` and the
+current resolved `shot`. Page objects do not need to be repeated in `context` or
+the main Scenario parameters unless that Scenario uses them itself. Explicit
+`context` values override injected objects, except for the runner-owned `I` and
+`shot`. To use a page object without a callback parameter, call
+`const { DTE } = inject();` inside `prepare` or `shot`. Keep injection inside
+callbacks; top-level `inject()` or page-object `require()` calls are rejected
+by the audio/head preflight and would load browser dependencies in those modes.
 Top-level callbacks cannot access variables declared inside the main scenario;
 destructure each required dependency from their context argument.
 For example, `shot: async ({ I, services }) => { await I.videoClick(services); }`
@@ -205,11 +221,19 @@ explicit `{ modelId, voiceId }`, non-empty `ELEVENLABS_MODEL_ID` /
 `ELEVENLABS_VOICE_ID`, repository default. The API key comes only from
 `ELEVENLABS_API_KEY`; never store it in code or command arguments.
 
-`I.generateAudio(videoPlan)` joins only the selected `text-<language>` fields,
-including manual and head shots, in array order and makes one request for the complete
-narration. It never invokes `shot` or `prepare`. It does not generate separate
-MP3s per shot or force speech to match the estimated durations. Run paid
-generation only when explicitly requested.
+`I.generateAudio(videoPlan)` packs the selected `text-<language>` fields,
+including manual and head shots, into numbered MP3 parts in array order. It
+starts a new part when the next complete shot, including its paragraph separator,
+would exceed the model's character limit (5,000 for `eleven_v3`). Never split a
+shot between files. An oversized individual shot fails preflight and must be
+divided into smaller shots in the plan. Silent shots add no text or empty parts.
+It never invokes `shot` or `prepare` or forces speech to match estimated durations.
+Legacy string narration remains one part and must fit the model limit.
+The helper validates every part and reserves all outputs, then prints each
+part's shot IDs, character count, filename and complete text before any ElevenLabs
+request. Requests run sequentially, with a ten-minute timeout each and one credit
+summary for the run. Failure stops later parts without retrying; completed parts
+remain available. Run paid generation only when explicitly requested.
 
 Run proportionate checks:
 
@@ -222,9 +246,12 @@ Run proportionate checks:
    execute inline callbacks.
 2. Dry-run the audio-only, head-only and complete video configurations; none may call
    ElevenLabs. Check legacy scenarios remain compatible when changing helpers.
+   Run `npm run video:plan video/<scenario-name>.js` to inspect narration and timing.
 3. Run `npm run audio video/<scenario-name>.js` only on explicit request with
-   an available API key. Object plans produce `<scenario-name>-<language>.mp3`;
-   legacy string narration retains `<scenario-name>.mp3`.
+   an available API key. Object plans produce `<scenario-name>-<language>-1.mp3`,
+   `-2.mp3`, etc.; legacy string narration produces `<scenario-name>-1.mp3`.
+   Always include the part number, even for one part. `I.generateAudio` returns
+   an array of paths in part order and registers `audio-1`, `audio-2`, etc.
 4. Run the tagged recording with `npm run video video/<scenario-name>.js`
    when the configured instance and test credentials are available. Reordering
    checks should include a shot that previously depended on its predecessor.
@@ -249,8 +276,8 @@ generated and any unverified browser behavior.
 ## Talking Heads and Credits
 
 Use `type: "head"` for an explicitly requested generated presenter. It keeps
-its narration, numbering and estimated duration in the shared plan and combined
-audio. In the browser recording it shows a two-second `WARNING: head video`
+its narration, numbering and estimated duration in the shared plan and numbered
+audio parts. In the browser recording it shows a two-second `WARNING: head video`
 slate with `Shot N/total: id`, full localized narration and notes. All per-shot
 preparation, actions and cleanup are skipped; replace the marker with the clip during editing.
 

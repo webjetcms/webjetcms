@@ -1,28 +1,24 @@
 const path = require("node:path");
 const { FEATURE_VIDEO_DIRECTORY } = require("./feature_video_paths.js");
-const { resolveVideoPlan, getPlanNarration } = require("./feature_video_plan.js");
+const { resolveAudioPlan, normalizeNarration } = require("./audio_plan.js");
 const client = require("./elevenlabs_client.js");
-const { getRequiredText, getEnvironmentOverride, getAudioSettings, generateAudioArtifact } = client;
+const { getRequiredText, getEnvironmentOverride, generateAudioArtifacts } = client;
 const { Helper } = codeceptjs;
 const AUDIO_SCENARIO_TITLE = "ElevenLabs @audio";
 const AUDIO_TAG = "@audio";
 
-function normalizeNarration(text) {
-  return getRequiredText(text, "Audio narration").replace(/\r\n?/g, "\n");
-}
-
-function getAudioArtifactName(test) {
+function getAudioArtifactName(test, part = 1, language = null) {
   const scenarioFile = typeof test?.file === "string" ? test.file.trim() : "";
   if (scenarioFile === "") {
     throw new Error("Unable to determine the audio artifact name because the scenario file is missing.");
   }
 
   const extension = path.extname(scenarioFile);
-  return `${path.basename(scenarioFile, extension)}.mp3`;
+  return `${path.basename(scenarioFile, extension)}${language == null ? "" : `-${language}`}-${part}.mp3`;
 }
 
-function getAudioArtifactPath(test, outputDirectory = FEATURE_VIDEO_DIRECTORY) {
-  return path.join(outputDirectory, getAudioArtifactName(test));
+function getAudioArtifactPath(test, outputDirectory = FEATURE_VIDEO_DIRECTORY, part = 1, language = null) {
+  return path.join(outputDirectory, getAudioArtifactName(test, part, language));
 }
 
 function assertAudioTestIdentity(test) {
@@ -80,10 +76,10 @@ class AudioHelper extends Helper {
   }
 
   /**
-   * Generates an MP3 narration for the current scenario file with ElevenLabs.
+   * Generates numbered MP3 parts, keeping every shot together within the model's character limit.
    * @param {string|object} text Legacy narration or a video plan with localized shot text; callbacks are not executed
    * @param {{modelId?: string, voiceId?: string, language?: string}} [options] Voice and language overrides
-   * @returns {Promise<string>} Absolute path of the generated MP3 file
+   * @returns {Promise<string[]>} Absolute paths of the generated MP3 parts in narration order
    * @throws {Error} When generation is disabled, configuration is invalid, or generation fails
    */
   async generateAudio(text, options = {}) {
@@ -100,38 +96,34 @@ class AudioHelper extends Helper {
     }
     assertAudioTestIdentity(this.audioTest);
     if (this.audioGenerationStarted) {
-      throw new Error("Only one audio file can be generated per audio run.");
+      throw new Error("Only one generateAudio call is allowed per audio run.");
     }
     this.audioGenerationStarted = true;
 
-    const { modelId, voiceId } = getAudioSettings(options);
-    const language = typeof text === "string" ? null : resolveVideoPlan(text, options.language).language;
-    const narration = typeof text === "string"
-      ? normalizeNarration(text)
-      : getPlanNarration(text, language);
+    const { modelId, voiceId, language, chunks } = resolveAudioPlan(text, options);
     const apiKey = getEnvironmentOverride("ELEVENLABS_API_KEY");
     if (apiKey == null) {
       throw new Error("ELEVENLABS_API_KEY must be set before generating audio.");
     }
 
-    const defaultPath = getAudioArtifactPath(this.audioTest, this.featureVideoDirectory);
-    const targetPath = language == null ? defaultPath : defaultPath.replace(/\.mp3$/, `-${language}.mp3`);
-    await generateAudioArtifact({
-      targetPath,
+    const paths = await generateAudioArtifacts({
+      chunks: chunks.map((chunk, index) => ({
+        ...chunk,
+        targetPath: getAudioArtifactPath(this.audioTest, this.featureVideoDirectory, index + 1, language)
+      })),
       apiKey,
-      text: narration,
       modelId,
       voiceId,
       creditLabel: "audio"
     });
 
     if (this.audioTest.artifacts == null) this.audioTest.artifacts = {};
-    this.audioTest.artifacts.audio = targetPath;
-    return targetPath;
+    paths.forEach((targetPath, index) => { this.audioTest.artifacts[`audio-${index + 1}`] = targetPath; });
+    return paths;
   }
 }
 
 module.exports = AudioHelper;
 Object.assign(module.exports, client, {
-  assertAudioTestIdentity, getRegisteredAudioTests, getAudioArtifactName, getAudioArtifactPath, normalizeNarration
+  assertAudioTestIdentity, getRegisteredAudioTests, getAudioArtifactName, getAudioArtifactPath, normalizeNarration, resolveAudioPlan
 });

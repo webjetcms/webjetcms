@@ -6,10 +6,29 @@ Video scenarios live in `src/test/webapp/video`. The standard commands are:
 
 ```shell
 cd src/test/webapp
+npm run video:plan video/<scenario-name>.js
 npm run audio video/<scenario-name>.js
 npm run video video/<scenario-name>.js
 npm run video:current
 ```
+
+`video:plan` prints a readable overview directly from the top-level `const
+videoPlan`: file, selected language, shot count, estimated edited duration,
+word/character counts, the full narration and the ordered shot plan with types,
+titles, production notes and per-shot narration. It uses `videoPlan.language`,
+defaulting to `sk`, and prints full text without CodeceptJS step truncation.
+Use `npm run --silent video:plan video/<scenario-name>.js > /tmp/video-plan.txt`
+to save a plain-text overview without npm's command header.
+
+This is a read-only Node command. It uses the same static metadata reader as the
+audio/head preflight, but does not import or execute the scenario. It starts no
+browser or CodeceptJS, requires no API key, and makes no network requests. The
+`Shot plan` Scenario can remain for CodeceptJS compatibility; the command does
+not invoke or require it. Draft plans can be inspected without audio/head
+scenarios, media assets or valid audio chunk sizes. The canonical `const
+videoPlan` object and valid localized shot metadata are required; legacy
+free-form `I.say` scenario text is not interpreted. Paths follow the audio/head
+commands and must identify one existing JavaScript file inside `video`.
 
 The audio command generates narration only from the selected file's `@audio`
 scenario. It requires exactly one existing `.js` file below `video`. The first
@@ -187,12 +206,34 @@ configuration. It does not start a browser or run login hooks, and it selects
 only `@audio`. Run it only when audio generation was explicitly requested,
 because the API call can consume ElevenLabs credits. There is no automatic
 retry, avoiding a second charge after an ambiguous network failure.
+`helpers/audio_plan.js` packs whole localized shots in plan order. A new part
+starts before a shot would exceed the model limit, counting Unicode characters
+and the two newlines between shots. Limits are 5,000 for `eleven_v3`, 10,000 for
+Multilingual v1/v2, 40,000 for Flash/Turbo v2.5 and 30,000 for Flash/Turbo v2.
+Unlisted models use the conservative 5,000-character default. A shot longer than
+the limit fails before any API call, identifying the shot, size and model; split
+that shot in the plan. Manual and head narration stay included; silent shots do
+not create empty parts. Legacy string narration is one indivisible part and
+must fit the limit. Static preflight and runtime use the same packing rules.
 
-A successful response is written atomically as
-`docs/feature-video/<scenario-name>-<language>.mp3` for object plans; legacy string
-narration retains `<scenario-name>.mp3`. A temporary file replaces the previous
-MP3 only after the complete response is available. An API, network, timeout, or
-disk error therefore leaves the last successful MP3 unchanged.
+All outputs are reserved before contacting ElevenLabs. The helper prints each
+part's number, shot IDs, character count and filename, then the complete normalized
+text under `[ElevenLabs audio] Text to generate:`. Requests run sequentially, with
+a ten-minute timeout each, including reading the audio response body.
+
+Responses are saved as `docs/feature-video/<scenario-name>-<language>-1.mp3`,
+`-2.mp3`, etc. Legacy strings produce `<scenario-name>-1.mp3`. The number is always
+present, including single-part runs. `I.generateAudio` returns an array of paths
+and registers `audio-1`, `audio-2`, etc. in CodeceptJS artifacts. Each successful
+part atomically replaces its corresponding MP3. Failure identifies the part,
+stops subsequent requests and removes temporary reservations; completed parts
+remain available and previous failed/unattempted parts remain unchanged. Use the
+current run's logged filenames; older unnumbered files or surplus parts from a
+previous longer plan are not automatically removed.
+
+One credit summary covers the complete run, including partial failures. It sums
+TTS response charges when every attempted request reports its cost; otherwise
+it uses the existing explicitly approximate account delta when available.
 
 ## ElevenLabs Head Profile and Credit Reports
 
@@ -375,12 +416,24 @@ For manual/head shots it only logs the warning and shows `I.videoTitle(shot)`
 with the filming instructions or full head narration and notes. Neither gets
 per-shot lifecycle callbacks or transition holds.
 
-Pass `I` separately, then one options object with `plan`. Optional `context`
-contains selectors, injected page objects and reusable functions defined in the
-main scenario. Top-level inline callbacks cannot close over those local variables;
-destructure the dependencies they use from the context argument. Each inline
-callback receives `{ ...context, I, shot }`; `I` and `shot` are supplied by the
-runner and cannot be overridden by context values.
+Pass `I` separately, then one options object with `plan`. The runner automatically
+reads CodeceptJS `inject()` when recording an automatic shot. Inline `prepare`
+and `shot` callbacks can destructure any configured page object, including `DT`,
+`DTE` and `Document`, without repeating it in `context` or the main Scenario
+parameters. Optional `context` contains selectors and reusable functions defined
+in the main scenario, or explicit overrides for injected page objects. Top-level
+inline callbacks cannot close over those local variables; destructure them from
+the context argument. Each inline callback receives
+`{ ...inject(), ...context, I, shot }`; `I` and `shot` are supplied by the runner
+and cannot be overridden. Outside CodeceptJS, explicit `context` still works
+without a global `inject` function.
+
+For example, `prepare: async ({ DTE }) => { await DTE.waitForEditor(); }`
+requires no `context: { DTE }`. To avoid a callback parameter entirely, use
+`prepare: async () => { const { DTE } = inject(); await DTE.waitForEditor(); }`.
+Keep these calls inside callbacks: top-level `inject()` and page-object
+`require()` calls are rejected by audio/head preflight and would load browser
+dependencies in those modes.
 Shared `prepare` and `cleanup` callbacks run only for automatic shots and receive
 the resolved shot directly; `setup` receives no arguments. The `language` option overrides narration for
 recording slates. No separate action or preparation maps are needed.
@@ -420,9 +473,9 @@ unconditionally when no popup is displayed.
 
 `durationSeconds` does not set speech speed, insert silence or make a callback
 last that long. Update estimates after measuring narration. The generator joins
-all selected localized texts with paragraph breaks and makes one API request.
+whole localized shots with paragraph breaks and makes one API request per part.
 It never runs `shot` or `prepare`. Manual and head shots are included and explicit
-empty strings mean intentional silence in combined audio. Head generation requires
+empty strings mean intentional silence in the audio parts. Head generation requires
 non-empty head narration.
 Missing language fields fail before the paid request; there is no silent fallback.
 
@@ -462,12 +515,15 @@ No new media or paid audio request is needed for an instruction-only review.
 ```shell
 node --check helpers/feature_video_paths.js
 node --check helpers/feature_video_plan.js
+node --check helpers/video_plan_source.js
+node --check helpers/video_plan_runner.js
 node --check helpers/audio_helper.js
 node --check helpers/audio_runner.js
 node --check helpers/video_helper.js
 node --check helpers/video_playwright_helper.js
 node --check video/<scenario-name>.js
 node -e "JSON.parse(require('fs').readFileSync('package.json', 'utf8'))"
+npm run video:plan video/<scenario-name>.js
 CODECEPT_AUDIO_FILE="$(pwd)/video/<scenario-name>.js" npx codeceptjs dry-run -c codecept.audio.conf.js --steps --grep '@audio'
 CODECEPT_VIDEO=true CODECEPT_VIDEO_ZOOM=1.411764705882353 CODECEPT_VIDEO_CURSOR=true npx codeceptjs dry-run -c codecept.video.conf.js --steps -p autoLogin video/<scenario-name>.js
 npm run audio:test

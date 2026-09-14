@@ -89,7 +89,7 @@ function getRecordingShots(plan, language) {
  * @param {object} I CodeceptJS actor
  * @param {object} options Shot plan and recording callbacks
  * @param {object} options.plan Shot plan with a shot function and optional prepare function on each automatic shot
- * @param {object} [options.context] Dependencies passed to inline callbacks, augmented with the actor I and resolved shot
+ * @param {object} [options.context] Extra dependencies or overrides for CodeceptJS inject() objects; I and shot are always supplied by the runner
  * @param {Function} [options.setup] One-time login and shared setup, after plan validation
  * @param {Function} [options.prepare] Baseline preparation before every automatic shot; receives the resolved shot
  * @param {Function} [options.cleanup] Cleanup after each successful automatic shot; receives the resolved shot
@@ -111,7 +111,8 @@ async function recordVideoPlan(I, { plan, context = {}, setup, prepare, cleanup,
       await I.videoTitle(shot);
       continue;
     }
-    const shotContext = { ...context, I, shot };
+    const dependencies = typeof inject === "function" ? inject() : {};
+    const shotContext = { ...dependencies, ...context, I, shot };
     const shotLabel = `shot ${shot.number}/${shot.total} ${shot.id}`;
     await I.say(`Recording ${shotLabel} (${shot.durationSeconds}s)`);
     await I.videoTitle(`SETUP ${shotLabel} (${shot.durationSeconds}s)`);

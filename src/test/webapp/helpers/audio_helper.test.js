@@ -11,7 +11,7 @@ const {
   DEFAULT_MODEL_ID,
   DEFAULT_VOICE_ID,
   OUTPUT_FORMAT,
-  generateAudioArtifact,
+  generateAudioArtifacts,
   getAudioArtifactPath,
   getAudioSettings,
   requestSpeechAudio,
@@ -79,7 +79,126 @@ function registerAudioTest(helper, audioTest) {
   helper._test(audioTest);
 }
 
-test("generates the default MP3 request and registers the scenario-file artifact", async () => {
+function createLongPlan() {
+  return { language: "sk", shots: ["first", "second", "third"].map((id, index) => ({
+    id, type: index === 1 ? "manual" : "auto", title: id, durationSeconds: 10,
+    "text-sk": `${id} ${"x".repeat(3000)}`,
+    shot: () => { throw new Error("Audio must not execute browser callbacks"); }
+  })) };
+}
+
+test("generates numbered parts sequentially, logs their exact text and reports the total charge", async t => {
+  const lines = [];
+  t.mock.method(console, "log", line => lines.push(line));
+  await withOutputDirectory(async outputDirectory => {
+    process.env.ELEVENLABS_API_KEY = "test-api-key";
+    const plan = createLongPlan();
+    const expectedPaths = [1, 2, 3].map(part => path.join(outputDirectory, `long-sk-${part}.mp3`));
+    let subscriptions = 0;
+    const texts = [];
+    global.fetch = async (url, options) => {
+      if (url.endsWith("/user/subscription")) {
+        subscriptions++;
+        assert.equal(lines.filter(line => line.startsWith("[ElevenLabs audio] Text to generate:")).length, 3,
+          "All part texts must be printed before contacting ElevenLabs");
+        return Response.json({ character_count: subscriptions * 100, character_limit: 1000, next_character_count_reset_unix: 9000 });
+      }
+      const part = texts.length + 1;
+      if (part > 1) assert.equal(await fs.readFile(expectedPaths[part - 2], "utf8"), `audio-${part - 1}`,
+        "The previous part must be saved before starting the next request");
+      texts.push(JSON.parse(options.body).text);
+      return new Response(`audio-${part}`, { headers: { "Content-Type": "audio/mpeg", "character-cost": String(part * 10) } });
+    };
+    const helper = new AudioHelper({ generationEnabled: true, featureVideoDirectory: outputDirectory });
+    const scenario = createAudioTest("/project/video/long.js");
+    registerAudioTest(helper, scenario);
+    assert.deepEqual(await helper.generateAudio(plan), expectedPaths);
+    assert.deepEqual(texts, plan.shots.map(shot => shot["text-sk"]));
+    assert.deepEqual(scenario.artifacts, Object.fromEntries(expectedPaths.map((file, index) => [`audio-${index + 1}`, file])));
+    assert.deepEqual((await fs.readdir(outputDirectory)).sort(), expectedPaths.map(file => path.basename(file)));
+    const reports = lines.filter(line => line.includes("Credits used:"));
+    assert.equal(reports.length, 1);
+    assert.match(reports[0], /Credits used: 60 \(TTS response\)/);
+    assert.equal(subscriptions, 2);
+  });
+});
+
+test("rejects an oversized later shot before any API call or output write", async () => {
+  await withOutputDirectory(async outputDirectory => {
+    process.env.ELEVENLABS_API_KEY = "test-api-key";
+    const plan = createLongPlan();
+    plan.shots[2]["text-sk"] = "x".repeat(5001);
+    let requests = 0;
+    global.fetch = async () => { requests++; throw new Error("No API calls expected"); };
+    const helper = new AudioHelper({ generationEnabled: true, featureVideoDirectory: outputDirectory });
+    registerAudioTest(helper, createAudioTest("/project/video/long.js"));
+    await assert.rejects(helper.generateAudio(plan), /Shot third has 5001 characters/);
+    assert.equal(requests, 0);
+    assert.deepEqual(await fs.readdir(outputDirectory), []);
+  });
+});
+
+test("checks every part output before spending credits and removes all reservations on failure", async () => {
+  await withOutputDirectory(async outputDirectory => {
+    const first = path.join(outputDirectory, "part-1.mp3");
+    const second = path.join(outputDirectory, "part-2.mp3");
+    await fs.writeFile(first, "previous audio");
+    await fs.mkdir(second);
+    let requests = 0;
+    await assert.rejects(generateAudioArtifacts({
+      chunks: [first, second].map(targetPath => ({ targetPath, text: "Narration" })),
+      apiKey: "test-api-key", modelId: DEFAULT_MODEL_ID, voiceId: DEFAULT_VOICE_ID, creditLabel: "audio",
+      fetchImpl: async () => { requests++; throw new Error("No API calls expected"); }
+    }), /Unable to prepare generated audio output.*not a regular file/);
+    assert.equal(requests, 0);
+    assert.equal(await fs.readFile(first, "utf8"), "previous audio");
+    assert.deepEqual((await fs.readdir(outputDirectory)).sort(), ["part-1.mp3", "part-2.mp3"]);
+  });
+});
+
+test("stops at a failed part without retrying and preserves completed and previous outputs", async t => {
+  const lines = [];
+  t.mock.method(console, "log", line => lines.push(line));
+  await withOutputDirectory(async outputDirectory => {
+    process.env.ELEVENLABS_API_KEY = "test-api-key";
+    const paths = [1, 2, 3].map(part => path.join(outputDirectory, `long-sk-${part}.mp3`));
+    for (const file of paths) await fs.writeFile(file, "previous audio");
+    let requests = 0;
+    global.fetch = mockGenerationFetch(async () => ++requests === 1
+      ? successfulResponse("new first part") : new Response("Generation failed", { status: 500 }));
+    const helper = new AudioHelper({ generationEnabled: true, featureVideoDirectory: outputDirectory });
+    registerAudioTest(helper, createAudioTest("/project/video/long.js"));
+    await assert.rejects(helper.generateAudio(createLongPlan()), /Audio part 2\/3 \(long-sk-2\.mp3\).*HTTP 500/);
+    assert.equal(requests, 2);
+    assert.deepEqual(await Promise.all(paths.map(file => fs.readFile(file, "utf8"))), ["new first part", "previous audio", "previous audio"]);
+    assert.deepEqual((await fs.readdir(outputDirectory)).sort(), paths.map(file => path.basename(file)));
+    assert.equal(lines.filter(line => line.includes("Credits used:")).length, 1);
+  });
+});
+
+test("uses an approximate total if any successful part lacks a charge header", async t => {
+  const lines = [];
+  t.mock.method(console, "log", line => lines.push(line));
+  await withOutputDirectory(async outputDirectory => {
+    let subscriptions = 0;
+    let requests = 0;
+    await generateAudioArtifacts({
+      chunks: [1, 2].map(part => ({ targetPath: path.join(outputDirectory, `part-${part}.mp3`), text: "Narration" })),
+      apiKey: "test-api-key", modelId: DEFAULT_MODEL_ID, voiceId: DEFAULT_VOICE_ID, creditLabel: "audio",
+      fetchImpl: async url => {
+        if (url.endsWith("/user/subscription")) return Response.json({ character_count: ++subscriptions * 100, character_limit: 1000, next_character_count_reset_unix: 9000 });
+        return ++requests === 1
+          ? new Response("audio", { headers: { "Content-Type": "audio/mpeg", "character-cost": "7" } })
+          : successfulResponse();
+      }
+    });
+    assert.match(lines.find(line => line.includes("Credits used:")), /Credits used: 100 \(approximate account delta/);
+  });
+});
+
+test("generates the default MP3 request and registers the scenario-file artifact", async t => {
+  const lines = [];
+  t.mock.method(console, "log", line => lines.push(line));
   await withOutputDirectory(async (outputDirectory) => {
     assert.equal(DEFAULT_MODEL_ID, "eleven_v3");
     process.env.ELEVENLABS_API_KEY = "  test-api-key  ";
@@ -87,6 +206,8 @@ test("generates the default MP3 request and registers the scenario-file artifact
     process.env.ELEVENLABS_VOICE_ID = "";
     const requests = [];
     global.fetch = mockGenerationFetch(async (url, options) => {
+      assert.ok(lines.includes(`[ElevenLabs audio] Text to generate:\n${JSON.parse(options.body).text}\n`),
+        "The complete normalized narration must be logged before the TTS request");
       requests.push({ url, options });
       return successfulResponse();
     });
@@ -103,12 +224,12 @@ test("generates the default MP3 request and registers the scenario-file artifact
     const result = await helper.generateAudio("\r\nFirst line.\r\nSecond line.\r\n");
     const expectedPath = path.join(
       outputDirectory,
-      "293-config-jstree-view.mp3"
+      "293-config-jstree-view-1.mp3"
     );
 
-    assert.equal(result, expectedPath);
+    assert.deepEqual(result, [expectedPath]);
     assert.equal(await fs.readFile(expectedPath, "utf8"), "generated-mp3");
-    assert.equal(scenario.artifacts.audio, expectedPath);
+    assert.equal(scenario.artifacts["audio-1"], expectedPath);
     assert.equal(requests.length, 1, "Audio generation must make one HTTP request");
 
     const requestUrl = new URL(requests[0].url);
@@ -138,15 +259,19 @@ test("resolves the default audio artifact directly below docs/feature-video", ()
 
   assert.equal(
     getAudioArtifactPath(scenario),
-    path.resolve(__dirname, "../../../../docs/feature-video/293-config-jstree-view.mp3")
+    path.resolve(__dirname, "../../../../docs/feature-video/293-config-jstree-view-1.mp3")
   );
 });
 
-test("generates localized plan narration in shot order without executing inline callbacks", async () => {
+test("generates localized plan narration in shot order without executing inline callbacks", async t => {
+  const lines = [];
+  t.mock.method(console, "log", line => lines.push(line));
   await withOutputDirectory(async outputDirectory => {
     process.env.ELEVENLABS_API_KEY = "test-api-key";
     const requests = [];
     global.fetch = mockGenerationFetch(async (url, options) => {
+      assert.ok(lines.includes(`[ElevenLabs audio] Text to generate:\n${JSON.parse(options.body).text}\n`),
+        "The selected language and all shot texts must be logged before the TTS request");
       requests.push(JSON.parse(options.body));
       return successfulResponse();
     });
@@ -163,16 +288,18 @@ test("generates localized plan narration in shot order without executing inline 
       const helper = new AudioHelper({ generationEnabled: true, featureVideoDirectory: outputDirectory });
       registerAudioTest(helper, createAudioTest("/project/video/plan.js"));
       const result = await helper.generateAudio(plan, { language });
-      assert.equal(result, path.join(outputDirectory, `plan-${language}.mp3`));
-      assert.equal(await fs.readFile(result, "utf8"), "generated-mp3");
+      assert.deepEqual(result, [path.join(outputDirectory, `plan-${language}-1.mp3`)]);
+      assert.equal(await fs.readFile(result[0], "utf8"), "generated-mp3");
     }
     assert.deepEqual(requests.map(request => request.text), ["Second.\n\nFirst.", "English second.\n\nEnglish first."]);
-    assert.deepEqual((await fs.readdir(outputDirectory)).sort(), ["plan-en.mp3", "plan-sk.mp3"]);
+    assert.deepEqual((await fs.readdir(outputDirectory)).sort(), ["plan-en-1.mp3", "plan-sk-1.mp3"]);
     const invalidHelper = new AudioHelper({ generationEnabled: true, featureVideoDirectory: outputDirectory });
     registerAudioTest(invalidHelper, createAudioTest("/project/video/plan.js"));
     await assert.rejects(invalidHelper.generateAudio(plan, { language: "cs" }), /missing text-cs/);
     assert.equal(requests.length, 2, "Missing translations must fail before the paid API call");
     assert.equal(callbackCalls, 0, "Audio generation must never execute browser callbacks");
+    assert.equal(lines.filter(line => line.startsWith("[ElevenLabs audio] Text to generate:")).length, 2,
+      "Invalid narration must fail before logging a generation request");
   });
 });
 
@@ -235,7 +362,7 @@ test("requires the API key before making a request and guards the complete run t
     );
     await assert.rejects(
       helper.generateAudio("Narration"),
-      /Only one audio file can be generated per audio run/
+      /Only one generateAudio call is allowed per audio run/
     );
     assert.equal(requestCount, 0, "A missing API key must fail before the HTTP request");
   });
@@ -341,6 +468,32 @@ test("rejects a successful response that is not MPEG audio", async () => {
   );
 });
 
+test("allows long narration requests beyond two minutes and aborts after ten minutes", async t => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  let signal;
+  let requestCount = 0;
+  const request = requestSpeechAudio({
+    apiKey: "test-api-key",
+    text: "Long narration",
+    modelId: DEFAULT_MODEL_ID,
+    voiceId: DEFAULT_VOICE_ID,
+    fetchImpl: async (url, options) => {
+      requestCount++;
+      signal = options.signal;
+      return new Promise((resolve, reject) => {
+        signal.addEventListener("abort", () => reject(new Error("aborted")), { once: true });
+      });
+    }
+  });
+  t.mock.timers.tick(120_000);
+  assert.equal(signal.aborted, false, "Long narration must survive the previous two-minute limit");
+  t.mock.timers.tick(479_999);
+  assert.equal(signal.aborted, false, "The request must remain active until the ten-minute deadline");
+  t.mock.timers.tick(1);
+  await assert.rejects(request, /timed out after 600 seconds/);
+  assert.equal(requestCount, 1, "Timed-out generation must not make another paid request");
+});
+
 test("reports network failures and request timeouts without retrying", async () => {
   let networkRequestCount = 0;
   await assert.rejects(
@@ -413,10 +566,9 @@ test("checks the output path before making a paid API request", async () => {
   };
 
   await assert.rejects(
-    generateAudioArtifact({
-      targetPath: "/unwritable/videos/scenario.mp3",
+    generateAudioArtifacts({
+      chunks: [{ targetPath: "/unwritable/videos/scenario-1.mp3", text: "Narration" }],
       apiKey: "test-api-key",
-      text: "Narration",
       modelId: DEFAULT_MODEL_ID,
       voiceId: DEFAULT_VOICE_ID,
       fsImpl: unavailableFileSystem,
@@ -438,10 +590,9 @@ test("removes the reserved temporary file and preserves the previous MP3 after a
     await fs.writeFile(targetPath, "previous-audio");
 
     await assert.rejects(
-      generateAudioArtifact({
-        targetPath,
+      generateAudioArtifacts({
+        chunks: [{ targetPath, text: "Narration" }],
         apiKey: "test-api-key",
-        text: "Narration",
         modelId: DEFAULT_MODEL_ID,
         voiceId: DEFAULT_VOICE_ID,
         fetchImpl: async () => new Response("unauthorized", { status: 401 })

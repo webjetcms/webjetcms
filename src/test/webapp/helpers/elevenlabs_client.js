@@ -4,7 +4,7 @@ const { randomBytes } = require("node:crypto");
 const DEFAULT_MODEL_ID = "eleven_v3";
 const DEFAULT_VOICE_ID = "Zai7B4Aol2bJtneyq0L1";
 const OUTPUT_FORMAT = "mp3_44100_128";
-const REQUEST_TIMEOUT_MS = 120_000;
+const REQUEST_TIMEOUT_MS = 600_000;
 const API_BASE_URL = "https://api.elevenlabs.io/v1/text-to-speech";
 
 class ElevenLabsApiError extends Error {}
@@ -181,47 +181,80 @@ async function writeFileAtomically(targetPath, data, options = {}) {
   }
 }
 
-async function generateAudioArtifact({
-  targetPath,
+/**
+ * Reserves all part outputs before API calls, then generates and atomically saves them in order.
+ * @param {object} options Request settings, prevalidated chunks and optional I/O replacements
+ * @returns {Promise<string[]>} Saved MP3 paths in chunk order
+ */
+async function generateAudioArtifacts({
+  chunks,
   apiKey,
-  text,
   modelId,
   voiceId,
   fetchImpl = globalThis.fetch,
   fsImpl = fs,
-  creditLabel
+  creditLabel,
+  log = console.log
 }) {
-  let preparedWrite;
+  const writes = [];
+  let report;
+  let totalCost = 0;
+  let allCostsKnown = true;
   try {
-    preparedWrite = await prepareAtomicWrite(targetPath, { fsImpl });
-  } catch (error) {
-    const message = getSafeErrorDetail(error?.message) || "Unknown file system error";
-    throw new Error(`Unable to prepare generated audio output: ${message}`);
-  }
-
-  const report = creditLabel ? await require("./elevenlabs_credits.js").startCreditReport({
-    apiKey, label: creditLabel, exactCost: true, fetchImpl
-  }) : null;
-  try {
-    const audio = await requestSpeechAudio({
-      apiKey,
-      text,
-      modelId,
-      voiceId,
-      fetchImpl,
-      onCost: cost => report?.recordCost(cost)
-    });
-
-    try {
-      await commitAtomicWrite(preparedWrite, audio);
-    } catch (error) {
-      const message = getSafeErrorDetail(error?.message) || "Unknown file system error";
-      throw new Error(`Unable to save generated audio: ${message}`);
+    for (const chunk of chunks) {
+      try {
+        writes.push(await prepareAtomicWrite(chunk.targetPath, { fsImpl }));
+        const existing = await fsImpl.stat(chunk.targetPath).catch(error => {
+          if (error.code !== "ENOENT") throw error;
+          return null;
+        });
+        if (existing && !existing.isFile()) throw new Error(`Audio output is not a regular file: ${chunk.targetPath}`);
+      } catch (error) {
+        const message = getSafeErrorDetail(error?.message) || "Unknown file system error";
+        throw new Error(`Unable to prepare generated audio output: ${message}`);
+      }
     }
+
+    chunks.forEach((chunk, index) => {
+      log(`[ElevenLabs audio] Part ${index + 1}/${chunks.length} | ${Array.from(chunk.text).length} characters | Shots: ${chunk.shotIds?.join(", ") || "narration"} | Output: ${chunk.targetPath}`);
+      log(`[ElevenLabs audio] Text to generate:\n${chunk.text}\n`);
+    });
+    report = creditLabel ? await require("./elevenlabs_credits.js").startCreditReport({
+      apiKey, label: creditLabel, exactCost: true, fetchImpl, log
+    }) : null;
+
+    for (const [index, chunk] of chunks.entries()) {
+      const label = `Audio part ${index + 1}/${chunks.length} (${path.basename(chunk.targetPath)})`;
+      try {
+        log(`[ElevenLabs audio] Generating part ${index + 1}/${chunks.length}.`);
+        let cost = null;
+        let audio;
+        try {
+          audio = await requestSpeechAudio({
+            apiKey, text: chunk.text, modelId, voiceId, fetchImpl,
+            onCost: value => { cost = value; }
+          });
+        } finally {
+          if (cost == null) allCostsKnown = false;
+          else totalCost += cost;
+        }
+        try {
+          await commitAtomicWrite(writes[index], audio);
+        } catch (error) {
+          const message = getSafeErrorDetail(error?.message) || "Unknown file system error";
+          throw new Error(`Unable to save generated audio: ${message}`);
+        }
+        log(`[ElevenLabs audio] Saved: ${chunk.targetPath}`);
+      } catch (error) {
+        throw new Error(`${label}: ${error.message}`, { cause: error });
+      }
+    }
+    return chunks.map(chunk => chunk.targetPath);
   } finally {
-    await discardAtomicWrite(preparedWrite);
+    await Promise.all(writes.map(discardAtomicWrite));
+    if (allCostsKnown) report?.recordCost(totalCost);
     await report?.finish();
   }
 }
 
-module.exports = { DEFAULT_MODEL_ID, DEFAULT_VOICE_ID, OUTPUT_FORMAT, REQUEST_TIMEOUT_MS, getRequiredText, getEnvironmentOverride, getAudioSettings, getSafeErrorDetail, readApiErrorDetail, requestSpeechAudio, prepareAtomicWrite, discardAtomicWrite, commitAtomicWrite, writeFileAtomically, generateAudioArtifact };
+module.exports = { DEFAULT_MODEL_ID, DEFAULT_VOICE_ID, OUTPUT_FORMAT, REQUEST_TIMEOUT_MS, getRequiredText, getEnvironmentOverride, getAudioSettings, getSafeErrorDetail, readApiErrorDetail, requestSpeechAudio, prepareAtomicWrite, discardAtomicWrite, commitAtomicWrite, writeFileAtomically, generateAudioArtifacts };

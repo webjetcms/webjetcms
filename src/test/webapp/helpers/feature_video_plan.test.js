@@ -157,6 +157,45 @@ test("records a manual-only plan without automatic preparation, actions or clean
   assert.ok(events.every(message => !message.startsWith("Recording ")));
 });
 
+test("injects configured page objects into inline preparation and actions", async t => {
+  const { recordVideoPlan } = require("./feature_video_plan.js");
+  const calls = [];
+  const I = { say: async () => {}, videoTitle: async () => {}, wait: async () => {} };
+  const support = {
+    I: "must not override the recording actor",
+    DTE: { waitForEditor: async () => calls.push("editor") },
+    DT: { waitForLoader: async () => calls.push("loader") },
+    Document: { resetPageBuilderMode: async () => calls.push("document") }
+  };
+  const originalInject = Object.getOwnPropertyDescriptor(globalThis, "inject");
+  globalThis.inject = () => support;
+  t.after(() => {
+    if (originalInject) Object.defineProperty(globalThis, "inject", originalInject);
+    else delete globalThis.inject;
+  });
+  const plan = createPlan();
+  plan.shots = [plan.shots[1]];
+  const selector = ".editor";
+  plan.shots[0].prepare = async ({ I: actor, DTE, Document, selector: receivedSelector }) => {
+    assert.equal(actor, I);
+    assert.equal(receivedSelector, selector);
+    await Document.resetPageBuilderMode();
+    await DTE.waitForEditor();
+  };
+  plan.shots[0].shot = async ({ DT, shot }) => {
+    assert.equal(shot.id, "edit");
+    await DT.waitForLoader();
+  };
+  await recordVideoPlan(I, { plan, context: { selector } });
+  assert.deepEqual(calls, ["document", "editor", "loader"]);
+
+  calls.length = 0;
+  const DTE = { waitForEditor: async () => calls.push("custom editor") };
+  await recordVideoPlan(I, { plan, context: { selector, DTE } });
+  assert.deepEqual(calls, ["document", "custom editor", "loader"]);
+  assert.notEqual(support.DTE, DTE, "Explicit context overrides must not mutate CodeceptJS support objects");
+});
+
 test("validates callbacks before setup and stops recording after a failed shot", async () => {
   const { recordVideoPlan } = require("./feature_video_plan.js");
   const events = [];
