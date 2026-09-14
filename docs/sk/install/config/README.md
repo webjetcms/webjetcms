@@ -30,6 +30,8 @@ Pre odosielanie emailov je potrebné nastaviť korektne SMTP server:
 - `smtpPassword` - heslo.
 - `smtpPort` - port pre pripojenie na SMTP server.
 - `useSMTPServer` - vypnutie odosielania emailov (napr. pre uzly clustra, ktoré nemajú dostupný SMTP server).
+- `sendMailSaveEmail` - ak je nastavené na `true`, systémové emaily aj emaily z [klasických a viackrokových formulárov](../../redactor/apps/form/README.md#možné-konfiguračné-premenné) sa namiesto odoslania cez SMTP ukladajú ako súbory `.eml`. Pri `useSMTPServer=false` má prednosť odložené odoslanie.
+- `sendMailSaveEmailPath` - adresár pre uložené súbory `.eml`, predvolene `/WEB-INF/tmp/emails`; pre vývojové prostredie môžete použiť napríklad `/files/protected/emails`. Ak adresár chýba, vytvorí sa; ak sa doň nedá zapísať, odoslanie formulára sa nahlási ako neúspešné.
 - `smtpConnectionTimeoutMillis` - počet milisekúnd pre čakanie na vytvorenie SMTP spojenia.
 - `emailProtectionSenderEmail` - nastavte email adresu, ktorá sa použije ako email odosielateľa pre všetky emaily, ak SMTP nemá nastavený `OPEN RELAY`. Typická hodnota je `noreply@domena.sk`. Pri nastavení sa zadaná emailová adresa nastaví do každého emailu do hlavičky `FROM` a pôvodne nastavená hodnota z `FROM` sa nastaví do `REPLY-TO`.
 
