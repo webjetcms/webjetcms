@@ -4,13 +4,20 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.io.Serializable;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.web.util.WebUtils;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
@@ -49,6 +56,9 @@ public class EshopService {
 	private static final String BROWSER_ID_SESSION_KEY = "BasketDB.browserIdSession";
 	private static final String BASKET_ITEM_ID = "basketItemId";
 	private static final String BASKET_QTY = "basketQty";
+	private static final String PRICE_OVERRIDES = "basket.priceOverrides";
+	/** Request attribute carrying a customer-facing checkout error surfaced by {@link #saveOrder(HttpServletRequest)}. */
+	public static final String ORDER_ERROR_ATTR = "basket.orderError";
 
 	private final BasketInvoicesRepository bir;
     private final BasketInvoiceItemsRepository biir;
@@ -101,7 +111,62 @@ public class EshopService {
 	 */
 	public List<BasketInvoiceItemEntity> getBasketItems(HttpServletRequest request)
 	{
-		return biir.findAllByBrowserIdAndItemsBasketInvoiceNullAndDomainId(EshopService.getBrowserId(request), CloudToolsForCore.getDomainId());
+		List<BasketInvoiceItemEntity> originals = biir.findAllByBrowserIdAndItemsBasketInvoiceNullAndDomainId(getBrowserId(request), CloudToolsForCore.getDomainId());
+		if (!BasketPricingService.isEnabled()) return originals;
+		String currency = getDisplayCurrency(request);
+		int scale = BasketPricingService.createPriceFormat().getMaximumFractionDigits();
+		List<BasketInvoiceItemEntity> items = new ArrayList<>();
+		for (BasketInvoiceItemEntity original : originals) {
+			BasketInvoiceItemEntity item = new BasketInvoiceItemEntity();
+			BeanUtils.copyProperties(original, item, "doc", "editorFields", "itemsBasketInvoice");
+			if (original.getItemIdInt() > 0) {
+				DocDetails doc = original.getDoc();
+				if (doc == null) {
+					//Product page was removed, drop it from the basket instead of failing the whole view.
+					Logger.println(EshopService.class, "Skipping basket item " + original.getId() + ", product is no longer available");
+					continue;
+				}
+				PriceOverride override = getPriceOverrides(request).get(original.getId());
+				BigDecimal net = override != null && override.net() != null ? override.net() : doc.getPrice(request);
+				BigDecimal vat = override != null && override.vat() != null ? override.vat() : doc.getVat();
+				Integer vatRate = toVatRate(vat);
+				if (vatRate == null) {
+					//VAT is stored as a whole-number percentage, skip products with an unexpected rate.
+					Logger.error(EshopService.class, "Skipping basket item " + original.getId() + ", VAT rate is not a whole number: " + vat);
+					continue;
+				}
+				item.setDoc(doc);
+				item.setItemTitle(doc.getTitle());
+				item.setItemPrice(BasketTools.convertCurrency(net, doc.getCurrency(), currency));
+				item.setItemVat(vatRate);
+			}
+			BasketPricingService.recalculateLinePrice(item, scale);
+			items.add(item);
+		}
+		BasketPricingService.allocateVat(items);
+		return items;
+	}
+
+	private record PriceOverride(BigDecimal net, BigDecimal vat) implements Serializable { }
+
+	@SuppressWarnings("unchecked")
+	private Map<Long, PriceOverride> getPriceOverrides(HttpServletRequest request) {
+		Object stored = request.getSession().getAttribute(PRICE_OVERRIDES);
+		return stored instanceof Map ? (Map<Long, PriceOverride>) stored : Map.of();
+	}
+
+	/** Returns the whole-number VAT percentage, or null when the rate cannot be represented as one. */
+	private static Integer toVatRate(BigDecimal vat) {
+		try {
+			return vat.intValueExact();
+		} catch (ArithmeticException ex) {
+			return null;
+		}
+	}
+
+	/** Builds a localized, customer-facing checkout validation error. */
+	private static IllegalArgumentException orderError(HttpServletRequest request, String messageKey) {
+		return new IllegalArgumentException(Prop.getInstance(request).getText(messageKey));
 	}
 
 	/**
@@ -235,7 +300,36 @@ public class EshopService {
         return bir.save(basketInvoice);
     }
 
-    public BasketInvoiceEntity saveOrder(HttpServletRequest request)
+    public BasketInvoiceEntity saveOrder(HttpServletRequest request) {
+		if (!BasketPricingService.isEnabled()) return createOrder(request);
+		//Container-portable per-session lock so concurrent checkout requests cannot double-submit an order.
+		synchronized (WebUtils.getSessionMutex(request.getSession())) {
+			try {
+				TransactionTemplate transaction = new TransactionTemplate(Tools.getSpringBean("webjet2022TransactionManager", PlatformTransactionManager.class));
+				BasketInvoiceEntity invoice = transaction.execute(status -> createOrder(request));
+				if (invoice != null) {
+					request.getSession().removeAttribute(BROWSER_ID_SESSION_KEY);
+					request.getSession().removeAttribute(PRICE_OVERRIDES);
+				}
+				return invoice;
+			} catch (Exception ex) {
+				Logger.error(EshopService.class, ex);
+				String message = resolveOrderErrorMessage(ex);
+				if (message != null) request.setAttribute(ORDER_ERROR_ATTR, message);
+				return null;
+			}
+		}
+	}
+
+	/** Extracts the customer-facing validation reason baked into a checkout exception, or null for internal failures. */
+	private static String resolveOrderErrorMessage(Throwable ex) {
+		Throwable cause = ex;
+		while (cause.getCause() != null) cause = cause.getCause();
+		if (cause instanceof IllegalArgumentException && cause.getMessage() != null && !cause.getMessage().isBlank()) return cause.getMessage();
+		return null;
+	}
+
+    private BasketInvoiceEntity createOrder(HttpServletRequest request)
 	{
 		BasketInvoiceEntity invoice = null;
 
@@ -243,7 +337,11 @@ public class EshopService {
 			invoice = new BasketInvoiceEntity();
 
 			BeanWrapperImpl wrapper = new BeanWrapperImpl(invoice);
-			wrapper.setPropertyValues(new MutablePropertyValues(request.getParameterMap()), true, true);
+			Map<String, String[]> fields = new HashMap<>(request.getParameterMap());
+			if (BasketPricingService.isEnabled()) fields.keySet().removeIf(key ->
+				!key.startsWith("contact") && !key.startsWith("delivery") && !"userNote".equals(key) && !"paymentMethod".equals(key));
+			wrapper.setPropertyValues(new MutablePropertyValues(fields), true, true);
+			invoice.setPriceToPayVat(null);
 
 			long browserId = EshopService.getBrowserId(request);
 			int userId = Tools.getUserId(request);
@@ -256,15 +354,28 @@ public class EshopService {
 			invoice.setUserLng(PageLng.getUserLng(request));
 
 			int deliveryMethodId = Tools.getIntValue(request.getParameter("deliveryMethod"),-1);
+			String country = Tools.isEmpty(request.getParameter("deliveryCountry")) ? request.getParameter("contactCountry") : request.getParameter("deliveryCountry");
 			if(deliveryMethodId > 0) {
 				try {
 					DeliveryMethodEntity dme = dms.getDeliveryMethod(deliveryMethodId, null, Prop.getInstance(request));
+					if (BasketPricingService.isEnabled() && !dme.getSupportedCountriesList().contains(country))
+						throw orderError(request, "components.basket.order_form.error.delivery_unavailable");
 					String title = dme.getTitle();
 					if (Tools.isEmpty(title)) title = dme.getDeliveryMethodName();
 					invoice.setDeliveryMethod(title);
+					if (BasketPricingService.isEnabled()) saveDeliveryMethod(request, dme, Prop.getInstance(request));
 				} catch(Exception e) {
+					if (BasketPricingService.isEnabled()) throw e;
 					Logger.error(e);
 				}
+			}
+
+			if (BasketPricingService.isEnabled()) {
+				if (!List.of("eur", "czk").contains(invoice.getCurrency())) throw new IllegalStateException("Rounded checkout supports EUR and CZK.");
+				if (deliveryMethodId <= 0 && !dms.getAllDeliveryMethods(request, Prop.getInstance(request), country).isEmpty())
+					throw orderError(request, "components.basket.order_form.error.select_delivery");
+				if (!PaymentMethodsService.isPaymentMethodConfigured(invoice.getPaymentMethod(), request, Prop.getInstance(request)))
+					throw orderError(request, "components.basket.order_form.error.select_payment");
 			}
 
 			//Get all items for adminlog
@@ -272,9 +383,21 @@ public class EshopService {
 
 			//Add payment as basket item, if created add it to list
 			int newItemId = PaymentMethodsService.createPaymentInvoiceItemAndReturnId(invoice, request, biir);
+			if (BasketPricingService.isEnabled() && newItemId < 0) throw new IllegalStateException("Payment fee could not be resolved.");
 			if(newItemId != -1) {
 				BasketInvoiceItemEntity newBasketItem = getBasketItemById(newItemId);
 				basketItems.add( newBasketItem );
+			}
+
+			if (BasketPricingService.isEnabled()) {
+				basketItems = getBasketItems(request);
+				if (basketItems.stream().noneMatch(item -> item.getItemIdInt() > 0)) throw orderError(request, "components.basket.order_form.error.empty_basket");
+				for (BasketInvoiceItemEntity item : basketItems) BasketPricingService.prepareForSave(item);
+				invoice.setPriceToPayVat(getTotalLocalPriceVat(basketItems, request));
+				invoice.setPriceToPayNoVat(getTotalLocalPrice(basketItems, request));
+				invoice.setBalanceToPay(invoice.getPriceToPayVat());
+				invoice.setItemQty(basketItems.stream().mapToInt(BasketInvoiceItemEntity::getItemQty).sum());
+				if (invoice.getPriceToPayVat().signum() <= 0) throw new IllegalStateException("The order total must be positive.");
 			}
 
 			//Save invoice
@@ -283,13 +406,15 @@ public class EshopService {
 			//Check and logs
 			if(invoice.getBasketInvoiceId() > 1)
 			{
+				if (BasketPricingService.isEnabled()) {
+					for (BasketInvoiceItemEntity item : basketItems) item.setInvoiceId(invoice.getId().intValue());
+					biir.saveAll(basketItems);
+				} else bindItemsToInvoice(invoice.getId(), invoice.getBrowserId());
 				Adminlog.add(Adminlog.TYPE_BASKET_CREATE, "Vytvorena objednavka: " + StringUtils.join(basketItems.iterator(), ","), invoice.getBasketInvoiceId(), -1);
 				Logger.println(EshopService.class, "Objednavka ulozena, id= " + invoice.getBasketInvoiceId());
 				//zrus browserId
-				request.getSession().removeAttribute(BROWSER_ID_SESSION_KEY);
+				if (!BasketPricingService.isEnabled()) request.getSession().removeAttribute(BROWSER_ID_SESSION_KEY);
 
-				//Bind items to new invoice
-				bindItemsToInvoice(invoice.getId(), invoice.getBrowserId());
 			}
 			else
 			{
@@ -298,6 +423,7 @@ public class EshopService {
 			}
 		}
 		catch (Exception e) {
+			if (BasketPricingService.isEnabled()) throw new IllegalStateException("Could not save the rounded order.", e);
 			sk.iway.iwcm.Logger.error(e);
 			invoice = null;
 		}
@@ -425,12 +551,12 @@ public class EshopService {
 	}
 
 	public boolean addDeliveryMethod(HttpServletRequest request, int deliveryMethodId, Prop prop) {
-		int itemId = Tools.getIntValue(deliveryMethodId, -1);
-		if (itemId == -1)
-			return false;
+		if (BasketPricingService.isEnabled()) return deliveryMethodId > 0;
+		if (deliveryMethodId == -1) return false;
+		return saveDeliveryMethod(request, dms.getDeliveryMethod(deliveryMethodId, null, prop), prop);
+	}
 
-		DeliveryMethodEntity dme = dms.getDeliveryMethod(deliveryMethodId, null, prop);
-
+	private boolean saveDeliveryMethod(HttpServletRequest request, DeliveryMethodEntity dme, Prop prop) {
 		long browserId = getBrowserId(request);
 		int userId = Tools.getUserId(request);
 
@@ -450,7 +576,7 @@ public class EshopService {
 		//nastavime domainId - v podstate mozeme vlozit cokolvek, setter je preimplementovany a vzdy sa vlozi aktualna domena.
 		basketItem.setDomainId(CloudToolsForCore.getDomainId());
 
-		basketItem.setItemsBasketInvoice( EshopService.getInstance().getInvoiceById(-1) );
+		basketItem.setItemsBasketInvoice( getInvoiceById(-1) );
 
 		basketItem.setItemTitle( DeliveryMethodsService.getDeliveryMethodLabel(dme.getDeliveryMethodName(), dme.getTitle(), request) );
 		basketItem.setItemPartNo(null);
@@ -585,6 +711,13 @@ public class EshopService {
 			}
 
 			saveBasketItem(basketItem);
+			if (BasketPricingService.isEnabled() && (request.getAttribute("docPrice") != null || request.getAttribute("docVat") != null)) {
+				Map<Long, PriceOverride> overrides = new HashMap<>(getPriceOverrides(request));
+				overrides.put(basketItem.getId(), new PriceOverride(
+					request.getAttribute("docPrice") == null ? null : Tools.getBigDecimalValue(request.getAttribute("docPrice"), "0"),
+					request.getAttribute("docVat") == null ? null : Tools.getBigDecimalValue(request.getAttribute("docVat"), "0")));
+				request.getSession().setAttribute(PRICE_OVERRIDES, overrides);
+			}
 			ok = true;
 		}
 
@@ -669,6 +802,7 @@ public class EshopService {
      */
     public static String getDisplayCurrency(HttpServletRequest request)
     {
+		if (BasketPricingService.isEnabled()) return BasketTools.getSystemCurrency();
         String curr = "";
         if("cloud".equals(Constants.getInstallName()))
         {

@@ -1,10 +1,13 @@
 # Elektronický obchod
 
+Voliteľné [zaokrúhľovanie cien](rounding.md) počíta košík zo zobrazených cien za kus s DPH, aby skryté desatinné miesta nemenili celkovú cenu.
+
 Cez aplikáciu E-shop môžete vytvoriť a spravovať jednoduchý elektronický obchod. V rámci aplikácie definujete jednotlivé produkty a ich atribúty (napr. veľkosť, farba), spôsoby doručenia, či platby. Aplikácia evidujete zoznam prijatých objednávok, umožňuje nastavovať ich stav s možnosťou notifikácie zmien v objednávke na zákazníkov email.
 
 ## Nastavenia aplikácie
 
-### Karta Nastavenie:
+### Karta Nastavenie
+
 - **Adresár**: Zadajte cestu k adresáru.
 - **Usporiadať podľa**: Vyberte kritérium usporiadania, napríklad „Priority“.
   - **Vzostupne**: Definujte, či sa má usporiadať vzostupne.
@@ -19,19 +22,23 @@ Cez aplikáciu E-shop môžete vytvoriť a spravovať jednoduchý elektronický 
 - **Katalóg produktov (bez nákupného košíka)**: Zobrazenie katalógu bez možnosti nákupu.
 - **Tajný kľúč pre službu "overené zákazníkmi" (heureka.sk)**: Zadajte tajný kľúč pre službu.
 
-#### Spôsob doručenia:
+#### Spôsob doručenia
+
 - **Zadajte spôsob doručenia**: Vyplňte dostupné spôsoby doručenia.
   - Pri stlačení **Pridať** možno vyplniť: **Cena bez DPH**, **Mena**, **Daň**, **Cena s DPH**, **Stará cena s DPH**
 
 ![](editor.png)
 
-### Karta Vizuálny štýl:
+### Karta Vizuálny štýl
+
 - Možnosť vybrať z dvoch štýlov pre zobrazenie.
 
 ![](editor-style.png)
 
-### Zoznam objednávok:
+### Zoznam objednávok
+
 Pri zobrazení možno vyfiltrovať podľa:
+
 - **Stav**
 - **Vydaná / odoslaná**
 - **Meno**
@@ -40,16 +47,19 @@ Pri zobrazení možno vyfiltrovať podľa:
 
 ![](editor-list.png)
 
-### Karta položky:
+### Karta položky
+
 - **Názov web stránky**: Zadajte názov web stránky.
 - **Popis produktu**: Zadajte popis produktu.
 - **Zobraziť štítok**: Zapnúť zobrazenie štítku produktu.
 
-#### Pridať variant:
+#### Pridať variant
+
 - **Názov variantu**: Zadajte názov variantu produktu.
 - **Hodnoty variantu**: Zadajte dostupné hodnoty variantu.
 
-#### Informácie o produkte:
+#### Informácie o produkte
+
 - **Cena bez DPH**
 - **Mena**
 - **Daň**

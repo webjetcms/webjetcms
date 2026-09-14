@@ -53,6 +53,14 @@ public class BasketInvoiceItemRestController extends DatatableRestControllerV2<B
 
         Page<BasketInvoiceItemEntity> page = basketInvoiceItemsRepository.findAllByInvoiceIdAndDomainId(invoiceId, CloudToolsForCore.getDomainId(), pageable);
 
+        if (BasketPricingService.isEnabled()) {
+            List<BasketInvoiceItemEntity> invoiceItems = basketInvoiceItemsRepository.findAllByInvoiceIdAndDomainId(invoiceId, CloudToolsForCore.getDomainId());
+            BasketPricingService.allocateVat(invoiceItems);
+            java.util.Map<Long, BasketInvoiceItemEntity> calculated = invoiceItems.stream()
+                .collect(java.util.stream.Collectors.toMap(BasketInvoiceItemEntity::getId, item -> item));
+            page = page.map(item -> calculated.get(item.getId()));
+        }
+
         paymentMethods = pms.getPaymentOptions(getProp());
         deliveryMethods = dms.getDeliveryOptions(getProp());
 
@@ -62,7 +70,7 @@ public class BasketInvoiceItemRestController extends DatatableRestControllerV2<B
 
     @Override
     public BasketInvoiceItemEntity processFromEntity(BasketInvoiceItemEntity entity, ProcessItemAction action) {
-        if(entity.getEditorFields() == null) {
+        if(entity.getEditorFields() == null || action == ProcessItemAction.EDIT) {
            BasketInvoiceItemEditorFields biief = new BasketInvoiceItemEditorFields();
            biief.fromBasketInvoiceItem(entity, paymentMethods, deliveryMethods);
         }
@@ -76,6 +84,15 @@ public class BasketInvoiceItemRestController extends DatatableRestControllerV2<B
     }
 
     @Override
+    public BasketInvoiceItemEntity processToEntity(BasketInvoiceItemEntity entity, ProcessItemAction action) {
+        if (BasketPricingService.isEnabled()) {
+            BasketPricingService.recalculateLinePrice(entity);
+            BasketPricingService.prepareForSave(entity);
+        }
+        return entity;
+    }
+
+    @Override
     public void beforeDuplicate(BasketInvoiceItemEntity entity) {
         throwError(getProp().getText("config.not_permitted_action_err"));
     }
@@ -84,12 +101,14 @@ public class BasketInvoiceItemRestController extends DatatableRestControllerV2<B
     public void afterSave(BasketInvoiceItemEntity entity, BasketInvoiceItemEntity saved) {
         //Update invoice stats
         ProductListService.updateInvoiceStats(Long.valueOf(entity.getInvoiceId()), true);
+        setForceReload(true);
     }
 
     @Override
     public void afterDelete(BasketInvoiceItemEntity entity, long id) {
         //Update invoice stats
         ProductListService.updateInvoiceStats(Long.valueOf(entity.getInvoiceId()), true);
+        setForceReload(true);
     }
 
     @Override
