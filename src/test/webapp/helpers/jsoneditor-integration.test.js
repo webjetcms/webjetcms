@@ -4,10 +4,10 @@ const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 const {createRequire} = require("node:module");
+const {JSDOM} = require("jsdom");
 
 const adminDirectory = path.resolve(__dirname, "../../../main/webapp/admin/v9");
 const adminRequire = createRequire(path.join(adminDirectory, "package.json"));
-const {JSDOM} = adminRequire("jsdom");
 const utilities = import("../../../main/webapp/admin/v9/npm_packages/webjetdatatables/jsoneditor-utils.mjs");
 
 /**

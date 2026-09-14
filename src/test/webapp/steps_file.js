@@ -266,6 +266,14 @@ module.exports = function () {
       this.amOnPage(url);
     },
 
+    /**
+     * Prevent error 429 too many requests
+     * @param {*} I
+     */
+    prevent429() {
+        this.wait(1);
+    },
+
     //vygenerovanie nahodneho retazca
     getRandomText() {
       const startDate = new Date();
@@ -483,6 +491,8 @@ module.exports = function () {
       this.waitForInvisible(name, 40);
       this.wait(0.5);
       this.waitForInvisible(name, 40);
+      //this one is visible when filtering jstree
+      this.waitForInvisible(".webjetAnimatedLoader", 40);
       this.wait(0.3);
     },
 
