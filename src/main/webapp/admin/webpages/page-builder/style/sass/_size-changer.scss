@@ -4,7 +4,6 @@
     box-sizing: border-box;
     align-items: center;
     flex-wrap: wrap;
-    width: 144px;
     max-width: 100%;
     min-width: 24px;
     min-height: 24px;
@@ -90,8 +89,8 @@
     .#{$prefix}-container.#{$prefix}-is-resize-columns & {
         display: flex;
     }
-    @container #{$prefix}-column-size (width < 144px) {
-        &__number {
+    &.is-narrow {
+        .#{$prefix}-size-changer__number {
             order: -1;
             flex-basis: 100%;
             flex-wrap: wrap;
@@ -102,10 +101,10 @@
             white-space: normal;
             overflow-wrap: anywhere;
         }
-        &__down, &__up { width: 50%; }
+        .#{$prefix}-size-changer__down, .#{$prefix}-size-changer__up { width: 50%; }
     }
     @container #{$prefix}-column-size (width < 48px) {
-        &__down, &__up { width: 100%; }
+        &.is-narrow .#{$prefix}-size-changer__down, &.is-narrow .#{$prefix}-size-changer__up { width: 100%; }
     }
     @media (prefers-reduced-motion: reduce) {
         button::before { transition: none; }

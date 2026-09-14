@@ -925,7 +925,9 @@
                 var resizing = resizeColumns.length > 0, columnPrefix = me.get_actual_screen_size();
                 if (!resizeColumns.is(ui.resizeActive)) ui.resizeActive = null;
                 resizeColumns.each(function() {
-                    $(this).children(me.tagc.size_changer).toggleClass('is-resize-active', this === ui.resizeActive);
+                    var control = $(this).children(me.tagc.size_changer);
+                    control.toggleClass('is-resize-active', this === ui.resizeActive)
+                        .toggleClass('is-narrow', control[0].getBoundingClientRect().width < parseFloat(control[0].style.width));
                 });
                 if (resizing) {
                     if (ui.columnPrefix !== columnPrefix) resizeColumns.each(function() { me.update_column_size_label($(this)); });
@@ -2387,11 +2389,18 @@
             return screenSizeText.toUpperCase();
         },
 
-        /** Updates the displayed size without changing classes when entering resize mode or switching devices. */
+        /** Fits the width control to its label without changing the column's grid classes. */
         update_column_size_label: function(column) {
-            $(column).children(this.tagc.size_changer).find(this.tagc.size_changer_number)
+            var control = $(column).children(this.tagc.size_changer);
+            var label = control.find(this.tagc.size_changer_number)
                 .text(this.get_actual_column_size(column)+' / '+this.options.max_col_size)
                 .append($('<small>').text(this.get_column_size_suffix()));
+            // Measure the unwrapped label before restoring the responsive layout.
+            control.removeClass('is-narrow');
+            label.css({flex: 'none', width: 'max-content'});
+            var width = Math.ceil(label[0].getBoundingClientRect().width) + 48;
+            label.css({flex: '', width: ''});
+            control.css('width', width).toggleClass('is-narrow', control[0].getBoundingClientRect().width < width);
         },
 
         listen_for_shift_key: function(e) {

@@ -1413,6 +1413,14 @@ Scenario('workbench column sizing outlines, toolbar exit and responsive values',
                 const content = Array.from(node.parentElement.children).find(child => !child.matches('aside'));
                 const css = getComputedStyle(node);
                 const [down, number, up] = Array.from(node.children).map(child => child.getBoundingClientRect());
+                const singleRow = down.top === number.top && up.top === number.top;
+                const label = node.querySelector('.pb-size-changer__number');
+                const labelCss = getComputedStyle(label);
+                const range = document.createRange();
+                range.selectNodeContents(label.firstChild);
+                const suffix = label.querySelector('small').getBoundingClientRect();
+                const textWidth = range.getBoundingClientRect().width + suffix.width + (suffix.width ? parseFloat(labelCss.gap) : 0);
+                const naturalWidth = 48 + textWidth + parseFloat(labelCss.paddingLeft) + parseFloat(labelCss.paddingRight);
                 return {
                     inside: [node, ...node.children].every(child => {
                         const bounds = child.getBoundingClientRect();
@@ -1420,8 +1428,8 @@ Scenario('workbench column sizing outlines, toolbar exit and responsive values',
                     }),
                     aboveContent: !content || rect.bottom <= content.getBoundingClientRect().top + 0.5,
                     targets: [down, up].every(button => button.width >= 24 && button.height >= 24),
-                    layout: rect.width >= 144 ? down.top === number.top && up.top === number.top :
-                        number.bottom <= down.top && (rect.width >= 48 ? down.top === up.top : down.bottom <= up.top),
+                    layout: singleRow || number.bottom <= down.top && (rect.width >= 48 ? down.top === up.top : down.bottom <= up.top),
+                    compact: !singleRow || Math.abs(rect.width - naturalWidth) <= 1.5,
                     border: css.borderTopWidth,
                     shadow: css.boxShadow
                 };
@@ -1432,6 +1440,7 @@ Scenario('workbench column sizing outlines, toolbar exit and responsive values',
                 assert.ok(control.aboveContent, 'The internal control strip must not cover authored content');
                 assert.ok(control.targets, 'Both size buttons must retain 24 by 24 pixel targets');
                 assert.ok(control.layout, 'Size controls must use complete rows, never wrap only one arrow');
+                assert.ok(control.compact, 'A single-row control must fit its text without a fixed-width reserve');
                 assert.equal(control.border, '0px', 'Width controls must not add another frame');
                 assert.equal(control.shadow, 'none');
             });
@@ -1550,13 +1559,44 @@ Scenario('workbench column sizing outlines, toolbar exit and responsive values',
         await checkActive(second);
         await second.locator('.pb-resize-nested-autotest').evaluate(node => node.remove());
 
+        const widths = [];
+        for (const size of [6, 12, 'auto']) {
+            await second.evaluate((node, size) => {
+                const pb = window.pageBuilder;
+                node.setAttribute(pb.column.attr_prefix + pb.get_actual_screen_size(), size);
+                pb.update_column_size_label($(node));
+            }, size);
+            await checkControls();
+            widths.push(await second.locator(':scope > .pb-size-changer').evaluate(node => node.getBoundingClientRect().width));
+        }
+        assert.ok(widths[0] < widths[1] && widths[1] < widths[2], 'The control must grow with two-digit values and auto');
+        assert.ok(widths[0] < 120 && widths[2] < 128, 'Standard labels must remain compact');
+        const sizePrefix = await frame.evaluateHandle(() => window.pbScreenSizePrefix);
+        await second.evaluate(node => {
+            window.pbScreenSizePrefix = () => 'col-wwww-';
+            const pb = window.pageBuilder;
+            node.setAttribute(pb.column.attr_prefix + pb.get_actual_screen_size(), 'auto');
+            pb.update_column_size_label($(node));
+        });
+        await checkControls();
+        assert.equal(await second.locator(':scope > .pb-size-changer').textContent(), 'auto / 12WWWW');
+        assert.ok(await second.locator(':scope > .pb-size-changer').evaluate(node => node.getBoundingClientRect().width > 144), 'Long custom labels must be allowed to grow beyond the former fixed width');
+        await second.evaluate(node => node.removeAttribute(window.pageBuilder.column.attr_prefix + 'col-wwww-'));
+        await frame.evaluate(prefix => { window.pbScreenSizePrefix = prefix; }, sizePrefix);
+        await sizePrefix.dispose();
+        await second.evaluate(node => {
+            const pb = window.pageBuilder;
+            node.setAttribute(pb.column.attr_prefix + pb.get_actual_screen_size(), 6);
+            pb.update_column_size_label($(node));
+        });
         const originalStyle = await second.getAttribute('style');
-        for (const width of [144, 80, 32]) {
+        for (const width of [120, 80, 32]) {
             await second.evaluate((node, width) => {
                 const css = getComputedStyle(node);
                 const size = width + parseFloat(css.paddingLeft) + parseFloat(css.paddingRight) + 'px';
                 Object.assign(node.style, {width: size, flexBasis: size, maxWidth: 'none'});
             }, width);
+            await frame.waitForFunction(() => window.pageBuilder.ui.frame === null);
             await checkControls();
         }
         await second.evaluate((node, style) => style === null ? node.removeAttribute('style') : node.setAttribute('style', style), originalStyle);
