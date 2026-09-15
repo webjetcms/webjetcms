@@ -3,12 +3,64 @@ const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
+const { spawnSync } = require("node:child_process");
 const {
   finalizeVideoArtifact,
   getVideoArtifactName,
   getVideoArtifactPath,
   getVideoRawDirectory
 } = require("./video_playwright_helper.js");
+
+test.beforeEach(t => {
+  const previousShot = process.env.VIDEO_SHOT;
+  delete process.env.VIDEO_SHOT;
+  t.after(() => {
+    if (previousShot === undefined) delete process.env.VIDEO_SHOT;
+    else process.env.VIDEO_SHOT = previousShot;
+  });
+});
+
+test("rejects malformed VIDEO_SHOT while loading the video configuration", () => {
+  const result = spawnSync(process.execPath, ["-e", "require('./codecept.video.conf.js')"], {
+    cwd: path.resolve(__dirname, ".."), env: { ...process.env, VIDEO_SHOT: "../outro" }, encoding: "utf8"
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /VIDEO_SHOT must be a lowercase hyphenated shot ID/);
+});
+
+test("names retakes with the normalized shot ID and preserves the full-run defaults", () => {
+  const scenario = { file: "video/308-pb-redesign.js", title: "308-pb-redesign @current" };
+  process.env.VIDEO_SHOT = " outro ";
+  assert.equal(getVideoArtifactName(scenario, true), "308-pb-redesign-outro.webm");
+  assert.equal(getVideoArtifactName(scenario, false), "308-pb-redesign-outro.failed.webm");
+  assert.equal(getVideoArtifactPath(scenario, true),
+    path.resolve(__dirname, "../../../../docs/feature-video/308-pb-redesign-outro.webm"));
+  for (const value of ["", "  "]) {
+    process.env.VIDEO_SHOT = value;
+    assert.equal(getVideoArtifactName(scenario, true), "308-pb-redesign.webm");
+    assert.equal(getVideoArtifactName(scenario, false), "308-pb-redesign.failed.webm");
+  }
+});
+
+test("replaces only the matching retake and result status while retaining full recordings", async t => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), "wj-video-retake-"));
+  t.after(() => fs.rm(directory, { recursive: true, force: true }));
+  const scenario = { file: "video/308-pb-redesign.js" };
+  const originals = ["308-pb-redesign.webm", "308-pb-redesign.failed.webm", "308-pb-redesign-edit.webm",
+    "308-pb-redesign-outro.webm", "308-pb-redesign-outro.failed.webm"];
+  for (const name of originals) await fs.writeFile(path.join(directory, name), name);
+  process.env.VIDEO_SHOT = "outro";
+  for (const passed of [false, true]) {
+    const rawPath = path.join(directory, "raw.webm");
+    await fs.writeFile(rawPath, `retake:${passed}`);
+    await finalizeVideoArtifact({ path: async () => rawPath }, path.join(directory, getVideoArtifactName(scenario, passed)));
+    for (const name of originals) {
+      const expected = name === "308-pb-redesign-outro.failed.webm" ? "retake:false"
+        : name === "308-pb-redesign-outro.webm" && passed ? "retake:true" : name;
+      assert.equal(await fs.readFile(path.join(directory, name), "utf8"), expected);
+    }
+  }
+});
 
 test("keeps the scenario file name stable for tagged and untagged runs", () => {
   const scenarioFile = path.join("project", "video", "293-config-jstree-view.js");

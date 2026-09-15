@@ -202,95 +202,115 @@ async function getRenderedCursorPosition(page) {
 }
 
 function installVideoCursor(cursorScale = 1) {
-  if (document.querySelector("#wj-video-cursor-host") != null) return;
+  if (window.__wjVideoCursorInstalled) return;
+  window.__wjVideoCursorInstalled = true;
 
   const mount = () => {
-    if (document.querySelector("#wj-video-cursor-host") != null) return;
-    if (document.documentElement == null) return;
+    let host, cursor, ring;
+    if (window === window.top) {
+      host = document.createElement("div");
+      host.id = "wj-video-cursor-host";
+      host.setAttribute("aria-hidden", "true");
+      Object.assign(host.style, {
+        position: "fixed",
+        left: "0",
+        top: "0",
+        width: "0",
+        height: "0",
+        overflow: "visible",
+        pointerEvents: "none",
+        zIndex: "2147483647"
+      });
 
-    const host = document.createElement("div");
-    host.id = "wj-video-cursor-host";
-    host.setAttribute("aria-hidden", "true");
-    Object.assign(host.style, {
-      position: "fixed",
-      left: "0",
-      top: "0",
-      width: "0",
-      height: "0",
-      overflow: "visible",
-      pointerEvents: "none",
-      zIndex: "2147483647"
-    });
+      const shadow = host.attachShadow({ mode: "open" });
+      cursor = document.createElement("div");
+      Object.assign(cursor.style, {
+        position: "absolute",
+        left: "0",
+        top: "0",
+        width: "30px",
+        height: "34px",
+        opacity: "0",
+        transform: `translate3d(-60px, -60px, 0) scale(${cursorScale})`,
+        transformOrigin: "0 0",
+        transition: "opacity 100ms linear",
+        willChange: "transform"
+      });
 
-    const shadow = host.attachShadow({ mode: "open" });
-    const cursor = document.createElement("div");
-    Object.assign(cursor.style, {
-      position: "absolute",
-      left: "0",
-      top: "0",
-      width: "30px",
-      height: "34px",
-      opacity: "0",
-      transform: `translate3d(-60px, -60px, 0) scale(${cursorScale})`,
-      transformOrigin: "0 0",
-      transition: "opacity 100ms linear",
-      willChange: "transform"
-    });
+      ring = document.createElement("span");
+      Object.assign(ring.style, {
+        position: "absolute",
+        left: "-11px",
+        top: "-11px",
+        width: "26px",
+        height: "26px",
+        border: "3px solid #00BE9F",
+        borderRadius: "50%",
+        boxSizing: "border-box",
+        opacity: "0"
+      });
 
-    const ring = document.createElement("span");
-    Object.assign(ring.style, {
-      position: "absolute",
-      left: "-11px",
-      top: "-11px",
-      width: "26px",
-      height: "26px",
-      border: "3px solid #00BE9F",
-      borderRadius: "50%",
-      boxSizing: "border-box",
-      opacity: "0"
-    });
+      const pointer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      pointer.setAttribute("width", "30");
+      pointer.setAttribute("height", "34");
+      pointer.setAttribute("viewBox", "0 0 30 34");
+      pointer.style.filter = "drop-shadow(0 1px 2px rgba(0, 0, 0, .55))";
 
-    const pointer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    pointer.setAttribute("width", "30");
-    pointer.setAttribute("height", "34");
-    pointer.setAttribute("viewBox", "0 0 30 34");
-    pointer.style.filter = "drop-shadow(0 1px 2px rgba(0, 0, 0, .55))";
+      const pointerPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      pointerPath.setAttribute("d", "M2 2 L2 25 L8.7 18.5 L13.8 30.5 L18.2 28.6 L13.1 16.8 L22.5 16.8 Z");
+      pointerPath.setAttribute("fill", "#ffffff");
+      pointerPath.setAttribute("stroke", "#111827");
+      pointerPath.setAttribute("stroke-width", "2");
+      pointerPath.setAttribute("stroke-linejoin", "round");
+      pointer.appendChild(pointerPath);
 
-    const pointerPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    pointerPath.setAttribute("d", "M2 2 L2 25 L8.7 18.5 L13.8 30.5 L18.2 28.6 L13.1 16.8 L22.5 16.8 Z");
-    pointerPath.setAttribute("fill", "#ffffff");
-    pointerPath.setAttribute("stroke", "#111827");
-    pointerPath.setAttribute("stroke-width", "2");
-    pointerPath.setAttribute("stroke-linejoin", "round");
-    pointer.appendChild(pointerPath);
+      cursor.appendChild(ring);
+      cursor.appendChild(pointer);
+      shadow.appendChild(cursor);
+      document.documentElement.appendChild(host);
+    }
 
-    cursor.appendChild(ring);
-    cursor.appendChild(pointer);
-    shadow.appendChild(cursor);
-    document.documentElement.appendChild(host);
-
-    const updatePosition = (event) => {
-      host.dataset.cursorX = String(event.clientX);
-      host.dataset.cursorY = String(event.clientY);
+    const showPointer = (point) => {
+      if (window !== window.top) {
+        window.parent.postMessage({ type: "wj-video-cursor", ...point }, "*");
+        return;
+      }
+      host.dataset.cursorX = String(point.x);
+      host.dataset.cursorY = String(point.y);
       cursor.style.opacity = "1";
-      cursor.style.transform = `translate3d(${event.clientX}px, ${event.clientY}px, 0) scale(${cursorScale})`;
+      cursor.style.transform = `translate3d(${point.x}px, ${point.y}px, 0) scale(${cursorScale})`;
+      if (point.click) {
+        ring.getAnimations().forEach(animation => animation.cancel());
+        ring.animate([
+          { opacity: .95, transform: "scale(.35)" },
+          { opacity: 0, transform: "scale(1.8)" }
+        ], { duration: 450, easing: "ease-out" });
+      }
     };
 
-    document.addEventListener("mousemove", updatePosition, true);
-    document.addEventListener("mousedown", (event) => {
-      updatePosition(event);
-      ring.getAnimations().forEach((animation) => animation.cancel());
-      ring.animate([
-        { opacity: .95, transform: "scale(.35)" },
-        { opacity: 0, transform: "scale(1.8)" }
-      ], {
-        duration: 450,
-        easing: "ease-out"
+    // Relay through direct parents to support nested and cross-origin iframe viewports.
+    window.addEventListener("message", (event) => {
+      const point = event.data;
+      if (point?.type !== "wj-video-cursor" || !Number.isFinite(point.x) ||
+        !Number.isFinite(point.y) || typeof point.click !== "boolean") return;
+      const frame = Array.from(document.querySelectorAll("iframe"))
+        .find(element => element.contentWindow === event.source);
+      if (!frame || frame.offsetWidth === 0 || frame.offsetHeight === 0) return;
+      const bounds = frame.getBoundingClientRect();
+      showPointer({
+        x: bounds.left + (frame.clientLeft + point.x) * bounds.width / frame.offsetWidth,
+        y: bounds.top + (frame.clientTop + point.y) * bounds.height / frame.offsetHeight,
+        click: point.click
       });
-    }, true);
-    window.addEventListener("blur", () => {
-      cursor.style.opacity = "0";
     });
+    const updatePosition = (event) => showPointer({
+      x: event.clientX, y: event.clientY, click: event.type === "mousedown"
+    });
+    document.addEventListener("mousemove", updatePosition, true);
+    document.addEventListener("mousedown", updatePosition, true);
+    if (window === window.top) {
+      window.addEventListener("blur", () => { cursor.style.opacity = "0"; });
+    }
   };
 
   if (document.readyState === "loading") {
@@ -303,7 +323,111 @@ function installVideoCursor(cursorScale = 1) {
 class VideoHelper extends Helper {
 
   /**
-   * Installs a synthetic cursor in every document created by the current browser context.
+   * Opens a documentation article and scrolls from top to bottom at 160 pixels per second.
+   * @param {string} url Documentation page URL, including an optional section anchor
+   * @returns {Promise<void>} Resolves when the bottom of the page is visible
+   */
+  async videoDocumentation(url) {
+    const helper = this.helpers.Playwright;
+    await helper.switchTo();
+    await helper.amOnPage(url);
+    await helper.waitForVisible("article h1", 20);
+    await this.videoScroll();
+  }
+
+  /**
+   * Scrolls the current top-level page from top to bottom at 160 pixels per second.
+   * @returns {Promise<void>} Resolves when the bottom of the page is visible
+   */
+  async videoScroll() {
+    await this.helpers.Playwright.page.evaluate(async () => {
+      await document.fonts.ready;
+      const scrollElement = document.scrollingElement || document.documentElement;
+      const scrollDistance = Math.max(0, scrollElement.scrollHeight - scrollElement.clientHeight);
+      window.scrollTo({ top: 0, behavior: "instant" });
+      if (scrollDistance === 0) return;
+
+      const duration = scrollDistance / 160 * 1000;
+      const startedAt = performance.now();
+      await new Promise(resolve => {
+        const scrollStep = now => {
+          const progress = Math.min((now - startedAt) / duration, 1);
+          window.scrollTo({ top: scrollDistance * progress, behavior: "instant" });
+          if (progress < 1) requestAnimationFrame(scrollStep);
+          else resolve();
+        };
+        requestAnimationFrame(scrollStep);
+      });
+    });
+  }
+
+  /**
+   * Shows a full-window editing slate for two seconds without changing focus or the active iframe.
+   * @param {string|object} title Legacy title or a resolved shot; manual/head shots show warnings with full notes or narration
+   * @returns {Promise<void>} Resolves after the slate has been removed
+   */
+  async videoTitle(title) {
+    const manual = typeof title === "object" && title.type === "manual";
+    const head = typeof title === "object" && title.type === "head";
+    const heading = typeof title === "string" ? title : `${manual ? "WARNING: manual steps | " : head ? "WARNING: head video | " : ""}Shot ${title.number}${title.total == null ? "" : `/${title.total}`}: ${title.id}`;
+    const excerpt = typeof title === "string" ? "" : manual
+      ? (typeof title.notes === "string" && title.notes.trim()) || "Add filming instructions to this shot's notes."
+      : head ? [title.narration, title.notes || "Generate this clip with npm run head and insert it during editing."].join("\n\n")
+      : Array.from(title.narration).slice(0, 200).join("");
+    await this.helpers.Playwright.page.evaluate(async ({ heading, excerpt, manual }) => {
+      const host = document.createElement("div");
+      host.id = "wj-video-title-host";
+      host.setAttribute("aria-hidden", "true");
+      Object.assign(host.style, {
+        all: "initial",
+        position: "fixed",
+        inset: "0",
+        zIndex: "2147483647",
+        pointerEvents: "none"
+      });
+      const shadow = host.attachShadow({ mode: "open" });
+      const slate = document.createElement("div");
+      Object.assign(slate.style, {
+        position: "absolute",
+        inset: "0",
+        display: "flex",
+        flexDirection: "column",
+        gap: "4vh",
+        alignItems: "center",
+        justifyContent: "center",
+        boxSizing: "border-box",
+        padding: "8vh 8vw",
+        background: "#000",
+        color: "#fff",
+        font: "700 clamp(24px, 4vw, 64px)/1.3 sans-serif",
+        textAlign: "center",
+        overflowWrap: "anywhere"
+      });
+      const label = document.createElement("div");
+      label.textContent = heading;
+      slate.appendChild(label);
+      if (excerpt !== "") {
+        const description = document.createElement("div");
+        description.setAttribute(manual ? "data-video-instructions" : "data-video-narration", "");
+        description.style.font = "400 clamp(16px, 2vw, 32px)/1.5 sans-serif";
+        description.style.whiteSpace = "pre-line";
+        description.textContent = excerpt;
+        slate.appendChild(description);
+      }
+      shadow.appendChild(slate);
+      document.documentElement.appendChild(host);
+      try {
+        // Start the presentation hold after the browser has painted the slate.
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } finally {
+        host.remove();
+      }
+    }, { heading, excerpt, manual });
+  }
+
+  /**
+   * Installs one top-level cursor and mouse-event relays in every iframe document.
    * Its size compensates for the native Chromium page zoom.
    */
   async _before(test) {
@@ -334,7 +458,7 @@ class VideoHelper extends Helper {
     const rememberedPosition = this.videoCursorPage === page ? this.videoCursorPosition : null;
     const fallbackPosition = { x: viewport.width / 2, y: viewport.height / 2 };
     // The remembered position uses main-viewport coordinates even when the last target was in an iframe.
-    const rawStart = rememberedPosition || renderedPosition || fallbackPosition;
+    const rawStart = renderedPosition || rememberedPosition || fallbackPosition;
     const maximumX = Math.max(0, viewport.width - 1);
     const maximumY = Math.max(0, viewport.height - 1);
     const start = {

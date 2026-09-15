@@ -5,9 +5,9 @@ Page Builder also includes the ability to insert ready-made blocks. Their list i
 In the root directory for blocks, you can have the following subdirectories:
 
 - ```section``` - ​​for section blocks (blue marking in Page Builder)
-- ```container``` - ​​for containers (red marking in Page Builder)
+- ```container``` - ​​for containers (pink marking in Page Builder)
 - ```column``` - ​​for columns (green marking in Page Builder)
-- ```content``` - ​​for inserting various texts, buttons, etc. They are inserted using the Blocks icon and the yellow line that appears between the blocks.
+- ```content``` - ​​for inserting various texts, buttons, etc. Insert them at the text cursor using **Blocks** in the CKEditor toolbar.
 
 In each of these subdirectories, you need to create **block groups as additional subdirectories**, e.g. ```Contact, Features```. Only in these subdirectories do you create individual HTML blocks. An example of this is the directory structure:
 
@@ -190,7 +190,7 @@ The cards themselves are not editable, they are generated automatically. Only th
 
 The ID attributes of individual cards are generated automatically based on the card name. If you need to use a specific name, you can set the value `data-title` on the `.tab-pane` element in the HTML code.
 
-Note the use of the CSS class ```pb-not-container``` on the main container element. This ensures that this element is not marked as a container and that individual tabs are considered containers. Each tab uses the CSS class ```pb-custom-container```, which ensures that the red frame/toolbar of the container is displayed.
+Note the use of the CSS class ```pb-not-container``` on the main container element. This ensures that this element is not marked as a container and that individual tabs are considered containers. Each tab uses the CSS class ```pb-custom-container```, which ensures that the container is outlined in pink and its tools are available in the shared toolbar.
 
 When you select the tab move option (in the container toolbar), all tabs are automatically displayed so that you can easily mark the tab where to move it. This is provided by the Page Builder CSS style.
 
@@ -600,6 +600,8 @@ window.pbBuildTabMenu = function(me, tabMenu) {
 
 };
 ```
+
+The **Style** window displays properties in independently expandable groups. `pbBuildTabMenu` still receives the original `tabs` and `items` configuration: `visible: false` hides a group or all groups belonging to a tab, `name` changes the group heading, and custom item order is preserved. If you leave the order unchanged, the new default order starts with identification. Empty groups, such as animations without controls, are omitted. Group `10` (Identification), or the first available group, expands when the window opens.
 
 ## Custom functions for cleaning HTML code
 

@@ -5,7 +5,7 @@ Súčasťou Page Builder je aj vkladanie pripravených blokov. Ich zoznam sa aut
 V koreňovom adresári pre bloky môžete mať nasledovné pod adresáre:
 
 - ```section``` - pre bloky sekcií (modré označenie v Page Builder)
-- ```container``` - pre kontajnery (červené označenie v Page Builder)
+- ```container``` - pre kontajnery (ružové označenie v Page Builder)
 - ```column``` - pre stĺpce (zelené označenie v Page Builder)
 - ```content``` - pre vkladané rôzne texty, tlačidlá a podobne. Vkladajú sa pomocou ikony Bloky a žltej čiary, ktorá sa zobrazuje medzi blokmi.
 
@@ -190,7 +190,7 @@ Samotné karty nie sú teda editovateľné, generujú sa automaticky. Editovate�
 
 Atribúty ID jednotlivých kariet sú generované automaticky podľa názvu karty. Ak potrebujete použiť špecifický názov je možné v HTML kóde nastaviť hodnotu `data-title` na `.tab-pane` elemente.
 
-Všimnite si použitie CSS triedy ```pb-not-container``` na hlavnom kontajner elemente. To zabezpečí, že tento element nebude označený ako kontajner a za kontajnery budú považované až jednotlivé karty. Každá karta používa CSS triedu ```pb-custom-container```, čo zabezpečí zobrazenie červeného rámu/nástrojovej lišty kontajnera.
+Všimnite si použitie CSS triedy ```pb-not-container``` na hlavnom kontajner elemente. To zabezpečí, že tento element nebude označený ako kontajner a za kontajnery budú považované až jednotlivé karty. Každá karta používa CSS triedu ```pb-custom-container```, čo zabezpečí označenie kontajnera ružovým rámikom a sprístupnenie jeho nástrojov v spoločnej lište.
 
 Pri zvolení možnosti presunutia tabu (v nástrojovej lište kontajnera) sa automaticky zobrazia všetky karty, aby bolo možné ľahko označiť kartu, kde sa má presunúť. To je zabezpečené CSS štýlom Page Builder.
 
@@ -599,6 +599,8 @@ window.pbBuildTabMenu = function(me, tabMenu) {
 
 };
 ```
+
+Okno **Štýl** zobrazuje vlastnosti v samostatne rozbaľovacích skupinách. Funkcia `pbBuildTabMenu` dostáva pôvodnú konfiguráciu `tabs` a `items`: `visible: false` skryje skupinu alebo všetky skupiny danej karty, `name` zmení nadpis skupiny a vlastné poradie položiek sa zachová. Ak poradie nezmeníte, použije sa nové predvolené poradie začínajúce identifikáciou. Prázdne skupiny, napríklad animácie bez ovládacích prvkov, sa nezobrazujú. Pri otvorení sa rozbalí skupina `10` (Identifikácia), prípadne prvá dostupná skupina.
 
 ## Vlastné funkcie pre čistenie HTML kódu
 

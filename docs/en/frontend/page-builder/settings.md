@@ -19,7 +19,7 @@ To run Page Builder correctly, set:
 
 Other config variables that can be edited:
 
-- `pagebuilderFilterAutoOpenItems` - ​​number of items that will automatically open when filtering in the block list, default 10.
+- `pagebuilderFilterAutoOpenItems` - legacy setting for the number of items expanded automatically. The new library does not use it: filtering keeps a matching category open or opens the first category with results.
 - `pagebuilderLibraryImageWidth` - ​​width of preview images in the block library, default 310.
 - `inlineEditingDisabledUrls` - ​​list of URLs for which the inline editor will not be available
 - `pageBuilderPrefix` - ​​prefix used for Page Builder CSS classes (pb by default), can only be changed if you also change the prefixes in Page Builder CSS classes
@@ -90,6 +90,20 @@ The following code is created after the Page Builder initialization:
 </div>
 ```
 
+## Editor controls
+
+Page Builder defaults to a selected block outline and a shared toolbar below CKEditor. The outline is drawn in a separate layer outside the content, offset from its edge. It does not add `padding`, `margin` or `border` to blocks, so their width and text wrapping stay unchanged. The layer does not intercept content clicks and is not clipped by a parent's `overflow: hidden`.
+
+The eye button cycles through selected, hidden and full hierarchy outlines. Ancestor outlines are offset outward. The choice is stored in `localStorage` under `webjet.pagebuilder.guides` (`selected`, `hidden`, `all`). If storage is unavailable, it applies to the current editor. Switching modes preserves selection and toolbar actions.
+
+The **Structure** tree uses recognized elements and names derived from content; it adds no identifiers or metadata. Standalone `pb-editable` elements can be selected without column operations. Hidden elements can be found without changing visibility.
+
+**Add block** displays destinations between sections, containers and columns. Its buttons are outside the content; temporary inactive `aside.pb-insert-space` elements create gaps in the structure. They are not CKEditor fields and `getClearNode` removes them even when saving during insertion mode. Column widths stay unchanged. Insertion uses the existing operations and restores CKEditor focus. The mode is not stored and does not change outline preferences.
+
+During insertion and column sizing, a blue hint with **Finish · Esc** replaces the path and toolbar actions. Exiting restores the regular toolbar. Device switching remains available during column sizing.
+
+Existing HTML, CSS classes, custom selectors and `pbCustomOptions`/`pbCustomSettings` remain valid. Toolbar actions use the existing operations, including restrictions on moving duplicable elements. Preview and saving use `getClearNode` and `clearEditorAttributes`; the new controls are outside the serialized content.
+
 ## Styling elements
 
 ### `SECTION` (blue color)
@@ -104,7 +118,7 @@ Styling using a class, with prefix: ```pb-style-section-```
 
 By setting the CSS class ```pb-not-section```, the element **will not be considered a section* element.
 
-### `CONTAINER` (red color)
+### `CONTAINER` (pink color)
 
 Initialization when using CSS class: ```container``` or ```pb-custom-container```. By setting CSS class ```pb-not-container```, the element **will not be considered a container** even if it has CSS class ```container```.
 

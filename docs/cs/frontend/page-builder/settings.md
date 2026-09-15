@@ -19,7 +19,7 @@ Pro správné spuštění Page Builder nastavte:
 
 Další konf. proměnné, které lze upravit:
 
-- `pagebuilderFilterAutoOpenItems` - ​​počet položek, které se při filtrování v seznamu bloků automaticky otevřou, ve výchozím nastavení 10.
+- `pagebuilderFilterAutoOpenItems` - starší nastavení počtu automaticky otevřených položek. Nová knihovna ho nepoužívá: při filtrování ponechá otevřenou vyhovující kategorii nebo otevře první kategorii s výsledkem.
 - `pagebuilderLibraryImageWidth` - ​​šířka náhledových obrázků v knihovně bloků, ve výchozím nastavení 310.
 - `inlineEditingDisabledUrls` - ​​seznam URL adres, pro které nebude dostupný inline editor
 - `pageBuilderPrefix` - ​​prefix, který se používá pro CSS třídy Page Builder (výchozí pb), změnit je možné pouze pokud změníte i prefixy v CSS třídách Page Builder
@@ -90,6 +90,20 @@ vznikne po inicializaci Page Builder kód:
 </div>
 ```
 
+## Ovládání v editoru
+
+Page Builder standardně zobrazuje rámeček vybraného bloku a společnou lištu pod CKEditorem. Rámeček se kreslí v samostatné vrstvě mimo obsah, s odstupem od jeho hrany. Nepřidává do bloků `padding`, `margin` ani `border`, takže nemění šířku nebo zalomení textu. Vrstva nezachytává kliknutí do obsahu a neomezuje ji `overflow: hidden` rodiče.
+
+Tlačítko oka přepíná rámeček výběru, žádné rámečky a rámečky celé hierarchie. Obrysy předků jsou odsazené směrem ven. Volba se ukládá do `localStorage` pod klíčem `webjet.pagebuilder.guides` (`selected`, `hidden`, `all`). Při nedostupném úložišti platí pro aktuální editor. Přepnutí nemění výběr ani nástroje.
+
+Strom **Struktura** používá rozpoznané elementy a názvy odvozené z obsahu; nepřidává identifikátory ani metadata. Samostatné `pb-editable` elementy lze vybrat, ale nemají operace pro sloupce. Skryté elementy lze najít bez změny viditelnosti.
+
+Režim **Přidat blok** zobrazuje pozice mezi sekcemi, kontejnery a sloupci. Tlačítka jsou mimo obsah; do struktury se dočasně přidávají neaktivní `aside.pb-insert-space` pro vytvoření mezer. Nejsou součástí polí CKEditoru a `getClearNode` je odstraní i při ukládání v aktivním režimu. Šířky sloupců se nemění. Vložení používá původní operace a obnoví fokus CKEditoru. Režim se neukládá a nemění nastavení rámečků.
+
+Při vkládání a nastavování šířky sloupců nahradí cestu a nástroje modrý pomocník s tlačítkem **Ukončit · Esc**. Ukončení obnoví běžnou lištu. Při nastavování šířky je nadále dostupné přepínání zařízení.
+
+Původní HTML, CSS třídy, vlastní selektory a funkce `pbCustomOptions`/`pbCustomSettings` zůstávají platné. Akce lišty používají stávající operace včetně omezení přesunu duplikovatelných prvků. Náhled a uložení používají `getClearNode` a `clearEditorAttributes`; nové ovládací prvky jsou mimo serializovaný obsah.
+
 ## Stylování elementů
 
 ### `SECTION` (modrá barva)
@@ -104,7 +118,7 @@ Stylování pomocí třídy, s prefixem: ```pb-style-section-```
 
 Nastavením CSS třídy ```pb-not-section``` se element **nebude považovat za section* element.
 
-### `CONTAINER` (červená barva)
+### `CONTAINER` (růžová barva)
 
 Inicializace při použití CSS třídy: ```container``` nebo ```pb-custom-container```. Nastavením CSS třídy ```pb-not-container``` se element **nebude považovat za kontejner** i když má CSS třídu ```container```.
 
