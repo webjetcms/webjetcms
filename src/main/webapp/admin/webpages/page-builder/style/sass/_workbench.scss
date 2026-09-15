@@ -72,7 +72,7 @@
     background: white;
     box-shadow: 0 3px 8px rgba(19, 21, 27, .06);
 
-    &.is-inserting, &.is-resizing {
+    &.is-inserting, &.is-resizing, &.is-moving {
         padding: 0;
         gap: 0;
         background: #edf3ff;
@@ -84,7 +84,8 @@
         }
     }
     &.is-inserting > :not(.#{$prefix}-insert-hint),
-    &.is-resizing > :not(.#{$prefix}-resize-hint) { display: none !important; }
+    &.is-resizing > :not(.#{$prefix}-resize-hint),
+    &.is-moving > :not(.#{$prefix}-move-hint) { display: none !important; }
     &-standalone { position: fixed; top: 0; z-index: 102000; }
     &-path {
         display: flex;
@@ -139,16 +140,16 @@ html.pb-insertion-open { overflow-anchor: none; }
         white-space: normal;
         overflow-wrap: anywhere;
         text-align: center;
-        bottom: calc(100% + 8px);
+        top: calc(100% + 8px);
+        bottom: auto;
         left: auto;
         right: 0;
-        transform: translateY(4px);
+        transform: translateY(-4px);
     }
     &:is(:hover, :focus-visible):not(:disabled)::before { opacity: 1; visibility: visible; transform: translateY(0); }
     &:disabled::before { opacity: 0; visibility: hidden; }
 }
 .#{$prefix}-workbench > [data-pb-action=structure]::before { left: 0; right: auto; }
-.#{$prefix}-structure-heading button.#{$prefix}-tooltip::before { top: calc(100% + 8px); bottom: auto; }
 // These controls already show their full label, or live in a clipped navigation strip.
 .#{$prefix}-workbench-menu button.#{$prefix}-tooltip::before,
 .#{$prefix}-mode-hint button.#{$prefix}-tooltip::before,

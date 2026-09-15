@@ -2944,18 +2944,18 @@ div.exit-inline-editor a[aria-pressed=true] {
   background: white;
   box-shadow: 0 3px 8px rgba(19, 21, 27, 0.06);
 }
-.pb-workbench.is-inserting, .pb-workbench.is-resizing {
+.pb-workbench.is-inserting, .pb-workbench.is-resizing, .pb-workbench.is-moving {
   padding: 0;
   gap: 0;
   background: #edf3ff;
 }
-.pb-workbench.is-inserting > .pb-mode-hint, .pb-workbench.is-resizing > .pb-mode-hint {
+.pb-workbench.is-inserting > .pb-mode-hint, .pb-workbench.is-resizing > .pb-mode-hint, .pb-workbench.is-moving > .pb-mode-hint {
   flex: 1 1 100%;
   margin: 0;
   padding: 6px 10px;
   border-top: 0;
 }
-.pb-workbench.is-inserting > :not(.pb-insert-hint), .pb-workbench.is-resizing > :not(.pb-resize-hint) {
+.pb-workbench.is-inserting > :not(.pb-insert-hint), .pb-workbench.is-resizing > :not(.pb-resize-hint), .pb-workbench.is-moving > :not(.pb-move-hint) {
   display: none !important;
 }
 .pb-workbench-standalone {
@@ -3056,10 +3056,11 @@ html.pb-insertion-open {
   white-space: normal;
   overflow-wrap: anywhere;
   text-align: center;
-  bottom: calc(100% + 8px);
+  top: calc(100% + 8px);
+  bottom: auto;
   left: auto;
   right: 0;
-  transform: translateY(4px);
+  transform: translateY(-4px);
 }
 .pb-workbench > button.pb-tooltip:is(:hover, :focus-visible):not(:disabled)::before,
 .pb-workbench-actions > button.pb-tooltip:is(:hover, :focus-visible):not(:disabled)::before,
@@ -3080,11 +3081,6 @@ html.pb-insertion-open {
 .pb-workbench > [data-pb-action=structure]::before {
   left: 0;
   right: auto;
-}
-
-.pb-structure-heading button.pb-tooltip::before {
-  top: calc(100% + 8px);
-  bottom: auto;
 }
 
 .pb-workbench-menu button.pb-tooltip::before,

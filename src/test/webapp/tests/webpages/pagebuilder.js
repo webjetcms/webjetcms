@@ -528,11 +528,8 @@ Scenario('duplicable elements toolbar, cleanup and operations', async ({I, DTE, 
     openDuplicableToolbar(I, 1, 2, "move");
     I.click(".pb-workbench [data-pb-action=move]");
     I.waitForElement("#wjInline-docdata.pb-is-moving-child.pb-is-moving-duplicable-element", 10);
-    const iframeFocused = await I.executeScript((root) => {
-        const cancelButton = root.querySelector("button.pb-notify__footer__button");
-        cancelButton.focus();
-        return root.ownerDocument.activeElement === cancelButton;
-    });
+    I.waitForVisible('.pb-workbench [data-pb-action=end-move]', 10);
+    const iframeFocused = await I.executeScript(() => document.activeElement.matches('.pb-workbench [data-pb-action=end-move]'));
     assert.strictEqual(iframeFocused, true, "The Page Builder iframe must receive the Escape key");
     I.pressKey("Escape");
     I.dontSeeElement("#wjInline-docdata.pb-is-moving-child");
@@ -1014,6 +1011,28 @@ Scenario('workbench CSS tooltips on toolbar and insertion buttons', async ({I, D
         await page.keyboard.press('Tab');
         await page.keyboard.press('Shift+Tab');
         await frame.waitForFunction(selector=>document.activeElement.matches(selector) && getComputedStyle(document.activeElement,'::before').opacity==='1',selector);
+        for (const action of ['structure', 'insert', 'resize', 'duplicate-adjacent', 'more', 'guides']) {
+            const button = frame.locator('.pb-workbench [data-pb-action='+action+']');
+            await button.hover();
+            const placement = await button.evaluate(element => {
+                const rect = element.getBoundingClientRect(), style = getComputedStyle(element, '::before');
+                const toolbar = element.closest('.pb-workbench').getBoundingClientRect();
+                return {top: rect.top + element.clientTop + parseFloat(style.top), toolbarBottom: toolbar.bottom};
+            });
+            assert.ok(placement.top >= placement.toolbarBottom, 'Toolbar tooltips must appear below the bar, clear of CKEditor');
+        }
+        await frame.locator('.cke_combo__styles:visible .cke_combo_button').click();
+        await frame.locator('.cke_panel:visible').waitFor({state: 'visible'});
+        const panelAboveToolbar = await frame.locator('.cke_panel:visible').evaluate(panel => {
+            const panelRect = panel.getBoundingClientRect(), barRect = document.querySelector('.pb-workbench').getBoundingClientRect();
+            const left = Math.max(panelRect.left, barRect.left), right = Math.min(panelRect.right, barRect.right);
+            const top = Math.max(panelRect.top, barRect.top), bottom = Math.min(panelRect.bottom, barRect.bottom);
+            return right > left && bottom > top && panel.contains(document.elementFromPoint((left + right) / 2, (top + bottom) / 2));
+        });
+        assert.equal(panelAboveToolbar, true, 'CKEditor dropdowns must remain clickable above the workbench');
+        await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path:'../../../build/test/pagebuilder-tooltip-ckeditor-panel.png'});
+        await frame.locator('.cke_combo__styles:visible .cke_combo_button').click();
+        await frame.locator('.cke_panel:visible').waitFor({state: 'hidden'});
         await frame.locator('.pb-workbench [data-pb-action=insert]').click();
         await frame.waitForFunction(()=>window.pageBuilder.ui.insertAnimations.every(animation=>animation.playState==='finished'));
         await frame.evaluate(()=>{
@@ -1792,6 +1811,57 @@ Scenario('workbench outline modes, offsets and remembered preference', async ({I
     });
     assert.deepStrictEqual(fallback, {invalid: 'selected', blocked: 'hidden'}, 'Invalid or unavailable storage must not prevent outline switching');
     I.switchTo();
+    DTE.cancel();
+});
+
+Scenario('workbench move and duplicate hints replace the toolbar and restore focus', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    const before = await workbenchGeometry(I);
+    await I.usePlaywrightTo('verify destination hints, cancellation and completed duplication', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        const bar = frame.locator('.pb-workbench');
+        const initialHtml = await frame.evaluate(() => window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data);
+        for (const width of [1440, 1057, 720]) {
+            await page.setViewportSize({width, height: 1052});
+            for (const action of ['duplicate', 'move']) {
+                await bar.locator('[data-pb-action=more]').click();
+                await bar.locator('[data-pb-action='+action+']').click();
+                await bar.locator('.pb-move-hint').waitFor({state: 'visible'});
+                assert.deepStrictEqual(await bar.locator('button:visible').evaluateAll(buttons => buttons.map(button => button.dataset.pbAction)), ['end-move'], 'The destination hint must replace the structure toolbar');
+                assert.equal(await frame.locator('.pb-notify').isVisible(), false, 'Choosing a destination must not show the old notification popup');
+                assert.equal(await bar.locator('.pb-move-hint [role=status]').textContent(), action === 'duplicate' ? 'Vyberte miesto, kam chcete blok duplikovať.' : 'Vyberte miesto, kam chcete blok presunúť.', 'Each operation must explain which destination to choose');
+                assert.ok((await bar.locator('[data-pb-action=end-move]').textContent()).includes('Esc'), 'The Exit action must advertise the Escape shortcut');
+                assert.equal(await frame.evaluate(() => document.activeElement.dataset.pbAction), 'end-move', 'The destination hint must focus its Exit action');
+                const layout = await bar.evaluate(element => {
+                    const hint = element.querySelector('.pb-move-hint'), button = hint.querySelector('button');
+                    const barRect = element.getBoundingClientRect(), hintRect = hint.getBoundingClientRect(), buttonRect = button.getBoundingClientRect();
+                    return {singleRow: Math.abs(barRect.height - hintRect.height) <= 2, fits: hint.scrollWidth <= hint.clientWidth, exitRight: buttonRect.right <= barRect.right && buttonRect.right >= barRect.right - 12};
+                });
+                assert.deepStrictEqual(layout, {singleRow: true, fits: true, exitRight: true}, 'The hint must fit one toolbar row with Exit aligned to the right');
+                if (width === 1057 && action === 'duplicate') await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path:'../../../build/test/pagebuilder-duplicate-hint.png'});
+                if (action === 'duplicate') await bar.locator('[data-pb-action=end-move]').click();
+                else await page.keyboard.press('Escape');
+                await bar.locator('.pb-move-hint').waitFor({state: 'hidden'});
+                await bar.locator('[data-pb-action=more]:enabled').waitFor({state: 'visible'});
+                assert.equal(await frame.locator('#wjInline-docdata.pb-is-moving-child, .pb-is-moving, .pb-is-duplicable-target').count(), 0, 'Cancelling must clear every destination and source marker');
+                assert.equal(await frame.evaluate(() => document.activeElement.dataset.pbAction), 'more', 'Cancelling must return focus to the action menu button');
+                assert.equal(await frame.evaluate(() => window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data), initialHtml, 'Cancelling must preserve the authored content');
+            }
+        }
+        await page.setViewportSize({width: 1440, height: 1000});
+    });
+    assert.deepStrictEqual(await workbenchGeometry(I), before, 'Cancelling must restore the original canvas geometry');
+    I.click(locate(workbenchFixture+' li.pb-duplicable-element').first());
+    I.click('.pb-workbench [data-pb-action=more]');
+    I.click('.pb-workbench [data-pb-action=duplicate]');
+    I.waitForVisible('.pb-move-hint', 10);
+    I.forceClick(locate(workbenchFixture+' li.pb-duplicable-element').at(2).find('aside.pb-append'));
+    I.waitForElement(workbenchFixture+' li.pb-duplicable-element:nth-child(3)', 10);
+    I.waitForInvisible('.pb-move-hint', 10);
+    I.waitForVisible('.pb-workbench [data-pb-action=duplicate-adjacent]:enabled', 10);
+    I.dontSeeElement('.pb-notify');
+    I.switchTo();
+    I.amAcceptingPopups();
     DTE.cancel();
 });
 

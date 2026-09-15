@@ -103,6 +103,8 @@
                     insert: "<iwcm:text key='pagebuilder.toolbar.add_block'/>",
                     insertHint: "<iwcm:text key='pagebuilder.ui.insert.hint'/>",
                     insertEnd: "<iwcm:text key='pagebuilder.ui.insert.end'/>",
+                    moveHint: "<iwcm:text key='pagebuilder.ui.move.hint'/>",
+                    duplicateHint: "<iwcm:text key='pagebuilder.ui.duplicate.hint'/>",
                     resizeHint: "<iwcm:text key='pagebuilder.ui.resize.hint'/>",
                     resizeMobile: "<iwcm:text key='pagebuilder.ui.resize.mobile'/>",
                     resizeTablet: "<iwcm:text key='pagebuilder.ui.resize.tablet'/>",
@@ -126,6 +128,9 @@
             ui.resizeHint = $('<div>', { 'class': prefix+'-mode-hint '+prefix+'-resize-hint', hidden: true }).append(
                 $('<span>', { role: 'status' }).text(ui.labels.resizeHint+' ').append($('<strong>')),
                 me.workbench_button('end-resize', ui.labels.insertEnd, 'close')
+            ).appendTo(ui.bar);
+            ui.moveHint = $('<div>', { 'class': prefix+'-mode-hint '+prefix+'-move-hint', hidden: true }).append(
+                $('<span>', { role: 'status' }), me.workbench_button('end-move', ui.labels.insertEnd, 'close')
             ).appendTo(ui.bar);
             ui.insertLayer = $('<div>', { 'class': prefix+'-insert-layer', hidden: true, 'aria-label': ui.labels.insert }).appendTo(document.body);
             ui.layer = $('<div>', { 'class': prefix+'-outline-layer', 'aria-hidden': 'true' }).appendTo(document.body);
@@ -465,6 +470,11 @@
         workbench_action: function(action, invoker) {
             var me = this, ui = me.ui, node = $(ui.selected);
             ui.quiet = false;
+            if (action === 'end-move') {
+                me.cancel_move_grid_element();
+                me.restore_workbench_focus();
+                return;
+            }
             if (action === 'end-resize' || (action === 'resize' && me.$wrapper.find('.'+me.state.is_resize_columns).length)) {
                 me.cancel_resize_columns();
                 me.restore_workbench_focus();
@@ -958,6 +968,14 @@
                     ui.actions.find('[data-pb-action=more]').attr('aria-expanded', 'false');
                     ui.resizeHint.find('[data-pb-action=end-resize]')[0].focus({ preventScroll: true });
                 }
+                var moving = me.$wrapper.hasClass(me.state.is_moving_child);
+                var moveStarted = moving && !ui.bar.hasClass('is-moving');
+                ui.bar.toggleClass('is-moving', moving);
+                ui.moveHint.prop('hidden', !moving);
+                if (moveStarted) {
+                    ui.moveHint.find('[role=status]').text(me.duplicate ? ui.labels.duplicateHint : ui.labels.moveHint);
+                    ui.moveHint.find('[data-pb-action=end-move]')[0].focus({ preventScroll: true });
+                }
                 var contentBottom = ui.toolbarContent.length ? ui.toolbarContent[0].getBoundingClientRect().bottom : 0;
                 if (ui.toolbarHost.length) {
                     var hostTop = ui.toolbarHost[0].getBoundingClientRect().top;
@@ -972,7 +990,6 @@
                 var top = Math.max(0, ui.bar[0].getBoundingClientRect().bottom);
                 ui.layer.css('top', top);
                 ui.drawer.css('top', top + 8);
-                var moving = me.$wrapper.hasClass(me.state.is_moving_child);
                 var element = moving ? ui.hovered : ui.selected;
                 var obstructed = me.$wrapper.hasClass(me.state.is_modal_open) || me.$wrapper.hasClass(me.state.is_library_active);
                 ui.layer.toggleClass('is-resizing', resizing);
@@ -2622,10 +2639,8 @@
 
             if(this.duplicate) {
                 $(this.$wrapper).addClass(this.state.is_duplicating);
-                this.update_notify_content("<iwcm:text key='pagebuilder.notify_content.duplicate'/>",'');
-            } else {
-                this.update_notify_content("<iwcm:text key='pagebuilder.notify_content.move'/>",'');
             }
+            if (!this.ui) this.update_notify_content(this.duplicate ? "<iwcm:text key='pagebuilder.notify_content.duplicate'/>" : "<iwcm:text key='pagebuilder.notify_content.move'/>", '');
 
             if(is_duplicable) {
                 $(this.$wrapper).addClass(this.state.is_moving_type(this.tag.duplicable));
@@ -2745,6 +2760,11 @@
         cancel_move_grid_element: function () {
             this.removeClassStartingWith($(this.$wrapper),this.state.is_moving);
             $(this.$wrapper).removeClass(this.state.is_duplicating);
+            if (this.ui) {
+                this.ui.bar.removeClass('is-moving');
+                this.ui.moveHint.prop('hidden', true);
+                this.schedule_workbench();
+            }
 
             $(this.$wrapper).find(this.tagc._grid_element)
                 .removeClass(this.state.is_special_helper)
@@ -3785,6 +3805,7 @@
             //console.log("forceEsc=", forceEsc);
             if(this.esc_key_down || (typeof forceEsc != "undefined" && forceEsc==true)) {
                 if (this.$wrapper.find('.'+this.state.is_resize_columns).length) this.cancel_resize_columns();
+                if (this.$wrapper.hasClass(this.state.is_moving_child)) this.cancel_move_grid_element();
 
                 if($(this.$wrapper).hasClass(this.state.has_child_toolbar_active) && !$(this.$wrapper).hasClass(this.state.is_notify_active)){
                     this.set_toolbar_invisible();
