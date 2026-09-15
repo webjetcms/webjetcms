@@ -77,13 +77,15 @@ const videoPlan = {
             "title": "Understand the block hierarchy",
             "text-sk": "Najprv si vysvetlime štruktúru. Modrá sekcia je veľká časť stránky, napríklad predstavenie služieb. V nej je ružový kontajner, ktorý drží obsah pokope. Sivý riadok usporadúva stĺpce vedľa seba. Zelený stĺpec obsahuje text, obrázok alebo aplikáciu. Oranžová označuje opakovateľnú položku alebo duplikovateľný riadok. Tieto úrovne nie sú novým spôsobom skladania stránky. Nové ovládanie vám ich pomáha jasnejšie rozlíšiť.",
             "notes": "Postupne vybrať Stĺpec, Riadok, Kontajner a Sekcia v ceste. MANUAL: postupne pripájať popisky úrovní k reálnemu záberu, zachovať farby rozhrania.",
-            shot: async ({ I, services }) => {
-                for (const type of ["row", "container", "section"]) {
+            shot: async ({ I, services, fixture }) => {
+                for (const type of ["section", "container", "row" ]) {
                     await I.videoClick(`.pb-workbench-path [data-type=${type}]`);
                     await I.waitForElement(`.pb-workbench-path [data-type=${type}][aria-current=location]`, 10);
                     await I.wait(3); // Editing room for the hierarchy explanation.
                     await I.videoClick(services);
                 }
+                await I.videoClick(locate(`${fixture} li.pb-duplicable-element`).first());
+                await I.wait(3); // Give some time to highlight the duplicable element.
             }
         },
         {
@@ -401,17 +403,14 @@ const videoPlan = {
             "text-sk": "Ikona oka postupne prepína rámik vybraného bloku, skryté rámiky a rámiky celej jeho hierarchie. Posledný režim pomôže pochopiť vnorenie. Prehliadač si voľbu pamätá. Nástroje a obsah zostávajú dostupné aj bez rámikov.",
             "notes": "S otvorenou Štruktúrou prepnúť oko: vybraný blok > žiadne rámiky > celá hierarchia > vybraný blok. Panel zostáva otvorený. Zavrieť ho a podržať čistý záber editora.",
             shot: async ({ I, action }) => {
-                await I.videoClick(action("structure"));
-                await I.fillField(".pb-structure input[type=search]", "");
+                //await I.videoClick(action("structure"));
+                //await I.fillField(".pb-structure input[type=search]", "");
                 for (const mode of ["hidden", "all", "selected"]) {
                     await I.videoClick(action("guides"));
                     await I.waitForElement(`${action("guides")}[data-pb-guides=${mode}]`, 10);
-                    await I.seeElement(".pb-structure");
                     await I.wait(4);
                 }
-                await I.videoClick(".pb-structure [data-pb-action=close-structure]");
-                await I.waitForInvisible(".pb-structure", 10);
-                await I.wait(5);
+                await I.wait(10);
             }
         },
         {
