@@ -290,6 +290,25 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
     }
 
     @Test
+    void testCopyEntityIntoOriginalCopiesNullOnlyForNumberFields() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<NumberMergeTestEntity, Long> repository = mock(JpaRepository.class);
+        DatatableRestControllerV2<NumberMergeTestEntity, Long> numberController =
+                new DatatableRestControllerV2<>(repository) {};
+        NumberMergeTestEntity original = new NumberMergeTestEntity(10, 20, 30);
+
+        numberController.copyEntityIntoOriginal(new NumberMergeTestEntity(null, null, null), original);
+
+        assertNull(original.getNumberValue());
+        assertEquals(20, original.getTextNumberValue());
+        assertEquals(30, original.getNumberOptOutValue());
+
+        numberController.copyEntityIntoOriginal(new NumberMergeTestEntity(40, null, null), original);
+
+        assertEquals(40, original.getNumberValue());
+    }
+
+    @Test
     void testDelete() {
         Object entity = new Object();
         Long id = 1L;
@@ -820,6 +839,48 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
 
         public void setName(String name) {
             this.name = name;
+        }
+    }
+
+    private static class NumberMergeTestEntity {
+
+        @DataTableColumn(inputType = DataTableColumnType.NUMBER)
+        private Integer numberValue;
+
+        @DataTableColumn(inputType = DataTableColumnType.TEXT_NUMBER)
+        private Integer textNumberValue;
+
+        @DataTableColumn(inputType = DataTableColumnType.NUMBER, alwaysCopyProperties = { false })
+        private Integer numberOptOutValue;
+
+        NumberMergeTestEntity(Integer numberValue, Integer textNumberValue, Integer numberOptOutValue) {
+            this.numberValue = numberValue;
+            this.textNumberValue = textNumberValue;
+            this.numberOptOutValue = numberOptOutValue;
+        }
+
+        public Integer getNumberValue() {
+            return numberValue;
+        }
+
+        public void setNumberValue(Integer numberValue) {
+            this.numberValue = numberValue;
+        }
+
+        public Integer getTextNumberValue() {
+            return textNumberValue;
+        }
+
+        public void setTextNumberValue(Integer textNumberValue) {
+            this.textNumberValue = textNumberValue;
+        }
+
+        public Integer getNumberOptOutValue() {
+            return numberOptOutValue;
+        }
+
+        public void setNumberOptOutValue(Integer numberOptOutValue) {
+            this.numberOptOutValue = numberOptOutValue;
         }
     }
 

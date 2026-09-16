@@ -2426,8 +2426,9 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 					//implicit false value
 					if (alwaysCopy==false) continue;
 				}
-				if (alwaysCopy || field.getType().isAssignableFrom(Date.class) || field.getType().isAssignableFrom(java.sql.Date.class) || field.getType().isAssignableFrom(LocalDate.class) || field.getType().isAssignableFrom(LocalDateTime.class)) {
-					//ak je to datum tak ho dajme do ignore, aby isiel zadat v GUI prazdny datum
+				boolean isNumber = Arrays.asList(annotation.inputType()).contains(DataTableColumnType.NUMBER);
+				if (alwaysCopy || isNumber || field.getType().isAssignableFrom(Date.class) || field.getType().isAssignableFrom(java.sql.Date.class) || field.getType().isAssignableFrom(LocalDate.class) || field.getType().isAssignableFrom(LocalDateTime.class)) {
+					//Copy dates and NUMBER fields even when null so their values can be cleared in the editor.
 					alwaysCopyProperties.add(field.getName());
 				}
 			}

@@ -61,6 +61,8 @@ Textové pole ```type="number"```, prehliadač typicky zobrazí v poli aj šípk
 
 Rozdiel medzi ```NUMBER``` a ```TEXT_NUMBER``` je v zobrazení v datatabuľke. ```TEXT_NUMBER``` zobrazí zaokrúhlené číslo, pri vyššom čísle vypíše v textovej podobe, napr. ```10 tis.``` namiesto ```10000```. V editore je správanie rovnaké (zobrazí sa presná hodnota).
 
+Pri editácii existujúceho záznamu je možné hodnotu poľa typu `NUMBER` vymazať. Prázdna hodnota sa prenesie do entity ako `null`. Automatické vynulovanie sa nevzťahuje na `TEXT_NUMBER`; v prípade potreby ho povoľte atribútom `alwaysCopyProperties = { true }`.
+
 ## PASSWORD
 
 Textové pole ```type="password"``` pre zadanie hesla.

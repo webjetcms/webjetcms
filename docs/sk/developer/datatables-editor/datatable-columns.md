@@ -171,7 +171,7 @@ Voliteľné polia:
   - ```{currentDate}``` - nahradí sa za aktuálny dátum
   - ```{currentDateTimeSeconds}``` - nahradí sa za aktuálny dátum a čas vrátane sekúnd
   - ```{currentTime}``` - nahradí sa za aktuálny čas
-- `alwaysCopyProperties` - pri editácii záznamu sa prázdne `null` hodnoty zachovajú a skopírujú z existujúceho objektu v databáze. Pre polia typu dátum/čas to neplatí, tie sa prepíšu automaticky. Ak potrebujete toto použiť aj pre iný typ poľa a preniesť aj `null` hodnotu nastavte atribút na `true`, prípadne na `false` ak nechcete automatický prepis pre dátumové polia.
+- `alwaysCopyProperties` - pri editácii záznamu sa prázdne `null` hodnoty štandardne zachovajú z existujúceho objektu v databáze. Polia typu dátum/čas a `NUMBER` sa automaticky prepíšu aj hodnotou `null`, aby ich bolo možné v editore vyprázdniť. Ak potrebujete preniesť `null` aj pre iný typ poľa, nastavte atribút na `true`; hodnotou `false` môžete automatický prepis pre dátumové a `NUMBER` polia vypnúť.
 - `ai` - nastavením na hodnotu `false` je možné vypnúť zobrazenie AI ikony pre všeobecné možnosti (preložiť, opraviť gramatiku...). AI ikona sa zobrazí len ak je asistent nastavený pre toto konkrétne pole.
 - `disabled` - nastavením na `false` sa vstupnému poľu v editore nastaví atribút `disabled="disabled"`.
 - `export` - nastavením na hodnotu `false` sa pole nebude exportovať.

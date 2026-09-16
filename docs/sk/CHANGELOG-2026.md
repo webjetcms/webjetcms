@@ -325,7 +325,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 				"Ak je nastavena na true, tak sa budu zobrazovat aj skupiny pre verejne obstaravanie.");
 ```
 
-- Dátové tabuľky - opravená validácia povinných polí typu [`DATE` a `DATETIME`](developer/datatables-editor/standard-fields.md#date). Prázdna hodnota sa odošle ako `null`, zobrazí sa chybové hlásenie podľa typu poľa a kalendárový výber sa po neúspešnej validácii automaticky neotvorí. Validačná chyba poľa [`QUILL`](developer/datatables-editor/standard-fields.md#quill) zároveň zvýrazní okraj nástrojovej lišty aj editora (#58770).
+- Dátové tabuľky - opravená validácia povinných polí typu [`DATE` a `DATETIME`](developer/datatables-editor/standard-fields.md#date). Prázdna hodnota sa odošle ako `null`, zobrazí sa chybové hlásenie podľa typu poľa a kalendárový výber sa po neúspešnej validácii automaticky neotvorí (#58770).
+- Dátové tabuľky - Pri editácii je možné vyprázdnením poľa vynulovať aj hodnotu typu [`NUMBER`](developer/datatables-editor/standard-fields.md#number--text_number). Validačná chyba poľa [`QUILL`](developer/datatables-editor/standard-fields.md#quill) zároveň zvýrazní okraj nástrojovej lišty aj editora (#58770).
 
 ## 2026.18
 

@@ -473,7 +473,7 @@ public void addSpecSearch(Map<String, String> params, List<Predicate> predicates
 
 ## Neexistujúce atribúty v editore
 
-Štandardne z editora nemusia prichádzať všetky atribúty entity, preto sa pred uložením spájajú hodnoty existujúcej entity a údajov zaslaných z editora. Štandardne sa prepíšu všetky nie ```null``` atribúty. To ale neumožňuje zadať prázdny dátum (ak už bol raz nastavený). Preto atribúty anotované DataTableColumn typu ```Date``` sú prenesené aj keď majú ```null``` hodnotu. Toto spojenie sa vykonáva v metóde ```public T editItem(T entity, long id)``` s využitím ```NullAwareBeanUtils.copyProperties(entity, one);```.
+Štandardne z editora nemusia prichádzať všetky atribúty entity, preto sa pred uložením spájajú hodnoty existujúcej entity a údajov zaslaných z editora. Štandardne sa prepíšu všetky nie ```null``` atribúty. To ale neumožňuje vyprázdniť už nastavený dátum alebo číselnú hodnotu. Preto sa dátumové atribúty a polia anotované ako ```DataTableColumnType.NUMBER``` prenesú aj vtedy, keď majú hodnotu ```null```. Pre iné typy je možné toto správanie zapnúť pomocou ```alwaysCopyProperties = { true }``` alebo ho pre dátumové a ```NUMBER``` polia vypnúť hodnotou ```false```. Toto spojenie sa vykonáva v metóde ```public T editItem(T entity, long id)``` s využitím ```NullAwareBeanUtils.copyProperties(entity, one);```.
 
 ## Obnovenie údajov po uložení
 
