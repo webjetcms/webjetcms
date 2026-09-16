@@ -278,8 +278,11 @@ private String country;
 
 Povinné polia je možné označiť anotáciami:
 
-- ```@NotEmpty``` - neprázdne pole, neumožní zadať medzeru, alebo tabulátor
-- ```@NotBlank``` - neprázdne pole, umožní ale zadať medzeru
+- ```@NotNull``` - hodnota nesmie byť `null`; použite najmä pre objektové typy vrátane polí `DATE` a `DATETIME`
+- ```@NotEmpty``` - reťazec, kolekcia, mapa alebo pole nesmie byť `null` ani prázdne; anotácia nie je určená pre typ `Date`
+- ```@NotBlank``` - text nesmie byť `null`, prázdny ani obsahovať iba medzery alebo tabulátory
+
+Pre dátumové polia použite výhradne `@NotNull`. Prázdna hodnota sa na server odošle ako `null`, aby ju štandardná Bean Validation vyhodnotila ako chýbajúcu povinnú hodnotu. Editor pre `DATE` a `DATETIME` zobrazí typovo špecifické chybové hlásenie.
 
 Ďalšie možnosti validácie sú opísané v dokumentácii k [restcontrolleru](../datatables/restcontroller.md#validácia--povinné-polia).
 

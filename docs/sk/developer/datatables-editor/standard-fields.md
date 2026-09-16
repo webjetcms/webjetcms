@@ -110,8 +110,11 @@ Viac riadkové textové pole. Dlhý text sa nezalamuje, ak chcete zalomiť dlhý
 
 Výber dátumu, po kliknutí do pola zobrazí okno pre výber dátumu.
 
+Ak je dátum povinný, označte pole anotáciou `@NotNull`. Prázdna hodnota sa na server odošle ako `null` a editor zobrazí chybové hlásenie **Povinné pole. Zadajte dátum.** Kalendárový výber sa po neúspešnej validácii automaticky neotvorí.
+
 ```java
     @Column(name = "date_from")
+	@NotNull
 	@DataTableColumn(
         inputType = DataTableColumnType.DATE,
         title="calendar.begin",
@@ -124,8 +127,11 @@ Výber dátumu, po kliknutí do pola zobrazí okno pre výber dátumu.
 
 Podobné pole ako ```DATE``` ale naviac umožňuje aj výber času.
 
+Pre povinnú hodnotu použite anotáciu `@NotNull`. Editor pri prázdnej hodnote zobrazí chybové hlásenie **Povinné pole. Zadajte dátum a čas.**
+
 ```java
     @Column(name = "date_to")
+	@NotNull
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="components.banner.dateTo",
@@ -464,6 +470,8 @@ Zobrazí textové pole, ktorého hodnotu nie je možné meniť. V príklade si v
 ## QUILL
 
 Zobrazí jednoduchý HTML editor, ktorý umožňuje základné formátovanie textu ako tučné písmo/kurzíva/podčiarknuté, nadpisy, zoznamy a odkaz.
+
+Pri validačnej chybe sa červeným okrajom zvýrazní nástrojová lišta aj editačná plocha, aby bol chybný obsah vizuálne označený rovnako ako pri ostatných typoch polí.
 
 Pri otvorení alebo potvrdení režimu úpravy HTML kódu editor odstráni nadbytočné prázdne odseky, napríklad `<p><br></p>`. Ak by odstránením zostal obsah úplne prázdny, pôvodný HTML kód zachová.
 

@@ -155,8 +155,13 @@ Scenario('reservation object + special prices test', ({I, DT, DTE}) => {
     let wrapper = "#datatableFieldDTE_Field_editorFields-objectPrices_wrapper";
 
     I.say("Required fields");
-    addPriceEntity(I, DTE, modal, "", "", "");
+    addPriceEntity(I, DTE, modal, "", "", "100");
     I.see("Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).", modal);
+    I.see("Povinné pole. Zadajte dátum.", `${modal} div.DTE_Field_Name_dateFrom`);
+    I.see("Povinné pole. Zadajte dátum.", `${modal} div.DTE_Field_Name_dateTo`);
+    I.dontSee("Povinné pole", `${modal} div.DTE_Field_Name_price`);
+    I.dontSeeElement("div.dt-datetime[role='dialog']");
+    I.seeElement(modal);
     I.click( locate(modal).find("button.btn-close-editor") );
 
     I.say("Adding price entity");
@@ -206,6 +211,7 @@ function addPriceEntity(I, DTE, modal, dateFrom, dateTo, price) {
 
     I.fillField(locate(modal).find("#DTE_Field_price"), price);
     I.click( locate(modal).find("button.btn-primary") );
+    DTE.waitForLoader();
 }
 
 Scenario('Domain test', ({I, DT, Document}) => {

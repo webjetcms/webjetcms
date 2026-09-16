@@ -281,6 +281,32 @@ export const dataTableInit = options => {
         return null;
     }
 
+    function handleEditorFieldError(editor, error) {
+        const field = editor.field(error.name);
+
+        if (field.type() === 'datetime') {
+            field.node().scrollIntoView({block: 'nearest'});
+            return;
+        }
+
+        field.focus();
+    }
+
+    function customizeDateRequiredErrorMessages(editor, json) {
+        if (!Array.isArray(json?.fieldErrors)) return;
+
+        for (const error of json.fieldErrors) {
+            const field = DATA.fields.find(item => item.name === error.name);
+            if (field?.required !== true || editor.field(error.name).val()) continue;
+
+            if (field?.renderFormat === 'dt-format-date') {
+                error.status = WJ.translate('datatables.field.required.date.error.js');
+            } else if (field?.renderFormat === 'dt-format-date-time') {
+                error.status = WJ.translate('datatables.field.required.datetime.error.js');
+            }
+        }
+    }
+
     function configureEditorAccessibility(dte, action) {
         const modal = document.getElementById(dte.TABLE.DATA.id + '_modal');
         if (modal == null) return;
@@ -1296,7 +1322,7 @@ export const dataTableInit = options => {
         //fix prace s datumami, DTED z nepochopitelnych dovodov pouzije moment len pre string hodnotu
         let originalDateTimeSetFunction = $.fn.dataTable.Editor.fieldTypes.datetime.set;
         $.fn.dataTable.Editor.fieldTypes.datetime.set = function (conf, val) {
-            val = ""+val;
+            val = val == null ? "" : ""+val;
 
             if ("dt-format-duration" === conf.renderFormat) {
                 conf._input.val(dtConfig.renderDuration(val, "editor", null, null));
@@ -1469,6 +1495,7 @@ export const dataTableInit = options => {
                 main: {
                     onEsc: false,
                     onBackground: false,
+                    onFieldError: handleEditorFieldError,
                     onReturn: false
                 }
             },
@@ -1566,6 +1593,10 @@ export const dataTableInit = options => {
                     return false;
                 }
             }*/
+        });
+
+        EDITOR.on('postSubmit', function (e, json) {
+            customizeDateRequiredErrorMessages(EDITOR, json);
         });
 
         EDITOR.on('opened', function (e, type, action) {
