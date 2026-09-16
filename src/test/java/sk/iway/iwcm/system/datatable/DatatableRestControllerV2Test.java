@@ -15,6 +15,7 @@ import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.web.bind.WebDataBinder;
 
 import ch.qos.logback.classic.Level;
 import sk.iway.iwcm.Constants;
@@ -44,6 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.persistence.Embeddable;
@@ -306,6 +308,22 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
         numberController.copyEntityIntoOriginal(new NumberMergeTestEntity(40, null, null), original);
 
         assertEquals(40, original.getNumberValue());
+    }
+
+    @Test
+    void testImportCopiesNullOnlyForIncludedNumberFields() {
+        NumberMergeTestEntity omitted = new NumberMergeTestEntity(10, 20, 30);
+        NumberMergeTestEntity included = new NumberMergeTestEntity(10, 20, 30);
+
+        try {
+            editImportedNumber(omitted, Set.of("textNumberValue"));
+            editImportedNumber(included, Set.of("numberValue"));
+        } finally {
+            controller.getOne(-1L);
+        }
+
+        assertEquals(10, omitted.getNumberValue());
+        assertNull(included.getNumberValue());
     }
 
     @Test
@@ -685,6 +703,26 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
         assertEquals(1L, entity.getId());
         assertEquals(1, entity.getDomainId());
         verify(repository, never()).saveAll(any());
+    }
+
+    private void editImportedNumber(NumberMergeTestEntity original, Set<String> importedColumns) {
+        @SuppressWarnings("unchecked")
+        JpaRepository<NumberMergeTestEntity, Long> repository = mock(JpaRepository.class);
+        when(repository.existsById(1L)).thenReturn(true);
+        when(repository.findById(1L)).thenReturn(Optional.of(original));
+
+        DatatableRestControllerV2<NumberMergeTestEntity, Long> numberController =
+                new DatatableRestControllerV2<>(repository) {};
+        TestRequest request = new TestRequest("", "/admin/rest/number-merge/editor");
+
+        NumberMergeTestEntity submitted = new NumberMergeTestEntity(null, 40, 30);
+        DatatableRequest<Long, NumberMergeTestEntity> datatableRequest = new DatatableRequest<>();
+        datatableRequest.setData(Map.of(1L, submitted));
+        datatableRequest.setDztotalchunkcount(1);
+        datatableRequest.setImportedColumns(importedColumns);
+
+        numberController.initBinder(request, new WebDataBinder(datatableRequest));
+        numberController.editItem(submitted, 1L);
     }
 
     private DatatableRestControllerV2<GeneratedIdTestEntity, Long> createGeneratedIdController(

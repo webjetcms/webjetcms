@@ -190,6 +190,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		boolean forceReload = isForceReload();
 		List<NotifyBean> notify = getThreadData().getNotify();
 		boolean isImporting = isImporting();
+		Set<String> importedColumns = getImportedColumns();
 
 		//toto nam zabezpeci aby sa nam nestratili udaje, ktore nemame v editore
 		T one = getOne(id);
@@ -197,6 +198,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		if (isForceReload()) setForceReload(forceReload);
 		if (notify!=null) addNotify(notify);
 		setImporting(isImporting);
+		setImportedColumns(importedColumns);
 
 		copyEntityIntoOriginal(entity, one);
 
@@ -2383,6 +2385,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		List<String> alwaysCopyProperties = new ArrayList<>();
 		List<String> ignoreProperties = new ArrayList<>();
 		List<String> identifierProperties = new ArrayList<>();
+		boolean importing = isImporting();
+		Set<String> importedColumns = importing ? getImportedColumns() : null;
 		for (Field field : getIdentifierFields(entity.getClass())) {
 			identifierProperties.add(field.getName());
 		}
@@ -2427,8 +2431,10 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 					if (alwaysCopy==false) continue;
 				}
 				boolean isNumber = Arrays.asList(annotation.inputType()).contains(DataTableColumnType.NUMBER);
-				if (alwaysCopy || isNumber || field.getType().isAssignableFrom(Date.class) || field.getType().isAssignableFrom(java.sql.Date.class) || field.getType().isAssignableFrom(LocalDate.class) || field.getType().isAssignableFrom(LocalDateTime.class)) {
-					//Copy dates and NUMBER fields even when null so their values can be cleared in the editor.
+				String columnName = Tools.isNotEmpty(annotation.data()) ? annotation.data() : field.getName();
+				boolean copyNullNumber = isNumber && (importing==false || (importedColumns!=null && importedColumns.contains(columnName)));
+				if (alwaysCopy || copyNullNumber || field.getType().isAssignableFrom(Date.class) || field.getType().isAssignableFrom(java.sql.Date.class) || field.getType().isAssignableFrom(LocalDate.class) || field.getType().isAssignableFrom(LocalDateTime.class)) {
+					//Copy dates and submitted NUMBER fields even when null so their values can be cleared in the editor.
 					alwaysCopyProperties.add(field.getName());
 				}
 			}

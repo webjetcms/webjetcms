@@ -129,6 +129,8 @@ Scenario('remove BASE test reservation object', async ({I, DT}) => {
 Scenario('reservation object + special prices test', ({I, DT, DTE}) => {
     I.amOnPage("/apps/reservation/admin/reservation-objects/");
 
+    let priceForHour = "125";
+
     I.clickCss("button.buttons-create");
     DTE.waitForEditor("reservationObjectDataTable");
 
@@ -138,6 +140,7 @@ Scenario('reservation object + special prices test', ({I, DT, DTE}) => {
     //Not important but required
     I.clickCss("#DTE_Field_description");
     I.fillField("#DTE_Field_description", "Reservation entity test + test of special prices inner data table.");
+    I.fillField("#DTE_Field_priceForHour", priceForHour);
 
     I.say("During create cant see special prices tab");
     I.dontSeeElement("#pills-dt-reservationObjectDataTable-specialPrice-tab");
@@ -147,6 +150,14 @@ Scenario('reservation object + special prices test', ({I, DT, DTE}) => {
     DT.filterContains("name", prices_reservation_object);
     I.click(prices_reservation_object);
     DTE.waitForEditor("reservationObjectDataTable");
+    I.waitForValue("#DTE_Field_priceForHour", priceForHour, 10);
+    I.fillField("#DTE_Field_priceForHour", "");
+    DTE.save();
+
+    DT.filterContains("name", prices_reservation_object);
+    I.click(prices_reservation_object);
+    DTE.waitForEditor("reservationObjectDataTable");
+    I.seeInField("#DTE_Field_priceForHour", "");
     I.seeElement("#pills-dt-reservationObjectDataTable-specialPrice-tab");
 
     I.clickCss("#pills-dt-reservationObjectDataTable-specialPrice-tab");
