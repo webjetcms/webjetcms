@@ -61,7 +61,9 @@ Textové pole ```type="number"```, prehliadač typicky zobrazí v poli aj šípk
 
 Rozdiel medzi ```NUMBER``` a ```TEXT_NUMBER``` je v zobrazení v datatabuľke. ```TEXT_NUMBER``` zobrazí zaokrúhlené číslo, pri vyššom čísle vypíše v textovej podobe, napr. ```10 tis.``` namiesto ```10000```. V editore je správanie rovnaké (zobrazí sa presná hodnota).
 
-Pri editácii existujúceho záznamu je možné hodnotu poľa typu `NUMBER` vymazať. Prázdna hodnota sa prenesie do entity ako `null`. Automatické vynulovanie sa nevzťahuje na `TEXT_NUMBER`; v prípade potreby ho povoľte atribútom `alwaysCopyProperties = { true }`.
+Pri editácii existujúceho záznamu je možné vymazať hodnotu objektového poľa typu `NUMBER`, napríklad `Integer`, `Long` alebo `Double`. Prázdna hodnota sa prenesie do entity ako `null`; primitívne typy `int`, `long` a `double` hodnotu `null` nepodporujú. Automatické vynulovanie sa nevzťahuje na `TEXT_NUMBER`; v prípade potreby ho povoľte atribútom `alwaysCopyProperties = { true }`.
+
+Pri importe sa pôvodná číselná hodnota zachová, ak stĺpec `NUMBER` nie je v Excel súbore. Ak je stĺpec importovaný s hodnotou `NULL`, hodnota entity sa vynuluje.
 
 ## PASSWORD
 
@@ -112,7 +114,7 @@ Viac riadkové textové pole. Dlhý text sa nezalamuje, ak chcete zalomiť dlhý
 
 Výber dátumu, po kliknutí do pola zobrazí okno pre výber dátumu.
 
-Ak je dátum povinný, označte pole anotáciou `@NotNull`. Prázdna hodnota sa na server odošle ako `null` a editor zobrazí chybové hlásenie **Povinné pole. Zadajte dátum.** Kalendárový výber sa po neúspešnej validácii automaticky neotvorí.
+Ak je dátum povinný, označte pole anotáciou `@NotNull`. Frontend odošle prázdnu hodnotu ako prázdny reťazec, ktorý server pri deserializácii prevedie na `null`. Editor zobrazí chybové hlásenie **Povinné pole. Zadajte dátum.** Kalendárový výber sa po neúspešnej validácii automaticky neotvorí.
 
 ```java
     @Column(name = "date_from")

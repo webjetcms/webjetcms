@@ -171,7 +171,7 @@ Voliteľné polia:
   - ```{currentDate}``` - nahradí sa za aktuálny dátum
   - ```{currentDateTimeSeconds}``` - nahradí sa za aktuálny dátum a čas vrátane sekúnd
   - ```{currentTime}``` - nahradí sa za aktuálny čas
-- `alwaysCopyProperties` - pri editácii záznamu sa prázdne `null` hodnoty štandardne zachovajú z existujúceho objektu v databáze. Polia typu dátum/čas a `NUMBER` sa automaticky prepíšu aj hodnotou `null`, aby ich bolo možné v editore vyprázdniť. Ak potrebujete preniesť `null` aj pre iný typ poľa, nastavte atribút na `true`; hodnotou `false` môžete automatický prepis pre dátumové a `NUMBER` polia vypnúť.
+- `alwaysCopyProperties` - pri editácii záznamu sa pri `null` vstupnej hodnote štandardne zachová hodnota existujúceho objektu v databáze. Hodnota `null` sa automaticky prenesie pre Java atribúty typov `java.util.Date`, `java.sql.Date`, `LocalDate`, `LocalDateTime` a objektové polia anotované ako `NUMBER`, ktoré podporujú `null`. Pri importe sa `NUMBER` prenesie iba vtedy, keď je stĺpec v importovanom Excel súbore; vynechaný stĺpec zachová pôvodnú hodnotu a hodnota `NULL` ju vynuluje. Pre dátum uložený v inom type, napríklad `Instant`, `Timestamp` alebo `Long`, prípadne pre `TEXT_NUMBER`, nastavte atribút na `true`; hodnotou `false` automatický prenos vypnete.
 - `ai` - nastavením na hodnotu `false` je možné vypnúť zobrazenie AI ikony pre všeobecné možnosti (preložiť, opraviť gramatiku...). AI ikona sa zobrazí len ak je asistent nastavený pre toto konkrétne pole.
 - `disabled` - nastavením na `false` sa vstupnému poľu v editore nastaví atribút `disabled="disabled"`.
 - `export` - nastavením na hodnotu `false` sa pole nebude exportovať.
@@ -282,7 +282,7 @@ Povinné polia je možné označiť anotáciami:
 - ```@NotEmpty``` - reťazec, kolekcia, mapa alebo pole nesmie byť `null` ani prázdne; anotácia nie je určená pre typ `Date`
 - ```@NotBlank``` - text nesmie byť `null`, prázdny ani obsahovať iba medzery alebo tabulátory
 
-Pre dátumové polia použite výhradne `@NotNull`. Prázdna hodnota sa na server odošle ako `null`, aby ju štandardná Bean Validation vyhodnotila ako chýbajúcu povinnú hodnotu. Editor pre `DATE` a `DATETIME` zobrazí typovo špecifické chybové hlásenie.
+Pre dátumové polia použite výhradne `@NotNull`. Frontend odošle prázdnu hodnotu ako prázdny reťazec, ktorý server pri deserializácii prevedie na `null`, aby ju štandardná Bean Validation vyhodnotila ako chýbajúcu povinnú hodnotu. Editor pre `DATE` a `DATETIME` zobrazí typovo špecifické chybové hlásenie.
 
 Ďalšie možnosti validácie sú opísané v dokumentácii k [restcontrolleru](../datatables/restcontroller.md#validácia--povinné-polia).
 
