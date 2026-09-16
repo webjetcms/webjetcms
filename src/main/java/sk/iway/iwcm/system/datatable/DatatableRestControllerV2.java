@@ -191,6 +191,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		List<NotifyBean> notify = getThreadData().getNotify();
 		boolean isImporting = isImporting();
 		Set<String> importedColumns = getImportedColumns();
+		Set<String> currentRowImportedColumns = getCurrentRowImportedColumns();
 
 		//toto nam zabezpeci aby sa nam nestratili udaje, ktore nemame v editore
 		T one = getOne(id);
@@ -199,6 +200,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		if (notify!=null) addNotify(notify);
 		setImporting(isImporting);
 		setImportedColumns(importedColumns);
+		setCurrentRowImportedColumns(currentRowImportedColumns);
 
 		copyEntityIntoOriginal(entity, one);
 
@@ -1417,6 +1419,9 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		if (isImporting && lastImportedRow!=null) rowCounter = lastImportedRow.intValue();
 		for (Long id : datatableRequest.getData().keySet()) {
 			rowCounter++;
+			if (isImporting) {
+				setCurrentRowImportedColumns(resolveImportedColumnsForRow(datatableRequest, id));
+			}
 
 			//This row was marked as invalid, skip it
 			if(isImporting() && skipWrongData == true && invalidImportedRows.contains(id)) {
@@ -1608,6 +1613,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				}
 			}
 		}
+		setCurrentRowImportedColumns(null);
 
 		//We skipped worng data, prepare and show errors notification
 		if(skipWrongData == true) {
@@ -2179,6 +2185,23 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		getThreadData().setImportedColumns(importedColumns);
 	}
 
+	private void setCurrentRowImportedColumns(Set<String> importedColumns) {
+		getThreadData().setCurrentRowImportedColumns(importedColumns);
+	}
+
+	private static Set<String> getCurrentRowImportedColumns() {
+		return getThreadData().getCurrentRowImportedColumns();
+	}
+
+	private Set<String> resolveImportedColumnsForRow(DatatableRequest<Long, T> datatableRequest, Long id) {
+		Map<Long, Set<String>> importedColumnsByRow = datatableRequest.getImportedColumnsByRow();
+		if (importedColumnsByRow == null) return null;
+
+		Set<String> importedColumns = importedColumnsByRow.get(id);
+		//Incomplete row metadata must preserve values instead of falling back to the file-wide set.
+		return importedColumns == null ? Set.of() : importedColumns;
+	}
+
 	/**
 	 * Returns Set<String> of imported columns from xlsx file.
 	 * You can check which columns were in Excel file during import process.
@@ -2386,7 +2409,11 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		List<String> ignoreProperties = new ArrayList<>();
 		List<String> identifierProperties = new ArrayList<>();
 		boolean importing = isImporting();
-		Set<String> importedColumns = importing ? getImportedColumns() : null;
+		Set<String> importedColumns = null;
+		if (importing) {
+			importedColumns = getCurrentRowImportedColumns();
+			if (importedColumns == null) importedColumns = getImportedColumns();
+		}
 		for (Field field : getIdentifierFields(entity.getClass())) {
 			identifierProperties.add(field.getName());
 		}

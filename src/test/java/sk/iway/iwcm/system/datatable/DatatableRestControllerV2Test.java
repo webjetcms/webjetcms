@@ -42,6 +42,7 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -318,6 +319,48 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
         try {
             editImportedNumber(omitted, Set.of("textNumberValue"));
             editImportedNumber(included, Set.of("numberValue"));
+        } finally {
+            controller.getOne(-1L);
+        }
+
+        assertEquals(10, omitted.getNumberValue());
+        assertNull(included.getNumberValue());
+    }
+
+    @Test
+    void testImportUsesColumnsFromEachRowWhenCopyingNullNumberFields() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<NumberMergeTestEntity, Long> repository = mock(JpaRepository.class);
+        NumberMergeTestEntity omitted = new NumberMergeTestEntity(10, 20, 30);
+        NumberMergeTestEntity included = new NumberMergeTestEntity(40, 50, 60);
+        when(repository.existsById(1L)).thenReturn(true);
+        when(repository.existsById(2L)).thenReturn(true);
+        when(repository.findById(1L)).thenReturn(Optional.of(omitted));
+        when(repository.findById(2L)).thenReturn(Optional.of(included));
+        when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        DatatableRestControllerV2<NumberMergeTestEntity, Long> numberController =
+                new DatatableRestControllerV2<>(repository) {};
+        TestRequest request = new TestRequest("", "/admin/rest/number-merge/editor");
+        numberController.setRequest(request);
+        numberController.setValidator(validator);
+
+        Map<Long, NumberMergeTestEntity> data = new LinkedHashMap<>();
+        data.put(1L, new NumberMergeTestEntity(null, 20, 30));
+        data.put(2L, new NumberMergeTestEntity(null, 50, 60));
+
+        DatatableRequest<Long, NumberMergeTestEntity> datatableRequest = new DatatableRequest<>();
+        datatableRequest.setAction("edit");
+        datatableRequest.setData(data);
+        datatableRequest.setDztotalchunkcount(1);
+        datatableRequest.setImportedColumns(Set.of("numberValue"));
+        datatableRequest.setImportedColumnsByRow(Map.of(
+                1L, Set.of(),
+                2L, Set.of("numberValue")));
+
+        try {
+            numberController.initBinder(request, new WebDataBinder(datatableRequest));
+            numberController.handleEditor(request, datatableRequest);
         } finally {
             controller.getOne(-1L);
         }
