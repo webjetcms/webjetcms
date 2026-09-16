@@ -80,7 +80,7 @@ public class StatNewDB
 
 	private static boolean isPartitioningAllowedFor(String tableName)
 	{
-		return Constants.getBoolean("statEnableTablePartitioning") || "stat_clicks".equals(tableName);
+		return Constants.getBoolean("statEnableTablePartitioning") || "stat_clicks".equals(tableName) || "stat_clicks_v2".equals(tableName);
 	}
 
 	/**
@@ -104,7 +104,7 @@ public class StatNewDB
 
 		List<String> suffixList = new ArrayList<>();
 
-		if (tableName != null && !"stat_clicks".equals(tableName) && !"stat_views".equals(tableName))
+		if (tableName != null && !"stat_clicks".equals(tableName) && !"stat_clicks_v2".equals(tableName) && !"stat_views".equals(tableName))
 		{
 			String convertDate = Constants.getString("statTablePartitioningDate-"+tableName);
 			if (Tools.isNotEmpty(convertDate))
@@ -471,6 +471,19 @@ public class StatNewDB
 						"			END|;";
 			}
 			sql += "CREATE INDEX to_document_"+suffix+" ON stat_clicks"+suffix+"(document_id);";
+		}
+		else if ("stat_clicks_v2".equals(tableName))
+		{
+			sql = "CREATE TABLE stat_clicks_v2"+suffix+" ("+
+					"event_id CHAR(32) NOT NULL PRIMARY KEY,"+
+					"domain_name VARCHAR(255) NOT NULL,"+
+					"document_id INT NOT NULL,"+
+					"day_of_month INT NOT NULL,"+
+					"viewport_width INT NOT NULL,"+
+					"x INT NOT NULL,"+
+					"y INT NOT NULL)";
+			if (DB_TYPE == Constants.DB_MYSQL) sql += " ENGINE="+Constants.getString("mariaDbDefaultEngine");
+			sql += ";CREATE INDEX hm_page"+suffix+" ON stat_clicks_v2"+suffix+"(domain_name, document_id, viewport_width, day_of_month);";
 		}
 		if (DB_TYPE == Constants.DB_PGSQL && sql != null) {
 			int i = sql.indexOf("ENGINE=");
@@ -3039,5 +3052,4 @@ public class StatNewDB
 		return result;
 	}
 }
-
 

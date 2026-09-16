@@ -99,6 +99,22 @@ public class TemplateDetails {
     )
     private String inlineEditingMode;
 
+    @jakarta.validation.constraints.Min(0)
+    @jakarta.validation.constraints.Max(3)
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.stat.heatmap.mode", tab = "basic",
+        editor = @DataTableColumnEditor(options = {
+            @DataTableColumnEditorAttr(key = "components.stat.heatmap.mode.inherit", value = "0"),
+            @DataTableColumnEditorAttr(key = "components.stat.heatmap.mode.statistics", value = "1"),
+            @DataTableColumnEditorAttr(key = "components.stat.heatmap.mode.heatmap", value = "2"),
+            @DataTableColumnEditorAttr(key = "components.stat.heatmap.mode.off", value = "3")
+        }))
+    private Integer statisticsMode = 0;
+
+    public Integer getStatisticsMode() { return statisticsMode; }
+
+    public void setStatisticsMode(Integer statisticsMode) { this.statisticsMode = statisticsMode; }
+
+
     @DataTableColumn(
             inputType = DataTableColumnType.SELECT,
             tab = "templatesTab",

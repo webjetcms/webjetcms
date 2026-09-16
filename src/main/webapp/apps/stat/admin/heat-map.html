@@ -1,0 +1,62 @@
+<script data-th-inline="javascript">
+    const heatMapColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.stat.jpa.HeatMapPageDTO")})]*/ [];
+</script>
+<script>
+    var heatMapDataTable;
+
+    WJ.breadcrumb({id: "heatMap", tabs: [
+        {url: "/apps/stat/admin/heat-map/", title: "[[#{stat_menu.heat_map}]]", active: true},
+        {url: "#dateRange", title: "{filter}", active: false}
+    ]});
+
+    window.domReady.add(function () {
+        $("#pills-dateRange-tab").empty();
+        $("#heatMapDataTable_extfilter").appendTo("#pills-dateRange-tab");
+        const defaultSearch = ChartTools.getSearchCriteria() || {};
+        const requestedRange = new URLSearchParams(window.location.search).get("dateRange");
+        if (requestedRange !== null) {
+            const dates = requestedRange.replace(/^daterange:/, "").split("-");
+            defaultSearch[".dt-filter-from-dayDate"] = dates[0] ? WJ.formatDate(Number(dates[0])) : "";
+            defaultSearch[".dt-filter-to-dayDate"] = dates[1] ? WJ.formatDate(Number(dates[1])) : "";
+        }
+        heatMapColumns.forEach(function (column) {
+            if (column.data === "name") {
+                column.render = function (value, type, row) {
+                    if (type !== "display") return value;
+                    const link = document.createElement("a");
+                    link.href = "/apps/stat/admin/heat-map-details/?docId=" + encodeURIComponent(row.id)
+                        + "&dateRange=" + encodeURIComponent(ChartTools.getDateRange(null));
+                    link.textContent = value;
+                    return link.outerHTML;
+                };
+            }
+        });
+        heatMapDataTable = WJ.DataTable({
+            url: "/admin/rest/stat/heat-map",
+            serverSide: false,
+            columns: heatMapColumns,
+            id: "heatMapDataTable",
+            idAutoOpener: false,
+            order: [[heatMapColumns.findIndex(column => column.data === "clicks"), "desc"]],
+            defaultSearch: defaultSearch,
+            hideButtons: "create,edit,duplicate,remove,import,celledit",
+            onPreXhr: function (TABLE, event, settings, data) {
+                data.fixed_dateRange = ChartTools.getDateRange(null);
+            },
+            summary: {mode: "all", columns: ["clicks"], title: "[[#{components.summary.total_title}]]"}
+        });
+        $("#heatMapDataTable_extfilter").on("click", "button.filtrujem", function () {
+            ChartTools.saveSearchCriteria(heatMapDataTable.DATA);
+            heatMapDataTable.ajax.reload();
+        });
+    });
+</script>
+
+<div id="heatMapDataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto dt-extfilter-title-dayDate" style="display: none;"></div>
+        <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
+    </div>
+</div>
+<p class="text-muted" data-th-text="#{components.stat.heatmap.listHelp}"></p>
+<table id="heatMapDataTable" class="datatableInit table"></table>

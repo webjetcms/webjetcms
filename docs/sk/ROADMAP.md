@@ -71,7 +71,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] Prechod najpoužívanejších aplikácii do Spring verzie s využitím Thymeleaf šablón.
 - [x] Zrušenie `Apache Struts` framework, nahradenie `logic:present,logic:iterate,bean:write` buď za `JSTL` variantu, alebo implementácia podobnej funkcionality do `iwcm:present,iwcm:iterate,iwcm:beanrwite` (#57789).
 - [ ] Presun JSP súborov, Java tried a JavaScript knižníc starej verzie 8 do `obsolete` jar archívu, ktorý nebude štandardnou súčasťou WebJET CMS. Môže byť použitý na starých projektoch, kde zatiaľ nie je vykonaná aktualizácia všetkých zákazníckych aplikácií na `Spring` verzie, ale bez podpory a aktualizácií zo strany WebJET CMS.
-- [ ] Štatistika - mapa kliknutí - obnovenie funkcionality, vyriešenie problému responzívnosti (samostatná evidencia podľa šírky okna).
+- [x] Štatistika - mapa kliknutí - obnovenie funkcionality, vyriešenie problému responzívnosti (samostatná evidencia podľa šírky okna).
 - [x] Štatistika - možnosť filtrovať botov pre štatistiku chybných stránok (#58053).
 - [ ] Log súbory - filtrovať podľa mena inštalácie.
 - [ ] `quill` - pridať možnosť nastaviť položky menu vrátane farieb.

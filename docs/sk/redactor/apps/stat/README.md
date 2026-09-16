@@ -16,6 +16,8 @@ Upozornenie: ukladanie štatistiky je podmienené GDPR súhlasom na ukladanie š
 
 Sekcia Štatistika využíva externý filter, ktorý je podrobnejšie opísaný tu [Externý filter](./external-filter.md)
 
+[Mapa kliknutí](./heat-map.md) zobrazuje miesta kliknutí na stránkach samostatne podľa šírky okna.
+
 ## Návštevnosť
 
 > Zistíte v ktoré dni (napr. pravidelne v stredy) rastie návštevnosť, prípadne v zoskupení podľa hodín v ktorom čase máte najvyššiu/najnižšiu návštevnosť.

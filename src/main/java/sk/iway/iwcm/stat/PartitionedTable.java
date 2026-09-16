@@ -19,7 +19,8 @@ public enum PartitionedTable {
 	StatFrom("stat_from"),
 	StatSearchengine("stat_searchengine"),
 	StatViews("stat_views"),
-	StatClicks("stat_clicks");
+	StatClicks("stat_clicks"),
+	StatClicksV2("stat_clicks_v2");
 	
 	
 	private String tableName;
