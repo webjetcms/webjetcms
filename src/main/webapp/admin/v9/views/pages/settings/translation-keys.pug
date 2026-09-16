@@ -16,7 +16,7 @@ block content
                 </div>
             </div>
 
-            <div id="SomStromcek" class="hide-while-loading" data-rest-url="/admin/rest/settings/translation-keys/tree" data-rest-param-name="id" data-th-data-search-label="\#{components.translation_key.key}"></div>
+            <div id="SomStromcek" class="hide-while-loading" data-rest-url="/admin/rest/settings/translation-keys/tree" data-rest-param-name="id" data-search-restore-state="false" data-th-data-search-label="\#{components.translation_key.key}"></div>
 
         div.col-md-8.datatable-col
             script.
@@ -55,13 +55,15 @@ block content
                         }
                     });
 
-                    $('#SomStromcek').on("changed.jstree", function(e, data) {
+                    $('#SomStromcek').on("changed.jstree refresh.jstree", function(e, data) {
                         if ("deselect_all" === data.action || "model" === data.action) return;
 
-                        var node = data.instance.get_node(data.selected);
+                        var node = data.instance.get_node(data.selected || data.instance.get_selected());
                         if (node === false || node.original == null) return;
 
-                        translationKeyPrefix = node.original.virtualPath || "";
+                        var prefix = node.original.virtualPath || "";
+                        if (translationKeyPrefix === prefix) return;
+                        translationKeyPrefix = prefix;
                         translationKeysTable.ajax.reload();
                     });
 
