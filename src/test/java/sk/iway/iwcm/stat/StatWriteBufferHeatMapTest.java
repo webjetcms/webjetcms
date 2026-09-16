@@ -33,7 +33,7 @@ class StatWriteBufferHeatMapTest extends BaseWebjetTest {
         PreparedStatement statement = mock(PreparedStatement.class);
         when(connection.prepareStatement(anyString())).thenReturn(statement);
         when(statement.executeUpdate()).thenThrow(new SQLException("duplicate event", "23505")).thenReturn(1);
-        UpdateInsertSqlPair sql = new UpdateInsertSqlPair("INSERT INTO stat_clicks_v2_2026_8 (event_id) VALUES (?)", "_2026_8", true);
+        UpdateInsertSqlPair sql = new UpdateInsertSqlPair("INSERT INTO stat_clicks_2026_8 (event_id) VALUES (?)", "_2026_8", true);
         try (MockedStatic<DBPool> pool = mockStatic(DBPool.class)) {
             pool.when(DBPool::getConnection).thenReturn(connection);
             assertTrue(save(sql, List.of(new Object[] { "duplicate" }, new Object[] { "next" })));
@@ -50,12 +50,12 @@ class StatWriteBufferHeatMapTest extends BaseWebjetTest {
         PreparedStatement statement = mock(PreparedStatement.class);
         when(connection.prepareStatement(anyString())).thenReturn(statement);
         when(statement.executeUpdate()).thenThrow(new SQLException("duplicate event", "23505"));
-        UpdateInsertSqlPair sql = new UpdateInsertSqlPair(null, "INSERT INTO stat_clicks_v2_2026_8 (event_id) VALUES (?)");
+        UpdateInsertSqlPair sql = new UpdateInsertSqlPair(null, "INSERT INTO stat_clicks_2026_8 (event_id) VALUES (?)");
         try (MockedStatic<DBPool> pool = mockStatic(DBPool.class); MockedStatic<StatNewDB> tables = mockStatic(StatNewDB.class)) {
             pool.when(DBPool::getConnection).thenReturn(connection);
             assertFalse(save(sql, List.of(new Object[] { "duplicate" }, new Object[] { "next" })));
             verify(statement).executeUpdate();
-            tables.verify(() -> StatNewDB.createStatTablesFromError("duplicate event", null, "stat_clicks_v2"));
+            tables.verify(() -> StatNewDB.createStatTablesFromError("duplicate event", null, "stat_clicks"));
         }
     }
 
@@ -63,12 +63,12 @@ class StatWriteBufferHeatMapTest extends BaseWebjetTest {
     void missingPartitionRetryUsesTheEventsMonth() throws Exception {
         Connection connection = mock(Connection.class);
         when(connection.prepareStatement(anyString())).thenThrow(new SQLException("table does not exist", "42P01"));
-        UpdateInsertSqlPair sql = new UpdateInsertSqlPair("INSERT INTO stat_clicks_v2_2025_12 (event_id) VALUES (?)", "_2025_12", true);
+        UpdateInsertSqlPair sql = new UpdateInsertSqlPair("INSERT INTO stat_clicks_2025_12 (event_id) VALUES (?)", "_2025_12", true);
         try (MockedStatic<DBPool> pool = mockStatic(DBPool.class); MockedStatic<StatNewDB> tables = mockStatic(StatNewDB.class)) {
             pool.when(DBPool::getConnection).thenReturn(connection);
-            tables.when(() -> StatNewDB.createStatTablesFromError("table does not exist", "_2025_12", "stat_clicks_v2")).thenReturn(true);
+            tables.when(() -> StatNewDB.createStatTablesFromError("table does not exist", "_2025_12", "stat_clicks")).thenReturn(true);
             assertFalse(save(sql, java.util.Collections.singletonList(new Object[] { "event" })));
-            tables.verify(() -> StatNewDB.createStatTablesFromError("table does not exist", "_2025_12", "stat_clicks_v2"));
+            tables.verify(() -> StatNewDB.createStatTablesFromError("table does not exist", "_2025_12", "stat_clicks"));
         }
     }
 
@@ -85,20 +85,25 @@ class StatWriteBufferHeatMapTest extends BaseWebjetTest {
     }
 
     @Test
-    void monthlySchemaUsesAnEventPrimaryKeyOnEveryDatabase() throws Exception {
+    void monthlySchemaPreservesLegacyIdentityAndUniquelyIndexesNewEventsOnEveryDatabase() throws Exception {
         Method ddl = StatNewDB.class.getDeclaredMethod("getCreateStatTableSqlCommand", String.class, String.class, int.class);
         ddl.setAccessible(true);
         String procedure = Constants.getString("statTableCreateProcedureName");
         Constants.setString("statTableCreateProcedureName", "");
         try {
             for (int type : new int[] { Constants.DB_MYSQL, Constants.DB_MSSQL, Constants.DB_PGSQL, Constants.DB_ORACLE }) {
-                String sql = (String) ddl.invoke(null, "stat_clicks_v2", "_2026_9", type);
-                assertTrue(sql.contains("event_id CHAR(32) NOT NULL PRIMARY KEY"));
-                assertTrue(sql.contains("domain_name VARCHAR(255) NOT NULL"));
-                assertTrue(sql.contains("viewport_width INT NOT NULL"));
+                String sql = (String) ddl.invoke(null, "stat_clicks", "_2026_9", type);
+                assertTrue(sql.contains("event_id CHAR(32)"));
+                assertTrue(sql.contains("stat_click_id INT"));
+                assertTrue(sql.contains("CREATE UNIQUE INDEX hm_event_2026_9"));
+                assertTrue(sql.contains("ON stat_clicks_2026_9(event_id)"));
+                assertTrue(sql.contains("domain_name VARCHAR(255)"));
+                assertTrue(sql.contains(type == Constants.DB_ORACLE
+                        ? "viewport_width INT DEFAULT 1920 NOT NULL" : "viewport_width INT NOT NULL DEFAULT 1920"));
                 assertTrue(sql.contains("CREATE INDEX hm_page_2026_9"));
                 assertFalse(sql.contains("session_id"));
-                assertFalse(sql.contains("IDENTITY"));
+                if (type == Constants.DB_MSSQL) assertTrue(sql.contains("WHERE event_id IS NOT NULL"));
+                if (type == Constants.DB_PGSQL) assertTrue(sql.contains("GENERATED BY DEFAULT AS IDENTITY"));
             }
         } finally {
             Constants.setString("statTableCreateProcedureName", procedure);
@@ -108,6 +113,6 @@ class StatWriteBufferHeatMapTest extends BaseWebjetTest {
     private static boolean save(UpdateInsertSqlPair sql, List<Object[]> values) throws Exception {
         Method save = StatWriteBuffer.class.getDeclaredMethod("batchSave", UpdateInsertSqlPair.class, List.class, Map.class);
         save.setAccessible(true);
-        return (boolean) save.invoke(null, sql, values, Map.of(sql, "stat_clicks_v2"));
+        return (boolean) save.invoke(null, sql, values, Map.of(sql, "stat_clicks"));
     }
 }

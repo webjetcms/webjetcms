@@ -12,7 +12,7 @@ Kliknutia sa zaznamenávajú podľa nastavenia súhlasu so štatistickými cooki
 
 ## Výber šírky a náhľad
 
-Kliknutia sa evidujú samostatne pre každú presnú šírku okna v CSS pixeloch. Výber šírky uvádza aj počet kliknutí a predvolene zobrazí najpoužívanejšiu šírku. Mobilné a široké zobrazenie sa tak nepremiešajú.
+Nové kliknutia sa evidujú samostatne pre každú presnú šírku okna v CSS pixeloch. Výber šírky uvádza aj počet kliknutí a predvolene zobrazí najpoužívanejšiu šírku. Mobilné a široké zobrazenie sa tak nepremiešajú.
 
 Náhľad má vlastné posúvanie. Ovládač **Zobrazenie** upravuje iba jeho zmenšenie na obrazovke; vnútorná šírka stránky zostáva zachovaná. Krytie mapy môžete meniť alebo mapu dočasne skryť. Obnovte náhľad, ak sa nepodarilo načítať stránku alebo časť mapy.
 
@@ -28,4 +28,12 @@ Kliknutia sa dočasne ukladajú do cookie a odošlú pri ďalšej bežnej požia
 
 V prehliadači čaká najviac 16 cookies kliknutí s celkovou veľkosťou do 2 KiB a platnosťou 24 hodín. Pri prekročení limitu sa najstaršie neodoslané kliknutia zahodia. Údaje uložené v mesačných databázových tabuľkách sa automaticky nemažú; odstrániť ich môžete existujúcim nástrojom na čistenie databázy.
 
-Mapa nepredstavuje záznam jednotlivých návštev: nesleduje pohyb myši ani nevytvára záznam relácie. Staré údaje bez šírky okna sa nemiešajú s novou mapou.
+Mapa nepredstavuje záznam jednotlivých návštev: nesleduje pohyb myši ani nevytvára záznam relácie.
+
+## Pôvodné údaje
+
+Existujúce mesačné tabuľky `stat_clicks_YYYY_M` sa rozšíria o nové údaje a používajú sa aj na ďalšie zaznamenávanie kliknutí. Pôvodné záznamy zostanú zachované. Kliknutiam bez evidovanej šírky okna sa priradí desktopová šírka **1920 px**, pod ktorou ich nájdete vo výbere šírky.
+
+Pôvodné súradnice sa nemenia. Mohli byť merané voči obalovému elementu stránky, ktorého polohu už nemožno spätne zistiť. Staré mapy pri šírke 1920 px sú preto orientačné; táto šírka nepredstavuje dodatočne zistenú veľkosť pôvodného okna.
+
+Doména starých záznamov sa priradí podľa aktuálnej domény zdrojovej stránky. Ak stránku alebo jej doménu nemožno dohľadať, záznamy zostanú uložené, ale v mape kliknutí sa nezobrazia. Historické zmeny domény sa spätne nerekonštruujú.

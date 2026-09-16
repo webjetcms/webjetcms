@@ -38,9 +38,9 @@ public final class HeatMapStorage {
     public static final int TILE_SIZE = 1024;
     public static final int MAX_VIEWPORT_WIDTH = 16384;
     public static final int MAX_COORDINATE = 1_000_000;
-    public static final String TABLE_NAME = "stat_clicks_v2";
+    public static final String TABLE_NAME = "stat_clicks";
 
-    private static final Pattern PARTITION = Pattern.compile("stat_clicks_v2_([0-9]{4})_([1-9]|1[0-2])");
+    private static final Pattern PARTITION = Pattern.compile("stat_clicks_([0-9]{4})_([1-9]|1[0-2])");
 
     private HeatMapStorage() {
     }
@@ -92,7 +92,7 @@ public final class HeatMapStorage {
                 || tileX > MAX_COORDINATE / TILE_SIZE || tileY > MAX_COORDINATE / TILE_SIZE) {
             throw new IllegalArgumentException("Invalid heatmap tile");
         }
-        String key = String.join("|", "v2", domain, Integer.toString(docId), from.toString(), to.toString(),
+        String key = String.join("|", "stat_clicks", domain, Integer.toString(docId), from.toString(), to.toString(),
                 Integer.toString(width), Integer.toString(tileX), Integer.toString(tileY));
         Path folder = Path.of(Tools.getRealPath("/WEB-INF/tmp/heat_map/"));
         Path cached = folder.resolve("tile_" + digest(key) + ".png");

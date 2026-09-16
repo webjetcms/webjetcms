@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
@@ -24,6 +25,17 @@ class DatabaseDeleteServiceHeatMapTest {
     private static final Date FROM = Date.from(Instant.parse("2026-08-01T00:00:00Z"));
     private static final Date TO = Date.from(Instant.parse("2026-09-15T23:59:59Z"));
 
+    /** The cleanup menu exposes one heatmap entry for the shared monthly table family. */
+    @Test
+    void exposesOneHeatmapCleanupEntry() {
+        List<String> tables = new DatabaseDeleteService().getAllItems(mock(Prop.class)).stream()
+                .map(DatabaseDeleteBean::getTableName)
+                .filter(table -> table.startsWith("stat_clicks"))
+                .toList();
+
+        assertEquals(List.of("stat_clicks"), tables);
+    }
+
     /** Heatmaps always count monthly partitions; legacy statistics still follow their global switch. */
     @ParameterizedTest
     @ValueSource(booleans = { false, true })
@@ -36,15 +48,15 @@ class DatabaseDeleteServiceHeatMapTest {
         try (MockedStatic<Constants> constants = mockStatic(Constants.class);
                 MockedStatic<DataDeletingManager> deletion = mockStatic(DataDeletingManager.class)) {
             constants.when(() -> Constants.getBoolean("statEnableTablePartitioning")).thenReturn(globalPartitioning);
-            deletion.when(() -> DataDeletingManager.checkTablePartitioning("stat_clicks_v2", FROM, TO)).thenReturn(7);
+            deletion.when(() -> DataDeletingManager.checkTablePartitioning("stat_clicks", FROM, TO)).thenReturn(7);
             deletion.when(() -> DataDeletingManager.checkTablePartitioning("stat_views", FROM, TO)).thenReturn(9);
             deletion.when(() -> DataDeletingManager.checkData("stat_views", FROM, TO, false, -1)).thenReturn(11);
 
             List<DatabaseDeleteBean> result = service.getMemoryCleanupEntities(FROM, TO, prop);
 
-            assertEquals(7, find(result, "stat_clicks_v2").getNumberOfEntriesToDelete());
+            assertEquals(7, find(result, "stat_clicks").getNumberOfEntriesToDelete());
             assertEquals(globalPartitioning ? 9 : 11, find(result, "stat_views").getNumberOfEntriesToDelete());
-            deletion.verify(() -> DataDeletingManager.checkTablePartitioning("stat_clicks_v2", FROM, TO));
+            deletion.verify(() -> DataDeletingManager.checkTablePartitioning("stat_clicks", FROM, TO));
             if (globalPartitioning) {
                 deletion.verify(() -> DataDeletingManager.checkTablePartitioning("stat_views", FROM, TO));
             } else {
@@ -69,10 +81,10 @@ class DatabaseDeleteServiceHeatMapTest {
                 MockedStatic<DataDeletingManager> deletion = mockStatic(DataDeletingManager.class)) {
             constants.when(() -> Constants.getBoolean("statEnableTablePartitioning")).thenReturn(globalPartitioning);
 
-            assertTrue(service.delete(find(entries, "stat_clicks_v2")));
+            assertTrue(service.delete(find(entries, "stat_clicks")));
             assertTrue(service.delete(find(entries, "stat_views")));
 
-            deletion.verify(() -> DataDeletingManager.deleteTablePartitioning("stat_clicks_v2", FROM, TO, true));
+            deletion.verify(() -> DataDeletingManager.deleteTablePartitioning("stat_clicks", FROM, TO, true));
             if (globalPartitioning) {
                 deletion.verify(() -> DataDeletingManager.deleteTablePartitioning("stat_views", FROM, TO, true));
             } else {
@@ -84,7 +96,7 @@ class DatabaseDeleteServiceHeatMapTest {
 
     private static List<DatabaseDeleteBean> statisticsEntries(DatabaseDeleteService service, Prop prop) {
         return service.getAllItems(prop).stream()
-                .filter(entry -> "stat_clicks_v2".equals(entry.getTableName()) || "stat_views".equals(entry.getTableName()))
+                .filter(entry -> "stat_clicks".equals(entry.getTableName()) || "stat_views".equals(entry.getTableName()))
                 .toList();
     }
 

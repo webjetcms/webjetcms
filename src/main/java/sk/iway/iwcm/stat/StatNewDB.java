@@ -34,6 +34,7 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.stat.heat_map.HeatMapSchema;
 import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 
@@ -80,7 +81,7 @@ public class StatNewDB
 
 	private static boolean isPartitioningAllowedFor(String tableName)
 	{
-		return Constants.getBoolean("statEnableTablePartitioning") || "stat_clicks".equals(tableName) || "stat_clicks_v2".equals(tableName);
+		return Constants.getBoolean("statEnableTablePartitioning") || "stat_clicks".equals(tableName);
 	}
 
 	/**
@@ -104,7 +105,7 @@ public class StatNewDB
 
 		List<String> suffixList = new ArrayList<>();
 
-		if (tableName != null && !"stat_clicks".equals(tableName) && !"stat_clicks_v2".equals(tableName) && !"stat_views".equals(tableName))
+		if (tableName != null && !"stat_clicks".equals(tableName) && !"stat_views".equals(tableName))
 		{
 			String convertDate = Constants.getString("statTablePartitioningDate-"+tableName);
 			if (Tools.isNotEmpty(convertDate))
@@ -435,6 +436,7 @@ public class StatNewDB
 			{
 				sql = "CREATE TABLE stat_clicks"+suffix+" ("+
 						"stat_click_id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,"+
+						"event_id CHAR(32) NULL,domain_name VARCHAR(255) NULL,viewport_width INT NOT NULL DEFAULT "+HeatMapSchema.DEFAULT_VIEWPORT_WIDTH+","+
 						"document_id INT,"+
 						"x INT,"+
 						"y INT,"+
@@ -444,6 +446,7 @@ public class StatNewDB
 			{
 				sql = "CREATE TABLE stat_clicks"+suffix+" ("+
 						"stat_click_id INT identity(1,1) NOT NULL,"+
+						"event_id CHAR(32) NULL,domain_name VARCHAR(255) NULL,viewport_width INT NOT NULL DEFAULT "+HeatMapSchema.DEFAULT_VIEWPORT_WIDTH+","+
 						"document_id INT,"+
 						"x INT,"+
 						"y INT,"+
@@ -453,6 +456,7 @@ public class StatNewDB
 			{
 				sql = "CREATE TABLE stat_clicks"+suffix+" ("+
 							"stat_click_id INT NOT NULL,"+
+							"event_id CHAR(32) NULL,domain_name VARCHAR(255) NULL,viewport_width INT DEFAULT "+HeatMapSchema.DEFAULT_VIEWPORT_WIDTH+" NOT NULL,"+
 							"document_id INTEGER,"+
 							"x INTEGER,"+
 							"y INTEGER,"+
@@ -471,19 +475,8 @@ public class StatNewDB
 						"			END|;";
 			}
 			sql += "CREATE INDEX to_document_"+suffix+" ON stat_clicks"+suffix+"(document_id);";
-		}
-		else if ("stat_clicks_v2".equals(tableName))
-		{
-			sql = "CREATE TABLE stat_clicks_v2"+suffix+" ("+
-					"event_id CHAR(32) NOT NULL PRIMARY KEY,"+
-					"domain_name VARCHAR(255) NOT NULL,"+
-					"document_id INT NOT NULL,"+
-					"day_of_month INT NOT NULL,"+
-					"viewport_width INT NOT NULL,"+
-					"x INT NOT NULL,"+
-					"y INT NOT NULL)";
-			if (DB_TYPE == Constants.DB_MYSQL) sql += " ENGINE="+Constants.getString("mariaDbDefaultEngine");
-			sql += ";CREATE INDEX hm_page"+suffix+" ON stat_clicks_v2"+suffix+"(domain_name, document_id, viewport_width, day_of_month);";
+			sql += HeatMapSchema.uniqueIndexSql("stat_clicks"+suffix, suffix, DB_TYPE)+";";
+			sql += HeatMapSchema.pageIndexSql("stat_clicks"+suffix, suffix, DB_TYPE)+";";
 		}
 		if (DB_TYPE == Constants.DB_PGSQL && sql != null) {
 			int i = sql.indexOf("ENGINE=");
@@ -3052,4 +3045,3 @@ public class StatNewDB
 		return result;
 	}
 }
-

@@ -111,7 +111,7 @@ public class DataDeletingManager
 			if (sql.indexOf("week") == -1)
 			{
 				if (table.indexOf("stat_clicks") != -1){
-					String clicksTable = table.startsWith("stat_clicks_v2_") ? "stat_clicks_v2_" : "stat_clicks_";
+					String clicksTable = "stat_clicks_";
 					if((clicksTable+startYear+"_"+startMonth).compareTo((clicksTable+endYear+"_"+endMonth))==0){	//ak sa jedna o jeden mesiac a rok
 						//Logger.debug(null, "Jeden mesiac a rok");
 						ps.setInt(psCounter++, startDay);
@@ -515,7 +515,7 @@ public class DataDeletingManager
 			try
 			{
 				if (table.indexOf("stat_clicks") != -1){
-					String clicksTable = table.startsWith("stat_clicks_v2_") ? "stat_clicks_v2_" : "stat_clicks_";
+					String clicksTable = "stat_clicks_";
 					if((clicksTable+startYear+"_"+startMonth).compareTo((clicksTable+endYear+"_"+endMonth))==0){	//ak sa jedna o jeden mesiac a rok
 						//Logger.debug(null, "Jeden mesiac a rok");
 						return query.forInt(sql, startDay, endDay);

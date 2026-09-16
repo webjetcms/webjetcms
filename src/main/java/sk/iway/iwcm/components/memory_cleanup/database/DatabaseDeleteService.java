@@ -48,7 +48,6 @@ public class DatabaseDeleteService {
         items.add(buildStatBean(prop, "stat_menu.invalidPages", "stat_error", true));
         items.add(buildStatBean(prop, "components.data.deleting.stats.view", "stat_views", true));
         items.add(buildStatBean(prop, "components.stat.heat_map.title", "stat_clicks", true));
-        items.add(buildStatBean(prop, "components.stat.heat_map.v2", "stat_clicks_v2", true));
         items.add(buildStatBean(prop, "components.memory_cleanup.banner_clicks", "banner_stat_clicks", false));
         items.add(buildStatBean(prop, "components.memory_cleanup.banner_views", "banner_stat_views", false));
         items.add(buildStatBean(prop, "components.memory_cleanup.banner_day_views", "banner_stat_views_day", false));
@@ -125,7 +124,7 @@ public class DatabaseDeleteService {
             for (DatabaseDeleteBean entity : items) {
                 entity.setFrom(datePair.first);
                 entity.setTo(datePair.second);
-                if ("stat_clicks_v2".equals(entity.getTableName())
+                if ("stat_clicks".equals(entity.getTableName())
                         || (entity.isTablePartitioning() && Constants.getBoolean("statEnableTablePartitioning"))) {
                     entity.setNumberOfEntriesToDelete(DataDeletingManager.checkTablePartitioning(entity.getTableName(), datePair.first, datePair.second));
                 } else if(entity.getGroupId() == 6) {
@@ -162,7 +161,7 @@ public class DatabaseDeleteService {
     boolean delete(DatabaseDeleteBean entity) {
         try {
             Pair<Date, Date> datePair = new Pair<>(entity.getFrom(), entity.getTo());
-            if ("stat_clicks_v2".equals(entity.getTableName())
+            if ("stat_clicks".equals(entity.getTableName())
                     || (entity.isTablePartitioning() && Constants.getBoolean("statEnableTablePartitioning"))) {
                 DataDeletingManager.deleteTablePartitioning(entity.getTableName(), datePair.first, datePair.second, true);
             }

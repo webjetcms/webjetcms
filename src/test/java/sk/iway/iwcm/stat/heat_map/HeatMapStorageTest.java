@@ -37,8 +37,8 @@ class HeatMapStorageTest extends BaseWebjetTest {
         try (MockedStatic<StatWriteBuffer> buffer = mockStatic(StatWriteBuffer.class)) {
             HeatMapStorage.record(event, "Example.COM");
             buffer.verify(() -> StatWriteBuffer.addIdempotent(
-                    "INSERT INTO stat_clicks_v2_2025_12 (event_id, domain_name, document_id, day_of_month, viewport_width, x, y) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    "stat_clicks_v2", "_2025_12", EVENT_ID, "example.com", 123, 31, 390, 800, 4000));
+                    "INSERT INTO stat_clicks_2025_12 (event_id, domain_name, document_id, day_of_month, viewport_width, x, y) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    "stat_clicks", "_2025_12", EVENT_ID, "example.com", 123, 31, 390, 800, 4000));
         }
     }
 
@@ -53,7 +53,7 @@ class HeatMapStorageTest extends BaseWebjetTest {
 
     @Test
     void sameMonthQueryAppliesBothDaysAndCanonicalDomain() throws Exception {
-        Connection connection = connectionWithTables("stat_clicks_v2_2026_9");
+        Connection connection = connectionWithTables("stat_clicks_2026_9");
         PreparedStatement statement = mock(PreparedStatement.class);
         when(connection.prepareStatement(anyString())).thenReturn(statement);
         ResultSet result = mock(ResultSet.class);
@@ -70,9 +70,28 @@ class HeatMapStorageTest extends BaseWebjetTest {
         }
     }
 
+    /** Migrated clicks remain visible at their assigned width even without an event identifier. */
+    @Test
+    void migratedDesktopClicksUseTheSameDomainScopedWidthQuery() throws Exception {
+        Connection connection = connectionWithTables("stat_clicks_2010_6");
+        PreparedStatement statement = statementWithCount(1920, 7);
+        String sql = "SELECT viewport_width, COUNT(*) FROM stat_clicks_2010_6"
+                + " WHERE domain_name = ? AND day_of_month BETWEEN ? AND ? AND document_id = ? GROUP BY viewport_width";
+        when(connection.prepareStatement(sql)).thenReturn(statement);
+        try (MockedStatic<DBPool> pool = mockStatic(DBPool.class)) {
+            pool.when(DBPool::getConnection).thenReturn(connection);
+            assertEquals(Map.of(1920, 7L), HeatMapStorage.getWidths("example.com", 123,
+                    LocalDate.of(2010, 6, 1), LocalDate.of(2010, 6, 30)));
+            verify(statement).setString(1, "example.com");
+            verify(statement).setInt(2, 1);
+            verify(statement).setInt(3, 30);
+            verify(statement).setInt(4, 123);
+        }
+    }
+
     @Test
     void yearBoundaryAddsWidthsFromExistingPartitionsOnly() throws Exception {
-        Connection connection = connectionWithTables("stat_clicks_v2_2025_12", "stat_clicks_v2_2026_1", "stat_clicks_2026_1");
+        Connection connection = connectionWithTables("stat_clicks_2025_12", "stat_clicks_2026_1", "stat_views_2026_1", "stat_clicks_2026_2");
         PreparedStatement december = statementWithCount(390, 3);
         PreparedStatement january = statementWithCount(390, 5);
         when(connection.prepareStatement(anyString())).thenAnswer(invocation ->
@@ -91,7 +110,7 @@ class HeatMapStorageTest extends BaseWebjetTest {
 
     @Test
     void legacyMssqlDriverWithoutGetSchemaStillDiscoversPartitions() throws Exception {
-        Connection connection = connectionWithTables("STAT_CLICKS_V2_2026_9");
+        Connection connection = connectionWithTables("STAT_CLICKS_2026_9");
         when(connection.getSchema()).thenThrow(new AbstractMethodError("JDBC getSchema is not implemented"));
         PreparedStatement statement = statementWithCount(390, 2);
         when(connection.prepareStatement(anyString())).thenReturn(statement);
@@ -103,7 +122,7 @@ class HeatMapStorageTest extends BaseWebjetTest {
 
     @Test
     void databaseFailureIsNotReportedAsAnEmptyHeatmap() throws Exception {
-        Connection connection = connectionWithTables("stat_clicks_v2_2026_9");
+        Connection connection = connectionWithTables("stat_clicks_2026_9");
         when(connection.prepareStatement(anyString())).thenThrow(new SQLException("permission denied", "42501"));
         try (MockedStatic<DBPool> pool = mockStatic(DBPool.class)) {
             pool.when(DBPool::getConnection).thenReturn(connection);
