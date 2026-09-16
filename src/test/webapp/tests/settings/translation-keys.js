@@ -31,6 +31,7 @@ Scenario('translation key tree', ({ I, DT }) => {
     DT.waitForLoader();
     I.waitForElement("#SomStromcek li[data-translation-key-prefix='components.map.width'].jstree-leaf", 20);
 
+    I.prevent429();
     I.jstreeFilter("width");
     I.seeElement("#SomStromcek li[data-translation-key-prefix='components.map.width'].jstree-leaf > a.jstree-search");
     I.dontSeeElement("#SomStromcek .ti-file-text");
@@ -40,6 +41,7 @@ Scenario('translation key tree', ({ I, DT }) => {
     I.see("components.map.width.short", "#datatableInit");
     I.dontSee("components.map.address", "#datatableInit");
 
+    I.prevent429();
     I.jstreeFilter("grideditor");
     I.seeElement("#SomStromcek li[data-translation-key-prefix='grideditor'] > a.jstree-search");
     I.dontSeeElement("#SomStromcek li[data-translation-key-prefix='components']");
@@ -48,6 +50,7 @@ Scenario('translation key tree', ({ I, DT }) => {
     I.dontSeeInField("#tree-folder-search-input", "grideditor");
     I.waitForElement("#SomStromcek li[data-translation-key-prefix='components']", 20);
 
+    I.prevent429();
     I.jstreeFilter("grideditor");
     I.seeElement("#SomStromcek li[data-translation-key-prefix='grideditor'] > a.jstree-search");
     I.clearField("#tree-folder-search-input");
@@ -56,6 +59,7 @@ Scenario('translation key tree', ({ I, DT }) => {
     I.dontSeeInField("#tree-folder-search-input", "grideditor");
     I.waitForElement("#SomStromcek li[data-translation-key-prefix='components']", 20);
 
+    I.prevent429();
     I.jstreeFilter("grideditor");
     I.seeElement("#SomStromcek li[data-translation-key-prefix='grideditor'] > a.jstree-search");
     I.clickCss("#translation-key-root-node > a.jstree-anchor");
