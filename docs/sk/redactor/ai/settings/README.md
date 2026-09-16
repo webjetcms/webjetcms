@@ -149,13 +149,15 @@ Lokálne modely vykonávajú požiadavky priamo na serveri WebJET CMS bez odosie
 - **Lokálny prekladový model** - používa model `facebook/m2m100_418M` na preklad čistého textu. Nepodporuje HTML kód, `INCLUDE` príkazy, štruktúrovaný vstup ani doplňujúci vstup používateľa.
 - **Lokálny embeddingový model** - používa model `intfloat/multilingual-e5-base` na [sémantické indexovanie a vyhľadávanie](../../apps/semantic-search/README.md). Model generuje vektory s `768` dimenziami.
 
-Modelové balíky vo formáte ZIP musia byť vopred pripravené a schválené pre WebJET CMS. Absolútne cesty k nim nastavte v konfiguračných premenných:
+Modelové balíky vo formáte ZIP musia byť vopred pripravené a schválené pre WebJET CMS. Cesty k nim nastavte v konfiguračných premenných:
 
 | Premenná | Model |
 | --- | --- |
 | `ai_localTextModelBundlePath` | `utter-project/EuroLLM-1.7B-Instruct` |
 | `ai_localTranslateModelBundlePath` | `facebook/m2m100_418M` |
 | `ai_localEmbeddingModelBundlePath` | `intfloat/multilingual-e5-base` |
+
+Cesta môže byť absolútna cesta na serveri alebo cesta začínajúca `/WEB-INF/`, napríklad `/WEB-INF/local-ai-models/eurollm-1.7b-instruct-q4-k-m.zip`. Cesty začínajúce `/WEB-INF/` sa vyhodnotia voči koreňovému adresáru nasadenej aplikácie na serveri.
 
 Cesty sú globálne pre celú inštaláciu, súbor musí byť čitateľný procesom aplikačného servera a po ich zmene je potrebný reštart. Model sa otvorí až pri prvom použití. Poskytovateľ sa v editore označí ako nenakonfigurovaný, kým príslušná cesta nie je nastavená.
 

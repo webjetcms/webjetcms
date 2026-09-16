@@ -1,7 +1,5 @@
 Feature('ai.ai-assistants');
 
-const path = require("path");
-
 Before(({ I, login }) => {
     login('admin');
 });
@@ -17,9 +15,9 @@ let openRouterId = "OpenRouter";
 let localTextId = "Lokálny model na generovanie textu";
 let localTranslateId = "Lokálny prekladový model";
 
-const localModelsDirectory = path.resolve(__dirname, "../../../../main/webapp/WEB-INF/local-ai-models");
-const localTextModelBundle = path.join(localModelsDirectory, "eurollm-1.7b-instruct-q4-k-m.zip");
-const localTranslateModelBundle = path.join(localModelsDirectory, "m2m100-418m-int8.zip");
+// The pipeline deploys these bundles under WEB-INF on the application server.
+const localTextModelBundle = "/WEB-INF/local-ai-models/eurollm-1.7b-instruct-q4-k-m.zip";
+const localTranslateModelBundle = "/WEB-INF/local-ai-models/m2m100-418m-int8.zip";
 const localAssistantPrefix = "local-ai-autotest";
 const localTextAssistant = localAssistantPrefix + "-text";
 const localTranslateAssistant = localAssistantPrefix + "-translate";
@@ -220,8 +218,10 @@ Scenario('local models return text', async ({I, DT, DTE, Document}) => {
     await assertLocalAssistantReturnsText(I, DTE, localTranslateAssistant, localTranslateId, "Good morning");
 });
 
-Scenario('cleanup local model assistants', async ({I, DT}) => {
+Scenario('cleanup local model assistants', async ({I, DT, Document}) => {
     await deleteLocalAssistants(I, DT);
+    Document.setConfigValue("ai_localTextModelBundlePath", "");
+    Document.setConfigValue("ai_localTranslateModelBundlePath", "");
 });
 
 

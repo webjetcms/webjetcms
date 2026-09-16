@@ -105,6 +105,9 @@ public abstract class ConfiguredLocalProvider implements AiProvider {
                 );
             }
             try {
+                if (bundlePath.startsWith("/WEB-INF/")) {
+                    bundlePath = Tools.getRealPath(bundlePath);
+                }
                 current = opener.open(Path.of(bundlePath));
             } catch (InvalidPathException exception) {
                 throw new AiProviderException(providerId, "Local model bundle path is invalid", exception);

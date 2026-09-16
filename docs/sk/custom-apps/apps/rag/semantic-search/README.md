@@ -94,7 +94,7 @@ Aktivácia a nastavenie sa robí v [Konfigurácii](../../../../admin/setup/confi
 | `ragEmbeddingProvider` | `openai` | Poskytovateľ použitý iba pri automatickom vytvorení chýbajúceho embedding asistenta. Vstavané externé hodnoty sú `openai`, `gemini`, `openrouter`; lokálny model vyberte priamo v systémových asistentoch. Použiť možno aj identifikátor správne zaregistrovaného vlastného poskytovateľa. |
 | `ragEmbeddingModel` | `text-embedding-3-small` | Model použitý iba pri automatickom vytvorení chýbajúceho embedding asistenta. |
 | `ragEmbeddingDimensions` | `1536` | Globálny počet dimenzií vektora pre celú inštaláciu. Musí zodpovedať použitému modelu a databázovej tabuľke. |
-| `ai_localEmbeddingModelBundlePath` | prázdna hodnota | Absolútna cesta ku globálnemu schválenému ZIP balíku lokálneho modelu `intfloat/multilingual-e5-base`. Po zmene je potrebný reštart. |
+| `ai_localEmbeddingModelBundlePath` | prázdna hodnota | Cesta ku globálnemu schválenému ZIP balíku lokálneho modelu `intfloat/multilingual-e5-base`: absolútna cesta na serveri alebo cesta začínajúca `/WEB-INF/` voči koreňu nasadenej aplikácie. Po zmene je potrebný reštart. |
 | `ragEmbeddingChunkSize` | `1000` | Maximálna veľkosť jednej časti textu v znakoch. |
 | `ragEmbeddingChunkOverlap` | `200` | Počet znakov, o ktoré sa susedné chunky prekrývajú. |
 
@@ -119,7 +119,7 @@ Fronta `rag_index_queue` ukladá iba typ entity, ID a akciu. Poskytovateľ a mod
 
 Vstavaný lokálny poskytovateľ používa model `intfloat/multilingual-e5-base` s `768` dimenziami. Postup nastavenia:
 
-1. Uložte schválený modelový ZIP balík na server a nastavte jeho absolútnu cestu do `ai_localEmbeddingModelBundlePath`.
+1. Uložte schválený modelový ZIP balík na server a nastavte jeho cestu do `ai_localEmbeddingModelBundlePath`. Použite absolútnu cestu na serveri alebo cestu začínajúcu `/WEB-INF/` voči koreňu nasadenej aplikácie.
 2. Nastavte globálnu premennú `ragEmbeddingDimensions` na `768`. Táto zmena odstráni existujúce vektory.
 3. Reštartujte aplikačný server.
 4. V asistentoch `RAG-EMB-INDEX` a `RAG-EMB-SEARCH` vyberte poskytovateľa **Lokálny embeddingový model** a model `intfloat/multilingual-e5-base`.

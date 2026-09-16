@@ -13,13 +13,15 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.webjetcms.ai.AiProvider;
 import com.webjetcms.ai.AiProviderConfig;
 import com.webjetcms.ai.ModelInfo;
 
+import jakarta.servlet.ServletContext;
 import sk.iway.iwcm.Constants;
 
 class ConfiguredLocalProviderTest {
@@ -27,18 +29,24 @@ class ConfiguredLocalProviderTest {
     @TempDir
     Path tempDirectory;
 
-    @Test
-    void opensConfiguredBundleLazilyAndClosesDelegateOnlyOnce() throws Exception {
+    /** Verifies lazy loading from absolute and server-relative paths and closing the delegate only once. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void opensConfiguredBundleLazilyAndClosesDelegateOnlyOnce(boolean useWebInfPath) throws Exception {
         String constantName = "ai_testLocalModelBundlePath";
         boolean constantExisted = Constants.containsKey(constantName);
         String originalValue = constantExisted ? Constants.getString(constantName) : null;
-        Path bundle = tempDirectory.resolve("model.zip");
+        Path bundle = tempDirectory.toRealPath().resolve("WEB-INF/local-ai-models/model.zip");
+        ServletContext originalServletContext = Constants.getServletContext();
+        ServletContext servletContext = mock(ServletContext.class);
+        when(servletContext.getRealPath("/")).thenReturn(tempDirectory.toString());
         AiProvider delegate = mock(AiProvider.class);
         List<ModelInfo> models = List.of(mock(ModelInfo.class));
         AtomicInteger openCount = new AtomicInteger();
 
         try {
-            Constants.setString(constantName, bundle.toString());
+            Constants.setServletContext(servletContext);
+            Constants.setString(constantName, useWebInfPath ? "/WEB-INF/local-ai-models/model.zip" : bundle.toString());
             when(delegate.listModels(any(AiProviderConfig.class))).thenReturn(models);
             ConfiguredLocalProvider provider = new TestConfiguredLocalProvider(
                 constantName,
@@ -58,6 +66,7 @@ class ConfiguredLocalProviderTest {
             provider.close();
             verify(delegate, times(1)).close();
         } finally {
+            Constants.setServletContext(originalServletContext);
             if (constantExisted) Constants.setString(constantName, originalValue);
             else Constants.deleteConstant(constantName);
         }
