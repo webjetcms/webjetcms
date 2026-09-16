@@ -108,11 +108,23 @@ VIDEO_SHOT=outro npm run video video/308-pb-redesign.js
 
 Výsledok sa uloží ako `docs/feature-video/308-pb-redesign-outro.webm`; neúspešný beh ako `308-pb-redesign-outro.failed.webm`. Opakované spustenie nahradí iba retake rovnakého záberu a rovnakého stavu. Celé video aj posledný úspešný retake pri neúspechu zostanú zachované. Premenná funguje aj s `npm run video:current`.
 
-Spoločný `setup` sa vykoná raz. Potom sa vykoná iba príprava, titulky, dvojsekundové rezervy, akcia a cleanup vybraného záberu. Ostatné zábery sa nespustia. Titulky a výpisy zachovávajú pôvodné číslo záberu a celkový počet z celého plánu; retake nemení jeho časovú os. Výber `manual` alebo `head` zobrazí iba existujúcu varovnú tabuľku po spoločnom setupe.
+Spoločný `setup` sa vykoná raz. Potom sa vykoná iba príprava, titulky, akcia a cleanup vybraného záberu. Po odstránení dvojsekundového titulku SHOT nasledujú **3 sekundy čistého obrazu pred akciou** na strihové prechody; po akcii zostáva dvojsekundová rezerva. Tieto rezervy platia aj pri nahrávaní celého plánu a nemenia odhadované dĺžky záberov. Ostatné zábery sa nespustia. Titulky a výpisy zachovávajú pôvodné číslo záberu a celkový počet z celého plánu; retake nemení jeho časovú os. Výber `manual` alebo `head` zobrazí iba existujúcu varovnú tabuľku po spoločnom setupe.
+
+Samostatný WebM začína priamo titulkom `Shot N/total: id`, vrátane jeho zobrazenia. Pri ukladaní sa odstráni prihlasovanie, SETUP aj príprava pred týmto titulkom. Orezanie používa skutočné pozície snímok Chromium a FFmpeg pribalený k Playwright s rovnakým profilom kvality VP8. Celá nahrávka bez `VIDEO_SHOT` zostáva vrátane SETUP. Ak záber zlyhá ešte pred titulkom, jeho `.failed.webm` ponechá celú prípravu na diagnostiku. Pri chybe orezania sa zachová raw video a pôvodný výstup sa nenahradí.
 
 Nenastavená alebo prázdna hodnota znamená celý plán; okolité medzery sa orežú. ID musí používať malé písmená, číslice a prípadné spojovníky, napríklad `text-editing`. Neplatný formát sa odmietne pri načítaní konfigurácie. Neznáme ID ukončí beh pred spoločným setupom a vypíše dostupné ID. Aj pri retake sa overuje platnosť celého plánu a všetkých automatických callbackov.
 
 `VIDEO_SHOT` ovplyvňuje iba nahrávanie prehliadača. Príkazy `audio`, `head` a `video:plan` naďalej spracujú celý plán.
+
+### Všetky zábery do samostatných súborov
+
+```shell
+npm run video:shots video/308-pb-redesign.js
+```
+
+Príkaz načíta `videoPlan` bez spustenia jeho kódu a postupne spustí každý záber cez existujúci príkaz `video` s vlastným `VIDEO_SHOT`. Výstupy sú napríklad `308-pb-redesign-hierarchy.webm` a `308-pb-redesign-preview.webm` v `docs/feature-video`. Každý začína svojím titulkom SHOT bez prípravy. Poradie, číslovanie a nastavenia nahrávania zostávajú zachované. Prípadná zdedená hodnota `VIDEO_SHOT` sa pre každý záber nahradí jeho ID.
+
+Každý záber má vlastný proces prehliadača a spoločný setup, rovnako ako ručný retake. Pri chybe záberu dávka pokračuje ďalšími; na konci vypíše neúspešné ID a vráti nenulový návratový kód. Prerušenie procesu dávku zastaví. Typy `manual` a `head` vytvoria samostatné varovné tabuľky, ktoré treba pri strihu nahradiť; príkaz negeneruje platené audio ani video s hovoriacou postavou.
 
 ## Nastavenia nahrávania
 

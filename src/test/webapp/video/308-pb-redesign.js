@@ -102,6 +102,11 @@ const videoPlan = {
                 await I.videoClick(services);
                 await I.waitForElement(".pb-workbench-path [data-type=column][aria-current=location]", 10);
                 await I.wait(3);
+                await I.videoClick(".pb-workbench-path [data-type=container]");
+                await I.waitForElement(".pb-workbench-path [data-type=container][aria-current=location]", 10);
+                await I.wait(4);
+                await I.videoClick(services);
+                await I.wait(10);
             }
         },
         {
@@ -149,12 +154,10 @@ const videoPlan = {
             "title": "Explore the compact style properties",
             "text-sk": "Aj Štýl má nové, kompaktné okno. V hlavičke vidíte, ktorý blok upravujete. Vlastnosti sú rozdelené do rozbaľovacích skupín. Pozadie a odsadenie môžete nechať otvorené súčasne. Prepojením hodnôt nastavíte rovnaké odsadenie na všetkých stranách. Zmenu hneď vidíte na stránke. Uložiť potvrdí štýl, Zrušiť vráti nepotvrdené úpravy. Celú stránku potom uložíte hlavným tlačidlom editora.",
             "notes": "Open Style for the selected column. Show its title and content label, collapse Identification, expand Background and Spacing together, set linked padding and cancel. The fixture is browser-only; do not save the page.",
-            prepare: async ({ I, action }) => {
-                await I.click(action("more"));
-                await I.click(action("style"));
+            shot: async ({ I, action,waitForPageBuilder }) => {
+                await I.videoClick(action("more"));
+                await I.videoClick(action("style"));
                 await I.waitForVisible(".pb-modal [name=selector-id]", 10);
-            },
-            shot: async ({ I, waitForPageBuilder }) => {
                 await I.see("Štýl stĺpca", ".pb-modal .header-title");
                 await I.see("Pánske kaderníctvo", ".pb-modal__context");
                 await I.wait(3);
@@ -190,6 +193,8 @@ const videoPlan = {
                 await I.saveScreenshot("308-pb-redesign-structure.png");
                 await I.wait(3);
                 await I.videoClick(locate(".pb-structure > ul > li > div > [data-pb-expand]").first());
+                await I.wait(4);
+                await I.videoClick(".pb-structure input[type=search]");
                 await I.fillField(".pb-structure input[type=search]", "Kontakt");
                 await I.waitForVisible(treeRow("column", "Kontakt"), 10);
                 await I.videoClick(treeRow("column", "Kontakt"));
@@ -209,6 +214,10 @@ const videoPlan = {
                 await I.waitForVisible(".pb-structure", 10);
             },
             shot: async ({ I, treeRow, services }) => {
+                await I.videoClick(".pb-structure input[type=search]");
+                await I.fillField(".pb-structure input[type=search]", "Kontakt");
+                await I.videoClick(treeRow("column", "Kontakt"));
+                await I.wait(2);
                 await I.fillField(".pb-structure input[type=search]", "Sezónna ponuka");
                 await I.waitForVisible(treeRow("section", "Sezónna ponuka"), 10);
                 await I.videoClick(treeRow("section", "Sezónna ponuka"));
@@ -217,10 +226,19 @@ const videoPlan = {
                 await I.wait(4);
                 await I.fillField(".pb-structure input[type=search]", "");
                 await I.videoClick(treeRow("section", "Pánske kaderníctvo"));
+                await I.wait(2);
+                await I.videoClick(treeRow("section", "Naše služby"));
+                await I.wait(2);
+                await I.videoClick(treeRow("section", "Cenník"));
+                await I.wait(2);
                 await I.pressKey("ArrowRight");
+                await I.wait(1);
                 await I.pressKey("ArrowDown");
+                await I.wait(1);
                 await I.pressKey("Enter");
+                await I.wait(1);
                 await I.pressKey("Escape");
+                await I.wait(1);
                 await I.waitForInvisible(".pb-structure", 10);
                 await I.videoClick(services);
             }
@@ -274,12 +292,6 @@ const videoPlan = {
                     await I.waitForVisible(`.pb-library .library-tab-item--${type}`, 10);
                     await I.wait(3);
                 }
-                await I.videoClick(".pb-library__close");
-                await I.waitForInvisible(".pb-library", 10);
-                await I.waitForVisible("[data-autotest-insert]", 10);
-                await I.wait(3);
-                await I.videoClick("[data-autotest-insert]");
-                await I.waitForVisible(".pb-library--section", 10);
                 await I.videoClick(".pb-library .library-tab-link[data-library-type=basic]");
                 await I.videoClick(locate(".pb-library .library-tab-item--basic .library-template-block--section .library-tab-item-button").first());
                 await I.waitForInvisible(".pb-library", 10);
@@ -323,8 +335,10 @@ const videoPlan = {
                 await I.videoClick(`${library} [data-library-tag=""]`);
                 await I.seeInField(`${library} .library-filter-input`, "form");
                 await I.fillField(`${library} .library-filter-input`, "nenájdený blok");
+                await I.wait(3);
                 await I.waitForVisible(`${library} .library-empty`, 10);
                 await I.videoClick(`${library} .library-clear-filters`);
+                await I.wait(3);
                 await I.seeInField(`${library} .library-filter-input`, "");
                 await I.videoClick(".pb-library__close");
                 await I.waitForInvisible(".pb-library", 10);
@@ -374,14 +388,19 @@ const videoPlan = {
                 await I.waitForVisible(`${fixture} .pb-size-changer__down`, 10);
                 await I.videoClick(locate(`${fixture} .pb-size-changer__down`).first());
                 await I.waitForElement(`${fixture} .col-11`, 10);
-                await I.wait(3);
+                await I.videoClick(locate(`${fixture} .pb-size-changer__down`).first());
+                await I.waitForElement(`${fixture} .col-10`, 10);
+                await I.videoClick(locate(`${fixture} .pb-size-changer__down`).first());
+                await I.waitForElement(`${fixture} .col-9`, 10);
+                await I.videoClick(locate(`${fixture} .pb-size-changer__up`).first());
+                await I.videoClick(locate(`${fixture} .pb-size-changer__up`).first());
                 await I.videoClick(locate(`${fixture} .pb-size-changer__up`).first());
                 await I.waitForElement(`${fixture} .col-12`, 10);
                 await I.videoClick(action("end-resize"));
                 await I.waitForInvisible(".pb-resize-hint", 10);
                 await I.videoClick(action("ancestors"));
                 await I.waitForVisible(".pb-workbench-path.is-expanded", 10);
-                await I.wait(3);
+                await I.wait(1);
                 await I.pressKey("Escape");
                 await I.videoClick(action("structure"));
                 await I.fillField(".pb-structure input[type=search]", "Pánske kaderníctvo");

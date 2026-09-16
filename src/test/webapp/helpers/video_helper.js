@@ -1,5 +1,5 @@
 const { Helper } = codeceptjs;
-const { getVideoSettings } = require("./video_settings.js");
+const { getVideoSettings, getVideoShot } = require("./video_settings.js");
 
 const DEFAULT_CLICK_DELAY = 350;
 const DEFAULT_POST_CLICK_DELAY = 500;
@@ -374,7 +374,7 @@ class VideoHelper extends Helper {
       ? (typeof title.notes === "string" && title.notes.trim()) || "Add filming instructions to this shot's notes."
       : head ? [title.narration, title.notes || "Generate this clip with npm run head and insert it during editing."].join("\n\n")
       : Array.from(title.narration).slice(0, 200).join("");
-    await this.helpers.Playwright.page.evaluate(async ({ heading, excerpt, manual }) => {
+    const slateTiming = await this.helpers.Playwright.page.evaluate(async ({ heading, excerpt, manual }) => {
       const host = document.createElement("div");
       host.id = "wj-video-title-host";
       host.setAttribute("aria-hidden", "true");
@@ -415,15 +415,20 @@ class VideoHelper extends Helper {
         slate.appendChild(description);
       }
       shadow.appendChild(slate);
+      let startTime, endTime;
       document.documentElement.appendChild(host);
       try {
         // Start the presentation hold after the browser has painted the slate.
         await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        startTime = Date.now() / 1000;
         await new Promise(resolve => setTimeout(resolve, 2000));
       } finally {
+        endTime = Date.now() / 1000;
         host.remove();
       }
+      return { startTime, endTime };
     }, { heading, excerpt, manual });
+    if (getVideoShot() && typeof title === "object") this.helpers.Playwright.videoShotSlate = slateTiming;
   }
 
   /**

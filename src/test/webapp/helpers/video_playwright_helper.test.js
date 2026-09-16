@@ -149,6 +149,18 @@ test("preserves the previous recording when final replacement fails", async () =
   }
 });
 
+test("retains raw footage and the previous output when a shot cannot be trimmed", async t => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), "wj-video-trim-failure-"));
+  t.after(() => fs.rm(directory, { recursive: true, force: true }));
+  const raw = path.join(directory, "raw.webm");
+  const target = path.join(directory, "shot.webm");
+  await fs.writeFile(raw, "diagnostic footage");
+  await fs.writeFile(target, "previous successful shot");
+  await assert.rejects(finalizeVideoArtifact({ path: async () => raw }, target, { slate: { startTime: 1, endTime: 3 } }), /Cannot locate the shot slate/);
+  assert.equal(await fs.readFile(raw, "utf8"), "diagnostic footage");
+  assert.equal(await fs.readFile(target, "utf8"), "previous successful shot");
+});
+
 test("keeps raw recordings below docs/feature-video", () => {
   const scenario = {
     file: path.join("project", "video", "293-config-jstree-view.js"),

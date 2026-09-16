@@ -93,7 +93,7 @@ when it is available; `durationSeconds` remains an editing estimate until adjust
   altering saved values, and inspect the recording.
 - Time ranges are derived cumulatively from `durationSeconds`. They describe
   the edited film, excluding setup, cleanup, two-second editing slates and the
-  runner's two-second holds before and after each automatic action.
+  runner's three-second hold before and two-second hold after each automatic action.
   Never use these durations as application waits. Use ASCII hyphens in ranges.
 
 ## 4. Implement the Scenarios
@@ -154,7 +154,7 @@ For automatic shots, the runner logs
 a two-second `SETUP shot <index>/<total> <id> (<duration>s)` slate. The index and
 total use the full plan, including manual and head shots. It then
 awaits shared `prepare`, runs `shot.prepare(context)` if present, displays the
-normal two-second shot slate, waits two seconds on the prepared scene, runs
+normal two-second shot slate, waits three seconds on the prepared scene, runs
 `shot.shot(context)`, waits another two seconds on the result and awaits cleanup.
 These automatic lead-in/tail holds provide room for transitions during editing;
 do not duplicate them in every callback.
@@ -192,6 +192,20 @@ full plan. The same selection works with `video:current`. A retake is saved as
 `<scenario-name>-<shot-id>.webm` or `<scenario-name>-<shot-id>.failed.webm`, replacing
 only the same shot and result status. Full recordings are retained. `VIDEO_SHOT`
 does not filter audio, head generation or `video:plan` output.
+
+Run `npm run video:shots video/<scenario-name>.js` to record every shot serially
+as an individual retake with the same suffixes and full-plan numbering. It reads
+metadata without executing the scenario, then invokes the existing video command
+with each shot ID. A failed shot does not prevent later shots; the command reports
+all failed IDs and exits nonzero. Process interruption stops the batch. Manual and
+head entries produce warning clips, without paid generation.
+
+Individual retakes start at the SHOT slate, including its full two-second display.
+The Chromium recording's actual frame positions are used to trim setup with the
+bundled FFmpeg and the existing high-quality VP8 profile. The full recording keeps
+SETUP. Failures before the SHOT slate retain setup for diagnosis; trim failures
+retain raw footage and do not replace existing outputs. The clean scene after
+the slate lasts three seconds before automatic actions, in both recording modes.
 
 A reordered shot must not depend on a prior shot's dialog, selection, search or
 mutation. Reopen/reset the editor with isolated browser-only content when that
@@ -254,7 +268,7 @@ Run proportionate checks:
    `npm run video:test` after infrastructure changes. Verify reordered plans,
    translation errors, manual-shot narration and warning slates, callback
    validation, and skipped automatic lifecycle callbacks for manual shots.
-   Verify the two-second lead-in/tail holds for automatic shots and their absence
+   Verify the three-second lead-in and two-second tail holds for automatic shots and their absence
    for manual/head entries. Verify that audio validation and generation do not
    execute inline callbacks.
 2. Dry-run the audio-only, head-only and complete video configurations; none may call

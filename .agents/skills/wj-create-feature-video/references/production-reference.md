@@ -9,6 +9,7 @@ cd src/test/webapp
 npm run video:plan video/<scenario-name>.js
 npm run audio video/<scenario-name>.js
 npm run video video/<scenario-name>.js
+npm run video:shots video/<scenario-name>.js
 npm run video:current
 ```
 
@@ -56,7 +57,7 @@ VIDEO_SHOT=outro npm run video video/308-pb-redesign.js
 
 The runner still validates the complete plan and all automatic callbacks and
 runs one-time `setup`. Only the selected shot then runs, with its shared and
-inline preparation, editing slates, two-second lead-in/tail holds, action and
+inline preparation, editing slates, a three-second lead-in, two-second tail, action and
 cleanup. No other shot callbacks run. Original shot numbers, full-plan totals
 and edited timeline positions are retained. Manual/head selections show their
 usual warning slate after setup and skip all automatic lifecycle callbacks.
@@ -71,6 +72,23 @@ replace only the corresponding shot and result status, preserving the full
 recording and the last successful retake on failure. Raw recording retention
 works as for full runs. `VIDEO_SHOT` only selects browser footage; audio,
 head generation and `video:plan` continue to process the full plan.
+
+`npm run video:shots video/<scenario-name>.js` statically reads the plan and runs
+every shot serially through `npm run video` with its own `VIDEO_SHOT`, overriding
+any inherited selection. It preserves recording settings, full-plan numbering and
+the single-shot output names. Each child has its own browser and one-time setup.
+Shot failures are collected while later shots continue; the batch exits nonzero
+and lists failed IDs. A signal or child-launch error stops the batch. Manual/head
+shots create warning clips, never paid audio or presenter media.
+
+Every individual retake is trimmed to start on its normal SHOT or warning slate,
+including the slate's two-second display. `video_shot_trim.js` tracks Chromium's
+encoded frame positions (including rounded repetitions of static frames) and
+uses bundled FFmpeg to remove setup with the same high-quality VP8 profile. It
+does not estimate video offsets from total wall-clock time. Final replacement
+remains atomic. A failure before the slate retains the complete setup recording;
+trim failures preserve raw footage and the previous final file. Full-plan videos
+still contain SETUP and preparation.
 
 Disable native cursor capture in an external recorder. The scenario already
 renders a cursor and click effect, and capturing the system cursor as well can
@@ -156,7 +174,7 @@ then `SETUP shot 3/14 ...` followed by `Shot 3/14: ...`.
 Warnings use the same full-plan number and total. There is no separate automatic counter.
 The SETUP slate marks footage to discard, up to and including the normal slate.
 The runner inserts all editing slates; individual callbacks must not duplicate them.
-After the normal slate disappears, the runner holds the prepared scene for two
+After the normal slate disappears, the runner holds the prepared scene for three
 seconds, executes the action, then holds the result for two seconds before
 cleanup. These transition handles are extra footage, excluded from the edited
 duration estimates; add further presentation holds only when the shot needs them.
@@ -436,7 +454,7 @@ each automatic `shot` function and optional `prepare` function before recording.
 Manual and head shots need no functions. `recordVideoPlan(I, options)` uses that validation
 before its one-time `setup`. For automatic shots it sequences logging, the SETUP
 slate, shared `prepare`, optional inline `shot.prepare(context)`, the normal slate,
-a two-second hold, `shot.shot(context)`, another two-second hold, and `cleanup`.
+a three-second hold, `shot.shot(context)`, a two-second hold, and `cleanup`.
 For manual/head shots it only logs the warning and shows `I.videoTitle(shot)`
 with the filming instructions or full head narration and notes. Neither gets
 per-shot lifecycle callbacks or transition holds.
@@ -586,7 +604,7 @@ video-only process to Playwright's private Chromium encoder and temporary
 profile preparation. The encoder adapter is needed because the public
 `recordVideo` API does not expose image quality, bitrate, codec, or format; the
 profile adapter sets Chromium's native default page zoom before launch.
-Revalidate both parts whenever Playwright or Chromium is upgraded. Current
+Revalidate both parts and the shot-trimming frame tracker whenever Playwright or Chromium is upgraded. Current
 upstream Playwright also uses a fixed 1 Mb/s VP8/WebM target bitrate, so an
 upgrade alone does not resolve recording quality.
 

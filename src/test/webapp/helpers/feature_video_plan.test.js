@@ -68,7 +68,7 @@ test("records only the selected shot with setup, preparation, slates, holds and 
   });
   assert.deepEqual(events, [
     "SETUP", "SETUP shot 3/3 preview (15s)", "BASELINE:preview", "PREPARE:preview", "SLATE:3/3:preview",
-    "HOLD:2", "RUN:preview", "HOLD:2", "CLEANUP:preview"
+    "HOLD:3", "RUN:preview", "HOLD:2", "CLEANUP:preview"
   ]);
   assert.deepEqual(messages.filter(message => message.startsWith("Recording ")), ["Recording shot 3/3 preview (15s)"]);
 });
@@ -157,9 +157,9 @@ test("head shots retain localized narration and timing while skipping all shot c
     videoTitle: async shot => events.push(typeof shot === "string" ? shot : `${shot.type}:${shot.id}:${shot.narration}`)
   }, { plan, language: "en", prepare: async shot => events.push(`PREPARE:${shot.id}`), cleanup: async shot => events.push(`CLEANUP:${shot.id}`) });
   assert.deepEqual(events, [
-    "SETUP shot 1/3 edit (10s)", "PREPARE:edit", "auto:edit:English editing.", "HOLD:2", "RUN:edit", "HOLD:2", "CLEANUP:edit",
+    "SETUP shot 1/3 edit (10s)", "PREPARE:edit", "auto:edit:English editing.", "HOLD:3", "RUN:edit", "HOLD:2", "CLEANUP:edit",
     "head:intro:English intro.",
-    "SETUP shot 3/3 preview (15s)", "PREPARE:preview", "auto:preview:English preview.", "HOLD:2", "RUN:preview", "HOLD:2", "CLEANUP:preview"
+    "SETUP shot 3/3 preview (15s)", "PREPARE:preview", "auto:preview:English preview.", "HOLD:3", "RUN:preview", "HOLD:2", "CLEANUP:preview"
   ]);
   assert.ok(messages.includes("WARNING: head video | Shot 2/3 [intro]: Intro (5s)\nEnglish intro.\nInsert the generated talking-head clip."));
 });
@@ -218,9 +218,9 @@ test("records reordered shots and manual warning slates without running manual c
     cleanup: callback("CLEANUP")
   });
   assert.deepEqual(events, [
-    "LOGIN", "SETUP shot 1/3 preview (15s)", "BASELINE:preview", "PREPARE:preview", "SLATE:preview", "HOLD:2", "RUN:preview", "HOLD:2", "CLEANUP:preview",
+    "LOGIN", "SETUP shot 1/3 preview (15s)", "BASELINE:preview", "PREPARE:preview", "SLATE:preview", "HOLD:3", "RUN:preview", "HOLD:2", "CLEANUP:preview",
     "MANUAL:intro:Film the opening card separately.",
-    "SETUP shot 3/3 edit (10s)", "BASELINE:edit", "SLATE:edit", "HOLD:2", "RUN:edit", "HOLD:2", "CLEANUP:edit"
+    "SETUP shot 3/3 edit (10s)", "BASELINE:edit", "SLATE:edit", "HOLD:3", "RUN:edit", "HOLD:2", "CLEANUP:edit"
   ]);
   assert.deepEqual(messages.filter(message => message.startsWith("Recording ")), [
     "Recording shot 1/3 preview (15s)",
