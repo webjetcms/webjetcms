@@ -183,7 +183,15 @@ block content
                 });
 
                 var foundParentTitle = false;
-                var dialogBodyElements = window.parent.parent.$(".cke_editor_data_dialog .cke_dialog_body");
+                var dialogBodyElements = $();
+                try {
+                    var parentDialogIframe = window.parent.frameElement;
+                    if (parentDialogIframe != null) {
+                        dialogBodyElements = $(parentDialogIframe).closest(".cke_dialog_body");
+                    }
+                } catch (error) {
+                    // Cross-origin frame; keep the application title in this window.
+                }
                 //iterate over if and try to find one with iframe
                 dialogBodyElements.each(function(index, element) {
                     var $this = $(element);
