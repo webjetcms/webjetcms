@@ -473,7 +473,9 @@ public void addSpecSearch(Map<String, String> params, List<Predicate> predicates
 
 ## Neexistujúce atribúty v editore
 
-Štandardne z editora nemusia prichádzať všetky atribúty entity, preto sa pred uložením spájajú hodnoty existujúcej entity a údajov zaslaných z editora. Štandardne sa prepíšu všetky nie ```null``` atribúty. To ale neumožňuje zadať prázdny dátum (ak už bol raz nastavený). Preto atribúty anotované DataTableColumn typu ```Date``` sú prenesené aj keď majú ```null``` hodnotu. Toto spojenie sa vykonáva v metóde ```public T editItem(T entity, long id)``` s využitím ```NullAwareBeanUtils.copyProperties(entity, one);```.
+Štandardne z editora nemusia prichádzať všetky atribúty entity, preto sa pred uložením spájajú hodnoty existujúcej entity a údajov zaslaných z editora. Prepíšu sa všetky atribúty s hodnotou odlišnou od ```null```. Hodnota ```null``` sa automaticky prenesie pre Java atribúty typov ```java.util.Date```, ```java.sql.Date```, ```LocalDate```, ```LocalDateTime``` a objektové polia anotované ako ```DataTableColumnType.NUMBER```, ktoré podporujú ```null```, aby ich bolo možné v editore vyprázdniť. Primitívne číselné typy hodnotu ```null``` nepodporujú.
+
+Pri importe sa ```NUMBER``` s hodnotou ```null``` prenesie iba vtedy, keď sa jeho stĺpec nachádza v importovanom Excel súbore. Vynechaný stĺpec zachová hodnotu existujúcej entity; explicitná hodnota ```NULL``` v importovanom stĺpci ju vynuluje. Pre dátum uložený v inom type, napríklad ```Instant```, ```Timestamp``` alebo ```Long```, prípadne pre ```TEXT_NUMBER```, je možné prenos ```null``` zapnúť pomocou ```alwaysCopyProperties = { true }```. Hodnotou ```false``` sa automatický prenos pre podporované dátumové typy a ```NUMBER``` vypne. Toto spojenie sa vykonáva v metóde ```public T editItem(T entity, long id)``` s využitím ```NullAwareBeanUtils.copyProperties(entity, one);```.
 
 ## Obnovenie údajov po uložení
 

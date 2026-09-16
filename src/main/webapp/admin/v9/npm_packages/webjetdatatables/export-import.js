@@ -469,6 +469,7 @@ export function bindImportButton(TABLE, DATA) {
                 //console.log(counter);
                 counter += 1;
                 countedData.push(data);
+                countedImportedColumns.push(importedColumnsByRow[index] || []);
                 //console.log("counter="+counter+" chunks="+chunks+" index="+index+" mainData.length - 1="+(mainData.length - 1));
 
                 //data posielame postupne, maximalne naraz chunks objektov
@@ -482,6 +483,7 @@ export function bindImportButton(TABLE, DATA) {
                     //console.log("stringify=", JSON.stringify(readyData.data), "readyData=", readyData);
                     formData['dzchunksize'] = Buffer.byteLength(JSON.stringify(readyData));
                     formData['importedColumns'] = importedColumns;
+                    formData['importedColumnsByRow'] = {...countedImportedColumns};
                     formData['importMode'] = importMode;
                     formData["updateByColumn"] = updateByColumn;
                     formData["skipWrongData"] = skipWrongData;
@@ -539,6 +541,7 @@ export function bindImportButton(TABLE, DATA) {
                     }
                     //console.log("Reseting countedData");
                     countedData = new Array();
+                    countedImportedColumns = new Array();
                 }
                 index++;
             }
@@ -552,6 +555,7 @@ export function bindImportButton(TABLE, DATA) {
 
         const formData = {};
         let countedData = new Array();
+        let countedImportedColumns = new Array();
         let counter = 0;
         let finishCounter = 0;
         let dzchunkindex = 0;
@@ -602,6 +606,7 @@ export function bindImportButton(TABLE, DATA) {
     let excelData;
     let mainData;
     let importedColumns = [];
+    let importedColumnsByRow = [];
 
     let importModalListenersBinded = false;
     $('#datatableImportModal').on('show.bs.modal', function () {
@@ -654,6 +659,7 @@ export function bindImportButton(TABLE, DATA) {
                 const fileReader = new FileReader();
                 mainData = null;
                 importedColumns = [];
+                importedColumnsByRow = [];
                 fileReader.onload = function(e) {
                     const data = e.target.result;
                     //console.log("xlsx=", xlsx);
@@ -677,8 +683,9 @@ export function bindImportButton(TABLE, DATA) {
                 //console.log("excelData=", excelData, "importTable=", importTable);
                 //hashtabulka ciselnikov na prevod nazvo hodnoty na ID
                 let optionsTable = dtWJ.getOptionsTableImport(importTable.DATA);
-                mainData = excelData.map(d => {
+                mainData = excelData.map((d, rowIndex) => {
                     let row = {};
+                    let rowImportedColumns = [];
                     row.__rowNum__ = d.__rowNum__;
                     for (let index in importTable.DATA.fields) {
                         let col = importTable.DATA.fields[index];
@@ -710,6 +717,9 @@ export function bindImportButton(TABLE, DATA) {
 
                         //nemame hodnotu v exceli, preskocime
                         if (typeof value == "undefined") continue;
+
+                        //Keep omitted cells distinct from an explicit NULL value for partial imports.
+                        rowImportedColumns.push(col.data);
 
                         //sprav TRIM hodnoty
                         try {
@@ -814,6 +824,7 @@ export function bindImportButton(TABLE, DATA) {
                         //console.log("Setting property, col.data=", col.data, "value=", value);
                         WJ.setJsonProperty(row, col.data, value);
                     }
+                    importedColumnsByRow[rowIndex] = rowImportedColumns;
                     //console.log("row=", row);
                     return row;
                 });
