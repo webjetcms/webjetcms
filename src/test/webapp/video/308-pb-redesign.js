@@ -59,7 +59,7 @@ const videoPlan = {
             "text-sk": "Jemný rámik pod myšou teraz napovie, čo môžete vybrať. Kliknite priamo do textu a rovno píšte. Blok zostane vybraný aj pri prechode myšou inde. Jeho nástroje sú v pevnej lište pod textovým editorom. Počas písania sa rámik výberu zjemní.",
             "notes": "Kliknúť do „Naše služby“, ukázať jeden rámik a pevnú lištu, dopísať krátky text. MANUAL: detail jemnejšieho rámika počas písania.",
             shot: async ({ I, services, fixture, typeText }) => {
-                await I.moveCursorTo(`${fixture} .row > .pb-column:nth-child(2) h2`);
+                await I.moveCursorTo(`${fixture} .row > .pb-column:nth-child(2) img`);
                 await I.waitForVisible(".pb-outline.is-hover[data-type=column]:not([hidden])", 10);
                 await I.wait(3);
                 await I.videoClick(services);
@@ -156,7 +156,7 @@ const videoPlan = {
             },
             shot: async ({ I, waitForPageBuilder }) => {
                 await I.see("Štýl stĺpca", ".pb-modal .header-title");
-                await I.see("Naše služby", ".pb-modal__context");
+                await I.see("Pánske kaderníctvo", ".pb-modal__context");
                 await I.wait(3);
                 await I.videoClick('.pb-modal .pb-style-accordion[data-input-group-id="10"] > button');
                 await I.videoClick('.pb-modal .pb-style-accordion[data-input-group-id="01"] > button');
@@ -185,8 +185,8 @@ const videoPlan = {
             shot: async ({ I, treeRow, action }) => {
                 await I.videoClick(action("structure"));
                 await I.waitForVisible(".pb-structure", 10);
-                await I.videoClick(treeRow("section", "Naše služby"));
-                await I.waitForElement(locate(".pb-structure [role=treeitem][data-type=section][aria-expanded=true]").withText("Naše služby"), 10);
+                await I.videoClick(treeRow("section", "Pánske kaderníctvo"));
+                await I.waitForElement(locate(".pb-structure [role=treeitem][data-type=section][aria-expanded=true]").withText("Pánske kaderníctvo"), 10);
                 await I.saveScreenshot("308-pb-redesign-structure.png");
                 await I.wait(3);
                 await I.videoClick(locate(".pb-structure > ul > li > div > [data-pb-expand]").first());
@@ -216,7 +216,7 @@ const videoPlan = {
                 await I.dontSeeElement(".pb-video-hidden-autotest");
                 await I.wait(4);
                 await I.fillField(".pb-structure input[type=search]", "");
-                await I.videoClick(treeRow("section", "Naše služby"));
+                await I.videoClick(treeRow("section", "Pánske kaderníctvo"));
                 await I.pressKey("ArrowRight");
                 await I.pressKey("ArrowDown");
                 await I.pressKey("Enter");
@@ -240,7 +240,7 @@ const videoPlan = {
                 await I.saveScreenshot("308-pb-redesign-insert.png");
                 await I.executeScript(() => {
                     const point = window.pageBuilder.ui.insertPoints.find(point =>
-                        point.type === "section" && point.previous?.matches(".pb-video-autotest") && point.next?.matches(".pb-video-contact-autotest"));
+                        point.type === "section" && point.previous?.matches(".pb-video-autotest") && point.next?.matches(".pb-video-services-autotest"));
                     point.button.attr("data-autotest-insert", "true");
                     point.button[0].focus();
                 });
@@ -261,7 +261,7 @@ const videoPlan = {
                 await I.waitForVisible(".pb-insert-point[data-type=section]", 10);
                 await I.executeScript(() => {
                     const point = window.pageBuilder.ui.insertPoints.find(point =>
-                        point.type === "section" && point.previous?.matches(".pb-video-autotest") && point.next?.matches(".pb-video-contact-autotest"));
+                        point.type === "section" && point.previous?.matches(".pb-video-autotest") && point.next?.matches(".pb-video-services-autotest"));
                     point.button.attr("data-autotest-insert", "true");
                     point.button[0].focus();
                 });
@@ -338,15 +338,15 @@ const videoPlan = {
             "text-sk": "Pri opakovaní obsahu vyskúšajte Duplikovať vedľa. Kópia vznikne hneď za výberom a automaticky sa označí. Netreba vyberať cieľ. Na malú zmenu poradia použite v Ďalších akciách Posunúť vyššie alebo Posunúť nižšie. Na okraji zoznamu je príslušná akcia neaktívna. Pôvodný presun s výberom miesta zostáva dostupný. Pri opakovateľných položkách sa presúvate len medzi kompatibilnými položkami rovnakého rodiča.",
             "notes": "Vybrať Konzultácia, Duplikovať vedľa, podržať vybranú kópiu. Presunúť ju za Podpora a ukázať neaktívny ďalší presun na konci. Otvoriť pôvodný Presunúť, ukázať povolené ciele, zrušiť Escape.",
             shot: async ({ I, fixture, action }) => {
-                await I.videoClick(locate(`${fixture} li.pb-duplicable-element`).withText("Konzultácia"));
+                await I.videoClick(locate(`${fixture} li.pb-duplicable-element`).withText("kvalitné strihanie mužov"));
                 await I.videoClick(action("duplicate-adjacent"));
                 await I.waitForElement(`${fixture} .video-services-list > li:nth-child(3)`, 10);
-                await I.waitForText("Konzultácia", 10, `${fixture} .video-services-list > li:nth-child(2)`);
+                await I.waitForText("kvalitné strihanie mužov", 10, `${fixture} .video-services-list > li:nth-child(2)`);
                 await I.wait(3);
                 await I.videoClick(action("more"));
                 await I.videoClick(action("next"));
-                await I.waitForText("Konzultácia", 10, `${fixture} .video-services-list > li:nth-child(3)`);
-                await I.waitForText("Podpora", 10, `${fixture} .video-services-list > li:nth-child(2)`);
+                await I.waitForText("kvalitné strihanie mužov", 10, `${fixture} .video-services-list > li:nth-child(3)`);
+                await I.waitForText("precíznu úpravu brady.", 10, `${fixture} .video-services-list > li:nth-child(2)`);
                 await I.videoClick(action("more"));
                 await I.seeElement(`${action("next")}:disabled`);
                 await I.wait(4);
@@ -384,8 +384,8 @@ const videoPlan = {
                 await I.wait(3);
                 await I.pressKey("Escape");
                 await I.videoClick(action("structure"));
-                await I.fillField(".pb-structure input[type=search]", "Naše služby");
-                await I.videoClick(treeRow("column", "Naše služby"));
+                await I.fillField(".pb-structure input[type=search]", "Pánske kaderníctvo");
+                await I.videoClick(treeRow("column", "Pánske kaderníctvo"));
                 await I.waitForInvisible(".pb-structure", 10);
                 await I.videoClick("a[title=Tablet]");
                 await waitForPageBuilder("wait for the tablet viewport", () => window.innerWidth >= 768 && window.innerWidth < 1200);
@@ -548,21 +548,153 @@ Scenario("308-pb-redesign", async ({ I, DTE, Document, login }) => {
             });
             wrapper.querySelectorAll(":scope > .pb-section").forEach(element => element.remove());
             wrapper.insertAdjacentHTML("afterbegin", `
-    <section class="pb-video-autotest" style="padding:32px 0;background:#f4f7fa">
-    <div class="container"><div class="row">
-    <div class="col-12 col-md-6 col-xl-6"><div class="column-content">
-    <h2>Naše služby</h2><p class="video-services">Pomôžeme vám vytvoriť prehľadnú webovú stránku.</p>
-    <ul class="video-services-list"><li class="pb-duplicable">Konzultácia</li><li class="pb-duplicable">Podpora</li></ul>
-    </div></div>
-    <div class="col-12 col-md-6 col-xl-6"><h2>Prečo si vybrať nás</h2><p>Jasný postup, praktické skúsenosti a priestor pre vaše nápady.</p></div>
-    </div><p class="pb-editable video-note">Spoločne pripravíme obsah, ktorý dáva zmysel.</p></div>
-    </section>
-    <section class="pb-video-contact-autotest" style="padding:64px 0">
-    <div class="container"><div class="row"><div class="col-12"><h2>Kontakt</h2><p>Dohodnime si úvodné stretnutie.</p></div></div></div>
-    </section>
-    <section class="pb-video-hidden-autotest" style="display:none">
-    <div class="container"><div class="row"><div class="col-12"><h2>Sezónna ponuka</h2></div></div></div>
-    </section>`);
+                <section class="py-3 bg-light pb-video-autotest">
+                <div class="container">
+                <div class="row align-items-center">
+                <div class="col-12 col-lg-6">
+                <div class="column-content">
+                <h1 class="mb-1" style="font-size: 2rem;">Pánske kaderníctvo a&nbsp;barber</h1>
+
+                <p class="lead video-services mb-1">Špecializujeme sa na:</p>
+
+                <ul class="video-services-list">
+                    <li class="lead pb-duplicable">kvalitné strihanie mužov</li>
+                    <li class="lead pb-duplicable">precíznu úpravu brady.</li>
+                </ul>
+
+                <p><a class="btn btn-primary btn-lg" href="#contact">Objednať sa</a></p>
+                </div>
+                </div>
+
+                <div class="col-12 col-lg-6 mt-4 mt-lg-0">
+                <div class="column-content">
+                <p class="text-center pb-0"><img alt="Kadernícky salón v Bratislave a moderné pánske účesy" class="img-responsive img-fluid rounded shadow" src="/images/test-stavov/page-builder/kadernictvo-bratislava/barber.jpg?v=1789495679093" style="width: 390px; height: 260px;" title="barber | WebJET CMS" /></p>
+                </div>
+                </div>
+                </div>
+
+                <p class="pb-editable video-note">Spoločne pripravíme obsah, ktorý dáva zmysel.</p>
+                </div>
+                </section>
+
+                <section class="py-3 pb-video-services-autotest">
+                <div class="container">
+                <div class="row text-center mb-3">
+                <div class="col-12">
+                <div class="column-content">
+                <h2>Naše služby</h2>
+                </div>
+                </div>
+                </div>
+
+                <div class="row justify-content-center">
+                <div class="col-12 col-md-6 mb-3">
+                <div class="column-content">
+                <div class="card h-100 text-center shadow-sm"><img alt="Pánske strihanie vlasov" class="fixedSize-320-240-5 card-img-top img-fluid" src="/thumb/components/htmlbox/objects/placeholder/content-computer.jpg?w=320&amp;h=240&amp;ip=5" />
+                <div class="card-body">
+                <h3 class="h5 card-title">Pánsky strih</h3>
+
+                <p class="card-text">Klasické aj moderné pánske účesy na&nbsp;mieru podľa vašich požiadaviek a&nbsp;typu vlasov.</p>
+                </div>
+                </div>
+                </div>
+                </div>
+
+                <div class="col-12 col-md-6 mb-3">
+                <div class="column-content">
+                <div class="card h-100 text-center shadow-sm"><img alt="Úprava brady a klasický barber" class="fixedSize-320-240-5 card-img-top img-fluid" src="/thumb/components/htmlbox/objects/placeholder/content-wolf-howling.jpg?w=320&amp;h=240&amp;ip=5" />
+                <div class="card-body">
+                <h3 class="h5 card-title">Úprava brady a&nbsp;barber</h3>
+
+                <p class="card-text">Precízne kontúrovanie, holenie a&nbsp;ošetrenie brady pomocou kvalitnej kozmetiky.</p>
+                </div>
+                </div>
+                </div>
+                </div>
+                </div>
+                </div>
+                </section>
+
+                <section class="py-3 bg-light">
+                <div class="container">
+                <div class="row">
+                <div class="col-12">
+                <div class="column-content">
+                <h2 class="mb-3 text-center">Cenník</h2>
+
+                <div class="table-responsive">
+                <table class="table table-striped table-hover bg-white border">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Služba</th>
+                            <th>Cena</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Pánsky strih (strojček / nožnice)</td>
+                            <td>od 20&nbsp;&euro;</td>
+                        </tr>
+                        <tr>
+                            <td>Úprava brady a&nbsp;fúzov (barber)</td>
+                            <td>od 15&nbsp;&euro;</td>
+                        </tr>
+                        <tr>
+                            <td>Kompletná úprava (vlasy + brada)</td>
+                            <td>od 30&nbsp;&euro;</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+                </div>
+                </div>
+                </div>
+                </div>
+                </section>
+
+                <section class="py-3 pb-video-contact-autotest" id="contact">
+                <div class="container">
+                <div class="row align-items-start">
+                <div class="col-12 col-lg-5 mb-3 mb-lg-0">
+                <div class="column-content">
+                <h2>Kontakt</h2>
+
+                <ul class="list-unstyled mt-4">
+                    <li class="mb-3"><strong>Adresa:</strong><br />
+                    Mlynské nivy 71, Bratislava</li>
+                    <li class="mb-3"><strong>Telefón:</strong><br />
+                    <a class="fs-5" href="tel:+421903123456">0903 123&nbsp;456</a></li>
+                    <li class="mb-3"><strong>Otváracie hodiny:</strong><br />
+                    Pondelok &ndash; Nedeľa: 8:00 &ndash; 15:00</li>
+                </ul>
+                </div>
+                </div>
+
+                <div class="col-12 col-lg-7">
+                <div class="column-content">
+                <h2>Kde nás nájdete</h2>
+
+                <div class="ratio ratio-16x9 mt-4 shadow-sm border">
+                <article>!INCLUDE(/components/map/map.jsp, object=&quot;|Mlynské nivy 71, Bratislava&quot;|, offsetX=0,offsetY=0, widthPercent=100, heightPercent=45, labelAddress=true, labelComment=false, zoom=13, label=&quot;|&quot;|,sizeInPercent=&quot;|true&quot;|, showControls=&quot;|false&quot;|, closeLabel=&quot;|false&quot;|, showContentString=&quot;|true&quot;|, scrollwheel=&quot;|true&quot;|, key=&quot;|&quot;|)!</article>
+                </div>
+                </div>
+                </div>
+                </div>
+                </div>
+                </section>
+
+                <section class="pb-video-hidden-autotest" style="display:none">
+                <div class="container">
+                <div class="row">
+                <div class="col-12">
+                <div class="column-content">
+                <h2>Sezónna ponuka</h2>
+                </div>
+                </div>
+                </div>
+                </div>
+                </section>
+            `);
             window.markPbElements("doc_data");
             window.pageBuilder.set_workbench_guides("selected", false);
         });
