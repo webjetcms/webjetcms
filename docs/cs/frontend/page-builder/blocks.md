@@ -7,7 +7,7 @@ V kořenovém adresáři pro bloky můžete mít následující pod adresáře:
 - ```section``` - ​​pro bloky sekcí (modré označení v Page Builder)
 - ```container``` - ​​pro kontejnery (růžové označení v Page Builder)
 - ```column``` - ​​pro sloupce (zelené označení v Page Builder)
-- ```content``` - ​​pro vkládané různé texty, tlačítka a podobně. Vkládají se pomocí tlačítka **Bloky** v CKEditoru na pozici textového kurzoru.
+- ```content``` - ​​pro vkládané různé texty, tlačítka a podobně. Vkládají se pomocí ikony Bloky a žluté čáry, která se zobrazuje mezi bloky.
 
 V každém z těchto podadresářů je třeba ještě vytvořit **skupiny bloků jako další pod adresáře**. ```Contact, Features```. Teprve v těchto pod adresářích vytváříte jednotlivé HTML bloky. Příkladem je tedy adresářová struktura:
 
@@ -601,7 +601,7 @@ window.pbBuildTabMenu = function(me, tabMenu) {
 };
 ```
 
-Okno **Styl** zobrazuje vlastnosti v samostatně rozbalovacích skupinách. Funkce `pbBuildTabMenu` nadále dostává původní konfiguraci `tabs` a `items`: `visible: false` skryje skupinu nebo všechny skupiny dané karty, `name` změní nadpis skupiny a vlastní pořadí položek se zachová. Pokud pořadí nezměníte, použije se nové výchozí pořadí začínající identifikací. Prázdné skupiny, například animace bez ovládacích prvků, se nezobrazují. Při otevření se rozbalí skupina `10` (Identifikace), případně první dostupná skupina.
+Okno **Styl** zobrazuje vlastnosti v samostatně rozbalovacích skupinách. Funkce `pbBuildTabMenu` dostává původní konfiguraci `tabs` a `items`: `visible: false` skryje skupinu nebo všechny skupiny dané karty, `name` změní nadpis skupiny a vlastní pořadí položek se zachová. Pokud pořadí nezměníte, použije se nové výchozí pořadí začínající identifikací. Prázdné skupiny, například animace bez ovládacích prvků, se nezobrazují. Při otevření se rozbalí skupina `10` (Identifikace), případně první dostupná skupina.
 
 ## Vlastní funkce pro čištění HTML kódu
 

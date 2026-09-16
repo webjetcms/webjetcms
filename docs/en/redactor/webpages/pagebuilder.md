@@ -1,166 +1,160 @@
 # Page Builder
 
-Page Builder is a special page editing mode. It lets you edit selected parts of a page and separates text and image editing from the page structure. This prevents you from accidentally deleting structural elements while editing text.
+Page Builder is a special page editing mode. In this mode, the entire page is not edited, but only selected parts of it. Page Builder separates the editing of text/images and the page structure. This prevents you from accidentally deleting structural elements of a web page when editing its text.
 
 <div class="video-container">
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/ieaNWY57Exc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/B_m_vPPel80" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-The mode must be enabled, blocks prepared and templates configured. See the [web designer guide](../../frontend/page-builder/README.md).
+The mode needs to be activated, blocks prepared and templates set up, the procedure is in the [web designer] section (../../frontend/page-builder/README.md).
 
-When a template uses Page Builder, this mode loads when you open a page in the editor.
+When you set the Page Builder option for a template, the Page Builder mode will load when you open a web page in the editor.
 
 ![](pagebuilder.png)
 
-Use the **Editor** selector to switch between **Page Builder**, **Standard** and **HTML**. The selected mode is remembered for other Page Builder pages you open. Select **Page Builder** to resume building a page from blocks.
+In the **Editor** selection, you can switch between **Page Builder**, **Standard**, and **HTML** modes. The selected mode is also remembered for the next opened Page Builder pages. To build a page from blocks again, select **Page Builder**.
 
-Switching modes transfers the current content to the selected editor. You can edit HTML and then continue in Page Builder. Save the page changes with **Save**.
+When you switch, the current content is transferred to the selected editor. For example, you can edit the HTML and continue in the Page Builder. You can save the page changes by clicking the **Save** button.
 
 ## Basic work
 
-Build your page from prepared blocks. Moving the pointer over content displays a faint, translucent outline. It shows the boundaries of the block you can click; green outlines help you find editable text.
+When using Page Builder, you create a web page from pre-built blocks. When you hover your mouse over the content, a subtle semi-transparent frame appears. It shows the boundaries of the block, which you can click into; the green frame helps you find the parts of the text you want to edit.
 
-Click text to select its block and start typing immediately. The selected block has a stronger outline and appears in the path in the top toolbar. Moving the pointer to another block does not change the selection. While typing, the selection outline becomes subtler and the hover outline disappears.
+Clicking in the text selects a block and allows you to type immediately. The selected block has a more prominent frame and appears in the path in the top bar. Hovering the mouse over another block does not change this selection. As you type, the selection frame becomes thinner and the helper frame under the mouse is hidden.
 
-![Selected column on the left and a faint hover outline on the right](pagebuilder-hover.png)
+![Selected column on the left and soft frame under mouse on the right](pagebuilder-hover.png)
 
-By default, each color identifies a block type:
+By default, the color indicates the block type:
 
-- Blue represents a section, the main building block, usually spanning the screen width.
-- Pink represents a container, which contains rows of columns and is usually narrower than a section for readability.
-- Gray represents a row, which arranges columns within a container.
-- Green represents a column or standalone editable text. Columns typically contain text, images or applications.
+- The blue color represents a section - the main building block, usually the entire width of the screen.
+- The pink color represents a container - it contains rows with columns and is usually narrower than a section for better readability of texts on the page.
+- The gray color represents the row - it organizes the columns in the container.
+- Green represents a column or separate editable text. A column typically contains text, images, or applications.
 - Orange represents a duplicable item, such as a list item.
 
 ![](pagebuilder.png)
 
-The selected block's tools are in a fixed toolbar below CKEditor. A clickable path, such as **Section › Container › Row › Column**, lets you select a parent without finding its outline in the content. On narrow screens, use the button next to the current block type to open the parent path. The toolbar contains:
+The tools for the selected block are in a fixed toolbar below CKEditor. A clickable path, such as **Section › Container › Row › Column**, allows you to select the parent section without searching for frames in the text. On a narrow screen, you can open the list of parent blocks by clicking the button next to the current block type. The toolbar contains options:
 
-- Structure - opens the page's block tree.
-- Add block (`+`) - shows section, container and column insertion points directly on the page, without selecting a block first.
-- Column width - displays the current width, such as `3 / 12`, and opens width controls for the selected device size.
-- Duplicate beside - inserts a copy immediately after the selected block and selects it.
-- More actions (`…`) - opens additional operations for the selected block.
-- Outlines (eye or layers icon) - cycles through outline modes.
+- Structure - opens the page block tree.
+- Add Block (`+`) - displays places to insert a section, container, or column directly on the page, without the need to first select the relevant block.
+- Column width - displays the current width, for example `3 / 12`, and opens its settings for the selected device size.
+- Duplicate Next to - inserts a copy immediately after the selected block and marks it.
+- More actions (`…`) - opens a menu of other operations with the selected block.
+- Frames (eye or layers icon) - toggles the range of frames displayed.
 
-Depending on the selected block type, **More actions** includes:
+In the **More actions** menu, you can find, depending on the type of block selected:
 
-- Style - background, colors, alignment, spacing and other properties.
-- Insert block before / Insert block after - opens the library for the same block type on the selected side.
-- Move up / Move down - moves the block one position in the order.
-- Move / Duplicate - shows available destinations on the page; click to move the block or insert a copy there. Press **Escape** to cancel destination selection.
-- Add to favorites - saves the block to your personal favorites in the library.
+- Style - setting the background image, colors, alignment, padding and other properties.
+- Insert Block Before / Insert Block After - opens the library for the same block type on the selected side of the selection.
+- Move Up / Move Down - moves the block one position in the sequence.
+- Move / Duplicate - displays available target locations on the page; click to select where to move the block or paste a copy of it. You can cancel the location selection by pressing the **Escape** key.
+- Add to Favorites - saves the block among your favorite blocks in the library.
 - Delete - deletes the selected block.
 
-Only supported operations appear. An ordinary row is used for navigation; duplicable rows and items support moving, duplication and deletion. Standalone editable text has no structure editing tools. Duplicable elements can only move between compatible siblings under the same parent.
+The menu contains only the operations supported by the selected type. The regular line is for orientation; the duplicable line and item support moving, duplicating, and deleting. Stand-alone editable text does not have tools for modifying the structure. Moving duplicable elements remains limited to compatible siblings of the same parent.
 
 ## Style settings
 
-Open **More actions → Style** to display the compact properties window. Its title, such as **Column style**, and the text below identify the edited block. **Locate on page** scrolls to that block and briefly highlights it. Drag the header to move the window.
+**More Actions → Style** opens a compact properties window. The name, for example **Column Style**, and the text below it indicate the block being edited. The **Find on Page** button will move the content to that block and briefly highlight it. You can move the window by dragging the header.
 
 ![](pagebuilder-style.png)
 
-Properties are organized into expandable groups: **Identification**, **Background**, **Visibility**, **Offset**, **Align**, **Dimensions**, **Borders**, **Radius**, **Shadow**, **Linked styles** and **Z-index**. **Identification**, with the ID, CSS classes and title, opens by default. Your web designer can customize the groups and their order for the template.
+The properties are organized into drop-down groups: **Identification**, **Background**, **Visibility**, **Indentation**, **Alignment**, **Dimensions**, **Border**, **Round**, **Shadow**, **Linked Styles**, and **Z-index**. When opened, **Identification** is expanded with the ID, CSS classes, and title. The web designer can customize the list and order of the groups to suit the template.
 
-Several groups can stay open together. Collapsing a group preserves its pending values. The header and bottom buttons remain accessible while you scroll the properties. Select a background image with the button beside its address. For spacing, borders and corner radii, you can link all four values or pairs; linked values follow the first field in their group.
+You can expand multiple groups at the same time. Collapse them does not discard unprocessed values. When scrolling through properties, the header and bottom buttons remain available. You select a background image by clicking the button next to its address. When indenting, framing, and rounding, you can link all four values ​​or pairs; the linked values ​​are taken from the first field of the respective group.
 
-![Spacing settings with linked values](pagebuilder-style-settings.png)
+![Setting Indentation with Linked Values](pagebuilder-style-settings.png)
 
-Changes are previewed on the page as you edit. **Save** in this window confirms the style in the page being edited; use the editor's main **Save** button to save the whole page afterward. **Cancel**, the header's close icon or **Escape** close the window and revert unconfirmed style changes. **Reset** removes the block's custom style so that the template styles apply again.
+You can see the changes continuously on the page. The **Save** button in this window confirms the style in the page in progress; you can then save the entire page using the main **Save** button in the editor. **Cancel**, the cross in the header, or **Escape** will close the window and revert unconfirmed style changes. **Reset** will remove the user style of the given block so that the template styles can be applied again.
 
 ## Inserting blocks
 
-Add a block without first selecting a section or column:
+The quickest way to add a block does not require marking an existing section or column:
 
-1. Click **Add block** (`+`) in the top toolbar. The tools and block path are temporarily replaced by a blue hint with insertion instructions and a **Finish · Esc** button.
-2. Click a plus at the required insertion point. Blue strips insert sections, pink strips insert containers and green plus buttons insert columns. Points appear before the first block, between neighboring blocks and after the last block. Strip labels and button descriptions identify the type and position.
-3. Click the required block card in the library. The library offers the appropriate type and reminds you of the destination at the top. Clicking inserts the block immediately, without another confirmation. Insertion mode ends, the new block is selected and you can edit its content.
+1. Click **Add Block** (`+`) in the top bar. The tools and path to the block will be temporarily replaced by a blue helper with a location selection prompt and a **Exit · Esc** button.
+2. On the page, click the plus sign where you want to insert the new block. Blue bars indicate the insertion of a section, pink bars indicate a container, and green bars indicate a column. The locations are before the first block, between adjacent blocks, and after the last block. The name next to the bar and the button description help you determine the type and position.
+3. In the open library, click on the tab of the desired block. The library offers the appropriate type and reminds you of the insertion point at the top. Clicking inserts the block directly; no further confirmation is required. After insertion, the mode is terminated, the new block is highlighted, and you can edit its contents.
 
-![Insertion points for sections, containers and columns](pagebuilder-insert.png)
+![Places to add a section, container, and column](pagebuilder-insert.png)
 
-You can also open the library for a selected block through **More actions → Insert block before / Insert block after**. It contains these tabs:
+You can also open the library for a selected block via **More actions → Insert block before / Insert block after**. It contains the following tabs:
 
-- Basic - simple blocks of different sizes.
-- Library - blocks prepared for your website.
-- Favorites - blocks you have marked as favorites.
+- Basic - simple blocks of various sizes.
+- Library - blocks created for your website.
+- Favorites - blocks that you have marked as favorites.
 
 ![](pagebuilder-library.png)
 
-The library opens in a narrow window over the page. The header shows, for example, **Insert section**, with the insertion destination below. Drag the header to move it. Close it with the icon in the top right corner or **Escape**.
+The library opens as a narrow window above the page. The header says, for example, **Insert section** and below it the insertion point. You can move the window by dragging the header. You can close it with the cross in the top right or with the **Escape** key.
 
-On the **Library** tab, blocks are grouped into categories with block counts. Click a category to expand it; only one stays open at a time. Cards show a name and a preview with its original aspect ratio. Click the preview or name to insert the block.
+In the **Library** tab, blocks are grouped into categories with a number of blocks. Click a category to expand it; only one remains open at a time. The tabs display the title and a preview in the original aspect ratio. Click the preview or title to insert the block into the page.
 
-**Find a block…** filters by name and can be combined with one tag. Filtering preserves an open matching category or opens the first category with results. Category counts reflect the active filter; tag counts show the total number of blocks with that tag. **All** clears only the tag and preserves the search text. If nothing matches, **Clear filters** resets both text and tag. Search and tags remain accessible while you scroll the results.
+The **Search block…** field filters by name and can be combined with a single label. When filtering, the matching category is left open or the first one with a result is opened. The numbers for categories take the filter into account, the numbers for labels indicate the total number of blocks with the given label. **All** only removes the label and keeps the search text. If nothing is found, the **Clear filters** button removes both the text and the label. When scrolling through the results, the search and labels remain available.
 
-![Searching for blocks with a tag filter](pagebuilder-library-filter.png)
+![Block search combined with label](pagebuilder-library-filter.png)
 
-Your web designer defines names and tags in `pagebuilder.properties` when [creating blocks](../../frontend/page-builder/blocks.md#block-name-and-tags). They belong to the template's library and do not necessarily change with the administration language. On the **Favorites** tab, use the button beside a block's name to remove it; removal requires confirmation.
+Block names and labels are defined by the web designer in the `pagebuilder.properties` file when [creating blocks](../../frontend/page-builder/blocks.md#block-name-and-labels). They are part of the library of the given template and do not have to change with the administration language. In the **Favorites** tab, you can delete a saved block by clicking the button next to its name; deletion requires confirmation.
 
-A `+` icon at the bottom of the page provides quick access to adding another section.
+An `+` icon is displayed at the bottom of the page to make it easier to add a new section.
 
 ![](pagebuilder-plusbutton.png)
 
-Entering insertion mode smoothly opens temporary gaps without scrolling visible destinations away. Column widths stay unchanged: plus buttons appear in gutters, between wrapped rows or over the content when space is limited. Selection and hover outlines disappear while choosing a destination.
+When you enable insert mode, temporary spaces are smoothly expanded without moving visible spaces. Column widths are not changed: pluses are displayed in the spaces between them, when there is a line break, and when there is no space above the content. Selection frames and mouseover frames are hidden during selection.
 
-Closing the library returns focus to the selected plus. End insertion mode with **Finish · Esc** or **Escape**. The gaps collapse smoothly, the regular toolbar returns and focus moves back to `+`. Clicking content ends the mode and selects that block. If your system uses reduced motion, opening and closing happen immediately. Insertion helpers are neither saved nor shown in the preview.
+Closing the library will return you to the selected plus. You can exit insert mode by pressing **Exit · Esc** in the helper or the **Escape** key. The spaces will collapse smoothly, the regular bar will be restored, and the focus will return to `+`. Clicking in the content will exit the mode and select the given block. If you have animation restrictions set in your system, showing and hiding will occur immediately. Help strips are not saved or displayed in the preview.
 
-## Page structure and outline modes
+## Page structure and calm display
 
-**Structure** opens a block tree with names derived from the content. Search by name or type. Clicking an item selects the block, scrolls to its position and expands its closed branch. Clicking again leaves the branch open; the arrow beside the name expands or collapses it without changing the selection.
+The **Structure** button opens a tree of blocks with names derived from their contents. You can search for blocks by name or type. Clicking on an item selects the corresponding block, moves the page to its location, and expands a closed branch. Clicking on an item again leaves the branch open; you can use the arrow next to the name to expand or collapse it without changing the selection.
 
-The selected item has a thin outline in its type's color, matching the page outline. The panel opens over the content and does not change the page width or wrapping. On narrow screens it closes after selection.
+The selected item has a thin border in the color of its type, matching the border on the page. The panel opens above the content and does not change the width or page wrap. On a narrow screen, it closes after selection.
 
-![Page tree with a selected column](pagebuilder-structure.png)
+![Page tree with column highlighted](pagebuilder-structure.png)
 
-Hidden blocks have a **Hidden** label. Selecting them does not change their visibility or the active page tab. The tree adds no names or identifiers to the HTML and does not support dragging blocks to reorder them. Use the toolbar actions to move blocks.
+Hidden blocks are marked **Hidden**. Selecting them does not change the visibility or active tab of the page. The tree does not add new names or identifiers to the HTML and does not allow dragging. Use the top bar actions to move.
 
-Use the up and down arrows to navigate the tree, and right and left arrows to expand or collapse branches. **Enter** or Space selects an item and expands its closed branch. **Escape** closes an open menu or panel, ends width editing, or cancels move or insertion destination selection.
+Use the up and down arrows to navigate the tree. Use the right and left arrows to open and close branches. The **Enter** key or the spacebar selects an item and expands its closed branch. **Escape** closes an open menu or panel, exits width adjustment, or deselects a move or paste location.
 
-The eye button cycles through three modes:
+The button with the eye icon switches between three modes in sequence:
 
-- **Selected block outline** (default) - highlights the selection and shows a faint outline for another block under the pointer.
-- **No outlines** (crossed-out eye) - hides both selection and hover outlines.
-- **Full active block hierarchy** (layers icon) - also outlines the parent section, container and row. Hover outlines show the hierarchy with fainter lines. Shared ancestors are not highlighted twice.
+- **Selected block frame** (default) - highlights the selection and subtly indicates the next block when you hover the mouse.
+- **No frames** (crossed out eye) - hides the selection and the auxiliary frames under the mouse.
+- **Frames the entire hierarchy of the active block** (layer icon) - also shows the parent section, container, and row. It also shows the hierarchy on hover, with finer lines. It does not highlight common parent blocks twice.
 
-The browser remembers your choice when you reopen the editor. Switching modes does not change the toolbar, Structure panel or content wrapping. Helper outlines and controls do not appear in **Preview** or on the saved page.
+The browser remembers the choice even after reopening the editor. The toolbar, Structure panel, and content wrapping are not changed by switching. Helper frames and controls are not displayed in **Preview** or on the saved page.
 
 ## Setting column widths
 
-Set different column widths for mobile, tablet and desktop:
+The editor allows you to set different column widths for mobile, tablet and computer:
 
-1. Select a device size using the icons beside **Editor**.
-2. Click a column and choose **Column width**, such as `3 / 12`, in the toolbar. A blue hint replaces the tools and path, as in insertion mode. It identifies the size being edited, such as **MD — Tablet (768–1199 px)**.
-3. Use the arrows inside each column to change its width. The value is the number of grid units; in the default 12-unit grid, `3 / 12` is a quarter and `12 / 12` is full width. The `auto` value allows automatic sizing.
-4. End the mode with **Finish · Esc** or **Escape**. The regular toolbar and your previous outline setting return.
+1. When selecting **Editor**, select the device size with the icon.
+2. Click in the desired column and select **Column Width** from the toolbar, for example `3 / 12`. The tools and path to the block will be replaced by a blue helper, similar to when inserting blocks. It explains the dimension currently being edited, for example **MD — Tablet (768–1199 px)**.
+3. Use the arrows inside each column to change its width. The value indicates the number of grid cells; in the default 12-cell grid, `3 / 12` is a quarter and `12 / 12` is a full width. A value of `auto` is also available for automatic adjustment.
+4. Exit the mode by pressing the **Exit · Esc** button in the helper or the **Escape** key. The regular toolbar and the original frame settings will be restored.
 
-Green outlines identify all columns in the container whose widths you can adjust, even if regular outlines are hidden. Controls with a light green background occupy temporary space inside each column above its content. In narrow columns, the value appears above the arrows. Exiting the mode releases that space.
+Green frames during setup indicate all columns in a given container, the width of which can be changed, even if the regular frames are hidden. Controls with a soft green background have a reserved space inside their column above its content. In narrow columns, the value is displayed above the arrows. When the mode is exited, the space for the controls is freed.
 
-![Width controls inside columns with the blue mode hint](pagebuilder-width.png)
+![Setting width with blue helper and controls inside columns](pagebuilder-width.png)
 
-You can switch devices while editing widths. The controls and hint update, and subsequent changes apply to the selected device.
+You can also switch devices during setup. The drivers and assistant will update and any additional width changes will be applied to the selected device.
 
 ![](pagebuilder-switcher.png)
 
-The abbreviation beside the width identifies the device size being edited. Defaults are:
+The abbreviation next to the width value indicates the device size currently being adjusted. The default settings are:
 
-| Device | Label | Preview width | CSS class |
+| Equipment | Marking | Preview width | CSS class |
 | --- | --- | --- | --- |
-| Desktop | `XL` | 1200 px and above | `col-xl-` |
+| Computer | `XL` | from 1200 px | `col-xl-` |
 | Tablet | `MD` | 768–1199 px | `col-md-` |
-| Mobile | no abbreviation | below 768 px | `col-` |
+| Mobile | without abbreviation | less than 768 px | `col-` |
 
-Templates can define custom labels and breakpoints. The hint then shows the template's label, such as `SM`, without the default ranges listed above.
+A template can use its own labels and resolution boundaries. In this case, the assistant displays the label according to the template, for example `SM`, without the default boundaries listed in the table.
 
 <div class="video-container">
     <iframe width="560" height="315" src="https://www.youtube.com/embed/aru-B1vxReo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-## Column splitting
+## Column Splitting
 
-**Split column** belongs to the blocks inserted into text:
-
-1. Place the text cursor at the split point.
-2. Click **Blocks** in the CKEditor toolbar.
-3. In the library, open **Basic** and choose **Split column**.
-
-The content is split into two columns at the cursor. You do not need to create another column and move the text manually. Use **Blocks** for prepared text fragments too; the Page Builder toolbar's `+` adds sections, containers and columns.
+You can access the Split Column function by clicking on `+` in the yellow bar and selecting the Block option. Then, in the Basic tab, select the Split Column option. The function allows you to quickly split a column without having to insert a new column and move the content. It will allow you to insert new complex blocks, e.g. into a long text column.

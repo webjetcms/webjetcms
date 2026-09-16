@@ -101,7 +101,7 @@ Režim **Pridať blok** v spoločnej lište zobrazí pozície medzi sekciami, ko
 
 Počas vkladania a nastavovania šírky stĺpcov nahradí cestu a nástroje v lište modrý pomocník s tlačidlom **Ukončiť · Esc**. Ukončenie obnoví bežnú lištu. Pri nastavovaní šírky zostáva dostupné prepínanie zariadení.
 
-Pôvodné HTML, CSS triedy, vlastné selektory a funkcie `pbCustomOptions`/`pbCustomSettings` zostávajú platné. Akcie hornej lišty používajú existujúce operácie Page Builder vrátane obmedzení presunu duplikovateľných elementov. Pri príprave náhľadu a uložení sa používajú pôvodné funkcie `getClearNode` a `clearEditorAttributes`; nové ovládacie prvky sú navyše umiestnené mimo serializovaného obsahu.
+Pôvodné HTML, CSS triedy, vlastné selektory a funkcie `pbCustomOptions`/`pbCustomSettings` zostávajú platné. Akcie hornej lišty používajú existujúce operácie Page Builder vrátane obmedzení presunu duplikovateľných elementov. Pri príprave náhľadu a uložení sa používajú pôvodné funkcie `getClearNode` a `clearEditorAttributes`.
 
 ## Štýlovanie elementov
 

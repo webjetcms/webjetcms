@@ -19,7 +19,6 @@ To run Page Builder correctly, set:
 
 Other config variables that can be edited:
 
-- `pagebuilderFilterAutoOpenItems` - legacy setting for the number of items expanded automatically. The new library does not use it: filtering keeps a matching category open or opens the first category with results.
 - `pagebuilderLibraryImageWidth` - ​​width of preview images in the block library, default 310.
 - `inlineEditingDisabledUrls` - ​​list of URLs for which the inline editor will not be available
 - `pageBuilderPrefix` - ​​prefix used for Page Builder CSS classes (pb by default), can only be changed if you also change the prefixes in Page Builder CSS classes
@@ -90,19 +89,19 @@ The following code is created after the Page Builder initialization:
 </div>
 ```
 
-## Editor controls
+## Control in the editor
 
-Page Builder defaults to a selected block outline and a shared toolbar below CKEditor. The outline is drawn in a separate layer outside the content, offset from its edge. It does not add `padding`, `margin` or `border` to blocks, so their width and text wrapping stay unchanged. The layer does not intercept content clicks and is not clipped by a parent's `overflow: hidden`.
+By default, Page Builder displays a single frame of the selected block and a common toolbar below CKEditor. The frame is drawn on a separate layer outside the page content, with a distance from its edge. It does not add `padding`, `margin`, or `border` to the blocks, so it does not change their width and text wrapping. The layer does not capture clicks into the content and does not clip it `overflow: hidden` of the parent block.
 
-The eye button cycles through selected, hidden and full hierarchy outlines. Ancestor outlines are offset outward. The choice is stored in `localStorage` under `webjet.pagebuilder.guides` (`selected`, `hidden`, `all`). If storage is unavailable, it applies to the current editor. Switching modes preserves selection and toolbar actions.
+The eye icon button toggles between three modes: selected block frame (default), no frames, and frames of the entire hierarchy of the active block (layer icon). Ancestor outlines are offset outwards so that they do not overlap even with matching block edges. The selection is stored in `localStorage` under the key `webjet.pagebuilder.guides` (`selected`, `hidden`, `all`). If storage is unavailable, the toggle works for the currently open editor. The toggle does not change the toolbar or block selection.
 
-The **Structure** tree uses recognized elements and names derived from content; it adds no identifiers or metadata. Standalone `pb-editable` elements can be selected without column operations. Hidden elements can be found without changing visibility.
+The **Structure** tree uses elements recognized by existing initialization and derives names from the content. It does not add identifiers or other metadata to blocks. Individual `pb-editable` elements can be selected, but it does not add column-specific operations to them. Hidden elements can be found in the tree without changing their visibility.
 
-**Add block** displays destinations between sections, containers and columns. Its buttons are outside the content; temporary inactive `aside.pb-insert-space` elements create gaps in the structure. They are not CKEditor fields and `getClearNode` removes them even when saving during insertion mode. Column widths stay unchanged. Insertion uses the existing operations and restores CKEditor focus. The mode is not stored and does not change outline preferences.
+**Add Block** mode in the common bar shows positions between sections, containers, and columns. Buttons remain on a separate layer outside the content; only inactive `aside.pb-insert-space` elements are temporarily inserted into the structure to make room. They are not part of CKEditor fields and `getClearNode` will remove them even when saving while in active mode. Column widths are not changed. Paste uses the original controls and library, and restores CKEditor focus after pasting. The mode is not remembered in storage and does not change the frame preference.
 
-During insertion and column sizing, a blue hint with **Finish · Esc** replaces the path and toolbar actions. Exiting restores the regular toolbar. Device switching remains available during column sizing.
+While inserting and adjusting column widths, the path and tools in the toolbar are replaced by a blue helper with a **Exit · Esc** button. Exiting restores the regular toolbar. Device switching remains available while adjusting the width.
 
-Existing HTML, CSS classes, custom selectors and `pbCustomOptions`/`pbCustomSettings` remain valid. Toolbar actions use the existing operations, including restrictions on moving duplicable elements. Preview and saving use `getClearNode` and `clearEditorAttributes`; the new controls are outside the serialized content.
+Original HTML, CSS classes, custom selectors, and `pbCustomOptions` /`pbCustomSettings` functions remain valid. Top bar actions use existing Page Builder operations, including restrictions on moving duplicated elements. Original `getClearNode` and `clearEditorAttributes` functions are used when preparing a preview and saving.
 
 ## Styling elements
 

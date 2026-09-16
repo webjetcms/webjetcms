@@ -3,7 +3,7 @@
 Page Builder je špeciálny režim editácie stránok. V tomto režime nie je editovaná celá stránka ale len jej vybrané časti. Page Builder oddeľuje editáciu textov/obrázkov a štruktúry stránok. Nestane sa tak to, že omylom zmažete štrukturálne elementy web stránky pri editácii jej textu.
 
 <div class="video-container">
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/B_m_vPPel80" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/B_m_vPPel80" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 Režim je potrebné aktivovať, pripraviť bloky a nastaviť šablóny, postup je v sekcii pre [web dizajnéra](../../frontend/page-builder/README.md).
@@ -157,10 +157,4 @@ Skratka vedľa hodnoty šírky označuje práve upravovanú veľkosť zariadenia
 
 ## Rozdelenie stĺpca
 
-Funkcia **Rozdeliť stĺpec** je súčasťou blokov vkladaných do textu:
-
-1. Umiestnite textový kurzor na miesto, kde chcete obsah rozdeliť.
-2. V lište CKEditora kliknite na **Bloky**.
-3. V otvorenej knižnici prejdite na kartu **Základné** a vyberte **Rozdeliť stĺpec**.
-
-Obsah sa rozdelí do dvoch stĺpcov v mieste kurzora. Nemusíte ručne vytvárať nový stĺpec a presúvať doň text. Tlačidlo **Bloky** používajte aj na vkladanie pripravených textových častí; tlačidlo `+` v lište Page Builder slúži na pridávanie sekcií, kontajnerov a stĺpcov.
+Funkciu Rozdeliť stĺpec vyvoláte pomocou kliknutia na `+` v žltej lište a zvolením možnosti Blok. Následne v karte Základné zvolíte možnosť Rozdeliť stĺpec. Funkcia umožňuje rýchle rozdelenie stĺpca bez nutnosti vkladať nový stĺpec a presúvať obsah. Umožní vám vkladať nové komplexné bloky napr. do dlhého textového stĺpca.
