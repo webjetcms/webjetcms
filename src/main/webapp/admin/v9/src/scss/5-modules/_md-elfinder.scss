@@ -734,6 +734,26 @@ html.pg-iframe {
     display: block !important;
 }
 
+.ui-dialog.elfinder-dialog.elfinder-dialog-error {
+    width: 640px !important;
+    max-width: calc(100% - 24px) !important;
+
+    .ui-dialog-content.ui-widget-content {
+        position: relative;
+        box-sizing: border-box;
+        max-height: min(60vh, 480px) !important;
+        padding: 16px 20px 16px 56px !important;
+        overflow-y: auto;
+        overflow-wrap: anywhere;
+        line-height: 1.5;
+    }
+
+    .elfinder-dialog-icon {
+        top: 16px;
+        margin-top: 0;
+    }
+}
+
 .ui-dialog.elfinder-dialog .ui-dialog-content.ui-widget-content .elfinder-cwd-icon::before {
     font-size: 45px;
     display: contents;
