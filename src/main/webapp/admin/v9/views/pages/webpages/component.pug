@@ -185,12 +185,13 @@ block content
                 var foundParentTitle = false;
                 var dialogBodyElements = $();
                 try {
+                    // PageBuilder inserts the application dialog into another iframe, so the original window.parent.parent did not find the parent CKEditor dialog.
                     var parentDialogIframe = window.parent.frameElement;
                     if (parentDialogIframe != null) {
                         dialogBodyElements = $(parentDialogIframe).closest(".cke_dialog_body");
                     }
                 } catch (error) {
-                    // Cross-origin frame; keep the application title in this window.
+                    // For an iframe from another domain the application title stays displayed in this window.
                 }
                 //iterate over if and try to find one with iframe
                 dialogBodyElements.each(function(index, element) {
