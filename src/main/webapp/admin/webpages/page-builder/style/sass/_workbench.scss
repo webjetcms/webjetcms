@@ -217,11 +217,12 @@ html.pb-insertion-open { overflow-anchor: none; }
         &::before {
             content: '';
             position: absolute;
-            height: 48px;
+            height: 100%;
             left: 50%;
             border-left: 1px dashed currentColor;
             opacity: .65;
         }
+        &:not(.is-horizontal)::before { min-height: 56px; }
         &.is-horizontal {
             transform: none;
             &::before { left: 0; right: 0; height: 0; border-left: 0; border-top: 1px dashed currentColor; }

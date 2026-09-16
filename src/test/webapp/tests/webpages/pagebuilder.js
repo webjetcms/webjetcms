@@ -794,6 +794,30 @@ async function workbenchGeometry(I) {
     }, workbenchFixture);
 }
 
+/** Verifies that side insertion guides span their target columns with centered buttons. */
+async function assertWorkbenchColumnInsertion(I) {
+    await I.usePlaywrightTo('check column insertion guide geometry', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        await frame.waitForFunction(() => window.pageBuilder.ui.frame === null && window.pageBuilder.ui.insertAnimations.every(animation => animation.playState === 'finished'));
+        const points = await frame.evaluate(selector => window.pageBuilder.ui.insertPoints
+            .filter(point => point.type === 'column' && point.parent.closest(selector))
+            .map(point => {
+                const column = (point.next || point.previous).getBoundingClientRect();
+                const guide = point.element[0].getBoundingClientRect();
+                const button = point.button[0].getBoundingClientRect();
+                return {
+                    top: guide.top - column.top,
+                    bottom: guide.bottom - column.bottom,
+                    lineHeight: parseFloat(getComputedStyle(point.element[0], '::before').height) - column.height,
+                    center: (button.top + button.bottom - column.top - column.bottom) / 2
+                };
+            }), workbenchFixture);
+        assert.equal(points.length, 3, 'Two columns must have three side insertion guides');
+        points.forEach(point => Object.values(point).forEach(offset =>
+            assert.ok(Math.abs(offset) < 1, 'Each guide must span its column with the button at its vertical center')));
+    });
+}
+
 Scenario('workbench selection, structure and unchanged canvas geometry', async ({I, DTE, Document}) => {
     await openWorkbenchFixture(I, DTE, Document);
     const before = await workbenchGeometry(I);
@@ -1187,6 +1211,7 @@ Scenario('workbench insertion destinations, cancellation and clean geometry', as
     I.click('.pb-workbench [data-pb-action=insert]');
     I.waitForVisible('.pb-insert-hint', 10);
     I.dontSeeElement('.pb-outline:not([hidden])');
+    await assertWorkbenchColumnInsertion(I);
     const state = await I.executeScript(() => {
         const pb = window.pageBuilder, points = pb.ui.insertPoints;
         return {
@@ -1274,12 +1299,7 @@ Scenario('workbench insertion in narrow gutters and wrapped columns', async ({I,
         const frame = await getPageBuilderFrame(page);
         await frame.waitForFunction(() => window.pageBuilder.ui.frame === null && window.pageBuilder.ui.insertAnimations.every(animation => animation.playState === 'finished'));
     });
-    const gutter = await I.executeScript(() => {
-        const point=window.pageBuilder.ui.insertPoints.find(point=>point.type==='column' && point.next && point.previous && point.parent.closest('section.pb-workbench-autotest'));
-        return {hasLane:!!point.header, top:point.button[0].getBoundingClientRect().bottom, contentTop:point.next.getBoundingClientRect().top};
-    });
-    assert.equal(gutter.hasLane,true,'A narrow gutter must get an insertion lane above its content');
-    assert.ok(gutter.top<=gutter.contentTop,'The insertion button must not overlap column text');
+    await assertWorkbenchColumnInsertion(I);
     I.executeScript(() => window.scrollTo(0,0));
     await I.usePlaywrightTo('capture desktop insertion destinations', async ({page}) => {
         const frame=await getPageBuilderFrame(page);

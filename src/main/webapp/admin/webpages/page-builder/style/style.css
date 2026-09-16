@@ -3185,10 +3185,13 @@ html.pb-insertion-open {
 .pb-insert-layer .pb-insert-point::before {
   content: "";
   position: absolute;
-  height: 48px;
+  height: 100%;
   left: 50%;
   border-left: 1px dashed currentColor;
   opacity: 0.65;
+}
+.pb-insert-layer .pb-insert-point:not(.is-horizontal)::before {
+  min-height: 56px;
 }
 .pb-insert-layer .pb-insert-point.is-horizontal {
   transform: none;

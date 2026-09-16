@@ -53,6 +53,43 @@ Scenario("293-config-jstree-view", ({ I, login }) => {
 }).tag("@video");
 ```
 
+## Miniatúra pre YouTube
+
+Miniatúru vytvoríte samostatným scenárom označeným iba `@title`. Pripravte v ňom obrazovku z videa a zavolajte `I.videoTitle(text, style)`. Helper zachytí aktuálny pohľad prehliadača vrátane iframe, doplní titulok a uloží JPG. Scenár 308 zdieľa prípravu dočasného obsahu s videom a po vytvorení obrázka editor zatvorí bez uloženia zmien.
+
+```shell
+cd src/test/webapp
+npm run video:title video/308-pb-redesign.js
+npm run video:title -- video/308-pb-redesign.js --text "Page Builder po novom" --style glow
+npm run video:title -- video/308-pb-redesign.js --style clean
+npm run video:title -- video/308-pb-redesign.js --style bold
+```
+
+| Štýl | Vzhľad |
+| --- | --- |
+| `glow` (predvolený) | Tmavé pozadie, biely titulok s modrofialovou žiarou a mierne natočený screenshot. |
+| `clean` | Svetlé pozadie, modrý titulok a rovný screenshot s jemným tieňom. |
+| `bold` | Modré pozadie, veľké biele písmená s výrazným tieňom, žltý akcent a natočený screenshot. |
+
+Všetky štýly používajú priamo SVG logo z `src/main/webapp/admin/v9/src/images/logo-cms.svg`. Vo svetlom štýle `clean` má biele logo tmavý podklad. Kompozícia sa vykreslí vo vyššom rozlíšení a pred exportom sa kvalitne zmenší, aby boli natočené čiary screenshotu vyhladené.
+
+Výstup má rozlíšenie **1920 × 1080**, pomer **16:9**, formát **JPG** a veľkosť pod **2 MB**. Ukladá sa do `docs/feature-video/<scenario-name>-title-<style>.jpg`, napríklad `308-pb-redesign-title-glow.jpg`. Každý štýl má vlastný súbor; ďalšie úspešné generovanie nahradí iba rovnaký štýl. Pri chybe zostane predchádzajúci obrázok zachovaný. Obrázok môžete nahrať ako vlastnú miniatúru v YouTube Studio. Aktuálne požiadavky sú v [pomoci YouTube](https://support.google.com/youtube/answer/72431).
+
+```javascript
+Scenario("YouTube thumbnail", async ({ I, login }) => {
+    login("admin");
+    await I.amOnPage("/admin/v9/webpages/web-pages-list/");
+    await I.waitForVisible("#datatableInit", 20);
+    await I.videoTitle("Page Builder\nNew experience", "glow");
+}).tag("@title");
+```
+
+Text podporuje diakritiku a `\n` na ručné zalomenie riadkov. Veľkosť písma sa prispôsobí dostupnému priestoru. Najlepšie funguje krátky titulok; limit je 160 znakov a text, ktorý sa nezmestí ani po zmenšení, skončí chybou. Hodnoty `--text` a `--style` prepíšu predvolené hodnoty scenára. Alternatívne použite premenné `VIDEO_TITLE_TEXT` a `VIDEO_TITLE_STYLE`; parametre príkazu majú prednosť pred premennými.
+
+Príkaz spustí iba `@title`, bez nahrávania WebM a bez generovania audia či hovoriacej postavy. `VIDEO_SHOT` sa pri miniatúre ignoruje. Voliteľné `--dry-run` vypíše kroky bez otvorenia prehliadača. Scenár musí počkať na požadovaný stav aplikácie pred volaním helpera; zmenu podkladového screenshotu urobíte zmenou jeho prípravných krokov. Nie je potrebné najskôr nahrať celé video.
+
+Existujúce `I.videoTitle(shot)` a volanie iba s textom v bežnom nahrávaní naďalej zobrazujú strihový medzititulok. V režime `video:title` stačí aj `I.videoTitle(text)` a použije sa `glow`. Text so zadaným štýlom generuje miniatúru aj mimo tohto režimu.
+
 ## Prehľad textov a plánu záberov
 
 Scenár so spoločným objektom `const videoPlan` si môžete prečítať v prehľadnej podobe bez spustenia nahrávania. V priečinku `src/test/webapp` spustite:

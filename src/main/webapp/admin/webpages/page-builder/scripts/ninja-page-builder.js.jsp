@@ -101,6 +101,11 @@
                     after: "<iwcm:text key='pagebuilder.ui.after'/>",
                     close: "<iwcm:text key='button.close'/>",
                     insert: "<iwcm:text key='pagebuilder.toolbar.add_block'/>",
+                    insertTypes: {
+                        section: "<iwcm:text key='pagebuilder.library.insert.section'/>",
+                        container: "<iwcm:text key='pagebuilder.library.insert.container'/>",
+                        column: "<iwcm:text key='pagebuilder.library.insert.column'/>"
+                    },
                     insertHint: "<iwcm:text key='pagebuilder.ui.insert.hint'/>",
                     insertEnd: "<iwcm:text key='pagebuilder.ui.insert.end'/>",
                     moveHint: "<iwcm:text key='pagebuilder.ui.move.hint'/>",
@@ -674,18 +679,16 @@
                     if (!source.length) continue;
                     var position = next ? ui.labels.insertBefore+' “'+me.workbench_name(next)+'”' :
                         previous ? ui.labels.insertAfter+' “'+me.workbench_name(previous)+'”' : ui.labels.insertStart;
-                    var context = item.parent === me.$wrapper[0] ? ui.labels.section : me.workbench_name(item.parent);
-                    var label = ui.labels[item.type]+' · '+context+' · '+position;
+                    var label = ui.labels.insertTypes[item.type]+' '+position.charAt(0).toLocaleLowerCase()+position.slice(1);
                     var point = { type: item.type, parent: item.parent, next: next, previous: previous, source: source.first(), label: label, position: position };
                     point.element = $('<div>', { 'class': prefix+'-insert-point', 'data-type': item.type }).appendTo(ui.insertLayer);
                     point.button = me.workbench_button('insert-here', label, 'plus').appendTo(point.element);
                     point.button.children('span').text(ui.labels[item.type]);
                     point.button.on('click', function(point) { return function() { me.open_workbench_insertion(point); }; }(point));
                     point.button.on('focus', function(point) { return function() {
-                        var rect = point.element[0].getBoundingClientRect(), top = ui.bar[0].getBoundingClientRect().bottom;
+                        var rect = point.button[0].getBoundingClientRect(), top = ui.bar[0].getBoundingClientRect().bottom;
                         if (rect.top < top || rect.bottom > window.innerHeight) {
-                            var anchor = point.space || point.header || $(point.next || point.previous || point.parent);
-                            window.scrollBy(0, anchor[0].getBoundingClientRect().top - top - 60);
+                            window.scrollBy(0, rect.top - top - 60);
                             me.position_workbench_insertion(top);
                         }
                     }; }(point));
@@ -713,12 +716,12 @@
             return space;
         },
 
-        /** Places wrapped boundaries between visual rows and reserves a lane when a gutter is too narrow. */
+        /** Places wrapped boundaries between visual rows while keeping side destinations alongside their columns. */
         prepare_workbench_column_points: function(points, nodes) {
-            var me = this, rows = [], minGap = window.matchMedia('(pointer: coarse)').matches ? 44 : 32;
+            var me = this, rows = [];
             nodes.forEach(function(node) {
                 var rect = node.getBoundingClientRect(), row = rows[rows.length-1];
-                if (!row || rect.top >= row.bottom - 1) rows.push(row = { nodes: [], bottom: rect.bottom, lanes: [] });
+                if (!row || rect.top >= row.bottom - 1) rows.push(row = { nodes: [], bottom: rect.bottom });
                 row.nodes.push(node);
                 row.bottom = Math.max(row.bottom, rect.bottom);
             });
@@ -727,22 +730,7 @@
                 if ((point.next && point.previous && !row.nodes.includes(point.previous)) ||
                     (window.innerWidth < 768 && rows.length === nodes.length && (!point.next || !point.previous))) {
                     me.create_workbench_insert_space(point);
-                    return;
                 }
-                var next = point.next && point.next.getBoundingClientRect(), previous = point.previous && point.previous.getBoundingClientRect();
-                var left = previous ? previous.right - parseFloat(getComputedStyle(point.previous).paddingRight) : 0;
-                var right = next ? next.left + parseFloat(getComputedStyle(point.next).paddingLeft) : window.innerWidth;
-                if (right-left >= minGap) return;
-                if (!row.header) {
-                    row.header = $('<aside>', { 'class': me.options.prefix+'-insert-space', 'aria-hidden': 'true', contenteditable: 'false' }).insertBefore(row.nodes[0]);
-                }
-                var x = Math.max(24, Math.min(window.innerWidth-24, next ? next.left : previous.right));
-                var lane = row.lanes.findIndex(positions => positions.every(position => Math.abs(position-x) >= 48));
-                if (lane < 0) { lane = row.lanes.length; row.lanes.push([]); }
-                row.lanes[lane].push(x);
-                row.header.css('height', row.lanes.length*48);
-                point.header = row.header;
-                point.lane = lane;
             });
         },
 
@@ -766,10 +754,9 @@
                     var x = point.next ? rect.left : rect.right;
                     if (point.next && point.previous) x = (point.previous.getBoundingClientRect().right+rect.left)/2;
                     var radius = window.matchMedia('(pointer: coarse)').matches ? 22 : 16;
-                    if (!point.header && !point.previous) x -= radius - parseFloat(getComputedStyle(anchor).paddingLeft)/2;
-                    if (!point.header && !point.next) x += radius - parseFloat(getComputedStyle(anchor).paddingRight)/2;
-                    var y = point.header ? point.header[0].getBoundingClientRect().top+24+point.lane*48 : rect.top+Math.min(40, rect.height/2);
-                    point.element.css({ left: Math.max(radius, Math.min(window.innerWidth-radius, x)), top: y-top });
+                    if (!point.previous) x -= radius - parseFloat(getComputedStyle(anchor).paddingLeft)/2;
+                    if (!point.next) x += radius - parseFloat(getComputedStyle(anchor).paddingRight)/2;
+                    point.element.css({ left: Math.max(radius, Math.min(window.innerWidth-radius, x)), top: rect.top+rect.height/2-top, height: rect.height });
                 }
                 var buttonRect = point.button[0].getBoundingClientRect();
                 var tooltipHalfWidth = Math.min(160, (window.innerWidth-32)/2);

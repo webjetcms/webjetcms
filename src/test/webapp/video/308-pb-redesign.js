@@ -525,8 +525,8 @@ Scenario("Shot plan", ({ I }) => {
     I.say(formatShotPlan(videoPlan));
 });
 
-Scenario("308-pb-redesign", async ({ I, DTE, Document, login }) => {
-    const { recordVideoPlan } = require("../helpers/feature_video_plan.js");
+/** Shares the isolated editor fixture between the walkthrough and thumbnail scenario. */
+function pageBuilderVideoContext({ I, DTE }) {
     const iframe = "#DTE_Field_data-pageBuilderIframe";
     const oldColumn = locate(".pb-column").first();
     const fixture = ".pb-video-autotest";
@@ -726,20 +726,43 @@ Scenario("308-pb-redesign", async ({ I, DTE, Document, login }) => {
         await I.waitForElement(".pb-workbench-path [data-type=column][aria-current=location]", 10);
     };
 
+    return { iframe, oldColumn, fixture, services, action, treeRow, waitForPageBuilder, typeText, closeEditor, prepareEditor };
+}
+
+Scenario("YouTube thumbnail", async ({ I, DTE, Document, login }) => {
+    const { prepareEditor, closeEditor, action } = pageBuilderVideoContext({ I, DTE });
+    login("admin");
+    Document.resetPageBuilderMode();
+    await prepareEditor();
+    // Use a bundled image so the thumbnail does not depend on an uploaded demo photograph.
+    await I.executeScript(() => {
+        const image = document.querySelector(".pb-video-autotest img");
+        image.src = "/components/htmlbox/objects/placeholder/content-computer.jpg";
+        image.alt = "Website editing";
+    });
+    await I.clickCss(action("structure"));
+    await I.waitForVisible(".pb-structure", 10);
+    await I.videoTitle("Page Builder\npo novom", "glow");
+    await closeEditor();
+}).tag("@title");
+
+Scenario("308-pb-redesign", async ({ I, DTE, Document, login }) => {
+    const { recordVideoPlan } = require("../helpers/feature_video_plan.js");
+    const context = pageBuilderVideoContext({ I, DTE });
     await recordVideoPlan(I, {
         plan: videoPlan,
-        context: { iframe, oldColumn, fixture, services, action, treeRow, waitForPageBuilder, typeText, closeEditor },
+        context,
         setup: async () => {
             login("admin");
             Document.resetPageBuilderMode();
         },
         prepare: async shot => {
             if (shot.id === "old-editor" || shot.id === "outro") return;
-            await prepareEditor();
+            await context.prepareEditor();
         },
         cleanup: async shot => {
             if (shot.id === "outro" || shot.id === "preview") return;
-            await closeEditor();
+            await context.closeEditor();
         }
     });
 }).tag("@video");

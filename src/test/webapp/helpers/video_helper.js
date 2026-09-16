@@ -1,5 +1,10 @@
 const { Helper } = codeceptjs;
 const { getVideoSettings, getVideoShot } = require("./video_settings.js");
+const fs = require("node:fs/promises");
+const path = require("node:path");
+const { randomUUID } = require("node:crypto");
+const { FEATURE_VIDEO_DIRECTORY } = require("./feature_video_paths.js");
+const { validateVideoTitle, renderVideoTitle } = require("./video_thumbnail.js");
 
 const DEFAULT_CLICK_DELAY = 350;
 const DEFAULT_POST_CLICK_DELAY = 500;
@@ -362,11 +367,15 @@ class VideoHelper extends Helper {
   }
 
   /**
-   * Shows a full-window editing slate for two seconds without changing focus or the active iframe.
+   * Shows a two-second editing slate, or saves a thumbnail when a style is supplied or title mode is enabled.
    * @param {string|object} title Legacy title or a resolved shot; manual/head shots show warnings with full notes or narration
-   * @returns {Promise<void>} Resolves after the slate has been removed
+   * @param {string} [style] Thumbnail style: glow (default in title mode), clean or bold
+   * @returns {Promise<void|string>} Thumbnail path, or nothing after the editing slate is removed
    */
-  async videoTitle(title) {
+  async videoTitle(title, style) {
+    if (typeof title === "string" && (style !== undefined || this.config.titleMode === true)) {
+      return this._saveVideoTitle(title, style);
+    }
     const manual = typeof title === "object" && title.type === "manual";
     const head = typeof title === "object" && title.type === "head";
     const heading = typeof title === "string" ? title : `${manual ? "WARNING: manual steps | " : head ? "WARNING: head video | " : ""}Shot ${title.number}${title.total == null ? "" : `/${title.total}`}: ${title.id}`;
@@ -431,12 +440,56 @@ class VideoHelper extends Helper {
     if (getVideoShot() && typeof title === "object") this.helpers.Playwright.videoShotSlate = slateTiming;
   }
 
+  _test(test) {
+    this.videoTest = test;
+  }
+
+  /** Captures the prepared scene and atomically replaces only this scenario's selected thumbnail style. */
+  async _saveVideoTitle(title, style) {
+    const text = process.env.VIDEO_TITLE_TEXT?.trim() || title;
+    style = process.env.VIDEO_TITLE_STYLE?.trim() || style || "glow";
+    validateVideoTitle(text, style);
+    if (!this.videoTest?.file) throw new Error("Video thumbnails must run inside a scenario with a source file.");
+    const name = path.basename(this.videoTest.file, path.extname(this.videoTest.file));
+    const directory = this.config.featureVideoDirectory || FEATURE_VIDEO_DIRECTORY;
+    const output = path.resolve(directory, `${name}-title-${style}.jpg`);
+    const temporary = `${output}.${randomUUID()}.tmp`;
+    const page = this.helpers.Playwright.page;
+    // Wait for visible scene images and fonts, including the active editor iframe.
+    for (const frame of page.frames()) {
+      await frame.evaluate(async () => {
+        await document.fonts.ready;
+        await Promise.all(Array.from(document.images)
+          .filter(img => {
+            const rect = img.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.right > 0 &&
+              rect.top < window.innerHeight && rect.left < window.innerWidth;
+          })
+          .map(img => img.decode()));
+      });
+    }
+    const screenshot = await page.screenshot({ type: "png", animations: "disabled",
+      style: "#wj-video-cursor-host, #wj-video-title-host { visibility: hidden !important; }" });
+    const jpeg = await renderVideoTitle(page.context().browser(), screenshot, text, style);
+    await fs.mkdir(path.dirname(output), { recursive: true });
+    try {
+      await fs.writeFile(temporary, jpeg, { flag: "wx" });
+      await fs.rename(temporary, output);
+    } finally {
+      await fs.rm(temporary, { force: true });
+    }
+    this.videoTest.artifacts ||= {};
+    this.videoTest.artifacts[`title-${style}`] = output;
+    console.log(`[Video title] ${output} (1920x1080, ${Math.round(jpeg.length / 1024)} KB)`);
+    return output;
+  }
+
   /**
    * Installs one top-level cursor and mouse-event relays in every iframe document.
    * Its size compensates for the native Chromium page zoom.
    */
   async _before(test) {
-    if (!isCursorEnabled()) return;
+    if (!isCursorEnabled() || this.config.titleMode === true) return;
 
     const { browserContext, page } = this.helpers.Playwright;
     const { zoom } = getVideoSettings();
